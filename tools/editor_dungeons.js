@@ -2965,6 +2965,7 @@ window.EDITOR_DUNGEONS = [
       "name": "casa_secreta",
       "ambiente": "masmorra",
       "saida_permitida": true,
+      "start_mode": "entrance",
       "grid": {
         "w": 11,
         "h": 16
@@ -3191,10 +3192,12 @@ window.EDITOR_DUNGEONS = [
           "doors": []
         }
       ],
+      "door_conditions": {},
       "entrance": {
         "x": 8,
         "y": 14
       },
+      "hero_spawns": [],
       "exit": {
         "x": 4,
         "y": 2
@@ -3389,6 +3392,25 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             4,
             3.2
+          ]
+        },
+        {
+          "id": "decor_11",
+          "type": "cortina_vermelha",
+          "pos": [
+            7,
+            9
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            1.6,
+            1.3
           ]
         }
       ],
@@ -25093,7 +25115,7 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "image": "camacasal.png",
+          "image": "cama_de_casal.png",
           "vscale": [
             0.8,
             0.8
@@ -25407,7 +25429,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "type": "fonte",
+          "type": "fonte_de_parede",
           "pos": [
             19,
             23
@@ -25417,8 +25439,8 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "charges": 3,
-          "image": "fontedecanto.png",
+          "charges": 2,
+          "image": "fonte_de_parede.png",
           "size": [
             1,
             1
@@ -29194,6 +29216,16 @@ window.EDITOR_DUNGEONS = [
           "room_id": 19,
           "boss": false,
           "target": false
+        },
+        {
+          "type": "medusa",
+          "pos": [
+            2,
+            35
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
         }
       ],
       "chests": [
@@ -29455,8 +29487,8 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "image": "fogueiracircular.png",
           "vscale": [
-            0.6,
-            1.4
+            0.8,
+            1.7
           ]
         },
         {
@@ -29551,7 +29583,7 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "image": "camacasal.png",
+          "image": "cama_de_casal.png",
           "vscale": [
             0.8,
             0.8
@@ -29771,82 +29803,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "decor_19",
-          "type": "grades_prisao",
-          "pos": [
-            34,
-            9
-          ],
-          "facing": [
-            1,
-            0
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "grade.png",
-          "vscale": [
-            1.6,
-            1.3
-          ]
-        },
-        {
-          "id": "decor_20",
-          "type": "grades_prisao",
-          "pos": [
-            34,
-            10
-          ],
-          "facing": [
-            1,
-            0
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "grade.png",
-          "vscale": [
-            1.5,
-            1.3
-          ]
-        },
-        {
-          "id": "decor_21",
-          "type": "grades_prisao",
-          "pos": [
-            35,
-            10
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "grade.png",
-          "vscale": [
-            1.6,
-            1.3
-          ]
-        },
-        {
-          "id": "decor_22",
-          "type": "grades_prisao",
-          "pos": [
-            36,
-            10
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "grade.png",
-          "vscale": [
-            1.6,
-            1.3
-          ]
-        },
-        {
           "id": "decor_23",
           "type": "arvore",
           "pos": [
@@ -29906,19 +29862,19 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "id": "decor_26",
-          "type": "fonte",
+          "type": "fonte_de_parede",
           "pos": [
-            19,
-            23
+            24,
+            21
           ],
           "facing": [
             0,
-            1
+            -1
           ],
           "loot": null,
           "key_objective": false,
-          "charges": 3,
-          "image": "fontedecanto.png",
+          "charges": 2,
+          "image": "fonte_de_parede.png",
           "size": [
             1,
             1
@@ -30027,6 +29983,28 @@ window.EDITOR_DUNGEONS = [
             "items": []
           },
           "key_objective": false
+        },
+        {
+          "id": "decor_33",
+          "type": "prisao",
+          "pos": [
+            34,
+            9
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            3,
+            3
+          ],
+          "vscale": [
+            1,
+            1.1
+          ]
         }
       ],
       "secret_passages": [],

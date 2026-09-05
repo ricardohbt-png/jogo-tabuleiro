@@ -177,6 +177,13 @@
     ];
     if (normalizedVScale[0] === 1 && normalizedVScale[1] === 1) delete out.vscale;
     else out.vscale = normalizedVScale;
+    const declaredFlight = Array.isArray(out.special_abilities) && out.special_abilities.some(a => a && a.id === "voo");
+    out.voo = !!(out.voo || declaredFlight);
+    out.altura_inicial = out.voo ? Math.max(0, Math.min(10, Math.trunc(n(out.altura_inicial, 2)))) : 0;
+    out.altura_max = out.voo ? Math.max(out.altura_inicial, Math.min(10, Math.trunc(n(out.altura_max, 10)))) : 0;
+    out.pode_alterar_altura = out.voo && out.pode_alterar_altura !== false;
+    out.custo_mov_altura = Math.max(1, Math.min(10, Math.trunc(n(out.custo_mov_altura, 1))));
+    out.ignora_obstaculos_voo = out.voo && !!out.ignora_obstaculos_voo;
     out.str_ = n(out.str_, 10); out.dex = n(out.dex, 10); out.con_ = n(out.con_, 10); out.int_ = n(out.int_, 10);
     out.movement = out.movement_exception ? n(out.movement, 6) : 6;
     out.vision_base = Math.max(-30, Math.min(30, n(out.vision_base, 0)));
@@ -294,6 +301,12 @@
     out.oriented = get("me-oriented").checked && out.size[0] * out.size[1] > 1;
     out.fill_footprint_3d = !!get("me-fill-footprint-3d")?.checked
       && out.oriented && out.size[0] * out.size[1] === 2;
+    out.voo = !!get("me-voo")?.checked;
+    out.altura_inicial = out.voo ? Math.max(0, Math.min(10, Math.trunc(n(get("me-altura-inicial")?.value, 2)))) : 0;
+    out.altura_max = out.voo ? Math.max(out.altura_inicial, Math.min(10, Math.trunc(n(get("me-altura-max")?.value, 10)))) : 0;
+    out.pode_alterar_altura = out.voo && !!get("me-pode-alterar-altura")?.checked;
+    out.custo_mov_altura = Math.max(1, Math.min(10, Math.trunc(n(get("me-custo-mov-altura")?.value, 1))));
+    out.ignora_obstaculos_voo = out.voo && !!get("me-ignora-obstaculos-voo")?.checked;
     out.immunities = [...root.querySelectorAll(".me-immunity:checked")].map(el => el.value);
     out.equipment_enabled = get("me-equipment-enabled").checked;
     out.equipped_items = [...root.querySelectorAll(".me-equipped-item")]
@@ -709,6 +722,7 @@
     if (attrFields) {
       const elongatedEnabled = draft.oriented && draft.size[0] * draft.size[1] === 2;
       attrFields.insertAdjacentHTML("beforeend", `<label><input id="me-fill-footprint-3d" type="checkbox"${draft.fill_footprint_3d ? " checked" : ""}${elongatedEnabled ? "" : " disabled"}> preencher visualmente as casas no 3D<small>alongar a miniatura entre duas casas</small></label><button id="me-apply-elongated" type="button" style="margin-top:6px">Aplicar preset: 2 casas alongadas</button>`);
+      attrFields.insertAdjacentHTML("beforeend", `<div class="me-flight-config" style="grid-column:1/-1;border-top:1px solid #4a3a2a;margin-top:8px;padding-top:10px"><b>Combate tridimensional — Voo</b><small style="display:block;color:#8a7a5a;margin:4px 0 8px">A diferença de altura reduz o alcance em 1 quadrado a cada 2 níveis. A altura vai de 0 a 10.</small><div class="me-fields cols-4"><label><input id="me-voo" type="checkbox"${draft.voo ? " checked" : ""}> possui Voo</label><label>Altura inicial<input id="me-altura-inicial" type="number" min="0" max="10" step="1" value="${esc(draft.altura_inicial)}"></label><label>Altura máxima<input id="me-altura-max" type="number" min="0" max="10" step="1" value="${esc(draft.altura_max)}"></label><label>Custo subir/descer<input id="me-custo-mov-altura" type="number" min="1" max="10" step="1" value="${esc(draft.custo_mov_altura)}"><small>movimento gasto por alteração</small></label><label><input id="me-pode-alterar-altura" type="checkbox"${draft.pode_alterar_altura ? " checked" : ""}> pode alterar altura</label><label><input id="me-ignora-obstaculos-voo" type="checkbox"${draft.ignora_obstaculos_voo ? " checked" : ""}> ignora obstáculos ao voar</label></div></div>`);
     }
     const checks = root.querySelector("#me-undead")?.closest(".me-checks");
     if (checks) checks.insertAdjacentHTML("beforeend", `<label>Subtipo<select id="me-subtipo">${SUBTIPOS.map(s => `<option value="${s.id}"${(draft.subtipo || (draft.undead ? "morto_vivo" : "raca_padrao")) === s.id ? " selected" : ""}>${s.nome}</option>`).join("")}</select><small id="me-subtipo-desc"></small></label><label><input id="me-visao_escuro" type="checkbox"${draft.visao_escuro ? " checked" : ""}> visão no escuro</label>`);
@@ -848,6 +862,19 @@
     document.getElementById("me-name").oninput = e => { if (!idManual) document.getElementById("me-type").value = slug(e.target.value); updateCalculated(); };
     document.getElementById("me-type").oninput = () => { idManual = true; };
     root.querySelectorAll("input, select, textarea").forEach(el => { if (!el.id || !["me-name","me-type"].includes(el.id)) el.addEventListener("input", updateCalculated); el.addEventListener("change", updateCalculated); });
+    const vooToggle = document.getElementById("me-voo");
+    const vooFields = ["me-altura-inicial", "me-altura-max", "me-custo-mov-altura", "me-pode-alterar-altura", "me-ignora-obstaculos-voo"]
+      .map(id => document.getElementById(id)).filter(Boolean);
+    const syncVooFields = () => {
+      const enabled = !!vooToggle?.checked;
+      vooFields.forEach(field => { field.disabled = !enabled; });
+      const hint = root.querySelector(".me-flight-config small");
+      if (hint) hint.textContent = enabled
+        ? "A diferença de altura reduz o alcance em 1 quadrado a cada 2 níveis. A altura vai de 0 a 10."
+        : "Sem Voo, a criatura permanece no chão e não usa regras de altura.";
+    };
+    vooToggle?.addEventListener("change", syncVooFields);
+    syncVooFields();
     ["me-size-w", "me-size-h", "me-oriented"].forEach(id => document.getElementById(id)?.addEventListener("change", () => { draft = read(); render(); }));
     document.getElementById("me-apply-elongated")?.addEventListener("click", () => {
       const width = document.getElementById("me-size-w");

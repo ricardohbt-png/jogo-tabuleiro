@@ -218,3 +218,18 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 .cityed-warn{display:block;margin:-4px 0 8px;color:#e8b34a;font-size:11px}
 .me-nd small{display:block;max-width:520px;margin-top:3px;color:#8a7a5a;font-size:9px;line-height:1.25;text-align:left}
 .nd-pair small{display:block;margin-top:3px;color:#8a7a5a;font-size:9px;line-height:1.25;white-space:nowrap}
+
+/* Ficha rápida das armadilhas no seletor e no painel de propriedades. */
+.trap-characteristics{margin:8px 0;padding:8px;background:#241b16;border:1px solid #694638;border-radius:6px;color:#e8dcc0;font-size:11px;line-height:1.35}
+.trap-characteristics.compact{display:inline-block;vertical-align:middle;max-width:520px;margin:0 0 0 8px;padding:5px 8px;text-align:left}
+.trap-characteristics-title{color:#f0c770;font-weight:bold;font-size:12px;margin-bottom:4px}
+.trap-characteristics-flags{display:flex;flex-wrap:wrap;gap:3px 8px;color:#c9b99b}
+.trap-characteristics-flags span{white-space:nowrap}
+.trap-characteristics-effects{margin-top:5px;padding-top:4px;border-top:1px solid #493529;color:#e7c98b}
+.trap-characteristics-effects b{display:block;color:#f0c770;margin-bottom:2px}
+.trap-characteristics-desc{margin-top:5px;color:#b9a87f;font-size:10px}
+.trap-overrides{margin:8px 0;padding:7px;background:#201a14;border:1px solid #5a4830;border-radius:5px}
+.trap-overrides b{display:block;color:#f0c770;font-size:11px;margin-bottom:4px}
+.trap-overrides label{margin-top:5px}
+.trap-overrides small{display:block;color:#9f927b;font-size:10px;margin-top:3px}
+@media(max-width:900px){.trap-characteristics.compact{display:block;max-width:none;margin:6px 0 0}}

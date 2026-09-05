@@ -144,6 +144,10 @@ window.LANG_ERROS = {
     "en": "Ally out of range.",
     "pt": "Aliado fora do alcance."
   },
+  "erro.parede_bloqueia_magia": {
+    "en": "🧱 A wall blocks the spell to {alvo}!",
+    "pt": "🧱 Uma parede bloqueia o feitiço até {alvo}!"
+  },
   "erro.aliado_fora_do_alcance_4_casas": {
     "en": "Ally out of range (4 squares).",
     "pt": "Aliado fora do alcance (4 casas)."
@@ -891,6 +895,34 @@ window.LANG_ERROS = {
   "erro.movimento_insuficiente_casa_custa": {
     "en": "Not enough movement: this tile costs {custo}.",
     "pt": "Movimento insuficiente: esta casa custa {custo}."
+  },
+  "erro.criatura_nao_possui_voo": {
+    "en": "This creature cannot fly.",
+    "pt": "Esta criatura não possui Voo."
+  },
+  "erro.altura_criatura_nao_alteravel": {
+    "en": "This creature's altitude cannot be changed.",
+    "pt": "A altura desta criatura não pode ser alterada."
+  },
+  "erro.criatura_agarrada_nao_altera_altura": {
+    "en": "A grappled creature cannot change altitude.",
+    "pt": "A criatura está agarrada e não pode alterar a altura."
+  },
+  "erro.criatura_imobilizada_nao_altera_altura": {
+    "en": "An immobilized creature cannot change altitude.",
+    "pt": "A criatura está imobilizada e não pode alterar a altura."
+  },
+  "erro.personagem_nao_possui_voo": {
+    "en": "This character cannot fly.",
+    "pt": "Este personagem não possui Voo."
+  },
+  "erro.altura_personagem_nao_alteravel": {
+    "en": "This character's altitude cannot be changed.",
+    "pt": "A altura deste personagem não pode ser alterada."
+  },
+  "erro.personagem_nao_altera_altura_neste_estado": {
+    "en": "This character cannot change altitude in its current state.",
+    "pt": "Você não pode alterar a altura neste estado."
   },
   "erro.mp_insuficiente": {
     "en": "Insufficient MP.",

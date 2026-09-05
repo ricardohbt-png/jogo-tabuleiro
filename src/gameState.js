@@ -36,6 +36,7 @@ const GS = (() => {
   let lobbyState      = null;   // latest lobby_state message from server
   let cityState       = null;   // latest city_state message from server
   let pendingAction   = null;   // reserved for future use
+  let pendingMove     = null;   // movimento selecionado, ainda não confirmado
   let pendingSkill    = null;   // skill waiting for map-click target
   let pendingInstrumento = null; // instrumento aguardando alvo no mapa: {id, base, alcance}
   let pendingThrow    = null;   // arremessável aguardando alvo no mapa: {id, alcance}
@@ -531,6 +532,7 @@ const GS = (() => {
     espada_curta:    { id:'espada_curta',    nome:'Espada Curta',         tipo:'arma', loja:'ferreiro', preco:15, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     machado_basico:  { id:'machado_basico',  nome:'Machado de Ferro',      tipo:'arma', loja:'ferreiro', preco:0,  dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:2, duasMaos:false, permitidoPara:['victorCoiceBravo'] },
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
+    lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
@@ -587,6 +589,7 @@ const GS = (() => {
     mochila_encantada: { id:'mochila_encantada', nome:'Mochila de Couro Encantada', tipo:'itemMagico', loja:'mercado', preco:30,  slotsExtras:2, descricao:'+2 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     mochila_viajante:  { id:'mochila_viajante',  nome:'Mochila do Viajante',        tipo:'itemMagico', loja:'mercado', preco:80,  slotsExtras:4, descricao:'+4 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     bolsa_dimensao:    { id:'bolsa_dimensao',    nome:'Bolsa de Dimensão',          tipo:'itemMagico', loja:'mercado', preco:150, slotsExtras:6, descricao:'+6 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
+    bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3.', permitidoPara:['todos'] },
 
     // ── MERCADO — Venenos (consumíveis aplicados na arma) ──
     // 1 slot de inventário cada. Usar = unta a arma equipada (ação bônus); o
@@ -910,13 +913,15 @@ const GS = (() => {
       decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
   }
 
-  function _walkable(tiles, x, y, openDoors, occupied) {
+  function _walkable(tiles, x, y, openDoors, occupied, moveCtx=null) {
     const t = tiles[y]?.[x];
     const illusion = (gameState?.secret_passages || []).some(p => p.type === 'illusion' && p.pos[0] === x && p.pos[1] === y);
-    const onFloor = t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
+    const vooLivre = !!(moveCtx?.actor?.voo && moveCtx.actor.ignora_obstaculos_voo);
+    const onFloor = vooLivre ? t !== undefined
+      : t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
     if (!onFloor) return false;
-    if (_matSolido(x, y)) return false;   // entulho: intransponível como parede
-    if (_decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
+    if (!vooLivre && _matSolido(x, y)) return false;   // entulho: intransponível como parede
+    if (!vooLivre && _decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
   }
@@ -964,14 +969,24 @@ const GS = (() => {
   // Supercover de Bresenham: paredes E portas fechadas barram ataques/magias à
   // distância. Os extremos (origem/alvo) não bloqueiam. Usado para impedir mira
   // através de paredes no cliente (o servidor já recusa, isto evita oferecer).
-  function _losBlocks(tiles, closed, x, y) {
+  function _losBlocks(tiles, closed, x, y, state, vooLivre=false) {
     if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return true;
-    return tiles[y][x] === TILE_WALL || closed.has(`${x},${y}`) || _matOpaco(x, y);
+    const key = `${x},${y}`;
+    const decoracoes = (state?.decorations || []);
+    const alto = decoracoes.some(d => d.alto && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
+    const solido = decoracoes.some(d => !d.pisavel && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
+    const materialOpaco = MATERIAIS_OPACOS.has(state?.materiais?.[key]);
+    if (vooLivre) return alto || materialOpaco;
+    return tiles[y][x] === TILE_WALL || closed.has(key) || solido || materialOpaco;
   }
-  function hasLineOfSight(state, ax, ay, bx, by) {
+  function hasLineOfSight(state, ax, ay, bx, by, observer=null) {
     const tiles = state && state.tiles;
     if (!tiles) return true;
     const closed = doorSets(state).closed;
+    const origem = observer || [...(state.players || []), ...(state.monsters || [])]
+      .find(entidade => entidade && entidade.pos?.[0] === (ax | 0) && entidade.pos?.[1] === (ay | 0));
+    const vooLivre = !!(origem?.voo && origem.ignora_obstaculos_voo && alturaDe(origem) > 0);
+    const bloqueia = (x, y) => _losBlocks(tiles, closed, x, y, state, vooLivre);
     const x1 = bx | 0, y1 = by | 0;
     let x = ax | 0, y = ay | 0, ix = 0, iy = 0;
     const dx = Math.abs(x1 - x), dy = Math.abs(y1 - y);
@@ -981,23 +996,24 @@ const GS = (() => {
       if (tX < tY) { x += sx; ix++; }
       else if (tX > tY) { y += sy; iy++; }
       else {
-        if (_losBlocks(tiles, closed, x + sx, y)) return false;
-        if (_losBlocks(tiles, closed, x, y + sy)) return false;
+        if (bloqueia(x + sx, y) || bloqueia(x, y + sy)) return false;
         x += sx; ix++; y += sy; iy++;
       }
       if (x === x1 && y === y1) break;
       if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return false;
-      if (_losBlocks(tiles, closed, x, y)) return false;
+      if (bloqueia(x, y)) return false;
     }
     return true;
   }
 
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
   function terrainMoveCost(moveCtx, x, y) {
+    const actor = moveCtx?.actor || {};
+    const vooNoAr = !!(actor.voo && alturaDe(actor) > 0);
+    if (vooNoAr) return 1;
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'areia_deserto' || kind === 'lava') return 2;
     if (kind !== 'agua' && kind !== 'agua_profunda') return 1;
-    const actor = moveCtx?.actor || {};
     if ((actor.special_abilities || []).some(h => h && h.id === 'movimento_erratico')) return 1;
     let cost = kind === 'agua_profunda' ? 3 : 2;
     const armor = actor.gear?.armor || {};
@@ -1024,14 +1040,15 @@ const GS = (() => {
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny);
-        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed;
+        const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
+        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
         // atravessada mesmo se o orçamento não cobrir o custo inteiro.
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
         const nextCost = (s === 0 && terrainCost > maxSteps) ? maxSteps : s + terrainCost;
         const nextSwampUsed = swampUsed || entersSwamp;
         const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied)
+        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied, moveCtx)
             && (best.get(bestKey) === undefined || nextCost < best.get(bestKey))) {
           best.set(bestKey, nextCost);
           q.push([nx, ny, nextCost, nextSwampUsed]);
@@ -1049,7 +1066,7 @@ const GS = (() => {
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(fx, fy);
     if (!exploredSet.has(`${tx},${ty}`)) return null;
-    const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied);
+    const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied, moveCtx);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
     const swampStart = moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
@@ -1063,12 +1080,13 @@ const GS = (() => {
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny);
-        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed;
+        const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
+        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
         const nextCost = (spent === 0 && terrainCost > maxSteps) ? maxSteps : spent + terrainCost;
         const nextSwampUsed = swampUsed || entersSwamp;
         const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied)
+        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx)
             || (bestCost.get(bestKey) !== undefined && bestCost.get(bestKey) <= nextCost)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
@@ -1178,6 +1196,7 @@ const GS = (() => {
     lobbyState = null;
     cityState = null;
     isMyTurn = false;
+    pendingMove = null;
     pendingSkill = null;
     pendingAction = null;
     pendingThrow = null;
@@ -1292,6 +1311,7 @@ const GS = (() => {
 
       case 'game_start':
         cityState = null;
+        pendingMove = null;
         if (msg.instrumentos_base) instrumentoBaseCache = msg.instrumentos_base;
         _resetSurvivalAll(false);   // início da aventura → fome/sede = 80
         _resetTurnActivity();
@@ -1300,6 +1320,7 @@ const GS = (() => {
 
       case 'city_state':
         cityState = msg;
+        pendingMove = null;
         // Descarta o estado da masmorra ANTERIOR (simétrico ao enter_dungeon, que
         // limpa cityState). Sem isto, os leitores que preferem gameState — como o
         // modal de inventário (_currentPlayer) — mostram o paperdoll/bolsa
@@ -1338,6 +1359,7 @@ const GS = (() => {
         // preta"/mapa errado na 2ª+ entrada. O game_state fresco (enviado pelo
         // servidor logo após este enter_dungeon) reconstrói com o mapa correto.
         gameState = null;
+        pendingMove = null;
         _resetTurnActivity();
         _emit('enterDungeon');
         break;
@@ -1357,6 +1379,17 @@ const GS = (() => {
         isMyTurn = msg.test_mode ? msg.master_pid === myPid
           : msg.current_turn === myPid || msg.last_stand_pid === myPid
             || msg.animados_turn === myPid;
+        // A prévia só permanece válida enquanto o herói continua na mesma
+        // casa, com o mesmo orçamento de movimento e ainda no turno. Isso
+        // evita confirmar uma rota velha depois de uma atualização autoritativa.
+        if (pendingMove && myPid) {
+          const pme = msg.players.find(p => p.id === myPid);
+          const mesmaOrigem = pme && Array.isArray(pendingMove.origin)
+            && pme.pos?.[0] === pendingMove.origin[0]
+            && pme.pos?.[1] === pendingMove.origin[1];
+          const mesmoOrcamento = pme && Number(pme.moves_left) === Number(pendingMove.moves_left);
+          if (!isMyTurn || !mesmaOrigem || !mesmoOrcamento) pendingMove = null;
+        }
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
         // Auto-clear pending skill when turn ends or action was processed
@@ -1422,6 +1455,12 @@ const GS = (() => {
 
       case 'trap_result':
         _emit('trapResult', msg);
+        break;
+
+      case 'fall_result':
+        // A queda já foi resolvida pelo servidor; o renderer só apresenta o
+        // resultado junto dos demais eventos de combate.
+        _emit('fallResult', msg);
         break;
 
       case 'fire_prompt':
@@ -1555,6 +1594,11 @@ const GS = (() => {
 
   // ── Action senders (thin wrappers over send) ───────────────────────────────
   function move(dx, dy)    { _turn.moved = true; send({ type: 'move', dx, dy }); }
+  function alterarAltura(delta, monsterId = null) {
+    const msg = { type: 'alterar_altura', delta: Number(delta) };
+    if (monsterId != null) msg.monster_id = monsterId;
+    send(msg);
+  }
   function endTurn()       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
@@ -1583,11 +1627,15 @@ const GS = (() => {
   }
   function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
   function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
+  // Arremesso de arma equipada. O slot é parte da ação para que o servidor
+  // não precise adivinhar entre uma arma principal e uma segunda arma.
+  function throwWeapon(slot, targetId) { send({ type: 'throw', slot, target_id: targetId }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
   function escaparBau()             { send({ type: 'escapar_bau' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
+  function quickEquipFromBag(i) { send({ type: 'quick_equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
   function repairItem(slot, bagIndex = null) {
     send({ type: 'repair_item', slot, bag_index: bagIndex });
@@ -2128,23 +2176,68 @@ const GS = (() => {
   //   {type:'none',   reason}          — no valid targets (show toast)
   //   {type:'direct', targetId}        — single target (send attack immediately)
   //   {type:'modal',  title, targets}  — multiple targets (open target modal)
-  function _alvoNoAlcanceArma(myP, tx, ty) {
+  function alturaDe(entidade) {
+    const valor = Number(entidade?.altura);
+    return Number.isFinite(valor) ? Math.max(0, Math.min(10, Math.trunc(valor))) : 0;
+  }
+
+  function custoVerticalAlcance(alturaA, alturaB) {
+    return Math.ceil(Math.abs(alturaDe({ altura: alturaA }) - alturaDe({ altura: alturaB })) / 2);
+  }
+
+  function faixaAlturaQueda(altura) {
+    const n = alturaDe({ altura });
+    if (n <= 0) return null;
+    if (n <= 3) return 'baixo';
+    if (n <= 7) return 'medio';
+    return 'alto';
+  }
+
+  function expressaoDanoQueda(altura) {
+    const faixa = faixaAlturaQueda(altura);
+    return faixa === 'baixo' ? '2d6' : faixa === 'medio' ? '4d6' : faixa === 'alto' ? '6d6' : null;
+  }
+
+  function weaponCanReachTile(myP, tx, ty, targetAltitude = 0) {
     const weapon = myP?.weapon || {};
     const range = weapon.range;
     const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
     if (range != null) {
+      const alcance = Number(range) - custoVerticalAlcance(alturaDe(myP), targetAltitude);
+      if (alcance < 1) return false;
       const distancia = Math.max(dx, dy);
       if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
-        return (dx === 0 || dy === 0) && distancia <= range;
+        return (dx === 0 || dy === 0) && distancia <= alcance;
       if (weapon.id === 'arco_curto' || weapon.id === 'longbow') {
-        const limite = (dx === 0 || dy === 0) ? range : Math.ceil(range / 2);
+        const limite = (dx === 0 || dy === 0) ? alcance : Math.ceil(alcance / 2);
         return distancia <= limite;
       }
-      return distancia <= range;
+      return distancia <= alcance;
     }
+    if (alturaDe(myP) !== alturaDe({ altura: targetAltitude })) return false;
+    if (weapon.reach === 'lanca')
+      return Math.max(dx, dy) === 1 || (dx === 0 && dy === 2) || (dx === 2 && dy === 0);
     if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
       return Math.max(dx, dy) === 1;
     return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+  }
+
+  function weaponReachInfo(myP, tx, ty, targetAltitude = 0) {
+    const weapon = myP?.weapon || {};
+    const ranged = weapon.range != null;
+    const attackerAltitude = alturaDe(myP);
+    const alvoAltitude = alturaDe({ altura: targetAltitude });
+    const verticalCost = ranged ? custoVerticalAlcance(attackerAltitude, alvoAltitude) : 0;
+    const horizontalDistance = Math.max(Math.abs((myP?.pos?.[0] || 0) - tx), Math.abs((myP?.pos?.[1] || 0) - ty));
+    const effectiveRange = ranged ? Number(weapon.range) - verticalCost : null;
+    return {
+      attackerAltitude,
+      targetAltitude: alvoAltitude,
+      horizontalDistance,
+      verticalCost,
+      effectiveRange,
+      inRange: weaponCanReachTile(myP, tx, ty, targetAltitude),
+    };
   }
 
   function resolveAttack() {
@@ -2158,12 +2251,12 @@ const GS = (() => {
       const tiles = monsterTiles(m);   // atacável em qualquer casa do corpo
       if (wRange != null) {
         // À distância: alguma casa do corpo no alcance E com linha de visão.
-        return tiles.some(([tx, ty]) => _alvoNoAlcanceArma(myP, tx, ty)
+        return tiles.some(([tx, ty]) => weaponCanReachTile(myP, tx, ty, m.altura)
           && hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty));
       }
       // Corpo a corpo: adjacente a alguma casa do corpo. A lança curta inclui
       // as diagonais; as demais armas mantêm a regra ortogonal.
-      return tiles.some(([tx, ty]) => _alvoNoAlcanceArma(myP, tx, ty));
+      return tiles.some(([tx, ty]) => weaponCanReachTile(myP, tx, ty, m.altura));
     });
     if (!adj.length) {
       const reason = wRange != null
@@ -2176,6 +2269,32 @@ const GS = (() => {
       ? _t('ui.ataque.titulo_distancia', `Atacar à distância — Escolha o Alvo (alcance ${wRange})`, { n: wRange })
       : _t('ui.ataque.titulo_adjacente', 'Atacar — Escolha o Inimigo Adjacente');
     return { type: 'modal', title, targets: adj };
+  }
+
+  // Casas de monstro que podem receber o ataque básico agora. O renderer usa
+  // esta consulta pura para a mira do joystick; o servidor continua validando
+  // o ataque quando a mensagem é recebida.
+  function attackTargetTiles() {
+    if (!gameState || gameState.phase !== 'playing' || !isMyTurn) return [];
+    const myP = gameState.players.find(p => p.id === myPid && p.alive);
+    if (!myP || myP.action_done) return [];
+    const ranged = myP.weapon?.range != null;
+    const result = [], seen = new Set();
+    for (const monster of gameState.monsters || []) {
+      if (!monster || monster.hp <= 0) continue;
+      for (const [tx, ty] of monsterTiles(monster)) {
+        const swallowedTarget = myP.engolido && monster.id === myP.engolido_por;
+        const inRange = swallowedTarget || weaponCanReachTile(myP, tx, ty, monster.altura);
+        const lineClear = !ranged || swallowedTarget
+          || hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty);
+        const key = `${tx},${ty}`;
+        if (inRange && lineClear && !seen.has(key)) {
+          seen.add(key);
+          result.push({ x: tx, y: ty, targetId: monster.id });
+        }
+      }
+    }
+    return result;
   }
 
   // ── Skill activator: sets pendingSkill or sends directly ──────────────────
@@ -2421,7 +2540,8 @@ const GS = (() => {
         monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
       if (m) {
         const distancia = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
-        if (distancia > (inst.alcance || 0)) return { type: 'instrumento_blocked', reason: 'range' };
+        const alcance = (inst.alcance || 0) - custoVerticalAlcance(alturaDe(myP), alturaDe(m));
+        if (alcance < 1 || distancia > alcance) return { type: 'instrumento_blocked', reason: 'range' };
         if (!hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
           return { type: 'instrumento_blocked', reason: 'wall' };
         return { type: 'instrumento', targetId: m.id };
@@ -2464,7 +2584,13 @@ const GS = (() => {
       const alvo = (CATALOGO_ITENS[th.id] || {}).alvo || th.alvo || 'ataque_alvo';
       const ddx  = Math.abs(myP.pos[0] - tx);
       const ddy  = Math.abs(myP.pos[1] - ty);
-      const inRange = Math.max(ddx, ddy) <= th.alcance;
+      const alvoAltura = alvo === 'area' ? 0 : (() => {
+        const alvoMonstro = gameState.monsters.find(mm => mm.hp > 0 &&
+          monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
+        return alvoMonstro ? alturaDe(alvoMonstro) : 0;
+      })();
+      const alcance = Number(th.alcance || 0) - custoVerticalAlcance(alturaDe(myP), alvoAltura);
+      const inRange = alcance >= 1 && Math.max(ddx, ddy) <= alcance;
       const losOk   = hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty);
       if (alvo === 'area') {
         // Área: mira numa CASA (não precisa de monstro), valida alcance + LOS ao centro.
@@ -2490,7 +2616,10 @@ const GS = (() => {
       // permanece fechada e a decisão de abri-la continua sendo do jogador.
       const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
       const path = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left, true);
-      if (path && path.length) return { type: 'move', path, stopAtDoor: true };
+      if (path && path.length) {
+        if (myP.petrificado) return { type: 'movement_blocked', reason: 'petrified' };
+        return { type: 'move', path, stopAtDoor: true };
+      }
       return { type: 'door_far' };
     }
 
@@ -2500,22 +2629,21 @@ const GS = (() => {
     if (monster && !myP.action_done) {
       if (myP.engolido && monster.id === myP.engolido_por)
         return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
-      const ddx  = Math.abs(myP.pos[0] - tx);
-      const ddy  = Math.abs(myP.pos[1] - ty);
       const wRng = myP.weapon?.range ?? null;
       if (wRng != null) {
-        if (_alvoNoAlcanceArma(myP, tx, ty)) {
+        if (weaponCanReachTile(myP, tx, ty, monster.altura)) {
           // Paredes/portas fechadas barram a linha de tiro.
           if (hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
             return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
           return { type: 'attack_blocked_wall' };
         }
-      } else if ((ddx === 1 && ddy === 0) || (ddx === 0 && ddy === 1)) {
+      } else if (weaponCanReachTile(myP, tx, ty, monster.altura)) {
         return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
       }
     }
 
     // ── Pathfind and move ────────────────────────────────────────────────────
+    if (myP.petrificado) return { type: 'movement_blocked', reason: 'petrified' };
     if (myP.moves_left <= 0) return null;
     if (tx === myP.pos[0] && ty === myP.pos[1]) return null;
     const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
@@ -2608,6 +2736,7 @@ const GS = (() => {
     get groundItems()     { return (gameState && gameState.ground_items) || []; },
     get isMyTurn()        { return isMyTurn; },
     get pendingAction()   { return pendingAction; },
+    get pendingMove()     { return pendingMove; },
     get pendingSkill()    { return pendingSkill; },
     get pendingThrow()    { return pendingThrow; },
     get pendingInstrumento() { return pendingInstrumento; },
@@ -2621,6 +2750,7 @@ const GS = (() => {
     set pendingThrow(v)    { pendingThrow    = v; },
     set pendingInstrumento(v) { pendingInstrumento = v; },
     set pendingAction(v)   { pendingAction   = v; },
+    set pendingMove(v)     { pendingMove     = v; },
     set activeShop(v)      { activeShop      = v; },
     set activeScene(v)     { activeScene     = v; },
     set shopTabIdx(v)      { shopTabIdx      = v; },
@@ -2685,6 +2815,7 @@ const GS = (() => {
 
     // ── Actions ──
     move,
+    alterarAltura,
     endTurn,
     sceneChoice,
     sceneTest,
@@ -2697,11 +2828,13 @@ const GS = (() => {
     respondFireChoice,
     throwItem,
     throwItemArea,
+    throwWeapon,
     apagarChamas,
     estancarSangramento,
     escaparEstomago,
     escaparBau,
     equipFromBag,
+    quickEquipFromBag,
     unequip,
     repairItem,
     reorderBag,
@@ -2714,6 +2847,7 @@ const GS = (() => {
     pickupItem,
     groundItemPickable,
     canPlaceItem,
+    slotCategoryForItem: _slotCategoryForItem,
     offHandBlockedByTwoHanded,
     compareItemStats,
     isDagger,
@@ -2855,7 +2989,14 @@ const GS = (() => {
     activateDecorMechanism,
 
     // ── Resolvers (no DOM — return data; renderer executes UI work) ──
+    alturaDe,
+    custoVerticalAlcance,
+    faixaAlturaQueda,
+    expressaoDanoQueda,
+    weaponCanReachTile,
+    weaponReachInfo,
     resolveAttack,
+    attackTargetTiles,
     activateSkill,
     resolveTileClick,
     cadaverAdjacente,

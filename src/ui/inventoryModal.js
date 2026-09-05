@@ -19,6 +19,11 @@ const InventoryModal = (() => {
   let _readOnly = false;
   let _storageCtx = null;
   let _selected = null;   // item selecionado (tap-to-select): {kind:'bag',index} | {kind:'gear',slotKey}
+  // Escolha exclusiva do controle para consumíveis: mantém o item selecionado
+  // enquanto o jogador alterna entre Usar e Cancelar pelo analógico direito.
+  let _gamepadAction = null; // {index, choice:'use'|'cancel'}
+  let _lastBagPress = null;  // duplo clique/toque rápido para equipar ou usar
+  const QUICK_EQUIP_PRESS_MS = 520;
 
   // Layout do paperdoll (3×3): posição visual de cada um dos 9 slots.
   // O rótulo do slot vem de ui.inv.slot.<key>, resolvido no RENDER: um `label`
@@ -117,6 +122,11 @@ const InventoryModal = (() => {
 .inv-bagslot.selected{outline:2px solid #ffe08a;outline-offset:2px;}
 .inv-bagslot.usable{border-color:#2ecc40;box-shadow:inset 0 0 4px rgba(46,204,64,.4),0 0 6px rgba(46,204,64,.35);}
 .inv-bagslot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
+.inv-gamepad-action{margin:12px auto 0;padding:8px 10px;border:1px solid #5ebce8;border-radius:6px;
+  background:linear-gradient(145deg,rgba(8,26,37,.96),rgba(9,12,17,.96));box-shadow:0 0 14px rgba(84,201,255,.28);text-align:center;font-family:Georgia,serif;}
+.inv-gamepad-action small{display:block;color:#9ee8ff;font-size:10px;letter-spacing:.4px;margin-bottom:7px;}
+.inv-gamepad-action-options{display:flex;gap:7px;justify-content:center;}.inv-gamepad-action-options span{min-width:82px;padding:5px 8px;border:1px solid #655f55;border-radius:4px;color:#a99f91;font-size:11px;}
+.inv-gamepad-action-options span.selected{border-color:#7ee9ff;background:rgba(51,171,218,.28);color:#ecfbff;box-shadow:0 0 10px rgba(102,220,255,.45);}
 .poison-charge-drops{position:absolute;z-index:4;top:4px;left:4px;display:flex;flex-wrap:wrap;gap:2px;
   width:30px;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));}
 .poison-charge-drop{width:8px;height:11px;display:block;background:linear-gradient(135deg,#d38cff,#7134c7);
@@ -209,6 +219,8 @@ const InventoryModal = (() => {
     _openPid  = pid;
     _readOnly = !!opts.readOnly;
     _selected = null;
+    _gamepadAction = null;
+    _lastBagPress = null;
     _injectStyles();
     _ensureDom();
     _render();
@@ -222,6 +234,8 @@ const InventoryModal = (() => {
     _openPid  = null;
     _storageCtx = null;
     _selected = null;
+    _gamepadAction = null;
+    _lastBagPress = null;
     if(typeof window._ocultarAtalhosNoMenu === 'function') window._ocultarAtalhosNoMenu();
     const overlay = document.getElementById('inv-modal-overlay');
     if(overlay) overlay.classList.remove('open');
@@ -253,6 +267,107 @@ const InventoryModal = (() => {
     return null;
   }
 
+  function _focusSelectedSlot(){
+    const selected = _selected;
+    if(!selected) return;
+    requestAnimationFrame(() => {
+      const selector = selected.kind === 'bag'
+        ? `.inv-bagslot[data-bag-index="${selected.index}"]`
+        : selected.kind === 'gear' ? `.inv-slot[data-slot-key="${selected.slotKey}"]` : '';
+      const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
+      if(slot) slot.focus({ preventScroll:true });
+    });
+  }
+
+  // Estado de ativação de um item da bolsa. Clique direito/touch e o botão
+  // secundário do controle compartilham esta regra para não criar economias de
+  // ação diferentes entre mouse e joystick.
+  function _bagActionState(item, player){
+    const isScroll = !!item && item.effect === 'scroll';
+    const isConsumable = !!item && !item.die
+      && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
+    const ehCaster = player?.class_id === 'mage' || player?.class_id === 'cleric';
+    const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
+    const isMyOwnDungeonTurn = !_readOnly && player?.id === GS.myPid && gsNow && gsNow.phase === 'playing'
+      && GS.isMyTurn && player.alive && !player.action_done;
+    const bonusBloqueado = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
+      && BONUS_ACTION_EFFECTS.has(item.effect) && !!player.bonus_action_used;
+    const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
+      ? GS.CATALOGO_ITENS[item && item.id] : null;
+    const isArremessavel = !!(catDef && catDef.arremessavel);
+    return {
+      isScroll, isConsumable, isArremessavel,
+      podeUsar: isMyOwnDungeonTurn && isConsumable && !bonusBloqueado,
+      podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster,
+      podeArremessar: isMyOwnDungeonTurn && isArremessavel && !player.action_done,
+    };
+  }
+
+  function _activateBagItem(index){
+    if(_readOnly) return false;
+    const player = _currentPlayer();
+    const item = player?.bag?.[index];
+    if(!item) return false;
+    const action = _bagActionState(item, player);
+    if(action.podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
+      close(); window._iniciarMiraArremesso(item, player); return true;
+    }
+    if(action.podeConjurar){ close(); castarPergaminho(item); return true; }
+    if(action.podeUsar){ useItem(item.id); return true; }
+    return false;
+  }
+
+  function _quickEquipOrUseBagItem(index){
+    if(_readOnly || _storageCtx) return false;
+    const player = _currentPlayer();
+    const item = player?.bag?.[index];
+    if(!item) return false;
+    // Poções, pergaminhos e outros consumíveis mantêm o duplo toque como uso.
+    if(GS.slotCategoryForItem?.(item) === 'bag') return _activateBagItem(index);
+    const trocaBotaEmVoo = GS.slotCategoryForItem?.(item) === 'boots'
+      && _botaAladaEmVoo(player, 'boots')
+      && !(item.id === 'bota_alada' || item.effect === 'voo');
+    const equipar = () => {
+      _selected = null;
+      _gamepadAction = null;
+      GS.quickEquipFromBag(index);
+      refresh();
+    };
+    if(trocaBotaEmVoo){
+      _confirmarDesequiparBota(player, 'boots', equipar, () => { refresh(); });
+      return true;
+    }
+    equipar();
+    return true;
+  }
+
+  function _canOfferGamepadAction(index){
+    if(_readOnly || _storageCtx) return false;
+    const player = _currentPlayer();
+    const item = player?.bag?.[index];
+    if(!item) return false;
+    const action = _bagActionState(item, player);
+    return action.podeUsar || action.podeConjurar || action.podeArremessar;
+  }
+
+  function _renderGamepadAction(overlay){
+    const action = _gamepadAction;
+    if(!action || !_selected || _selected.kind !== 'bag' || _selected.index !== action.index
+      || !_canOfferGamepadAction(action.index)) return;
+    const host = overlay.querySelector('.inv-main');
+    if(!host) return;
+    const panel = document.createElement('div');
+    panel.className = 'inv-gamepad-action';
+    panel.setAttribute('aria-live', 'polite');
+    panel.innerHTML = `
+      <small>${t('ui.inv.gamepad_acao_hint')}</small>
+      <div class="inv-gamepad-action-options">
+        <span class="${action.choice === 'use' ? 'selected' : ''}">✓ ${t('ui.inv.gamepad_usar')}</span>
+        <span class="${action.choice === 'cancel' ? 'selected' : ''}">✕ ${t('ui.geral.cancelar')}</span>
+      </div>`;
+    host.appendChild(panel);
+  }
+
   function _renderGear(overlay, player){
     const grid = overlay.querySelector('.inv-grid');
     grid.innerHTML = '';
@@ -269,6 +384,12 @@ const InventoryModal = (() => {
         + (item ? ' filled' : ' empty')
         + (blocked ? ' blocked' : '');
       slot.dataset.slotKey = cfg.key;
+      if(!_readOnly && !blocked){
+        slot.tabIndex = 0;
+        slot.dataset.inventorySlot = 'gear';
+        slot.setAttribute('role', 'button');
+        slot.setAttribute('aria-label', item ? `${_slotLabel(cfg.key)}: ${item.name}` : _slotLabel(cfg.key));
+      }
       slot.title = blocked ? t('ui.inv.bloqueado_duas_maos')
                  : item ? item.name : _slotLabel(cfg.key);
       slot.innerHTML = blocked
@@ -321,24 +442,18 @@ const InventoryModal = (() => {
       const slot = document.createElement('div');
       slot.className = 'inv-bagslot' + (item ? ' filled' : ' empty');
       slot.dataset.bagIndex = String(i);
+      if(!_readOnly){
+        slot.tabIndex = 0;
+        slot.dataset.inventorySlot = 'bag';
+        slot.setAttribute('role', 'button');
+        slot.setAttribute('aria-label', item ? item.name : t('ui.inv.espaco_vazio'));
+      }
       slot.title = item ? item.name : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}` : '';
-      const isScroll = !!item && item.effect === 'scroll';
-      const isConsumable = !!item && !item.die && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
-      const ehCaster = player.class_id === 'mage' || player.class_id === 'cleric';
-      const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
-      const isMyOwnDungeonTurn = !_readOnly && player.id === GS.myPid && gsNow && gsNow.phase === 'playing'
-        && GS.isMyTurn && player.alive && !player.action_done;
-      const bonusBloqueado = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
-        && BONUS_ACTION_EFFECTS.has(item.effect) && !!player.bonus_action_used;
-      const podeUsar = isMyOwnDungeonTurn && isConsumable && !bonusBloqueado;
-      const podeConjurar = isMyOwnDungeonTurn && isScroll && ehCaster;
+      const action = _bagActionState(item, player);
+      const { isScroll, isConsumable, isArremessavel, podeUsar, podeConjurar, podeArremessar } = action;
       // Arremessáveis de bolsa (frasco_oleo/fogo_grego): clique direito abre a mira.
-      const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
-        ? GS.CATALOGO_ITENS[item && item.id] : null;
-      const isArremessavel = !!(catDef && catDef.arremessavel);
       const isShortcutItem = !!item && (isConsumable || isScroll || isArremessavel);
-      const podeArremessar = isMyOwnDungeonTurn && isArremessavel && !player.action_done;
       if(isShortcutItem){
         slot.dataset.shortcutKind = 'item';
         slot.dataset.shortcutId = item.id;
@@ -356,17 +471,22 @@ const InventoryModal = (() => {
       }
       if(_selected && _selected.kind === 'bag' && _selected.index === i) slot.classList.add('selected');
       if(!_readOnly){
-        // Esquerdo: só seleciona/move (arrastar continua abaixo).
-        slot.onclick = () => { _onBagSlotClick(i); };
+        // Dois cliques/toques rápidos equipam automaticamente (ou usam um
+        // consumível). Um toque isolado preserva a seleção/movimentação.
+        slot.onclick = () => {
+          const now = performance.now();
+          if(item && _lastBagPress?.index === i && now - _lastBagPress.at <= QUICK_EQUIP_PRESS_MS){
+            _lastBagPress = null;
+            _quickEquipOrUseBagItem(i);
+            return;
+          }
+          _lastBagPress = item ? {index:i, at:now} : null;
+          _onBagSlotClick(i);
+        };
         // Direito: usar/ativar (regra única). preventDefault tira o menu do browser.
         slot.addEventListener('contextmenu', (e) => {
           e.preventDefault();
-          if(!item) return;
-          if(podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
-            close(); window._iniciarMiraArremesso(item, player); return;
-          }
-          if(podeConjurar){ close(); castarPergaminho(item); return; }
-          if(podeUsar){ useItem(item.id); return; }
+          _activateBagItem(i);
         });
       }
       if(!_readOnly){
@@ -408,7 +528,7 @@ const InventoryModal = (() => {
             <div class="inv-main">
               <div class="inv-header">
                 <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
-                <div class="inv-close" title="Fechar">✕</div>
+                <div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div>
               </div>
               <div class="inv-grid"></div>
               <div class="inv-gold">🪙 <span></span></div>
@@ -426,15 +546,20 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
     _renderBag(overlay, player);
+    _renderGamepadAction(overlay);
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
   }
 
   function _onGearSlotClick(slotKey, blocked){
     if(_readOnly || blocked) return;
+    _gamepadAction = null;
     if(_selected == null){
       const player = _currentPlayer();
-      if(player && player.gear && player.gear[slotKey]) _selected = { kind: 'gear', slotKey };
+      if(player && player.gear && player.gear[slotKey]){
+        _selected = { kind: 'gear', slotKey };
+      }
       refresh();
+      _focusSelectedSlot();
       return;
     }
     if(_selected.kind === 'gear' && _selected.slotKey === slotKey){ _selected = null; refresh(); return; }
@@ -443,10 +568,14 @@ const InventoryModal = (() => {
 
   function _onBagSlotClick(index){
     if(_readOnly) return;
+    _gamepadAction = null;
     if(_selected == null){
       const player = _currentPlayer();
-      if(player && player.bag && player.bag[index]) _selected = { kind: 'bag', index };
+      if(player && player.bag && player.bag[index]){
+        _selected = { kind: 'bag', index };
+      }
       refresh();
+      _focusSelectedSlot();
       return;
     }
     if(_selected.kind === 'bag' && _selected.index === index){ _selected = null; refresh(); return; }
@@ -454,7 +583,8 @@ const InventoryModal = (() => {
   }
 
   function _attemptMoveToGear(slotKey){
-    const sel = _selected; _selected = null;
+    const sel = _selected;
+    _gamepadAction = null;
     if(!sel || sel.kind === 'gear'){ refresh(); return; }   // gear→gear: sem suporte, ignora
     // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
     // o encaixe é o servidor, que já manda o item para o slot livre compatível.
@@ -465,12 +595,23 @@ const InventoryModal = (() => {
     const item = player && player.bag ? player.bag[sel.index] : null;
     if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
     const ehOffhand = slotKey === 'off_hand' && GS.isOffhandWeapon(item);
-    if(ehOffhand) GS.equipOffhand(sel.index);
-    else          GS.equipFromBag(sel.index);
+    const trocaBotaEmVoo = slotKey === 'boots'
+      && _botaAladaEmVoo(player, slotKey)
+      && !(item.id === 'bota_alada' || item.effect === 'voo');
+    const equipar = () => {
+      _selected = null;
+      if(ehOffhand) GS.equipOffhand(sel.index);
+      else          GS.equipFromBag(sel.index);
+    };
+    if(trocaBotaEmVoo){
+      _confirmarDesequiparBota(player, slotKey, equipar, () => { refresh(); });
+      return;
+    }
+    equipar();
   }
 
   function _attemptMoveToBag(toIndex){
-    const sel = _selected; _selected = null;
+    const sel = _selected;
     if(!sel){ refresh(); return; }
     if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     if(sel.kind === 'bag'){
@@ -478,6 +619,14 @@ const InventoryModal = (() => {
       else refresh();
       return;
     }
+    const player = _currentPlayer();
+    if(sel.kind === 'gear' && _botaAladaEmVoo(player, sel.slotKey)){
+      _confirmarDesequiparBota(player, sel.slotKey, () => {
+        _selected = null; _gamepadAction = null; GS.unequip(sel.slotKey);
+      }, () => { _gamepadAction = null; refresh(); });
+      return;
+    }
+    _selected = null; _gamepadAction = null;
     GS.unequip(sel.slotKey);   // sel.kind === 'gear'
   }
 
@@ -634,6 +783,16 @@ const InventoryModal = (() => {
       const slot = document.createElement('div');
       slot.className = 'storage-slot' + (item ? ' filled' : ' empty');
       slot.dataset.index = String(i);
+      // Os espaços do baú também participam da navegação do joystick. Um
+      // espaço vazio é um destino válido quando há item selecionado no herói;
+      // um espaço ocupado continua acessível para retirar o item.
+      slot.dataset.storageSlot = 'true';
+      slot.tabIndex = 0;
+      slot.setAttribute('role', 'button');
+      slot.setAttribute('data-gamepad-action', 'activate');
+      slot.setAttribute('aria-label', item
+        ? `${item.name || item.id || t('ui.bau.slot.padrao')} — ${t('ui.refugio.retirar')}`
+        : `${t('ui.inv.espaco_vazio')} — ${t('ui.refugio.guardar')}`);
       slot.title = item ? (item.name || item.id || t('ui.bau.slot.padrao')) : t('ui.inv.espaco_vazio');
       slot.innerHTML = item
         ? `<span class="storage-slot-icon">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}<small></small>`
@@ -751,6 +910,8 @@ const InventoryModal = (() => {
     _openPid  = (typeof GS !== 'undefined') ? GS.myPid : null;
     _readOnly = false;
     _selected = null;
+    _gamepadAction = null;
+    _lastBagPress = null;
     _render();
     requestAnimationFrame(() => {
       const overlay = document.getElementById('inv-modal-overlay');
@@ -765,10 +926,207 @@ const InventoryModal = (() => {
     if(!_storageCtx || _storageCtx.scope !== scope) return;
     _storageCtx = { scope, payload: payload || {} };
     _selected = null;
+    _gamepadAction = null;
+    _lastBagPress = null;
     _render();
   }
 
   function storageScope(){ return _storageCtx ? _storageCtx.scope : null; }
 
-  return { open, close, toggle, isOpen, refresh, openStorage, updateStorage, storageScope };
+  // Chamado por game.js quando o botão secundário do controle é pressionado
+  // sobre uma casa da bolsa. A seleção/equipamento continua no botão Confirmar.
+  function gamepadUseFocused(){
+    const focused = document.activeElement?.closest?.('[data-inventory-slot="bag"]');
+    if(!focused) return false;
+    return _activateBagItem(Number(focused.dataset.bagIndex));
+  }
+
+  function _gamepadFocusedSlot(){
+    const active = document.activeElement?.closest?.('[data-inventory-slot]');
+    return active || document.querySelector('#inv-modal-overlay .gamepad-focus[data-inventory-slot]');
+  }
+
+  function _gamepadRefreshSelected(){
+    refresh();
+    _focusSelectedSlot();
+  }
+
+  function _botaAladaEmVoo(player, slotKey){
+    if(slotKey !== 'boots') return false;
+    const item = player?.gear?.[slotKey];
+    const altura = Math.max(0, Math.trunc(Number(player?.altura) || 0));
+    return (item?.id === 'bota_alada' || item?.effect === 'voo') && altura > 0;
+  }
+
+  function _confirmarDesequiparBota(player, slotKey, onConfirm, onCancel){
+    if(!_botaAladaEmVoo(player, slotKey)){
+      onConfirm();
+      return;
+    }
+    if(document.getElementById('inv-unequip-flight-confirm')) return;
+    const altura = Math.max(0, Math.trunc(Number(player?.altura) || 0));
+    const faixa = typeof GS.faixaAlturaQueda === 'function' ? GS.faixaAlturaQueda(altura) : null;
+    const expressao = typeof GS.expressaoDanoQueda === 'function'
+      ? GS.expressaoDanoQueda(altura) : (faixa === 'alto' ? '6d6' : faixa === 'medio' ? '4d6' : '2d6');
+    const ov = document.createElement('div');
+    ov.id = 'inv-unequip-flight-confirm';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;'
+      + 'align-items:center;justify-content:center;z-index:1250;padding:16px;';
+    ov.innerHTML = '<div style="background:rgba(28,20,6,.98);border:1px solid #ff8b5c;'
+      + 'border-radius:12px;padding:22px 24px;max-width:360px;text-align:center;'
+      + 'box-shadow:0 8px 30px #000b;">'
+      + `<div style="color:#ffb36b;font-weight:700;font-size:1rem;margin-bottom:8px;">⚠️ ${t('ui.inv.desequipar_bota_alada_titulo')}</div>`
+      + `<div style="color:#e8dcc0;font-size:.82rem;line-height:1.45;margin-bottom:16px;">${t('ui.inv.desequipar_bota_alada_aviso', {altura, expressao})}</div>`
+      + '<div style="display:flex;gap:10px;">'
+      + `<button data-flight-cancel data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;background:rgba(40,32,16,.9);color:#cbbe9c;font-weight:700;cursor:pointer;">${t('ui.geral.cancelar')}</button>`
+      + `<button data-flight-confirm style="flex:1;padding:8px;border-radius:8px;border:1px solid #ff8b5c;background:rgba(100,42,20,.96);color:#ffd0aa;font-weight:700;cursor:pointer;">${t('ui.geral.confirmar')}</button>`
+      + '</div></div>';
+    let closed = false;
+    const close = () => {
+      if(closed) return false;
+      closed = true;
+      document.removeEventListener('keydown', onKey);
+      if(ov.parentNode) ov.parentNode.removeChild(ov);
+      return true;
+    };
+    const cancel = () => { if(close()) onCancel?.(); };
+    const confirm = () => { if(close()) onConfirm(); };
+    const onKey = e => {
+      if(e.key === 'Escape'){
+        e.preventDefault();
+        cancel();
+      }
+    };
+    ov.addEventListener('click', e => { if(e.target === ov) cancel(); });
+    document.body.appendChild(ov);
+    ov.querySelector('[data-flight-cancel]').onclick = cancel;
+    ov.querySelector('[data-flight-confirm]').onclick = confirm;
+    document.addEventListener('keydown', onKey);
+    if(typeof _gamepadFocusMapPoint === 'function')
+      _gamepadFocusMapPoint('#inv-unequip-flight-confirm [data-flight-confirm]', '#inv-unequip-flight-confirm [data-flight-cancel]');
+  }
+
+  // Confirmar no controle preserva o gesto de organizar inventário: primeiro
+  // toque seleciona, outro slot move/troca. No mesmo consumível, o segundo
+  // toque confirma a opção escolhida (por padrão, Usar).
+  function gamepadConfirmFocused(){
+    if(_readOnly || _storageCtx) return false;
+    const focused = _gamepadFocusedSlot();
+    if(!focused) return false;
+    const kind = focused.dataset.inventorySlot;
+    if(kind === 'bag'){
+      const index = Number(focused.dataset.bagIndex);
+      const player = _currentPlayer();
+      const item = player?.bag?.[index];
+      if(!_selected){
+        if(!item) return true;
+        _selected = {kind:'bag', index, gamepadSelectedAt: performance.now()};
+        _gamepadAction = _canOfferGamepadAction(index) ? {index, choice:'use'} : null;
+        _gamepadRefreshSelected();
+        return true;
+      }
+      if(_selected.kind === 'bag' && _selected.index === index){
+        if(_gamepadAction){
+          if(_gamepadAction.choice === 'cancel'){
+            _gamepadAction = null;
+            _gamepadRefreshSelected();
+            return true;
+          }
+          const used = _activateBagItem(index);
+          if(used){
+            _selected = null;
+            _gamepadAction = null;
+            if(isOpen()) refresh();
+          }
+          return true;
+        }
+        if(GS.slotCategoryForItem?.(item) !== 'bag'
+          && performance.now() - Number(_selected.gamepadSelectedAt || 0) <= QUICK_EQUIP_PRESS_MS){
+          _quickEquipOrUseBagItem(index);
+          return true;
+        }
+        _selected = null;
+        refresh();
+        return true;
+      }
+      _attemptMoveToBag(index);
+      return true;
+    }
+    if(kind === 'gear'){
+      const slotKey = focused.dataset.slotKey;
+      const player = _currentPlayer();
+      if(!_selected){
+        if(player?.gear?.[slotKey]) _selected = {kind:'gear', slotKey};
+        _gamepadAction = null;
+        _gamepadRefreshSelected();
+        return true;
+      }
+      if(_selected.kind === 'gear' && _selected.slotKey === slotKey){
+        _selected = null;
+        _gamepadAction = null;
+        refresh();
+        return true;
+      }
+      _attemptMoveToGear(slotKey);
+      return true;
+    }
+    return false;
+  }
+
+  // Qualquer direção do segundo analógico alterna as duas escolhas; isso evita
+  // exigir precisão horizontal/vertical e funciona igual em todos os layouts.
+  function gamepadCycleAction(){
+    if(!_gamepadAction) return false;
+    _gamepadAction.choice = _gamepadAction.choice === 'use' ? 'cancel' : 'use';
+    _gamepadRefreshSelected();
+    return true;
+  }
+
+  function gamepadActionOpen(){ return !!_gamepadAction; }
+
+  // Voltar é uma escada: primeiro fecha Usar/Cancelar, depois solta o item.
+  // Sem uma seleção ativa devolve false para que game.js feche o inventário.
+  function gamepadCancelSelection(){
+    if(!_selected) return false;
+    if(_gamepadAction){
+      _gamepadAction = null;
+      _gamepadRefreshSelected();
+      return true;
+    }
+    _selected = null;
+    refresh();
+    return true;
+  }
+
+  // Largar pelo controle exige que o item já esteja selecionado pelo botão
+  // Confirmar; assim um toque acidental no botão frontal superior não descarta
+  // o conteúdo da bolsa. O servidor continua escolhendo a casa adjacente livre.
+  function gamepadDropSelected(){
+    const sel = _selected;
+    const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
+    if(_readOnly || !sel || !gsNow || gsNow.phase !== 'playing') return false;
+    const player = _currentPlayer();
+    if(!player) return false;
+    if(sel.kind === 'bag'){
+      if(!player.bag?.[sel.index]) return false;
+      GS.dropItem('bag', sel.index);
+    } else if(sel.kind === 'gear'){
+      if(!player.gear?.[sel.slotKey]) return false;
+      if(_botaAladaEmVoo(player, sel.slotKey)){
+        _confirmarDesequiparBota(player, sel.slotKey, () => {
+          _selected = null;
+          GS.dropItem('gear', sel.slotKey);
+          close();
+        }, () => {});
+        return true;
+      }
+      GS.dropItem('gear', sel.slotKey);
+    } else return false;
+    _selected = null;
+    close();
+    return true;
+  }
+
+  return { open, close, toggle, isOpen, refresh, openStorage, updateStorage, storageScope,
+    gamepadUseFocused, gamepadConfirmFocused, gamepadCycleAction, gamepadActionOpen, gamepadCancelSelection, gamepadDropSelected };
 })();

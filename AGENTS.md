@@ -137,7 +137,11 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`
+`decor_loot`, `trap_result`, `fall_result`
+
+> `fall_result` é broadcast quando uma criatura voadora perde o controle do
+> voo e cai. A altura anterior define o dano físico: 1–3 = 2d6, 4–7 = 4d6,
+> 8–10 = 6d6. O pouso voluntário por `alterar_altura` não causa dano.
 
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz

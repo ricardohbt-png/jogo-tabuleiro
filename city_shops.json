@@ -75,6 +75,7 @@
       "helm_iron",
       "circlet",
       "boots",
+      "bota_alada",
       "amulet",
       "backpack",
       "veneno_aranha_sombria",
@@ -134,6 +135,7 @@
     ],
     "templo": [
       "agua_benta",
+      "magia_voo",
       "health_potion",
       "health_potion_small",
       "health_potion_concentrated",

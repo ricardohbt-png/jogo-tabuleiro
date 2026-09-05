@@ -2678,6 +2678,12 @@ window.EDITOR_CATALOG = {
           "descricao": "Atravessa quadrados ocupados, mas deve terminar o movimento em uma casa livre."
         },
         {
+          "id": "voo",
+          "name": "Voo",
+          "action_type": "passiva",
+          "descricao": "Move-se no ar na altura 2; ataques à distância consideram a diferença vertical."
+        },
+        {
           "id": "turbilhao",
           "name": "Turbilhão",
           "action_type": "acao",
@@ -2711,6 +2717,12 @@ window.EDITOR_CATALOG = {
       "ai_type": "agressivo",
       "undead": false,
       "subtipo": "construto",
+      "voo": true,
+      "altura_inicial": 2,
+      "altura_max": 10,
+      "pode_alterar_altura": true,
+      "custo_mov_altura": 1,
+      "ignora_obstaculos_voo": false,
       "percepcao": 13
     },
     {
@@ -5318,9 +5330,330 @@ window.EDITOR_CATALOG = {
       "undead": false,
       "subtipo": "besta_magica",
       "percepcao": 13
+    },
+    {
+      "type": "medusa",
+      "name": "Medusa",
+      "emoji": "🐍",
+      "boss": false,
+      "tier": 5,
+      "cr": 5,
+      "hp": 43,
+      "ac": 15,
+      "natural_armor": 3,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "medusa",
+      "str_": 10,
+      "dex": 15,
+      "con_": 16,
+      "int_": 12,
+      "fort": 5,
+      "ref_": 4,
+      "will": 4,
+      "attacks": [
+        {
+          "name": "Arco Longo",
+          "atk_bonus": 5,
+          "damage": "1d8+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "range": 10,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        },
+        {
+          "name": "Adaga",
+          "atk_bonus": 5,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": null
+        },
+        {
+          "name": "Cobras do Cabelo",
+          "atk_bonus": 5,
+          "damage": "1d4+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "olhar_petrificante",
+          "name": "Olhar Petrificante",
+          "action_type": "passiva",
+          "save": "vontade",
+          "dc": 15,
+          "descricao": "Sempre ativo. Uma criatura que veja a Medusa testa Vontade; falha gera uma marca de Petrificação e sucesso uma marca de Resistência. Três marcas de Petrificação petrificam; três de Resistência encerram o efeito."
+        },
+        {
+          "id": "veneno_medusa",
+          "name": "Veneno da Medusa",
+          "action_type": "passiva",
+          "poison_dc": 15,
+          "descricao": "Fortitude CD 15; falha: +2d4 de veneno e -2 FOR/-2 CON por 1d6 rodadas; sucesso: +2 de veneno. O efeito não acumula e reinicia sua duração."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "medusa",
+      "undead": false,
+      "subtipo": "besta_magica",
+      "percepcao": 13
+    },
+    {
+      "type": "grande_medusa",
+      "name": "Grande Medusa",
+      "emoji": "🐍",
+      "boss": false,
+      "tier": 7,
+      "cr": 7,
+      "hp": 72,
+      "ac": 15,
+      "natural_armor": 3,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "medusa",
+      "str_": 10,
+      "dex": 15,
+      "con_": 16,
+      "int_": 12,
+      "fort": 5,
+      "ref_": 4,
+      "will": 4,
+      "attacks": [
+        {
+          "name": "Arco Longo",
+          "atk_bonus": 5,
+          "damage": "1d8+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "range": 10,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        },
+        {
+          "name": "Adaga",
+          "atk_bonus": 5,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": null
+        },
+        {
+          "name": "Cobras do Cabelo",
+          "atk_bonus": 5,
+          "damage": "1d4+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "olhar_petrificante",
+          "name": "Olhar Petrificante",
+          "action_type": "passiva",
+          "save": "vontade",
+          "dc": 15,
+          "descricao": "Sempre ativo; acumula marcas de Petrificação ou Resistência enquanto a criatura vê a Medusa."
+        },
+        {
+          "id": "veneno_medusa",
+          "name": "Veneno da Medusa",
+          "action_type": "passiva",
+          "poison_dc": 15,
+          "descricao": "Fortitude CD 15; falha: +2d4 de veneno e -2 FOR/-2 CON por 1d6 rodadas; sucesso: +2 de veneno."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "medusa",
+      "undead": false,
+      "subtipo": "besta_magica",
+      "percepcao": 13
+    },
+    {
+      "type": "grande_gorgona",
+      "name": "Grande Gorgona",
+      "emoji": "🐍",
+      "boss": false,
+      "tier": 9,
+      "cr": 9,
+      "hp": 127,
+      "ac": 15,
+      "natural_armor": 3,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "medusa",
+      "str_": 10,
+      "dex": 15,
+      "con_": 16,
+      "int_": 12,
+      "fort": 5,
+      "ref_": 4,
+      "will": 4,
+      "attacks": [
+        {
+          "name": "Arco Longo",
+          "atk_bonus": 5,
+          "damage": "1d8+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "range": 10,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        },
+        {
+          "name": "Adaga",
+          "atk_bonus": 5,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": null
+        },
+        {
+          "name": "Cobras do Cabelo",
+          "atk_bonus": 5,
+          "damage": "1d4+3",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante",
+          "on_hit": "veneno_medusa",
+          "poison_dc": 15
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "olhar_petrificante",
+          "name": "Olhar Petrificante",
+          "action_type": "passiva",
+          "save": "vontade",
+          "dc": 16,
+          "descricao": "Sempre ativo; CD 16. Acumula marcas de Petrificação ou Resistência enquanto a criatura vê a Gorgona."
+        },
+        {
+          "id": "veneno_medusa",
+          "name": "Veneno da Medusa",
+          "action_type": "passiva",
+          "poison_dc": 15,
+          "descricao": "Fortitude CD 15; falha: +2d4 de veneno e -2 FOR/-2 CON por 1d6 rodadas; sucesso: +2 de veneno."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "medusa",
+      "undead": false,
+      "subtipo": "besta_magica",
+      "percepcao": 13
     }
   ],
   "monster_abilities": [
+    {
+      "id": "agarrar_aereo",
+      "source": "monstro",
+      "name": "Agarrão Aéreo",
+      "icon": "🦅",
+      "action_type": "passiva",
+      "dc": 14,
+      "save": "forca",
+      "escape_saves": [
+        "forca"
+      ],
+      "max_targets": 1,
+      "automatic_damage": "1d4+2",
+      "damage_types": [
+        "physical"
+      ],
+      "damage_threshold": 5,
+      "height_loss_per_threshold": 1,
+      "descricao": "Ao acertar uma garra, Força CD 14 ou fica preso. A presa acompanha a Harpia horizontal e verticalmente; sofre 1d4+2 automático no início do turno dela. Cada 5 dano recebido pela Harpia reduz sua altura em 1. Escapar ou ser solto provoca queda."
+    },
+    {
+      "id": "soltar_presa",
+      "source": "monstro",
+      "name": "Soltar Presa",
+      "icon": "🪶",
+      "action_type": "acao_livre",
+      "ai_release_height": 4,
+      "descricao": "Ação livre. Solta a criatura agarrada; ela sofre dano de queda conforme a altura atual."
+    },
+    {
+      "id": "investida_poderosa_minotauro",
+      "source": "monstro",
+      "name": "Investida Poderosa",
+      "icon": "🐂",
+      "action_type": "passiva",
+      "move_required": 3,
+      "damage": "4d6+6",
+      "attack_bonus": 4,
+      "descricao": "Após mover pelo menos 3 casas, faz um único ataque de chifres (4d6+6) e não realiza outros ataques no turno."
+    },
+    {
+      "id": "faro_implacavel_minotauro",
+      "source": "monstro",
+      "name": "Faro Implacável",
+      "icon": "👃",
+      "action_type": "passiva",
+      "descricao": "Heróis não conseguem se esconder do minotauro com invisibilidade ou habilidades de furtividade do Ladino."
+    },
     {
       "id": "amaldicoar_monstro",
       "source": "monstro",
@@ -5851,6 +6184,13 @@ window.EDITOR_CATALOG = {
       "name": "Velocidade do Vento",
       "action_type": "passiva",
       "descricao": "Atravessa quadrados ocupados, mas deve terminar o movimento em uma casa livre.",
+      "source": "monstro"
+    },
+    {
+      "id": "voo",
+      "name": "Voo",
+      "action_type": "passiva",
+      "descricao": "Move-se no ar na altura 2; ataques à distância consideram a diferença vertical.",
       "source": "monstro"
     },
     {
@@ -6448,6 +6788,23 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "olhar_petrificante",
+      "name": "Olhar Petrificante",
+      "action_type": "passiva",
+      "save": "vontade",
+      "dc": 15,
+      "descricao": "Sempre ativo. Uma criatura que veja a Medusa testa Vontade; falha gera uma marca de Petrificação e sucesso uma marca de Resistência. Três marcas de Petrificação petrificam; três de Resistência encerram o efeito.",
+      "source": "monstro"
+    },
+    {
+      "id": "veneno_medusa",
+      "name": "Veneno da Medusa",
+      "action_type": "passiva",
+      "poison_dc": 15,
+      "descricao": "Fortitude CD 15; falha: +2d4 de veneno e -2 FOR/-2 CON por 1d6 rodadas; sucesso: +2 de veneno. O efeito não acumula e reinicia sua duração.",
+      "source": "monstro"
+    },
+    {
       "id": "hero_warrior_mira_certeira",
       "source": "heroi",
       "source_id": "mira_certeira",
@@ -6774,6 +7131,76 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao",
       "uses_per_day": 1,
       "cooldown_turns": 0
+    },
+    {
+      "id": "guild_tecnica_investida",
+      "source": "guilda",
+      "source_id": "tecnica_investida",
+      "name": "Investida Heroica",
+      "icon": "⚡",
+      "action_type": "acao",
+      "monster_effect": "investida_heroica_minotauro",
+      "movement_multiplier": 2,
+      "damage_bonus": 2,
+      "uses_per_day": null,
+      "cooldown_turns": 2,
+      "descricao": "Dobra o deslocamento do turno e concede +2 de dano ao próximo ataque."
+    },
+    {
+      "id": "guild_tecnica_pressao_constante",
+      "source": "guilda",
+      "source_id": "tecnica_pressao_constante",
+      "name": "Pressão Constante",
+      "icon": "😖",
+      "action_type": "acao",
+      "monster_effect": "pressao_constante_minotauro",
+      "ca_penalty": 2,
+      "duration_rounds": 2,
+      "uses_per_day": null,
+      "cooldown_turns": 4,
+      "descricao": "Um herói adjacente sofre -2 de CA por 2 rodadas."
+    },
+    {
+      "id": "guild_tecnica_instinto_sobrevivencia",
+      "source": "guilda",
+      "source_id": "tecnica_instinto_sobrevivencia",
+      "name": "Instinto de Sobrevivência",
+      "icon": "🍀",
+      "action_type": "passiva",
+      "monster_effect": "instinto_sobrevivencia_minotauro",
+      "uses_per_day": null,
+      "cooldown_turns": 10,
+      "descricao": "Quando um dano reduziria o minotauro a 0 PV, ele permanece com 1 PV."
+    },
+    {
+      "id": "guild_tecnica_ultimo_esforco",
+      "source": "guilda",
+      "source_id": "tecnica_ultimo_esforco",
+      "name": "Último Esforço",
+      "icon": "🔥",
+      "action_type": "passiva",
+      "monster_effect": "ultimo_esforco_minotauro",
+      "uses_per_day": null,
+      "cooldown_turns": 10,
+      "descricao": "Quando um dano reduziria o minotauro a 0 PV, ele permanece com 1 PV por 2 turnos; nesse período tem vantagem e todo acerto é crítico, não pode ser curado e depois morre."
+    },
+    {
+      "id": "comando",
+      "source": "monstro",
+      "name": "Comando",
+      "icon": "🗣️",
+      "action_type": "magia",
+      "uses_per_combat": 3,
+      "descricao": "Magia de controle mental; 3 usos por encontro."
+    },
+    {
+      "id": "sono",
+      "source": "monstro",
+      "name": "Sono",
+      "icon": "💤",
+      "action_type": "magia",
+      "uses_per_combat": 1,
+      "descricao": "Magia de área; 1 uso por encontro."
     },
     {
       "id": "hero_warrior_furia_berserker",
@@ -7278,34 +7705,12 @@ window.EDITOR_CATALOG = {
       "guild_category": "tecnica"
     },
     {
-      "id": "guild_tecnica_investida",
-      "source": "guilda",
-      "source_id": "tecnica_investida",
-      "name": "Investida Heroica",
-      "icon": "✦",
-      "descricao": "Dobra o movimento; se andar ≥2 casas em linha reta, o próximo ataque corpo a corpo tem vantagem +2 dano.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
-    },
-    {
       "id": "guild_tecnica_defesa_impecavel",
       "source": "guilda",
       "source_id": "tecnica_defesa_impecavel",
       "name": "Defesa Impecável",
       "icon": "✦",
       "descricao": "Até o próximo turno, ataques contra você têm desvantagem e você fica imune a Ataque Furtivo.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
-    },
-    {
-      "id": "guild_tecnica_pressao_constante",
-      "source": "guilda",
-      "source_id": "tecnica_pressao_constante",
-      "name": "Pressão Constante",
-      "icon": "✦",
-      "descricao": "Um inimigo adjacente sofre -2 de CA por 2 rodadas.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -7383,28 +7788,6 @@ window.EDITOR_CATALOG = {
       "name": "Oportunidade",
       "icon": "✦",
       "descricao": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma ação extra — mover mais, atacar de novo, usar a habilidade de classe de novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
-    },
-    {
-      "id": "guild_tecnica_instinto_sobrevivencia",
-      "source": "guilda",
-      "source_id": "tecnica_instinto_sobrevivencia",
-      "name": "Instinto de Sobrevivência",
-      "icon": "✦",
-      "descricao": "Automática. Se um dano zeraria seu HP, você fica com 1 em vez de morrer. Depois disso, entra em recarga.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "guild_category": "tecnica"
-    },
-    {
-      "id": "guild_tecnica_ultimo_esforco",
-      "source": "guilda",
-      "source_id": "tecnica_ultimo_esforco",
-      "name": "Último Esforço",
-      "icon": "✦",
-      "descricao": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 turnos seguidos: todo ataque tem vantagem e todo acerto é crítico (nat20 → dano TRIPLICADO). Não pode se curar. Ao final, cai como se tivesse morrido normalmente (pode ser reerguido por Ressurreição).",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -8752,6 +9135,39 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_medusa",
+      "source": "guilda",
+      "source_id": "lenda_medusa",
+      "name": "Lenda: Medusa",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Medusa.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_grande_medusa",
+      "source": "guilda",
+      "source_id": "lenda_grande_medusa",
+      "name": "Lenda: Grande Medusa",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Grande Medusa.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_grande_gorgona",
+      "source": "guilda",
+      "source_id": "lenda_grande_gorgona",
+      "name": "Lenda: Grande Gorgona",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Grande Gorgona.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "arremesso_bruto",
       "source": "arma",
       "name": "Arremesso Bruto",
@@ -8802,6 +9218,19 @@ window.EDITOR_CATALOG = {
       "descricao": "3d4+2d4/2níveis sem save. Fortitude ou paralisado 1-2 rodadas.",
       "save": "fortitude",
       "dano_base": "3d4",
+      "alcance_base": 3
+    },
+    {
+      "id": "voo",
+      "nome": "Voo",
+      "circulo": "primeiro",
+      "classe": [
+        "mage",
+        "cleric"
+      ],
+      "icone": "🪽",
+      "tipo": "alvo_aliado",
+      "descricao": "Ativa Voo em um aliado: alcance 3 quadrados +1 a cada 3 níveis de conjurador; altura inicial 2, máxima 10.",
       "alcance_base": 3
     },
     {
@@ -9140,6 +9569,20 @@ window.EDITOR_CATALOG = {
       "save": "reflexos",
       "dano_por_nivel": "1d6+1",
       "alcance": 6
+    },
+    {
+      "id": "olhar_petrificante",
+      "nome": "Olhar Petrificante",
+      "circulo": "quarto",
+      "classe": [
+        "mage",
+        "cleric"
+      ],
+      "icone": "👁️",
+      "tipo": "buff_self",
+      "descricao": "O alvo que tiver o conjurador em sua visão testa Vontade. Faz um teste inicial, dois por turno enquanto o conjurador permanecer visível e até cinco testes finais após perdê-lo de vista. Três falhas petrificam permanentemente; três sucessos encerram o efeito.",
+      "save": "vontade",
+      "duracao": "1d4"
     }
   ],
   "items": [
@@ -9248,6 +9691,7 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
+      "throw_range": 3,
       "categoria": "perfurante",
       "descricao": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
     },
@@ -9278,6 +9722,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
+      "throw_range": 4,
       "categoria": "perfurante",
       "descricao": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
     },
@@ -9339,6 +9784,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
@@ -9360,8 +9806,9 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
+      "throw_range": 4,
       "categoria": "perfurante",
-      "descricao": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente."
+      "descricao": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
     },
     {
       "id": "longsword",
@@ -9472,6 +9919,7 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
+      "throw_range": 3,
       "categoria": "perfurante",
       "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
@@ -9492,6 +9940,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
+      "throw_range": 4,
       "categoria": "perfurante",
       "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
@@ -9531,6 +9980,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "descricao": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -9542,8 +9992,9 @@ window.EDITOR_CATALOG = {
       "die": "1d8",
       "stat": "str_",
       "reach": "lanca",
+      "throw_range": 4,
       "categoria": "perfurante",
-      "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "longsword_prata",
@@ -9874,6 +10325,16 @@ window.EDITOR_CATALOG = {
       "item_slot": "head",
       "effect": "maxhp",
       "value": 4
+    },
+    {
+      "id": "bota_alada",
+      "name": "Bota Alada",
+      "emoji": "🪽",
+      "kind": "boots",
+      "item_slot": "boots",
+      "effect": "voo",
+      "value": 0,
+      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
     },
     {
       "id": "boots",
@@ -10365,6 +10826,17 @@ window.EDITOR_CATALOG = {
       "nome": "Buraco",
       "icone": "🕳️",
       "cr": 0.1,
+      "descricao": "Reflexos dif 10 ou perde o movimento. Permanece ativa.",
+      "dificuldade": 10,
+      "save": "reflexos",
+      "custo_ouro": 0,
+      "persiste": true,
+      "visivel_apos": true,
+      "efeitos": [
+        {
+          "tipo": "perder_movimento"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10372,6 +10844,21 @@ window.EDITOR_CATALOG = {
       "nome": "Armadilha de Urso",
       "icone": "🪤",
       "cr": 0.25,
+      "descricao": "1d4 de dano + perde movimento. Some após ativar.",
+      "dificuldade": 10,
+      "save": "reflexos",
+      "custo_ouro": 1,
+      "persiste": false,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "1d4",
+          "elemento": "fisico"
+        },
+        {
+          "tipo": "perder_movimento"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10379,6 +10866,22 @@ window.EDITOR_CATALOG = {
       "nome": "Fosso com Estacas",
       "icone": "⛏️",
       "cr": 0.35,
+      "descricao": "1d6 de dano + perde movimento. Fica visível após ativar.",
+      "dificuldade": 10,
+      "save": "reflexos",
+      "custo_ouro": 2,
+      "persiste": true,
+      "visivel_apos": true,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "1d6",
+          "elemento": "fisico"
+        },
+        {
+          "tipo": "perder_movimento"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10386,6 +10889,16 @@ window.EDITOR_CATALOG = {
       "nome": "Rede",
       "icone": "🕸️",
       "cr": 0.15,
+      "descricao": "Perde a rodada inteira. Some após ativar.",
+      "dificuldade": 11,
+      "save": "reflexos",
+      "custo_ouro": 4,
+      "persiste": false,
+      "efeitos": [
+        {
+          "tipo": "perder_rodada"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10393,6 +10906,31 @@ window.EDITOR_CATALOG = {
       "nome": "Armadilha Incendiária",
       "icone": "🔥",
       "cr": 0.5,
+      "descricao": "Dano de fogo progressivo: 1d6 + 1d4 + 1 em 3 rodadas.",
+      "dificuldade": 12,
+      "save": "reflexos",
+      "custo_ouro": 10,
+      "persiste": false,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "1d6",
+          "elemento": "fogo",
+          "rodada": 1
+        },
+        {
+          "tipo": "dano",
+          "valor": "1d4",
+          "elemento": "fogo",
+          "rodada": 2
+        },
+        {
+          "tipo": "dano",
+          "valor": "1",
+          "elemento": "fogo",
+          "rodada": 3
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10400,6 +10938,21 @@ window.EDITOR_CATALOG = {
       "nome": "Mina Terrestre",
       "icone": "💣",
       "cr": 0.75,
+      "descricao": "2d6 de dano em área de 1 quadrado. Save reduz à metade.",
+      "dificuldade": 12,
+      "save": "reflexos",
+      "save_reduz": true,
+      "custo_ouro": 20,
+      "persiste": false,
+      "area": 1,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "2d6",
+          "elemento": "explosao",
+          "area": true
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10407,6 +10960,23 @@ window.EDITOR_CATALOG = {
       "nome": "Fosso com Estacas Envenenadas",
       "icone": "☠️",
       "cr": 0.5,
+      "descricao": "1d6 de dano + efeito do veneno usado. Fica visível após ativar.",
+      "dificuldade": 10,
+      "save": "reflexos",
+      "custo_ouro": 2,
+      "persiste": true,
+      "visivel_apos": true,
+      "custo_veneno": true,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "1d6",
+          "elemento": "fisico"
+        },
+        {
+          "tipo": "veneno"
+        }
+      ],
       "precisa_veneno": true
     },
     {
@@ -10414,14 +10984,43 @@ window.EDITOR_CATALOG = {
       "nome": "Lâmina Escondida",
       "icone": "🗡️",
       "cr": 0.55,
-      "precisa_veneno": false,
-      "permite_veneno": true
+      "descricao": "Reflexos CD 15 evita a lâmina. Na falha, sofre 1d8 de dano e o veneno combinado.",
+      "dificuldade": 15,
+      "save": "reflexos",
+      "custo_ouro": 8,
+      "persiste": false,
+      "permite_veneno": true,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "1d8",
+          "elemento": "fisico"
+        },
+        {
+          "tipo": "veneno"
+        }
+      ],
+      "precisa_veneno": false
     },
     {
       "tipo": "lamina_pendulo",
       "nome": "Lâmina Pêndulo",
       "icone": "🗡️",
       "cr": 0.7,
+      "descricao": "Reflexos CD 14 evita a lâmina. Na falha, sofre 2d6 de dano. Após ativar, permanece perigosa por 3 rodadas.",
+      "dificuldade": 14,
+      "save": "reflexos",
+      "custo_ouro": 12,
+      "persiste": true,
+      "visivel_apos": true,
+      "duracao_rodadas": 3,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "2d6",
+          "elemento": "fisico"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10429,6 +11028,20 @@ window.EDITOR_CATALOG = {
       "nome": "Nuvem de Gás",
       "icone": "🌫️",
       "cr": 0.4,
+      "descricao": "-1d6 CON por 3 rodadas em área. Recalcula HP.",
+      "dificuldade": 13,
+      "save": "fortitude",
+      "custo_ouro": 25,
+      "persiste": false,
+      "area": 1,
+      "efeitos": [
+        {
+          "tipo": "reduzir_con",
+          "valor": "1d6",
+          "duracao": 3,
+          "area": true
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10436,6 +11049,13 @@ window.EDITOR_CATALOG = {
       "nome": "Câmara de Gás",
       "icone": "☠️",
       "cr": 0.9,
+      "descricao": "Ao entrar no quadrado, libera gás pela sala. Fortitude CD 13 a cada turno; na falha, sofre 1d6 de dano. Permanece ativa por 1d6+1 rodadas.",
+      "dificuldade": 13,
+      "save": "fortitude",
+      "custo_ouro": 30,
+      "dano": "1d6",
+      "persiste": false,
+      "special": "camara_gas",
       "precisa_veneno": false
     },
     {
@@ -10443,6 +11063,13 @@ window.EDITOR_CATALOG = {
       "nome": "Jato de Ácido",
       "icone": "🧪",
       "cr": 0.8,
+      "descricao": "Reflexos CD 18 evita o jato. Na falha, sofre 2d6 de dano, uma peça equipada sofre 1 nível de corrosão e metade do dano volta na rodada seguinte.",
+      "dificuldade": 18,
+      "save": "reflexos",
+      "custo_ouro": 15,
+      "dano": "2d6",
+      "persiste": false,
+      "special": "jato_acido",
       "precisa_veneno": false
     },
     {
@@ -10450,6 +11077,14 @@ window.EDITOR_CATALOG = {
       "nome": "Teto Esmagador",
       "icone": "🪨",
       "cr": 1.0,
+      "descricao": "Ao ser ativado, o teto desaba sobre toda a sala. Reflexos CD 20 evita; na falha, sofre 4d6 de dano.",
+      "dificuldade": 20,
+      "save": "reflexos",
+      "custo_ouro": 30,
+      "dano": "4d6",
+      "persiste": false,
+      "area_sala": true,
+      "special": "teto_esmagador",
       "precisa_veneno": false
     },
     {
@@ -10457,14 +11092,34 @@ window.EDITOR_CATALOG = {
       "nome": "Baú Engolidor",
       "icone": "📦",
       "cr": 1.0,
-      "precisa_veneno": false,
-      "apenas_objeto": true
+      "descricao": "Reflexos CD 20 evita. Na falha, fica preso dentro do objeto e só escapa com Força CD 20.",
+      "dificuldade": 20,
+      "save": "reflexos",
+      "custo_ouro": 35,
+      "persiste": false,
+      "special": "bau_engolidor",
+      "escape_save": "forca",
+      "escape_dificuldade": 20,
+      "apenas_objeto": true,
+      "precisa_veneno": false
     },
     {
       "tipo": "guilhotina",
       "nome": "Guilhotina",
       "icone": "🪓",
       "cr": 0.8,
+      "descricao": "Reflexos CD 14 evita a lâmina. Na falha, sofre 3d6 de dano.",
+      "dificuldade": 14,
+      "save": "reflexos",
+      "custo_ouro": 18,
+      "persiste": false,
+      "efeitos": [
+        {
+          "tipo": "dano",
+          "valor": "3d6",
+          "elemento": "fisico"
+        }
+      ],
       "precisa_veneno": false
     },
     {
@@ -10472,6 +11127,13 @@ window.EDITOR_CATALOG = {
       "nome": "Fosso",
       "icone": "🕳️",
       "cr": 0.45,
+      "descricao": "Reflexos CD 15 evita. Na falha, sofre 1d6 de dano, perde o movimento e a próxima rodada; fica oculto e protegido enquanto estiver no fosso.",
+      "dificuldade": 15,
+      "save": "reflexos",
+      "custo_ouro": 8,
+      "dano": "1d6",
+      "persiste": false,
+      "special": "fosso",
       "precisa_veneno": false
     },
     {
@@ -10479,6 +11141,11 @@ window.EDITOR_CATALOG = {
       "nome": "Armadilha de Teletransporte",
       "icone": "🌀",
       "cr": 0.4,
+      "descricao": "Vontade CD 12 ou é teleportado para a saída configurada.",
+      "dificuldade": 12,
+      "save": "vontade",
+      "persiste": false,
+      "special": "teletransporte",
       "precisa_veneno": false
     },
     {
@@ -10486,6 +11153,12 @@ window.EDITOR_CATALOG = {
       "nome": "Armadilha de Dardos Envenenados",
       "icone": "🎯",
       "cr": 0.4,
+      "descricao": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido.",
+      "dificuldade": 0,
+      "save": "fortitude",
+      "dano": "1d4",
+      "persiste": false,
+      "special": "dardos_envenenados",
       "precisa_veneno": true
     },
     {
@@ -10493,6 +11166,11 @@ window.EDITOR_CATALOG = {
       "nome": "Armadilha de Maldição",
       "icone": "☠️",
       "cr": 0.75,
+      "descricao": "Vontade CD configurada ou recebe uma maldição específica ou aleatória.",
+      "dificuldade": 13,
+      "save": "vontade",
+      "persiste": false,
+      "special": "maldicao",
       "precisa_veneno": false
     }
   ],
@@ -10512,6 +11190,10 @@ window.EDITOR_CATALOG = {
     {
       "id": "veneno_basilisco",
       "name": "Peçonha do Basilisco"
+    },
+    {
+      "id": "veneno_medusa",
+      "name": "Veneno da Medusa"
     },
     {
       "id": "veneno_polvo_abissal",
@@ -10792,6 +11474,82 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "tumba_lapide",
+      "nome": "Tumba com lápide",
+      "emoji": "⚰️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "tumba_lapide.png"
+    },
+    {
+      "type": "lapide",
+      "nome": "Lápide",
+      "emoji": "🪦",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "lapide.png"
+    },
+    {
+      "type": "cripta",
+      "nome": "Cripta",
+      "emoji": "⚰️",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cripta.png"
+    },
+    {
+      "type": "fonte_de_parede",
+      "nome": "Fonte de parede",
+      "emoji": "⛲",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": "fountain",
+      "image": "fonte_de_parede.png",
+      "charges": 2
+    },
+    {
+      "type": "armadura",
+      "nome": "Armadura",
+      "emoji": "🛡️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "armadura.png"
+    },
+    {
       "type": "mesa_cadeiras",
       "nome": "Mesa com cadeiras",
       "emoji": "🪑",
@@ -10819,7 +11577,7 @@ window.EDITOR_CATALOG = {
       "pisavel": false,
       "loot_capaz": true,
       "special": null,
-      "image": null
+      "image": "estante_armas_cranios.png"
     },
     {
       "type": "carroca",
@@ -10834,7 +11592,7 @@ window.EDITOR_CATALOG = {
       "pisavel": false,
       "loot_capaz": true,
       "special": null,
-      "image": null
+      "image": "carroca.png"
     },
     {
       "type": "coluna",
@@ -10957,6 +11715,21 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "prisao",
+      "nome": "Prisão",
+      "emoji": "⛓️",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": null
+    },
+    {
       "type": "grades_prisao",
       "nome": "Grades de prisão",
       "emoji": "🚧",
@@ -10995,11 +11768,11 @@ window.EDITOR_CATALOG = {
         2
       ],
       "gira": true,
-      "alto": false,
+      "alto": true,
       "pisavel": false,
-      "loot_capaz": true,
+      "loot_capaz": false,
       "special": null,
-      "image": null
+      "image": "mesa_tortura.png"
     },
     {
       "type": "mesa_quimica",
@@ -11090,6 +11863,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "casa.png"
+    },
+    {
+      "type": "brasa_chao",
+      "nome": "Brasa no chão",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "brasa_chao.png"
     },
     {
       "type": "chao",

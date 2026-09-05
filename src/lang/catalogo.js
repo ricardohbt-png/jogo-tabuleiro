@@ -1882,6 +1882,14 @@ window.LANG_CATALOGO = {
     "en": "Swift Boots",
     "pt": "Botas Velozes"
   },
+  "cat.item.bota_alada.desc": {
+    "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
+    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
+  },
+  "cat.item.bota_alada.nome": {
+    "en": "Winged Boot",
+    "pt": "Bota Alada"
+  },
   "cat.item.bordao.desc": {
     "en": "",
     "pt": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
@@ -2272,7 +2280,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lanca.desc": {
     "en": "",
-    "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente."
+    "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
   },
   "cat.item.lanca.nome": {
     "en": "Spear",
@@ -2296,7 +2304,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lanca_prata.desc": {
     "en": "",
-    "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_prata.nome": {
     "en": "Silver Spear",
@@ -2401,6 +2409,14 @@ window.LANG_CATALOGO = {
   "cat.item.machado_orc_prata.nome": {
     "en": "Silver Orcish War Axe",
     "pt": "Machado de Guerra Órquico de Prata"
+  },
+  "cat.item.magia_voo.desc": {
+    "en": "",
+    "pt": "Aprende a magia Voo, que permite controlar a altura do alvo até 10."
+  },
+  "cat.item.magia_voo.nome": {
+    "en": "",
+    "pt": "Voo"
   },
   "cat.item.mangual.desc": {
     "en": "",
@@ -2822,6 +2838,14 @@ window.LANG_CATALOGO = {
     "en": "Darkvision",
     "pt": "Visão no Escuro"
   },
+  "cat.magia.voo.desc": {
+    "en": "",
+    "pt": "Ativa Voo em um aliado: alcance 3 quadrados +1 a cada 3 níveis de conjurador; altura inicial 2, máxima 10."
+  },
+  "cat.magia.voo.nome": {
+    "en": "",
+    "pt": "Voo"
+  },
   "cat.monstro.aranha_sombria.nome": {
     "en": "Shadow Spider",
     "pt": "Aranha Sombria"
@@ -2982,6 +3006,10 @@ window.LANG_CATALOGO = {
     "en": "Grotão",
     "pt": "Grotão"
   },
+  "cat.monstro.harpia.nome": {
+    "en": "",
+    "pt": "Harpia"
+  },
   "cat.monstro.kobold_besteiro.nome": {
     "en": "Kobold Crossbowman",
     "pt": "Kobold Besteiro"
@@ -3021,6 +3049,14 @@ window.LANG_CATALOGO = {
   "cat.monstro.lorde_vampiro.nome": {
     "en": "Vampire Lord",
     "pt": "Lorde Vampiro"
+  },
+  "cat.monstro.minotauro.nome": {
+    "en": "",
+    "pt": "Minotauro"
+  },
+  "cat.monstro.minotauro_elite.nome": {
+    "en": "",
+    "pt": "Minotauro de Elite"
   },
   "cat.monstro.molochus_adulto.nome": {
     "en": "Adult Molochus",

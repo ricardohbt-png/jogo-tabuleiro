@@ -228,6 +228,16 @@ window.VC = {
         },
       },
     },
+
+    // Estátua (status "petrificado"): cinza AMARRONZADO de pedra, não cinza
+    // neutro. O desvio para o marrom é o que faz o peão ler como "virou
+    // estátua" em vez de "ficou em preto e branco". Fonte única do tom: o
+    // peão 2D usa o filtro de canvas e o 3D usa a cor/emissiva do material.
+    petrificacao: {
+      cor:      [0.44, 0.375, 0.30],
+      emissiva: [0.030, 0.025, 0.019],
+      filtro2D: 'grayscale(1) sepia(0.60) brightness(0.88)',
+    },
   },
 
   // ── Typography ─────────────────────────────────────────────────────────────

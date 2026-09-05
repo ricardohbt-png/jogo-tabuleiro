@@ -14,6 +14,8 @@ def main():
     pesada = {"gear": {"armor": {"armor_category": "pesada"}}}
     natural = {"natural_armor": 3}
     erratico = {"natural_armor": 3, "special_abilities": [{"id": "movimento_erratico"}]}
+    voador = {"voo": True, "altura": 2,
+              "gear": {"armor": {"armor_category": "pesada"}}}
 
     checks = [
         (room._water_step_cost(sem_armadura, 1, 1) == 2, "água sem armadura = 2"),
@@ -26,6 +28,12 @@ def main():
         (room._water_step_cost(natural, 2, 2) == 4, "natural em profunda = 4"),
         (room._water_step_cost(erratico, 1, 1) == 1 and room._water_step_cost(erratico, 2, 2) == 1,
          "Movimento Errático ignora água"),
+        (room._water_step_cost(voador, 1, 1) == 1
+         and room._water_step_cost(voador, 2, 2) == 1
+         and room._water_step_cost(voador, 3, 3) == 1,
+         "Voo acima do chão ignora custos de terreno"),
+        (room._water_turn_moves(voador, 6) == 6,
+         "Voo acima do chão ignora penalidade de pântano"),
         (room._water_turn_moves({}, 0) == 1, "mínimo de movimento = 1"),
         (room._water_turn_moves({}, 1) == 1, "um ponto permite a passada mínima"),
     ]

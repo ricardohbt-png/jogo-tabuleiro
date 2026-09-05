@@ -381,6 +381,7 @@ document.body.innerHTML = `
       <span class="turn-badge" id="turn-timer-badge" style="display:none">⏳ 30s</span>
       <div id="view-3d-ctrls">
         <span id="orbit-hint" data-i18n-html="ui.hud.orbit_hint">🖱 esq: orbitar &nbsp;·&nbsp; dir: pan &nbsp;·&nbsp; scroll: zoom</span>
+        <button id="btn-altura" onclick="toggleMouseAltitudeMode()" data-i18n-title="ui.hud.altura_ativar_title" title="Mantenha o botão direito pressionado e use o scroll para alterar a altura" aria-pressed="false" style="display:none">↕ Altura</button>
         <button id="btn-cam-reset" onclick="resetCamera3D()" data-i18n-title="ui.hud.cam_reset_title" title="Visão isométrica padrão (R)">⌂ Reset</button>
         <button id="btn-tile-spacing-reset" onclick="restoreTileSpacing3D()" data-i18n-title="ui.hud.espaco_reset_title" title="Voltar ao espaçamento anterior de 0,94" data-i18n="ui.hud.espaco_voltar">↶ Espaço 0,94</button>
         <button id="btn-3d-toggle" onclick="toggle3D()" data-i18n-title="ui.hud.toggle3d_title" title="Alternar visão 3D / 2D">🎲 3D</button>
@@ -388,6 +389,8 @@ document.body.innerHTML = `
       </div>
     </div>
     <div id="active-effects-hud" aria-label="Efeitos ativos" hidden></div>
+    <div id="gamepad-context-hud" aria-live="polite" hidden></div>
+    <div id="gamepad-shortcuts-hud" aria-label="Atalhos do controle" hidden></div>
     <div id="map-wrap">
       <canvas id="dungeon-canvas"></canvas>
       <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
@@ -503,12 +506,14 @@ document.body.innerHTML = `
 <div id="toast"></div>
 `;
 
-// O indicador precisa ficar fora de #map-panel: esse painel usa overflow:hidden
-// e o HUD é position:fixed. Mantê-lo diretamente no body evita que a coluna
-// de renderização 2D/3D recorte os ícones no navegador.
-(function _activeEffectsHudNoBody(){
-  const hud = document.getElementById('active-effects-hud');
-  if(hud && hud.parentNode !== document.body) document.body.appendChild(hud);
+// Estes indicadores precisam ficar fora de #map-panel: esse painel usa
+// overflow:hidden e os HUDs são position:fixed. Mantê-los diretamente no body
+// evita que a coluna de renderização 2D/3D os recorte no navegador.
+(function _fixedGameHudsNoBody(){
+  ['active-effects-hud', 'gamepad-context-hud', 'gamepad-shortcuts-hud'].forEach(id => {
+    const hud = document.getElementById(id);
+    if(hud && hud.parentNode !== document.body) document.body.appendChild(hud);
+  });
 })();
 
 // All mutable game state is owned by GS (gameState.js):
@@ -561,12 +566,19 @@ const DECOR_GLB_MODELS = {
   'coluna.png': 'assets/objetos/coluna.glb',
   // Fonte encaixada no canto/parede; distinta da fonte circular.
   'fontedecanto.png': 'assets/objetos/fonte_de_parede.glb',
+  'fonte_de_parede.png': 'assets/objetos/fonte_de_parede.glb',
+  'armadura.png': 'assets/objetos/armadura.glb',
   // Variante circular da fogueira usada na masmorra de Elara.
   'fogueiracircular.png': 'assets/objetos/fogueira.glb',
   // Cama de casal da masmorra de Elara.
   'camacasal.png': 'assets/objetos/cama_de_casal.glb',
   // Compatibilidade com a mesa de alquimia legada, que pode vir com type=tumba.
   'mesaalquimia.png': 'assets/objetos/mesa_alquimia.glb',
+  // Modelos coloridos das cortinas de parede; o PNG continua como fallback.
+  'cortina_vermelha.png': 'assets/objetos/cortina_vermelha.glb',
+  'cortina_branca.png': 'assets/objetos/cortina_branca.glb',
+  // Brasão texturizado com o PNG original; o PNG continua como fallback.
+  'brasao_leao.png': 'assets/objetos/brasao_leao.glb',
 };
 const DECOR_GLB_TYPES = {
   // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
@@ -576,12 +588,21 @@ const DECOR_GLB_TYPES = {
   altar: 'assets/objetos/altar.glb',
   cama: 'assets/objetos/cama.glb',
   cama_casal: 'assets/objetos/cama_de_casal.glb',
+  estante: 'assets/objetos/estante_armas_cranios.glb',
   lareira: 'assets/objetos/lareira.glb',
   fogueira: 'assets/objetos/fogueira.glb',
   tumba: 'assets/objetos/sarcofago.glb',
+  tumba_lapide: 'assets/objetos/tumba_lapide.glb',
+  carroca: 'assets/objetos/carroca.glb',
+  lapide: 'assets/objetos/lapide.glb',
+  cripta: 'assets/objetos/cripta.glb',
+  fonte_de_parede: 'assets/objetos/fonte_de_parede.glb',
+  armadura: 'assets/objetos/armadura.glb',
   arca_tesouros: 'assets/objetos/bau.glb',
   gaiola: 'assets/objetos/jaula_esqueleto.glb',
+  prisao: 'assets/objetos/prisao.glb',
   estante_livros: 'assets/objetos/estante_livros.glb',
+  mesa_tortura: 'assets/objetos/mesa_tortura.glb',
   mesa_quimica: 'assets/objetos/mesa_alquimia.glb',
   // Armorial/estante de armas vertical (1×2 casas).
   estante_armas: 'assets/objetos/armorial.glb',
@@ -597,6 +618,10 @@ const DECOR_GLB_TYPES = {
   caverna: 'assets/objetos/caverna.glb',
   // Casa: PNG no editor/2D e modelo 3D real no tabuleiro.
   casa: 'assets/objetos/casa.glb',
+  brasa_chao: 'assets/objetos/brasa_chao.glb',
+  cortina_vermelha: 'assets/objetos/cortina_vermelha.glb',
+  cortina_branca: 'assets/objetos/cortina_branca.glb',
+  brasao_leao: 'assets/objetos/brasao_leao.glb',
 };
 // A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
 // base dos modelos atravesse o piso por arredondamento de geometria.
@@ -655,6 +680,7 @@ let _atalhosAbertos = false;
 let _atalhosMenuAtual = null;
 
 function showScreen(id){
+  if(id !== 'screen-game') _clearGamepadEndTurnConfirm();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
   if(!['screen-game', 'screen-city'].includes(id)){
@@ -663,6 +689,10 @@ function showScreen(id){
     if(shortcutBar){ shortcutBar.hidden = true; shortcutBar.innerHTML = ''; }
     const activeEffects = document.getElementById('active-effects-hud');
     if(activeEffects){ activeEffects.hidden = true; activeEffects.innerHTML = ''; }
+    const gamepadContext = document.getElementById('gamepad-context-hud');
+    if(gamepadContext){ gamepadContext.hidden = true; gamepadContext.innerHTML = ''; }
+    const gamepadShortcuts = document.getElementById('gamepad-shortcuts-hud');
+    if(gamepadShortcuts){ gamepadShortcuts.hidden = true; gamepadShortcuts.innerHTML = ''; }
   }
   if(!['screen-game', 'screen-city', 'screen-class-select'].includes(id)){
     document.getElementById('pause-menu')?.classList.remove('open');
@@ -1620,6 +1650,7 @@ function initCityImage(){
   if(tb) tb.style.display = 'none';
 
   _cityImg = { stage, frame, img, life, hotWrap, raf:0 };
+  _gamepadFocusMapPoint('#city-hotspots .city-hotspot');
 }
 
 function _cityHotspotClick(pointId, type){
@@ -1746,6 +1777,7 @@ function abrirEntradaMasmorra(adventure, titulo){
   box.appendChild(back);
   wrap.appendChild(box);
   document.body.appendChild(wrap);
+  _gamepadFocusMapPoint('#city-dungeon-entry .worldmap-travel:not([disabled])', '#city-dungeon-entry .btn-cancel');
   const fechar = () => { document.removeEventListener('keydown', onKey); wrap.remove(); if(_cdeFechar === fechar) _cdeFechar = null; };
   const onKey = e => { if(e.key === 'Escape') fechar(); };
   document.addEventListener('keydown', onKey);
@@ -1958,6 +1990,7 @@ function showWorldLocationPreview(world, loc){
   }
   frame.appendChild(panel);
   _worldMapEl.appendChild(frame);
+  _gamepadFocusMapPoint('.worldmap-travel:not([disabled])', '.worldmap-back');
 }
 
 // Fragmentos de requisito ("renome 3", "informação: …"), compartilhados pelo
@@ -2023,6 +2056,7 @@ function showWorldAdventurePreview(world, adventure){
   panel.innerHTML = info.html;
   if(!info.completed) panel.appendChild(_adventureGoButton(adventure, world));
   frame.appendChild(panel); _worldMapEl.appendChild(frame);
+  _gamepadFocusMapPoint('.worldmap-travel:not([disabled])', '.worldmap-back');
 }
 
 function showWorldMap(){
@@ -2112,6 +2146,7 @@ function showWorldMap(){
     marker.onclick = () => showWorldAdventurePreview(world, adventure); frame.appendChild(marker);
   });
   _worldMapEl.appendChild(frame);
+  _gamepadFocusMapPoint('.worldmap-marker.current', '.worldmap-marker');
 }
 
 // ── Fase 4b (história): overlay de história da campanha ───────────────────────
@@ -2421,6 +2456,25 @@ function _updateShopTabs(){
     el.classList.toggle('active',i===GS.shopTabIdx));
 }
 
+function _gamepadCycleShopTab(direction){
+  const modal = $('shop-modal');
+  if(!modal?.classList.contains('open') || !GS.activeShop) return false;
+  const tabs = [...modal.querySelectorAll('.shop-tab')];
+  if(tabs.length < 2) return false;
+  const current = Math.max(0, Math.min(tabs.length - 1, Number(GS.shopTabIdx) || 0));
+  GS.shopTabIdx = (current + direction + tabs.length) % tabs.length;
+  _updateShopTabs();
+  _renderShopItems();
+  // A troca de aba recria a lista. Dar foco ao primeiro botão acionável evita
+  // que Confirmar continue preso em uma compra que acabou de desaparecer.
+  requestAnimationFrame(() => {
+    const firstAction = modal.querySelector('#shop-items-list .btn-buy:not([disabled]), #shop-items-list .cena-npc, #shop-items-list .cena-back, .shop-tab.active');
+    _gamepadSetUiFocus(firstAction || tabs[GS.shopTabIdx] || null);
+  });
+  _gamepadRumble('target');
+  return true;
+}
+
 let _openCenaNpcId = null;
 function _renderCenaConversas(){
   const list=$('shop-items-list'); if(!list) return;
@@ -2555,6 +2609,62 @@ function itemIconHTML(item, fallbackEmoji){
   return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
 
+function _guardarSelecaoLoja(itemId){
+  const modal = $('shop-modal');
+  const list = $('shop-items-list');
+  if(!modal?.classList.contains('open') || !list) return;
+  const rows = [...list.querySelectorAll('.shop-item')];
+  const focusedRow = _gamepadUi?.focusEl?.closest?.('.shop-item')
+    || document.activeElement?.closest?.('.shop-item')
+    || rows.find(row => row.dataset.shopItemId === String(itemId));
+  const rowIndex = focusedRow ? rows.indexOf(focusedRow) : -1;
+  window._shopSelectionRestore = {
+    shopId: GS.activeShop,
+    tabIdx: GS.shopTabIdx,
+    itemId: String(itemId),
+    rowIndex,
+    scrollTop: list.scrollTop,
+    relativeTop: focusedRow ? focusedRow.offsetTop - list.scrollTop : null
+  };
+}
+
+function _restaurarSelecaoLoja(){
+  const restore = window._shopSelectionRestore;
+  if(!restore) return;
+  const modal = $('shop-modal');
+  const list = $('shop-items-list');
+  if(!modal?.classList.contains('open') || !list){
+    window._shopSelectionRestore = null;
+    return;
+  }
+  if(GS.activeShop !== restore.shopId || GS.shopTabIdx !== restore.tabIdx){
+    window._shopSelectionRestore = null;
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    if(window._shopSelectionRestore !== restore) return;
+    const rows = [...list.querySelectorAll('.shop-item')];
+    const row = rows.find(item => item.dataset.shopItemId === restore.itemId)
+      || (restore.rowIndex >= 0 ? rows[restore.rowIndex] : null);
+    if(!row){ window._shopSelectionRestore = null; return; }
+
+    // Repõe a mesma linha no mesmo ponto da lista, sem fazer a tela saltar
+    // para o topo quando o city_state atualiza ouro/inventário.
+    list.scrollTop = restore.relativeTop == null
+      ? restore.scrollTop
+      : Math.max(0, row.offsetTop - restore.relativeTop);
+    const button = [...row.querySelectorAll('.btn-buy')]
+      .find(candidate => !candidate.disabled) || row.querySelector('.btn-buy');
+    if(button){
+      button.focus?.({preventScroll:true});
+      if(typeof _gamepadInput !== 'undefined' && _gamepadInput.active)
+        _gamepadSetUiFocus(button);
+    }
+    window._shopSelectionRestore = null;
+  });
+}
+
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
   // A cena em tela cheia vale só para a aba de conversas (e só quando ela tem
@@ -2605,21 +2715,24 @@ function _renderShopItems(){
     // Refeição de balcão (1×/visita): bloqueia se o herói já a pediu nesta visita.
     const jaUsada = item.effect==='meal_survival'
       && myP && (myP.taverna_refeicoes||[]).includes(item.id);
-    const canBuy=gold>=item.price && !classRestrita && !jaUsada;
+    const jaConhecida = item.effect==='learn_spell'
+      && myP && (myP.magias_conhecidas||[]).includes(item.magia_id);
+    const canBuy=gold>=item.price && !classRestrita && !jaUsada && !jaConhecida;
     const desc=_itemDesc(item);
     const kindTag=item.kind==='shield'?`<span style="color:var(--blue);font-size:.68rem;"> [${t('ui.loja.escudo')}]</span>`:'';
     const restritaTag=classRestrita?`<span style="color:var(--danger,#ff4136);font-size:.68rem;"> 🚫 ${t('ui.loja.classe_restrita')}</span>`:'';
     const usadaTag=jaUsada?`<span style="color:var(--muted,#888);font-size:.68rem;"> ✔ ${t('ui.loja.ja_usada')}</span>`:'';
-    return `<div class="shop-item"${(classRestrita||jaUsada)?' style="opacity:.5;"':''}>
+    const conhecidaTag=jaConhecida?`<span style="color:var(--muted,#888);font-size:.68rem;"> ✔ ${t('ui.loja.ja_conhecida')}</span>`:'';
+    return `<div class="shop-item" data-shop-item-id="${item.id}"${(classRestrita||jaUsada||jaConhecida)?' style="opacity:.5;"':''}>
       <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
-        <div class="shop-item-name">${item.name}${kindTag}${restritaTag}${usadaTag}</div>
+        <div class="shop-item-name">${item.name}${kindTag}${restritaTag}${usadaTag}${conhecidaTag}</div>
         <div class="shop-item-desc">${desc}</div>
       </div>
       <span class="shop-item-price">💰 ${item.price}</span>
       <button class="btn-buy" ${canBuy?'':'disabled'}
-        title="${classRestrita?t('ui.loja.title_classe_restrita'):jaUsada?t('ui.loja.title_ja_usada'):''}"
-        onclick="buyItem('${shopKey}','${item.id}')">${classRestrita?'🚫 '+t('ui.loja.restrito'):jaUsada?'✔ '+t('ui.loja.usada'):t('ui.loja.comprar')}</button>
+        title="${classRestrita?t('ui.loja.title_classe_restrita'):jaUsada?t('ui.loja.title_ja_usada'):jaConhecida?t('ui.loja.title_ja_conhecida'):''}"
+        onclick="buyItem('${shopKey}','${item.id}')">${classRestrita?'🚫 '+t('ui.loja.restrito'):jaUsada?'✔ '+t('ui.loja.usada'):jaConhecida?'✔ '+t('ui.loja.conhecida'):t('ui.loja.comprar')}</button>
     </div>`;
   }).join('');
   // Tooltip de pergaminho (hover) — a loja usa innerHTML, então anexa por índice.
@@ -2677,7 +2790,7 @@ function _renderSellItems(mode){
     return;
   }
   list.innerHTML=sellable.map(({slot,item,sp,tag})=>`
-    <div class="shop-item">
+    <div class="shop-item" data-shop-item-id="${slot}">
       <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
         <div class="shop-item-name">${item.name}</div>
@@ -2714,7 +2827,7 @@ function _renderRepairItems(){
       local
     ].filter(Boolean).join(' • ');
     const bagArg=entry.bag_index==null?'null':String(entry.bag_index);
-    return `<div class="shop-item${canRepair?'':' shop-item-disabled'}"${canRepair?'':' style="opacity:.58;"'}>
+    return `<div class="shop-item${canRepair?'':' shop-item-disabled'}" data-shop-item-id="${entry.slot}"${canRepair?'':' style="opacity:.58;"'}>
       <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
         <div class="shop-item-name">${item.name||entry.name}</div>
@@ -2733,6 +2846,10 @@ function _renderRepairItems(){
 }
 
 function _itemDesc(item){
+  if(item.effect === 'learn_spell'){
+    const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
+    return item.descricao || (mg ? `${mg.nome} • ${mg.descricao || ''}` : item.name || '');
+  }
   if(item.effect === 'scroll'){
     const pv = item.preview || {};
     const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
@@ -2815,6 +2932,7 @@ function _itemDesc(item){
 }
 
 function buyItem(shop, itemId){
+  _guardarSelecaoLoja(itemId);
   send({type:'shop_buy', shop, item_id:itemId});
 }
 function removerMaldicaoTemplo(maldicaoId){
@@ -2822,17 +2940,47 @@ function removerMaldicaoTemplo(maldicaoId){
 }
 
 function sellItem(slot){
+  _guardarSelecaoLoja(slot);
   send({type:'sell_item', item_slot:slot});
 }
 
 function repairItem(slot, bagIndex=null){
+  _guardarSelecaoLoja(slot);
   GS.repairItem(slot, bagIndex);
 }
 
 function closeShop(){
   GS.activeShop=null;
   GS.activeScene=null;
+  GS.shopTabIdx=0;
+  window._shopSelectionRestore = null;
+  _openCenaNpcId=null;
   const m=$('shop-modal'); if(m) m.classList.remove('open');
+}
+
+// A loja pode conter uma cena/conversa antes das abas comerciais. No controle,
+// Cancelar percorre essa hierarquia sem obrigar o jogador a focalizar o botão
+// "Voltar ao Mapa": conversa → cena principal → cidade.
+function _gamepadBackFromShop(){
+  const modal = $('shop-modal');
+  if(!modal?.classList.contains('open')) return false;
+  const dialog = modal.querySelector('.cena-dialogo');
+  if(dialog){
+    _openCenaNpcId = null;
+    dialog.remove();
+    _gamepadFocusMapPoint('#shop-modal .cena-npc, #shop-modal .cena-back');
+    return true;
+  }
+  if(GS.activeScene && GS.shopTabIdx > 0){
+    GS.shopTabIdx = 0;
+    _updateShopTabs();
+    _renderShopItems();
+    _gamepadFocusMapPoint('#shop-modal .cena-npc, #shop-modal .cena-back');
+    return true;
+  }
+  closeShop();
+  _gamepadSetUiFocus(null);
+  return true;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -4198,7 +4346,7 @@ function abrirLoja(nomeLocal, heroiAtivo){
             color: #8a7a5a; font-family: 'Cinzel', serif; font-size: 11px; padding: 6px 12px; cursor: pointer;">✕ FECHAR</button>
         </div>
       </div>
-      <div style="overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px;">
+      <div data-shop-scroll style="overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px;">
         ${itensDaLoja.map(item => {
           const podeComprar = item.permitidoPara.includes('todos') ||
             item.permitidoPara.includes(heroiAtivo.key);
@@ -4236,7 +4384,27 @@ function abrirLoja(nomeLocal, heroiAtivo){
     const item = GS.CATALOGO_ITENS[el.dataset.itemId];
     aplicarTooltipAoItemDados(el, item || {id: el.dataset.itemId});
   });
-  requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    const restore = window._legacyShopSelectionRestore;
+    if(!restore) return;
+    if(restore.shopId !== nomeLocal){ window._legacyShopSelectionRestore = null; return; }
+    const scroll = overlay.querySelector('[data-shop-scroll]');
+    const rows = [...overlay.querySelectorAll('[data-item-id]')];
+    const row = rows.find(item => item.dataset.itemId === restore.itemId)
+      || (restore.rowIndex >= 0 ? rows[restore.rowIndex] : null);
+    if(!scroll || !row){ window._legacyShopSelectionRestore = null; return; }
+    scroll.scrollTop = restore.relativeTop == null
+      ? restore.scrollTop
+      : Math.max(0, row.offsetTop - restore.relativeTop);
+    const button = row.querySelector('button:not([disabled])') || row.querySelector('button');
+    if(button){
+      button.focus?.({preventScroll:true});
+      if(typeof _gamepadInput !== 'undefined' && _gamepadInput.active)
+        _gamepadSetUiFocus(button);
+    }
+    window._legacyShopSelectionRestore = null;
+  });
 }
 
 // Resolve o `shop` exato do servidor a partir do item.
@@ -4278,6 +4446,17 @@ function comprarItem(itemId){
   }
 
   // Mesmo formato do buyItem existente — caminho autoritativo do servidor.
+  const legacyOverlay = document.getElementById('loja-overlay');
+  const legacyScroll = legacyOverlay?.querySelector('[data-shop-scroll]');
+  const legacyRows = legacyOverlay ? [...legacyOverlay.querySelectorAll('[data-item-id]')] : [];
+  const legacyRow = legacyRows.find(row => row.dataset.itemId === String(itemId));
+  window._legacyShopSelectionRestore = {
+    shopId: window._lojaUltimaAberta,
+    itemId: String(itemId),
+    rowIndex: legacyRow ? legacyRows.indexOf(legacyRow) : -1,
+    scrollTop: legacyScroll?.scrollTop || 0,
+    relativeTop: legacyRow && legacyScroll ? legacyRow.offsetTop - legacyScroll.scrollTop : null
+  };
   window._comprando = true;                       // compra em andamento
   send({ type: 'shop_buy', shop: shopKey, item_id: itemId });
 
@@ -4316,6 +4495,7 @@ function _sincronizarHeroiComServidor(serverPlayer){
 
 function fecharLoja(){
   window._lojaAtualAberta = null;   // limpa ao fechar
+  if(!window._comprando) window._legacyShopSelectionRestore = null;
   const overlay = document.getElementById('loja-overlay');
   if(!overlay) return;
   overlay.style.opacity = '0';
@@ -4818,6 +4998,10 @@ function handleGameState(msg){
   // Atualiza antes do restante do HUD: um erro em qualquer painel opcional não
   // pode deixar o botão preso no estado desabilitado do turno anterior.
   _reconciliarEfeitosVisuaisLocais(msg);
+  if(!GS.isMyTurn) {
+    _clearGamepadEndTurnConfirm();
+    _aimEnd({silent:true, reason:'turn_changed'});
+  }
   // Mesmo se o estado recebido chegar no meio de uma animação de passo, o loop
   // 3D deve reconciliar os ícones no frame seguinte.
   if(g3) g3._activeEffectsDirty = true;
@@ -4828,6 +5012,7 @@ function handleGameState(msg){
   renderPlayers(msg);
   renderMyPanel(msg);
   _renderAtalhos();
+  _renderGamepadHud(msg);
   _renderEfeitosAtivos(msg);
   renderGMLog(msg.gm_log);
   updateTurnBadge(msg);
@@ -4866,7 +5051,7 @@ function encerrarMissaoConfirm(){
     + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">'
     + t('ui.missao.encerrar_aviso') + '</div>'
     + '<div style="display:flex;gap:10px;">'
-    + '<button id="em-cancel" style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
+    + '<button id="em-cancel" data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
     + 'background:rgba(40,32,16,0.9);color:#cbbe9c;font-weight:700;font-size:.78rem;cursor:pointer;">' + t('ui.geral.cancelar') + '</button>'
     + '<button id="em-ok" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);'
     + 'background:rgba(60,45,12,0.96);color:var(--gold,#ffcc44);font-weight:700;font-size:.78rem;cursor:pointer;">🏁 Encerrar</button>'
@@ -4878,6 +5063,36 @@ function encerrarMissaoConfirm(){
   document.getElementById('em-ok').onclick = () => { close(); GS.encerrarMissao(); };
 }
 window.encerrarMissaoConfirm = encerrarMissaoConfirm;
+
+// A confirmação de saída precisa ser HTML do jogo, não window.confirm():
+// diálogos nativos não permitem foco/click pela Gamepad API.
+function confirmarSaidaMasmorra(custo, espera){
+  if(document.getElementById('exit-dungeon-overlay')) return;
+  const ov = document.createElement('div');
+  ov.id = 'exit-dungeon-overlay';
+  ov.className = 'open';
+  ov.style.cssText = 'position:fixed;inset:0;background:#000a;display:flex;'
+    + 'align-items:center;justify-content:center;z-index:500;';
+  const aviso = t('ui.tabuleiro.confirmar_saida', {f:custo.fome, s:custo.sede, n:espera});
+  ov.innerHTML = '<div style="background:rgba(28,20,6,.98);border:1px solid var(--gold,#ffcc44);'
+    + 'border-radius:12px;padding:22px 24px;max-width:340px;text-align:center;box-shadow:0 8px 30px #000b;">'
+    + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">🪜 ' + t('ui.tabuleiro.escada_saida') + '</div>'
+    + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">' + aviso + '</div>'
+    + '<div style="display:flex;gap:10px;">'
+    + '<button data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;background:rgba(40,32,16,.9);color:#cbbe9c;font-weight:700;cursor:pointer;">' + t('ui.geral.cancelar') + '</button>'
+    + '<button data-gamepad-exit style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);background:rgba(60,45,12,.96);color:var(--gold,#ffcc44);font-weight:700;cursor:pointer;">' + t('ui.tabuleiro.clique_voltar_cidade') + '</button>'
+    + '</div></div>';
+  const close = () => { if(ov.parentNode) ov.parentNode.removeChild(ov); };
+  ov.addEventListener('click', event => { if(event.target === ov) close(); });
+  ov.querySelector('[data-gamepad-cancel]').onclick = close;
+  ov.querySelector('[data-gamepad-exit]').onclick = () => {
+    close();
+    fecharQuadrosFlutuantes();
+    send({type:'exit_dungeon'});
+  };
+  document.body.appendChild(ov);
+  _gamepadFocusMapPoint('#exit-dungeon-overlay [data-gamepad-exit]', '#exit-dungeon-overlay [data-gamepad-cancel]');
+}
 
 function renderObjectivesHUD(msg){
   const hud = $('objectives-hud');
@@ -4915,9 +5130,11 @@ function _start2DHighlightLoop(){
   function step(){
     const st = GS.gameState;
     const me = st && st.players.find(p => p.id === GS.myPid && p.alive);
-    const hasAnimatedTerrain = !!(st && Object.values(st.materiais || {}).some(mid => mid === 'lava' || mid === 'pantano'));
+    const hasAnimatedTerrain = !!(st && Object.values(st.materiais || {}).some(mid =>
+      mid === 'lava' || mid === 'pantano' || mid === 'agua' || mid === 'agua_profunda'));
     const animateHighlights = GS.isMyTurn && me && me.moves_left > 0;
-    if(!mode3D && st && (animateHighlights || hasAnimatedTerrain)){
+    const animateGamepadCursor = !!_gamepadCursorTile(st);
+    if(!mode3D && st && (animateHighlights || hasAnimatedTerrain || animateGamepadCursor)){
       _movePulse = 0.5 + 0.5 * Math.sin(Date.now() / 420);
       renderMap(st);
       _2dHighlightFrame = _scheduleVisualFrame(step);
@@ -5002,9 +5219,14 @@ const findPath     = (...a) => GS.findPath(...a);
 
 // Center the map wrap on the player — runs inside rAF so canvas resize never beats it
 function centerOnPlayer(state){
-  if(mode3D) return;   // 3D camera handles its own view; 2D pixel offsets don't apply
   const me=state.players.find(p=>p.id===GS.myPid&&p.alive);
   if(!me) return;
+  if(mode3D){
+    // Após um passo pelo controle, a câmera volta a enquadrar o próprio peão.
+    if(_gamepadInput.active && _gamepadInput.followPawn && !configCamera.seguindoPeao)
+      centralizarCamera3DNoPeao(me.pos);
+    return;
+  }
   const wrap=$('map-wrap');
   const tl=Math.max(0, me.pos[0]*CELL+CELL/2 - wrap.clientWidth/2);
   const tt=Math.max(0, me.pos[1]*CELL+CELL/2 - wrap.clientHeight/2);
@@ -6264,6 +6486,9 @@ const _MONSTER_TYPE_DEFAULT_IMAGE = Object.freeze({
   skeleton: 'esqueletoHumano',
   orc: 'orcGuerreiro',
   dark_mage: 'necromante',
+  medusa: 'medusa',
+  grande_medusa: 'medusa',
+  grande_gorgona: 'medusa',
 });
 function _monsterImageName(monster){
   return monster && (monster.image || _MONSTER_TYPE_DEFAULT_IMAGE[monster.type]) || null;
@@ -6321,20 +6546,33 @@ function _getWallObjeto2DImg(imageName){
 // Rotação de objetos (decorações): facing → ângulo. O facing canônico [0,1] é 0°;
 // cada giro de 90° avança no sentido [0,1]→[1,0]→[0,-1]→[-1,0]. Usado no 2D (canvas)
 // e no 3D (rotation.y), para a imagem do objeto realmente girar.
-function _facingAngle2D(f){
-  if(!f) return 0;
-  if(f[0]===1  && f[1]===0)  return Math.PI/2;
-  if(f[0]===0  && f[1]===-1) return Math.PI;
-  if(f[0]===-1 && f[1]===0)  return -Math.PI/2;
-  return 0;
+const DECOR_FACING_OFFSETS = Object.freeze({
+  prisao: Math.PI,
+  estante_livros: Math.PI,
+  fonte_de_parede: Math.PI,
+  'fonte_de_parede.png': Math.PI,
+  'fontedecanto.png': Math.PI,
+});
+function _decorFacingOffset(type, imageName, glbPath){
+  if (DECOR_FACING_OFFSETS[type] !== undefined) return DECOR_FACING_OFFSETS[type];
+  if (DECOR_FACING_OFFSETS[imageName] !== undefined) return DECOR_FACING_OFFSETS[imageName];
+  const file = (glbPath || '').split('/').pop();
+  return DECOR_FACING_OFFSETS[file ? file.replace(/\.glb$/, '') : ''] || 0;
 }
-function _facingAngleY3D(f){
+function _facingAngle2D(f, type, imageName){
+  let angle = 0;
+  if(f && f[0]===1  && f[1]===0)  angle = Math.PI/2;
+  else if(f && f[0]===0  && f[1]===-1) angle = Math.PI;
+  else if(f && f[0]===-1 && f[1]===0)  angle = -Math.PI/2;
+  return angle + _decorFacingOffset(type, imageName);
+}
+function _facingAngleY3D(f, type, imageName, glbPath){
   // Eixo Y do mundo 3D: sinal oposto ao 2D para o giro casar visualmente com o topo.
-  if(!f) return 0;
-  if(f[0]===1  && f[1]===0)  return -Math.PI/2;
-  if(f[0]===0  && f[1]===-1) return Math.PI;
-  if(f[0]===-1 && f[1]===0)  return Math.PI/2;
-  return 0;
+  let angle = 0;
+  if(f && f[0]===1  && f[1]===0)  angle = -Math.PI/2;
+  else if(f && f[0]===0  && f[1]===-1) angle = Math.PI;
+  else if(f && f[0]===-1 && f[1]===0)  angle = Math.PI/2;
+  return angle + _decorFacingOffset(type, imageName, glbPath);
 }
 
 // Visibilidade de uma armadilha colocável para o jogador local:
@@ -6374,7 +6612,14 @@ const _FIT_TILE_FRAC  = 0.94;
 const _FILL_WIDTH_PAWNS = new Set(['ogroClava', 'ogroLanca']);
 const _FILL_WIDTH_FRAC  = 0.98;
 
-function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur){
+// Tom de estátua do status "petrificado". O tom mora em VC.feedback.petrificacao
+// (fonte única com o material de pedra do 3D); aqui ele vira filtro de canvas.
+// É função, e não const de módulo, porque o VC é lido no momento do desenho.
+function _petrificadoFiltro2D(){
+  return VC.feedback?.petrificacao?.filtro2D ?? 'grayscale(1) sepia(0.60) brightness(0.88)';
+}
+
+function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-2;
   // Drop shadow (ellipse at feet)
@@ -6386,6 +6631,7 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur){
     ctx.strokeStyle=color+'cc'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.arc(0,-2,r+5,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
+  if(petrificado) ctx.filter=_petrificadoFiltro2D();
   // Class sprite — usa a miniatura PNG (frente.png), igual ao 3D; enquanto a
   // imagem não carrega, cai no sprite procedural (drawWarrior, …).
   const heroImg = _getHero2DImg(classId);
@@ -6470,7 +6716,7 @@ function _monsterIs2x2(m){
 // na orientação natural da arte (cabeça à ESQUERDA) e é espelhada quando encara
 // leste. Norte/sul ficam em pé centralizados — a base mostra a direção. hcx,hcy =
 // centro de tela da casa-cabeça (frente = m.pos).
-function drawOrientedMonster2D(ctx, m, hcx, hcy){
+function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
   const f = m.facing || [-1,0];
   const [offX, offY] = _monsterVisualCenterOffset(m);
   // Centro geométrico do footprint (inclui a segunda linha do 2x2).
@@ -6480,7 +6726,10 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   const isWideOriented = !!m?.oriented && fp.width > 1;
   // Ângulo da BASE (segue o eixo do corpo, indicando a direção).
   const angBase = (f[0]===1) ? Math.PI : (f[1]===-1) ? Math.PI/2 : (f[1]===1) ? -Math.PI/2 : 0;
-  ctx.save(); ctx.translate(mcx, mcy); ctx.rotate(angBase);
+  // A mira do joystick realça a própria criatura sem mudar sua posição lógica.
+  const attackScale = attackTargeted ? 1.05 : 1;
+  const attackLift = attackTargeted ? CELL * .055 : 0;
+  ctx.save(); ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale); ctx.rotate(angBase);
   const baseLongRadius = is2x2 ? 0.86 : (isWideOriented ? fp.length * 0.46 : 0.95);
   const baseWidthRadius = is2x2 ? 0.72 : (isWideOriented ? fp.width * 0.42 : 0.40);
   ctx.fillStyle='rgba(0,0,0,0.40)';
@@ -6492,9 +6741,10 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy){
   // Criatura EM PÉ (billboard): orientação natural da arte; espelha para leste.
   const imageName = _monsterImageName(m);
   const img = imageName ? _getMonster2DImg(imageName) : null;
-  ctx.save(); ctx.translate(mcx, mcy);
+  ctx.save(); ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale);
   if(f[0]===1) ctx.scale(-1, 1);   // encara leste → espelha (cabeça da arte é à esquerda)
   if(img && img.complete && img.naturalWidth){
+    if(m.petrificado) ctx.filter=_petrificadoFiltro2D();
     const ar = img.naturalWidth/img.naturalHeight;
     const visualSpan = isWideOriented && !is2x2 ? Math.max(fp.w, fp.h) : 1;
     let w = CELL*(is2x2 ? 1.80 : (visualSpan > 1 ? visualSpan * 0.90 : 1.9)), h = w/ar;
@@ -6568,6 +6818,8 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
     durations.push(['❄ Paralisia', Number(entity.paralisado_rodadas), '#75d7ff']);
   if(Number(entity.cego_rodadas) > 0)
     durations.push(['◼ Cegueira', Number(entity.cego_rodadas), '#d5d5d5']);
+  if(Number(entity.petrificacao_marcas) > 0)
+    durations.push(['🗿 Petrificação', `${Math.min(3, Number(entity.petrificacao_marcas))}/3`, '#c8c8c8']);
   if(durations.length){
     const small = Math.max(9, Math.round(CELL * 0.115));
     ctx.font = `900 ${small}px Arial, sans-serif`;
@@ -6586,7 +6838,7 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
   ctx.restore();
 }
 
-function drawMonsterSprite(ctx, cx, cy, m){
+function drawMonsterSprite(ctx, cx, cy, m, attackTargeted=false){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-3;
   const _mfp = _monsterFootprintSize(m);
@@ -6596,7 +6848,10 @@ function drawMonsterSprite(ctx, cx, cy, m){
   const _msx = Math.max(0.2, Math.min(4, Number(_mvs[0]) || 1));
   const _msy = Math.max(0.2, Math.min(4, Number(_mvs[1]) || 1));
   // Mantém os pés na base da miniatura ao crescer para cima.
-  ctx.translate(0, r * 0.82); ctx.scale(_msx, _msy); ctx.translate(0, -r * 0.82);
+  const attackScale = attackTargeted ? 1.05 : 1;
+  const attackLift = attackTargeted ? CELL * .055 : 0;
+  ctx.translate(0, -attackLift);
+  ctx.translate(0, r * 0.82); ctx.scale(_msx * attackScale, _msy * attackScale); ctx.translate(0, -r * 0.82);
   // Sprites 2D são billboards frontais: espelha horizontalmente o servo para
   // acompanhar o sentido lateral do movimento sem deitar a miniatura.
   const _facing2D = Array.isArray(m.facing) ? m.facing : null;
@@ -6613,6 +6868,7 @@ function drawMonsterSprite(ctx, cx, cy, m){
   // na base, SEM recorte circular. Sem imagem (ex.: servos animados) → procedural.
   const imageName = _monsterImageName(m);
   const mImg = imageName ? _getMonster2DImg(imageName) : null;
+  if(m.petrificado) ctx.filter=_petrificadoFiltro2D();
   if(mImg && mImg.complete && mImg.naturalWidth){
     const ar = mImg.naturalWidth / mImg.naturalHeight;
     if(_m2x2){
@@ -6675,6 +6931,147 @@ function drawMonsterSprite(ctx, cx, cy, m){
 // ══ 3D DIORAMA MAP ═══════════════════════════════════════════════════════════
 
 const WALL_RISE = Math.round(CELL * 0.50); // visible wall-face height — taller = more 3D depth
+// Escala visual da altura autoritativa: cada ponto de voo sobe um pouco acima
+// do piso, mantendo a sombra/base no tabuleiro para que a posição continue legível.
+const FLIGHT_ALTITUDE_STEP = 0.24;
+const FLIGHT_FALL_DURATION_MS = 760;
+const FLIGHT_FALL_IMPACT_MS = 680;
+const _flightFallAnims = [];
+
+function _flightFallFigure(targetId){
+  if(!g3?.entityGroup || targetId == null) return null;
+  const wanted = String(targetId);
+  return g3.entityGroup.children.find(fig => {
+    const u = fig.userData || {};
+    return [u.pid, u.monId, u.animadoId].some(id => id != null && String(id) === wanted)
+      || (u.prisoner && wanted === 'prisoner');
+  }) || null;
+}
+
+function _buildFlightFallImpact3D(anim){
+  if(!g3?.scene || !window.THREE || anim.impactGroup) return;
+  const T = g3.T;
+  const group = new T.Group();
+  group.name = 'flight-fall-impact';
+  const figure = _flightFallFigure(anim.targetId);
+  group.position.set(figure?.position.x ?? anim.pos[0], 0,
+    figure?.position.z ?? anim.pos[1]);
+
+  const ringMat = new T.MeshBasicMaterial({
+    color: 0xffb45b, transparent: true, opacity: 0,
+    depthWrite: false, depthTest: false,
+  });
+  const ring = new T.Mesh(new T.TorusGeometry(.18, .026, 8, 32), ringMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = .285;
+  ring.renderOrder = 124;
+  group.add(ring);
+
+  const dustMat = new T.MeshBasicMaterial({
+    color: 0xd9b58a, transparent: true, opacity: 0,
+    depthWrite: false, depthTest: false,
+  });
+  const particles = [];
+  for(let i = 0; i < 12; i++){
+    const particle = new T.Mesh(new T.SphereGeometry(.035 + (i % 3) * .012, 6, 5), dustMat);
+    particle.userData.fallAngle = i * Math.PI * 2 / 12;
+    particle.userData.fallPhase = (i * 17) % 11 / 11;
+    particle.position.y = .285;
+    group.add(particle);
+    particles.push(particle);
+  }
+  g3.scene.add(group);
+  anim.impactGroup = group;
+  anim.impactRing = ring;
+  anim.impactParticles = particles;
+  anim.impactRingMat = ringMat;
+  anim.impactDustMat = dustMat;
+}
+
+function _disposeFlightFallImpact3D(anim){
+  if(!anim?.impactGroup) return;
+  if(anim.impactGroup.parent) anim.impactGroup.parent.remove(anim.impactGroup);
+  anim.impactGroup.traverse(obj => { if(obj.geometry) obj.geometry.dispose(); });
+  anim.impactRingMat?.dispose();
+  anim.impactDustMat?.dispose();
+  anim.impactGroup = null;
+}
+
+function _updateFlightFallAnimations3D(now){
+  for(let i = _flightFallAnims.length - 1; i >= 0; i--){
+    const anim = _flightFallAnims[i];
+    const elapsed = now - anim.start;
+    const p = Math.max(0, Math.min(1, elapsed / anim.duration));
+    const fig = _flightFallFigure(anim.targetId);
+    const body = fig?.userData?.flightBody;
+    if(body){
+      if(anim.body !== body){
+        anim.body = body;
+        anim.baseRotationX = body.rotation.x || 0;
+        anim.baseRotationZ = body.rotation.z || 0;
+      }
+      // Começa controlada e acelera perto do impacto, como uma queda real.
+      const heightFactor = 1 - p * p;
+      body.position.y = anim.fromAltitude * FLIGHT_ALTITUDE_STEP * heightFactor;
+      const wobble = Math.sin(p * Math.PI * 3.2 + anim.seed) * .13 * Math.sin(p * Math.PI);
+      body.rotation.x = anim.baseRotationX + wobble * .42;
+      body.rotation.z = anim.baseRotationZ + wobble;
+      if(p >= 1){
+        body.position.y = 0;
+        body.rotation.x = anim.baseRotationX;
+        body.rotation.z = anim.baseRotationZ;
+      }
+    }
+
+    if(elapsed >= anim.duration && elapsed <= anim.duration + FLIGHT_FALL_IMPACT_MS){
+      if(anim.impactGroup && anim.impactGroup.parent !== g3?.scene)
+        _disposeFlightFallImpact3D(anim);
+      if(!anim.impactGroup) _buildFlightFallImpact3D(anim);
+      if(anim.impactGroup){
+        if(fig) anim.impactGroup.position.set(fig.position.x, 0, fig.position.z);
+        const q = Math.max(0, Math.min(1, (elapsed - anim.duration) / FLIGHT_FALL_IMPACT_MS));
+        const pulse = Math.sin(Math.PI * q);
+        anim.impactRing.scale.setScalar(.8 + q * 2.15);
+        anim.impactRing.material.opacity = .88 * (1 - q) * (.72 + pulse * .28);
+        for(const particle of anim.impactParticles){
+          const angle = particle.userData.fallAngle;
+          const radius = .08 + q * (.42 + particle.userData.fallPhase * .24);
+          particle.position.set(Math.cos(angle) * radius,
+            .29 + q * (.12 + particle.userData.fallPhase * .22),
+            Math.sin(angle) * radius);
+          particle.material.opacity = .68 * (1 - q);
+        }
+      }
+    }
+
+    if(elapsed > anim.duration + FLIGHT_FALL_IMPACT_MS){
+      _disposeFlightFallImpact3D(anim);
+      _flightFallAnims.splice(i, 1);
+    }
+  }
+}
+
+function _receiveFlightFall(msg){
+  if(!msg || msg.target_id == null || !Array.isArray(msg.pos)) return;
+  const fromAltitude = Math.max(0, Math.min(10, Math.trunc(Number(msg.altura) || 0)));
+  if(fromAltitude <= 0) return;
+  for(let i = _flightFallAnims.length - 1; i >= 0; i--){
+    if(String(_flightFallAnims[i].targetId) !== String(msg.target_id)) continue;
+    _disposeFlightFallImpact3D(_flightFallAnims[i]);
+    _flightFallAnims.splice(i, 1);
+  }
+  _flightFallAnims.push({
+    targetId: msg.target_id,
+    pos: [Number(msg.pos[0]) || 0, Number(msg.pos[1]) || 0],
+    fromAltitude,
+    start: performance.now(),
+    duration: FLIGHT_FALL_DURATION_MS,
+    seed: Math.random() * Math.PI * 2,
+    body: null,
+    impactGroup: null,
+  });
+  if(mode3D && g3) _updateFlightFallAnimations3D(performance.now());
+}
 
 // ── Vision set: tiles currently visible to the local player ──────────────────
 // Enemies outside this set are hidden (fog of war). Floor/walls keep using
@@ -6715,21 +7112,8 @@ function computeVisionSet(state, me){
   return set;
 }
 
-function _alvoNoAlcanceArmaClient(me, tx, ty) {
-  const weapon = me?.weapon || {};
-  const range = weapon.range;
-  const dx = Math.abs(me.pos[0] - tx), dy = Math.abs(me.pos[1] - ty);
-  if(range != null){
-    const distancia = Math.max(dx, dy);
-    if(['besta', 'hand_crossbow'].includes(weapon.id))
-      return (dx === 0 || dy === 0) && distancia <= range;
-    if(['arco_curto', 'longbow'].includes(weapon.id))
-      return distancia <= ((dx === 0 || dy === 0) ? range : Math.ceil(range / 2));
-    return distancia <= range;
-  }
-  if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
-    return Math.max(dx, dy) === 1;
-  return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+function _alvoNoAlcanceArmaClient(me, tx, ty, targetAltitude = 0) {
+  return GS.weaponCanReachTile(me, tx, ty, targetAltitude);
 }
 
 function _computeWeaponRangeTiles(state, me) {
@@ -6757,7 +7141,7 @@ function _computeWeaponRangeTiles(state, me) {
 // enquanto o canvas visível recebe apenas os efeitos e entidades dinâmicas.
 let _dungeonStatic2D = {
   canvas: null, tiles: null, materiais: null, explorado: null, revelado: null,
-  rooms: null, animatedTiles: [], master: null, W: 0, H: 0,
+  rooms: null, secretPassages: null, animatedTiles: [], master: null, W: 0, H: 0,
 };
 
 function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
@@ -6770,6 +7154,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     && cache.explorado === state.explored
     && cache.revelado === state.revealed
     && cache.rooms === state.rooms
+    && cache.secretPassages === state.secret_passages
     && cache.master === master && cache.W === W && cache.H === H;
   if(mesmaBase) return cache.canvas;
 
@@ -6778,7 +7163,8 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   const ctx = canvas.getContext('2d');
   const animatedTiles = [];
   for(const [key, mid] of Object.entries(state.materiais || {})){
-    if(mid !== 'lava' && mid !== 'pantano' || !terrainSet.has(key)) continue;
+    if(mid !== 'lava' && mid !== 'pantano' && mid !== 'agua' && mid !== 'agua_profunda'
+        || !terrainSet.has(key)) continue;
     const [x, y] = key.split(',').map(Number);
     if(Number.isInteger(x) && Number.isInteger(y)) animatedTiles.push({x, y, mid});
   }
@@ -6821,15 +7207,18 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   _dungeonStatic2D = {
     canvas, tiles: state.tiles, materiais: state.materiais,
     explorado: state.explored, revelado: state.revealed, rooms: state.rooms,
+    secretPassages: state.secret_passages,
     animatedTiles, master, W, H,
   };
   return canvas;
 }
 
-// Só os traços móveis da lava e as ondulações do pântano são recalculados.
+// Só os traços móveis de lava/água e as ondulações do pântano são recalculados.
 // A pintura base permanece na camada estática acima.
 function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const flowLava = now / 520;
+  const flowWater = now / 680;
+  const flowDeepWater = now / 1180;
   const flowSwamp = now / 900;
   const tiles = _dungeonStatic2D.materiais === state.materiais
     ? _dungeonStatic2D.animatedTiles : [];
@@ -6858,6 +7247,40 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
         ctx.strokeStyle = `rgba(255,116,18,${(.26 + q * .26).toFixed(2)})`;
         ctx.lineWidth = Math.max(1, CELL / 70); ctx.stroke();
       }
+    } else if(mid === 'agua' || mid === 'agua_profunda'){
+      const profunda = mid === 'agua_profunda';
+      const flow = profunda ? flowDeepWater : flowWater;
+      const waves = _rng((x * 7331 ^ y * 4129 ^ (profunda ? 0xD33F : 0xA91C)) >>> 0);
+      for(let row=0; row<3; row++){
+        const phase = flow + row * 1.8 + x * .21 + y * .13;
+        const yy = Y + CELL * (.20 + row * .28)
+          + Math.sin(phase) * CELL * (profunda ? .022 : .032);
+        ctx.strokeStyle = profunda
+          ? (row % 2 ? 'rgba(82,159,231,.22)' : 'rgba(28,91,171,.30)')
+          : (row % 2 ? 'rgba(190,247,255,.46)' : 'rgba(62,188,240,.38)');
+        ctx.lineWidth = Math.max(1, CELL / (profunda ? 60 : 52));
+        ctx.beginPath();
+        ctx.moveTo(X - CELL * .08, yy);
+        ctx.bezierCurveTo(X + CELL * .20, yy - CELL * .045,
+          X + CELL * .48, yy + CELL * .045, X + CELL * 1.08, yy);
+        ctx.stroke();
+      }
+      for(let i=0; i<2; i++){
+        const px = X + CELL * (.18 + waves() * .64);
+        const py = Y + CELL * (.22 + waves() * .58);
+        const q = .5 + .5 * Math.sin(flow * 1.35 + i * 2.7 + x * .37 + y * .29);
+        const rx = CELL * (profunda ? .07 : .06) * (.75 + q * .38);
+        const ry = rx * (profunda ? .34 : .28);
+        ctx.strokeStyle = profunda
+          ? `rgba(101,181,255,${(.13 + q * .13).toFixed(2)})`
+          : `rgba(221,253,255,${(.24 + q * .22).toFixed(2)})`;
+        ctx.lineWidth = Math.max(1, CELL / 76);
+        ctx.beginPath();
+        ctx.ellipse(px + Math.sin(flow + i) * CELL * .025,
+          py + Math.cos(flow * .8 + i) * CELL * .018,
+          rx, ry, Math.sin(flow + i) * .12, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     } else {
       for(let row=0; row<2; row++){
         const phase = flowSwamp + row * 2.3 + x * .41 + y * .27;
@@ -6873,6 +7296,38 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
       }
     }
   }
+}
+
+function _drawGamepadCursor2D(ctx, state, terrainSet, now){
+  const cursor = _gamepadCursorTile(state);
+  if(!cursor) return;
+  const [x, y] = cursor, key = `${x},${y}`;
+  if(!terrainSet.has(key)) return; // o controle não revela a névoa
+  const X = x * CELL, Y = y * CELL;
+  const pulse = 0.5 + 0.5 * Math.sin(now / 260);
+  const tone = _gamepadCursorTone(state);
+  const selecionandoAtaque = !!_gamepadInput.attackMode;
+  ctx.save();
+  ctx.fillStyle = `rgba(${tone.fill},${(tone.fillAlpha + pulse * .08).toFixed(3)})`;
+  ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+  ctx.shadowColor = selecionandoAtaque ? 'rgba(255,232,103,.98)' : `rgba(${tone.stroke},.65)`;
+  ctx.shadowBlur = selecionandoAtaque ? CELL * (.15 + pulse * .13) : 0;
+  ctx.strokeStyle = `rgba(${tone.stroke},${(selecionandoAtaque ? .82 + pulse * .18 : .58 + pulse * .36).toFixed(3)})`;
+  ctx.lineWidth = Math.max(selecionandoAtaque ? 2.6 : 1.5, CELL / (selecionandoAtaque ? 25 : 42));
+  if(!selecionandoAtaque) ctx.setLineDash([Math.max(3, CELL / 7), Math.max(2, CELL / 12)]);
+  else ctx.setLineDash([]);
+  ctx.lineDashOffset = -now / 28;
+  ctx.strokeRect(X + 3, Y + 3, CELL - 6, CELL - 6);
+  ctx.setLineDash([]);
+  if(selecionandoAtaque){
+    // Retículo central: não se confunde com os quadrados vermelhos de alcance.
+    const cx = X + CELL / 2, cy = Y + CELL / 2, arm = CELL * .19;
+    ctx.beginPath();
+    ctx.moveTo(cx - arm, cy); ctx.lineTo(cx + arm, cy);
+    ctx.moveTo(cx, cy - arm); ctx.lineTo(cx, cy + arm);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // Realces de interação pertencem ao primeiro plano. Eles são desenhados
@@ -6917,6 +7372,60 @@ function _drawFloorHighlights2D(ctx, x, y, isReachable, isAttackable, isWeaponPr
       ctx.beginPath(); ctx.arc(cx,cy,2.5,0,Math.PI*2); ctx.fill();
     }
   }
+}
+
+function _drawMovePreview2D(ctx, state, terrainSet){
+  const preview = GS.pendingMove;
+  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!preview?.path?.length || !me) return;
+  const origin = Array.isArray(preview.origin) ? preview.origin : me.pos;
+  let x = origin[0], y = origin[1];
+  const points = [];
+  if(terrainSet.has(`${x},${y}`)) points.push([x * CELL + CELL / 2, y * CELL + CELL / 2]);
+  for(const step of preview.path){
+    x += step[0]; y += step[1];
+    if(!terrainSet.has(`${x},${y}`)) break;
+    points.push([x * CELL + CELL / 2, y * CELL + CELL / 2]);
+  }
+  if(points.length < 2) return;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(255, 194, 48, .9)';
+  ctx.shadowBlur = Math.max(5, CELL * .16);
+  ctx.strokeStyle = 'rgba(255, 194, 48, .82)';
+  ctx.lineWidth = Math.max(4, CELL * .13);
+  ctx.beginPath();
+  ctx.moveTo(points[0][0], points[0][1]);
+  for(let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255, 245, 170, .98)';
+  ctx.lineWidth = Math.max(1.5, CELL * .045);
+  ctx.stroke();
+
+  // Pequenos nós deixam explícito por quais casas o peão passará.
+  ctx.fillStyle = 'rgba(255, 223, 92, .96)';
+  for(let i = 1; i < points.length; i++){
+    ctx.beginPath();
+    ctx.arc(points[i][0], points[i][1], Math.max(2.5, CELL * .065), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const tip = points[points.length - 1];
+  const prev = points[points.length - 2];
+  const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
+  ctx.translate(tip[0], tip[1]);
+  ctx.rotate(angle);
+  ctx.fillStyle = 'rgba(255, 246, 176, .98)';
+  ctx.beginPath();
+  ctx.moveTo(CELL * .24, 0);
+  ctx.lineTo(-CELL * .16, -CELL * .16);
+  ctx.lineTo(-CELL * .16, CELL * .16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 }
 
 function renderMap(state){
@@ -6981,7 +7490,7 @@ function renderMap(state){
     for(const m of state.monsters){
       if(!m||m.hp<=0||m._morteVisualPendente) continue;
       const dx=Math.abs(me.pos[0]-m.pos[0]), dy=Math.abs(me.pos[1]-m.pos[1]);
-      const inR=_alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1])
+      const inR=_alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
       if(inR) attackable.add(`${m.pos[0]},${m.pos[1]}`);
     }
@@ -7000,11 +7509,11 @@ function renderMap(state){
     _masterAttackSet(state).forEach(k => attackable.add(k));
   }
 
-  const weaponRangeTiles = (window._weaponRangePreview && me && !isAnimadosTurn2D)
+  const weaponRangeTiles = ((window._weaponRangePreview || window._gamepadAttackRangePreview) && me && !isAnimadosTurn2D)
     ? _computeWeaponRangeTiles(state, me) : new Set();
 
   // Durante a mira de magia/arremesso, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
+  if(_aimSessionIs() || window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable.clear(); }
 
   // A base pesada do tabuleiro é restaurada de um canvas em cache. Os
   // realces, efeitos e peões continuam no canvas visível para preservar a
@@ -7026,8 +7535,9 @@ function renderMap(state){
     _drawFloorHighlights2D(ctx, x, y,
       reachable.has(key), attackable.has(key), weaponRangeTiles.has(key));
   }
+  _drawGamepadCursor2D(ctx, state, terrainSet, performance.now());
 
-  // ── PASS 1.5: Realce de MAGIA — alcance (vermelho), zona (laranja), área (verde)
+  // ── PASS 1.5: Realce de mira — alcance (azul), zona (laranja), alvo/área (verde)
   _desenharSpellHL2D(ctx, exploredSet);
   _desenharSpellTargetPreview2D(ctx, state, exploredSet);
   _desenharSpellDirection2D(ctx, state);
@@ -7082,6 +7592,7 @@ function renderMap(state){
     if(!terrainSet.has(`${x},${y}`))
       ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
   }
+  _desenharAimHover2D(ctx);   // cursor da mira por cima da névoa — ver a função
 
   // ── PASS 5: Dramatic Diablo torchlight (multi-layer, orange-red inferno glow)
   if(me){
@@ -7363,7 +7874,7 @@ function renderMap(state){
         const px = minX * CELL + _ox, py = minY * CELL + _oy;
         const pw = (maxX - minX + 1) * CELL, ph = (maxY - minY + 1) * CELL;
         const ar = _oImg.naturalWidth / _oImg.naturalHeight;
-        const _ang = _facingAngle2D(d.facing);
+        const _ang = _facingAngle2D(d.facing, d.type, d.image);
         if (_ang === 0) {
           // ajusta mantendo proporção, ancorado embaixo (caminho original)
           let dw = pw, dh = pw / ar;
@@ -7450,8 +7961,10 @@ function renderMap(state){
   _drawMasterMonsterSelection2D(ctx, state, terrainSet);
   _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet);
   _drawMasterHistoryFocus2D(ctx, state, terrainSet);
+  _drawMovePreview2D(ctx, state, terrainSet);
 
   // ── Monsters: only visible within player's vision radius
+  const gamepadAttackTarget2D = _gamepadSelectedAttackTarget(state);
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
     if(!visionSet.has(`${mtx},${mty}`)) continue;
@@ -7463,13 +7976,15 @@ function renderMap(state){
     const [hitX, hitY] = _hitReaction2D(`m:${m.id}`);
     const cx=(mx+offX)*CELL+CELL/2+hitX, cy=(my+offY)*CELL+CELL/2+hitY;
     const fp = _monsterFootprintSize(m);
+    const attackTargeted = gamepadAttackTarget2D?.targetId === m.id;
+    if(attackTargeted) _drawGamepadAttackTargetFocus2D(ctx, m, mx, my, performance.now());
     if(m.oriented){
       // A função recebe a casa-âncora e calcula internamente o centro do
       // corpo; isso preserva a direção mesmo no footprint orientado 2x2.
-      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2+hitX, my*CELL+CELL/2+hitY);
+      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2+hitX, my*CELL+CELL/2+hitY, attackTargeted);
     } else {
       drawMiniBase(ctx, cx, cy, '#c02020', false, fp.logicalW, fp.logicalH);
-      drawMonsterSprite(ctx, cx, cy-3, m);
+      drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
     }
     // HP bar
     const pct=_combatHpRatio(`m:${m.id}`, m.hp, m.max_hp);
@@ -7485,7 +8000,9 @@ function renderMap(state){
     const mNameFs=Math.round(CELL*0.125);
     ctx.fillStyle='rgba(255,90,90,0.95)'; ctx.font=`bold ${mNameFs}px monospace`;
     ctx.textAlign='center'; ctx.textBaseline='top';
-    ctx.fillText(m.name.slice(0,10), cx, barY+barH+3);
+    const alturaVisivel = Number.isFinite(Number(m.altura)) ? Math.max(0, Math.min(10, Math.trunc(Number(m.altura)))) : 0;
+    const nomeVisivel = `${alturaVisivel > 0 ? `↑${alturaVisivel} ` : ''}${m.name}`.slice(0,10);
+    ctx.fillText(nomeVisivel, cx, barY+barH+3);
     _drawStatusIcons2D(ctx, barX-3, barY, m);
   }
 
@@ -7499,6 +8016,29 @@ function renderMap(state){
     ctx.font=`${Math.round(CELL*0.5)}px serif`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(c.icone||'💀', cx, cy);
+    ctx.restore();
+  }
+
+  // Lápides dos heróis derrotados. O registro é separado dos cadáveres de
+  // monstros, pois a Ressurreição remove esta marca antes de devolver o peão.
+  for(const c of (state.hero_corpses||[])){
+    const [cxp,cyp] = c.pos || [];
+    if(!Number.isFinite(cxp) || !Number.isFinite(cyp) || !visionSet.has(`${cxp},${cyp}`)) continue;
+    const img = _getObjeto2DImg('lapide.png');
+    const cx = cxp*CELL + CELL/2;
+    const baseY = cyp*CELL + CELL*0.90;
+    ctx.save();
+    if(img && img.complete && img.naturalWidth){
+      const ar = img.naturalWidth / img.naturalHeight;
+      let dw = CELL*0.72, dh = dw/ar;
+      if(dh > CELL*1.12){ dh = CELL*1.12; dw = dh*ar; }
+      ctx.drawImage(img, cx-dw/2, baseY-dh, dw, dh);
+    } else {
+      ctx.globalAlpha = 0.85;
+      ctx.font = `${Math.round(CELL*0.52)}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(c.icone || '🪦', cx, cyp*CELL + CELL/2);
+    }
     ctx.restore();
   }
 
@@ -7649,9 +8189,11 @@ function renderMap(state){
       const wolf = _getMonster2DImg(p.pawn_override);
       if(wolf && wolf.complete && wolf.naturalWidth){
         const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
+        if(p.petrificado) ctx.save(), ctx.filter=_petrificadoFiltro2D();
         ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
-      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
-    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur);
+        if(p.petrificado) ctx.restore();
+      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
+    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
@@ -8270,7 +8812,10 @@ const MAT_PALETTE_2D = {
 // Resolve o material de uma casa para render (default por estrutura do tile).
 function matDaCasa(state, x, y){
   const m = state && state.materiais;
-  const id = m && m[`${x},${y}`];
+  const secret = (state && state.secret_passages || []).find(sp =>
+    sp && sp.pos && sp.pos[0] === x && sp.pos[1] === y);
+  const secretId = secret && secret.wall_material;
+  const id = secretId && MAT_PALETTE_2D[secretId] ? secretId : (m && m[`${x},${y}`]);
   if(id && MAT_PALETTE_2D[id]) return id;
   return (state.tiles[y][x] === TILE_WALL) ? 'pedra_normal' : 'pedra_cinza';
 }
@@ -11444,9 +11989,22 @@ function _partyTemBardoVivo(){
 
 // Tooltip do inimigo. `full=false` → só o nome + HP/CA (visão comum).
 // `full=true` (com Henrique no grupo) → ficha completa do monstro.
-function fichaInimigoTooltipHTML(m, full){
+function fichaInimigoTooltipHTML(m, full, attacker=null){
   const nome = `<b>${m.emoji||'👾'} ${m.name}</b>`;
-  if(!full) return `${nome}<br>HP ${m.hp}/${m.max_hp} | CA ${m.ac}`;
+  let verticalHTML = '';
+  if(attacker?.pos && (attacker.weapon?.range != null || Number(m.altura) > 0 || Number(attacker.altura) > 0)){
+      const info = GS.weaponReachInfo?.(attacker, m.pos?.[0], m.pos?.[1], m.altura);
+    if(info){
+      const delta = Math.abs(info.targetAltitude - info.attackerAltitude);
+      const alcance = info.effectiveRange == null ? 'corpo a corpo' : `${Math.max(0, info.effectiveRange)}/${attacker.weapon.range}`;
+      const linhaLivre = info.effectiveRange == null || GS.hasLineOfSight?.(GS.gameState, attacker.pos[0], attacker.pos[1], m.pos[0], m.pos[1]);
+      const situacao = info.effectiveRange == null
+        ? (info.inRange ? 'mesma altura' : 'alturas diferentes')
+        : (!info.inRange ? 'fora do alcance' : (linhaLivre ? 'alcance' : 'linha bloqueada'));
+      verticalHTML = `<div style="margin-top:4px;padding-top:3px;border-top:1px solid #c8a95133;color:${info.inRange && linhaLivre ? '#9ee7b3' : '#ff9b9b'};font-size:9px;">↕ Altura ${info.attackerAltitude} → ${info.targetAltitude} · Δ${delta} = ${info.verticalCost}q · ${alcance} (${situacao})</div>`;
+    }
+  }
+  if(!full) return `${nome}<br>HP ${m.hp}/${m.max_hp} | CA ${m.ac}${verticalHTML}`;
   const pct = Math.max(0, Math.min(100, (m.hp / Math.max(1,m.max_hp)) * 100));
   const cor = pct>60 ? '#2ecc40' : pct>30 ? '#ff851b' : '#ff4136';
   const TIER = {1:'Comum', 2:'Veterano', 3:'Elite', 4:'Chefe'};
@@ -11549,6 +12107,7 @@ function fichaInimigoTooltipHTML(m, full){
       </div>
       <div>🛡️ CA <b>${m.ac}</b>${crVal ? ` &nbsp;·&nbsp; ND <b>${crVal}</b>` : ''}</div>
       <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ XP <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
+      ${verticalHTML}
       ${legacyAtkHTML}
       ${atribHTML}
       ${savesHTML}
@@ -11649,7 +12208,7 @@ function iniciarProvocacao(){
   const st  = GS.gameState;
   const pp  = me.pos || [0,0];
   const alvos = (st.monsters||[]).filter(m => m && m.hp>0 &&
-    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 3 &&
+    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, 3, m) &&
     !(m.provocado && (m.provocado_turnos||0) > 0));
   if(!alvos.length){ toast(t('ui.bardo.provocar_sem_alvo'), 'var(--orange)'); return; }
   if(alvos.length === 1){ send({ type:'provocacao', target_id:alvos[0].id }); return; }
@@ -11763,35 +12322,38 @@ function _iniciarMiraInstrumento(me, inst, b){
   const st = GS.instrumentoStatsClient(inst) || {};
   const alcance = st.alcance || 0;
   const state = GS.gameState;
-  const range = new Set();
   const [px, py] = me.pos || [0, 0];
-  for(let y = 0; y < (state?.tiles || []).length; y++){
-    for(let x = 0; x < (state?.tiles?.[y] || []).length; x++){
-      if(x === px && y === py) continue;
-      if(state.tiles[y][x] !== TILE_FLOOR) continue;
-      if(Math.max(Math.abs(px - x), Math.abs(py - y)) > alcance) continue;
-      if(GS.hasLineOfSight(state, px, py, x, y)) range.add(`${x},${y}`);
-    }
-  }
+  // O alcance PINTADO é o disco do instrumento, do mesmo jeito que o das
+  // magias (_recomputarAlcanceMagia também usa _addCheb). Antes ele já vinha
+  // peneirado por chão + linha de visão, e numa sala fechada isso desenhava o
+  // formato da SALA em vez do alcance da arma — o jogador via só as casas ao
+  // redor e não conseguia julgar até onde a Nota Cortante chega. As paredes
+  // continuam sem pintura porque a fábrica do realce recusa casa que não é
+  // chão, e a névoa continua filtrando, como em qualquer outro alcance.
+  const range = new Set();
+  _addCheb(px, py, Math.max(0, _alcanceComAlturaCli(me, alcance)), range);
+  range.delete(`${px},${py}`);   // a própria casa do bardo não é alvo
   window._modoInstrumento = { id: 'nota_cortante', base: inst.base, alcance, range };
   GS.pendingInstrumento = { id: 'nota_cortante', base: inst.base, alcance };
-  window._spellHL.range = range;
-  window._spellHL.area = new Set();
-  window._spellHL.double = new Set();
-  _aplicarSpellHL();
-  if(typeof g3 !== 'undefined' && g3?.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  let leg = document.getElementById('legenda-instrumento');
-  if(!leg){
-    leg = document.createElement('div');
-    leg.id = 'legenda-instrumento';
-    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-      "background:rgba(10,8,5,0.92);border:1px solid #ff4422;color:#ff8c66;font-family:'Cinzel',serif;" +
-      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
-    document.body.appendChild(leg);
+  // O VERDE continua marcando só o que dá para acertar de fato: inimigo no
+  // alcance e com linha de visão — a mesma regra que GS.resolveTileClick usa
+  // para aceitar o clique.
+  const validTargets = new Set();
+  for (const monster of state?.monsters || []) {
+    if (monster.hp <= 0) continue;
+    for (const [x, y] of GS.monsterTiles(monster)) {
+      if (Math.max(Math.abs(px - x), Math.abs(py - y)) > _alcanceComAlturaCli(me, alcance, monster)) continue;
+      if (GS.hasLineOfSight(state, px, py, x, y)) validTargets.add(`${x},${y}`);
+    }
   }
-  leg.textContent = `${b.icon} ${b.habilidade_nome.toUpperCase()} — clique num inimigo destacado (alcance ${alcance}q) | ESC cancela`;
-  leg.style.display = 'block';
-  document.addEventListener('keydown', _keyInstrumentoEsc);
+  _aimStart({
+    kind: 'instrumento',
+    title: `${b.icon} ${b.habilidade_nome.toUpperCase()}`,
+    instruction: `Selecione um inimigo destacado · alcance ${alcance}q.`,
+    color: '#ff8c66', targetLabel: 'INIMIGO', range, area: validTargets,
+    cancelText: 'Nota Cortante cancelada.',
+    cleanup: () => { window._modoInstrumento = null; GS.pendingInstrumento = null; },
+  });
 }
 
 function _clickTileInstrumento(tx, ty){
@@ -11801,11 +12363,16 @@ function _clickTileInstrumento(tx, ty){
     GS.usarInstrumento({ id: r.targetId });
     _encerrarMiraInstrumento();
   } else if(r?.type === 'instrumento_blocked'){
-    toast(r.reason === 'wall' ? '🧱 Uma parede ou porta fechada bloqueia a Nota Cortante.' : 'Fora do alcance da Nota Cortante.', 'var(--orange)');
+    const msg = r.reason === 'wall' ? '🧱 Uma parede ou porta fechada bloqueia a Nota Cortante.' : 'Fora do alcance da Nota Cortante.';
+    _aimSetStatus(msg, '#ffb168');
+    toast(msg, 'var(--orange)');
+  } else {
+    _aimSetStatus('Selecione um inimigo vivo dentro do alcance.', '#ffb168');
   }
 }
 
 function _encerrarMiraInstrumento(){
+  if(_aimSessionIs('instrumento')) { _aimEnd({ silent:true, reason:'resolved' }); return; }
   window._modoInstrumento = null;
   GS.pendingInstrumento = null;
   window._spellHL.range = new Set();
@@ -11816,6 +12383,51 @@ function _encerrarMiraInstrumento(){
   if(leg) leg.remove();
   if(typeof g3 !== 'undefined' && g3?.renderer) g3.renderer.domElement.style.cursor = 'default';
   document.removeEventListener('keydown', _keyInstrumentoEsc);
+}
+
+function _iniciarMiraInstrumentoAlvo(me, b, alcance, onSelect, targetList = null){
+  const state = GS.gameState;
+  const range = new Set(), validTargets = new Set();
+  if(!state || !me?.pos) return false;
+  if(!targetList) _addCheb(me.pos[0], me.pos[1], alcance, range);
+  for(const monster of targetList || state.monsters || []){
+    if(!monster || monster.hp <= 0) continue;
+    for(const [x, y] of GS.monsterTiles(monster)) {
+      if(targetList || Math.max(Math.abs(me.pos[0]-x), Math.abs(me.pos[1]-y)) <= _alcanceComAlturaCli(me, alcance, monster)) validTargets.add(`${x},${y}`);
+    }
+  }
+  if(!validTargets.size){ toast(t('ui.instrumento.sem_inimigo_raio', {n:alcance}), 'var(--orange)'); return false; }
+  window._modoInstrumentoAlvo = { validTargets, onSelect };
+  _aimStart({
+    kind:'instrumento_alvo', title:`${b.icon || '🎵'} ${(b.habilidade_nome || 'INSTRUMENTO').toUpperCase()}`,
+    instruction:targetList ? 'Selecione um inimigo destacado.' : `Selecione um inimigo destacado · alcance ${alcance}q.`,
+    color:'#ff8c66', targetLabel:'INIMIGO', range, area:validTargets,
+    cancelText:'Habilidade de instrumento cancelada.',
+    cleanup:()=>{ window._modoInstrumentoAlvo = null; },
+  });
+  return true;
+}
+
+function _clickTileInstrumentoAlvo(tx, ty){
+  const mode = window._modoInstrumentoAlvo;
+  if(!mode) return;
+  const monster = (GS.gameState?.monsters || []).find(m => m?.hp > 0 &&
+    GS.monsterTiles(m).some(([x, y]) => x === tx && y === ty));
+  const valid = !!monster && mode.validTargets.has(`${tx},${ty}`);
+  if(!valid){
+    _aimSetHover(tx, ty, 'blocked');
+    _aimSetStatus('Selecione um inimigo destacado dentro do alcance.', '#ff9aa2');
+    return;
+  }
+  const onSelect = mode.onSelect;
+  _aimEnd({silent:true, reason:'resolved'});
+  onSelect(monster.id);
+}
+
+function _aimHoverInstrumentoAlvo(tx, ty){
+  const valid = !!window._modoInstrumentoAlvo?.validTargets?.has(`${tx},${ty}`);
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(valid ? 'Inimigo válido — confirme para usar.' : 'Selecione um inimigo destacado dentro do alcance.', valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _keyInstrumentoEsc(e){
@@ -11835,12 +12447,19 @@ function _atualizarMiraInstrumentoHover(tx, ty, tip, event){
     const key = `${tx},${ty}`;
     const ok = mode.range.has(key) && GS.hasLineOfSight(GS.gameState, GS.me.pos[0], GS.me.pos[1], tx, ty);
     tip.innerHTML = `<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok ? '#f08080' : '#f09030'}">${ok ? '🎵 Clique para usar Nota Cortante' : '⚠ Fora de alcance ou bloqueado'}</span>`;
-    tip.style.display = 'block';
+    // Sem evento a chamada veio do controle, que não tem ponteiro: mostrar a
+    // dica a deixaria parada na última posição do mouse. O estado da mira (o
+    // realce e a linha de status) já diz o mesmo sem depender da tela.
+    tip.style.display = event ? 'block' : 'none';
     if(event){ tip.style.left = (event.clientX + 14) + 'px'; tip.style.top = (event.clientY - 10) + 'px'; }
     const canvas = document.getElementById('dungeon-canvas');
     if(canvas) canvas.style.cursor = ok ? 'crosshair' : 'not-allowed';
+    _aimSetHover(tx, ty, ok ? 'valid' : 'blocked');
+    _aimSetStatus(ok ? 'Alvo válido — confirmar para usar.' : 'Alvo bloqueado: fora do alcance ou atrás de uma parede.', ok ? '#94dfb0' : '#ff9aa2');
   } else {
     tip.style.display = 'none';
+    _aimSetHover(tx, ty, 'blocked');
+    _aimSetStatus('Selecione um inimigo destacado dentro do alcance.', '#ff9aa2');
   }
   return true;
 }
@@ -11862,11 +12481,9 @@ function acionarInstrumento(me, inst, b){
     const gs = GS.gameState;
     const pp = me.pos || [0,0];
     const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0 &&
-      Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= alcance);
+      Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, alcance, m));
     if(!alvos.length){ toast(t('ui.instrumento.sem_inimigo_raio', {n:alcance}), 'var(--orange)'); return; }
-    if(alvos.length === 1){ GS.usarInstrumento(alvos[0]); return; }
-    openTargetModal(t('ui.instrumento.escolha_alvo', {icone:b.icon, nome:b.habilidade_nome, alcance}), alvos, 'monster',
-      id => GS.usarInstrumento({ id }));
+    _iniciarMiraInstrumentoAlvo(me, b, alcance, id => GS.usarInstrumento({ id }));
   } else {
     GS.usarInstrumento(null);
   }
@@ -11887,6 +12504,41 @@ window.acionarInstrumento = acionarInstrumento;
 let _instrumentoDirFechar = null;
 
 function escolherDirecaoInstrumento(b, onEscolher){
+  if(_instrumentoDirFechar) _instrumentoDirFechar();
+  const me = GS.me;
+  if(!me?.pos) return;
+  const directions = new Set();
+  _addCheb(me.pos[0], me.pos[1], 1, directions);
+  directions.delete(`${me.pos[0]},${me.pos[1]}`);
+  window._modoDirecaoInstrumento = { onEscolher, directions };
+  _aimStart({
+    kind:'instrumento_direcao',
+    title:`${b.icon || '📯'} ${(b.habilidade_nome || 'ESCOLHER DIREÇÃO').toUpperCase()}`,
+    instruction:'Selecione uma das oito casas ao redor do bardo.',
+    color:'#ff8c66', targetLabel:'DIREÇÃO', range:directions, area:directions,
+    cancelText:'Escolha de direção cancelada.',
+    cleanup:()=>{ window._modoDirecaoInstrumento = null; },
+  });
+}
+
+function _clickTileDirecaoInstrumento(tx, ty){
+  const mode = window._modoDirecaoInstrumento, me = GS.me;
+  if(!mode || !me?.pos) return;
+  const key = `${tx},${ty}`;
+  if(!mode.directions.has(key)){
+    _aimSetHover(tx, ty, 'blocked');
+    _aimSetStatus('Escolha uma das oito casas ao redor do bardo.', '#ff9aa2');
+    return;
+  }
+  const [dx, dy] = _dir8(tx - me.pos[0], ty - me.pos[1]);
+  const onEscolher = mode.onEscolher;
+  _aimEnd({silent:true, reason:'resolved'});
+  onEscolher(dx, dy);
+}
+
+// Mantido apenas como fallback para sessões antigas já abertas antes de uma
+// atualização em tempo real. Entradas novas usam a mira do tabuleiro acima.
+function _escolherDirecaoInstrumentoLegacy(b, onEscolher){
   // Fecha uma invocação anterior ainda aberta (remove o overlay E o listener
   // de keydown dela — senão cada reabertura empilhava mais um listener no
   // document, que nunca era removido).
@@ -12022,13 +12674,8 @@ function aimNextImprovisoAlvo(pendentes, i){
     const gs = GS.gameState;
     const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0);
     if(!alvos.length){ toast('Nenhum inimigo vivo para o Improviso.', 'var(--orange)'); return; }
-    if(alvos.length === 1){
-      GS.improvisoAlvo(alvos[0].id, null);
-      aimNextImprovisoAlvo(pendentes, i + 1);
-      return;
-    }
-    openTargetModal('🪗 Improviso — Escolha o alvo', alvos, 'monster',
-      id => { GS.improvisoAlvo(id, null); aimNextImprovisoAlvo(pendentes, i + 1); });
+    _iniciarMiraInstrumentoAlvo(GS.me, { icon:'🪗', habilidade_nome:'Improviso' }, 0,
+      id => { GS.improvisoAlvo(id, null); aimNextImprovisoAlvo(pendentes, i + 1); }, alvos);
   } else if(step.alvo_tipo === 'direcao'){
     escolherDirecaoInstrumento({ icon: '🪗', habilidade_nome: t('ui.instrumento.improviso_direcao') },
       (dx, dy) => { GS.improvisoAlvo(null, [dx, dy]); aimNextImprovisoAlvo(pendentes, i + 1); });
@@ -12097,6 +12744,7 @@ function abrirPainelGuerreiroLuz(){
   if(me.guerreiro_luz_ativo){ send({type:'acao_livre_richard', habilidade_id:'guerreiro_luz'}); return; }
 
   _bonusGuerreiro = { visao:0, ataque:0, dano:0, ca:0 };
+  let gamepadFocusKey = 'visao-plus';
   const painel = document.createElement('div');
   painel.id = 'painel-guerreiro-luz';
   painel.style.cssText =
@@ -12120,11 +12768,11 @@ function abrirPainelGuerreiroLuz(){
           <span style="font-size:16px;">${attr.icone}</span>
           <div style="flex:1;color:${valor>0?'#c8a951':'#c8b89a'};font-size:11px;">+${valor} ${_glLabel(attr.id)}</div>
           <div style="display:flex;gap:4px;align-items:center;">
-            <button onclick="ajustarBonusGuerreiro('${attr.id}',-1)" ${valor===0?'disabled':''}
+            <button data-gdl-control="${attr.id}-minus" onclick="ajustarBonusGuerreiro('${attr.id}',-1)" ${valor===0?'disabled':''}
               style="width:24px;height:24px;background:transparent;border:1px solid ${valor>0?'#c8a951':'#2a2a2a'};
               color:${valor>0?'#c8a951':'#4a4a4a'};cursor:${valor>0?'pointer':'not-allowed'};font-size:14px;line-height:1;">−</button>
             <span style="color:#c8a951;font-size:13px;font-weight:bold;min-width:16px;text-align:center;">${valor}</span>
-            <button onclick="ajustarBonusGuerreiro('${attr.id}',1)" ${valor>=attr.max?'disabled':''}
+            <button data-gdl-control="${attr.id}-plus" onclick="ajustarBonusGuerreiro('${attr.id}',1)" ${valor>=attr.max?'disabled':''}
               style="width:24px;height:24px;background:transparent;border:1px solid ${valor<attr.max?'#c8a951':'#2a2a2a'};
               color:${valor<attr.max?'#c8a951':'#4a4a4a'};cursor:${valor<attr.max?'pointer':'not-allowed'};font-size:14px;line-height:1;">+</button>
           </div>
@@ -12141,14 +12789,23 @@ function abrirPainelGuerreiroLuz(){
         <span style="color:#ff851b;font-size:10px;">${(custo.fome||custo.sede)?`${custo.fome?`🍖-${custo.fome} `:''}${custo.sede?`💧-${custo.sede}`:''}`:t('ui.paladino.selecione_bonus')}</span>
       </div>
       <div style="display:flex;gap:6px;">
-        <button onclick="document.getElementById('painel-guerreiro-luz').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">${t('ui.geral.cancelar_caixa')}</button>
-        <button onclick="confirmarGuerreiroLuz()" ${(custo.fome+custo.sede)===0?'disabled':''} style="flex:2;padding:8px;background:${(custo.fome+custo.sede)>0?'rgba(200,169,81,0.15)':'transparent'};border:1px solid ${(custo.fome+custo.sede)>0?'#c8a951':'#4a4a4a'};color:${(custo.fome+custo.sede)>0?'#c8a951':'#4a4a4a'};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:${(custo.fome+custo.sede)>0?'pointer':'not-allowed'};">${t('ui.paladino.ativar')}</button>
+        <button data-gdl-control="cancelar" onclick="document.getElementById('painel-guerreiro-luz').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">${t('ui.geral.cancelar_caixa')}</button>
+        <button data-gdl-control="confirmar" onclick="confirmarGuerreiroLuz()" ${(custo.fome+custo.sede)===0?'disabled':''} style="flex:2;padding:8px;background:${(custo.fome+custo.sede)>0?'rgba(200,169,81,0.15)':'transparent'};border:1px solid ${(custo.fome+custo.sede)>0?'#c8a951':'#4a4a4a'};color:${(custo.fome+custo.sede)>0?'#c8a951':'#4a4a4a'};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:${(custo.fome+custo.sede)>0?'pointer':'not-allowed'};">${t('ui.paladino.ativar')}</button>
       </div>`;
+    if(_gamepadInput.active && painel.isConnected){
+      const alvo = painel.querySelector(`[data-gdl-control="${gamepadFocusKey}"]:not(:disabled)`)
+        || painel.querySelector('[data-gdl-control="visao-plus"]:not(:disabled)')
+        || painel.querySelector('button:not(:disabled)');
+      if(alvo) _gamepadSetUiFocus(alvo);
+    }
   }
   render();
   document.body.appendChild(painel);
+  if(_gamepadInput.active) _gamepadSetUiFocus(painel.querySelector('[data-gdl-control="visao-plus"]'));
 
   window.ajustarBonusGuerreiro = (id, delta) => {
+    const focado = _gamepadUi.focusEl?.dataset?.gdlControl || document.activeElement?.dataset?.gdlControl;
+    if(focado) gamepadFocusKey = focado;
     const attr = GUERREIRO_LUZ_BONUS_CLIENT.find(a => a.id === id);
     if(!attr) return;
     // Teto de atributos simultâneos (Fase 1c): ativar um NOVO atributo (0→>0)
@@ -12177,7 +12834,7 @@ function _aliadosNoRaioPaladin(me, raio){
   const st = GS.gameState; if(!st) return [];
   const pp = me.pos || [0,0];
   return (st.players || []).filter(a => a && a.alive && a.id !== me.id && a.pos &&
-    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= raio);
+    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
 }
 
 // Protetor — ação bônus (raio 4). Escolhe aliado via modal (auto-envia se 1).
@@ -12504,25 +13161,31 @@ function abrirPainelCriarArmadilha(){
 
 function _ativarModoPlacementArmadilha(tipoId, venenoId){
   window._modoPlacementArmadilha = { tipoId, venenoId };
-  try { if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair'; } catch(e){}
-
-  const legenda = document.createElement('div');
-  legenda.id = 'legenda-armadilha';
-  legenda.style.cssText = `position:fixed; bottom:120px; left:50%; transform:translateX(-50%);
-    background:rgba(10,8,5,0.92); border:1px solid #c8a951; color:#c8a951; font-family:'Cinzel',serif;
-    font-size:11px; letter-spacing:2px; padding:8px 20px; pointer-events:none; z-index:100;`;
   const meta = ARMADILHAS_LUCCAS.find(a => a.id === tipoId);
-  legenda.innerHTML = meta?.apenas_objeto
-    ? '📦 Clique num objeto ao alcance | ESC cancela'
-    : '🪤 Clique numa casa sua ou adjacente | ESC cancela';
-  document.body.appendChild(legenda);
-
-  document.addEventListener('keydown', function cancelarPlacement(e){
-    if(e.key === 'Escape'){ _cancelarPlacementArmadilha(); document.removeEventListener('keydown', cancelarPlacement); e.preventDefault(); }
+  const me = GS.me;
+  const range = new Set(), area = new Set();
+  if (me?.pos) {
+    _addCheb(me.pos[0], me.pos[1], 1, range);
+    if (meta?.apenas_objeto) {
+      for (const decor of GS.decorations || []) {
+        if (decor.pisavel) continue;
+        for (const [x, y] of GS.decorTilesOf(decor)) if (range.has(`${x},${y}`)) area.add(`${x},${y}`);
+      }
+    } else {
+      for (const key of range) area.add(key);
+    }
+  }
+  _aimStart({
+    kind: 'armadilha', title: `🪤 ${meta?.nome || 'POSICIONAR ARMADILHA'}`,
+    instruction: meta?.apenas_objeto ? 'Selecione um objeto sólido adjacente.' : 'Selecione a sua casa ou uma casa adjacente.',
+    color: '#c8a951', targetLabel: meta?.apenas_objeto ? 'OBJETO' : 'CASA', range, area,
+    cancelText: 'Posicionamento de armadilha cancelado.',
+    cleanup: () => { window._modoPlacementArmadilha = null; },
   });
 }
 
 function _cancelarPlacementArmadilha(){
+  if(_aimSessionIs('armadilha')) { _aimEnd({ silent:true, reason:'resolved' }); return; }
   window._modoPlacementArmadilha = null;
   try { if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'default'; } catch(e){}
   document.getElementById('legenda-armadilha')?.remove();
@@ -12536,7 +13199,10 @@ function onClickTileParaArmadilha(tx, ty){
     const objetos = (GS.decorations || []).filter(d =>
       GS.decorTilesOf(d).some(([x,y]) => x === tx && y === ty) && !d.pisavel);
     const objeto = objetos[0];
-    if(!objeto){ toast('Selecione um objeto ao alcance.', 'var(--orange)'); return; }
+    if(!objeto){
+      _aimSetStatus('Selecione um objeto sólido adjacente.', '#ffb168');
+      toast('Selecione um objeto ao alcance.', 'var(--orange)'); return;
+    }
     send({ type:'criar_armadilha', tipo:tipoId, decor_id:objeto.id, tx:tx, ty:ty, veneno_id:venenoId || null });
   } else {
     send({ type:'criar_armadilha', tipo:tipoId, tx:tx, ty:ty, veneno_id:venenoId || null });
@@ -12718,7 +13384,7 @@ function _aliadosVivosNoRaioCleric(me, raio, incluirSelf){
   const pp = me.pos || [0,0];
   return (st.players || []).filter(a => a && a.alive && a.pos &&
     (incluirSelf || a.id !== me.id) &&
-    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= raio);
+    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
 }
 
 // Aliados MORTOS dentro de `raio` (Ressurreição). Exclui o próprio Lewis.
@@ -12726,7 +13392,7 @@ function _aliadosMortosNoRaioCleric(me, raio){
   const st = GS.gameState; if(!st) return [];
   const pp = me.pos || [0,0];
   return (st.players || []).filter(a => a && a.alive === false && a.id !== me.id && a.pos &&
-    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= raio);
+    Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
 }
 
 // Tipos de purificação — espelha PURIFICACAO_CUSTOS em server.py. `cond` lê os
@@ -13063,6 +13729,17 @@ const GRIMORIO_CLIENT = {
                <b>Sucesso:</b> age normalmente<br>
                <b>Falha:</b> mais 1 rodada (máx 2)`
   },
+  voo: {
+    id:'voo', nome:'Voo', icone:'🪽',
+    circulo:'primeiro', classe:['mage','cleric'],
+    tipo:'alvo_aliado', alcance_base:3, alcance_escala:1, alcance_por_niveis:3,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 3 quadrados +1 a cada 3 níveis de conjurador<br>
+               <b>Alvo:</b> 1 aliado (ou você)<br>
+               <b>Efeito:</b> ativa Voo até o fim da missão; altura inicial 2, máxima 10<br>
+               <b>Controle:</b> use o botão ↕ Altura e o scroll, ou L1 + L2/R2 no joystick<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
+  },
   sono: {
     id:'sono', nome:'Sono', icone:'🌙',
     circulo:'primeiro', classe:['mage'],
@@ -13312,11 +13989,23 @@ const GRIMORIO_CLIENT = {
                <b>Save:</b> Reflexos → metade<br>
                <b>Vs mortos-vivos/demônios:</b> dano dobrado<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
+  },
+  olhar_petrificante: {
+    id:'olhar_petrificante', nome:'Olhar Petrificante', icone:'👁️',
+    circulo:'quarto', classe:['mage','cleric'], tipo:'buff_self', alcance:0,
+    custo:'📜 Pergaminho',
+    descricao:`<b>Duração:</b> 1d4 + 1 rodada a cada 3 níveis<br>
+               <b>Alcance:</b> usa a visão da vítima e exige o conjurador em sua LOS<br>
+               <b>Testes:</b> 1 teste inicial; 2 por turno enquanto visível; até 5 testes finais após perder a visão<br>
+               <b>Vontade:</b> CD 8 + INT + 4<br>
+               <b>Falha:</b> 1 marca de Petrificação; 3 = petrificação permanente<br>
+               <b>Sucesso:</b> 1 marca de Resistência; 3 encerra o efeito<br>
+               <b>Bloqueio:</b> Manto da Escuridão impede o olhar sem visão no escuro`
   }
 };
 
-const _COR_CIRCULO = { primeiro:'#c8a951', segundo:'#4488ff', terceiro:'#cc44ff' };
-const _RGB_CIRCULO = { primeiro:'200,169,81', segundo:'68,136,255', terceiro:'204,68,255' };
+const _COR_CIRCULO = { primeiro:'#c8a951', segundo:'#4488ff', terceiro:'#cc44ff', quarto:'#ff6644' };
+const _RGB_CIRCULO = { primeiro:'200,169,81', segundo:'68,136,255', terceiro:'204,68,255', quarto:'255,102,68' };
 // Função, e não mapa: o `t` só existe depois do boot do I18N, e um mapa de
 // módulo congelaria o idioma da carga (padrão do Lote 1 para {id:'texto'}).
 const _labelCirculo = c => _rotulo(c, 'ui.magia.circulo', '');
@@ -13623,7 +14312,7 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'abencoar', 'amaldicoar', 'abencoar_arma',
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
-  'conjurar_elemental', 'silencio', 'barreira_arcana', 'contramagica'
+  'conjurar_elemental', 'silencio', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante'
 ]);
 
 function _meVivoNaVez() {
@@ -13741,7 +14430,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
                         areaLado: _cajadoArcanoAreaLado(_me, _def, !!scrollItemId) || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
-  // Realce: alcance (vermelho) fixo no caster; área (verde) segue o cursor.
+  // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
     window._modoMagia.validTiles = _tilesAdjacentesLivresMagia();
     window._spellHL.range = new Set();
@@ -13749,25 +14438,27 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   } else {
     _recomputarAlcanceMagia();
     if (alvoTipo === 'self_area') _recomputarAreaMagia(null, null); // área fixa no caster
+    // Linha e cone NÃO têm anel de alcance (o próprio trajeto o mostra) e a
+    // área só era calculada no mousemove: quem abria a mira e não mexia o
+    // mouse ficava com o tabuleiro limpo, sem nada indicando o trajeto.
+    // Semeia na direção para onde o peão está virado (Sul, antes do 1º passo).
+    else if (alvoTipo === 'linha' || alvoTipo === 'cone') _semearTrajetoMagia();
     else window._spellHL.area = new Set();
   }
-  _aplicarSpellHL();
-  if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  let leg = document.getElementById('legenda-magia');
-  if (!leg) {
-    leg = document.createElement('div');
-    leg.id = 'legenda-magia';
-    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-      "background:rgba(10,8,5,0.92);border:1px solid #c8a951;color:#c8a951;font-family:'Cinzel',serif;" +
-      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
-    document.body.appendChild(leg);
-  }
   const m = GRIMORIO_CLIENT[magiaId];
-  leg.innerHTML = `${m.icone} ${m.nome.toUpperCase()} — ${_rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao'))} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}<br><span style="font-size:9px;letter-spacing:1px;color:#ff6b6b">■ INIMIGO</span> <span style="font-size:9px;letter-spacing:1px;color:#6bb7ff">■ ALIADO</span> <span style="font-size:9px;letter-spacing:1px;color:#ffe070">■ LANÇADOR</span>`;
-  leg.style.borderColor = '#c8a951';
-  leg.style.color       = '#c8a951';
-  leg.style.display = 'block';
-  document.addEventListener('keydown', _keyMagiaEsc);
+  _aimStart({
+    kind: 'magia',
+    title: `${m.icone} ${m.nome.toUpperCase()}`,
+    instruction: _rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao')),
+    color: '#c8a951', targetLabel: alvoTipo === 'foe' ? 'INIMIGO' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? 'DIREÇÃO' : 'CASA',
+    range: window._spellHL.range, area: window._spellHL.area, double: window._spellHL.double,
+    cancelText: 'Magia cancelada.',
+    cleanup: () => {
+      const cancelada = window._modoMagia?.magiaId;
+      window._modoMagia = null;
+      if (cancelada) _removerEfeitoVisualLocal(cancelada);
+    },
+  });
 }
 
 // Extrai o "spec" de alvo de um clique conforme o tipo de mira. Retorna
@@ -13807,11 +14498,15 @@ function _clickTileMagia(tx, ty) {
   const m  = GRIMORIO_CLIENT[magiaId];
 
   if (mode.alvoTipo === 'adjacent_tile' && !mode.validTiles?.has(`${tx},${ty}`)) {
+    _aimSetStatus('Casa inválida: escolha uma das casas verdes livres.', '#ffb168');
     toast('Escolha uma das casas verdes livres.', '#ff6b6b'); return;
   }
 
   const spec = _specAlvoMagia(mode.alvoTipo, tx, ty);
-  if (!spec.ok) { if (spec.msg) toast(spec.msg, '#ff6b6b'); return; }
+  if (!spec.ok) {
+    _aimSetStatus(spec.msg || 'Alvo inválido para esta magia.', '#ffb168');
+    if (spec.msg) toast(spec.msg, '#ff6b6b'); return;
+  }
 
   // Alcance: SÓ a Clarividência (alvoLivre) mira o mapa inteiro. As demais
   // respeitam o alcance original — alvo/centro deve estar dentro do raio
@@ -13821,10 +14516,18 @@ function _clickTileMagia(tx, ty) {
   if (!mode.scrollItemId && !mode.alvoLivre &&
       (mode.alvoTipo === 'tile' || mode.alvoTipo === 'foe' || mode.alvoTipo === 'ally')) {
     const me  = GS.me;
-    const alc = _alcanceMagiaCli(m, me && me.level);
+    const alvoVisual = (mode.alvoTipo === 'foe')
+      ? (GS.gameState?.monsters || []).find(mm => mm.hp > 0 &&
+          GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
+      : (GS.gameState?.players || []).find(pp => pp.alive && pp.pos[0] === tx && pp.pos[1] === ty);
+    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me && me.level), alvoVisual);
     if (me && alc > 0) {
       const d = Math.max(Math.abs(me.pos[0] - tx), Math.abs(me.pos[1] - ty));
-      if (d > alc) { toast(t('ui.magia.fora_de_alcance', {n:alc}), '#ff6b6b'); return; }
+      if (d > alc) {
+        const msg = t('ui.magia.fora_de_alcance', {n:alc});
+        _aimSetStatus(msg, '#ffb168');
+        toast(msg, '#ff6b6b'); return;
+      }
     }
   }
 
@@ -13840,6 +14543,7 @@ function _clickTileMagia(tx, ty) {
 }
 
 function _encerrarModoMagia() {
+  if(_aimSessionIs('magia')) { _aimEnd({ silent:true, reason:'resolved' }); return; }
   const magiaCancelada = window._modoMagia?.magiaId;
   window._modoMagia = null;
   if(magiaCancelada) _removerEfeitoVisualLocal(magiaCancelada);
@@ -13860,24 +14564,19 @@ function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
   window._modoAnimarMortos = { cadaveres: validos, alcance: 3, versao };
   const alcance = new Set();
   _addCheb(me.pos[0], me.pos[1], 3, alcance);
-  window._spellHL.range = alcance;
-  window._spellHL.area = new Set(cadaveres.map(c => `${c.pos[0]},${c.pos[1]}`));
-  _aplicarSpellHL();
-  if (typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  let leg = document.getElementById('legenda-magia');
-  if (!leg) {
-    leg = document.createElement('div');
-    leg.id = 'legenda-magia';
-    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-      'background:rgba(10,8,5,0.92);border:1px solid #b36bff;color:#d98cff;font-family:inherit;' +
-      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
-    document.body.appendChild(leg);
-  }
-  leg.textContent = t('ui.animar.modo_legenda');
-  leg.style.borderColor = '#b36bff';
-  leg.style.color = '#d98cff';
-  leg.style.display = 'block';
-  document.addEventListener('keydown', _keyAnimarMortosEsc);
+  _aimStart({
+    kind: 'animar_mortos',
+    title: '💀 ANIMAR MORTOS',
+    instruction: t('ui.animar.modo_legenda'),
+    color: '#d98cff', targetLabel: 'CADÁVER', range: alcance,
+    area: new Set(cadaveres.map(c => `${c.pos[0]},${c.pos[1]}`)),
+    cancelText: 'Animar Mortos cancelado.',
+    cleanup: () => {
+      const cancelada = window._modoAnimarMortos?.versao;
+      window._modoAnimarMortos = null;
+      if (cancelada) _removerEfeitoVisualLocal(cancelada === 'senhor_da_morte' ? 'animar_mortos' : cancelada);
+    },
+  });
 }
 
 function _clickTileAnimarMortos(tx, ty) {
@@ -13885,12 +14584,16 @@ function _clickTileAnimarMortos(tx, ty) {
   if (!mode) return;
   const corpse = (GS.gameState?.corpses || []).find(c =>
     c.pos[0] === tx && c.pos[1] === ty && mode.cadaveres.has(c.id));
-  if (!corpse) { toast(t('ui.animar.clique_cadaver'), '#ff6b6b'); return; }
+  if (!corpse) {
+    _aimSetStatus(t('ui.animar.clique_cadaver'), '#ffb168');
+    toast(t('ui.animar.clique_cadaver'), '#ff6b6b'); return;
+  }
   GS.animarMortos(corpse.id, mode.versao);
   _encerrarModoAnimarMortos();
 }
 
 function _encerrarModoAnimarMortos() {
+  if(_aimSessionIs('animar_mortos')) { _aimEnd({ silent:true, reason:'resolved' }); return; }
   const habilidadeCancelada = window._modoAnimarMortos?.versao;
   window._modoAnimarMortos = null;
   if(habilidadeCancelada) _removerEfeitoVisualLocal(habilidadeCancelada === 'senhor_da_morte' ? 'animar_mortos' : habilidadeCancelada);
@@ -13947,29 +14650,25 @@ function _iniciarMiraArremesso(item, player){
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
   _addCheb(me.pos[0], me.pos[1], alcance, range);
-  window._spellHL.range  = range;
-  // Área verde: começa vazia; é recalculada no hover (_recomputarAreaThrow).
-  window._spellHL.area   = new Set();
-  window._spellHL.double = new Set();
-  _aplicarSpellHL();
-  if(typeof g3 !== 'undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  let leg = document.getElementById('legenda-arremesso-item');
-  if(!leg){
-    leg = document.createElement('div');
-    leg.id = 'legenda-arremesso-item';
-    leg.style.cssText = 'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-      "background:rgba(10,8,5,0.92);border:1px solid #ff4422;color:#ff8c66;font-family:'Cinzel',serif;" +
-      'font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
-    document.body.appendChild(leg);
-  }
   const _alvoTxt = isArea
     ? t('ui.arremesso.mira_area', {raio:areaRaio, alcance})
     : t('ui.arremesso.mira_alvo', {alcance});
-  leg.innerHTML = `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()} — ${_alvoTxt} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}<br><span style="font-size:9px;letter-spacing:1px;color:#ff6b6b">■ INIMIGO</span> <span style="font-size:9px;letter-spacing:1px;color:#6bb7ff">■ ALIADO</span> <span style="font-size:9px;letter-spacing:1px;color:#ffe070">■ LANÇADOR</span>`;
-  leg.style.display = 'block';
+  const validTargets = new Set();
+  if (!isArea) for (const monster of GS.gameState?.monsters || []) {
+    if (monster.hp <= 0) continue;
+    for (const [x, y] of GS.monsterTiles(monster)) {
+      if (range.has(`${x},${y}`) && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y)) validTargets.add(`${x},${y}`);
+    }
+  }
+  _aimStart({
+    kind: 'arremesso_item',
+    title: `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()}`,
+    instruction: _alvoTxt,
+    color: '#ff8c66', targetLabel: isArea ? 'CASA' : 'INIMIGO', range, area: validTargets,
+    cancelText: 'Arremesso cancelado.',
+    cleanup: () => { window._modoThrowItem = null; GS.pendingThrow = null; },
+  });
   GS.adicionarLog(`${catDef.emoji || '🔥'} ` + t(isArea ? 'ui.arremesso.log_mira_area' : 'ui.arremesso.log_mira_alvo'));
-  document.addEventListener('keydown', _keyThrowEsc);
-  document.addEventListener('mousedown', _clickOutsideThrow, true);
 }
 
 // Resolve o clique numa casa durante a mira (2D e 3D). A lógica de alvo/alcance/
@@ -13984,12 +14683,19 @@ function _clickTileThrow(tx, ty){
     GS.throwItemArea(r.itemId, r.tx, r.ty);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_blocked'){
-    toast('Fora de alcance ou parede no caminho.', 'var(--gold)');
+    const msg = 'Fora do alcance ou parede no caminho.';
+    _aimSetStatus(msg, '#ffb168');
+    toast(msg, 'var(--gold)');
+  } else {
+    _aimSetStatus(window._modoThrowItem?.area
+      ? 'Escolha uma casa dentro do alcance e sem parede no caminho.'
+      : 'Selecione um inimigo vivo dentro do alcance.', '#ffb168');
   }
   // r === null → clicou fora de um monstro; permanece na mira (ESC cancela).
 }
 
 function _encerrarMiraArremesso(){
+  if(_aimSessionIs('arremesso_item')) { _aimEnd({ silent:true, reason:'resolved' }); return; }
   window._modoThrowItem = null;
   GS.pendingThrow = null;
   window._spellHL.range  = new Set();
@@ -14057,16 +14763,423 @@ window._fecharPickerElemental = _fecharPickerElemental;
 // Estado global lido pelos dois renderers. range/area = Set de "x,y"; zonas =
 // lista persistente {cx,cy,raio} (de game_state.zonas_especiais — Bola de Fogo).
 // range=alcance(vermelho), area=efeito(verde), double=atingido 2x(verde escuro), zonas=fogo persistente.
-window._spellHL = { range: new Set(), area: new Set(), double: new Set(), zonas: [], nuvensAcidas: [], camarasGas: new Set(), escuridao: [], silencio: [] };
+window._spellHL = { range: new Set(), area: new Set(), double: new Set(), hover: null, zonas: [], nuvensAcidas: [], camarasGas: new Set(), escuridao: [], silencio: [] };
+
+// Semântica única da mira: azul = casa dentro do alcance, verde = confirmação
+// possível, vermelho = cursor sobre uma escolha recusada. A mesma paleta é
+// usada no canvas e no tabuleiro 3D; cores de efeitos persistentes continuam
+// independentes desta camada de entrada.
+//
+// CALIBRAGEM (medida no 3D, diferenca media de cor do quadro inteiro com a
+// camada ligada x desligada): o realce de MOVIMENTO -- a referencia do que
+// conta como "visivel" neste jogo -- rende delta ~106. A primeira versao desta
+// paleta usava azul claro a 18% e verde a 34%, que rendiam delta 19 e 39 sobre
+// os pisos claros: praticamente invisiveis. Os valores abaixo foram escolhidos
+// medindo, nao a olho. Alterar cor/opacidade aqui muda os DOIS renderizadores
+// (`op` alimenta os planos 3D em _mkSpell; `fill` alimenta o canvas 2D), entao
+// esta e a fonte unica da intensidade da mira -- nao repita numero solto.
+const AIM_COLORS = {
+  range:   { hex: 0x2f7dff, op: .52, fill: 'rgba(47,125,255,.40)' },   // alcance  (delta ~66)
+  valid:   { hex: 0x22c96f, op: .62, fill: 'rgba(34,201,111,.52)' },   // confirma (delta ~83 somado ao alcance)
+  blocked: { hex: 0xff4d57, op: .46, fill: 'rgba(255,77,87,.40)' },
+  preview: { hex: 0xffc857, op: .48, fill: 'rgba(255,200,87,.40)' },
+};
+
+// ── Sessão visual única de mira ────────────────────────────────────────────
+// Esta camada é SOMENTE de apresentação e entrada. Alcance, linha de visão,
+// custos e a validação final continuam nos resolvers existentes e no servidor.
+// Ela impede que cada habilidade mantenha a própria legenda, listener de ESC e
+// limpeza de realces, que eram fontes de estados de mira presos na tela.
+const _aimSessionState = { current: null, keyHandler: null, outsideHandler: null };
+
+function _aimSessionIs(kind) {
+  return !!_aimSessionState.current && (!kind || _aimSessionState.current.kind === kind);
+}
+
+function _aimSetBoardCursor(cursor = 'crosshair') {
+  const canvas2d = document.getElementById('dungeon-canvas');
+  if (canvas2d) canvas2d.style.cursor = cursor;
+  if (typeof g3 !== 'undefined' && g3?.renderer) g3.renderer.domElement.style.cursor = cursor;
+}
+
+function _aimRenderLegend(session) {
+  document.getElementById('aim-session-hud')?.remove();
+  const hud = document.createElement('section');
+  hud.id = 'aim-session-hud';
+  hud.setAttribute('role', 'status');
+  hud.setAttribute('aria-live', 'polite');
+  hud.style.cssText = 'position:fixed;bottom:118px;left:50%;transform:translateX(-50%);'
+    + 'display:flex;align-items:center;gap:10px;max-width:min(620px,94vw);padding:8px 10px;'
+    + 'background:rgba(10,8,5,.94);border:1px solid ' + (session.color || '#c8a951') + ';'
+    + 'box-shadow:0 8px 26px rgba(0,0,0,.48);color:#e9dfc5;font-family:Cinzel,serif;z-index:1100;';
+  const copy = document.createElement('div');
+  copy.style.cssText = 'min-width:0;display:grid;gap:2px;';
+  const title = document.createElement('strong');
+  title.style.cssText = 'color:' + (session.color || '#c8a951') + ';font-size:11px;letter-spacing:1.3px;';
+  title.textContent = session.title || 'MIRA';
+  const instruction = document.createElement('span');
+  instruction.style.cssText = 'font-size:10px;line-height:1.25;color:#d4c9ae;';
+  instruction.textContent = session.instruction || 'Selecione um alvo no tabuleiro.';
+  const status = document.createElement('span');
+  status.className = 'aim-session-status';
+  status.style.cssText = 'min-height:12px;font-size:9px;line-height:1.2;color:#94dfb0;';
+  status.textContent = session.status || '';
+  const guide = document.createElement('span');
+  guide.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;font-size:8px;line-height:1.2;color:#cfc2a5;';
+  const chip = (color, label) => {
+    const item = document.createElement('span');
+    item.textContent = `■ ${label}`;
+    item.style.color = color;
+    guide.appendChild(item);
+  };
+  chip('#78abff', 'ALCANCE');
+  chip('#72e5a5', session.targetLabel || 'VÁLIDO');
+  chip('#ff8b92', 'BLOQUEADO');
+  copy.append(title, instruction, guide, status);
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.style.cssText = 'flex:0 0 auto;border:1px solid ' + (session.color || '#c8a951') + ';'
+    + 'border-radius:4px;background:rgba(255,255,255,.05);color:#f2dfad;padding:6px 8px;'
+    + 'font:700 10px Cinzel,serif;letter-spacing:.7px;cursor:pointer;';
+  cancel.textContent = 'ESC · CANCELAR';
+  cancel.onclick = () => _aimEnd({ message: session.cancelText });
+  hud.append(copy, cancel);
+  document.body.appendChild(hud);
+}
+
+function _aimSetStatus(message = '', tone = '#94dfb0') {
+  const session = _aimSessionState.current;
+  if (!session) return;
+  session.status = message;
+  const status = document.querySelector('#aim-session-hud .aim-session-status');
+  if (status) { status.textContent = message; status.style.color = tone; }
+}
+
+function _aimSetHover(tx, ty, state = 'blocked') {
+  const session = _aimSessionState.current;
+  if (!session) return;
+  const key = Number.isFinite(tx) && Number.isFinite(ty) ? `${tx},${ty}` : null;
+  const next = key ? { key, state } : null;
+  const current = window._spellHL.hover;
+  if (current?.key === next?.key && current?.state === next?.state) return;
+  window._spellHL.hover = next;
+  if (mode3D) _aimRenderHover3D();
+  else if (GS.gameState) renderMap(GS.gameState);
+}
+
+function _aimSetHoverFromSets(tx, ty, explicitState = null) {
+  if (!_aimSessionIs()) return;
+  const key = `${tx},${ty}`;
+  const hl = window._spellHL;
+  const valid = hl.area?.has(key) || hl.range?.has(key) || hl.double?.has(key);
+  const state = explicitState || (valid ? 'valid' : 'blocked');
+  _aimSetHover(tx, ty, state);
+  if (!explicitState)
+    _aimSetStatus(valid ? 'Casa válida — confirme para executar.' : 'Escolha bloqueada — selecione uma casa destacada.', valid ? '#94dfb0' : '#ff9aa2');
+}
+
+function _renderWeaponAimTrajectory3D() {
+  if(!g3?.scene || !g3.T) return;
+  const old = g3.scene.getObjectByName('trajetoria_ataque_voo');
+  const hover = window._spellHL?.hover;
+  const me = GS.me;
+  const monster = hover?.key && GS.gameState
+    ? _masterMonsterAtTileClient(GS.gameState, ...hover.key.split(',').map(Number)) : null;
+  if(!_aimSessionIs('ataque') || !monster || !me?.pos){
+    if(old){ old.geometry?.dispose(); old.material?.dispose(); g3.scene.remove(old); }
+    return;
+  }
+  if(old){ old.geometry?.dispose(); old.material?.dispose(); g3.scene.remove(old); }
+  const T = g3.T;
+  const origem = casaParaMundo(me.pos[0], me.pos[1]);
+  const destino = casaParaMundo(monster.pos[0], monster.pos[1]);
+  const yOrigem = .34 + (Number(me.altura) > 0 ? Math.max(0, Math.min(10, Math.trunc(Number(me.altura)))) * FLIGHT_ALTITUDE_STEP : 0);
+  const yDestino = .34 + (Number(monster.altura) > 0 ? Math.max(0, Math.min(10, Math.trunc(Number(monster.altura)))) * FLIGHT_ALTITUDE_STEP : 0);
+  const geometry = new T.BufferGeometry().setFromPoints([
+    new T.Vector3(origem.x, yOrigem, origem.z),
+    new T.Vector3(destino.x, yDestino, destino.z),
+  ]);
+  const palette = AIM_COLORS[hover.state] || AIM_COLORS.blocked;
+  const material = new T.LineDashedMaterial({color:palette.hex, transparent:true, opacity:.92,
+    dashSize:.16, gapSize:.10, depthWrite:false, depthTest:false});
+  const line = new T.Line(geometry, material);
+  line.computeLineDistances();
+  line.name = 'trajetoria_ataque_voo';
+  line.renderOrder = 95;
+  g3.scene.add(line);
+}
+
+function _aimHoverMagic(tx, ty) {
+  const mode = window._modoMagia;
+  if (!mode) return;
+  const key = `${tx},${ty}`;
+  const spec = _specAlvoMagia(mode.alvoTipo, tx, ty);
+  const inRange = mode.alvoLivre || mode.alvoTipo === 'linha' || mode.alvoTipo === 'cone'
+    || mode.alvoTipo === 'self_area' || mode.validTiles?.has(key) || window._spellHL.range?.has(key);
+  const valid = !!spec.ok && !!inRange;
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(valid ? 'Mira válida — confirme para lançar.' : (spec.msg || 'Escolha uma casa destacada dentro do alcance.'), valid ? '#94dfb0' : '#ff9aa2');
+}
+
+function _aimHoverThrow(tx, ty) {
+  const action = GS.resolveTileClick(tx, ty);
+  const valid = action?.type === 'throw' || action?.type === 'throw_area';
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(valid ? 'Mira válida — confirme para arremessar.' : 'Escolha um alvo ou casa válida, sem parede no caminho.', valid ? '#94dfb0' : '#ff9aa2');
+}
+
+function _aimHoverPendingSkill(tx, ty) {
+  const action = GS.resolveTileClick(tx, ty);
+  const valid = action?.type === 'skill';
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(valid ? 'Alvo válido — confirme para usar.' : 'Selecione um alvo destacado para esta habilidade.', valid ? '#94dfb0' : '#ff9aa2');
+}
+
+// Os modos que _aimPreviewAt sabe tratar. Serve de guarda nos manipuladores:
+// os modos de arremesso LEGADOS (_modoArremessoLanca/Principal/Ativo) não estão
+// aqui de propósito — eles têm caminho próprio e não passam por esta camada.
+function _aimAlgumModoAtivo() {
+  return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
+    || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
+    || window._modoMagia || window._modoThrowItem || window._modoAnimarMortos
+    || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
+    || (GS.pendingSkill && _aimSessionIs('habilidade')));
+}
+
+// O cursor saiu do tabuleiro: apaga a prévia que seguia o cursor e o marcador.
+function _aimPreviewNone() {
+  if (window._modoMagia) _recomputarAreaMagia(null, null);
+  else if (window._modoThrowItem?.area) _recomputarAreaThrow(null, null);
+  if (window._modoInstrumento) { const tip = document.getElementById('tooltip'); if (tip) tip.style.display = 'none'; }
+  _aimSetHover(null, null);
+}
+
+// ── Ponto ÚNICO de atualização da mira a partir de uma casa ────────────────
+// Mouse (2D e 3D) e controle chegam aqui com a mesma casa e produzem o mesmo
+// estado: área/trajeto recalculados e o cursor marcado como válido ou
+// bloqueado. Antes, cada manipulador de mousemove repetia a cadeia inteira de
+// `window._modoX`, e o controle não tinha nenhuma — por isso mirar no joystick
+// não mostrava área nem dizia se a casa servia.
+// Devolve `true` quando alguma mira consumiu a casa (o chamador então não trata
+// o movimento/tooltip normal do tabuleiro).
+function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
+  const dica = tip || document.getElementById('tooltip');
+  if (window._modoDirecaoInstrumento) { _aimSetHoverFromSets(tx, ty); return true; }
+  if (window._modoAtaqueMira)         { _aimHoverAttack(tx, ty); return true; }
+  if (window._modoInstrumentoAlvo)    { _aimHoverInstrumentoAlvo(tx, ty); return true; }
+  if (window._modoArremessoArma) {
+    const mode = window._modoArremessoArma;
+    const monster = _masterMonsterAtTileClient(GS.gameState, tx, ty);
+    const ok = !!monster && mode.range.has(`${tx},${ty}`)
+      && GS.hasLineOfSight(GS.gameState, GS.me.pos[0], GS.me.pos[1], tx, ty);
+    _aimSetHover(tx, ty, ok ? 'valid' : 'blocked');
+    _aimSetStatus(ok ? 'Alvo válido — confirmar para arremessar.' : 'Selecione um inimigo visível dentro do alcance.', ok ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
+  if (window._modoInstrumento)  { _atualizarMiraInstrumentoHover(tx, ty, dica, event); return true; }
+  if (window._modoMestreMira)   { _atualizarMiraMestre(tx, ty); _aimSetHoverFromSets(tx, ty); return true; }
+  if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
+  if (window._modoThrowItem) {
+    if (window._modoThrowItem.area) _recomputarAreaThrow(tx, ty);
+    _aimHoverThrow(tx, ty);
+    return true;
+  }
+  if (window._modoAnimarMortos) {
+    const valid = window._spellHL.area.has(`${tx},${ty}`);
+    _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+    _aimSetStatus(valid ? 'Cadáver válido — confirme para animar.' : 'Selecione um cadáver destacado.', valid ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
+  if (window._modoPlacementArmadilha)      { _aimSetHoverFromSets(tx, ty); return true; }
+  if (_aimSessionIs('desarmar_armadilha')) { _aimSetHoverFromSets(tx, ty); return true; }
+  if (GS.pendingSkill && _aimSessionIs('habilidade')) { _aimHoverPendingSkill(tx, ty); return true; }
+  return false;
+}
+
+// Estilo de cursor do tabuleiro conforme o último estado da mira. Os dois
+// manipuladores de mouse faziam esta mesma linha em cada ramo.
+function _aimCursorStyle() {
+  return window._spellHL.hover?.state === 'valid' ? 'crosshair' : 'not-allowed';
+}
+
+function _aimSetHighlights({ range = new Set(), area = new Set(), double = new Set() } = {}) {
+  window._spellHL.range = range;
+  window._spellHL.area = area;
+  window._spellHL.double = double;
+  _aplicarSpellHL();
+}
+
+function _aimEnd({ silent = false, message = null, reason = 'cancel' } = {}) {
+  const session = _aimSessionState.current;
+  if (!session) return false;
+  _aimSessionState.current = null;
+  if (_aimSessionState.keyHandler) document.removeEventListener('keydown', _aimSessionState.keyHandler);
+  if (_aimSessionState.outsideHandler) document.removeEventListener('pointerdown', _aimSessionState.outsideHandler, true);
+  _aimSessionState.keyHandler = null;
+  _aimSessionState.outsideHandler = null;
+  try { session.cleanup?.(reason); } catch (err) { console.error('aim cleanup:', err); }
+  window._spellHL.hover = null;
+  _aimRenderHover3D();
+  // Zera o canal de repetição do direcional: sem isto um toque ainda segurado
+  // ao confirmar/cancelar escorreria para o movimento do peão.
+  try { _gamepadRepeat('aimCursor', null, performance.now()); } catch (err) { /* controle ausente */ }
+  _limparSpellHLMira();
+  _aimSetBoardCursor('default');
+  document.getElementById('aim-session-hud')?.remove();
+  if (!silent && (message || session.cancelText)) toast(message || session.cancelText, '#888');
+  return true;
+}
+
+// Chaves de estado que uma mira instala em `window` / `GS` antes de chamar
+// _aimStart. Ver _aimStart: o cleanup da mira ANTERIOR zera justamente estas.
+const _AIM_GS_MODE_KEYS = ['pendingSkill', 'pendingThrow', 'pendingInstrumento'];
+
+function _aimModeSnapshot() {
+  const snap = { win: {}, gs: {} };
+  for (const key of Object.keys(window)) if (key.startsWith('_modo')) snap.win[key] = window[key];
+  for (const key of _AIM_GS_MODE_KEYS) { try { snap.gs[key] = GS[key]; } catch (err) { /* getter ausente */ } }
+  return snap;
+}
+
+// Devolve o que o cleanup da mira anterior apagou SEM ser dele.
+// `antes` = estado no instante em que a mira nova ja estava instalada.
+// `base`  = estado no instante em que a mira ANTERIOR comecou.
+// A chave so volta quando (a) tinha valor, (b) o cleanup zerou e (c) o valor
+// NAO era o mesmo com que a mira anterior comecou -- ou seja, quem o colocou
+// ali foi a mira nova. Se a chave ainda era a da mira anterior, o cleanup
+// acertou em zera-la e nada volta.
+function _aimModeRestore(antes, base) {
+  const daAnterior = (escopo, key, val) => (base?.[escopo] || {})[key] === val;
+  for (const [key, val] of Object.entries(antes.win))
+    if (val && window[key] == null && !daAnterior('win', key, val)) window[key] = val;
+  for (const key of _AIM_GS_MODE_KEYS) {
+    const val = antes.gs[key];
+    if (!val || daAnterior('gs', key, val)) continue;
+    try { if (GS[key] == null) GS[key] = val; } catch (err) { /* somente leitura */ }
+  }
+}
+
+function _aimStart(spec) {
+  // ORDEM: todo iniciador de mira instala o seu `window._modoX` ANTES de
+  // chamar esta funcao, e o primeiro ato daqui e encerrar a mira anterior --
+  // cujo cleanup zera exatamente essas chaves. Trocar de magia (ou de qualquer
+  // mira) com outra ativa deixava entao a legenda na tela e o modo nulo: uma
+  // sessao zumbi que nao pintava alcance nem reagia a clique, so ao ESC.
+  // Guardamos o estado que o chamador acabou de instalar, deixamos o cleanup
+  // anterior rodar por inteiro (ele ainda precisa limpar o que era dele) e
+  // devolvemos so o que era da mira nova -- ver _aimModeRestore.
+  // Por isso todo modo de mira precisa ser um valor de IDENTIDADE PROPRIA
+  // (objeto), nunca um `true` solto: dois `true` seriam indistinguiveis.
+  const anterior = _aimSessionState.current;
+  const instalado = _aimModeSnapshot();
+  _aimEnd({ silent: true, reason: 'replaced' });
+  _aimModeRestore(instalado, anterior?.modosNoInicio);
+  const session = {
+    kind: spec.kind,
+    title: spec.title,
+    instruction: spec.instruction,
+    status: spec.status || '',
+    color: spec.color || '#c8a951',
+    targetLabel: spec.targetLabel || 'VÁLIDO',
+    cancelText: spec.cancelText || 'Mira cancelada.',
+    cleanup: spec.cleanup,
+  };
+  session.modosNoInicio = _aimModeSnapshot();   // base da proxima troca de mira
+  _aimSessionState.current = session;
+  _aimSetHighlights({ range: spec.range || new Set(), area: spec.area || new Set(), double: spec.double || new Set() });
+  _aimSetBoardCursor('crosshair');
+  _aimRenderLegend(session);
+  _aimSessionState.keyHandler = event => {
+    if (event.key !== 'Escape' || !_aimSessionState.current) return;
+    _aimEnd();
+    event.preventDefault();
+  };
+  _aimSessionState.outsideHandler = event => {
+    if (!_aimSessionState.current) return;
+    if (event.target.closest?.('#aim-session-hud')) return;
+    const canvas2d = document.getElementById('dungeon-canvas');
+    const canvas3d = (typeof g3 !== 'undefined' && g3?.renderer) ? g3.renderer.domElement : null;
+    if (event.target === canvas2d || event.target === canvas3d) return;
+    _aimEnd();
+  };
+  document.addEventListener('keydown', _aimSessionState.keyHandler);
+  document.addEventListener('pointerdown', _aimSessionState.outsideHandler, true);
+  // No controle a mira não tem ponteiro: o cursor da grade precisa nascer numa
+  // casa útil, senão o primeiro toque no direcional já sai bloqueado.
+  _aimSeedGamepadCursor();
+  return session;
+}
+
+// Habilidades de alvo único ainda usam GS.pendingSkill para que o resolvedor
+// puro permaneça a fonte de verdade. Esta função só transforma esse estado em
+// uma prévia visual comum para 2D, 3D, mouse, toque e controle.
+function _aimStartPendingSkill(skill) {
+  const state = GS.gameState;
+  if (!state || !skill || !['enemy', 'ally'].includes(skill.target)) return;
+  const range = new Set(), valid = new Set();
+  const candidates = skill.target === 'enemy'
+    ? (state.monsters || []).filter(m => m?.hp > 0).flatMap(m => GS.monsterTiles(m))
+    : (state.players || []).filter(p => p?.alive).map(p => p.pos);
+  for (const [x, y] of candidates) {
+    const key = `${x},${y}`;
+    range.add(key);
+    const action = GS.resolveTileClick(x, y);
+    if (action?.type === 'skill') valid.add(key);
+  }
+  const targetLabel = skill.target === 'enemy' ? 'inimigo' : 'aliado';
+  _aimStart({
+    kind: 'habilidade',
+    title: `✨ ${(skill.name || skill.nome || skill.id || 'HABILIDADE').toUpperCase()}`,
+    instruction: `Selecione um ${targetLabel} destacado.`,
+    color: skill.target === 'enemy' ? '#c98cff' : '#79bfff', targetLabel: targetLabel.toUpperCase(),
+    range, area: valid,
+    cancelText: 'Habilidade cancelada.',
+    cleanup: () => {
+      const active = GS.pendingSkill;
+      GS.pendingSkill = null;
+      if (active?.id) _removerEfeitoVisualLocal(active.id);
+      if (GS.gameState) renderMyPanel(GS.gameState);
+    },
+  });
+}
+
+function _aimStartDisarmTrap() {
+  const me = GS.me;
+  if (!me?.pos) return;
+  const adjacent = new Set();
+  _addCheb(me.pos[0], me.pos[1], 1, adjacent);
+  _aimStart({
+    kind: 'desarmar_armadilha', title: '🪤 DESARMAR ARMADILHA',
+    instruction: 'Selecione a sua casa ou uma casa adjacente.',
+    color: '#c98cff', targetLabel: 'CASA', range: adjacent, area: adjacent,
+    cancelText: 'Desarme de armadilha cancelado.',
+    cleanup: () => {
+      GS.pendingSkill = null;
+      _removerEfeitoVisualLocal('desarmar_armadilha');
+      if (GS.gameState) renderMyPanel(GS.gameState);
+    },
+  });
+}
 
 function _alcanceMagiaCli(m, level) {
   if (m.alcance_base != null) {
     const lv = level || 1;
     // Silêncio escala 1 a cada 2 níveis; as demais, 1 por nível (a partir do nível 1).
     if (m.id === 'silencio') return m.alcance_base + Math.floor(lv / 2) * (m.alcance_escala || 0);
+    if (m.alcance_por_niveis) return m.alcance_base + Math.floor(lv / m.alcance_por_niveis) * (m.alcance_escala || 0);
     return m.alcance_base + (m.alcance_escala || 0) * (lv - 1);
   }
   return (m.alcance != null) ? m.alcance : 0;
+}
+function _alturaEntidadeCli(entidade){
+  const n = Number(entidade?.altura);
+  return Number.isFinite(n) ? Math.max(0, Math.min(10, Math.trunc(n))) : 0;
+}
+function _alcanceComAlturaCli(origem, alcance, destino=null, alturaDestino=0){
+  const alvoAltura = destino ? _alturaEntidadeCli(destino) : _alturaEntidadeCli({altura:alturaDestino});
+  const custo = GS.custoVerticalAlcance
+    ? GS.custoVerticalAlcance(_alturaEntidadeCli(origem), alvoAltura) : 0;
+  return Number(alcance || 0) - custo;
 }
 // Direção 8-way dominante do caster até o cursor (cardinal ou diagonal).
 function _dir8(ddx, ddy) {
@@ -14161,7 +15274,7 @@ function _recomputarAlcanceMagia() {
   // Relâmpago/Jato de Ar não usam círculo vermelho — o trajeto/cone (verde) já mostra o alcance.
   // alvoLivre (Clarividência): sem anel de alcance — pode mirar o mapa inteiro.
   if (m && me && !mode.alvoLivre && mode.alvoTipo !== 'linha' && mode.alvoTipo !== 'cone') {
-    const alc = _alcanceMagiaCli(m, me.level);
+    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level));
     if (alc > 0) _addCheb(me.pos[0], me.pos[1], alc, range);
   }
   window._spellHL.range = range;
@@ -14186,7 +15299,7 @@ function _recomputarAreaMagia(hx, hy) {
       const [dx, dy] = _dir8(hx - me.pos[0], hy - me.pos[1]);
       mode.dir = [dx, dy];
       if (dx !== 0 || dy !== 0) {
-        const alc = _alcanceMagiaCli(m, me.level);
+        const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level));
         for (const [k, c] of _caminhoRelampagoCli(me.pos[0], me.pos[1], dx, dy, alc)) {
           if (c >= 2) dbl.add(k); else area.add(k);
         }
@@ -14208,6 +15321,17 @@ function _recomputarAreaMagia(hx, hy) {
   window._spellHL.area   = area;
   window._spellHL.double = dbl;
   _aplicarSpellHL();
+}
+
+// Trajeto inicial de uma magia de linha/cone: usa o `facing` do peão (o
+// servidor grava a cada passo; ausente antes do 1º movimento) para que o
+// trajeto já apareça ao abrir a mira, antes de qualquer mousemove. O cursor
+// continua mandando — o primeiro movimento do mouse recalcula por cima.
+function _semearTrajetoMagia() {
+  const me = GS.me;
+  if (!me?.pos) { window._spellHL.area = new Set(); return; }
+  const [fx, fy] = Array.isArray(me.facing) && (me.facing[0] || me.facing[1]) ? me.facing : [0, 1];
+  _recomputarAreaMagia(me.pos[0] + fx, me.pos[1] + fy);
 }
 
 // Prévia de ÁREA VERDE do arremesso de área (espelha o ramo `tile` de
@@ -14287,6 +15411,34 @@ function _aplicarSpellHL3D() {
     toggle(g3.spellTargetMeshes.self, targets.self);
   }
   _atualizarDirecaoSpell3D();
+  _aimRenderHover3D();
+}
+
+function _aimRenderHover3D(){
+  if(!g3?.scene || !window.THREE) return;
+  const hover = window._spellHL?.hover;
+  if(!hover){ if(g3.aimHoverGroup) g3.aimHoverGroup.visible = false; _renderWeaponAimTrajectory3D(); return; }
+  const [x, y] = hover.key.split(',').map(Number);
+  if(!Number.isFinite(x) || !Number.isFinite(y)) return;
+  const T = g3.T;
+  if(!g3.aimHoverGroup){
+    const group = new T.Group(); group.name = 'aim-hover-marker'; group.renderOrder = 32;
+    const geo = new T.PlaneGeometry(.90, .90); geo.rotateX(-Math.PI / 2);
+    const fill = new T.Mesh(geo, new T.MeshBasicMaterial({transparent:true, opacity:.20, depthWrite:false, depthTest:false}));
+    const edge = new T.LineSegments(new T.EdgesGeometry(new T.PlaneGeometry(.94, .94)),
+      new T.LineBasicMaterial({transparent:true, opacity:.98, depthWrite:false, depthTest:false}));
+    edge.rotation.x = -Math.PI / 2;
+    group.add(fill, edge); g3.aimHoverGroup = group; g3.aimHoverFill = fill; g3.aimHoverEdge = edge; g3.scene.add(group);
+  }
+  const palette = AIM_COLORS[hover.state] || AIM_COLORS.blocked;
+  g3.aimHoverFill.material.color.setHex(palette.hex);
+  // O marcador do cursor fica POR CIMA do alcance ja pintado: com .24/.18 ele
+  // somava quase nada ao que ja estava azul embaixo.
+  g3.aimHoverFill.material.opacity = hover.state === 'valid' ? .62 : .50;
+  g3.aimHoverEdge.material.color.setHex(palette.hex);
+  g3.aimHoverGroup.position.set(x, .035, y);
+  g3.aimHoverGroup.visible = true;
+  _renderWeaponAimTrajectory3D();
 }
 
 function _atualizarDirecaoSpell3D(){
@@ -14354,6 +15506,7 @@ function _limparSpellHLMira() {
   window._spellHL.range  = new Set();
   window._spellHL.area   = new Set();
   window._spellHL.double = new Set();
+  window._spellHL.hover  = null;
   _aplicarSpellHL();
 }
 
@@ -14374,7 +15527,7 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   const silSet = new Set();
   for (const z of (hl.silencio || [])) _addQuadrado(z.cx, z.cy, z.lado, silSet);
   for (const k of silSet) draw(k, 'rgba(120,140,200,0.26)');
-  for (const k of hl.range) draw(k, 'rgba(255,40,40,0.22)');     // alcance — vermelho
+  for (const k of hl.range) draw(k, AIM_COLORS.range.fill);       // alcance — azul
   const zonaSet = new Set();                                     // zona de fogo persistente — laranja
   for (const z of hl.zonas)
     if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
@@ -14384,7 +15537,30 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const k of acidSet) draw(k, 'rgba(150,235,60,0.38)');
   for (const k of (hl.camarasGas || [])) draw(k, 'rgba(8,90,25,0.62)'); // Câmara de Gás — sala inteira
   for (const k of (hl.double || [])) draw(k, 'rgba(8,90,25,0.62)'); // atingido 2x — verde escuro
-  for (const k of hl.area) draw(k, 'rgba(40,230,70,0.34)');      // área de efeito — verde (por cima)
+  for (const k of hl.area) draw(k, AIM_COLORS.valid.fill);        // alvo/efeito válido — verde
+}
+
+// Cursor da mira (2D). Fica FORA de _desenharSpellHL2D e é chamado DEPOIS da
+// névoa (PASS 4) de propósito: desenhado antes, o preenchimento preto de 96%
+// da casa inexplorada apagava justamente o marcador vermelho de "bloqueado" —
+// e, como o anel de alcance costuma passar da área já explorada, era o caso
+// mais comum. O marcador é o cursor do próprio jogador: não revela nada do
+// mapa, então não é filtrado pela névoa (o 3D já se comportava assim).
+function _desenharAimHover2D(ctx) {
+  const hover = window._spellHL?.hover;
+  if(!hover?.key) return;
+  const [hx, hy] = hover.key.split(',').map(Number);
+  if(!Number.isFinite(hx) || !Number.isFinite(hy)) return;
+  const palette = AIM_COLORS[hover.state] || AIM_COLORS.blocked;
+  const X = hx * CELL, Y = hy * CELL;
+  ctx.save();
+  ctx.fillStyle = palette.fill;
+  ctx.fillRect(X + 4, Y + 4, CELL - 8, CELL - 8);
+  ctx.strokeStyle = `#${palette.hex.toString(16).padStart(6, '0')}`;
+  ctx.lineWidth = Math.max(2, CELL * .055);
+  if(hover.state === 'blocked') ctx.setLineDash([Math.max(3, CELL*.12), Math.max(2, CELL*.08)]);
+  ctx.strokeRect(X + 3, Y + 3, CELL - 6, CELL - 6);
+  ctx.restore();
 }
 
 function _desenharFogoPersistente2D(ctx, exploredSet, now) {
@@ -14672,7 +15848,7 @@ function _mpCustoDe(a){
 // Espelha _habilidade_ativavel_manual no servidor. O servidor é a autoridade;
 // isto só decide o que fica clicável.
 const _MP_HAB_EXTRAIDAS = ['mestre_dos_mortos','sopro_dragao','amaldicoar_monstro',
-                           'golpe_brutal','desaparecer_nas_sombras'];
+                           'golpe_brutal','desaparecer_nas_sombras','soltar_presa'];
 // Dano automático em quem já está agarrado. A ficha as declara 'passiva', mas
 // são A ação do turno da criatura — por isso passam na frente do corte abaixo.
 const _MP_ESMAGAR_PRESO = ['atq_mandibula','esmagar'];
@@ -14732,6 +15908,30 @@ function _mpAbaAtivo(state){
 
   h += `<div class="mp-vitais"><div class="mp-hpbar"><i style="width:${hpPct}%"></i></div><span>${m.hp}/${m.max_hp || m.hp}</span></div>
     <div style="font-size:.68rem;color:var(--text2)">🛡️ CA ${m.ac != null ? m.ac : '—'} · 👣 ${m.movement != null ? m.movement : '—'}</div>`;
+
+  if(manual && m.voo){
+    const altura = Math.max(0, Math.min(10, Math.trunc(Number(m.altura) || 0)));
+    const alturaMax = Math.max(0, Math.min(10, Math.trunc(Number(m.altura_max) || 10)));
+    const custoAltura = Math.max(1, Math.min(10, Math.trunc(Number(m.custo_mov_altura) || 1)));
+    const podeAlterar = m.pode_alterar_altura !== false;
+    const movimentos = Math.max(0, Number(mm.moves_left) || 0);
+    const podeDescer = podeAlterar && altura > 0 && movimentos >= custoAltura;
+    const podeSubir = podeAlterar && altura < alturaMax && movimentos >= custoAltura;
+    const faixaQueda = GS.faixaAlturaQueda?.(altura);
+    const expressaoQueda = GS.expressaoDanoQueda?.(altura);
+    const riscoQueda = faixaQueda && expressaoQueda
+      ? `<small style="display:block;margin-top:.2rem;color:#ffb36b">${t('ui.voo.risco_queda', {faixa: t('ui.voo.faixa_' + faixaQueda), expressao: expressaoQueda})}</small>`
+      : '';
+    h += `<div class="mp-altura" style="margin-top:.45rem;padding:.45rem .55rem;border:1px solid rgba(120,190,255,.28);border-radius:8px;background:rgba(40,100,160,.10)">
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:.3rem">🪽 Altura <b style="color:var(--text)">${altura}</b>/<b style="color:var(--text)">${alturaMax}</b> <small>(custa ${custoAltura} movimento/ponto)</small></div>
+        ${riscoQueda}
+        <div style="display:flex;gap:.35rem">
+          <button class="mp-altura-btn" data-altura="-1" ${podeDescer ? '' : 'disabled'}>↓ Descer</button>
+          <button class="mp-altura-btn" data-altura="1" ${podeSubir ? '' : 'disabled'}>↑ Subir</button>
+        </div>
+        ${podeAlterar ? '' : '<small style="color:var(--text2)">A altura desta criatura é fixa.</small>'}
+      </div>`;
+  }
 
   const cond = _mpCondicoes(m);
   if(cond.length) h += `<div class="mp-cond">${cond.map(c=>`<span>${c}</span>`).join('')}</div>`;
@@ -14819,6 +16019,9 @@ function _mpAbaAtivo(state){
 function _mpWireAtivo(host, state){
   const m = _mpMonstroAtivo(state);
   if(!m) return;
+  host.querySelectorAll('.mp-altura-btn:not([disabled])').forEach(btn => {
+    btn.onclick = () => GS.alterarAltura(Number(btn.dataset.altura), m.id);
+  });
   host.querySelectorAll('.mp-linha.atk').forEach(el => {
     el.onclick = () => {
       const i = parseInt(el.dataset.atk, 10);
@@ -14968,6 +16171,10 @@ function _mpWireMestre(host, state){
 
 // Ativar (mestre): mira um herói no alcance e envia mestre_usar_habilidade.
 function _limparMiraMestre(){
+  if(_aimSessionIs('mestre')){
+    _aimEnd({silent:true, reason:'mestre_cleanup'});
+    return;
+  }
   window._modoMestreMira = null;
   window._spellHL.range = new Set(); window._spellHL.area = new Set(); window._spellHL.double = new Set();
   _aplicarSpellHL();
@@ -14978,13 +16185,14 @@ function _limparMiraMestre(){
 function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast('Mira cancelada.', '#888'); e.preventDefault(); } }
 function _mestreMiraErro(motivo){
   const msg = `Alvo inválido: ${motivo}`;
+  _aimSetStatus(msg, '#ffb168');
   toast(msg, 'var(--orange)');
   appendGM(`⚠️ ${msg}`);
 }
 function _mestreLinhaRangeTiles(state, caster, range){
   const out = new Set(), pos = caster?.pos || [], ox = Number(pos[0]), oy = Number(pos[1]);
   if(!state?.tiles || !Number.isFinite(ox) || !Number.isFinite(oy)) return out;
-  const reach = Math.max(1, Number(range) || 1);
+  const reach = Math.max(1, _alcanceComAlturaCli(caster, range));
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
     for(let passo=1; passo<=reach; passo++){
       const x=ox+dx*passo, y=oy+dy*passo, row=state.tiles[y];
@@ -15068,7 +16276,12 @@ function _monsterRearAttackTilesClient(m, reach=1){
 function _monsterAttackInRangeClient(m, targetPos, atkDef={}){
   if(atkDef.range != null){
     const tiles = GS.monsterTiles(m);
-    const lim = Math.max(1, Number(atkDef.range) || 1);
+    const alvo = [...(GS.gameState?.players || []), ...(GS.gameState?.monsters || [])]
+      .find(entidade => entidade?.pos?.[0] === targetPos[0] && entidade?.pos?.[1] === targetPos[1]);
+    const vertical = GS.custoVerticalAlcance
+      ? GS.custoVerticalAlcance(m.altura, alvo?.altura || 0) : 0;
+    const lim = (Number(atkDef.range) || 1) - vertical;
+    if(lim < 1) return false;
     if(['orthogonal','cardinal','line'].includes(atkDef.range_shape)){
       return tiles.some(([x,y])=>{
         const dx=targetPos[0]-x, dy=targetPos[1]-y;
@@ -15287,8 +16500,10 @@ function _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet){
 
 function _iniciarMiraMestre(spec){
   _limparMiraMestre();
-  const [x,y]=spec.caster.pos, range=Math.max(0,Number(spec.range ?? 1));
-  window._modoMestreMira=Object.assign({},spec,{range});
+  const [x,y]=spec.caster.pos;
+  const rawRange=Math.max(0, Number(spec.range ?? 1));
+  const range=Math.max(0, _alcanceComAlturaCli(spec.caster, rawRange));
+  window._modoMestreMira=Object.assign({},spec,{range, rawRange});
   const alcance=spec.rearAttack
     ? new Set(_monsterRearAttackTilesClient(spec.caster, 1))
     : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster))
@@ -15299,12 +16514,14 @@ function _iniciarMiraMestre(spec){
   const usesFootprintAttackZone = !!spec.rearAttack ||
     (spec.kind === 'attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster));
   if(!spec.lineRange && !usesFootprintAttackZone && range>0) _addCheb(x,y,range,alcance);
-  window._spellHL.range=alcance; window._spellHL.area=new Set(); _aplicarSpellHL();
-  if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='crosshair';
-  const leg=document.createElement('div'); leg.id='legenda-mestre-mira';
-  leg.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(10,8,5,.94);border:1px solid #ff4422;color:#ff8c66;font-family:Cinzel,serif;font-size:11px;letter-spacing:2px;padding:8px 20px;pointer-events:none;z-index:1000;';
-  leg.textContent=t('ui.mestre.mira_legenda', {icone:spec.icon||'🎯', rotulo:spec.label||t('ui.mestre.custo.principal')});
-  document.body.appendChild(leg); document.addEventListener('keydown',_keyMestreMira);
+  _aimStart({
+    kind:'mestre',
+    title:`${spec.icon || '🎯'} ${spec.label || t('ui.mestre.custo.principal')}`,
+    instruction:'Escolha uma casa ou criatura dentro da área destacada.',
+    color:'#ff8c66', targetLabel: spec.kind === 'attack' ? 'HERÓI' : 'ALVO',
+    range:alcance,
+    cleanup:()=>{ window._modoMestreMira = null; },
+  });
 }
 function _atualizarMiraMestre(tx,ty){
   const mode=window._modoMestreMira; if(!mode) return;
@@ -15315,12 +16532,15 @@ function _atualizarMiraMestre(tx,ty){
 }
 function _clickMiraMestre(tx,ty){
   const mode=window._modoMestreMira, st=GS.gameState; if(!mode||!st) return;
+  const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
+  const targetHero = (st.players||[]).find(p=>p.alive&&p.pos[0]===tx&&p.pos[1]===ty);
+  const targetEntity = targetMonster || targetHero;
   const d=Math.max(Math.abs(mode.caster.pos[0]-tx),Math.abs(mode.caster.pos[1]-ty));
   const inRange = mode.rearAttack
     ? _monsterRearAttackTilesClient(mode.caster,1).some(([x,y])=>x===tx&&y===ty)
     : mode.kind==='attack' && mode.attackDef
     ? _monsterAttackInRangeClient(mode.caster,[tx,ty],mode.attackDef)
-    : mode.range <= 0 || d <= mode.range;
+    : mode.range <= 0 || d <= _alcanceComAlturaCli(mode.caster, mode.rawRange ?? mode.range, targetEntity);
   if(!inRange){
     const descricao = mode.kind === 'attack'
       ? `a casa não está na área efetiva de ${mode.label || 'este golpe'}`
@@ -15330,8 +16550,7 @@ function _clickMiraMestre(tx,ty){
   if(mode.lineRange && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
     _mestreMiraErro('este ataque só pode ser usado em linha reta.'); return;
   }
-  const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
-  const alvo=(st.players||[]).find(p=>p.alive&&p.pos[0]===tx&&p.pos[1]===ty)
+  const alvo=targetHero
     || ((st.test_mode || GS.isCommandController()) && targetMonster && targetMonster.id !== mode.caster.id
         ? targetMonster : null)
     || (mode.allowEmpty ? {id:null} : null);
@@ -15366,6 +16585,10 @@ function _mestreAtivarHabilidade(m, abid){
       {id:'esqueleto_humano', emoji:'💀', name:'Esqueleto Humano'},
       {id:'esqueleto_animal', emoji:'🦴', name:'Esqueleto Animal'}
     ], 'choice', tipo=>GS.mestreUsarHabilidade(m.id, abid, null, tipo));
+    return;
+  }
+  if(abid === 'soltar_presa'){
+    GS.mestreUsarHabilidade(m.id, abid, null);
     return;
   }
   // Esmagar/Mandíbula: o alvo é sempre quem já está agarrado — o servidor o
@@ -15457,7 +16680,7 @@ function abrirFichaMonstro(m){
       <section><h3>${t('ui.mestre.habilidades')}</h3>${habilidades.length ? habilidades.map(a => `<div class="fm-linha"><b>${_esc(a.name||a.id)}</b><span>${_esc(a.descricao||a.description||a.desc||a.action_type||'')}</span></div>`).join('') : `<p>${t('ui.mestre.sem_habilidade')}</p>`}</section>
       <section><h3>${t('ui.mestre.magias')}</h3><p>${magias.length ? _esc(magias.join(' · ')) : t('ui.mestre.sem_magia')}</p></section>
       <section><h3>${t('ui.mestre.defesas')}</h3><div class="fm-linha"><b>${t('ui.mestre.imunidades')}</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>${t('ui.mestre.resistencias')}</b><span>${_esc(_fmtFichaMonstroLista(m.resistances))}</span></div><div class="fm-linha"><b>${t('ui.mestre.fraquezas')}</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
-      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}</p></section>
+      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b>Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
     </div>
     <footer><span>C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()">FECHAR</button></footer>
   </article>`;
@@ -15596,11 +16819,15 @@ function _masterAttackSet(state){
   const atk = (mm.attacks||[{}])[idx] || {};
   for(const p of (state.players||[])){
     if(!p.alive) continue;
-    if(_monsterAttackInRangeClient(mm, p.pos, atk)) s.add(`${p.pos[0]},${p.pos[1]}`);
+    if(_monsterAttackInRangeClient(mm, p.pos, atk)
+        && (!atk.range || GS.hasLineOfSight(state, mm.pos[0], mm.pos[1], p.pos[0], p.pos[1])))
+      s.add(`${p.pos[0]},${p.pos[1]}`);
   }
   if(GS.isCommandController()) for(const o of (state.monsters||[])){
     if(o.id === mm.id || o.hp <= 0) continue;
-    if(_monsterAttackInRangeClient(mm, o.pos, atk)) s.add(`${o.pos[0]},${o.pos[1]}`);
+    if(_monsterAttackInRangeClient(mm, o.pos, atk)
+        && (!atk.range || GS.hasLineOfSight(state, mm.pos[0], mm.pos[1], o.pos[0], o.pos[1])))
+      s.add(`${o.pos[0]},${o.pos[1]}`);
   }
   return s;
 }
@@ -16055,12 +17282,12 @@ function renderMyPanel(state){
   const _adjMonsters = (GS.gameState ? GS.gameState.monsters : []).filter(m=>{
     if(!m || m.hp <= 0) return false;
     if(me.engolido && m.id === me.engolido_por) return true;
-    return _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1]);
+    return _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura);
   });
   const canAttack = canAct && _adjMonsters.length > 0;
 
-  // ── Arremesso: UM botão por arma arremessável equipada (adaga / lança curta) ──
-  // Cada botão arremessa o SEU slot (mão principal ou 2ª mão). Arremesso usa DES.
+  // ── Arremesso: UM botão por arma arremessável equipada ──
+  // Cada botão arremessa o SEU slot (mão principal ou 2ª mão).
   // A origem do alcance é a posição autoritativa do personagem no estado do servidor.
   const _pp = Array.isArray(me.pos) ? me.pos : [0, 0];
   const _throwWeapons = [];
@@ -16077,7 +17304,7 @@ function renderMyPanel(state){
     return `<button class="btn-action" ${can?'':'disabled'} onclick="beginThrowSlot('${tw.slot}')"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ffaa00;">
       <span style="color:#ffc96b;">🎯 Arremessar ${tw.item.name}</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${die} +DES dano</small>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${die} +${_weaponThrowStatLabel(tw.item)} dano</small>
       <small style="color:var(--text2);font-size:.62rem;">${tw.hand} · alcance ${tr} · perde a arma</small>
       ${canAct && !can ? '<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">nenhum alvo no alcance</small>' : ''}
     </button>`;
@@ -16281,6 +17508,7 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'paladin') sl.appendChild(_paladinSkillBtn(me, sk));
     else if(sk.granted_origem === 'cleric')  sl.appendChild(_clericSkillBtn(me, sk));
     else if(sk.granted_origem === 'bard')    sl.appendChild(_bardSkillBtn(me, sk));
+    else if(sk.granted_origem === 'weapon')  sl.appendChild(_weaponThrowSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -16318,14 +17546,14 @@ function renderMyPanel(state){
       // Técnicas com alvo (Fase 2b) abrem o modal de seleção; as demais disparam direto.
       if(cat.alvo === 'monstro_adjacente'){
         const alvos = (state.monsters||[]).filter(m => m && m.hp>0 &&
-          Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 1);
+          Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, 1, m));
         if(!alvos.length){ toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster',
           id => GS.usarTecnica(tid, id));
       } else if(cat.alvo === 'aliado_raio4'){
         const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id &&
-          Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
+          Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= _alcanceComAlturaCli(me, 4, q));
         if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
         openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado (4 casas)`, alvos, 'player',
@@ -16741,8 +17969,25 @@ const _trapQueue = [];
 let _trapShowTimer = null;
 let _trapPopupOpen = false;
 
+function _isPetrificandoResult(msg){
+  return !!msg?._condition && msg.condition_id === 'petrificacao';
+}
+
+function _isPetrificadoResult(msg){
+  return !msg?._condition && msg.tipo === 'petrificado';
+}
+
 function queueTrapResult(msg){
-  _trapQueue.push(msg);
+  // O servidor pode entregar o resultado final antes do aviso da marca,
+  // porque o primeiro é enviado imediatamente e o segundo sai no push_state.
+  // A progressão precisa ser exibida antes da petrificação completa.
+  if(_isPetrificandoResult(msg)){
+    const finalIdx = _trapQueue.findIndex(_isPetrificadoResult);
+    if(finalIdx >= 0) _trapQueue.splice(finalIdx, 0, msg);
+    else _trapQueue.push(msg);
+  } else {
+    _trapQueue.push(msg);
+  }
   if(_trapShowTimer || _trapPopupOpen) return;   // já tem um agendado ou aberto
   _trapShowTimer = setTimeout(_advanceTrapQueue, 1200);
 }
@@ -16877,17 +18122,22 @@ function _showTrapResult(msg){
   };
   const trapIcon = $('trap-icon');
   const isCondition = !!msg._condition;
+  const isFall = msg.tipo === 'queda' || msg._fall === true;
   const isSwallowed = msg.tipo_id === 'engolido';
   const conditionImages = {
     sangramento: 'sangramento.png',
     hemorragia: 'hemorragia.png',
+    petrificacao: 'petrificando.png',
   };
   const conditionId = msg.condition_id;
+  const isPetrificacao = isCondition && conditionId === 'petrificacao';
+  const petrificacaoMarcas = Math.max(0, Math.min(3, Number(msg.petrificacao_marcas) || 0));
   const conditionTitle = isCondition ? t(`ui.condicao.${conditionId}`) : '';
   const swallowedTitle = isSwallowed ? t('ui.armadilha.engolido.titulo') : '';
   const resultTitle = swallowedTitle || conditionTitle;
   const swallowedDamage = msg.acid_damage || '3d6';
   const swallowedDc = Math.max(1, Number(msg.escape_dc) || 22);
+  const swallowedMonster = msg.monstro || 'monstro';
   const level = Math.max(0, Number(msg.level) || 0);
   const duration = Math.max(0, Number(msg.duration_rounds) || 0);
   const bleedingDamage = level * (msg.hemorrhage ? 2 : 1);
@@ -16923,7 +18173,8 @@ function _showTrapResult(msg){
   const isArmorBroken = msg.tipo === 'armadura_quebrada';
   // A transformação por Licantropia mantém o popup de maldição, mas usa a
   // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
-  const imageName = isSwallowed ? 'engolido.png'
+  const imageName = isFall ? 'queda.png'
+    : isSwallowed ? 'engolido.png'
     : isCondition ? conditionImages[conditionId]
     : isEquipmentDamaged ? 'equipamento_danificado.png'
     : isWeaponBroken ? 'arma_quebrada.png'
@@ -16941,18 +18192,25 @@ function _showTrapResult(msg){
   } else {
     trapIcon.textContent = msg.icone || '🪤';
   }
-  $('trap-title').textContent = resultTitle || msg.nome || 'Armadilha';
-  $('trap-desc').textContent = isSwallowed
-    ? t('ui.armadilha.engolido.desc', {dano: swallowedDamage, dc: swallowedDc})
+  $('trap-title').textContent = isFall ? (msg.nome || t('ui.voo.queda_titulo'))
+    : resultTitle || msg.nome || 'Armadilha';
+  $('trap-desc').textContent = isFall
+    ? (msg.descricao || t('ui.voo.queda_descricao', {altura: msg.altura || 0, faixa: msg.faixa || '', dano: msg.dano || 0}))
+    : isSwallowed
+    ? t('ui.armadilha.engolido.desc', {dano: swallowedDamage, dc: swallowedDc, monstro: swallowedMonster})
     : isCondition
     ? (conditionId === 'sangramento'
       ? t('ui.condicao.sangramento_desc', {n: level, dano: bleedingDamage})
+      : conditionId === 'petrificacao'
+      ? t('ui.condicao.petrificacao_desc', {n: petrificacaoMarcas})
       : t('ui.condicao.hemorragia_desc'))
     : (msg.descricao || '');
 
   const effectsEl = $('trap-effects');
   effectsEl.innerHTML = '';
-  const conditionEffects = isSwallowed
+  const conditionEffects = isFall
+    ? (msg.efeitos_extra || [t('ui.voo.queda_dano', {expressao: msg.expressao || '—', dano: msg.dano || 0})])
+    : isSwallowed
     ? [
         t('ui.armadilha.engolido.dano', {dano: swallowedDamage}),
         t('ui.armadilha.engolido.movimento'),
@@ -16966,6 +18224,13 @@ function _showTrapResult(msg){
           ...(msg.open_wound ? [t('ui.condicao.ferida_aberta')] : []),
           ...(msg.hemorrhage ? [t('ui.condicao.hemorragia_ativa')] : []),
         ]
+      : conditionId === 'petrificacao'
+      ? [
+          t('ui.condicao.petrificacao_marcas', {n: petrificacaoMarcas}),
+          ...(petrificacaoMarcas >= 1 ? [t('ui.condicao.petrificacao_movimento')] : []),
+          ...(petrificacaoMarcas >= 2 ? [t('ui.condicao.petrificacao_destreza')] : []),
+          t('ui.condicao.petrificacao_purificacao'),
+        ]
       : [t('ui.condicao.hemorragia_duracao', {n: duration})])
     : (msg.efeitos_extra || []);
   conditionEffects.forEach(txt => {
@@ -16975,12 +18240,18 @@ function _showTrapResult(msg){
   });
 
   const statusEl = $('trap-status');
-  if(isSwallowed){
+  if(isFall){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = `${msg.expressao || ''} · ${msg.dano || 0} dano`;
+    tocarSomArmadilha();
+  } else if(isSwallowed){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.engolido.status');
   } else if(isCondition){
-    statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = t('ui.condicao.aplicada');
+    statusEl.className = `trap-status ${isPetrificacao ? 'trap-status--partial' : 'trap-status--fail'}`;
+    statusEl.textContent = isPetrificacao
+      ? t('ui.condicao.petrificacao_progresso', {n: petrificacaoMarcas})
+      : t('ui.condicao.aplicada');
   } else if(msg.tipo === 'doenca'){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.doenca',{sev: msg.severidade || ''}).trim();
@@ -16998,7 +18269,9 @@ function _showTrapResult(msg){
     statusEl.textContent = t('ui.armadilha.armadura_quebrada',{peca: msg.peca || t('ui.armadilha.sua_armadura')});
   } else if(msg.tipo === 'petrificado'){
     statusEl.className = 'trap-status trap-status--fail';
-    statusEl.textContent = t('ui.armadilha.petrificado',{n: msg.duracao || 0});
+    statusEl.textContent = msg.permanente
+      ? t('ui.armadilha.petrificado_permanente')
+      : t('ui.armadilha.petrificado',{n: msg.duracao || 0});
   } else if(msg.tipo === 'enfeiticado'){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.enfeiticado',{nome: msg.nome || t('ui.armadilha.magia'), n: msg.duracao || 0});
@@ -17206,9 +18479,11 @@ function toggleAjuda(){
       <p>${t('ui.ajuda.dados')}</p>
       <p>${t('ui.ajuda.fome_sede')}</p>
       <p>${t('ui.ajuda.camera')}</p>
+      <section class="ajuda-joystick"><h4>${t('ui.ajuda.joystick_titulo')}</h4><p>${t('ui.ajuda.joystick_turno')}</p><p>${t('ui.ajuda.joystick_camera')}</p><p>${t('ui.ajuda.joystick_menu')}</p></section>
       <button class="btn-secondary" onclick="toggleAjuda()">${t('ui.geral.fechar')}</button>
     </div>`;
   document.body.appendChild(p);
+  _gamepadFocusMapPoint('#painel-ajuda button');
 }
 
 // ── Som de baú — arpejo dourado curto (mesma infra WebAudio dos dados) ──────
@@ -17701,20 +18976,25 @@ function abrirMenuMagias(pid){
   const porCirculo = ['primeiro', 'segundo', 'terceiro'];
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
   const slots = _slotsMenuMagias(player);
-  const renderMagia = m => `
-    <div class="mm-magia${podeAgir && slots[m.circulo]?.livres > 0 ? ' mm-acionavel' : ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' mm-sem-slot' : ''}" ${podeAgir && slots[m.circulo]?.livres > 0 ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
+  const renderMagia = m => {
+    const acionavel = podeAgir && slots[m.circulo]?.livres > 0;
+    const gamepadAction = acionavel ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(m.nome)}"` : '';
+    return `
+    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${podeAgir && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
-      <span><b>${m.nome}</b><small>${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !(slots[m.circulo]?.livres > 0) ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
+      <span><b>${m.nome}</b><small>${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
     </div>`;
+  };
   const renderMod = m => {
     const pendente = m.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, m.id);
     const ativavel = !pendente && podeAgir && (modificadoresBase.includes(m) || (m.categoria === 'tecnica' && (equip.tecnicas || []).includes(m.id) && !m.automatica));
     const onclick = ativavel && modificadoresBase.includes(m) ? `onclick="ativarHabilidadeDoMenu('${m.id}')"`
       : ativavel ? `onclick="ativarTecnicaGuildaDoMenu('${m.id}')"` : '';
+    const gamepadAction = onclick ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(m.nome || m.name || m.id)}"` : '';
     const shortcutSource = m.categoria === 'tecnica' ? 'technique' : 'skill';
     return `
-    <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick} draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(m.id)}">
+    <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick} ${gamepadAction} draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(m.id)}">
       <span class="mm-mod-icon">${abilityIconHtml(m, m.icon || '✨')}</span>
       <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${m.desc || m.description || ''}</small></span>
     </div>`;
@@ -17724,7 +19004,7 @@ function abrirMenuMagias(pid){
     <div class="menu-magias-layout">
       ${renderSlotsMenuMagias(player)}
       <section class="menu-magias" role="dialog" aria-modal="true" aria-label="${t('ui.magia.menu_aria')}">
-        <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
+        <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
         <div class="mm-body">
           <section><h3>${t('ui.magia.modificadores')}</h3>
             ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
@@ -17916,6 +19196,13 @@ function ativarHabilidadeDoMenu(skillId){
   const me = state && state.players.find(p => p.id === GS.myPid);
   if(!me || state.phase !== 'playing'){ toast(t('ui.habilidade.so_na_masmorra')); return; }
   if(!GS.isMyTurn || !me.alive){ toast(t('ui.habilidade.nao_e_sua_vez')); return; }
+  const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
+  if(weaponThrowSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginThrowSlot(weaponThrowSlot);
+    return;
+  }
   const comboTecelagem = window._comboTecelagemArcanaMenu;
   if(me.class_id === 'mage' && comboTecelagem){
     if(!MODIFICADORES_METAMAGIA.includes(skillId)){
@@ -18006,6 +19293,7 @@ function ativarHabilidadeDoMenu(skillId){
     criar_armadilha:     () => abrirPainelCriarArmadilha(),
     desarmar_armadilha:  () => {
       GS.pendingSkill = {id: 'desarmar_armadilha', target: 'tile'};
+      _aimStartDisarmTrap();
       renderMyPanel(state);
       toast(t('ui.habilidade.selecione_casa_desarmar'), 'var(--gold)');
     },
@@ -18043,14 +19331,15 @@ function ativarTecnicaGuildaDoMenu(tid){
   fecharMenuMagias();
   const pp = me.pos || [0,0];
   if(cat.alvo === 'monstro_adjacente'){
-    const alvos = (state.monsters||[]).filter(m => m && m.hp>0 && Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= 1);
+    const alvos = (state.monsters||[]).filter(m => m && m.hp>0 &&
+      Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, 1, m));
     if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
     if(alvos.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, alvos[0].id); }
     return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   const aliados = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
   if(cat.alvo === 'aliado_raio4'){
-    const alvos = aliados.filter(q => Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= 4);
+    const alvos = aliados.filter(q => Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= _alcanceComAlturaCli(me, 4, q));
     if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
     if(alvos.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, alvos[0].id); }
     return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado`, alvos, 'player', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
@@ -18088,6 +19377,12 @@ function abrirMenuHabilidades(pid){
   // mago. A Bola de Fogo do grimório continua intacta no menu de Magias.
   const base = [...(player.skills || [])].filter(s =>
     !['fireball', 'ice_lance', 'magic_shield'].includes(s.id));
+  // Arremessos são habilidades temporárias fornecidas pelas armas equipadas.
+  // A lista normalmente vem do servidor em `granted_hero_skills`; o helper
+  // também reconstrói a entrada a partir do equipamento recebido para que a
+  // aba H não dependa de um snapshot antigo/cacheado do servidor.
+  const weaponThrowSkills = _weaponThrowSkillEntries(player);
+  base.push(...weaponThrowSkills);
   // A passiva do bardo não integra `skills` no estado antigo do servidor, mas
   // é uma habilidade-base e deve sempre constar no compêndio.
   if(player.class_id === 'bard' && !base.some(s => s.id === 'conhecimento_lendas')){
@@ -18177,9 +19472,10 @@ function abrirMenuHabilidades(pid){
       : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
       : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
+    const gamepadAction = onclick ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(nome)}"` : '';
     const shortcutSource = guilda && h.categoria === 'tecnica' ? 'technique' : 'skill';
     const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}"`;
-    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick}${dragShortcut}
+    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction}${dragShortcut}
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
@@ -18195,7 +19491,7 @@ function abrirMenuHabilidades(pid){
 
   overlay.innerHTML = `
     <section class="menu-habilidades" role="dialog" aria-modal="true" aria-label="Menu de habilidades">
-      <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
+      <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
       <div class="mh-layout">
         <div class="mh-body">
           ${secao(t('ui.habilidade.sec_ativas'), habilidadesAtivas, false, t('ui.habilidade.sem_ativas'))}
@@ -18232,14 +19528,155 @@ function sendAttack(targetId, targetPos){
   window._ataqueGuerreiroArmado = false;
 }
 
+function _iniciarMiraAtaque(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me || !GS.isMyTurn || me.action_done) return false;
+  const range = new Set(), validTargets = new Set();
+  for(const monster of state.monsters || []){
+    if(!monster || monster.hp <= 0) continue;
+    for(const [x, y] of GS.monsterTiles(monster)){
+      if(_alvoNoAlcanceArmaClient(me, x, y, monster.altura)
+        && (me.weapon?.range == null || GS.hasLineOfSight(state, me.pos[0], me.pos[1], x, y))) {
+        range.add(`${x},${y}`);
+      }
+      if(GS.resolveTileClick(x, y)?.type === 'attack') validTargets.add(`${x},${y}`);
+    }
+  }
+  if(!validTargets.size){ toast('Nenhum inimigo válido para atacar.', 'var(--orange)'); return false; }
+  window._modoAtaqueMira = { kind: 'ataque' };   // objeto (e nao `true`) por causa da identidade -- ver _aimStart
+  _aimStart({
+    kind:'ataque', title:`${me.weapon?.range != null ? '🏹' : '⚔'} ATACAR`,
+    instruction:'Selecione um inimigo destacado.', color:'#e96b6b', targetLabel:'INIMIGO',
+    range, area:validTargets, cancelText:'Ataque cancelado.',
+    cleanup:()=>{ window._modoAtaqueMira = null; },
+  });
+  return true;
+}
+
+function _clickTileAtaque(tx, ty){
+  if(!window._modoAtaqueMira) return;
+  const action = GS.resolveTileClick(tx, ty);
+  if(action?.type === 'attack'){
+    GS.notifyAttack(); sendAttack(action.targetId, action.targetPos);
+    _aimEnd({silent:true, reason:'resolved'});
+    return;
+  }
+  const msg = action?.type === 'attack_blocked_wall'
+    ? 'Uma parede ou porta fechada bloqueia o ataque.'
+    : 'Selecione um inimigo destacado dentro do alcance.';
+  _aimSetHover(tx, ty, 'blocked');
+  _aimSetStatus(msg, '#ff9aa2');
+  toast(msg, 'var(--orange)');
+}
+
+function _weaponAimStatus(tx, ty){
+  const state = GS.gameState, me = GS.me;
+  const monster = state ? _masterMonsterAtTileClient(state, tx, ty) : null;
+  if(!monster || !me) return 'Selecione um inimigo destacado dentro do alcance.';
+  const info = GS.weaponReachInfo?.(me, tx, ty, monster.altura);
+  if(info && !info.inRange){
+    return info.effectiveRange != null
+      ? `Fora do alcance: ${info.horizontalDistance}q horizontais, alcance efetivo ${Math.max(0, info.effectiveRange)}q.`
+      : 'Corpo a corpo exige a mesma altura.';
+  }
+  if(me.weapon?.range != null && !GS.hasLineOfSight(state, me.pos[0], me.pos[1], tx, ty))
+    return 'Linha bloqueada por uma parede ou obstáculo alto.';
+  if(info && info.effectiveRange != null)
+    return `Mira válida · altura ${info.attackerAltitude} → ${info.targetAltitude} · alcance efetivo ${info.effectiveRange}q.`;
+  return 'Inimigo válido — confirme para atacar.';
+}
+
+function _aimHoverAttack(tx, ty){
+  const valid = GS.resolveTileClick(tx, ty)?.type === 'attack';
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(_weaponAimStatus(tx, ty), valid ? '#94dfb0' : '#ff9aa2');
+}
+
 function beginAttack(){
   getAudioContext();
-  const result = GS.resolveAttack();
-  if(!result) return;
-  if(result.type==='none'){ toast(result.reason); return; }
-  if(result.type==='direct'){ GS.notifyAttack(); sendAttack(result.targetId); return; }
-  // modal: multiple valid targets
-  openTargetModal(result.title, result.targets, 'monster', id=>{ GS.notifyAttack(); sendAttack(id); });
+  _iniciarMiraAtaque();
+}
+
+function _weaponThrowSlotFromSkillId(skillId){
+  const match = /^arremesso_arma_(weapon|off_hand)$/.exec(String(skillId || ''));
+  return match ? match[1] : null;
+}
+
+function _weaponThrowSkillEntries(player){
+  if(!player) return [];
+  const result = [];
+  const seen = new Set();
+  const add = skill => {
+    if(!skill || skill.granted_origem !== 'weapon' || seen.has(skill.id)) return;
+    seen.add(skill.id);
+    result.push(skill);
+  };
+
+  // Caminho autoritativo: preserva nome, descrição e slot calculados pelo
+  // servidor, inclusive armas com regras especiais de atributo.
+  for(const skill of (player.granted_hero_skills || [])) add(skill);
+
+  // Fallback visual para partidas/snapshots antigos: a arma principal pode
+  // estar completa em `weapon`, enquanto `gear.weapon` é apenas o espelho do
+  // equipamento. Instrumentos já seguem esse padrão na própria aba H.
+  const slots = [
+    ['weapon', {...(player.weapon || {}), ...(player.gear?.weapon || {})}],
+    ['off_hand', player.gear?.off_hand],
+  ];
+  for(const [slot, item] of slots){
+    if(!item || !item.throw_range || !item.die) continue;
+    const nome = item.name || item.id || 'arma';
+    const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
+      ? 'Força'
+      : (item.finesse || item.id === 'dagger' ? 'Força ou Destreza' : 'Destreza');
+    add({
+      id: `arremesso_arma_${slot}`,
+      source: 'arma',
+      name: `Arremessar ${nome}`,
+      icon: item.emoji || '🎯',
+      tipo: 'acao_principal',
+      target: 'enemy',
+      description: `Arremessa ${nome} até ${item.throw_range} casas. Usa ${atributo} para acerto e dano; a arma deixa a mão.`,
+      throw_slot: slot,
+      weapon_id: item.id,
+      granted_origem: 'weapon',
+    });
+  }
+  return result;
+}
+
+function _weaponThrowStatLabel(item){
+  if(!item) return 'DES';
+  if(item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico') return 'FOR';
+  if(item.finesse || item.id === 'dagger') return 'FOR/DES';
+  return 'DES';
+}
+
+function _weaponThrowSkillBtn(me, skill){
+  const state = GS.gameState;
+  const slot = skill.throw_slot || _weaponThrowSlotFromSkillId(skill.id);
+  const item = slot === 'off_hand' ? me.gear?.off_hand : me.weapon;
+  const targets = (state?.monsters || []).filter(monstro => {
+    if(!monstro || monstro.hp <= 0 || !item?.throw_range) return false;
+    const p = me.pos || [0, 0];
+    return Math.max(Math.abs(p[0] - monstro.pos[0]), Math.abs(p[1] - monstro.pos[1])) <=
+      _alcanceComAlturaCli(me, item.throw_range, monstro)
+      && GS.hasLineOfSight(state, p[0], p[1], monstro.pos[0], monstro.pos[1]);
+  });
+  // O arremesso pode ser ação principal ou bônus, exatamente como no servidor.
+  const podeAgir = GS.isMyTurn && me.alive && state?.phase === 'playing'
+    && (!me.action_done || !me.bonus_action_used);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn weapon-throw-skill';
+  btn.disabled = !podeAgir;
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, skill.icon || '🎯')} ${skill.name}</div>
+      <div class="skill-desc">${skill.description || skill.desc || ''}</div>
+    </div>
+    <div class="skill-cost">${targets.length ? '🎯' : '—'}</div>`;
+  btn.onclick = () => beginThrowSlot(slot);
+  return btn;
 }
 
 // Arremessa a arma de um slot específico ('weapon' = mão principal, 'off_hand' =
@@ -18256,12 +19693,42 @@ function beginThrowSlot(slot){
   const nome = (item && item.name) || 'arma';
   const pp = me.pos || [0,0];
   const targets = (st.monsters||[]).filter(m=>m && m.hp>0 &&
-    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= tr &&
+    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, tr, m) &&
     GS.hasLineOfSight(st, pp[0], pp[1], m.pos[0], m.pos[1]));   // paredes barram o arremesso
   if(!targets.length){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:tr})); return; }
-  if(targets.length===1){ send({type:'throw', target_id:targets[0].id, slot}); return; }
-  openTargetModal(t('ui.arremesso.escolha_alvo', {nome, alcance:tr}), targets, 'monster',
-    id=>send({type:'throw', target_id:id, slot}));
+  const range = new Set(), validTargets = new Set();
+  _addCheb(pp[0], pp[1], Math.max(0, _alcanceComAlturaCli(me, tr)), range);
+  for(const monster of st.monsters || []) {
+    if(!monster || monster.hp <= 0) continue;
+    for(const [x, y] of GS.monsterTiles(monster)) {
+      const efetivo = _alcanceComAlturaCli(me, tr, monster);
+      if(Math.max(Math.abs(pp[0]-x), Math.abs(pp[1]-y)) <= efetivo
+          && GS.hasLineOfSight(st, pp[0], pp[1], x, y)) validTargets.add(`${x},${y}`);
+    }
+  }
+  window._modoArremessoArma = {slot, alcance:tr, range};
+  _aimStart({
+    kind:'arremesso_arma', title:`🎯 ${t('ui.acao.arremessar_arma', {nome})}`,
+    instruction:t('ui.arremesso.escolha_alvo', {nome, alcance:tr}),
+    color:'#ffad57', targetLabel:'INIMIGO', range, area:validTargets,
+    cancelText:'Arremesso de arma cancelado.',
+    cleanup:()=>{ window._modoArremessoArma = null; },
+  });
+}
+
+function _clickTileArremessoArma(tx, ty){
+  const mode = window._modoArremessoArma;
+  const state = GS.gameState;
+  if(!mode || !state) return;
+  const monster = (state.monsters || []).find(m => m?.hp > 0 && GS.monsterTiles(m).some(([x,y]) => x === tx && y === ty));
+  if(!monster){ _aimSetStatus('Selecione um inimigo vivo.', '#ffb168'); return; }
+  if(!mode.range.has(`${tx},${ty}`)) { _aimSetStatus('Alvo fora do alcance.', '#ffb168'); return; }
+  const me = GS.me;
+  if(!me || !GS.hasLineOfSight(state, me.pos[0], me.pos[1], tx, ty)) {
+    _aimSetStatus('Uma parede ou porta fechada bloqueia o arremesso.', '#ffb168'); return;
+  }
+  GS.throwWeapon(mode.slot, monster.id);
+  _aimEnd({silent:true, reason:'resolved'});
 }
 
 function beginSkill(skill, state){
@@ -18273,9 +19740,11 @@ function beginSkill(skill, state){
   if(result==='no_targets'){ toast('Nenhum inimigo vivo!'); return; }
   _registrarEfeitoVisualLocal(skill.id, 'skill');
   if(result==='pending_enemy'){
+    _aimStartPendingSkill(skill);
     renderMyPanel(GS.gameState);
     toast(`✨ ${skill.name} ativado — clique no inimigo no mapa!`, 'var(--purple)');
   } else if(result==='pending_ally'){
+    _aimStartPendingSkill(skill);
     renderMyPanel(GS.gameState);
     toast(`✨ ${skill.name} ativado — clique no aliado (ou em si mesmo) no mapa!`, 'var(--blue)');
   }
@@ -18295,6 +19764,65 @@ function openTargetModal(title, targets, kind, callback){
     list.appendChild(item);
   }
   $('target-modal').classList.add('open');
+}
+
+// Um monstro pode ocupar a mesma casa onde caiu um item. Nessa situação o
+// clique no chão não deve escolher silenciosamente só uma das duas ações.
+// Mantemos o ataque resolvido pelo GS e usamos este painel apenas para decidir
+// qual ação o jogador pretende executar.
+function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
+  const state = GS.gameState;
+  const monster = (state?.monsters || []).find(m =>
+    String(m.id) === String(attackAction?.targetId) && m.hp > 0);
+  if(!groundItem || !monster || attackAction?.type !== 'attack') return false;
+
+  const modal = $('target-modal');
+  const list = $('target-list');
+  if(!modal || !list) return false;
+  $('target-title').textContent = 'Escolha uma ação';
+  list.innerHTML = '';
+
+  const adicionar = (icone, nome, detalhe, acao) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'target-item loot-attack-choice';
+    button.style.cssText = 'width:100%;text-align:left;color:var(--text);font:inherit;';
+    const icon = document.createElement('span');
+    icon.textContent = icone;
+    const body = document.createElement('span');
+    body.style.cssText = 'display:flex;flex-direction:column;gap:2px;';
+    const label = document.createElement('span');
+    label.textContent = nome;
+    const sub = document.createElement('small');
+    sub.style.color = 'var(--text2)';
+    sub.textContent = detalhe;
+    body.append(label, sub);
+    button.append(icon, body);
+    button.onclick = () => {
+      closeTargetModal();
+      _gamepadSetUiFocus(null);
+      acao();
+    };
+    list.appendChild(button);
+  };
+
+  const item = groundItem.item || {};
+  const itemNome = item.name || item.nome || 'item deixado no chão';
+  adicionar('🎒', `Pegar ${itemNome}`, 'Recolher o loot', () => GS.pickupItem(groundItem.id));
+  adicionar('⚔️', `Atacar ${monster.name || monster.nome || 'monstro'}`,
+    `HP ${monster.hp}/${monster.max_hp || monster.hp}`, () => {
+      // Revalida no estado mais recente antes de consumir a ação.
+      const atual = GS.resolveTileClick(attackAction.targetPos[0], attackAction.targetPos[1]);
+      if(atual?.type !== 'attack'){
+        toast('O monstro não está mais disponível para ataque.', 'var(--orange)');
+        return;
+      }
+      GS.notifyAttack();
+      sendAttack(atual.targetId, atual.targetPos);
+    });
+  modal.classList.add('open');
+  _gamepadFocusMapPoint('#target-list .loot-attack-choice', '#target-modal .btn-cancel');
+  return true;
 }
 
 function closeTargetModal(){
@@ -18372,6 +19900,1579 @@ document.addEventListener('keydown', e=>{
     case 'Enter': if(GS.isMyTurn) GS.endTurn();           break;
   }
 });
+
+// ── CONTROLE / JOYSTICK ─────────────────────────────────────────────────────
+// A Gamepad API apenas alimenta os mesmos caminhos já usados por teclado e
+// clique: GS.move(), GS.endTurn() e handleTileClick(). Não há protocolo novo
+// nem lógica de jogo no cliente para sincronizar com o servidor.
+const _gamepadInput = {
+  index: null, buttons: [], cursor: null, cursorBoard: '', cursorPlayerKey: '',
+  moveDir: null, moveNextAt: 0, cursorDir: null, cursorNextAt: 0,
+  rightMode: 'cursor', cameraLastAt: 0, attackMode: false, altitudeComboActive: false, uiPointer: false, interactionDismissedKey: null, shortcutWheelModifier: null, shortcutWheelConsumed: false, followPawn: false, active: false, raf: null,
+};
+let _gamepadCursorToneCache = null;
+let _gamepadEndTurnConfirmUntil = 0;
+const GAMEPAD_END_TURN_CONFIRM_MS = 2200;
+const _gamepadUi = { focusEl: null };
+const GAMEPAD_FIRST_REPEAT_MS = 260;
+const GAMEPAD_REPEAT_MS = 135;
+const GAMEPAD_CAMERA_TURN_SPEED = 1.75; // radianos por segundo no curso máximo
+const GAMEPAD_CAMERA_ZOOM_SPEED = 1.55;
+const _GAMEPAD_PREFS_KEY = 'lfh_gamepad';
+// L3 alterna o analógico direito entre cursor e rotação da câmera. R3 abre o
+// menu principal; Y abre o cursor de interface para botões contextuais.
+const _GAMEPAD_DEFAULT_BINDINGS = Object.freeze({ confirm:0, cancel:1, camera:10, cameraReset:2, endTurn:9, characterMenu:8, nextTarget:3, mainMenu:11 });
+const _GAMEPAD_ACTIONS = Object.freeze([
+  ['confirm', 'ui.menu.joystick_confirm'], ['cancel', 'ui.menu.joystick_cancel'],
+  ['camera', 'ui.menu.joystick_camera'], ['cameraReset', 'ui.menu.joystick_camera_reset'],
+  ['endTurn', 'ui.menu.joystick_end_turn'], ['characterMenu', 'ui.menu.joystick_character_menu'], ['mainMenu', 'ui.pausa.titulo'],
+  ['nextTarget', 'ui.menu.joystick_next_target'],
+]);
+let _gamepadDeadZone = 0.48;
+let _gamepadInvertCameraY = false;
+let _gamepadVibration = true;
+let _gamepadCursorSpeed = 1;
+let _gamepadCameraSensitivity = 1;
+let _gamepadBindings = { ..._GAMEPAD_DEFAULT_BINDINGS };
+let _gamepadBindingCapture = null;
+
+function _gamepadControllerFamily(){
+  const id = String(_gamepadPrimary()?.id || '').toLowerCase();
+  if(/dualshock|dualsense|playstation|sony|054c|wireless controller/.test(id)) return 'playstation';
+  if(/nintendo|joy-?con|switch pro|057e/.test(id)) return 'nintendo';
+  return 'xbox';
+}
+function _gamepadButtonLabel(index){
+  const families = {
+    xbox:       ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'L3', 'R3', '↑', '↓', '←', '→'],
+    playstation:['✕', '○', '□', '△', 'L1', 'R1', 'L2', 'R2', 'Share', 'Options', 'L3', 'R3', '↑', '↓', '←', '→'],
+    nintendo:   ['B', 'A', 'Y', 'X', 'L', 'R', 'ZL', 'ZR', '−', '+', 'L3', 'R3', '↑', '↓', '←', '→'],
+  };
+  const labels = families[_gamepadControllerFamily()] || families.xbox;
+  return labels[index] || `Botão ${index + 1}`;
+}
+function _gamepadBinding(action){ return _gamepadBindings[action] ?? _GAMEPAD_DEFAULT_BINDINGS[action]; }
+function _gamepadSavePrefs(){
+  try{ localStorage.setItem(_GAMEPAD_PREFS_KEY, JSON.stringify({ deadZone:_gamepadDeadZone, invertCameraY:_gamepadInvertCameraY, vibration:_gamepadVibration, cursorSpeed:_gamepadCursorSpeed, cameraSensitivity:_gamepadCameraSensitivity, bindings:_gamepadBindings })); }catch(e){}
+}
+function _gamepadRenderPrefs(){
+  const dead = document.getElementById('gp-deadzone'), deadVal = document.getElementById('gp-deadzone-val');
+  if(dead) dead.value = String(Math.round(_gamepadDeadZone * 100));
+  if(deadVal) deadVal.textContent = `${Math.round(_gamepadDeadZone * 100)}%`;
+  const invert = document.getElementById('gp-invert-y'); if(invert) invert.checked = _gamepadInvertCameraY;
+  const vibration = document.getElementById('gp-vibration'); if(vibration) vibration.checked = _gamepadVibration;
+  const cursorSpeed = document.getElementById('gp-cursor-speed'), cursorSpeedVal = document.getElementById('gp-cursor-speed-val');
+  if(cursorSpeed) cursorSpeed.value = String(Math.round(_gamepadCursorSpeed * 100));
+  if(cursorSpeedVal) cursorSpeedVal.textContent = `${Math.round(_gamepadCursorSpeed * 100)}%`;
+  const cameraSensitivity = document.getElementById('gp-camera-sensitivity'), cameraSensitivityVal = document.getElementById('gp-camera-sensitivity-val');
+  if(cameraSensitivity) cameraSensitivity.value = String(Math.round(_gamepadCameraSensitivity * 100));
+  if(cameraSensitivityVal) cameraSensitivityVal.textContent = `${Math.round(_gamepadCameraSensitivity * 100)}%`;
+  document.querySelectorAll('[data-gamepad-bind]').forEach(button => {
+    const action = button.dataset.gamepadBind;
+    const label = button.querySelector('[data-gamepad-bind-label]');
+    if(label) label.textContent = _gamepadButtonLabel(_gamepadBinding(action));
+    button.classList.toggle('capturing', _gamepadBindingCapture === action);
+  });
+}
+function _setGamepadDeadZone(value){
+  _gamepadDeadZone = Math.max(.15, Math.min(.80, Number(value) || .48));
+  _gamepadSavePrefs(); _gamepadRenderPrefs();
+}
+function _setGamepadInvertCameraY(value){ _gamepadInvertCameraY = !!value; _gamepadSavePrefs(); _gamepadRenderPrefs(); }
+function _setGamepadVibration(value){ _gamepadVibration = !!value; _gamepadSavePrefs(); _gamepadRenderPrefs(); }
+function _gamepadSensitivity(value){ return Math.max(.50, Math.min(1.80, Number(value) || 1)); }
+function _setGamepadCursorSpeed(value){ _gamepadCursorSpeed = _gamepadSensitivity(value); _gamepadSavePrefs(); _gamepadRenderPrefs(); }
+function _setGamepadCameraSensitivity(value){ _gamepadCameraSensitivity = _gamepadSensitivity(value); _gamepadSavePrefs(); _gamepadRenderPrefs(); }
+function _resetGamepadPrefs(){
+  _gamepadDeadZone = .48; _gamepadInvertCameraY = false; _gamepadVibration = true; _gamepadCursorSpeed = 1; _gamepadCameraSensitivity = 1;
+  _gamepadBindings = { ..._GAMEPAD_DEFAULT_BINDINGS };
+  _gamepadBindingCapture = null;
+  _gamepadSavePrefs(); _gamepadRenderPrefs();
+  toast('🎮 Configuração do joystick restaurada.', 'var(--cyan)');
+}
+function _setGamepadBinding(action, index){
+  if(!_GAMEPAD_DEFAULT_BINDINGS.hasOwnProperty(action) || !Number.isInteger(index) || index < 0 || index > 31) return;
+  const prior = _gamepadBinding(action);
+  const other = Object.keys(_gamepadBindings).find(key => key !== action && _gamepadBinding(key) === index);
+  if(other) _gamepadBindings[other] = prior; // troca, impedindo ações duplicadas por engano
+  _gamepadBindings[action] = index;
+  _gamepadSavePrefs(); _gamepadRenderPrefs();
+}
+function _gamepadStartBindingCapture(action){
+  if(!_GAMEPAD_DEFAULT_BINDINGS.hasOwnProperty(action)) return;
+  _gamepadBindingCapture = action;
+  _gamepadRenderPrefs();
+  toast(`🎮 Pressione o botão desejado para: ${t(_GAMEPAD_ACTIONS.find(a => a[0] === action)?.[1] || action)}`, 'var(--cyan)');
+}
+function _gamepadLoadPrefs(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(_GAMEPAD_PREFS_KEY) || '{}');
+    let migratedLegacyLayout = false;
+    if(typeof saved.deadZone === 'number') _gamepadDeadZone = Math.max(.15, Math.min(.80, saved.deadZone));
+    if(typeof saved.invertCameraY === 'boolean') _gamepadInvertCameraY = saved.invertCameraY;
+    if(typeof saved.vibration === 'boolean') _gamepadVibration = saved.vibration;
+    if(typeof saved.cursorSpeed === 'number') _gamepadCursorSpeed = _gamepadSensitivity(saved.cursorSpeed);
+    if(typeof saved.cameraSensitivity === 'number') _gamepadCameraSensitivity = _gamepadSensitivity(saved.cameraSensitivity);
+    if(saved.bindings && typeof saved.bindings === 'object'){
+      for(const action of Object.keys(_GAMEPAD_DEFAULT_BINDINGS)){
+        const value = saved.bindings[action];
+        if(Number.isInteger(value) && value >= 0 && value <= 31) _gamepadBindings[action] = value;
+      }
+      // Layouts anteriores usavam Y/R3 para câmera/interface. R3 agora é menu
+      // principal e L3 alterna câmera/cursor; migra apenas os pares padrão.
+      if(saved.bindings.camera === 3 && saved.bindings.nextTarget === 11){
+        _gamepadBindings.camera = 10;
+        _gamepadBindings.nextTarget = 3;
+        _gamepadBindings.mainMenu = 11;
+        migratedLegacyLayout = true;
+      } else if(saved.bindings.camera === 11 && saved.bindings.nextTarget === 3
+        && saved.bindings.mainMenu === undefined){
+        _gamepadBindings.camera = 10;
+        _gamepadBindings.mainMenu = 11;
+        migratedLegacyLayout = true;
+      }
+    }
+    if(migratedLegacyLayout) _gamepadSavePrefs();
+  }catch(e){}
+}
+_gamepadLoadPrefs();
+
+function _gamepadPrimary(){
+  if(!navigator.getGamepads) return null;
+  const pads = navigator.getGamepads();
+  if(_gamepadInput.index != null){
+    const current = pads[_gamepadInput.index];
+    if(current && current.connected) return current;
+  }
+  for(const pad of pads) if(pad && pad.connected) return pad;
+  return null;
+}
+
+// Nem todo navegador expõe o atuador háptico e alguns controles usam a API
+// antiga `pulse`. O feedback é sempre opcional e a ausência dele é silenciosa.
+function _gamepadRumble(kind = 'confirm'){
+  if(!_gamepadVibration || !_gamepadInput.active) return;
+  const pad = _gamepadPrimary();
+  const actuator = pad?.vibrationActuator || pad?.hapticActuators?.[0];
+  if(!actuator) return;
+  const patterns = {
+    confirm: { duration:34, weakMagnitude:.28, strongMagnitude:.08 },
+    target:  { duration:22, weakMagnitude:.12, strongMagnitude:.22 },
+    cancel:  { duration:28, weakMagnitude:.08, strongMagnitude:.14 },
+    endTurn: { duration:70, weakMagnitude:.34, strongMagnitude:.18 },
+  };
+  const effect = patterns[kind] || patterns.confirm;
+  try{
+    if(typeof actuator.playEffect === 'function') Promise.resolve(actuator.playEffect('dual-rumble', effect)).catch(() => {});
+    else if(typeof actuator.pulse === 'function') Promise.resolve(actuator.pulse(Math.max(effect.weakMagnitude, effect.strongMagnitude), effect.duration)).catch(() => {});
+  }catch(_err){}
+}
+function _clearGamepadEndTurnConfirm(){ _gamepadEndTurnConfirmUntil = 0; }
+function _gamepadRequestEndTurn(now){
+  if(now <= _gamepadEndTurnConfirmUntil){
+    _clearGamepadEndTurnConfirm();
+    _gamepadRumble('endTurn');
+    endTurn();
+    return;
+  }
+  _gamepadEndTurnConfirmUntil = now + GAMEPAD_END_TURN_CONFIRM_MS;
+  _gamepadRumble('target');
+  const button = _gamepadButtonLabel(_gamepadBinding('endTurn'));
+  toast(t('ui.joystick.confirmar_encerrar_turno', {botao: button}), 'var(--cyan)');
+}
+
+function _gamepadDirection(pad, axisX, axisY, up, down, left, right){
+  const pressed = index => index >= 0 && !!pad.buttons[index]?.pressed;
+  const bx = (pressed(right) ? 1 : 0) - (pressed(left) ? 1 : 0);
+  const by = (pressed(down) ? 1 : 0) - (pressed(up) ? 1 : 0);
+  const rawX = bx || (Math.abs(pad.axes[axisX] || 0) >= _gamepadDeadZone ? pad.axes[axisX] : 0);
+  const rawY = by || (Math.abs(pad.axes[axisY] || 0) >= _gamepadDeadZone ? pad.axes[axisY] : 0);
+  if(!rawX && !rawY) return null;
+  return Math.abs(rawX) >= Math.abs(rawY)
+    ? [rawX > 0 ? 1 : -1, 0]
+    : [0, rawY > 0 ? 1 : -1];
+}
+
+// Traduz a direção do controle para a grade conforme a rotação atual da
+// câmera. Com a câmera padrão o resultado é idêntico ao comportamento antigo;
+// ao girar o mapa 90°/180°, "cima" continua sendo cima na tela do jogador.
+function _gamepadBoardDirectionForView(direction){
+  if(!direction) return null;
+  // No 2D, mantenha a convenção já usada pelo tabuleiro. No 3D, não basta
+  // compensar o azimute: inclinação, zoom e qualquer vista livre mudam a
+  // projeção. Comparamos as quatro direções do mapa diretamente na tela.
+  const fallback = [-direction[0], -direction[1]];
+  if(!mode3D || !g3?.camera || !g3?.controls || !window.THREE) return fallback;
+
+  const camera = g3.camera;
+  const origin = g3.controls.target.clone();
+  origin.y = 0;
+  camera.updateMatrixWorld();
+  const projectedOrigin = origin.clone().project(camera);
+  if(!Number.isFinite(projectedOrigin.x) || !Number.isFinite(projectedOrigin.y)) return fallback;
+
+  const wantedX = direction[0];
+  const wantedY = direction[1];
+  let best = fallback;
+  let bestScore = -Infinity;
+  for(const candidate of [[1,0],[-1,0],[0,1],[0,-1]]){
+    const projected = origin.clone()
+      .add(new THREE.Vector3(candidate[0], 0, candidate[1]))
+      .project(camera);
+    // NDC cresce para cima; o eixo vertical do joystick cresce para baixo.
+    const screenX = projected.x - projectedOrigin.x;
+    const screenY = projectedOrigin.y - projected.y;
+    const length = Math.hypot(screenX, screenY);
+    if(length < 0.00001) continue;
+    let score = (screenX * wantedX + screenY * wantedY) / length;
+    // Em empates exatos (vista isométrica), conserva a orientação anterior.
+    if(candidate[0] === fallback[0] && candidate[1] === fallback[1]) score += 0.0001;
+    if(score > bestScore){
+      bestScore = score;
+      best = candidate;
+    }
+  }
+  return best;
+}
+
+function _gamepadRepeat(channel, direction, now){
+  const dirKey = direction ? direction.join(',') : '';
+  const stateDir = `${channel}Dir`, stateNext = `${channel}NextAt`;
+  if(!dirKey){ _gamepadInput[stateDir] = null; _gamepadInput[stateNext] = 0; return false; }
+  const speed = channel === 'cursor' ? _gamepadCursorSpeed : 1;
+  if(_gamepadInput[stateDir] !== dirKey){
+    _gamepadInput[stateDir] = dirKey;
+    _gamepadInput[stateNext] = now + GAMEPAD_FIRST_REPEAT_MS / speed;
+    return true;
+  }
+  if(now < _gamepadInput[stateNext]) return false;
+  _gamepadInput[stateNext] = now + GAMEPAD_REPEAT_MS / speed;
+  return true;
+}
+
+function _gamepadButtonEdge(pad, index){
+  return !!pad.buttons[index]?.pressed && !_gamepadInput.buttons[index];
+}
+
+function _gamepadLayerVisible(el){
+  if(!el) return false;
+  const style = getComputedStyle(el);
+  return style.display !== 'none' && style.visibility !== 'hidden' && !!el.getClientRects().length;
+}
+
+// A interface é composta por DOM dinâmico (lojas, fichas, painéis e modais).
+// Em vez de manter uma lista frágil por tela, procuramos os controles visíveis
+// e priorizamos o último modal aberto. Assim elementos recém-renderizados
+// também ficam navegáveis pelo direcional.
+function _gamepadUiScope(){
+  const open = [...document.querySelectorAll(
+    '#pause-menu.open, [id$="-modal"].open, [id$="-overlay"].open, .ficha-cidade-panel.open,' +
+    '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay,' +
+    '#campaign-scene-overlay, #ficha-overlay-jogo, #encerrar-missao-overlay, #city-dungeon-entry,' +
+    '#instrumento-dir-overlay, #improviso-overlay, #ficha-monstro-overlay,' +
+    '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-ajuda, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
+  )].filter(_gamepadLayerVisible);
+  return open.at(-1) || document.querySelector('.screen.active');
+}
+
+function _gamepadUiVisible(el){
+  if(!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return false;
+  if(el.closest('.screen') && !el.closest('.screen').classList.contains('active')) return false;
+  return _gamepadLayerVisible(el);
+}
+
+function _gamepadUiControls(){
+  const scope = _gamepadUiScope();
+  if(!scope) return [];
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const controls = [...scope.querySelectorAll('button, a[href], input[type="checkbox"], input[type="text"], input[type="password"], input[type="search"], input[type="url"], input[type="email"], input[type="tel"], input[type="number"], [role="button"], [tabindex]:not([tabindex="-1"]), [data-shortcut-kind]')]
+    .filter(_gamepadUiVisible)
+    // Nas listas de magias/habilidades, só cartões realmente acionáveis
+    // entram no percurso da masmorra. Na cidade, todos voltam ao percurso:
+    // eles não ativam efeito ali, mas precisam receber foco para L1/R1+face
+    // gravar um atalho.
+    .filter(el => !el.matches('#menu-habilidades-overlay [data-shortcut-kind], #menu-magias-overlay [data-shortcut-kind]')
+      || el.hasAttribute('data-gamepad-action') || naCidade);
+  // Cartas de habilidade, magia e itens são divs arrastáveis, portanto não
+  // entram na navegação nativa do browser. Torná-las focáveis aqui permite
+  // apontar para uma delas e usar L1/R1+face para gravá-la no atalho.
+  controls.forEach(el => {
+    if(el.matches('[data-shortcut-kind]') && !el.hasAttribute('tabindex')) el.tabIndex = 0;
+  });
+  return [...new Set(controls)];
+}
+
+function _gamepadSetUiFocus(el){
+  if(_gamepadUi.focusEl === el) return;
+  _gamepadUi.focusEl?.classList?.remove('gamepad-focus');
+  _gamepadUi.focusEl = el || null;
+  if(!el) return;
+  el.classList.add('gamepad-focus');
+  try { el.focus({ preventScroll: true }); } catch(_) { el.focus(); }
+}
+
+function _gamepadFocusMapPoint(selector, fallbackSelector = ''){
+  if(!_gamepadInput.active) return;
+  requestAnimationFrame(() => {
+    const point = document.querySelector(selector) || (fallbackSelector && document.querySelector(fallbackSelector));
+    if(point && _gamepadUiVisible(point)) _gamepadSetUiFocus(point);
+  });
+}
+
+function _gamepadMoveUiFocus(dx, dy, controlsOverride=null){
+  const controls = controlsOverride || _gamepadUiControls();
+  if(!controls.length){ _gamepadSetUiFocus(null); return; }
+  let current = controls.includes(_gamepadUi.focusEl) ? _gamepadUi.focusEl : document.activeElement;
+  if(!controls.includes(current)){ _gamepadSetUiFocus(controls[0]); return; }
+  const origin = current.getBoundingClientRect();
+  const ox = origin.left + origin.width / 2, oy = origin.top + origin.height / 2;
+  let candidate = null, bestScore = Infinity;
+  for(const el of controls){
+    if(el === current) continue;
+    const rect = el.getBoundingClientRect();
+    const ex = rect.left + rect.width / 2, ey = rect.top + rect.height / 2;
+    const forward = dx ? (dx > 0 ? ex - ox : ox - ex) : (dy > 0 ? ey - oy : oy - ey);
+    if(forward < 3) continue;
+    const lateral = dx ? Math.abs(ey - oy) : Math.abs(ex - ox);
+    // Prioriza o botão que está na direção pedida e mais alinhado ao atual.
+    const score = forward + lateral * 2.5;
+    if(score < bestScore){ bestScore = score; candidate = el; }
+  }
+  _gamepadSetUiFocus(candidate || current);
+}
+
+// Y transforma o analógico direito em um cursor de interface. No tabuleiro
+// ele se limita aos botões contextuais, para não misturar a mira da grade com
+// menus como "Encerrar missão". Em overlays usa todos os controles visíveis.
+function _gamepadUiPointerControls(){
+  const scope = _gamepadUiScope();
+  const gameScreen = document.getElementById('screen-game');
+  if(scope === gameScreen){
+    return [...gameScreen.querySelectorAll('#objectives-hud button, #btn-libertar')]
+      .filter(_gamepadUiVisible);
+  }
+  return _gamepadUiControls();
+}
+
+function _gamepadToggleUiPointer(){
+  const controls = _gamepadUiPointerControls();
+  if(!controls.length) return false;
+  _gamepadInput.uiPointer = !_gamepadInput.uiPointer;
+  _gamepadRepeat('uiPointer', null, performance.now());
+  if(_gamepadInput.uiPointer){
+    const current = controls.includes(_gamepadUi.focusEl) ? _gamepadUi.focusEl : controls[0];
+    _gamepadSetUiFocus(current);
+    toast(`🖱 ${_gamepadButtonLabel(_gamepadBinding('nextTarget'))}: cursor de interface ativo`, 'var(--cyan)');
+  } else {
+    _gamepadSetUiFocus(null);
+    toast('🖱 Cursor de interface fechado.', 'var(--text2)');
+  }
+  _gamepadRumble('target');
+  return true;
+}
+
+function _gamepadAcceptUi(){
+  const controls = _gamepadUiControls();
+  let target = controls.includes(_gamepadUi.focusEl) ? _gamepadUi.focusEl : document.activeElement;
+  if(!controls.includes(target)) target = controls[0];
+  if(target instanceof HTMLInputElement && ['text', 'password', 'search', 'url', 'email', 'tel', 'number'].includes(target.type)){
+    _openGamepadKeyboard(target);
+    return;
+  }
+  if(target) target.click();
+}
+
+// Teclado virtual para os campos indispensáveis no controle: nome, PIN e
+// código da sala. Ele escreve no próprio input e dispara os mesmos eventos da
+// digitação física, para preservar as validações e os atalhos já existentes.
+const _gamepadKeyboard = { input: null, shift: false };
+
+function _gamepadKeyboardKind(input){
+  if(input.type === 'password' || input.inputMode === 'numeric' || /(?:^|[-_])pin$/i.test(input.id)) return 'numeric';
+  if(/(?:^|[-_])code$/i.test(input.id)) return 'code';
+  return 'text';
+}
+
+function _gamepadKeyboardText(value){
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
+}
+
+function _gamepadKeyboardWrite(value){
+  const input = _gamepadKeyboard.input;
+  if(!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  let next = input.value.slice(0, start) + value + input.value.slice(end);
+  if(input.maxLength > 0) next = next.slice(0, input.maxLength);
+  input.value = next;
+  const caret = Math.min(next.length, start + value.length);
+  input.setSelectionRange?.(caret, caret);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function _gamepadKeyboardBackspace(){
+  const input = _gamepadKeyboard.input;
+  if(!input) return;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  if(start !== end) _gamepadKeyboardWrite('');
+  else if(start > 0){
+    input.setSelectionRange?.(start - 1, end);
+    _gamepadKeyboardWrite('');
+  }
+}
+
+function _closeGamepadKeyboard(){
+  const input = _gamepadKeyboard.input;
+  document.getElementById('gamepad-keyboard-overlay')?.remove();
+  _gamepadKeyboard.input = null;
+  if(input && input.isConnected) _gamepadSetUiFocus(input);
+}
+
+function _gamepadKeyboardSubmit(){
+  const input = _gamepadKeyboard.input;
+  _closeGamepadKeyboard();
+  if(input?.isConnected) input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+function _renderGamepadKeyboard(){
+  const host = document.getElementById('gamepad-keyboard-overlay');
+  const input = _gamepadKeyboard.input;
+  if(!host || !input) return;
+  // Recriar as teclas atualiza o valor exibido; lembramos a tecla ativa para
+  // que digitar vários caracteres não obrigue o jogador a voltar ao início.
+  const oldChar = _gamepadUi.focusEl?.dataset?.gamepadChar;
+  const oldAction = _gamepadUi.focusEl?.dataset?.gamepadAction;
+  const kind = _gamepadKeyboardKind(input);
+  const alphabet = _gamepadKeyboard.shift ? 'QWERTYUIOPASDFGHJKLZXCVBNM' : 'qwertyuiopasdfghjklzxcvbnm';
+  const chars = kind === 'numeric' ? '1234567890'.split('')
+    : (kind === 'code' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' : `${alphabet}0123456789-_.:/`).split('');
+  const keys = chars.map(char => `<button type="button" class="gamepad-kb-key" data-gamepad-char="${char}">${char}</button>`).join('');
+  const textTools = kind === 'text'
+    ? '<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="shift">⇧ Maiúsculas</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-char=" ">Espaço</button>'
+    : '';
+  const fieldName = _gamepadKeyboardText(input.labels?.[0]?.textContent?.trim() || input.placeholder || 'campo');
+  const shownValue = input.type === 'password' ? '•'.repeat(input.value.length) : (input.value || ' ');
+  host.innerHTML = `<div class="gamepad-kb-box" role="dialog" aria-modal="true" aria-label="Teclado virtual">
+    <div class="gamepad-kb-title">⌨️ Digitar: <b>${fieldName}</b></div>
+    <div class="gamepad-kb-value">${_gamepadKeyboardText(shownValue)}</div>
+    <div class="gamepad-kb-keys">${keys}</div>
+    <div class="gamepad-kb-tools">${textTools}<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="backspace">⌫ Apagar</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="clear">Limpar</button><button type="button" class="gamepad-kb-key gamepad-kb-confirm" data-gamepad-action="submit">↵ Confirmar</button></div>
+    <small>Direcional: selecionar · A: digitar · B: fechar</small>
+  </div>`;
+  host.querySelectorAll('[data-gamepad-char]').forEach(btn => btn.addEventListener('click', () => {
+    _gamepadKeyboardWrite(btn.dataset.gamepadChar || '');
+    _renderGamepadKeyboard();
+  }));
+  host.querySelectorAll('[data-gamepad-action]').forEach(btn => btn.addEventListener('click', () => {
+    const action = btn.dataset.gamepadAction;
+    if(action === 'shift'){ _gamepadKeyboard.shift = !_gamepadKeyboard.shift; _renderGamepadKeyboard(); }
+    else if(action === 'backspace'){ _gamepadKeyboardBackspace(); _renderGamepadKeyboard(); }
+    else if(action === 'clear'){ input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); _renderGamepadKeyboard(); }
+    else if(action === 'submit') _gamepadKeyboardSubmit();
+  }));
+  requestAnimationFrame(() => {
+    const buttons = [...host.querySelectorAll('button')];
+    const same = buttons.find(btn => (oldChar != null && btn.dataset.gamepadChar === oldChar)
+      || (oldAction != null && btn.dataset.gamepadAction === oldAction));
+    _gamepadSetUiFocus(same || buttons[0]);
+  });
+}
+
+function _openGamepadKeyboard(input){
+  if(!input || input.readOnly || input.disabled) return;
+  document.getElementById('gamepad-keyboard-overlay')?.remove();
+  _gamepadKeyboard.input = input;
+  _gamepadKeyboard.shift = _gamepadKeyboardKind(input) === 'code';
+  const host = document.createElement('div');
+  host.id = 'gamepad-keyboard-overlay';
+  document.body.appendChild(host);
+  _renderGamepadKeyboard();
+}
+
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && _gamepadKeyboard.input){
+    _closeGamepadKeyboard();
+    event.preventDefault();
+  }
+});
+
+function _gamepadCoverBlocking(){
+  const cover = $('cover-splash');
+  return !!(cover && !cover.classList.contains('dismissed')
+    && cover.closest('.screen')?.classList.contains('active'));
+}
+
+function _gamepadBoard(state){
+  return `${state.tiles?.[0]?.length || 0}x${state.tiles?.length || 0}`;
+}
+
+function _gamepadEnsureCursor(state){
+  if(!state?.tiles?.length) return null;
+  const W = state.tiles[0].length, H = state.tiles.length;
+  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const board = _gamepadBoard(state);
+  const playerKey = me?.pos ? `${board}:${me.id}:${me.pos[0]},${me.pos[1]}` : '';
+  const valid = Array.isArray(_gamepadInput.cursor)
+    && _gamepadInput.cursor[0] >= 0 && _gamepadInput.cursor[1] >= 0
+    && _gamepadInput.cursor[0] < W && _gamepadInput.cursor[1] < H;
+  // Todo deslocamento do herói reinicia o cursor sobre ele. O jogador pode
+  // então explorar com o analógico direito sem o cursor ficar esquecido fora
+  // da tela após uma caminhada longa.
+  if(!valid || _gamepadInput.cursorBoard !== board || _gamepadInput.cursorPlayerKey !== playerKey){
+    _gamepadInput.cursor = me?.pos ? [...me.pos] : [0, 0];
+    _gamepadInput.cursorBoard = board;
+    _gamepadInput.cursorPlayerKey = playerKey;
+  }
+  return _gamepadInput.cursor;
+}
+
+function _gamepadResetCursorToPlayer(state = GS.gameState, render = true){
+  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!state?.tiles?.length || !me?.pos) return false;
+  const board = _gamepadBoard(state);
+  _gamepadInput.cursor = [...me.pos];
+  _gamepadInput.cursorBoard = board;
+  _gamepadInput.cursorPlayerKey = `${board}:${me.id}:${me.pos[0]},${me.pos[1]}`;
+  _gamepadRepeat('cursor', null, performance.now());
+  if(render){
+    _gamepadRenderCursor();
+    _renderGamepadHud(state);
+  }
+  return true;
+}
+
+function _gamepadCursorTile(state){
+  if(!_gamepadInput.active || !state || !$('screen-game')?.classList.contains('active')) return null;
+  // No 3D o mesmo analógico direito pode assumir a câmera; nesse modo o anel
+  // de alvo some para não sugerir que a próxima confirmação usará outra casa.
+  if(mode3D && _gamepadInput.rightMode === 'camera') return null;
+  return _gamepadEnsureCursor(state);
+}
+
+function _gamepadRenderCursor(){
+  if(!GS.gameState) return;
+  if(mode3D && g3) renderMap3D(GS.gameState);
+  else if(!mode3D) renderMap(GS.gameState);
+}
+
+function _gamepadMoveCursor(state, dx, dy){
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor) return;
+  const W = state.tiles[0].length, H = state.tiles.length;
+  cursor[0] = Math.max(0, Math.min(W - 1, cursor[0] + dx));
+  cursor[1] = Math.max(0, Math.min(H - 1, cursor[1] + dy));
+  _gamepadAtualizarPreviaMovimento(state);
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+}
+
+// No modo normal do controle, a mira de movimento já fica ativa. Cada passo
+// do cursor atualiza a rota imediatamente; A fica reservado só para confirmar.
+function _gamepadAtualizarPreviaMovimento(state){
+  if(!GS.isMyTurn || _gamepadInput.attackMode || _aimAlgumModoAtivo()
+    || window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
+    || window._modoThrowItem || window._modoPlacementArmadilha
+    || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow) return;
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor) return;
+  const action = GS.resolveTileClick(cursor[0], cursor[1]);
+  if(action?.type === 'move'){
+    _selecionarPreviaMovimento(action, cursor[0], cursor[1], false);
+  } else if(GS.pendingMove){
+    GS.pendingMove = null;
+    _clearMovePreviewVisual();
+  }
+}
+
+// ── Mira pelo controle ─────────────────────────────────────────────────────
+// O direcional esquerdo anda com o CURSOR DA MIRA, casa a casa, em vez de mover
+// o peão. Enquanto a mira está aberta o herói não dá um passo: ou você confirma
+// o alvo, ou cancela. É o mesmo contrato do attackMode, estendido para toda a
+// camada de mira (magia, arremessável, instrumento, armadilha, habilidade…).
+
+// Casas a que o cursor fica preso. Quando a mira publica um alcance, é ele.
+// Linha/cone e Clarividência não publicam alcance de propósito (a direção e o
+// mapa inteiro é que são o alvo), e ali o cursor anda livre.
+function _aimGamepadRangeSet(){
+  const range = window._spellHL?.range;
+  return (range && range.size) ? range : null;
+}
+
+// Anda UMA casa na direção pedida. Se a vizinha estiver fora do alcance,
+// procura adiante na MESMA direção a primeira casa válida — é isso que mantém
+// navegável um conjunto esparso, como a lista de alvos de uma habilidade, sem
+// deixar de ser "casa a casa" num alcance cheio. Função pura: recebe e devolve
+// coordenadas, para poder ser testada fora do navegador.
+function _aimStepTile(from, dx, dy, permitido, W, H){
+  if((!dx && !dy) || !from) return null;
+  let [x, y] = from;
+  for(let i = 0, teto = Math.max(W, H); i < teto; i++){
+    x += dx; y += dy;
+    if(x < 0 || y < 0 || x >= W || y >= H) return null;
+    if(!permitido || permitido.has(`${x},${y}`)) return [x, y];
+  }
+  return null;
+}
+
+function _aimGamepadStep(state, dx, dy){
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor || !state?.tiles) return false;
+  const W = state.tiles[0].length, H = state.tiles.length;
+  const destino = _aimStepTile(cursor, dx, dy, _aimGamepadRangeSet(), W, H);
+  if(!destino) return false;
+  cursor[0] = destino[0]; cursor[1] = destino[1];
+  _aimPreviewAt(cursor[0], cursor[1]);
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+  return true;
+}
+
+// Onde o cursor começa quando a mira abre no controle: o inimigo mais próximo
+// dentro do alcance (o alvo mais provável, como no attackMode), senão a casa do
+// próprio herói. Sem isto o cursor ficaria onde parou da última vez, podendo
+// nascer fora do alcance e travar o primeiro toque no direcional.
+function _aimSeedGamepadCursor(){
+  const state = GS.gameState;
+  if(!_gamepadInput.active || !state?.tiles) return;
+  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const permitido = _aimGamepadRangeSet();
+  const dentro = ([x, y]) => !permitido || permitido.has(`${x},${y}`);
+  const origem = me?.pos || [0, 0];
+  let melhor = null, melhorDist = Infinity;
+  for(const m of state.monsters || []){
+    if(!m || m.hp <= 0) continue;
+    for(const casa of GS.monsterTiles(m)){
+      if(!dentro(casa)) continue;
+      const d = Math.max(Math.abs(casa[0] - origem[0]), Math.abs(casa[1] - origem[1]));
+      if(d < melhorDist){ melhorDist = d; melhor = casa; }
+    }
+  }
+  const alvo = melhor || (dentro(origem) ? origem : null);
+  if(!alvo) return;
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor) return;
+  cursor[0] = alvo[0]; cursor[1] = alvo[1];
+  _aimPreviewAt(cursor[0], cursor[1]);
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+}
+
+function _gamepadAttackTargets(){
+  return GS.attackTargetTiles?.() || [];
+}
+
+// A mira guarda uma casa, mas monstros grandes podem ocupar várias. Mantemos o
+// id retornado por GS para que o destaque acompanhe a criatura inteira.
+function _gamepadSelectedAttackTarget(state){
+  if(!_gamepadInput.attackMode) return null;
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor) return null;
+  return _gamepadAttackTargets().find(t => t.x === cursor[0] && t.y === cursor[1]) || null;
+}
+
+function _drawGamepadAttackTargetFocus2D(ctx, monster, mx, my, now){
+  const [offX, offY] = _monsterVisualCenterOffset(monster);
+  const fp = _monsterFootprintSize(monster);
+  const cx = (mx + offX) * CELL + CELL / 2;
+  const cy = (my + offY) * CELL + CELL / 2;
+  const pulse = .5 + .5 * Math.sin(now / 230);
+  const rx = CELL * Math.max(.48, fp.logicalW * .48 + .06);
+  const ry = CELL * Math.max(.26, fp.logicalH * .27 + .05);
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,224,96,.92)';
+  ctx.shadowBlur = CELL * (.12 + .12 * pulse);
+  ctx.strokeStyle = `rgba(255,225,105,${(.72 + .22 * pulse).toFixed(2)})`;
+  ctx.lineWidth = Math.max(1.5, CELL * .035);
+  ctx.beginPath(); ctx.ellipse(cx, cy + CELL * .18, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+
+function _gamepadExitAttackMode(state = GS.gameState, render = true){
+  if(!_gamepadInput.attackMode && !window._gamepadAttackRangePreview) return;
+  _gamepadInput.attackMode = false;
+  window._gamepadAttackRangePreview = false;
+  _gamepadRepeat('attackTarget', null, performance.now());
+  if(render && state){
+    _gamepadRenderCursor();
+    _renderGamepadHud(state);
+  }
+}
+
+function _gamepadSelectAttackTarget(state, dx, dy){
+  const targets = _gamepadAttackTargets();
+  if(!targets.length){ _gamepadExitAttackMode(state); return false; }
+  const cursor = _gamepadEnsureCursor(state);
+  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const selected = targets.find(t => t.x === cursor[0] && t.y === cursor[1]);
+  const [ox, oy] = selected ? [selected.x, selected.y] : (me?.pos || cursor);
+  let candidate = null, bestScore = Infinity;
+  for(const target of targets){
+    if(target.x === ox && target.y === oy) continue;
+    const forward = dx ? (dx > 0 ? target.x - ox : ox - target.x)
+      : (dy > 0 ? target.y - oy : oy - target.y);
+    if(forward <= 0) continue;
+    const lateral = dx ? Math.abs(target.y - oy) : Math.abs(target.x - ox);
+    const score = forward + lateral * 2.5;
+    if(score < bestScore){ candidate = target; bestScore = score; }
+  }
+  if(!candidate) return false;
+  cursor[0] = candidate.x; cursor[1] = candidate.y;
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+  return true;
+}
+
+function _gamepadEnterAttackMode(state){
+  const targets = _gamepadAttackTargets();
+  if(!targets.length){
+    const attack = GS.resolveAttack?.();
+    toast(attack?.reason || 'Nenhum inimigo está ao alcance da arma.', 'var(--gold)');
+    _gamepadRumble('cancel');
+    return false;
+  }
+  _gamepadInput.attackMode = true;
+  // A mira de ataque é uma prévia visual temporária, separada do hover do item.
+  window._gamepadAttackRangePreview = true;
+  _gamepadInput.rightMode = 'cursor';
+  const cursor = _gamepadEnsureCursor(state);
+  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const [ox, oy] = cursor || me?.pos || [0, 0];
+  const initial = targets.reduce((best, target) => {
+    const distance = Math.max(Math.abs(target.x - ox), Math.abs(target.y - oy));
+    const bestDistance = Math.max(Math.abs(best.x - ox), Math.abs(best.y - oy));
+    return distance < bestDistance ? target : best;
+  }, targets[0]);
+  cursor[0] = initial.x; cursor[1] = initial.y;
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+  toast('⚔ Mira de ataque: use o direcional esquerdo e confirme o alvo.', 'var(--red)');
+  _gamepadRumble('target');
+  return true;
+}
+
+function _gamepadAxis(pad, index){
+  const value = Number(pad?.axes?.[index]) || 0;
+  return Math.abs(value) >= _gamepadDeadZone ? value : 0;
+}
+
+function _gamepadTrigger(pad, index){
+  const button = pad?.buttons?.[index];
+  if(!button) return 0;
+  return Math.max(0, Number(button.value) || (button.pressed ? 1 : 0));
+}
+
+// OrbitControls continua sendo o dono da câmera. O controle apenas reposiciona
+// a câmera em torno do mesmo alvo dele, depois sincroniza os controles; assim
+// mouse, toque e joystick podem alternar sem salto de posição.
+function _gamepadAltitudeInput(pad, now, playing){
+  const state = GS.gameState;
+  const player = state?.players?.find(p => p && p.id === GS.myPid && p.alive && p.voo
+    && p.pode_alterar_altura !== false);
+  const l1 = !!pad?.buttons?.[4]?.pressed;
+  const lt = _gamepadTrigger(pad, 6) >= .55;
+  const rt = _gamepadTrigger(pad, 7) >= .55;
+  const combo = !!(playing && GS.isMyTurn && player && l1
+    && !_gamepadInput.uiPointer && !_gamepadInput.attackMode && !_aimAlgumModoAtivo() && (lt || rt));
+  _gamepadInput.altitudeComboActive = combo;
+  if(!combo){
+    _gamepadRepeat('altitude', null, now);
+    return false;
+  }
+  const direction = lt && !rt ? -1 : rt && !lt ? 1 : null;
+  if(direction != null && _gamepadRepeat('altitude', [direction], now)){
+    GS.alterarAltura(direction);
+    _gamepadRumble('target');
+  } else if(direction == null){
+    _gamepadRepeat('altitude', null, now);
+  }
+  return true;
+}
+
+function _gamepadCameraInput(pad, now, rotate, allowZoom = true){
+  if(!mode3D || !g3) return;
+  const dt = Math.min(0.050, Math.max(0, (now - (_gamepadInput.cameraLastAt || now)) / 1000));
+  _gamepadInput.cameraLastAt = now;
+  const rx = rotate ? _gamepadAxis(pad, 2) : 0;
+  const ry = rotate ? _gamepadAxis(pad, 3) : 0;
+  const zoom = allowZoom ? _gamepadTrigger(pad, 7) - _gamepadTrigger(pad, 6) : 0; // RT aproxima, LT afasta
+  if(!rx && !ry && !zoom) return;
+
+  // Tomar a câmera manualmente encerra o seguimento automático do peão, que
+  // caso contrário reposicionaria a câmera no quadro seguinte.
+  if(rx || ry){
+    _gamepadInput.followPawn = false;
+    if(configCamera.seguindoPeao) encerrarSeguimentoCamera();
+  }
+
+  const { T, camera, controls } = g3;
+  if(rx || ry){
+    const offset = camera.position.clone().sub(controls.target);
+    const spherical = new T.Spherical().setFromVector3(offset);
+    spherical.theta -= rx * GAMEPAD_CAMERA_TURN_SPEED * _gamepadCameraSensitivity * dt;
+    spherical.phi = Math.max(controls.minPolarAngle, Math.min(
+      controls.maxPolarAngle, spherical.phi + ry * (_gamepadInvertCameraY ? -1 : 1) * GAMEPAD_CAMERA_TURN_SPEED * _gamepadCameraSensitivity * dt
+    ));
+    offset.setFromSpherical(spherical);
+    camera.position.copy(controls.target).add(offset);
+  }
+  if(zoom){
+    const factor = Math.exp(zoom * GAMEPAD_CAMERA_ZOOM_SPEED * _gamepadCameraSensitivity * dt);
+    camera.zoom = Math.max(controls.minZoom, Math.min(controls.maxZoom, camera.zoom * factor));
+    camera.updateProjectionMatrix();
+  }
+  controls.update();
+}
+
+// No mapa-múndi o analógico direito não aponta um alvo nem move a câmera: ele
+// rola o próprio overlay. O eixo vertical mantém a convenção do Gamepad API
+// (negativo para cima, positivo para baixo), igual ao scroll natural da página.
+function _gamepadWorldMapScroll(pad, now){
+  const map = _worldMapEl;
+  if(!_gamepadLayerVisible(map)){
+    _gamepadRepeat('worldScroll', null, now);
+    return false;
+  }
+  const y = _gamepadAxis(pad, 3);
+  const direction = y ? [0, y > 0 ? 1 : -1] : null;
+  if(_gamepadRepeat('worldScroll', direction, now)){
+    const step = Math.max(80, Math.round(map.clientHeight * .24));
+    map.scrollTop = Math.max(0, Math.min(
+      Math.max(0, map.scrollHeight - map.clientHeight),
+      map.scrollTop + direction[1] * step
+    ));
+  }
+  return true;
+}
+
+// Fora do mapa-múndi, o analógico direito rola o painel que contém o foco.
+// Isso atende tanto listas longas da cidade (loja, guilda, ficha) quanto
+// modais que surgirem depois, sem precisar manter uma lista de telas aqui.
+function _gamepadScrollableMenuTarget(){
+  const scope = _gamepadUiScope();
+  if(!scope) return null;
+  const isScrollable = el => {
+    if(!_gamepadLayerVisible(el) || el.scrollHeight <= el.clientHeight + 2) return false;
+    const overflowY = getComputedStyle(el).overflowY;
+    return overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+  };
+  const focused = _gamepadUi.focusEl?.isConnected ? _gamepadUi.focusEl : document.activeElement;
+  if(focused && (focused === scope || scope.contains(focused))){
+    for(let el = focused; el; el = el.parentElement){
+      if(isScrollable(el)) return el;
+      if(el === scope) break;
+    }
+  }
+  const candidates = [scope, ...scope.querySelectorAll('*')].filter(isScrollable);
+  if(!candidates.length) return null;
+  // Sem um controle focado (por exemplo, ao abrir um painel), privilegia a
+  // área com mais conteúdo para rolar, em vez da moldura do modal.
+  return candidates.sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight))[0];
+}
+
+function _gamepadScrollActiveMenu(pad, now){
+  const y = _gamepadAxis(pad, 3);
+  const direction = y ? [0, y > 0 ? 1 : -1] : null;
+  if(!direction){
+    _gamepadRepeat('menuScroll', null, now);
+    return false;
+  }
+  const target = _gamepadScrollableMenuTarget();
+  if(!target){
+    _gamepadRepeat('menuScroll', null, now);
+    return false;
+  }
+  if(_gamepadRepeat('menuScroll', direction, now)){
+    const step = Math.max(70, Math.round(target.clientHeight * .22));
+    target.scrollTop = Math.max(0, Math.min(
+      Math.max(0, target.scrollHeight - target.clientHeight),
+      target.scrollTop + direction[1] * step
+    ));
+  }
+  return true;
+}
+
+function _gamepadToggleCameraMode(){
+  if(!mode3D || !g3) return;
+  _gamepadInput.rightMode = _gamepadInput.rightMode === 'cursor' ? 'camera' : 'cursor';
+  _gamepadInput.cursorDir = null;
+  _gamepadRenderCursor();
+  _renderGamepadHud(GS.gameState);
+  toast(_gamepadInput.rightMode === 'camera'
+    ? '🎮 Analógico direito: câmera · Gatilhos: zoom'
+    : '🎯 Analógico direito: cursor de alvo · Gatilhos: zoom', 'var(--cyan)');
+}
+
+function _gamepadToggleMainMenu(){
+  const menu = document.getElementById('pause-menu');
+  if(!menu) return;
+  const open = !menu.classList.contains('open');
+  togglePauseMenu(open);
+  _gamepadInput.uiPointer = false;
+  _gamepadSetUiFocus(open ? menu.querySelector('.pause-menu-primary') : null);
+  _gamepadRumble(open ? 'confirm' : 'cancel');
+}
+
+function _gamepadCancel(){
+  _clearGamepadEndTurnConfirm();
+  _gamepadRumble('cancel');
+  if(_cancelarPreviaMovimento()) return;
+  _gamepadResetCursorToPlayer(GS.gameState);
+  if(_aimSessionIs()){
+    _aimEnd();
+    return;
+  }
+  const modalCancel = document.querySelector('#encerrar-missao-overlay [data-gamepad-cancel], #exit-dungeon-overlay [data-gamepad-cancel], #inv-unequip-flight-confirm [data-gamepad-cancel]');
+  if(modalCancel){
+    modalCancel.click();
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  if($('pause-menu')?.classList.contains('open')){
+    togglePauseMenu(false);
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  const configPop = document.getElementById('audio-pop');
+  if(configPop && configPop.style.display !== 'none'){
+    _toggleConfigPop(false);
+    return;
+  }
+  // O painel de saque é compartilhado por baús e contêineres/itens interativos.
+  // Escape deliberadamente não o fecha (para não acionar a pausa); o controle
+  // precisa fechá-lo explicitamente com Voltar/B/Círculo.
+  if($('chest-overlay')?.classList.contains('open')){
+    closeChestWindow();
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  if($('target-modal')?.classList.contains('open')){
+    closeTargetModal();
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  // Enquanto o inventário estiver aberto, o botão voltar primeiro larga no
+  // chão o item selecionado durante a masmorra. Sem seleção, mantém a escada
+  // normal: desfaz a seleção de interface e depois fecha o inventário antes
+  // de considerar interações adjacentes da masmorra.
+  if(_gamepadCharacterMenuKind() === 'itens'){
+    const emMasmorra = document.getElementById('screen-game')?.classList.contains('active')
+      && GS.gameState?.phase === 'playing';
+    if(emMasmorra && typeof InventoryModal !== 'undefined'
+      && InventoryModal.gamepadDropSelected?.()) return;
+    if(typeof InventoryModal !== 'undefined' && InventoryModal.gamepadCancelSelection?.()) return;
+    if(typeof InventoryModal !== 'undefined'){ InventoryModal.close(); return; }
+  }
+  if(_gamepadInput.attackMode){
+    _gamepadExitAttackMode();
+    return;
+  }
+  const nearbyInteraction = _gamepadNearbyInteraction(GS.gameState, GS.me);
+  if(nearbyInteraction){
+    // B/Círculo só dispensa o aviso contextual. A interação continua sendo
+    // possível com A, mas o ícone só volta após sair e retornar ao alcance.
+    _gamepadInput.interactionDismissedKey = nearbyInteraction.key;
+    _renderGamepadHud(GS.gameState);
+    return;
+  }
+  if(_gamepadKeyboard.input){ _closeGamepadKeyboard(); return; }
+  const painelGuerreiroLuz = document.getElementById('painel-guerreiro-luz');
+  if(painelGuerreiroLuz){
+    painelGuerreiroLuz.remove();
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  // Habilidades e magias são painéis de navegação: B/Círculo deve voltar ao
+  // tabuleiro, em vez de deixar o Escape cair no menu de pausa.
+  if(_gamepadCharacterMenuKind() === 'habilidades'){ fecharMenuHabilidades(); return; }
+  if(_gamepadCharacterMenuKind() === 'magias'){ fecharMenuMagias(); return; }
+  if(_gamepadCharacterMenuKind() === 'status'){ fecharMenuStatus(); return; }
+  if(_gamepadBackFromShop()) return;
+  if($('painel-ajuda')){ toggleAjuda(); return; }
+  // Voltar pelos mapas segue a hierarquia visual: detalhe → mapa-múndi → cidade.
+  if(_worldMapEl && _gamepadLayerVisible(_worldMapEl)){
+    if(_worldMapEl.querySelector('#worldmap-location-frame')) showWorldMap();
+    else hideWorldMap();
+    return;
+  }
+  if(document.getElementById('city-dungeon-entry')){ _fecharEntradaMasmorra(); return; }
+  // No tabuleiro, B/Círculo não abre menu: sem uma ação contextual para
+  // cancelar ele simplesmente não faz nada além de recentrar o cursor.
+}
+
+function _gamepadAdjacentClosedDoor(state, player){
+  if(!state || !player?.pos) return null;
+  return [...GS.doorSets(state).closed]
+    .map(key => key.split(',').map(Number))
+    .filter(([x, y]) => Math.max(Math.abs(player.pos[0] - x), Math.abs(player.pos[1] - y)) <= 1)
+    .sort(([ax, ay], [bx, by]) =>
+      Math.abs(player.pos[0] - ax) + Math.abs(player.pos[1] - ay)
+      - Math.abs(player.pos[0] - bx) - Math.abs(player.pos[1] - by))[0] || null;
+}
+
+function _gamepadNearbyInteraction(state, player){
+  if(!state || !player?.pos || !GS.isMyTurn) return null;
+  const adjacent = (pos) => Math.max(Math.abs(player.pos[0] - pos[0]), Math.abs(player.pos[1] - pos[1])) <= 1;
+  const door = _gamepadAdjacentClosedDoor(state, player);
+  if(door) return { kind:'door', key:`door:${door[0]},${door[1]}`, pos:door, icon:'🚪' };
+
+  const chest = (state.chests || []).filter(c => c.pos && adjacent(c.pos))
+    .sort((a,b) => Math.abs(player.pos[0]-a.pos[0]) + Math.abs(player.pos[1]-a.pos[1])
+      - Math.abs(player.pos[0]-b.pos[0]) - Math.abs(player.pos[1]-b.pos[1]))[0];
+  if(chest) return { kind:'chest', key:`chest:${chest.id}`, chest, icon:'📦' };
+
+  const decor = (GS.decorations || []).filter(d => {
+    const interactive = d.tem_loot || d.chest_trap || d.trap || d.key_objective
+      || d.special === 'fountain' || d.interactive;
+    return interactive && GS.decorTilesOf(d).some(adjacent);
+  }).sort((a,b) => String(a.id).localeCompare(String(b.id)))[0];
+  if(decor) return { kind:'decor', key:`decor:${decor.id}`, decor, icon:decor.emoji || '✋' };
+
+  const ground = (state.ground_items || []).find(item => GS.groundItemPickable(item, player));
+  if(ground) return { kind:'ground', key:`ground:${ground.id}`, ground, icon:'✋' };
+  return null;
+}
+
+function _gamepadActivateNearbyInteraction(state, player){
+  const interaction = _gamepadNearbyInteraction(state, player);
+  if(!interaction) return false;
+  if(interaction.kind === 'door'){
+    if(GS.resolveTileClick(interaction.pos[0], interaction.pos[1])?.type !== 'open_door') return false;
+    handleTileClick(interaction.pos[0], interaction.pos[1]);
+  } else if(interaction.kind === 'chest') {
+    openChestWindow(interaction.chest);
+  } else if(interaction.kind === 'decor') {
+    GS.interagirDecor(interaction.decor.id);
+  } else if(interaction.kind === 'ground') {
+    const attack = GS.resolveTileClick(interaction.ground.pos[0], interaction.ground.pos[1]);
+    if(!_abrirEscolhaLootOuAtaque(interaction.ground, attack)) GS.pickupItem(interaction.ground.id);
+  } else {
+    return false;
+  }
+  _gamepadRumble('confirm');
+  return true;
+}
+
+function _gamepadInteractAtCursor(state){
+  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!me) return false;
+  // A proximidade é a forma principal de interagir no joystick. Assim A abre
+  // o objeto ao lado do herói, sem depender de um cursor visível na grade.
+  if(_gamepadActivateNearbyInteraction(state, me)) return true;
+  const cursor = _gamepadEnsureCursor(state);
+  if(!cursor) return false;
+  const [tx, ty] = cursor;
+  const near = (pos) => Math.max(Math.abs(me.pos[0] - pos[0]), Math.abs(me.pos[1] - pos[1])) <= 2;
+  const openDoor = (x, y) => {
+    // Resolve no módulo de estado antes de disparar a ação: ele confirma que a
+    // porta ainda está fechada, que é adjacente e que é o turno deste herói.
+    if(GS.resolveTileClick(x, y)?.type !== 'open_door') return false;
+    handleTileClick(x, y);
+    _gamepadRumble('confirm');
+    return true;
+  };
+
+  const groundItem = (state.ground_items || []).find(item =>
+    item.pos?.[0] === tx && item.pos?.[1] === ty);
+  if(groundItem && GS.groundItemPickable(groundItem, me)){
+    const attack = GS.resolveTileClick(tx, ty);
+    if(!_abrirEscolhaLootOuAtaque(groundItem, attack)) GS.pickupItem(groundItem.id);
+    _gamepadRumble('confirm');
+    return true;
+  }
+
+  const chestAtCursor = (state.chests || []).find(chest =>
+    chest.pos?.[0] === tx && chest.pos?.[1] === ty && near(chest.pos));
+  if(chestAtCursor){
+    openChestWindow(chestAtCursor);
+    _gamepadRumble('confirm');
+    return true;
+  }
+
+  // A porta apontada pelo cursor sempre tem prioridade sobre ataque/movimento.
+  if(openDoor(tx, ty)) return true;
+
+  // Depois de caminhar, o cursor costuma permanecer na casa anterior. Se ele
+  // ainda está sobre o herói, confirmar abre o baú mais próximo sem exigir que
+  // o jogador procure a casa novamente com o analógico direito.
+  if(tx === me.pos[0] && ty === me.pos[1]){
+    const nearbyChest = (state.chests || [])
+      .filter(chest => chest.pos && near(chest.pos))
+      .sort((a, b) =>
+        Math.max(Math.abs(me.pos[0] - a.pos[0]), Math.abs(me.pos[1] - a.pos[1]))
+        - Math.max(Math.abs(me.pos[0] - b.pos[0]), Math.abs(me.pos[1] - b.pos[1])))[0];
+    if(nearbyChest){
+      openChestWindow(nearbyChest);
+      _gamepadRumble('confirm');
+      return true;
+    }
+  }
+  return false;
+}
+
+function _gamepadAccept(state){
+  if($('target-modal')?.classList.contains('open')){
+    _gamepadAcceptUi();
+    _gamepadRumble('confirm');
+    return;
+  }
+  if(GS.pendingMove){
+    const cursor = _gamepadEnsureCursor(state);
+    if(cursor){
+      _clearGamepadEndTurnConfirm();
+      _gamepadRumble('confirm');
+      // Durante uma prévia, A sempre confirma/troca a casa selecionada antes
+      // de considerar interações contextuais próximas ao herói.
+      handleTileClick(cursor[0], cursor[1]);
+    }
+    return;
+  }
+  if(_gamepadInput.attackMode){
+    const cursor = _gamepadEnsureCursor(state);
+    const target = cursor && _gamepadAttackTargets().find(t => t.x === cursor[0] && t.y === cursor[1]);
+    if(!target){
+      _gamepadExitAttackMode(state);
+      toast('O alvo saiu do alcance.', 'var(--gold)');
+      return;
+    }
+    // Resolve pelo mesmo caminho de clique do tabuleiro, preservando animação,
+    // efeitos locais e a validação autoritativa já existente.
+    _gamepadExitAttackMode(state);
+    _gamepadRumble('confirm');
+    handleTileClick(target.x, target.y);
+    return;
+  }
+  if(_aimSessionIs() || window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
+    || window._modoThrowItem || window._modoPlacementArmadilha
+    || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow){
+    const cursor = _gamepadEnsureCursor(state);
+    if(cursor){
+      _gamepadRumble('confirm');
+      handleTileClick(cursor[0], cursor[1]);
+    }
+    return;
+  }
+  // Interações físicas recebem precedência sobre o atalho de combate: assim A
+  // abre um baú ou recolhe um item selecionado, mesmo se houver inimigos no
+  // alcance da arma naquele turno.
+  if(_gamepadInteractAtCursor(state)) return;
+  if(_gamepadEnterAttackMode(state)) return;
+  const cursor = _gamepadEnsureCursor(state);
+  if(cursor){
+    _clearGamepadEndTurnConfirm();
+    _gamepadRumble('confirm');
+    handleTileClick(cursor[0], cursor[1]);
+  }
+}
+
+// Y percorre apenas casas que podem receber uma ação no contexto atual. Isso
+// evita varrer o mapa inteiro quando há um inimigo, uma porta ou um item útil
+// na cena. O cursor continua livre no analógico direito para a mira precisa.
+function _gamepadUsefulTargetTiles(state){
+  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!state || !me || !GS.isMyTurn) return [];
+  const out = [], seen = new Set();
+  const add = (x, y, priority) => {
+    const key = `${x},${y}`;
+    if(!seen.has(key)){ seen.add(key); out.push({x, y, priority}); }
+  };
+  const aiming = !!(_aimSessionIs() || window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
+    || window._modoThrowItem || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow);
+  const weaponThrowAim = _aimSessionIs('arremesso_arma');
+
+  for(const m of state.monsters || []){
+    if(!m || m.hp <= 0) continue;
+    for(const [x,y] of GS.monsterTiles(m)){
+      const action = GS.resolveTileClick(x, y);
+      if(weaponThrowAim) {
+        if(window._spellHL?.area?.has(`${x},${y}`)) add(x, y, 0);
+      } else if(aiming || ['attack', 'skill', 'instrumento', 'throw'].includes(action?.type)) add(x, y, 0);
+    }
+  }
+  if(!aiming){
+    for(const item of state.ground_items || []){
+      if(GS.groundItemPickable(item, me)) add(item.pos[0], item.pos[1], 1);
+    }
+    for(const chest of state.chests || []){
+      if(Math.max(Math.abs(me.pos[0] - chest.pos[0]), Math.abs(me.pos[1] - chest.pos[1])) <= 2) add(chest.pos[0], chest.pos[1], 2);
+    }
+    for(const decor of GS.decorations || []){
+      const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain';
+      if(interativa) add(decor.pos[0], decor.pos[1], 3);
+    }
+    const { closed } = GS.doorSets(state);
+    for(const key of closed){
+      const [x,y] = key.split(',').map(Number);
+      const action = GS.resolveTileClick(x, y);
+      if(action?.type === 'open_door' || action?.type === 'move') add(x, y, 4);
+    }
+  }
+  return out.sort((a,b) => a.priority - b.priority || a.y - b.y || a.x - b.x);
+}
+function _gamepadCycleUsefulTarget(state){
+  const targets = _gamepadUsefulTargetTiles(state);
+  if(!targets.length){ toast(t('ui.joystick.sem_alvo_rapido'), 'var(--text2)'); return; }
+  const cursor = _gamepadEnsureCursor(state);
+  const at = targets.findIndex(target => target.x === cursor[0] && target.y === cursor[1]);
+  const next = targets[(at + 1) % targets.length];
+  cursor[0] = next.x; cursor[1] = next.y;
+  _gamepadRumble('target');
+  _gamepadRenderCursor();
+  _renderGamepadHud(state);
+}
+
+// Menus do herói ficam em overlays diferentes por razões visuais, mas para o
+// controle formam uma única sequência. O botão View/Share abre Itens; os
+// gatilhos percorrem a sequência sem expor o jogador a menus que não se
+// aplicam à classe atual.
+const _GAMEPAD_CHARACTER_MENUS = ['itens', 'habilidades', 'magias', 'status'];
+function _gamepadCharacterMenuKind(){
+  if(document.getElementById('inv-modal-overlay')?.classList.contains('open')) return 'itens';
+  if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) return 'habilidades';
+  if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) return 'magias';
+  if(document.getElementById('menu-status-overlay')?.classList.contains('open')) return 'status';
+  return null;
+}
+function _gamepadCharacterMenuAvailable(kind, player){
+  if(kind === 'magias') return player?.class_id === 'mage' || player?.class_id === 'cleric';
+  return ['itens', 'habilidades', 'status'].includes(kind);
+}
+function _gamepadCloseCharacterMenus(){
+  if(typeof InventoryModal !== 'undefined') InventoryModal.close();
+  fecharMenuHabilidades();
+  fecharMenuMagias();
+  fecharMenuStatus();
+}
+function _gamepadFocusCharacterMenu(kind){
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  const cartaDePersonagem = naCidade ? '[data-shortcut-kind]' : '[data-gamepad-action]';
+  const selectors = {
+    itens: '#inv-modal-overlay [data-inventory-slot], #inv-modal-overlay [data-shortcut-kind], #inv-modal-overlay .inv-close',
+    habilidades: `#menu-habilidades-overlay ${cartaDePersonagem}, #menu-habilidades-overlay .mh-header button`,
+    magias: `#menu-magias-overlay ${cartaDePersonagem}, #menu-magias-overlay .mm-header button`,
+    status: '#menu-status-overlay button',
+  };
+  const selector = selectors[kind];
+  if(selector) _gamepadFocusMapPoint(selector);
+}
+function _gamepadOpenCharacterMenu(){
+  if(!GS.myPid || !['screen-game', 'screen-city'].includes(document.querySelector('.screen.active')?.id)) return;
+  const current = _gamepadCharacterMenuKind();
+  if(current === 'itens'){
+    if(typeof InventoryModal !== 'undefined') InventoryModal.close();
+    return;
+  }
+  _gamepadCloseCharacterMenus();
+  if(typeof InventoryModal !== 'undefined') InventoryModal.open(GS.myPid);
+  _gamepadFocusCharacterMenu('itens');
+}
+function _gamepadCycleCharacterMenu(direction){
+  const current = _gamepadCharacterMenuKind();
+  if(!current) return false;
+  const player = GS.me || (GS.gameState?.players || []).find(p => p.id === GS.myPid)
+    || (GS.cityState?.players || []).find(p => p.id === GS.myPid);
+  const start = _GAMEPAD_CHARACTER_MENUS.indexOf(current);
+  for(let step = 1; step <= _GAMEPAD_CHARACTER_MENUS.length; step++){
+    const index = (start + direction * step + _GAMEPAD_CHARACTER_MENUS.length * 2) % _GAMEPAD_CHARACTER_MENUS.length;
+    const next = _GAMEPAD_CHARACTER_MENUS[index];
+    if(!_gamepadCharacterMenuAvailable(next, player)) continue;
+    _gamepadCloseCharacterMenus();
+    if(next === 'itens' && typeof InventoryModal !== 'undefined') InventoryModal.open(GS.myPid);
+    else if(next === 'habilidades') abrirMenuHabilidades(GS.myPid);
+    else if(next === 'magias') abrirMenuMagias(GS.myPid);
+    else abrirMenuStatus(GS.myPid);
+    _gamepadFocusCharacterMenu(next);
+    return true;
+  }
+  return false;
+}
+function _gamepadShortcutEntryFromFocus(){
+  const focused = _gamepadUi.focusEl?.isConnected ? _gamepadUi.focusEl : document.activeElement;
+  return _atalhoEntryFromElement(focused?.closest?.('[data-shortcut-kind]'));
+}
+function _gamepadUseOrAssignShortcut(slot){
+  const entry = _gamepadShortcutEntryFromFocus();
+  const menu = _gamepadCharacterMenuKind();
+  // Dentro de uma ficha, L1/R1+face grava o conteúdo atualmente focado. Fora
+  // dela, a mesma combinação é o disparo rápido do atalho salvo.
+  if(menu && entry){
+    GS.setShortcut(slot, entry);
+    const meta = _atalhoMeta(entry, GS.me);
+    toast(`🎮 ${meta?.nome || entry.id} → atalho ${slot + 1}`, 'var(--green)');
+    return true;
+  }
+  const slots = Array.isArray(GS.me?.shortcut_slots) ? GS.me.shortcut_slots : [];
+  const saved = slots[slot];
+  if(!saved){ toast(`🎮 Atalho ${slot + 1} vazio`, 'var(--text2)'); return true; }
+  _ativarAtalho(saved, slot);
+  return true;
+}
+
+function _pollGamepad(now){
+  const pad = _gamepadPrimary();
+  if(!pad){
+    const wasActive = _gamepadInput.active;
+    _gamepadInput.index = null; _gamepadInput.active = false; _gamepadInput.cursor = null; _gamepadInput.cursorPlayerKey = ''; _gamepadInput.uiPointer = false; _gamepadInput.altitudeComboActive = false; _gamepadInput.interactionDismissedKey = null; _gamepadInput.shortcutWheelModifier = null; _gamepadInput.shortcutWheelConsumed = false; _gamepadInput.followPawn = false; _gamepadInput.buttons = [];
+    _clearGamepadEndTurnConfirm();
+    if(_gamepadBindingCapture){ _gamepadBindingCapture = null; _gamepadRenderPrefs(); }
+    _gamepadSetUiFocus(null);
+    if(wasActive){
+      _gamepadRenderCursor();
+      _renderGamepadHud(GS.gameState);
+    }
+    return;
+  }
+  const wasActive = _gamepadInput.active;
+  _gamepadInput.index = pad.index;
+  _gamepadInput.active = true;
+  if(_gamepadBindingCapture){
+    const pressed = Array.from(pad.buttons).findIndex((button, index) => !!button.pressed && !_gamepadInput.buttons[index]);
+    if(pressed >= 0){
+      const action = _gamepadBindingCapture;
+      _gamepadBindingCapture = null;
+      _setGamepadBinding(action, pressed);
+      toast(`🎮 ${t(_GAMEPAD_ACTIONS.find(a => a[0] === action)?.[1] || action)}: ${_gamepadButtonLabel(pressed)}`, 'var(--green)');
+    }
+    _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
+    return;
+  }
+  // A capa inicial deliberadamente bloqueia a interface até o primeiro gesto.
+  // Confirmar / Encerrar turno equivalem a esse clique para iniciar sem mouse.
+  if(_gamepadCoverBlocking()){
+    if(_gamepadButtonEdge(pad, _gamepadBinding('confirm')) || _gamepadButtonEdge(pad, _gamepadBinding('endTurn'))) $('cover-splash').click();
+    _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
+    return;
+  }
+  const state = GS.gameState;
+  const inDungeon = !!(state && state.phase === 'playing' && $('screen-game')?.classList.contains('active'));
+  // Um modal aberto recebe o direcional antes do tabuleiro: evita mover o
+  // herói acidentalmente enquanto uma confirmação, loja ou ficha está na tela.
+  const playing = inDungeon && _gamepadUiScope() === $('screen-game');
+  if(_gamepadInput.uiPointer && !_gamepadUiPointerControls().length){
+    _gamepadInput.uiPointer = false;
+    _gamepadSetUiFocus(null);
+  }
+  if(!playing) _clearGamepadEndTurnConfirm();
+  const altitudeComboActive = _gamepadAltitudeInput(pad, now, playing);
+
+  if(playing){
+    _gamepadRepeat('worldScroll', null, now);
+    _gamepadEnsureCursor(state);
+    if(_gamepadInput.attackMode && !_gamepadAttackTargets().length)
+      _gamepadExitAttackMode(state);
+    if(!wasActive){
+      _gamepadRenderCursor();
+      _renderGamepadHud(state);
+      _gamepadRenderPrefs();
+    }
+    const moveDir = _gamepadDirection(pad, 0, 1, 12, 13, 14, 15);
+    const boardMoveDir = _gamepadBoardDirectionForView(moveDir);
+    if(_gamepadInput.attackMode){
+      // Durante a mira, o direcional esquerdo não move o herói: ele percorre
+      // somente casas que têm um inimigo realmente atacável pela arma atual.
+      if(_gamepadRepeat('attackTarget', moveDir, now)){
+        if(_gamepadSelectAttackTarget(state, boardMoveDir[0], boardMoveDir[1])) _gamepadRumble('target');
+      }
+      _gamepadRepeat('move', null, now);
+    } else if(_aimAlgumModoAtivo()){
+      // Mesma regra do attackMode para TODA a camada de mira: o direcional
+      // anda com o cursor da mira, casa a casa, e o peão fica parado até
+      // confirmar (A) ou cancelar (B). Sem isto o herói caminhava enquanto o
+      // jogador escolhia o alvo da magia.
+      if(_gamepadRepeat('aimCursor', moveDir, now)){
+        if(_aimGamepadStep(state, boardMoveDir[0], boardMoveDir[1])) _gamepadRumble('target');
+      }
+      _gamepadRepeat('move', null, now);
+    } else if(_gamepadRepeat('move', moveDir, now) && GS.isMyTurn){
+      const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+      if(me){
+        _clearGamepadEndTurnConfirm();
+        // O direcional escolhe a casa; A confirma o movimento. Assim o
+        // controle segue o mesmo fluxo da prévia por clique, sem mover o
+        // peão antes da confirmação do jogador.
+        _gamepadInput.followPawn = false;
+        _gamepadMoveCursor(state, boardMoveDir[0], boardMoveDir[1]);
+        _gamepadRumble('target');
+      }
+    }
+    // Y ativa um cursor de interface para os botões contextuais do tabuleiro.
+    // Enquanto ele está ativo, o analógico direito não gira a câmera nem move
+    // a mira da grade.
+    if(_gamepadInput.uiPointer){
+      const pointerDir = _gamepadDirection(pad, 2, 3, -1, -1, -1, -1);
+      if(_gamepadRepeat('uiPointer', pointerDir, now)){
+        _gamepadMoveUiFocus(pointerDir[0], pointerDir[1], _gamepadUiPointerControls());
+        _gamepadRumble('target');
+      }
+      _gamepadRepeat('cursor', null, now);
+      _gamepadRepeat('camera', null, now);
+    } else {
+      // Analógico direito: cursor por padrão; botão configurado alterna para câmera 3D.
+      const cameraMode = mode3D && _gamepadInput.rightMode === 'camera';
+      _gamepadCameraInput(pad, now, cameraMode, !altitudeComboActive); // L2/R2 continuam zoom fora do modo altura
+      if(cameraMode){
+        _gamepadRepeat('cursor', null, now);
+      } else if(_gamepadInput.attackMode || _aimAlgumModoAtivo()){
+        // A mira fica travada nos alvos permitidos; o analógico direito não pode
+        // deslocá-la para uma casa vazia enquanto o ataque está armado. Vale
+        // igual para magia/arremesso: quem conduz a mira é o direcional
+        // esquerdo, para não haver dois controles disputando o mesmo cursor.
+        _gamepadRepeat('cursor', null, now);
+      } else {
+        const cursorDir = _gamepadDirection(pad, 2, 3, -1, -1, -1, -1);
+        const boardCursorDir = _gamepadBoardDirectionForView(cursorDir);
+        if(_gamepadRepeat('cursor', cursorDir, now))
+          _gamepadMoveCursor(state, boardCursorDir[0], boardCursorDir[1]);
+      }
+    }
+  } else {
+    const navDir = _gamepadDirection(pad, 0, 1, 12, 13, 14, 15);
+    if(_gamepadRepeat('move', navDir, now)) _gamepadMoveUiFocus(navDir[0], navDir[1]);
+    // Guerreiro da Luz é uma grade de ajustes, não uma lista: aqui o segundo
+    // direcional age como mouse e desloca o foco entre os botões +/−.
+    const painelGuerreiroLuz = document.getElementById('painel-guerreiro-luz');
+    const inventoryOpen = _gamepadCharacterMenuKind() === 'itens';
+    const inventoryActionOpen = inventoryOpen && typeof InventoryModal !== 'undefined'
+      && !!InventoryModal.gamepadActionOpen?.();
+    if(_gamepadInput.uiPointer){
+      const pointerDir = _gamepadDirection(pad, 2, 3, -1, -1, -1, -1);
+      if(_gamepadRepeat('uiPointer', pointerDir, now)){
+        _gamepadMoveUiFocus(pointerDir[0], pointerDir[1], _gamepadUiPointerControls());
+        _gamepadRumble('target');
+      }
+      _gamepadRepeat('gdlFocus', null, now);
+      _gamepadRepeat('inventoryAction', null, now);
+      _gamepadRepeat('worldScroll', null, now);
+      _gamepadRepeat('menuScroll', null, now);
+    } else if(_gamepadLayerVisible(painelGuerreiroLuz)){
+      const selecaoDir = _gamepadDirection(pad, 2, 3, -1, -1, -1, -1);
+      if(_gamepadRepeat('gdlFocus', selecaoDir, now)){
+        _gamepadMoveUiFocus(selecaoDir[0], selecaoDir[1]);
+        _gamepadRumble('target');
+      }
+      _gamepadRepeat('inventoryAction', null, now);
+      _gamepadRepeat('worldScroll', null, now);
+      _gamepadRepeat('menuScroll', null, now);
+    } else if(inventoryActionOpen){
+      _gamepadRepeat('gdlFocus', null, now);
+      const optionDir = _gamepadDirection(pad, 2, 3, -1, -1, -1, -1);
+      if(_gamepadRepeat('inventoryAction', optionDir, now)
+        && typeof InventoryModal !== 'undefined' && InventoryModal.gamepadCycleAction?.()) _gamepadRumble('target');
+      _gamepadRepeat('worldScroll', null, now);
+      _gamepadRepeat('menuScroll', null, now);
+    } else {
+      _gamepadRepeat('gdlFocus', null, now);
+      _gamepadRepeat('inventoryAction', null, now);
+      if(!_gamepadWorldMapScroll(pad, now)) _gamepadScrollActiveMenu(pad, now);
+    }
+    _gamepadRepeat('cursor', null, now);
+  }
+
+  const l1Held = !!pad.buttons[4]?.pressed;
+  const r1Held = !!pad.buttons[5]?.pressed;
+  // L1 opera os slots 1–4; R1 abre a segunda roda, nos slots 5–8.
+  // Se ambos estiverem pressionados, L1 tem prioridade para evitar ambiguidade.
+  const heldModifier = l1Held ? 4 : (r1Held ? 5 : null);
+  if(heldModifier == null) _gamepadInput.shortcutWheelConsumed = false;
+  const shortcutModifier = _gamepadInput.shortcutWheelConsumed ? null : heldModifier;
+  if(shortcutModifier !== _gamepadInput.shortcutWheelModifier){
+    _gamepadInput.shortcutWheelModifier = shortcutModifier;
+    _renderGamepadHud(state);
+  } else if(shortcutModifier != null && playing){
+    _positionGamepadShortcutWheel(state, _gamepadHudPlayer(state));
+  }
+  let shortcutHandled = false;
+  if(!_gamepadInput.shortcutWheelConsumed && l1Held){
+    for(let slot = 0; slot < 4; slot++){
+      if(_gamepadButtonEdge(pad, slot)){
+        shortcutHandled = _gamepadUseOrAssignShortcut(slot);
+        break;
+      }
+    }
+  } else if(!_gamepadInput.shortcutWheelConsumed && r1Held){
+    for(let slot = 0; slot < 4; slot++){
+      if(_gamepadButtonEdge(pad, slot)){
+        shortcutHandled = _gamepadUseOrAssignShortcut(slot + 4);
+        break;
+      }
+    }
+  }
+  if(shortcutHandled){
+    _clearGamepadEndTurnConfirm();
+    // Depois de disparar/gravar um atalho, mantenha a roda aberta enquanto
+    // L1/R1 continuar pressionado. O edge dos botões frontais continua
+    // impedindo que o mesmo acionamento seja repetido a cada frame.
+    _renderGamepadHud(state);
+  }
+  if(_gamepadButtonEdge(pad, _gamepadBinding('characterMenu')) && !l1Held && !r1Held) _gamepadOpenCharacterMenu();
+  if(!altitudeComboActive && _gamepadButtonEdge(pad, 6)){ // L2: aba anterior
+    if(!_gamepadCycleShopTab(-1)) _gamepadCycleCharacterMenu(-1);
+  } else if(!altitudeComboActive && _gamepadButtonEdge(pad, 7)){ // R2: próxima aba
+    if(!_gamepadCycleShopTab(1)) _gamepadCycleCharacterMenu(1);
+  }
+
+  // No inventário, o botão frontal secundário usa o item focalizado (poção,
+  // pergaminho ou arremessável). Confirmar continua reservado para selecionar,
+  // equipar, desequipar e reorganizar os slots.
+  if(!shortcutHandled && _gamepadCharacterMenuKind() === 'itens' && _gamepadButtonEdge(pad, 2)){
+    if(typeof InventoryModal !== 'undefined' && InventoryModal.gamepadUseFocused?.()) _gamepadRumble('confirm');
+  }
+  if(!shortcutHandled && _gamepadCharacterMenuKind() === 'itens' && _gamepadButtonEdge(pad, 3)){
+    if(typeof InventoryModal !== 'undefined' && InventoryModal.gamepadDropSelected?.()) _gamepadRumble('cancel');
+  }
+
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('confirm'))){
+    if(playing && !_gamepadInput.uiPointer) _gamepadAccept(state); // A / Cruz
+    else if(_gamepadCharacterMenuKind() === 'itens'
+      && typeof InventoryModal !== 'undefined' && InventoryModal.gamepadConfirmFocused?.()) _gamepadRumble('confirm');
+    else _gamepadAcceptUi();
+  }
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('cancel'))) _gamepadCancel();
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('mainMenu'))) _gamepadToggleMainMenu();
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('camera')) && playing && !_gamepadInput.attackMode) _gamepadToggleCameraMode();
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('cameraReset')) && playing && mode3D) resetCamera3D();
+  if(!shortcutHandled && _gamepadButtonEdge(pad, _gamepadBinding('nextTarget'))){
+    // Y prefere o cursor de interface quando há uma decisão na tela. Fora
+    // desse contexto mantém o atalho anterior de alternar alvos úteis.
+    if(!_gamepadToggleUiPointer() && playing && !_gamepadInput.attackMode) _gamepadCycleUsefulTarget(state);
+  }
+  if(_gamepadButtonEdge(pad, _gamepadBinding('endTurn')) && playing && GS.isMyTurn && !_gamepadInput.attackMode){
+    _gamepadRequestEndTurn(now);
+  }
+  _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
+}
+
+function _startGamepadLoop(){
+  if(_gamepadInput.raf != null) return;
+  const tick = (now) => {
+    _pollGamepad(now);
+    _gamepadInput.raf = requestAnimationFrame(tick);
+  };
+  _gamepadInput.raf = requestAnimationFrame(tick);
+}
+
+window.addEventListener('gamepadconnected', e => {
+  _gamepadInput.index = e.gamepad.index;
+  _gamepadInput.cursor = null;
+  _gamepadInput.cursorPlayerKey = '';
+  _gamepadInput.rightMode = 'cursor';
+  _gamepadInput.cameraLastAt = 0;
+  toast(`🎮 Controle conectado: ${e.gamepad.id || 'gamepad'} · ${_gamepadButtonLabel(_gamepadBinding('camera'))} alterna cursor e câmera 3D`, 'var(--cyan)');
+  _gamepadRenderPrefs();
+  _renderGamepadHud(GS.gameState);
+  _startGamepadLoop();
+});
+window.addEventListener('gamepaddisconnected', e => {
+  if(_gamepadInput.index === e.gamepad.index){
+    _gamepadInput.index = null;
+    _gamepadInput.cursor = null;
+    _gamepadInput.cursorPlayerKey = '';
+    _gamepadInput.rightMode = 'cursor';
+    _gamepadInput.cameraLastAt = 0;
+  }
+});
+_startGamepadLoop(); // também detecta controles conectados antes de abrir a página
 
 // ── Mobile / touch helpers ──────────────────────────────────────────────────
 function isMobile(){
@@ -18455,15 +21556,12 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   } else if(_masterMonsterHoverId){
     _setMasterMonsterHover(null);
   }
-  if(window._modoMestreMira){ _atualizarMiraMestre(tx,ty); return; }
-  if(window._modoInstrumento){
-    _atualizarMiraInstrumentoHover(tx, ty, $('tooltip'), e);
+  // Toda a cadeia de mira vive em _aimPreviewAt (compartilhada com o 3D e com
+  // o controle). Aqui resta só o estilo do cursor do canvas.
+  if(_aimPreviewAt(tx, ty, { event: e, tip: $('tooltip') })){
+    $('dungeon-canvas').style.cursor = _aimCursorStyle();
     return;
   }
-  // Mira de MAGIA (2D): a área verde segue o cursor.
-  if(window._modoMagia){ _recomputarAreaMagia(tx, ty); return; }
-  // Mira de ARREMESSO DE ÁREA (2D): a área verde segue o cursor (irmã da magia).
-  if(window._modoThrowItem && window._modoThrowItem.area){ _recomputarAreaThrow(tx, ty); return; }
   const tip=$('tooltip');
   const myP=GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
 
@@ -18479,13 +21577,14 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   // ── Pending skill: show targeting cursor & tooltip ──
   if(GS.pendingSkill){
     const sk=GS.pendingSkill;
-    const MELEE_SKILLS=['heavy_blow','backstab','smite'];
+    const skillAction = GS.resolveTileClick(tx, ty);
+    const skillTargetOk = skillAction?.type === 'skill';
+    _aimSetHover(tx, ty, skillTargetOk ? 'valid' : 'blocked');
+    _aimSetStatus(skillTargetOk ? 'Alvo válido — confirme para usar.' : 'Selecione um alvo destacado para esta habilidade.', skillTargetOk ? '#94dfb0' : '#ff9aa2');
     if(sk.target==='enemy'){
       const m=_masterMonsterAtTileClient(GS.gameState, tx, ty);
       if(m){
-        const needsAdj=MELEE_SKILLS.includes(sk.id);
-        let ok=true;
-        if(needsAdj&&myP){const dx=Math.abs(myP.pos[0]-tx),dy=Math.abs(myP.pos[1]-ty);ok=(dx===1&&dy===0)||(dx===0&&dy===1);}
+        const ok=skillTargetOk;
         tip.innerHTML=`<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok?'#f08080':'#f09030'}">${ok?'⚔ Clique → '+sk.name:'⚠ Fora de alcance (corpo a corpo)'}</span>`;
         tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
         $('dungeon-canvas').style.cursor=ok?'crosshair':'not-allowed'; return;
@@ -18493,23 +21592,34 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     } else if(sk.target==='ally'){
       const pl=GS.gameState.players.find(p=>p.pos[0]===tx&&p.pos[1]===ty&&p.alive);
       if(pl){
-        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:#80c0ff">💚 Clique → ${sk.name}</span>`;
+        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:${skillTargetOk ? '#80c0ff' : '#f09030'}">${skillTargetOk ? '💚 Clique → ' + sk.name : '⚠ Alvo inválido ou bloqueado'}</span>`;
         tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
-        $('dungeon-canvas').style.cursor='crosshair'; return;
+        $('dungeon-canvas').style.cursor=skillTargetOk ? 'crosshair' : 'not-allowed'; return;
       }
     }
     tip.style.display='none'; $('dungeon-canvas').style.cursor='default'; return;
+  }
+
+  const heroCorpse = (GS.gameState.hero_corpses||[]).find(c=>c.pos?.[0]===tx&&c.pos?.[1]===ty);
+  if(heroCorpse){
+    tip.innerHTML=`🪦 <b>${heroCorpse.nome || 'Herói derrotado'}</b><br><span style="color:#c7b0d8">Herói derrotado</span>`;
+    tip.style.display='block';
+    tip.style.left=(e.clientX+14)+'px';
+    tip.style.top=(e.clientY-10)+'px';
+    $('dungeon-canvas').style.cursor='default';
+    return;
   }
 
   const monster=_masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
     const _ddx=myP?Math.abs(myP.pos[0]-tx):99, _ddy=myP?Math.abs(myP.pos[1]-ty):99;
     const _wRng=myP&&myP.weapon&&myP.weapon.range!=null?myP.weapon.range:null;
-    const inRange=myP ? _alvoNoAlcanceArmaClient(myP, tx, ty) : false;
-    const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&GS.gameState.phase==='playing';
+    const inRange=myP ? _alvoNoAlcanceArmaClient(myP, tx, ty, monster.altura) : false;
+    const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
+    const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&lineClear&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} ${t('ui.tabuleiro.clique_atacar')}</span>`:'';
     // Conhecimento das Lendas (passiva do Henrique): ficha completa se há bardo vivo.
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo())+atkLabel;
+    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)+atkLabel;
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -18898,10 +22008,38 @@ function _atalhoMeta(entry, player){
     const m = GRIMORIO_CLIENT[entry.id];
     return m ? {nome:m.nome || entry.id, icon:magiaIconHTML(m, 28), texto:true} : null;
   }
+  if(entry.kind === 'skill' && entry.id === 'animar_mortos' && player.class_id === 'mage'){
+    return {nome:t('ui.animar.nome_curto'), icon:abilityIconHtml({icon:'💀'}, '💀')};
+  }
   if(entry.kind === 'item'){
     const item = (player.bag || []).find(it => it && it.id === entry.id);
     if(!item) return {nome:entry.id, icon:itemIconHTML(item || {id:entry.id}, '📦')};
     return {nome:item.name || item.nome || entry.id, icon:itemIconHTML(item, item.emoji || '📦'), item};
+  }
+  const weaponSlot = _weaponThrowSlotFromSkillId(entry.id);
+  if(weaponSlot){
+    // A arma principal pode chegar completa em `player.weapon`, enquanto
+    // `gear.weapon` é somente o espelho visual. O atalho precisa combinar os
+    // dois para conservar throw_range e reconhecer a habilidade como válida.
+    const weapon = weaponSlot === 'off_hand'
+      ? player.gear?.off_hand
+      : {...(player.weapon || {}), ...(player.gear?.weapon || {})};
+    if(!weapon?.throw_range) return null;
+    return {
+      nome: t('ui.acao.arremessar_arma', {nome: weapon.name || weapon.nome || entry.id}),
+      icon: abilityIconHtml({icon:weapon.emoji || '🎯'}, weapon.emoji || '🎯'),
+    };
+  }
+  const inst = player.gear?.off_hand;
+  if(entry.id.startsWith('instrumento_') && inst?.tipo_item === 'instrumento'
+      && entry.id === `instrumento_${inst.base}`){
+    const base = GS.instrumentoBase(inst.base);
+    if(base){
+      return {
+        nome: base.habilidade_nome || entry.id,
+        icon: abilityIconHtml({icon:base.icon || '🎵'}, base.icon || '🎵'),
+      };
+    }
   }
   const h = window._menuHabilidadesDados?.[entry.id]
     || (player.skills || []).find(s => s && s.id === entry.id)
@@ -18925,6 +22063,13 @@ function _atalhoHabilidadeContextoAberto(){
     || document.querySelector('[id^="painel-"]'));
 }
 function _cancelarHabilidadeDoAtalho(){
+  if(_aimSessionIs()){
+    _aimEnd({silent:true, reason:'shortcut_cancel'});
+    _limparEfeitosVisuaisLocais();
+    _atalhoHabilidadeAtiva = false;
+    toast('Mira cancelada.', 'var(--text2)');
+    return true;
+  }
   const contextoAberto = _atalhoHabilidadeContextoAberto();
   // O cancelamento também precisa funcionar quando a habilidade foi clicada
   // diretamente no compêndio. Antes esta guarda dependia exclusivamente de
@@ -19022,6 +22167,182 @@ function _renderAtalhos(){
   help.className = 'shortcut-help'; help.textContent = t('ui.atalhos.ajuda'); bar.appendChild(help);
 }
 
+// ── HUD persistente do controle ────────────────────────────────────────────
+// A roda é apenas uma leitura dos oito slots ativados por L1/R1+face.
+// Ela não cria um segundo sistema de atalhos nem mantém estado local.
+function _gamepadHudPlayer(state){
+  return state?.players?.find(p => p.id === GS.myPid && p.alive && !p.is_master) || null;
+}
+function _gamepadHudVisible(state){
+  return !!(_gamepadInput.active && state?.phase === 'playing'
+    && document.getElementById('screen-game')?.classList.contains('active')
+    && _gamepadHudPlayer(state));
+}
+function _gamepadContextForCursor(state, player){
+  const label = (key, icon) => ({ key, icon, text: t(key) });
+  if(!GS.isMyTurn) return label('ui.joystick.contexto_aguarde', '⏳');
+  if(GS.pendingMove) return { icon:'👣', text:'A / clique novamente para confirmar · B / Esc cancelar' };
+  if(_gamepadInput.attackMode) return label('ui.joystick.contexto_confirmar_alvo', '⚔');
+
+  // Estes modos são tratados pelo renderer antes do resolvedor puro.
+  if(window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
+    || window._modoThrowItem || window._modoPlacementArmadilha
+    || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow)
+    return label('ui.joystick.contexto_confirmar_alvo', '🎯');
+
+  // Interação por proximidade não depende do cursor. Cancelar a dispensa até o
+  // herói sair do alcance; isso evita que o aviso volte a cada frame.
+  const nearbyInteraction = _gamepadNearbyInteraction(state, player);
+  if(!nearbyInteraction){
+    _gamepadInput.interactionDismissedKey = null;
+  } else {
+    if(_gamepadInput.interactionDismissedKey === nearbyInteraction.key) return null;
+    return { icon: nearbyInteraction.icon, text:t('ui.joystick.contexto_interagir') };
+  }
+
+  const cursor = _gamepadCursorTile(state);
+  if(!cursor) return null;
+  const [tx, ty] = cursor;
+
+  const ground = (state.ground_items || []).find(g => g.pos?.[0] === tx && g.pos?.[1] === ty);
+  if(ground) return GS.groundItemPickable(ground, player)
+    ? label('ui.joystick.contexto_pegar', '✋')
+    : label('ui.joystick.contexto_longe', '↔');
+
+  const chest = (state.chests || []).find(c => c.pos?.[0] === tx && c.pos?.[1] === ty);
+  if(chest){
+    const dist = Math.max(Math.abs(player.pos[0] - tx), Math.abs(player.pos[1] - ty));
+    return dist <= 2 ? label('ui.joystick.contexto_abrir', '📦') : label('ui.joystick.contexto_longe', '↔');
+  }
+
+  const decor = (GS.decorations || []).find(d => GS.decorTilesOf(d).some(([x,y]) => x === tx && y === ty));
+  if(decor){
+    const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain';
+    if(interativa) return label('ui.joystick.contexto_interagir', '✋');
+    if(!decor.pisavel) return label('ui.joystick.contexto_sem_acao', '—');
+  }
+
+  const action = GS.resolveTileClick(tx, ty);
+  if(!action) return label('ui.joystick.contexto_sem_acao', '—');
+  if(action.type === 'attack') return label('ui.joystick.contexto_atacar', '⚔');
+  if(action.type === 'open_door') return label('ui.joystick.contexto_abrir_porta', '🚪');
+  if(action.type === 'move') return label('ui.joystick.contexto_mover', '👣');
+  if(['skill', 'instrumento', 'throw', 'throw_area', 'disarm_trap'].includes(action.type))
+    return label('ui.joystick.contexto_confirmar_alvo', '🎯');
+  if(action.type === 'door_far') return label('ui.joystick.contexto_longe', '↔');
+  return label('ui.joystick.contexto_sem_acao', '—');
+}
+function _gamepadCursorTone(state){
+  const cursor = _gamepadCursorTile(state);
+  const modeKey = `${cursor?.join(',') || ''}|${GS.isMyTurn ? 1 : 0}|${_gamepadInput.attackMode ? 1 : 0}|${GS.pendingSkill?.id || ''}|${GS.pendingInstrumento?.id || ''}|${GS.pendingThrow?.id || ''}|${window._modoMagia ? 1 : 0}|${window._modoThrowItem ? 1 : 0}|${window._modoInstrumento ? 1 : 0}`;
+  if(_gamepadCursorToneCache?.state === state && _gamepadCursorToneCache.modeKey === modeKey)
+    return _gamepadCursorToneCache.tone;
+  // O alcance do ataque é vermelho. Durante essa mira o cursor muda para ouro
+  // brilhante, deixando inequívoca a casa que receberá o golpe.
+  const tone = _gamepadInput.attackMode
+    ? {fill:'255,204,42', fillAlpha:.44, stroke:'255,255,220', hex:0xffdf4a}
+    : {fill:'238,42,42', fillAlpha:.24, stroke:'255,218,218', hex:0xff3434};
+  _gamepadCursorToneCache = {state, modeKey, tone};
+  return tone;
+}
+
+function _positionGamepadShortcutWheel(state, player){
+  const wheel = document.getElementById('gamepad-shortcuts-hud');
+  if(!wheel || !state || !player?.pos){ if(wheel) wheel.hidden = true; return; }
+  let x, y;
+  if(mode3D && g3?.camera && g3?.renderer && g3?.T){
+    const rect = g3.renderer.domElement.getBoundingClientRect();
+    const peao = typeof getPeaoMesh === 'function' ? getPeaoMesh(player.id) : null;
+    const point = new g3.T.Vector3(
+      peao?.position?.x ?? player.pos[0],
+      (peao?.position?.y ?? 0) + 1.58,
+      peao?.position?.z ?? player.pos[1]
+    ).project(g3.camera);
+    if(point.z >= -1 && point.z <= 1){
+      x = rect.left + (point.x + 1) * rect.width / 2;
+      y = rect.top + (1 - point.y) * rect.height / 2;
+    }
+  } else {
+    const canvas = document.getElementById('dungeon-canvas');
+    const rect = canvas?.getBoundingClientRect();
+    const W = state.tiles?.[0]?.length || 0, H = state.tiles?.length || 0;
+    if(rect && W && H){
+      x = rect.left + (player.pos[0] + .5) * rect.width / W;
+      y = rect.top + (player.pos[1] + .5) * rect.height / H;
+    }
+  }
+  const viewport = document.getElementById('map-wrap')?.getBoundingClientRect();
+  const foraDaTela = !Number.isFinite(x) || !Number.isFinite(y)
+    || (viewport && (x < viewport.left || x > viewport.right || y < viewport.top || y > viewport.bottom));
+  if(foraDaTela){
+    // Sem uma posição visível, esconder é preferível a exibir a roda em um
+    // canto arbitrário. O próximo frame do joystick a exibirá ao redor do peão.
+    wheel.hidden = true;
+    return;
+  }
+  const cx = viewport ? viewport.left + viewport.width / 2 : innerWidth / 2;
+  const cy = viewport ? viewport.top + viewport.height / 2 : innerHeight / 2;
+  const safe = Math.max(34, Math.min(76, Math.min(viewport?.width || innerWidth, viewport?.height || innerHeight) / 2 - 8));
+  const minX = viewport ? viewport.left + safe : safe;
+  const maxX = viewport ? viewport.right - safe : innerWidth - safe;
+  const minY = viewport ? viewport.top + safe : safe;
+  const maxY = viewport ? viewport.bottom - safe : innerHeight - safe;
+  wheel.style.left = `${minX <= maxX ? Math.max(minX, Math.min(maxX, x)) : cx}px`;
+  wheel.style.top = `${minY <= maxY ? Math.max(minY, Math.min(maxY, y)) : cy}px`;
+  wheel.hidden = false;
+}
+
+function _renderGamepadHud(state = GS.gameState){
+  const shortcutsHud = document.getElementById('gamepad-shortcuts-hud');
+  const contextHud = document.getElementById('gamepad-context-hud');
+  if(!shortcutsHud || !contextHud) return;
+  const player = _gamepadHudPlayer(state);
+  if(!_gamepadHudVisible(state)){
+    shortcutsHud.hidden = true; shortcutsHud.innerHTML = '';
+    contextHud.hidden = true; contextHud.innerHTML = '';
+    return;
+  }
+
+  const modifierButton = _gamepadInput.shortcutWheelModifier;
+  const modifierHeld = modifierButton != null && !!_gamepadPrimary()?.buttons?.[modifierButton]?.pressed;
+  if(modifierHeld){
+    const slots = Array.isArray(player.shortcut_slots) ? player.shortcut_slots : [];
+    const firstSlot = modifierButton === 5 ? 4 : 0;
+    // A disposição reproduz os quatro botões frontais: Y em cima, X à esquerda,
+    // B à direita e A embaixo (ou seus equivalentes no controle conectado).
+    const positions = ['south', 'east', 'west', 'north'];
+    shortcutsHud.innerHTML = `<span class="gamepad-shortcut-wheel-center">${_esc(_gamepadButtonLabel(modifierButton))}</span>` + [0,1,2,3].map(index => {
+      const slotIndex = firstSlot + index;
+      const entry = slots[slotIndex] || null;
+      const meta = _atalhoMeta(entry, player);
+      const buttons = `${_gamepadButtonLabel(modifierButton)} + ${_gamepadButtonLabel(index)}`;
+      const title = meta ? `${buttons}: ${meta.nome}` : `${buttons}: ${t('ui.atalhos.vazio')}`;
+      return `<button type="button" class="gamepad-shortcut gamepad-shortcut-${positions[index]}${meta ? '' : ' empty'}" data-gamepad-shortcut-slot="${slotIndex}" title="${_esc(title)}">
+        <span class="gamepad-shortcut-key">${_esc(_gamepadButtonLabel(index))}</span><span class="gamepad-shortcut-icon">${meta ? meta.icon : '+'}</span><span class="gamepad-shortcut-name">${_esc(meta?.nome || t('ui.atalhos.vazio'))}</span>
+      </button>`;
+    }).join('');
+    shortcutsHud.querySelectorAll('[data-gamepad-shortcut-slot]').forEach(button => {
+      button.addEventListener('click', () => {
+        const index = Number(button.dataset.gamepadShortcutSlot);
+        const entry = slots[index];
+        if(entry) _ativarAtalho(entry, index);
+      });
+    });
+    shortcutsHud.hidden = true;
+    _positionGamepadShortcutWheel(state, player);
+  } else {
+    shortcutsHud.hidden = true;
+    shortcutsHud.innerHTML = '';
+  }
+
+  const action = _gamepadContextForCursor(state, player);
+  if(!action){ contextHud.hidden = true; contextHud.innerHTML = ''; return; }
+  const quickTargets = _gamepadUsefulTargetTiles(state).length;
+  const cycleHint = quickTargets ? `<span class="gamepad-context-cycle">${_esc(_gamepadButtonLabel(_gamepadBinding('nextTarget')))} · ${_esc(t('ui.joystick.proximo_alvo'))}</span>` : '';
+  contextHud.innerHTML = `<span class="gamepad-context-key">${_esc(_gamepadButtonLabel(_gamepadBinding('confirm')))}</span><span class="gamepad-context-icon">${action.icon}</span><span>${_esc(action.text)}</span>${cycleHint}`;
+  contextHud.hidden = false;
+}
+
 // ── Indicadores de efeitos ativos ───────────────────────────────────────────
 // A lista é reconstruída a partir do estado autoritativo, em vez de guardar
 // uma cópia local do último atalho usado. Assim o ícone some no mesmo estado
@@ -19086,6 +22407,9 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
       addSkill(id, r);
     }
   });
+  // Voo também pode vir de um item equipado (Bota Alada), sem duração em
+  // rodadas; o estado autoritativo continua sendo o único critério.
+  if(player.voo) addMagic('voo');
   (GS.getWarriorSelected?.() || []).forEach(id => addSkill(id));
   MODIFICADORES_METAMAGIA.forEach(id => { if(_modificadorMagiaAtivo(player, id)) addSkill(id); });
 
@@ -19662,6 +22986,7 @@ function _setLang(code){
   I18N.setLang(code);
   try { localStorage.setItem(_LANG_KEY, code); } catch (e) {}
   _i18nApply(document.body);
+  _syncMouseAltitudeControl(GS.gameState);
   _refreshTurnTimerOption();          // rótulos montados em JS, não por data-i18n
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
   _refreshCityHotspots();             // idem: a cidade é montada UMA vez (initCityImage)
@@ -19678,6 +23003,10 @@ function _audioPanelEnsure(){
   let wrap = document.getElementById('audio-settings');
   if (wrap) return wrap;
   const pct = (v) => Math.round(v * 100);
+  const gamepadBindRows = _GAMEPAD_ACTIONS.map(([action, key]) =>
+    '<button type="button" class="cfg-gamepad-bind" data-gamepad-bind="' + action + '">'
+    + '<span data-i18n="' + key + '"></span><b data-gamepad-bind-label>' + _gamepadButtonLabel(_gamepadBinding(action)) + '</b></button>'
+  ).join('');
   wrap = document.createElement('div');
   wrap.id = 'audio-settings';
   wrap.style.cssText = 'position:fixed;right:14px;top:14px;z-index:61;font-family:inherit;';
@@ -19708,6 +23037,18 @@ function _audioPanelEnsure(){
     +     '<div class="cfg-audio-line"><span>🎲 Dados</span><span id="aud-dice-val">' + pct(_diceVol) + '%</span></div>'
     +     '<input id="aud-dice" type="range" min="0" max="100" value="' + pct(_diceVol) + '" style="width:100%;">'
     +   '</section>'
+    +   '<div class="cfg-access-title" data-i18n="ui.menu.joystick">🎮 Joystick</div>'
+    +   '<div class="cfg-access-line"><span data-i18n="ui.menu.joystick_deadzone">Zona morta</span><span id="gp-deadzone-val">' + Math.round(_gamepadDeadZone * 100) + '%</span></div>'
+    +   '<div class="cfg-gamepad-deadzone"><button id="gp-deadzone-down" type="button" aria-label="Diminuir zona morta">−</button><input id="gp-deadzone" type="range" min="15" max="80" step="1" value="' + Math.round(_gamepadDeadZone * 100) + '"><button id="gp-deadzone-up" type="button" aria-label="Aumentar zona morta">+</button></div>'
+    +   '<div class="cfg-access-line"><span data-i18n="ui.menu.joystick_cursor_speed">Velocidade do cursor</span><span id="gp-cursor-speed-val">' + Math.round(_gamepadCursorSpeed * 100) + '%</span></div>'
+    +   '<input id="gp-cursor-speed" type="range" min="50" max="180" step="5" value="' + Math.round(_gamepadCursorSpeed * 100) + '" style="width:100%;">'
+    +   '<div class="cfg-access-line"><span data-i18n="ui.menu.joystick_camera_sensitivity">Sensibilidade da câmera</span><span id="gp-camera-sensitivity-val">' + Math.round(_gamepadCameraSensitivity * 100) + '%</span></div>'
+    +   '<input id="gp-camera-sensitivity" type="range" min="50" max="180" step="5" value="' + Math.round(_gamepadCameraSensitivity * 100) + '" style="width:100%;">'
+    +   '<label class="cfg-access-check"><input id="gp-invert-y" type="checkbox"' + (_gamepadInvertCameraY ? ' checked' : '') + '> <span data-i18n="ui.menu.joystick_invert_y">Inverter câmera vertical</span></label>'
+    +   '<label class="cfg-access-check"><input id="gp-vibration" type="checkbox"' + (_gamepadVibration ? ' checked' : '') + '> <span data-i18n="ui.menu.joystick_vibration">Vibração</span></label>'
+    +   '<button id="cfg-gamepad-toggle" class="cfg-section-button" type="button" aria-expanded="false"><span data-i18n="ui.menu.joystick_bind">Remapear botões</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
+    +   '<section id="cfg-gamepad-controls" class="cfg-gamepad-controls" hidden>' + gamepadBindRows + '</section>'
+    +   '<button id="gp-reset" class="cfg-gamepad-reset" type="button" data-i18n="ui.menu.joystick_reset">Restaurar padrão</button>'
     +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
@@ -19759,6 +23100,14 @@ function _audioPanelEnsure(){
     audioToggle.classList.toggle('open', aberto);
     audioToggle.setAttribute('aria-expanded', String(aberto));
   };
+  const gamepadToggle = wrap.querySelector('#cfg-gamepad-toggle');
+  const gamepadControls = wrap.querySelector('#cfg-gamepad-controls');
+  gamepadToggle.onclick = () => {
+    const aberto = gamepadControls.hidden;
+    gamepadControls.hidden = !aberto;
+    gamepadToggle.classList.toggle('open', aberto);
+    gamepadToggle.setAttribute('aria-expanded', String(aberto));
+  };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
@@ -19768,6 +23117,26 @@ function _audioPanelEnsure(){
   aSl.oninput = () => { aVal.textContent = aSl.value + '%'; _setAmbienceVol(aSl.value / 100); };
   const dSl = wrap.querySelector('#aud-dice'), dVal = wrap.querySelector('#aud-dice-val');
   dSl.oninput = () => { dVal.textContent = dSl.value + '%'; _setDiceVol(dSl.value / 100); };
+  const gpDead = wrap.querySelector('#gp-deadzone');
+  gpDead.oninput = () => _setGamepadDeadZone(gpDead.value / 100);
+  wrap.querySelector('#gp-deadzone-down').onclick = () => _setGamepadDeadZone(_gamepadDeadZone - .05);
+  wrap.querySelector('#gp-deadzone-up').onclick = () => _setGamepadDeadZone(_gamepadDeadZone + .05);
+  const gpCursorSpeed = wrap.querySelector('#gp-cursor-speed');
+  gpCursorSpeed.oninput = () => _setGamepadCursorSpeed(gpCursorSpeed.value / 100);
+  const gpCameraSensitivity = wrap.querySelector('#gp-camera-sensitivity');
+  gpCameraSensitivity.oninput = () => _setGamepadCameraSensitivity(gpCameraSensitivity.value / 100);
+  const gpInvert = wrap.querySelector('#gp-invert-y');
+  gpInvert.onchange = () => _setGamepadInvertCameraY(gpInvert.checked);
+  const gpVibration = wrap.querySelector('#gp-vibration');
+  gpVibration.onchange = () => {
+    _setGamepadVibration(gpVibration.checked);
+    if(gpVibration.checked) _gamepadRumble('confirm');
+  };
+  wrap.querySelector('#gp-reset').onclick = _resetGamepadPrefs;
+  wrap.querySelectorAll('[data-gamepad-bind]').forEach(button => {
+    button.onclick = () => _gamepadStartBindingCapture(button.dataset.gamepadBind);
+  });
+  _gamepadRenderPrefs();
   const fSl = wrap.querySelector('#acc-font'), fVal = wrap.querySelector('#acc-font-val');
   fSl.oninput = () => { fVal.textContent = fSl.value + '%'; _setAccessFontScale(fSl.value / 100); };
   const durSl = wrap.querySelector('#acc-duration'), durVal = wrap.querySelector('#acc-duration-val');
@@ -19887,6 +23256,54 @@ let mode3D = false;   // 3D view active?
 let g3     = null;    // Three.js renderer state (null when 2D active)
 let _movePulse       = 0.5;   // 0→1 sine value used by 2D and 3D highlight animations
 let _2dHighlightFrame = null; // requestAnimationFrame handle for 2D pulse loop
+let _mouseRightHeld = false;
+let _mouseAltitudeWheelAt = 0;
+
+document.addEventListener('mouseup', event => {
+  if(event.button === 2) _mouseRightHeld = false;
+});
+
+function _localFlightPlayer(state = GS.gameState){
+  return state?.players?.find(p => p && p.id === GS.myPid && p.alive && p.voo
+    && p.pode_alterar_altura !== false) || null;
+}
+
+function _syncMouseAltitudeControl(state = GS.gameState){
+  const button = $('btn-altura');
+  const available = !!(mode3D && _localFlightPlayer(state));
+  const hint = $('orbit-hint');
+  if(hint) hint.innerHTML = t(available ? 'ui.hud.orbit_hint_altura' : 'ui.hud.orbit_hint');
+  // Mantém o elemento antigo oculto para compatibilidade com layouts/cache
+  // anteriores; a altura agora é acionada diretamente pelo botão direito + roda.
+  if(button) button.style.display = 'none';
+}
+
+function toggleMouseAltitudeMode(){
+  // Compatibilidade com chamadas antigas: o controle agora usa o botão
+  // direito pressionado durante a rolagem, sem modo persistente.
+}
+
+function _handleAltitudeWheel(event){
+  if(!mode3D) return;
+  const rightHeld = _mouseRightHeld || ((Number(event.buttons) || 0) & 2) === 2;
+  if(!rightHeld) return;
+  const player = _localFlightPlayer();
+  if(!player || !GS.isMyTurn){
+    return;
+  }
+  event.preventDefault();
+  // OrbitControls também escuta wheel no canvas. O listener está em capture;
+  // interromper os demais handlers impede que um mesmo giro altere altura e
+  // zoom ao mesmo tempo.
+  if(event.stopImmediatePropagation) event.stopImmediatePropagation();
+  else event.stopPropagation();
+  const deltaY = Number(event.deltaY) || 0;
+  if(!deltaY) return;
+  const now = performance.now();
+  if(now < _mouseAltitudeWheelAt) return;
+  _mouseAltitudeWheelAt = now + 125;
+  GS.alterarAltura(deltaY < 0 ? 1 : -1);
+}
 
 // Coordenador único dos loops visuais de combate/magia. Em 3D os callbacks
 // são drenados pelo loop principal do renderer; em 2D o próprio coordenador
@@ -21003,8 +24420,8 @@ function _jatoArAnimFromMessage(msg){
     impactMs: Math.max(360, Number(msg.impact_ms) || JATO_AR_DEFAULT_IMPACT_MS),
     start: performance.now(), seed: (origin[0] * 73856093) ^ (origin[1] * 19349663) ^ Date.now(),
     impactPlayed: false, collisions: [],
-    group: null, coneGlow: null, coneCore: null, dustCone: null,
-    particles: [], gustBands: [], windStreaks: [], tileRings: [], collisionMeshes: []
+    group: null, coneGlow: null, coneFire: null, coneCore: null,
+    particles: [], tileRings: [], areaTiles: [], collisionMeshes: []
   };
 }
 
@@ -21065,54 +24482,47 @@ function _tocarSomJatoArImpacto(){
   }catch(e){}
 }
 
-function _jatoArWedgeGeometry(anim, fraction, depth, T){
-  const d = Math.max(.08, anim.length * Math.max(.02, fraction));
-  const half = Math.max(.10, anim.baseWidth * .5 * (d / anim.length));
-  const [leftX, leftZ] = _jatoArPoint(anim, d, half);
-  const [rightX, rightZ] = _jatoArPoint(anim, d, -half);
-  const ox = anim.origin[0], oz = anim.origin[1], y = depth;
-  const geo = new T.BufferGeometry();
-  geo.setAttribute('position', new T.Float32BufferAttribute([
-    ox, y, oz, leftX, y, leftZ, rightX, y, rightZ,
-    ox, y + .012, oz, rightX, y + .012, rightZ, leftX, y + .012, leftZ
-  ], 3));
-  geo.computeVertexNormals();
-  return geo;
+function _jatoArSpread(anim, distance){
+  const ratio = Math.max(0, Math.min(1, distance / Math.max(1, anim.length)));
+  return Math.max(.50, .50 + (anim.baseWidth * .5 - .50) * ratio);
+}
+
+function _jatoArWindTubeGeometry(anim, fraction, radius, lane, phase, T){
+  const front = Math.max(.08, anim.length * Math.max(.02, fraction));
+  const points = [];
+  for(let i = 0; i <= 16; i++){
+    const d = front * i / 16, ratio = front ? d / front : 0;
+    const spread = _jatoArSpread(anim, d) * ratio;
+    const wave = Math.sin(performance.now() / 78 + d * 4.6 + phase) * (.018 + ratio * .075)
+      + Math.sin(performance.now() / 131 + d * 7.8 + phase * .7) * ratio * .035;
+    const [x, z] = _jatoArPoint(anim, d, lane * spread + wave);
+    const y = .745 + Math.sin(performance.now() / 91 + d * 3.3 + phase) * (.018 + ratio * .045)
+      + ratio * .025;
+    points.push(new T.Vector3(x, y, z));
+  }
+  const curve = new T.CatmullRomCurve3(points);
+  return new T.TubeGeometry(curve, 18, radius * (.78 + .22 * Math.sin(performance.now() / 112 + phase)), 7, false);
 }
 
 function _jatoArBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
   const T = window.THREE, group = new T.Group(); group.name = 'jato-ar-animation';
-  const glowMat = new T.MeshBasicMaterial({ color:0x53cfff, transparent:true, opacity:.16, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
-  const coreMat = new T.MeshBasicMaterial({ color:0xdffaff, transparent:true, opacity:.25, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
-  const dustMat = new T.MeshBasicMaterial({ color:0xb58a5b, transparent:true, opacity:.12, depthWrite:false, depthTest:false, side:T.DoubleSide });
-  const glow = new T.Mesh(new T.BufferGeometry(), glowMat), core = new T.Mesh(new T.BufferGeometry(), coreMat), dust = new T.Mesh(new T.BufferGeometry(), dustMat);
-  glow.renderOrder = 61; dust.renderOrder = 62; core.renderOrder = 63;
-  group.add(glow, dust, core); anim.coneGlow = glow; anim.dustCone = dust; anim.coneCore = core;
-  for(let i = 0; i < 30; i++){
-    const mat = new T.MeshBasicMaterial({ color:i % 3 ? 0xc49a6b : 0x9eeaff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
+  const glowMat = new T.MeshBasicMaterial({ color:0x3aaeff, transparent:true, opacity:.17, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
+  const windMat = new T.MeshBasicMaterial({ color:0x72dfff, transparent:true, opacity:.25, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
+  const coreMat = new T.MeshBasicMaterial({ color:0xf4ffff, transparent:true, opacity:.34, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
+  const glow = new T.Mesh(new T.BufferGeometry(), glowMat), wind = new T.Mesh(new T.BufferGeometry(), windMat), core = new T.Mesh(new T.BufferGeometry(), coreMat);
+  glow.renderOrder = 61; wind.renderOrder = 62; core.renderOrder = 63;
+  group.add(glow, wind, core); anim.coneGlow = glow; anim.coneFire = wind; anim.coneCore = core;
+  for(let i = 0; i < 34; i++){
+    const mat = new T.MeshBasicMaterial({ color:i % 4 ? 0x62cfff : 0xf0ffff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
     const mesh = new T.Mesh(new T.IcosahedronGeometry(.025 + (i % 4) * .012, 0), mat);
     mesh.renderOrder = 64; group.add(mesh); anim.particles.push(mesh);
-  }
-  const flow = new T.Vector3(anim.dir[0], 0, anim.dir[1]).normalize();
-  const flowAngle = Math.atan2(anim.dir[0], anim.dir[1]);
-  // Anéis de compressão dão a leitura de uma rajada rápida atravessando o
-  // cone, em vez de uma placa triangular estática.
-  for(let i = 0; i < 6; i++){
-    const mat = new T.MeshBasicMaterial({ color:i % 2 ? 0x87e8ff : 0xb98b5c, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
-    const band = new T.Mesh(new T.TorusGeometry(.14 + (i % 3) * .035, .018 + (i % 2) * .012, 6, 24), mat);
-    band.rotation.y = flowAngle; band.renderOrder = 64; group.add(band); band.userData.phase = i * .61; band.userData.index = i; anim.gustBands.push(band);
-  }
-  // Pequenas lâminas alongadas de ar e poeira, orientadas no sentido do fluxo.
-  for(let i = 0; i < 18; i++){
-    const mat = new T.MeshBasicMaterial({ color:i % 3 ? 0xc7a16e : 0xb5f5ff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
-    const streak = new T.Mesh(new T.ConeGeometry(.018 + (i % 3) * .009, .34 + (i % 4) * .10, 6), mat);
-    streak.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), flow); streak.renderOrder = 65; group.add(streak);
-    streak.userData.phase = _jatoArHash(anim.seed + i * 47) * anim.length; streak.userData.index = i; anim.windStreaks.push(streak);
   }
   for(const tile of anim.tiles){
     const mat = new T.MeshBasicMaterial({ color:0xbaf5ff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
     const ring = new T.Mesh(new T.TorusGeometry(.14, .025, 7, 20), mat); ring.rotation.x = Math.PI / 2; ring.position.set(tile[0], .745, tile[1]); ring.renderOrder = 65; group.add(ring); anim.tileRings.push({ tile, mesh:ring });
+    const areaMat = new T.MeshBasicMaterial({ color:0x45bfff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
+    const area = new T.Mesh(new T.PlaneGeometry(.92, .92), areaMat); area.rotation.x = -Math.PI / 2; area.position.set(tile[0], .755, tile[1]); area.renderOrder = 60; group.add(area); anim.areaTiles.push({ tile, mesh:area });
   }
   g3.scene.add(group); anim.group = group; return true;
 }
@@ -21138,42 +24548,33 @@ function _jatoArDispose3D(anim){
 function _jatoArUpdate3D(anim, now){
   if(!g3 || !window.THREE) return;
   if(!anim.group || anim.group.parent !== g3.scene){ _jatoArDispose3D(anim); if(!_jatoArBuild3D(anim)) return; }
-  const T = window.THREE, p = _jatoArProgress(anim, now);
-  for(const [mesh, depth, opacity] of [[anim.coneGlow,.70,.22],[anim.dustCone,.715,.10],[anim.coneCore,.73,.30]]){
-    if(mesh.geometry) mesh.geometry.dispose(); mesh.geometry = _jatoArWedgeGeometry(anim, Math.max(.02, p.expansion), depth, T);
-    mesh.material.opacity = opacity * (p.impacting ? Math.max(0, 1 - p.impact * .82) : 1);
+  const T = window.THREE, p = _jatoArProgress(anim, now), fade = p.impacting ? Math.max(0, 1 - p.impact * .84) : 1;
+  const tubes = [[anim.coneGlow,.105,0.00,.0,.24],[anim.coneFire,.075,-.46,1.7,.30],[anim.coneCore,.042,.34,3.1,.46]];
+  for(const [mesh, radius, lane, phase, opacity] of tubes){
+    if(mesh.geometry) mesh.geometry.dispose();
+    mesh.geometry = _jatoArWindTubeGeometry(anim, Math.max(.02, p.expansion), radius, lane, phase, T);
+    mesh.material.opacity = opacity * fade;
   }
   const front = anim.length * Math.max(.02, p.expansion);
   for(let i = 0; i < anim.particles.length; i++){
     const mesh = anim.particles[i], u = ((now - anim.start) / 1000 * (.95 + _jatoArHash(anim.seed + i) * .75) + _jatoArHash(anim.seed + i * 17) * anim.length) % anim.length;
     const visible = u <= front;
-    const lateral = ( _jatoArHash(anim.seed + i * 31) - .5) * anim.baseWidth * Math.max(.12, u / anim.length) * .82;
-    const [x, z] = _jatoArPoint(anim, u, lateral); mesh.position.set(x, .77 + _jatoArHash(anim.seed + i * 43) * .05, z);
-    mesh.material.opacity = visible ? .25 + .50 * (1 - u / anim.length) : 0;
-    mesh.scale.setScalar(.7 + .35 * Math.sin(now / 90 + i));
-  }
-  for(const band of anim.gustBands){
-    const i = band.userData.index, u = front - i * .54 + Math.sin(now / 105 + band.userData.phase) * .12;
-    const visible = u > .05 && u <= front + .25;
-    const [x, z] = _jatoArPoint(anim, Math.max(.05, u), 0);
-    band.position.set(x, .735 + .018 * Math.sin(now / 90 + i), z);
-    const breath = .72 + .18 * Math.sin(now / 85 + i);
-    band.scale.setScalar(visible ? breath * (0.75 + Math.max(0, u / anim.length) * 1.45) : 0.001);
-    band.material.opacity = visible ? (.22 + .16 * (1 - i / anim.gustBands.length)) * (p.impacting ? Math.max(0, 1 - p.impact * 2.2) : 1) : 0;
-  }
-  for(const streak of anim.windStreaks){
-    const i = streak.userData.index, u = ((now - anim.start) / 1000 * (1.45 + _jatoArHash(anim.seed + i * 17) * 1.25) + streak.userData.phase) % anim.length;
-    const visible = u <= front;
-    const lateral = (_jatoArHash(anim.seed + i * 59) - .5) * anim.baseWidth * Math.max(.12, u / anim.length) * .72;
-    const [x, z] = _jatoArPoint(anim, u, lateral); streak.position.set(x, .70 + _jatoArHash(anim.seed + i * 71) * .06, z);
-    streak.material.opacity = visible ? .22 + .30 * (1 - u / anim.length) : 0;
-    streak.scale.set(1, visible ? .72 + .45 * Math.sin(now / 75 + i) : .001, 1);
+    const lateral = (_jatoArHash(anim.seed + i * 31) - .5) * _jatoArSpread(anim, u) * 1.55;
+    const [x, z] = _jatoArPoint(anim, u, lateral); mesh.position.set(x, .76 + _jatoArHash(anim.seed + i * 43) * .10, z);
+    mesh.material.opacity = visible ? (.28 + .55 * (1 - u / anim.length)) * fade : 0;
+    mesh.scale.setScalar(.72 + .42 * Math.sin(now / 82 + i));
   }
   for(const item of anim.tileRings){
     const d = _jatoArTileDistance(anim, item.tile), age = now - anim.start - Math.max(0, d) / anim.length * anim.travelMs;
     const visible = d >= 0 && d <= anim.length && age >= 0 && age < 520;
     const fade = visible ? Math.sin(Math.PI * Math.min(1, age / 520)) : 0;
-    item.mesh.material.opacity = .72 * fade; item.mesh.scale.setScalar(1 + fade * 1.7);
+    item.mesh.material.opacity = .82 * fade; item.mesh.scale.setScalar(1 + fade * 1.7);
+  }
+  const areaFade = p.impacting ? Math.max(.04, 1 - p.impact * .72) : 1;
+  for(const item of anim.areaTiles){
+    const pulse = .72 + .20 * Math.sin(now / 150 + item.tile[0] * .7 + item.tile[1]);
+    item.mesh.material.opacity = .13 * pulse * areaFade;
+    item.mesh.scale.setScalar(1 + .025 * Math.sin(now / 110 + item.tile[0]));
   }
   if(anim.collisions.length && !anim.collisionMeshes.length) _jatoArBuildCollision3D(anim);
   for(const item of anim.collisionMeshes){ const age = now - item.start, fade = age < 620 ? Math.sin(Math.PI * Math.min(1, age / 620)) : 0; item.mesh.material.opacity = .90 * fade; item.mesh.scale.setScalar(1 + fade * 1.8); }
@@ -21187,71 +24588,50 @@ function _jatoArDraw2D(ctx, state, anim, now){
   const dx = anim.dir[0], dy = anim.dir[1], px = -dy, py = dx;
   const ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
   const pointPx = (d, lateral) => [ox + dx * d * CELL + px * lateral * CELL, oy + dy * d * CELL + py * lateral * CELL];
-  const half = Math.max(.08, anim.baseWidth * .5 * (front / anim.length));
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const areaAlpha = p.impacting ? Math.max(.045, 1 - p.impact * .70) : 1;
+  for(const tile of anim.tiles){
+    const key = `${tile[0]},${tile[1]}`;
+    if(!explored.has(key) && !GS.isMaster() && !state.test_mode) continue;
+    const x = tile[0] * CELL + 2, y = tile[1] * CELL + 2;
+    ctx.fillStyle = `rgba(40,169,232,${(.10 * areaAlpha).toFixed(3)})`; ctx.fillRect(x, y, CELL - 4, CELL - 4);
+    ctx.strokeStyle = `rgba(155,239,255,${(.38 * areaAlpha).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .025); ctx.strokeRect(x, y, CELL - 4, CELL - 4);
+  }
 
-  // Volume de apoio: a silhueta é irregular e bem translúcida para não parecer
-  // uma placa/cone mágico desenhado por cima do tabuleiro.
+  // Névoa azul translúcida: a silhueta é irregular, com o mesmo volume
+  // progressivo do Sopro de Dragão, mas sem aparência de placa geométrica.
   const tip = pointPx(front, 0), grad = ctx.createLinearGradient(ox, oy, tip[0], tip[1]);
-  grad.addColorStop(0, 'rgba(218,249,255,.04)'); grad.addColorStop(.48, 'rgba(74,180,221,.12)'); grad.addColorStop(.86, 'rgba(190,237,245,.07)'); grad.addColorStop(1, 'rgba(255,245,215,.02)');
-  ctx.fillStyle = grad; ctx.shadowColor = '#63dfff'; ctx.shadowBlur = CELL * .22;
-  ctx.beginPath(); ctx.moveTo(ox, oy);
-  for(let i = 0; i <= 14; i++){
-    const d = front * i / 14, ratio = front ? d / front : 0;
-    const spread = half * (.28 + .72 * ratio);
-    const turbulence = Math.sin(now / 73 + d * 3.4) * (.025 + ratio * .065) + Math.sin(now / 117 + d * 6.1) * ratio * .035;
-    const q = pointPx(d, spread + turbulence); ctx.lineTo(q[0], q[1]);
-  }
-  for(let i = 14; i >= 0; i--){
-    const d = front * i / 14, ratio = front ? d / front : 0;
-    const spread = half * (.28 + .72 * ratio);
-    const turbulence = Math.sin(now / 79 + d * 3.1 + 2.4) * (.025 + ratio * .065) + Math.sin(now / 131 + d * 5.7 + 1.1) * ratio * .035;
-    const q = pointPx(d, -spread + turbulence); ctx.lineTo(q[0], q[1]);
-  }
+  grad.addColorStop(0, 'rgba(225,253,255,.035)'); grad.addColorStop(.42, 'rgba(56,177,241,.10)'); grad.addColorStop(.82, 'rgba(151,231,255,.075)'); grad.addColorStop(1, 'rgba(242,255,255,.018)');
+  ctx.fillStyle = grad; ctx.shadowColor = '#49cfff'; ctx.shadowBlur = CELL * .18; ctx.beginPath(); ctx.moveTo(ox, oy);
+  for(let i = 0; i <= 18; i++){ const d = front * i / 18, spread = _jatoArSpread(anim, d), w = Math.sin(now / 74 + d * 4.1) * (.018 + d / Math.max(1, anim.length) * .07), q = pointPx(d, spread + w); ctx.lineTo(q[0], q[1]); }
+  for(let i = 18; i >= 0; i--){ const d = front * i / 18, spread = _jatoArSpread(anim, d), w = Math.sin(now / 91 + d * 3.6 + 1.5) * (.018 + d / Math.max(1, anim.length) * .07), q = pointPx(d, -spread + w); ctx.lineTo(q[0], q[1]); }
   ctx.closePath(); ctx.fill();
 
-  // Faixas turbulentas: o movimento longitudinal e as curvas assimétricas
-  // fazem a rajada parecer ar comprimido, e não um raio geométrico.
-  ctx.shadowBlur = CELL * .10;
-  for(let s = -.78; s <= .78; s += .26){
-    const intensity = 1 - Math.abs(s) * .48;
-    ctx.strokeStyle = s === 0 ? `rgba(228,255,255,${(.72 * intensity).toFixed(3)})` : `rgba(158,224,238,${(.34 * intensity).toFixed(3)})`;
-    ctx.lineWidth = Math.max(1.5, CELL * (.018 + .022 * intensity));
-    ctx.beginPath();
-    for(let i = 0; i <= 18; i++){
-      const d = Math.max(.06, front * i / 18), ratio = front ? d / front : 0;
-      const wave = Math.sin(now / 66 + d * 4.2 + s * 9) * (.018 + ratio * .095) + Math.sin(now / 143 + d * 8.4 + s * 4) * ratio * .035;
-      const lateral = s * anim.baseWidth * .5 * ratio + wave;
-      const q = pointPx(d, lateral); if(i === 0) ctx.moveTo(q[0], q[1]); else ctx.lineTo(q[0], q[1]);
+  // Faixas curvas e assimétricas de ar comprimido.
+  ctx.shadowBlur = CELL * .14; ctx.lineCap = 'round';
+  for(let i = 0; i < 15; i++){
+    const lane = (i / 14 - .5) * 1.55, phase = _jatoArHash(anim.seed + i * 17) * Math.PI * 2;
+    ctx.strokeStyle = i % 5 === 0 ? 'rgba(244,255,255,.90)' : (i % 2 ? 'rgba(74,191,250,.62)' : 'rgba(166,237,255,.78)');
+    ctx.lineWidth = Math.max(1.5, CELL * (.016 + _jatoArHash(anim.seed + i * 23) * .026)); ctx.beginPath();
+    for(let j = 0; j <= 20; j++){
+      const d = Math.max(.04, front * j / 20), ratio = front ? d / front : 0;
+      const wave = Math.sin(now / 68 + d * 5.2 + phase) * (.018 + ratio * .11) + Math.sin(now / 121 + d * 8.6 + phase) * ratio * .045;
+      const q = pointPx(d, lane * _jatoArSpread(anim, d) * ratio + wave); if(j) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]);
     }
     ctx.stroke();
   }
 
-  // Filetes rápidos e alongados, com velocidades diferentes para criar
-  // sensação de pressão e profundidade no jato.
-  ctx.lineCap = 'round';
-  for(let i = 0; i < 28; i++){
-    const speed = .95 + _jatoArHash(anim.seed + i * 13) * 1.35;
-    const u = ((now - anim.start) / 1000 * speed + _jatoArHash(anim.seed + i * 19) * anim.length) % anim.length;
-    if(u > front) continue;
-    const ratio = Math.max(.08, u / anim.length), lateral = (_jatoArHash(anim.seed + i * 23) - .5) * anim.baseWidth * ratio * .78;
-    const streakLen = .12 + _jatoArHash(anim.seed + i * 29) * (.16 + ratio * .24);
-    const q1 = pointPx(u, lateral), q0 = pointPx(Math.max(.04, u - streakLen), lateral * .72);
-    ctx.strokeStyle = i % 4 === 0 ? 'rgba(219,252,255,.82)' : 'rgba(190,155,108,.58)';
-    ctx.lineWidth = Math.max(1.5, CELL * (.012 + _jatoArHash(anim.seed + i * 31) * .025));
-    ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+  // Línguas de vento e filetes rápidos, sempre em branco e azul.
+  for(let i = 0; i < 8; i++){
+    const phase = _jatoArHash(anim.seed + i * 41) * Math.PI * 2, start = Math.max(.08, front - (.18 + _jatoArHash(anim.seed + i * 43) * .42));
+    const len = .14 + _jatoArHash(anim.seed + i * 47) * .30, side = (_jatoArHash(anim.seed + i * 53) - .5) * _jatoArSpread(anim, start) * 1.25;
+    ctx.strokeStyle = i % 3 === 0 ? 'rgba(248,255,255,.92)' : 'rgba(84,202,255,.78)'; ctx.lineWidth = Math.max(1.5, CELL * (.022 + _jatoArHash(anim.seed + i * 59) * .024)); ctx.beginPath();
+    for(let j = 0; j <= 6; j++){ const u = j / 6, d = Math.min(front, start + len * u), l = side + Math.sin(phase + u * Math.PI * 1.4 + now / 85) * CELL * .045 + u * (_jatoArHash(anim.seed + i * 61) - .5) * .18, q = pointPx(d, l); if(j) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); } ctx.stroke();
   }
-
-  // Poeira e folhas são puxadas para a frente, em vez de aparecerem como
-  // pontos circulares parados dentro do cone.
-  for(let i = 0; i < 18; i++){
-    const u = ((now - anim.start) / 1000 * (.62 + _jatoArHash(anim.seed + i) * .85) + _jatoArHash(anim.seed + i * 37) * anim.length) % anim.length;
-    if(u > front) continue;
-    const ratio = Math.max(.10, u / anim.length), lateral = (_jatoArHash(anim.seed + i * 41) - .5) * anim.baseWidth * ratio * .88;
-    const q1 = pointPx(u, lateral), q0 = pointPx(Math.max(.03, u - (.10 + _jatoArHash(anim.seed + i * 43) * .16)), lateral * .82);
-    ctx.strokeStyle = i % 3 ? 'rgba(181,145,100,.72)' : 'rgba(197,245,255,.84)';
-    ctx.lineWidth = Math.max(1.5, CELL * (.018 + _jatoArHash(anim.seed + i * 47) * .028));
-    ctx.beginPath(); ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.stroke();
+  for(let i = 0; i < 32; i++){
+    const speed = .9 + _jatoArHash(anim.seed + i * 13) * 1.5, u = ((now - anim.start) / 1000 * speed + _jatoArHash(anim.seed + i * 19) * anim.length) % anim.length; if(u > front) continue;
+    const lateral = (_jatoArHash(anim.seed + i * 23) - .5) * _jatoArSpread(anim, u) * 1.8, len = .10 + _jatoArHash(anim.seed + i * 29) * (.12 + u * .08), a = pointPx(Math.max(.03, u - len), lateral * .78), b = pointPx(u, lateral);
+    ctx.strokeStyle = i % 4 ? 'rgba(77,190,250,.72)' : 'rgba(245,255,255,.96)'; ctx.lineWidth = Math.max(1.5, CELL * (.012 + _jatoArHash(anim.seed + i * 31) * .028)); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
   }
   // Impactos sucessivos nas casas alcançadas pela frente da rajada.
   for(const tile of anim.tiles){
@@ -21259,8 +24639,9 @@ function _jatoArDraw2D(ctx, state, anim, now){
     const age = now - anim.start - d / anim.length * anim.travelMs; if(age < 0 || age > 500) continue;
     const fade = Math.sin(Math.PI * Math.min(1, age / 500)), x = tile[0] * CELL + CELL / 2, y = tile[1] * CELL + CELL / 2;
     if(!explored.has(`${tile[0]},${tile[1]}`) && !GS.isMaster() && !state.test_mode) continue;
-    ctx.strokeStyle = `rgba(224,250,255,${(.80 * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .04);
-    ctx.beginPath(); ctx.arc(x, y, CELL * (.16 + .32 * fade), 0, Math.PI * 2); ctx.stroke();
+    const r = CELL * (.16 + .34 * fade), g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+    g.addColorStop(0, `rgba(248,255,255,${(.92 * fade).toFixed(3)})`); g.addColorStop(.34, `rgba(52,189,255,${(.70 * fade).toFixed(3)})`); g.addColorStop(1, 'rgba(34,142,210,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r * 2, y - r * 2, r * 4, r * 4); ctx.strokeStyle = `rgba(194,246,255,${(.90 * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .04); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
   }
   // Explosões secas onde o alvo bateu em parede/obstáculo.
   for(const col of anim.collisions){
@@ -24161,6 +27542,7 @@ function toggle3D(){
     if(spacingReset){ spacingReset.style.display='inline-block'; spacingReset.disabled=_tileFootprint3D===0.94; spacingReset.textContent=t(_tileFootprint3D===0.94?'ui.hud.espaco_ok':'ui.hud.espaco_voltar'); }
     $('dungeon-canvas').style.display = 'none';
     if(GS.gameState) renderMap3D(GS.gameState);   // init3D called lazily inside
+    _syncMouseAltitudeControl(GS.gameState);
   } else {
     btn.classList.remove('active');
     btn.textContent = '🎲 3D';
@@ -24169,6 +27551,7 @@ function toggle3D(){
     if(spacingReset) spacingReset.style.display = 'none';
     $('dungeon-canvas').style.display = 'block';
     dispose3D();
+    _syncMouseAltitudeControl(GS.gameState);
     if(GS.gameState) renderMap(GS.gameState);
   }
 }
@@ -24184,7 +27567,9 @@ function _assinaturaVisualTabuleiro3D(state){
   const materiais = state.materiais || {};
   const pintura = Object.keys(materiais).sort()
     .map(key => `${key}:${materiais[key]}`).join('|');
-  return `${tiles}#${pintura}`;
+  const segredos = (state.secret_passages || []).map(sp =>
+    `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
+  return `${tiles}#${pintura}#${segredos}`;
 }
 
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
@@ -24350,6 +27735,38 @@ function init3D(state){
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'agua':
+      case 'agua_profunda': {
+        // Textura própria para a água: não reutilizar floorTex, porque ele é
+        // compartilhado com os pisos de pedra e não pode ser deslocado pela
+        // animação sem mover a textura do tabuleiro inteiro.
+        const profunda = matId === 'agua_profunda';
+        c.fillStyle = profunda ? '#06173f' : '#0078c6';
+        c.fillRect(0, 0, S, S);
+        for(let row = 0; row < (profunda ? 12 : 18); row++){
+          const yy = row * (S / (profunda ? 12 : 18)) + S * (0.02 + r() * 0.08);
+          const amp = S * (profunda ? 0.018 : 0.028);
+          c.strokeStyle = profunda
+            ? `rgba(66,143,224,${(0.16 + r() * 0.10).toFixed(2)})`
+            : `rgba(167,240,255,${(0.22 + r() * 0.14).toFixed(2)})`;
+          c.lineWidth = S * (profunda ? 0.006 : 0.008);
+          c.beginPath();
+          c.moveTo(-S * 0.08, yy);
+          c.bezierCurveTo(S * 0.18, yy - amp, S * 0.36, yy + amp, S * 0.58, yy);
+          c.bezierCurveTo(S * 0.76, yy - amp, S * 0.94, yy + amp, S * 1.08, yy);
+          c.stroke();
+        }
+        for(let n = 0; n < (profunda ? 14 : 24); n++){
+          const px = r() * S, py = r() * S;
+          c.fillStyle = profunda
+            ? `rgba(111,181,255,${(0.08 + r() * 0.10).toFixed(2)})`
+            : `rgba(218,252,255,${(0.12 + r() * 0.16).toFixed(2)})`;
+          c.beginPath();
+          c.ellipse(px, py, S * (0.012 + r() * 0.025), S * (0.004 + r() * 0.010), r() * Math.PI, 0, Math.PI * 2);
+          c.fill();
+        }
+        break;
+      }
       case 'duna_deserto':  paintSand(c,0,0,S,r); break;
       case 'rocha':         paintRock(c,0,0,S,r); break;
       case 'rocha_marrom':  paintRock(c,0,0,S,r,true); break;
@@ -24377,7 +27794,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='lava'||matId==='pantano'||matId==='duna_deserto'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='lava'||matId==='pantano'||matId==='duna_deserto'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -24394,6 +27811,8 @@ function init3D(state){
   const waterFloorGeo = new T.BoxGeometry(1, TH, 1);
   const lavaFloorGeo = new T.BoxGeometry(1, TH, 1);
   const swampFloorGeo = new T.BoxGeometry(1, TH, 1);
+  const waterMats = [];
+  const deepWaterMats = [];
   const lavaBubbleMeshes = [];
   const lavaBubbleGeo = new T.SphereGeometry(0.032, 8, 6);
   const lavaBubbleMat = new T.MeshStandardMaterial({
@@ -24401,6 +27820,17 @@ function init3D(state){
     roughness: 0.28, metalness: 0.02, transparent: true, opacity: 0.82,
     depthWrite: false
   });
+  const waterRippleGeo = new T.RingGeometry(0.11, 0.16, 20);
+  const waterRippleMat = new T.MeshBasicMaterial({
+    color: 0xb8f5ff, transparent: true, opacity: 0.25,
+    side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending
+  });
+  const deepWaterRippleMat = new T.MeshBasicMaterial({
+    color: 0x4f9be6, transparent: true, opacity: 0.13,
+    side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending
+  });
+  const waterRippleMeshes = [];
+  const deepWaterRippleMeshes = [];
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
   function makeDuneWallGeo(gx, gy){
     const r = _rng(((gx * 73856093) ^ (gy * 19349663) ^ 0xD00DE) >>> 0);
@@ -24638,6 +28068,20 @@ function init3D(state){
   const moveHighlightMeshes = _mkOverlayPool(
     _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90), moveHighlightMat, 0.004, _ehChao));
 
+  // Cursor virtual do joystick: uma única malha, deslocada sobre a casa-alvo.
+  // Não participa do raycast, nem do estado autoritativo do tabuleiro.
+  const gamepadCursorMat = new T.MeshBasicMaterial({
+    color: 0xff3434, transparent: true, opacity: 0.82,
+    side: T.DoubleSide, depthWrite: false
+  });
+  const gamepadCursorMesh = new T.Mesh(new T.PlaneGeometry(TW * 0.88, TW * 0.88), gamepadCursorMat);
+  gamepadCursorMesh.rotation.x = -Math.PI / 2;
+  gamepadCursorMesh.position.y = TH + 0.036;
+  gamepadCursorMesh.visible = false;
+  gamepadCursorMesh.renderOrder = 30;
+  gamepadCursorMesh.userData.noRay = true;
+  scene.add(gamepadCursorMesh);
+
   // ── ATTACK HIGHLIGHT PLANES (red — MeshBasicMaterial, unaffected by lighting)
   const atkHighlightMeshes = _mkOverlayPool(
     _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90),
@@ -24671,10 +28115,13 @@ function init3D(state){
     yoff, _ehChao));
   const spellEscuridaoMeshes = _mkSpell(0x0a061a, 0.60, 0.007);   // névoa escura (sob os peões)
   const spellSilencioMeshes  = _mkSpell(0x7888c8, 0.26, 0.0072);  // véu de silêncio
-  const spellRangeMeshes     = _mkSpell(0xff2a2a, 0.16, 0.008);
+  // A intensidade das duas camadas de MIRA vem de AIM_COLORS (fonte unica,
+  // com a calibragem medida documentada la). As demais sao efeitos do jogo,
+  // nao mira, e mantem os proprios valores.
+  const spellRangeMeshes     = _mkSpell(AIM_COLORS.range.hex, AIM_COLORS.range.op, 0.008);
   const spellZonaMeshes      = _mkSpell(0xff6a00, 0.30, 0.009);
   const spellDoubleMeshes    = _mkSpell(0x0a5a16, 0.60, 0.010);
-  const spellAreaMeshes      = _mkSpell(0x28e636, 0.32, 0.012);
+  const spellAreaMeshes      = _mkSpell(AIM_COLORS.valid.hex, AIM_COLORS.valid.op, 0.012);
   const spellTargetMeshes = {
     self:  _mkSpell(0xf5be2a, 0.52, 0.014),
     ally:  _mkSpell(0x3791ff, 0.44, 0.0145),
@@ -24826,14 +28273,17 @@ function init3D(state){
           mat.emissive.set(VC.floor.emissive);
           mat.emissiveIntensity = 1.0;
           if(isWater3){
-            // Superfície azul e mais lustrosa que pedra: indica água profunda,
-            // sem transformá-la em obstáculo de navegação.
+            // Superfície azul e mais lustrosa que pedra: indica água rasa ou
+            // profunda sem transformá-la em obstáculo de navegação. A textura
+            // própria pode deslizar sem afetar os demais pisos.
+            const profunda = mid3 === 'agua_profunda';
             mat.roughness = 0.24;
             mat.metalness = 0.12;
-            mat.emissive.set(mid3==='agua_profunda' ? 0x06173f : 0x0075bd);
-            mat.emissiveIntensity = mid3==='agua_profunda' ? 0.58 : 0.92;
+            mat.emissive.set(profunda ? 0x06173f : 0x0075bd);
+            mat.emissiveIntensity = profunda ? 0.58 : 0.92;
             mat.bumpMap = null;
             mat.bumpScale = 0;
+            mat.emissiveMap = null;
           }
           if(isLava3){
             mat.roughness = 0.34;
@@ -24868,6 +28318,8 @@ function init3D(state){
           }
           _tileMatCache[fKey] = mat;
         }
+        if(mid3 === 'agua' && !waterMats.includes(mat)) waterMats.push(mat);
+        if(mid3 === 'agua_profunda' && !deepWaterMats.includes(mat)) deepWaterMats.push(mat);
         if(isLava3 && !lavaMats.includes(mat)) lavaMats.push(mat);
         if(isSwamp3 && !swampMats.includes(mat)) swampMats.push(mat);
         mesh = new T.Mesh((isWater3 || isLava3 || isSwamp3)
@@ -24899,7 +28351,7 @@ function init3D(state){
           tileMeshes[`entulho:${key}`] = eMesh;   // revelado junto com a casa (ver visibilidade)
         }
       } else {
-        const matId3 = (state.materiais && state.materiais[key]) || 'pedra_normal';
+        const matId3 = matDaCasa(state, x, y);
         const wc = (VC.materiais[matId3] || VC.materiais.pedra_normal).color;
         const wtex = makeMaterialTex(matId3);
         // Com textura própria a cor vira (1,1,1): jitter não muda a aparência.
@@ -24972,6 +28424,29 @@ function init3D(state){
       b.userData.lavaBaseScale = b.scale.x;
       scene.add(b); lavaBubbleMeshes.push(b);
     }
+  }
+
+  // Ondulações leves na superfície: uma por casa, com fase e deslocamento
+  // determinísticos para evitar que toda a água pulse de forma idêntica.
+  for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+    const kind = state.materiais && state.materiais[`${x},${y}`];
+    if(kind !== 'agua' && kind !== 'agua_profunda') continue;
+    const br = _rng(((x * 7547) ^ (y * 4217) ^ 0xA71E) >>> 0);
+    const ripple = new T.Mesh(waterRippleGeo, kind === 'agua_profunda' ? deepWaterRippleMat : waterRippleMat);
+    const baseScale = kind === 'agua_profunda' ? 1.15 + br() * 0.42 : 0.72 + br() * 0.30;
+    ripple.position.set(x + (br() - 0.5) * 0.18, TH + 0.014, y + (br() - 0.5) * 0.18);
+    ripple.rotation.x = -Math.PI / 2;
+    ripple.rotation.z = br() * Math.PI;
+    ripple.scale.setScalar(baseScale);
+    ripple.userData.waterRipple = true;
+    ripple.userData.waterKey = `${x},${y}`;
+    ripple.userData.waterKind = kind;
+    ripple.userData.waterPhase = br() * Math.PI * 2;
+    ripple.userData.waterBaseX = ripple.position.x;
+    ripple.userData.waterBaseZ = ripple.position.z;
+    ripple.userData.waterBaseScale = baseScale;
+    scene.add(ripple);
+    (kind === 'agua_profunda' ? deepWaterRippleMeshes : waterRippleMeshes).push(ripple);
   }
 
   // ── DOOR LEAVES — wooden slab over each DOOR tile (hidden when open) ──────────
@@ -25180,15 +28655,22 @@ function init3D(state){
   activeEffectGroup.renderOrder = 80;
   scene.add(activeEffectGroup);
 
+  // Rota de movimento selecionada, mas ainda não confirmada pelo jogador.
+  // O grupo fica acima do piso e fora do raycast para não alterar a interação.
+  const movePreviewGroup = new T.Group();
+  movePreviewGroup.renderOrder = 90;
+  scene.add(movePreviewGroup);
+
   g3 = {
     T, scene, renderer, camera, controls,
     ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
     showcase, haloLight,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
-    sceneryMeshes, groutMeshes, groutMats, lavaMats, swampMats, lavaBubbleMeshes,
+    sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
+    lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes,
     wetFloorInst, wetFloorKeys, wetFloorTH: TH,
-    moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat,
+    moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat, gamepadCursorMesh,
     softShadowMat,
     weaponRangeMeshes,
     masterAttackRangeMeshes, masterAttackZoneMeshes, masterFootprintMeshes,
@@ -25198,7 +28680,7 @@ function init3D(state){
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
-    activeEffectGroup,
+    activeEffectGroup, movePreviewGroup,
     activeEffectSprites: {},
     stairGroup,                          // staircase mesh (null if no stairs)
     heroSpawnGroups,                     // markers for separated hero starts
@@ -25234,7 +28716,19 @@ function init3D(state){
   // OrbitControls handles the actual camera movement; we only need to know
   // "did the pointer travel while a button was held?" to suppress tile clicks.
   const domEl = renderer.domElement;
-  domEl.addEventListener('mousedown',  () => { _orbitDragMoved = false; });
+  // Com o botão direito pressionado, o scroll vira um passo vertical. Fora
+  // desse gesto, o OrbitControls continua controlando o zoom normalmente.
+  domEl.addEventListener('wheel', _handleAltitudeWheel, { passive:false, capture:true });
+  domEl.addEventListener('mousedown',  e  => {
+    _orbitDragMoved = false;
+    if(e.button === 2) _mouseRightHeld = true;
+  });
+  domEl.addEventListener('mouseup',    e  => {
+    if(e.button === 2) _mouseRightHeld = false;
+  });
+  domEl.addEventListener('contextmenu', e  => {
+    if(e.button === 2 || _mouseRightHeld) e.preventDefault();
+  });
   domEl.addEventListener('mousemove',  e  => { if(e.buttons) _orbitDragMoved = true; });
 
   domEl.addEventListener('click',      on3DClick);
@@ -25491,6 +28985,7 @@ function dispose3D(){
     });
     g3.activeEffectGroup.clear?.();
   }
+  _clearMovePreviewVisual();
   for(const f of _combatFeedbacks) _disposeCombatFeedback3D(f);
   // Restore map-wrap positioning so the 2D canvas flows normally
   const wrap = $('map-wrap');
@@ -25587,14 +29082,18 @@ function _atribuirLightPool(){
   }
 }
 
-// Lava e pântano têm animação visual própria, mas não precisam acompanhar a
+// Lava, água e pântano têm animação visual própria, mas não precisam acompanhar a
 // taxa máxima do renderizador. Atualizar em ~30 Hz preserva a fluidez percebida
 // e evita percorrer os materiais do tabuleiro em todos os frames.
 function _atualizarTerrenoAnimado3D(t){
   if(!g3) return;
   const temTerreno = (g3.lavaMats && g3.lavaMats.length)
+    || (g3.waterMats && g3.waterMats.length)
+    || (g3.deepWaterMats && g3.deepWaterMats.length)
     || (g3.swampMats && g3.swampMats.length)
-    || (g3.lavaBubbleMeshes && g3.lavaBubbleMeshes.length);
+    || (g3.lavaBubbleMeshes && g3.lavaBubbleMeshes.length)
+    || (g3.waterRippleMeshes && g3.waterRippleMeshes.length)
+    || (g3.deepWaterRippleMeshes && g3.deepWaterRippleMeshes.length);
   if(!temTerreno) return;
   if(g3._terrainAnimLastAt && t - g3._terrainAnimLastAt < 33) return;
   g3._terrainAnimLastAt = t;
@@ -25608,6 +29107,26 @@ function _atualizarTerrenoAnimado3D(t){
         // Alterar offset não exige reenvio da textura para a GPU.
       }
       mat.emissiveIntensity = 1.00 + lp * 0.72;
+    }
+  }
+  if(g3.waterMats){
+    const wp = 0.5 + 0.5 * Math.sin(t / 520) + 0.08 * Math.sin(t / 173);
+    for(const mat of g3.waterMats){
+      if(mat.map){
+        mat.map.offset.x = (t / 15000) % 1;
+        mat.map.offset.y = (t / 23000) % 1;
+      }
+      mat.emissiveIntensity = 0.82 + wp * 0.20;
+    }
+  }
+  if(g3.deepWaterMats){
+    const dwp = 0.5 + 0.5 * Math.sin(t / 1050) + 0.06 * Math.sin(t / 307);
+    for(const mat of g3.deepWaterMats){
+      if(mat.map){
+        mat.map.offset.x = (t / 27000) % 1;
+        mat.map.offset.y = (t / 39000) % 1;
+      }
+      mat.emissiveIntensity = 0.50 + dwp * 0.12;
     }
   }
   if(g3.swampMats){
@@ -25629,6 +29148,30 @@ function _atualizarTerrenoAnimado3D(t){
       bubble.scale.set(base * (0.72 + q * 0.42), base * (0.58 + q * 0.24), base * (0.72 + q * 0.42));
     }
   }
+  if(g3.waterRippleMeshes){
+    for(const ripple of g3.waterRippleMeshes){
+      if(!ripple.visible) continue;
+      const phase = ripple.userData.waterPhase || 0;
+      const q = 0.5 + 0.5 * Math.sin(t / 760 + phase);
+      const base = ripple.userData.waterBaseScale || 0.85;
+      ripple.position.x = (ripple.userData.waterBaseX || 0) + Math.sin(t / 1450 + phase) * 0.035;
+      ripple.position.z = (ripple.userData.waterBaseZ || 0) + Math.cos(t / 1710 + phase) * 0.028;
+      ripple.scale.setScalar(base * (0.70 + q * 0.52));
+      ripple.rotation.z += 0.002;
+    }
+  }
+  if(g3.deepWaterRippleMeshes){
+    for(const ripple of g3.deepWaterRippleMeshes){
+      if(!ripple.visible) continue;
+      const phase = ripple.userData.waterPhase || 0;
+      const q = 0.5 + 0.5 * Math.sin(t / 1350 + phase);
+      const base = ripple.userData.waterBaseScale || 1.25;
+      ripple.position.x = (ripple.userData.waterBaseX || 0) + Math.sin(t / 2400 + phase) * 0.022;
+      ripple.position.z = (ripple.userData.waterBaseZ || 0) + Math.cos(t / 2750 + phase) * 0.018;
+      ripple.scale.setScalar(base * (0.82 + q * 0.34));
+      ripple.rotation.z += 0.001;
+    }
+  }
 }
 
 function startLoop3D(){
@@ -25640,6 +29183,7 @@ function startLoop3D(){
     _fpsTick(now);
     // Todos os efeitos de magia compartilham este mesmo frame do renderer.
     _flushVisualAnimFrame3D(now);
+    _updateFlightFallAnimations3D(now);
     _updateDiceLoop3D(now);
     // Não depende de renderMap3D: ele pode ser adiado enquanto uma miniatura
     // caminha. Isso garante que ativar/cancelar uma habilidade reflita no
@@ -25880,7 +29424,7 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
   const det = {};
   const isDuneWall = (x, y) => tiles[y]?.[x] === TILE_WALL
     && new Set(['duna_deserto', 'rocha', 'rocha_marrom']).has(
-      ((state.materiais && state.materiais[`${x},${y}`]) || 'pedra_normal'));
+      matDaCasa(state, x, y));
 
   // Stone material matching wallBaseMat, brightness-adjustable
   // Memoizado por brilho: `v` assume 5 valores (0.70, 0.94, 1.06, 1.12, 1.18),
@@ -27053,6 +30597,20 @@ function atualizarCamera(){
   g3.camera.lookAt(configCamera.alvoAtual);
 }
 
+// Reenquadra após cada passo recebido do controle, preservando ângulo e zoom.
+// Diferente do seguimento animado acima, aqui o servidor já confirmou um passo
+// discreto e basta transportar câmera e alvo para a nova casa.
+function centralizarCamera3DNoPeao(pos){
+  if(!g3?.camera || !g3?.controls || !Array.isArray(pos)) return;
+  const world = casaParaMundo(pos[0], pos[1]);
+  const alvo = new THREE.Vector3(world.x, 0, world.z);
+  const offset = g3.camera.position.clone().sub(g3.controls.target);
+  g3.controls.target.copy(alvo);
+  g3.camera.position.copy(alvo).add(offset);
+  g3.camera.lookAt(alvo);
+  g3.controls.update();
+}
+
 function encerrarSeguimentoCamera(){
   if(!g3 || !g3.controls) return;
   configCamera.seguindoPeao = false;
@@ -27282,7 +30840,10 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
       -box.min.y,
       -(box.min.z + box.max.z) / 2
     );
-    inst.traverse(o => { if (o.isMesh) o.userData.isGLB = true; });
+    inst.traverse(o => {
+      if (!o.isMesh) return;
+      o.userData.isGLB = true;
+    });
     const wrap = new g3.T.Group();
     wrap.add(inst);
     wrap.scale.setScalar(scale);
@@ -27291,11 +30852,69 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     grp.add(wrap);
     grp.position.copy(slot.position);
     grp.position.y = DECOR_GLB_FLOOR_Y;
-    grp.rotation.y = _facingAngleY3D(facing);
+    grp.rotation.y = _facingAngleY3D(facing, undefined, imageName, path);
     grp.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
     g3.scene.add(grp);
     g3.decorMeshes[decorId] = grp;
+  };
+  _loadDecorGLB(g3.T, path, montar);
+}
+
+// Brasões e cortinas são decorações de parede: o GLB fica vertical, centrado na face da
+// parede e com a base apoiada no piso. O PNG segue como fallback para manter a
+// decoração visível enquanto o GLB carrega ou se o arquivo não estiver disponível.
+function _buildWallDecorGLB(d, path){
+  const montar = template => {
+    const slot = g3 && g3.decorMeshes[d.id];
+    if (!slot || slot.userData.wallGlbPath !== path) return;
+    if (!template) {
+      slot.userData = { isDecor:true, decorId:d.id, wallImage:d.image,
+        wallGlbPath:'png', wallFace:(d.facing || [0,1]).join(',') };
+      _buildWallDecor3D(d);
+      return;
+    }
+
+    const T = g3.T, face = d.facing || [0,1];
+    const vs = Array.isArray(d.vscale) ? d.vscale : [1,1];
+    const inst = template.clone();
+    const box = new T.Box3().setFromObject(inst);
+    const size = box.getSize(new T.Vector3());
+    const isCurtain = d.type === 'cortina_vermelha' || d.type === 'cortina_branca';
+    const targetW = (isCurtain ? 0.96 : 0.74) * (vs[0] || 1);
+    const targetH = (isCurtain ? 1.24 : 0.92) * (vs[1] || 1);
+    const scaleX = targetW / Math.max(size.x, 1e-3);
+    const scaleY = targetH / Math.max(size.y, 1e-3);
+    const scaleZ = scaleX;
+    // Centraliza horizontalmente e remove a folga inferior do modelo original.
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    inst.traverse(o => { if (o.isMesh) o.userData.isGLB = true; });
+    const wrap = new T.Group();
+    wrap.add(inst);
+    wrap.scale.set(scaleX, scaleY, scaleZ);
+
+    const grp = new T.Group();
+    grp.userData = { isDecor:true, decorId:d.id, wallImage:d.image,
+      wallGlbPath:path, wallFace:face.join(','), wallScale:vs.join(',') };
+    const WALL_DECOR_GLB_SURFACE = 0.575;
+    // O brasão é uma placa suspensa: sua base acompanha a altura do decal PNG
+    // (em vez de começar no piso), deixando o topo dentro do terço superior da
+    // parede de 1,75 unidades.
+    const wallBaseY = d.type === 'brasao_leao' ? 0.58 : DECOR_GLB_FLOOR_Y;
+    grp.position.set(
+      d.pos[0] + face[0] * WALL_DECOR_GLB_SURFACE,
+      wallBaseY,
+      d.pos[1] + face[1] * WALL_DECOR_GLB_SURFACE
+    );
+    grp.rotation.y = _wallDecorRotation(face);
+    grp.add(wrap);
+    grp.visible = slot.visible;
+    g3.scene.remove(slot); _disposeDecorMesh(slot);
+    g3.scene.add(grp); g3.decorMeshes[d.id] = grp;
   };
   _loadDecorGLB(g3.T, path, montar);
 }
@@ -27312,7 +30931,7 @@ function _buildObjetoMini(decorId, imageName, cells, facing){
     const grp = window.Miniatura3D.build(g3.T, { image: img, tileSize: Math.max(1, cells) * DECOR_MINI_ESCALA });
     grp.userData = { isDecor: true, decorId: decorId, imageName: imageName };
     grp.position.copy(slot.position);
-    grp.rotation.y = _facingAngleY3D(facing);   // giro 90° aplicado já na construção assíncrona
+    grp.rotation.y = _facingAngleY3D(facing, undefined, imageName);   // giro 90° aplicado já na construção assíncrona
     grp.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
     g3.scene.add(grp);
@@ -27550,9 +31169,94 @@ function _atualizarWetFloor3D(terrainSet){
   inst.instanceMatrix.needsUpdate = true;
 }
 
+function _clearMovePreviewVisual(){
+  const group = g3?.movePreviewGroup;
+  if(!group) return;
+  const geometries = new Set(), materials = new Set();
+  for(const child of [...group.children]){
+    child.traverse?.(obj => {
+      if(obj.geometry) geometries.add(obj.geometry);
+      if(obj.material){
+        if(Array.isArray(obj.material)) obj.material.forEach(m => materials.add(m));
+        else materials.add(obj.material);
+      }
+    });
+    group.remove(child);
+  }
+  geometries.forEach(geo => geo.dispose?.());
+  materials.forEach(mat => mat.dispose?.());
+}
+
+function _renderMovePreview3D(state, terrainSet, TH){
+  const group = g3?.movePreviewGroup;
+  if(!group) return;
+  _clearMovePreviewVisual();
+  const preview = GS.pendingMove;
+  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!preview?.path?.length || !me) return;
+  const origin = Array.isArray(preview.origin) ? preview.origin : me.pos;
+  let x = origin[0], y = origin[1];
+  const cells = [];
+  if(terrainSet.has(`${x},${y}`)) cells.push([x, y]);
+  for(const step of preview.path){
+    x += step[0]; y += step[1];
+    if(!terrainSet.has(`${x},${y}`)) break;
+    cells.push([x, y]);
+  }
+  if(cells.length < 2) return;
+
+  const { T } = g3;
+  const mat = new T.MeshBasicMaterial({
+    color: 0xffd04a, transparent: true, opacity: .92,
+    depthWrite: false, depthTest: false
+  });
+  const up = new T.Vector3(0, 1, 0);
+  for(let i = 1; i < cells.length; i++){
+    const [ax, ay] = cells[i - 1], [bx, by] = cells[i];
+    const dir = new T.Vector3(bx - ax, 0, by - ay);
+    const len = dir.length();
+    const mesh = new T.Mesh(new T.CylinderGeometry(.038, .038, len, 8), mat);
+    mesh.position.set((ax + bx) / 2, TH + .075, (ay + by) / 2);
+    mesh.quaternion.setFromUnitVectors(up, dir.normalize());
+    mesh.renderOrder = 90;
+    mesh.userData.noRay = true;
+    group.add(mesh);
+  }
+  const nodeGeo = new T.SphereGeometry(.075, 8, 6);
+  for(const [cx, cy] of cells.slice(1)){
+    const node = new T.Mesh(nodeGeo, mat);
+    node.position.set(cx, TH + .075, cy);
+    node.renderOrder = 91;
+    node.userData.noRay = true;
+    group.add(node);
+  }
+
+  const [px, py] = cells[cells.length - 1];
+  const [ox, oy] = cells[cells.length - 2];
+  const arrowDir = new T.Vector3(px - ox, 0, py - oy).normalize();
+  const arrow = new T.Mesh(new T.ConeGeometry(.16, .34, 6), mat);
+  arrow.position.set(px + arrowDir.x * .12, TH + .075, py + arrowDir.z * .12);
+  arrow.quaternion.setFromUnitVectors(up, arrowDir);
+  arrow.renderOrder = 92;
+  arrow.userData.noRay = true;
+  group.add(arrow);
+
+  const ringMat = new T.MeshBasicMaterial({
+    color: 0xfff0a0, transparent: true, opacity: .9,
+    depthWrite: false, depthTest: false
+  });
+  const ring = new T.Mesh(new T.TorusGeometry(.29, .025, 6, 24), ringMat);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(px, TH + .075, py);
+  ring.renderOrder = 91;
+  ring.userData.noRay = true;
+  group.add(ring);
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   state = _estadoComMortosVisuais(state);
+  _syncMouseAltitudeControl(state);
   _syncInvisibilidadeState(state);
   _syncProtecaoEnergiaState(state);
   // Durante a animação de movimento não reconstrói os peões (preserva o mesh
@@ -27569,6 +31273,7 @@ function renderMap3D(state){
       mode3D = false;
       const btn=$('btn-3d-toggle'); if(btn){ btn.classList.remove('active'); btn.textContent='🎲 3D'; }
       const hint=$('orbit-hint'); if(hint) hint.style.display='none';
+      _syncMouseAltitudeControl(state);
       const reset=$('btn-cam-reset'); if(reset) reset.style.display='none';
       $('dungeon-canvas').style.display='block';
       renderMap(state);
@@ -27636,7 +31341,7 @@ function renderMap3D(state){
     for(const m of state.monsters){
       if(!m || m.hp <= 0 || m._morteVisualPendente) continue;
       const dx = Math.abs(me.pos[0] - m.pos[0]), dy = Math.abs(me.pos[1] - m.pos[1]);
-      const inR = _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1])
+      const inR = _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
       if(inR) attackable3d.add(`${m.pos[0]},${m.pos[1]}`);
     }
@@ -27656,7 +31361,7 @@ function renderMap3D(state){
   }
 
   // Durante a mira de magia, oculta realces de movimento/ataque (mostra alcance/área).
-  if(window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable3d.clear(); }
+  if(_aimSessionIs() || window._modoMagia || window._modoMestreMira || window._modoThrowItem || window._modoAnimarMortos){ reachable.clear(); attackable3d.clear(); }
 
   // ── Tile visibility
   for(let y=0; y<H; y++){
@@ -27673,6 +31378,29 @@ function renderMap3D(state){
   if(g3.lavaBubbleMeshes){
     for(const bubble of g3.lavaBubbleMeshes)
       bubble.visible = terrainSet.has(bubble.userData.lavaKey);
+  }
+  if(g3.waterRippleMeshes){
+    for(const ripple of g3.waterRippleMeshes)
+      ripple.visible = terrainSet.has(ripple.userData.waterKey);
+  }
+  if(g3.deepWaterRippleMeshes){
+    for(const ripple of g3.deepWaterRippleMeshes)
+      ripple.visible = terrainSet.has(ripple.userData.waterKey);
+  }
+  if(g3.gamepadCursorMesh){
+    const cursor = _gamepadCursorTile(state);
+    const valid = cursor && state.tiles[cursor[1]]?.[cursor[0]] != null;
+    const visible = !!(valid && terrainSet.has(`${cursor[0]},${cursor[1]}`));
+    g3.gamepadCursorMesh.visible = visible;
+    if(visible){
+      const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
+      const tone = _gamepadCursorTone(state);
+      g3.gamepadCursorMesh.position.set(cursor[0], TH + 0.036, cursor[1]);
+      const selecionandoAtaque = !!_gamepadInput.attackMode;
+      g3.gamepadCursorMesh.scale.setScalar(selecionandoAtaque ? 1.08 + pulse * 0.13 : 0.92 + pulse * 0.18);
+      g3.gamepadCursorMesh.material.color.set(tone.hex);
+      g3.gamepadCursorMesh.material.opacity = selecionandoAtaque ? 0.82 + pulse * 0.18 : 0.58 + pulse * 0.34;
+    }
   }
   // Segredos 3D: Encontrar Armadilhas ou Clarividência os revela. A parede
   // continua existindo; a transparência é somente uma indicação visual.
@@ -27715,13 +31443,14 @@ function renderMap3D(state){
 
   // ── Movement highlight overlay visibility (blue planes)
   _overlayShowOnly(g3.moveHighlightMeshes, _soExploradas(reachable));
+  _renderMovePreview3D(state, terrainSet, TH);
 
   // ── Attack highlight overlay visibility (red planes)
   _overlayShowOnly(g3.atkHighlightMeshes, _soExploradas(attackable3d));
 
   // ── Weapon range preview planes (vermelho forte — hover no ícone da arma)
   {
-    const wRngTiles = (window._weaponRangePreview && me)
+    const wRngTiles = ((window._weaponRangePreview || window._gamepadAttackRangePreview) && me)
       ? _computeWeaponRangeTiles(state, me) : new Set();
     _overlayShowOnly(g3.weaponRangeMeshes, _soExploradas(wRngTiles));
   }
@@ -27911,15 +31640,19 @@ function renderMap3D(state){
       if (d.special === 'wall' && d.image) {
         const faceSig = (d.facing || [0,1]).join(',');
         const scaleSig = (Array.isArray(d.vscale) ? d.vscale : [1,1]).join(',');
-        if (!mesh || mesh.userData.wallImage !== d.image || mesh.userData.wallFace !== faceSig || mesh.userData.wallScale !== scaleSig) {
+        const wallGlbPath = d.model3d || (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
+        const wallMode = wallGlbPath && _decorGLBCache[wallGlbPath] !== 'erro' ? wallGlbPath : 'png';
+        if (!mesh || mesh.userData.wallImage !== d.image || mesh.userData.wallFace !== faceSig
+            || mesh.userData.wallScale !== scaleSig || mesh.userData.wallGlbPath !== wallMode) {
           if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
           mesh = new T.Group();
           // A assinatura completa evita recriar o placeholder a cada render
           // enquanto o PNG ainda está carregando.
           mesh.userData = {isDecor:true, decorId:d.id, wallImage:d.image,
-            wallFace:faceSig, wallScale:scaleSig, pending:true};
+            wallFace:faceSig, wallScale:scaleSig, wallGlbPath:wallMode, pending:true};
           mesh.visible = visivel; g3.scene.add(mesh); g3.decorMeshes[d.id] = mesh;
-          _buildWallDecor3D(d);
+          if (wallMode === 'png') _buildWallDecor3D(d);
+          else _buildWallDecorGLB(d, wallGlbPath);
         }
         mesh = g3.decorMeshes[d.id];
         if (mesh) mesh.visible = visivel;
@@ -27980,7 +31713,7 @@ function renderMap3D(state){
         }
         mesh.position.set(worldX, 0, worldZ);
         // Giro 90° (facing): roda a miniatura em pé sobre o eixo vertical.
-        mesh.rotation.y = _facingAngleY3D(d.facing);
+        mesh.rotation.y = _facingAngleY3D(d.facing, d.type, d.image, glbPath);
         // Escala visual (vscale): largura no plano (x,z), altura p/ cima (y);
         // o footprint já está embutido na geometria via tileSize.
         const _mvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
@@ -28031,17 +31764,19 @@ function renderMap3D(state){
   // reconstrói os peões. Reconstruir a cada mensagem criava/vazava dezenas de
   // geometrias, materiais, texturas e PointLights — e a variação na contagem de
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
+  const gamepadAttackTarget3D = _gamepadSelectedAttackTarget(state);
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.alive, p.color, p.class_id, p.pawn_override, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, _invisibilidadeAnimAtiva(p.id), p.em_chamas_rodadas > 0,
+    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), p.em_chamas_rodadas > 0,
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.size, a.oriented, a.facing])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
-      m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0]),
+    m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
+    state.hero_corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
-    state.current_turn, state.animados_turn, GS.myPid,
+    state.current_turn, state.animados_turn, GS.myPid, gamepadAttackTarget3D?.targetId || null,
     g3.selectedPos, _animadoSel,
     GS.isMaster() ? [..._masterSelectedMonsterIds(state)].sort().join('|') : '',
     state.explored.length, [...visionSet].sort().join('|'),
@@ -28067,7 +31802,7 @@ function renderMap3D(state){
 
   // Reaproveita a figura `key` se a assinatura visual não mudou; senão
   // reconstrói (descartando a antiga). Reposiciona em (x, z) quando passado.
-  const obterFig = (key, sig, construir, x, y) => {
+  const obterFig = (key, sig, construir, x, y, altitude = 0) => {
     let ent = figCache.get(key);
     if(!ent || ent.sig !== sig){
       if(ent) _disposeEntityTree(ent.fig);
@@ -28080,6 +31815,13 @@ function renderMap3D(state){
       fig.position.z = y;
       fig.userData.gridX = x;
       fig.userData.gridY = y;
+      const altitudeNum = Number(altitude);
+      const altitudeNormalizada = Math.max(0, Math.min(10,
+        Number.isFinite(altitudeNum) ? Math.trunc(altitudeNum) : 0));
+      fig.userData.altitude = altitudeNormalizada;
+      if(fig.userData.flightBody){
+        fig.userData.flightBody.position.y = altitudeNormalizada * FLIGHT_ALTITUDE_STEP;
+      }
       // Água rasa/profunda: afunda cada miniatura em 25%/45% da própria altura.
       // O deslocamento fica no grupo-raiz e serve para heróis e monstros.
       if(fig.userData._waterSinkDeepY === undefined){
@@ -28117,16 +31859,20 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.pawn_override, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0,
+      JSON.stringify([p.color, p.class_id, p.pawn_override, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!p.pawn_override, p.id===GS.myPid, isCur, px, py, p.class_id,
           p.pawn_override ? 'lobisomem' : null, pSel, p.pawn_override,
           undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
-          p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0);
+          // Os `undefined` cobrem monsterVisionRadius, mModel3D, mFillFootprint
+          // e mSize — parâmetros só de monstro. Faltava o de mSize, então
+          // `petrificado` caía uma posição antes e o herói NUNCA virava pedra.
+          p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
+          undefined, undefined, undefined, undefined, !!p.petrificado);
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
-      }, px, py);
+      }, px, py, p.altura);
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
   }
 
@@ -28159,29 +31905,31 @@ function renderMap3D(state){
     if(!visionSet.has(`${mx},${my}`)) continue;
     const mSel = (g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my)
       || (GS.isMaster() && _masterSelectedMonsterIds(state).has(String(m.id)));
+    const gamepadAttackTargeted = gamepadAttackTarget3D?.targetId === m.id;
     const imageName = _monsterImageName(m);
     obterFig(`mon:${m.id}`,
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
-      JSON.stringify([m.type, imageName, m.model3d, !!mSel, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
-        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, GS.sorrateiroAtivo(), _arteGen]),
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0, !!m.petrificado,
+        m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.altura, GS.sorrateiroAtivo(), _arteGen]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel, imageName, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
-          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d, !!m.fill_footprint_3d, m.size);
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d, !!m.fill_footprint_3d, m.size, !!m.petrificado);
         const vs = Array.isArray(m.vscale) ? m.vscale : [1, 1];
         const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));
         const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
         // Escala só a aparência: posição, footprint e regras continuam iguais.
-        f.scale.set(sx, sy, sx);
+        const focusScale = gamepadAttackTargeted ? 1.05 : 1;
+        f.scale.set(sx * focusScale, sy * focusScale, sx * focusScale);
         // O grupo começa no nível do piso; ao reduzir sy, a base também seria
         // multiplicada e afundaria. O lift é aplicado pelo posicionamento
         // comum das entidades, preservando hover, água e saltos de movimento.
-        f.userData._floorAnchorLiftY = TH * (1 - sy);
+        f.userData._floorAnchorLiftY = TH * (1 - sy) + (gamepadAttackTargeted ? .045 : 0);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
-      mx, my);
+      mx, my, m.altura);
     // m.pos continua sendo a âncora autoritativa para seleção e colisão; a
     // raiz visual é deslocada para o centro geométrico do footprint.
     // A âncora é a fileira frontal. Centralizamos qualquer footprint orientado
@@ -28206,6 +31954,15 @@ function renderMap3D(state){
     const [cx,cy] = c.pos;
     if(!visionSet.has(`${cx},${cy}`)) continue;
     obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+  }
+
+  // Lápides dos heróis derrotados — somem quando a Ressurreição remove o
+  // registro autoritativo e o peão vivo volta a ser renderizado acima.
+  for(const c of (state.hero_corpses||[])){
+    const [hx, hy] = c.pos || [];
+    if(!Number.isFinite(hx) || !Number.isFinite(hy)) continue;
+    if(!visionSet.has(`${hx},${hy}`)) continue;
+    obterFig(`hero-corpse:${c.hero_id || c.id}`, JSON.stringify(c), () => build3DCorpse(c), hx, hy);
   }
 
   // Animados (servos do Pedro) — peão do MONSTRO ORIGINAL com base/aro roxo (aliado)
@@ -28602,6 +32359,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   garaloux_alfa:       'assets/models3d/monstros/garalux.glb',
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
+  medusa:            'assets/models3d/monstros/medusa.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
   // Cobre a ficha com `image: "necromante"` e o `dark_mage` legado, que resolve
   // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE.
@@ -28735,10 +32493,40 @@ function _heroGLBFrontOffset(classId) {
 
 // Instancia a miniatura GLB dentro de grp. Retorna true se síncrono (cache),
 // false se o template ainda não está disponível (carrega e adiciona async).
-function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
+function _makePetrified3D(T, root) {
+  const tom = VC.feedback?.petrificacao || {};
+  const cor = Array.isArray(tom.cor) ? tom.cor : [0.44, 0.375, 0.30];
+  const emi = Array.isArray(tom.emissiva) ? tom.emissiva : [0.030, 0.025, 0.019];
+  root.traverse(o => {
+    if(!o.isMesh || !o.material) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const stone = mats.map(src => {
+      const mat = src.clone();
+      // Retira a pintura original do GLB para que a miniatura inteira assuma
+      // o aspecto de estátua, em vez de apenas receber uma tonalidade sobre
+      // a textura colorida.
+      mat.map = null;
+      if(mat.emissiveMap !== undefined) mat.emissiveMap = null;
+      if(mat.vertexColors !== undefined) mat.vertexColors = false;
+      if(mat.color) mat.color.setRGB(cor[0], cor[1], cor[2]);
+      if(mat.emissive) mat.emissive.setRGB(emi[0], emi[1], emi[2]);
+      if(mat.emissiveIntensity !== undefined) mat.emissiveIntensity = 0.35;
+      if(mat.roughness !== undefined) mat.roughness = 0.92;
+      if(mat.metalness !== undefined) mat.metalness = 0.0;
+      // A remoção do map altera os defines do shader; sem needsUpdate o
+      // Three.js pode continuar usando o programa antigo com as cores do GLB.
+      mat.needsUpdate = true;
+      return mat;
+    });
+    o.material = Array.isArray(o.material) ? stone : stone[0];
+  });
+}
+
+function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petrificado=false) {
   const montar = tpl => {
     if (!tpl) { if (onMissing) onMissing(); return; }
     const inst = tpl.clone();
+    if(petrificado) _makePetrified3D(T, inst);
     // Limite de 1 quadrado: a peça nunca ultrapassa o tile (1.0) no chão.
     const box = new T.Box3().setFromObject(inst);
     const tam = box.getSize(new T.Vector3());
@@ -28757,12 +32545,14 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing) {
     const wrap = new T.Group();
     wrap.add(inst);
     wrap.scale.setScalar(s);
-    // Mantém a frente real do arquivo GLB alinhada à frente lógica do peão.
-    // A orientação de movimento fica no grupo externo para cada passo poder
-    // ser aplicado como um ângulo absoluto, sem somar rotações anteriores.
+    // Mantém a frente real do arquivo GLB alinhada à frente lógica do modelo.
+    // A orientação do movimento fica no grupo-raiz do peão; como `grp` é o
+    // corpo separado (usado pelo voo), não devemos gravar nele a direção do
+    // passo, pois isso faria a animação somar a rotação duas vezes.
     wrap.rotation.y = _heroGLBFrontOffset(classId);
     wrap.position.y = Y0;
-    grp.rotation.y = rotY;
+    if(grp.parent) grp.parent.rotation.y = rotY;
+    else grp.rotation.y = rotY;
     // isGroundDecal (dungeon) + noOL (class-select): fora do passe de outline —
     // a malha já é a silhueta exata; um shell BackSide ficaria errado.
     // isGLB: clone compartilha geometria/material/texturas com o template em
@@ -28824,12 +32614,13 @@ function _loadMonsterGLB(T, path, cb) {
 // tabelas e descartava o `model3d`: build3DFig entrava no ramo "tem GLB" e aqui
 // dava `path = null` → onMissing → peão genérico, justamente nas criaturas cujo
 // modelo foi escolhido no editor.
-function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented, onMissing, glbPath, fillFootprint, mSize) {
+function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented, onMissing, glbPath, fillFootprint, mSize, petrificado=false) {
   const path = glbPath || _monsterGLBPath(imageName, monsterType);
   if (!path) { if (onMissing) onMissing(); return false; }
   const montar = template => {
     if (!template) { if (onMissing) onMissing(); return; }
     const inst = template.clone();
+    if(petrificado) _makePetrified3D(T, inst);
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
     // No enquadramento geral do modo de teste, o limite antigo de 0,94 deixava
@@ -28950,6 +32741,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   ]);
   const movementFront = new Set([
     'ciclope',
+    // O GLB do Estrangulador foi exportado 90° fora do eixo padrão;
+    // alinhar a orientação-base faz a frente acompanhar o movimento.
+    'estrangulador',
     'gigante_guerreiro', 'gigante_guerra',
     'gigante_runas', 'gigante_runico',
     'molochos', 'molochus_jovem', 'molochus_adulto', 'molochus_anciao',
@@ -29026,12 +32820,12 @@ function _setMonsterMeshFacing3D(mesh, facing){
   }
 }
 
-function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY) {
+function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY, petrificado=false) {
   const cacheKey = classId || 'generic';
   const billboard = () => _makeBillboardSprite(T, grp,
-    `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0);
+    `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0, undefined, undefined, undefined, petrificado);
   if (_GLB_ENABLED_CLASSES.has(classId)) {
-    _makeCharacterPawn3D(T, grp, classId, Y0, rotY || 0, _BB_H_ALVO, billboard);
+    _makeCharacterPawn3D(T, grp, classId, Y0, rotY || 0, _BB_H_ALVO, billboard, petrificado);
     return;
   }
   billboard();
@@ -29105,10 +32899,55 @@ function _bbScaleFromImg(img, sf, mode){
 // sem nada no console explicando o motivo.
 const _pawnTexErro   = {};   // cacheKey -> true
 const _pawnTexEspera = {};   // cacheKey -> [fn]  (avisados só em caso de falha)
+const _pawnTexPronta = {};   // cacheKey -> [fn]  (avisados quando a imagem chega)
+
+// ── Estátua nos peões que são BILLBOARD ──────────────────────────────────────
+// Num Sprite a arte É a silhueta: não dá para descartar o `map` como o
+// _makePetrified3D faz nas malhas do GLB, e multiplicar a cor só deixa a
+// criatura escura, ainda com as cores dela. Aqui a pedra é GRAVADA numa cópia
+// da imagem, com o MESMO filtro do peão 2D — é o que faz o billboard virar
+// estátua de verdade. Uma cópia por arte: todos os monstros do mesmo tipo
+// compartilham a textura de pedra.
+const _pawnTexPedra = {};    // cacheKey -> THREE.CanvasTexture
+// Sem `ctx.filter` a cópia sairia IDÊNTICA à arte original e o monstro ficaria
+// sem efeito nenhum — pior que o verniz de cor, que pelo menos escurece. Ao
+// devolver null aqui, o chamador mantém o verniz como está.
+let _filtroCanvasOk = null;
+function _suportaFiltroCanvas(){
+  if(_filtroCanvasOk !== null) return _filtroCanvasOk;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1;
+  const ctx = cv.getContext('2d');
+  ctx.filter = 'grayscale(1)';
+  ctx.fillStyle = '#ff0000'; ctx.fillRect(0, 0, 1, 1);
+  const px = ctx.getImageData(0, 0, 1, 1).data;
+  _filtroCanvasOk = Math.abs(px[0] - px[2]) < 8;   // virou cinza ⇒ o filtro valeu
+  return _filtroCanvasOk;
+}
+function _texturaPetrificada(T, cacheKey, tex){
+  if(_pawnTexPedra[cacheKey]) return _pawnTexPedra[cacheKey];
+  if(!_suportaFiltroCanvas()) return null;
+  const img = tex && tex.image;
+  if(!img || !img.width) return null;      // ainda em voo — o chamador tenta de novo
+  const cv = document.createElement('canvas');
+  cv.width = img.width; cv.height = img.height;
+  const ctx = cv.getContext('2d');
+  ctx.filter = _petrificadoFiltro2D();
+  ctx.drawImage(img, 0, 0);                // o filtro preserva o alfa: fundo segue vazado
+  const pedra = new T.CanvasTexture(cv);
+  // Herda os parâmetros da original: `encoding` diferente deixa a estátua clara
+  // demais e `flipY` diferente vira a arte de cabeça para baixo.
+  pedra.encoding  = tex.encoding;
+  pedra.flipY     = tex.flipY;
+  pedra.minFilter = tex.minFilter;
+  pedra.magFilter = tex.magFilter;
+  pedra.needsUpdate = true;
+  _pawnTexPedra[cacheKey] = pedra;
+  return pedra;
+}
 
 // `onErro` é chamado quando a textura não carrega, para que quem constrói o peão
 // possa cair numa miniatura procedural em vez de deixar a base sozinha.
-function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, onErro) {
+function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, onErro, petrificado=false) {
   const sf = sizeFactor || 1;
   if (_pawnTexErro[cacheKey]) { if (onErro) onErro(); return null; }
   let tex = _pawnTexCache[cacheKey];
@@ -29120,6 +32959,24 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
     depthWrite:  false,
     depthTest:   false,
   });
+  // Estátua: a pedra de verdade vai na TEXTURA (_texturaPetrificada), mas ela só
+  // pode ser gravada depois que a imagem chega. Até lá a cor do material serve
+  // de aproximação — escurece e puxa para o marrom. Normaliza o tom do VC para
+  // o canal mais claro ficar em 0,48, para não clarear o peão.
+  if(petrificado){
+    const cor = VC.feedback?.petrificacao?.cor || [0.44, 0.375, 0.30];
+    const k = 0.48 / Math.max(cor[0], cor[1], cor[2], 1e-3);
+    mat.color.setRGB(cor[0] * k, cor[1] * k, cor[2] * k);
+  }
+  // Troca o mapa pela cópia de pedra e devolve a cor ao branco — sem isso o
+  // escurecimento provisório se somaria ao da textura e a estátua sairia preta.
+  const aplicarPedra = () => {
+    const pedra = _texturaPetrificada(T, cacheKey, _pawnTexCache[cacheKey]);
+    if(!pedra) return;
+    mat.map = pedra;
+    mat.color.setRGB(1, 1, 1);
+    mat.needsUpdate = true;
+  };
   const sp = new T.Sprite(mat);
   sp.center.set(0.5, 0);      // âncora nos "pés" → base plantada ao orbitar
   sp.position.set(0, Y0, 0);
@@ -29132,6 +32989,7 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
   const aplicar = (texture) => {
     const [w, h] = _bbScaleFromImg(texture.image, sf, mode);
     sp.scale.set(w, h, 1);
+    if (petrificado) aplicarPedra();
   };
   // Enquanto a textura não chega, este sprite fica na fila: se ela falhar, ele
   // se remove do grupo e o chamador desenha o que puder no lugar.
@@ -29141,10 +32999,17 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
       if (onErro) onErro();
     });
   };
+  // Fila do SUCESSO: quem pediu a mesma arte enquanto ela ainda estava em voo
+  // não recebia aviso nenhum, então ficava com a escala provisória — e, agora,
+  // ficaria sem a textura de pedra. É o caso comum de vários monstros do mesmo
+  // tipo entrarem na cena no mesmo quadro.
+  const esperarPronta = () => {
+    (_pawnTexPronta[cacheKey] = _pawnTexPronta[cacheKey] || []).push(() => aplicar(_pawnTexCache[cacheKey]));
+  };
   if (tex) {
     mat.map = tex;
     if (tex.image && tex.image.width) aplicar(tex);   // já em cache e pronta
-    else esperarFalha();                              // ainda em voo (outro peão pediu)
+    else { esperarFalha(); esperarPronta(); }         // ainda em voo (outro peão pediu)
   } else {
     // Mesma insistência dos GLB: com o mapa inteiro revelado de uma vez, as
     // texturas saem em rajada e algumas caem na rede. Uma falha dessas não pode
@@ -29162,6 +33027,8 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
           tex.needsUpdate = true;
           mat.needsUpdate = true;
           aplicar(tex);
+          (_pawnTexPronta[cacheKey] || []).forEach(fn => fn());
+          delete _pawnTexPronta[cacheKey];
         },
         undefined,
         () => {
@@ -29178,6 +33045,10 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
             }
             _pawnTexErro[cacheKey] = true;
             delete _pawnTexCache[cacheKey];
+            // A cópia de pedra nasce da imagem original: se a arte cair, ela
+            // precisa ser refeita quando a retentativa trouxer o PNG.
+            delete _pawnTexPedra[cacheKey];
+            delete _pawnTexPronta[cacheKey];
             console.warn(`[peão] arte não carregada: ${texUrl} — `
               + (falhaDeRede
                   ? 'falha de conexão; nova tentativa em instantes.'
@@ -29204,12 +33075,12 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
 }
 
 // Billboard PNG para monstros com campo `image` (apenas frente.png).
-function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro) {
+function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro, petrificado=false) {
   const mode = _FIT_TILE_PAWNS.has(imageName)   ? 'box'
              : _FILL_WIDTH_PAWNS.has(imageName) ? 'width'
              : null;
   _makeBillboardSprite(T, grp, `assets/pawns/monstros/${imageName}/${imageName}.png`,
-                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode, onErro);
+                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode, onErro, petrificado);
 }
 
 // Monstros ORIENTADOS (croc/lagarto): no 3D a criatura fica EM PÉ (billboard)
@@ -29217,7 +33088,7 @@ function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro) {
 // facing) indica a direção. Espelha para leste; norte/sul ficam em pé e a base
 // mostra a direção. O flag `oriented` e o `facing` vêm do servidor. A arte é
 // horizontal com a cabeça à ESQUERDA.
-function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emChamas){
+function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emChamas, petrificado=false){
   const TH  = 0.22;
   const grp = new T.Group();
   grp.userData.gridX = gx; grp.userData.gridY = gy;
@@ -29281,6 +33152,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
   sp.renderOrder = 10;                          // sempre por cima das paredes/névoa
   const H = 2.05;                              // altura alvo (como os outros billboards)
   sp.scale.set(1.8 * flip, H, 1);              // provisório até a textura carregar
+  const cacheKey = '__mon_' + imageName;
   const aplicar = (tex) => {
     const img = tex.image;
     if (img && img.width) {
@@ -29289,13 +33161,34 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
       if (w > 2.0) { w = 2.0; h = w / ar; }   // largura ≤ ~2 casas (criatura larga e baixa)
       sp.scale.set(w * flip, h, 1);
     }
+    // Mesma estátua dos demais billboards: a pedra vai na cópia da textura.
+    if (petrificado) {
+      const pedra = _texturaPetrificada(T, cacheKey, tex);
+      if (pedra) { mat.map = pedra; mat.color.setRGB(1, 1, 1); mat.needsUpdate = true; }
+    }
   };
-  const cacheKey = '__mon_' + imageName;
+  if (petrificado) {
+    const cor = VC.feedback?.petrificacao?.cor || [0.44, 0.375, 0.30];
+    const k = 0.48 / Math.max(cor[0], cor[1], cor[2], 1e-3);
+    mat.color.setRGB(cor[0] * k, cor[1] * k, cor[2] * k);
+  }
   let tex = _pawnTexCache[cacheKey];
-  if (tex) { mat.map = tex; if (tex.image && tex.image.width) aplicar(tex); }
+  if (tex) {
+    mat.map = tex;
+    if (tex.image && tex.image.width) aplicar(tex);
+    // Arte pedida por outra criatura e ainda em voo: sem entrar na fila, esta
+    // aqui ficava com a escala provisória — e, com a estátua, sem a textura de
+    // pedra (era o caso do 2º monstro orientado do mesmo tipo na cena).
+    else (_pawnTexPronta[cacheKey] = _pawnTexPronta[cacheKey] || []).push(
+      () => { const t2 = _pawnTexCache[cacheKey]; if (t2) aplicar(t2); });
+  }
   else {
     tex = new T.TextureLoader().load(
-      _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`), aplicar);
+      _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`), t2 => {
+        aplicar(t2);
+        (_pawnTexPronta[cacheKey] || []).forEach(fn => fn());
+        delete _pawnTexPronta[cacheKey];
+      });
     _pawnTexCache[cacheKey] = tex; mat.map = tex;
   }
   grp.add(sp);
@@ -29319,7 +33212,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius, mModel3D, mFillFootprint, mSize){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius, mModel3D, mFillFootprint, mSize, petrificado=false){
   const T   = g3.T;
   const monsterGLBPath = isMonster ? (mModel3D || _monsterGLBPath(mImage, mType)) : null;
   // No mapa 3D, inclusive no teste livre do Mestre, a miniatura deve ser o GLB
@@ -29328,7 +33221,9 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   if (isMonster && mOriented && mImage && !monsterGLBPath) {
     // emChamas vai PARA DENTRO do helper (posiciona o 🔥 no centro midX/midZ do
     // billboard, não no tile-âncora — senão flutuaria sobre a casa vizinha).
-    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas);
+    // `petrificado` também: esta saída é ANTES do _makePetrified3D do fim da
+    // função, então sem passá-lo a criatura orientada nunca viraria estátua.
+    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas, petrificado);
   }
   const TH  = 0.22;                        // floor tile thickness (must match init3D)
   const grp = new T.Group();
@@ -29351,6 +33246,10 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   })();
   const isMultiFootprint3D = monsterFootprint3D.w > 1 || monsterFootprint3D.h > 1;
   const baseGrp = new T.Group(); baseGrp.name = 'base'; grp.add(baseGrp);
+  // Corpo separado da base: a criatura sobe, mas sombra, pedestal e seleção
+  // continuam presos ao quadrado de origem.
+  const bodyGrp = new T.Group(); bodyGrp.name = 'body'; grp.add(bodyGrp);
+  grp.userData.flightBody = bodyGrp;
 
   if(isMonster && GS.sorrateiroAtivo()){
     const raio = Math.max(1, Number(monsterVisionRadius || 6));
@@ -29454,29 +33353,30 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
     // Cadeia de fallback: GLB → billboard PNG → miniatura procedural. O último
     // elo é o que garante que a criatura NUNCA vire uma base vazia no tabuleiro
     // quando a arte estiver faltando (nome de pasta errado, PNG não enviado).
-    const semArte = () => _miniGenericMonster(grp, clr, Y0);
+    const semArte = () => { _miniGenericMonster(bodyGrp, clr, Y0); if(petrificado) _makePetrified3D(T, bodyGrp); };
     if(monsterGLBPath){
-      _makeMonsterPawn3D(T, grp, mImage, mType, Y0, mFacing, mOriented,
-        () => mImage ? _makeMonsterBillboard(T, grp, mImage, Y0, mPorte, semArte)
+      _makeMonsterPawn3D(T, bodyGrp, mImage, mType, Y0, mFacing, mOriented,
+        () => mImage ? _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado)
                      : semArte(),
-        monsterGLBPath, mFillFootprint, mSize);
+        monsterGLBPath, mFillFootprint, mSize, petrificado);
     } else if(mImage){
-      _makeMonsterBillboard(T, grp, mImage, Y0, mPorte, semArte);
+      _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado);
     } else {
       switch(mType){
-        case 'goblin':    _miniGoblin(grp, clr, Y0);    break;
-        case 'skeleton':  _miniSkeleton(grp, clr, Y0);  break;
-        case 'orc':       _miniOrc(grp, clr, Y0);       break;
-        case 'dark_mage': _miniDarkMage(grp, clr, Y0);  break;
-        case 'troll':     _miniTroll(grp, clr, Y0);     break;
-        case 'dragon':    _miniDragon(grp, clr, Y0);    break;
-        default:          _miniGenericMonster(grp, clr, Y0); break;
+        case 'goblin':    _miniGoblin(bodyGrp, clr, Y0);    break;
+        case 'skeleton':  _miniSkeleton(bodyGrp, clr, Y0);  break;
+        case 'orc':       _miniOrc(bodyGrp, clr, Y0);       break;
+        case 'dark_mage': _miniDarkMage(bodyGrp, clr, Y0);  break;
+        case 'troll':     _miniTroll(bodyGrp, clr, Y0);     break;
+        case 'dragon':    _miniDragon(bodyGrp, clr, Y0);    break;
+        default:          _miniGenericMonster(bodyGrp, clr, Y0); break;
       }
     }
   } else {
-    _makeCharacterPawn(T, grp, classId, clr, Y0, _facingToRotY(mFacing));
+    _makeCharacterPawn(T, bodyGrp, classId, clr, Y0, _facingToRotY(mFacing), petrificado);
   }
   });
+  if(petrificado) _makePetrified3D(T, bodyGrp);
 
   // ── Selection ring — golden glowing torus at base, excluded from outline ──────
   if(isSelected){
@@ -29523,9 +33423,9 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   // luz a menos por peão reduz o custo de TODOS os materiais da cena.
 
   // Indicador "em chamas": 🔥 flutuando acima da cabeça (sprite billboard).
-  if(emChamas) grp.add(_makeChamasSprite3D());
-  if(acidoResidual) grp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
-  if(envenenado) grp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
+  if(emChamas) bodyGrp.add(_makeChamasSprite3D());
+  if(acidoResidual) bodyGrp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
+  if(envenenado) bodyGrp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
 
   grp.position.set(gx, 0, gy);
   return grp;
@@ -29572,7 +33472,7 @@ function _makeStatusDropSprite3D(color, xOffset){
 }
 
 // ── Cadáver 3D: marca onde um monstro derrotado pode ser reanimado ────────────
-// Mancha escura + anel roxo emissivo (ponto de reanimação) + corpo tombado + crânio.
+// Mancha escura + anel roxo emissivo (ponto de reanimação) + lápide GLB.
 function build3DCorpse(c){
   const T = g3.T, TH = 0.22;
   const grp = new T.Group();
@@ -29589,19 +33489,53 @@ function build3DCorpse(c){
     new T.MeshStandardMaterial({ color:0xcc44ff, emissive:0x9900cc, emissiveIntensity:1.4, roughness:0.30, metalness:0.0 })
   );
   ring.rotation.x = Math.PI/2; ring.position.set(0, TH+0.02, 0); ring.castShadow = false; grp.add(ring);
-  // Corpo tombado — esfera achatada escura
-  const body = new T.Mesh(
+  // Fallback enquanto o modelo real carrega (ou se o arquivo não estiver disponível).
+  const fallbackBody = new T.Mesh(
     new T.SphereGeometry(0.20, 12, 10),
     new T.MeshStandardMaterial({ color:0x2a2030, roughness:0.90, metalness:0.05, emissive:0x1a0022, emissiveIntensity:0.4 })
   );
-  body.scale.set(1.3, 0.42, 0.9); body.position.set(0, TH+0.10, 0); grp.add(body);
-  // Crânio claro sobre o corpo
-  const skull = new T.Mesh(
+  fallbackBody.scale.set(1.3, 0.42, 0.9); fallbackBody.position.set(0, TH+0.10, 0); grp.add(fallbackBody);
+  const fallbackSkull = new T.Mesh(
     new T.SphereGeometry(0.085, 10, 8),
     new T.MeshStandardMaterial({ color:0xd8d0c0, roughness:0.80, metalness:0.0 })
   );
-  skull.position.set(0.12, TH+0.13, 0); grp.add(skull);
+  fallbackSkull.position.set(0.12, TH+0.13, 0); grp.add(fallbackSkull);
   grp.position.set(c.pos[0], 0, c.pos[1]);
+
+  // O modelo real substitui somente o corpo/crânio provisórios; a mancha e o
+  // anel continuam indicando que este ponto é um cadáver reanimável.
+  _loadDecorGLB(T, 'assets/objetos/lapide.glb', template => {
+    const montarLapide = () => {
+      if(!template || !grp.parent) return;
+      const inst = template.clone();
+      const box = new T.Box3().setFromObject(inst);
+      const size = box.getSize(new T.Vector3());
+      const scale = Math.min(
+        0.78 / Math.max(size.x, size.z, 1e-3),
+        1.12 / Math.max(size.y, 1e-3)
+      );
+      inst.position.set(
+        -(box.min.x + box.max.x) / 2,
+        -box.min.y,
+        -(box.min.z + box.max.z) / 2
+      );
+      inst.traverse(o => { if(o.isMesh) o.userData.isGLB = true; });
+      const lapide = new T.Group();
+      lapide.add(inst);
+      lapide.scale.setScalar(scale);
+      lapide.position.y = TH + 0.004;
+      lapide.userData.isGLB = true;
+      _disposeEntityTree(fallbackBody);
+      _disposeEntityTree(fallbackSkull);
+      grp.remove(fallbackBody);
+      grp.remove(fallbackSkull);
+      grp.add(lapide);
+    };
+    // Quando o GLB já está em cache, aguarda o ciclo atual para que `obterFig`
+    // termine de anexar o cadáver ao entityGroup antes de trocar o fallback.
+    if(grp.parent) montarLapide();
+    else queueMicrotask(montarLapide);
+  });
   return grp;
 }
 
@@ -34242,6 +38176,10 @@ function removerLegendaArremesso(){
 // arremessável na mão secundária, mostra highlight + legenda, cursor crosshair,
 // e ESC para cancelar. Exposta globalmente (onclick do botão do painel).
 function iniciarModoArremessoAdagaSecundaria(){
+  beginThrowSlot('off_hand');
+  return;
+  // Implementação pré-sessão de mira: mantida abaixo apenas para referência
+  // durante esta migração, mas não é mais alcançada.
   if(window._modoArremessoPrincipal){ toast('Cancele o arremesso atual primeiro (ESC).', 'var(--gold)'); return; }
   if(!g3){ toast(t('ui.arremesso.so_3d'), 'var(--gold)'); return; }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
@@ -34381,6 +38319,9 @@ function removerLegendaArremessoPrincipal(){
 // Entrada do modo (mão principal). Lê posição/estado reais do gameState; exige
 // adaga arremessável na mão principal (me.weapon.throw_range) e ação disponível.
 function iniciarModoArremessoAdagaPrincipal(){
+  beginThrowSlot('weapon');
+  return;
+  // Implementação pré-sessão de mira: mantida abaixo apenas para referência.
   if(window._modoArremessoAtivo || window._modoArremessoPrincipal){
     toast(t('ui.arremesso.cancele_primeiro'), 'var(--gold)'); return;
   }
@@ -34520,6 +38461,9 @@ function removerLegendaArremessoLanca(){
 }
 
 function iniciarModoArremessoLanca(){
+  beginThrowSlot('weapon');
+  return;
+  // Implementação pré-sessão de mira: mantida abaixo apenas para referência.
   if(window._modoArremessoAtivo || window._modoArremessoPrincipal || window._modoArremessoLanca){
     toast(t('ui.arremesso.cancele_primeiro'), 'var(--gold)'); return;
   }
@@ -34611,6 +38555,26 @@ function get3DTilePlane(e){
 
 function on3DClick(e){
   if(_orbitDragMoved){ _orbitDragMoved = false; return; }
+  if(window._modoDirecaoInstrumento){
+    const tDirection = get3DTilePlane(e);
+    if(tDirection) _clickTileDirecaoInstrumento(tDirection[0], tDirection[1]);
+    return;
+  }
+  if(window._modoAtaqueMira){
+    const tAttack = get3DTile(e);
+    if(tAttack) _clickTileAtaque(tAttack[0], tAttack[1]);
+    return;
+  }
+  if(window._modoInstrumentoAlvo){
+    const tInstrument = get3DTile(e);
+    if(tInstrument) _clickTileInstrumentoAlvo(tInstrument[0], tInstrument[1]);
+    return;
+  }
+  if(window._modoArremessoArma){
+    const tWeapon = get3DTile(e);
+    if(tWeapon) _clickTileArremessoArma(tWeapon[0], tWeapon[1]);
+    return;
+  }
   if(window._modoInstrumento){
     const tInst = get3DTile(e);
     if(tInst) _clickTileInstrumento(tInst[0], tInst[1]);
@@ -34722,34 +38686,16 @@ function on3DClick(e){
 
 function on3DMouseMove(e){
   if(!GS.gameState || !g3) return;
-  if(window._modoInstrumento){
-    const tInst = get3DTile(e);
-    const tip = $('tooltip');
-    if(tInst) _atualizarMiraInstrumentoHover(tInst[0], tInst[1], tip, e);
-    else tip.style.display = 'none';
-    g3.renderer.domElement.style.cursor = 'crosshair';
-    return;
-  }
-  if(window._modoMestreMira){
-    const tMestre=get3DTile(e);
-    _atualizarMiraMestre(tMestre ? tMestre[0] : null, tMestre ? tMestre[1] : null);
-    g3.renderer.domElement.style.cursor='crosshair';
-    return;
-  }
-  // Mira de MAGIA: a área verde (efeito) segue o cursor enquanto você mira.
-  if(window._modoMagia){
-    const tMag = window._modoMagia.alvoLivre ? get3DTilePlane(e) : get3DTile(e);
-    _recomputarAreaMagia(tMag ? tMag[0] : null, tMag ? tMag[1] : null);
-    g3.renderer.domElement.style.cursor = 'crosshair';
-    return;
-  }
-  if(window._modoThrowItem){
-    // Arremesso de ÁREA (3D): recalcula a prévia verde no tile sob o cursor.
-    if(window._modoThrowItem.area){
-      const tThrow = get3DTile(e);
-      _recomputarAreaThrow(tThrow ? tThrow[0] : null, tThrow ? tThrow[1] : null);
-    }
-    if(g3 && g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
+  // A cadeia de mira mora em _aimPreviewAt (compartilhada com o 2D e com o
+  // controle). Aqui fica só o que é do mouse no 3D: qual raycast usa a casa e o
+  // estilo do cursor. `alvoLivre` (Clarividência) e o seletor de direção miram
+  // o PLANO do chão, para alcançar casas ainda na névoa.
+  if(_aimAlgumModoAtivo()){
+    const noPlano = !!window._modoDirecaoInstrumento || !!window._modoMagia?.alvoLivre;
+    const tile = noPlano ? get3DTilePlane(e) : get3DTile(e);
+    if(tile) _aimPreviewAt(tile[0], tile[1], { event: e, tip: $('tooltip') });
+    else _aimPreviewNone();
+    g3.renderer.domElement.style.cursor = _aimCursorStyle();
     return;
   }
   if(window._modoArremessoLanca){ onMouseMoveArremessoLanca(e); return; }
@@ -34801,13 +38747,23 @@ function on3DMouseMove(e){
     return;
   }
 
+  const heroCorpse = (GS.gameState.hero_corpses||[]).find(c=>c.pos?.[0]===tx&&c.pos?.[1]===ty);
+  if(heroCorpse){
+    tip.innerHTML=`🪦 <b>${heroCorpse.nome || 'Herói derrotado'}</b><br><span style="color:#c7b0d8">Herói derrotado</span>`;
+    tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
+    el.style.cursor='default';
+    g3.hoveredPos=null;
+    return;
+  }
+
   const monster = _masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
     const dx=myP?Math.abs(myP.pos[0]-tx):99, dy=myP?Math.abs(myP.pos[1]-ty):99;
     const wRng = myP?.weapon?.range ?? null;
-    const inR  = myP ? _alvoNoAlcanceArmaClient(myP, tx, ty) : false;
-    const canA = GS.isMyTurn && myP && !myP.action_done && inR && GS.gameState.phase==='playing';
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo()) +
+    const inR  = myP ? _alvoNoAlcanceArmaClient(myP, tx, ty, monster.altura) : false;
+    const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
+    const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';
+    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP) +
                   (canA ? `<br><span style="color:#f88">⚔ Clique → atacar</span>` : '');
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canA ? 'crosshair' : 'default';
@@ -34832,6 +38788,65 @@ function on3DMouseMove(e){
   else
     el.style.cursor='default';
 }
+
+function _selecionarPreviaMovimento(action, tx, ty, notify=true){
+  const st = GS.gameState;
+  const me = st?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!me || !action?.path?.length) return false;
+  GS.pendingMove = {
+    target: [tx, ty],
+    path: action.path.map(step => [step[0], step[1]]),
+    stopAtDoor: !!action.stopAtDoor,
+    origin: [me.pos[0], me.pos[1]],
+    moves_left: Number(me.moves_left) || 0
+  };
+  renderMap(st);
+  if(notify) toast('👣 Clique novamente na casa para confirmar · Esc cancela', 'var(--gold)');
+  return true;
+}
+
+function _executarMovimentoConfirmado(action){
+  const st = GS.gameState;
+  const myP = st?.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!myP || !action?.path?.length) return;
+  const peao = (mode3D && g3) ? getPeaoMesh(GS.myPid) : null;
+  if(peao){
+    // Caminho absoluto (passos relativos → casas {x,z}) p/ a animação.
+    let cx = myP.pos[0], cy = myP.pos[1];
+    const caminho = [];
+    for(const [dx,dy] of action.path){
+      cx += dx; cy += dy;
+      caminho.push({x:cx, z:cy, rotY:_facingToRotY([dx,dy])});
+    }
+    // Envia os passos ao servidor JÁ — assim a névoa é revelada (server-side)
+    // em paralelo à animação local, em vez de só iniciar o round-trip DEPOIS
+    // dela. Isso elimina a demora de "continuidade do mapa" ao caminhar.
+    for(const [dx,dy] of action.path) GS.move(dx, dy);
+    // Anima localmente; ao concluir, reconcilia com o estado autoritativo.
+    moverPeaoAoCaminho(peao, myP, caminho, () => {
+      if(GS.gameState) renderMap3D(GS.gameState);
+    });
+  } else {
+    // 2D ou sem peão 3D — movimento instantâneo (comportamento anterior).
+    for(const [dx,dy] of action.path) GS.move(dx, dy);
+  }
+}
+
+function _cancelarPreviaMovimento(){
+  if(!GS.pendingMove) return false;
+  GS.pendingMove = null;
+  _clearMovePreviewVisual();
+  if(GS.gameState) renderMap(GS.gameState);
+  toast('Movimento cancelado.', 'var(--text2)');
+  return true;
+}
+
+// Escape cancela apenas a seleção de movimento e não abre o menu de pausa.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape' || !_cancelarPreviaMovimento()) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+}, true);
 
 // Called by both 2D canvas click and 3D on3DClick.
 // Pure decision is delegated to GS.resolveTileClick(); this function handles
@@ -34868,7 +38883,9 @@ function handleTileClick(tx, ty){
           const atk = (monM.attacks||[{}])[idx] || {};
           const rng = atk.range || null;
           const inR = _monsterAttackInRangeClient(monM,[tx,ty],atk);
-          if(inR){ GS.mestreAtacarMonstro(mm.mid, alvo.id, idx); window._mpGolpeArmado = null; return; }
+          if(inR && (!atk.range || GS.hasLineOfSight(st, monM.pos[0], monM.pos[1], tx, ty))){
+            GS.mestreAtacarMonstro(mm.mid, alvo.id, idx); window._mpGolpeArmado = null; return;
+          }
           toast('Alvo fora do alcance deste golpe.', 'var(--orange)'); return;
         }
       }
@@ -34888,6 +38905,10 @@ function handleTileClick(tx, ty){
   }
   // ── Mira de MAGIA (2D e 3D): resolve alvo/casa e envia `magia` ─────────────
   // (No 3D, on3DClick já intercepta antes; aqui cobre o caminho do canvas 2D.)
+  if(window._modoDirecaoInstrumento){ _clickTileDirecaoInstrumento(tx, ty); return; }
+  if(window._modoAtaqueMira){ _clickTileAtaque(tx, ty); return; }
+  if(window._modoInstrumentoAlvo){ _clickTileInstrumentoAlvo(tx, ty); return; }
+  if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
   if(window._modoAnimarMortos){ _clickTileAnimarMortos(tx, ty); return; }
@@ -34911,9 +38932,7 @@ function handleTileClick(tx, ty){
         toast(t('ui.tabuleiro.provisoes_insuficientes',{f: custo.fome, s: custo.sede}), 'var(--red)');
         return;
       }
-      if(!confirm(t('ui.tabuleiro.confirmar_saida',{f: custo.fome, s: custo.sede, n: espera}))) return;
-      fecharQuadrosFlutuantes();
-      send({type:'exit_dungeon'});
+      confirmarSaidaMasmorra(custo, espera);
       return;
     }
   }
@@ -34924,13 +38943,22 @@ function handleTileClick(tx, ty){
     const gi = _st.ground_items.find(g => g.pos[0]===tx && g.pos[1]===ty);
     if(gi){
       const me = _st.players.find(p=>p.id===GS.myPid&&p.alive);
-      if(me && GS.groundItemPickable(gi, me)){ GS.pickupItem(gi.id); return; }
-      toast('Muito longe do item.', 'var(--text2)'); return;
+      const podePegar = !!(me && GS.groundItemPickable(gi, me));
+      const ataque = GS.resolveTileClick(tx, ty);
+      if(podePegar && ataque?.type === 'attack'
+        && _abrirEscolhaLootOuAtaque(gi, ataque)){
+        return;
+      }
+      if(podePegar){ GS.pickupItem(gi.id); return; }
+      // Um item distante não pode bloquear um ataque válido no mesmo tile.
+      if(ataque?.type !== 'attack'){
+        toast('Muito longe do item.', 'var(--text2)'); return;
+      }
     }
   }
 
   // ── Chest click (2D canvas path — 3D path handled in on3DClick) ────────────
-  if(_st && !mode3D){
+  if(_st){
     const chest = (_st.chests||[]).find(c=>c.pos[0]===tx&&c.pos[1]===ty);
     if(chest){
       const myP = _st.players.find(p=>p.id===GS.myPid&&p.alive);
@@ -34943,7 +38971,7 @@ function handleTileClick(tx, ty){
   // ── Decoration click (2D canvas path — 3D path handled in on3DClick) ─────────
   // Interativa (loot/fonte) → interage. Sólida → bloqueia o clique. Pisável
   // (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento.
-  if(_st && !mode3D){
+  if(_st){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
@@ -35021,7 +39049,35 @@ function handleTileClick(tx, ty){
     }
   }
 
-  const action = GS.resolveTileClick(tx, ty);
+  let action = GS.resolveTileClick(tx, ty);
+  const preview = GS.pendingMove;
+  if(preview){
+    const sameTarget = preview.target?.[0] === tx && preview.target?.[1] === ty;
+    if(sameTarget){
+      // Recalcula a rota no estado mais recente antes de confirmar. Se o
+      // servidor já mudou a situação, a prévia não pode disparar uma rota velha.
+      if(action?.type === 'move'){
+        GS.pendingMove = null;
+        _clearMovePreviewVisual();
+        _executarMovimentoConfirmado(action);
+        return;
+      }
+      GS.pendingMove = null;
+      _clearMovePreviewVisual();
+      if(!action) { renderMap(GS.gameState); return; }
+    } else if(action?.type === 'move'){
+      // Clicar outra casa troca a seleção; o segundo clique nessa nova casa
+      // será a confirmação, como no fluxo de seleção do Rezrog.
+      _selecionarPreviaMovimento(action, tx, ty);
+      return;
+    } else {
+      // Um clique em monstro/porta/interação abandona a prévia e segue para a
+      // ação correspondente, sem exigir um clique extra para limpar o estado.
+      GS.pendingMove = null;
+      _clearMovePreviewVisual();
+      renderMap(GS.gameState);
+    }
+  }
   if(!action) return; // nothing to do (null = consume silently)
   switch(action.type){
     case 'open_door':
@@ -35033,16 +39089,23 @@ function handleTileClick(tx, ty){
     case 'attack_blocked_wall':
       toast('🧱 Uma parede bloqueia a linha de tiro!', 'var(--orange)');
       break;
+    case 'movement_blocked':
+      if(action.reason === 'petrified')
+        toast(t('erro.voce_esta_petrificado_e_nao_pode_se_move'), 'var(--orange)');
+      break;
     case 'skill_blocked':
-      toast(action.reason === 'trap_adjacent' ? '⚠ Selecione uma casa adjacente ao Luccas.' : '⚠ Este ataque requer inimigo cardinalmente adjacente!', 'var(--orange)');
+      { const msg = action.reason === 'trap_adjacent' ? '⚠ Selecione uma casa adjacente ao Luccas.' : '⚠ Este ataque requer inimigo cardinalmente adjacente!';
+        _aimSetStatus(msg, '#ffb168'); toast(msg, 'var(--orange)'); }
       break;
     case 'disarm_trap':
+      if(_aimSessionIs('desarmar_armadilha')) _aimEnd({silent:true, reason:'resolved'});
       GS.desarmarArmadilha(action.tx, action.ty);
       GS.pendingSkill = null;
       _removerEfeitoVisualLocal('desarmar_armadilha');
       renderMyPanel(GS.gameState);
       break;
     case 'skill':
+      if(_aimSessionIs('habilidade')) _aimEnd({silent:true, reason:'resolved'});
       GS.notifySkill();
       send({type:'skill', skill_id:action.skillId, target_id:action.targetId});
       GS.pendingSkill = null;
@@ -35054,27 +39117,8 @@ function handleTileClick(tx, ty){
       sendAttack(action.targetId, action.targetPos);
       break;
     case 'move': {
-      const myP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
-      const peao = (mode3D && g3) ? getPeaoMesh(GS.myPid) : null;
-      if(peao && myP){
-        // Caminho absoluto (passos relativos → casas {x,z}) p/ a animação.
-        let cx = myP.pos[0], cy = myP.pos[1];
-        const caminho = [];
-        for(const [dx,dy] of action.path){ cx+=dx; cy+=dy; caminho.push({x:cx, z:cy, rotY:_facingToRotY([dx,dy])}); }
-        // Envia os passos ao servidor JÁ — assim a névoa é revelada (server-side)
-        // em paralelo à animação local, em vez de só iniciar o round-trip DEPOIS
-        // dela. Isso elimina a demora de "continuidade do mapa" ao caminhar.
-        for(const [dx,dy] of action.path) GS.move(dx, dy);
-        // Anima localmente; ao concluir, reconcilia com o estado autoritativo
-        // (renderMap3D fica bloqueado durante a animação — este render final
-        // garante que a névoa revelada apareça assim que o peão pousa).
-        moverPeaoAoCaminho(peao, myP, caminho, () => {
-          if(GS.gameState) renderMap3D(GS.gameState);
-        });
-      } else {
-        // 2D ou sem peão 3D — movimento instantâneo (comportamento anterior).
-        for(const [dx,dy] of action.path) GS.move(dx, dy);
-      }
+      // Primeiro clique apenas seleciona a rota; o segundo confirma.
+      _selecionarPreviaMovimento(action, tx, ty);
       break;
     }
   }
@@ -35253,6 +39297,7 @@ GS.on('cityState', msg => {
     window._comprando = false;
     abrirLoja(window._lojaUltimaAberta, GS.getHeroiAtivo());
   }
+  _restaurarSelecaoLoja();
   // Painel da ficha aberto → re-renderiza com o estado novo (equipar/reordenar).
   if(_fcPanelPid != null) _refreshFichaCidadePanel();
   if(typeof InventoryModal !== 'undefined') InventoryModal.refresh();
@@ -35670,6 +39715,10 @@ GS.on('sorteReacao', msg => {
 });
 
 GS.on('trapResult',  msg  => queueTrapResult(msg));
+GS.on('fallResult',  msg  => {
+  _receiveFlightFall(msg);
+  queueTrapResult({...msg, _fall: true, tipo: 'queda'});
+});
 GS.on('firePrompt',  msg  => _showFireChoice(msg));
 GS.on('conditionResult', msg => queueConditionResult(msg));
 GS.on('diseaseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
@@ -35802,13 +39851,21 @@ function _renderOverlaySelecaoCriacao(){
   if(!el) return;
   const cls = window._magiasCriacaoCls;
   const sel = window._magiasCriacaoSel || [];
+  // O overlay é recriado a cada seleção. Guardamos a carta que estava sob o
+  // foco para que o direcional não volte ao início da lista após cada clique.
+  const focoAnterior = _gamepadUi.focusEl?.dataset?.gamepadSpellCreation || '';
   const opcoes = Object.values(GRIMORIO_CLIENT).filter(m => m.circulo === 'primeiro' && m.classe.includes(cls));
   const cartas = opcoes.map(m => {
     const on = sel.includes(m.id);
+    const podeSelecionar = on || sel.length < 2;
     return `
       <div onclick="window._toggleMagiaCriacao('${m.id}')"
            onmouseenter="mostrarTooltipMagia('${m.id}', event)"
            onmouseleave="ocultarTooltipMagia()"
+           data-gamepad-spell-creation="${_esc(m.id)}"
+           data-gamepad-action="activate"
+           tabindex="0" role="button" aria-label="${_esc(m.nome || m.id)}"
+           ${podeSelecionar ? '' : 'aria-disabled="true"'}
            style="position:relative; display:inline-block; overflow:hidden;
                   width:74px; height:88px; cursor:pointer; margin:5px; border-radius:4px;
                   background:${on ? 'rgba(200,169,81,0.18)' : 'rgba(255,255,255,0.04)'};
@@ -35827,6 +39884,19 @@ function _renderOverlaySelecaoCriacao(){
              background:${pronto ? 'rgba(68,204,136,0.18)' : 'rgba(80,80,80,0.18)'};
              color:${pronto ? '#44cc88' : '#666'}; border:1px solid ${pronto ? '#44cc88' : '#444'};
              cursor:${pronto ? 'pointer' : 'not-allowed'};">${t('ui.geral.confirmar')}</button>`;
+
+  // O foco do joystick precisa ser reaplicado depois que o HTML dinâmico é
+  // reconstruído. Na abertura, a primeira carta vira o foco inicial.
+  if(_gamepadInput.active){
+    requestAnimationFrame(() => {
+      if(!_gamepadInput.active || !el.isConnected) return;
+      const cartasGamepad = [...el.querySelectorAll('[data-gamepad-spell-creation]')];
+      let alvo = cartasGamepad.find(c => c.dataset.gamepadSpellCreation === focoAnterior && _gamepadUiVisible(c));
+      if(!alvo) alvo = cartasGamepad.find(_gamepadUiVisible);
+      if(!alvo) alvo = [...el.querySelectorAll('button')].find(_gamepadUiVisible);
+      if(alvo) _gamepadSetUiFocus(alvo);
+    });
+  }
 }
 
 window._toggleMagiaCriacao = function(id){

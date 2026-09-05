@@ -18,19 +18,22 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("29 tipos", len(d) == 29)
+    check("36 tipos", len(d) == 36)
     check("ids esperados presentes", all(k in d for k in (
-        "cama", "lareira", "fonte", "fogueira", "tumba", "mesa_cadeiras",
+        "cama", "lareira", "fonte", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
-        "estante_livros", "altar", "trono", "gaiola", "grades_prisao",
+        "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
-        "chao", "brasao_leao", "cortina_vermelha", "cortina_branca")))
+        "chao", "brasao_leao", "cortina_vermelha", "cortina_branca", "lapide", "cripta",
+        "fonte_de_parede", "armadura", "brasa_chao")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
     check("fogueira é campfire e pisável", d["fogueira"]["special"] == "campfire" and d["fogueira"]["pisavel"])
     check("fonte size 2x2", d["fonte"]["size"] == [2, 2])
     check("cama size 1x2", d["cama"]["size"] == [1, 2])
+    check("estante usa a nova arte PNG/GLB", d["estante"]["image"] == "estante_armas_cranios.png"
+          and server.DECOR_MODEL3D["estante"].endswith("estante_armas_cranios.glb"))
     check("coluna alta", d["coluna"]["alto"] is True)
     check("caverna é alta, sólida e usa sua arte", d["caverna"]["alto"] is True
           and not d["caverna"]["pisavel"] and not d["caverna"]["loot_capaz"]
@@ -38,12 +41,58 @@ def test_catalog():
     check("casa é alta, 3x3, sólida e usa suas artes", d["casa"]["alto"] is True
           and d["casa"]["size"] == [3, 3] and not d["casa"]["pisavel"]
           and not d["casa"]["loot_capaz"] and d["casa"]["image"] == "casa.png")
+    check("tumba com lápide usa PNG/GLB e ocupa 1x2", d["tumba_lapide"]["size"] == [1, 2]
+          and d["tumba_lapide"]["gira"] and d["tumba_lapide"]["alto"]
+          and not d["tumba_lapide"]["pisavel"] and not d["tumba_lapide"]["loot_capaz"]
+          and d["tumba_lapide"]["image"] == "tumba_lapide.png"
+          and server.DECOR_MODEL3D["tumba_lapide"].endswith("tumba_lapide.glb"))
+    check("carroça usa PNG/GLB e ocupa 2x2", d["carroca"]["size"] == [2, 2]
+          and d["carroca"]["gira"] and d["carroca"]["image"] == "carroca.png"
+          and server.DECOR_MODEL3D["carroca"].endswith("carroca.glb"))
+    check("lápide usa a miniatura correta", d["lapide"]["size"] == [1, 1]
+          and not d["lapide"]["loot_capaz"] and d["lapide"]["image"] == "lapide.png"
+          and server.DECOR_MODEL3D["lapide"].endswith("lapide.glb"))
+    check("cripta ocupa 2x2 e usa suas artes", d["cripta"]["size"] == [2, 2]
+          and d["cripta"]["alto"] and not d["cripta"]["loot_capaz"]
+          and d["cripta"]["image"] == "cripta.png"
+          and server.DECOR_MODEL3D["cripta"].endswith("cripta.glb"))
+    check("fonte de parede usa suas artes", d["fonte_de_parede"]["size"] == [1, 1]
+          # fonte de parede FORNECE agua (ate 2 garrafas), como a fonte circular,
+          and d["fonte_de_parede"]["special"] == "fountain"
+          and d["fonte_de_parede"]["charges"] == 2
+          and d["fonte_de_parede"]["alto"]
+          and not d["fonte_de_parede"]["pisavel"]
+          and not d["fonte_de_parede"]["loot_capaz"]
+          and d["fonte_de_parede"]["image"] == "fonte_de_parede.png"
+          and server.DECOR_MODEL3D["fonte_de_parede"].endswith("fonte_de_parede.glb"))
+    check("armadura usa suas artes", d["armadura"]["size"] == [1, 1]
+          and d["armadura"]["alto"]
+          and not d["armadura"]["pisavel"]
+          and not d["armadura"]["loot_capaz"]
+          and d["armadura"]["image"] == "armadura.png"
+          and server.DECOR_MODEL3D["armadura"].endswith("armadura.glb"))
     check("grades não-alta", d["grades_prisao"]["alto"] is False)
+    check("prisão ocupa 4 casas e pode girar", d["prisao"]["size"] == [2, 2]
+          and d["prisao"]["gira"] and d["prisao"]["alto"]
+          and not d["prisao"]["pisavel"])
+    check("mesa de tortura usa PNG/GLB e ocupa 1x2", d["mesa_tortura"]["size"] == [1, 2]
+          and d["mesa_tortura"]["gira"] and d["mesa_tortura"]["alto"]
+          and not d["mesa_tortura"]["pisavel"] and not d["mesa_tortura"]["loot_capaz"]
+          and d["mesa_tortura"]["image"] == "mesa_tortura.png"
+          and server.DECOR_MODEL3D["mesa_tortura"].endswith("mesa_tortura.glb"))
+    check("brasa usa PNG/GLB, é 1x1 e pisável", d["brasa_chao"]["size"] == [1, 1]
+          and d["brasa_chao"]["pisavel"] and not d["brasa_chao"]["loot_capaz"]
+          and d["brasa_chao"]["image"] == "brasa_chao.png"
+          and server.DECOR_MODEL3D["brasa_chao"].endswith("brasa_chao.glb"))
+    check("cortina vermelha usa PNG/GLB", d["cortina_vermelha"]["image"] == "cortina_vermelha.png"
+          and server.DECOR_MODEL3D["cortina_vermelha"].endswith("cortina_vermelha.glb"))
+    check("brasão usa PNG/GLB", d["brasao_leao"]["image"] == "brasao_leao.png"
+          and server.DECOR_MODEL3D["brasao_leao"].endswith("brasao_leao.glb"))
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("pisáveis: chão, fogueira e decorações de parede", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "brasao_leao", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
+    check("pisáveis: chão, fogueira e brasa", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "brasa_chao", "brasao_leao", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
 
 async def _noop(*a, **k): pass
 
@@ -70,6 +119,9 @@ def test_footprint():
     # fonte 2x2 é igual em qualquer facing
     t = r._decor_tiles_at("fonte", 5, 5, [1, 0])
     check("fonte 2x2", sorted(map(tuple, t)) == [(5, 5), (5, 6), (6, 5), (6, 6)])
+    t = r._decor_tiles_at("prisao", 6, 3, [0, 1])
+    check("prisão 2x2 na orientação frontal", sorted(map(tuple, t)) == [
+        (6, 3), (6, 4), (7, 3), (7, 4)])
     # 1x1
     t = r._decor_tiles_at("coluna", 2, 2, [1, 0])
     check("coluna 1x1", sorted(map(tuple, t)) == [(2, 2)])

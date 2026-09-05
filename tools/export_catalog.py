@@ -94,6 +94,8 @@ def build_catalog():
             "resistances",
             "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",
             "ai_type", "undead", "subtipo", "darkvision_range",
+            "voo", "altura_inicial", "altura_max", "pode_alterar_altura",
+            "custo_mov_altura", "ignora_obstaculos_voo",
         )
         entry = {key: m[key] for key in fields if key in m}
         if "percepcao" not in entry:
@@ -102,7 +104,7 @@ def build_catalog():
     item_fields = (
         "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon",
         "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
-        "range", "reach", "categoria", "granted_ability", "kind", "ac_bonus",
+        "range", "reach", "throw_range", "categoria", "granted_ability", "kind", "ac_bonus",
         "damage_reduction", "item_slot", "effect", "value", "veneno_id",
         "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao"
     )
@@ -116,15 +118,21 @@ def build_catalog():
         items.append(entry)
     traps = []
     for tipo, meta in server.ARMADILHAS.items():
+        # O editor usa o mesmo catálogo para selecionar a armadilha e exibir
+        # suas regras. Manter estes campos aqui evita uma segunda fonte de
+        # verdade em JavaScript.
+        trap_fields = (
+            "descricao", "dificuldade", "save", "save_reduz", "custo_ouro", "dano",
+            "persiste", "visivel_apos", "area", "area_sala", "duracao_rodadas",
+            "special", "escape_save", "escape_dificuldade", "precisa_veneno",
+            "custo_veneno", "permite_veneno", "apenas_objeto", "efeitos",
+        )
         entry = {
             "tipo": tipo, "nome": meta["nome"], "icone": meta.get("icone", ""),
             "cr": server.trap_cr(meta),
-            "precisa_veneno": bool(meta.get("precisa_veneno") or meta.get("custo_veneno")),
+            **{key: meta[key] for key in trap_fields if key in meta},
         }
-        if meta.get("apenas_objeto"):
-            entry["apenas_objeto"] = True
-        if meta.get("permite_veneno"):
-            entry["permite_veneno"] = True
+        entry["precisa_veneno"] = bool(meta.get("precisa_veneno") or meta.get("custo_veneno"))
         traps.append(entry)
     venoms = [{"id": vid, "name": meta["nome"]} for vid, meta in server.VENENOS.items()]
     curses = [{"id": mid, "name": meta["nome"], "category": meta.get("categoria", "leve"),
@@ -137,6 +145,7 @@ def build_catalog():
             "size": meta["size"], "gira": meta["gira"], "alto": meta["alto"],
             "pisavel": meta["pisavel"], "loot_capaz": meta["loot_capaz"],
             "special": meta["special"], "image": meta.get("image"),
+            **({"charges": meta["charges"]} if meta.get("charges") is not None else {}),
         })
     materiais = []
     for mid, meta in server.MATERIAIS.items():

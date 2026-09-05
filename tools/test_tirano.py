@@ -109,6 +109,7 @@ async def main():
         check("engolir envia popup com imagem e efeitos",
               any(pid == "p" and msg.get("type") == "trap_result"
                   and msg.get("tipo_id") == "engolido"
+                  and msg.get("monstro") == "Tirano Ancestral"
                   and msg.get("acid_damage") == "3d6"
                   and msg.get("escape_dc") == 22
                   for pid, msg in popup_messages))

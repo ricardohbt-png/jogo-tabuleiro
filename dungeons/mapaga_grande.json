@@ -2687,7 +2687,7 @@
         1
       ],
       "loot": null,
-      "image": "camacasal.png",
+      "image": "cama_de_casal.png",
       "vscale": [
         0.8,
         0.8
@@ -3001,7 +3001,7 @@
       ]
     },
     {
-      "type": "fonte",
+      "type": "fonte_de_parede",
       "pos": [
         19,
         23
@@ -3011,8 +3011,8 @@
         1
       ],
       "loot": null,
-      "charges": 3,
-      "image": "fontedecanto.png",
+      "charges": 2,
+      "image": "fonte_de_parede.png",
       "size": [
         1,
         1

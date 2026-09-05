@@ -12,8 +12,35 @@
     monsters: (BASE_CAT.monsters || []).concat(window.EDITOR_CUSTOM_MONSTERS || []),
     items: (BASE_CAT.items || []).concat(customBaus),
   });
+  // Compatibilidade com uma cópia antiga do editor_catalog.js em cache: a
+  // Fonte de parede continua aparecendo na lista mesmo antes de o navegador
+  // recarregar o catálogo gerado pelo servidor.
+  if (!(CAT.decorations || []).some(d => d && d.type === "fonte_de_parede")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "fonte_de_parede", nome: "Fonte de parede", emoji: "⛲",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "fonte_de_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "armadura")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "armadura", nome: "Armadura", emoji: "🛡️",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "armadura.png",
+    });
+  }
   const MAT = (CAT.materiais || []);
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
+  const WALL_MATERIALS = MAT.filter(m => m && m.categoria === "parede");
+  const WALL_MATERIAL_IDS = new Set(WALL_MATERIALS.map(m => m.id));
+  function secretPassageAt(x, y) {
+    return S.secretPassages.find(p => p.pos[0] === x && p.pos[1] === y) || null;
+  }
+  function wallMaterialAt(x, y) {
+    const passage = secretPassageAt(x, y);
+    return (passage && WALL_MATERIAL_IDS.has(passage.wall_material))
+      ? passage.wall_material : S.materiais[x + "," + y];
+  }
   // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
   // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
@@ -51,6 +78,7 @@
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
+    trapType: ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas",
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
@@ -112,6 +140,19 @@
   function monsterMeta(monsterOrType) {
     const type = typeof monsterOrType === "string" ? monsterOrType : monsterOrType && monsterOrType.type;
     return CAT.monsters.find(m => m.type === type) || null;
+  }
+  function monsterFlightMeta(monsterOrType) {
+    const meta = monsterMeta(monsterOrType);
+    return meta && (meta.voo || (meta.special_abilities || []).some(a => a && a.id === "voo")) ? meta : null;
+  }
+  function monsterCanFly(monsterOrType) {
+    const meta = monsterFlightMeta(monsterOrType);
+    return !!(meta || (monsterOrType && typeof monsterOrType !== "string" && monsterOrType.voo));
+  }
+  function altitudeClamp(value, fallback) {
+    const n = Number(value);
+    const base = Number.isFinite(n) ? Math.trunc(n) : fallback;
+    return Math.max(0, Math.min(10, base));
   }
   function monsterSize(monster) {
     const meta = monsterMeta(monster);
@@ -193,12 +234,18 @@
     return validFaces[0] || current;
   }
   // facing → ângulo (rad) p/ o giro 90° da imagem no preview 2D. Espelha game.js.
-  function facingAngle2D(f) {
-    if (!f) return 0;
-    if (f[0] === 1 && f[1] === 0) return Math.PI / 2;
-    if (f[0] === 0 && f[1] === -1) return Math.PI;
-    if (f[0] === -1 && f[1] === 0) return -Math.PI / 2;
-    return 0;
+  function facingAngle2D(f, type, imageName) {
+    let angle = 0;
+    if (f && f[0] === 1 && f[1] === 0) angle = Math.PI / 2;
+    else if (f && f[0] === 0 && f[1] === -1) angle = Math.PI;
+    else if (f && f[0] === -1 && f[1] === 0) angle = -Math.PI / 2;
+    // Estes modelos foram exportados com a frente no eixo oposto ao facing
+    // padrão do editor. Corrige a arte e o marcador sem alterar o facing salvo.
+    if (type === "prisao" || type === "estante_livros" || type === "fonte_de_parede"
+        || imageName === "fonte_de_parede.png" || imageName === "fontedecanto.png") {
+      angle += Math.PI;
+    }
+    return angle;
   }
   function rotateDecorPending() {
     if (S.sel && S.sel.kind === "decor") {
@@ -323,7 +370,7 @@
     const d = { id: nextDecorId(), type: S.decorType, pos, facing,
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null,
                 key_objective: false };
-    if (m && m.special === "fountain") d.charges = 3;
+    if (m && m.special === "fountain") d.charges = (m.charges ?? 3);
     if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
     if (m && m.image) d.image = m.image;
     S.decorations.push(d);
@@ -587,7 +634,7 @@
     // A seta usa exatamente a mesma transformação aplicada ao sprite: começa
     // apontando para cima e gira no sentido horário a cada clique.
     // A arte da lareira foi modelada com a frente invertida em relação às demais.
-    const angle = facingAngle2D(d.facing) + (d.type === "lareira" ? Math.PI : 0);
+    const angle = facingAngle2D(d.facing, d.type, d.image) + (d.type === "lareira" ? Math.PI : 0);
     const dx = Math.sin(angle), dy = -Math.cos(angle);
     const reach = Math.max((maxX - minX + 1) * CELL, (maxY - minY + 1) * CELL) * .42;
     const tipX = cx + dx * reach, tipY = cy + dy * reach;
@@ -652,7 +699,7 @@
     for (let y = 0; y < S.grid.h; y++) {
       for (let x = 0; x < S.grid.w; x++) {
         const t = S.tiles[y][x];
-        const mid = S.materiais[x + "," + y];
+        const mid = wallMaterialAt(x, y);
         const mm = mid ? matMeta(mid) : null;
         if (mm && mm.id === "duna_deserto") drawDunePreview(x, y);
         else {
@@ -724,7 +771,7 @@
       const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
       const ox = Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
       const oy = Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
-      const ang = facingAngle2D(d.facing);
+      const ang = facingAngle2D(d.facing, d.type, d.image);
       if (ang === 0) {
         // Escala visual: altura cresce para cima (âncora na base), largura centralizada.
         const dw = pw * vs[0], dh = ph * vs[1];
@@ -843,6 +890,15 @@
         ctx.fillText(emoji, 0, 0);
       }
       ctx.restore();
+      if (monsterCanFly(m)) {
+        const meta = monsterFlightMeta(m) || {};
+        const altitude = altitudeClamp(m.altura, altitudeClamp(meta.altura_inicial, 2));
+        ctx.save();
+        ctx.fillStyle = "#8ed8ff"; ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+        ctx.fillText("↑" + altitude, cx, (minY + fh) * CELL - 6 - Math.max(0, sy - 1) * CELL * .25);
+        ctx.restore();
+      }
     }
     drawEntityMarkers();
     if (S.entrance) drawStairs(S.entrance.x, S.entrance.y, "#69bde9", true);
@@ -982,6 +1038,22 @@
       hint.style.color = "#b9a87f";
       hint.style.marginLeft = "6px";
       tb.appendChild(hint);
+    }
+    if (S.tool === "trap") {
+      const trapSelect = document.createElement("select");
+      trapSelect.id = "trap-type-tool";
+      trapSelect.innerHTML = CAT.traps.filter(t => !t.apenas_objeto).map(t =>
+        `<option value="${t.tipo}"${t.tipo === S.trapType ? " selected" : ""}>${t.icone || "⚠️"} ${t.nome}</option>`).join("");
+      trapSelect.onchange = e => {
+        S.trapType = e.target.value;
+        const info = document.getElementById("trap-tool-info");
+        if (info) info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(t => t.tipo === S.trapType), true);
+      };
+      tb.appendChild(trapSelect);
+      const info = document.createElement("div");
+      info.id = "trap-tool-info";
+      info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(t => t.tipo === S.trapType), true);
+      tb.appendChild(info);
     }
     if (S.tool === "decor") {
       const sel = document.createElement("select");
@@ -1232,16 +1304,16 @@
         break;
       }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
-      case "trap": S.traps.push({ tipo: ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "trap": S.traps.push({ tipo: S.trapType || ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
       case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
         if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
-          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "mechanism", key_decor_ids: [], keys_mode: "any" });
+          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "mechanism", wall_material: wallMaterialAt(x, y) || MAT_DEFAULT.parede, key_decor_ids: [], keys_mode: "any" });
         break;
       case "illusion_wall":
         if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
-          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "illusion", key_decor_ids: [], keys_mode: "any" });
+          S.secretPassages.push({ id: "passage_" + S.nextPassageId++, pos: [x, y], type: "illusion", wall_material: wallMaterialAt(x, y) || MAT_DEFAULT.parede, key_decor_ids: [], keys_mode: "any" });
         break;
     }
   }
@@ -1288,6 +1360,65 @@
 
   const panel = document.getElementById("panel");
   function opt(list, val, fmt) { return list.map(o => `<option value="${o.v}"${o.v === val ? " selected" : ""}>${fmt(o)}</option>`).join(""); }
+
+  function trapText(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+  }
+
+  function trapEffectLabel(effect) {
+    if (!effect) return "";
+    const tipo = effect.tipo;
+    if (tipo === "dano") {
+      const elemento = effect.elemento && effect.elemento !== "fisico" ? ` (${trapText(effect.elemento)})` : "";
+      const rodada = effect.rodada ? ` — rodada ${effect.rodada}` : "";
+      return `${trapText(effect.valor || "dano")} de dano${elemento}${rodada}${effect.area ? " em área" : ""}`;
+    }
+    if (tipo === "perder_movimento") return "Perde o movimento";
+    if (tipo === "perder_rodada") return "Perde a rodada";
+    if (tipo === "veneno") return "Aplica o veneno escolhido";
+    if (tipo === "reduzir_con") return `${trapText(effect.valor || "redução")} CON por ${trapText(effect.duracao || "algumas")} rodadas${effect.area ? " em área" : ""}`;
+    return trapText(tipo || "efeito especial");
+  }
+
+  function trapPrimaryDamage(meta) {
+    if (!meta) return "";
+    if (meta.dano != null) return meta.dano;
+    const effect = (meta.efeitos || []).find(e => e && e.tipo === "dano");
+    return effect ? (effect.valor || "") : "";
+  }
+
+  function validTrapDamage(value) {
+    return /^(?:\d*d\d+|\d+)(?:[+-](?:\d*d\d+|\d+))*$/i.test(String(value || "").replace(/\s/g, ""));
+  }
+
+  function trapCharacteristicsHTML(meta, compact, instance) {
+    if (!meta || !meta.nome) return "";
+    const difficulty = instance && instance.dificuldade != null ? instance.dificuldade : meta.dificuldade;
+    const damage = instance && instance.dano != null ? instance.dano : trapPrimaryDamage(meta);
+    const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : "Sem teste padrão";
+    const scope = meta.area_sala ? "Sala inteira" : meta.area ? `Área: ${meta.area} casa${meta.area === 1 ? "" : "s"}` : "Alvo na casa";
+    const duration = meta.duracao_rodadas ? `${meta.duracao_rodadas} rodadas` : (meta.persiste ? "Permanece ativa" : "Uso único");
+    const flags = [
+      `🎲 ${save}`, `🎯 ${scope}`, `⏱️ ${duration}`,
+      damage ? `💥 Dano: ${trapText(damage)}` : "",
+      meta.custo_ouro != null ? `🪙 Custo: ${meta.custo_ouro} ouro` : "",
+      meta.save_reduz ? "🛡️ Sucesso reduz o dano" : "",
+      meta.precisa_veneno ? "☠️ Exige veneno" : (meta.permite_veneno ? "☠️ Veneno opcional" : ""),
+      meta.visivel_apos ? "👁️ Revela após ativar" : "",
+      meta.escape_save ? `↗️ Escape: ${trapText(meta.escape_save)}${meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : ""}` : "",
+      meta.apenas_objeto ? "📦 Só em objeto/decoração" : "",
+    ].filter(Boolean);
+    const effects = (meta.efeitos || []).map((effect, index) => {
+      if (damage && index === (meta.efeitos || []).findIndex(e => e && e.tipo === "dano")) return { ...effect, valor: damage };
+      return effect;
+    }).map(trapEffectLabel).filter(Boolean);
+    return `<div class="trap-characteristics${compact ? " compact" : ""}">
+      <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(meta.nome)}</div>
+      <div class="trap-characteristics-flags">${flags.map(flag => `<span>${flag}</span>`).join("")}</div>
+      ${effects.length ? `<div class="trap-characteristics-effects"><b>Efeitos</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
+      ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(meta.descricao)}</div>` : ""}
+    </div>`;
+  }
 
   // Organização visual exclusiva dos seletores de loot de baús e decorações.
   // O item continua sendo salvo pelo mesmo ID; esta camada só agrupa e ordena
@@ -1754,18 +1885,45 @@
         <small>Para trocar de herói, selecione a ferramenta "início herói" e escolha outra classe.</small>`;
     } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
+      const flightMeta = monsterFlightMeta(ref);
+      const isFlying = monsterCanFly(ref);
+      const defaultAltitude = altitudeClamp(flightMeta && flightMeta.altura_inicial, 2);
+      const defaultMaxAltitude = altitudeClamp(flightMeta && flightMeta.altura_max, 10);
+      const defaultCanChangeAltitude = flightMeta && flightMeta.pode_alterar_altura !== undefined
+        ? !!flightMeta.pode_alterar_altura : true;
+      const defaultAltitudeMoveCost = Math.max(1, Math.min(10, Number(flightMeta && flightMeta.custo_mov_altura) || 1));
+      const defaultIgnoreFlightObstacles = !!(flightMeta && flightMeta.ignora_obstaculos_voo);
+      const altitude = altitudeClamp(ref.altura, defaultAltitude);
+      const maxAltitude = Math.max(altitude, altitudeClamp(ref.altura_max, defaultMaxAltitude));
       panel.innerHTML = `<b>👹 Monstro</b>
         <label>tipo</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), ref.type, o => o.v + " — " + o.name)}</select>
         <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> chefe (boss)</label>
         <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> alvo do objetivo</label>
+        ${isFlying ? `<div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>🪽 Voo e altitude</b>
+          <div style="font-size:11px;color:#8a7a5a">A altura usa a escala 0–10 e afeta o alcance das armas.</div>
+          <label>altura inicial <input id="p-altitude" type="number" min="0" max="10" step="1" value="${altitude}"></label>
+          <label>altura máxima <input id="p-altitude-max" type="number" min="0" max="10" step="1" value="${maxAltitude}"></label>
+          <label><input type="checkbox" id="p-altitude-change"${(ref.pode_alterar_altura ?? defaultCanChangeAltitude) ? " checked" : ""}> pode subir/descer</label>
+          <label>custo vertical <input id="p-altitude-cost" type="number" min="1" max="10" step="1" value="${Math.max(1, Math.min(10, Number(ref.custo_mov_altura) || defaultAltitudeMoveCost))}"> movimento por ponto</label>
+          <label><input type="checkbox" id="p-flight-obstacles"${(ref.ignora_obstaculos_voo ?? defaultIgnoreFlightObstacles) ? " checked" : ""}> ignora obstáculos no voo</label>
+        </div>` : `<small style="display:block;margin-top:8px;color:#8a7a5a">Este tipo não possui a habilidade Voo.</small>`}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>Tamanho visual do sprite</b>
           <div style="font-size:11px;color:#8a7a5a">não muda as casas ocupadas nem as regras de combate.</div>
           <label>escala largura <input id="p-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs[0]}"></label>
           <label>escala altura <input id="p-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs[1]}"></label>
         </div>`;
-      document.getElementById("p-type").onchange = e => { ref.type = e.target.value; render(); };
+      document.getElementById("p-type").onchange = e => {
+        ref.type = e.target.value;
+        if (!monsterCanFly(ref)) {
+          delete ref.altura; delete ref.altura_max;
+          delete ref.pode_alterar_altura; delete ref.custo_mov_altura;
+          delete ref.ignora_obstaculos_voo;
+        }
+        renderPanel(); render();
+      };
       document.getElementById("p-room").onchange = e => { ref.room_id = e.target.value === "" ? null : Number(e.target.value); };
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
@@ -1777,6 +1935,44 @@
       };
       document.getElementById("p-vsx").onchange = applyMonsterScale;
       document.getElementById("p-vsy").onchange = applyMonsterScale;
+      if (isFlying) {
+        const applyAltitude = () => {
+          const n = altitudeClamp(document.getElementById("p-altitude").value, defaultAltitude);
+          if (n === defaultAltitude) delete ref.altura; else ref.altura = n;
+          const maxEl = document.getElementById("p-altitude-max");
+          const max = Math.max(n, altitudeClamp(maxEl.value, defaultMaxAltitude));
+          maxEl.value = max;
+          if (max === defaultMaxAltitude) delete ref.altura_max; else ref.altura_max = max;
+          render();
+        };
+        const applyAltitudeMax = () => {
+          const n = altitudeClamp(document.getElementById("p-altitude").value, defaultAltitude);
+          const max = Math.max(n, altitudeClamp(document.getElementById("p-altitude-max").value, defaultMaxAltitude));
+          document.getElementById("p-altitude-max").value = max;
+          if (max === defaultMaxAltitude) delete ref.altura_max; else ref.altura_max = max;
+          if (altitudeClamp(ref.altura, defaultAltitude) > max) ref.altura = max === defaultAltitude ? undefined : max;
+          if (ref.altura === undefined) delete ref.altura;
+          render();
+        };
+        const altitudeChange = document.getElementById("p-altitude-change");
+        const altitudeCost = document.getElementById("p-altitude-cost");
+        const flightObstacles = document.getElementById("p-flight-obstacles");
+        document.getElementById("p-altitude").onchange = applyAltitude;
+        document.getElementById("p-altitude-max").onchange = applyAltitudeMax;
+        altitudeChange.onchange = e => {
+          if (e.target.checked === defaultCanChangeAltitude) delete ref.pode_alterar_altura;
+          else ref.pode_alterar_altura = e.target.checked;
+        };
+        altitudeCost.onchange = e => {
+          const n = Math.max(1, Math.min(10, Number(e.target.value) | 0));
+          e.target.value = n;
+          if (n === defaultAltitudeMoveCost) delete ref.custo_mov_altura; else ref.custo_mov_altura = n;
+        };
+        flightObstacles.onchange = e => {
+          if (e.target.checked === defaultIgnoreFlightObstacles) delete ref.ignora_obstaculos_voo;
+          else ref.ignora_obstaculos_voo = e.target.checked;
+        };
+      }
     } else if (k === "chest") {
       panel.innerHTML = `<b>🧰 Baú</b>
         <label>ouro <input id="p-gold" type="number" value="${ref.gold}"></label>
@@ -1791,8 +1987,17 @@
       panel.querySelectorAll(".rm-item").forEach(b => b.onclick = () => { ref.items.splice(Number(b.dataset.i), 1); renderPanel(); });
     } else if (k === "trap") {
       const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
+      const defaultDamage = trapPrimaryDamage(meta);
+      const defaultDifficulty = meta.dificuldade || "";
       panel.innerHTML = `<b>⚠️ Armadilha</b>
         <label>tipo</label><select id="p-tt">${opt(CAT.traps.filter(t => !t.apenas_objeto).map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
+        ${trapCharacteristicsHTML(meta, false, ref)}
+        <div class="trap-overrides">
+          <b>⚙️ Ajustes desta armadilha</b>
+          <label>CD do teste <input id="p-trap-cd" type="number" min="1" max="40" value="${ref.dificuldade ?? defaultDifficulty}"></label>
+          ${defaultDamage ? `<label>dano principal <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">Formato: 1d6, 2d8+2 ou 3.</small>` : `<small>Esta armadilha não possui dano direto configurável.</small>`}
+          <small>Apague o valor para voltar ao padrão do catálogo.</small>
+        </div>
         ${meta.precisa_veneno || meta.permite_veneno ? `<label>veneno${meta.permite_veneno && !meta.precisa_veneno ? " (opcional)" : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
         ${curseFieldsHTML(ref, "p")}
         ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="p-out-help" style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
@@ -1810,11 +2015,28 @@
         </div>`;
       document.getElementById("p-tt").onchange = e => {
         ref.tipo = e.target.value;
+        delete ref.dificuldade;
+        delete ref.dano;
         const nextMeta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
         if (!(nextMeta.precisa_veneno || nextMeta.permite_veneno)) delete ref.veneno_id;
         if (ref.tipo !== "armadilha_teletransporte") delete ref.saida;
         prepareCurseTrap(ref, true);
         renderPanel(); render();
+      };
+      const trapCdInput = document.getElementById("p-trap-cd");
+      if (trapCdInput) trapCdInput.onchange = e => {
+        const raw = e.target.value.trim();
+        if (!raw) delete ref.dificuldade;
+        else ref.dificuldade = Math.max(1, Math.min(40, Number(raw) | 0));
+        renderPanel(); render(); updateStatus();
+      };
+      const trapDamageInput = document.getElementById("p-trap-damage");
+      if (trapDamageInput) trapDamageInput.onchange = e => {
+        const raw = e.target.value.trim().replace(/\s/g, "");
+        const help = document.getElementById("p-trap-damage-help");
+        if (!raw) { delete ref.dano; renderPanel(); render(); updateStatus(); return; }
+        if (!validTrapDamage(raw)) { if (help) help.textContent = "Valor inválido. Use 1d6, 2d8+2 ou 3."; e.target.focus(); return; }
+        ref.dano = raw; renderPanel(); render(); updateStatus();
       };
       if (meta.precisa_veneno || meta.permite_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value || null; };
       wireCurseFields(ref, "p", () => { renderPanel(); render(); });
@@ -1974,9 +2196,15 @@
       };
     } else if (k === "secret_passage") {
       const keys = S.decorations.filter(d => d.key_objective);
+      const wallMaterial = WALL_MATERIAL_IDS.has(ref.wall_material)
+        ? ref.wall_material : (S.materiais[ref.pos[0] + "," + ref.pos[1]] || MAT_DEFAULT.parede);
+      const wallMaterialOptions = WALL_MATERIALS.map(m =>
+        `<option value="${m.id}"${m.id === wallMaterial ? " selected" : ""}>🧱 ${m.nome}</option>`).join("");
       panel.innerHTML = `<b>${ref.type === "illusion" ? "Parede ilusória" : "Passagem secreta"}</b>
         <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? "Atravessável desde o início; somente o ladino a identifica durante Encontrar Armadilhas." : "Abre permanentemente quando suas decorações-chave forem ativadas."}</div>
+        <label>textura da parede<select id="sp-wall-material">${wallMaterialOptions}</select></label>
         ${ref.type === "mechanism" ? `<label>ativação</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>qualquer chave</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>todas as chaves</option></select><label>decorações-chave</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${decorMeta(d.type)?.nome || d.type} (${d.pos[0]},${d.pos[1]})</label>`).join("") : '<small>Marque uma decoração como objeto-chave primeiro.</small>'}</div>` : ""}`;
+      document.getElementById("sp-wall-material").onchange = e => { ref.wall_material = e.target.value; render(); };
       if (ref.type === "mechanism") {
         document.getElementById("sp-mode").onchange = e => { ref.keys_mode = e.target.value; };
         panel.querySelectorAll("#sp-keys input").forEach(el => el.onchange = () => {
@@ -1989,6 +2217,9 @@
       const hasLoot = !!ref.loot;
       const decorTrap = ref.trap || null;
       const trapOptions = (CAT.traps || []).map(t => ({ v: t.tipo, name: `${t.icone || '🪤'} ${t.nome || t.tipo}` }));
+      const decorTrapMeta = decorTrap ? (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}) : null;
+      const decorTrapDefaultDamage = trapPrimaryDamage(decorTrapMeta);
+      const decorTrapDefaultDifficulty = decorTrapMeta?.dificuldade || "";
       const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: v.name || v.nome || v.id }));
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
@@ -2007,6 +2238,13 @@
         ${ref.chest_trap_monster_type ? `<label>monstro que surge</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:x.name})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">No primeiro clique, Reflexos CD 12; o loot só abre no próximo clique.</small>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> contém armadilha</label>
         ${decorTrap ? `<label>armadilha</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
+          ${trapCharacteristicsHTML(decorTrapMeta, true, decorTrap)}
+          <div class="trap-overrides compact">
+            <b>⚙️ Ajustes desta armadilha</b>
+            <label>CD do teste <input id="d-trap-cd" type="number" min="1" max="40" value="${decorTrap.dificuldade ?? decorTrapDefaultDifficulty}"></label>
+            ${decorTrapDefaultDamage ? `<label>dano principal <input id="d-trap-damage" value="${trapText(decorTrap.dano ?? decorTrapDefaultDamage)}" placeholder="ex.: 2d6"></label><small id="d-trap-damage-help">Formato: 1d6, 2d8+2 ou 3.</small>` : `<small>Esta armadilha não possui dano direto configurável.</small>`}
+            <small>Apague o valor para voltar ao padrão do catálogo.</small>
+          </div>
           ${((CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno || (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno) ? `<label>veneno${(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno && !(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno ? " (opcional)" : ""}</label><select id="d-trap-venom">${opt(venomOptions, decorTrap.veneno_id || "", o => o.name)}</select>` : ""}
           ${curseFieldsHTML(decorTrap, "d")}
           ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>local de saída</label><div style="display:flex;gap:4px"><input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"><input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></div><button id="d-pick-trap-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="d-trap-out-help" style="color:#8a7a5a">Escolha uma casa de chão no mapa.</small>` : ""}
@@ -2066,6 +2304,21 @@
           ref.trap = { tipo: e.target.value };
           prepareCurseTrap(ref.trap, true);
           renderPanel();
+        };
+        const decorTrapCdInput = document.getElementById("d-trap-cd");
+        if (decorTrapCdInput) decorTrapCdInput.onchange = e => {
+          const raw = e.target.value.trim();
+          if (!raw) delete ref.trap.dificuldade;
+          else ref.trap.dificuldade = Math.max(1, Math.min(40, Number(raw) | 0));
+          renderPanel(); render(); updateStatus();
+        };
+        const decorTrapDamageInput = document.getElementById("d-trap-damage");
+        if (decorTrapDamageInput) decorTrapDamageInput.onchange = e => {
+          const raw = e.target.value.trim().replace(/\s/g, "");
+          const help = document.getElementById("d-trap-damage-help");
+          if (!raw) { delete ref.trap.dano; renderPanel(); render(); updateStatus(); return; }
+          if (!validTrapDamage(raw)) { if (help) help.textContent = "Valor inválido. Use 1d6, 2d8+2 ou 3."; e.target.focus(); return; }
+          ref.trap.dano = raw; renderPanel(); render(); updateStatus();
         };
         const venom = document.getElementById("d-trap-venom"); if (venom) venom.onchange = e => { ref.trap.veneno_id = e.target.value; };
         wireCurseFields(ref.trap, "d", () => { renderPanel(); render(); });
@@ -2131,6 +2384,12 @@
       const imgSel = document.getElementById("d-img-sel");
       const imgSt = document.getElementById("d-img-st");
       function fillImgOptions(list) {
+        // O catálogo já conhece as artes nativas das decorações. Mesclá-las
+        // aqui garante que a imagem continue disponível mesmo se a consulta
+        // de PNGs do servidor estiver atrasada ou indisponível.
+        const catalogImages = (CAT.decorations || [])
+          .map(d => d && d.image).filter(Boolean);
+        list = [...new Set([...(list || []), ...catalogImages])].sort();
         const opts = ['<option value="">(nenhuma — procedural)</option>']
           .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
         // garante a imagem atual visível mesmo se a lista falhar
@@ -2298,11 +2557,31 @@
       monsters: S.monsters.map(m => {
         const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
         if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
+        if (monsterCanFly(m)) {
+          const meta = monsterFlightMeta(m) || {};
+          const defaultAltitude = altitudeClamp(meta.altura_inicial, 2);
+          const defaultMaxAltitude = altitudeClamp(meta.altura_max, 10);
+          const defaultCanChangeAltitude = meta.pode_alterar_altura !== undefined ? !!meta.pode_alterar_altura : true;
+          const defaultAltitudeMoveCost = Math.max(1, Math.min(10, Number(meta.custo_mov_altura) || 1));
+          const defaultIgnoreFlightObstacles = !!meta.ignora_obstaculos_voo;
+          const altitude = altitudeClamp(m.altura, defaultAltitude);
+          const maxAltitude = Math.max(altitude, altitudeClamp(m.altura_max, defaultMaxAltitude));
+          if (altitude !== defaultAltitude) o.altura = altitude;
+          if (maxAltitude !== defaultMaxAltitude) o.altura_max = maxAltitude;
+          if (m.pode_alterar_altura !== undefined && !!m.pode_alterar_altura !== defaultCanChangeAltitude)
+            o.pode_alterar_altura = !!m.pode_alterar_altura;
+          if (m.custo_mov_altura !== undefined && Number(m.custo_mov_altura) !== defaultAltitudeMoveCost)
+            o.custo_mov_altura = Math.max(1, Math.min(10, Number(m.custo_mov_altura) | 0));
+          if (m.ignora_obstaculos_voo !== undefined && !!m.ignora_obstaculos_voo !== defaultIgnoreFlightObstacles)
+            o.ignora_obstaculos_voo = !!m.ignora_obstaculos_voo;
+        }
         return o;
       }),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => {
         const o = { tipo: t.tipo, pos: t.pos.slice() };
+        if (t.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, t.dificuldade | 0));
+        if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
         if (t.veneno_id) o.veneno_id = t.veneno_id;
         if (t.saida) o.saida = t.saida.slice();
         if (t.tipo === "armadilha_maldicao") {
@@ -2320,6 +2599,8 @@
         if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
         if (d.trap?.tipo) {
           o.trap = { tipo: d.trap.tipo };
+          if (d.trap.dificuldade != null) o.trap.dificuldade = Math.max(1, Math.min(40, d.trap.dificuldade | 0));
+          if (d.trap.dano != null && validTrapDamage(d.trap.dano)) o.trap.dano = String(d.trap.dano).replace(/\s/g, "");
           if (d.trap.veneno_id) o.trap.veneno_id = d.trap.veneno_id;
           if (Array.isArray(d.trap.saida)) o.trap.saida = d.trap.saida.slice();
           if (d.trap.tipo === "armadilha_maldicao") {
@@ -2337,7 +2618,11 @@
         if (Array.isArray(d.voffset) && (d.voffset[0] !== 0 || d.voffset[1] !== 0)) o.voffset = [d.voffset[0], d.voffset[1]];
         return o;
       }),
-      secret_passages: S.secretPassages.map(p => ({ id: p.id, type: p.type, pos: p.pos.slice(), key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode })),
+      secret_passages: S.secretPassages.map(p => ({
+        id: p.id, type: p.type, pos: p.pos.slice(),
+        ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
+        key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode,
+      })),
       falas: S.falas.map(f => {
         const tg = f.trigger || {};
         const t = { tipo: tg.tipo || "proximidade" };
@@ -2419,6 +2704,8 @@
       if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
       if (CAT.traps.find(c => c.tipo === t.tipo)?.apenas_objeto) e.push(`${t.tipo} só pode ser colocado em uma decoração/objeto`);
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
+      if (t.dificuldade != null && (!Number.isInteger(t.dificuldade) || t.dificuldade < 1 || t.dificuldade > 40)) e.push(`${t.tipo} com CD inválida: ${t.dificuldade}`);
+      if (t.dano != null && !validTrapDamage(t.dano)) e.push(`${t.tipo} com dano inválido: ${t.dano}`);
       if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
       if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte sem saída em chão");
       if (t.tipo === "armadilha_maldicao") {
@@ -2464,6 +2751,8 @@
       if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push("baú-armadilha com monstro inválido");
       if (d.trap) {
         if (!traps.has(d.trap.tipo)) e.push("armadilha de decoração inválida");
+        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(`${d.trap.tipo} na decoração com CD inválida`);
+        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(`${d.trap.tipo} na decoração com dano inválido`);
         if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração sem veneno válido`);
         if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte na decoração sem saída em chão");
         if (d.trap.tipo === "armadilha_maldicao") {
@@ -2501,6 +2790,7 @@
       if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
       passageIds.add(p.id);
       if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push("passagem secreta deve ficar em uma parede");
+      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push("textura de passagem secreta inválida");
       if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push("passagem com decoração-chave inválida");
       if (p.type === "mechanism" && !p.key_decor_ids.length) e.push("passagem secreta sem decoração-chave");
     }
@@ -2583,10 +2873,17 @@
     S.monsters = (obj.monsters || []).map(m => ({
       type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target,
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
+      ...(m.altura !== undefined ? { altura: altitudeClamp(m.altura, 2) } : {}),
+      ...(m.altura_max !== undefined ? { altura_max: altitudeClamp(m.altura_max, 10) } : {}),
+      ...(m.pode_alterar_altura !== undefined ? { pode_alterar_altura: !!m.pode_alterar_altura } : {}),
+      ...(m.custo_mov_altura !== undefined ? { custo_mov_altura: Math.max(1, Math.min(10, Number(m.custo_mov_altura) | 0)) } : {}),
+      ...(m.ignora_obstaculos_voo !== undefined ? { ignora_obstaculos_voo: !!m.ignora_obstaculos_voo } : {}),
     }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => {
       const o = { tipo: t.tipo, pos: t.pos.slice() };
+      if (t.dificuldade != null) o.dificuldade = Number(t.dificuldade) | 0;
+      if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
       if (t.veneno_id) o.veneno_id = t.veneno_id;
       if (t.saida) o.saida = t.saida.slice();
       if (t.tipo === "armadilha_maldicao") {
@@ -2622,6 +2919,8 @@
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
       ...(d.trap?.tipo ? { trap: {
         tipo: d.trap.tipo,
+        ...(d.trap.dificuldade != null ? { dificuldade: Number(d.trap.dificuldade) | 0 } : {}),
+        ...(d.trap.dano != null && validTrapDamage(d.trap.dano) ? { dano: String(d.trap.dano).replace(/\s/g, "") } : {}),
         ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}),
         ...(Array.isArray(d.trap.saida) ? { saida: d.trap.saida.slice() } : {}),
         ...(d.trap.tipo === "armadilha_maldicao" ? {
@@ -2644,7 +2943,14 @@
       const m = /^decor_(\d+)$/.exec(d.id || "");
       return m ? Math.max(next, Number(m[1]) + 1) : next;
     }, 0);
-    S.secretPassages = (obj.secret_passages || []).map((p, i) => ({ id: p.id || ("passage_" + i), type: p.type === "illusion" ? "illusion" : "mechanism", pos: p.pos.slice(), key_decor_ids: (p.key_decor_ids || []).slice(), keys_mode: p.keys_mode === "all" ? "all" : "any" }));
+    S.secretPassages = (obj.secret_passages || []).map((p, i) => ({
+      id: p.id || ("passage_" + i),
+      type: p.type === "illusion" ? "illusion" : "mechanism",
+      pos: p.pos.slice(),
+      ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
+      key_decor_ids: (p.key_decor_ids || []).slice(),
+      keys_mode: p.keys_mode === "all" ? "all" : "any",
+    }));
     S.nextPassageId = S.secretPassages.length;
     S.falas = (obj.falas || []).map((f, i) => {
       const tg = f.trigger || {};

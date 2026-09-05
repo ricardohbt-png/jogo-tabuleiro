@@ -101,7 +101,10 @@ def main():
     # miniaturas procedurais DEDICADAS para alguns deles: sem espelhar as duas
     # coisas aqui, o teste acusaria falta de arte onde ela existe.
     img_padrao = tabela_js(fonte, "_MONSTER_TYPE_DEFAULT_IMAGE")
-    com_mini_propria = set(re.findall(r"case '(\w+)':\s+_mini\w+\(grp", fonte))
+    # Ancorar no CONTRATO (`_miniX(`) e nao no nome do argumento: a varredura
+    # antiga exigia `(grp` e um rename inocente no game.js (grp -> bodyGrp)
+    # escondeu as 6 minis de uma vez, acusando troll e dragao como sem arte.
+    com_mini_propria = set(re.findall(r"case '(\w+)':\s+_mini\w+\(", fonte))
 
     custom = {m.get("type") for m in server._read_custom_monsters() if isinstance(m, dict)}
 
@@ -159,6 +162,22 @@ def main():
         usa_helper = "EDITOR_CLIENTE.url(" in js
         check("%s usa EDITOR_CLIENTE.url" % arq, usa_helper,
               "voltou a montar o endereço na mão")
+
+    print("\n[8] Rotinas de GLB não deixam uma decoração interromper as demais")
+    # _buildObjetoGLB é compartilhada por todos os objetos 3D e recebe apenas
+    # ids/medidas. A lógica específica do brasão deve ficar em
+    # _buildWallDecorGLB; usar `d`/`T` aqui quebra o loop no primeiro objeto GLB
+    # e faz o restante das decorações desaparecer no modo Mestre.
+    m_obj = re.search(r"function _buildObjetoGLB\(.*?\n\}\n\n// Brasões e cortinas",
+                      fonte, re.S)
+    corpo_obj = m_obj.group(0) if m_obj else ""
+    check("_buildObjetoGLB é independente da decoração de parede",
+          bool(m_obj) and "d.type" not in corpo_obj and "new T." not in corpo_obj)
+    m_wall = re.search(r"function _buildWallDecorGLB\(.*?\n\}\n\nfunction _buildObjetoMini",
+                       fonte, re.S)
+    corpo_wall = m_wall.group(0) if m_wall else ""
+    check("brasão permanece no caminho de parede",
+          bool(m_wall) and "d.type === 'brasao_leao'" in corpo_wall)
 
     if _avisos:
         print("\n⚠️  AVISOS (não falham o teste)")

@@ -13,6 +13,42 @@
 //     com elas (" e " × " and "). NÃO dê parâmetros a essas duas — o _valor()
 //     do cliente chama t() para lê-las, e um parâmetro criaria recursão.
 window.LANG_STRINGS = {
+  "dado.dano_queda": {
+    "pt": "💥 Dano de queda",
+    "en": "💥 Fall damage"
+  },
+  "ui.voo.queda_titulo": {
+    "pt": "Queda",
+    "en": "Fall"
+  },
+  "ui.voo.faixa_baixo": {
+    "pt": "Voo baixo",
+    "en": "Low flight"
+  },
+  "ui.voo.faixa_medio": {
+    "pt": "Voo médio",
+    "en": "Medium flight"
+  },
+  "ui.voo.faixa_alto": {
+    "pt": "Voo alto",
+    "en": "High flight"
+  },
+  "ui.voo.queda_descricao": {
+    "pt": "A criatura caiu de altura {altura} ({faixa}) e sofreu {dano} de dano.",
+    "en": "The creature fell from height {altura} ({faixa}) and took {dano} damage."
+  },
+  "ui.voo.queda_altura": {
+    "pt": "↕ Altura da queda: {altura} ({faixa})",
+    "en": "↕ Fall height: {altura} ({faixa})"
+  },
+  "ui.voo.queda_dano": {
+    "pt": "🎲 {expressao} = {dano} de dano físico",
+    "en": "🎲 {expressao} = {dano} physical damage"
+  },
+  "ui.voo.risco_queda": {
+    "pt": "⚠️ Queda: {faixa} ({expressao})",
+    "en": "⚠️ Fall: {faixa} ({expressao})"
+  },
   "narracao.abre_porta": {
     "pt": "🚪 **{nome}** abre uma porta!",
     "en": "🚪 **{nome}** opens a door!"
@@ -33,6 +69,17 @@ window.LANG_STRINGS = {
   "ui.menu.qual_baixa":  { "pt": "Baixa", "en": "Low" },
   "ui.menu.qual_dica":   { "pt": "Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.", "en": "Low turns off shadows and cuts lights and resolution — use it if the 3D dungeon stutters." },
   "ui.menu.mostrar_fps": { "pt": "Mostrar FPS", "en": "Show FPS" },
+  "ui.menu.joystick": { "pt": "🎮 Joystick", "en": "🎮 Controller" },
+  "ui.menu.joystick_bind": { "pt": "Remapear botões", "en": "Remap buttons" },
+  "ui.menu.joystick_camera": { "pt": "Alternar câmera 3D", "en": "Toggle 3D camera" },
+  "ui.menu.joystick_camera_reset": { "pt": "Restaurar câmera 3D", "en": "Reset 3D camera" },
+  "ui.menu.joystick_cancel": { "pt": "Cancelar / Voltar", "en": "Cancel / Back" },
+  "ui.menu.joystick_confirm": { "pt": "Confirmar / Selecionar", "en": "Confirm / Select" },
+  "ui.menu.joystick_deadzone": { "pt": "Zona morta", "en": "Dead zone" },
+  "ui.menu.joystick_end_turn": { "pt": "Encerrar turno", "en": "End turn" },
+  "ui.menu.joystick_character_menu": { "pt": "Abrir menus do herói", "en": "Open hero menus" },
+  "ui.menu.joystick_invert_y": { "pt": "Inverter câmera vertical", "en": "Invert vertical camera" },
+  "ui.menu.joystick_reset": { "pt": "Restaurar padrão", "en": "Restore defaults" },
   "ui.menu.voltar_inicio": { "pt": "⌂ Voltar ao menu inicial", "en": "⌂ Back to main menu" },
   "ui.menu.sair":        { "pt": "⏻ Sair do jogo", "en": "⏻ Quit game" },
   "ui.menu.timer_ativo":   { "pt": "⏳ Limite de turno: ATIVO — desativar",

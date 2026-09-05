@@ -207,6 +207,10 @@ window.LANG_INTERFACE = {
       "en": "🎯 Throw Off-hand Dagger",
       "pt": "🎯 Arremessar Adaga Secundária"
     },
+    "ui.acao.arremessar_arma": {
+      "en": "🎯 Throw {nome}",
+      "pt": "🎯 Arremessar {nome}"
+    },
     "ui.acao.arremessar_adaga_desc": {
       "en": "1d4 + DEX — up to 3 squares",
       "pt": "1d4 + DES — até 3 quadrados"
@@ -220,8 +224,24 @@ window.LANG_INTERFACE = {
       "pt": "1d4 + DES adjacente"
     },
     "ui.ajuda.camera": {
-      "en": "<b>3D camera:</b> drag = orbit · right button = pan · scroll = zoom · <b>R</b> or ⌂ = default view · 🎲 toggles 2D/3D.",
-      "pt": "<b>Câmera 3D:</b> arrastar = orbitar · direito = pan · scroll = zoom · <b>R</b> ou ⌂ = vista padrão · 🎲 alterna 2D/3D."
+      "en": "<b>3D camera:</b> drag = orbit · right button = pan · scroll = zoom · with a flying hero, hold the right button and scroll up/down to change height · <b>R</b> or ⌂ = default view · 🎲 toggles 2D/3D.",
+      "pt": "<b>Câmera 3D:</b> arrastar = orbitar · direito = pan · scroll = zoom · com um herói voando, mantenha o botão direito pressionado e use scroll up/down para alterar a altura · <b>R</b> ou ⌂ = vista padrão · 🎲 alterna 2D/3D."
+    },
+    "ui.ajuda.joystick_camera": {
+      "en": "<b>3D camera with controller:</b> the configured camera button switches the right stick between target cursor and camera · the triggers zoom · with a flying hero, hold L1+L2 to descend or L1+R2 to ascend · the configured reset button restores the view.",
+      "pt": "<b>Câmera 3D com controle:</b> o botão configurado para câmera alterna o analógico direito entre cursor de alvo e câmera · os gatilhos controlam o zoom · com um herói voando, segure L1+L2 para descer ou L1+R2 para subir · o botão de restaurar volta à vista padrão."
+    },
+    "ui.ajuda.joystick_menu": {
+      "en": "<b>Menus, city and world map:</b> D-pad or left stick navigates · right stick scrolls the world map up/down · the configured confirm button activates · the cancel button goes back. The menu button opens the hero menus; the triggers change Items, Abilities, Magic and Stats. In the inventory, Confirm selects, equips or moves items; the secondary face button uses the focused consumable, scroll or throwable; and the upper face button drops a previously selected item during a dungeon. In a hero menu, focus an action and hold the left shoulder button + one of the face buttons to assign it to a shortcut. In text fields, Confirm opens the virtual keyboard.",
+      "pt": "<b>Menus, cidade e mapa-múndi:</b> direcional ou analógico esquerdo navega · segundo direcional rola o mapa-múndi para cima/baixo · o botão de confirmar ativa · o de cancelar volta. O botão de menu abre os menus do herói; os gatilhos alternam Itens, Habilidades, Magias e Estatísticas. No inventário, Confirmar seleciona, equipa ou move itens; o botão frontal secundário usa o consumível, pergaminho ou arremessável focalizado; e o botão frontal superior larga, na masmorra, um item já selecionado. Em um menu do herói, selecione uma ação e segure o botão superior esquerdo + um botão frontal para colocá-la em um atalho. Em campos de texto, Confirmar abre o teclado virtual."
+    },
+    "ui.ajuda.joystick_titulo": {
+      "en": "🎮 Controller",
+      "pt": "🎮 Joystick"
+    },
+    "ui.ajuda.joystick_turno": {
+      "en": "<b>Dungeon:</b> D-pad or left stick moves the hero · Confirm activates the selected tile · Cancel leaves target mode · press the menu button twice to end your turn · R3 cycles useful targets · hold the left shoulder button + a face button to use the first four shortcuts.",
+      "pt": "<b>Masmorra:</b> direcional ou analógico esquerdo move o herói · Confirmar ativa a casa selecionada · Cancelar sai da mira · pressione duas vezes o botão de menu para encerrar o turno · R3 alterna entre alvos úteis · segure o botão superior esquerdo + um botão frontal para usar os quatro primeiros atalhos."
     },
     "ui.ajuda.dados": {
       "en": "<b>Dice:</b> <span style=\"color:#FF5500\">■ d20</span> attack/checks · <span style=\"color:#FF1111\">■ d6</span> / <span style=\"color:#0055FF\">■ d8</span> damage · <span style=\"color:#2ecc71\">■ green</span> die kept · <span style=\"color:#e74c3c\">■ red</span> discarded.",
@@ -496,8 +516,8 @@ window.LANG_INTERFACE = {
       "pt": "🫀 ENGOLIDO"
     },
     "ui.armadilha.engolido.desc": {
-      "en": "The Tyrant of the Wild swallowed you. You are inside its stomach until you escape or break a path out.",
-      "pt": "O Tirano da Mata engoliu você. Você permanece dentro do estômago até escapar ou abrir caminho para fora."
+      "en": "The {monstro} swallowed you. You are inside its stomach until you escape or break a path out.",
+      "pt": "O {monstro} engoliu você. Você permanece dentro do estômago até escapar ou abrir caminho para fora."
     },
     "ui.armadilha.engolido.dano": {
       "en": "🧪 Suffers {dano} acid damage at the start of each turn.",
@@ -614,6 +634,10 @@ window.LANG_INTERFACE = {
     "ui.armadilha.petrificado": {
       "en": "🗿 Petrified — duration: {n} round(s).",
       "pt": "🗿 Petrificado — duração: {n} rodada(s)."
+    },
+    "ui.armadilha.petrificado_permanente": {
+      "en": "🗿 PERMANENTLY PETRIFIED",
+      "pt": "🗿 PETRIFICADO PERMANENTEMENTE"
     },
     "ui.armadilha.rede.desc": {
       "en": "Lose the whole round. Vanishes once triggered.",
@@ -2255,6 +2279,30 @@ window.LANG_INTERFACE = {
       "en": "🖱 left: orbit &nbsp;·&nbsp; right: pan &nbsp;·&nbsp; scroll: zoom",
       "pt": "🖱 esq: orbitar &nbsp;·&nbsp; dir: pan &nbsp;·&nbsp; scroll: zoom"
     },
+    "ui.hud.orbit_hint_altura": {
+      "en": "🖱 left: orbit &nbsp;·&nbsp; right: pan &nbsp;·&nbsp; right + scroll: altitude ±1",
+      "pt": "🖱 esq: orbitar &nbsp;·&nbsp; dir: pan &nbsp;·&nbsp; dir + scroll: altura ±1"
+    },
+    "ui.hud.altura": {
+      "en": "↕ Altitude",
+      "pt": "↕ Altura"
+    },
+    "ui.hud.altura_ativa": {
+      "en": "↕ Altitude: ON",
+      "pt": "↕ Altura: ATIVA"
+    },
+    "ui.hud.altura_ativar_title": {
+      "en": "Hold the right mouse button and scroll to change altitude",
+      "pt": "Mantenha o botão direito pressionado e use o scroll para alterar a altura"
+    },
+    "ui.hud.altura_desativar_title": {
+      "en": "Release the right mouse button to restore camera zoom",
+      "pt": "Solte o botão direito para devolver o scroll ao zoom da câmera"
+    },
+    "ui.hud.altura_so_seu_turno": {
+      "en": "Altitude can only be changed on your turn.",
+      "pt": "A altura só pode ser alterada no seu turno."
+    },
     "ui.hud.parar": {
       "en": "stop",
       "pt": "parar"
@@ -2466,6 +2514,14 @@ window.LANG_INTERFACE = {
     "ui.inv.inventario": {
       "en": "Inventory",
       "pt": "Inventário"
+    },
+    "ui.inv.desequipar_bota_alada_titulo": {
+      "en": "Remove Winged Boot?",
+      "pt": "Desequipar Bota Alada?"
+    },
+    "ui.inv.desequipar_bota_alada_aviso": {
+      "en": "You are flying at altitude {altura}. Removing the Winged Boot will make you fall and take {expressao} damage. Do you really want to continue?",
+      "pt": "Você está voando na altura {altura}. Desequipar a Bota Alada fará você cair e sofrer {expressao} de dano. Deseja mesmo continuar?"
     },
     "ui.inv.municao_aria": {
       "en": "{n} projectiles left",
@@ -3315,6 +3371,10 @@ window.LANG_INTERFACE = {
       "en": "already used this visit",
       "pt": "já usada nesta visita"
     },
+    "ui.loja.ja_conhecida": {
+      "en": "already learned",
+      "pt": "já conhecida"
+    },
     "ui.loja.log_inventario_cheio": {
       "en": "❌ {nome}: inventory full",
       "pt": "❌ {nome}: inventário cheio"
@@ -3403,6 +3463,10 @@ window.LANG_INTERFACE = {
       "en": "Already used on this visit to town",
       "pt": "Já usada nesta visita à cidade"
     },
+    "ui.loja.title_ja_conhecida": {
+      "en": "This spell is already in your spellbook",
+      "pt": "Esta magia já está no seu grimório"
+    },
     "ui.loja.titulo.ferreiro": {
       "en": "🔨 Blacksmith",
       "pt": "🔨 Ferreiro"
@@ -3426,6 +3490,10 @@ window.LANG_INTERFACE = {
     "ui.loja.usada": {
       "en": "Used",
       "pt": "Usada"
+    },
+    "ui.loja.conhecida": {
+      "en": "Learned",
+      "pt": "Conhecida"
     },
     "ui.loja.voltar_mapa": {
       "en": "← Back to the Map",
@@ -3643,6 +3711,10 @@ window.LANG_INTERFACE = {
       "en": "3rd",
       "pt": "3º"
     },
+    "ui.magia.ordinal.quarto": {
+      "en": "4th",
+      "pt": "4º"
+    },
     "ui.magia.parede_bloqueia": {
       "en": "🧱 A wall blocks the spell to the target!",
       "pt": "🧱 Uma parede bloqueia o feitiço até o alvo!"
@@ -3654,6 +3726,10 @@ window.LANG_INTERFACE = {
     "ui.magia.raio_congelante.desc": {
       "en": "<b>Range:</b> 3 +1 per level<br>\n               <b>Damage:</b> 3d4 +2d4 every 2 levels<br>\n               <b>⚠️ No Reflex save:</b> damage is always full<br>\n               <b>Fortitude:</b> fail → paralysed for 1 round<br>\n               <b>Next round:</b> new Fortitude save<br>\n               <b>Success:</b> acts normally<br>\n               <b>Fail:</b> 1 more round (max 2)",
       "pt": "<b>Alcance:</b> 3 +1 por nível<br>\n               <b>Dano:</b> 3d4 +2d4 a cada 2 níveis<br>\n               <b>⚠️ Sem Reflexos:</b> dano sempre total<br>\n               <b>Fortitude:</b> falha → paralisado 1 rodada<br>\n               <b>Rodada seguinte:</b> novo Fortitude<br>\n               <b>Sucesso:</b> age normalmente<br>\n               <b>Falha:</b> mais 1 rodada (máx 2)"
+    },
+    "ui.magia.voo.desc": {
+      "en": "<b>Range:</b> 3 squares +1 for every 3 caster levels<br>\n               <b>Target:</b> 1 ally (or yourself)<br>\n               <b>Effect:</b> enables Flight until the end of the mission; starting height 2, maximum 10<br>\n               <b>Control:</b> hold the right mouse button and use the wheel, or L1 + L2/R2 on a controller<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
+      "pt": "<b>Alcance:</b> 3 quadrados +1 a cada 3 níveis de conjurador<br>\n               <b>Alvo:</b> 1 aliado (ou você)<br>\n               <b>Efeito:</b> ativa Voo até o fim da missão; altura inicial 2, máxima 10<br>\n               <b>Controle:</b> mantenha o botão direito pressionado e use o scroll, ou L1 + L2/R2 no joystick<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
     },
     "ui.magia.raio_divino.desc": {
       "en": "<b>Damage:</b> 1d6+1 per character level<br>\n               <b>Save:</b> Reflex → half<br>\n               <b>Vs undead/demons:</b> damage doubled<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
@@ -5403,6 +5479,34 @@ window.LANG_INTERFACE = {
       "en": "Active while Bleeding remains: {n} round(s) remaining.",
       "pt": "Ativa enquanto houver Sangramento: {n} rodada(s) restantes."
     },
+    "ui.condicao.petrificacao": {
+      "en": "Petrification",
+      "pt": "Petrificação"
+    },
+    "ui.condicao.petrificacao_desc": {
+      "en": "Your body is turning to stone. You have {n}/3 Petrification marks.",
+      "pt": "Seu corpo começa a se transformar em pedra. Você tem {n}/3 marcas de Petrificação."
+    },
+    "ui.condicao.petrificacao_progresso": {
+      "en": "PETRIFICATION PROGRESS — {n}/3 MARKS",
+      "pt": "PROGRESSO DA PETRIFICAÇÃO — {n}/3 MARCAS"
+    },
+    "ui.condicao.petrificacao_marcas": {
+      "en": "Petrification marks: {n}/3 — 3 marks fully petrify you.",
+      "pt": "Marcas de Petrificação: {n}/3 — com 3 marcas, você fica totalmente petrificado."
+    },
+    "ui.condicao.petrificacao_movimento": {
+      "en": "1 mark: -1 movement permanently.",
+      "pt": "1 marca: -1 em Movimento permanentemente."
+    },
+    "ui.condicao.petrificacao_destreza": {
+      "en": "2 marks: -6 Dexterity and all penalties derived from it, including Reflex and AC.",
+      "pt": "2 marcas: -6 em Destreza e todas as penalidades derivadas, incluindo Reflexos e CA."
+    },
+    "ui.condicao.petrificacao_purificacao": {
+      "en": "These penalties remain until Purification or an item that cures petrification.",
+      "pt": "As penalidades permanecem até Purificação ou até usar um item que cure petrificação."
+    },
     "ui.status.furia_berserker": {
       "en": "Berserker Fury",
       "pt": "Fúria Berserker"
@@ -5818,6 +5922,86 @@ window.LANG_INTERFACE = {
     "ui.atalhos.item_indisponivel": {
       "en": "That item is no longer in your bag.",
       "pt": "Esse item não está mais na sua bolsa."
+    },
+    "ui.joystick.contexto_aguarde": {
+      "en": "Wait for your turn",
+      "pt": "Aguarde o turno"
+    },
+    "ui.joystick.contexto_confirmar_alvo": {
+      "en": "Confirm target",
+      "pt": "Confirmar alvo"
+    },
+    "ui.joystick.contexto_pegar": {
+      "en": "Pick up",
+      "pt": "Pegar"
+    },
+    "ui.joystick.contexto_abrir": {
+      "en": "Open",
+      "pt": "Abrir"
+    },
+    "ui.joystick.contexto_interagir": {
+      "en": "Interact",
+      "pt": "Interagir"
+    },
+    "ui.joystick.contexto_abrir_porta": {
+      "en": "Open door",
+      "pt": "Abrir porta"
+    },
+    "ui.joystick.contexto_atacar": {
+      "en": "Attack",
+      "pt": "Atacar"
+    },
+    "ui.joystick.contexto_mover": {
+      "en": "Move",
+      "pt": "Mover"
+    },
+    "ui.joystick.contexto_longe": {
+      "en": "Too far",
+      "pt": "Muito longe"
+    },
+    "ui.joystick.contexto_sem_acao": {
+      "en": "No action",
+      "pt": "Sem ação"
+    },
+    "ui.joystick.proximo_alvo": {
+      "en": "next target",
+      "pt": "próximo alvo"
+    },
+    "ui.joystick.sem_alvo_rapido": {
+      "en": "No quick target available.",
+      "pt": "Não há alvo rápido disponível."
+    },
+    "ui.joystick.confirmar_encerrar_turno": {
+      "en": "Press {botao} again to end your turn.",
+      "pt": "Pressione {botao} novamente para encerrar o turno."
+    },
+    "ui.joystick.menu_navegacao": {
+      "en": "🎮 D-pad: navigate · Confirm: activate · Cancel: back",
+      "pt": "🎮 Direcional: navegar · Confirmar: ativar · Cancelar: voltar"
+    },
+    "ui.inv.gamepad_acao_hint": {
+      "en": "🎮 Right stick: choose · Confirm: apply",
+      "pt": "🎮 Segundo direcional: escolher · Confirmar: aplicar"
+    },
+    "ui.inv.gamepad_usar": {
+      "en": "USE",
+      "pt": "USAR"
+    },
+    "ui.menu.joystick_next_target": {
+      "en": "Next target",
+      "pt": "Próximo alvo"
+    },
+    "ui.menu.joystick_vibration": {
+      "en": "Vibration",
+      "pt": "Vibração"
+    },
+    "ui.menu.joystick_cursor_speed": {
+      "en": "Cursor speed",
+      "pt": "Velocidade do cursor"
+    },
+    "ui.menu.joystick_camera_sensitivity": {
+      "en": "Camera sensitivity",
+      "pt": "Sensibilidade da câmera"
     }
   };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
