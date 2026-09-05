@@ -123,6 +123,34 @@ window.EDITOR_CUSTOM_ITEMS = [
       "loot_monstro": false
     },
     "throw_range": 3
+  },
+  {
+    "id": "maca_treino",
+    "name": "Maça de Treino",
+    "emoji": "🔨",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d6",
+    "stat": "str_",
+    "categoria": "contundente",
+    "finesse": true,
+    "two_handed": false,
+    "atk_bonus": 0,
+    "damage_bonus": 2,
+    "corrosao_resistente": 0,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": null,
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [],
+    "price": 0,
+    "disponibilidade": {
+      "loja": false,
+      "baus": true,
+      "loot_monstro": false
+    }
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de itens.

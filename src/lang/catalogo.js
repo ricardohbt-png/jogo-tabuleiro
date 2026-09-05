@@ -2418,6 +2418,10 @@ window.LANG_CATALOGO = {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
   },
+  "cat.item.maca_treino.nome": {
+    "en": "Training Mace",
+    "pt": "Maça de Treino"
+  },
   "cat.item.machado_basico.desc": {
     "en": "",
     "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."

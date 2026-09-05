@@ -6,7 +6,7 @@
   "saida_permitida": false,
   "start_mode": "hero_spawns",
   "grid": {
-    "w": 34,
+    "w": 41,
     "h": 12
   },
   "tiles": [
@@ -44,6 +44,13 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -80,6 +87,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -95,6 +109,13 @@
       0,
       0,
       0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       1,
       1,
@@ -152,36 +173,7 @@
       1,
       1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
+      2,
       1,
       1,
       1,
@@ -224,6 +216,56 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -260,6 +302,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -270,71 +319,6 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -404,9 +388,109 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -498,6 +582,21 @@
           3
         ]
       ]
+    },
+    {
+      "id": 4,
+      "x": 34,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "boss",
+      "locked": true,
+      "doors": [
+        [
+          33,
+          3
+        ]
+      ]
     }
   ],
   "door_conditions": {
@@ -558,7 +657,7 @@
     }
   ],
   "exit": {
-    "x": 32,
+    "x": 39,
     "y": 3
   },
   "monsters": [
@@ -681,6 +780,16 @@
       "room_id": 2,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "esqueleto_humano",
+      "pos": [
+        37,
+        3
+      ],
+      "room_id": 4,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [
@@ -721,9 +830,30 @@
           "id": "garrafa_agua"
         }
       ]
+    },
+    {
+      "pos": [
+        35,
+        5
+      ],
+      "gold": 0,
+      "key_objective": false,
+      "items": [
+        {
+          "id": "maca_treino"
+        }
+      ]
     }
   ],
-  "traps": [],
+  "traps": [
+    {
+      "tipo": "buraco",
+      "pos": [
+        35,
+        3
+      ]
+    }
+  ],
   "decorations": [],
   "secret_passages": [],
   "master_reinforcements": [],
@@ -1371,6 +1501,119 @@
         "alvo": "golpe_sagrado",
         "vezes": 1,
         "texto_curto": "Ative o Golpe Sagrado"
+      }
+    },
+    {
+      "id": "perigo_01",
+      "pos": [
+        34,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Última sala. Há uma armadilha no chão daqui — armadilhas ficam ocultas até alguém revelá-las, e pisar numa cobra caro. Luccas sabe detectá-las e desarmá-las; os outros contornam, ou aguentam.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 10
+    },
+    {
+      "id": "ladino_04",
+      "pos": [
+        34,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "É a sua vez de brilhar, Luccas. Desarme a armadilha desta sala: um teste de Destreza contra a dificuldade dela. Um 1 natural dispara na sua cara — e no sucesso você ainda recupera o material.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "rogue",
+      "ordem": 4,
+      "tarefa": {
+        "tipo": "desarmar_armadilha",
+        "vezes": 1,
+        "texto_curto": "Desarme a armadilha"
+      }
+    },
+    {
+      "id": "perigo_02",
+      "pos": [
+        36,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Aquele esqueleto reage à sua espada de um jeito e à sua maça de outro. Acerte um golpe nele com o que está na sua mão e olhe o número: corte contra osso entra a MENOS — ele resiste a lâmina.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 11,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Acerte um golpe no esqueleto"
+      }
+    },
+    {
+      "id": "perigo_03",
+      "pos": [
+        36,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "No baú desta sala há uma maça. Pegue-a e equipe: osso não resiste a impacto, ele racha. Toda criatura tem essas duas listas — resistências e fraquezas — e a ficha dela mostra as que você já descobriu.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 12,
+      "tarefa": {
+        "tipo": "equipar",
+        "alvo": "maca_treino",
+        "vezes": 1,
+        "texto_curto": "Equipe a maça do baú"
+      }
+    },
+    {
+      "id": "perigo_04",
+      "pos": [
+        36,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Agora o mesmo braço, outra arma. Derrube-o e compare os números com o golpe de antes: cerca de três pontos a mais por acerto, só por trocar de arma. Escolher a arma certa vale mais que rolar bem o dado.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": null,
+      "ordem": 13,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Derrube o esqueleto com a maça"
       }
     }
   ],

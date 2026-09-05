@@ -458,12 +458,14 @@ async def main():
           all(f"atrio_0{i}" in _por_classe.get("TODAS", []) for i in range(1, 6)))
     _classes = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
     _tamanhos = {c: len(_por_classe.get(c, [])) for c in _classes}
-    check("nenhuma classe fica para tras",
-          len(set(_tamanhos.values())) == 1 and min(_tamanhos.values()) >= 3)
+    # O ladino tem uma a mais de proposito: so ele desarma armadilhas.
+    check("nenhuma classe fica para tras", min(_tamanhos.values()) >= 3)
+    check("o ladino tem a licao de desarme so dele",
+          _tamanhos["rogue"] > min(_tamanhos.values()))
     check("nenhuma licao mira o goblin antigo",
           all((f.get("tarefa") or {}).get("alvo") != "goblin" for f in _mapa["falas"]))
-    check("ha bonecos para todos", len(_mapa["monsters"]) >= 6
-          and all(m["type"] == "boneco_treino" for m in _mapa["monsters"]))
+    _bonecos = [m for m in _mapa["monsters"] if m["type"] == "boneco_treino"]
+    check("ha bonecos para todos", len(_bonecos) >= 6)
 
     print("\n[10b] A trilha da classe dispara para o heroi certo")
     for _cls, _pref in (("cleric", "clerigo"), ("mage", "mago"), ("bard", "bardo")):
@@ -662,6 +664,111 @@ async def main():
             p["pos"] = [_alvo["pos"][0] - 1, _alvo["pos"][1]]
         await _acao(r, p, _alvo["id"] if _cls == "warrior" else _alvo)
         check(f"{_cls}: usar a habilidade cumpre", _lid in p["licoes_feitas"])
+    print("\n[16] Sala de Perigo: armadilha, resistencia e fraqueza")
+    r = GameRoom("T")
+    async def _noop(*a, **k): pass
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+    r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+    p = make_player("h1", "Thorin", "warrior", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    r._is_turn = lambda pid: True
+    check("a armadilha autorada virou desarmavel", len(r.armadilhas) == 1)
+    _esq = next((m for m in r.monsters.values() if m["type"] == "esqueleto_humano"), None)
+    check("o esqueleto esta la", _esq is not None)
+
+    p["licoes_feitas"] = ([f"atrio_0{i}" for i in range(1, 6)]
+                          + ["guerreiro_01", "guerreiro_02", "guerreiro_03"]
+                          + [f"prov_0{i}" for i in range(1, 5)])
+    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+    _esp = dict(S._DUNGEON_ITEM_CATALOG["sword"])
+    p["gear"]["weapon"] = _esp; p["weapon"] = _esp
+    p["pos"] = [34, 3]
+    await r._verificar_falas(p, None)
+    check("a licao do esqueleto dispara", p["licao_atual"] == "perigo_02")
+
+    # Corte contra osso entra a MENOS; impacto entra a MAIS. A licao promete
+    # cerca de tres pontos de diferenca — se a ficha do esqueleto mudar, isto
+    # avisa antes de o texto virar mentira.
+    def _dano(arma_id):
+        import statistics
+        S_ = S
+        return arma_id
+    async def _dano_medio(n=150):
+        """Media de dano por ACERTO. Um golpe so nao serve: os dados se
+        sobrepoem e a comparacao fica instavel — a licao promete uma
+        diferenca media, e e isso que o teste tem de medir."""
+        _tot = _acertos = 0
+        for _ in range(n):
+            _esq["hp"] = 999
+            _a = _esq["hp"]
+            p["action_done"] = False
+            await r.handle_attack("h1", _esq["id"])
+            if _esq["hp"] < _a:
+                _tot += _a - _esq["hp"]; _acertos += 1
+        return _tot / max(1, _acertos)
+
+    _esq["hp"] = 999
+    p["pos"] = [36, 3]
+    _antes = _esq["hp"]
+    while _esq["hp"] == _antes:
+        p["action_done"] = False
+        await r.handle_attack("h1", _esq["id"])
+    check("acertar cumpre e pede a maca", p["licao_atual"] == "perigo_03")
+    _corte = await _dano_medio()
+
+    _bau = next(c for c in r.chests.values()
+                if any(i["id"] == "maca_treino" for i in c["items"]))
+    p["pos"] = list(_bau["pos"])
+    await r.handle_take_from_chest("h1", _bau["id"], "item", 0)
+    _i = next(i for i, it in enumerate(p["bag"]) if it.get("id") == "maca_treino")
+    await r.handle_equip_from_bag("h1", _i)
+    check("equipar a maca cumpre", "perigo_03" in p["licoes_feitas"])
+    check("e passa para derrubar", p["licao_atual"] == "perigo_04")
+
+    p["pos"] = [36, 3]          # voltar para perto: o bau fica longe do esqueleto
+    _impacto = await _dano_medio()
+    check("a maca doi mais que a espada no esqueleto", _impacto > _corte)
+    # A diferenca real e ~2.9 (-1 resistido contra +2 vulneravel). O piso em
+    # 1.2 com 150 amostras avisa se a ficha do esqueleto mudar e o texto da
+    # licao virar mentira, sem ficar instavel pela variancia do dado.
+    check("e a diferenca e a que a licao promete (~3)", _impacto - _corte > 1.2)
+
+    # O golpe final pode errar (CA 12): insiste ate cair, como um jogador faria.
+    for _ in range(20):
+        if "perigo_04" in p["licoes_feitas"]: break
+        _esq["hp"] = 1; p["action_done"] = False
+        await r.handle_attack("h1", _esq["id"])
+    check("derrubar fecha a sala", "perigo_04" in p["licoes_feitas"])
+    _sai = S.carregar_dungeon("campo_de_treinamento.json")["exit"]
+    p["pos"] = [_sai["x"], _sai["y"]]
+    await r._check_objectives()
+    check("e a saida encerra o tutorial", r.mission_complete_pending is True)
+
+    print("\n[16b] So o ladino desarma")
+    r = GameRoom("T")
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+    r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+    p = make_player("h1", "Luccas", "rogue", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    r._is_turn = lambda pid: True
+    p["licoes_feitas"] = ([f"atrio_0{i}" for i in range(1, 6)]
+                          + ["ladino_01", "ladino_02", "ladino_03"]
+                          + [f"prov_0{i}" for i in range(1, 5)])
+    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+    p["pos"] = [34, 3]
+    await r._verificar_falas(p, None)
+    check("o ladino recebe a licao de desarme", p["licao_atual"] == "ladino_04")
+    _arm = r.armadilhas[0]; _arm["visivel"] = True
+    p["pos"] = [_arm["pos"][0] - 1, _arm["pos"][1]]
+    for _ in range(15):
+        if "ladino_04" in p["licoes_feitas"]: break
+        p["action_done"] = False
+        await r.handle_desarmar_armadilha("h1", {"tx": _arm["pos"][0], "ty": _arm["pos"][1]})
+    check("desarmar cumpre a licao", "ladino_04" in p["licoes_feitas"])
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
