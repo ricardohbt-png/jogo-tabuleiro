@@ -447,8 +447,16 @@ async def main():
 
     fonte = open(os.path.join(os.path.dirname(os.path.dirname(
         os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
-    check("os DOIS caminhos de equipar chamam _licao_evento",
-          fonte.count('_licao_evento(p, "equipar"') == 2)
+    # Enumera os handlers em vez de contar: ja se perderam TRES caminhos de
+    # equipar seguidos (normal, rapido e mao do escudo), cada um deixando uma
+    # licao presa em silencio. Um quarto handler novo cai aqui.
+    import re as _re
+    _equipadores = [m for m in _re.findall(r"async def (handle_\w*equip\w*)\(", fonte)
+                    if m not in ("handle_guild_equip", "handle_unequip")]
+    check("ha tres caminhos de equipar conhecidos", len(_equipadores) == 3)
+    for _h in _equipadores:
+        _corpo = fonte.split(f"async def {_h}(")[1].split("async def ")[0]
+        check(f"{_h} chama _licao_evento", '_licao_evento(p, "equipar"' in _corpo)
     print("\n[10] Cada uma das seis classes tem trilha propria")
     _mapa = S.carregar_dungeon("campo_de_treinamento.json")
     _por_classe = {}
