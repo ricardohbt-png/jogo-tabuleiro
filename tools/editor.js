@@ -29,6 +29,15 @@
       loot_capaz: false, special: null, image: "armadura.png",
     });
   }
+  // Compatibilidade com uma cópia antiga do catálogo: a Chama Viva precisa
+  // continuar disponível nas decorações de chão mesmo antes do recarregamento.
+  if (!(CAT.decorations || []).some(d => d && d.type === "chama_viva")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "chama_viva", nome: "Chama viva", emoji: "🔥",
+      size: [1, 1], gira: false, alto: false, pisavel: true,
+      loot_capaz: false, special: "living_flame", image: null,
+    });
+  }
   const MAT = (CAT.materiais || []);
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
   const WALL_MATERIALS = MAT.filter(m => m && m.categoria === "parede");

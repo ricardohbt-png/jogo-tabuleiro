@@ -569,7 +569,7 @@ const DECOR_GLB_MODELS = {
   'fonte_de_parede.png': 'assets/objetos/fonte_de_parede.glb',
   'armadura.png': 'assets/objetos/armadura.glb',
   // Variante circular da fogueira usada na masmorra de Elara.
-  'fogueiracircular.png': 'assets/objetos/fogueira.glb',
+  'fogueiracircular.png': 'assets/objetos/fogueira_animada.glb',
   // Cama de casal da masmorra de Elara.
   'camacasal.png': 'assets/objetos/cama_de_casal.glb',
   // Compatibilidade com a mesa de alquimia legada, que pode vir com type=tumba.
@@ -590,7 +590,7 @@ const DECOR_GLB_TYPES = {
   cama_casal: 'assets/objetos/cama_de_casal.glb',
   estante: 'assets/objetos/estante_armas_cranios.glb',
   lareira: 'assets/objetos/lareira.glb',
-  fogueira: 'assets/objetos/fogueira.glb',
+  fogueira: 'assets/objetos/fogueira_animada.glb',
   tumba: 'assets/objetos/sarcofago.glb',
   tumba_lapide: 'assets/objetos/tumba_lapide.glb',
   carroca: 'assets/objetos/carroca.glb',
@@ -618,7 +618,8 @@ const DECOR_GLB_TYPES = {
   caverna: 'assets/objetos/caverna.glb',
   // Casa: PNG no editor/2D e modelo 3D real no tabuleiro.
   casa: 'assets/objetos/casa.glb',
-  brasa_chao: 'assets/objetos/brasa_chao.glb',
+  brasa_chao: 'assets/objetos/brasa_chao_animada.glb',
+  chama_viva: 'assets/objetos/chama_viva.glb',
   cortina_vermelha: 'assets/objetos/cortina_vermelha.glb',
   cortina_branca: 'assets/objetos/cortina_branca.glb',
   brasao_leao: 'assets/objetos/brasao_leao.glb',
@@ -652,6 +653,7 @@ const DECOR_3D = {
   arvore:         { shape: 'cyl', h: 1.8,  color: 0x2e7d32 },
   arvore_grande:  { shape: 'cyl', h: 2.6,  color: 0x1b5e20 },
   casa:           { shape: 'box', h: 2.2,  color: 0x665044 },
+  chama_viva:     { shape: 'cyl', h: 1.0, color: 0xff6a00 },
 };
 
 // ── Hi-DPI helper — call at start of every renderMap / dice frame ──
@@ -18767,8 +18769,13 @@ function _fmtBonus(n){ n = Number(n) || 0; return `${n >= 0 ? '+' : ''}${n}`; }
 function _modAtributo(n){ return Math.floor(((Number(n) || 10) - 10) / 2); }
 function _modificadoresTemporariosStatus(p){
   const out = [];
-  const add = (nome, efeito, ate) => out.push({nome, efeito, ate});
-  const r = GS.gameState?.round;
+  const add = (nome, efeito, ate = null, rodadas = null) => out.push({nome, efeito, ate, rodadas});
+  const addRestante = (nome, efeito, rodadas) => {
+    const n = Number(rodadas);
+    add(nome, efeito, null, Number.isFinite(n) && n > 0 ? n : null);
+  };
+  const state = GS.gameState || GS.cityState || {};
+  const r = Number(state.round || state.round_num || 0);
   const fome = Number(p.fome ?? p.hunger ?? 100), sede = Number(p.sede ?? p.thirst ?? 100);
   // Nome e efeito de cada status vêm de ui.status.* — namespace próprio, e não
   // reusa ui.selecao.skill.* de propósito: são superfícies diferentes, e acoplar
@@ -18803,18 +18810,147 @@ function _modificadoresTemporariosStatus(p){
   if(armadas.includes('furia_berserker')) add(S('furia_berserker'), S('furia_berserker_ef'));
   if(p.investida_armada) add(S('investida_heroica'), S('investida_heroica_ef'));
   if(p.tecnica_golpe_decisivo_armado) add(S('golpe_decisivo'), S('golpe_decisivo_ef'));
-  if(p.defesa_impecavel_ate >= r) add(S('defesa_impecavel'), S('defesa_impecavel_ef'), p.defesa_impecavel_ate);
-  if(p.resistencia_saves_ate >= r) add(S('resistencia_absoluta'), S('resistencia_absoluta_ef', {n: p.resistencia_saves_val || 0}), p.resistencia_saves_ate);
-  if(p.em_chamas_rodadas) add(S('em_chamas'), S('em_chamas_ef', {n: p.em_chamas_rodadas}));
+  if(Number(p.defesa_impecavel_ate || 0) >= r && Number(p.defesa_impecavel_ate || 0) > 0)
+    add(S('defesa_impecavel'), S('defesa_impecavel_ef'), p.defesa_impecavel_ate);
+  if(Number(p.resistencia_saves_ate || 0) >= r && Number(p.resistencia_saves_ate || 0) > 0)
+    add(S('resistencia_absoluta'), S('resistencia_absoluta_ef', {n: p.resistencia_saves_val || 0}), p.resistencia_saves_ate);
+  if(p.em_chamas_rodadas) addRestante(S('em_chamas'), S('em_chamas_ef', {n: p.em_chamas_rodadas}), p.em_chamas_rodadas);
   const sangNivel = Math.max(0, Math.min(3, Number(p.sangramento_nivel) || 0));
-  if(sangNivel) add(`🩸 ${S('sangramento', {n: sangNivel})}`, S('sangramento_ef', {n: sangNivel, r: Number(p.sangramento_rodadas) || 0}));
+  if(sangNivel) addRestante(`🩸 ${S('sangramento', {n: sangNivel})}`, S('sangramento_ef', {n: sangNivel, r: Number(p.sangramento_rodadas) || 0}), p.sangramento_rodadas);
   if(p.ferida_aberta) add(`🩹 ${S('ferida_aberta')}`, S('ferida_aberta_ef'));
   if(p.hemorragia) add(`⚠️ ${S('hemorragia')}`, S('hemorragia_ef'));
-  if(p.veneno_rodadas || p.envenenado_rodadas) add(S('envenenado'), S('envenenado_ef', {n: p.veneno_rodadas || p.envenenado_rodadas}));
-  if(p.com_medo || p.medo_rodadas) add(S('medo'), S('medo_ef'), p.medo_rodadas);
-  if(p.lento || p.lento_rodadas) add(S('lentidao'), S('lentidao_ef'), p.lento_rodadas);
-  if(p.paralisado) add(S('paralisado'), S('paralisado_ef'));
-  if(p.cego) add(S('cego'), S('cego_ef'));
+  const attrNome = {
+    str_: _rotulo('str_', 'ui.atributo.sigla', 'FOR'), forca: _rotulo('str_', 'ui.atributo.sigla', 'FOR'),
+    dex: _rotulo('dex', 'ui.atributo.sigla', 'DES'), destreza: _rotulo('dex', 'ui.atributo.sigla', 'DES'),
+    con_: _rotulo('con_', 'ui.atributo.sigla', 'CON'), constituicao: _rotulo('con_', 'ui.atributo.sigla', 'CON'),
+    int_: _rotulo('int_', 'ui.atributo.sigla', 'INT'), ataque: 'ataque', dano: 'dano', ca: 'CA', resistencia: 'resistência',
+    movimento: 'movimento', percepcao: 'percepção', vontade: 'Vontade', reflexos: 'Reflexos', fortitude: 'Fortitude',
+  };
+  const fmtDelta = (valor) => `${Number(valor) >= 0 ? '+' : ''}${Number(valor) || 0}`;
+  const poisonName = e => e?.nome || S('envenenado');
+  const poisonDetail = e => {
+    const op = e?.operacao;
+    if(op === 'dano') return `${e.dano || 'dano'} de dano por rodada`;
+    if(op === 'reduzir') return `-${Number(e.valor) || 0} ${attrNome[e.atributo] || e.atributo || 'atributo'}`;
+    if(op === 'penalidade') return (e.atributos || []).map(([a,v]) => `${fmtDelta(v)} ${attrNome[a] || a}`).join(' · ') || 'penalidade ativa';
+    if(op === 'petrificar') return 'petrificação';
+    if(op === 'cegar') return 'cegueira e penalidade em ataques';
+    return 'efeito de veneno ativo';
+  };
+  const venenos = Array.isArray(p.efeitos_veneno) ? p.efeitos_veneno : [];
+  if(venenos.length){
+    venenos.forEach((e, i) => addRestante(`☠️ ${poisonName(e)}`, poisonDetail(e), e.duracao ?? e.rodadas));
+  } else if(p.veneno_rodadas || p.envenenado_rodadas){
+    addRestante(S('envenenado'), S('envenenado_ef', {n: p.veneno_rodadas || p.envenenado_rodadas}), p.veneno_rodadas || p.envenenado_rodadas);
+  }
+
+  // Os modificadores de Abençoar/Amaldiçoar são uma única estrutura no
+  // servidor. Exibi-los aqui evita que o efeito apareça apenas como um nome,
+  // sem revelar quais números estão alterados.
+  const mods = p.mods_magia;
+  if(mods && Number(mods.rodadas || 0) > 0){
+    const partes = ['ataque', 'dano', 'ca', 'resistencia'].filter(k => Number(mods[k] || 0))
+      .map(k => `${fmtDelta(mods[k])} ${attrNome[k]}`);
+    if(mods.arma_ignora_resistencia) partes.push('ignora reduções/imunidades físicas');
+    addRestante('✨ Modificador mágico', partes.join(' · ') || 'efeito mágico ativo', mods.rodadas);
+  }
+
+  // Condições que antes só eram usadas pelo motor e não tinham representação
+  // no painel de status.
+  if(p.dormindo) addRestante('🌙 Sono', 'perde o turno; acorda ao sofrer dano', p.dormindo_rodadas);
+  if(p.comandado) addRestante('🗣️ Comando', 'o controlador dirige o próximo turno', p.comandado_rodadas || 1);
+  if(p.dominado) addRestante('🧠 Dominação', 'age sob controle de outra criatura', p.dominado_rodadas);
+  if(p.perde_turno) addRestante('🕸️ Imobilizado', 'perde o turno e não pode agir', p.perde_turno_rodadas || 1);
+  if(p.preso) addRestante('⛓️ Preso', 'movimento impedido', p.preso_rodadas);
+  if(p.paralisado) addRestante(S('paralisado'), S('paralisado_ef'), p.paralisado_rodadas);
+  if(p.cego) addRestante(S('cego'), S('cego_ef'), p.cego_rodadas);
+  if(p.com_medo || p.medo_rodadas) addRestante(S('medo'), S('medo_ef'), p.medo_rodadas);
+  if(p.lento || p.lento_rodadas) addRestante(S('lentidao'), S('lentidao_ef'), p.lento_rodadas);
+  if(Number(p.acido_residual || 0) > 0) add('🧪 Ácido residual', `${p.acido_residual} dano no início do próximo turno`);
+
+  // Magias de duração e reservas de regeneração.
+  const magicName = id => GRIMORIO_CLIENT[id]?.nome || id;
+  if(Number(p.visao_escuro_manto || p.visao_escuro_rodadas || 0) > 0)
+    addRestante(`🌑 ${magicName('manto_escuridao')}`, 'concede visão no escuro e protege contra o olhar petrificante', p.visao_escuro_rodadas);
+  if(p.visao_escuro_missao) add(`🌌 ${magicName('visao_escuro')}`, 'visão no escuro ativa');
+  if(Number(p.protecao_rodadas || 0) > 0)
+    addRestante(`🛡️ ${magicName('protecao_energia')}`, `absorve ${p.protecao_restante ?? p.protecao_max ?? 0} dano elemental`, p.protecao_rodadas);
+  if(Number(p.temp_ca_bonus || 0) !== 0)
+    addRestante('🛡️ CA temporária', `${fmtDelta(p.temp_ca_bonus)} CA`, p.temp_ca_rodadas);
+  if(p.invisivel_magico && Number(p.invisivel_magico_rodadas || 0) > 0)
+    addRestante(`🫥 ${magicName('invisibilidade')}`, 'não pode ser atacado normalmente; próximo ataque tem vantagem', p.invisivel_magico_rodadas);
+  if(Number(p.velocidade_rodadas || 0) > 0)
+    addRestante(`⚡ ${magicName('velocidade')}`, 'movimento e ação extra', p.velocidade_rodadas);
+  if(Number(p.regen_pool || 0) > 0)
+    add(`🌿 ${magicName('regeneracao_magica')}`, `reserva de ${p.regen_pool} PV; cura no início do turno`);
+  if(Number(p.potion_regen_pool || 0) > 0)
+    add(`🧪 Poção de Regeneração`, `reserva de ${p.potion_regen_pool} PV; cura 1 PV no início do turno`);
+  if(p.contramagica_preparada) add(`🛑 ${magicName('contramagica')}`, 'pronta para reagir à próxima magia');
+  if(Number(p.voo || p.voo_magico || 0) > 0) add('🪽 Voo', `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`);
+  if(Number(p.olhar_petrificante_ate || 0) >= r && Number(p.olhar_petrificante_ate || 0) > 0)
+    add('👁️ Olhar Petrificante', 'efeito ativo: criaturas que o veem devem resistir à petrificação', p.olhar_petrificante_ate);
+
+  if(Number(p.bonus_ataque_temporario || 0) !== 0)
+    add('⚗️ Bônus temporário de ataque', `${fmtDelta(p.bonus_ataque_temporario)} ataque até o fim do turno`, null, 1);
+  if(p.vinho_ativo) addRestante('🍷 Embriaguez', '-1 ataque e -1 Reflexos', p.vinho_rodadas);
+  if(p.cerveja_ativo) addRestante('🍺 Alegria', '-1 ataque', p.cerveja_rodadas);
+
+  // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
+  // penalidade do próprio personagem.
+  const armasEnvenenadas = [p.weapon, p.gear?.weapon, p.gear?.off_hand]
+    .filter(Boolean).flatMap(w => Array.isArray(w.poison_slots) ? w.poison_slots : (w.veneno_id ? [w.veneno_id] : []));
+  if(armasEnvenenadas.length){
+    const nomes = armasEnvenenadas.map(id => `☠️ ${id}`).join(' · ');
+    add('🗡️ Veneno aplicado', `${armasEnvenenadas.length} carga(s) — ${nomes}`);
+  }
+
+  // Doenças e maldições são persistentes até purificação, mas precisam ser
+  // visíveis neste painel para não parecerem efeitos “perdidos”.
+  if(p.doente){
+    const sintomas = (p.doenca?.sintomas || []).join(', ') || p.doenca_tipo || 'ativa';
+    add('🦠 Doença', `${sintomas} — permanece até Purificação`);
+  }
+  (p.maldicoes || []).forEach(m => {
+    const id = m?.id || m;
+    if(!id) return;
+    const estagio = m?.aventuras != null && ['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(id)
+      ? ` · ${t('ui.maldicao.estagio', {n: Math.min(5, 1 + Math.floor(Number(m.aventuras || 0) / 2))})}` : '';
+    add(`☠️ ${_rotulo(id, 'ui.maldicao', id)}`, `${_rotulo(id + '.ef', 'ui.maldicao', t('ui.maldicao.ativa'))}${estagio} — permanece até Purificação`);
+  });
+
+  // Marcas e imunidades também têm efeito mecânico e devem sobreviver à troca
+  // de tela/rodada no mesmo painel.
+  const marcasPet = Number(p.petrificacao_marcas || 0);
+  const resistPet = Number(p.resistencia_petrificacao_marcas || 0);
+  if(marcasPet > 0 || p.olhar_petrificante_ativo || p.petrificado){
+    const estado = p.petrificado ? 'totalmente petrificado' : `${marcasPet}/3 marcas de Petrificação`;
+    const extra = p.olhar_petrificante_ativo ? ` · resistência ${resistPet}/3` : '';
+    add('🗿 Petrificação', `${estado}${extra}${p.petrificado ? ' — permanente até Purificação' : ''}`);
+  }
+  const imunidades = p.imunidades_status || {};
+  Object.entries(imunidades).forEach(([tipo, ate]) => {
+    const n = Number(ate) - r;
+    if(n > 0) addRestante(`🛡️ Imune a ${tipo}`, 'o estado correspondente não pode ser aplicado', n);
+  });
+
+  // Silêncio e Escuridão são zonas do mapa, portanto não aparecem como campo
+  // no jogador. Ainda assim, quando o herói está dentro delas, o efeito é
+  // ativo e precisa ser mostrado junto dos demais estados.
+  const pos = Array.isArray(p.pos) ? p.pos : null;
+  const zonaContem = z => {
+    if(!pos || !z || !Number.isFinite(Number(z.cx)) || !Number.isFinite(Number(z.cy))) return false;
+    if(z.lado || z.area_lado){
+      const lado = Number(z.lado || z.area_lado) || 4, h = Math.floor(lado / 2);
+      return pos[0] >= Number(z.cx) - h + 1 && pos[0] <= Number(z.cx) + h
+        && pos[1] >= Number(z.cy) - h + 1 && pos[1] <= Number(z.cy) + h;
+    }
+    return Math.max(Math.abs(pos[0] - Number(z.cx)), Math.abs(pos[1] - Number(z.cy))) <= Number(z.raio || 0);
+  };
+  (state.zonas_especiais || []).filter(z => z?.ativa && zonaContem(z)).forEach(z => {
+    if(z.tipo === 'silencio') addRestante('🔇 Silêncio', 'não pode lançar magias; bônus musicais são suprimidos', z.duracao);
+    if(z.tipo === 'escuridao' && !p.visao_escuro && !p.visao_escuro_manto)
+      addRestante('🌑 Escuridão', 'visão limitada e ataques à distância prejudicados', z.duracao);
+  });
   return out;
 }
 function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
@@ -18841,7 +18977,8 @@ function _menuStatusMarkup(p, opts = {}){
   const acertoTotal = bonusBaseAtaque + danoBase + bonusArma + bonusAtaque;
   const detalheAcerto = t('ui.status.detalhe_acerto', {bba:_fmtBonus(bonusBaseAtaque), attr:nomeAtributoAtaque, mod:_fmtBonus(danoBase), arma:_fmtBonus(bonusArma), temp:_fmtBonus(bonusAtaque)});
   const bonusDano = sobrevivencia + (cancao.bonus_dano || 0) + (gl.dano || 0) + (p.tecnica_buff_dano_arma || 0);
-  const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0);
+  const tempCa = Number(p.temp_ca_bonus || 0);
+  const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0) + tempCa;
   const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
   const dano = `${dadoDano} ${_fmtBonus(danoBase)} → ${dadoDano} ${_fmtBonus(danoBase + bonusDano)}`;
   const temporarios = _modificadoresTemporariosStatus(p);
@@ -18853,7 +18990,7 @@ function _menuStatusMarkup(p, opts = {}){
     <header class="st-header"><div><b>${t('ui.status.titulo')}</b>${hint}</div>${close}</header>
     <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, `${t(weapon?.stat === 'dex' ? 'ui.atributo.destreza' : 'ui.atributo.forca')} · ${_bAtual}`)}</section>
     <section><h3>${t('ui.status.resistencias')}</h3>${linha(t('ui.resistencia.fortitude'), `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.reflexos'), `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.vontade'), `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, _bAtual)}</section>
-    <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${t('ui.status.rodadas_restantes', {n:Math.max(0,m.ate-GS.gameState.round)})}</em>` : ''}</div>`).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
+    <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => { const n = m.rodadas != null ? Number(m.rodadas) : (m.ate != null && r ? Math.max(0, Number(m.ate) - r) : null); return `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${n != null && n > 0 ? `<em>${t('ui.status.rodadas_restantes', {n:n})}</em>` : ''}</div>`; }).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
 }
 function abrirMenuStatus(pid){
   const p = _playerMenuMagias(pid);
@@ -29192,11 +29329,20 @@ function _atualizarTerrenoAnimado3D(t){
 }
 
 function startLoop3D(){
+  let lastDecorAnimAt = performance.now();
   function tick(){
     if(!g3) return;
     g3.animFrame = requestAnimationFrame(tick);
     const t = Date.now();
     const now = performance.now();
+    const decorAnimDt = Math.min(0.1, Math.max(0, now - lastDecorAnimAt) / 1000);
+    lastDecorAnimAt = now;
+    if(g3.decorMeshes){
+      for(const decor of Object.values(g3.decorMeshes)){
+        const mixer = decor && decor.userData && decor.userData.animationMixer;
+        if(mixer) mixer.update(decorAnimDt);
+      }
+    }
     _fpsTick(now);
     // Todos os efeitos de magia compartilham este mesmo frame do renderer.
     _flushVisualAnimFrame3D(now);
@@ -30667,6 +30813,11 @@ function _disposeEntityTree(root){
 
 // ── Helpers para miniaturas extrudadas de decorações (PNG → 3D) ───────────────
 function _disposeDecorMesh(obj){
+  if(obj && obj.userData && obj.userData.animationMixer){
+    const mixer = obj.userData.animationMixer;
+    mixer.stopAllAction();
+    if(mixer.uncacheRoot) mixer.uncacheRoot(obj);
+  }
   obj.traverse(o => {
     // Instâncias GLB compartilham os recursos com o template em cache.
     if (o.userData && o.userData.isGLB) return;
@@ -30802,6 +30953,9 @@ function _loadDecorGLB(T, path, cb){
       gltf => {
         liberarVaga();
         const template = gltf.scene;
+        // Os clips ficam no template em cache; Object3D.clone() preserva esta
+        // referência e cada instância recebe seu próprio AnimationMixer.
+        template.userData._gltfAnimations = gltf.animations || [];
         template.traverse(o => {
           if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
         });
@@ -30845,6 +30999,11 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     }
 
     const inst = template.clone();
+    const animations = (template.userData && template.userData._gltfAnimations) || [];
+    const animationMixer = animations.length ? new g3.T.AnimationMixer(inst) : null;
+    if(animationMixer){
+      for(const clip of animations) animationMixer.clipAction(clip).play();
+    }
     const box = new g3.T.Box3().setFromObject(inst);
     const size = box.getSize(new g3.T.Vector3());
     const scale = Math.min(
@@ -30865,7 +31024,7 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     wrap.add(inst);
     wrap.scale.setScalar(scale);
     const grp = new g3.T.Group();
-    grp.userData = { isDecor: true, decorId, glbPath: path };
+    grp.userData = { isDecor: true, decorId, glbPath: path, animationMixer };
     grp.add(wrap);
     grp.position.copy(slot.position);
     grp.position.y = DECOR_GLB_FLOOR_Y;

@@ -11459,6 +11459,21 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "chama_viva",
+      "nome": "Chama viva",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "living_flame",
+      "image": null
+    },
+    {
       "type": "tumba",
       "nome": "Tumba",
       "emoji": "⚰️",

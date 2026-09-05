@@ -7022,7 +7022,7 @@ DECOR_MODEL3D = {
     "cama": "assets/objetos/cama.glb",
     "lareira": "assets/objetos/lareira.glb",
     "fonte": "assets/objetos/fonte.glb",
-    "fogueira": "assets/objetos/fogueira.glb",
+    "fogueira": "assets/objetos/fogueira_animada.glb",
     "tumba": "assets/objetos/sarcofago.glb",
     "tumba_lapide": "assets/objetos/tumba_lapide.glb",
     "carroca": "assets/objetos/carroca.glb",
@@ -7050,10 +7050,13 @@ DECOR_MODEL3D = {
     "arvore_seca": "assets/objetos/arvore_seca.glb",
     "caverna": "assets/objetos/caverna.glb",
     "casa": "assets/objetos/casa.glb",
-    "brasa_chao": "assets/objetos/brasa_chao.glb",
+    "brasa_chao": "assets/objetos/brasa_chao_animada.glb",
     "cortina_vermelha": "assets/objetos/cortina_vermelha.glb",
     "cortina_branca": "assets/objetos/cortina_branca.glb",
     "brasao_leao": "assets/objetos/brasao_leao.glb",
+    # Chama 3D viva: a animação é reproduzida pelo cliente; o servidor mantém
+    # apenas a regra autoritativa de dano ao entrar na casa.
+    "chama_viva": "assets/objetos/chama_viva.glb",
 }
 
 DECOR_TYPES = {
@@ -7061,6 +7064,7 @@ DECOR_TYPES = {
     "lareira":        _decor("Lareira", "🪵", [1, 2], gira=True),
     "fonte":          _decor("Fonte", "⛲", [2, 2], special="fountain"),
     "fogueira":       _decor("Fogueira", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="campfire"),
+    "chama_viva":     _decor("Chama viva", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="living_flame"),
     "tumba":          _decor("Tumba", "⚰️", [1, 2], gira=True),
     "tumba_lapide":   _decor("Tumba com lápide", "⚰️", [1, 2], gira=True, alto=True,
                                loot_capaz=False, image="tumba_lapide.png"),
@@ -7101,7 +7105,7 @@ DECOR_TYPES = {
     "casa":           _decor("Casa", "🏠", [3, 3], gira=True, alto=True,
                                loot_capaz=False, image="casa.png"),
     "brasa_chao":     _decor("Brasa no chão", "🔥", [1, 1], pisavel=True,
-                               loot_capaz=False, image="brasa_chao.png"),
+                               loot_capaz=False, special="floor_ember", image="brasa_chao.png"),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
     # DecoraÃ§Ãµes de parede: ficam presas a uma face de WALL, sem ocupar nem
     # bloquear o chÃ£o. A arte Ã© um decal vertical no modo 3D.
@@ -8747,6 +8751,7 @@ class GameRoom:
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
+        self._fire_damage_tiles = {}
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
         self._mat_oclui_tiles = set()  # casas de material opaco (entulho) â€” barra visÃ£o
@@ -9253,7 +9258,12 @@ class GameRoom:
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             initiative=self.initiative_value(p),
-                            repair_options=self._opcoes_reparo_ferreiro(p))
+                            repair_options=self._opcoes_reparo_ferreiro(p),
+                            # Bênção Divina, bênção de grupo e elixires usam um
+                            # cache de combate interno. Expor só este metadado
+                            # permite ao painel de status mostrar o bônus sem
+                            # alterar a regra nem tornar o cache parte do save.
+                            bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
                         for p in self.players.values()]
         return {
             "type": "city_state",
@@ -27645,6 +27655,7 @@ class GameRoom:
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
+        self._fire_damage_tiles = {}
         for d in getattr(self, "decorations", []):
             meta = DECOR_TYPES[d["type"]]
             if meta["special"] == "wall":
@@ -27656,6 +27667,11 @@ class GameRoom:
                     self._decor_tall_tiles.add((tx, ty))
                 if meta["special"] == "campfire":
                     self._campfire_tiles.add((tx, ty))
+                    self._fire_damage_tiles[(tx, ty)] = "1d4"
+                elif meta["special"] == "living_flame":
+                    self._fire_damage_tiles[(tx, ty)] = "2d4"
+                elif meta["special"] == "floor_ember":
+                    self._fire_damage_tiles[(tx, ty)] = "1"
 
     def _rebuild_materiais_index(self):
         """Recalcula os índices de bloqueio/visão da camada de materiais."""
@@ -27671,16 +27687,30 @@ class GameRoom:
                 self._mat_oclui_tiles.add((x, y))
 
     async def _aplicar_fogueira_se_pisar(self, criatura):
-        """Se a criatura está numa casa de fogueira, sofre 1d4 de fogo (sem save)."""
-        if self._voo_imune_terreno(criatura):
-            return
+        """Aplica o dano autoritativo de fogo de uma decoração pisável (sem save).
+
+        A fogueira mantém a imunidade de terreno das criaturas voadoras. A chama
+        viva é uma exceção deliberada: qualquer personagem ou monstro que passe
+        sobre sua casa sofre o dano, inclusive ao sobrevoá-la.
+        """
         pos = criatura.get("pos")
-        if not pos or (pos[0], pos[1]) not in self._campfire_tiles:
+        tile = (pos[0], pos[1]) if pos else None
+        dado = getattr(self, "_fire_damage_tiles", {}).get(tile)
+        if not dado:
             return
-        dano = roll_dice("1d4")
+        if dado == "1d4" and self._voo_imune_terreno(criatura):
+            return
+        dano = roll_dice(dado)
         nome = criatura.get("name") or criatura.get("nome", "Alguém")
-        await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": T("dado.fogueira")})
-        await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome_criatura(criatura), dano=dano))
+        if dado == "1d4":
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": T("dado.fogueira")})
+            await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome_criatura(criatura), dano=dano))
+        elif dado == "2d4":
+            await self.broadcast({"type": "dice_roll", "die": "2d4", "value": dano, "label": "Chama viva"})
+            await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a chama viva e sofre **{dano}** de dano de fogo!")
+        else:
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano, "label": "Brasa no chão"})
+            await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a brasa e sofre **{dano}** de dano de fogo!")
         await self._dano_em_alvo(criatura, dano, "fogo")
 
     async def _commit_monster_step(self, m, nx, ny):
@@ -34900,7 +34930,10 @@ class GameRoom:
                             # exclusivamente em temp_def na resolução da CA.
                             temp_ca_bonus=int(self.temp_def.get(p["id"], 0) or 0),
                             temp_ca_rodadas=(max(1, int(self.temp_def_turnos.get(p["id"], 1) or 1))
-                                             if self.temp_def.get(p["id"], 0) else 0))
+                                             if self.temp_def.get(p["id"], 0) else 0),
+                            # Mesmo metadado do payload da cidade: o bônus vem
+                            # do cache de rodada e não muda nenhuma resolução.
+                            bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
             players_state.append(snapshot)
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m),

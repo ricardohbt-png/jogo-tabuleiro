@@ -18,18 +18,22 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("36 tipos", len(d) == 36)
+    check("37 tipos", len(d) == 37)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
         "chao", "brasao_leao", "cortina_vermelha", "cortina_branca", "lapide", "cripta",
-        "fonte_de_parede", "armadura", "brasa_chao")))
+        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
     check("fogueira é campfire e pisável", d["fogueira"]["special"] == "campfire" and d["fogueira"]["pisavel"])
+    check("chama viva usa GLB, é pisável e causa 2d4", d["chama_viva"]["special"] == "living_flame"
+          and d["chama_viva"]["pisavel"] and not d["chama_viva"]["loot_capaz"]
+          and d["chama_viva"]["size"] == [1, 1]
+          and server.DECOR_MODEL3D["chama_viva"].endswith("chama_viva.glb"))
     check("fonte size 2x2", d["fonte"]["size"] == [2, 2])
     check("cama size 1x2", d["cama"]["size"] == [1, 2])
     check("estante usa a nova arte PNG/GLB", d["estante"]["image"] == "estante_armas_cranios.png"
@@ -82,8 +86,9 @@ def test_catalog():
           and server.DECOR_MODEL3D["mesa_tortura"].endswith("mesa_tortura.glb"))
     check("brasa usa PNG/GLB, é 1x1 e pisável", d["brasa_chao"]["size"] == [1, 1]
           and d["brasa_chao"]["pisavel"] and not d["brasa_chao"]["loot_capaz"]
+          and d["brasa_chao"]["special"] == "floor_ember"
           and d["brasa_chao"]["image"] == "brasa_chao.png"
-          and server.DECOR_MODEL3D["brasa_chao"].endswith("brasa_chao.glb"))
+          and server.DECOR_MODEL3D["brasa_chao"].endswith("brasa_chao_animada.glb"))
     check("cortina vermelha usa PNG/GLB", d["cortina_vermelha"]["image"] == "cortina_vermelha.png"
           and server.DECOR_MODEL3D["cortina_vermelha"].endswith("cortina_vermelha.glb"))
     check("brasão usa PNG/GLB", d["brasao_leao"]["image"] == "brasao_leao.png"
@@ -91,8 +96,8 @@ def test_catalog():
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("pisáveis: chão, fogueira e brasa", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "brasa_chao", "brasao_leao", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
+    check("pisáveis: chão, fogueira, brasa e chama viva", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
 
 async def _noop(*a, **k): pass
 
@@ -200,6 +205,37 @@ def test_fogueira():
         p["pos"] = [0, 0]; hp0 = p["hp"]
         await r._aplicar_fogueira_se_pisar(p)
         check("sem dano fora da fogueira", p["hp"] == hp0)
+    asyncio.run(run())
+
+def test_chama_viva():
+    print("\n[A5b] chama viva 2d4")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d0", "type": "chama_viva", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 20; p["max_hp"] = 20; p["alive"] = True
+        await r._aplicar_fogueira_se_pisar(p)
+        check("herói perdeu entre 2 e 8 HP", 12 <= p["hp"] <= 18)
+        p["pos"] = [0, 0]; hp0 = p["hp"]
+        await r._aplicar_fogueira_se_pisar(p)
+        check("sem dano fora da chama viva", p["hp"] == hp0)
+        m = {"name": "Monstro de teste", "type": "goblin", "pos": [4, 4],
+             "hp": 20, "max_hp": 20, "alive": True}
+        await r._aplicar_fogueira_se_pisar(m)
+        check("monstro também perdeu entre 2 e 8 HP", 12 <= m["hp"] <= 18)
+    asyncio.run(run())
+
+def test_brasa_chao():
+    print("\n[A5c] brasa no chão 1 dano")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d0", "type": "brasa_chao", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 20; p["max_hp"] = 20; p["alive"] = True
+        await r._aplicar_fogueira_se_pisar(p)
+        check("brasa causa exatamente 1 de dano", p["hp"] == 19)
     asyncio.run(run())
 
 def test_fonte():
@@ -382,6 +418,8 @@ def main():
     test_bloqueio()
     test_objeto_chave()
     test_fogueira()
+    test_chama_viva()
+    test_brasa_chao()
     test_fonte()
     test_container()
     test_container_refresh()
