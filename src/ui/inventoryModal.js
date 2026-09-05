@@ -76,6 +76,8 @@ const InventoryModal = (() => {
 #inv-modal-overlay.open{opacity:1;pointer-events:auto;}
 .inv-frame{position:relative;width:min(620px,94vw);max-width:94vw;}
 .inv-frame.inv-combined-frame{width:min(1120px,96vw);}
+.inv-frame.inv-combined-frame.stats-hidden,.inv-frame.inv-combined-frame.shortcuts-hidden,
+.inv-frame.inv-combined-frame.stats-hidden.shortcuts-hidden{width:max-content;max-width:96vw;}
 .inv-modal{position:relative;padding:26px 26px 26px;
   background:
     repeating-linear-gradient(115deg, rgba(255,255,255,.05) 0 1px, transparent 1px 34px),
@@ -100,9 +102,11 @@ const InventoryModal = (() => {
 .inv-body{position:relative;z-index:2;}
 .inv-normal-body{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:12px;align-items:start;}
 .inv-combined-body{display:grid;grid-template-columns:minmax(225px,280px) minmax(350px,1fr) 96px;gap:14px;align-items:start;}
-.inv-combined-body.stats-hidden{grid-template-columns:minmax(0,1fr) 96px;}
-.inv-combined-body.shortcuts-hidden{grid-template-columns:minmax(225px,280px) minmax(350px,1fr);}
-.inv-combined-body.stats-hidden.shortcuts-hidden{grid-template-columns:minmax(0,1fr);}
+.inv-combined-body.stats-hidden{grid-template-columns:max-content 96px;}
+.inv-combined-body.shortcuts-hidden{grid-template-columns:max-content max-content;}
+.inv-combined-body.stats-hidden.shortcuts-hidden{grid-template-columns:max-content;}
+.inv-combined-body.stats-hidden .inv-main,.inv-combined-body.shortcuts-hidden .inv-main,
+.inv-combined-body.stats-hidden.shortcuts-hidden .inv-main{width:max-content;max-width:100%;}
 .inv-stats-panel{min-width:0;max-height:calc(100vh - 90px);overflow-y:auto;margin-top:40px;padding:0;
   border:1px solid #c8a95188;border-radius:8px;background:linear-gradient(145deg,#15110a,#090806);
   box-shadow:0 12px 35px rgba(0,0,0,.72),0 0 14px rgba(200,169,81,.14);}
@@ -482,8 +486,13 @@ const InventoryModal = (() => {
   function _applyPanelPrefs(overlay){
     const body = overlay.querySelector('.inv-combined-body');
     if(!body) return;
+    const frame = overlay.querySelector('.inv-combined-frame');
     body.classList.toggle('stats-hidden', _panelPrefs.statsHidden);
     body.classList.toggle('shortcuts-hidden', _panelPrefs.shortcutsHidden);
+    if(frame){
+      frame.classList.toggle('stats-hidden', _panelPrefs.statsHidden);
+      frame.classList.toggle('shortcuts-hidden', _panelPrefs.shortcutsHidden);
+    }
     const stats = overlay.querySelector('[data-panel="stats"]');
     const shortcuts = overlay.querySelector('[data-panel="shortcuts"]');
     if(stats) stats.hidden = _panelPrefs.statsHidden;
