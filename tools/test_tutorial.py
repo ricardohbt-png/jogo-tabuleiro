@@ -381,6 +381,21 @@ async def main():
     check("sem pendência, licao_id é nulo", bloco["licao_id"] is None)
     check("conta a concluída", bloco["concluidas"] == 1)
 
+    print("\n[5e] Verbo que nao e movimento tambem libera a proxima licao")
+    r = sala([
+        licao(id="a", classe="warrior", ordem=1, pos=[2, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1, "texto_curto": "Encerre"}),
+        licao(id="b", classe="warrior", ordem=2, pos=[2, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "equipar", "vezes": 1, "texto_curto": "Equipe"}),
+    ])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("a primeira licao esta pendente", g["licao_atual"] == "a")
+    await r._licao_evento(g, "encerrar_turno")
+    check("cumprida por verbo sem movimento", "a" in g["licoes_feitas"])
+    check("a proxima aparece sem o heroi andar", g["licao_atual"] == "b")
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

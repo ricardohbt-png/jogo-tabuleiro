@@ -1,0 +1,584 @@
+{
+  "schema_version": 1,
+  "id": "campo_de_treinamento",
+  "name": "Campo de Treinamento",
+  "ambiente": "masmorra",
+  "saida_permitida": false,
+  "start_mode": "hero_spawns",
+  "grid": {
+    "w": 20,
+    "h": 12
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "entrance",
+      "locked": false,
+      "doors": []
+    },
+    {
+      "id": 1,
+      "x": 13,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          12,
+          3
+        ]
+      ]
+    }
+  ],
+  "door_conditions": {
+    "12,3": {
+      "type": "licao",
+      "licao_id": "atrio_04"
+    }
+  },
+  "entrance": null,
+  "hero_spawns": [
+    {
+      "class_id": "warrior",
+      "pos": [
+        2,
+        2
+      ],
+      "room_id": 0
+    },
+    {
+      "class_id": "mage",
+      "pos": [
+        3,
+        2
+      ],
+      "room_id": 0
+    },
+    {
+      "class_id": "rogue",
+      "pos": [
+        4,
+        2
+      ],
+      "room_id": 0
+    },
+    {
+      "class_id": "cleric",
+      "pos": [
+        2,
+        5
+      ],
+      "room_id": 0
+    },
+    {
+      "class_id": "bard",
+      "pos": [
+        3,
+        5
+      ],
+      "room_id": 0
+    },
+    {
+      "class_id": "paladin",
+      "pos": [
+        4,
+        5
+      ],
+      "room_id": 0
+    }
+  ],
+  "exit": {
+    "x": 18,
+    "y": 3
+  },
+  "monsters": [
+    {
+      "type": "goblin",
+      "pos": [
+        16,
+        3
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    }
+  ],
+  "chests": [
+    {
+      "pos": [
+        5,
+        5
+      ],
+      "gold": 0,
+      "items": [
+        {
+          "id": "sword"
+        }
+      ],
+      "key_objective": false
+    }
+  ],
+  "traps": [],
+  "decorations": [],
+  "secret_passages": [],
+  "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 1,
+    "level": 1
+  },
+  "prisoner": null,
+  "materiais": {},
+  "falas": [
+    {
+      "id": "atrio_01",
+      "pos": [
+        3,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Bem-vindo ao Campo de Treinamento. Comece andando: clique numa casa iluminada. Seu herói tem um número de passos por turno — quando eles acabam, só o próximo turno devolve.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 9
+      },
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          5,
+          3
+        ],
+        "vezes": 1,
+        "texto_curto": "Ande até a marca à sua direita"
+      }
+    },
+    {
+      "id": "atrio_02",
+      "pos": [
+        5,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Naquele baú há uma espada. Fique ao lado dele e pegue o que tem dentro: todo item adquirido vai primeiro para a sua bolsa, não direto para a mão.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 3
+      },
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "pegar_item",
+        "alvo": "sword",
+        "vezes": 1,
+        "texto_curto": "Pegue a espada do baú"
+      }
+    },
+    {
+      "id": "atrio_03",
+      "pos": [
+        5,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Na bolsa a espada não serve de nada. Abra o inventário e equipe-a: equipar é ação livre, não custa o seu turno.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 3
+      },
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "equipar",
+        "alvo": "sword",
+        "vezes": 1,
+        "texto_curto": "Equipe a espada"
+      }
+    },
+    {
+      "id": "atrio_04",
+      "pos": [
+        6,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "O combate é por turnos. Quando terminar o que quer fazer, encerre o turno e deixe os outros agirem. Encerre o seu agora — a porta ao fundo destranca em seguida.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 2
+      },
+      "ordem": 4,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Encerre o seu turno"
+      }
+    },
+    {
+      "id": "atrio_05",
+      "pos": [
+        11,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Portas trancadas se abrem com um clique quando você está ao lado delas. Abrir é de graça: não gasta movimento nem ação.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 2
+      },
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "abrir_porta",
+        "alvo": [
+          12,
+          3
+        ],
+        "vezes": 1,
+        "texto_curto": "Abra a porta ao fundo"
+      }
+    },
+    {
+      "id": "guerreiro_01",
+      "pos": [
+        14,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Todo ataque rola 1d20 e soma o seu acerto contra a Classe de Armadura do alvo. Empatar ou passar acerta; abaixo disso, erra. Ataque aquela criatura e observe o dado.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 3
+      },
+      "classe": "warrior",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "goblin",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque na criatura"
+      }
+    },
+    {
+      "id": "guerreiro_02",
+      "pos": [
+        14,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Um acerto raramente basta. Continue até derrubá-la — e repare que um 20 natural dobra o dano.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 3
+      },
+      "classe": "warrior",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "goblin",
+        "vezes": 1,
+        "texto_curto": "Derrote a criatura"
+      }
+    }
+  ],
+  "objectives": {
+    "primary": {
+      "type": "all_heroes_at_exit",
+      "xp": 0,
+      "reward": {
+        "gold": 0,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}

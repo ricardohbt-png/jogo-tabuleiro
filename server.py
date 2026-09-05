@@ -12652,12 +12652,10 @@ class GameRoom:
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
-        # A ordem importa nas duas pontas: a lição precisa ter disparado ANTES,
-        # para que o passo que a revela também possa cumpri-la (andar até a casa
-        # que aciona o marcador); e a varredura roda DE NOVO depois, para que a
-        # lição cumprida agora libere a próxima da ordem no mesmo passo.
+        # A varredura vem ANTES para que o passo que revela a lição também possa
+        # cumpri-la (andar até a casa do marcador). Liberar a lição SEGUINTE é
+        # trabalho do próprio _licao_evento, que faz isso para os sete verbos.
         await self._licao_evento(p, "mover_ate", alvo=list(p["pos"]))
-        await self._verificar_falas(p, entered)
         if entered and not entered["cleared"]:
             await self._on_enter_room(pid, entered)
 
@@ -12827,6 +12825,12 @@ class GameRoom:
         prog[lic_id] = prog.get(lic_id, 0) + 1
         if prog[lic_id] >= int(tar.get("vezes", 1) or 1):
             await self._licao_concluir(p, lic)
+            # Cumprir libera a próxima da trilha AQUI, e não só no próximo passo:
+            # a varredura de falas roda a partir do movimento, então sem isto
+            # uma lição concluída por pegar item, equipar ou encerrar o turno
+            # deixaria o herói sem instrução até ele andar de novo.
+            await self._verificar_falas(
+                p, player_room(self.rooms, p["pos"][0], p["pos"][1]))
 
     async def _disparar_fala(self, fala, p=None):
         """Exibe uma fala de NPC. Fala comum: broadcast, uma vez para a sala.
