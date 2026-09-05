@@ -356,6 +356,31 @@ async def main():
     ok, msg = S.validar_dungeon(mapa_porta({"type": "licao", "licao_id": "zzz"}))
     check("licao_id inexistente é recusado", ok is False and "zzz" in msg)
 
+    print("\n[7] Bloco tutorial do game_state")
+    r = sala([])
+    check("masmorra sem lição não manda bloco", r._tutorial_payload() is None)
+
+    r = sala([licao(id="a", classe="warrior", ordem=1,
+                    tarefa={"tipo": "atacar", "alvo": "goblin", "vezes": 3,
+                            "texto_curto": "Ataque o boneco"}),
+              licao(id="b", classe="mage", ordem=1,
+                    tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                            "texto_curto": "Encerre o turno"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    g["licao_atual"] = "a"; g["licao_progresso"]["a"] = 1
+    bloco = r._tutorial_payload()["por_classe"]["warrior"]
+    check("mostra a lição atual", bloco["licao_id"] == "a")
+    check("mostra o texto curto", bloco["texto_curto"] == "Ataque o boneco")
+    check("mostra o progresso", bloco["feito"] == 1 and bloco["vezes"] == 3)
+    check("total conta só as da classe", bloco["total"] == 1)
+    check("mago sem herói na sala não aparece",
+          "mage" not in r._tutorial_payload()["por_classe"])
+
+    g["licao_atual"] = None; g["licoes_feitas"] = ["a"]
+    bloco = r._tutorial_payload()["por_classe"]["warrior"]
+    check("sem pendência, licao_id é nulo", bloco["licao_id"] is None)
+    check("conta a concluída", bloco["concluidas"] == 1)
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

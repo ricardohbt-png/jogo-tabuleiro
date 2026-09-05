@@ -26585,6 +26585,32 @@ class GameRoom:
                  "revealed_by_clarividencia": sp.get("revealed_by_clarividencia_until", 0) > self.round_num}
                 for sp in self.secret_passages]
 
+    def _tutorial_payload(self):
+        """Bloco `tutorial` do game_state — None fora de uma masmorra-tutorial.
+
+        O game_state é um broadcast único, então o progresso vai chaveado por
+        classe e cada cliente lê a entrada da própria. Como o servidor impede
+        dois jogadores com a mesma classe na sala, classe = um jogador."""
+        if not getattr(self, "licoes", None):
+            return None
+        por_classe = {}
+        for p in self.players.values():
+            cls = p.get("class_id")
+            if not cls:
+                continue
+            lic = next((l for l in self.licoes if l["id"] == p.get("licao_atual")), None)
+            tar = (lic or {}).get("tarefa") or {}
+            por_classe[cls] = {
+                "licao_id": lic["id"] if lic else None,
+                "texto_curto": tar.get("texto_curto", ""),
+                "feito": (p.get("licao_progresso") or {}).get(lic["id"], 0) if lic else 0,
+                "vezes": int(tar.get("vezes", 1) or 1) if lic else 0,
+                "concluidas": len(p.get("licoes_feitas") or []),
+                "total": sum(1 for l in self.licoes
+                             if not l.get("classe") or l["classe"] == cls),
+            }
+        return {"por_classe": por_classe}
+
     def _serializar_condicoes_portas(self):
         out = {}
         for (x, y), cond in self.door_conditions.items():
@@ -32054,6 +32080,7 @@ class GameRoom:
                 for t, c in self.master_reserve.items()
             ],
             "expected_party": self.expected_party,
+            "tutorial": self._tutorial_payload(),
             "falas": [{"id": f["id"], "falante": f.get("falante") or {}, "texto": f.get("texto", "")}
                       for f in getattr(self, "falas", [])
                       if (f.get("trigger") or {}).get("tipo") == "manual" and not f.get("disparada")],
