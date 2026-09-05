@@ -236,6 +236,45 @@ async def main():
     await r._verificar_falas(m, None)
     check("fala comum não repete para o segundo herói", len(r._falas_msg) == n)
 
+    print("\n[4e] Duas lições no mesmo passo não se atropelam")
+    r = sala([
+        licao(id="a", classe="warrior", ordem=None, pos=[3, 3],
+              trigger={"tipo": "proximidade", "raio": 5},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1, "texto_curto": "1"}),
+        licao(id="b", classe="warrior", ordem=None, pos=[3, 3],
+              trigger={"tipo": "proximidade", "raio": 5},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1, "texto_curto": "2"}),
+    ])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("só uma tarefa fica pendente por vez", g["licao_atual"] == "a")
+    await r._licao_evento(g, "encerrar_turno")
+    check("a primeira completa", "a" in g["licoes_feitas"])
+    await r._verificar_falas(g, None)
+    check("a segunda dispara no passo seguinte", g["licao_atual"] == "b")
+    await r._licao_evento(g, "encerrar_turno")
+    check("a segunda também completa", "b" in g["licoes_feitas"])
+
+    print("\n[4f] Recarregar a masmorra devolve as lições ao jogador")
+    r = sala([licao(id="a", classe="warrior", pos=[3, 3],
+                    trigger={"tipo": "proximidade", "raio": 5},
+                    tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                            "texto_curto": "Encerre o turno"})])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    await r._licao_evento(g, "encerrar_turno")
+    check("cumpriu na primeira visita", "a" in g["licoes_feitas"])
+
+    r._carregar_licoes({"falas": [licao(id="a", classe="warrior", pos=[3, 3],
+                                        trigger={"tipo": "proximidade", "raio": 5},
+                                        tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                                                "texto_curto": "Encerre o turno"})]})
+    check("recarga zera o progresso do jogador", g["licao_progresso"] == {})
+    check("recarga zera as lições feitas do jogador", g["licoes_feitas"] == [])
+    check("recarga zera a lição atual", g["licao_atual"] is None)
+    await r._verificar_falas(g, None)
+    check("a lição dispara de novo na revisita", g["licao_atual"] == "a")
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

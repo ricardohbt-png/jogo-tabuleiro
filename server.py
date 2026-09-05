@@ -12754,10 +12754,17 @@ class GameRoom:
     def _carregar_licoes(self, defn):
         """Deriva as lições das falas autoradas. Chamado na carga da masmorra.
         Uma lição é uma fala com `classe` e/ou `tarefa` — as demais seguem
-        sendo falas de NPC comuns e não entram aqui."""
+        sendo falas de NPC comuns e não entram aqui.
+
+        O progresso de lição pertence à execução da masmorra, não à carreira do
+        personagem: quem rejoga o tutorial recebe as lições de novo."""
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
         self.licoes = [f for f in self.falas if _e_licao(f)]
         self.licoes_feitas = set()
+        for p in self.players.values():
+            p["licao_atual"] = None
+            p["licao_progresso"] = {}
+            p["licoes_feitas"] = []
 
     @staticmethod
     def _licao_alvo_ok(esperado, real):
@@ -12845,6 +12852,8 @@ class GameRoom:
             return False
         if fala["id"] in (p.get("licao_progresso") or {}):
             return False                     # já disparou para ele
+        if fala.get("tarefa") and p.get("licao_atual"):
+            return False    # uma tarefa pendente por vez: não sobrescreve o painel
         return self._licao_liberada(p, fala)
 
     async def _verificar_falas(self, p, entered):
