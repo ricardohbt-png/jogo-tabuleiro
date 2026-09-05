@@ -12759,6 +12759,47 @@ class GameRoom:
         self.licoes = [f for f in self.falas if _e_licao(f)]
         self.licoes_feitas = set()
 
+    @staticmethod
+    def _licao_alvo_ok(esperado, real):
+        """Alvo da tarefa: ausente = qualquer um serve. Casa compara [x,y];
+        o resto compara texto (tipo do monstro, id do item)."""
+        if esperado in (None, "", []):
+            return True
+        if isinstance(esperado, (list, tuple)):
+            return isinstance(real, (list, tuple)) and list(esperado) == list(real)
+        return esperado == real
+
+    async def _licao_concluir(self, p, lic):
+        """Marca a lição como cumprida por este jogador e pela sala."""
+        feitas = p.setdefault("licoes_feitas", [])
+        if lic["id"] not in feitas:
+            feitas.append(lic["id"])
+        self.licoes_feitas.add(lic["id"])
+        if p.get("licao_atual") == lic["id"]:
+            p["licao_atual"] = None
+
+    async def _licao_evento(self, p, verbo, alvo=None):
+        """Registra progresso na lição pendente do jogador.
+
+        Chamado do caminho de SUCESSO dos handlers — ação recusada não conta.
+        Sem lição pendente, ou com verbo/alvo diferentes do esperado, é um
+        no-op barato: fora de uma masmorra-tutorial não há lição nenhuma."""
+        if not p or not self.licoes:
+            return
+        lic_id = p.get("licao_atual")
+        if not lic_id:
+            return
+        lic = next((l for l in self.licoes if l["id"] == lic_id), None)
+        tar = (lic or {}).get("tarefa") or {}
+        if not lic or tar.get("tipo") != verbo:
+            return
+        if not self._licao_alvo_ok(tar.get("alvo"), alvo):
+            return
+        prog = p.setdefault("licao_progresso", {})
+        prog[lic_id] = prog.get(lic_id, 0) + 1
+        if prog[lic_id] >= int(tar.get("vezes", 1) or 1):
+            await self._licao_concluir(p, lic)
+
     async def _disparar_fala(self, fala):
         """Exibe uma fala de NPC (popup leve no cliente), uma única vez."""
         if not fala or fala.get("disparada"):

@@ -139,6 +139,48 @@ async def main():
     check("jogador nasce com progresso vazio", p["licao_progresso"] == {})
     check("jogador nasce sem lições feitas", p["licoes_feitas"] == [])
 
+    print("\n[3] _licao_evento registra o progresso")
+    r = sala([licao(id="a", tarefa={"tipo": "atacar", "alvo": "goblin",
+                                    "vezes": 2, "texto_curto": "Ataque"})])
+    p = heroi(r)
+    p["licao_atual"] = "a"; p["licao_progresso"]["a"] = 0
+
+    await r._licao_evento(p, "matar", alvo="goblin")
+    check("verbo errado não conta", p["licao_progresso"]["a"] == 0)
+
+    await r._licao_evento(p, "atacar", alvo="orc")
+    check("alvo errado não conta", p["licao_progresso"]["a"] == 0)
+
+    await r._licao_evento(p, "atacar", alvo="goblin")
+    check("verbo e alvo certos contam", p["licao_progresso"]["a"] == 1)
+    check("vezes=2 ainda não concluiu", p["licao_atual"] == "a")
+
+    await r._licao_evento(p, "atacar", alvo="goblin")
+    check("a segunda vez conclui", p["licao_atual"] is None)
+    check("entrou nas feitas do jogador", "a" in p["licoes_feitas"])
+    check("entrou nas feitas da sala", "a" in r.licoes_feitas)
+
+    await r._licao_evento(p, "atacar", alvo="goblin")
+    check("depois de concluída não conta mais", p["licao_progresso"]["a"] == 2)
+
+    print("\n[3b] Alvo ausente aceita qualquer um")
+    r = sala([licao(id="a", tarefa={"tipo": "atacar", "vezes": 1,
+                                    "texto_curto": "Ataque"})])
+    p = heroi(r)
+    p["licao_atual"] = "a"; p["licao_progresso"]["a"] = 0
+    await r._licao_evento(p, "atacar", alvo="qualquer_bicho")
+    check("sem alvo na tarefa, qualquer alvo serve", "a" in p["licoes_feitas"])
+
+    print("\n[3c] Alvo de casa compara coordenada")
+    r = sala([licao(id="a", tarefa={"tipo": "mover_ate", "alvo": [3, 3],
+                                    "vezes": 1, "texto_curto": "Ande"})])
+    p = heroi(r)
+    p["licao_atual"] = "a"; p["licao_progresso"]["a"] = 0
+    await r._licao_evento(p, "mover_ate", alvo=[2, 3])
+    check("casa errada não conta", p["licao_progresso"]["a"] == 0)
+    await r._licao_evento(p, "mover_ate", alvo=[3, 3])
+    check("casa certa conclui", "a" in p["licoes_feitas"])
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
