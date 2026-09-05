@@ -1713,7 +1713,13 @@
             <option value="none"${!condition ? " selected" : ""}>Sem condição</option>
             <option value="item"${condition?.type === "item" ? " selected" : ""}>Item-chave</option>
             <option value="decor"${condition?.type === "decor" ? " selected" : ""}>Objeto-chave ativado</option>
+            <option value="licao"${condition?.type === "licao" ? " selected" : ""}>Lição cumprida</option>
           </select>
+          ${condition?.type === "licao" ? (() => {
+            const licoes = S.falas.filter(f => f.tarefa && f.tarefa.tipo);
+            if (!licoes.length) return '<small style="color:#d8a0a0">Crie primeiro uma fala com tarefa.</small>';
+            return `<label>lição necessária</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
+          })() : ""}
           ${condition?.type === "item" ? `<label>item necessário</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
           ${condition?.type === "decor" ? `<label>modo das ativações</label><select id="door-condition-mode">
               <option value="any"${condition.keys_mode !== "all" ? " selected" : ""}>qualquer objeto</option>
@@ -1726,9 +1732,12 @@
       document.getElementById("door-condition-type").onchange = e => {
         if (e.target.value === "none") delete S.doorConditions[conditionKey];
         else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
+        else if (e.target.value === "licao") S.doorConditions[conditionKey] = { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" };
         else S.doorConditions[conditionKey] = { type: "decor", key_decor_ids: [], keys_mode: "any" };
         renderPanel(); render();
       };
+      const conditionLicao = document.getElementById("door-condition-licao");
+      if (conditionLicao) conditionLicao.onchange = e => { S.doorConditions[conditionKey].licao_id = e.target.value; };
       const conditionItem = document.getElementById("door-condition-item");
       if (conditionItem) conditionItem.onchange = e => { S.doorConditions[conditionKey].item_id = e.target.value; };
       const conditionMode = document.getElementById("door-condition-mode");
@@ -2279,8 +2288,9 @@
         else delete out.door_orientations;
         return out;
       }),
-      door_conditions: Object.fromEntries(Object.entries(S.doorConditions).map(([key, c]) => [key, c.type === "item"
-        ? { type: "item", item_id: c.item_id || "" }
+      door_conditions: Object.fromEntries(Object.entries(S.doorConditions).map(([key, c]) => [key,
+        c.type === "item" ? { type: "item", item_id: c.item_id || "" }
+        : c.type === "licao" ? { type: "licao", licao_id: c.licao_id || "" }
         : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
@@ -2470,8 +2480,10 @@
       if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
         e.push(`condição de abertura em porta inválida: ${key}`); continue;
       }
-      if (!c || !["item", "decor"].includes(c.type)) { e.push(`tipo de condição de porta inválido em ${key}`); continue; }
+      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(`tipo de condição de porta inválido em ${key}`); continue; }
       if (c.type === "item" && !items.has(c.item_id)) e.push(`item-chave inválido na porta ${key}: ${c.item_id}`);
+      if (c.type === "licao" && !S.falas.some(f => f.id === c.licao_id && f.tarefa && f.tarefa.tipo))
+        e.push(`porta ${key} aponta para uma lição que não existe ou não tem tarefa`);
       if (c.type === "decor") {
         if (!Array.isArray(c.key_decor_ids) || !c.key_decor_ids.length || c.key_decor_ids.some(id => !decorIds.has(id)))
           e.push(`porta ${key} sem objetos-chave válidos`);
@@ -2545,6 +2557,7 @@
     for (const [key, c] of Object.entries(obj.door_conditions || {})) {
       if (!/^\d+,\d+$/.test(key) || !c || typeof c !== "object") continue;
       if (c.type === "item" && typeof c.item_id === "string") S.doorConditions[key] = { type: "item", item_id: c.item_id };
+      else if (c.type === "licao" && typeof c.licao_id === "string") S.doorConditions[key] = { type: "licao", licao_id: c.licao_id };
       else if (c.type === "decor") S.doorConditions[key] = { type: "decor", key_decor_ids: Array.isArray(c.key_decor_ids) ? c.key_decor_ids.slice() : [], keys_mode: c.keys_mode === "all" ? "all" : "any" };
     }
     S.doorRotations = {};
