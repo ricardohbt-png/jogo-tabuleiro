@@ -946,7 +946,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "O combate é por turnos. Quando terminar o que quer fazer, encerre o turno e deixe os outros agirem. Encerre o seu agora — a porta ao fundo destranca em seguida.",
+      "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. Só depois disso a porta ao fundo destranca.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 2
@@ -955,7 +955,7 @@
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
-        "texto_curto": "Encerre o seu turno"
+        "texto_curto": "Clique em Encerrar Turno"
       }
     },
     {
