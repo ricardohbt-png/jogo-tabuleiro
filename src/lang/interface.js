@@ -2031,6 +2031,10 @@ window.LANG_INTERFACE = {
       "en": "EXHAUSTION ({causas} &lt;20): to-hit · saves · damage",
       "pt": "EXAUSTÃO ({causas} &lt;20): acerto · resistência · dano"
     },
+    "ui.hud.banner_licao": {
+      "en": "LESSON",
+      "pt": "LIÇÃO"
+    },
     "ui.hud.banner_pocao_regen": {
       "en": "REGENERATION POTION: {n} HP IN RESERVE",
       "pt": "POÇÃO DE REGENERAÇÃO: {n} HP NA RESERVA"

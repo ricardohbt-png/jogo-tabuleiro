@@ -15945,6 +15945,20 @@ function renderMyPanel(state){
     })() : ''}
 
     ${(() => {
+      // Tutorial: a tarefa pendente fica sempre à vista, para ninguém ficar
+      // perdido depois que o balão de fala some. `texto_curto` é conteúdo
+      // autoral (português), então não passa por t().
+      const lic = GS.licaoAtual();
+      if (!lic) return '';
+      const prog = lic.vezes > 1 ? ` (${lic.feito}/${lic.vezes})` : '';
+      return `<div style="margin-top:4px; padding:5px 8px; background:rgba(240,200,103,0.12); border:1px solid #f0c86766; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
+        <span style="color:#f0c867; font-weight:bold; font-size:.95rem;">⚑</span>
+        <span style="color:#f0c867; font-size:.6rem; letter-spacing:1px;">${t('ui.hud.banner_licao')}</span>
+        <span style="color:#e8d8a0; font-size:.62rem;">${_esc(lic.texto_curto)}${prog}</span>
+      </div>`;
+    })()}
+
+    ${(() => {
       const f = me.fome ?? 100, s = me.sede ?? 100;
       // BÔNUS: +1 só quando fome E sede > 80 (saciado).
       if (f > 80 && s > 80) {
