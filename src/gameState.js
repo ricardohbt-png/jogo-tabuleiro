@@ -1717,6 +1717,16 @@ const GS = (() => {
     return mm.acao == null || mm.acao === 'ataque';
   }
 
+  // ── Tutorial ── Lição pendente do MEU herói, ou null. Leitura pura: o bloco
+  // vem chaveado por classe porque game_state é um broadcast único.
+  function licaoAtual() {
+    if (!gameState || !gameState.tutorial) return null;
+    const me = (gameState.players || []).find(p => p.id === myPid);
+    if (!me || !me.class_id) return null;
+    const lic = (gameState.tutorial.por_classe || {})[me.class_id];
+    return (lic && lic.licao_id) ? lic : null;
+  }
+
   // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
   function worldTravel(destination)   { send({ type: 'world_travel', destination: destination }); }
@@ -2740,6 +2750,7 @@ const GS = (() => {
     masterManual,
     masterAttackCharges,
     masterPodeAtacar,
+    licaoAtual,
 
     // ── Prévia do editor (index.html?preview=1) ──
     isPreview: PREVIEW,
