@@ -181,6 +181,61 @@ async def main():
     await r._licao_evento(p, "mover_ate", alvo=[3, 3])
     check("casa certa conclui", "a" in p["licoes_feitas"])
 
+    print("\n[4] Disparo da lição")
+    r = sala([licao(id="a", classe="warrior", pos=[3, 3],
+                    trigger={"tipo": "proximidade", "raio": 1},
+                    tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                            "texto_curto": "Encerre o turno"})])
+    g = heroi(r, "h1", "warrior", (3, 3))
+    m = heroi(r, "h2", "mage", (3, 3))
+    await r._verificar_falas(g, None)
+    await r._verificar_falas(m, None)
+    check("a lição chegou ao guerreiro", any(pid == "h1" for pid, _ in r._falas_msg))
+    check("a lição NÃO chegou ao mago", not any(pid == "h2" for pid, _ in r._falas_msg))
+    check("nada foi para broadcast", not any(pid is None for pid, _ in r._falas_msg))
+    check("virou a lição atual do guerreiro", g["licao_atual"] == "a")
+    check("o mago segue sem lição", m["licao_atual"] is None)
+
+    n = len(r._falas_msg)
+    await r._verificar_falas(g, None)
+    check("não repete para o mesmo jogador", len(r._falas_msg) == n)
+
+    print("\n[4b] Lição sem tarefa se conclui ao disparar")
+    r = sala([licao(id="a", classe="warrior", pos=[3, 3],
+                    trigger={"tipo": "proximidade", "raio": 1}, tarefa=None)])
+    g = heroi(r, "h1", "warrior", (3, 3))
+    await r._verificar_falas(g, None)
+    check("sem tarefa não vira lição atual", g["licao_atual"] is None)
+    check("sem tarefa já entra nas feitas", "a" in g["licoes_feitas"])
+
+    print("\n[4c] A ordem segura a lição seguinte")
+    r = sala([
+        licao(id="a", classe="warrior", ordem=1, pos=[3, 3],
+              trigger={"tipo": "proximidade", "raio": 5},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1, "texto_curto": "1"}),
+        licao(id="b", classe="warrior", ordem=2, pos=[3, 3],
+              trigger={"tipo": "proximidade", "raio": 5},
+              tarefa={"tipo": "encerrar_turno", "vezes": 1, "texto_curto": "2"}),
+    ])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("só a de ordem 1 disparou", g["licao_atual"] == "a")
+    await r._licao_evento(g, "encerrar_turno")
+    await r._verificar_falas(g, None)
+    check("cumprida a 1, a 2 dispara", g["licao_atual"] == "b")
+
+    print("\n[4d] Fala comum não regrediu")
+    r = sala([{"id": "f", "pos": [3, 3], "falante": {"nome": "N", "emoji": "🧙"},
+               "texto": "oi", "trigger": {"tipo": "proximidade", "raio": 5}}])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    m = heroi(r, "h2", "mage", (2, 2))
+    await r._verificar_falas(g, None)
+    check("fala comum vai por broadcast", any(pid is None for pid, _ in r._falas_msg))
+    check("fala comum marca disparada", r.falas[0].get("disparada") is True)
+    n = len(r._falas_msg)
+    await r._verificar_falas(m, None)
+    check("fala comum não repete para o segundo herói", len(r._falas_msg) == n)
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

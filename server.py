@@ -12800,20 +12800,57 @@ class GameRoom:
         if prog[lic_id] >= int(tar.get("vezes", 1) or 1):
             await self._licao_concluir(p, lic)
 
-    async def _disparar_fala(self, fala):
-        """Exibe uma fala de NPC (popup leve no cliente), uma única vez."""
-        if not fala or fala.get("disparada"):
+    async def _disparar_fala(self, fala, p=None):
+        """Exibe uma fala de NPC. Fala comum: broadcast, uma vez para a sala.
+        Lição: chega só ao herói que a recebeu e entra no painel dele."""
+        if not fala:
             return
-        fala["disparada"] = True
-        await self.broadcast({"type": "fala",
-                              "falante": fala.get("falante") or {},
-                              "texto": fala.get("texto", ""),
-                              "pos": fala.get("pos")})
+        payload = {"type": "fala",
+                   "falante": fala.get("falante") or {},
+                   "texto": fala.get("texto", ""),
+                   "pos": fala.get("pos")}
+        if not _e_licao(fala):
+            if fala.get("disparada"):
+                return
+            fala["disparada"] = True
+            await self.broadcast(payload)
+            return
+        if p is None:
+            return                      # lição sem destinatário não dispara
+        p.setdefault("licao_progresso", {})[fala["id"]] = 0
+        if fala.get("tarefa"):
+            p["licao_atual"] = fala["id"]
+        await self.send_to(p["id"], payload)
+        if not fala.get("tarefa"):
+            await self._licao_concluir(p, fala)   # lição que só explica
+
+    def _licao_liberada(self, p, fala):
+        """True se as lições da mesma classe com ordem menor já foram
+        cumpridas POR ESTE jogador. Sem ordem, nada segura."""
+        ordem = fala.get("ordem")
+        if ordem is None:
+            return True
+        feitas = p.get("licoes_feitas") or []
+        return all(outra["id"] in feitas
+                   for outra in self.licoes
+                   if outra.get("ordem") is not None
+                   and outra["ordem"] < ordem
+                   and outra.get("classe") == fala.get("classe"))
+
+    def _fala_elegivel(self, p, fala):
+        """Se esta fala pode disparar agora para este jogador."""
+        if not _e_licao(fala):
+            return not fala.get("disparada")
+        if fala.get("classe") and fala["classe"] != p.get("class_id"):
+            return False
+        if fala["id"] in (p.get("licao_progresso") or {}):
+            return False                     # já disparou para ele
+        return self._licao_liberada(p, fala)
 
     async def _verificar_falas(self, p, entered):
         """Gatilhos automáticos de fala (proximidade + entrar na sala) após um passo."""
         for fala in list(getattr(self, "falas", [])):
-            if fala.get("disparada"):
+            if not self._fala_elegivel(p, fala):
                 continue
             trig = fala.get("trigger") or {}
             tipo = trig.get("tipo")
@@ -12821,11 +12858,11 @@ class GameRoom:
             if tipo == "proximidade" and pos:
                 raio = int(trig.get("raio", 2) or 2)
                 if max(abs(p["pos"][0] - pos[0]), abs(p["pos"][1] - pos[1])) <= raio:
-                    await self._disparar_fala(fala)
+                    await self._disparar_fala(fala, p)
             elif tipo == "sala" and entered and pos:
                 sala = player_room(self.rooms, pos[0], pos[1])
                 if sala and sala["id"] == entered["id"]:
-                    await self._disparar_fala(fala)
+                    await self._disparar_fala(fala, p)
 
     async def handle_disparar_fala(self, pid, fala_id):
         """Mestre humano dispara uma fala 'manual' pelo HUD."""
@@ -12836,6 +12873,8 @@ class GameRoom:
             return
         if (fala.get("trigger") or {}).get("tipo") != "manual":
             return
+        if _e_licao(fala):
+            return          # lição não é disparada pelo mestre: ela é do herói
         await self._disparar_fala(fala)
         await self.push_state()
 
