@@ -328,6 +328,34 @@ async def main():
     await r.handle_move("h1", 1, 0)
     check("a primeira lição foi cumprida pelo passo", "a" in g["licoes_feitas"])
     check("a segunda já apareceu no mesmo passo", g["licao_atual"] == "b")
+
+    print("\n[6] Porta com condição de lição")
+    r = sala([licao(id="a", classe="warrior",
+                    tarefa={"tipo": "encerrar_turno", "vezes": 1,
+                            "texto_curto": "Encerre o turno"})])
+    r.tiles[3][4] = S.DOOR
+    r.rooms.append({"id": 1, "x": 5, "y": 1, "w": 1, "h": 4, "role": "monster",
+                    "locked": True, "doors": [[4, 3]], "cleared": True, "looted": True})
+    r.door_rooms = {(4, 3): [1]}
+    r.door_conditions = {(4, 3): {"type": "licao", "licao_id": "a"}}
+    r.door_condition_activated = {(4, 3): set()}
+    check("porta fechada antes da lição", r._door_condition_satisfied((4, 3)) is False)
+    r.licoes_feitas.add("a")
+    check("porta abre depois da lição", r._door_condition_satisfied((4, 3)) is True)
+    check("serializa sem estourar", "4,3" in r._serializar_condicoes_portas())
+
+    print("\n[6b] Validação da porta de lição")
+    def mapa_porta(cond):
+        d = mapa_base(falas=[licao(id="a")])
+        d["tiles"][3][4] = S.DOOR
+        d["rooms"][0]["doors"] = [[4, 3]]
+        d["door_conditions"] = {"4,3": cond}
+        return d
+    ok, _ = S.validar_dungeon(mapa_porta({"type": "licao", "licao_id": "a"}))
+    check("porta apontando para lição existente passa", ok is True)
+    ok, msg = S.validar_dungeon(mapa_porta({"type": "licao", "licao_id": "zzz"}))
+    check("licao_id inexistente é recusado", ok is False and "zzz" in msg)
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

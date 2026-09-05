@@ -88,6 +88,10 @@ window.LANG_ERROS = {
     "en": "🚪 Activate the key object(s) linked to this door first.",
     "pt": "🚪 Ative primeiro o(s) objeto(s)-chave ligado(s) a esta porta."
   },
+  "erro.porta_exige_licao": {
+    "en": "This door only opens once you complete your current lesson.",
+    "pt": "Esta porta só abre quando você cumprir a lição atual."
+  },
   "erro.a_provocacao_do_gigante_runico_obriga_vo": {
     "en": "The Runic Giant's Taunt forces you to attack it for as long as the effect lasts.",
     "pt": "A Provocação do Gigante Rúnico obriga você a atacá-lo enquanto o efeito durar."

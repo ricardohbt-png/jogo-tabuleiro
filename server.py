@@ -6151,15 +6151,21 @@ def validar_dungeon(defn):
     if not isinstance(door_conditions, dict):
         return False, "door_conditions deve ser um objeto."
     decor_by_id = {de.get("id"): de for de in decors if isinstance(de, dict)}
+    _licao_ids = {f.get("id") for f in (defn.get("falas") or [])
+                  if _e_licao(f) and (f.get("tarefa"))}
     for key, cond in door_conditions.items():
         if not isinstance(key, str) or not re.fullmatch(r"\d+,\d+", key):
             return False, f"chave de condicao de porta invalida: {key!r}."
         dx, dy = (int(v) for v in key.split(","))
         if not in_grid([dx, dy]) or tile_at([dx, dy]) != DOOR:
             return False, f"condicao de abertura referencia uma casa que nao e porta: {key}."
-        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor"):
-            return False, f"condicao de porta invalida em {key}: use item ou decor."
-        if cond["type"] == "item":
+        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor", "licao"):
+            return False, f"condicao de porta invalida em {key}: use item, decor ou licao."
+        if cond["type"] == "licao":
+            if cond.get("licao_id") not in _licao_ids:
+                return False, (f"porta {key} aponta para uma licao que nao existe ou "
+                               f"nao tem tarefa: {cond.get('licao_id')!r}.")
+        elif cond["type"] == "item":
             if cond.get("item_id") not in _DUNGEON_ITEM_CATALOG:
                 return False, f"item-chave invalido na porta {key}: {cond.get('item_id')!r}."
         else:
@@ -10861,6 +10867,9 @@ class GameRoom:
             dx, dy = (int(v) for v in key.split(","))
             if cond.get("type") == "item":
                 self.door_conditions[(dx, dy)] = {"type": "item", "item_id": cond["item_id"]}
+            elif cond.get("type") == "licao":
+                self.door_conditions[(dx, dy)] = {"type": "licao",
+                                                  "licao_id": cond.get("licao_id", "")}
             else:
                 self.door_conditions[(dx, dy)] = {
                     "type": "decor",
@@ -12345,6 +12354,8 @@ class GameRoom:
             return True
         if cond["type"] == "item":
             return self._grupo_tem_item(cond.get("item_id"))
+        if cond["type"] == "licao":
+            return cond.get("licao_id") in getattr(self, "licoes_feitas", set())
         keys = cond.get("key_decor_ids") or []
         activated = self.door_condition_activated.get(tuple(pos), set())
         return (any(k in activated for k in keys)
@@ -12356,6 +12367,8 @@ class GameRoom:
         if cond.get("type") == "item":
             item = _DUNGEON_ITEM_CATALOG.get(cond.get("item_id"), {})
             return T("erro.porta_exige_item_chave", item=item.get("name", cond.get("item_id", "item-chave")))
+        if cond.get("type") == "licao":
+            return T("erro.porta_exige_licao")
         return T("erro.porta_exige_ativacao_objeto_chave")
 
     def _is_closed_door(self, x, y):
@@ -26580,6 +26593,8 @@ class GameRoom:
                    "opened": (x, y) in self.opened_doors}
             if cond["type"] == "item":
                 row["item_id"] = cond.get("item_id")
+            elif cond["type"] == "licao":
+                row["licao_id"] = cond.get("licao_id")
             else:
                 row["key_decor_ids"] = list(cond.get("key_decor_ids") or [])
                 row["keys_mode"] = cond.get("keys_mode", "any")
