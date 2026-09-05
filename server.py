@@ -19228,6 +19228,9 @@ class GameRoom:
             # __getattr__, então `T + str` estoura alto em vez de perder a
             # tradução em silêncio.
             await self.gm_say(T("narracao.equipou_2a_arma_mao_esquerda", frase=log))
+        # Terceiro caminho de equipar: arrastar para a mao do escudo. Os tres
+        # precisam do gancho — o tutorial nao pode depender de qual o jogador usou.
+        await self._licao_evento(p, "equipar", alvo=(item or {}).get("id"))
         await self.push_state_or_city()
 
     async def handle_unequip(self, pid, slot_key):
