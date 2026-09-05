@@ -374,10 +374,17 @@ Ainda em `server.py`, acrescente o método logo **acima** de `async def _dispara
     def _carregar_licoes(self, defn):
         """Deriva as lições das falas autoradas. Chamado na carga da masmorra.
         Uma lição é uma fala com `classe` e/ou `tarefa` — as demais seguem
-        sendo falas de NPC comuns e não entram aqui."""
+        sendo falas de NPC comuns e não entram aqui.
+
+        O progresso de lição pertence à execução da masmorra, não à carreira do
+        personagem: quem rejoga o tutorial recebe as lições de novo."""
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
         self.licoes = [f for f in self.falas if _e_licao(f)]
         self.licoes_feitas = set()
+        for p in self.players.values():
+            p["licao_atual"] = None
+            p["licao_progresso"] = {}
+            p["licoes_feitas"] = []
 ```
 
 E na carga da masmorra, substitua a linha
@@ -680,6 +687,8 @@ Em `server.py`, substitua **todo** o método `_disparar_fala` e **todo** o méto
             return False
         if fala["id"] in (p.get("licao_progresso") or {}):
             return False                     # já disparou para ele
+        if fala.get("tarefa") and p.get("licao_atual"):
+            return False    # uma tarefa pendente por vez: não sobrescreve o painel
         return self._licao_liberada(p, fala)
 
     async def _verificar_falas(self, p, entered):
@@ -1846,6 +1855,12 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
 
 ---
+
+## Dois bugs achados em revisão e já corrigidos (commit `1c222e1`)
+
+**Uma tarefa pendente por vez.** Duas lições da mesma classe sem `ordem` que satisfizessem o gatilho no mesmo passo faziam a segunda sobrescrever `licao_atual`, e a primeira ficava órfã para sempre — invisível no painel e impossível de cumprir. `_fala_elegivel` passou a recusar uma lição com tarefa enquanto já há uma pendente. Com gatilho `proximidade` a segunda dispara no passo seguinte; com gatilho `sala`, ao reentrar.
+
+**Recarregar a masmorra zera o progresso do jogador.** O estado de lição pertence à execução da masmorra, não à carreira do personagem. Sem isso, o tutorial revisitável da Fase 3 ficaria mudo na segunda visita, e dois mapas que reusassem um id de lição se atrapalhariam.
 
 ## Um desvio consciente do spec
 
