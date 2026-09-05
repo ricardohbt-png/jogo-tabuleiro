@@ -31,12 +31,14 @@ cp server.py /tmp/antes_server.py
 # 2. Edite normalmente.
 
 # 3. Gere o patch só das SUAS mudanças e aplique-o ao índice:
-diff -u --label a/server.py --label b/server.py /tmp/antes_server.py server.py > /tmp/meu_server.patch
+git diff --no-index --diff-algorithm=histogram /tmp/antes_server.py server.py   | sed 's|/tmp/antes_server.py|a/server.py|; s|b/server.py|b/server.py|' > /tmp/meu_server.patch
 git apply --cached --check /tmp/meu_server.patch && git apply --cached /tmp/meu_server.patch
 
 # 4. CONFIRME que só as suas linhas entraram antes de commitar:
 git diff --cached --stat
 ```
+
+**Use `--diff-algorithm=histogram`, não `diff -u`.** O algoritmo LCS padrão do `diff` desalinha diante de blocos de código parecidos e inventa hunks fantasma — num arquivo de 34 mil linhas isso produziu ~150 linhas de diferença falsa que pareciam edição concorrente do autor. O histogram não faz isso.
 
 Se o `git apply --cached --check` recusar o patch, **pare e reporte DONE_WITH_CONCERNS** — isso significa que o WIP do autor mexeu no contexto ao redor da sua edição, e forçar o commit corromperia o trabalho dele.
 
