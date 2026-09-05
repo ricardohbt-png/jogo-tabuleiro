@@ -17533,11 +17533,8 @@ function _modificadoresTemporariosStatus(p){
   return out;
 }
 function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
-function abrirMenuStatus(pid){
-  const p = _playerMenuMagias(pid);
-  if(!p){ toast(t('ui.status.indisponivel')); return; }
-  let overlay = document.getElementById('menu-status-overlay');
-  if(!overlay){ overlay = document.createElement('div'); overlay.id = 'menu-status-overlay'; overlay.onclick = e => { if(e.target === overlay) fecharMenuStatus(); }; document.body.appendChild(overlay); }
+function _menuStatusMarkup(p, opts = {}){
+  if(!p) return '';
   const weapon = p.weapon || p.gear?.weapon;
   const statKey = weapon?.stat || 'str_';
   const dadoDano = weapon?.die || '1';
@@ -17565,15 +17562,25 @@ function abrirMenuStatus(pid){
   const temporarios = _modificadoresTemporariosStatus(p);
   const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
   const _bAtual = t('ui.status.base_atual');
-  overlay.innerHTML = `<section class="menu-status" role="dialog" aria-modal="true" aria-label="${t('ui.status.aria')}">
-    <header class="st-header"><div><b>${t('ui.status.titulo')}</b><small>${p.name || t('ui.tabuleiro.heroi')} · ${t('ui.status.tecla_s')}</small></div><button onclick="fecharMenuStatus()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
+  const close = opts.embedded ? '' : `<button onclick="fecharMenuStatus()" aria-label="${t('ui.geral.fechar')}">✕</button>`;
+  const hint = opts.embedded ? `<small>${p.name || t('ui.tabuleiro.heroi')}</small>` : `<small>${p.name || t('ui.tabuleiro.heroi')} · ${t('ui.status.tecla_s')}</small>`;
+  return `<section class="menu-status${opts.embedded ? ' menu-status-embedded' : ''}" role="dialog" aria-modal="true" aria-label="${t('ui.status.aria')}">
+    <header class="st-header"><div><b>${t('ui.status.titulo')}</b>${hint}</div>${close}</header>
     <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, `${t(weapon?.stat === 'dex' ? 'ui.atributo.destreza' : 'ui.atributo.forca')} · ${_bAtual}`)}</section>
     <section><h3>${t('ui.status.resistencias')}</h3>${linha(t('ui.resistencia.fortitude'), `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.reflexos'), `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.vontade'), `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, _bAtual)}</section>
     <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${m.ate && GS.gameState?.round ? `<em>${t('ui.status.rodadas_restantes', {n:Math.max(0,m.ate-GS.gameState.round)})}</em>` : ''}</div>`).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
+}
+function abrirMenuStatus(pid){
+  const p = _playerMenuMagias(pid);
+  if(!p){ toast(t('ui.status.indisponivel')); return; }
+  let overlay = document.getElementById('menu-status-overlay');
+  if(!overlay){ overlay = document.createElement('div'); overlay.id = 'menu-status-overlay'; overlay.onclick = e => { if(e.target === overlay) fecharMenuStatus(); }; document.body.appendChild(overlay); }
+  overlay.innerHTML = _menuStatusMarkup(p);
   requestAnimationFrame(() => overlay.classList.add('open'));
 }
 window.abrirMenuStatus = abrirMenuStatus;
 window.fecharMenuStatus = fecharMenuStatus;
+window._renderStatusPanelHTML = p => _menuStatusMarkup(p, {embedded:true});
 
 // ── Menu de Magias ──────────────────────────────────────────────────────────
 // Consulta o mesmo estado autoritativo da ficha e reúne magias conhecidas com
@@ -35324,8 +35331,9 @@ document.addEventListener('keydown', (e) => {
   const tag = (document.activeElement && document.activeElement.tagName) || '';
   if(tag === 'INPUT' || tag === 'TEXTAREA') return;
   if(!GS.myPid) return;
+  const emRefugio = !!(document.getElementById('refugio-overlay') || document.getElementById('quarto-overlay'));
   if(!document.getElementById('screen-city')?.classList.contains('active') &&
-     !document.getElementById('screen-game')?.classList.contains('active')) return;
+     !document.getElementById('screen-game')?.classList.contains('active') && !emRefugio) return;
   InventoryModal.toggle(GS.myPid);
 });
 
