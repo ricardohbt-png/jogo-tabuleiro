@@ -13666,6 +13666,9 @@ class GameRoom:
         p.setdefault("licao_progresso", {})[fala["id"]] = 0
         if fala.get("tarefa"):
             p["licao_atual"] = fala["id"]
+        # O cliente trata lição e fala comum de formas diferentes: a fala some
+        # sozinha em segundos, a lição fica numa janela até o jogador fechar.
+        payload["licao_id"] = fala["id"]
         await self.send_to(p["id"], payload)
         if not fala.get("tarefa"):
             await self._licao_concluir(p, fala)   # lição que só explica
@@ -14650,6 +14653,12 @@ class GameRoom:
                     p["fome"] = max(0, p.get("fome", 0) - 1)
                     await self.push_state()
                     return
+                # O acerto é registrado ANTES da morte: um golpe que mata de
+                # primeira cumpre "acerte um ataque" e só então libera "derrote",
+                # que o _monster_dies logo abaixo cobra. Na ordem inversa, a
+                # lição de derrotar era avaliada enquanto a de acertar ainda
+                # estava pendente — e ficava para trás sem alvo.
+                await self._licao_evento(p, "atacar", alvo=target.get("type"))
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -14662,7 +14671,6 @@ class GameRoom:
                     elif _melee_poison_vid:
                         await self._aplicar_veneno(target, _melee_poison_vid, fonte="ataque")
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
-                await self._licao_evento(p, "atacar", alvo=target.get("type"))
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
                     await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
             else:
@@ -18928,8 +18936,13 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or "bag" not in p:
             return
+        # Mesmo gancho de lição do equipar comum: são dois caminhos para a mesma
+        # ação, e o tutorial não pode depender de qual deles o jogador usou.
+        _bag = p.get("bag") or []
+        _it = _bag[slot_index] if 0 <= slot_index < len(_bag) else None
         if not await self._executar_quick_equip_from_bag(pid, slot_index):
             return
+        await self._licao_evento(p, "equipar", alvo=(_it or {}).get("id"))
         await self.push_state_or_city()
 
     async def _executar_quick_equip_from_bag(self, pid, slot_index):

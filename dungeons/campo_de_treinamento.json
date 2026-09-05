@@ -365,10 +365,80 @@
   },
   "monsters": [
     {
-      "type": "goblin",
+      "type": "boneco_treino",
+      "pos": [
+        14,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
       "pos": [
         16,
-        3
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        18,
+        1
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        14,
+        2
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        17,
+        2
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        14,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        16,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        18,
+        5
       ],
       "room_id": 1,
       "boss": false,
@@ -531,7 +601,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Todo ataque rola 1d20 e soma o seu acerto contra a Classe de Armadura do alvo. Empatar ou passar acerta; abaixo disso, erra. Ataque aquela criatura e observe o dado.",
+      "texto": "Todo ataque rola 1d20 e soma o seu acerto contra a Classe de Armadura do alvo. Empatar ou passar acerta; abaixo disso, erra. Ataque um boneco e observe o dado.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -540,9 +610,9 @@
       "ordem": 1,
       "tarefa": {
         "tipo": "atacar",
-        "alvo": "goblin",
+        "alvo": "boneco_treino",
         "vezes": 1,
-        "texto_curto": "Acerte um ataque na criatura"
+        "texto_curto": "Acerte um ataque num boneco"
       }
     },
     {
@@ -555,7 +625,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Um acerto raramente basta. Continue até derrubá-la — e repare que um 20 natural dobra o dano.",
+      "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -564,9 +634,249 @@
       "ordem": 2,
       "tarefa": {
         "tipo": "matar",
-        "alvo": "goblin",
+        "alvo": "boneco_treino",
         "vezes": 1,
-        "texto_curto": "Derrote a criatura"
+        "texto_curto": "Derrube um boneco"
+      }
+    },
+    {
+      "id": "mago_01",
+      "pos": [
+        13,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Você não é homem de espada, Pedro. Seu cajado acerta como qualquer arma — 1d20 mais o seu acerto contra a Classe de Armadura do alvo — mas é o Grimório que vence as suas batalhas. Acerte um boneco para sentir a diferença.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "mage",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque num boneco"
+      }
+    },
+    {
+      "id": "mago_02",
+      "pos": [
+        13,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "mage",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Derrube um boneco"
+      }
+    },
+    {
+      "id": "ladino_01",
+      "pos": [
+        13,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Atacar de frente é o seu pior golpe, Luccas. Acerte um boneco para ver o dano cru: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "rogue",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque num boneco"
+      }
+    },
+    {
+      "id": "ladino_02",
+      "pos": [
+        13,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "rogue",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Derrube um boneco"
+      }
+    },
+    {
+      "id": "clerigo_01",
+      "pos": [
+        15,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "A sua maça também resolve, Frade. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "cleric",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque num boneco"
+      }
+    },
+    {
+      "id": "clerigo_02",
+      "pos": [
+        15,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "cleric",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Derrube um boneco"
+      }
+    },
+    {
+      "id": "bardo_01",
+      "pos": [
+        15,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Toda balada precisa de um primeiro compasso. Acerte um boneco: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "bard",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque num boneco"
+      }
+    },
+    {
+      "id": "bardo_02",
+      "pos": [
+        15,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "bard",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Derrube um boneco"
+      }
+    },
+    {
+      "id": "paladino_01",
+      "pos": [
+        14,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Ao trabalho, Richard. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "paladin",
+      "ordem": 1,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um ataque num boneco"
+      }
+    },
+    {
+      "id": "paladino_02",
+      "pos": [
+        14,
+        4
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "classe": "paladin",
+      "ordem": 2,
+      "tarefa": {
+        "tipo": "matar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Derrube um boneco"
       }
     }
   ],
