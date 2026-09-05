@@ -810,12 +810,15 @@ Em `server.py`, dentro de `handle_move`, a linha
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
 ```
 
-vira duas linhas — o evento vem **antes**, para que cumprir a lição atual libere a próxima da ordem no mesmo passo:
+vira quatro linhas. A varredura roda **antes e depois** do evento, e as duas pontas importam: antes, para que o passo que revela a lição também possa cumpri-la (andar até a casa do marcador não pode deixar a tarefa pendente com o herói já parado nela); depois, para que a lição cumprida agora libere a próxima da ordem no mesmo passo.
 
 ```python
-        await self._licao_evento(p, "mover_ate", alvo=list(p["pos"]))
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
+        await self._licao_evento(p, "mover_ate", alvo=list(p["pos"]))
+        await self._verificar_falas(p, entered)
 ```
+
+`_verificar_falas` é idempotente (`_fala_elegivel` recusa o que já disparou para aquele jogador), então a segunda passada é barata e segura.
 
 Em `handle_end_turn`, logo depois do bloco que cobra a Dor Constante:
 
