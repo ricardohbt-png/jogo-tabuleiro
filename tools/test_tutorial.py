@@ -425,7 +425,10 @@ async def main():
 
     await r.handle_world_adventure("h1", "treinamento")
     check("clicar leva para a masmorra", r.phase == "playing")
-    check("as licoes foram carregadas", len(r.licoes) == 7)
+    # Relacao, nao numero cravado: o mapa ganha licoes conforme o tutorial cresce.
+    _falas_mapa = S.carregar_dungeon("campo_de_treinamento.json")["falas"]
+    _esperado = sum(1 for f in _falas_mapa if f.get("classe") or f.get("tarefa"))
+    check("todas as licoes do arquivo foram carregadas", len(r.licoes) == _esperado)
     check("entrar nao cobrou fome nem sede",
           (r.players["h1"]["fome"], r.players["h1"]["sede"]) == (100, 100))
     print("\n[9] Equipar rapido tambem cumpre a licao")
@@ -444,6 +447,75 @@ async def main():
         os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
     check("os DOIS caminhos de equipar chamam _licao_evento",
           fonte.count('_licao_evento(p, "equipar"') == 2)
+    print("\n[10] Cada uma das seis classes tem trilha propria")
+    _mapa = S.carregar_dungeon("campo_de_treinamento.json")
+    _por_classe = {}
+    for _f in _mapa["falas"]:
+        _por_classe.setdefault(_f.get("classe") or "TODAS", []).append(_f["id"])
+    check("as licoes comuns do atrio continuam la", len(_por_classe.get("TODAS", [])) == 5)
+    for _cls in ("warrior", "mage", "rogue", "cleric", "bard", "paladin"):
+        check(f"{_cls} tem duas licoes", len(_por_classe.get(_cls, [])) == 2)
+    check("nenhuma licao mira o goblin antigo",
+          all((f.get("tarefa") or {}).get("alvo") != "goblin" for f in _mapa["falas"]))
+    check("ha bonecos para todos", len(_mapa["monsters"]) >= 6
+          and all(m["type"] == "boneco_treino" for m in _mapa["monsters"]))
+
+    print("\n[10b] A trilha da classe dispara para o heroi certo")
+    for _cls, _pref in (("cleric", "clerigo"), ("mage", "mago"), ("bard", "bardo")):
+        r = GameRoom("T")
+        async def _noop(*a, **k): pass
+        r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+        r.broadcast_city_state = _noop; r.push_state = _noop
+        p = make_player("h1", "Heroi", _cls, 0)
+        r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+        r.phase = "lobby"
+        await r.handle_select_dungeon("h1", "campo_de_treinamento.json")
+        r.phase = "city"
+        await r.enter_dungeon("h1")
+        # o atrio ja foi: o heroi chega na sala dos bonecos
+        p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)]
+        p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+        p["pos"] = [14, 3]
+        await r._verificar_falas(p, None)
+        check(f"{_cls} recebe {_pref}_01", p["licao_atual"] == f"{_pref}_01")
+
+    print("\n[11] Um golpe que mata cumpre as duas licoes")
+    r = sala([
+        licao(id="a", classe="warrior", ordem=1, pos=[2, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "atacar", "vezes": 1, "texto_curto": "Acerte"}),
+        licao(id="b", classe="warrior", ordem=2, pos=[2, 2],
+              trigger={"tipo": "proximidade", "raio": 9},
+              tarefa={"tipo": "matar", "vezes": 1, "texto_curto": "Derrube"}),
+    ])
+    g = heroi(r, "h1", "warrior", (2, 2))
+    await r._verificar_falas(g, None)
+    check("a licao de acertar esta pendente", g["licao_atual"] == "a")
+    _m = {"id": "m1", "type": "boneco_treino", "name": "Boneco", "nome": "Boneco",
+          "pos": [3, 2], "hp": 1, "max_hp": 1, "ac": 1, "alertado": True}
+    r.monsters["m1"] = _m
+    g["action_done"] = False
+    await r.handle_attack("h1", "m1")
+    check("o acerto cumpriu a primeira", "a" in g["licoes_feitas"])
+    check("a morte no mesmo golpe cumpriu a segunda", "b" in g["licoes_feitas"])
+    print("\n[12] O tutorial fecha e devolve o heroi a cidade")
+    r = GameRoom("T")
+    async def _noop(*a, **k): pass
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+    r.broadcast_city_state = _noop; r.push_state = _noop
+    p = make_player("h1", "Lewis", "cleric", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    check("entrou pela cidade", r.phase == "playing")
+    check("os bonecos estao la",
+          sum(1 for m in r.monsters.values() if m["type"] == "boneco_treino") >= 6)
+    p["pos"] = [18, 3]                       # em cima da saida
+    await r._check_objectives()
+    check("chegar a saida cumpre o objetivo", r.mission_complete_pending is True)
+    await r.handle_encerrar_missao("h1")
+    check("encerrar devolve o heroi a cidade", r.phase == "city")
+    check("o tutorial nao cobra mantimento", (p["fome"], p["sede"]) == (100, 100))
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 
