@@ -25,6 +25,18 @@
     { id: "bard", name: "Bardo", emoji: "🎻", mark: "B" },
     { id: "paladin", name: "Paladino", emoji: "🛡️", mark: "P" },
   ];
+  // Tutorial: verbos que uma tarefa de lição pode cobrar. Espelha
+  // LICAO_VERBOS no server.py — mudar um exige mudar o outro.
+  const LICAO_VERBOS = [
+    { v: "mover_ate", nome: "chegar a uma casa" },
+    { v: "abrir_porta", nome: "abrir uma porta" },
+    { v: "atacar", nome: "acertar um ataque" },
+    { v: "matar", nome: "derrotar um monstro" },
+    { v: "pegar_item", nome: "pegar um item" },
+    { v: "equipar", nome: "equipar um item" },
+    { v: "encerrar_turno", nome: "encerrar o turno" },
+  ];
+  const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { name: id, emoji: "⚔️", mark: "H" };
 
   const S = {
@@ -1221,7 +1233,7 @@
       }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
       case "trap": S.traps.push({ tipo: ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
-      case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 } }); break;
+      case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
         if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
@@ -1840,7 +1852,9 @@
     } else if (k === "fala") {
       const tg = ref.trigger || (ref.trigger = { tipo: "proximidade", raio: 2 });
       const fal = ref.falante || (ref.falante = { nome: "", emoji: "🧙" });
-      panel.innerHTML = `<b>💬 Fala de NPC</b>
+      const tar = ref.tarefa || null;
+      const ehCasa = tar && LICAO_VERBOS_CASA.has(tar.tipo);
+      panel.innerHTML = `<b>💬 Fala / lição</b>
         <label>emoji do falante</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
         <label>nome do falante</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="(opcional)">
         <label>texto</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
@@ -1850,13 +1864,58 @@
           <option value="manual"${tg.tipo === "manual" ? " selected" : ""}>manual (mestre)</option>
         </select>
         ${tg.tipo === "proximidade" ? `<label>raio (casas)</label><input id="f-raio" type="number" min="1" max="20" value="${tg.raio || 2}" style="width:60px">` : ""}
-        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">Dispara uma vez. Manual só com mestre humano.</div>`;
+        <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>🎓 Lição de tutorial</b>
+          <label>para a classe</label>
+          <select id="f-classe">
+            <option value=""${!ref.classe ? " selected" : ""}>todas as classes</option>
+            ${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.classe === h.id ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("")}
+          </select>
+          <label>ordem na trilha (vazio = sem ordem)</label>
+          <input id="f-ordem" type="number" min="1" value="${ref.ordem ?? ""}" style="width:70px">
+          <label><input type="checkbox" id="f-tem-tarefa"${tar ? " checked" : ""}> cobra uma tarefa</label>
+          ${tar ? `
+            <label>tarefa</label>
+            <select id="f-tarefa-tipo">${LICAO_VERBOS.map(o => `<option value="${o.v}"${tar.tipo === o.v ? " selected" : ""}>${o.nome}</option>`).join("")}</select>
+            <label>alvo ${ehCasa ? "(casa x,y — vazio = qualquer)" : "(tipo do monstro ou id do item — vazio = qualquer)"}</label>
+            <input id="f-tarefa-alvo" value="${ehCasa ? (Array.isArray(tar.alvo) ? tar.alvo.join(",") : "") : (typeof tar.alvo === "string" ? tar.alvo : "")}" placeholder="${ehCasa ? "12,5" : "goblin"}">
+            <label>vezes</label><input id="f-tarefa-vezes" type="number" min="1" value="${tar.vezes || 1}" style="width:70px">
+            <label>texto curto (aparece no HUD)</label>
+            <input id="f-tarefa-curto" value="${(tar.texto_curto || "").replace(/"/g, "&quot;")}" placeholder="Ataque o boneco de treino">
+          ` : ""}
+        </div>
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">Dispara uma vez por herói. Lição não aceita gatilho manual.</div>`;
       document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
       document.getElementById("f-nome").onchange = e => { fal.nome = e.target.value; };
       document.getElementById("f-texto").onchange = e => { ref.texto = e.target.value; };
       document.getElementById("f-tipo").onchange = e => { tg.tipo = e.target.value; if (tg.tipo === "proximidade" && !tg.raio) tg.raio = 2; renderPanel(); };
       const fr = document.getElementById("f-raio");
       if (fr) fr.onchange = e => { tg.raio = Math.max(1, parseInt(e.target.value, 10) || 2); };
+      document.getElementById("f-classe").onchange = e => { ref.classe = e.target.value || null; renderPanel(); };
+      document.getElementById("f-ordem").onchange = e => {
+        const n = parseInt(e.target.value, 10);
+        ref.ordem = Number.isFinite(n) && n >= 1 ? n : null;
+      };
+      document.getElementById("f-tem-tarefa").onchange = e => {
+        ref.tarefa = e.target.checked
+          ? { tipo: "encerrar_turno", alvo: null, vezes: 1, texto_curto: "" }
+          : null;
+        renderPanel();
+      };
+      const tt = document.getElementById("f-tarefa-tipo");
+      if (tt) tt.onchange = e => { ref.tarefa.tipo = e.target.value; ref.tarefa.alvo = null; renderPanel(); };
+      const ta = document.getElementById("f-tarefa-alvo");
+      if (ta) ta.onchange = e => {
+        const v = e.target.value.trim();
+        if (!v) { ref.tarefa.alvo = null; return; }
+        ref.tarefa.alvo = LICAO_VERBOS_CASA.has(ref.tarefa.tipo)
+          ? v.split(",").map(n => parseInt(n, 10) || 0).slice(0, 2)
+          : v;
+      };
+      const tv = document.getElementById("f-tarefa-vezes");
+      if (tv) tv.onchange = e => { ref.tarefa.vezes = Math.max(1, parseInt(e.target.value, 10) || 1); };
+      const tc = document.getElementById("f-tarefa-curto");
+      if (tc) tc.onchange = e => { ref.tarefa.texto_curto = e.target.value; };
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
         <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
@@ -2273,7 +2332,16 @@
         const tg = f.trigger || {};
         const t = { tipo: tg.tipo || "proximidade" };
         if (t.tipo === "proximidade") t.raio = tg.raio || 2;
-        return { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: t };
+        const out = { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: t };
+        if (f.classe) out.classe = f.classe;
+        if (f.ordem != null) out.ordem = f.ordem;
+        if (f.tarefa && f.tarefa.tipo) out.tarefa = {
+          tipo: f.tarefa.tipo,
+          ...(f.tarefa.alvo != null && f.tarefa.alvo !== "" ? { alvo: f.tarefa.alvo } : {}),
+          vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
+          texto_curto: f.tarefa.texto_curto || "",
+        };
+        return out;
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
@@ -2424,11 +2492,26 @@
       if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push("passagem com decoração-chave inválida");
       if (p.type === "mechanism" && !p.key_decor_ids.length) e.push("passagem secreta sem decoração-chave");
     }
+    const ordensLicao = new Set();
     for (const f of S.falas) {
       if (isWall(f.pos)) e.push(`fala de NPC em parede: ${f.pos}`);
       if (!(f.texto || "").trim()) e.push("fala de NPC sem texto");
       const tipo = (f.trigger || {}).tipo;
       if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC com gatilho inválido: ${tipo}`);
+      const ehLicao = !!(f.classe || f.tarefa);
+      if (!ehLicao) continue;
+      if (tipo === "manual") e.push(`lição ${f.id} não pode ter gatilho manual`);
+      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} com classe inválida: ${f.classe}`);
+      if (f.ordem != null) {
+        const chave = `${f.classe || ""}#${f.ordem}`;
+        if (ordensLicao.has(chave)) e.push(`duas lições com a mesma ordem ${f.ordem} para ${f.classe || "todas as classes"}`);
+        ordensLicao.add(chave);
+      }
+      if (f.tarefa) {
+        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(`lição ${f.id} com tarefa inválida: ${f.tarefa.tipo}`);
+        if (!(f.tarefa.texto_curto || "").trim()) e.push(`lição ${f.id} sem texto curto`);
+        if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(`lição ${f.id}: alvo deveria ser uma casa x,y`);
+      }
     }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {
@@ -2555,7 +2638,14 @@
       const tipo = ["proximidade", "sala", "manual"].includes(tg.tipo) ? tg.tipo : "proximidade";
       const trigger = { tipo };
       if (tipo === "proximidade") trigger.raio = Math.max(1, parseInt(tg.raio, 10) || 2);
-      return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger };
+      const tar = f.tarefa && f.tarefa.tipo ? {
+        tipo: f.tarefa.tipo,
+        alvo: f.tarefa.alvo ?? null,
+        vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
+        texto_curto: f.tarefa.texto_curto || "",
+      } : null;
+      return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger,
+               classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar };
     });
     S.nextFalaId = S.falas.length;
     S.masterReinforcements = (obj.master_reinforcements || [])
