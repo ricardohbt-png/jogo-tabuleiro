@@ -2967,7 +2967,7 @@ window.EDITOR_DUNGEONS = [
       "saida_permitida": false,
       "start_mode": "hero_spawns",
       "grid": {
-        "w": 41,
+        "w": 48,
         "h": 12
       },
       "tiles": [
@@ -3012,6 +3012,13 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -3055,6 +3062,13 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -3070,6 +3084,13 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           1,
           1,
@@ -3141,43 +3162,7 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0
-        ],
-        [
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
+          2,
           1,
           1,
           1,
@@ -3227,6 +3212,63 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -3270,6 +3312,13 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -3280,42 +3329,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
           0,
           0,
           0,
@@ -3399,6 +3412,63 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -3442,9 +3512,23 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -3545,8 +3629,23 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": 4,
+          "id": 5,
           "x": 34,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "chest",
+          "locked": true,
+          "doors": [
+            [
+              33,
+              3
+            ]
+          ]
+        },
+        {
+          "id": 4,
+          "x": 41,
           "y": 1,
           "w": 6,
           "h": 6,
@@ -3554,7 +3653,7 @@ window.EDITOR_DUNGEONS = [
           "locked": true,
           "doors": [
             [
-              33,
+              40,
               3
             ]
           ]
@@ -3618,44 +3717,14 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "exit": {
-        "x": 39,
+        "x": 46,
         "y": 3
       },
       "monsters": [
         {
           "type": "boneco_treino",
           "pos": [
-            14,
-            1
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_treino",
-          "pos": [
             16,
-            1
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_treino",
-          "pos": [
-            18,
-            1
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_treino",
-          "pos": [
-            14,
             2
           ],
           "room_id": 1,
@@ -3675,8 +3744,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "boneco_treino",
           "pos": [
-            14,
-            5
+            18,
+            2
           ],
           "room_id": 1,
           "boss": false,
@@ -3686,7 +3755,17 @@ window.EDITOR_DUNGEONS = [
           "type": "boneco_treino",
           "pos": [
             16,
-            5
+            4
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            17,
+            4
           ],
           "room_id": 1,
           "boss": false,
@@ -3696,14 +3775,24 @@ window.EDITOR_DUNGEONS = [
           "type": "boneco_treino",
           "pos": [
             18,
-            5
+            4
           ],
           "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "boneco_treino",
+          "type": "boneco_mira",
+          "pos": [
+            21,
+            1
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_golpe",
           "pos": [
             22,
             1
@@ -3713,9 +3802,9 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "boneco_treino",
+          "type": "boneco_furia",
           "pos": [
-            24,
+            23,
             1
           ],
           "room_id": 2,
@@ -3735,17 +3824,27 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "boneco_treino",
           "pos": [
-            24,
-            5
+            37,
+            2
           ],
-          "room_id": 2,
+          "room_id": 5,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            37,
+            4
+          ],
+          "room_id": 5,
           "boss": false,
           "target": false
         },
         {
           "type": "esqueleto_humano",
           "pos": [
-            37,
+            44,
             3
           ],
           "room_id": 4,
@@ -3794,7 +3893,7 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            35,
+            42,
             5
           ],
           "gold": 0,
@@ -3804,13 +3903,32 @@ window.EDITOR_DUNGEONS = [
               "id": "maca_treino"
             }
           ]
+        },
+        {
+          "pos": [
+            35,
+            2
+          ],
+          "gold": 0,
+          "key_objective": false,
+          "items": [
+            {
+              "id": "frasco_oleo"
+            },
+            {
+              "id": "veneno_fungo_acre"
+            },
+            {
+              "id": "health_potion_small"
+            }
+          ]
         }
       ],
       "traps": [
         {
           "tipo": "buraco",
           "pos": [
-            35,
+            42,
             3
           ]
         }
@@ -3979,7 +4097,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.",
+          "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 3
@@ -4027,7 +4145,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.",
+          "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4075,7 +4193,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.",
+          "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4123,7 +4241,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.",
+          "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4171,7 +4289,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.",
+          "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4219,7 +4337,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.",
+          "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4313,7 +4431,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. A saída é ali.",
+          "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. Ainda falta uma sala: abra a porta ao fundo, com cuidado.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4331,7 +4449,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais.",
+          "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira ⚔️ dá +2 no dado de acerto. Cada alvo desta sala só cai para a habilidade do emoji dele — ataque o alvo ⚔️ com Mira Certeira armada. No começo só dá para armar uma por turno; a Guilda destrava mais.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4342,7 +4460,55 @@ window.EDITOR_DUNGEONS = [
             "tipo": "usar_habilidade",
             "alvo": "mira_certeira",
             "vezes": 1,
-            "texto_curto": "Ataque com Mira Certeira armada"
+            "texto_curto": "Ataque o alvo ⚔️ com Mira Certeira"
+          }
+        },
+        {
+          "id": "guerreiro_04",
+          "pos": [
+            21,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Golpe Devastador 💥 dobra cada dado de dano do golpe — é o que você arma quando o inimigo precisa cair AGORA, e não daqui a duas rodadas. Arme-o e derrube o alvo 💥.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 4,
+          "classe": "warrior",
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "golpe_devastador",
+            "vezes": 1,
+            "texto_curto": "Ataque o alvo 💥 com Golpe Devastador"
+          }
+        },
+        {
+          "id": "guerreiro_05",
+          "pos": [
+            21,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Fúria Berserker 🔥 te dá um ataque extra no mesmo turno. Arme-a e derrube o alvo 🔥. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 5,
+          "classe": "warrior",
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "furia_berserker",
+            "vezes": 1,
+            "texto_curto": "Ataque o alvo 🔥 com Fúria Berserker"
           }
         },
         {
@@ -4355,7 +4521,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
+          "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto. Feito isso, abra a porta ao fundo e siga.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4378,7 +4544,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
+          "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis. Feito isso, abra a porta ao fundo e siga.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4402,7 +4568,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
+          "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu. Feito isso, abra a porta ao fundo e siga.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4426,7 +4592,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
+          "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate. Feito isso, abra a porta ao fundo e siga.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4450,7 +4616,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
+          "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos. Feito isso, abra a porta ao fundo e siga.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -4465,9 +4631,123 @@ window.EDITOR_DUNGEONS = [
           }
         },
         {
+          "id": "cons_01",
+          "pos": [
+            35,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Nem tudo se resolve no braço. Naquele baú há três coisas que se gastam: um óleo que se arremessa, um veneno que se unta na arma e uma poção que devolve vida. Pegue tudo — vai precisar na última sala.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 10,
+          "tarefa": {
+            "tipo": "pegar_item",
+            "vezes": 1,
+            "texto_curto": "Pegue os itens do baú"
+          }
+        },
+        {
+          "id": "cons_02",
+          "pos": [
+            35,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "O Frasco de Óleo Incendiário 🔥 é arremessado: você rola destreza contra a Armadura do alvo, e ele pega fogo, queimando por algumas rodadas. Serve para quem você não quer deixar chegar perto. Arremesse um num boneco.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 11,
+          "tarefa": {
+            "tipo": "arremessar_item",
+            "alvo": "frasco_oleo",
+            "vezes": 1,
+            "texto_curto": "Arremesse o óleo num boneco"
+          }
+        },
+        {
+          "id": "cons_03",
+          "pos": [
+            35,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Veneno não se bebe: unta-se na arma. Use o Fungo Acre e ele fica esperando no fio da lâmina — qualquer classe pode fazer isso, não só o ladino.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 12,
+          "tarefa": {
+            "tipo": "usar_item",
+            "alvo": "veneno_fungo_acre",
+            "vezes": 1,
+            "texto_curto": "Unte a arma com o veneno"
+          }
+        },
+        {
+          "id": "cons_04",
+          "pos": [
+            35,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco agora e veja a peçonha entrar.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 13,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Acerte um boneco com a arma untada"
+          }
+        },
+        {
+          "id": "cons_05",
+          "pos": [
+            35,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Por fim, a poção: beber é ação bônus, então dá para curar-se E atacar no mesmo turno. Beba a sua agora para saber onde ela fica na bolsa — na hora do aperto você não vai ter tempo de procurar. Depois, abra a porta ao fundo: a última sala morde de verdade.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 14,
+          "tarefa": {
+            "tipo": "usar_item",
+            "alvo": "health_potion_small",
+            "vezes": 1,
+            "texto_curto": "Beba a poção de cura"
+          }
+        },
+        {
           "id": "perigo_01",
           "pos": [
-            34,
+            41,
             3
           ],
           "falante": {
@@ -4480,12 +4760,12 @@ window.EDITOR_DUNGEONS = [
             "raio": 4
           },
           "classe": null,
-          "ordem": 10
+          "ordem": 15
         },
         {
           "id": "ladino_04",
           "pos": [
-            34,
+            41,
             3
           ],
           "falante": {
@@ -4508,7 +4788,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "perigo_02",
           "pos": [
-            36,
+            43,
             3
           ],
           "falante": {
@@ -4521,7 +4801,7 @@ window.EDITOR_DUNGEONS = [
             "raio": 4
           },
           "classe": null,
-          "ordem": 11,
+          "ordem": 16,
           "tarefa": {
             "tipo": "atacar",
             "alvo": "esqueleto_humano",
@@ -4532,7 +4812,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "perigo_03",
           "pos": [
-            36,
+            43,
             3
           ],
           "falante": {
@@ -4545,7 +4825,7 @@ window.EDITOR_DUNGEONS = [
             "raio": 4
           },
           "classe": null,
-          "ordem": 12,
+          "ordem": 17,
           "tarefa": {
             "tipo": "equipar",
             "alvo": "maca_treino",
@@ -4556,7 +4836,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "perigo_04",
           "pos": [
-            36,
+            43,
             3
           ],
           "falante": {
@@ -4569,7 +4849,7 @@ window.EDITOR_DUNGEONS = [
             "raio": 4
           },
           "classe": null,
-          "ordem": 13,
+          "ordem": 18,
           "tarefa": {
             "tipo": "matar",
             "alvo": "esqueleto_humano",

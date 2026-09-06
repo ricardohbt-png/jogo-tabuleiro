@@ -6,7 +6,7 @@
   "saida_permitida": false,
   "start_mode": "hero_spawns",
   "grid": {
-    "w": 41,
+    "w": 48,
     "h": 12
   },
   "tiles": [
@@ -51,6 +51,13 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -94,6 +101,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -109,6 +123,13 @@
       0,
       0,
       0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       1,
       1,
@@ -180,43 +201,7 @@
       1,
       1,
       1,
-      0
-    ],
-    [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
+      2,
       1,
       1,
       1,
@@ -266,6 +251,63 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -309,6 +351,13 @@
       1,
       1,
       1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
     ],
     [
@@ -319,42 +368,6 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
       0,
       0,
       0,
@@ -438,6 +451,63 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
@@ -481,9 +551,23 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0
     ],
     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -584,8 +668,23 @@
       ]
     },
     {
-      "id": 4,
+      "id": 5,
       "x": 34,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "chest",
+      "locked": true,
+      "doors": [
+        [
+          33,
+          3
+        ]
+      ]
+    },
+    {
+      "id": 4,
+      "x": 41,
       "y": 1,
       "w": 6,
       "h": 6,
@@ -593,7 +692,7 @@
       "locked": true,
       "doors": [
         [
-          33,
+          40,
           3
         ]
       ]
@@ -657,44 +756,14 @@
     }
   ],
   "exit": {
-    "x": 39,
+    "x": 46,
     "y": 3
   },
   "monsters": [
     {
       "type": "boneco_treino",
       "pos": [
-        14,
-        1
-      ],
-      "room_id": 1,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "boneco_treino",
-      "pos": [
         16,
-        1
-      ],
-      "room_id": 1,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "boneco_treino",
-      "pos": [
-        18,
-        1
-      ],
-      "room_id": 1,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "boneco_treino",
-      "pos": [
-        14,
         2
       ],
       "room_id": 1,
@@ -714,8 +783,8 @@
     {
       "type": "boneco_treino",
       "pos": [
-        14,
-        5
+        18,
+        2
       ],
       "room_id": 1,
       "boss": false,
@@ -725,7 +794,17 @@
       "type": "boneco_treino",
       "pos": [
         16,
-        5
+        4
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        17,
+        4
       ],
       "room_id": 1,
       "boss": false,
@@ -735,14 +814,24 @@
       "type": "boneco_treino",
       "pos": [
         18,
-        5
+        4
       ],
       "room_id": 1,
       "boss": false,
       "target": false
     },
     {
-      "type": "boneco_treino",
+      "type": "boneco_mira",
+      "pos": [
+        21,
+        1
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_golpe",
       "pos": [
         22,
         1
@@ -752,9 +841,9 @@
       "target": false
     },
     {
-      "type": "boneco_treino",
+      "type": "boneco_furia",
       "pos": [
-        24,
+        23,
         1
       ],
       "room_id": 2,
@@ -774,17 +863,27 @@
     {
       "type": "boneco_treino",
       "pos": [
-        24,
-        5
+        37,
+        2
       ],
-      "room_id": 2,
+      "room_id": 5,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        37,
+        4
+      ],
+      "room_id": 5,
       "boss": false,
       "target": false
     },
     {
       "type": "esqueleto_humano",
       "pos": [
-        37,
+        44,
         3
       ],
       "room_id": 4,
@@ -833,7 +932,7 @@
     },
     {
       "pos": [
-        35,
+        42,
         5
       ],
       "gold": 0,
@@ -843,13 +942,32 @@
           "id": "maca_treino"
         }
       ]
+    },
+    {
+      "pos": [
+        35,
+        2
+      ],
+      "gold": 0,
+      "key_objective": false,
+      "items": [
+        {
+          "id": "frasco_oleo"
+        },
+        {
+          "id": "veneno_fungo_acre"
+        },
+        {
+          "id": "health_potion_small"
+        }
+      ]
     }
   ],
   "traps": [
     {
       "tipo": "buraco",
       "pos": [
-        35,
+        42,
         3
       ]
     }
@@ -1370,7 +1488,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira ⚔️ dá +2 no dado de acerto. Cada alvo desta sala só cai para a habilidade do emoji dele — ataque o alvo ⚔️ com Mira Certeira armada. No começo só dá para armar uma por turno; a Guilda destrava mais.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1381,7 +1499,55 @@
         "tipo": "usar_habilidade",
         "alvo": "mira_certeira",
         "vezes": 1,
-        "texto_curto": "Ataque com Mira Certeira armada"
+        "texto_curto": "Ataque o alvo ⚔️ com Mira Certeira"
+      }
+    },
+    {
+      "id": "guerreiro_04",
+      "pos": [
+        21,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Golpe Devastador 💥 dobra cada dado de dano do golpe — é o que você arma quando o inimigo precisa cair AGORA, e não daqui a duas rodadas. Arme-o e derrube o alvo 💥.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 4,
+      "classe": "warrior",
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "golpe_devastador",
+        "vezes": 1,
+        "texto_curto": "Ataque o alvo 💥 com Golpe Devastador"
+      }
+    },
+    {
+      "id": "guerreiro_05",
+      "pos": [
+        21,
+        2
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Fúria Berserker 🔥 te dá um ataque extra no mesmo turno. Arme-a e derrube o alvo 🔥. Feito isso, abra a porta ao fundo e siga.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 5,
+      "classe": "warrior",
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "furia_berserker",
+        "vezes": 1,
+        "texto_curto": "Ataque o alvo 🔥 com Fúria Berserker"
       }
     },
     {
@@ -1504,9 +1670,123 @@
       }
     },
     {
+      "id": "cons_01",
+      "pos": [
+        35,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Nem tudo se resolve no braço. Naquele baú há três coisas que se gastam: um óleo que se arremessa, um veneno que se unta na arma e uma poção que devolve vida. Pegue tudo — vai precisar na última sala.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 10,
+      "tarefa": {
+        "tipo": "pegar_item",
+        "vezes": 1,
+        "texto_curto": "Pegue os itens do baú"
+      }
+    },
+    {
+      "id": "cons_02",
+      "pos": [
+        35,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "O Frasco de Óleo Incendiário 🔥 é arremessado: você rola destreza contra a Armadura do alvo, e ele pega fogo, queimando por algumas rodadas. Serve para quem você não quer deixar chegar perto. Arremesse um num boneco.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 11,
+      "tarefa": {
+        "tipo": "arremessar_item",
+        "alvo": "frasco_oleo",
+        "vezes": 1,
+        "texto_curto": "Arremesse o óleo num boneco"
+      }
+    },
+    {
+      "id": "cons_03",
+      "pos": [
+        35,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Veneno não se bebe: unta-se na arma. Use o Fungo Acre e ele fica esperando no fio da lâmina — qualquer classe pode fazer isso, não só o ladino.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 12,
+      "tarefa": {
+        "tipo": "usar_item",
+        "alvo": "veneno_fungo_acre",
+        "vezes": 1,
+        "texto_curto": "Unte a arma com o veneno"
+      }
+    },
+    {
+      "id": "cons_04",
+      "pos": [
+        35,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco agora e veja a peçonha entrar.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 13,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Acerte um boneco com a arma untada"
+      }
+    },
+    {
+      "id": "cons_05",
+      "pos": [
+        35,
+        3
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Por fim, a poção: beber é ação bônus, então dá para curar-se E atacar no mesmo turno. Beba a sua agora para saber onde ela fica na bolsa — na hora do aperto você não vai ter tempo de procurar. Depois, abra a porta ao fundo: a última sala morde de verdade.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 14,
+      "tarefa": {
+        "tipo": "usar_item",
+        "alvo": "health_potion_small",
+        "vezes": 1,
+        "texto_curto": "Beba a poção de cura"
+      }
+    },
+    {
       "id": "perigo_01",
       "pos": [
-        34,
+        41,
         3
       ],
       "falante": {
@@ -1519,12 +1799,12 @@
         "raio": 4
       },
       "classe": null,
-      "ordem": 10
+      "ordem": 15
     },
     {
       "id": "ladino_04",
       "pos": [
-        34,
+        41,
         3
       ],
       "falante": {
@@ -1547,7 +1827,7 @@
     {
       "id": "perigo_02",
       "pos": [
-        36,
+        43,
         3
       ],
       "falante": {
@@ -1560,7 +1840,7 @@
         "raio": 4
       },
       "classe": null,
-      "ordem": 11,
+      "ordem": 16,
       "tarefa": {
         "tipo": "atacar",
         "alvo": "esqueleto_humano",
@@ -1571,7 +1851,7 @@
     {
       "id": "perigo_03",
       "pos": [
-        36,
+        43,
         3
       ],
       "falante": {
@@ -1584,7 +1864,7 @@
         "raio": 4
       },
       "classe": null,
-      "ordem": 12,
+      "ordem": 17,
       "tarefa": {
         "tipo": "equipar",
         "alvo": "maca_treino",
@@ -1595,7 +1875,7 @@
     {
       "id": "perigo_04",
       "pos": [
-        36,
+        43,
         3
       ],
       "falante": {
@@ -1608,7 +1888,7 @@
         "raio": 4
       },
       "classe": null,
-      "ordem": 13,
+      "ordem": 18,
       "tarefa": {
         "tipo": "matar",
         "alvo": "esqueleto_humano",

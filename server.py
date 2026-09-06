@@ -44,7 +44,10 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  "pegar_item", "equipar", "encerrar_turno",
                  # Fase 2 — o que o herói FAZ além de andar e bater.
                  "usar_item", "usar_magia", "usar_habilidade",
-                 "usar_tecnica", "usar_instrumento", "desarmar_armadilha")
+                 "usar_tecnica", "usar_instrumento", "desarmar_armadilha",
+                 # Arremesso tem handler proprio (handle_throw_item): usar_item
+                 # sai cedo no ramo "throwable" e nunca chega ao gancho.
+                 "arremessar_item")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
@@ -14440,6 +14443,20 @@ class GameRoom:
             await self.gm_say(T("narracao.ganha_2_de_ca_por_1_rodada_ao_se_revelar", heroi=p['name']))
         return True
 
+    @staticmethod
+    def _nome_habilidade(p, hab_id):
+        """Nome legivel de uma habilidade de classe, para a recusa do alvo de
+        treino. Cai no proprio id quando o heroi nao tem a habilidade — quem
+        nao e guerreiro nunca derruba um alvo preso as skills dele."""
+        for s in (p.get("skills") or []):
+            if s.get("id") == hab_id:
+                return s.get("name") or hab_id
+        for cls in CLASSES.values():
+            for s in (cls.get("skills") or []):
+                if s.get("id") == hab_id:
+                    return s.get("name") or hab_id
+        return hab_id
+
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
@@ -14486,6 +14503,15 @@ class GameRoom:
 
         if target_id in self.monsters:
             target = self.monsters[target_id]
+            # Alvo de treino preso a uma habilidade (tutorial): recusado ANTES
+            # do custo e do gasto de acao, para que errar a habilidade nao cobre
+            # fome/sede nem queime o turno — o jogador arma a certa e repete.
+            _so_hab = target.get("so_habilidade")
+            if _so_hab and _so_hab not in set(buffs or []):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.alvo_so_cai_com_a_habilidade",
+                             habilidade=self._nome_habilidade(p, _so_hab))})
+                return
             provocado_id = p.get("runico_provocado_por")
             if (provocado_id and p.get("runico_provocacao_ate", 0) >= self.round_num
                     and target_id != provocado_id):
@@ -15269,12 +15295,18 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         alvo_tipo = defn.get("alvo")
+        # Os dois executores ainda recusam por alvo/alcance/parede. Consumir a
+        # acao principal e o unico sinal confiavel de que o arremesso saiu, e e
+        # o que separa o caminho de sucesso do de recusa para a licao.
+        _agiu_antes = bool(p.get("action_done"))
         if alvo_tipo == "ataque_alvo":
             await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"))
         elif alvo_tipo == "area":
             await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
+        if not _agiu_antes and p.get("action_done"):
+            await self._licao_evento(p, "arremessar_item", alvo=item.get("id"))
 
     async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha

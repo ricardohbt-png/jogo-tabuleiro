@@ -69,6 +69,21 @@ def sala(falas=None):
     r._falas_msg = falas_msg
     return r
 
+def concluir_ate(r, p, lic_id):
+    """Marca como feitas TODAS as licoes que travam `lic_id`, lidas do mapa, e
+    poe o heroi em cima do marcador dela. Cravar essa lista a mao quebra a cada
+    licao nova inserida no meio da trilha — e ja quebrou duas vezes."""
+    alvo = next(l for l in r.licoes if l["id"] == lic_id)
+    feitas = [l["id"] for l in r.licoes
+              if l.get("ordem") is not None and alvo.get("ordem") is not None
+              and l["ordem"] < alvo["ordem"] and l.get("classe") == alvo.get("classe")]
+    p["licoes_feitas"] = feitas
+    p["licao_progresso"] = {i: 1 for i in feitas}
+    p["licao_atual"] = None
+    p["pos"] = list(alvo["pos"])
+    return alvo
+
+
 def heroi(r, pid="h1", classe="warrior", pos=(2, 2)):
     p = make_player(pid, "Herói", classe, 0)
     p["pos"] = list(pos); p["alive"] = True
@@ -490,7 +505,8 @@ async def main():
         # o atrio ja foi: o heroi chega na sala dos bonecos
         p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)]
         p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
-        p["pos"] = [14, 3]
+        p["pos"] = list(next(f for f in r.licoes
+                             if f["id"] == f"{_pref}_01")["pos"])
         await r._verificar_falas(p, None)
         check(f"{_cls} recebe {_pref}_01", p["licao_atual"] == f"{_pref}_01")
 
@@ -662,7 +678,8 @@ async def main():
                  "cleric": "clerigo", "bard": "bardo", "paladin": "paladino"}[_cls]
         p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)] + [f"{_pref}_01", f"{_pref}_02"]
         p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
-        p["pos"] = [21, 3]
+        p["pos"] = list(next(f for f in r.licoes
+                             if f["id"] == f"{_pref}_03")["pos"])
         await r._verificar_falas(p, None)
         check(f"{_cls}: a licao de kit dispara", p["licao_atual"] == _lid)
         _alvo = next((m for m in r.monsters.values()
@@ -686,14 +703,10 @@ async def main():
     _esq = next((m for m in r.monsters.values() if m["type"] == "esqueleto_humano"), None)
     check("o esqueleto esta la", _esq is not None)
 
-    p["licoes_feitas"] = ([f"atrio_0{i}" for i in range(1, 6)]
-                          + ["guerreiro_01", "guerreiro_02", "guerreiro_03"]
-                          + [f"prov_0{i}" for i in range(1, 5)])
-    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
     _esp = dict(S._DUNGEON_ITEM_CATALOG["sword"])
     p["gear"]["weapon"] = _esp; p["weapon"] = _esp
-    p["pos"] = [34, 3]
-    await r._verificar_falas(p, None)
+    _marca = concluir_ate(r, p, "perigo_02")
+    await r._verificar_falas(p, S.player_room(r.rooms, p["pos"][0], p["pos"][1]))
     check("a licao do esqueleto dispara", p["licao_atual"] == "perigo_02")
 
     # Corte contra osso entra a MENOS; impacto entra a MAIS. A licao promete
@@ -718,11 +731,15 @@ async def main():
         return _tot / max(1, _acertos)
 
     _esq["hp"] = 999
-    p["pos"] = [36, 3]
+    p["pos"] = [_esq["pos"][0] - 1, _esq["pos"][1]]   # do mapa, nao cravado
     _antes = _esq["hp"]
-    while _esq["hp"] == _antes:
+    # Laco LIMITADO: um "while" sem teto transforma coordenada velha
+    # em travamento silencioso da suite, em vez de check vermelho.
+    for _ in range(200):
+        if _esq["hp"] != _antes: break
         p["action_done"] = False
         await r.handle_attack("h1", _esq["id"])
+    check("o heroi alcanca o esqueleto", _esq["hp"] != _antes)
     check("acertar cumpre e pede a maca", p["licao_atual"] == "perigo_03")
     _corte = await _dano_medio()
 
@@ -735,7 +752,7 @@ async def main():
     check("equipar a maca cumpre", "perigo_03" in p["licoes_feitas"])
     check("e passa para derrubar", p["licao_atual"] == "perigo_04")
 
-    p["pos"] = [36, 3]          # voltar para perto: o bau fica longe do esqueleto
+    p["pos"] = [_esq["pos"][0] - 1, _esq["pos"][1]]   # o bau fica longe do esqueleto
     _impacto = await _dano_medio()
     check("a maca doi mais que a espada no esqueleto", _impacto > _corte)
     # A diferenca real e ~2.9 (-1 resistido contra +2 vulneravel). O piso em
@@ -763,12 +780,8 @@ async def main():
     r.phase = "city"
     await r.handle_world_adventure("h1", "treinamento")
     r._is_turn = lambda pid: True
-    p["licoes_feitas"] = ([f"atrio_0{i}" for i in range(1, 6)]
-                          + ["ladino_01", "ladino_02", "ladino_03"]
-                          + [f"prov_0{i}" for i in range(1, 5)])
-    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
-    p["pos"] = [34, 3]
-    await r._verificar_falas(p, None)
+    concluir_ate(r, p, "ladino_04")
+    await r._verificar_falas(p, S.player_room(r.rooms, p["pos"][0], p["pos"][1]))
     check("o ladino recebe a licao de desarme", p["licao_atual"] == "ladino_04")
     _arm = r.armadilhas[0]; _arm["visivel"] = True
     p["pos"] = [_arm["pos"][0] - 1, _arm["pos"][1]]
@@ -837,6 +850,100 @@ async def main():
           not _bon.get("vscale") and _bon.get("porte") == "medio")
 
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
+    print("\n[20] Verbo de arremesso")
+    check("o servidor conhece o verbo", "arremessar_item" in S.LICAO_VERBOS)
+    _js = io.open(os.path.join(_raiz, "tools", "editor.js"), encoding="utf-8").read()
+    _bloco = _js[_js.index("const LICAO_VERBOS = ["):]
+    _bloco = _bloco[:_bloco.index("]")]
+    import re as _re
+    check("editor e servidor listam os MESMOS verbos",
+          set(_re.findall(r'v: "([a-z_]+)"', _bloco)) == set(S.LICAO_VERBOS))
+
+    r = GameRoom("T")
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+    r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+    p = make_player("h1", "Heroi", "warrior", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    r._is_turn = lambda pid: True
+    _cons = next(f for f in r.licoes if f["id"] == "cons_02")
+    p["licao_atual"] = "cons_02"; p["licao_progresso"] = {"cons_02": 0}
+    # handle_throw_item casa por item["id"] (o TIPO do item), nao por um id
+    # de instancia — passar outra coisa devolve "item nao encontrado".
+    p["bag"].append(dict(S.ARREMESSAVEIS["frasco_oleo"], id="frasco_oleo",
+                         name="Frasco de Óleo", item_slot="bag",
+                         effect="throwable"))
+    _b = next(m for m in r.monsters.values() if m["type"] == "boneco_treino")
+    p["pos"] = [_b["pos"][0] + 30, _b["pos"][1]]          # longe demais
+    p["action_done"] = False
+    await r.handle_throw_item("h1", {"item_id": "frasco_oleo", "target_id": _b["id"]})
+    check("arremesso recusado nao cumpre a licao", p.get("licao_atual") == "cons_02")
+    p["pos"] = [_b["pos"][0] - 1, _b["pos"][1]]
+    p["action_done"] = False
+    await r.handle_throw_item("h1", {"item_id": "frasco_oleo", "target_id": _b["id"]})
+    check("arremesso que sai cumpre a licao", "cons_02" in p["licoes_feitas"])
+
+    print("\n[21] Alvo que so cai com a habilidade certa")
+    r = GameRoom("T")
+    _erros = []
+    async def _cap21(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "error": _erros.append(str(msg.get("msg")))
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _cap21
+    r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+    p = make_player("h1", "Heroi", "warrior", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    r._is_turn = lambda pid: True
+    _mira = next(m for m in r.monsters.values() if m.get("so_habilidade") == "mira_certeira")
+    p["pos"] = [_mira["pos"][0], _mira["pos"][1] + 1]
+    _fome, _sede = p["fome"], p["sede"]
+    p["action_done"] = False
+    await r.handle_attack("h1", _mira["id"])
+    check("golpe comum e recusado", _mira["hp"] > 0 and bool(_erros))
+    check("e nao cobra acao nem fome/sede",
+          not p.get("action_done") and p["fome"] == _fome and p["sede"] == _sede)
+    check("a recusa diz QUAL habilidade", "Mira Certeira" in _erros[-1])
+    for _ in range(25):
+        if _mira["hp"] <= 0: break
+        p["action_done"] = False
+        await r.handle_attack("h1", _mira["id"], buffs=["mira_certeira"])
+    check("com a habilidade armada, o alvo cai", _mira["hp"] <= 0)
+    _comum = next(m for m in r.monsters.values()
+                  if m["type"] == "boneco_treino" and not m.get("so_habilidade"))
+    p["pos"] = [_comum["pos"][0], _comum["pos"][1] + 1]
+    for _ in range(25):
+        if _comum["hp"] <= 0: break
+        p["action_done"] = False
+        await r.handle_attack("h1", _comum["id"])
+    check("boneco sem a trava segue caindo no golpe comum", _comum["hp"] <= 0)
+
+    print("\n[22] O mapa das seis salas")
+    _m22 = S.carregar_dungeon("campo_de_treinamento.json")
+    check("a masmorra continua valida", S.validar_dungeon(_m22)[0] is True)
+    _salas = {s["id"] for s in _m22["rooms"]}
+    check("ha uma sala a mais que as cinco antigas", len(_salas) == 6)
+    _consal = next(s for s in _m22["rooms"] if s["id"] == 5)
+    check("a saida fica DEPOIS da sala nova", _m22["exit"]["x"] > _consal["x"] + _consal["w"])
+    _tipos = {m["type"] for m in _m22["monsters"]}
+    _defs = {m["type"]: m for m in S.MONSTER_DEFS}
+    check("todo alvo travado do mapa tem ficha com o campo",
+          all(_defs.get(t, {}).get("so_habilidade") for t in _tipos if t.startswith("boneco_")
+              and t != "boneco_treino"))
+    _skills = {sk["id"] for sk in S.CLASSES["warrior"]["skills"]}
+    _travas = {_defs[t]["so_habilidade"] for t in _tipos if _defs.get(t, {}).get("so_habilidade")}
+    check("ha um alvo para CADA habilidade do guerreiro", _travas == _skills)
+    _bau = next(c for c in _m22["chests"] if c["pos"] == [35, 2])
+    _sobra = make_player("x", "x", "warrior", 0).get("bag_size", 6) - 3   # 3 sobram das provisoes
+    check("o bau dos consumiveis cabe no que sobra da bolsa",
+          len(_bau["items"]) <= _sobra)
+    _ids = {i["id"] for i in _bau["items"]}
+    _pedidos = {(f.get("tarefa") or {}).get("alvo") for f in _m22["falas"]
+                if f["id"].startswith("cons_") and (f.get("tarefa") or {}).get("alvo")}
+    check("o bau tem tudo que as licoes pedem",
+          _pedidos - _ids <= {"boneco_treino"})
+
     sys.exit(1 if FAIL else 0)
 
 asyncio.run(main())

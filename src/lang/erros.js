@@ -260,6 +260,10 @@ window.LANG_ERROS = {
     "en": "Target out of range, or the curse has no uses left/is on cooldown.",
     "pt": "Alvo fora do alcance, ou maldição sem usos/em recarga."
   },
+  "erro.alvo_so_cai_com_a_habilidade": {
+    "en": "This training target only falls to {habilidade}. Arm the ability and attack again.",
+    "pt": "Este alvo de treino só cai com {habilidade}. Arme a habilidade e ataque de novo."
+  },
   "erro.alvo_invalido": {
     "en": "Invalid target.",
     "pt": "Alvo inválido."

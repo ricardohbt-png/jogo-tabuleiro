@@ -77,6 +77,7 @@
     { v: "usar_habilidade", nome: "usar uma habilidade de classe" },
     { v: "usar_tecnica", nome: "usar uma técnica da Guilda" },
     { v: "usar_instrumento", nome: "tocar o instrumento (bardo)" },
+    { v: "arremessar_item", nome: "arremessar um item (óleo, bomba)" },
     { v: "desarmar_armadilha", nome: "desarmar uma armadilha" },
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
