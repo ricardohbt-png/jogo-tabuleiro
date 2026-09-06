@@ -926,6 +926,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Young Garaloux",
     "pt": "Lenda: Garaloux Jovem"
   },
+  "cat.guilda.lenda_gato.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Gato."
+  },
+  "cat.guilda.lenda_gato.nome": {
+    "en": "",
+    "pt": "Lenda: Gato"
+  },
   "cat.guilda.lenda_gigante_guerra.desc": {
     "en": "+1 to attack and +1 to saving throws against War Giant.",
     "pt": "+1 de ataque e +1 nos saves contra Gigante da Guerra."
@@ -1149,6 +1157,30 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_orc_guerreiro.nome": {
     "en": "Lore: Orc Warrior",
     "pt": "Lenda: Orc Guerreiro"
+  },
+  "cat.guilda.lenda_ovelha.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Ovelha."
+  },
+  "cat.guilda.lenda_ovelha.nome": {
+    "en": "",
+    "pt": "Lenda: Ovelha"
+  },
+  "cat.guilda.lenda_pombo.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Pombo."
+  },
+  "cat.guilda.lenda_pombo.nome": {
+    "en": "",
+    "pt": "Lenda: Pombo"
+  },
+  "cat.guilda.lenda_rato.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Rato."
+  },
+  "cat.guilda.lenda_rato.nome": {
+    "en": "",
+    "pt": "Lenda: Rato"
   },
   "cat.guilda.lenda_skeleton.desc": {
     "en": "+1 to attack and +1 to saving throws against Skeleton.",
@@ -2726,6 +2758,14 @@ window.LANG_CATALOGO = {
     "en": "Fireball",
     "pt": "Bola de Fogo"
   },
+  "cat.magia.chamado_inverno.desc": {
+    "en": "",
+    "pt": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede."
+  },
+  "cat.magia.chamado_inverno.nome": {
+    "en": "",
+    "pt": "Chamado do Inverno"
+  },
   "cat.magia.clarividencia.desc": {
     "en": "Clears fog of war in a 4x4 area (+scales by level). Lasts 2 rounds.",
     "pt": "Remove névoa em área 4x4 (+escala por nível). Dura 2 rodadas."
@@ -2821,6 +2861,14 @@ window.LANG_CATALOGO = {
   "cat.magia.medo.nome": {
     "en": "Fear",
     "pt": "Medo"
+  },
+  "cat.magia.metamorfose.desc": {
+    "en": "",
+    "pt": "Transforma uma criatura viva em uma forma desbloqueada do bestiário. A forma mantém seus atributos, ataques, defesa, movimento e habilidades; a manutenção custa 1 Fome e 1 Sede por rodada."
+  },
+  "cat.magia.metamorfose.nome": {
+    "en": "",
+    "pt": "Metamorfose"
   },
   "cat.magia.olhar_petrificante.desc": {
     "en": "",
@@ -2921,6 +2969,18 @@ window.LANG_CATALOGO = {
   "cat.monstro.aranha_sombria.nome": {
     "en": "Shadow Spider",
     "pt": "Aranha Sombria"
+  },
+  "cat.monstro.boneco_furia.nome": {
+    "en": "Fury Target",
+    "pt": "Alvo de Fúria"
+  },
+  "cat.monstro.boneco_golpe.nome": {
+    "en": "Strike Target",
+    "pt": "Alvo de Golpe"
+  },
+  "cat.monstro.boneco_mira.nome": {
+    "en": "Aim Target",
+    "pt": "Alvo de Mira"
   },
   "cat.monstro.boneco_treino.nome": {
     "en": "Training Dummy",
@@ -3045,6 +3105,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.garaloux_jovem.nome": {
     "en": "Young Garaloux",
     "pt": "Garaloux Jovem"
+  },
+  "cat.monstro.gato.nome": {
+    "en": "",
+    "pt": "Gato"
   },
   "cat.monstro.gigante_guerra.nome": {
     "en": "War Giant",
@@ -3177,6 +3241,18 @@ window.LANG_CATALOGO = {
   "cat.monstro.orc_guerreiro.nome": {
     "en": "Orc Warrior",
     "pt": "Orc Guerreiro"
+  },
+  "cat.monstro.ovelha.nome": {
+    "en": "",
+    "pt": "Ovelha"
+  },
+  "cat.monstro.pombo.nome": {
+    "en": "",
+    "pt": "Pombo"
+  },
+  "cat.monstro.rato.nome": {
+    "en": "",
+    "pt": "Rato"
   },
   "cat.monstro.rato_gigante.nome": {
     "en": "Giant Rat",
