@@ -3740,23 +3740,20 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_type": "sentinela",
     "ai_profile": "sentinela",
     "ai_tactics": [],
-    "image": "escorpiaodepedra_original",
-    "portrait": "nova_criatura_customizado",
+    "image": "armadura",
+    "portrait": "armadura",
     "size": [
       1,
       1
     ],
     "oriented": false,
-    "porte": "minusculo",
+    "porte": "medio",
     "spawn_min": 1,
     "spawn_max": 1,
     "undead": false,
     "subtipo": "construto",
     "boss": false,
-    "vscale": [
-      0.5,
-      0.5
-    ]
+    "vscale": null
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de criaturas.

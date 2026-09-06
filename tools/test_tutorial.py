@@ -1,5 +1,5 @@
 """Tutorial por herói — Fase 1 (motor de lições). Roda da raiz: python tools/test_tutorial.py"""
-import asyncio, sys, os
+import asyncio, sys, os, io, json
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -777,6 +777,65 @@ async def main():
         p["action_done"] = False
         await r.handle_desarmar_armadilha("h1", {"tx": _arm["pos"][0], "ty": _arm["pos"][1]})
     check("desarmar cumpre a licao", "ladino_04" in p["licoes_feitas"])
+    print("\n[17] A primeira licao chega ao entrar, nao no primeiro passo")
+    r = GameRoom("T")
+    _falas17 = []
+    async def _cap17(pid, msg, *a, **k):
+        if isinstance(msg, dict) and msg.get("type") == "fala": _falas17.append(msg)
+    r.gm_say = _noop; r.broadcast = _noop; r.send_to = _cap17
+    r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+    p = make_player("h1", "Heroi", "warrior", 0)
+    r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+    r.phase = "city"
+    await r.handle_world_adventure("h1", "treinamento")
+    check("entrar ainda nao instrui: a transicao esta na frente",
+          p.get("licao_atual") is None)
+    await r._liberar_intro_masmorra(True)
+    check("a transicao acabar entrega a licao 1", p.get("licao_atual") == "atrio_01")
+    check("e a janela do jogador recebe o texto",
+          any(f.get("licao_id") == "atrio_01" for f in _falas17))
+
+    print("\n[18] Licao de sala nao vaza para fora da sala")
+    _mapa18 = S.carregar_dungeon("campo_de_treinamento.json")
+    _g01 = next(f for f in _mapa18["falas"] if f["id"] == "guerreiro_01")
+    _sala_g = S.player_room(r.rooms, _g01["pos"][0], _g01["pos"][1])
+    check("a licao do combate mora numa sala", _sala_g is not None)
+    p["licoes_feitas"] = [f"atrio_0{i}" for i in range(1, 6)]
+    p["licao_progresso"] = {i: 1 for i in p["licoes_feitas"]}
+    p["licao_atual"] = None
+    _porta = _mapa18["rooms"][1]["doors"][0]
+    p["pos"] = [_porta[0] - 1, _porta[1]]        # corredor, do lado de fora
+    check("o heroi esta fora da sala do combate",
+          (S.player_room(r.rooms, p["pos"][0], p["pos"][1]) or {}).get("id")
+          != _sala_g["id"])
+    check("mas dentro do raio do gatilho",
+          max(abs(p["pos"][0] - _g01["pos"][0]),
+              abs(p["pos"][1] - _g01["pos"][1])) <= _g01["trigger"]["raio"])
+    await r._verificar_falas(p, None)
+    check("ainda assim nao manda atacar de fora", p.get("licao_atual") is None)
+    p["pos"] = list(_g01["pos"])
+    await r._verificar_falas(p, S.player_room(r.rooms, p["pos"][0], p["pos"][1]))
+    check("dentro da sala, a licao chega", p.get("licao_atual") == "guerreiro_01")
+    check("e ha boneco ao alcance do heroi",
+          any(m["type"] == "boneco_treino"
+              and max(abs(m["pos"][0] - p["pos"][0]),
+                      abs(m["pos"][1] - p["pos"][1])) <= 2
+              for m in r.monsters.values()))
+
+    print("\n[19] O boneco de treino usa um peao que existe")
+    _raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _bon = next(m for m in json.load(io.open(
+        os.path.join(_raiz, "monstros_personalizados.json"), encoding="utf-8"))
+        if m.get("type") == "boneco_treino")
+    check("o peao esta no disco",
+          os.path.isfile(os.path.join(_raiz, "assets", "pawns", "monstros",
+                                      _bon["image"], _bon["image"] + ".png")))
+    check("o retrato esta no disco",
+          os.path.isfile(os.path.join(_raiz, "assets", "retratos", "monstros",
+                                      _bon["portrait"] + ".png")))
+    check("e nao e miniatura: da para ver no tabuleiro",
+          not _bon.get("vscale") and _bon.get("porte") == "medio")
+
     print(f"\n{'='*50}\n  {PASS} passaram, {FAIL} falharam\n{'='*50}")
     sys.exit(1 if FAIL else 0)
 

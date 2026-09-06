@@ -2967,7 +2967,7 @@ window.EDITOR_DUNGEONS = [
       "saida_permitida": false,
       "start_mode": "hero_spawns",
       "grid": {
-        "w": 27,
+        "w": 41,
         "h": 12
       },
       "tiles": [
@@ -2998,6 +2998,20 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -3027,21 +3041,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0
-        ],
-        [
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           1,
           1,
@@ -3065,6 +3064,63 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
           1,
           1,
           1,
@@ -3114,21 +3170,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0
-        ],
-        [
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           1,
           1,
@@ -3172,6 +3213,63 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -3201,21 +3299,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0,
@@ -3259,6 +3342,63 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -3288,9 +3428,37 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -3352,11 +3520,41 @@ window.EDITOR_DUNGEONS = [
           "y": 1,
           "w": 6,
           "h": 6,
-          "role": "empty",
+          "role": "monster",
           "locked": true,
           "doors": [
             [
               19,
+              3
+            ]
+          ]
+        },
+        {
+          "id": 3,
+          "x": 27,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "empty",
+          "locked": true,
+          "doors": [
+            [
+              26,
+              3
+            ]
+          ]
+        },
+        {
+          "id": 4,
+          "x": 34,
+          "y": 1,
+          "w": 6,
+          "h": 6,
+          "role": "boss",
+          "locked": true,
+          "doors": [
+            [
+              33,
               3
             ]
           ]
@@ -3420,7 +3618,7 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "exit": {
-        "x": 25,
+        "x": 39,
         "y": 3
       },
       "monsters": [
@@ -3503,6 +3701,56 @@ window.EDITOR_DUNGEONS = [
           "room_id": 1,
           "boss": false,
           "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            22,
+            1
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            24,
+            1
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            22,
+            5
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            24,
+            5
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "esqueleto_humano",
+          "pos": [
+            37,
+            3
+          ],
+          "room_id": 4,
+          "boss": false,
+          "target": false
         }
       ],
       "chests": [
@@ -3521,7 +3769,7 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            22,
+            29,
             2
           ],
           "gold": 0,
@@ -3543,9 +3791,30 @@ window.EDITOR_DUNGEONS = [
               "id": "garrafa_agua"
             }
           ]
+        },
+        {
+          "pos": [
+            35,
+            5
+          ],
+          "gold": 0,
+          "key_objective": false,
+          "items": [
+            {
+              "id": "maca_treino"
+            }
+          ]
         }
       ],
-      "traps": [],
+      "traps": [
+        {
+          "tipo": "buraco",
+          "pos": [
+            35,
+            3
+          ]
+        }
+      ],
       "decorations": [],
       "secret_passages": [],
       "master_reinforcements": [],
@@ -3638,7 +3907,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "O combate é por turnos. Quando terminar o que quer fazer, encerre o turno e deixe os outros agirem. Encerre o seu agora — a porta ao fundo destranca em seguida.",
+          "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. Só depois disso a porta ao fundo destranca.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 2
@@ -3647,7 +3916,7 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o seu turno"
+            "texto_curto": "Clique em Encerrar Turno"
           }
         },
         {
@@ -3660,10 +3929,10 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Portas trancadas se abrem com um clique quando você está ao lado delas. Abrir é de graça: não gasta movimento nem ação.",
+          "texto": "A porta ao fundo já destrancou. Mas porta não se atravessa andando: CLIQUE nela para abrir. Abrir é de graça — não gasta movimento nem a sua ação, e vale para qualquer porta da masmorra.",
           "trigger": {
             "tipo": "proximidade",
-            "raio": 2
+            "raio": 7
           },
           "ordem": 5,
           "tarefa": {
@@ -3673,7 +3942,7 @@ window.EDITOR_DUNGEONS = [
               3
             ],
             "vezes": 1,
-            "texto_curto": "Abra a porta ao fundo"
+            "texto_curto": "Clique na porta ao fundo para abri-la"
           }
         },
         {
@@ -3967,7 +4236,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "prov_01",
           "pos": [
-            21,
+            28,
             3
           ],
           "falante": {
@@ -3989,7 +4258,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "prov_02",
           "pos": [
-            21,
+            28,
             3
           ],
           "falante": {
@@ -4013,7 +4282,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "prov_03",
           "pos": [
-            21,
+            28,
             3
           ],
           "falante": {
@@ -4037,7 +4306,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "prov_04",
           "pos": [
-            24,
+            31,
             3
           ],
           "falante": {
@@ -4051,6 +4320,262 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": null,
           "ordem": 9
+        },
+        {
+          "id": "guerreiro_03",
+          "pos": [
+            21,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "warrior",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "mira_certeira",
+            "vezes": 1,
+            "texto_curto": "Ataque com Mira Certeira armada"
+          }
+        },
+        {
+          "id": "mago_03",
+          "pos": [
+            21,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "mage",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_magia",
+            "vezes": 1,
+            "texto_curto": "Lance uma magia num boneco"
+          }
+        },
+        {
+          "id": "ladino_03",
+          "pos": [
+            23,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "criar_armadilha",
+            "vezes": 1,
+            "texto_curto": "Prepare uma armadilha"
+          }
+        },
+        {
+          "id": "clerigo_03",
+          "pos": [
+            23,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "cleric",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "cura",
+            "vezes": 1,
+            "texto_curto": "Cure a si mesmo com 1 dado"
+          }
+        },
+        {
+          "id": "bardo_03",
+          "pos": [
+            21,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "bard",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "cancao_heroica",
+            "vezes": 1,
+            "texto_curto": "Entoe a Canção Heroica"
+          }
+        },
+        {
+          "id": "paladino_03",
+          "pos": [
+            23,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "paladin",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "golpe_sagrado",
+            "vezes": 1,
+            "texto_curto": "Ative o Golpe Sagrado"
+          }
+        },
+        {
+          "id": "perigo_01",
+          "pos": [
+            34,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Última sala. Há uma armadilha no chão daqui — armadilhas ficam ocultas até alguém revelá-las, e pisar numa cobra caro. Luccas sabe detectá-las e desarmá-las; os outros contornam, ou aguentam.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 10
+        },
+        {
+          "id": "ladino_04",
+          "pos": [
+            34,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "É a sua vez de brilhar, Luccas. Desarme a armadilha desta sala: um teste de Destreza contra a dificuldade dela. Um 1 natural dispara na sua cara — e no sucesso você ainda recupera o material.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "desarmar_armadilha",
+            "vezes": 1,
+            "texto_curto": "Desarme a armadilha"
+          }
+        },
+        {
+          "id": "perigo_02",
+          "pos": [
+            36,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Aquele esqueleto reage à sua espada de um jeito e à sua maça de outro. Acerte um golpe nele com o que está na sua mão e olhe o número: corte contra osso entra a MENOS — ele resiste a lâmina.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 11,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "esqueleto_humano",
+            "vezes": 1,
+            "texto_curto": "Acerte um golpe no esqueleto"
+          }
+        },
+        {
+          "id": "perigo_03",
+          "pos": [
+            36,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "No baú desta sala há uma maça. Pegue-a e equipe: osso não resiste a impacto, ele racha. Toda criatura tem essas duas listas — resistências e fraquezas — e a ficha dela mostra as que você já descobriu.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 12,
+          "tarefa": {
+            "tipo": "equipar",
+            "alvo": "maca_treino",
+            "vezes": 1,
+            "texto_curto": "Equipe a maça do baú"
+          }
+        },
+        {
+          "id": "perigo_04",
+          "pos": [
+            36,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Agora o mesmo braço, outra arma. Derrube-o e compare os números com o golpe de antes: cerca de três pontos a mais por acerto, só por trocar de arma. Escolher a arma certa vale mais que rolar bem o dado.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": null,
+          "ordem": 13,
+          "tarefa": {
+            "tipo": "matar",
+            "alvo": "esqueleto_humano",
+            "vezes": 1,
+            "texto_curto": "Derrube o esqueleto com a maça"
+          }
         }
       ],
       "objectives": {

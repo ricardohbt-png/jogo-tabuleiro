@@ -1018,7 +1018,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.",
+      "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -1066,7 +1066,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.",
+      "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1114,7 +1114,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.",
+      "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1162,7 +1162,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.",
+      "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1210,7 +1210,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.",
+      "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1258,7 +1258,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.",
+      "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1352,7 +1352,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. A saída é ali.",
+      "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. Ainda falta uma sala: abra a porta ao fundo, com cuidado.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1370,7 +1370,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais.",
+      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira dá +2 no dado de acerto. Arme-a e ataque um boneco — no começo só dá para armar uma por turno; a Guilda destrava mais. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1394,7 +1394,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
+      "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1417,7 +1417,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
+      "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1441,7 +1441,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
+      "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1465,7 +1465,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
+      "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1489,7 +1489,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
+      "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos. Feito isso, abra a porta ao fundo e siga.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4

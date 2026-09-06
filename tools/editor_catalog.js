@@ -10818,6 +10818,20 @@ window.EDITOR_CATALOG = {
       "value": 0,
       "veneno_id": "ensaio_sobre_a_cegueira",
       "descricao": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas."
+    },
+    {
+      "id": "maca_treino",
+      "name": "Maça de Treino",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "categoria": "contundente",
+      "granted_ability": null,
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0,
+      "descricao": "Maça de Treino: 1d6 de dano contundente, usando Força ou Destreza."
     }
   ],
   "traps": [
