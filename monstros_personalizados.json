@@ -3063,7 +3063,9 @@
       {
         "name": "Alabarda",
         "damage": "2d8",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 1,
         "attack_attribute": "str_",
         "damage_attribute": "str_",
@@ -3081,7 +3083,9 @@
       {
         "name": "Chifres",
         "damage": "1d8+4",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 2,
         "attack_attribute": "str_",
         "damage_attribute": "str_",
@@ -3172,12 +3176,41 @@
       }
     ],
     "monster_abilities": [
-      {"id": "investida_poderosa_minotauro"},
-      {"id": "faro_implacavel_minotauro"},
-      {"id": "guild_brutalidade", "uses_per_day": null, "cooldown_turns": 3, "monster_effect": "brutalidade_todos_ataques", "damage_bonus": 2},
-      {"id": "guild_tecnica_investida", "uses_per_day": null, "cooldown_turns": 2, "monster_effect": "investida_heroica_minotauro", "movement_multiplier": 2, "damage_bonus": 2},
-      {"id": "guild_tecnica_pressao_constante", "uses_per_day": null, "cooldown_turns": 4, "monster_effect": "pressao_constante_minotauro", "ca_penalty": 2, "duration_rounds": 2},
-      {"id": "guild_tecnica_instinto_sobrevivencia", "uses_per_day": null, "cooldown_turns": 10, "monster_effect": "instinto_sobrevivencia_minotauro"}
+      {
+        "id": "investida_poderosa_minotauro"
+      },
+      {
+        "id": "faro_implacavel_minotauro"
+      },
+      {
+        "id": "guild_brutalidade",
+        "uses_per_day": null,
+        "cooldown_turns": 3,
+        "monster_effect": "brutalidade_todos_ataques",
+        "damage_bonus": 2
+      },
+      {
+        "id": "guild_tecnica_investida",
+        "uses_per_day": null,
+        "cooldown_turns": 2,
+        "monster_effect": "investida_heroica_minotauro",
+        "movement_multiplier": 2,
+        "damage_bonus": 2
+      },
+      {
+        "id": "guild_tecnica_pressao_constante",
+        "uses_per_day": null,
+        "cooldown_turns": 4,
+        "monster_effect": "pressao_constante_minotauro",
+        "ca_penalty": 2,
+        "duration_rounds": 2
+      },
+      {
+        "id": "guild_tecnica_instinto_sobrevivencia",
+        "uses_per_day": null,
+        "cooldown_turns": 10,
+        "monster_effect": "instinto_sobrevivencia_minotauro"
+      }
     ],
     "monster_spells": [],
     "negative_ability_ids": [],
@@ -3198,7 +3231,10 @@
     "image": "minotauro",
     "portrait": "minotauro",
     "model3d": "assets/models3d/monstros/minotauro.glb",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "oriented": false,
     "porte": "grande",
     "spawn_min": 0,
@@ -3239,7 +3275,9 @@
       {
         "name": "Alabarda",
         "damage": "2d8",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 1,
         "attack_attribute": "str_",
         "damage_attribute": "str_",
@@ -3257,7 +3295,9 @@
       {
         "name": "Chifres",
         "damage": "1d8+4",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 2,
         "attack_attribute": "str_",
         "damage_attribute": "str_",
@@ -3348,12 +3388,41 @@
       }
     ],
     "monster_abilities": [
-      {"id": "investida_poderosa_minotauro"},
-      {"id": "faro_implacavel_minotauro"},
-      {"id": "guild_brutalidade", "uses_per_day": null, "cooldown_turns": 3, "monster_effect": "brutalidade_todos_ataques", "damage_bonus": 2},
-      {"id": "guild_tecnica_investida", "uses_per_day": null, "cooldown_turns": 2, "monster_effect": "investida_heroica_minotauro", "movement_multiplier": 2, "damage_bonus": 2},
-      {"id": "guild_tecnica_pressao_constante", "uses_per_day": null, "cooldown_turns": 4, "monster_effect": "pressao_constante_minotauro", "ca_penalty": 2, "duration_rounds": 2},
-      {"id": "guild_tecnica_ultimo_esforco", "uses_per_day": null, "cooldown_turns": 10, "monster_effect": "ultimo_esforco_minotauro"}
+      {
+        "id": "investida_poderosa_minotauro"
+      },
+      {
+        "id": "faro_implacavel_minotauro"
+      },
+      {
+        "id": "guild_brutalidade",
+        "uses_per_day": null,
+        "cooldown_turns": 3,
+        "monster_effect": "brutalidade_todos_ataques",
+        "damage_bonus": 2
+      },
+      {
+        "id": "guild_tecnica_investida",
+        "uses_per_day": null,
+        "cooldown_turns": 2,
+        "monster_effect": "investida_heroica_minotauro",
+        "movement_multiplier": 2,
+        "damage_bonus": 2
+      },
+      {
+        "id": "guild_tecnica_pressao_constante",
+        "uses_per_day": null,
+        "cooldown_turns": 4,
+        "monster_effect": "pressao_constante_minotauro",
+        "ca_penalty": 2,
+        "duration_rounds": 2
+      },
+      {
+        "id": "guild_tecnica_ultimo_esforco",
+        "uses_per_day": null,
+        "cooldown_turns": 10,
+        "monster_effect": "ultimo_esforco_minotauro"
+      }
     ],
     "monster_spells": [],
     "negative_ability_ids": [],
@@ -3375,7 +3444,10 @@
     "portrait": "minotauro",
     "model3d": "assets/models3d/monstros/minotauro.glb",
     "armor_description": "Armadura completa — descrição mecânica; não é equipamento nem gera saque.",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "oriented": false,
     "porte": "grande",
     "spawn_min": 0,
@@ -3420,7 +3492,9 @@
       {
         "name": "Garra esquerda",
         "damage": "1d4",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 1,
         "attack_attribute": "dex",
         "damage_attribute": "dex",
@@ -3438,7 +3512,9 @@
       {
         "name": "Garra direita",
         "damage": "1d4",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "num_attacks": 1,
         "attack_attribute": "dex",
         "damage_attribute": "dex",
@@ -3498,10 +3574,14 @@
         "action_type": "passiva",
         "dc": 14,
         "save": "forca",
-        "escape_saves": ["forca"],
+        "escape_saves": [
+          "forca"
+        ],
         "max_targets": 1,
         "automatic_damage": "1d4+2",
-        "damage_types": ["physical"],
+        "damage_types": [
+          "physical"
+        ],
         "damage_threshold": 5,
         "height_loss_per_threshold": 1,
         "descricao": "Ao acertar uma garra, Força CD 14 ou fica preso. A presa acompanha a Harpia horizontal e verticalmente; sofre 1d4+2 automático no início do turno dela. Cada 5 dano recebido pela Harpia reduz sua altura em 1. Escapar ou ser solto provoca queda."
@@ -3540,16 +3620,48 @@
       }
     ],
     "monster_abilities": [
-      {"id": "voo", "uses_per_day": null, "cooldown_turns": 0},
-      {"id": "agarrar_aereo", "uses_per_day": null, "cooldown_turns": 0},
-      {"id": "soltar_presa", "uses_per_day": null, "cooldown_turns": 0},
-      {"id": "investida_heroica", "uses_per_day": null, "cooldown_turns": 5},
-      {"id": "furia_berserker", "uses_per_day": null, "cooldown_turns": 5}
+      {
+        "id": "voo",
+        "uses_per_day": null,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "agarrar_aereo",
+        "uses_per_day": null,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "soltar_presa",
+        "uses_per_day": null,
+        "cooldown_turns": 0
+      },
+      {
+        "id": "investida_heroica",
+        "uses_per_day": null,
+        "cooldown_turns": 5
+      },
+      {
+        "id": "furia_berserker",
+        "uses_per_day": null,
+        "cooldown_turns": 5
+      }
     ],
     "monster_spells": [
-      {"id": "comando", "limit_mode": "encounter", "uses_per_combat": 3},
-      {"id": "medo", "limit_mode": "encounter", "uses_per_combat": 1},
-      {"id": "sono", "limit_mode": "encounter", "uses_per_combat": 1}
+      {
+        "id": "comando",
+        "limit_mode": "encounter",
+        "uses_per_combat": 3
+      },
+      {
+        "id": "medo",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      },
+      {
+        "id": "sono",
+        "limit_mode": "encounter",
+        "uses_per_combat": 1
+      }
     ],
     "negative_ability_ids": [],
     "immunities": [],
@@ -3569,7 +3681,10 @@
     "image": "harpia",
     "portrait": "harpia",
     "model3d": "assets/models3d/monstros/harpia.glb",
-    "size": [1, 1],
+    "size": [
+      1,
+      1
+    ],
     "oriented": false,
     "porte": "medio",
     "spawn_min": 0,
@@ -3625,22 +3740,19 @@
     "ai_type": "sentinela",
     "ai_profile": "sentinela",
     "ai_tactics": [],
-    "image": "escorpiaodepedra_original",
-    "portrait": "nova_criatura_customizado",
+    "image": "armadura",
+    "portrait": "armadura",
     "size": [
       1,
       1
     ],
     "oriented": false,
-    "porte": "minusculo",
+    "porte": "medio",
     "spawn_min": 1,
     "spawn_max": 1,
     "undead": false,
     "subtipo": "construto",
     "boss": false,
-    "vscale": [
-      0.5,
-      0.5
-    ]
+    "vscale": null
   }
 ]

@@ -3907,7 +3907,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "O combate é por turnos. Quando terminar o que quer fazer, encerre o turno e deixe os outros agirem. Encerre o seu agora — a porta ao fundo destranca em seguida.",
+          "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. Só depois disso a porta ao fundo destranca.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 2
@@ -3916,7 +3916,7 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o seu turno"
+            "texto_curto": "Clique em Encerrar Turno"
           }
         },
         {
@@ -3929,10 +3929,10 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Portas trancadas se abrem com um clique quando você está ao lado delas. Abrir é de graça: não gasta movimento nem ação.",
+          "texto": "A porta ao fundo já destrancou. Mas porta não se atravessa andando: CLIQUE nela para abrir. Abrir é de graça — não gasta movimento nem a sua ação, e vale para qualquer porta da masmorra.",
           "trigger": {
             "tipo": "proximidade",
-            "raio": 2
+            "raio": 7
           },
           "ordem": 5,
           "tarefa": {
@@ -3942,7 +3942,7 @@ window.EDITOR_DUNGEONS = [
               3
             ],
             "vezes": 1,
-            "texto_curto": "Abra a porta ao fundo"
+            "texto_curto": "Clique na porta ao fundo para abri-la"
           }
         },
         {

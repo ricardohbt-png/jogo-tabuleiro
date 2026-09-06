@@ -12377,6 +12377,19 @@ class GameRoom:
         else:
             await self.gm_say(T("narracao.os_aventureiros_descem_novamente_as_esca"))
 
+        # Tutorial: a primeira licao so pode aparecer depois que a transicao de
+        # entrada sai da frente. Antes disto ela nao era entregue em lugar
+        # nenhum: a varredura de falas roda a partir do movimento, e o primeiro
+        # movimento E justamente o que a licao 1 manda fazer — o jogador agia
+        # antes de ler, e a trilha inteira nascia um tempo atrasada.
+        if getattr(self, "licoes", None):
+            for _p in list(self.players.values()):
+                if not self._ativo(_p):
+                    continue
+                await self._verificar_falas(
+                    _p, player_room(self.rooms, _p["pos"][0], _p["pos"][1]))
+            await self.push_state()
+
     def _initiative_attribute(self, entity, key):
         """Atributo efetivo para iniciativa. Modificadores temporários ou
         permanentes podem ser aplicados pelos sistemas usando *_bonus/mod_*.
@@ -13893,6 +13906,21 @@ class GameRoom:
             return False    # uma tarefa pendente por vez: não sobrescreve o painel
         return self._licao_liberada(p, fala)
 
+    def _licao_no_lugar(self, p, pos):
+        """Se o herói está onde a lição foi plantada.
+
+        O raio do gatilho é generoso de propósito — ninguém passa em cima do
+        marcador —, mas raio não conhece parede: a lição do combate, plantada
+        no meio da sala dos bonecos, alcançava o átrio inteiro e chegava a quem
+        ainda estava do lado de fora da porta, mandando acertar um boneco que
+        não havia ali. Lição dentro de uma sala é daquela sala; marcador de
+        corredor (sem sala) segue valendo só pelo raio."""
+        sala = player_room(self.rooms, pos[0], pos[1])
+        if sala is None:
+            return True
+        aqui = player_room(self.rooms, p["pos"][0], p["pos"][1])
+        return bool(aqui) and aqui["id"] == sala["id"]
+
     async def _verificar_falas(self, p, entered):
         """Gatilhos automáticos de fala (proximidade + entrar na sala) após um passo."""
         for fala in list(getattr(self, "falas", [])):
@@ -13901,6 +13929,8 @@ class GameRoom:
             trig = fala.get("trigger") or {}
             tipo = trig.get("tipo")
             pos = fala.get("pos")
+            if _e_licao(fala) and pos and not self._licao_no_lugar(p, pos):
+                continue
             if tipo == "proximidade" and pos:
                 raio = int(trig.get("raio", 2) or 2)
                 if max(abs(p["pos"][0] - pos[0]), abs(p["pos"][1] - pos[1])) <= raio:
@@ -19511,6 +19541,9 @@ class GameRoom:
             # __getattr__, então `T + str` estoura alto em vez de perder a
             # tradução em silêncio.
             await self.gm_say(T("narracao.equipou_2a_arma_mao_esquerda", frase=log))
+        # Terceiro caminho de equipar: arrastar para a mao do escudo. Os tres
+        # precisam do gancho — o tutorial nao pode depender de qual o jogador usou.
+        await self._licao_evento(p, "equipar", alvo=(item or {}).get("id"))
         await self.push_state_or_city()
 
     async def handle_unequip(self, pid, slot_key):
