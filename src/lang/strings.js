@@ -45,6 +45,18 @@ window.LANG_STRINGS = {
     "pt": "🎲 {expressao} = {dano} de dano físico",
     "en": "🎲 {expressao} = {dano} physical damage"
   },
+  "ui.terreno.queda_titulo": {
+    "pt": "Queda no desnível",
+    "en": "Terrain fall"
+  },
+  "ui.terreno.queda_descricao": {
+    "pt": "{nome} caiu do nível {origem} para o nível {destino} ({faixa}) e sofreu {dano} de dano.",
+    "en": "{nome} fell from level {origem} to level {destino} ({faixa}) and took {dano} damage."
+  },
+  "ui.terreno.queda_desnivel": {
+    "pt": "↕ Desnível: nível {origem} → nível {destino} ({faixa})",
+    "en": "↕ Drop: level {origem} → level {destino} ({faixa})"
+  },
   "ui.voo.risco_queda": {
     "pt": "⚠️ Queda: {faixa} ({expressao})",
     "en": "⚠️ Fall: {faixa} ({expressao})"

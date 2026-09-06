@@ -78,9 +78,9 @@ ALTURA_INICIAL_VOO = 2
 ALTURA_POR_QUADRADO_ALCANCE = 2
 
 # Elevação visual do terreno autorado. É uma camada independente de
-# `altura`, que continua reservada ao voo das criaturas e às regras verticais
-# de combate. Nesta primeira fase a elevação não altera movimento, alcance,
-# linha de visão ou quedas.
+# `altura`, que continua reservada ao voo das criaturas. O movimento, a linha
+# de visão e o alcance vertical combinam as duas camadas; quedas reutilizam as
+# faixas de dano do voo.
 ELEVACAO_TERRENO_MIN = -1
 ELEVACAO_TERRENO_MAX = 2
 
@@ -8880,6 +8880,7 @@ class GameRoom:
         self._terrenos_inverno = {}
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..2)
+        self.transicao_altura = "rampa"
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
         self._mat_oclui_tiles = set()  # casas de material opaco (entulho) â€” barra visÃ£o
 
@@ -10625,7 +10626,7 @@ class GameRoom:
                 if st.get("push", 0) > 0:
                     dx = (m["pos"][0] > p["pos"][0]) - (m["pos"][0] < p["pos"][0])
                     dy = (m["pos"][1] > p["pos"][1]) - (m["pos"][1] < p["pos"][1])
-                    self._empurrar(m, dx, dy, st["push"])
+                    await self._empurrar(m, dx, dy, st["push"])
                 else:
                     self._reduzir_mov_monstro(m, 1, 1)   # Tambor Velho: -1 movimento
                 if runico:
@@ -12191,6 +12192,7 @@ class GameRoom:
             self._rebuild_decor_index()
             self.materiais = {}
             self.elevacoes = {}
+            self.transicao_altura = "rampa"
             self._terrenos_inverno = {}
             self._rebuild_materiais_index()
             self.zonas_especiais = []
@@ -12978,6 +12980,50 @@ class GameRoom:
             return True
         return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
 
+    def _elevacao_terreno(self, x, y):
+        """Nível autorado do piso; casas sem marca permanecem no nível 0."""
+        try:
+            return max(-1, min(2, int(getattr(self, "elevacoes", {}).get((int(x), int(y)), 0))))
+        except (TypeError, ValueError):
+            return 0
+
+    def _custo_passo_elevacao(self, criatura, origem, destino,
+                              facing_origem=None, facing_destino=None):
+        """Retorna o custo adicional de elevação ou ``None`` se for uma parede.
+
+        A comparação é feita casa a casa para que footprints grandes não possam
+        atravessar um desnível incompatível. Voo acima do solo ignora a camada
+        de elevação, assim como já ignora os custos dos terrenos do piso.
+        """
+        if self._voo_imune_terreno(criatura):
+            return 0
+        if not isinstance(origem, (list, tuple)) or len(origem) < 2:
+            return 0
+        if not isinstance(destino, (list, tuple)) or len(destino) < 2:
+            return None
+        old_tiles = [(int(origem[0]), int(origem[1]))]
+        new_tiles = [(int(destino[0]), int(destino[1]))]
+        if criatura and criatura.get("id") in self.monsters and self.monsters.get(criatura.get("id")) is criatura:
+            old_tiles = self._monster_tiles_at(criatura, int(origem[0]), int(origem[1]), facing_origem)
+            new_tiles = self._monster_tiles_at(criatura, int(destino[0]), int(destino[1]), facing_destino)
+        if len(old_tiles) != len(new_tiles):
+            return None
+        maior_diferenca = 0
+        for old_tile, new_tile in zip(old_tiles, new_tiles):
+            diferenca = abs(self._elevacao_terreno(*new_tile) - self._elevacao_terreno(*old_tile))
+            if diferenca > 1:
+                return None
+            maior_diferenca = max(maior_diferenca, diferenca)
+        return maior_diferenca
+
+    def _passo_elevacao_permitido(self, criatura, origem, destino,
+                                  facing_destino=None):
+        return self._custo_passo_elevacao(
+            criatura, origem, destino,
+            criatura.get("facing") if criatura else None,
+            facing_destino,
+        ) is not None
+
     def _voo_ignora_obstaculos(self, criatura):
         """Se Voo permite atravessar paredes, portas e obstáculos baixos.
 
@@ -13516,7 +13562,10 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.um_servo_animado_ocupa_este_espaco")})
             return
 
-        step_cost = self._water_step_cost(p, nx, ny)
+        if not voo_livre and not self._passo_elevacao_permitido(p, p["pos"], [nx, ny]):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
+            return
+        step_cost = self._water_step_cost(p, nx, ny, p["pos"])
         minimum_water_step = (p["moves_left"] > 0 and not p.get("moved_this_turn")
                               and not p.get("_water_min_step_used"))
         if p["moves_left"] < step_cost and not minimum_water_step:
@@ -13530,6 +13579,10 @@ class GameRoom:
             p["_water_min_step_used"] = True
         else:
             p["moves_left"] -= step_cost
+        await self._aplicar_queda_terreno(p, old_pos, p["pos"])
+        if not p.get("alive"):
+            await self.push_state()
+            return
         self._apply_swamp_entry_penalty(p)
         # Caminhar custa -1 sede UMA vez por turno (na 1Âª casa andada), nÃ£o por casa.
         if not p.get("moved_this_turn"):
@@ -13975,10 +14028,14 @@ class GameRoom:
         return (dx == 1 and dy == 0) or (dx == 0 and dy == 1)
 
     def _tem_linha_de_visao(self, pos_a, pos_b, ignorar_objetos=False):
-        """Linha de visão entre dois tiles: True se NENHUMA parede intercepta a
-        linha reta entre os centros (Bresenham supercover — visita todos os
-        tiles que a linha toca, sem deixar 'frestas' diagonais). Endpoints não
-        bloqueiam. Paredes barram ataques à distância, arremessos e magias."""
+        """Linha de visão entre dois tiles, incluindo a elevação do terreno.
+
+        O traçado continua sendo o supercover de Bresenham. Além de paredes e
+        objetos, uma casa intermediária elevada bloqueia a visão quando o topo
+        dela fica acima da altura da linha entre observador e alvo. Endpoints
+        nunca bloqueiam. Criaturas voando acima do solo ignoram a obstrução do
+        terreno, mantendo a regra já existente para o voo.
+        """
         x0, y0 = int(pos_a[0]), int(pos_a[1])
         x1, y1 = int(pos_b[0]), int(pos_b[1])
         dx, dy = abs(x1 - x0), abs(y1 - y0)
@@ -13995,6 +14052,25 @@ class GameRoom:
                            list(self.players.values()) + list(self.monsters.values())
                            if entidade.get("pos") == [x0, y0]), None)
         voo_livre = self._voo_ignora_obstaculos(observador)
+        alvo_entidade = next((entidade for entidade in
+                              list(self.players.values()) + list(self.monsters.values())
+                              if entidade.get("pos") == [x1, y1]), None)
+        z0 = self._elevacao_terreno(x0, y0) + (normalizar_altura(observador.get("altura", 0)) if observador else 0)
+        z1 = self._elevacao_terreno(x1, y1) + (normalizar_altura(alvo_entidade.get("altura", 0)) if alvo_entidade else 0)
+        dz2 = dx * dx + dy * dy
+
+        def bloqueia_por_elevacao(cx, cy):
+            if (cx, cy) in {(x0, y0), (x1, y1)}:
+                return False
+            # Um observador no ar vê acima do relevo, mesmo quando não possui
+            # a habilidade separada de atravessar paredes/decorações.
+            if observador and normalizar_altura(observador.get("altura", 0)) > ALTURA_MIN:
+                return False
+            if not dz2:
+                return False
+            t = ((cx - x0) * (x1 - x0) + (cy - y0) * (y1 - y0)) / dz2
+            raio_z = z0 + (z1 - z0) * max(0.0, min(1.0, t))
+            return self._elevacao_terreno(cx, cy) > raio_z + 1e-6
         # Alguns testes e salas leves instanciam o GameRoom sem passar pelo
         # carregamento completo de materiais/decorações. Nesses casos, a LOS
         # deve manter o comportamento de mapa vazio sem exigir esses caches.
@@ -14005,6 +14081,8 @@ class GameRoom:
 
         def bloqueia(cx, cy):
             if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
+                return True
+            if bloqueia_por_elevacao(cx, cy):
                 return True
             if self.tiles[cy][cx] == WALL or self._is_closed_door(cx, cy):
                 return not voo_livre or (cx, cy) in decor_tall_tiles
@@ -14298,9 +14376,9 @@ class GameRoom:
             body = self._monster_tiles(target)
             return any(self._tile_no_alcance_arma_distancia(
                 p, t, wr, target.get("altura", ALTURA_MIN)) for t in body)
-        # Armas corpo a corpo não alcançam outro nível de altura nesta primeira
-        # versão. Armas de alcance vertical entram numa etapa posterior.
-        if normalizar_altura(p.get("altura", ALTURA_MIN)) != normalizar_altura(target.get("altura", ALTURA_MIN)):
+        # Um desnível de até 1 nível ainda permite combate adjacente; diferenças
+        # maiores bloqueiam o golpe corpo a corpo.
+        if abs(self._altura_efetiva(p) - self._altura_efetiva(target)) > 1:
             return False
         if w.get("reach") == "lanca":
             return self._lanca_no_alcance_jogador(p["pos"], target)
@@ -14320,8 +14398,8 @@ class GameRoom:
             alcance = int(alcance)
         except (TypeError, ValueError):
             return False
-        alcance_restante = alcance - custo_vertical_alcance(
-            p.get("altura", ALTURA_MIN), target_altitude)
+        alcance_restante = alcance - self._custo_vertical_terreno(
+            p, tile, altura_destino=target_altitude)
         if alcance_restante < 1:
             return False
         dx = abs(p["pos"][0] - tile[0])
@@ -14486,8 +14564,7 @@ class GameRoom:
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=target["name"])})
                     return
-            elif normalizar_altura(p.get("altura", ALTURA_MIN)) != normalizar_altura(
-                    target.get("altura", ALTURA_MIN)):
+            elif abs(self._altura_efetiva(p) - self._altura_efetiva(target)) > 1:
                 await self.send_to(pid, {
                     "type": "error",
                     "msg": T("erro.alvo_fora_de_alcance_aproxime_ortogonal", alvo=target["name"])
@@ -15953,9 +16030,15 @@ class GameRoom:
             if pp.get("animados"):
                 pp["animados"] = [a for a in pp["animados"] if a.get("id") != aid]
 
-    def _tile_livre_para_animado(self, nx, ny, self_id):
+    def _tile_livre_para_animado(self, nx, ny, self_id, origem=None):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL: return False
+        if origem is not None:
+            criatura = next((a for a in self._all_animados() if a.get("id") == self_id), None)
+            if criatura is None and self.prisoner and self.prisoner.get("id") == self_id:
+                criatura = self.prisoner
+            if not self._passo_elevacao_permitido(criatura, origem, [nx, ny]):
+                return False
         if any(a.get("id") == self_id and a.get("rodamoinho_preso")
                for a in self._all_animados()): return False
         if any(a.get("id") == self_id and a.get("rodamoinho_profundo_preso")
@@ -16051,12 +16134,15 @@ class GameRoom:
                         if adx == 0 and ady == 0:
                             continue
                         nx, ny = a["pos"][0]+adx, a["pos"][1]+ady
-                        if self._tile_livre_para_animado(nx, ny, a["id"]):
+                        if self._tile_livre_para_animado(nx, ny, a["id"], a["pos"]):
                             frm = list(a["pos"])
                             a["pos"] = [nx, ny]
                             a["facing"] = [adx, ady]
                             moved = True
-                            self._apply_water_entry_penalty(a, nx, ny)
+                            await self._aplicar_queda_terreno(a, frm, a["pos"], p.get("id"))
+                            if a.get("vida_atual", 0) <= 0:
+                                break
+                            self._apply_water_entry_penalty(a, nx, ny, frm)
                             a["moves_left"] = max(0, a.get("moves_left", 0) - 1)
                             self._apply_snow_entry_penalty(a, frm, a["pos"])
                             await self._aplicar_lava_se_pisar(a)
@@ -16069,6 +16155,8 @@ class GameRoom:
                         break
 
             # Ataca se no alcance
+            if a.get("vida_atual", 0) <= 0:
+                continue
             pode_atacar = self._animado_attack_in_range(a, target, ataque) if eh_elemental else (
                 self._em_linha_cardinal(a["pos"], target["pos"], atk_range)
                 and not self._linha_bloqueada_por_parede(a["pos"], target["pos"])
@@ -16214,11 +16302,15 @@ class GameRoom:
             candidate_facing = step_facing if m.get("oriented") and step_facing in (
                 [1, 0], [-1, 0], [0, 1], [0, -1]
             ) else None
-            if not self._monster_can_occupy(m, nx, ny, candidate_facing):
+            origem = list(m["pos"])
+            if not self._monster_can_occupy(m, nx, ny, candidate_facing, origem):
+                break
+            passo_custo = self._water_step_cost(m, nx, ny, origem)
+            if m.get("master_moves_left", 0) < passo_custo:
                 break
             if not await self._commit_monster_step(m, nx, ny):
                 break
-            m["master_moves_left"] -= 1
+            m["master_moves_left"] = max(0, m.get("master_moves_left", 0) - passo_custo)
         self._reiniciar_timer_manual()
         await self.push_state()
 
@@ -16779,12 +16871,16 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = a["pos"][0] + dx, a["pos"][1] + dy
-        if not self._tile_livre_para_animado(nx, ny, a["id"]):
+        if not self._tile_livre_para_animado(nx, ny, a["id"], a["pos"]):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
         old_pos = list(a["pos"])
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
-        self._apply_water_entry_penalty(a, nx, ny)
+        await self._aplicar_queda_terreno(a, old_pos, a["pos"], pid)
+        if a.get("vida_atual", 0) <= 0:
+            await self.push_state()
+            return
+        self._apply_water_entry_penalty(a, nx, ny, old_pos)
         a["moves_left"] = max(0, a["moves_left"] - 1)
         self._apply_snow_entry_penalty(a, old_pos, a["pos"])
         await self._aplicar_lava_se_pisar(a)
@@ -21648,6 +21744,9 @@ class GameRoom:
             passo = next(((x, y) for x, y in opcoes if (x or y) and self._passo_livre_licantropo(p, p["pos"][0]+x, p["pos"][1]+y)), None)
             if not passo: break
             antes = list(p["pos"]); p["pos"] = [antes[0]+passo[0], antes[1]+passo[1]]; p["facing"] = list(passo)
+            await self._aplicar_queda_terreno(p, antes, p["pos"])
+            if not p.get("alive"):
+                break
             p["moves_left"] -= 1; self._apply_water_entry_penalty(p, *p["pos"])
             self._apply_snow_entry_penalty(p, antes, p["pos"])
             await self._aplicar_lava_se_pisar(p)
@@ -21679,7 +21778,7 @@ class GameRoom:
         livre de parede/porta fechada e de qualquer outra entidade viva."""
         return self._monster_can_occupy(m, nx, ny, facing)
 
-    def _passo_monstro(self, m, tx, ty, away=False):
+    async def _passo_monstro(self, m, tx, ty, away=False):
         """Move m um passo cardinal em direção a (tx,ty) — ou para longe, se away."""
         if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"): return False
         sx = 0 if m["pos"][0] == tx else (1 if tx > m["pos"][0] else -1)
@@ -21690,9 +21789,12 @@ class GameRoom:
             if adx == 0 and ady == 0:
                 continue
             nx, ny = m["pos"][0] + adx, m["pos"][1] + ady
-            if self._passo_livre(m, nx, ny, [adx, ady]):
+            if self._passo_livre(m, nx, ny, [adx, ady]) \
+                    and self._passo_elevacao_permitido(m, m["pos"], [nx, ny], [adx, ady]):
+                origem = list(m["pos"])
                 m["pos"] = [nx, ny]
                 m["facing"] = [adx, ady]
+                await self._aplicar_queda_terreno(m, origem, m["pos"])
                 self._apply_swamp_entry_penalty(m)
                 return True
         return False
@@ -21703,7 +21805,7 @@ class GameRoom:
             return
         alvo = min(vivos, key=lambda p: abs(p["pos"][0]-m["pos"][0]) + abs(p["pos"][1]-m["pos"][1]))
         antes = list(m["pos"])
-        moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+        moveu = await self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
         if moveu:
             self._apply_snow_entry_penalty(m, antes, m["pos"])
         await self._aplicar_lava_se_pisar(m)
@@ -21738,7 +21840,7 @@ class GameRoom:
                 await self.gm_say(T("narracao.dominado_ataca_e_erra", monstro=nome_criatura(m), alvo=nome_criatura(alvo)))
         else:
             antes = list(m["pos"])
-            moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
+            moveu = await self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1])
             if moveu:
                 self._apply_snow_entry_penalty(m, antes, m["pos"])
             await self._aplicar_lava_se_pisar(m)
@@ -22519,16 +22621,22 @@ class GameRoom:
                     if adx == 0 and ady == 0:
                         continue
                     nx, ny = a["pos"][0]+adx, a["pos"][1]+ady
-                    if self._tile_livre_para_animado(nx, ny, a["id"]):
+                    if self._tile_livre_para_animado(nx, ny, a["id"], a["pos"]):
                         antes = list(a["pos"])
                         a["pos"] = [nx, ny]
                         a["facing"] = [adx, ady]
+                        await self._aplicar_queda_terreno(a, antes, a["pos"])
+                        if a.get("vida_atual", 0) <= 0:
+                            break
+                        self._apply_water_entry_penalty(a, nx, ny, antes)
                         self._apply_snow_entry_penalty(a, antes, a["pos"])
                         await self._aplicar_lava_se_pisar(a)
                         await self._aplicar_piso_congelado_se_pisar(a)
                         moved = True; break
                 if not moved:
                     break
+        if a.get("vida_atual", 0) <= 0:
+            return
         if not self._cardinal_adjacent(a["pos"], target["pos"]):
             return
         roll  = random.randint(1, 20)
@@ -23182,8 +23290,10 @@ class GameRoom:
                     tiles.add((tx, ty))
         return tiles
 
-    def _empurrar(self, alvo, dx, dy, dist):
+    async def _empurrar(self, alvo, dx, dy, dist):
         """Empurra alvo até `dist` casas em (dx,dy). Retorna True se colidiu (parou cedo)."""
+        if not self._vivo(alvo):
+            return False
         for _ in range(max(0, dist)):
             nx, ny = alvo["pos"][0] + dx, alvo["pos"][1] + dy
             if not (0 <= nx < self.map_w and 0 <= ny < self.map_h) or self.tiles[ny][nx] == WALL:
@@ -23194,7 +23304,11 @@ class GameRoom:
                 return True
             if self._animado_em([nx, ny]):
                 return True
+            origem = list(alvo["pos"])
             alvo["pos"] = [nx, ny]
+            await self._aplicar_queda_terreno(alvo, origem, alvo["pos"])
+            if not self._vivo(alvo):
+                return False
         return False
 
     async def _executar_jato_ar(self, caster, magia, data, dmg_mult):
@@ -23241,7 +23355,7 @@ class GameRoom:
             save_ok, *_ = await self._save_mostrado(alvo, "reflexos", save_dif)
             push = magia.get("empurra_sucesso", 2) if save_ok else self._rolar_dado(magia.get("empurra_falha", "1d6"))
             col = 0
-            if self._empurrar(alvo, dx, dy, push):
+            if await self._empurrar(alvo, dx, dy, push):
                 collisions.append({
                     "target_id": alvo.get("id"),
                     "target": list(alvo.get("pos", [0, 0])),
@@ -24199,8 +24313,7 @@ class GameRoom:
 
     def _em_alcance_ogro(self, m, alvo_pos):
         """True se o alvo está ao alcance de ataque do ogro (lança = alcance estendido)."""
-        if normalizar_altura(m.get("altura", ALTURA_MIN)) != normalizar_altura(
-                self._altura_entidade_em(alvo_pos)):
+        if abs(self._altura_efetiva(m) - self._altura_entidade_em(alvo_pos)) > 1:
             return False
         if m.get("reach_lanca"):
             return self._lanca_no_alcance(m, alvo_pos)
@@ -24629,7 +24742,7 @@ class GameRoom:
             or tipo_elemental in {"agua", "água", "water"}
         )
 
-    def _water_step_cost(self, criatura, x, y):
+    def _water_step_cost(self, criatura, x, y, origem=None):
         """Custo para ENTRAR na casa: areia/lava custam 2; água custa 2/3.
 
         Armadura média/pesada acrescenta +1/+2. Em monstros sem armadura
@@ -24638,12 +24751,17 @@ class GameRoom:
         """
         if self._voo_imune_terreno(criatura):
             return 1
+        custo_elevacao = 0
+        if origem is not None:
+            custo_elevacao = self._custo_passo_elevacao(criatura, origem, [x, y])
+            if custo_elevacao is None:
+                return 9999
         material = getattr(self, "materiais", {}).get((x, y))
         if material in {"areia_deserto", "lava"}:
-            return 2
+            return 2 + custo_elevacao
         kind = self._water_tile_kind(x, y)
         if not kind or self._ignora_penalidade_agua(criatura) or self._ignora_rodamoinho(criatura):
-            return 1
+            return 1 + custo_elevacao
         cost = 3 if kind in {"agua_profunda", "rodamoinho_profundo"} else 2
         category = self._armor_category_of(criatura)
         if category == "media":
@@ -24652,7 +24770,7 @@ class GameRoom:
             cost += 2
         elif criatura.get("natural_armor", 0) > 0:
             cost += 1
-        return max(1, cost)
+        return max(1, cost + custo_elevacao)
 
     def _lava_tiles_of(self, criatura):
         """Casas de lava sob uma criatura; monstros grandes contam uma vez."""
@@ -24964,10 +25082,10 @@ class GameRoom:
                 criatura[key] = max(0, int(criatura.get(key, 0)) - 1)
                 break
 
-    def _apply_water_entry_penalty(self, criatura, nx, ny):
+    def _apply_water_entry_penalty(self, criatura, nx, ny, origem=None):
         """Compatibilidade dos chamadores legados: eles ainda descontam 1 após
         esta chamada, portanto debitamos aqui somente o excedente do terreno."""
-        extra = self._water_step_cost(criatura, nx, ny) - 1
+        extra = self._water_step_cost(criatura, nx, ny, origem) - 1
         if extra:
             criatura["moves_left"] = max(0, criatura.get("moves_left", 0) - extra)
         self._apply_swamp_entry_penalty(criatura, nx, ny)
@@ -26341,6 +26459,59 @@ class GameRoom:
             )
             await self._aplicar_queda(presa, f"{motivo}_presa", alvo.get("id"))
         return {"altura": altura, "faixa": faixa, "dano": dano,
+                "dano_bruto": dano_bruto, "expressao": f"{quantidade}d{faces}"}
+
+    async def _aplicar_queda_terreno(self, alvo, origem, destino, killer_pid=None):
+        """Aplica a queda ao descer um desnível sem rampa.
+
+        O terreno usa a mesma tabela autoritativa do voo (2d6/4d6/6d6).
+        Uma rampa permite a descida normal de um nível; no modo declive,
+        qualquer descida causa a queda. Criaturas voando acima do chão não
+        interagem com o desnível do piso.
+        """
+        if not alvo or self._voo_imune_terreno(alvo):
+            return None
+        if not (isinstance(origem, (list, tuple)) and len(origem) >= 2
+                and isinstance(destino, (list, tuple)) and len(destino) >= 2):
+            return None
+        nivel_origem = self._elevacao_terreno(*origem[:2])
+        nivel_destino = self._elevacao_terreno(*destino[:2])
+        queda = nivel_origem - nivel_destino
+        if queda <= 0:
+            return None
+        if (getattr(self, "transicao_altura", "rampa") == "rampa"
+                and queda <= 1):
+            return None
+        dados = dados_dano_queda(queda)
+        if not dados or not (alvo.get("alive", True)
+                             and alvo.get("hp", alvo.get("vida_atual", 1)) > 0):
+            return None
+
+        quantidade, faces = dados
+        dano_bruto = await self._rolar_dano_mostrado(
+            quantidade, faces, T("dado.dano_queda"))
+        dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
+        await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, killer_pid)
+        faixa = faixa_altura_queda(queda)
+        faixa_nome = T(f"ui.voo.faixa_{faixa}")
+        nome = nome_criatura(alvo)
+        await self.broadcast({
+            "type": "fall_result", "target_id": alvo.get("id"),
+            "pos": list(alvo.get("pos", destino)), "altura": queda,
+            "faixa": faixa, "expressao": f"{quantidade}d{faces}",
+            "dano_bruto": dano_bruto, "dano": dano,
+            "motivo": "desnivel_terreno", "tipo": "queda", "_fall": True,
+            "nome": T("ui.terreno.queda_titulo"), "icone": "💥",
+            "descricao": T("ui.terreno.queda_descricao", nome=nome,
+                            origem=nivel_origem, destino=nivel_destino,
+                            faixa=faixa_nome, dano=dano),
+            "efeitos_extra": [
+                T("ui.terreno.queda_desnivel", origem=nivel_origem,
+                  destino=nivel_destino, faixa=faixa_nome),
+                T("ui.voo.queda_dano", expressao=f"{quantidade}d{faces}", dano=dano),
+            ],
+        })
+        return {"queda": queda, "faixa": faixa, "dano": dano,
                 "dano_bruto": dano_bruto, "expressao": f"{quantidade}d{faces}"}
 
     async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None):
@@ -27750,12 +27921,8 @@ class GameRoom:
         alvo_altura = altura_destino
         if alvo_altura is None and isinstance(destino, dict):
             alvo_altura = destino.get("altura", ALTURA_MIN)
-        if alvo_altura is None:
-            alvo_altura = self._altura_entidade_em(destino_pos)
-        restante = alcance - custo_vertical_alcance(
-            origem.get("altura", ALTURA_MIN) if isinstance(origem, dict) else ALTURA_MIN,
-            alvo_altura,
-        )
+        restante = alcance - self._custo_vertical_terreno(
+            origem, destino_pos, destino=destino, altura_destino=alvo_altura)
         distancia = max(abs(int(origem["pos"][0]) - int(destino_pos[0])),
                         abs(int(origem["pos"][1]) - int(destino_pos[1]))) \
             if isinstance(origem, dict) else max(abs(int(origem[0]) - int(destino_pos[0])),
@@ -28941,6 +29108,8 @@ class GameRoom:
             return False
         old_x, old_y = m["pos"]
         step_facing = [nx - old_x, ny - old_y]
+        if not self._passo_elevacao_permitido(m, [old_x, old_y], [nx, ny], step_facing):
+            return False
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
             # A direção do último passo é autoritativa para todos os monstros;
             # o cliente usa este campo para girar a miniatura GLB como nos heróis.
@@ -28948,7 +29117,7 @@ class GameRoom:
                 return False
         if "_water_moves_left" not in m:
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
-        step_cost = self._water_step_cost(m, nx, ny)
+        step_cost = self._water_step_cost(m, nx, ny, [old_x, old_y])
         minimum_water_step = (m["_water_moves_left"] > 0 and not m.get("_moved_this_turn")
                               and not m.get("_water_min_step_used"))
         if m["_water_moves_left"] < step_cost and not minimum_water_step:
@@ -28976,6 +29145,9 @@ class GameRoom:
             m["_water_min_step_used"] = True
         else:
             m["_water_moves_left"] = max(0, m["_water_moves_left"] - step_cost)
+        await self._aplicar_queda_terreno(m, [old_x, old_y], m["pos"])
+        if m.get("hp", 0) <= 0:
+            return True
         self._apply_swamp_entry_penalty(m)
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
             m["facing"] = step_facing
@@ -29372,7 +29544,7 @@ class GameRoom:
                 return True
         return self._animado_em([x, y], exclude_id=exclude_aid)
 
-    def _monster_can_occupy(self, m, ax, ay, facing=None):
+    def _monster_can_occupy(self, m, ax, ay, facing=None, from_anchor=None):
         """True se o monstro m pode posicionar sua âncora em (ax,ay): footprint
         inteiro dentro do mapa, sem parede/porta fechada e sem outra entidade
         viva (a própria m é ignorada via exclude_mid). Voo configurado para
@@ -29381,6 +29553,8 @@ class GameRoom:
         `facing` avalia uma virada de um monstro orientado (footprint
         recalculado com essa direção)."""
         voo_livre = self._voo_ignora_obstaculos(m)
+        if from_anchor is not None and not self._passo_elevacao_permitido(m, from_anchor, [ax, ay], facing):
+            return False
         for tx, ty in self._monster_tiles_at(m, ax, ay, facing):
             if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
                 return False
@@ -29405,6 +29579,7 @@ class GameRoom:
         dist = {(sx, sy): 0}
         q = [(sx, sy)]; head = 0
         while head < len(q):
+            q[head:] = sorted(q[head:], key=lambda pos: dist[pos])
             x, y = q[head]; head += 1
             if dist[(x, y)] >= budget:
                 continue
@@ -29414,10 +29589,16 @@ class GameRoom:
                 # com a facing antiga fazia o Tirano 2×3 parecer bloqueado em
                 # viradas que cabiam perfeitamente com a nova orientação.
                 candidate_facing = [dx, dy] if m.get("oriented") else None
-                if (nx, ny) in prev or not self._monster_can_occupy(m, nx, ny, candidate_facing):
+                if (nx, ny) in prev or not self._monster_can_occupy(m, nx, ny, candidate_facing, [x, y]):
+                    continue
+                passo = self._custo_passo_elevacao(m, [x, y], [nx, ny], m.get("facing"), candidate_facing)
+                if passo is None:
+                    continue
+                step_cost = 1 + passo
+                if dist[(x, y)] + step_cost > budget:
                     continue
                 prev[(nx, ny)] = (x, y)
-                dist[(nx, ny)] = dist[(x, y)] + 1
+                dist[(nx, ny)] = dist[(x, y)] + step_cost
                 q.append((nx, ny))
         return prev
 
@@ -29607,13 +29788,41 @@ class GameRoom:
             ])
         return out
 
-    def _altura_entidade_em(self, target_pos):
-        """Retorna a altura da entidade na posição, com fallback no chão."""
+    def _entidade_em_pos(self, target_pos):
         pos = list(target_pos or [])
         for entidade in list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados()):
             if entidade.get("pos") == pos:
-                return normalizar_altura(entidade.get("altura", ALTURA_MIN))
-        return ALTURA_MIN
+                return entidade
+            if entidade.get("id") in self.monsters and pos in self._monster_tiles(entidade):
+                return entidade
+        return None
+
+    def _altura_entidade_em(self, target_pos):
+        """Retorna a altura efetiva da entidade, incluindo o piso sob ela."""
+        pos = list(target_pos or [])
+        entidade = self._entidade_em_pos(pos)
+        if entidade:
+            return self._altura_efetiva(entidade)
+        return self._elevacao_terreno(*pos) if len(pos) >= 2 else ALTURA_MIN
+
+    def _altura_efetiva(self, entidade=None, pos=None, altura=None):
+        """Altura usada no combate: elevação do piso + altura de voo."""
+        if pos is None and isinstance(entidade, dict):
+            pos = entidade.get("pos")
+        if altura is None and isinstance(entidade, dict):
+            altura = entidade.get("altura", ALTURA_MIN)
+        piso = self._elevacao_terreno(*(pos or [0, 0])) if pos and len(pos) >= 2 else 0
+        return piso + normalizar_altura(altura, ALTURA_MIN)
+
+    def _custo_vertical_terreno(self, origem, destino_pos, destino=None,
+                                altura_destino=None):
+        """Custo de alcance vertical considerando os pisos das duas casas."""
+        origem_pos = origem.get("pos") if isinstance(origem, dict) else origem
+        altura_origem = self._altura_efetiva(origem, origem_pos)
+        if altura_destino is None and isinstance(destino, dict):
+            altura_destino = destino.get("altura", ALTURA_MIN)
+        altura_alvo = self._altura_efetiva(destino, destino_pos, altura_destino)
+        return int(math.ceil(abs(altura_origem - altura_alvo) / ALTURA_POR_QUADRADO_ALCANCE))
 
     def _monster_attack_in_range(self, m, target_pos, atk_def=None, target_altitude=None):
         """Valida um ataque respeitando a frente de footprints largos.
@@ -29628,9 +29837,11 @@ class GameRoom:
         ranged = atk_def.get("range")
         if ranged:
             try:
-                limite = int(ranged) - custo_vertical_alcance(
-                    m.get("altura", ALTURA_MIN),
-                    self._altura_entidade_em(target_pos) if target_altitude is None else target_altitude)
+                custo_vertical = self._custo_vertical_terreno(
+                    m, target_pos,
+                    destino=(self._entidade_em_pos(target_pos) if target_altitude is None else None),
+                    altura_destino=target_altitude)
+                limite = int(ranged) - custo_vertical
             except (TypeError, ValueError):
                 return False
             if limite < 1:
@@ -29640,8 +29851,9 @@ class GameRoom:
                            for tx, ty in self._monster_tiles(m))
             return min(max(abs(target_pos[0] - tx), abs(target_pos[1] - ty))
                        for tx, ty in self._monster_tiles(m)) <= limite
-        if normalizar_altura(m.get("altura", ALTURA_MIN)) != normalizar_altura(
-                self._altura_entidade_em(target_pos) if target_altitude is None else target_altitude):
+        alvo_altura = (self._altura_entidade_em(target_pos) if target_altitude is None
+                       else self._elevacao_terreno(*target_pos) + normalizar_altura(target_altitude))
+        if abs(self._altura_efetiva(m) - alvo_altura) > 1:
             return False
         alcance = atk_def.get("reach", 1) or 1
         if self._monster_is_2x2(m) and not m.get("oriented"):
@@ -29659,15 +29871,15 @@ class GameRoom:
         heights.
         """
         atk_def = atk_def or {}
-        attacker_height = normalizar_altura(m.get("altura", ALTURA_MIN))
-        target_height = normalizar_altura(target.get("altura", ALTURA_MIN))
+        attacker_height = self._altura_efetiva(m)
+        target_height = self._altura_efetiva(target)
         if atk_def.get("range") is not None:
             try:
                 attack_range = int(atk_def.get("range"))
             except (TypeError, ValueError):
                 return False
-            return attack_range - custo_vertical_alcance(attacker_height, target_height) >= 1
-        return attacker_height == target_height
+            return attack_range - int(math.ceil(abs(attacker_height - target_height) / ALTURA_POR_QUADRADO_ALCANCE)) >= 1
+        return abs(attacker_height - target_height) <= 1
 
     def _monster_rear_attack_tiles(self, m, reach=1):
         """Casas imediatamente atrás de um footprint largo, pela sua facing.
@@ -30445,6 +30657,9 @@ class GameRoom:
                         await self._corpo_energetico_atravessar(m, nx, ny)
                     m["pos"] = [bx, by]
                     m["_moved_this_turn"] = True
+                    await self._aplicar_queda_terreno(m, frm, m["pos"])
+                    if m.get("hp", 0) <= 0:
+                        break
                     if any(ab.get("id") in {"salto_selvagem", "investida_brutal"}
                            for ab in m.get("special_abilities", [])):
                         m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 2
@@ -30463,6 +30678,8 @@ class GameRoom:
         # Anima o deslize fiel de 1 casa no cliente (sÃ³ se de fato moveu).
         if m["pos"] != frm:
             await self._emit_entity_step(m["id"], frm, m["pos"], "monster")
+        if m.get("hp", 0) <= 0:
+            return
         arm = self._armadilha_no_tile(m["pos"][0], m["pos"][1])
         if arm:
             await self._disparar_armadilha(m, arm)
@@ -30740,7 +30957,7 @@ class GameRoom:
                     dx = 0 if target["pos"][0] == m["pos"][0] else (1 if target["pos"][0] > m["pos"][0] else -1)
                     dy = 0 if target["pos"][1] == m["pos"][1] else (1 if target["pos"][1] > m["pos"][1] else -1)
                     if dx or dy:
-                        self._empurrar(target, dx, dy, 1)
+                        await self._empurrar(target, dx, dy, 1)
                         await self.gm_say(T("narracao.e_empurrado_1_quadrado_pelo_golpe_de_ven", tgt_name=nome_criatura(target)))
                 # Extra damage (ex: virote incendiÃ¡rio do kobold besteiro)
                 if atk_def.get("extra_damage") and target.get("hp", 1) > 0:
@@ -30804,7 +31021,7 @@ class GameRoom:
                     dx = 0 if target["pos"][0] == m["pos"][0] else (1 if target["pos"][0] > m["pos"][0] else -1)
                     dy = 0 if target["pos"][1] == m["pos"][1] else (1 if target["pos"][1] > m["pos"][1] else -1)
                     if dx or dy:
-                        self._empurrar(target, dx, dy, int(charge["investida"].get("push", 1) or 1))
+                        await self._empurrar(target, dx, dy, int(charge["investida"].get("push", 1) or 1))
             if target.get("hp", target.get("vida_atual", 0)) > 0:
                 await self._ciclope_golpe_esmagador(m, target, atk_def)
             # Agarrão com teste de resistência (crocodilo, cobra). Fica FORA do
@@ -32770,7 +32987,7 @@ class GameRoom:
             await self._soltar_agarrado(preso)
             dx = 0 if preso["pos"][0] == m["pos"][0] else (1 if preso["pos"][0] > m["pos"][0] else -1)
             dy = 0 if preso["pos"][1] == m["pos"][1] else (1 if preso["pos"][1] > m["pos"][1] else -1)
-            self._empurrar(preso, dx, dy, int(ab.get("throw_distance", 2) or 2))
+            await self._empurrar(preso, dx, dy, int(ab.get("throw_distance", 2) or 2))
         return True
 
     async def _tirano_engolir(self, m):
@@ -32872,7 +33089,7 @@ class GameRoom:
             if self._vivo(alvo):
                 dx = 0 if alvo["pos"][0] == m["pos"][0] else (1 if alvo["pos"][0] > m["pos"][0] else -1)
                 dy = 0 if alvo["pos"][1] == m["pos"][1] else (1 if alvo["pos"][1] > m["pos"][1] else -1)
-                self._empurrar(alvo, dx, dy, int(ab.get("push", 1) or 1))
+                await self._empurrar(alvo, dx, dy, int(ab.get("push", 1) or 1))
 
     async def _ai_tirano(self, m, targets):
         target_obj = self._get_monster_primary_target(m, targets)
@@ -32998,7 +33215,7 @@ class GameRoom:
         # Ataca e recua: afasta-se um passo do alvo apÃ³s a mordida.
         if m["hp"] > 0:
             antes = list(m["pos"])
-            if self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
+            if await self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True):
                 self._apply_snow_entry_penalty(m, antes, m["pos"])
                 await self._aplicar_piso_congelado_se_pisar(m)
                 await self._aplicar_fogueira_se_pisar(m)
@@ -33046,7 +33263,7 @@ class GameRoom:
                     break
                 if self._em_zona_fogo(m["pos"]):
                     antes = list(m["pos"])
-                    moveu = self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                    moveu = await self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
                     if moveu:
                         self._apply_snow_entry_penalty(m, antes, m["pos"])
                         await self._aplicar_piso_congelado_se_pisar(m)
@@ -33237,7 +33454,7 @@ class GameRoom:
                 alvo = min(targets, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                       abs(m["pos"][1] - t["obj"]["pos"][1])))["obj"]
                 antes = list(m["pos"])
-                moveu = self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
+                moveu = await self._passo_monstro(m, alvo["pos"][0], alvo["pos"][1], away=True)
                 if moveu:
                     self._apply_snow_entry_penalty(m, antes, m["pos"])
                     await self._aplicar_piso_congelado_se_pisar(m)
@@ -36023,11 +36240,15 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
-        if not self._tile_livre_para_animado(nx, ny, None):
+        if not self._tile_livre_para_animado(nx, ny, None, pr["pos"]):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
         pr["pos"] = [nx, ny]
-        self._apply_water_entry_penalty(pr, nx, ny)
+        await self._aplicar_queda_terreno(pr, old_pos, pr["pos"], pid)
+        if not pr.get("alive"):
+            await self.push_state()
+            return
+        self._apply_water_entry_penalty(pr, nx, ny, old_pos)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
         self._apply_snow_entry_penalty(pr, old_pos, pr["pos"])
         await self._aplicar_lava_se_pisar(pr)

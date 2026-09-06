@@ -913,13 +913,28 @@ const GS = (() => {
       decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
   }
 
-  function _walkable(tiles, x, y, openDoors, occupied, moveCtx=null) {
+  function _elevacaoTerreno(x, y, moveCtx=null) {
+    const mapa = moveCtx?.elevacoes || gameState?.elevacoes || {};
+    const n = Number(mapa[`${x},${y}`]);
+    return Number.isInteger(n) ? Math.max(-1, Math.min(2, n)) : 0;
+  }
+
+  function _custoElevacao(moveCtx, fromX, fromY, x, y) {
+    const actor = moveCtx?.actor || {};
+    if (actor.voo && alturaDe(actor) > 0) return 0;
+    const diferenca = Math.abs(_elevacaoTerreno(x, y, moveCtx) -
+      _elevacaoTerreno(fromX, fromY, moveCtx));
+    return diferenca > 1 ? 9999 : diferenca;
+  }
+
+  function _walkable(tiles, x, y, openDoors, occupied, moveCtx=null, fromX=null, fromY=null) {
     const t = tiles[y]?.[x];
     const illusion = (gameState?.secret_passages || []).some(p => p.type === 'illusion' && p.pos[0] === x && p.pos[1] === y);
     const vooLivre = !!(moveCtx?.actor?.voo && moveCtx.actor.ignora_obstaculos_voo);
     const onFloor = vooLivre ? t !== undefined
       : t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
     if (!onFloor) return false;
+    if (fromX != null && fromY != null && _custoElevacao(moveCtx, fromX, fromY, x, y) > 1) return false;
     if (!vooLivre && _matSolido(x, y)) return false;   // entulho: intransponível como parede
     if (!vooLivre && _decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
@@ -985,8 +1000,25 @@ const GS = (() => {
     const closed = doorSets(state).closed;
     const origem = observer || [...(state.players || []), ...(state.monsters || [])]
       .find(entidade => entidade && entidade.pos?.[0] === (ax | 0) && entidade.pos?.[1] === (ay | 0));
+    const alvo = [...(state.players || []), ...(state.monsters || [])]
+      .find(entidade => entidade && entidade.pos?.[0] === (bx | 0) && entidade.pos?.[1] === (by | 0));
     const vooLivre = !!(origem?.voo && origem.ignora_obstaculos_voo && alturaDe(origem) > 0);
-    const bloqueia = (x, y) => _losBlocks(tiles, closed, x, y, state, vooLivre);
+    const z0 = _elevacaoTerreno(ax | 0, ay | 0, state) + (origem ? alturaDe(origem) : 0);
+    const z1 = _elevacaoTerreno(bx | 0, by | 0, state) + (alvo ? alturaDe(alvo) : 0);
+    const dxAbs = Math.abs((bx | 0) - (ax | 0));
+    const dyAbs = Math.abs((by | 0) - (ay | 0));
+    const dz2 = dxAbs * dxAbs + dyAbs * dyAbs;
+    const bloqueiaPorElevacao = (x, y) => {
+      if ((x === (ax | 0) && y === (ay | 0)) || (x === (bx | 0) && y === (by | 0))) return false;
+      if (origem && alturaDe(origem) > 0) return false;
+      if (!dz2) return false;
+      const t = (((x - (ax | 0)) * ((bx | 0) - (ax | 0))) +
+        ((y - (ay | 0)) * ((by | 0) - (ay | 0)))) / dz2;
+      const raioZ = z0 + (z1 - z0) * Math.max(0, Math.min(1, t));
+      return _elevacaoTerreno(x, y, state) > raioZ + 1e-6;
+    };
+    const bloqueia = (x, y) => bloqueiaPorElevacao(x, y) ||
+      _losBlocks(tiles, closed, x, y, state, vooLivre);
     const x1 = bx | 0, y1 = by | 0;
     let x = ax | 0, y = ay | 0, ix = 0, iy = 0;
     const dx = Math.abs(x1 - x), dy = Math.abs(y1 - y);
@@ -1007,16 +1039,19 @@ const GS = (() => {
   }
 
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
-  function terrainMoveCost(moveCtx, x, y) {
+  function terrainMoveCost(moveCtx, x, y, fromX=null, fromY=null) {
     const actor = moveCtx?.actor || {};
     if (actor.rodamoinho_preso || actor.rodamoinho_profundo_preso) return 9999;
     const vooNoAr = !!(actor.voo && alturaDe(actor) > 0);
     if (vooNoAr) return 1;
+    const custoElevacao = (fromX == null || fromY == null) ? 0
+      : _custoElevacao(moveCtx, fromX, fromY, x, y);
+    if (custoElevacao > 1) return 9999;
     const kind = moveCtx?.materiais?.[`${x},${y}`];
-    if (kind === 'piso_congelado') return 1;
-    if (kind === 'areia_deserto' || kind === 'lava') return 2;
+    if (kind === 'piso_congelado') return 1 + custoElevacao;
+    if (kind === 'areia_deserto' || kind === 'lava') return 2 + custoElevacao;
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
-        && kind !== 'rodamoinho_profundo') return 1;
+        && kind !== 'rodamoinho_profundo') return 1 + custoElevacao;
     if ((actor.special_abilities || []).some(h => h &&
         ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return 1;
     let cost = (kind === 'agua_profunda' || kind === 'rodamoinho_profundo') ? 3 : 2;
@@ -1025,7 +1060,7 @@ const GS = (() => {
     if (category === 'media') cost += 1;
     else if (category === 'pesada') cost += 2;
     else if (actor.natural_armor > 0) cost += 1;
-    return Math.max(1, cost);
+    return Math.max(1, cost + custoElevacao);
   }
 
   function bfsReachable(tiles, exploredSet, sx, sy, maxSteps, result, moveCtx=null) {
@@ -1044,7 +1079,7 @@ const GS = (() => {
       if (s >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
-        const rawCost = terrainMoveCost(moveCtx, nx, ny);
+        const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
@@ -1053,7 +1088,7 @@ const GS = (() => {
         const nextCost = (s === 0 && terrainCost > maxSteps) ? maxSteps : s + terrainCost;
         const nextSwampUsed = swampUsed || entersSwamp;
         const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied, moveCtx)
+        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
             && (best.get(bestKey) === undefined || nextCost < best.get(bestKey))) {
           best.set(bestKey, nextCost);
           q.push([nx, ny, nextCost, nextSwampUsed]);
@@ -1072,6 +1107,9 @@ const GS = (() => {
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(fx, fy);
     if (!exploredSet.has(`${tx},${ty}`)) return null;
+    // O destino pode estar dois ou mais níveis acima, mas ainda ser alcançável
+    // por uma sequência de degraus de 1 nível; a restrição é avaliada em cada
+    // aresta do BFS, não em linha reta entre origem e destino.
     const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied, moveCtx);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
@@ -1085,14 +1123,14 @@ const GS = (() => {
       if (spent >= maxSteps) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
-        const rawCost = terrainMoveCost(moveCtx, nx, ny);
+        const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
         const nextCost = (spent === 0 && terrainCost > maxSteps) ? maxSteps : spent + terrainCost;
         const nextSwampUsed = swampUsed || entersSwamp;
         const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx)
+        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
             || (bestCost.get(bestKey) !== undefined && bestCost.get(bestKey) <= nextCost)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
@@ -2207,6 +2245,23 @@ const GS = (() => {
     return Math.ceil(Math.abs(alturaDe({ altura: alturaA }) - alturaDe({ altura: alturaB })) / 2);
   }
 
+  function custoVerticalTerreno(posA, alturaA, posB, alturaB, state=null) {
+    const st = state || gameState;
+    const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
+    const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
+    const zA = pisoA + alturaDe({ altura: alturaA });
+    const zB = pisoB + alturaDe({ altura: alturaB });
+    return Math.ceil(Math.abs(zA - zB) / 2);
+  }
+
+  function diferencaVerticalTerreno(posA, alturaA, posB, alturaB, state=null) {
+    const st = state || gameState;
+    const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
+    const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
+    return Math.abs((pisoA + alturaDe({ altura: alturaA })) -
+      (pisoB + alturaDe({ altura: alturaB })));
+  }
+
   function faixaAlturaQueda(altura) {
     const n = alturaDe({ altura });
     if (n <= 0) return null;
@@ -2225,7 +2280,8 @@ const GS = (() => {
     const range = weapon.range;
     const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
     if (range != null) {
-      const alcance = Number(range) - custoVerticalAlcance(alturaDe(myP), targetAltitude);
+      const alcance = Number(range) - custoVerticalTerreno(
+        myP.pos, alturaDe(myP), [tx, ty], targetAltitude);
       if (alcance < 1) return false;
       const distancia = Math.max(dx, dy);
       if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
@@ -2236,7 +2292,7 @@ const GS = (() => {
       }
       return distancia <= alcance;
     }
-    if (alturaDe(myP) !== alturaDe({ altura: targetAltitude })) return false;
+    if (diferencaVerticalTerreno(myP.pos, alturaDe(myP), [tx, ty], targetAltitude) > 1) return false;
     if (weapon.reach === 'lanca')
       return Math.max(dx, dy) === 1 || (dx === 0 && dy === 2) || (dx === 2 && dy === 0);
     if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
@@ -2249,7 +2305,8 @@ const GS = (() => {
     const ranged = weapon.range != null;
     const attackerAltitude = alturaDe(myP);
     const alvoAltitude = alturaDe({ altura: targetAltitude });
-    const verticalCost = ranged ? custoVerticalAlcance(attackerAltitude, alvoAltitude) : 0;
+    const verticalCost = ranged ? custoVerticalTerreno(
+      myP.pos, attackerAltitude, [tx, ty], alvoAltitude) : 0;
     const horizontalDistance = Math.max(Math.abs((myP?.pos?.[0] || 0) - tx), Math.abs((myP?.pos?.[1] || 0) - ty));
     const effectiveRange = ranged ? Number(weapon.range) - verticalCost : null;
     return {
@@ -2562,7 +2619,8 @@ const GS = (() => {
         monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
       if (m) {
         const distancia = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
-        const alcance = (inst.alcance || 0) - custoVerticalAlcance(alturaDe(myP), alturaDe(m));
+        const alcance = (inst.alcance || 0) - custoVerticalTerreno(
+          myP.pos, alturaDe(myP), m.pos, alturaDe(m));
         if (alcance < 1 || distancia > alcance) return { type: 'instrumento_blocked', reason: 'range' };
         if (!hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty))
           return { type: 'instrumento_blocked', reason: 'wall' };
@@ -2611,7 +2669,8 @@ const GS = (() => {
           monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty));
         return alvoMonstro ? alturaDe(alvoMonstro) : 0;
       })();
-      const alcance = Number(th.alcance || 0) - custoVerticalAlcance(alturaDe(myP), alvoAltura);
+      const alcance = Number(th.alcance || 0) - custoVerticalTerreno(
+        myP.pos, alturaDe(myP), [tx, ty], alvoAltura);
       const inRange = alcance >= 1 && Math.max(ddx, ddy) <= alcance;
       const losOk   = hasLineOfSight(gameState, myP.pos[0], myP.pos[1], tx, ty);
       if (alvo === 'area') {
@@ -2721,6 +2780,8 @@ const GS = (() => {
 
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
     hasLineOfSight,
+    custoVerticalTerreno,
+    diferencaVerticalTerreno,
 
     // ── Footprint de um monstro (1×1, bloco size, ou 2 casas orientadas) ──
     monsterTiles,

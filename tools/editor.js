@@ -1239,6 +1239,7 @@
   function paintTile(x, y) {
     if (S.tool === "wall") {
       if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
+      delete S.elevacoes[x + "," + y];
       if (S.matWall === "entulho") { S.tiles[y][x] = FLOOR; S.materiais[x + "," + y] = "entulho"; return; }
       S.tiles[y][x] = WALL;
       _applyMat(x, y, S.matWall, "parede");
@@ -1438,6 +1439,7 @@
     S.secretPassages = S.secretPassages.filter(p => !(p.pos[0] === x && p.pos[1] === y));
     S.falas = S.falas.filter(f => !(f.pos[0] === x && f.pos[1] === y));
     delete S.materiais[x + "," + y];
+    delete S.elevacoes[x + "," + y];
     S.tiles[y][x] = WALL;
   }
 
@@ -1478,6 +1480,7 @@
         for (let i = room.x; i < room.x + room.w; i++) {
           if (S.tiles[j] && S.tiles[j][i] !== undefined) {
             if (S.tiles[j][i] === DOOR) doorUnlink(i, j);
+            delete S.elevacoes[i + "," + j];
             S.tiles[j][i] = WALL;
           }
         }

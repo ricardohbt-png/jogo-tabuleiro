@@ -7162,7 +7162,7 @@ function _computeWeaponRangeTiles(state, me) {
 // principal custo do loop. O canvas fora da tela preserva a mesma qualidade,
 // enquanto o canvas visível recebe apenas os efeitos e entidades dinâmicas.
 let _dungeonStatic2D = {
-  canvas: null, tiles: null, materiais: null, explorado: null, revelado: null,
+  canvas: null, tiles: null, materiais: null, elevacoes: null, transicao: null, explorado: null, revelado: null,
   rooms: null, secretPassages: null, animatedTiles: [], master: null, W: 0, H: 0,
 };
 
@@ -7237,6 +7237,8 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   // comparar os arrays internos evita invalidar a camada por causa dessa cópia.
   const mesmaBase = cache.canvas && cache.tiles === state.tiles
     && cache.materiais === state.materiais
+    && cache.elevacoes === state.elevacoes
+    && cache.transicao === (state.transicao_altura || 'rampa')
     && cache.explorado === state.explored
     && cache.revelado === state.revealed
     && cache.rooms === state.rooms
@@ -7266,6 +7268,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     if(tile !== TILE_FLOOR && tile !== TILE_DOOR) continue;
     const mid = matDaCasa(state, x, y);
     drawFloor3D(ctx, x, y, false, false, false, mid);
+    drawElevacao2D(ctx, state, x, y);
     if(mid === 'entulho') drawEntulho2D(ctx, x, y);
   }
 
@@ -7297,6 +7300,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     whirlpoolAreaByKey[tile.key] = area;
   _dungeonStatic2D = {
     canvas, tiles: state.tiles, materiais: state.materiais,
+    elevacoes: state.elevacoes, transicao: state.transicao_altura || 'rampa',
     explorado: state.explored, revelado: state.revealed, rooms: state.rooms,
     secretPassages: state.secret_passages,
     animatedTiles, whirlpoolAreas, whirlpoolAreaByKey, master, W, H,
@@ -9118,6 +9122,53 @@ function matDaCasa(state, x, y){
   const id = secretId && MAT_PALETTE_2D[secretId] ? secretId : (m && m[`${x},${y}`]);
   if(id && MAT_PALETTE_2D[id]) return id;
   return (state.tiles[y][x] === TILE_WALL) ? 'pedra_normal' : 'pedra_cinza';
+}
+
+// Elevação visual do terreno autorado. Não confundir com `altura`, que é o
+// eixo de voo das criaturas e continua sendo usado pelas regras de combate.
+const TERRENO_ELEVACAO_STEP_3D = 0.24;
+function elevacaoTerreno(state, x, y){
+  const n = Number(state?.elevacoes?.[`${x},${y}`]);
+  return Number.isInteger(n) ? Math.max(-1, Math.min(2, n)) : 0;
+}
+function topoTerreno3D(state, x, y, TH = 0.22){
+  return TH + elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
+}
+
+function drawElevacao2D(ctx, state, x, y){
+  const level = elevacaoTerreno(state, x, y);
+  if(!level) return;
+  const X = x * CELL, Y = y * CELL;
+  const depth = 2 + Math.abs(level) * 3;
+  const vizinho = (nx, ny) => elevacaoTerreno(state, nx, ny);
+  ctx.save();
+  if(level > 0){
+    ctx.fillStyle = 'rgba(7, 7, 12, .38)';
+    if(vizinho(x + 1, y) < level) ctx.fillRect(X + CELL - depth, Y + 1, depth, CELL - 1);
+    if(vizinho(x, y + 1) < level) ctx.fillRect(X + 1, Y + CELL - depth, CELL - 1, depth);
+    ctx.fillStyle = 'rgba(255, 255, 255, .16)';
+    ctx.fillRect(X + 1, Y + 1, CELL - 2, 2);
+    ctx.fillRect(X + 1, Y + 1, 2, CELL - 2);
+    if(state.transicao_altura === 'rampa'){
+      ctx.fillStyle = 'rgba(244, 217, 139, .13)';
+      if(vizinho(x + 1, y) < level){
+        ctx.beginPath(); ctx.moveTo(X + CELL - depth, Y + 2);
+        ctx.lineTo(X + CELL - 2, Y + CELL - 2); ctx.lineTo(X + CELL - 2, Y + 2);
+        ctx.closePath(); ctx.fill();
+      }
+      if(vizinho(x, y + 1) < level){
+        ctx.beginPath(); ctx.moveTo(X + 2, Y + CELL - depth);
+        ctx.lineTo(X + CELL - 2, Y + CELL - 2); ctx.lineTo(X + 2, Y + CELL - 2);
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }else{
+    ctx.fillStyle = 'rgba(0, 0, 0, .26)';
+    ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+    ctx.strokeStyle = 'rgba(100, 210, 255, .35)'; ctx.lineWidth = 1;
+    ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+  }
+  ctx.restore();
 }
 
 // ── DIABLO-STYLE FLOOR TILE — dark charcoal flagstones with blood & bone details
@@ -15651,8 +15702,11 @@ function _alturaEntidadeCli(entidade){
 }
 function _alcanceComAlturaCli(origem, alcance, destino=null, alturaDestino=0){
   const alvoAltura = destino ? _alturaEntidadeCli(destino) : _alturaEntidadeCli({altura:alturaDestino});
-  const custo = GS.custoVerticalAlcance
-    ? GS.custoVerticalAlcance(_alturaEntidadeCli(origem), alvoAltura) : 0;
+  const custo = (GS.custoVerticalTerreno && destino?.pos)
+    ? GS.custoVerticalTerreno(origem?.pos, _alturaEntidadeCli(origem), destino?.pos,
+        alvoAltura, GS.gameState)
+    : (GS.custoVerticalAlcance
+      ? GS.custoVerticalAlcance(_alturaEntidadeCli(origem), alvoAltura) : 0);
   return Number(alcance || 0) - custo;
 }
 // Direção 8-way dominante do caster até o cursor (cardinal ou diagonal).
@@ -16768,8 +16822,11 @@ function _monsterAttackInRangeClient(m, targetPos, atkDef={}){
     const tiles = GS.monsterTiles(m);
     const alvo = [...(GS.gameState?.players || []), ...(GS.gameState?.monsters || [])]
       .find(entidade => entidade?.pos?.[0] === targetPos[0] && entidade?.pos?.[1] === targetPos[1]);
-    const vertical = GS.custoVerticalAlcance
-      ? GS.custoVerticalAlcance(m.altura, alvo?.altura || 0) : 0;
+    const vertical = GS.custoVerticalTerreno
+      ? GS.custoVerticalTerreno(m.pos, _alturaEntidadeCli(m), alvo?.pos || targetPos,
+          _alturaEntidadeCli(alvo), GS.gameState)
+      : (GS.custoVerticalAlcance
+        ? GS.custoVerticalAlcance(m.altura, alvo?.altura || 0) : 0);
     const lim = (Number(atkDef.range) || 1) - vertical;
     if(lim < 1) return false;
     if(['orthogonal','cardinal','line'].includes(atkDef.range_shape)){
@@ -28202,9 +28259,11 @@ function _assinaturaVisualTabuleiro3D(state){
   const materiais = state.materiais || {};
   const pintura = Object.keys(materiais).sort()
     .map(key => `${key}:${materiais[key]}`).join('|');
+  const elevacoes = Object.keys(state.elevacoes || {}).sort()
+    .map(key => `${key}:${state.elevacoes[key]}`).join('|');
   const segredos = (state.secret_passages || []).map(sp =>
     `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
-  return `${tiles}#${pintura}#${segredos}`;
+  return `${tiles}#${pintura}#${elevacoes}#${state.transicao_altura || 'rampa'}#${segredos}`;
 }
 
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
@@ -28733,7 +28792,7 @@ function init3D(state){
     if(!elegivel(x, y)) return null;
     const m = new T.Mesh(geo, mat);
     m.rotation.x = -Math.PI / 2;
-    m.position.set(x, TH + yoff, y);
+    m.position.set(x, topoTerreno3D(state, x, y, TH) + yoff, y);
     m.visible = false;
     scene.add(m);
     return m;
@@ -28915,6 +28974,7 @@ function init3D(state){
       const vw = ((x*6271^y*4423)&0xFF) / 255;
 
       if(state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR){
+        const elev3 = elevacaoTerreno(state, x, y);
         // Cor base por material (default pedra_cinza); jitter por casa preserva o relevo.
         const mid3 = (state.materiais && state.materiais[key]) || 'pedra_cinza';
         const mc = (VC.materiais[mid3] || VC.materiais.pedra_cinza).color;
@@ -29037,7 +29097,10 @@ function init3D(state){
         if(isSwamp3 && !swampMats.includes(mat)) swampMats.push(mat);
         mesh = new T.Mesh((isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3)
           ? (isLava3 ? lavaFloorGeo : isSwamp3 ? swampFloorGeo : waterFloorGeo) : floorGeo, mat);
-        mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
+        const terrainTop = TH + elev3 * TERRENO_ELEVACAO_STEP_3D;
+        const terrainHeight = elev3 >= 0 ? Math.max(TH * 0.5, terrainTop) : TH;
+        mesh.scale.y = terrainHeight / TH;
+        mesh.position.set(x, elev3 >= 0 ? terrainHeight / 2 : terrainTop - TH / 2, y);
         mesh.receiveShadow = true;
         mesh.userData.isFloor = true;
         mesh.userData.gridX   = x;
@@ -29055,7 +29118,7 @@ function init3D(state){
             _tileMatCache['entulho'] = eMat;
           }
           const eMesh = new T.Mesh(wallGeo, eMat);
-          eMesh.position.set(x, WH/2, y);
+          eMesh.position.set(x, elev3 * TERRENO_ELEVACAO_STEP_3D + WH/2, y);
           eMesh.scale.y = 0.7;                 // pilha um pouco mais baixa que a parede
           eMesh.castShadow = eMesh.receiveShadow = true;
           eMesh.visible = false;
@@ -29121,19 +29184,66 @@ function init3D(state){
     }
   }
 
+  // Transições puramente visuais entre pisos com um nível de diferença. O
+  // declive já é formado pelas laterais espessas das peças; no modo rampa,
+  // acrescentamos uma cunha que liga suavemente as duas superfícies. Nenhuma
+  // destas malhas participa de colisão, movimento ou linha de visão.
+  const terrainTransitionMeshes = [];
+  if(state.transicao_altura === 'rampa'){
+    const rampGeo = (lowTop, highTop) => {
+      const halfLen = 0.25, halfWidth = 0.45, bottom = Math.min(lowTop, highTop) - 0.002;
+      const geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.Float32BufferAttribute([
+        -halfLen, bottom, -halfWidth, -halfLen, bottom, halfWidth,
+         halfLen, bottom, -halfWidth,  halfLen, bottom, halfWidth,
+        -halfLen, lowTop + 0.004, -halfWidth, -halfLen, lowTop + 0.004, halfWidth,
+         halfLen, highTop + 0.004, -halfWidth,  halfLen, highTop + 0.004, halfWidth,
+      ], 3));
+      geo.setIndex([
+        4, 6, 7, 4, 7, 5, 0, 1, 5, 0, 5, 4,
+        2, 6, 3, 3, 6, 7, 0, 4, 2, 2, 4, 6, 1, 3, 7, 1, 7, 5,
+      ]);
+      geo.computeVertexNormals();
+      return geo;
+    };
+    const addRamp = (low, high, horizontal) => {
+      const [lx, ly] = low, [hx, hy] = high;
+      const lowTop = topoTerreno3D(state, lx, ly, TH);
+      const highTop = topoTerreno3D(state, hx, hy, TH);
+      const lowMesh = tileMeshes[`${lx},${ly}`];
+      if(!lowMesh || Math.abs(elevacaoTerreno(state, lx, ly) - elevacaoTerreno(state, hx, hy)) !== 1) return;
+      const ramp = new T.Mesh(rampGeo(lowTop, highTop), lowMesh.material);
+      ramp.position.set((lx + hx) / 2, 0, (ly + hy) / 2);
+      if(!horizontal) ramp.rotation.y = -Math.PI / 2;
+      ramp.castShadow = true; ramp.receiveShadow = true;
+      ramp.userData.terrainTransition = true;
+      ramp.userData.terrainKeys = [`${lx},${ly}`, `${hx},${hy}`];
+      ramp.visible = false;
+      scene.add(ramp); terrainTransitionMeshes.push(ramp);
+    };
+    for(let y=0; y<H; y++) for(let x=0; x<W; x++){
+      if(state.tiles[y][x] !== TILE_FLOOR && state.tiles[y][x] !== TILE_DOOR) continue;
+      if(x + 1 < W && (state.tiles[y][x+1] === TILE_FLOOR || state.tiles[y][x+1] === TILE_DOOR)
+          && elevacaoTerreno(state, x, y) < elevacaoTerreno(state, x+1, y)) addRamp([x, y], [x+1, y], true);
+      if(y + 1 < H && (state.tiles[y+1][x] === TILE_FLOOR || state.tiles[y+1][x] === TILE_DOOR)
+          && elevacaoTerreno(state, x, y) < elevacaoTerreno(state, x, y+1)) addRamp([x, y], [x, y+1], false);
+    }
+  }
+
   // Pequenas bolhas emissivas sobem e encolhem sobre a lava. São poucas por
   // casa para manter o efeito sutil e barato mesmo em rios grandes de lava.
   for(let y=0; y<H; y++) for(let x=0; x<W; x++){
     if((state.materiais && state.materiais[`${x},${y}`]) !== 'lava') continue;
+    const floorTop = topoTerreno3D(state, x, y, TH);
     const br = _rng(((x * 92821) ^ (y * 68917) ^ 0xBABB1E) >>> 0);
     for(let i=0; i<2; i++){
       const b = new T.Mesh(lavaBubbleGeo, lavaBubbleMat);
-      b.position.set(x + (br()-.5)*.62, TH + .018, y + (br()-.5)*.62);
+      b.position.set(x + (br()-.5)*.62, floorTop + .018, y + (br()-.5)*.62);
       b.scale.setScalar(.55 + br()*.65);
       b.userData.lavaBubble = true;
       b.userData.lavaKey = `${x},${y}`;
       b.userData.lavaPhase = br() * Math.PI * 2;
-      b.userData.lavaBaseY = TH + .018;
+      b.userData.lavaBaseY = floorTop + .018;
       b.userData.lavaBaseScale = b.scale.x;
       scene.add(b); lavaBubbleMeshes.push(b);
     }
@@ -29144,10 +29254,11 @@ function init3D(state){
   for(let y=0; y<H; y++) for(let x=0; x<W; x++){
     const kind = state.materiais && state.materiais[`${x},${y}`];
     if(kind !== 'agua' && kind !== 'agua_profunda') continue;
+    const floorTop = topoTerreno3D(state, x, y, TH);
     const br = _rng(((x * 7547) ^ (y * 4217) ^ 0xA71E) >>> 0);
     const ripple = new T.Mesh(waterRippleGeo, kind === 'agua_profunda' ? deepWaterRippleMat : waterRippleMat);
     const baseScale = kind === 'agua_profunda' ? 1.15 + br() * 0.42 : 0.72 + br() * 0.30;
-    ripple.position.set(x + (br() - 0.5) * 0.18, TH + 0.014, y + (br() - 0.5) * 0.18);
+    ripple.position.set(x + (br() - 0.5) * 0.18, floorTop + 0.014, y + (br() - 0.5) * 0.18);
     ripple.rotation.x = -Math.PI / 2;
     ripple.rotation.z = br() * Math.PI;
     ripple.scale.setScalar(baseScale);
@@ -29185,7 +29296,9 @@ function init3D(state){
       // restante garante que nem o pulso nem a turbulência atravessem a área.
       const areaScaleX = areaW * 1.02;
       const areaScaleZ = areaH * 1.02;
-      vortex.position.set(centerX, TH + 0.023 + i * 0.001, centerZ);
+      const areaElev = area.tiles.reduce((sum, tile) => sum + elevacaoTerreno(state, tile.x, tile.y), 0)
+        / Math.max(1, area.tiles.length);
+      vortex.position.set(centerX, TH + areaElev * TERRENO_ELEVACAO_STEP_3D + 0.023 + i * 0.001, centerZ);
       vortex.rotation.x = -Math.PI / 2;
       vortex.rotation.z = br() * Math.PI * 2;
       vortex.scale.set(areaScaleX * baseScale, areaScaleZ * baseScale, 1);
@@ -29199,7 +29312,7 @@ function init3D(state){
       vortex.userData.whirlpoolLayer = i;
       vortex.userData.whirlpoolBaseX = centerX;
       vortex.userData.whirlpoolBaseZ = centerZ;
-      vortex.userData.whirlpoolBaseY = TH + 0.023 + i * 0.001;
+      vortex.userData.whirlpoolBaseY = TH + areaElev * TERRENO_ELEVACAO_STEP_3D + 0.023 + i * 0.001;
       vortex.userData.whirlpoolBaseOpacity = kind === 'rodamoinho_profundo'
         ? 0.30 + i * 0.055 : 0.34 + i * 0.065;
       scene.add(vortex);
@@ -29241,7 +29354,7 @@ function init3D(state){
         const vertical = isWall3D(x-1,y) && isWall3D(x+1,y);
         const extraTurns = GS.doorOrientation(state, x, y);
         grp.rotation.y = (vertical ? 0 : Math.PI/2) + (extraTurns == null ? 0 : extraTurns * Math.PI/2);
-        grp.position.set(x, TH + WH*0.40, y);
+        grp.position.set(x, TH + elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D + WH*0.40, y);
         grp.visible = false;
         scene.add(grp);
         doorMeshes[`${x},${y}`] = grp;
@@ -29427,6 +29540,7 @@ function init3D(state){
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
     lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes, whirlpoolMeshes,
+    terrainTransitionMeshes,
     whirlpoolMats,
     wetFloorInst, wetFloorKeys, wetFloorTH: TH,
     moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat, gamepadCursorMesh,
@@ -29968,6 +30082,11 @@ function _atualizarTerrenoAnimado3D(t){
         + Math.sin(t / 92 + phase) * 0.004;
       vortex.material.opacity = (vortex.userData.whirlpoolBaseOpacity || 0.30)
         * (0.58 + q * 0.78);
+    }
+  }
+  if(g3.terrainTransitionMeshes){
+    for(const ramp of g3.terrainTransitionMeshes){
+      ramp.visible = (ramp.userData.terrainKeys || []).some(key => terrainSet.has(key));
     }
   }
 }
@@ -30669,7 +30788,7 @@ function buildRoomOverlays(T, scene, state, roomOverlayMeshes, TW, TH){
         if(roomOverlayMeshes[key]) continue;  // already has overlay (room overlap)
         const m = new T.Mesh(planeGeo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.position.set(tx, TH + 0.004, ty);  // float 4mm above floor surface
+        m.position.set(tx, topoTerreno3D(state, tx, ty, TH) + 0.004, ty);  // float 4mm above floor surface
         m.visible = false;
         scene.add(m);
         roomOverlayMeshes[key] = m;
@@ -31988,14 +32107,14 @@ function _rebuildDetailInstances(){
 // reveladas. Substitui o antigo laco que ligava/desligava 882 meshes.
 // So e chamada de renderMap3D (ou seja, quando o estado muda), nunca por quadro.
 const _wetTmpM4 = (typeof THREE !== 'undefined' && THREE.Matrix4) ? new THREE.Matrix4() : null;
-function _atualizarWetFloor3D(terrainSet){
+function _atualizarWetFloor3D(terrainSet, state){
   if(!g3 || !g3.wetFloorInst || !_wetTmpM4) return;
   const inst = g3.wetFloorInst, TH = g3.wetFloorTH;
   let n = 0;
   for(const [x, y] of g3.wetFloorKeys){
     if(!terrainSet.has(`${x},${y}`)) continue;
     _wetTmpM4.makeRotationX(-Math.PI / 2);
-    _wetTmpM4.setPosition(x, TH + 0.002, y);   // 2mm acima do piso
+    _wetTmpM4.setPosition(x, topoTerreno3D(state, x, y, TH) + 0.002, y);   // 2mm acima do piso
     inst.setMatrixAt(n++, _wetTmpM4);
   }
   inst.count = n;
@@ -32049,7 +32168,9 @@ function _renderMovePreview3D(state, terrainSet, TH){
     const dir = new T.Vector3(bx - ax, 0, by - ay);
     const len = dir.length();
     const mesh = new T.Mesh(new T.CylinderGeometry(.038, .038, len, 8), mat);
-    mesh.position.set((ax + bx) / 2, TH + .075, (ay + by) / 2);
+    mesh.position.set((ax + bx) / 2,
+      (topoTerreno3D(state, ax, ay, TH) + topoTerreno3D(state, bx, by, TH)) / 2 + .075,
+      (ay + by) / 2);
     mesh.quaternion.setFromUnitVectors(up, dir.normalize());
     mesh.renderOrder = 90;
     mesh.userData.noRay = true;
@@ -32058,7 +32179,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   const nodeGeo = new T.SphereGeometry(.075, 8, 6);
   for(const [cx, cy] of cells.slice(1)){
     const node = new T.Mesh(nodeGeo, mat);
-    node.position.set(cx, TH + .075, cy);
+    node.position.set(cx, topoTerreno3D(state, cx, cy, TH) + .075, cy);
     node.renderOrder = 91;
     node.userData.noRay = true;
     group.add(node);
@@ -32068,7 +32189,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   const [ox, oy] = cells[cells.length - 2];
   const arrowDir = new T.Vector3(px - ox, 0, py - oy).normalize();
   const arrow = new T.Mesh(new T.ConeGeometry(.16, .34, 6), mat);
-  arrow.position.set(px + arrowDir.x * .12, TH + .075, py + arrowDir.z * .12);
+  arrow.position.set(px + arrowDir.x * .12, topoTerreno3D(state, px, py, TH) + .075, py + arrowDir.z * .12);
   arrow.quaternion.setFromUnitVectors(up, arrowDir);
   arrow.renderOrder = 92;
   arrow.userData.noRay = true;
@@ -32080,7 +32201,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   });
   const ring = new T.Mesh(new T.TorusGeometry(.29, .025, 6, 24), ringMat);
   ring.rotation.x = Math.PI / 2;
-  ring.position.set(px, TH + .075, py);
+  ring.position.set(px, topoTerreno3D(state, px, py, TH) + .075, py);
   ring.renderOrder = 91;
   ring.userData.noRay = true;
   group.add(ring);
@@ -32236,7 +32357,7 @@ function renderMap3D(state){
     if(visible){
       const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
       const tone = _gamepadCursorTone(state);
-      g3.gamepadCursorMesh.position.set(cursor[0], TH + 0.036, cursor[1]);
+      g3.gamepadCursorMesh.position.set(cursor[0], topoTerreno3D(state, cursor[0], cursor[1], TH) + 0.036, cursor[1]);
       const selecionandoAtaque = !!_gamepadInput.attackMode;
       g3.gamepadCursorMesh.scale.setScalar(selecionandoAtaque ? 1.08 + pulse * 0.13 : 0.92 + pulse * 0.18);
       g3.gamepadCursorMesh.material.color.set(tone.hex);
@@ -32386,7 +32507,7 @@ function renderMap3D(state){
   }
 
   // ── Wet floor reflection visibility (revealed with its floor tile) ───────────
-  _atualizarWetFloor3D(terrainSet);
+  _atualizarWetFloor3D(terrainSet, state);
 
   // ── Dust motes: show once the player has revealed any tiles ──────────────────
   if(g3.dustPts && !g3.dustPts.visible && exploredSet.size > 0 && _perfCfg().poeira)
@@ -32434,6 +32555,7 @@ function renderMap3D(state){
       g3.scene.add(grp);
       g3.chestMeshes[chest.id] = grp;
     }
+    g3.chestMeshes[chest.id].position.y = topoTerreno3D(state, chest.pos[0], chest.pos[1], 0.22);
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
   }
 
@@ -32453,6 +32575,7 @@ function renderMap3D(state){
       g3.scene.add(grp);
       g3.groundItemMeshes[gi.id] = grp;
     }
+    g3.groundItemMeshes[gi.id].position.y = topoTerreno3D(state, gi.pos[0], gi.pos[1], 0.22);
     g3.groundItemMeshes[gi.id].visible = exploredSet.has(key);
   }
 
@@ -32474,6 +32597,9 @@ function renderMap3D(state){
       const _dvo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
       const worldX = (minX + maxX) / 2 + Math.max(-.45, Math.min(.45, Number(_dvo[0]) || 0));
       const worldZ = (minY + maxY) / 2 + Math.max(-.45, Math.min(.45, Number(_dvo[1]) || 0));
+      const dElevation = tiles.reduce((sum, tile) => sum + elevacaoTerreno(state, tile[0], tile[1]), 0)
+        / Math.max(1, tiles.length);
+      const dFloorY = dElevation * TERRENO_ELEVACAO_STEP_3D;
       const visivel = tiles.some(([tx2, ty2]) => exploredSet.has(`${tx2},${ty2}`));
 
       let mesh = g3.decorMeshes[d.id];
@@ -32508,7 +32634,7 @@ function renderMap3D(state){
           g3.scene.add(mesh);
           g3.decorMeshes[d.id] = mesh;
         }
-        mesh.position.set(worldX, 0.222, worldZ);   // logo acima do piso (TH=0.22), sob os realces
+        mesh.position.set(worldX, 0.222 + dFloorY, worldZ);   // logo acima do piso, sob os realces
         mesh.visible = visivel;
         continue;
       }
@@ -32528,7 +32654,7 @@ function renderMap3D(state){
           _buildObjetoGLB(d.id, d.image, glbPath, wCells, hCells, d.facing);
           mesh = g3.decorMeshes[d.id];
         }
-        mesh.position.set(worldX, DECOR_GLB_FLOOR_Y, worldZ);
+        mesh.position.set(worldX, DECOR_GLB_FLOOR_Y + dFloorY, worldZ);
         const glbScale = Array.isArray(d.vscale) ? d.vscale : [1, 1];
         mesh.scale.set(glbScale[0] || 1, glbScale[1] || 1, glbScale[0] || 1);
         mesh.visible = visivel;
@@ -32552,7 +32678,7 @@ function renderMap3D(state){
           _buildObjetoMini(d.id, d.image, Math.max(wCells, hCells), d.facing);   // assíncrono (ou síncrono se em cache)
           mesh = g3.decorMeshes[d.id];   // _buildObjetoMini pode ter trocado o mesh (cache)
         }
-        mesh.position.set(worldX, 0, worldZ);
+        mesh.position.set(worldX, dFloorY, worldZ);
         // Giro 90° (facing): roda a miniatura em pé sobre o eixo vertical.
         mesh.rotation.y = _facingAngleY3D(d.facing, d.type, d.image, glbPath);
         // Escala visual (vscale): largura no plano (x,z), altura p/ cima (y);
@@ -32583,7 +32709,7 @@ function renderMap3D(state){
       // Escala visual (vscale): largura no plano ×sx, altura ×sy (ancorada no chão).
       const _pvs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
       const _psx = _pvs[0] || 1, _psy = _pvs[1] || 1;
-      mesh.position.set(worldX, spec.h * _psy / 2, worldZ);
+      mesh.position.set(worldX, dFloorY + spec.h * _psy / 2, worldZ);
       // Scale box to cover full footprint; cylinder mantém o raio (só vscale)
       if (spec.shape === 'box') mesh.scale.set(wCells * 0.9 * _psx, _psy, hCells * 0.9 * _psx);
       else mesh.scale.set(_psx, _psy, _psx);
@@ -32685,7 +32811,8 @@ function renderMap3D(state){
       // vscale é aplicado ao grupo inteiro, cujo pivô fica no mapa (y=0).
       // Compensa a redução vertical para manter a menor parte da miniatura
       // apoiada na superfície do piso, sem interferir no tamanho visual.
-      fig.userData.baseY = waterSinkY + (Number(fig.userData._floorAnchorLiftY) || 0);
+      const terrainLiftY = elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
+      fig.userData.baseY = terrainLiftY + waterSinkY + (Number(fig.userData._floorAnchorLiftY) || 0);
       fig.position.y = fig.userData.baseY;
       fig.userData._stepBaseY = fig.userData.baseY;
     }
