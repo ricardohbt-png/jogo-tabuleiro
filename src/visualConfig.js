@@ -91,8 +91,8 @@ window.VC = {
     // escuras e distinguir-se claramente dos pisos de pedra.
     agua:          { color: [0.01, 0.40, 0.78] },
     agua_profunda: { color: [0.006, 0.045, 0.18] },
-    piso_congelado:{ color: [0.42, 0.78, 0.89] },
-    planicie_nevada:{ color: [0.78, 0.90, 0.94] },
+    piso_congelado:{ color: [0.20, 0.66, 0.88] },
+    planicie_nevada:{ color: [0.90, 0.93, 0.93] },
     lava:          { color: [0.84, 0.12, 0.025] },
     pantano:       { color: [0.12, 0.23, 0.12] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },

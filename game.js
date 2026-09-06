@@ -3663,6 +3663,11 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
   const listaHabilidades = habilidades.length
     ? habilidades.map(h => h.name || h.id).join(' • ')
     : 'Nenhuma'
+  const alcanceAtaques = ataques.length
+    ? ataques.map(at => at.range
+        ? `${at.range}q${at.range_shape ? ' em linha' : ''}`
+        : 'adjacente').join(' • ')
+    : 'adjacente'
 
   tip.innerHTML = `
     <div style="padding:10px 14px 8px; border-bottom:1px solid #9900cc33;">
@@ -3699,7 +3704,7 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
       ${renderLinhaTooltip('🛡️', 'Classe de Armadura', a.ca)}
       ${renderLinhaTooltip('🎲', t('ui.animar.ataques'), listaAtaques)}
       ${renderLinhaTooltip('👣', t('ui.cancao.atributo.movimento'), t('ui.animar.n_casas', {n:a.movimento}))}
-      ${renderLinhaTooltip('⚔️', t('ui.animar.alcance_ataque'), t('ui.animar.uma_casa_4dir'))}
+      ${renderLinhaTooltip('⚔️', t('ui.animar.alcance_ataque'), alcanceAtaques)}
       ${renderLinhaTooltip('✨', t('ui.mestre.habilidades_titulo'), listaHabilidades)}
     </div>
 
@@ -5147,7 +5152,8 @@ function _start2DHighlightLoop(){
     const st = GS.gameState;
     const me = st && st.players.find(p => p.id === GS.myPid && p.alive);
     const hasAnimatedTerrain = !!(st && Object.values(st.materiais || {}).some(mid =>
-      mid === 'lava' || mid === 'pantano' || mid === 'agua' || mid === 'agua_profunda'));
+      mid === 'lava' || mid === 'pantano' || mid === 'agua' || mid === 'agua_profunda'
+      || mid === 'rodamoinho' || mid === 'rodamoinho_profundo'));
     const animateHighlights = GS.isMyTurn && me && me.moves_left > 0;
     const animateGamepadCursor = !!_gamepadCursorTile(st);
     if(!mode3D && st && (animateHighlights || hasAnimatedTerrain || animateGamepadCursor)){
@@ -7160,6 +7166,70 @@ let _dungeonStatic2D = {
   rooms: null, secretPassages: null, animatedTiles: [], master: null, W: 0, H: 0,
 };
 
+function _collectWhirlpoolAreas(state, terrainSet){
+  const mats = state.materiais || {};
+  const cells = new Set(Object.entries(mats)
+    .filter(([key, mid]) => (mid === 'rodamoinho' || mid === 'rodamoinho_profundo')
+      && (!terrainSet || terrainSet.has(key)))
+    .map(([key]) => key));
+  const seen = new Set();
+  const areas = [];
+  for(const start of cells){
+    if(seen.has(start)) continue;
+    const mid = mats[start], queue = [start], tiles = [];
+    seen.add(start);
+    for(let qi=0; qi<queue.length; qi++){
+      const key = queue[qi], [x,y] = key.split(',').map(Number);
+      tiles.push({x,y,key});
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+        const next = `${x+dx},${y+dy}`;
+        if(!seen.has(next) && cells.has(next) && mats[next] === mid){
+          seen.add(next); queue.push(next);
+        }
+      }
+    }
+    areas.push({mid, tiles,
+      x0: Math.min(...tiles.map(t => t.x)), x1: Math.max(...tiles.map(t => t.x)),
+      y0: Math.min(...tiles.map(t => t.y)), y1: Math.max(...tiles.map(t => t.y))});
+  }
+  return areas;
+}
+
+function _drawWhirlpoolArea2D(ctx, area, now){
+  const x = area.x0 * CELL, y = area.y0 * CELL;
+  const w = (area.x1 - area.x0 + 1) * CELL;
+  const h = (area.y1 - area.y0 + 1) * CELL;
+  const cx = x + w * .5, cy = y + h * .5;
+  const deep = area.mid === 'rodamoinho_profundo';
+  const flow = now / 115;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x + 1, y + 1, w - 2, h - 2); ctx.clip();
+  for(let i=0; i<8; i++){
+    const rx = Math.max(CELL * .10, w * (.075 + i * .052));
+    const ry = Math.max(CELL * .08, h * (.075 + i * .052)) * .70;
+    ctx.strokeStyle = deep
+      ? (i % 2 ? 'rgba(139,207,255,.50)' : 'rgba(45,117,224,.64)')
+      : (i % 2 ? 'rgba(208,251,255,.68)' : 'rgba(61,190,239,.74)');
+    ctx.lineWidth = Math.max(1, CELL * (i === 0 ? .026 : .014));
+    ctx.beginPath();
+    for(let a=.14; a<=Math.PI*2.1; a+=.09){
+      const aa = a + flow * (i % 2 ? -1.10 : 1.24) + .12 * Math.sin(flow * 2.1 + i);
+      const wobble = 1 + .14 * Math.sin(a * 4 + i) + .05 * Math.sin(a * 9 - flow * 1.5);
+      const px = cx + Math.cos(aa) * rx * wobble;
+      const py = cy + Math.sin(aa) * ry * wobble;
+      if(a === .14) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+  const hole = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w,h) * .25);
+  hole.addColorStop(0, deep ? 'rgba(0,5,22,.90)' : 'rgba(2,32,83,.82)');
+  hole.addColorStop(.64, deep ? 'rgba(3,31,91,.70)' : 'rgba(4,72,137,.56)');
+  hole.addColorStop(1, deep ? 'rgba(14,75,151,0)' : 'rgba(4,115,183,0)');
+  ctx.fillStyle = hole; ctx.beginPath();
+  ctx.ellipse(cx, cy, Math.min(w,h)*.21, Math.min(w,h)*.15, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
 function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   const master = !!(GS.isMaster() || state.test_mode);
   const cache = _dungeonStatic2D;
@@ -7180,6 +7250,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   const animatedTiles = [];
   for(const [key, mid] of Object.entries(state.materiais || {})){
     if(mid !== 'lava' && mid !== 'pantano' && mid !== 'agua' && mid !== 'agua_profunda'
+        && mid !== 'rodamoinho' && mid !== 'rodamoinho_profundo'
         || !terrainSet.has(key)) continue;
     const [x, y] = key.split(',').map(Number);
     if(Number.isInteger(x) && Number.isInteger(y)) animatedTiles.push({x, y, mid});
@@ -7220,16 +7291,20 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     if(!terrainSet.has(`${x},${y}`)) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
   }
 
+  const whirlpoolAreas = _collectWhirlpoolAreas(state, terrainSet);
+  const whirlpoolAreaByKey = {};
+  for(const area of whirlpoolAreas) for(const tile of area.tiles)
+    whirlpoolAreaByKey[tile.key] = area;
   _dungeonStatic2D = {
     canvas, tiles: state.tiles, materiais: state.materiais,
     explorado: state.explored, revelado: state.revealed, rooms: state.rooms,
     secretPassages: state.secret_passages,
-    animatedTiles, master, W, H,
+    animatedTiles, whirlpoolAreas, whirlpoolAreaByKey, master, W, H,
   };
   return canvas;
 }
 
-// Só os traços móveis de lava/água e as ondulações do pântano são recalculados.
+// Só os traços móveis de lava/água, os vortexes e as ondulações do pântano são recalculados.
 // A pintura base permanece na camada estática acima.
 function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const flowLava = now / 520;
@@ -7238,6 +7313,7 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const flowSwamp = now / 900;
   const tiles = _dungeonStatic2D.materiais === state.materiais
     ? _dungeonStatic2D.animatedTiles : [];
+  const whirlpoolDrawn = new Set();
   for(const {x, y, mid} of tiles){
     const X = x * CELL, Y = y * CELL;
     if(mid === 'lava'){
@@ -7262,6 +7338,13 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
         ctx.beginPath(); ctx.arc(bx, by - q * CELL * .025, br, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = `rgba(255,116,18,${(.26 + q * .26).toFixed(2)})`;
         ctx.lineWidth = Math.max(1, CELL / 70); ctx.stroke();
+      }
+    } else if(mid === 'rodamoinho' || mid === 'rodamoinho_profundo'){
+      const area = _dungeonStatic2D.whirlpoolAreaByKey
+        && _dungeonStatic2D.whirlpoolAreaByKey[`${x},${y}`];
+      if(area && !whirlpoolDrawn.has(area)){
+        whirlpoolDrawn.add(area);
+        _drawWhirlpoolArea2D(ctx, area, now);
       }
     } else if(mid === 'agua' || mid === 'agua_profunda'){
       const profunda = mid === 'agua_profunda';
@@ -7980,6 +8063,7 @@ function renderMap(state){
   _drawMovePreview2D(ctx, state, terrainSet);
 
   // ── Monsters: only visible within player's vision radius
+  const _vortexSpin2D = performance.now() / 260;
   const gamepadAttackTarget2D = _gamepadSelectedAttackTarget(state);
   for(const m of state.monsters){
     const [mtx,mty]=m.pos;
@@ -7994,6 +8078,10 @@ function renderMap(state){
     const fp = _monsterFootprintSize(m);
     const attackTargeted = gamepadAttackTarget2D?.targetId === m.id;
     if(attackTargeted) _drawGamepadAttackTargetFocus2D(ctx, m, mx, my, performance.now());
+    const _monVortexPreso = !!(m.rodamoinho_preso || m.rodamoinho_profundo_preso);
+    if(_monVortexPreso){
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
+    }
     if(m.oriented){
       // A função recebe a casa-âncora e calcula internamente o centro do
       // corpo; isso preserva a direção mesmo no footprint orientado 2x2.
@@ -8002,6 +8090,7 @@ function renderMap(state){
       drawMiniBase(ctx, cx, cy, '#c02020', false, fp.logicalW, fp.logicalH);
       drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
     }
+    if(_monVortexPreso) ctx.restore();
     // HP bar
     const pct=_combatHpRatio(`m:${m.id}`, m.hp, m.max_hp);
     const barH=Math.max(4,Math.round(CELL*0.08));
@@ -8083,6 +8172,7 @@ function renderMap(state){
     if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`) || _visPathP){
       const [hitX, hitY] = _hitReaction2D('pr:singleton');
       const cx=drawX*CELL+CELL/2+hitX, cy=drawY*CELL+CELL/2+hitY;
+      const _prisVortexPreso = !!(_pris.rodamoinho_preso || _pris.rodamoinho_profundo_preso);
       // Anel de seleção quando o controlador o selecionou (janela pós-turno).
       if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
         ctx.save();
@@ -8091,6 +8181,9 @@ function renderMap(state){
         ctx.restore();
       }
       // Base do peão: tom amarelado se aliado/seguindo, acinzentado se cativo.
+      if(_prisVortexPreso){
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
+      }
       drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
       const _pImg = _getPrisoner2DImg(_pris.image);
       if(_pImg && _pImg.complete && _pImg.naturalWidth){
@@ -8101,6 +8194,7 @@ function renderMap(state){
         ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
       }
+      if(_prisVortexPreso) ctx.restore();
       // Barra de HP simples
       const max=_pris.max_hp||_pris.hp||1;
       const pct=Math.max(0,Math.min(1,_pris.hp/max));
@@ -8167,6 +8261,10 @@ function renderMap(state){
       if(!visionSet.has(`${ax},${ay}`) && !_visPath) continue;
       const [hitX, hitY] = _hitReaction2D(`a:${a.id}`);
       const cx=drawX*CELL+CELL/2+hitX, cy=drawY*CELL+CELL/2+hitY;
+      const _animVortexPreso = !!(a.rodamoinho_preso || a.rodamoinho_profundo_preso);
+      if(_animVortexPreso){
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
+      }
       drawMiniBase(ctx, cx, cy, '#9900cc', false);
       // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
       drawMonsterSprite(ctx, cx, cy-3, {
@@ -8179,6 +8277,7 @@ function renderMap(state){
       ctx.lineWidth   = (_animadoSel===a.id) ? 3 : 2;
       ctx.beginPath(); ctx.arc(cx, cy-3, CELL/2-2, 0, Math.PI*2); ctx.stroke();
       ctx.restore();
+      if(_animVortexPreso) ctx.restore();
       // Barra de vida (usa posição visual drawX/drawY)
       const pct=Math.max(0, (a.vida_atual||0)/(a.vida_max||1));
       const barH=Math.max(4,Math.round(CELL*0.08));
@@ -8199,7 +8298,11 @@ function renderMap(state){
     const X=px*CELL+hitX, Y=py*CELL+hitY, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     const _invisP = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
+    const _playerVortexPreso = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
     if(_invisP) ctx.save(), ctx.globalAlpha=.18;
+    if(_playerVortexPreso){
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
+    }
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
     if(p.pawn_override){
       const wolf = _getMonster2DImg(p.pawn_override);
@@ -8210,6 +8313,7 @@ function renderMap(state){
         if(p.petrificado) ctx.restore();
       } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
     } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
+    if(_playerVortexPreso) ctx.restore();
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
@@ -8686,19 +8790,58 @@ function paintSwamp(ctx, ox, oy, size, r){
   }
 }
 
+function paintWhirlpool(ctx, ox, oy, size, r, deep=false){
+  // Base azul contínua igual à água, com espirais concêntricas turbulentas.
+  // A textura é estática no tile, mas a rotação/ondulação é atualizada no
+  // renderizador 3D; no canvas ela também é redesenhada com uma fase rápida.
+  ctx.fillStyle=deep ? '#06173f' : '#0078c6'; ctx.fillRect(ox,oy,size,size);
+  const cx=ox+size*.5, cy=oy+size*.5, t=Date.now()/170;
+  for(let i=0;i<7;i++){
+    const rr=size*(.075+i*.067+.020*Math.sin(t*1.7+i));
+    ctx.strokeStyle=deep
+      ? (i%2 ? 'rgba(139,207,255,.48)' : 'rgba(45,117,224,.62)')
+      : (i%2 ? 'rgba(208,251,255,.66)' : 'rgba(61,190,239,.72)');
+    ctx.lineWidth=Math.max(1,size*(i===0?.028:.015));
+    ctx.beginPath();
+    for(let a=.18;a<=Math.PI*2.08;a+=.105){
+      const aa=a+t*(i%2 ? -1.02 : 1.14)+.10*Math.sin(t*2.4+i);
+      const rad=rr*(1+.15*Math.sin(a*4+i*.8)+.045*Math.sin(a*9-t*1.6));
+      const x=cx+Math.cos(aa)*rad, y=cy+Math.sin(aa)*rad*.68;
+      if(a===.18) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  // Espuma curta perto do ralo central, para quebrar o aspecto de simples
+  // círculos e reforçar a sensação de água sendo sugada com violência.
+  for(let i=0;i<8;i++){
+    const aa=t*(i%2 ? -1.15 : 1.25)+i*.78;
+    const rad=size*(.19+(i%3)*.025);
+    ctx.strokeStyle=deep ? 'rgba(151,218,255,.42)' : 'rgba(224,255,255,.58)';
+    ctx.lineWidth=Math.max(1,size*.010);
+    ctx.beginPath();
+    ctx.arc(cx+Math.cos(aa)*rad,cy+Math.sin(aa)*rad*.68,size*(.035+(i%2)*.012),aa+.5,aa+2.0);
+    ctx.stroke();
+  }
+  const hole=ctx.createRadialGradient(cx,cy,0,cx,cy,size*.21);
+  hole.addColorStop(0,deep ? 'rgba(0,5,22,.88)' : 'rgba(2,32,83,.78)');
+  hole.addColorStop(.65,deep ? 'rgba(3,31,91,.72)' : 'rgba(4,72,137,.58)');
+  hole.addColorStop(1,deep ? 'rgba(14,75,151,0)' : 'rgba(4,115,183,0)');
+  ctx.fillStyle=hole; ctx.beginPath(); ctx.ellipse(cx,cy,size*.16,size*.11,0,0,Math.PI*2); ctx.fill();
+}
+
 function paintIce(ctx, ox, oy, size, r){
-  // Superfície azulada e translúcida, com camadas, fissuras e reflexos de um
-  // lago congelado. O ruído é determinístico por casa na chamada do painter.
+  // Lago congelado: azul frio, saturado e com reflexos mais nítidos que a
+  // neve. O ruído é determinístico por casa na chamada do painter.
   const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
-  grad.addColorStop(0,'#dffaff'); grad.addColorStop(.28,'#9adced');
-  grad.addColorStop(.62,'#5baecb'); grad.addColorStop(1,'#2e789b');
+  grad.addColorStop(0,'#e3fbff'); grad.addColorStop(.24,'#86e0f5');
+  grad.addColorStop(.58,'#2ca8d7'); grad.addColorStop(1,'#075d96');
   ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
-  ctx.fillStyle='rgba(245,255,255,.23)';
+  ctx.fillStyle='rgba(240,255,255,.30)';
   ctx.fillRect(ox,oy,size,size*.08);
   for(let i=0;i<3;i++){
     const px=ox+size*(.08+r()*.78), py=oy+size*(.14+r()*.72);
     const len=size*(.20+r()*.34);
-    ctx.strokeStyle=i===0 ? 'rgba(255,255,255,.78)' : 'rgba(180,239,250,.58)';
+    ctx.strokeStyle=i===0 ? 'rgba(255,255,255,.90)' : 'rgba(178,244,255,.70)';
     ctx.lineWidth=Math.max(1,size*(i===0?.012:.007));
     ctx.beginPath(); ctx.moveTo(px,py);
     ctx.lineTo(px+len*(.35+r()*.35),py+size*(r()-.5)*.10);
@@ -8706,30 +8849,32 @@ function paintIce(ctx, ox, oy, size, r){
   }
   for(let i=0;i<5;i++){
     const px=ox+size*(.08+r()*.84), py=oy+size*(.08+r()*.84);
-    ctx.fillStyle=`rgba(255,255,255,${(.22+r()*.35).toFixed(2)})`;
+    ctx.fillStyle=`rgba(255,255,255,${(.28+r()*.42).toFixed(2)})`;
     ctx.beginPath(); ctx.ellipse(px,py,size*(.025+r()*.045),size*(.007+r()*.014),r()*Math.PI,0,Math.PI*2); ctx.fill();
   }
-  ctx.strokeStyle='rgba(22,91,126,.28)'; ctx.lineWidth=Math.max(1,size*.012);
+  ctx.strokeStyle='rgba(4,66,112,.42)'; ctx.lineWidth=Math.max(1,size*.012);
   ctx.beginPath(); ctx.moveTo(ox+size*.02,oy+size*.78);
   ctx.bezierCurveTo(ox+size*.28,oy+size*.66,ox+size*.57,oy+size*.91,ox+size*1.02,oy+size*.72); ctx.stroke();
 }
 
 function paintSnowPlain(ctx, ox, oy, size, r){
+  // Banco de neve: branco e opaco, com sombras cinza muito suaves. Não deve
+  // ter o brilho azul nem o contraste de uma superfície de gelo.
   const grad=ctx.createLinearGradient(ox,oy,ox+size,oy+size);
-  grad.addColorStop(0,'#fbffff'); grad.addColorStop(.42,'#e1f1f4');
-  grad.addColorStop(.75,'#bddce5'); grad.addColorStop(1,'#8dbdce');
+  grad.addColorStop(0,'#ffffff'); grad.addColorStop(.42,'#f6f8f7');
+  grad.addColorStop(.75,'#e9eeee'); grad.addColorStop(1,'#d3dddd');
   ctx.fillStyle=grad; ctx.fillRect(ox,oy,size,size);
   // Ondulações suaves de neve acumulada, sem rejunte de pedra.
   for(let row=0;row<4;row++){
     const yy=oy+size*(.18+row*.20)+(r()-.5)*size*.06;
-    ctx.strokeStyle=row%2 ? 'rgba(116,172,191,.27)' : 'rgba(255,255,255,.62)';
+    ctx.strokeStyle=row%2 ? 'rgba(126,145,148,.18)' : 'rgba(255,255,255,.72)';
     ctx.lineWidth=Math.max(1,size/42); ctx.beginPath(); ctx.moveTo(ox-size*.04,yy);
     ctx.bezierCurveTo(ox+size*.22,yy-size*.06,ox+size*.47,yy+size*.06,ox+size*.72,yy);
     ctx.bezierCurveTo(ox+size*.85,yy-size*.04,ox+size*1.02,yy+size*.04,ox+size*1.05,yy-size*.01); ctx.stroke();
   }
   for(let i=0;i<7;i++){
     const px=ox+size*(.05+r()*.90), py=oy+size*(.05+r()*.90);
-    ctx.fillStyle=`rgba(255,255,255,${(.30+r()*.38).toFixed(2)})`;
+    ctx.fillStyle=`rgba(255,255,255,${(.22+r()*.34).toFixed(2)})`;
     ctx.beginPath(); ctx.ellipse(px,py,size*(.018+r()*.035),size*(.006+r()*.012),r()*Math.PI,0,Math.PI*2); ctx.fill();
   }
 }
@@ -8822,28 +8967,53 @@ function paintFrozenCaveWall(ctx, ox, oy, size, r){
 }
 
 function paintSnowDuneWall(ctx, ox, oy, size, r){
+  // A duna de neve acompanha a leitura irregular da duna de areia: vários
+  // picos assimétricos, encostas sobrepostas e sulcos, em vez de uma única
+  // rampa diagonal. A neve continua clara e fria, sem brilho de gelo.
   const grad=ctx.createLinearGradient(ox,oy,ox,oy+size);
-  grad.addColorStop(0,'#f5fdff'); grad.addColorStop(.42,'#c8e8f1');
-  grad.addColorStop(.78,'#83bfd2'); grad.addColorStop(1,'#3e7894');
-  ctx.fillStyle='#234c65'; ctx.fillRect(ox,oy,size,size);
+  grad.addColorStop(0,'#ffffff'); grad.addColorStop(.34,'#f2f6f6');
+  grad.addColorStop(.72,'#d5e0e0'); grad.addColorStop(1,'#aebfc1');
+  ctx.fillStyle='#80999d'; ctx.fillRect(ox,oy,size,size);
+
+  const ridge = [
+    [0.00,.86], [0.10,.62+r()*.08], [0.20,.38+r()*.10],
+    [0.31,.50+r()*.08], [0.43,.25+r()*.10], [0.55,.18+r()*.08],
+    [0.66,.39+r()*.10], [0.77,.31+r()*.08], [0.88,.49+r()*.09],
+    [1.00,.22+r()*.08],
+  ];
   ctx.fillStyle=grad;
-  ctx.beginPath(); ctx.moveTo(ox,oy+size*.82);
-  ctx.bezierCurveTo(ox+size*.18,oy+size*(.35+r()*.12),ox+size*.44,oy+size*(.18+r()*.12),ox+size*.68,oy+size*(.38+r()*.10));
-  ctx.bezierCurveTo(ox+size*.82,oy+size*(.53+r()*.10),ox+size*.92,oy+size*(.22+r()*.11),ox+size,oy+size*.17);
-  ctx.lineTo(ox+size,oy+size); ctx.lineTo(ox,oy+size); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,.78)'; ctx.lineWidth=Math.max(1,size/24);
-  ctx.beginPath(); ctx.moveTo(ox+size*.02,oy+size*.80);
-  ctx.bezierCurveTo(ox+size*.20,oy+size*.34,ox+size*.43,oy+size*.20,ox+size*.67,oy+size*.40);
-  ctx.bezierCurveTo(ox+size*.82,oy+size*.53,ox+size*.92,oy+size*.24,ox+size*.98,oy+size*.18); ctx.stroke();
-  for(let row=0;row<3;row++){
-    const yy=oy+size*(.48+row*.14)+(r()-.5)*size*.04;
-    ctx.strokeStyle=row===0 ? 'rgba(65,132,158,.42)' : 'rgba(255,255,255,.34)';
-    ctx.lineWidth=Math.max(1,size/80); ctx.beginPath(); ctx.moveTo(ox+size*.05,yy);
-    ctx.bezierCurveTo(ox+size*.30,yy-size*.05,ox+size*.66,yy+size*.06,ox+size*.98,yy-size*.02); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(ox,oy+size);
+  ctx.lineTo(ox,oy+size*ridge[0][1]);
+  for(let i=1;i<ridge.length;i++){
+    const prev=ridge[i-1], cur=ridge[i];
+    const mx=ox+size*(prev[0]+(cur[0]-prev[0])*.5);
+    ctx.quadraticCurveTo(mx,oy+size*(Math.min(prev[1],cur[1])-.10-r()*.05),ox+size*cur[0],oy+size*cur[1]);
   }
-  for(let i=0;i<4;i++){
-    const px=ox+size*(.12+r()*.75), py=oy+size*(.14+r()*.28);
-    ctx.fillStyle='rgba(255,255,255,.56)'; ctx.beginPath(); ctx.ellipse(px,py,size*(.02+r()*.04),size*(.008+r()*.016),r()*Math.PI,0,Math.PI*2); ctx.fill();
+  ctx.lineTo(ox+size,oy+size); ctx.closePath(); ctx.fill();
+
+  // Crista de neve iluminada e uma sombra quebrada logo abaixo, como nas
+  // ondulações da areia, para destacar os vários volumes da duna.
+  ctx.strokeStyle='rgba(255,255,255,.90)'; ctx.lineWidth=Math.max(1,size/25);
+  ctx.beginPath(); ctx.moveTo(ox+size*.01,oy+size*(ridge[0][1]-.01));
+  for(let i=1;i<ridge.length;i++){
+    const prev=ridge[i-1], cur=ridge[i];
+    const mx=ox+size*(prev[0]+(cur[0]-prev[0])*.5);
+    ctx.quadraticCurveTo(mx,oy+size*(Math.min(prev[1],cur[1])-.11),ox+size*cur[0],oy+size*(cur[1]-.01));
+  }
+  ctx.stroke();
+  for(let row=0;row<4;row++){
+    const yy=oy+size*(.48+row*.12)+(r()-.5)*size*.05;
+    ctx.strokeStyle=row%2 ? 'rgba(111,137,141,.24)' : 'rgba(255,255,255,.42)';
+    ctx.lineWidth=Math.max(1,size/78); ctx.beginPath();
+    ctx.moveTo(ox+size*(.04+r()*.05),yy);
+    ctx.bezierCurveTo(ox+size*.25,yy-size*(.06+r()*.025),ox+size*.49,yy+size*(.06+r()*.025),ox+size*.70,yy-size*.01);
+    ctx.bezierCurveTo(ox+size*.82,yy-size*.05,ox+size*.94,yy+size*.04,ox+size*.98,yy-size*.02); ctx.stroke();
+  }
+  for(let i=0;i<5;i++){
+    const px=ox+size*(.08+r()*.82), py=oy+size*(.16+r()*.36);
+    ctx.fillStyle=`rgba(255,255,255,${(.30+r()*.34).toFixed(2)})`;
+    ctx.beginPath(); ctx.ellipse(px,py,size*(.025+r()*.045),size*(.008+r()*.014),r()*Math.PI,0,Math.PI*2); ctx.fill();
   }
 }
 
@@ -8918,8 +9088,10 @@ const MAT_PALETTE_2D = {
   grama:       { base: [46, 78, 40],  accent: 'grass' },
   agua:        { base: [0, 120, 202], accent: 'water' },
   agua_profunda: { base: [6, 23, 63], accent: 'deepWater' },
-  piso_congelado: { base: [120, 200, 226], accent: 'ice' },
-  planicie_nevada: { base: [216, 237, 242], accent: 'snowPlain' },
+  rodamoinho:  { base: [0, 120, 202], accent: 'whirlpool' },
+  rodamoinho_profundo: { base: [6, 23, 63], accent: 'deepWhirlpool' },
+  piso_congelado: { base: [48, 169, 221], accent: 'ice' },
+  planicie_nevada: { base: [232, 239, 239], accent: 'snowPlain' },
   lava:        { base: [214, 59, 19], accent: 'lava' },
   pantano:     { base: [53, 78, 49], accent: 'swamp' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
@@ -8980,6 +9152,13 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
   else if(pal.accent==='swamp'){
     paintSwamp(ctx, X, Y, CELL, _rng((x*67^y*131^23)>>>0));
+  }
+  else if(pal.accent==='whirlpool' || pal.accent==='deepWhirlpool'){
+    // O vortex completo é desenhado uma única vez por área contínua em
+    // _drawAnimatedTerrain2D; aqui fica apenas a base para não repetir um
+    // pequeno redemoinho em cada casa.
+    ctx.fillStyle = pal.accent === 'deepWhirlpool' ? '#06173f' : '#0078c6';
+    ctx.fillRect(X, Y, CELL, CELL);
   }
   else if(pal.accent==='ice'){
     paintIce(ctx, X, Y, CELL, _rng((x*71^y*149^29)>>>0));
@@ -14025,6 +14204,18 @@ const GRIMORIO_CLIENT = {
                <b>Duração:</b> 1d4+1 rodadas<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
+  chamado_inverno: {
+    id:'chamado_inverno', nome:'Chamado do Inverno', icone:'❄️',
+    circulo:'segundo', classe:['cleric'],
+    tipo:'area_fixa', alcance_base:7, alcance_escala:1, area_lado:4,
+    custo:'🍖-1 💧-1 (permanente: +🍖20 💧20)',
+    descricao:`<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>
+               <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>
+               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área<br>
+               <b>Duração:</b> 1d4 + nível do clérigo<br>
+               <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
+  },
   manto_escuridao: {
     id:'manto_escuridao', nome:'Manto de Escuridão', icone:'🌑',
     circulo:'segundo', classe:['mage','cleric'],
@@ -14145,9 +14336,8 @@ const GRIMORIO_CLIENT = {
     circulo:'terceiro', classe:['cleric'],
     tipo:'invocacao', alcance:0,
     custo:'🍖-1 💧-1',
-    descricao:`<b>Tipos:</b> Fogo (HP18 2d6), Elétrico (HP20 linha),
-               Gelo (HP22 -2fís), Pedra (HP26 ½fís)<br>
-               <b>Controle:</b> age após Lewis, 6 quad. movimento<br>
+    descricao:`<b>Tipos:</b> Fogo, Gelo, Pedra, Elétrico, Ar e Água — usa as fichas do bestiário<br>
+               <b>Controle:</b> age após Lewis, com movimento e ataques da ficha correspondente<br>
                <b>⚠️ Explosão afeta aliados`
   },
   raio_divino: {
@@ -14171,6 +14361,15 @@ const GRIMORIO_CLIENT = {
                <b>Falha:</b> 1 marca de Petrificação; 3 = petrificação permanente<br>
                <b>Sucesso:</b> 1 marca de Resistência; 3 encerra o efeito<br>
                <b>Bloqueio:</b> Manto da Escuridão impede o olhar sem visão no escuro`
+  },
+  metamorfose: {
+    id:'metamorfose', nome:'Metamorfose', icone:'🦋',
+    circulo:'quarto', classe:['mage'], tipo:'transformacao', alcance:0,
+    custo:'🍖-1 💧-1 por rodada',
+    descricao:`<b>Alvo:</b> você, um aliado ou uma criatura viva<br>
+               <b>Forma:</b> criatura desbloqueada do bestiário<br>
+               <b>Efeito:</b> assume atributos, ataques, defesa, movimento e habilidades da forma<br>
+               <b>Resistência:</b> Vontade CD 8 + INT do mago + 4`
   }
 };
 
@@ -14350,11 +14549,11 @@ function _magiasConhecidasIds(heroi) {
 
 // Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
 const SLOTS_POR_NIVEL_CLIENT = {
-  1: {primeiro:2, segundo:0, terceiro:0},
-  2: {primeiro:3, segundo:0, terceiro:0},
-  3: {primeiro:3, segundo:1, terceiro:0},
-  4: {primeiro:3, segundo:2, terceiro:0},
-  5: {primeiro:3, segundo:2, terceiro:1},
+  1: {primeiro:2, segundo:0, terceiro:0, quarto:0},
+  2: {primeiro:3, segundo:0, terceiro:0, quarto:0},
+  3: {primeiro:3, segundo:1, terceiro:0, quarto:0},
+  4: {primeiro:3, segundo:2, terceiro:0, quarto:0},
+  5: {primeiro:3, segundo:2, terceiro:1, quarto:1},
 };
 
 // Aba de magias em jogo: cartas por círculo + pips de slot com contagem regressiva.
@@ -14420,6 +14619,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       ${renderCirculoMagias('primeiro', t('ui.magia.circulo_caixa.primeiro'))}
       ${renderCirculoMagias('segundo',  t('ui.magia.circulo_caixa.segundo'))}
       ${renderCirculoMagias('terceiro', t('ui.magia.circulo_caixa.terceiro'))}
+      ${renderCirculoMagias('quarto', '4º Círculo')}
     </div>`;
 }
 
@@ -14482,7 +14682,7 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'abencoar', 'amaldicoar', 'abencoar_arma',
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
-  'conjurar_elemental', 'silencio', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante'
+  'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose'
 ]);
 
 function _meVivoNaVez() {
@@ -14501,8 +14701,10 @@ function castarMagia(magiaId) {
   if (!GRIMORIO_IMPLEMENTADAS_CLIENT.has(magiaId)) {
     toast(t('ui.magia.em_desenvolvimento', {icone:m.icone, nome:m.nome}), '#c8a951'); return;
   }
-  // Conjurar Elemental: escolhe o tipo (4 elementos) antes de lançar.
+  // Conjurar Elemental: escolhe um dos seis tipos do bestiário antes de lançar.
   if (magiaId === 'conjurar_elemental') { _abrirPickerElemental(); return; }
+  if (magiaId === 'metamorfose') { _abrirPickerMetamorfose(); return; }
+  if (magiaId === 'chamado_inverno') { _abrirPickerChamadoInverno(); return; }
   _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile'); return; }
   // Manto de Escuridão é auto-centrado: conjura imediatamente no próprio
@@ -14530,6 +14732,90 @@ function castarMagia(magiaId) {
   else if (['alvo_aliado', 'buff_aliado', 'toque'].includes(tipo)) alvoTipo = 'ally';
   else                                                            alvoTipo = 'tile'; // area / area_fixa / area_persistente
   _iniciarModoMagia(magiaId, alvoTipo);
+}
+
+// Metamorfose usa uma seleção explícita para permitir alvo próprio, aliado ou
+// monstro sem alterar o modo de mira das demais magias.
+let _metamorfoseAlvoEscolhido = null;
+function _fecharPickerMetamorfose(){ document.getElementById('metamorfose-picker')?.remove(); _metamorfoseAlvoEscolhido = null; }
+function _abrirPickerMetamorfose(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me) return;
+  _fecharPickerMetamorfose();
+  const ov = document.createElement('div'); ov.id='metamorfose-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(8,5,12,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
+  const heroes = (state.players||[]).filter(p=>p.alive && !p.is_master);
+  const monsters = (state.monsters||[]).filter(m=>m.hp>0 && !m.boss && !m.undead && !['morto_vivo','construto','licantropo'].includes(m.subtipo));
+  const targets = heroes.map(p=>`<button class="meta-choice" data-meta-target="${_esc(p.id)}">${p.id===me.id?'🧙 Você':'🛡️ '+_esc(p.name)}</button>`).join('')
+    + monsters.map(m=>`<button class="meta-choice" data-meta-target="${_esc(m.id)}">${_esc(m.emoji||'👾')} ${_esc(m.name)}</button>`).join('');
+  ov.innerHTML=`<section style="max-width:620px;width:100%;max-height:90vh;overflow:auto;background:#17111c;border:1px solid #c8a951;border-radius:10px;padding:20px;color:#eadfc8;font-family:serif;box-shadow:0 12px 50px #000;">
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Metamorfose</h2><button data-meta-close>✕</button></header>
+    <p style="color:#c8b89a;">Escolha quem será transformado:</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${targets}</div>
+    <div style="margin-top:14px;color:#8a7a5a;font-size:12px;">A forma escolhida deve estar desbloqueada e ter ND igual ou inferior ao nível do personagem.</div></section>`;
+  document.body.appendChild(ov);
+  ov.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
+  ov.querySelectorAll('[data-meta-target]').forEach(b=>b.onclick=()=>_metamorfoseEscolherAlvo(b.dataset.metaTarget));
+}
+function _metamorfoseEscolherAlvo(id){
+  const state=GS.gameState, me=GS.me, alvo=(state.players||[]).find(p=>String(p.id)===String(id)) || (state.monsters||[]).find(m=>String(m.id)===String(id));
+  if(!alvo) return;
+  _metamorfoseAlvoEscolhido=id;
+  const catalog=state.metamorfose_catalog||[], unlocked=new Set(me.metamorfose_formas_desbloqueadas||['pombo','rato','gato','ovelha']);
+  const forms=catalog.filter(f=>unlocked.has(f.type) && Number(f.cr||0)<=Number(me.level||1));
+  const box=document.querySelector('#metamorfose-picker section');
+  if(!box) return;
+  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">Alvo: <b>${_esc(alvo.name||'criatura')}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div>Nenhuma forma desbloqueada disponível.</div>'}</div>`;
+  box.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
+  box.querySelectorAll('[data-meta-form]').forEach(b=>b.onclick=()=>_metamorfoseEnviar(b.dataset.metaForm));
+}
+function _metamorfoseEnviar(forma){
+  if(!_metamorfoseAlvoEscolhido || !forma) return;
+  send({type:'magia', magia_id:'metamorfose', target_id:_metamorfoseAlvoEscolhido, forma_id:forma});
+  _fecharPickerMetamorfose();
+}
+
+// Chamado do Inverno: primeiro escolhe o terreno e depois decide se a área
+// dura normalmente ou fica permanente pelo custo adicional.
+let _chamadoInvernoTerreno = null;
+let _chamadoInvernoPermanente = false;
+function _fecharPickerChamadoInverno(){
+  document.getElementById('chamado-inverno-picker')?.remove();
+  _chamadoInvernoTerreno = null;
+  _chamadoInvernoPermanente = false;
+}
+function _abrirPickerChamadoInverno(){
+  const me = GS.me;
+  if(!me) return;
+  _fecharPickerChamadoInverno();
+  const ov = document.createElement('div'); ov.id='chamado-inverno-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(5,12,18,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML=`<section style="max-width:520px;width:100%;background:#101b24;border:1px solid #8bd7e8;border-radius:10px;padding:20px;color:#e7f4f7;font-family:serif;box-shadow:0 12px 50px #000;">
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
+    <p style="color:#bdd4da;">Escolha o tipo de terreno criado pela magia:</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <button data-inverno-terreno="piso_congelado" style="padding:16px;background:#285d72;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;">🧊 Piso congelado</button>
+      <button data-inverno-terreno="planicie_nevada" style="padding:16px;background:#aabfc5;color:#12252c;border:1px solid #e7f4f7;border-radius:6px;cursor:pointer;">🌨️ Planície nevada</button>
+    </div>
+    <div data-inverno-step style="margin-top:14px;color:#7898a2;font-size:12px;text-align:center;">A área afetará aliados e inimigos.</div>
+  </section>`;
+  document.body.appendChild(ov);
+  ov.querySelector('[data-inverno-close]').onclick=_fecharPickerChamadoInverno;
+  ov.querySelectorAll('[data-inverno-terreno]').forEach(b=>b.onclick=()=>{
+    _chamadoInvernoTerreno=b.dataset.invernoTerreno;
+    const box=ov.querySelector('section');
+    box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
+      <p style="color:#bdd4da;">${_chamadoInvernoTerreno==='piso_congelado'?'🧊 Piso congelado':'🌨️ Planície nevada'} selecionado. Escolha a duração:</p>
+      <div style="display:grid;gap:10px;">
+        <button data-inverno-duracao="temporario" style="padding:14px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;">⏳ Temporário — 1d4 + nível de clérigo rodadas</button>
+        <button data-inverno-duracao="permanente" style="padding:14px;background:#334b51;color:#f4fbfc;border:1px solid #c8e8ee;border-radius:6px;cursor:pointer;">♾️ Permanente — custo adicional de 20 Fome e 20 Sede</button>
+      </div>`;
+    box.querySelector('[data-inverno-close]').onclick=_fecharPickerChamadoInverno;
+    box.querySelectorAll('[data-inverno-duracao]').forEach(o=>o.onclick=()=>{
+      _chamadoInvernoPermanente=o.dataset.invernoDuracao==='permanente';
+      ov.remove();
+      _iniciarModoMagia('chamado_inverno','tile');
+    });
+  });
 }
 
 // Usa um PERGAMINHO: igual a castarMagia, mas envia `use_scroll` (carrega o id do
@@ -14597,8 +14883,10 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   // alvoLivre: a magia mira qualquer casa do mapa, sem limite de alcance e
   // mesmo sob névoa (ex.: Clarividência). Some o anel vermelho de alcance.
   const _me = GS.me;
+  const invernoLado = magiaId === 'chamado_inverno'
+    ? 4 + Math.floor((Number(_me?.level) || 1) / 2) : 0;
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: _cajadoArcanoAreaLado(_me, _def, !!scrollItemId) || (_def && _def.area_lado) || 0,
+                        areaLado: _cajadoArcanoAreaLado(_me, _def, !!scrollItemId) || invernoLado || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -14626,6 +14914,10 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     cleanup: () => {
       const cancelada = window._modoMagia?.magiaId;
       window._modoMagia = null;
+      if (cancelada === 'chamado_inverno') {
+        _chamadoInvernoTerreno = null;
+        _chamadoInvernoPermanente = false;
+      }
       if (cancelada) _removerEfeitoVisualLocal(cancelada);
     },
   });
@@ -14701,11 +14993,16 @@ function _clickTileMagia(tx, ty) {
     }
   }
 
+  const fields = Object.assign({}, spec.fields);
+  if (magiaId === 'chamado_inverno') {
+    fields.terreno = _chamadoInvernoTerreno;
+    fields.permanente = !!_chamadoInvernoPermanente;
+  }
   if (mode.scrollItemId) {
-    send(Object.assign({ type: 'use_scroll', item_id: mode.scrollItemId }, spec.fields));
+    send(Object.assign({ type: 'use_scroll', item_id: mode.scrollItemId }, fields));
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951');
   } else {
-    send(Object.assign({ type: 'magia', magia_id: magiaId }, spec.fields));
+    send(Object.assign({ type: 'magia', magia_id: magiaId }, fields));
     toast(t('ui.magia.lancada', {icone:m.icone, nome:m.nome}), '#c8a951');
   }
   _removerEfeitoVisualLocal(magiaId);
@@ -14897,18 +15194,25 @@ function _clickOutsideThrow(e){
 window._iniciarMiraArremesso  = _iniciarMiraArremesso;
 window._encerrarMiraArremesso = _encerrarMiraArremesso;
 
-// ── Conjurar Elemental: escolha do tipo (4 elementos) ───────────────────────
+// ── Conjurar Elemental: escolha do tipo (6 elementais do bestiário) ─────────
 function _abrirPickerElemental() {
   if (!_meVivoNaVez()) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   _fecharPickerElemental();
   const box = document.createElement('div');
   box.id = 'picker-elemental';
   box.style.cssText = 'position:fixed;bottom:140px;left:50%;transform:translateX(-50%);' +
-    'display:flex;gap:8px;align-items:center;background:rgba(10,8,5,0.96);border:1px solid #c8a951;' +
+    'display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;max-width:min(820px,94vw);' +
+    'background:rgba(10,8,5,0.96);border:1px solid #c8a951;' +
     "padding:10px 14px;z-index:1001;font-family:'Cinzel',serif;";
   // O nome do elemento vem de ui.elemental.tipo.* (o mesmo id que o servidor usa).
-  const tipos = [['fogo','🔥','HP18·2d6'], ['eletrico','⚡','HP20·1d8'],
-                 ['gelo','❄️','HP22·1d6'], ['pedra','🪨','HP26·1d8']];
+  const tipos = [
+    ['fogo','🔥','Elemental de Fogo · HP32 · 1d10+3'],
+    ['gelo','❄️','Elemental de Gelo · HP36 · 1d10'],
+    ['pedra','🪨','Elemental de Pedra · HP44 · 1d12'],
+    ['eletrico','⚡','Elemental Elétrico · HP32 · 1d10 · alcance 4'],
+    ['ar','🌪️','Elemental de Ar · HP32 · 1d8 · alcance 2'],
+    ['agua','🌊','Elemental de Água · HP42 · 1d10'],
+  ];
   box.innerHTML =
     '<span style="color:#c8a951;font-size:11px;letter-spacing:2px;margin-right:4px;">🌪️ CONJURAR</span>' +
     tipos.map(([id, ic, st]) =>
@@ -15413,6 +15717,7 @@ function _cajadoArcanoAreaLado(heroi, m, scroll = false) {
   const arma = heroi.gear?.weapon || heroi.weapon || {};
   if (arma.id !== 'staff') return 0;
   if (!['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo)) return 0;
+  if (m.id === 'chamado_inverno') return 4 + Math.floor((Number(heroi.level) || 1) / 2) + 1;
   if (m.area_lado != null) return Math.max(1, Number(m.area_lado) + 1);
   if (m.area_raio != null) return Math.max(1, Number(m.area_raio) * 2 + 2);
   if (m.area_base != null) return Math.max(1, Number(m.area_base) + 1);
@@ -15424,6 +15729,13 @@ function _addQuadrado(cx, cy, lado, out) {
   for (let y = cy - h + 1; y <= cy + h; y++)
     for (let x = cx - h + 1; x <= cx + h; x++)
       out.add(`${x},${y}`);
+}
+function _addQuadradoChamadoInverno(cx, cy, lado, out) {
+  lado = Math.max(1, Math.floor(Number(lado) || 1));
+  const deslocamento = Math.floor(lado / 2) - (lado % 2 === 0 ? 1 : 0);
+  const x0 = cx - deslocamento, y0 = cy - deslocamento;
+  for (let y = y0; y < y0 + lado; y++)
+    for (let x = x0; x < x0 + lado; x++) out.add(`${x},${y}`);
 }
 function _addCheb(cx, cy, raio, out) {
   for (let y = cy - raio; y <= cy + raio; y++)
@@ -15482,7 +15794,10 @@ function _recomputarAreaMagia(hx, hy) {
         for (const k of _coneTilesCli(me.pos[0], me.pos[1], dx, dy, m.comprimento || 4, m.base || 4)) area.add(k);
       }
     } else if (hx != null && hy != null) {
-      if (mode.alvoTipo === 'tile' && mode.areaLado) _addQuadrado(hx, hy, mode.areaLado, area);
+      if (mode.alvoTipo === 'tile' && mode.areaLado) {
+        if (mode.magiaId === 'chamado_inverno') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
+        else _addQuadrado(hx, hy, mode.areaLado, area);
+      }
       else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
       else if (mode.alvoTipo === 'tile')            _addCheb(hx, hy, _areaRaioMagiaCli(m), area);
       else                                          area.add(`${hx},${hy}`); // foe / ally
@@ -15816,6 +16131,7 @@ function renderAbaMagiasLewis(me){
 // (ele casa CAMPOS name/nome e desc/descricao a partir de uma chave cat.*).
 const _ELEMENTAL_CORES_LEWIS = {
   fogo: '#ff6b3d', eletrico: '#5db8ff', gelo: '#7fe0ff', pedra: '#caa472',
+  ar: '#cfd8e6', agua: '#4fc3f7',
 };
 
 // Ficha dos elementais conjurados pelo Lewis (mesmo padrão da ficha do Pedro:
@@ -15842,9 +16158,13 @@ function renderElementaisLewis(me){
       ` : ''}
       ${elementais.map(a => {
         const tipo = a.tipo_elemental || 'pedra';
-        const hab  = { cor:   _ELEMENTAL_CORES_LEWIS[tipo] || '#44cc88',
-                       label: _rotulo(tipo, 'ui.elemental.label', t('ui.elemental.label.padrao')),
-                       desc:  _rotulo(tipo, 'ui.elemental.desc', '') };
+        const cor  = _ELEMENTAL_CORES_LEWIS[tipo] || '#44cc88';
+        const ataques = Array.isArray(a.attacks) ? a.attacks : [];
+        const ataque = ataques[0] || {};
+        const habilidades = Array.isArray(a.special_abilities) ? a.special_abilities : [];
+        const resumoHabilidades = habilidades.length
+          ? habilidades.map(ab => `${ab.icone || '✦'} ${_esc(ab.name || ab.id)}${ab.action_type !== 'passiva' ? ' · ativa' : ''}`).join('<br>')
+          : 'Nenhuma';
         const pct  = Math.max(0, Math.min(100, (a.vida_atual / Math.max(1, a.vida_max)) * 100));
         const corVida = pct > 60 ? '#2ecc40' : pct > 30 ? '#ff851b' : '#ff4136';
         return `
@@ -15861,11 +16181,11 @@ function renderElementaisLewis(me){
                 </div>
                 <div style="color:#8a7a5a;font-size:9px;">❤️ ${a.vida_atual}/${a.vida_max}</div>
               </div>
-              <div style="color:#44cc88;font-size:9px;letter-spacing:1px;text-align:right;line-height:1.6;">🛡️ CA ${a.ca}<br>🎲 ${a.dano}<br>👣 ${a.movimento}q</div>
+              <div style="color:#44cc88;font-size:9px;letter-spacing:1px;text-align:right;line-height:1.6;">🛡️ CA ${a.ca}<br>🎲 ${ataque.damage || a.dano || '—'}<br>👣 ${a.movimento}q</div>
             </div>
-            <div style="padding:6px 8px;background:rgba(0,0,0,0.25);border-left:2px solid ${hab.cor};">
-              <div style="color:${hab.cor};font-size:9px;letter-spacing:2px;margin-bottom:2px;">✦ ${hab.label.toUpperCase()}</div>
-              <div style="color:#c8b89a;font-size:9px;line-height:1.5;">${hab.desc}</div>
+            <div style="padding:6px 8px;background:rgba(0,0,0,0.25);border-left:2px solid ${cor};">
+              <div style="color:${cor};font-size:9px;letter-spacing:2px;margin-bottom:2px;">✦ HABILIDADES</div>
+              <div style="color:#c8b89a;font-size:9px;line-height:1.5;">${resumoHabilidades}</div>
             </div>
           </div>`;
       }).join('')}
@@ -17152,17 +17472,19 @@ function _animadoManualAbilityList(animado){
 
 function _renderAnimadoManualControls(state, me){
   if(!state || !me || state.animados_turn !== GS.myPid || !GS.isMyTurn) return '';
-  const a = (me.animados || []).find(x => x && x.id === _animadoSel && x.senhor_da_morte && x.vida_atual > 0);
+  const a = (me.animados || []).find(x => x && x.id === _animadoSel
+    && (x.senhor_da_morte || (x.tipo === 'elemental' && x.tipo_elemental))
+    && x.vida_atual > 0);
   if(!a) return '';
   const abilities = _animadoManualAbilityList(a);
   if(!abilities.length) return `
     <div style="margin-top:8px;padding:8px;border:1px solid #8f303066;background:rgba(70,0,0,.12);color:#b78a8a;font-size:.68rem;">
-      ☠️ Esta ficha não possui habilidades ativas disponíveis.
+      ✦ Esta ficha não possui habilidades ativas disponíveis.
     </div>`;
   const pending = window._animadoAbilityPending;
   return `
     <div style="margin-top:8px;padding:8px;border:1px solid #8f303066;background:rgba(70,0,0,.12);">
-      <div style="color:#e06b6b;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:1px;margin-bottom:6px;">☠️ HABILIDADES DO SENHOR DA MORTE</div>
+      <div style="color:#e06b6b;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:1px;margin-bottom:6px;">${a.tipo === 'elemental' ? '🌪️ HABILIDADES DO ELEMENTAL' : '☠️ HABILIDADES DO SENHOR DA MORTE'}</div>
       <div style="color:#b78a8a;font-size:.62rem;margin-bottom:6px;">Selecione uma habilidade e depois clique no monstro-alvo.</div>
       ${abilities.map(ab => {
         const custo = (ab.action_type === 'acao_bonus') ? 'BÔNUS' : (ab.action_type === 'acao_livre' ? 'LIVRE' : 'AÇÃO');
@@ -28048,6 +28370,8 @@ function init3D(state){
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'rodamoinho':    paintWhirlpool(c,0,0,S,r); break;
+      case 'rodamoinho_profundo': paintWhirlpool(c,0,0,S,r,true); break;
       case 'piso_congelado': paintIce(c,0,0,S,r); break;
       case 'planicie_nevada': paintSnowPlain(c,0,0,S,r); break;
       case 'agua':
@@ -28111,7 +28435,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -28130,6 +28454,7 @@ function init3D(state){
   const swampFloorGeo = new T.BoxGeometry(1, TH, 1);
   const waterMats = [];
   const deepWaterMats = [];
+  const whirlpoolMats = [];
   const lavaBubbleMeshes = [];
   const lavaBubbleGeo = new T.SphereGeometry(0.032, 8, 6);
   const lavaBubbleMat = new T.MeshStandardMaterial({
@@ -28146,8 +28471,41 @@ function init3D(state){
     color: 0x4f9be6, transparent: true, opacity: 0.13,
     side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending
   });
+  const whirlpoolRippleMat = new T.MeshBasicMaterial({
+    color: 0xd2fbff, transparent: true, opacity: 0.34,
+    side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending
+  });
+  // Faixa espiral contínua: os anéis independentes pareciam círculos
+  // artificiais. A faixa começa no centro e abre em espiral, como uma
+  // corrente de água sendo puxada para o ralo.
+  const whirlpoolRibbonGeo = (() => {
+    const vertices = [], indices = [], samples = 150, turns = Math.PI * 3.7;
+    for(let i=0; i<samples; i++){
+      const q = i / (samples - 1);
+      const angle = q * turns;
+      const radius = 0.035 + q * 0.405;
+      const dr = 0.405 / (samples - 1);
+      const tx = -Math.sin(angle) * radius + Math.cos(angle) * dr;
+      const ty =  Math.cos(angle) * radius + Math.sin(angle) * dr;
+      const len = Math.max(0.0001, Math.hypot(tx, ty));
+      const nx = -ty / len, ny = tx / len;
+      const width = 0.010 + q * 0.009;
+      const px = Math.cos(angle) * radius, py = Math.sin(angle) * radius;
+      vertices.push(px + nx * width, py + ny * width, 0,
+                    px - nx * width, py - ny * width, 0);
+      if(i){
+        const a = (i - 1) * 2, b = i * 2;
+        indices.push(a, a + 1, b, a + 1, b + 1, b);
+      }
+    }
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+    geo.setIndex(indices); geo.computeBoundingSphere();
+    return geo;
+  })();
   const waterRippleMeshes = [];
   const deepWaterRippleMeshes = [];
+  const whirlpoolMeshes = [];
   const wallGeo  = new T.BoxGeometry(TW, WH, TW);
   function makeDuneWallGeo(gx, gy){
     const r = _rng(((gx * 73856093) ^ (gy * 19349663) ^ 0xD00DE) >>> 0);
@@ -28563,12 +28921,14 @@ function init3D(state){
         // A água não recebe jitter por tile: variações independentes fariam
         // aparecer uma grade onde deveriam existir apenas ondas contínuas.
         const isWater3 = mid3==='agua' || mid3==='agua_profunda';
+        const isWhirlpool3 = mid3==='rodamoinho';
+        const isDeepWhirlpool3 = mid3==='rodamoinho_profundo';
         const isLava3 = mid3==='lava';
         const isSwamp3 = mid3==='pantano';
         const ftex = makeMaterialTex(mid3);
         // Com textura própria ou água a cor final não depende do jitter (é fixada
         // abaixo), então essas casas colapsam num material único por tipo.
-        const jitQ = (isWater3 || isLava3 || isSwamp3 || ftex) ? 0 : _quantJit(vf);
+        const jitQ = (isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3 || ftex) ? 0 : _quantJit(vf);
         const fKey = `f|${mid3}|${jitQ}`;
         let mat = _tileMatCache[fKey];
         if(!mat){
@@ -28602,6 +28962,24 @@ function init3D(state){
             mat.bumpScale = 0;
             mat.emissiveMap = null;
           }
+          if(isWhirlpool3){
+            mat.roughness = 0.20;
+            mat.metalness = 0.10;
+            mat.emissive.set(0x0075bd);
+            mat.emissiveIntensity = 0.82;
+            mat.bumpMap = null;
+            mat.bumpScale = 0;
+            mat.emissiveMap = null;
+          }
+          if(isDeepWhirlpool3){
+            mat.roughness = 0.20;
+            mat.metalness = 0.10;
+            mat.emissive.set(0x06173f);
+            mat.emissiveIntensity = 0.58;
+            mat.bumpMap = null;
+            mat.bumpScale = 0;
+            mat.emissiveMap = null;
+          }
           if(isLava3){
             mat.roughness = 0.34;
             mat.metalness = 0.08;
@@ -28619,18 +28997,18 @@ function init3D(state){
             mat.bumpMap = ftex;
           }
           if(mid3 === 'piso_congelado'){
-            mat.roughness = 0.18;
-            mat.metalness = 0.10;
-            mat.emissive.set(0x4ca9c7);
-            mat.emissiveIntensity = 0.34;
+            mat.roughness = 0.10;
+            mat.metalness = 0.16;
+            mat.emissive.set(0x168fc9);
+            mat.emissiveIntensity = 0.52;
             mat.bumpMap = ftex;
             mat.bumpScale = 0.018;
           }
           if(mid3 === 'planicie_nevada'){
-            mat.roughness = 0.82;
-            mat.metalness = 0.02;
-            mat.emissive.set(0x8fbac6);
-            mat.emissiveIntensity = 0.18;
+            mat.roughness = 0.90;
+            mat.metalness = 0.00;
+            mat.emissive.set(0xa7b3b3);
+            mat.emissiveIntensity = 0.08;
             mat.bumpMap = ftex;
             mat.bumpScale = 0.012;
           }
@@ -28653,9 +29031,11 @@ function init3D(state){
         }
         if(mid3 === 'agua' && !waterMats.includes(mat)) waterMats.push(mat);
         if(mid3 === 'agua_profunda' && !deepWaterMats.includes(mat)) deepWaterMats.push(mat);
+        if(isWhirlpool3 && !whirlpoolMats.includes(mat)) whirlpoolMats.push(mat);
+        if(isDeepWhirlpool3 && !whirlpoolMats.includes(mat)) whirlpoolMats.push(mat);
         if(isLava3 && !lavaMats.includes(mat)) lavaMats.push(mat);
         if(isSwamp3 && !swampMats.includes(mat)) swampMats.push(mat);
-        mesh = new T.Mesh((isWater3 || isLava3 || isSwamp3)
+        mesh = new T.Mesh((isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3)
           ? (isLava3 ? lavaFloorGeo : isSwamp3 ? swampFloorGeo : waterFloorGeo) : floorGeo, mat);
         mesh.position.set(x, TH/2, y);     // bottom edge sits at y = 0
         mesh.receiveShadow = true;
@@ -28698,12 +29078,12 @@ function init3D(state){
           mat.color.setRGB(wc[0]+jw, wc[1]+jw, wc[2]+jw);
           if(wtex){
             mat.map = wtex; mat.color.setRGB(1,1,1); mat.bumpMap = wtex;
-            mat.bumpScale = matId3 === 'duna_deserto' ? 0.018
+            mat.bumpScale = (matId3 === 'duna_deserto' || matId3 === 'duna_neve') ? 0.018
               : (matId3 === 'rocha' || matId3 === 'rocha_marrom') ? 0.065 : (VC.wall.bumpScale ?? 0.045);
             // wallBaseMat nasce com o roughnessMap da textura de pedra. Para
             // dunas, substituí-lo pela textura arenosa evita a borda cinza
             // herdada do material de alvenaria.
-            if(matId3 === 'duna_deserto') mat.roughnessMap = wtex;
+            if(matId3 === 'duna_deserto' || matId3 === 'duna_neve') mat.roughnessMap = wtex;
             if(matId3 === 'rocha' || matId3 === 'rocha_marrom'){
               mat.roughnessMap = wtex;
               mat.roughness = 0.78;
@@ -28714,7 +29094,7 @@ function init3D(state){
           mat.emissiveIntensity = 1.0;
           _tileMatCache[wKey] = mat;
         }
-        const isDune3 = matId3 === 'duna_deserto';
+        const isDune3 = matId3 === 'duna_deserto' || matId3 === 'duna_neve';
         const isRock3 = matId3 === 'rocha' || matId3 === 'rocha_marrom';
         mesh = new T.Mesh(isDune3 ? makeDuneWallGeo(x, y)
           : isRock3 ? makeRockWallGeo(x, y) : wallGeo, mat);
@@ -28780,6 +29160,51 @@ function init3D(state){
     ripple.userData.waterBaseScale = baseScale;
     scene.add(ripple);
     (kind === 'agua_profunda' ? deepWaterRippleMeshes : waterRippleMeshes).push(ripple);
+  }
+
+  // Uma área contínua pintada no editor vira um único vórtice grande. Isso
+  // evita a aparência de vários redemoinhos independentes quando o jogador
+  // arrasta o pincel por vários quadrados.
+  const whirlpoolAreas3D = _collectWhirlpoolAreas(state, null);
+  for(const area of whirlpoolAreas3D){
+    const x = area.x0, y = area.y0, kind = area.mid;
+    const areaW = area.x1 - area.x0 + 1, areaH = area.y1 - area.y0 + 1;
+    const centerX = (area.x0 + area.x1) * .5;
+    const centerZ = (area.y0 + area.y1) * .5;
+    const br = _rng(((x * 11717) ^ (y * 7321) ^ 0xB00A) >>> 0);
+    for(let i=0; i<4; i++){
+      const vortex = new T.Mesh(whirlpoolRibbonGeo, whirlpoolRippleMat.clone());
+      if(kind === 'rodamoinho_profundo'){
+        vortex.material.color.setHex(0x82c6ff);
+        vortex.material.opacity = 0.30;
+      }
+      // O raio externo cobre a maior parte da área, com uma margem pequena
+      // para manter a animação dentro do retângulo pintado.
+      const baseScale = (0.60 + i * 0.13) * (0.94 + br() * 0.06);
+      // A espiral foi modelada dentro de um raio local de 0,44. A margem
+      // restante garante que nem o pulso nem a turbulência atravessem a área.
+      const areaScaleX = areaW * 1.02;
+      const areaScaleZ = areaH * 1.02;
+      vortex.position.set(centerX, TH + 0.023 + i * 0.001, centerZ);
+      vortex.rotation.x = -Math.PI / 2;
+      vortex.rotation.z = br() * Math.PI * 2;
+      vortex.scale.set(areaScaleX * baseScale, areaScaleZ * baseScale, 1);
+      vortex.userData.whirlpool = true;
+      vortex.userData.whirlpoolDeep = kind === 'rodamoinho_profundo';
+      vortex.userData.whirlpoolKey = area.tiles[0].key;
+      vortex.userData.whirlpoolKeys = area.tiles.map(tile => tile.key);
+      vortex.userData.whirlpoolPhase = br() * Math.PI * 2;
+      vortex.userData.whirlpoolBaseScaleX = areaScaleX * baseScale;
+      vortex.userData.whirlpoolBaseScaleZ = areaScaleZ * baseScale;
+      vortex.userData.whirlpoolLayer = i;
+      vortex.userData.whirlpoolBaseX = centerX;
+      vortex.userData.whirlpoolBaseZ = centerZ;
+      vortex.userData.whirlpoolBaseY = TH + 0.023 + i * 0.001;
+      vortex.userData.whirlpoolBaseOpacity = kind === 'rodamoinho_profundo'
+        ? 0.30 + i * 0.055 : 0.34 + i * 0.065;
+      scene.add(vortex);
+      whirlpoolMeshes.push(vortex);
+    }
   }
 
   // ── DOOR LEAVES — wooden slab over each DOOR tile (hidden when open) ──────────
@@ -29001,7 +29426,8 @@ function init3D(state){
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
-    lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes,
+    lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes, whirlpoolMeshes,
+    whirlpoolMats,
     wetFloorInst, wetFloorKeys, wetFloorTH: TH,
     moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat, gamepadCursorMesh,
     softShadowMat,
@@ -29423,6 +29849,7 @@ function _atualizarTerrenoAnimado3D(t){
   const temTerreno = (g3.lavaMats && g3.lavaMats.length)
     || (g3.waterMats && g3.waterMats.length)
     || (g3.deepWaterMats && g3.deepWaterMats.length)
+    || (g3.whirlpoolMats && g3.whirlpoolMats.length)
     || (g3.swampMats && g3.swampMats.length)
     || (g3.lavaBubbleMeshes && g3.lavaBubbleMeshes.length)
     || (g3.waterRippleMeshes && g3.waterRippleMeshes.length)
@@ -29472,6 +29899,18 @@ function _atualizarTerrenoAnimado3D(t){
       mat.emissiveIntensity = 0.18 + sp * 0.10;
     }
   }
+  if(g3.whirlpoolMats){
+    const wvp = 0.5 + 0.5 * Math.sin(t / 205) + 0.16 * Math.sin(t / 61);
+    for(const mat of g3.whirlpoolMats){
+      if(mat.map){
+        mat.map.offset.x = (t / 1550) % 1;
+        mat.map.offset.y = (t / 2100) % 1;
+      }
+      // Pulso forte e irregular: a superfície parece acelerar e perder
+      // estabilidade, em vez de apenas brilhar de forma uniforme.
+      mat.emissiveIntensity = 0.78 + wvp * 0.46;
+    }
+  }
   if(g3.lavaBubbleMeshes){
     for(const bubble of g3.lavaBubbleMeshes){
       if(!bubble.visible) continue;
@@ -29503,6 +29942,32 @@ function _atualizarTerrenoAnimado3D(t){
       ripple.position.z = (ripple.userData.waterBaseZ || 0) + Math.cos(t / 2750 + phase) * 0.018;
       ripple.scale.setScalar(base * (0.82 + q * 0.34));
       ripple.rotation.z += 0.001;
+    }
+  }
+  if(g3.whirlpoolMeshes){
+    for(const vortex of g3.whirlpoolMeshes){
+      if(!vortex.visible) continue;
+      const phase = vortex.userData.whirlpoolPhase || 0;
+      const layer = vortex.userData.whirlpoolLayer || 0;
+      const q = 0.5 + 0.5 * Math.sin(t / 175 + phase)
+        + 0.16 * Math.sin(t / 57 + phase * 1.7 + layer);
+      const baseX = vortex.userData.whirlpoolBaseScaleX || 0.6;
+      const baseZ = vortex.userData.whirlpoolBaseScaleZ || 0.6;
+      const pulse = Math.max(0, Math.min(1, q));
+      const spin = (0.038 + pulse * 0.030) * (layer % 2 ? -1 : 1);
+      // Deslocamento mínimo: a espiral vibra, mas nunca sai da área pintada.
+      const swirl = 0.003 + layer * 0.001;
+      const pulseScale = 0.88 + pulse * 0.10;
+      vortex.scale.set(baseX * pulseScale, baseZ * pulseScale, 1);
+      vortex.rotation.z += spin;
+      vortex.position.x = (vortex.userData.whirlpoolBaseX || 0)
+        + Math.cos(t / 115 + phase) * swirl;
+      vortex.position.z = (vortex.userData.whirlpoolBaseZ || 0)
+        + Math.sin(t / 132 + phase * 1.3) * swirl * 0.82;
+      vortex.position.y = (vortex.userData.whirlpoolBaseY || 0)
+        + Math.sin(t / 92 + phase) * 0.004;
+      vortex.material.opacity = (vortex.userData.whirlpoolBaseOpacity || 0.30)
+        * (0.58 + q * 0.78);
     }
   }
 }
@@ -29707,6 +30172,19 @@ function startLoop3D(){
           : fig.userData.monId != null ? `m:${fig.userData.monId}`
           : fig.userData.animadoId != null ? `a:${fig.userData.animadoId}`
           : fig.userData.prisoner ? 'pr:singleton' : null, performance.now());
+      // O redemoinho arrasta visualmente a criatura presa. A rotação é
+      // aplicada à raiz inteira, preservando a pose/facing quando o efeito
+      // termina e sem alterar posição, colisão ou regras autoritativas.
+      if(fig.userData.whirlpoolTrapped){
+        if(!fig.userData._whirlpoolWasSpinning)
+          fig.userData._whirlpoolBaseRotationY = fig.rotation.y || 0;
+        fig.userData._whirlpoolWasSpinning = true;
+        fig.rotation.y = (fig.userData._whirlpoolBaseRotationY || 0) + performance.now() / 360;
+      } else if(fig.userData._whirlpoolWasSpinning){
+        fig.rotation.y = fig.userData._whirlpoolBaseRotationY || 0;
+        delete fig.userData._whirlpoolWasSpinning;
+        delete fig.userData._whirlpoolBaseRotationY;
+      }
       const isHov = hovP && gx === hovP[0] && gy === hovP[1];
       const isSel = selP && gx === selP[0] && gy === selP[1];
       // Smooth vertical lift (lerp coefficient 0.14 ≈ snappy but not instant)
@@ -31742,6 +32220,14 @@ function renderMap3D(state){
     for(const ripple of g3.deepWaterRippleMeshes)
       ripple.visible = terrainSet.has(ripple.userData.waterKey);
   }
+  if(g3.whirlpoolMeshes){
+    for(const vortex of g3.whirlpoolMeshes){
+      const keys = vortex.userData.whirlpoolKeys;
+      vortex.visible = keys
+        ? keys.some(key => terrainSet.has(key))
+        : terrainSet.has(vortex.userData.whirlpoolKey);
+    }
+  }
   if(g3.gamepadCursorMesh){
     const cursor = _gamepadCursorTile(state);
     const valid = cursor && state.tiles[cursor[1]]?.[cursor[0]] != null;
@@ -32184,12 +32670,14 @@ function renderMap3D(state){
         const h = bounds.getSize(new T.Vector3()).y;
         fig.userData._waterSinkShallowY = -Math.max(0.10, h) * 0.25;
         fig.userData._waterSinkDeepY = -Math.max(0.10, h) * 0.45;
+        fig.userData._whirlpoolSinkY = -Math.max(0.10, h) * 0.60;
         fig.userData._lavaSinkY = -Math.max(0.10, h) * 0.30;
         fig.userData._swampSinkY = -Math.max(0.10, h) * 0.20;
         fig.userData._snowPlainSinkY = -Math.max(0.10, h) * 0.15;
       }
       const waterKind = state.materiais && state.materiais[`${x},${y}`];
-      const waterSinkY = waterKind === 'planicie_nevada' && altitudeNormalizada <= 0 ? fig.userData._snowPlainSinkY
+      const waterSinkY = (waterKind === 'rodamoinho' || waterKind === 'rodamoinho_profundo') && altitudeNormalizada <= 0 ? fig.userData._whirlpoolSinkY
+        : waterKind === 'planicie_nevada' && altitudeNormalizada <= 0 ? fig.userData._snowPlainSinkY
         : waterKind === 'pantano' ? fig.userData._swampSinkY
         : waterKind === 'lava' ? fig.userData._lavaSinkY
         : waterKind === 'agua_profunda' ? fig.userData._waterSinkDeepY
@@ -32216,11 +32704,11 @@ function renderMap3D(state){
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.pawn_override, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
+      JSON.stringify([p.color, p.class_id, p.pawn_override, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!p.pawn_override, p.id===GS.myPid, isCur, px, py, p.class_id,
-          p.pawn_override ? 'lobisomem' : null, pSel, p.pawn_override,
+          p.pawn_override ? (p.metamorfose_forma_type || 'lobisomem') : null, pSel, p.pawn_override,
           undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
           // Os `undefined` cobrem monsterVisionRadius, mModel3D, mFillFootprint
           // e mSize — parâmetros só de monstro. Faltava o de mSize, então
@@ -32231,6 +32719,7 @@ function renderMap3D(state){
         return f;
       }, px, py, p.altura);
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
+    _figInvis.userData.whirlpoolTrapped = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
   }
 
   // Os mesmos efeitos ativos do HUD 2D aparecem presos ao peão no espaço 3D.
@@ -32244,7 +32733,7 @@ function renderMap3D(state){
     if(visionSet.has(`${prx},${pry}`) || exploredSet.has(`${prx},${pry}`)){
       const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
         && _pris3D.rescuer_pid === GS.myPid);
-      obterFig('prisoner',
+      const _prisFig3D = obterFig('prisoner',
         JSON.stringify([_pris3D.freed, _pris3D.image, prisSelNow]),
         () => {
           const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
@@ -32252,6 +32741,7 @@ function renderMap3D(state){
           return f;
         },
         prx, pry);
+      _prisFig3D.userData.whirlpoolTrapped = !!(_pris3D.rodamoinho_preso || _pris3D.rodamoinho_profundo_preso);
     }
   }
 
@@ -32264,7 +32754,7 @@ function renderMap3D(state){
       || (GS.isMaster() && _masterSelectedMonsterIds(state).has(String(m.id)));
     const gamepadAttackTargeted = gamepadAttackTarget3D?.targetId === m.id;
     const imageName = _monsterImageName(m);
-    obterFig(`mon:${m.id}`,
+    const _monFig3D = obterFig(`mon:${m.id}`,
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
@@ -32287,6 +32777,7 @@ function renderMap3D(state){
         return f;
       },
       mx, my, m.altura);
+    _monFig3D.userData.whirlpoolTrapped = !!(m.rodamoinho_preso || m.rodamoinho_profundo_preso);
     // m.pos continua sendo a âncora autoritativa para seleção e colisão; a
     // raiz visual é deslocada para o centro geométrico do footprint.
     // A âncora é a fileira frontal. Centralizamos qualquer footprint orientado
@@ -32328,7 +32819,7 @@ function renderMap3D(state){
       if(!a.pos || (a.vida_atual||0) <= 0) continue;
       const [ax,ay] = a.pos;
       if(!visionSet.has(`${ax},${ay}`)) continue;
-      obterFig(`ani:${a.id}`,
+      const _aniFig3D = obterFig(`ani:${a.id}`,
         JSON.stringify([a.tipo, a.image, a.porte, a.size, a.oriented, a.fill_footprint_3d, a.facing, _animadoSel===a.id]),
         () => {
           const f = build3DFig('#9900cc', true, false, false, ax, ay, null, a.tipo, _animadoSel===a.id,
@@ -32336,6 +32827,7 @@ function renderMap3D(state){
           f.userData.animadoId = a.id;   // taggeado para getAnimadoMesh()
           return f;
         }, ax, ay);
+      _aniFig3D.userData.whirlpoolTrapped = !!(a.rodamoinho_preso || a.rodamoinho_profundo_preso);
     }
   }
 
@@ -39368,6 +39860,7 @@ function handleTileClick(tx, ty){
         }
         _animadoSel = (_animadoSel===sobre.id) ? null : sobre.id;
         renderMap(_st);
+        renderMyPanel(_st);
         return;
       }
       if(_animadoSel){
@@ -39382,14 +39875,18 @@ function handleTileClick(tx, ty){
               renderMyPanel(GS.gameState);
               return;
             }
-            const isElecA = a.especial === 'linha_3q';
             const dx_a = Math.abs(a.pos[0]-mon.pos[0]), dy_a = Math.abs(a.pos[1]-mon.pos[1]);
-            const dist_a = dx_a + dy_a;
-            const emLinha = (dx_a===0 || dy_a===0) && dist_a >= 1 && dist_a <= 3;
-            if(isElecA ? emLinha : dist_a === 1) GS.atacarAnimado(a.id, mon.id);
-            else toast(isElecA
-              ? t('ui.tabuleiro.elemental_linha')
-              : 'O servo precisa estar cardinalmente adjacente ao alvo.');
+            const ataqueA = (a.attacks || [])[0] || {};
+            const alcanceA = Number(ataqueA.range || 0);
+            const distA = Math.max(dx_a, dy_a);
+            const emLinhaA = (dx_a === 0 || dy_a === 0) && distA >= 1 && distA <= alcanceA;
+            const emAlcanceA = alcanceA
+              ? (ataqueA.range_shape ? emLinhaA : distA >= 1 && distA <= alcanceA)
+              : distA === 1;
+            if(emAlcanceA) GS.atacarAnimado(a.id, mon.id);
+            else toast(alcanceA
+              ? `O ataque alcança ${alcanceA} quadrado(s)${ataqueA.range_shape ? ' em linha reta' : ''}.`
+              : 'O servo precisa estar adjacente ao alvo.');
             return;
           }
           // Movimento fluido: percorre o caminho inteiro até a casa clicada,
@@ -39871,6 +40368,7 @@ GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   _consumeResistanceEvents(msg);
   handleGameState(msg);
+  _atualizarMetamorfoseStatus();
   _garantirLoopBolaFogo();  // mantém as chamas residuais pulsando até a zona expirar
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
   _garantirLoopJatoAr();     // mantém o cone visível até o impacto terminar
@@ -40112,6 +40610,41 @@ GS.on('diseaseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg);
 GS.on('curseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('poisonResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('equipmentDamageResult', msg => queueTrapResult(msg));
+function _atualizarMetamorfoseStatus(){
+  const id='metamorfose-status', p=GS.me;
+  const monstroMeta=(GS.gameState?.monsters||[]).find(m=>String(m.metamorfose_caster_id||'')===String(GS.myPid)&&m.metamorfose_ativa);
+  const ativo=!!(p && p.metamorfose_ativa) || !!monstroMeta;
+  let el=document.getElementById(id);
+  if(!ativo){ el?.remove(); return; }
+  if(!el){
+    el=document.createElement('div'); el.id=id;
+    el.style.cssText='position:fixed;right:18px;bottom:18px;z-index:2147483000;width:270px;background:linear-gradient(145deg,#24162a,#120e18);border:1px solid #d99b52;border-radius:9px;padding:12px;color:#eadfc8;box-shadow:0 8px 30px #000b;font-family:serif;';
+    document.body.appendChild(el);
+  }
+  const view=p?.metamorfose_ativa ? p : monstroMeta;
+  const caster=String(p?.metamorfose_caster_id||'')===String(GS.myPid) || !!monstroMeta;
+  const itensInfo = view?.metamorfose_usa_equipamentos
+    ? 'Equipamentos e itens continuam utilizáveis.'
+    : 'Equipamentos e itens ficam bloqueados enquanto durar.';
+  el.innerHTML=`<div style="display:flex;gap:10px;align-items:center;"><img src="${_assetURL('assets/armadilhas/metamorfose.png')}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'"><div><b style="color:#ffb06b;">🦋 METAMORFOSE</b><div style="font-size:12px;margin-top:4px;">Forma: <b>${_esc(view?.metamorfose_forma_nome||view?.metamorfose_forma_type||'—')}</b><br>PV: ${view?.hp??'—'}/${view?.max_hp??'—'}<br>${itensInfo}<br>Habilidades de herói ficam bloqueadas enquanto durar.</div></div></div><div style="font-size:11px;color:#c8b89a;margin-top:8px;">O mago paga 🍖-1 e 💧-1 por rodada.</div>${caster?'<button data-meta-cancel style="margin-top:8px;width:100%;">Encerrar metamorfose</button>':''}${monstroMeta?'<button data-meta-perm style="margin-top:6px;width:100%;">Tentar tornar o monstro permanente</button>':''}`;
+  el.querySelector('[data-meta-cancel]')?.addEventListener('click',()=>GS.cancelarMetamorfose());
+  el.querySelector('[data-meta-perm]')?.addEventListener('click',()=>GS.tentarMetamorfosePermanente());
+}
+
+GS.on('metamorfoseSavePrompt', msg => {
+  if (String(msg.target_id) !== String(GS.myPid)) return;
+  const forma = msg.forma?.name || 'criatura escolhida';
+  const falhar = confirm(`🦋 Metamorfose\n\nVocê será transformado em ${forma}.\n\nDeseja falhar propositalmente no teste de Vontade CD ${msg.dc}, aceitando o efeito?\n\nCancelar realiza o teste normalmente.`);
+  GS.responderMetamorfose(msg.request_id, falhar);
+});
+GS.on('metamorfoseResult', msg => {
+  if (String(msg.target_id) === String(GS.myPid)) toast(msg.revertida ? '🦋 A Metamorfose terminou.' : `🦋 Forma: ${msg.forma?.name || 'criatura'}`, '#c8a951');
+  _atualizarMetamorfoseStatus();
+});
+GS.on('metamorfoseFormaDesbloqueada', msg => {
+  const f = msg?.forma;
+  toast(`🦋 Nova forma desbloqueada: ${f?.name || f?.type || 'criatura'}.`, '#8fd18f');
+});
 GS.on('petrifyResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('mentalControlResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('acidSpitResult', msg => queueTrapResult(msg));

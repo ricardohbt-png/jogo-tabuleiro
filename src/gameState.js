@@ -1009,14 +1009,17 @@ const GS = (() => {
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
   function terrainMoveCost(moveCtx, x, y) {
     const actor = moveCtx?.actor || {};
+    if (actor.rodamoinho_preso || actor.rodamoinho_profundo_preso) return 9999;
     const vooNoAr = !!(actor.voo && alturaDe(actor) > 0);
     if (vooNoAr) return 1;
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'piso_congelado') return 1;
     if (kind === 'areia_deserto' || kind === 'lava') return 2;
-    if (kind !== 'agua' && kind !== 'agua_profunda') return 1;
-    if ((actor.special_abilities || []).some(h => h && h.id === 'movimento_erratico')) return 1;
-    let cost = kind === 'agua_profunda' ? 3 : 2;
+    if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
+        && kind !== 'rodamoinho_profundo') return 1;
+    if ((actor.special_abilities || []).some(h => h &&
+        ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return 1;
+    let cost = (kind === 'agua_profunda' || kind === 'rodamoinho_profundo') ? 3 : 2;
     const armor = actor.gear?.armor || {};
     const category = armor.armor_category;
     if (category === 'media') cost += 1;
@@ -1028,6 +1031,7 @@ const GS = (() => {
   function bfsReachable(tiles, exploredSet, sx, sy, maxSteps, result, moveCtx=null) {
     if (!moveCtx && gameState) moveCtx = { materiais: gameState.materiais,
       actor: (gameState.players || []).find(p => p.pos?.[0] === sx && p.pos?.[1] === sy) || {} };
+    if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) { result.add(`${sx},${sy}`); return; }
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(sx, sy);
     const swampStart = moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
@@ -1064,6 +1068,7 @@ const GS = (() => {
   function findPath(tiles, exploredSet, fx, fy, tx, ty, maxSteps, partial=false, moveCtx=null) {
     if (!moveCtx && gameState) moveCtx = { materiais: gameState.materiais,
       actor: (gameState.players || []).find(p => p.pos?.[0] === fx && p.pos?.[1] === fy) || {} };
+    if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) return null;
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(fx, fy);
     if (!exploredSet.has(`${tx},${ty}`)) return null;
@@ -1492,6 +1497,17 @@ const GS = (() => {
         _emit('petrifyResult', msg);
         break;
 
+      case 'metamorfose_save_prompt':
+        _emit('metamorfoseSavePrompt', msg);
+        break;
+
+      case 'metamorfose_result':
+        _emit('metamorfoseResult', msg);
+        break;
+      case 'metamorfose_forma_desbloqueada':
+        _emit('metamorfoseFormaDesbloqueada', msg);
+        break;
+
       case 'mental_control_result':
         _emit('mentalControlResult', msg);
         break;
@@ -1813,6 +1829,11 @@ const GS = (() => {
   function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
   function responderSorteReacao(usar) { send({ type: 'sorte_reacao', usar: !!usar }); }
   function usarOportunidadeMovimento() { send({ type: 'usar_oportunidade_movimento' }); }
+  function responderMetamorfose(requestId, aceitar) {
+    send({ type:'metamorfose_consent', request_id:requestId, aceitar:!!aceitar });
+  }
+  function cancelarMetamorfose() { send({ type:'cancelar_metamorfose' }); }
+  function tentarMetamorfosePermanente() { send({ type:'metamorfose_permanencia' }); }
   // Getters puros: catálogo filtrado por classe, itens possuídos e equipados
   // pelo jogador (lidos de cityState.guild), e recarga restante de uma técnica
   // (lida de game_state.players[].technique_cooldowns + gameState.round).
@@ -2915,6 +2936,9 @@ const GS = (() => {
     usarTecnica,
     responderSorteReacao,
     usarOportunidadeMovimento,
+    responderMetamorfose,
+    cancelarMetamorfose,
+    tentarMetamorfosePermanente,
     guildCatalogFor,
     guildOwnedOf,
     guildEquipOf,

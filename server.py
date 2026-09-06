@@ -77,6 +77,13 @@ ALTURA_MAX = 10
 ALTURA_INICIAL_VOO = 2
 ALTURA_POR_QUADRADO_ALCANCE = 2
 
+# Elevação visual do terreno autorado. É uma camada independente de
+# `altura`, que continua reservada ao voo das criaturas e às regras verticais
+# de combate. Nesta primeira fase a elevação não altera movimento, alcance,
+# linha de visão ou quedas.
+ELEVACAO_TERRENO_MIN = -1
+ELEVACAO_TERRENO_MAX = 2
+
 
 def normalizar_altura(valor, padrao=0):
     """Converte altura para um inteiro seguro no intervalo 0..10."""
@@ -2305,7 +2312,7 @@ _DURABLE_FIELDS = (
     "bag", "bag_size", "gear",
     "guild_owned", "guild_equip", "magias_conhecidas",
     "maldicoes",
-    "renome_individual",
+    "renome_individual", "metamorfose_formas_desbloqueadas",
 )
 
 SHORTCUT_SLOT_COUNT = 10
@@ -3493,6 +3500,37 @@ CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machado_duplo", "machado_orc
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 
 MONSTER_DEFS = [
+    # Formas animais básicas da Metamorfose. São opções permanentes de todos
+    # os personagens e não aparecem em encontros aleatórios.
+    {"type":"pombo", "name":"Pombo", "emoji":"🕊️", "tier":0, "cr":0,
+     "hp":1, "ac":17, "size":[1,1], "movement":9, "movement_exception":True,
+     "str_":2, "dex":17, "con_":10, "int_":2, "fort":2, "ref_":5, "will":2,
+     "initiative_bonus":-4, "vision_base":0, "attacks":[], "special_abilities":[],
+     "voo":True, "altura_inicial":2, "altura_max":10, "porte":"minusculo",
+     "image":"pombo", "subtipo":"animal", "spawn_min":0, "spawn_max":0,
+     "undead":False, "boss":False, "foge_se_nd_zero":True},
+    {"type":"rato", "name":"Rato", "emoji":"🐀", "tier":0, "cr":0,
+     "hp":1, "ac":14, "natural_armor":2, "size":[1,1], "movement":4, "movement_exception":True,
+     "str_":2, "dex":15, "con_":10, "int_":2, "fort":2, "ref_":4, "will":1,
+     "initiative_bonus":-4, "vision_base":0,
+     "attacks":[{"name":"Mordida","atk_bonus":4,"damage":"1","damage_types":[DMG_PHYSICAL],"num_attacks":1}],
+     "special_abilities":[], "porte":"minusculo", "image":"rato", "subtipo":"animal",
+     "spawn_min":0, "spawn_max":0, "undead":False, "boss":False, "foge_se_nd_zero":True},
+    {"type":"gato", "name":"Gato", "emoji":"🐈", "tier":0, "cr":0,
+     "hp":2, "ac":14, "natural_armor":2, "size":[1,1], "movement":8, "movement_exception":True,
+     "str_":3, "dex":15, "con_":10, "int_":2, "fort":2, "ref_":4, "will":1,
+     "initiative_bonus":-4, "vision_base":0,
+     "attacks":[{"name":"Garras","atk_bonus":4,"damage":"1","damage_types":[DMG_PHYSICAL],"num_attacks":2}],
+     "special_abilities":[], "visao_escuro":True, "darkvision_range":8, "porte":"pequeno",
+     "image":"gato", "subtipo":"animal", "spawn_min":0, "spawn_max":0,
+     "undead":False, "boss":False, "foge_se_nd_zero":True},
+    {"type":"ovelha", "name":"Ovelha", "emoji":"🐑", "tier":0, "cr":0,
+     "hp":6, "ac":10, "size":[1,1], "movement":6, "movement_exception":True,
+     "str_":11, "dex":10, "con_":15, "int_":2, "fort":4, "ref_":2, "will":1,
+     "initiative_bonus":-3, "vision_base":0,
+     "attacks":[{"name":"Cabeçada","atk_bonus":1,"damage":"1d4","damage_types":[DMG_PHYSICAL],"num_attacks":1}],
+     "special_abilities":[], "porte":"medio", "image":"ovelha", "subtipo":"animal",
+     "spawn_min":0, "spawn_max":0, "undead":False, "boss":False, "foge_se_nd_zero":True},
     # â”€â”€ Placeholders (sistema legado) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TODO: Substituir por monstros reais com fichas completas
     {"type": "goblin",    "name": "Goblin",         "emoji": "👺", "hp": 8,  "ac": 12, "atk_bonus": 2,  "damage": "1d4", "xp": 10,  "gold": 5,   "tier": 1, "cr": 0.25, "vscale": [0.6, 0.6]},
@@ -6391,6 +6429,7 @@ def validar_dungeon(defn):
     if mats is not None:
         if not isinstance(mats, dict):
             return False, "materiais deve ser um objeto (mapa 'x,y' -> id)."
+        whirlpool_deep_tiles = set()
         for key, mid in mats.items():
             meta = MATERIAIS.get(mid)
             if meta is None:
@@ -6411,6 +6450,40 @@ def validar_dungeon(defn):
                 return False, f"material de piso {mid!r} em casa não-chão ({mx},{my})."
             if meta["categoria"] == "parede" and t != WALL:
                 return False, f"material de parede {mid!r} em casa não-parede ({mx},{my})."
+            if mid == "rodamoinho_profundo":
+                whirlpool_deep_tiles.add((mx, my))
+        if whirlpool_deep_tiles and not any(
+                (x + 1, y) in whirlpool_deep_tiles
+                and (x, y + 1) in whirlpool_deep_tiles
+                and (x + 1, y + 1) in whirlpool_deep_tiles
+                for x, y in whirlpool_deep_tiles):
+            return False, "Rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas."
+
+    elevacoes = defn.get("elevacoes")
+    if elevacoes is not None:
+        if not isinstance(elevacoes, dict):
+            return False, "elevacoes deve ser um objeto (mapa 'x,y' -> nível)."
+        for key, valor in elevacoes.items():
+            if not isinstance(key, str):
+                return False, f"chave de elevação inválida: {key!r}."
+            partes = key.split(",")
+            if len(partes) != 2:
+                return False, f"chave de elevação inválida: {key!r} (esperado 'x,y')."
+            try:
+                ex, ey = int(partes[0]), int(partes[1])
+            except ValueError:
+                return False, f"chave de elevação inválida: {key!r} (esperado 'x,y')."
+            if not (0 <= ex < w and 0 <= ey < h):
+                return False, f"elevação fora do grid em {key!r}."
+            if tiles[ey][ex] not in (FLOOR, DOOR):
+                return False, f"elevação deve estar em chão ou porta em ({ex},{ey})."
+            if (isinstance(valor, bool) or not isinstance(valor, int)
+                    or not ELEVACAO_TERRENO_MIN <= valor <= ELEVACAO_TERRENO_MAX):
+                return False, f"elevação em {key!r} deve ser um inteiro entre {ELEVACAO_TERRENO_MIN} e {ELEVACAO_TERRENO_MAX}."
+
+    transicao = defn.get("transicao_altura", "rampa")
+    if transicao not in ("rampa", "declive"):
+        return False, "transicao_altura inválida (use 'rampa' ou 'declive')."
 
     return True, "ok"
 
@@ -7162,6 +7235,8 @@ MATERIAIS = {
     "grama":         _mat("Grama", "piso", "#287322"),
     "agua":          _mat("Água", "piso", "#126da1", terreno="agua"),
     "agua_profunda": _mat("Água profunda", "piso", "#06173f", terreno="agua_profunda"),
+    "rodamoinho":    _mat("Rodamoinho", "piso", "#126da1", terreno="rodamoinho"),
+    "rodamoinho_profundo": _mat("Rodamoinho profundo", "piso", "#06173f", terreno="rodamoinho_profundo"),
     "piso_congelado": _mat("Piso congelado", "piso", "#78c8e2", terreno="piso_congelado"),
     "planicie_nevada": _mat("Planície nevada", "piso", "#d8edf2", terreno="planicie_nevada"),
     "lava":          _mat("Lava", "piso", "#d63b13", terreno="lava", custo_mov=2),
@@ -7530,14 +7605,14 @@ PERGAMINHO_FALHA_MAX     = 95   # teto da chance de falha / efeito nocivo (sempr
 # cÃ­rculo + ðŸ–-1/ðŸ’§-1. Slots regeneram por rodadas (timer independente por slot).
 # Tabela Ãºnica para as duas classes. NÃ­vel 6+ = cap no nÃ­vel 5 (TODO: estender).
 SLOTS_POR_NIVEL = {
-    1: {"primeiro": 2, "segundo": 0, "terceiro": 0},
-    2: {"primeiro": 3, "segundo": 0, "terceiro": 0},
-    3: {"primeiro": 3, "segundo": 1, "terceiro": 0},
-    4: {"primeiro": 3, "segundo": 2, "terceiro": 0},
-    5: {"primeiro": 3, "segundo": 2, "terceiro": 1},
+    1: {"primeiro": 2, "segundo": 0, "terceiro": 0, "quarto": 0},
+    2: {"primeiro": 3, "segundo": 0, "terceiro": 0, "quarto": 0},
+    3: {"primeiro": 3, "segundo": 1, "terceiro": 0, "quarto": 0},
+    4: {"primeiro": 3, "segundo": 2, "terceiro": 0, "quarto": 0},
+    5: {"primeiro": 3, "segundo": 2, "terceiro": 1, "quarto": 1},
 }
 # Rodadas para um slot gasto regenerar, por cÃ­rculo.
-SLOT_REGEN = {"primeiro": 10, "segundo": 15, "terceiro": 20}
+SLOT_REGEN = {"primeiro": 10, "segundo": 15, "terceiro": 20, "quarto": 25}
 # O Cajado Arcano possui um slot de 1º círculo separado dos slots normais.
 # Ele só pode ser usado depois que os slots normais do círculo se esgotarem.
 CAJADO_ARCANO_SLOT_CIRCULO = "primeiro"
@@ -7560,7 +7635,7 @@ GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "invisibilidade", "regeneracao_magica", "jato_ar",
                           "velocidade", "protecao_energia", "conjurar_elemental",
                           "silencio", "barreira_arcana", "contramagica", "voo",
-                          "olhar_petrificante"}
+                          "olhar_petrificante", "metamorfose", "chamado_inverno"}
 
 GRIMORIO = {
     # â”€â”€ 1Âº CÃRCULO â€” MAGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -7713,6 +7788,17 @@ GRIMORIO = {
         "duracao": "1d4",
         "descricao": "Área 4x4. Sem magias nem bônus de Canção Heroica dentro. Dura 1d4 rodadas.",
     },
+    "chamado_inverno": {
+        "id": "chamado_inverno", "nome": "Chamado do Inverno",
+        "circulo": "segundo", "classe": ["cleric"],
+        "icone": "❄️", "tipo": "area_fixa",
+        "alcance_base": 7, "alcance_escala": 1,
+        "area_lado": 4, "area_lado_niveis": 2,
+        "duracao": "1d4", "duracao_por_nivel": 1,
+        "save": "reflexos", "permanente_custo": 20,
+        "terrenos": ["piso_congelado", "planicie_nevada"],
+        "descricao": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede.",
+    },
     "manto_escuridao": {
         "id": "manto_escuridao", "nome": "Manto de Escuridão",
         "circulo": "segundo", "classe": ["mage", "cleric"],
@@ -7829,10 +7915,12 @@ GRIMORIO = {
         "circulo": "terceiro", "classe": ["cleric"],
         "icone": "🌪️", "tipo": "invocacao",
         "tipos": {
-            "fogo":     {"hp": 18, "dano": "2d6", "especial": "explosao_6d6"},
-            "eletrico": {"hp": 20, "dano": "1d8", "especial": "linha_3q"},
-            "gelo":     {"hp": 22, "dano": "1d6", "especial": "-2_fisico_+2_fogo"},
-            "pedra":    {"hp": 26, "dano": "1d8", "especial": "metade_fisico"},
+            "fogo":     {"bestiario": "elemental_fogo"},
+            "gelo":     {"bestiario": "elemental_gelo"},
+            "pedra":    {"bestiario": "elemental_pedra"},
+            "eletrico": {"bestiario": "elemental_eletrico"},
+            "ar":       {"bestiario": "elemental_ar"},
+            "agua":     {"bestiario": "elemental_agua"},
         },
         "movimento": 6, "age_apos_lewis": True,
         "controlado": True, "explosao_afeta_aliados": True,
@@ -7854,6 +7942,11 @@ GRIMORIO = {
         "icone": "👁️", "tipo": "buff_self", "save": "vontade",
         "duracao": "1d4", "duracao_por_niveis": 3,
         "descricao": "O alvo que tiver o conjurador em sua visão testa Vontade. Faz um teste inicial, dois por turno enquanto o conjurador permanecer visível e até cinco testes finais após perdê-lo de vista. Três falhas petrificam permanentemente; três sucessos encerram o efeito.",
+    },
+    "metamorfose": {
+        "id": "metamorfose", "nome": "Metamorfose", "circulo": "quarto",
+        "classe": ["mage"], "icone": "🦋", "tipo": "transformacao",
+        "save": "vontade", "descricao": "Transforma uma criatura viva em uma forma desbloqueada do bestiário. A forma mantém seus atributos, ataques, defesa, movimento e habilidades; a manutenção custa 1 Fome e 1 Sede por rodada.",
     },
 }
 
@@ -8154,7 +8247,11 @@ def make_player(pid, name, cls_id, slot):
         "detectar_ativo":      False,  # Detectar Armadilhas ativa (manutenÃ§Ã£o ðŸ’§-1)
         # â”€â”€ Magias (Pedro/mage, Lewis/cleric) â€” magias conhecidas + slots c/ regen â”€â”€
         "magias_conhecidas":   [],     # ids do GRIMORIO escolhidos (obrigatÃ³rio p/ lanÃ§ar)
+        # O quarto círculo é criado sob demanda pelos helpers de slots; manter
+        # o formato enxuto aqui preserva compatibilidade com saves/testes antigos.
         "slots_cooldown":      {"primeiro": [], "segundo": [], "terceiro": []},  # ready_at por slot gasto
+        "metamorfose_formas_desbloqueadas": ["pombo", "rato", "gato", "ovelha"],
+        "metamorfose_ativa": False,
         # Slot exclusivo do Cajado Arcano. A chave permanece no jogador para
         # que a recarga continue correndo mesmo enquanto o item estiver fora
         # do equipamento; o slot só fica visível/utilizável quando equipado.
@@ -8780,7 +8877,9 @@ class GameRoom:
         self._decor_tall_tiles = set()
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
+        self._terrenos_inverno = {}
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
+        self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..2)
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
         self._mat_oclui_tiles = set()  # casas de material opaco (entulho) â€” barra visÃ£o
 
@@ -11222,6 +11321,7 @@ class GameRoom:
         self.map_w = defn["grid"]["w"]
         self.map_h = defn["grid"]["h"]
         self.tiles = deepcopy(defn["tiles"])
+        self.elevacoes = {}
         # Preset de iluminaÃ§Ã£o do 3D (cliente). Valor desconhecido â†’ "masmorra".
         amb = defn.get("ambiente", "masmorra")
         self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
@@ -11229,6 +11329,8 @@ class GameRoom:
         # Camada de materiais (piso/parede pintÃ¡vel). Chaves "x,y"->id; descarta
         # entradas malformadas/desconhecidas (a validaÃ§Ã£o jÃ¡ recusou antes).
         self.materiais = {}
+        self.elevacoes = {}
+        self._terrenos_inverno = {}
         for key, mid in (defn.get("materiais") or {}).items():
             if mid not in MATERIAIS or not isinstance(key, str):
                 continue
@@ -11240,6 +11342,23 @@ class GameRoom:
             except ValueError:
                 continue
             self.materiais[(mx, my)] = mid
+        for key, valor in (defn.get("elevacoes") or {}).items():
+            if not isinstance(key, str) or not isinstance(valor, int) or isinstance(valor, bool):
+                continue
+            partes = key.split(",")
+            if len(partes) != 2:
+                continue
+            try:
+                ex, ey = int(partes[0]), int(partes[1])
+            except ValueError:
+                continue
+            if (0 <= ex < self.map_w and 0 <= ey < self.map_h
+                    and self.tiles[ey][ex] in (FLOOR, DOOR)):
+                self.elevacoes[(ex, ey)] = max(ELEVACAO_TERRENO_MIN,
+                                               min(ELEVACAO_TERRENO_MAX, valor))
+        self.transicao_altura = defn.get("transicao_altura", "rampa")
+        if self.transicao_altura not in ("rampa", "declive"):
+            self.transicao_altura = "rampa"
         self._rebuild_materiais_index()
 
         # Salas no mesmo formato de generate_dungeon.
@@ -12071,6 +12190,8 @@ class GameRoom:
             self.decorations = []
             self._rebuild_decor_index()
             self.materiais = {}
+            self.elevacoes = {}
+            self._terrenos_inverno = {}
             self._rebuild_materiais_index()
             self.zonas_especiais = []
             self.explored = set()    # nÃ©voa volta ao inÃ­cio no mapa novo
@@ -12315,6 +12436,9 @@ class GameRoom:
 
     async def _start_initiative_player_turn(self, p):
         """Preparação comum de um turno de herói iniciado pela fila individual."""
+        await self._cobrar_manutencao_metamorfose(p)
+        if not p.get("alive"):
+            return
         await self._processar_aura_escaldante_inicio(p)
         await self._processar_zona_molochus_inicio_turno(p)
         await self._aplicar_lava_se_pisar(p)
@@ -12357,6 +12481,14 @@ class GameRoom:
         if p.get("preso"): await self._processar_escape_agarrar(p)
         congelamento_pen = await self._processar_congelamento_progressivo_turno(p)
         p["moves_left"] = self._water_turn_moves(p, max(0, self._moves_base(p) - congelamento_pen))
+        if p.get("rodamoinho_profundo_preso"):
+            await self._testar_rodamoinho_profundo_inicio_turno(p)
+            if p.get("_rodamoinho_profundo_bloqueado_turno"):
+                p["moves_left"] = 0
+        if p.get("rodamoinho_preso"):
+            await self._testar_rodamoinho_inicio_turno(p)
+            if p.get("_rodamoinho_bloqueado_turno"):
+                p["moves_left"] = 0
         if p.get("preso"):
             captor = self.monsters.get(p.get("preso_por"))
             if captor and captor["hp"] > 0: p["moves_left"] = 0
@@ -12407,6 +12539,10 @@ class GameRoom:
         async def monster_corpo(mid):
             monster = self.monsters.get(mid)
             if monster and monster.get("hp", 0) > 0:
+                await self._testar_rodamoinho_profundo_inicio_turno(monster)
+                if monster.get("_rodamoinho_profundo_bloqueado_turno"):
+                    return
+                await self._testar_rodamoinho_inicio_turno(monster)
                 await self._processar_olhar_petrificante_inicio(monster)
                 if monster.get("petrificado"):
                     await self.gm_say(f"🗿 **{nome_criatura(monster)}** está petrificado e perde este turno.")
@@ -13297,6 +13433,14 @@ class GameRoom:
             return
         p = self.players[pid]
         if not p["alive"]: return
+        if p.get("rodamoinho_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho prende você; é preciso passar no teste de Reflexos para voltar a se mover."})
+            return
+        if p.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende você; é preciso passar no teste de Reflexos para sair."})
+            return
         if p.get("engolido") or p.get("bau_engolido"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_engolido_e_nao_pode_se_mover")})
             return
@@ -14206,6 +14350,24 @@ class GameRoom:
         if p.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_agir")})
             return
+        if p.get("metamorfose_ativa"):
+            alvo = self.monsters.get(target_id)
+            ataques = p.get("attacks") or []
+            possiveis = [a for a in ataques if self._monster_attack_in_range(p, alvo.get("pos", []) if alvo else [], a)] if alvo else []
+            if not alvo or not possiveis:
+                await self.send_to(pid, {"type":"error", "msg":"A forma atual não alcança esse alvo ou não possui ataque."})
+                return
+            for ataque in possiveis:
+                for _ in range(max(1, int(ataque.get("num_attacks", 1) or 1))):
+                    if alvo.get("hp", 0) <= 0:
+                        break
+                    await self._execute_one_monster_attack(p, ataque, {"kind":"monster", "obj":alvo})
+            # A forma usa os ataques da criatura, mas continua respeitando a
+            # economia de ação do herói e o custo normal de um ataque.
+            p["fome"] = max(0, p.get("fome", 0) - 1)
+            p["action_done"] = True
+            await self.push_state()
+            return
         if p.get("cego") and p.get("bloqueia_distancia") and (p.get("weapon") or {}).get("range") is not None:
             await self.send_to(pid, {"type": "error", "msg": T("erro.cego_nao_pode_usar_ataques_a_distancia")})
             return
@@ -14667,6 +14829,7 @@ class GameRoom:
                         target, dmg, [DMG_PHYSICAL] + ([DMG_HOLY] if holy else []),
                         critical=crit, impact_pos=target_tile)
                     target["hp"] -= dmg
+                    await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
                     await self._harpia_reagir_dano(target, dmg, pid)
                 await self._furtivo_reativo(p, target)
                 if _ammo_damage_bonus:
@@ -14681,6 +14844,7 @@ class GameRoom:
                     xdmg = self._apply_damage_types(xdmg, _ammo_extra_types, target)
                     self._registrar_dano_combate(target, xdmg, _ammo_extra_types)
                     target["hp"] = max(0, target["hp"] - xdmg)
+                    await self._registrar_dano_desbloqueio_metamorfose(p, target, xdmg)
                     await self._harpia_reagir_dano(target, xdmg, pid)
                     await self.gm_say(T("narracao.projetil_incendiario_de_dano_de_fogo", xdmg=xdmg))
                 # ── Dano elemental adicional da arma (Editor de Itens) ──
@@ -14693,6 +14857,7 @@ class GameRoom:
                     _xr = self._apply_damage_types(_xr, [_xd.get("type")], target)
                     self._registrar_dano_combate(target, _xr, [_xd.get("type")])
                     target["hp"] = max(0, target["hp"] - _xr)
+                    await self._registrar_dano_desbloqueio_metamorfose(p, target, _xr)
                     await self._harpia_reagir_dano(target, _xr, pid)
                     _elem_pt = {DMG_FIRE: "fogo", DMG_COLD: "frio", DMG_LIGHTNING: "relâmpago",
                                 DMG_ACID: "ácido", DMG_HOLY: "sagrado"}.get(_xd.get("type"), _xd.get("type"))
@@ -14802,6 +14967,7 @@ class GameRoom:
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
                                            "value": oraw, "label": T("dado.dano_2a_mao")})
                     tgt["hp"] -= odmg
+                    await self._registrar_dano_desbloqueio_metamorfose(p, tgt, odmg)
                     ocrit_str = " **CRÍTICO!**" if ocrit else ""
                     osb = f"+{off_stat_mod}" if off_stat_mod >= 0 else str(off_stat_mod)
                     ostat = "FOR/DES" if off_finesse else "DES"
@@ -14944,6 +15110,7 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": T("dado.dano_arremesso")})
             target["hp"] -= dmg
+            await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
             await self._furtivo_reativo(p, target)
             sb = f"+{throw_stat_mod}" if throw_stat_mod >= 0 else str(throw_stat_mod)
             throw_stat_name = "FOR (Arremesso Bruto)" if throw_brutal else "FOR/DES" if throw_finesse else "DES"
@@ -15759,9 +15926,37 @@ class GameRoom:
     def _tile_livre_para_animado(self, nx, ny, self_id):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL: return False
+        if any(a.get("id") == self_id and a.get("rodamoinho_preso")
+               for a in self._all_animados()): return False
+        if any(a.get("id") == self_id and a.get("rodamoinho_profundo_preso")
+               for a in self._all_animados()): return False
+        if self.prisoner and self.prisoner.get("id") == self_id and self.prisoner.get("rodamoinho_preso"):
+            return False
+        if self.prisoner and self.prisoner.get("id") == self_id and self.prisoner.get("rodamoinho_profundo_preso"):
+            return False
         if any(m["hp"] > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
         if any(p["alive"] and p["pos"] == [nx, ny] for p in self.players.values()): return False
         if self._animado_em([nx, ny], exclude_id=self_id): return False
+        return True
+
+    def _animado_attack_in_range(self, animado, target, atk_def=None):
+        """Valida alcance/linha de tiro de um servo contra um monstro.
+
+        Elementais conjurados carregam a definição completa do bestiário, então
+        ataques como o Raio (linha 4) e a Rajada de Vento (alcance 2) não podem
+        continuar usando a antiga regra fixa de adjacência.
+        """
+        if not animado or not target or not target.get("pos"):
+            return False
+        atk_def = atk_def or {}
+        alvo_tiles = self._monster_tiles(target)
+        if not any(self._monster_attack_in_range(animado, tile, atk_def)
+                   for tile in alvo_tiles):
+            return False
+        if atk_def.get("range") and not any(
+                self._tem_linha_de_visao(animado["pos"], tile)
+                for tile in alvo_tiles):
+            return False
         return True
 
     async def handle_comandar_animados(self, pid):
@@ -15796,11 +15991,15 @@ class GameRoom:
             if not living:
                 break
             target = min(living, key=lambda m: abs(m["pos"][0]-a["pos"][0]) + abs(m["pos"][1]-a["pos"][1]))
+            eh_elemental = a.get("tipo") == "elemental" and bool(a.get("tipo_elemental"))
+            ataque = (a.get("attacks") or [{}])[0]
             eh_eletrico = a.get("especial") == "linha_3q"
             atk_range   = 3 if eh_eletrico else 1
 
-            # Elemental ElÃ©trico: verifica se jÃ¡ tem alvo em linha dentro de 3q (sem mover)
-            pode_atacar_agora = (
+            # Elementais novos usam exatamente o alcance do primeiro ataque da
+            # ficha do bestiário. O ramo elétrico abaixo permanece para servos
+            # antigos que ainda tenham sido criados com a configuração legada.
+            pode_atacar_agora = self._animado_attack_in_range(a, target, ataque) if eh_elemental else (
                 self._em_linha_cardinal(a["pos"], target["pos"], atk_range)
                 and not self._linha_bloqueada_por_parede(a["pos"], target["pos"])
             ) if eh_eletrico else self._cardinal_adjacent(a["pos"], target["pos"])
@@ -15808,7 +16007,9 @@ class GameRoom:
             # Move (cardinal greedy) atÃ© `moves_left` casas se ainda nÃ£o pode atacar
             if not pode_atacar_agora:
                 for _ in range(a.get("moves_left", a.get("movimento", 3))):
-                    if self._cardinal_adjacent(a["pos"], target["pos"]):
+                    if eh_elemental and self._animado_attack_in_range(a, target, ataque):
+                        break
+                    if not eh_elemental and self._cardinal_adjacent(a["pos"], target["pos"]):
                         break
                     if eh_eletrico and self._em_linha_cardinal(a["pos"], target["pos"], atk_range) \
                             and not self._linha_bloqueada_por_parede(a["pos"], target["pos"]):
@@ -15838,27 +16039,33 @@ class GameRoom:
                         break
 
             # Ataca se no alcance
-            pode_atacar = (
+            pode_atacar = self._animado_attack_in_range(a, target, ataque) if eh_elemental else (
                 self._em_linha_cardinal(a["pos"], target["pos"], atk_range)
                 and not self._linha_bloqueada_por_parede(a["pos"], target["pos"])
             ) if eh_eletrico else self._cardinal_adjacent(a["pos"], target["pos"])
 
             if pode_atacar:
-                ataque = (a.get("attacks") or [{}])[0]
-                bonus_ataque = ataque.get("atk_bonus", a.get("nivel", 1))
-                roll, _esc = self._rolar_d20_escuridao(a, target)
-                total = roll + bonus_ataque
-                if roll == 20 or total >= target["ac"]:
-                    dmg = max(1, roll_dice(ataque.get("damage", a.get("dano", "1d4"))) * (2 if roll == 20 else 1))
-                    target["hp"] -= dmg
-                    await self.gm_say(
-                        T("narracao.ataca_d20_vs_ca_de_dano_2", a_nome=nome_criatura(a), target=nome_criatura(target), roll=roll, bonus_ataque=bonus_ataque, total=total, target_ac=target['ac'], dmg=dmg))
-                    if target["hp"] <= 0:
-                        await self._monster_dies(target, pid)
-                    await self._linha_eletrica(a, list(target["pos"]), pid)
+                if eh_elemental:
+                    # O elemental conjurado é uma criatura do bestiário, não um
+                    # ataque simplificado: aplica dano, resistências, efeitos
+                    # on-hit e passivas pelo executor comum.
+                    await self._monster_execute_attacks(a, {"kind": "monster", "obj": target})
                 else:
-                    await self.gm_say(
-                        T("narracao.ataca_e_erra_d20_vs_ca_2", a_nome=nome_criatura(a), target=nome_criatura(target), roll=roll, bonus_ataque=bonus_ataque, total=total, target_ac=target['ac']))
+                    bonus_ataque = ataque.get("atk_bonus", a.get("nivel", 1))
+                    roll, _esc = self._rolar_d20_escuridao(a, target)
+                    total = roll + bonus_ataque
+                    if roll == 20 or total >= target["ac"]:
+                        dmg = max(1, roll_dice(ataque.get("damage", a.get("dano", "1d4"))) * (2 if roll == 20 else 1))
+                        target["hp"] -= dmg
+                        await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
+                        await self.gm_say(
+                            T("narracao.ataca_d20_vs_ca_de_dano_2", a_nome=nome_criatura(a), target=nome_criatura(target), roll=roll, bonus_ataque=bonus_ataque, total=total, target_ac=target['ac'], dmg=dmg))
+                        if target["hp"] <= 0:
+                            await self._monster_dies(target, pid)
+                        await self._linha_eletrica(a, list(target["pos"]), pid)
+                    else:
+                        await self.gm_say(
+                            T("narracao.ataca_e_erra_d20_vs_ca_2", a_nome=nome_criatura(a), target=nome_criatura(target), roll=roll, bonus_ataque=bonus_ataque, total=total, target_ac=target['ac']))
             # O atalho "comandar todos" gasta o turno do animado.
             a["moves_left"] = 0
             a["acted"] = True
@@ -15939,6 +16146,10 @@ class GameRoom:
         m = self.monsters.get(monster_id)
         if not m or m["hp"] <= 0:
             return
+        if m.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este monstro; ele não pode agir até escapar."})
+            return
         try:
             tx = int(tx); ty = int(ty)
         except (TypeError, ValueError):
@@ -16012,6 +16223,10 @@ class GameRoom:
             return
         m = self.monsters.get(monster_id)
         if not m or m["hp"] <= 0:
+            return
+        if m.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este monstro; ele não pode agir até escapar."})
             return
         if m.get("_master_acted") and m.get("_master_acao_tipo") != "ataque":
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
@@ -16513,8 +16728,20 @@ class GameRoom:
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
+        if a.get("rodamoinho_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho prende este servo; é preciso passar no teste de Reflexos para voltar a se mover."})
+            return
+        if a.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este servo; é preciso passar no teste de Reflexos para sair."})
+            return
         if a.get("dominado_por_monstro"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_sob_controle_de_um_necro")}); return
+        if a.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este servo; ele não pode atacar até escapar."})
+            return
         if a.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_dormindo")}); return
         if a.get("moves_left", 0) <= 0:
@@ -16557,9 +16784,18 @@ class GameRoom:
         m = self.monsters.get(target_id)
         if not m or m["hp"] <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
-        # Elemental ElÃ©trico ataca em linha cardinal de atÃ© 3 casas; demais requerem adjacÃªncia.
+        # Servos elementais usam o alcance real do ataque do bestiário. O ramo
+        # elétrico abaixo permanece apenas para compatibilidade com invocações
+        # antigas, criadas antes da ficha completa ser incorporada.
+        eh_elemental = a.get("tipo") == "elemental" and bool(a.get("tipo_elemental"))
         eh_eletrico = a.get("especial") == "linha_3q"
-        if eh_eletrico:
+        ataque = (a.get("attacks") or [{}])[0]
+        if eh_elemental:
+            if not self._animado_attack_in_range(a, m, ataque):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.alvo_fora_de_alcance") if ataque.get("range")
+                           else T("erro.servo_nao_esta_adjacente_ao_alvo")}); return
+        elif eh_eletrico:
             if not self._em_linha_cardinal(a["pos"], m["pos"], 3):
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.o_elemental_eletrico_ataca_em_linha_reta")}); return
@@ -16571,7 +16807,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.servo_nao_esta_adjacente_ao_alvo")}); return
 
-        if a.get("senhor_da_morte"):
+        if a.get("senhor_da_morte") or eh_elemental:
             # Senhor da Morte usa o motor completo de ataques do monstro:
             # todos os grupos, num_attacks, venenos, sangramentos, agarrões,
             # resistências e efeitos on-hit da ficha original.
@@ -16582,7 +16818,6 @@ class GameRoom:
             await self.push_state()
             return
 
-        ataque = (a.get("attacks") or [{}])[0]
         a["acted"] = True
         roll, _esc = self._rolar_d20_escuridao(a, m)   # escuridÃ£o: desvantagem/vantagem
         bonus_ataque = ataque.get("atk_bonus", a.get("nivel", 1))
@@ -16615,7 +16850,7 @@ class GameRoom:
         await self.push_state()
 
     async def handle_usar_habilidade_animado(self, pid, animado_id, ability_id, target_id=None):
-        """Controle manual das habilidades ativas do Senhor da Morte.
+        """Controle manual das habilidades ativas de servos controláveis.
 
         Reusa os executores autoritativos do modo Mestre para que a ficha
         original mantenha saves, magias, recargas, venenos e efeitos especiais.
@@ -16627,12 +16862,18 @@ class GameRoom:
         p = self.players.get(pid)
         a = next((x for x in (p or {}).get("animados", [])
                   if x.get("id") == animado_id), None)
-        if not p or not p.get("alive") or not a or not a.get("senhor_da_morte") \
+        controlavel = bool(a and (a.get("senhor_da_morte")
+                                  or (a.get("tipo") == "elemental" and a.get("tipo_elemental"))))
+        if not p or not p.get("alive") or not a or not controlavel \
                 or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")})
             return
         if a.get("dominado_por_monstro") or a.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_animado_indisponivel")})
+            return
+        if a.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este servo; ele não pode usar habilidades até escapar."})
             return
 
         ability = next((ab for ab in a.get("special_abilities", [])
@@ -16641,7 +16882,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_nao_ativavel_manualmente_ia_a")})
             return
         custo = self._custo_acao_ability(ability)
-        if (m.get("type") in {"minotauro", "minotauro_elite"}
+        if (a.get("type") in {"minotauro", "minotauro_elite"}
                 and ability.get("source") == "guilda"):
             # Técnicas da Guilda do monstro são preparações da mesma rodada;
             # o monstro ainda pode realizar seus ataques depois de ativá-las.
@@ -16716,6 +16957,12 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")})
                 return
             used = await self._lancar_magia_monstro(a, ability_id, data, cfg)
+        elif ability_id == "turbilhao":
+            distancia = max(abs(a["pos"][0] - alvo["pos"][0]), abs(a["pos"][1] - alvo["pos"][1]))
+            if distancia > 1 or not self._tem_linha_de_visao(a["pos"], alvo["pos"]):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")})
+                return
+            used = await self._usar_turbilhao_controlado(a, ability, alvo_obj)
         elif ability_id == "cuspir_acido":
             if not self._cuspir_acido_em_linha(a, alvo_obj, ability):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")})
@@ -16767,6 +17014,13 @@ class GameRoom:
             return
         p = self.players[pid]
         if not p["alive"]: return
+        if p.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende você; não é possível realizar ações enquanto estiver preso."})
+            return
+        if p.get("metamorfose_ativa"):
+            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode usar habilidades de herói."})
+            return
         if p.get("engolido") and target_id not in {None, p.get("engolido_por"), p.get("id")}: 
             await self.send_to(pid, {"type": "error", "msg": T("erro.engolido_voce_so_pode_mirar_no_interior")})
             return
@@ -18230,6 +18484,35 @@ class GameRoom:
         self._cancelar_intro_masmorra()
         self.dungeon_intro_active = False
         self.dungeon_intro_until_ms = None
+        # Metamorfose é uma condição de combate e nunca atravessa o descanso
+        # na cidade. Monstros temporariamente transformados são restaurados
+        # antes de a masmorra ser encerrada.
+        for pp in self.players.values():
+            if pp.get("metamorfose_ativa") and not pp.get("metamorfose_permanente"):
+                await self._reverter_metamorfose(pp, "retorno à cidade")
+        for mm in self.monsters.values():
+            if mm.get("metamorfose_ativa") and not mm.get("metamorfose_permanente"):
+                await self._reverter_metamorfose(mm, "retorno à cidade")
+        # O aprisionamento é uma condição do terreno da masmorra; não pode
+        # atravessar a transição para a cidade nem bloquear a reentrada.
+        deep_whirlpool_state = (
+            "rodamoinho_profundo_preso",
+            "_rodamoinho_profundo_bloqueado_turno",
+            "_rodamoinho_profundo_teste_rodada",
+            "_rodamoinho_profundo_ultima_pos",
+        )
+        for pp in self.players.values():
+            for key in deep_whirlpool_state:
+                pp.pop(key, None)
+            for aa in pp.get("animados", []):
+                for key in deep_whirlpool_state:
+                    aa.pop(key, None)
+        for mm in self.monsters.values():
+            for key in deep_whirlpool_state:
+                mm.pop(key, None)
+        if self.prisoner:
+            for key in deep_whirlpool_state:
+                self.prisoner.pop(key, None)
         self.phase = "city"
         self._story_encadeada = story   # limpa a emenda; instala o encerramento, se houver
         self._gerar_loja_pergaminhos()
@@ -20216,7 +20499,7 @@ class GameRoom:
         disponível. A normalização também protege campanhas antigas que possam
         ter serializado esse número como texto.
         """
-        cd = p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        cd = p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []})
         ativos = []
         for ready_at in cd.get(circulo, []):
             try:
@@ -20279,6 +20562,9 @@ class GameRoom:
         tipo = magia.get("tipo")
         if tipo not in ("area", "area_persistente", "area_fixa", "area_centrada"):
             return None
+        if magia.get("id") == "chamado_inverno":
+            nivel = self._nivel_conjurador(caster)
+            return max(1, 4 + (nivel // 2) + 1)
         if magia.get("area_lado") is not None:
             try:
                 return max(1, int(magia["area_lado"]) + 1)
@@ -20304,7 +20590,7 @@ class GameRoom:
 
     def _gastar_slot(self, p, circulo):
         """Marca 1 slot do círculo como gasto: volta em SLOT_REGEN[circulo] rodadas."""
-        p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": []})
+        p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []})
         p["slots_cooldown"].setdefault(circulo, []).append(self.round_num + SLOT_REGEN[circulo])
 
     def _proximo_slot_rodadas(self, p, circulo):
@@ -20336,7 +20622,7 @@ class GameRoom:
 
     def _recarregar_slots(self, p):
         """Recarga total (descanso na cidade): zera todos os cooldowns."""
-        p["slots_cooldown"] = {"primeiro": [], "segundo": [], "terceiro": []}
+        p["slots_cooldown"] = {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []}
         p["cajado_arcano_slot_pronto_em"] = 0
 
     # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -20350,6 +20636,8 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p["alive"]:
             return
+        if p.get("metamorfose_ativa"):
+            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode lançar magias."}); return
         if p.get("class_id") not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_lanca_magias_do_grimorio")}); return
         if p.get("petrificado"):
@@ -20381,6 +20669,19 @@ class GameRoom:
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.magia_ainda_em_desenvolvimento", icone=magia["icone"], magia=nome_de("magia", magia_id))}); return
+
+        if magia_id == "chamado_inverno":
+            terreno = (data or {}).get("terreno")
+            if terreno not in {"piso_congelado", "planicie_nevada"}:
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Escolha Piso congelado ou Planície nevada para o Chamado do Inverno."})
+                return
+            # A versão permanente soma 20/20 ao custo normal de toda magia.
+            # Validar antes de gastar ação, slot ou recursos evita desperdício.
+            if (data or {}).get("permanente") and (p.get("fome", 0) < 21 or p.get("sede", 0) < 21):
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Você precisa de pelo menos 21 de Fome e 21 de Sede para tornar o terreno permanente."})
+                return
 
         # Custo do cÃ­rculo: 1 SLOT do mesmo cÃ­rculo (estrito). NinguÃ©m usa MP.
         # Criar Alimentos materializa um baú numa casa adjacente livre. Validar
@@ -20534,6 +20835,288 @@ class GameRoom:
             return True
         return magia.get("id") in ("bola_fogo", "relampago", "raio_congelante", "raio_divino", "jato_ar", "barreira_arcana", "criar_alimentos")
 
+    def _metamorfose_forma(self, form_id):
+        """Ficha pública e normalizada de uma forma permitida."""
+        form = next((deepcopy(m) for m in MONSTER_DEFS
+                     if m.get("type") == str(form_id or "")), None)
+        # Alguns monstros legados ainda guardam o ataque em `atk_bonus` +
+        # `damage`, sem a lista moderna de ataques. Normalizamos só para a
+        # transformação, preservando a ficha original do bestiário.
+        if form and not form.get("attacks") and form.get("damage"):
+            form["attacks"] = [{"name": "Ataque", "atk_bonus": form.get("atk_bonus", 0),
+                                "damage": form.get("damage", "1d4"),
+                                "damage_types": [DMG_PHYSICAL], "num_attacks": 1}]
+        return form
+
+    def _metamorfose_usa_equipamentos(self, form):
+        """Determina se a forma consegue portar os itens do herói.
+
+        Fichas autoradas declaram `equipment_enabled`; no bestiário legado,
+        criaturas de subtipo racial são tratadas como humanoides equipáveis,
+        enquanto animais/bestas e demais criaturas não usam itens.
+        """
+        if "equipment_enabled" in form:
+            return bool(form.get("equipment_enabled"))
+        return form.get("subtipo") in {"raca_padrao", "abissal"}
+
+    def _metamorfose_catalog(self):
+        """Catálogo enxuto para a janela de seleção da Metamorfose."""
+        out = []
+        for m in MONSTER_DEFS:
+            if m.get("boss") or m.get("undead") or m.get("subtipo") in {"morto_vivo", "construto", "licantropo"}:
+                continue
+            out.append({k: deepcopy(m.get(k)) for k in (
+                "type", "name", "emoji", "cr", "hp", "ac", "image", "porte",
+                "movement", "voo", "visao_escuro", "darkvision_range", "attacks",
+                "special_abilities", "subtipo") if k in m})
+        return out
+
+    def _metamorfose_alvo_valido(self, alvo):
+        if not alvo:
+            return False
+        if self._eh_jogador(alvo):
+            return bool(not alvo.get("is_master") and alvo.get("alive") and alvo.get("hp", 0) > 0)
+        return bool(alvo.get("hp", 0) > 0 and not alvo.get("boss")
+                    and not alvo.get("undead")
+                    and alvo.get("subtipo", _subtipo_padrao_monstro(alvo))
+                    not in {"morto_vivo", "construto", "licantropo"})
+
+    def _metamorfose_forma_aceita(self, caster, form_id):
+        form = self._metamorfose_forma(form_id)
+        if not form or form.get("boss") or form.get("undead"):
+            return None
+        if form.get("subtipo") in {"morto_vivo", "construto", "licantropo"}:
+            return None
+        # O desbloqueio e o limite de ND pertencem ao mago que lança a magia,
+        # independentemente de o alvo ser ele próprio, um aliado ou um monstro.
+        if not self._eh_jogador(caster) or caster.get("class_id") != "mage":
+            return None
+        formas = caster.get("metamorfose_formas_desbloqueadas", [])
+        if str(form_id) not in {str(x) for x in formas}:
+            return None
+        if float(form.get("cr", 0) or 0) > int(caster.get("level", 1) or 1):
+            return None
+        return form
+
+    async def _registrar_dano_desbloqueio_metamorfose(self, atacante, alvo, dano):
+        """Registra dano pessoal do herói contra uma criatura do bestiário.
+
+        Ao alcançar metade do PV máximo, a criatura fica disponível como forma
+        para aquele personagem. O contador vive no monstro da batalha e não é
+        exposto ao cliente; o desbloqueio do herói é durável como os demais
+        progressos da ficha.
+        """
+        if not atacante or not self._eh_jogador(atacante) or not alvo:
+            return
+        if alvo.get("id") in self.players or dano <= 0:
+            return
+        tipo = alvo.get("type")
+        forma = self._metamorfose_forma(tipo)
+        if not tipo or not forma or forma.get("boss") or forma.get("undead") \
+                or forma.get("subtipo") in {"morto_vivo", "construto", "licantropo"}:
+            return
+        max_hp = max(1, int(alvo.get("max_hp", forma.get("hp", 1)) or 1))
+        dano_por_jogador = alvo.setdefault("metamorfose_dano_por_jogador", {})
+        pid = atacante["id"]
+        dano_por_jogador[pid] = int(dano_por_jogador.get(pid, 0) or 0) + max(0, int(dano))
+        formas = atacante.setdefault("metamorfose_formas_desbloqueadas", [])
+        if dano_por_jogador[pid] * 2 < max_hp or tipo in formas:
+            return
+        formas.append(tipo)
+        await self.send_to(pid, {"type": "metamorfose_forma_desbloqueada",
+                                 "forma": deepcopy(forma)})
+        await self.gm_say(f"🦋 **{nome_criatura(atacante)}** aprendeu a forma de **{forma.get('name', tipo)}** para Metamorfose.")
+        self._checkpoint_savegame()
+
+    def _metamorfose_overrides(self):
+        return ("str_", "dex", "con_", "int_", "fort", "ref_", "will", "ac",
+                "natural_armor", "hp", "max_hp", "spd", "movement", "base_movement",
+                "vision_base", "visao_escuro", "darkvision_range", "voo", "altura",
+                "altura_max", "pode_alterar_altura", "custo_mov_altura",
+                "ignora_obstaculos_voo", "attacks", "special_abilities", "immunities",
+                "resistances", "weaknesses", "image", "emoji", "porte", "initiative_bonus",
+                "size", "percepcao", "subtipo")
+
+    async def _aplicar_metamorfose(self, caster, alvo, form, permanente=False):
+        if alvo.get("metamorfose_ativa"):
+            await self.send_to(caster["id"], {"type":"error", "msg":"O alvo já está sob Metamorfose."})
+            return False
+        if self._eh_jogador(alvo):
+            original = {k: deepcopy(alvo.get(k)) for k in self._metamorfose_overrides() if k in alvo}
+        else:
+            original = deepcopy(alvo)
+        alvo["_metamorfose_original"] = original
+        alvo["metamorfose_ativa"] = True
+        alvo["metamorfose_caster_id"] = caster["id"]
+        alvo["metamorfose_forma_type"] = form["type"]
+        alvo["metamorfose_forma_nome"] = form.get("name", form["type"])
+        alvo["metamorfose_permanente"] = bool(permanente)
+        alvo["metamorfose_hp_inicial"] = int(form.get("hp", 1) or 1)
+        alvo["metamorfose_permanencia_resistencias"] = 0
+        alvo["metamorfose_usa_equipamentos"] = self._metamorfose_usa_equipamentos(form)
+        for key in self._metamorfose_overrides():
+            if key in form:
+                alvo[key] = deepcopy(form[key])
+        alvo["max_hp"] = max(1, int(form.get("hp", 1) or 1))
+        alvo["hp"] = alvo["max_hp"]
+        alvo["spd"] = int(form.get("movement", 6) or 6)
+        alvo["movement"] = alvo["spd"]
+        alvo["base_movement"] = alvo["spd"]
+        alvo["pawn_override"] = form.get("image") or form["type"]
+        if self._eh_jogador(alvo):
+            alvo["moves_left"] = self._water_turn_moves(alvo, alvo["spd"])
+        await self.broadcast({"type":"metamorfose_result", "target_id": alvo["id"],
+                              "caster_id": caster["id"], "forma": form,
+                              "permanente": bool(permanente)})
+        await self.gm_say(f"🦋 **{nome_criatura(alvo)}** assume a forma de **{form.get('name', form['type'])}**.")
+        return True
+
+    async def _reverter_metamorfose(self, alvo, motivo="fim da magia", morreu=False):
+        original = alvo.pop("_metamorfose_original", None)
+        if not original:
+            alvo["metamorfose_ativa"] = False
+            return
+        forma_hp = int(alvo.get("metamorfose_hp_inicial", alvo.get("max_hp", 1)) or 1)
+        dano = max(0, forma_hp - int(alvo.get("hp", 0) or 0))
+        jogador = self._eh_jogador(alvo)
+        if jogador:
+            hp_original = int(original.get("hp", alvo.get("hp", 1)) or 1)
+            max_original = int(original.get("max_hp", hp_original) or hp_original)
+            for k in self._metamorfose_overrides():
+                if k not in original:
+                    alvo.pop(k, None)
+            for k, v in original.items():
+                alvo[k] = deepcopy(v)
+            alvo["hp"] = 0 if morreu else max(1, min(max_original, hp_original - dano))
+            alvo["alive"] = alvo["hp"] > 0
+            alvo["pawn_override"] = original.get("pawn_override")
+            alvo["moves_left"] = 0 if morreu else self._water_turn_moves(alvo, self._moves_base(alvo))
+        else:
+            pos, mid = list(alvo.get("pos", [0, 0])), alvo.get("id")
+            for k in list(alvo):
+                if k not in {"id"}:
+                    alvo.pop(k, None)
+            alvo.update(deepcopy(original))
+            alvo["id"], alvo["pos"] = mid, pos
+            if morreu:
+                alvo["hp"] = 0
+            else:
+                hp_original = int(original.get("hp", 1) or 1)
+                alvo["hp"] = max(1, min(int(original.get("max_hp", hp_original) or hp_original), hp_original - dano))
+        alvo["metamorfose_ativa"] = False
+        alvo.pop("metamorfose_caster_id", None)
+        alvo.pop("metamorfose_forma_type", None)
+        alvo.pop("metamorfose_forma_nome", None)
+        alvo.pop("metamorfose_permanente", None)
+        alvo.pop("metamorfose_hp_inicial", None)
+        alvo.pop("metamorfose_permanencia_ultima_tentativa", None)
+        alvo.pop("metamorfose_permanencia_resistencias", None)
+        alvo.pop("metamorfose_usa_equipamentos", None)
+        if jogador:
+            await self.broadcast({"type":"metamorfose_result", "target_id": alvo["id"], "revertida": True})
+        await self.gm_say(f"🦋 **{nome_criatura(alvo)}** retorna à forma original ({motivo}).")
+
+    async def _executar_metamorfose(self, caster, magia, data):
+        target_id = (data or {}).get("target_id")
+        alvo = self.players.get(target_id) or self.monsters.get(target_id)
+        form_id = (data or {}).get("forma_id")
+        form = self._metamorfose_forma_aceita(caster, form_id)
+        if not alvo or not self._metamorfose_alvo_valido(alvo) or not form:
+            await self.send_to(caster["id"], {"type":"error", "msg":"Alvo ou forma inválida para Metamorfose."})
+            return
+        if any(x.get("metamorfose_caster_id") == caster["id"] and x.get("metamorfose_ativa")
+               for x in list(self.players.values()) + list(self.monsters.values())):
+            await self.send_to(caster["id"], {"type":"error",
+                "msg":"Você já mantém uma criatura sob Metamorfose."})
+            return
+        dc = self._dif_magia(caster, magia)
+        if self._eh_jogador(alvo) and not bool((data or {}).get("falha_voluntaria")):
+            request_id = f"metamorfose_{caster['id']}_{self.round_num}_{alvo['id']}"
+            self._pending_metamorfose = {"request_id": request_id, "caster_id": caster["id"],
+                                         "target_id": alvo["id"], "forma_id": form_id, "dc": dc}
+            await self.send_to(alvo["id"], {"type":"metamorfose_save_prompt", "request_id":request_id,
+                                            "caster_id":caster["id"], "target_id":alvo["id"],
+                                            "forma":form, "dc":dc})
+            return
+        if not bool((data or {}).get("falha_voluntaria")):
+            passou, *_ = self._testar_save(alvo, "vontade", dc, fonte=caster)
+            if passou:
+                await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resistiu à Metamorfose.")
+                return
+        await self._aplicar_metamorfose(caster, alvo, form)
+
+    async def handle_metamorfose_consent(self, pid, request_id, aceitar):
+        req = getattr(self, "_pending_metamorfose", None)
+        if not req or req.get("request_id") != request_id or req.get("target_id") != pid:
+            return
+        self._pending_metamorfose = None
+        caster = self.players.get(req["caster_id"])
+        alvo = self.players.get(pid)
+        form = self._metamorfose_forma_aceita(caster, req.get("forma_id")) if caster else None
+        if not caster or not alvo or not form:
+            return
+        if not aceitar:
+            passou, *_ = self._testar_save(alvo, "vontade", req["dc"], fonte=caster)
+            if passou:
+                await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resistiu à Metamorfose.")
+                await self.push_state(); return
+        await self._aplicar_metamorfose(caster, alvo, form)
+        await self.push_state()
+
+    async def handle_cancelar_metamorfose(self, pid):
+        caster = self.players.get(pid)
+        if not caster:
+            return
+        alvo = next((p for p in self.players.values() if p.get("metamorfose_caster_id") == pid), None)
+        if not alvo:
+            alvo = next((m for m in self.monsters.values() if m.get("metamorfose_caster_id") == pid), None)
+        if alvo and not alvo.get("metamorfose_permanente"):
+            await self._reverter_metamorfose(alvo)
+            await self.push_state()
+
+    async def handle_tentar_metamorfose_permanente(self, pid):
+        caster = self.players.get(pid)
+        if not caster or caster.get("class_id") != "mage":
+            return
+        alvo = next((m for m in self.monsters.values()
+                     if m.get("metamorfose_caster_id") == pid and m.get("metamorfose_ativa")), None)
+        if not alvo:
+            await self.send_to(pid, {"type":"error", "msg":"Não há monstro sob sua Metamorfose."}); return
+        if alvo.get("metamorfose_permanencia_ultima_tentativa") == self.round_num:
+            await self.send_to(pid, {"type":"error",
+                "msg":"A permanência só pode ser tentada uma vez por rodada."}); return
+        forma = self._metamorfose_forma(alvo.get("metamorfose_forma_type"))
+        original = alvo.get("_metamorfose_original") or {}
+        custo = max(0, math.ceil(float(original.get("cr", 0) or 0)
+                                 - float(forma.get("cr", 0) or 0))) if forma else 0
+        if caster.get("fome", 0) < custo or caster.get("sede", 0) < custo:
+            await self.send_to(pid, {"type":"error", "msg":f"Fome e Sede insuficientes para tentar a permanência (custo {custo})."}); return
+        alvo["metamorfose_permanencia_ultima_tentativa"] = self.round_num
+        self._pagar_fome_sede(caster, custo, custo, contexto="permanência de Metamorfose")
+        passou, *_ = self._testar_save(alvo, "vontade", self._dif_magia(caster, GRIMORIO["metamorfose"]), fonte=caster)
+        if passou:
+            alvo["metamorfose_permanencia_resistencias"] = int(alvo.get("metamorfose_permanencia_resistencias", 0) or 0) + 1
+            n = alvo["metamorfose_permanencia_resistencias"]
+            await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resiste à permanência ({n}/3).")
+            if n >= 3:
+                await self._reverter_metamorfose(alvo, "três resistências à permanência")
+        else:
+            alvo["metamorfose_permanente"] = True
+            alvo.pop("metamorfose_caster_id", None)
+            await self.gm_say(f"🦋 A forma de **{nome_criatura(alvo)}** tornou-se permanente.")
+        await self.push_state()
+
+    async def _cobrar_manutencao_metamorfose(self, caster):
+        alvo = next((p for p in self.players.values() if p.get("metamorfose_caster_id") == caster["id"]), None)
+        if not alvo:
+            alvo = next((m for m in self.monsters.values() if m.get("metamorfose_caster_id") == caster["id"]), None)
+        if not alvo or alvo.get("metamorfose_permanente"):
+            return
+        if caster.get("fome", 0) < 1 or caster.get("sede", 0) < 1:
+            await self._reverter_metamorfose(alvo, "falta de Fome ou Sede")
+            return
+        self._pagar_fome_sede(caster, 1, 1, contexto="manutenção de Metamorfose")
+
     async def _executar_magia_grimorio(self, caster, magia, data, dmg_mult=1, dur_bonus=0, alcance_bonus=0):
         """Despacha a execução de uma magia já paga. FUNDAÇÃO: implementa o sistema
         de escuridão/visão; as demais recaem em _magia_nao_implementada."""
@@ -20542,7 +21125,9 @@ class GameRoom:
         bonus_int = mod(caster.get("int_", 10))       # noqa: F841 â€” idem
 
         # â”€â”€ Magias de dano de Pedro (revisadas) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        if mid == "bola_fogo":
+        if mid == "metamorfose":
+            await self._executar_metamorfose(caster, magia, data)
+        elif mid == "bola_fogo":
             await self._executar_bola_fogo(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
 
         elif mid == "relampago":
@@ -20598,6 +21183,8 @@ class GameRoom:
             await self._executar_conjurar_elemental(caster, magia, data)
         elif mid == "silencio":
             await self._executar_silencio(caster, magia, data, dur_bonus)
+        elif mid == "chamado_inverno":
+            await self._executar_chamado_inverno(caster, magia, data, dur_bonus, alcance_bonus)
         elif mid == "barreira_arcana":
             await self._executar_barreira_arcana(caster, magia, dmg_mult, dur_bonus)
         elif mid == "contramagica":
@@ -21003,6 +21590,7 @@ class GameRoom:
 
     # â”€â”€ Batch 2: helpers de movimento e status de monstro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _passo_livre_licantropo(self, p, nx, ny):
+        if p.get("rodamoinho_preso") or p.get("rodamoinho_profundo_preso"): return False
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny): return False
         if self._is_closed_door(nx, ny) or self._blocks_tile(nx, ny): return False
@@ -21060,6 +21648,7 @@ class GameRoom:
 
     def _passo_monstro(self, m, tx, ty, away=False):
         """Move m um passo cardinal em direção a (tx,ty) — ou para longe, se away."""
+        if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"): return False
         sx = 0 if m["pos"][0] == tx else (1 if tx > m["pos"][0] else -1)
         sy = 0 if m["pos"][1] == ty else (1 if ty > m["pos"][1] else -1)
         if away:
@@ -21987,6 +22576,8 @@ class GameRoom:
             return True
         if p.get("bau_engolido"):
             return True
+        if p.get("rodamoinho_profundo_preso"):
+            return True
         if p.get("perde_turno"):
             return True  # Imobilizado (teia, etc.) â€” perde o turno inteiro
         if not p.get("action_done"):
@@ -22107,18 +22698,161 @@ class GameRoom:
         await self.gm_say(
             T("narracao.cria_uma_area_de_silencio_x_em_por_rodad", caster=caster['name'], lado=lado, tx=tx, ty=ty, dur=dur, alcance=alcance))
 
+    def _inverno_area_tiles(self, cx, cy, lado):
+        """Casas válidas da área quadrada do Chamado do Inverno."""
+        lado = max(1, int(lado))
+        # Mantém a âncora assimétrica dos quadrados pares (4x4: centro-1 até
+        # centro+2), mas preserva 5x5, 7x7 etc. quando o lado fica ímpar.
+        deslocamento = lado // 2 - (1 if lado % 2 == 0 else 0)
+        x0, x1 = cx - deslocamento, cx - deslocamento + lado - 1
+        y0, y1 = cy - deslocamento, cy - deslocamento + lado - 1
+        return [[x, y] for y in range(max(0, y0), min(self.map_h, y1 + 1))
+                for x in range(max(0, x0), min(self.map_w, x1 + 1))
+                if self.tiles[y][x] in (FLOOR, DOOR)]
+
+    def _aplicar_camadas_terreno_inverno(self, tiles, material, zone_id,
+                                          permanente=False, expira_em=None):
+        """Aplica a camada de inverno sem perder o material original.
+
+        Camadas temporárias podem se sobrepor. Ao expirar, cada casa volta à
+        última camada ainda ativa ou ao material que existia antes da magia.
+        A versão permanente substitui as camadas temporárias da área.
+        """
+        for pos in tiles:
+            tile = (int(pos[0]), int(pos[1]))
+            if permanente:
+                self.materiais[tile] = material
+                self._terrenos_inverno.pop(tile, None)
+                continue
+            registro = self._terrenos_inverno.setdefault(
+                tile, {"base": self.materiais.get(tile), "camadas": []})
+            registro["camadas"].append({
+                "id": zone_id, "material": material, "expira_em": int(expira_em),
+            })
+            self.materiais[tile] = material
+        self._rebuild_materiais_index()
+
+    def _expirar_terrenos_inverno(self):
+        """Remove as camadas temporárias vencidas no começo de cada rodada."""
+        alterado = False
+        for tile, registro in list(self._terrenos_inverno.items()):
+            camadas = [c for c in registro.get("camadas", [])
+                       if self.round_num < int(c.get("expira_em", 0) or 0)]
+            if camadas:
+                registro["camadas"] = camadas
+                self.materiais[tile] = camadas[-1]["material"]
+                alterado = True
+                continue
+            base = registro.get("base")
+            if base is None:
+                self.materiais.pop(tile, None)
+            else:
+                self.materiais[tile] = base
+            self._terrenos_inverno.pop(tile, None)
+            alterado = True
+        if alterado:
+            self._rebuild_materiais_index()
+
+    def _alvos_no_inverno(self, tiles):
+        """Retorna vivos dentro da área, incluindo aliados, inimigos e servos."""
+        area = {(int(x), int(y)) for x, y in tiles}
+        candidatos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
+        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed"):
+            candidatos.append(self.prisoner)
+        out = []
+        for alvo in candidatos:
+            if not self._vivo(alvo) or self._fosso_protegido(alvo):
+                continue
+            posicoes = (self._monster_tiles(alvo)
+                        if alvo.get("id") in self.monsters else [alvo.get("pos", [])])
+            if any(len(pos) >= 2 and (int(pos[0]), int(pos[1])) in area for pos in posicoes):
+                out.append(alvo)
+        return out
+
+    async def _executar_chamado_inverno(self, caster, magia, data, dur_bonus, alcance_bonus=0):
+        """Converte uma área quadrada em Piso congelado ou Planície nevada."""
+        data = data or {}
+        terreno = data.get("terreno")
+        if terreno not in {"piso_congelado", "planicie_nevada"}:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "Escolha Piso congelado ou Planície nevada para o Chamado do Inverno."})
+            return
+        nivel = self._nivel_conjurador(caster)
+        alcance = 6 + nivel + int(alcance_bonus or 0)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            await self.send_to(caster["id"], {"type": "error", "msg": "Escolha o centro da área do Chamado do Inverno."})
+            return
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
+            await self.send_to(caster["id"], {"type": "error", "msg": "O centro da magia está fora do mapa."})
+            return
+        dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
+        if not self._alcance_com_altura(caster, [cx, cy], alcance):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": f"O centro da magia está fora do alcance (distância {dist}, alcance {alcance})."})
+            return
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "Uma parede bloqueia a trajetória do Chamado do Inverno."})
+            return
+
+        lado_base = int(magia.get("area_lado", 4) or 4) + (nivel // int(magia.get("area_lado_niveis", 2) or 2))
+        lado = self._cajado_arcano_area_lado(caster, magia) or lado_base
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        if not tiles:
+            await self.send_to(caster["id"], {"type": "error", "msg": "A área escolhida não contém piso válido."})
+            return
+
+        permanente = bool(data.get("permanente"))
+        if permanente:
+            self._pagar_fome_sede(caster, int(magia.get("permanente_custo", 20)),
+                                  int(magia.get("permanente_custo", 20)),
+                                  contexto="terreno permanente do Chamado do Inverno")
+            self._verificar_estado_sobrevivencia(caster)
+        dur = self._rolar_dado(magia.get("duracao", "1d4")) + nivel + int(dur_bonus or 0)
+        zone_id = f"chamado_inverno_{caster['id']}_{self.round_num}_{cx}_{cy}"
+        expira_em = None if permanente else self.round_num + max(1, dur)
+        self._aplicar_camadas_terreno_inverno(
+            tiles, terreno, zone_id, permanente=permanente, expira_em=expira_em)
+        self.zonas_especiais.append({
+            "id": zone_id, "tipo": "chamado_inverno", "cx": cx, "cy": cy,
+            "lado": lado, "material": terreno, "duracao": None if permanente else dur,
+            "expira_em": expira_em, "permanente": permanente, "ativa": True,
+            "caster": caster.get("id"),
+        })
+
+        # A área afeta imediatamente todos que já estiverem nela. Entradas
+        # futuras continuam usando os hooks normais dos dois terrenos.
+        for alvo in self._alvos_no_inverno(tiles):
+            if terreno == "piso_congelado":
+                await self._aplicar_piso_congelado_se_pisar(alvo)
+            else:
+                pos = alvo.get("pos") or [0, 0]
+                self._apply_snow_entry_penalty(alvo, [int(pos[0]) - 1, int(pos[1])], pos)
+        tipo_txt = "Piso congelado" if terreno == "piso_congelado" else "Planície nevada"
+        dur_txt = "permanentemente" if permanente else f"por {dur} rodada(s)"
+        await self.gm_say(
+            f"❄️ **{caster['name']}** transforma uma área **{lado}x{lado}** em **{tipo_txt}** {dur_txt}.")
+
     async def _executar_conjurar_elemental(self, caster, magia, data):
-        """Invoca um elemental CONTROLÁVEL: entra na lista `animados` do caster, então
-        reusa tudo (mira dos monstros, janela dos servos ao encerrar turno, controle por
-        clique no tabuleiro, render). Specials por tipo ficam para um passo futuro."""
+        """Invoca um elemental CONTROLÁVEL usando a ficha do bestiário.
+
+        A invocação conserva a economia de ação/controle dos servos, mas a
+        criatura materializada passa a carregar atributos, ataques, resistências,
+        passivas, magias e identidade visual do elemental escolhido.
+        """
         tipos = magia.get("tipos", {})
         tipo  = (data or {}).get("tipo_elemental", "pedra")
         if tipo not in tipos:
             tipo = "pedra" if "pedra" in tipos else next(iter(tipos), "pedra")
-        stats   = tipos.get(tipo, {"hp": 20, "dano": "1d6"})
-        icones  = {"fogo": "🔥", "eletrico": "⚡", "gelo": "❄️", "pedra": "🪨"}
-        ca_tipo = {"fogo": 14, "eletrico": 14, "gelo": 15, "pedra": 16}
-        ATK_ELEMENTAL = 4   # bÃ´nus de ataque da criatura (usado como roll + nivel)
+        bestiario_id = tipos.get(tipo, {}).get("bestiario", f"elemental_{tipo}")
+        definicao = next((d for d in MONSTER_DEFS if d.get("type") == bestiario_id), None)
+        if not definicao:
+            definicao = next((d for d in MONSTER_DEFS if d.get("type") == "elemental_pedra"), None)
+            tipo = "pedra"
+        if not definicao:
+            return
 
         # Casa livre adjacente ao caster (8 vizinhos); fallback = casa do caster.
         ox, oy = caster["pos"]
@@ -22128,27 +22862,36 @@ class GameRoom:
                 pos = [ox+ddx, oy+ddy]; break
 
         self._elemental_seq = getattr(self, "_elemental_seq", 0) + 1
-        mov = magia.get("movimento", 6)
-        hpv = stats.get("hp", 20)
+        # make_monster aplica as normalizações autoritativas do bestiário (voo,
+        # altura, CA, usos/recargas de habilidades e magias, etc.).
+        base = make_monster(definicao, {
+            "id": f"conjuracao_elemental_{caster['id']}",
+            "cx": ox, "cy": oy,
+        })
+        hpv = int(base.get("hp", definicao.get("hp", 1)) or 1)
+        mov = int(base.get("movement", definicao.get("movement", 6)) or 6)
+        ataque = (base.get("attacks") or [{}])[0]
         elem = {
+            **base,
             "id":         f"elemental_{tipo}_{self._elemental_seq}",
             "owner":      caster["id"],
-            "nome":       f"Elemental de {tipo.capitalize()}",
-            "icone":      icones.get(tipo, "🌪️"),
+            "nome":       base.get("name", f"Elemental de {tipo.capitalize()}"),
+            "nome_base":  base.get("name", f"Elemental de {tipo.capitalize()}"),
+            "icone":      base.get("emoji", "🌪️"),
             "tipo":       "elemental",
             "tipo_elemental": tipo,
-            "especial":   stats.get("especial"),
-            "nivel":      ATK_ELEMENTAL,        # +4 de ataque (formula do animado: roll + nivel)
+            "summoned_elemental": True,
+            "nivel":      int(base.get("cr", base.get("tier", 1)) or 1),
             "slots":      0,
-            "ca":         ca_tipo.get(tipo, 14),
             "vida_max":   hpv, "vida_atual": hpv,
-            "dano":       stats.get("dano", "1d6"),
+            "dano":       ataque.get("damage", "1d4"),
             "movimento":  mov, "moves_left": mov,
             "acted":      False, "pos": pos, "hostil": False,
+            "summoned_by": caster["id"],
         }
         caster.setdefault("animados", []).append(elem)
         await self.gm_say(
-            T("narracao.conjura_um_elemental_de_hp_dano_mov_cont", caster=caster['name'], tipo_capitalize=tipo.capitalize(), hpv=hpv, stats_get_dano_1d6=stats.get('dano','1d6'), mov=mov))
+            T("narracao.conjura_um_elemental_de_hp_dano_mov_cont", caster=caster['name'], tipo_capitalize=base.get('name', tipo.capitalize()), hpv=hpv, stats_get_dano_1d6=ataque.get('damage','1d4'), mov=mov))
 
     # â”€â”€ Especiais dos elementais â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _ajustar_dano_elemental(self, alvo, dano, elemento):
@@ -22543,7 +23286,7 @@ class GameRoom:
         """Dificuldade para resistir: 8 + bônus de INT + círculo (1/2/3). Soma o
         bônus temporário `_mm_dc_bonus`, setado em handle_magia a partir da
         Metamagia do Mago (1f) e/ou da técnica Aprimorar Magia da Guilda (Fase 3)."""
-        circ = {"primeiro": 1, "segundo": 2, "terceiro": 3}.get(magia.get("circulo", "primeiro"), 1)
+        circ = {"primeiro": 1, "segundo": 2, "terceiro": 3, "quarto": 4}.get(magia.get("circulo", "primeiro"), 1)
         return 8 + mod(caster.get("int_", 10)) + circ + caster.get("_mm_dc_bonus", 0)
 
     # â”€â”€ Bola de Fogo (Ã¡rea persistente que decai R1â†’R2â†’R3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -23503,6 +24246,7 @@ class GameRoom:
 
     async def _processar_zonas_turno(self):
         """Decrementa a duração das zonas a cada rodada; remove e anuncia expiradas."""
+        self._expirar_terrenos_inverno()
         if not self.zonas_especiais:
             return
         for z in self.zonas_especiais:
@@ -23526,6 +24270,10 @@ class GameRoom:
                 if z["duracao"] <= 0:
                     z["ativa"] = False
                     await self.gm_say(T("narracao.as_chamas_deixadas_pelo_molochus_se_apag"))
+            elif z.get("tipo") == "chamado_inverno":
+                if not z.get("permanente") and self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    await self.gm_say("❄️ O terreno criado pelo Chamado do Inverno voltou ao normal.")
             elif z.get("tipo") == "solo_sagrado":
                 x, y = z.get("pos", [-1, -1])
                 for m in self.monsters.values():
@@ -23701,7 +24449,9 @@ class GameRoom:
     def _water_tile_kind(self, x, y):
         """Retorna o tipo de água da casa, ou ``None`` se não for água."""
         material = getattr(self, "materiais", {}).get((x, y))
-        return material if material in {"agua", "agua_profunda"} else None
+        return material if material in {
+            "agua", "agua_profunda", "rodamoinho", "rodamoinho_profundo"
+        } else None
 
     def _is_lava_tile(self, x, y):
         return getattr(self, "materiais", {}).get((x, y)) == "lava"
@@ -23743,7 +24493,7 @@ class GameRoom:
         return self._water_tile_kind(x, y) is not None
 
     def _is_deep_water_tile(self, x, y):
-        return self._water_tile_kind(x, y) == "agua_profunda"
+        return self._water_tile_kind(x, y) in {"agua_profunda", "rodamoinho_profundo"}
 
     def _mare_viva_ativa(self, monstro):
         """Maré Viva fica ativa sobre ou a até uma casa de água rasa/profunda."""
@@ -23793,6 +24543,59 @@ class GameRoom:
                    and habilidade.get("id") in {"movimento_erratico", "movimento_aquatico"}
                    for habilidade in criatura.get("special_abilities", []))
 
+    def _ignora_rodamoinho(self, criatura):
+        """Voo, natação/movimento aquático e imunidade aquática atravessam o
+        rodamoinho sem teste e não ficam presos nele."""
+        if not criatura or self._voo_imune_terreno(criatura):
+            return True
+        habilidades = criatura.get("special_abilities", []) or []
+        if any(isinstance(h, dict) and h.get("id") in {
+                "movimento_aquatico", "nadar", "natacao", "natação"
+        } for h in habilidades):
+            return True
+        if criatura.get("aquatico") or criatura.get("nada") or criatura.get("swim_speed"):
+            return True
+        imunidades = set(criatura.get("immunities", []) or [])
+        return bool(imunidades.intersection({
+            "agua", "água", "aquatico", "aquática", "terreno_aquatico",
+            "terreno_aquático", "rodamoinho"
+        }))
+
+    def _ignora_rodamoinho_profundo(self, criatura):
+        """Voo e imunidade aquática ignoram o rodamoinho profundo. Criaturas
+        aquáticas podem ser presas, mas não sofrem o dano de afogamento."""
+        if not criatura or self._voo_imune_terreno(criatura):
+            return True
+        imunidades = set(criatura.get("immunities", []) or [])
+        return bool(imunidades.intersection({
+            "agua", "água", "aquatico", "aquática", "terreno_aquatico",
+            "terreno_aquático", "rodamoinho", "rodamoinho_profundo"
+        }))
+
+    def _criatura_aquatica(self, criatura):
+        habilidades = criatura.get("special_abilities", []) or []
+        return bool(criatura and (
+            criatura.get("aquatico") or criatura.get("nada") or criatura.get("swim_speed")
+            or any(isinstance(h, dict) and h.get("id") in {
+                "movimento_aquatico", "nadar", "natacao", "natação"
+            } for h in habilidades)
+        ))
+
+    def _imune_afogamento(self, criatura):
+        """Seres sem respiração não sofrem dano de afogamento, mas ainda
+        podem ficar presos no rodamoinho profundo quando a regra permitir."""
+        if self._criatura_aquatica(criatura):
+            return True
+        subtipo = str(criatura.get("subtipo") or _subtipo_padrao_monstro(criatura)).strip().lower()
+        tipo = str(criatura.get("type") or "").strip().lower()
+        tipo_elemental = str(criatura.get("tipo_elemental") or "").strip().lower()
+        return bool(
+            criatura.get("undead") or criatura.get("construct") or criatura.get("elemental")
+            or subtipo in {"morto_vivo", "morto-vivo", "undead", "construto", "construct", "elemental"}
+            or tipo in {"elemental_agua", "elemental_água"}
+            or tipo_elemental in {"agua", "água", "water"}
+        )
+
     def _water_step_cost(self, criatura, x, y):
         """Custo para ENTRAR na casa: areia/lava custam 2; água custa 2/3.
 
@@ -23806,9 +24609,9 @@ class GameRoom:
         if material in {"areia_deserto", "lava"}:
             return 2
         kind = self._water_tile_kind(x, y)
-        if not kind or self._ignora_penalidade_agua(criatura):
+        if not kind or self._ignora_penalidade_agua(criatura) or self._ignora_rodamoinho(criatura):
             return 1
-        cost = 3 if kind == "agua_profunda" else 2
+        cost = 3 if kind in {"agua_profunda", "rodamoinho_profundo"} else 2
         category = self._armor_category_of(criatura)
         if category == "media":
             cost += 1
@@ -23853,6 +24656,8 @@ class GameRoom:
         Vale para herois, monstros e servos controlados. Criaturas voadoras em
         altura ignoram o piso. Uma falha zera somente o movimento restante.
         """
+        await self._aplicar_rodamoinho_profundo_se_pisar(criatura)
+        await self._aplicar_rodamoinho_se_pisar(criatura)
         if not criatura or self._voo_imune_terreno(criatura):
             return True
         if ("hp" in criatura and criatura.get("hp", 0) <= 0) or \
@@ -23877,6 +24682,184 @@ class GameRoom:
         )
         return False
 
+    def _rodamoinho_tiles_of(self, criatura):
+        pos = criatura.get("pos") if criatura else None
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return []
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        return [(int(x), int(y)) for x, y in tiles
+                if getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho"]
+
+    async def _aplicar_rodamoinho_se_pisar(self, criatura):
+        """Ao entrar no rodamoinho, testa Reflexos CD 14. Uma falha bloqueia
+        somente o movimento; ataques e demais ações continuam disponíveis."""
+        if not criatura:
+            return True
+        if self._ignora_rodamoinho(criatura):
+            criatura.pop("rodamoinho_preso", None)
+            criatura["_rodamoinho_bloqueado_turno"] = False
+            return True
+        if ("hp" in criatura and criatura.get("hp", 0) <= 0) or \
+                ("vida_atual" in criatura and criatura.get("vida_atual", 0) <= 0):
+            return True
+        pos = criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return True
+        atual = [int(pos[0]), int(pos[1])]
+        anterior = criatura.get("_rodamoinho_ultima_pos")
+        criatura["_rodamoinho_ultima_pos"] = atual
+        if anterior == atual or not self._rodamoinho_tiles_of(criatura):
+            return True
+        passou, *_ = await self._save_mostrado(criatura, "reflexos", 14)
+        if passou:
+            criatura.pop("rodamoinho_preso", None)
+            return True
+        criatura["rodamoinho_preso"] = True
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                criatura[key] = 0
+        await self.gm_say(
+            f"🌪️ **{nome_criatura(criatura)}** é preso pelo rodamoinho e perde o movimento restante do turno!"
+        )
+        return False
+
+    async def _testar_rodamoinho_inicio_turno(self, criatura):
+        """Enquanto preso, faz no máximo um novo teste de Reflexos por turno."""
+        if not criatura:
+            return True
+        if not criatura.get("rodamoinho_preso"):
+            criatura["_rodamoinho_bloqueado_turno"] = False
+            return True
+        if self._ignora_rodamoinho(criatura):
+            criatura.pop("rodamoinho_preso", None)
+            criatura["_rodamoinho_bloqueado_turno"] = False
+            return True
+        if criatura.get("_rodamoinho_teste_rodada") == self.round_num:
+            return not criatura.get("_rodamoinho_bloqueado_turno", False)
+        criatura["_rodamoinho_teste_rodada"] = self.round_num
+        criatura["_rodamoinho_bloqueado_turno"] = False
+        passou, *_ = await self._save_mostrado(criatura, "reflexos", 14)
+        if passou:
+            criatura.pop("rodamoinho_preso", None)
+            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** consegue escapar do rodamoinho e pode se mover normalmente.")
+            return True
+        criatura["_rodamoinho_bloqueado_turno"] = True
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                criatura[key] = 0
+        await self.gm_say(f"🌪️ **{nome_criatura(criatura)}** continua preso no rodamoinho e não pode se mover neste turno.")
+        return False
+
+    def _rodamoinho_profundo_tiles_of(self, criatura):
+        pos = criatura.get("pos") if criatura else None
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return []
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        return [(int(x), int(y)) for x, y in tiles
+                if getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho_profundo"]
+
+    def _bloquear_rodamoinho_profundo_turno(self, criatura):
+        criatura["rodamoinho_profundo_preso"] = True
+        criatura["_rodamoinho_profundo_bloqueado_turno"] = True
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                criatura[key] = 0
+        if "action_done" in criatura:
+            criatura["action_done"] = True
+        if "bonus_action_used" in criatura:
+            criatura["bonus_action_used"] = True
+        if "acted" in criatura:
+            criatura["acted"] = True
+        if "bonus_acted" in criatura:
+            criatura["bonus_acted"] = True
+
+    async def _aplicar_rodamoinho_profundo_se_pisar(self, criatura):
+        """Ao entrar no rodamoinho profundo, testa Reflexos CD 15. A falha
+        prende o alvo e encerra seu turno, incluindo ações e movimento."""
+        if not criatura:
+            return True
+        if self._ignora_rodamoinho_profundo(criatura):
+            criatura.pop("rodamoinho_profundo_preso", None)
+            criatura["_rodamoinho_profundo_bloqueado_turno"] = False
+            return True
+        if ("hp" in criatura and criatura.get("hp", 0) <= 0) or \
+                ("vida_atual" in criatura and criatura.get("vida_atual", 0) <= 0):
+            return True
+        pos = criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return True
+        atual = [int(pos[0]), int(pos[1])]
+        anterior = criatura.get("_rodamoinho_profundo_ultima_pos")
+        criatura["_rodamoinho_profundo_ultima_pos"] = atual
+        if anterior == atual or not self._rodamoinho_profundo_tiles_of(criatura):
+            return True
+        passou, *_ = await self._save_mostrado(criatura, "reflexos", 15)
+        if passou:
+            return True
+        self._bloquear_rodamoinho_profundo_turno(criatura)
+        await self.gm_say(
+            f"🌊 **{nome_criatura(criatura)}** cai no rodamoinho profundo, fica preso e perde o turno!"
+        )
+        return False
+
+    async def _testar_rodamoinho_profundo_inicio_turno(self, criatura):
+        """Enquanto preso, tenta escapar primeiro com Reflexos CD 18. Se
+        falhar, faz Fortitude CD 18 para evitar 1d6 de afogamento."""
+        if not criatura:
+            return True
+        if not criatura.get("rodamoinho_profundo_preso"):
+            criatura["_rodamoinho_profundo_bloqueado_turno"] = False
+            return True
+        if self._ignora_rodamoinho_profundo(criatura):
+            criatura.pop("rodamoinho_profundo_preso", None)
+            criatura["_rodamoinho_profundo_bloqueado_turno"] = False
+            return True
+        if criatura.get("_rodamoinho_profundo_teste_rodada") == self.round_num:
+            return not criatura.get("_rodamoinho_profundo_bloqueado_turno", False)
+        criatura["_rodamoinho_profundo_teste_rodada"] = self.round_num
+        criatura["_rodamoinho_profundo_bloqueado_turno"] = False
+        if "fome" in criatura:
+            criatura["fome"] = max(0, criatura.get("fome", 0) - 1)
+        if "sede" in criatura:
+            criatura["sede"] = max(0, criatura.get("sede", 0) - 1)
+        passou, *_ = await self._save_mostrado(criatura, "reflexos", 18)
+        if passou:
+            criatura.pop("rodamoinho_profundo_preso", None)
+            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** escapa do rodamoinho profundo e pode agir normalmente.")
+            return True
+        self._bloquear_rodamoinho_profundo_turno(criatura)
+        evitou_dano, *_ = await self._save_mostrado(criatura, "fortitude", 18)
+        if not evitou_dano and not self._imune_afogamento(criatura):
+            bruto = roll_dice("1d6")
+            if "vida_atual" in criatura:
+                criatura["vida_atual"] = max(0, criatura.get("vida_atual", 0) - bruto)
+                if criatura["vida_atual"] <= 0:
+                    await self._animado_morre(criatura, criatura.get("owner_pid"))
+            else:
+                # Afogamento é um dano especial: a única defesa contra ele é
+                # a Fortitude acima, portanto resistências físicas não reduzem
+                # este valor.
+                criatura["hp"] = max(0, criatura.get("hp", 0) - bruto)
+                if criatura["hp"] <= 0:
+                    if criatura.get("id") in self.players and self.players.get(criatura.get("id")) is criatura:
+                        await self._player_dies(criatura["id"])
+                    elif criatura.get("id") in self.monsters and self.monsters.get(criatura.get("id")) is criatura:
+                        await self._monster_dies(criatura, None)
+                    elif self.prisoner is criatura:
+                        await self._prisioneiro_morre()
+            await self.broadcast({"type": "dice_roll", "die": "d6", "value": bruto,
+                                  "label": "🌊 Afogamento — Rodamoinho profundo"})
+            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** sofre **{bruto}** de dano de afogamento.")
+        return False
+
     def _water_turn_moves(self, criatura, base_moves):
         """Orçamento normal do turno; água agora é cobrada a cada casa.
         O mínimo de movimento disponível é sempre 1."""
@@ -23887,6 +24870,9 @@ class GameRoom:
         criatura.pop("_swamp_penalty_applied", None)
         criatura.pop("_snow_movement_reduced", None)
         base = max(0, int(base_moves or 0))
+        if (criatura.get("_rodamoinho_bloqueado_turno")
+                and criatura.get("_rodamoinho_teste_rodada") == self.round_num):
+            return 0
         if self._voo_imune_terreno(criatura):
             return max(1, base)
         if self._swamp_under(criatura):
@@ -25793,6 +26779,9 @@ class GameRoom:
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players[pid]
+        if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
+            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode usar itens."})
+            return
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
@@ -26213,7 +27202,14 @@ class GameRoom:
                 p["sede"] = max(0, p.get("sede", 10) - custo)
                 for a in animados_vivos:               # orÃ§amento p/ a janela de controle
                     a["moves_left"] = self._water_turn_moves(a, a.get("movimento", 3))
-                    a["acted"] = False
+                    await self._testar_rodamoinho_profundo_inicio_turno(a)
+                    if a.get("_rodamoinho_profundo_bloqueado_turno"):
+                        a["moves_left"] = 0
+                    await self._testar_rodamoinho_inicio_turno(a)
+                    if a.get("_rodamoinho_bloqueado_turno"):
+                        a["moves_left"] = 0
+                    if not a.get("_rodamoinho_profundo_bloqueado_turno"):
+                        a["acted"] = False
                     # Sono/LentidÃ£o em minions (de magias em Ã¡rea): expiram aqui.
                     for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
                         if a.get(flag):
@@ -26224,6 +27220,12 @@ class GameRoom:
                                 else "narracao.n_animado", n=custo))
             if controla_prisioneiro:
                 pr["moves_left"] = self._water_turn_moves(pr, PRIS_MOVE)
+                await self._testar_rodamoinho_profundo_inicio_turno(pr)
+                if pr.get("_rodamoinho_profundo_bloqueado_turno"):
+                    pr["moves_left"] = 0
+                await self._testar_rodamoinho_inicio_turno(pr)
+                if pr.get("_rodamoinho_bloqueado_turno"):
+                    pr["moves_left"] = 0
                 partes.append(T("narracao.o_prisioneiro"))
             # LISTA, não string pronta: o motor junta com o separador do idioma
             # de quem lê, e cada fragmento é ele próprio um T.
@@ -26382,6 +27384,10 @@ class GameRoom:
             await self._processar_escape_agarrar(cur_p)
         congelamento_pen = await self._processar_congelamento_progressivo_turno(cur_p)
         cur_p["moves_left"] = self._water_turn_moves(cur_p, max(0, self._moves_base(cur_p) - congelamento_pen))
+        if cur_p.get("rodamoinho_preso"):
+            await self._testar_rodamoinho_inicio_turno(cur_p)
+            if cur_p.get("_rodamoinho_bloqueado_turno"):
+                cur_p["moves_left"] = 0
         # Se ainda preso apÃ³s a tentativa, bloqueia o movimento.
         if cur_p.get("preso"):
             captor = self.monsters.get(cur_p.get("preso_por"))
@@ -27895,6 +28901,8 @@ class GameRoom:
 
     async def _commit_monster_step(self, m, nx, ny):
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
+        if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
+            return False
         # Agarrado por outra criatura: só quem o segura o desloca (_arrastar_preso).
         if m.get("preso") and self._captor_ativo(m):
             return False
@@ -28292,6 +29300,12 @@ class GameRoom:
     def _serializar_materiais(self):
         """Camada de materiais como {"x,y": id} para o cliente."""
         return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
+
+    def _serializar_elevacoes(self):
+        """Camada visual de elevação como {"x,y": nível} para o cliente."""
+        return {f"{x},{y}": nivel
+                for (x, y), nivel in getattr(self, "elevacoes", {}).items()
+                if nivel}
 
     def _face_toward(self, m, target_pos):
         """Vira a frente para `target_pos` quando a criatura tem footprint 2×2.
@@ -29368,6 +30382,8 @@ class GameRoom:
     async def _monster_move_step(self, m, target_pos, avoid_tiles=None):
         """Move o monstro 1 passo cardinal em direção a target_pos.
         avoid_tiles: frozenset de (x,y) que o monstro recusa pisar (ex: armadilhas próprias)."""
+        if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
+            return
         avoid = set(avoid_tiles or ()) | self._monster_known_hazard_tiles(m)
         frm = list(m["pos"])
         dx = 0 if m["pos"][0] == target_pos[0] else (1 if target_pos[0] > m["pos"][0] else -1)
@@ -29421,6 +30437,8 @@ class GameRoom:
 
     async def _execute_one_monster_attack(self, m, atk_def, target_obj):
         """Executa um único ataque de um monstro com formato novo."""
+        if m.get("rodamoinho_profundo_preso"):
+            return False
         target   = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
         is_monster = target_obj["kind"] == "monster"
@@ -29716,6 +30734,7 @@ class GameRoom:
                     target, dmg, atk_def.get("damage_types", [DMG_PHYSICAL]),
                     critical=crit, impact_pos=target.get("pos"))
                 target["hp"] = max(0, target["hp"] - dmg)
+                await self._registrar_dano_desbloqueio_metamorfose(m, target, dmg)
                 dano_sofrido = dmg
                 await self.gm_say(
                     T("narracao.em_d20_vs_ca_de_dano_hp_2", monstro=nome_criatura(m), atk_name=atk_name, tgt_name=nome_criatura(target), roll=roll, m_atk=m_atk, total=total, effective_ac=effective_ac, crit_str=crit_str, dmg=dmg, target_hp=target['hp'], target_max_hp=target['max_hp']))
@@ -29798,6 +30817,8 @@ class GameRoom:
 
     async def _monster_execute_attacks(self, m, target_obj):
         """Executa todos os ataques de um monstro no formato novo."""
+        if m.get("rodamoinho_profundo_preso"):
+            return
         target    = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
         if await self._monster_try_equipment_item(m, target_obj):
@@ -30826,6 +31847,10 @@ class GameRoom:
         magia = GRIMORIO.get(spell_id)
         if not m or m.get("hp", 0) <= 0 or not cfg or not magia:
             await self.send_to(pid, {"type": "error", "msg": T("erro.magia_indisponivel_para_este_monstro")}); return
+        if m.get("rodamoinho_profundo_preso"):
+            await self.send_to(pid, {"type": "error",
+                "msg": "O rodamoinho profundo prende este monstro; ele não pode realizar ações."})
+            return
         if m.get("_master_acted"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
         if not self._magia_monstro_disponivel(m, spell_id):
@@ -30893,8 +31918,46 @@ class GameRoom:
         m["_ja_executou_acao"] = True
         await self.push_state()
 
+    async def _usar_turbilhao_controlado(self, m, ability, target_obj):
+        """Executa o Turbilhão quando o elemental de ar é controlado pelo jogador."""
+        if not self._ativar_habilidade_nativa(m, ability):
+            return False
+        centro = target_obj["obj"]["pos"]
+        raio = int(ability.get("radius", 1) or 1)
+        alvos = [monstro for monstro in self.monsters.values()
+                 if monstro.get("hp", 0) > 0
+                 and max(abs(monstro["pos"][0] - centro[0]),
+                         abs(monstro["pos"][1] - centro[1])) <= raio]
+        for alvo in alvos:
+            passou, *_ = self._testar_save(
+                alvo, ability.get("save", "reflexos"),
+                int(ability.get("dc", 13) or 13), fonte=m)
+            bruto = roll_dice(ability.get("damage", "1d8"))
+            dano = self._apply_damage_types(
+                bruto // 2 if passou else bruto,
+                ability.get("damage_types", [DMG_PHYSICAL]), alvo)
+            alvo["hp"] = max(0, alvo["hp"] - dano)
+            if passou:
+                alvo["turbilhao_perde_movimento"] = True
+            else:
+                alvo["turbilhao_perde_acao"] = True
+            await self._enviar_resultado_atordoamento(
+                alvo, "O Turbilhão do Elemental de Ar o deixa sem fôlego.",
+                "1 turno",
+                (["Você perde o movimento no próximo turno"] if passou
+                 else ["Você perde a próxima ação", "Duração: até o próximo turno"]))
+            await self.gm_say(
+                T("narracao.sofre_do_turbilhao_e_perdera" if passou
+                  else "narracao.sofre_do_turbilhao_e_perdera_acao",
+                  alvo=nome_criatura(alvo), dano=dano))
+            if alvo["hp"] <= 0:
+                await self._monster_dies(alvo, m.get("id"))
+        return True
+
     async def _use_monster_ability(self, m, ability, target_obj):
         """Usa uma habilidade especial do monstro. Retorna True se ativada."""
+        if m.get("rodamoinho_profundo_preso"):
+            return False
         ab_id = ability["id"]
         # Usos e recarga sÃ£o limites independentes: uma habilidade pode ter
         # ambos, como configurado no novo editor de criaturas.
@@ -32783,10 +33846,34 @@ class GameRoom:
         await self._lancar_magia_monstro(m, sid, data, cfg)
         return True
 
+    async def _ai_fugitivo(self, m, targets):
+        """Formas animais ND 0 fogem quando controladas pela IA."""
+        alvo = min((t["obj"] for t in targets if t.get("kind") == "player" and t["obj"].get("alive") and t["obj"].get("hp", 0) > 0),
+                   key=lambda p: max(abs(p["pos"][0]-m["pos"][0]), abs(p["pos"][1]-m["pos"][1])), default=None)
+        if not alvo:
+            return
+        while m.get("_water_moves_left", 0) > 0:
+            dx = -1 if m["pos"][0] < alvo["pos"][0] else 1 if m["pos"][0] > alvo["pos"][0] else 0
+            dy = -1 if m["pos"][1] < alvo["pos"][1] else 1 if m["pos"][1] > alvo["pos"][1] else 0
+            antes = list(m["pos"])
+            # Preferimos o eixo que abre mais distância; o helper continua
+            # responsável por ocupação, portas, perigos e animação.
+            candidatos = []
+            if dx: candidatos.append([m["pos"][0] - dx * 8, m["pos"][1]])
+            if dy: candidatos.append([m["pos"][0], m["pos"][1] - dy * 8])
+            if not candidatos: break
+            destino = max(candidatos, key=lambda q: max(abs(q[0]-alvo["pos"][0]), abs(q[1]-alvo["pos"][1])))
+            await self._monster_move_step(m, destino)
+            if m["pos"] == antes:
+                break
+
     async def _run_monster_ai(self, m, targets):
         """Despacha para a IA específica do monstro."""
         self._expirar_editor_ability_effect(m)
         if not targets:
+            return
+        if m.get("foge_se_nd_zero"):
+            await self._ai_fugitivo(m, targets)
             return
         self._monster_update_personality(m)
         if m.pop("ai_boss_phase_changed", False):
@@ -33890,6 +34977,10 @@ class GameRoom:
         for m in alive_monsters:
             if m["hp"] <= 0:
                 continue
+            await self._testar_rodamoinho_profundo_inicio_turno(m)
+            if m.get("_rodamoinho_profundo_bloqueado_turno"):
+                continue
+            await self._testar_rodamoinho_inicio_turno(m)
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
             m["_runico_bonus_used"] = False
             m["_runico_passo_ativo"] = False
@@ -34177,6 +35268,12 @@ class GameRoom:
 
     async def _monster_dies(self, m, killer_pid):
         if m["hp"] > 0: return
+
+        # A forma temporária não substitui a morte do alvo: ao chegar a 0 PV,
+        # primeiro recupera-se a ficha original e então o fluxo normal de morte
+        # (incluindo habilidades defensivas do monstro original) continua.
+        if m.get("metamorfose_ativa") and not m.get("metamorfose_permanente"):
+            await self._reverter_metamorfose(m, "a forma chegou a 0 PV", morreu=True)
 
         # Defesa automática das duas versões do Minotauro.
         if not m.get("_ultimo_esforco_monstro_turnos"):
@@ -34499,6 +35596,16 @@ class GameRoom:
             p["hp"] = 1
             p["technique_cooldowns"]["tecnica_ultimo_esforco"] = self.round_num + 10
             await self._abrir_ultimo_esforco(p)
+        # A morte do mago encerra qualquer Metamorfose temporária que ele
+        # esteja sustentando; formas permanentes não dependem mais do caster.
+        for alvo_meta in list(self.players.values()) + list(self.monsters.values()):
+            if (alvo_meta is not p
+                    and alvo_meta.get("metamorfose_caster_id") == pid
+                    and alvo_meta.get("metamorfose_ativa")
+                    and not alvo_meta.get("metamorfose_permanente")):
+                await self._reverter_metamorfose(alvo_meta, "o mago morreu")
+        if p.get("metamorfose_ativa"):
+            await self._reverter_metamorfose(p, "a forma chegou a 0 PV", morreu=True)
         p["alive"] = False
         p["hp"] = 0
         # Registro separado dos cadáveres de monstros: a lápide aparece no
@@ -34891,6 +35998,8 @@ class GameRoom:
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
         self._apply_snow_entry_penalty(pr, old_pos, pr["pos"])
         await self._aplicar_lava_se_pisar(pr)
+        await self._aplicar_rodamoinho_profundo_se_pisar(pr)
+        await self._aplicar_rodamoinho_se_pisar(pr)
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
@@ -35131,11 +36240,16 @@ class GameRoom:
                             # Mesmo metadado do payload da cidade: o bônus vem
                             # do cache de rodada e não muda nenhuma resolução.
                             bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
+            for _privado in ("_metamorfose_original",):
+                snapshot.pop(_privado, None)
             players_state.append(snapshot)
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m),
                                percepcao=self._get_percepcao_monstro(m))
                           for m in self.monsters.values() if m["hp"] > 0]
+        for snapshot in monsters_state:
+            snapshot.pop("_metamorfose_original", None)
+            snapshot.pop("metamorfose_dano_por_jogador", None)
         actor = self.current_actor()
         msg_state = {
             "type": "game_state",
@@ -35173,6 +36287,7 @@ class GameRoom:
             "door_conditions": self._serializar_condicoes_portas(),
             "players": players_state,
             "monsters": monsters_state,
+            "metamorfose_catalog": self._metamorfose_catalog(),
             "corpses": list(self.corpses.values()),
             "hero_corpses": list(self.hero_corpses.values()),
             "traps": [t for t in self.traps if not t["triggered"] and tuple(t["pos"]) in self.explored],
@@ -35221,6 +36336,8 @@ class GameRoom:
             "decorations": self._serializar_decoracoes(),
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
+            "elevacoes": self._serializar_elevacoes(),
+            "transicao_altura": getattr(self, "transicao_altura", "rampa"),
         }
         return msg_state
 
@@ -36048,6 +37165,15 @@ async def handler(ws):
 
                 elif t == "magia":
                     if room: await room.handle_magia(pid, msg)
+
+                elif t == "metamorfose_consent":
+                    if room: await room.handle_metamorfose_consent(pid, msg.get("request_id"), bool(msg.get("aceitar")))
+
+                elif t == "cancelar_metamorfose":
+                    if room: await room.handle_cancelar_metamorfose(pid)
+
+                elif t == "metamorfose_permanencia":
+                    if room: await room.handle_tentar_metamorfose_permanente(pid)
 
                 elif t == "aprimorar_magia":
                     if room: await room.handle_aprimorar_magia(pid, msg)

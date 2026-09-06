@@ -1,6 +1,166 @@
 window.EDITOR_CATALOG = {
   "monsters": [
     {
+      "type": "pombo",
+      "name": "Pombo",
+      "emoji": "🕊️",
+      "boss": false,
+      "tier": 0,
+      "cr": 0,
+      "hp": 1,
+      "ac": 17,
+      "movement": 9,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "minusculo",
+      "image": "pombo",
+      "str_": 2,
+      "dex": 17,
+      "con_": 10,
+      "int_": 2,
+      "fort": 2,
+      "ref_": 5,
+      "will": 2,
+      "attacks": [],
+      "special_abilities": [],
+      "undead": false,
+      "subtipo": "animal",
+      "voo": true,
+      "altura_inicial": 2,
+      "altura_max": 10,
+      "percepcao": 14
+    },
+    {
+      "type": "rato",
+      "name": "Rato",
+      "emoji": "🐀",
+      "boss": false,
+      "tier": 0,
+      "cr": 0,
+      "hp": 1,
+      "ac": 14,
+      "natural_armor": 2,
+      "movement": 4,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "minusculo",
+      "image": "rato",
+      "str_": 2,
+      "dex": 15,
+      "con_": 10,
+      "int_": 2,
+      "fort": 2,
+      "ref_": 4,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 4,
+          "damage": "1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 11
+    },
+    {
+      "type": "gato",
+      "name": "Gato",
+      "emoji": "🐈",
+      "boss": false,
+      "tier": 0,
+      "cr": 0,
+      "hp": 2,
+      "ac": 14,
+      "natural_armor": 2,
+      "movement": 8,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "pequeno",
+      "image": "gato",
+      "str_": 3,
+      "dex": 15,
+      "con_": 10,
+      "int_": 2,
+      "fort": 2,
+      "ref_": 4,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Garras",
+          "atk_bonus": 4,
+          "damage": "1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2
+        }
+      ],
+      "special_abilities": [],
+      "undead": false,
+      "subtipo": "animal",
+      "darkvision_range": 8,
+      "percepcao": 13
+    },
+    {
+      "type": "ovelha",
+      "name": "Ovelha",
+      "emoji": "🐑",
+      "boss": false,
+      "tier": 0,
+      "cr": 0,
+      "hp": 6,
+      "ac": 10,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "ovelha",
+      "str_": 11,
+      "dex": 10,
+      "con_": 15,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 2,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Cabeçada",
+          "atk_bonus": 1,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 12
+    },
+    {
       "type": "skeleton",
       "name": "Esqueleto",
       "emoji": "💀",
@@ -8486,6 +8646,50 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_pombo",
+      "source": "guilda",
+      "source_id": "lenda_pombo",
+      "name": "Lenda: Pombo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Pombo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_rato",
+      "source": "guilda",
+      "source_id": "lenda_rato",
+      "name": "Lenda: Rato",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Rato.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_gato",
+      "source": "guilda",
+      "source_id": "lenda_gato",
+      "name": "Lenda: Gato",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Gato.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_ovelha",
+      "source": "guilda",
+      "source_id": "lenda_ovelha",
+      "name": "Lenda: Ovelha",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Ovelha.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_goblin",
       "source": "guilda",
       "source_id": "lenda_goblin",
@@ -9402,6 +9606,21 @@ window.EDITOR_CATALOG = {
       "duracao": "1d4"
     },
     {
+      "id": "chamado_inverno",
+      "nome": "Chamado do Inverno",
+      "circulo": "segundo",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "❄️",
+      "tipo": "area_fixa",
+      "descricao": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede.",
+      "save": "reflexos",
+      "area_lado": 4,
+      "alcance_base": 7,
+      "duracao": "1d4"
+    },
+    {
       "id": "manto_escuridao",
       "nome": "Manto de Escuridão",
       "circulo": "segundo",
@@ -9583,6 +9802,18 @@ window.EDITOR_CATALOG = {
       "descricao": "O alvo que tiver o conjurador em sua visão testa Vontade. Faz um teste inicial, dois por turno enquanto o conjurador permanecer visível e até cinco testes finais após perdê-lo de vista. Três falhas petrificam permanentemente; três sucessos encerram o efeito.",
       "save": "vontade",
       "duracao": "1d4"
+    },
+    {
+      "id": "metamorfose",
+      "nome": "Metamorfose",
+      "circulo": "quarto",
+      "classe": [
+        "mage"
+      ],
+      "icone": "🦋",
+      "tipo": "transformacao",
+      "descricao": "Transforma uma criatura viva em uma forma desbloqueada do bestiário. A forma mantém seus atributos, ataques, defesa, movimento e habilidades; a manutenção custa 1 Fome e 1 Sede por rodada.",
+      "save": "vontade"
     }
   ],
   "items": [
@@ -10818,6 +11049,20 @@ window.EDITOR_CATALOG = {
       "value": 0,
       "veneno_id": "ensaio_sobre_a_cegueira",
       "descricao": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas."
+    },
+    {
+      "id": "maca_treino",
+      "name": "Maça de Treino",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "categoria": "contundente",
+      "granted_ability": null,
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0,
+      "descricao": "Maça de Treino: 1d6 de dano contundente, usando Força ou Destreza."
     }
   ],
   "traps": [
@@ -11991,6 +12236,22 @@ window.EDITOR_CATALOG = {
     {
       "id": "agua_profunda",
       "nome": "Água profunda",
+      "categoria": "piso",
+      "cor": "#06173f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "rodamoinho",
+      "nome": "Rodamoinho",
+      "categoria": "piso",
+      "cor": "#126da1",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "rodamoinho_profundo",
+      "nome": "Rodamoinho profundo",
       "categoria": "piso",
       "cor": "#06173f",
       "solido": false,

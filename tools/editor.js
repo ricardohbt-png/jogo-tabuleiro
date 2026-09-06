@@ -1,6 +1,7 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
+  const ELEVACAO_MIN = -1, ELEVACAO_MAX = 2;
   const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], curses: [], decorations: [], materiais: [] };
   // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
   // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
@@ -98,6 +99,9 @@
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
     materiais: {},                 // {"x,y": id}
+    elevacoes: {},                 // {"x,y": nível visual (-1..2)}
+    transicaoAltura: "rampa",      // transição visual entre níveis diferentes
+    elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
@@ -117,6 +121,7 @@
     S.grid = { w, h };
     S.tiles = [];
     S.doorRotations = {};
+    S.elevacoes = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
   }
 
@@ -282,6 +287,10 @@
   }
   window.addEventListener("keydown", (ev) => {
     if (editingText(ev)) return;
+    if (ev.key === "Delete") {
+      if (deleteSelectedEntity()) ev.preventDefault();
+      return;
+    }
     const modifier = ev.ctrlKey || ev.metaKey;
     if (modifier && ev.key.toLowerCase() === "c") {
       if (copySelectedDecor()) ev.preventDefault();
@@ -708,6 +717,51 @@
     ctx.restore();
   }
 
+  function drawElevationEditor(x, y) {
+    const level = elevationAt(x, y);
+    if (!level) return;
+    const X = x * CELL, Y = y * CELL;
+    const depth = 2 + Math.abs(level) * 3;
+    const neighborLevel = (nx, ny) =>
+      nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h
+        ? elevationAt(nx, ny) : 0;
+    ctx.save();
+    if (level > 0) {
+      ctx.fillStyle = "rgba(8, 7, 12, .42)";
+      if (neighborLevel(x + 1, y) < level) ctx.fillRect(X + CELL - depth, Y + 1, depth, CELL - 1);
+      if (neighborLevel(x, y + 1) < level) ctx.fillRect(X + 1, Y + CELL - depth, CELL - 1, depth);
+      ctx.fillStyle = "rgba(255, 255, 255, .22)";
+      ctx.fillRect(X + 1, Y + 1, CELL - 2, 2);
+      ctx.fillRect(X + 1, Y + 1, 2, CELL - 2);
+      if (S.transicaoAltura === "rampa") {
+        ctx.fillStyle = "rgba(235, 211, 137, .18)";
+        if (neighborLevel(x + 1, y) < level) {
+          ctx.beginPath(); ctx.moveTo(X + CELL - depth, Y + 2);
+          ctx.lineTo(X + CELL - 2, Y + CELL - 2); ctx.lineTo(X + CELL - 2, Y + 2);
+          ctx.closePath(); ctx.fill();
+        }
+        if (neighborLevel(x, y + 1) < level) {
+          ctx.beginPath(); ctx.moveTo(X + 2, Y + CELL - depth);
+          ctx.lineTo(X + CELL - 2, Y + CELL - 2); ctx.lineTo(X + 2, Y + CELL - 2);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+    } else {
+      ctx.fillStyle = "rgba(0, 0, 0, .32)";
+      ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+      ctx.strokeStyle = "rgba(90, 210, 255, .45)"; ctx.lineWidth = 1;
+      ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+    }
+    if (S.tool === "altura") {
+      ctx.fillStyle = "rgba(12, 10, 18, .86)";
+      ctx.fillRect(X + 3, Y + 3, 15, 12);
+      ctx.fillStyle = level > 0 ? "#ffe18b" : "#87dfff";
+      ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText((level > 0 ? "+" : "") + level, X + 10.5, Y + 9);
+    }
+    ctx.restore();
+  }
+
   function render() {
     board.width = S.grid.w * CELL;
     board.height = S.grid.h * CELL;
@@ -745,6 +799,9 @@
         }
       }
     }
+    for (let y = 0; y < S.grid.h; y++)
+      for (let x = 0; x < S.grid.w; x++)
+        if (S.tiles[y][x] === FLOOR || S.tiles[y][x] === DOOR) drawElevationEditor(x, y);
     for (const r of S.rooms) {
       ctx.strokeStyle = r.locked ? "#e0683c" : "#8fb0e0";
       ctx.lineWidth = 2;
@@ -1003,6 +1060,7 @@
     { id: "wall", label: "parede", group: "tiles" },
     { id: "floor", label: "chão", group: "tiles" },
     { id: "door", label: "porta", group: "tiles" },
+    { id: "altura", label: "altura", group: "tiles" },
     { id: "entrance", label: "entrada", group: "entidades" },
     { id: "hero_spawn", label: "início herói", group: "entidades" },
     { id: "exit", label: "saída", group: "entidades" },
@@ -1122,6 +1180,26 @@
       fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
       tb.appendChild(fill);
     }
+    if (S.tool === "altura") {
+      const level = document.createElement("select");
+      level.id = "terrain-height-value";
+      level.innerHTML = [
+        [-1, "−1 · depressão"], [0, "0 · nivelar"],
+        [1, "+1 · elevado"], [2, "+2 · muito elevado"],
+      ].map(([value, label]) => `<option value="${value}"${Number(value) === Number(S.elevacaoValor) ? " selected" : ""}>${label}</option>`).join("");
+      level.onchange = e => { S.elevacaoValor = Number(e.target.value); render(); };
+      tb.appendChild(level);
+      const transition = document.createElement("select");
+      transition.id = "terrain-height-transition";
+      transition.title = "Escolhe a aparência das transições entre níveis diferentes";
+      transition.innerHTML = `<option value="rampa"${S.transicaoAltura === "rampa" ? " selected" : ""}>transição: rampa</option><option value="declive"${S.transicaoAltura === "declive" ? " selected" : ""}>transição: declive</option>`;
+      transition.onchange = e => { S.transicaoAltura = e.target.value === "declive" ? "declive" : "rampa"; render(); };
+      tb.appendChild(transition);
+      const hint = document.createElement("small");
+      hint.textContent = "Clique e arraste no chão; a altura é apenas visual nesta fase.";
+      hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
+      tb.appendChild(hint);
+    }
   }
 
   function cellFromEvent(ev) {
@@ -1205,7 +1283,21 @@
     }
   }
 
+  function elevationAt(x, y) {
+    const n = Number(S.elevacoes[x + "," + y]);
+    return Number.isInteger(n) ? Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, n)) : 0;
+  }
+
+  function paintElevation(x, y) {
+    if (!S.tiles[y] || ![FLOOR, DOOR].includes(S.tiles[y][x])) return;
+    const value = Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, Number(S.elevacaoValor) || 0));
+    const key = x + "," + y;
+    if (value === 0) delete S.elevacoes[key];
+    else S.elevacoes[key] = value;
+  }
+
   let painting = false;
+  let materialAreaPaint = null;
   let roomDrag = null;
   let _drag = null;  // arrasto na ferramenta "selecionar"
 
@@ -1347,6 +1439,31 @@
     S.falas = S.falas.filter(f => !(f.pos[0] === x && f.pos[1] === y));
     delete S.materiais[x + "," + y];
     S.tiles[y][x] = WALL;
+  }
+
+  // Remove somente a entidade selecionada. Diferente da ferramenta "apagar",
+  // isto nunca altera o tile nem o material de chão sob o objeto.
+  function deleteSelectedEntity() {
+    if (!S.sel || !S.sel.ref) return false;
+    const { kind, ref } = S.sel;
+    if (kind === "monster") {
+      const before = S.monsters.length;
+      S.monsters = S.monsters.filter(m => m !== ref);
+      if (S.monsters.length === before) return false;
+    } else if (kind === "decor") {
+      const before = S.decorations.length;
+      S.decorations = S.decorations.filter(d => d !== ref);
+      if (S.decorations.length === before) return false;
+    } else if (kind === "chest") {
+      const before = S.chests.length;
+      S.chests = S.chests.filter(c => c !== ref);
+      if (S.chests.length === before) return false;
+    } else {
+      return false;
+    }
+    S.sel = null;
+    renderPanel(); render(); updateStatus();
+    return true;
   }
 
   function deleteRoom(room, clearFloor) {
@@ -2478,7 +2595,23 @@
       decorAreaPaint = { x0: x, y0: y, x1: x, y1: y };
       render();
     }
-    else if (["wall", "floor", "door"].includes(S.tool)) { painting = true; (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y); render(); updateStatus(); }
+    else if (S.tool === "altura") {
+      painting = true;
+      paintElevation(x, y);
+      render(); updateStatus();
+    }
+    else if (["wall", "floor", "door"].includes(S.tool)) {
+      const areaMat = S.tool === "floor" ? S.matFloor : S.matWall;
+      if (S.tool === "floor"
+          && (areaMat === "rodamoinho" || areaMat === "rodamoinho_profundo")) {
+        materialAreaPaint = { x0: x, y0: y, x1: x, y1: y, mat: areaMat };
+        render(); drawMaterialAreaPreview(materialAreaPaint);
+      } else {
+        painting = true;
+        (S.matFill && S.tool !== "door" ? paintMaterial : paintTile)(x, y);
+        render(); updateStatus();
+      }
+    }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
     else if (["entrance", "hero_spawn", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); updateStatus(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
@@ -2499,11 +2632,32 @@
     const r = S.rooms.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
     return r ? { kind: "room", ref: r } : null;
   }
+
+  function drawMaterialAreaPreview(area) {
+    const x0 = Math.min(area.x0, area.x1), y0 = Math.min(area.y0, area.y1);
+    const x1 = Math.max(area.x0, area.x1), y1 = Math.max(area.y0, area.y1);
+    ctx.save();
+    ctx.fillStyle = area.mat === "rodamoinho_profundo"
+      ? "rgba(35, 100, 210, .30)" : "rgba(40, 190, 235, .30)";
+    ctx.strokeStyle = area.mat === "rodamoinho_profundo"
+      ? "#6fa8ed" : "#b8f5ff";
+    ctx.lineWidth = 2;
+    ctx.fillRect(x0 * CELL + 1, y0 * CELL + 1,
+      (x1 - x0 + 1) * CELL - 2, (y1 - y0 + 1) * CELL - 2);
+    ctx.strokeRect(x0 * CELL + 1, y0 * CELL + 1,
+      (x1 - x0 + 1) * CELL - 2, (y1 - y0 + 1) * CELL - 2);
+    ctx.restore();
+  }
+
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     if (decorAreaPaint) {
       decorAreaPaint.x1 = c[0]; decorAreaPaint.y1 = c[1]; render(); return;
+    }
+    if (materialAreaPaint) {
+      materialAreaPaint.x1 = c[0]; materialAreaPaint.y1 = c[1];
+      render(); drawMaterialAreaPreview(materialAreaPaint); return;
     }
     if (_drag) {
       const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
@@ -2514,7 +2668,8 @@
       return;
     }
     if (painting) {
-      if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
+      if (S.tool === "altura") { paintElevation(c[0], c[1]); updateStatus(); }
+      else if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
       else { paintTile(c[0], c[1]); updateStatus(); }
       render(); return;
     }
@@ -2537,6 +2692,17 @@
   });
   window.addEventListener("mouseup", () => {
     painting = false;
+    if (materialAreaPaint) {
+      const area = materialAreaPaint;
+      materialAreaPaint = null;
+      const x0 = Math.max(0, Math.min(area.x0, area.x1));
+      const y0 = Math.max(0, Math.min(area.y0, area.y1));
+      const x1 = Math.min(S.grid.w - 1, Math.max(area.x0, area.x1));
+      const y1 = Math.min(S.grid.h - 1, Math.max(area.y0, area.y1));
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++)
+        paintTile(x, y);
+      renderPanel(); render(); updateStatus();
+    }
     if (decorAreaPaint) {
       const area = decorAreaPaint;
       decorAreaPaint = null;
@@ -2682,6 +2848,10 @@
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
+      elevacoes: Object.fromEntries(Object.entries(S.elevacoes)
+        .filter(([key, value]) => value && Number.isInteger(value))
+        .map(([key, value]) => [key, Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, value))])),
+      transicao_altura: S.transicaoAltura === "declive" ? "declive" : "rampa",
       objectives: {
         primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
                    reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
@@ -2864,6 +3034,28 @@
       if (cat === "parede" && t !== WALL) e.push(`material de parede ${mid} fora de parede em ${key}`);
       if (cat === "piso" && !(t === FLOOR || t === DOOR)) e.push(`material de piso ${mid} fora de chão em ${key}`);
     }
+    const profundo = new Set(Object.entries(S.materiais)
+      .filter(([, mid]) => mid === "rodamoinho_profundo")
+      .map(([key]) => key));
+    if (profundo.size && ![...profundo].some(key => {
+      const [x, y] = key.split(",").map(Number);
+      return profundo.has(`${x + 1},${y}`)
+        && profundo.has(`${x},${y + 1}`)
+        && profundo.has(`${x + 1},${y + 1}`);
+    })) e.push("rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas");
+    for (const [key, value] of Object.entries(S.elevacoes)) {
+      const p = key.split(",").map(Number);
+      if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
+          || p[0] < 0 || p[1] < 0 || p[0] >= S.grid.w || p[1] >= S.grid.h) {
+        e.push(`elevação fora do grid em ${key}`); continue;
+      }
+      if (![FLOOR, DOOR].includes(S.tiles[p[1]]?.[p[0]]))
+        e.push(`elevação em casa que não é chão: ${key}`);
+      if (!Number.isInteger(value) || value < ELEVACAO_MIN || value > ELEVACAO_MAX)
+        e.push(`elevação inválida em ${key}`);
+    }
+    if (!["rampa", "declive"].includes(S.transicaoAltura))
+      e.push("transição de altura inválida");
     return { ok: e.length === 0, erros: e };
   }
 
@@ -3017,6 +3209,15 @@
                level:  Math.max(1, parseInt(ep.level, 10) || 1) };
     })(obj.expected_party);
     S.materiais = (obj.materiais && typeof obj.materiais === "object") ? { ...obj.materiais } : {};
+    S.elevacoes = {};
+    for (const [key, value] of Object.entries((obj.elevacoes && typeof obj.elevacoes === "object") ? obj.elevacoes : {})) {
+      const p = key.split(",").map(Number), n = Number(value);
+      if (p.length === 2 && p.every(Number.isInteger) && p[0] >= 0 && p[1] >= 0
+          && p[0] < S.grid.w && p[1] < S.grid.h && [FLOOR, DOOR].includes(S.tiles[p[1]]?.[p[0]])
+          && Number.isInteger(n) && n >= ELEVACAO_MIN && n <= ELEVACAO_MAX && n !== 0)
+        S.elevacoes[key] = n;
+    }
+    S.transicaoAltura = obj.transicao_altura === "declive" ? "declive" : "rampa";
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
@@ -3113,8 +3314,13 @@
     const w = Math.max(1, Math.min(60, Number(document.getElementById("g-w").value) | 0));
     const h = Math.max(1, Math.min(60, Number(document.getElementById("g-h").value) | 0));
     const old = S.tiles, ow = S.grid.w, oh = S.grid.h;
+    const oldElevacoes = { ...S.elevacoes };
     initGrid(w, h);
     for (let y = 0; y < Math.min(h, oh); y++) for (let x = 0; x < Math.min(w, ow); x++) S.tiles[y][x] = old[y][x];
+    for (const [key, value] of Object.entries(oldElevacoes)) {
+      const [x, y] = key.split(",").map(Number);
+      if (x >= 0 && y >= 0 && x < w && y < h && [FLOOR, DOOR].includes(S.tiles[y][x])) S.elevacoes[key] = value;
+    }
     render();
   };
 
