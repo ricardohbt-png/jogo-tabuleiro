@@ -27408,6 +27408,14 @@ class GameRoom:
         jogador, o bloco de abertura da janela é pulado pela própria condição
         que já está lá e a execução cai direto no fechamento.
         """
+        # Mesma guarda dos irmaos handle_mover_animado/handle_atacar_animado.
+        # Nao e redundante com o teste abaixo: _is_turn tambem exige
+        # phase == "playing". _voltar_para_cidade muda a fase SEM limpar
+        # animados_phase_pid, entao sem isto um encerrar_animado atrasado
+        # dispararia um push_state de masmorra em quem ja esta na cidade.
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
         if self.animados_phase_pid != pid:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.nao_ha_servo_seu_para_encerrar_agora")}); return

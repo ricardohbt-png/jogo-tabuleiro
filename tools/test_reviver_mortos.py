@@ -207,6 +207,20 @@ async def main():
     check("recusa encerrar o mesmo servo duas vezes", len(r._errs) == 1)
     check("a vez do seguinte foi preservada", r._animados_atual("m") == "s2")
 
+    # [12b] Guarda de fase: _voltar_para_cidade muda phase sem limpar
+    # animados_phase_pid, entao um encerrar_animado atrasado nao pode agir.
+    print("\n[12b] handle_encerrar_animado — fora da fase de jogo")
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    r.handle_end_turn = fake_end_turn
+    del r._is_turn                       # volta ao _is_turn real da classe
+    r.phase = "city"                     # o grupo voltou pra cidade
+    avisos = []
+    async def cap_aviso(pid): avisos.append(pid)
+    r._avisar_controle_de_monstro = cap_aviso
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa fora da fase playing", avisos == ["m"])
+    check("nao mexeu na fila", r.animados_done == set())
+
     # [13] end_turn continua fechando tudo de uma vez (rede do timer anti-AFK)
     print("\n[13] end_turn na janela fecha tudo")
     r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
