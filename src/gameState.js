@@ -2396,6 +2396,53 @@ const GS = (() => {
   // Casas de monstro que podem receber o ataque básico agora. O renderer usa
   // esta consulta pura para a mira do joystick; o servidor continua validando
   // o ataque quando a mensagem é recebida.
+  // Casas que o servo animado/elemental selecionado pode atacar.
+  //
+  // Fonte UNICA da regra no cliente — consumida pelo render 2D, pelo render 3D,
+  // pelo clique do tabuleiro e pelo joystick. Espelha os tres ramos que o
+  // servidor valida em handle_atacar_animado:
+  //   1. elemental com ficha completa  -> _animado_attack_in_range
+  //   2. legado `especial: 'linha_3q'` -> _em_linha_cardinal(..., 3)
+  //   3. o resto (corpo a corpo)       -> _cardinal_adjacent (so as 4 ortogonais)
+  //
+  // Antes esta regra estava escrita em tres lugares que ja divergiam: os renders
+  // cravavam "cardinal, alcance 1 (ou 3)" e mentiam para elementais de alcance
+  // maior, e o clique aceitava a diagonal no corpo a corpo, mandando um ataque
+  // que o servidor recusa.
+  //
+  // Simplificacao conhecida e aceita: nao modela custo vertical de terreno nem
+  // footprint 2x2 (o servidor modela). O realce pode oferecer uma casa que o
+  // servidor recusa; a recusa chega como erro normal e nada fica inconsistente.
+  function animadoAttackTargetTiles(animado) {
+    if (!gameState || !animado || !animado.pos || animado.vida_atual <= 0) return [];
+    const [ax, ay] = animado.pos;
+    const atk = (animado.attacks || [])[0] || {};
+    const alcance = Number(atk.range || 0);
+    const emLinha = !!atk.range_shape;
+    const out = [], seen = new Set();
+    for (const monster of gameState.monsters || []) {
+      if (!monster || monster.hp <= 0) continue;
+      for (const [tx, ty] of monsterTiles(monster)) {
+        const dx = Math.abs(ax - tx), dy = Math.abs(ay - ty);
+        const dist = Math.max(dx, dy);
+        const cardinal = (dx === 0 || dy === 0);
+        let ok;
+        if (animado.especial === 'linha_3q' && !alcance) {
+          ok = cardinal && dist >= 1 && dist <= 3;
+        } else if (alcance) {
+          ok = emLinha ? (cardinal && dist >= 1 && dist <= alcance)
+                       : (dist >= 1 && dist <= alcance);
+          if (ok) ok = hasLineOfSight(gameState, ax, ay, tx, ty);
+        } else {
+          ok = cardinal && dist === 1;
+        }
+        const key = tx + ',' + ty;
+        if (ok && !seen.has(key)) { seen.add(key); out.push({ x: tx, y: ty, targetId: monster.id }); }
+      }
+    }
+    return out;
+  }
+
   function attackTargetTiles() {
     if (!gameState || gameState.phase !== 'playing' || !isMyTurn) return [];
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
@@ -2943,6 +2990,7 @@ const GS = (() => {
     move,
     alterarAltura,
     encerrarAnimado,
+    animadoAttackTargetTiles,
     animadoAtual,
     animadoPendenteParaEncerrar,
     endTurn,

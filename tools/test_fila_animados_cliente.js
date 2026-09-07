@@ -85,6 +85,58 @@ console.log('\n[7] Id desconhecido cai no atual');
 estado({ atual: 'a', ordem: ['a', 'b'], animados: [A, B] });
 check('id que nao existe', GS.animadoPendenteParaEncerrar('nao_existe') === 'a');
 
+console.log('\n[8] animadoAttackTargetTiles — regra unica de alcance do servo');
+function comMonstros(animado, monstros) {
+  GS.injectPreviewState({
+    type: 'game_state', master_pid: 'm',
+    tiles: Array.from({length:7}, () => [1,1,1,1,1,1,1]),
+    explored: [], chests: [],
+    monsters: monstros, players: [{ id:'m', name:'Pedro', alive:true, pos:[0,0], animados:[animado] }],
+    animados_turn: 'm', animados_order: [animado.id], animados_atual: { m: animado.id },
+  });
+  return GS.animadoAttackTargetTiles(animado).map(t => t.x + ',' + t.y).sort();
+}
+const mon = (id, x, y) => ({ id, pos: [x, y], hp: 5, max_hp: 5 });
+
+// Corpo a corpo: CARDINAL, como _cardinal_adjacent no servidor. O clique antigo
+// aceitava a diagonal e mandava um ataque que o servidor recusava.
+const zumbi = servo('z', { pos: [2, 2] });
+check('melee alcanca o ortogonal',
+      comMonstros(zumbi, [mon('m1', 2, 1)]).join('|') === '2,1');
+check('melee NAO alcanca a diagonal',
+      comMonstros(zumbi, [mon('m1', 3, 3)]).length === 0);
+
+// Elemental com ficha: honra o alcance real. Os renders cravavam 1 e mentiam.
+const eleme = servo('e', { pos: [2, 2], attacks: [{ range: 2 }] });
+check('elemental de alcance 2 alcanca a 2 casas',
+      comMonstros(eleme, [mon('m1', 2, 0)]).join('|') === '2,0');
+check('elemental de alcance 2 inclui a diagonal',
+      comMonstros(eleme, [mon('m1', 3, 3)]).join('|') === '3,3');
+check('elemental de alcance 2 alcanca no limite (2 na diagonal)',
+      comMonstros(eleme, [mon('m1', 0, 0)]).join('|') === '0,0');
+check('elemental de alcance 2 NAO alcanca a 3 casas',
+      comMonstros(eleme, [mon('m1', 2, 5)]).length === 0);
+
+// range_shape restringe a linha reta.
+const linha = servo('l', { pos: [2, 2], attacks: [{ range: 3, range_shape: 'line' }] });
+check('em linha alcanca o ortogonal',
+      comMonstros(linha, [mon('m1', 2, 0)]).join('|') === '2,0');
+check('em linha NAO alcanca a diagonal',
+      comMonstros(linha, [mon('m1', 3, 3)]).length === 0);
+
+// Legado do elemental eletrico.
+const eletr = servo('r', { pos: [2, 2], especial: 'linha_3q' });
+check('linha_3q alcanca em linha ate 3',
+      comMonstros(eletr, [mon('m1', 0, 2)]).join('|') === '0,2');
+check('linha_3q NAO alcanca a diagonal',
+      comMonstros(eletr, [mon('m1', 4, 4)]).length === 0);
+
+check('monstro morto nunca entra',
+      comMonstros(zumbi, [{ id:'d', pos:[2,1], hp:0 }]).length === 0);
+check('servo morto nao mira nada',
+      GS.animadoAttackTargetTiles(servo('x', { pos:[2,2], vida_atual:0 })).length === 0);
+check('sem animado devolve vazio', GS.animadoAttackTargetTiles(null).length === 0);
+
 console.log('\n' + '='.repeat(46));
 console.log('  ' + PASS + ' passaram, ' + FAIL + ' falharam');
 console.log('='.repeat(46));

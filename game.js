@@ -7631,15 +7631,11 @@ function renderMap(state){
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
+  // Regra unica em GS.animadoAttackTargetTiles — esta copia cravava
+  // "cardinal, alcance 1 (ou 3)" e mentia para servos elementais de alcance maior.
   const atkRefAnimado2D = selAnimado2D || window._animadoHover;
-  if(atkRefAnimado2D && atkRefAnimado2D.pos){
-    const [ax,ay]=atkRefAnimado2D.pos;
-    const isElec2D = atkRefAnimado2D.especial === 'linha_3q';
-    const atkRange2D = isElec2D ? 3 : 1;
-    for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
-      for(let r=1; r<=atkRange2D; r++)
-        attackable.add(`${ax+ddx*r},${ay+ddy*r}`);
-  }
+  for(const alvo of GS.animadoAttackTargetTiles(atkRefAnimado2D))
+    attackable.add(`${alvo.x},${alvo.y}`);
   if(GS.isMaster()){
     _masterAttackSet(state).forEach(k => attackable.add(k));
   }
@@ -32339,15 +32335,10 @@ function renderMap3D(state){
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
+  // Mesma fonte do 2D — ver GS.animadoAttackTargetTiles.
   const atkRefAnimado3D = selAnimado3D || window._animadoHover;
-  if(atkRefAnimado3D && atkRefAnimado3D.pos){
-    const [ax3,ay3] = atkRefAnimado3D.pos;
-    const isElec3D = atkRefAnimado3D.especial === 'linha_3q';
-    const atkRange3D = isElec3D ? 3 : 1;
-    for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
-      for(let r=1; r<=atkRange3D; r++)
-        attackable3d.add(`${ax3+ddx*r},${ay3+ddy*r}`);
-  }
+  for(const alvo of GS.animadoAttackTargetTiles(atkRefAnimado3D))
+    attackable3d.add(`${alvo.x},${alvo.y}`);
   if(GS.isMaster()){
     _masterAttackSet(state).forEach(k => attackable3d.add(k));
   }
@@ -40040,14 +40031,13 @@ function handleTileClick(tx, ty){
               renderMyPanel(GS.gameState);
               return;
             }
-            const dx_a = Math.abs(a.pos[0]-mon.pos[0]), dy_a = Math.abs(a.pos[1]-mon.pos[1]);
             const ataqueA = (a.attacks || [])[0] || {};
             const alcanceA = Number(ataqueA.range || 0);
-            const distA = Math.max(dx_a, dy_a);
-            const emLinhaA = (dx_a === 0 || dy_a === 0) && distA >= 1 && distA <= alcanceA;
-            const emAlcanceA = alcanceA
-              ? (ataqueA.range_shape ? emLinhaA : distA >= 1 && distA <= alcanceA)
-              : distA === 1;
+            // Mesma regra do realce (e do servidor): corpo a corpo e CARDINAL.
+            // Antes esta copia aceitava a diagonal e mandava um ataque que o
+            // servidor recusava por falta de adjacencia.
+            const emAlcanceA = GS.animadoAttackTargetTiles(a)
+              .some(alvo => alvo.x === mon.pos[0] && alvo.y === mon.pos[1]);
             if(emAlcanceA) GS.atacarAnimado(a.id, mon.id);
             else toast(alcanceA
               ? `O ataque alcança ${alcanceA} quadrado(s)${ataqueA.range_shape ? ' em linha reta' : ''}.`
