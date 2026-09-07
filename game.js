@@ -21209,6 +21209,23 @@ function _gamepadAtualizarPreviaMovimento(state){
     || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow) return;
   const cursor = _gamepadEnsureCursor(state);
   if(!cursor) return;
+  const peca = GS.pecaControlada();
+  // Servo/prisioneiro: GS.resolveTileClick e do HEROI e nao serve aqui. A rota
+  // sai do mesmo GS.findPath sobre o orcamento da peca que o clique do mouse ja
+  // usa no ramo de servo do handleTileClick.
+  if(peca && peca.kind !== 'hero'){
+    const exp = new Set((state.explored || []).map(([x, y]) => `${x},${y}`));
+    for(const [rx, ry] of (state.revealed || [])) exp.add(`${rx},${ry}`);
+    const passos = GS.findPath(state.tiles, exp, peca.pos[0], peca.pos[1],
+                               cursor[0], cursor[1], peca.moves_left);
+    if(passos && passos.length){
+      _selecionarPreviaMovimento({type:'move', path:passos}, cursor[0], cursor[1], false, peca);
+    } else if(GS.pendingMove){
+      GS.pendingMove = null;
+      _clearMovePreviewVisual();
+    }
+    return;
+  }
   const action = GS.resolveTileClick(cursor[0], cursor[1]);
   if(action?.type === 'move'){
     _selecionarPreviaMovimento(action, cursor[0], cursor[1], false);
@@ -39800,19 +39817,23 @@ function on3DMouseMove(e){
     el.style.cursor='default';
 }
 
-function _selecionarPreviaMovimento(action, tx, ty, notify=true){
+// `peca` opcional: quando vem preenchida (GS.pecaControlada()), a previa e da
+// peca controlada — o servo da vez na janela pos-turno — em vez do heroi.
+function _selecionarPreviaMovimento(action, tx, ty, notify=true, peca=null){
   const st = GS.gameState;
   const me = st?.players?.find(p => p.id === GS.myPid && p.alive);
-  if(!me || !action?.path?.length) return false;
+  const origem = peca || me;
+  if(!origem?.pos || !action?.path?.length) return false;
   GS.pendingMove = {
     target: [tx, ty],
     path: action.path.map(step => [step[0], step[1]]),
     stopAtDoor: !!action.stopAtDoor,
-    origin: [me.pos[0], me.pos[1]],
-    moves_left: Number(me.moves_left) || 0
+    origin: [origem.pos[0], origem.pos[1]],
+    moves_left: Number(origem.moves_left) || 0,
+    animadoId: (peca && peca.kind !== 'hero') ? peca.id : null
   };
   renderMap(st);
-  if(notify) toast('👣 Clique novamente na casa para confirmar · Esc cancela', 'var(--gold)');
+  if(notify) toast(t('ui.tabuleiro.clique_novamente_para_confirmar'), 'var(--gold)');
   return true;
 }
 
@@ -40008,7 +40029,10 @@ function handleTileClick(tx, ty){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
       for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
       const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
-      if(passosP && passosP.length){ _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return; }
+      if(passosP && passosP.length){
+        GS.pendingMove = null; _clearMovePreviewVisual();
+        _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return;
+      }
       _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
     }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
@@ -40057,7 +40081,10 @@ function handleTileClick(tx, ty){
           const expSetMin = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
           for(const [rx,ry] of (_st.revealed||[])) expSetMin.add(`${rx},${ry}`);
           const passosMin = GS.findPath(_st.tiles, expSetMin, a.pos[0], a.pos[1], tx, ty, a.moves_left||0);
-          if(passosMin && passosMin.length){ _animarEEnviarMoverCaminhoMinino(a, passosMin); return; }
+          if(passosMin && passosMin.length){
+            GS.pendingMove = null; _clearMovePreviewVisual();
+            _animarEEnviarMoverCaminhoMinino(a, passosMin); return;
+          }
           _animadoSel=null; renderMap(_st); return;   // sem caminho/alcance → desseleciona
         }
       }

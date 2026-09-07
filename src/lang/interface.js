@@ -5659,6 +5659,10 @@ window.LANG_INTERFACE = {
       "en": "Click to attack",
       "pt": "Clique para atacar"
     },
+    "ui.tabuleiro.clique_novamente_para_confirmar": {
+      "en": "👣 Click the tile again to confirm · Esc cancels",
+      "pt": "👣 Clique novamente na casa para confirmar · Esc cancela"
+    },
     "ui.tabuleiro.clique_voltar_cidade": {
       "en": "Click to return to the city",
       "pt": "Clique para retornar à cidade"
