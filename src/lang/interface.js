@@ -2147,6 +2147,10 @@ window.LANG_INTERFACE = {
       "en": "⏭ End Turn",
       "pt": "⏭ Encerrar Turno"
     },
+    "ui.hud.prisioneiro": {
+      "en": "Prisoner",
+      "pt": "Prisioneiro"
+    },
     "ui.hud.equipado_loja": {
       "en": "Equipped (Shop)",
       "pt": "Equipado (Loja)"
@@ -5978,6 +5982,10 @@ window.LANG_INTERFACE = {
     "ui.joystick.contexto_sem_acao": {
       "en": "No action",
       "pt": "Sem ação"
+    },
+    "ui.joystick.contexto_peca_da_vez": {
+      "en": "{nome} · {mov} mov",
+      "pt": "{nome} · {mov} mov"
     },
     "ui.joystick.proximo_alvo": {
       "en": "next target",

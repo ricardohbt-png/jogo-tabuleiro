@@ -20795,6 +20795,14 @@ function _gamepadRumble(kind = 'confirm'){
 }
 function _clearGamepadEndTurnConfirm(){ _gamepadEndTurnConfirmUntil = 0; }
 function _gamepadRequestEndTurn(now){
+  // Encerrar a vez de UM servo nao e destrutivo — so passa a peca adiante. Pedir
+  // dupla-pressao aqui dobraria os apertos de uma fila de 3 servos para 6.
+  if(GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel) != null){
+    _clearGamepadEndTurnConfirm();
+    _gamepadRumble('endTurn');
+    endTurn();
+    return;
+  }
   if(now <= _gamepadEndTurnConfirmUntil){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
@@ -21309,6 +21317,10 @@ function _aimSeedGamepadCursor(){
 }
 
 function _gamepadAttackTargets(){
+  // Na janela pos-turno o alvo e do SERVO da vez, pela mesma regra do realce.
+  const peca = GS.pecaControlada();
+  if(peca?.kind === 'animado') return GS.animadoAttackTargetTiles(peca.ref) || [];
+  if(peca?.kind === 'prisoner') return [];   // o prisioneiro so se move
   return GS.attackTargetTiles?.() || [];
 }
 
@@ -21386,8 +21398,8 @@ function _gamepadEnterAttackMode(state){
   window._gamepadAttackRangePreview = true;
   _gamepadInput.rightMode = 'cursor';
   const cursor = _gamepadEnsureCursor(state);
-  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
-  const [ox, oy] = cursor || me?.pos || [0, 0];
+  const peca = GS.pecaControlada();
+  const [ox, oy] = cursor || peca?.pos || [0, 0];
   const initial = targets.reduce((best, target) => {
     const distance = Math.max(Math.abs(target.x - ox), Math.abs(target.y - oy));
     const bestDistance = Math.max(Math.abs(best.x - ox), Math.abs(best.y - oy));
@@ -21805,7 +21817,10 @@ function _gamepadAccept(state){
   // Interações físicas recebem precedência sobre o atalho de combate: assim A
   // abre um baú ou recolhe um item selecionado, mesmo se houver inimigos no
   // alcance da arma naquele turno.
-  if(_gamepadInteractAtCursor(state)) return;
+  // Baú, item no chão e ciclo de alvos sao do HEROI e ancoram em me.pos: na
+  // janela pos-turno eles agiriam pela peca errada.
+  const _naJanelaServos = state?.animados_turn === GS.myPid;
+  if(!_naJanelaServos && _gamepadInteractAtCursor(state)) return;
   if(_gamepadEnterAttackMode(state)) return;
   const cursor = _gamepadEnsureCursor(state);
   if(cursor){
@@ -21821,6 +21836,7 @@ function _gamepadAccept(state){
 function _gamepadUsefulTargetTiles(state){
   const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
   if(!state || !me || !GS.isMyTurn) return [];
+  if(state.animados_turn === GS.myPid) return [];   // fila de servos: sem ciclo do heroi
   const out = [], seen = new Set();
   const add = (x, y, priority) => {
     const key = `${x},${y}`;
@@ -22930,6 +22946,15 @@ function _gamepadHudVisible(state){
 function _gamepadContextForCursor(state, player){
   const label = (key, icon) => ({ key, icon, text: t(key) });
   if(!GS.isMyTurn) return label('ui.joystick.contexto_aguarde', '⏳');
+  const _pecaCtx = GS.pecaControlada();
+  if(_pecaCtx && _pecaCtx.kind !== 'hero' && !_gamepadInput.attackMode){
+    return { icon: _pecaCtx.kind === 'prisoner' ? '🔗' : '☠️',
+             text: t('ui.joystick.contexto_peca_da_vez', {
+               nome: _pecaCtx.kind === 'prisoner'
+                 ? t('ui.hud.prisioneiro')
+                 : (_pecaCtx.ref.nome || _pecaCtx.ref.tipo || ''),
+               mov: _pecaCtx.moves_left }) };
+  }
   if(GS.pendingMove) return { icon:'👣', text:'A / clique novamente para confirmar · B / Esc cancelar' };
   if(_gamepadInput.attackMode) return label('ui.joystick.contexto_confirmar_alvo', '⚔');
 
