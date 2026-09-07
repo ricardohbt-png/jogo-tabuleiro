@@ -624,6 +624,10 @@ window.LANG_ERROS = {
     "en": "This spell has no manual use.",
     "pt": "Esta magia não tem uso manual."
   },
+  "erro.esta_peca_nao_esta_na_sua_fila": {
+    "en": "That piece is not in your queue.",
+    "pt": "Esta peça não está na sua fila."
+  },
   "erro.esta_pocao_ja_nao_possui_doses": {
     "en": "This potion has no doses left.",
     "pt": "Esta poção já não possui doses."
@@ -987,6 +991,10 @@ window.LANG_ERROS = {
   "erro.nao_ha_prisioneiro_para_mover": {
     "en": "No prisoner to move.",
     "pt": "Não há prisioneiro para mover."
+  },
+  "erro.nao_ha_servo_seu_para_encerrar_agora": {
+    "en": "You have no minion to end right now.",
+    "pt": "Não há servo seu para encerrar agora."
   },
   "erro.nenhum_ataque_recente_para_rerolar": {
     "en": "No recent attack to reroll.",

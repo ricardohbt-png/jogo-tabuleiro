@@ -170,6 +170,55 @@ async def main():
     r2.animados_phase_pid = "outro"
     check("janela de outro jogador devolve None", r2._animados_atual("m") is None)
 
+    # [11] encerrar_animado avança a fila
+    print("\n[11] handle_encerrar_animado — avanço")
+    r, p = sala_com_servos(servo("s_rapido", 18), servo("s_medio", 12))
+    fechou = []
+    async def fake_end_turn(pid): fechou.append(pid)
+    r.handle_end_turn = fake_end_turn
+    await r.handle_encerrar_animado("m", "s_rapido")
+    check("primeiro servo marcado como encerrado", "s_rapido" in r.animados_done)
+    check("fila passa ao segundo", r._animados_atual("m") == "s_medio")
+    check("janela NÃO fechou ainda", fechou == [])
+    await r.handle_encerrar_animado("m", "s_medio")
+    check("fila vazia delega a handle_end_turn", fechou == ["m"])
+
+    # [12] Recusas
+    print("\n[12] handle_encerrar_animado — recusas")
+    r, p = sala_com_servos(servo("s1", 14))
+    r.handle_end_turn = fake_end_turn
+    r.animados_phase_pid = None
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa fora da janela", len(r._errs) == 1)
+    check("não marcou nada", r.animados_done == set())
+
+    r, p = sala_com_servos(servo("s1", 14))
+    r.handle_end_turn = fake_end_turn
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "id_que_nao_existe")
+    check("recusa id fora da fila", len(r._errs) == 1)
+
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    r.handle_end_turn = fake_end_turn
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "s1")
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa encerrar o mesmo servo duas vezes", len(r._errs) == 1)
+    check("a vez do seguinte foi preservada", r._animados_atual("m") == "s2")
+
+    # [13] end_turn continua fechando tudo de uma vez (rede do timer anti-AFK)
+    print("\n[13] end_turn na janela fecha tudo")
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    avancou = []
+    async def fake_advance(): avancou.append(True)
+    r._advance_initiative = fake_advance
+    r.initiative_active = True
+    await r.handle_end_turn("m")
+    check("janela fechada", r.animados_phase_pid is None)
+    check("fila limpa", r.animados_order == [] and r.animados_done == set())
+    check("iniciativa avançou", avancou == [True])
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

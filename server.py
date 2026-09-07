@@ -27400,6 +27400,34 @@ class GameRoom:
             return "prisoner"
         return None
 
+    async def handle_encerrar_animado(self, pid, animado_id):
+        """Encerra a vez de UMA peça da janela pós-turno e passa à seguinte.
+
+        Espelha o mestre_encerrar_monstro do Modo Mestre. Quando não sobra
+        ninguém, delega a handle_end_turn: como animados_phase_pid já é este
+        jogador, o bloco de abertura da janela é pulado pela própria condição
+        que já está lá e a execução cai direto no fechamento.
+        """
+        if self.animados_phase_pid != pid:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.nao_ha_servo_seu_para_encerrar_agora")}); return
+        if animado_id == "prisoner":
+            pr = self.prisoner
+            if (self.prisioneiro_done or not pr or not pr.get("freed")
+                    or not pr.get("alive") or pr.get("rescuer_pid") != pid):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
+            self.prisioneiro_done = True
+        else:
+            if animado_id not in self.animados_order or animado_id in self.animados_done:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
+            self.animados_done.add(animado_id)
+        if self._animados_atual(pid) is None:
+            await self.handle_end_turn(pid)
+            return
+        await self.push_state()
+
     async def handle_end_turn(self, pid):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
@@ -37581,6 +37609,9 @@ async def handler(ws):
                     dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_mover_prisioneiro(pid, dx, dy)
+
+                elif t == "encerrar_animado":
+                    if room: await room.handle_encerrar_animado(pid, msg.get("animado_id"))
 
                 elif t == "atacar_animado":
                     if room: await room.handle_atacar_animado(pid, msg.get("animado_id"), msg.get("target_id"))
