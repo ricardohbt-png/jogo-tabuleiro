@@ -287,6 +287,45 @@ async def main():
     check("quem acordou NAO foi consumido", "s_acorda" not in r.animados_done)
     check("e e ele o servo da vez", r._animados_atual("m") == "s_acorda")
 
+    # [17] Prisioneiro e o ultimo da fila
+    print("\n[17] prisioneiro no fim da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12))
+    r.prisoner = {"freed": True, "alive": True, "rescuer_pid": "m",
+                  "pos": [2, 2], "moves_left": 6}
+    fechou_pr = []
+    async def fake_end_turn_pr(pid): fechou_pr.append(pid)
+    r.handle_end_turn = fake_end_turn_pr
+    await r.handle_encerrar_animado("m", "s_a")
+    check("ainda em servo", r._animados_atual("m") == "s_b")
+    await r.handle_encerrar_animado("m", "s_b")
+    check("servos esgotados -> prisioneiro", r._animados_atual("m") == "prisoner")
+    check("janela ainda aberta", fechou_pr == [])
+    await r.handle_encerrar_animado("m", "prisoner")
+    check("prisioneiro encerrado fecha a janela", fechou_pr == ["m"])
+
+    # [18] Prisioneiro de OUTRO resgatador nao entra na minha fila
+    print("\n[18] prisioneiro alheio")
+    r, p = sala_com_servos(servo("s_a", 18))
+    r.prisoner = {"freed": True, "alive": True, "rescuer_pid": "outro",
+                  "pos": [2, 2], "moves_left": 6}
+    r.handle_end_turn = fake_end_turn_pr
+    r._errs.clear()
+    r.animados_done.add("s_a")
+    check("nao aparece na minha vez", r._animados_atual("m") is None)
+    await r.handle_encerrar_animado("m", "prisoner")
+    check("recusa encerrar prisioneiro alheio", len(r._errs) == 1)
+
+    # [19] Prisioneiro morto no meio da janela nao trava o fechamento
+    print("\n[19] prisioneiro morto")
+    r, p = sala_com_servos(servo("s_a", 18))
+    r.prisoner = {"freed": True, "alive": False, "rescuer_pid": "m",
+                  "pos": [2, 2], "moves_left": 6}
+    fechou2 = []
+    async def fake_end_turn2(pid): fechou2.append(pid)
+    r.handle_end_turn = fake_end_turn2
+    await r.handle_encerrar_animado("m", "s_a")
+    check("prisioneiro morto nao segura a janela", fechou2 == ["m"])
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
