@@ -1654,6 +1654,36 @@ const GS = (() => {
     if (monsterId != null) msg.monster_id = monsterId;
     send(msg);
   }
+  // ── Janela pós-turno do mago: a fila de servos ─────────────────────────────
+  // O servidor é quem manda: `animados_atual` no game_state diz quem eu controlo
+  // agora (id do servo, "prisoner", ou null). Estes dois helpers são a única
+  // fonte da decisão "encerrar servo vs. encerrar turno" no cliente.
+  function encerrarAnimado(animadoId) {
+    return send({ type: 'encerrar_animado', animado_id: animadoId });
+  }
+
+  function animadoAtual() {
+    // DICT POR PID, não escalar: o game_state é montado UMA vez para a sala
+    // inteira (_game_state_payload não recebe pid), então cada jogador lê a
+    // própria entrada.
+    return gameState?.animados_atual?.[myPid] ?? null;
+  }
+
+  // Devolve a peça cuja vez o botão de encerrar deve fechar, ou null quando o
+  // botão significa "encerrar o turno do herói". `selId` é a seleção visual do
+  // renderer (o jogador pode ter clicado noutro servo, e a fila respeita isso).
+  function animadoPendenteParaEncerrar(selId) {
+    if (!gameState || gameState.animados_turn !== myPid) return null;
+    const atual = animadoAtual();
+    if (atual == null) return null;
+    if (selId == null) return atual;
+    if (selId === 'prisoner') return 'prisoner';
+    const me = (gameState.players || []).find(p => p.id === myPid);
+    const vivo = (me?.animados || []).some(
+      a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
+    return vivo ? selId : atual;
+  }
+
   function endTurn()       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
@@ -2899,6 +2929,9 @@ const GS = (() => {
     // ── Actions ──
     move,
     alterarAltura,
+    encerrarAnimado,
+    animadoAtual,
+    animadoPendenteParaEncerrar,
     endTurn,
     sceneChoice,
     sceneTest,

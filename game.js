@@ -12344,6 +12344,7 @@ function renderBotoesAcaoBonus(heroi){
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
+let _lastAnimadosAtual = null;   // último `animados_atual` visto (espelha a fila do servidor)
 let _prisSel = false;            // prisioneiro liberto selecionado (janela pós-turno do resgatador)
 let _lastAnimadosTurn = null;
 function trocarAbaPainel(aba){ _painelAbaPedro = aba; if(GS.gameState) renderMyPanel(GS.gameState); }
@@ -40510,28 +40511,31 @@ GS.on('gameState', msg => {
     HERO_DATA.pedro.animados = meNow.animados;
     if (GS.HERO_DATA && GS.HERO_DATA.pedro) GS.HERO_DATA.pedro.animados = meNow.animados;
   }
-  // Entrou na minha janela de controle (servos e/ou prisioneiro) → dica única.
-  if (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid) {
-    const meusAnimados = (msg.players.find(p=>p.id===GS.myPid)?.animados || [])
-      .filter(a => a.vida_atual > 0 && !a.dominado_por_monstro);
-    const porId = new Map(meusAnimados.map(a => [a.id, a]));
-    const ordem = (msg.animados_order || []).map(id => porId.get(id)).filter(Boolean);
-    const proximo = (ordem.length ? ordem : meusAnimados.sort((a, b) =>
-      (b.initiative || 0) - (a.initiative || 0))).find(a => !a.acted) || null;
-    _animadoSel = proximo ? proximo.id : null;
-    _prisSel = false;
-    const _pr = msg.prisoner;
-    const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
-      && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
-    toast(soPris
-      ? t('ui.hud.mova_prisioneiro')
-      : t('ui.animar.turno_servos') + (proximo ? ' ' + t('ui.animar.servo_selecionado', {nome:proximo.nome}) : ''));
+  // A fila é do servidor: `animados_atual` diz quem eu controlo agora. Espelhar
+  // isso na seleção é o que faz o próximo servo ser escolhido sozinho quando o
+  // anterior encerra — antes isso só acontecia na abertura da janela.
+  const _entrouNaJanela = (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid);
+  const _atualServo = (msg.animados_turn === GS.myPid) ? (msg.animados_atual?.[GS.myPid] ?? null) : null;
+  if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela) {
+    if (_atualServo === 'prisoner') {
+      _animadoSel = null;
+      _prisSel = true;
+      toast(t('ui.hud.mova_prisioneiro'));
+    } else if (_atualServo != null) {
+      _animadoSel = _atualServo;
+      _prisSel = false;
+      const nome = (msg.players.find(p => p.id === GS.myPid)?.animados || [])
+        .find(a => a.id === _atualServo)?.nome || '';
+      toast(t('ui.animar.turno_servos') + ' ' + t('ui.animar.servo_selecionado', {nome}));
+    }
     if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
   }
+  _lastAnimadosAtual = _atualServo;
   // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
     _animadoSel = null;
     _prisSel = false;
+    _lastAnimadosAtual = null;
   }
   _lastAnimadosTurn = msg.animados_turn || null;
   // Auto-refresh open chest window (contents may have changed)
