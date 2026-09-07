@@ -1697,6 +1697,30 @@ const GS = (() => {
     return selId;
   }
 
+  // Quem o controle dirige AGORA: a peça da vez na janela pós-turno, ou o herói
+  // fora dela. Devolve { kind, id, pos, moves_left, ref } ou null.
+  // `kind` é 'hero' | 'animado' | 'prisoner'.
+  function pecaControlada() {
+    if (!gameState || !isMyTurn) return null;
+    const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
+    if (gameState.animados_turn === myPid) {
+      const atual = animadoAtual();
+      if (atual === 'prisoner') {
+        const pr = gameState.prisoner;
+        if (!pr || !pr.alive) return null;
+        return { kind: 'prisoner', id: 'prisoner', pos: pr.pos,
+                 moves_left: pr.moves_left || 0, ref: pr };
+      }
+      const a = (me?.animados || []).find(x => x && x.id === atual);
+      if (!a) return null;
+      return { kind: 'animado', id: a.id, pos: a.pos,
+               moves_left: a.moves_left || 0, ref: a };
+    }
+    if (!me) return null;
+    return { kind: 'hero', id: me.id, pos: me.pos,
+             moves_left: me.moves_left || 0, ref: me };
+  }
+
   function endTurn()       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
@@ -2991,6 +3015,7 @@ const GS = (() => {
     alterarAltura,
     encerrarAnimado,
     animadoAttackTargetTiles,
+    pecaControlada,
     animadoAtual,
     animadoPendenteParaEncerrar,
     endTurn,

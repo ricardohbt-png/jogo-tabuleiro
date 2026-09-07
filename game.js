@@ -21137,17 +21137,23 @@ function _gamepadBoard(state){
 function _gamepadEnsureCursor(state){
   if(!state?.tiles?.length) return null;
   const W = state.tiles[0].length, H = state.tiles.length;
+  // A ancora e a PECA CONTROLADA, nao o heroi: na janela pos-turno do mago ela
+  // e o servo (ou o prisioneiro) da vez. Como o id entra na chave, trocar de
+  // servo joga o cursor sobre o servo novo — e isso que faz o encadeamento
+  // parecer automatico no controle.
+  const peca = GS.pecaControlada();
   const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const ancora = peca || (me ? {id: me.id, pos: me.pos} : null);
   const board = _gamepadBoard(state);
-  const playerKey = me?.pos ? `${board}:${me.id}:${me.pos[0]},${me.pos[1]}` : '';
+  const playerKey = ancora?.pos ? `${board}:${ancora.id}:${ancora.pos[0]},${ancora.pos[1]}` : '';
   const valid = Array.isArray(_gamepadInput.cursor)
     && _gamepadInput.cursor[0] >= 0 && _gamepadInput.cursor[1] >= 0
     && _gamepadInput.cursor[0] < W && _gamepadInput.cursor[1] < H;
-  // Todo deslocamento do herói reinicia o cursor sobre ele. O jogador pode
-  // então explorar com o analógico direito sem o cursor ficar esquecido fora
-  // da tela após uma caminhada longa.
+  // Todo deslocamento do heroi reinicia o cursor sobre ele. O jogador pode
+  // entao explorar com o analogico direito sem o cursor ficar esquecido fora
+  // da tela apos uma caminhada longa.
   if(!valid || _gamepadInput.cursorBoard !== board || _gamepadInput.cursorPlayerKey !== playerKey){
-    _gamepadInput.cursor = me?.pos ? [...me.pos] : [0, 0];
+    _gamepadInput.cursor = ancora?.pos ? [...ancora.pos] : [0, 0];
     _gamepadInput.cursorBoard = board;
     _gamepadInput.cursorPlayerKey = playerKey;
   }
