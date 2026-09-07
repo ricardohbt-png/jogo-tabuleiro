@@ -322,8 +322,9 @@ grep -n "\"animados_order\": self.animados_order" server.py
 
 e leia as ~60 linhas acima para achar a assinatura da função que monta o payload.
 
-Se o payload for montado **uma vez só para todos** (sem `pid` no escopo), publique
-em vez disso o dicionário por jogador:
+**RESOLVIDO NA EXECUÇÃO:** `_game_state_payload` NÃO recebe `pid` — é montado uma
+vez para a sala e transmitido a todos. Portanto o campo publicado é o **dict por
+jogador**, e as Tasks 5 e 6 abaixo já vêm com a leitura indexada por `GS.myPid`:
 
 ```python
             "animados_atual": {pid_: self._animados_atual(pid_) for pid_ in self.players},
@@ -780,7 +781,10 @@ IMEDIATAMENTE ANTES dela:
   }
 
   function animadoAtual() {
-    return gameState?.animados_atual ?? null;
+    // DICT POR PID, não escalar: o game_state é montado UMA vez para a sala
+    // inteira (_game_state_payload não recebe pid), então cada jogador lê a
+    // própria entrada. Ver Task 1, Step 7.
+    return gameState?.animados_atual?.[myPid] ?? null;
   }
 
   // Devolve a peça cuja vez o botão de encerrar deve fechar, ou null quando o
@@ -833,7 +837,7 @@ por:
   // isso na seleção é o que faz o próximo servo ser escolhido sozinho quando o
   // anterior encerra — antes isso só acontecia na abertura da janela.
   const _entrouNaJanela = (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid);
-  const _atualServo = (msg.animados_turn === GS.myPid) ? (msg.animados_atual ?? null) : null;
+  const _atualServo = (msg.animados_turn === GS.myPid) ? (msg.animados_atual?.[GS.myPid] ?? null) : null;
   if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela) {
     if (_atualServo === 'prisoner') {
       _animadoSel = null;
@@ -995,16 +999,18 @@ function _atualizarBotaoEncerrarTurno(state){
   // acompanha o idioma sozinho, sem entrar na lista do _setLang.
   const span = btn.querySelector('span');
   if(!span) return;
-  const naFila = state?.animados_turn === GS.myPid && (state.animados_atual ?? null) !== null;
+  // Dict por pid (ver Task 1, Step 7): cada jogador lê a própria entrada.
+  const atual = state?.animados_atual?.[GS.myPid] ?? null;
+  const naFila = state?.animados_turn === GS.myPid && atual !== null;
   if(naFila){
     const ordem = state.animados_order || [];
     const total = ordem.length + (_temPrisioneiroNaFila(state) ? 1 : 0);
     // A posição é o índice do servo da vez na ordem de iniciativa. O prisioneiro
     // não está em `animados_order`: ele é sempre o último da fila.
-    const idx = ordem.indexOf(state.animados_atual);
+    const idx = ordem.indexOf(atual);
     const pos = (idx >= 0) ? idx + 1 : total;
     span.removeAttribute('data-i18n');
-    span.textContent = state.animados_atual === 'prisoner'
+    span.textContent = atual === 'prisoner'
       ? t('ui.hud.encerrar_prisioneiro')
       : t('ui.hud.encerrar_servo', {pos, total});
   } else if(!span.hasAttribute('data-i18n')){
