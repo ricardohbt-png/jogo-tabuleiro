@@ -2135,6 +2135,14 @@ window.LANG_INTERFACE = {
       "en": "🦠 {sev} DISEASE",
       "pt": "🦠 DOENÇA {sev}"
     },
+    "ui.hud.encerrar_prisioneiro": {
+      "en": "⏭ End prisoner",
+      "pt": "⏭ Encerrar prisioneiro"
+    },
+    "ui.hud.encerrar_servo": {
+      "en": "⏭ End minion ({pos}/{total})",
+      "pt": "⏭ Encerrar servo ({pos}/{total})"
+    },
     "ui.hud.encerrar_turno": {
       "en": "⏭ End Turn",
       "pt": "⏭ Encerrar Turno"

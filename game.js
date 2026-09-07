@@ -5012,6 +5012,38 @@ function _atualizarBotaoEncerrarTurno(state){
         || state.last_stand_pid === GS.myPid
         || state.animados_turn === GS.myPid));
   btn.disabled = !podeEncerrar;
+
+  // Rótulo dinâmico durante a janela dos servos: "⏭ Encerrar servo (2/3)".
+  // `_i18nApply` sobrescreve o textContent de todo [data-i18n], então o atributo
+  // SAI enquanto o texto é calculado e VOLTA quando não é mais. Esta função roda
+  // a cada game_state, e a troca de idioma reenvia o estado — então o rótulo
+  // acompanha o idioma sozinho, sem entrar na lista do _setLang.
+  const span = btn.querySelector('span');
+  if(!span) return;
+  // Dict por pid: cada jogador lê a própria entrada.
+  const atual = state?.animados_atual?.[GS.myPid] ?? null;
+  const naFila = state?.animados_turn === GS.myPid && atual !== null;
+  if(naFila){
+    const ordem = state.animados_order || [];
+    const total = ordem.length + (_temPrisioneiroNaFila(state) ? 1 : 0);
+    // A posição é o índice do servo da vez na ordem de iniciativa. O prisioneiro
+    // não está em `animados_order`: ele é sempre o último da fila.
+    const idx = ordem.indexOf(atual);
+    const pos = (idx >= 0) ? idx + 1 : total;
+    span.removeAttribute('data-i18n');
+    span.textContent = atual === 'prisoner'
+      ? t('ui.hud.encerrar_prisioneiro')
+      : t('ui.hud.encerrar_servo', {pos, total});
+  } else if(!span.hasAttribute('data-i18n')){
+    span.setAttribute('data-i18n', 'ui.hud.encerrar_turno');
+    span.textContent = t('ui.hud.encerrar_turno');
+  }
+}
+
+// O prisioneiro liberto ocupa a última posição da fila da janela pós-turno.
+function _temPrisioneiroNaFila(state){
+  const pr = state?.prisoner;
+  return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === GS.myPid);
 }
 
 function handleGameState(msg){
@@ -19087,7 +19119,12 @@ function endTurn(){
   // que um clique atrasado envie um turno fora da vez do jogador.
   if(!btn || btn.disabled) return;
   getAudioContext();
-  if(!GS.endTurn()) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
+  // Na janela pós-turno do mago, este botão encerra a vez de UMA peça e o
+  // servidor seleciona a próxima. Só a última fecha a janela. A decisão mora em
+  // gameState.js; aqui só passamos a seleção visual atual.
+  const peca = GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel);
+  const ok = (peca != null) ? GS.encerrarAnimado(peca) : GS.endTurn();
+  if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
 }
 
 // Mantém o comando de encerrar turno ligado mesmo se o código for carregado em
@@ -20590,7 +20627,7 @@ document.addEventListener('keydown', e=>{
     case 'ArrowDown':  case 's': case 'S': GS.move(0,1);  e.preventDefault(); break;
     case 'ArrowLeft':  case 'a': case 'A': GS.move(-1,0); e.preventDefault(); break;
     case 'ArrowRight': case 'd': case 'D': GS.move(1,0);  e.preventDefault(); break;
-    case 'Enter': if(GS.isMyTurn) GS.endTurn();           break;
+    case 'Enter': if(GS.isMyTurn) endTurn();              break;
   }
 });
 
