@@ -1681,7 +1681,20 @@ const GS = (() => {
     const me = (gameState.players || []).find(p => p.id === myPid);
     const vivo = (me?.animados || []).some(
       a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
-    return vivo ? selId : atual;
+    if (!vivo) return atual;
+    // Um servo que aparece ANTES do atual na ordem de iniciativa ja encerrou a
+    // vez: a fila e estritamente ordenada e `atual` e, por definicao, o primeiro
+    // que ainda nao encerrou. Sem esta checagem, clicar num servo ja usado
+    // mandaria um encerrar_animado que o servidor recusa, e o jogador levaria um
+    // erro em vez de passar a vez. Derivado de animados_order + animados_atual,
+    // sem precisar que o servidor publique o conjunto dos encerrados.
+    const ordem = gameState.animados_order || [];
+    const iSel = ordem.indexOf(selId);
+    if (iSel < 0) return atual;                    // nao esta na fila
+    const iAtual = ordem.indexOf(atual);
+    // iAtual < 0 significa que a vez ja e do prisioneiro: todos os servos foram.
+    if (iAtual < 0 || iSel < iAtual) return atual;
+    return selId;
   }
 
   function endTurn()       {
