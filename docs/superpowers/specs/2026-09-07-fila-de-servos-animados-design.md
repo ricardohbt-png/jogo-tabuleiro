@@ -47,9 +47,11 @@ Ao lado do `animados_order` que já existe:
 - `self.animados_done: set` — ids já encerrados nesta janela.
 - `self.prisioneiro_done: bool` — o mesmo para o prisioneiro.
 
-Ambos são limpos nos **três** pontos que já zeram `animados_order` (abertura da
-janela em `handle_end_turn`, fechamento da janela, e o reset por entrada de
-masmorra).
+Ambos são limpos em **três** pontos: a abertura da janela e o fechamento da
+janela (em `handle_end_turn`, os dois lugares que já mexem em `animados_order`) e
+o reset por entrada de masmorra em `enter_dungeon` — que hoje zera só
+`animados_phase_pid` e passa a zerar `animados_order` também, para a fila nunca
+sobreviver a uma entrada.
 
 ### Campo novo no `game_state`
 
