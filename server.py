@@ -27400,6 +27400,37 @@ class GameRoom:
             return "prisoner"
         return None
 
+    async def _consumir_animados_travados(self, pid):
+        """Tira da fila, narrando, todo servo que não tem como agir.
+
+        Chamado ao abrir a janela e depois de cada encerramento, para o jogador
+        só ser levado a peças jogáveis. Marcar em animados_done (em vez de só
+        pular na derivação) mantém a contagem "servo N de M" honesta.
+        """
+        p = self.players.get(pid)
+        if not p:
+            return
+        por_id = {a.get("id"): a for a in p.get("animados", [])}
+        for aid in self.animados_order:
+            if aid in self.animados_done:
+                continue
+            a = por_id.get(aid)
+            if a is None or a.get("dominado_por_monstro"):
+                self.animados_done.add(aid)
+                continue
+            if self._animado_pode_agir(a):
+                break              # achou o da vez: para de consumir
+            self.animados_done.add(aid)
+            if a.get("vida_atual", 0) <= 0:
+                motivo = T("narracao.servo_salto_morto")
+            elif a.get("dormindo"):
+                motivo = T("narracao.servo_salto_dormindo")
+            else:
+                motivo = T("narracao.servo_salto_preso")
+            await self.gm_say(T("narracao.servo_perde_a_vez",
+                                servo=a.get("nome") or a.get("tipo") or "?",
+                                motivo=motivo))
+
     async def handle_encerrar_animado(self, pid, animado_id):
         """Encerra a vez de UMA peça da janela pós-turno e passa à seguinte.
 
@@ -27431,6 +27462,7 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
             self.animados_done.add(animado_id)
+        await self._consumir_animados_travados(pid)
         if self._animados_atual(pid) is None:
             await self.handle_end_turn(pid)
             return
@@ -27513,6 +27545,7 @@ class GameRoom:
             self.animados_order = [a["id"] for a in animados_vivos]
             self.animados_done = set()
             self.prisioneiro_done = False
+            await self._consumir_animados_travados(pid)
             partes = []
             if animados_vivos:
                 # Upkeep: cada cadÃ¡ver reanimado custa -1 fome e -1 sede por turno.

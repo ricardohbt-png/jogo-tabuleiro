@@ -2224,6 +2224,22 @@ window.LANG_NARRACAO = {
     "en": "🌿 **{heroi}** would have been defeated, but **Regeneration** brings them back up with 1 HP! (-3 hunger/thirst)",
     "pt": "🌿 **{heroi}** seria derrotado, mas a **Regeneração** o reergue com 1 HP! (-3 fome/sede)"
   },
+  "narracao.servo_perde_a_vez": {
+    "en": "💀 {servo} loses its turn — {motivo}.",
+    "pt": "💀 {servo} perde a vez — {motivo}."
+  },
+  "narracao.servo_salto_morto": {
+    "en": "is destroyed",
+    "pt": "está destruído"
+  },
+  "narracao.servo_salto_dormindo": {
+    "en": "is asleep",
+    "pt": "está dormindo"
+  },
+  "narracao.servo_salto_preso": {
+    "en": "is caught in the whirlpool",
+    "pt": "está preso pelo rodamoinho"
+  },
   "narracao.so_pode_combinar_habilidade_s_por_turno": {
     "en": "**{heroi}** can only combine {teto} ability(ies) per turn — the rest were ignored.",
     "pt": "**{heroi}** só pode combinar {teto} habilidade(s) por turno — as demais foram ignoradas."

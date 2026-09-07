@@ -233,6 +233,39 @@ async def main():
     check("fila limpa", r.animados_order == [] and r.animados_done == set())
     check("iniciativa avançou", avancou == [True])
 
+    # [14] Servo travado é pulado com narração
+    print("\n[14] saltos de servo travado")
+    r, p = sala_com_servos(servo("s_rapido", 18),
+                           servo("s_dorme", 14, dormindo=True),
+                           servo("s_medio", 12))
+    ditos = []
+    async def cap_say(msg): ditos.append(msg)
+    r.gm_say = cap_say
+    async def fake_end_turn_3(pid): pass
+    r.handle_end_turn = fake_end_turn_3
+    check("dormindo não pode agir", r._animado_pode_agir(p["animados"][1]) is False)
+    await r.handle_encerrar_animado("m", "s_rapido")
+    check("pulou o adormecido", r._animados_atual("m") == "s_medio")
+    check("adormecido marcado como encerrado", "s_dorme" in r.animados_done)
+    check("narrou o salto", len(ditos) == 1)
+
+    # [15] Servo que morre no meio da janela sai da fila
+    print("\n[15] servo morto sai da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 14), servo("s_c", 10))
+    r.gm_say = cap_say
+    r.handle_end_turn = fake_end_turn_3
+    p["animados"][1]["vida_atual"] = 0     # s_b morreu por lava/retaliação
+    await r.handle_encerrar_animado("m", "s_a")
+    check("morto é pulado", r._animados_atual("m") == "s_c")
+
+    # [16] Servo dominado por necromante não obedece
+    print("\n[16] servo dominado sai da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 14, dominado_por_monstro="mX"))
+    r.gm_say = cap_say
+    r.handle_end_turn = fake_end_turn_3
+    await r.handle_encerrar_animado("m", "s_a")
+    check("dominado não entra na vez", r._animados_atual("m") is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
