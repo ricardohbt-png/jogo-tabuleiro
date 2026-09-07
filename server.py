@@ -27431,6 +27431,19 @@ class GameRoom:
                                 servo=a.get("nome") or a.get("tipo") or "?",
                                 motivo=motivo))
 
+    def _zerar_turno_da_peca(self, pid, animado_id):
+        """Esgota o orcamento da peca que acabou de encerrar a vez."""
+        if animado_id == "prisoner":
+            if self.prisoner:
+                self.prisoner["moves_left"] = 0
+            return
+        p = self.players.get(pid)
+        for a in (p.get("animados", []) if p else []):
+            if a.get("id") == animado_id:
+                a["moves_left"] = 0
+                a["acted"] = True
+                return
+
     async def handle_encerrar_animado(self, pid, animado_id):
         """Encerra a vez de UMA peça da janela pós-turno e passa à seguinte.
 
@@ -27462,6 +27475,10 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
             self.animados_done.add(animado_id)
+        # Encerrar a vez tem de ser REAL, nao so contabilidade da fila: sem zerar
+        # o orcamento, a peca continuava podendo mover e atacar depois de passar
+        # a vez (handle_mover_animado/handle_atacar_animado nao olham a fila).
+        self._zerar_turno_da_peca(pid, animado_id)
         await self._consumir_animados_travados(pid)
         if self._animados_atual(pid) is None:
             await self.handle_end_turn(pid)
@@ -27587,10 +27604,16 @@ class GameRoom:
             recursos = (T("narracao.turno_controle_recursos",
                           fome=f"{p['fome']:.0f}", sede=f"{p['sede']:.0f}")
                         if animados_vivos else "")
-            await self.gm_say(T("narracao.turno_de_controle_de_mova_e_encerre",
-                                heroi=p["name"], partes=partes, recursos=recursos))
-            await self.push_state()
-            return
+            # Se o upkeep + os saltos nao deixaram NINGUEM controlavel (ex.: todos
+            # os servos dormindo por um sono em area), nao abre uma janela vazia:
+            # desfaz o ponteiro e cai no encerramento normal do turno logo abaixo.
+            if self._animados_atual(pid) is None:
+                self.animados_phase_pid = None
+            else:
+                await self.gm_say(T("narracao.turno_de_controle_de_mova_e_encerre",
+                                    heroi=p["name"], partes=partes, recursos=recursos))
+                await self.push_state()
+                return
         self.animados_phase_pid = None
         self.animados_order = []
         self.animados_done = set()
@@ -36732,6 +36755,10 @@ class GameRoom:
             # montado UMA vez para a sala inteira (sem pid em escopo aqui); o
             # cliente indexa pelo próprio GS.myPid.
             "animados_atual": {pid_: self._animados_atual(pid_) for pid_ in self.players},
+            # Quem ja encerrou a vez nesta janela. O cliente precisa do conjunto
+            # exato: deduzir pela ordem so identifica quem ficou ATRAS do atual,
+            # e uma peca escolhida fora de ordem fica adiante dele.
+            "animados_done": sorted(self.animados_done, key=str),
             "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do inÃ­cio do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,

@@ -1682,19 +1682,34 @@ const GS = (() => {
     const vivo = (me?.animados || []).some(
       a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
     if (!vivo) return atual;
-    // Um servo que aparece ANTES do atual na ordem de iniciativa ja encerrou a
-    // vez: a fila e estritamente ordenada e `atual` e, por definicao, o primeiro
-    // que ainda nao encerrou. Sem esta checagem, clicar num servo ja usado
-    // mandaria um encerrar_animado que o servidor recusa, e o jogador levaria um
-    // erro em vez de passar a vez. Derivado de animados_order + animados_atual,
-    // sem precisar que o servidor publique o conjunto dos encerrados.
-    const ordem = gameState.animados_order || [];
-    const iSel = ordem.indexOf(selId);
-    if (iSel < 0) return atual;                    // nao esta na fila
-    const iAtual = ordem.indexOf(atual);
-    // iAtual < 0 significa que a vez ja e do prisioneiro: todos os servos foram.
-    if (iAtual < 0 || iSel < iAtual) return atual;
+    // Peca que ja encerrou a vez cai de volta no atual. Deduzir isso pela ordem
+    // so pegava quem ficou ATRAS do atual -- e escolher um servo fora de ordem
+    // (que a fila permite de proposito) deixa a peca usada ADIANTE dele. Por
+    // isso o servidor publica o conjunto exato.
+    if (animadoJaEncerrou(selId)) return atual;
+    if (!(gameState.animados_order || []).includes(selId)) return atual;
     return selId;
+  }
+
+  // Uma peca da janela pos-turno ja gastou a vez? Autoritativo: vem do servidor.
+  function animadoJaEncerrou(id) {
+    if (id == null) return false;
+    return (gameState?.animados_done || []).some(d => String(d) === String(id));
+  }
+
+  // A selecao visual ainda aponta para uma peca que pode agir? O renderer usa
+  // isto para voltar sozinho a peca da vez depois de encerrar uma escolhida
+  // fora de ordem -- sem isso o clique e o joystick agiriam com a peca gasta.
+  function animadoSelecaoValida(selId) {
+    if (!gameState || gameState.animados_turn !== myPid || selId == null) return false;
+    if (animadoJaEncerrou(selId)) return false;
+    if (selId === 'prisoner') {
+      const pr = gameState.prisoner;
+      return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === myPid);
+    }
+    const me = (gameState.players || []).find(p => p.id === myPid);
+    return (me?.animados || []).some(
+      a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
   }
 
   // Quem o controle dirige AGORA: a peça da vez na janela pós-turno, ou o herói
@@ -3015,6 +3030,8 @@ const GS = (() => {
     alterarAltura,
     encerrarAnimado,
     animadoAttackTargetTiles,
+    animadoJaEncerrou,
+    animadoSelecaoValida,
     pecaControlada,
     animadoAtual,
     animadoPendenteParaEncerrar,

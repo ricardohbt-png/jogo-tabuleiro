@@ -40601,7 +40601,14 @@ GS.on('gameState', msg => {
   // anterior encerra — antes isso só acontecia na abertura da janela.
   const _entrouNaJanela = (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid);
   const _atualServo = (msg.animados_turn === GS.myPid) ? (msg.animados_atual?.[GS.myPid] ?? null) : null;
-  if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela) {
+  // Resincronizar so quando `animados_atual` MUDA nao basta: escolher uma peca
+  // fora de ordem e encerra-la nao mexe no atual, e a selecao ficaria presa
+  // numa peca ja gasta -- o botao passaria a levar recusa e, no joystick, o
+  // clique agiria com a peca errada. Entao tambem resincroniza quando a selecao
+  // deixa de ser uma peca que pode agir.
+  const _selAtualCliente = _prisSel ? 'prisoner' : _animadoSel;
+  const _selObsoleta = (_atualServo != null) && !GS.animadoSelecaoValida(_selAtualCliente);
+  if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela || _selObsoleta) {
     if (_atualServo === 'prisoner') {
       _animadoSel = null;
       _prisSel = true;

@@ -28,7 +28,7 @@ function check(nome, cond) {
 
 // injectPreviewState faz myPid = msg.master_pid e passa pelo _handle normal,
 // que e o unico caminho de entrada de estado do modulo.
-function estado({ atual, ordem = [], animados = [], prisioneiro = null, janela = 'm' }) {
+function estado({ atual, ordem = [], animados = [], prisioneiro = null, janela = 'm', done = [] }) {
   GS.injectPreviewState({
     type: 'game_state',
     master_pid: 'm',
@@ -38,6 +38,7 @@ function estado({ atual, ordem = [], animados = [], prisioneiro = null, janela =
     animados_turn: janela,
     animados_order: ordem,
     animados_atual: { m: atual },
+    animados_done: done,
   });
 }
 const servo = (id, extra = {}) => Object.assign(
@@ -62,13 +63,13 @@ check('escolher o proprio atual', GS.animadoPendenteParaEncerrar('a') === 'a');
 
 console.log('\n[4] Servo JA encerrado cai de volta no atual (nao gera recusa)');
 // A fila avancou para "b": logo "a" ja encerrou, mesmo estando vivo na tela.
-estado({ atual: 'b', ordem: ['a', 'b', 'c'], animados: [A, B, C] });
+estado({ atual: 'b', ordem: ['a', 'b', 'c'], animados: [A, B, C], done: ['a'] });
 check('"a" ficou para tras -> devolve "b"', GS.animadoPendenteParaEncerrar('a') === 'b');
 check('"c" ainda nao foi -> devolve "c"', GS.animadoPendenteParaEncerrar('c') === 'c');
 
 console.log('\n[5] Vez do prisioneiro: todo servo ja passou');
 estado({
-  atual: 'prisoner', ordem: ['a', 'b'], animados: [A, B],
+  atual: 'prisoner', ordem: ['a', 'b'], animados: [A, B], done: ['a', 'b'],
   prisioneiro: { alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
 });
 check('clicar num servo devolve o prisioneiro', GS.animadoPendenteParaEncerrar('a') === 'prisoner');
@@ -136,6 +137,38 @@ check('monstro morto nunca entra',
 check('servo morto nao mira nada',
       GS.animadoAttackTargetTiles(servo('x', { pos:[2,2], vida_atual:0 })).length === 0);
 check('sem animado devolve vazio', GS.animadoAttackTargetTiles(null).length === 0);
+
+console.log('\n[9] Escolha fora de ordem nao deixa a selecao presa numa peca gasta');
+// Cenario do revisor: o atual e "a", o jogador escolhe "c" (adiante na fila) e
+// encerra. `animados_atual` NAO muda -- continua "a" --, entao um espelho que so
+// reage a mudanca de atual deixaria a selecao em "c", que ja foi. O botao
+// passaria a levar recusa e o joystick agiria com a peca errada.
+function estadoDone({ atual, ordem, animados, done = [] }) {
+  GS.injectPreviewState({
+    type: 'game_state', master_pid: 'm',
+    tiles: [[1]], explored: [], monsters: [], chests: [],
+    players: [{ id:'m', name:'Pedro', alive:true, pos:[0,0], animados }],
+    prisoner: null, animados_turn: 'm',
+    animados_order: ordem, animados_atual: { m: atual }, animados_done: done,
+  });
+}
+estadoDone({ atual:'a', ordem:['a','b','c'], animados:[A,B,C], done:['c'] });
+check('"c" ja encerrou, mesmo estando ADIANTE do atual',
+      GS.animadoJaEncerrou('c') === true);
+check('encerrar com "c" selecionado cai no atual',
+      GS.animadoPendenteParaEncerrar('c') === 'a');
+check('a selecao em "c" e reconhecida como obsoleta',
+      GS.animadoSelecaoValida('c') === false);
+check('a selecao em "b" continua valida', GS.animadoSelecaoValida('b') === true);
+check('"a" (o atual) continua valido', GS.animadoSelecaoValida('a') === true);
+
+console.log('\n[10] animadoSelecaoValida — bordas');
+estadoDone({ atual:'a', ordem:['a','b'], animados:[A,B], done:[] });
+check('null nunca e selecao valida', GS.animadoSelecaoValida(null) === false);
+check('id inexistente nao e valido', GS.animadoSelecaoValida('zzz') === false);
+const mortoD = servo('md', { vida_atual: 0 });
+estadoDone({ atual:'a', ordem:['a','md'], animados:[A, mortoD], done:[] });
+check('servo morto nao e selecao valida', GS.animadoSelecaoValida('md') === false);
 
 console.log('\n' + '='.repeat(46));
 console.log('  ' + PASS + ' passaram, ' + FAIL + ' falharam');

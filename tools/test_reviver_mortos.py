@@ -326,6 +326,53 @@ async def main():
     await r.handle_encerrar_animado("m", "s_a")
     check("prisioneiro morto nao segura a janela", fechou2 == ["m"])
 
+    # [20] Encerrar a vez ESGOTA a peca. Sem isto, "encerrar" era so
+    # contabilidade da fila: handle_mover_animado nao olha animados_done, entao
+    # a peca continuava andando e atacando depois de passar a vez.
+    print("\n[20] encerrar a vez esgota o orcamento da peca")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12))
+    async def fake_end_turn_z(pid): pass
+    r.handle_end_turn = fake_end_turn_z
+    sa = p["animados"][0]
+    sa["moves_left"] = 3; sa["acted"] = False
+    await r.handle_encerrar_animado("m", "s_a")
+    check("movimento zerado", sa["moves_left"] == 0)
+    check("acao marcada como usada", sa["acted"] is True)
+    check("o seguinte segue intacto", p["animados"][1]["moves_left"] == 3)
+
+    # [21] O conjunto dos encerrados vai ao cliente. Deduzir pela ordem so
+    # identifica quem ficou ATRAS do atual, e uma peca escolhida fora de ordem
+    # fica ADIANTE dele -- o cliente precisa do conjunto exato.
+    print("\n[21] animados_done viaja no game_state")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12), servo("s_c", 10))
+    r.handle_end_turn = fake_end_turn_z
+    await r.handle_encerrar_animado("m", "s_c")     # escolha FORA de ordem
+    r.tiles = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]     # mapa minimo p/ serializar
+    r.map_w, r.map_h = 3, 3
+    r.explored = {(x, y) for y in range(3) for x in range(3)}
+    payload = r._game_state_payload()
+    check("animados_done no payload", "animados_done" in payload)
+    check("traz a peca escolhida fora de ordem", "s_c" in payload["animados_done"])
+    check("nao traz quem ainda nao foi", "s_a" not in payload["animados_done"])
+    check("o atual segue sendo o primeiro", payload["animados_atual"]["m"] == "s_a")
+
+    # [22] Janela nao abre sem ninguem controlavel: todos os servos dormindo e
+    # sem prisioneiro nao pode prender o jogador numa janela vazia.
+    print("\n[22] janela vazia nao abre")
+    r = setup()
+    pz = mage(); pz["spd"] = 5
+    pz["animados"] = [servo("z1", 18, dormindo=True, dormindo_rodadas=5),
+                      servo("z2", 12, dormindo=True, dormindo_rodadas=5)]
+    r.players = {"m": pz}
+    r.animados_phase_pid = None
+    avancou_z = []
+    async def fake_adv_z(): avancou_z.append(True)
+    r._advance_initiative = fake_adv_z
+    r.initiative_active = True
+    await r.handle_end_turn("m")
+    check("a janela NAO abriu", r.animados_phase_pid is None)
+    check("o turno avancou normalmente", avancou_z == [True])
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
