@@ -122,6 +122,54 @@ async def main():
     await r.handle_animar_mortos("m", {"cadaver_id": "c1"})
     check("rejeita por slots insuficientes", any("Slots insuficientes" in e for e in r._errs))
 
+    # ── Helpers da fila de servos (Tasks 1–4) ────────────────────────────────
+    def servo(sid, dex, pos=(1, 0), **extra):
+        a = {"id": sid, "nome": f"Servo {sid}", "tipo": "zombie",
+             "pos": list(pos), "vida_atual": 8, "vida_max": 8,
+             "movimento": 3, "moves_left": 3, "acted": False,
+             "dex": dex, "int_": 10, "ca": 10}
+        a.update(extra)
+        return a
+
+    def sala_com_servos(*servos):
+        """Sala com o mago já DENTRO da janela dos servos."""
+        r = setup()
+        p = mage()
+        p["animados"] = list(servos)
+        r.players = {"m": p}
+        r.animados_phase_pid = "m"
+        for a in servos:
+            a["initiative"] = r.initiative_value(a)
+        ordenados = sorted(servos, key=lambda a: (-a["initiative"], -a["dex"], a["id"]))
+        r.animados_order = [a["id"] for a in ordenados]
+        r.animados_done = set()
+        r.prisioneiro_done = False
+        return r, p
+
+    # [8] O servo da vez é o de maior iniciativa
+    print("\n[8] animados_atual — ordem por iniciativa")
+    r, p = sala_com_servos(servo("s_lento", 8), servo("s_rapido", 18), servo("s_medio", 12))
+    check("fila começa no de maior iniciativa",
+          r._animados_atual("m") == "s_rapido")
+    check("ordem completa por iniciativa",
+          r.animados_order == ["s_rapido", "s_medio", "s_lento"])
+
+    # [9] Servo encerrado sai da vez
+    print("\n[9] animados_done tira o servo da vez")
+    r.animados_done.add("s_rapido")
+    check("passa ao segundo da ordem", r._animados_atual("m") == "s_medio")
+    r.animados_done.add("s_medio")
+    r.animados_done.add("s_lento")
+    check("fila vazia devolve None", r._animados_atual("m") is None)
+
+    # [10] Fila só existe dentro da janela deste jogador
+    print("\n[10] animados_atual fora da janela")
+    r2, _ = sala_com_servos(servo("s1", 14))
+    r2.animados_phase_pid = None
+    check("sem janela aberta devolve None", r2._animados_atual("m") is None)
+    r2.animados_phase_pid = "outro"
+    check("janela de outro jogador devolve None", r2._animados_atual("m") is None)
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
