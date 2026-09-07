@@ -27545,7 +27545,6 @@ class GameRoom:
             self.animados_order = [a["id"] for a in animados_vivos]
             self.animados_done = set()
             self.prisioneiro_done = False
-            await self._consumir_animados_travados(pid)
             partes = []
             if animados_vivos:
                 # Upkeep: cada cadÃ¡ver reanimado custa -1 fome e -1 sede por turno.
@@ -27579,6 +27578,10 @@ class GameRoom:
                 if pr.get("_rodamoinho_bloqueado_turno"):
                     pr["moves_left"] = 0
                 partes.append(T("narracao.o_prisioneiro"))
+            # DEPOIS do upkeep, nao antes: o laco acima roda os testes de
+            # rodamoinho desta rodada e ACORDA quem teve o sono expirado. Consumir
+            # antes leria flags da rodada passada e faria o servo perder a vez.
+            await self._consumir_animados_travados(pid)
             # LISTA, não string pronta: o motor junta com o separador do idioma
             # de quem lê, e cada fragmento é ele próprio um T.
             recursos = (T("narracao.turno_controle_recursos",

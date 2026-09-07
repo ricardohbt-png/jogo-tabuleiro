@@ -266,6 +266,27 @@ async def main():
     await r.handle_encerrar_animado("m", "s_a")
     check("dominado não entra na vez", r._animados_atual("m") is None)
 
+    # [16b] O consumo roda DEPOIS do upkeep da abertura. O laco de upkeep
+    # decrementa dormindo_rodadas e ACORDA o servo; consumir antes dele leria o
+    # flag da rodada passada e faria o servo perder a vez sem motivo.
+    print("\n[16b] abertura da janela — sono que expira nao perde a vez")
+    r = setup()
+    pm = mage()
+    pm["spd"] = 5
+    dorminhoco = servo("s_acorda", 18, dormindo=True, dormindo_rodadas=1)
+    acordado   = servo("s_ok", 12)
+    pm["animados"] = [dorminhoco, acordado]
+    r.players = {"m": pm}
+    r.animados_phase_pid = None          # janela AINDA fechada: vamos abri-la
+    ditos_ab = []
+    async def cap_say_ab(msg): ditos_ab.append(msg)
+    r.gm_say = cap_say_ab
+    await r.handle_end_turn("m")
+    check("a janela abriu", r.animados_phase_pid == "m")
+    check("o sono expirou no upkeep", not dorminhoco.get("dormindo"))
+    check("quem acordou NAO foi consumido", "s_acorda" not in r.animados_done)
+    check("e e ele o servo da vez", r._animados_atual("m") == "s_acorda")
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 
