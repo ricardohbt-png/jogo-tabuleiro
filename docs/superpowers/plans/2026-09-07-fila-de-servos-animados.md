@@ -21,6 +21,38 @@ dicionários pt/en em `src/lang/*.js`, testes em `tools/test_*.py` rodados da ra
 
 ---
 
+## ⚠️ BASELINE DE TESTES — leia antes de rodar qualquer suíte
+
+**Esta branch já está vermelha antes desta implementação.** As falhas abaixo são
+dívida de i18n do trabalho em andamento do autor (literais em português novos no
+`server.py` e no `game.js`), **não** são regressões suas e **não são para você
+consertar**. Elas foram medidas no worktree limpo, no commit `135229a`:
+
+| Suíte | Baseline | Falhas pré-existentes |
+|---|---|---|
+| `python tools/test_reviver_mortos.py` | **32 PASS / 0 FAIL** | — (limpa) |
+| `python tools/test_idioma.py` | **36 / 0** | — (limpa) |
+| `python tools/test_vocabulario.py` | **38 / 0** | — (limpa) |
+| `python tools/test_narracao.py` | **70 / 2** | 28 `gm_say` de uma linha com literal; 43 `gm_say` com texto em português |
+| `python tools/test_erros.py` | **19 / 1** | literal de erro de texto fixo no `server.py` |
+| `python tools/test_interface.py` | **31 / 5** | 206 literais em português no `game.js`; sobra proposital; 58 funções fechadas; `trapImages` `sopro_dragao`; texto acentuado fora de `data-i18n` |
+| `node tools/test_idioma_cliente.js` | **31 / 1** | chave `data-i18n` órfã (95 usadas) |
+| `node tools/test_vocabulario_cliente.js` | **54 / 1** | descrição sem chave `.desc` |
+
+**A regra de aceitação de cada task é "não piorou", não "está verde":**
+
+- As três suítes limpas (`test_reviver_mortos`, `test_idioma`, `test_vocabulario`)
+  **devem continuar com FAIL=0**. Qualquer falha nelas é sua e precisa de conserto.
+- Nas cinco vermelhas, o número de falhas **não pode subir**, e os contadores
+  citados acima **não podem crescer**. Em particular: se `test_interface` passar de
+  **206** literais, você deixou texto cru em vez de `t('ui....')` — conserte.
+  Se `test_narracao` passar de **28/43**, você escreveu um `gm_say` com string em
+  português em vez de `T("narracao....")` — conserte.
+- **Nunca** conserte as falhas pré-existentes para "deixar verde". Elas são de
+  outro trabalho e mexer nelas polui este branch.
+
+---
+
 ## Contexto que o implementador precisa saber
 
 **Rode tudo da raiz do projeto** (`C:\Users\RICARDO\Desktop\jogo tabuleiro`).
@@ -1009,7 +1041,9 @@ Em `src/lang/interface.js`:
 node --check game.js && node tools/test_idioma_cliente.js && node tools/test_vocabulario_cliente.js
 ```
 
-Esperado: `FAIL=0` nas duas suítes.
+Esperado: **baseline inalterado** — `test_idioma_cliente` 31/1 e
+`test_vocabulario_cliente` 54/1 (ver a tabela de baseline no topo). Se o número
+de falhas subir, a chave nova é sua.
 
 - [ ] **Step 6: Rode o placar de interface**
 
@@ -1017,9 +1051,10 @@ Esperado: `FAIL=0` nas duas suítes.
 python tools/test_interface.py
 ```
 
-Esperado: `FAIL=0`. Este teste **cobra** que não sobre literal em português no
-`game.js` — se ele acusar uma string nova, é porque você deixou texto cru em vez
-de `t('ui....')`.
+Esperado: **baseline inalterado** — 31/5, com o contador de literais em
+`game.js` ainda em **206**. Se o contador subir, você deixou texto cru em vez de
+`t('ui....')`; conserte só o que você acrescentou. As 5 falhas pré-existentes
+não são suas.
 
 - [ ] **Step 7: Commit**
 
@@ -1499,7 +1534,8 @@ e troque por:
 node --check game.js && python tools/test_interface.py
 ```
 
-Esperado: nenhuma saída do `node`, `FAIL=0` no placar.
+Esperado: nenhuma saída do `node`; `test_interface` no baseline 31/5 com o
+contador de literais ainda em **206**.
 
 - [ ] **Step 5: Commit**
 
@@ -1663,7 +1699,8 @@ Se não existir, acrescente:
 node --check game.js && node tools/test_idioma_cliente.js && python tools/test_interface.py
 ```
 
-Esperado: nenhuma saída do `node --check`; `FAIL=0` nas duas suítes.
+Esperado: nenhuma saída do `node --check`; `test_idioma_cliente` 31/1 e
+`test_interface` 31/5 (206 literais) — baseline inalterado.
 
 - [ ] **Step 8: Commit**
 
@@ -1686,7 +1723,16 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 python tools/test_reviver_mortos.py && python tools/test_idioma.py && python tools/test_narracao.py && python tools/test_erros.py && python tools/test_interface.py && python tools/test_vocabulario.py
 ```
 
-Esperado: `FAIL=0` em todas.
+Esperado, comparando com a tabela de baseline do topo:
+
+| Suíte | Tem de ficar |
+|---|---|
+| `test_reviver_mortos` | **FAIL=0** (e com mais checks que os 32 do baseline) |
+| `test_idioma` | **FAIL=0** |
+| `test_vocabulario` | **FAIL=0** |
+| `test_narracao` | 2 falhas, contadores ainda **28** e **43** |
+| `test_erros` | 1 falha |
+| `test_interface` | 5 falhas, contador ainda **206** |
 
 - [ ] **Step 2: Rode as suítes de cliente**
 
@@ -1694,7 +1740,8 @@ Esperado: `FAIL=0` em todas.
 node tools/test_idioma_cliente.js && node tools/test_vocabulario_cliente.js
 ```
 
-Esperado: `FAIL=0` nas duas.
+Esperado: `test_idioma_cliente` 31/1 e `test_vocabulario_cliente` 54/1 —
+baseline inalterado.
 
 - [ ] **Step 3: Confirme que o servidor sobe**
 
