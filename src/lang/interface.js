@@ -2383,6 +2383,14 @@ window.LANG_INTERFACE = {
     "en": "🦠 {sev} DISEASE",
     "pt": "🦠 DOENÇA {sev}"
   },
+  "ui.hud.encerrar_prisioneiro": {
+    "en": "⏭ End prisoner",
+    "pt": "⏭ Encerrar prisioneiro"
+  },
+  "ui.hud.encerrar_servo": {
+    "en": "⏭ End minion ({pos}/{total})",
+    "pt": "⏭ Encerrar servo ({pos}/{total})"
+  },
   "ui.hud.encerrar_turno": {
     "en": "⏭ End Turn",
     "pt": "⏭ Encerrar Turno"
@@ -2558,6 +2566,10 @@ window.LANG_INTERFACE = {
   "ui.hud.personagem_title": {
     "en": "Character (actions and abilities)",
     "pt": "Personagem (ações e habilidades)"
+  },
+  "ui.hud.prisioneiro": {
+    "en": "Prisoner",
+    "pt": "Prisioneiro"
   },
   "ui.hud.recupera_ouro": {
     "en": "You may recover the gold.",
@@ -3570,6 +3582,10 @@ window.LANG_INTERFACE = {
   "ui.joystick.contexto_mover": {
     "en": "Move",
     "pt": "Mover"
+  },
+  "ui.joystick.contexto_peca_da_vez": {
+    "en": "{nome} · {mov} mov",
+    "pt": "{nome} · {mov} mov"
   },
   "ui.joystick.contexto_pegar": {
     "en": "Pick up",
@@ -6578,6 +6594,10 @@ window.LANG_INTERFACE = {
   "ui.tabuleiro.clique_atacar": {
     "en": "Click to attack",
     "pt": "Clique para atacar"
+  },
+  "ui.tabuleiro.clique_novamente_para_confirmar": {
+    "en": "👣 Click the tile again to confirm · Esc cancels",
+    "pt": "👣 Clique novamente na casa para confirmar · Esc cancela"
   },
   "ui.tabuleiro.clique_voltar_cidade": {
     "en": "Click to return to the city",

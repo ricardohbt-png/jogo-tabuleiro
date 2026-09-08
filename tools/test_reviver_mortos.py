@@ -122,6 +122,257 @@ async def main():
     await r.handle_animar_mortos("m", {"cadaver_id": "c1"})
     check("rejeita por slots insuficientes", any("Slots insuficientes" in e for e in r._errs))
 
+    # ── Helpers da fila de servos (Tasks 1–4) ────────────────────────────────
+    def servo(sid, dex, pos=(1, 0), **extra):
+        a = {"id": sid, "nome": f"Servo {sid}", "tipo": "zombie",
+             "pos": list(pos), "vida_atual": 8, "vida_max": 8,
+             "movimento": 3, "moves_left": 3, "acted": False,
+             "dex": dex, "int_": 10, "ca": 10}
+        a.update(extra)
+        return a
+
+    def sala_com_servos(*servos):
+        """Sala com o mago já DENTRO da janela dos servos."""
+        r = setup()
+        p = mage()
+        p["animados"] = list(servos)
+        r.players = {"m": p}
+        r.animados_phase_pid = "m"
+        for a in servos:
+            a["initiative"] = r.initiative_value(a)
+        ordenados = sorted(servos, key=lambda a: (-a["initiative"], -a["dex"], a["id"]))
+        r.animados_order = [a["id"] for a in ordenados]
+        r.animados_done = set()
+        r.prisioneiro_done = False
+        return r, p
+
+    # [8] O servo da vez é o de maior iniciativa
+    print("\n[8] animados_atual — ordem por iniciativa")
+    r, p = sala_com_servos(servo("s_lento", 8), servo("s_rapido", 18), servo("s_medio", 12))
+    check("fila começa no de maior iniciativa",
+          r._animados_atual("m") == "s_rapido")
+    check("ordem completa por iniciativa",
+          r.animados_order == ["s_rapido", "s_medio", "s_lento"])
+
+    # [9] Servo encerrado sai da vez
+    print("\n[9] animados_done tira o servo da vez")
+    r.animados_done.add("s_rapido")
+    check("passa ao segundo da ordem", r._animados_atual("m") == "s_medio")
+    r.animados_done.add("s_medio")
+    r.animados_done.add("s_lento")
+    check("fila vazia devolve None", r._animados_atual("m") is None)
+
+    # [10] Fila só existe dentro da janela deste jogador
+    print("\n[10] animados_atual fora da janela")
+    r2, _ = sala_com_servos(servo("s1", 14))
+    r2.animados_phase_pid = None
+    check("sem janela aberta devolve None", r2._animados_atual("m") is None)
+    r2.animados_phase_pid = "outro"
+    check("janela de outro jogador devolve None", r2._animados_atual("m") is None)
+
+    # [11] encerrar_animado avança a fila
+    print("\n[11] handle_encerrar_animado — avanço")
+    r, p = sala_com_servos(servo("s_rapido", 18), servo("s_medio", 12))
+    fechou = []
+    async def fake_end_turn(pid): fechou.append(pid)
+    r.handle_end_turn = fake_end_turn
+    await r.handle_encerrar_animado("m", "s_rapido")
+    check("primeiro servo marcado como encerrado", "s_rapido" in r.animados_done)
+    check("fila passa ao segundo", r._animados_atual("m") == "s_medio")
+    check("janela NÃO fechou ainda", fechou == [])
+    await r.handle_encerrar_animado("m", "s_medio")
+    check("fila vazia delega a handle_end_turn", fechou == ["m"])
+
+    # [12] Recusas
+    print("\n[12] handle_encerrar_animado — recusas")
+    r, p = sala_com_servos(servo("s1", 14))
+    r.handle_end_turn = fake_end_turn
+    r.animados_phase_pid = None
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa fora da janela", len(r._errs) == 1)
+    check("não marcou nada", r.animados_done == set())
+
+    r, p = sala_com_servos(servo("s1", 14))
+    r.handle_end_turn = fake_end_turn
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "id_que_nao_existe")
+    check("recusa id fora da fila", len(r._errs) == 1)
+
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    r.handle_end_turn = fake_end_turn
+    r._errs.clear()
+    await r.handle_encerrar_animado("m", "s1")
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa encerrar o mesmo servo duas vezes", len(r._errs) == 1)
+    check("a vez do seguinte foi preservada", r._animados_atual("m") == "s2")
+
+    # [12b] Guarda de fase: _voltar_para_cidade muda phase sem limpar
+    # animados_phase_pid, entao um encerrar_animado atrasado nao pode agir.
+    print("\n[12b] handle_encerrar_animado — fora da fase de jogo")
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    r.handle_end_turn = fake_end_turn
+    del r._is_turn                       # volta ao _is_turn real da classe
+    r.phase = "city"                     # o grupo voltou pra cidade
+    avisos = []
+    async def cap_aviso(pid): avisos.append(pid)
+    r._avisar_controle_de_monstro = cap_aviso
+    await r.handle_encerrar_animado("m", "s1")
+    check("recusa fora da fase playing", avisos == ["m"])
+    check("nao mexeu na fila", r.animados_done == set())
+
+    # [13] end_turn continua fechando tudo de uma vez (rede do timer anti-AFK)
+    print("\n[13] end_turn na janela fecha tudo")
+    r, p = sala_com_servos(servo("s1", 14), servo("s2", 10))
+    avancou = []
+    async def fake_advance(): avancou.append(True)
+    r._advance_initiative = fake_advance
+    r.initiative_active = True
+    await r.handle_end_turn("m")
+    check("janela fechada", r.animados_phase_pid is None)
+    check("fila limpa", r.animados_order == [] and r.animados_done == set())
+    check("iniciativa avançou", avancou == [True])
+
+    # [14] Servo travado é pulado com narração
+    print("\n[14] saltos de servo travado")
+    r, p = sala_com_servos(servo("s_rapido", 18),
+                           servo("s_dorme", 14, dormindo=True),
+                           servo("s_medio", 12))
+    ditos = []
+    async def cap_say(msg): ditos.append(msg)
+    r.gm_say = cap_say
+    async def fake_end_turn_3(pid): pass
+    r.handle_end_turn = fake_end_turn_3
+    check("dormindo não pode agir", r._animado_pode_agir(p["animados"][1]) is False)
+    await r.handle_encerrar_animado("m", "s_rapido")
+    check("pulou o adormecido", r._animados_atual("m") == "s_medio")
+    check("adormecido marcado como encerrado", "s_dorme" in r.animados_done)
+    check("narrou o salto", len(ditos) == 1)
+
+    # [15] Servo que morre no meio da janela sai da fila
+    print("\n[15] servo morto sai da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 14), servo("s_c", 10))
+    r.gm_say = cap_say
+    r.handle_end_turn = fake_end_turn_3
+    p["animados"][1]["vida_atual"] = 0     # s_b morreu por lava/retaliação
+    await r.handle_encerrar_animado("m", "s_a")
+    check("morto é pulado", r._animados_atual("m") == "s_c")
+
+    # [16] Servo dominado por necromante não obedece
+    print("\n[16] servo dominado sai da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 14, dominado_por_monstro="mX"))
+    r.gm_say = cap_say
+    r.handle_end_turn = fake_end_turn_3
+    await r.handle_encerrar_animado("m", "s_a")
+    check("dominado não entra na vez", r._animados_atual("m") is None)
+
+    # [16b] O consumo roda DEPOIS do upkeep da abertura. O laco de upkeep
+    # decrementa dormindo_rodadas e ACORDA o servo; consumir antes dele leria o
+    # flag da rodada passada e faria o servo perder a vez sem motivo.
+    print("\n[16b] abertura da janela — sono que expira nao perde a vez")
+    r = setup()
+    pm = mage()
+    pm["spd"] = 5
+    dorminhoco = servo("s_acorda", 18, dormindo=True, dormindo_rodadas=1)
+    acordado   = servo("s_ok", 12)
+    pm["animados"] = [dorminhoco, acordado]
+    r.players = {"m": pm}
+    r.animados_phase_pid = None          # janela AINDA fechada: vamos abri-la
+    ditos_ab = []
+    async def cap_say_ab(msg): ditos_ab.append(msg)
+    r.gm_say = cap_say_ab
+    await r.handle_end_turn("m")
+    check("a janela abriu", r.animados_phase_pid == "m")
+    check("o sono expirou no upkeep", not dorminhoco.get("dormindo"))
+    check("quem acordou NAO foi consumido", "s_acorda" not in r.animados_done)
+    check("e e ele o servo da vez", r._animados_atual("m") == "s_acorda")
+
+    # [17] Prisioneiro e o ultimo da fila
+    print("\n[17] prisioneiro no fim da fila")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12))
+    r.prisoner = {"freed": True, "alive": True, "rescuer_pid": "m",
+                  "pos": [2, 2], "moves_left": 6}
+    fechou_pr = []
+    async def fake_end_turn_pr(pid): fechou_pr.append(pid)
+    r.handle_end_turn = fake_end_turn_pr
+    await r.handle_encerrar_animado("m", "s_a")
+    check("ainda em servo", r._animados_atual("m") == "s_b")
+    await r.handle_encerrar_animado("m", "s_b")
+    check("servos esgotados -> prisioneiro", r._animados_atual("m") == "prisoner")
+    check("janela ainda aberta", fechou_pr == [])
+    await r.handle_encerrar_animado("m", "prisoner")
+    check("prisioneiro encerrado fecha a janela", fechou_pr == ["m"])
+
+    # [18] Prisioneiro de OUTRO resgatador nao entra na minha fila
+    print("\n[18] prisioneiro alheio")
+    r, p = sala_com_servos(servo("s_a", 18))
+    r.prisoner = {"freed": True, "alive": True, "rescuer_pid": "outro",
+                  "pos": [2, 2], "moves_left": 6}
+    r.handle_end_turn = fake_end_turn_pr
+    r._errs.clear()
+    r.animados_done.add("s_a")
+    check("nao aparece na minha vez", r._animados_atual("m") is None)
+    await r.handle_encerrar_animado("m", "prisoner")
+    check("recusa encerrar prisioneiro alheio", len(r._errs) == 1)
+
+    # [19] Prisioneiro morto no meio da janela nao trava o fechamento
+    print("\n[19] prisioneiro morto")
+    r, p = sala_com_servos(servo("s_a", 18))
+    r.prisoner = {"freed": True, "alive": False, "rescuer_pid": "m",
+                  "pos": [2, 2], "moves_left": 6}
+    fechou2 = []
+    async def fake_end_turn2(pid): fechou2.append(pid)
+    r.handle_end_turn = fake_end_turn2
+    await r.handle_encerrar_animado("m", "s_a")
+    check("prisioneiro morto nao segura a janela", fechou2 == ["m"])
+
+    # [20] Encerrar a vez ESGOTA a peca. Sem isto, "encerrar" era so
+    # contabilidade da fila: handle_mover_animado nao olha animados_done, entao
+    # a peca continuava andando e atacando depois de passar a vez.
+    print("\n[20] encerrar a vez esgota o orcamento da peca")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12))
+    async def fake_end_turn_z(pid): pass
+    r.handle_end_turn = fake_end_turn_z
+    sa = p["animados"][0]
+    sa["moves_left"] = 3; sa["acted"] = False
+    await r.handle_encerrar_animado("m", "s_a")
+    check("movimento zerado", sa["moves_left"] == 0)
+    check("acao marcada como usada", sa["acted"] is True)
+    check("o seguinte segue intacto", p["animados"][1]["moves_left"] == 3)
+
+    # [21] O conjunto dos encerrados vai ao cliente. Deduzir pela ordem so
+    # identifica quem ficou ATRAS do atual, e uma peca escolhida fora de ordem
+    # fica ADIANTE dele -- o cliente precisa do conjunto exato.
+    print("\n[21] animados_done viaja no game_state")
+    r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12), servo("s_c", 10))
+    r.handle_end_turn = fake_end_turn_z
+    await r.handle_encerrar_animado("m", "s_c")     # escolha FORA de ordem
+    r.tiles = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]     # mapa minimo p/ serializar
+    r.map_w, r.map_h = 3, 3
+    r.explored = {(x, y) for y in range(3) for x in range(3)}
+    payload = r._game_state_payload()
+    check("animados_done no payload", "animados_done" in payload)
+    check("traz a peca escolhida fora de ordem", "s_c" in payload["animados_done"])
+    check("nao traz quem ainda nao foi", "s_a" not in payload["animados_done"])
+    check("o atual segue sendo o primeiro", payload["animados_atual"]["m"] == "s_a")
+
+    # [22] Janela nao abre sem ninguem controlavel: todos os servos dormindo e
+    # sem prisioneiro nao pode prender o jogador numa janela vazia.
+    print("\n[22] janela vazia nao abre")
+    r = setup()
+    pz = mage(); pz["spd"] = 5
+    pz["animados"] = [servo("z1", 18, dormindo=True, dormindo_rodadas=5),
+                      servo("z2", 12, dormindo=True, dormindo_rodadas=5)]
+    r.players = {"m": pz}
+    r.animados_phase_pid = None
+    avancou_z = []
+    async def fake_adv_z(): avancou_z.append(True)
+    r._advance_initiative = fake_adv_z
+    r.initiative_active = True
+    await r.handle_end_turn("m")
+    check("a janela NAO abriu", r.animados_phase_pid is None)
+    check("o turno avancou normalmente", avancou_z == [True])
+
     print(f"\n{'='*40}\nPASS={PASS} FAIL={FAIL}\n{'='*40}")
     sys.exit(1 if FAIL else 0)
 

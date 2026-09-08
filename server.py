@@ -8910,6 +8910,8 @@ class GameRoom:
         self.corpses = {}       # id -> cadÃ¡ver (monstro morto, alvo de Animar Mortos)
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo apÃ³s o mago)
         self.animados_order = []        # ids dos servos na ordem de iniciativa da janela atual
+        self.animados_done = set()      # ids dos servos que jÃ¡ encerraram a vez nesta janela
+        self.prisioneiro_done = False   # o prisioneiro jÃ¡ encerrou a vez nesta janela
         self.last_stand_pid = None      # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
         self.last_stand_event = None    # asyncio.Event sinalizado ao fechar a janela
         self.last_stand_timer_task = None
@@ -12287,6 +12289,9 @@ class GameRoom:
 
         self.phase = "playing"
         self.animados_phase_pid = None   # ponteiro de turno transitÃ³rio (zera em qualquer entrada)
+        self.animados_order = []         # idem â€” a fila nunca sobrevive a uma entrada
+        self.animados_done = set()
+        self.prisioneiro_done = False
         self.last_stand_pid = None   # idem â€” nunca deve sobreviver a uma nova entrada
 
         # A masmorra sÃ³ Ã© GERADA na 1Âª entrada da expediÃ§Ã£o (ou apÃ³s concluÃ­da).
@@ -27985,6 +27990,131 @@ class GameRoom:
 
         await self.push_state()
 
+    def _animado_pode_agir(self, a):
+        """Um servo só entra na fila se tiver como fazer alguma coisa na vez dele.
+
+        Morto, adormecido por magia ou preso pelo rodamoinho com o turno
+        bloqueado: a fila salta, para o jogador não gastar um clique numa peça
+        travada. Quem narra o motivo do salto é _consumir_animados_travados.
+        """
+        if not a or a.get("vida_atual", 0) <= 0:
+            return False
+        if a.get("dormindo"):
+            return False
+        if a.get("_rodamoinho_bloqueado_turno") or a.get("_rodamoinho_profundo_bloqueado_turno"):
+            return False
+        return True
+
+    def _animados_atual(self, pid):
+        """Quem este jogador controla AGORA na janela pós-turno.
+
+        Derivado, nunca armazenado: o primeiro de animados_order que ainda não
+        encerrou e consegue agir; esgotados os servos, o prisioneiro liberto que
+        ele resgatou; esgotado tudo, None (a janela pode fechar).
+        """
+        if self.animados_phase_pid != pid:
+            return None
+        p = self.players.get(pid)
+        if not p:
+            return None
+        por_id = {a.get("id"): a for a in p.get("animados", [])}
+        for aid in self.animados_order:
+            if aid in self.animados_done:
+                continue
+            a = por_id.get(aid)
+            if a and not a.get("dominado_por_monstro") and self._animado_pode_agir(a):
+                return aid
+        pr = self.prisoner
+        if (not self.prisioneiro_done and pr and pr.get("freed") and pr.get("alive")
+                and pr.get("rescuer_pid") == pid):
+            return "prisoner"
+        return None
+
+    async def _consumir_animados_travados(self, pid):
+        """Tira da fila, narrando, todo servo que não tem como agir.
+
+        Chamado ao abrir a janela e depois de cada encerramento, para o jogador
+        só ser levado a peças jogáveis. Marcar em animados_done (em vez de só
+        pular na derivação) mantém a contagem "servo N de M" honesta.
+        """
+        p = self.players.get(pid)
+        if not p:
+            return
+        por_id = {a.get("id"): a for a in p.get("animados", [])}
+        for aid in self.animados_order:
+            if aid in self.animados_done:
+                continue
+            a = por_id.get(aid)
+            if a is None or a.get("dominado_por_monstro"):
+                self.animados_done.add(aid)
+                continue
+            if self._animado_pode_agir(a):
+                break              # achou o da vez: para de consumir
+            self.animados_done.add(aid)
+            if a.get("vida_atual", 0) <= 0:
+                motivo = T("narracao.servo_salto_morto")
+            elif a.get("dormindo"):
+                motivo = T("narracao.servo_salto_dormindo")
+            else:
+                motivo = T("narracao.servo_salto_preso")
+            await self.gm_say(T("narracao.servo_perde_a_vez",
+                                servo=a.get("nome") or a.get("tipo") or "?",
+                                motivo=motivo))
+
+    def _zerar_turno_da_peca(self, pid, animado_id):
+        """Esgota o orcamento da peca que acabou de encerrar a vez."""
+        if animado_id == "prisoner":
+            if self.prisoner:
+                self.prisoner["moves_left"] = 0
+            return
+        p = self.players.get(pid)
+        for a in (p.get("animados", []) if p else []):
+            if a.get("id") == animado_id:
+                a["moves_left"] = 0
+                a["acted"] = True
+                return
+
+    async def handle_encerrar_animado(self, pid, animado_id):
+        """Encerra a vez de UMA peça da janela pós-turno e passa à seguinte.
+
+        Espelha o mestre_encerrar_monstro do Modo Mestre. Quando não sobra
+        ninguém, delega a handle_end_turn: como animados_phase_pid já é este
+        jogador, o bloco de abertura da janela é pulado pela própria condição
+        que já está lá e a execução cai direto no fechamento.
+        """
+        # Mesma guarda dos irmaos handle_mover_animado/handle_atacar_animado.
+        # Nao e redundante com o teste abaixo: _is_turn tambem exige
+        # phase == "playing". _voltar_para_cidade muda a fase SEM limpar
+        # animados_phase_pid, entao sem isto um encerrar_animado atrasado
+        # dispararia um push_state de masmorra em quem ja esta na cidade.
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        if self.animados_phase_pid != pid:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.nao_ha_servo_seu_para_encerrar_agora")}); return
+        if animado_id == "prisoner":
+            pr = self.prisoner
+            if (self.prisioneiro_done or not pr or not pr.get("freed")
+                    or not pr.get("alive") or pr.get("rescuer_pid") != pid):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
+            self.prisioneiro_done = True
+        else:
+            if animado_id not in self.animados_order or animado_id in self.animados_done:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
+            self.animados_done.add(animado_id)
+        # Encerrar a vez tem de ser REAL, nao so contabilidade da fila: sem zerar
+        # o orcamento, a peca continuava podendo mover e atacar depois de passar
+        # a vez (handle_mover_animado/handle_atacar_animado nao olham a fila).
+        self._zerar_turno_da_peca(pid, animado_id)
+        await self._consumir_animados_travados(pid)
+        if self._animados_atual(pid) is None:
+            await self.handle_end_turn(pid)
+            return
+        await self.push_state()
+
     async def handle_end_turn(self, pid):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
@@ -28060,6 +28190,8 @@ class GameRoom:
         if (animados_vivos or controla_prisioneiro) and self.animados_phase_pid != pid and not fosso_encerrando:
             self.animados_phase_pid = pid
             self.animados_order = [a["id"] for a in animados_vivos]
+            self.animados_done = set()
+            self.prisioneiro_done = False
             partes = []
             if animados_vivos:
                 # Upkeep: cada cadÃ¡ver reanimado custa -1 fome e -1 sede por turno.
@@ -28093,17 +28225,29 @@ class GameRoom:
                 if pr.get("_rodamoinho_bloqueado_turno"):
                     pr["moves_left"] = 0
                 partes.append(T("narracao.o_prisioneiro"))
+            # DEPOIS do upkeep, nao antes: o laco acima roda os testes de
+            # rodamoinho desta rodada e ACORDA quem teve o sono expirado. Consumir
+            # antes leria flags da rodada passada e faria o servo perder a vez.
+            await self._consumir_animados_travados(pid)
             # LISTA, não string pronta: o motor junta com o separador do idioma
             # de quem lê, e cada fragmento é ele próprio um T.
             recursos = (T("narracao.turno_controle_recursos",
                           fome=f"{p['fome']:.0f}", sede=f"{p['sede']:.0f}")
                         if animados_vivos else "")
-            await self.gm_say(T("narracao.turno_de_controle_de_mova_e_encerre",
-                                heroi=p["name"], partes=partes, recursos=recursos))
-            await self.push_state()
-            return
+            # Se o upkeep + os saltos nao deixaram NINGUEM controlavel (ex.: todos
+            # os servos dormindo por um sono em area), nao abre uma janela vazia:
+            # desfaz o ponteiro e cai no encerramento normal do turno logo abaixo.
+            if self._animados_atual(pid) is None:
+                self.animados_phase_pid = None
+            else:
+                await self.gm_say(T("narracao.turno_de_controle_de_mova_e_encerre",
+                                    heroi=p["name"], partes=partes, recursos=recursos))
+                await self.push_state()
+                return
         self.animados_phase_pid = None
         self.animados_order = []
+        self.animados_done = set()
+        self.prisioneiro_done = False
 
         # O herói oculto no Fosso só reaparece depois de concluir a rodada
         # inteira que perdeu; o turno atual continua podendo ser encerrado.
@@ -37249,6 +37393,15 @@ class GameRoom:
             "dungeon_intro_until_ms": self.dungeon_intro_until_ms,
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
             "animados_order": self.animados_order,
+            # Quem cada jogador controla agora na janela pós-turno (id do
+            # servo, "prisoner", ou None) — dict por pid porque este payload é
+            # montado UMA vez para a sala inteira (sem pid em escopo aqui); o
+            # cliente indexa pelo próprio GS.myPid.
+            "animados_atual": {pid_: self._animados_atual(pid_) for pid_ in self.players},
+            # Quem ja encerrou a vez nesta janela. O cliente precisa do conjunto
+            # exato: deduzir pela ordem so identifica quem ficou ATRAS do atual,
+            # e uma peca escolhida fora de ordem fica adiante dele.
+            "animados_done": sorted(self.animados_done, key=str),
             "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do inÃ­cio do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,
@@ -38182,6 +38335,9 @@ async def handler(ws):
                     dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_mover_prisioneiro(pid, dx, dy)
+
+                elif t == "encerrar_animado":
+                    if room: await room.handle_encerrar_animado(pid, msg.get("animado_id"))
 
                 elif t == "atacar_animado":
                     if room: await room.handle_atacar_animado(pid, msg.get("animado_id"), msg.get("target_id"))

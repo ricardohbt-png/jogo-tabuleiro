@@ -1711,6 +1711,88 @@ const GS = (() => {
     if (monsterId != null) msg.monster_id = monsterId;
     send(msg);
   }
+  // ── Janela pós-turno do mago: a fila de servos ─────────────────────────────
+  // O servidor é quem manda: `animados_atual` no game_state diz quem eu controlo
+  // agora (id do servo, "prisoner", ou null). Estes dois helpers são a única
+  // fonte da decisão "encerrar servo vs. encerrar turno" no cliente.
+  function encerrarAnimado(animadoId) {
+    return send({ type: 'encerrar_animado', animado_id: animadoId });
+  }
+
+  function animadoAtual() {
+    // DICT POR PID, não escalar: o game_state é montado UMA vez para a sala
+    // inteira (_game_state_payload não recebe pid), então cada jogador lê a
+    // própria entrada.
+    return gameState?.animados_atual?.[myPid] ?? null;
+  }
+
+  // Devolve a peça cuja vez o botão de encerrar deve fechar, ou null quando o
+  // botão significa "encerrar o turno do herói". `selId` é a seleção visual do
+  // renderer (o jogador pode ter clicado noutro servo, e a fila respeita isso).
+  function animadoPendenteParaEncerrar(selId) {
+    if (!gameState || gameState.animados_turn !== myPid) return null;
+    const atual = animadoAtual();
+    if (atual == null) return null;
+    if (selId == null) return atual;
+    if (selId === 'prisoner') return 'prisoner';
+    const me = (gameState.players || []).find(p => p.id === myPid);
+    const vivo = (me?.animados || []).some(
+      a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
+    if (!vivo) return atual;
+    // Peca que ja encerrou a vez cai de volta no atual. Deduzir isso pela ordem
+    // so pegava quem ficou ATRAS do atual -- e escolher um servo fora de ordem
+    // (que a fila permite de proposito) deixa a peca usada ADIANTE dele. Por
+    // isso o servidor publica o conjunto exato.
+    if (animadoJaEncerrou(selId)) return atual;
+    if (!(gameState.animados_order || []).includes(selId)) return atual;
+    return selId;
+  }
+
+  // Uma peca da janela pos-turno ja gastou a vez? Autoritativo: vem do servidor.
+  function animadoJaEncerrou(id) {
+    if (id == null) return false;
+    return (gameState?.animados_done || []).some(d => String(d) === String(id));
+  }
+
+  // A selecao visual ainda aponta para uma peca que pode agir? O renderer usa
+  // isto para voltar sozinho a peca da vez depois de encerrar uma escolhida
+  // fora de ordem -- sem isso o clique e o joystick agiriam com a peca gasta.
+  function animadoSelecaoValida(selId) {
+    if (!gameState || gameState.animados_turn !== myPid || selId == null) return false;
+    if (animadoJaEncerrou(selId)) return false;
+    if (selId === 'prisoner') {
+      const pr = gameState.prisoner;
+      return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === myPid);
+    }
+    const me = (gameState.players || []).find(p => p.id === myPid);
+    return (me?.animados || []).some(
+      a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
+  }
+
+  // Quem o controle dirige AGORA: a peça da vez na janela pós-turno, ou o herói
+  // fora dela. Devolve { kind, id, pos, moves_left, ref } ou null.
+  // `kind` é 'hero' | 'animado' | 'prisoner'.
+  function pecaControlada() {
+    if (!gameState || !isMyTurn) return null;
+    const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
+    if (gameState.animados_turn === myPid) {
+      const atual = animadoAtual();
+      if (atual === 'prisoner') {
+        const pr = gameState.prisoner;
+        if (!pr || !pr.alive) return null;
+        return { kind: 'prisoner', id: 'prisoner', pos: pr.pos,
+                 moves_left: pr.moves_left || 0, ref: pr };
+      }
+      const a = (me?.animados || []).find(x => x && x.id === atual);
+      if (!a) return null;
+      return { kind: 'animado', id: a.id, pos: a.pos,
+               moves_left: a.moves_left || 0, ref: a };
+    }
+    if (!me) return null;
+    return { kind: 'hero', id: me.id, pos: me.pos,
+             moves_left: me.moves_left || 0, ref: me };
+  }
+
   function endTurn()       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
@@ -2412,6 +2494,53 @@ const GS = (() => {
   // Casas de monstro que podem receber o ataque básico agora. O renderer usa
   // esta consulta pura para a mira do joystick; o servidor continua validando
   // o ataque quando a mensagem é recebida.
+  // Casas que o servo animado/elemental selecionado pode atacar.
+  //
+  // Fonte UNICA da regra no cliente — consumida pelo render 2D, pelo render 3D,
+  // pelo clique do tabuleiro e pelo joystick. Espelha os tres ramos que o
+  // servidor valida em handle_atacar_animado:
+  //   1. elemental com ficha completa  -> _animado_attack_in_range
+  //   2. legado `especial: 'linha_3q'` -> _em_linha_cardinal(..., 3)
+  //   3. o resto (corpo a corpo)       -> _cardinal_adjacent (so as 4 ortogonais)
+  //
+  // Antes esta regra estava escrita em tres lugares que ja divergiam: os renders
+  // cravavam "cardinal, alcance 1 (ou 3)" e mentiam para elementais de alcance
+  // maior, e o clique aceitava a diagonal no corpo a corpo, mandando um ataque
+  // que o servidor recusa.
+  //
+  // Simplificacao conhecida e aceita: nao modela custo vertical de terreno nem
+  // footprint 2x2 (o servidor modela). O realce pode oferecer uma casa que o
+  // servidor recusa; a recusa chega como erro normal e nada fica inconsistente.
+  function animadoAttackTargetTiles(animado) {
+    if (!gameState || !animado || !animado.pos || animado.vida_atual <= 0) return [];
+    const [ax, ay] = animado.pos;
+    const atk = (animado.attacks || [])[0] || {};
+    const alcance = Number(atk.range || 0);
+    const emLinha = !!atk.range_shape;
+    const out = [], seen = new Set();
+    for (const monster of gameState.monsters || []) {
+      if (!monster || monster.hp <= 0) continue;
+      for (const [tx, ty] of monsterTiles(monster)) {
+        const dx = Math.abs(ax - tx), dy = Math.abs(ay - ty);
+        const dist = Math.max(dx, dy);
+        const cardinal = (dx === 0 || dy === 0);
+        let ok;
+        if (animado.especial === 'linha_3q' && !alcance) {
+          ok = cardinal && dist >= 1 && dist <= 3;
+        } else if (alcance) {
+          ok = emLinha ? (cardinal && dist >= 1 && dist <= alcance)
+                       : (dist >= 1 && dist <= alcance);
+          if (ok) ok = hasLineOfSight(gameState, ax, ay, tx, ty);
+        } else {
+          ok = cardinal && dist === 1;
+        }
+        const key = tx + ',' + ty;
+        if (ok && !seen.has(key)) { seen.add(key); out.push({ x: tx, y: ty, targetId: monster.id }); }
+      }
+    }
+    return out;
+  }
+
   function attackTargetTiles() {
     if (!gameState || gameState.phase !== 'playing' || !isMyTurn) return [];
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
@@ -2959,6 +3088,13 @@ const GS = (() => {
     // ── Actions ──
     move,
     alterarAltura,
+    encerrarAnimado,
+    animadoAttackTargetTiles,
+    animadoJaEncerrou,
+    animadoSelecaoValida,
+    pecaControlada,
+    animadoAtual,
+    animadoPendenteParaEncerrar,
     endTurn,
     sceneChoice,
     sceneTest,

@@ -5033,6 +5033,38 @@ function _atualizarBotaoEncerrarTurno(state){
         || state.last_stand_pid === GS.myPid
         || state.animados_turn === GS.myPid));
   btn.disabled = !podeEncerrar;
+
+  // Rótulo dinâmico durante a janela dos servos: "⏭ Encerrar servo (2/3)".
+  // `_i18nApply` sobrescreve o textContent de todo [data-i18n], então o atributo
+  // SAI enquanto o texto é calculado e VOLTA quando não é mais. Esta função roda
+  // a cada game_state, e a troca de idioma reenvia o estado — então o rótulo
+  // acompanha o idioma sozinho, sem entrar na lista do _setLang.
+  const span = btn.querySelector('span');
+  if(!span) return;
+  // Dict por pid: cada jogador lê a própria entrada.
+  const atual = state?.animados_atual?.[GS.myPid] ?? null;
+  const naFila = state?.animados_turn === GS.myPid && atual !== null;
+  if(naFila){
+    const ordem = state.animados_order || [];
+    const total = ordem.length + (_temPrisioneiroNaFila(state) ? 1 : 0);
+    // A posição é o índice do servo da vez na ordem de iniciativa. O prisioneiro
+    // não está em `animados_order`: ele é sempre o último da fila.
+    const idx = ordem.indexOf(atual);
+    const pos = (idx >= 0) ? idx + 1 : total;
+    span.removeAttribute('data-i18n');
+    span.textContent = atual === 'prisoner'
+      ? t('ui.hud.encerrar_prisioneiro')
+      : t('ui.hud.encerrar_servo', {pos, total});
+  } else if(!span.hasAttribute('data-i18n')){
+    span.setAttribute('data-i18n', 'ui.hud.encerrar_turno');
+    span.textContent = t('ui.hud.encerrar_turno');
+  }
+}
+
+// O prisioneiro liberto ocupa a última posição da fila da janela pós-turno.
+function _temPrisioneiroNaFila(state){
+  const pr = state?.prisoner;
+  return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === GS.myPid);
 }
 
 function handleGameState(msg){
@@ -7702,15 +7734,11 @@ function renderMap(state){
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
+  // Regra unica em GS.animadoAttackTargetTiles — esta copia cravava
+  // "cardinal, alcance 1 (ou 3)" e mentia para servos elementais de alcance maior.
   const atkRefAnimado2D = selAnimado2D || window._animadoHover;
-  if(atkRefAnimado2D && atkRefAnimado2D.pos){
-    const [ax,ay]=atkRefAnimado2D.pos;
-    const isElec2D = atkRefAnimado2D.especial === 'linha_3q';
-    const atkRange2D = isElec2D ? 3 : 1;
-    for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
-      for(let r=1; r<=atkRange2D; r++)
-        attackable.add(`${ax+ddx*r},${ay+ddy*r}`);
-  }
+  for(const alvo of GS.animadoAttackTargetTiles(atkRefAnimado2D))
+    attackable.add(`${alvo.x},${alvo.y}`);
   if(GS.isMaster()){
     _masterAttackSet(state).forEach(k => attackable.add(k));
   }
@@ -12528,6 +12556,7 @@ function renderBotoesAcaoBonus(heroi){
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
+let _lastAnimadosAtual = null;   // último `animados_atual` visto (espelha a fila do servidor)
 let _prisSel = false;            // prisioneiro liberto selecionado (janela pós-turno do resgatador)
 let _lastAnimadosTurn = null;
 function trocarAbaPainel(aba){ _painelAbaPedro = aba; if(GS.gameState) renderMyPanel(GS.gameState); }
@@ -19641,7 +19670,12 @@ function endTurn(){
   // que um clique atrasado envie um turno fora da vez do jogador.
   if(!btn || btn.disabled) return;
   getAudioContext();
-  if(!GS.endTurn()) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
+  // Na janela pós-turno do mago, este botão encerra a vez de UMA peça e o
+  // servidor seleciona a próxima. Só a última fecha a janela. A decisão mora em
+  // gameState.js; aqui só passamos a seleção visual atual.
+  const peca = GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel);
+  const ok = (peca != null) ? GS.encerrarAnimado(peca) : GS.endTurn();
+  if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
 }
 
 // Mantém o comando de encerrar turno ligado mesmo se o código for carregado em
@@ -21145,7 +21179,7 @@ document.addEventListener('keydown', e=>{
     case 'ArrowDown':  case 's': case 'S': GS.move(0,1);  e.preventDefault(); break;
     case 'ArrowLeft':  case 'a': case 'A': GS.move(-1,0); e.preventDefault(); break;
     case 'ArrowRight': case 'd': case 'D': GS.move(1,0);  e.preventDefault(); break;
-    case 'Enter': if(GS.isMyTurn) GS.endTurn();           break;
+    case 'Enter': if(GS.isMyTurn) endTurn();              break;
   }
 });
 
@@ -21317,6 +21351,14 @@ function _gamepadRumble(kind = 'confirm'){
 }
 function _clearGamepadEndTurnConfirm(){ _gamepadEndTurnConfirmUntil = 0; }
 function _gamepadRequestEndTurn(now){
+  // Encerrar a vez de UM servo nao e destrutivo — so passa a peca adiante. Pedir
+  // dupla-pressao aqui dobraria os apertos de uma fila de 3 servos para 6.
+  if(GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel) != null){
+    _clearGamepadEndTurnConfirm();
+    _gamepadRumble('endTurn');
+    endTurn();
+    return;
+  }
   if(now <= _gamepadEndTurnConfirmUntil){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
@@ -21659,17 +21701,23 @@ function _gamepadBoard(state){
 function _gamepadEnsureCursor(state){
   if(!state?.tiles?.length) return null;
   const W = state.tiles[0].length, H = state.tiles.length;
+  // A ancora e a PECA CONTROLADA, nao o heroi: na janela pos-turno do mago ela
+  // e o servo (ou o prisioneiro) da vez. Como o id entra na chave, trocar de
+  // servo joga o cursor sobre o servo novo — e isso que faz o encadeamento
+  // parecer automatico no controle.
+  const peca = GS.pecaControlada();
   const me = state.players?.find(p => p.id === GS.myPid && p.alive);
+  const ancora = peca || (me ? {id: me.id, pos: me.pos} : null);
   const board = _gamepadBoard(state);
-  const playerKey = me?.pos ? `${board}:${me.id}:${me.pos[0]},${me.pos[1]}` : '';
+  const playerKey = ancora?.pos ? `${board}:${ancora.id}:${ancora.pos[0]},${ancora.pos[1]}` : '';
   const valid = Array.isArray(_gamepadInput.cursor)
     && _gamepadInput.cursor[0] >= 0 && _gamepadInput.cursor[1] >= 0
     && _gamepadInput.cursor[0] < W && _gamepadInput.cursor[1] < H;
-  // Todo deslocamento do herói reinicia o cursor sobre ele. O jogador pode
-  // então explorar com o analógico direito sem o cursor ficar esquecido fora
-  // da tela após uma caminhada longa.
+  // Todo deslocamento do heroi reinicia o cursor sobre ele. O jogador pode
+  // entao explorar com o analogico direito sem o cursor ficar esquecido fora
+  // da tela apos uma caminhada longa.
   if(!valid || _gamepadInput.cursorBoard !== board || _gamepadInput.cursorPlayerKey !== playerKey){
-    _gamepadInput.cursor = me?.pos ? [...me.pos] : [0, 0];
+    _gamepadInput.cursor = ancora?.pos ? [...ancora.pos] : [0, 0];
     _gamepadInput.cursorBoard = board;
     _gamepadInput.cursorPlayerKey = playerKey;
   }
@@ -21725,6 +21773,23 @@ function _gamepadAtualizarPreviaMovimento(state){
     || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow) return;
   const cursor = _gamepadEnsureCursor(state);
   if(!cursor) return;
+  const peca = GS.pecaControlada();
+  // Servo/prisioneiro: GS.resolveTileClick e do HEROI e nao serve aqui. A rota
+  // sai do mesmo GS.findPath sobre o orcamento da peca que o clique do mouse ja
+  // usa no ramo de servo do handleTileClick.
+  if(peca && peca.kind !== 'hero'){
+    const exp = new Set((state.explored || []).map(([x, y]) => `${x},${y}`));
+    for(const [rx, ry] of (state.revealed || [])) exp.add(`${rx},${ry}`);
+    const passos = GS.findPath(state.tiles, exp, peca.pos[0], peca.pos[1],
+                               cursor[0], cursor[1], peca.moves_left);
+    if(passos && passos.length){
+      _selecionarPreviaMovimento({type:'move', path:passos}, cursor[0], cursor[1], false, peca);
+    } else if(GS.pendingMove){
+      GS.pendingMove = null;
+      _clearMovePreviewVisual();
+    }
+    return;
+  }
   const action = GS.resolveTileClick(cursor[0], cursor[1]);
   if(action?.type === 'move'){
     _selecionarPreviaMovimento(action, cursor[0], cursor[1], false);
@@ -21808,6 +21873,10 @@ function _aimSeedGamepadCursor(){
 }
 
 function _gamepadAttackTargets(){
+  // Na janela pos-turno o alvo e do SERVO da vez, pela mesma regra do realce.
+  const peca = GS.pecaControlada();
+  if(peca?.kind === 'animado') return GS.animadoAttackTargetTiles(peca.ref) || [];
+  if(peca?.kind === 'prisoner') return [];   // o prisioneiro so se move
   return GS.attackTargetTiles?.() || [];
 }
 
@@ -21885,8 +21954,8 @@ function _gamepadEnterAttackMode(state){
   window._gamepadAttackRangePreview = true;
   _gamepadInput.rightMode = 'cursor';
   const cursor = _gamepadEnsureCursor(state);
-  const me = state.players?.find(p => p.id === GS.myPid && p.alive);
-  const [ox, oy] = cursor || me?.pos || [0, 0];
+  const peca = GS.pecaControlada();
+  const [ox, oy] = cursor || peca?.pos || [0, 0];
   const initial = targets.reduce((best, target) => {
     const distance = Math.max(Math.abs(target.x - ox), Math.abs(target.y - oy));
     const bestDistance = Math.max(Math.abs(best.x - ox), Math.abs(best.y - oy));
@@ -22304,7 +22373,10 @@ function _gamepadAccept(state){
   // Interações físicas recebem precedência sobre o atalho de combate: assim A
   // abre um baú ou recolhe um item selecionado, mesmo se houver inimigos no
   // alcance da arma naquele turno.
-  if(_gamepadInteractAtCursor(state)) return;
+  // Baú, item no chão e ciclo de alvos sao do HEROI e ancoram em me.pos: na
+  // janela pos-turno eles agiriam pela peca errada.
+  const _naJanelaServos = state?.animados_turn === GS.myPid;
+  if(!_naJanelaServos && _gamepadInteractAtCursor(state)) return;
   if(_gamepadEnterAttackMode(state)) return;
   const cursor = _gamepadEnsureCursor(state);
   if(cursor){
@@ -22320,6 +22392,7 @@ function _gamepadAccept(state){
 function _gamepadUsefulTargetTiles(state){
   const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
   if(!state || !me || !GS.isMyTurn) return [];
+  if(state.animados_turn === GS.myPid) return [];   // fila de servos: sem ciclo do heroi
   const out = [], seen = new Set();
   const add = (x, y, priority) => {
     const key = `${x},${y}`;
@@ -23429,6 +23502,15 @@ function _gamepadHudVisible(state){
 function _gamepadContextForCursor(state, player){
   const label = (key, icon) => ({ key, icon, text: t(key) });
   if(!GS.isMyTurn) return label('ui.joystick.contexto_aguarde', '⏳');
+  const _pecaCtx = GS.pecaControlada();
+  if(_pecaCtx && _pecaCtx.kind !== 'hero' && !_gamepadInput.attackMode){
+    return { icon: _pecaCtx.kind === 'prisoner' ? '🔗' : '☠️',
+             text: t('ui.joystick.contexto_peca_da_vez', {
+               nome: _pecaCtx.kind === 'prisoner'
+                 ? t('ui.hud.prisioneiro')
+                 : (_pecaCtx.ref.nome || _pecaCtx.ref.tipo || ''),
+               mov: _pecaCtx.moves_left }) };
+  }
   if(GS.pendingMove) return { icon:'👣', text:'A / clique novamente para confirmar · B / Esc cancelar' };
   if(_gamepadInput.attackMode) return label('ui.joystick.contexto_confirmar_alvo', '⚔');
 
@@ -34038,15 +34120,10 @@ function renderMap3D(state){
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
+  // Mesma fonte do 2D — ver GS.animadoAttackTargetTiles.
   const atkRefAnimado3D = selAnimado3D || window._animadoHover;
-  if(atkRefAnimado3D && atkRefAnimado3D.pos){
-    const [ax3,ay3] = atkRefAnimado3D.pos;
-    const isElec3D = atkRefAnimado3D.especial === 'linha_3q';
-    const atkRange3D = isElec3D ? 3 : 1;
-    for(const [ddx,ddy] of [[1,0],[-1,0],[0,1],[0,-1]])
-      for(let r=1; r<=atkRange3D; r++)
-        attackable3d.add(`${ax3+ddx*r},${ay3+ddy*r}`);
-  }
+  for(const alvo of GS.animadoAttackTargetTiles(atkRefAnimado3D))
+    attackable3d.add(`${alvo.x},${alvo.y}`);
   if(GS.isMaster()){
     _masterAttackSet(state).forEach(k => attackable3d.add(k));
   }
@@ -41559,19 +41636,23 @@ function on3DMouseMove(e){
     el.style.cursor='default';
 }
 
-function _selecionarPreviaMovimento(action, tx, ty, notify=true){
+// `peca` opcional: quando vem preenchida (GS.pecaControlada()), a previa e da
+// peca controlada — o servo da vez na janela pos-turno — em vez do heroi.
+function _selecionarPreviaMovimento(action, tx, ty, notify=true, peca=null){
   const st = GS.gameState;
   const me = st?.players?.find(p => p.id === GS.myPid && p.alive);
-  if(!me || !action?.path?.length) return false;
+  const origem = peca || me;
+  if(!origem?.pos || !action?.path?.length) return false;
   GS.pendingMove = {
     target: [tx, ty],
     path: action.path.map(step => [step[0], step[1]]),
     stopAtDoor: !!action.stopAtDoor,
-    origin: [me.pos[0], me.pos[1]],
-    moves_left: Number(me.moves_left) || 0
+    origin: [origem.pos[0], origem.pos[1]],
+    moves_left: Number(origem.moves_left) || 0,
+    animadoId: (peca && peca.kind !== 'hero') ? peca.id : null
   };
   renderMap(st);
-  if(notify) toast('👣 Clique novamente na casa para confirmar · Esc cancela', 'var(--gold)');
+  if(notify) toast(t('ui.tabuleiro.clique_novamente_para_confirmar'), 'var(--gold)');
   return true;
 }
 
@@ -41768,7 +41849,10 @@ function handleTileClick(tx, ty){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
       for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
       const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
-      if(passosP && passosP.length){ _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return; }
+      if(passosP && passosP.length){
+        GS.pendingMove = null; _clearMovePreviewVisual();
+        _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return;
+      }
       _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
     }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
@@ -41797,14 +41881,13 @@ function handleTileClick(tx, ty){
               renderMyPanel(GS.gameState);
               return;
             }
-            const dx_a = Math.abs(a.pos[0]-mon.pos[0]), dy_a = Math.abs(a.pos[1]-mon.pos[1]);
             const ataqueA = (a.attacks || [])[0] || {};
             const alcanceA = Number(ataqueA.range || 0);
-            const distA = Math.max(dx_a, dy_a);
-            const emLinhaA = (dx_a === 0 || dy_a === 0) && distA >= 1 && distA <= alcanceA;
-            const emAlcanceA = alcanceA
-              ? (ataqueA.range_shape ? emLinhaA : distA >= 1 && distA <= alcanceA)
-              : distA === 1;
+            // Mesma regra do realce (e do servidor): corpo a corpo e CARDINAL.
+            // Antes esta copia aceitava a diagonal e mandava um ataque que o
+            // servidor recusava por falta de adjacencia.
+            const emAlcanceA = GS.animadoAttackTargetTiles(a)
+              .some(alvo => alvo.x === mon.pos[0] && alvo.y === mon.pos[1]);
             if(emAlcanceA) GS.atacarAnimado(a.id, mon.id);
             else toast(alcanceA
               ? t('ui.mestre.ataque_alcanca', {n: alcanceA, forma: ataqueA.range_shape ? t('ui.mestre.em_linha_reta') : ''})
@@ -41818,7 +41901,10 @@ function handleTileClick(tx, ty){
           const expSetMin = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
           for(const [rx,ry] of (_st.revealed||[])) expSetMin.add(`${rx},${ry}`);
           const passosMin = GS.findPath(_st.tiles, expSetMin, a.pos[0], a.pos[1], tx, ty, a.moves_left||0);
-          if(passosMin && passosMin.length){ _animarEEnviarMoverCaminhoMinino(a, passosMin); return; }
+          if(passosMin && passosMin.length){
+            GS.pendingMove = null; _clearMovePreviewVisual();
+            _animarEEnviarMoverCaminhoMinino(a, passosMin); return;
+          }
           _animadoSel=null; renderMap(_st); return;   // sem caminho/alcance → desseleciona
         }
       }
@@ -42304,28 +42390,38 @@ GS.on('gameState', msg => {
     HERO_DATA.pedro.animados = meNow.animados;
     if (GS.HERO_DATA && GS.HERO_DATA.pedro) GS.HERO_DATA.pedro.animados = meNow.animados;
   }
-  // Entrou na minha janela de controle (servos e/ou prisioneiro) → dica única.
-  if (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid) {
-    const meusAnimados = (msg.players.find(p=>p.id===GS.myPid)?.animados || [])
-      .filter(a => a.vida_atual > 0 && !a.dominado_por_monstro);
-    const porId = new Map(meusAnimados.map(a => [a.id, a]));
-    const ordem = (msg.animados_order || []).map(id => porId.get(id)).filter(Boolean);
-    const proximo = (ordem.length ? ordem : meusAnimados.sort((a, b) =>
-      (b.initiative || 0) - (a.initiative || 0))).find(a => !a.acted) || null;
-    _animadoSel = proximo ? proximo.id : null;
-    _prisSel = false;
-    const _pr = msg.prisoner;
-    const soPris = _pr && _pr.alive && _pr.freed && _pr.rescuer_pid === GS.myPid
-      && !((msg.players.find(p=>p.id===GS.myPid)?.animados||[]).some(a=>a.vida_atual>0));
-    toast(soPris
-      ? t('ui.hud.mova_prisioneiro')
-      : t('ui.animar.turno_servos') + (proximo ? ' ' + t('ui.animar.servo_selecionado', {nome:proximo.nome}) : ''));
+  // A fila é do servidor: `animados_atual` diz quem eu controlo agora. Espelhar
+  // isso na seleção é o que faz o próximo servo ser escolhido sozinho quando o
+  // anterior encerra — antes isso só acontecia na abertura da janela.
+  const _entrouNaJanela = (msg.animados_turn === GS.myPid && _lastAnimadosTurn !== GS.myPid);
+  const _atualServo = (msg.animados_turn === GS.myPid) ? (msg.animados_atual?.[GS.myPid] ?? null) : null;
+  // Resincronizar so quando `animados_atual` MUDA nao basta: escolher uma peca
+  // fora de ordem e encerra-la nao mexe no atual, e a selecao ficaria presa
+  // numa peca ja gasta -- o botao passaria a levar recusa e, no joystick, o
+  // clique agiria com a peca errada. Entao tambem resincroniza quando a selecao
+  // deixa de ser uma peca que pode agir.
+  const _selAtualCliente = _prisSel ? 'prisoner' : _animadoSel;
+  const _selObsoleta = (_atualServo != null) && !GS.animadoSelecaoValida(_selAtualCliente);
+  if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela || _selObsoleta) {
+    if (_atualServo === 'prisoner') {
+      _animadoSel = null;
+      _prisSel = true;
+      toast(t('ui.hud.mova_prisioneiro'));
+    } else if (_atualServo != null) {
+      _animadoSel = _atualServo;
+      _prisSel = false;
+      const nome = (msg.players.find(p => p.id === GS.myPid)?.animados || [])
+        .find(a => a.id === _atualServo)?.nome || '';
+      toast(t('ui.animar.turno_servos') + ' ' + t('ui.animar.servo_selecionado', {nome}));
+    }
     if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
   }
+  _lastAnimadosAtual = _atualServo;
   // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
     _animadoSel = null;
     _prisSel = false;
+    _lastAnimadosAtual = null;
   }
   _lastAnimadosTurn = msg.animados_turn || null;
   // Auto-refresh open chest window (contents may have changed)
