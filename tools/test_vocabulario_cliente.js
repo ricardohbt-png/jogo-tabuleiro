@@ -80,7 +80,10 @@ const comDesc = I18N.traduzirNomes({
 check("troca o campo desc", comDesc.guild[0].desc === "+2 damage");
 check("troca o campo descricao", comDesc.outro[0].descricao === "+2 damage");
 check("o nome continua sendo trocado", comDesc.guild[0].nome === "Brutality");
-const semDesc = I18N.traduzirNomes({ a: [{ id: "dagger", name: "Adaga", desc: "texto autoral" }] });
+// Id SINTETICO, que nunca vai existir no catalogo. A versao anterior usava
+// "dagger" e ficou vermelha sozinha quando a adaga ganhou uma cat.item.dagger.desc:
+// um teste de REGRA nao pode depender do conteudo que a regra mede.
+const semDesc = I18N.traduzirNomes({ a: [{ id: "__item_sem_chave__", name: "Adaga", desc: "texto autoral" }] });
 check("sem chave .desc no dicionário, a descrição fica intacta",
       semDesc.a[0].desc === "texto autoral");
 

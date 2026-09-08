@@ -335,11 +335,16 @@ def _rodar_verificacoes():
     # (server.py:1856 devolve essa recusa como string crua, fora do T()).
     # Traduzi-la quebraria o ramo que oferece criar conta, em silêncio. O
     # conserto certo é um código de erro no payload, e é trabalho próprio.
-    SOBRA_PROPOSITAL = {"não encontrada"}
+    # A sobra que existia — o `'não encontrada'` de handleTileClick — deixou de
+    # existir: o servidor passou a mandar `error_code` ("sem_conta", de
+    # ERRO_LOGIN_SEM_CONTA) e o cliente decide o ramo pelo CÓDIGO, não pela
+    # frase. Era o conserto que este comentário apontava como "trabalho
+    # próprio"; feito, o conjunto tem de ficar VAZIO.
+    SOBRA_PROPOSITAL = set()
     restantes = {txt for _l, txt in _literais_pendentes()}
     check(f"nenhum literal em português restou no game.js ({total})",
           restantes <= SOBRA_PROPOSITAL)
-    check("a sobra proposital ainda é a chave de lógica esperada",
+    check(f"nenhuma sobra proposital ({sorted(restantes) or 'ok'})",
           restantes == SOBRA_PROPOSITAL)
     # Helper interno (arrow de uma linha DENTRO de outra função) não pode virar
     # dono de literal: a atribuição é pela declaração anterior mais próxima, e
@@ -463,8 +468,19 @@ def _rodar_verificacoes():
     _j = GAME.index("const trapImages = {")
     _bloco_cli = GAME[_j:GAME.index("\n  };", _j)]
     ids_cli = set(re.findall(r"\n    (\w+):", _bloco_cli))
-    # buraco_escondido (procedural) e bau_armadilha nao vivem em ARMADILHAS
-    orfaos = ids_cli - ids_srv - {"buraco_escondido", "bau_armadilha"}
+    # A tabela deixou de ser so de armadilhas: o mesmo popup serve condicoes,
+    # queda, "engolido" e habilidade de monstro, e o id dessas fontes nao vive
+    # em ARMADILHAS. O que a checagem protege continua sendo o id INVENTADO —
+    # entao a fonte nao-armadilha vale, desde que exista no server.py.
+    NAO_SAO_ARMADILHA = {
+        "buraco_escondido",   # buraco procedural de sala
+        "bau_armadilha",      # bau
+        "sopro_dragao",       # habilidade de monstro (_usar_sopro_dragao)
+    }
+    for _id in NAO_SAO_ARMADILHA - {"buraco_escondido", "bau_armadilha"}:
+        check(f"a fonte nao-armadilha {_id} existe no server.py",
+              f'"{_id}"' in SRV or f"'{_id}'" in SRV)
+    orfaos = ids_cli - ids_srv - NAO_SAO_ARMADILHA
     check(f"todo id de trapImages existe no servidor ({sorted(orfaos) or 'ok'})",
           not orfaos)
     check("o popup escolhe a arte por tipo_id, nao pelo nome",

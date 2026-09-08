@@ -429,7 +429,15 @@ async def main():
     check("dark_mage legado cr 0.5", S.monster_cr(_by("dark_mage")) == 0.5)
     check("troll legado cr 1.5", S.monster_cr(_by("troll")) == 1.5)
     check("dragon legado cr 5", S.monster_cr(_by("dragon")) == 5.0)
-    check("todos MONSTER_DEFS resolvem cr>0", all(S.monster_cr(d) > 0 for d in S.MONSTER_DEFS))
+    # As formas animais da Metamorfose (pombo/rato/gato/ovelha) tem cr 0 DE
+    # PROPOSITO: sao criaturas ambientais de ND zero, nao aparecem em encontro
+    # (spawn_min/max 0) e nao devem somar nada no termometro nem no minimapa.
+    # O que a invariante protege e o cr NEGATIVO e o cr que nao resolve.
+    _crs = [(d.get("type"), S.monster_cr(d)) for d in S.MONSTER_DEFS]
+    check("todos MONSTER_DEFS resolvem um cr >= 0",
+          all(cr is not None and cr >= 0 for _t, cr in _crs))
+    check("so as formas ambientais tem cr 0",
+          {t for t, cr in _crs if cr == 0} <= {"pombo", "rato", "gato", "ovelha"})
 
     print("\n[20] expected_party — normalização/validação")
     check("default sem campo", S.GameRoom._norm_expected_party(None) == {"heroes": 4, "level": 1})

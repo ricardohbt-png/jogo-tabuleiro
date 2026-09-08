@@ -175,7 +175,10 @@ def test_acorde_aoe_falha_empurra():
     room._save_mostrado = _save_falha
     room._rolar_dano_mostrado = _dano8
     empurrados = []
-    room._empurrar = lambda alvo, dx, dy, dist: empurrados.append((alvo["id"], dx, dy, dist)) or False
+    async def _push(alvo, dx, dy, dist):
+        empurrados.append((alvo["id"], dx, dy, dist))
+        return False
+    room._empurrar = _push
     _run(room.handle_usar_instrumento("p1", {}))
     assert m["hp"] == 22          # 30 - 8 (cheio)
     assert far["hp"] == 30        # fora do raio
@@ -188,7 +191,7 @@ def test_acorde_sucesso_meia_sem_empurrao():
     room.monsters = {"m1": m}
     room._save_mostrado = _save_passa
     room._rolar_dano_mostrado = _dano8
-    def _no_push(*a): raise AssertionError("não deveria empurrar")
+    async def _no_push(*a): raise AssertionError("não deveria empurrar")
     room._empurrar = _no_push
     _run(room.handle_usar_instrumento("p1", {}))
     assert m["hp"] == 26          # 30 - 4 (metade)
@@ -894,7 +897,8 @@ def test_tambor_runico_atordoa_e_penaliza():
     async def _save(alvo, tipo, dif, **k): return (alvo["id"] == "m2", 1, 0, 1)  # m2 passa, m1 falha
     room._save_mostrado = _save
     room._rolar_dano_mostrado = _dano8
-    room._empurrar = lambda *a: False
+    async def _sem_push(*a): return False
+    room._empurrar = _sem_push
     _run(room.handle_usar_instrumento("p1", {}))
     assert falho.get("perde_turno") is True
     assert room._acorde_atk_pen(passou) == -1
@@ -915,7 +919,8 @@ def test_tambor_normal_nao_atordoa():
     room.monsters = {"m1": m}
     room._save_mostrado = _save_falha
     room._rolar_dano_mostrado = _dano8
-    room._empurrar = lambda *a: False
+    async def _sem_push(*a): return False
+    room._empurrar = _sem_push
     _run(room.handle_usar_instrumento("p1", {}))
     assert m.get("perde_turno") is None
 

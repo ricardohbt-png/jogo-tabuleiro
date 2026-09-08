@@ -37,41 +37,41 @@ def run():
         # o browser pede com %20 no lugar dos espaços
         req = FakeReq("/assets/story/zz%20Teste%20Imagem%20(4).jpeg")
         resp = server._serve_static(req)
-        check(resp.status_code == 200,
-              f"serve imagem com espacos (status {resp.status_code}, esperado 200)")
+        check(resp.status == 200,
+              f"serve imagem com espacos (status {resp.status}, esperado 200)")
         check(resp.body == b"IMG-BYTES", "corpo da imagem correto")
 
         # cache-buster ?v= não deve atrapalhar
         req2 = FakeReq("/assets/story/zz%20Teste%20Imagem%20(4).jpeg?v=123")
-        check(server._serve_static(req2).status_code == 200,
+        check(server._serve_static(req2).status == 200,
               "serve mesmo com query ?v=")
 
         # nome limpo continua funcionando
         limpo = os.path.join(story_dir, "zz_audio_limpo.mp3")
         with open(limpo, "wb") as f:
             f.write(b"MP3")
-        check(server._serve_static(FakeReq("/assets/story/zz_audio_limpo.mp3")).status_code == 200,
+        check(server._serve_static(FakeReq("/assets/story/zz_audio_limpo.mp3")).status == 200,
               "serve nome limpo (audio)")
         os.remove(limpo)
 
         # arquivos soltos permitidos continuam servidos (regressão da allow-list)
-        check(server._serve_static(FakeReq("/index.html")).status_code == 200,
+        check(server._serve_static(FakeReq("/index.html")).status == 200,
               "serve index.html")
-        check(server._serve_static(FakeReq("/")).status_code == 200,
+        check(server._serve_static(FakeReq("/")).status == 200,
               "serve raiz / como index.html")
-        check(server._serve_static(FakeReq("/game.js")).status_code == 200,
+        check(server._serve_static(FakeReq("/game.js")).status == 200,
               "serve game.js")
 
         # path traversal codificado (%2e%2e%2f = ../) deve ser bloqueado mesmo após decode
         trav = server._serve_static(FakeReq("/assets/%2e%2e%2fserver.py"))
-        check(trav.status_code in (403, 404),
-              f"bloqueia traversal codificado p/ raiz (status {trav.status_code})")
+        check(trav.status in (403, 404),
+              f"bloqueia traversal codificado p/ raiz (status {trav.status})")
         # traversal mais profundo a partir de uma subpasta de assets
         trav2 = server._serve_static(FakeReq("/assets/story/%2e%2e%2f%2e%2e%2fserver.py"))
-        check(trav2.status_code in (403, 404),
-              f"bloqueia traversal profundo (status {trav2.status_code})")
+        check(trav2.status in (403, 404),
+              f"bloqueia traversal profundo (status {trav2.status})")
         # tentativa de servir um arquivo da raiz não-permitido diretamente
-        check(server._serve_static(FakeReq("/server.py")).status_code == 404,
+        check(server._serve_static(FakeReq("/server.py")).status == 404,
               "nao serve server.py direto")
     finally:
         if os.path.isfile(caminho):

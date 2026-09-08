@@ -589,7 +589,7 @@ const GS = (() => {
     mochila_encantada: { id:'mochila_encantada', nome:'Mochila de Couro Encantada', tipo:'itemMagico', loja:'mercado', preco:30,  slotsExtras:2, descricao:'+2 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     mochila_viajante:  { id:'mochila_viajante',  nome:'Mochila do Viajante',        tipo:'itemMagico', loja:'mercado', preco:80,  slotsExtras:4, descricao:'+4 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     bolsa_dimensao:    { id:'bolsa_dimensao',    nome:'Bolsa de Dimensão',          tipo:'itemMagico', loja:'mercado', preco:150, slotsExtras:6, descricao:'+6 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
-    bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3.', permitidoPara:['todos'] },
+    bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10.', permitidoPara:['todos'] },
 
     // ── MERCADO — Venenos (consumíveis aplicados na arma) ──
     // 1 slot de inventário cada. Usar = unta a arma equipada (ação bônus); o
@@ -905,6 +905,27 @@ const GS = (() => {
     const m = gameState && gameState.materiais;
     return !!(m && MATERIAIS_OPACOS.has(m[`${x},${y}`]));
   }
+
+  function _ponteTiles(state, ponte) {
+    const inicio = ponte?.inicio || ponte?.start;
+    const fim = ponte?.fim || ponte?.end;
+    const largura = Math.max(1, Math.min(3, Number(ponte?.largura ?? ponte?.width ?? 1) | 0));
+    if (!Array.isArray(inicio) || !Array.isArray(fim) || inicio.length < 2 || fim.length < 2) return [];
+    const out = [];
+    if (inicio[1] === fim[1] && inicio[0] !== fim[0]) {
+      const x0 = Math.min(inicio[0], fim[0]), x1 = Math.max(inicio[0], fim[0]);
+      const y0 = inicio[1] - Math.floor(largura / 2);
+      for (let y = y0; y < y0 + largura; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
+    } else if (inicio[0] === fim[0] && inicio[1] !== fim[1]) {
+      const y0 = Math.min(inicio[1], fim[1]), y1 = Math.max(inicio[1], fim[1]);
+      const x0 = inicio[0] - Math.floor(largura / 2);
+      for (let x = x0; x < x0 + largura; x++) for (let y = y0; y <= y1; y++) out.push([x, y]);
+    }
+    return out;
+  }
+  function _ponteEm(x, y, state=gameState) {
+    return (state?.pontes || []).some(p => _ponteTiles(state, p).some(([tx, ty]) => tx === x && ty === y));
+  }
   // Decorações sólidas ocupam as casas do seu footprint e bloqueiam rota,
   // exatamente como o renderer e o servidor. Decorações pisáveis (chão,
   // fogueira etc.) continuam permitindo passagem.
@@ -913,10 +934,20 @@ const GS = (() => {
       decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
   }
 
+  // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py.
+  const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
+
   function _elevacaoTerreno(x, y, moveCtx=null) {
     const mapa = moveCtx?.elevacoes || gameState?.elevacoes || {};
+    const estado = moveCtx?.state || gameState;
+    const ponte = (estado?.pontes || []).find(p => _ponteTiles(estado, p).some(([tx, ty]) => tx === x && ty === y));
+    if (ponte) {
+      const altura = Number(ponte.altura ?? ponte.height);
+      if (Number.isInteger(altura)) return Math.max(ELEVACAO_TERRENO_MIN, Math.min(ELEVACAO_TERRENO_MAX, altura));
+    }
     const n = Number(mapa[`${x},${y}`]);
-    return Number.isInteger(n) ? Math.max(-1, Math.min(2, n)) : 0;
+    return Number.isInteger(n)
+      ? Math.max(ELEVACAO_TERRENO_MIN, Math.min(ELEVACAO_TERRENO_MAX, n)) : 0;
   }
 
   function _custoElevacao(moveCtx, fromX, fromY, x, y) {
@@ -927,15 +958,35 @@ const GS = (() => {
     return diferenca > 1 ? 9999 : diferenca;
   }
 
+  // Espelho de `_queda_no_passo` do server.py. Existe para o azul não oferecer
+  // casa que o servidor recusaria: o jogador clicaria e nada aconteceria, sem
+  // explicação — pior que o defeito original. Movimento voluntário nunca cai;
+  // queda por desnível só por empurrão, que não passa por aqui.
+  function _quedaNoPasso(moveCtx, fromX, fromY, x, y) {
+    const actor = moveCtx?.actor || {};
+    if (actor.voo && alturaDe(actor) > 0) return false;
+    const queda = _elevacaoTerreno(fromX, fromY, moveCtx)
+                - _elevacaoTerreno(x, y, moveCtx);
+    if (queda <= 0) return false;
+    const estado = moveCtx?.state || gameState;
+    // A ponte não tem rampa lateral: sair dela é queda mesmo com desnível 1.
+    const saiuDaPonte = _ponteEm(fromX, fromY, estado) && !_ponteEm(x, y, estado);
+    const modo = estado?.transicao_altura || 'rampa';
+    if (modo === 'rampa' && queda <= 1 && !saiuDaPonte) return false;
+    return true;
+  }
+
   function _walkable(tiles, x, y, openDoors, occupied, moveCtx=null, fromX=null, fromY=null) {
     const t = tiles[y]?.[x];
     const illusion = (gameState?.secret_passages || []).some(p => p.type === 'illusion' && p.pos[0] === x && p.pos[1] === y);
     const vooLivre = !!(moveCtx?.actor?.voo && moveCtx.actor.ignora_obstaculos_voo);
     const onFloor = vooLivre ? t !== undefined
-      : t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
+      : _ponteEm(x, y) || t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
     if (!onFloor) return false;
-    if (fromX != null && fromY != null && _custoElevacao(moveCtx, fromX, fromY, x, y) > 1) return false;
-    if (!vooLivre && _matSolido(x, y)) return false;   // entulho: intransponível como parede
+    if (fromX != null && fromY != null
+        && (_custoElevacao(moveCtx, fromX, fromY, x, y) > 1
+            || _quedaNoPasso(moveCtx, fromX, fromY, x, y))) return false;
+    if (!vooLivre && !_ponteEm(x, y) && _matSolido(x, y)) return false;   // entulho sob ponte não bloqueia a superfície
     if (!vooLivre && _decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
@@ -992,7 +1043,7 @@ const GS = (() => {
     const solido = decoracoes.some(d => !d.pisavel && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
     const materialOpaco = MATERIAIS_OPACOS.has(state?.materiais?.[key]);
     if (vooLivre) return alto || materialOpaco;
-    return tiles[y][x] === TILE_WALL || closed.has(key) || solido || materialOpaco;
+    return (!_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key) || solido || materialOpaco));
   }
   function hasLineOfSight(state, ax, ay, bx, by, observer=null) {
     const tiles = state && state.tiles;
@@ -1047,6 +1098,9 @@ const GS = (() => {
     const custoElevacao = (fromX == null || fromY == null) ? 0
       : _custoElevacao(moveCtx, fromX, fromY, x, y);
     if (custoElevacao > 1) return 9999;
+    // A ponte é a superfície efetivamente ocupada: o material que está
+    // abaixo dela não aumenta o custo de movimento nem aplica penalidades.
+    if (_ponteEm(x, y, moveCtx?.state || gameState)) return 1 + custoElevacao;
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'piso_congelado') return 1 + custoElevacao;
     if (kind === 'areia_deserto' || kind === 'lava') return 2 + custoElevacao;
@@ -1069,7 +1123,8 @@ const GS = (() => {
     if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) { result.add(`${sx},${sy}`); return; }
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(sx, sy);
-    const swampStart = moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
+    const swampStart = !_ponteEm(sx, sy, moveCtx?.state || gameState)
+      && moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
     const q   = [[sx, sy, 0, swampStart]];
     const best = new Map([[`${sx},${sy},${swampStart ? 1 : 0}`, 0]]);
     while (q.length) {
@@ -1081,7 +1136,8 @@ const GS = (() => {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
-        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+        const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
+          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
         // atravessada mesmo se o orçamento não cobrir o custo inteiro.
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
@@ -1125,7 +1181,8 @@ const GS = (() => {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
-        const entersSwamp = moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+        const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
+          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
         const nextCost = (spent === 0 && terrainCost > maxSteps) ? maxSteps : spent + terrainCost;
         const nextSwampUsed = swampUsed || entersSwamp;
@@ -1714,6 +1771,8 @@ const GS = (() => {
   function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
   function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
+  // Senhor das Águas: ação livre única para criar os redemoinhos da zona ativa.
+  function senhorDasAguasCriar(tiles) { send({ type: 'senhor_das_aguas_rodamoinhos', tiles }); }
   // Animar Mortos (Pedro): anima o cadáver selecionado a até 3 casas.
   function animarMortos(cadaverId, versao) {
     const msg = { type: 'animar_mortos', cadaver_id: cadaverId };
@@ -2793,6 +2852,7 @@ const GS = (() => {
     get gameState()       { return gameState; },
     get decorations()     { return (gameState && gameState.decorations) || []; },
     get materiais()       { return (gameState && gameState.materiais) || {}; },
+    get pontes()          { return (gameState && gameState.pontes) || []; },
     // Jogador local autoritativo (estado mais recente do servidor). Usado pela
     // ficha em jogo (abrirFichaEmJogo) para HP/atributos/CA reais. Mesmo padrão
     // de lookup de getHeroiAtivo; null se ainda não há jogador.
@@ -2937,6 +2997,7 @@ const GS = (() => {
     isOffhandWeapon,
     setKnownSpells,
     escolherMagiaNivel,
+    senhorDasAguasCriar,
     animarMortos,
     comandarAnimados,
     moverAnimado,

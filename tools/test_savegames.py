@@ -152,19 +152,28 @@ def main():
     S.ACCOUNTS_DIR = tmp; _loja_tmp(tmp)
     S.ACCOUNTS_ONLINE.clear()
     try:
+        # try_login devolve (ok, payload_ou_mensagem, CODIGO). O código existe
+        # para o cliente decidir o ramo "oferecer criar conta" sem comparar o
+        # TEXTO da mensagem — que é traduzido, e cuja comparação quebrava em
+        # silêncio no idioma errado.
         _aw(S.create_account("ana", "senha da ana!"))
-        ok, pay = _aw(S.try_login("pid1", "Ana", "senha da ana!"))
-        check("login com senha certa ok", ok is True and pay["username"] == "ana")
-        ok2, err2 = _aw(S.try_login("pid2", "ana", "senha errada!"))
-        check("login com senha errada recusa", ok2 is False and "senha" in (err2 or "").lower())
-        ok3, err3 = _aw(S.try_login("pid3", "fantasma", "senha fantasma"))
+        ok, pay, code = _aw(S.try_login("pid1", "Ana", "senha da ana!"))
+        check("login com senha certa ok",
+              ok is True and pay["username"] == "ana" and code is None)
+        ok2, err2, code2 = _aw(S.try_login("pid2", "ana", "senha errada!"))
+        check("login com senha errada recusa",
+              ok2 is False and "senha" in str(err2 or "").lower() and code2 is None)
+        ok3, err3, code3 = _aw(S.try_login("pid3", "fantasma", "senha fantasma"))
         check("login de conta inexistente recusa", ok3 is False)
+        check("conta inexistente devolve o código próprio",
+              code3 == S.ERRO_LOGIN_SEM_CONTA)
         # já online noutra conexão
         S.ACCOUNTS_ONLINE["ana"] = "pid1"
-        ok4, err4 = _aw(S.try_login("pid9", "ana", "senha da ana!"))
-        check("conta já online recusa 2º login", ok4 is False and "uso" in (err4 or "").lower())
+        ok4, err4, _c4 = _aw(S.try_login("pid9", "ana", "senha da ana!"))
+        check("conta já online recusa 2º login",
+              ok4 is False and "uso" in str(err4 or "").lower())
         # mesma conexão relogando é permitido (idempotente)
-        ok5, _ = _aw(S.try_login("pid1", "ana", "senha da ana!"))
+        ok5, _p5, _c5 = _aw(S.try_login("pid1", "ana", "senha da ana!"))
         check("mesma conexão pode relogar", ok5 is True)
     finally:
         S.ACCOUNTS_DIR = olda; _loja_volta()

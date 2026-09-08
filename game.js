@@ -487,6 +487,27 @@ document.body.innerHTML = `
   </div>
 </div>
 
+<!-- Janela explicativa do Senhor das Águas — aberta antes da seleção das casas -->
+<div id="senhor-aguas-overlay" role="dialog" aria-modal="true" aria-labelledby="senhor-aguas-title"
+     style="position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:121;padding:14px;">
+  <div class="trap-box senhor-aguas-box" style="border-color:#4fc3f7;max-height:calc(100vh - 28px);">
+    <div class="trap-art" style="background:radial-gradient(circle at 50% 35%,#123e62 0%,#07131e 72%);border-right-color:#4fc3f755;">
+      <div class="trap-icon" style="font-size:5rem;">🌊</div>
+    </div>
+    <div class="trap-content">
+      <h3 id="senhor-aguas-title" data-i18n="ui.magia.senhor_das_aguas">🌊 Senhor das Águas</h3>
+      <div class="trap-status trap-status--success" id="senhor-aguas-status"></div>
+      <p class="trap-desc" id="senhor-aguas-desc"></p>
+      <ul class="trap-effects" id="senhor-aguas-effects"></ul>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:8px;">
+        <button class="btn-primary" id="senhor-aguas-create" type="button" data-gamepad-action="activate" data-i18n="ui.hud.criar_redemoinhos"
+                style="border-color:#4fc3f7;background:#123e62;color:#e7faff;">🌪️ Criar redemoinhos</button>
+        <button class="btn-cancel" id="senhor-aguas-close" type="button" data-i18n="ui.geral.fechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Balão de fala de NPC (Modo Mestre) -->
 <div id="fala-popup" onclick="_avancarFala()"></div>
 
@@ -2942,7 +2963,7 @@ function _itemDesc(item){
   if(item.effect==='regeneration')
     return t('ui.item.desc.regeneracao', {n: item.value||0});
   if(item.effect==='veil_shadow')
-    return item.descricao || 'Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem.';
+    return item.descricao || t('ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno');
   const v=item.value?` ${item.value}`:'';
   return _rotulo(item.effect, 'ui.item.efeito', item.effect||'')+v;
 }
@@ -3440,9 +3461,9 @@ function renderAbaMagiasPedro(heroi) {
       >
         <div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:30px;">☠️</div>
         <div style="flex:1;">
-          <div style="color:#e06b6b;font-family:'Cinzel Decorative',serif;font-size:13px;margin-bottom:3px;">Senhor da Morte</div>
-          <div style="color:#b78a8a;font-size:10px;letter-spacing:1px;">Versão alternativa · ficha completa · ND + 2 slots</div>
-          <div style="color:#ff7777;font-size:10px;margin-top:3px;">−20% sucesso · +10% hostilidade · morto-vivo</div>
+          <div style="color:#e06b6b;font-family:'Cinzel Decorative',serif;font-size:13px;margin-bottom:3px;" data-i18n="ui.animar.senhor_da_morte">Senhor da Morte</div>
+          <div style="color:#b78a8a;font-size:10px;letter-spacing:1px;" data-i18n="ui.magia.versao_alternativa_ficha_completa_nd_2_slo">Versão alternativa · ficha completa · ND + 2 slots</div>
+          <div style="color:#ff7777;font-size:10px;margin-top:3px;" data-i18n="ui.animar.senhor_da_morte_penalidades">−20% sucesso · +10% hostilidade · morto-vivo</div>
         </div>
       </div>` : ''}
     </div>
@@ -6619,6 +6640,12 @@ function _pawnScaleFactor(porte){
   return _PORTE_FATOR[porte] || 1.0;
 }
 
+// Pombo e rato são formas MINÚSCULAS de ND 0: sua arte deve ocupar só cerca
+// de um terço do quadrado, mesmo com o enquadramento normal dos GLBs de
+// monstros. Gato (pequeno) e ovelha (médio) usam o enquadramento comum.
+const _TINY_3D_PAWNS = new Set(['pombo', 'rato']);
+const _TINY_3D_PAWN_FRAC = 0.34;
+
 // Minis cujo PNG já traz a criatura enrolada sobre um pedestal redondo (cobras).
 // Diferente das figuras "altas, pés na base", elas devem caber INTEIRAS no tile
 // (largura E altura ≤ 1 quadrado), sem estourar para os tiles vizinhos. Tratadas
@@ -6841,7 +6868,7 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
   if(Number(entity.cego_rodadas) > 0)
     durations.push(['◼ Cegueira', Number(entity.cego_rodadas), '#d5d5d5']);
   if(Number(entity.petrificacao_marcas) > 0)
-    durations.push(['🗿 Petrificação', `${Math.min(3, Number(entity.petrificacao_marcas))}/3`, '#c8c8c8']);
+    durations.push([t('ui.tabuleiro.petrificacao'), `${Math.min(3, Number(entity.petrificacao_marcas))}/3`, '#c8c8c8']);
   if(durations.length){
     const small = Math.max(9, Math.round(CELL * 0.115));
     ctx.font = `900 ${small}px Arial, sans-serif`;
@@ -7230,6 +7257,70 @@ function _drawWhirlpoolArea2D(ctx, area, now){
   ctx.restore();
 }
 
+function _bridgeTiles2D(bridge){
+  const a = bridge?.inicio || bridge?.start, b = bridge?.fim || bridge?.end;
+  const width = Math.max(1, Math.min(3, Number(bridge?.largura ?? bridge?.width ?? 1) | 0));
+  if(!Array.isArray(a) || !Array.isArray(b) || (a[0] !== b[0] && a[1] !== b[1])) return [];
+  const out = [];
+  if(a[1] === b[1]){
+    const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]), y0=a[1]-Math.floor(width/2);
+    for(let y=y0;y<y0+width;y++) for(let x=x0;x<=x1;x++) out.push([x,y]);
+  }else{
+    const y0=Math.min(a[1],b[1]), y1=Math.max(a[1],b[1]), x0=a[0]-Math.floor(width/2);
+    for(let x=x0;x<x0+width;x++) for(let y=y0;y<=y1;y++) out.push([x,y]);
+  }
+  return out;
+}
+function _drawBridges2D(ctx, state, terrainSet){
+  for(const bridge of (state.pontes || [])){
+    const tiles = _bridgeTiles2D(bridge);
+    if(!tiles.length) continue;
+    const horizontal = bridge.inicio[1] === bridge.fim[1];
+    const minX=Math.min(...tiles.map(t=>t[0])), maxX=Math.max(...tiles.map(t=>t[0]));
+    const minY=Math.min(...tiles.map(t=>t[1])), maxY=Math.max(...tiles.map(t=>t[1]));
+    const visible = key => !terrainSet || terrainSet.has(key);
+    const woodBase = 'rgba(55,28,12,.95)', woodDeck = 'rgba(154,91,40,.96)';
+    // Base contínua: duas longarinas longitudinais, como trilhos sob o deck.
+    ctx.save();
+    ctx.fillStyle=woodBase;
+    if(horizontal){
+      for(const yy of [minY*CELL+CELL*.18, (maxY+1)*CELL-CELL*.28])
+        ctx.fillRect(minX*CELL+2, yy, (maxX-minX+1)*CELL-4, Math.max(3,CELL*.10));
+    }else{
+      for(const xx of [minX*CELL+CELL*.18, (maxX+1)*CELL-CELL*.28])
+        ctx.fillRect(xx, minY*CELL+2, Math.max(3,CELL*.10), (maxY-minY+1)*CELL-4);
+    }
+    // Tábuas transversais, com intervalo discreto entre cada uma.
+    const first = horizontal ? minX : minY, last = horizontal ? maxX : maxY;
+    for(let step=first; step<=last; step++){
+      const sampleKey = horizontal ? `${step},${Math.floor((minY+maxY)/2)}` : `${Math.floor((minX+maxX)/2)},${step}`;
+      if(!visible(sampleKey)) continue;
+      const pad=2, gap=Math.max(2,CELL*.055);
+      ctx.fillStyle=woodDeck;
+      if(horizontal) ctx.fillRect(step*CELL+pad, minY*CELL+pad, CELL-2*pad, (maxY-minY+1)*CELL-2*pad);
+      else ctx.fillRect(minX*CELL+pad, step*CELL+pad, (maxX-minX+1)*CELL-2*pad, CELL-2*pad);
+      ctx.strokeStyle='rgba(64,31,12,.9)'; ctx.lineWidth=Math.max(1,CELL*.035);
+      ctx.strokeRect(
+        horizontal ? step*CELL+gap : minX*CELL+gap,
+        horizontal ? minY*CELL+gap : step*CELL+gap,
+        horizontal ? CELL-2*gap : (maxX-minX+1)*CELL-2*gap,
+        horizontal ? (maxY-minY+1)*CELL-2*gap : CELL-2*gap
+      );
+      ctx.strokeStyle='rgba(224,157,78,.38)'; ctx.lineWidth=1;
+      ctx.beginPath();
+      if(horizontal){
+        const cx=step*CELL+CELL*.24;
+        ctx.moveTo(cx,minY*CELL+5); ctx.lineTo(cx,(maxY+1)*CELL-5);
+      }else{
+        const cy=step*CELL+CELL*.24;
+        ctx.moveTo(minX*CELL+5,cy); ctx.lineTo((maxX+1)*CELL-5,cy);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
 function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
   const master = !!(GS.isMaster() || state.test_mode);
   const cache = _dungeonStatic2D;
@@ -7243,6 +7334,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     && cache.revelado === state.revealed
     && cache.rooms === state.rooms
     && cache.secretPassages === state.secret_passages
+    && cache.pontes === state.pontes
     && cache.master === master && cache.W === W && cache.H === H;
   if(mesmaBase) return cache.canvas;
 
@@ -7288,6 +7380,10 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     drawDoor2D(ctx, state, x, y, doorClosed.has(`${x},${y}`));
   }
 
+  // A ponte é uma superfície independente: sua madeira cobre visualmente o
+  // piso/abismo inferior sem alterar tiles, materiais ou elevações.
+  _drawBridges2D(ctx, state, terrainSet);
+
   // Névoa também é estática até a próxima atualização autoritativa.
   ctx.fillStyle = 'rgba(4,3,8,0.96)';
   for(let y=0; y<H; y++) for(let x=0; x<W; x++){
@@ -7303,6 +7399,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H){
     elevacoes: state.elevacoes, transicao: state.transicao_altura || 'rampa',
     explorado: state.explored, revelado: state.revealed, rooms: state.rooms,
     secretPassages: state.secret_passages,
+    pontes: state.pontes,
     animatedTiles, whirlpoolAreas, whirlpoolAreaByKey, master, W, H,
   };
   return canvas;
@@ -7315,10 +7412,16 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const flowWater = now / 680;
   const flowDeepWater = now / 1180;
   const flowSwamp = now / 900;
+  const bridgeKeys = new Set();
+  for(const bridge of (state.pontes || []))
+    for(const [x, y] of _bridgeTiles2D(bridge)) bridgeKeys.add(`${x},${y}`);
   const tiles = _dungeonStatic2D.materiais === state.materiais
     ? _dungeonStatic2D.animatedTiles : [];
   const whirlpoolDrawn = new Set();
   for(const {x, y, mid} of tiles){
+    // A ponte é a superfície superior; os efeitos animados do piso inferior
+    // não devem ser desenhados por cima dela.
+    if(bridgeKeys.has(`${x},${y}`)) continue;
     const X = x * CELL, Y = y * CELL;
     if(mid === 'lava'){
       for(let row=0; row<4; row++){
@@ -7629,12 +7732,15 @@ function renderMap(state){
   _drawAnimatedTerrain2D(ctx, state, terrainSet, performance.now());
 
   const highlightTiles = new Set([...reachable, ...attackable, ...weaponRangeTiles]);
+  const bridgeTiles2D = new Set();
+  for(const bridge of (state.pontes || []))
+    for(const [bx, by] of _bridgeTiles2D(bridge)) bridgeTiles2D.add(`${bx},${by}`);
   for(const key of highlightTiles){
     if(!terrainSet.has(key)) continue;
     const [x, y] = key.split(',').map(Number);
     if(!Number.isInteger(x) || !Number.isInteger(y)) continue;
     const tile = state.tiles[y]?.[x];
-    if(tile !== TILE_FLOOR && tile !== TILE_DOOR) continue;
+    if(tile !== TILE_FLOOR && tile !== TILE_DOOR && !bridgeTiles2D.has(key)) continue;
     _drawFloorHighlights2D(ctx, x, y,
       reachable.has(key), attackable.has(key), weaponRangeTiles.has(key));
   }
@@ -7644,6 +7750,8 @@ function renderMap(state){
   _desenharSpellHL2D(ctx, exploredSet);
   _desenharSpellTargetPreview2D(ctx, state, exploredSet);
   _desenharSpellDirection2D(ctx, state);
+  for(const _animSenhorAguas of _senhorAguasAnims)
+    _senhorAguasDraw2D(ctx, state, _animSenhorAguas, performance.now());
   for(const _animMantoEsc of _mantoEscuridaoAnims)
     _mantoEscuridaoDraw2D(ctx, state, _animMantoEsc, performance.now());
   for(const _animClarividencia of _clarividenciaAnims)
@@ -8340,6 +8448,16 @@ function renderMap(state){
     _invisibilidadeDraw2D(ctx, state, _animInvis, _agoraRelampago);
   for(const _animProtecao of _protecaoEnergiaAnims)
     _protecaoEnergiaDrawForeground2D(ctx, state, _animProtecao, _agoraRelampago);
+  for(const _animOlhar of _olharPetrificanteAnims)
+    _olharPetrificanteDraw2D(ctx, state, _animOlhar, _agoraRelampago);
+  for(const _animVoo of _vooAnims)
+    _vooDraw2D(ctx, state, _animVoo, _agoraRelampago);
+  for(const _animCriarAlimentos of _criarAlimentosAnims)
+    _criarAlimentosDraw2D(ctx, state, _animCriarAlimentos, _agoraRelampago);
+  for(const _animCura of _curaAnims)
+    _curaDraw2D(ctx, state, _animCura, _agoraRelampago);
+  for(const _animElemental of _conjurarElementalAnims)
+    _conjurarElementalDraw2D(ctx, state, _animElemental, _agoraRelampago);
   for(const _animRaioDivino of _raioDivinoAnims)
     _raioDivinoDrawForeground2D(ctx, state, _animRaioDivino, _agoraRelampago);
   for(const _animRelampago of _relampagoAnims)
@@ -8506,7 +8624,7 @@ function _drawDefeatVisuals2D(ctx, state, now){
     if(v.kind === 'magic'){
       ctx.font = `${Math.max(16, CELL*.28)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✦', x, y - CELL*(.22 + p*.48));
     } else if(v.kind === 'hero'){
-      ctx.font = `900 ${Math.max(12, CELL*.16)}px Arial, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('CAÍDO', x, y - CELL*(.28 + p*.42));
+      ctx.font = `900 ${Math.max(12, CELL*.16)}px Arial, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(t('ui.tabuleiro.caido'), x, y - CELL*(.28 + p*.42));
     }
     ctx.restore();
   }
@@ -8535,6 +8653,12 @@ function _visualTemAnimacaoDeMagia(){
     _relampagoAnims, _bolaFogoAnims, _raioGeloAnims, _raioDivinoAnims,
     _jatoArAnims, _soproDragaoAnims, _cuspeAcidoAnims, _dominarMenteAnims, _lentidaoAnims, _sonoAnims,
     _silencioAnims, _medoAnims,
+    _senhorAguasAnims,
+    _olharPetrificanteAnims,
+    _conjurarElementalAnims,
+    _vooAnims,
+    _criarAlimentosAnims,
+    _curaAnims,
   ];
   return animArrays.some(arr => arr && arr.length > 0);
 }
@@ -8575,7 +8699,7 @@ function _agendarFimMorteVisual(id){
       const titulo = atual.monster.boss ? `👑 ${atual.monster.name} derrotado` : `✅ ${atual.monster.name} derrotado`;
       toast(titulo, atual.monster.boss ? 'var(--gold)' : 'var(--green)');
       if(atual.xpGain > 0 || atual.lootAvailable){
-        const recompensa = [atual.xpGain > 0 ? `✨ +${atual.xpGain} XP` : '', atual.lootAvailable ? '🧰 Baú de saque disponível' : '']
+        const recompensa = [atual.xpGain > 0 ? `✨ +${atual.xpGain} XP` : '', atual.lootAvailable ? t('ui.hud.bau_de_saque_disponivel') : '']
           .filter(Boolean).join('  •  ');
         toast(recompensa, 'var(--gold)');
       }
@@ -9127,19 +9251,78 @@ function matDaCasa(state, x, y){
 // Elevação visual do terreno autorado. Não confundir com `altura`, que é o
 // eixo de voo das criaturas e continua sendo usado pelas regras de combate.
 const TERRENO_ELEVACAO_STEP_3D = 0.24;
+// Espelha ELEVACAO_TERRENO_MIN/MAX do server.py: o servidor já recusa fora
+// disto, mas o cliente também desenha estado antigo (masmorra salva com outro
+// teto) e não pode esticar a geometria por causa de um número solto.
+const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
 function elevacaoTerreno(state, x, y){
   const n = Number(state?.elevacoes?.[`${x},${y}`]);
-  return Number.isInteger(n) ? Math.max(-1, Math.min(2, n)) : 0;
+  return Number.isInteger(n)
+    ? Math.max(ELEVACAO_TERRENO_MIN, Math.min(ELEVACAO_TERRENO_MAX, n)) : 0;
 }
 function topoTerreno3D(state, x, y, TH = 0.22){
   return TH + elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
+}
+
+// A ponte é uma superfície acima do material/terreno que está embaixo dela.
+// O topo do tabuleiro fica 0,20 acima do topo da elevação usada como base
+// (deck: centro +0,145, espessura 0,105). Não misturar este helper com
+// topoTerreno3D: efeitos do material inferior, como lava e água, continuam
+// precisando permanecer abaixo da ponte.
+const PONTE_SUPERFICIE_OFFSET_3D = 0.20;
+function ponteNaCasa3D(state, x, y){
+  return (state?.pontes || []).find(ponte =>
+    _bridgeTiles2D(ponte).some(([px, py]) => px === x && py === y)) || null;
+}
+function topoSuperficie3D(state, x, y, TH = 0.22){
+  const ponte = ponteNaCasa3D(state, x, y);
+  if(ponte){
+    const nivel = Number(ponte.altura ?? ponte.height);
+    const nivelValido = Number.isInteger(nivel)
+      ? Math.max(ELEVACAO_TERRENO_MIN, Math.min(ELEVACAO_TERRENO_MAX, nivel))
+      : elevacaoTerreno(state, x, y);
+    return TH + nivelValido * TERRENO_ELEVACAO_STEP_3D + PONTE_SUPERFICIE_OFFSET_3D;
+  }
+  return topoTerreno3D(state, x, y, TH);
+}
+
+// Elevação da base visual de um peão (a raiz do grupo fica TH abaixo do topo
+// da superfície). A ponte é uma camada própria: quando o peão entra nela, a
+// altura visual precisa acompanhar o deck, mesmo que o piso abaixo seja lava,
+// água ou uma parede.
+function baseSuperficiePonte3D(state, x, y, TH = 0.22){
+  if(!ponteNaCasa3D(state, x, y)) return null;
+  return topoSuperficie3D(state, x, y, TH) - TH;
+}
+
+// Durante a animação de um passo o peão ocupa coordenadas fracionárias, então
+// não é possível consultar a ponte apenas com um par inteiro. Interpolamos a
+// base entre as casas do segmento quando uma das pontas é ponte; assim o peão
+// sobe/desce suavemente e termina apoiado no deck.
+function basePonteInterpolada3D(state, pontos, fracao, fallback, TH = 0.22){
+  if(!Array.isArray(pontos) || pontos.length < 2) return null;
+  const segmentos = pontos.length - 1;
+  const f = Math.max(0, Math.min(segmentos, Number(fracao) || 0));
+  const i = Math.min(Math.floor(f), segmentos - 1);
+  const t = f >= segmentos ? 1 : f - i;
+  const a = pontos[i], b = pontos[i + 1];
+  const ya = baseSuperficiePonte3D(state, a[0], a[1], TH);
+  const yb = baseSuperficiePonte3D(state, b[0], b[1], TH);
+  if(ya === null && yb === null) return null;
+  const inicio = ya === null ? fallback : ya;
+  const fim = yb === null
+    ? topoTerreno3D(state, b[0], b[1], TH) - TH
+    : yb;
+  return inicio + (fim - inicio) * easeInOut(t);
 }
 
 function drawElevacao2D(ctx, state, x, y){
   const level = elevacaoTerreno(state, x, y);
   if(!level) return;
   const X = x * CELL, Y = y * CELL;
-  const depth = 2 + Math.abs(level) * 3;
+  // Mesmo teto do editor: sem ele a borda de sombra de um nível alto engolia
+  // metade da casa. Inerte de −1 a +7 nesta escala de CELL.
+  const depth = Math.min(CELL * 0.4, 2 + Math.abs(level) * 3);
   const vizinho = (nx, ny) => elevacaoTerreno(state, nx, ny);
   ctx.save();
   if(level > 0){
@@ -9970,6 +10153,7 @@ function _spellHasDedicatedSound(id){
     'sopro_dragao','cuspe_acido','dominar_mente','sono','silencio','medo',
     'barreira','maldicao','invisibilidade','protecao_energia','manto_escuridao',
     'clarividencia','regeneracao','velocidade','lentidao','abencoar','abencoar_arma',
+    'senhor_das_aguas','chamado_inverno','olhar_petrificante','conjurar_elemental','voo','criar_alimentos','cura','cura_area',
   ]).has(String(id || '').toLowerCase());
 }
 
@@ -10001,7 +10185,7 @@ const RESISTANCE_FEEDBACK_MS = VC.feedback?.combat?.resistance?.durationMs ?? 14
 function _resistanceInfo(type){
   const key = String(type || '').toLowerCase();
   const table = VC.feedback?.combat?.resistance || {};
-  return table[key] || {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || 'RESISTÊNCIA'};
+  return table[key] || {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || t('ui.hud.resistencia')};
 }
 
 function _resistanceFeedbackVisible(f, state){
@@ -10188,9 +10372,9 @@ function _attackFeedbackModeLabel(mode){
 
 function _attackFeedbackResultLabel(f){
   if(!f.result) return 'PREPARANDO';
-  if(f.natural_critical) return '20 NATURAL — CRÍTICO!';
+  if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return '1 NATURAL — FALHA!';
-  if(f.crit) return 'CRÍTICO!';
+  if(f.crit) return t('ui.hud.critico');
   return f.hit ? 'ACERTO' : 'ERRO';
 }
 
@@ -10230,7 +10414,7 @@ function _combatDamageTypeInfo(type){
     agua:'water', água:'water', water:'water',
   };
   const key = aliases[String(type || '').trim().toLowerCase()] || String(type || '').trim().toLowerCase();
-  return { key, ...(table[key] || table.physical || {color:'#f4eee2', icon:'⚔', label:'Físico'}) };
+  return { key, ...(table[key] || table.physical || {color:'#f4eee2', icon:'⚔', label:t('ui.hud.fisico')}) };
 }
 
 function _combatPrimaryDamageType(types){
@@ -10814,7 +10998,7 @@ function _detectHpChanges(st){
         const positiveEvents = positiveEventsByKey.get(key) || [];
         const regen = positiveEvents.some(e => e.kind === 'regeneration');
         const source = positiveEvents.find(e => e.source)?.source || '';
-        const positiveLabel = regen ? 'REGENERAÇÃO' : '';
+        const positiveLabel = regen ? t('ui.hud.regeneracao') : '';
         _spawnCombatFeedback(entry, `+${amount} HP`, 'heal', now, null,
           {status: positiveLabel});
         _spawnPositiveBurst(entry, regen ? 'regeneration' : 'heal', amount, source);
@@ -11517,7 +11701,7 @@ function _diceRollMeta(msg, dieType, label, flags){
   const formula = _diceFormula(msg, dieType);
   const status = flags.discarded ? '✕ DESCARTADO'
     : flags.kept ? '✓ ESCOLHIDO'
-    : flags.offhand ? 'MÃO SECUNDÁRIA' : '';
+    : flags.offhand ? t('ui.hud.mao_secundaria') : '';
   const context = [label, status].filter(Boolean).join(' • ');
   return { formula, status, context,
     modifier: Number.isFinite(Number(msg?.modifier)) ? Number(msg.modifier) : null,
@@ -12827,7 +13011,7 @@ function _clickTileInstrumentoAlvo(tx, ty){
 function _aimHoverInstrumentoAlvo(tx, ty){
   const valid = !!window._modoInstrumentoAlvo?.validTargets?.has(`${tx},${ty}`);
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? 'Inimigo válido — confirme para usar.' : 'Selecione um inimigo destacado dentro do alcance.', valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.instrumento.inimigo_valido_confirme_para_usar') : 'Selecione um inimigo destacado dentro do alcance.', valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _keyInstrumentoEsc(e){
@@ -12855,7 +13039,7 @@ function _atualizarMiraInstrumentoHover(tx, ty, tip, event){
     const canvas = document.getElementById('dungeon-canvas');
     if(canvas) canvas.style.cursor = ok ? 'crosshair' : 'not-allowed';
     _aimSetHover(tx, ty, ok ? 'valid' : 'blocked');
-    _aimSetStatus(ok ? 'Alvo válido — confirmar para usar.' : 'Alvo bloqueado: fora do alcance ou atrás de uma parede.', ok ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(ok ? t('ui.instrumento.alvo_valido_confirmar_para_usar') : t('ui.instrumento.alvo_bloqueado_fora_do_alcance_ou_atras_de'), ok ? '#94dfb0' : '#ff9aa2');
   } else {
     tip.style.display = 'none';
     _aimSetHover(tx, ty, 'blocked');
@@ -12913,10 +13097,10 @@ function escolherDirecaoInstrumento(b, onEscolher){
   window._modoDirecaoInstrumento = { onEscolher, directions };
   _aimStart({
     kind:'instrumento_direcao',
-    title:`${b.icon || '📯'} ${(b.habilidade_nome || 'ESCOLHER DIREÇÃO').toUpperCase()}`,
+    title:`${b.icon || '📯'} ${(b.habilidade_nome || t('ui.instrumento.escolher_direcao')).toUpperCase()}`,
     instruction:'Selecione uma das oito casas ao redor do bardo.',
-    color:'#ff8c66', targetLabel:'DIREÇÃO', range:directions, area:directions,
-    cancelText:'Escolha de direção cancelada.',
+    color:'#ff8c66', targetLabel:t('ui.instrumento.direcao'), range:directions, area:directions,
+    cancelText:t('ui.instrumento.escolha_de_direcao_cancelada'),
     cleanup:()=>{ window._modoDirecaoInstrumento = null; },
   });
 }
@@ -13577,7 +13761,7 @@ function _ativarModoPlacementArmadilha(tipoId, venenoId){
   }
   _aimStart({
     kind: 'armadilha', title: `🪤 ${meta?.nome || 'POSICIONAR ARMADILHA'}`,
-    instruction: meta?.apenas_objeto ? 'Selecione um objeto sólido adjacente.' : 'Selecione a sua casa ou uma casa adjacente.',
+    instruction: meta?.apenas_objeto ? t('ui.armadilha.selecione_um_objeto_solido_adjacente') : 'Selecione a sua casa ou uma casa adjacente.',
     color: '#c8a951', targetLabel: meta?.apenas_objeto ? 'OBJETO' : 'CASA', range, area,
     cancelText: 'Posicionamento de armadilha cancelado.',
     cleanup: () => { window._modoPlacementArmadilha = null; },
@@ -13600,7 +13784,7 @@ function onClickTileParaArmadilha(tx, ty){
       GS.decorTilesOf(d).some(([x,y]) => x === tx && y === ty) && !d.pisavel);
     const objeto = objetos[0];
     if(!objeto){
-      _aimSetStatus('Selecione um objeto sólido adjacente.', '#ffb168');
+      _aimSetStatus(t('ui.armadilha.selecione_um_objeto_solido_adjacente_2'), '#ffb168');
       toast('Selecione um objeto ao alcance.', 'var(--orange)'); return;
     }
     send({ type:'criar_armadilha', tipo:tipoId, decor_id:objeto.id, tx:tx, ty:ty, veneno_id:venenoId || null });
@@ -14241,7 +14425,7 @@ const GRIMORIO_CLIENT = {
     tipo:'toque', alcance:1,
     custo:'🍖-1 💧-1',
     descricao:`<b>Alcance:</b> adjacente<br>
-               <b>Efeito:</b> +20 fome e +20 sede<br>
+               <b>Efeito:</b> +25 fome e +25 sede<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
   // ── 2º CÍRCULO ─────────────────────────────────────────────────────────────
@@ -14266,6 +14450,21 @@ const GRIMORIO_CLIENT = {
                <b>Duração:</b> 1d4 + nível do clérigo<br>
                <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
+  },
+  senhor_das_aguas: {
+    id:'senhor_das_aguas', nome:'Senhor das Águas', icone:'🌊',
+    circulo:'terceiro', classe:['cleric'],
+    tipo:'area_fixa', alcance_base:5, alcance_escala:1, alcance_por_niveis:1,
+    area_lado:4, area_lado_niveis:2,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 5 + 1 quadrado por nível do clérigo<br>
+               <b>Área:</b> Água 4x4 ou Água profunda 3x3, +1 casa a cada 2 níveis<br>
+               <b>Duração:</b> 1d4 + nível do clérigo rodadas<br>
+               <b>A partir da 2ª rodada:</b> ação livre para marcar casas da área como redemoinho, até metade do nível do clérigo no TOTAL<br>
+               <b>Cota acumulada:</b> a janela fica aberta em todas as rodadas seguintes — dá para marcar poucas casas por vez<br>
+               <b>Escolha:</b> Água cria Redemoinho; Água profunda cria Redemoinho profundo<br>
+               <b>Redemoinhos:</b> permanecem até o fim da magia; também é possível não criar nenhum<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 3º círculo`
   },
   manto_escuridao: {
     id:'manto_escuridao', nome:'Manto de Escuridão', icone:'🌑',
@@ -14598,6 +14797,49 @@ function _magiasConhecidasIds(heroi) {
   return Array.isArray(known) ? known : [];
 }
 
+// A segunda etapa do Senhor das Águas é uma ação livre separada do lançamento:
+// o card cria a área, enquanto esta ação só aparece quando há uma zona ativa
+// pronta para receber os redemoinhos.
+// Cota de redemoinhos do Senhor das Águas. O teto é AUTORITATIVO do servidor
+// (`redemoinho_max` na zona); o `nível ÷ 2` só existe como retaguarda para uma
+// zona antiga que ainda não trouxesse o campo. Derivar o restante da lista
+// `redemoinhos` — e não de um booleano de "já usou" — é o que permite gastar a
+// cota aos poucos, em rodadas diferentes.
+function _senhorAguasLimite(zona, heroi) {
+  const doServidor = Number(zona?.redemoinho_max);
+  if (Number.isFinite(doServidor)) return Math.max(0, doServidor);
+  return Math.max(0, Math.floor(Number(heroi?.level || 1) / 2));
+}
+function _senhorAguasRestante(zona, heroi) {
+  const criados = (zona?.redemoinhos || []).length;
+  return Math.max(0, _senhorAguasLimite(zona, heroi) - criados);
+}
+
+function _renderAcaoSenhorDasAguas(heroi) {
+  const state = GS.gameState;
+  if (!state || !heroi || heroi.class_id !== 'cleric' || String(heroi.id) !== String(GS.myPid)) return '';
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'senhor_das_aguas' && z.ativa && String(z.caster) === String(heroi.id));
+  if (!zona) return '';
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const limite = _senhorAguasLimite(zona, heroi);
+  const restante = _senhorAguasRestante(zona, heroi);
+  if (limite > 0 && restante <= 0) {
+    return `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid #4fc3f744;background:rgba(79,195,247,.06);color:#8fcbe2;font-size:9px;line-height:1.5;">🌊 Redemoinhos: ${limite}/${limite} criados nesta magia.</div>`;
+  }
+  const disponivel = rodada >= Number(zona.disponivel_em || 0);
+  if (!disponivel) {
+    return `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid #4fc3f733;background:rgba(79,195,247,.04);color:#7898a2;font-size:9px;line-height:1.5;" data-i18n="ui.magia.redemoinhos_disponiveis_a_partir_da_2a_rod">🌊 Redemoinhos disponíveis a partir da 2ª rodada.</div>`;
+  }
+  if (restante <= 0) return '';
+  const gastos = limite - restante;
+  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
+    <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;" data-i18n="ui.magia.redemoinhos_acao_livre">🌪️ REDEMOINHOS — AÇÃO LIVRE</div>
+    <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.restam_casas_redemoinho', {restante, limite, extra: gastos ? t('ui.magia.ja_criadas', {n: gastos}) : ''})}</div>
+    <button data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaSenhorDasAguas()" style="width:100%;padding:7px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;" data-i18n="ui.hud.criar_redemoinhos">🌪️ Criar redemoinhos</button>
+  </div>`;
+}
+
 // Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
 const SLOTS_POR_NIVEL_CLIENT = {
   1: {primeiro:2, segundo:0, terceiro:0, quarto:0},
@@ -14646,8 +14888,8 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       return `<div title="Volta em ${falta} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#1a1a1a; border:1px solid #3a3a3a; display:flex; align-items:center; justify-content:center; color:#cc8844; font-size:9px;">${falta}</div>`;
     }).join('');
     const pipsExtra = extraAtivo ? (extraLivre
-      ? `<div title="Slot temporário do Cajado Arcano — pronto" style="width:16px; height:16px; border-radius:50%; background:#5b3009; border:1px solid #ff9d2e; display:flex; align-items:center; justify-content:center; color:#ffd08a; font-size:10px; box-shadow:0 0 6px rgba(255,157,46,.38);">✦</div>`
-      : `<div title="Slot temporário do Cajado Arcano — volta em ${cajadoExtra.recarga} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#24190d; border:1px solid #d4771c; display:flex; align-items:center; justify-content:center; color:#ffb347; font-size:9px; box-shadow:inset 0 0 5px rgba(0,0,0,.7);">${cajadoExtra.recarga}</div>`)
+      ? `<div title="Slot temporário do Cajado Arcano — pronto" data-i18n-title="ui.magia.slot_temporario_do_cajado_arcano_pronto" style="width:16px; height:16px; border-radius:50%; background:#5b3009; border:1px solid #ff9d2e; display:flex; align-items:center; justify-content:center; color:#ffd08a; font-size:10px; box-shadow:0 0 6px rgba(255,157,46,.38);">✦</div>`
+      : `<div title="${t('ui.magia.slot_cajado_volta_em', {n: cajadoExtra.recarga})}" style="width:16px; height:16px; border-radius:50%; background:#24190d; border:1px solid #d4771c; display:flex; align-items:center; justify-content:center; color:#ffb347; font-size:9px; box-shadow:inset 0 0 5px rgba(0,0,0,.7);">${cajadoExtra.recarga}</div>`)
       : '';
     const pips = pipsNormais + pipsExtra;
 
@@ -14667,10 +14909,11 @@ function renderMagiasFichaEmJogo(heroi, cls) {
 
   return `
     <div style="padding:4px 0;">
+      ${_renderAcaoSenhorDasAguas(heroi)}
       ${renderCirculoMagias('primeiro', t('ui.magia.circulo_caixa.primeiro'))}
       ${renderCirculoMagias('segundo',  t('ui.magia.circulo_caixa.segundo'))}
       ${renderCirculoMagias('terceiro', t('ui.magia.circulo_caixa.terceiro'))}
-      ${renderCirculoMagias('quarto', '4º Círculo')}
+      ${renderCirculoMagias('quarto', t('ui.magia.4o_circulo'))}
     </div>`;
 }
 
@@ -14733,7 +14976,8 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'abencoar', 'amaldicoar', 'abencoar_arma',
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
-  'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose'
+  'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose',
+  'senhor_das_aguas'
 ]);
 
 function _meVivoNaVez() {
@@ -14756,6 +15000,7 @@ function castarMagia(magiaId) {
   if (magiaId === 'conjurar_elemental') { _abrirPickerElemental(); return; }
   if (magiaId === 'metamorfose') { _abrirPickerMetamorfose(); return; }
   if (magiaId === 'chamado_inverno') { _abrirPickerChamadoInverno(); return; }
+  if (magiaId === 'senhor_das_aguas') { _abrirPickerSenhorDasAguas(); return; }
   _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile'); return; }
   // Manto de Escuridão é auto-centrado: conjura imediatamente no próprio
@@ -14797,12 +15042,12 @@ function _abrirPickerMetamorfose(){
   ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(8,5,12,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
   const heroes = (state.players||[]).filter(p=>p.alive && !p.is_master);
   const monsters = (state.monsters||[]).filter(m=>m.hp>0 && !m.boss && !m.undead && !['morto_vivo','construto','licantropo'].includes(m.subtipo));
-  const targets = heroes.map(p=>`<button class="meta-choice" data-meta-target="${_esc(p.id)}">${p.id===me.id?'🧙 Você':'🛡️ '+_esc(p.name)}</button>`).join('')
+  const targets = heroes.map(p=>`<button class="meta-choice" data-meta-target="${_esc(p.id)}">${p.id===me.id?t('ui.magia.voce'):'🛡️ '+_esc(p.name)}</button>`).join('')
     + monsters.map(m=>`<button class="meta-choice" data-meta-target="${_esc(m.id)}">${_esc(m.emoji||'👾')} ${_esc(m.name)}</button>`).join('');
   ov.innerHTML=`<section style="max-width:620px;width:100%;max-height:90vh;overflow:auto;background:#17111c;border:1px solid #c8a951;border-radius:10px;padding:20px;color:#eadfc8;font-family:serif;box-shadow:0 12px 50px #000;">
-    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Metamorfose</h2><button data-meta-close>✕</button></header>
-    <p style="color:#c8b89a;">Escolha quem será transformado:</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${targets}</div>
-    <div style="margin-top:14px;color:#8a7a5a;font-size:12px;">A forma escolhida deve estar desbloqueada e ter ND igual ou inferior ao nível do personagem.</div></section>`;
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;" data-i18n="ui.magia.metamorfose_titulo">🦋 Metamorfose</h2><button data-meta-close>✕</button></header>
+    <p style="color:#c8b89a;" data-i18n="ui.magia.escolha_quem_sera_transformado">Escolha quem será transformado:</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${targets}</div>
+    <div style="margin-top:14px;color:#8a7a5a;font-size:12px;" data-i18n="ui.magia.a_forma_escolhida_deve_estar_desbloqueada">A forma escolhida deve estar desbloqueada e ter ND igual ou inferior ao nível do personagem.</div></section>`;
   document.body.appendChild(ov);
   ov.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
   ov.querySelectorAll('[data-meta-target]').forEach(b=>b.onclick=()=>_metamorfoseEscolherAlvo(b.dataset.metaTarget));
@@ -14815,7 +15060,7 @@ function _metamorfoseEscolherAlvo(id){
   const forms=catalog.filter(f=>unlocked.has(f.type) && Number(f.cr||0)<=Number(me.level||1));
   const box=document.querySelector('#metamorfose-picker section');
   if(!box) return;
-  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">Alvo: <b>${_esc(alvo.name||'criatura')}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div>Nenhuma forma desbloqueada disponível.</div>'}</div>`;
+  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">Alvo: <b>${_esc(alvo.name||'criatura')}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div data-i18n="ui.magia.nenhuma_forma_desbloqueada_disponivel">Nenhuma forma desbloqueada disponível.</div>'}</div>`;
   box.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
   box.querySelectorAll('[data-meta-form]').forEach(b=>b.onclick=()=>_metamorfoseEnviar(b.dataset.metaForm));
 }
@@ -14834,6 +15079,36 @@ function _fecharPickerChamadoInverno(){
   _chamadoInvernoTerreno = null;
   _chamadoInvernoPermanente = false;
 }
+
+// Senhor das Águas: a escolha inicial define se a área usará água rasa ou
+// profunda. Os redemoinhos são uma ação livre opcional a partir da segunda
+// rodada e não fazem parte desta escolha inicial.
+let _senhorDasAguasTerreno = null;
+function _fecharPickerSenhorDasAguas(){
+  document.getElementById('senhor-aguas-picker')?.remove();
+  _senhorDasAguasTerreno = null;
+}
+function _abrirPickerSenhorDasAguas(){
+  _fecharPickerSenhorDasAguas();
+  const ov = document.createElement('div'); ov.id='senhor-aguas-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(5,12,18,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML=`<section style="max-width:520px;width:100%;background:#101b24;border:1px solid #4fc3f7;border-radius:10px;padding:20px;color:#e7f4f7;font-family:serif;box-shadow:0 12px 50px #000;">
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #4fc3f755;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;" data-i18n="ui.magia.senhor_das_aguas">🌊 Senhor das Águas</h2><button data-senhor-aguas-close>✕</button></header>
+    <p style="color:#bdd4da;" data-i18n="ui.magia.escolha_o_terreno_da_area_a_escolha_tambem">Escolha o terreno da área. A escolha também define o tipo de redemoinho disponível depois:</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <button data-senhor-aguas-terreno="agua" style="padding:16px;background:#126da1;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;"><span data-i18n="ui.magia.opcao_agua">🌊 Água</span><br><small data-i18n="ui.magia.opcao_redemoinho">Redemoinho</small></button>
+      <button data-senhor-aguas-terreno="agua_profunda" style="padding:16px;background:#06173f;color:#e7faff;border:1px solid #5d9ed4;border-radius:6px;cursor:pointer;"><span data-i18n="ui.magia.opcao_agua_profunda">🌊 Água profunda</span><br><small data-i18n="ui.magia.opcao_redemoinho_profundo">Redemoinho profundo</small></button>
+    </div>
+    <div style="margin-top:14px;color:#7898a2;font-size:12px;text-align:center;" data-i18n="ui.magia.a_area_afeta_aliados_e_inimigos_os_redemoi">A área afeta aliados e inimigos. Os redemoinhos são opcionais.</div>
+  </section>`;
+  document.body.appendChild(ov);
+  ov.querySelector('[data-senhor-aguas-close]').onclick=_fecharPickerSenhorDasAguas;
+  ov.querySelectorAll('[data-senhor-aguas-terreno]').forEach(b=>b.onclick=()=>{
+    _senhorDasAguasTerreno=b.dataset.senhorAguasTerreno;
+    ov.remove();
+    _iniciarModoMagia('senhor_das_aguas','tile');
+  });
+}
 function _abrirPickerChamadoInverno(){
   const me = GS.me;
   if(!me) return;
@@ -14841,24 +15116,24 @@ function _abrirPickerChamadoInverno(){
   const ov = document.createElement('div'); ov.id='chamado-inverno-picker';
   ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(5,12,18,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
   ov.innerHTML=`<section style="max-width:520px;width:100%;background:#101b24;border:1px solid #8bd7e8;border-radius:10px;padding:20px;color:#e7f4f7;font-family:serif;box-shadow:0 12px 50px #000;">
-    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
-    <p style="color:#bdd4da;">Escolha o tipo de terreno criado pela magia:</p>
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;" data-i18n="ui.marcado.chamado_do_inverno">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
+    <p style="color:#bdd4da;" data-i18n="ui.marcado.escolha_o_tipo_de_terreno_criado_pela_magi">Escolha o tipo de terreno criado pela magia:</p>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-      <button data-inverno-terreno="piso_congelado" style="padding:16px;background:#285d72;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;">🧊 Piso congelado</button>
-      <button data-inverno-terreno="planicie_nevada" style="padding:16px;background:#aabfc5;color:#12252c;border:1px solid #e7f4f7;border-radius:6px;cursor:pointer;">🌨️ Planície nevada</button>
+      <button data-inverno-terreno="piso_congelado" style="padding:16px;background:#285d72;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;" data-i18n="ui.marcado.piso_congelado">🧊 Piso congelado</button>
+      <button data-inverno-terreno="planicie_nevada" style="padding:16px;background:#aabfc5;color:#12252c;border:1px solid #e7f4f7;border-radius:6px;cursor:pointer;" data-i18n="ui.magia.planicie_nevada">🌨️ Planície nevada</button>
     </div>
-    <div data-inverno-step style="margin-top:14px;color:#7898a2;font-size:12px;text-align:center;">A área afetará aliados e inimigos.</div>
+    <div data-inverno-step style="margin-top:14px;color:#7898a2;font-size:12px;text-align:center;" data-i18n="ui.magia.a_area_afetara_aliados_e_inimigos">A área afetará aliados e inimigos.</div>
   </section>`;
   document.body.appendChild(ov);
   ov.querySelector('[data-inverno-close]').onclick=_fecharPickerChamadoInverno;
   ov.querySelectorAll('[data-inverno-terreno]').forEach(b=>b.onclick=()=>{
     _chamadoInvernoTerreno=b.dataset.invernoTerreno;
     const box=ov.querySelector('section');
-    box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
-      <p style="color:#bdd4da;">${_chamadoInvernoTerreno==='piso_congelado'?'🧊 Piso congelado':'🌨️ Planície nevada'} selecionado. Escolha a duração:</p>
+    box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #8bd7e855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#9de8f4;" data-i18n="ui.marcado.chamado_do_inverno">❄️ Chamado do Inverno</h2><button data-inverno-close>✕</button></header>
+      <p style="color:#bdd4da;">${t('ui.magia.terreno_selecionado_escolha_duracao', {terreno: _chamadoInvernoTerreno==='piso_congelado'?t('ui.magia.piso_congelado'):t('ui.magia.planicie_nevada')})}</p>
       <div style="display:grid;gap:10px;">
-        <button data-inverno-duracao="temporario" style="padding:14px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;">⏳ Temporário — 1d4 + nível de clérigo rodadas</button>
-        <button data-inverno-duracao="permanente" style="padding:14px;background:#334b51;color:#f4fbfc;border:1px solid #c8e8ee;border-radius:6px;cursor:pointer;">♾️ Permanente — custo adicional de 20 Fome e 20 Sede</button>
+        <button data-inverno-duracao="temporario" style="padding:14px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:6px;cursor:pointer;" data-i18n="ui.magia.temporario_1d4_nivel_de_clerigo_rodadas">⏳ Temporário — 1d4 + nível de clérigo rodadas</button>
+        <button data-inverno-duracao="permanente" style="padding:14px;background:#334b51;color:#f4fbfc;border:1px solid #c8e8ee;border-radius:6px;cursor:pointer;" data-i18n="ui.marcado.permanente_custo_adicional_de_20_fome_e_20">♾️ Permanente — custo adicional de 20 Fome e 20 Sede</button>
       </div>`;
     box.querySelector('[data-inverno-close]').onclick=_fecharPickerChamadoInverno;
     box.querySelectorAll('[data-inverno-duracao]').forEach(o=>o.onclick=()=>{
@@ -14936,8 +15211,12 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   const _me = GS.me;
   const invernoLado = magiaId === 'chamado_inverno'
     ? 4 + Math.floor((Number(_me?.level) || 1) / 2) : 0;
+  const senhorAguasLado = magiaId === 'senhor_das_aguas'
+    ? (_senhorDasAguasTerreno === 'agua_profunda' ? 3 : 4)
+      + Math.floor((Number(_me?.level) || 1) / 2) : 0;
+  const cajadoLado = magiaId === 'senhor_das_aguas' ? 0 : _cajadoArcanoAreaLado(_me, _def, !!scrollItemId);
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: _cajadoArcanoAreaLado(_me, _def, !!scrollItemId) || invernoLado || (_def && _def.area_lado) || 0,
+                        areaLado: cajadoLado || invernoLado || senhorAguasLado || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -14959,7 +15238,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     kind: 'magia',
     title: `${m.icone} ${m.nome.toUpperCase()}`,
     instruction: _rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao')),
-    color: '#c8a951', targetLabel: alvoTipo === 'foe' ? 'INIMIGO' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? 'DIREÇÃO' : 'CASA',
+    color: '#c8a951', targetLabel: alvoTipo === 'foe' ? 'INIMIGO' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? t('ui.magia.direcao') : 'CASA',
     range: window._spellHL.range, area: window._spellHL.area, double: window._spellHL.double,
     cancelText: 'Magia cancelada.',
     cleanup: () => {
@@ -14969,6 +15248,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
         _chamadoInvernoTerreno = null;
         _chamadoInvernoPermanente = false;
       }
+      if (cancelada === 'senhor_das_aguas') _senhorDasAguasTerreno = null;
       if (cancelada) _removerEfeitoVisualLocal(cancelada);
     },
   });
@@ -15011,13 +15291,13 @@ function _clickTileMagia(tx, ty) {
   const m  = GRIMORIO_CLIENT[magiaId];
 
   if (mode.alvoTipo === 'adjacent_tile' && !mode.validTiles?.has(`${tx},${ty}`)) {
-    _aimSetStatus('Casa inválida: escolha uma das casas verdes livres.', '#ffb168');
+    _aimSetStatus(t('ui.magia.casa_invalida_escolha_uma_das_casas_verdes'), '#ffb168');
     toast('Escolha uma das casas verdes livres.', '#ff6b6b'); return;
   }
 
   const spec = _specAlvoMagia(mode.alvoTipo, tx, ty);
   if (!spec.ok) {
-    _aimSetStatus(spec.msg || 'Alvo inválido para esta magia.', '#ffb168');
+    _aimSetStatus(spec.msg || t('ui.magia.alvo_invalido_para_esta_magia'), '#ffb168');
     if (spec.msg) toast(spec.msg, '#ff6b6b'); return;
   }
 
@@ -15049,6 +15329,7 @@ function _clickTileMagia(tx, ty) {
     fields.terreno = _chamadoInvernoTerreno;
     fields.permanente = !!_chamadoInvernoPermanente;
   }
+  if (magiaId === 'senhor_das_aguas') fields.terreno = _senhorDasAguasTerreno;
   if (mode.scrollItemId) {
     send(Object.assign({ type: 'use_scroll', item_id: mode.scrollItemId }, fields));
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951');
@@ -15072,6 +15353,171 @@ function _encerrarModoMagia() {
   document.removeEventListener('keydown', _keyMagiaEsc);
 }
 
+// Janela explicativa antes da seleção das casas: o jogador vê as regras dos
+// dois tipos e só depois entra na mira do mapa para marcar os redemoinhos.
+let _senhorAguasPopupKeyHandler = null;
+function _fecharJanelaSenhorDasAguas(){
+  const overlay = document.getElementById('senhor-aguas-overlay');
+  if(overlay) overlay.style.display = 'none';
+  if(_senhorAguasPopupKeyHandler){
+    document.removeEventListener('keydown', _senhorAguasPopupKeyHandler);
+    _senhorAguasPopupKeyHandler = null;
+  }
+}
+
+function _abrirJanelaSenhorDasAguas(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me) return;
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'senhor_das_aguas' && z.ativa
+      && String(z.caster) === String(me.id));
+  if(!zona || _senhorAguasRestante(zona, me) <= 0) return;
+
+  const overlay = document.getElementById('senhor-aguas-overlay');
+  if(!overlay) { _iniciarSenhorDasAguasRedemoinhos(); return; }
+  const restante = _senhorAguasRestante(zona, me);
+  const materialProfundo = zona.material === 'agua_profunda';
+  const status = document.getElementById('senhor-aguas-status');
+  const desc = document.getElementById('senhor-aguas-desc');
+  const effects = document.getElementById('senhor-aguas-effects');
+  const create = document.getElementById('senhor-aguas-create');
+  const close = document.getElementById('senhor-aguas-close');
+  if(status) status.textContent = t('ui.magia.senhor_aguas_janela_status', {n: restante});
+  if(desc) desc.textContent = t(materialProfundo
+    ? 'ui.magia.senhor_aguas_janela_desc_profunda'
+    : 'ui.magia.senhor_aguas_janela_desc_agua');
+  if(effects) effects.innerHTML = `
+    <li>${t('ui.magia.senhor_aguas_janela_redemoinho')}</li>
+    <li>${t('ui.magia.senhor_aguas_janela_redemoinho_profundo')}</li>
+    <li>${t('ui.magia.senhor_aguas_janela_atencao')}</li>`;
+  if(create) create.onclick = () => {
+    _fecharJanelaSenhorDasAguas();
+    _iniciarSenhorDasAguasRedemoinhos();
+  };
+  if(close) close.onclick = _fecharJanelaSenhorDasAguas;
+  overlay.onclick = event => { if(event.target === overlay) _fecharJanelaSenhorDasAguas(); };
+  _senhorAguasPopupKeyHandler = event => {
+    if(event.key === 'Escape'){
+      _fecharJanelaSenhorDasAguas();
+      event.preventDefault();
+    }
+  };
+  document.addEventListener('keydown', _senhorAguasPopupKeyHandler);
+  overlay.style.display = 'flex';
+  close?.focus();
+}
+
+// Abre a explicação automaticamente quando o turno do clérigo começa. A chave
+// impede que cada `game_state` recebido durante o mesmo turno reabra o popup.
+let _senhorAguasUltimoPopupTurno = null;
+function _considerarPopupSenhorDasAguas(msg){
+  const state = msg || GS.gameState;
+  const me = GS.me;
+  if(!state || !me || state.phase !== 'playing'
+      || me.class_id !== 'cleric' || !me.alive
+      || String(state.current_turn) !== String(GS.myPid)
+      || state.animados_turn) return;
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'senhor_das_aguas' && z.ativa
+      && String(z.caster) === String(me.id)
+      && _senhorAguasRestante(z, me) > 0);
+  if(!zona) return;
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  if(rodada < Number(zona.disponivel_em || 0)) return;
+  const ator = state.current_actor || {};
+  const chave = [zona.id, rodada, ator.kind || 'player', ator.id || state.current_turn].join('|');
+  if(_senhorAguasUltimoPopupTurno === chave) return;
+  _senhorAguasUltimoPopupTurno = chave;
+  // Aguarda o HUD autoritativo terminar de renderizar antes de abrir a janela.
+  requestAnimationFrame(() => {
+    const atual = GS.gameState;
+    if(!atual || atual.phase !== 'playing'
+        || String(atual.current_turn) !== String(GS.myPid)
+        || atual.animados_turn) return;
+    _abrirJanelaSenhorDasAguas();
+  });
+}
+
+// Seleção múltipla das casas de redemoinho. A camada de mira só cuida da
+// apresentação e da entrada; o servidor valida zona, rodada, limite e tipo.
+function _iniciarSenhorDasAguasRedemoinhos(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me) return;
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'senhor_das_aguas' && z.ativa
+      && _senhorAguasRestante(z, me) > 0
+      && String(z.caster) === String(me.id));
+  if(!zona){ toast(t('ui.magia.nao_ha_um_senhor_das_aguas_pronto_para_cri'), '#ff6b6b'); return; }
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  if(rodada < Number(zona.disponivel_em || 0)){
+    toast(t('ui.magia.os_redemoinhos_so_podem_ser_criados_a_part'), '#ffb168'); return;
+  }
+  const max = _senhorAguasRestante(zona, me);
+  // As casas já marcadas saem da mira: remarcá-las não mudaria o terreno e o
+  // servidor recusaria o pedido inteiro.
+  const jaCriados = new Set((zona.redemoinhos || []).map(([x,y]) => `${x},${y}`));
+  const permitidos = new Set((zona.tiles || [])
+    .map(([x,y]) => `${x},${y}`).filter(k => !jaCriados.has(k)));
+  const selecionados = new Set();
+  window._modoSenhorDasAguas = { zonaId: zona.id, permitidos, selecionados, max };
+  const atualizar = () => {
+    const modo = window._modoSenhorDasAguas;
+    if(!modo) return;
+    _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
+    _aimSetStatus(`${modo.selecionados.size}/${modo.max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar.`, '#94dfb0');
+    const btn = _aimSessionState.current?.confirmButton;
+    if(btn){
+      btn.disabled = modo.selecionados.size < 1;
+      btn.style.opacity = btn.disabled ? '.45' : '1';
+      btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+    }
+  };
+  _aimStart({
+    kind:'senhor_das_aguas_rodamoinhos',
+    title:t('ui.magia.redemoinhos_acao_livre'),
+    instruction:t('ui.magia.escolha_ate_casas_senhor_aguas', {max}),
+    color:'#4fc3f7', targetLabel:'SELECIONADO', range:permitidos, area:selecionados,
+    confirmText:'CRIAR REDEMOINHOS',
+    canConfirm:()=>window._modoSenhorDasAguas?.selecionados?.size > 0,
+    confirm:()=>{
+      const modo = window._modoSenhorDasAguas;
+      if(!modo || !modo.selecionados.size) return;
+      const tiles = [...modo.selecionados].map(k=>k.split(',').map(Number));
+      GS.senhorDasAguasCriar(tiles);
+      _aimEnd({silent:true, reason:'resolved'});
+    },
+    cleanup:()=>{ window._modoSenhorDasAguas = null; },
+  });
+  atualizar();
+}
+
+function _clickTileSenhorDasAguas(tx, ty){
+  const modo = window._modoSenhorDasAguas;
+  if(!modo) return;
+  const key = `${tx},${ty}`;
+  if(!modo.permitidos.has(key)){
+    _aimSetStatus(t('ui.magia.escolha_uma_casa_dentro_da_area_do_senhor'), '#ff9aa2');
+    toast(t('ui.magia.casa_fora_da_area_da_magia'), '#ff6b6b'); return;
+  }
+  if(modo.selecionados.has(key)) modo.selecionados.delete(key);
+  else if(modo.selecionados.size < modo.max) modo.selecionados.add(key);
+  else {
+    _aimSetStatus(t('ui.magia.limite_casas_redemoinho', {max: modo.max}), '#ffb168');
+    return;
+  }
+  _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
+  _aimSetStatus(`${modo.selecionados.size}/${modo.max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar.`, '#94dfb0');
+  const btn = _aimSessionState.current?.confirmButton;
+  if(btn){
+    btn.disabled = modo.selecionados.size < 1;
+    btn.style.opacity = btn.disabled ? '.45' : '1';
+    btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+  }
+}
+
+window._iniciarSenhorDasAguasRedemoinhos = _iniciarSenhorDasAguasRedemoinhos;
+window._abrirJanelaSenhorDasAguas = _abrirJanelaSenhorDasAguas;
+
 function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
   if (window._modoMagia) _encerrarModoMagia();
   if (window._modoThrowItem) _encerrarMiraArremesso();
@@ -15086,7 +15532,7 @@ function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
     kind: 'animar_mortos',
     title: '💀 ANIMAR MORTOS',
     instruction: t('ui.animar.modo_legenda'),
-    color: '#d98cff', targetLabel: 'CADÁVER', range: alcance,
+    color: '#d98cff', targetLabel: t('ui.animar.cadaver'), range: alcance,
     area: new Set(cadaveres.map(c => `${c.pos[0]},${c.pos[1]}`)),
     cancelText: 'Animar Mortos cancelado.',
     cleanup: () => {
@@ -15260,9 +15706,9 @@ function _abrirPickerElemental() {
     ['fogo','🔥','Elemental de Fogo · HP32 · 1d10+3'],
     ['gelo','❄️','Elemental de Gelo · HP36 · 1d10'],
     ['pedra','🪨','Elemental de Pedra · HP44 · 1d12'],
-    ['eletrico','⚡','Elemental Elétrico · HP32 · 1d10 · alcance 4'],
+    ['eletrico','⚡',t('ui.elemental.elemental_eletrico_hp32_1d10_alcance_4')],
     ['ar','🌪️','Elemental de Ar · HP32 · 1d8 · alcance 2'],
-    ['agua','🌊','Elemental de Água · HP42 · 1d10'],
+    ['agua','🌊',t('ui.elemental.elemental_de_agua_hp42_1d10')],
   ];
   box.innerHTML =
     '<span style="color:#c8a951;font-size:11px;letter-spacing:2px;margin-right:4px;">🌪️ CONJURAR</span>' +
@@ -15358,7 +15804,7 @@ function _aimRenderLegend(session) {
     guide.appendChild(item);
   };
   chip('#78abff', 'ALCANCE');
-  chip('#72e5a5', session.targetLabel || 'VÁLIDO');
+  chip('#72e5a5', session.targetLabel || t('ui.mira.valido'));
   chip('#ff8b92', 'BLOQUEADO');
   copy.append(title, instruction, guide, status);
   const cancel = document.createElement('button');
@@ -15368,7 +15814,21 @@ function _aimRenderLegend(session) {
     + 'font:700 10px Cinzel,serif;letter-spacing:.7px;cursor:pointer;';
   cancel.textContent = 'ESC · CANCELAR';
   cancel.onclick = () => _aimEnd({ message: session.cancelText });
-  hud.append(copy, cancel);
+  const actions = document.createElement('div');
+  actions.style.cssText = 'display:flex;flex:0 0 auto;gap:6px;align-items:center;';
+  if (session.confirm) {
+    const confirm = document.createElement('button');
+    confirm.type = 'button';
+    confirm.style.cssText = 'border:1px solid #72e5a5;border-radius:4px;background:rgba(114,229,165,.12);color:#bff6d2;padding:6px 8px;font:700 10px Cinzel,serif;letter-spacing:.7px;cursor:pointer;';
+    confirm.textContent = session.confirmText || 'CONFIRMAR';
+    confirm.disabled = session.canConfirm ? !session.canConfirm() : false;
+    if (confirm.disabled) { confirm.style.opacity = '.45'; confirm.style.cursor = 'not-allowed'; }
+    confirm.onclick = () => { if (!confirm.disabled) session.confirm(); };
+    session.confirmButton = confirm;
+    actions.appendChild(confirm);
+  }
+  actions.appendChild(cancel);
+  hud.append(copy, actions);
   document.body.appendChild(hud);
 }
 
@@ -15400,7 +15860,7 @@ function _aimSetHoverFromSets(tx, ty, explicitState = null) {
   const state = explicitState || (valid ? 'valid' : 'blocked');
   _aimSetHover(tx, ty, state);
   if (!explicitState)
-    _aimSetStatus(valid ? 'Casa válida — confirme para executar.' : 'Escolha bloqueada — selecione uma casa destacada.', valid ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(valid ? t('ui.mira.casa_valida_confirme_para_executar') : 'Escolha bloqueada — selecione uma casa destacada.', valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _renderWeaponAimTrajectory3D() {
@@ -15443,21 +15903,21 @@ function _aimHoverMagic(tx, ty) {
     || mode.alvoTipo === 'self_area' || mode.validTiles?.has(key) || window._spellHL.range?.has(key);
   const valid = !!spec.ok && !!inRange;
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? 'Mira válida — confirme para lançar.' : (spec.msg || 'Escolha uma casa destacada dentro do alcance.'), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') : (spec.msg || 'Escolha uma casa destacada dentro do alcance.'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverThrow(tx, ty) {
   const action = GS.resolveTileClick(tx, ty);
   const valid = action?.type === 'throw' || action?.type === 'throw_area';
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? 'Mira válida — confirme para arremessar.' : 'Escolha um alvo ou casa válida, sem parede no caminho.', valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverPendingSkill(tx, ty) {
   const action = GS.resolveTileClick(tx, ty);
   const valid = action?.type === 'skill';
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? 'Alvo válido — confirme para usar.' : 'Selecione um alvo destacado para esta habilidade.', valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : 'Selecione um alvo destacado para esta habilidade.', valid ? '#94dfb0' : '#ff9aa2');
 }
 
 // Os modos que _aimPreviewAt sabe tratar. Serve de guarda nos manipuladores:
@@ -15466,7 +15926,7 @@ function _aimHoverPendingSkill(tx, ty) {
 function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
-    || window._modoMagia || window._modoThrowItem || window._modoAnimarMortos
+    || window._modoMagia || window._modoSenhorDasAguas || window._modoThrowItem || window._modoAnimarMortos
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
     || (GS.pendingSkill && _aimSessionIs('habilidade')));
 }
@@ -15498,11 +15958,18 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     const ok = !!monster && mode.range.has(`${tx},${ty}`)
       && GS.hasLineOfSight(GS.gameState, GS.me.pos[0], GS.me.pos[1], tx, ty);
     _aimSetHover(tx, ty, ok ? 'valid' : 'blocked');
-    _aimSetStatus(ok ? 'Alvo válido — confirmar para arremessar.' : 'Selecione um inimigo visível dentro do alcance.', ok ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(ok ? t('ui.mira.alvo_valido_confirmar_para_arremessar') : t('ui.mira.selecione_um_inimigo_visivel_dentro_do_alc'), ok ? '#94dfb0' : '#ff9aa2');
     return true;
   }
   if (window._modoInstrumento)  { _atualizarMiraInstrumentoHover(tx, ty, dica, event); return true; }
   if (window._modoMestreMira)   { _atualizarMiraMestre(tx, ty); _aimSetHoverFromSets(tx, ty); return true; }
+  if (window._modoSenhorDasAguas) {
+    const modo = window._modoSenhorDasAguas;
+    const valid = modo.permitidos.has(`${tx},${ty}`);
+    _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+    _aimSetStatus(valid ? t('ui.mira.casa_valida_clique_para_marcar_ou_desmarca') : t('ui.mira.escolha_uma_casa_dentro_da_area_da_magia'), valid ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
   if (window._modoThrowItem) {
     if (window._modoThrowItem.area) _recomputarAreaThrow(tx, ty);
@@ -15512,7 +15979,7 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
   if (window._modoAnimarMortos) {
     const valid = window._spellHL.area.has(`${tx},${ty}`);
     _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-    _aimSetStatus(valid ? 'Cadáver válido — confirme para animar.' : 'Selecione um cadáver destacado.', valid ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(valid ? t('ui.mira.cadaver_valido_confirme_para_animar') : t('ui.mira.selecione_um_cadaver_destacado'), valid ? '#94dfb0' : '#ff9aa2');
     return true;
   }
   if (window._modoPlacementArmadilha)      { _aimSetHoverFromSets(tx, ty); return true; }
@@ -15605,8 +16072,11 @@ function _aimStart(spec) {
     instruction: spec.instruction,
     status: spec.status || '',
     color: spec.color || '#c8a951',
-    targetLabel: spec.targetLabel || 'VÁLIDO',
+    targetLabel: spec.targetLabel || t('ui.mira.valido_2'),
     cancelText: spec.cancelText || 'Mira cancelada.',
+    confirmText: spec.confirmText || '',
+    canConfirm: spec.canConfirm,
+    confirm: spec.confirm,
     cleanup: spec.cleanup,
   };
   session.modosNoInicio = _aimModeSnapshot();   // base da proxima troca de mira
@@ -15849,7 +16319,7 @@ function _recomputarAreaMagia(hx, hy) {
       }
     } else if (hx != null && hy != null) {
       if (mode.alvoTipo === 'tile' && mode.areaLado) {
-        if (mode.magiaId === 'chamado_inverno') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
+        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
         else _addQuadrado(hx, hy, mode.areaLado, area);
       }
       else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
@@ -16269,7 +16739,7 @@ let _masterHistorySeq = 0;
 function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 function _masterActionResultLabel(msg){
-  if(msg.natural_critical || msg.crit) return 'CRÍTICO';
+  if(msg.natural_critical || msg.crit) return t('ui.hud.critico_2');
   if(msg.natural_fumble) return 'FALHA';
   return msg.hit ? 'ACERTO' : 'ERRO';
 }
@@ -16358,7 +16828,7 @@ function renderMasterPanel(state){
      </div>`;
   host.innerHTML =
     abas +
-     `<div class="mp-corpo"><div class="mp-preview-legend"><span><i class="mp-leg-range"></i> alcance</span><span><i class="mp-leg-zone"></i> área efetiva</span><span><i class="mp-leg-foot"></i> ocupação</span></div>${corpo}${_mpHistoricoAcoes(state)}</div>` +
+     `<div class="mp-corpo"><div class="mp-preview-legend"><span><i class="mp-leg-range"></i> <span data-i18n="ui.mestre.alcance">alcance</span></span><span><i class="mp-leg-zone"></i> <span data-i18n="ui.mestre.area_efetiva">área efetiva</span></span><span><i class="mp-leg-foot"></i> <span data-i18n="ui.mestre.ocupacao">ocupação</span></span></div>${corpo}${_mpHistoricoAcoes(state)}</div>` +
     (mm ? `<div class="mp-rodape"><button class="mp-encerrar">Encerrar monstro</button></div>` : '');
 
   host.querySelectorAll('.mp-aba').forEach(b => {
@@ -16473,7 +16943,7 @@ function _mpAbaAtivo(state){
           <button class="mp-altura-btn" data-altura="-1" ${podeDescer ? '' : 'disabled'}>↓ Descer</button>
           <button class="mp-altura-btn" data-altura="1" ${podeSubir ? '' : 'disabled'}>↑ Subir</button>
         </div>
-        ${podeAlterar ? '' : '<small style="color:var(--text2)">A altura desta criatura é fixa.</small>'}
+        ${podeAlterar ? '' : '<small style="color:var(--text2)" data-i18n="ui.mestre.a_altura_desta_criatura_e_fixa">A altura desta criatura é fixa.</small>'}
       </div>`;
   }
 
@@ -16499,7 +16969,7 @@ function _mpAbaAtivo(state){
       h += `<div class="mp-linha ${pode ? 'atk'+armado : 'off'}" data-atk="${i}">
           <span style="font-size:1rem">${a.range ? '🎯' : '⚔️'}</span>
           <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}${window._mpGolpeArmado === i ? ' <small class="mp-armado-label">ARMADO</small>' : ''}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
-          <span class="mp-cargas" title="${cargas} ataque(s) disponível(is); ${gastas} gasto(s)">${'●'.repeat(cargas) || '—'}<small>${cargas}/${totalCargas} disp.</small>${gastas ? `<em>${gastas} gasto(s)</em>` : ''}</span>
+          <span class="mp-cargas" title="${t('ui.mestre.ataques_disponiveis_gastos', {disp: cargas, gastos: gastas})}">${'●'.repeat(cargas) || '—'}<small>${cargas}/${totalCargas} ${t('ui.mestre.disp_abrev')}</small>${gastas ? `<em>${gastas} gasto(s)</em>` : ''}</span>
         </div>`;
     });
   }
@@ -16728,7 +17198,7 @@ function _limparMiraMestre(){
 }
 function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast('Mira cancelada.', '#888'); e.preventDefault(); } }
 function _mestreMiraErro(motivo){
-  const msg = `Alvo inválido: ${motivo}`;
+  const msg = t('ui.mestre.alvo_invalido_motivo', {motivo});
   _aimSetStatus(msg, '#ffb168');
   toast(msg, 'var(--orange)');
   appendGM(`⚠️ ${msg}`);
@@ -17064,8 +17534,8 @@ function _iniciarMiraMestre(spec){
   _aimStart({
     kind:'mestre',
     title:`${spec.icon || '🎯'} ${spec.label || t('ui.mestre.custo.principal')}`,
-    instruction:'Escolha uma casa ou criatura dentro da área destacada.',
-    color:'#ff8c66', targetLabel: spec.kind === 'attack' ? 'HERÓI' : 'ALVO',
+    instruction:t('ui.mestre.escolha_uma_casa_ou_criatura_dentro_da_are'),
+    color:'#ff8c66', targetLabel: spec.kind === 'attack' ? t('ui.mestre.heroi') : 'ALVO',
     range:alcance,
     cleanup:()=>{ window._modoMestreMira = null; },
   });
@@ -17090,12 +17560,12 @@ function _clickMiraMestre(tx,ty){
     : mode.range <= 0 || d <= _alcanceComAlturaCli(mode.caster, mode.rawRange ?? mode.range, targetEntity);
   if(!inRange){
     const descricao = mode.kind === 'attack'
-      ? `a casa não está na área efetiva de ${mode.label || 'este golpe'}`
-      : `a casa está fora do alcance de ${mode.label || 'esta habilidade'} (${mode.range} casa(s))`;
+      ? t('ui.mestre.casa_fora_area_efetiva', {alvo: mode.label || t('ui.mestre.este_golpe')})
+      : t('ui.mestre.casa_fora_alcance', {alvo: mode.label || t('ui.mestre.esta_habilidade'), n: mode.range});
     _mestreMiraErro(descricao); return;
   }
   if(mode.lineRange && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
-    _mestreMiraErro('este ataque só pode ser usado em linha reta.'); return;
+    _mestreMiraErro(t('ui.mestre.este_ataque_so_pode_ser_usado_em_linha_ret')); return;
   }
   const alvo=targetHero
     || ((st.test_mode || GS.isCommandController()) && targetMonster && targetMonster.id !== mode.caster.id
@@ -17103,10 +17573,10 @@ function _clickMiraMestre(tx,ty){
     || (mode.allowEmpty ? {id:null} : null);
   if(!alvo){
     const motivo = targetMonster && targetMonster.id === mode.caster.id
-      ? 'o próprio monstro não pode ser escolhido como alvo.'
+      ? t('ui.mestre.o_proprio_monstro_nao_pode_ser_escolhido_c')
       : mode.kind === 'attack'
-        ? 'clique em um herói dentro das casas vermelhas do golpe.'
-        : 'clique em uma criatura válida dentro da área destacada.';
+        ? t('ui.mestre.clique_em_um_heroi_dentro_das_casas_vermel')
+        : t('ui.mestre.clique_em_uma_criatura_valida_dentro_da_ar');
     _mestreMiraErro(motivo); return;
   }
   if(mode.kind==='attack') GS.mestreAtacarMonstro(mode.caster.id,alvo.id,mode.attackIndex);
@@ -17227,7 +17697,7 @@ function abrirFichaMonstro(m){
       <section><h3>${t('ui.mestre.habilidades')}</h3>${habilidades.length ? habilidades.map(a => `<div class="fm-linha"><b>${_esc(a.name||a.id)}</b><span>${_esc(a.descricao||a.description||a.desc||a.action_type||'')}</span></div>`).join('') : `<p>${t('ui.mestre.sem_habilidade')}</p>`}</section>
       <section><h3>${t('ui.mestre.magias')}</h3><p>${magias.length ? _esc(magias.join(' · ')) : t('ui.mestre.sem_magia')}</p></section>
       <section><h3>${t('ui.mestre.defesas')}</h3><div class="fm-linha"><b>${t('ui.mestre.imunidades')}</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>${t('ui.mestre.resistencias')}</b><span>${_esc(_fmtFichaMonstroLista(m.resistances))}</span></div><div class="fm-linha"><b>${t('ui.mestre.fraquezas')}</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
-      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b>Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
+      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b data-i18n="ui.ficha.protecao">Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
     </div>
     <footer><span>C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()">FECHAR</button></footer>
   </article>`;
@@ -17535,7 +18005,7 @@ function _renderAnimadoManualControls(state, me){
   if(!a) return '';
   const abilities = _animadoManualAbilityList(a);
   if(!abilities.length) return `
-    <div style="margin-top:8px;padding:8px;border:1px solid #8f303066;background:rgba(70,0,0,.12);color:#b78a8a;font-size:.68rem;">
+    <div style="margin-top:8px;padding:8px;border:1px solid #8f303066;background:rgba(70,0,0,.12);color:#b78a8a;font-size:.68rem;" data-i18n="ui.animar.esta_ficha_nao_possui_habilidades_ativas_d">
       ✦ Esta ficha não possui habilidades ativas disponíveis.
     </div>`;
   const pending = window._animadoAbilityPending;
@@ -17544,7 +18014,7 @@ function _renderAnimadoManualControls(state, me){
       <div style="color:#e06b6b;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:1px;margin-bottom:6px;">${a.tipo === 'elemental' ? '🌪️ HABILIDADES DO ELEMENTAL' : '☠️ HABILIDADES DO SENHOR DA MORTE'}</div>
       <div style="color:#b78a8a;font-size:.62rem;margin-bottom:6px;">Selecione uma habilidade e depois clique no monstro-alvo.</div>
       ${abilities.map(ab => {
-        const custo = (ab.action_type === 'acao_bonus') ? 'BÔNUS' : (ab.action_type === 'acao_livre' ? 'LIVRE' : 'AÇÃO');
+        const custo = (ab.action_type === 'acao_bonus') ? t('ui.animar.bonus') : (ab.action_type === 'acao_livre' ? 'LIVRE' : t('ui.animar.acao'));
         const selected = pending && pending.animadoId === a.id && pending.abilityId === ab.id;
         const label = _esc(ab.nome || ab.name || ab.id);
         const desc = _esc(ab.descricao || ab.description || 'Habilidade da ficha original.');
@@ -17898,6 +18368,31 @@ function renderMyPanel(state){
       <span style="color:#e7a36c;">📦 ${t('ui.hud.escapar_bau')}</span>
       <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${t('ui.hud.forca_bau')}</small>
     </button>` : '';
+  // Senhor das Águas: a ação livre fica visível no começo do turno do clérigo,
+  // mesmo que a aba de Magias não esteja aberta. A seleção das casas continua
+  // no mapa e o servidor ainda valida rodada, limite e zona ativa.
+  const _senhorAguasZona = me.class_id === 'cleric'
+    ? (state.zonas_especiais || []).slice().reverse().find(z =>
+        z && z.tipo === 'senhor_das_aguas' && z.ativa
+          && _senhorAguasRestante(z, me) > 0 && String(z.caster) === String(me.id))
+    : null;
+  // O painel principal é usado pelo mouse e pelo joystick. Em alguns estados
+  // de iniciativa o `current_turn` chega antes da atualização do booleano
+  // derivado `GS.isMyTurn`; aceitar os dois sinais evita esconder a ação do
+  // mouse durante essa janela, sem liberar a ação fora do turno real.
+  const _senhorAguasMeuTurno = !!(GS.isMyTurn
+    || String(state.current_turn) === String(me.id)
+    || String(state.animados_turn) === String(me.id));
+  const _senhorAguasDisponivel = !!(_senhorAguasZona && _senhorAguasMeuTurno
+    && Number(state.round ?? state.round_num ?? 1) >= Number(_senhorAguasZona.disponivel_em || 0)
+    && _senhorAguasRestante(_senhorAguasZona, me) > 0);
+  const _senhorAguasRest = _senhorAguasZona ? _senhorAguasRestante(_senhorAguasZona, me) : 0;
+  const _redemoinhosBtn = _senhorAguasDisponivel ? `
+    <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaSenhorDasAguas()"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#4fc3f7;">
+      <span style="color:#9de8f4;" data-i18n="ui.hud.criar_redemoinhos">🌪️ Criar redemoinhos</span>
+      <small style="color:#bdd4da;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre_restam_casas', {n: _senhorAguasRest})}</small>
+    </button>` : '';
   const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
   const _adjHint = canAct && !canAttack
@@ -17916,6 +18411,7 @@ function renderMyPanel(state){
     ${_estancarSangramentoBtn}
     ${_escaparBtn}
     ${_escaparBauBtn}
+    ${_redemoinhosBtn}
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
@@ -18527,11 +19023,26 @@ function _isPetrificadoResult(msg){
   return !msg?._condition && msg.tipo === 'petrificado';
 }
 
+function _isWhirlpoolResult(msg){
+  return msg?.tipo_id === 'rodamoinho' || msg?.tipo_id === 'rodamoinho_profundo'
+    || msg?.tipo === 'rodamoinho';
+}
+
+function _isDrowningResult(msg){
+  return msg?.tipo_id === 'afogamento' || msg?.tipo === 'afogamento';
+}
+
 function queueTrapResult(msg){
   // O servidor pode entregar o resultado final antes do aviso da marca,
   // porque o primeiro é enviado imediatamente e o segundo sai no push_state.
   // A progressão precisa ser exibida antes da petrificação completa.
-  if(_isPetrificandoResult(msg)){
+  if(_isWhirlpoolResult(msg)){
+    // A captura é a causa do afogamento. Se os dois eventos chegarem antes
+    // de a fila avançar, o redemoinho precisa aparecer primeiro.
+    const drowningIdx = _trapQueue.findIndex(_isDrowningResult);
+    if(drowningIdx >= 0) _trapQueue.splice(drowningIdx, 0, msg);
+    else _trapQueue.push(msg);
+  } else if(_isPetrificandoResult(msg)){
     const finalIdx = _trapQueue.findIndex(_isPetrificadoResult);
     if(finalIdx >= 0) _trapQueue.splice(finalIdx, 0, msg);
     else _trapQueue.push(msg);
@@ -18561,12 +19072,12 @@ function _mpHistoricoAcoes(state){
   const log = Array.isArray(state?.gm_log) ? state.gm_log.slice(-7) : [];
   const attacks = _masterActionHistory.slice(-8);
   const actionMarkup = attacks.map(item =>
-    `<button type="button" class="mp-historico-acao" data-master-history="${_esc(item.id)}" title="Destacar atacante e alvo">${_esc(item.text || 'Ação de combate')}</button>`
+    `<button type="button" class="mp-historico-acao" data-master-history="${_esc(item.id)}" title="Destacar atacante e alvo">${_esc(item.text || t('ui.mestre.acao_de_combate'))}</button>`
   ).join('');
-  return `<section class="mp-historico"><div class="mp-sec">📜 HISTÓRICO RECENTE</div>
+  return `<section class="mp-historico"><div class="mp-sec" data-i18n="ui.mestre.historico_recente">📜 HISTÓRICO RECENTE</div>
     <div class="mp-historico-list">${actionMarkup || log.length
       ? actionMarkup + log.slice(-4).map(item => `<div>${_esc(String(item))}</div>`).join('')
-      : '<div class="mp-historico-vazio">Nenhuma ação registrada.</div>'}</div></section>`;
+      : '<div class="mp-historico-vazio" data-i18n="ui.mestre.nenhuma_acao_registrada">Nenhuma ação registrada.</div>'}</div></section>`;
 }
 
 function _spellPreviewTargetSets(state, area){
@@ -18704,6 +19215,8 @@ function _showTrapResult(msg){
     congelamento_paralisia: 'congelamento_ou_paralisia.png',
     atordoado: 'atordoado.png', morte: 'morte.png', sono: 'sono.png',
     engolido: 'engolido.png',
+    afogamento: 'afogamento.png',
+    rodamoinho: 'redemoinho.png', rodamoinho_profundo: 'redemoinho.png',
   };
   // A corrosão provocada por ácido pode quebrar arma/armadura ou apenas
   // aumentar o nível de dano. Nesses três casos o servidor envia tipos
@@ -18718,6 +19231,10 @@ function _showTrapResult(msg){
   // sem preencher `tipo`. O resultado direto do monstro usa o tipo explícito.
   const isAcidResidual = msg.tipo === 'jato_acido_residual'
     || (msg.tick === true && msg.tipo_id === 'cuspe_acido');
+  const isDrowning = msg.tipo === 'afogamento' || msg.tipo_id === 'afogamento';
+  const isWhirlpool = _isWhirlpoolResult(msg);
+  const isDeepWhirlpool = msg.tipo_id === 'rodamoinho_profundo' || msg.profundo === true;
+  const isWaveDrowning = isDrowning && msg.fonte === 'onda_envolvente';
   const isEquipmentDamaged = msg.tipo === 'equipamento_danificado';
   const isWeaponBroken = msg.tipo === 'arma_quebrada';
   const isArmorBroken = msg.tipo === 'armadura_quebrada';
@@ -18725,6 +19242,8 @@ function _showTrapResult(msg){
   // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
   const imageName = isFall ? 'queda.png'
     : isSwallowed ? 'engolido.png'
+    : isWhirlpool ? 'redemoinho.png'
+    : isDrowning ? 'afogamento.png'
     : isCondition ? conditionImages[conditionId]
     : isEquipmentDamaged ? 'equipamento_danificado.png'
     : isWeaponBroken ? 'arma_quebrada.png'
@@ -18748,6 +19267,12 @@ function _showTrapResult(msg){
     ? (msg.descricao || t('ui.voo.queda_descricao', {altura: msg.altura || 0, faixa: msg.faixa || '', dano: msg.dano || 0}))
     : isSwallowed
     ? t('ui.armadilha.engolido.desc', {dano: swallowedDamage, dc: swallowedDc, monstro: swallowedMonster})
+    : isWhirlpool
+    ? t(isDeepWhirlpool ? 'ui.rodamoinho.desc_profundo' : 'ui.rodamoinho.desc')
+    : isDrowning
+    ? (isWaveDrowning
+      ? t('ui.afogamento.onda_desc')
+      : t('ui.afogamento.desc', {dano: msg.dano || 0, dc: msg.fortitude_dc || 18}))
     : isCondition
     ? (conditionId === 'sangramento'
       ? t('ui.condicao.sangramento_desc', {n: level, dano: bleedingDamage})
@@ -18766,6 +19291,28 @@ function _showTrapResult(msg){
         t('ui.armadilha.engolido.movimento'),
         t('ui.armadilha.engolido.ataque'),
         t('ui.armadilha.engolido.escape', {dc: swallowedDc}),
+      ]
+    : isWhirlpool
+    ? [
+        t('ui.rodamoinho.falha_entrada', {dc: msg.entrada_reflexos_dc || (isDeepWhirlpool ? 15 : 14)}),
+        t(isDeepWhirlpool ? 'ui.rodamoinho.perde_turno' : 'ui.rodamoinho.perde_movimento'),
+        t('ui.rodamoinho.escapa', {dc: msg.escape_reflexos_dc || (isDeepWhirlpool ? 18 : 14)}),
+        ...(isDeepWhirlpool ? [t('ui.rodamoinho.afogamento', {dc: msg.fortitude_dc || 18})] : []),
+      ]
+    : isDrowning
+    ? [
+        t('ui.afogamento.dano', {dano: msg.dano || 0}),
+        ...(isWaveDrowning
+          ? [
+              ...(Number(msg.water_bonus) > 0
+                ? [t('ui.afogamento.onda_extra', {dano: msg.water_bonus})]
+                : []),
+              t('ui.afogamento.onda_escape', {dc: msg.escape_dc || 12}),
+            ]
+          : [
+              t('ui.afogamento.fortitude', {dc: msg.fortitude_dc || 18}),
+              t('ui.afogamento.fome_sede'),
+            ]),
       ]
     : isCondition
     ? (conditionId === 'sangramento'
@@ -18797,6 +19344,14 @@ function _showTrapResult(msg){
   } else if(isSwallowed){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.engolido.status');
+  } else if(isWhirlpool){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t(isDeepWhirlpool ? 'ui.rodamoinho.status_profundo' : 'ui.rodamoinho.status');
+    tocarSomArmadilha();
+  } else if(isDrowning){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.afogamento.status', {dano: msg.dano || 0});
+    tocarSomArmadilha();
   } else if(isCondition){
     statusEl.className = `trap-status ${isPetrificacao ? 'trap-status--partial' : 'trap-status--fail'}`;
     statusEl.textContent = isPetrificacao
@@ -19361,8 +19916,8 @@ function _modificadoresTemporariosStatus(p){
     str_: _rotulo('str_', 'ui.atributo.sigla', 'FOR'), forca: _rotulo('str_', 'ui.atributo.sigla', 'FOR'),
     dex: _rotulo('dex', 'ui.atributo.sigla', 'DES'), destreza: _rotulo('dex', 'ui.atributo.sigla', 'DES'),
     con_: _rotulo('con_', 'ui.atributo.sigla', 'CON'), constituicao: _rotulo('con_', 'ui.atributo.sigla', 'CON'),
-    int_: _rotulo('int_', 'ui.atributo.sigla', 'INT'), ataque: 'ataque', dano: 'dano', ca: 'CA', resistencia: 'resistência',
-    movimento: 'movimento', percepcao: 'percepção', vontade: 'Vontade', reflexos: 'Reflexos', fortitude: 'Fortitude',
+    int_: _rotulo('int_', 'ui.atributo.sigla', 'INT'), ataque: 'ataque', dano: 'dano', ca: 'CA', resistencia: t('ui.status.resistencia'),
+    movimento: 'movimento', percepcao: t('ui.status.percepcao'), vontade: 'Vontade', reflexos: 'Reflexos', fortitude: 'Fortitude',
   };
   const fmtDelta = (valor) => `${Number(valor) >= 0 ? '+' : ''}${Number(valor) || 0}`;
   const poisonName = e => e?.nome || S('envenenado');
@@ -19371,7 +19926,7 @@ function _modificadoresTemporariosStatus(p){
     if(op === 'dano') return `${e.dano || 'dano'} de dano por rodada`;
     if(op === 'reduzir') return `-${Number(e.valor) || 0} ${attrNome[e.atributo] || e.atributo || 'atributo'}`;
     if(op === 'penalidade') return (e.atributos || []).map(([a,v]) => `${fmtDelta(v)} ${attrNome[a] || a}`).join(' · ') || 'penalidade ativa';
-    if(op === 'petrificar') return 'petrificação';
+    if(op === 'petrificar') return t('ui.status.petrificacao');
     if(op === 'cegar') return 'cegueira e penalidade em ataques';
     return 'efeito de veneno ativo';
   };
@@ -19389,47 +19944,47 @@ function _modificadoresTemporariosStatus(p){
   if(mods && Number(mods.rodadas || 0) > 0){
     const partes = ['ataque', 'dano', 'ca', 'resistencia'].filter(k => Number(mods[k] || 0))
       .map(k => `${fmtDelta(mods[k])} ${attrNome[k]}`);
-    if(mods.arma_ignora_resistencia) partes.push('ignora reduções/imunidades físicas');
-    addRestante('✨ Modificador mágico', partes.join(' · ') || 'efeito mágico ativo', mods.rodadas);
+    if(mods.arma_ignora_resistencia) partes.push(t('ui.status.ignora_reducoes_imunidades_fisicas'));
+    addRestante(t('ui.status.modificador_magico'), partes.join(' · ') || t('ui.status.efeito_magico_ativo'), mods.rodadas);
   }
 
   // Condições que antes só eram usadas pelo motor e não tinham representação
   // no painel de status.
   if(p.dormindo) addRestante('🌙 Sono', 'perde o turno; acorda ao sofrer dano', p.dormindo_rodadas);
-  if(p.comandado) addRestante('🗣️ Comando', 'o controlador dirige o próximo turno', p.comandado_rodadas || 1);
-  if(p.dominado) addRestante('🧠 Dominação', 'age sob controle de outra criatura', p.dominado_rodadas);
-  if(p.perde_turno) addRestante('🕸️ Imobilizado', 'perde o turno e não pode agir', p.perde_turno_rodadas || 1);
+  if(p.comandado) addRestante('🗣️ Comando', t('ui.status.o_controlador_dirige_o_proximo_turno'), p.comandado_rodadas || 1);
+  if(p.dominado) addRestante(t('ui.status.dominacao'), 'age sob controle de outra criatura', p.dominado_rodadas);
+  if(p.perde_turno) addRestante('🕸️ Imobilizado', t('ui.status.perde_o_turno_e_nao_pode_agir'), p.perde_turno_rodadas || 1);
   if(p.preso) addRestante('⛓️ Preso', 'movimento impedido', p.preso_rodadas);
   if(p.paralisado) addRestante(S('paralisado'), S('paralisado_ef'), p.paralisado_rodadas);
   if(p.cego) addRestante(S('cego'), S('cego_ef'), p.cego_rodadas);
   if(p.com_medo || p.medo_rodadas) addRestante(S('medo'), S('medo_ef'), p.medo_rodadas);
   if(p.lento || p.lento_rodadas) addRestante(S('lentidao'), S('lentidao_ef'), p.lento_rodadas);
-  if(Number(p.acido_residual || 0) > 0) add('🧪 Ácido residual', `${p.acido_residual} dano no início do próximo turno`);
+  if(Number(p.acido_residual || 0) > 0) add(t('ui.status.acido_residual'), t('ui.status.acido_dano_proximo_turno', {n: p.acido_residual}));
 
   // Magias de duração e reservas de regeneração.
   const magicName = id => GRIMORIO_CLIENT[id]?.nome || id;
   if(Number(p.visao_escuro_manto || p.visao_escuro_rodadas || 0) > 0)
-    addRestante(`🌑 ${magicName('manto_escuridao')}`, 'concede visão no escuro e protege contra o olhar petrificante', p.visao_escuro_rodadas);
-  if(p.visao_escuro_missao) add(`🌌 ${magicName('visao_escuro')}`, 'visão no escuro ativa');
+    addRestante(`🌑 ${magicName('manto_escuridao')}`, t('ui.status.concede_visao_no_escuro_e_protege_contra_o'), p.visao_escuro_rodadas);
+  if(p.visao_escuro_missao) add(`🌌 ${magicName('visao_escuro')}`, t('ui.status.visao_no_escuro_ativa'));
   if(Number(p.protecao_rodadas || 0) > 0)
     addRestante(`🛡️ ${magicName('protecao_energia')}`, `absorve ${p.protecao_restante ?? p.protecao_max ?? 0} dano elemental`, p.protecao_rodadas);
   if(Number(p.temp_ca_bonus || 0) !== 0)
-    addRestante('🛡️ CA temporária', `${fmtDelta(p.temp_ca_bonus)} CA`, p.temp_ca_rodadas);
+    addRestante(t('ui.status.ca_temporaria'), `${fmtDelta(p.temp_ca_bonus)} CA`, p.temp_ca_rodadas);
   if(p.invisivel_magico && Number(p.invisivel_magico_rodadas || 0) > 0)
-    addRestante(`🫥 ${magicName('invisibilidade')}`, 'não pode ser atacado normalmente; próximo ataque tem vantagem', p.invisivel_magico_rodadas);
+    addRestante(`🫥 ${magicName('invisibilidade')}`, t('ui.status.nao_pode_ser_atacado_normalmente_proximo_a'), p.invisivel_magico_rodadas);
   if(Number(p.velocidade_rodadas || 0) > 0)
-    addRestante(`⚡ ${magicName('velocidade')}`, 'movimento e ação extra', p.velocidade_rodadas);
+    addRestante(`⚡ ${magicName('velocidade')}`, t('ui.status.movimento_e_acao_extra'), p.velocidade_rodadas);
   if(Number(p.regen_pool || 0) > 0)
-    add(`🌿 ${magicName('regeneracao_magica')}`, `reserva de ${p.regen_pool} PV; cura no início do turno`);
+    add(`🌿 ${magicName('regeneracao_magica')}`, t('ui.status.reserva_regen', {n: p.regen_pool}));
   if(Number(p.potion_regen_pool || 0) > 0)
-    add(`🧪 Poção de Regeneração`, `reserva de ${p.potion_regen_pool} PV; cura 1 PV no início do turno`);
-  if(p.contramagica_preparada) add(`🛑 ${magicName('contramagica')}`, 'pronta para reagir à próxima magia');
+    add(t('ui.status.pocao_de_regeneracao'), t('ui.status.reserva_regen_pocao', {n: p.potion_regen_pool}));
+  if(p.contramagica_preparada) add(`🛑 ${magicName('contramagica')}`, t('ui.status.pronta_para_reagir_a_proxima_magia'));
   if(Number(p.voo || p.voo_magico || 0) > 0) add('🪽 Voo', `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`);
   if(Number(p.olhar_petrificante_ate || 0) >= r && Number(p.olhar_petrificante_ate || 0) > 0)
-    add('👁️ Olhar Petrificante', 'efeito ativo: criaturas que o veem devem resistir à petrificação', p.olhar_petrificante_ate);
+    add('👁️ Olhar Petrificante', t('ui.status.efeito_ativo_criaturas_que_o_veem_devem_re'), p.olhar_petrificante_ate);
 
   if(Number(p.bonus_ataque_temporario || 0) !== 0)
-    add('⚗️ Bônus temporário de ataque', `${fmtDelta(p.bonus_ataque_temporario)} ataque até o fim do turno`, null, 1);
+    add(t('ui.status.bonus_temporario_de_ataque'), t('ui.status.bonus_ataque_ate_fim_turno', {delta: fmtDelta(p.bonus_ataque_temporario)}), null, 1);
   if(p.vinho_ativo) addRestante('🍷 Embriaguez', '-1 ataque e -1 Reflexos', p.vinho_rodadas);
   if(p.cerveja_ativo) addRestante('🍺 Alegria', '-1 ataque', p.cerveja_rodadas);
 
@@ -19446,14 +20001,14 @@ function _modificadoresTemporariosStatus(p){
   // visíveis neste painel para não parecerem efeitos “perdidos”.
   if(p.doente){
     const sintomas = (p.doenca?.sintomas || []).join(', ') || p.doenca_tipo || 'ativa';
-    add('🦠 Doença', `${sintomas} — permanece até Purificação`);
+    add(t('ui.status.doenca'), t('ui.status.permanece_ate_purificacao', {texto: sintomas}));
   }
   (p.maldicoes || []).forEach(m => {
     const id = m?.id || m;
     if(!id) return;
     const estagio = m?.aventuras != null && ['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(id)
       ? ` · ${t('ui.maldicao.estagio', {n: Math.min(5, 1 + Math.floor(Number(m.aventuras || 0) / 2))})}` : '';
-    add(`☠️ ${_rotulo(id, 'ui.maldicao', id)}`, `${_rotulo(id + '.ef', 'ui.maldicao', t('ui.maldicao.ativa'))}${estagio} — permanece até Purificação`);
+    add(`☠️ ${_rotulo(id, 'ui.maldicao', id)}`, t('ui.status.permanece_ate_purificacao', {texto: _rotulo(id + '.ef', 'ui.maldicao', t('ui.maldicao.ativa')) + estagio}));
   });
 
   // Marcas e imunidades também têm efeito mecânico e devem sobreviver à troca
@@ -19461,14 +20016,14 @@ function _modificadoresTemporariosStatus(p){
   const marcasPet = Number(p.petrificacao_marcas || 0);
   const resistPet = Number(p.resistencia_petrificacao_marcas || 0);
   if(marcasPet > 0 || p.olhar_petrificante_ativo || p.petrificado){
-    const estado = p.petrificado ? 'totalmente petrificado' : `${marcasPet}/3 marcas de Petrificação`;
-    const extra = p.olhar_petrificante_ativo ? ` · resistência ${resistPet}/3` : '';
-    add('🗿 Petrificação', `${estado}${extra}${p.petrificado ? ' — permanente até Purificação' : ''}`);
+    const estado = p.petrificado ? 'totalmente petrificado' : t('ui.status.marcas_petrificacao', {n: marcasPet});
+    const extra = p.olhar_petrificante_ativo ? t('ui.status.resistencia_petrificacao', {n: resistPet}) : '';
+    add(t('ui.status.petrificacao_2'), `${estado}${extra}${p.petrificado ? t('ui.status.permanente_ate_purificacao') : ''}`);
   }
   const imunidades = p.imunidades_status || {};
   Object.entries(imunidades).forEach(([tipo, ate]) => {
     const n = Number(ate) - r;
-    if(n > 0) addRestante(`🛡️ Imune a ${tipo}`, 'o estado correspondente não pode ser aplicado', n);
+    if(n > 0) addRestante(`🛡️ Imune a ${tipo}`, t('ui.status.o_estado_correspondente_nao_pode_ser_aplic'), n);
   });
 
   // Silêncio e Escuridão são zonas do mapa, portanto não aparecem como campo
@@ -19485,9 +20040,9 @@ function _modificadoresTemporariosStatus(p){
     return Math.max(Math.abs(pos[0] - Number(z.cx)), Math.abs(pos[1] - Number(z.cy))) <= Number(z.raio || 0);
   };
   (state.zonas_especiais || []).filter(z => z?.ativa && zonaContem(z)).forEach(z => {
-    if(z.tipo === 'silencio') addRestante('🔇 Silêncio', 'não pode lançar magias; bônus musicais são suprimidos', z.duracao);
+    if(z.tipo === 'silencio') addRestante(t('ui.status.silencio'), t('ui.status.nao_pode_lancar_magias_bonus_musicais_sao'), z.duracao);
     if(z.tipo === 'escuridao' && !p.visao_escuro && !p.visao_escuro_manto)
-      addRestante('🌑 Escuridão', 'visão limitada e ataques à distância prejudicados', z.duracao);
+      addRestante(t('ui.status.escuridao'), t('ui.status.visao_limitada_e_ataques_a_distancia_preju'), z.duracao);
   });
   return out;
 }
@@ -19611,8 +20166,8 @@ function renderSlotsMenuMagias(heroi){
       return `<span class="mm-slot-pip cooldown" title="${t('ui.magia.slot_volta_em', {n:falta})}">${falta}</span>`;
     }).join('');
     const pipsCajado = s.extra ? (s.extra.livre
-      ? `<span class="mm-slot-pip ready staff" title="Slot temporário do Cajado Arcano — ${t('ui.magia.slot_disponivel')}">✦</span>`
-      : `<span class="mm-slot-pip cooldown staff" title="Slot temporário do Cajado Arcano — ${t('ui.magia.slot_volta_em', {n:s.extra.espera[0] || 0})}">${s.extra.espera[0] || 0}</span>`)
+      ? `<span class="mm-slot-pip ready staff" title="${t('ui.magia.slot_cajado_pronto')}">✦</span>`
+      : `<span class="mm-slot-pip cooldown staff" title="${t('ui.magia.slot_cajado_volta_em', {n: s.extra.espera[0] || 0})}">${s.extra.espera[0] || 0}</span>`)
       : '';
     const pips = pipsNormais + pipsCajado;
     return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
@@ -19698,6 +20253,7 @@ function abrirMenuMagias(pid){
       <section class="menu-magias" role="dialog" aria-modal="true" aria-label="${t('ui.magia.menu_aria')}">
         <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
         <div class="mm-body">
+          ${_renderAcaoSenhorDasAguas(player)}
           <section><h3>${t('ui.magia.modificadores')}</h3>
             ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
               : `<p class="mm-empty">${t('ui.magia.sem_modificadores')}</p>`}
@@ -20234,7 +20790,7 @@ function _iniciarMiraAtaque(){
       if(GS.resolveTileClick(x, y)?.type === 'attack') validTargets.add(`${x},${y}`);
     }
   }
-  if(!validTargets.size){ toast('Nenhum inimigo válido para atacar.', 'var(--orange)'); return false; }
+  if(!validTargets.size){ toast(t('ui.mira.nenhum_inimigo_valido_para_atacar'), 'var(--orange)'); return false; }
   window._modoAtaqueMira = { kind: 'ataque' };   // objeto (e nao `true`) por causa da identidade -- ver _aimStart
   _aimStart({
     kind:'ataque', title:`${me.weapon?.range != null ? '🏹' : '⚔'} ATACAR`,
@@ -20272,10 +20828,10 @@ function _weaponAimStatus(tx, ty){
       : 'Corpo a corpo exige a mesma altura.';
   }
   if(me.weapon?.range != null && !GS.hasLineOfSight(state, me.pos[0], me.pos[1], tx, ty))
-    return 'Linha bloqueada por uma parede ou obstáculo alto.';
+    return t('ui.arremesso.linha_bloqueada_por_uma_parede_ou_obstacul');
   if(info && info.effectiveRange != null)
-    return `Mira válida · altura ${info.attackerAltitude} → ${info.targetAltitude} · alcance efetivo ${info.effectiveRange}q.`;
-  return 'Inimigo válido — confirme para atacar.';
+    return t('ui.mira.valida_altura_alcance', {de: info.attackerAltitude, para: info.targetAltitude, alcance: info.effectiveRange});
+  return t('ui.arremesso.inimigo_valido_confirme_para_atacar');
 }
 
 function _aimHoverAttack(tx, ty){
@@ -20319,8 +20875,8 @@ function _weaponThrowSkillEntries(player){
     if(!item || !item.throw_range || !item.die) continue;
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
-      ? 'Força'
-      : (item.finesse || item.id === 'dagger' ? 'Força ou Destreza' : 'Destreza');
+      ? t('ui.arremesso.forca')
+      : (item.finesse || item.id === 'dagger' ? t('ui.arremesso.forca_ou_destreza') : 'Destreza');
     add({
       id: `arremesso_arma_${slot}`,
       source: 'arma',
@@ -20328,7 +20884,7 @@ function _weaponThrowSkillEntries(player){
       icon: item.emoji || '🎯',
       tipo: 'acao_principal',
       target: 'enemy',
-      description: `Arremessa ${nome} até ${item.throw_range} casas. Usa ${atributo} para acerto e dano; a arma deixa a mão.`,
+      description: t('ui.arremesso.descricao_arma', {nome, alcance: item.throw_range, atributo}),
       throw_slot: slot,
       weapon_id: item.id,
       granted_origem: 'weapon',
@@ -20471,7 +21027,7 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
   const modal = $('target-modal');
   const list = $('target-list');
   if(!modal || !list) return false;
-  $('target-title').textContent = 'Escolha uma ação';
+  $('target-title').textContent = t('ui.bau.escolha_uma_acao');
   list.innerHTML = '';
 
   const adicionar = (icone, nome, detalhe, acao) => {
@@ -20499,14 +21055,14 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
   };
 
   const item = groundItem.item || {};
-  const itemNome = item.name || item.nome || 'item deixado no chão';
+  const itemNome = item.name || item.nome || t('ui.bau.item_deixado_no_chao');
   adicionar('🎒', `Pegar ${itemNome}`, 'Recolher o loot', () => GS.pickupItem(groundItem.id));
   adicionar('⚔️', `Atacar ${monster.name || monster.nome || 'monstro'}`,
     `HP ${monster.hp}/${monster.max_hp || monster.hp}`, () => {
       // Revalida no estado mais recente antes de consumir a ação.
       const atual = GS.resolveTileClick(attackAction.targetPos[0], attackAction.targetPos[1]);
       if(atual?.type !== 'attack'){
-        toast('O monstro não está mais disponível para ataque.', 'var(--orange)');
+        toast(t('ui.bau.o_monstro_nao_esta_mais_disponivel_para_at'), 'var(--orange)');
         return;
       }
       GS.notifyAttack();
@@ -20641,7 +21197,7 @@ function _gamepadButtonLabel(index){
     nintendo:   ['B', 'A', 'Y', 'X', 'L', 'R', 'ZL', 'ZR', '−', '+', 'L3', 'R3', '↑', '↓', '←', '→'],
   };
   const labels = families[_gamepadControllerFamily()] || families.xbox;
-  return labels[index] || `Botão ${index + 1}`;
+  return labels[index] || t('ui.joystick.botao_n', {n: index + 1});
 }
 function _gamepadBinding(action){ return _gamepadBindings[action] ?? _GAMEPAD_DEFAULT_BINDINGS[action]; }
 function _gamepadSavePrefs(){
@@ -20680,7 +21236,7 @@ function _resetGamepadPrefs(){
   _gamepadBindings = { ..._GAMEPAD_DEFAULT_BINDINGS };
   _gamepadBindingCapture = null;
   _gamepadSavePrefs(); _gamepadRenderPrefs();
-  toast('🎮 Configuração do joystick restaurada.', 'var(--cyan)');
+  toast(t('ui.joystick.configuracao_do_joystick_restaurada'), 'var(--cyan)');
 }
 function _setGamepadBinding(action, index){
   if(!_GAMEPAD_DEFAULT_BINDINGS.hasOwnProperty(action) || !Number.isInteger(index) || index < 0 || index > 31) return;
@@ -20694,7 +21250,7 @@ function _gamepadStartBindingCapture(action){
   if(!_GAMEPAD_DEFAULT_BINDINGS.hasOwnProperty(action)) return;
   _gamepadBindingCapture = action;
   _gamepadRenderPrefs();
-  toast(`🎮 Pressione o botão desejado para: ${t(_GAMEPAD_ACTIONS.find(a => a[0] === action)?.[1] || action)}`, 'var(--cyan)');
+  toast(t('ui.joystick.pressione_botao_para', {acao: t(_GAMEPAD_ACTIONS.find(a => a[0] === action)?.[1] || action)}), 'var(--cyan)');
 }
 function _gamepadLoadPrefs(){
   try{
@@ -21042,7 +21598,7 @@ function _renderGamepadKeyboard(){
     : (kind === 'code' ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' : `${alphabet}0123456789-_.:/`).split('');
   const keys = chars.map(char => `<button type="button" class="gamepad-kb-key" data-gamepad-char="${char}">${char}</button>`).join('');
   const textTools = kind === 'text'
-    ? '<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="shift">⇧ Maiúsculas</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-char=" ">Espaço</button>'
+    ? '<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="shift" data-i18n="ui.joystick.maiusculas">⇧ Maiúsculas</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-char=" " data-i18n="ui.joystick.espaco">Espaço</button>'
     : '';
   const fieldName = _gamepadKeyboardText(input.labels?.[0]?.textContent?.trim() || input.placeholder || 'campo');
   const shownValue = input.type === 'password' ? '•'.repeat(input.value.length) : (input.value || ' ');
@@ -21051,7 +21607,7 @@ function _renderGamepadKeyboard(){
     <div class="gamepad-kb-value">${_gamepadKeyboardText(shownValue)}</div>
     <div class="gamepad-kb-keys">${keys}</div>
     <div class="gamepad-kb-tools">${textTools}<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="backspace">⌫ Apagar</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="clear">Limpar</button><button type="button" class="gamepad-kb-key gamepad-kb-confirm" data-gamepad-action="submit">↵ Confirmar</button></div>
-    <small>Direcional: selecionar · A: digitar · B: fechar</small>
+    <small data-i18n="ui.joystick.direcional_selecionar_a_digitar_b_fechar">Direcional: selecionar · A: digitar · B: fechar</small>
   </div>`;
   host.querySelectorAll('[data-gamepad-char]').forEach(btn => btn.addEventListener('click', () => {
     _gamepadKeyboardWrite(btn.dataset.gamepadChar || '');
@@ -21320,7 +21876,7 @@ function _gamepadEnterAttackMode(state){
   const targets = _gamepadAttackTargets();
   if(!targets.length){
     const attack = GS.resolveAttack?.();
-    toast(attack?.reason || 'Nenhum inimigo está ao alcance da arma.', 'var(--gold)');
+    toast(attack?.reason || t('ui.joystick.nenhum_inimigo_esta_ao_alcance_da_arma'), 'var(--gold)');
     _gamepadRumble('cancel');
     return false;
   }
@@ -21492,8 +22048,8 @@ function _gamepadToggleCameraMode(){
   _gamepadRenderCursor();
   _renderGamepadHud(GS.gameState);
   toast(_gamepadInput.rightMode === 'camera'
-    ? '🎮 Analógico direito: câmera · Gatilhos: zoom'
-    : '🎯 Analógico direito: cursor de alvo · Gatilhos: zoom', 'var(--cyan)');
+    ? t('ui.joystick.analogico_direito_camera_gatilhos_zoom')
+    : t('ui.joystick.analogico_direito_cursor_de_alvo_gatilhos'), 'var(--cyan)');
 }
 
 function _gamepadToggleMainMenu(){
@@ -22150,7 +22706,7 @@ window.addEventListener('gamepadconnected', e => {
   _gamepadInput.cursorPlayerKey = '';
   _gamepadInput.rightMode = 'cursor';
   _gamepadInput.cameraLastAt = 0;
-  toast(`🎮 Controle conectado: ${e.gamepad.id || 'gamepad'} · ${_gamepadButtonLabel(_gamepadBinding('camera'))} alterna cursor e câmera 3D`, 'var(--cyan)');
+  toast(t('ui.joystick.controle_conectado', {id: e.gamepad.id || 'gamepad', botao: _gamepadButtonLabel(_gamepadBinding('camera'))}), 'var(--cyan)');
   _gamepadRenderPrefs();
   _renderGamepadHud(GS.gameState);
   _startGamepadLoop();
@@ -22272,7 +22828,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const skillAction = GS.resolveTileClick(tx, ty);
     const skillTargetOk = skillAction?.type === 'skill';
     _aimSetHover(tx, ty, skillTargetOk ? 'valid' : 'blocked');
-    _aimSetStatus(skillTargetOk ? 'Alvo válido — confirme para usar.' : 'Selecione um alvo destacado para esta habilidade.', skillTargetOk ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(skillTargetOk ? t('ui.tabuleiro.alvo_valido_confirme_para_usar') : 'Selecione um alvo destacado para esta habilidade.', skillTargetOk ? '#94dfb0' : '#ff9aa2');
     if(sk.target==='enemy'){
       const m=_masterMonsterAtTileClient(GS.gameState, tx, ty);
       if(m){
@@ -22284,7 +22840,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     } else if(sk.target==='ally'){
       const pl=GS.gameState.players.find(p=>p.pos[0]===tx&&p.pos[1]===ty&&p.alive);
       if(pl){
-        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:${skillTargetOk ? '#80c0ff' : '#f09030'}">${skillTargetOk ? '💚 Clique → ' + sk.name : '⚠ Alvo inválido ou bloqueado'}</span>`;
+        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:${skillTargetOk ? '#80c0ff' : '#f09030'}">${skillTargetOk ? '💚 Clique → ' + sk.name : t('ui.tabuleiro.alvo_invalido_ou_bloqueado')}</span>`;
         tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
         $('dungeon-canvas').style.cursor=skillTargetOk ? 'crosshair' : 'not-allowed'; return;
       }
@@ -22294,7 +22850,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
 
   const heroCorpse = (GS.gameState.hero_corpses||[]).find(c=>c.pos?.[0]===tx&&c.pos?.[1]===ty);
   if(heroCorpse){
-    tip.innerHTML=`🪦 <b>${heroCorpse.nome || 'Herói derrotado'}</b><br><span style="color:#c7b0d8">Herói derrotado</span>`;
+    tip.innerHTML=`🪦 <b>${heroCorpse.nome || t('ui.tabuleiro.heroi_derrotado')}</b><br><span style="color:#c7b0d8" data-i18n="ui.tabuleiro.heroi_derrotado">Herói derrotado</span>`;
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -23051,18 +23607,18 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
     efeitos.set(id, {id, nome: nome || id, icon, rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
   };
   const nomes = {
-    cancao_heroica:'Canção Heroica', esconder_sombras:'Esconder nas Sombras',
-    detectar_armadilhas:'Detectar Armadilhas', regeneracao_divina:'Regeneração Divina',
+    cancao_heroica:t('ui.hud.cancao_heroica'), esconder_sombras:'Esconder nas Sombras',
+    detectar_armadilhas:'Detectar Armadilhas', regeneracao_divina:t('ui.hud.regeneracao_divina'),
     guerreiro_luz:'Guerreiro da Luz', golpe_sagrado:'Golpe Sagrado', protetor:'Protetor',
     brutalidade:'Brutalidade', tecnica_mira_perfeita:'Mira Perfeita',
     tecnica_investida:'Investida Heroica', tecnica_ataque_coordenado:'Ataque Coordenado',
     tecnica_sangue_frio:'Sangue Frio', tecnica_golpe_decisivo:'Golpe Decisivo',
-    tecnica_tatica_defensiva:'Tática Defensiva', tecnica_defesa_impecavel:'Defesa Impecável',
-    tecnica_passo_fantasma:'Passo Fantasma', tecnica_resistencia_absoluta:'Resistência Absoluta',
+    tecnica_tatica_defensiva:t('ui.hud.tatica_defensiva'), tecnica_defesa_impecavel:t('ui.hud.defesa_impecavel'),
+    tecnica_passo_fantasma:'Passo Fantasma', tecnica_resistencia_absoluta:t('ui.hud.resistencia_absoluta'),
     tecnica_contra_ataque:'Contra-Ataque', mira_certeira:'Mira Certeira',
-    golpe_devastador:'Golpe Devastador', furia_berserker:'Fúria Berserker',
+    golpe_devastador:'Golpe Devastador', furia_berserker:t('ui.hud.furia_berserker'),
     aprimorar_magia:'Aprimorar Magia', estender_magia:'Estender Magia',
-    fortalecer_magia:'Fortalecer Magia', aumento_ca_temporario:'CA temporária',
+    fortalecer_magia:'Fortalecer Magia', aumento_ca_temporario:t('ui.hud.ca_temporaria'),
   };
   const nomeSkill = id => {
     const h = window._menuHabilidadesDados?.[id]
@@ -23142,7 +23698,7 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
   if(Number(player.regen_pool || 0) > 0) addMagic('regeneracao_magica');
   if(player.contramagica_preparada) addMagic('contramagica');
   if(Number(player.temp_ca_bonus || 0) > 0)
-    add('aumento_ca_temporario', 'CA temporária', '🛡️', player.temp_ca_rodadas);
+    add('aumento_ca_temporario', t('ui.hud.ca_temporaria_2'), '🛡️', player.temp_ca_rodadas);
 
   // Zonas são estado do mapa, não do jogador. Mostra a zona enquanto ela
   // estiver ativa e tiver sido criada pelo herói local.
@@ -23750,12 +24306,12 @@ function _audioPanelEnsure(){
     +   '<small data-i18n="ui.menu.qual_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.</small>'
     +   '<label class="cfg-access-check"><input id="perf-fps" type="checkbox"> <span data-i18n="ui.menu.mostrar_fps">Mostrar FPS</span></label>'
     +   '<div class="cfg-access-title">♿ Acessibilidade</div>'
-    +   '<div class="cfg-access-line"><span>🔠 Números</span><span id="acc-font-val">' + Math.round(_accessFontScale * 100) + '%</span></div>'
+    +   '<div class="cfg-access-line"><span data-i18n="ui.audio.numeros">🔠 Números</span><span id="acc-font-val">' + Math.round(_accessFontScale * 100) + '%</span></div>'
     +   '<input id="acc-font" type="range" min="100" max="200" step="10" value="' + Math.round(_accessFontScale * 100) + '" style="width:100%;">'
     +   '<div class="cfg-access-line"><span>⏱ Mensagens</span><span id="acc-duration-val">' + Math.round(_accessDurationScale * 100) + '%</span></div>'
     +   '<input id="acc-duration" type="range" min="50" max="200" step="10" value="' + Math.round(_accessDurationScale * 100) + '" style="width:100%;">'
     +   '<label class="cfg-access-check"><input id="acc-contrast" type="checkbox"' + (_highContrast ? ' checked' : '') + '> Alto contraste</label>'
-    +   '<label class="cfg-access-line cfg-speed-line"><span>🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal">Normal</option><option value="fast">Rápida</option><option value="instant">Instantânea</option></select></label>'
+    +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.audio.velocidade">🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal" data-i18n="ui.audio.normal">Normal</option><option value="fast" data-i18n="ui.audio.rapida">Rápida</option><option value="instant" data-i18n="ui.audio.instantanea">Instantânea</option></select></label>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
@@ -24047,6 +24603,1090 @@ function _flushVisualAnimFrame3D(now){
 function _wakeVisualAnimScheduler(){
   if(!(mode3D && g3)) _ensureVisualAnimFrame();
 }
+
+// ── Senhor das Águas — onda de conjuração e surgimento dos redemoinhos ────
+// O servidor envia o início somente depois de validar o alvo. A animação é
+// puramente visual: o terreno e as regras continuam vindo do game_state.
+const _senhorAguasAnims = [];
+let _senhorAguasRaf = null;
+const SENHOR_AGUAS_TRAVEL_MS = 880;
+const SENHOR_AGUAS_IMPACT_MS = 980;
+
+function _senhorAguasHash(n){
+  n = (n | 0) ^ 0x6d2b79f5;
+  n = Math.imul(n ^ (n >>> 15), 0x1b873593);
+  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
+}
+
+function _senhorAguasAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
+  const seen = new Set(), tiles = (Array.isArray(msg.tiles) ? msg.tiles : [])
+    .filter(t => Array.isArray(t) && t.length >= 2)
+    .map(t => [Number(t[0]), Number(t[1])])
+    .filter(([x,y]) => Number.isFinite(x) && Number.isFinite(y))
+    .filter(([x,y]) => { const k = `${x},${y}`; if(seen.has(k)) return false; seen.add(k); return true; });
+  const spellId = String(msg.spell_id || 'senhor_das_aguas');
+  const cold = spellId === 'chamado_inverno';
+  const material = String(msg.material || (cold ? 'piso_congelado' : 'agua'));
+  const whirlpools = msg.phase === 'whirlpools';
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    spellId, cold, origin, center, tiles, material, whirlpools,
+    travelMs: Math.max(260, Number(msg.travel_ms) || (whirlpools ? 420 : SENHOR_AGUAS_TRAVEL_MS)),
+    impactMs: Math.max(320, Number(msg.impact_ms) || (whirlpools ? 720 : SENHOR_AGUAS_IMPACT_MS)),
+    start: performance.now(), group: null, wave: null, waveInner: null,
+    originRing: null, orb: null, pathGlow: null, pathCore: null,
+    tileMeshes: [], tileRings: [], motes: []
+  };
+}
+
+function _senhorAguasProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 620};
+}
+
+function _senhorAguasTileVisible(state, x, y){
+  if(!state) return false;
+  if(GS.isMaster() || state.test_mode) return true;
+  const visible = new Set([...(state.explored || []), ...(state.revealed || [])]
+    .map(([tx,ty]) => `${tx},${ty}`));
+  return visible.has(`${x},${y}`);
+}
+
+function _senhorAguasVisible(anim, state){
+  return _senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+    || _senhorAguasTileVisible(state, anim.center[0], anim.center[1])
+    || anim.tiles.some(([x,y]) => _senhorAguasTileVisible(state, x, y));
+}
+
+function _senhorAguasSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _senhorAguasBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group();
+  group.name = anim.whirlpools ? 'senhor-das-aguas-redemoinhos'
+    : (anim.cold ? 'chamado-do-inverno-animation' : 'senhor-das-aguas-animation');
+  const deep = anim.material === 'agua_profunda' || anim.material === 'rodamoinho_profundo';
+  const snow = anim.material === 'planicie_nevada';
+  const water = anim.cold ? (snow ? 0xdff6ff : 0x45c7ef) : (deep ? 0x0874a8 : 0x38c7e8);
+  const foam = anim.cold ? 0xffffff : (deep ? 0x8edfff : 0xbaf6ff);
+  const glowMat = new T.LineBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.pathGlow = new T.Line(new T.BufferGeometry(), glowMat);
+  anim.pathCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.pathGlow.renderOrder = 62; anim.pathCore.renderOrder = 63;
+  group.add(anim.pathGlow, anim.pathCore);
+
+  const ringMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const innerMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.wave = new T.Mesh(new T.TorusGeometry(.22, .035, 8, 44), ringMat);
+  anim.waveInner = new T.Mesh(new T.TorusGeometry(.13, .016, 7, 36), innerMat);
+  anim.originRing = new T.Mesh(new T.TorusGeometry(.24, .022, 7, 36), innerMat);
+  anim.wave.rotation.x = anim.waveInner.rotation.x = anim.originRing.rotation.x = Math.PI / 2;
+  anim.wave.renderOrder = 66; anim.waveInner.renderOrder = 67; anim.originRing.renderOrder = 65;
+  group.add(anim.wave, anim.waveInner, anim.originRing);
+
+  const orbMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.orb = new T.Mesh(new T.SphereGeometry(.075, 10, 8), orbMat);
+  anim.orb.renderOrder = 68; group.add(anim.orb);
+
+  for(let i = 0; i < 12; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? water : foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.SphereGeometry(.014 + (i % 3) * .006, 6, 5), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(i * 47 + anim.origin[0] * 13 + anim.origin[1] * 29);
+    mote.renderOrder = 69; group.add(mote); anim.motes.push(mote);
+  }
+
+  for(let i = 0; i < anim.tiles.length; i++){
+    const [x,z] = anim.tiles[i];
+    const tileMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    const tile = new T.Mesh(new T.PlaneGeometry(.94, .94), tileMat);
+    tile.rotation.x = -Math.PI / 2; tile.position.set(x, .285, z); tile.scale.setScalar(.01); tile.renderOrder = 60; group.add(tile);
+    const item = {x, z, tile, index:i, ring:null};
+    if(anim.whirlpools){
+      const whirlMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+      const ring = new T.Mesh(new T.TorusGeometry(.22, .030, 7, 30), whirlMat);
+      ring.rotation.x = Math.PI / 2; ring.position.set(x, .34, z); ring.renderOrder = 71; group.add(ring); item.ring = ring;
+    }
+    anim.tileMeshes.push(item);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _senhorAguasDispose3D(anim){
+  const fig = anim.casterId != null && typeof getPeaoMesh === 'function'
+    ? getPeaoMesh(anim.casterId) : null;
+  if(fig && anim.casterPose){
+    const bless = fig.getObjectByName('blessArm'), staff = fig.getObjectByName('staffArm');
+    if(bless && anim.casterPose.bless) bless.rotation.set(...anim.casterPose.bless);
+    if(staff && anim.casterPose.staff) staff.rotation.set(...anim.casterPose.staff);
+  }
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _senhorAguasUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _senhorAguasDispose3D(anim); if(!_senhorAguasBuild3D(anim)) return; }
+  const T = window.THREE, p = _senhorAguasProgress(anim, now);
+  // O Lewis já nasce em pose de bênção; durante a conjuração a mão avança
+  // levemente e retorna, dando movimento ao próprio clérigo sem interferir
+  // na posição/facing controlados pelo renderer.
+  if(anim.casterId != null && typeof getPeaoMesh === 'function'){
+    const fig = getPeaoMesh(anim.casterId), bless = fig?.getObjectByName('blessArm'), staff = fig?.getObjectByName('staffArm');
+    if(fig && (bless || staff)){
+      if(!anim.casterPose) anim.casterPose = {
+        bless: bless ? [bless.rotation.x, bless.rotation.y, bless.rotation.z] : null,
+        staff: staff ? [staff.rotation.x, staff.rotation.y, staff.rotation.z] : null,
+      };
+      const gesto = Math.sin(Math.PI * Math.min(1, p.elapsed / Math.max(260, anim.travelMs * .72)));
+      if(bless && anim.casterPose.bless) bless.rotation.z = anim.casterPose.bless[2] - .18 * gesto;
+      if(staff && anim.casterPose.staff) staff.rotation.z = anim.casterPose.staff[2] + .10 * gesto;
+    }
+  }
+  const dx = anim.center[0] - anim.origin[0], dz = anim.center[1] - anim.origin[1];
+  const front = [anim.origin[0] + dx * p.travel, anim.origin[1] + dz * p.travel];
+  const pts = [];
+  for(let i = 0; i <= 14; i++){
+    const u = p.travel * i / 14, bend = Math.sin(u * Math.PI) * Math.sin(now / 135 + i) * .055;
+    pts.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .33 + Math.sin(u * Math.PI) * .06, anim.origin[1] + dz * u + dx * bend));
+  }
+  _senhorAguasSetLine(anim.pathGlow, pts, T); _senhorAguasSetLine(anim.pathCore, pts, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
+  const pulse = .82 + .18 * Math.sin(now / 150);
+  const traveling = !anim.whirlpools && p.travel < 1;
+  anim.pathGlow.material.opacity = (anim.whirlpools ? 0 : .56 * (1 - p.impact)) * fade;
+  anim.pathCore.material.opacity = (anim.whirlpools ? 0 : .88 * (1 - p.impact)) * fade;
+  anim.wave.position.set(front[0], .34, front[1]); anim.waveInner.position.set(front[0], .355, front[1]);
+  const waveScale = anim.whirlpools ? .40 + p.impact * 1.65 : .20 + (traveling ? p.travel * (anim.cold ? .72 : .85) : p.impact * 1.75);
+  anim.wave.scale.setScalar(Math.max(.01, waveScale)); anim.waveInner.scale.setScalar(Math.max(.01, waveScale * .64));
+  anim.wave.material.opacity = (traveling || p.impacting) ? (.48 + .22 * pulse) * fade : 0;
+  anim.waveInner.material.opacity = (traveling || p.impacting) ? (.62 + .20 * pulse) * fade : 0;
+  anim.originRing.position.set(anim.origin[0], .30, anim.origin[1]);
+  anim.originRing.scale.setScalar(1 + .24 * Math.sin(now / 170));
+  anim.originRing.material.opacity = anim.whirlpools ? 0 : (.58 + .18 * pulse) * fade;
+  anim.orb.position.set(front[0], .62 + .10 * Math.sin(now / 180), front[1]);
+  anim.orb.scale.setScalar(anim.whirlpools ? .01 : .72 + .32 * pulse);
+  anim.orb.material.opacity = anim.whirlpools ? 0 : (.55 + .25 * pulse) * fade;
+  for(const mote of anim.motes){
+    const i = mote.userData.index, a = now / 560 + mote.userData.phase * Math.PI * 2;
+    const r = .10 + (i % 4) * .045, base = anim.whirlpools ? anim.center : front;
+    mote.position.set(base[0] + Math.cos(a) * r, .36 + ((now / 850 + mote.userData.phase) % 1) * .48, base[1] + Math.sin(a) * r);
+    mote.material.opacity = (anim.whirlpools ? p.impact : p.travel) * (.18 + .28 * Math.sin(now / 115 + i) ** 2) * fade;
+  }
+  for(const item of anim.tileMeshes){
+    const dist = Math.hypot(item.x - anim.center[0], item.z - anim.center[1]);
+    const delay = anim.whirlpools ? item.index * 62 : dist * 34;
+    const reveal = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
+    item.tile.scale.setScalar(.01 + reveal * .99);
+    item.tile.material.opacity = (anim.whirlpools ? .12 : (anim.cold ? .12 + .13 * reveal : .16 + .16 * reveal)) * fade;
+    if(item.ring){
+      item.ring.rotation.z = now / 260 + item.index;
+      item.ring.scale.setScalar(.20 + reveal * (.86 + .12 * Math.sin(now / 120 + item.index)));
+      item.ring.material.opacity = (.56 + .24 * Math.sin(now / 145 + item.index)) * reveal * fade;
+    }
+  }
+}
+
+function _senhorAguasDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasVisible(anim, state)) return;
+  const p = _senhorAguasProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const cx = anim.center[0] * CELL + CELL / 2, cy = anim.center[1] * CELL + CELL / 2;
+  const fx = ox + (cx - ox) * p.travel, fy = oy + (cy - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
+  const pulse = .82 + .18 * Math.sin(now / 150);
+  const snow = anim.material === 'planicie_nevada';
+  const primary = anim.cold ? (snow ? '#e7f8ff' : '#45c7ef') : '#38c7e8';
+  const light = anim.cold ? '#ffffff' : '#dafcff';
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  if(!anim.whirlpools && p.travel < 1){
+    ctx.shadowColor = primary; ctx.shadowBlur = CELL * .22; ctx.strokeStyle = anim.cold
+      ? `rgba(221,247,255,${(.56 * (1-p.impact) * fade).toFixed(3)})`
+      : `rgba(56,199,232,${(.42 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .13);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+    ctx.shadowBlur = CELL * .08; ctx.strokeStyle = `rgba(255,255,255,${(.82 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .035); ctx.stroke();
+  }
+  const wave = anim.whirlpools ? .20 + p.impact * 1.10 : .14 + p.travel * .42 + p.impact * .92;
+  if(p.travel > .01 || anim.whirlpools){
+    ctx.shadowColor = primary; ctx.shadowBlur = CELL * .18; ctx.strokeStyle = anim.cold
+      ? `rgba(220,250,255,${((.55 + .18*pulse) * fade).toFixed(3)})`
+      : `rgba(106,224,255,${((.45 + .18*pulse) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .038);
+    ctx.beginPath(); ctx.arc(fx, fy, CELL * wave, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,255,${((.48 + .16*pulse) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .020); ctx.beginPath(); ctx.arc(fx, fy, CELL * wave * .62, now / 500, now / 500 + Math.PI * 1.55); ctx.stroke();
+  }
+  if(!anim.whirlpools){
+    ctx.strokeStyle = `rgba(255,255,255,${((.42 + .16*pulse) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .025); ctx.beginPath(); ctx.arc(ox, oy, CELL * (.20 + .05*pulse), 0, Math.PI*2); ctx.stroke();
+  }
+  for(const [i,[tx,ty]] of anim.tiles.entries()){
+    const dist = Math.hypot(tx - anim.center[0], ty - anim.center[1]);
+    const delay = anim.whirlpools ? i * 62 : dist * 34;
+    const reveal = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
+    if(reveal <= 0) continue;
+    const x = tx * CELL + CELL / 2, y = ty * CELL + CELL / 2;
+    ctx.fillStyle = anim.cold
+      ? `rgba(${snow ? '231,248,255' : '69,199,239'},${((anim.whirlpools ? .10 : .07 + .12*reveal) * fade).toFixed(3)})`
+      : `rgba(35,183,225,${((anim.whirlpools ? .10 : .07 + .12*reveal) * fade).toFixed(3)})`;
+    ctx.fillRect(tx * CELL + 2, ty * CELL + 2, CELL - 4, CELL - 4);
+    ctx.shadowColor = light; ctx.shadowBlur = CELL * .12; ctx.strokeStyle = anim.cold
+      ? `rgba(255,255,255,${((anim.whirlpools ? .55 : .34 + .24*reveal) * fade).toFixed(3)})`
+      : `rgba(139,239,255,${((anim.whirlpools ? .48 : .24 + .24*reveal) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .030);
+    ctx.beginPath(); ctx.arc(x, y, CELL * (anim.whirlpools ? .18 + .08*Math.sin(now/150+i) : .18 + .20*reveal), 0, Math.PI*2); ctx.stroke();
+    if(anim.whirlpools){ ctx.strokeStyle = `rgba(218,252,255,${(.60*reveal*fade).toFixed(3)})`; ctx.beginPath(); ctx.arc(x, y, CELL * (.30 + .10*reveal), now/280+i, now/280+i+Math.PI*1.55); ctx.stroke(); }
+    else if(anim.cold){
+      ctx.font = `bold ${Math.max(10, CELL * .13)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(255,255,255,${(.42 * reveal * fade).toFixed(3)})`; ctx.fillText(snow ? '✦' : '❄', x, y - CELL * .12);
+    }
+  }
+  ctx.restore();
+}
+
+function _tickSenhorAguas(now){
+  let active = false;
+  for(let i = _senhorAguasAnims.length - 1; i >= 0; i--){
+    const anim = _senhorAguasAnims[i], p = _senhorAguasProgress(anim, now);
+    if(p.finished){ _senhorAguasDispose3D(anim); _senhorAguasAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _senhorAguasUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _senhorAguasRaf = active ? _scheduleVisualFrame(_tickSenhorAguas) : null;
+}
+
+function _receberAnimacaoSenhorAguas(msg){
+  if(!msg || !['senhor_das_aguas','chamado_inverno'].includes(msg.spell_id)
+      || !['start','whirlpools'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(id != null && _senhorAguasAnims.some(a => a.animationId === id)) return;
+  const anim = _senhorAguasAnimFromMessage(msg); _senhorAguasAnims.push(anim);
+  _playCombatCue(msg.spell_id === 'chamado_inverno' ? 'cold' : 'water', {repeatKey:`spell:${id || msg.phase}`, volume:.95});
+  if(!_senhorAguasRaf) _senhorAguasRaf = _scheduleVisualFrame(_tickSenhorAguas);
+}
+
+// ── Conjurar Elemental — círculo, coluna de energia e materialização ──────
+const _conjurarElementalAnims = [];
+let _conjurarElementalRaf = null;
+const _ELEMENTAL_FX = {
+  fogo:    {color:0xff641e, light:0xffd26a, icon:'🔥', sound:'fire'},
+  gelo:    {color:0x8bdfff, light:0xe8fbff, icon:'❄️', sound:'cold'},
+  pedra:   {color:0xb48a62, light:0xe1c39d, icon:'🪨', sound:'magic'},
+  eletrico:{color:0x8e7bff, light:0xe3dcff, icon:'⚡', sound:'lightning'},
+  ar:      {color:0x9cebd8, light:0xe5fff7, icon:'🌪️', sound:'magic'},
+  agua:    {color:0x28bde8, light:0xb9f4ff, icon:'🌊', sound:'water'},
+};
+
+function _conjurarElementalAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  const tipo = String(msg.elemental_type || 'pedra').toLowerCase();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    elementalId: msg.elemental_id == null ? null : String(msg.elemental_id),
+    origin, target, tipo, fx:_ELEMENTAL_FX[tipo] || _ELEMENTAL_FX.pedra,
+    travelMs: Math.max(260, Number(msg.travel_ms) || 420),
+    impactMs: Math.max(420, Number(msg.impact_ms) || 980),
+    start: performance.now(), resolved:false, group:null, beamGlow:null,
+    beamCore:null, circle:null, circleInner:null, column:null, core:null, particles:[]
+  };
+}
+
+function _conjurarElementalProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start), travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 680};
+}
+
+function _conjurarElementalSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _conjurarElementalBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'conjurar-elemental-animation';
+  const glowMat = new T.LineBasicMaterial({color:anim.fx.color, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:anim.fx.light, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 72; anim.beamCore.renderOrder = 73; group.add(anim.beamGlow, anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:anim.fx.color, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const innerMat = new T.MeshBasicMaterial({color:anim.fx.light, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.circle = new T.Mesh(new T.TorusGeometry(.26, .035, 8, 42), ringMat);
+  anim.circleInner = new T.Mesh(new T.TorusGeometry(.15, .018, 7, 34), innerMat);
+  anim.circle.rotation.x = anim.circleInner.rotation.x = Math.PI / 2;
+  anim.circle.renderOrder = 68; anim.circleInner.renderOrder = 69; group.add(anim.circle, anim.circleInner);
+  const columnMat = new T.MeshBasicMaterial({color:anim.fx.color, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const coreMat3 = new T.MeshBasicMaterial({color:anim.fx.light, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.16, .28, 1.15, 12, 1, true), columnMat);
+  anim.core = new T.Mesh(new T.SphereGeometry(.13, 10, 8), coreMat3);
+  anim.column.renderOrder = 70; anim.core.renderOrder = 74; group.add(anim.column, anim.core);
+  for(let i = 0; i < 22; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 4 ? anim.fx.color : anim.fx.light, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.016 + (i % 3) * .009, 0), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(i * 53 + anim.target[0] * 17 + anim.target[1] * 31);
+    mote.renderOrder = 75; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _conjurarElementalDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _conjurarElementalUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _conjurarElementalDispose3D(anim); if(!_conjurarElementalBuild3D(anim)) return; }
+  const T = window.THREE, p = _conjurarElementalProgress(anim, now), dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], front = [anim.origin[0] + dx*p.travel, anim.origin[1] + dz*p.travel], pts=[];
+  for(let i=0;i<=12;i++){ const u=p.travel*i/12, bend=Math.sin(u*Math.PI)*Math.sin(now/125+i)*.035; pts.push(new T.Vector3(anim.origin[0]+dx*u-dz*bend,.70+Math.sin(u*Math.PI)*.12,anim.origin[1]+dz*u+dx*bend)); }
+  _conjurarElementalSetLine(anim.beamGlow, pts, T); _conjurarElementalSetLine(anim.beamCore, pts, T);
+  const fade = p.finished ? Math.max(0, 1-(p.elapsed-anim.travelMs-anim.impactMs-680)/440) : 1, pulse=.85+.15*Math.sin(now/130);
+  anim.beamGlow.material.opacity=.55*(1-p.impact)*fade; anim.beamCore.material.opacity=.88*(1-p.impact)*fade;
+  anim.circle.position.set(anim.target[0],.27,anim.target[1]); anim.circleInner.position.set(anim.target[0],.285,anim.target[1]);
+  const appear = Math.max(0,p.impact), scale=.18+appear*1.20; anim.circle.scale.setScalar(scale); anim.circleInner.scale.setScalar(scale*.62);
+  anim.circle.rotation.z=now/420; anim.circleInner.rotation.z=-now/280; anim.circle.material.opacity=(.48+.24*pulse)*appear*fade; anim.circleInner.material.opacity=(.62+.22*pulse)*appear*fade;
+  anim.column.position.set(anim.target[0],.72,anim.target[1]); anim.column.scale.set(.70+.18*pulse, Math.max(.01, appear), .70+.18*pulse); anim.column.rotation.y=now/500; anim.column.material.opacity=.24*appear*fade;
+  anim.core.position.set(anim.target[0],.38+appear*.48+.08*Math.sin(now/150),anim.target[1]); anim.core.scale.setScalar((.30+appear*.95)*(.88+.16*pulse)); anim.core.material.opacity=(.44+.30*pulse)*appear*fade;
+  for(const mote of anim.particles){ const i=mote.userData.index,a=now/470+mote.userData.phase*Math.PI*2,r=.14+(i%5)*.035,u=(now/850+mote.userData.phase)%1; mote.position.set(anim.target[0]+Math.cos(a)*r,.28+u*.95,anim.target[1]+Math.sin(a)*r); mote.material.opacity=appear*(.18+.38*Math.sin(now/105+i)**2)*fade; mote.scale.setScalar(.72+.35*Math.sin(now/90+i)); }
+}
+
+function _conjurarElementalDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1]) && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p=_conjurarElementalProgress(anim,now),ox=anim.origin[0]*CELL+CELL/2,oy=anim.origin[1]*CELL+CELL/2,tx=anim.target[0]*CELL+CELL/2,ty=anim.target[1]*CELL+CELL/2,fx=ox+(tx-ox)*p.travel,fy=oy+(ty-oy)*p.travel,fade=p.finished?Math.max(0,1-(p.elapsed-p.travelMs-p.impactMs-680)/440):1,pulse=.85+.15*Math.sin(now/130),impact=p.impact;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  ctx.shadowColor='#cbeeff';ctx.shadowBlur=CELL*.20;ctx.strokeStyle=`rgba(190,235,255,${(.78*(1-p.impact)*fade).toFixed(3)})`;ctx.lineWidth=Math.max(4,CELL*.10);ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();
+  ctx.shadowColor=`#${anim.fx.color.toString(16).padStart(6,'0')}`;ctx.shadowBlur=CELL*.18;ctx.strokeStyle=`rgba(220,245,255,${((.48+.22*pulse)*impact*fade).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.038);ctx.beginPath();ctx.arc(tx,ty,CELL*(.18+impact*.64),0,Math.PI*2);ctx.stroke();ctx.strokeStyle=`rgba(255,255,255,${((.55+.20*pulse)*impact*fade).toFixed(3)})`;ctx.beginPath();ctx.arc(tx,ty,CELL*(.11+impact*.38),now/480,now/480+Math.PI*1.55);ctx.stroke();
+  ctx.font=`bold ${Math.max(14,CELL*.24)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(255,255,255,${((.68+.25*pulse)*impact*fade).toFixed(3)})`;ctx.fillText(anim.fx.icon,tx,ty-CELL*(.22+impact*.28));
+  for(let i=0;i<14;i++){const a=now/470+i*.73,r=CELL*(.10+(i%5)*.06),x=tx+Math.cos(a)*r,y=ty+Math.sin(a)*r-CELL*((now/850+i/14)%1);ctx.fillStyle=`rgba(220,248,255,${(.22+.40*Math.sin(now/105+i)**2)*impact*fade})`;ctx.beginPath();ctx.arc(x,y,Math.max(1.2,CELL*.022),0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+}
+
+function _tickConjurarElemental(now){
+  let active=false;
+  for(let i=_conjurarElementalAnims.length-1;i>=0;i--){const anim=_conjurarElementalAnims[i],p=_conjurarElementalProgress(anim,now);if(p.finished){_conjurarElementalDispose3D(anim);_conjurarElementalAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_conjurarElementalUpdate3D(anim,now);}
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_conjurarElementalRaf=active?_scheduleVisualFrame(_tickConjurarElemental):null;
+}
+
+function _receberAnimacaoConjurarElemental(msg){
+  if(!msg||msg.spell_id!=='conjurar_elemental'||!['start','resolve'].includes(msg.phase))return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='resolve'){const anim=_conjurarElementalAnims.find(a=>a.animationId===id);if(anim)anim.resolved=!!msg.success;return;}
+  if(id!=null&&_conjurarElementalAnims.some(a=>a.animationId===id))return;
+  const anim=_conjurarElementalAnimFromMessage(msg);_conjurarElementalAnims.push(anim);
+  _playCombatCue(anim.fx.sound,{repeatKey:`spell:${id||'conjurar_elemental'}`,volume:.92});
+  if(!_conjurarElementalRaf)_conjurarElementalRaf=_scheduleVisualFrame(_tickConjurarElemental);
+}
+
+// ── Voo — elevação, espiral de vento e penas luminosas ────────────────────
+const _vooAnims = [];
+let _vooRaf = null;
+
+function _vooAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target,
+    fromAltitude: Math.max(0, Number(msg.from_altitude) || 0),
+    toAltitude: Math.max(1, Number(msg.to_altitude) || 2),
+    travelMs: Math.max(280, Number(msg.travel_ms) || 680),
+    impactMs: Math.max(420, Number(msg.impact_ms) || 1080),
+    start: performance.now(), success: null,
+    group: null, pathGlow: null, pathCore: null,
+    ring: null, innerRing: null, column: null, halo: null, motes: []
+  };
+}
+
+function _vooProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const lift = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, lift, impacting: elapsed >= anim.travelMs,
+    finished: elapsed >= anim.travelMs + anim.impactMs + 820};
+}
+
+function _vooSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _vooBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group();
+  group.name = 'voo-animation';
+  const glowMat = new T.LineBasicMaterial({color:0x9de8ff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xffffff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.pathGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.pathGlow.renderOrder = 120; group.add(anim.pathGlow);
+  anim.pathCore = new T.Line(new T.BufferGeometry(), coreMat); anim.pathCore.renderOrder = 121; group.add(anim.pathCore);
+  const ringMat = new T.MeshBasicMaterial({color:0x79dfff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.ring = new T.Mesh(new T.TorusGeometry(.22, .035, 8, 40), ringMat);
+  anim.ring.rotation.x = Math.PI / 2; anim.ring.renderOrder = 122; group.add(anim.ring);
+  const innerMat = new T.MeshBasicMaterial({color:0xe9fbff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.12, .018, 7, 32), innerMat);
+  anim.innerRing.rotation.x = Math.PI / 2; anim.innerRing.renderOrder = 123; group.add(anim.innerRing);
+  const columnMat = new T.MeshBasicMaterial({color:0x8edfff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.06, .28, 1.25, 18, 1, true), columnMat);
+  anim.column.renderOrder = 119; group.add(anim.column);
+  const haloMat = new T.MeshBasicMaterial({color:0xdffbff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.halo = new T.Mesh(new T.TorusGeometry(.28, .022, 7, 36), haloMat);
+  anim.halo.rotation.x = Math.PI / 2; anim.halo.renderOrder = 124; group.add(anim.halo);
+  for(let i = 0; i < 16; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? 0xb7f1ff : 0xffffff, transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.SphereGeometry(.025 + (i % 3) * .012, 6, 5), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(0x71 + i * 29);
+    mote.renderOrder = 125; group.add(mote); anim.motes.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _vooDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _vooUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _vooDispose3D(anim); if(!_vooBuild3D(anim)) return; }
+  const T = window.THREE, p = _vooProgress(anim, now);
+  const dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1];
+  const front = [anim.origin[0] + dx * p.travel, anim.origin[1] + dz * p.travel], points = [];
+  for(let i = 0; i <= 12; i++){
+    const u = p.travel * i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 125 + i) * .035;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend,
+      .54 + Math.sin(u * Math.PI) * .20, anim.origin[1] + dz * u + dx * bend));
+  }
+  _vooSetLine(anim.pathGlow, points, T); _vooSetLine(anim.pathCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 820) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 125);
+  anim.pathGlow.material.opacity = .46 * (1 - p.lift) * fade;
+  anim.pathCore.material.opacity = .90 * (1 - p.lift) * fade;
+  const lift = p.lift, radius = .22 + lift * .34;
+  anim.ring.position.set(anim.target[0], .30, anim.target[1]);
+  anim.innerRing.position.set(anim.target[0], .315, anim.target[1]);
+  anim.ring.scale.setScalar(.12 + lift * 1.45); anim.innerRing.scale.setScalar(.10 + lift * .82);
+  anim.ring.rotation.z = now / 320; anim.innerRing.rotation.z = -now / 220;
+  anim.ring.material.opacity = (.56 + .20 * pulse) * lift * fade;
+  anim.innerRing.material.opacity = (.72 + .16 * pulse) * lift * fade;
+  anim.column.position.set(anim.target[0], .48 + lift * .54, anim.target[1]);
+  anim.column.scale.set(.58 + .14 * pulse, Math.max(.01, lift), .58 + .14 * pulse);
+  anim.column.material.opacity = (.20 + .16 * pulse) * lift * fade;
+  anim.halo.position.set(anim.target[0], .62 + lift * .68, anim.target[1]);
+  anim.halo.scale.setScalar(.42 + lift * .88); anim.halo.rotation.z = now / 260;
+  anim.halo.material.opacity = (.38 + .24 * pulse) * lift * fade;
+  for(const mote of anim.motes){
+    const i = mote.userData.index, a = now / 420 + mote.userData.phase * Math.PI * 2;
+    const u = (now / 760 + mote.userData.phase) % 1, r = radius + (i % 4) * .05;
+    mote.position.set(anim.target[0] + Math.cos(a) * r,
+      .32 + u * (1.05 + lift * .75), anim.target[1] + Math.sin(a) * r);
+    mote.material.opacity = (.22 + .40 * Math.sin(now / 105 + i) ** 2) * lift * fade;
+    mote.scale.setScalar(.72 + .34 * Math.sin(now / 90 + i));
+  }
+}
+
+function _vooDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _vooProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 820) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 125), lift = p.lift;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.shadowColor = '#a8edff'; ctx.shadowBlur = CELL * .22;
+  ctx.strokeStyle = `rgba(136,226,255,${(.56 * (1 - lift) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .11);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${(.86 * (1 - lift) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .028); ctx.stroke();
+  if(lift > 0){
+    ctx.shadowColor = '#8fe8ff'; ctx.shadowBlur = CELL * .18;
+    for(let i = 0; i < 3; i++){
+      const radius = CELL * (.18 + lift * (.38 + i * .17)), start = now / 330 + i * 1.75;
+      ctx.strokeStyle = `rgba(166,239,255,${((.42 + .18 * pulse) * lift * fade).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, CELL * (.026 - i * .004));
+      ctx.beginPath(); ctx.arc(tx, ty - lift * CELL * .18, radius, start, start + Math.PI * 1.52); ctx.stroke();
+    }
+    ctx.strokeStyle = `rgba(240,253,255,${((.52 + .22 * pulse) * lift * fade).toFixed(3)})`;
+    ctx.lineWidth = Math.max(2, CELL * .032); ctx.beginPath();
+    ctx.arc(tx, ty, CELL * (.20 + lift * .46), 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold ${Math.max(14, CELL * .27)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(255,255,255,${((.66 + .24 * pulse) * lift * fade).toFixed(3)})`;
+    ctx.fillText('🪽', tx, ty - CELL * (.20 + lift * .28));
+    for(let i = 0; i < 10; i++){
+      const a = now / 430 + i * .63, r = CELL * (.12 + (i % 4) * .06);
+      const x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r - CELL * ((now / 760 + i / 10) % 1) * (0.35 + lift * .65);
+      ctx.fillStyle = `rgba(221,249,255,${(.20 + .42 * Math.sin(now / 105 + i) ** 2) * lift * fade})`;
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, CELL * .022), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickVoo(now){
+  let active = false;
+  for(let i = _vooAnims.length - 1; i >= 0; i--){
+    const anim = _vooAnims[i], p = _vooProgress(anim, now);
+    if(p.finished){ _vooDispose3D(anim); _vooAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _vooUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _vooRaf = active ? _scheduleVisualFrame(_tickVoo) : null;
+}
+
+function _receberAnimacaoVoo(msg){
+  if(!msg || msg.spell_id !== 'voo' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _vooAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; anim.toAltitude = Math.max(1, Number(msg.to_altitude) || anim.toAltitude); }
+    return;
+  }
+  if(id != null && _vooAnims.some(a => a.animationId === id)) return;
+  const anim = _vooAnimFromMessage(msg); _vooAnims.push(anim);
+  _playCombatCue('magic', {repeatKey:`spell:${id || 'voo'}`, volume:.90});
+  if(!_vooRaf) _vooRaf = _scheduleVisualFrame(_tickVoo);
+}
+
+// ── Criar Alimentos — círculo de provisões e baú materializado ────────────
+const _criarAlimentosAnims = [];
+let _criarAlimentosRaf = null;
+
+function _criarAlimentosAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    chestId: msg.chest_id == null ? null : String(msg.chest_id),
+    origin, target, quantity: Math.max(1, Number(msg.quantity) || 1),
+    travelMs: Math.max(280, Number(msg.travel_ms) || 620),
+    impactMs: Math.max(420, Number(msg.impact_ms) || 980),
+    start: performance.now(), success: null,
+    group: null, pathGlow: null, pathCore: null,
+    ring: null, innerRing: null, chest: null, lid: null, motes: []
+  };
+}
+
+function _criarAlimentosProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const reveal = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, reveal, impacting: elapsed >= anim.travelMs,
+    finished: elapsed >= anim.travelMs + anim.impactMs + 900};
+}
+
+function _criarAlimentosSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _criarAlimentosBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'criar-alimentos-animation';
+  const glowMat = new T.LineBasicMaterial({color:0xffd66b, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xfff5cc, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.pathGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.pathGlow.renderOrder = 120; group.add(anim.pathGlow);
+  anim.pathCore = new T.Line(new T.BufferGeometry(), coreMat); anim.pathCore.renderOrder = 121; group.add(anim.pathCore);
+  const ringMat = new T.MeshBasicMaterial({color:0xffc957, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.ring = new T.Mesh(new T.TorusGeometry(.23, .035, 8, 40), ringMat);
+  anim.ring.rotation.x = Math.PI / 2; anim.ring.renderOrder = 122; group.add(anim.ring);
+  const innerMat = new T.MeshBasicMaterial({color:0xffffe0, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.13, .018, 7, 32), innerMat);
+  anim.innerRing.rotation.x = Math.PI / 2; anim.innerRing.renderOrder = 123; group.add(anim.innerRing);
+  const chestMat = new T.MeshBasicMaterial({color:0x9b5b2c, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false});
+  const lidMat = new T.MeshBasicMaterial({color:0xe1a34e, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false});
+  anim.chest = new T.Mesh(new T.BoxGeometry(.62, .34, .50), chestMat);
+  anim.lid = new T.Mesh(new T.BoxGeometry(.68, .10, .56), lidMat);
+  anim.chest.renderOrder = 124; anim.lid.renderOrder = 125; group.add(anim.chest); group.add(anim.lid);
+  for(let i = 0; i < 12; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? 0xffd978 : 0xffffee, transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.SphereGeometry(.025 + (i % 3) * .012, 6, 5), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(0x2f + i * 37);
+    mote.renderOrder = 126; group.add(mote); anim.motes.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _criarAlimentosDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _criarAlimentosUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _criarAlimentosDispose3D(anim); if(!_criarAlimentosBuild3D(anim)) return; }
+  const T = window.THREE, p = _criarAlimentosProgress(anim, now);
+  const dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 12; i++){
+    const u = p.travel * i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 130 + i) * .04;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend,
+      .58 + Math.sin(u * Math.PI) * .16, anim.origin[1] + dz * u + dx * bend));
+  }
+  _criarAlimentosSetLine(anim.pathGlow, points, T); _criarAlimentosSetLine(anim.pathCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 900) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 125), reveal = p.reveal;
+  anim.pathGlow.material.opacity = .50 * (1 - reveal) * fade;
+  anim.pathCore.material.opacity = .90 * (1 - reveal) * fade;
+  anim.ring.position.set(anim.target[0], .30, anim.target[1]);
+  anim.innerRing.position.set(anim.target[0], .315, anim.target[1]);
+  anim.ring.scale.setScalar(.10 + reveal * 1.42); anim.innerRing.scale.setScalar(.10 + reveal * .88);
+  anim.ring.rotation.z = now / 310; anim.innerRing.rotation.z = -now / 220;
+  anim.ring.material.opacity = (.52 + .22 * pulse) * reveal * fade;
+  anim.innerRing.material.opacity = (.68 + .18 * pulse) * reveal * fade;
+  const chestScale = Math.max(.01, reveal * (1.05 + .08 * Math.sin(now / 100)));
+  anim.chest.position.set(anim.target[0], .46 + reveal * .12, anim.target[1]);
+  anim.lid.position.set(anim.target[0], .67 + reveal * .12, anim.target[1]);
+  anim.chest.scale.setScalar(chestScale); anim.lid.scale.setScalar(chestScale);
+  anim.chest.material.opacity = (.76 + .14 * pulse) * reveal * fade;
+  anim.lid.material.opacity = (.82 + .14 * pulse) * reveal * fade;
+  for(const mote of anim.motes){
+    const i = mote.userData.index, a = now / 430 + mote.userData.phase * Math.PI * 2;
+    const u = (now / 720 + mote.userData.phase) % 1, r = .14 + (i % 4) * .055;
+    mote.position.set(anim.target[0] + Math.cos(a) * r,
+      .36 + u * (.82 + reveal * .52), anim.target[1] + Math.sin(a) * r);
+    mote.material.opacity = (.20 + .44 * Math.sin(now / 105 + i) ** 2) * reveal * fade;
+  }
+}
+
+function _criarAlimentosDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _criarAlimentosProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel, fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 900) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 125), reveal = p.reveal;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.shadowColor = '#ffd86a'; ctx.shadowBlur = CELL * .22;
+  ctx.strokeStyle = `rgba(255,211,93,${(.58 * (1 - reveal) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .11);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,251,218,${(.88 * (1 - reveal) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .028); ctx.stroke();
+  if(reveal > 0){
+    ctx.shadowColor = '#ffd65c'; ctx.shadowBlur = CELL * .17;
+    ctx.strokeStyle = `rgba(255,221,111,${((.50 + .18 * pulse) * reveal * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .035);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.20 + reveal * .62), now / 340, now / 340 + Math.PI * 1.7); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,250,208,${((.66 + .18 * pulse) * reveal * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.4, CELL * .022);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.12 + reveal * .38), -now / 250, -now / 250 + Math.PI * 1.55); ctx.stroke();
+    const boxW = CELL * (.42 + reveal * .30), boxH = CELL * (.24 + reveal * .16), left = tx - boxW / 2, top = ty - boxH / 2 + CELL * .08;
+    ctx.fillStyle = `rgba(130,73,31,${(.66 * reveal * fade).toFixed(3)})`; ctx.fillRect(left, top, boxW, boxH);
+    ctx.strokeStyle = `rgba(255,205,92,${((.72 + .18 * pulse) * reveal * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .026); ctx.strokeRect(left, top, boxW, boxH);
+    ctx.beginPath(); ctx.moveTo(left - CELL * .02, top); ctx.lineTo(tx, top - CELL * (.12 + reveal * .06)); ctx.lineTo(left + boxW + CELL * .02, top); ctx.stroke();
+    ctx.font = `bold ${Math.max(13, CELL * .22)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(255,246,193,${((.72 + .22 * pulse) * reveal * fade).toFixed(3)})`; ctx.fillText('🍞', tx, top + boxH * .48);
+    for(let i = 0; i < Math.min(10, 4 + anim.quantity); i++){
+      const a = now / 450 + i * .68, r = CELL * (.14 + (i % 4) * .055);
+      const x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r - CELL * ((now / 720 + i / 10) % 1) * (.30 + reveal * .56);
+      ctx.fillStyle = `rgba(255,235,142,${(.22 + .44 * Math.sin(now / 105 + i) ** 2) * reveal * fade})`;
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, CELL * .022), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickCriarAlimentos(now){
+  let active = false;
+  for(let i = _criarAlimentosAnims.length - 1; i >= 0; i--){
+    const anim = _criarAlimentosAnims[i], p = _criarAlimentosProgress(anim, now);
+    if(p.finished){ _criarAlimentosDispose3D(anim); _criarAlimentosAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _criarAlimentosUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _criarAlimentosRaf = active ? _scheduleVisualFrame(_tickCriarAlimentos) : null;
+}
+
+function _receberAnimacaoCriarAlimentos(msg){
+  if(!msg || msg.spell_id !== 'criar_alimentos' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _criarAlimentosAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; anim.chestId = msg.chest_id == null ? anim.chestId : String(msg.chest_id); }
+    return;
+  }
+  if(id != null && _criarAlimentosAnims.some(a => a.animationId === id)) return;
+  const anim = _criarAlimentosAnimFromMessage(msg); _criarAlimentosAnims.push(anim);
+  _playCombatCue('magic', {repeatKey:`spell:${id || 'criar_alimentos'}`, volume:.84});
+  if(!_criarAlimentosRaf) _criarAlimentosRaf = _scheduleVisualFrame(_tickCriarAlimentos);
+}
+
+// ── Cura / Cura em Área — feixes sagrados e pulsos de restauração ─────────
+const _curaAnims = [];
+let _curaRaf = null;
+
+function _curaAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const rawTargets = Array.isArray(msg.targets) ? msg.targets : [];
+  const targets = rawTargets.filter(t => t && Array.isArray(t.pos))
+    .map(t => ({id:t.id == null ? null : String(t.id), pos:t.pos.map(Number)}));
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    spellId: String(msg.spell_id || 'cura'), origin, targets,
+    area: msg.spell_id === 'cura_area', radius: Math.max(1, Number(msg.radius) || 2),
+    travelMs: Math.max(260, Number(msg.travel_ms) || (msg.spell_id === 'cura_area' ? 520 : 560)),
+    impactMs: Math.max(360, Number(msg.impact_ms) || (msg.spell_id === 'cura_area' ? 920 : 760)),
+    start: performance.now(), success: null, amount: 0,
+    group: null, centerRing: null, centerInner: null,
+    beams: [], rings: [], columns: [], motes: []
+  };
+}
+
+function _curaProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting: elapsed >= anim.travelMs,
+    finished: elapsed >= anim.travelMs + anim.impactMs + 760};
+}
+
+function _curaSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _curaBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = anim.area ? 'cura-area-animation' : 'cura-animation';
+  const beamGlowMat = new T.LineBasicMaterial({color:0x54e89a, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const beamCoreMat = new T.LineBasicMaterial({color:0xe9fff3, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  for(const target of anim.targets){
+    const glow = new T.Line(new T.BufferGeometry(), beamGlowMat.clone());
+    const core = new T.Line(new T.BufferGeometry(), beamCoreMat.clone());
+    glow.renderOrder = 120; core.renderOrder = 121; group.add(glow); group.add(core);
+    const ringMat = new T.MeshBasicMaterial({color:0x56ec9b, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    const ring = new T.Mesh(new T.TorusGeometry(.20, .030, 8, 36), ringMat);
+    ring.rotation.x = Math.PI / 2; ring.renderOrder = 122; group.add(ring);
+    const columnMat = new T.MeshBasicMaterial({color:0xb9ffda, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    const column = new T.Mesh(new T.CylinderGeometry(.07, .22, 1.15, 16, 1, true), columnMat);
+    column.renderOrder = 119; group.add(column);
+    anim.beams.push({target, glow, core}); anim.rings.push(ring); anim.columns.push(column);
+  }
+  const centerMat = new T.MeshBasicMaterial({color:0x9dffca, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.centerRing = new T.Mesh(new T.TorusGeometry(.28, .035, 8, 44), centerMat);
+  anim.centerRing.rotation.x = Math.PI / 2; anim.centerRing.renderOrder = 123; group.add(anim.centerRing);
+  const centerInnerMat = new T.MeshBasicMaterial({color:0xf0fff6, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.centerInner = new T.Mesh(new T.TorusGeometry(.15, .018, 7, 32), centerInnerMat);
+  anim.centerInner.rotation.x = Math.PI / 2; anim.centerInner.renderOrder = 124; group.add(anim.centerInner);
+  for(let i = 0; i < (anim.area ? 18 : 10); i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? 0x75f2ad : 0xffffff, transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.SphereGeometry(.024 + (i % 3) * .011, 6, 5), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(0x91 + i * 31);
+    mote.renderOrder = 125; group.add(mote); anim.motes.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _curaDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _curaUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _curaDispose3D(anim); if(!_curaBuild3D(anim)) return; }
+  const T = window.THREE, p = _curaProgress(anim, now), fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 760) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 125);
+  for(let i = 0; i < anim.beams.length; i++){
+    const b = anim.beams[i], target = b.target.pos, dx = target[0] - anim.origin[0], dz = target[1] - anim.origin[1], points = [];
+    const beamTravel = anim.area ? p.travel : p.travel;
+    for(let n = 0; n <= 12; n++){
+      const u = beamTravel * n / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 135 + n + i) * .035;
+      points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend,
+        .56 + Math.sin(u * Math.PI) * .17, anim.origin[1] + dz * u + dx * bend));
+    }
+    _curaSetLine(b.glow, points, T); _curaSetLine(b.core, points, T);
+    b.glow.material.opacity = .46 * (1 - p.impact) * fade; b.core.material.opacity = .86 * (1 - p.impact) * fade;
+    const ring = anim.rings[i], column = anim.columns[i], lift = p.impact;
+    ring.position.set(target[0], .30, target[1]); ring.scale.setScalar(.12 + lift * 1.14); ring.rotation.z = now / 290 + i;
+    ring.material.opacity = (.54 + .20 * pulse) * lift * fade;
+    column.position.set(target[0], .48 + lift * .46, target[1]); column.scale.set(.55 + .12 * pulse, Math.max(.01, lift), .55 + .12 * pulse);
+    column.material.opacity = (.18 + .16 * pulse) * lift * fade;
+  }
+  const center = anim.origin;
+  anim.centerRing.position.set(center[0], .32, center[1]); anim.centerInner.position.set(center[0], .335, center[1]);
+  const centerVisible = anim.area ? Math.max(p.travel, p.impact) : p.impact;
+  anim.centerRing.scale.setScalar(.15 + centerVisible * (anim.area ? anim.radius * .50 : .85));
+  anim.centerInner.scale.setScalar(.10 + centerVisible * .62); anim.centerRing.rotation.z = now / 350; anim.centerInner.rotation.z = -now / 250;
+  anim.centerRing.material.opacity = (.48 + .18 * pulse) * centerVisible * fade;
+  anim.centerInner.material.opacity = (.64 + .16 * pulse) * centerVisible * fade;
+  for(const mote of anim.motes){
+    const i = mote.userData.index, base = anim.area ? center : (anim.targets[0]?.pos || center);
+    const a = now / 430 + mote.userData.phase * Math.PI * 2, r = .12 + (i % 5) * .055, u = (now / 740 + mote.userData.phase) % 1;
+    mote.position.set(base[0] + Math.cos(a) * r, .34 + u * (.80 + centerVisible * .65), base[1] + Math.sin(a) * r);
+    mote.material.opacity = (.18 + .42 * Math.sin(now / 105 + i) ** 2) * centerVisible * fade;
+  }
+}
+
+function _curaDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !anim.targets.some(t => _senhorAguasTileVisible(state, t.pos[0], t.pos[1]))) return;
+  const p = _curaProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 760) / 440) : 1, pulse = .84 + .16 * Math.sin(now / 125);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  for(const [i, target] of anim.targets.entries()){
+    const tx = target.pos[0] * CELL + CELL / 2, ty = target.pos[1] * CELL + CELL / 2, fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+    ctx.shadowColor = '#72efad'; ctx.shadowBlur = CELL * .20; ctx.strokeStyle = `rgba(81,226,143,${(.52 * (1 - p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .10);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+    ctx.strokeStyle = `rgba(240,255,247,${(.84 * (1 - p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .026); ctx.stroke();
+    if(p.impact > 0){
+      const r = CELL * (.18 + p.impact * .55);
+      ctx.shadowColor = '#82f0b1'; ctx.shadowBlur = CELL * .15; ctx.strokeStyle = `rgba(116,246,166,${((.50 + .18 * pulse) * p.impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.8, CELL * .032);
+      ctx.beginPath(); ctx.arc(tx, ty, r, now / 300 + i, now / 300 + i + Math.PI * 1.65); ctx.stroke();
+      ctx.strokeStyle = `rgba(239,255,247,${((.62 + .18 * pulse) * p.impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .020); ctx.beginPath(); ctx.arc(tx, ty, r * .62, -now / 240, -now / 240 + Math.PI * 1.45); ctx.stroke();
+      ctx.font = `bold ${Math.max(14, CELL * .25)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = `rgba(234,255,242,${((.70 + .22 * pulse) * p.impact * fade).toFixed(3)})`; ctx.fillText('✚', tx, ty - CELL * (.16 + p.impact * .24));
+    }
+  }
+  const centerVisible = anim.area ? Math.max(p.travel, p.impact) : p.impact;
+  if(centerVisible > 0){
+    const cx = ox, cy = oy, radius = CELL * (.20 + centerVisible * (anim.area ? anim.radius * .46 : .55));
+    ctx.shadowColor = '#a4ffd0'; ctx.shadowBlur = CELL * .18; ctx.strokeStyle = `rgba(151,255,198,${((.48 + .18 * pulse) * centerVisible * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .035); ctx.beginPath(); ctx.arc(cx, cy, radius, now / 330, now / 330 + Math.PI * 1.7); ctx.stroke();
+    if(anim.area){ ctx.font = `bold ${Math.max(13, CELL * .21)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = `rgba(245,255,248,${(.66 * centerVisible * fade).toFixed(3)})`; ctx.fillText('✦', cx, cy); }
+  }
+  ctx.restore();
+}
+
+function _tickCura(now){
+  let active = false;
+  for(let i = _curaAnims.length - 1; i >= 0; i--){
+    const anim = _curaAnims[i], p = _curaProgress(anim, now);
+    if(p.finished){ _curaDispose3D(anim); _curaAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _curaUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _curaRaf = active ? _scheduleVisualFrame(_tickCura) : null;
+}
+
+function _receberAnimacaoCura(msg){
+  if(!msg || !['cura', 'cura_area'].includes(msg.spell_id) || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _curaAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; anim.amount = Number(msg.amount) || 0; }
+    return;
+  }
+  if(id != null && _curaAnims.some(a => a.animationId === id)) return;
+  const anim = _curaAnimFromMessage(msg); _curaAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || msg.spell_id}`, volume:.92});
+  if(!_curaRaf) _curaRaf = _scheduleVisualFrame(_tickCura);
+}
+
+// ── Olhar Petrificante — feixe ocular e marcas de pedra ───────────────────
+const _olharPetrificanteAnims = [];
+let _olharPetrificanteRaf = null;
+
+function _olharPetrificanteAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  const cast = msg.phase === 'cast';
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target, cast,
+    travelMs: Math.max(240, Number(msg.travel_ms) || (cast ? 360 : 520)),
+    impactMs: Math.max(320, Number(msg.impact_ms) || (cast ? 820 : 700)),
+    start: performance.now(), success: null, petrified: false,
+    marks: 0, resistanceMarks: 0, group: null, beamGlow: null,
+    beamCore: null, sourceEye: null, sourceRing: null, targetRing: null,
+    particles: []
+  };
+}
+
+function _olharPetrificanteProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + (anim.cast ? 360 : 620)};
+}
+
+function _olharPetrificanteSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _olharPetrificanteBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'olhar-petrificante-animation';
+  const beamMat = new T.LineBasicMaterial({color:0xd7df8a, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xffffdb, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), beamMat); anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 76; anim.beamCore.renderOrder = 77; group.add(anim.beamGlow, anim.beamCore);
+  const eyeMat = new T.MeshBasicMaterial({color:0xf5e89a, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const ringMat = new T.MeshBasicMaterial({color:0xb8c27c, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.sourceEye = new T.Mesh(new T.SphereGeometry(.075, 9, 7), eyeMat);
+  anim.sourceRing = new T.Mesh(new T.TorusGeometry(.20, .022, 7, 32), ringMat);
+  anim.targetRing = new T.Mesh(new T.TorusGeometry(.22, .032, 8, 32), ringMat.clone());
+  anim.sourceRing.rotation.x = anim.targetRing.rotation.x = Math.PI / 2;
+  anim.sourceEye.renderOrder = 80; anim.sourceRing.renderOrder = 79; anim.targetRing.renderOrder = 78;
+  group.add(anim.sourceEye, anim.sourceRing, anim.targetRing);
+  for(let i = 0; i < 16; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? 0xc5d08a : 0xfff4b0, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.016 + (i % 3) * .007, 0), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(i * 41 + anim.origin[0] * 17 + anim.origin[1] * 23);
+    mote.renderOrder = 81; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _olharPetrificanteDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _olharPetrificanteUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _olharPetrificanteDispose3D(anim); if(!_olharPetrificanteBuild3D(anim)) return; }
+  const T = window.THREE, p = _olharPetrificanteProgress(anim, now), hasTarget = !anim.cast;
+  const dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1];
+  const front = [anim.origin[0] + dx * p.travel, anim.origin[1] + dz * p.travel];
+  const pts = [];
+  for(let i = 0; i <= 12; i++){
+    const u = p.travel * i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 120 + i) * .035;
+    pts.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .82 + Math.sin(u * Math.PI) * .08, anim.origin[1] + dz * u + dx * bend));
+  }
+  _olharPetrificanteSetLine(anim.beamGlow, pts, T); _olharPetrificanteSetLine(anim.beamCore, pts, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - (anim.cast ? 360 : 620)) / 420) : 1;
+  const pulse = .85 + .15 * Math.sin(now / 120);
+  anim.beamGlow.material.opacity = hasTarget ? .56 * (1 - p.impact) * fade : 0;
+  anim.beamCore.material.opacity = hasTarget ? .90 * (1 - p.impact) * fade : 0;
+  anim.sourceEye.position.set(anim.origin[0], .86 + .08 * Math.sin(now / 160), anim.origin[1]);
+  anim.sourceEye.scale.setScalar(anim.cast ? .84 + .25 * pulse : .55);
+  anim.sourceEye.material.opacity = (.56 + .24 * pulse) * fade;
+  anim.sourceRing.position.set(anim.origin[0], .79, anim.origin[1]); anim.sourceRing.rotation.z = now / 460;
+  anim.sourceRing.scale.setScalar(anim.cast ? 1 + .35 * pulse : .70);
+  anim.sourceRing.material.opacity = (.52 + .22 * pulse) * fade;
+  anim.targetRing.position.set(anim.target[0], .80, anim.target[1]);
+  const impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  anim.targetRing.scale.setScalar(hasTarget ? .25 + impactPulse * (anim.petrified ? 1.9 : 1.35) : .001);
+  anim.targetRing.material.opacity = hasTarget ? (.72 * impactPulse + (anim.petrified ? .22 : 0)) * fade : 0;
+  for(const mote of anim.particles){
+    const i = mote.userData.index, a = now / 480 + mote.userData.phase * Math.PI * 2;
+    const base = hasTarget && p.impacting ? anim.target : anim.origin, r = .10 + (i % 5) * .035;
+    mote.position.set(base[0] + Math.cos(a) * r, .76 + ((now / 730 + mote.userData.phase) % 1) * .54, base[1] + Math.sin(a) * r);
+    mote.material.opacity = (hasTarget ? Math.max(p.travel, p.impact) : p.travel) * (.18 + .34 * Math.sin(now / 105 + i) ** 2) * fade;
+  }
+}
+
+function _olharPetrificanteDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _olharPetrificanteProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - (anim.cast ? 360 : 620)) / 420) : 1;
+  const pulse = .85 + .15 * Math.sin(now / 120), hasTarget = !anim.cast;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  if(hasTarget){
+    ctx.shadowColor = '#d7df8a'; ctx.shadowBlur = CELL * .24; ctx.strokeStyle = `rgba(207,220,128,${(.52 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .12);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+    ctx.shadowBlur = CELL * .08; ctx.strokeStyle = `rgba(255,255,218,${(.90 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .035); ctx.stroke();
+  }
+  ctx.shadowColor = '#d7df8a'; ctx.shadowBlur = CELL * .16; ctx.strokeStyle = `rgba(239,235,157,${((.54 + .22*pulse) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .038);
+  ctx.beginPath(); ctx.arc(ox, oy, CELL * (anim.cast ? .22 + .06*pulse : .15), 0, Math.PI*2); ctx.stroke();
+  ctx.font = `bold ${Math.max(12, CELL * .20)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = `rgba(255,248,185,${(.84*fade).toFixed(3)})`; ctx.fillText('👁', ox, oy - CELL * .22);
+  if(hasTarget && p.impacting){
+    const impact = Math.sin(Math.PI * p.impact), stone = anim.petrified;
+    ctx.shadowColor = stone ? '#9b9b82' : '#d7df8a'; ctx.shadowBlur = CELL * .16; ctx.strokeStyle = stone
+      ? `rgba(197,197,174,${((.70 + .20*impact) * fade).toFixed(3)})`
+      : `rgba(235,235,172,${((.74*impact) * fade).toFixed(3)})`;
+    ctx.lineWidth = Math.max(2, CELL * .045); ctx.beginPath(); ctx.arc(tx, ty, CELL * (.20 + impact * (stone ? .34 : .25)), 0, Math.PI*2); ctx.stroke();
+    ctx.font = `bold ${Math.max(12, CELL * .19)}px serif`; ctx.fillStyle = `rgba(235,235,201,${(.78*impact*fade).toFixed(3)})`; ctx.fillText(stone ? '🗿' : (anim.success === false ? '✦' : '◌'), tx, ty - CELL * .28);
+    if(stone || anim.marks > 0){
+      ctx.strokeStyle = `rgba(176,176,151,${(.52*impact*fade).toFixed(3)})`; ctx.lineWidth = Math.max(1, CELL * .022);
+      for(let i=0;i<3;i++){ const sx=tx + Math.cos(i*2.2+.5)*CELL*.10, sy=ty + Math.sin(i*2.2+.5)*CELL*.08; ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(sx + Math.cos(i*1.7)*CELL*.17, sy + Math.sin(i*1.7)*CELL*.20); ctx.stroke(); }
+    }
+  }
+  ctx.restore();
+}
+
+function _tickOlharPetrificante(now){
+  let active = false;
+  for(let i = _olharPetrificanteAnims.length - 1; i >= 0; i--){
+    const anim = _olharPetrificanteAnims[i], p = _olharPetrificanteProgress(anim, now);
+    if(p.finished){ _olharPetrificanteDispose3D(anim); _olharPetrificanteAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _olharPetrificanteUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _olharPetrificanteRaf = active ? _scheduleVisualFrame(_tickOlharPetrificante) : null;
+}
+
+function _receberAnimacaoOlharPetrificante(msg){
+  if(!msg || msg.spell_id !== 'olhar_petrificante' || !['cast','start','resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _olharPetrificanteAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; anim.petrified = !!msg.petrified; anim.marks = Number(msg.petrification_marks) || 0; anim.resistanceMarks = Number(msg.resistance_marks) || 0; }
+    return;
+  }
+  if(id != null && _olharPetrificanteAnims.some(a => a.animationId === id)) return;
+  const anim = _olharPetrificanteAnimFromMessage(msg); _olharPetrificanteAnims.push(anim);
+  _playCombatCue('magic', {repeatKey:`spell:${id || msg.phase}`, volume:.90});
+  if(!_olharPetrificanteRaf) _olharPetrificanteRaf = _scheduleVisualFrame(_tickOlharPetrificante);
+}
+
 // Prévia de alcance do monstro sob o cursor no modo Mestre. O id, e não a
 // posição, é guardado para que footprints 2×1/2×2/2×3 continuem funcionando
 // quando o cursor estiver sobre qualquer uma das casas ocupadas.
@@ -28261,9 +29901,11 @@ function _assinaturaVisualTabuleiro3D(state){
     .map(key => `${key}:${materiais[key]}`).join('|');
   const elevacoes = Object.keys(state.elevacoes || {}).sort()
     .map(key => `${key}:${state.elevacoes[key]}`).join('|');
+  const pontes = (state.pontes || []).map(p =>
+    `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}`).sort().join('|');
   const segredos = (state.secret_passages || []).map(sp =>
     `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
-  return `${tiles}#${pintura}#${elevacoes}#${state.transicao_altura || 'rampa'}#${segredos}`;
+  return `${tiles}#${pintura}#${elevacoes}#${pontes}#${state.transicao_altura || 'rampa'}#${segredos}`;
 }
 
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
@@ -28781,18 +30423,20 @@ function init3D(state){
   // Todas as famílias abaixo cobrem uma casa por vez e ficam invisíveis quase
   // o tempo todo: nascem sob demanda (ver _mkOverlayPool). O filtro de tipo de
   // casa que o laço antigo fazia vive agora dentro da fábrica.
-  const _ehChao   = (x, y) => state.tiles[y] && state.tiles[y][x] === TILE_FLOOR;
-  const _ehPisavel = (x, y) => state.tiles[y] &&
-    (state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR);
+  const _ehChao   = (x, y) => (state.tiles[y] && state.tiles[y][x] === TILE_FLOOR)
+    || !!ponteNaCasa3D(state, x, y);
+  const _ehPisavel = (x, y) => (state.tiles[y] &&
+    (state.tiles[y][x] === TILE_FLOOR || state.tiles[y][x] === TILE_DOOR))
+    || !!ponteNaCasa3D(state, x, y);
   // "12,7" → [12, 7]
   const _xyDaChave = (key) => { const v = key.split(','); return [+v[0], +v[1]]; };
   // Fábrica comum dos realces de chão: um plano deitado na casa, invisível.
-  const _mkPlano = (geo, mat, yoff, elegivel) => (key) => {
+  const _mkPlano = (geo, mat, yoff, elegivel, topoFn = topoSuperficie3D) => (key) => {
     const [x, y] = _xyDaChave(key);
     if(!elegivel(x, y)) return null;
     const m = new T.Mesh(geo, mat);
     m.rotation.x = -Math.PI / 2;
-    m.position.set(x, topoTerreno3D(state, x, y, TH) + yoff, y);
+    m.position.set(x, topoFn(state, x, y, TH) + yoff, y);
     m.visible = false;
     scene.add(m);
     return m;
@@ -28800,7 +30444,7 @@ function init3D(state){
 
   const moveHighlightMat = new T.MeshBasicMaterial({ color: 0x1e6bff, opacity: 0.45, transparent: true, depthWrite: false });
   const moveHighlightMeshes = _mkOverlayPool(
-    _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90), moveHighlightMat, 0.004, _ehChao));
+    _mkPlano(new T.PlaneGeometry(TW * 0.90, TW * 0.90), moveHighlightMat, 0.004, _ehChao, topoSuperficie3D));
 
   // Cursor virtual do joystick: uma única malha, deslocada sobre a casa-alvo.
   // Não participa do raycast, nem do estado autoritativo do tabuleiro.
@@ -29184,13 +30828,91 @@ function init3D(state){
     }
   }
 
+  // ── PONTES DE MADEIRA RÚSTICA ─────────────────────────────────────────────
+  // A ponte é uma camada visual/caminhável própria: cobre o que estiver abaixo
+  // sem substituir o tile, seu material ou sua elevação original.
+  const bridgeMeshes = [];
+  // A ponte usa a mesma textura de tábuas do piso de madeira escura. A base
+  // fica mais escura e baixa; o tabuleiro é formado por tábuas transversais,
+  // discretamente separadas, sobre duas longarinas contínuas.
+  const bridgeTex = makeMaterialTex('madeira_escura');
+  const bridgeBaseMat = new T.MeshStandardMaterial({
+    map: bridgeTex, color: 0x5b3217, roughness: 0.92, metalness: 0.0
+  });
+  const bridgeDeckMat = new T.MeshStandardMaterial({
+    map: bridgeTex, color: 0xb87838, roughness: 0.88, metalness: 0.0
+  });
+  const bridgeDeckGeoH = new T.BoxGeometry(TW * 0.88, 0.105, 0.88);
+  const bridgeDeckGeoV = new T.BoxGeometry(0.88, 0.105, TW * 0.88);
+  for(const bridge of (state.pontes || [])){
+    const bridgeTiles = _bridgeTiles2D(bridge);
+    if(!bridgeTiles.length) continue;
+    const horizontal = bridge.inicio?.[1] === bridge.fim?.[1];
+    const height = Number.isInteger(Number(bridge.altura)) ? Number(bridge.altura) : 0;
+    const minX = Math.min(...bridgeTiles.map(t => t[0]));
+    const maxX = Math.max(...bridgeTiles.map(t => t[0]));
+    const minY = Math.min(...bridgeTiles.map(t => t[1]));
+    const maxY = Math.max(...bridgeTiles.map(t => t[1]));
+    const centerX = (minX + maxX) / 2;
+    const centerZ = (minY + maxY) / 2;
+    const span = horizontal ? (maxX - minX + 1) : (maxY - minY + 1);
+    const width = horizontal ? (maxY - minY + 1) : (maxX - minX + 1);
+    const top = TH + height * TERRENO_ELEVACAO_STEP_3D;
+    const railLength = Math.max(TW * 0.9, span * TW - 0.10);
+    const railGeo = horizontal
+      ? new T.BoxGeometry(railLength, 0.14, 0.14)
+      : new T.BoxGeometry(0.14, 0.14, railLength);
+    const railOffset = Math.max(0.16, width * TW / 2 - 0.18);
+    for(const side of [-1, 1]){
+      const rail = new T.Mesh(railGeo, bridgeBaseMat);
+      rail.position.set(
+        horizontal ? centerX : centerX + side * railOffset,
+        top + 0.065,
+        horizontal ? centerZ + side * railOffset : centerZ
+      );
+      rail.castShadow = true; rail.receiveShadow = true;
+      rail.userData.isBridge = true; rail.userData.bridgeBase = true;
+      rail.userData.bridgeKey = `${minX},${minY}`;
+      rail.userData.bridgeKeys = bridgeTiles.map(([x, y]) => `${x},${y}`);
+      rail.userData.gridX = Math.round(centerX);
+      rail.userData.gridY = Math.round(centerZ);
+      rail.visible = false;
+      scene.add(rail); bridgeMeshes.push(rail);
+    }
+    // Uma tábua por casa no comprimento da ponte, cruzando toda a largura.
+    // O pequeno intervalo entre elas deixa as duas longarinas aparecerem.
+    for(let step = 0; step < span; step++){
+      const bx = horizontal ? minX + step : centerX;
+      const by = horizontal ? centerZ : minY + step;
+      const plank = new T.Mesh(horizontal ? bridgeDeckGeoH : bridgeDeckGeoV, bridgeDeckMat);
+      plank.position.set(bx, top + 0.145, by);
+      plank.scale.set(horizontal ? 1 : width, 1, horizontal ? width : 1);
+      plank.castShadow = true; plank.receiveShadow = true;
+      plank.userData.isBridge = true; plank.userData.bridgeDeck = true;
+      plank.userData.bridgeKey = `${Math.round(bx)},${Math.round(by)}`;
+      plank.userData.gridX = Math.round(bx);
+      plank.userData.gridY = Math.round(by);
+      plank.visible = false;
+      scene.add(plank); bridgeMeshes.push(plank);
+    }
+  }
+
   // Transições puramente visuais entre pisos com um nível de diferença. O
   // declive já é formado pelas laterais espessas das peças; no modo rampa,
   // acrescentamos uma cunha que liga suavemente as duas superfícies. Nenhuma
   // destas malhas participa de colisão, movimento ou linha de visão.
   const terrainTransitionMeshes = [];
   if(state.transicao_altura === 'rampa'){
-    const rampGeo = (lowTop, highTop) => {
+    // Todas as transições têm sempre a mesma diferença de um nível. Antes uma
+    // geometria independente era criada para CADA fronteira entre casas; em
+    // mapas grandes isso podia atrasar ou travar a abertura do modo Mestre.
+    // Reutilizamos uma geometria por nível inferior (os quatro níveis possíveis).
+    const rampGeometries = new Map();
+    const rampGeo = (lowLevel) => {
+      const cached = rampGeometries.get(lowLevel);
+      if(cached) return cached;
+      const lowTop = TH + lowLevel * TERRENO_ELEVACAO_STEP_3D;
+      const highTop = lowTop + TERRENO_ELEVACAO_STEP_3D;
       const halfLen = 0.25, halfWidth = 0.45, bottom = Math.min(lowTop, highTop) - 0.002;
       const geo = new T.BufferGeometry();
       geo.setAttribute('position', new T.Float32BufferAttribute([
@@ -29204,15 +30926,16 @@ function init3D(state){
         2, 6, 3, 3, 6, 7, 0, 4, 2, 2, 4, 6, 1, 3, 7, 1, 7, 5,
       ]);
       geo.computeVertexNormals();
+      rampGeometries.set(lowLevel, geo);
       return geo;
     };
     const addRamp = (low, high, horizontal) => {
       const [lx, ly] = low, [hx, hy] = high;
-      const lowTop = topoTerreno3D(state, lx, ly, TH);
-      const highTop = topoTerreno3D(state, hx, hy, TH);
       const lowMesh = tileMeshes[`${lx},${ly}`];
-      if(!lowMesh || Math.abs(elevacaoTerreno(state, lx, ly) - elevacaoTerreno(state, hx, hy)) !== 1) return;
-      const ramp = new T.Mesh(rampGeo(lowTop, highTop), lowMesh.material);
+      const lowLevel = elevacaoTerreno(state, lx, ly);
+      const highLevel = elevacaoTerreno(state, hx, hy);
+      if(!lowMesh || highLevel - lowLevel !== 1) return;
+      const ramp = new T.Mesh(rampGeo(lowLevel), lowMesh.material);
       ramp.position.set((lx + hx) / 2, 0, (ly + hy) / 2);
       if(!horizontal) ramp.rotation.y = -Math.PI / 2;
       ramp.castShadow = true; ramp.receiveShadow = true;
@@ -29540,7 +31263,7 @@ function init3D(state){
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
     lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes, whirlpoolMeshes,
-    terrainTransitionMeshes,
+    terrainTransitionMeshes, bridgeMeshes,
     whirlpoolMats,
     wetFloorInst, wetFloorKeys, wetFloorTH: TH,
     moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat, gamepadCursorMesh,
@@ -30082,11 +31805,6 @@ function _atualizarTerrenoAnimado3D(t){
         + Math.sin(t / 92 + phase) * 0.004;
       vortex.material.opacity = (vortex.userData.whirlpoolBaseOpacity || 0.30)
         * (0.58 + q * 0.78);
-    }
-  }
-  if(g3.terrainTransitionMeshes){
-    for(const ramp of g3.terrainTransitionMeshes){
-      ramp.visible = (ramp.userData.terrainKeys || []).some(key => terrainSet.has(key));
     }
   }
 }
@@ -31429,6 +33147,10 @@ function moverPeaoAoCaminho(peao, heroi, caminho, onConclucao){
   estadoMovimento.peaoAtivo   = peao;
   estadoMovimento.heroi       = heroi;
   estadoMovimento.onConclucao = onConclucao || null;
+  // O estado autoritativo ainda está na casa inicial enquanto os passos são
+  // animados localmente. Guardar a casa visual atual permite calcular a
+  // transição de altura quando o caminho entra ou sai de uma ponte.
+  peao.userData._moveGridPos = [heroi.pos[0], heroi.pos[1]];
   iniciarSeguimentoCamera(peao);              // câmera passa a seguir o peão
   _executarProximoPasso();
 }
@@ -31437,6 +33159,7 @@ function _executarProximoPasso(){
   if(estadoMovimento.filaCaminho.length === 0){
     estadoMovimento.emMovimento = false;        // libera input ANTES do callback
     encerrarSeguimentoCamera();                 // re-sincroniza OrbitControls
+    if(estadoMovimento.peaoAtivo) delete estadoMovimento.peaoAtivo.userData._moveGridPos;
     const cb = estadoMovimento.onConclucao;
     estadoMovimento.onConclucao = null;
     if(cb) cb();
@@ -31450,6 +33173,19 @@ function _animarPasso(peao, destino, onPasso){
   if (destino.rotY !== undefined) peao.rotation.y = destino.rotY;   // vira primeiro, antes de andar
   const inicio = { x: peao.position.x, y: peao.position.y, z: peao.position.z };
   const destinoWorld = casaParaMundo(destino.x, destino.z);
+  const bridgeState = GS.gameState;
+  const origemGrid = peao.userData._moveGridPos || [peao.userData.gridX, peao.userData.gridY];
+  const origemPonteY = Array.isArray(origemGrid) && Number.isFinite(origemGrid[0])
+    ? baseSuperficiePonte3D(bridgeState, origemGrid[0], origemGrid[1]) : null;
+  const destinoPonteY = baseSuperficiePonte3D(bridgeState, destino.x, destino.z);
+  const transitaPonte = origemPonteY !== null || destinoPonteY !== null;
+  const inicioSuperficieY = origemPonteY !== null ? origemPonteY : inicio.y;
+  const fimSuperficieY = destinoPonteY !== null
+    ? destinoPonteY
+    : (origemPonteY !== null
+      ? topoTerreno3D(bridgeState, destino.x, destino.z) - 0.22
+      : inicio.y);
+  if(transitaPonte) peao.position.y = inicioSuperficieY;
   let startTime = null;
   function tick(timestamp){
     if(startTime === null) startTime = timestamp;
@@ -31458,19 +33194,19 @@ function _animarPasso(peao, destino, onPasso){
     if(progress < 0.3){
       // FASE 1 — levanta
       const t = progress / 0.3, eased = easeOut(t);
-      peao.position.y = inicio.y + ALTURA_ELEVACAO * eased;
+      peao.position.y = inicioSuperficieY + ALTURA_ELEVACAO * eased;
       peao.rotation.x = -0.08 * eased;
     } else if(progress < 0.7){
       // FASE 2 — avança no ar
       const t = (progress - 0.3) / 0.4, eased = easeInOut(t);
-      peao.position.y = inicio.y + ALTURA_ELEVACAO;
+      peao.position.y = inicioSuperficieY + (fimSuperficieY - inicioSuperficieY) * eased + ALTURA_ELEVACAO;
       peao.position.x = inicio.x + (destinoWorld.x - inicio.x) * eased;
       peao.position.z = inicio.z + (destinoWorld.z - inicio.z) * eased;
       peao.rotation.x = -0.08;
     } else {
       // FASE 3 — pousa
       const t = (progress - 0.7) / 0.3, eased = easeIn(t);
-      peao.position.y = inicio.y + ALTURA_ELEVACAO * (1 - eased);
+      peao.position.y = fimSuperficieY + ALTURA_ELEVACAO * (1 - eased);
       peao.position.x = destinoWorld.x;
       peao.position.z = destinoWorld.z;
       peao.rotation.x = -0.08 * (1 - t);
@@ -31493,7 +33229,8 @@ function _animarPasso(peao, destino, onPasso){
       // combate/magia e do lançamento de dados.
       _scheduleVisualFrame(tick);
     } else {
-      peao.position.set(destinoWorld.x, inicio.y, destinoWorld.z);
+      peao.position.set(destinoWorld.x, fimSuperficieY, destinoWorld.z);
+      peao.userData._moveGridPos = [destino.x, destino.z];
       peao.rotation.set(0, peao.rotation.y, 0);
       peao.scale.set(1, 1, 1);
       peao._somTocado = false;
@@ -32169,7 +33906,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
     const len = dir.length();
     const mesh = new T.Mesh(new T.CylinderGeometry(.038, .038, len, 8), mat);
     mesh.position.set((ax + bx) / 2,
-      (topoTerreno3D(state, ax, ay, TH) + topoTerreno3D(state, bx, by, TH)) / 2 + .075,
+      (topoSuperficie3D(state, ax, ay, TH) + topoSuperficie3D(state, bx, by, TH)) / 2 + .075,
       (ay + by) / 2);
     mesh.quaternion.setFromUnitVectors(up, dir.normalize());
     mesh.renderOrder = 90;
@@ -32179,7 +33916,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   const nodeGeo = new T.SphereGeometry(.075, 8, 6);
   for(const [cx, cy] of cells.slice(1)){
     const node = new T.Mesh(nodeGeo, mat);
-    node.position.set(cx, topoTerreno3D(state, cx, cy, TH) + .075, cy);
+    node.position.set(cx, topoSuperficie3D(state, cx, cy, TH) + .075, cy);
     node.renderOrder = 91;
     node.userData.noRay = true;
     group.add(node);
@@ -32189,7 +33926,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   const [ox, oy] = cells[cells.length - 2];
   const arrowDir = new T.Vector3(px - ox, 0, py - oy).normalize();
   const arrow = new T.Mesh(new T.ConeGeometry(.16, .34, 6), mat);
-  arrow.position.set(px + arrowDir.x * .12, topoTerreno3D(state, px, py, TH) + .075, py + arrowDir.z * .12);
+  arrow.position.set(px + arrowDir.x * .12, topoSuperficie3D(state, px, py, TH) + .075, py + arrowDir.z * .12);
   arrow.quaternion.setFromUnitVectors(up, arrowDir);
   arrow.renderOrder = 92;
   arrow.userData.noRay = true;
@@ -32201,7 +33938,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
   });
   const ring = new T.Mesh(new T.TorusGeometry(.29, .025, 6, 24), ringMat);
   ring.rotation.x = Math.PI / 2;
-  ring.position.set(px, topoTerreno3D(state, px, py, TH) + .075, py);
+  ring.position.set(px, topoSuperficie3D(state, px, py, TH) + .075, py);
   ring.renderOrder = 91;
   ring.userData.noRay = true;
   group.add(ring);
@@ -32349,6 +34086,25 @@ function renderMap3D(state){
         : terrainSet.has(vortex.userData.whirlpoolKey);
     }
   }
+  // Pontes sao uma camada estatica, mas sua visibilidade depende da nevoa do
+  // mapa. Este bloco fica no escopo correto, onde `terrainSet` existe.
+  if(g3.bridgeMeshes){
+    for(const bridgeMesh of g3.bridgeMeshes){
+      const keys = bridgeMesh.userData.bridgeKeys;
+      const vis = keys ? keys.some(key => terrainSet.has(key))
+        : terrainSet.has(bridgeMesh.userData.bridgeKey);
+      if(bridgeMesh.visible !== vis) bridgeMesh.visible = vis;
+    }
+  }
+  // Rampas de elevação: a cunha aparece assim que UMA das duas casas que ela
+  // liga sai da névoa, senão o desnível apareceria cortado no limite do
+  // explorado. Mora aqui, e não no laço de animação do terreno, porque depende
+  // do `terrainSet` desta função.
+  if(g3.terrainTransitionMeshes){
+    for(const ramp of g3.terrainTransitionMeshes){
+      ramp.visible = (ramp.userData.terrainKeys || []).some(key => terrainSet.has(key));
+    }
+  }
   if(g3.gamepadCursorMesh){
     const cursor = _gamepadCursorTile(state);
     const valid = cursor && state.tiles[cursor[1]]?.[cursor[0]] != null;
@@ -32357,7 +34113,7 @@ function renderMap3D(state){
     if(visible){
       const pulse = 0.5 + 0.5 * Math.sin(performance.now() / 260);
       const tone = _gamepadCursorTone(state);
-      g3.gamepadCursorMesh.position.set(cursor[0], topoTerreno3D(state, cursor[0], cursor[1], TH) + 0.036, cursor[1]);
+      g3.gamepadCursorMesh.position.set(cursor[0], topoSuperficie3D(state, cursor[0], cursor[1], TH) + 0.036, cursor[1]);
       const selecionandoAtaque = !!_gamepadInput.attackMode;
       g3.gamepadCursorMesh.scale.setScalar(selecionandoAtaque ? 1.08 + pulse * 0.13 : 0.92 + pulse * 0.18);
       g3.gamepadCursorMesh.material.color.set(tone.hex);
@@ -32801,7 +34557,10 @@ function renderMap3D(state){
         fig.userData._swampSinkY = -Math.max(0.10, h) * 0.20;
         fig.userData._snowPlainSinkY = -Math.max(0.10, h) * 0.15;
       }
-      const waterKind = state.materiais && state.materiais[`${x},${y}`];
+      // A ponte substitui a superfície do material inferior: o peão fica
+      // apoiado no tabuleiro e não afunda nem recebe aparência de lava/água.
+      const waterKind = ponteNaCasa3D(state, x, y) ? null
+        : state.materiais && state.materiais[`${x},${y}`];
       const waterSinkY = (waterKind === 'rodamoinho' || waterKind === 'rodamoinho_profundo') && altitudeNormalizada <= 0 ? fig.userData._whirlpoolSinkY
         : waterKind === 'planicie_nevada' && altitudeNormalizada <= 0 ? fig.userData._snowPlainSinkY
         : waterKind === 'pantano' ? fig.userData._swampSinkY
@@ -32811,7 +34570,7 @@ function renderMap3D(state){
       // vscale é aplicado ao grupo inteiro, cujo pivô fica no mapa (y=0).
       // Compensa a redução vertical para manter a menor parte da miniatura
       // apoiada na superfície do piso, sem interferir no tamanho visual.
-      const terrainLiftY = elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
+      const terrainLiftY = topoSuperficie3D(state, x, y, TH) - TH;
       fig.userData.baseY = terrainLiftY + waterSinkY + (Number(fig.userData._floorAnchorLiftY) || 0);
       fig.position.y = fig.userData.baseY;
       fig.userData._stepBaseY = fig.userData.baseY;
@@ -33023,7 +34782,16 @@ function renderMap3D(state){
       if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
       // Saltinho do peão (efeito de movimentação) — a entidade em deslize não
       // está sob o cursor, então não conflita com o hover-lift.
-      mesh.position.y = mesh.userData._stepBaseY + step.hop * ALTURA_ELEVACAO * 0.5;
+      const stepAnim = _serverStepAnim.get(id);
+      const stepFraction = stepAnim
+        ? (performance.now() - stepAnim.startTime) / stepAnim.segDur : 0;
+      const ponteBaseY = stepAnim
+        ? basePonteInterpolada3D(state, stepAnim.pts, stepFraction,
+            mesh.userData._stepBaseY, TH)
+        : null;
+      const stepBaseY = ponteBaseY !== null
+        ? ponteBaseY : mesh.userData._stepBaseY;
+      mesh.position.y = stepBaseY + step.hop * ALTURA_ELEVACAO * 0.5;
     }
   }
 
@@ -33381,6 +35149,12 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   ogro_lanca:         'assets/models3d/monstros/ogro_lanca.glb',
   escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
   rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
+  pombo:              'assets/models3d/monstros/pombo.glb',
+  // Formas animais da Metamorfose: casam pelo `type`, porque as fichas não
+  // declaram `image` (não existe PNG destas — a arte é só o GLB).
+  rato:               'assets/models3d/monstros/rato.glb',
+  gato:               'assets/models3d/monstros/gato.glb',
+  ovelha:             'assets/models3d/monstros/ovelha.glb',
   // Casa pelo `type` do monstro: a ficha do soldado tem `image` apontando para
   // "nova_criatura_customizado", cuja arte nunca existiu.
   soldado:            'assets/models3d/monstros/soldado.glb',
@@ -33610,7 +35384,9 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : null;
     // Modelos 2x2 precisam preencher o quadrado visual inteiro; os demais
     // conservam o enquadramento anterior para não alterar criaturas 1x1.
-    const footprint = orientedDims
+    const footprint = _TINY_3D_PAWNS.has(imageName) || _TINY_3D_PAWNS.has(monsterType)
+      ? _TINY_3D_PAWN_FRAC
+      : orientedDims
       ? Math.max(orientedDims[0], orientedDims[1]) * 0.92
       : (is2x2 ? 1.86 : 1.45);
     const scale = Math.min(
@@ -39477,11 +41253,24 @@ function get3DTile(e){
   raycaster.setFromCamera(new T.Vector2(mx, my), camera);
   const illusionKeys = new Set(((GS.gameState && GS.gameState.secret_passages) || [])
     .filter(p => p.type === 'illusion').map(p => `${p.pos[0]},${p.pos[1]}`));
+  const bridgeMeshes = g3.bridgeMeshes || [];
   const clickableTiles = Object.values(tileMeshes).filter(m => m.visible &&
-    (m.userData.isFloor || (m.userData.isWall && illusionKeys.has(`${m.userData.gridX},${m.userData.gridY}`))));
+    (m.userData.isFloor || (m.userData.isWall && illusionKeys.has(`${m.userData.gridX},${m.userData.gridY}`))))
+    .concat(bridgeMeshes.filter(m => m.visible));
   const hits   = raycaster.intersectObjects(clickableTiles);
   if(!hits.length) return null;
   const obj = hits[0].object;
+  if(obj.userData.isBridge){
+    // A ponte não possui um tileMesh próprio. Use o ponto real atingido pelo
+    // raio para identificar inclusive a faixa lateral de uma ponte larga;
+    // sem isso o clique retornava [undefined, undefined] e não era possível
+    // escolher a casa da ponte como destino de movimento.
+    const bx = Math.round(hits[0].point.x), by = Math.round(hits[0].point.z);
+    const bkey = `${bx},${by}`;
+    const bridgeHit = bridgeMeshes.some(mesh => mesh.visible
+      && (mesh.userData.bridgeKeys || []).includes(bkey));
+    if(bridgeHit) return [bx, by];
+  }
   return [obj.userData.gridX, obj.userData.gridY];
 }
 
@@ -39554,6 +41343,11 @@ function on3DClick(e){
   if(window._modoInstrumento){
     const tInst = get3DTile(e);
     if(tInst) _clickTileInstrumento(tInst[0], tInst[1]);
+    return;
+  }
+  if(window._modoSenhorDasAguas){
+    const tAgua = get3DTile(e);
+    if(tAgua) _clickTileSenhorDasAguas(tAgua[0], tAgua[1]);
     return;
   }
   // Modo de mira de MAGIA: clicar uma carta arma a mira; aqui o clique no
@@ -39725,7 +41519,7 @@ function on3DMouseMove(e){
 
   const heroCorpse = (GS.gameState.hero_corpses||[]).find(c=>c.pos?.[0]===tx&&c.pos?.[1]===ty);
   if(heroCorpse){
-    tip.innerHTML=`🪦 <b>${heroCorpse.nome || 'Herói derrotado'}</b><br><span style="color:#c7b0d8">Herói derrotado</span>`;
+    tip.innerHTML=`🪦 <b>${heroCorpse.nome || t('ui.tabuleiro.heroi_derrotado_2')}</b><br><span style="color:#c7b0d8" data-i18n="ui.tabuleiro.heroi_derrotado">Herói derrotado</span>`;
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor='default';
     g3.hoveredPos=null;
@@ -39886,6 +41680,7 @@ function handleTileClick(tx, ty){
   if(window._modoInstrumentoAlvo){ _clickTileInstrumentoAlvo(tx, ty); return; }
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
+  if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
   if(window._modoAnimarMortos){ _clickTileAnimarMortos(tx, ty); return; }
   // ── Mira de ARREMESSÁVEL (2D e 3D): resolve o alvo e envia `throw_item` ─────
@@ -40012,7 +41807,7 @@ function handleTileClick(tx, ty){
               : distA === 1;
             if(emAlcanceA) GS.atacarAnimado(a.id, mon.id);
             else toast(alcanceA
-              ? `O ataque alcança ${alcanceA} quadrado(s)${ataqueA.range_shape ? ' em linha reta' : ''}.`
+              ? t('ui.mestre.ataque_alcanca', {n: alcanceA, forma: ataqueA.range_shape ? t('ui.mestre.em_linha_reta') : ''})
               : 'O servo precisa estar adjacente ao alvo.');
             return;
           }
@@ -40128,13 +41923,11 @@ GS.on('loginResult', (msg) => {
   if (msg.ok) {
     GS.listSavegames();
     showScreen('screen-savegames');
-  // ACOPLAMENTO CONHECIDO: este ramo decide por TEXTO do erro do servidor.
-  // Funciona porque server.py:1856 ainda devolve string crua ("Conta não
-  // encontrada..."), fora do T(). Se aquela mensagem for migrada para T(), ela
-  // passa a chegar traduzida e este includes deixa de casar EM SILÊNCIO — o
-  // jogador nunca receberia a oferta de criar a conta. O conserto certo é o
-  // servidor mandar um código de erro; ver o mesmo padrão em trapImages.
-  } else if ((msg.error || '').includes('não encontrada')) {
+  // Decide pelo CODIGO do erro, nunca pelo texto: a mensagem e traduzida e uma
+  // comparacao por frase deixaria de casar em silencio no idioma errado (era o
+  // acoplamento que este ramo tinha, e ele quebrou de verdade quando a frase
+  // foi migrada). `error_code` vem de ERRO_LOGIN_SEM_CONTA no server.py.
+  } else if (msg.error_code === 'sem_conta') {
     const c = window._contaCtx || {};
     if (confirm(t('ui.conta.criar_agora'))) {
       GS.criarConta(c.url, c.name, c.password);
@@ -40495,6 +42288,7 @@ GS.on('gameState', msg => {
   _detectHpChanges(msg);   // som de dano/cura por variação de HP entre estados
   _consumeResistanceEvents(msg);
   handleGameState(msg);
+  _considerarPopupSenhorDasAguas(msg);
   _atualizarMetamorfoseStatus();
   _garantirLoopBolaFogo();  // mantém as chamas residuais pulsando até a zona expirar
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
@@ -40663,6 +42457,11 @@ function _dadosMagiaEmTrajeto(){
   if(_silencioAnims.some(anim => !_silencioProgress(anim, now).expanded)) return true;
   if(_medoAnims.some(anim => !_medoProgress(anim, now).impacting)) return true;
   if(_raioDivinoAnims.some(anim => !_raioDivinoProgress(anim, now).impacting)) return true;
+  if(_olharPetrificanteAnims.some(anim => !_olharPetrificanteProgress(anim, now).impacting)) return true;
+  if(_conjurarElementalAnims.some(anim => !_conjurarElementalProgress(anim, now).impacting)) return true;
+  if(_vooAnims.some(anim => !_vooProgress(anim, now).impacting)) return true;
+  if(_criarAlimentosAnims.some(anim => !_criarAlimentosProgress(anim, now).impacting)) return true;
+  if(_curaAnims.some(anim => !_curaProgress(anim, now).impacting)) return true;
   return false;
 }
 
@@ -40712,6 +42511,12 @@ const _spellAnimationReceivers = [
   _receberAnimacaoRegeneracao,
   _receberAnimacaoVelocidade,
   _receberAnimacaoLentidao,
+  _receberAnimacaoSenhorAguas,
+  _receberAnimacaoOlharPetrificante,
+  _receberAnimacaoConjurarElemental,
+  _receberAnimacaoVoo,
+  _receberAnimacaoCriarAlimentos,
+  _receberAnimacaoCura,
 ];
 GS.on('spellAnimation', msg => {
   _registrarInicioAnimacaoMagia(msg);
@@ -40751,9 +42556,9 @@ function _atualizarMetamorfoseStatus(){
   const view=p?.metamorfose_ativa ? p : monstroMeta;
   const caster=String(p?.metamorfose_caster_id||'')===String(GS.myPid) || !!monstroMeta;
   const itensInfo = view?.metamorfose_usa_equipamentos
-    ? 'Equipamentos e itens continuam utilizáveis.'
+    ? t('ui.magia.equipamentos_e_itens_continuam_utilizaveis')
     : 'Equipamentos e itens ficam bloqueados enquanto durar.';
-  el.innerHTML=`<div style="display:flex;gap:10px;align-items:center;"><img src="${_assetURL('assets/armadilhas/metamorfose.png')}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'"><div><b style="color:#ffb06b;">🦋 METAMORFOSE</b><div style="font-size:12px;margin-top:4px;">Forma: <b>${_esc(view?.metamorfose_forma_nome||view?.metamorfose_forma_type||'—')}</b><br>PV: ${view?.hp??'—'}/${view?.max_hp??'—'}<br>${itensInfo}<br>Habilidades de herói ficam bloqueadas enquanto durar.</div></div></div><div style="font-size:11px;color:#c8b89a;margin-top:8px;">O mago paga 🍖-1 e 💧-1 por rodada.</div>${caster?'<button data-meta-cancel style="margin-top:8px;width:100%;">Encerrar metamorfose</button>':''}${monstroMeta?'<button data-meta-perm style="margin-top:6px;width:100%;">Tentar tornar o monstro permanente</button>':''}`;
+  el.innerHTML=`<div style="display:flex;gap:10px;align-items:center;"><img src="${_assetURL('assets/armadilhas/metamorfose.png')}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'"><div><b style="color:#ffb06b;" data-i18n="ui.magia.metamorfose">🦋 METAMORFOSE</b><div style="font-size:12px;margin-top:4px;"><span data-i18n="ui.magia.forma_rotulo">Forma:</span> <b>${_esc(view?.metamorfose_forma_nome||view?.metamorfose_forma_type||'—')}</b><br><span data-i18n="ui.magia.pv_rotulo">PV:</span> ${view?.hp??'—'}/${view?.max_hp??'—'}<br>${itensInfo}<br><span data-i18n="ui.marcado.habilidades_de_heroi_ficam_bloqueadas_enqu">Habilidades de herói ficam bloqueadas enquanto durar.</span></div></div></div><div style="font-size:11px;color:#c8b89a;margin-top:8px;" data-i18n="ui.magia.o_mago_paga_1_e_1_por_rodada">O mago paga 🍖-1 e 💧-1 por rodada.</div>${caster?'<button data-meta-cancel style="margin-top:8px;width:100%;">Encerrar metamorfose</button>':''}${monstroMeta?'<button data-meta-perm style="margin-top:6px;width:100%;">Tentar tornar o monstro permanente</button>':''}`;
   el.querySelector('[data-meta-cancel]')?.addEventListener('click',()=>GS.cancelarMetamorfose());
   el.querySelector('[data-meta-perm]')?.addEventListener('click',()=>GS.tentarMetamorfosePermanente());
 }
@@ -40761,7 +42566,7 @@ function _atualizarMetamorfoseStatus(){
 GS.on('metamorfoseSavePrompt', msg => {
   if (String(msg.target_id) !== String(GS.myPid)) return;
   const forma = msg.forma?.name || 'criatura escolhida';
-  const falhar = confirm(`🦋 Metamorfose\n\nVocê será transformado em ${forma}.\n\nDeseja falhar propositalmente no teste de Vontade CD ${msg.dc}, aceitando o efeito?\n\nCancelar realiza o teste normalmente.`);
+  const falhar = confirm(t('ui.magia.metamorfose_confirmar_falha', {forma, dc: msg.dc}));
   GS.responderMetamorfose(msg.request_id, falhar);
 });
 GS.on('metamorfoseResult', msg => {

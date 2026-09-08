@@ -85,7 +85,37 @@ ALTURA_POR_QUADRADO_ALCANCE = 2
 # de visão e o alcance vertical combinam as duas camadas; quedas reutilizam as
 # faixas de dano do voo.
 ELEVACAO_TERRENO_MIN = -1
-ELEVACAO_TERRENO_MAX = 2
+ELEVACAO_TERRENO_MAX = 10
+
+
+def _pontes_tiles(ponte):
+    """Expande a linha central e a largura de uma ponte em casas da grade.
+
+    Pontes autoradas são sempre retas nos eixos cardeais. A fórmula fica
+    centralizada de forma determinística para larguras pares também.
+    """
+    inicio = ponte.get("inicio") or ponte.get("start")
+    fim = ponte.get("fim") or ponte.get("end")
+    try:
+        x0, y0 = int(inicio[0]), int(inicio[1])
+        x1, y1 = int(fim[0]), int(fim[1])
+        largura = max(1, min(3, int(ponte.get("largura", ponte.get("width", 1)))))
+    except (TypeError, ValueError, IndexError):
+        return []
+    tiles = []
+    if y0 == y1 and x0 != x1:
+        a, b = sorted((x0, x1))
+        lateral0 = y0 - (largura // 2)
+        for y in range(lateral0, lateral0 + largura):
+            for x in range(a, b + 1):
+                tiles.append((x, y))
+    elif x0 == x1 and y0 != y1:
+        a, b = sorted((y0, y1))
+        lateral0 = x0 - (largura // 2)
+        for x in range(lateral0, lateral0 + largura):
+            for y in range(a, b + 1):
+                tiles.append((x, y))
+    return tiles
 
 
 def normalizar_altura(valor, padrao=0):
@@ -2255,29 +2285,36 @@ def _ip_do_cliente(request, publico):
     return getattr(request, "remote", None) or "?"
 
 
+# Codigo de erro do login. O cliente decide o ramo "oferecer criar conta" por
+# ESTE codigo, nunca pelo texto da mensagem — que e traduzido.
+ERRO_LOGIN_SEM_CONTA = "sem_conta"
+
+
 async def try_login(pid, username, password):
     """Valida credenciais e reserva a conta em ACCOUNTS_ONLINE.
-    Retorna (True, dados_da_conta) ou (False, mensagem_de_erro)."""
+    Retorna (True, dados_da_conta, None) ou (False, mensagem, codigo)."""
     u = _norm_username(username)
     acc = load_account(u)
     if not acc:
-        return False, "Conta não encontrada. Crie uma conta primeiro."
+        return (False, T("erro.conta_nao_encontrada_crie_uma_conta_primeiro"),
+                ERRO_LOGIN_SEM_CONTA)
     # Na thread, de proposito: sem isso, cada tentativa recusada travaria o
     # laco por ~100 ms, e uma rajada de forca bruta seria, sozinha, negacao de
     # servico contra todos os jogadores. E pre-requisito do limite de
     # tentativas -- senao o proprio freio viraria a arma.
     if not await asyncio.to_thread(verify_password, password,
                                    acc.get("password_hash", "")):
-        return False, "Senha incorreta."
+        return False, T("erro.senha_incorreta"), None
     dono = ACCOUNTS_ONLINE.get(u)
     if dono and dono != pid:
-        return False, "Esta conta já está em uso em outra conexão."
+        return False, T("erro.esta_conta_ja_esta_em_uso_em_outra_conexao"), None
     # Se esta conexão já estava logada noutra conta, libera a anterior.
     for outra, opid in list(ACCOUNTS_ONLINE.items()):
         if opid == pid and outra != u:
             del ACCOUNTS_ONLINE[outra]
     ACCOUNTS_ONLINE[u] = pid
-    return True, {"username": u, "profile": acc.get("profile", {}), "heroes": acc.get("heroes", {})}
+    return True, {"username": u, "profile": acc.get("profile", {}),
+                  "heroes": acc.get("heroes", {})}, None
 
 def try_create_savegame(account, name, mode, campaign_file, has_master, group_id=None, rules=None, continue_from=None):
     """Valida a criação de um savegame por uma conta logada.
@@ -3510,14 +3547,14 @@ MONSTER_DEFS = [
      "str_":2, "dex":17, "con_":10, "int_":2, "fort":2, "ref_":5, "will":2,
      "initiative_bonus":-4, "vision_base":0, "attacks":[], "special_abilities":[],
      "voo":True, "altura_inicial":2, "altura_max":10, "porte":"minusculo",
-     "image":"pombo", "subtipo":"animal", "spawn_min":0, "spawn_max":0,
+     "subtipo":"animal", "spawn_min":0, "spawn_max":0,
      "undead":False, "boss":False, "foge_se_nd_zero":True},
     {"type":"rato", "name":"Rato", "emoji":"🐀", "tier":0, "cr":0,
      "hp":1, "ac":14, "natural_armor":2, "size":[1,1], "movement":4, "movement_exception":True,
      "str_":2, "dex":15, "con_":10, "int_":2, "fort":2, "ref_":4, "will":1,
      "initiative_bonus":-4, "vision_base":0,
      "attacks":[{"name":"Mordida","atk_bonus":4,"damage":"1","damage_types":[DMG_PHYSICAL],"num_attacks":1}],
-     "special_abilities":[], "porte":"minusculo", "image":"rato", "subtipo":"animal",
+     "special_abilities":[], "porte":"minusculo", "subtipo":"animal",
      "spawn_min":0, "spawn_max":0, "undead":False, "boss":False, "foge_se_nd_zero":True},
     {"type":"gato", "name":"Gato", "emoji":"🐈", "tier":0, "cr":0,
      "hp":2, "ac":14, "natural_armor":2, "size":[1,1], "movement":8, "movement_exception":True,
@@ -3525,14 +3562,14 @@ MONSTER_DEFS = [
      "initiative_bonus":-4, "vision_base":0,
      "attacks":[{"name":"Garras","atk_bonus":4,"damage":"1","damage_types":[DMG_PHYSICAL],"num_attacks":2}],
      "special_abilities":[], "visao_escuro":True, "darkvision_range":8, "porte":"pequeno",
-     "image":"gato", "subtipo":"animal", "spawn_min":0, "spawn_max":0,
+     "subtipo":"animal", "spawn_min":0, "spawn_max":0,
      "undead":False, "boss":False, "foge_se_nd_zero":True},
     {"type":"ovelha", "name":"Ovelha", "emoji":"🐑", "tier":0, "cr":0,
      "hp":6, "ac":10, "size":[1,1], "movement":6, "movement_exception":True,
      "str_":11, "dex":10, "con_":15, "int_":2, "fort":4, "ref_":2, "will":1,
      "initiative_bonus":-3, "vision_base":0,
      "attacks":[{"name":"Cabeçada","atk_bonus":1,"damage":"1d4","damage_types":[DMG_PHYSICAL],"num_attacks":1}],
-     "special_abilities":[], "porte":"medio", "image":"ovelha", "subtipo":"animal",
+     "special_abilities":[], "porte":"medio", "subtipo":"animal",
      "spawn_min":0, "spawn_max":0, "undead":False, "boss":False, "foge_se_nd_zero":True},
     # â”€â”€ Placeholders (sistema legado) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TODO: Substituir por monstros reais com fichas completas
@@ -5667,7 +5704,7 @@ SHOP_MERCHANT = [
     {"id": "bota_alada",     "name": "Bota Alada",         "emoji": "🪽",  "price": 0,
      "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "voo", "value": 0,
      "magico": True,
-     "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."},
+     "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10."},
     # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
     {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10, "item_slot": "item",  "effect": "spd",       "value": 1},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
@@ -5900,11 +5937,12 @@ DUNGEONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dungeon
 # CatÃ¡logo de itens que um baÃº autorado pode conter (Fase 1: sÃ³ CHEST_ITEMS).
 _DUNGEON_ITEM_CATALOG = {it["id"]: it for it in CHEST_ITEMS}
 
-def _contar_chao_alcancavel(tiles, w, h, start, limite):
+def _contar_chao_alcancavel(tiles, w, h, start, limite, pontes=None):
     """Conta casas caminháveis (FLOOR/DOOR) alcançáveis a partir de `start`,
     parando ao atingir `limite` (otimização). Usado p/ garantir spawn dos heróis."""
     sx, sy = start
-    if not (0 <= sx < w and 0 <= sy < h) or tiles[sy][sx] == WALL:
+    pontes = pontes or set()
+    if not (0 <= sx < w and 0 <= sy < h) or (tiles[sy][sx] == WALL and (sx, sy) not in pontes):
         return 0
     visto = {(sx, sy)}; pilha = [(sx, sy)]; conta = 0
     while pilha:
@@ -5915,7 +5953,7 @@ def _contar_chao_alcancavel(tiles, w, h, start, limite):
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             nx, ny = x + dx, y + dy
             if (0 <= nx < w and 0 <= ny < h and (nx, ny) not in visto
-                    and tiles[ny][nx] != WALL):
+                    and (tiles[ny][nx] != WALL or (nx, ny) in pontes)):
                 visto.add((nx, ny)); pilha.append((nx, ny))
     return conta
 
@@ -6125,12 +6163,14 @@ def validar_dungeon(defn):
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
         return False, "exit fora do grid."
 
+    ponte_reach = {tile for ponte in (defn.get("pontes") or []) if isinstance(ponte, dict)
+                   for tile in _pontes_tiles(ponte)}
     if start_mode == "entrance":
-        if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6) < 6:
+        if _contar_chao_alcancavel(tiles, w, h, [ent["x"], ent["y"]], limite=6, pontes=ponte_reach) < 6:
             return False, "menos de 6 casas de chão alcançáveis a partir da entrada."
     else:
         for spawn in defn.get("hero_spawns", []):
-            if _contar_chao_alcancavel(tiles, w, h, spawn["pos"], limite=1) < 1:
+            if _contar_chao_alcancavel(tiles, w, h, spawn["pos"], limite=1, pontes=ponte_reach) < 1:
                 return False, f"hero_spawn de {spawn['class_id']!r} não está em uma casa caminhável."
 
     decors = defn.get("decorations", [])
@@ -6483,6 +6523,52 @@ def validar_dungeon(defn):
             if (isinstance(valor, bool) or not isinstance(valor, int)
                     or not ELEVACAO_TERRENO_MIN <= valor <= ELEVACAO_TERRENO_MAX):
                 return False, f"elevação em {key!r} deve ser um inteiro entre {ELEVACAO_TERRENO_MIN} e {ELEVACAO_TERRENO_MAX}."
+
+    pontes = defn.get("pontes")
+    if pontes is not None:
+        if not isinstance(pontes, list):
+            return False, "pontes deve ser uma lista."
+        ponte_ids = set()
+        ponte_ocupacao = set()
+        elev_map = defn.get("elevacoes") or {}
+
+        def nivel_em(px, py):
+            valor = elev_map.get(f"{px},{py}", 0)
+            return valor if isinstance(valor, int) and not isinstance(valor, bool) else 0
+
+        for i, ponte in enumerate(pontes):
+            if not isinstance(ponte, dict):
+                return False, f"ponte {i} inválida."
+            pid = ponte.get("id") or f"ponte_{i}"
+            if not isinstance(pid, str) or not pid or pid in ponte_ids:
+                return False, f"id de ponte duplicado ou inválido: {pid!r}."
+            ponte_ids.add(pid)
+            inicio = ponte.get("inicio") or ponte.get("start")
+            fim = ponte.get("fim") or ponte.get("end")
+            if not in_grid(inicio) or not in_grid(fim) or inicio == fim:
+                return False, f"ponte {pid} precisa de início e fim distintos dentro do grid."
+            if tiles[inicio[1]][inicio[0]] not in (FLOOR, DOOR) or tiles[fim[1]][fim[0]] not in (FLOOR, DOOR):
+                return False, f"ponte {pid} precisa começar e terminar em casas de chão ou porta."
+            if inicio[0] != fim[0] and inicio[1] != fim[1]:
+                return False, f"ponte {pid} deve ser reta na horizontal ou vertical."
+            if nivel_em(*inicio) != nivel_em(*fim):
+                return False, f"ponte {pid} precisa ligar pontos da mesma altura."
+            try:
+                largura = int(ponte.get("largura", ponte.get("width", 1)))
+                altura = int(ponte.get("altura", ponte.get("height", nivel_em(*inicio))))
+            except (TypeError, ValueError):
+                return False, f"ponte {pid} tem largura ou altura inválida."
+            if largura < 1 or largura > 3:
+                return False, f"ponte {pid} deve ter largura entre 1 e 3 casas."
+            if altura != nivel_em(*inicio) or not ELEVACAO_TERRENO_MIN <= altura <= ELEVACAO_TERRENO_MAX:
+                return False, f"ponte {pid} deve ter a mesma altura dos pontos conectados."
+            tiles_ponte = _pontes_tiles({"inicio": inicio, "fim": fim, "largura": largura})
+            if not tiles_ponte or any(not in_grid([x, y]) for x, y in tiles_ponte):
+                return False, f"ponte {pid} ultrapassa os limites do grid."
+            for tile in tiles_ponte:
+                if tile in ponte_ocupacao:
+                    return False, f"pontes sobrepostas na casa {tile[0]},{tile[1]}."
+                ponte_ocupacao.add(tile)
 
     transicao = defn.get("transicao_altura", "rampa")
     if transicao not in ("rampa", "declive"):
@@ -7638,7 +7724,8 @@ GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "invisibilidade", "regeneracao_magica", "jato_ar",
                           "velocidade", "protecao_energia", "conjurar_elemental",
                           "silencio", "barreira_arcana", "contramagica", "voo",
-                          "olhar_petrificante", "metamorfose", "chamado_inverno"}
+                          "olhar_petrificante", "metamorfose", "chamado_inverno",
+                          "senhor_das_aguas"}
 
 GRIMORIO = {
     # â”€â”€ 1Âº CÃRCULO â€” MAGO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -7777,8 +7864,8 @@ GRIMORIO = {
         "circulo": "primeiro", "classe": ["cleric"],
         "icone": "💧", "tipo": "toque",
         "alcance": 1,
-        "fome_bonus": 20, "sede_bonus": 20,
-        "descricao": "Toque. +20 fome +20 sede em 1 aliado.",
+        "fome_bonus": 25, "sede_bonus": 25,
+        "descricao": "Toque. +25 fome +25 sede em 1 aliado.",
     },
     # â”€â”€ 2Âº CÃRCULO â€” AMBOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "silencio": {
@@ -7801,6 +7888,19 @@ GRIMORIO = {
         "save": "reflexos", "permanente_custo": 20,
         "terrenos": ["piso_congelado", "planicie_nevada"],
         "descricao": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede.",
+    },
+    "senhor_das_aguas": {
+        "id": "senhor_das_aguas", "nome": "Senhor das Águas",
+        "circulo": "terceiro", "classe": ["cleric"],
+        "icone": "🌊", "tipo": "area_fixa",
+        "alcance_base": 5, "alcance_escala": 1, "alcance_por_niveis": 1,
+        "area_lado": 4, "area_lado_niveis": 2,
+        "area_lado_agua_profunda": 3,
+        "duracao": "1d4", "duracao_por_nivel": 1,
+        "terrenos": ["agua", "agua_profunda"],
+        "redemoinho_max_por_nivel": 2,
+        "redemoinho_segundo_round": True,
+        "descricao": "Transforma uma área em Água ou Água profunda por 1d4 + nível rodadas. A partir da segunda rodada, e em qualquer rodada seguinte enquanto a magia durar, pode marcar casas da área como redemoinho por ação livre, até somar metade do nível do clérigo no total. A cota é acumulada (dá para marcar poucas casas por vez) e os redemoinhos permanecem até o fim da magia.",
     },
     "manto_escuridao": {
         "id": "manto_escuridao", "nome": "Manto de Escuridão",
@@ -8281,6 +8381,15 @@ def monster_cr(mdef):
         except (TypeError, ValueError):
             pass
     return _CR_POR_TIER.get(mdef.get("tier", 1), 1.0)
+
+# Nome do terreno criado por magia, para a narracao. Guarda a CHAVE (nunca
+# um T()): T() no nivel de modulo e avaliado no import e derrubaria o boot.
+_TERRENO_MAGIA_CHAVE = {
+    "piso_congelado": "narracao.terreno.piso_congelado",
+    "planicie_nevada": "narracao.terreno.planicie_nevada",
+    "agua": "narracao.terreno.agua",
+    "agua_profunda": "narracao.terreno.agua_profunda",
+}
 
 TRAP_XP_POR_CR = 20
 
@@ -8870,6 +8979,7 @@ class GameRoom:
         self.ground_items = {}  # gid -> {"id","item","pos":[x,y]} â€” itens largados no chÃ£o (persistem como chests)
         self.shop_scrolls = []  # pergaminhos Ã  venda no mercador (renovados por visita Ã  cidade)
         self.decorations = []
+        self.pontes = []             # estruturas elevadas; não alteram tiles/elevacoes
         self.secret_passages = []
         self.door_conditions = {}
         self.door_condition_activated = {}
@@ -8886,6 +8996,8 @@ class GameRoom:
         self.transicao_altura = "rampa"
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
         self._mat_oclui_tiles = set()  # casas de material opaco (entulho) â€” barra visÃ£o
+        self._ponte_tiles = set()
+        self._ponte_alturas = {}
 
     # â”€â”€ broadcast helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -11360,6 +11472,25 @@ class GameRoom:
                     and self.tiles[ey][ex] in (FLOOR, DOOR)):
                 self.elevacoes[(ex, ey)] = max(ELEVACAO_TERRENO_MIN,
                                                min(ELEVACAO_TERRENO_MAX, valor))
+        self.pontes = []
+        for i, ponte in enumerate(defn.get("pontes") or []):
+            if not isinstance(ponte, dict):
+                continue
+            inicio = ponte.get("inicio") or ponte.get("start")
+            fim = ponte.get("fim") or ponte.get("end")
+            if not isinstance(inicio, (list, tuple)) or not isinstance(fim, (list, tuple)):
+                continue
+            try:
+                inicio = [int(inicio[0]), int(inicio[1])]
+                fim = [int(fim[0]), int(fim[1])]
+                largura = max(1, min(3, int(ponte.get("largura", ponte.get("width", 1)))))
+                altura = int(ponte.get("altura", ponte.get("height", self._elevacao_terreno(*inicio))))
+            except (TypeError, ValueError, IndexError):
+                continue
+            self.pontes.append({"id": ponte.get("id") or f"ponte_{i}",
+                                "inicio": inicio, "fim": fim,
+                                "largura": largura, "altura": altura})
+        self._rebuild_pontes_index()
         self.transicao_altura = defn.get("transicao_altura", "rampa")
         if self.transicao_altura not in ("rampa", "declive"):
             self.transicao_altura = "rampa"
@@ -12192,11 +12323,13 @@ class GameRoom:
             self.traps = []          # idem armadilhas de masmorra
             self.armadilhas = []     # idem armadilhas colocÃ¡veis
             self.decorations = []
+            self.pontes = []
             self._rebuild_decor_index()
             self.materiais = {}
             self.elevacoes = {}
             self.transicao_altura = "rampa"
             self._terrenos_inverno = {}
+            self._rebuild_pontes_index()
             self._rebuild_materiais_index()
             self.zonas_especiais = []
             self.explored = set()    # nÃ©voa volta ao inÃ­cio no mapa novo
@@ -12563,7 +12696,7 @@ class GameRoom:
                 await self._testar_rodamoinho_inicio_turno(monster)
                 await self._processar_olhar_petrificante_inicio(monster)
                 if monster.get("petrificado"):
-                    await self.gm_say(f"🗿 **{nome_criatura(monster)}** está petrificado e perde este turno.")
+                    await self.gm_say(T("narracao.esta_petrificado_e_perde_este_turno", nome_criatura_monster=nome_criatura(monster)))
                     return
                 # Comando tem prioridade sobre a IA e sobre a janela do Mestre:
                 # o jogador que lançou a magia controla o próximo turno inteiro.
@@ -12627,8 +12760,27 @@ class GameRoom:
     async def _advance_initiative(self):
         if not self.initiative_active or self._intro_masmorra_bloqueada():
             return
+        # Sem heroi ativo, nao existe uma vez que possa ser entregue. Evita
+        # que a cadeia de `monster_step` ciclique indefinidamente entre os
+        # monstros quando todos os herois estao desconectados/fora da masmorra.
+        if not any(self._ativo(p) for p in self.players.values()):
+            self._cancelar_timer_turno()
+            return
         self.initiative_index += 1
-        if self.initiative_index >= len(self.initiative_order):
+        # A fila pode conter monstros que morreram depois que a rodada foi
+        # montada. Se todos os atores restantes da fila estiverem mortos ou
+        # desconectados, a volta atual terminou mesmo sem chegar literalmente
+        # ao último índice; sem esta verificação o herói solo volta a receber
+        # o turno com o mesmo round_num para sempre.
+        terminou_fila_viva = self.initiative_index >= len(self.initiative_order)
+        if not terminou_fila_viva:
+            terminou_fila_viva = not any(
+                (entry["kind"] == "player"
+                 and self._ativo(self.players.get(entry["id"])))
+                or (entry["kind"] == "monster"
+                    and self.monsters.get(entry["id"], {}).get("hp", 0) > 0)
+                for entry in self.initiative_order[self.initiative_index:])
+        if terminou_fila_viva:
             self.round_num += 1
             self._processar_recarga_slots_rodada()
             self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
@@ -12975,10 +13127,66 @@ class GameRoom:
         # Porta avulsa de corredor: fechada até alguém abri-la.
         return True
 
+    def _elevacao_bruta(self, x, y):
+        """Elevação AUTORADA da casa, sem consultar pontes.
+
+        A ponte não pode descobrir a própria altura por `_elevacao_terreno`:
+        aquela lê `_ponte_alturas`, que é justamente o índice sendo construído.
+        Usar a versão crua quebra a dependência circular.
+        """
+        try:
+            return max(ELEVACAO_TERRENO_MIN,
+                       min(ELEVACAO_TERRENO_MAX,
+                           int(getattr(self, "elevacoes", {}).get((int(x), int(y)), 0))))
+        except (TypeError, ValueError):
+            return 0
+
+    def _ponte_altura(self, ponte):
+        """Altura da superfície da ponte: a MAIS BAIXA das duas pontas.
+
+        DERIVADA, nunca lida do JSON. O campo `altura` que o editor grava é um
+        snapshot do momento da criação e não acompanha a pintura de elevação
+        posterior: quem criava a ponte antes de levantar os platôs ficava com
+        ela deitada no fundo do vão, e nenhuma casa dela entrava no alcance.
+        A ponta mais alta vira um degrau comum — de 1, transponível; de 2 ou
+        mais, bloqueado pela regra de passo.
+        """
+        inicio = ponte.get("inicio") or ponte.get("start") or [0, 0]
+        fim = ponte.get("fim") or ponte.get("end") or inicio
+        try:
+            return min(self._elevacao_bruta(inicio[0], inicio[1]),
+                       self._elevacao_bruta(fim[0], fim[1]))
+        except (TypeError, ValueError, IndexError):
+            return 0
+
+    def _rebuild_pontes_index(self):
+        """Indexa a superfície das pontes sem modificar o piso original."""
+        self._ponte_tiles = set()
+        self._ponte_alturas = {}
+        for ponte in getattr(self, "pontes", []) or []:
+            altura = self._ponte_altura(ponte)
+            # Grava de volta: `_serializar_pontes` emite este campo, e é dele
+            # que o cliente tira a altura em `_elevacaoTerreno`. Sem isto o
+            # servidor andaria certo e o azul do cliente continuaria errado.
+            ponte["altura"] = altura
+            for x, y in _pontes_tiles(ponte):
+                if 0 <= x < self.map_w and 0 <= y < self.map_h:
+                    self._ponte_tiles.add((x, y))
+                    self._ponte_alturas[(x, y)] = altura
+
+    def _ponte_em(self, x, y):
+        return (int(x), int(y)) in getattr(self, "_ponte_tiles", set())
+
     def _blocks_tile(self, x, y):
-        """Tile intransponível: parede, porta fechada ou decoração sólida."""
+        """Tile intransponível: parede, porta fechada ou decoração sólida.
+
+        A ponte é uma superfície independente e, portanto, pode passar sobre
+        água, abismos representados por paredes e outros pisos sem alterá-los.
+        """
         if not (0 <= x < self.map_w and 0 <= y < self.map_h):
             return True
+        if self._ponte_em(x, y):
+            return (x, y) in self._decor_block_tiles
         if self.tiles[y][x] == WALL or self._is_closed_door(x, y):
             return True
         return (x, y) in self._decor_block_tiles or (x, y) in self._mat_solid_tiles
@@ -12986,7 +13194,13 @@ class GameRoom:
     def _elevacao_terreno(self, x, y):
         """Nível autorado do piso; casas sem marca permanecem no nível 0."""
         try:
-            return max(-1, min(2, int(getattr(self, "elevacoes", {}).get((int(x), int(y)), 0))))
+            ponte_altura = getattr(self, "_ponte_alturas", {}).get((int(x), int(y)))
+            if ponte_altura is not None:
+                return max(ELEVACAO_TERRENO_MIN,
+                           min(ELEVACAO_TERRENO_MAX, int(ponte_altura)))
+            return max(ELEVACAO_TERRENO_MIN,
+                       min(ELEVACAO_TERRENO_MAX,
+                           int(getattr(self, "elevacoes", {}).get((int(x), int(y)), 0))))
         except (TypeError, ValueError):
             return 0
 
@@ -13026,6 +13240,48 @@ class GameRoom:
             criatura.get("facing") if criatura else None,
             facing_destino,
         ) is not None
+
+    def _queda_no_passo(self, criatura, origem, destino):
+        """Este deslocamento de uma casa terminaria em queda por desnível?
+
+        FONTE ÚNICA da regra de queda por terreno. É consultada nos dois
+        sentidos: `_passo_seguro` a usa para RECUSAR o passo voluntário antes
+        de mover, e `_aplicar_queda_terreno` a usa para decidir se aplica o
+        dano quando o deslocamento é FORÇADO (empurrão). Duplicar a regra nos
+        dois lugares faria o azul do cliente e o dano do servidor divergirem no
+        primeiro ajuste de balanceamento.
+        """
+        if not criatura or self._voo_imune_terreno(criatura):
+            return False
+        if not (isinstance(origem, (list, tuple)) and len(origem) >= 2
+                and isinstance(destino, (list, tuple)) and len(destino) >= 2):
+            return False
+        queda = (self._elevacao_terreno(*origem[:2])
+                 - self._elevacao_terreno(*destino[:2]))
+        if queda <= 0:
+            return False
+        # Sair da lateral de uma ponte é queda mesmo com desnível de 1: a
+        # ponte não tem rampa lateral. A regra de rampa vale para o piso comum.
+        saiu_da_ponte = (self._ponte_em(origem[0], origem[1])
+                         and not self._ponte_em(destino[0], destino[1]))
+        if (getattr(self, "transicao_altura", "rampa") == "rampa"
+                and queda <= 1 and not saiu_da_ponte):
+            return False
+        return True
+
+    def _passo_seguro(self, criatura, origem, destino, facing_destino=None):
+        """Portão do movimento VOLUNTÁRIO: permitido pela elevação E sem queda.
+
+        Movimento voluntário nunca derruba ninguém. Onde o passo terminaria em
+        queda ele simplesmente não é oferecido — antes, o jogador clicava numa
+        casa e caía, o que é erro de jogo, não decisão. Queda por desnível
+        passa a existir só quando alguém é EMPURRADO: `_empurrar` nunca
+        consultou este portão e continua sem consultá-lo.
+        """
+        if not self._passo_elevacao_permitido(criatura, origem, destino,
+                                              facing_destino):
+            return False
+        return not self._queda_no_passo(criatura, origem, destino)
 
     def _voo_ignora_obstaculos(self, criatura):
         """Se Voo permite atravessar paredes, portas e obstáculos baixos.
@@ -13171,20 +13427,35 @@ class GameRoom:
                 or self._tem_imunidade(alvo, "petrificacao"):
             return True
         dc = int(fonte.get("olhar_petrificante_cd", 15) or 15)
+        animation_id = f"olhar_petrificante_{fonte.get('id')}_{alvo.get('id')}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "olhar_petrificante", "phase": "start",
+            "animation_id": animation_id, "caster_id": fonte.get("id"),
+            "target_id": alvo.get("id"),
+            "origin": list(fonte.get("pos") or alvo.get("pos") or [0, 0]),
+            "target": list(alvo.get("pos") or [0, 0]), "travel_ms": 520, "impact_ms": 700,
+        })
         ok, d20, bonus, total = self._testar_save(alvo, "vontade", dc, fonte=fonte)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": f"Olhar Petrificante — {nome_criatura(alvo)}",
                               "modifier": bonus, "total": total, "dc": dc})
         if ok:
             alvo["resistencia_petrificacao_marcas"] = int(alvo.get("resistencia_petrificacao_marcas", 0) or 0) + 1
-            await self.gm_say(f"👁️ **{nome_criatura(alvo)}** resiste ao Olhar Petrificante ({total} contra CD {dc}) — resistência {alvo['resistencia_petrificacao_marcas']}/3.")
+            await self.gm_say(T("narracao.resiste_ao_olhar_petrificante_contra_cd", nome_criatura_alvo=nome_criatura(alvo), total=total, dc=dc, alvo_resistencia_petrifi=alvo['resistencia_petrificacao_marcas']))
             if alvo["resistencia_petrificacao_marcas"] >= 3:
                 self._encerrar_olhar_petrificante(alvo, sucesso=True)
-                await self.gm_say(f"✨ O efeito do Olhar Petrificante termina em **{nome_criatura(alvo)}**.")
+                await self.gm_say(T("narracao.o_efeito_do_olhar_petrificante_termina_e", nome_criatura_alvo=nome_criatura(alvo)))
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "olhar_petrificante", "phase": "resolve",
+                "animation_id": animation_id, "success": True,
+                "resistance_marks": alvo.get("resistencia_petrificacao_marcas", 0),
+                "petrification_marks": alvo.get("petrificacao_marcas", 0),
+                "petrified": bool(alvo.get("petrificado")),
+            })
         else:
             alvo["petrificacao_marcas"] = min(3, int(alvo.get("petrificacao_marcas", 0) or 0) + 1)
             self._aplicar_marca_petrificacao(alvo)
-            await self.gm_say(f"🗿 **{nome_criatura(alvo)}** falha no Olhar Petrificante ({total} contra CD {dc}) — petrificação {alvo['petrificacao_marcas']}/3.")
+            await self.gm_say(T("narracao.falha_no_olhar_petrificante_contra_cd_pe", nome_criatura_alvo=nome_criatura(alvo), total=total, dc=dc, alvo_petrificacao_marcas=alvo['petrificacao_marcas']))
             if alvo["petrificacao_marcas"] >= 3:
                 alvo["petrificado"] = True
                 alvo["petrificado_permanente"] = True
@@ -13192,9 +13463,16 @@ class GameRoom:
                 self._encerrar_olhar_petrificante(alvo)
                 await self._enviar_resultado_petrificacao(
                     alvo, 0, "Olhar Petrificante", permanente=True)
-                await self.gm_say(f"🗿 **{nome_criatura(alvo)}** foi totalmente petrificado. A condição é permanente até Purificação.")
+                await self.gm_say(T("narracao.foi_totalmente_petrificado_a_condicao_e", nome_criatura_alvo=nome_criatura(alvo)))
             else:
                 self._registrar_aviso_petrificacao(alvo, fonte)
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "olhar_petrificante", "phase": "resolve",
+                "animation_id": animation_id, "success": False,
+                "resistance_marks": alvo.get("resistencia_petrificacao_marcas", 0),
+                "petrification_marks": alvo.get("petrificacao_marcas", 0),
+                "petrified": bool(alvo.get("petrificado")),
+            })
         return ok
 
     async def _processar_olhar_petrificante_inicio(self, alvo):
@@ -13497,11 +13775,11 @@ class GameRoom:
         if not p["alive"]: return
         if p.get("rodamoinho_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho prende você; é preciso passar no teste de Reflexos para voltar a se mover."})
+                "msg": T("erro.o_rodamoinho_prende_voce_e_preciso_passa")})
             return
         if p.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende você; é preciso passar no teste de Reflexos para sair."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_voce_e_prec")})
             return
         if p.get("engolido") or p.get("bau_engolido"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_engolido_e_nao_pode_se_mover")})
@@ -13533,10 +13811,10 @@ class GameRoom:
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
         voo_livre = self._voo_ignora_obstaculos(p)
-        if not voo_livre and self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny):
+        if not voo_livre and self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny) and not self._ponte_em(nx, ny):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
             return
-        if not voo_livre and self._is_closed_door(nx, ny):
+        if not voo_livre and self._is_closed_door(nx, ny) and not self._ponte_em(nx, ny):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.a_porta_esta_fechada_clique_nela_para_ab")})
             return
@@ -13565,7 +13843,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.um_servo_animado_ocupa_este_espaco")})
             return
 
-        if not voo_livre and not self._passo_elevacao_permitido(p, p["pos"], [nx, ny]):
+        if not voo_livre and not self._passo_seguro(p, p["pos"], [nx, ny]):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
             return
         step_cost = self._water_step_cost(p, nx, ny, p["pos"])
@@ -13582,7 +13860,6 @@ class GameRoom:
             p["_water_min_step_used"] = True
         else:
             p["moves_left"] -= step_cost
-        await self._aplicar_queda_terreno(p, old_pos, p["pos"])
         if not p.get("alive"):
             await self.push_state()
             return
@@ -14087,7 +14364,7 @@ class GameRoom:
                 return True
             if bloqueia_por_elevacao(cx, cy):
                 return True
-            if self.tiles[cy][cx] == WALL or self._is_closed_door(cx, cy):
+            if (self.tiles[cy][cx] == WALL or self._is_closed_door(cx, cy)) and not self._ponte_em(cx, cy):
                 return not voo_livre or (cx, cy) in decor_tall_tiles
             if voo_livre:
                 return ((cx, cy) in decor_tall_tiles
@@ -14095,8 +14372,8 @@ class GameRoom:
             if ignorar_objetos:
                 return False
             return ((cx, cy) in decor_blocks
-                    or (cx, cy) in mat_solid
-                    or (cx, cy) in mat_occludes)
+                    or ((cx, cy) not in getattr(self, "_ponte_tiles", set())
+                        and ((cx, cy) in mat_solid or (cx, cy) in mat_occludes)))
 
         while (x, y) != (x1, y1):
             # Compara (ix+0.5)/dx com (iy+0.5)/dy sem divisÃ£o (produtos cruzados)
@@ -14480,7 +14757,7 @@ class GameRoom:
             ataques = p.get("attacks") or []
             possiveis = [a for a in ataques if self._monster_attack_in_range(p, alvo.get("pos", []) if alvo else [], a)] if alvo else []
             if not alvo or not possiveis:
-                await self.send_to(pid, {"type":"error", "msg":"A forma atual não alcança esse alvo ou não possui ataque."})
+                await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_atual_nao_alcanca_esse_alvo_ou_n")})
                 return
             for ataque in possiveis:
                 for _ in range(max(1, int(ataque.get("num_attacks", 1) or 1))):
@@ -16064,12 +16341,12 @@ class GameRoom:
 
     def _tile_livre_para_animado(self, nx, ny, self_id, origem=None):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
-        if self.tiles[ny][nx] == WALL: return False
+        if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny): return False
         if origem is not None:
             criatura = next((a for a in self._all_animados() if a.get("id") == self_id), None)
             if criatura is None and self.prisoner and self.prisoner.get("id") == self_id:
                 criatura = self.prisoner
-            if not self._passo_elevacao_permitido(criatura, origem, [nx, ny]):
+            if not self._passo_seguro(criatura, origem, [nx, ny]):
                 return False
         if any(a.get("id") == self_id and a.get("rodamoinho_preso")
                for a in self._all_animados()): return False
@@ -16171,7 +16448,6 @@ class GameRoom:
                             a["pos"] = [nx, ny]
                             a["facing"] = [adx, ady]
                             moved = True
-                            await self._aplicar_queda_terreno(a, frm, a["pos"], p.get("id"))
                             if a.get("vida_atual", 0) <= 0:
                                 break
                             self._apply_water_entry_penalty(a, nx, ny, frm)
@@ -16298,7 +16574,7 @@ class GameRoom:
             return
         if m.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este monstro; ele não pode agir até escapar."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_monstr")})
             return
         try:
             tx = int(tx); ty = int(ty)
@@ -16380,7 +16656,7 @@ class GameRoom:
             return
         if m.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este monstro; ele não pode agir até escapar."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_monstr")})
             return
         if m.get("_master_acted") and m.get("_master_acao_tipo") != "ataque":
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
@@ -16884,17 +17160,17 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
         if a.get("rodamoinho_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho prende este servo; é preciso passar no teste de Reflexos para voltar a se mover."})
+                "msg": T("erro.o_rodamoinho_prende_este_servo_e_preciso")})
             return
         if a.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este servo; é preciso passar no teste de Reflexos para sair."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_servo")})
             return
         if a.get("dominado_por_monstro"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_sob_controle_de_um_necro")}); return
         if a.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este servo; ele não pode atacar até escapar."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_servo_2")})
             return
         if a.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_dormindo")}); return
@@ -16908,7 +17184,6 @@ class GameRoom:
         old_pos = list(a["pos"])
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
-        await self._aplicar_queda_terreno(a, old_pos, a["pos"], pid)
         if a.get("vida_atual", 0) <= 0:
             await self.push_state()
             return
@@ -17031,7 +17306,7 @@ class GameRoom:
             return
         if a.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este servo; ele não pode usar habilidades até escapar."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_servo_3")})
             return
 
         ability = next((ab for ab in a.get("special_abilities", [])
@@ -17174,10 +17449,10 @@ class GameRoom:
         if not p["alive"]: return
         if p.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende você; não é possível realizar ações enquanto estiver preso."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_voce_nao_e")})
             return
         if p.get("metamorfose_ativa"):
-            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode usar habilidades de herói."})
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_habil")})
             return
         if p.get("engolido") and target_id not in {None, p.get("engolido_por"), p.get("id")}: 
             await self.send_to(pid, {"type": "error", "msg": T("erro.engolido_voce_so_pode_mirar_no_interior")})
@@ -17911,12 +18186,27 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.uma_parede_bloqueia_a_energia_curativa_p")}); return
 
+        animation_id = f"cura_{pid}_{alvo['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "cura", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid,
+            "target_id": alvo["id"], "origin": list(p["pos"]),
+            "targets": [{"id": alvo["id"], "pos": list(alvo["pos"])}],
+            "travel_ms": 560, "impact_ms": 760,
+        })
         dados = [random.randint(1, 8) for _ in range(num_dados)]
         bonus_int = mod(p["int_"])
         cura = max(1, sum(dados) + bonus_int)
         await self.broadcast({"type": "dice_roll", "die": "d8", "value": sum(dados), "label": T("dado.cura")})
 
         cura_real = self._curar_hp(alvo, cura, "Cura")
+
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "cura", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": pid,
+            "target_id": alvo["id"], "amount": cura_real,
+            "success": cura_real > 0,
+        })
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
@@ -17950,6 +18240,20 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
+        targets_visual = []
+        for aliado in self.players.values():
+            if not aliado.get("alive"): continue
+            if aliado["id"] == pid and p.get("ultimo_esforco_ativo"): continue
+            if not self._no_raio(p, aliado, raio): continue
+            if not self._tem_linha_de_visao(p["pos"], aliado["pos"]): continue
+            targets_visual.append({"id": aliado["id"], "pos": list(aliado["pos"])})
+        animation_id = f"cura_area_{pid}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "cura_area", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid,
+            "origin": list(p["pos"]), "targets": targets_visual,
+            "radius": raio, "travel_ms": 520, "impact_ms": 920,
+        })
         dados = [random.randint(1, 8) for _ in range(num_dados)]
         bonus_int = mod(p["int_"])
         cura = max(1, sum(dados) + bonus_int)
@@ -17965,6 +18269,13 @@ class GameRoom:
             cura_real = self._curar_hp(aliado, cura, "Cura em Massa")
             if cura_real > 0:
                 curados.append(f"{aliado['name']}(+{cura_real})")
+
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "cura_area", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": pid,
+            "target_ids": [item["id"] for item in targets_visual],
+            "amount": cura, "success": bool(curados),
+        })
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
@@ -18144,9 +18455,21 @@ class GameRoom:
             else:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_esta_amaldicoado", aliado=alvo["name"])}); return
 
+        animation_id = f"purificacao_{pid}_{alvo['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "purificacao", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid, "target_id": alvo["id"],
+            "origin": list(p["pos"]), "target": list(alvo["pos"]), "effect_type": tipo,
+            "maldicao_id": maldicao_alvo, "travel_ms": 540, "impact_ms": 900,
+        })
         if removido:
             self._pagar_fome_sede(p, custo["fome"], custo["sede"])
             p["action_done"] = True
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "purificacao", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": pid, "target_id": alvo["id"],
+                "effect_type": tipo, "success": True,
+            })
             await self.gm_say(
                 T("narracao.purifica_livre_de", heroi=p['name'], alvo=nome_criatura(alvo), nomes_tipo=nomes[tipo], custo_fome=custo['fome'], custo_sede=custo['sede']))
             await self.push_state()
@@ -18647,10 +18970,10 @@ class GameRoom:
         # antes de a masmorra ser encerrada.
         for pp in self.players.values():
             if pp.get("metamorfose_ativa") and not pp.get("metamorfose_permanente"):
-                await self._reverter_metamorfose(pp, "retorno à cidade")
+                await self._reverter_metamorfose(pp, T("narracao.motivo_meta.retorno_cidade"))
         for mm in self.monsters.values():
             if mm.get("metamorfose_ativa") and not mm.get("metamorfose_permanente"):
-                await self._reverter_metamorfose(mm, "retorno à cidade")
+                await self._reverter_metamorfose(mm, T("narracao.motivo_meta.retorno_cidade"))
         # O aprisionamento é uma condição do terreno da masmorra; não pode
         # atravessar a transição para a cidade nem bloquear a reentrada.
         deep_whirlpool_state = (
@@ -19127,8 +19450,8 @@ class GameRoom:
         """Atualiza o voo derivado das fontes que pertencem ao herói.
 
         Voo mágico é um efeito de missão; a Bota Alada é um efeito
-        permanente enquanto equipada. Quando as duas fontes coexistem, a
-        restrição mais forte da bota (altura máxima 3) prevalece.
+        permanente enquanto equipada. Quando as duas fontes coexistem, ambas
+        permitem a altura máxima do sistema (10).
         """
         if not isinstance(p, dict) or not p.get("class_id"):
             return
@@ -19147,7 +19470,7 @@ class GameRoom:
             p["ignora_obstaculos_voo"] = False
             return
 
-        limite = 3 if bota_alada else ALTURA_MAX
+        limite = ALTURA_MAX
         p["altura_max"] = limite
         p["pode_alterar_altura"] = True
         p["custo_mov_altura"] = 1
@@ -20798,7 +21121,7 @@ class GameRoom:
         if not p or not p["alive"]:
             return
         if p.get("metamorfose_ativa"):
-            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode lançar magias."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_lancar_mag")}); return
         if p.get("class_id") not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_lanca_magias_do_grimorio")}); return
         if p.get("petrificado"):
@@ -20835,13 +21158,19 @@ class GameRoom:
             terreno = (data or {}).get("terreno")
             if terreno not in {"piso_congelado", "planicie_nevada"}:
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Escolha Piso congelado ou Planície nevada para o Chamado do Inverno."})
+                    "msg": T("erro.escolha_piso_congelado_ou_planicie_nevad")})
                 return
             # A versão permanente soma 20/20 ao custo normal de toda magia.
             # Validar antes de gastar ação, slot ou recursos evita desperdício.
             if (data or {}).get("permanente") and (p.get("fome", 0) < 21 or p.get("sede", 0) < 21):
                 await self.send_to(pid, {"type": "error",
-                    "msg": "Você precisa de pelo menos 21 de Fome e 21 de Sede para tornar o terreno permanente."})
+                    "msg": T("erro.voce_precisa_de_pelo_menos_21_de_fome_e")})
+                return
+        if magia_id == "senhor_das_aguas":
+            terreno = (data or {}).get("terreno")
+            if terreno not in {"agua", "agua_profunda"}:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.escolha_agua_ou_agua_profunda_para_o_sen")})
                 return
 
         # Custo do cÃ­rculo: 1 SLOT do mesmo cÃ­rculo (estrito). NinguÃ©m usa MP.
@@ -21086,7 +21415,7 @@ class GameRoom:
         formas.append(tipo)
         await self.send_to(pid, {"type": "metamorfose_forma_desbloqueada",
                                  "forma": deepcopy(forma)})
-        await self.gm_say(f"🦋 **{nome_criatura(atacante)}** aprendeu a forma de **{forma.get('name', tipo)}** para Metamorfose.")
+        await self.gm_say(T("narracao.aprendeu_a_forma_de_para_metamorfose", nome_criatura_atacante=nome_criatura(atacante), forma_get_name_tipo=forma.get('name', tipo)))
         self._checkpoint_savegame()
 
     def _metamorfose_overrides(self):
@@ -21100,7 +21429,7 @@ class GameRoom:
 
     async def _aplicar_metamorfose(self, caster, alvo, form, permanente=False):
         if alvo.get("metamorfose_ativa"):
-            await self.send_to(caster["id"], {"type":"error", "msg":"O alvo já está sob Metamorfose."})
+            await self.send_to(caster["id"], {"type":"error", "msg": T("erro.o_alvo_ja_esta_sob_metamorfose")})
             return False
         if self._eh_jogador(alvo):
             original = {k: deepcopy(alvo.get(k)) for k in self._metamorfose_overrides() if k in alvo}
@@ -21129,10 +21458,10 @@ class GameRoom:
         await self.broadcast({"type":"metamorfose_result", "target_id": alvo["id"],
                               "caster_id": caster["id"], "forma": form,
                               "permanente": bool(permanente)})
-        await self.gm_say(f"🦋 **{nome_criatura(alvo)}** assume a forma de **{form.get('name', form['type'])}**.")
+        await self.gm_say(T("narracao.assume_a_forma_de", nome_criatura_alvo=nome_criatura(alvo), form_get_name_form_type=form.get('name', form['type'])))
         return True
 
-    async def _reverter_metamorfose(self, alvo, motivo="fim da magia", morreu=False):
+    async def _reverter_metamorfose(self, alvo, motivo=None, morreu=False):
         original = alvo.pop("_metamorfose_original", None)
         if not original:
             alvo["metamorfose_ativa"] = False
@@ -21175,7 +21504,8 @@ class GameRoom:
         alvo.pop("metamorfose_usa_equipamentos", None)
         if jogador:
             await self.broadcast({"type":"metamorfose_result", "target_id": alvo["id"], "revertida": True})
-        await self.gm_say(f"🦋 **{nome_criatura(alvo)}** retorna à forma original ({motivo}).")
+        await self.gm_say(T("narracao.retorna_a_forma_original", nome_criatura_alvo=nome_criatura(alvo),
+                            motivo=motivo if motivo is not None else T("narracao.motivo_meta.fim_da_magia")))
 
     async def _executar_metamorfose(self, caster, magia, data):
         target_id = (data or {}).get("target_id")
@@ -21183,12 +21513,12 @@ class GameRoom:
         form_id = (data or {}).get("forma_id")
         form = self._metamorfose_forma_aceita(caster, form_id)
         if not alvo or not self._metamorfose_alvo_valido(alvo) or not form:
-            await self.send_to(caster["id"], {"type":"error", "msg":"Alvo ou forma inválida para Metamorfose."})
+            await self.send_to(caster["id"], {"type":"error", "msg": T("erro.alvo_ou_forma_invalida_para_metamorfose")})
             return
         if any(x.get("metamorfose_caster_id") == caster["id"] and x.get("metamorfose_ativa")
                for x in list(self.players.values()) + list(self.monsters.values())):
             await self.send_to(caster["id"], {"type":"error",
-                "msg":"Você já mantém uma criatura sob Metamorfose."})
+                "msg": T("erro.voce_ja_mantem_uma_criatura_sob_metamorf")})
             return
         dc = self._dif_magia(caster, magia)
         if self._eh_jogador(alvo) and not bool((data or {}).get("falha_voluntaria")):
@@ -21202,7 +21532,7 @@ class GameRoom:
         if not bool((data or {}).get("falha_voluntaria")):
             passou, *_ = self._testar_save(alvo, "vontade", dc, fonte=caster)
             if passou:
-                await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resistiu à Metamorfose.")
+                await self.gm_say(T("narracao.resistiu_a_metamorfose", nome_criatura_alvo=nome_criatura(alvo)))
                 return
         await self._aplicar_metamorfose(caster, alvo, form)
 
@@ -21219,7 +21549,7 @@ class GameRoom:
         if not aceitar:
             passou, *_ = self._testar_save(alvo, "vontade", req["dc"], fonte=caster)
             if passou:
-                await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resistiu à Metamorfose.")
+                await self.gm_say(T("narracao.resistiu_a_metamorfose", nome_criatura_alvo=nome_criatura(alvo)))
                 await self.push_state(); return
         await self._aplicar_metamorfose(caster, alvo, form)
         await self.push_state()
@@ -21242,10 +21572,10 @@ class GameRoom:
         alvo = next((m for m in self.monsters.values()
                      if m.get("metamorfose_caster_id") == pid and m.get("metamorfose_ativa")), None)
         if not alvo:
-            await self.send_to(pid, {"type":"error", "msg":"Não há monstro sob sua Metamorfose."}); return
+            await self.send_to(pid, {"type":"error", "msg": T("erro.nao_ha_monstro_sob_sua_metamorfose")}); return
         if alvo.get("metamorfose_permanencia_ultima_tentativa") == self.round_num:
             await self.send_to(pid, {"type":"error",
-                "msg":"A permanência só pode ser tentada uma vez por rodada."}); return
+                "msg": T("erro.a_permanencia_so_pode_ser_tentada_uma_ve")}); return
         forma = self._metamorfose_forma(alvo.get("metamorfose_forma_type"))
         original = alvo.get("_metamorfose_original") or {}
         custo = max(0, math.ceil(float(original.get("cr", 0) or 0)
@@ -21258,13 +21588,13 @@ class GameRoom:
         if passou:
             alvo["metamorfose_permanencia_resistencias"] = int(alvo.get("metamorfose_permanencia_resistencias", 0) or 0) + 1
             n = alvo["metamorfose_permanencia_resistencias"]
-            await self.gm_say(f"🛡️ **{nome_criatura(alvo)}** resiste à permanência ({n}/3).")
+            await self.gm_say(T("narracao.resiste_a_permanencia_3", nome_criatura_alvo=nome_criatura(alvo), n=n))
             if n >= 3:
-                await self._reverter_metamorfose(alvo, "três resistências à permanência")
+                await self._reverter_metamorfose(alvo, T("narracao.motivo_meta.tres_resistencias"))
         else:
             alvo["metamorfose_permanente"] = True
             alvo.pop("metamorfose_caster_id", None)
-            await self.gm_say(f"🦋 A forma de **{nome_criatura(alvo)}** tornou-se permanente.")
+            await self.gm_say(T("narracao.a_forma_de_tornou_se_permanente", nome_criatura_alvo=nome_criatura(alvo)))
         await self.push_state()
 
     async def _cobrar_manutencao_metamorfose(self, caster):
@@ -21274,7 +21604,7 @@ class GameRoom:
         if not alvo or alvo.get("metamorfose_permanente"):
             return
         if caster.get("fome", 0) < 1 or caster.get("sede", 0) < 1:
-            await self._reverter_metamorfose(alvo, "falta de Fome ou Sede")
+            await self._reverter_metamorfose(alvo, T("narracao.motivo_meta.sem_fome_sede"))
             return
         self._pagar_fome_sede(caster, 1, 1, contexto="manutenção de Metamorfose")
 
@@ -21346,6 +21676,8 @@ class GameRoom:
             await self._executar_silencio(caster, magia, data, dur_bonus)
         elif mid == "chamado_inverno":
             await self._executar_chamado_inverno(caster, magia, data, dur_bonus, alcance_bonus)
+        elif mid == "senhor_das_aguas":
+            await self._executar_senhor_das_aguas(caster, magia, data, dur_bonus, alcance_bonus)
         elif mid == "barreira_arcana":
             await self._executar_barreira_arcana(caster, magia, dmg_mult, dur_bonus)
         elif mid == "contramagica":
@@ -21382,7 +21714,13 @@ class GameRoom:
             dur = self._rolar_dado(magia.get("duracao", "1d4")) + (nivel // por_niveis) + dur_bonus
             caster["olhar_petrificante_ate"] = self.round_num + max(1, dur) - 1
             caster["olhar_petrificante_cd"] = 8 + mod(caster.get("int_", 10)) + int(magia.get("circulo_num", 4) or 4) + int(caster.get("_mm_dc_bonus", 0) or 0)
-            await self.gm_say(f"👁️ **{caster['name']}** conjura **Olhar Petrificante** por {dur} rodada(s).")
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "olhar_petrificante", "phase": "cast",
+                "animation_id": f"olhar_petrificante_cast_{caster['id']}_{self.round_num}",
+                "caster_id": caster["id"], "origin": list(caster["pos"]),
+                "travel_ms": 360, "impact_ms": 820,
+            })
+            await self.gm_say(T("narracao.conjura_olhar_petrificante_por_rodada_s", caster=caster['name'], dur=dur))
             for alvo in list(self.players.values()) + list(self.monsters.values()):
                 if alvo is not caster and self._entidade_viva(alvo):
                     await self._processar_olhar_petrificante_inicio(alvo)
@@ -21420,11 +21758,27 @@ class GameRoom:
                 "msg": T("erro.parede_bloqueia_magia", alvo=nome_criatura(alvo))})
             return
 
+        animation_id = f"voo_{caster['id']}_{alvo['id']}_{self.round_num}_{new_id()}"
+        origin = list(caster["pos"])
+        target = list(alvo["pos"])
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "voo", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "target_id": alvo["id"], "origin": origin, "target": target,
+            "from_altitude": int(alvo.get("altura", ALTURA_MIN) or ALTURA_MIN),
+            "travel_ms": 680, "impact_ms": 1080,
+        })
         alvo["voo_magico"] = True
         self._atualizar_voo_heroi(alvo)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "voo", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "target_id": alvo["id"], "target": target,
+            "to_altitude": int(alvo.get("altura", ALTURA_INICIAL_VOO) or ALTURA_INICIAL_VOO),
+            "success": True,
+        })
         await self.gm_say(
-            f"🪽 **{alvo['name']}** recebe **Voo** e pode controlar sua altura "
-            f"de {alvo.get('altura', ALTURA_INICIAL_VOO)} até {alvo.get('altura_max', ALTURA_MAX)}."
+            T("narracao.recebe_voo_e_pode_controlar_sua_altura_d", alvo=alvo['name'], alvo_get_altura_altura_i=alvo.get('altura', ALTURA_INICIAL_VOO), alvo_get_altura_max_altu=alvo.get('altura_max', ALTURA_MAX))
         )
 
     async def _magia_nao_implementada(self, caster, magia):
@@ -21487,7 +21841,20 @@ class GameRoom:
                   if item.get("item_slot") == "bag"
                   and item.get("id") not in {"refeicao_simples", "banquete"}]
         itens = [deepcopy(random.choice(opcoes)) for _ in range(quantidade)]
-        self._spawn_chest([tx, ty], 0, itens, source_id="criar_alimentos")
+        animation_id = f"criar_alimentos_{caster['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "criar_alimentos", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "origin": list(caster["pos"]), "target": [tx, ty],
+            "quantity": quantidade, "travel_ms": 620, "impact_ms": 980,
+        })
+        chest_id = self._spawn_chest([tx, ty], 0, itens, source_id="criar_alimentos")
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "criar_alimentos", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "target": [tx, ty], "chest_id": chest_id, "quantity": quantidade,
+            "success": True,
+        })
         extra = f" (Fortalecer ×{dmg_mult:g})" if dmg_mult > 1 else ""
         await self.gm_say(
             T("narracao.cria_um_bau_de_provisoes_em_com_alimento", caster=caster['name'], tx=tx, ty=ty, quantidade=quantidade, extra=extra))
@@ -21753,10 +22120,14 @@ class GameRoom:
     def _passo_livre_licantropo(self, p, nx, ny):
         if p.get("rodamoinho_preso") or p.get("rodamoinho_profundo_preso"): return False
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
-        if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny): return False
-        if self._is_closed_door(nx, ny) or self._blocks_tile(nx, ny): return False
+        if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny) and not self._ponte_em(nx, ny): return False
+        if (self._is_closed_door(nx, ny) and not self._ponte_em(nx, ny)) or self._blocks_tile(nx, ny): return False
         if any(m.get("hp", 0) > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
         if any(q.get("alive") and q["id"] != p["id"] and q.get("pos") == [nx, ny] for q in self.players.values()): return False
+        # Perda de controle nao e empurrao: a forma lupina anda sozinha, mas
+        # nao se joga de um penhasco. Sem este portao ela seria o unico
+        # caminho voluntario capaz de matar por queda.
+        if not self._passo_seguro(p, p["pos"], [nx, ny]): return False
         return not self._animado_em([nx, ny])
 
     async def _turno_licantropo(self, p):
@@ -21776,7 +22147,6 @@ class GameRoom:
             passo = next(((x, y) for x, y in opcoes if (x or y) and self._passo_livre_licantropo(p, p["pos"][0]+x, p["pos"][1]+y)), None)
             if not passo: break
             antes = list(p["pos"]); p["pos"] = [antes[0]+passo[0], antes[1]+passo[1]]; p["facing"] = list(passo)
-            await self._aplicar_queda_terreno(p, antes, p["pos"])
             if not p.get("alive"):
                 break
             p["moves_left"] -= 1; self._apply_water_entry_penalty(p, *p["pos"])
@@ -21822,11 +22192,10 @@ class GameRoom:
                 continue
             nx, ny = m["pos"][0] + adx, m["pos"][1] + ady
             if self._passo_livre(m, nx, ny, [adx, ady]) \
-                    and self._passo_elevacao_permitido(m, m["pos"], [nx, ny], [adx, ady]):
+                    and self._passo_seguro(m, m["pos"], [nx, ny], [adx, ady]):
                 origem = list(m["pos"])
                 m["pos"] = [nx, ny]
                 m["facing"] = [adx, ady]
-                await self._aplicar_queda_terreno(m, origem, m["pos"])
                 self._apply_swamp_entry_penalty(m)
                 return True
         return False
@@ -22657,7 +23026,6 @@ class GameRoom:
                         antes = list(a["pos"])
                         a["pos"] = [nx, ny]
                         a["facing"] = [adx, ady]
-                        await self._aplicar_queda_terreno(a, antes, a["pos"])
                         if a.get("vida_atual", 0) <= 0:
                             break
                         self._apply_water_entry_penalty(a, nx, ny, antes)
@@ -22948,17 +23316,17 @@ class GameRoom:
         terreno = data.get("terreno")
         if terreno not in {"piso_congelado", "planicie_nevada"}:
             await self.send_to(caster["id"], {"type": "error",
-                "msg": "Escolha Piso congelado ou Planície nevada para o Chamado do Inverno."})
+                "msg": T("erro.escolha_piso_congelado_ou_planicie_nevad")})
             return
         nivel = self._nivel_conjurador(caster)
         alcance = 6 + nivel + int(alcance_bonus or 0)
         try:
             cx, cy = int(data.get("tx")), int(data.get("ty"))
         except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error", "msg": "Escolha o centro da área do Chamado do Inverno."})
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.escolha_o_centro_da_area_do_chamado_do_i")})
             return
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
-            await self.send_to(caster["id"], {"type": "error", "msg": "O centro da magia está fora do mapa."})
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
             return
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
         if not self._alcance_com_altura(caster, [cx, cy], alcance):
@@ -22967,15 +23335,27 @@ class GameRoom:
             return
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
             await self.send_to(caster["id"], {"type": "error",
-                "msg": "Uma parede bloqueia a trajetória do Chamado do Inverno."})
+                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_cham")})
             return
 
         lado_base = int(magia.get("area_lado", 4) or 4) + (nivel // int(magia.get("area_lado_niveis", 2) or 2))
         lado = self._cajado_arcano_area_lado(caster, magia) or lado_base
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
-            await self.send_to(caster["id"], {"type": "error", "msg": "A área escolhida não contém piso válido."})
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
             return
+
+        # Evento visual disparado somente depois de todas as validações. O
+        # estado autoritativo do inverno continua sendo aplicado logo abaixo.
+        animation_id = f"chamado_inverno_{caster['id']}_{self.round_num}_{cx}_{cy}"
+        travel_ms = max(620, min(1250, 520 + dist * 145))
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "chamado_inverno", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "origin": list(caster["pos"]), "center": [cx, cy],
+            "tiles": [list(tile) for tile in tiles], "material": terreno,
+            "travel_ms": travel_ms, "impact_ms": 980,
+        })
 
         permanente = bool(data.get("permanente"))
         if permanente:
@@ -22984,7 +23364,7 @@ class GameRoom:
                                   contexto="terreno permanente do Chamado do Inverno")
             self._verificar_estado_sobrevivencia(caster)
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + nivel + int(dur_bonus or 0)
-        zone_id = f"chamado_inverno_{caster['id']}_{self.round_num}_{cx}_{cy}"
+        zone_id = animation_id
         expira_em = None if permanente else self.round_num + max(1, dur)
         self._aplicar_camadas_terreno_inverno(
             tiles, terreno, zone_id, permanente=permanente, expira_em=expira_em)
@@ -22993,6 +23373,14 @@ class GameRoom:
             "lado": lado, "material": terreno, "duracao": None if permanente else dur,
             "expira_em": expira_em, "permanente": permanente, "ativa": True,
             "caster": caster.get("id"),
+        })
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "chamado_inverno", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "center": [cx, cy], "tiles": [list(tile) for tile in tiles],
+            "material": terreno, "zone_id": zone_id,
+            "duration_rounds": dur if not permanente else None,
+            "permanente": permanente, "success": True,
         })
 
         # A área afeta imediatamente todos que já estiverem nela. Entradas
@@ -23003,10 +23391,195 @@ class GameRoom:
             else:
                 pos = alvo.get("pos") or [0, 0]
                 self._apply_snow_entry_penalty(alvo, [int(pos[0]) - 1, int(pos[1])], pos)
-        tipo_txt = "Piso congelado" if terreno == "piso_congelado" else "Planície nevada"
-        dur_txt = "permanentemente" if permanente else f"por {dur} rodada(s)"
+        tipo_txt = T(_TERRENO_MAGIA_CHAVE[terreno])
+        dur_txt = (T("narracao.duracao.permanentemente") if permanente
+                   else T("narracao.duracao.por_rodadas", dur=dur))
         await self.gm_say(
-            f"❄️ **{caster['name']}** transforma uma área **{lado}x{lado}** em **{tipo_txt}** {dur_txt}.")
+            T("narracao.transforma_uma_area_x_em", caster=caster['name'], lado=lado, tipo_txt=tipo_txt, dur_txt=dur_txt))
+
+    async def _executar_senhor_das_aguas(self, caster, magia, data, dur_bonus,
+                                         alcance_bonus=0):
+        """Cria uma área temporária de água e registra a janela opcional de
+        redemoinhos da segunda rodada.
+
+        A conversão e a expiração reutilizam o sistema de camadas de terreno
+        já usado pelo Chamado do Inverno. Assim, áreas sobrepostas continuam
+        restaurando corretamente o material anterior, enquanto os hooks
+        existentes de água e redemoinho mantêm todas as regras de movimento,
+        testes e afogamento.
+        """
+        data = data or {}
+        terreno = data.get("terreno")
+        if terreno not in {"agua", "agua_profunda"}:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.escolha_agua_ou_agua_profunda_para_o_sen")})
+            return
+        nivel = self._nivel_conjurador(caster)
+        alcance = 5 + nivel + int(alcance_bonus or 0)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.escolha_o_centro_da_area_do_senhor_das_a")})
+            return
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
+            return
+        dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
+        if not self._alcance_com_altura(caster, [cx, cy], alcance):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": f"O centro da magia está fora do alcance (distância {dist}, alcance {alcance})."})
+            return
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_senh")})
+            return
+
+        nivel_area = int(magia.get("area_lado_niveis", 2) or 2)
+        if terreno == "agua_profunda":
+            lado_base = int(magia.get("area_lado_agua_profunda", 3) or 3)
+        else:
+            lado_base = int(magia.get("area_lado", 4) or 4)
+        lado = lado_base + (nivel // nivel_area)
+        # Senhor das Águas usa dois lados-base diferentes (4 para água e 3
+        # para água profunda); o bônus genérico do cajado não substitui essa
+        # escolha feita pelo jogador.
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        if not tiles:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
+            return
+
+        # O cliente usa este evento para mostrar a conjuração e a onda de água
+        # chegando à área. A regra continua autoritativa neste método: o
+        # terreno só é aplicado logo depois da validação acima.
+        animation_id = f"senhor_das_aguas_{caster['id']}_{self.round_num}_{cx}_{cy}"
+        travel_ms = max(620, min(1250, 520 + dist * 145))
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "senhor_das_aguas", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "origin": list(caster["pos"]), "center": [cx, cy],
+            "tiles": [list(tile) for tile in tiles], "material": terreno,
+            "travel_ms": travel_ms, "impact_ms": 980,
+        })
+
+        dur = self._rolar_dado(magia.get("duracao", "1d4")) + nivel + int(dur_bonus or 0)
+        zone_id = animation_id
+        expira_em = self.round_num + max(1, dur)
+        self._aplicar_camadas_terreno_inverno(
+            tiles, terreno, zone_id, permanente=False, expira_em=expira_em)
+        self.zonas_especiais.append({
+            "id": zone_id, "tipo": "senhor_das_aguas", "cx": cx, "cy": cy,
+            "lado": lado, "material": terreno, "tiles": tiles,
+            "duracao": dur, "expira_em": expira_em, "ativa": True,
+            "caster": caster.get("id"), "criado_em": self.round_num,
+            "disponivel_em": self.round_num + 1,
+            "redemoinhos": [],
+            "redemoinho_max": max(0, nivel // int(magia.get("redemoinho_max_por_nivel", 2) or 2)),
+        })
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "senhor_das_aguas", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "center": [cx, cy], "tiles": [list(tile) for tile in tiles],
+            "material": terreno, "zone_id": zone_id,
+            "duration_rounds": dur, "success": True,
+        })
+        tipo_txt = T(_TERRENO_MAGIA_CHAVE[terreno])
+        await self.gm_say(
+            T("narracao.transforma_uma_area_x_em_por_rodada_s", caster=caster['name'], lado=lado, tipo_txt=tipo_txt, dur=dur)
+        )
+
+    def _senhor_das_aguas_zona_ativa(self, pid):
+        """Retorna a zona de Senhor das Águas ainda ativa do clérigo."""
+        for zona in reversed(self.zonas_especiais):
+            if (zona.get("tipo") == "senhor_das_aguas"
+                    and zona.get("ativa")
+                    and str(zona.get("caster")) == str(pid)):
+                return zona
+        return None
+
+    async def handle_senhor_das_aguas_rodamoinhos(self, pid, tiles):
+        """Ação livre única, a partir da segunda rodada, para marcar casas da
+        área como redemoinho ou redemoinho profundo."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        caster = self.players.get(pid)
+        if not caster or not caster.get("alive") or caster.get("class_id") != "cleric":
+            return
+        zona = self._senhor_das_aguas_zona_ativa(pid)
+        if not zona:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_um_senhor_das_aguas_ativo")})
+            return
+        if self.round_num < int(zona.get("disponivel_em", 0) or 0):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.os_redemoinhos_so_podem_ser_criados_a_pa")})
+            return
+        # COTA ACUMULADA: a janela abre na segunda rodada e fica aberta até a
+        # magia acabar. O clérigo marca casas em qualquer rodada dessa janela
+        # até somar `redemoinho_max` no TOTAL — o gasto é por casa, não por
+        # disparo. Por isso o estado é a própria lista `redemoinhos`, e não um
+        # booleano de "já usou": duas fontes de verdade para a mesma coisa
+        # divergem na primeira marcação parcial.
+        limite = max(0, int(zona.get("redemoinho_max", 0) or 0))
+        ja_criados = [(int(x), int(y)) for x, y in zona.get("redemoinhos", [])]
+        restante = limite - len(ja_criados)
+        if restante <= 0:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Você já criou os {limite} redemoinho(s) desta magia."})
+            return
+        if not isinstance(tiles, list):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_as_casas_dos_redemoinhos")})
+            return
+        # Casa que já virou redemoinho sai dos permitidos: remarcá-la não teria
+        # efeito nenhum no terreno e ainda queimaria uma casa da cota.
+        permitidos = {(int(x), int(y)) for x, y in zona.get("tiles", [])} - set(ja_criados)
+        escolhidos = []
+        vistos = set()
+        for pos in tiles:
+            if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+                continue
+            try:
+                tile = (int(pos[0]), int(pos[1]))
+            except (TypeError, ValueError):
+                continue
+            if tile in permitidos and tile not in vistos:
+                vistos.add(tile)
+                escolhidos.append([tile[0], tile[1]])
+        # Tudo ou nada: um pedido acima do restante é recusado inteiro, em vez
+        # de aplicar os primeiros e engolir o resto em silêncio.
+        if not escolhidos or len(escolhidos) > restante:
+            await self.send_to(pid, {"type": "error",
+                "msg": f"Escolha de 1 a {restante} casa(s) ainda livre(s) dentro da área da magia."})
+            return
+
+        material = "rodamoinho_profundo" if zona.get("material") == "agua_profunda" else "rodamoinho"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "senhor_das_aguas", "phase": "whirlpools",
+            "animation_id": f"{zona['id']}_redemoinhos_{self.round_num}_{len(ja_criados)}",
+            "caster_id": caster["id"], "origin": list(caster["pos"]),
+            "tiles": [list(tile) for tile in escolhidos], "material": material,
+            "travel_ms": 420, "impact_ms": 720,
+        })
+        self._aplicar_camadas_terreno_inverno(
+            escolhidos, material, zona["id"], permanente=False,
+            expira_em=int(zona.get("expira_em", self.round_num + 1)))
+        zona["redemoinhos"] = [list(t) for t in ja_criados] + escolhidos
+
+        # Quem já ocupava uma casa marcada é afetado imediatamente. Remover a
+        # última posição registrada força o hook a tratá-lo como entrada,
+        # inclusive quando ele já estava parado sobre a área de água.
+        for alvo in self._alvos_no_inverno(escolhidos):
+            if material == "rodamoinho_profundo":
+                alvo.pop("_rodamoinho_profundo_ultima_pos", None)
+                await self._aplicar_rodamoinho_profundo_se_pisar(alvo)
+            else:
+                alvo.pop("_rodamoinho_ultima_pos", None)
+                await self._aplicar_rodamoinho_se_pisar(alvo)
+        await self.gm_say(
+            T("narracao.cria_redemoinho_s_como_acao_livre_desta", caster=caster['name'], len_escolhidos=len(escolhidos), len_zona_redemoinhos=len(zona['redemoinhos']), limite=limite)
+        )
+        await self.push_state()
 
     async def _executar_conjurar_elemental(self, caster, magia, data):
         """Invoca um elemental CONTROLÁVEL usando a ficha do bestiário.
@@ -23062,7 +23635,21 @@ class GameRoom:
             "acted":      False, "pos": pos, "hostil": False,
             "summoned_by": caster["id"],
         }
+        animation_id = f"conjurar_elemental_{caster['id']}_{self._elemental_seq}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "conjurar_elemental", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "target": list(pos), "origin": list(caster["pos"]),
+            "elemental_type": tipo, "elemental_id": elem["id"],
+            "travel_ms": 420, "impact_ms": 980,
+        })
         caster.setdefault("animados", []).append(elem)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "conjurar_elemental", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "target": list(pos), "elemental_type": tipo, "elemental_id": elem["id"],
+            "success": True,
+        })
         await self.gm_say(
             T("narracao.conjura_um_elemental_de_hp_dano_mov_cont", caster=caster['name'], tipo_capitalize=base.get('name', tipo.capitalize()), hpv=hpv, stats_get_dano_1d6=ataque.get('damage','1d4'), mov=mov))
 
@@ -23328,7 +23915,15 @@ class GameRoom:
             return False
         for _ in range(max(0, dist)):
             nx, ny = alvo["pos"][0] + dx, alvo["pos"][1] + dy
-            if not (0 <= nx < self.map_w and 0 <= ny < self.map_h) or self.tiles[ny][nx] == WALL:
+            if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
+                return True
+            saiu_da_ponte = self._ponte_em(alvo["pos"][0], alvo["pos"][1]) and not self._ponte_em(nx, ny)
+            if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny):
+                if saiu_da_ponte:
+                    # O abismo pode ser representado por uma parede no tile
+                    # base. A criatura permanece na última casa da ponte, mas
+                    # recebe a queda correspondente ao desnível da ponte.
+                    await self._aplicar_queda_terreno(alvo, list(alvo["pos"]), [nx, ny])
                 return True
             if any(o["hp"] > 0 and o["pos"] == [nx, ny] for o in self.monsters.values() if o is not alvo):
                 return True
@@ -24451,7 +25046,11 @@ class GameRoom:
             elif z.get("tipo") == "chamado_inverno":
                 if not z.get("permanente") and self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
-                    await self.gm_say("❄️ O terreno criado pelo Chamado do Inverno voltou ao normal.")
+                    await self.gm_say(T("narracao.o_terreno_criado_pelo_chamado_do_inverno"))
+            elif z.get("tipo") == "senhor_das_aguas":
+                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    await self.gm_say(T("narracao.o_terreno_criado_pelo_senhor_das_aguas_v"))
             elif z.get("tipo") == "solo_sagrado":
                 x, y = z.get("pos", [-1, -1])
                 for m in self.monsters.values():
@@ -24626,13 +25225,16 @@ class GameRoom:
 
     def _water_tile_kind(self, x, y):
         """Retorna o tipo de água da casa, ou ``None`` se não for água."""
+        if self._ponte_em(x, y):
+            return None
         material = getattr(self, "materiais", {}).get((x, y))
         return material if material in {
             "agua", "agua_profunda", "rodamoinho", "rodamoinho_profundo"
         } else None
 
     def _is_lava_tile(self, x, y):
-        return getattr(self, "materiais", {}).get((x, y)) == "lava"
+        return (not self._ponte_em(x, y)
+                and getattr(self, "materiais", {}).get((x, y)) == "lava")
 
     def _swamp_tiles_of(self, criatura):
         """Casas de pântano sob a criatura, incluindo footprints de monstros."""
@@ -24645,7 +25247,8 @@ class GameRoom:
         else:
             tiles = [pos]
         return [(int(x), int(y)) for x, y in tiles
-                if getattr(self, "materiais", {}).get((int(x), int(y))) == "pantano"]
+                if not self._ponte_em(int(x), int(y))
+                and getattr(self, "materiais", {}).get((int(x), int(y))) == "pantano"]
 
     def _swamp_under(self, criatura):
         return bool(self._swamp_tiles_of(criatura))
@@ -24661,7 +25264,8 @@ class GameRoom:
         else:
             tiles = [pos]
         return [(int(x), int(y)) for x, y in tiles
-                if getattr(self, "materiais", {}).get((int(x), int(y))) == "planicie_nevada"]
+                if not self._ponte_em(int(x), int(y))
+                and getattr(self, "materiais", {}).get((int(x), int(y))) == "planicie_nevada"]
 
     def _snow_under(self, criatura):
         return bool(self._snow_tiles_of(criatura))
@@ -24788,6 +25392,10 @@ class GameRoom:
             custo_elevacao = self._custo_passo_elevacao(criatura, origem, [x, y])
             if custo_elevacao is None:
                 return 9999
+        # A ponte substitui a superfície do piso inferior: entrar nela custa
+        # como uma casa normal, mesmo que o material de baixo seja lava/água.
+        if self._ponte_em(x, y):
+            return 1 + custo_elevacao
         material = getattr(self, "materiais", {}).get((x, y))
         if material in {"areia_deserto", "lava"}:
             return 2 + custo_elevacao
@@ -24839,6 +25447,9 @@ class GameRoom:
         Vale para herois, monstros e servos controlados. Criaturas voadoras em
         altura ignoram o piso. Uma falha zera somente o movimento restante.
         """
+        pos = criatura.get("pos") if criatura else None
+        if isinstance(pos, (list, tuple)) and len(pos) >= 2 and self._ponte_em(pos[0], pos[1]):
+            return True
         await self._aplicar_rodamoinho_profundo_se_pisar(criatura)
         await self._aplicar_rodamoinho_se_pisar(criatura)
         if not criatura or self._voo_imune_terreno(criatura):
@@ -24861,7 +25472,7 @@ class GameRoom:
             if key in criatura:
                 criatura[key] = 0
         await self.gm_say(
-            f"Piso congelado: **{nome_criatura(criatura)}** escorrega e perde o movimento restante do turno!"
+            T("narracao.piso_congelado_escorrega_e_perde_o_movim", nome_criatura_criatura=nome_criatura(criatura))
         )
         return False
 
@@ -24875,7 +25486,8 @@ class GameRoom:
         else:
             tiles = [pos]
         return [(int(x), int(y)) for x, y in tiles
-                if getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho"]
+                if not self._ponte_em(int(x), int(y))
+                and getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho"]
 
     async def _aplicar_rodamoinho_se_pisar(self, criatura):
         """Ao entrar no rodamoinho, testa Reflexos CD 14. Uma falha bloqueia
@@ -24901,12 +25513,18 @@ class GameRoom:
         if passou:
             criatura.pop("rodamoinho_preso", None)
             return True
+        await self._enviar_trap_result(
+            criatura, T("narracao.rodamoinho_nome"), "🌪️", sucesso=False,
+            dano=0, metade=False,
+            descricao=T("narracao.rodamoinho_descricao"), efeitos_extra=[],
+            tipo_id="rodamoinho", tipo="rodamoinho",
+            profundo=False, entrada_reflexos_dc=14, escape_reflexos_dc=14)
         criatura["rodamoinho_preso"] = True
         for key in ("moves_left", "_water_moves_left", "master_moves_left"):
             if key in criatura:
                 criatura[key] = 0
         await self.gm_say(
-            f"🌪️ **{nome_criatura(criatura)}** é preso pelo rodamoinho e perde o movimento restante do turno!"
+            T("narracao.e_preso_pelo_rodamoinho_e_perde_o_movime", nome_criatura_criatura=nome_criatura(criatura))
         )
         return False
 
@@ -24928,13 +25546,13 @@ class GameRoom:
         passou, *_ = await self._save_mostrado(criatura, "reflexos", 14)
         if passou:
             criatura.pop("rodamoinho_preso", None)
-            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** consegue escapar do rodamoinho e pode se mover normalmente.")
+            await self.gm_say(T("narracao.consegue_escapar_do_rodamoinho_e_pode_se", nome_criatura_criatura=nome_criatura(criatura)))
             return True
         criatura["_rodamoinho_bloqueado_turno"] = True
         for key in ("moves_left", "_water_moves_left", "master_moves_left"):
             if key in criatura:
                 criatura[key] = 0
-        await self.gm_say(f"🌪️ **{nome_criatura(criatura)}** continua preso no rodamoinho e não pode se mover neste turno.")
+        await self.gm_say(T("narracao.continua_preso_no_rodamoinho_e_nao_pode", nome_criatura_criatura=nome_criatura(criatura)))
         return False
 
     def _rodamoinho_profundo_tiles_of(self, criatura):
@@ -24947,7 +25565,8 @@ class GameRoom:
         else:
             tiles = [pos]
         return [(int(x), int(y)) for x, y in tiles
-                if getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho_profundo"]
+                if not self._ponte_em(int(x), int(y))
+                and getattr(self, "materiais", {}).get((int(x), int(y))) == "rodamoinho_profundo"]
 
     def _bloquear_rodamoinho_profundo_turno(self, criatura):
         criatura["rodamoinho_profundo_preso"] = True
@@ -24988,8 +25607,15 @@ class GameRoom:
         if passou:
             return True
         self._bloquear_rodamoinho_profundo_turno(criatura)
+        await self._enviar_trap_result(
+            criatura, T("narracao.rodamoinho_profundo_nome"), "🌀", sucesso=False,
+            dano=0, metade=False,
+            descricao=T("narracao.rodamoinho_profundo_descricao"), efeitos_extra=[],
+            tipo_id="rodamoinho_profundo", tipo="rodamoinho",
+            profundo=True, entrada_reflexos_dc=15, escape_reflexos_dc=18,
+            fortitude_dc=18)
         await self.gm_say(
-            f"🌊 **{nome_criatura(criatura)}** cai no rodamoinho profundo, fica preso e perde o turno!"
+            T("narracao.cai_no_rodamoinho_profundo_fica_preso_e", nome_criatura_criatura=nome_criatura(criatura))
         )
         return False
 
@@ -25013,10 +25639,12 @@ class GameRoom:
             criatura["fome"] = max(0, criatura.get("fome", 0) - 1)
         if "sede" in criatura:
             criatura["sede"] = max(0, criatura.get("sede", 0) - 1)
+        # CD 18 continua valendo apenas para escapar depois de já estar preso;
+        # a CD de entrada do redemoinho profundo é 15.
         passou, *_ = await self._save_mostrado(criatura, "reflexos", 18)
         if passou:
             criatura.pop("rodamoinho_profundo_preso", None)
-            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** escapa do rodamoinho profundo e pode agir normalmente.")
+            await self.gm_say(T("narracao.escapa_do_rodamoinho_profundo_e_pode_agi", nome_criatura_criatura=nome_criatura(criatura)))
             return True
         self._bloquear_rodamoinho_profundo_turno(criatura)
         evitou_dano, *_ = await self._save_mostrado(criatura, "fortitude", 18)
@@ -25040,7 +25668,13 @@ class GameRoom:
                         await self._prisioneiro_morre()
             await self.broadcast({"type": "dice_roll", "die": "d6", "value": bruto,
                                   "label": "🌊 Afogamento — Rodamoinho profundo"})
-            await self.gm_say(f"🌊 **{nome_criatura(criatura)}** sofre **{bruto}** de dano de afogamento.")
+            await self._enviar_trap_result(
+                criatura, T("narracao.afogamento_nome"), "🌊", sucesso=False,
+                dano=bruto, metade=False,
+                descricao=T("narracao.afogamento_descricao"), efeitos_extra=[],
+                tick=True, tipo_id="afogamento", tipo="afogamento",
+                fortitude_dc=18, escape_dc=18, fome_sede=1)
+            await self.gm_say(T("narracao.sofre_de_dano_de_afogamento", nome_criatura_criatura=nome_criatura(criatura), bruto=bruto))
         return False
 
     def _water_turn_moves(self, criatura, base_moves):
@@ -25318,7 +25952,7 @@ class GameRoom:
             if not self._entidade_viva(alvo):
                 return
             if save_ok:
-                await self.gm_say(f"☠️ **{nome_criatura(alvo)}** sofre {dano_extra} de veneno da Medusa (sucesso na Fortitude).")
+                await self.gm_say(T("narracao.sofre_de_veneno_da_medusa_sucesso_na_for", nome_criatura_alvo=nome_criatura(alvo), dano_extra=dano_extra))
                 return
             duracao = self._rolar_dado(veneno.get("duracao", "1d6")) * dobro
             for attr in ("forca", "constituicao"):
@@ -25349,7 +25983,7 @@ class GameRoom:
                         alvo["penalidades"]["dano"] = alvo["penalidades"].get("dano", 0) - 1
                         efeito["pen_dano"] = 1
                 alvo["efeitos_veneno"].append(efeito)
-            await self.gm_say(f"☠️ **{nome_criatura(alvo)}** sofre {dano_extra} de veneno da Medusa e recebe -2 FOR/-2 CON por {duracao} rodadas (falha na Fortitude).")
+            await self.gm_say(T("narracao.sofre_de_veneno_da_medusa_e_recebe_2_for", nome_criatura_alvo=nome_criatura(alvo), dano_extra=dano_extra, duracao=duracao))
             return
 
         if op == "reduzir":
@@ -26487,7 +27121,7 @@ class GameRoom:
         # queda separados no cliente, cada um com seu próprio dano.
         for presa in presas:
             await self.gm_say(
-                f"{nome_criatura(presa)} cai junto com {nome_criatura(alvo)}."
+                T("narracao.cai_junto_com", nome_criatura_presa=nome_criatura(presa), nome_criatura_alvo=nome_criatura(alvo))
             )
             await self._aplicar_queda(presa, f"{motivo}_presa", alvo.get("id"))
         return {"altura": altura, "faixa": faixa, "dano": dano,
@@ -26501,19 +27135,11 @@ class GameRoom:
         qualquer descida causa a queda. Criaturas voando acima do chão não
         interagem com o desnível do piso.
         """
-        if not alvo or self._voo_imune_terreno(alvo):
-            return None
-        if not (isinstance(origem, (list, tuple)) and len(origem) >= 2
-                and isinstance(destino, (list, tuple)) and len(destino) >= 2):
+        if not self._queda_no_passo(alvo, origem, destino):
             return None
         nivel_origem = self._elevacao_terreno(*origem[:2])
         nivel_destino = self._elevacao_terreno(*destino[:2])
         queda = nivel_origem - nivel_destino
-        if queda <= 0:
-            return None
-        if (getattr(self, "transicao_altura", "rampa") == "rampa"
-                and queda <= 1):
-            return None
         dados = dados_dano_queda(queda)
         if not dados or not (alvo.get("alive", True)
                              and alvo.get("hp", alvo.get("vida_atual", 1)) > 0):
@@ -26960,10 +27586,14 @@ class GameRoom:
                 await self.gm_say(T("narracao.se_joga_no_chao_e_apaga_as_chamas",
                                     heroi=alvo["name"]))
                 continue
-            await self._dano_em_alvo(alvo, 1, "fogo", None)
-            await self._concentracao_requiem(alvo, 1)   # RÃ©quiem Final (Fase 3)
+            # O dano residual também é dano de fogo: precisa passar pelo
+            # mesmo funil de imunidades/resistências do impacto inicial.
+            dano_chamas = self._apply_damage_types(1, [DMG_FIRE], alvo)
+            if dano_chamas > 0:
+                await self._dano_em_alvo(alvo, dano_chamas, DMG_FIRE, None)
+                await self._concentracao_requiem(alvo, dano_chamas)   # Réquiem Final (Fase 3)
             await self._enviar_trap_result(
-                alvo, "Em Chamas", "🔥", sucesso=False, dano=1, metade=False,
+                alvo, "Em Chamas", "🔥", sucesso=False, dano=dano_chamas, metade=False,
                 descricao="As chamas continuam queimando.",
                 efeitos_extra=[], tick=True, tipo_id="armadilha_incendiaria")
             alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
@@ -27016,7 +27646,7 @@ class GameRoom:
             return
         p = self.players[pid]
         if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
-            await self.send_to(pid, {"type":"error", "msg":"A forma transformada não pode usar itens."})
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
             return
         item = next((i for i in p["bag"] if i["id"] == item_id), None)
         if not item:
@@ -27978,7 +28608,7 @@ class GameRoom:
             int(m.get("movement", 6) or 6) * mult,
         )
         await self.gm_say(
-            f"{nome_criatura(m)} usa Investida Heroica e dobra seu deslocamento."
+            T("narracao.usa_investida_heroica_e_dobra_seu_desloc_2", nome_criatura_m=nome_criatura(m))
         )
         return True
 
@@ -27987,7 +28617,7 @@ class GameRoom:
         if not ability or not self._ativar_habilidade_nativa(m, ability):
             return False
         await self.gm_say(
-            f"{nome_criatura(m)} entra em Fúria Berserker e repete seus ataques de garras."
+            T("narracao.entra_em_furia_berserker_e_repete_seus_a", nome_criatura_m=nome_criatura(m))
         )
         await self._monster_execute_attacks(m, target_obj)
         return True
@@ -29125,10 +29755,10 @@ class GameRoom:
             await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome_criatura(criatura), dano=dano))
         elif dado == "2d4":
             await self.broadcast({"type": "dice_roll", "die": "2d4", "value": bruto, "label": "Chama viva"})
-            await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a chama viva e sofre **{dano}** de dano de fogo!")
+            await self.gm_say(T("narracao.passa_sobre_a_chama_viva_e_sofre_de_dano", nome_criatura_criatura=nome_criatura(criatura), dano=dano))
         else:
             await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": "Brasa no chão"})
-            await self.gm_say(f"🔥 **{nome_criatura(criatura)}** passa sobre a brasa e sofre **{dano}** de dano de fogo!")
+            await self.gm_say(T("narracao.passa_sobre_a_brasa_e_sofre_de_dano_de_f", nome_criatura_criatura=nome_criatura(criatura), dano=dano))
         await self._dano_em_alvo(criatura, dano, "fogo")
 
     async def _commit_monster_step(self, m, nx, ny):
@@ -29140,7 +29770,7 @@ class GameRoom:
             return False
         old_x, old_y = m["pos"]
         step_facing = [nx - old_x, ny - old_y]
-        if not self._passo_elevacao_permitido(m, [old_x, old_y], [nx, ny], step_facing):
+        if not self._passo_seguro(m, [old_x, old_y], [nx, ny], step_facing):
             return False
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
             # A direção do último passo é autoritativa para todos os monstros;
@@ -29177,7 +29807,6 @@ class GameRoom:
             m["_water_min_step_used"] = True
         else:
             m["_water_moves_left"] = max(0, m["_water_moves_left"] - step_cost)
-        await self._aplicar_queda_terreno(m, [old_x, old_y], m["pos"])
         if m.get("hp", 0) <= 0:
             return True
         self._apply_swamp_entry_penalty(m)
@@ -29544,6 +30173,16 @@ class GameRoom:
                 for (x, y), nivel in getattr(self, "elevacoes", {}).items()
                 if nivel}
 
+    def _serializar_pontes(self):
+        """Pontes autoradas: superfície independente do terreno inferior."""
+        return [
+            {"id": p.get("id"), "inicio": list(p.get("inicio", [0, 0])),
+             "fim": list(p.get("fim", [0, 0])),
+             "largura": int(p.get("largura", 1)), "altura": int(p.get("altura", 0)),
+             "tiles": [[x, y] for x, y in _pontes_tiles(p)]}
+            for p in (getattr(self, "pontes", []) or [])
+        ]
+
     def _face_toward(self, m, target_pos):
         """Vira a frente para `target_pos` quando a criatura tem footprint 2×2.
 
@@ -29585,7 +30224,7 @@ class GameRoom:
         `facing` avalia uma virada de um monstro orientado (footprint
         recalculado com essa direção)."""
         voo_livre = self._voo_ignora_obstaculos(m)
-        if from_anchor is not None and not self._passo_elevacao_permitido(m, from_anchor, [ax, ay], facing):
+        if from_anchor is not None and not self._passo_seguro(m, from_anchor, [ax, ay], facing):
             return False
         for tx, ty in self._monster_tiles_at(m, ax, ay, facing):
             if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
@@ -30258,7 +30897,7 @@ class GameRoom:
         if await self._monster_try_retreat(m, target_obj, threshold=0.5):
             if m.get("ai_personality_flee_round") != self.round_num:
                 await self.gm_say(
-                    f"{nome_criatura(m)} recua: está ferido e ficou isolado do grupo.")
+                    T("narracao.recua_esta_ferido_e_ficou_isolado_do_gru", nome_criatura_m=nome_criatura(m)))
                 m["ai_personality_flee_round"] = int(self.round_num)
             return True
         return False
@@ -30603,7 +31242,7 @@ class GameRoom:
         m["veneno_arma_ativo"] = bool(item.get("veneno_id"))
         m["veneno_arma_id"] = item.get("veneno_id") or "veneno_aranha_sombria"
         await self.gm_say(
-            f"🔱 {nome_criatura(m)} recupera automaticamente a lança do chão."
+            T("narracao.recupera_automaticamente_a_lanca_do_chao", nome_criatura_m=nome_criatura(m))
         )
         return True
 
@@ -30652,7 +31291,7 @@ class GameRoom:
             }]
         m["veneno_arma_ativo"] = False
         await self.gm_say(
-            f"🔱 {nome_criatura(m)} arremessa a lança; ela cai em {tile[0]},{tile[1]}."
+            T("narracao.arremessa_a_lanca_ela_cai_em", nome_criatura_m=nome_criatura(m), tile_0=tile[0], tile_1=tile[1])
         )
         return True
 
@@ -30689,7 +31328,6 @@ class GameRoom:
                         await self._corpo_energetico_atravessar(m, nx, ny)
                     m["pos"] = [bx, by]
                     m["_moved_this_turn"] = True
-                    await self._aplicar_queda_terreno(m, frm, m["pos"])
                     if m.get("hp", 0) <= 0:
                         break
                     if any(ab.get("id") in {"salto_selvagem", "investida_brutal"}
@@ -31935,7 +32573,7 @@ class GameRoom:
             await self.push_state(); return
         if ability_id == "soltar_presa" and m.get("type") == "harpia":
             if not await self._harpia_soltar_presa(m, causar_queda=True):
-                await self.send_to(pid, {"type": "error", "msg": "A Harpia não está segurando nenhuma presa."}); return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.a_harpia_nao_esta_segurando_nenhuma_pres")}); return
             self._debitar_acao_mestre(m, "livre", "habilidade")
             await self.push_state(); return
         # Ramo (b): habilidade de editor (herói/guilda) — self-buff, sem alvo.
@@ -32088,7 +32726,7 @@ class GameRoom:
             if ability.get("monster_effect") == "investida_heroica_minotauro":
                 m["master_moves_left"] = int(m.get("master_moves_left", 0) or 0) + int(m.get("movement", 6) or 6)
             self._debitar_acao_mestre(m, custo, "habilidade")
-            await self.gm_say(f"{nome_criatura(m)} ativa {nome_criatura(ability)}.")
+            await self.gm_say(T("narracao.ativa_4", nome_criatura_m=nome_criatura(m), nome_criatura_ability=nome_criatura(ability)))
             await self.push_state(); return
         if not (ability.get("save") is not None and ability.get("dc") is not None):
             if not self._ativar_editor_ability(m, ability):
@@ -32131,7 +32769,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.magia_indisponivel_para_este_monstro")}); return
         if m.get("rodamoinho_profundo_preso"):
             await self.send_to(pid, {"type": "error",
-                "msg": "O rodamoinho profundo prende este monstro; ele não pode realizar ações."})
+                "msg": T("erro.o_rodamoinho_profundo_prende_este_monstr_2")})
             return
         if m.get("_master_acted"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_principal")}); return
@@ -32663,6 +33301,13 @@ class GameRoom:
             dano = self._apply_damage_types(dano_base + dano_extra, [DMG_WATER], p)
             p["hp"] = max(0, p["hp"] - dano)
             detalhe = f" +{dano_extra} por estar na água" if dano_extra else ""
+            await self._enviar_trap_result(
+                p, T("narracao.afogamento_nome"), "🌊", sucesso=False,
+                dano=dano, metade=False,
+                descricao=T("narracao.afogamento_onda_descricao"), efeitos_extra=[],
+                tick=True, tipo_id="afogamento", tipo="afogamento",
+                fonte="onda_envolvente", fortitude_dc=12, escape_dc=12,
+                water_bonus=dano_extra)
             await self.gm_say(T("narracao.sofre_de_afogar", heroi=p['name'], dano=dano, dano_base=dano_base, detalhe=detalhe))
             if p["hp"] <= 0:
                 p["preso"] = False
@@ -32803,7 +33448,7 @@ class GameRoom:
         await self._soltar_agarrado(presa)
         m.pop("_agarrar_aereo_dano", None)
         await self.gm_say(
-            f"{nome_criatura(m)} solta {nome_criatura(presa)} das garras."
+            T("narracao.solta_das_garras", nome_criatura_m=nome_criatura(m), nome_criatura_presa=nome_criatura(presa))
         )
         if causar_queda and altura > ALTURA_MIN:
             # _aplicar_queda zera a altura somente depois de capturar a faixa
@@ -32845,7 +33490,7 @@ class GameRoom:
         m["altura"] = nova_altura
         await self._sincronizar_presas_aereas(m)
         await self.gm_say(
-            f"{nome_criatura(m)} perde {perda_real} ponto(s) de altura com o impacto."
+            T("narracao.perde_ponto_s_de_altura_com_o_impacto", nome_criatura_m=nome_criatura(m), perda_real=perda_real)
         )
         if nova_altura == ALTURA_MIN and altura > ALTURA_MIN:
             await self._aplicar_queda(m, "impacto_reduz_altura", killer_pid)
@@ -32862,8 +33507,7 @@ class GameRoom:
                 bruto, ab.get("damage_types", [DMG_PHYSICAL]), presa)
             await self._dano_em_alvo(presa, dano, DMG_PHYSICAL, m.get("id"))
             await self.gm_say(
-                f"{nome_criatura(m)} mantém {nome_criatura(presa)} presa e causa "
-                f"{dano} de dano automático ({expressao})."
+                T("narracao.mantem_presa_e_causa_de_dano_automatico", nome_criatura_m=nome_criatura(m), nome_criatura_presa=nome_criatura(presa), dano=dano, expressao=expressao)
             )
             if not self._alvo_vivo({
                 "kind": "player" if self._eh_jogador(presa) else "monster",
@@ -34160,7 +34804,7 @@ class GameRoom:
         self._monster_update_personality(m)
         if m.pop("ai_boss_phase_changed", False):
             await self.gm_say(
-                f"⚔️ {nome_criatura(m)} entra na fase 2 e passa a caçar o herói mais ferido.")
+                T("narracao.entra_na_fase_2_e_passa_a_cacar_o_heroi", nome_criatura_m=nome_criatura(m)))
         if m.get("type") in {"minotauro", "minotauro_elite"}:
             await self._ai_minotauro(m, targets)
             return
@@ -34292,12 +34936,12 @@ class GameRoom:
         pressure = abilities.get("guild_tecnica_pressao_constante")
         if (pressure and target_obj.get("kind") == "player" and adjacent
                 and self._ativar_editor_ability(m, pressure, target_obj)):
-            await self.gm_say(f"{nome_criatura(m)} usa Pressão Constante: -2 de CA por 2 rodadas.")
+            await self.gm_say(T("narracao.usa_pressao_constante_2_de_ca_por_2_roda", nome_criatura_m=nome_criatura(m)))
             return True
 
         investida = abilities.get("guild_tecnica_investida")
         if investida and not adjacent and self._ativar_editor_ability(m, investida):
-            await self.gm_say(f"{nome_criatura(m)} usa Investida Heroica e dobra seu deslocamento.")
+            await self.gm_say(T("narracao.usa_investida_heroica_e_dobra_seu_desloc_2", nome_criatura_m=nome_criatura(m)))
             return True
 
         brutality = abilities.get("guild_brutalidade")
@@ -34305,7 +34949,7 @@ class GameRoom:
         can_attack = adjacent or bool(target and halberd
                                      and self._monster_attack_in_range(m, target.get("pos", []), halberd))
         if brutality and can_attack and self._ativar_editor_ability(m, brutality):
-            await self.gm_say(f"{nome_criatura(m)} ativa Brutalidade: todos os ataques deste turno causam +2 de dano.")
+            await self.gm_say(T("narracao.ativa_brutalidade_todos_os_ataques_deste", nome_criatura_m=nome_criatura(m)))
             return True
         return False
 
@@ -35555,7 +36199,7 @@ class GameRoom:
         # primeiro recupera-se a ficha original e então o fluxo normal de morte
         # (incluindo habilidades defensivas do monstro original) continua.
         if m.get("metamorfose_ativa") and not m.get("metamorfose_permanente"):
-            await self._reverter_metamorfose(m, "a forma chegou a 0 PV", morreu=True)
+            await self._reverter_metamorfose(m, T("narracao.motivo_meta.forma_zerou"), morreu=True)
 
         # Defesa automática das duas versões do Minotauro.
         if not m.get("_ultimo_esforco_monstro_turnos"):
@@ -35565,7 +36209,7 @@ class GameRoom:
             if instinto and cds.get(instinto.get("id"), 0) <= 0:
                 m["hp"] = 1
                 cds[instinto["id"]] = 10
-                await self.gm_say(f"{nome_criatura(m)} recorre ao Instinto de Sobrevivência e permanece com 1 PV.")
+                await self.gm_say(T("narracao.recorre_ao_instinto_de_sobrevivencia_e_p", nome_criatura_m=nome_criatura(m)))
                 return
             ultimo = next((ab for ab in m.get("special_abilities", [])
                            if ab.get("monster_effect") == "ultimo_esforco_minotauro"), None)
@@ -35573,7 +36217,7 @@ class GameRoom:
                 m["hp"] = 1
                 m["_ultimo_esforco_monstro_turnos"] = 2
                 cds[ultimo["id"]] = 10
-                await self.gm_say(f"{nome_criatura(m)} ativa Último Esforço e luta por mais 2 turnos.")
+                await self.gm_say(T("narracao.ativa_ultimo_esforco_e_luta_por_mais_2_t", nome_criatura_m=nome_criatura(m)))
                 return
 
         _matador = self.players.get(killer_pid)
@@ -35885,9 +36529,9 @@ class GameRoom:
                     and alvo_meta.get("metamorfose_caster_id") == pid
                     and alvo_meta.get("metamorfose_ativa")
                     and not alvo_meta.get("metamorfose_permanente")):
-                await self._reverter_metamorfose(alvo_meta, "o mago morreu")
+                await self._reverter_metamorfose(alvo_meta, T("narracao.motivo_meta.mago_morreu"))
         if p.get("metamorfose_ativa"):
-            await self._reverter_metamorfose(p, "a forma chegou a 0 PV", morreu=True)
+            await self._reverter_metamorfose(p, T("narracao.motivo_meta.forma_zerou"), morreu=True)
         p["alive"] = False
         p["hp"] = 0
         # Registro separado dos cadáveres de monstros: a lápide aparece no
@@ -36276,7 +36920,6 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
         pr["pos"] = [nx, ny]
-        await self._aplicar_queda_terreno(pr, old_pos, pr["pos"], pid)
         if not pr.get("alive"):
             await self.push_state()
             return
@@ -36623,6 +37266,7 @@ class GameRoom:
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
             "elevacoes": self._serializar_elevacoes(),
+            "pontes": self._serializar_pontes(),
             "transicao_altura": getattr(self, "transicao_altura", "rampa"),
         }
         return msg_state
@@ -37139,15 +37783,20 @@ async def handler(ws):
                     acc, e = await create_account(msg.get("username"),
                                                   msg.get("password"))
                     if acc:
-                        ok, pay = await try_login(pid, acc["username"],
-                                                  msg.get("password"))
+                        ok, pay, code = await try_login(pid, acc["username"],
+                                                        msg.get("password"))
                         if ok:
                             account["name"] = pay["username"]
-                        await ws.send(json.dumps({"type": "login_result", "ok": ok,
-                                                  "username": acc["username"] if ok else None,
-                                                  "error": None if ok else pay}))
+                        await ws.send(json.dumps(
+                            {"type": "login_result", "ok": ok,
+                             "username": acc["username"] if ok else None,
+                             "error": None if ok else pay,
+                             "error_code": None if ok else code},
+                            default=lambda o: _t_render(o, _lang_de(pid))))
                     else:
-                        await ws.send(json.dumps({"type": "login_result", "ok": False, "error": e}))
+                        await ws.send(json.dumps(
+                            {"type": "login_result", "ok": False, "error": e},
+                            default=lambda o: _t_render(o, _lang_de(pid))))
                     continue
 
                 if t == "login":
@@ -37163,15 +37812,18 @@ async def handler(ws):
                             "error": T("erro.login_bloqueado", segundos=_espera)},
                             default=lambda o: _t_render(o, _lang_de(pid))))
                         continue
-                    ok, pay = await try_login(pid, _u, msg.get("password"))
+                    ok, pay, code = await try_login(pid, _u, msg.get("password"))
                     if ok:
                         account["name"] = pay["username"]
                         _limpar_falhas_login(_u, getattr(ws, "ip", None))
                     else:
                         _registrar_falha_login(_u, getattr(ws, "ip", None))
-                    await ws.send(json.dumps({"type": "login_result", "ok": ok,
-                                              "username": pay["username"] if ok else None,
-                                              "error": None if ok else pay}))
+                    await ws.send(json.dumps(
+                        {"type": "login_result", "ok": ok,
+                         "username": pay["username"] if ok else None,
+                         "error": None if ok else pay,
+                         "error_code": None if ok else code},
+                        default=lambda o: _t_render(o, _lang_de(pid))))
                     continue
 
                 if t == "list_savegames":
@@ -37451,6 +38103,9 @@ async def handler(ws):
 
                 elif t == "magia":
                     if room: await room.handle_magia(pid, msg)
+
+                elif t == "senhor_das_aguas_rodamoinhos":
+                    if room: await room.handle_senhor_das_aguas_rodamoinhos(pid, msg.get("tiles"))
 
                 elif t == "metamorfose_consent":
                     if room: await room.handle_metamorfose_consent(pid, msg.get("request_id"), bool(msg.get("aceitar")))

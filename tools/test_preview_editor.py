@@ -96,14 +96,20 @@ async def main():
     check("não ok", ok is False)
     check("erro é texto", isinstance(res, str) and bool(res))
 
-    print("\n[4b] resposta estática declara que a conexão fecha")
-    # A lib websockets fecha a conexão depois de responder. Sem "Connection: close"
-    # o navegador supõe keep-alive, reusa o socket e a requisição seguinte morre na
-    # rede — o que derrubava os .glb pedidos sob demanda (ProgressEvent status 0).
+    print("\n[4b] resposta estática bem formada")
+    # HISTÓRICO: existia aqui um "Connection: close" obrigatório. Ele era um
+    # CONTORNO da lib `websockets`, que fechava o socket depois de responder —
+    # sem o cabeçalho o navegador supunha keep-alive, reusava o socket e a
+    # requisição seguinte morria na rede (os .glb sob demanda caíam com
+    # ProgressEvent status 0). Com o servidor em aiohttp a conexão persistente
+    # funciona de verdade e o cabeçalho foi REMOVIDO de propósito: exigi-lo
+    # agora seria cobrar o contorno de um problema que não existe mais.
     resp = S._http(200, "OK", b"x", "model/gltf-binary")
-    check("Connection: close presente",
-          resp.headers.get("Connection", "").lower() == "close")
-    check("Content-Length continua correto", resp.headers.get("Content-Length") == "1")
+    check("status 200", resp.status == 200)
+    check("content-type preservado",
+          resp.headers.get("Content-Type") == "model/gltf-binary")
+    check("não volta a fixar Connection: close",
+          resp.headers.get("Connection", "").lower() != "close")
 
     print("\n[5] a prévia não deixa rastro numa sala real")
     check("nenhuma sala criada", "PREVIEW" not in S.rooms)

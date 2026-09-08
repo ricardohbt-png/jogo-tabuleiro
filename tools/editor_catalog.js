@@ -17,7 +17,6 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "minusculo",
-      "image": "pombo",
       "str_": 2,
       "dex": 17,
       "con_": 10,
@@ -52,7 +51,6 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "minusculo",
-      "image": "rato",
       "str_": 2,
       "dex": 15,
       "con_": 10,
@@ -94,7 +92,6 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "pequeno",
-      "image": "gato",
       "str_": 3,
       "dex": 15,
       "con_": 10,
@@ -136,7 +133,6 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "medio",
-      "image": "ovelha",
       "str_": 11,
       "dex": 10,
       "con_": 15,
@@ -9587,7 +9583,7 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "💧",
       "tipo": "toque",
-      "descricao": "Toque. +20 fome +20 sede em 1 aliado.",
+      "descricao": "Toque. +25 fome +25 sede em 1 aliado.",
       "alcance": 1
     },
     {
@@ -9618,6 +9614,20 @@ window.EDITOR_CATALOG = {
       "save": "reflexos",
       "area_lado": 4,
       "alcance_base": 7,
+      "duracao": "1d4"
+    },
+    {
+      "id": "senhor_das_aguas",
+      "nome": "Senhor das Águas",
+      "circulo": "terceiro",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "🌊",
+      "tipo": "area_fixa",
+      "descricao": "Transforma uma área em Água ou Água profunda por 1d4 + nível rodadas. A partir da segunda rodada, e em qualquer rodada seguinte enquanto a magia durar, pode marcar casas da área como redemoinho por ação livre, até somar metade do nível do clérigo no total. A cota é acumulada (dá para marcar poucas casas por vez) e os redemoinhos permanecem até o fim da magia.",
+      "area_lado": 4,
+      "alcance_base": 5,
       "duracao": "1d4"
     },
     {
@@ -10565,7 +10575,7 @@ window.EDITOR_CATALOG = {
       "item_slot": "boots",
       "effect": "voo",
       "value": 0,
-      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
+      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10."
     },
     {
       "id": "boots",

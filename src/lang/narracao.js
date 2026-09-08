@@ -36,6 +36,10 @@ window.LANG_NARRACAO = {
     "en": "💥 The blast deals up to **{dano_total}** fire damage (radius {raio}) — DC 12 Reflex for half! It hits allies too!",
     "pt": "💥 A explosão causa até **{dano_total}** de dano em chamas (raio {raio}) — CD 12 Reflexos para metade! Atinge aliados também!"
   },
+  "narracao.a_forma_de_tornou_se_permanente": {
+    "en": "🦋 The form of **{nome_criatura_alvo}** has become permanent.",
+    "pt": "🦋 A forma de **{nome_criatura_alvo}** tornou-se permanente."
+  },
   "narracao.a_ilusao_do_dueto_fantasma_repete_o_golp": {
     "en": "🎶 The **Ghostly Duet**'s illusion repeats the blow on **{alvo}**: **{eco}** damage!",
     "pt": "🎶 A ilusão do **Dueto Fantasma** repete o golpe em **{alvo}**: **{eco}** de dano!"
@@ -172,6 +176,10 @@ window.LANG_NARRACAO = {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
   },
+  "narracao.aprendeu_a_forma_de_para_metamorfose": {
+    "en": "🦋 **{nome_criatura_atacante}** learned the form of **{forma_get_name_tipo}** for Polymorph.",
+    "pt": "🦋 **{nome_criatura_atacante}** aprendeu a forma de **{forma_get_name_tipo}** para Metamorfose."
+  },
   "narracao.aproveita_a_oportunidade_para_se_mover_m": {
     "en": "⏳ **{heroi}** uses Opportunity to move further!",
     "pt": "⏳ **{heroi}** aproveita a Oportunidade para se mover mais!"
@@ -199,6 +207,10 @@ window.LANG_NARRACAO = {
   "narracao.arremessa_a_adaga_em_mas_erra_d20_4_vs_c": {
     "en": "🗡️ **{monstro}** throws the dagger at **{target}** but **misses** (d20={d20}+4={total} vs AC {eff_ac}).",
     "pt": "🗡️ **{monstro}** arremessa a adaga em **{target}** mas **erra** (d20={d20}+4={total} vs CA {eff_ac})."
+  },
+  "narracao.arremessa_a_lanca_ela_cai_em": {
+    "en": "🔱 {nome_criatura_m} hurls the spear; it lands at {tile_0},{tile_1}.",
+    "pt": "🔱 {nome_criatura_m} arremessa a lança; ela cai em {tile_0},{tile_1}."
   },
   "narracao.arremessa_em": {
     "en": "{defn_emoji} **{heroi}** throws **{defn}** at ({cx},{cy})!",
@@ -235,6 +247,10 @@ window.LANG_NARRACAO = {
   "narracao.as_coordenadas_do_mapa_mundi_foram_atual": {
     "en": "🧭 The world map coordinates have been updated.",
     "pt": "🧭 As coordenadas do mapa-múndi foram atualizadas."
+  },
+  "narracao.assume_a_forma_de": {
+    "en": "🦋 **{nome_criatura_alvo}** takes the form of **{form_get_name_form_type}**.",
+    "pt": "🦋 **{nome_criatura_alvo}** assume a forma de **{form_get_name_form_type}**."
   },
   "narracao.ataca_as_cegas_na_escuridao_desvantagem": {
     "en": "🌑 **{heroi}** attacks blindly in the dark — **disadvantage** (2d20, uses {roll}).",
@@ -324,6 +340,10 @@ window.LANG_NARRACAO = {
     "en": "**{heroi}** activates {join_nomes} (🍖-{total_fome}{f_total_sede_if_total_se}).",
     "pt": "**{heroi}** ativa {join_nomes} (🍖-{total_fome}{f_total_sede_if_total_se})."
   },
+  "narracao.ativa_4": {
+    "en": "{nome_criatura_m} activates {nome_criatura_ability}.",
+    "pt": "{nome_criatura_m} ativa {nome_criatura_ability}."
+  },
   "narracao.ativa_a_deteccao_de_armadilhas_armadilha": {
     "en": "🔍 **{heroi}** activates Trap Detection — {reveladas} trap(s) revealed. (upkeep 💧-1/turn)",
     "pt": "🔍 **{heroi}** ativa a Detecção de Armadilhas — {reveladas} armadilha(s) revelada(s). (manutenção 💧-1/turno)"
@@ -335,6 +355,10 @@ window.LANG_NARRACAO = {
   "narracao.ativa_aura_sagrada_2_ca_para_todos_por_2": {
     "en": "✨ **{heroi}** activates **Holy Aura**! +2 AC for everyone for 2 turns.",
     "pt": "✨ **{heroi}** ativa **Aura Sagrada**! +2 CA para todos por 2 turnos."
+  },
+  "narracao.ativa_brutalidade_todos_os_ataques_deste": {
+    "en": "{nome_criatura_m} activates Brutality: every attack this turn deals +2 damage.",
+    "pt": "{nome_criatura_m} ativa Brutalidade: todos os ataques deste turno causam +2 de dano."
   },
   "narracao.ativa_escudo_magico_4_ca_ate_o_proximo_t": {
     "en": "✨ **{heroi}** activates **Magic Shield**! +4 AC until the next turn.",
@@ -351,6 +375,10 @@ window.LANG_NARRACAO = {
   "narracao.ativa_regeneracao_divina_1_hp_por_turno": {
     "en": "✨ **{heroi}** activates **Divine Regeneration** — +1 HP per turn. (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "✨ **{heroi}** ativa **Regeneração Divina** — +1 HP por turno. (🍖-{fome_cost} 💧-{sede_cost})"
+  },
+  "narracao.ativa_ultimo_esforco_e_luta_por_mais_2_t": {
+    "en": "{nome_criatura_m} activates Last Stand and fights for 2 more turns.",
+    "pt": "{nome_criatura_m} ativa Último Esforço e luta por mais 2 turnos."
   },
   "narracao.ativa_um_bau_armadilha_surge": {
     "en": "📦 **{heroi}** triggers a **Trap Chest**: **{monstro}** appears!",
@@ -388,6 +416,18 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{heroi}** lowers the holy blade — Holy Strike deactivated.",
     "pt": "⚔️ **{heroi}** baixa a lâmina sagrada — Golpe Sagrado desativado."
   },
+  "narracao.bau_engolidor_escapa": {
+    "en": "💪 **{heroi}** escapes the Swallowing Chest with Strength {total} vs DC {dc}!",
+    "pt": "💪 **{heroi}** escapa do Baú Engolidor com Força {total} contra CD {dc}!"
+  },
+  "narracao.bau_engolidor_falha_escape": {
+    "en": "📦 **{heroi}** fails to escape the Swallowing Chest ({total} vs DC {dc}).",
+    "pt": "📦 **{heroi}** falha ao escapar do Baú Engolidor ({total} contra CD {dc})."
+  },
+  "narracao.bau_engolidor_prende_heroi": {
+    "en": "📦 **{heroi}** is swallowed by the object! Escape with Strength DC {dc}.",
+    "pt": "📦 **{heroi}** é engolido pelo objeto! Escape com Força CD {dc}."
+  },
   "narracao.bebe_regeneracao": {
     "en": "🌿 **{m_get_name_o_monstro}** drinks **{item}** — regeneration +{val}.",
     "pt": "🌿 **{m_get_name_o_monstro}** bebe **{item}** — regeneração +{val}."
@@ -400,9 +440,49 @@ window.LANG_NARRACAO = {
     "en": "😈 **{magia_nome}** benefits the enemy **{inimigo}** by mistake!",
     "pt": "😈 **{magia_nome}** beneficia o inimigo **{inimigo}** por engano!"
   },
+  "narracao.bordao_alvo_perde_acao": {
+    "en": "💫 **{alvo}** is stunned by the staff and loses its action this turn.",
+    "pt": "💫 **{alvo}** está tonto pelo impacto do Bordão e perde sua ação neste turno."
+  },
+  "narracao.bordao_critico_atordoa": {
+    "en": "the target is stunned and loses its next action",
+    "pt": "o alvo fica tonto e perde sua próxima ação"
+  },
+  "narracao.bordao_critico_fortitude": {
+    "en": "🔱 **{heroi}** lands a staff critical on **{alvo}**! Fortitude {total} vs DC {dc} — {resultado}.",
+    "pt": "🔱 **{heroi}** acerta **{alvo}** com um crítico de Bordão! Fortitude {total} vs CD {dc} — {resultado}."
+  },
+  "narracao.bordao_critico_nao_afeta_imune": {
+    "en": "🔱 The staff's critical impact does not affect **{alvo}** (construct/undead immunity).",
+    "pt": "🔱 O impacto crítico do Bordão não afeta **{alvo}** (imunidade de construto/morto-vivo)."
+  },
+  "narracao.bordao_critico_resiste": {
+    "en": "the target resists the concussive impact",
+    "pt": "o alvo resiste ao impacto atordoante"
+  },
   "narracao.cacador_das_trevas_ataque_extra_das_garr": {
     "en": "🌑 **Hunter of Darkness** — extra claw attack!",
     "pt": "🌑 **Caçador das Trevas** — ataque extra das garras!"
+  },
+  "narracao.cai_junto_com": {
+    "en": "{nome_criatura_presa} falls together with {nome_criatura_alvo}.",
+    "pt": "{nome_criatura_presa} cai junto com {nome_criatura_alvo}."
+  },
+  "narracao.cai_no_rodamoinho_profundo_fica_preso_e": {
+    "en": "🌊 **{nome_criatura_criatura}** falls into the deep whirlpool, is trapped and loses the turn!",
+    "pt": "🌊 **{nome_criatura_criatura}** cai no rodamoinho profundo, fica preso e perde o turno!"
+  },
+  "narracao.camara_gas_ativa": {
+    "en": "☠️ The Gas Chamber fills room **{sala}** for **{duracao}** round(s). Fortitude DC 13 is required at the start of each turn.",
+    "pt": "☠️ A Câmara de Gás preenche a sala **{sala}** por **{duracao}** rodada(s). É preciso testar Fortitude CD 13 no início de cada turno."
+  },
+  "narracao.camara_gas_resiste": {
+    "en": "🫁 **{alvo_nome}** resists the gas this turn.",
+    "pt": "🫁 **{alvo_nome}** resiste ao gás neste turno."
+  },
+  "narracao.camara_gas_se_dissipou": {
+    "en": "☠️ The Gas Chamber dissipates.",
+    "pt": "☠️ A Câmara de Gás se dissipa."
   },
   "narracao.cancao_heroica_de_manutencao": {
     "en": "🎵 **{heroi}**'s Heroic Song [{labels}] — upkeep 🍖-{custo_fome} 💧-{custo_sede}.",
@@ -419,38 +499,6 @@ window.LANG_NARRACAO = {
   "narracao.causa_de_dano_no_estomago_de": {
     "en": "🫀 **{heroi}** deals **{dano}** damage to **{captor}**'s stomach ({p_engolido_dano}/{limite}).",
     "pt": "🫀 **{heroi}** causa **{dano}** de dano no estômago de **{captor}** ({p_engolido_dano}/{limite})."
-  },
-  "narracao.bau_engolidor_prende_heroi": {
-    "en": "📦 **{heroi}** is swallowed by the object! Escape with Strength DC {dc}.",
-    "pt": "📦 **{heroi}** é engolido pelo objeto! Escape com Força CD {dc}."
-  },
-  "narracao.bau_engolidor_escapa": {
-    "en": "💪 **{heroi}** escapes the Swallowing Chest with Strength {total} vs DC {dc}!",
-    "pt": "💪 **{heroi}** escapa do Baú Engolidor com Força {total} contra CD {dc}!"
-  },
-  "narracao.bau_engolidor_falha_escape": {
-    "en": "📦 **{heroi}** fails to escape the Swallowing Chest ({total} vs DC {dc}).",
-    "pt": "📦 **{heroi}** falha ao escapar do Baú Engolidor ({total} contra CD {dc})."
-  },
-  "narracao.fosso_prende_heroi": {
-    "en": "🕳️ **{heroi}** falls into the Pit and disappears from the map until the end of the next round.",
-    "pt": "🕳️ **{heroi}** cai no Fosso e some do mapa até o fim da próxima rodada."
-  },
-  "narracao.fosso_perde_proxima_rodada": {
-    "en": "🕳️ **{heroi}** is still inside the Pit and loses this entire round.",
-    "pt": "🕳️ **{heroi}** ainda está no Fosso e perde esta rodada inteira."
-  },
-  "narracao.camara_gas_ativa": {
-    "en": "☠️ The Gas Chamber fills room **{sala}** for **{duracao}** round(s). Fortitude DC 13 is required at the start of each turn.",
-    "pt": "☠️ A Câmara de Gás preenche a sala **{sala}** por **{duracao}** rodada(s). É preciso testar Fortitude CD 13 no início de cada turno."
-  },
-  "narracao.camara_gas_resiste": {
-    "en": "🫁 **{alvo_nome}** resists the gas this turn.",
-    "pt": "🫁 **{alvo_nome}** resiste ao gás neste turno."
-  },
-  "narracao.camara_gas_se_dissipou": {
-    "en": "☠️ The Gas Chamber dissipates.",
-    "pt": "☠️ A Câmara de Gás se dissipa."
   },
   "narracao.cego_por_rodada_s_em_ataques": {
     "en": "🙈 **{nome}**: **{alvo_nome}** blinded for {duracao} round(s) ({pen} to attacks)!",
@@ -508,6 +556,10 @@ window.LANG_NARRACAO = {
     "en": "🎶 **{heroi}** casts the **Ghostly Duet** for {st_duracao} round(s)!",
     "pt": "🎶 **{heroi}** conjura o **Dueto Fantasma** por {st_duracao} rodada(s)!"
   },
+  "narracao.conjura_olhar_petrificante_por_rodada_s": {
+    "en": "👁️ **{caster}** casts **Petrifying Gaze** for {dur} round(s).",
+    "pt": "👁️ **{caster}** conjura **Olhar Petrificante** por {dur} rodada(s)."
+  },
   "narracao.conjura_servo_s": {
     "en": "💀 **{monstro}** summons {len_invocados} minion(s): **{nomes}**!",
     "pt": "💀 **{monstro}** conjura {len_invocados} servo(s): **{nomes}**!"
@@ -523,6 +575,10 @@ window.LANG_NARRACAO = {
   "narracao.conjuracao_bem_sucedida": {
     "en": "✨ Casting **successful**!{extra}",
     "pt": "✨ Conjuração **bem-sucedida**!{extra}"
+  },
+  "narracao.consegue_escapar_do_rodamoinho_e_pode_se": {
+    "en": "🌊 **{nome_criatura_criatura}** escapes the whirlpool and can move normally.",
+    "pt": "🌊 **{nome_criatura_criatura}** consegue escapar do rodamoinho e pode se mover normalmente."
   },
   "narracao.consome": {
     "en": "{item_emoji} **{heroi}** consumes **{item}**: {e_join_partes}.",
@@ -552,6 +608,10 @@ window.LANG_NARRACAO = {
     "en": "🕸️ **{monstro}** remains stuck in the net and loses the turn!",
     "pt": "🕸️ **{monstro}** continua preso na rede e perde o turno!"
   },
+  "narracao.continua_preso_no_rodamoinho_e_nao_pode": {
+    "en": "🌪️ **{nome_criatura_criatura}** is still caught in the whirlpool and cannot move this turn.",
+    "pt": "🌪️ **{nome_criatura_criatura}** continua preso no rodamoinho e não pode se mover neste turno."
+  },
   "narracao.contrai_uma_doenca_sintomas_curavel_por": {
     "en": "🦠 **{heroi}** contracts a **{d_severidade_capitalize} Disease**! Symptoms: {sint}. (curable by a cleric or at the temple)",
     "pt": "🦠 **{heroi}** contrai uma **Doença {d_severidade_capitalize}**! Sintomas: {sint}. (curável por clérigo ou templo)"
@@ -575,6 +635,10 @@ window.LANG_NARRACAO = {
   "narracao.cospe_acido_em_de_dano_reflexos_vs_cd": {
     "en": "🧪 **{monstro}** spits acid at **{alvo}**: **{dano}** damage (Reflex {total} vs DC {cd}){metade_if_passou_else}",
     "pt": "🧪 **{monstro}** cospe ácido em **{alvo}**: **{dano}** de dano (Reflexos {total} vs CD {cd}){metade_if_passou_else}"
+  },
+  "narracao.cria_redemoinho_s_como_acao_livre_desta": {
+    "en": "🌪️ **{caster}** creates {len_escolhidos} whirlpool(s) as a free action ({len_zona_redemoinhos}/{limite} of this spell).",
+    "pt": "🌪️ **{caster}** cria {len_escolhidos} redemoinho(s) como ação livre ({len_zona_redemoinhos}/{limite} desta magia)."
   },
   "narracao.cria_um_bau_de_provisoes_em_com_alimento": {
     "en": "🍞 **{caster}** creates a **Supply Chest** at ({tx}, {ty}) with **{quantidade}** random food item(s){extra}!",
@@ -760,6 +824,14 @@ window.LANG_NARRACAO = {
     "en": "💢 **Constant Pain** takes its toll on **{heroi}** — **1** damage.",
     "pt": "💢 **Dor Constante** cobra seu preço de **{heroi}** — **1** de dano."
   },
+  "narracao.duracao.permanentemente": {
+    "en": "permanently",
+    "pt": "permanentemente"
+  },
+  "narracao.duracao.por_rodadas": {
+    "en": "for {dur} round(s)",
+    "pt": "por {dur} rodada(s)"
+  },
   "narracao.e_arremessado_contra_a_parede_de_colisao": {
     "en": "🌪️ **{nome}** is thrown against the wall (+{col} collision damage).",
     "pt": "🌪️ **{nome}** é arremessado contra a parede (+{col} de colisão)."
@@ -835,6 +907,10 @@ window.LANG_NARRACAO = {
   "narracao.e_infectado_fortitude_vs_cd_2": {
     "en": "🦠 **{target}** is infected! (Fortitude {total_save} vs DC {dc})",
     "pt": "🦠 **{target}** é infectado! (Fortitude {total_save} vs CD {dc})"
+  },
+  "narracao.e_preso_pelo_rodamoinho_e_perde_o_movime": {
+    "en": "🌪️ **{nome_criatura_criatura}** is caught by the whirlpool and loses the remaining movement of the turn!",
+    "pt": "🌪️ **{nome_criatura_criatura}** é preso pelo rodamoinho e perde o movimento restante do turno!"
   },
   "narracao.e_queimado_pelo_corpo_em_chamas_de_dano": {
     "en": "🔥 **{heroi}** is burned by the Body in Flames: **{fogo_alvo}** damage!",
@@ -924,6 +1000,10 @@ window.LANG_NARRACAO = {
     "en": "🔥 {monstro} flies into **Berserker Rage** and lands an extra attack.",
     "pt": "{monstro} entra em Fúria Berserker e desfere um ataque adicional."
   },
+  "narracao.entra_em_furia_berserker_e_repete_seus_a": {
+    "en": "{nome_criatura_m} flies into a Berserker Rage and repeats its claw attacks.",
+    "pt": "{nome_criatura_m} entra em Fúria Berserker e repete seus ataques de garras."
+  },
   "narracao.entra_em_furia_cega_1_de_dano_mas_1_ca": {
     "en": "😡 **{monstro}** flies into **Blind Rage**! +1 damage, but -1 AC.",
     "pt": "😡 **{monstro}** entra em **Fúria Cega**! +1 de dano, mas -1 CA."
@@ -931,6 +1011,10 @@ window.LANG_NARRACAO = {
   "narracao.entra_em_panico_amedrontado_r": {
     "en": "📯 **{monstro}** panics (Frightened {st_medo}r)!",
     "pt": "📯 **{monstro}** entra em pânico (Amedrontado {st_medo}r)!"
+  },
+  "narracao.entra_na_fase_2_e_passa_a_cacar_o_heroi": {
+    "en": "⚔️ {nome_criatura_m} enters phase 2 and starts hunting the most wounded hero.",
+    "pt": "⚔️ {nome_criatura_m} entra na fase 2 e passa a caçar o herói mais ferido."
   },
   "narracao.entrou_em_panico_vai_fugir_por_2_rodadas": {
     "en": "😱 **{monstro}** panicked! It will flee for 2 rounds. (d20={d20}{sb_str}={stot})",
@@ -979,6 +1063,10 @@ window.LANG_NARRACAO = {
   "narracao.escapa_ao_ser_arrastado_por": {
     "en": "💨 **{c}** breaks free while being dragged by **{monstro}**!",
     "pt": "💨 **{c}** escapa ao ser arrastado por **{monstro}**!"
+  },
+  "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
+    "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
+    "pt": "🌊 **{nome_criatura_criatura}** escapa do rodamoinho profundo e pode agir normalmente."
   },
   "narracao.escuridao_criada_raio_rodada_s": {
     "en": "🌑 **Darkness** created — radius {raio}, {duracao} round(s).",
@@ -1035,6 +1123,10 @@ window.LANG_NARRACAO = {
   "narracao.esta_paralisado_novo_fortitude_por_rodad": {
     "en": "❄️ **{alvo}** is **paralyzed**! (new Fortitude save each round, max {alvo_paralisado_rodada_m})",
     "pt": "❄️ **{alvo}** está **paralisado**! (novo Fortitude por rodada, máx {alvo_paralisado_rodada_m})"
+  },
+  "narracao.esta_petrificado_e_perde_este_turno": {
+    "en": "🗿 **{nome_criatura_monster}** is petrified and loses this turn.",
+    "pt": "🗿 **{nome_criatura_monster}** está petrificado e perde este turno."
   },
   "narracao.esta_petrificado_e_perde_o_turno": {
     "en": "🗿 **{monstro}** is petrified and loses the turn!",
@@ -1108,6 +1200,10 @@ window.LANG_NARRACAO = {
     "en": "❌ Disarm failed ({total} vs {dif}) — try again next turn.",
     "pt": "❌ Falha no desarme ({total} vs {dif}) — tente de novo no próximo turno."
   },
+  "narracao.falha_no_olhar_petrificante_contra_cd_pe": {
+    "en": "🗿 **{nome_criatura_alvo}** fails against the Petrifying Gaze ({total} vs DC {dc}) — petrification {alvo_petrificacao_marcas}/3.",
+    "pt": "🗿 **{nome_criatura_alvo}** falha no Olhar Petrificante ({total} contra CD {dc}) — petrificação {alvo_petrificacao_marcas}/3."
+  },
   "narracao.falhou_em_reflexos_e_sofre_de_dano": {
     "en": "{prefix} **{heroi}** failed the **Reflex** save (DC 13) and takes **{dano}** damage after the shield's reduction!",
     "pt": "{prefix} **{heroi}** falhou em **Reflexos** (CD 13) e sofre **{dano}** de dano após a redução do escudo!"
@@ -1131,26 +1227,6 @@ window.LANG_NARRACAO = {
   "narracao.fica_atordoado_fortitude_vs_cd_e_perde_a": {
     "en": "💫 **{tgt_name}** becomes **stunned** (Fortitude {stot} vs DC {dc}) and loses the next round!",
     "pt": "💫 **{tgt_name}** fica **atordoado** (Fortitude {stot} vs CD {dc}) e perde a próxima rodada!"
-  },
-  "narracao.bordao_critico_fortitude": {
-    "en": "🔱 **{heroi}** lands a staff critical on **{alvo}**! Fortitude {total} vs DC {dc} — {resultado}.",
-    "pt": "🔱 **{heroi}** acerta **{alvo}** com um crítico de Bordão! Fortitude {total} vs CD {dc} — {resultado}."
-  },
-  "narracao.bordao_critico_atordoa": {
-    "en": "the target is stunned and loses its next action",
-    "pt": "o alvo fica tonto e perde sua próxima ação"
-  },
-  "narracao.bordao_critico_resiste": {
-    "en": "the target resists the concussive impact",
-    "pt": "o alvo resiste ao impacto atordoante"
-  },
-  "narracao.bordao_critico_nao_afeta_imune": {
-    "en": "🔱 The staff's critical impact does not affect **{alvo}** (construct/undead immunity).",
-    "pt": "🔱 O impacto crítico do Bordão não afeta **{alvo}** (imunidade de construto/morto-vivo)."
-  },
-  "narracao.bordao_alvo_perde_acao": {
-    "en": "💫 **{alvo}** is stunned by the staff and loses its action this turn.",
-    "pt": "💫 **{alvo}** está tonto pelo impacto do Bordão e perde sua ação neste turno."
   },
   "narracao.fica_cambaleante_e_perde_sua_acao_de_ata": {
     "en": "🦖 **{monstro}** is left reeling and loses its attack action.",
@@ -1256,6 +1332,10 @@ window.LANG_NARRACAO = {
     "en": "🗿 **{tgt_name}** was petrified!",
     "pt": "🗿 **{tgt_name}** foi petrificado!"
   },
+  "narracao.foi_totalmente_petrificado_a_condicao_e": {
+    "en": "🗿 **{nome_criatura_alvo}** was fully petrified. The condition is permanent until Purification.",
+    "pt": "🗿 **{nome_criatura_alvo}** foi totalmente petrificado. A condição é permanente até Purificação."
+  },
   "narracao.forca_a_sorte_e_acerta_com": {
     "en": "🎲 **{heroi}** forces Luck and hits **{alvo}** with {weapon_name} {dmg_detail} = **{dmg}**!",
     "pt": "🎲 **{heroi}** força a Sorte e acerta **{alvo}** com {weapon_name} {dmg_detail} = **{dmg}**!"
@@ -1271,6 +1351,14 @@ window.LANG_NARRACAO = {
   "narracao.fortuna_roubada_consome_ouros_de": {
     "en": "☠️ **Stolen Fortune** consumes **{perdido}** gold {motivo} from **{heroi}**.",
     "pt": "☠️ **Fortuna Roubada** consome **{perdido}** ouros {motivo} de **{heroi}**."
+  },
+  "narracao.fosso_perde_proxima_rodada": {
+    "en": "🕳️ **{heroi}** is still inside the Pit and loses this entire round.",
+    "pt": "🕳️ **{heroi}** ainda está no Fosso e perde esta rodada inteira."
+  },
+  "narracao.fosso_prende_heroi": {
+    "en": "🕳️ **{heroi}** falls into the Pit and disappears from the map until the end of the next round.",
+    "pt": "🕳️ **{heroi}** cai no Fosso e some do mapa até o fim da próxima rodada."
   },
   "narracao.frag_ferida_aberta": {
     "en": " +1 Open Wound",
@@ -1552,6 +1640,10 @@ window.LANG_NARRACAO = {
     "en": "🧊 **{heroi}** keeps a cool head and rolls again!",
     "pt": "🧊 **{heroi}** mantém o sangue frio e rola novamente!"
   },
+  "narracao.mantem_presa_e_causa_de_dano_automatico": {
+    "en": "{nome_criatura_m} keeps {nome_criatura_presa} pinned and deals {dano} automatic damage ({expressao}).",
+    "pt": "{nome_criatura_m} mantém {nome_criatura_presa} presa e causa {dano} de dano automático ({expressao})."
+  },
   "narracao.mantem_protetor_sobre_1": {
     "en": "🛡️ **{heroi}** maintains Protector over **{alvo}** 🍖-1.",
     "pt": "🛡️ **{heroi}** mantém Protetor sobre **{alvo}** 🍖-1."
@@ -1563,6 +1655,30 @@ window.LANG_NARRACAO = {
   "narracao.metamagia": {
     "en": "🔮 **{heroi}** — metamagic: {join_partes}{custo_txt}.",
     "pt": "🔮 **{heroi}** — metamagia: {join_partes}{custo_txt}."
+  },
+  "narracao.motivo_meta.fim_da_magia": {
+    "en": "the spell ended",
+    "pt": "fim da magia"
+  },
+  "narracao.motivo_meta.forma_zerou": {
+    "en": "the form dropped to 0 HP",
+    "pt": "a forma chegou a 0 PV"
+  },
+  "narracao.motivo_meta.mago_morreu": {
+    "en": "the mage died",
+    "pt": "o mago morreu"
+  },
+  "narracao.motivo_meta.retorno_cidade": {
+    "en": "returned to town",
+    "pt": "retorno à cidade"
+  },
+  "narracao.motivo_meta.sem_fome_sede": {
+    "en": "not enough Hunger or Thirst",
+    "pt": "falta de Fome ou Sede"
+  },
+  "narracao.motivo_meta.tres_resistencias": {
+    "en": "three saves against permanence",
+    "pt": "três resistências à permanência"
   },
   "narracao.n_animado": {
     "en": "{n} minion",
@@ -1632,6 +1748,10 @@ window.LANG_NARRACAO = {
     "en": "💀 The **Echo of Death** tears through **{q}** — **{self_eco_morte_dano}** damage.",
     "pt": "💀 O **Eco da Morte** atravessa **{q}** — **{self_eco_morte_dano}** de dano."
   },
+  "narracao.o_efeito_do_olhar_petrificante_termina_e": {
+    "en": "✨ The Petrifying Gaze effect ends on **{nome_criatura_alvo}**.",
+    "pt": "✨ O efeito do Olhar Petrificante termina em **{nome_criatura_alvo}**."
+  },
   "narracao.o_estomago_e_rompido_por_dentro_sofre_de": {
     "en": "💥 The stomach bursts from the inside: **{captor}** takes **{interno}** internal damage and is left reeling.",
     "pt": "💥 O estômago é rompido por dentro: **{captor}** sofre **{interno}** de dano interno e fica cambaleante."
@@ -1700,6 +1820,14 @@ window.LANG_NARRACAO = {
     "en": "✅ **{alvo_get_name_alvo}**'s teleport fails: exit blocked.",
     "pt": "✅ O teletransporte de **{alvo_get_name_alvo}** falha: saída bloqueada."
   },
+  "narracao.o_terreno_criado_pelo_chamado_do_inverno": {
+    "en": "❄️ The terrain created by Call of Winter returned to normal.",
+    "pt": "❄️ O terreno criado pelo Chamado do Inverno voltou ao normal."
+  },
+  "narracao.o_terreno_criado_pelo_senhor_das_aguas_v": {
+    "en": "🌊 The terrain created by Lord of Waters returned to normal.",
+    "pt": "🌊 O terreno criado pelo Senhor das Águas voltou ao normal."
+  },
   "narracao.o_veneno_da_arma_de_acabou": {
     "en": "🧴 **{heroi}**'s weapon poison ran out.",
     "pt": "🧴 O veneno da arma de **{heroi}** acabou."
@@ -1756,6 +1884,14 @@ window.LANG_NARRACAO = {
     "en": "🐗 **{monstro}** charges into a **Brutal Charge** (+2 damage)!",
     "pt": "🐗 **{monstro}** parte para a **Investida Brutal** (+2 de dano)!"
   },
+  "narracao.passa_sobre_a_brasa_e_sofre_de_dano_de_f": {
+    "en": "🔥 **{nome_criatura_criatura}** walks over the embers and takes **{dano}** fire damage!",
+    "pt": "🔥 **{nome_criatura_criatura}** passa sobre a brasa e sofre **{dano}** de dano de fogo!"
+  },
+  "narracao.passa_sobre_a_chama_viva_e_sofre_de_dano": {
+    "en": "🔥 **{nome_criatura_criatura}** walks through the living flame and takes **{dano}** fire damage!",
+    "pt": "🔥 **{nome_criatura_criatura}** passa sobre a chama viva e sofre **{dano}** de dano de fogo!"
+  },
   "narracao.passou_no_teste_de_reflexos_e_se_esquivou": {
     "en": "{prefix} **{heroi}** made the **Reflex** save (DC 13) and dodged!",
     "pt": "{prefix} **{heroi}** passou no teste de **Reflexos** (CD 13) e se esquivou!"
@@ -1808,6 +1944,10 @@ window.LANG_NARRACAO = {
     "en": "🦵 **{alvo_nome}** loses their movement!",
     "pt": "🦵 **{alvo_nome}** perde o movimento!"
   },
+  "narracao.perde_ponto_s_de_altura_com_o_impacto": {
+    "en": "{nome_criatura_m} loses {perda_real} point(s) of altitude from the impact.",
+    "pt": "{nome_criatura_m} perde {perda_real} ponto(s) de altura com o impacto."
+  },
   "narracao.perdera_apenas_o_movimento_no_proximo_tu": {
     "en": "🦂 **{alvo_nome}** will only lose movement on the next turn.",
     "pt": "🦂 **{alvo_nome}** perderá apenas o movimento no próximo turno."
@@ -1819,6 +1959,10 @@ window.LANG_NARRACAO = {
   "narracao.petrificado_por_rodada_s": {
     "en": "🗿 **{nome}**: **{alvo_nome}** petrified for {pet_dur} round(s)!",
     "pt": "🗿 **{nome}**: **{alvo_nome}** petrificado por {pet_dur} rodada(s)!"
+  },
+  "narracao.piso_congelado_escorrega_e_perde_o_movim": {
+    "en": "Frozen Floor: **{nome_criatura_criatura}** slips and loses the remaining movement of the turn!",
+    "pt": "Piso congelado: **{nome_criatura_criatura}** escorrega e perde o movimento restante do turno!"
   },
   "narracao.pisou_na_fogueira_e_sofre_de_fogo": {
     "en": "🔥 **{nome}** stepped into the campfire and takes **{dano}** fire damage!",
@@ -1916,6 +2060,10 @@ window.LANG_NARRACAO = {
     "en": "👁️ **{caster}** gains Darkvision while Cloak of Darkness lasts.",
     "pt": "👁️ **{caster}** recebe Visão no Escuro enquanto o Manto de Escuridão durar."
   },
+  "narracao.recebe_voo_e_pode_controlar_sua_altura_d": {
+    "en": "🪶 **{alvo}** gains **Flight** and can control its altitude from {alvo_get_altura_altura_i} to {alvo_get_altura_max_altu}.",
+    "pt": "🪽 **{alvo}** recebe **Voo** e pode controlar sua altura de {alvo_get_altura_altura_i} até {alvo_get_altura_max_altu}."
+  },
   "narracao.reconectou_se_a_aventura": {
     "en": "🔌 **{name}** reconnected to the adventure.",
     "pt": "🔌 **{name}** reconectou-se à aventura."
@@ -1924,6 +2072,10 @@ window.LANG_NARRACAO = {
     "en": "🔌 **{name}** reconnected and returned to the dungeon!",
     "pt": "🔌 **{name}** reconectou-se e voltou à masmorra!"
   },
+  "narracao.recorre_ao_instinto_de_sobrevivencia_e_p": {
+    "en": "{nome_criatura_m} falls back on Survival Instinct and stays at 1 HP.",
+    "pt": "{nome_criatura_m} recorre ao Instinto de Sobrevivência e permanece com 1 PV."
+  },
   "narracao.recorre_ao_instinto_de_sobrevivencia_e_r": {
     "en": "🍀 **{heroi}** falls back on **Survival Instinct** and holds on with 1 HP!",
     "pt": "🍀 **{heroi}** recorre ao **Instinto de Sobrevivência** e resiste com 1 HP!"
@@ -1931,6 +2083,10 @@ window.LANG_NARRACAO = {
   "narracao.recua_das_chamas": {
     "en": "🟢 **{monstro}** backs away from the flames!",
     "pt": "🟢 **{monstro}** recua das chamas!"
+  },
+  "narracao.recua_esta_ferido_e_ficou_isolado_do_gru": {
+    "en": "{nome_criatura_m} retreats: it is wounded and got cut off from the group.",
+    "pt": "{nome_criatura_m} recua: está ferido e ficou isolado do grupo."
   },
   "narracao.recua_para_as_sombras_apos_morder": {
     "en": "🐍 **{monstro}** retreats into the shadows after biting.",
@@ -1943,6 +2099,10 @@ window.LANG_NARRACAO = {
   "narracao.recupera_a_pontaria_penalidade_da_cervej": {
     "en": "🍺 **{heroi}** regains their aim (the beer penalty wore off).",
     "pt": "🍺 **{heroi}** recupera a pontaria (penalidade da cerveja acabou)."
+  },
+  "narracao.recupera_automaticamente_a_lanca_do_chao": {
+    "en": "🔱 {nome_criatura_m} automatically picks the spear back up from the ground.",
+    "pt": "🔱 {nome_criatura_m} recupera automaticamente a lança do chão."
   },
   "narracao.recupera_hp_com_a_regeneracao_runica_rod": {
     "en": "🔷 {monstro} recovers {cura} HP from **Runic Regeneration** ({max_0_restantes_1} rounds left).",
@@ -2032,6 +2192,10 @@ window.LANG_NARRACAO = {
     "en": "🦠 **{target}** resists the infection (Fortitude {total_save} vs DC {dc}).",
     "pt": "🦠 **{target}** resiste à infecção (Fortitude {total_save} vs CD {dc})."
   },
+  "narracao.resiste_a_permanencia_3": {
+    "en": "🛡️ **{nome_criatura_alvo}** resists the permanence ({n}/3).",
+    "pt": "🛡️ **{nome_criatura_alvo}** resiste à permanência ({n}/3)."
+  },
   "narracao.resiste_a_petrificacao_imunizado": {
     "en": "🛡️ **{alvo_nome}** resists petrification (immune)!",
     "pt": "🛡️ **{alvo_nome}** resiste à petrificação (imunizado)!"
@@ -2052,6 +2216,10 @@ window.LANG_NARRACAO = {
     "en": "🎻 **{monstro}** resists the improvised lament.",
     "pt": "🎻 **{monstro}** resiste ao lamento improvisado."
   },
+  "narracao.resiste_ao_olhar_petrificante_contra_cd": {
+    "en": "👁️ **{nome_criatura_alvo}** resists the Petrifying Gaze ({total} vs DC {dc}) — resistance {alvo_resistencia_petrifi}/3.",
+    "pt": "👁️ **{nome_criatura_alvo}** resiste ao Olhar Petrificante ({total} contra CD {dc}) — resistência {alvo_resistencia_petrifi}/3."
+  },
   "narracao.resiste_ao_requiem_nesta_rodada": {
     "en": "🎻 **{monstro}** resists the Requiem this round.",
     "pt": "🎻 **{monstro}** resiste ao Réquiem nesta rodada."
@@ -2063,6 +2231,10 @@ window.LANG_NARRACAO = {
   "narracao.resiste_vontade_vs_cd_nd": {
     "en": "💀 **{alvo_nome}** resists (Will vs DC {dc}, CR +{nd}).",
     "pt": "💀 **{alvo_nome}** resiste (Vontade vs CD {dc}, ND +{nd})."
+  },
+  "narracao.resistiu_a_metamorfose": {
+    "en": "🛡️ **{nome_criatura_alvo}** resisted Polymorph.",
+    "pt": "🛡️ **{nome_criatura_alvo}** resistiu à Metamorfose."
   },
   "narracao.resistiu_a_paralisacao": {
     "en": "❄️ **{alvo}** resisted paralysis.",
@@ -2095,6 +2267,10 @@ window.LANG_NARRACAO = {
   "narracao.retorna_a_forma_normal": {
     "en": "🌙 **{heroi}** returns to their normal form.",
     "pt": "🌙 **{heroi}** retorna à forma normal."
+  },
+  "narracao.retorna_a_forma_original": {
+    "en": "🦋 **{nome_criatura_alvo}** returns to its original form ({motivo}).",
+    "pt": "🦋 **{nome_criatura_alvo}** retorna à forma original ({motivo})."
   },
   "narracao.revela_se": {
     "en": "🌑 **{heroi}** reveals themself ({motivo}).",
@@ -2300,6 +2476,38 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{alvo_nome}** takes **{dano}** extra poison damage.",
     "pt": "☠️ **{alvo_nome}** sofre **{dano}** de dano adicional do veneno."
   },
+  "narracao.sofre_de_dano_de_afogamento": {
+    "en": "🌊 **{nome_criatura_criatura}** takes **{bruto}** drowning damage.",
+    "pt": "🌊 **{nome_criatura_criatura}** sofre **{bruto}** de dano de afogamento."
+  },
+  "narracao.afogamento_nome": {
+    "en": "Drowning",
+    "pt": "Afogamento"
+  },
+  "narracao.afogamento_descricao": {
+    "en": "The character failed Fortitude against the deep whirlpool and is drowning.",
+    "pt": "O personagem falhou na Fortitude contra o redemoinho profundo e está se afogando."
+  },
+  "narracao.afogamento_onda_descricao": {
+    "en": "The Water Elemental's Enveloping Wave keeps the character trapped and causes drowning damage.",
+    "pt": "A Onda Envolvente do Elemental de Água mantém o personagem preso e causa dano de afogamento."
+  },
+  "narracao.rodamoinho_nome": {
+    "en": "Whirlpool",
+    "pt": "Redemoinho"
+  },
+  "narracao.rodamoinho_descricao": {
+    "en": "The character failed Reflex and is trapped in the whirlpool.",
+    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho."
+  },
+  "narracao.rodamoinho_profundo_nome": {
+    "en": "Deep Whirlpool",
+    "pt": "Redemoinho profundo"
+  },
+  "narracao.rodamoinho_profundo_descricao": {
+    "en": "The character failed Reflex and is trapped in the deep whirlpool.",
+    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho profundo."
+  },
   "narracao.sofre_de_dano_hp": {
     "en": "💥 **{alvo_nome}** takes **{dano}** damage ({elemento}) ({alvo_hp}/{alvo_get_max_hp} HP).",
     "pt": "💥 **{alvo_nome}** sofre **{dano}** de dano ({elemento}) ({alvo_hp}/{alvo_get_max_hp} HP)."
@@ -2311,6 +2519,14 @@ window.LANG_NARRACAO = {
   "narracao.sofre_de_exaustao_1_hp": {
     "en": "☠️ **{heroi}** suffers from exhaustion ({e_join_motivos}) — **-1 HP** ({p_hp}/{p_max_hp}).",
     "pt": "☠️ **{heroi}** sofre de exaustão ({e_join_motivos}) — **-1 HP** ({p_hp}/{p_max_hp})."
+  },
+  "narracao.sofre_de_veneno_da_medusa_e_recebe_2_for": {
+    "en": "☠️ **{nome_criatura_alvo}** takes {dano_extra} Medusa venom damage and gets -2 STR/-2 CON for {duracao} rounds (failed Fortitude).",
+    "pt": "☠️ **{nome_criatura_alvo}** sofre {dano_extra} de veneno da Medusa e recebe -2 FOR/-2 CON por {duracao} rodadas (falha na Fortitude)."
+  },
+  "narracao.sofre_de_veneno_da_medusa_sucesso_na_for": {
+    "en": "☠️ **{nome_criatura_alvo}** takes {dano_extra} Medusa venom damage (successful Fortitude).",
+    "pt": "☠️ **{nome_criatura_alvo}** sofre {dano_extra} de veneno da Medusa (sucesso na Fortitude)."
   },
   "narracao.sofre_do_sangue_em_ebulicao_de": {
     "en": "🌋 **{atacante_get_name_or_ata}** takes **{dano}** from **{molochus}**'s Boiling Blood.",
@@ -2339,6 +2555,10 @@ window.LANG_NARRACAO = {
   "narracao.solo_sagrado_fere_em_de_dano_sagrado": {
     "en": "✝️ Holy ground wounds **{monstro}** for {dano} holy damage.",
     "pt": "✝️ Solo sagrado fere **{monstro}** em {dano} de dano sagrado."
+  },
+  "narracao.solta_das_garras": {
+    "en": "{nome_criatura_m} releases {nome_criatura_presa} from its claws.",
+    "pt": "{nome_criatura_m} solta {nome_criatura_presa} das garras."
   },
   "narracao.sopra_o_chamado_do_general_cone": {
     "en": "📯 **{heroi}** blows the **General's Call** (cone {comp})!",
@@ -2396,6 +2616,22 @@ window.LANG_NARRACAO = {
     "en": "⚠ **{heroi}** attempts **Heavy Strike** but the enemy is out of range!",
     "pt": "⚠ **{heroi}** tenta **Golpe Pesado** mas o inimigo está fora de alcance!"
   },
+  "narracao.terreno.agua": {
+    "en": "Water",
+    "pt": "Água"
+  },
+  "narracao.terreno.agua_profunda": {
+    "en": "Deep Water",
+    "pt": "Água profunda"
+  },
+  "narracao.terreno.piso_congelado": {
+    "en": "Frozen Floor",
+    "pt": "Piso congelado"
+  },
+  "narracao.terreno.planicie_nevada": {
+    "en": "Snowy Plain",
+    "pt": "Planície nevada"
+  },
   "narracao.tira_1_no_arremesso_a_adaga_se_quebra": {
     "en": "💥 **{monstro}** rolls a **1** on the throw — the dagger **breaks**!",
     "pt": "💥 **{monstro}** tira **1** no arremesso — a adaga **se quebra**!"
@@ -2407,6 +2643,14 @@ window.LANG_NARRACAO = {
   "narracao.torna_se_protetor_de_metade_do_dano_rece": {
     "en": "🛡️ **{heroi}** becomes **Protector** of **{alvo}** — half the damage taken will be transferred to Richard! (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "🛡️ **{heroi}** torna-se **Protetor** de **{alvo}** — metade do dano recebido será transferido a Richard! (🍖-{fome_cost} 💧-{sede_cost})"
+  },
+  "narracao.transforma_uma_area_x_em": {
+    "en": "❄️ **{caster}** turns a **{lado}x{lado}** area into **{tipo_txt}** {dur_txt}.",
+    "pt": "❄️ **{caster}** transforma uma área **{lado}x{lado}** em **{tipo_txt}** {dur_txt}."
+  },
+  "narracao.transforma_uma_area_x_em_por_rodada_s": {
+    "en": "🌊 **{caster}** turns a **{lado}x{lado}** area into **{tipo_txt}** for {dur} round(s).",
+    "pt": "🌊 **{caster}** transforma uma área **{lado}x{lado}** em **{tipo_txt}** por {dur} rodada(s)."
   },
   "narracao.turno_controle_recursos": {
     "en": " 🍖 {fome}/10 💧 {sede}/10",
@@ -2528,6 +2772,10 @@ window.LANG_NARRACAO = {
     "en": "🐗 {monstro} uses **Heroic Charge** and doubles its movement this round.",
     "pt": "{monstro} usa Investida Heroica e dobra seu deslocamento nesta rodada."
   },
+  "narracao.usa_investida_heroica_e_dobra_seu_desloc_2": {
+    "en": "{nome_criatura_m} uses Heroic Charge and doubles its movement.",
+    "pt": "{nome_criatura_m} usa Investida Heroica e dobra seu deslocamento."
+  },
   "narracao.usa_lanca_de_gelo_em_de_dano_de_frio": {
     "en": "🧊 **{heroi}** uses **Ice Lance**{extra} on **{t}**: **{dmg}** cold damage!",
     "pt": "🧊 **{heroi}** usa **Lança de Gelo**{extra} em **{t}**: **{dmg}** de dano de frio!"
@@ -2547,6 +2795,10 @@ window.LANG_NARRACAO = {
   "narracao.usa_presenca_aterradora_contra_vontade_v": {
     "en": "😱 {monstro} uses **Terrifying Presence** against {heroi}: {resultado} (Will {total} vs DC {dc}).",
     "pt": "{monstro} usa Presença Aterradora contra {heroi}: {resultado} (Vontade {total} vs CD {dc})."
+  },
+  "narracao.usa_pressao_constante_2_de_ca_por_2_roda": {
+    "en": "{nome_criatura_m} uses Constant Pressure: -2 AC for 2 rounds.",
+    "pt": "{nome_criatura_m} usa Pressão Constante: -2 de CA por 2 rodadas."
   },
   "narracao.usa_provocar_todos_os_monstros_agora_foc": {
     "en": "😤 **{heroi}** uses **Taunt** — all monsters now focus on them!",

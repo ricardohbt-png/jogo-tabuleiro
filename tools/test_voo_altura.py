@@ -203,10 +203,13 @@ def main():
     monster["altura"] = 10
     assert not room._alvo_no_alcance_arma(player, monster)
 
-    # Corpo a corpo continua exigindo o mesmo nível nesta primeira versão.
+    # Corpo a corpo tolera UM nível de desnível; dois ou mais bloqueiam o golpe.
+    # A regra mudou em a0385aa (elevação de terreno) — antes exigia o mesmo nível.
     player["weapon"] = server.WEAPONS["lanca_curta"]
     monster["pos"] = [3, 2]
     monster["altura"] = 1
+    assert room._alvo_no_alcance_arma(player, monster)
+    monster["altura"] = 2
     assert not room._alvo_no_alcance_arma(player, monster)
     monster["altura"] = 0
     assert room._alvo_no_alcance_arma(player, monster)

@@ -55,7 +55,11 @@ console.log("\n[5] Chaves data-i18n do game.js existem no dicionário");
 const gamejs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 const usadas = new Set();
 for (const m of gamejs.matchAll(/data-i18n(?:-ph|-title|-html)?="([^"]+)"/g)) usadas.add(m[1]);
-const orfas = [...usadas].filter(k => !DICT[k]);
+// Chave MONTADA em runtime (`data-i18n="' + key + '"`) nao e chave: o scanner
+// so ve o pedaco literal do meio da concatenacao. Mesmo caso ja registrado para
+// o prefixo `ui.cancao.atributo.`, que termina em ponto.
+const montadaEmRuntime = k => k.includes("'") || k.includes("+") || k.endsWith(".");
+const orfas = [...usadas].filter(k => !montadaEmRuntime(k) && !DICT[k]);
 check(`nenhuma chave data-i18n órfã (usadas: ${usadas.size})`, orfas.length === 0);
 if (orfas.length) console.log("     órfãs:", orfas.join(", "));
 

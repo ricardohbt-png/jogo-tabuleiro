@@ -28,6 +28,37 @@ try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
 
+# Um `/` começa uma EXPRESSÃO REGULAR quando o último token significativo antes
+# dele não pode terminar um valor. Depois de identificador, número, `)`, `]` ou
+# `++/--`, o `/` é divisão. É a heurística clássica, e basta aqui: o que precisa
+# ser acertado é só onde a regex TERMINA, para as aspas de dentro não abrirem
+# uma string fantasma.
+_ANTES_DE_REGEX = set("(,=:[!&|?{};+-*%~^<>") | {""}
+_PALAVRAS_ANTES_DE_REGEX = {
+    "return", "typeof", "instanceof", "in", "of", "new", "delete", "void",
+    "case", "do", "else", "yield", "await", "throw",
+}
+
+
+def _inicia_regex(src, i):
+    """True se o `/` em `src[i]` abre um literal de regex, não uma divisão."""
+    j = i - 1
+    while j >= 0 and src[j] in " \t\r\n":
+        j -= 1
+    if j < 0:
+        return True
+    c = src[j]
+    if c in _ANTES_DE_REGEX:
+        return True
+    if c.isalnum() or c in "_$)]":
+        # pode ser palavra-chave (return /re/) ou fim de valor (a / b)
+        k = j
+        while k >= 0 and (src[k].isalnum() or src[k] in "_$"):
+            k -= 1
+        return src[k + 1:j + 1] in _PALAVRAS_ANTES_DE_REGEX
+    return False
+
+
 def literais(src, _linha0=1):
     """[(linha_1based, aspa, texto)] de cada literal de string do fonte.
 
@@ -50,6 +81,29 @@ def literais(src, _linha0=1):
                 linha += trecho.count("\n")
                 i = n if j < 0 else j + 2
                 continue
+            # Literal de regex. Sem tratá-lo, `/[&<>"']/g` abria uma string
+            # fantasma na aspa de dentro e TUDO a partir dali saía deslocado —
+            # o placar passou a contar pedaços de comentário e de código como
+            # se fossem texto de interface, e um migrador chegou a escrever
+            # dentro de um seletor por causa disso.
+            if _inicia_regex(src, i):
+                j, classe = i + 1, False
+                while j < n:
+                    d = src[j]
+                    if d == "\\": j += 2; continue
+                    if d == "\n": break          # regex não atravessa linha
+                    if d == "[": classe = True
+                    elif d == "]": classe = False
+                    elif d == "/" and not classe:
+                        j += 1
+                        while j < n and src[j].isalpha(): j += 1   # flags
+                        break
+                    j += 1
+                else:
+                    j = n
+                if j > i + 1 and (j >= n or src[j - 1] != "\n"):
+                    i = j
+                    continue
         # string simples
         if c in "'\"":
             ini, buf, i = linha, [], i + 1

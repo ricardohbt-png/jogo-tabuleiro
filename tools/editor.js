@@ -1,7 +1,9 @@
 "use strict";
 (function () {
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
-  const ELEVACAO_MIN = -1, ELEVACAO_MAX = 2;
+  // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py — validar_dungeon recusa fora
+  // deste intervalo, então subir o teto aqui sem subir lá derruba o salvamento.
+  const ELEVACAO_MIN = -1, ELEVACAO_MAX = 10;
   const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], curses: [], decorations: [], materiais: [] };
   // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
   // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
@@ -99,6 +101,10 @@
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
+    pontes: [],
+    nextPonteId: 0,
+    ponteLargura: 1,
+    ponteDrag: null,
     materiais: {},                 // {"x,y": id}
     elevacoes: {},                 // {"x,y": nível visual (-1..2)}
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
@@ -722,7 +728,10 @@
     const level = elevationAt(x, y);
     if (!level) return;
     const X = x * CELL, Y = y * CELL;
-    const depth = 2 + Math.abs(level) * 3;
+    // A espessura da borda cresce com o nível, mas com teto: em +10 a fórmula
+    // antiga dava 32px numa casa de 28 e a "sombra" cobria o quadrado inteiro,
+    // apagando o material do piso. O teto não muda nada de −1 a +3.
+    const depth = Math.min(CELL * 0.4, 2 + Math.abs(level) * 3);
     const neighborLevel = (nx, ny) =>
       nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h
         ? elevationAt(nx, ny) : 0;
@@ -754,12 +763,54 @@
       ctx.strokeRect(X + 2, Y + 2, CELL - 4, CELL - 4);
     }
     if (S.tool === "altura") {
-      ctx.fillStyle = "rgba(12, 10, 18, .86)";
-      ctx.fillRect(X + 3, Y + 3, 15, 12);
-      ctx.fillStyle = level > 0 ? "#ffe18b" : "#87dfff";
+      // A etiqueta acompanha o texto: "+10" não cabia na caixa fixa de 15px e
+      // saía cortada. Mede primeiro, desenha a caixa depois.
+      const texto = (level > 0 ? "+" : "") + level;
       ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText((level > 0 ? "+" : "") + level, X + 10.5, Y + 9);
+      const larg = Math.max(15, ctx.measureText(texto).width + 6);
+      ctx.fillStyle = "rgba(12, 10, 18, .86)";
+      ctx.fillRect(X + 3, Y + 3, larg, 12);
+      ctx.fillStyle = level > 0 ? "#ffe18b" : "#87dfff";
+      ctx.fillText(texto, X + 3 + larg / 2, Y + 9);
     }
+    ctx.restore();
+  }
+
+  function drawBridgeEditor(bridge, preview = false) {
+    const tiles = bridgeTilesOf(bridge, bridge?.inicio, bridge?.fim, bridge?.largura);
+    if (!tiles.length) return;
+    const horizontal = bridge.inicio[1] === bridge.fim[1];
+    const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+    const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+    ctx.save();
+    const base = preview ? "rgba(65,32,12,.72)" : "#4a270f";
+    const deck = preview ? "rgba(194,130,58,.60)" : "#9a5b28";
+    // Duas longarinas contínuas abaixo do tabuleiro.
+    ctx.fillStyle = base;
+    if (horizontal) {
+      for (const yy of [minY * CELL + CELL * .18, (maxY + 1) * CELL - CELL * .28])
+        ctx.fillRect(minX * CELL + 2, yy, (maxX - minX + 1) * CELL - 4, Math.max(3, CELL * .10));
+    } else {
+      for (const xx of [minX * CELL + CELL * .18, (maxX + 1) * CELL - CELL * .28])
+        ctx.fillRect(xx, minY * CELL + 2, Math.max(3, CELL * .10), (maxY - minY + 1) * CELL - 4);
+    }
+    // Tábuas transversais, separadas por uma pequena fresta.
+    const first = horizontal ? minX : minY, last = horizontal ? maxX : maxY;
+    for (let step = first; step <= last; step++) {
+      const pad = 2, gap = Math.max(2, CELL * .055);
+      ctx.fillStyle = deck;
+      if (horizontal) ctx.fillRect(step * CELL + pad, minY * CELL + pad, CELL - 2 * pad, (maxY - minY + 1) * CELL - 2 * pad);
+      else ctx.fillRect(minX * CELL + pad, step * CELL + pad, (maxX - minX + 1) * CELL - 2 * pad, CELL - 2 * pad);
+      ctx.strokeStyle = "rgba(62,31,12,.92)"; ctx.lineWidth = 1;
+      ctx.strokeRect(
+        horizontal ? step * CELL + gap : minX * CELL + gap,
+        horizontal ? minY * CELL + gap : step * CELL + gap,
+        horizontal ? CELL - 2 * gap : (maxX - minX + 1) * CELL - 2 * gap,
+        horizontal ? (maxY - minY + 1) * CELL - 2 * gap : CELL - 2 * gap
+      );
+    }
+    ctx.strokeStyle = preview ? "#ffe08a" : "#4c2b14"; ctx.lineWidth = 2;
+    ctx.strokeRect(minX * CELL + 1, minY * CELL + 1, (maxX - minX + 1) * CELL - 2, (maxY - minY + 1) * CELL - 2);
     ctx.restore();
   }
 
@@ -803,6 +854,8 @@
     for (let y = 0; y < S.grid.h; y++)
       for (let x = 0; x < S.grid.w; x++)
         if (S.tiles[y][x] === FLOOR || S.tiles[y][x] === DOOR) drawElevationEditor(x, y);
+    for (const bridge of S.pontes) drawBridgeEditor(bridge);
+    if (S.ponteDrag) drawBridgeEditor({ inicio: S.ponteDrag.start, fim: S.ponteDrag.end, largura: S.ponteDrag.width }, true);
     for (const r of S.rooms) {
       ctx.strokeStyle = r.locked ? "#e0683c" : "#8fb0e0";
       ctx.lineWidth = 2;
@@ -987,6 +1040,15 @@
       ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(minX * CELL + 2, minY * CELL + 2, ctx.measureText(label).width + 5, 13);
       ctx.fillStyle = "#ffd86a"; ctx.fillText(label, minX * CELL + 4, minY * CELL + 3);
       ctx.textAlign = "start";
+    } else if (S.sel && S.sel.kind === "bridge" && S.sel.ref) {
+      const tiles = bridgeTilesOf(S.sel.ref);
+      if (tiles.length) {
+        const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
+        const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+        ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2; ctx.setLineDash([4, 2]);
+        ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
+        ctx.setLineDash([]);
+      }
     } else if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
       // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
       const tiles = decorTiles(S.sel.ref);
@@ -1062,6 +1124,7 @@
     { id: "floor", label: "chão", group: "tiles" },
     { id: "door", label: "porta", group: "tiles" },
     { id: "altura", label: "altura", group: "tiles" },
+    { id: "ponte", label: "ponte", group: "tiles" },
     { id: "entrance", label: "entrada", group: "entidades" },
     { id: "hero_spawn", label: "início herói", group: "entidades" },
     { id: "exit", label: "saída", group: "entidades" },
@@ -1184,10 +1247,17 @@
     if (S.tool === "altura") {
       const level = document.createElement("select");
       level.id = "terrain-height-value";
-      level.innerHTML = [
-        [-1, "−1 · depressão"], [0, "0 · nivelar"],
-        [1, "+1 · elevado"], [2, "+2 · muito elevado"],
-      ].map(([value, label]) => `<option value="${value}"${Number(value) === Number(S.elevacaoValor) ? " selected" : ""}>${label}</option>`).join("");
+      // Gerado a partir do intervalo, não escrito à mão: mexer em ELEVACAO_MIN/MAX
+      // passa a bastar. Os rótulos nomeiam só os degraus baixos, que são os que
+      // o autor distingue de olho; daí para cima o número já diz tudo.
+      const NOME_NIVEL = { "-1": "depressão", 0: "nivelar", 1: "elevado", 2: "muito elevado" };
+      const niveis = [];
+      for (let n = ELEVACAO_MAX; n >= ELEVACAO_MIN; n--) niveis.push(n);
+      level.innerHTML = niveis.map(n => {
+        const sinal = n > 0 ? "+" + n : (n < 0 ? "−" + Math.abs(n) : "0");
+        const nome = NOME_NIVEL[n];
+        return `<option value="${n}"${n === Number(S.elevacaoValor) ? " selected" : ""}>${sinal} · ${nome || "nível " + n}</option>`;
+      }).join("");
       level.onchange = e => { S.elevacaoValor = Number(e.target.value); render(); };
       tb.appendChild(level);
       const transition = document.createElement("select");
@@ -1198,6 +1268,17 @@
       tb.appendChild(transition);
       const hint = document.createElement("small");
       hint.textContent = "Clique e arraste no chão; a altura é apenas visual nesta fase.";
+      hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
+      tb.appendChild(hint);
+    }
+    if (S.tool === "ponte") {
+      const width = document.createElement("select");
+      width.id = "bridge-width";
+      width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>largura: ${n} quadrado${n > 1 ? "s" : ""}</option>`).join("");
+      width.onchange = e => { S.ponteLargura = Math.max(1, Math.min(3, Number(e.target.value) | 0)); render(); };
+      tb.appendChild(width);
+      const hint = document.createElement("small");
+      hint.textContent = "Arraste entre pontos da mesma altura; a ponte não altera o terreno abaixo.";
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
@@ -1290,6 +1371,56 @@
     return Number.isInteger(n) ? Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, n)) : 0;
   }
 
+  function bridgeTilesOf(bridge, start, end, width) {
+    const a = start || bridge?.inicio, b = end || bridge?.fim;
+    const largura = Math.max(1, Math.min(3, Number(width ?? bridge?.largura ?? 1) | 0));
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length < 2 || b.length < 2
+        || (a[0] !== b[0] && a[1] !== b[1]) || (a[0] === b[0] && a[1] === b[1])) return [];
+    const out = [];
+    if (a[1] === b[1]) {
+      const x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]);
+      const y0 = a[1] - Math.floor(largura / 2);
+      for (let y = y0; y < y0 + largura; y++) for (let x = x0; x <= x1; x++) out.push([x, y]);
+    } else {
+      const y0 = Math.min(a[1], b[1]), y1 = Math.max(a[1], b[1]);
+      const x0 = a[0] - Math.floor(largura / 2);
+      for (let x = x0; x < x0 + largura; x++) for (let y = y0; y <= y1; y++) out.push([x, y]);
+    }
+    return out;
+  }
+
+  // Altura da superfície da ponte: a MAIS BAIXA das duas pontas, derivada na
+  // hora. O campo `altura` deixou de ser fonte de verdade — gravá-lo na
+  // criação e nunca atualizar era o que deixava a ponte no fundo do vão
+  // quando o autor pintava a elevação depois de traçá-la.
+  function bridgeAltura(bridge) {
+    const a = bridge?.inicio, b = bridge?.fim || a;
+    if (!Array.isArray(a) || !Array.isArray(b)) return 0;
+    return Math.min(elevationAt(a[0], a[1]), elevationAt(b[0], b[1]));
+  }
+
+  function bridgeAt(x, y) {
+    return S.pontes.find(p => bridgeTilesOf(p).some(([tx, ty]) => tx === x && ty === y)) || null;
+  }
+
+  function bridgeDragValid(drag) {
+    if (!drag) return false;
+    const tiles = bridgeTilesOf(null, drag.start, drag.end, drag.width);
+    if (!tiles.length || tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) return false;
+    if (![FLOOR, DOOR].includes(S.tiles[drag.start[1]]?.[drag.start[0]])
+        || ![FLOOR, DOOR].includes(S.tiles[drag.end[1]]?.[drag.end[0]])) return false;
+    if (elevationAt(drag.start[0], drag.start[1]) !== elevationAt(drag.end[0], drag.end[1])) return false;
+    return !tiles.some(([x, y]) => bridgeAt(x, y));
+  }
+
+  function placeBridge(start, end, width) {
+    const drag = { start: start.slice(), end: end.slice(), width: Math.max(1, Math.min(3, Number(width) | 0)) };
+    if (!bridgeDragValid(drag)) return false;
+    S.pontes.push({ id: "ponte_" + S.nextPonteId++, inicio: drag.start, fim: drag.end,
+      largura: drag.width, altura: bridgeAltura({ inicio: drag.start, fim: drag.end }) });
+    return true;
+  }
+
   function paintElevation(x, y) {
     if (!S.tiles[y] || ![FLOOR, DOOR].includes(S.tiles[y][x])) return;
     const value = Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, Number(S.elevacaoValor) || 0));
@@ -1364,6 +1495,8 @@
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) found.push({ kind: "prisoner", ref: S.prisoner, pos: S.prisoner.pos.slice() });
     for (const p of S.secretPassages) if (p.pos[0] === x && p.pos[1] === y)
       found.push({ kind: "secret_passage", ref: p, pos: p.pos.slice() });
+    const bridge = bridgeAt(x, y);
+    if (bridge) found.push({ kind: "bridge", ref: bridge, pos: bridge.inicio.slice() });
     const decs = S.decorations.filter(d => decorTiles(d).some(c => c[0] === x && c[1] === y));
     for (const d of decs.filter(d => !isFloorDecor(d)).concat(decs.filter(isFloorDecor)))
       found.push({ kind: "decor", ref: d, pos: d.pos.slice() });
@@ -1461,6 +1594,10 @@
       const before = S.chests.length;
       S.chests = S.chests.filter(c => c !== ref);
       if (S.chests.length === before) return false;
+    } else if (kind === "bridge") {
+      const before = S.pontes.length;
+      S.pontes = S.pontes.filter(p => p !== ref);
+      if (S.pontes.length === before) return false;
     } else {
       return false;
     }
@@ -1961,6 +2098,15 @@
       return;
     }
     const k = S.sel.kind, ref = S.sel.ref;
+    if (k === "bridge") {
+      const tiles = bridgeTilesOf(ref);
+      panel.innerHTML = `<b>🌉 Ponte de madeira rústica</b>
+        <div style="color:#a89773;font-size:11px;line-height:1.5;margin-top:6px">${tiles.length} casas · largura ${ref.largura} · altura ${ref.altura}</div>
+        <div style="color:#8a7a5a;font-size:11px;margin-top:6px">A ponte não altera o terreno abaixo. Criaturas podem cair pelas laterais ao serem empurradas.</div>
+        <button id="bridge-delete" style="margin-top:10px">🗑 Deletar ponte</button>`;
+      document.getElementById("bridge-delete").onclick = () => deleteSelectedEntity();
+      return;
+    }
     if (k === "door") {
       const rot = doorRotationAt(ref.x, ref.y);
       const conditionKey = doorKey(ref.x, ref.y);
@@ -2595,7 +2741,11 @@
       renderPanel(); render(); updateStatus();
       return;
     }
-    if (S.tool === "decor" && decorBrushActive && decorClipboard) {
+    if (S.tool === "ponte") {
+      S.ponteDrag = { start: c.slice(), end: c.slice(), width: S.ponteLargura };
+      render(); updateStatus();
+    }
+    else if (S.tool === "decor" && decorBrushActive && decorClipboard) {
       decorAreaPaint = { x0: x, y0: y, x1: x, y1: y };
       render();
     }
@@ -2623,7 +2773,7 @@
       // Clique repetido na mesma casa alterna entre as entidades empilhadas.
       S.sel = entityAt(x, y, true) || roomSel(x, y);
       // Entidades pontuais/decorações entram em modo arrasto (sala não).
-       if (S.sel && S.sel.kind !== "room" && S.sel.kind !== "door" && S.sel.pos) {
+       if (S.sel && S.sel.kind !== "room" && S.sel.kind !== "door" && S.sel.kind !== "bridge" && S.sel.pos) {
         const anchor = S.sel.pos;
         _drag = { sel: S.sel, offX: x - anchor[0], offY: y - anchor[1],
                   origin: anchor.slice(), candidate: null, valid: true, moved: false };
@@ -2656,6 +2806,9 @@
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
+    if (S.ponteDrag) {
+      S.ponteDrag.end = c.slice(); render(); return;
+    }
     if (decorAreaPaint) {
       decorAreaPaint.x1 = c[0]; decorAreaPaint.y1 = c[1]; render(); return;
     }
@@ -2711,6 +2864,15 @@
       const area = decorAreaPaint;
       decorAreaPaint = null;
       pasteDecorArea(area);
+      renderPanel(); render(); updateStatus();
+    }
+    if (S.ponteDrag) {
+      const drag = S.ponteDrag; S.ponteDrag = null;
+      if (drag.start[0] !== drag.end[0] || drag.start[1] !== drag.end[1]) {
+        if (!placeBridge(drag.start, drag.end, drag.width)) {
+          alert("A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura.");
+        }
+      }
       renderPanel(); render(); updateStatus();
     }
     if (_drag) {
@@ -2852,6 +3014,7 @@
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
+      pontes: S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p) })),
       elevacoes: Object.fromEntries(Object.entries(S.elevacoes)
         .filter(([key, value]) => value && Number.isInteger(value))
         .map(([key, value]) => [key, Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, value))])),
@@ -2869,13 +3032,14 @@
     const origin = start || (S.entrance && [S.entrance.x, S.entrance.y]);
     if (!origin) return 0;
     const [x, y] = origin;
-    if (S.tiles[y][x] === WALL) return 0;
+    if (S.tiles[y][x] === WALL && !bridgeAt(x, y)) return 0;
     const seen = new Set([x + "," + y]); const st = [[x, y]]; let n = 0;
     while (st.length) {
       const [cx, cy] = st.pop(); n++; if (n >= limit) return n;
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy, k = nx + "," + ny;
-        if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k) && S.tiles[ny][nx] !== WALL) { seen.add(k); st.push([nx, ny]); }
+        if (nx >= 0 && ny >= 0 && nx < S.grid.w && ny < S.grid.h && !seen.has(k)
+            && (S.tiles[ny][nx] !== WALL || bridgeAt(nx, ny))) { seen.add(k); st.push([nx, ny]); }
       }
     }
     return n;
@@ -3047,6 +3211,22 @@
         && profundo.has(`${x},${y + 1}`)
         && profundo.has(`${x + 1},${y + 1}`);
     })) e.push("rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas");
+    const bridgeIds = new Set(), bridgeOccupied = new Set();
+    for (const bridge of S.pontes) {
+      if (!bridge || !bridge.id || bridgeIds.has(bridge.id)) { e.push("ponte com id duplicado ou vazio"); continue; }
+      bridgeIds.add(bridge.id);
+      const tiles = bridgeTilesOf(bridge);
+      if (!tiles.length) { e.push(`ponte ${bridge.id} precisa ser reta e ter início/fim distintos`); continue; }
+      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(`ponte ${bridge.id} fora do grid`);
+      if (![FLOOR, DOOR].includes(S.tiles[bridge.inicio?.[1]]?.[bridge.inicio?.[0]])
+          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(`ponte ${bridge.id} precisa começar e terminar em chão ou porta`);
+      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(`ponte ${bridge.id} liga alturas diferentes`);
+      for (const [x, y] of tiles) {
+        const key = `${x},${y}`;
+        if (bridgeOccupied.has(key)) e.push(`pontes sobrepostas em ${key}`);
+        bridgeOccupied.add(key);
+      }
+    }
     for (const [key, value] of Object.entries(S.elevacoes)) {
       const p = key.split(",").map(Number);
       if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
@@ -3221,6 +3401,17 @@
           && Number.isInteger(n) && n >= ELEVACAO_MIN && n <= ELEVACAO_MAX && n !== 0)
         S.elevacoes[key] = n;
     }
+    S.pontes = (Array.isArray(obj.pontes) ? obj.pontes : []).map((p, i) => {
+      const inicio = Array.isArray(p.inicio || p.start) ? (p.inicio || p.start).slice(0, 2).map(Number) : [0, 0];
+      const fim = Array.isArray(p.fim || p.end) ? (p.fim || p.end).slice(0, 2).map(Number) : inicio.slice();
+      return { id: p.id || `ponte_${i}`, inicio, fim,
+        largura: Math.max(1, Math.min(3, Number(p.largura ?? p.width ?? 1) | 0)),
+        altura: Number.isInteger(Number(p.altura ?? p.height)) ? Number(p.altura ?? p.height) : elevationAt(inicio[0], inicio[1]) };
+    });
+    S.nextPonteId = S.pontes.reduce((next, p) => {
+      const m = /^ponte_(\d+)$/.exec(p.id || "");
+      return m ? Math.max(next, Number(m[1]) + 1) : next;
+    }, S.pontes.length);
     S.transicaoAltura = obj.transicao_altura === "declive" ? "declive" : "rampa";
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
@@ -3319,12 +3510,14 @@
     const h = Math.max(1, Math.min(60, Number(document.getElementById("g-h").value) | 0));
     const old = S.tiles, ow = S.grid.w, oh = S.grid.h;
     const oldElevacoes = { ...S.elevacoes };
+    const oldPontes = S.pontes.slice();
     initGrid(w, h);
     for (let y = 0; y < Math.min(h, oh); y++) for (let x = 0; x < Math.min(w, ow); x++) S.tiles[y][x] = old[y][x];
     for (const [key, value] of Object.entries(oldElevacoes)) {
       const [x, y] = key.split(",").map(Number);
       if (x >= 0 && y >= 0 && x < w && y < h && [FLOOR, DOOR].includes(S.tiles[y][x])) S.elevacoes[key] = value;
     }
+    S.pontes = oldPontes.filter(p => bridgeTilesOf(p).every(([x, y]) => x >= 0 && y >= 0 && x < w && y < h));
     render();
   };
 
@@ -3375,7 +3568,7 @@
   document.getElementById("tab-cenas").onclick = () => setTab("cenas");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, rotateFacing, rotateDecorPending, doorRotationAt, rotateDoorAt, rotateDoorSelected, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
+  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, bridgeTilesOf, placeBridge, rotateFacing, rotateDecorPending, doorRotationAt, rotateDoorAt, rotateDoorSelected, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();

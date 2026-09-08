@@ -211,7 +211,7 @@ window.LANG_CATALOGO = {
     "pt": "Arca de tesouros"
   },
   "cat.decor.armadura.nome": {
-    "en": "",
+    "en": "Armor Stand",
     "pt": "Armadura"
   },
   "cat.decor.arvore.nome": {
@@ -231,7 +231,7 @@ window.LANG_CATALOGO = {
     "pt": "Barril"
   },
   "cat.decor.brasa_chao.nome": {
-    "en": "",
+    "en": "Embers",
     "pt": "Brasa no chão"
   },
   "cat.decor.brasao_leao.nome": {
@@ -259,7 +259,7 @@ window.LANG_CATALOGO = {
     "pt": "Caverna"
   },
   "cat.decor.chama_viva.nome": {
-    "en": "",
+    "en": "Living Flame",
     "pt": "Chama viva"
   },
   "cat.decor.chao.nome": {
@@ -279,7 +279,7 @@ window.LANG_CATALOGO = {
     "pt": "Cortina vermelha"
   },
   "cat.decor.cripta.nome": {
-    "en": "",
+    "en": "Crypt",
     "pt": "Cripta"
   },
   "cat.decor.estante.nome": {
@@ -303,7 +303,7 @@ window.LANG_CATALOGO = {
     "pt": "Fonte"
   },
   "cat.decor.fonte_de_parede.nome": {
-    "en": "",
+    "en": "Wall Fountain",
     "pt": "Fonte de parede"
   },
   "cat.decor.gaiola.nome": {
@@ -315,7 +315,7 @@ window.LANG_CATALOGO = {
     "pt": "Grades de prisão"
   },
   "cat.decor.lapide.nome": {
-    "en": "",
+    "en": "Gravestone",
     "pt": "Lápide"
   },
   "cat.decor.lareira.nome": {
@@ -335,7 +335,7 @@ window.LANG_CATALOGO = {
     "pt": "Mesa de tortura"
   },
   "cat.decor.prisao.nome": {
-    "en": "",
+    "en": "Prison",
     "pt": "Prisão"
   },
   "cat.decor.trono.nome": {
@@ -347,7 +347,7 @@ window.LANG_CATALOGO = {
     "pt": "Tumba"
   },
   "cat.decor.tumba_lapide.nome": {
-    "en": "",
+    "en": "Tomb with Gravestone",
     "pt": "Tumba com lápide"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
@@ -927,11 +927,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Garaloux Jovem"
   },
   "cat.guilda.lenda_gato.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Cat.",
     "pt": "+1 de ataque e +1 nos saves contra Gato."
   },
   "cat.guilda.lenda_gato.nome": {
-    "en": "",
+    "en": "Lore: Cat",
     "pt": "Lenda: Gato"
   },
   "cat.guilda.lenda_gigante_guerra.desc": {
@@ -991,19 +991,19 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Xamã Goblin"
   },
   "cat.guilda.lenda_grande_gorgona.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Greater Gorgon.",
     "pt": "+1 de ataque e +1 nos saves contra Grande Gorgona."
   },
   "cat.guilda.lenda_grande_gorgona.nome": {
-    "en": "",
+    "en": "Lore: Greater Gorgon",
     "pt": "Lenda: Grande Gorgona"
   },
   "cat.guilda.lenda_grande_medusa.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Greater Medusa.",
     "pt": "+1 de ataque e +1 nos saves contra Grande Medusa."
   },
   "cat.guilda.lenda_grande_medusa.nome": {
-    "en": "",
+    "en": "Lore: Greater Medusa",
     "pt": "Lenda: Grande Medusa"
   },
   "cat.guilda.lenda_grotao.desc": {
@@ -1087,11 +1087,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lorde Vampiro"
   },
   "cat.guilda.lenda_medusa.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Medusa.",
     "pt": "+1 de ataque e +1 nos saves contra Medusa."
   },
   "cat.guilda.lenda_medusa.nome": {
-    "en": "",
+    "en": "Lore: Medusa",
     "pt": "Lenda: Medusa"
   },
   "cat.guilda.lenda_molochus_adulto.desc": {
@@ -1159,27 +1159,27 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Orc Guerreiro"
   },
   "cat.guilda.lenda_ovelha.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Sheep.",
     "pt": "+1 de ataque e +1 nos saves contra Ovelha."
   },
   "cat.guilda.lenda_ovelha.nome": {
-    "en": "",
+    "en": "Lore: Sheep",
     "pt": "Lenda: Ovelha"
   },
   "cat.guilda.lenda_pombo.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Pigeon.",
     "pt": "+1 de ataque e +1 nos saves contra Pombo."
   },
   "cat.guilda.lenda_pombo.nome": {
-    "en": "",
+    "en": "Lore: Pigeon",
     "pt": "Lenda: Pombo"
   },
   "cat.guilda.lenda_rato.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 on saves against Rat.",
     "pt": "+1 de ataque e +1 nos saves contra Rato."
   },
   "cat.guilda.lenda_rato.nome": {
-    "en": "",
+    "en": "Lore: Rat",
     "pt": "Lenda: Rato"
   },
   "cat.guilda.lenda_skeleton.desc": {
@@ -1988,7 +1988,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.bota_alada.desc": {
     "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
-    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
+    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10."
   },
   "cat.item.bota_alada.nome": {
     "en": "Winged Boot",
@@ -2503,11 +2503,11 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Guerra Órquico de Prata"
   },
   "cat.item.magia_voo.desc": {
-    "en": "",
+    "en": "Learn the Flight spell, which lets you control the target's altitude up to 10.",
     "pt": "Aprende a magia Voo, que permite controlar a altura do alvo até 10."
   },
   "cat.item.magia_voo.nome": {
-    "en": "",
+    "en": "Flight",
     "pt": "Voo"
   },
   "cat.item.mangual.desc": {
@@ -2607,7 +2607,7 @@ window.LANG_CATALOGO = {
     "pt": "Desarmado"
   },
   "cat.item.vela_escuridao.desc": {
-    "en": "",
+    "en": "Bonus action. You stay hidden until the end of the turn; your next attack has advantage. For the Rogue, the next attack automatically triggers Sneak Attack.",
     "pt": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
   },
   "cat.item.vela_escuridao.nome": {
@@ -2659,11 +2659,11 @@ window.LANG_CATALOGO = {
     "pt": "Fungo Acre"
   },
   "cat.item.veneno_medusa.nome": {
-    "en": "",
+    "en": "Medusa Venom",
     "pt": "Veneno da Medusa"
   },
   "cat.item.veneno_polvo_abissal.desc": {
-    "en": "",
+    "en": "Fortitude DC 11. Failure: blinded for 1d4 rounds, vision 1 square, -5 perception, -4 to attacks and no ranged attacks. Success: -2 perception for 1d4 rounds.",
     "pt": "Fortitude CD 11. Falha: cegueira por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: percepção -2 por 1d4 rodadas."
   },
   "cat.item.veneno_polvo_abissal.nome": {
@@ -2759,11 +2759,11 @@ window.LANG_CATALOGO = {
     "pt": "Bola de Fogo"
   },
   "cat.magia.chamado_inverno.desc": {
-    "en": "",
+    "en": "4x4 area (+1 square every 2 levels). Turns the ground into Frozen Floor or Snowy Plain for 1d4 + level rounds. Permanent: +20 Hunger and +20 Thirst.",
     "pt": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede."
   },
   "cat.magia.chamado_inverno.nome": {
-    "en": "",
+    "en": "Call of Winter",
     "pt": "Chamado do Inverno"
   },
   "cat.magia.clarividencia.desc": {
@@ -2863,19 +2863,19 @@ window.LANG_CATALOGO = {
     "pt": "Medo"
   },
   "cat.magia.metamorfose.desc": {
-    "en": "",
+    "en": "Turns a living creature into an unlocked form from the bestiary. The form keeps its attributes, attacks, defense, movement and abilities; upkeep costs 1 Hunger and 1 Thirst per round.",
     "pt": "Transforma uma criatura viva em uma forma desbloqueada do bestiário. A forma mantém seus atributos, ataques, defesa, movimento e habilidades; a manutenção custa 1 Fome e 1 Sede por rodada."
   },
   "cat.magia.metamorfose.nome": {
-    "en": "",
+    "en": "Polymorph",
     "pt": "Metamorfose"
   },
   "cat.magia.olhar_petrificante.desc": {
-    "en": "",
+    "en": "A target with the caster in sight makes a Will save. It rolls once at the start, twice per turn while the caster stays visible, and up to five final saves after losing sight. Three failures petrify permanently; three successes end the effect.",
     "pt": "O alvo que tiver o conjurador em sua visão testa Vontade. Faz um teste inicial, dois por turno enquanto o conjurador permanecer visível e até cinco testes finais após perdê-lo de vista. Três falhas petrificam permanentemente; três sucessos encerram o efeito."
   },
   "cat.magia.olhar_petrificante.nome": {
-    "en": "",
+    "en": "Petrifying Gaze",
     "pt": "Olhar Petrificante"
   },
   "cat.magia.protecao_energia.desc": {
@@ -2920,11 +2920,19 @@ window.LANG_CATALOGO = {
   },
   "cat.magia.saciar.desc": {
     "en": "Touch. +20 hunger +20 thirst to 1 ally.",
-    "pt": "Toque. +20 fome +20 sede em 1 aliado."
+    "pt": "Toque. +25 fome +25 sede em 1 aliado."
   },
   "cat.magia.saciar.nome": {
     "en": "Satiate",
     "pt": "Saciar"
+  },
+  "cat.magia.senhor_das_aguas.desc": {
+    "en": "Turns an area into Water or Deep Water for 1d4 + level rounds. From the second round on, and in any later round while the spell lasts, you may mark squares of the area as whirlpools as a free action, up to half the cleric's level in total. The quota accumulates (you can mark a few squares at a time) and the whirlpools last until the spell ends.",
+    "pt": "Transforma uma área em Água ou Água profunda por 1d4 + nível rodadas. A partir da segunda rodada, e em qualquer rodada seguinte enquanto a magia durar, pode marcar casas da área como redemoinho por ação livre, até somar metade do nível do clérigo no total. A cota é acumulada (dá para marcar poucas casas por vez) e os redemoinhos permanecem até o fim da magia."
+  },
+  "cat.magia.senhor_das_aguas.nome": {
+    "en": "Lord of Waters",
+    "pt": "Senhor das Águas"
   },
   "cat.magia.silencio.desc": {
     "en": "4x4 area. No spells or Heroic Song bonuses inside. Lasts 1d4 rounds.",
@@ -2959,11 +2967,11 @@ window.LANG_CATALOGO = {
     "pt": "Visão no Escuro"
   },
   "cat.magia.voo.desc": {
-    "en": "",
+    "en": "Grants Flight to an ally: range 3 squares +1 every 3 caster levels; starting altitude 2, maximum 10.",
     "pt": "Ativa Voo em um aliado: alcance 3 quadrados +1 a cada 3 níveis de conjurador; altura inicial 2, máxima 10."
   },
   "cat.magia.voo.nome": {
-    "en": "",
+    "en": "Flight",
     "pt": "Voo"
   },
   "cat.monstro.aranha_sombria.nome": {
@@ -3107,7 +3115,7 @@ window.LANG_CATALOGO = {
     "pt": "Garaloux Jovem"
   },
   "cat.monstro.gato.nome": {
-    "en": "",
+    "en": "Cat",
     "pt": "Gato"
   },
   "cat.monstro.gigante_guerra.nome": {
@@ -3139,11 +3147,11 @@ window.LANG_CATALOGO = {
     "pt": "Xamã Goblin"
   },
   "cat.monstro.grande_gorgona.nome": {
-    "en": "",
+    "en": "Greater Gorgon",
     "pt": "Grande Gorgona"
   },
   "cat.monstro.grande_medusa.nome": {
-    "en": "",
+    "en": "Greater Medusa",
     "pt": "Grande Medusa"
   },
   "cat.monstro.grotao.nome": {
@@ -3155,7 +3163,7 @@ window.LANG_CATALOGO = {
     "pt": "Grotão"
   },
   "cat.monstro.harpia.nome": {
-    "en": "",
+    "en": "Harpy",
     "pt": "Harpia"
   },
   "cat.monstro.kobold_besteiro.nome": {
@@ -3199,15 +3207,15 @@ window.LANG_CATALOGO = {
     "pt": "Lorde Vampiro"
   },
   "cat.monstro.medusa.nome": {
-    "en": "",
+    "en": "Medusa",
     "pt": "Medusa"
   },
   "cat.monstro.minotauro.nome": {
-    "en": "",
+    "en": "Minotaur",
     "pt": "Minotauro"
   },
   "cat.monstro.minotauro_elite.nome": {
-    "en": "",
+    "en": "Elite Minotaur",
     "pt": "Minotauro de Elite"
   },
   "cat.monstro.molochus_adulto.nome": {
@@ -3243,15 +3251,15 @@ window.LANG_CATALOGO = {
     "pt": "Orc Guerreiro"
   },
   "cat.monstro.ovelha.nome": {
-    "en": "",
+    "en": "Sheep",
     "pt": "Ovelha"
   },
   "cat.monstro.pombo.nome": {
-    "en": "",
+    "en": "Pigeon",
     "pt": "Pombo"
   },
   "cat.monstro.rato.nome": {
-    "en": "",
+    "en": "Rat",
     "pt": "Rato"
   },
   "cat.monstro.rato_gigante.nome": {

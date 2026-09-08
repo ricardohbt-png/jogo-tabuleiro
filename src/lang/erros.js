@@ -5,21 +5,6 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
-  "erro.editor_indisponivel": {
-    "pt": "Os editores só funcionam no servidor local.",
-    "en": "The editors only work on the local server."
-  },
-
-  "erro.login_bloqueado": {
-    "pt": "Muitas tentativas. Espere {segundos} segundos e tente de novo.",
-    "en": "Too many attempts. Wait {segundos} seconds and try again."
-  },
-
-  "erro.senha_curta": {
-    "pt": "A senha precisa ter pelo menos {minimo} caracteres.",
-    "en": "The password must be at least {minimo} characters."
-  },
-
   "erro._circulo_primeiro": {
     "en": "first",
     "pt": "primeiro"
@@ -68,29 +53,53 @@ window.LANG_ERROS = {
     "en": " (returns in {falta} rounds)",
     "pt": " (volta em {falta} rodadas)"
   },
+  "erro.a_acao_principal_ja_foi_usada_neste_tur": {
+    "en": "The main action has already been used this turn.",
+    "pt": "A ação principal já foi usada neste turno."
+  },
+  "erro.a_area_escolhida_nao_contem_piso_valido": {
+    "en": "The chosen area contains no valid floor.",
+    "pt": "A área escolhida não contém piso válido."
+  },
+  "erro.a_criatura": {
+    "en": "the creature",
+    "pt": "a criatura"
+  },
   "erro.a_fonte_esta_seca": {
     "en": "💧 The fountain is dry.",
     "pt": "💧 A fonte está seca."
+  },
+  "erro.a_forma_atual_nao_alcanca_esse_alvo_ou_n": {
+    "en": "The current form cannot reach that target or has no attack.",
+    "pt": "A forma atual não alcança esse alvo ou não possui ataque."
+  },
+  "erro.a_forma_transformada_nao_pode_lancar_mag": {
+    "en": "The transformed form cannot cast spells.",
+    "pt": "A forma transformada não pode lançar magias."
+  },
+  "erro.a_forma_transformada_nao_pode_usar_habil": {
+    "en": "The transformed form cannot use hero abilities.",
+    "pt": "A forma transformada não pode usar habilidades de herói."
+  },
+  "erro.a_forma_transformada_nao_pode_usar_itens": {
+    "en": "The transformed form cannot use items.",
+    "pt": "A forma transformada não pode usar itens."
+  },
+  "erro.a_harpia_nao_esta_segurando_nenhuma_pres": {
+    "en": "The Harpy is not holding any prey.",
+    "pt": "A Harpia não está segurando nenhuma presa."
   },
   "erro.a_masmorra_esta_pausada_durante_uma_cena": {
     "en": "The dungeon is paused during a scene.",
     "pt": "A masmorra está pausada durante uma cena."
   },
+  "erro.a_permanencia_so_pode_ser_tentada_uma_ve": {
+    "en": "Permanence can only be attempted once per round.",
+    "pt": "A permanência só pode ser tentada uma vez por rodada."
+  },
   "erro.a_porta_esta_fechada_clique_nela_para_ab": {
     "en": "🚪 The door is closed. Click it to open.",
     "pt": "🚪 A porta está fechada. Clique nela para abri-la."
-  },
-  "erro.porta_exige_item_chave": {
-    "en": "🚪 This door requires the key item: {item}.",
-    "pt": "🚪 Esta porta exige o item-chave: {item}."
-  },
-  "erro.porta_exige_ativacao_objeto_chave": {
-    "en": "🚪 Activate the key object(s) linked to this door first.",
-    "pt": "🚪 Ative primeiro o(s) objeto(s)-chave ligado(s) a esta porta."
-  },
-  "erro.porta_exige_licao": {
-    "en": "This door only opens once you complete your current lesson.",
-    "pt": "Esta porta só abre quando você cumprir a lição atual."
   },
   "erro.a_provocacao_do_gigante_runico_obriga_vo": {
     "en": "The Runic Giant's Taunt forces you to attack it for as long as the effect lasts.",
@@ -104,33 +113,9 @@ window.LANG_ERROS = {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
   },
-  "erro.a_acao_principal_ja_foi_usada_neste_tur": {
-    "en": "The main action has already been used this turn.",
-    "pt": "A ação principal já foi usada neste turno."
-  },
-  "erro.a_criatura": {
-    "en": "the creature",
-    "pt": "a criatura"
-  },
-  "erro.controlando_monstro_encerre_a_vez_dele": {
-    "en": "You are controlling {monstro}. End its turn (button \"End monster\" on the right panel) to get your own turn back.",
-    "pt": "Você está controlando {monstro}. Encerre a vez dele (botão \"Encerrar monstro\", no painel à direita) para voltar ao seu turno."
-  },
   "erro.acao_principal_ja_usada_neste_turno": {
     "en": "Main action already used this turn.",
     "pt": "Ação principal já usada neste turno."
-  },
-  "erro.voce_nao_tem_este_aprimoramento": {
-    "en": "You do not have this upgrade.",
-    "pt": "Você não possui este aprimoramento."
-  },
-  "erro.habilidade_animado_indisponivel": {
-    "en": "This animated creature cannot use abilities right now.",
-    "pt": "Esta criatura animada não pode usar habilidades agora."
-  },
-  "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
-    "en": "You can't attack in the same turn you hide in the shadows.",
-    "pt": "Você não pode atacar no mesmo turno em que se esconde nas sombras."
   },
   "erro.agarrado_por_captor_nao_pode_se_mover": {
     "en": "Grappled by {captor} — can't move.",
@@ -143,10 +128,6 @@ window.LANG_ERROS = {
   "erro.aliado_fora_do_alcance": {
     "en": "Ally out of range.",
     "pt": "Aliado fora do alcance."
-  },
-  "erro.parede_bloqueia_magia": {
-    "en": "🧱 A wall blocks the spell to {alvo}!",
-    "pt": "🧱 Uma parede bloqueia o feitiço até {alvo}!"
   },
   "erro.aliado_fora_do_alcance_4_casas": {
     "en": "Ally out of range (4 squares).",
@@ -183,6 +164,14 @@ window.LANG_ERROS = {
   "erro.aliado_nao_esta_petrificado": {
     "en": "{aliado} is not petrified.",
     "pt": "{aliado} não está petrificado."
+  },
+  "erro.altura_criatura_nao_alteravel": {
+    "en": "This creature's altitude cannot be changed.",
+    "pt": "A altura desta criatura não pode ser alterada."
+  },
+  "erro.altura_personagem_nao_alteravel": {
+    "en": "This character's altitude cannot be changed.",
+    "pt": "A altura deste personagem não pode ser alterada."
   },
   "erro.alvo_de_area_invalido": {
     "en": "Invalid area target.",
@@ -260,10 +249,6 @@ window.LANG_ERROS = {
     "en": "Target out of range, or the curse has no uses left/is on cooldown.",
     "pt": "Alvo fora do alcance, ou maldição sem usos/em recarga."
   },
-  "erro.alvo_so_cai_com_a_habilidade": {
-    "en": "This training target only falls to {habilidade}. Arm the ability and attack again.",
-    "pt": "Este alvo de treino só cai com {habilidade}. Arme a habilidade e ataque de novo."
-  },
   "erro.alvo_invalido": {
     "en": "Invalid target.",
     "pt": "Alvo inválido."
@@ -283,6 +268,14 @@ window.LANG_ERROS = {
   "erro.alvo_nao_esta_adjacente": {
     "en": "Target is not adjacent.",
     "pt": "Alvo não está adjacente."
+  },
+  "erro.alvo_ou_forma_invalida_para_metamorfose": {
+    "en": "Invalid target or form for Polymorph.",
+    "pt": "Alvo ou forma inválida para Metamorfose."
+  },
+  "erro.alvo_so_cai_com_a_habilidade": {
+    "en": "This training target only falls to {habilidade}. Arm the ability and attack again.",
+    "pt": "Este alvo de treino só cai com {habilidade}. Arme a habilidade e ataque de novo."
   },
   "erro.animado_invalido": {
     "en": "Invalid minion.",
@@ -351,6 +344,10 @@ window.LANG_ERROS = {
   "erro.armadilha_invalida": {
     "en": "Invalid trap.",
     "pt": "Armadilha inválida."
+  },
+  "erro.armadilha_so_pode_ser_colocada_em_objeto": {
+    "en": "This trap can only be placed on an object within reach.",
+    "pt": "Esta armadilha só pode ser colocada em um objeto ao alcance."
   },
   "erro.atalho_invalido": {
     "en": "Invalid shortcut.",
@@ -432,6 +429,14 @@ window.LANG_ERROS = {
     "en": "Finish or skip the scene before entering the dungeon.",
     "pt": "Conclua ou pule a cena antes de entrar na masmorra."
   },
+  "erro.conta_nao_encontrada_crie_uma_conta_primeiro": {
+    "en": "Account not found. Create an account first.",
+    "pt": "Conta não encontrada. Crie uma conta primeiro."
+  },
+  "erro.controlando_monstro_encerre_a_vez_dele": {
+    "en": "You are controlling {monstro}. End its turn (button \"End monster\" on the right panel) to get your own turn back.",
+    "pt": "Você está controlando {monstro}. Encerre a vez dele (botão \"Encerrar monstro\", no painel à direita) para voltar ao seu turno."
+  },
   "erro.conversa_bloqueada_requer": {
     "en": "Conversation locked: requires {motivos}.",
     "pt": "Conversa bloqueada: requer {motivos}."
@@ -444,6 +449,18 @@ window.LANG_ERROS = {
     "en": "Invalid map coordinates.",
     "pt": "Coordenadas do mapa inválidas."
   },
+  "erro.criatura_agarrada_nao_altera_altura": {
+    "en": "A grappled creature cannot change altitude.",
+    "pt": "A criatura está agarrada e não pode alterar a altura."
+  },
+  "erro.criatura_imobilizada_nao_altera_altura": {
+    "en": "An immobilized creature cannot change altitude.",
+    "pt": "A criatura está imobilizada e não pode alterar a altura."
+  },
+  "erro.criatura_nao_possui_voo": {
+    "en": "This creature cannot fly.",
+    "pt": "Esta criatura não possui Voo."
+  },
   "erro.curar_licantropia_no_estagio_iv_exige_o": {
     "en": "Curing Lycanthropy at stage IV requires double the hunger and thirst.",
     "pt": "Curar Licantropia no estágio IV exige o dobro de fome e sede."
@@ -452,13 +469,13 @@ window.LANG_ERROS = {
     "en": "Turn off the current song before changing the attributes.",
     "pt": "Desative a canção atual antes de trocar os atributos."
   },
-  "erro.destino_de_aventura_invalido": {
-    "en": "Invalid adventure destination.",
-    "pt": "Destino de aventura inválido."
-  },
   "erro.destino_bloqueado_requer": {
     "en": "Destination locked: requires {motivos}.",
     "pt": "Destino bloqueado: requer {motivos}."
+  },
+  "erro.destino_de_aventura_invalido": {
+    "en": "Invalid adventure destination.",
+    "pt": "Destino de aventura inválido."
   },
   "erro.destino_inalcancavel": {
     "en": "Destination unreachable.",
@@ -483,6 +500,10 @@ window.LANG_ERROS = {
   "erro.e_preciso_pelo_menos_1_heroi_para_inicia": {
     "en": "At least 1 hero is needed to start.",
     "pt": "É preciso pelo menos 1 herói para iniciar."
+  },
+  "erro.editor_indisponivel": {
+    "en": "The editors only work on the local server.",
+    "pt": "Os editores só funcionam no servidor local."
   },
   "erro.em_ultimo_esforco_voce_nao_pode_se_curar": {
     "en": "🔥 You can't heal yourself during Last Stand!",
@@ -520,6 +541,14 @@ window.LANG_ERROS = {
     "en": "Internal error: {tipo}",
     "pt": "Erro interno: {tipo}"
   },
+  "erro.escolha_agua_ou_agua_profunda_para_o_sen": {
+    "en": "Choose Water or Deep Water for Lord of Waters.",
+    "pt": "Escolha Água ou Água profunda para o Senhor das Águas."
+  },
+  "erro.escolha_as_casas_dos_redemoinhos": {
+    "en": "Choose the whirlpool squares.",
+    "pt": "Escolha as casas dos redemoinhos."
+  },
   "erro.escolha_exatamente_2_magias_de_1o_circul": {
     "en": "Choose exactly 2 first-circle spells.",
     "pt": "Escolha exatamente 2 magias de 1º círculo."
@@ -528,6 +557,14 @@ window.LANG_ERROS = {
     "en": "Invalid choice.",
     "pt": "Escolha inválida."
   },
+  "erro.escolha_o_centro_da_area_do_chamado_do_i": {
+    "en": "Choose the center of the Call of Winter area.",
+    "pt": "Escolha o centro da área do Chamado do Inverno."
+  },
+  "erro.escolha_o_centro_da_area_do_senhor_das_a": {
+    "en": "Choose the center of the Lord of Waters area.",
+    "pt": "Escolha o centro da área do Senhor das Águas."
+  },
   "erro.escolha_pelo_menos_um_atributo_para_a_ca": {
     "en": "Choose at least one attribute for the song.",
     "pt": "Escolha pelo menos um atributo para a canção."
@@ -535,6 +572,10 @@ window.LANG_ERROS = {
   "erro.escolha_pelo_menos_um_bonus": {
     "en": "Choose at least one bonus.",
     "pt": "Escolha pelo menos um bônus."
+  },
+  "erro.escolha_piso_congelado_ou_planicie_nevad": {
+    "en": "Choose Frozen Floor or Snowy Plain for Call of Winter.",
+    "pt": "Escolha Piso congelado ou Planície nevada para o Chamado do Inverno."
   },
   "erro.escolha_sua_nova_magia_antes_de_encerrar": {
     "en": "Choose your new spell before ending the turn.",
@@ -611,6 +652,10 @@ window.LANG_ERROS = {
   "erro.esta_cena_nao_esta_mais_ativa": {
     "en": "This scene is no longer active.",
     "pt": "Esta cena não está mais ativa."
+  },
+  "erro.esta_conta_ja_esta_em_uso_em_outra_conexao": {
+    "en": "This account is already in use on another connection.",
+    "pt": "Esta conta já está em uso em outra conexão."
   },
   "erro.esta_conversa_ja_foi_concluida": {
     "en": "This conversation has already been completed.",
@@ -716,6 +761,10 @@ window.LANG_ERROS = {
     "en": "There's an object blocking the path.",
     "pt": "Há um objeto bloqueando o caminho."
   },
+  "erro.habilidade_animado_indisponivel": {
+    "en": "This animated creature cannot use abilities right now.",
+    "pt": "Esta criatura animada não pode usar habilidades agora."
+  },
   "erro.habilidade_invalida": {
     "en": "Invalid ability.",
     "pt": "Habilidade inválida."
@@ -796,10 +845,6 @@ window.LANG_ERROS = {
     "en": "Item not found.",
     "pt": "Item não encontrado."
   },
-  "erro.item_sem_reparo_disponivel": {
-    "en": "This item has no repairable corrosion.",
-    "pt": "Este item não possui corrosão reparável."
-  },
   "erro.item_nao_encontrado_na_bolsa": {
     "en": "Item not found in the bag.",
     "pt": "Item não encontrado na bolsa."
@@ -815,6 +860,10 @@ window.LANG_ERROS = {
   "erro.item_nao_usavel_pelo_mestre": {
     "en": "Item can't be used by the game master.",
     "pt": "Item não usável pelo mestre."
+  },
+  "erro.item_sem_reparo_disponivel": {
+    "en": "This item has no repairable corrosion.",
+    "pt": "Este item não possui corrosão reparável."
   },
   "erro.ja_existe_um_mestre_nesta_sala": {
     "en": "There's already a game master in this room.",
@@ -835,6 +884,10 @@ window.LANG_ERROS = {
   "erro.linha_de_descarga_bloqueada_por_parede": {
     "en": "⚡ Discharge line blocked by a wall.",
     "pt": "⚡ Linha de descarga bloqueada por parede."
+  },
+  "erro.login_bloqueado": {
+    "en": "Too many attempts. Wait {segundos} seconds and try again.",
+    "pt": "Muitas tentativas. Espere {segundos} segundos e tente de novo."
   },
   "erro.magia_ainda_em_desenvolvimento": {
     "en": "{icone} {magia} is still in development.",
@@ -900,34 +953,6 @@ window.LANG_ERROS = {
     "en": "Not enough movement: this tile costs {custo}.",
     "pt": "Movimento insuficiente: esta casa custa {custo}."
   },
-  "erro.criatura_nao_possui_voo": {
-    "en": "This creature cannot fly.",
-    "pt": "Esta criatura não possui Voo."
-  },
-  "erro.altura_criatura_nao_alteravel": {
-    "en": "This creature's altitude cannot be changed.",
-    "pt": "A altura desta criatura não pode ser alterada."
-  },
-  "erro.criatura_agarrada_nao_altera_altura": {
-    "en": "A grappled creature cannot change altitude.",
-    "pt": "A criatura está agarrada e não pode alterar a altura."
-  },
-  "erro.criatura_imobilizada_nao_altera_altura": {
-    "en": "An immobilized creature cannot change altitude.",
-    "pt": "A criatura está imobilizada e não pode alterar a altura."
-  },
-  "erro.personagem_nao_possui_voo": {
-    "en": "This character cannot fly.",
-    "pt": "Este personagem não possui Voo."
-  },
-  "erro.altura_personagem_nao_alteravel": {
-    "en": "This character's altitude cannot be changed.",
-    "pt": "A altura deste personagem não pode ser alterada."
-  },
-  "erro.personagem_nao_altera_altura_neste_estado": {
-    "en": "This character cannot change altitude in its current state.",
-    "pt": "Você não pode alterar a altura neste estado."
-  },
   "erro.mp_insuficiente": {
     "en": "Insufficient MP.",
     "pt": "MP insuficiente."
@@ -980,6 +1005,10 @@ window.LANG_ERROS = {
     "en": "No free space nearby for the trap to trigger.",
     "pt": "Não há espaço livre ao lado para a armadilha disparar."
   },
+  "erro.nao_ha_monstro_sob_sua_metamorfose": {
+    "en": "There is no monster under your Polymorph.",
+    "pt": "Não há monstro sob sua Metamorfose."
+  },
   "erro.nao_ha_prisioneiro_para_libertar": {
     "en": "No prisoner to free.",
     "pt": "Não há prisioneiro para libertar."
@@ -987,6 +1016,14 @@ window.LANG_ERROS = {
   "erro.nao_ha_prisioneiro_para_mover": {
     "en": "No prisoner to move.",
     "pt": "Não há prisioneiro para mover."
+  },
+  "erro.nao_ha_um_senhor_das_aguas_ativo": {
+    "en": "There is no active Lord of Waters.",
+    "pt": "Não há um Senhor das Águas ativo."
+  },
+  "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
+    "en": "You can't attack in the same turn you hide in the shadows.",
+    "pt": "Você não pode atacar no mesmo turno em que se esconde nas sombras."
   },
   "erro.nenhum_ataque_recente_para_rerolar": {
     "en": "No recent attack to reroll.",
@@ -1056,6 +1093,10 @@ window.LANG_ERROS = {
     "en": "The ally needs to be adjacent.",
     "pt": "O aliado precisa estar adjacente."
   },
+  "erro.o_alvo_ja_esta_sob_metamorfose": {
+    "en": "The target is already under Polymorph.",
+    "pt": "O alvo já está sob Metamorfose."
+  },
   "erro.o_alvo_nao_e_um_morto_vivo": {
     "en": "The target isn't undead.",
     "pt": "O alvo não é um morto-vivo."
@@ -1079,6 +1120,10 @@ window.LANG_ERROS = {
   "erro.o_centro_da_area_precisa_estar_em_uma_ca": {
     "en": "The area's center must be on a valid tile.",
     "pt": "O centro da área precisa estar em uma casa válida."
+  },
+  "erro.o_centro_da_magia_esta_fora_do_mapa": {
+    "en": "The spell's center is outside the map.",
+    "pt": "O centro da magia está fora do mapa."
   },
   "erro.o_elemental_eletrico_ataca_em_linha_reta": {
     "en": "⚡ The electric elemental attacks in an orthogonal line (max 4 tiles).",
@@ -1108,9 +1153,49 @@ window.LANG_ERROS = {
     "en": "The Heroes' Refuge is still locked.",
     "pt": "O Refúgio dos Heróis ainda está bloqueado."
   },
+  "erro.o_rodamoinho_prende_este_servo_e_preciso": {
+    "en": "The whirlpool holds this minion; it must pass a Reflex save to move again.",
+    "pt": "O rodamoinho prende este servo; é preciso passar no teste de Reflexos para voltar a se mover."
+  },
+  "erro.o_rodamoinho_prende_voce_e_preciso_passa": {
+    "en": "The whirlpool holds you; you must pass a Reflex save to move again.",
+    "pt": "O rodamoinho prende você; é preciso passar no teste de Reflexos para voltar a se mover."
+  },
+  "erro.o_rodamoinho_profundo_prende_este_monstr": {
+    "en": "The deep whirlpool holds this monster; it cannot act until it escapes.",
+    "pt": "O rodamoinho profundo prende este monstro; ele não pode agir até escapar."
+  },
+  "erro.o_rodamoinho_profundo_prende_este_monstr_2": {
+    "en": "The deep whirlpool holds this monster; it cannot take actions.",
+    "pt": "O rodamoinho profundo prende este monstro; ele não pode realizar ações."
+  },
+  "erro.o_rodamoinho_profundo_prende_este_servo": {
+    "en": "The deep whirlpool holds this minion; it must pass a Reflex save to get out.",
+    "pt": "O rodamoinho profundo prende este servo; é preciso passar no teste de Reflexos para sair."
+  },
+  "erro.o_rodamoinho_profundo_prende_este_servo_2": {
+    "en": "The deep whirlpool holds this minion; it cannot attack until it escapes.",
+    "pt": "O rodamoinho profundo prende este servo; ele não pode atacar até escapar."
+  },
+  "erro.o_rodamoinho_profundo_prende_este_servo_3": {
+    "en": "The deep whirlpool holds this minion; it cannot use abilities until it escapes.",
+    "pt": "O rodamoinho profundo prende este servo; ele não pode usar habilidades até escapar."
+  },
+  "erro.o_rodamoinho_profundo_prende_voce_e_prec": {
+    "en": "The deep whirlpool holds you; you must pass a Reflex save to get out.",
+    "pt": "O rodamoinho profundo prende você; é preciso passar no teste de Reflexos para sair."
+  },
+  "erro.o_rodamoinho_profundo_prende_voce_nao_e": {
+    "en": "The deep whirlpool holds you; you cannot take actions while trapped.",
+    "pt": "O rodamoinho profundo prende você; não é possível realizar ações enquanto estiver preso."
+  },
   "erro.o_teste_nao_esta_mais_disponivel": {
     "en": "The test is no longer available.",
     "pt": "O teste não está mais disponível."
+  },
+  "erro.objeto_ja_tem_armadilha": {
+    "en": "This object already has a trap.",
+    "pt": "Este objeto já possui uma armadilha."
   },
   "erro.objeto_nao_encontrado": {
     "en": "Object not found.",
@@ -1128,6 +1213,10 @@ window.LANG_ERROS = {
     "en": "Map points can only be adjusted in the Editor.",
     "pt": "Os pontos do mapa só podem ser ajustados no Editor."
   },
+  "erro.os_redemoinhos_so_podem_ser_criados_a_pa": {
+    "en": "Whirlpools can only be created from the second round on.",
+    "pt": "Os redemoinhos só podem ser criados a partir da segunda rodada."
+  },
   "erro.ouro_insuficiente": {
     "en": "Not enough gold.",
     "pt": "Ouro insuficiente."
@@ -1136,13 +1225,13 @@ window.LANG_ERROS = {
     "en": "Not enough gold!",
     "pt": "Ouro insuficiente!"
   },
-  "erro.ouro_insuficiente_reparo": {
-    "en": "Not enough gold — repair requires {ouro} coins.",
-    "pt": "Ouro insuficiente — o reparo custa {ouro} moedas."
-  },
   "erro.ouro_insuficiente_precisa": {
     "en": "Not enough gold — needs {ouro}🪙.",
     "pt": "Ouro insuficiente — precisa {ouro}🪙."
+  },
+  "erro.ouro_insuficiente_reparo": {
+    "en": "Not enough gold — repair requires {ouro} coins.",
+    "pt": "Ouro insuficiente — o reparo custa {ouro} moedas."
   },
   "erro.outro_aventureiro_esta_neste_espaco": {
     "en": "Another adventurer is in this space.",
@@ -1164,6 +1253,10 @@ window.LANG_ERROS = {
     "en": "🧱 A wall blocks the line of fire to {alvo}!",
     "pt": "🧱 Uma parede bloqueia a linha de tiro até {alvo}!"
   },
+  "erro.parede_bloqueia_magia": {
+    "en": "🧱 A wall blocks the spell to {alvo}!",
+    "pt": "🧱 Uma parede bloqueia o feitiço até {alvo}!"
+  },
   "erro.parede_bloqueia_nota_cortante": {
     "en": "🧱 A wall or closed door blocks the Cutting Note.",
     "pt": "🧱 Uma parede ou porta fechada bloqueia a Nota Cortante."
@@ -1176,13 +1269,33 @@ window.LANG_ERROS = {
     "en": "Scroll not found.",
     "pt": "Pergaminho não encontrado."
   },
+  "erro.personagem_nao_altera_altura_neste_estado": {
+    "en": "This character cannot change altitude in its current state.",
+    "pt": "Você não pode alterar a altura neste estado."
+  },
   "erro.personagem_nao_conhece_magia": {
     "en": "{personagem} doesn't know {magia}.",
     "pt": "{personagem} não conhece {magia}."
   },
+  "erro.personagem_nao_possui_voo": {
+    "en": "This character cannot fly.",
+    "pt": "Este personagem não possui Voo."
+  },
   "erro.ponto_da_cidade_invalido": {
     "en": "Invalid town point.",
     "pt": "Ponto da cidade inválido."
+  },
+  "erro.porta_exige_ativacao_objeto_chave": {
+    "en": "🚪 Activate the key object(s) linked to this door first.",
+    "pt": "🚪 Ative primeiro o(s) objeto(s)-chave ligado(s) a esta porta."
+  },
+  "erro.porta_exige_item_chave": {
+    "en": "🚪 This door requires the key item: {item}.",
+    "pt": "🚪 Esta porta exige o item-chave: {item}."
+  },
+  "erro.porta_exige_licao": {
+    "en": "This door only opens once you complete your current lesson.",
+    "pt": "Esta porta só abre quando você cumprir a lição atual."
   },
   "erro.posicao_invalida_para_a_armadilha": {
     "en": "Invalid position for the trap.",
@@ -1331,6 +1444,14 @@ window.LANG_ERROS = {
   "erro.sem_slot_de_magia_de_circulo": {
     "en": "No {circulo}-circle spell slot{extra}.",
     "pt": "Sem slot de magia de {circulo} círculo{extra}."
+  },
+  "erro.senha_curta": {
+    "en": "The password must be at least {minimo} characters.",
+    "pt": "A senha precisa ter pelo menos {minimo} caracteres."
+  },
+  "erro.senha_incorreta": {
+    "en": "Wrong password.",
+    "pt": "Senha incorreta."
   },
   "erro.servo_ja_atacou_neste_turno": {
     "en": "Minion already attacked this turn.",
@@ -1504,6 +1625,14 @@ window.LANG_ERROS = {
     "en": "🧱 A wall blocks the throw's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória do arremesso!"
   },
+  "erro.uma_parede_bloqueia_a_trajetoria_do_cham": {
+    "en": "A wall blocks the path of Call of Winter.",
+    "pt": "Uma parede bloqueia a trajetória do Chamado do Inverno."
+  },
+  "erro.uma_parede_bloqueia_a_trajetoria_do_senh": {
+    "en": "A wall blocks the path of Lord of Waters.",
+    "pt": "Uma parede bloqueia a trajetória do Senhor das Águas."
+  },
   "erro.uma_parede_bloqueia_o_arremesso": {
     "en": "A wall blocks the throw.",
     "pt": "Uma parede bloqueia o arremesso."
@@ -1556,14 +1685,6 @@ window.LANG_ERROS = {
     "en": "You are Swallowed and cannot move.",
     "pt": "Você está Engolido e não pode se mover."
   },
-  "erro.armadilha_so_pode_ser_colocada_em_objeto": {
-    "en": "This trap can only be placed on an object within reach.",
-    "pt": "Esta armadilha só pode ser colocada em um objeto ao alcance."
-  },
-  "erro.objeto_ja_tem_armadilha": {
-    "en": "This object already has a trap.",
-    "pt": "Este objeto já possui uma armadilha."
-  },
   "erro.voce_esta_imobilizado_e_nao_pode_se_move": {
     "en": "🕸️ You're immobilized and can't move! End your turn.",
     "pt": "🕸️ Você está imobilizado e não pode se mover! Encerre o turno."
@@ -1607,6 +1728,10 @@ window.LANG_ERROS = {
   "erro.voce_ja_esta_furtivo_a_vela_nao_acumula": {
     "en": "You're already stealthed — the Candle of Darkness doesn't stack with another stealth effect.",
     "pt": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."
+  },
+  "erro.voce_ja_mantem_uma_criatura_sob_metamorf": {
+    "en": "You are already maintaining a creature under Polymorph.",
+    "pt": "Você já mantém uma criatura sob Metamorfose."
   },
   "erro.voce_ja_pode_voltar_a_masmorra": {
     "en": "You can already return to the dungeon.",
@@ -1716,6 +1841,10 @@ window.LANG_ERROS = {
     "en": "You don't know how to use Quick Poison.",
     "pt": "Você não sabe usar Veneno Rápido."
   },
+  "erro.voce_nao_tem_este_aprimoramento": {
+    "en": "You do not have this upgrade.",
+    "pt": "Você não possui este aprimoramento."
+  },
   "erro.voce_nao_tem_servos": {
     "en": "You have no minions.",
     "pt": "Você não tem servos."
@@ -1727,6 +1856,10 @@ window.LANG_ERROS = {
   "erro.voce_precisa_de_1_e_1_para_desarmar_a_ar": {
     "en": "You need 🍖1 and 💧1 to disarm the trap.",
     "pt": "Você precisa de 🍖1 e 💧1 para desarmar a armadilha."
+  },
+  "erro.voce_precisa_de_pelo_menos_21_de_fome_e": {
+    "en": "You need at least 21 Hunger and 21 Thirst to make the terrain permanent.",
+    "pt": "Você precisa de pelo menos 21 de Fome e 21 de Sede para tornar o terreno permanente."
   },
   "erro.voz_quebrada_impede_cancoes_heroicas": {
     "en": "Broken Voice prevents Heroic Songs.",
