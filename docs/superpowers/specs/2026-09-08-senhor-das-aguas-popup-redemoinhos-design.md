@@ -1,129 +1,137 @@
 # Senhor das Águas — popup dos redemoinhos no início do turno (e joystick)
 
 Data: 2026-09-08
+Estado: reproduzido em jogo; causa raiz confirmada por medição.
 
-## Problema
+## Problema relatado
 
 A segunda etapa do Senhor das Águas (marcar casas da área como redemoinho, ação
-livre a partir da 2ª rodada, cota acumulada) só é alcançável hoje por uma
-mensagem dentro do menu de Magias da ficha. O jogador quer que, no início do
-turno dele, uma janela abra sozinha na tela principal oferecendo a escolha — e
-que todo o fluxo funcione no controle.
+livre a partir da 2ª rodada, cota acumulada) só aparece como uma mensagem dentro
+do menu de Magias. O jogador quer uma janela abrindo sozinha na tela principal no
+início do turno dele, e o fluxo inteiro utilizável no controle.
 
-O código para isso **já existe** e nunca funcionou: entrou no commit `5b7ab80`
-("wip: ... estacionado"), sem verificação em jogo.
+O código do popup automático **já existe** (`_considerarPopupSenhorDasAguas`,
+commit `5b7ab80`, 2026-09-07) e nunca foi verificado em jogo.
 
-- `_considerarPopupSenhorDasAguas()` (game.js) deveria abrir
-  `#senhor-aguas-overlay` a cada `game_state`. Não abre nunca.
-- Quando o popup é aberto na mão (clicando na mensagem da aba de Magias), o
-  controle não navega nele.
-- Depois de "Criar redemoinhos", o controle também não conclui a seleção das
-  casas no mapa.
+## Reprodução
 
-## O que fica combinado
+Servidor real + cliente real no navegador; clérigo em masmorra; uma zona
+`senhor_das_aguas` sintética injetada nas mensagens `game_state` por
+`GS.setMessageFilter` (com `redemoinho_max: 2`, `disponivel_em` já satisfeito).
+Assim o cenário é alcançável sem precisar de um clérigo de nível 5 — a magia é de
+3º círculo, e `redemoinho_max = nível // 2`.
 
-- Janela **explicativa + botões**, como a de hoje (`🌪️ Criar redemoinhos` /
-  `Fechar`). Sem opção de "não perguntar mais".
-- Abre **todo turno do clérigo** enquanto a magia durar e sobrar cota. Fechar
-  dispensa apenas aquele turno; o botão do painel de ações continua reabrindo.
-- Joystick precisa funcionar **no popup** e **na seleção das casas no mapa**.
-  O botão do painel de ações e a mensagem da aba de Magias ficam fora do escopo
-  (continuam como estão, para o mouse).
-- Confirmar a seleção no controle: pelo **cursor de interface (Y)** já
-  existente, não por botão dedicado.
+Armadilha do instrumento, registrada porque custou tempo: no painel de navegação
+do agente o `requestAnimationFrame` só corre quando a página compõe um frame.
+Como o popup é agendado dentro de um `requestAnimationFrame`, ele parecia "nunca
+abrir" — falso negativo do harness, não do jogo. Forçar uma captura de tela faz
+os frames correrem e o popup abre. **Ao medir cliente aqui, force composição
+antes de concluir qualquer coisa.**
 
-## Falha 1 — o popup nunca dispara
+## Causa raiz (D1) — o popup abre atrás dos menus
 
-`_considerarPopupSenhorDasAguas()` reprova em silêncio: sete guardas numa
-condição única, sem dizer qual barrou. A leitura estática não acusa nada — todos
-os campos lidos (`phase`, `current_turn`, `animados_turn`, `round`,
-`zonas_especiais`) existem no payload de `push_state`.
+`#senhor-aguas-overlay` tem `z-index: 121`, na faixa dos avisos de tabuleiro
+(baú 110, lição 118, armadilha 120, fala 120). Os menus do personagem estão
+muito acima: `#menu-magias-overlay` e `#menu-habilidades-overlay` em **510**,
+`#inv-modal-overlay` em **500**.
 
-Hipótese principal, a confirmar: `GS.on()` guarda **um** handler por evento
-(`_handlers[ev]`, src/gameState.js), e a chamada do popup é a sétima linha de um
-handler que executa `handleGameState(msg)` antes. Uma exceção em qualquer linha
-anterior mata o popup sem erro visível no jogo.
+Medido: com o Grimório aberto, o popup abre (`display: flex`), mas
+`document.elementFromPoint` no centro da tela devolve um nó do menu — o popup
+fica invisível. A tela mostra apenas a mensagem "🌪️ REDEMOINHOS — AÇÃO LIVRE"
+dentro do Grimório: exatamente o sintoma relatado.
 
-### Desenho
+O Grimório **persiste entre turnos** — `handleGameState` o re-renderiza a cada
+`game_state` enquanto tiver a classe `.open`. Um clérigo que joga a partir do
+Grimório nunca vê o popup.
 
-Extrair a guarda para uma função **pura**:
-
-```
-_senhorAguasDecisaoPopup(state, myPid, ultimaChave) -> { abrir, zona, chave, motivo }
-```
-
-`motivo` é um dos: `sem_estado`, `sem_heroi`, `fora_de_jogo`, `nao_clerigo`,
-`morto`, `fora_do_turno`, `janela_servos`, `sem_zona`, `cota_zerada`,
-`rodada_cedo`, `ja_abriu`, `ok`.
-
-`_considerarPopupSenhorDasAguas()` passa a ser uma casca fina: chama a decisão,
-registra o motivo em `console.debug` e abre a janela quando `abrir` é verdadeiro.
-O conserto definitivo só é escrito **depois** de observar o motivo real em jogo —
-o diagnóstico faz parte do trabalho, não é presumido aqui.
-
-## Falha 2 — o controle não enxerga o popup
-
-`_gamepadUiScope()` só reconhece overlays com a classe `.open`
-(`[id$="-overlay"].open`). `#senhor-aguas-overlay` é exibido com
-`style.display='flex'`, sem a classe. Com o popup aberto, o escopo do controle
-continua sendo `#screen-game`: o direcional segue movendo o cursor no tabuleiro
-e os botões da janela ficam inalcançáveis.
+Agravante: `_senhorAguasUltimoPopupTurno` é gravada **antes** de a janela abrir.
+Qualquer caminho em que a abertura não aconteça queima a chave e o popup não
+tenta de novo naquela rodada.
 
 ### Desenho
 
-- `_abrirJanelaSenhorDasAguas()` adiciona `open` ao `classList` (além do
-  `display`); `_fecharJanelaSenhorDasAguas()` remove.
-- `Fechar` recebe `data-gamepad-cancel`, para B fechar a janela.
-- Ao abrir, `_gamepadFocusMapPoint('#senhor-aguas-create', '#senhor-aguas-close')`
-  para o foco nascer em "Criar redemoinhos".
+- Subir o `z-index` do `#senhor-aguas-overlay` para acima dos menus de
+  personagem. É uma decisão de camada, não um número solto: o popup é uma
+  **decisão do turno**, e decisões vêm à frente de menus de consulta.
+- Gravar a chave de deduplicação **somente quando a janela realmente abriu**,
+  para que uma falha de abertura não custe a rodada inteira.
 
-## Falha 3 — o controle não conclui a seleção das casas
+Sem alterar a frequência combinada: abre todo turno enquanto sobrar cota; fechar
+dispensa apenas aquele turno; o botão do painel de ações continua reabrindo.
 
-Dois furos independentes:
+## D2 — o popup é invisível para o controle
 
-**(a) O cursor não nasce dentro da área.** `_aimSeedGamepadCursor()` semeia no
-monstro mais próximo dentro do conjunto permitido; sem monstro, na casa do
-herói; se nenhum dos dois estiver no conjunto, **não semeia**. A área do Senhor
-das Águas é um quadrado remoto que costuma não conter monstro e não contém o
-herói. Como `_aimStepTile()` só encontra casa válida seguindo em linha reta a
-partir do cursor, o direcional trava.
+`_gamepadUiScope()` só reconhece overlay que tenha a classe `.open`
+(`[id$="-overlay"].open`); o popup abre só com `style.display`.
 
-Conserto: quando nenhum candidato atual serve, semear na **casa permitida mais
-próxima do herói** (distância de Chebyshev, empate pela ordem do conjunto).
-Vale para toda a camada de mira, não só para esta magia.
+Medido com o popup aberto: `_gamepadUiScope()` devolve `screen-game` e
+`senhor-aguas-create` não está entre os controles alcançáveis. O direcional
+continua movendo o cursor no tabuleiro.
 
-**(b) O botão CONFIRMAR é inalcançável.** `_aimRenderLegend()` anexa
-`#aim-session-hud` ao `<body>`, fora de `#screen-game`, e
-`_gamepadUiPointerControls()` lista apenas `#objectives-hud button, #btn-libertar`
-quando o escopo é a tela de jogo.
+### Desenho
 
-Conserto: incluir `#aim-session-hud button` nessa lista. O fluxo completo passa a
-ser: direcional move o cursor sobre as casas permitidas → **A** marca/desmarca →
-**Y** liga o cursor de interface → analógico direito escolhe
-CONFIRMAR/CANCELAR → **A** pressiona. Nada disso é específico do Senhor das
-Águas: qualquer mira de seleção múltipla futura herda o comportamento.
+- Adicionar/remover a classe `open` junto do `display`.
+- `data-gamepad-cancel` no botão Fechar (B fecha).
+- Ao abrir, focar "Criar redemoinhos" via `_gamepadFocusMapPoint`.
+
+## D3 — o cursor da mira não alcança a área
+
+`_aimSeedGamepadCursor()` semeia no monstro mais próximo dentro do conjunto
+permitido; sem monstro, na casa do herói; **se nenhum dos dois estiver no
+conjunto, desiste**. A área do Senhor das Águas é um quadrado remoto (alcance
+5 + nível) que normalmente não contém o herói. `_aimStepTile` só encontra casa
+válida seguindo em linha reta a partir do cursor.
+
+Medido: herói em [7,25], área 2x2 em [2,3]-[3,4] (fora da linha, da coluna e das
+diagonais do herói) → as **8 direções** falham; a mira fica travada. Numa área
+que por acaso divide linha ou diagonal com o herói, algumas direções funcionam —
+o que torna a falha intermitente e enganosa.
+
+### Desenho
+
+Quando nenhum candidato atual servir, semear na **casa permitida mais próxima do
+herói** (Chebyshev; empate pela ordem do conjunto). Vale para toda a camada de
+mira, não só para esta magia.
+
+## D4 — o botão CONFIRMAR é inalcançável no controle
+
+`_aimRenderLegend()` anexa `#aim-session-hud` ao `<body>`, fora de
+`#screen-game`, e `_gamepadUiPointerControls()` lista apenas
+`#objectives-hud button, #btn-libertar` quando o escopo é a tela de jogo.
+
+Medido com a mira ativa: `_gamepadUiPointerControls()` devolve `[]`. Ou seja,
+mesmo com o cursor andando e A marcando casas, **não há como concluir a ação no
+controle**.
+
+### Desenho
+
+Incluir `#aim-session-hud button` nessa lista. O fluxo fica: direcional move o
+cursor → **A** marca/desmarca → **Y** liga o cursor de interface → analógico
+direito escolhe CONFIRMAR/CANCELAR → **A** pressiona. Nada específico desta
+magia: qualquer mira de seleção múltipla futura herda o comportamento.
 
 ## Fora de escopo
 
-- Mudar as regras do servidor (cota, rodada de liberação, tipo de redemoinho).
+- Regras do servidor (cota, rodada de liberação, tipo de redemoinho).
   `handle_senhor_das_aguas_rodamoinhos` continua autoritativo e intocado.
 - O botão do painel de ações e a mensagem da aba de Magias no controle.
 - Botão dedicado de confirmação no controle.
 
 ## Testes
 
-`tools/test_senhor_aguas_cliente.js` (node, no padrão dos demais testes de
-cliente), sobre as funções puras:
+Node (`tools/test_senhor_aguas_cliente.js`), sobre funções puras e varredura
+estática do fonte:
 
-1. `_senhorAguasDecisaoPopup` devolve `ok` no caso feliz e o motivo certo em
-   cada guarda reprovada (uma asserção por motivo).
-2. Repetir a mesma chave devolve `ja_abriu` (não reabre no mesmo turno).
-3. Semeadura do cursor: herói fora da área e sem monstro dentro dela devolve a
-   casa permitida mais próxima, e não `null`.
-4. Varredura estática: `#aim-session-hud button` está em
-   `_gamepadUiPointerControls`, e `_abrirJanelaSenhorDasAguas` adiciona/remove a
-   classe `open`.
+1. Semeadura do cursor: herói fora da área, sem monstro dentro → devolve a casa
+   permitida mais próxima, não `null`. Caso de regressão: área desalinhada da
+   linha/coluna/diagonal do herói.
+2. `#aim-session-hud button` está em `_gamepadUiPointerControls`.
+3. `_abrirJanelaSenhorDasAguas` adiciona `open` e `_fecharJanelaSenhorDasAguas`
+   remove.
+4. O `z-index` do `#senhor-aguas-overlay` é maior que o de
+   `#menu-magias-overlay` / `#inv-modal-overlay` (lidos do CSS e do markup).
+5. A chave de deduplicação só é gravada quando a janela abre.
 
-Verificação viva: injetar um `game_state` sintético no cliente (com uma zona
-`senhor_das_aguas` ativa e cota restante) e observar a janela abrir, mais uma
-passada com o controle no popup e na seleção das casas.
+Verificação viva (com composição forçada): com o Grimório aberto, o popup abre
+por cima; `_gamepadUiScope()` passa a devolver o overlay; a mira semeia dentro da
+área e o botão de confirmar entra na lista do cursor de interface.
