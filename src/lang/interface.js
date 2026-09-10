@@ -3963,6 +3963,10 @@ window.LANG_INTERFACE = {
     "en": "4th Circle",
     "pt": "4º Círculo"
   },
+  "ui.magia.5o_circulo_teste": {
+    "en": "5TH CIRCLE — TEST",
+    "pt": "5º CÍRCULO — TESTE"
+  },
   "ui.magia.a_area_afeta_aliados_e_inimigos_os_redemoi": {
     "en": "The area affects allies and enemies. The whirlpools are optional.",
     "pt": "A área afeta aliados e inimigos. Os redemoinhos são opcionais."
@@ -4674,6 +4678,54 @@ window.LANG_INTERFACE = {
   "ui.magia.teleporte_toast_resistiu": {
     "en": "🌀 {alvo} resisted Teleport.",
     "pt": "🌀 {alvo} resistiu ao Teleporte."
+  },
+  "ui.magia.tempestade_cabecalho": {
+    "en": "🌪️ CYCLONES — FREE ACTION",
+    "pt": "🌪️ CICLONES — AÇÃO LIVRE"
+  },
+  "ui.magia.tempestade_ciclone": {
+    "en": "CYCLONE",
+    "pt": "CICLONE"
+  },
+  "ui.magia.tempestade_ciclones.desc": {
+    "en": "<b>Range:</b> 6 +1 every 2 levels<br><b>Area:</b> 3x3, +1 square every 3 levels<br><b>Cyclones:</b> one 2x2 cyclone every 4 levels; each may move 2 squares per round<br><b>Impact:</b> 2d8 lightning, Reflex halves<br><b>Wind:</b> every square inside the storm costs 2 movement<br><b>Lightning:</b> 1d8 lightning every 2 rounds, Reflex halves<br><b>Flight:</b> a failed Fortitude save knocks you down and deals falling damage<br><b>Cyclone:</b> Reflex success loses your movement; failure loses movement and the main action<br><b>Temporary test:</b> available to the cleric with no 5th-circle slot",
+    "pt": "<b>Alcance:</b> 6 +1 a cada 2 níveis<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Ciclones:</b> 1 ciclone 2x2 a cada 4 níveis; cada um pode mover 2 casas por rodada<br>\n               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>\n               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>\n               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>\n               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>\n               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>\n               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo"
+  },
+  "ui.magia.tempestade_escolha_casa": {
+    "en": "Choose a square inside the storm, up to 2 squares away.",
+    "pt": "Escolha uma casa dentro da tempestade, a até 2 casas."
+  },
+  "ui.magia.tempestade_hover_erro": {
+    "en": "Invalid position for the cyclone.",
+    "pt": "Posição inválida para o ciclone."
+  },
+  "ui.magia.tempestade_hover_ok": {
+    "en": "Valid position. Click to move.",
+    "pt": "Posição válida. Clique para mover."
+  },
+  "ui.magia.tempestade_mira_instrucao": {
+    "en": "Click the cyclone's new 2x2 position.",
+    "pt": "Clique na nova posição 2x2 do ciclone."
+  },
+  "ui.magia.tempestade_mira_titulo": {
+    "en": "🌪️ MOVE CYCLONE",
+    "pt": "🌪️ MOVER CICLONE"
+  },
+  "ui.magia.tempestade_mova_ciclones": {
+    "en": "Move each cyclone up to 2 squares. A cyclone covers a 2x2 area.",
+    "pt": "Mova cada ciclone até 2 casas. O ciclone ocupa uma área 2x2."
+  },
+  "ui.magia.tempestade_movimento_cancelado": {
+    "en": "Move cancelled.",
+    "pt": "Movimento cancelado."
+  },
+  "ui.magia.tempestade_pos_invalida": {
+    "en": "Invalid position: use a free 2x2 area, inside the storm and up to 2 squares away.",
+    "pt": "Posição inválida: use uma área 2x2 livre, dentro da tempestade e até 2 casas."
+  },
+  "ui.magia.tempestade_todos_moveram": {
+    "en": "Every cyclone has already moved this round.",
+    "pt": "Todos os ciclones já se moveram nesta rodada."
   },
   "ui.magia.temporario_1d4_nivel_de_clerigo_rodadas": {
     "en": "⏳ Temporary — 1d4 + cleric level rounds",

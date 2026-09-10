@@ -14590,6 +14590,21 @@ const GRIMORIO_CLIENT = {
                <b>Chamas Vivas:</b> a partir da 2ª rodada, cria 2d4 decorações em uma área 1x1 maior que a lava; você escolhe as casas<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo`
   },
+  tempestade_ciclones: {
+    id:'tempestade_ciclones', nome:'Tempestade de Ciclones', icone:'🌪️',
+    circulo:'quinto', classe:['cleric'], tipo:'area_fixa', alcance_base:6,
+    alcance_escala:1, alcance_por_niveis:2, area_lado:3, area_lado_niveis:3,
+    custo:'TESTE: livre, sem slot/fome/sede',
+    descricao:`<b>Alcance:</b> 6 +1 a cada 2 níveis<br>
+               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>
+               <b>Ciclones:</b> 1 ciclone 2x2 a cada 4 níveis; cada um pode mover 2 casas por rodada<br>
+               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>
+               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>
+               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>
+               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>
+               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>
+               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo`
+  },
   teleporte: {
     id:'teleporte', nome:'Teleporte', icone:'🌀',
     circulo:'quarto', classe:['mage'], tipo:'teleporte', alcance_base:15,
@@ -14948,6 +14963,7 @@ function _magiasConhecidasIds(heroi) {
   if (heroi?.class_id === 'mage') {
     for (const id of ['metamorfose', 'teleporte', 'prisao_chamas']) if (!ids.includes(id)) ids.push(id);
   }
+  if (heroi?.class_id === 'cleric' && !ids.includes('tempestade_ciclones')) ids.push('tempestade_ciclones');
   return ids;
 }
 
@@ -15072,14 +15088,15 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
   const known    = _magiasConhecidasIds(heroi);
   const limites  = _slotsMaxParaHeroi(heroi);
-  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[], quarto:[]};
+  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[], quarto:[], quinto:[]};
   const restantesServidor = (heroi && heroi.slots_remaining) || null;
   const cajadoExtra = restantesServidor?.cajado_arcano || null;
   const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
     const limite = limites[circulo] || 0;
-    if (limite === 0) return `
+    const possuiTesteLivre = cls === 'cleric' && circulo === 'quinto' && magiasCirculo.includes('tempestade_ciclones');
+    if (limite === 0 && !possuiTesteLivre) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — ${t('ui.magia.slot_nivel_maior')}</div>
       </div>`;
@@ -15119,7 +15136,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
           ${magiasCirculo.map((id, idx) => {
-            const livreParaTeste = cls === 'mage' && (id === 'metamorfose' || id === 'teleporte');
+            const livreParaTeste = possuiTesteLivre || (cls === 'mage' && (id === 'metamorfose' || id === 'teleporte'));
             return criarCartaMagia(id, false, livreParaTeste || livres > 0, false, 'jogo');
           }).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">Nenhuma magia memorizada</div>` : ''}
@@ -15131,11 +15148,13 @@ function renderMagiasFichaEmJogo(heroi, cls) {
     <div style="padding:4px 0;">
       ${_renderAcaoSenhorDasAguas(heroi)}
       ${_renderAcaoIraRocha(heroi)}
+      ${_renderAcaoTempestade(heroi)}
       ${_renderAcaoPrisaoChamas(heroi)}
       ${renderCirculoMagias('primeiro', t('ui.magia.circulo_caixa.primeiro'))}
       ${renderCirculoMagias('segundo',  t('ui.magia.circulo_caixa.segundo'))}
       ${renderCirculoMagias('terceiro', t('ui.magia.circulo_caixa.terceiro'))}
       ${renderCirculoMagias('quarto', t('ui.magia.4o_circulo'))}
+      ${renderCirculoMagias('quinto', t('ui.magia.5o_circulo_teste'))}
     </div>`;
 }
 
@@ -15199,7 +15218,7 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
   'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose',
-  'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas'
+  'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas', 'tempestade_ciclones'
 ]);
 
 function _meVivoNaVez() {
@@ -15539,11 +15558,13 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
       + Math.floor((Number(_me?.level) || 1) / 2) : 0;
   const iraRochaLado = magiaId === 'ira_rocha_ardente'
     ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
+  const tempestadeLado = magiaId === 'tempestade_ciclones'
+    ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
   const prisaoChamasLado = magiaId === 'prisao_chamas'
     ? Math.max(2, Math.min(4, Number(_prisaoChamasLado) || 2)) : 0;
   const cajadoLado = magiaId === 'senhor_das_aguas' ? 0 : _cajadoArcanoAreaLado(_me, _def, !!scrollItemId);
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: prisaoChamasLado || cajadoLado || invernoLado || senhorAguasLado || iraRochaLado || (_def && _def.area_lado) || 0,
+                        areaLado: prisaoChamasLado || cajadoLado || invernoLado || senhorAguasLado || iraRochaLado || tempestadeLado || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -16270,7 +16291,7 @@ window._fecharPickerElemental = _fecharPickerElemental;
 // Estado global lido pelos dois renderers. range/area = Set de "x,y"; zonas =
 // lista persistente {cx,cy,raio} (de game_state.zonas_especiais — Bola de Fogo).
 // range=alcance(vermelho), area=efeito(verde), double=atingido 2x(verde escuro), zonas=fogo persistente.
-window._spellHL = { range: new Set(), area: new Set(), double: new Set(), hover: null, zonas: [], nuvensAcidas: [], camarasGas: new Set(), escuridao: [], silencio: [] };
+window._spellHL = { range: new Set(), area: new Set(), double: new Set(), hover: null, zonas: [], tempestades: [], nuvensAcidas: [], camarasGas: new Set(), escuridao: [], silencio: [] };
 
 // Semântica única da mira: azul = casa dentro do alcance, verde = confirmação
 // possível, vermelho = cursor sobre uma escolha recusada. A mesma paleta é
@@ -16462,7 +16483,7 @@ function _aimHoverPendingSkill(tx, ty) {
 function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
-    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha
+    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadeMove
     || window._modoThrowItem || window._modoAnimarMortos
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
     || (GS.pendingSkill && _aimSessionIs('habilidade')));
@@ -16512,6 +16533,16 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     const valid = modo.permitidos.has(String(tx) + ',' + String(ty));
     _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
     _aimSetStatus(valid ? t('ui.magia.ira_rocha_hover_marcar') : t('ui.magia.ira_rocha_hover_fora'), valid ? '#ffb168' : '#ff9aa2');
+    return true;
+  }
+  if (window._modoTempestadeMove) {
+    const mode = window._modoTempestadeMove, c = mode.cyclone, [ox,oy] = c.pos || [0,0];
+    const z = (GS.gameState?.zonas_especiais || []).find(x => x.id === mode.zoneId);
+    const area = new Set((z?.tiles || []).map(([x,y])=>`${x},${y}`));
+    const fp = [[tx,ty],[tx+1,ty],[tx,ty+1],[tx+1,ty+1]];
+    const valid = fp.every(([x,y])=>area.has(`${x},${y}`)) && Math.max(Math.abs(tx-ox),Math.abs(ty-oy))<=2;
+    _aimSetHover(tx,ty,valid?'valid':'blocked');
+    _aimSetStatus(valid?t('ui.magia.tempestade_hover_ok'):t('ui.magia.tempestade_hover_erro'),valid?'#94dfb0':'#ff9aa2');
     return true;
   }
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
@@ -16863,7 +16894,7 @@ function _recomputarAreaMagia(hx, hy) {
       }
     } else if (hx != null && hy != null) {
       if (mode.alvoTipo === 'tile' && mode.areaLado) {
-        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas' || mode.magiaId === 'ira_rocha_ardente' || mode.magiaId === 'prisao_chamas') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
+        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas' || mode.magiaId === 'ira_rocha_ardente' || mode.magiaId === 'prisao_chamas' || mode.magiaId === 'tempestade_ciclones') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
         else _addQuadrado(hx, hy, mode.areaLado, area);
       }
       else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
@@ -16906,6 +16937,8 @@ function _atualizarZonasMagia(state) {
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2, lado: z.area_lado || 0,
                                   tiles: z.flame_tiles || z.tiles || [], tipo: z.tipo,
                                   visualId: z.animation_id || z.visual_id || z.id || null }));
+  window._spellHL.tempestades = zz.filter(z => z.ativa && z.tipo === 'tempestade_ciclones')
+    .map(z => ({id:z.id, cx:z.cx, cy:z.cy, lado:z.lado, tiles:z.tiles||[], ciclones:z.ciclones||[], expira_em:z.expira_em}));
   window._spellHL.nuvensAcidas = zz.filter(z => z.ativa && z.tipo === 'nuvem_acida')
                                   .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 1 }));
   const gasTiles = new Set();
@@ -16950,6 +16983,7 @@ function _aplicarSpellHL3D() {
       adicionarZona(z, zonaSet);
       adicionarZona(z, z.tipo === 'prisao_chamas' ? chamasVivasSet : fogoSet);
     }
+  for (const z of (hl.tempestades || [])) adicionarZona(z, zonaSet);
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   const escSet = new Set();
   for (const z of (hl.escuridao || [])) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, escSet) : _addCheb(z.cx, z.cy, z.raio, escSet);
@@ -17105,6 +17139,25 @@ function _desenharSpellHL2D(ctx, exploredSet) {
       else z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
     }
   for (const k of zonaSet) draw(k, 'rgba(255,110,0,0.32)');
+  for (const z of (hl.tempestades || [])) {
+    const stormSet = new Set((z.tiles || []).map(([x,y]) => `${x},${y}`));
+    for (const k of stormSet) draw(k, 'rgba(80,170,210,0.24)');
+    for (const c of (z.ciclones || [])) {
+      const [x,y] = c.pos || [0,0];
+      const px = x*CELL, py = y*CELL;
+      if (exploredSet && !exploredSet.has(`${x},${y}`)) continue;
+      ctx.save(); ctx.strokeStyle='rgba(180,245,255,.9)'; ctx.lineWidth=Math.max(2,CELL*.045);
+      ctx.fillStyle='rgba(40,110,150,.22)'; ctx.fillRect(px+2,py+2,CELL*2-4,CELL*2-4);
+      ctx.beginPath(); ctx.arc(px+CELL,py+CELL,CELL*.56,0,Math.PI*1.55); ctx.stroke();
+      ctx.beginPath(); ctx.arc(px+CELL,py+CELL,CELL*.30,Math.PI,Math.PI*2.3); ctx.stroke();
+      ctx.fillStyle='#d9fbff'; ctx.font=`${Math.max(12,CELL*.52)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🌪️',px+CELL,py+CELL); ctx.restore();
+    }
+  }
+  if (hl.tempestadeFlash && hl.tempestadeFlash.until > performance.now()) {
+    const f = hl.tempestadeFlash;
+    for (const [x,y] of (f.tiles || [])) draw(`${x},${y}`, `rgba(210,250,255,${0.18 + 0.18 * Math.sin(performance.now()/45)})`);
+    requestAnimationFrame(() => { if (GS.gameState) renderMap(GS.gameState); });
+  }
   const acidSet = new Set();
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, acidSet);
   for (const k of acidSet) draw(k, 'rgba(150,235,60,0.38)');
@@ -44183,6 +44236,11 @@ function on3DClick(e){
     if(tIra) _clickTileIraRocha(tIra[0], tIra[1]);
     return;
   }
+  if(window._modoTempestadeMove){
+    const tStorm = get3DTile(e);
+    if(tStorm) _clickTileTempestade(tStorm[0], tStorm[1]);
+    return;
+  }
   if(window._modoTeleporteAlvo){
     const tTele = get3DTile(e);
     if(tTele) _clickTileTeleporteAlvo(tTele[0], tTele[1]);
@@ -44529,6 +44587,7 @@ function handleTileClick(tx, ty){
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
   if(window._modoIraRocha){ _clickTileIraRocha(tx, ty); return; }
+  if(window._modoTempestadeMove){ _clickTileTempestade(tx, ty); return; }
   if(window._modoTeleporteAlvo){ _clickTileTeleporteAlvo(tx, ty); return; }
   if(window._modoTeleporteDestino){ _clickTileTeleporteDestino(tx, ty); return; }
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
@@ -45349,6 +45408,57 @@ function _receberDadoVisual(msg){
   updateDiceHistory(msg);
 }
 
+function _renderAcaoTempestade(heroi) {
+  const state = GS.gameState;
+  if (!state || !heroi || heroi.class_id !== 'cleric' || String(heroi.id) !== String(GS.myPid)) return '';
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const zonas = (state.zonas_especiais || []).filter(z => z.ativa && z.tipo === 'tempestade_ciclones' && String(z.caster) === String(heroi.id));
+  if (!zonas.length) return '';
+  const botoes = zonas.flatMap(z => (z.ciclones || []).filter(c => c.movido_em !== rodada).map(c =>
+    `<button onclick="_iniciarMovimentoTempestade('${z.id}',${c.id})" style="padding:6px 8px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;">🌪️ Ciclone ${c.id}</button>`));
+  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
+    <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.tempestade_cabecalho')}</div>
+    <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.tempestade_mova_ciclones')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">${botoes.join('') || `<span style="color:#7898a2;font-size:9px;">${t('ui.magia.tempestade_todos_moveram')}</span>`}</div>
+  </div>`;
+}
+
+function _iniciarMovimentoTempestade(zoneId, cicloneId) {
+  const state = GS.gameState, z = (state?.zonas_especiais || []).find(x => x.id === zoneId);
+  const c = z?.ciclones?.find(x => Number(x.id) === Number(cicloneId));
+  if (!z || !c) return;
+  window._modoTempestadeMove = {zoneId, cicloneId:Number(cicloneId), cyclone:c};
+  _aimStart({kind:'tempestade_ciclone', title:t('ui.magia.tempestade_mira_titulo'), instruction:t('ui.magia.tempestade_mira_instrucao'), color:'#9de8f4', targetLabel:t('ui.magia.tempestade_ciclone'), cancelText:t('ui.magia.tempestade_movimento_cancelado'), cleanup:()=>{window._modoTempestadeMove=null;}});
+  _aimSetStatus(t('ui.magia.tempestade_escolha_casa'), '#9de8f4');
+}
+window._iniciarMovimentoTempestade = _iniciarMovimentoTempestade;
+
+function _clickTileTempestade(tx, ty) {
+  const mode = window._modoTempestadeMove, state = GS.gameState;
+  const z = (state?.zonas_especiais || []).find(x => x.id === mode?.zoneId);
+  const c = z?.ciclones?.find(x => Number(x.id) === Number(mode?.cicloneId));
+  if (!z || !c) return;
+  const area = new Set((z.tiles || []).map(([x,y]) => `${x},${y}`));
+  const footprint = [[tx,ty],[tx+1,ty],[tx,ty+1],[tx+1,ty+1]];
+  const otherTiles = new Set((z.ciclones||[]).filter(o => Number(o.id)!==Number(c.id)).flatMap(o => {const [x,y]=o.pos||[];return [[x,y],[x+1,y],[x,y+1],[x+1,y+1]].map(([a,b])=>`${a},${b}`);}));
+  const [ox,oy] = c.pos || [0,0];
+  const valid = footprint.every(([x,y]) => area.has(`${x},${y}`)) && footprint.every(([x,y]) => !otherTiles.has(`${x},${y}`)) && Math.max(Math.abs(tx-ox),Math.abs(ty-oy)) <= 2;
+  if (!valid) { _aimSetStatus(t('ui.magia.tempestade_pos_invalida'), '#ff9aa2'); return; }
+  GS.tempestadeCiclonesMover(z.id, c.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
+}
+
+function _receberAnimacaoTempestade(msg){
+  if(!msg || msg.spell_id !== 'tempestade_ciclones') return;
+  const tiles = msg.tiles || [];
+  if(msg.phase === 'start') toast('🌪️ A tempestade se aproxima...', '#9de8f4');
+  if(msg.phase === 'resolve') toast(`🌪️ Tempestade ${msg.side || ''}×${msg.side || ''} formada`, '#9de8f4');
+  if(msg.phase === 'lightning') toast('⚡ Raios atingem a tempestade!', '#e8f7ff');
+  window._spellHL.tempestadeFlash = {tiles, until: performance.now() + (msg.phase === 'lightning' ? 520 : 900)};
+  if(GS.gameState) renderMap(GS.gameState);
+  setTimeout(() => { if(GS.gameState) renderMap(GS.gameState); }, 950);
+}
+
 function _liberarDadosMagia(){
   if(!_dadosMagiaFila.length) return;
   const fila = _dadosMagiaFila.splice(0);
@@ -45364,6 +45474,7 @@ GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // interromper a fila inteira — especialmente o Sono, que precisa criar tanto
 // o impacto quanto os indicadores persistentes nos alvos adormecidos.
 const _spellAnimationReceivers = [
+  _receberAnimacaoTempestade,
   _receberAnimacaoSono,
   _receberAnimacaoRelampago,
   _receberAnimacaoBolaFogo,

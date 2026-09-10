@@ -427,7 +427,8 @@ async def main():
     check("skeleton legado cr 0.5", S.monster_cr(_by("skeleton")) == 0.5)
     check("orc legado cr 0.75", S.monster_cr(_by("orc")) == 0.75)
     check("dark_mage legado cr 0.5", S.monster_cr(_by("dark_mage")) == 0.5)
-    check("troll legado cr 1.5", S.monster_cr(_by("troll")) == 1.5)
+    # O troll deixou de ser stub legado e ganhou ficha completa (tier 4, cr 4).
+    check("troll (ficha completa) cr 4", S.monster_cr(_by("troll")) == 4)
     check("dragon legado cr 5", S.monster_cr(_by("dragon")) == 5.0)
     # As formas animais da Metamorfose (pombo/rato/gato/ovelha) tem cr 0 DE
     # PROPOSITO: sao criaturas ambientais de ND zero, nao aparecem em encontro

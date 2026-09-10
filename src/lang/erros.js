@@ -65,6 +65,10 @@ window.LANG_ERROS = {
     "en": "The chosen area contains no valid floor.",
     "pt": "A área escolhida não contém piso válido."
   },
+  "erro.a_area_nao_contem_piso_valido": {
+    "en": "The area has no valid floor.",
+    "pt": "A área não contém piso válido."
+  },
   "erro.a_criatura": {
     "en": "the creature",
     "pt": "a criatura"
@@ -100,6 +104,10 @@ window.LANG_ERROS = {
   "erro.a_masmorra_esta_pausada_durante_uma_cena": {
     "en": "The dungeon is paused during a scene.",
     "pt": "A masmorra está pausada durante uma cena."
+  },
+  "erro.a_nova_posicao_do_ciclone_e_invalida": {
+    "en": "The cyclone's new position is invalid.",
+    "pt": "A nova posição do ciclone é inválida."
   },
   "erro.a_permanencia_so_pode_ser_tentada_uma_ve": {
     "en": "Permanence can only be attempted once per round.",
@@ -589,6 +597,10 @@ window.LANG_ERROS = {
     "en": "Choose the center of the Lord of Waters area.",
     "pt": "Escolha o centro da área do Senhor das Águas."
   },
+  "erro.escolha_o_centro_da_tempestade": {
+    "en": "Choose the centre of the storm.",
+    "pt": "Escolha o centro da tempestade."
+  },
   "erro.escolha_o_centro_e_o_tamanho_da_prisao_d": {
     "en": "Choose the center and the size of the Prison of Flames.",
     "pt": "Escolha o centro e o tamanho da Prisão de Chamas."
@@ -1041,6 +1053,10 @@ window.LANG_ERROS = {
     "en": "No free space nearby for the trap to trigger.",
     "pt": "Não há espaço livre ao lado para a armadilha disparar."
   },
+  "erro.nao_ha_espaco_para_um_ciclone_2x2_nessa": {
+    "en": "There is no room for a 2x2 cyclone in that area.",
+    "pt": "Não há espaço para um ciclone 2x2 nessa área."
+  },
   "erro.nao_ha_monstro_sob_sua_metamorfose": {
     "en": "There is no monster under your Polymorph.",
     "pt": "Não há monstro sob sua Metamorfose."
@@ -1172,6 +1188,14 @@ window.LANG_ERROS = {
   "erro.o_centro_da_magia_esta_fora_do_mapa": {
     "en": "The spell's center is outside the map.",
     "pt": "O centro da magia está fora do mapa."
+  },
+  "erro.o_ciclone_so_pode_se_mover_2_casas_por_r": {
+    "en": "The cyclone can only move 2 squares per round.",
+    "pt": "O ciclone só pode se mover 2 casas por rodada."
+  },
+  "erro.o_ciclone_so_pode_se_mover_a_partir_da_r": {
+    "en": "The cyclone can only move from the next round on.",
+    "pt": "O ciclone só pode se mover a partir da rodada seguinte."
   },
   "erro.o_elemental_eletrico_ataca_em_linha_reta": {
     "en": "⚡ The electric elemental attacks in an orthogonal line (max 4 tiles).",
@@ -1664,6 +1688,10 @@ window.LANG_ERROS = {
   "erro.uma_parede_bloqueia_a_nuvem_acida": {
     "en": "A wall blocks the Acid Cloud.",
     "pt": "Uma parede bloqueia a Nuvem Acida."
+  },
+  "erro.uma_parede_bloqueia_a_tempestade": {
+    "en": "A wall blocks the storm.",
+    "pt": "Uma parede bloqueia a tempestade."
   },
   "erro.uma_parede_bloqueia_a_trajetoria_da_bola": {
     "en": "🧱 A wall blocks Fireball's path!",

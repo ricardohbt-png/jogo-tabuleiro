@@ -68,7 +68,10 @@ async def main():
         check(f"catálogo tem {gid}", gid in ids)
     check("preço goblin (T1) = 60", S.guild_item("lenda_goblin")["preco"] == 60)
     check("preço orc (T2) = 90", S.guild_item("lenda_orc")["preco"] == 90)
-    check("preço troll (T3) = 120", S.guild_item("lenda_troll")["preco"] == 120)
+    # O troll ERA o exemplo de T3; ao virar ficha completa foi para tier 4, e a
+    # escada perdia a faixa. O lobisomem entra no lugar para manter a cobertura.
+    check("preço lobisomem (T3) = 120", S.guild_item("lenda_lobisomem")["preco"] == 120)
+    check("preço troll (T4) = 200", S.guild_item("lenda_troll")["preco"] == 200)
     check("preço dragon (T4) = 200", S.guild_item("lenda_dragon")["preco"] == 200)
     check("lenda guarda lenda_tipo", S.guild_item("lenda_goblin")["lenda_tipo"] == "goblin")
 

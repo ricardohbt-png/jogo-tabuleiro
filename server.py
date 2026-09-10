@@ -7864,19 +7864,19 @@ GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "silencio", "barreira_arcana", "contramagica", "voo",
                           "olhar_petrificante", "metamorfose", "chamado_inverno",
                           "senhor_das_aguas", "ira_rocha_ardente", "teleporte",
-                          "prisao_chamas"}
+                          "prisao_chamas", "tempestade_ciclones"}
 
 # Desbloqueio temporário para testes: estas duas magias continuam respeitando
 # classe, alvo, linha de visão e todas as validações do efeito, mas não exigem
 # aprendizado nem consomem slot/fome/sede ao serem lançadas.
-MAGIAS_TESTE_LIVRE = {"metamorfose", "teleporte"}
+MAGIAS_TESTE_LIVRE = {"metamorfose", "teleporte", "tempestade_ciclones"}
 
 # Espaco temporario de teste: magias de 4o circulo entregues DE GRACA no
 # start_game, alem das 2 escolhidas no lobby, para poderem ser exercitadas
 # antes do nivel 5. Esvaziar este dict devolve o comportamento normal (so as
 # do lobby) sem tocar em mais nada — e o teste de savegame le daqui, entao
 # nao quebra quando a lista mudar.
-MAGIAS_TESTE_AUTO = {"cleric": ["ira_rocha_ardente"],
+MAGIAS_TESTE_AUTO = {"cleric": ["ira_rocha_ardente", "tempestade_ciclones"],
                      "mage": ["teleporte", "prisao_chamas"]}
 
 GRIMORIO = {
@@ -8063,6 +8063,18 @@ GRIMORIO = {
         "dano_lava": "2d6", "duracao": "1d4", "duracao_por_niveis": 3,
         "chamas_vivas": "2d4", "terreno": "lava",
         "descricao": "Área de lava 3x3 (+1 casa a cada 3 níveis), alcance 4 (+1 a cada 2 níveis). Todos na área sofrem 2d6 de fogo e os efeitos da lava. Dura 1d4 +1 rodada a cada 3 níveis (mínimo 2). A partir da segunda rodada, cria 2d4 Chamas Vivas escolhidas pelo clérigo em uma área 1x1 maior que a lava.",
+    },
+    "tempestade_ciclones": {
+        "id": "tempestade_ciclones", "nome": "Tempestade de Ciclones",
+        "circulo": "quinto", "classe": ["cleric"],
+        "icone": "🌪️", "tipo": "area_fixa",
+        "alcance_base": 6, "alcance_escala": 1, "alcance_por_niveis": 2,
+        "area_lado": 3, "area_lado_niveis": 3,
+        "ciclone_lado": 2, "ciclones_por_niveis": 4,
+        "ciclone_movimento": 2,
+        "dano_inicial": "2d8", "dano_raio": "1d8", "dano_ciclone": "1d8",
+        "duracao": "1d4+1", "duracao_por_nivel": 2,
+        "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
     },
     "teleporte": {
         "id": "teleporte", "nome": "Teleporte",
@@ -12925,6 +12937,7 @@ class GameRoom:
             captor = self.monsters.get(p.get("preso_por"))
             if captor and captor["hp"] > 0: p["moves_left"] = 0
         if p.get("velocidade_rodadas", 0) > 0: p["moves_left"] *= 2
+        await self._processar_tempestade_inicio_turno(p)
         if p.pop("turbilhao_perde_movimento", False):
             p["moves_left"] = 0
         if p.pop("ciclope_perde_movimento", False):
@@ -14228,6 +14241,9 @@ class GameRoom:
             await self._aplicar_fogueira_se_pisar(p)
 
         if p["alive"]:
+            await self._tempestade_verificar_entrada(p, old_pos, p["pos"])
+
+        if p["alive"]:
             await self._processar_olhar_petrificante_inicio(p)
         await self._verificar_avistamento()   # Modo Mestre: herÃ³i pode ter avistado monstros
         await self.push_state()
@@ -14289,6 +14305,8 @@ class GameRoom:
             if "_water_moves_left" in m:
                 m["_water_moves_left"] = max(0, int(m.get("_water_moves_left", 0) or 0) - custo)
             m["_master_touched"] = True
+            if nova > ALTURA_MIN:
+                await self._tempestade_verificar_entrada(m, None, m.get("pos"))
             self._reiniciar_timer_manual()
             await self.push_state()
             return
@@ -14329,6 +14347,8 @@ class GameRoom:
             return
         p["altura"] = nova
         p["moves_left"] = int(p.get("moves_left", 0) or 0) - custo
+        if nova > ALTURA_MIN:
+            await self._tempestade_verificar_entrada(p, None, p.get("pos"))
         await self.push_state()
 
     async def _verificar_trap_procedural(self, pid, p, nx, ny):
@@ -22330,6 +22350,8 @@ class GameRoom:
             await self._executar_senhor_das_aguas(caster, magia, data, dur_bonus, alcance_bonus)
         elif mid == "ira_rocha_ardente":
             await self._executar_ira_rocha_ardente(caster, magia, data, dur_bonus, alcance_bonus)
+        elif mid == "tempestade_ciclones":
+            await self._executar_tempestade_ciclones(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
         elif mid == "prisao_chamas":
             await self._executar_prisao_chamas(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
         elif mid == "barreira_arcana":
@@ -24371,6 +24393,193 @@ class GameRoom:
                             dur=zona.get("duracao", 0)))
         await self.push_state()
 
+    def _tempestade_entidades(self):
+        out = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
+        if self.prisoner and self.prisoner.get("freed") and self.prisoner.get("alive"):
+            out.append(self.prisoner)
+        return out
+
+    def _tempestade_posicoes(self, alvo):
+        if alvo in self.monsters.values():
+            return [(int(x), int(y)) for x, y in self._monster_tiles(alvo)]
+        pos = alvo.get("pos") if alvo else None
+        return [(int(pos[0]), int(pos[1]))] if isinstance(pos, (list, tuple)) and len(pos) >= 2 else []
+
+    def _tempestade_zonas_ativas(self):
+        return [z for z in self.zonas_especiais if z.get("ativa") and z.get("tipo") == "tempestade_ciclones"]
+
+    def _tempestade_ciclone_tiles(self, ciclone):
+        x, y = ciclone.get("pos", [0, 0])
+        lado = int(ciclone.get("lado", 2) or 2)
+        return [(int(x) + dx, int(y) + dy) for dy in range(lado) for dx in range(lado)]
+
+    def _tempestade_em_tiles(self, posicoes, zona):
+        area = {(int(x), int(y)) for x, y in zona.get("tiles", [])}
+        return any(pos in area for pos in posicoes)
+
+    async def _tempestade_dano(self, alvo, expressao, elemento, save_tipo=None,
+                               dif=0, dmg_mult=1, label="🌪️ Tempestade"):
+        if not alvo or not self._vivo(alvo) or self._fosso_protegido(alvo):
+            return False
+        raw = await self._rolar_dano_mostrado(1 if expressao == "1d8" else 2, 8, label)
+        dano = max(1, int(round(raw * float(dmg_mult or 1))))
+        passou = True
+        if save_tipo:
+            passou, *_ = await self._save_mostrado(alvo, save_tipo, dif, mitigacao="metade")
+            if passou:
+                dano = max(1, dano // 2)
+        if "vida_atual" not in alvo:
+            dano = self._apply_damage_types(dano, [elemento], alvo)
+        await self._dano_em_alvo(alvo, dano, elemento)
+        return passou
+
+    async def _tempestade_testar_voo(self, alvo, zona, motivo="vento"):
+        if not alvo or not self._vivo(alvo) or not alvo.get("voo"):
+            return False
+        if normalizar_altura(alvo.get("altura", ALTURA_MIN)) <= ALTURA_MIN:
+            return False
+        passou, *_ = await self._save_mostrado(alvo, "fortitude", int(zona.get("save_dif", 13) or 13),
+                                                mitigacao="queda")
+        if passou:
+            return False
+        await self._aplicar_queda(alvo, "tempestade_ciclones_" + str(motivo), zona.get("caster"))
+        zona.setdefault("quedas_tempestade_rodada", {})[str(alvo.get("id"))] = self.round_num
+        return True
+
+    async def _tempestade_aplicar_ciclone(self, alvo, zona):
+        if not alvo or not self._vivo(alvo):
+            return
+        posicoes = self._tempestade_posicoes(alvo)
+        if not any(self._tempestade_em_tiles([pos], zona) and any(pos in self._tempestade_ciclone_tiles(c) for c in zona.get("ciclones", [])) for pos in posicoes):
+            return
+        vistos = zona.setdefault("alvos_ciclone_rodada", {})
+        aid = str(alvo.get("id"))
+        if vistos.get(aid) == self.round_num:
+            return
+        vistos[aid] = self.round_num
+        if zona.get("quedas_tempestade_rodada", {}).get(aid) == self.round_num:
+            return
+        passou = await self._tempestade_dano(alvo, "1d8", DMG_PHYSICAL, "reflexos",
+                                             zona.get("save_dif", 13), zona.get("dmg_mult", 1),
+                                             "🌪️ Ciclone")
+        alvo["turbilhao_perde_movimento"] = True
+        if not passou:
+            alvo["turbilhao_perde_acao"] = True
+
+    async def _tempestade_verificar_entrada(self, alvo, origem=None, destino=None):
+        if not alvo or not self._vivo(alvo):
+            return
+        old = {(int(origem[0]), int(origem[1]))} if origem else set()
+        new = self._tempestade_posicoes(alvo)
+        for zona in self._tempestade_zonas_ativas():
+            if not any(self._tempestade_em_tiles([p], zona) for p in new):
+                continue
+            entrou = not old or any(self._tempestade_em_tiles([p], zona) for p in new) and not any(self._tempestade_em_tiles([p], zona) for p in old)
+            if entrou:
+                await self._tempestade_testar_voo(alvo, zona, "entrada")
+            await self._tempestade_aplicar_ciclone(alvo, zona)
+
+    async def _processar_tempestade_inicio_turno(self, alvo):
+        if not alvo or not self._vivo(alvo):
+            return
+        for zona in self._tempestade_zonas_ativas():
+            if any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
+                await self._tempestade_testar_voo(alvo, zona, "inicio")
+                await self._tempestade_aplicar_ciclone(alvo, zona)
+
+    async def _tempestade_descarga(self, zona):
+        zona["quedas_tempestade_rodada"] = {}
+        for alvo in list(self._tempestade_entidades()):
+            if not self._vivo(alvo) or not any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
+                continue
+            await self._tempestade_dano(alvo, "1d8", DMG_LIGHTNING, "reflexos",
+                                         zona.get("save_dif", 13), zona.get("dmg_mult", 1),
+                                         "⚡ Raio da Tempestade")
+            if self._vivo(alvo):
+                await self._tempestade_testar_voo(alvo, zona, "raio")
+        await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones",
+                              "phase": "lightning", "animation_id": zona.get("id"),
+                              "center": [zona.get("cx", 0), zona.get("cy", 0)],
+                              "tiles": zona.get("tiles", []), "ciclones": zona.get("ciclones", [])})
+
+    async def _executar_tempestade_ciclones(self, caster, magia, data, dmg_mult=1,
+                                             dur_bonus=0, alcance_bonus=0):
+        data = data or {}
+        nivel = self._nivel_conjurador(caster)
+        alcance = int(magia.get("alcance_base", 6)) + (nivel // int(magia.get("alcance_por_niveis", 2))) + int(alcance_bonus or 0)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.escolha_o_centro_da_tempestade")}); return
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h) or not self._alcance_com_altura(caster, [cx, cy], alcance):
+            await self.send_to(caster["id"], {"type": "error", "msg": f"Centro fora do alcance (alcance {alcance})."}); return
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.uma_parede_bloqueia_a_tempestade")}); return
+        lado = int(magia.get("area_lado", 3)) + nivel // int(magia.get("area_lado_niveis", 3) or 3)
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        area = {(int(x), int(y)) for x, y in tiles}
+        if not area:
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_nao_contem_piso_valido")}); return
+        dur = max(1, self._rolar_dado(magia.get("duracao", "1d4+1")) + nivel // int(magia.get("duracao_por_nivel", 2) or 2) + int(dur_bonus or 0))
+        zone_id = f"tempestade_ciclones_{caster['id']}_{self.round_num}_{new_id()}"
+        anchors = []
+        for ay in range(cy - lado // 2 - 1, cy + lado // 2 + 1):
+            for ax in range(cx - lado // 2 - 1, cx + lado // 2 + 1):
+                footprint = {(ax, ay), (ax + 1, ay), (ax, ay + 1), (ax + 1, ay + 1)}
+                if footprint <= area and not any(footprint & set(self._tempestade_ciclone_tiles(c)) for c in anchors):
+                    anchors.append({"id": len(anchors) + 1, "pos": [ax, ay], "lado": 2, "movido_em": None})
+                    if len(anchors) >= max(1, nivel // 4): break
+            if len(anchors) >= max(1, nivel // 4): break
+        if not anchors:
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.nao_ha_espaco_para_um_ciclone_2x2_nessa")}); return
+        save_dif = self._dif_magia(caster, magia)
+        zona = {"id": zone_id, "tipo": "tempestade_ciclones", "cx": cx, "cy": cy,
+                "lado": lado, "tiles": [list(t) for t in sorted(area)], "ciclones": anchors,
+                "duracao": dur, "expira_em": self.round_num + dur, "ativa": True,
+                "caster": caster.get("id"), "criado_em": self.round_num,
+                "save_dif": save_dif, "dmg_mult": dmg_mult, "proxima_descarga": self.round_num + 2,
+                "ciclone_movimento": int(magia.get("ciclone_movimento", 2) or 2),
+                "alvos_ciclone_rodada": {}, "quedas_tempestade_rodada": {}}
+        await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "start",
+                              "animation_id": zone_id, "caster_id": caster["id"], "origin": list(caster["pos"]),
+                              "center": [cx, cy], "tiles": [list(t) for t in sorted(area)], "side": lado,
+                              "ciclones": anchors, "travel_ms": max(620, min(1250, 520 + max(abs(caster["pos"][0]-cx), abs(caster["pos"][1]-cy))*145))})
+        self.zonas_especiais.append(zona)
+        for alvo in list(self._tempestade_entidades()):
+            if self._vivo(alvo) and any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
+                await self._tempestade_dano(alvo, "2d8", DMG_LIGHTNING, "reflexos", save_dif, dmg_mult, "⚡ Impacto da Tempestade")
+                if self._vivo(alvo): await self._tempestade_testar_voo(alvo, zona, "impacto")
+                if self._vivo(alvo): await self._tempestade_aplicar_ciclone(alvo, zona)
+        await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "resolve",
+                              "animation_id": zone_id, "caster_id": caster["id"], "center": [cx, cy],
+                              "tiles": zona["tiles"], "side": lado, "ciclones": anchors,
+                              "zone_id": zone_id, "duration_rounds": dur, "success": True})
+        await self.gm_say(T("narracao.tempestade_ciclones_criada",
+                            caster=caster["name"], lado=lado, ciclones=len(anchors), dur=dur))
+
+    async def handle_tempestade_ciclones_mover(self, pid, zone_id, ciclone_id, pos):
+        if not self._is_turn(pid): return
+        zona = next((z for z in self._tempestade_zonas_ativas() if z.get("id") == zone_id and str(z.get("caster")) == str(pid)), None)
+        if not zona or self.round_num <= int(zona.get("criado_em", 0)):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_ciclone_so_pode_se_mover_a_partir_da_r")}); return
+        ciclone = next((c for c in zona.get("ciclones", []) if int(c.get("id")) == int(ciclone_id)), None)
+        try: ax, ay = int(pos[0]), int(pos[1])
+        except (TypeError, ValueError): return
+        if not ciclone or ciclone.get("movido_em") == self.round_num:
+            return
+        ox, oy = ciclone["pos"]
+        if max(abs(ax - ox), abs(ay - oy)) > int(zona.get("ciclone_movimento", 2)):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_ciclone_so_pode_se_mover_2_casas_por_r")}); return
+        footprint = {(ax, ay), (ax+1, ay), (ax, ay+1), (ax+1, ay+1)}
+        if not footprint <= {(int(x), int(y)) for x, y in zona.get("tiles", [])} or any(c is not ciclone and footprint & set(self._tempestade_ciclone_tiles(c)) for c in zona.get("ciclones", [])):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")}); return
+        old = list(ciclone["pos"]); ciclone["pos"] = [ax, ay]; ciclone["movido_em"] = self.round_num
+        await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "cyclone_move",
+                              "animation_id": zona["id"], "zone_id": zona["id"], "ciclone_id": ciclone["id"],
+                              "from_pos": old, "to_pos": [ax, ay], "ciclones": zona["ciclones"]})
+        await self._tempestade_verificar_entrada(next((a for a in self._tempestade_entidades() if a.get("pos") == [ax, ay]), None), None, None)
+        await self.push_state()
+
     def _prisao_chamas_entidades(self):
         """Entidades que podem ser atingidas pela Prisão de Chamas."""
         out = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
@@ -25124,7 +25333,7 @@ class GameRoom:
         """Dificuldade para resistir: 8 + bônus de INT + círculo (1/2/3). Soma o
         bônus temporário `_mm_dc_bonus`, setado em handle_magia a partir da
         Metamagia do Mago (1f) e/ou da técnica Aprimorar Magia da Guilda (Fase 3)."""
-        circ = {"primeiro": 1, "segundo": 2, "terceiro": 3, "quarto": 4}.get(magia.get("circulo", "primeiro"), 1)
+        circ = {"primeiro": 1, "segundo": 2, "terceiro": 3, "quarto": 4, "quinto": 5}.get(magia.get("circulo", "primeiro"), 1)
         return 8 + mod(caster.get("int_", 10)) + circ + caster.get("_mm_dc_bonus", 0)
 
     # â”€â”€ Bola de Fogo (Ã¡rea persistente que decai R1â†’R2â†’R3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -26148,6 +26357,14 @@ class GameRoom:
                                         if d.get("ira_rocha_ardente_id") != z.get("id")]
                     self._rebuild_decor_index()
                     await self.gm_say(T("narracao.ira_da_rocha_ardente_se_dissipa"))
+            elif z.get("tipo") == "tempestade_ciclones":
+                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "expire", "animation_id": z.get("id")})
+                    await self.gm_say(T("narracao.tempestade_ciclones_dissipa"))
+                elif self.round_num >= int(z.get("proxima_descarga", 0) or 0):
+                    await self._tempestade_descarga(z)
+                    z["proxima_descarga"] = self.round_num + 2
             elif z.get("tipo") == "prisao_chamas":
                 if self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
@@ -26486,8 +26703,6 @@ class GameRoom:
         equipada, armadura natural acrescenta +1. Movimento Errático ignora
         qualquer custo de água e permanece em 1 por casa.
         """
-        if self._voo_imune_terreno(criatura):
-            return 1
         custo_elevacao = 0
         if origem is not None:
             custo_elevacao = self._custo_passo_elevacao(criatura, origem, [x, y])
@@ -26495,14 +26710,20 @@ class GameRoom:
                 return 9999
         # A ponte substitui a superfície do piso inferior: entrar nela custa
         # como uma casa normal, mesmo que o material de baixo seja lava/água.
+        custo_vento = 0
+        for z in self._tempestade_zonas_ativas():
+            if (int(x), int(y)) in {(int(a), int(b)) for a, b in z.get("tiles", [])}:
+                custo_vento = max(custo_vento, 2 + custo_elevacao)
+        if self._voo_imune_terreno(criatura):
+            return max(1, custo_vento)
         if self._ponte_em(x, y):
-            return 1 + custo_elevacao
+            return max(1 + custo_elevacao, custo_vento)
         material = getattr(self, "materiais", {}).get((x, y))
         if material in {"areia_deserto", "lava"}:
-            return 2 + custo_elevacao
+            return max(2 + custo_elevacao, custo_vento)
         kind = self._water_tile_kind(x, y)
         if not kind or self._ignora_penalidade_agua(criatura) or self._ignora_rodamoinho(criatura):
-            return 1 + custo_elevacao
+            return max(1 + custo_elevacao, custo_vento)
         cost = 3 if kind in {"agua_profunda", "rodamoinho_profundo"} else 2
         category = self._armor_category_of(criatura)
         if category == "media":
@@ -26511,7 +26732,7 @@ class GameRoom:
             cost += 2
         elif criatura.get("natural_armor", 0) > 0:
             cost += 1
-        return max(1, cost + custo_elevacao)
+        return max(1, cost + custo_elevacao, custo_vento)
 
     def _lava_tiles_of(self, criatura):
         """Casas de lava sob uma criatura; monstros grandes contam uma vez."""
@@ -29655,6 +29876,7 @@ class GameRoom:
         # Velocidade: movimento dobrado enquanto ativa.
         if cur_p.get("velocidade_rodadas", 0) > 0:
             cur_p["moves_left"] *= 2
+        await self._processar_tempestade_inicio_turno(cur_p)
         if cur_p.pop("turbilhao_perde_movimento", False):
             cur_p["moves_left"] = 0
         if cur_p.pop("ciclope_perde_movimento", False):
@@ -31206,6 +31428,8 @@ class GameRoom:
         await self._aplicar_prisao_chamas_se_pisar(m)
         await self._aplicar_fogueira_se_pisar(m)
         await self._aplicar_piso_congelado_se_pisar(m)
+        if m.get("hp", 0) > 0:
+            await self._tempestade_verificar_entrada(m, [old_x, old_y], m["pos"])
         if m.get("hp", 0) > 0:
             await self._verificar_entrada_zona_molochus(m, nx, ny)
         await self._arrastar_preso(m, [old_x, old_y])
@@ -37325,6 +37549,7 @@ class GameRoom:
             return False
         await self._processar_nuvem_acida_inicio_turno(m)
         await self._processar_camara_gas_inicio_turno(m)
+        await self._processar_tempestade_inicio_turno(m)
         await self._processar_constricao_charcos_inicio(m)
         engolir_ativo = self._habilidade_monstro(m, "engolir")
         if (m.get("type") in {"tirano_da_mata", "tirano_ancestral"}
@@ -37361,6 +37586,8 @@ class GameRoom:
         if m.get("turbilhao_perde_movimento", False):
             m["_water_moves_left"] = 0
             m["master_moves_left"] = 0
+        if m.pop("turbilhao_perde_acao", False):
+            return False
         # Petrificado: perde o turno (não move nem ataca).
         if m.get("petrificado"):
             await self.gm_say(T("narracao.esta_petrificado_e_perde_o_turno", monstro=nome_criatura(m)))
@@ -39673,6 +39900,9 @@ async def handler(ws):
 
                 elif t == "ira_rocha_ardente_chamas":
                     if room: await room.handle_ira_rocha_ardente_chamas(pid, msg.get("zone_id"), msg.get("tiles"))
+
+                elif t == "tempestade_ciclones_mover":
+                    if room: await room.handle_tempestade_ciclones_mover(pid, msg.get("zone_id"), msg.get("ciclone_id"), msg.get("pos"))
 
                 elif t == "encerrar_prisao_chamas":
                     if room: await room.handle_encerrar_prisao_chamas(pid)

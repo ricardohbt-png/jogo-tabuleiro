@@ -2656,6 +2656,14 @@ window.LANG_NARRACAO = {
     "en": "🤝 **Defensive Tactics**: **{tatico}** takes {dano_tatico} of **{alvo_nome}**'s damage (who takes {dano_aliado}).",
     "pt": "🤝 **Tática Defensiva**: **{tatico}** assume {dano_tatico} do dano de **{alvo_nome}** (que sofre {dano_aliado})."
   },
+  "narracao.tempestade_ciclones_criada": {
+    "en": "{caster} raises a {lado}x{lado} Cyclone Storm: {ciclones} cyclone(s), for {dur} rounds.",
+    "pt": "{caster} cria uma Tempestade de Ciclones {lado}x{lado}: {ciclones} ciclone(s), por {dur} rodadas."
+  },
+  "narracao.tempestade_ciclones_dissipa": {
+    "en": "The Cyclone Storm dies down.",
+    "pt": "A Tempestade de Ciclones se dissipa."
+  },
   "narracao.tempo_esgotado_o_turno_foi_encerrado": {
     "en": "⏳ Time's up! **{heroi}**'s turn ended automatically.",
     "pt": "⏳ Tempo esgotado! O turno de **{heroi}** foi encerrado automaticamente."

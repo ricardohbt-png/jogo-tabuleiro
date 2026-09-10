@@ -1892,6 +1892,9 @@ const GS = (() => {
   function iraRochaArdenteConfirmarChamas(zoneId, tiles) {
     send({ type: 'ira_rocha_ardente_chamas', zone_id: zoneId, tiles });
   }
+  function tempestadeCiclonesMover(zoneId, cicloneId, pos) {
+    send({ type: 'tempestade_ciclones_mover', zone_id: zoneId, ciclone_id: cicloneId, pos });
+  }
   function encerrarPrisaoChamas() { send({ type: 'encerrar_prisao_chamas' }); }
   function responderTeleporte(requestId, falhaVoluntaria = false) {
     send({ type: 'teleporte_consent', request_id: requestId,
@@ -3181,6 +3184,7 @@ const GS = (() => {
     escolherMagiaNivel,
     senhorDasAguasCriar,
     iraRochaArdenteConfirmarChamas,
+    tempestadeCiclonesMover,
     encerrarPrisaoChamas,
     responderTeleporte,
     confirmarTeleporte,

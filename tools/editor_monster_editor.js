@@ -596,8 +596,8 @@
     const rings = itemBy(i => i.item_slot === "ring");
     const accessories = itemBy(i => i.item_slot === "item" || i.item_slot === "instrumento");
     const bagItems = itemBy(i => i.item_slot === "bag" || i.item_slot === "ammo");
-    const circleName = {primeiro:"1º círculo", segundo:"2º círculo", terceiro:"3º círculo"};
-    const spellCards = ["primeiro", "segundo", "terceiro"].map(circle => {
+     const circleName = {primeiro:"1º círculo", segundo:"2º círculo", terceiro:"3º círculo", quarto:"4º círculo", quinto:"5º círculo"};
+     const spellCards = ["primeiro", "segundo", "terceiro", "quarto", "quinto"].map(circle => {
       const cards = spellLibrary().filter(s => s.circulo === circle).map(s => {
         const cfg = configuredSpells.get(s.id) || {limit_mode:"encounter", uses_per_combat:1};
         const selected = configuredSpells.has(s.id);

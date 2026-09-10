@@ -2994,6 +2994,14 @@ window.LANG_CATALOGO = {
     "en": "Teleport",
     "pt": "Teleporte"
   },
+  "cat.magia.tempestade_ciclones.desc": {
+    "en": "3x3 area (+1 every 3 levels). Creates one 2x2 cyclone every 4 levels. The wind doubles movement cost, lightning strikes every 2 rounds, and a Fortitude save knocks flying creatures down.",
+    "pt": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras."
+  },
+  "cat.magia.tempestade_ciclones.nome": {
+    "en": "Cyclone Storm",
+    "pt": "Tempestade de Ciclones"
+  },
   "cat.magia.velocidade.desc": {
     "en": "Doubles all actions on the turn. Normal cost per action. Lasts 1d4 rounds.",
     "pt": "Dobra todas as ações no turno. Custo normal por ação. Dura 1d4 rodadas."
