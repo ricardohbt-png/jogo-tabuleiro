@@ -80,6 +80,10 @@ window.LANG_NARRACAO = {
     "en": "🌿 The **Regeneration Potion** heals **{heroi}** +{cura} HP ({p_hp}/{p_max_hp}; pool {pool}).",
     "pt": "🌿 A **Poção de Regeneração** cura **{heroi}** +{cura} HP ({p_hp}/{p_max_hp}; reserva {pool})."
   },
+  "narracao.a_prisao_de_chamas_se_extingue": {
+    "en": "The Prison of Flames burns out.",
+    "pt": "A Prisão de Chamas se extingue."
+  },
   "narracao.a_protecao_contra_energia_de_termina": {
     "en": "🛡️ **{alvo}**'s Protection from Energy ends.",
     "pt": "🛡️ A Proteção contra Energia de **{alvo}** termina."
@@ -144,9 +148,25 @@ window.LANG_NARRACAO = {
     "en": "😴 **{tgt_name}** fell asleep!",
     "pt": "😴 **{tgt_name}** adormeceu!"
   },
+  "narracao.afogamento_descricao": {
+    "en": "The character failed Fortitude against the deep whirlpool and is drowning.",
+    "pt": "O personagem falhou na Fortitude contra o redemoinho profundo e está se afogando."
+  },
+  "narracao.afogamento_nome": {
+    "en": "Drowning",
+    "pt": "Afogamento"
+  },
+  "narracao.afogamento_onda_descricao": {
+    "en": "The Water Elemental's Enveloping Wave keeps the character trapped and causes drowning damage.",
+    "pt": "A Onda Envolvente do Elemental de Água mantém o personagem preso e causa dano de afogamento."
+  },
   "narracao.aguenta_o_impacto_fortitude_d20_vs_cd": {
     "en": "💪 **{tgt_name}** withstands the impact (Fortitude d20({d20}){sbs}={stot} vs DC {dc}).",
     "pt": "💪 **{tgt_name}** aguenta o impacto (Fortitude d20({d20}){sbs}={stot} vs CD {dc})."
+  },
+  "narracao.alvo_sem_nome": {
+    "en": "The target",
+    "pt": "O alvo"
   },
   "narracao.amaldicoa_alvo_s_1_ataque_dano_ca_resist": {
     "en": "☠️ **{caster}** curses {n} target(s): -1 attack/damage/AC/resistance for {dur} round(s) (affects allies/minions).",
@@ -191,6 +211,10 @@ window.LANG_NARRACAO = {
   "narracao.armadilha_desarmada_com_sucesso": {
     "en": "✅ Trap disarmed successfully!{msg_recover}",
     "pt": "✅ Armadilha desarmada com sucesso!{msg_recover}"
+  },
+  "narracao.armadilha_raio_congelante_paralisa": {
+    "en": "❄️ **{alvo}** is paralyzed by the freezing ray! Escape with Strength DC {dc} at the start of each turn.",
+    "pt": "❄️ **{alvo}** está paralisado pelo raio congelante! Escapa com Força CD {dc} no início de cada turno."
   },
   "narracao.armadilha_superada_xp_para_o_grupo": {
     "en": "✨ Trap overcome — +{share} XP for the group!",
@@ -740,6 +764,10 @@ window.LANG_NARRACAO = {
     "en": "🗡️ **{heroi}** lands an off-hand blow with **{off}** (bonus action) (d20={oroll}+{offhand_atk}={ototal} vs AC {tgt_ac}):{ocrit_str} damage [{off_die}={oraw}{osb} {ostat}] = **{odmg}**!",
     "pt": "🗡️ **{heroi}** desfere golpe de mão secundária com **{off}** (ação bônus) (d20={oroll}+{offhand_atk}={ototal} vs CA {tgt_ac}):{ocrit_str} dano [{off_die}={oraw}{osb} {ostat}] = **{odmg}**!"
   },
+  "narracao.desfere_golpe_devastador": {
+    "en": "{monstro} lands a Devastating Blow!",
+    "pt": "{monstro} desfere um Golpe Devastador!"
+  },
   "narracao.desfere_um_golpe_brutal_2_dano": {
     "en": "💥 **{monstro}** delivers a **Brutal Strike** (+2 damage)!",
     "pt": "💥 **{monstro}** desfere um **Golpe Brutal** (+2 dano)!"
@@ -932,6 +960,10 @@ window.LANG_NARRACAO = {
     "en": "🧪 **{alvo_nome}** is **sensitive to poison** — effects doubled!",
     "pt": "🧪 **{alvo_nome}** é **sensível a venenos** — efeitos dobrados!"
   },
+  "narracao.e_teletransportado_para_nova_posicao": {
+    "en": "{alvo} is teleported to a new position.",
+    "pt": "{alvo} é teletransportado para uma nova posição."
+  },
   "narracao.efeito_de_expirou_em": {
     "en": "✅ **{efeito_get_nome_veneno}**'s effect expired on **{alvo_nome}**.",
     "pt": "✅ Efeito de **{efeito_get_nome_veneno}** expirou em **{alvo_nome}**."
@@ -967,6 +999,10 @@ window.LANG_NARRACAO = {
   "narracao.encerra_a_cancao_heroica": {
     "en": "🔇 **{heroi}** ends the Heroic Song.",
     "pt": "🔇 **{heroi}** encerra a Canção Heroica."
+  },
+  "narracao.encerra_a_prisao_de_chamas": {
+    "en": "{caster} ends the Prison of Flames as a free action.",
+    "pt": "{caster} encerra a Prisão de Chamas como ação livre."
   },
   "narracao.encerra_a_protecao_protetor_desativado": {
     "en": "🛡️ **{heroi}** ends the protection — Protector deactivated.",
@@ -1063,6 +1099,10 @@ window.LANG_NARRACAO = {
   "narracao.escapa_ao_ser_arrastado_por": {
     "en": "💨 **{c}** breaks free while being dragged by **{monstro}**!",
     "pt": "💨 **{c}** escapa ao ser arrastado por **{monstro}**!"
+  },
+  "narracao.escapa_da_paralisacao_com_forca": {
+    "en": "💪 **{alvo}** breaks free of the freezing paralysis (Strength DC {dc}).",
+    "pt": "💪 **{alvo}** escapa da paralisia congelante (Força CD {dc})."
   },
   "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
@@ -1195,6 +1235,10 @@ window.LANG_NARRACAO = {
   "narracao.falha_em_se_esconder_d20_vs": {
     "en": "❌ **{heroi}** fails to hide (d20={d20}+{bonus_dex}={total} vs {dificuldade}).",
     "pt": "❌ **{heroi}** falha em se esconder (d20={d20}+{bonus_dex}={total} vs {dificuldade})."
+  },
+  "narracao.falha_escape_paralisacao_com_forca": {
+    "en": "❄️ **{alvo}** remains paralyzed — failed the Strength escape (DC {dc}).",
+    "pt": "❄️ **{alvo}** continua paralisado — falhou no escape de Força (CD {dc})."
   },
   "narracao.falha_no_desarme_vs_tente_de_novo_no_pro": {
     "en": "❌ Disarm failed ({total} vs {dif}) — try again next turn.",
@@ -1536,6 +1580,10 @@ window.LANG_NARRACAO = {
     "en": "Henrique was incapacitated",
     "pt": "Henrique foi incapacitado"
   },
+  "narracao.impoe_pressao_constante": {
+    "en": "{monstro} applies Constant Pressure: -2 AC for 2 rounds.",
+    "pt": "{monstro} impõe Pressão Constante: -2 CA por 2 rodadas."
+  },
   "narracao.improvisa_a_sinfonia_heroica_por_1_rodad": {
     "en": "🪗 **{heroi}** improvises the **Heroic Symphony** for 1 round!",
     "pt": "🪗 **{heroi}** improvisa a **Sinfonia Heroica** por 1 rodada!"
@@ -1563,6 +1611,22 @@ window.LANG_NARRACAO = {
   "narracao.invoca_luz_sagrada_2d6_int_dano_sagrado": {
     "en": "☀️ **{heroi}** invokes **Holy Light**! 2d6+INT holy damage to all enemies!",
     "pt": "☀️ **{heroi}** invoca **Luz Sagrada**! 2d6+INT dano sagrado em todos os inimigos!"
+  },
+  "narracao.ira_da_rocha_ardente_cria_lava": {
+    "en": "🌋 **{caster}** invokes **Wrath of the Burning Rock**: a **{lado}x{lado}** lava area rises for **{dur}** round(s), at a range of **{alcance}** squares. **{chamas}** Living Flame(s) await tile selection.",
+    "pt": "🌋 **{caster}** invoca **Ira da Rocha Ardente**: uma área de lava **{lado}x{lado}** surge por **{dur}** rodada(s), ao alcance de **{alcance}** casas. **{chamas}** Chama(s) Viva(s) aguardam a escolha das casas."
+  },
+  "narracao.ira_da_rocha_ardente_se_dissipa": {
+    "en": "🌋 The **Wrath of the Burning Rock** area dissipates; the lava and Living Flames disappear.",
+    "pt": "🌋 A área da **Ira da Rocha Ardente** se dissipa; a lava e as Chamas Vivas desaparecem."
+  },
+  "narracao.ira_da_rocha_chamas_vivas_colocadas": {
+    "en": "🔥 **{caster}** places **{chamas}** Living Flame(s); they deal **2d4 fire** when touched and remain for **{dur}** round(s).",
+    "pt": "🔥 **{caster}** posiciona **{chamas}** Chama(s) Viva(s); elas causam **2d4 de fogo** ao serem tocadas e permanecem por **{dur}** rodada(s)."
+  },
+  "narracao.ira_da_rocha_sem_casa_para_chama_viva": {
+    "en": "🌋 There were no free tiles for Living Flames. The lava remains for **{dur}** round(s).",
+    "pt": "🌋 Não havia casas livres para criar Chamas Vivas. A lava permanece por **{dur}** rodada(s)."
   },
   "narracao.ja_usou_sua_acao_bonus_neste_turno": {
     "en": "⚠️ **{heroi}** already used their bonus action this turn.",
@@ -1984,9 +2048,17 @@ window.LANG_NARRACAO = {
     "en": "🪤 **{heroi}** sets **{tipo_nome}** at ({tx},{ty}).",
     "pt": "🪤 **{heroi}** prepara **{tipo_nome}** em ({tx},{ty})."
   },
+  "narracao.prepara_investida_brutal": {
+    "en": "{monstro} readies a Brutal Charge!",
+    "pt": "{monstro} prepara uma Investida Brutal!"
+  },
   "narracao.prepara_mas_seus_efeitos_ainda_nao_foram": {
     "en": "📖 **{caster}** prepares **{magia_nome}** {magia_get_icone}, but its effects have not been implemented yet (in development).",
     "pt": "📖 **{caster}** prepara **{magia_nome}** {magia_get_icone}, mas seus efeitos ainda não foram conjurados (em desenvolvimento)."
+  },
+  "narracao.prisao_de_chamas_criada": {
+    "en": "{caster} creates a {lado}x{lado} Prison of Flames for {dur} rounds. The edges deal 2d8 and the heat reaches the eight neighbouring squares.",
+    "pt": "{caster} cria uma Prisão de Chamas {lado}x{lado} por {dur} rodadas. As bordas causam 2d8 e o calor alcança as oito casas vizinhas."
   },
   "narracao.projetil_incendiario_de_dano_de_fogo": {
     "en": "🔥 Incendiary projectile: +{xdmg} fire damage!",
@@ -2252,6 +2324,14 @@ window.LANG_NARRACAO = {
     "en": "💪 **{monstro}** resisted the fear! (d20={d20}{sb_str}={stot})",
     "pt": "💪 **{monstro}** resistiu ao medo! (d20={d20}{sb_str}={stot})"
   },
+  "narracao.resistiu_ao_teleporte": {
+    "en": "{alvo} resisted Teleport.",
+    "pt": "{alvo} resistiu ao Teleporte."
+  },
+  "narracao.resistiu_ao_teleporte_com_rolagem": {
+    "en": "{alvo} resisted Teleport ({total} against DC {dc}).",
+    "pt": "{alvo} resistiu ao Teleporte ({total} contra CD {dc})."
+  },
   "narracao.resistiu_ao_teletransporte": {
     "en": "✅ **{alvo_get_name_alvo}** resisted the teleport!",
     "pt": "✅ **{alvo_get_name_alvo}** resistiu ao teletransporte!"
@@ -2279,6 +2359,22 @@ window.LANG_NARRACAO = {
   "narracao.revela_se_ao_lancar_magia": {
     "en": "🫥 **{heroi}** reveals themself by casting a spell.",
     "pt": "🫥 **{heroi}** revela-se ao lançar magia."
+  },
+  "narracao.rodamoinho_descricao": {
+    "en": "The character failed Reflex and is trapped in the whirlpool.",
+    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho."
+  },
+  "narracao.rodamoinho_nome": {
+    "en": "Whirlpool",
+    "pt": "Redemoinho"
+  },
+  "narracao.rodamoinho_profundo_descricao": {
+    "en": "The character failed Reflex and is trapped in the deep whirlpool.",
+    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho profundo."
+  },
+  "narracao.rodamoinho_profundo_nome": {
+    "en": "Deep Whirlpool",
+    "pt": "Redemoinho profundo"
   },
   "narracao.rompe_o_controle_do_necromante_e_volta_a": {
     "en": "💀 **{a_nome}** breaks the necromancer's control and obeys **{dono_nome}** again!",
@@ -2404,13 +2500,13 @@ window.LANG_NARRACAO = {
     "en": "💀 {servo} loses its turn — {motivo}.",
     "pt": "💀 {servo} perde a vez — {motivo}."
   },
-  "narracao.servo_salto_morto": {
-    "en": "is destroyed",
-    "pt": "está destruído"
-  },
   "narracao.servo_salto_dormindo": {
     "en": "is asleep",
     "pt": "está dormindo"
+  },
+  "narracao.servo_salto_morto": {
+    "en": "is destroyed",
+    "pt": "está destruído"
   },
   "narracao.servo_salto_preso": {
     "en": "is caught in the whirlpool",
@@ -2495,34 +2591,6 @@ window.LANG_NARRACAO = {
   "narracao.sofre_de_dano_de_afogamento": {
     "en": "🌊 **{nome_criatura_criatura}** takes **{bruto}** drowning damage.",
     "pt": "🌊 **{nome_criatura_criatura}** sofre **{bruto}** de dano de afogamento."
-  },
-  "narracao.afogamento_nome": {
-    "en": "Drowning",
-    "pt": "Afogamento"
-  },
-  "narracao.afogamento_descricao": {
-    "en": "The character failed Fortitude against the deep whirlpool and is drowning.",
-    "pt": "O personagem falhou na Fortitude contra o redemoinho profundo e está se afogando."
-  },
-  "narracao.afogamento_onda_descricao": {
-    "en": "The Water Elemental's Enveloping Wave keeps the character trapped and causes drowning damage.",
-    "pt": "A Onda Envolvente do Elemental de Água mantém o personagem preso e causa dano de afogamento."
-  },
-  "narracao.rodamoinho_nome": {
-    "en": "Whirlpool",
-    "pt": "Redemoinho"
-  },
-  "narracao.rodamoinho_descricao": {
-    "en": "The character failed Reflex and is trapped in the whirlpool.",
-    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho."
-  },
-  "narracao.rodamoinho_profundo_nome": {
-    "en": "Deep Whirlpool",
-    "pt": "Redemoinho profundo"
-  },
-  "narracao.rodamoinho_profundo_descricao": {
-    "en": "The character failed Reflex and is trapped in the deep whirlpool.",
-    "pt": "O personagem falhou em Reflexos e ficou preso no redemoinho profundo."
   },
   "narracao.sofre_de_dano_hp": {
     "en": "💥 **{alvo_nome}** takes **{dano}** damage ({elemento}) ({alvo_hp}/{alvo_get_max_hp} HP).",
@@ -2667,6 +2735,18 @@ window.LANG_NARRACAO = {
   "narracao.transforma_uma_area_x_em_por_rodada_s": {
     "en": "🌊 **{caster}** turns a **{lado}x{lado}** area into **{tipo_txt}** for {dur} round(s).",
     "pt": "🌊 **{caster}** transforma uma área **{lado}x{lado}** em **{tipo_txt}** por {dur} rodada(s)."
+  },
+  "narracao.troll_cai_mas_regenera": {
+    "en": "🩸 **{monstro}** falls, but its wounds begin to regenerate!",
+    "pt": "🩸 **{monstro}** cai, mas seus ferimentos começam a se regenerar!"
+  },
+  "narracao.troll_regenera_4_pv": {
+    "en": "🩸 **{monstro}** regenerates {cura} HP at the start of its turn.",
+    "pt": "🩸 **{monstro}** regenera {cura} PV no início do turno."
+  },
+  "narracao.troll_se_ergue_com_1_pv": {
+    "en": "🩸 **{monstro}** knits itself back together and rises with 1 HP!",
+    "pt": "🩸 **{monstro}** recompõe o corpo e se ergue com 1 PV!"
   },
   "narracao.turno_controle_recursos": {
     "en": " 🍖 {fome}/10 💧 {sede}/10",

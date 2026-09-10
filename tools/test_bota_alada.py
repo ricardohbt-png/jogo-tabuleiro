@@ -41,20 +41,20 @@ def test_compra_equipamento():
         assert player["voo"] is True
         assert player["voo_bota_alada"] is True
         assert player["altura"] == S.ALTURA_INICIAL_VOO == 2
-        assert player["altura_max"] == S.ALTURA_MAX == 10
+        assert player["altura_max"] == S.ALTURA_MAX_BOTA_ALADA == 3
         assert player["pode_alterar_altura"] is True
 
         room.phase = "playing"
         room.player_order = ["p1"]
         room.turn_index = 0
         room.push_state = lambda: asyncio.sleep(0)
-        player["moves_left"] = 8
-        for _ in range(8):
+        player["moves_left"] = 1
+        for _ in range(1):
             await room.handle_alterar_altura("p1", 1)
-        assert player["altura"] == 10
+        assert player["altura"] == 3
         assert player["moves_left"] == 0
         await room.handle_alterar_altura("p1", 1)
-        assert player["altura"] == 10
+        assert player["altura"] == 3
         assert player["moves_left"] == 0
 
         player["altura"] = 3

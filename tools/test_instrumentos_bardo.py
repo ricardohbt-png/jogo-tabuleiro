@@ -67,6 +67,14 @@ def _room_bardo():
     # resultado de resistência). São consumidas junto do próximo game_state;
     # como o room aqui nasce de __new__, sem elas qualquer save dispara
     # AttributeError em _registrar_resultado_resistencia. Espelha o __init__.
+    # Estado de fome/sede: _pagar_fome_sede chama _verificar_estado_sobrevivencia,
+    # que lê estas máscaras para só avisar na TRANSIÇÃO para abaixo de 20. Sem
+    # elas, tocar um instrumento (que cobra 🍖/💧) estoura AttributeError.
+    # Espelha o __init__.
+    room._survival_penalty_masks = {}
+    room._survival_depletion_masks = {}
+    room._survival_alerts = []
+    room._condition_alerts = []
     room._combat_damage_events = []
     room._positive_effect_events = []
     room._resistance_events = []

@@ -140,6 +140,37 @@ def test_executor_monstro_recusa_alvo_aereo_no_melee():
     asyncio.run(executar())
 
 
+def test_bola_fogo_residual_fica_no_chao():
+    async def verificar():
+        room = server.GameRoom("FLIGHT_FIREBALL_GROUND_TEST")
+        room._tem_linha_de_visao = lambda *args, **kwargs: True
+        room.gm_say = lambda *args, **kwargs: asyncio.sleep(0)
+        voador = {"id": "p1", "name": "Voador", "alive": True, "hp": 30,
+                  "max_hp": 30, "pos": [2, 2], "altura": 2, "gear": {}}
+        no_chao = {"id": "p2", "name": "No chão", "alive": True, "hp": 30,
+                   "max_hp": 30, "pos": [2, 3], "altura": 0, "gear": {}}
+        room.players = {"p1": voador, "p2": no_chao}
+        zona = {"tipo": "bola_fogo", "ativa": True, "cx": 2, "cy": 2,
+                "raio": 1, "area_lado": 3, "dano_r2": 5,
+                "rodada_atual": 2, "rodadas_max": 2, "caster": "mago"}
+
+        await room._processar_zona_bola_fogo(zona)
+        assert voador["hp"] == 30
+        assert no_chao["hp"] < 30
+
+        voador["hp"] = 30
+        await room._verificar_entrada_zona_fogo(voador, 2, 2)
+        assert voador["hp"] == 30
+        voador["altura"] = 0
+        zona["ativa"] = True
+        zona["rodada_atual"] = 2
+        room.zonas_especiais = [zona]
+        await room._verificar_entrada_zona_fogo(voador, 2, 2)
+        assert voador["hp"] < 30
+
+    asyncio.run(verificar())
+
+
 def test_voo_imunidade_terreno_e_armadilhas():
     async def verificar():
         room = server.GameRoom("FLIGHT_TERRAIN_IMMUNITY_TEST")
@@ -232,6 +263,7 @@ def main():
     test_voo_alcance_vertical_compartilhado()
     test_ataques_de_monstro_respeitam_altura()
     test_executor_monstro_recusa_alvo_aereo_no_melee()
+    test_bola_fogo_residual_fica_no_chao()
     test_voo_imunidade_terreno_e_armadilhas()
 
     print("35 passed, 0 failed")

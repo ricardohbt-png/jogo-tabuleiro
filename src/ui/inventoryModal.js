@@ -341,12 +341,45 @@ const InventoryModal = (() => {
     });
   }
 
+  function _captureGamepadFocus(){
+    const slot = document.activeElement?.closest?.('#inv-modal-overlay [data-inventory-slot]');
+    if(!slot) return null;
+    if(slot.dataset.inventorySlot === 'bag'){
+      const index = Number(slot.dataset.bagIndex);
+      return Number.isInteger(index) ? { kind:'bag', index } : null;
+    }
+    if(slot.dataset.inventorySlot === 'gear' && slot.dataset.slotKey)
+      return { kind:'gear', slotKey:slot.dataset.slotKey };
+    return null;
+  }
+
+  function _restoreGamepadFocus(focus){
+    if(!focus) return;
+    requestAnimationFrame(() => {
+      const selector = focus.kind === 'bag'
+        ? `.inv-bagslot[data-bag-index="${focus.index}"]`
+        : focus.kind === 'gear'
+          ? `.inv-slot[data-slot-key="${focus.slotKey}"]` : '';
+      const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
+      if(!slot) return;
+      if(typeof window._gamepadSetUiFocus === 'function')
+        window._gamepadSetUiFocus(slot);
+      else
+        slot.focus({ preventScroll:true });
+    });
+  }
+
+  function _isCarta(item){
+    return !!item && (item.id === 'carta' || item.effect === 'letter' || item.tipo === 'carta');
+  }
+
   // Estado de ativação de um item da bolsa. Clique direito/touch e o botão
   // secundário do controle compartilham esta regra para não criar economias de
   // ação diferentes entre mouse e joystick.
   function _bagActionState(item, player){
+    const isCarta = _isCarta(item);
     const isScroll = !!item && item.effect === 'scroll';
-    const isConsumable = !!item && !item.die
+    const isConsumable = !!item && !isCarta && !item.die
       && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
     const ehCaster = player?.class_id === 'mage' || player?.class_id === 'cleric';
     const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
@@ -358,7 +391,8 @@ const InventoryModal = (() => {
       ? GS.CATALOGO_ITENS[item && item.id] : null;
     const isArremessavel = !!(catDef && catDef.arremessavel);
     return {
-      isScroll, isConsumable, isArremessavel,
+      isCarta, isScroll, isConsumable, isArremessavel,
+      podeLer: isCarta,
       podeUsar: isMyOwnDungeonTurn && isConsumable && !bonusBloqueado,
       podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster,
       podeArremessar: isMyOwnDungeonTurn && isArremessavel && !player.action_done,
@@ -366,10 +400,20 @@ const InventoryModal = (() => {
   }
 
   function _activateBagItem(index){
-    if(_readOnly) return false;
     const player = _currentPlayer();
     const item = player?.bag?.[index];
     if(!item) return false;
+    if(_isCarta(item)){
+      // A leitura passa pelo servidor para que uma maldição vinculada à
+      // instância da Carta seja aplicada de forma autoritativa. Em fichas
+      // somente-leitura/cidade, continua sendo possível apenas visualizar o
+      // texto localmente.
+      const ownDungeon = !_readOnly && player?.id === GS.myPid && GS.gameState;
+      if(ownDungeon && typeof GS.readItem === 'function') GS.readItem(item.id, index);
+      else if(typeof window.abrirCarta === 'function') window.abrirCarta(item);
+      return true;
+    }
+    if(_readOnly) return false;
     const action = _bagActionState(item, player);
     if(action.podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
       close(); window._iniciarMiraArremesso(item, player); return true;
@@ -409,7 +453,7 @@ const InventoryModal = (() => {
     const item = player?.bag?.[index];
     if(!item) return false;
     const action = _bagActionState(item, player);
-    return action.podeUsar || action.podeConjurar || action.podeArremessar;
+    return action.podeLer || action.podeUsar || action.podeConjurar || action.podeArremessar;
   }
 
   function _renderGamepadAction(overlay){
@@ -424,7 +468,7 @@ const InventoryModal = (() => {
     panel.innerHTML = `
       <small>${t('ui.inv.gamepad_acao_hint')}</small>
       <div class="inv-gamepad-action-options">
-        <span class="${action.choice === 'use' ? 'selected' : ''}">✓ ${t('ui.inv.gamepad_usar')}</span>
+        <span class="${action.choice === 'use' ? 'selected' : ''}">${_isCarta(_currentPlayer()?.bag?.[action.index]) ? '📖 Ler' : `✓ ${t('ui.inv.gamepad_usar')}`}</span>
         <span class="${action.choice === 'cancel' ? 'selected' : ''}">✕ ${t('ui.geral.cancelar')}</span>
       </div>`;
     host.appendChild(panel);
@@ -536,6 +580,11 @@ const InventoryModal = (() => {
         // Dois cliques/toques rápidos equipam automaticamente (ou usam um
         // consumível). Um toque isolado preserva a seleção/movimentação.
         slot.onclick = () => {
+          if(item && _isCarta(item)){
+            _lastBagPress = null;
+            _activateBagItem(i);
+            return;
+          }
           const now = performance.now();
           if(item && _lastBagPress?.index === i && now - _lastBagPress.at <= QUICK_EQUIP_PRESS_MS){
             _lastBagPress = null;
@@ -633,9 +682,16 @@ const InventoryModal = (() => {
   function _render(){
     const overlay = document.getElementById('inv-modal-overlay');
     if(!overlay) return;
+    // Guardar antes de trocar innerHTML é essencial: depois do redesenho o
+    // elemento antigo já não pode ser usado pelo navegador nem pelo controle.
+    const focusBeforeRender = _captureGamepadFocus();
     const player = _currentPlayer();
     if(!player){ close(); return; }
-    if(_storageCtx){ _renderStorage(overlay, player); return; }
+    if(_storageCtx){
+      _renderStorage(overlay, player);
+      _restoreGamepadFocus(focusBeforeRender);
+      return;
+    }
     overlay.innerHTML = `
       <div class="inv-frame inv-combined-frame">
         <div class="inv-modal">
@@ -668,6 +724,7 @@ const InventoryModal = (() => {
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
     _wirePanelToggles(overlay);
     _applyPanelPrefs(overlay);
+    _restoreGamepadFocus(focusBeforeRender);
   }
 
   function _onGearSlotClick(slotKey, blocked){

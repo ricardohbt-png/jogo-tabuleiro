@@ -106,7 +106,8 @@ def build_catalog():
         "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
         "range", "reach", "throw_range", "categoria", "granted_ability", "kind", "ac_bonus",
         "damage_reduction", "item_slot", "effect", "value", "veneno_id",
-        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao"
+        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao", "texto",
+        "curse_mode", "curse_id", "curse_category"
     )
     items = []
     for i in server._DUNGEON_ITEM_CATALOG.values():

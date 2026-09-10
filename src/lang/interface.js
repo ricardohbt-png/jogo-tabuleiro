@@ -215,6 +215,38 @@ window.LANG_INTERFACE = {
     "en": "1d4 + DEX adjacent",
     "pt": "1d4 + DES adjacente"
   },
+  "ui.afogamento.dano": {
+    "en": "{dano} drowning damage",
+    "pt": "{dano} de dano de afogamento"
+  },
+  "ui.afogamento.desc": {
+    "en": "The character failed the Fortitude save against the deep whirlpool and is taking drowning damage.",
+    "pt": "O personagem falhou no teste de Fortitude contra o redemoinho profundo e sofreu dano de afogamento."
+  },
+  "ui.afogamento.fome_sede": {
+    "en": "-1 Hunger and -1 Thirst",
+    "pt": "-1 de Fome e -1 de Sede"
+  },
+  "ui.afogamento.fortitude": {
+    "en": "Fortitude DC {dc}: failed",
+    "pt": "Fortitude CD {dc}: falhou"
+  },
+  "ui.afogamento.onda_desc": {
+    "en": "The Enveloping Wave keeps the character trapped and causes continuous drowning damage.",
+    "pt": "A Onda Envolvente mantém o personagem preso e causa dano contínuo de afogamento."
+  },
+  "ui.afogamento.onda_escape": {
+    "en": "Escape at the start of the character's turn with Fortitude DC {dc}",
+    "pt": "Escapa no início do próprio turno com Fortitude CD {dc}"
+  },
+  "ui.afogamento.onda_extra": {
+    "en": "+{dano} extra damage for being on water",
+    "pt": "+{dano} de dano adicional por estar na água"
+  },
+  "ui.afogamento.status": {
+    "en": "DROWNING · {dano} DAMAGE",
+    "pt": "AFOGAMENTO · {dano} DE DANO"
+  },
   "ui.ajuda.camera": {
     "en": "<b>3D camera:</b> drag = orbit · right button = pan · scroll = zoom · with a flying hero, hold the right button and scroll up/down to change height · <b>R</b> or ⌂ = default view · 🎲 toggles 2D/3D.",
     "pt": "<b>Câmera 3D:</b> arrastar = orbitar · direito = pan · scroll = zoom · com um herói voando, mantenha o botão direito pressionado e use scroll up/down para alterar a altura · <b>R</b> ou ⌂ = vista padrão · 🎲 alterna 2D/3D."
@@ -502,6 +534,10 @@ window.LANG_INTERFACE = {
   "ui.armadilha.armadilha_incendiaria.desc": {
     "en": "1d6+1d4+1 fire over 3 rounds. Vanishes once triggered.",
     "pt": "1d6+1d4+1 fogo em 3 rodadas. Some após ativar."
+  },
+  "ui.armadilha.armadilha_raio_congelante.desc": {
+    "en": "3d4 cold damage. Fortitude DC 15 avoids the paralysis; escape with Strength DC 16.",
+    "pt": "3d4 de dano de gelo. Fortitude CD 15 evita a paralisia; escape com Força CD 16."
   },
   "ui.armadilha.armadilha_urso.desc": {
     "en": "1d4 damage + lose your movement. Vanishes once triggered.",
@@ -1118,6 +1154,10 @@ window.LANG_INTERFACE = {
   "ui.cancao.titulo": {
     "en": "🎵 HEROIC SONG",
     "pt": "🎵 CANÇÃO HEROICA"
+  },
+  "ui.carta.sem_mensagem": {
+    "en": "This letter has no message.",
+    "pt": "Esta carta não contém nenhuma mensagem."
   },
   "ui.cena.alt_fundo": {
     "en": "Scene of the place",
@@ -2383,6 +2423,10 @@ window.LANG_INTERFACE = {
     "en": "🦠 {sev} DISEASE",
     "pt": "🦠 DOENÇA {sev}"
   },
+  "ui.hud.encerrar_prisao_chamas": {
+    "en": "🔥 End Prison of Flames",
+    "pt": "🔥 Encerrar Prisão de Chamas"
+  },
   "ui.hud.encerrar_prisioneiro": {
     "en": "⏭ End prisoner",
     "pt": "⏭ Encerrar prisioneiro"
@@ -2402,6 +2446,10 @@ window.LANG_INTERFACE = {
   "ui.hud.escapar_bau": {
     "en": "Escape the chest",
     "pt": "Escapar do baú"
+  },
+  "ui.hud.escolher_chamas_vivas": {
+    "en": "🔥 Choose Living Flames",
+    "pt": "🔥 Escolher Chamas Vivas"
   },
   "ui.hud.espaco_ok": {
     "en": "✓ Spacing 0.94",
@@ -3935,6 +3983,10 @@ window.LANG_INTERFACE = {
     "en": "<b>Range:</b> 6 squares<br>\n               <b>Buff:</b> +1 attack and damage on the weapon<br>\n               <b>Blessed weapon:</b> ignores reductions, halved damage and physical immunity<br>\n               <b>Duration:</b> 1d6+2 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> 6 quadrados<br>\n               <b>Buff:</b> +1 ataque e dano na arma<br>\n               <b>Arma abençoada:</b> ignora reduções, dano pela metade e imunidade física<br>\n               <b>Duração:</b> 1d6+2 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
+  "ui.magia.acao_livre": {
+    "en": "free action",
+    "pt": "ação livre"
+  },
   "ui.magia.acao_livre_restam_casas": {
     "en": "free action · {n} square(s) left",
     "pt": "ação livre · restam {n} casa(s)"
@@ -4018,6 +4070,10 @@ window.LANG_INTERFACE = {
   "ui.magia.criar_alimentos.desc": {
     "en": "<b>Creates:</b> a chest on a free adjacent square<br>\n               <b>Contents:</b> 1d4+2 random tavern foods<br>\n               <b>Empower:</b> multiplies the final item count<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Cria:</b> baú em uma casa adjacente livre<br>\n               <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>\n               <b>Fortalecer:</b> multiplica a quantidade final de itens<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.criatura_escolhida": {
+    "en": "the chosen creature",
+    "pt": "criatura escolhida"
   },
   "ui.magia.dica.adjacent_tile": {
     "en": "Click an adjacent GREEN SQUARE to create the chest",
@@ -4127,6 +4183,90 @@ window.LANG_INTERFACE = {
     "en": "<b>Effect:</b> enemies cannot attack you<br>\n               <b>Attack:</b> with advantage (higher of 2d20) + sneak<br>\n               <b>Breaks:</b> on attacking or casting a spell<br>\n               <b>Duration:</b> 1d6+1 rounds",
     "pt": "<b>Efeito:</b> inimigos não podem atacar<br>\n               <b>Ataque:</b> com vantagem (2d20 maior) + furtivo<br>\n               <b>Quebra:</b> ao atacar ou lançar magia<br>\n               <b>Duração:</b> 1d6+1 rodadas"
   },
+  "ui.magia.ira_rocha_aguardando": {
+    "en": "{restante} Living Flame(s) awaiting placement",
+    "pt": "{restante} Chama(s) Viva(s) aguardando colocação"
+  },
+  "ui.magia.ira_rocha_ardente.desc": {
+    "en": "<b>Range:</b> 4 squares +1 every 2 levels<br><b>Area:</b> 3x3 lava, +1 square every 3 levels<br><b>Effect:</b> everyone in the area takes 2d6 fire damage and the lava terrain effects<br><b>Duration:</b> 1d4 +1 round every 3 levels (minimum 2)<br><b>Living Flames:</b> from the 2nd round on, creates 2d4 decorations in an area 1x1 larger than the lava; you choose the squares<br><b>Cost:</b> 🍖-1 💧-1 + 1 fourth-circle slot",
+    "pt": "<b>Alcance:</b> 4 quadrados +1 a cada 2 níveis<br>\n               <b>Área:</b> lava 3x3 +1 casa a cada 3 níveis<br>\n               <b>Efeito:</b> todos na área sofrem 2d6 de fogo e os efeitos do terreno lava<br>\n               <b>Duração:</b> 1d4 +1 rodada a cada 3 níveis (mínimo 2)<br>\n               <b>Chamas Vivas:</b> a partir da 2ª rodada, cria 2d4 decorações em uma área 1x1 maior que a lava; você escolhe as casas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo"
+  },
+  "ui.magia.ira_rocha_btn_criar": {
+    "en": "CREATE LIVING FLAMES",
+    "pt": "CRIAR CHAMAS VIVAS"
+  },
+  "ui.magia.ira_rocha_btn_escolher": {
+    "en": "🔥 Choose Living Flames",
+    "pt": "🔥 Escolher Chamas Vivas"
+  },
+  "ui.magia.ira_rocha_casa_livre_ampliada": {
+    "en": "Choose a free square inside the extended Living Flames area.",
+    "pt": "Escolha uma casa livre dentro da área ampliada das Chamas Vivas."
+  },
+  "ui.magia.ira_rocha_chama_viva": {
+    "en": "LIVING FLAME",
+    "pt": "CHAMA VIVA"
+  },
+  "ui.magia.ira_rocha_chamas_a_partir_r2": {
+    "en": "🌋 Living Flames become available from the 2nd round on.",
+    "pt": "🌋 Chamas Vivas disponíveis a partir da 2ª rodada."
+  },
+  "ui.magia.ira_rocha_chamas_cabecalho": {
+    "en": "🔥 LIVING FLAMES — FREE ACTION",
+    "pt": "🔥 CHAMAS VIVAS — AÇÃO LIVRE"
+  },
+  "ui.magia.ira_rocha_chamas_colocadas": {
+    "en": "🌋 Living Flames: {postas}/{postas} already placed for this spell.",
+    "pt": "🌋 Chamas Vivas: {postas}/{postas} já colocadas nesta magia."
+  },
+  "ui.magia.ira_rocha_efeito_dano": {
+    "en": "The flames deal fire damage and last until the lava ends.",
+    "pt": "As chamas causam o dano de fogo e permanecem até o fim da lava."
+  },
+  "ui.magia.ira_rocha_efeito_escolha": {
+    "en": "Choose exactly {restante} square(s) in the area extended by 1x1.",
+    "pt": "Escolha exatamente {restante} casa(s) na área ampliada em 1x1."
+  },
+  "ui.magia.ira_rocha_efeito_r2": {
+    "en": "Available from the 2nd round on.",
+    "pt": "Disponível a partir da 2ª rodada."
+  },
+  "ui.magia.ira_rocha_escolha_casas": {
+    "en": "Choose {restante} square(s) in the area extended by 1x1 around the lava.",
+    "pt": "Escolha {restante} casa(s) na área ampliada em 1x1 ao redor da lava."
+  },
+  "ui.magia.ira_rocha_hover_fora": {
+    "en": "Choose a free square inside the lava area.",
+    "pt": "Escolha uma casa livre dentro da área da lava."
+  },
+  "ui.magia.ira_rocha_hover_marcar": {
+    "en": "Click to select/deselect this Living Flame.",
+    "pt": "Clique para marcar/desmarcar esta Chama Viva."
+  },
+  "ui.magia.ira_rocha_lava_ativa": {
+    "en": "The lava is already active. Now choose the squares where the Living Flames will appear; this is a free action on your turn.",
+    "pt": "A lava já está ativa. Escolha agora as casas onde surgirão as Chamas Vivas; esta é uma ação livre do seu turno."
+  },
+  "ui.magia.ira_rocha_limite": {
+    "en": "Limit of {max} Living Flames reached.",
+    "pt": "Limite de {max} Chamas Vivas atingido."
+  },
+  "ui.magia.ira_rocha_mira_instrucao": {
+    "en": "Choose {max} square(s) inside the extended area to create the Living Flames.",
+    "pt": "Escolha {max} casa(s) dentro da área ampliada para criar as Chamas Vivas."
+  },
+  "ui.magia.ira_rocha_mira_titulo": {
+    "en": "🌋 WRATH OF THE BURNING ROCK",
+    "pt": "🌋 IRA DA ROCHA ARDENTE"
+  },
+  "ui.magia.ira_rocha_sem_casa_livre": {
+    "en": "🌋 No free square in the area for the Living Flames.",
+    "pt": "🌋 Sem casa livre na área para as Chamas Vivas."
+  },
+  "ui.magia.ira_rocha_titulo": {
+    "en": "🌋 Wrath of the Burning Rock",
+    "pt": "🌋 Ira da Rocha Ardente"
+  },
   "ui.magia.ja_criadas": {
     "en": " ({n} already created)",
     "pt": " ({n} já criada(s))"
@@ -4171,9 +4311,29 @@ window.LANG_INTERFACE = {
     "en": "<b>Target:</b> yourself, an ally or a living creature<br><b>Form:</b> an unlocked creature from the bestiary<br><b>Effect:</b> takes on the form's attributes, attacks, defense, movement and abilities<br><b>Resistance:</b> Will DC 8 + the mage's INT + 4",
     "pt": "<b>Alvo:</b> você, um aliado ou uma criatura viva<br>\n               <b>Forma:</b> criatura desbloqueada do bestiário<br>\n               <b>Efeito:</b> assume atributos, ataques, defesa, movimento e habilidades da forma<br>\n               <b>Resistência:</b> Vontade CD 8 + INT do mago + 4"
   },
+  "ui.magia.metamorfose_assumiu_forma": {
+    "en": "{alvo} took the shape of {forma}.",
+    "pt": "{alvo} assumiu a forma de {forma}."
+  },
   "ui.magia.metamorfose_confirmar_falha": {
     "en": "🦋 Polymorph\\n\\nYou will be transformed into {forma}.\\n\\nDo you want to fail the Will save (DC {dc}) on purpose and accept the effect?\\n\\nCancel makes the save normally.",
     "pt": "🦋 Metamorfose\\n\\nVocê será transformado em {forma}.\\n\\nDeseja falhar propositalmente no teste de Vontade CD {dc}, aceitando o efeito?\\n\\nCancelar realiza o teste normalmente."
+  },
+  "ui.magia.metamorfose_desc_padrao": {
+    "en": "The target has taken a new shape and now uses the chosen creature's traits.",
+    "pt": "O alvo assumiu uma nova forma e passa a usar as características da criatura escolhida."
+  },
+  "ui.magia.metamorfose_efeito_atributos": {
+    "en": "The shape's attributes, attacks, defence, movement and abilities all apply.",
+    "pt": "Atributos, ataques, defesa, movimento e habilidades da forma são aplicados."
+  },
+  "ui.magia.metamorfose_efeito_equipamento": {
+    "en": "Gear and hero abilities follow the shape's rules while it lasts.",
+    "pt": "Equipamentos e habilidades de herói seguem as regras da forma enquanto durar."
+  },
+  "ui.magia.metamorfose_forma_aplicada": {
+    "en": "Shape applied: {forma}.",
+    "pt": "Forma aplicada: {forma}."
   },
   "ui.magia.metamorfose_titulo": {
     "en": "🦋 Polymorph",
@@ -4206,6 +4366,10 @@ window.LANG_INTERFACE = {
   "ui.magia.nenhuma_forma_desbloqueada_disponivel": {
     "en": "No unlocked form available.",
     "pt": "Nenhuma forma desbloqueada disponível."
+  },
+  "ui.magia.o_alvo": {
+    "en": "The target",
+    "pt": "O alvo"
   },
   "ui.magia.o_mago_paga_1_e_1_por_rodada": {
     "en": "The mage pays 🍖-1 and 💧-1 per round.",
@@ -4263,6 +4427,38 @@ window.LANG_INTERFACE = {
     "en": "🌨️ Snowy Plain",
     "pt": "🌨️ Planície nevada"
   },
+  "ui.magia.prisao_chamas.desc": {
+    "en": "<b>Centre:</b> choose the central point of the area<br><b>Size:</b> a 2x2, 3x3 or 4x4 square; only the edges burn<br><b>Range:</b> 4 squares +1 every 2 mage levels<br><b>Effect:</b> wall squares are ignored; allies may cross, but take damage<br><b>Heat:</b> adjacent creatures, diagonals included, take 2d4 when it appears and at the start of their turn<br><b>Flames:</b> standing on, entering or crossing a burning edge deals 2d8 fire damage<br><b>Duration:</b> 10 rounds; ending it is a free action<br><b>Cost:</b> 🍖-1 💧-1 + 1 fourth-circle slot",
+    "pt": "<b>Centro:</b> escolha o ponto central da área<br>\n               <b>Tamanho:</b> quadrado de 2x2, 3x3 ou 4x4; somente as bordas têm chamas<br>\n               <b>Alcance:</b> 4 quadrados +1 a cada 2 níveis do mago<br>\n               <b>Efeito:</b> casas de parede são ignoradas; aliados podem atravessar, mas sofrem dano<br>\n               <b>Calor:</b> criaturas adjacentes, inclusive diagonais, sofrem 2d4 ao surgir e no início do turno<br>\n               <b>Chamas:</b> ocupar, entrar ou atravessar uma borda em chamas causa 2d8 de fogo<br>\n               <b>Duração:</b> 10 rodadas; encerrar é uma ação livre<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo"
+  },
+  "ui.magia.prisao_chamas_bordas": {
+    "en": "burning edges",
+    "pt": "bordas em chamas"
+  },
+  "ui.magia.prisao_chamas_btn_encerrar": {
+    "en": "🔥 End Prison of Flames",
+    "pt": "🔥 Encerrar Prisão de Chamas"
+  },
+  "ui.magia.prisao_chamas_cabecalho": {
+    "en": "🔥 PRISON OF FLAMES — FREE ACTION",
+    "pt": "🔥 PRISÃO DE CHAMAS — AÇÃO LIVRE"
+  },
+  "ui.magia.prisao_chamas_dano_resumo": {
+    "en": "The edges deal 2d8; adjacent squares, diagonals included, take 2d4.",
+    "pt": "As bordas causam 2d8; casas adjacentes, inclusive diagonais, sofrem 2d4."
+  },
+  "ui.magia.prisao_chamas_escolha_tamanho": {
+    "en": "Choose the size of the square. Then pick the central point on the map; the area will show in green.",
+    "pt": "Escolha o tamanho do quadrado. Depois, selecione no mapa o ponto central; a área aparecerá em verde."
+  },
+  "ui.magia.prisao_chamas_restante": {
+    "en": "{restante} round(s) left. You may end the area before it expires.",
+    "pt": "{restante} rodada(s) restante(s). Você pode encerrar a área antes do fim."
+  },
+  "ui.magia.prisao_chamas_titulo": {
+    "en": "🔥 Prison of Flames",
+    "pt": "🔥 Prisão de Chamas"
+  },
   "ui.magia.protecao_energia.desc": {
     "en": "<b>Protection:</b> 10 points/round of elemental damage<br>\n               <b>Types:</b> fire, ice, lightning, acid, water or holy<br>\n               <b>Duration:</b> 1d6+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Proteção:</b> 10 pontos/rodada de dano elemental<br>\n               <b>Tipos:</b> fogo, gelo, eletricidade, ácido, água ou sagrado<br>\n               <b>Duração:</b> 1d6+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
@@ -4315,21 +4511,17 @@ window.LANG_INTERFACE = {
     "en": "no slot available",
     "pt": "sem slot disponível"
   },
-  "ui.magia.senhor_das_aguas": {
-    "en": "🌊 Lord of Waters",
-    "pt": "🌊 Senhor das Águas"
-  },
-  "ui.magia.senhor_aguas_janela_status": {
-    "en": "{n} whirlpool square(s) available",
-    "pt": "{n} casa(s) de redemoinho disponível(is)"
-  },
-  "ui.magia.senhor_aguas_janela_desc_profunda": {
-    "en": "The chosen area became Deep Water. Marked squares will become deep whirlpools.",
-    "pt": "A área escolhida foi transformada em Água profunda. As casas marcadas receberão redemoinhos profundos."
+  "ui.magia.senhor_aguas_janela_atencao": {
+    "en": "<strong>📌 Attention:</strong> whirlpools last until the spell ends. The type created depends on the chosen terrain: Water or Deep Water.",
+    "pt": "<strong>📌 Atenção:</strong> os redemoinhos permanecem até o fim da magia. O tipo criado depende do terreno escolhido: Água ou Água profunda."
   },
   "ui.magia.senhor_aguas_janela_desc_agua": {
     "en": "The chosen area became Water. Marked squares will become whirlpools.",
     "pt": "A área escolhida foi transformada em Água. As casas marcadas receberão redemoinhos."
+  },
+  "ui.magia.senhor_aguas_janela_desc_profunda": {
+    "en": "The chosen area became Deep Water. Marked squares will become deep whirlpools.",
+    "pt": "A área escolhida foi transformada em Água profunda. As casas marcadas receberão redemoinhos profundos."
   },
   "ui.magia.senhor_aguas_janela_redemoinho": {
     "en": "<strong>🌪️ Whirlpool:</strong> on entry, make a Reflex save DC 14. On a failure, lose movement. While trapped, make another Reflex save at the start of each round; the creature can act and leave normally.",
@@ -4339,77 +4531,13 @@ window.LANG_INTERFACE = {
     "en": "<strong>🌀 Deep Whirlpool:</strong> on entry, make a Reflex save DC 15. On a failure, the creature is trapped and repeats the Reflex save on the next round. While trapped, make a Fortitude save DC 18 to avoid 1d6 drowning damage and suffer -1 Hunger and Thirst per round.",
     "pt": "<strong>🌀 Redemoinho profundo:</strong> ao entrar, testa Reflexos CD 15. Se falhar, fica preso e testa Reflexos novamente na rodada seguinte. Enquanto preso, testa Fortitude CD 18 para evitar 1d6 de dano por afogamento e sofre -1 de Fome e Sede por rodada."
   },
-  "ui.afogamento.desc": {
-    "en": "The character failed the Fortitude save against the deep whirlpool and is taking drowning damage.",
-    "pt": "O personagem falhou no teste de Fortitude contra o redemoinho profundo e sofreu dano de afogamento."
+  "ui.magia.senhor_aguas_janela_status": {
+    "en": "{n} whirlpool square(s) available",
+    "pt": "{n} casa(s) de redemoinho disponível(is)"
   },
-  "ui.afogamento.dano": {
-    "en": "{dano} drowning damage",
-    "pt": "{dano} de dano de afogamento"
-  },
-  "ui.afogamento.fortitude": {
-    "en": "Fortitude DC {dc}: failed",
-    "pt": "Fortitude CD {dc}: falhou"
-  },
-  "ui.afogamento.fome_sede": {
-    "en": "-1 Hunger and -1 Thirst",
-    "pt": "-1 de Fome e -1 de Sede"
-  },
-  "ui.afogamento.status": {
-    "en": "DROWNING · {dano} DAMAGE",
-    "pt": "AFOGAMENTO · {dano} DE DANO"
-  },
-  "ui.afogamento.onda_desc": {
-    "en": "The Enveloping Wave keeps the character trapped and causes continuous drowning damage.",
-    "pt": "A Onda Envolvente mantém o personagem preso e causa dano contínuo de afogamento."
-  },
-  "ui.afogamento.onda_extra": {
-    "en": "+{dano} extra damage for being on water",
-    "pt": "+{dano} de dano adicional por estar na água"
-  },
-  "ui.afogamento.onda_escape": {
-    "en": "Escape at the start of the character's turn with Fortitude DC {dc}",
-    "pt": "Escapa no início do próprio turno com Fortitude CD {dc}"
-  },
-  "ui.rodamoinho.desc": {
-    "en": "The character is trapped by the whirlpool and loses movement this turn.",
-    "pt": "O personagem ficou preso pelo redemoinho e perdeu o movimento neste turno."
-  },
-  "ui.rodamoinho.desc_profundo": {
-    "en": "The character is trapped by the deep whirlpool and loses the entire turn.",
-    "pt": "O personagem ficou preso pelo redemoinho profundo e perdeu o turno inteiro."
-  },
-  "ui.rodamoinho.status": {
-    "en": "TRAPPED IN WHIRLPOOL",
-    "pt": "PRESO NO REDEMOINHO"
-  },
-  "ui.rodamoinho.status_profundo": {
-    "en": "TRAPPED IN DEEP WHIRLPOOL",
-    "pt": "PRESO NO REDEMOINHO PROFUNDO"
-  },
-  "ui.rodamoinho.falha_entrada": {
-    "en": "Reflex DC {dc}: failed",
-    "pt": "Reflexos CD {dc}: falhou"
-  },
-  "ui.rodamoinho.perde_movimento": {
-    "en": "Loses movement for this turn",
-    "pt": "Perde o movimento neste turno"
-  },
-  "ui.rodamoinho.perde_turno": {
-    "en": "Loses movement, action and bonus action for this turn",
-    "pt": "Perde movimento, ação e ação bônus neste turno"
-  },
-  "ui.rodamoinho.escapa": {
-    "en": "Attempts Reflex DC {dc} at the start of the next turn",
-    "pt": "Testa Reflexos CD {dc} no início do próximo turno"
-  },
-  "ui.rodamoinho.afogamento": {
-    "en": "If it fails again: Fortitude DC {dc} or 1d6 drowning damage, -1 Hunger and -1 Thirst",
-    "pt": "Se falhar novamente: Fortitude CD {dc} ou 1d6 de afogamento, -1 de Fome e -1 de Sede"
-  },
-  "ui.magia.senhor_aguas_janela_atencao": {
-    "en": "<strong>📌 Attention:</strong> whirlpools last until the spell ends. The type created depends on the chosen terrain: Water or Deep Water.",
-    "pt": "<strong>📌 Atenção:</strong> os redemoinhos permanecem até o fim da magia. O tipo criado depende do terreno escolhido: Água ou Água profunda."
+  "ui.magia.senhor_das_aguas": {
+    "en": "🌊 Lord of Waters",
+    "pt": "🌊 Senhor das Águas"
   },
   "ui.magia.senhor_das_aguas.desc": {
     "en": "<b>Range:</b> 5 + 1 square per cleric level<br><b>Area:</b> Water 4x4 or Deep Water 3x3, +1 square every 2 levels<br><b>Duration:</b> 1d4 + cleric level rounds<br><b>From the 2nd round on:</b> free action to mark squares of the area as whirlpools, up to half the cleric's level in TOTAL<br><b>Accumulated quota:</b> the window stays open in every later round — you can mark a few squares at a time<br><b>Choice:</b> Water creates a Whirlpool; Deep Water creates a Deep Whirlpool<br><b>Whirlpools:</b> they last until the spell ends; creating none is also allowed<br><b>Cost:</b> 🍖-1 💧-1 + 1 third-circle slot",
@@ -4475,6 +4603,78 @@ window.LANG_INTERFACE = {
     "en": "M key",
     "pt": "tecla M"
   },
+  "ui.magia.teleporte.desc": {
+    "en": "<b>Target:</b> you, a monster or another player in your line of sight<br><b>Destination:</b> a free square on the map, with no walls, doors or solid obstacles<br><b>Destination range:</b> 15 squares +1 per mage level<br><b>Resistance:</b> Will DC 8 + INT + 4; players may fail on purpose<br><b>Cost:</b> 🍖-1 💧-1 + 1 fourth-circle slot",
+    "pt": "<b>Alvo:</b> você, um monstro ou outro jogador na sua linha de visão<br>\n               <b>Destino:</b> casa livre do mapa, sem paredes, portas ou obstáculos sólidos<br>\n               <b>Alcance do destino:</b> 15 quadrados +1 por nível do mago<br>\n               <b>Resistência:</b> Vontade CD 8 + INT + 4; jogadores podem falhar voluntariamente<br>\n                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo"
+  },
+  "ui.magia.teleporte_alvo_visivel": {
+    "en": "VISIBLE TARGET",
+    "pt": "ALVO VISÍVEL"
+  },
+  "ui.magia.teleporte_alvo_vivo_visivel": {
+    "en": "Choose a living, visible target.",
+    "pt": "Escolha um alvo vivo e visível."
+  },
+  "ui.magia.teleporte_cancelado": {
+    "en": "Teleport cancelled.",
+    "pt": "Teleporte cancelado."
+  },
+  "ui.magia.teleporte_destino_cancelado": {
+    "en": "Destination choice cancelled.",
+    "pt": "Escolha de destino cancelada."
+  },
+  "ui.magia.teleporte_destino_instrucao": {
+    "en": "Choose a free square up to {alcance} squares away from you.",
+    "pt": "Escolha uma casa livre a até {alcance} quadrados de você."
+  },
+  "ui.magia.teleporte_destino_titulo": {
+    "en": "🌀 TELEPORT DESTINATION",
+    "pt": "🌀 DESTINO DO TELEPORTE"
+  },
+  "ui.magia.teleporte_destino_valido": {
+    "en": "VALID DESTINATION",
+    "pt": "DESTINO VÁLIDO"
+  },
+  "ui.magia.teleporte_mira_instrucao": {
+    "en": "Choose yourself, a monster or another player in your line of sight.",
+    "pt": "Escolha você, um monstro ou outro jogador na sua linha de visão."
+  },
+  "ui.magia.teleporte_mira_titulo": {
+    "en": "🌀 TELEPORT",
+    "pt": "🌀 TELEPORTE"
+  },
+  "ui.magia.teleporte_save_desc": {
+    "en": "You have been chosen as the target of a Teleport.",
+    "pt": "Você foi escolhido como alvo de um Teleporte."
+  },
+  "ui.magia.teleporte_save_efeito_consequencia": {
+    "en": "If you fail, you are moved to a free square chosen by the caster.",
+    "pt": "Se falhar, você será levado para uma casa livre escolhida pelo conjurador."
+  },
+  "ui.magia.teleporte_save_efeito_falhar": {
+    "en": "Fail on purpose: allows the effect with no roll.",
+    "pt": "Falhar voluntariamente: permite o efeito sem rolagem."
+  },
+  "ui.magia.teleporte_save_efeito_resistir": {
+    "en": "Resist: make the Will save; if you succeed, nothing happens.",
+    "pt": "Resistir: faz o teste de Vontade; se passar, nada acontece."
+  },
+  "ui.magia.teleporte_save_status": {
+    "en": "WILL SAVE — DC {dc}",
+    "pt": "TESTE DE VONTADE — CD {dc}"
+  },
+  "ui.magia.teleporte_save_titulo": {
+    "en": "🌀 {caster} casts Teleport",
+    "pt": "🌀 {caster} lança Teleporte"
+  },
+  "ui.magia.teleporte_toast_concluido": {
+    "en": "🌀 Teleport complete.",
+    "pt": "🌀 Teleporte concluído."
+  },
+  "ui.magia.teleporte_toast_resistiu": {
+    "en": "🌀 {alvo} resisted Teleport.",
+    "pt": "🌀 {alvo} resistiu ao Teleporte."
+  },
   "ui.magia.temporario_1d4_nivel_de_clerigo_rodadas": {
     "en": "⏳ Temporary — 1d4 + cleric level rounds",
     "pt": "⏳ Temporário — 1d4 + nível de clérigo rodadas"
@@ -4482,6 +4682,10 @@ window.LANG_INTERFACE = {
   "ui.magia.terreno_selecionado_escolha_duracao": {
     "en": "{terreno} selected. Choose the duration:",
     "pt": "{terreno} selecionado. Escolha a duração:"
+  },
+  "ui.magia.um_conjurador": {
+    "en": "A caster",
+    "pt": "Um conjurador"
   },
   "ui.magia.velocidade.desc": {
     "en": "<b>Effect:</b> every action is doubled<br>\n               <b>Cost:</b> each action still costs hunger/thirst<br>\n               <b>Duration:</b> 1d4 rounds",
@@ -4498,6 +4702,10 @@ window.LANG_INTERFACE = {
   "ui.magia.voce": {
     "en": "🧙 You",
     "pt": "🧙 Você"
+  },
+  "ui.magia.voce_alvo": {
+    "en": "You",
+    "pt": "Você"
   },
   "ui.magia.voo.desc": {
     "en": "<b>Range:</b> 3 squares +1 every 3 caster levels<br><b>Target:</b> 1 ally (or yourself)<br><b>Effect:</b> grants Flight until the end of the mission; starting altitude 2, maximum 10<br><b>Control:</b> use the ↕ Altitude button and the scroll wheel, or L1 + L2/R2 on the gamepad<br><b>Cost:</b> 🍖-1 💧-1 + 1 slot",
@@ -5667,6 +5875,42 @@ window.LANG_INTERFACE = {
     "en": "Will",
     "pt": "Vontade"
   },
+  "ui.rodamoinho.afogamento": {
+    "en": "If it fails again: Fortitude DC {dc} or 1d6 drowning damage, -1 Hunger and -1 Thirst",
+    "pt": "Se falhar novamente: Fortitude CD {dc} ou 1d6 de afogamento, -1 de Fome e -1 de Sede"
+  },
+  "ui.rodamoinho.desc": {
+    "en": "The character is trapped by the whirlpool and loses movement this turn.",
+    "pt": "O personagem ficou preso pelo redemoinho e perdeu o movimento neste turno."
+  },
+  "ui.rodamoinho.desc_profundo": {
+    "en": "The character is trapped by the deep whirlpool and loses the entire turn.",
+    "pt": "O personagem ficou preso pelo redemoinho profundo e perdeu o turno inteiro."
+  },
+  "ui.rodamoinho.escapa": {
+    "en": "Attempts Reflex DC {dc} at the start of the next turn",
+    "pt": "Testa Reflexos CD {dc} no início do próximo turno"
+  },
+  "ui.rodamoinho.falha_entrada": {
+    "en": "Reflex DC {dc}: failed",
+    "pt": "Reflexos CD {dc}: falhou"
+  },
+  "ui.rodamoinho.perde_movimento": {
+    "en": "Loses movement for this turn",
+    "pt": "Perde o movimento neste turno"
+  },
+  "ui.rodamoinho.perde_turno": {
+    "en": "Loses movement, action and bonus action for this turn",
+    "pt": "Perde movimento, ação e ação bônus neste turno"
+  },
+  "ui.rodamoinho.status": {
+    "en": "TRAPPED IN WHIRLPOOL",
+    "pt": "PRESO NO REDEMOINHO"
+  },
+  "ui.rodamoinho.status_profundo": {
+    "en": "TRAPPED IN DEEP WHIRLPOOL",
+    "pt": "PRESO NO REDEMOINHO PROFUNDO"
+  },
   "ui.save.apagar_confirm": {
     "en": "Delete \"{nome}\"? This is permanent.",
     "pt": "Apagar \"{nome}\"? Isso é permanente."
@@ -6107,6 +6351,30 @@ window.LANG_INTERFACE = {
     "en": "⚠️ Restore hunger or thirst within {n} turns or you will die!",
     "pt": "⚠️ Recupere fome ou sede em {n} turnos ou morrerá!"
   },
+  "ui.sobrevivencia.desidratacao_sede": {
+    "en": "💧 Thirst is at zero: suffer 1 HP of damage per round.",
+    "pt": "💧 A sede está zerada: sofre 1 PV de dano por rodada."
+  },
+  "ui.sobrevivencia.desnutricao_desc": {
+    "en": "Hunger or thirst has reached zero. Your character is taking damage from exhaustion.",
+    "pt": "A fome ou a sede chegou a zero. Seu personagem está sofrendo dano de exaustão."
+  },
+  "ui.sobrevivencia.desnutricao_fome": {
+    "en": "🍖 Hunger is at zero: suffer 1 HP of damage per round.",
+    "pt": "🍖 A fome está zerada: sofre 1 PV de dano por rodada."
+  },
+  "ui.sobrevivencia.desnutricao_recuperar": {
+    "en": "Restore the empty resource above zero to stop the exhaustion damage.",
+    "pt": "Recupere o recurso zerado acima de zero para interromper o dano de exaustão."
+  },
+  "ui.sobrevivencia.desnutricao_status": {
+    "en": "⚠️ EXHAUSTION DAMAGE — -1 HP",
+    "pt": "⚠️ DANO DE EXAUSTÃO — -1 PV"
+  },
+  "ui.sobrevivencia.desnutricao_titulo": {
+    "en": "Starvation and dehydration",
+    "pt": "Desnutrição e desidratação"
+  },
   "ui.sobrevivencia.estado.colapso": {
     "en": "Collapse",
     "pt": "Colapso"
@@ -6130,6 +6398,34 @@ window.LANG_INTERFACE = {
   "ui.sobrevivencia.estado.saciado": {
     "en": "Sated",
     "pt": "Saciado"
+  },
+  "ui.sobrevivencia.exaustao_desc": {
+    "en": "Your hunger and/or thirst has fallen below 20. Your character is exhausted.",
+    "pt": "Sua fome e/ou sede caiu abaixo de 20. Seu personagem está exausto."
+  },
+  "ui.sobrevivencia.exaustao_efeito": {
+    "en": "Total exhaustion penalty: -{n} to attacks, damage and saving throws.",
+    "pt": "Penalidade total de exaustão: -{n} em ataques, dano e testes de resistência."
+  },
+  "ui.sobrevivencia.exaustao_fome": {
+    "en": "🍖 Hunger below 20: -1 to attacks, damage and saving throws.",
+    "pt": "🍖 Fome abaixo de 20: -1 em ataques, dano e testes de resistência."
+  },
+  "ui.sobrevivencia.exaustao_sede": {
+    "en": "💧 Thirst below 20: -1 to attacks, damage and saving throws.",
+    "pt": "💧 Sede abaixo de 20: -1 em ataques, dano e testes de resistência."
+  },
+  "ui.sobrevivencia.exaustao_status": {
+    "en": "⚠️ EXHAUSTION — -{n} total penalty",
+    "pt": "⚠️ EXAUSTÃO — -{n} de penalidade total"
+  },
+  "ui.sobrevivencia.exaustao_titulo": {
+    "en": "Exhaustion from hunger and thirst",
+    "pt": "Exaustão por fome e sede"
+  },
+  "ui.sobrevivencia.exaustao_valores": {
+    "en": "Current values: Hunger {fome} · Thirst {sede}",
+    "pt": "Valores atuais: Fome {fome} · Sede {sede}"
   },
   "ui.sobrevivencia.fome": {
     "en": "Hunger",

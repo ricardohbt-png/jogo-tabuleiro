@@ -35,6 +35,7 @@ FAMILIAS = [
     "masterHistoryAttackerMeshes", "masterHistoryTargetMeshes",
     "spellRangeMeshes", "spellZonaMeshes", "spellDoubleMeshes", "spellAreaMeshes",
     "spellEscuridaoMeshes", "spellSilencioMeshes", "spellFireFx",
+    "spellLivingFlameFx",
 ]
 
 PASS = 0
@@ -103,6 +104,10 @@ print("[6] a animacao do fogo tolera entrada nula (casa inelegivel)")
 check("_animarFogoPersistente3D checa fx antes de usar",
       re.search(r"for\(const fx of Object\.values\(g3\.spellFireFx\)\)\{\s*\n"
                 r"(\s*//[^\n]*\n)*\s*if\(!fx \|\|", src) is not None)
+check("chamas vivas persistentes usam o GLB da decoração",
+      "spellLivingFlameFx" in src and "DECOR_GLB_TYPES.chama_viva" in src
+      and "new T.AnimationMixer(inst)" in src
+      and "_animarChamasVivasPersistentes3D" in src)
 
 print("")
 print("PASS=%d FAIL=%d" % (PASS, FAIL))

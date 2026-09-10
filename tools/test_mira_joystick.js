@@ -115,6 +115,87 @@ check(`_recomputarAreaMagia é chamada em poucos lugares (${chamadas})`, chamada
 check("os modos legados de arremesso ficam FORA da camada nova",
   !/function _aimAlgumModoAtivo\(\)[\s\S]{0,700}?_modoArremessoLanca/.test(GAME));
 
+console.log("\n[6] A semente do cursor alcança uma área remota");
+// Defeito medido: o Senhor das Águas pinta um quadrado longe do herói. A
+// semente antiga só olhava monstro-no-alcance e casa-do-herói; quando nenhum
+// dos dois estava no conjunto ela DESISTIA, e o cursor ficava fora da área.
+// Como _aimStepTile só acha casa válida em linha reta, uma área desalinhada da
+// linha, da coluna e das diagonais do herói travava as 8 direções.
+const srcPerto = fonteDaFuncao("_aimCasaMaisProximaPermitida");
+check("_aimCasaMaisProximaPermitida existe no game.js", !!srcPerto);
+check("é pura: não toca DOM, window nem GS",
+  !!srcPerto && !/\b(document|window|GS|g3)\b/.test(srcPerto));
+if (srcPerto) {
+  eval(srcPerto);
+  // 2x2 desalinhado de (7,25) mais uma casa nitidamente mais perto: assim o
+  // "mais próxima" é único e o teste não depende do critério de empate.
+  const remota = new Set(["2,3", "3,3", "2,4", "3,4", "6,20"]);
+  check("herói fora da área: devolve a casa permitida mais próxima",
+    String(_aimCasaMaisProximaPermitida([7, 25], remota)) === "6,20");
+  check("herói dentro da área: fica onde está",
+    String(_aimCasaMaisProximaPermitida([2, 4], remota)) === "2,4");
+  check("conjunto vazio não inventa casa",
+    _aimCasaMaisProximaPermitida([7, 25], new Set()) === null);
+  check("sem conjunto publicado devolve null",
+    _aimCasaMaisProximaPermitida([7, 25], null) === null);
+  check("empate é resolvido pela ordem do conjunto (determinístico)",
+    String(_aimCasaMaisProximaPermitida([5, 5], new Set(["4,4", "6,6"]))) === "4,4");
+}
+check("a semente usa a casa mais próxima quando não há candidato",
+  /function _aimSeedGamepadCursor[\s\S]{0,1200}?_aimCasaMaisProximaPermitida\(/.test(GAME));
+
+console.log("\n[7] O botão de confirmar da mira é alcançável no controle");
+// #aim-session-hud é anexado ao <body>, fora de #screen-game, e o cursor de
+// interface (Y) só listava #objectives-hud e #btn-libertar — então uma mira de
+// seleção múltipla não tinha como ser CONFIRMADA no controle.
+const srcPtr = fonteDaFuncao("_gamepadUiPointerControls");
+check("_gamepadUiPointerControls existe", !!srcPtr);
+check("a lista do cursor de interface inclui os botões da mira",
+  !!srcPtr && /#aim-session-hud button/.test(srcPtr));
+
+console.log("\n[8] O guarda de \"tem mira ativa\" cobre TODOS os modos da camada");
+// _aimAlgumModoAtivo e _aimPreviewAt sao as duas metades da MESMA camada: a
+// primeira responde "ha mira ativa?" e a segunda trata a casa. Um modo que so
+// esteja na segunda fica meio ligado: no mouse 3D o hover nunca roda (o
+// on3DMouseMove so chama _aimPreviewAt quando o guarda diz que ha mira) e no
+// controle o direcional cai no ramo de MOVIMENTO, andando com o herói em vez
+// de percorrer as casas da mira. Foi o que aconteceu com _modoIraRocha
+// (Chamas Vivas da Ira da Rocha Ardente).
+// fonteDaFuncao ancora na 1a chave depois do nome -- que em _aimPreviewAt e a
+// da DESESTRUTURACAO do parametro, nao a do corpo. Aqui o corpo e recortado
+// pulando a lista de parametros primeiro.
+function corpoDaFuncao(nome) {
+  const i = GAME.indexOf(String.fromCharCode(10) + "function " + nome + "(");
+  if (i < 0) return null;
+  let j = GAME.indexOf("(", i), par = 0;
+  for (; j < GAME.length; j++) {
+    if (GAME[j] === "(") par++;
+    else if (GAME[j] === ")") { par--; if (par === 0) break; }
+  }
+  let k = GAME.indexOf("{", j), n = 0;
+  for (let m = k; m < GAME.length; m++) {
+    if (GAME[m] === "{") n++;
+    else if (GAME[m] === "}") { n--; if (n === 0) return GAME.slice(k, m + 1); }
+  }
+  return null;
+}
+const srcPreview = corpoDaFuncao("_aimPreviewAt");
+const srcGuarda  = corpoDaFuncao("_aimAlgumModoAtivo");
+check("_aimPreviewAt existe", !!srcPreview);
+check("_aimAlgumModoAtivo existe", !!srcGuarda);
+if (srcPreview && srcGuarda) {
+  // Só conta o modo REALMENTE consultado (`if (window._modoX)`); o que aparece
+  // em comentário (a nota dos modos legados) não vale.
+  const semComentario = txt => txt.replace(/\/\/[^\n]*/g, "");
+  const modos = txt => [...new Set(
+    (semComentario(txt).match(/window\.(_modo[A-Za-z]+)/g) || []).map(m => m.slice(7)))];
+  const tratados = modos(srcPreview);
+  const faltando = tratados.filter(k => !new Set(modos(srcGuarda)).has(k));
+  check("a varredura achou os modos de _aimPreviewAt", tratados.length >= 10);
+  check("nenhum modo tratado ficou fora do guarda" +
+        (faltando.length ? " (faltam: " + faltando.join(", ") + ")" : ""),
+    faltando.length === 0);
+}
 console.log("\n==============================================================");
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("==============================================================");

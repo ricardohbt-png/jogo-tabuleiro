@@ -418,6 +418,11 @@ def main():
             r.host_pid = "j1"
             return r
 
+        def _com_auto(cls_id, escolhidas):
+            """As do lobby/save + as de teste que o start_game concede de graça."""
+            return list(escolhidas) + [m for m in S.MAGIAS_TESTE_AUTO.get(cls_id, ())
+                                       if m not in escolhidas]
+
         sg = S.create_savegame("Jogo", "ricardo", "procedural", None, False)
         base_w = S.snapshot_character(S.make_player("x", "x", "warrior", 0)); base_w["gold"] = 777
         base_m = S.snapshot_character(S.make_player("y", "y", "mage", 0))   # bind: magias []
@@ -429,10 +434,10 @@ def main():
         r = _sala_pronta(sg)
         _aio.run(r.start_game("j1"))
         check("1º início mantém as magias escolhidas no lobby",
-              r.players["j2"]["magias_conhecidas"] == ["bola_fogo", "raio_congelante"])
+              r.players["j2"]["magias_conhecidas"] == _com_auto("mage", ["bola_fogo", "raio_congelante"]))
         disco = S.load_savegame(sg["id"])
         check("start_game checkpointa (magias do lobby no disco)",
-              disco["characters"]["mage"].get("magias_conhecidas") == ["bola_fogo", "raio_congelante"])
+              disco["characters"]["mage"].get("magias_conhecidas") == _com_auto("mage", ["bola_fogo", "raio_congelante"]))
         # compras na cidade persistem ao ENTRAR na masmorra (não só ao voltar)
         r.players["j1"]["gold"] = 555
         _aio.run(r.enter_dungeon("j1"))
@@ -451,7 +456,7 @@ def main():
         r2 = _sala_pronta(sg2)
         _aio.run(r2.start_game("j1"))
         check("retomada mantém as magias salvas (ignora re-escolha do lobby)",
-              r2.players["j2"]["magias_conhecidas"] == ["relampago", "manto_escuridao"])
+              r2.players["j2"]["magias_conhecidas"] == _com_auto("mage", ["relampago", "manto_escuridao"]))
     finally:
         S.SAVEGAMES_DIR = olds; _loja_volta(); shutil.rmtree(tmp, ignore_errors=True)
 

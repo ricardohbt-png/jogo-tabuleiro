@@ -488,8 +488,13 @@ document.body.innerHTML = `
 </div>
 
 <!-- Janela explicativa do Senhor das Águas — aberta antes da seleção das casas -->
+<!-- z-index acima dos menus de personagem (magias/habilidades 510, inventário
+     1100): o popup é uma DECISÃO do turno e precisa vir à frente de um menu de
+     consulta. Com 121 ele abria atrás do Grimório e o jogador só enxergava a
+     mensagem dentro do menu. Fica abaixo do toast (10000) e da seleção de
+     criação (9999), que são avisos globais. -->
 <div id="senhor-aguas-overlay" role="dialog" aria-modal="true" aria-labelledby="senhor-aguas-title"
-     style="position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:121;padding:14px;">
+     style="position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:1150;padding:14px;">
   <div class="trap-box senhor-aguas-box" style="border-color:#4fc3f7;max-height:calc(100vh - 28px);">
     <div class="trap-art" style="background:radial-gradient(circle at 50% 35%,#123e62 0%,#07131e 72%);border-right-color:#4fc3f755;">
       <div class="trap-icon" style="font-size:5rem;">🌊</div>
@@ -502,7 +507,29 @@ document.body.innerHTML = `
       <div style="display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:8px;">
         <button class="btn-primary" id="senhor-aguas-create" type="button" data-gamepad-action="activate" data-i18n="ui.hud.criar_redemoinhos"
                 style="border-color:#4fc3f7;background:#123e62;color:#e7faff;">🌪️ Criar redemoinhos</button>
-        <button class="btn-cancel" id="senhor-aguas-close" type="button" data-i18n="ui.geral.fechar">Fechar</button>
+        <button class="btn-cancel" id="senhor-aguas-close" type="button" data-gamepad-cancel data-i18n="ui.geral.fechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Janela explicativa da Ira da Rocha Ardente — as Chamas Vivas são uma
+     ação livre separada, disponível a partir da segunda rodada. -->
+<div id="ira-rocha-overlay" role="dialog" aria-modal="true" aria-labelledby="ira-rocha-title"
+     style="position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:1150;padding:14px;">
+  <div class="trap-box ira-rocha-box" style="border-color:#ff6a24;max-height:calc(100vh - 28px);">
+    <div class="trap-art" style="background:radial-gradient(circle at 50% 35%,#6b2612 0%,#1e0905 72%);border-right-color:#ff6a2455;">
+      <div class="trap-icon" style="font-size:5rem;">🌋</div>
+    </div>
+    <div class="trap-content">
+      <h3 id="ira-rocha-title" data-i18n="ui.magia.ira_rocha_titulo">🌋 Ira da Rocha Ardente</h3>
+      <div class="trap-status trap-status--success" id="ira-rocha-status"></div>
+      <p class="trap-desc" id="ira-rocha-desc"></p>
+      <ul class="trap-effects" id="ira-rocha-effects"></ul>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:8px;">
+        <button class="btn-primary" id="ira-rocha-create" type="button" data-gamepad-action="activate"
+                style="border-color:#ff6a24;background:#6b2612;color:#fff0e8;" data-i18n="ui.hud.escolher_chamas_vivas">🔥 Escolher Chamas Vivas</button>
+        <button class="btn-cancel" id="ira-rocha-close" type="button" data-gamepad-cancel data-i18n="ui.geral.fechar">Fechar</button>
       </div>
     </div>
   </div>
@@ -604,6 +631,8 @@ const DECOR_GLB_MODELS = {
   'cortina_branca.png': 'assets/objetos/cortina_branca.glb',
   // Brasão texturizado com o PNG original; o PNG continua como fallback.
   'brasao_leao.png': 'assets/objetos/brasao_leao.glb',
+  // Placa fincada: PNG para editor/2D e GLB no tabuleiro 3D.
+  'placa_fincada.png': 'assets/objetos/placa_fincada.glb',
 };
 const DECOR_GLB_TYPES = {
   // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
@@ -648,6 +677,7 @@ const DECOR_GLB_TYPES = {
   cortina_vermelha: 'assets/objetos/cortina_vermelha.glb',
   cortina_branca: 'assets/objetos/cortina_branca.glb',
   brasao_leao: 'assets/objetos/brasao_leao.glb',
+  placa: 'assets/objetos/placa_fincada.glb',
 };
 // A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
 // base dos modelos atravesse o piso por arredondamento de geometria.
@@ -656,6 +686,7 @@ const DECOR_GLB_FLOOR_Y = 0.225;
 // ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
 const DECOR_3D = {
   cama:           { shape: 'box', h: 0.5,  color: 0x8a5a3c },
+  placa:          { shape: 'box', h: 0.85, color: 0x8b5a2b },
   lareira:        { shape: 'box', h: 0.8,  color: 0x6b6b6b },
   fonte:          { shape: 'cyl', h: 0.6,  color: 0x5a8fb0 },
   fogueira:       { shape: 'cyl', h: 0.25, color: 0xd2691e },
@@ -6561,12 +6592,19 @@ const _MONSTER_TYPE_DEFAULT_IMAGE = Object.freeze({
   skeleton: 'esqueletoHumano',
   orc: 'orcGuerreiro',
   dark_mage: 'necromante',
+  troll: 'troll',
   medusa: 'medusa',
   grande_medusa: 'medusa',
   grande_gorgona: 'medusa',
 });
 function _monsterImageName(monster){
-  return monster && (monster.image || _MONSTER_TYPE_DEFAULT_IMAGE[monster.type]) || null;
+  const formaAtiva = _metamorfoseVisualName(monster);
+  return monster && (formaAtiva || monster.image || _MONSTER_TYPE_DEFAULT_IMAGE[monster.type]) || null;
+}
+function _metamorfoseVisualName(entity){
+  if(!entity) return null;
+  return (entity.metamorfose_ativa && entity.metamorfose_forma_type)
+    || entity.pawn_override || null;
 }
 function _getMonster2DImg(imageName){
   if(!imageName) return null;
@@ -6674,9 +6712,16 @@ function _pawnScaleFactor(porte){
 
 // Pombo e rato são formas MINÚSCULAS de ND 0: sua arte deve ocupar só cerca
 // de um terço do quadrado, mesmo com o enquadramento normal dos GLBs de
-// monstros. Gato (pequeno) e ovelha (médio) usam o enquadramento comum.
+// monstros. O gato usa uma escala própria, ligeiramente maior que a do pombo;
+// a ovelha (médio) usa o enquadramento comum.
 const _TINY_3D_PAWNS = new Set(['pombo', 'rato']);
 const _TINY_3D_PAWN_FRAC = 0.34;
+// O rato da Metamorfose deve ter presença visual semelhante à do pombo.
+const _RATO_3D_PAWN_FRAC = _TINY_3D_PAWN_FRAC;
+const _GATO_3D_PAWN_FRAC = 0.40;
+// A ovelha é uma forma média, mas o modelo é largo; reduzimos um pouco o
+// enquadramento para ela não dominar visualmente o quadrado.
+const _OVELHA_3D_PAWN_FRAC = 1.20;
 
 // Minis cujo PNG já traz a criatura enrolada sobre um pedestal redondo (cobras).
 // Diferente das figuras "altas, pés na base", elas devem caber INTEIRAS no tile
@@ -7311,7 +7356,9 @@ function _drawBridges2D(ctx, state, terrainSet){
     const minX=Math.min(...tiles.map(t=>t[0])), maxX=Math.max(...tiles.map(t=>t[0]));
     const minY=Math.min(...tiles.map(t=>t[1])), maxY=Math.max(...tiles.map(t=>t[1]));
     const visible = key => !terrainSet || terrainSet.has(key);
-    const woodBase = 'rgba(55,28,12,.95)', woodDeck = 'rgba(154,91,40,.96)';
+    const pedraRustica = String(bridge.material || 'madeira').toLowerCase() === 'pedra_rustica';
+    const woodBase = pedraRustica ? 'rgba(50,47,43,.97)' : 'rgba(55,28,12,.95)';
+    const woodDeck = pedraRustica ? 'rgba(123,113,101,.98)' : 'rgba(154,91,40,.96)';
     // Base contínua: duas longarinas longitudinais, como trilhos sob o deck.
     ctx.save();
     ctx.fillStyle=woodBase;
@@ -7331,14 +7378,16 @@ function _drawBridges2D(ctx, state, terrainSet){
       ctx.fillStyle=woodDeck;
       if(horizontal) ctx.fillRect(step*CELL+pad, minY*CELL+pad, CELL-2*pad, (maxY-minY+1)*CELL-2*pad);
       else ctx.fillRect(minX*CELL+pad, step*CELL+pad, (maxX-minX+1)*CELL-2*pad, CELL-2*pad);
-      ctx.strokeStyle='rgba(64,31,12,.9)'; ctx.lineWidth=Math.max(1,CELL*.035);
+      ctx.strokeStyle = pedraRustica ? 'rgba(42,39,36,.94)' : 'rgba(64,31,12,.9)';
+      ctx.lineWidth=Math.max(1,CELL*.035);
       ctx.strokeRect(
         horizontal ? step*CELL+gap : minX*CELL+gap,
         horizontal ? minY*CELL+gap : step*CELL+gap,
         horizontal ? CELL-2*gap : (maxX-minX+1)*CELL-2*gap,
         horizontal ? (maxY-minY+1)*CELL-2*gap : CELL-2*gap
       );
-      ctx.strokeStyle='rgba(224,157,78,.38)'; ctx.lineWidth=1;
+      ctx.strokeStyle = pedraRustica ? 'rgba(214,202,184,.24)' : 'rgba(224,157,78,.38)';
+      ctx.lineWidth=1;
       ctx.beginPath();
       if(horizontal){
         const cx=step*CELL+CELL*.24;
@@ -7780,6 +7829,10 @@ function renderMap(state){
   _desenharSpellDirection2D(ctx, state);
   for(const _animSenhorAguas of _senhorAguasAnims)
     _senhorAguasDraw2D(ctx, state, _animSenhorAguas, performance.now());
+  for(const _animIraRocha of _iraRochaAnims)
+    _iraRochaDraw2D(ctx, state, _animIraRocha, performance.now());
+  for(const _animPrisaoChamas of _prisaoChamasAnims)
+    _prisaoChamasDraw2D(ctx, state, _animPrisaoChamas, performance.now());
   for(const _animMantoEsc of _mantoEscuridaoAnims)
     _mantoEscuridaoDraw2D(ctx, state, _animMantoEsc, performance.now());
   for(const _animClarividencia of _clarividenciaAnims)
@@ -8146,7 +8199,7 @@ function renderMap(state){
         ctx.textBaseline = 'middle';
       }
       // Encontrar Armadilhas revelou o mecanismo escondido no objeto.
-      if (d.trap && d.trap_revealed) {
+      if ((d.trap || d.chest_trap) && d.trap_revealed) {
         ctx.font = `bold ${Math.round(CELL * 0.22)}px monospace`;
         ctx.fillStyle = '#ff6b52';
         ctx.fillText('⚠', ecx - CELL * 0.30, ecy - CELL * 0.29);
@@ -8437,6 +8490,7 @@ function renderMap(state){
     const [hitX, hitY] = _hitReaction2D(`p:${p.id}`);
     const X=px*CELL+hitX, Y=py*CELL+hitY, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
+    const formaVisual = _metamorfoseVisualName(p);
     const _invisP = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
     const _playerVortexPreso = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
     if(_invisP) ctx.save(), ctx.globalAlpha=.18;
@@ -8444,8 +8498,8 @@ function renderMap(state){
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
     }
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
-    if(p.pawn_override){
-      const wolf = _getMonster2DImg(p.pawn_override);
+    if(formaVisual){
+      const wolf = _getMonster2DImg(formaVisual);
       if(wolf && wolf.complete && wolf.naturalWidth){
         const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
         if(p.petrificado) ctx.save(), ctx.filter=_petrificadoFiltro2D();
@@ -8484,6 +8538,22 @@ function renderMap(state){
     _criarAlimentosDraw2D(ctx, state, _animCriarAlimentos, _agoraRelampago);
   for(const _animCura of _curaAnims)
     _curaDraw2D(ctx, state, _animCura, _agoraRelampago);
+  for(const _animPurificacao of _purificacaoAnims)
+    _purificacaoDraw2D(ctx, state, _animPurificacao, _agoraRelampago);
+  for(const _animRessurreicao of _ressurreicaoAnims)
+    _ressurreicaoDraw2D(ctx, state, _animRessurreicao, _agoraRelampago);
+  for(const _animMetamorfose of _metamorfoseAnims)
+    _metamorfoseDraw2D(ctx, state, _animMetamorfose, _agoraRelampago);
+  for(const _animTeleporte of _teleporteAnims)
+    _teleporteDraw2D(ctx, state, _animTeleporte, _agoraRelampago);
+  for(const _animGuerreiroLuz of _guerreiroLuzAnims)
+    _guerreiroLuzDraw2D(ctx, state, _animGuerreiroLuz, _agoraRelampago);
+  for(const _animCancaoHeroica of _cancaoHeroicaAnims)
+    _cancaoHeroicaDraw2D(ctx, state, _animCancaoHeroica, _agoraRelampago);
+  for(const _animSaciar of _saciarAnims)
+    _saciarDraw2D(ctx, state, _animSaciar, _agoraRelampago);
+  for(const _animContramagica of _contramagicaAnims)
+    _contramagicaDraw2D(ctx, state, _animContramagica, _agoraRelampago);
   for(const _animElemental of _conjurarElementalAnims)
     _conjurarElementalDraw2D(ctx, state, _animElemental, _agoraRelampago);
   for(const _animRaioDivino of _raioDivinoAnims)
@@ -8684,9 +8754,19 @@ function _visualTemAnimacaoDeMagia(){
     _senhorAguasAnims,
     _olharPetrificanteAnims,
     _conjurarElementalAnims,
+    _iraRochaAnims,
+    _prisaoChamasAnims,
     _vooAnims,
     _criarAlimentosAnims,
     _curaAnims,
+    _purificacaoAnims,
+    _ressurreicaoAnims,
+    _metamorfoseAnims,
+    _teleporteAnims,
+    _guerreiroLuzAnims,
+    _cancaoHeroicaAnims,
+    _saciarAnims,
+    _contramagicaAnims,
   ];
   return animArrays.some(arr => arr && arr.length > 0);
 }
@@ -10181,7 +10261,8 @@ function _spellHasDedicatedSound(id){
     'sopro_dragao','cuspe_acido','dominar_mente','sono','silencio','medo',
     'barreira','maldicao','invisibilidade','protecao_energia','manto_escuridao',
     'clarividencia','regeneracao','velocidade','lentidao','abencoar','abencoar_arma',
-    'senhor_das_aguas','chamado_inverno','olhar_petrificante','conjurar_elemental','voo','criar_alimentos','cura','cura_area',
+    'senhor_das_aguas','chamado_inverno','olhar_petrificante','conjurar_elemental','voo','criar_alimentos','cura','cura_area','purificacao','ressurreicao','metamorfose','guerreiro_luz','cancao_heroica','saciar','contramagica',
+     'ira_rocha_ardente','prisao_chamas',
   ]).has(String(id || '').toLowerCase());
 }
 
@@ -13651,6 +13732,7 @@ const ARMADILHAS_LUCCAS = [
   { id:'nuvem_gas',              nome:'Nuvem de Gás',          icone:'🌫️', custo_ouro:25, desc:'-1d6 CON por 3 rodadas em área. Save Fortitude dif 13.' },
   { id:'camara_gas',             nome:'Câmara de Gás',          icone:'☠️', custo_ouro:30, desc:'Ao ativar, afeta toda a sala por 1d6+1 rodadas. Fortitude CD 13 a cada turno; falha causa 1d6 de dano.' },
   { id:'jato_acido',             nome:'Jato de Ácido',         icone:'🧪', custo_ouro:15, desc:'Reflexos CD 18 evita. Na falha, 2d6 ácido + 1 nível de corrosão em equipamento; metade do dano na rodada seguinte.' },
+  { id:'armadilha_raio_congelante', nome:'Armadilha de Raio Congelante', icone:'❄️', custo_ouro:25, desc:'3d4 de dano de gelo. Fortitude CD 15 evita a paralisia; escape com Força CD 16.' },
   { id:'teto_esmagador',         nome:'Teto Esmagador',         icone:'🪨', custo_ouro:30, desc:'Ao ativar, afeta toda a sala. Reflexos CD 20 evita; na falha, sofre 4d6 de dano.' },
   { id:'bau_engolidor',          nome:'Baú Engolidor',          icone:'📦', custo_ouro:35, apenas_objeto:true, desc:'Só pode ser colocado em um objeto. Reflexos CD 20 evita; na falha, fica preso até passar em Força CD 20.' },
   { id:'guilhotina',              nome:'Guilhotina',              icone:'🪓', custo_ouro:18, desc:'Reflexos CD 14 evita. Na falha, sofre 3d6 de dano.' },
@@ -14495,6 +14577,43 @@ const GRIMORIO_CLIENT = {
                <b>Redemoinhos:</b> permanecem até o fim da magia; também é possível não criar nenhum<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 3º círculo`
   },
+  ira_rocha_ardente: {
+    id:'ira_rocha_ardente', nome:'Ira da Rocha Ardente', icone:'🌋',
+    circulo:'quarto', classe:['cleric'],
+    tipo:'area_fixa', alcance_base:4, alcance_escala:1, alcance_por_niveis:2,
+    area_lado:3, area_lado_niveis:3,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 4 quadrados +1 a cada 2 níveis<br>
+               <b>Área:</b> lava 3x3 +1 casa a cada 3 níveis<br>
+               <b>Efeito:</b> todos na área sofrem 2d6 de fogo e os efeitos do terreno lava<br>
+               <b>Duração:</b> 1d4 +1 rodada a cada 3 níveis (mínimo 2)<br>
+               <b>Chamas Vivas:</b> a partir da 2ª rodada, cria 2d4 decorações em uma área 1x1 maior que a lava; você escolhe as casas<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo`
+  },
+  teleporte: {
+    id:'teleporte', nome:'Teleporte', icone:'🌀',
+    circulo:'quarto', classe:['mage'], tipo:'teleporte', alcance_base:15,
+    alcance_escala:1, custo:'🍖-1 💧-1',
+    descricao:`<b>Alvo:</b> você, um monstro ou outro jogador na sua linha de visão<br>
+               <b>Destino:</b> casa livre do mapa, sem paredes, portas ou obstáculos sólidos<br>
+               <b>Alcance do destino:</b> 15 quadrados +1 por nível do mago<br>
+               <b>Resistência:</b> Vontade CD 8 + INT + 4; jogadores podem falhar voluntariamente<br>
+                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo`
+  },
+  prisao_chamas: {
+    id:'prisao_chamas', nome:'Prisão de Chamas', icone:'🔥',
+    circulo:'quarto', classe:['mage'], tipo:'area_fixa', alcance_base:4,
+    alcance_escala:1, alcance_por_niveis:2, lado_min:2, lado_max:4,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Centro:</b> escolha o ponto central da área<br>
+               <b>Tamanho:</b> quadrado de 2x2, 3x3 ou 4x4; somente as bordas têm chamas<br>
+               <b>Alcance:</b> 4 quadrados +1 a cada 2 níveis do mago<br>
+               <b>Efeito:</b> casas de parede são ignoradas; aliados podem atravessar, mas sofrem dano<br>
+               <b>Calor:</b> criaturas adjacentes, inclusive diagonais, sofrem 2d4 ao surgir e no início do turno<br>
+               <b>Chamas:</b> ocupar, entrar ou atravessar uma borda em chamas causa 2d8 de fogo<br>
+               <b>Duração:</b> 10 rodadas; encerrar é uma ação livre<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 4º círculo`
+  },
   manto_escuridao: {
     id:'manto_escuridao', nome:'Manto de Escuridão', icone:'🌑',
     circulo:'segundo', classe:['mage','cleric'],
@@ -14823,7 +14942,13 @@ function mostrarTooltipAnimarMortos(event) {
 function _magiasConhecidasIds(heroi) {
   const known = heroi && (heroi.magias_conhecidas
     || (Array.isArray(heroi.magiasConhecidas) ? heroi.magiasConhecidas.map(x => x.id || x) : null));
-  return Array.isArray(known) ? known : [];
+  const ids = Array.isArray(known) ? [...known] : [];
+  // Desbloqueio temporário de teste: o servidor também aceita estas magias
+  // sem aprendizado/recursos, então elas precisam aparecer na ficha do mago.
+  if (heroi?.class_id === 'mage') {
+    for (const id of ['metamorfose', 'teleporte', 'prisao_chamas']) if (!ids.includes(id)) ids.push(id);
+  }
+  return ids;
 }
 
 // A segunda etapa do Senhor das Águas é uma ação livre separada do lançamento:
@@ -14869,6 +14994,56 @@ function _renderAcaoSenhorDasAguas(heroi) {
   </div>`;
 }
 
+// Espelha _renderAcaoSenhorDasAguas para a Ira da Rocha Ardente. Sem este
+// bloco a magia so tinha UMA porta de entrada (o botao do painel de acoes) e
+// nenhum retorno quando as Chamas Vivas ainda nao estavam liberadas: quem
+// abria o grimorio depois de lancar nao via nada e concluia que a magia estava
+// quebrada.
+function _renderAcaoIraRocha(heroi) {
+  const state = GS.gameState;
+  if (!state || !heroi || heroi.class_id !== 'cleric' || String(heroi.id) !== String(GS.myPid)) return '';
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'ira_rocha_ardente' && z.ativa && String(z.caster) === String(heroi.id));
+  if (!zona) return '';
+  const restante = _iraRochaRestante(zona);
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const caixa = (borda, cor, texto) => `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid ${borda};background:rgba(255,106,36,.06);color:${cor};font-size:9px;line-height:1.5;">${texto}</div>`;
+  if (restante <= 0) {
+    const postas = (zona.chamas_vivas || []).length;
+    return caixa('#ff6a2444', '#e0a884',
+      t('ui.magia.ira_rocha_chamas_colocadas', {postas}));
+  }
+  if (rodada < Number(zona.disponivel_em || 0)) {
+    return caixa('#ff6a2433', '#a2837a',
+      t('ui.magia.ira_rocha_chamas_a_partir_r2'));
+  }
+  if (!(zona.chamas_permitidas || []).length) {
+    return caixa('#ff6a2433', '#a2837a',
+      t('ui.magia.ira_rocha_sem_casa_livre'));
+  }
+  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #ff6a2499;background:rgba(255,106,36,.10);">
+    <div style="color:#ffb168;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.ira_rocha_chamas_cabecalho')}</div>
+    <div style="color:#f0c3a5;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.ira_rocha_escolha_casas', {restante})}</div>
+    <button data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaIraRocha()" style="width:100%;padding:7px;background:#6b2612;color:#fff0e8;border:1px solid #ff9a66;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.ira_rocha_btn_escolher')}</button>
+  </div>`;
+}
+
+function _renderAcaoPrisaoChamas(heroi) {
+  const state = GS.gameState;
+  if (!state || !heroi || heroi.class_id !== 'mage' || String(heroi.id) !== String(GS.myPid)) return '';
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'prisao_chamas' && z.ativa && String(z.caster) === String(heroi.id));
+  const noTurno = !!(GS.isMyTurn || String(state.current_turn) === String(heroi.id));
+  if (!zona || !noTurno || state.animados_turn) return '';
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const restante = Math.max(0, Number(zona.expira_em || rodada) - rodada);
+  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #ff6a2499;background:rgba(255,106,36,.10);">
+    <div style="color:#ffb168;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.prisao_chamas_cabecalho')}</div>
+    <div style="color:#f0c3a5;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.prisao_chamas_restante', {restante})}</div>
+    <button data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarPrisaoChamas()" style="width:100%;padding:7px;background:#6b2612;color:#fff0e8;border:1px solid #ff9a66;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.prisao_chamas_btn_encerrar')}</button>
+  </div>`;
+}
+
 // Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
 const SLOTS_POR_NIVEL_CLIENT = {
   1: {primeiro:2, segundo:0, terceiro:0, quarto:0},
@@ -14878,13 +15053,26 @@ const SLOTS_POR_NIVEL_CLIENT = {
   5: {primeiro:3, segundo:2, terceiro:1, quarto:1},
 };
 
+// O servidor concede ao clérigo um slot adicional de 4º círculo para a
+// Ira da Rocha Ardente. Mantemos a tabela-base intacta para o mago e apenas
+// aplicamos o bônus ao herói que realmente é clérigo.
+function _slotsMaxParaHeroi(heroi){
+  const nivel = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
+  const base = {...(SLOTS_POR_NIVEL_CLIENT[nivel] || SLOTS_POR_NIVEL_CLIENT[1])};
+  // Espaço temporário de teste: o mago mantém 3 slots de 4º círculo para
+  // testar Olhar Petrificante, Metamorfose e Teleporte.
+  if(heroi?.class_id === 'mage') base.quarto = Math.max(base.quarto || 0, 3);
+  if(heroi?.class_id === 'cleric') base.quarto = (base.quarto || 0) + 1;
+  return base;
+}
+
 // Aba de magias em jogo: cartas por círculo + pips de slot com contagem regressiva.
 function renderMagiasFichaEmJogo(heroi, cls) {
   cls = cls || (heroi && heroi.class_id) || 'mage';
   const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
   const known    = _magiasConhecidasIds(heroi);
-  const limites  = SLOTS_POR_NIVEL_CLIENT[nivel];
-  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[]};
+  const limites  = _slotsMaxParaHeroi(heroi);
+  const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[], quarto:[]};
   const restantesServidor = (heroi && heroi.slots_remaining) || null;
   const cajadoExtra = restantesServidor?.cajado_arcano || null;
   const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
@@ -14930,7 +15118,10 @@ function renderMagiasFichaEmJogo(heroi, cls) {
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
-          ${magiasCirculo.map((id, idx) => criarCartaMagia(id, false, livres > 0, livres === 0, 'jogo')).join('')}
+          ${magiasCirculo.map((id, idx) => {
+            const livreParaTeste = cls === 'mage' && (id === 'metamorfose' || id === 'teleporte');
+            return criarCartaMagia(id, false, livreParaTeste || livres > 0, false, 'jogo');
+          }).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">Nenhuma magia memorizada</div>` : ''}
         </div>
       </div>`;
@@ -14939,6 +15130,8 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   return `
     <div style="padding:4px 0;">
       ${_renderAcaoSenhorDasAguas(heroi)}
+      ${_renderAcaoIraRocha(heroi)}
+      ${_renderAcaoPrisaoChamas(heroi)}
       ${renderCirculoMagias('primeiro', t('ui.magia.circulo_caixa.primeiro'))}
       ${renderCirculoMagias('segundo',  t('ui.magia.circulo_caixa.segundo'))}
       ${renderCirculoMagias('terceiro', t('ui.magia.circulo_caixa.terceiro'))}
@@ -15006,7 +15199,7 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
   'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose',
-  'senhor_das_aguas'
+  'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas'
 ]);
 
 function _meVivoNaVez() {
@@ -15030,6 +15223,8 @@ function castarMagia(magiaId) {
   if (magiaId === 'metamorfose') { _abrirPickerMetamorfose(); return; }
   if (magiaId === 'chamado_inverno') { _abrirPickerChamadoInverno(); return; }
   if (magiaId === 'senhor_das_aguas') { _abrirPickerSenhorDasAguas(); return; }
+  if (magiaId === 'prisao_chamas') { _abrirPickerPrisaoChamas(); return; }
+  if (magiaId === 'teleporte') { _iniciarMiraTeleporteAlvo(); return; }
   _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile'); return; }
   // Manto de Escuridão é auto-centrado: conjura imediatamente no próprio
@@ -15117,6 +15312,40 @@ function _fecharPickerSenhorDasAguas(){
   document.getElementById('senhor-aguas-picker')?.remove();
   _senhorDasAguasTerreno = null;
 }
+// Prisão de Chamas: o tamanho é escolhido antes da mira no mapa. O overlay
+// usa a mesma convenção de escopo dos popups acessíveis pelo joystick.
+let _prisaoChamasLado = null;
+function _fecharPickerPrisaoChamas(){
+  document.getElementById('prisao-chamas-overlay')?.remove();
+  _prisaoChamasLado = null;
+}
+function _abrirPickerPrisaoChamas(scrollItemId = null){
+  const me = GS.me;
+  if(!me) return;
+  _fecharPickerPrisaoChamas();
+  const ov = document.createElement('div');
+  ov.id = 'prisao-chamas-overlay';
+  ov.className = 'open';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:2147483600;background:rgba(18,6,3,.84);display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML = `<section style="max-width:540px;width:100%;background:#1b100d;border:1px solid #ff7b38;border-radius:10px;padding:20px;color:#fff0e8;font-family:serif;box-shadow:0 12px 50px #000;">
+    <header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ff7b3855;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ffb168;">${t('ui.magia.prisao_chamas_titulo')}</h2><button data-prisao-chamas-close data-gamepad-action="activate" tabindex="0" aria-label="${t('ui.geral.fechar')}">✕</button></header>
+    <p style="color:#f0c3a5;line-height:1.5;">${t('ui.magia.prisao_chamas_escolha_tamanho')}</p>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+      ${[2,3,4].map(lado => `<button data-prisao-chamas-lado="${lado}" data-gamepad-action="activate" tabindex="0" style="padding:16px 8px;background:#6b2612;color:#fff0e8;border:1px solid #ff9a66;border-radius:6px;cursor:pointer;font-size:16px;"><b>${lado}×${lado}</b><br><small style="font-size:10px;color:#ffd0b7;">${t('ui.magia.prisao_chamas_bordas')}</small></button>`).join('')}
+    </div>
+    <div style="margin-top:14px;color:#c8957c;font-size:12px;text-align:center;">${t('ui.magia.prisao_chamas_dano_resumo')}</div>
+  </section>`;
+  document.body.appendChild(ov);
+  ov.querySelector('[data-prisao-chamas-close]').onclick = _fecharPickerPrisaoChamas;
+  ov.onclick = event => { if(event.target === ov) _fecharPickerPrisaoChamas(); };
+  ov.querySelectorAll('[data-prisao-chamas-lado]').forEach(btn => btn.onclick = () => {
+    _prisaoChamasLado = Number(btn.dataset.prisaoChamasLado) || 2;
+    ov.remove();
+    _iniciarModoMagia('prisao_chamas', 'tile', scrollItemId);
+  });
+  const first = ov.querySelector('[data-prisao-chamas-lado]');
+  first?.focus();
+}
 function _abrirPickerSenhorDasAguas(){
   _fecharPickerSenhorDasAguas();
   const ov = document.createElement('div'); ov.id='senhor-aguas-picker';
@@ -15189,6 +15418,7 @@ function castarPergaminho(item) {
     send({ type: 'use_scroll', item_id: item.id });
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951'); return;
   }
+  if (magiaId === 'prisao_chamas') { _abrirPickerPrisaoChamas(item.id); return; }
   _registrarEfeitoVisualLocal(magiaId, 'magic');
   if (magiaId === 'criar_alimentos') { _iniciarModoMagia(magiaId, 'adjacent_tile', item.id); return; }
   if (magiaId === 'manto_escuridao') {
@@ -15232,6 +15462,70 @@ function _tilesAdjacentesLivresMagia(){
   return out;
 }
 
+function _iniciarMiraTeleporteAlvo(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me) return;
+  // O alvo não usa o alcance de 15+nível: a única limitação é estar na linha
+  // de visão do mago. O raio de 15+nível pertence exclusivamente à segunda
+  // etapa, que escolhe a casa de destino recebida do servidor.
+  const targets = new Map(), valid = new Set();
+  const add = (id, pos) => {
+    if(!Array.isArray(pos) || pos.length < 2) return;
+    const key = `${pos[0]},${pos[1]}`;
+    if(GS.hasLineOfSight(state, me.pos[0], me.pos[1], pos[0], pos[1])){
+      targets.set(key, id);
+      valid.add(key);
+    }
+  };
+  (state.players || []).filter(p => p.alive && !p.is_master).forEach(p => add(p.id, p.pos));
+  (state.monsters || []).filter(m => m.hp > 0).forEach(m => GS.monsterTiles(m).forEach(pos => add(m.id, pos)));
+  window._modoTeleporteAlvo = { targets, valid };
+  _aimStart({
+    kind:'teleporte_alvo', title:t('ui.magia.teleporte_mira_titulo'),
+    instruction:t('ui.magia.teleporte_mira_instrucao'),
+    color:'#b77cff', targetLabel:t('ui.magia.teleporte_alvo_visivel'), range:valid, area:valid,
+    cancelText:t('ui.magia.teleporte_cancelado'),
+    cleanup:() => { window._modoTeleporteAlvo = null; },
+  });
+}
+
+function _clickTileTeleporteAlvo(tx, ty){
+  const mode = window._modoTeleporteAlvo;
+  if(!mode) return;
+  const key = `${tx},${ty}`, id = mode.targets.get(key);
+  if(!id || !mode.valid.has(key)){
+    _aimSetStatus(t('ui.magia.teleporte_alvo_vivo_visivel'), '#ff9aa2');
+    return;
+  }
+  GS.send({ type:'magia', magia_id:'teleporte', target_id:id });
+  _aimEnd({ silent:true, reason:'resolved' });
+}
+
+function _iniciarMiraTeleporteDestino(msg){
+  const destinos = new Set((msg?.destinos || []).map(([x,y]) => `${x},${y}`));
+  if(!destinos.size) return;
+  window._modoTeleporteDestino = { requestId:msg.request_id, destinos };
+  _aimStart({
+    kind:'teleporte_destino', title:t('ui.magia.teleporte_destino_titulo'),
+    instruction:t('ui.magia.teleporte_destino_instrucao', {alcance: msg.alcance || 15}),
+    color:'#b77cff', targetLabel:t('ui.magia.teleporte_destino_valido'), range:destinos, area:destinos,
+    cancelText:t('ui.magia.teleporte_destino_cancelado'),
+    cleanup:() => { window._modoTeleporteDestino = null; },
+  });
+}
+
+function _clickTileTeleporteDestino(tx, ty){
+  const mode = window._modoTeleporteDestino;
+  if(!mode) return;
+  const key = `${tx},${ty}`;
+  if(!mode.destinos.has(key)){
+    _aimSetStatus('Destino bloqueado ou ocupado. Escolha uma casa verde.', '#ff9aa2');
+    return;
+  }
+  GS.confirmarTeleporte(mode.requestId, tx, ty);
+  _aimEnd({ silent:true, reason:'resolved' });
+}
+
 function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   const _def = GRIMORIO_CLIENT[magiaId];
   _registrarEfeitoVisualLocal(magiaId, 'magic');
@@ -15243,9 +15537,13 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   const senhorAguasLado = magiaId === 'senhor_das_aguas'
     ? (_senhorDasAguasTerreno === 'agua_profunda' ? 3 : 4)
       + Math.floor((Number(_me?.level) || 1) / 2) : 0;
+  const iraRochaLado = magiaId === 'ira_rocha_ardente'
+    ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
+  const prisaoChamasLado = magiaId === 'prisao_chamas'
+    ? Math.max(2, Math.min(4, Number(_prisaoChamasLado) || 2)) : 0;
   const cajadoLado = magiaId === 'senhor_das_aguas' ? 0 : _cajadoArcanoAreaLado(_me, _def, !!scrollItemId);
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: cajadoLado || invernoLado || senhorAguasLado || (_def && _def.area_lado) || 0,
+                        areaLado: prisaoChamasLado || cajadoLado || invernoLado || senhorAguasLado || iraRochaLado || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -15278,6 +15576,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
         _chamadoInvernoPermanente = false;
       }
       if (cancelada === 'senhor_das_aguas') _senhorDasAguasTerreno = null;
+      if (cancelada === 'prisao_chamas') _prisaoChamasLado = null;
       if (cancelada) _removerEfeitoVisualLocal(cancelada);
     },
   });
@@ -15359,6 +15658,7 @@ function _clickTileMagia(tx, ty) {
     fields.permanente = !!_chamadoInvernoPermanente;
   }
   if (magiaId === 'senhor_das_aguas') fields.terreno = _senhorDasAguasTerreno;
+  if (magiaId === 'prisao_chamas') fields.lado = mode.areaLado;
   if (mode.scrollItemId) {
     send(Object.assign({ type: 'use_scroll', item_id: mode.scrollItemId }, fields));
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951');
@@ -15387,23 +15687,29 @@ function _encerrarModoMagia() {
 let _senhorAguasPopupKeyHandler = null;
 function _fecharJanelaSenhorDasAguas(){
   const overlay = document.getElementById('senhor-aguas-overlay');
-  if(overlay) overlay.style.display = 'none';
+  // A classe `open` é o que faz _gamepadUiScope() reconhecer a janela como
+  // camada ativa do controle (o seletor é `[id$="-overlay"].open`). O display
+  // sozinho não bastava: o direcional continuava movendo o cursor no tabuleiro.
+  if(overlay){ overlay.style.display = 'none'; overlay.classList.remove('open'); }
   if(_senhorAguasPopupKeyHandler){
     document.removeEventListener('keydown', _senhorAguasPopupKeyHandler);
     _senhorAguasPopupKeyHandler = null;
   }
 }
 
+// Devolve `true` quando a janela realmente ficou na tela. Quem chama usa isso
+// para só então gravar a chave de deduplicação da rodada — gravá-la antes fazia
+// qualquer desistência aqui custar o popup da rodada inteira.
 function _abrirJanelaSenhorDasAguas(){
   const state = GS.gameState, me = GS.me;
-  if(!state || !me) return;
+  if(!state || !me) return false;
   const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
     z && z.tipo === 'senhor_das_aguas' && z.ativa
       && String(z.caster) === String(me.id));
-  if(!zona || _senhorAguasRestante(zona, me) <= 0) return;
+  if(!zona || _senhorAguasRestante(zona, me) <= 0) return false;
 
   const overlay = document.getElementById('senhor-aguas-overlay');
-  if(!overlay) { _iniciarSenhorDasAguasRedemoinhos(); return; }
+  if(!overlay) { _iniciarSenhorDasAguasRedemoinhos(); return true; }
   const restante = _senhorAguasRestante(zona, me);
   const materialProfundo = zona.material === 'agua_profunda';
   const status = document.getElementById('senhor-aguas-status');
@@ -15432,38 +15738,176 @@ function _abrirJanelaSenhorDasAguas(){
     }
   };
   document.addEventListener('keydown', _senhorAguasPopupKeyHandler);
+  // _gamepadUiScope() desempata por ORDEM NO DOM (`open.at(-1)`), não por
+  // z-index. Os menus de personagem nascem dinamicamente e ficam depois deste
+  // markup estático no <body>, então o Grimório roubava o escopo do controle
+  // mesmo com o popup visualmente por cima. Reancorar no fim faz a camada
+  // recém-aberta vencer — que é a regra que o `at(-1)` já tenta expressar.
+  document.body.appendChild(overlay);
   overlay.style.display = 'flex';
+  overlay.classList.add('open');   // ver _fecharJanelaSenhorDasAguas
   close?.focus();
+  // No controle o percurso começa na ação, não no Fechar: quem abriu a janela
+  // quase sempre quer criar os redemoinhos.
+  _gamepadFocusMapPoint('#senhor-aguas-create', '#senhor-aguas-close');
+  return true;
+}
+
+// Decide, a partir do estado puro, se o popup dos redemoinhos deve abrir neste
+// `game_state`. Vive separada da abertura por dois motivos: dá para exercitá-la
+// fora do navegador, e a recusa passa a ter um MOTIVO legível — sete guardas
+// espremidas numa condição só não diziam qual delas havia barrado, e foi isso
+// que tornou o diagnóstico caro.
+function _senhorAguasDecisaoPopup(state, myPid, chaveAnterior){
+  const nao = motivo => ({ abrir:false, zona:null, chave:null, motivo });
+  if(!state) return nao('sem_estado');
+  if(state.phase !== 'playing') return nao('fora_de_jogo');
+  if(String(state.current_turn) !== String(myPid)) return nao('fora_do_turno');
+  if(state.animados_turn) return nao('janela_servos');
+  const heroi = (state.players || []).find(p => p && String(p.id) === String(myPid));
+  if(!heroi) return nao('sem_heroi');
+  if(heroi.class_id !== 'cleric') return nao('nao_clerigo');
+  if(!heroi.alive) return nao('morto');
+  const minhas = (state.zonas_especiais || []).filter(z =>
+    z && z.tipo === 'senhor_das_aguas' && z.ativa && String(z.caster) === String(heroi.id));
+  if(!minhas.length) return nao('sem_zona');
+  // A cota é acumulada: a zona útil é a última que ainda tem casa para marcar.
+  // Separar "não tenho zona" de "gastei tudo" é o que deixa o motivo honesto.
+  const zona = minhas.slice().reverse().find(z => _senhorAguasRestante(z, heroi) > 0);
+  if(!zona) return nao('cota_zerada');
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  if(rodada < Number(zona.disponivel_em || 0)) return nao('rodada_cedo');
+  const ator = state.current_actor || {};
+  const chave = [zona.id, rodada, ator.kind || 'player', ator.id || state.current_turn].join('|');
+  if(chaveAnterior === chave) return { abrir:false, zona, chave, motivo:'ja_abriu' };
+  return { abrir:true, zona, chave, motivo:'ok' };
 }
 
 // Abre a explicação automaticamente quando o turno do clérigo começa. A chave
 // impede que cada `game_state` recebido durante o mesmo turno reabra o popup.
 let _senhorAguasUltimoPopupTurno = null;
 function _considerarPopupSenhorDasAguas(msg){
-  const state = msg || GS.gameState;
-  const me = GS.me;
-  if(!state || !me || state.phase !== 'playing'
-      || me.class_id !== 'cleric' || !me.alive
-      || String(state.current_turn) !== String(GS.myPid)
-      || state.animados_turn) return;
-  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
-    z && z.tipo === 'senhor_das_aguas' && z.ativa
-      && String(z.caster) === String(me.id)
-      && _senhorAguasRestante(z, me) > 0);
-  if(!zona) return;
-  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
-  if(rodada < Number(zona.disponivel_em || 0)) return;
-  const ator = state.current_actor || {};
-  const chave = [zona.id, rodada, ator.kind || 'player', ator.id || state.current_turn].join('|');
-  if(_senhorAguasUltimoPopupTurno === chave) return;
-  _senhorAguasUltimoPopupTurno = chave;
+  const decisao = _senhorAguasDecisaoPopup(msg || GS.gameState, GS.myPid,
+                                           _senhorAguasUltimoPopupTurno);
+  if(!decisao.abrir) return;
   // Aguarda o HUD autoritativo terminar de renderizar antes de abrir a janela.
   requestAnimationFrame(() => {
-    const atual = GS.gameState;
-    if(!atual || atual.phase !== 'playing'
-        || String(atual.current_turn) !== String(GS.myPid)
-        || atual.animados_turn) return;
-    _abrirJanelaSenhorDasAguas();
+    // Recheca contra o estado do momento: um `game_state` mais novo pode ter
+    // chegado no intervalo. A chave só é gravada se a janela REALMENTE abriu —
+    // gravá-la antes fazia qualquer desistência aqui custar a rodada inteira.
+    const agora = _senhorAguasDecisaoPopup(GS.gameState, GS.myPid, null);
+    if(!agora.abrir || agora.chave !== decisao.chave) return;
+    if(_abrirJanelaSenhorDasAguas()) _senhorAguasUltimoPopupTurno = decisao.chave;
+  });
+}
+
+// A Ira da Rocha Ardente deixa as Chamas Vivas pendentes até a segunda
+// rodada. Assim como os redemoinhos, a colocação é uma ação livre opcional e
+// pode ser feita em qualquer turno elegível enquanto a lava estiver ativa.
+function _iraRochaRestante(zona){
+  return Math.max(0, Number(zona?.chamas_pendentes || 0));
+}
+
+function _iraRochaMsgDaZona(zona){
+  return {
+    zone_id: zona?.id,
+    tiles: zona?.tiles || [],
+    permitidos: zona?.chamas_permitidas || [],
+    count: _iraRochaRestante(zona),
+    rolled: zona?.chamas_roladas,
+    duration: zona?.duracao,
+  };
+}
+
+let _iraRochaPopupKeyHandler = null;
+function _fecharJanelaIraRocha(){
+  const overlay = document.getElementById('ira-rocha-overlay');
+  if(overlay){ overlay.style.display = 'none'; overlay.classList.remove('open'); }
+  if(_iraRochaPopupKeyHandler){
+    document.removeEventListener('keydown', _iraRochaPopupKeyHandler);
+    _iraRochaPopupKeyHandler = null;
+  }
+}
+
+function _abrirJanelaIraRocha(){
+  const state = GS.gameState, me = GS.me;
+  if(!state || !me || me.class_id !== 'cleric') return false;
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'ira_rocha_ardente' && z.ativa
+      && String(z.caster) === String(me.id)
+      && rodada >= Number(z.disponivel_em || 0)
+      && _iraRochaRestante(z) > 0);
+  if(!zona) return false;
+
+  const overlay = document.getElementById('ira-rocha-overlay');
+  if(!overlay) { _iniciarSelecaoChamasIraRocha(_iraRochaMsgDaZona(zona)); return true; }
+  const restante = _iraRochaRestante(zona);
+  const status = document.getElementById('ira-rocha-status');
+  const desc = document.getElementById('ira-rocha-desc');
+  const effects = document.getElementById('ira-rocha-effects');
+  const create = document.getElementById('ira-rocha-create');
+  const close = document.getElementById('ira-rocha-close');
+  if(status) status.textContent = t('ui.magia.ira_rocha_aguardando', {restante});
+  if(desc) desc.textContent = t('ui.magia.ira_rocha_lava_ativa');
+  if(effects) effects.innerHTML = `
+    <li>${t('ui.magia.ira_rocha_efeito_r2')}</li>
+    <li>${t('ui.magia.ira_rocha_efeito_escolha', {restante})}</li>
+    <li>${t('ui.magia.ira_rocha_efeito_dano')}</li>`;
+  if(create) create.onclick = () => {
+    _fecharJanelaIraRocha();
+    _iniciarSelecaoChamasIraRocha(_iraRochaMsgDaZona(zona));
+  };
+  if(close) close.onclick = _fecharJanelaIraRocha;
+  overlay.onclick = event => { if(event.target === overlay) _fecharJanelaIraRocha(); };
+  _iraRochaPopupKeyHandler = event => {
+    if(event.key === 'Escape'){
+      _fecharJanelaIraRocha();
+      event.preventDefault();
+    }
+  };
+  document.addEventListener('keydown', _iraRochaPopupKeyHandler);
+  document.body.appendChild(overlay);
+  overlay.style.display = 'flex';
+  overlay.classList.add('open');
+  close?.focus();
+  _gamepadFocusMapPoint('#ira-rocha-create', '#ira-rocha-close');
+  return true;
+}
+
+function _iraRochaDecisaoPopup(state, myPid, chaveAnterior){
+  const nao = motivo => ({abrir:false, zona:null, chave:null, motivo});
+  if(!state) return nao('sem_estado');
+  if(state.phase !== 'playing') return nao('fora_de_jogo');
+  if(String(state.current_turn) !== String(myPid)) return nao('fora_do_turno');
+  if(state.animados_turn) return nao('janela_servos');
+  const heroi = (state.players || []).find(p => p && String(p.id) === String(myPid));
+  if(!heroi) return nao('sem_heroi');
+  if(heroi.class_id !== 'cleric') return nao('nao_clerigo');
+  if(!heroi.alive) return nao('morto');
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  const zona = (state.zonas_especiais || []).filter(z =>
+    z && z.tipo === 'ira_rocha_ardente' && z.ativa
+      && String(z.caster) === String(heroi.id)
+      && rodada >= Number(z.disponivel_em || 0)
+      && _iraRochaRestante(z) > 0
+      && (z.chamas_permitidas || []).length > 0).slice().reverse()[0];
+  if(!zona) return nao('sem_chamas_pendentes');
+  const ator = state.current_actor || {};
+  const chave = [zona.id, rodada, ator.kind || 'player', ator.id || state.current_turn].join('|');
+  if(chaveAnterior === chave) return {abrir:false, zona, chave, motivo:'ja_abriu'};
+  return {abrir:true, zona, chave, motivo:'ok'};
+}
+
+let _iraRochaUltimoPopupTurno = null;
+function _considerarPopupIraRocha(msg){
+  const decisao = _iraRochaDecisaoPopup(msg || GS.gameState, GS.myPid,
+                                         _iraRochaUltimoPopupTurno);
+  if(!decisao.abrir) return;
+  requestAnimationFrame(() => {
+    const agora = _iraRochaDecisaoPopup(GS.gameState, GS.myPid, null);
+    if(!agora.abrir || agora.chave !== decisao.chave) return;
+    if(_abrirJanelaIraRocha()) _iraRochaUltimoPopupTurno = decisao.chave;
   });
 }
 
@@ -15546,6 +15990,69 @@ function _clickTileSenhorDasAguas(tx, ty){
 
 window._iniciarSenhorDasAguasRedemoinhos = _iniciarSenhorDasAguasRedemoinhos;
 window._abrirJanelaSenhorDasAguas = _abrirJanelaSenhorDasAguas;
+
+function _iniciarSelecaoChamasIraRocha(msg){
+  const permitidos = new Set((msg.permitidos || msg.tiles || [])
+    .map(([x,y]) => String(x) + ',' + String(y)));
+  const selecionados = new Set();
+  const max = Math.max(0, Number(msg.count) || 0);
+  if(!permitidos.size || !max) return;
+  window._modoIraRocha = { zoneId: msg.zone_id, permitidos, selecionados, max };
+  const atualizar = () => {
+    const modo = window._modoIraRocha;
+    if(!modo) return;
+    _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
+    _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' Chama(s) Viva(s) selecionada(s). Clique para marcar/desmarcar.', '#ffb168');
+    const btn = _aimSessionState.current?.confirmButton;
+    if(btn){
+      btn.disabled = modo.selecionados.size !== modo.max;
+      btn.style.opacity = btn.disabled ? '.45' : '1';
+      btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+    }
+  };
+  _aimStart({
+    kind:'ira_rocha_ardente_chamas',
+    title:t('ui.magia.ira_rocha_mira_titulo'),
+    instruction:t('ui.magia.ira_rocha_mira_instrucao', {max}),
+    color:'#ff6a24', targetLabel:t('ui.magia.ira_rocha_chama_viva'), range:permitidos, area:selecionados,
+    confirmText:t('ui.magia.ira_rocha_btn_criar'),
+    canConfirm:()=>window._modoIraRocha?.selecionados?.size === max,
+    confirm:()=>{
+      const modo = window._modoIraRocha;
+      if(!modo || modo.selecionados.size !== modo.max) return;
+      GS.iraRochaArdenteConfirmarChamas(modo.zoneId,
+        [...modo.selecionados].map(k=>k.split(',').map(Number)));
+      _aimEnd({silent:true, reason:'resolved'});
+    },
+    cleanup:()=>{ window._modoIraRocha = null; },
+  });
+  atualizar();
+}
+
+function _clickTileIraRocha(tx, ty){
+  const modo = window._modoIraRocha;
+  if(!modo) return;
+  const key = String(tx) + ',' + String(ty);
+  if(!modo.permitidos.has(key)){
+    _aimSetStatus(t('ui.magia.ira_rocha_casa_livre_ampliada'), '#ff9aa2');
+    return;
+  }
+  if(modo.selecionados.has(key)) modo.selecionados.delete(key);
+  else if(modo.selecionados.size < modo.max) modo.selecionados.add(key);
+  else {
+    _aimSetStatus(t('ui.magia.ira_rocha_limite', {max: modo.max}), '#ffb168');
+    return;
+  }
+  _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
+  _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' Chama(s) Viva(s) selecionada(s). Clique para marcar/desmarcar.', '#ffb168');
+  const btn = _aimSessionState.current?.confirmButton;
+  if(btn){
+    btn.disabled = modo.selecionados.size !== modo.max;
+    btn.style.opacity = btn.disabled ? '.45' : '1';
+  }
+}
+
+window._iniciarSelecaoChamasIraRocha = _iniciarSelecaoChamasIraRocha;
 
 function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
   if (window._modoMagia) _encerrarModoMagia();
@@ -15955,7 +16462,8 @@ function _aimHoverPendingSkill(tx, ty) {
 function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
-    || window._modoMagia || window._modoSenhorDasAguas || window._modoThrowItem || window._modoAnimarMortos
+    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha
+    || window._modoThrowItem || window._modoAnimarMortos
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
     || (GS.pendingSkill && _aimSessionIs('habilidade')));
 }
@@ -15997,6 +16505,13 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     const valid = modo.permitidos.has(`${tx},${ty}`);
     _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
     _aimSetStatus(valid ? t('ui.mira.casa_valida_clique_para_marcar_ou_desmarca') : t('ui.mira.escolha_uma_casa_dentro_da_area_da_magia'), valid ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
+  if (window._modoIraRocha) {
+    const modo = window._modoIraRocha;
+    const valid = modo.permitidos.has(String(tx) + ',' + String(ty));
+    _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+    _aimSetStatus(valid ? t('ui.magia.ira_rocha_hover_marcar') : t('ui.magia.ira_rocha_hover_fora'), valid ? '#ffb168' : '#ff9aa2');
     return true;
   }
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
@@ -16348,7 +16863,7 @@ function _recomputarAreaMagia(hx, hy) {
       }
     } else if (hx != null && hy != null) {
       if (mode.alvoTipo === 'tile' && mode.areaLado) {
-        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
+        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas' || mode.magiaId === 'ira_rocha_ardente' || mode.magiaId === 'prisao_chamas') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
         else _addQuadrado(hx, hy, mode.areaLado, area);
       }
       else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
@@ -16387,8 +16902,9 @@ function _recomputarAreaThrow(hx, hy) {
 // Apenas dados (sem redraw) — chamado de dentro de renderMap/renderMap3D.
 function _atualizarZonasMagia(state) {
   const zz = ((state && state.zonas_especiais) || []);
-  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas'))
+  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas' || z.tipo === 'prisao_chamas'))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2, lado: z.area_lado || 0,
+                                  tiles: z.flame_tiles || z.tiles || [], tipo: z.tipo,
                                   visualId: z.animation_id || z.visual_id || z.id || null }));
   window._spellHL.nuvensAcidas = zz.filter(z => z.ativa && z.tipo === 'nuvem_acida')
                                   .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 1 }));
@@ -16420,8 +16936,20 @@ function _aplicarSpellHL3D() {
   if (typeof g3 === 'undefined' || !g3) return;
   const hl = window._spellHL || { range: new Set(), area: new Set(), zonas: [] };
   const zonaSet = new Set();
+  const fogoSet = new Set();
+  const chamasVivasSet = new Set();
+  const adicionarZona = (z, destino) => {
+    if (Array.isArray(z.tiles) && z.tiles.length) {
+      for (const [x, y] of z.tiles) destino.add(`${x},${y}`);
+    } else {
+      z.lado ? _addQuadrado(z.cx, z.cy, z.lado, destino) : _addCheb(z.cx, z.cy, z.raio, destino);
+    }
+  };
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
+    if (_bolaFogoZonaLiberada(z)) {
+      adicionarZona(z, zonaSet);
+      adicionarZona(z, z.tipo === 'prisao_chamas' ? chamasVivasSet : fogoSet);
+    }
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   const escSet = new Set();
   for (const z of (hl.escuridao || [])) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, escSet) : _addCheb(z.cx, z.cy, z.raio, escSet);
@@ -16437,7 +16965,11 @@ function _aplicarSpellHL3D() {
   toggle(g3.spellZonaMeshes,   zonaSet);
   // O fogo persistente nunca passou pelo filtro de névoa (ao contrário dos
   // realces acima): mantido assim de propósito.
-  _overlayShowOnly(g3.spellFireFx, zonaSet);
+  _overlayShowOnly(g3.spellFireFx, fogoSet);
+  // As bordas da Prisão de Chamas usam instâncias animadas do mesmo GLB da
+  // decoração Chama Viva. Não passam pelo filtro de névoa, como o fogo
+  // persistente já fazia, para a parede continuar visível enquanto ativa.
+  _overlayShowOnly(g3.spellLivingFlameFx, chamasVivasSet);
   const gasAndDouble = new Set(hl.camarasGas || []);
   for (const k of (hl.double || [])) gasAndDouble.add(k);
   toggle(g3.spellDoubleMeshes, gasAndDouble);             // verde escuro (gás / atingido 2x)
@@ -16514,8 +17046,8 @@ function _atualizarDirecaoSpell3D(){
 }
 
 function _animarFogoPersistente3D(now){
-  if(!g3 || !g3.spellFireFx) return;
-  for(const fx of Object.values(g3.spellFireFx)){
+  if(!g3) return;
+  if(g3.spellFireFx) for(const fx of Object.values(g3.spellFireFx)){
     // O pool guarda null para casa inelegivel (parede), entao o guarda e obrigatorio.
     if(!fx || !fx.group.visible) continue;
     const pulse = .72 + .20 * Math.sin(now / 155 + (fx.flames[0]?.userData.firePhase || 0));
@@ -16568,7 +17100,10 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const k of hl.range) draw(k, AIM_COLORS.range.fill);       // alcance — azul
   const zonaSet = new Set();                                     // zona de fogo persistente — laranja
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
+    if (_bolaFogoZonaLiberada(z)) {
+      if (Array.isArray(z.tiles) && z.tiles.length) for (const [x, y] of z.tiles) zonaSet.add(`${x},${y}`);
+      else z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
+    }
   for (const k of zonaSet) draw(k, 'rgba(255,110,0,0.32)');
   const acidSet = new Set();
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, acidSet);
@@ -16607,7 +17142,10 @@ function _desenharFogoPersistente2D(ctx, exploredSet, now) {
   if (!zonas.length) return;
   const tiles = new Set();
   for (const z of zonas)
-    if (_bolaFogoZonaLiberada(z)) z.lado ? _addQuadrado(z.cx, z.cy, z.lado, tiles) : _addCheb(z.cx, z.cy, z.raio, tiles);
+    if (_bolaFogoZonaLiberada(z)) {
+      if (Array.isArray(z.tiles) && z.tiles.length) for (const [x, y] of z.tiles) tiles.add(`${x},${y}`);
+      else z.lado ? _addQuadrado(z.cx, z.cy, z.lado, tiles) : _addCheb(z.cx, z.cy, z.raio, tiles);
+    }
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   for (const key of tiles) {
@@ -18422,6 +18960,31 @@ function renderMyPanel(state){
       <span style="color:#9de8f4;" data-i18n="ui.hud.criar_redemoinhos">🌪️ Criar redemoinhos</span>
       <small style="color:#bdd4da;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre_restam_casas', {n: _senhorAguasRest})}</small>
     </button>` : '';
+  const _iraRochaZona = me.class_id === 'cleric'
+    ? (state.zonas_especiais || []).slice().reverse().find(z =>
+        z && z.tipo === 'ira_rocha_ardente' && z.ativa
+          && _iraRochaRestante(z) > 0 && String(z.caster) === String(me.id))
+    : null;
+  const _iraRochaDisponivel = !!(_iraRochaZona && _senhorAguasMeuTurno && !state.animados_turn
+    && Number(state.round ?? state.round_num ?? 1) >= Number(_iraRochaZona.disponivel_em || 0)
+    && (_iraRochaZona.chamas_permitidas || []).length > 0);
+  const _chamasVivasBtn = _iraRochaDisponivel ? `
+    <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaIraRocha()"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff6a24;">
+      <span style="color:#ffb168;" data-i18n="ui.hud.escolher_chamas_vivas">🔥 Escolher Chamas Vivas</span>
+      <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre_restam_casas', {n: _iraRochaRestante(_iraRochaZona)})}</small>
+     </button>` : '';
+  const _prisaoChamasZona = me.class_id === 'mage'
+    ? (state.zonas_especiais || []).slice().reverse().find(z =>
+        z && z.tipo === 'prisao_chamas' && z.ativa && String(z.caster) === String(me.id))
+    : null;
+  const _prisaoChamasPodeEncerrar = !!(_prisaoChamasZona && _senhorAguasMeuTurno && !state.animados_turn);
+  const _encerrarPrisaoChamasBtn = _prisaoChamasPodeEncerrar ? `
+    <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarPrisaoChamas()"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff6a24;">
+      <span style="color:#ffb168;" data-i18n="ui.hud.encerrar_prisao_chamas">🔥 Encerrar Prisão de Chamas</span>
+      <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre')}</small>
+    </button>` : '';
   const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
   const _adjHint = canAct && !canAttack
@@ -18441,6 +19004,8 @@ function renderMyPanel(state){
     ${_escaparBtn}
     ${_escaparBauBtn}
     ${_redemoinhosBtn}
+    ${_chamasVivasBtn}
+    ${_encerrarPrisaoChamasBtn}
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
@@ -19212,6 +19777,8 @@ function _showTrapResult(msg){
   };
   const trapIcon = $('trap-icon');
   const isCondition = !!msg._condition;
+  const isSurvivalDamage = msg.tipo === 'sobrevivencia_dano' || msg.tipo_id === 'desnutrido_desidratado';
+  const isSurvival = msg.tipo === 'sobrevivencia' || msg.tipo_id === 'sede_fome' || isSurvivalDamage;
   const isFall = msg.tipo === 'queda' || msg._fall === true;
   const isSwallowed = msg.tipo_id === 'engolido';
   const conditionImages = {
@@ -19223,8 +19790,9 @@ function _showTrapResult(msg){
   const isPetrificacao = isCondition && conditionId === 'petrificacao';
   const petrificacaoMarcas = Math.max(0, Math.min(3, Number(msg.petrificacao_marcas) || 0));
   const conditionTitle = isCondition ? t(`ui.condicao.${conditionId}`) : '';
+  const survivalTitle = isSurvival ? (msg.nome || t('ui.sobrevivencia.exaustao_titulo')) : '';
   const swallowedTitle = isSwallowed ? t('ui.armadilha.engolido.titulo') : '';
-  const resultTitle = swallowedTitle || conditionTitle;
+  const resultTitle = swallowedTitle || conditionTitle || survivalTitle;
   const swallowedDamage = msg.acid_damage || '3d6';
   const swallowedDc = Math.max(1, Number(msg.escape_dc) || 22);
   const swallowedMonster = msg.monstro || 'monstro';
@@ -19246,6 +19814,7 @@ function _showTrapResult(msg){
     engolido: 'engolido.png',
     afogamento: 'afogamento.png',
     rodamoinho: 'redemoinho.png', rodamoinho_profundo: 'redemoinho.png',
+    metamorfose: 'metamorfose.png',
   };
   // A corrosão provocada por ácido pode quebrar arma/armadura ou apenas
   // aumentar o nível de dano. Nesses três casos o servidor envia tipos
@@ -19263,6 +19832,7 @@ function _showTrapResult(msg){
   const isDrowning = msg.tipo === 'afogamento' || msg.tipo_id === 'afogamento';
   const isWhirlpool = _isWhirlpoolResult(msg);
   const isDeepWhirlpool = msg.tipo_id === 'rodamoinho_profundo' || msg.profundo === true;
+  const isMetamorfose = msg.tipo === 'metamorfose' || msg.tipo_id === 'metamorfose';
   const isWaveDrowning = isDrowning && msg.fonte === 'onda_envolvente';
   const isEquipmentDamaged = msg.tipo === 'equipamento_danificado';
   const isWeaponBroken = msg.tipo === 'arma_quebrada';
@@ -19270,6 +19840,8 @@ function _showTrapResult(msg){
   // A transformação por Licantropia mantém o popup de maldição, mas usa a
   // ilustração própria do lobisomem em vez do ícone genérico de amaldiçoado.
   const imageName = isFall ? 'queda.png'
+    : isSurvivalDamage ? 'desnutrido_desidratado.png'
+    : isSurvival ? 'sede_fome.png'
     : isSwallowed ? 'engolido.png'
     : isWhirlpool ? 'redemoinho.png'
     : isDrowning ? 'afogamento.png'
@@ -19294,6 +19866,10 @@ function _showTrapResult(msg){
     : resultTitle || msg.nome || 'Armadilha';
   $('trap-desc').textContent = isFall
     ? (msg.descricao || t('ui.voo.queda_descricao', {altura: msg.altura || 0, faixa: msg.faixa || '', dano: msg.dano || 0}))
+    : isSurvivalDamage
+    ? (msg.descricao || t('ui.sobrevivencia.desnutricao_desc'))
+    : isSurvival
+    ? (msg.descricao || t('ui.sobrevivencia.exaustao_desc'))
     : isSwallowed
     ? t('ui.armadilha.engolido.desc', {dano: swallowedDamage, dc: swallowedDc, monstro: swallowedMonster})
     : isWhirlpool
@@ -19302,7 +19878,9 @@ function _showTrapResult(msg){
     ? (isWaveDrowning
       ? t('ui.afogamento.onda_desc')
       : t('ui.afogamento.desc', {dano: msg.dano || 0, dc: msg.fortitude_dc || 18}))
-    : isCondition
+     : isMetamorfose
+     ? (msg.descricao || t('ui.magia.metamorfose_desc_padrao'))
+     : isCondition
     ? (conditionId === 'sangramento'
       ? t('ui.condicao.sangramento_desc', {n: level, dano: bleedingDamage})
       : conditionId === 'petrificacao'
@@ -19314,6 +19892,10 @@ function _showTrapResult(msg){
   effectsEl.innerHTML = '';
   const conditionEffects = isFall
     ? (msg.efeitos_extra || [t('ui.voo.queda_dano', {expressao: msg.expressao || '—', dano: msg.dano || 0})])
+    : isSurvivalDamage
+    ? (msg.efeitos_extra || [t('ui.sobrevivencia.desnutricao_recuperar')])
+    : isSurvival
+    ? (msg.efeitos_extra || [t('ui.sobrevivencia.exaustao_efeito', {n: Math.abs(Number(msg.penalidade_total) || 0)})])
     : isSwallowed
     ? [
         t('ui.armadilha.engolido.dano', {dano: swallowedDamage}),
@@ -19343,8 +19925,10 @@ function _showTrapResult(msg){
               t('ui.afogamento.fome_sede'),
             ]),
       ]
-    : isCondition
-    ? (conditionId === 'sangramento'
+     : isMetamorfose
+     ? (msg.efeitos_extra || [])
+     : isCondition
+     ? (conditionId === 'sangramento'
       ? [
           t('ui.condicao.duracao', {n: duration}),
           ...(msg.open_wound ? [t('ui.condicao.ferida_aberta')] : []),
@@ -19370,6 +19954,12 @@ function _showTrapResult(msg){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = `${msg.expressao || ''} · ${msg.dano || 0} dano`;
     tocarSomArmadilha();
+  } else if(isSurvival){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = msg.status || (isSurvivalDamage
+      ? t('ui.sobrevivencia.desnutricao_status')
+      : t('ui.sobrevivencia.exaustao_status', {n: Math.abs(Number(msg.penalidade_total) || 0)}));
+    tocarSomArmadilha();
   } else if(isSwallowed){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.engolido.status');
@@ -19381,6 +19971,9 @@ function _showTrapResult(msg){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.afogamento.status', {dano: msg.dano || 0});
     tocarSomArmadilha();
+  } else if(isMetamorfose){
+    statusEl.className = 'trap-status trap-status--success';
+    statusEl.textContent = 'FORMA ALTERADA';
   } else if(isCondition){
     statusEl.className = `trap-status ${isPetrificacao ? 'trap-status--partial' : 'trap-status--fail'}`;
     statusEl.textContent = isPetrificacao
@@ -20155,8 +20748,8 @@ function fecharMenuMagias(){
 // disponível. O servidor continua sendo a autoridade; isto é apenas leitura.
 function _slotsMenuMagias(heroi){
   const nivel = Math.min(Math.max(Number(heroi?.level || heroi?.nivel || 1), 1), 5);
-  const limites = SLOTS_POR_NIVEL_CLIENT[nivel] || SLOTS_POR_NIVEL_CLIENT[1];
-  const cooldown = heroi?.slots_cooldown || {primeiro:[], segundo:[], terceiro:[]};
+  const limites = _slotsMaxParaHeroi(heroi);
+  const cooldown = heroi?.slots_cooldown || {primeiro:[], segundo:[], terceiro:[], quarto:[]};
   const restantesServidor = heroi?.slots_remaining || null;
   const naMasmorra = !!GS.gameState;
   const round = naMasmorra ? Number(GS.gameState.round || 0) : 0;
@@ -20168,7 +20761,7 @@ function _slotsMenuMagias(heroi){
     espera: extraRaw?.ativo && Number(extraRaw?.recarga || 0) > 0
       ? [Math.max(0, Number(extraRaw.recarga) || 0)] : []
   };
-  ['primeiro','segundo','terceiro'].forEach(circulo => {
+  ['primeiro','segundo','terceiro','quarto'].forEach(circulo => {
     const total = Number(limites[circulo] || 0);
     const espera = naMasmorra && Array.isArray(restantesServidor?.[circulo])
       ? restantesServidor[circulo].map(n => Math.max(0, Number(n) || 0)).sort((a,b) => a - b)
@@ -20190,7 +20783,7 @@ function _slotsMenuMagias(heroi){
 
 function renderSlotsMenuMagias(heroi){
   const status = _slotsMenuMagias(heroi);
-  const circulos = ['primeiro','segundo','terceiro'];
+  const circulos = ['primeiro','segundo','terceiro','quarto'];
   const grupos = circulos.map(circulo => {
     const s = status[circulo];
     if(!s.total) return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-locked">${t('ui.magia.slot_nivel_maior')}</span></div>`;
@@ -20254,7 +20847,7 @@ function abrirMenuMagias(pid){
   const modificadores = [...modificadoresBase, ...modificadoresGuilda];
   const conhecidos = _magiasConhecidasIds(player)
     .map(id => GRIMORIO_CLIENT[id]).filter(Boolean);
-  const porCirculo = ['primeiro', 'segundo', 'terceiro'];
+  const porCirculo = ['primeiro', 'segundo', 'terceiro', 'quarto'];
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
   const slots = _slotsMenuMagias(player);
   const renderMagia = m => {
@@ -20288,6 +20881,8 @@ function abrirMenuMagias(pid){
         <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
         <div class="mm-body">
           ${_renderAcaoSenhorDasAguas(player)}
+          ${_renderAcaoIraRocha(player)}
+          ${_renderAcaoPrisaoChamas(player)}
           <section><h3>${t('ui.magia.modificadores')}</h3>
             ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
               : `<p class="mm-empty">${t('ui.magia.sem_modificadores')}</p>`}
@@ -21500,6 +22095,9 @@ function _gamepadSetUiFocus(el){
   el.classList.add('gamepad-focus');
   try { el.focus({ preventScroll: true }); } catch(_) { el.focus(); }
 }
+// O modal de inventário é carregado depois deste arquivo e precisa conseguir
+// sincronizar o foco visual do controle quando repinta a bolsa.
+window._gamepadSetUiFocus = _gamepadSetUiFocus;
 
 function _gamepadFocusMapPoint(selector, fallbackSelector = ''){
   if(!_gamepadInput.active) return;
@@ -21507,6 +22105,31 @@ function _gamepadFocusMapPoint(selector, fallbackSelector = ''){
     const point = document.querySelector(selector) || (fallbackSelector && document.querySelector(fallbackSelector));
     if(point && _gamepadUiVisible(point)) _gamepadSetUiFocus(point);
   });
+}
+
+// Se o popup abrir antes de o navegador reconhecer o controle, o foco nativo
+// pode ficar no botão Fechar ou no menu que estava atrás. Recupera o foco da
+// ação principal assim que o gamepad passa a ficar ativo, sem roubá-lo depois
+// que o jogador já começou a navegar dentro da janela.
+// As janelas de acao livre do clerigo que precisam disso. Toda nova janela do
+// mesmo formato (overlay + botao principal) entra AQUI: sem a linha, o popup
+// abre e o A do controle nao aciona nada, porque o foco ficou no que estava
+// atras. Foi o caso da Ira da Rocha Ardente.
+const _GAMEPAD_ACAO_LIVRE_POPUPS = [
+  ['senhor-aguas-overlay', '#senhor-aguas-create'],
+  ['ira-rocha-overlay',    '#ira-rocha-create'],
+];
+function _gamepadRecoverSenhorAguasFocus(){
+  if(!_gamepadInput.active) return;
+  for(const [id, seletorCriar] of _GAMEPAD_ACAO_LIVRE_POPUPS){
+    const overlay = document.getElementById(id);
+    if(!overlay?.classList.contains('open')) continue;
+    const focused = _gamepadUi.focusEl;
+    if(focused && overlay.contains(focused) && _gamepadUiVisible(focused)) return;
+    const create = overlay.querySelector(seletorCriar);
+    if(create && _gamepadUiVisible(create)) _gamepadSetUiFocus(create);
+    return;
+  }
 }
 
 function _gamepadMoveUiFocus(dx, dy, controlsOverride=null){
@@ -21538,7 +22161,12 @@ function _gamepadUiPointerControls(){
   const scope = _gamepadUiScope();
   const gameScreen = document.getElementById('screen-game');
   if(scope === gameScreen){
-    return [...gameScreen.querySelectorAll('#objectives-hud button, #btn-libertar')]
+    // #aim-session-hud é anexado ao <body>, fora de #screen-game, então precisa
+    // ser buscado à parte. Sem ele, uma mira de SELEÇÃO MÚLTIPLA (redemoinhos do
+    // Senhor das Águas) podia marcar casas com A e não tinha nenhum caminho no
+    // controle para pressionar CONFIRMAR.
+    return [...gameScreen.querySelectorAll('#objectives-hud button, #btn-libertar'),
+            ...document.querySelectorAll('#aim-session-hud button')]
       .filter(_gamepadUiVisible);
   }
   return _gamepadUiControls();
@@ -21829,6 +22457,26 @@ function _aimStepTile(from, dx, dy, permitido, W, H){
   return null;
 }
 
+// Casa permitida mais próxima de uma origem, por Chebyshev. Existe para o caso
+// em que a mira pinta uma área LONGE do herói — o Senhor das Águas alcança
+// 5 + nível casas — e não há monstro dentro dela: sem uma semente ali o cursor
+// ficava fora do conjunto, e como _aimStepTile só encontra casa válida em linha
+// reta, uma área desalinhada da linha, da coluna e das diagonais do herói
+// travava as oito direções. Empate resolvido pela ordem do conjunto, para o
+// resultado ser determinístico. Função pura: recebe e devolve coordenadas, para
+// poder ser testada fora do navegador.
+function _aimCasaMaisProximaPermitida(origem, permitido){
+  if(!origem || !permitido || !permitido.size) return null;
+  let melhor = null, melhorDist = Infinity;
+  for(const chave of permitido){
+    const [x, y] = String(chave).split(',').map(Number);
+    if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
+    const d = Math.max(Math.abs(x - origem[0]), Math.abs(y - origem[1]));
+    if(d < melhorDist){ melhorDist = d; melhor = [x, y]; }
+  }
+  return melhor;
+}
+
 function _aimGamepadStep(state, dx, dy){
   const cursor = _gamepadEnsureCursor(state);
   if(!cursor || !state?.tiles) return false;
@@ -21862,7 +22510,10 @@ function _aimSeedGamepadCursor(){
       if(d < melhorDist){ melhorDist = d; melhor = casa; }
     }
   }
-  const alvo = melhor || (dentro(origem) ? origem : null);
+  // Sem monstro no alcance e com o herói fora dele, a semente cai na casa
+  // permitida mais próxima em vez de desistir — ver _aimCasaMaisProximaPermitida.
+  const alvo = melhor
+    || (dentro(origem) ? origem : _aimCasaMaisProximaPermitida(origem, permitido));
   if(!alvo) return;
   const cursor = _gamepadEnsureCursor(state);
   if(!cursor) return;
@@ -22140,6 +22791,18 @@ function _gamepadCancel(){
     _aimEnd();
     return;
   }
+  const senhorAguasOverlay = document.getElementById('senhor-aguas-overlay');
+  if(senhorAguasOverlay?.classList.contains('open')){
+    _fecharJanelaSenhorDasAguas();
+    _gamepadSetUiFocus(null);
+    return;
+  }
+  const iraRochaOverlay = document.getElementById('ira-rocha-overlay');
+  if(iraRochaOverlay?.classList.contains('open')){
+    _fecharJanelaIraRocha();
+    _gamepadSetUiFocus(null);
+    return;
+  }
   const modalCancel = document.querySelector('#encerrar-missao-overlay [data-gamepad-cancel], #exit-dungeon-overlay [data-gamepad-cancel], #inv-unequip-flight-confirm [data-gamepad-cancel]');
   if(modalCancel){
     modalCancel.click();
@@ -22241,7 +22904,7 @@ function _gamepadNearbyInteraction(state, player){
 
   const decor = (GS.decorations || []).filter(d => {
     const interactive = d.tem_loot || d.chest_trap || d.trap || d.key_objective
-      || d.special === 'fountain' || d.interactive;
+      || d.special === 'fountain' || d.special === 'plaque' || d.interactive;
     return interactive && GS.decorTilesOf(d).some(adjacent);
   }).sort((a,b) => String(a.id).localeCompare(String(b.id)))[0];
   if(decor) return { kind:'decor', key:`decor:${decor.id}`, decor, icon:decor.emoji || '✋' };
@@ -22419,7 +23082,7 @@ function _gamepadUsefulTargetTiles(state){
       if(Math.max(Math.abs(me.pos[0] - chest.pos[0]), Math.abs(me.pos[1] - chest.pos[1])) <= 2) add(chest.pos[0], chest.pos[1], 2);
     }
     for(const decor of GS.decorations || []){
-      const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain';
+      const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain' || decor.special === 'plaque';
       if(interativa) add(decor.pos[0], decor.pos[1], 3);
     }
     const { closed } = GS.doorSets(state);
@@ -22547,6 +23210,7 @@ function _pollGamepad(now){
   const wasActive = _gamepadInput.active;
   _gamepadInput.index = pad.index;
   _gamepadInput.active = true;
+  if(!wasActive) _gamepadRecoverSenhorAguasFocus();
   if(_gamepadBindingCapture){
     const pressed = Array.from(pad.buttons).findIndex((button, index) => !!button.pressed && !_gamepadInput.buttons[index]);
     if(pressed >= 0){
@@ -23547,7 +24211,7 @@ function _gamepadContextForCursor(state, player){
 
   const decor = (GS.decorations || []).find(d => GS.decorTilesOf(d).some(([x,y]) => x === tx && y === ty));
   if(decor){
-    const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain';
+    const interativa = decor.tem_loot || decor.chest_trap || decor.trap || decor.key_objective || decor.special === 'fountain' || decor.special === 'plaque';
     if(interativa) return label('ui.joystick.contexto_interagir', '✋');
     if(!decor.pisavel) return label('ui.joystick.contexto_sem_acao', '—');
   }
@@ -24957,6 +25621,534 @@ function _receberAnimacaoSenhorAguas(msg){
   if(!_senhorAguasRaf) _senhorAguasRaf = _scheduleVisualFrame(_tickSenhorAguas);
 }
 
+// ── Ira da Rocha Ardente — fissura vulcânica, lava e Chamas Vivas ─────────
+// A animação acompanha somente eventos autoritativos do servidor. O terreno,
+// o dano e a duração continuam sendo lidos do game_state; este bloco apenas
+// dramatiza a viagem da rocha, a abertura das fissuras e o nascimento das
+// chamas escolhidas pelo clérigo.
+const _iraRochaAnims = [];
+let _iraRochaRaf = null;
+const IRA_ROCHA_DEFAULT_TRAVEL_MS = 820;
+const IRA_ROCHA_DEFAULT_IMPACT_MS = 980;
+
+function _iraRochaHash(n){
+  n = (n | 0) ^ 0x6d2b79f5;
+  n = Math.imul(n ^ (n >>> 15), 0x1b873593);
+  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
+}
+
+function _iraRochaAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
+  const tiles = (Array.isArray(msg.tiles) ? msg.tiles : [])
+    .filter(p => Array.isArray(p) && p.length >= 2)
+    .map(p => [Number(p[0]), Number(p[1])]);
+  const flames = (Array.isArray(msg.flames) ? msg.flames : tiles)
+    .filter(p => Array.isArray(p) && p.length >= 2)
+    .map(p => [Number(p[0]), Number(p[1])]);
+  const isFlames = msg.phase === 'flames';
+  const travelMs = Math.max(220, Number(msg.travel_ms)
+    || (isFlames ? 260 : IRA_ROCHA_DEFAULT_TRAVEL_MS));
+  const impactMs = Math.max(360, Number(msg.impact_ms)
+    || (isFlames ? 720 : IRA_ROCHA_DEFAULT_IMPACT_MS));
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    zoneId: msg.zone_id == null ? null : String(msg.zone_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    origin, center, tiles: isFlames ? [] : tiles, flames: isFlames ? flames : [],
+    isFlames, travelMs, impactMs, start: performance.now(),
+    duration: travelMs + impactMs + (isFlames ? 520 : 600),
+    seed: ((origin[0] * 73856093) ^ (origin[1] * 19349663)
+      ^ (center[0] * 83492791) ^ Date.now()) >>> 0,
+    impactPlayed: false, group: null, orb: null, orbGlow: null,
+    trail: [], fissure: [], tileMeshes: [], tileRings: [], flameColumns: [],
+  };
+}
+
+function _iraRochaProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  return {
+    elapsed,
+    travel: Math.min(1, elapsed / anim.travelMs),
+    impact: Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs)),
+    impacting: elapsed >= anim.travelMs,
+    finished: elapsed >= anim.duration,
+  };
+}
+
+function _iraRochaTileVisible(state, pos){
+  if(!state || !Array.isArray(pos)) return false;
+  if(GS.isMaster() || state.test_mode) return true;
+  const visible = new Set([...(state.explored || []), ...(state.revealed || [])]
+    .map(([x,y]) => `${x},${y}`));
+  return visible.has(`${pos[0]},${pos[1]}`);
+}
+
+function _iraRochaVisible(anim, state){
+  return _iraRochaTileVisible(state, anim.origin)
+    || _iraRochaTileVisible(state, anim.center)
+    || anim.tiles.some(pos => _iraRochaTileVisible(state, pos))
+    || anim.flames.some(pos => _iraRochaTileVisible(state, pos));
+}
+
+function _iraRochaBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group();
+  group.name = anim.isFlames ? 'ira-rocha-chamas-vivas' : 'ira-rocha-ardente';
+  const hot = 0xff4a00, orange = 0xff8a12, bright = 0xffe78a;
+  const glowMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+  const orbMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+  anim.orbGlow = new T.Mesh(new T.SphereGeometry(.34, 14, 10), glowMat);
+  anim.orb = new T.Mesh(new T.DodecahedronGeometry(.20, 0), orbMat);
+  group.add(anim.orbGlow, anim.orb);
+
+  for(let i=0;i<14;i++){
+    const mat = new T.MeshBasicMaterial({color:i%3 ? orange : bright, transparent:true,
+      opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const mesh = new T.Mesh(new T.SphereGeometry(i<6 ? .045 : .028, 7, 5), mat);
+    mesh.userData.index = i; group.add(mesh); anim.trail.push(mesh);
+  }
+
+  for(const [x,z] of anim.tiles){
+    const tileMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
+      depthWrite:false, depthTest:false, side:T.DoubleSide, blending:T.AdditiveBlending});
+    const tile = new T.Mesh(new T.PlaneGeometry(.90, .90), tileMat);
+    tile.rotation.x = -Math.PI/2; tile.position.set(x, .285, z); tile.scale.setScalar(.01);
+    tile.renderOrder = 61; group.add(tile); anim.tileMeshes.push({x,z,tile});
+    const ringMat = new T.MeshBasicMaterial({color:bright, transparent:true, opacity:0,
+      depthWrite:false, depthTest:false, side:T.DoubleSide, blending:T.AdditiveBlending});
+    const ring = new T.Mesh(new T.TorusGeometry(.22, .025, 7, 28), ringMat);
+    ring.rotation.x = -Math.PI/2; ring.position.set(x, .34, z); ring.renderOrder = 64;
+    group.add(ring); anim.tileRings.push({x,z,ring});
+  }
+  for(const [x,z] of anim.flames){
+    const columnMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0,
+      depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const column = new T.Mesh(new T.ConeGeometry(.12, .62, 7), columnMat);
+    column.position.set(x, .55, z); column.scale.setScalar(.04); column.renderOrder = 70;
+    group.add(column); anim.flameColumns.push({x,z,column});
+    for(let j=0;j<3;j++){
+      const flameMat = new T.MeshBasicMaterial({color:j===0 ? bright : orange,
+        transparent:true, opacity:0, depthWrite:false, depthTest:false,
+        blending:T.AdditiveBlending});
+      const flame = new T.Mesh(new T.ConeGeometry(.045 + j*.012, .20 + j*.05, 7), flameMat);
+      flame.userData.flameIndex = j; flame.position.set(x + (j-1)*.06, .72, z);
+      flame.renderOrder = 71; group.add(flame); anim.flameColumns.push({x,z,column:flame, flame:true});
+    }
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _iraRochaDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material])
+      .forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _iraRochaUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _iraRochaDispose3D(anim); if(!_iraRochaBuild3D(anim)) return; }
+  const p = _iraRochaProgress(anim, now), T = window.THREE;
+  const dx = anim.center[0]-anim.origin[0], dz = anim.center[1]-anim.origin[1];
+  const front = [anim.origin[0] + dx*p.travel, anim.origin[1] + dz*p.travel];
+  const fade = p.finished ? Math.max(0, 1-(p.elapsed-anim.duration)/300) : 1;
+  const pulse = .80 + .20*Math.sin(now/70);
+  const flight = !anim.isFlames && !p.impacting;
+  anim.orb.visible = anim.orbGlow.visible = flight;
+  anim.orb.position.set(front[0], .70, front[1]); anim.orbGlow.position.set(front[0], .70, front[1]);
+  anim.orb.scale.setScalar(.75 + .25*pulse); anim.orbGlow.scale.setScalar(1 + .18*pulse);
+  for(const mote of anim.trail){
+    const i=mote.userData.index, q=Math.max(0,p.travel-(i+1)*.045);
+    const sway=Math.sin(now/78+i*1.7)*(.025+i*.003);
+    mote.visible=flight && q>0; mote.position.set(anim.origin[0]+dx*q+sway,.61+i*.007,anim.origin[1]+dz*q+sway);
+    mote.material.opacity=flight ? Math.max(0,1-i/anim.trail.length)*.84 : 0;
+  }
+  const e = p.impact, impactFade = Math.sin(Math.PI*Math.min(1,e));
+  for(let i=0;i<anim.tileMeshes.length;i++){
+    const item=anim.tileMeshes[i], dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
+    const reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-dist*34)/Math.max(260,anim.impactMs*.72)));
+    item.tile.scale.setScalar(.01+reveal*.99); item.tile.material.opacity=(.10+.24*reveal)*fade;
+  }
+  for(let i=0;i<anim.tileRings.length;i++){
+    const item=anim.tileRings[i], reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-i*28)/Math.max(240,anim.impactMs*.70)));
+    item.ring.rotation.z=now/240+i; item.ring.scale.setScalar(.30+reveal*(.95+.12*pulse));
+    item.ring.material.opacity=(.26+.65*impactFade)*reveal*fade;
+  }
+  for(const item of anim.flameColumns){
+    const j=item.column.userData.flameIndex ?? 0;
+    const q=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-(j*55))/Math.max(260,anim.impactMs*.65)));
+    item.column.scale.setScalar(q*(.82+.22*Math.sin(now/75+j)));
+    item.column.rotation.z=Math.sin(now/90+j)*.16; item.column.material.opacity=.82*q*fade;
+    item.column.position.y=item.flame ? .68+.05*Math.sin(now/100+j) : .55+.08*q;
+  }
+  // A pequena esfera some no impacto; os próprios tiles e colunas assumem a cena.
+  if(!anim.isFlames && p.impacting){
+    anim.orb.visible=anim.orbGlow.visible=false;
+    if(anim.group.userData.impactRing == null){
+      const mat=new T.MeshBasicMaterial({color:bright,transparent:true,opacity:0,
+        depthWrite:false,depthTest:false,blending:T.AdditiveBlending,side:T.DoubleSide});
+      const ring=new T.Mesh(new T.TorusGeometry(.30,.045,8,36),mat); ring.rotation.x=Math.PI/2;
+      ring.position.set(anim.center[0],.36,anim.center[1]); ring.renderOrder=68; anim.group.add(ring); anim.group.userData.impactRing=ring;
+    }
+    const ring=anim.group.userData.impactRing; ring.scale.setScalar(.35+e*2.15); ring.material.opacity=.92*impactFade*fade;
+  }
+}
+
+function _iraRochaDraw2D(ctx, state, anim, now){
+  if(!_iraRochaVisible(anim,state)) return;
+  const p=_iraRochaProgress(anim,now), fade=p.finished?Math.max(0,1-(p.elapsed-anim.duration)/300):1;
+  const ox=anim.origin[0]*CELL+CELL/2, oy=anim.origin[1]*CELL+CELL/2;
+  const cx=anim.center[0]*CELL+CELL/2, cy=anim.center[1]*CELL+CELL/2;
+  const fx=ox+(cx-ox)*p.travel, fy=oy+(cy-oy)*p.travel;
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
+  if(!anim.isFlames && !p.impacting){
+    ctx.shadowColor='#ff4a00'; ctx.shadowBlur=CELL*.24; ctx.strokeStyle='rgba(255,92,8,.60)'; ctx.lineWidth=Math.max(5,CELL*.12);
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();
+    for(let i=0;i<11;i++){
+      const q=Math.max(0,p.travel-i*.055), sx=ox+(fx-ox)*q/p.travel||fx, sy=oy+(fy-oy)*q/p.travel||fy;
+      ctx.fillStyle=`rgba(255,${95+(i%3)*35},18,${(.72-i*.045).toFixed(3)})`;
+      ctx.beginPath();ctx.arc(sx,sy-CELL*.04,Math.max(2,CELL*(.025+(i%3)*.012)),0,Math.PI*2);ctx.fill();
+    }
+    if(_iraRochaTileVisible(state,anim.origin)||_iraRochaTileVisible(state,anim.center)){
+      const r=CELL*(.20+.05*Math.sin(now/55));
+      const hot=ctx.createRadialGradient(fx,fy,0,fx,fy,r*2.4); hot.addColorStop(0,'rgba(255,252,190,.98)'); hot.addColorStop(.34,'rgba(255,161,18,.95)'); hot.addColorStop(1,'rgba(160,10,0,0)');
+      ctx.fillStyle=hot;ctx.beginPath();ctx.arc(fx,fy,r*2.4,0,Math.PI*2);ctx.fill();
+    }
+  }
+  const impactFade=Math.sin(Math.PI*Math.min(1,p.impact));
+  for(let i=0;i<anim.tiles.length;i++){
+    const pos=anim.tiles[i]; if(!_iraRochaTileVisible(state,pos)) continue;
+    const reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-Math.hypot(pos[0]-anim.center[0],pos[1]-anim.center[1])*34)/Math.max(260,anim.impactMs*.72)));
+    if(reveal<=0) continue;
+    const x=pos[0]*CELL+CELL/2,y=pos[1]*CELL+CELL/2;
+    const g=ctx.createRadialGradient(x,y,0,x,y,CELL*.75);g.addColorStop(0,`rgba(255,240,160,${(.78*reveal*fade).toFixed(3)})`);g.addColorStop(.32,`rgba(255,75,0,${(.70*reveal*fade).toFixed(3)})`);g.addColorStop(1,'rgba(150,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-CELL*.75,y-CELL*.75,CELL*1.5,CELL*1.5);
+    ctx.strokeStyle=`rgba(255,190,48,${((.36+.58*impactFade)*reveal*fade).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.beginPath();ctx.arc(x,y,CELL*(.16+.20*reveal),0,Math.PI*2);ctx.stroke();
+    for(let k=0;k<4;k++){const a=_iraRochaHash(anim.seed+i*31+k*17)*Math.PI*2, len=CELL*(.16+.18*reveal);ctx.beginPath();ctx.moveTo(x+Math.cos(a)*CELL*.10,y+Math.sin(a)*CELL*.10);ctx.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);ctx.stroke();}
+  }
+  for(const pos of anim.flames){
+    if(!_iraRochaTileVisible(state,pos)) continue;
+    const x=pos[0]*CELL+CELL/2,y=pos[1]*CELL+CELL/2,q=Math.max(0,Math.min(1,p.impact));
+    for(let i=0;i<5;i++){const a=_iraRochaHash(anim.seed+i*23+pos[0]*7+pos[1]*11)*Math.PI*2,r=CELL*(.06+i*.025),h=CELL*(.12+.10*((i%3)+q));ctx.fillStyle=i===0?`rgba(255,238,132,${(.9*q*fade).toFixed(3)})`:`rgba(255,${75+(i%2)*55},8,${(.82*q*fade).toFixed(3)})`;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.quadraticCurveTo(x+Math.cos(a)*r*1.8,y+Math.sin(a)*r*1.8-h,x+Math.cos(a)*r*.35,y+Math.sin(a)*r*.35-h*1.25);ctx.quadraticCurveTo(x-Math.cos(a)*r,y-Math.sin(a)*r,x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.fill();}
+  }
+  ctx.restore();
+}
+
+function _iraRochaPlayImpactSound(anim){
+  _playCombatCue('fire', {repeatKey:`ira-rocha:${anim.animationId || anim.start}:impact`, power:1.35, volume:.95});
+}
+
+function _tickIraRocha(now){
+  let active=false;
+  for(let i=_iraRochaAnims.length-1;i>=0;i--){
+    const anim=_iraRochaAnims[i], p=_iraRochaProgress(anim,now);
+    if(p.impacting && !anim.impactPlayed){anim.impactPlayed=true;_iraRochaPlayImpactSound(anim);_liberarDadosMagia();if(mode3D&&GS.gameState)renderMap3D(GS.gameState);}
+    if(p.finished){_iraRochaDispose3D(anim);_iraRochaAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_iraRochaUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _iraRochaRaf=active?_scheduleVisualFrame(_tickIraRocha):null;
+}
+
+function _receberAnimacaoIraRocha(msg){
+  if(!msg || msg.spell_id!=='ira_rocha_ardente') return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='start'){
+    if(id!=null && _iraRochaAnims.some(a=>a.animationId===id)) return;
+    const anim=_iraRochaAnimFromMessage(msg);_iraRochaAnims.push(anim);
+    _playCombatCue('fire',{repeatKey:`ira-rocha:${id||'start'}`,power:1.05,volume:.90});
+  } else if(msg.phase==='flames'){
+    const anim=_iraRochaAnimFromMessage({...msg, flames:msg.tiles||[]});_iraRochaAnims.push(anim);
+    _playCombatCue('fire',{repeatKey:`ira-rocha:${id||'flames'}`,power:.72,volume:.75});
+  }
+  if(!_iraRochaRaf)_iraRochaRaf=_scheduleVisualFrame(_tickIraRocha);
+}
+
+// ── Prisão de Chamas — projétil de fogo e erupção sequencial das bordas ─────
+// A zona persistente continua sendo autoritativa no game_state. Esta animação
+// é apenas o momento da conjuração: o fogo viaja até o centro e se espalha
+// pelas casas de borda, evitando que a prisão simplesmente apareça pronta.
+const _prisaoChamasAnims = [];
+let _prisaoChamasRaf = null;
+const PRISAO_CHAMAS_DEFAULT_TRAVEL_MS = 720;
+const PRISAO_CHAMAS_DEFAULT_IMPACT_MS = 980;
+
+function _prisaoChamasAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
+  const flames = (Array.isArray(msg.tiles) ? msg.tiles : (msg.flame_tiles || []))
+    .filter(p => Array.isArray(p) && p.length >= 2).map(p => [Number(p[0]), Number(p[1])]);
+  const travelMs = Math.max(260, Number(msg.travel_ms) || PRISAO_CHAMAS_DEFAULT_TRAVEL_MS);
+  const impactMs = Math.max(460, Number(msg.impact_ms) || PRISAO_CHAMAS_DEFAULT_IMPACT_MS);
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    origin, center, flames, tiles: flames, side: Number(msg.side) || 2, travelMs, impactMs,
+    start: performance.now(), duration: travelMs + impactMs + 640,
+    seed: ((origin[0] * 73856093) ^ (origin[1] * 19349663)
+      ^ (center[0] * 83492791) ^ (center[1] * 2971215073) ^ Date.now()) >>> 0,
+    impactPlayed: false, group: null, orb: null, orbGlow: null,
+    beamGlow: null, beamCore: null, impactRing: null, impactFlash: null,
+    rings: [], flames3d: [], livingFlames: []
+  };
+}
+
+function _prisaoChamasProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  return {
+    elapsed, travel: Math.min(1, elapsed / anim.travelMs),
+    impact: Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs)),
+    impacting: elapsed >= anim.travelMs, finished: elapsed >= anim.duration
+  };
+}
+
+function _prisaoChamasSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _prisaoChamasBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'prisao-de-chamas-animation';
+  const hot = 0xff3c00, orange = 0xff8a13, bright = 0xffe7a0;
+  const glowMat = new T.LineBasicMaterial({color:hot, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:bright, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat);
+  anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 73; anim.beamCore.renderOrder = 74;
+  group.add(anim.beamGlow, anim.beamCore);
+  const orbGlowMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const orbMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.orbGlow = new T.Mesh(new T.SphereGeometry(.30, 12, 8), orbGlowMat);
+  anim.orb = new T.Mesh(new T.DodecahedronGeometry(.16, 0), orbMat);
+  group.add(anim.orbGlow, anim.orb);
+  const burstMat = new T.MeshBasicMaterial({color:bright, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const flashMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.impactRing = new T.Mesh(new T.TorusGeometry(.28, .045, 8, 36), burstMat);
+  anim.impactFlash = new T.Mesh(new T.SphereGeometry(.20, 12, 8), flashMat);
+  anim.impactRing.rotation.x = Math.PI / 2; anim.impactRing.renderOrder = 76; anim.impactFlash.renderOrder = 77;
+  group.add(anim.impactRing, anim.impactFlash);
+  anim.flames.forEach(([x, z], tileIndex) => {
+    const ringMat = new T.MeshBasicMaterial({color:bright, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    const ring = new T.Mesh(new T.TorusGeometry(.30, .025, 7, 28), ringMat);
+    ring.rotation.x = Math.PI / 2; ring.position.set(x, .34, z); ring.renderOrder = 68;
+    group.add(ring); anim.rings.push({ring, tileIndex});
+    for(let j = 0; j < 3; j++){
+      const mat = new T.MeshBasicMaterial({color:j === 0 ? bright : orange, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+      const flame = new T.Mesh(new T.ConeGeometry(.055 + j * .016, .28 + j * .08, 7), mat);
+      flame.position.set(x + (j - 1) * .07, .52, z + (j % 2 ? .025 : -.025));
+      flame.userData.phase = tileIndex * .71 + j * 1.8 + anim.seed * .00001;
+      flame.renderOrder = 78; group.add(flame); anim.flames3d.push({flame, tileIndex, j});
+    }
+  });
+  g3.scene.add(group); anim.group = group;
+  // A borda usa o mesmo GLB animado da decoração Chama Viva. Os cones acima
+  // permanecem como fallback imediato enquanto o modelo é carregado.
+  const flamePath = (typeof DECOR_GLB_TYPES !== 'undefined' && DECOR_GLB_TYPES.chama_viva)
+    || 'assets/objetos/chama_viva.glb';
+  _loadDecorGLB(T, flamePath, template => {
+    if(!template || !anim.group || anim.group.parent !== g3.scene) return;
+    const clips = (template.userData && template.userData._gltfAnimations) || [];
+    for(const [x, z] of anim.flames){
+      const inst = template.clone(true), box = new T.Box3().setFromObject(inst);
+      const size = box.getSize(new T.Vector3());
+      const fit = Math.min(.84 / Math.max(size.x, 1e-3), .84 / Math.max(size.z, 1e-3), .98 / Math.max(size.y, 1e-3));
+      inst.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
+      inst.traverse(o => { if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+      const wrap = new T.Group(); wrap.position.set(x, DECOR_GLB_FLOOR_Y, z); wrap.add(inst); wrap.scale.setScalar(fit);
+      const mixer = clips.length ? new T.AnimationMixer(inst) : null;
+      if(mixer) for(const clip of clips) mixer.clipAction(clip).play();
+      wrap.visible = false; wrap.renderOrder = 79; anim.group.add(wrap);
+      anim.livingFlames.push({wrap, mixer, baseScale: fit, lastAt: performance.now()});
+    }
+    // Quando o GLB chega, esconde somente as labaredas procedurais, mantendo
+    // anéis e brilho da animação da prisão ativos.
+    for(const item of anim.flames3d) item.flame.visible = false;
+  });
+  return true;
+}
+
+function _prisaoChamasDispose3D(anim){
+  if(!anim.group) return;
+  for(const item of (anim.livingFlames || [])) item.mixer?.stopAllAction();
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _prisaoChamasUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _prisaoChamasDispose3D(anim); if(!_prisaoChamasBuild3D(anim)) return; }
+  const T = window.THREE, p = _prisaoChamasProgress(anim, now);
+  const dx = anim.center[0] - anim.origin[0], dz = anim.center[1] - anim.origin[1];
+  const fx = anim.origin[0] + dx * p.travel, fz = anim.origin[1] + dz * p.travel;
+  const flight = !p.impacting, pulse = .82 + .18 * Math.sin(now / 65);
+  _prisaoChamasSetLine(anim.beamGlow, [new T.Vector3(anim.origin[0], .70, anim.origin[1]), new T.Vector3(fx, .70, fz)], T);
+  _prisaoChamasSetLine(anim.beamCore, [new T.Vector3(anim.origin[0], .71, anim.origin[1]), new T.Vector3(fx, .71, fz)], T);
+  anim.beamGlow.visible = anim.beamCore.visible = flight;
+  anim.beamGlow.material.opacity = flight ? .48 * (1 - p.travel * .35) : 0;
+  anim.beamCore.material.opacity = flight ? .92 * (1 - p.travel * .30) : 0;
+  anim.orb.visible = anim.orbGlow.visible = flight;
+  anim.orb.position.set(fx, .72 + .06 * Math.sin(now / 80), fz);
+  anim.orbGlow.position.copy(anim.orb.position);
+  anim.orb.scale.setScalar(.82 + .22 * pulse); anim.orbGlow.scale.setScalar(1.0 + .24 * pulse);
+  anim.orb.material.opacity = flight ? .88 : 0; anim.orbGlow.material.opacity = flight ? .45 : 0;
+  const impactFade = Math.sin(Math.PI * p.impact);
+  anim.impactRing.position.set(anim.center[0], .36, anim.center[1]);
+  anim.impactRing.scale.setScalar(.35 + p.impact * 2.2); anim.impactRing.material.opacity = .92 * impactFade;
+  anim.impactFlash.position.set(anim.center[0], .72, anim.center[1]);
+  anim.impactFlash.scale.setScalar(.25 + p.impact * .95); anim.impactFlash.material.opacity = .62 * impactFade;
+  const stagger = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  for(const item of anim.rings){
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger) / Math.max(260, anim.impactMs * .72)));
+    item.ring.scale.setScalar(.32 + q * (1.0 + .10 * pulse));
+    item.ring.rotation.z = now / 210 + item.tileIndex;
+    item.ring.material.opacity = .66 * q;
+  }
+  for(const item of anim.flames3d){
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger - item.j * 38) / Math.max(300, anim.impactMs * .65)));
+    item.flame.scale.set(.82 + .18 * pulse, q * (.86 + .20 * Math.sin(now / 75 + item.flame.userData.phase)), .82 + .18 * pulse);
+    item.flame.rotation.z = Math.sin(now / 92 + item.flame.userData.phase) * .14;
+    item.flame.material.opacity = .82 * q;
+  }
+  const staggerLiving = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  for(let i = 0; i < anim.livingFlames.length; i++){
+    const item = anim.livingFlames[i];
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - i * staggerLiving) / Math.max(300, anim.impactMs * .65)));
+    item.wrap.visible = q > 0;
+    item.wrap.scale.setScalar(item.baseScale * (.72 + .28 * q) * (0.94 + .06 * pulse));
+    if(item.mixer){
+      item.mixer.update(Math.min(.1, Math.max(0, (now - item.lastAt) / 1000)));
+      item.lastAt = now;
+    }
+  }
+  _animarChamasVivasPersistentes3D(now);
+}
+
+// A Prisão de Chamas mantém a arte animada da decoração Chama Viva durante
+// toda a vida da zona. Cada casa tem seu próprio mixer, mas todos avançam no
+// mesmo loop 3D para que o efeito continue ativo mesmo sem novos game_state.
+function _animarChamasVivasPersistentes3D(now){
+  if(!g3?.spellLivingFlameFx) return;
+  for(const fx of Object.values(g3.spellLivingFlameFx)){
+    if(!fx || !fx.group?.visible) continue;
+    for(const item of (fx.livingFlames || [])){
+      const t = now / 1000 + (item.phase || 0);
+      // O GLB fornece a forma base; estes movimentos irregulares dão à
+      // labareda o comportamento de fogo crepitando, em vez de um objeto
+      // estático repetido em cada casa da parede.
+      if(item.wrap){
+        const pulseY = .96 + .10 * Math.sin(t * 7.4) + .045 * Math.sin(t * 13.7 + 1.2);
+        item.wrap.scale.set(
+          item.baseScale * (.98 + .055 * Math.sin(t * 8.1 + .4)),
+          item.baseScale * pulseY,
+          item.baseScale * (.98 + .06 * Math.sin(t * 9.3 + 1.7))
+        );
+        item.wrap.rotation.x = .035 * Math.sin(t * 5.1 + 1.1);
+        item.wrap.rotation.z = .055 * Math.sin(t * 4.3 + .7);
+        item.wrap.position.x = .018 * Math.sin(t * 5.7 + 2.0);
+        item.wrap.position.z = .014 * Math.sin(t * 6.6 + .3);
+      }
+      if(item.mixer){
+        const dt = Math.min(.1, Math.max(0, now - (item.lastAt || now)) / 1000);
+        item.mixer.update(dt);
+        item.lastAt = now;
+      }
+    }
+    // Pequenas brasas sobem e desaparecem em ciclos desencontrados, reforçando
+    // o aspecto de chama viva mesmo quando o GLB não contém clipes próprios.
+    for(const ember of (fx.embers || [])){
+      const u = ember.userData || {}, life = ((now / 1000) * (u.speed || 1) + (u.phase || 0)) % 1;
+      const fade = Math.sin(Math.PI * life);
+      ember.position.x = (u.baseX || 0) + .035 * Math.sin(now / 1000 * 5.5 + (u.phase || 0));
+      ember.position.z = (u.baseZ || 0) + .028 * Math.cos(now / 1000 * 4.8 + (u.phase || 0));
+      ember.position.y = DECOR_GLB_FLOOR_Y + .08 + life * .50;
+      ember.visible = fade > .025;
+      if(ember.material) ember.material.opacity = .12 + .78 * fade;
+      ember.scale.setScalar(.55 + .65 * fade);
+    }
+  }
+}
+
+function _prisaoChamasDraw2D(ctx, state, anim, now){
+  if(!_iraRochaVisible(anim, state)) return;
+  const p = _prisaoChamasProgress(anim, now), fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.duration) / 300) : 1;
+  const ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const cx = anim.center[0] * CELL + CELL / 2, cy = anim.center[1] * CELL + CELL / 2;
+  const fx = ox + (cx - ox) * p.travel, fy = oy + (cy - oy) * p.travel;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  if(!p.impacting){
+    ctx.shadowColor = '#ff4a00'; ctx.shadowBlur = CELL * .22;
+    ctx.strokeStyle = 'rgba(255,84,8,.68)'; ctx.lineWidth = Math.max(5, CELL * .11);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+    for(let i = 0; i < 10; i++){
+      const q = Math.max(0, p.travel - i * .06), sx = ox + (fx - ox) * q / Math.max(.001, p.travel), sy = oy + (fy - oy) * q / Math.max(.001, p.travel);
+      ctx.fillStyle = `rgba(255,${90 + (i % 3) * 35},18,${(.72 - i * .045).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(sx, sy, Math.max(2, CELL * (.025 + (i % 3) * .012)), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  const impactFade = Math.sin(Math.PI * p.impact);
+  const burst = CELL * (.18 + p.impact * .42);
+  ctx.strokeStyle = `rgba(255,226,100,${(.85 * impactFade * fade).toFixed(3)})`;
+  ctx.lineWidth = Math.max(2, CELL * .045); ctx.beginPath(); ctx.arc(cx, cy, burst, 0, Math.PI * 2); ctx.stroke();
+  const stagger = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  anim.flames.forEach(([tx, ty], tileIndex) => {
+    if(!_iraRochaTileVisible(state, [tx, ty])) return;
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - tileIndex * stagger) / Math.max(260, anim.impactMs * .72)));
+    if(q <= 0) return;
+    const x = tx * CELL + CELL / 2, y = ty * CELL + CELL / 2;
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, CELL * .72);
+    glow.addColorStop(0, `rgba(255,239,140,${(.78 * q * fade).toFixed(3)})`);
+    glow.addColorStop(.35, `rgba(255,75,0,${(.66 * q * fade).toFixed(3)})`);
+    glow.addColorStop(1, 'rgba(150,0,0,0)'); ctx.fillStyle = glow; ctx.fillRect(x - CELL * .72, y - CELL * .72, CELL * 1.44, CELL * 1.44);
+    ctx.strokeStyle = `rgba(255,194,42,${(.55 * q * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .03);
+    ctx.beginPath(); ctx.arc(x, y, CELL * (.16 + .20 * q), 0, Math.PI * 2); ctx.stroke();
+    for(let j = 0; j < 3; j++){
+      const phase = _iraRochaHash(anim.seed + tileIndex * 31 + j * 19), a = phase * Math.PI * 2;
+      const r = CELL * (.06 + j * .03), h = CELL * (.16 + j * .07) * q;
+      ctx.fillStyle = j === 0 ? `rgba(255,240,150,${(.88 * q * fade).toFixed(3)})` : `rgba(255,${76 + j * 34},8,${(.80 * q * fade).toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r);
+      ctx.quadraticCurveTo(x + Math.cos(a) * r * 1.8, y + Math.sin(a) * r * 1.8 - h, x + Math.cos(a) * r * .25, y + Math.sin(a) * r * .25 - h * 1.25);
+      ctx.quadraticCurveTo(x - Math.cos(a) * r, y - Math.sin(a) * r, x + Math.cos(a) * r, y + Math.sin(a) * r); ctx.fill();
+    }
+  });
+  ctx.restore();
+}
+
+function _tickPrisaoChamas(now){
+  let active = false;
+  for(let i = _prisaoChamasAnims.length - 1; i >= 0; i--){
+    const anim = _prisaoChamasAnims[i], p = _prisaoChamasProgress(anim, now);
+    if(p.impacting && !anim.impactPlayed){
+      anim.impactPlayed = true;
+      _playCombatCue('fire', {repeatKey:`prisao-chamas:${anim.animationId || anim.start}:impact`, power:1.42, volume:.96});
+      _liberarDadosMagia();
+    }
+    if(p.finished){ _prisaoChamasDispose3D(anim); _prisaoChamasAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _prisaoChamasUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _prisaoChamasRaf = active ? _scheduleVisualFrame(_tickPrisaoChamas) : null;
+}
+
+function _receberAnimacaoPrisaoChamas(msg){
+  if(!msg || msg.spell_id !== 'prisao_chamas' || msg.phase !== 'start') return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(id != null && _prisaoChamasAnims.some(a => a.animationId === id)) return;
+  const anim = _prisaoChamasAnimFromMessage(msg); _prisaoChamasAnims.push(anim);
+  _playCombatCue('fire', {repeatKey:`prisao-chamas:${id || 'start'}`, power:1.08, volume:.92});
+  if(!_prisaoChamasRaf) _prisaoChamasRaf = _scheduleVisualFrame(_tickPrisaoChamas);
+}
+
 // ── Conjurar Elemental — círculo, coluna de energia e materialização ──────
 const _conjurarElementalAnims = [];
 let _conjurarElementalRaf = null;
@@ -25606,6 +26798,1366 @@ function _receberAnimacaoCura(msg){
   const anim = _curaAnimFromMessage(msg); _curaAnims.push(anim);
   _playCombatCue('holy', {repeatKey:`spell:${id || msg.spell_id}`, volume:.92});
   if(!_curaRaf) _curaRaf = _scheduleVisualFrame(_tickCura);
+}
+
+// ── Purificação — luz sagrada que quebra o efeito negativo ────────────────
+const _purificacaoAnims = [];
+let _purificacaoRaf = null;
+const _PURIFICACAO_FX = {
+  veneno:      {color:0x9dff6e, light:0xe8ffd1, icon:'☠️'},
+  doenca:      {color:0x7dffd0, light:0xe1fff4, icon:'☣️'},
+  maldicao:    {color:0xd49aff, light:0xf3ddff, icon:'☠'},
+  petrificacao:{color:0xf0e8c8, light:0xffffff, icon:'🪨'},
+};
+
+function _purificacaoAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  const tipo = String(msg.effect_type || 'veneno').toLowerCase();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target, tipo, fx:_PURIFICACAO_FX[tipo] || _PURIFICACAO_FX.veneno,
+    travelMs: Math.max(260, Number(msg.travel_ms) || 540),
+    impactMs: Math.max(420, Number(msg.impact_ms) || 900),
+    start: performance.now(), success:null,
+    group:null, beamGlow:null, beamCore:null, ring:null, innerRing:null,
+    column:null, shards:[]
+  };
+}
+
+function _purificacaoProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 720};
+}
+
+function _purificacaoSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _purificacaoBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'purificacao-animation';
+  const glowMat = new T.LineBasicMaterial({color:anim.fx.color, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:anim.fx.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamGlow.renderOrder = 120; group.add(anim.beamGlow);
+  anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat); anim.beamCore.renderOrder = 121; group.add(anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:anim.fx.color, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.ring = new T.Mesh(new T.TorusGeometry(.22, .035, 8, 40), ringMat);
+  anim.ring.rotation.x = Math.PI / 2; anim.ring.renderOrder = 122; group.add(anim.ring);
+  const innerMat = new T.MeshBasicMaterial({color:anim.fx.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.12, .018, 7, 32), innerMat);
+  anim.innerRing.rotation.x = Math.PI / 2; anim.innerRing.renderOrder = 123; group.add(anim.innerRing);
+  const columnMat = new T.MeshBasicMaterial({color:anim.fx.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.06, .24, 1.20, 18, 1, true), columnMat);
+  anim.column.renderOrder = 119; group.add(anim.column);
+  for(let i = 0; i < 12; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? anim.fx.color : anim.fx.light, transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const shard = new T.Mesh(new T.TetrahedronGeometry(.045 + (i % 3) * .012), mat);
+    shard.userData.index = i; shard.userData.phase = _senhorAguasHash(0xa1 + i * 23);
+    shard.renderOrder = 124; group.add(shard); anim.shards.push(shard);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _purificacaoDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _purificacaoUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _purificacaoDispose3D(anim); if(!_purificacaoBuild3D(anim)) return; }
+  const T = window.THREE, p = _purificacaoProgress(anim, now), dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 13; i++){
+    const u = p.travel * i / 13, bend = Math.sin(u * Math.PI) * Math.sin(now / 120 + i) * .035;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend,
+      .56 + Math.sin(u * Math.PI) * .15, anim.origin[1] + dz * u + dx * bend));
+  }
+  _purificacaoSetLine(anim.beamGlow, points, T); _purificacaoSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 720) / 420) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 120), impact = p.impact;
+  anim.beamGlow.material.opacity = .52 * (1 - impact) * fade; anim.beamCore.material.opacity = .90 * (1 - impact) * fade;
+  anim.ring.position.set(anim.target[0], .30, anim.target[1]); anim.innerRing.position.set(anim.target[0], .315, anim.target[1]);
+  anim.ring.scale.setScalar(.12 + impact * 1.28); anim.innerRing.scale.setScalar(.10 + impact * .78);
+  anim.ring.rotation.z = now / 260; anim.innerRing.rotation.z = -now / 190;
+  anim.ring.material.opacity = (.52 + .22 * pulse) * impact * fade; anim.innerRing.material.opacity = (.68 + .18 * pulse) * impact * fade;
+  anim.column.position.set(anim.target[0], .50 + impact * .42, anim.target[1]); anim.column.scale.set(.54 + .12 * pulse, Math.max(.01, impact), .54 + .12 * pulse); anim.column.material.opacity = (.20 + .18 * pulse) * impact * fade;
+  for(const shard of anim.shards){
+    const i = shard.userData.index, phase = shard.userData.phase * Math.PI * 2, a = phase + i * .31;
+    const burst = Math.max(0, impact - .24), r = .10 + burst * (.45 + (i % 4) * .08);
+    shard.position.set(anim.target[0] + Math.cos(a + now / 360) * r,
+      .40 + impact * .36 + burst * (.40 + (i % 3) * .10), anim.target[1] + Math.sin(a + now / 360) * r);
+    shard.rotation.set(now / 170 + i, now / 210 + i * .4, now / 260 + i * .7);
+    shard.material.opacity = (.20 + .50 * Math.sin(now / 95 + i) ** 2) * impact * fade;
+  }
+}
+
+function _purificacaoDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _purificacaoProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2, fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 720) / 420) : 1, pulse = .84 + .16 * Math.sin(now / 120), impact = p.impact;
+  const color = anim.tipo === 'maldicao' ? '212,153,255' : anim.tipo === 'petrificacao' ? '246,239,208' : '139,255,188';
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.shadowColor = '#dffff0'; ctx.shadowBlur = CELL * .22;
+  ctx.strokeStyle = `rgba(${color},${(.58 * (1 - impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .10); ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,255,${(.88 * (1 - impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .026); ctx.stroke();
+  if(impact > 0){
+    ctx.shadowColor = anim.tipo === 'maldicao' ? '#d49aff' : '#9dffd0';
+    for(let i = 0; i < 3; i++){
+      const r = CELL * (.20 + impact * (.32 + i * .16)), a = now / 300 + i * 1.8;
+      ctx.strokeStyle = `rgba(${color},${((.48 + .18 * pulse) * impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * (.030 - i * .004)); ctx.beginPath(); ctx.arc(tx, ty, r, a, a + Math.PI * 1.55); ctx.stroke();
+    }
+    ctx.font = `bold ${Math.max(13, CELL * .23)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = `rgba(255,255,255,${((.72 + .18 * pulse) * impact * fade).toFixed(3)})`; ctx.fillText(anim.fx.icon, tx, ty - CELL * (.22 + impact * .18));
+    ctx.strokeStyle = `rgba(255,255,255,${(.76 * impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .025); ctx.beginPath(); ctx.moveTo(tx - CELL * .34, ty + CELL * .24); ctx.lineTo(tx + CELL * .34, ty - CELL * .24); ctx.stroke();
+    for(let i = 0; i < 9; i++){
+      const a = now / 380 + i * .70, r = CELL * (.12 + (i % 4) * .065), burst = Math.max(0, impact - .20), x = tx + Math.cos(a) * r * (1 + burst * 1.7), y = ty + Math.sin(a) * r * (1 + burst * 1.7) - burst * CELL * .22;
+      ctx.fillStyle = `rgba(237,255,246,${(.20 + .46 * Math.sin(now / 95 + i) ** 2) * impact * fade})`; ctx.beginPath(); ctx.arc(x, y, Math.max(1.1, CELL * .021), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickPurificacao(now){
+  let active = false;
+  for(let i = _purificacaoAnims.length - 1; i >= 0; i--){
+    const anim = _purificacaoAnims[i], p = _purificacaoProgress(anim, now);
+    if(p.finished){ _purificacaoDispose3D(anim); _purificacaoAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _purificacaoUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _purificacaoRaf = active ? _scheduleVisualFrame(_tickPurificacao) : null;
+}
+
+function _receberAnimacaoPurificacao(msg){
+  if(!msg || msg.spell_id !== 'purificacao' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _purificacaoAnims.find(a => a.animationId === id);
+    if(anim) anim.success = !!msg.success;
+    return;
+  }
+  if(id != null && _purificacaoAnims.some(a => a.animationId === id)) return;
+  const anim = _purificacaoAnimFromMessage(msg); _purificacaoAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || 'purificacao'}`, volume:.95});
+  if(!_purificacaoRaf) _purificacaoRaf = _scheduleVisualFrame(_tickPurificacao);
+}
+
+// ── Ressurreição — alma ascendente, retorno ao corpo e luz dourada ─────────
+const _ressurreicaoAnims = [];
+let _ressurreicaoRaf = null;
+
+function _ressurreicaoAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id), origin, target,
+    travelMs: Math.max(280, Number(msg.travel_ms) || 620),
+    impactMs: Math.max(480, Number(msg.impact_ms) || 1180),
+    start: performance.now(), success:null,
+    group:null, beamGlow:null, beamCore:null, ring:null, innerRing:null,
+    column:null, soul:null, particles:[]
+  };
+}
+
+function _ressurreicaoProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 980};
+}
+
+function _ressurreicaoSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _ressurreicaoBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'ressurreicao-animation';
+  const glowMat = new T.LineBasicMaterial({color:0xffc95c, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xffffed, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamGlow.renderOrder = 120; group.add(anim.beamGlow);
+  anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat); anim.beamCore.renderOrder = 121; group.add(anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:0xffc24f, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.ring = new T.Mesh(new T.TorusGeometry(.23, .035, 8, 42), ringMat); anim.ring.rotation.x = Math.PI / 2; anim.ring.renderOrder = 122; group.add(anim.ring);
+  const innerMat = new T.MeshBasicMaterial({color:0xffffdf, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.13, .018, 7, 34), innerMat); anim.innerRing.rotation.x = Math.PI / 2; anim.innerRing.renderOrder = 123; group.add(anim.innerRing);
+  const columnMat = new T.MeshBasicMaterial({color:0xffef9c, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.07, .28, 1.35, 18, 1, true), columnMat); anim.column.renderOrder = 119; group.add(anim.column);
+  const soulMat = new T.MeshBasicMaterial({color:0xffffe6, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.soul = new T.Mesh(new T.SphereGeometry(.14, 14, 10), soulMat); anim.soul.renderOrder = 125; group.add(anim.soul);
+  for(let i = 0; i < 16; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? 0xffd36d : 0xffffff, transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const particle = new T.Mesh(new T.SphereGeometry(.025 + (i % 3) * .012, 6, 5), mat);
+    particle.userData.index = i; particle.userData.phase = _senhorAguasHash(0x5b + i * 27);
+    particle.renderOrder = 126; group.add(particle); anim.particles.push(particle);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _ressurreicaoDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _ressurreicaoUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _ressurreicaoDispose3D(anim); if(!_ressurreicaoBuild3D(anim)) return; }
+  const T = window.THREE, p = _ressurreicaoProgress(anim, now), dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 13; i++){
+    const u = p.travel * i / 13, bend = Math.sin(u * Math.PI) * Math.sin(now / 120 + i) * .035;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .56 + Math.sin(u * Math.PI) * .18, anim.origin[1] + dz * u + dx * bend));
+  }
+  _ressurreicaoSetLine(anim.beamGlow, points, T); _ressurreicaoSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 980) / 480) : 1, pulse = .84 + .16 * Math.sin(now / 115), impact = p.impact;
+  anim.beamGlow.material.opacity = .54 * (1 - impact) * fade; anim.beamCore.material.opacity = .92 * (1 - impact) * fade;
+  anim.ring.position.set(anim.target[0], .30, anim.target[1]); anim.innerRing.position.set(anim.target[0], .315, anim.target[1]);
+  anim.ring.scale.setScalar(.12 + impact * 1.42); anim.innerRing.scale.setScalar(.10 + impact * .85); anim.ring.rotation.z = now / 280; anim.innerRing.rotation.z = -now / 205;
+  anim.ring.material.opacity = (.54 + .22 * pulse) * impact * fade; anim.innerRing.material.opacity = (.70 + .18 * pulse) * impact * fade;
+  const arc = impact <= .58 ? impact / .58 : Math.max(0, 1 - (impact - .58) / .42);
+  anim.column.position.set(anim.target[0], .50 + impact * .45, anim.target[1]); anim.column.scale.set(.58 + .14 * pulse, Math.max(.01, impact), .58 + .14 * pulse); anim.column.material.opacity = (.20 + .20 * pulse) * impact * fade;
+  anim.soul.position.set(anim.target[0], .42 + arc * .98, anim.target[1]); anim.soul.scale.setScalar(.72 + .30 * pulse); anim.soul.material.opacity = (.40 + .42 * pulse) * arc * fade;
+  for(const particle of anim.particles){
+    const i = particle.userData.index, a = now / 410 + particle.userData.phase * Math.PI * 2, burst = Math.max(0, impact - .35), r = .12 + (i % 5) * .052 + burst * .34;
+    particle.position.set(anim.target[0] + Math.cos(a) * r, .34 + arc * .70 + ((now / 730 + particle.userData.phase) % 1) * .38, anim.target[1] + Math.sin(a) * r);
+    particle.material.opacity = (.18 + .48 * Math.sin(now / 95 + i) ** 2) * impact * fade;
+  }
+}
+
+function _ressurreicaoDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _ressurreicaoProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2, tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2, fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 980) / 480) : 1, pulse = .84 + .16 * Math.sin(now / 115), impact = p.impact, arc = impact <= .58 ? impact / .58 : Math.max(0, 1 - (impact - .58) / .42);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.shadowColor = '#ffe69b'; ctx.shadowBlur = CELL * .23;
+  ctx.strokeStyle = `rgba(255,204,91,${(.60 * (1 - impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .11); ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,230,${(.90 * (1 - impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .028); ctx.stroke();
+  if(impact > 0){
+    ctx.strokeStyle = `rgba(255,213,105,${((.54 + .20 * pulse) * impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .036); ctx.beginPath(); ctx.arc(tx, ty, CELL * (.20 + impact * .66), now / 300, now / 300 + Math.PI * 1.7); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,255,221,${((.72 + .16 * pulse) * impact * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.3, CELL * .022); ctx.beginPath(); ctx.arc(tx, ty, CELL * (.12 + impact * .40), -now / 230, -now / 230 + Math.PI * 1.55); ctx.stroke();
+    ctx.font = `bold ${Math.max(14, CELL * .26)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = `rgba(255,250,209,${((.62 + .30 * pulse) * arc * fade).toFixed(3)})`; ctx.fillText('✨', tx, ty - CELL * (.20 + arc * .58));
+    ctx.fillStyle = `rgba(255,255,235,${((.68 + .20 * pulse) * impact * fade).toFixed(3)})`; ctx.fillText('✚', tx, ty + CELL * .10);
+    for(let i = 0; i < 11; i++){
+      const a = now / 400 + i * .61, r = CELL * (.12 + (i % 5) * .06), x = tx + Math.cos(a) * r * (1 + impact * .9), y = ty + Math.sin(a) * r * (1 + impact * .9) - arc * CELL * .45;
+      ctx.fillStyle = `rgba(255,235,151,${(.22 + .46 * Math.sin(now / 95 + i) ** 2) * impact * fade})`; ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, CELL * .022), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickRessurreicao(now){
+  let active = false;
+  for(let i = _ressurreicaoAnims.length - 1; i >= 0; i--){
+    const anim = _ressurreicaoAnims[i], p = _ressurreicaoProgress(anim, now);
+    if(p.finished){ _ressurreicaoDispose3D(anim); _ressurreicaoAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _ressurreicaoUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _ressurreicaoRaf = active ? _scheduleVisualFrame(_tickRessurreicao) : null;
+}
+
+function _receberAnimacaoRessurreicao(msg){
+  if(!msg || msg.spell_id !== 'ressurreicao' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _ressurreicaoAnims.find(a => a.animationId === id);
+    if(anim) anim.success = !!msg.success;
+    return;
+  }
+  if(id != null && _ressurreicaoAnims.some(a => a.animationId === id)) return;
+  const anim = _ressurreicaoAnimFromMessage(msg); _ressurreicaoAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || 'ressurreicao'}`, volume:1});
+  if(!_ressurreicaoRaf) _ressurreicaoRaf = _scheduleVisualFrame(_tickRessurreicao);
+}
+
+// ── Teleporte — runas de origem, espiral de partículas e chegada no destino ─
+// A fase start pode ficar aguardando a decisão de Vontade e a escolha da casa.
+// Por isso esta animação permanece em suspensão até receber resolve, em vez de
+// desaparecer enquanto o jogador escolhe o destino.
+const _teleporteAnims = [];
+let _teleporteRaf = null;
+
+function _teleporteAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target, destination: target.slice(), resolved:null, resolveAt:null,
+    travelMs: Math.max(300, Number(msg.travel_ms) || 520),
+    impactMs: Math.max(420, Number(msg.impact_ms) || 920),
+    start: performance.now(), group:null, pathGlow:null, pathCore:null,
+    sourceRing:null, targetRing:null, destinationRing:null, core:null, particles:[]
+  };
+}
+
+function _teleporteProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impactStart = anim.resolveAt == null
+    ? Infinity : Math.max(anim.resolveAt, anim.start + anim.travelMs);
+  const impact = Number.isFinite(impactStart)
+    ? Math.max(0, Math.min(1, (now - impactStart) / anim.impactMs)) : 0;
+  return {elapsed, travel, impact, waiting:anim.resolved == null,
+    impacting:anim.resolved != null && now >= impactStart,
+    finished:anim.resolved != null && now >= impactStart + anim.impactMs + 620};
+}
+
+function _teleporteSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _teleporteBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'teleporte-animation';
+  const glow = new T.LineBasicMaterial({color:0xb77cff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const core = new T.LineBasicMaterial({color:0xf4e9ff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.pathGlow = new T.Line(new T.BufferGeometry(), glow);
+  anim.pathCore = new T.Line(new T.BufferGeometry(), core);
+  anim.pathGlow.renderOrder = 132; anim.pathCore.renderOrder = 133;
+  group.add(anim.pathGlow, anim.pathCore);
+  const ring = new T.MeshBasicMaterial({color:0xb77cff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const bright = new T.MeshBasicMaterial({color:0xf4e9ff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.sourceRing = new T.Mesh(new T.TorusGeometry(.24,.026,8,42), ring);
+  anim.targetRing = new T.Mesh(new T.TorusGeometry(.19,.022,8,38), ring.clone());
+  anim.destinationRing = new T.Mesh(new T.TorusGeometry(.27,.035,8,46), bright);
+  for(const r of [anim.sourceRing,anim.targetRing,anim.destinationRing]){
+    r.rotation.x = Math.PI / 2; r.renderOrder = 134; group.add(r);
+  }
+  const coreMat = new T.MeshBasicMaterial({color:0xf4e9ff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.core = new T.Mesh(new T.SphereGeometry(.09,12,9), coreMat);
+  anim.core.renderOrder = 137; group.add(anim.core);
+  for(let i=0;i<22;i++){
+    const mat = new T.MeshBasicMaterial({color:i%4 ? 0x9e6eff : 0xf4e9ff,
+      transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.014 + (i%3)*.007,0), mat);
+    mote.userData.index=i; mote.userData.phase=_senhorAguasHash(i*59 + anim.target[0]*17 + anim.target[1]*31);
+    mote.renderOrder=138; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group=group; return true;
+}
+
+function _teleporteDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj=>{
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());
+  });
+  anim.group=null;
+}
+
+function _teleporteUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent!==g3.scene){ _teleporteDispose3D(anim); if(!_teleporteBuild3D(anim)) return; }
+  const T=window.THREE, p=_teleporteProgress(anim,now), end=anim.resolved===true?anim.destination:anim.target;
+  const dx=end[0]-anim.origin[0], dz=end[1]-anim.origin[1], pts=[];
+  for(let i=0;i<=16;i++){
+    const u=p.travel*i/16, wave=Math.sin(u*Math.PI*2 + now/110)*.055;
+    pts.push(new T.Vector3(anim.origin[0]+dx*u-dz*wave,.62+Math.sin(u*Math.PI)*.24,anim.origin[1]+dz*u+dx*wave));
+  }
+  _teleporteSetLine(anim.pathGlow,pts,T); _teleporteSetLine(anim.pathCore,pts,T);
+  const pulse=.72+.28*Math.sin(now/95), fade=1;
+  const travelFade=anim.resolved==null?1:Math.max(0,1-p.impact*1.8);
+  anim.pathGlow.material.opacity=.58*travelFade*fade; anim.pathCore.material.opacity=.88*travelFade*fade;
+  anim.sourceRing.position.set(anim.origin[0],.31,anim.origin[1]); anim.sourceRing.rotation.z=now/260;
+  anim.sourceRing.scale.setScalar(.72+.25*pulse); anim.sourceRing.material.opacity=(.42+.18*pulse)*travelFade*fade;
+  anim.targetRing.position.set(anim.target[0],.33,anim.target[1]); anim.targetRing.rotation.z=-now/210;
+  anim.targetRing.scale.setScalar(.55+.28*pulse); anim.targetRing.material.opacity=(.34+.18*pulse)*(p.waiting?1:Math.max(0,1-p.impact))*fade;
+  anim.destinationRing.position.set(end[0],.35,end[1]); anim.destinationRing.rotation.z=now/170;
+  anim.destinationRing.scale.setScalar(.35+p.impact*(1.5+.25*pulse));
+  anim.destinationRing.material.opacity=anim.resolved===true?(.62+.25*pulse)*Math.sin(Math.PI*Math.min(1,p.impact))*fade:0;
+  anim.core.position.set(end[0],.52,end[1]); anim.core.scale.setScalar(.2+p.impact*(1.6+.35*pulse));
+  anim.core.material.opacity=anim.resolved===true?(.30+.60*pulse)*Math.sin(Math.PI*Math.min(1,p.impact))*fade:0;
+  for(const mote of anim.particles){
+    const i=mote.userData.index, a=now/(270+(i%5)*44)+mote.userData.phase*Math.PI*2;
+    const around=anim.resolved===true?Math.max(0,p.impact-.1):Math.max(0,p.travel-.25);
+    const radius=.08+(i%6)*.035+around*(.18+(i%3)*.05), lift=((now/630+mote.userData.phase)%1)*.42;
+    mote.position.set(end[0]+Math.cos(a)*radius,.34+lift+around*.32,end[1]+Math.sin(a)*radius);
+    mote.material.opacity=(.14+.50*Math.sin(now/90+i)**2)*Math.max(.12,anim.resolved===true?p.impact:.35)*fade;
+  }
+}
+
+function _teleporteDraw2D(ctx,state,anim,now){
+  if(!_senhorAguasTileVisible(state,anim.origin[0],anim.origin[1]) && !_senhorAguasTileVisible(state,anim.target[0],anim.target[1])) return;
+  const p=_teleporteProgress(anim,now), ox=anim.origin[0]*CELL+CELL/2, oy=anim.origin[1]*CELL+CELL/2;
+  const end=anim.resolved===true?anim.destination:anim.target, tx=end[0]*CELL+CELL/2, ty=end[1]*CELL+CELL/2;
+  const fx=ox+(tx-ox)*p.travel, fy=oy+(ty-oy)*p.travel, pulse=.72+.28*Math.sin(now/95), fade=1;
+  const travelFade=anim.resolved==null?1:Math.max(0,1-p.impact*1.8);
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
+  ctx.shadowColor='#c9a2ff'; ctx.shadowBlur=CELL*.22; ctx.strokeStyle=`rgba(170,111,255,${(.52*travelFade*fade).toFixed(3)})`; ctx.lineWidth=Math.max(4,CELL*.105);
+  ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();
+  ctx.shadowBlur=CELL*.07;ctx.strokeStyle=`rgba(248,239,255,${(.88*travelFade*fade).toFixed(3)})`;ctx.lineWidth=Math.max(1.4,CELL*.026);ctx.stroke();
+  const drawRing=(x,y,r,alpha,dir)=>{ctx.save();ctx.translate(x,y);ctx.rotate(dir);ctx.strokeStyle=`rgba(188,137,255,${alpha.toFixed(3)})`;ctx.lineWidth=Math.max(1.5,CELL*.025);ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*1.65);ctx.stroke();ctx.restore();};
+  drawRing(ox,oy,CELL*(.18+.06*pulse),(.42+.18*pulse)*travelFade*fade,now/260);
+  drawRing(anim.target[0]*CELL+CELL/2,anim.target[1]*CELL+CELL/2,CELL*(.14+.05*pulse),(.32+.16*pulse)*(p.waiting?1:Math.max(0,1-p.impact))*fade,-now/210);
+  if(anim.resolved===true && p.impacting){
+    const burst=Math.sin(Math.PI*Math.min(1,p.impact));
+    drawRing(tx,ty,CELL*(.18+burst*.72),(.62+.25*pulse)*burst*fade,now/170);
+    drawRing(tx,ty,CELL*(.10+burst*.44),(.48+.25*pulse)*burst*fade,-now/120);
+    ctx.fillStyle=`rgba(245,231,255,${((.30+.60*pulse)*burst*fade).toFixed(3)})`;ctx.beginPath();ctx.arc(tx,ty,CELL*(.05+burst*.10),0,Math.PI*2);ctx.fill();
+  }
+  for(let i=0;i<18;i++){
+    const a=now/(270+(i%5)*44)+i*.61, around=anim.resolved===true?Math.max(0,p.impact-.1):Math.max(0,p.travel-.25), r=CELL*(.08+(i%6)*.035+around*(.18+(i%3)*.05));
+    const x=tx+Math.cos(a)*r,y=ty+Math.sin(a)*r-Math.max(0,around-.2)*CELL*.30;
+    ctx.fillStyle=`rgba(${i%4?174:245},${i%4?120:231},255,${((.14+.50*Math.sin(now/90+i)**2)*Math.max(.12,anim.resolved===true?p.impact:.35)*fade).toFixed(3)})`;
+    ctx.beginPath();ctx.arc(x,y,Math.max(1.1,CELL*(.014+(i%3)*.006)),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function _tickTeleporte(now){
+  let active=false;
+  for(let i=_teleporteAnims.length-1;i>=0;i--){
+    const anim=_teleporteAnims[i], p=_teleporteProgress(anim,now);
+    if(p.finished){_teleporteDispose3D(anim);_teleporteAnims.splice(i,1);continue;}
+    active=true; if(mode3D&&g3)_teleporteUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _teleporteRaf=active?_scheduleVisualFrame(_tickTeleporte):null;
+}
+
+function _receberAnimacaoTeleporte(msg){
+  if(!msg || msg.spell_id!=='teleporte' || !['start','resolve'].includes(msg.phase)) return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='resolve'){
+    const anim=_teleporteAnims.find(a=>a.animationId===id);
+    if(anim){anim.resolved=!!msg.success;anim.resolveAt=performance.now();if(Array.isArray(msg.destination))anim.destination=msg.destination.map(Number);}
+    if(!_teleporteRaf)_teleporteRaf=_scheduleVisualFrame(_tickTeleporte);
+    return;
+  }
+  if(id!=null&&_teleporteAnims.some(a=>a.animationId===id))return;
+  _teleporteAnims.push(_teleporteAnimFromMessage(msg));
+  if(!_teleporteRaf)_teleporteRaf=_scheduleVisualFrame(_tickTeleporte);
+}
+
+// ── Metamorfose — feixe de transformação, espiral e nova forma ────────────
+const _metamorfoseAnims = [];
+let _metamorfoseRaf = null;
+
+function _metamorfoseVisual(formId){
+  const palette = {
+    pombo:  {color:0xcfe8ff, light:0xffffff},
+    rato:   {color:0xd29b83, light:0xffe3d5},
+    gato:   {color:0xbda4ff, light:0xf0e7ff},
+    ovelha: {color:0xffe6a3, light:0xffffff},
+  };
+  return palette[String(formId || '').toLowerCase()] || {color:0xff9bce, light:0xffe6f5};
+}
+
+function _metamorfoseAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  const visual = _metamorfoseVisual(msg.forma_id);
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target, formId: String(msg.forma_id || ''),
+    formName: msg.forma_nome || msg.forma_id || 'nova forma',
+    formEmoji: msg.forma_emoji || '🦋', permanent: !!msg.permanente,
+    color: visual.color, light: visual.light,
+    travelMs: Math.max(300, Number(msg.travel_ms) || 620),
+    impactMs: Math.max(620, Number(msg.impact_ms) || 1250),
+    start: performance.now(), success:null, group:null,
+    beamGlow:null, beamCore:null, sourceRing:null, targetRing:null,
+    innerRing:null, cocoon:null, core:null, particles:[]
+  };
+}
+
+function _metamorfoseProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 920};
+}
+
+function _metamorfoseSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _metamorfoseBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'metamorfose-animation';
+  const beamGlowMat = new T.LineBasicMaterial({color:anim.color, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const beamCoreMat = new T.LineBasicMaterial({color:anim.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), beamGlowMat);
+  anim.beamCore = new T.Line(new T.BufferGeometry(), beamCoreMat);
+  anim.beamGlow.renderOrder = 124; anim.beamCore.renderOrder = 125; group.add(anim.beamGlow, anim.beamCore);
+  const sourceMat = new T.MeshBasicMaterial({color:anim.color, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const targetMat = sourceMat.clone();
+  const innerMat = new T.MeshBasicMaterial({color:anim.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.sourceRing = new T.Mesh(new T.TorusGeometry(.18, .025, 8, 36), sourceMat);
+  anim.targetRing = new T.Mesh(new T.TorusGeometry(.24, .035, 8, 42), targetMat);
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.13, .018, 7, 34), innerMat);
+  anim.sourceRing.rotation.x = anim.targetRing.rotation.x = anim.innerRing.rotation.x = Math.PI / 2;
+  anim.sourceRing.renderOrder = 122; anim.targetRing.renderOrder = 123; anim.innerRing.renderOrder = 126;
+  group.add(anim.sourceRing, anim.targetRing, anim.innerRing);
+  const cocoonMat = new T.MeshBasicMaterial({color:anim.color, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide,
+    wireframe:true});
+  anim.cocoon = new T.Mesh(new T.IcosahedronGeometry(.33, 2), cocoonMat); anim.cocoon.renderOrder = 127; group.add(anim.cocoon);
+  const coreMat = new T.MeshBasicMaterial({color:anim.light, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.core = new T.Mesh(new T.SphereGeometry(.11, 12, 9), coreMat); anim.core.renderOrder = 128; group.add(anim.core);
+  for(let i = 0; i < 20; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 4 ? anim.color : anim.light, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.016 + (i % 3) * .008, 0), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(i * 47 + anim.target[0] * 19 + anim.target[1] * 31);
+    mote.renderOrder = 129; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _metamorfoseDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _metamorfoseUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _metamorfoseDispose3D(anim); if(!_metamorfoseBuild3D(anim)) return; }
+  const T = window.THREE, p = _metamorfoseProgress(anim, now);
+  const dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 14; i++){
+    const u = p.travel * i / 14, bend = Math.sin(u * Math.PI) * Math.sin(now / 135 + i * .7) * .045;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .72 + Math.sin(u * Math.PI) * .20, anim.origin[1] + dz * u + dx * bend));
+  }
+  _metamorfoseSetLine(anim.beamGlow, points, T); _metamorfoseSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 920) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  anim.beamGlow.material.opacity = .60 * (1 - p.impact) * fade;
+  anim.beamCore.material.opacity = .94 * (1 - p.impact) * fade;
+  anim.sourceRing.position.set(anim.origin[0], .32, anim.origin[1]); anim.sourceRing.rotation.z = now / 390;
+  anim.sourceRing.scale.setScalar(.72 + .35 * pulse); anim.sourceRing.material.opacity = (.38 + .24 * pulse) * (1 - p.impact * .7) * fade;
+  anim.targetRing.position.set(anim.target[0], .34, anim.target[1]); anim.innerRing.position.set(anim.target[0], .36, anim.target[1]);
+  anim.targetRing.rotation.z = -now / 250; anim.innerRing.rotation.z = now / 175;
+  anim.targetRing.scale.setScalar(.20 + impactPulse * (anim.success === false ? 1.1 : 1.75));
+  anim.innerRing.scale.setScalar(.10 + impactPulse * 1.10);
+  anim.targetRing.material.opacity = (.56 + .22 * pulse) * Math.max(p.impact, .08) * fade;
+  anim.innerRing.material.opacity = (.68 + .20 * pulse) * impactPulse * fade;
+  const cocoonPhase = p.impact <= .55 ? p.impact / .55 : Math.max(0, 1 - (p.impact - .55) / .45);
+  anim.cocoon.position.set(anim.target[0], .72 + cocoonPhase * .10, anim.target[1]);
+  anim.cocoon.rotation.set(now / 470, now / 330, now / 590);
+  anim.cocoon.scale.setScalar(.18 + cocoonPhase * (.72 + .12 * pulse));
+  anim.cocoon.material.opacity = (.10 + .34 * pulse) * cocoonPhase * fade;
+  const burst = Math.max(0, p.impact - .30), symbol = Math.max(0, p.impact - .16);
+  anim.core.position.set(anim.target[0], .55 + symbol * .46, anim.target[1]);
+  anim.core.scale.setScalar(.25 + symbol * (1.1 + .25 * pulse)); anim.core.material.opacity = (.24 + .56 * pulse) * symbol * fade;
+  for(const mote of anim.particles){
+    const i = mote.userData.index, a = now / (330 + (i % 4) * 55) + mote.userData.phase * Math.PI * 2;
+    const r = .08 + (i % 6) * .036 + burst * (.24 + (i % 3) * .05), lift = ((now / 710 + mote.userData.phase) % 1) * .46;
+    mote.position.set(anim.target[0] + Math.cos(a) * r, .36 + lift + symbol * .32, anim.target[1] + Math.sin(a) * r);
+    mote.material.opacity = (.16 + .46 * Math.sin(now / 90 + i) ** 2) * Math.max(p.impact, .10) * fade;
+  }
+}
+
+function _metamorfoseDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _metamorfoseProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 920) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.shadowColor = '#ffbde2'; ctx.shadowBlur = CELL * .24;
+  ctx.strokeStyle = `rgba(255,143,207,${(.56 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .12);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.shadowBlur = CELL * .08; ctx.strokeStyle = `rgba(255,246,255,${(.90 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .032); ctx.stroke();
+  if(p.impacting){
+    ctx.shadowColor = '#ffbde2'; ctx.shadowBlur = CELL * .18;
+    ctx.strokeStyle = `rgba(255,151,215,${((.48 + .24*pulse) * Math.max(p.impact, .12) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .038);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.18 + impactPulse * .74), now / 270, now / 270 + Math.PI * 1.72); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,246,255,${((.68 + .18*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .022);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.10 + impactPulse * .43), -now / 210, -now / 210 + Math.PI * 1.55); ctx.stroke();
+    ctx.save(); ctx.translate(tx, ty - CELL * (.08 + impactPulse * .22)); ctx.rotate(Math.sin(now / 250) * .10);
+    ctx.font = `bold ${Math.max(15, CELL * .30)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(255,231,249,${((.62 + .28*pulse) * Math.max(impactPulse, .18) * fade).toFixed(3)})`; ctx.fillText('🦋', 0, 0);
+    ctx.restore();
+    if(p.impact > .42){
+      ctx.font = `bold ${Math.max(13, CELL * .24)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(255,255,255,${((.50 + .30*pulse) * impactPulse * fade).toFixed(3)})`; ctx.fillText(anim.formEmoji, tx, ty - CELL * (.15 + impactPulse * .54));
+    }
+    for(let i = 0; i < 14; i++){
+      const a = now / (330 + (i % 4) * 48) + i * .61, r = CELL * (.12 + (i % 6) * .05 + Math.max(0, p.impact - .3) * .32);
+      const x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r - Math.max(0, p.impact - .22) * CELL * .35;
+      ctx.fillStyle = `rgba(255,${170 + (i % 3) * 24},${220 + (i % 2) * 18},${(.18 + .48 * Math.sin(now / 90 + i) ** 2) * Math.max(p.impact, .12) * fade})`;
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, CELL * (.018 + (i % 3) * .006)), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickMetamorfose(now){
+  let active = false;
+  for(let i = _metamorfoseAnims.length - 1; i >= 0; i--){
+    const anim = _metamorfoseAnims[i], p = _metamorfoseProgress(anim, now);
+    if(p.finished){ _metamorfoseDispose3D(anim); _metamorfoseAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _metamorfoseUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _metamorfoseRaf = active ? _scheduleVisualFrame(_tickMetamorfose) : null;
+}
+
+function _receberAnimacaoMetamorfose(msg){
+  if(!msg || msg.spell_id !== 'metamorfose' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _metamorfoseAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; if(msg.forma_emoji) anim.formEmoji = msg.forma_emoji; }
+    return;
+  }
+  if(id != null && _metamorfoseAnims.some(a => a.animationId === id)) return;
+  const anim = _metamorfoseAnimFromMessage(msg); _metamorfoseAnims.push(anim);
+  _playCombatCue('magic', {repeatKey:`spell:${id || 'metamorfose'}`, volume:.92});
+  if(!_metamorfoseRaf) _metamorfoseRaf = _scheduleVisualFrame(_tickMetamorfose);
+}
+
+// ── Guerreiro da Luz — coluna sagrada, halo e selos dos bônus escolhidos ──
+const _guerreiroLuzAnims = [];
+let _guerreiroLuzRaf = null;
+const _GDL_FX = {
+  visao:  {icon:'👁', color:'#bff5ff'},
+  ataque: {icon:'⚔', color:'#fff0a8'},
+  dano:   {icon:'✦', color:'#ffcb72'},
+  ca:     {icon:'🛡', color:'#b7c9ff'},
+};
+
+function _guerreiroLuzAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id),
+    origin, target, bonus: msg.bonus || {},
+    travelMs: Math.max(260, Number(msg.travel_ms) || 420),
+    impactMs: Math.max(560, Number(msg.impact_ms) || 980),
+    start: performance.now(), success:null, group:null,
+    beamGlow:null, beamCore:null, baseRing:null, halo:null, sigil:null,
+    column:null, core:null, orbs:[], particles:[]
+  };
+}
+
+function _guerreiroLuzProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 980};
+}
+
+function _guerreiroLuzSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _guerreiroLuzBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'guerreiro-luz-animation';
+  const glowMat = new T.LineBasicMaterial({color:0xffd879, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xfffff0, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 130; anim.beamCore.renderOrder = 131; group.add(anim.beamGlow, anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:0xffc75c, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.baseRing = new T.Mesh(new T.TorusGeometry(.25, .035, 8, 44), ringMat); anim.baseRing.rotation.x = Math.PI / 2;
+  anim.baseRing.renderOrder = 132; group.add(anim.baseRing);
+  const haloMat = new T.MeshBasicMaterial({color:0xfff1a0, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.halo = new T.Mesh(new T.TorusGeometry(.30, .022, 7, 40), haloMat); anim.halo.rotation.x = Math.PI / 2;
+  anim.halo.renderOrder = 133; group.add(anim.halo);
+  const sigilMat = new T.MeshBasicMaterial({color:0xffe6a2, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.sigil = new T.Mesh(new T.TorusGeometry(.17, .014, 7, 32), sigilMat); anim.sigil.rotation.x = Math.PI / 2;
+  anim.sigil.renderOrder = 134; group.add(anim.sigil);
+  const columnMat = new T.MeshBasicMaterial({color:0xffd979, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.10, .34, 1.45, 18, 1, true), columnMat);
+  anim.column.renderOrder = 128; group.add(anim.column);
+  const coreMat3d = new T.MeshBasicMaterial({color:0xffffe0, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.core = new T.Mesh(new T.SphereGeometry(.12, 12, 9), coreMat3d); anim.core.renderOrder = 135; group.add(anim.core);
+  for(let i = 0; i < 4; i++){
+    const mat = new T.MeshBasicMaterial({color:[0xbff5ff,0xfff0a8,0xffcb72,0xb7c9ff][i], transparent:true,
+      opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const orb = new T.Mesh(new T.SphereGeometry(.045, 8, 6), mat); orb.userData.index = i;
+    orb.renderOrder = 136; group.add(orb); anim.orbs.push(orb);
+  }
+  for(let i = 0; i < 18; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 4 ? 0xffd477 : 0xffffff, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.016 + (i % 3) * .008, 0), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(0x91 + i * 37);
+    mote.renderOrder = 137; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _guerreiroLuzDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _guerreiroLuzUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _guerreiroLuzDispose3D(anim); if(!_guerreiroLuzBuild3D(anim)) return; }
+  const T = window.THREE, p = _guerreiroLuzProgress(anim, now), x = anim.target[0], z = anim.target[1];
+  const points = [], beam = Math.max(0, p.travel);
+  for(let i = 0; i <= 10; i++){
+    const u = i / 10, sway = Math.sin(now / 130 + i) * .035;
+    points.push(new T.Vector3(x + sway * u, .30 + beam * u * 1.15, z - sway * u));
+  }
+  _guerreiroLuzSetLine(anim.beamGlow, points, T); _guerreiroLuzSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 980) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  anim.beamGlow.material.opacity = .54 * (1 - p.impact) * fade; anim.beamCore.material.opacity = .90 * (1 - p.impact) * fade;
+  anim.baseRing.position.set(x, .31, z); anim.baseRing.rotation.z = now / 300;
+  anim.baseRing.scale.setScalar(.18 + impactPulse * 1.42); anim.baseRing.material.opacity = (.48 + .22*pulse) * Math.max(p.impact, .10) * fade;
+  anim.halo.position.set(x, .82 + impactPulse * .18, z); anim.halo.rotation.z = -now / 230;
+  anim.halo.scale.setScalar(.30 + impactPulse * 1.18); anim.halo.material.opacity = (.42 + .24*pulse) * impactPulse * fade;
+  anim.sigil.position.set(x, .92 + impactPulse * .22, z); anim.sigil.rotation.z = now / 175;
+  anim.sigil.scale.setScalar(.20 + impactPulse * .80); anim.sigil.material.opacity = (.38 + .28*pulse) * impactPulse * fade;
+  anim.column.position.set(x, .58 + impactPulse * .36, z); anim.column.scale.set(.62 + .16*pulse, Math.max(.01, impactPulse), .62 + .16*pulse);
+  anim.column.material.opacity = (.18 + .22*pulse) * impactPulse * fade;
+  anim.core.position.set(x, .72 + impactPulse * .52, z); anim.core.scale.setScalar(.24 + impactPulse * (1.0 + .24*pulse));
+  anim.core.material.opacity = (.26 + .50*pulse) * impactPulse * fade;
+  const keys = ['visao','ataque','dano','ca'];
+  for(const orb of anim.orbs){
+    const i = orb.userData.index, active = Number(anim.bonus[keys[i]] || 0) > 0, a = now / 390 + i * Math.PI / 2;
+    const r = .20 + impactPulse * (.22 + i * .025);
+    orb.position.set(x + Math.cos(a) * r, .62 + impactPulse * .58 + Math.sin(a * 1.4) * .08, z + Math.sin(a) * r);
+    orb.scale.setScalar(active ? .72 + .28*pulse : .01); orb.material.opacity = active ? (.42 + .34*pulse) * impactPulse * fade : 0;
+  }
+  for(const mote of anim.particles){
+    const i = mote.userData.index, a = now / (350 + (i % 4) * 48) + mote.userData.phase * Math.PI * 2;
+    const r = .10 + (i % 5) * .045 + impactPulse * .32, lift = ((now / 710 + mote.userData.phase) % 1) * (.66 + impactPulse * .58);
+    mote.position.set(x + Math.cos(a) * r, .34 + lift, z + Math.sin(a) * r);
+    mote.material.opacity = (.18 + .46 * Math.sin(now / 90 + i) ** 2) * Math.max(p.impact, .10) * fade;
+  }
+}
+
+function _guerreiroLuzDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _guerreiroLuzProgress(anim, now), tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 980) / 460) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.shadowColor = '#ffe298'; ctx.shadowBlur = CELL * .24;
+  ctx.strokeStyle = `rgba(255,207,105,${(.56 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .12);
+  ctx.beginPath(); ctx.moveTo(tx, ty + CELL * .54); ctx.lineTo(tx, ty + CELL * (.54 - p.travel * 1.35)); ctx.stroke();
+  ctx.strokeStyle = `rgba(255,255,235,${(.90 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .032); ctx.stroke();
+  if(p.impacting){
+    ctx.shadowColor = '#ffe39b'; ctx.shadowBlur = CELL * .18;
+    for(let i = 0; i < 3; i++){
+      const r = CELL * (.20 + impactPulse * (.34 + i * .18));
+      ctx.strokeStyle = `rgba(255,${211 - i*18},${112 + i*35},${((.40 + .18*pulse) * impactPulse * fade).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, CELL * (.034 - i * .006)); ctx.beginPath();
+      ctx.arc(tx, ty, r, now / (270 + i*80) + i, now / (270 + i*80) + i + Math.PI * 1.60); ctx.stroke();
+    }
+    ctx.strokeStyle = `rgba(255,250,205,${((.62 + .22*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .032);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.20 + impactPulse * .48), 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold ${Math.max(17, CELL * .34)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(255,249,204,${((.68 + .24*pulse) * impactPulse * fade).toFixed(3)})`; ctx.fillText('✦', tx, ty - CELL * (.10 + impactPulse * .18));
+    const keys = ['visao','ataque','dano','ca'];
+    for(let i = 0; i < keys.length; i++){
+      if(Number(anim.bonus[keys[i]] || 0) <= 0) continue;
+      const a = now / 540 + i * Math.PI / 2, r = CELL * (.42 + impactPulse * .23), x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r;
+      ctx.font = `bold ${Math.max(13, CELL * .23)}px serif`; ctx.fillStyle = `${_GDL_FX[keys[i]].color}`;
+      ctx.globalAlpha = Math.min(1, (.55 + .35*pulse) * impactPulse * fade); ctx.fillText(_GDL_FX[keys[i]].icon, x, y);
+    }
+  }
+  ctx.restore();
+}
+
+function _tickGuerreiroLuz(now){
+  let active = false;
+  for(let i = _guerreiroLuzAnims.length - 1; i >= 0; i--){
+    const anim = _guerreiroLuzAnims[i], p = _guerreiroLuzProgress(anim, now);
+    if(p.finished){ _guerreiroLuzDispose3D(anim); _guerreiroLuzAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _guerreiroLuzUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _guerreiroLuzRaf = active ? _scheduleVisualFrame(_tickGuerreiroLuz) : null;
+}
+
+function _receberAnimacaoGuerreiroLuz(msg){
+  if(!msg || msg.spell_id !== 'guerreiro_luz' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _guerreiroLuzAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; if(msg.bonus) anim.bonus = msg.bonus; }
+    return;
+  }
+  if(id != null && _guerreiroLuzAnims.some(a => a.animationId === id)) return;
+  const anim = _guerreiroLuzAnimFromMessage(msg); _guerreiroLuzAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || 'guerreiro_luz'}`, volume:.96});
+  if(!_guerreiroLuzRaf) _guerreiroLuzRaf = _scheduleVisualFrame(_tickGuerreiroLuz);
+}
+
+// ── Canção Heroica — ondas sonoras que alcançam o grupo e selos musicais ──
+const _cancaoHeroicaAnims = [];
+let _cancaoHeroicaRaf = null;
+const _CANCAO_FX = {
+  acerto:     {icon:'⚔', color:'#ffe89b'},
+  dano:       {icon:'✦', color:'#ffbd75'},
+  ca:         {icon:'🛡', color:'#b8d7ff'},
+  movimento:  {icon:'👣', color:'#b9ffd7'},
+  resistencia:{icon:'◆', color:'#dcb9ff'},
+};
+
+function _cancaoHeroicaAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const rawTargets = Array.isArray(msg.targets) ? msg.targets : [];
+  const targets = rawTargets.map(item => Array.isArray(item) ? item.map(Number) : (Array.isArray(item?.pos) ? item.pos.map(Number) : null)).filter(Boolean);
+  if(!targets.length) targets.push(origin.slice());
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    origin, targets, atributos: Array.isArray(msg.atributos) ? msg.atributos.map(String) : [],
+    travelMs: Math.max(260, Number(msg.travel_ms) || 420),
+    impactMs: Math.max(600, Number(msg.impact_ms) || 1100),
+    start: performance.now(), success:null, group:null, beams:[], rings:[], innerRings:[], particles:[]
+  };
+}
+
+function _cancaoHeroicaProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 1120};
+}
+
+function _cancaoHeroicaSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _cancaoHeroicaBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'cancao-heroica-animation';
+  const glowMat = new T.LineBasicMaterial({color:0xffbd78, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xffffe8, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const ringMat = new T.MeshBasicMaterial({color:0xffc878, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const innerMat = new T.MeshBasicMaterial({color:0xffffe5, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  for(const target of anim.targets){
+    const glow = new T.Line(new T.BufferGeometry(), glowMat.clone());
+    const core = new T.Line(new T.BufferGeometry(), coreMat.clone());
+    glow.renderOrder = 140; core.renderOrder = 141; group.add(glow, core); anim.beams.push({glow, core, target});
+    const ring = new T.Mesh(new T.TorusGeometry(.22, .030, 8, 38), ringMat.clone());
+    const inner = new T.Mesh(new T.TorusGeometry(.13, .016, 7, 30), innerMat.clone());
+    ring.rotation.x = inner.rotation.x = Math.PI / 2; ring.renderOrder = 142; inner.renderOrder = 143;
+    group.add(ring, inner); anim.rings.push({mesh:ring, target}); anim.innerRings.push({mesh:inner, target});
+  }
+  const coreMat3d = new T.MeshBasicMaterial({color:0xffffd3, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const core = new T.Mesh(new T.SphereGeometry(.12, 12, 9), coreMat3d); core.renderOrder = 145; group.add(core); anim.core = core;
+  for(let i = 0; i < 22; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 4 ? 0xffcf82 : 0xffffff, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const mote = new T.Mesh(new T.IcosahedronGeometry(.014 + (i % 3) * .008, 0), mat);
+    mote.userData.index = i; mote.userData.phase = _senhorAguasHash(0x31 + i * 43);
+    mote.renderOrder = 146; group.add(mote); anim.particles.push(mote);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _cancaoHeroicaDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _cancaoHeroicaUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _cancaoHeroicaDispose3D(anim); if(!_cancaoHeroicaBuild3D(anim)) return; }
+  const T = window.THREE, p = _cancaoHeroicaProgress(anim, now), x0 = anim.origin[0], z0 = anim.origin[1];
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 1120) / 500) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 110), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  for(const beam of anim.beams){
+    const dx = beam.target[0] - x0, dz = beam.target[1] - z0, points = [];
+    for(let i = 0; i <= 12; i++){
+      const u = p.travel * i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 135 + i) * .045;
+      points.push(new T.Vector3(x0 + dx * u - dz * bend, .60 + Math.sin(u * Math.PI) * .14, z0 + dz * u + dx * bend));
+    }
+    _cancaoHeroicaSetLine(beam.glow, points, T); _cancaoHeroicaSetLine(beam.core, points, T);
+    beam.glow.material.opacity = .40 * (1 - p.impact) * fade; beam.core.material.opacity = .82 * (1 - p.impact) * fade;
+  }
+  for(const item of anim.rings){
+    item.mesh.position.set(item.target[0], .31, item.target[1]); item.mesh.rotation.z = now / 300;
+    item.mesh.scale.setScalar(.14 + impactPulse * 1.32); item.mesh.material.opacity = (.42 + .22*pulse) * Math.max(p.impact, .10) * fade;
+  }
+  for(const item of anim.innerRings){
+    item.mesh.position.set(item.target[0], .33, item.target[1]); item.mesh.rotation.z = -now / 210;
+    item.mesh.scale.setScalar(.10 + impactPulse * .85); item.mesh.material.opacity = (.62 + .20*pulse) * impactPulse * fade;
+  }
+  anim.core.position.set(x0, .68 + impactPulse * .50, z0); anim.core.scale.setScalar(.22 + impactPulse * (1.05 + .20*pulse));
+  anim.core.material.opacity = (.24 + .52*pulse) * impactPulse * fade;
+  for(const mote of anim.particles){
+    const i = mote.userData.index, a = now / (350 + (i % 4) * 50) + mote.userData.phase * Math.PI * 2;
+    const radius = .10 + (i % 6) * .04 + impactPulse * .30, lift = ((now / 720 + mote.userData.phase) % 1) * (.55 + impactPulse * .72);
+    mote.position.set(x0 + Math.cos(a) * radius, .35 + lift, z0 + Math.sin(a) * radius);
+    mote.material.opacity = (.16 + .42 * Math.sin(now / 95 + i) ** 2) * Math.max(p.impact, .10) * fade;
+  }
+}
+
+function _cancaoHeroicaDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])) return;
+  const p = _cancaoHeroicaProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 1120) / 500) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 110), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+  ctx.shadowColor = '#ffd17e'; ctx.shadowBlur = CELL * .20;
+  for(const target of anim.targets){
+    const tx = target[0] * CELL + CELL / 2, ty = target[1] * CELL + CELL / 2;
+    const dx = tx - ox, dy = ty - oy, fx = ox + dx * p.travel, fy = oy + dy * p.travel;
+    ctx.strokeStyle = `rgba(255,190,112,${(.42 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(4, CELL * .085);
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+    ctx.strokeStyle = `rgba(255,250,220,${(.78 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .024); ctx.stroke();
+    if(p.impacting){
+      ctx.strokeStyle = `rgba(255,210,130,${((.44 + .20*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .030);
+      ctx.beginPath(); ctx.arc(tx, ty, CELL * (.16 + impactPulse * .52), now / 300, now / 300 + Math.PI * 1.6); ctx.stroke();
+      ctx.strokeStyle = `rgba(255,251,224,${((.56 + .22*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1, CELL * .018);
+      ctx.beginPath(); ctx.arc(tx, ty, CELL * (.10 + impactPulse * .30), -now / 220, -now / 220 + Math.PI * 1.45); ctx.stroke();
+    }
+  }
+  if(p.impacting){
+    ctx.font = `bold ${Math.max(16, CELL * .31)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(255,247,190,${((.64 + .25*pulse) * impactPulse * fade).toFixed(3)})`; ctx.fillText('🎵', ox, oy - CELL * (.14 + impactPulse * .24));
+    for(let i = 0; i < anim.atributos.length; i++){
+      const attr = _CANCAO_FX[anim.atributos[i]]; if(!attr) continue;
+      const a = now / 520 + i * (Math.PI * 2 / Math.max(1, anim.atributos.length)), r = CELL * (.38 + impactPulse * .18);
+      ctx.font = `bold ${Math.max(12, CELL * .22)}px serif`; ctx.fillStyle = attr.color;
+      ctx.globalAlpha = Math.min(1, (.56 + .32*pulse) * impactPulse * fade); ctx.fillText(attr.icon, ox + Math.cos(a) * r, oy + Math.sin(a) * r);
+    }
+  }
+  ctx.restore();
+}
+
+function _tickCancaoHeroica(now){
+  let active = false;
+  for(let i = _cancaoHeroicaAnims.length - 1; i >= 0; i--){
+    const anim = _cancaoHeroicaAnims[i], p = _cancaoHeroicaProgress(anim, now);
+    if(p.finished){ _cancaoHeroicaDispose3D(anim); _cancaoHeroicaAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _cancaoHeroicaUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _cancaoHeroicaRaf = active ? _scheduleVisualFrame(_tickCancaoHeroica) : null;
+}
+
+function _receberAnimacaoCancaoHeroica(msg){
+  if(!msg || msg.spell_id !== 'cancao_heroica' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _cancaoHeroicaAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; if(Array.isArray(msg.atributos)) anim.atributos = msg.atributos.map(String); }
+    return;
+  }
+  if(id != null && _cancaoHeroicaAnims.some(a => a.animationId === id)) return;
+  const anim = _cancaoHeroicaAnimFromMessage(msg); _cancaoHeroicaAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || 'cancao_heroica'}`, volume:.90});
+  if(!_cancaoHeroicaRaf) _cancaoHeroicaRaf = _scheduleVisualFrame(_tickCancaoHeroica);
+}
+
+// ── Saciar — corrente de água pura, ondas e recuperação de sobrevivência ──
+const _saciarAnims = [];
+let _saciarRaf = null;
+
+function _saciarAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id), origin, target,
+    fomeBonus: Math.max(0, Number(msg.fome_bonus) || 25), sedeBonus: Math.max(0, Number(msg.sede_bonus) || 25),
+    travelMs: Math.max(260, Number(msg.travel_ms) || 420),
+    impactMs: Math.max(560, Number(msg.impact_ms) || 980),
+    start: performance.now(), success:null, group:null, beamGlow:null, beamCore:null,
+    ring:null, innerRing:null, column:null, core:null, droplets:[]
+  };
+}
+
+function _saciarProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + 920};
+}
+
+function _saciarSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _saciarBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'saciar-animation';
+  const glowMat = new T.LineBasicMaterial({color:0x65dfff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:0xe8ffff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 150; anim.beamCore.renderOrder = 151; group.add(anim.beamGlow, anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:0x61dfff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const innerMat = new T.MeshBasicMaterial({color:0xe0ffff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.ring = new T.Mesh(new T.TorusGeometry(.23, .032, 8, 42), ringMat); anim.ring.rotation.x = Math.PI / 2;
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.13, .017, 7, 34), innerMat); anim.innerRing.rotation.x = Math.PI / 2;
+  anim.ring.renderOrder = 152; anim.innerRing.renderOrder = 153; group.add(anim.ring, anim.innerRing);
+  const columnMat = new T.MeshBasicMaterial({color:0x65dfff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.column = new T.Mesh(new T.CylinderGeometry(.08, .30, 1.22, 18, 1, true), columnMat); anim.column.renderOrder = 149; group.add(anim.column);
+  const coreMat3d = new T.MeshBasicMaterial({color:0xf1ffff, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.core = new T.Mesh(new T.SphereGeometry(.11, 12, 9), coreMat3d); anim.core.renderOrder = 154; group.add(anim.core);
+  for(let i = 0; i < 18; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 4 ? 0x83eaff : 0xffffff, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const drop = new T.Mesh(new T.SphereGeometry(.014 + (i % 3) * .008, 6, 5), mat);
+    drop.userData.index = i; drop.userData.phase = _senhorAguasHash(0x44 + i * 39);
+    drop.renderOrder = 155; group.add(drop); anim.droplets.push(drop);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _saciarDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _saciarUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _saciarDispose3D(anim); if(!_saciarBuild3D(anim)) return; }
+  const T = window.THREE, p = _saciarProgress(anim, now), dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 12; i++){
+    const u = p.travel * i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 125 + i) * .04;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .56 + Math.sin(u * Math.PI) * .18, anim.origin[1] + dz * u + dx * bend));
+  }
+  _saciarSetLine(anim.beamGlow, points, T); _saciarSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 920) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  anim.beamGlow.material.opacity = .52 * (1 - p.impact) * fade; anim.beamCore.material.opacity = .88 * (1 - p.impact) * fade;
+  anim.ring.position.set(anim.target[0], .31, anim.target[1]); anim.ring.rotation.z = now / 280;
+  anim.ring.scale.setScalar(.14 + impactPulse * 1.52); anim.ring.material.opacity = (.48 + .22*pulse) * Math.max(p.impact, .10) * fade;
+  anim.innerRing.position.set(anim.target[0], .33, anim.target[1]); anim.innerRing.rotation.z = -now / 190;
+  anim.innerRing.scale.setScalar(.10 + impactPulse * .92); anim.innerRing.material.opacity = (.66 + .20*pulse) * impactPulse * fade;
+  anim.column.position.set(anim.target[0], .54 + impactPulse * .40, anim.target[1]); anim.column.scale.set(.62 + .15*pulse, Math.max(.01, impactPulse), .62 + .15*pulse);
+  anim.column.material.opacity = (.18 + .22*pulse) * impactPulse * fade;
+  anim.core.position.set(anim.target[0], .60 + impactPulse * .55, anim.target[1]); anim.core.scale.setScalar(.22 + impactPulse * (1.05 + .22*pulse));
+  anim.core.material.opacity = (.24 + .54*pulse) * impactPulse * fade;
+  for(const drop of anim.droplets){
+    const i = drop.userData.index, a = now / (340 + (i % 4) * 52) + drop.userData.phase * Math.PI * 2;
+    const r = .10 + (i % 5) * .045 + impactPulse * .28, lift = ((now / 680 + drop.userData.phase) % 1) * (.54 + impactPulse * .68);
+    drop.position.set(anim.target[0] + Math.cos(a) * r, .34 + lift, anim.target[1] + Math.sin(a) * r);
+    drop.material.opacity = (.18 + .46 * Math.sin(now / 92 + i) ** 2) * Math.max(p.impact, .10) * fade;
+  }
+}
+
+function _saciarDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _saciarProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
+  const tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2, fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 920) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.shadowColor = '#8beeff'; ctx.shadowBlur = CELL * .23;
+  ctx.strokeStyle = `rgba(83,218,255,${(.54 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .11);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(239,255,255,${(.88 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .028); ctx.stroke();
+  if(p.impacting){
+    ctx.shadowColor = '#7ceaff'; ctx.shadowBlur = CELL * .17;
+    for(let i = 0; i < 3; i++){
+      const r = CELL * (.18 + impactPulse * (.34 + i * .17));
+      ctx.strokeStyle = `rgba(${90+i*32},${220+i*10},255,${((.44 + .18*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * (.034 - i * .006));
+      ctx.beginPath(); ctx.arc(tx, ty, r, now / (270 + i*70) + i, now / (270 + i*70) + i + Math.PI * 1.62); ctx.stroke();
+    }
+    ctx.strokeStyle = `rgba(236,255,255,${((.60 + .24*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .032);
+    ctx.beginPath(); ctx.arc(tx, ty, CELL * (.20 + impactPulse * .46), 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold ${Math.max(16, CELL * .30)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(220,252,255,${((.66 + .25*pulse) * impactPulse * fade).toFixed(3)})`; ctx.fillText('💧', tx, ty - CELL * (.12 + impactPulse * .22));
+    ctx.font = `bold ${Math.max(11, CELL * .18)}px sans-serif`;
+    ctx.fillStyle = `rgba(224,255,255,${((.60 + .30*pulse) * impactPulse * fade).toFixed(3)})`;
+    ctx.fillText(`+${anim.fomeBonus} fome`, tx, ty + CELL * .30);
+    ctx.fillText(`+${anim.sedeBonus} sede`, tx, ty + CELL * .50);
+    for(let i = 0; i < 12; i++){
+      const a = now / (360 + (i % 4) * 45) + i * .62, r = CELL * (.12 + (i % 5) * .06);
+      const x = tx + Math.cos(a) * r, y = ty + Math.sin(a) * r - CELL * ((now / 740 + i / 12) % 1) * .36;
+      ctx.fillStyle = `rgba(150,239,255,${(.18 + .46 * Math.sin(now / 90 + i) ** 2) * impactPulse * fade})`;
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, CELL * .021), 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function _tickSaciar(now){
+  let active = false;
+  for(let i = _saciarAnims.length - 1; i >= 0; i--){
+    const anim = _saciarAnims[i], p = _saciarProgress(anim, now);
+    if(p.finished){ _saciarDispose3D(anim); _saciarAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _saciarUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _saciarRaf = active ? _scheduleVisualFrame(_tickSaciar) : null;
+}
+
+function _receberAnimacaoSaciar(msg){
+  if(!msg || msg.spell_id !== 'saciar' || !['start', 'resolve'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _saciarAnims.find(a => a.animationId === id);
+    if(anim){ anim.success = !!msg.success; anim.fomeBonus = Number(msg.fome_bonus) || anim.fomeBonus; anim.sedeBonus = Number(msg.sede_bonus) || anim.sedeBonus; }
+    return;
+  }
+  if(id != null && _saciarAnims.some(a => a.animationId === id)) return;
+  const anim = _saciarAnimFromMessage(msg); _saciarAnims.push(anim);
+  _playCombatCue('holy', {repeatKey:`spell:${id || 'saciar'}`, volume:.86});
+  if(!_saciarRaf) _saciarRaf = _scheduleVisualFrame(_tickSaciar);
+}
+
+// ── Contramágica — selo de interrupção e quebra do feitiço ────────────────
+const _contramagicaAnims = [];
+let _contramagicaRaf = null;
+
+function _contramagicaAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const target = Array.isArray(msg.target) ? msg.target.map(Number) : origin.slice();
+  const mode = msg.phase === 'trigger' || msg.mode === 'trigger' ? 'trigger' : 'prepare';
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    targetId: msg.target_id == null ? null : String(msg.target_id), origin, target, mode,
+    success: msg.success == null ? null : !!msg.success,
+    travelMs: Math.max(220, Number(msg.travel_ms) || (mode === 'trigger' ? 320 : 300)),
+    impactMs: Math.max(520, Number(msg.impact_ms) || (mode === 'trigger' ? 860 : 920)),
+    start: performance.now(), group:null, beamGlow:null, beamCore:null,
+    sourceRing:null, targetRing:null, innerRing:null, shield:null, core:null, shards:[]
+  };
+}
+
+function _contramagicaProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const travel = Math.min(1, elapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
+    finished:elapsed >= anim.travelMs + anim.impactMs + (anim.mode === 'trigger' ? 960 : 820)};
+}
+
+function _contramagicaSetLine(line, points, T){
+  if(!line) return;
+  if(line.geometry) line.geometry.dispose();
+  line.geometry = new T.BufferGeometry().setFromPoints(points);
+}
+
+function _contramagicaBuild3D(anim){
+  if(!g3 || !g3.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'contramagica-animation';
+  const active = anim.mode === 'trigger', failed = active && anim.success === false;
+  const mainColor = failed ? 0xff6f76 : active ? 0x79e7ff : 0xffd57a, coreColor = failed ? 0xffd0d4 : 0xeaffff;
+  const glowMat = new T.LineBasicMaterial({color:mainColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  const coreMat = new T.LineBasicMaterial({color:coreColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.beamGlow = new T.Line(new T.BufferGeometry(), glowMat); anim.beamCore = new T.Line(new T.BufferGeometry(), coreMat);
+  anim.beamGlow.renderOrder = 160; anim.beamCore.renderOrder = 161; group.add(anim.beamGlow, anim.beamCore);
+  const ringMat = new T.MeshBasicMaterial({color:mainColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  const innerMat = new T.MeshBasicMaterial({color:coreColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+  anim.sourceRing = new T.Mesh(new T.TorusGeometry(.20, .027, 8, 36), ringMat); anim.sourceRing.rotation.x = Math.PI / 2;
+  anim.targetRing = new T.Mesh(new T.TorusGeometry(.25, .034, 8, 42), ringMat.clone()); anim.targetRing.rotation.x = Math.PI / 2;
+  anim.innerRing = new T.Mesh(new T.TorusGeometry(.14, .017, 7, 34), innerMat); anim.innerRing.rotation.x = Math.PI / 2;
+  anim.sourceRing.renderOrder = 157; anim.targetRing.renderOrder = 158; anim.innerRing.renderOrder = 162;
+  group.add(anim.sourceRing, anim.targetRing, anim.innerRing);
+  const shieldMat = new T.MeshBasicMaterial({color:mainColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide, wireframe:true});
+  anim.shield = new T.Mesh(new T.IcosahedronGeometry(.30, 1), shieldMat); anim.shield.renderOrder = 163; group.add(anim.shield);
+  const coreMat3d = new T.MeshBasicMaterial({color:coreColor, transparent:true, opacity:0,
+    blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+  anim.core = new T.Mesh(new T.SphereGeometry(.10, 10, 8), coreMat3d); anim.core.renderOrder = 164; group.add(anim.core);
+  for(let i = 0; i < 14; i++){
+    const mat = new T.MeshBasicMaterial({color:i % 3 ? mainColor : coreColor, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const shard = new T.Mesh(new T.IcosahedronGeometry(.018 + (i % 3) * .007, 0), mat);
+    shard.userData.index = i; shard.userData.phase = _senhorAguasHash(0x55 + i * 41);
+    shard.renderOrder = 165; group.add(shard); anim.shards.push(shard);
+  }
+  g3.scene.add(group); anim.group = group; return true;
+}
+
+function _contramagicaDispose3D(anim){
+  if(!anim.group) return;
+  if(anim.group.parent) anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+  });
+  anim.group = null;
+}
+
+function _contramagicaUpdate3D(anim, now){
+  if(!g3 || !window.THREE) return;
+  if(!anim.group || anim.group.parent !== g3.scene){ _contramagicaDispose3D(anim); if(!_contramagicaBuild3D(anim)) return; }
+  const T = window.THREE, p = _contramagicaProgress(anim, now), active = anim.mode === 'trigger';
+  const dx = anim.target[0] - anim.origin[0], dz = anim.target[1] - anim.origin[1], points = [];
+  for(let i = 0; i <= 12; i++){
+    const u = active ? p.travel * i / 12 : i / 12, bend = Math.sin(u * Math.PI) * Math.sin(now / 120 + i) * .045;
+    points.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .58 + (active ? Math.sin(u * Math.PI) * .16 : u * .84), anim.origin[1] + dz * u + dx * bend));
+  }
+  _contramagicaSetLine(anim.beamGlow, points, T); _contramagicaSetLine(anim.beamCore, points, T);
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - (active ? 960 : 820)) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  anim.beamGlow.material.opacity = (active ? .58 : .20) * (1 - p.impact) * fade; anim.beamCore.material.opacity = (active ? .90 : .42) * (1 - p.impact) * fade;
+  anim.sourceRing.position.set(anim.origin[0], .32, anim.origin[1]); anim.sourceRing.rotation.z = now / 310;
+  anim.sourceRing.scale.setScalar(.72 + .24*pulse); anim.sourceRing.material.opacity = (.42 + .20*pulse) * fade;
+  anim.targetRing.position.set(anim.target[0], .34, anim.target[1]); anim.targetRing.rotation.z = -now / 230;
+  anim.targetRing.scale.setScalar(.18 + impactPulse * (active ? 1.65 : 1.22)); anim.targetRing.material.opacity = (.50 + .24*pulse) * Math.max(p.impact, .12) * fade;
+  anim.innerRing.position.set(anim.target[0], .36, anim.target[1]); anim.innerRing.rotation.z = now / 170;
+  anim.innerRing.scale.setScalar(.10 + impactPulse * .92); anim.innerRing.material.opacity = (.66 + .20*pulse) * impactPulse * fade;
+  anim.shield.position.set(anim.target[0], .70 + impactPulse * .16, anim.target[1]); anim.shield.rotation.set(now/430, now/310, now/520);
+  anim.shield.scale.setScalar(.20 + impactPulse * (active ? .92 : .72)); anim.shield.material.opacity = (.16 + .32*pulse) * (active ? Math.max(p.impact, .12) : (1 - p.impact * .5)) * fade;
+  anim.core.position.set(anim.target[0], .62 + impactPulse * .46, anim.target[1]); anim.core.scale.setScalar(.22 + impactPulse * (active ? 1.0 : .72));
+  anim.core.material.opacity = (.24 + .52*pulse) * Math.max(p.impact, .12) * fade;
+  for(const shard of anim.shards){
+    const i = shard.userData.index, a = now / (350 + (i % 4) * 45) + shard.userData.phase * Math.PI * 2;
+    const r = .10 + (i % 5) * .045 + impactPulse * (active ? .35 : .20), lift = ((now / 710 + shard.userData.phase) % 1) * (.44 + impactPulse * .60);
+    shard.position.set(anim.target[0] + Math.cos(a) * r, .35 + lift, anim.target[1] + Math.sin(a) * r);
+    shard.material.opacity = (.16 + .44 * Math.sin(now / 90 + i) ** 2) * Math.max(p.impact, .12) * fade;
+  }
+}
+
+function _contramagicaDraw2D(ctx, state, anim, now){
+  if(!_senhorAguasTileVisible(state, anim.origin[0], anim.origin[1])
+      && !_senhorAguasTileVisible(state, anim.target[0], anim.target[1])) return;
+  const p = _contramagicaProgress(anim, now), active = anim.mode === 'trigger';
+  const ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2, tx = anim.target[0] * CELL + CELL / 2, ty = anim.target[1] * CELL + CELL / 2;
+  const fx = ox + (tx - ox) * p.travel, fy = oy + (ty - oy) * p.travel;
+  const failed = active && anim.success === false, main = failed ? '255,100,108' : active ? '111,224,255' : '255,211,117';
+  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - (active ? 960 : 820)) / 440) : 1;
+  const pulse = .84 + .16 * Math.sin(now / 105), impactPulse = p.impacting ? Math.sin(Math.PI * p.impact) : 0;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.shadowColor = failed ? '#ff8088' : active ? '#8beaff' : '#ffe09a'; ctx.shadowBlur = CELL * .22;
+  ctx.strokeStyle = `rgba(${main},${((active ? .56 : .24) * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .105);
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
+  ctx.strokeStyle = `rgba(245,255,255,${((active ? .88 : .46) * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .028); ctx.stroke();
+  ctx.shadowBlur = CELL * .16; ctx.strokeStyle = `rgba(${main},${((.46 + .20*pulse) * Math.max(p.impact, .12) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .036);
+  ctx.beginPath(); ctx.arc(tx, ty, CELL * (.18 + impactPulse * (active ? .70 : .48)), now / 260, now / 260 + Math.PI * 1.72); ctx.stroke();
+  ctx.strokeStyle = `rgba(245,255,255,${((.62 + .22*pulse) * impactPulse * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .020);
+  ctx.beginPath(); ctx.arc(tx, ty, CELL * (.10 + impactPulse * .36), -now / 190, -now / 190 + Math.PI * 1.48); ctx.stroke();
+  ctx.font = `bold ${Math.max(16, CELL * .31)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = `rgba(240,255,255,${((.62 + .28*pulse) * Math.max(impactPulse, .18) * fade).toFixed(3)})`; ctx.fillText(active ? (failed ? '✕' : '🛑') : '🛑', tx, ty - CELL * (.08 + impactPulse * .18));
+  if(active && p.impact > .42){
+    ctx.font = `bold ${Math.max(12, CELL * .20)}px sans-serif`; ctx.fillStyle = failed ? '#ffadb2' : '#baf4ff';
+    ctx.globalAlpha = Math.min(1, (.60 + .26*pulse) * impactPulse * fade); ctx.fillText(failed ? 'falhou' : 'magia anulada', tx, ty + CELL * .34);
+  }
+  ctx.restore();
+}
+
+function _tickContramagica(now){
+  let active = false;
+  for(let i = _contramagicaAnims.length - 1; i >= 0; i--){
+    const anim = _contramagicaAnims[i], p = _contramagicaProgress(anim, now);
+    if(p.finished){ _contramagicaDispose3D(anim); _contramagicaAnims.splice(i, 1); continue; }
+    active = true; if(mode3D && g3) _contramagicaUpdate3D(anim, now);
+  }
+  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
+  _contramagicaRaf = active ? _scheduleVisualFrame(_tickContramagica) : null;
+}
+
+function _receberAnimacaoContramagica(msg){
+  if(!msg || msg.spell_id !== 'contramagica' || !['start', 'resolve', 'trigger'].includes(msg.phase)) return;
+  const id = msg.animation_id == null ? null : String(msg.animation_id);
+  if(msg.phase === 'resolve'){
+    const anim = _contramagicaAnims.find(a => a.animationId === id);
+    if(anim) anim.success = !!msg.success;
+    return;
+  }
+  if(id != null && _contramagicaAnims.some(a => a.animationId === id)) return;
+  const anim = _contramagicaAnimFromMessage(msg); _contramagicaAnims.push(anim);
+  _playCombatCue('magic', {repeatKey:`spell:${id || 'contramagica'}`, volume:.94});
+  if(!_contramagicaRaf) _contramagicaRaf = _scheduleVisualFrame(_tickContramagica);
 }
 
 // ── Olhar Petrificante — feixe ocular e marcas de pedra ───────────────────
@@ -29984,7 +32536,7 @@ function _assinaturaVisualTabuleiro3D(state){
   const elevacoes = Object.keys(state.elevacoes || {}).sort()
     .map(key => `${key}:${state.elevacoes[key]}`).join('|');
   const pontes = (state.pontes || []).map(p =>
-    `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}`).sort().join('|');
+    `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}:${p.material || 'madeira'}`).sort().join('|');
   const segredos = (state.secret_passages || []).map(sp =>
     `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
   return `${tiles}#${pintura}#${elevacoes}#${pontes}#${state.transicao_altura || 'rampa'}#${segredos}`;
@@ -30635,6 +33187,85 @@ function init3D(state){
     return fx3;
   });
 
+  // ── Labaredas persistentes da Prisão de Chamas ─────────────────────────────
+  // Diferente do fogo procedural usado pela Bola de Fogo, cada casa da borda
+  // recebe o mesmo GLB animado da decoração Chama Viva. O pool continua
+  // preguiçoso: só cria/carrega as casas que pertencem a uma prisão ativa.
+  const spellLivingFlameFx = _mkOverlayPool((key) => {
+    const [fx, fy] = _xyDaChave(key);
+    if(!_ehChao(fx, fy)) return null;
+    const fireGroup = new T.Group();
+    fireGroup.name = 'prisao-chamas-viva';
+    fireGroup.position.set(fx, 0, fy);
+    fireGroup.visible = false;
+    scene.add(fireGroup);
+    const embers = [];
+    const emberGeo = new T.SphereGeometry(.018, 5, 4);
+    for(let i = 0; i < 5; i++){
+      const phase = i * 1.47 + fx * .31 + fy * .67;
+      const emberMat = new T.MeshBasicMaterial({
+        color: i % 3 ? 0xff7a13 : 0xffe06a, transparent:true, opacity:.7,
+        depthWrite:false, depthTest:false, blending:T.AdditiveBlending
+      });
+      const ember = new T.Mesh(emberGeo, emberMat);
+      ember.position.set(
+        -.30 + (i * .147) % .60,
+        DECOR_GLB_FLOOR_Y + .08 + (i % 3) * .04,
+        -.25 + ((i * .193) % .50)
+      );
+      ember.renderOrder = 81;
+      ember.userData = {
+        phase, speed: .72 + (i % 3) * .16,
+        baseX: ember.position.x, baseZ: ember.position.z
+      };
+      fireGroup.add(ember); embers.push(ember);
+    }
+    const fx3 = { group:fireGroup, livingFlames:[], embers };
+    Object.defineProperty(fx3, 'visible', {
+      get(){ return fireGroup.visible; },
+      set(v){ fireGroup.visible = v; },
+    });
+
+    const flamePath = (typeof DECOR_GLB_TYPES !== 'undefined' && DECOR_GLB_TYPES.chama_viva)
+      || 'assets/objetos/chama_viva.glb';
+    _loadDecorGLB(T, flamePath, template => {
+      if(!template || !fireGroup.parent) return;
+      const inst = template.clone(true);
+      const box = new T.Box3().setFromObject(inst);
+      const size = box.getSize(new T.Vector3());
+      const fit = Math.min(
+        .84 / Math.max(size.x, 1e-3),
+        .84 / Math.max(size.z, 1e-3),
+        .98 / Math.max(size.y, 1e-3)
+      );
+      inst.position.set(
+        -(box.min.x + box.max.x) / 2,
+        -box.min.y,
+        -(box.min.z + box.max.z) / 2
+      );
+      inst.traverse(o => {
+        if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; }
+      });
+      const wrap = new T.Group();
+      wrap.position.y = DECOR_GLB_FLOOR_Y;
+      wrap.renderOrder = 79;
+      wrap.add(inst);
+      wrap.scale.setScalar(fit);
+      // A visibilidade é controlada pelo grupo do pool; não esconda o wrap
+      // quando o GLB carregar enquanto a zona já estiver ativa.
+      wrap.visible = true;
+      fireGroup.add(wrap);
+      const clips = (template.userData && template.userData._gltfAnimations) || [];
+      const mixer = clips.length ? new T.AnimationMixer(inst) : null;
+      if(mixer) for(const clip of clips) mixer.clipAction(clip).play();
+      fx3.livingFlames.push({
+        mixer, lastAt:performance.now(), wrap, baseScale:fit,
+        phase: (fx * 1.71 + fy * 2.39 + Math.random() * Math.PI * 2)
+      });
+    });
+    return fx3;
+  });
+
   // ── WET FLOOR REFLECTION (damp specular sheen — all dungeon floor tiles) ──────
   // A near-black low-roughness plane floats 2mm above each floor piece.
   // MeshStandardMaterial roughness 0.10 produces sharp torch reflections.
@@ -30910,25 +33541,50 @@ function init3D(state){
     }
   }
 
-  // ── PONTES DE MADEIRA RÚSTICA ─────────────────────────────────────────────
+  // ── PONTES ────────────────────────────────────────────────────────────────
   // A ponte é uma camada visual/caminhável própria: cobre o que estiver abaixo
   // sem substituir o tile, seu material ou sua elevação original.
   const bridgeMeshes = [];
-  // A ponte usa a mesma textura de tábuas do piso de madeira escura. A base
-  // fica mais escura e baixa; o tabuleiro é formado por tábuas transversais,
-  // discretamente separadas, sobre duas longarinas contínuas.
-  const bridgeTex = makeMaterialTex('madeira_escura');
-  const bridgeBaseMat = new T.MeshStandardMaterial({
-    map: bridgeTex, color: 0x5b3217, roughness: 0.92, metalness: 0.0
-  });
-  const bridgeDeckMat = new T.MeshStandardMaterial({
-    map: bridgeTex, color: 0xb87838, roughness: 0.88, metalness: 0.0
-  });
+  // Madeira permanece como padrão. A variante pedra_rustica usa a textura
+  // autoral da ponte e materiais próprios, permitindo misturar os dois tipos
+  // no mesmo mapa sem alterar a lógica de movimento.
+  const bridgeMaterialSets = new Map();
+  function bridgeMaterials(materialId){
+    const key = String(materialId || 'madeira').toLowerCase() === 'pedra_rustica'
+      ? 'pedra_rustica' : 'madeira';
+    if(bridgeMaterialSets.has(key)) return bridgeMaterialSets.get(key);
+    let tex;
+    if(key === 'pedra_rustica'){
+      tex = new T.TextureLoader().load(_assetURL('assets/textures/bridge-stone-rustic.png'));
+      tex.wrapS = tex.wrapT = T.RepeatWrapping;
+      if(T.SRGBColorSpace) tex.colorSpace = T.SRGBColorSpace;
+      else if(T.sRGBEncoding) tex.encoding = T.sRGBEncoding;
+    }else{
+      tex = makeMaterialTex('madeira_escura');
+    }
+    const mats = {
+      base: new T.MeshStandardMaterial({
+        map: tex,
+        color: key === 'pedra_rustica' ? 0x4b4844 : 0x5b3217,
+        roughness: key === 'pedra_rustica' ? 0.98 : 0.92,
+        metalness: 0.0
+      }),
+      deck: new T.MeshStandardMaterial({
+        map: tex,
+        color: key === 'pedra_rustica' ? 0xaaa096 : 0xb87838,
+        roughness: key === 'pedra_rustica' ? 0.96 : 0.88,
+        metalness: 0.0
+      })
+    };
+    bridgeMaterialSets.set(key, mats);
+    return mats;
+  }
   const bridgeDeckGeoH = new T.BoxGeometry(TW * 0.88, 0.105, 0.88);
   const bridgeDeckGeoV = new T.BoxGeometry(0.88, 0.105, TW * 0.88);
   for(const bridge of (state.pontes || [])){
     const bridgeTiles = _bridgeTiles2D(bridge);
     if(!bridgeTiles.length) continue;
+    const bridgeMats = bridgeMaterials(bridge.material);
     const horizontal = bridge.inicio?.[1] === bridge.fim?.[1];
     const height = Number.isInteger(Number(bridge.altura)) ? Number(bridge.altura) : 0;
     const minX = Math.min(...bridgeTiles.map(t => t[0]));
@@ -30946,7 +33602,7 @@ function init3D(state){
       : new T.BoxGeometry(0.14, 0.14, railLength);
     const railOffset = Math.max(0.16, width * TW / 2 - 0.18);
     for(const side of [-1, 1]){
-      const rail = new T.Mesh(railGeo, bridgeBaseMat);
+      const rail = new T.Mesh(railGeo, bridgeMats.base);
       rail.position.set(
         horizontal ? centerX : centerX + side * railOffset,
         top + 0.065,
@@ -30966,7 +33622,7 @@ function init3D(state){
     for(let step = 0; step < span; step++){
       const bx = horizontal ? minX + step : centerX;
       const by = horizontal ? centerZ : minY + step;
-      const plank = new T.Mesh(horizontal ? bridgeDeckGeoH : bridgeDeckGeoV, bridgeDeckMat);
+      const plank = new T.Mesh(horizontal ? bridgeDeckGeoH : bridgeDeckGeoV, bridgeMats.deck);
       plank.position.set(bx, top + 0.145, by);
       plank.scale.set(horizontal ? 1 : width, 1, horizontal ? width : 1);
       plank.castShadow = true; plank.receiveShadow = true;
@@ -31353,7 +34009,7 @@ function init3D(state){
     weaponRangeMeshes,
     masterAttackRangeMeshes, masterAttackZoneMeshes, masterFootprintMeshes,
     masterHistoryAttackerMeshes, masterHistoryTargetMeshes,
-    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx,
+    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
@@ -31372,6 +34028,12 @@ function init3D(state){
 
   // ── Initial camera position + first OrbitControls sync ───────────────────
   resetCamera3D();
+  // Ao entrar na masmorra, o jogador deve começar vendo o próprio herói.
+  // `resetCamera3D()` fornece o ângulo/zoom padrão; o reenquadramento abaixo
+  // apenas desloca o alvo para o peão local, sem esperar o primeiro movimento.
+  const peaoInicial = (state.players || []).find(p =>
+    p && String(p.id) === String(GS.myPid) && p.alive && Array.isArray(p.pos));
+  if(peaoInicial) centralizarCamera3DNoPeao(peaoInicial.pos);
   resize3D();
   // Quando init3D roda logo após showScreen('screen-game'), o map-wrap pode
   // ainda não ter layout (offsetWidth=0) → o resize acima usa o fallback
@@ -34026,6 +36688,33 @@ function _renderMovePreview3D(state, terrainSet, TH){
   group.add(ring);
 }
 
+// A cena 3D pode precisar ser recriada quando o chão muda de material. A
+// câmera, porém, pertence à experiência do jogador e deve sobreviver a essa
+// troca. Capturamos somente os dados da visão — nenhum objeto da cena antiga
+// é reutilizado depois do dispose3D().
+function _capturarCamera3D(){
+  if(!g3?.camera || !g3?.controls) return null;
+  return {
+    position: g3.camera.position.clone(),
+    target: g3.controls.target.clone(),
+    up: g3.camera.up.clone(),
+    zoom: Number(g3.camera.zoom) || 1,
+  };
+}
+
+function _restaurarCamera3D(view){
+  if(!view || !g3?.camera || !g3?.controls) return;
+  const { camera, controls } = g3;
+  camera.up.copy(view.up);
+  camera.position.copy(view.position);
+  camera.zoom = view.zoom;
+  camera.updateProjectionMatrix();
+  controls.target.copy(view.target);
+  // Recalcula o estado interno do OrbitControls a partir da posição que foi
+  // restaurada, sem aplicar novamente a câmera padrão de init3D().
+  controls.update();
+}
+
 function renderMap3D(state){
   if(!state || !state.tiles) return;
   state = _estadoComMortosVisuais(state);
@@ -34038,7 +36727,16 @@ function renderMap3D(state){
   if(estadoMovimento.emMovimento || estadoMininoMov.emMovimento) return;
   const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
   if(!g3 || g3.boardVisualSig !== boardVisualSig){
-    try { init3D(state); }
+    // Alterações de terreno (por exemplo, as áreas criadas por Senhor das
+    // Águas, Sopro do Inverno e Ira da Rocha Ardente) mudam a assinatura
+    // visual e exigem reconstruir a cena. A reconstrução cria uma câmera nova
+    // e normalmente chama resetCamera3D(); guarde a visão atual para que uma
+    // magia nunca force o jogador a perder seu zoom, ângulo ou enquadramento.
+    const cameraView = _capturarCamera3D();
+    try {
+      init3D(state);
+      _restaurarCamera3D(cameraView);
+    }
     catch(err){
       console.error('init3D failed:', err);
       toast('❌ Erro ao iniciar 3D: ' + err.message, 'var(--red)');
@@ -34549,6 +37247,26 @@ function renderMap3D(state){
       // Visibility: show if any footprint tile is explored
       mesh.visible = visivel;
     }
+
+    // Perigo identificado pelo Ladino: mantém um marcador visível também no
+    // modo 3D. O marcador é filho da própria decoração e desaparece junto com
+    // ela quando a armadilha é desarmada ou disparada.
+    for (const d of decors) {
+      const mesh = g3.decorMeshes[d.id];
+      if (!mesh) continue;
+      const perigosa = (d.trap || d.chest_trap) && d.trap_revealed;
+      let badge = mesh.userData && mesh.userData._trapBadge;
+      if (perigosa && !badge) {
+        badge = _decorTrapBadge3D();
+        mesh.add(badge);
+        mesh.userData._trapBadge = badge;
+      }
+      if (badge) {
+        badge.visible = !!(perigosa && mesh.visible);
+        badge.position.set(0, 1.25, 0);
+      }
+    }
+
     // Remove meshes for decorations that no longer exist
     for (const id of Object.keys(g3.decorMeshes)) {
       if (!vistosDec.has(id)) {
@@ -34566,15 +37284,16 @@ function renderMap3D(state){
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const gamepadAttackTarget3D = _gamepadSelectedAttackTarget(state);
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), p.em_chamas_rodadas > 0,
+    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, !!p.metamorfose_ativa, p.metamorfose_forma_type, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), p.em_chamas_rodadas > 0,
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.size, a.oriented, a.facing])]),
-    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
+    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
     m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
     state.hero_corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
+    (state.decorations||[]).map(d => [d.id, d.pos, d.facing, d.trap, d.chest_trap, d.trap_revealed, d.tem_loot]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
     state.current_turn, state.animados_turn, GS.myPid, gamepadAttackTarget3D?.targetId || null,
     g3.selectedPos, _animadoSel,
@@ -34666,12 +37385,13 @@ function renderMap3D(state){
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
     const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
     const isCur = p.id===state.current_turn;
+    const formaVisual = _metamorfoseVisualName(p);
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, p.pawn_override, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
+      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
-        const f = build3DFig(p.color, !!p.pawn_override, p.id===GS.myPid, isCur, px, py, p.class_id,
-          p.pawn_override ? (p.metamorfose_forma_type || 'lobisomem') : null, pSel, p.pawn_override,
+        const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
+          formaVisual ? (p.metamorfose_forma_type || formaVisual) : null, pSel, formaVisual,
           undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
           // Os `undefined` cobrem monsterVisionRadius, mModel3D, mFillFootprint
           // e mSize — parâmetros só de monstro. Faltava o de mSize, então
@@ -34879,6 +37599,27 @@ function renderMap3D(state){
 }
 
 // Sprite de armadilha (emoji em canvas). Verde/normal = armada; vermelho = ativada.
+function _decorTrapBadge3D(){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 96;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, 96, 96);
+  ctx.beginPath(); ctx.arc(48, 48, 39, 0, Math.PI * 2);
+  ctx.fillStyle = '#5b1010'; ctx.fill();
+  ctx.lineWidth = 5; ctx.strokeStyle = '#ff6b52'; ctx.stroke();
+  ctx.font = 'bold 58px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff1d0'; ctx.fillText('!', 48, 51);
+  const tex = new T.CanvasTexture(cv);
+  tex._owned = true;
+  const badge = new T.Sprite(new T.SpriteMaterial({
+    map: tex, transparent: true, depthWrite: false,
+  }));
+  badge.scale.set(0.42, 0.42, 1);
+  badge.renderOrder = 8;
+  badge.userData.isTrapBadge = true;
+  return badge;
+}
+
 function _armadilhaSprite3D(arm, x, y){
   const T = g3.T;
   const cv = document.createElement('canvas'); cv.width = cv.height = 64;
@@ -35195,6 +37936,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro.glb',
   gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro.glb',
   gigante_runico:     'assets/models3d/monstros/gigante_runas.glb',
+  troll:              'assets/models3d/monstros/troll.glb',
 
   // Fallback por `type`: importante para monstros antigos/autorados que não
   // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
@@ -35461,7 +38203,13 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : null;
     // Modelos 2x2 precisam preencher o quadrado visual inteiro; os demais
     // conservam o enquadramento anterior para não alterar criaturas 1x1.
-    const footprint = _TINY_3D_PAWNS.has(imageName) || _TINY_3D_PAWNS.has(monsterType)
+    const footprint = (imageName === 'rato' || monsterType === 'rato')
+      ? _RATO_3D_PAWN_FRAC
+      : (imageName === 'gato' || monsterType === 'gato')
+      ? _GATO_3D_PAWN_FRAC
+      : (imageName === 'ovelha' || monsterType === 'ovelha')
+      ? _OVELHA_3D_PAWN_FRAC
+      : _TINY_3D_PAWNS.has(imageName) || _TINY_3D_PAWNS.has(monsterType)
       ? _TINY_3D_PAWN_FRAC
       : orientedDims
       ? Math.max(orientedDims[0], orientedDims[1]) * 0.92
@@ -35570,6 +38318,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   ]);
   const movementFront = new Set([
     'ciclope',
+    // O GLB do Troll também foi exportado 90° fora do eixo do mapa;
+    // alinhar a orientação-base faz a frente acompanhar o movimento.
+    'troll',
     // O GLB do Estrangulador foi exportado 90° fora do eixo padrão;
     // alinhar a orientação-base faz a frente acompanhar o movimento.
     'estrangulador',
@@ -41427,6 +44178,21 @@ function on3DClick(e){
     if(tAgua) _clickTileSenhorDasAguas(tAgua[0], tAgua[1]);
     return;
   }
+  if(window._modoIraRocha){
+    const tIra = get3DTile(e);
+    if(tIra) _clickTileIraRocha(tIra[0], tIra[1]);
+    return;
+  }
+  if(window._modoTeleporteAlvo){
+    const tTele = get3DTile(e);
+    if(tTele) _clickTileTeleporteAlvo(tTele[0], tTele[1]);
+    return;
+  }
+  if(window._modoTeleporteDestino){
+    const tDestino = get3DTilePlane(e);
+    if(tDestino) _clickTileTeleporteDestino(tDestino[0], tDestino[1]);
+    return;
+  }
   // Modo de mira de MAGIA: clicar uma carta arma a mira; aqui o clique no
   // tabuleiro resolve o alvo/casa e envia a mensagem `magia` (ver castarMagia).
   if(window._modoMagia){
@@ -41508,7 +44274,7 @@ function on3DClick(e){
     const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere3D.length){
-      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain');
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
       if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -41762,6 +44528,9 @@ function handleTileClick(tx, ty){
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
+  if(window._modoIraRocha){ _clickTileIraRocha(tx, ty); return; }
+  if(window._modoTeleporteAlvo){ _clickTileTeleporteAlvo(tx, ty); return; }
+  if(window._modoTeleporteDestino){ _clickTileTeleporteDestino(tx, ty); return; }
   if(window._modoMagia){ _clickTileMagia(tx, ty); return; }
   if(window._modoAnimarMortos){ _clickTileAnimarMortos(tx, ty); return; }
   // ── Mira de ARREMESSÁVEL (2D e 3D): resolve o alvo e envia `throw_item` ─────
@@ -41827,7 +44596,7 @@ function handleTileClick(tx, ty){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
-      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain');
+      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
       if(inter){ GS.interagirDecor(inter.id); return; }
       if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
@@ -42375,6 +45144,7 @@ GS.on('gameState', msg => {
   _consumeResistanceEvents(msg);
   handleGameState(msg);
   _considerarPopupSenhorDasAguas(msg);
+  _considerarPopupIraRocha(msg);
   _atualizarMetamorfoseStatus();
   _garantirLoopBolaFogo();  // mantém as chamas residuais pulsando até a zona expirar
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
@@ -42544,6 +45314,8 @@ function _dadosMagiaEmTrajeto(){
   })) return true;
   if(_bolaFogoAnims.some(anim => !_bolaFogoProgress(anim, now).exploding)) return true;
   if(_raioGeloAnims.some(anim => !_raioGeloProgress(anim, now).impacting)) return true;
+  if(_iraRochaAnims.some(anim => !_iraRochaProgress(anim, now).impacting)) return true;
+  if(_prisaoChamasAnims.some(anim => !_prisaoChamasProgress(anim, now).impacting)) return true;
   if(_jatoArAnims.some(anim => !_jatoArProgress(anim, now).impacting)) return true;
   if(_soproDragaoAnims.some(anim => !_soproDragaoProgress(anim, now).impacting)) return true;
   if(_cuspeAcidoAnims.some(anim => !_cuspeAcidoProgress(anim, now).impacting)) return true;
@@ -42558,6 +45330,13 @@ function _dadosMagiaEmTrajeto(){
   if(_vooAnims.some(anim => !_vooProgress(anim, now).impacting)) return true;
   if(_criarAlimentosAnims.some(anim => !_criarAlimentosProgress(anim, now).impacting)) return true;
   if(_curaAnims.some(anim => !_curaProgress(anim, now).impacting)) return true;
+  if(_purificacaoAnims.some(anim => !_purificacaoProgress(anim, now).impacting)) return true;
+  if(_ressurreicaoAnims.some(anim => !_ressurreicaoProgress(anim, now).impacting)) return true;
+  if(_metamorfoseAnims.some(anim => !_metamorfoseProgress(anim, now).impacting)) return true;
+  if(_guerreiroLuzAnims.some(anim => !_guerreiroLuzProgress(anim, now).impacting)) return true;
+  if(_cancaoHeroicaAnims.some(anim => !_cancaoHeroicaProgress(anim, now).impacting)) return true;
+  if(_saciarAnims.some(anim => !_saciarProgress(anim, now).impacting)) return true;
+  if(_contramagicaAnims.some(anim => !_contramagicaProgress(anim, now).impacting)) return true;
   return false;
 }
 
@@ -42608,11 +45387,21 @@ const _spellAnimationReceivers = [
   _receberAnimacaoVelocidade,
   _receberAnimacaoLentidao,
   _receberAnimacaoSenhorAguas,
+  _receberAnimacaoIraRocha,
+  _receberAnimacaoPrisaoChamas,
   _receberAnimacaoOlharPetrificante,
   _receberAnimacaoConjurarElemental,
   _receberAnimacaoVoo,
   _receberAnimacaoCriarAlimentos,
   _receberAnimacaoCura,
+  _receberAnimacaoPurificacao,
+  _receberAnimacaoRessurreicao,
+  _receberAnimacaoMetamorfose,
+  _receberAnimacaoTeleporte,
+  _receberAnimacaoGuerreiroLuz,
+  _receberAnimacaoCancaoHeroica,
+  _receberAnimacaoSaciar,
+  _receberAnimacaoContramagica,
 ];
 GS.on('spellAnimation', msg => {
   _registrarInicioAnimacaoMagia(msg);
@@ -42622,12 +45411,14 @@ GS.on('spellAnimation', msg => {
     catch(err){ console.error('Falha ao processar animação de magia:', err); }
   }
 });
+GS.on('iraRochaArdentePrompt', msg => _iniciarSelecaoChamasIraRocha(msg));
 GS.on('sorteReacao', msg => {
   const aceitar = window.confirm(`🎲 SORTE\n\n${msg.texto || 'Usar Sorte?'}`);
   GS.responderSorteReacao(aceitar);
 });
 
 GS.on('trapResult',  msg  => queueTrapResult(msg));
+GS.on('survivalResult', msg => queueTrapResult(msg));
 GS.on('fallResult',  msg  => {
   _receiveFlightFall(msg);
   queueTrapResult({...msg, _fall: true, tipo: 'queda'});
@@ -42638,6 +45429,63 @@ GS.on('diseaseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg);
 GS.on('curseResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('poisonResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('equipmentDamageResult', msg => queueTrapResult(msg));
+let _teleporteSaveOpen = false;
+function _ensureTeleporteSaveOverlay(){
+  let overlay = document.getElementById('teleporte-save-overlay');
+  if(overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'teleporte-save-overlay';
+  overlay.innerHTML = `<div class="trap-box" role="dialog" aria-modal="true" style="border-color:#b77cff;">
+    <div class="trap-art"><img data-teleporte-art alt="Teleporte" style="width:100%;height:100%;object-fit:cover;border-radius:6px;"></div>
+    <div class="trap-content"><h3 data-teleporte-title>🌀 TELEPORTE</h3>
+      <div class="trap-status trap-status--fail" data-teleporte-status>TESTE DE VONTADE</div>
+      <p data-teleporte-desc></p><ul data-teleporte-effects></ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button type="button" data-teleporte-resist class="trap-close" style="border-color:#75b7ff;">RESISTIR</button>
+        <button type="button" data-teleporte-fail class="trap-close" style="border-color:#d39bff;">FALHAR VOLUNTARIAMENTE</button>
+      </div>
+    </div></div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-teleporte-resist]').onclick = () => _responderTeleporte(false);
+  overlay.querySelector('[data-teleporte-fail]').onclick = () => _responderTeleporte(true);
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && _teleporteSaveOpen){ _responderTeleporte(false); e.preventDefault(); }
+  });
+  return overlay;
+}
+function _showTeleporteSavePrompt(msg){
+  if(String(msg.target_id) !== String(GS.myPid)) return;
+  const overlay = _ensureTeleporteSaveOverlay();
+  overlay.querySelector('[data-teleporte-art]').src = _assetURL(msg.imagem || 'assets/armadilhas/armadilha_teletransporte.png');
+  overlay.querySelector('[data-teleporte-title]').textContent =
+    t('ui.magia.teleporte_save_titulo', {caster: msg.caster_name || t('ui.magia.um_conjurador')});
+  overlay.querySelector('[data-teleporte-status]').textContent = t('ui.magia.teleporte_save_status', {dc: msg.dc});
+  overlay.querySelector('[data-teleporte-desc]').textContent = t('ui.magia.teleporte_save_desc');
+  overlay.querySelector('[data-teleporte-effects]').innerHTML =
+    `<li>${t('ui.magia.teleporte_save_efeito_resistir')}</li>`
+    + `<li>${t('ui.magia.teleporte_save_efeito_falhar')}</li>`
+    + `<li>${t('ui.magia.teleporte_save_efeito_consequencia')}</li>`;
+  overlay.querySelectorAll('button').forEach(b => { b.disabled = false; });
+  overlay.dataset.requestId = msg.request_id || '';
+  _teleporteSaveOpen = true;
+  overlay.classList.add('open');
+  setTimeout(() => overlay.querySelector('[data-teleporte-resist]')?.focus(), 0);
+}
+function _responderTeleporte(falhaVoluntaria){
+  if(!_teleporteSaveOpen) return;
+  const overlay = document.getElementById('teleporte-save-overlay');
+  const id = overlay?.dataset.requestId;
+  if(!id) return;
+  _teleporteSaveOpen = false;
+  overlay?.classList.remove('open');
+  GS.responderTeleporte(id, falhaVoluntaria);
+}
+GS.on('teleporteSavePrompt', _showTeleporteSavePrompt);
+GS.on('teleporteDestinoPrompt', msg => _iniciarMiraTeleporteDestino(msg));
+GS.on('teleporteResult', msg => {
+  if(msg.resisted) toast(t('ui.magia.teleporte_toast_resistiu', {alvo: msg.target_name || t('ui.magia.o_alvo')}), '#8fc7ff');
+  else if(msg.success && String(msg.target_id) === String(GS.myPid)) toast(t('ui.magia.teleporte_toast_concluido'), '#d39bff');
+});
 function _atualizarMetamorfoseStatus(){
   const id='metamorfose-status', p=GS.me;
   const monstroMeta=(GS.gameState?.monsters||[]).find(m=>String(m.metamorfose_caster_id||'')===String(GS.myPid)&&m.metamorfose_ativa);
@@ -42666,7 +45514,28 @@ GS.on('metamorfoseSavePrompt', msg => {
   GS.responderMetamorfose(msg.request_id, falhar);
 });
 GS.on('metamorfoseResult', msg => {
-  if (String(msg.target_id) === String(GS.myPid)) toast(msg.revertida ? '🦋 A Metamorfose terminou.' : `🦋 Forma: ${msg.forma?.name || 'criatura'}`, '#c8a951');
+  const souAlvo = String(msg.target_id) === String(GS.myPid);
+  const souConjurador = String(msg.caster_id) === String(GS.myPid);
+  if (souAlvo) toast(msg.revertida ? '🦋 A Metamorfose terminou.' : `🦋 Forma: ${msg.forma?.name || 'criatura'}`, '#c8a951');
+  // O resultado chega por broadcast. A janela deve aparecer para quem sofreu
+  // a transformação e também para o mago que a lançou sobre outra criatura,
+  // sem abrir o mesmo popup para os demais jogadores.
+  if (!msg.revertida && (souAlvo || souConjurador)) {
+    const forma = msg.forma?.name || msg.forma_nome || t('ui.magia.criatura_escolhida');
+    const alvo = souAlvo ? t('ui.magia.voce_alvo') : (msg.target_name || t('ui.magia.o_alvo'));
+    queueTrapResult({
+      ...msg,
+      tipo: 'metamorfose',
+      tipo_id: 'metamorfose',
+      nome: _rotulo('metamorfose.nome', 'cat.magia', 'Metamorfose'),
+      descricao: t('ui.magia.metamorfose_assumiu_forma', {alvo, forma}),
+      efeitos_extra: [
+        t('ui.magia.metamorfose_forma_aplicada', {forma}),
+        t('ui.magia.metamorfose_efeito_atributos'),
+        t('ui.magia.metamorfose_efeito_equipamento'),
+      ],
+    });
+  }
   _atualizarMetamorfoseStatus();
 });
 GS.on('metamorfoseFormaDesbloqueada', msg => {
@@ -42773,6 +45642,75 @@ GS.on('decor_loot', msg => {
   });
   _openDecorLootId = msg.decor_id;   // set AFTER abrirPainelLoot (which resets it)
 });
+
+// ── Popup de mensagem de placa ─────────────────────────────────────────────
+function abrirMensagemPlaca(msg){
+  const anterior = document.getElementById('placa-message-overlay');
+  if(anterior) anterior.remove();
+  const el = document.createElement('div');
+  el.id = 'placa-message-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const texto = _esc(msg?.texto || '');
+  const titulo = _esc(msg?.nome || 'Placa');
+  el.innerHTML = `<div style="width:min(560px,92vw);background:linear-gradient(145deg,#312516,#17120d);border:2px solid #c8a951;border-radius:12px;box-shadow:0 0 30px #000;padding:22px;color:#f5e7c5;text-align:center;">
+    <div style="font-size:30px;line-height:1;margin-bottom:8px">${_esc(msg?.icone || '🪧')}</div>
+    <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:18px;letter-spacing:1px">${titulo}</div>
+    <div style="margin:18px 4px 20px;white-space:pre-wrap;text-align:left;line-height:1.55;font-size:16px;color:#f4ead4">${texto}</div>
+    <button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #c8a951;border-radius:7px;background:#3b2b18;color:#f5e7c5;font-weight:700;cursor:pointer">Fechar</button>
+  </div>`;
+  document.body.appendChild(el);
+  const fechar = () => {
+    document.removeEventListener('keydown', onKey);
+    el.remove();
+    _gamepadSetUiFocus(null);
+  };
+  const onKey = e => { if(e.key === 'Escape'){ e.preventDefault(); fechar(); } };
+  el.querySelector('[data-gamepad-cancel]').onclick = fechar;
+  el.addEventListener('click', e => { if(e.target === el) fechar(); });
+  document.addEventListener('keydown', onKey);
+  _gamepadFocusMapPoint('#placa-message-overlay [data-gamepad-cancel]');
+}
+
+GS.on('decor_message', abrirMensagemPlaca);
+
+// ── Carta narrativa ─────────────────────────────────────────────────────────
+// Cartas são itens de leitura: o servidor envia o texto e pode aplicar uma
+// maldição vinculada à instância; em fichas somente-leitura a abertura é local.
+window.abrirCarta = function(item){
+  const anterior = document.getElementById('carta-message-overlay');
+  if(anterior) anterior.remove();
+  const focoAnterior = document.activeElement;
+  const el = document.createElement('div');
+  el.id = 'carta-message-overlay';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1300;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const nome = _esc(item?.name || item?.nome || 'Carta');
+  const texto = _esc(item?.texto || item?.mensagem || item?.descricao || t('ui.carta.sem_mensagem'));
+  el.innerHTML = `<div style="width:min(620px,92vw);max-height:84vh;overflow:auto;background:linear-gradient(145deg,#f3e5c4,#d6bd8b);border:3px solid #67451e;border-radius:5px;box-shadow:0 12px 40px #000; padding:28px 30px;color:#2e2113;">
+    <div style="text-align:center;border-bottom:1px solid #8a6836;padding-bottom:12px;margin-bottom:18px;">
+      <div style="font-size:34px;line-height:1">✉️</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:18px;letter-spacing:1px">${nome}</div>
+    </div>
+    <div style="white-space:pre-wrap;line-height:1.7;font-family:Georgia,serif;font-size:17px;min-height:80px">${texto}</div>
+    <div style="text-align:center;margin-top:24px"><button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #67451e;border-radius:5px;background:#7b5527;color:#fff4d8;font-weight:700;cursor:pointer">Fechar</button></div>
+  </div>`;
+  document.body.appendChild(el);
+  let fechada = false;
+  const fechar = () => {
+    if(fechada) return;
+    fechada = true;
+    document.removeEventListener('keydown', onKey);
+    el.remove();
+    if(focoAnterior?.isConnected && typeof window._gamepadSetUiFocus === 'function')
+      window._gamepadSetUiFocus(focoAnterior);
+  };
+  const onKey = e => { if(e.key === 'Escape'){ e.preventDefault(); fechar(); } };
+  el.querySelector('[data-gamepad-cancel]').onclick = fechar;
+  el.addEventListener('click', e => { if(e.target === el) fechar(); });
+  document.addEventListener('keydown', onKey);
+  _gamepadFocusMapPoint('#carta-message-overlay [data-gamepad-cancel]');
+};
+
+GS.on('item_message', msg => window.abrirCarta(msg?.item || msg));
 
 GS.on('decor_mechanism', msg => {
   abrirPainelLoot({

@@ -82,12 +82,13 @@ def _exportar(meshes, nome):
 # ── Rato ──────────────────────────────────────────────────────────────────
 def make_rato():
     """Corpo baixo e alongado, orelhas redondas grandes e cauda longa — os
-    tres tracos que fazem a silhueta ser lida como rato vista de cima."""
+    tres tracos que fazem a silhueta ser lida como rato vista de cima. A paleta
+    branca e rosa diferencia a forma da Metamorfose das criaturas comuns."""
     meshes = []
-    pelo = (0.34, 0.30, 0.28)
-    ventre = (0.48, 0.44, 0.41)
-    focinho = (0.40, 0.35, 0.33)
-    rosa = (0.52, 0.33, 0.34)
+    pelo = (0.96, 0.95, 0.92)
+    ventre = (1.00, 0.70, 0.76)
+    focinho = (1.00, 0.78, 0.82)
+    rosa = (0.94, 0.38, 0.50)
     preto = (0.02, 0.018, 0.015)
 
     # Corpo em gota: mais largo atras, afinando para o focinho (+Z).

@@ -26,6 +26,14 @@ window.LANG_CATALOGO = {
     "en": "Curse Trap",
     "pt": "Armadilha de Maldição"
   },
+  "cat.armadilha.armadilha_raio_congelante.desc": {
+    "en": "Fires a freezing ray: deals 3d4 damage. Fortitude DC 15 avoids the paralysis; on failure, escape with Strength DC 16.",
+    "pt": "Dispara um raio congelante: causa 3d4 de dano. Fortitude CD 15 evita a paralisia; na falha, escapa com Força CD 16."
+  },
+  "cat.armadilha.armadilha_raio_congelante.nome": {
+    "en": "Ray of Frost Trap",
+    "pt": "Armadilha de Raio Congelante"
+  },
   "cat.armadilha.armadilha_teletransporte.desc": {
     "en": "Will DC 12 or is teleported to the configured exit.",
     "pt": "Vontade CD 12 ou é teleportado para a saída configurada."
@@ -334,6 +342,10 @@ window.LANG_CATALOGO = {
     "en": "Torture Table",
     "pt": "Mesa de tortura"
   },
+  "cat.decor.placa.nome": {
+    "en": "Sign",
+    "pt": "Placa"
+  },
   "cat.decor.prisao.nome": {
     "en": "Prison",
     "pt": "Prisão"
@@ -541,6 +553,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.ladino_armadilha_incendiaria.nome": {
     "en": "Formula: Incendiary Trap",
     "pt": "Fórmula: Armadilha Incendiária"
+  },
+  "cat.guilda.ladino_armadilha_raio_congelante.desc": {
+    "en": "Permanently unlocks crafting the Ray of Frost Trap.",
+    "pt": "Desbloqueia permanentemente a fabricação de Armadilha de Raio Congelante."
+  },
+  "cat.guilda.ladino_armadilha_raio_congelante.nome": {
+    "en": "Formula: Ray of Frost Trap",
+    "pt": "Fórmula: Armadilha de Raio Congelante"
   },
   "cat.guilda.ladino_armadilha_urso.desc": {
     "en": "Permanently unlocks crafting the Bear Trap.",
@@ -1887,7 +1907,7 @@ window.LANG_CATALOGO = {
     "pt": "Água Benta"
   },
   "cat.item.alabarda.desc": {
-    "en": "",
+    "en": "Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands.",
     "pt": "Alabarda: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos."
   },
   "cat.item.alabarda.nome": {
@@ -1895,7 +1915,7 @@ window.LANG_CATALOGO = {
     "pt": "Alabarda"
   },
   "cat.item.alabarda_prata.desc": {
-    "en": "",
+    "en": "Silver Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.alabarda_prata.nome": {
@@ -1915,7 +1935,7 @@ window.LANG_CATALOGO = {
     "pt": "Antídoto"
   },
   "cat.item.arco_curto.desc": {
-    "en": "",
+    "en": "Short Bow: 1d6 piercing damage, using Dexterity. Range: 6 squares in a straight line or 3 diagonally.",
     "pt": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
   },
   "cat.item.arco_curto.nome": {
@@ -1931,7 +1951,7 @@ window.LANG_CATALOGO = {
     "pt": "Banquete"
   },
   "cat.item.bastsword.desc": {
-    "en": "",
+    "en": "Bastard Sword: 1d10 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Bastarda: 1d10 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.bastsword.nome": {
@@ -1939,7 +1959,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Bastarda"
   },
   "cat.item.bastsword_prata.desc": {
-    "en": "",
+    "en": "Silver Bastard Sword: 1d10 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.bastsword_prata.nome": {
@@ -1947,7 +1967,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Bastarda de Prata"
   },
   "cat.item.besta.desc": {
-    "en": "",
+    "en": "Crossbow: 1d8 piercing damage, using Dexterity. Range: 8 squares in a straight line.",
     "pt": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
   },
   "cat.item.besta.nome": {
@@ -1971,7 +1991,7 @@ window.LANG_CATALOGO = {
     "pt": "Botas Velozes"
   },
   "cat.item.bordao.desc": {
-    "en": "",
+    "en": "Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned.",
     "pt": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
   },
   "cat.item.bordao.nome": {
@@ -1979,7 +1999,7 @@ window.LANG_CATALOGO = {
     "pt": "Bordão"
   },
   "cat.item.bordao_prata.desc": {
-    "en": "",
+    "en": "Silver Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.bordao_prata.nome": {
@@ -1988,7 +2008,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.bota_alada.desc": {
     "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
-    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10."
+    "pt": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
   },
   "cat.item.bota_alada.nome": {
     "en": "Winged Boot",
@@ -2003,7 +2023,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadura de Bronze"
   },
   "cat.item.cajado_madeira.desc": {
-    "en": "",
+    "en": "Wooden Staff: 1d6 bludgeoning damage, using Strength or Dexterity. Range: any adjacent square.",
     "pt": "Cajado de Madeira: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
   },
   "cat.item.cajado_madeira.nome": {
@@ -2023,7 +2043,7 @@ window.LANG_CATALOGO = {
     "pt": "Cota de Malha"
   },
   "cat.item.chicote.desc": {
-    "en": "",
+    "en": "Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield.",
     "pt": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
   },
   "cat.item.chicote.nome": {
@@ -2031,7 +2051,7 @@ window.LANG_CATALOGO = {
     "pt": "Chicote"
   },
   "cat.item.chicote_prata.desc": {
-    "en": "",
+    "en": "Silver Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.chicote_prata.nome": {
@@ -2055,7 +2075,7 @@ window.LANG_CATALOGO = {
     "pt": "Cola Alquímica"
   },
   "cat.item.dagger.desc": {
-    "en": "",
+    "en": "Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield.",
     "pt": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
   },
   "cat.item.dagger.nome": {
@@ -2063,7 +2083,7 @@ window.LANG_CATALOGO = {
     "pt": "Adaga"
   },
   "cat.item.dagger_prata.desc": {
-    "en": "",
+    "en": "Silver Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.dagger_prata.nome": {
@@ -2071,7 +2091,7 @@ window.LANG_CATALOGO = {
     "pt": "Adaga de Prata"
   },
   "cat.item.dente_da_fera.desc": {
-    "en": "",
+    "en": "Beast Fang: 1d6 slashing damage, using Strength or Dexterity. Can also be thrown up to 3 squares.",
     "pt": "Dente da fera: 1d6 de dano cortante, usando Força ou Destreza. Também pode ser arremessada até 3 casas."
   },
   "cat.item.dente_da_fera.nome": {
@@ -2079,7 +2099,7 @@ window.LANG_CATALOGO = {
     "pt": "Dente da fera"
   },
   "cat.item.dente_da_fera_copia.desc": {
-    "en": "",
+    "en": "Beast Fang (Copy): 1d6 slashing damage, using Strength or Dexterity. Can also be thrown up to 5 squares.",
     "pt": "Dente da fera (cópia): 1d6 de dano cortante, usando Força ou Destreza. Também pode ser arremessada até 5 casas."
   },
   "cat.item.dente_da_fera_copia.nome": {
@@ -2123,7 +2143,7 @@ window.LANG_CATALOGO = {
     "pt": "Escudo Pequeno"
   },
   "cat.item.espada2m.desc": {
-    "en": "",
+    "en": "Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20.",
     "pt": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
   },
   "cat.item.espada2m.nome": {
@@ -2131,7 +2151,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada de 2 Mãos"
   },
   "cat.item.espada2m_prata.desc": {
-    "en": "",
+    "en": "Silver Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.espada2m_prata.nome": {
@@ -2187,7 +2207,7 @@ window.LANG_CATALOGO = {
     "pt": "Granada Superior"
   },
   "cat.item.hand_crossbow.desc": {
-    "en": "",
+    "en": "Hand Crossbow: 1d4 piercing damage, using Dexterity. Range: 4 squares in a straight line.",
     "pt": "Besta de Mão: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta."
   },
   "cat.item.hand_crossbow.nome": {
@@ -2215,7 +2235,7 @@ window.LANG_CATALOGO = {
     "pt": "Elmo de Ferro"
   },
   "cat.item.instrumento.desc": {
-    "en": "",
+    "en": "Musical Instrument: — physical damage, using Dexterity.",
     "pt": "Instrumento Musical: — de dano físico, usando Destreza."
   },
   "cat.item.instrumento.nome": {
@@ -2367,7 +2387,7 @@ window.LANG_CATALOGO = {
     "pt": "Violino Rústico"
   },
   "cat.item.lanca.desc": {
-    "en": "",
+    "en": "Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares.",
     "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
   },
   "cat.item.lanca.nome": {
@@ -2375,7 +2395,7 @@ window.LANG_CATALOGO = {
     "pt": "Lança"
   },
   "cat.item.lanca_curta.desc": {
-    "en": "",
+    "en": "Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares.",
     "pt": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
   },
   "cat.item.lanca_curta.nome": {
@@ -2383,7 +2403,7 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta"
   },
   "cat.item.lanca_curta_prata.desc": {
-    "en": "",
+    "en": "Silver Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_curta_prata.nome": {
@@ -2391,7 +2411,7 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta de Prata"
   },
   "cat.item.lanca_prata.desc": {
-    "en": "",
+    "en": "Silver Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_prata.nome": {
@@ -2411,7 +2431,7 @@ window.LANG_CATALOGO = {
     "pt": "Armadura de Couro e Placas"
   },
   "cat.item.longbow.desc": {
-    "en": "",
+    "en": "Long Bow: 1d8 piercing damage, using Dexterity. Range: 10 squares in a straight line or 5 diagonally.",
     "pt": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
   },
   "cat.item.longbow.nome": {
@@ -2419,7 +2439,7 @@ window.LANG_CATALOGO = {
     "pt": "Arco Longo"
   },
   "cat.item.longsword.desc": {
-    "en": "",
+    "en": "Long Sword: 1d8 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.longsword.nome": {
@@ -2427,7 +2447,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Longa"
   },
   "cat.item.longsword_prata.desc": {
-    "en": "",
+    "en": "Silver Long Sword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.longsword_prata.nome": {
@@ -2435,7 +2455,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Longa de Prata"
   },
   "cat.item.maca.desc": {
-    "en": "",
+    "en": "Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3.",
     "pt": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
   },
   "cat.item.maca.nome": {
@@ -2443,7 +2463,7 @@ window.LANG_CATALOGO = {
     "pt": "Maça"
   },
   "cat.item.maca_prata.desc": {
-    "en": "",
+    "en": "Silver Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.maca_prata.nome": {
@@ -2455,7 +2475,7 @@ window.LANG_CATALOGO = {
     "pt": "Maça de Treino"
   },
   "cat.item.machado_basico.desc": {
-    "en": "",
+    "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
     "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
   },
   "cat.item.machado_basico.nome": {
@@ -2463,7 +2483,7 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Ferro"
   },
   "cat.item.machado_basico_prata.desc": {
-    "en": "",
+    "en": "Silver Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_basico_prata.nome": {
@@ -2471,7 +2491,7 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Ferro de Prata"
   },
   "cat.item.machado_duplo.desc": {
-    "en": "",
+    "en": "Double Axe: 1d8 slashing damage, using Strength. Natural 19: makes an additional attack.",
     "pt": "Machado Duplo: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.machado_duplo.nome": {
@@ -2479,7 +2499,7 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo"
   },
   "cat.item.machado_duplo_prata.desc": {
-    "en": "",
+    "en": "Silver Double Axe: 1d8 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Machado Duplo de Prata: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_duplo_prata.nome": {
@@ -2487,7 +2507,7 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo de Prata"
   },
   "cat.item.machado_orc.desc": {
-    "en": "",
+    "en": "Orcish War Axe: 1d10 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3.",
     "pt": "Machado de Guerra Órquico: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
   },
   "cat.item.machado_orc.nome": {
@@ -2495,7 +2515,7 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Guerra Órquico"
   },
   "cat.item.machado_orc_prata.desc": {
-    "en": "",
+    "en": "Silver Orcish War Axe: 1d10 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_orc_prata.nome": {
@@ -2511,7 +2531,7 @@ window.LANG_CATALOGO = {
     "pt": "Voo"
   },
   "cat.item.mangual.desc": {
-    "en": "",
+    "en": "Flail: 1d8 bludgeoning damage, using Strength. Range: any of the 8 adjacent squares, including diagonals. Natural 20: damage multiplied by 2.5.",
     "pt": "Mangual: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5."
   },
   "cat.item.mangual.nome": {
@@ -2519,7 +2539,7 @@ window.LANG_CATALOGO = {
     "pt": "Mangual"
   },
   "cat.item.mangual_prata.desc": {
-    "en": "",
+    "en": "Silver Flail: 1d8 bludgeoning damage, using Strength. Range: any of the 8 adjacent squares, including diagonals. Natural 20: damage multiplied by 2.5. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.mangual_prata.nome": {
@@ -2571,7 +2591,7 @@ window.LANG_CATALOGO = {
     "pt": "Anel da Vitalidade"
   },
   "cat.item.shortsword.desc": {
-    "en": "",
+    "en": "Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.shortsword.nome": {
@@ -2579,7 +2599,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Curta"
   },
   "cat.item.shortsword_prata.desc": {
-    "en": "",
+    "en": "Silver Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.shortsword_prata.nome": {
@@ -2587,7 +2607,7 @@ window.LANG_CATALOGO = {
     "pt": "Espada Curta de Prata"
   },
   "cat.item.staff.desc": {
-    "en": "",
+    "en": "Arcane Staff: 1d6 bludgeoning damage, using Strength or Dexterity. Range: any adjacent square.",
     "pt": "Cajado Arcano: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
   },
   "cat.item.staff.nome": {
@@ -2599,7 +2619,7 @@ window.LANG_CATALOGO = {
     "pt": "Suco de Fruta"
   },
   "cat.item.unarmed.desc": {
-    "en": "",
+    "en": "Unarmed: — physical damage, using Strength.",
     "pt": "Desarmado: — de dano físico, usando Força."
   },
   "cat.item.unarmed.nome": {
@@ -2687,7 +2707,7 @@ window.LANG_CATALOGO = {
     "pt": "Virotes de Prata (×10)"
   },
   "cat.item.warhammer.desc": {
-    "en": "",
+    "en": "Warhammer: 1d8 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3.",
     "pt": "Martelo de Guerra: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
   },
   "cat.item.warhammer.nome": {
@@ -2695,7 +2715,7 @@ window.LANG_CATALOGO = {
     "pt": "Martelo de Guerra"
   },
   "cat.item.warhammer_prata.desc": {
-    "en": "",
+    "en": "Silver Warhammer: 1d8 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.warhammer_prata.nome": {
@@ -2830,6 +2850,14 @@ window.LANG_CATALOGO = {
     "en": "Invisibility",
     "pt": "Invisibilidade"
   },
+  "cat.magia.ira_rocha_ardente.desc": {
+    "en": "3x3 lava area (+1 square every 3 levels), range 4 (+1 every 2 levels). Everyone in the area takes 2d6 fire damage and the lava effects. Lasts 1d4 +1 round every 3 levels (minimum 2). From the second round on, creates 2d4 Living Flames chosen by the cleric in an area 1x1 larger than the lava.",
+    "pt": "Área de lava 3x3 (+1 casa a cada 3 níveis), alcance 4 (+1 a cada 2 níveis). Todos na área sofrem 2d6 de fogo e os efeitos da lava. Dura 1d4 +1 rodada a cada 3 níveis (mínimo 2). A partir da segunda rodada, cria 2d4 Chamas Vivas escolhidas pelo clérigo em uma área 1x1 maior que a lava."
+  },
+  "cat.magia.ira_rocha_ardente.nome": {
+    "en": "Wrath of the Burning Rock",
+    "pt": "Ira da Rocha Ardente"
+  },
   "cat.magia.jato_ar.desc": {
     "en": "4-square cone. 1d6 per level. Failure: pushes back 1d6 squares. Collision with a wall: +1d4.",
     "pt": "Cone 4q. 1d6 por nível. Falha: empurra 1d6q. Colisão com parede: +1d4."
@@ -2877,6 +2905,14 @@ window.LANG_CATALOGO = {
   "cat.magia.olhar_petrificante.nome": {
     "en": "Petrifying Gaze",
     "pt": "Olhar Petrificante"
+  },
+  "cat.magia.prisao_chamas.desc": {
+    "en": "Creates a square prison of flames, 2x2, 3x3 or 4x4. Only the edges burn and wall squares are ignored. Adjacent creatures take 2d4 when it appears and at the start of their turns; anyone standing on or crossing the flames takes 2d8. Lasts 10 rounds and the mage can end it as a free action.",
+    "pt": "Cria uma prisão quadrada de chamas de 2x2, 3x3 ou 4x4. Apenas as bordas têm chamas e casas de parede são ignoradas. Criaturas adjacentes sofrem 2d4 ao surgir e no início de seus turnos; quem ocupa ou atravessa as chamas sofre 2d8. Dura 10 rodadas e pode ser encerrada pelo mago como ação livre."
+  },
+  "cat.magia.prisao_chamas.nome": {
+    "en": "Prison of Flames",
+    "pt": "Prisão de Chamas"
   },
   "cat.magia.protecao_energia.desc": {
     "en": "Absorbs 10 damage/round from fire, cold, electricity, acid, water, or holy. Lasts 1d6+1 rounds.",
@@ -2949,6 +2985,14 @@ window.LANG_CATALOGO = {
   "cat.magia.sono.nome": {
     "en": "Sleep",
     "pt": "Sono"
+  },
+  "cat.magia.teleporte.desc": {
+    "en": "Teleports you, a monster or another visible player to a free square on the map up to 15 squares +1 per level away. Unwilling targets make a Will save against DC 8 + INT + 4; a player may fail on purpose.",
+    "pt": "Teletransporta você, um monstro ou outro jogador visível para uma casa livre do mapa a até 15 quadrados +1 por nível. Alvos involuntários fazem Vontade contra CD 8 + INT + 4; o jogador pode falhar voluntariamente."
+  },
+  "cat.magia.teleporte.nome": {
+    "en": "Teleport",
+    "pt": "Teleporte"
   },
   "cat.magia.velocidade.desc": {
     "en": "Doubles all actions on the turn. Normal cost per action. Lasts 1d4 rounds.",

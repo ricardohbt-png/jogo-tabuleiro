@@ -57,6 +57,10 @@ window.LANG_ERROS = {
     "en": "The main action has already been used this turn.",
     "pt": "A ação principal já foi usada neste turno."
   },
+  "erro.a_area_escolhida_nao_contem_chao_para_fo": {
+    "en": "The chosen area has no floor to form the flames.",
+    "pt": "A área escolhida não contém chão para formar as chamas."
+  },
   "erro.a_area_escolhida_nao_contem_piso_valido": {
     "en": "The chosen area contains no valid floor.",
     "pt": "A área escolhida não contém piso válido."
@@ -89,6 +93,10 @@ window.LANG_ERROS = {
     "en": "The Harpy is not holding any prey.",
     "pt": "A Harpia não está segurando nenhuma presa."
   },
+  "erro.a_linha_de_visao_esta_bloqueada": {
+    "en": "The line of sight is blocked.",
+    "pt": "A linha de visão está bloqueada."
+  },
   "erro.a_masmorra_esta_pausada_durante_uma_cena": {
     "en": "The dungeon is paused during a scene.",
     "pt": "A masmorra está pausada durante uma cena."
@@ -100,6 +108,10 @@ window.LANG_ERROS = {
   "erro.a_porta_esta_fechada_clique_nela_para_ab": {
     "en": "🚪 The door is closed. Click it to open.",
     "pt": "🚪 A porta está fechada. Clique nela para abri-la."
+  },
+  "erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4": {
+    "en": "The Prison of Flames must be 2x2, 3x3 or 4x4 squares.",
+    "pt": "A Prisão de Chamas deve ter 2x2, 3x3 ou 4x4 casas."
   },
   "erro.a_provocacao_do_gigante_runico_obriga_vo": {
     "en": "The Runic Giant's Taunt forces you to attack it for as long as the effect lasts.",
@@ -253,6 +265,10 @@ window.LANG_ERROS = {
     "en": "Invalid target.",
     "pt": "Alvo inválido."
   },
+  "erro.alvo_invalido_ou_fora_da_linha_de_visao": {
+    "en": "Invalid target, or out of the line of sight.",
+    "pt": "Alvo inválido ou fora da linha de visão."
+  },
   "erro.alvo_invalido_para_esta_magia": {
     "en": "Invalid target for this spell.",
     "pt": "Alvo inválido para esta magia."
@@ -348,6 +364,10 @@ window.LANG_ERROS = {
   "erro.armadilha_so_pode_ser_colocada_em_objeto": {
     "en": "This trap can only be placed on an object within reach.",
     "pt": "Esta armadilha só pode ser colocada em um objeto ao alcance."
+  },
+  "erro.as_chamas_vivas_so_podem_ser_colocadas_a": {
+    "en": "Living Flames can only be placed from the second round on.",
+    "pt": "As Chamas Vivas só podem ser colocadas a partir da segunda rodada."
   },
   "erro.atalho_invalido": {
     "en": "Invalid shortcut.",
@@ -557,6 +577,10 @@ window.LANG_ERROS = {
     "en": "Invalid choice.",
     "pt": "Escolha inválida."
   },
+  "erro.escolha_o_centro_da_area_da_ira_da_rocha": {
+    "en": "Choose the center of the Wrath of the Burning Rock area.",
+    "pt": "Escolha o centro da área da Ira da Rocha Ardente."
+  },
   "erro.escolha_o_centro_da_area_do_chamado_do_i": {
     "en": "Choose the center of the Call of Winter area.",
     "pt": "Escolha o centro da área do Chamado do Inverno."
@@ -564,6 +588,10 @@ window.LANG_ERROS = {
   "erro.escolha_o_centro_da_area_do_senhor_das_a": {
     "en": "Choose the center of the Lord of Waters area.",
     "pt": "Escolha o centro da área do Senhor das Águas."
+  },
+  "erro.escolha_o_centro_e_o_tamanho_da_prisao_d": {
+    "en": "Choose the center and the size of the Prison of Flames.",
+    "pt": "Escolha o centro e o tamanho da Prisão de Chamas."
   },
   "erro.escolha_pelo_menos_um_atributo_para_a_ca": {
     "en": "Choose at least one attribute for the song.",
@@ -592,6 +620,10 @@ window.LANG_ERROS = {
   "erro.escolha_um_alvo_vivo_nao_pode_ser_voce": {
     "en": "Choose a living target (can't be you).",
     "pt": "Escolha um alvo vivo (não pode ser você)."
+  },
+  "erro.escolha_um_alvo_vivo_para_o_teleporte": {
+    "en": "Choose a living target for Teleport.",
+    "pt": "Escolha um alvo vivo para o Teleporte."
   },
   "erro.escolha_um_destino_no_mapa_do_mundo_para": {
     "en": "Choose a destination on the world map to start a dungeon.",
@@ -1028,6 +1060,14 @@ window.LANG_ERROS = {
   "erro.nao_ha_um_senhor_das_aguas_ativo": {
     "en": "There is no active Lord of Waters.",
     "pt": "Não há um Senhor das Águas ativo."
+  },
+  "erro.nao_ha_uma_casa_livre_valida_no_alcance": {
+    "en": "There is no valid free square within Teleport's range.",
+    "pt": "Não há uma casa livre válida no alcance do Teleporte."
+  },
+  "erro.nao_ha_uma_ira_da_rocha_ardente_ativa": {
+    "en": "There is no active Wrath of the Burning Rock.",
+    "pt": "Não há uma Ira da Rocha Ardente ativa."
   },
   "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
     "en": "You can't attack in the same turn you hide in the shadows.",
@@ -1629,6 +1669,14 @@ window.LANG_ERROS = {
     "en": "🧱 A wall blocks Fireball's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória da Bola de Fogo!"
   },
+  "erro.uma_parede_bloqueia_a_trajetoria_da_ira_da_rocha": {
+    "en": "A wall blocks the path of Wrath of the Burning Rock.",
+    "pt": "Uma parede bloqueia a trajetória da Ira da Rocha Ardente."
+  },
+  "erro.uma_parede_bloqueia_a_trajetoria_da_pris": {
+    "en": "A wall blocks the path of the Prison of Flames.",
+    "pt": "Uma parede bloqueia a trajetória da Prisão de Chamas."
+  },
   "erro.uma_parede_bloqueia_a_trajetoria_do_arre": {
     "en": "🧱 A wall blocks the throw's path!",
     "pt": "🧱 Uma parede bloqueia a trajetória do arremesso!"
@@ -1792,6 +1840,10 @@ window.LANG_ERROS = {
   "erro.voce_nao_possui_esta_tecnica": {
     "en": "You don't own this technique.",
     "pt": "Você não possui esta técnica."
+  },
+  "erro.voce_nao_possui_uma_prisao_de_chamas_ati": {
+    "en": "You have no active Prison of Flames.",
+    "pt": "Você não possui uma Prisão de Chamas ativa."
   },
   "erro.voce_nao_sabe_criar_armadilhas": {
     "en": "You don't know how to create traps.",

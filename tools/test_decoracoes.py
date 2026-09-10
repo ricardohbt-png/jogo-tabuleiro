@@ -18,18 +18,23 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("37 tipos", len(d) == 37)
+    check("38 tipos", len(d) == 38)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
         "chao", "brasao_leao", "cortina_vermelha", "cortina_branca", "lapide", "cripta",
-        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva")))
+        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva", "placa")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
     check("fogueira é campfire e pisável", d["fogueira"]["special"] == "campfire" and d["fogueira"]["pisavel"])
+    check("placa é informativa, 1x1 e pisável", d["placa"]["special"] == "plaque"
+          and d["placa"]["size"] == [1, 1] and d["placa"]["pisavel"]
+          and not d["placa"]["loot_capaz"])
+    check("placa usa PNG/GLB", d["placa"]["image"] == "placa_fincada.png"
+          and server.DECOR_MODEL3D["placa"].endswith("placa_fincada.glb"))
     check("chama viva usa GLB, é pisável e causa 2d4", d["chama_viva"]["special"] == "living_flame"
           and d["chama_viva"]["pisavel"] and not d["chama_viva"]["loot_capaz"]
           and d["chama_viva"]["size"] == [1, 1]
@@ -96,8 +101,8 @@ def test_catalog():
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("pisáveis: chão, fogueira, brasa e chama viva", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira"])
+    check("pisáveis: chão, fogueira, brasa, chama viva e placa", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira", "placa"])
 
 async def _noop(*a, **k): pass
 
@@ -372,6 +377,59 @@ def test_armadilha_decoracao():
     check("Encontrar Armadilhas revela a decoração", found == 1 and r.decorations[0]["trap_revealed"])
     check("cliente recebe perigo revelado, sem configuração interna", payload.get("trap") is True and payload.get("trap_revealed") is True and "veneno_id" not in payload)
 
+def test_bau_armadilha_ladino():
+    print("\n[A9c] baú-armadilha: detecção e desarme do Ladino")
+    r = _room()
+    r._is_turn = lambda pid: True
+    r.traps, r.armadilhas = [], []
+    r.decorations = [{"id": "d-chest", "type": "arca_tesouros", "pos": [4, 4], "facing": [0, 1],
+                      "loot": {"gold": 10, "items": []}, "tem_loot": True,
+                      "key_objective": False, "chest_trap_monster_type": "goblin_combatente",
+                      "chest_trap_triggered": False, "chest_trap_disarmed": False,
+                      "trap": None, "trap_triggered": False, "trap_disarmed": False,
+                      "trap_revealed": False}]
+    r._rebuild_decor_index()
+    p = make_player("p1", "Luccas", "rogue", 0); p["pos"] = [3, 4]; p["alive"] = True
+    r.players[p["id"]] = p
+
+    found = r._revelar_armadilhas_raio(p, 3)
+    payload = r._serializar_decoracoes()[0]
+    check("Detectar Armadilhas revela o baú", found == 1 and payload.get("chest_trap") is True
+          and payload.get("trap_revealed") is True)
+
+    original_randint = server.random.randint
+    server.random.randint = lambda a, b: 20
+    try:
+        asyncio.run(r.handle_desarmar_armadilha("p1", {"tx": 4, "ty": 4}))
+    finally:
+        server.random.randint = original_randint
+    check("desarme bem-sucedido impede o monstro", r.decorations[0]["chest_trap_disarmed"]
+          and len(r.monsters) == 0)
+
+    mensagens = []
+    async def capturar(pid, msg): mensagens.append(msg)
+    r.send_to = capturar
+    asyncio.run(r.handle_interagir_decor("p1", "d-chest"))
+    check("baú desarmado abre o loot", any(m.get("type") == "decor_loot" for m in mensagens))
+
+def test_placa():
+    print("\n[A9d] placa informativa")
+    r = _room()
+    r.decorations = [{"id": "d-placa", "type": "placa", "pos": [5, 5], "facing": [0, 1],
+                      "texto": "Fraqueza: fogo.\nEvite a mordida.", "loot": None,
+                      "tem_loot": False, "key_objective": False}]
+    r._rebuild_decor_index()
+    p = make_player("p1", "Pedro", "mage", 0); p["pos"] = [4, 5]; p["alive"] = True
+    r.players[p["id"]] = p
+    mensagens = []
+    async def capturar(pid, msg): mensagens.append((pid, msg))
+    r.send_to = capturar
+    asyncio.run(r.handle_interagir_decor("p1", "d-placa"))
+    msg = mensagens[0][1] if mensagens else {}
+    check("interação envia a mensagem da placa", mensagens and mensagens[0][0] == "p1"
+          and msg.get("type") == "decor_message")
+    check("mensagem preserva quebras de linha", msg.get("texto") == "Fraqueza: fogo.\nEvite a mordida.")
+
 def _defn_base():
     return {
         "schema_version": 1, "id": "t", "name": "T",
@@ -439,6 +497,11 @@ def test_validacao():
     ok, _ = server.validar_dungeon(d9); check("aceita armadilha em decoração", ok is True)
     d9["decorations"][0]["trap"] = {"tipo": "fosso_envenenado"}
     ok, _ = server.validar_dungeon(d9); check("rejeita armadilha de decoração sem veneno", ok is False)
+    d10 = _defn_base()
+    d10["decorations"] = [{"type": "placa", "pos": [5, 5], "facing": [0, 1]}]
+    ok, _ = server.validar_dungeon(d10); check("rejeita placa sem mensagem", ok is False)
+    d10["decorations"][0]["texto"] = "Leia antes de entrar."
+    ok, _ = server.validar_dungeon(d10); check("aceita placa com mensagem", ok is True)
 
 def main():
     test_catalog()
@@ -456,6 +519,8 @@ def main():
     test_visao()
     test_serial()
     test_armadilha_decoracao()
+    test_bau_armadilha_ladino()
+    test_placa()
     test_validacao()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)

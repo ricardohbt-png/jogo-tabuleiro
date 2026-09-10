@@ -212,18 +212,111 @@ window.EDITOR_CATALOG = {
       "type": "troll",
       "name": "Troll",
       "emoji": "🗿",
-      "tier": 3,
-      "cr": 1.5,
-      "hp": 22,
+      "boss": false,
+      "tier": 4,
+      "cr": 4,
+      "hp": 60,
       "ac": 16,
       "movement": 6,
       "vision_base": 0,
-      "atk_bonus": 7,
-      "damage": "1d10",
-      "gold": 25,
-      "xp": 40,
+      "percepcao": 12,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "troll",
+      "str_": 20,
+      "dex": 10,
+      "con_": 18,
+      "int_": 6,
+      "fort": 5,
+      "will": 1,
+      "save_bonuses": {
+        "fortitude": 3
+      },
+      "attacks": [
+        {
+          "name": "Clava Pesada",
+          "atk_bonus": 6,
+          "damage": "1d12+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2,
+          "on_hit": null,
+          "categoria": "contundente"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "regeneracao_troll",
+          "name": "Regeneração Troll",
+          "action_type": "passiva",
+          "amount": 4,
+          "descricao": "Recupera 4 PV no início do turno; ácido bloqueia a regeneração. Se chegar a 0 PV, retorna com 1 PV no próximo turno, exceto se o dano final tiver sido fogo ou se a regeneração estiver bloqueada por ácido."
+        },
+        {
+          "id": "golpe_devastador_troll",
+          "name": "Golpe Devastador",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 4,
+          "descricao": "No próximo ataque de clava, dobra os dados de dano. Recarga: 4 rodadas."
+        },
+        {
+          "id": "pressao_constante_troll",
+          "name": "Pressão Constante",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 4,
+          "range": 1,
+          "ca_penalty": 2,
+          "duration_rounds": 2,
+          "descricao": "Um herói adjacente sofre -2 CA por 2 rodadas. Recarga: 4 rodadas."
+        },
+        {
+          "id": "investida_brutal_troll",
+          "name": "Investida Brutal",
+          "action_type": "passiva",
+          "cooldown_turns": 5,
+          "move_required": 3,
+          "damage": "2d6",
+          "push": 1,
+          "descricao": "Após mover pelo menos 3 casas antes do ataque, acrescenta 2d6 de dano e empurra 1 casa. Recarga: 5 rodadas."
+        },
+        {
+          "id": "vigor_colossal",
+          "name": "Vigor Colossal",
+          "action_type": "passiva",
+          "save_bonus": {
+            "fortitude": 3
+          },
+          "descricao": "+3 em todos os testes de Fortitude."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "acid",
+          "multiplier": 2,
+          "descricao": "Vulnerabilidade: dano de ácido é dobrado e bloqueia a regeneração."
+        }
+      ],
+      "resistances": [],
+      "loot_table": {
+        "1-50": null,
+        "51-80": {
+          "tipo": "gold",
+          "valor": 8
+        },
+        "81-100": {
+          "tipo": "item",
+          "id": "pocao_cura"
+        }
+      },
+      "ai_type": "troll",
+      "undead": false,
       "subtipo": "raca_padrao",
-      "percepcao": 13
+      "darkvision_range": 8
     },
     {
       "type": "dragon",
@@ -5842,6 +5935,54 @@ window.EDITOR_CATALOG = {
       "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
     },
     {
+      "id": "regeneracao_troll",
+      "name": "Regeneração Troll",
+      "action_type": "passiva",
+      "amount": 4,
+      "descricao": "Recupera 4 PV no início do turno; ácido bloqueia a regeneração. Se chegar a 0 PV, retorna com 1 PV no próximo turno, exceto se o dano final tiver sido fogo ou se a regeneração estiver bloqueada por ácido.",
+      "source": "monstro"
+    },
+    {
+      "id": "golpe_devastador_troll",
+      "name": "Golpe Devastador",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 4,
+      "descricao": "No próximo ataque de clava, dobra os dados de dano. Recarga: 4 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "pressao_constante_troll",
+      "name": "Pressão Constante",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 4,
+      "range": 1,
+      "ca_penalty": 2,
+      "duration_rounds": 2,
+      "descricao": "Um herói adjacente sofre -2 CA por 2 rodadas. Recarga: 4 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_brutal_troll",
+      "name": "Investida Brutal",
+      "action_type": "passiva",
+      "cooldown_turns": 5,
+      "move_required": 3,
+      "damage": "2d6",
+      "push": 1,
+      "descricao": "Após mover pelo menos 3 casas antes do ataque, acrescenta 2d6 de dano e empurra 1 casa. Recarga: 5 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "vigor_colossal",
+      "name": "Vigor Colossal",
+      "action_type": "passiva",
+      "save_bonus": {
+        "fortitude": 3
+      },
+      "descricao": "+3 em todos os testes de Fortitude.",
+      "source": "monstro"
+    },
+    {
       "id": "disparo_teia",
       "name": "Disparo de Teia",
       "action_type": "acao",
@@ -6715,16 +6856,6 @@ window.EDITOR_CATALOG = {
       "damage": "2d6",
       "damage_attribute": "str_",
       "descricao": "Após mover 4 ou mais quadrados em linha reta, personagens atravessados sofrem 2d6 + FOR.",
-      "source": "monstro"
-    },
-    {
-      "id": "vigor_colossal",
-      "name": "Vigor Colossal",
-      "action_type": "passiva",
-      "save_bonus": {
-        "fortitude": 3
-      },
-      "descricao": "+3 em todos os testes de Fortitude.",
       "source": "monstro"
     },
     {
@@ -8598,6 +8729,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_ladino_armadilha_raio_congelante",
+      "source": "guilda",
+      "source_id": "ladino_armadilha_raio_congelante",
+      "name": "Fórmula: Armadilha de Raio Congelante",
+      "icon": "✦",
+      "descricao": "Desbloqueia permanentemente a fabricação de Armadilha de Raio Congelante.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_ladino_teto_esmagador",
       "source": "guilda",
       "source_id": "ladino_teto_esmagador",
@@ -9631,6 +9773,46 @@ window.EDITOR_CATALOG = {
       "duracao": "1d4"
     },
     {
+      "id": "ira_rocha_ardente",
+      "nome": "Ira da Rocha Ardente",
+      "circulo": "quarto",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "🌋",
+      "tipo": "area_fixa",
+      "descricao": "Área de lava 3x3 (+1 casa a cada 3 níveis), alcance 4 (+1 a cada 2 níveis). Todos na área sofrem 2d6 de fogo e os efeitos da lava. Dura 1d4 +1 rodada a cada 3 níveis (mínimo 2). A partir da segunda rodada, cria 2d4 Chamas Vivas escolhidas pelo clérigo em uma área 1x1 maior que a lava.",
+      "area_lado": 3,
+      "alcance_base": 4,
+      "duracao": "1d4"
+    },
+    {
+      "id": "teleporte",
+      "nome": "Teleporte",
+      "circulo": "quarto",
+      "classe": [
+        "mage"
+      ],
+      "icone": "🌀",
+      "tipo": "teleporte",
+      "descricao": "Teletransporta você, um monstro ou outro jogador visível para uma casa livre do mapa a até 15 quadrados +1 por nível. Alvos involuntários fazem Vontade contra CD 8 + INT + 4; o jogador pode falhar voluntariamente.",
+      "save": "vontade",
+      "alcance_base": 15
+    },
+    {
+      "id": "prisao_chamas",
+      "nome": "Prisão de Chamas",
+      "circulo": "quarto",
+      "classe": [
+        "mage"
+      ],
+      "icone": "🔥",
+      "tipo": "area_fixa",
+      "descricao": "Cria uma prisão quadrada de chamas de 2x2, 3x3 ou 4x4. Apenas as bordas têm chamas e casas de parede são ignoradas. Criaturas adjacentes sofrem 2d4 ao surgir e no início de seus turnos; quem ocupa ou atravessa as chamas sofre 2d8. Dura 10 rodadas e pode ser encerrada pelo mago como ação livre.",
+      "alcance_base": 4,
+      "duracao": 10
+    },
+    {
       "id": "manto_escuridao",
       "nome": "Manto de Escuridão",
       "circulo": "segundo",
@@ -9827,6 +10009,17 @@ window.EDITOR_CATALOG = {
     }
   ],
   "items": [
+    {
+      "id": "carta",
+      "name": "Carta",
+      "emoji": "✉️",
+      "item_slot": "bag",
+      "effect": "letter",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Ao ler, abre a mensagem escrita sem consumir a carta.",
+      "texto": "Esta carta não contém nenhuma mensagem."
+    },
     {
       "id": "sword",
       "name": "Espada Curta de Ferro Serrilhado",
@@ -10575,7 +10768,7 @@ window.EDITOR_CATALOG = {
       "item_slot": "boots",
       "effect": "voo",
       "value": 0,
-      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10."
+      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
     },
     {
       "id": "boots",
@@ -11328,6 +11521,22 @@ window.EDITOR_CATALOG = {
       "precisa_veneno": false
     },
     {
+      "tipo": "armadilha_raio_congelante",
+      "nome": "Armadilha de Raio Congelante",
+      "icone": "❄️",
+      "cr": 0.8,
+      "descricao": "Dispara um raio congelante: causa 3d4 de dano. Fortitude CD 15 evita a paralisia; na falha, escapa com Força CD 16.",
+      "dificuldade": 15,
+      "save": "fortitude",
+      "custo_ouro": 25,
+      "dano": "3d4",
+      "persiste": false,
+      "special": "raio_congelante",
+      "escape_save": "forca",
+      "escape_dificuldade": 16,
+      "precisa_veneno": false
+    },
+    {
       "tipo": "teto_esmagador",
       "nome": "Teto Esmagador",
       "icone": "🪨",
@@ -11697,6 +11906,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": "fountain",
       "image": null
+    },
+    {
+      "type": "placa",
+      "nome": "Placa",
+      "emoji": "🪧",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "plaque",
+      "image": "placa_fincada.png"
     },
     {
       "type": "fogueira",

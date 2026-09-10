@@ -569,6 +569,7 @@ const GS = (() => {
     virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
 
     // ── TAVERNA — Itens de sobrevivência ──
+    carta:             { id:'carta',             nome:'Carta',               tipo:'carta',      loja:'masmorra', preco:0, item_slot:'bag', effect:'letter', value:0, texto:'Esta carta não contém nenhuma mensagem.', descricao:'Ao ler, abre a mensagem escrita sem consumir a carta.', permitidoPara:['todos'] },
     pao_duro:          { id:'pao_duro',          nome:'Pão Duro',            tipo:'consumivel', loja:'taverna', preco:2,  fome:10, sede:0,  permitidoPara:['todos'] },
     racao_viagem:      { id:'racao_viagem',      nome:'Ração de Viagem',     tipo:'consumivel', loja:'taverna', preco:5,  fome:20, sede:0,  permitidoPara:['todos'] },
     carne_seca:        { id:'carne_seca',        nome:'Carne Seca',          tipo:'consumivel', loja:'taverna', preco:8,  fome:30, sede:0,  permitidoPara:['todos'] },
@@ -1550,12 +1551,32 @@ const GS = (() => {
         _emit('spellAnimation', msg);
         break;
 
+      case 'ira_rocha_ardente_prompt':
+        _emit('iraRochaArdentePrompt', msg);
+        break;
+
+      case 'teleporte_save_prompt':
+        _emit('teleporteSavePrompt', msg);
+        break;
+
+      case 'teleporte_destino_prompt':
+        _emit('teleporteDestinoPrompt', msg);
+        break;
+
+      case 'teleporte_result':
+        _emit('teleporteResult', msg);
+        break;
+
       case 'sorte_reacao':
         _emit('sorteReacao', msg);
         break;
 
       case 'trap_result':
         _emit('trapResult', msg);
+        break;
+
+      case 'survival_result':
+        _emit('survivalResult', msg);
         break;
 
       case 'fall_result':
@@ -1657,6 +1678,14 @@ const GS = (() => {
 
       case 'decor_loot':
         _emit('decor_loot', msg);
+        break;
+
+      case 'decor_message':
+        _emit('decor_message', msg);
+        break;
+
+      case 'item_message':
+        _emit('item_message', msg);
         break;
 
       case 'decor_mechanism':
@@ -1815,6 +1844,11 @@ const GS = (() => {
     send(msg);
   }
   function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
+  function readItem(id, bagIndex = null) {
+    const msg = { type: 'read_item', item_id: id };
+    if (Number.isInteger(bagIndex) && bagIndex >= 0) msg.bag_index = bagIndex;
+    send(msg);
+  }
   function respondFireChoice(choice) {
     const value = ['water', 'action', 'none'].includes(choice) ? choice : 'none';
     send({ type: 'fire_choice', choice: value });
@@ -1855,6 +1889,17 @@ const GS = (() => {
   function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
   // Senhor das Águas: ação livre única para criar os redemoinhos da zona ativa.
   function senhorDasAguasCriar(tiles) { send({ type: 'senhor_das_aguas_rodamoinhos', tiles }); }
+  function iraRochaArdenteConfirmarChamas(zoneId, tiles) {
+    send({ type: 'ira_rocha_ardente_chamas', zone_id: zoneId, tiles });
+  }
+  function encerrarPrisaoChamas() { send({ type: 'encerrar_prisao_chamas' }); }
+  function responderTeleporte(requestId, falhaVoluntaria = false) {
+    send({ type: 'teleporte_consent', request_id: requestId,
+           falha_voluntaria: !!falhaVoluntaria });
+  }
+  function confirmarTeleporte(requestId, tx, ty) {
+    send({ type: 'teleporte_destino', request_id: requestId, tx, ty });
+  }
   // Animar Mortos (Pedro): anima o cadáver selecionado a até 3 casas.
   function animarMortos(cadaverId, versao) {
     const msg = { type: 'animar_mortos', cadaver_id: cadaverId };
@@ -3104,6 +3149,7 @@ const GS = (() => {
     setShortcut,
     shortcutActivated,
     useItem,
+    readItem,
     respondFireChoice,
     throwItem,
     throwItemArea,
@@ -3134,6 +3180,10 @@ const GS = (() => {
     setKnownSpells,
     escolherMagiaNivel,
     senhorDasAguasCriar,
+    iraRochaArdenteConfirmarChamas,
+    encerrarPrisaoChamas,
+    responderTeleporte,
+    confirmarTeleporte,
     animarMortos,
     comandarAnimados,
     moverAnimado,

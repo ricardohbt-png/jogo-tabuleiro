@@ -41,6 +41,13 @@
       loot_capaz: false, special: "living_flame", image: null,
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "placa")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "placa", nome: "Placa", emoji: "🪧",
+      size: [1, 1], gira: false, alto: false, pisavel: true,
+      loot_capaz: false, special: "plaque", image: null,
+    });
+  }
   const MAT = (CAT.materiais || []);
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
   const WALL_MATERIALS = MAT.filter(m => m && m.categoria === "parede");
@@ -104,6 +111,7 @@
     pontes: [],
     nextPonteId: 0,
     ponteLargura: 1,
+    ponteMaterial: "madeira",
     ponteDrag: null,
     materiais: {},                 // {"x,y": id}
     elevacoes: {},                 // {"x,y": nível visual (-1..2)}
@@ -402,6 +410,7 @@
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null,
                 key_objective: false };
     if (m && m.special === "fountain") d.charges = (m.charges ?? 3);
+    if (m && m.special === "plaque") d.texto = "";
     if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
     if (m && m.image) d.image = m.image;
     S.decorations.push(d);
@@ -783,8 +792,13 @@
     const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
     const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
     ctx.save();
-    const base = preview ? "rgba(65,32,12,.72)" : "#4a270f";
-    const deck = preview ? "rgba(194,130,58,.60)" : "#9a5b28";
+    const pedraRustica = String(bridge.material || "madeira").toLowerCase() === "pedra_rustica";
+    const base = preview
+      ? (pedraRustica ? "rgba(72,68,62,.72)" : "rgba(65,32,12,.72)")
+      : (pedraRustica ? "#4b4844" : "#4a270f");
+    const deck = preview
+      ? (pedraRustica ? "rgba(166,154,138,.68)" : "rgba(194,130,58,.60)")
+      : (pedraRustica ? "#7b7165" : "#9a5b28");
     // Duas longarinas contínuas abaixo do tabuleiro.
     ctx.fillStyle = base;
     if (horizontal) {
@@ -801,7 +815,8 @@
       ctx.fillStyle = deck;
       if (horizontal) ctx.fillRect(step * CELL + pad, minY * CELL + pad, CELL - 2 * pad, (maxY - minY + 1) * CELL - 2 * pad);
       else ctx.fillRect(minX * CELL + pad, step * CELL + pad, (maxX - minX + 1) * CELL - 2 * pad, CELL - 2 * pad);
-      ctx.strokeStyle = "rgba(62,31,12,.92)"; ctx.lineWidth = 1;
+      ctx.strokeStyle = pedraRustica ? "rgba(42,39,36,.94)" : "rgba(62,31,12,.92)";
+      ctx.lineWidth = 1;
       ctx.strokeRect(
         horizontal ? step * CELL + gap : minX * CELL + gap,
         horizontal ? minY * CELL + gap : step * CELL + gap,
@@ -809,7 +824,7 @@
         horizontal ? (maxY - minY + 1) * CELL - 2 * gap : CELL - 2 * gap
       );
     }
-    ctx.strokeStyle = preview ? "#ffe08a" : "#4c2b14"; ctx.lineWidth = 2;
+    ctx.strokeStyle = preview ? "#ffe08a" : (pedraRustica ? "#302d2a" : "#4c2b14"); ctx.lineWidth = 2;
     ctx.strokeRect(minX * CELL + 1, minY * CELL + 1, (maxX - minX + 1) * CELL - 2, (maxY - minY + 1) * CELL - 2);
     ctx.restore();
   }
@@ -855,7 +870,8 @@
       for (let x = 0; x < S.grid.w; x++)
         if (S.tiles[y][x] === FLOOR || S.tiles[y][x] === DOOR) drawElevationEditor(x, y);
     for (const bridge of S.pontes) drawBridgeEditor(bridge);
-    if (S.ponteDrag) drawBridgeEditor({ inicio: S.ponteDrag.start, fim: S.ponteDrag.end, largura: S.ponteDrag.width }, true);
+    if (S.ponteDrag) drawBridgeEditor({ inicio: S.ponteDrag.start, fim: S.ponteDrag.end,
+      largura: S.ponteDrag.width, material: S.ponteDrag.material }, true);
     for (const r of S.rooms) {
       ctx.strokeStyle = r.locked ? "#e0683c" : "#8fb0e0";
       ctx.lineWidth = 2;
@@ -1277,6 +1293,11 @@
       width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>largura: ${n} quadrado${n > 1 ? "s" : ""}</option>`).join("");
       width.onchange = e => { S.ponteLargura = Math.max(1, Math.min(3, Number(e.target.value) | 0)); render(); };
       tb.appendChild(width);
+      const material = document.createElement("select");
+      material.id = "bridge-material";
+      material.innerHTML = `<option value="madeira"${S.ponteMaterial === "madeira" ? " selected" : ""}>material: madeira</option><option value="pedra_rustica"${S.ponteMaterial === "pedra_rustica" ? " selected" : ""}>material: pedra rústica</option>`;
+      material.onchange = e => { S.ponteMaterial = e.target.value === "pedra_rustica" ? "pedra_rustica" : "madeira"; render(); };
+      tb.appendChild(material);
       const hint = document.createElement("small");
       hint.textContent = "Arraste entre pontos da mesma altura; a ponte não altera o terreno abaixo.";
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
@@ -1413,11 +1434,12 @@
     return !tiles.some(([x, y]) => bridgeAt(x, y));
   }
 
-  function placeBridge(start, end, width) {
+  function placeBridge(start, end, width, material) {
     const drag = { start: start.slice(), end: end.slice(), width: Math.max(1, Math.min(3, Number(width) | 0)) };
     if (!bridgeDragValid(drag)) return false;
+    const materialId = material === "pedra_rustica" ? "pedra_rustica" : "madeira";
     S.pontes.push({ id: "ponte_" + S.nextPonteId++, inicio: drag.start, fim: drag.end,
-      largura: drag.width, altura: bridgeAltura({ inicio: drag.start, fim: drag.end }) });
+      largura: drag.width, altura: bridgeAltura({ inicio: drag.start, fim: drag.end }), material: materialId });
     return true;
   }
 
@@ -1723,6 +1745,83 @@
       const items = groups.get(group).slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), "pt-BR"));
       return items.length ? `<optgroup label="${group}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
     }).join("")}</select>`;
+  }
+  function editorEscapeText(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function lootItemRowHTML(item, index, removeClass) {
+    const def = CAT.items.find(x => x.id === item.id) || {};
+    const label = `${def.emoji || "📦"} ${def.name || item.id}`;
+    const carta = item.id === "carta";
+    const curseMode = carta ? (item.curse_mode || "") : "";
+    const curses = curseCatalog();
+    const curseId = item.curse_id || (curses[0] && curses[0].id) || "";
+    return `<div style="margin:4px 0;padding:4px;border:1px solid ${carta ? "#9c783a" : "transparent"};border-radius:4px;">
+      <span>${editorEscapeText(label)}</span> <button data-i="${index}" class="${removeClass}">×</button>
+      ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="Texto da carta...">${editorEscapeText(item.texto || "")}</textarea>
+        <label style="display:block;margin-top:5px">maldição ao ler
+          <select data-carta-curse-mode data-i="${index}">
+            <option value=""${!curseMode ? " selected" : ""}>Sem maldição</option>
+            <option value="especifica"${curseMode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
+            <option value="aleatoria"${curseMode === "aleatoria" ? " selected" : ""}>Aleatória por gravidade</option>
+          </select>
+        </label>
+        ${curseMode === "especifica" ? `<select data-carta-curse-id data-i="${index}">${opt(curses.map(c => ({ v: c.id, name: c.name || c.nome || c.id })), curseId, o => o.name)}</select>` : ""}
+        ${curseMode === "aleatoria" ? `<select data-carta-curse-category data-i="${index}">${opt(CURSE_CATEGORIES, item.curse_category || "leve", o => o.name)}</select>` : ""}` : ""}
+    </div>`;
+  }
+  function wireCartaTextFields(root, items, rerender) {
+    root.querySelectorAll("[data-carta-text]").forEach(field => {
+      field.oninput = e => {
+        const item = items[Number(e.target.dataset.i)];
+        if (item) item.texto = e.target.value.slice(0, 2000);
+      };
+    });
+    root.querySelectorAll("[data-carta-curse-mode]").forEach(field => {
+      field.onchange = e => {
+        const item = items[Number(e.target.dataset.i)];
+        if (!item) return;
+        const mode = e.target.value;
+        if (!mode) {
+          delete item.curse_mode; delete item.curse_id; delete item.curse_category;
+        } else if (mode === "especifica") {
+          item.curse_mode = mode; delete item.curse_category;
+          if (!item.curse_id) item.curse_id = (curseCatalog()[0] && curseCatalog()[0].id) || "maos_tremulas";
+        } else {
+          item.curse_mode = "aleatoria"; delete item.curse_id;
+          if (!item.curse_category) item.curse_category = "leve";
+        }
+        if (rerender) rerender();
+      };
+    });
+    root.querySelectorAll("[data-carta-curse-id]").forEach(field => {
+      field.onchange = e => {
+        const item = items[Number(e.target.dataset.i)];
+        if (item) item.curse_id = e.target.value;
+        if (rerender) rerender();
+      };
+    });
+    root.querySelectorAll("[data-carta-curse-category]").forEach(field => {
+      field.onchange = e => {
+        const item = items[Number(e.target.dataset.i)];
+        if (item) item.curse_category = e.target.value;
+        if (rerender) rerender();
+      };
+    });
+  }
+  function exportLootItem(item) {
+    const out = { id: item.id };
+    if (item.id === "carta") {
+      if (String(item.texto || "").trim()) out.texto = item.texto.trim().slice(0, 2000);
+      if (item.curse_mode === "especifica" && item.curse_id) {
+        out.curse_mode = "especifica"; out.curse_id = item.curse_id;
+      } else if (item.curse_mode === "aleatoria") {
+        out.curse_mode = "aleatoria"; out.curse_category = item.curse_category || "leve";
+      }
+    }
+    return out;
   }
 
   const CURSE_CATEGORIES = [
@@ -2100,10 +2199,17 @@
     const k = S.sel.kind, ref = S.sel.ref;
     if (k === "bridge") {
       const tiles = bridgeTilesOf(ref);
-      panel.innerHTML = `<b>🌉 Ponte de madeira rústica</b>
+      panel.innerHTML = `<b>🌉 Ponte</b>
         <div style="color:#a89773;font-size:11px;line-height:1.5;margin-top:6px">${tiles.length} casas · largura ${ref.largura} · altura ${ref.altura}</div>
+        <label style="display:block;margin-top:8px;font-size:11px;color:#b9a87f">Material
+          <select id="bridge-selected-material"><option value="madeira"${ref.material !== "pedra_rustica" ? " selected" : ""}>Madeira</option><option value="pedra_rustica"${ref.material === "pedra_rustica" ? " selected" : ""}>Pedra rústica</option></select>
+        </label>
         <div style="color:#8a7a5a;font-size:11px;margin-top:6px">A ponte não altera o terreno abaixo. Criaturas podem cair pelas laterais ao serem empurradas.</div>
         <button id="bridge-delete" style="margin-top:10px">🗑 Deletar ponte</button>`;
+      document.getElementById("bridge-selected-material").onchange = e => {
+        ref.material = e.target.value === "pedra_rustica" ? "pedra_rustica" : "madeira";
+        renderPanel(); render();
+      };
       document.getElementById("bridge-delete").onclick = () => deleteSelectedEntity();
       return;
     }
@@ -2260,12 +2366,13 @@
         <label>ouro <input id="p-gold" type="number" value="${ref.gold}"></label>
         <label><input type="checkbox" id="p-key" ${ref.key_objective ? "checked" : ""}> baú-chave</label>
         <label>itens</label>
-        <div id="p-items">${ref.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="rm-item">×</button></div>`).join("")}</div>
+        <div id="p-items">${ref.items.map((it, i) => lootItemRowHTML(it, i, "rm-item")).join("")}</div>
         ${lootItemSelectHTML("p-add")}
         <button id="p-additem">+ item</button>`;
       document.getElementById("p-gold").onchange = e => { ref.gold = Math.max(0, Number(e.target.value) | 0); };
       document.getElementById("p-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("p-additem").onclick = () => { const id = document.getElementById("p-add").value; if (id) ref.items.push({ id }); renderPanel(); };
+      wireCartaTextFields(panel, ref.items, renderPanel);
       panel.querySelectorAll(".rm-item").forEach(b => b.onclick = () => { ref.items.splice(Number(b.dataset.i), 1); renderPanel(); });
     } else if (k === "trap") {
       const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
@@ -2526,6 +2633,8 @@
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const vo0 = Array.isArray(ref.voffset) ? ref.voffset : [0, 0];
+      const placaTexto = String(ref.texto || "")
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
         ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
@@ -2535,6 +2644,7 @@
         <small style="display:block;color:#8a7a5a;margin-top:3px">Depois, arraste no mapa. Esc desativa o pincel.</small>
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
+        ${m.special === "plaque" ? `<label style="display:block;margin-top:8px">mensagem da placa<textarea id="d-texto" rows="5" maxlength="600" placeholder="Escreva a mensagem que os heróis encontrarão...">${placaTexto}</textarea></label><small style="color:#8a7a5a">Até 600 caracteres. A mensagem aparece quando um herói interagir com a placa.</small>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> baú-armadilha</label>
         ${ref.chest_trap_monster_type ? `<label>monstro que surge</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:x.name})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">No primeiro clique, Reflexos CD 12; o loot só abre no próximo clique.</small>` : ""}
@@ -2555,7 +2665,7 @@
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
           <label>itens</label>
-          <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="d-rm">×</button></div>`).join("") : ""}</div>
+        <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => lootItemRowHTML(it, i, "d-rm")).join("") : ""}</div>
           ${lootItemSelectHTML("d-add")}
           <button id="d-additem">+ item</button>
         </div>
@@ -2593,6 +2703,7 @@
       };
       document.getElementById("d-brush").onclick = () => { copySelectedDecor(); activateDecorBrush(); };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      if (m.special === "plaque") document.getElementById("d-texto").oninput = e => { ref.texto = e.target.value.slice(0, 600); updateStatus(); };
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
       if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
@@ -2640,6 +2751,7 @@
       if (hasLoot) {
         document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
         document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
+        wireCartaTextFields(panel, ref.loot.items, renderPanel);
         panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
       }
       // Footprint (casas): aplica com bloqueio — reverte se não couber.
@@ -2742,7 +2854,7 @@
       return;
     }
     if (S.tool === "ponte") {
-      S.ponteDrag = { start: c.slice(), end: c.slice(), width: S.ponteLargura };
+      S.ponteDrag = { start: c.slice(), end: c.slice(), width: S.ponteLargura, material: S.ponteMaterial };
       render(); updateStatus();
     }
     else if (S.tool === "decor" && decorBrushActive && decorClipboard) {
@@ -2869,7 +2981,7 @@
     if (S.ponteDrag) {
       const drag = S.ponteDrag; S.ponteDrag = null;
       if (drag.start[0] !== drag.end[0] || drag.start[1] !== drag.end[1]) {
-        if (!placeBridge(drag.start, drag.end, drag.width)) {
+        if (!placeBridge(drag.start, drag.end, drag.width, drag.material)) {
           alert("A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura.");
         }
       }
@@ -2944,7 +3056,7 @@
         }
         return o;
       }),
-      chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(i => ({ id: i.id })), key_objective: !!c.key_objective })),
+      chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(exportLootItem), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => {
         const o = { tipo: t.tipo, pos: t.pos.slice() };
         if (t.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, t.dificuldade | 0));
@@ -2961,7 +3073,7 @@
       }),
       decorations: S.decorations.map(d => {
         const o = { id: d.id, type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
-        o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(i => ({ id: i.id })) } : null;
+        o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(exportLootItem) } : null;
         o.key_objective = !!d.key_objective;
         if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
         if (d.trap?.tipo) {
@@ -2977,6 +3089,7 @@
           }
         }
         const m = decorMeta(d.type);
+        if (m && m.special === "plaque" && d.texto?.trim()) o.texto = d.texto.trim();
         if (m && m.special === "fountain") o.charges = d.charges | 0;
         if (d.image) o.image = d.image;
         // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
@@ -3014,7 +3127,7 @@
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
       materiais: { ...S.materiais },
-      pontes: S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p) })),
+      pontes: S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),
       elevacoes: Object.fromEntries(Object.entries(S.elevacoes)
         .filter(([key, value]) => value && Number.isInteger(value))
         .map(([key, value]) => [key, Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, value))])),
@@ -3054,6 +3167,16 @@
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
+    const validateCarta = (it, label) => {
+      if (it?.id !== "carta" || !it.curse_mode) return;
+      if (!["especifica", "aleatoria"].includes(it.curse_mode)) {
+        e.push(`${label}: modo de maldição inválido`); return;
+      }
+      if (it.curse_mode === "especifica" && !curses.has(it.curse_id))
+        e.push(`${label}: maldição específica inválida`);
+      if (it.curse_mode === "aleatoria" && !["leve", "media", "grave"].includes(it.curse_category || "leve"))
+        e.push(`${label}: gravidade da maldição inválida`);
+    };
     if (S.startMode === "entrance") {
       if (!S.entrance) e.push("falta a entrada");
       else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
@@ -3076,7 +3199,10 @@
     }
     for (const c of S.chests) {
       if (isWall(c.pos)) e.push(`baú em parede: ${c.pos}`);
-      for (const it of c.items) if (!items.has(it.id)) e.push(`item inválido: ${it.id}`);
+      for (const it of c.items) {
+        if (!items.has(it.id)) e.push(`item inválido: ${it.id}`);
+        validateCarta(it, "Carta do baú");
+      }
     }
     for (const t of S.traps) {
       if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
@@ -3107,6 +3233,11 @@
     const wallDecOcc = new Set();
     for (const d of S.decorations) {
       if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type}`); continue; }
+      const decorCat = decorMeta(d.type);
+      if (decorCat?.special === "plaque" && !String(d.texto || "").trim())
+        e.push(`placa ${d.id} precisa de uma mensagem`);
+      if (decorCat?.special === "plaque" && String(d.texto || "").length > 600)
+        e.push(`placa ${d.id} excede 600 caracteres`);
       if (isWallDecor(d)) {
         const [wx, wy] = d.pos;
         const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
@@ -3115,7 +3246,10 @@
         const wallKey = `${wx},${wy}:${(d.facing || []).join(",")}`;
         if (wallDecOcc.has(wallKey)) e.push(`decorações sobrepostas na mesma face de parede em ${wx},${wy}`);
         wallDecOcc.add(wallKey);
-        if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+        if (d.loot) for (const it of d.loot.items) {
+          if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+          validateCarta(it, "Carta da decoração");
+        }
         continue;
       }
       for (const [tx, ty] of decorTiles(d)) {
@@ -3125,7 +3259,10 @@
         if (decOcc.has(key)) e.push(`decorações sobrepostas em ${tx},${ty}`);
         decOcc.add(key);
       }
-      if (d.loot) for (const it of d.loot.items) if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+      if (d.loot) for (const it of d.loot.items) {
+        if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
+        validateCarta(it, "Carta da decoração");
+      }
       if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push("baú-armadilha com monstro inválido");
       if (d.trap) {
         if (!traps.has(d.trap.tipo)) e.push("armadilha de decoração inválida");
@@ -3295,7 +3432,7 @@
       ...(m.custo_mov_altura !== undefined ? { custo_mov_altura: Math.max(1, Math.min(10, Number(m.custo_mov_altura) | 0)) } : {}),
       ...(m.ignora_obstaculos_voo !== undefined ? { ignora_obstaculos_voo: !!m.ignora_obstaculos_voo } : {}),
     }));
-    S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(i => ({ id: i.id })), key_objective: !!c.key_objective }));
+    S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(exportLootItem), key_objective: !!c.key_objective }));
     S.traps = (obj.traps || []).map(t => {
       const o = { tipo: t.tipo, pos: t.pos.slice() };
       if (t.dificuldade != null) o.dificuldade = Number(t.dificuldade) | 0;
@@ -3330,8 +3467,9 @@
     S.decorations = rawDecors.map((d, i) => ({
       id: uniqueLoadedDecorId(d.id || ("decor_" + i)),
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
-      loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(i => ({ id: i.id })) } : null,
+      loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(exportLootItem) } : null,
       key_objective: !!d.key_objective,
+      ...(typeof d.texto === "string" ? { texto: d.texto.slice(0, 600) } : {}),
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
       ...(d.trap?.tipo ? { trap: {
         tipo: d.trap.tipo,
@@ -3406,7 +3544,8 @@
       const fim = Array.isArray(p.fim || p.end) ? (p.fim || p.end).slice(0, 2).map(Number) : inicio.slice();
       return { id: p.id || `ponte_${i}`, inicio, fim,
         largura: Math.max(1, Math.min(3, Number(p.largura ?? p.width ?? 1) | 0)),
-        altura: Number.isInteger(Number(p.altura ?? p.height)) ? Number(p.altura ?? p.height) : elevationAt(inicio[0], inicio[1]) };
+        altura: Number.isInteger(Number(p.altura ?? p.height)) ? Number(p.altura ?? p.height) : elevationAt(inicio[0], inicio[1]),
+        material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" };
     });
     S.nextPonteId = S.pontes.reduce((next, p) => {
       const m = /^ponte_(\d+)$/.exec(p.id || "");

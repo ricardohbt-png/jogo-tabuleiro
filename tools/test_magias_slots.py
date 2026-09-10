@@ -38,6 +38,7 @@ async def main():
     r = setup(); p = mk_mage(r, 1)
     check("nível 1 → 2 slots de 1º", slots_max_para(p)["primeiro"] == 2)
     check("nível 1 → 0 de 2º", slots_max_para(p)["segundo"] == 0)
+    check("mago de teste → 3 slots de 4º", slots_max_para(p)["quarto"] == 3)
     check("init cooldown vazio", p["slots_cooldown"] == {"primeiro": [], "segundo": [], "terceiro": []})
     check("disponíveis 1º = 2", r._slots_disponiveis(p, "primeiro") == 2)
 

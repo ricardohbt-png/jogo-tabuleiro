@@ -163,6 +163,25 @@ async def main():
     r._expirar_armadilhas_duracao()
     check("armadilha expira após a terceira rodada", arm not in r.armadilhas)
 
+    # ── [2e] Armadilha de Raio Congelante — dano, paralisação e escape ───────
+    print("\n[2e] Armadilha de Raio Congelante — 3d4, Fortitude CD 15 e Força CD 16")
+    r = setup()
+    p = make_player("p1", "Victor", "warrior", 0); p["fort"] = 0; p["str_"] = 0; r.players["p1"] = p
+    arm = {"id": "a_gelo", "tipo": "armadilha_raio_congelante", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = fake_rng_seq([1, 1, 20])
+    await r._disparar_armadilha(p, arm)
+    msgs = trap_msgs(r, "p1")
+    check("armadilha existe no catálogo", "armadilha_raio_congelante" in ARMADILHAS)
+    check("popup de congelamento enviado", len(msgs) == 1 and msgs[0].get("tipo") == "congelamento_paralisia")
+    check("dano 3d4 aplicado", msgs and msgs[0]["dano"] == 9)
+    check("Fortitude CD 15 falhou e paralisou", p.get("paralisado") and p.get("paralisado_dificuldade") == 16)
+    await r._processar_paralisacao_turno(p)
+    check("falha no escape de Força mantém paralisia", p.get("paralisado") is True)
+    await r._processar_paralisacao_turno(p)
+    check("sucesso no escape de Força remove paralisia", p.get("paralisado") is False)
+    server.random.randint = _o
+
     print("\n[3] Mina Terrestre (área) — 1 alvo falha, 1 resiste com metade")
     r = setup()
     p1 = make_player("p1", "A", "warrior", 0); p1["ref_"] = 0; p1["pos"] = [5, 5]
