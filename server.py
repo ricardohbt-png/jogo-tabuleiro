@@ -164,6 +164,27 @@ def dados_dano_queda(altura):
         "alto": (6, 6),
     }.get(faixa_altura_queda(altura))
 
+
+# Corpo de pedra não amortece: quem cai petrificado se espatifa. Vale para
+# QUALQUER queda enquanto o alvo está petrificado -- a do voo, a do desnível de
+# terreno e a de empurrão --, e não só para a queda que a própria petrificação
+# provocou. Espelhado em `multiplicadorQueda` no src/gameState.js, que so' usa o
+# número na prévia de risco; o dano autoritativo e' calculado aqui.
+MULT_QUEDA_PETRIFICADO = 3
+
+
+def multiplicador_queda(criatura):
+    """Multiplicador do dano BRUTO da queda, antes de resistências."""
+    if isinstance(criatura, dict) and criatura.get("petrificado"):
+        return MULT_QUEDA_PETRIFICADO
+    return 1
+
+
+def _expressao_queda(quantidade, faces, mult=1):
+    """Rótulo da rolagem para o popup: "6d6" ou "6d6 ×3"."""
+    base = f"{quantidade}d{faces}"
+    return f"{base} ×{mult}" if mult > 1 else base
+
 # Primeira região navegável de Varlúzia. Custos são por herói e por viagem.
 WORLD_LOCATIONS = {
     "alva_e_luz": {"id": "alva_e_luz", "nome": "Alva e Luz", "tipo": "cidade",
@@ -13757,6 +13778,11 @@ class GameRoom:
                 alvo["petrificado"] = True
                 alvo["petrificado_permanente"] = True
                 alvo["petrificado_rodadas"] = 0
+                # Era a UNICA fonte de petrificacao que nao derrubava o alvo no
+                # ar: as outras duas (veneno/habilidade) ja chamavam a queda.
+                # A ordem importa -- `petrificado` ja esta True, entao a queda
+                # sai com o x3 de MULT_QUEDA_PETRIFICADO.
+                await self._aplicar_queda(alvo, "petrificacao", None)
                 self._encerrar_olhar_petrificante(alvo)
                 await self._enviar_resultado_petrificacao(
                     alvo, 0, "Olhar Petrificante", permanente=True)
@@ -24400,10 +24426,16 @@ class GameRoom:
         return out
 
     def _tempestade_posicoes(self, alvo):
+        # A checagem de `pos` vem ANTES dos dois ramos. O ramo de monstro chama
+        # _monster_tiles, que le `m["pos"]` sem guarda: sem posicao ele estourava
+        # KeyError em vez de simplesmente nao interagir com a tempestade (era o
+        # que derrubava o test_voo_altura, cuja fixture nao da `pos` ao monstro).
+        pos = alvo.get("pos") if alvo else None
+        if not (isinstance(pos, (list, tuple)) and len(pos) >= 2):
+            return []
         if alvo in self.monsters.values():
             return [(int(x), int(y)) for x, y in self._monster_tiles(alvo)]
-        pos = alvo.get("pos") if alvo else None
-        return [(int(pos[0]), int(pos[1]))] if isinstance(pos, (list, tuple)) and len(pos) >= 2 else []
+        return [(int(pos[0]), int(pos[1]))]
 
     def _tempestade_zonas_ativas(self):
         return [z for z in self.zonas_especiais if z.get("ativa") and z.get("tipo") == "tempestade_ciclones"]
@@ -28482,8 +28514,9 @@ class GameRoom:
         faixa = faixa_altura_queda(altura)
         quantidade, faces = dados
         alvo["altura"] = ALTURA_MIN
+        mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
-            quantidade, faces, T("dado.dano_queda"))
+            quantidade, faces, T("dado.dano_queda")) * mult
         dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, killer_pid)
         await self.broadcast({
@@ -28492,9 +28525,10 @@ class GameRoom:
             "pos": list(alvo.get("pos", [0, 0])),
             "altura": altura,
             "faixa": faixa,
-            "expressao": f"{quantidade}d{faces}",
+            "expressao": _expressao_queda(quantidade, faces, mult),
             "dano_bruto": dano_bruto,
             "dano": dano,
+            "multiplicador": mult,
             "motivo": motivo,
             "nome": T("ui.voo.queda_titulo"),
             "icone": "💥",
@@ -28503,8 +28537,9 @@ class GameRoom:
             "efeitos_extra": [
                 T("ui.voo.queda_altura", altura=altura,
                   faixa=T(f"ui.voo.faixa_{faixa}")),
-                T("ui.voo.queda_dano", expressao=f"{quantidade}d{faces}", dano=dano),
-            ],
+                T("ui.voo.queda_dano",
+                  expressao=_expressao_queda(quantidade, faces, mult), dano=dano),
+            ] + ([T("ui.voo.queda_petrificado", mult=mult)] if mult > 1 else []),
         })
         # A perda de controle derruba também quem estava sendo carregado.
         # A presa é resolvida depois da Harpia para preservar dois eventos de
@@ -28514,8 +28549,9 @@ class GameRoom:
                 T("narracao.cai_junto_com", nome_criatura_presa=nome_criatura(presa), nome_criatura_alvo=nome_criatura(alvo))
             )
             await self._aplicar_queda(presa, f"{motivo}_presa", alvo.get("id"))
-        return {"altura": altura, "faixa": faixa, "dano": dano,
-                "dano_bruto": dano_bruto, "expressao": f"{quantidade}d{faces}"}
+        return {"altura": altura, "faixa": faixa, "dano": dano, "multiplicador": mult,
+                "dano_bruto": dano_bruto,
+                "expressao": _expressao_queda(quantidade, faces, mult)}
 
     async def _aplicar_queda_terreno(self, alvo, origem, destino, killer_pid=None):
         """Aplica a queda ao descer um desnível sem rampa.
@@ -28536,8 +28572,9 @@ class GameRoom:
             return None
 
         quantidade, faces = dados
+        mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
-            quantidade, faces, T("dado.dano_queda"))
+            quantidade, faces, T("dado.dano_queda")) * mult
         dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, killer_pid)
         faixa = faixa_altura_queda(queda)
@@ -28546,8 +28583,8 @@ class GameRoom:
         await self.broadcast({
             "type": "fall_result", "target_id": alvo.get("id"),
             "pos": list(alvo.get("pos", destino)), "altura": queda,
-            "faixa": faixa, "expressao": f"{quantidade}d{faces}",
-            "dano_bruto": dano_bruto, "dano": dano,
+            "faixa": faixa, "expressao": _expressao_queda(quantidade, faces, mult),
+            "dano_bruto": dano_bruto, "dano": dano, "multiplicador": mult,
             "motivo": "desnivel_terreno", "tipo": "queda", "_fall": True,
             "nome": T("ui.terreno.queda_titulo"), "icone": "💥",
             "descricao": T("ui.terreno.queda_descricao", nome=nome,
@@ -28556,11 +28593,13 @@ class GameRoom:
             "efeitos_extra": [
                 T("ui.terreno.queda_desnivel", origem=nivel_origem,
                   destino=nivel_destino, faixa=faixa_nome),
-                T("ui.voo.queda_dano", expressao=f"{quantidade}d{faces}", dano=dano),
-            ],
+                T("ui.voo.queda_dano",
+                  expressao=_expressao_queda(quantidade, faces, mult), dano=dano),
+            ] + ([T("ui.voo.queda_petrificado", mult=mult)] if mult > 1 else []),
         })
-        return {"queda": queda, "faixa": faixa, "dano": dano,
-                "dano_bruto": dano_bruto, "expressao": f"{quantidade}d{faces}"}
+        return {"queda": queda, "faixa": faixa, "dano": dano, "multiplicador": mult,
+                "dano_bruto": dano_bruto,
+                "expressao": _expressao_queda(quantidade, faces, mult)}
 
     async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None):
         """Subtrai HP e trata morte de jogador / monstro / animado."""

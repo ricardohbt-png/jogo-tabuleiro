@@ -7210,6 +7210,10 @@ window.LANG_INTERFACE = {
   "ui.tooltip.visao": {
     "en": "Vision",
     "pt": "Visão"
+  },
+  "ui.voo.queda_petrificado": {
+    "en": "🗿 Petrified: a body of stone, fall damage ×{mult}",
+    "pt": "🗿 Petrificado: corpo de pedra, dano da queda ×{mult}"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

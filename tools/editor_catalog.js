@@ -9787,6 +9787,20 @@ window.EDITOR_CATALOG = {
       "duracao": "1d4"
     },
     {
+      "id": "tempestade_ciclones",
+      "nome": "Tempestade de Ciclones",
+      "circulo": "quinto",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "🌪️",
+      "tipo": "area_fixa",
+      "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
+      "area_lado": 3,
+      "alcance_base": 6,
+      "duracao": "1d4+1"
+    },
+    {
       "id": "teleporte",
       "nome": "Teleporte",
       "circulo": "quarto",

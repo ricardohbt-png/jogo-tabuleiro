@@ -9,6 +9,12 @@ import server
 def main():
     room = server.GameRoom.__new__(server.GameRoom)
     room.materiais = {(1, 1): "agua", (2, 2): "agua_profunda"}
+    # A sala e' montada com __new__ (sem __init__) de proposito: o custo de
+    # passo em agua e' funcao pura de material + equipamento. Mas o
+    # _water_step_cost passou a consultar a Tempestade de Ciclones, e o
+    # __init__ e' quem cria `zonas_especiais` -- sem esta linha o teste estoura
+    # AttributeError. Fica explicito de que estado a funcao depende hoje.
+    room.zonas_especiais = []
     sem_armadura = {"gear": {"armor": None}}
     media = {"gear": {"armor": {"armor_category": "media"}}}
     pesada = {"gear": {"armor": {"armor_category": "pesada"}}}

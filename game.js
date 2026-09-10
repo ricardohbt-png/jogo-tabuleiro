@@ -17552,7 +17552,7 @@ function _mpAbaAtivo(state){
     const podeDescer = podeAlterar && altura > 0 && movimentos >= custoAltura;
     const podeSubir = podeAlterar && altura < alturaMax && movimentos >= custoAltura;
     const faixaQueda = GS.faixaAlturaQueda?.(altura);
-    const expressaoQueda = GS.expressaoDanoQueda?.(altura);
+    const expressaoQueda = GS.expressaoDanoQueda?.(altura, m);
     const riscoQueda = faixaQueda && expressaoQueda
       ? `<small style="display:block;margin-top:.2rem;color:#ffb36b">${t('ui.voo.risco_queda', {faixa: t('ui.voo.faixa_' + faixaQueda), expressao: expressaoQueda})}</small>`
       : '';

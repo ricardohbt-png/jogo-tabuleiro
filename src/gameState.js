@@ -2459,9 +2459,21 @@ const GS = (() => {
     return 'alto';
   }
 
-  function expressaoDanoQueda(altura) {
+  // Corpo de pedra não amortece: quem cai petrificado se espatifa. Espelha
+  // MULT_QUEDA_PETRIFICADO no server.py — é lá que o dano é autoritativo; aqui
+  // o número só existe para a prévia de risco não mentir para o jogador.
+  const MULT_QUEDA_PETRIFICADO = 3;
+
+  function multiplicadorQueda(criatura) {
+    return criatura && criatura.petrificado ? MULT_QUEDA_PETRIFICADO : 1;
+  }
+
+  function expressaoDanoQueda(altura, criatura) {
     const faixa = faixaAlturaQueda(altura);
-    return faixa === 'baixo' ? '2d6' : faixa === 'medio' ? '4d6' : faixa === 'alto' ? '6d6' : null;
+    const base = faixa === 'baixo' ? '2d6' : faixa === 'medio' ? '4d6' : faixa === 'alto' ? '6d6' : null;
+    if (!base) return null;
+    const mult = multiplicadorQueda(criatura);
+    return mult > 1 ? `${base} ×${mult}` : base;
   }
 
   function weaponCanReachTile(myP, tx, ty, targetAltitude = 0) {
@@ -3330,6 +3342,7 @@ const GS = (() => {
     custoVerticalAlcance,
     faixaAlturaQueda,
     expressaoDanoQueda,
+    multiplicadorQueda,
     weaponCanReachTile,
     weaponReachInfo,
     resolveAttack,
