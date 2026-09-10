@@ -4723,6 +4723,18 @@ window.LANG_INTERFACE = {
     "en": "Invalid position: use a free 2x2 area, inside the storm and up to 2 squares away.",
     "pt": "Posição inválida: use uma área 2x2 livre, dentro da tempestade e até 2 casas."
   },
+  "ui.magia.tempestade_toast_aproxima": {
+    "en": "🌪️ The storm draws near...",
+    "pt": "🌪️ A tempestade se aproxima..."
+  },
+  "ui.magia.tempestade_toast_formada": {
+    "en": "🌪️ {lado}×{lado} storm formed",
+    "pt": "🌪️ Tempestade {lado}×{lado} formada"
+  },
+  "ui.magia.tempestade_toast_raios": {
+    "en": "⚡ Lightning strikes the storm!",
+    "pt": "⚡ Raios atingem a tempestade!"
+  },
   "ui.magia.tempestade_todos_moveram": {
     "en": "Every cyclone has already moved this round.",
     "pt": "Todos os ciclones já se moveram nesta rodada."

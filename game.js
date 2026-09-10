@@ -45578,10 +45578,10 @@ function _tempestadeTick(now){
 function _receberAnimacaoTempestade(msg){
   if(!msg||msg.spell_id!=='tempestade_ciclones')return;
   const now=performance.now(),id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_tempestadeAnims.find(a=>a.animationId===id);
-  if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast('🌪️ A tempestade se aproxima...','#9de8f4');}
-  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(`🌪️ Tempestade ${msg.side||''}×${msg.side||''} formada`,'#9de8f4');}
+  if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast(t('ui.magia.tempestade_toast_aproxima'),'#9de8f4');}
+  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
   else if(msg.phase==='cyclone_move'){if(anim){const c=anim.ciclones.find(x=>Number(x.id)===Number(msg.ciclone_id));if(c&&Array.isArray(msg.from_pos)&&Array.isArray(msg.to_pos)){c.fromPos=msg.from_pos.map(Number);c.toPos=msg.to_pos.map(Number);c.pos=c.toPos.slice();c.moveStart=now;}}}
-  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast('⚡ Raios atingem a tempestade!','#e8f7ff');}
+  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast(t('ui.magia.tempestade_toast_raios'),'#e8f7ff');}
   else if(msg.phase==='expire'){if(anim)anim.endingAt=now;}
   if(!_tempestadeRaf)_tempestadeRaf=_scheduleVisualFrame(_tempestadeTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
 }
