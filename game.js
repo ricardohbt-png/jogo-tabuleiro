@@ -7831,6 +7831,8 @@ function renderMap(state){
     _senhorAguasDraw2D(ctx, state, _animSenhorAguas, performance.now());
   for(const _animIraRocha of _iraRochaAnims)
     _iraRochaDraw2D(ctx, state, _animIraRocha, performance.now());
+  for(const _animTempestade of _tempestadeAnims)
+    _tempestadeDraw2D(ctx, state, _animTempestade, performance.now());
   for(const _animPrisaoChamas of _prisaoChamasAnims)
     _prisaoChamasDraw2D(ctx, state, _animPrisaoChamas, performance.now());
   for(const _animMantoEsc of _mantoEscuridaoAnims)
@@ -17142,6 +17144,9 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const z of (hl.tempestades || [])) {
     const stormSet = new Set((z.tiles || []).map(([x,y]) => `${x},${y}`));
     for (const k of stormSet) draw(k, 'rgba(80,170,210,0.24)');
+    const stormAnimationActive = typeof _tempestadeAnims !== 'undefined'
+      && _tempestadeAnims.some(a => a.animationId && String(a.animationId) === String(z.id));
+    if (stormAnimationActive) continue;
     for (const c of (z.ciclones || [])) {
       const [x,y] = c.pos || [0,0];
       const px = x*CELL, py = y*CELL;
@@ -45396,6 +45401,7 @@ function _dadosMagiaEmTrajeto(){
   if(_cancaoHeroicaAnims.some(anim => !_cancaoHeroicaProgress(anim, now).impacting)) return true;
   if(_saciarAnims.some(anim => !_saciarProgress(anim, now).impacting)) return true;
   if(_contramagicaAnims.some(anim => !_contramagicaProgress(anim, now).impacting)) return true;
+  if(typeof _tempestadeAnims !== 'undefined' && _tempestadeAnims.some(anim => !_tempestadeProgress(anim, now).impacting)) return true;
   return false;
 }
 
@@ -45448,15 +45454,136 @@ function _clickTileTempestade(tx, ty) {
   _aimEnd({silent:true, reason:'resolved'});
 }
 
+// ── Tempestade de Ciclones — funis de vento, partículas e relâmpagos ───────
+// A zona, o dano e a queda continuam autoritativos no servidor. Este bloco
+// apenas transforma os eventos spell_animation em uma animação contínua nos
+// modos 2D e 3D, inclusive quando cada ciclone se desloca.
+const _tempestadeAnims = [];
+let _tempestadeRaf = null;
+const TEMPESTADE_FORMACAO_MS = 980;
+const TEMPESTADE_MOVIMENTO_MS = 680;
+const TEMPESTADE_IMPACTO_MS = 760;
+const TEMPESTADE_RELAMPAGO_MS = 720;
+
+function _tempestadeClamp(v, a=0, b=1){ return Math.max(a, Math.min(b, Number(v) || 0)); }
+function _tempestadeHash(n){
+  n = (n | 0) ^ 0x9e3779b9;
+  n = Math.imul(n ^ (n >>> 16), 0x85ebca6b);
+  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
+}
+function _tempestadeTiles(raw){
+  const seen = new Set();
+  return (Array.isArray(raw) ? raw : [])
+    .filter(p => Array.isArray(p) && p.length >= 2)
+    .map(p => [Number(p[0]), Number(p[1])])
+    .filter(([x,y]) => Number.isFinite(x) && Number.isFinite(y))
+    .filter(([x,y]) => { const k=`${x},${y}`; if(seen.has(k)) return false; seen.add(k); return true; });
+}
+function _tempestadeVisible(state, pos){
+  if(!state || !Array.isArray(pos)) return false;
+  if(GS.isMaster() || state.test_mode) return true;
+  const visible = new Set([...(state.explored || []), ...(state.revealed || [])]
+    .map(([x,y]) => `${x},${y}`));
+  return visible.has(`${Math.floor(pos[0])},${Math.floor(pos[1])}`);
+}
+function _tempestadeAnimFromMessage(msg){
+  const now = performance.now();
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
+  const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
+  const ciclones = (Array.isArray(msg.ciclones) ? msg.ciclones : []).map((c, i) => ({
+    id: Number(c.id ?? i + 1), pos: Array.isArray(c.pos) ? c.pos.map(Number) : center.slice(),
+    fromPos:null, toPos:null, moveStart:0
+  }));
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    zoneId: msg.zone_id == null ? null : String(msg.zone_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    origin, center, tiles:_tempestadeTiles(msg.tiles), side:Number(msg.side) || 3,
+    ciclones, travelMs:Math.max(360, Number(msg.travel_ms) || TEMPESTADE_FORMACAO_MS),
+    durationRounds:Number(msg.duration_rounds) || 0, start:now,
+    resolved:msg.phase === 'resolve', resolvedAt:msg.phase === 'resolve' ? now : 0,
+    impactReached:false, lightningAt:0, lightningTiles:[], endingAt:null,
+    seed:((origin[0]*73856093)^(origin[1]*19349663)^(center[0]*83492791)^Date.now())>>>0,
+    group:null, areaMeshes:[], stormRings:[], cycloneMeshes:[], boltMeshes:[],
+    lightningFlash:null, lightningRing:null
+  };
+}
+function _tempestadeProgress(anim, now){
+  const elapsed=Math.max(0,now-anim.start);
+  const travel=_tempestadeClamp(elapsed/anim.travelMs);
+  const formed=_tempestadeClamp((elapsed-anim.travelMs+180)/TEMPESTADE_IMPACTO_MS);
+  const impact=anim.resolvedAt?_tempestadeClamp((now-anim.resolvedAt)/TEMPESTADE_IMPACTO_MS):0;
+  const fade=anim.endingAt==null?1:_tempestadeClamp(1-(now-anim.endingAt)/850);
+  return {elapsed,travel,formed,impact,fade,impacting:formed>=1,finished:anim.endingAt!=null&&fade<=0};
+}
+function _tempestadeCyclonePosition(c, now){
+  if(!c?.fromPos||!c?.toPos||!c.moveStart) return c?.pos||[0,0];
+  const q=_tempestadeClamp((now-c.moveStart)/TEMPESTADE_MOVIMENTO_MS);
+  return [c.fromPos[0]+(c.toPos[0]-c.fromPos[0])*q,c.fromPos[1]+(c.toPos[1]-c.fromPos[1])*q];
+}
+function _tempestadeBuildBolt(line, from, to, seed, T){
+  const points=[new T.Vector3(from[0],from[1],from[2])], dx=to[0]-from[0],dy=to[1]-from[1],dz=to[2]-from[2];
+  for(let i=1;i<6;i++){const q=i/6,w=(_tempestadeHash(seed+i*31)-.5)*.22;points.push(new T.Vector3(from[0]+dx*q+w,from[1]+dy*q,from[2]+dz*q-w));}
+  points.push(new T.Vector3(to[0],to[1],to[2]));
+  if(line.geometry) line.geometry.dispose(); line.geometry=new T.BufferGeometry().setFromPoints(points);
+}
+function _tempestadeBuild3D(anim){
+  if(!g3||!g3.scene||!window.THREE) return false;
+  const T=window.THREE, group=new T.Group(); group.name='tempestade-de-ciclones-animation';
+  const wind=0x65d8ef, foam=0xdafcff, deep=0x176f9b;
+  for(const [x,z] of anim.tiles){const mat=new T.MeshBasicMaterial({color:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const tile=new T.Mesh(new T.PlaneGeometry(.92,.92),mat);tile.rotation.x=-Math.PI/2;tile.position.set(x,.255,z);tile.renderOrder=74;group.add(tile);anim.areaMeshes.push(tile);}
+  const centerMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+  const centerRing=new T.Mesh(new T.TorusGeometry(.45,.035,8,44),centerMat);centerRing.rotation.x=-Math.PI/2;centerRing.position.set(anim.center[0],.30,anim.center[1]);centerRing.renderOrder=78;group.add(centerRing);anim.stormRings.push(centerRing);
+  for(const c of anim.ciclones){
+    const [x,z]=c.pos, root=new T.Group(); root.position.set(x+.5,.25,z+.5); root.renderOrder=80; group.add(root);
+    const funnelMat=new T.MeshBasicMaterial({color:deep,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+    const funnel=new T.Mesh(new T.ConeGeometry(.67,1.55,18,1,true),funnelMat);funnel.position.y=.78;root.add(funnel);
+    const rings=[];
+    for(let j=0;j<4;j++){const mat=new T.MeshBasicMaterial({color:j===1?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const ring=new T.Mesh(new T.TorusGeometry(.22+j*.12,.025+j*.004,7,32),mat);ring.rotation.x=Math.PI/2;ring.position.y=.34+j*.29;root.add(ring);rings.push(ring);}
+    const baseMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const base=new T.Mesh(new T.TorusGeometry(.62,.032,8,38),baseMat);base.rotation.x=Math.PI/2;base.position.y=.08;root.add(base);
+    const motes=[];for(let j=0;j<12;j++){const mat=new T.MeshBasicMaterial({color:j%3===0?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const mote=new T.Mesh(new T.SphereGeometry(j%4===0?.038:.022,7,5),mat);root.add(mote);motes.push(mote);}
+    anim.cycloneMeshes.push({id:c.id,root,funnel,rings,base,motes});
+  }
+  const lightningGroup=new T.Group();lightningGroup.renderOrder=100;group.add(lightningGroup);
+  for(let i=0;i<8;i++){const mat=new T.LineBasicMaterial({color:i%2?foam:0x8edfff,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const line=new T.Line(new T.BufferGeometry(),mat);line.visible=false;lightningGroup.add(line);anim.boltMeshes.push(line);}
+  const flashMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});anim.lightningFlash=new T.Mesh(new T.SphereGeometry(.36,14,10),flashMat);anim.lightningFlash.position.set(anim.center[0],.72,anim.center[1]);anim.lightningFlash.renderOrder=101;lightningGroup.add(anim.lightningFlash);
+  const ringMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});anim.lightningRing=new T.Mesh(new T.TorusGeometry(.44,.04,8,40),ringMat);anim.lightningRing.rotation.x=Math.PI/2;anim.lightningRing.position.set(anim.center[0],.34,anim.center[1]);anim.lightningRing.renderOrder=101;lightningGroup.add(anim.lightningRing);
+  g3.scene.add(group);anim.group=group;return true;
+}
+function _tempestadeDispose3D(anim){
+  if(!anim.group)return;if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj=>{if(obj.geometry)obj.geometry.dispose();if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());});anim.group=null;
+}
+function _tempestadeUpdate3D(anim,now){
+  if(!g3||!window.THREE)return;if(!anim.group||anim.group.parent!==g3.scene){_tempestadeDispose3D(anim);if(!_tempestadeBuild3D(anim))return;}
+  const p=_tempestadeProgress(anim,now),pulse=.5+.5*Math.sin(now/145+anim.seed),formed=p.formed,fade=p.fade;
+  for(const tile of anim.areaMeshes)tile.material.opacity=(.055+.04*pulse)*fade;
+  for(const ring of anim.stormRings){ring.rotation.z=now/360;ring.scale.setScalar(.75+.18*pulse+Math.min(1,p.impact)*.55);ring.material.opacity=(.25+.18*pulse)*formed*fade;}
+  for(let i=0;i<anim.cycloneMeshes.length;i++){const v=anim.cycloneMeshes[i],c=anim.ciclones.find(x=>Number(x.id)===Number(v.id))||anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);v.root.position.set(pos[0]+.5,.25,pos[1]+.5);v.root.rotation.y=now/(520+i*48)+i;v.funnel.scale.set(.88+.10*pulse,Math.max(.02,formed*(.78+.20*pulse)),.88+.10*pulse);v.funnel.rotation.z=Math.sin(now/310+i)*.06;v.funnel.material.opacity=(.10+.045*pulse)*formed*fade;for(let j=0;j<v.rings.length;j++){const ring=v.rings[j];ring.rotation.z=now/(250+j*52)*(j%2?-1:1)+i;ring.scale.setScalar(.82+.12*Math.sin(now/110+j+i));ring.material.opacity=(.33+.20*pulse)*(formed*.72+.28)*fade;}v.base.rotation.z=-now/310-i;v.base.material.opacity=(.42+.18*pulse)*formed*fade;for(let j=0;j<v.motes.length;j++){const a=now/600+_tempestadeHash(anim.seed+i*97+j*13)*Math.PI*2,r=.22+(j%5)*.095,y=.22+((now/1100+j*.13+_tempestadeHash(anim.seed+j*17))%1)*1.28;v.motes[j].position.set(Math.cos(a)*r,y,Math.sin(a)*r);v.motes[j].material.opacity=(.18+.28*Math.sin(now/170+j)**2)*formed*fade;}}
+  const flashAge=anim.lightningAt?now-anim.lightningAt:-1,lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS,lf=lightning?Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS)):0;anim.lightningFlash.visible=lightning;anim.lightningRing.visible=lightning;anim.lightningFlash.scale.setScalar(.45+1.8*lf);anim.lightningFlash.material.opacity=.68*lf;anim.lightningRing.scale.setScalar(.65+1.75*lf);anim.lightningRing.material.opacity=.8*lf;
+  for(let i=0;i<anim.boltMeshes.length;i++){const line=anim.boltMeshes[i];line.visible=lightning&&i<Math.max(2,Math.min(anim.boltMeshes.length,2+anim.ciclones.length*2));if(!line.visible)continue;const c=anim.ciclones[i%Math.max(1,anim.ciclones.length)],pos=_tempestadeCyclonePosition(c,now),tx=pos[0]+(_tempestadeHash(anim.seed+i*7)*1.7-.35),tz=pos[1]+(_tempestadeHash(anim.seed+i*11)*1.7-.35);_tempestadeBuildBolt(line,[pos[0]+.5,1.60,pos[1]+.5],[tx,.28,tz],anim.seed+i*41,window.THREE);line.material.opacity=(.70+.25*pulse)*lf;}
+}
+function _tempestadeDraw2D(ctx,state,anim,now){
+  if(!_tempestadeVisible(state,anim.origin)&&!_tempestadeVisible(state,anim.center)&&!anim.tiles.some(p=>_tempestadeVisible(state,p)))return;
+  const p=_tempestadeProgress(anim,now),fade=p.fade,pulse=.5+.5*Math.sin(now/145+anim.seed);ctx.save();ctx.globalCompositeOperation='lighter';
+  for(const [tx,ty] of anim.tiles){if(!_tempestadeVisible(state,[tx,ty]))continue;ctx.fillStyle=`rgba(50,170,210,${(.08+.04*pulse)*fade})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}
+  for(let i=0;i<anim.ciclones.length;i++){const c=anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now),x=(pos[0]+1)*CELL,y=(pos[1]+1)*CELL,r=CELL*(.62+.06*pulse),formed=p.formed;if(!_tempestadeVisible(state,[Math.floor(pos[0]),Math.floor(pos[1])]))continue;ctx.fillStyle=`rgba(35,125,165,${(.12+.05*pulse)*formed*fade})`;ctx.fillRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL*2-4,CELL*2-4);ctx.strokeStyle=`rgba(180,248,255,${(.55+.25*pulse)*formed*fade})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.shadowColor='#64e6ff';ctx.shadowBlur=CELL*.16;for(let j=0;j<3;j++){const rr=r*(.42+j*.25),a=now/260*(j%2?-1:1)+i;ctx.beginPath();ctx.arc(x,y,rr,a,a+Math.PI*1.42);ctx.stroke();}ctx.strokeStyle=`rgba(220,252,255,${(.30+.25*pulse)*formed*fade})`;ctx.beginPath();ctx.arc(x,y,r*(.54+.10*pulse),0,Math.PI*2);ctx.stroke();ctx.font=`bold ${Math.max(12,CELL*.42)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(225,252,255,${(.55+.28*pulse)*formed*fade})`;ctx.fillText('🌪️',x,y);}
+  const flashAge=anim.lightningAt?now-anim.lightningAt:-1,lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS,lf=lightning?Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS)):0;if(lightning){for(let i=0;i<Math.max(2,anim.ciclones.length*2);i++){const c=anim.ciclones[i%Math.max(1,anim.ciclones.length)],pos=_tempestadeCyclonePosition(c,now),sx=(pos[0]+1)*CELL,sy=(pos[1]+.15)*CELL,tx=(pos[0]+.5+_tempestadeHash(anim.seed+i*7)*1.7-.35)*CELL,ty=(pos[1]+.5+_tempestadeHash(anim.seed+i*11)*1.7-.35)*CELL;ctx.beginPath();ctx.moveTo(sx,sy);for(let j=1;j<6;j++){const q=j/6;ctx.lineTo(sx+(tx-sx)*q+(_tempestadeHash(anim.seed+i*23+j*3)-.5)*CELL*.22,sy+(ty-sy)*q);}ctx.lineTo(tx,ty);ctx.strokeStyle=`rgba(235,255,255,${(.72*lf).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.stroke();}for(const [tx,ty] of (anim.lightningTiles.length?anim.lightningTiles:anim.tiles)){ctx.fillStyle=`rgba(210,250,255,${(.12+.24*lf).toFixed(3)})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}}
+  ctx.restore();
+}
+function _tempestadeTick(now){
+  let active=false;for(let i=_tempestadeAnims.length-1;i>=0;i--){const anim=_tempestadeAnims[i],p=_tempestadeProgress(anim,now);if(p.impacting&&!anim.impactReached){anim.impactReached=true;_liberarDadosMagia();}if(p.finished){_tempestadeDispose3D(anim);_tempestadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_tempestadeUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_tempestadeRaf=active?_scheduleVisualFrame(_tempestadeTick):null;
+}
+
 function _receberAnimacaoTempestade(msg){
-  if(!msg || msg.spell_id !== 'tempestade_ciclones') return;
-  const tiles = msg.tiles || [];
-  if(msg.phase === 'start') toast('🌪️ A tempestade se aproxima...', '#9de8f4');
-  if(msg.phase === 'resolve') toast(`🌪️ Tempestade ${msg.side || ''}×${msg.side || ''} formada`, '#9de8f4');
-  if(msg.phase === 'lightning') toast('⚡ Raios atingem a tempestade!', '#e8f7ff');
-  window._spellHL.tempestadeFlash = {tiles, until: performance.now() + (msg.phase === 'lightning' ? 520 : 900)};
-  if(GS.gameState) renderMap(GS.gameState);
-  setTimeout(() => { if(GS.gameState) renderMap(GS.gameState); }, 950);
+  if(!msg||msg.spell_id!=='tempestade_ciclones')return;
+  const now=performance.now(),id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_tempestadeAnims.find(a=>a.animationId===id);
+  if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast('🌪️ A tempestade se aproxima...','#9de8f4');}
+  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(`🌪️ Tempestade ${msg.side||''}×${msg.side||''} formada`,'#9de8f4');}
+  else if(msg.phase==='cyclone_move'){if(anim){const c=anim.ciclones.find(x=>Number(x.id)===Number(msg.ciclone_id));if(c&&Array.isArray(msg.from_pos)&&Array.isArray(msg.to_pos)){c.fromPos=msg.from_pos.map(Number);c.toPos=msg.to_pos.map(Number);c.pos=c.toPos.slice();c.moveStart=now;}}}
+  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast('⚡ Raios atingem a tempestade!','#e8f7ff');}
+  else if(msg.phase==='expire'){if(anim)anim.endingAt=now;}
+  if(!_tempestadeRaf)_tempestadeRaf=_scheduleVisualFrame(_tempestadeTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
 }
 
 function _liberarDadosMagia(){
