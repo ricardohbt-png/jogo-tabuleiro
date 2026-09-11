@@ -473,6 +473,46 @@ CS.reset(); CS.configure({});
   check("(c') cena que errou e já golpeou não é pendente", CS.pendingFor("m:id_9", 700) === null);
 }
 
+console.log("\n[32e] Hand-off prefere cena sem hand-off (Fúria: 2 golpes → 2 números)");
+CS.reset(); CS.configure({});
+{
+  // (a) A e B (mesmo atacante, mesmo alvo) ainda não golpearam; 2 hand-offs
+  CS.start(START, 0); CS.tick(0);
+  CS.start({ ...START, attack_id: "atk_1_2" }, 1); CS.tick(1);   // B fica em FILA (impactAt null)
+  check("(a) 1º hand-off vai para A", CS.pendingFor("m:id_9", 2) === "atk_1_1"
+    && CS.handoff("m:id_9", { feedback: { text: "3", kind: "damage" }, death: false, onImpact: [] }, 2) === null);
+  check("(a) 2º hand-off vai para B (A já tem o seu)", CS.pendingFor("m:id_9", 3) === "atk_1_2"
+    && CS.handoff("m:id_9", { feedback: { text: "5", kind: "damage" }, death: false, onImpact: [] }, 3) === null);
+  const A = CS._scenes.find(x => x.id === "atk_1_1"), B = CS._scenes.find(x => x.id === "atk_1_2");
+  check("(a) A guarda só o 1º, B só o 2º", A.handoffs === 1 && A.impact.feedbacks[0].text === "3"
+    && B.handoffs === 1 && B.impact.feedbacks[0].text === "5");
+  check("(a) com os dois ocupados, um 3º hand-off ainda cai na primeira não golpeada", CS.pendingFor("m:id_9", 4) === "atk_1_1");
+  CS.result(RESULT_HIT, 5); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);     // A: GOLPE
+  const impA = CS.tick(610).find(c => c.cmd === "impact" && c.id === "atk_1_1");
+  check("(a) impact de A tem exatamente 1 feedback ('3')", impA && impA.feedbacks.length === 1 && impA.feedbacks[0].text === "3");
+  CS.tick(610 + 260);                                                              // A fecha (tinha hand-off)
+  check("(a) A fechou e B saiu da FILA", CS.phaseOf("atk_1_1") === null && CS.phaseOf("atk_1_2") !== "FILA");
+  CS.result({ ...RESULT_HIT, attack_id: "atk_1_2" }, 871); CS.dieSettled({ die: "d20" }, 900);
+  CS.tick(870 + 180);                                                              // B: windup pronto + dado → GOLPE
+  const impB = CS.tick(870 + 180 + 110).find(c => c.cmd === "impact" && c.id === "atk_1_2");
+  check("(a) impact de B tem exatamente 1 feedback ('5')", impB && impB.feedbacks.length === 1 && impB.feedbacks[0].text === "5");
+
+  // (b) morte + número do mesmo game_state ficam no MESMO golpe, mesmo havendo
+  // outra cena livre (B) no alvo
+  CS.reset();
+  CS.start({ ...START, target_key: "p:id_7" }, 0); CS.tick(0);
+  CS.start({ ...START, attack_id: "atk_1_2", target_key: "p:id_7" }, 1); CS.tick(1);
+  check("(b) morte vai para A", CS.handoff("p:id_7", { feedback: { text: "☠", kind: "death" }, death: true, onImpact: [] }, 2) === null
+    && CS._scenes.find(x => x.id === "atk_1_1").impact.death === true);
+  check("(b) pendingFor insiste em A (carrega morte), não em B (livre)", CS.pendingFor("p:id_7", 3) === "atk_1_1");
+  check("(b) número também vai para A", CS.handoff("p:id_7", { feedback: { text: "12", kind: "damage" }, death: false, onImpact: [] }, 3) === null
+    && CS._scenes.find(x => x.id === "atk_1_2").handoffs === 0);
+  CS.result({ ...RESULT_HIT, target_key: "p:id_7" }, 5); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+  const impM = CS.tick(610).find(c => c.cmd === "impact" && c.id === "atk_1_1");
+  check("(b) um impact com 2 feedbacks (morte, número) e death:true",
+    impM && impM.death === true && impM.feedbacks.length === 2 && impM.feedbacks[0].text === "☠" && impM.feedbacks[1].text === "12");
+}
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');

@@ -267,15 +267,23 @@
   // espera o SEU número (acertou e nunca recebeu hand-off). `now`, se
   // informado, ignora cena expirada (rAF pode ter pausado numa aba oculta
   // enquanto mensagens de WS chegavam).
+  // Entre as cenas que ainda não golpearam, prefere a primeira SEM hand-off
+  // (Fúria com 2 golpes no mesmo alvo → cada golpe ganha o seu número);
+  // exceção: a primeira que já carrega `impact.death` continua recebendo —
+  // a morte e o número do mesmo game_state ficam no mesmo golpe.
   function cenaParaHandoff(targetKey, now) {
-    let semImpacto = null, comImpacto = null;
+    let semImpacto = null, semImpactoLivre = null, comImpacto = null;
     for (const s of scenes) {
       if (s.done || s.targetKey !== targetKey) continue;
       if (now != null && now - s.createdAt > cfg.expireMs) continue;
-      if (s.impactAt == null) { if (!semImpacto) semImpacto = s; }
+      if (s.impactAt == null) {
+        if (!semImpacto) semImpacto = s;
+        if (!semImpactoLivre && s.handoffs === 0) semImpactoLivre = s;
+      }
       else if (s.handoffs === 0 && s.result && s.result.hit) { if (!comImpacto) comImpacto = s; }
     }
-    return semImpacto || comImpacto;
+    if (semImpacto && semImpacto.impact.death) return semImpacto;
+    return semImpactoLivre || semImpacto || comImpacto;
   }
 
   function pendingFor(targetKey, now) {
