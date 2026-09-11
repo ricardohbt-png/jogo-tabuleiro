@@ -102,7 +102,7 @@ O cliente **já mantém** o monstro morto no estado renderizado por um tempo: `_
 - **herói**: `_estadoComMortosVisuais` ganha um ramo para `players`: enquanto `isDying('p:<pid>')`, o jogador com `alive=false` é reinjetado com `alive:true` (cópia rasa) para o fig `pl:<pid>` continuar existindo; `_capturarDerrotasERessurreicoes` faz o hand-off de morte do herói;
 - o cadáver (`corp:<id>` / `hero-corpse:<pid>`) nasce `visible=false` enquanto `isDying` e o comando `end` da cena força um re-render, que o mostra.
 
-Se a remoção chegar antes do impacto (caso normal), a cópia fica parada até o dado assentar. Vale para monstro, servo animado, prisioneiro e herói.
+Se a remoção chegar antes do impacto (caso normal), a cópia fica parada até o dado assentar. Vale para **monstro e herói**; servo animado e prisioneiro ficam **fora** (não há registro de morte pendente para eles — o peão some no próximo `game_state`; a cena expira sozinha).
 
 ### 3.8 Shake de câmera
 
@@ -130,6 +130,7 @@ Corpo a corpo = distância Chebyshev entre `attacker_pos` e `target_pos` ≤ `me
 - Tomba 90° em torno do eixo horizontal perpendicular à direção do golpe (cai para longe do atacante), 380 ms ease-in, quique de 4° no chão; escurece (`color × 0,35`) e desvanece (`opacity → 0`) nos últimos 200 ms; squash `scale.y 0,85` no toque.
 - Recebe shake + partículas mesmo em acerto normal.
 - Lápide/cadáver aparece só ao terminar (3.7).
+- Vale para monstro e herói; servo animado e prisioneiro ficam fora (não há registro de morte pendente para eles — o peão some no próximo `game_state`; a cena expira sozinha).
 
 Nada disso usa esqueleto: tudo é transformação da raiz do peão, igual para GLB, sprite e mini procedural.
 

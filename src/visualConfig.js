@@ -214,6 +214,24 @@ window.VC = {
         criticalScale: 1.30,
         cycles: 2.7,
       },
+      // Cena de combate do 3D (investida sincronizada com o d20; crítico e
+      // morte exagerados). Lido por CombatScene.configure em game.js.
+      scene: {
+        enabled: true,
+        meleeRange: 1.5,
+        windup:   { dist: 0.15, ms: 180 },
+        strike:   { dist: 0.35, ms: 110, tiltX: 0.12 },
+        recover:  { ms: 220, overshoot: 0.03 },
+        ranged:   { recoil: 0.10, msOut: 90, msBack: 200 },
+        fumble:   { dist: 0.50, wobbleCycles: 2 },
+        hit:      { angle: 0.14, ms: 260, push: 0.12 },
+        dodge:    { angle: 0.08, ms: 200 },
+        crit:     { push: 0.30, flashMs: 140, flashPeak: 0.9, hitStopMs: 80,
+                    shakeMs: 140, shakeAmp: 0.06, particles: 18 },
+        death:    { fallMs: 380, bounceDeg: 4, darken: 0.35, fadeMs: 200, squashY: 0.85 },
+        waitDieMs: 3500,
+        expireMs:  6000,
+      },
       resistance: {
         reflexos:  { color: '#72d8ff', icon: '💨', label: 'REFLEXOS' },
         fortitude: { color: '#8dffb0', icon: '🛡', label: 'FORTITUDE' },

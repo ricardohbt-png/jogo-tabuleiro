@@ -876,7 +876,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 - [ ] **Step 1: Acrescentar as checagens estáticas ao teste**
 
 ```js
-console.log("\n[19] Fiação estática (index.html, visualConfig, game.js)");
+console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
 check("index.html carrega src/combatScene.js", iCS > 0);
@@ -905,7 +905,7 @@ check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure
 - [ ] **Step 2: Rodar — as checagens de `game.js` devem falhar (as de index/visualConfig também, por ora)**
 
 Run: `node tools/test_combat_scene.js`
-Expected: `[19]` com ❌ em todas exceto `_detectHpChanges existe`.
+Expected: `[33]` com ❌ em todas exceto `_detectHpChanges existe`.
 
 - [ ] **Step 3: `visualConfig.js` — acrescentar o bloco depois de `hitReaction: { ... },`**
 
@@ -941,7 +941,7 @@ document.write('<script src="src/combatScene.js?v='+v+'"><\/script>');
 - [ ] **Step 5: Rodar**
 
 Run: `node tools/test_combat_scene.js`
-Expected: em `[19]`, index.html e visualConfig ✅; as 6 de `game.js` ainda ❌ (fecham nas Tasks 7–10).
+Expected: em `[33]`, index.html e visualConfig ✅; as 6 de `game.js` ainda ❌ (fecham nas Tasks 7–10).
 
 - [ ] **Step 6: Commit**
 
@@ -995,7 +995,8 @@ function _executarComandoCena(c){
   for(const fn of (c.onImpact || [])){
     try{ fn(); }catch(e){ console.warn('combatScene onImpact:', e); }
   }
-  if(g3 && c.hit && (c.crit || c.death)){
+  // `tardio` = hand-off que chegou DEPOIS do golpe: o burst do crítico já saiu no comando do golpe; só a morte (informação nova) ainda merece partículas.
+  if(g3 && c.hit && ((c.crit && !c.tardio) || c.death)){
     const tipo = fb && fb.damageType ? _combatPrimaryDamageType(fb.damageType) : 'physical';
     const corHex = (_combatDamageTypeInfo(tipo).color || '#f4eee2').replace('#', '');
     _spawnBurstParticles(g3.T, g3.scene,
@@ -1124,7 +1125,7 @@ if(window.CombatScene) CombatScene.configure({
 - [ ] **Step 8: Verificar sintaxe e checagens estáticas**
 
 Run: `node --check game.js && node tools/test_combat_scene.js`
-Expected: `game.js` sem erro; em `[19]` passam agora `dieSettled`, `shake subtrai antes`, `configure`; seguem ❌ `pendingFor` (×2) e `_aplicarPoseCena` (Tasks 8 e 9).
+Expected: `game.js` sem erro; em `[33]` passam agora `dieSettled`, `shake subtrai antes`, `configure`; seguem ❌ `pendingFor` (×2) e `_aplicarPoseCena` (Tasks 8 e 9).
 
 - [ ] **Step 9: Commit**
 
@@ -1178,7 +1179,7 @@ e troque por:
         // dona do instante do impacto — número, cue e reação saem no golpe,
         // sincronizados com o d20. Sem cena (magia, armadilha, veneno…), o
         // comportamento abaixo segue intocado.
-        if(_cenaAtiva() && CombatScene.pendingFor(key)){
+        if(_cenaAtiva() && CombatScene.pendingFor(key, now)){
           const cmd = CombatScene.handoff(key, {
             feedback: {
               entry: impact ? {...entry, pos: impact} : entry,
@@ -1200,7 +1201,7 @@ e troque por:
 - [ ] **Step 2: Verificar**
 
 Run: `node --check game.js && node tools/test_combat_scene.js`
-Expected: em `[19]` passam as duas de `pendingFor`; só `_aplicarPoseCena` segue ❌.
+Expected: em `[33]` passam as duas de `pendingFor`; só `_aplicarPoseCena` segue ❌.
 
 - [ ] **Step 3: Commit**
 
@@ -1336,7 +1337,7 @@ function _aplicarPoseCena(fig, now){
 - [ ] **Step 5: Verificar**
 
 Run: `node --check game.js && node tools/test_combat_scene.js`
-Expected: `[19]` toda ✅. Placar: `93 + 11 = 104 passaram, 0 falharam`.
+Expected: `[33]` toda ✅. Placar: `131 + 11 = 142 passaram, 0 falharam`.
 
 - [ ] **Step 6: Commit**
 
@@ -1369,7 +1370,7 @@ e trocar por:
     const kind = _defeatVisualKind(anterior,
       _visualTemAnimacaoDeMagia() ? 'magic' : 'common');
     const chaveCena = `m:${id}`;
-    const comCena = _cenaAtiva() && !!CombatScene.pendingFor(chaveCena);
+    const comCena = _cenaAtiva() && !!CombatScene.pendingFor(chaveCena, agora);
     if(!comCena){
       _spawnDefeatVisual(anterior, kind);
       _playDefeatSound(kind);
@@ -1475,7 +1476,7 @@ por
 ```js
     if(anterior.alive && !atual.alive){
       const chaveCena = `p:${id}`;
-      if(_cenaAtiva() && CombatScene.pendingFor(chaveCena)){
+      if(_cenaAtiva() && CombatScene.pendingFor(chaveCena, performance.now())){
         const cmd = CombatScene.handoff(chaveCena, {
           feedback: {entry: {pos: atual.pos}, text: '☠ MORTE DEFINITIVA', kind: 'death', damageType: null, options: {}},
           death: true,

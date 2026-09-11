@@ -9097,7 +9097,8 @@ function _agendarFimMorteVisual(id){
     const aguardarAnimacao = atual.aguardarMagia
       && (_visualTemAnimacaoDeMagia() || agora < atual.magiaAte)
       && agora < atual.maxAte;
-    if(aguardarMinimo || aguardarAnimacao){
+    const aguardarCena = !!(window.CombatScene && CombatScene.isDying(`m:${id}`)) && agora < atual.maxAte;
+    if(aguardarMinimo || aguardarAnimacao || aguardarCena){
       atual.timer = setTimeout(verificar, 100);
       return;
     }
@@ -9114,6 +9115,9 @@ function _agendarFimMorteVisual(id){
     _mortesVisuaisPendentes.delete(String(id));
     _renderizarEstadoAtual();
   };
+  // O `end` da cena de combate (tombo terminado) conclui na hora — ver o ramo
+  // 'end' de _executarComandoCena, que zera minAte/aguardarMagia antes de chamar.
+  rec.concluir = verificar;
   rec.timer = setTimeout(verificar, MORTE_VISUAL_MIN_MS);
 }
 
@@ -9142,8 +9146,12 @@ function _capturarMortesVisuais(state){
     const copia = JSON.parse(JSON.stringify(anterior));
     const kind = _defeatVisualKind(anterior,
       _visualTemAnimacaoDeMagia() ? 'magic' : 'common');
-    _spawnDefeatVisual(anterior, kind);
-    _playDefeatSound(kind);
+    const chaveCena = `m:${id}`;
+    const comCena = _cenaAtiva() && !!CombatScene.pendingFor(chaveCena, agora);
+    if(!comCena){
+      _spawnDefeatVisual(anterior, kind);
+      _playDefeatSound(kind);
+    }
     const minhaAntes = xpAnterior.get(String(GS.myPid));
     const minhaAgora = (state.players || []).find(p => String(p.id) === String(GS.myPid));
     const xpGain = minhaAntes != null && minhaAgora ? Math.max(0, Number(minhaAgora.xp || 0) - Number(minhaAntes.xp || 0)) : 0;
@@ -9156,19 +9164,31 @@ function _capturarMortesVisuais(state){
     _mortesVisuaisPendentes.set(id, {
       monster: copia,
       minAte: agora + MORTE_VISUAL_MIN_MS,
-      maxAte: agora + (aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
+      maxAte: agora + (comCena ? (VC.feedback?.combat?.scene?.expireMs ?? 6000)
+        : aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
       magiaAte: agora + MORTE_VISUAL_MAGIA_RECENTE_MS,
       aguardarMagia, xpGain, lootAvailable, confirmado: false,
       timer: null,
     });
-    _spawnCombatFeedback(
-      anterior, '☠ DERROTADO', 'death',
-      (() => {
-        const inicio = _bolaFogoFeedbackStartAt(anterior);
-        return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
-          : (mortesPotenciais > 1 ? agora + morteIndex * 120 : null);
-      })()
-    );
+    if(comCena){
+      // A cena solta texto, anel e som no golpe (sincronizados com o d20) e
+      // segura a cópia visual até o tombo terminar (ver _agendarFimMorteVisual).
+      const cmd = CombatScene.handoff(chaveCena, {
+        feedback: {entry: anterior, text: '☠ DERROTADO', kind: 'death', damageType: null, options: {}},
+        death: true,
+        onImpact: [() => { _spawnDefeatVisual(anterior, kind); _playDefeatSound(kind); }],
+      }, agora);
+      if(cmd) _executarComandoCena(cmd);
+    } else {
+      _spawnCombatFeedback(
+        anterior, '☠ DERROTADO', 'death',
+        (() => {
+          const inicio = _bolaFogoFeedbackStartAt(anterior);
+          return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
+            : (mortesPotenciais > 1 ? agora + morteIndex * 120 : null);
+        })()
+      );
+    }
     _agendarFimMorteVisual(id);
   }
 
@@ -9198,9 +9218,19 @@ function _capturarDerrotasERessurreicoes(state){
     const atual = atuais.get(id);
     if(!atual || !Array.isArray(atual.pos)) continue;
     if(anterior.alive && !atual.alive){
-      _spawnDefeatVisual(atual, 'hero');
-      _playDefeatSound('hero');
-      _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+      const chaveCena = `p:${id}`;
+      if(_cenaAtiva() && CombatScene.pendingFor(chaveCena, performance.now())){
+        const cmd = CombatScene.handoff(chaveCena, {
+          feedback: {entry: {pos: atual.pos}, text: '☠ MORTE DEFINITIVA', kind: 'death', damageType: null, options: {}},
+          death: true,
+          onImpact: [() => { _spawnDefeatVisual(atual, 'hero'); _playDefeatSound('hero'); }],
+        }, performance.now());
+        if(cmd) _executarComandoCena(cmd);
+      } else {
+        _spawnDefeatVisual(atual, 'hero');
+        _playDefeatSound('hero');
+        _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+      }
     } else if(!anterior.alive && atual.alive){
       _spawnDefeatVisual(atual, 'revive');
       _playDefeatSound('magic');
@@ -9209,8 +9239,20 @@ function _capturarDerrotasERessurreicoes(state){
 }
 
 function _estadoComMortosVisuais(state){
-  if(!state || !Array.isArray(state.monsters) || !_mortesVisuaisPendentes.size)
-    return state;
+  if(!state) return state;
+  let out = state;
+  // Herói: enquanto a cena o faz tombar, o peão vivo precisa continuar
+  // existindo (renderMap3D pula !p.alive). Cópia rasa com alive:true.
+  if(window.CombatScene && Array.isArray(state.players)){
+    let mudou = false;
+    const players = state.players.map(p => {
+      if(p && p.alive === false && CombatScene.isDying(`p:${p.id}`)){ mudou = true; return {...p, alive: true, hp: 1}; }
+      return p;
+    });
+    if(mudou) out = { ...out, players };
+  }
+  if(!Array.isArray(state.monsters) || !_mortesVisuaisPendentes.size)
+    return out;
   const agora = performance.now();
   const vivos = state.monsters.filter(m => m && m.hp > 0);
   const presentes = new Set(vivos.map(m => String(m.id)));
@@ -9222,11 +9264,12 @@ function _estadoComMortosVisuais(state){
     }
     if(!presentes.has(id)) pendentes.push(rec.monster);
   }
-  if(!pendentes.length) return state;
-  return { ...state, monsters: vivos.concat(pendentes) };
+  if(!pendentes.length) return out;
+  return { ...out, monsters: vivos.concat(pendentes) };
 }
 
 function _limparMortesVisuais(){
+  if(window.CombatScene) CombatScene.reset();
   for(const rec of _mortesVisuaisPendentes.values())
     if(rec.timer) clearTimeout(rec.timer);
   _mortesVisuaisPendentes.clear();
@@ -10778,8 +10821,14 @@ function _attackFeedbackModeLabel(mode){
   return mode === 'advantage' ? 'VANTAGEM' : mode === 'disadvantage' ? 'DESVANTAGEM' : 'NORMAL';
 }
 
+// Com cena de combate (3D), o result chega ~240 ms depois do d20 mas o GOLPE
+// só acontece quando o dado assenta (1–3 s): até lá o banner não pode revelar
+// acerto/erro. `resultAt === Infinity` é a marca "esperando o golpe" que
+// _receiveAttackFeedback põe e o `impact` de _executarComandoCena tira.
+function _attackFeedbackAguardaGolpe(f){ return !!f.result && f.resultAt === Infinity; }
+
 function _attackFeedbackResultLabel(f){
-  if(!f.result) return 'PREPARANDO';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return '1 NATURAL — FALHA!';
   if(f.crit) return t('ui.hud.critico');
@@ -10787,7 +10836,7 @@ function _attackFeedbackResultLabel(f){
 }
 
 function _attackFeedbackColor(f){
-  if(!f.result) return '#ffe18a';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return '#ffe18a';
   if(f.natural_critical || f.crit) return '#ffd34d';
   if(f.natural_fumble) return '#d978ff';
   return f.hit ? '#7dffad' : '#ff7373';
@@ -11074,10 +11123,114 @@ function _disposeAttackFeedback(f){
   f.group=null;
 }
 
+// ── Cena de combate (CombatScene) — fiação no cliente 3D ─────────────────────
+// Os ids de attack_feedback vêm de new_id() (únicos entre heróis e monstros);
+// a chave de entidade é a mesma dos _hitReactions / _gatherHpEntries.
+function _entityKeyById(id){
+  const st = GS.gameState;
+  if(!st || id == null) return null;
+  const sid = String(id);
+  if((st.players || []).some(p => String(p.id) === sid)) return `p:${id}`;
+  if((st.monsters || []).some(m => String(m.id) === sid)) return `m:${id}`;
+  for(const p of (st.players || []))
+    if((p.animados || []).some(a => String(a.id) === sid)) return `a:${id}`;
+  if(st.prisoner && st.prisoner.id != null && String(st.prisoner.id) === sid) return 'pr:singleton';
+  return null;
+}
+
+function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
+
+// Executa um comando devolvido por CombatScene.tick/handoff. O `impact` é o
+// único que desenha: número flutuante, cue de dano, callbacks (anel/som de
+// derrota) e partículas de crítico/morte.
+function _executarComandoCena(c){
+  if(!c) return;
+  if(c.cmd === 'end'){
+    // Cena que expirou sem golpear deixaria o banner legado imortal
+    // (resultAt=Infinity nunca passa → o tick de _receiveAttackFeedback nunca
+    // o descarta): destrava aqui, revelando o resultado.
+    const fEnd = _attackFeedbacks.find(x => x.id === c.id);
+    if(fEnd && fEnd.resultAt === Infinity){
+      fEnd.resultAt = performance.now();
+      _drawAttackFeedbackTexture3D(fEnd);
+      if(fEnd.cueAdiado){ _playCombatCue(fEnd.cueAdiado.kind, fEnd.cueAdiado.opts); fEnd.cueAdiado = null; }
+    }
+    if(!c.death) return;
+    // O fim do tombo é AUTORITATIVO para a cópia visual do monstro: a cena
+    // já saiu da lista (poseFor → null) e o laço deste mesmo frame restauraria
+    // o peão em pé, opaco — enquanto a cópia hp=1 seguiria em
+    // _mortesVisuaisPendentes até o próximo poll (≤100 ms) ou o minAte.
+    // Concluir agora apaga a cópia e re-renderiza de forma síncrona, então a
+    // fig é descartada ANTES da travessia por fig (_tickCombatScene roda antes
+    // do entityGroup.children.forEach em startLoop3D).
+    // EXCEÇÃO: renderMap3D retorna cedo enquanto uma miniatura anda
+    // (estadoMovimento/estadoMininoMov.emMovimento) — o reconcile ficaria para
+    // o próximo render e a fig do morto ressuscitaria em pé neste frame. Por
+    // isso a fig é escondida AGORA; o reconcile a descarta depois.
+    const tk = typeof c.targetKey === 'string' ? c.targetKey : '';
+    const figMorto = tk.startsWith('m:') ? getMonsterMesh(tk.slice(2))
+                   : tk.startsWith('p:') ? getPeaoMesh(tk.slice(2))
+                   : tk.startsWith('a:') ? getAnimadoMesh(tk.slice(2)) : null;
+    if(figMorto) figMorto.visible = false;
+    const mid = tk.startsWith('m:') ? tk.slice(2) : null;
+    const rec = mid != null ? _mortesVisuaisPendentes.get(String(mid)) : null;
+    if(rec && typeof rec.concluir === 'function'){
+      if(rec.timer) clearTimeout(rec.timer);
+      rec.minAte = 0; rec.aguardarMagia = false;
+      rec.concluir();
+    } else {
+      _renderizarEstadoAtual();
+    }
+    return;
+  }
+  if(c.cmd !== 'impact') return;
+  const now = performance.now();
+  if(!c.tardio){
+    // O golpe aconteceu: agora o banner legado pode mostrar ACERTO/ERRO/CRÍTICO
+    // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
+    const f = _attackFeedbacks.find(x => x.id === c.id);
+    if(f && f.result && !(f.resultAt < now)){   // ainda não revelado (Infinity ou futuro)
+      f.resultAt = now;
+      _drawAttackFeedbackTexture3D(f);
+      if(f.cueAdiado){ _playCombatCue(f.cueAdiado.kind, f.cueAdiado.opts); f.cueAdiado = null; }
+    }
+  }
+  const feedbacks = Array.isArray(c.feedbacks) ? c.feedbacks : [];
+  for(const fb of feedbacks){
+    if(!fb) continue;
+    if(fb.cue) _playCombatCue('damage', fb.cue);
+    _spawnCombatFeedback(fb.entry, fb.text, fb.kind, now, fb.damageType, fb.options || {});
+  }
+  for(const fn of (c.onImpact || [])){
+    try{ fn(); }catch(e){ console.warn('combatScene onImpact:', e); }
+  }
+  // `tardio` = hand-off que chegou DEPOIS do golpe: o burst do crítico já saiu no comando do golpe; só a morte (informação nova) ainda merece partículas.
+  if(g3 && c.hit && Array.isArray(c.targetPos) && ((c.crit && !c.tardio) || c.death)){
+    const fb = feedbacks.find(f => f && f.damageType) || null;
+    const tipo = fb ? _combatPrimaryDamageType(fb.damageType) : 'physical';
+    const corHex = (_combatDamageTypeInfo(tipo).color || '#f4eee2').replace('#', '');
+    _spawnBurstParticles(g3.T, g3.scene,
+      { x: c.targetPos[0], y: 0.35, z: c.targetPos[1] },
+      parseInt(corHex, 16), VC.feedback?.combat?.scene?.crit?.particles ?? 18);
+  }
+}
+
+function _tickCombatScene(now){
+  if(!window.CombatScene) return;
+  for(const c of CombatScene.tick(now)) _executarComandoCena(c);
+}
+
 function _receiveAttackFeedback(msg){
   if(!msg || !msg.attack_id) return;
   _registrarHistoricoAtaque(msg);
   const id=String(msg.attack_id), now=performance.now();
+  if(_cenaAtiva()){
+    const base = {attack_id:id, attacker_key:_entityKeyById(msg.attacker_id), target_key:_entityKeyById(msg.target_id),
+      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos};
+    if(msg.phase==='start') CombatScene.start(base, now);
+    else if(msg.phase==='result') CombatScene.result({...base, hit:!!msg.hit, crit:!!msg.crit,
+      natural_critical:!!msg.natural_critical, natural_fumble:!!msg.natural_fumble}, now);
+  }
   if(msg.phase==='start'){
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
     const f={id, attackerName:msg.attacker_name||'Atacante', targetName:msg.target_name||'Alvo',
@@ -11092,16 +11245,27 @@ function _receiveAttackFeedback(msg){
     if(!f) return;
     Object.assign(f,{result:true,resultAt:now+f.prepDuration,roll:msg.roll,total:msg.total,hit:!!msg.hit,crit:!!msg.crit,
       natural:msg.natural,natural_critical:!!msg.natural_critical,natural_fumble:!!msg.natural_fumble});
-    if(msg.natural_critical || msg.crit)
-      _playCombatCue('critical', {repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1});
-    else if(!msg.hit || msg.natural_fumble)
-      _playCombatCue('error', {repeatKey:'error', volume:.82});
+    const cue = (msg.natural_critical || msg.crit)
+      ? {kind:'critical', opts:{repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1}}
+      : (!msg.hit || msg.natural_fumble) ? {kind:'error', opts:{repeatKey:'error', volume:.82}} : null;
+    if(_cenaAtiva() && CombatScene.phaseOf(id)){
+      // Há cena para este ataque: o banner e o cue de crítico/erro esperam o
+      // GOLPE (comando `impact` em _executarComandoCena), que é quando o
+      // resultado deixa de ser spoiler. `end` destrava se a cena expirar.
+      f.resultAt = Infinity;
+      f.cueAdiado = cue;
+    } else if(cue){
+      _playCombatCue(cue.kind, cue.opts);
+    }
     _drawAttackFeedbackTexture3D(f);
   }
   if(mode3D && g3) _buildAttackFeedback3D(_attackFeedbacks[_attackFeedbacks.length-1]);
   if(!_attackFeedbackRaf){
     const tick=()=>{_attackFeedbackRaf=null; const n=performance.now();
-      for(let i=_attackFeedbacks.length-1;i>=0;i--){const f=_attackFeedbacks[i],q=_attackFeedbackProgress(f,n);if(f.result&&q.done){_disposeAttackFeedback(f);_attackFeedbacks.splice(i,1);}}
+      for(let i=_attackFeedbacks.length-1;i>=0;i--){const f=_attackFeedbacks[i];
+        // Esperando o golpe mas a cena sumiu sem `end` (CombatScene.reset em dispose3D/troca 2D): revela, senão o banner nunca morre.
+        if(f.resultAt===Infinity && !(window.CombatScene && CombatScene.phaseOf(f.id))){ f.resultAt=n; _drawAttackFeedbackTexture3D(f); f.cueAdiado=null; }
+        const q=_attackFeedbackProgress(f,n);if(f.result&&q.done){_disposeAttackFeedback(f);_attackFeedbacks.splice(i,1);}}
       if(!mode3D&&GS.gameState) renderMap(GS.gameState); if(mode3D&&g3) _updateAttackFeedback3D(n);
       if(_attackFeedbacks.length) _attackFeedbackRaf=_scheduleVisualFrame(tick);
     }; _attackFeedbackRaf=_scheduleVisualFrame(tick);
@@ -11381,13 +11545,32 @@ function _detectHpChanges(st){
         const amount = Math.max(1, Math.round(prev - hp));
         const damageEvents = damageEventsByKey.get(key) || [];
         const primaryDamageType = _combatPrimaryDamageType(damageTypesByKey.get(key) || ['physical']);
-        _playCombatCue('damage', {
+        const cue = {
           damageType: primaryDamageType,
           repeatKey: `damage:${primaryDamageType}`,
           volume: isMine ? .95 : .72,
-        });
+        };
         const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
         const impact = damageEvents.find(e => Array.isArray(e.pos))?.pos;
+        // Hand-off: se há uma cena de ataque pendente para este alvo, ela é a
+        // dona do instante do impacto — número, cue e reação saem no golpe,
+        // sincronizados com o d20. Sem cena (magia, armadilha, veneno…), o
+        // comportamento abaixo segue intocado.
+        if(_cenaAtiva() && CombatScene.pendingFor(key, now)){
+          const cmd = CombatScene.handoff(key, {
+            feedback: {
+              entry: impact ? {...entry, pos: impact} : entry,
+              text: `${amount}`, kind: isMine ? 'hero_damage' : 'damage',
+              damageType: damageTypesByKey.get(key) || 'physical',
+              options: {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical)},
+              cue,
+            },
+            death: false, onImpact: [],
+          }, now);
+          if(cmd) _executarComandoCena(cmd);
+          continue;
+        }
+        _playCombatCue('damage', cue);
         const damageIndex = damageSequenceIndex++;
         const fireStart = _bolaFogoFeedbackStartAt(entry);
         const startAt = fireStart != null
@@ -11621,26 +11804,31 @@ function syncDiceCanvas(){
 
 const _particleSystems = [];
 
-function _spawnGoldParticles(T, scene, pos){
-  const N = 20;
+function _spawnBurstParticles(T, scene, pos, color, n){
+  const N = Math.max(1, n | 0);
   const posArr = new Float32Array(N * 3);
   const vels   = [];
   for(let i = 0; i < N; i++){
     posArr[i*3]   = pos.x + (Math.random()-.5)*0.3;
-    posArr[i*3+1] = pos.y + 0.45;  // start just above die top face
+    posArr[i*3+1] = pos.y;
     posArr[i*3+2] = pos.z + (Math.random()-.5)*0.3;
     vels.push({ x:(Math.random()-.5)*1.2, y:1.6+Math.random()*2.0, z:(Math.random()-.5)*1.2 });
   }
   const pGeo = new T.BufferGeometry();
   pGeo.setAttribute('position', new T.BufferAttribute(posArr, 3));
   const pMat = new T.PointsMaterial({
-    color:0xffd700, size:0.10,
+    color, size:0.10,
     transparent:true, opacity:1.0,
     sizeAttenuation:true, depthWrite:false,
   });
   const pts = new T.Points(pGeo, pMat);
   scene.add(pts);
   _particleSystems.push({ pts, pGeo, pMat, vels, N, elapsed:0, duration:800 });
+}
+
+// Dourado do dado: começa logo acima da face superior.
+function _spawnGoldParticles(T, scene, pos){
+  _spawnBurstParticles(T, scene, { x:pos.x, y:pos.y + 0.45, z:pos.z }, 0xffd700, 20);
 }
 
 function _updateParticles(dt){
@@ -12215,6 +12403,11 @@ function _clearDiceVisuals(){
     for(let i=_tweens.length-1; i>=0; i--)
       if(diceMeshes.has(_tweens[i].mesh)) _tweens.splice(i,1);
     for(const die of _dice3){
+      // d20 descartado no ar (rolling/snapping — nunca assentou): a cena de
+      // combate que esperava ESTE dado ficaria em ESPERANDO_DADO até o
+      // waitDieMs; libera-a agora, como se o dado tivesse assentado.
+      if(die.dieType === 'd20' && die.phase !== 'settling' && die.phase !== 'fading' && window.CombatScene)
+        CombatScene.dieSettled({die:'d20', value: die.value}, performance.now());
       if(_d3._diceGroup) _d3._diceGroup.remove(die.mesh);
       _disposeDieMaterials(die.mats);
       _disposeTopBadge(die.topBadge);
@@ -12524,6 +12717,7 @@ function _tickDie3(obj, dt){
       }
       obj.phase='settling'; obj.settleT=0;
       playSettle();
+      if(window.CombatScene) CombatScene.dieSettled({die: obj.dieType, value: obj.value}, performance.now());
       // Gold particle burst — usa posição mundial (mesh é filho do diceGroup)
       if(g3){ const _wp=new (window.THREE).Vector3(); mesh.getWorldPosition(_wp); _spawnGoldParticles(window.THREE,g3.scene,_wp); }
     });
@@ -33384,6 +33578,7 @@ function init3D(state){
   if(!window.THREE){ console.error('Three.js not loaded'); return; }
   if(!window.THREE.OrbitControls){ console.error('OrbitControls not loaded'); return; }
   if(g3) dispose3D();
+  if(window.CombatScene) CombatScene.reset();
 
   const T   = window.THREE;
   const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
@@ -35088,6 +35283,10 @@ function _mkWoodTex(T){
 function dispose3D(){
   if(!g3) return;
   cancelAnimationFrame(g3.animFrame);
+  // Sem o laço 3D ninguém mais tica as cenas: um herói morto ficaria
+  // "tombando" para sempre (isDying) e seria desenhado vivo no 2D. Lacuna
+  // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
+  if(window.CombatScene) CombatScene.reset();
   g3.resizeObs.disconnect();
   if(g3.controls) g3.controls.dispose();
 
@@ -35341,6 +35540,138 @@ function _atualizarTerrenoAnimado3D(t){
   }
 }
 
+// ── Aplicação da pose da cena de combate no peão ─────────────────────────────
+// Por CHAVE (o Group pode ser reconstruído no meio da cena). Idempotente: a
+// base é gridX/gridY + footprint; ao terminar, restaura uma vez e não escreve
+// mais. A inclinação usa rotateOnWorldAxis porque rotation é Euler XYZ e o
+// facing (rotation.y) misturaria os eixos.
+const _sceneAxis = new (window.THREE ? window.THREE.Vector3 : Object)();
+function _figSceneKey(fig){
+  const u = fig.userData || {};
+  return u.pid != null ? `p:${u.pid}`
+    : u.monId != null ? `m:${u.monId}`
+    : u.animadoId != null ? `a:${u.animadoId}`
+    : u.prisoner ? 'pr:singleton' : null;
+}
+function _materiaisCena(fig){
+  const u = fig.userData;
+  if(u._sceneMats) return u._sceneMats;
+  const lista = [];
+  fig.traverse(o => {
+    if(!(o.isMesh || o.isSprite) || !o.material) return;
+    const ud = o.userData || {};
+    // A arte GLB é marcada isGroundDecal (reuso como "fora do passe de outline")
+    // E isGLB — só o decal de verdade (sombra blob, anel de visão, base) fica
+    // de fora. O contorno (isOutline) entra, mas só recebe opacidade (abaixo).
+    if((ud.isGroundDecal && !ud.isGLB) || ud.isPulseRing || ud.isSelectionRing) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const clones = mats.map(m => { const c = m.clone(); c.userData._sceneOwned = true; return c; });
+    o.material = Array.isArray(o.material) ? clones : clones[0];
+    for(const m of mats) if(m.userData && m.userData._sceneOwned) m.dispose();   // clone antigo (re-clonagem após arte tardia)
+    for(const c of clones) lista.push({
+      mat: c,
+      outline: !!ud.isOutline,
+      color: c.color ? c.color.clone() : null,
+      emissive: c.emissive ? c.emissive.clone() : null,
+      opacity: c.opacity, transparent: c.transparent,
+    });
+  });
+  u._sceneMats = lista;
+  return lista;
+}
+function _pintarMateriaisCena(fig, pose){
+  for(const e of _materiaisCena(fig)){
+    const m = e.mat, flash = pose.flash || 0;
+    if(e.outline){   // casca do contorno: só desvanece com o peão (nunca clareia/escurece)
+      if(pose.opacity !== undefined){ m.transparent = true; m.opacity = e.opacity * pose.opacity; }
+      else { m.transparent = e.transparent; m.opacity = e.opacity; }
+      continue;
+    }
+    if(e.emissive){
+      if(flash) m.emissive.setRGB(flash, flash, flash); else m.emissive.copy(e.emissive);
+    }
+    if(e.color){
+      m.color.copy(e.color);
+      if(flash && !e.emissive) m.color.addScalar(flash);        // sprites: clareia
+      if(pose.darken !== undefined) m.color.multiplyScalar(pose.darken);
+    }
+    if(pose.opacity !== undefined){ m.transparent = true; m.opacity = e.opacity * pose.opacity; }
+    else { m.transparent = e.transparent; m.opacity = e.opacity; }
+  }
+}
+function _restaurarMateriaisCena(fig){
+  for(const e of (fig.userData._sceneMats || [])){
+    const m = e.mat;
+    if(e.color) m.color.copy(e.color);
+    if(e.emissive) m.emissive.copy(e.emissive);
+    m.opacity = e.opacity; m.transparent = e.transparent;
+  }
+}
+function _aplicarPoseCena(fig, now){
+  if(!window.CombatScene) return;
+  const key = _figSceneKey(fig);
+  if(!key) return;
+  const pose = CombatScene.poseFor(key, now);
+  const u = fig.userData;
+  if(!pose){
+    if(u._scenePoseAtiva){
+      u._scenePoseAtiva = false;
+      fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0);
+      fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0);
+      fig.rotation.set(0, u._sceneBaseRotY || 0, u._hitBaseRotationZ || 0);
+      if(u._sceneBaseScale) fig.scale.copy(u._sceneBaseScale);
+      _restaurarMateriaisCena(fig);
+    }
+    return;
+  }
+  if(!u._scenePoseAtiva){
+    u._scenePoseAtiva = true;
+    // Casa AUTORITATIVA da cena (attack_feedback do servidor). gridX/gridY só são
+    // renovados por renderMap3D a partir de um game_state — um monstro que anda
+    // (deslize entity_step) e ataca no mesmo turno NÃO recebe game_state entre o
+    // passo e o golpe, e a pose o devolveria à casa de antes do passo. Gravar a
+    // base aqui faz a pose E a restauração partirem da casa certa.
+    if(Array.isArray(pose.base)){ u.gridX = pose.base[0]; u.gridY = pose.base[1]; }
+    // Sob o redemoinho rotation.y já traz o giro do frame: a base é a de antes.
+    u._sceneBaseRotY = (u._whirlpoolWasSpinning && u._whirlpoolBaseRotationY != null)
+      ? u._whirlpoolBaseRotationY : (fig.rotation.y || 0);
+    u._sceneBaseScale = fig.scale.clone();
+  }
+  fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0) + pose.dx;
+  fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0) + pose.dz;
+  fig.rotation.set(0, u._sceneBaseRotY, 0);
+  if(pose.tilt){
+    const d = pose.tiltDir;
+    _sceneAxis.set(d[1], 0, -d[0]).normalize();      // eixo ⟂ à direção: y × d
+    fig.rotateOnWorldAxis(_sceneAxis, pose.tilt);
+  }
+  const b = u._sceneBaseScale;
+  fig.scale.set(b.x, b.y * (pose.scaleY == null ? 1 : pose.scaleY), b.z);
+  if(pose.flash || pose.opacity !== undefined || pose.darken !== undefined) _pintarMateriaisCena(fig, pose);
+  else if(u._sceneMats) _restaurarMateriaisCena(fig);
+}
+
+// Shake de câmera do crítico/morte. OrbitControls recalcula a câmera a partir de
+// position − target a cada update(): o offset precisa ser retirado ANTES e
+// posto de volta DEPOIS, senão vira deriva permanente.
+function _desfazerShakeCamera(){
+  if(g3 && g3._shakeOffset){ g3.camera.position.sub(g3._shakeOffset); g3._shakeOffset = null; }
+}
+function _reduzMovimento(){
+  try{ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch(e){ return false; }
+}
+function _aplicarShakeCamera(now){
+  if(!g3 || !window.CombatScene) return;
+  const sh = CombatScene.shake(now);        // consome/limpa a lista mesmo com movimento reduzido
+  if(!sh || _reduzMovimento()) return;
+  const T = g3.T, q = g3.camera.quaternion;
+  const off = new T.Vector3(1,0,0).applyQuaternion(q).multiplyScalar(sh.x)
+    .add(new T.Vector3(0,1,0).applyQuaternion(q).multiplyScalar(sh.y));
+  g3.camera.position.add(off);
+  g3._shakeOffset = off;
+}
+
 function startLoop3D(){
   let lastDecorAnimAt = performance.now();
   function tick(){
@@ -35361,6 +35692,7 @@ function startLoop3D(){
     _flushVisualAnimFrame3D(now);
     _updateFlightFallAnimations3D(now);
     _updateDiceLoop3D(now);
+    _tickCombatScene(now);
     // Não depende de renderMap3D: ele pode ser adiado enquanto uma miniatura
     // caminha. Isso garante que ativar/cancelar uma habilidade reflita no
     // próximo frame 3D, e que o ícone acompanhe a posição animada do herói.
@@ -35369,8 +35701,10 @@ function startLoop3D(){
     _atualizarPosicoesEfeitosAtivos3D();
 
     // ── OrbitControls damping (pausado durante o seguimento de câmera) ───────
+    _desfazerShakeCamera();   // o offset do frame anterior não pode ser absorvido pelo OrbitControls
     if(!configCamera.seguindoPeao) g3.controls.update();
     atualizarCamera();   // seguimento suave do peão (quando ativo)
+    _aplicarShakeCamera(now);
 
     // ── Player torch flicker (two sine waves for organic feel) ──────────────
     g3.torch.intensity = 8.5 + Math.sin(t/112)*1.0 + Math.sin(t/197)*0.7;
@@ -35530,6 +35864,8 @@ function startLoop3D(){
       if(fig.userData.isCurrentFig) curFig = fig;
       // Não interfere no peão em movimento — _animarPasso controla o Y dele.
       if(estadoMovimento.emMovimento && fig === estadoMovimento.peaoAtivo) return;
+      // Idem para o servo/prisioneiro movido à mão (_animarPassoMinion).
+      if(typeof estadoMininoMov !== 'undefined' && estadoMininoMov.emMovimento && fig === estadoMininoMov.peaoAtivo) return;
       const gx = fig.userData.gridX, gy = fig.userData.gridY;
       if(gx === undefined) return;
       // Reação de impacto no 3D: inclina o grupo inteiro por poucos frames.
@@ -35538,10 +35874,7 @@ function startLoop3D(){
       if(fig.userData._hitBaseRotationZ === undefined)
         fig.userData._hitBaseRotationZ = fig.rotation.z || 0;
       fig.rotation.z = fig.userData._hitBaseRotationZ
-        + _hitReaction3DAngle(fig.userData.pid != null ? `p:${fig.userData.pid}`
-          : fig.userData.monId != null ? `m:${fig.userData.monId}`
-          : fig.userData.animadoId != null ? `a:${fig.userData.animadoId}`
-          : fig.userData.prisoner ? 'pr:singleton' : null, performance.now());
+        + _hitReaction3DAngle(_figSceneKey(fig), performance.now());
       // O redemoinho arrasta visualmente a criatura presa. A rotação é
       // aplicada à raiz inteira, preservando a pose/facing quando o efeito
       // termina e sem alterar posição, colisão ou regras autoritativas.
@@ -35578,6 +35911,7 @@ function startLoop3D(){
       if(isHov) hovFigY = fig.position.y + 0.30;   // light tracks above base
       // Slow Y-rotation while selected (~3 rpm)
       if(isSel) fig.rotation.y += 0.008;
+      _aplicarPoseCena(fig, now);
     });
     // Fade vitrine spotlight in/out
     if(hovP && hspot){
@@ -36851,10 +37185,17 @@ function encerrarSeguimentoCamera(){
 // THREE.js NÃO libera geometria/material/textura ao remover da cena — sem este
 // descarte, cada game_state vazava dezenas de buffers (lentidão progressiva).
 function _disposeEntityTree(root){
+  for(const e of ((root.userData && root.userData._sceneMats) || [])) e.mat.dispose();   // clones do flash (Material.dispose não toca texturas)
   root.traverse(o => {
     // Clones GLB compartilham geometria/material/texturas com o template em
     // cache (_heroGLBCache) — descartar aqui quebraria os próximos clones.
-    if(o.userData && o.userData.isGLB) return;
+    if(o.userData && o.userData.isGLB){
+      // Só o clone da cena de combate (_sceneOwned) é nosso: pode ficar preso à
+      // malha se a arte tardia apagou _sceneMats sem uma nova pose re-clonar.
+      for(const m of (Array.isArray(o.material) ? o.material : [o.material]))
+        if(m && m.userData && m.userData._sceneOwned) m.dispose();
+      return;
+    }
     if(!(o.isMesh || o.isSprite)) return;
     // Sprites no r128 compartilham UMA geometria global — nunca descartá-la.
     if(o.isMesh && o.geometry) o.geometry.dispose();
@@ -37497,6 +37838,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
 // troca. Capturamos somente os dados da visão — nenhum objeto da cena antiga
 // é reutilizado depois do dispose3D().
 function _capturarCamera3D(){
+  _desfazerShakeCamera();   // o offset do shake nunca pode ser assado numa cena reconstruída
   if(!g3?.camera || !g3?.controls) return null;
   return {
     position: g3.camera.position.clone(),
@@ -38288,7 +38630,8 @@ function renderMap3D(state){
   for(const c of (state.corpses||[])){
     const [cx,cy] = c.pos;
     if(!visionSet.has(`${cx},${cy}`)) continue;
-    obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+    const corpFig = obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+    corpFig.visible = !(window.CombatScene && CombatScene.isDying(`m:${c.id}`));
   }
 
   // Lápides dos heróis derrotados — somem quando a Ressurreição remove o
@@ -38297,7 +38640,8 @@ function renderMap3D(state){
     const [hx, hy] = c.pos || [];
     if(!Number.isFinite(hx) || !Number.isFinite(hy)) continue;
     if(!visionSet.has(`${hx},${hy}`)) continue;
-    obterFig(`hero-corpse:${c.hero_id || c.id}`, JSON.stringify(c), () => build3DCorpse(c), hx, hy);
+    const heroCorpFig = obterFig(`hero-corpse:${c.hero_id || c.id}`, JSON.stringify(c), () => build3DCorpse(c), hx, hy);
+    heroCorpFig.visible = !(window.CombatScene && CombatScene.isDying(`p:${c.hero_id || c.id}`));
   }
 
   // Animados (servos do Pedro) — peão do MONSTRO ORIGINAL com base/aro roxo (aliado)
@@ -38374,6 +38718,7 @@ function renderMap3D(state){
       if(!step) continue;
       const mesh = getMonsterMesh(id) || getAnimadoMesh(id);
       if(!mesh) continue;
+      if(window.CombatScene && CombatScene.poseFor(_figSceneKey(mesh), performance.now())) continue;
       if(mesh.userData._stepBaseY === undefined) mesh.userData._stepBaseY = mesh.position.y;
       // entity_step usa a âncora do servidor. Criaturas 2x2 deslizam com o
       // mesmo offset visual usado no estado parado, sem voltar para o canto.
@@ -38932,6 +39277,14 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petr
     // cache (_heroGLBCache) — o descarte do peão NUNCA pode liberar esses recursos.
     inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
+    // Arte tardia (GLB async): se a cena de combate já clonou os materiais deste
+    // peão, restaura e esquece a lista — o próximo frame com pose re-clona
+    // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
+    // Se uma pose já foi travada antes do GLB chegar, o rotY que ela restaura
+    // a cada frame (e ao desfazer) precisa acompanhar a orientação recém-gravada.
+    { const raiz = grp.parent || grp;
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; }
+      if(raiz.userData && raiz.userData._scenePoseAtiva) raiz.userData._sceneBaseRotY = rotY; }
   };
   const cached = _heroGLBCache[classId];
   if (cached && cached !== 'erro') { montar(cached); return true; }
@@ -39059,6 +39412,11 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.position.y = Y0;
     inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
+    // Arte tardia (GLB async): se a cena de combate já clonou os materiais deste
+    // peão, restaura e esquece a lista — o próximo frame com pose re-clona
+    // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
+    { const raiz = grp.parent || grp;
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; } }
   };
   const cached = _monsterGLBCache[path];
   if (cached && cached !== 'erro') { montar(cached); return true; }
@@ -46699,6 +47057,13 @@ function _liberarDadosMagia(){
 }
 
 GS.on('diceRoll',    msg  => _receberDadoVisual(msg));
+// Cena de combate: números em VC; durações respeitam o modo de animação da
+// acessibilidade (instant colapsa a cena — sem investida, número na hora).
+if(window.CombatScene) CombatScene.configure({
+  cfg: VC.feedback?.combat?.scene,
+  duration: _animationProgressDuration,
+  instant: () => _animationSpeedMode === 'instant',
+});
 GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // Cada receptor filtra pelo próprio spell_id. Um erro visual isolado não pode
 // interromper a fila inteira — especialmente o Sono, que precisa criar tanto
