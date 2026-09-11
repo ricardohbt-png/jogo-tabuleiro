@@ -397,6 +397,31 @@ CS.tick(90);
 check("windup escalado termina aos 90ms → ESPERANDO_DADO", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
 CS.configure({});
 
+console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
+const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
+const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
+check("index.html carrega src/combatScene.js", iCS > 0);
+check("combatScene.js vem ANTES de game.js", iCS > 0 && iGame > iCS);
+const vcSrc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
+check("visualConfig tem feedback.combat.scene", /scene:\s*\{/.test(vcSrc) && /waitDieMs/.test(vcSrc));
+const gameSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+function corpoDaFuncao(nome) {
+  const i = gameSrc.indexOf("\nfunction " + nome + "(");
+  if (i < 0) return "";
+  const j = gameSrc.indexOf("\n}\n", i);
+  return gameSrc.slice(i, j);
+}
+const diff = corpoDaFuncao("_detectHpChanges");
+check("_detectHpChanges existe", diff.length > 0);
+check("diff de HP consulta CombatScene.pendingFor ANTES de _spawnCombatFeedback",
+  diff.indexOf("CombatScene.pendingFor") > 0 && diff.indexOf("CombatScene.pendingFor") < diff.indexOf("_spawnCombatFeedback("));
+check("diff de HP consulta CombatScene.pendingFor ANTES de _triggerHitReaction",
+  diff.indexOf("CombatScene.pendingFor") > 0 && diff.indexOf("CombatScene.pendingFor") < diff.indexOf("_triggerHitReaction("));
+check("gancho do d20 chama CombatScene.dieSettled", gameSrc.includes("CombatScene.dieSettled("));
+check("laço 3D aplica a pose (_aplicarPoseCena)", gameSrc.includes("_aplicarPoseCena(fig"));
+check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeCamera();") > 0 && gameSrc.indexOf("_desfazerShakeCamera();") < gameSrc.indexOf("if(!configCamera.seguindoPeao) g3.controls.update();"));
+check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
