@@ -27,9 +27,9 @@ Entrada (eventos):
 - `handoff(targetKey, impact)` — do diff de HP (ver 3.4): `{amount, kind, damageType, critical, status, death}`.
 - `tick(now)` — avança fases por tempo; devolve comandos.
 
-Saída (comandos consumidos pelo `game.js`): `windup`, `strike`, `impact{...}`, `death{key, dir}`, `end`.
+Saída (comandos consumidos pelo `game.js`): `impact{...}` (o único que desenha — número, cue, callbacks, partículas) e `end` (com `death` para forçar re-render). As demais fases (armar, golpe, tombo) não são comandos: são **poses** lidas por `poseFor`.
 
-Consultas: `poseFor(key, now)` → `{dx, dz, rotX, rotZ, scaleY, flash} | null`; `pendingFor(targetKey)` → cena que ainda vai dar impacto nesse alvo, ou `null`; `isDying(key)`; `shake(now)` → offset de câmera ou `null`.
+Consultas: `poseFor(key, now)` → `{dx, dz, tilt, tiltDir:[x,z], scaleY, flash, opacity, darken, dying} | null` (a inclinação é um ângulo em torno do eixo horizontal perpendicular a `tiltDir` — ver riscos); `pendingFor(targetKey)` → cena que ainda vai dar impacto nesse alvo, ou `null`; `isDying(key)`; `shake(now)` → offset de câmera ou `null`.
 
 Chaves de entidade seguem as já usadas pelo `_hitReactions`: `p:<pid>`, `m:<mid>`, `a:<aid>`, `pr:singleton`.
 
