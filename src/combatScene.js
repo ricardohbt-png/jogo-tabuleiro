@@ -305,7 +305,29 @@
     return { dx: d[0] * push, dz: d[1] * push, tilt: cfg.hit.angle * wave, tiltDir: d, flash };
   }
 
-  function poseMorte(s, now) { return null; }   // Task 5
+  function isDying(key) {
+    return scenes.some(s => !s.done && s.targetKey === key && s.impact && s.impact.death);
+  }
+
+  // Tombo: gira 90° em torno do eixo horizontal perpendicular ao golpe (cai para
+  // longe do atacante), quica, escurece e desvanece. Pivô = base do peão (a raiz
+  // do Group fica no chão), então a peça "tomba" apoiada nos pés.
+  function poseMorte(s, now) {
+    const t = now - s.deathAt, fall = D(cfg.death.fallMs), total = deathTotalMs();
+    if (t < 0 || t >= total) return null;
+    const p = t / fall;
+    let tilt, scaleY = 1;
+    if (p < 1) tilt = (Math.PI / 2) * easeIn(p);
+    else {
+      const q = clamp01((t - fall) / Math.max(1e-6, total - fall)), b = Math.sin(q * Math.PI);
+      tilt = Math.PI / 2 - (cfg.death.bounceDeg * Math.PI / 180) * b;
+      scaleY = 1 - (1 - cfg.death.squashY) * b;
+    }
+    const fade = D(cfg.death.fadeMs);
+    const opacity = t > total - fade ? clamp01((total - t) / Math.max(1e-6, fade)) : 1;
+    const darken = 1 - (1 - cfg.death.darken) * easeIn(clamp01(p));
+    return { dx: 0, dz: 0, tilt, tiltDir: s.dir, scaleY, opacity, darken, dying: true };
+  }
 
   function somar(a, b) {
     if (!a) return b; if (!b) return a;
@@ -339,7 +361,7 @@
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
-    pendingFor, handoff, shake,
+    pendingFor, handoff, shake, isDying,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
   };

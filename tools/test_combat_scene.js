@@ -219,6 +219,47 @@ pt = CS.poseFor("m:id_9", 690 + 60);            // meio da segunda metade da rea
 check("depois do hold a reação continua e decai", pt && pt.dx < 0.30);
 check("acerto normal não gera shake", (CS.reset(), CS.start(START, 0), CS.tick(0), CS.result(RESULT_HIT, 1), CS.tick(180), CS.dieSettled({die:"d20"}, 500), CS.tick(500), CS.tick(610), CS.shake(620) === null));
 
+console.log("\n[17] Morte: isDying, tombo, fade e fechamento");
+CS.reset(); CS.configure({});
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+check("não está morrendo antes do hand-off", CS.isDying("m:id_9") === false);
+CS.handoff("m:id_9", { feedback: { text: "☠ DERROTADO", kind: "death" }, death: true, onImpact: [] }, 200);
+check("isDying vira true no hand-off (antes do golpe)", CS.isDying("m:id_9") === true);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+const cmdsD = CS.tick(610);
+const impD = cmdsD.find(c => c.cmd === "impact");
+check("impact traz death=true", impD && impD.death === true);
+check("morte gera shake mesmo sem crítico", CS.shake(615) !== null);
+let pm = CS.poseFor("m:id_9", 610 + 190);        // metade da queda
+check("meio da queda: inclinação entre 0 e 90°", pm && pm.tilt > 0 && pm.tilt < Math.PI / 2);
+check("cai para longe do atacante", pm && perto(pm.tiltDir[0], 1));
+check("escurece durante a queda", pm && pm.darken < 1);
+check("pose de morte marca dying", pm && pm.dying === true);
+pm = CS.poseFor("m:id_9", 610 + 380);
+check("no chão = 90°", pm && perto(pm.tilt, Math.PI / 2, 1e-3));
+pm = CS.poseFor("m:id_9", 610 + 380 + 47);       // meio do quique
+check("quique reduz um pouco o ângulo", pm && pm.tilt < Math.PI / 2);
+check("squash no quique", pm && pm.scaleY < 1);
+pm = CS.poseFor("m:id_9", 610 + 475 - 50);
+check("fade nos últimos fadeMs", pm && pm.opacity < 1 && pm.opacity > 0);
+CS.tick(610 + 260);
+check("após recuperar vai a MORRENDO", CS.phaseOf("atk_1_1") === "MORRENDO");
+check("ainda morrendo", CS.isDying("m:id_9") === true);
+const cmdsFim = CS.tick(610 + 475);
+check("fim da morte emite end com death=true", cmdsFim.some(c => c.cmd === "end" && c.death === true));
+check("deixa de estar morrendo", CS.isDying("m:id_9") === false);
+check("sem pose depois do fim", CS.poseFor("m:id_9", 2000) === null);
+
+console.log("\n[18] Morte com hand-off tardio (após o golpe)");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610); CS.tick(610 + 260);   // AGUARDANDO_HANDOFF
+const cmdT = CS.handoff("m:id_9", { feedback: null, death: true, onImpact: [] }, 900);
+check("hand-off tardio de morte devolve impact com death", cmdT && cmdT.death === true);
+CS.tick(901);
+check("vai a MORRENDO", CS.phaseOf("atk_1_1") === "MORRENDO");
+check("tombo começa no hand-off (t=900)", CS.poseFor("m:id_9", 900 + 380).tilt > 1.5);
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
