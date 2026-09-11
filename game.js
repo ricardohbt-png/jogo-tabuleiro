@@ -8930,6 +8930,7 @@ function _estadoComMortosVisuais(state){
 }
 
 function _limparMortesVisuais(){
+  if(window.CombatScene) CombatScene.reset();
   for(const rec of _mortesVisuaisPendentes.values())
     if(rec.timer) clearTimeout(rec.timer);
   _mortesVisuaisPendentes.clear();
@@ -10777,10 +10778,65 @@ function _disposeAttackFeedback(f){
   f.group=null;
 }
 
+// ── Cena de combate (CombatScene) — fiação no cliente 3D ─────────────────────
+// Os ids de attack_feedback vêm de new_id() (únicos entre heróis e monstros);
+// a chave de entidade é a mesma dos _hitReactions / _gatherHpEntries.
+function _entityKeyById(id){
+  const st = GS.gameState;
+  if(!st || id == null) return null;
+  const sid = String(id);
+  if((st.players || []).some(p => String(p.id) === sid)) return `p:${id}`;
+  if((st.monsters || []).some(m => String(m.id) === sid)) return `m:${id}`;
+  for(const p of (st.players || []))
+    if((p.animados || []).some(a => String(a.id) === sid)) return `a:${id}`;
+  if(st.prisoner && st.prisoner.id != null && String(st.prisoner.id) === sid) return 'pr:singleton';
+  return null;
+}
+
+function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
+
+// Executa um comando devolvido por CombatScene.tick/handoff. O `impact` é o
+// único que desenha: número flutuante, cue de dano, callbacks (anel/som de
+// derrota) e partículas de crítico/morte.
+function _executarComandoCena(c){
+  if(!c) return;
+  if(c.cmd === 'end'){ if(c.death) _renderizarEstadoAtual(); return; }
+  if(c.cmd !== 'impact') return;
+  const now = performance.now();
+  const fb = c.feedback;
+  if(fb){
+    if(fb.cue) _playCombatCue('damage', fb.cue);
+    _spawnCombatFeedback(fb.entry, fb.text, fb.kind, now, fb.damageType, fb.options || {});
+  }
+  for(const fn of (c.onImpact || [])){
+    try{ fn(); }catch(e){ console.warn('combatScene onImpact:', e); }
+  }
+  // `tardio` = hand-off que chegou DEPOIS do golpe: o burst do crítico já saiu no comando do golpe; só a morte (informação nova) ainda merece partículas.
+  if(g3 && c.hit && ((c.crit && !c.tardio) || c.death)){
+    const tipo = fb && fb.damageType ? _combatPrimaryDamageType(fb.damageType) : 'physical';
+    const corHex = (_combatDamageTypeInfo(tipo).color || '#f4eee2').replace('#', '');
+    _spawnBurstParticles(g3.T, g3.scene,
+      { x: c.targetPos[0], y: 0.35, z: c.targetPos[1] },
+      parseInt(corHex, 16), VC.feedback?.combat?.scene?.crit?.particles ?? 18);
+  }
+}
+
+function _tickCombatScene(now){
+  if(!window.CombatScene) return;
+  for(const c of CombatScene.tick(now)) _executarComandoCena(c);
+}
+
 function _receiveAttackFeedback(msg){
   if(!msg || !msg.attack_id) return;
   _registrarHistoricoAtaque(msg);
   const id=String(msg.attack_id), now=performance.now();
+  if(_cenaAtiva()){
+    const base = {attack_id:id, attacker_key:_entityKeyById(msg.attacker_id), target_key:_entityKeyById(msg.target_id),
+      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos};
+    if(msg.phase==='start') CombatScene.start(base, now);
+    else if(msg.phase==='result') CombatScene.result({...base, hit:!!msg.hit, crit:!!msg.crit,
+      natural_critical:!!msg.natural_critical, natural_fumble:!!msg.natural_fumble}, now);
+  }
   if(msg.phase==='start'){
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
     const f={id, attackerName:msg.attacker_name||'Atacante', targetName:msg.target_name||'Alvo',
@@ -11324,26 +11380,31 @@ function syncDiceCanvas(){
 
 const _particleSystems = [];
 
-function _spawnGoldParticles(T, scene, pos){
-  const N = 20;
+function _spawnBurstParticles(T, scene, pos, color, n){
+  const N = Math.max(1, n | 0);
   const posArr = new Float32Array(N * 3);
   const vels   = [];
   for(let i = 0; i < N; i++){
     posArr[i*3]   = pos.x + (Math.random()-.5)*0.3;
-    posArr[i*3+1] = pos.y + 0.45;  // start just above die top face
+    posArr[i*3+1] = pos.y;
     posArr[i*3+2] = pos.z + (Math.random()-.5)*0.3;
     vels.push({ x:(Math.random()-.5)*1.2, y:1.6+Math.random()*2.0, z:(Math.random()-.5)*1.2 });
   }
   const pGeo = new T.BufferGeometry();
   pGeo.setAttribute('position', new T.BufferAttribute(posArr, 3));
   const pMat = new T.PointsMaterial({
-    color:0xffd700, size:0.10,
+    color, size:0.10,
     transparent:true, opacity:1.0,
     sizeAttenuation:true, depthWrite:false,
   });
   const pts = new T.Points(pGeo, pMat);
   scene.add(pts);
   _particleSystems.push({ pts, pGeo, pMat, vels, N, elapsed:0, duration:800 });
+}
+
+// Dourado do dado: começa logo acima da face superior.
+function _spawnGoldParticles(T, scene, pos){
+  _spawnBurstParticles(T, scene, { x:pos.x, y:pos.y + 0.45, z:pos.z }, 0xffd700, 20);
 }
 
 function _updateParticles(dt){
@@ -12227,6 +12288,7 @@ function _tickDie3(obj, dt){
       }
       obj.phase='settling'; obj.settleT=0;
       playSettle();
+      if(window.CombatScene) CombatScene.dieSettled({die: obj.dieType, value: obj.value}, performance.now());
       // Gold particle burst — usa posição mundial (mesh é filho do diceGroup)
       if(g3){ const _wp=new (window.THREE).Vector3(); mesh.getWorldPosition(_wp); _spawnGoldParticles(window.THREE,g3.scene,_wp); }
     });
@@ -32654,6 +32716,7 @@ function init3D(state){
   if(!window.THREE){ console.error('Three.js not loaded'); return; }
   if(!window.THREE.OrbitControls){ console.error('OrbitControls not loaded'); return; }
   if(g3) dispose3D();
+  if(window.CombatScene) CombatScene.reset();
 
   const T   = window.THREE;
   const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
@@ -34611,6 +34674,27 @@ function _atualizarTerrenoAnimado3D(t){
   }
 }
 
+// Shake de câmera do crítico/morte. OrbitControls recalcula a câmera a partir de
+// position − target a cada update(): o offset precisa ser retirado ANTES e
+// posto de volta DEPOIS, senão vira deriva permanente.
+function _desfazerShakeCamera(){
+  if(g3 && g3._shakeOffset){ g3.camera.position.sub(g3._shakeOffset); g3._shakeOffset = null; }
+}
+function _reduzMovimento(){
+  try{ return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  catch(e){ return false; }
+}
+function _aplicarShakeCamera(now){
+  if(!g3 || !window.CombatScene || _reduzMovimento()) return;
+  const sh = CombatScene.shake(now);
+  if(!sh) return;
+  const T = g3.T, q = g3.camera.quaternion;
+  const off = new T.Vector3(1,0,0).applyQuaternion(q).multiplyScalar(sh.x)
+    .add(new T.Vector3(0,1,0).applyQuaternion(q).multiplyScalar(sh.y));
+  g3.camera.position.add(off);
+  g3._shakeOffset = off;
+}
+
 function startLoop3D(){
   let lastDecorAnimAt = performance.now();
   function tick(){
@@ -34631,6 +34715,7 @@ function startLoop3D(){
     _flushVisualAnimFrame3D(now);
     _updateFlightFallAnimations3D(now);
     _updateDiceLoop3D(now);
+    _tickCombatScene(now);
     // Não depende de renderMap3D: ele pode ser adiado enquanto uma miniatura
     // caminha. Isso garante que ativar/cancelar uma habilidade reflita no
     // próximo frame 3D, e que o ícone acompanhe a posição animada do herói.
@@ -34639,8 +34724,10 @@ function startLoop3D(){
     _atualizarPosicoesEfeitosAtivos3D();
 
     // ── OrbitControls damping (pausado durante o seguimento de câmera) ───────
+    _desfazerShakeCamera();   // o offset do frame anterior não pode ser absorvido pelo OrbitControls
     if(!configCamera.seguindoPeao) g3.controls.update();
     atualizarCamera();   // seguimento suave do peão (quando ativo)
+    _aplicarShakeCamera(now);
 
     // ── Player torch flicker (two sine waves for organic feel) ──────────────
     g3.torch.intensity = 8.5 + Math.sin(t/112)*1.0 + Math.sin(t/197)*0.7;
@@ -45596,6 +45683,13 @@ function _liberarDadosMagia(){
 }
 
 GS.on('diceRoll',    msg  => _receberDadoVisual(msg));
+// Cena de combate: números em VC; durações respeitam o modo de animação da
+// acessibilidade (instant colapsa a cena — sem investida, número na hora).
+if(window.CombatScene) CombatScene.configure({
+  cfg: VC.feedback?.combat?.scene,
+  duration: _animationProgressDuration,
+  instant: () => _animationSpeedMode === 'instant',
+});
 GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // Cada receptor filtra pelo próprio spell_id. Um erro visual isolado não pode
 // interromper a fila inteira — especialmente o Sono, que precisa criar tanto
