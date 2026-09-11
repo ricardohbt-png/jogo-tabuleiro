@@ -11140,13 +11140,32 @@ function _detectHpChanges(st){
         const amount = Math.max(1, Math.round(prev - hp));
         const damageEvents = damageEventsByKey.get(key) || [];
         const primaryDamageType = _combatPrimaryDamageType(damageTypesByKey.get(key) || ['physical']);
-        _playCombatCue('damage', {
+        const cue = {
           damageType: primaryDamageType,
           repeatKey: `damage:${primaryDamageType}`,
           volume: isMine ? .95 : .72,
-        });
+        };
         const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
         const impact = damageEvents.find(e => Array.isArray(e.pos))?.pos;
+        // Hand-off: se há uma cena de ataque pendente para este alvo, ela é a
+        // dona do instante do impacto — número, cue e reação saem no golpe,
+        // sincronizados com o d20. Sem cena (magia, armadilha, veneno…), o
+        // comportamento abaixo segue intocado.
+        if(_cenaAtiva() && CombatScene.pendingFor(key, now)){
+          const cmd = CombatScene.handoff(key, {
+            feedback: {
+              entry: impact ? {...entry, pos: impact} : entry,
+              text: `${amount}`, kind: isMine ? 'hero_damage' : 'damage',
+              damageType: damageTypesByKey.get(key) || 'physical',
+              options: {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical)},
+              cue,
+            },
+            death: false, onImpact: [],
+          }, now);
+          if(cmd) _executarComandoCena(cmd);
+          continue;
+        }
+        _playCombatCue('damage', cue);
         const damageIndex = damageSequenceIndex++;
         const fireStart = _bolaFogoFeedbackStartAt(entry);
         const startAt = fireStart != null
