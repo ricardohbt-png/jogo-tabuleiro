@@ -34713,12 +34713,17 @@ function _materiaisCena(fig){
   fig.traverse(o => {
     if(!(o.isMesh || o.isSprite) || !o.material) return;
     const ud = o.userData || {};
-    if(ud.isOutline || ud.isGroundDecal || ud.isPulseRing || ud.isSelectionRing) return;
+    // A arte GLB é marcada isGroundDecal (reuso como "fora do passe de outline")
+    // E isGLB — só o decal de verdade (sombra blob, anel de visão, base) fica
+    // de fora. O contorno (isOutline) entra, mas só recebe opacidade (abaixo).
+    if((ud.isGroundDecal && !ud.isGLB) || ud.isPulseRing || ud.isSelectionRing) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     const clones = mats.map(m => { const c = m.clone(); c.userData._sceneOwned = true; return c; });
     o.material = Array.isArray(o.material) ? clones : clones[0];
+    for(const m of mats) if(m.userData && m.userData._sceneOwned) m.dispose();   // clone antigo (re-clonagem após arte tardia)
     for(const c of clones) lista.push({
       mat: c,
+      outline: !!ud.isOutline,
       color: c.color ? c.color.clone() : null,
       emissive: c.emissive ? c.emissive.clone() : null,
       opacity: c.opacity, transparent: c.transparent,
@@ -34730,6 +34735,11 @@ function _materiaisCena(fig){
 function _pintarMateriaisCena(fig, pose){
   for(const e of _materiaisCena(fig)){
     const m = e.mat, flash = pose.flash || 0;
+    if(e.outline){   // casca do contorno: só desvanece com o peão (nunca clareia/escurece)
+      if(pose.opacity !== undefined){ m.transparent = true; m.opacity = e.opacity * pose.opacity; }
+      else { m.transparent = e.transparent; m.opacity = e.opacity; }
+      continue;
+    }
     if(e.emissive){
       if(flash) m.emissive.setRGB(flash, flash, flash); else m.emissive.copy(e.emissive);
     }
@@ -34769,7 +34779,15 @@ function _aplicarPoseCena(fig, now){
   }
   if(!u._scenePoseAtiva){
     u._scenePoseAtiva = true;
-    u._sceneBaseRotY = fig.rotation.y || 0;
+    // Casa AUTORITATIVA da cena (attack_feedback do servidor). gridX/gridY só são
+    // renovados por renderMap3D a partir de um game_state — um monstro que anda
+    // (deslize entity_step) e ataca no mesmo turno NÃO recebe game_state entre o
+    // passo e o golpe, e a pose o devolveria à casa de antes do passo. Gravar a
+    // base aqui faz a pose E a restauração partirem da casa certa.
+    if(Array.isArray(pose.base)){ u.gridX = pose.base[0]; u.gridY = pose.base[1]; }
+    // Sob o redemoinho rotation.y já traz o giro do frame: a base é a de antes.
+    u._sceneBaseRotY = (u._whirlpoolWasSpinning && u._whirlpoolBaseRotationY != null)
+      ? u._whirlpoolBaseRotationY : (fig.rotation.y || 0);
     u._sceneBaseScale = fig.scale.clone();
   }
   fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0) + pose.dx;
@@ -34998,6 +35016,8 @@ function startLoop3D(){
       if(fig.userData.isCurrentFig) curFig = fig;
       // Não interfere no peão em movimento — _animarPasso controla o Y dele.
       if(estadoMovimento.emMovimento && fig === estadoMovimento.peaoAtivo) return;
+      // Idem para o servo/prisioneiro movido à mão (_animarPassoMinion).
+      if(typeof estadoMininoMov !== 'undefined' && estadoMininoMov.emMovimento && fig === estadoMininoMov.peaoAtivo) return;
       const gx = fig.userData.gridX, gy = fig.userData.gridY;
       if(gx === undefined) return;
       // Reação de impacto no 3D: inclina o grupo inteiro por poucos frames.
@@ -35006,10 +35026,7 @@ function startLoop3D(){
       if(fig.userData._hitBaseRotationZ === undefined)
         fig.userData._hitBaseRotationZ = fig.rotation.z || 0;
       fig.rotation.z = fig.userData._hitBaseRotationZ
-        + _hitReaction3DAngle(fig.userData.pid != null ? `p:${fig.userData.pid}`
-          : fig.userData.monId != null ? `m:${fig.userData.monId}`
-          : fig.userData.animadoId != null ? `a:${fig.userData.animadoId}`
-          : fig.userData.prisoner ? 'pr:singleton' : null, performance.now());
+        + _hitReaction3DAngle(_figSceneKey(fig), performance.now());
       // O redemoinho arrasta visualmente a criatura presa. A rotação é
       // aplicada à raiz inteira, preservando a pose/facing quando o efeito
       // termina e sem alterar posição, colisão ou regras autoritativas.
@@ -36309,7 +36326,13 @@ function _disposeEntityTree(root){
   root.traverse(o => {
     // Clones GLB compartilham geometria/material/texturas com o template em
     // cache (_heroGLBCache) — descartar aqui quebraria os próximos clones.
-    if(o.userData && o.userData.isGLB) return;
+    if(o.userData && o.userData.isGLB){
+      // Só o clone da cena de combate (_sceneOwned) é nosso: pode ficar preso à
+      // malha se a arte tardia apagou _sceneMats sem uma nova pose re-clonar.
+      for(const m of (Array.isArray(o.material) ? o.material : [o.material]))
+        if(m && m.userData && m.userData._sceneOwned) m.dispose();
+      return;
+    }
     if(!(o.isMesh || o.isSprite)) return;
     // Sprites no r128 compartilham UMA geometria global — nunca descartá-la.
     if(o.isMesh && o.geometry) o.geometry.dispose();
@@ -38389,6 +38412,11 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petr
     // cache (_heroGLBCache) — o descarte do peão NUNCA pode liberar esses recursos.
     inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
+    // Arte tardia (GLB async): se a cena de combate já clonou os materiais deste
+    // peão, restaura e esquece a lista — o próximo frame com pose re-clona
+    // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
+    { const raiz = grp.parent || grp;
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; } }
   };
   const cached = _heroGLBCache[classId];
   if (cached && cached !== 'erro') { montar(cached); return true; }
@@ -38516,6 +38544,11 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.position.y = Y0;
     inst.traverse(o => { if (o.isMesh) { o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
+    // Arte tardia (GLB async): se a cena de combate já clonou os materiais deste
+    // peão, restaura e esquece a lista — o próximo frame com pose re-clona
+    // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
+    { const raiz = grp.parent || grp;
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; } }
   };
   const cached = _monsterGLBCache[path];
   if (cached && cached !== 'erro') { montar(cached); return true; }

@@ -225,7 +225,7 @@
       else if (s.phase === 'HOLD')        dist = -cfg.ranged.recoil;
       else if (s.phase === 'RECUPERANDO') dist = -cfg.ranged.recoil * (1 - easeOut(clamp01((now - s.phaseAt) / D(cfg.ranged.msBack))));
       else return null;
-      return { dx: d[0] * dist, dz: d[1] * dist, tilt: 0, tiltDir: d };
+      return { dx: d[0] * dist, dz: d[1] * dist, tilt: 0, tiltDir: d, base: s.aPos };
     }
     switch (s.phase) {
       case 'ARMANDO':        dist = -w * easeOut(clamp01((now - s.phaseAt) / D(cfg.windup.ms))); break;
@@ -245,7 +245,7 @@
       }
       default: return null;
     }
-    return { dx: d[0] * dist, dz: d[1] * dist, tilt, tiltDir: d };
+    return { dx: d[0] * dist, dz: d[1] * dist, tilt, tiltDir: d, base: s.aPos };
   }
 
   // Acha a cena certa do alvo para receber o hand-off de dano: prioriza a
@@ -324,7 +324,7 @@
     const d = s.dir, p = progressoReacao(s, now);
     if (p >= 1) return null;
     const wave = Math.sin(p * Math.PI);
-    if (!s.result.hit) return { dx: 0, dz: 0, tilt: cfg.dodge.angle * wave, tiltDir: d };
+    if (!s.result.hit) return { dx: 0, dz: 0, tilt: cfg.dodge.angle * wave, tiltDir: d, base: s.tPos };
     const crit = s.result.crit;
     const push = (crit ? cfg.crit.push : cfg.hit.push) * wave;
     let flash = 0;
@@ -332,7 +332,7 @@
       const tf = now - s.impactAt, fm = D(cfg.crit.flashMs);
       if (tf < fm) flash = cfg.crit.flashPeak * (1 - Math.abs(2 * tf / fm - 1));
     }
-    return { dx: d[0] * push, dz: d[1] * push, tilt: cfg.hit.angle * wave, tiltDir: d, flash };
+    return { dx: d[0] * push, dz: d[1] * push, tilt: cfg.hit.angle * wave, tiltDir: d, flash, base: s.tPos };
   }
 
   function isDying(key) {
@@ -346,7 +346,7 @@
     const t = now - s.deathAt, fall = D(cfg.death.fallMs), total = deathTotalMs();
     if (t < 0) return null;
     if (t >= total)   // pose terminal congelada: nunca "pisca" de volta antes do end da cena
-      return { dx: 0, dz: 0, tilt: Math.PI / 2, tiltDir: s.dir, scaleY: 1, opacity: 0, darken: cfg.death.darken, dying: true };
+      return { dx: 0, dz: 0, tilt: Math.PI / 2, tiltDir: s.dir, scaleY: 1, opacity: 0, darken: cfg.death.darken, dying: true, base: s.tPos };
     const p = t / fall;
     let tilt, scaleY = 1;
     if (p < 1) tilt = (Math.PI / 2) * easeIn(p);
@@ -358,7 +358,7 @@
     const fade = D(cfg.death.fadeMs);
     const opacity = t > total - fade ? clamp01((total - t) / Math.max(1e-6, fade)) : 1;
     const darken = 1 - (1 - cfg.death.darken) * easeIn(clamp01(p));
-    return { dx: 0, dz: 0, tilt, tiltDir: s.dir, scaleY, opacity, darken, dying: true };
+    return { dx: 0, dz: 0, tilt, tiltDir: s.dir, scaleY, opacity, darken, dying: true, base: s.tPos };
   }
 
   function somar(a, b) {
@@ -372,9 +372,14 @@
       opacity: Math.min(a.opacity == null ? 1 : a.opacity, b.opacity == null ? 1 : b.opacity),
       darken: Math.min(a.darken == null ? 1 : a.darken, b.darken == null ? 1 : b.darken),
       dying: !!(a.dying || b.dying),
+      base: a.base || b.base,
     };
   }
 
+  // Toda pose carrega `base:[x,z]` — a casa AUTORITATIVA vinda do servidor no
+  // attack_feedback (aPos/tPos). O consumidor deve partir dela, não da casa que
+  // tinha em cache: um monstro que anda (entity_step) e ataca no mesmo turno
+  // não recebe game_state entre o passo e o golpe.
   // Pose visual de uma entidade AGORA: soma o que ela faz como atacante e o
   // que sofre como alvo (uma criatura pode ser as duas coisas em cenas
   // distintas). null = nenhuma cena a toca → o laço não escreve nada.

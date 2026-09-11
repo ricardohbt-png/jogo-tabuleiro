@@ -120,6 +120,7 @@ pa = CS.poseFor("p:id_1", 1110);
 check("fim do golpe = +strike.dist rumo ao alvo", pa && perto(pa.dx, 0.35));
 check("golpe inclina para frente (tilt = strike.tiltX)", pa && perto(pa.tilt, 0.12));
 check("tiltDir aponta para o alvo", pa && perto(pa.tiltDir[0], 1) && perto(pa.tiltDir[1], 0));
+check("pose do atacante traz base = attacker_pos", pa && Array.isArray(pa.base) && pa.base[0] === 3 && pa.base[1] === 5);
 CS.tick(1110);                                  // impacto → RECUPERANDO em 1110
 pa = CS.poseFor("p:id_1", 1110 + 220);
 check("recuperado volta a ~0 (sem overshoot no fim)", pa && Math.abs(pa.dx) < 1e-6);
@@ -136,6 +137,7 @@ check("à distância não arma (pose null em ARMANDO)", CS.poseFor("p:id_1", 100
 CS.result({ ...LONGE, hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
 pa = CS.poseFor("p:id_1", 590);
 check("coice recua recoil no fim de msOut", pa && perto(pa.dx, -0.10));
+check("coice também traz base = attacker_pos", pa && pa.base && pa.base[0] === 0 && pa.base[1] === 0);
 CS.tick(590);                                   // impacto (msOut=90) → RECUPERANDO
 pa = CS.poseFor("p:id_1", 590 + 200);
 check("coice volta a 0 em msBack", pa && Math.abs(pa.dx) < 1e-6);
@@ -185,6 +187,7 @@ let pt = CS.poseFor("m:id_9", 610 + 130);      // p=0.5 → pico
 check("empurrão de hit.push no pico", pt && perto(pt.dx, 0.12) && perto(pt.dz, 0));
 check("inclina hit.angle no pico", pt && perto(pt.tilt, 0.14));
 check("sem flash em acerto normal", pt && !pt.flash);
+check("pose do alvo traz base = target_pos", pt && Array.isArray(pt.base) && pt.base[0] === 4 && pt.base[1] === 5);
 check("antes do impacto o alvo não tem pose", CS.poseFor("m:id_9", 600) === null);
 pt = CS.poseFor("m:id_9", 610 + 260);
 check("reação termina em hit.ms", pt === null || Math.abs(pt.dx) < 1e-6);
@@ -198,6 +201,7 @@ check("impact de erro tem hit=false", cmdsM.find(c => c.cmd === "impact").hit ==
 pt = CS.poseFor("m:id_9", 610 + 100);
 check("esquiva não desloca", pt && perto(pt.dx, 0) && perto(pt.dz, 0));
 check("esquiva inclina dodge.angle no pico", pt && perto(pt.tilt, 0.08));
+check("esquiva também traz base = target_pos", pt && pt.base && pt.base[0] === 4 && pt.base[1] === 5);
 CS.tick(610 + 260);
 check("erro fecha sem esperar hand-off", CS.phaseOf("atk_1_1") === null);
 
@@ -238,6 +242,7 @@ check("meio da queda: inclinação entre 0 e 90°", pm && pm.tilt > 0 && pm.tilt
 check("cai para longe do atacante", pm && perto(pm.tiltDir[0], 1));
 check("escurece durante a queda", pm && pm.darken < 1);
 check("pose de morte marca dying", pm && pm.dying === true);
+check("pose de morte traz base = target_pos", pm && pm.base && pm.base[0] === 4 && pm.base[1] === 5);
 pm = CS.poseFor("m:id_9", 610 + 380);
 check("no chão = 90°", pm && perto(pm.tilt, Math.PI / 2, 1e-3));
 pm = CS.poseFor("m:id_9", 610 + 380 + 47);       // meio do quique
@@ -347,6 +352,7 @@ CS.tick(420);   // A: windup+result → ESPERANDO_DADO (dx=-0.15); B: 130ms pós
 const combo = CS.poseFor("p:id_1", 420);
 check("somar(): dx combina atacante (-0.15) e alvo (+0.12)", combo && perto(combo.dx, -0.03));
 check("somar(): tilt usa o maior módulo (do alvo, 0.14)", combo && perto(combo.tilt, 0.14));
+check("somar(): mantém a base (a.base || b.base)", combo && Array.isArray(combo.base) && combo.base.length === 2);
 
 console.log("\n[26] reset() limpa shakes");
 CS.reset(); CS.configure({});
@@ -419,6 +425,12 @@ check("diff de HP consulta CombatScene.pendingFor ANTES de _triggerHitReaction",
   diff.indexOf("CombatScene.pendingFor") > 0 && diff.indexOf("CombatScene.pendingFor") < diff.indexOf("_triggerHitReaction("));
 check("gancho do d20 chama CombatScene.dieSettled", gameSrc.includes("CombatScene.dieSettled("));
 check("laço 3D aplica a pose (_aplicarPoseCena)", gameSrc.includes("_aplicarPoseCena(fig"));
+const poseFn = corpoDaFuncao("_aplicarPoseCena");
+check("_aplicarPoseCena adota pose.base como casa autoritativa", /u\.gridX\s*=\s*pose\.base\[0\]/.test(poseFn) && /u\.gridY\s*=\s*pose\.base\[1\]/.test(poseFn));
+const matsFn = corpoDaFuncao("_materiaisCena");
+check("_materiaisCena não pula a arte GLB (isGroundDecal && !isGLB)", matsFn.includes("ud.isGroundDecal && !ud.isGLB"));
+check("_materiaisCena inclui o contorno marcado como outline", /outline:\s*!!ud\.isOutline/.test(matsFn));
+check("laço 3D usa _figSceneKey para a reação de impacto", gameSrc.includes("_hitReaction3DAngle(_figSceneKey(fig)"));
 check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeCamera();") > 0 && gameSrc.indexOf("_desfazerShakeCamera();") < gameSrc.indexOf("if(!configCamera.seguindoPeao) g3.controls.update();"));
 check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
 
