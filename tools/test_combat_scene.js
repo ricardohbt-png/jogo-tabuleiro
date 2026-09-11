@@ -153,6 +153,72 @@ check("na volta do fumble há oscilação extra além do tilt do golpe", pb && p
 
 function easeOutT(t) { return 1 - Math.pow(1 - t, 2); }
 
+console.log("\n[12] Hand-off antes do golpe: número sai só no impacto");
+CS.reset(); CS.configure({});
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+check("pendingFor acha a cena do alvo", CS.pendingFor("m:id_9") === "atk_1_1");
+check("pendingFor de outro alvo é null", CS.pendingFor("m:id_8") === null);
+const FB = { feedback: { text: "7", kind: "damage" }, death: false, onImpact: [] };
+check("handoff antes do impacto devolve null (guardado)", CS.handoff("m:id_9", FB, 200) === null);
+check("depois do hand-off deixa de ser pendente", CS.pendingFor("m:id_9") === null);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+const cmdsH = CS.tick(610);
+const imp = cmdsH.find(c => c.cmd === "impact");
+check("impact carrega o feedback guardado", imp && imp.feedback && imp.feedback.text === "7");
+CS.tick(610 + 260);
+check("com hand-off já feito, RECUPERANDO → fecha (phase null)", CS.phaseOf("atk_1_1") === null);
+
+console.log("\n[13] Hand-off DEPOIS do golpe: dispara na hora");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);   // impacto sem número
+const tardio = CS.handoff("m:id_9", FB, 700);
+check("handoff tardio devolve o comando impact", tardio && tardio.cmd === "impact" && tardio.feedback.text === "7");
+CS.tick(610 + 260);
+check("cena fecha após recuperar", CS.phaseOf("atk_1_1") === null);
+
+console.log("\n[14] Alvo: acerto empurra e inclina para longe do atacante");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);   // impacto em 610
+let pt = CS.poseFor("m:id_9", 610 + 130);      // p=0.5 → pico
+check("empurrão de hit.push no pico", pt && perto(pt.dx, 0.12) && perto(pt.dz, 0));
+check("inclina hit.angle no pico", pt && perto(pt.tilt, 0.14));
+check("sem flash em acerto normal", pt && !pt.flash);
+check("antes do impacto o alvo não tem pose", CS.poseFor("m:id_9", 600) === null);
+pt = CS.poseFor("m:id_9", 610 + 260);
+check("reação termina em hit.ms", pt === null || Math.abs(pt.dx) < 1e-6);
+
+console.log("\n[15] Alvo: erro = esquiva sem empurrão");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result({ ...RESULT_HIT, hit: false }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+const cmdsM = CS.tick(610);
+check("impact de erro tem hit=false", cmdsM.find(c => c.cmd === "impact").hit === false);
+pt = CS.poseFor("m:id_9", 610 + 100);
+check("esquiva não desloca", pt && perto(pt.dx, 0) && perto(pt.dz, 0));
+check("esquiva inclina dodge.angle no pico", pt && perto(pt.tilt, 0.08));
+CS.tick(610 + 260);
+check("erro fecha sem esperar hand-off", CS.phaseOf("atk_1_1") === null);
+
+console.log("\n[16] Crítico: hold, flash, empurrão maior e shake");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result({ ...RESULT_HIT, natural_critical: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20", value: 20 }, 500); CS.tick(500); CS.tick(610);
+check("crítico entra em HOLD", CS.phaseOf("atk_1_1") === "HOLD");
+pt = CS.poseFor("m:id_9", 640);                  // dentro do hold (80 ms)
+check("durante o hold o alvo está no pico (crit.push)", pt && perto(pt.dx, 0.30));
+check("atacante congelado no apex durante o hold", perto(CS.poseFor("p:id_1", 640).dx, 0.35));
+check("flash no meio do flashMs", CS.poseFor("m:id_9", 610 + 70).flash > 0.8);
+check("flash zera após flashMs", !CS.poseFor("m:id_9", 610 + 141).flash);
+check("shake ativo logo após o impacto", CS.shake(620) !== null);
+check("shake acaba após shakeMs", CS.shake(610 + 141) === null);
+CS.tick(690);
+check("após o hold vai a RECUPERANDO", CS.phaseOf("atk_1_1") === "RECUPERANDO");
+pt = CS.poseFor("m:id_9", 690 + 60);            // meio da segunda metade da reação (p≈0,73)
+check("depois do hold a reação continua e decai", pt && pt.dx < 0.30);
+check("acerto normal não gera shake", (CS.reset(), CS.start(START, 0), CS.tick(0), CS.result(RESULT_HIT, 1), CS.tick(180), CS.dieSettled({die:"d20"}, 500), CS.tick(500), CS.tick(610), CS.shake(620) === null));
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

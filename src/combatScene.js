@@ -119,6 +119,7 @@
     s.impactAt = now;
     const crit = !!(s.result && s.result.crit);
     if (s.impact && s.impact.death && s.deathAt == null) s.deathAt = now;
+    if ((s.result && s.result.crit) || (s.impact && s.impact.death)) agitar(now);
     if (crit) { s.holdUntil = now + D(cfg.crit.hitStopMs); entrar(s, 'HOLD', now); }
     else entrar(s, 'RECUPERANDO', now);
     return emitirImpacto(s, cmds, now);
@@ -239,7 +240,72 @@
     return { dx: d[0] * dist, dz: d[1] * dist, tilt, tiltDir: d };
   }
 
-  function poseAlvo(s, now) { return null; }    // Task 4
+  function pendingFor(targetKey) {
+    const s = scenes.find(x => !x.done && x.targetKey === targetKey && !x.impact);
+    return s ? s.id : null;
+  }
+
+  // Entrega o feedback de dano à cena pendente do alvo. Devolve o comando
+  // `impact` quando o golpe JÁ aconteceu (rede lenta) — o chamador executa na
+  // hora; senão null (guardado para o IMPACTO).
+  function handoff(targetKey, data, now) {
+    const s = scenes.find(x => !x.done && x.targetKey === targetKey && !x.impact);
+    if (!s) return null;
+    s.impact = { feedback: data.feedback || null, death: !!data.death, onImpact: data.onImpact || [] };
+    if (s.impactAt == null) return null;
+    if (s.impact.death && s.deathAt == null) { s.deathAt = now; agitar(now); }
+    const cmds = [];
+    emitirImpacto(s, cmds, now);
+    return cmds[0];
+  }
+
+  function agitar(now) {
+    shakes.push({ start: now, ms: D(cfg.crit.shakeMs), amp: cfg.crit.shakeAmp, seed: Math.random() * 6.28 });
+  }
+
+  function shake(now) {
+    let x = 0, y = 0, any = false;
+    for (let i = shakes.length - 1; i >= 0; i--) {
+      const sh = shakes[i], p = (now - sh.start) / Math.max(1e-6, sh.ms);
+      if (p >= 1) { shakes.splice(i, 1); continue; }
+      any = true;
+      const env = (1 - p) * (1 - p);
+      x += Math.sin(now * 0.11 + sh.seed) * sh.amp * env;
+      y += Math.sin(now * 0.17 + sh.seed * 1.3) * sh.amp * 0.6 * env;
+    }
+    return any ? { x, y } : null;
+  }
+
+  // Progresso da reação do alvo em [0,1]: sem crítico é linear em hit/dodge.ms;
+  // com crítico o impacto entra direto no pico (0,5), congela pelo hit-stop e
+  // completa a segunda metade depois.
+  function progressoReacao(s, now) {
+    const dur = (s.result && s.result.hit) ? D(cfg.hit.ms) : D(cfg.dodge.ms);
+    const t = now - s.impactAt;
+    if (!(s.result && s.result.crit)) return clamp01(t / dur);
+    const hold = D(cfg.crit.hitStopMs);
+    if (t < hold) return 0.5;
+    return 0.5 + 0.5 * clamp01((t - hold) / (dur * 0.5));
+  }
+
+  function poseAlvo(s, now) {
+    if (s.impactAt == null || !s.result || now < s.impactAt) return null;
+    if (s.impact && s.impact.death && s.deathAt != null) return poseMorte(s, now);
+    const d = s.dir, p = progressoReacao(s, now);
+    if (p >= 1) return null;
+    const wave = Math.sin(p * Math.PI);
+    if (!s.result.hit) return { dx: 0, dz: 0, tilt: cfg.dodge.angle * wave, tiltDir: d };
+    const crit = s.result.crit;
+    const push = (crit ? cfg.crit.push : cfg.hit.push) * wave;
+    let flash = 0;
+    if (crit) {
+      const tf = now - s.impactAt, fm = D(cfg.crit.flashMs);
+      if (tf < fm) flash = cfg.crit.flashPeak * (1 - Math.abs(2 * tf / fm - 1));
+    }
+    return { dx: d[0] * push, dz: d[1] * push, tilt: cfg.hit.angle * wave, tiltDir: d, flash };
+  }
+
+  function poseMorte(s, now) { return null; }   // Task 5
 
   function somar(a, b) {
     if (!a) return b; if (!b) return a;
@@ -273,6 +339,7 @@
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
+    pendingFor, handoff, shake,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
   };
