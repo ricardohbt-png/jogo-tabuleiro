@@ -66,12 +66,12 @@ CS.tick(180);
 check("windup acabou com dado já assentado → GOLPE direto", CS.phaseOf("atk_1_1") === "GOLPE");
 
 console.log("\n[5] Modo instant colapsa no result");
-CS.reset(); CS.configure({ instant: () => true });
+CS.reset(); CS.configure({ instant: () => true, duration: () => 0.001 });
 CS.start(START, 0); CS.tick(0);
 CS.result(RESULT_HIT, 5);
 const cmdsI = CS.tick(5);
 check("impact emitido no mesmo tick do result", cmdsI.some(c => c.cmd === "impact"));
-CS.configure({ instant: () => false });
+CS.configure({ instant: () => false, duration: ms => ms });
 
 console.log("\n[6] result sem start → só impacto");
 CS.reset();
@@ -114,7 +114,7 @@ check("armando não inclina", pa && pa.tilt === 0);
 pa = CS.poseFor("p:id_1", 180);
 check("windup completo = -windup.dist", pa && perto(pa.dx, -0.15) && perto(pa.dz, 0));
 CS.result(RESULT_HIT, 1); CS.tick(180);         // ESPERANDO_DADO
-check("esperando o dado mantém a pose armada", perto(CS.poseFor("p:id_1", 1000).dx, -0.15));
+check("esperando o dado mantém a pose armada", perto((CS.poseFor("p:id_1", 1000) || {}).dx, -0.15));
 CS.dieSettled({ die: "d20" }, 1000); CS.tick(1000);   // GOLPE em t=1000
 pa = CS.poseFor("p:id_1", 1110);
 check("fim do golpe = +strike.dist rumo ao alvo", pa && perto(pa.dx, 0.35));
@@ -208,16 +208,19 @@ CS.dieSettled({ die: "d20", value: 20 }, 500); CS.tick(500); CS.tick(610);
 check("crítico entra em HOLD", CS.phaseOf("atk_1_1") === "HOLD");
 pt = CS.poseFor("m:id_9", 640);                  // dentro do hold (80 ms)
 check("durante o hold o alvo está no pico (crit.push)", pt && perto(pt.dx, 0.30));
-check("atacante congelado no apex durante o hold", perto(CS.poseFor("p:id_1", 640).dx, 0.35));
-check("flash no meio do flashMs", CS.poseFor("m:id_9", 610 + 70).flash > 0.8);
-check("flash zera após flashMs", !CS.poseFor("m:id_9", 610 + 141).flash);
+check("atacante congelado no apex durante o hold", perto((CS.poseFor("p:id_1", 640) || {}).dx, 0.35));
+check("flash no meio do flashMs", (CS.poseFor("m:id_9", 610 + 70) || {}).flash > 0.8);
+check("flash zera após flashMs", !(CS.poseFor("m:id_9", 610 + 141) || {}).flash);
 check("shake ativo logo após o impacto", CS.shake(620) !== null);
 check("shake acaba após shakeMs", CS.shake(610 + 141) === null);
 CS.tick(690);
 check("após o hold vai a RECUPERANDO", CS.phaseOf("atk_1_1") === "RECUPERANDO");
 pt = CS.poseFor("m:id_9", 690 + 60);            // meio da segunda metade da reação (p≈0,73)
 check("depois do hold a reação continua e decai", pt && pt.dx < 0.30);
-check("acerto normal não gera shake", (CS.reset(), CS.start(START, 0), CS.tick(0), CS.result(RESULT_HIT, 1), CS.tick(180), CS.dieSettled({die:"d20"}, 500), CS.tick(500), CS.tick(610), CS.shake(620) === null));
+
+CS.reset(); CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);
+check("acerto normal não gera shake", CS.shake(620) === null);
 
 console.log("\n[17] Morte: isDying, tombo, fade e fechamento");
 CS.reset(); CS.configure({});
@@ -258,7 +261,141 @@ const cmdT = CS.handoff("m:id_9", { feedback: null, death: true, onImpact: [] },
 check("hand-off tardio de morte devolve impact com death", cmdT && cmdT.death === true);
 CS.tick(901);
 check("vai a MORRENDO", CS.phaseOf("atk_1_1") === "MORRENDO");
-check("tombo começa no hand-off (t=900)", CS.poseFor("m:id_9", 900 + 380).tilt > 1.5);
+check("tombo começa no hand-off (t=900)", (CS.poseFor("m:id_9", 900 + 380) || {}).tilt > 1.5);
+
+console.log("\n[19] Timeouts (waitDieMs/expireMs) não passam por duration()");
+CS.reset(); CS.configure({ duration: () => 0.001 });
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1);
+CS.tick(1);
+check("windup escalado por duration() termina quase instantaneamente", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+CS.tick(3000);
+check("aos 3000ms (< waitDieMs real) ainda espera o dado, mesmo com duration quase-zero", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+CS.tick(3501);
+check("waitDieMs (3500, RAW) dispara o golpe sem depender de duration()", CS.phaseOf("atk_1_1") === "GOLPE");
+CS.configure({});
+
+CS.reset(); CS.configure({ duration: () => 0.001 });
+CS.start(START, 0); CS.tick(0);
+CS.tick(5999);
+check("expireMs (6000, RAW) ainda não expirou aos 5999ms mesmo com duration quase-zero", CS.phaseOf("atk_1_1") === "ARMANDO");
+const cmdsExpFix = CS.tick(6001);
+check("expireMs expira em 6001ms (RAW), não escalado", cmdsExpFix.some(c => c.cmd === "end"));
+CS.configure({});
+
+console.log("\n[20] Fila por ordem de chegada (mesmo timestamp)");
+CS.reset();
+CS.start(START, 5); CS.start({ ...START, attack_id: "atk_1_2" }, 5); CS.tick(5);
+check("1ª cena (criada primeiro) sai da FILA", CS.phaseOf("atk_1_1") === "ARMANDO");
+check("2ª cena com o MESMO now fica em FILA", CS.phaseOf("atk_1_2") === "FILA");
+
+console.log("\n[21] pendingFor/handoff preferem a cena que ainda não golpeou");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);   // A golpeia em 610, sem hand-off ainda
+CS.tick(610 + 260);
+check("A está aguardando hand-off", CS.phaseOf("atk_1_1") === "AGUARDANDO_HANDOFF");
+check("pendingFor acha A quando é a única", CS.pendingFor("m:id_9") === "atk_1_1");
+CS.start({ ...START, attack_id: "atk_1_2" }, 900); CS.tick(900);   // B: novo ataque ao mesmo alvo
+check("B saiu da FILA (A só aguarda hand-off, não bloqueia)", CS.phaseOf("atk_1_2") === "ARMANDO");
+check("pendingFor agora prioriza B (ainda não golpeou) sobre A (já golpeou)", CS.pendingFor("m:id_9") === "atk_1_2");
+const FB2 = { feedback: { text: "9", kind: "damage" }, death: false, onImpact: [] };
+check("handoff entrega a B (guardado, retorna null pois B ainda não golpeou)", CS.handoff("m:id_9", FB2, 901) === null);
+check("A continua sem impact (não roubou o hand-off)", CS._scenes.find(s => s.id === "atk_1_1").impact === null);
+const bScene = CS._scenes.find(s => s.id === "atk_1_2");
+check("B recebeu o impact guardado", bScene && bScene.impact && bScene.impact.feedback.text === "9");
+
+console.log("\n[22] Comando impact carrega tardio (dedupe de partículas no consumidor)");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+const cmdsStrike = CS.tick(610);                          // impacto SEM hand-off ainda
+const impStrike = cmdsStrike.find(c => c.cmd === "impact");
+check("impact no golpe não é tardio", impStrike && !impStrike.tardio);
+const impLate = CS.handoff("m:id_9", FB, 700);             // hand-off chega DEPOIS do golpe
+check("hand-off tardio marca tardio:true", impLate && impLate.tardio === true);
+
+console.log("\n[23] Crítico + morte tardia não duplica o shake");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result({ ...RESULT_HIT, natural_critical: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20", value: 20 }, 500); CS.tick(500);
+CS.tick(610);                                              // crítico golpeia → agitar já disparou
+check("shake do crítico ativo logo após o golpe", CS.shake(615) !== null);
+check("shake do crítico já acabou aos 755ms", CS.shake(755) === null);
+CS.handoff("m:id_9", { feedback: null, death: true, onImpact: [] }, 900);   // morte tardia, mesma cena crítica
+check("hand-off tardio de morte NÃO reabre o shake (crítico já agitou)", CS.shake(905) === null);
+
+console.log("\n[24] Cena expirada é ignorada por pendingFor/handoff/dieSettled quando now é informado");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+check("pendingFor sem now enxerga a cena mesmo velha", CS.pendingFor("m:id_9") === "atk_1_1");
+check("pendingFor com now dentro do prazo enxerga normalmente", CS.pendingFor("m:id_9", 5999) === "atk_1_1");
+check("pendingFor com now após expireMs ignora a cena (ainda não podada)", CS.pendingFor("m:id_9", 6001) === null);
+check("handoff também ignora cena expirada quando now indica expiração", CS.handoff("m:id_9", FB, 6001) === null);
+CS.result(RESULT_HIT, 1);
+check("dieSettled recusa quando now indica expiração da cena", CS.dieSettled({ die: "d20" }, 6001) === null);
+
+console.log("\n[25] somar(): poseFor combina atacante e alvo na mesma chave");
+CS.reset(); CS.configure({});
+const Bmsg = { attacker_key: "m:id_9", target_key: "p:id_1", attacker_pos: [0, 0], target_pos: [1, 0], attack_id: "atk_B" };
+CS.start({ ...START, attack_id: "atk_A" }, 0); CS.tick(0);            // A: p:id_1 ataca (ARMANDO)
+CS.start(Bmsg, 0); CS.tick(0);                                        // B: p:id_1 é o alvo
+CS.result({ ...Bmsg, hit: true, crit: false, natural_critical: false, natural_fumble: false }, 1);
+CS.dieSettled({ die: "d20" }, 2);
+CS.tick(180); CS.tick(290);                                           // B golpeia em t=290
+CS.result({ ...START, attack_id: "atk_A", hit: true, crit: false, natural_critical: false, natural_fumble: false }, 291);
+CS.tick(420);   // A: windup+result → ESPERANDO_DADO (dx=-0.15); B: 130ms pós-impacto = pico (dx=+0.12, tilt=0.14)
+const combo = CS.poseFor("p:id_1", 420);
+check("somar(): dx combina atacante (-0.15) e alvo (+0.12)", combo && perto(combo.dx, -0.03));
+check("somar(): tilt usa o maior módulo (do alvo, 0.14)", combo && perto(combo.tilt, 0.14));
+
+console.log("\n[26] reset() limpa shakes");
+CS.reset(); CS.configure({});
+CS.start(START, 0); CS.tick(0); CS.result({ ...RESULT_HIT, natural_critical: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);
+check("shake ativo antes do reset", CS.shake(615) !== null);
+CS.reset();
+check("shake some depois do reset (nenhuma cena, nenhum shake)", CS.shake(615) === null);
+
+console.log("\n[27] enabled:false desliga o módulo");
+CS.reset(); CS.configure({ cfg: { enabled: false } });
+check("start devolve null com enabled:false", CS.start(START, 0) === null);
+check("result devolve null com enabled:false", CS.result(RESULT_HIT, 0) === null);
+CS.configure({});
+
+console.log("\n[28] start duplicado (mesmo attack_id) devolve null");
+CS.reset();
+check("1º start cria a cena", CS.start(START, 0) !== null);
+check("2º start com mesmo attack_id devolve null", CS.start(START, 1) === null);
+
+console.log("\n[29] Expiração com hand-off pendente emite impact antes do end");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+CS.handoff("m:id_9", { feedback: { text: "5", kind: "damage" }, death: false, onImpact: [] }, 1);
+const cmdsExp = CS.tick(6001);
+const iImp = cmdsExp.findIndex(c => c.cmd === "impact");
+const iEnd = cmdsExp.findIndex(c => c.cmd === "end");
+check("expiração emite impact com o feedback guardado", iImp >= 0 && cmdsExp[iImp].feedback && cmdsExp[iImp].feedback.text === "5");
+check("impact vem antes do end", iImp >= 0 && iEnd >= 0 && iImp < iEnd);
+
+console.log("\n[30] dieSettled ignora dado que não é d20");
+CS.reset();
+CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+check("dieSettled com die='d6' é ignorado", CS.dieSettled({ die: "d6", value: 3 }, 200) === null);
+check("cena continua ESPERANDO_DADO", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+
+console.log("\n[31] handoff sem cena correspondente devolve null");
+CS.reset();
+check("handoff para alvo sem cena nenhuma devolve null", CS.handoff("m:inexistente", FB, 0) === null);
+
+console.log("\n[32] Escala de duração (fast/slow) via injeção de duration()");
+CS.reset(); CS.configure({ duration: ms => ms * 0.5 });
+CS.start(START, 0); CS.tick(0);
+CS.result(RESULT_HIT, 1);
+CS.tick(89);
+check("windup escalado (180*0.5=90ms) ainda não terminou aos 89ms", CS.phaseOf("atk_1_1") === "ARMANDO");
+CS.tick(90);
+check("windup escalado termina aos 90ms → ESPERANDO_DADO", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+CS.configure({});
 
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);

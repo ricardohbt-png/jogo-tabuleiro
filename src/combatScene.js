@@ -49,9 +49,11 @@
 
   function configure(opts) {
     opts = opts || {};
-    cfg = mergeCfg(DEFAULT_CFG, opts.cfg || {});   // não cumulativo: cada chamada recomeça do DEFAULT_CFG
-    if (typeof opts.duration === 'function') durationFn = opts.duration;
-    if (typeof opts.instant === 'function') instantFn = opts.instant;
+    // Não cumulativo: cada chamada recomeça do DEFAULT_CFG e dos defaults de
+    // duration/instant — configure({}) é um reset completo, não um no-op.
+    cfg = mergeCfg(DEFAULT_CFG, opts.cfg || {});
+    durationFn = (typeof opts.duration === 'function') ? opts.duration : (ms => ms);
+    instantFn  = (typeof opts.instant  === 'function') ? opts.instant  : (() => false);
   }
   function reset() { scenes.length = 0; shakes.length = 0; }
 
@@ -99,7 +101,10 @@
 
   function entrar(s, phase, now) { s.phase = phase; s.phaseAt = now; }
 
-  function emitirImpacto(s, cmds, now) {
+  // `tardio` marca um comando `impact` emitido por um hand-off que chegou
+  // DEPOIS do golpe (ver handoff) — o consumidor usa isso para não repetir
+  // partículas/callbacks já disparados no impact do golpe em si.
+  function emitirImpacto(s, cmds, tardio) {
     const c = {
       cmd: 'impact', id: s.id,
       attackerKey: s.attackerKey, targetKey: s.targetKey,
@@ -109,6 +114,7 @@
       feedback: s.impact ? s.impact.feedback || null : null,
       death: !!(s.impact && s.impact.death),
       onImpact: s.impact ? s.impact.onImpact || [] : [],
+      tardio: !!tardio,
     };
     if (s.impact) s.feedbackEmitido = true;
     cmds.push(c);
@@ -118,18 +124,19 @@
   function irParaImpacto(s, now, cmds) {
     s.impactAt = now;
     const crit = !!(s.result && s.result.crit);
-    if (s.impact && s.impact.death && s.deathAt == null) s.deathAt = now;
-    if ((s.result && s.result.crit) || (s.impact && s.impact.death)) agitar(now);
+    const death = !!(s.impact && s.impact.death);
+    if (death && s.deathAt == null) s.deathAt = now;
+    if (crit || death) agitar(now);
     if (crit) { s.holdUntil = now + D(cfg.crit.hitStopMs); entrar(s, 'HOLD', now); }
     else entrar(s, 'RECUPERANDO', now);
-    return emitirImpacto(s, cmds, now);
+    return emitirImpacto(s, cmds, false);
   }
 
   function finalizar(s, cmds, now) {
     if (s.done) return;
     if (s.impact && !s.feedbackEmitido) {      // expirou antes do golpe: não perde o número
       if (s.impactAt == null) s.impactAt = now;
-      emitirImpacto(s, cmds, now);
+      emitirImpacto(s, cmds, false);
     }
     s.done = true;
     cmds.push({ cmd: 'end', id: s.id, attackerKey: s.attackerKey, targetKey: s.targetKey,
@@ -142,11 +149,11 @@
     const cmds = [];
     for (const s of scenes) {
       if (s.done) continue;
-      if (now - s.createdAt > D(cfg.expireMs)) { finalizar(s, cmds, now); continue; }
+      if (now - s.createdAt > cfg.expireMs) { finalizar(s, cmds, now); continue; }   // timeout: NÃO passa por D()
       switch (s.phase) {
         case 'FILA': {
           const ocupado = scenes.some(o => o !== s && !o.done && o.attackerKey
-            && o.attackerKey === s.attackerKey && o.createdAt < s.createdAt
+            && o.attackerKey === s.attackerKey && scenes.indexOf(o) < scenes.indexOf(s)
             && o.phase !== 'AGUARDANDO_HANDOFF' && o.phase !== 'MORRENDO');
           if (ocupado) break;
           entrar(s, s.soImpacto ? 'ESPERANDO_DADO' : 'ARMANDO', now);
@@ -160,7 +167,7 @@
         case 'ESPERANDO_DADO':
           if (!s.result) break;
           if (instantFn()) { irParaImpacto(s, now, cmds); break; }
-          if (s.dieAt != null || now - s.resultAt >= D(cfg.waitDieMs)) entrar(s, 'GOLPE', now);
+          if (s.dieAt != null || now - s.resultAt >= cfg.waitDieMs) entrar(s, 'GOLPE', now);   // timeout: NÃO passa por D()
           break;
         case 'GOLPE': {
           const dur = s.melee ? D(cfg.strike.ms) : D(cfg.ranged.msOut);
@@ -200,7 +207,8 @@
   // receber o dado ainda em FILA). Devolve a cena ou null (dado ignorado).
   function dieSettled(info, now) {
     if (info && info.die && info.die !== 'd20') return null;
-    const s = scenes.find(x => !x.done && x.result && x.dieAt == null && x.impactAt == null);
+    const s = scenes.find(x => !x.done && x.result && x.dieAt == null && x.impactAt == null
+      && now - x.createdAt <= cfg.expireMs);   // rAF pode ter pausado: ignora cena já expirada
     if (!s) return null;
     s.dieAt = now;
     return s;
@@ -240,22 +248,44 @@
     return { dx: d[0] * dist, dz: d[1] * dist, tilt, tiltDir: d };
   }
 
-  function pendingFor(targetKey) {
-    const s = scenes.find(x => !x.done && x.targetKey === targetKey && !x.impact);
+  // Acha a cena certa do alvo para receber o hand-off de dano: prioriza a
+  // cena que AINDA NÃO golpeou (impactAt==null) — senão, uma cena atrasada
+  // (ex.: dano líquido zero) em AGUARDANDO_HANDOFF roubaria o número de um
+  // 2º ataque mais novo no mesmo alvo. Só cai para a "já golpeou" (fallback)
+  // quando não há nenhuma pendente. `now`, se informado, ignora cena expirada
+  // (rAF pode ter pausado numa aba oculta enquanto mensagens de WS chegavam).
+  function cenaParaHandoff(targetKey, now) {
+    let semImpacto = null, comImpacto = null;
+    for (const s of scenes) {
+      if (s.done || s.targetKey !== targetKey || s.impact) continue;
+      if (now != null && now - s.createdAt > cfg.expireMs) continue;
+      if (s.impactAt == null) { if (!semImpacto) semImpacto = s; }
+      else { if (!comImpacto) comImpacto = s; }
+    }
+    return semImpacto || comImpacto;
+  }
+
+  function pendingFor(targetKey, now) {
+    const s = cenaParaHandoff(targetKey, now);
     return s ? s.id : null;
   }
 
   // Entrega o feedback de dano à cena pendente do alvo. Devolve o comando
-  // `impact` quando o golpe JÁ aconteceu (rede lenta) — o chamador executa na
-  // hora; senão null (guardado para o IMPACTO).
+  // `impact` (com `tardio:true`) quando o golpe JÁ aconteceu (rede lenta) —
+  // o chamador executa na hora; senão null (guardado para o IMPACTO).
   function handoff(targetKey, data, now) {
-    const s = scenes.find(x => !x.done && x.targetKey === targetKey && !x.impact);
+    data = data || {};
+    const s = cenaParaHandoff(targetKey, now);
     if (!s) return null;
     s.impact = { feedback: data.feedback || null, death: !!data.death, onImpact: data.onImpact || [] };
     if (s.impactAt == null) return null;
-    if (s.impact.death && s.deathAt == null) { s.deathAt = now; agitar(now); }
+    const jaEraCrit = !!(s.result && s.result.crit);
+    if (s.impact.death && s.deathAt == null) {
+      s.deathAt = now;
+      if (!jaEraCrit) agitar(now);   // crítico já agitou no golpe; não duplicar
+    }
     const cmds = [];
-    emitirImpacto(s, cmds, now);
+    emitirImpacto(s, cmds, true);
     return cmds[0];
   }
 
@@ -266,7 +296,7 @@
   function shake(now) {
     let x = 0, y = 0, any = false;
     for (let i = shakes.length - 1; i >= 0; i--) {
-      const sh = shakes[i], p = (now - sh.start) / Math.max(1e-6, sh.ms);
+      const sh = shakes[i], p = Math.max(0, (now - sh.start) / Math.max(1e-6, sh.ms));
       if (p >= 1) { shakes.splice(i, 1); continue; }
       any = true;
       const env = (1 - p) * (1 - p);
@@ -314,7 +344,9 @@
   // do Group fica no chão), então a peça "tomba" apoiada nos pés.
   function poseMorte(s, now) {
     const t = now - s.deathAt, fall = D(cfg.death.fallMs), total = deathTotalMs();
-    if (t < 0 || t >= total) return null;
+    if (t < 0) return null;
+    if (t >= total)   // pose terminal congelada: nunca "pisca" de volta antes do end da cena
+      return { dx: 0, dz: 0, tilt: Math.PI / 2, tiltDir: s.dir, scaleY: 1, opacity: 0, darken: cfg.death.darken, dying: true };
     const p = t / fall;
     let tilt, scaleY = 1;
     if (p < 1) tilt = (Math.PI / 2) * easeIn(p);
