@@ -8800,7 +8800,8 @@ function _agendarFimMorteVisual(id){
     const aguardarAnimacao = atual.aguardarMagia
       && (_visualTemAnimacaoDeMagia() || agora < atual.magiaAte)
       && agora < atual.maxAte;
-    if(aguardarMinimo || aguardarAnimacao){
+    const aguardarCena = !!(window.CombatScene && CombatScene.isDying(`m:${id}`)) && agora < atual.maxAte;
+    if(aguardarMinimo || aguardarAnimacao || aguardarCena){
       atual.timer = setTimeout(verificar, 100);
       return;
     }
@@ -8845,8 +8846,12 @@ function _capturarMortesVisuais(state){
     const copia = JSON.parse(JSON.stringify(anterior));
     const kind = _defeatVisualKind(anterior,
       _visualTemAnimacaoDeMagia() ? 'magic' : 'common');
-    _spawnDefeatVisual(anterior, kind);
-    _playDefeatSound(kind);
+    const chaveCena = `m:${id}`;
+    const comCena = _cenaAtiva() && !!CombatScene.pendingFor(chaveCena, agora);
+    if(!comCena){
+      _spawnDefeatVisual(anterior, kind);
+      _playDefeatSound(kind);
+    }
     const minhaAntes = xpAnterior.get(String(GS.myPid));
     const minhaAgora = (state.players || []).find(p => String(p.id) === String(GS.myPid));
     const xpGain = minhaAntes != null && minhaAgora ? Math.max(0, Number(minhaAgora.xp || 0) - Number(minhaAntes.xp || 0)) : 0;
@@ -8859,19 +8864,31 @@ function _capturarMortesVisuais(state){
     _mortesVisuaisPendentes.set(id, {
       monster: copia,
       minAte: agora + MORTE_VISUAL_MIN_MS,
-      maxAte: agora + (aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
+      maxAte: agora + (comCena ? (VC.feedback?.combat?.scene?.expireMs ?? 6000)
+        : aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
       magiaAte: agora + MORTE_VISUAL_MAGIA_RECENTE_MS,
       aguardarMagia, xpGain, lootAvailable, confirmado: false,
       timer: null,
     });
-    _spawnCombatFeedback(
-      anterior, '☠ DERROTADO', 'death',
-      (() => {
-        const inicio = _bolaFogoFeedbackStartAt(anterior);
-        return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
-          : (mortesPotenciais > 1 ? agora + morteIndex * 120 : null);
-      })()
-    );
+    if(comCena){
+      // A cena solta texto, anel e som no golpe (sincronizados com o d20) e
+      // segura a cópia visual até o tombo terminar (ver _agendarFimMorteVisual).
+      const cmd = CombatScene.handoff(chaveCena, {
+        feedback: {entry: anterior, text: '☠ DERROTADO', kind: 'death', damageType: null, options: {}},
+        death: true,
+        onImpact: [() => { _spawnDefeatVisual(anterior, kind); _playDefeatSound(kind); }],
+      }, agora);
+      if(cmd) _executarComandoCena(cmd);
+    } else {
+      _spawnCombatFeedback(
+        anterior, '☠ DERROTADO', 'death',
+        (() => {
+          const inicio = _bolaFogoFeedbackStartAt(anterior);
+          return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
+            : (mortesPotenciais > 1 ? agora + morteIndex * 120 : null);
+        })()
+      );
+    }
     _agendarFimMorteVisual(id);
   }
 
@@ -8901,9 +8918,19 @@ function _capturarDerrotasERessurreicoes(state){
     const atual = atuais.get(id);
     if(!atual || !Array.isArray(atual.pos)) continue;
     if(anterior.alive && !atual.alive){
-      _spawnDefeatVisual(atual, 'hero');
-      _playDefeatSound('hero');
-      _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+      const chaveCena = `p:${id}`;
+      if(_cenaAtiva() && CombatScene.pendingFor(chaveCena, performance.now())){
+        const cmd = CombatScene.handoff(chaveCena, {
+          feedback: {entry: {pos: atual.pos}, text: '☠ MORTE DEFINITIVA', kind: 'death', damageType: null, options: {}},
+          death: true,
+          onImpact: [() => { _spawnDefeatVisual(atual, 'hero'); _playDefeatSound('hero'); }],
+        }, performance.now());
+        if(cmd) _executarComandoCena(cmd);
+      } else {
+        _spawnDefeatVisual(atual, 'hero');
+        _playDefeatSound('hero');
+        _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+      }
     } else if(!anterior.alive && atual.alive){
       _spawnDefeatVisual(atual, 'revive');
       _playDefeatSound('magic');
@@ -8912,8 +8939,20 @@ function _capturarDerrotasERessurreicoes(state){
 }
 
 function _estadoComMortosVisuais(state){
-  if(!state || !Array.isArray(state.monsters) || !_mortesVisuaisPendentes.size)
-    return state;
+  if(!state) return state;
+  let out = state;
+  // Herói: enquanto a cena o faz tombar, o peão vivo precisa continuar
+  // existindo (renderMap3D pula !p.alive). Cópia rasa com alive:true.
+  if(window.CombatScene && Array.isArray(state.players)){
+    let mudou = false;
+    const players = state.players.map(p => {
+      if(p && p.alive === false && CombatScene.isDying(`p:${p.id}`)){ mudou = true; return {...p, alive: true, hp: 1}; }
+      return p;
+    });
+    if(mudou) out = { ...out, players };
+  }
+  if(!Array.isArray(state.monsters) || !_mortesVisuaisPendentes.size)
+    return out;
   const agora = performance.now();
   const vivos = state.monsters.filter(m => m && m.hp > 0);
   const presentes = new Set(vivos.map(m => String(m.id)));
@@ -8925,8 +8964,8 @@ function _estadoComMortosVisuais(state){
     }
     if(!presentes.has(id)) pendentes.push(rec.monster);
   }
-  if(!pendentes.length) return state;
-  return { ...state, monsters: vivos.concat(pendentes) };
+  if(!pendentes.length) return out;
+  return { ...out, monsters: vivos.concat(pendentes) };
 }
 
 function _limparMortesVisuais(){
@@ -10812,7 +10851,7 @@ function _executarComandoCena(c){
     try{ fn(); }catch(e){ console.warn('combatScene onImpact:', e); }
   }
   // `tardio` = hand-off que chegou DEPOIS do golpe: o burst do crítico já saiu no comando do golpe; só a morte (informação nova) ainda merece partículas.
-  if(g3 && c.hit && ((c.crit && !c.tardio) || c.death)){
+  if(g3 && c.hit && Array.isArray(c.targetPos) && ((c.crit && !c.tardio) || c.death)){
     const tipo = fb && fb.damageType ? _combatPrimaryDamageType(fb.damageType) : 'physical';
     const corHex = (_combatDamageTypeInfo(tipo).color || '#f4eee2').replace('#', '');
     _spawnBurstParticles(g3.T, g3.scene,
@@ -37767,7 +37806,8 @@ function renderMap3D(state){
   for(const c of (state.corpses||[])){
     const [cx,cy] = c.pos;
     if(!visionSet.has(`${cx},${cy}`)) continue;
-    obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+    const corpFig = obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+    corpFig.visible = !(window.CombatScene && CombatScene.isDying(`m:${c.id}`));
   }
 
   // Lápides dos heróis derrotados — somem quando a Ressurreição remove o
@@ -37776,7 +37816,8 @@ function renderMap3D(state){
     const [hx, hy] = c.pos || [];
     if(!Number.isFinite(hx) || !Number.isFinite(hy)) continue;
     if(!visionSet.has(`${hx},${hy}`)) continue;
-    obterFig(`hero-corpse:${c.hero_id || c.id}`, JSON.stringify(c), () => build3DCorpse(c), hx, hy);
+    const heroCorpFig = obterFig(`hero-corpse:${c.hero_id || c.id}`, JSON.stringify(c), () => build3DCorpse(c), hx, hy);
+    heroCorpFig.visible = !(window.CombatScene && CombatScene.isDying(`p:${c.hero_id || c.id}`));
   }
 
   // Animados (servos do Pedro) — peão do MONSTRO ORIGINAL com base/aro roxo (aliado)
@@ -38415,8 +38456,11 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petr
     // Arte tardia (GLB async): se a cena de combate já clonou os materiais deste
     // peão, restaura e esquece a lista — o próximo frame com pose re-clona
     // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
+    // Se uma pose já foi travada antes do GLB chegar, o rotY que ela restaura
+    // a cada frame (e ao desfazer) precisa acompanhar a orientação recém-gravada.
     { const raiz = grp.parent || grp;
-      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; } }
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; }
+      if(raiz.userData && raiz.userData._scenePoseAtiva) raiz.userData._sceneBaseRotY = rotY; }
   };
   const cached = _heroGLBCache[classId];
   if (cached && cached !== 'erro') { montar(cached); return true; }

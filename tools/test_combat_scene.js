@@ -403,6 +403,24 @@ CS.tick(90);
 check("windup escalado termina aos 90ms → ESPERANDO_DADO", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
 CS.configure({});
 
+console.log("\n[32b] start sem posições → base nula (nunca teleporta para 0,0)");
+CS.reset(); CS.configure({});
+{
+  const SEM_POS = { attack_id: "atk_np", attacker_key: "p:id_1", target_key: "m:id_9" };
+  let ok = true, poseNP = null, impNP = null;
+  try {
+    CS.start(SEM_POS, 0); CS.tick(0);
+    poseNP = CS.poseFor("p:id_1", 90);
+    CS.result({ ...SEM_POS, hit: true, crit: false }, 1); CS.tick(180);
+    CS.dieSettled({ die: "d20" }, 1000); CS.tick(1000);
+    impNP = CS.tick(1110).find(c => c.cmd === "impact" && c.id === "atk_np") || null;
+  } catch (e) { ok = false; console.log("     exceção: " + e.message); }
+  check("start/tick/pose sem attacker_pos/target_pos não lança", ok);
+  check("pose do atacante existe com base === null", !!poseNP && poseNP.base === null);
+  check("dir cai em [1,0] e melee em true", (() => { const s = CS._scenes.find(x => x.id === "atk_np"); return s && s.dir[0] === 1 && s.dir[1] === 0 && s.melee === true; })());
+  check("comando impact traz targetPos null (sem .slice em null)", !!impNP && impNP.targetPos === null);
+}
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
@@ -433,6 +451,21 @@ check("_materiaisCena inclui o contorno marcado como outline", /outline:\s*!!ud\
 check("laço 3D usa _figSceneKey para a reação de impacto", gameSrc.includes("_hitReaction3DAngle(_figSceneKey(fig)"));
 check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeCamera();") > 0 && gameSrc.indexOf("_desfazerShakeCamera();") < gameSrc.indexOf("if(!configCamera.seguindoPeao) g3.controls.update();"));
 check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
+
+console.log("\n[34] Morte (Task 10): fiação em game.js");
+{
+  const capMortes = corpoDaFuncao("_capturarMortesVisuais");
+  const fimMorte = corpoDaFuncao("_agendarFimMorteVisual");
+  const estMortos = corpoDaFuncao("_estadoComMortosVisuais");
+  const capHerois = corpoDaFuncao("_capturarDerrotasERessurreicoes");
+  check("_capturarMortesVisuais entrega a morte à cena (handoff)", capMortes.includes("CombatScene.handoff("));
+  check("comCena é calculado ANTES do _mortesVisuaisPendentes.set", capMortes.indexOf("const comCena") > 0 && capMortes.indexOf("const comCena") < capMortes.indexOf("_mortesVisuaisPendentes.set("));
+  check("_agendarFimMorteVisual espera o tombo (isDying)", fimMorte.includes("CombatScene.isDying(`m:${id}`)"));
+  check("_estadoComMortosVisuais mantém o herói vivo enquanto tomba", estMortos.includes("CombatScene.isDying(`p:${p.id}`)"));
+  check("_capturarDerrotasERessurreicoes entrega a morte do herói à cena", capHerois.includes("CombatScene.handoff("));
+  check("cadáver de monstro some enquanto tomba", gameSrc.includes("corpFig.visible = !(window.CombatScene && CombatScene.isDying(`m:${c.id}`))"));
+  check("lápide do herói some enquanto tomba", gameSrc.includes("heroCorpFig.visible = !(window.CombatScene && CombatScene.isDying(`p:${c.hero_id || c.id}`))"));
+}
 
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);

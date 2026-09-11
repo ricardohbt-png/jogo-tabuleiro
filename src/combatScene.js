@@ -58,17 +58,26 @@
   function reset() { scenes.length = 0; shakes.length = 0; }
 
   function novaCena(msg, soImpacto, now) {
-    const ap = msg.attacker_pos || [0, 0], tp = msg.target_pos || [0, 0];
-    const ax = Number(ap[0]) || 0, az = Number(ap[1]) || 0;
-    const tx = Number(tp[0]) || 0, tz = Number(tp[1]) || 0;
-    const ddx = tx - ax, ddz = tz - az, len = Math.hypot(ddx, ddz) || 1;
+    // Sem posição → null (nunca [0,0]): `pose.base` nulo deixa o peão onde o
+    // render o pôs, em vez de teleportá-lo para a casa (0,0). O servidor sempre
+    // manda as duas; isto é cinto-e-suspensório.
+    const ap = Array.isArray(msg.attacker_pos) ? msg.attacker_pos : null;
+    const tp = Array.isArray(msg.target_pos) ? msg.target_pos : null;
+    const aPos = ap ? [Number(ap[0]) || 0, Number(ap[1]) || 0] : null;
+    const tPos = tp ? [Number(tp[0]) || 0, Number(tp[1]) || 0] : null;
+    let dir = [1, 0], melee = true;
+    if (aPos && tPos) {
+      const ddx = tPos[0] - aPos[0], ddz = tPos[1] - aPos[1], len = Math.hypot(ddx, ddz) || 1;
+      dir = [ddx / len, ddz / len];
+      melee = Math.max(Math.abs(ddx), Math.abs(ddz)) <= cfg.meleeRange;
+    }
     const s = {
       id: String(msg.attack_id),
       attackerKey: msg.attacker_key || null,
       targetKey: msg.target_key || null,
-      aPos: [ax, az], tPos: [tx, tz],
-      dir: [ddx / len, ddz / len],
-      melee: Math.max(Math.abs(ddx), Math.abs(ddz)) <= cfg.meleeRange,
+      aPos, tPos,
+      dir,
+      melee,
       soImpacto: !!soImpacto,
       phase: 'FILA', phaseAt: now, createdAt: now,
       result: null, resultAt: null, dieAt: null,
@@ -108,7 +117,7 @@
     const c = {
       cmd: 'impact', id: s.id,
       attackerKey: s.attackerKey, targetKey: s.targetKey,
-      targetPos: s.tPos.slice(), dir: s.dir.slice(),
+      targetPos: s.tPos ? s.tPos.slice() : null, dir: s.dir.slice(),
       hit: !!(s.result && s.result.hit), crit: !!(s.result && s.result.crit),
       fumble: !!(s.result && s.result.fumble),
       feedback: s.impact ? s.impact.feedback || null : null,
