@@ -82,7 +82,9 @@
       phase: 'FILA', phaseAt: now, createdAt: now,
       result: null, resultAt: null, dieAt: null,
       impactAt: null, holdUntil: null,
-      impact: null, feedbackEmitido: false, deathAt: null,
+      // Hand-offs ACUMULAM (morte + número do mesmo golpe chegam em mensagens
+      // separadas): feedbacks/onImpact são drenados (splice) a cada impact emitido.
+      impact: { feedbacks: [], onImpact: [], death: false }, handoffs: 0, deathAt: null,
       done: false,
     };
     scenes.push(s);
@@ -120,12 +122,11 @@
       targetPos: s.tPos ? s.tPos.slice() : null, dir: s.dir.slice(),
       hit: !!(s.result && s.result.hit), crit: !!(s.result && s.result.crit),
       fumble: !!(s.result && s.result.fumble),
-      feedback: s.impact ? s.impact.feedback || null : null,
-      death: !!(s.impact && s.impact.death),
-      onImpact: s.impact ? s.impact.onImpact || [] : [],
+      feedbacks: s.impact.feedbacks.splice(0),   // emitido UMA vez
+      death: !!s.impact.death,
+      onImpact: s.impact.onImpact.splice(0),
       tardio: !!tardio,
     };
-    if (s.impact) s.feedbackEmitido = true;
     cmds.push(c);
     return c;
   }
@@ -133,7 +134,7 @@
   function irParaImpacto(s, now, cmds) {
     s.impactAt = now;
     const crit = !!(s.result && s.result.crit);
-    const death = !!(s.impact && s.impact.death);
+    const death = !!s.impact.death;
     if (death && s.deathAt == null) s.deathAt = now;
     if (crit || death) agitar(now);
     if (crit) { s.holdUntil = now + D(cfg.crit.hitStopMs); entrar(s, 'HOLD', now); }
@@ -143,13 +144,13 @@
 
   function finalizar(s, cmds, now) {
     if (s.done) return;
-    if (s.impact && !s.feedbackEmitido) {      // expirou antes do golpe: não perde o número
-      if (s.impactAt == null) s.impactAt = now;
+    if (s.impactAt == null && s.handoffs > 0) {      // expirou antes do golpe: não perde o número
+      s.impactAt = now;
       emitirImpacto(s, cmds, false);
     }
     s.done = true;
     cmds.push({ cmd: 'end', id: s.id, attackerKey: s.attackerKey, targetKey: s.targetKey,
-                death: !!(s.impact && s.impact.death) });
+                death: !!s.impact.death });
   }
 
   function deathTotalMs() { return D(cfg.death.fallMs) * 1.25; }
@@ -190,14 +191,14 @@
           const volta = s.melee ? D(cfg.recover.ms) : D(cfg.ranged.msBack);
           const reacao = s.result && s.result.hit ? D(cfg.hit.ms) : D(cfg.dodge.ms);
           if (now - s.phaseAt >= Math.max(volta, reacao)) {
-            if (s.impact && s.impact.death) entrar(s, 'MORRENDO', now);
-            else if (s.impact || !(s.result && s.result.hit)) finalizar(s, cmds, now);
+            if (s.impact.death) entrar(s, 'MORRENDO', now);
+            else if (s.handoffs > 0 || !(s.result && s.result.hit)) finalizar(s, cmds, now);
             else entrar(s, 'AGUARDANDO_HANDOFF', now);
           }
           break;
         }
         case 'AGUARDANDO_HANDOFF':
-          if (s.impact) {
+          if (s.handoffs > 0) {
             if (s.impact.death) entrar(s, 'MORRENDO', now);
             else finalizar(s, cmds, now);
           }
@@ -258,18 +259,21 @@
   }
 
   // Acha a cena certa do alvo para receber o hand-off de dano: prioriza a
-  // cena que AINDA NÃO golpeou (impactAt==null) — senão, uma cena atrasada
-  // (ex.: dano líquido zero) em AGUARDANDO_HANDOFF roubaria o número de um
-  // 2º ataque mais novo no mesmo alvo. Só cai para a "já golpeou" (fallback)
-  // quando não há nenhuma pendente. `now`, se informado, ignora cena expirada
-  // (rAF pode ter pausado numa aba oculta enquanto mensagens de WS chegavam).
+  // cena que AINDA NÃO golpeou (impactAt==null), não importa quantos hand-offs
+  // já acumulou (a morte e o número do mesmo golpe chegam separados) — senão,
+  // uma cena atrasada (ex.: dano líquido zero) em AGUARDANDO_HANDOFF roubaria
+  // o número de um 2º ataque mais novo no mesmo alvo. Só cai para a "já
+  // golpeou" (fallback) quando não há nenhuma pendente, e só se ela ainda
+  // espera o SEU número (acertou e nunca recebeu hand-off). `now`, se
+  // informado, ignora cena expirada (rAF pode ter pausado numa aba oculta
+  // enquanto mensagens de WS chegavam).
   function cenaParaHandoff(targetKey, now) {
     let semImpacto = null, comImpacto = null;
     for (const s of scenes) {
-      if (s.done || s.targetKey !== targetKey || s.impact) continue;
+      if (s.done || s.targetKey !== targetKey) continue;
       if (now != null && now - s.createdAt > cfg.expireMs) continue;
       if (s.impactAt == null) { if (!semImpacto) semImpacto = s; }
-      else { if (!comImpacto) comImpacto = s; }
+      else if (s.handoffs === 0 && s.result && s.result.hit) { if (!comImpacto) comImpacto = s; }
     }
     return semImpacto || comImpacto;
   }
@@ -279,17 +283,24 @@
     return s ? s.id : null;
   }
 
-  // Entrega o feedback de dano à cena pendente do alvo. Devolve o comando
-  // `impact` (com `tardio:true`) quando o golpe JÁ aconteceu (rede lenta) —
-  // o chamador executa na hora; senão null (guardado para o IMPACTO).
+  // Entrega o feedback de dano à cena pendente do alvo. Hand-offs ACUMULAM:
+  // feedbacks e callbacks são empilhados e `death` é OR — a morte
+  // (_capturarDerrotasERessurreicoes) e o número (_detectHpChanges) do mesmo
+  // golpe chegam em chamadas separadas. Devolve o comando `impact` (com
+  // `tardio:true`) quando o golpe JÁ aconteceu (rede lenta) — o chamador
+  // executa na hora; senão null (guardado para o IMPACTO).
   function handoff(targetKey, data, now) {
     data = data || {};
     const s = cenaParaHandoff(targetKey, now);
     if (!s) return null;
-    s.impact = { feedback: data.feedback || null, death: !!data.death, onImpact: data.onImpact || [] };
+    if (data.feedback) s.impact.feedbacks.push(data.feedback);
+    if (Array.isArray(data.onImpact) && data.onImpact.length) s.impact.onImpact.push(...data.onImpact);
+    const novaMorte = !!data.death && !s.impact.death;
+    s.impact.death = s.impact.death || !!data.death;
+    s.handoffs++;
     if (s.impactAt == null) return null;
     const jaEraCrit = !!(s.result && s.result.crit);
-    if (s.impact.death && s.deathAt == null) {
+    if (novaMorte && s.deathAt == null) {
       s.deathAt = now;
       if (!jaEraCrit) agitar(now);   // crítico já agitou no golpe; não duplicar
     }
@@ -329,7 +340,7 @@
 
   function poseAlvo(s, now) {
     if (s.impactAt == null || !s.result || now < s.impactAt) return null;
-    if (s.impact && s.impact.death && s.deathAt != null) return poseMorte(s, now);
+    if (s.impact.death && s.deathAt != null) return poseMorte(s, now);
     const d = s.dir, p = progressoReacao(s, now);
     if (p >= 1) return null;
     const wave = Math.sin(p * Math.PI);
@@ -345,7 +356,7 @@
   }
 
   function isDying(key) {
-    return scenes.some(s => !s.done && s.targetKey === key && s.impact && s.impact.death);
+    return scenes.some(s => !s.done && s.targetKey === key && s.impact.death);
   }
 
   // Tombo: gira 90° em torno do eixo horizontal perpendicular ao golpe (cai para

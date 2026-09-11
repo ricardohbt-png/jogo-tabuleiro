@@ -8818,6 +8818,9 @@ function _agendarFimMorteVisual(id){
     _mortesVisuaisPendentes.delete(String(id));
     _renderizarEstadoAtual();
   };
+  // O `end` da cena de combate (tombo terminado) conclui na hora — ver o ramo
+  // 'end' de _executarComandoCena, que zera minAte/aguardarMagia antes de chamar.
+  rec.concluir = verificar;
   rec.timer = setTimeout(verificar, MORTE_VISUAL_MIN_MS);
 }
 
@@ -10839,11 +10842,31 @@ function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
 // derrota) e partículas de crítico/morte.
 function _executarComandoCena(c){
   if(!c) return;
-  if(c.cmd === 'end'){ if(c.death) _renderizarEstadoAtual(); return; }
+  if(c.cmd === 'end'){
+    if(!c.death) return;
+    // O fim do tombo é AUTORITATIVO para a cópia visual do monstro: a cena
+    // já saiu da lista (poseFor → null) e o laço deste mesmo frame restauraria
+    // o peão em pé, opaco — enquanto a cópia hp=1 seguiria em
+    // _mortesVisuaisPendentes até o próximo poll (≤100 ms) ou o minAte.
+    // Concluir agora apaga a cópia e re-renderiza de forma síncrona, então a
+    // fig é descartada ANTES da travessia por fig (_tickCombatScene roda antes
+    // do entityGroup.children.forEach em startLoop3D).
+    const mid = typeof c.targetKey === 'string' && c.targetKey.startsWith('m:') ? c.targetKey.slice(2) : null;
+    const rec = mid != null ? _mortesVisuaisPendentes.get(String(mid)) : null;
+    if(rec && typeof rec.concluir === 'function'){
+      if(rec.timer) clearTimeout(rec.timer);
+      rec.minAte = 0; rec.aguardarMagia = false;
+      rec.concluir();
+    } else {
+      _renderizarEstadoAtual();
+    }
+    return;
+  }
   if(c.cmd !== 'impact') return;
   const now = performance.now();
-  const fb = c.feedback;
-  if(fb){
+  const feedbacks = Array.isArray(c.feedbacks) ? c.feedbacks : [];
+  for(const fb of feedbacks){
+    if(!fb) continue;
     if(fb.cue) _playCombatCue('damage', fb.cue);
     _spawnCombatFeedback(fb.entry, fb.text, fb.kind, now, fb.damageType, fb.options || {});
   }
@@ -10852,7 +10875,8 @@ function _executarComandoCena(c){
   }
   // `tardio` = hand-off que chegou DEPOIS do golpe: o burst do crítico já saiu no comando do golpe; só a morte (informação nova) ainda merece partículas.
   if(g3 && c.hit && Array.isArray(c.targetPos) && ((c.crit && !c.tardio) || c.death)){
-    const tipo = fb && fb.damageType ? _combatPrimaryDamageType(fb.damageType) : 'physical';
+    const fb = feedbacks.find(f => f && f.damageType) || null;
+    const tipo = fb ? _combatPrimaryDamageType(fb.damageType) : 'physical';
     const corHex = (_combatDamageTypeInfo(tipo).color || '#f4eee2').replace('#', '');
     _spawnBurstParticles(g3.T, g3.scene,
       { x: c.targetPos[0], y: 0.35, z: c.targetPos[1] },
@@ -34479,6 +34503,10 @@ function _mkWoodTex(T){
 function dispose3D(){
   if(!g3) return;
   cancelAnimationFrame(g3.animFrame);
+  // Sem o laço 3D ninguém mais tica as cenas: um herói morto ficaria
+  // "tombando" para sempre (isDying) e seria desenhado vivo no 2D. Lacuna
+  // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
+  if(window.CombatScene) CombatScene.reset();
   g3.resizeObs.disconnect();
   if(g3.controls) g3.controls.dispose();
 

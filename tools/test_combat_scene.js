@@ -162,11 +162,11 @@ check("pendingFor acha a cena do alvo", CS.pendingFor("m:id_9") === "atk_1_1");
 check("pendingFor de outro alvo é null", CS.pendingFor("m:id_8") === null);
 const FB = { feedback: { text: "7", kind: "damage" }, death: false, onImpact: [] };
 check("handoff antes do impacto devolve null (guardado)", CS.handoff("m:id_9", FB, 200) === null);
-check("depois do hand-off deixa de ser pendente", CS.pendingFor("m:id_9") === null);
+check("depois do hand-off CONTINUA pendente (acumula até o golpe)", CS.pendingFor("m:id_9") === "atk_1_1");
 CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
 const cmdsH = CS.tick(610);
 const imp = cmdsH.find(c => c.cmd === "impact");
-check("impact carrega o feedback guardado", imp && imp.feedback && imp.feedback.text === "7");
+check("impact carrega o feedback guardado", imp && imp.feedbacks.length === 1 && imp.feedbacks[0].text === "7");
 CS.tick(610 + 260);
 check("com hand-off já feito, RECUPERANDO → fecha (phase null)", CS.phaseOf("atk_1_1") === null);
 
@@ -175,7 +175,7 @@ CS.reset();
 CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
 CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);   // impacto sem número
 const tardio = CS.handoff("m:id_9", FB, 700);
-check("handoff tardio devolve o comando impact", tardio && tardio.cmd === "impact" && tardio.feedback.text === "7");
+check("handoff tardio devolve o comando impact", tardio && tardio.cmd === "impact" && tardio.feedbacks[0].text === "7");
 CS.tick(610 + 260);
 check("cena fecha após recuperar", CS.phaseOf("atk_1_1") === null);
 
@@ -305,9 +305,9 @@ check("B saiu da FILA (A só aguarda hand-off, não bloqueia)", CS.phaseOf("atk_
 check("pendingFor agora prioriza B (ainda não golpeou) sobre A (já golpeou)", CS.pendingFor("m:id_9") === "atk_1_2");
 const FB2 = { feedback: { text: "9", kind: "damage" }, death: false, onImpact: [] };
 check("handoff entrega a B (guardado, retorna null pois B ainda não golpeou)", CS.handoff("m:id_9", FB2, 901) === null);
-check("A continua sem impact (não roubou o hand-off)", CS._scenes.find(s => s.id === "atk_1_1").impact === null);
+check("A continua sem hand-off (não roubou o número)", CS._scenes.find(s => s.id === "atk_1_1").handoffs === 0);
 const bScene = CS._scenes.find(s => s.id === "atk_1_2");
-check("B recebeu o impact guardado", bScene && bScene.impact && bScene.impact.feedback.text === "9");
+check("B recebeu o impact guardado", bScene && bScene.handoffs === 1 && bScene.impact.feedbacks[0].text === "9");
 
 console.log("\n[22] Comando impact carrega tardio (dedupe de partículas no consumidor)");
 CS.reset();
@@ -380,7 +380,7 @@ CS.handoff("m:id_9", { feedback: { text: "5", kind: "damage" }, death: false, on
 const cmdsExp = CS.tick(6001);
 const iImp = cmdsExp.findIndex(c => c.cmd === "impact");
 const iEnd = cmdsExp.findIndex(c => c.cmd === "end");
-check("expiração emite impact com o feedback guardado", iImp >= 0 && cmdsExp[iImp].feedback && cmdsExp[iImp].feedback.text === "5");
+check("expiração emite impact com o feedback guardado", iImp >= 0 && cmdsExp[iImp].feedbacks.length === 1 && cmdsExp[iImp].feedbacks[0].text === "5");
 check("impact vem antes do end", iImp >= 0 && iEnd >= 0 && iImp < iEnd);
 
 console.log("\n[30] dieSettled ignora dado que não é d20");
@@ -419,6 +419,58 @@ CS.reset(); CS.configure({});
   check("pose do atacante existe com base === null", !!poseNP && poseNP.base === null);
   check("dir cai em [1,0] e melee em true", (() => { const s = CS._scenes.find(x => x.id === "atk_np"); return s && s.dir[0] === 1 && s.dir[1] === 0 && s.melee === true; })());
   check("comando impact traz targetPos null (sem .slice em null)", !!impNP && impNP.targetPos === null);
+}
+
+console.log("\n[32d] Hand-offs acumulam (morte e número do mesmo golpe chegam separados)");
+CS.reset(); CS.configure({});
+{
+  // (a) dois hand-offs ANTES do golpe: morte primeiro, depois o dano
+  CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+  let chamadas = 0;
+  const FB_MORTE = { feedback: { text: "☠", kind: "death" }, death: true, onImpact: [() => chamadas++] };
+  const FB_DANO  = { feedback: { text: "12", kind: "damage", damageType: "fire" }, death: false, onImpact: [() => chamadas++] };
+  check("(a) 1º hand-off (morte) antes do golpe devolve null", CS.handoff("m:id_9", FB_MORTE, 200) === null);
+  check("(a) entre os dois hand-offs pendingFor ainda devolve a cena", CS.pendingFor("m:id_9", 201) === "atk_1_1");
+  check("(a) 2º hand-off (número) antes do golpe devolve null", CS.handoff("m:id_9", FB_DANO, 202) === null);
+  check("(a) handoffs conta 2", CS._scenes[0].handoffs === 2);
+  check("(a) isDying já vale antes do golpe", CS.isDying("m:id_9") === true);
+  CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+  const cmds2 = CS.tick(610);
+  const imps = cmds2.filter(c => c.cmd === "impact");
+  check("(a) UM único comando impact no golpe", imps.length === 1);
+  check("(a) o impact traz os 2 feedbacks na ordem (morte, número)",
+    imps[0] && imps[0].feedbacks.length === 2 && imps[0].feedbacks[0].text === "☠" && imps[0].feedbacks[1].text === "12");
+  check("(a) death:true e os 2 callbacks vieram juntos", imps[0] && imps[0].death === true && imps[0].onImpact.length === 2);
+  check("(a) comando não é tardio", imps[0] && imps[0].tardio === false);
+  check("(a) feedbacks/onImpact foram drenados da cena (emitidos uma vez)",
+    CS._scenes[0].impact.feedbacks.length === 0 && CS._scenes[0].impact.onImpact.length === 0);
+  check("(a) após o golpe com hand-off a cena deixa de ser pendente", CS.pendingFor("m:id_9", 611) === null);
+  check("(a) morte inicia o tombo no golpe (deathAt = impactAt)", CS._scenes[0].deathAt === 610);
+  CS.tick(610 + 260);
+  check("(a) RECUPERANDO → MORRENDO", CS.phaseOf("atk_1_1") === "MORRENDO");
+
+  // (b) DEPOIS do golpe com handoffs>0: um 2º hand-off é recusado
+  CS.reset();
+  CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+  CS.handoff("m:id_9", { feedback: { text: "4", kind: "damage" }, death: false, onImpact: [] }, 200);
+  CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);
+  check("(b) pendingFor é null (golpeou e já tem hand-off)", CS.pendingFor("m:id_9", 700) === null);
+  check("(b) handoff extra é recusado (null)", CS.handoff("m:id_9", { feedback: { text: "99", kind: "damage" } }, 700) === null);
+  check("(b) handoffs continua 1", CS._scenes[0].handoffs === 1);
+
+  // (c) golpeou SEM hand-off (espera o seu número): aceita um, tardio
+  CS.reset();
+  CS.start(START, 0); CS.tick(0); CS.result(RESULT_HIT, 1); CS.tick(180);
+  CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);
+  check("(c) pendingFor acha a cena golpeada sem hand-off", CS.pendingFor("m:id_9", 700) === "atk_1_1");
+  const tard = CS.handoff("m:id_9", { feedback: { text: "6", kind: "damage" }, death: false, onImpact: [] }, 700);
+  check("(c) devolve comando impact tardio com o feedback", tard && tard.cmd === "impact" && tard.tardio === true && tard.feedbacks.length === 1 && tard.feedbacks[0].text === "6");
+  check("(c) depois disso não aceita outro", CS.pendingFor("m:id_9", 701) === null);
+  // (c') golpe que ERROU não espera número: não é fallback
+  CS.reset();
+  CS.start(START, 0); CS.tick(0); CS.result({ ...RESULT_HIT, hit: false }, 1); CS.tick(180);
+  CS.dieSettled({ die: "d20" }, 500); CS.tick(500); CS.tick(610);
+  check("(c') cena que errou e já golpeou não é pendente", CS.pendingFor("m:id_9", 700) === null);
 }
 
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
@@ -465,6 +517,13 @@ console.log("\n[34] Morte (Task 10): fiação em game.js");
   check("_capturarDerrotasERessurreicoes entrega a morte do herói à cena", capHerois.includes("CombatScene.handoff("));
   check("cadáver de monstro some enquanto tomba", gameSrc.includes("corpFig.visible = !(window.CombatScene && CombatScene.isDying(`m:${c.id}`))"));
   check("lápide do herói some enquanto tomba", gameSrc.includes("heroCorpFig.visible = !(window.CombatScene && CombatScene.isDying(`p:${c.hero_id || c.id}`))"));
+  const execCena = corpoDaFuncao("_executarComandoCena");
+  check("_executarComandoCena itera c.feedbacks (não c.feedback)", execCena.includes("c.feedbacks") && !/\bc\.feedback\b/.test(execCena));
+  check("end com morte conclui a cópia do monstro na hora (rec.concluir)", execCena.includes("rec.concluir()"));
+  check("_agendarFimMorteVisual expõe rec.concluir", fimMorte.includes("rec.concluir = verificar;"));
+  check("dispose3D reseta as cenas", corpoDaFuncao("dispose3D").includes("CombatScene.reset()"));
+  const iTick = gameSrc.indexOf("_tickCombatScene(now);"), iPose = gameSrc.indexOf("_aplicarPoseCena(fig, now);");
+  check("no laço 3D, _tickCombatScene roda ANTES da travessia que aplica a pose", iTick > 0 && iPose > iTick);
 }
 
 console.log("\n" + "=".repeat(50));
