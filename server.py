@@ -7878,12 +7878,15 @@ GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "bola_fogo", "relampago", "raio_congelante",
                           "saciar", "criar_alimentos", "clarividencia", "raio_divino",
                           "abencoar", "amaldicoar", "abencoar_arma",
+                          "maldicao_corpo_pesado",
                           "sono", "medo", "comando", "dominar_mente",
                           "dominar_morto_vivo", "lentidao",
                           "invisibilidade", "regeneracao_magica", "jato_ar",
                           "velocidade", "protecao_energia", "conjurar_elemental",
                           "silencio", "barreira_arcana", "contramagica", "voo",
                           "olhar_petrificante", "metamorfose", "chamado_inverno",
+                          "desnutricao",
+                          "definhar",
                           "senhor_das_aguas", "ira_rocha_ardente", "teleporte",
                           "prisao_chamas", "tempestade_ciclones"}
 
@@ -8040,6 +8043,14 @@ GRIMORIO = {
         "fome_bonus": 25, "sede_bonus": 25,
         "descricao": "Toque. +25 fome +25 sede em 1 aliado.",
     },
+    "maldicao_corpo_pesado": {
+        "id": "maldicao_corpo_pesado", "nome": "Maldição do Corpo Pesado",
+        "circulo": "primeiro", "classe": ["cleric"],
+        "icone": "⛓️", "tipo": "alvo_jogador", "alcance": 6,
+        "save": "vontade", "duracao": "1d6", "duracao_por_nivel": 1,
+        "multiplicador_custo_fome_sede": 2,
+        "descricao": "Alvo único. Vontade nega. Durante 1d6 + nível de conjurador rodadas, os custos de Fome e Sede do alvo são duplicados.",
+    },
     # â”€â”€ 2Âº CÃRCULO â€” AMBOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "silencio": {
         "id": "silencio", "nome": "Silêncio",
@@ -8061,6 +8072,26 @@ GRIMORIO = {
         "save": "reflexos", "permanente_custo": 20,
         "terrenos": ["piso_congelado", "planicie_nevada"],
         "descricao": "Área 4x4 (+1 casa a cada 2 níveis). Transforma o chão em Piso congelado ou Planície nevada por 1d4 + nível rodadas. Permanente: +20 Fome e +20 Sede.",
+    },
+    "desnutricao": {
+        "id": "desnutricao", "nome": "Desnutrição",
+        "circulo": "segundo", "classe": ["cleric"],
+        "icone": "🍖", "tipo": "alvo_inimigo",
+        "alcance": 6, "save": "fortitude",
+        "fome_dreno": 20, "fome_dreno_sucesso": 10,
+        "duracao": 2, "movimento_penalidade": 1,
+        "monstro_ataque_penalidade": 1, "monstro_dano_penalidade": 2,
+        "descricao": "Alvo único. Fortitude: falha → jogador perde 20 Fome e -1 Movimento por 2 rodadas; sucesso → perde 10 Fome. Monstro vivo: falha → por 2 rodadas pode apenas atacar ou movimentar, com -1 Ataque e -2 Dano. Mortos-vivos e construtos são imunes.",
+    },
+    "definhar": {
+        "id": "definhar", "nome": "Definhar",
+        "circulo": "terceiro", "classe": ["cleric"],
+        "icone": "🥀", "tipo": "area_fixa",
+        "alcance": 6, "area_lado": 3, "area_lado_niveis": 3,
+        "save": "fortitude", "fome_sede_dreno": 20,
+        "fome_sede_dreno_sucesso": 10, "duracao": 2,
+        "monstro_ataque_penalidade": 2, "monstro_dano_penalidade": 4,
+        "descricao": "Área 3x3 (+1 casa a cada 3 níveis), afetando todas as criaturas vivas na área. Fortitude: falha → jogadores perdem 20 Fome e 20 Sede; sucesso → perdem 10 de cada. Monstros vivos que falharem podem apenas atacar ou movimentar por 2 rodadas, com -2 Ataque e -4 Dano. Mortos-vivos e construtos são imunes.",
     },
     "senhor_das_aguas": {
         "id": "senhor_das_aguas", "nome": "Senhor das Águas",
@@ -12945,6 +12976,7 @@ class GameRoom:
         await self._processar_camara_gas_inicio_turno(p)
         if p.get("preso"): await self._processar_escape_agarrar(p)
         congelamento_pen = await self._processar_congelamento_progressivo_turno(p)
+        self._preparar_desnutricao_jogador_turno(p)
         p["moves_left"] = self._water_turn_moves(p, max(0, self._moves_base(p) - congelamento_pen))
         if p.get("rodamoinho_profundo_preso"):
             await self._testar_rodamoinho_profundo_inicio_turno(p)
@@ -18333,6 +18365,9 @@ class GameRoom:
            and p.get("class_id") in ("mage", "cleric"):
             p["encore_magia_gratis"] = p.get("encore_magia_gratis", 0) - 1
             return 0, 0
+        if p.get("maldicao_corpo_pesado_rodadas", 0) > 0 and (fome or sede):
+            fome *= 2
+            sede *= 2
         if p.get("encore_menor_ate", -1) >= self.round_num:
             return max(0, fome - 1), max(0, sede - 1)
         return fome, sede
@@ -19435,6 +19470,7 @@ class GameRoom:
             pp.pop("visao_escuro_rodadas", None)
             pp.pop("visao_escuro_manto", None)
             pp.pop("_visao_escuro_antes_manto", None)
+            pp.pop("maldicao_corpo_pesado_rodadas", None)
             pp["visao_escuro"] = False
             # Voo da magia termina no descanso; o voo concedido pela Bota
             # Alada continua enquanto ela permanecer equipada.
@@ -22326,6 +22362,12 @@ class GameRoom:
         # â”€â”€ Batch 1: utilidades, dano direto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         elif mid == "saciar":
             await self._executar_saciar(caster, magia, data)
+        elif mid == "maldicao_corpo_pesado":
+            await self._executar_maldicao_corpo_pesado(caster, magia, data, dur_bonus)
+        elif mid == "desnutricao":
+            await self._executar_desnutricao(caster, magia, data)
+        elif mid == "definhar":
+            await self._executar_definhar(caster, magia, data)
         elif mid == "criar_alimentos":
             await self._executar_criar_alimentos(caster, magia, data, dmg_mult)
         elif mid == "clarividencia":
@@ -22511,12 +22553,18 @@ class GameRoom:
 
     async def _processar_mods_magia_turno(self, alvo):
         m = alvo.get("mods_magia")
-        if not m:
-            return
-        m["rodadas"] = m.get("rodadas", 0) - 1
-        if m["rodadas"] <= 0:
-            alvo.pop("mods_magia", None)
-            await self.gm_say(T("narracao.os_efeitos_magicos_em_se_dissipam", alvo_get_name_alvo=nome_criatura(alvo)))
+        if m:
+            m["rodadas"] = m.get("rodadas", 0) - 1
+            if m["rodadas"] <= 0:
+                alvo.pop("mods_magia", None)
+                await self.gm_say(T("narracao.os_efeitos_magicos_em_se_dissipam", alvo_get_name_alvo=nome_criatura(alvo)))
+        restante = max(0, int(alvo.get("maldicao_corpo_pesado_rodadas", 0) or 0))
+        if restante:
+            alvo["maldicao_corpo_pesado_rodadas"] = restante - 1
+            if alvo["maldicao_corpo_pesado_rodadas"] <= 0:
+                alvo.pop("maldicao_corpo_pesado_rodadas", None)
+                await self.gm_say(
+                    f"A Maldição do Corpo Pesado se dissipa de {nome_criatura(alvo)}.")
 
     # â”€â”€ Batch 1: utilidades e dano direto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_saciar(self, caster, magia, data):
@@ -22544,6 +22592,226 @@ class GameRoom:
             "fome_bonus": int(fb), "sede_bonus": int(sb), "success": True,
         })
         await self.gm_say(T("narracao.sacia_fome_sede", caster=caster['name'], alvo=nome_criatura(alvo), fb=fb, sb=sb))
+
+    async def _executar_maldicao_corpo_pesado(self, caster, magia, data, dur_bonus=0):
+        """Duplica todos os custos de Fome/Sede de um jogador amaldiçoado."""
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo) or not self._eh_jogador(alvo) or alvo is caster:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "Escolha outro jogador vivo como alvo da Maldição do Corpo Pesado."})
+            return
+        alcance = int(magia.get("alcance", 6) or 6)
+        if not self._alcance_com_altura(caster, alvo["pos"], alcance, destino=alvo):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.alvo_fora_do_alcance", alcance=alcance)})
+            return
+        if not self._tem_linha_de_visao(caster["pos"], alvo["pos"]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.parede_bloqueia_magia", alvo=nome_criatura(alvo))})
+            return
+
+        animation_id = f"maldicao_corpo_pesado_{caster['id']}_{alvo['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "maldicao_corpo_pesado", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "origin": list(caster["pos"]), "target": list(alvo["pos"]),
+            "travel_ms": 520, "impact_ms": 820,
+        })
+        save_ok, *_ = await self._save_mostrado(
+            alvo, "vontade", self._dif_magia(caster, magia))
+        duracao = max(1, self._rolar_dado(magia.get("duracao", "1d6"))
+                      + self._nivel_conjurador(caster)
+                      * int(magia.get("duracao_por_nivel", 1) or 1)
+                      + int(dur_bonus or 0))
+        if not save_ok:
+            alvo["maldicao_corpo_pesado_rodadas"] = max(
+                int(alvo.get("maldicao_corpo_pesado_rodadas", 0) or 0), duracao)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "maldicao_corpo_pesado", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "target": list(alvo["pos"]), "passed": bool(save_ok),
+            "success": not save_ok, "duration_rounds": duracao if not save_ok else 0,
+        })
+        if save_ok:
+            await self.gm_say(
+                f"{alvo['name']} resiste à Maldição do Corpo Pesado.")
+        else:
+            await self.gm_say(
+                f"{alvo['name']} sofre a Maldição do Corpo Pesado: seus custos de "
+                f"Fome e Sede ficam duplicados por {duracao} rodadas.")
+
+    def _desnutricao_imune(self, alvo):
+        """Mortos-vivos e construtos não dependem de alimento."""
+        if not alvo or self._eh_jogador(alvo):
+            return False
+        subtipo = str(alvo.get("subtipo") or _subtipo_padrao_monstro(alvo)).strip().lower()
+        tipo = str(alvo.get("type") or alvo.get("tipo") or "").strip().lower()
+        return bool(alvo.get("undead") or alvo.get("construct")
+                    or subtipo in {"morto_vivo", "morto-vivo", "undead", "construto", "construct"}
+                    or tipo in {"morto_vivo", "morto-vivo", "undead", "construto", "construct"})
+
+    def _definhar_imune(self, alvo):
+        """Definhar usa as mesmas imunidades fisiológicas da Desnutrição."""
+        return self._desnutricao_imune(alvo)
+
+    async def _executar_desnutricao(self, caster, magia, data):
+        """Drena Fome de jogadores e transforma a falta de alimento em exaustão
+        de combate nos monstros vivos, sem criar uma barra de sobrevivência para
+        criaturas que não usam esse sistema."""
+        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo) or alvo is caster:
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return
+        alcance = int(magia.get("alcance", 6) or 6)
+        if not self._alcance_com_altura(caster, alvo["pos"], alcance, destino=alvo):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.alvo_fora_do_alcance", alcance=alcance)}); return
+        if not self._tem_linha_de_visao(caster["pos"], alvo["pos"]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.parede_bloqueia_magia", alvo=nome_criatura(alvo))}); return
+
+        animation_id = f"desnutricao_{caster['id']}_{alvo['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "desnutricao", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "origin": list(caster["pos"]), "target": list(alvo["pos"]),
+            "travel_ms": 460, "impact_ms": 700,
+        })
+
+        if self._desnutricao_imune(alvo):
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "desnutricao", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+                "success": False, "immune": True,
+            })
+            await self.gm_say(T("narracao.esta_imune_nao_faz_efeito", alvo=nome_criatura(alvo), magia="Desnutrição"))
+            return
+
+        save_ok, *_ = await self._save_mostrado(alvo, "fortitude", self._dif_magia(caster, magia))
+        duracao = max(1, int(magia.get("duracao", 2) or 2))
+        if self._eh_jogador(alvo):
+            dreno = int(magia.get("fome_dreno_sucesso", 10) if save_ok
+                        else magia.get("fome_dreno", 20))
+            alvo["fome"] = max(0, int(alvo.get("fome", 0) or 0) - dreno)
+            self._verificar_estado_sobrevivencia(alvo)
+            if not save_ok:
+                alvo["desnutricao_mov_rodadas"] = max(
+                    int(alvo.get("desnutricao_mov_rodadas", 0) or 0), duracao)
+            efeitos = [f"-{dreno} Fome"]
+            if not save_ok:
+                efeitos.append(f"-1 Movimento por {duracao} rodadas")
+        else:
+            if not save_ok:
+                alvo["desnutricao_rodadas"] = max(
+                    int(alvo.get("desnutricao_rodadas", 0) or 0), duracao)
+                alvo["desnutricao_ataque_penalidade"] = -int(magia.get("monstro_ataque_penalidade", 1) or 1)
+                alvo["desnutricao_dano_penalidade"] = -int(magia.get("monstro_dano_penalidade", 2) or 2)
+            efeitos = ([f"pode apenas atacar ou movimentar por {duracao} rodadas",
+                        "-1 Ataque", "-2 Dano"] if not save_ok else ["resistiu à Desnutrição"])
+
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "desnutricao", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "success": True, "passed": bool(save_ok), "effects": efeitos,
+        })
+        await self.gm_say(
+            f"{nome_criatura(alvo)} {'resiste à' if save_ok else 'sofre os efeitos da'} "
+            f"Desnutrição: {'; '.join(efeitos)}.")
+
+    async def _executar_definhar(self, caster, magia, data):
+        """Drena Fome e Sede em uma área quadrada e exaure monstros vivos.
+
+        A magia mantém a mesma lógica de resistência da Desnutrição, mas troca
+        o alvo único por uma área. O estado dos monstros é separado para que
+        os efeitos possam coexistir sem sobrescrever a Desnutrição.
+        """
+        data = data or {}
+        nivel = self._nivel_conjurador(caster)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "Escolha o centro da área de Definhar."})
+            return
+        alcance = int(magia.get("alcance", 6) or 6)
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
+            return
+        if not self._alcance_com_altura(caster, [cx, cy], alcance):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.alvo_fora_do_alcance", alcance=alcance)})
+            return
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.parede_bloqueia_magia", alvo="o centro da área")})
+            return
+
+        lado = int(magia.get("area_lado", 3) or 3) + (
+            nivel // int(magia.get("area_lado_niveis", 3) or 3))
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        if not tiles:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "A área escolhida não contém piso válido."})
+            return
+        area_set = {(int(x), int(y)) for x, y in tiles}
+        alvos = []
+        for alvo in self._alvos_no_inverno(tiles):
+            posicoes = (self._monster_tiles(alvo)
+                        if alvo.get("id") in self.monsters else [alvo.get("pos", [])])
+            if any(self._tem_linha_de_visao([cx, cy], pos)
+                   for pos in posicoes
+                   if len(pos) >= 2 and (int(pos[0]), int(pos[1])) in area_set):
+                alvos.append(alvo)
+        duracao = max(1, int(magia.get("duracao", 2) or 2))
+        animation_id = f"definhar_{caster['id']}_{self.round_num}_{cx}_{cy}_{new_id()}"
+        distancia_visual = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
+        travel_ms = max(560, min(1150, 450 + distancia_visual * 145))
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "definhar", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "origin": list(caster["pos"]), "center": [cx, cy],
+            "tiles": [list(tile) for tile in tiles], "side": lado,
+            "targets": [{"id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0]))}
+                        for alvo in alvos],
+            "travel_ms": travel_ms, "impact_ms": 900,
+        })
+
+        drenados = []
+        imunes = []
+        for alvo in alvos:
+            if self._definhar_imune(alvo):
+                imunes.append(alvo.get("id"))
+                continue
+            save_ok, *_ = await self._save_mostrado(
+                alvo, "fortitude", self._dif_magia(caster, magia))
+            if self._eh_jogador(alvo):
+                dreno = int(magia.get("fome_sede_dreno_sucesso", 10)
+                            if save_ok else magia.get("fome_sede_dreno", 20))
+                alvo["fome"] = max(0, int(alvo.get("fome", 0) or 0) - dreno)
+                alvo["sede"] = max(0, int(alvo.get("sede", 0) or 0) - dreno)
+                self._verificar_estado_sobrevivencia(alvo)
+                drenados.append({"id": alvo.get("id"), "fome": dreno,
+                                 "sede": dreno, "passed": bool(save_ok)})
+            elif not save_ok:
+                alvo["definhar_rodadas"] = max(
+                    int(alvo.get("definhar_rodadas", 0) or 0), duracao)
+                alvo["definhar_ataque_penalidade"] = -int(
+                    magia.get("monstro_ataque_penalidade", 2) or 2)
+                alvo["definhar_dano_penalidade"] = -int(
+                    magia.get("monstro_dano_penalidade", 4) or 4)
+                drenados.append({"id": alvo.get("id"), "passed": False,
+                                 "monster": True})
+
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "definhar", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "center": [cx, cy], "tiles": [list(tile) for tile in tiles],
+            "side": lado, "duration_rounds": duracao,
+            "affected": drenados, "immune_ids": imunes, "success": True,
+        })
+        await self.gm_say(
+            f"{caster['name']} faz a vida definhar em uma área {lado}x{lado}: "
+            f"{len(drenados)} alvo(s) afetado(s) e {len(imunes)} imune(s).")
 
     async def _executar_criar_alimentos(self, caster, magia, data, dmg_mult=1):
         """Materializa um baú adjacente com provisões aleatórias da taverna."""
@@ -23016,6 +23284,15 @@ class GameRoom:
         if p.get("dormindo"):
             await self.gm_say(T("narracao.esta_dormindo_nao_pode_agir_neste_turno", heroi=p['name']))
 
+    def _preparar_desnutricao_jogador_turno(self, p):
+        """Ativa a penalidade de movimento somente nos dois próximos turnos."""
+        restante = max(0, int(p.get("desnutricao_mov_rodadas", 0) or 0))
+        p["_desnutricao_mov_ativa"] = restante > 0
+        if restante:
+            p["desnutricao_mov_rodadas"] = restante - 1
+        else:
+            p.pop("desnutricao_mov_rodadas", None)
+
     async def _status_monstro_turno(self, m, alive_monsters):
         """Resolve status de controle no turno do monstro. Retorna 'pulou' se o
         turno foi consumido pelo status (não deve agir normalmente)."""
@@ -23065,6 +23342,26 @@ class GameRoom:
                 if m["lento_pulou"]:
                     await self.gm_say(T("narracao.esta_lento_e_perde_o_turno", monstro=nome_criatura(m)))
                     return "pulou"
+        # Desnutrição não tira o turno: durante as duas rodadas seguintes a IA
+        # é limitada a uma escolha, ataque OU deslocamento.
+        restante_desnutricao = max(0, int(m.get("desnutricao_rodadas", 0) or 0))
+        m["_desnutricao_restrito_turno"] = restante_desnutricao > 0
+        if restante_desnutricao:
+            m["desnutricao_rodadas"] = restante_desnutricao - 1
+        else:
+            m.pop("desnutricao_rodadas", None)
+            m.pop("desnutricao_ataque_penalidade", None)
+            m.pop("desnutricao_dano_penalidade", None)
+        # Definhar mantém um contador próprio para poder coexistir com a
+        # Desnutrição sem renovar ou apagar o efeito da outra magia.
+        restante_definhar = max(0, int(m.get("definhar_rodadas", 0) or 0))
+        m["_definhar_restrito_turno"] = restante_definhar > 0
+        if restante_definhar:
+            m["definhar_rodadas"] = restante_definhar - 1
+        else:
+            m.pop("definhar_rodadas", None)
+            m.pop("definhar_ataque_penalidade", None)
+            m.pop("definhar_dano_penalidade", None)
         # Movimento reduzido (Cola): NÃƒO pula o turno â€” sÃ³ reduz o passo. Conta
         # ANTES de decrementar (como o Sono) para garantir `duracao` turnos
         # reduzidos de verdade â€” senÃ£o restauraria cedo demais (off-by-one).
@@ -24106,7 +24403,7 @@ class GameRoom:
             "animation_id": animation_id, "caster_id": caster["id"],
             "origin": list(caster["pos"]), "center": [cx, cy],
             "tiles": [list(tile) for tile in tiles], "material": terreno,
-            "travel_ms": travel_ms, "impact_ms": 980,
+            "charge_ms": 760, "travel_ms": travel_ms, "impact_ms": 980,
         })
 
         permanente = bool(data.get("permanente"))
@@ -24213,7 +24510,8 @@ class GameRoom:
             "animation_id": animation_id, "caster_id": caster["id"],
             "origin": list(caster["pos"]), "center": [cx, cy],
             "tiles": [list(tile) for tile in tiles], "material": terreno,
-            "travel_ms": travel_ms, "impact_ms": 980,
+            "charge_ms": 820,
+            "travel_ms": travel_ms, "impact_ms": 1350,
         })
 
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + nivel + int(dur_bonus or 0)
@@ -24445,6 +24743,24 @@ class GameRoom:
         lado = int(ciclone.get("lado", 2) or 2)
         return [(int(x) + dx, int(y) + dy) for dy in range(lado) for dx in range(lado)]
 
+    def _tempestade_ciclone_spin_ms(self, zona, ciclone):
+        """Velocidade visual estável do ciclone, espelhada pelo renderer."""
+        for i, atual in enumerate(zona.get("ciclones", [])):
+            if atual is ciclone or int(atual.get("id", -1)) == int(ciclone.get("id", -2)):
+                return 520 + i * 48
+        return 520
+
+    def _tempestade_target_kind(self, alvo):
+        if alvo in self.players.values():
+            return "player"
+        if alvo in self.monsters.values():
+            return "monster"
+        if any(alvo is animado for animado in self._all_animados()):
+            return "animado"
+        if self.prisoner is alvo:
+            return "prisoner"
+        return "entity"
+
     def _tempestade_em_tiles(self, posicoes, zona):
         area = {(int(x), int(y)) for x, y in zona.get("tiles", [])}
         return any(pos in area for pos in posicoes)
@@ -24478,32 +24794,74 @@ class GameRoom:
         zona.setdefault("quedas_tempestade_rodada", {})[str(alvo.get("id"))] = self.round_num
         return True
 
-    async def _tempestade_aplicar_ciclone(self, alvo, zona):
+    async def _tempestade_notificar_alvo_ciclone(self, alvo, zona, ciclone, passou):
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "tempestade_ciclones",
+            "phase": "cyclone_target", "animation_id": zona.get("id"),
+            "zone_id": zona.get("id"), "cyclone_id": ciclone.get("id"),
+            "target_id": alvo.get("id"), "target_kind": self._tempestade_target_kind(alvo),
+            "target_pos": list(alvo.get("pos", [])),
+            "passed": bool(passou), "trapped": not bool(passou),
+            "spin_ms": self._tempestade_ciclone_spin_ms(zona, ciclone),
+            "center": [zona.get("cx", 0), zona.get("cy", 0)],
+            "tiles": zona.get("tiles", []), "side": zona.get("lado", 3),
+            "ciclones": zona.get("ciclones", []),
+        })
+
+    async def _tempestade_aplicar_ciclone(self, alvo, zona, ciclone=None):
         if not alvo or not self._vivo(alvo):
-            return
+            return None
         posicoes = self._tempestade_posicoes(alvo)
-        if not any(self._tempestade_em_tiles([pos], zona) and any(pos in self._tempestade_ciclone_tiles(c) for c in zona.get("ciclones", [])) for pos in posicoes):
-            return
+        if ciclone is None:
+            atingido = any(
+                self._tempestade_em_tiles([pos], zona)
+                and any(pos in self._tempestade_ciclone_tiles(c)
+                        for c in zona.get("ciclones", []))
+                for pos in posicoes)
+            ciclone = next((c for c in zona.get("ciclones", [])
+                            if any(pos in self._tempestade_ciclone_tiles(c)
+                                   for pos in posicoes)), None)
+        else:
+            cyclone_tiles = set(self._tempestade_ciclone_tiles(ciclone))
+            atingido = any(
+                self._tempestade_em_tiles([pos], zona) and pos in cyclone_tiles
+                for pos in posicoes)
+        if not atingido or ciclone is None:
+            return None
         vistos = zona.setdefault("alvos_ciclone_rodada", {})
         aid = str(alvo.get("id"))
         if vistos.get(aid) == self.round_num:
-            return
+            return None
         vistos[aid] = self.round_num
         if zona.get("quedas_tempestade_rodada", {}).get(aid) == self.round_num:
-            return
+            return None
         passou = await self._tempestade_dano(alvo, "1d8", DMG_PHYSICAL, "reflexos",
                                              zona.get("save_dif", 13), zona.get("dmg_mult", 1),
                                              "🌪️ Ciclone")
         alvo["turbilhao_perde_movimento"] = True
         if not passou:
             alvo["turbilhao_perde_acao"] = True
+        await self._tempestade_notificar_alvo_ciclone(alvo, zona, ciclone, passou)
+        return {"target_id": aid, "target_kind": self._tempestade_target_kind(alvo),
+                "cyclone_id": ciclone.get("id"), "passed": bool(passou),
+                "trapped": not bool(passou)}
 
-    async def _tempestade_verificar_entrada(self, alvo, origem=None, destino=None):
+    async def _tempestade_verificar_entrada(self, alvo, origem=None, destino=None, ciclone=None):
         if not alvo or not self._vivo(alvo):
             return
         old = {(int(origem[0]), int(origem[1]))} if origem else set()
         new = self._tempestade_posicoes(alvo)
         for zona in self._tempestade_zonas_ativas():
+            if ciclone is not None:
+                if not any(c is ciclone or int(c.get("id", -1)) == int(ciclone.get("id", -2))
+                           for c in zona.get("ciclones", [])):
+                    continue
+                cyclone_tiles = set(self._tempestade_ciclone_tiles(ciclone))
+                if not any(self._tempestade_em_tiles([p], zona) and p in cyclone_tiles for p in new):
+                    continue
+                await self._tempestade_testar_voo(alvo, zona, "entrada")
+                await self._tempestade_aplicar_ciclone(alvo, zona, ciclone)
+                continue
             if not any(self._tempestade_em_tiles([p], zona) for p in new):
                 continue
             entrou = not old or any(self._tempestade_em_tiles([p], zona) for p in new) and not any(self._tempestade_em_tiles([p], zona) for p in old)
@@ -24575,6 +24933,7 @@ class GameRoom:
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "start",
                               "animation_id": zone_id, "caster_id": caster["id"], "origin": list(caster["pos"]),
                               "center": [cx, cy], "tiles": [list(t) for t in sorted(area)], "side": lado,
+                              "charge_ms": 900,
                               "ciclones": anchors, "travel_ms": max(620, min(1250, 520 + max(abs(caster["pos"][0]-cx), abs(caster["pos"][1]-cy))*145))})
         self.zonas_especiais.append(zona)
         for alvo in list(self._tempestade_entidades()):
@@ -24609,7 +24968,11 @@ class GameRoom:
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "cyclone_move",
                               "animation_id": zona["id"], "zone_id": zona["id"], "ciclone_id": ciclone["id"],
                               "from_pos": old, "to_pos": [ax, ay], "ciclones": zona["ciclones"]})
-        await self._tempestade_verificar_entrada(next((a for a in self._tempestade_entidades() if a.get("pos") == [ax, ay]), None), None, None)
+        # O ciclone ocupa 2x2: o alvo pode estar em qualquer uma das quatro
+        # casas, não apenas na âncora [ax, ay]. Cada criatura atingida faz o
+        # teste imediatamente; a falha também gera o marcador visual no cliente.
+        for alvo in list(self._tempestade_entidades()):
+            await self._tempestade_verificar_entrada(alvo, None, None, ciclone)
         await self.push_state()
 
     def _prisao_chamas_entidades(self):
@@ -26558,6 +26921,17 @@ class GameRoom:
         """Penalidade ativa de veneno para uma chave (valor já assinado, ≤ 0)."""
         return alvo.get("penalidades", {}).get(chave, 0)
 
+    def _privacao_monstro_penalidade(self, monstro, chave):
+        """Soma as penalidades de combate das privações alimentares ativas."""
+        if not monstro:
+            return 0
+        total = 0
+        if monstro.get("_desnutricao_restrito_turno"):
+            total += int(monstro.get(f"desnutricao_{chave}_penalidade", 0) or 0)
+        if monstro.get("_definhar_restrito_turno"):
+            total += int(monstro.get(f"definhar_{chave}_penalidade", 0) or 0)
+        return total
+
     def _grito_mov_bonus(self, p):
         """+N de movimento transitório (Técnica Grito de Guerra) enquanto válido
         nesta rodada. Alma Quebrada anula — é bônus concedido por aliado."""
@@ -26571,7 +26945,8 @@ class GameRoom:
         maldicao_mov = self._maldicao_mod(p, "movimento")
         return max(0, p["spd"] + self._cancao_bonus(p, "bonus_mov")
                    + self._pen(p, "movimento") + self._doenca_mov_pen(p)
-                   + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p) + maldicao_mov)
+                   + self._grito_mov_bonus(p) - self._corrosao_spd_pen(p) + maldicao_mov
+                   - (1 if p.get("_desnutricao_mov_ativa") else 0))
 
     def _water_tile_kind(self, x, y):
         """Retorna o tipo de água da casa, ou ``None`` se não for água."""
@@ -27830,12 +28205,18 @@ class GameRoom:
             return
         if not pid:
             return
-        await self.send_to(pid, {
+        payload = {
             "type": "trap_result", "nome": nome, "icone": icone,
             "sucesso": sucesso, "dano": dano, "metade": metade,
             "descricao": descricao, "efeitos_extra": efeitos_extra, "tick": tick,
             "tipo_id": tipo_id, **extras,
-        })
+        }
+        # A posição autoritativa acompanha o evento para que o renderer consiga
+        # animar a casa exata mesmo quando o trap_result chega antes do próximo
+        # game_state (principalmente ao pisar numa armadilha durante movimento).
+        if isinstance(alvo.get("pos"), (list, tuple)) and len(alvo["pos"]) >= 2:
+            payload["pos"] = [alvo["pos"][0], alvo["pos"][1]]
+        await self.send_to(pid, payload)
 
     async def _disparar_armadilha(self, alvo, arm):
         """Dispara a armadilha sobre `alvo` (jogador OU monstro)."""
@@ -33060,6 +33441,7 @@ class GameRoom:
         gigante_mira_bonus = self._gigante_mira_bonus(m)
         gigante_heroic_damage_bonus = self._gigante_heroic_damage_bonus(m)
         m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+                 + self._privacao_monstro_penalidade(m, "ataque")
                  + (2 if m.get("furia_lobisomem") else 0)
                  + m.get("equipment_attack_bonus", 0)
                  + self._bonus_ferrao_lacralion(m, target, atk_def)
@@ -33207,6 +33589,7 @@ class GameRoom:
                 # rolagem; aqui entra somente o bônus fixo de dano.
                 charge_bonus += charge_damage
             dmg = max(1, raw_dmg + attr_dmg + charge_bonus + self._pen(m, "dano") + self._mod_magia(m, "dano")
+                      + self._privacao_monstro_penalidade(m, "dano")
                       + self._furia_bonus(m)                         # FÃºria (HP < 50%)
                       + self._investida_bonus(m)                     # Investida Brutal (moveu)
                       + self._impacto_devastador_bonus(m)            # Elemental de Pedra: parado
@@ -36488,10 +36871,36 @@ class GameRoom:
             if m["pos"] == antes:
                 break
 
+    async def _ai_monstro_desnutrido(self, m, targets):
+        """Privação alimentar limita o turno: o monstro escolhe atacar ou andar."""
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        ataques = [atk for atk in m.get("attacks", [])
+                   if self._monster_attack_in_range(m, target.get("pos", []), atk)]
+        if ataques:
+            # O ataque ainda pode conter vários golpes, mas nenhum deslocamento
+            # é feito neste turno. Habilidades especiais ficam para o próximo.
+            for atk_def in ataques:
+                for _ in range(max(1, int(atk_def.get("num_attacks", 1) or 1))):
+                    if not self._alvo_vivo(target_obj):
+                        return
+                    await self._execute_one_monster_attack(m, atk_def, target_obj)
+            return
+        while m.get("_water_moves_left", 0) > 0:
+            antes = list(m.get("pos", []))
+            await self._monster_move_step(m, target.get("pos", []))
+            if m.get("pos") == antes:
+                break
+
     async def _run_monster_ai(self, m, targets):
         """Despacha para a IA específica do monstro."""
         self._expirar_editor_ability_effect(m)
         if not targets:
+            return
+        if m.get("_desnutricao_restrito_turno") or m.get("_definhar_restrito_turno"):
+            await self._ai_monstro_desnutrido(m, targets)
             return
         if m.get("foge_se_nd_zero"):
             await self._ai_fugitivo(m, targets)
@@ -37777,7 +38186,9 @@ class GameRoom:
                 # Envia AMBOS os dados ao cliente: o "descartado" (maior) marcado para
                 # animar em vermelho, e o "usado" (menor â€” pior) marcado em verde.
                 # Penalidade de veneno no ataque do monstro (cego/escorpiÃ£o), se houver.
-                m_atk = m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque") + self._acorde_atk_pen(m)  # AmaldiÃ§oar / Tambor RÃºnico
+                m_atk = (m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+                         + self._privacao_monstro_penalidade(m, "ataque")
+                         + self._acorde_atk_pen(m))  # AmaldiÃ§oar / Desnutrição / Tambor RÃºnico
                 # Desvantagem: ProvocaÃ§Ã£o OU atacar Ã s cegas na escuridÃ£o. Vantagem: ver na escuridÃ£o.
                 esc = self._verificar_escuridao(m, target)
                 prov = bool(m.get("provocado_turno_efeito"))
@@ -37814,7 +38225,12 @@ class GameRoom:
                 if hit:
                     raw_dmg = roll_dice(m["damage"])
                     if crit: raw_dmg *= 2
-                    dmg = max(1, raw_dmg + self._pen(m, "dano") + self._mod_magia(m, "dano"))  # AmaldiÃ§oar
+                    dmg = max(1, raw_dmg + self._pen(m, "dano") + self._mod_magia(m, "dano")
+                              + (int(m.get("desnutricao_dano_penalidade", 0) or 0)
+                                 if m.get("_desnutricao_restrito_turno") else 0))  # Amaldiçoar / Desnutrição
+                    dmg = max(1, dmg + self._privacao_monstro_penalidade(m, "dano")
+                              - (int(m.get("desnutricao_dano_penalidade", 0) or 0)
+                                 if m.get("_desnutricao_restrito_turno") else 0))
                     die_type = "d" + m["damage"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": T("dado.dano")})

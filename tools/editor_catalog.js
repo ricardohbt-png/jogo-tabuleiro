@@ -9729,6 +9729,20 @@ window.EDITOR_CATALOG = {
       "alcance": 1
     },
     {
+      "id": "maldicao_corpo_pesado",
+      "nome": "Maldição do Corpo Pesado",
+      "circulo": "primeiro",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "⛓️",
+      "tipo": "alvo_jogador",
+      "descricao": "Alvo único. Vontade nega. Durante 1d6 + nível de conjurador rodadas, os custos de Fome e Sede do alvo são duplicados.",
+      "save": "vontade",
+      "alcance": 6,
+      "duracao": "1d6"
+    },
+    {
       "id": "silencio",
       "nome": "Silêncio",
       "circulo": "segundo",
@@ -9757,6 +9771,35 @@ window.EDITOR_CATALOG = {
       "area_lado": 4,
       "alcance_base": 7,
       "duracao": "1d4"
+    },
+    {
+      "id": "desnutricao",
+      "nome": "Desnutrição",
+      "circulo": "segundo",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "🍖",
+      "tipo": "alvo_inimigo",
+      "descricao": "Alvo único. Fortitude: falha → jogador perde 20 Fome e -1 Movimento por 2 rodadas; sucesso → perde 10 Fome. Monstro vivo: falha → por 2 rodadas pode apenas atacar ou movimentar, com -1 Ataque e -2 Dano. Mortos-vivos e construtos são imunes.",
+      "save": "fortitude",
+      "alcance": 6,
+      "duracao": 2
+    },
+    {
+      "id": "definhar",
+      "nome": "Definhar",
+      "circulo": "terceiro",
+      "classe": [
+        "cleric"
+      ],
+      "icone": "🥀",
+      "tipo": "area_fixa",
+      "descricao": "Área 3x3 (+1 casa a cada 3 níveis), afetando todas as criaturas vivas na área. Fortitude: falha → jogadores perdem 20 Fome e 20 Sede; sucesso → perdem 10 de cada. Monstros vivos que falharem podem apenas atacar ou movimentar por 2 rodadas, com -2 Ataque e -4 Dano. Mortos-vivos e construtos são imunes.",
+      "save": "fortitude",
+      "area_lado": 3,
+      "alcance": 6,
+      "duracao": 2
     },
     {
       "id": "senhor_das_aguas",

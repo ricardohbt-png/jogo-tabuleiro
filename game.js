@@ -7715,6 +7715,295 @@ function _drawMovePreview2D(ctx, state, terrainSet){
   ctx.restore();
 }
 
+// ── Animações visuais das armadilhas ───────────────────────────────────────
+// Armadilhas são resolvidas no servidor. Este bloco apenas interpreta o
+// trap_result privado recebido pelo jogador afetado e desenha a antecipação,
+// o disparo e o impacto, sem alterar dano, saves ou estado da partida.
+const _armadilhaAnims = [];
+let _armadilha2DRaf = null;
+
+function _armadilhaId(msg){
+  return String(msg?.tipo_id || msg?.tipo || '').toLowerCase();
+}
+
+function _armadilhaStyle(msg){
+  const id = _armadilhaId(msg);
+  if(id.includes('pendulo') || id.includes('guilhotina') || id.includes('lamina') || id.includes('dardo'))
+    return {kind:'blade', color:'#e4edf5', hot:'#ff435f', dark:'#721b31', icon:'⚔'};
+  if(id.includes('gelo') || id.includes('congel') || id.includes('frio'))
+    return {kind:'ice', color:'#baf6ff', hot:'#39cfff', dark:'#1d4d8f', icon:'❄'};
+  if(id.includes('rede'))
+    return {kind:'net', color:'#d9b6ff', hot:'#9d5dff', dark:'#342062', icon:'🕸'};
+  if(id.includes('teto') || id.includes('esmag') || id.includes('prensa'))
+    return {kind:'crush', color:'#d6ae89', hot:'#ff7147', dark:'#4b2c24', icon:'⬇'};
+  if(id.includes('venen') || id.includes('poison'))
+    return {kind:'poison', color:'#b7ff55', hot:'#d8ff36', dark:'#3e214f', icon:'☠'};
+  if(id.includes('gas') || id.includes('fumaca') || id.includes('nuvem'))
+    return {kind:'gas', color:'#d7ed58', hot:'#ffe36a', dark:'#4c5e24', icon:'☁'};
+  if(id.includes('mina') || id.includes('explos') || id.includes('fogo') || id.includes('incend'))
+    return {kind:'mine', color:'#ffb347', hot:'#ff3c20', dark:'#722211', icon:'✹'};
+  if(id.includes('teleport') || id.includes('teletrans'))
+    return {kind:'teleport', color:'#b88cff', hot:'#5ad7ff', dark:'#38206e', icon:'🌀'};
+  if(id.includes('acido') || id.includes('ácido'))
+    return {kind:'acid', color:'#efff68', hot:'#91ff35', dark:'#52651f', icon:'☣'};
+  return {kind:'generic', color:'#ffcb62', hot:'#ff5a38', dark:'#54253b', icon:'⚠'};
+}
+
+function _armadilhaPos(msg, state=GS.gameState){
+  const raw = msg?.pos || msg?.target_pos || msg?.alvo_pos;
+  if(Array.isArray(raw) && raw.length >= 2 && raw.every(Number.isFinite)) return [raw[0], raw[1]];
+  const id = msg?.target_id ?? msg?.alvo_id ?? GS.myPid;
+  const alvo = (state?.players || []).find(p => String(p.id) === String(id) && p.pos)
+    || (state?.players || []).find(p => String(p.id) === String(GS.myPid) && p.pos);
+  return alvo?.pos ? [alvo.pos[0], alvo.pos[1]] : null;
+}
+
+function _armadilhaProgress(anim, now){
+  return Math.max(0, Math.min(1, (now - anim.startedAt) / anim.duration));
+}
+
+function _armadilhaDraw2D(ctx, state, anim, now){
+  const p = _armadilhaProgress(anim, now);
+  const style = anim.style;
+  const [tx, ty] = anim.pos;
+  const cx = tx * CELL + CELL / 2, cy = ty * CELL + CELL / 2;
+  const q = p < .30 ? p / .30 : 1;
+  const impact = Math.max(0, Math.min(1, (p - .23) / .50));
+  const fade = p > .67 ? Math.max(0, 1 - (p - .67) / .33) : 1;
+  const intensity = anim.msg?.sucesso ? (anim.msg?.metade ? .78 : .58) : 1;
+  const pulse = .55 + .45 * Math.sin(now / 65 + anim.seed);
+  const radius = CELL * (.27 + q * .52);
+  const rgba = (hex, a) => {
+    const n = parseInt(hex.slice(1), 16);
+    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${Math.max(0, a * fade * intensity).toFixed(3)})`;
+  };
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Marca no chão: todo disparo nasce de uma pulsação curta antes do impacto.
+  ctx.strokeStyle = rgba(style.hot, .72 + .18 * pulse);
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = rgba(style.color, .26);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(0, 0, radius * (.66 + .10 * pulse), 0, Math.PI * 2); ctx.stroke();
+
+  const drawRay = (angle, length, width=2) => {
+    ctx.save(); ctx.rotate(angle);
+    ctx.strokeStyle = rgba(style.hot, .65 + .30 * impact);
+    ctx.lineWidth = width;
+    ctx.beginPath(); ctx.moveTo(CELL * .08, 0); ctx.lineTo(length, 0); ctx.stroke();
+    ctx.restore();
+  };
+  const drawShard = (angle, dist, size) => {
+    ctx.save(); ctx.rotate(angle); ctx.translate(dist, 0);
+    ctx.fillStyle = rgba(style.color, .80);
+    ctx.strokeStyle = rgba(style.hot, .92); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(size, 0); ctx.lineTo(-size * .45, size * .52);
+    ctx.lineTo(-size * .38, -size * .52); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+  };
+
+  if(style.kind === 'blade'){
+    const sweep = -1.0 + Math.min(1, impact * 2.4);
+    ctx.save(); ctx.rotate(sweep);
+    ctx.strokeStyle = rgba(style.color, .95); ctx.lineWidth = CELL * .12;
+    ctx.beginPath(); ctx.moveTo(-CELL * .72, -CELL * .58); ctx.lineTo(CELL * .72, CELL * .58); ctx.stroke();
+    ctx.strokeStyle = rgba(style.hot, .95); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-CELL * .78, -CELL * .64); ctx.lineTo(CELL * .78, CELL * .64); ctx.stroke(); ctx.restore();
+    drawRay(-Math.PI * .25, CELL * (.56 + impact * .58), 1.5);
+    drawRay(Math.PI * .75, CELL * (.56 + impact * .58), 1.5);
+  } else if(style.kind === 'ice'){
+    for(let i=0;i<8;i++) drawShard(i * Math.PI / 4 + .2, radius * (.42 + impact * .48), CELL * (.10 + .06 * impact));
+    for(let i=0;i<4;i++) drawRay(i * Math.PI / 2 + Math.PI / 4, CELL * (.35 + impact * .54), 1.5);
+  } else if(style.kind === 'net'){
+    ctx.strokeStyle = rgba(style.color, .88); ctx.lineWidth = 2;
+    for(let i=0;i<8;i++){
+      const a = i * Math.PI / 4 + now / 1800;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*radius, Math.sin(a)*radius); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(0,0,radius*.52,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,radius*.80,0,Math.PI*2); ctx.stroke();
+  } else if(style.kind === 'crush'){
+    const down = Math.min(1, impact * 1.35);
+    ctx.fillStyle = rgba(style.dark, .70); ctx.fillRect(-CELL*.57, -CELL*.92 + down*CELL*.70, CELL*1.14, CELL*.30);
+    ctx.fillStyle = rgba(style.hot, .58); ctx.fillRect(-CELL*.52, -CELL*.92 + down*CELL*.70, CELL*1.04, CELL*.07);
+    for(let i=0;i<5;i++) drawRay((i-2)*.45, CELL * (.34 + impact*.40), 1.5);
+  } else if(style.kind === 'poison' || style.kind === 'gas'){
+    const spread = radius * (1.0 + impact * .42);
+    for(let i=0;i<7;i++){
+      const a = i * 2.399 + anim.seed;
+      const rr = spread * (.24 + (i%3)*.18);
+      ctx.fillStyle = rgba(style.color, .15 + .07 * pulse);
+      ctx.beginPath(); ctx.arc(Math.cos(a)*rr, Math.sin(a)*rr, CELL*(.18 + (i%2)*.06), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.strokeStyle = rgba(style.hot, .62); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0,0,spread*.78,0,Math.PI*2); ctx.stroke();
+  } else if(style.kind === 'mine'){
+    for(let i=0;i<10;i++) drawRay(i * Math.PI / 5, CELL * (.38 + impact*.68), i%2 ? 2 : 3);
+    ctx.fillStyle = rgba(style.hot, .52 + .25 * pulse);
+    ctx.beginPath(); ctx.arc(0,0,CELL*(.18 + impact*.24),0,Math.PI*2); ctx.fill();
+  } else if(style.kind === 'teleport'){
+    ctx.strokeStyle = rgba(style.color, .85); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0,0,radius*.68, -now/300, Math.PI*1.35-now/300); ctx.stroke();
+    ctx.strokeStyle = rgba(style.hot, .78); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0,0,radius*.46, now/250, Math.PI*1.55+now/250); ctx.stroke();
+  } else if(style.kind === 'acid'){
+    for(let i=0;i<7;i++){
+      const a = i * 1.83 + anim.seed;
+      const rr = CELL * (.20 + impact*.55) * (i%2 ? .7 : 1);
+      ctx.fillStyle = rgba(style.color, .75);
+      ctx.beginPath(); ctx.arc(Math.cos(a)*rr, Math.sin(a)*rr, CELL*(.045 + .025*(i%3)), 0, Math.PI*2); ctx.fill();
+    }
+    for(let i=0;i<4;i++) drawRay(i*Math.PI/2+.35, CELL*(.38+impact*.46), 1.5);
+  } else {
+    for(let i=0;i<8;i++) drawRay(i*Math.PI/4, CELL*(.35+impact*.48), 2);
+  }
+
+  if(impact > 0){
+    ctx.fillStyle = rgba(style.hot, .20 * (1-impact));
+    ctx.beginPath(); ctx.arc(0,0,CELL*(.18+impact*.42),0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.font = `bold ${Math.max(12, CELL * .32)}px sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = rgba(style.color, .90);
+  ctx.shadowColor = rgba(style.hot, .90); ctx.shadowBlur = 7;
+  ctx.fillText(style.icon, 0, -CELL*.67 - Math.sin(now/130)*2);
+  ctx.font = `bold ${Math.max(10, CELL * .22)}px sans-serif`;
+  ctx.fillStyle = rgba(anim.msg?.sucesso ? '#9dffbc' : '#ff9b78', .95);
+  ctx.fillText(anim.msg?.sucesso ? '✓' : '!', CELL*.34, CELL*.48);
+  ctx.restore();
+}
+
+function _disposeArmadilhaGroup(group){
+  if(!group) return;
+  group.traverse(obj => {
+    if(obj.geometry?.dispose) obj.geometry.dispose();
+    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for(const mat of mats) if(mat?.dispose) mat.dispose();
+  });
+  if(group.parent) group.parent.remove(group);
+}
+
+function _buildArmadilha3D(anim){
+  if(!g3?.scene || !g3.T || anim.group) return;
+  const T = g3.T, s = anim.style, group = new T.Group();
+  group.name = `trap-fx-${_armadilhaId(anim.msg)}`;
+  const mat = (color, opacity=.75, emissive=true) => new T.MeshBasicMaterial({
+    color, transparent:true, opacity, depthWrite:false,
+    blending:T.AdditiveBlending
+  });
+  const ringMat = mat(s.hot, .80);
+  const ring = new T.Mesh(new T.TorusGeometry(.38, .026, 8, 36), ringMat);
+  ring.rotation.x = Math.PI/2; ring.userData.trapRing = 1; group.add(ring);
+  const ring2 = new T.Mesh(new T.TorusGeometry(.64, .014, 6, 36), mat(s.color, .55));
+  ring2.rotation.x = Math.PI/2; ring2.userData.trapRing = 2; group.add(ring2);
+  const core = new T.Mesh(new T.SphereGeometry(.12, 10, 8), mat(s.hot, .82));
+  core.userData.trapCore = 1; group.add(core);
+
+  const addLine = (points, opacity=.8) => {
+    const geo = new T.BufferGeometry().setFromPoints(points);
+    const line = new T.Line(geo, new T.LineBasicMaterial({color:s.color, transparent:true, opacity, depthWrite:false, blending:T.AdditiveBlending}));
+    line.userData.trapLine = 1; group.add(line); return line;
+  };
+  for(let i=0;i<8;i++){
+    const a = i*Math.PI/4;
+    addLine([new T.Vector3(Math.cos(a)*.12,.07,Math.sin(a)*.12), new T.Vector3(Math.cos(a)*.82,.07,Math.sin(a)*.82)], .62);
+  }
+  if(s.kind === 'blade'){
+    const blade = new T.Mesh(new T.BoxGeometry(1.25,.055,.09), mat(s.color,.92));
+    blade.rotation.y = -.55; blade.position.y = .58; blade.userData.trapBlade = 1; group.add(blade);
+  } else if(s.kind === 'crush'){
+    const block = new T.Mesh(new T.BoxGeometry(1.08,.25,1.08), mat(s.dark,.84));
+    block.position.y = 1.35; block.userData.trapCrush = 1; group.add(block);
+  } else if(s.kind === 'ice'){
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3, shard=new T.Mesh(new T.ConeGeometry(.075,.36,5),mat(s.color,.82));
+      shard.position.set(Math.cos(a)*.46,.18,Math.sin(a)*.46); shard.userData.trapShard = 1; group.add(shard);
+    }
+  } else if(s.kind === 'net'){
+    for(let i=0;i<3;i++){
+      const netRing = new T.Mesh(new T.TorusGeometry(.25+i*.16,.012,5,28),mat(s.color,.66));
+      netRing.rotation.x=Math.PI/2; netRing.rotation.z=i*.25; netRing.userData.trapNet=i; group.add(netRing);
+    }
+  } else if(s.kind === 'poison' || s.kind === 'gas'){
+    for(let i=0;i<7;i++){
+      const a=i*2.399, puff=new T.Mesh(new T.SphereGeometry(.13+(i%3)*.035,8,6),mat(s.color,.25));
+      puff.position.set(Math.cos(a)*(.25+(i%2)*.22),.16+(i%3)*.08,Math.sin(a)*(.25+(i%2)*.22));
+      puff.userData.trapPuff = 1; puff.userData.trapAngle = a; group.add(puff);
+    }
+  } else if(s.kind === 'mine'){
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4, shard=new T.Mesh(new T.ConeGeometry(.035,.28,5),mat(s.hot,.75));
+      shard.position.set(Math.cos(a)*.28,.18,Math.sin(a)*.28); shard.userData.trapShard=1; shard.userData.trapAngle=a; group.add(shard);
+    }
+  } else if(s.kind === 'acid'){
+    for(let i=0;i<6;i++){
+      const a=i*1.83, drop=new T.Mesh(new T.SphereGeometry(.045,7,6),mat(s.color,.82));
+      drop.position.set(Math.cos(a)*.25,.65+(i%3)*.11,Math.sin(a)*.25); drop.userData.trapDrop=1; drop.userData.trapAngle=a; group.add(drop);
+      drop.userData.trapBaseX = drop.position.x;
+      drop.userData.trapBaseY = drop.position.y;
+      drop.userData.trapBaseZ = drop.position.z;
+    }
+  }
+  const w = casaParaMundo(anim.pos[0], anim.pos[1]);
+  group.position.set(w.x, .03, w.z);
+  group.userData.trapAnim = anim;
+  g3.scene.add(group); anim.group = group;
+}
+
+function _updateArmadilhas3D(now){
+  if(!g3?.scene) return;
+  for(const anim of _armadilhaAnims){
+    if(anim.group && anim.group.parent !== g3.scene){ _disposeArmadilhaGroup(anim.group); anim.group = null; }
+    if(!anim.group) _buildArmadilha3D(anim);
+    const group = anim.group; if(!group) continue;
+    const p = _armadilhaProgress(anim, now), q = Math.min(1, p/.30), impact = Math.max(0, Math.min(1,(p-.23)/.50));
+    const pulse = .5 + .5*Math.sin(now/65 + anim.seed);
+    group.children.forEach(obj => {
+      const u=obj.userData||{};
+      if(u.trapRing){ const base = u.trapRing === 1 ? .38 : .64; const sc=base*(.55+q*.55)*(u.trapRing===2?1+impact*.28:1); obj.scale.setScalar(sc/base); obj.rotation.z += u.trapRing === 1 ? .022 : -.015; if(obj.material) obj.material.opacity=(u.trapRing===1?.76:.45)*(1-Math.max(0,p-.68)/.32); }
+      if(u.trapCore){ obj.scale.setScalar(.55+impact*.9+pulse*.22); if(obj.material) obj.material.opacity=.72*(1-Math.max(0,p-.65)/.35); }
+      if(u.trapLine){ const sc=.5+impact*.72; obj.scale.set(sc,1,sc); if(obj.material) obj.material.opacity=.48+.34*impact; }
+      if(u.trapBlade){ obj.rotation.y = -.55 + Math.min(1,impact*1.6)*1.9; obj.position.y=.72-impact*.62; if(obj.material) obj.material.opacity=.92*(1-Math.max(0,p-.70)/.30); }
+      if(u.trapCrush){ obj.position.y=1.35-Math.min(1,impact*1.45)*1.20; if(obj.material) obj.material.opacity=.84*(1-Math.max(0,p-.72)/.28); }
+      if(u.trapShard){ const a=u.trapAngle ?? 0, rr=.30+impact*.48; obj.position.x=Math.cos(a)*rr; obj.position.z=Math.sin(a)*rr; obj.position.y=.12+impact*.18; obj.rotation.z += .04; }
+      if(u.trapNet!=null){ obj.scale.setScalar(.55+impact*.70); obj.rotation.z += .018*(u.trapNet%2?-1:1); }
+      if(u.trapPuff){ obj.scale.setScalar(.75+impact*.85+pulse*.10); if(obj.material) obj.material.opacity=.20*(1-Math.max(0,p-.60)/.40); }
+      if(u.trapDrop){ const a = u.trapAngle || 0; obj.position.y=Math.max(.08,(u.trapBaseY ?? .65)+Math.sin(now/180+a)*.08-impact*.55); obj.position.x=(u.trapBaseX ?? 0)*(1+impact*.8); obj.position.z=(u.trapBaseZ ?? 0)*(1+impact*.8); }
+    });
+    group.visible = p < 1;
+  }
+  for(let i=_armadilhaAnims.length-1;i>=0;i--){
+    if(_armadilhaProgress(_armadilhaAnims[i],now)>=1){ _disposeArmadilhaGroup(_armadilhaAnims[i].group); _armadilhaAnims.splice(i,1); }
+  }
+}
+
+function _tickArmadilhas2D(now){
+  _armadilha2DRaf = null;
+  if(mode3D && g3) return;
+  if(!GS.gameState || !_armadilhaAnims.length) return;
+  renderMap(GS.gameState);
+  for(let i=_armadilhaAnims.length-1;i>=0;i--)
+    if(_armadilhaProgress(_armadilhaAnims[i],now)>=1) _armadilhaAnims.splice(i,1);
+  if(_armadilhaAnims.length) _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
+}
+
+function _receberAnimacaoArmadilha(msg){
+  // Outros popups também usam trap_result; condições e quedas já possuem seus
+  // próprios efeitos e não devem receber uma segunda animação de armadilha.
+  if(!msg || msg._condition || msg._fall || msg.condition_id || msg.tipo === 'queda') return;
+  const pos = _armadilhaPos(msg);
+  if(!pos) return;
+  const anim = {msg, pos, style:_armadilhaStyle(msg), startedAt:performance.now(), duration:msg.tick ? 720 : 1050, seed:Math.random()*Math.PI*2, group:null};
+  _armadilhaAnims.push(anim);
+  if(mode3D && g3) _buildArmadilha3D(anim);
+  else if(!_armadilha2DRaf) _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
+}
+
 function renderMap(state){
   if(!state.tiles) return;
   state = _estadoComMortosVisuais(state);
@@ -7722,6 +8011,8 @@ function renderMap(state){
   _syncProtecaoEnergiaState(state);
   _atualizarZonasMagia(state);   // zonas persistentes (Bola de Fogo) — vale p/ 2D e 3D
   if(mode3D){ renderMap3D(state); return; }
+  if(_armadilhaAnims.length && !_armadilha2DRaf)
+    _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
   const canvas=$('dungeon-canvas');
   const W=state.tiles[0].length, H=state.tiles.length;
   applyDPR(canvas, W*CELL, H*CELL);
@@ -7833,6 +8124,8 @@ function renderMap(state){
     _iraRochaDraw2D(ctx, state, _animIraRocha, performance.now());
   for(const _animTempestade of _tempestadeAnims)
     _tempestadeDraw2D(ctx, state, _animTempestade, performance.now());
+  for(const _animPrivacao of _privacaoAnims)
+    _privacaoDraw2D(ctx, state, _animPrivacao, performance.now());
   for(const _animPrisaoChamas of _prisaoChamasAnims)
     _prisaoChamasDraw2D(ctx, state, _animPrisaoChamas, performance.now());
   for(const _animMantoEsc of _mantoEscuridaoAnims)
@@ -8588,6 +8881,8 @@ function renderMap(state){
     _barreiraDrawForeground2D(ctx, state, _animBarreira, _agoraRelampago);
   for(const _animMaldicao of _maldicaoAnims)
     _maldicaoDrawForeground2D(ctx, state, _animMaldicao, _agoraRelampago);
+  for(const _animPrivacao of _privacaoAnims)
+    _privacaoDrawForeground2D(ctx, state, _animPrivacao, _agoraRelampago);
   for(const _animMantoEsc of _mantoEscuridaoAnims)
     _mantoEscuridaoDrawForeground2D(ctx, state, _animMantoEsc, _agoraRelampago);
   for(const _animClarividencia of _clarividenciaAnims)
@@ -8600,6 +8895,8 @@ function renderMap(state){
     _velocidadeDrawForeground2D(ctx, state, _animVelocidade, _agoraRelampago);
   for(const _animHabilidade of _habilidadeAtivacaoAnims)
     _habilidadeFxDraw2D(ctx, state, _animHabilidade, _agoraRelampago);
+  for(const _animArmadilha of _armadilhaAnims)
+    _armadilhaDraw2D(ctx, state, _animArmadilha, _agoraRelampago);
   _drawAttackFeedback2D(ctx, state, _agoraRelampago);
   // Números de dano/cura e resultado de derrota ficam no primeiro plano para
   // permanecerem legíveis mesmo quando uma magia atravessa a miniatura.
@@ -14541,6 +14838,18 @@ const GRIMORIO_CLIENT = {
                <b>Efeito:</b> +25 fome e +25 sede<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
+  maldicao_corpo_pesado: {
+    id:'maldicao_corpo_pesado', nome:'Maldição do Corpo Pesado', icone:'⛓️',
+    circulo:'primeiro', classe:['cleric'],
+    tipo:'alvo_jogador', alcance:6,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 6 casas<br>
+               <b>Alvo:</b> 1 jogador vivo<br>
+               <b>Resistência:</b> Vontade nega<br>
+               <b>Efeito:</b> custos de Fome e Sede duplicados<br>
+               <b>Duração:</b> 1d6 + nível de conjurador rodadas<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 1º círculo`
+  },
   // ── 2º CÍRCULO ─────────────────────────────────────────────────────────────
   silencio: {
     id:'silencio', nome:'Silêncio', icone:'🔇',
@@ -14563,6 +14872,34 @@ const GRIMORIO_CLIENT = {
                <b>Duração:</b> 1d4 + nível do clérigo<br>
                <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
+  },
+  desnutricao: {
+    id:'desnutricao', nome:'Desnutrição', icone:'🍖',
+    circulo:'segundo', classe:['cleric'],
+    tipo:'alvo_inimigo', alcance:6,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 6 casas<br>
+               <b>Resistência:</b> Fortitude<br>
+               <b>Jogador — falha:</b> -20 Fome e -1 Movimento por 2 rodadas<br>
+               <b>Jogador — sucesso:</b> -10 Fome<br>
+               <b>Monstro vivo — falha:</b> por 2 rodadas pode apenas atacar ou movimentar; -1 Ataque e -2 Dano<br>
+               <b>Imunidades:</b> mortos-vivos e construtos não são afetados<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
+  },
+  definhar: {
+    id:'definhar', nome:'Definhar', icone:'🥀',
+    circulo:'terceiro', classe:['cleric'],
+    tipo:'area_fixa', alcance:6, area_lado:3, area_lado_niveis:3,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alcance:</b> 6 casas<br>
+               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>
+               <b>Alvos:</b> todas as criaturas vivas na área, incluindo aliados e o clérigo<br>
+               <b>Resistência:</b> Fortitude<br>
+               <b>Jogadores — falha:</b> -20 Fome e -20 Sede<br>
+               <b>Jogadores — sucesso:</b> -10 Fome e -10 Sede<br>
+               <b>Monstros vivos — falha:</b> por 2 rodadas podem apenas atacar ou movimentar; -2 Ataque e -4 Dano<br>
+               <b>Imunidades:</b> mortos-vivos e construtos não são afetados<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 3º círculo`
   },
   senhor_das_aguas: {
     id:'senhor_das_aguas', nome:'Senhor das Águas', icone:'🌊',
@@ -15215,12 +15552,12 @@ window.GRIMORIO_CLIENT         = GRIMORIO_CLIENT;
 // O clique no tabuleiro é capturado em on3DClick (ver hook _modoMagia lá).
 const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'manto_escuridao', 'visao_escuro', 'bola_fogo', 'relampago', 'raio_congelante',
-  'saciar', 'criar_alimentos', 'clarividencia', 'raio_divino',
+  'saciar', 'maldicao_corpo_pesado', 'criar_alimentos', 'clarividencia', 'raio_divino',
   'abencoar', 'amaldicoar', 'abencoar_arma',
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
   'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose',
-  'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas', 'tempestade_ciclones'
+  'desnutricao', 'definhar', 'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas', 'tempestade_ciclones'
 ]);
 
 function _meVivoNaVez() {
@@ -15270,6 +15607,8 @@ function castarMagia(magiaId) {
   else if (tipo === 'linha_reflexiva')                            alvoTipo = 'linha';
   else if (tipo === 'cone')                                       alvoTipo = 'cone';   // mira por direção
   else if (tipo === 'alvo')                                       alvoTipo = 'foe';
+  else if (tipo === 'alvo_inimigo')                               alvoTipo = 'foe_or_player';
+  else if (tipo === 'alvo_jogador')                               alvoTipo = 'player_target';
   else if (['alvo_aliado', 'buff_aliado', 'toque'].includes(tipo)) alvoTipo = 'ally';
   else                                                            alvoTipo = 'tile'; // area / area_fixa / area_persistente
   _iniciarModoMagia(magiaId, alvoTipo);
@@ -15458,6 +15797,7 @@ function castarPergaminho(item) {
   else if (tipo === 'linha_reflexiva')                            alvoTipo = 'linha';
   else if (tipo === 'cone')                                       alvoTipo = 'cone';
   else if (tipo === 'alvo')                                       alvoTipo = 'foe';
+  else if (tipo === 'alvo_jogador')                               alvoTipo = 'player_target';
   else if (['alvo_aliado', 'buff_aliado', 'toque'].includes(tipo)) alvoTipo = 'ally';
   else                                                            alvoTipo = 'tile';
   _iniciarModoMagia(magiaId, alvoTipo, item.id);
@@ -15562,11 +15902,13 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
   const tempestadeLado = magiaId === 'tempestade_ciclones'
     ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
+  const definharLado = magiaId === 'definhar'
+    ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
   const prisaoChamasLado = magiaId === 'prisao_chamas'
     ? Math.max(2, Math.min(4, Number(_prisaoChamasLado) || 2)) : 0;
   const cajadoLado = magiaId === 'senhor_das_aguas' ? 0 : _cajadoArcanoAreaLado(_me, _def, !!scrollItemId);
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: prisaoChamasLado || cajadoLado || invernoLado || senhorAguasLado || iraRochaLado || tempestadeLado || (_def && _def.area_lado) || 0,
+                        areaLado: prisaoChamasLado || cajadoLado || invernoLado || senhorAguasLado || iraRochaLado || tempestadeLado || definharLado || (_def && _def.area_lado) || 0,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -15588,7 +15930,7 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     kind: 'magia',
     title: `${m.icone} ${m.nome.toUpperCase()}`,
     instruction: _rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao')),
-    color: '#c8a951', targetLabel: alvoTipo === 'foe' ? 'INIMIGO' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? t('ui.magia.direcao') : 'CASA',
+    color: '#c8a951', targetLabel: ['foe', 'foe_or_player'].includes(alvoTipo) ? 'ALVO' : alvoTipo === 'player_target' ? 'JOGADOR' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? t('ui.magia.direcao') : 'CASA',
     range: window._spellHL.range, area: window._spellHL.area, double: window._spellHL.double,
     cancelText: 'Magia cancelada.',
     cleanup: () => {
@@ -15624,11 +15966,24 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
     if (dx === 0 && dy === 0) return { ok: false, msg: t('ui.magia.mire_direcao') };
     return { ok: true, fields: { dir: [dx, dy] } };
   }
+  if (alvoTipo === 'player_target') {
+    const alvoJogador = (gs.players || []).find(pp => pp.alive && pp.id !== me?.id
+      && pp.pos[0] === tx && pp.pos[1] === ty);
+    if (!alvoJogador) return { ok: false, msg: 'Escolha outro jogador vivo.' };
+    if (me && !GS.hasLineOfSight(gs, me.pos[0], me.pos[1], tx, ty))
+      return { ok: false, msg: t('ui.magia.parede_bloqueia') };
+    return { ok: true, fields: { target_id: alvoJogador.id } };
+  }
   const alvo = (alvoTipo === 'foe')
     ? (gs.monsters || []).find(mm => mm.hp > 0 &&
         GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
+    : (alvoTipo === 'foe_or_player')
+      ? (gs.monsters || []).find(mm => mm.hp > 0 &&
+          GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
+        || (gs.players || []).find(pp => pp.alive && pp.id !== me?.id
+          && pp.pos[0] === tx && pp.pos[1] === ty)
     : (gs.players  || []).find(pp => pp.pos[0] === tx && pp.pos[1] === ty && pp.alive);
-  if (!alvo) return { ok: false, msg: t(alvoTipo === 'foe' ? 'ui.magia.inimigo_invalido' : 'ui.magia.aliado_invalido') };
+  if (!alvo) return { ok: false, msg: t(['foe', 'foe_or_player'].includes(alvoTipo) ? 'ui.magia.inimigo_invalido' : 'ui.magia.aliado_invalido') };
   // Magias de alvo exigem linha de visão — paredes/portas fechadas barram.
   if (me && !GS.hasLineOfSight(gs, me.pos[0], me.pos[1], tx, ty))
     return { ok: false, msg: t('ui.magia.parede_bloqueia') };
@@ -15658,11 +16013,19 @@ function _clickTileMagia(tx, ty) {
   // Pergaminho: o alcance escala pelo nível MARCADO no item (o servidor valida);
   // por isso pulamos o gate de alcance do cliente quando em modo pergaminho.
   if (!mode.scrollItemId && !mode.alvoLivre &&
-      (mode.alvoTipo === 'tile' || mode.alvoTipo === 'foe' || mode.alvoTipo === 'ally')) {
+      (mode.alvoTipo === 'tile' || mode.alvoTipo === 'foe' || mode.alvoTipo === 'foe_or_player' || mode.alvoTipo === 'player_target' || mode.alvoTipo === 'ally')) {
     const me  = GS.me;
     const alvoVisual = (mode.alvoTipo === 'foe')
       ? (GS.gameState?.monsters || []).find(mm => mm.hp > 0 &&
           GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
+      : (mode.alvoTipo === 'foe_or_player')
+        ? (GS.gameState?.monsters || []).find(mm => mm.hp > 0 &&
+            GS.monsterTiles(mm).some(([bx, by]) => bx === tx && by === ty))
+          || (GS.gameState?.players || []).find(pp => pp.alive && pp.id !== me?.id
+            && pp.pos[0] === tx && pp.pos[1] === ty)
+      : (mode.alvoTipo === 'player_target')
+        ? (GS.gameState?.players || []).find(pp => pp.alive && pp.id !== me?.id
+            && pp.pos[0] === tx && pp.pos[1] === ty)
       : (GS.gameState?.players || []).find(pp => pp.alive && pp.pos[0] === tx && pp.pos[1] === ty);
     const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me && me.level), alvoVisual);
     if (me && alc > 0) {
@@ -16896,7 +17259,7 @@ function _recomputarAreaMagia(hx, hy) {
       }
     } else if (hx != null && hy != null) {
       if (mode.alvoTipo === 'tile' && mode.areaLado) {
-        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas' || mode.magiaId === 'ira_rocha_ardente' || mode.magiaId === 'prisao_chamas' || mode.magiaId === 'tempestade_ciclones') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
+        if (mode.magiaId === 'chamado_inverno' || mode.magiaId === 'senhor_das_aguas' || mode.magiaId === 'ira_rocha_ardente' || mode.magiaId === 'prisao_chamas' || mode.magiaId === 'tempestade_ciclones' || mode.magiaId === 'definhar') _addQuadradoChamadoInverno(hx, hy, mode.areaLado, area);
         else _addQuadrado(hx, hy, mode.areaLado, area);
       }
       else if (mode.alvoTipo === 'tile' && m.area_lado)  _addQuadrado(hx, hy, m.area_lado, area); // Silêncio 4x4
@@ -25413,8 +25776,12 @@ function _wakeVisualAnimScheduler(){
 // puramente visual: o terreno e as regras continuam vindo do game_state.
 const _senhorAguasAnims = [];
 let _senhorAguasRaf = null;
+const SENHOR_AGUAS_CONCENTRACAO_MS = 820;
+const CHAMADO_INVERNO_CONCENTRACAO_MS = 760;
 const SENHOR_AGUAS_TRAVEL_MS = 880;
-const SENHOR_AGUAS_IMPACT_MS = 980;
+// A expansão da água precisa permanecer tempo suficiente na tela para que o
+// preenchimento casa a casa seja legível, sem alterar o ritmo da onda inicial.
+const SENHOR_AGUAS_IMPACT_MS = 1350;
 
 function _senhorAguasHash(n){
   n = (n | 0) ^ 0x6d2b79f5;
@@ -25434,24 +25801,50 @@ function _senhorAguasAnimFromMessage(msg){
   const cold = spellId === 'chamado_inverno';
   const material = String(msg.material || (cold ? 'piso_congelado' : 'agua'));
   const whirlpools = msg.phase === 'whirlpools';
+  const chargeMs = !whirlpools
+    ? Math.max(420, Number(msg.charge_ms)
+      || (cold ? CHAMADO_INVERNO_CONCENTRACAO_MS : SENHOR_AGUAS_CONCENTRACAO_MS)) : 0;
+  // O congelamento começa na borda da área mais próxima do clérigo e cruza
+  // o quadrado até o lado oposto. Em áreas diagonais, escolhemos o eixo em
+  // que o clérigo está mais afastado para a frente ficar legível no tabuleiro.
+  const axisDx = Math.abs(center[0] - origin[0]), axisDy = Math.abs(center[1] - origin[1]);
+  const freezeAxis = axisDx >= axisDy ? 0 : 1;
+  const freezeDelta = freezeAxis === 0 ? center[0] - origin[0] : center[1] - origin[1];
+  const freezeSign = freezeDelta >= 0 ? 1 : -1;
+  const freezeValues = tiles.map(tile => tile[freezeAxis]);
+  const freezeMin = freezeValues.length ? Math.min(...freezeValues) : center[freezeAxis];
+  const freezeMax = freezeValues.length ? Math.max(...freezeValues) : center[freezeAxis];
+  const freezeRange = Math.max(1, freezeMax - freezeMin);
+  const tileOrders = tiles.map(tile => {
+    const value = tile[freezeAxis];
+    return freezeSign > 0 ? (value - freezeMin) / freezeRange
+      : (freezeMax - value) / freezeRange;
+  });
   return {
     animationId: msg.animation_id == null ? null : String(msg.animation_id),
     casterId: msg.caster_id == null ? null : String(msg.caster_id),
     spellId, cold, origin, center, tiles, material, whirlpools,
+    chargeMs, freezeAxis, freezeSign, freezeMin, freezeMax, tileOrders,
     travelMs: Math.max(260, Number(msg.travel_ms) || (whirlpools ? 420 : SENHOR_AGUAS_TRAVEL_MS)),
     impactMs: Math.max(320, Number(msg.impact_ms) || (whirlpools ? 720 : SENHOR_AGUAS_IMPACT_MS)),
-    start: performance.now(), group: null, wave: null, waveInner: null,
+    start: performance.now(), group: null, castCore: null, castGlow: null, castRings: [], castMotes: [],
+    wave: null, waveInner: null,
     originRing: null, orb: null, pathGlow: null, pathCore: null,
+    freezeFrontGlow: null, freezeFrontCore: null,
     tileMeshes: [], tileRings: [], motes: []
   };
 }
 
 function _senhorAguasProgress(anim, now){
   const elapsed = Math.max(0, now - anim.start);
-  const travel = Math.min(1, elapsed / anim.travelMs);
-  const impact = Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs));
-  return {elapsed, travel, impact, impacting:elapsed >= anim.travelMs,
-    finished:elapsed >= anim.travelMs + anim.impactMs + 620};
+  const waterElapsed = Math.max(0, elapsed - anim.chargeMs);
+  const travel = Math.min(1, waterElapsed / anim.travelMs);
+  const impact = Math.max(0, Math.min(1, (waterElapsed - anim.travelMs) / anim.impactMs));
+  return {elapsed, waterElapsed, charge:anim.chargeMs ? Math.min(1, elapsed / anim.chargeMs) : 1,
+    charging:elapsed < anim.chargeMs, traveling:elapsed >= anim.chargeMs
+      && elapsed < anim.chargeMs + anim.travelMs, travel, impact,
+    impacting:elapsed >= anim.chargeMs + anim.travelMs,
+    finished:elapsed >= anim.chargeMs + anim.travelMs + anim.impactMs + 620};
 }
 
 function _senhorAguasTileVisible(state, x, y){
@@ -25483,12 +25876,46 @@ function _senhorAguasBuild3D(anim){
   const snow = anim.material === 'planicie_nevada';
   const water = anim.cold ? (snow ? 0xdff6ff : 0x45c7ef) : (deep ? 0x0874a8 : 0x38c7e8);
   const foam = anim.cold ? 0xffffff : (deep ? 0x8edfff : 0xbaf6ff);
+  if(anim.chargeMs){
+    anim.castRings.length = 0; anim.castMotes.length = 0;
+    const castGlowMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const castCoreMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    anim.castGlow = new T.Mesh(new T.SphereGeometry(.34, 14, 10), castGlowMat);
+    anim.castCore = new T.Mesh(new T.OctahedronGeometry(.13, 0), castCoreMat);
+    group.add(anim.castGlow, anim.castCore);
+    for(let i=0;i<3;i++){
+      const mat = new T.MeshBasicMaterial({color:i===1 ? foam : water, transparent:true, opacity:0,
+        blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+      const ring = new T.Mesh(new T.TorusGeometry(.28+i*.12, .018, 8, 32), mat);
+      ring.rotation.x = -Math.PI/2; ring.position.set(anim.origin[0], .31+i*.045, anim.origin[1]);
+      ring.renderOrder = 73; group.add(ring); anim.castRings.push(ring);
+    }
+    for(let i=0;i<12;i++){
+      const mat = new T.MeshBasicMaterial({color:i%3 ? water : foam, transparent:true, opacity:0,
+        blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+      const mote = new T.Mesh(new T.SphereGeometry(.024+(i%3)*.009, 7, 5), mat);
+      mote.userData.index=i; mote.userData.phase=_senhorAguasHash(i*47+anim.origin[0]*13+anim.origin[1]*29);
+      group.add(mote); anim.castMotes.push(mote);
+    }
+  }
   const glowMat = new T.LineBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
   const coreMat = new T.LineBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
   anim.pathGlow = new T.Line(new T.BufferGeometry(), glowMat);
   anim.pathCore = new T.Line(new T.BufferGeometry(), coreMat);
   anim.pathGlow.renderOrder = 62; anim.pathCore.renderOrder = 63;
   group.add(anim.pathGlow, anim.pathCore);
+  if(anim.cold && !anim.whirlpools && anim.tiles.length){
+    const frontGlowMat = new T.LineBasicMaterial({color:water, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    const frontCoreMat = new T.LineBasicMaterial({color:foam, transparent:true, opacity:0,
+      blending:T.AdditiveBlending, depthWrite:false, depthTest:false});
+    anim.freezeFrontGlow = new T.Line(new T.BufferGeometry(), frontGlowMat);
+    anim.freezeFrontCore = new T.Line(new T.BufferGeometry(), frontCoreMat);
+    anim.freezeFrontGlow.renderOrder = 64; anim.freezeFrontCore.renderOrder = 65;
+    group.add(anim.freezeFrontGlow, anim.freezeFrontCore);
+  }
 
   const ringMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
   const innerMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
@@ -25515,11 +25942,17 @@ function _senhorAguasBuild3D(anim){
     const tileMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
     const tile = new T.Mesh(new T.PlaneGeometry(.94, .94), tileMat);
     tile.rotation.x = -Math.PI / 2; tile.position.set(x, .285, z); tile.scale.setScalar(.01); tile.renderOrder = 60; group.add(tile);
-    const item = {x, z, tile, index:i, ring:null};
+    const item = {x, z, tile, index:i, ring:null, floodRing:null};
     if(anim.whirlpools){
       const whirlMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
       const ring = new T.Mesh(new T.TorusGeometry(.22, .030, 7, 30), whirlMat);
       ring.rotation.x = Math.PI / 2; ring.position.set(x, .34, z); ring.renderOrder = 71; group.add(ring); item.ring = ring;
+    }else if(anim.chargeMs){
+      const floodMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0,
+        blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
+      const floodRing = new T.Mesh(new T.TorusGeometry(.31, .022, 7, 34), floodMat);
+      floodRing.rotation.x = Math.PI / 2; floodRing.position.set(x, .345, z);
+      floodRing.renderOrder = 65; group.add(floodRing); item.floodRing = floodRing;
     }
     anim.tileMeshes.push(item);
   }
@@ -25562,6 +25995,19 @@ function _senhorAguasUpdate3D(anim, now){
       if(staff && anim.casterPose.staff) staff.rotation.z = anim.casterPose.staff[2] + .10 * gesto;
     }
   }
+  const chargeFade = anim.chargeMs && p.charging
+    ? Math.min(1, p.elapsed/180) * Math.min(1, (anim.chargeMs-p.elapsed)/150) : 0;
+  if(anim.chargeMs){
+    const castPulse=.78+.22*Math.sin(now/90);
+    anim.castCore.visible=anim.castGlow.visible=chargeFade>.001;
+    anim.castCore.position.set(anim.origin[0],.76+.04*Math.sin(now/105),anim.origin[1]);
+    anim.castGlow.position.copy(anim.castCore.position);
+    anim.castCore.scale.setScalar(.72+.28*castPulse+.18*p.charge);
+    anim.castGlow.scale.setScalar(1+.25*castPulse+.22*p.charge);
+    anim.castCore.material.opacity=.72*chargeFade;anim.castGlow.material.opacity=.30*chargeFade;
+    anim.castRings.forEach((ring,i)=>{ring.visible=chargeFade>.001;ring.rotation.z=(i%2?-1:1)*now/(330+i*70);ring.scale.setScalar(.72+.34*p.charge+.08*Math.sin(now/100+i));ring.material.opacity=(.28+i*.10)*chargeFade;});
+    for(const mote of anim.castMotes){const i=mote.userData.index,a=now/560+i*Math.PI*2/anim.castMotes.length,r=.18+(i%4)*.06+.10*p.charge,lift=(now/760+i*.13)%1;mote.visible=chargeFade>.001;mote.position.set(anim.origin[0]+Math.cos(a)*r,.38+lift*.66,anim.origin[1]+Math.sin(a)*r);mote.material.opacity=(.22+.36*Math.sin(now/110+i)**2)*chargeFade;mote.scale.setScalar(.72+.30*Math.sin(now/90+i));}
+  }
   const dx = anim.center[0] - anim.origin[0], dz = anim.center[1] - anim.origin[1];
   const front = [anim.origin[0] + dx * p.travel, anim.origin[1] + dz * p.travel];
   const pts = [];
@@ -25570,9 +26016,29 @@ function _senhorAguasUpdate3D(anim, now){
     pts.push(new T.Vector3(anim.origin[0] + dx * u - dz * bend, .33 + Math.sin(u * Math.PI) * .06, anim.origin[1] + dz * u + dx * bend));
   }
   _senhorAguasSetLine(anim.pathGlow, pts, T); _senhorAguasSetLine(anim.pathCore, pts, T);
-  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
+  const fade = p.finished ? Math.max(0, 1 - (p.waterElapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
+  if(anim.freezeFrontGlow && anim.freezeFrontCore){
+    const freezeElapsed = p.waterElapsed - anim.travelMs;
+    const freezeSpan = Math.max(520, anim.impactMs * .72);
+    const frontProgress = Math.max(0, Math.min(1.18, (freezeElapsed + 120) / freezeSpan));
+    const frontValue = anim.freezeSign > 0
+      ? anim.freezeMin + (anim.freezeMax - anim.freezeMin) * frontProgress
+      : anim.freezeMax - (anim.freezeMax - anim.freezeMin) * frontProgress;
+    const perpendicular = anim.tiles.map(tile => tile[anim.freezeAxis === 0 ? 1 : 0]);
+    const crossMin = perpendicular.length ? Math.min(...perpendicular) - .52 : anim.center[anim.freezeAxis === 0 ? 1 : 0] - .52;
+    const crossMax = perpendicular.length ? Math.max(...perpendicular) + .52 : crossMin + 1;
+    const points = anim.freezeAxis === 0
+      ? [new T.Vector3(frontValue, .37, crossMin), new T.Vector3(frontValue, .37, crossMax)]
+      : [new T.Vector3(crossMin, .37, frontValue), new T.Vector3(crossMax, .37, frontValue)];
+    _senhorAguasSetLine(anim.freezeFrontGlow, points, T);
+    _senhorAguasSetLine(anim.freezeFrontCore, points, T);
+    const frontFade = frontProgress > 1 ? Math.max(0, 1 - (frontProgress - 1) * 5) : frontProgress;
+    anim.freezeFrontGlow.material.opacity = .50 * frontFade * fade;
+    anim.freezeFrontCore.material.opacity = .90 * frontFade * fade;
+    anim.freezeFrontGlow.visible = anim.freezeFrontCore.visible = frontFade > .001;
+  }
   const pulse = .82 + .18 * Math.sin(now / 150);
-  const traveling = !anim.whirlpools && p.travel < 1;
+  const traveling = !anim.whirlpools && p.traveling;
   anim.pathGlow.material.opacity = (anim.whirlpools ? 0 : .56 * (1 - p.impact)) * fade;
   anim.pathCore.material.opacity = (anim.whirlpools ? 0 : .88 * (1 - p.impact)) * fade;
   anim.wave.position.set(front[0], .34, front[1]); anim.waveInner.position.set(front[0], .355, front[1]);
@@ -25594,14 +26060,22 @@ function _senhorAguasUpdate3D(anim, now){
   }
   for(const item of anim.tileMeshes){
     const dist = Math.hypot(item.x - anim.center[0], item.z - anim.center[1]);
-    const delay = anim.whirlpools ? item.index * 62 : dist * 34;
-    const reveal = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
+    const delay = anim.whirlpools ? item.index * 62
+      : (anim.cold ? (anim.tileOrders[item.index] || 0) * 520 : dist * 150);
+    const reveal = Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
     item.tile.scale.setScalar(.01 + reveal * .99);
     item.tile.material.opacity = (anim.whirlpools ? .12 : (anim.cold ? .12 + .13 * reveal : .16 + .16 * reveal)) * fade;
     if(item.ring){
       item.ring.rotation.z = now / 260 + item.index;
       item.ring.scale.setScalar(.20 + reveal * (.86 + .12 * Math.sin(now / 120 + item.index)));
       item.ring.material.opacity = (.56 + .24 * Math.sin(now / 145 + item.index)) * reveal * fade;
+    }
+    if(item.floodRing){
+      const lead = Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay + 170) / Math.max(280, anim.impactMs * .58)));
+      item.floodRing.visible = lead > 0 && fade > 0;
+      item.floodRing.rotation.z = -now / 250 - item.index;
+      item.floodRing.scale.setScalar(.20 + lead * 1.05);
+      item.floodRing.material.opacity = (.16 + .66 * lead) * (1 - reveal * .48) * fade;
     }
   }
 }
@@ -25611,18 +26085,74 @@ function _senhorAguasDraw2D(ctx, state, anim, now){
   const p = _senhorAguasProgress(anim, now), ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
   const cx = anim.center[0] * CELL + CELL / 2, cy = anim.center[1] * CELL + CELL / 2;
   const fx = ox + (cx - ox) * p.travel, fy = oy + (cy - oy) * p.travel;
-  const fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
+  const fade = p.finished ? Math.max(0, 1 - (p.waterElapsed - anim.travelMs - anim.impactMs - 620) / 420) : 1;
   const pulse = .82 + .18 * Math.sin(now / 150);
   const snow = anim.material === 'planicie_nevada';
   const primary = anim.cold ? (snow ? '#e7f8ff' : '#45c7ef') : '#38c7e8';
   const light = anim.cold ? '#ffffff' : '#dafcff';
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-  if(!anim.whirlpools && p.travel < 1){
+  if(anim.chargeMs && p.charging){
+    const q=p.charge,fadeIn=Math.min(1,p.elapsed/170),castPulse=.78+.22*Math.sin(now/90);
+    ctx.shadowColor=primary;ctx.shadowBlur=CELL*(.18+.10*castPulse);
+    for(let i=0;i<3;i++){const radius=CELL*(.19+i*.105+.035*Math.sin(now/110+i));ctx.strokeStyle=anim.cold?`rgba(235,252,255,${((.28+i*.11)*fadeIn*(1-q*.16)).toFixed(3)})`:`rgba(106,224,255,${((.28+i*.11)*fadeIn*(1-q*.16)).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*(.024+i*.008));ctx.beginPath();const a=now/360*(i%2?-1:1);ctx.arc(ox,oy,radius,a,a+Math.PI*(1.25+i*.24));ctx.stroke();}
+    const glow=ctx.createRadialGradient(ox,oy,0,ox,oy,CELL*(.70+.18*castPulse));glow.addColorStop(0,`rgba(238,255,255,${(.62*fadeIn).toFixed(3)})`);glow.addColorStop(.25,`rgba(60,205,238,${(.34*fadeIn).toFixed(3)})`);glow.addColorStop(1,'rgba(0,80,150,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(ox,oy,CELL*.88,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<10;i++){const a=now/560+i*Math.PI*2/10,r=CELL*(.18+(i%4)*.065+.10*q),lift=(now/760+i*.13)%1;ctx.fillStyle=`rgba(${150+(i%3)*25},${225+(i%2)*18},255,${(.26+.34*Math.sin(now/110+i)**2).toFixed(3)})`;ctx.beginPath();ctx.arc(ox+Math.cos(a)*r,oy+Math.sin(a)*r-lift*CELL*.34,Math.max(2,CELL*.024+(i%3)),0,Math.PI*2);ctx.fill();}
+    ctx.font=`bold ${Math.max(15,CELL*.25)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(238,255,255,${(.70+.20*castPulse).toFixed(3)})`;ctx.fillText(anim.cold ? (snow ? '✦' : '❄') : '🌊',ox,oy);
+  }
+  if(!anim.whirlpools && p.traveling){
     ctx.shadowColor = primary; ctx.shadowBlur = CELL * .22; ctx.strokeStyle = anim.cold
       ? `rgba(221,247,255,${(.56 * (1-p.impact) * fade).toFixed(3)})`
       : `rgba(56,199,232,${(.42 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(5, CELL * .13);
     ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
     ctx.shadowBlur = CELL * .08; ctx.strokeStyle = `rgba(255,255,255,${(.82 * (1-p.impact) * fade).toFixed(3)})`; ctx.lineWidth = Math.max(1.5, CELL * .035); ctx.stroke();
+  }
+  if(anim.chargeMs && !anim.whirlpools && p.waterElapsed > anim.travelMs){
+    const flood = Math.min(1, (p.waterElapsed - anim.travelMs) / Math.max(520, anim.impactMs * .72));
+    const maxDist = anim.tiles.reduce((m,[tx,ty]) => Math.max(m,Math.hypot(tx-anim.center[0],ty-anim.center[1])), 0);
+    ctx.shadowColor = primary; ctx.shadowBlur = CELL * .12; ctx.lineWidth = Math.max(1.5, CELL * .025);
+    for(let i=0;i<3;i++){
+      const radius = CELL * (.24 + (maxDist + .9) * flood * (i ? .78 + i*.12 : .92));
+      const a = now / (470 + i*80) * (i%2 ? -1 : 1) + i;
+      ctx.strokeStyle = anim.cold
+        ? `rgba(235,252,255,${((.22 + .08*pulse) * fade).toFixed(3)})`
+        : `rgba(139,239,255,${((.22 + .10*pulse) * fade).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(cx, cy, radius, a, a + Math.PI * (.68 + i*.16)); ctx.stroke();
+    }
+  }
+  if(anim.cold && !anim.whirlpools && p.waterElapsed > anim.travelMs){
+    const freezeElapsed = p.waterElapsed - anim.travelMs;
+    const freezeSpan = Math.max(520, anim.impactMs * .72);
+    const frontProgress = Math.max(0, Math.min(1.18, (freezeElapsed + 120) / freezeSpan));
+    const frontValue = anim.freezeSign > 0
+      ? anim.freezeMin + (anim.freezeMax - anim.freezeMin) * frontProgress
+      : anim.freezeMax - (anim.freezeMax - anim.freezeMin) * frontProgress;
+    const perpendicular = anim.tiles.map(tile => tile[anim.freezeAxis === 0 ? 1 : 0]);
+    const crossMin = perpendicular.length ? Math.min(...perpendicular) - .52 : anim.center[anim.freezeAxis === 0 ? 1 : 0] - .52;
+    const crossMax = perpendicular.length ? Math.max(...perpendicular) + .52 : crossMin + 1;
+    const frontFade = frontProgress > 1 ? Math.max(0, 1 - (frontProgress - 1) * 5) : frontProgress;
+    const frontAlpha = (.64 + .20 * pulse) * frontFade * fade;
+    ctx.shadowColor = light; ctx.shadowBlur = CELL * .20;
+    ctx.strokeStyle = `rgba(235,253,255,${frontAlpha.toFixed(3)})`;
+    ctx.lineWidth = Math.max(3, CELL * .075);
+    ctx.beginPath();
+    if(anim.freezeAxis === 0){
+      const x = frontValue * CELL + CELL / 2;
+      ctx.moveTo(x, crossMin * CELL + CELL / 2); ctx.lineTo(x, crossMax * CELL + CELL / 2);
+    }else{
+      const y = frontValue * CELL + CELL / 2;
+      ctx.moveTo(crossMin * CELL + CELL / 2, y); ctx.lineTo(crossMax * CELL + CELL / 2, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = CELL * .08; ctx.strokeStyle = `rgba(255,255,255,${(.90 * frontFade * fade).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1.5, CELL * .024); ctx.stroke();
+    for(let i=0;i<5;i++){
+      const wobble = Math.sin(now / 150 + i * 1.7) * CELL * .08;
+      const along = crossMin + (crossMax - crossMin) * ((i + .5) / 5);
+      const px = anim.freezeAxis === 0 ? frontValue * CELL + CELL / 2 + wobble : along * CELL + CELL / 2;
+      const py = anim.freezeAxis === 0 ? along * CELL + CELL / 2 : frontValue * CELL + CELL / 2 + wobble;
+      ctx.fillStyle = `rgba(255,255,255,${(.52 * frontFade * fade).toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, CELL * .025), 0, Math.PI * 2); ctx.fill();
+    }
   }
   const wave = anim.whirlpools ? .20 + p.impact * 1.10 : .14 + p.travel * .42 + p.impact * .92;
   if(p.travel > .01 || anim.whirlpools){
@@ -25637,10 +26167,21 @@ function _senhorAguasDraw2D(ctx, state, anim, now){
   }
   for(const [i,[tx,ty]] of anim.tiles.entries()){
     const dist = Math.hypot(tx - anim.center[0], ty - anim.center[1]);
-    const delay = anim.whirlpools ? i * 62 : dist * 34;
-    const reveal = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
-    if(reveal <= 0) continue;
+    const delay = anim.whirlpools ? i * 62
+      : (anim.cold ? (anim.tileOrders[i] || 0) * 520 : dist * 150);
+    const reveal = Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
+    const lead = anim.whirlpools ? reveal : Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay + 170) / Math.max(280, anim.impactMs * .58)));
+    if(lead <= 0) continue;
     const x = tx * CELL + CELL / 2, y = ty * CELL + CELL / 2;
+    if(!anim.whirlpools){
+      ctx.shadowColor = light; ctx.shadowBlur = CELL * .10;
+      ctx.strokeStyle = anim.cold
+        ? `rgba(240,255,255,${(.34 * lead * fade).toFixed(3)})`
+        : `rgba(148,242,255,${(.40 * lead * fade).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.5, CELL * .026); ctx.beginPath();
+      ctx.arc(x, y, CELL * (.30 + .08 * Math.sin(now / 150 + i)), now / 260 + i, now / 260 + i + Math.PI * 1.30); ctx.stroke();
+    }
+    if(reveal <= 0) continue;
     ctx.fillStyle = anim.cold
       ? `rgba(${snow ? '231,248,255' : '69,199,239'},${((anim.whirlpools ? .10 : .07 + .12*reveal) * fade).toFixed(3)})`
       : `rgba(35,183,225,${((anim.whirlpools ? .10 : .07 + .12*reveal) * fade).toFixed(3)})`;
@@ -25709,27 +26250,39 @@ function _iraRochaAnimFromMessage(msg){
     || (isFlames ? 260 : IRA_ROCHA_DEFAULT_TRAVEL_MS));
   const impactMs = Math.max(360, Number(msg.impact_ms)
     || (isFlames ? 720 : IRA_ROCHA_DEFAULT_IMPACT_MS));
+  // Antes da rocha partir, o clérigo concentra a energia vulcânica no próprio
+  // corpo. Esta etapa é puramente visual: o servidor já validou e resolveu a
+  // magia quando envia o evento `start`.
+  const chargeMs = isFlames ? 0 : Math.max(420, Number(msg.charge_ms) || 760);
   return {
     animationId: msg.animation_id == null ? null : String(msg.animation_id),
     zoneId: msg.zone_id == null ? null : String(msg.zone_id),
     casterId: msg.caster_id == null ? null : String(msg.caster_id),
     origin, center, tiles: isFlames ? [] : tiles, flames: isFlames ? flames : [],
-    isFlames, travelMs, impactMs, start: performance.now(),
-    duration: travelMs + impactMs + (isFlames ? 520 : 600),
+    isFlames, chargeMs, travelMs, impactMs, start: performance.now(),
+    duration: chargeMs + travelMs + impactMs + (isFlames ? 520 : 600),
     seed: ((origin[0] * 73856093) ^ (origin[1] * 19349663)
       ^ (center[0] * 83492791) ^ Date.now()) >>> 0,
     impactPlayed: false, group: null, orb: null, orbGlow: null,
-    trail: [], fissure: [], tileMeshes: [], tileRings: [], flameColumns: [],
+    castCore: null, castCoreGlow: null, castRings: [], castEmbers: [],
+    trail: [], fissure: [], tileMeshes: [], tileRings: [], crackLines: [], flameColumns: [],
   };
 }
 
 function _iraRochaProgress(anim, now){
   const elapsed = Math.max(0, now - anim.start);
+  const spellElapsed = Math.max(0, elapsed - anim.chargeMs);
   return {
     elapsed,
-    travel: Math.min(1, elapsed / anim.travelMs),
-    impact: Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs)),
-    impacting: elapsed >= anim.travelMs,
+    spellElapsed,
+    charge: anim.chargeMs ? Math.min(1, elapsed / anim.chargeMs) : 1,
+    charging: !anim.isFlames && elapsed < anim.chargeMs,
+    traveling: !anim.isFlames && elapsed >= anim.chargeMs
+      && elapsed < anim.chargeMs + anim.travelMs,
+    travel: Math.min(1, spellElapsed / anim.travelMs),
+    impact: Math.max(0, Math.min(1,
+      (spellElapsed - anim.travelMs) / anim.impactMs)),
+    impacting: elapsed >= anim.chargeMs + anim.travelMs,
     finished: elapsed >= anim.duration,
   };
 }
@@ -25762,6 +26315,31 @@ function _iraRochaBuild3D(anim){
   anim.orb = new T.Mesh(new T.DodecahedronGeometry(.20, 0), orbMat);
   group.add(anim.orbGlow, anim.orb);
 
+  if(!anim.isFlames){
+    const castGlowMat = new T.MeshBasicMaterial({color:hot, transparent:true,
+      opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    const castCoreMat = new T.MeshBasicMaterial({color:bright, transparent:true,
+      opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    anim.castCoreGlow = new T.Mesh(new T.SphereGeometry(.34, 14, 10), castGlowMat);
+    anim.castCore = new T.Mesh(new T.OctahedronGeometry(.13, 0), castCoreMat);
+    group.add(anim.castCoreGlow, anim.castCore);
+    for(let i=0;i<3;i++){
+      const ringMat = new T.MeshBasicMaterial({color:i===1 ? bright : orange,
+        transparent:true, opacity:0, depthWrite:false, depthTest:false,
+        side:T.DoubleSide, blending:T.AdditiveBlending});
+      const ring = new T.Mesh(new T.TorusGeometry(.28 + i*.12, .018, 8, 32), ringMat);
+      ring.rotation.x = -Math.PI/2; ring.position.set(anim.origin[0], .34 + i*.045, anim.origin[1]);
+      ring.renderOrder = 73; group.add(ring); anim.castRings.push(ring);
+    }
+    for(let i=0;i<12;i++){
+      const mat = new T.MeshBasicMaterial({color:i%3 ? orange : bright,
+        transparent:true, opacity:0, depthWrite:false, depthTest:false,
+        blending:T.AdditiveBlending});
+      const ember = new T.Mesh(new T.OctahedronGeometry(.025 + (i%3)*.012, 0), mat);
+      ember.userData.index = i; group.add(ember); anim.castEmbers.push(ember);
+    }
+  }
+
   for(let i=0;i<14;i++){
     const mat = new T.MeshBasicMaterial({color:i%3 ? orange : bright, transparent:true,
       opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
@@ -25770,16 +26348,51 @@ function _iraRochaBuild3D(anim){
   }
 
   for(const [x,z] of anim.tiles){
+    // O piso autoritativo já chega como lava no game_state. Esta cobertura
+    // escura o oculta durante a conjuração para que a lava possa subir por
+    // baixo dela, em vez de aparecer pronta no primeiro frame.
+    const coverMat = new T.MeshBasicMaterial({color:0x211612, transparent:true,
+      opacity:0.98, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    const cover = new T.Mesh(new T.PlaneGeometry(.94, .94), coverMat);
+    cover.rotation.x = -Math.PI/2; cover.position.set(x, .302, z);
+    cover.renderOrder = 60; group.add(cover);
     const tileMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
       depthWrite:false, depthTest:false, side:T.DoubleSide, blending:T.AdditiveBlending});
     const tile = new T.Mesh(new T.PlaneGeometry(.90, .90), tileMat);
     tile.rotation.x = -Math.PI/2; tile.position.set(x, .285, z); tile.scale.setScalar(.01);
-    tile.renderOrder = 61; group.add(tile); anim.tileMeshes.push({x,z,tile});
+    tile.renderOrder = 61; group.add(tile); anim.tileMeshes.push({x,z,tile,cover});
     const ringMat = new T.MeshBasicMaterial({color:bright, transparent:true, opacity:0,
       depthWrite:false, depthTest:false, side:T.DoubleSide, blending:T.AdditiveBlending});
     const ring = new T.Mesh(new T.TorusGeometry(.22, .025, 7, 28), ringMat);
     ring.rotation.x = -Math.PI/2; ring.position.set(x, .34, z); ring.renderOrder = 64;
     group.add(ring); anim.tileRings.push({x,z,ring});
+
+    // Fissuras escuras aparecem antes do piso se transformar em lava. Cada
+    // rachadura tem uma pequena quebra para parecer aberta no terreno, em vez
+    // de ser apenas um círculo desenhado sobre a casa.
+    const tileIndex = anim.tileMeshes.length - 1;
+    for(let k=0;k<4;k++){
+      const phase = _iraRochaHash(anim.seed + tileIndex * 41 + k * 17);
+      const angle = phase * Math.PI * 2;
+      const length = .25 + _iraRochaHash(anim.seed + tileIndex * 67 + k * 23) * .24;
+      const bend = (_iraRochaHash(anim.seed + tileIndex * 83 + k * 29) - .5) * .16;
+      const dirX = Math.cos(angle), dirZ = Math.sin(angle);
+      const sideX = -dirZ, sideZ = dirX;
+      const points = [
+        new T.Vector3(x, .355, z),
+        new T.Vector3(x + dirX * length * .34 + sideX * bend, .357,
+          z + dirZ * length * .34 + sideZ * bend),
+        new T.Vector3(x + dirX * length * .70 - sideX * bend * .45, .359,
+          z + dirZ * length * .70 - sideZ * bend * .45),
+        new T.Vector3(x + dirX * length, .361, z + dirZ * length),
+      ];
+      const crackMat = new T.LineBasicMaterial({color:k%2 ? 0xff3b00 : 0xffb52e,
+        transparent:true, opacity:0, depthWrite:false, depthTest:false,
+        blending:T.AdditiveBlending});
+      const crack = new T.Line(new T.BufferGeometry().setFromPoints(points), crackMat);
+      crack.renderOrder = 66; group.add(crack);
+      anim.crackLines.push({x,z,crack,phase});
+    }
   }
   for(const [x,z] of anim.flames){
     const columnMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0,
@@ -25818,7 +26431,36 @@ function _iraRochaUpdate3D(anim, now){
   const front = [anim.origin[0] + dx*p.travel, anim.origin[1] + dz*p.travel];
   const fade = p.finished ? Math.max(0, 1-(p.elapsed-anim.duration)/300) : 1;
   const pulse = .80 + .20*Math.sin(now/70);
-  const flight = !anim.isFlames && !p.impacting;
+  const chargeFade = !anim.isFlames && p.charging
+    ? Math.min(1, p.elapsed / 190) * Math.min(1, (anim.chargeMs - p.elapsed) / 150)
+    : 0;
+  if(!anim.isFlames){
+    const chargePulse = .78 + .22*Math.sin(now/82);
+    anim.castCore.visible = anim.castCoreGlow.visible = chargeFade > .001;
+    anim.castCore.position.set(anim.origin[0], .78 + .045*Math.sin(now/105), anim.origin[1]);
+    anim.castCoreGlow.position.copy(anim.castCore.position);
+    anim.castCore.scale.setScalar(.72 + .30*chargePulse + p.charge*.20);
+    anim.castCoreGlow.scale.setScalar(1.0 + .24*chargePulse + p.charge*.25);
+    anim.castCore.material.opacity = .72 * chargeFade;
+    anim.castCoreGlow.material.opacity = .34 * chargeFade;
+    anim.castRings.forEach((ring, i) => {
+      const spin = (i % 2 ? -1 : 1) * now / (330 + i*70);
+      ring.visible = chargeFade > .001; ring.rotation.z = spin;
+      ring.scale.setScalar(.72 + p.charge*.36 + .08*Math.sin(now/95+i));
+      ring.material.opacity = (.30 + i*.10) * chargeFade;
+    });
+    for(const ember of anim.castEmbers){
+      const i=ember.userData.index, a=now/540+i*Math.PI*2/anim.castEmbers.length;
+      const r=.19 + (i%4)*.055 + .10*p.charge;
+      const lift=(now/720+i*.17)%1;
+      ember.visible = chargeFade > .001;
+      ember.position.set(anim.origin[0]+Math.cos(a)*r,
+        .44+lift*.64, anim.origin[1]+Math.sin(a)*r);
+      ember.material.opacity = (.28+.38*Math.sin(now/105+i)**2) * chargeFade;
+      ember.scale.setScalar(.72+.32*Math.sin(now/90+i));
+    }
+  }
+  const flight = !anim.isFlames && p.traveling;
   anim.orb.visible = anim.orbGlow.visible = flight;
   anim.orb.position.set(front[0], .70, front[1]); anim.orbGlow.position.set(front[0], .70, front[1]);
   anim.orb.scale.setScalar(.75 + .25*pulse); anim.orbGlow.scale.setScalar(1 + .18*pulse);
@@ -25831,17 +26473,30 @@ function _iraRochaUpdate3D(anim, now){
   const e = p.impact, impactFade = Math.sin(Math.PI*Math.min(1,e));
   for(let i=0;i<anim.tileMeshes.length;i++){
     const item=anim.tileMeshes[i], dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
-    const reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-dist*34)/Math.max(260,anim.impactMs*.72)));
-    item.tile.scale.setScalar(.01+reveal*.99); item.tile.material.opacity=(.10+.24*reveal)*fade;
+    const impactElapsed = p.spellElapsed - anim.travelMs;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
+    const reveal=Math.max(0,Math.min(1,(impactElapsed-dist*34)/Math.max(260,anim.impactMs*.72)));
+    item.cover.material.opacity=Math.max(0, (1-reveal)*.98*fade);
+    item.cover.visible=item.cover.material.opacity>.001;
+    item.tile.scale.setScalar(.01+reveal*.99);
+    item.tile.material.opacity=(.18+.78*reveal)*fade;
+  }
+  for(const item of anim.crackLines){
+    const dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
+    const impactElapsed=p.spellElapsed-anim.travelMs;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
+    item.crack.visible=crack>0 && fade>0;
+    item.crack.scale.setScalar(.35+.75*crack);
+    item.crack.material.opacity=(.10+.74*crack)*fade;
   }
   for(let i=0;i<anim.tileRings.length;i++){
-    const item=anim.tileRings[i], reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-i*28)/Math.max(240,anim.impactMs*.70)));
+    const item=anim.tileRings[i], reveal=Math.max(0,Math.min(1,(p.spellElapsed-anim.travelMs-i*28)/Math.max(240,anim.impactMs*.70)));
     item.ring.rotation.z=now/240+i; item.ring.scale.setScalar(.30+reveal*(.95+.12*pulse));
     item.ring.material.opacity=(.26+.65*impactFade)*reveal*fade;
   }
   for(const item of anim.flameColumns){
     const j=item.column.userData.flameIndex ?? 0;
-    const q=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-(j*55))/Math.max(260,anim.impactMs*.65)));
+    const q=Math.max(0,Math.min(1,(p.spellElapsed-anim.travelMs-(j*55))/Math.max(260,anim.impactMs*.65)));
     item.column.scale.setScalar(q*(.82+.22*Math.sin(now/75+j)));
     item.column.rotation.z=Math.sin(now/90+j)*.16; item.column.material.opacity=.82*q*fade;
     item.column.position.y=item.flame ? .68+.05*Math.sin(now/100+j) : .55+.08*q;
@@ -25866,7 +26521,30 @@ function _iraRochaDraw2D(ctx, state, anim, now){
   const cx=anim.center[0]*CELL+CELL/2, cy=anim.center[1]*CELL+CELL/2;
   const fx=ox+(cx-ox)*p.travel, fy=oy+(cy-oy)*p.travel;
   ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
-  if(!anim.isFlames && !p.impacting){
+  if(!anim.isFlames && p.charging){
+    const q = p.charge, fadeIn = Math.min(1, p.elapsed / 170);
+    const pulse = .78 + .22*Math.sin(now/85);
+    ctx.shadowColor='#ff4a00'; ctx.shadowBlur=CELL*(.18+.10*pulse);
+    for(let i=0;i<3;i++){
+      const radius=CELL*(.19+i*.105+.035*Math.sin(now/110+i));
+      ctx.strokeStyle=`rgba(${i===1?255:255},${i===1?210:105},${i===1?102:12},${((.28+i*.12)*fadeIn*(1-q*.18)).toFixed(3)})`;
+      ctx.lineWidth=Math.max(2,CELL*(.025+i*.009));
+      ctx.beginPath();ctx.arc(ox,oy,radius,now/360*(i%2?-1:1),now/360*(i%2?-1:1)+Math.PI*(1.25+i*.24));ctx.stroke();
+    }
+    const glow=ctx.createRadialGradient(ox,oy,0,ox,oy,CELL*(.72+.18*pulse));
+    glow.addColorStop(0,`rgba(255,246,180,${(.72*fadeIn).toFixed(3)})`);
+    glow.addColorStop(.22,`rgba(255,107,12,${(.38*fadeIn).toFixed(3)})`);
+    glow.addColorStop(1,'rgba(155,0,0,0)');
+    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(ox,oy,CELL*.88,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<10;i++){
+      const a=now/540+i*Math.PI*2/10, r=CELL*(.18+(i%4)*.065+.10*q), lift=(now/720+i*.17)%1;
+      ctx.fillStyle=`rgba(255,${110+(i%3)*38},18,${(.30+.34*Math.sin(now/105+i)**2).toFixed(3)})`;
+      ctx.beginPath();ctx.arc(ox+Math.cos(a)*r,oy+Math.sin(a)*r-lift*CELL*.34,Math.max(2,CELL*.025+(i%3)*1.2),0,Math.PI*2);ctx.fill();
+    }
+    ctx.font=`bold ${Math.max(15,CELL*.25)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=`rgba(255,245,196,${(.72+.18*pulse).toFixed(3)})`;ctx.fillText('🌋',ox,oy-CELL*.03);
+  }
+  if(!anim.isFlames && p.traveling){
     ctx.shadowColor='#ff4a00'; ctx.shadowBlur=CELL*.24; ctx.strokeStyle='rgba(255,92,8,.60)'; ctx.lineWidth=Math.max(5,CELL*.12);
     ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();
     for(let i=0;i<11;i++){
@@ -25883,9 +26561,61 @@ function _iraRochaDraw2D(ctx, state, anim, now){
   const impactFade=Math.sin(Math.PI*Math.min(1,p.impact));
   for(let i=0;i<anim.tiles.length;i++){
     const pos=anim.tiles[i]; if(!_iraRochaTileVisible(state,pos)) continue;
-    const reveal=Math.max(0,Math.min(1,(p.elapsed-anim.travelMs-Math.hypot(pos[0]-anim.center[0],pos[1]-anim.center[1])*34)/Math.max(260,anim.impactMs*.72)));
-    if(reveal<=0) continue;
+    const dist=Math.hypot(pos[0]-anim.center[0],pos[1]-anim.center[1]);
+    const impactElapsed=p.spellElapsed-anim.travelMs;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
+    const reveal=Math.max(0,Math.min(1,(impactElapsed-dist*34)/Math.max(260,anim.impactMs*.72)));
     const x=pos[0]*CELL+CELL/2,y=pos[1]*CELL+CELL/2;
+    // Cobre a lava que já está no piso até o líquido alcançar aquela casa.
+    // A transparência diminui junto com a onda de preenchimento, revelando a
+    // textura autoritativa sem um corte brusco no final da animação.
+    if(reveal < 1){
+      ctx.fillStyle=`rgba(31,20,16,${(.96*(1-reveal)*fade).toFixed(3)})`;
+      ctx.fillRect(pos[0]*CELL+1,pos[1]*CELL+1,CELL-2,CELL-2);
+      ctx.strokeStyle=`rgba(89,54,39,${(.72*(1-reveal)*fade).toFixed(3)})`;
+      ctx.lineWidth=Math.max(1,CELL*.018);ctx.strokeRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL-4,CELL-4);
+    }
+    if(reveal>0){
+      // Mancha orgânica com borda ondulada: a lava entra no quadrado como
+      // líquido, em vez de apenas ligar/desligar o piso inteiro.
+      const radius=CELL*(.08+.86*reveal), points=[];
+      for(let k=0;k<20;k++){
+        const a=k*Math.PI*2/20;
+        const wobble=1+.08*Math.sin(a*3+now/180+i*.7);
+        points.push([x+Math.cos(a)*radius*wobble,y+Math.sin(a)*radius*wobble]);
+      }
+      ctx.save();ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+      for(let k=1;k<points.length;k++)ctx.lineTo(points[k][0],points[k][1]);
+      ctx.closePath();ctx.clip();
+      const liquid=ctx.createRadialGradient(x,y,0,x,y,Math.max(CELL*.2,radius*1.08));
+      liquid.addColorStop(0,`rgba(255,241,152,${(.92*reveal*fade).toFixed(3)})`);
+      liquid.addColorStop(.34,`rgba(255,91,7,${(.86*reveal*fade).toFixed(3)})`);
+      liquid.addColorStop(1,`rgba(166,18,0,${(.78*reveal*fade).toFixed(3)})`);
+      ctx.fillStyle=liquid;ctx.fillRect(x-radius*1.2,y-radius*1.2,radius*2.4,radius*2.4);
+      ctx.restore();
+    }
+    if(crack<=0) continue;
+    // A fissura nasce escura e ganha um fio de magma luminoso à medida que
+    // se abre; o preenchimento líquido acontece logo abaixo desta fissura.
+    for(let k=0;k<4;k++){
+      const phase=_iraRochaHash(anim.seed+i*41+k*17), angle=phase*Math.PI*2;
+      const length=CELL*(.25+_iraRochaHash(anim.seed+i*67+k*23)*.24);
+      const bend=(_iraRochaHash(anim.seed+i*83+k*29)-.5)*CELL*.16;
+      const dirX=Math.cos(angle), dirY=Math.sin(angle), sideX=-dirY, sideY=dirX;
+      const points=[
+        [x,y],
+        [x+dirX*length*.34+sideX*bend,y+dirY*length*.34+sideY*bend],
+        [x+dirX*length*.70-sideX*bend*.45,y+dirY*length*.70-sideY*bend*.45],
+        [x+dirX*length,y+dirY*length],
+      ];
+      ctx.strokeStyle=`rgba(49,5,0,${(.80*crack*fade).toFixed(3)})`;
+      ctx.lineWidth=Math.max(3,CELL*.065);ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+      for(let j=1;j<points.length;j++)ctx.lineTo(points[j][0],points[j][1]);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,${70+(k%2)*70},12,${(.42*crack*fade).toFixed(3)})`;
+      ctx.lineWidth=Math.max(1,CELL*.018);ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+      for(let j=1;j<points.length;j++)ctx.lineTo(points[j][0],points[j][1]);ctx.stroke();
+    }
+    if(reveal<=0) continue;
     const g=ctx.createRadialGradient(x,y,0,x,y,CELL*.75);g.addColorStop(0,`rgba(255,240,160,${(.78*reveal*fade).toFixed(3)})`);g.addColorStop(.32,`rgba(255,75,0,${(.70*reveal*fade).toFixed(3)})`);g.addColorStop(1,'rgba(150,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-CELL*.75,y-CELL*.75,CELL*1.5,CELL*1.5);
     ctx.strokeStyle=`rgba(255,190,48,${((.36+.58*impactFade)*reveal*fade).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.beginPath();ctx.arc(x,y,CELL*(.16+.20*reveal),0,Math.PI*2);ctx.stroke();
     for(let k=0;k<4;k++){const a=_iraRochaHash(anim.seed+i*31+k*17)*Math.PI*2, len=CELL*(.16+.18*reveal);ctx.beginPath();ctx.moveTo(x+Math.cos(a)*CELL*.10,y+Math.sin(a)*CELL*.10);ctx.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);ctx.stroke();}
@@ -34692,6 +35422,7 @@ function startLoop3D(){
 
     _atualizarTerrenoAnimado3D(t);
     _animarFogoPersistente3D(t);
+    _updateArmadilhas3D(now);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
     if(g3.dustPts && g3.dustPts.visible &&
@@ -34823,6 +35554,21 @@ function startLoop3D(){
         fig.rotation.y = fig.userData._whirlpoolBaseRotationY || 0;
         delete fig.userData._whirlpoolWasSpinning;
         delete fig.userData._whirlpoolBaseRotationY;
+      }
+      // Alvo que falhou no teste do ciclone: gira na mesma velocidade do
+      // funil correspondente. O estado é apenas visual; a regra autoritativa
+      // continua nos flags temporários enviados pelo servidor.
+      const _tempestadeSpin = fig.userData.tempestadeCicloneSpin;
+      if(_tempestadeSpin){
+        if(!fig.userData._tempestadeWasSpinning)
+          fig.userData._tempestadeBaseRotationY = fig.rotation.y || 0;
+        fig.userData._tempestadeWasSpinning = true;
+        fig.rotation.y = (fig.userData._tempestadeBaseRotationY || 0)
+          + performance.now() / Math.max(1, Number(_tempestadeSpin.speedMs) || 520);
+      } else if(fig.userData._tempestadeWasSpinning){
+        fig.rotation.y = fig.userData._tempestadeBaseRotationY || 0;
+        delete fig.userData._tempestadeWasSpinning;
+        delete fig.userData._tempestadeBaseRotationY;
       }
       const isHov = hovP && gx === hovP[0] && gy === hovP[1];
       const isSel = selP && gx === selP[0] && gy === selP[1];
@@ -44964,6 +45710,7 @@ GS.on('sceneEnd', _sceneEnd);
 GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();
   _limparMortesVisuais();
+  _limparAnimacoesTempestade();
   _hpSnapshot.clear();   // de volta à cidade: zera HP base p/ a próxima masmorra
   _limparPositiveEffectSnapshot();
   // Não limpe a fila em toda atualização da cidade: ao equipar um item
@@ -45021,6 +45768,7 @@ GS.on('shopResult',  msg =>
 GS.on('enterDungeon', (msg) => {
   fecharFichaCidade();
   _limparMortesVisuais();
+  _limparAnimacoesTempestade();
   // O mapa-múndi é um overlay sobre screen-city e só some quando a cidade MUDA.
   // Entrar numa aventura não muda a cidade, então sem isto o jogador voltaria da
   // masmorra para o mapa-múndi em vez da ilustração da cidade.
@@ -45402,6 +46150,7 @@ function _dadosMagiaEmTrajeto(){
   if(_saciarAnims.some(anim => !_saciarProgress(anim, now).impacting)) return true;
   if(_contramagicaAnims.some(anim => !_contramagicaProgress(anim, now).impacting)) return true;
   if(typeof _tempestadeAnims !== 'undefined' && _tempestadeAnims.some(anim => !_tempestadeProgress(anim, now).impacting)) return true;
+  if(typeof _privacaoAnims !== 'undefined' && _privacaoAnims.some(anim => !_privacaoProgress(anim, now).pathDone)) return true;
   return false;
 }
 
@@ -45460,6 +46209,7 @@ function _clickTileTempestade(tx, ty) {
 // modos 2D e 3D, inclusive quando cada ciclone se desloca.
 const _tempestadeAnims = [];
 let _tempestadeRaf = null;
+const TEMPESTADE_CONCENTRACAO_MS = 900;
 const TEMPESTADE_FORMACAO_MS = 980;
 const TEMPESTADE_MOVIMENTO_MS = 680;
 const TEMPESTADE_IMPACTO_MS = 760;
@@ -45492,34 +46242,106 @@ function _tempestadeAnimFromMessage(msg){
   const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
   const ciclones = (Array.isArray(msg.ciclones) ? msg.ciclones : []).map((c, i) => ({
     id: Number(c.id ?? i + 1), pos: Array.isArray(c.pos) ? c.pos.map(Number) : center.slice(),
-    fromPos:null, toPos:null, moveStart:0
+    fromPos:null, toPos:null, moveStart:0, spinMs:520+i*48
   }));
+  const chargeMs = Math.max(420, Number(msg.charge_ms) || TEMPESTADE_CONCENTRACAO_MS);
   return {
     animationId: msg.animation_id == null ? null : String(msg.animation_id),
     zoneId: msg.zone_id == null ? null : String(msg.zone_id),
     casterId: msg.caster_id == null ? null : String(msg.caster_id),
     origin, center, tiles:_tempestadeTiles(msg.tiles), side:Number(msg.side) || 3,
-    ciclones, travelMs:Math.max(360, Number(msg.travel_ms) || TEMPESTADE_FORMACAO_MS),
+    ciclones, chargeMs, travelMs:Math.max(360, Number(msg.travel_ms) || TEMPESTADE_FORMACAO_MS),
     durationRounds:Number(msg.duration_rounds) || 0, start:now,
     resolved:msg.phase === 'resolve', resolvedAt:msg.phase === 'resolve' ? now : 0,
     impactReached:false, lightningAt:0, lightningTiles:[], endingAt:null,
+    trappedTargets:new Map(),
     seed:((origin[0]*73856093)^(origin[1]*19349663)^(center[0]*83492791)^Date.now())>>>0,
-    group:null, areaMeshes:[], stormRings:[], cycloneMeshes:[], boltMeshes:[],
+    group:null, castCore:null, castGlow:null, castRings:[], castMotes:[],
+    fogPuffs:[], windBands:[], areaMeshes:[], stormRings:[], cycloneMeshes:[], boltMeshes:[],
     lightningFlash:null, lightningRing:null
   };
 }
 function _tempestadeProgress(anim, now){
   const elapsed=Math.max(0,now-anim.start);
-  const travel=_tempestadeClamp(elapsed/anim.travelMs);
-  const formed=_tempestadeClamp((elapsed-anim.travelMs+180)/TEMPESTADE_IMPACTO_MS);
+  const stormElapsed=Math.max(0,elapsed-anim.chargeMs);
+  const travel=_tempestadeClamp(stormElapsed/anim.travelMs);
+  const formed=_tempestadeClamp((stormElapsed-anim.travelMs+180)/TEMPESTADE_IMPACTO_MS);
   const impact=anim.resolvedAt?_tempestadeClamp((now-anim.resolvedAt)/TEMPESTADE_IMPACTO_MS):0;
   const fade=anim.endingAt==null?1:_tempestadeClamp(1-(now-anim.endingAt)/850);
-  return {elapsed,travel,formed,impact,fade,impacting:formed>=1,finished:anim.endingAt!=null&&fade<=0};
+  return {elapsed,stormElapsed,charge:_tempestadeClamp(elapsed/anim.chargeMs),
+    charging:elapsed<anim.chargeMs,traveling:elapsed>=anim.chargeMs
+      && elapsed<anim.chargeMs+anim.travelMs,
+    travel,formed,impact,fade,impacting:formed>=1,finished:anim.endingAt!=null&&fade<=0};
 }
 function _tempestadeCyclonePosition(c, now){
   if(!c?.fromPos||!c?.toPos||!c.moveStart) return c?.pos||[0,0];
   const q=_tempestadeClamp((now-c.moveStart)/TEMPESTADE_MOVIMENTO_MS);
   return [c.fromPos[0]+(c.toPos[0]-c.fromPos[0])*q,c.fromPos[1]+(c.toPos[1]-c.fromPos[1])*q];
+}
+function _tempestadeCycloneSpinMs(c,index=0){
+  return Math.max(1,Number(c?.spinMs)||520+index*48);
+}
+function _tempestadeTargetKey(kind,id){ return `${kind || 'entity'}:${String(id)}`; }
+function _tempestadeEntity(state, rec){
+  if(!state || !rec) return null;
+  const id=String(rec.id), kind=String(rec.kind || '');
+  if(kind==='player') return (state.players||[]).find(x=>String(x.id)===id) || null;
+  if(kind==='monster') return (state.monsters||[]).find(x=>String(x.id)===id) || null;
+  if(kind==='animado') return (state.players||[]).flatMap(x=>x.animados||[]).find(x=>String(x.id)===id) || null;
+  if(kind==='prisoner') return state.prisoner && String(state.prisoner.id)===id ? state.prisoner : null;
+  return (state.players||[]).find(x=>String(x.id)===id)
+    || (state.monsters||[]).find(x=>String(x.id)===id)
+    || (state.players||[]).flatMap(x=>x.animados||[]).find(x=>String(x.id)===id)
+    || (state.prisoner && String(state.prisoner.id)===id ? state.prisoner : null);
+}
+function _tempestadeTargetPos(state, rec){
+  const ent=_tempestadeEntity(state,rec);
+  return Array.isArray(ent?.pos) ? ent.pos : (Array.isArray(rec?.pos) ? rec.pos : null);
+}
+function _tempestadeCicloneContem(c, pos){
+  if(!c || !Array.isArray(pos)) return false;
+  const [x,y]=c.pos||[];
+  return Number.isFinite(x) && Number.isFinite(y)
+    && pos[0]>=x && pos[0]<x+2 && pos[1]>=y && pos[1]<y+2;
+}
+function _tempestadeTargetMesh(rec){
+  if(!g3?.entityGroup || !rec) return null;
+  const id=String(rec.id), kind=String(rec.kind || '');
+  return g3.entityGroup.children.find(fig=>{
+    const u=fig.userData||{};
+    if(kind==='player') return u.pid!=null && String(u.pid)===id;
+    if(kind==='monster') return u.monId!=null && String(u.monId)===id;
+    if(kind==='animado') return u.animadoId!=null && String(u.animadoId)===id;
+    if(kind==='prisoner') return !!u.prisoner;
+    return [u.pid,u.monId,u.animadoId].some(x=>x!=null&&String(x)===id) || !!u.prisoner;
+  }) || null;
+}
+function _tempestadeSyncTargetSpins(state){
+  if(!g3?.entityGroup) return;
+  const desired=new Map();
+  for(const anim of _tempestadeAnims){
+    for(const rec of (anim.trappedTargets||[]).values()){
+      const pos=_tempestadeTargetPos(state,rec);
+      const cyclone=anim.ciclones.find(c=>Number(c.id)===Number(rec.cycloneId));
+      const ent=_tempestadeEntity(state,rec);
+      if(!ent || (ent.alive===false) || Number(ent.hp ?? ent.vida_atual ?? 1)<=0
+         || !_tempestadeCicloneContem(cyclone,pos)) continue;
+      desired.set(_tempestadeTargetKey(rec.kind,rec.id),rec);
+    }
+  }
+  g3.entityGroup.children.forEach(fig=>{
+    const u=fig.userData||{};
+    const key=u.pid!=null ? _tempestadeTargetKey('player',u.pid)
+      : u.monId!=null ? _tempestadeTargetKey('monster',u.monId)
+      : u.animadoId!=null ? _tempestadeTargetKey('animado',u.animadoId)
+      : u.prisoner ? _tempestadeTargetKey('prisoner','prisoner') : null;
+    if(!key) return;
+    const rec=u.prisoner
+      ? [...desired.values()].find(x=>String(x.kind)==='prisoner')
+      : desired.get(key);
+    if(rec) u.tempestadeCicloneSpin={speedMs:Number(rec.spinMs)||520};
+    else if(u.tempestadeCicloneSpin) delete u.tempestadeCicloneSpin;
+  });
 }
 function _tempestadeBuildBolt(line, from, to, seed, T){
   const points=[new T.Vector3(from[0],from[1],from[2])], dx=to[0]-from[0],dy=to[1]-from[1],dz=to[2]-from[2];
@@ -45531,6 +46353,51 @@ function _tempestadeBuild3D(anim){
   if(!g3||!g3.scene||!window.THREE) return false;
   const T=window.THREE, group=new T.Group(); group.name='tempestade-de-ciclones-animation';
   const wind=0x65d8ef, foam=0xdafcff, deep=0x176f9b;
+  // Se a cena 3D for reconstruída durante a animação, descarta as referências
+  // de objetos do grupo anterior junto com ele.
+  anim.castRings.length=0; anim.castMotes.length=0; anim.fogPuffs.length=0; anim.windBands.length=0;
+  const castGlowMat=new T.MeshBasicMaterial({color:wind,transparent:true,opacity:0,
+    depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+  const castCoreMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,
+    depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+  anim.castGlow=new T.Mesh(new T.SphereGeometry(.34,14,10),castGlowMat);
+  anim.castCore=new T.Mesh(new T.OctahedronGeometry(.14,0),castCoreMat);
+  group.add(anim.castGlow,anim.castCore);
+  for(let i=0;i<3;i++){
+    const mat=new T.MeshBasicMaterial({color:i===1?foam:wind,transparent:true,opacity:0,
+      depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+    const ring=new T.Mesh(new T.TorusGeometry(.28+i*.12,.018,8,32),mat);
+    ring.rotation.x=-Math.PI/2;ring.position.set(anim.origin[0],.31+i*.045,anim.origin[1]);
+    ring.renderOrder=76;group.add(ring);anim.castRings.push(ring);
+  }
+  for(let i=0;i<14;i++){
+    const mat=new T.MeshBasicMaterial({color:i%3?wind:foam,transparent:true,opacity:0,
+      depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+    const mote=new T.Mesh(new T.OctahedronGeometry(.025+(i%3)*.01,0),mat);
+    mote.userData.index=i;group.add(mote);anim.castMotes.push(mote);
+  }
+  const areaTiles=anim.tiles.length?anim.tiles:[[anim.center[0],anim.center[1]]];
+  const minX=Math.min(...areaTiles.map(p=>p[0])),maxX=Math.max(...areaTiles.map(p=>p[0]));
+  const minZ=Math.min(...areaTiles.map(p=>p[1])),maxZ=Math.max(...areaTiles.map(p=>p[1]));
+  const fogWidth=Math.max(1.8,maxX-minX+1.2),fogDepth=Math.max(1.8,maxZ-minZ+1.2);
+  for(let i=0;i<18;i++){
+    const mat=new T.MeshBasicMaterial({color:i%3?0x8bdff0:foam,transparent:true,opacity:0,
+      depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+    const puff=new T.Mesh(new T.SphereGeometry(.22+(i%4)*.045,8,6),mat);
+    puff.userData.index=i;puff.userData.phase=_tempestadeHash(anim.seed+i*61);
+    puff.userData.baseX=minX+_tempestadeHash(anim.seed+i*71)*fogWidth;
+    puff.userData.baseZ=minZ+_tempestadeHash(anim.seed+i*79)*fogDepth;
+    puff.position.set(puff.userData.baseX,.34+(i%3)*.025,puff.userData.baseZ);puff.scale.y=.16;
+    puff.renderOrder=75;group.add(puff);anim.fogPuffs.push(puff);
+  }
+  const windRadius=Math.max(1.0,Math.max(fogWidth,fogDepth)*.38);
+  for(let i=0;i<4;i++){
+    const mat=new T.MeshBasicMaterial({color:i%2?wind:foam,transparent:true,opacity:0,
+      depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+    const band=new T.Mesh(new T.TorusGeometry(windRadius*(.62+i*.16),.018,7,48),mat);
+    band.rotation.x=-Math.PI/2;band.position.set((minX+maxX+1)/2,.31+i*.012,(minZ+maxZ+1)/2);
+    band.renderOrder=77;group.add(band);anim.windBands.push(band);
+  }
   for(const [x,z] of anim.tiles){const mat=new T.MeshBasicMaterial({color:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const tile=new T.Mesh(new T.PlaneGeometry(.92,.92),mat);tile.rotation.x=-Math.PI/2;tile.position.set(x,.255,z);tile.renderOrder=74;group.add(tile);anim.areaMeshes.push(tile);}
   const centerMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
   const centerRing=new T.Mesh(new T.TorusGeometry(.45,.035,8,44),centerMat);centerRing.rotation.x=-Math.PI/2;centerRing.position.set(anim.center[0],.30,anim.center[1]);centerRing.renderOrder=78;group.add(centerRing);anim.stormRings.push(centerRing);
@@ -45542,7 +46409,7 @@ function _tempestadeBuild3D(anim){
     for(let j=0;j<4;j++){const mat=new T.MeshBasicMaterial({color:j===1?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const ring=new T.Mesh(new T.TorusGeometry(.22+j*.12,.025+j*.004,7,32),mat);ring.rotation.x=Math.PI/2;ring.position.y=.34+j*.29;root.add(ring);rings.push(ring);}
     const baseMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const base=new T.Mesh(new T.TorusGeometry(.62,.032,8,38),baseMat);base.rotation.x=Math.PI/2;base.position.y=.08;root.add(base);
     const motes=[];for(let j=0;j<12;j++){const mat=new T.MeshBasicMaterial({color:j%3===0?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const mote=new T.Mesh(new T.SphereGeometry(j%4===0?.038:.022,7,5),mat);root.add(mote);motes.push(mote);}
-    anim.cycloneMeshes.push({id:c.id,root,funnel,rings,base,motes});
+    anim.cycloneMeshes.push({id:c.id,root,funnel,rings,base,motes,spinMs:_tempestadeCycloneSpinMs(c,i)});
   }
   const lightningGroup=new T.Group();lightningGroup.renderOrder=100;group.add(lightningGroup);
   for(let i=0;i<8;i++){const mat=new T.LineBasicMaterial({color:i%2?foam:0x8edfff,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const line=new T.Line(new T.BufferGeometry(),mat);line.visible=false;lightningGroup.add(line);anim.boltMeshes.push(line);}
@@ -45554,36 +46421,272 @@ function _tempestadeDispose3D(anim){
   if(!anim.group)return;if(anim.group.parent)anim.group.parent.remove(anim.group);
   anim.group.traverse(obj=>{if(obj.geometry)obj.geometry.dispose();if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>m.dispose());});anim.group=null;
 }
+function _limparAnimacoesTempestade(){
+  for(const anim of _tempestadeAnims) _tempestadeDispose3D(anim);
+  _tempestadeAnims.length = 0;
+  if(_tempestadeRaf != null){
+    _cancelVisualFrame(_tempestadeRaf);
+    _tempestadeRaf = null;
+  }
+}
 function _tempestadeUpdate3D(anim,now){
   if(!g3||!window.THREE)return;if(!anim.group||anim.group.parent!==g3.scene){_tempestadeDispose3D(anim);if(!_tempestadeBuild3D(anim))return;}
   const p=_tempestadeProgress(anim,now),pulse=.5+.5*Math.sin(now/145+anim.seed),formed=p.formed,fade=p.fade;
-  for(const tile of anim.areaMeshes)tile.material.opacity=(.055+.04*pulse)*fade;
+  const castFade=p.charging?Math.min(1,p.elapsed/180)*Math.min(1,(anim.chargeMs-p.elapsed)/150):0;
+  const castPulse=.72+.28*Math.sin(now/92+anim.seed);
+  anim.castCore.visible=anim.castGlow.visible=castFade>.001;
+  anim.castCore.position.set(anim.origin[0],.76+.05*Math.sin(now/105),anim.origin[1]);
+  anim.castGlow.position.copy(anim.castCore.position);
+  anim.castCore.scale.setScalar(.75+.28*castPulse+.18*p.charge);
+  anim.castGlow.scale.setScalar(1+.24*castPulse+.24*p.charge);
+  anim.castCore.material.opacity=.70*castFade;anim.castGlow.material.opacity=.28*castFade;
+  anim.castRings.forEach((ring,i)=>{ring.visible=castFade>.001;ring.rotation.z=(i%2?-1:1)*now/(330+i*70);ring.scale.setScalar(.72+.34*p.charge+.08*Math.sin(now/100+i));ring.material.opacity=(.24+i*.10)*castFade;});
+  for(const mote of anim.castMotes){const i=mote.userData.index,a=now/560+i*Math.PI*2/anim.castMotes.length,r=.18+(i%4)*.06+.10*p.charge,lift=(now/760+i*.13)%1;mote.visible=castFade>.001;mote.position.set(anim.origin[0]+Math.cos(a)*r,.38+lift*.70,anim.origin[1]+Math.sin(a)*r);mote.material.opacity=(.20+.34*Math.sin(now/110+i)**2)*castFade;mote.scale.setScalar(.72+.30*Math.sin(now/90+i));}
+  for(const puff of anim.fogPuffs){const i=puff.userData.index,phase=puff.userData.phase,a=now/1450+phase*Math.PI*2;puff.position.x=puff.userData.baseX+Math.cos(a)*.08;puff.position.z=puff.userData.baseZ+Math.sin(a)*.08;puff.position.y=.31+.045*Math.sin(now/520+i);puff.scale.set(.85+.24*Math.sin(now/210+i)**2,.13+.06*Math.sin(now/180+i)**2,1.25+.28*Math.sin(now/240+i)**2);puff.material.opacity=(.018+.035*Math.sin(now/170+i)**2)*fade;}
+  for(let i=0;i<anim.windBands.length;i++){const band=anim.windBands[i];band.rotation.z=(i%2?-1:1)*now/(520+i*85);band.scale.setScalar(.88+.08*Math.sin(now/190+i));band.material.opacity=(.07+.045*pulse)*fade;}
+  for(const tile of anim.areaMeshes)tile.material.opacity=(.035+.025*pulse)*fade;
   for(const ring of anim.stormRings){ring.rotation.z=now/360;ring.scale.setScalar(.75+.18*pulse+Math.min(1,p.impact)*.55);ring.material.opacity=(.25+.18*pulse)*formed*fade;}
-  for(let i=0;i<anim.cycloneMeshes.length;i++){const v=anim.cycloneMeshes[i],c=anim.ciclones.find(x=>Number(x.id)===Number(v.id))||anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);v.root.position.set(pos[0]+.5,.25,pos[1]+.5);v.root.rotation.y=now/(520+i*48)+i;v.funnel.scale.set(.88+.10*pulse,Math.max(.02,formed*(.78+.20*pulse)),.88+.10*pulse);v.funnel.rotation.z=Math.sin(now/310+i)*.06;v.funnel.material.opacity=(.10+.045*pulse)*formed*fade;for(let j=0;j<v.rings.length;j++){const ring=v.rings[j];ring.rotation.z=now/(250+j*52)*(j%2?-1:1)+i;ring.scale.setScalar(.82+.12*Math.sin(now/110+j+i));ring.material.opacity=(.33+.20*pulse)*(formed*.72+.28)*fade;}v.base.rotation.z=-now/310-i;v.base.material.opacity=(.42+.18*pulse)*formed*fade;for(let j=0;j<v.motes.length;j++){const a=now/600+_tempestadeHash(anim.seed+i*97+j*13)*Math.PI*2,r=.22+(j%5)*.095,y=.22+((now/1100+j*.13+_tempestadeHash(anim.seed+j*17))%1)*1.28;v.motes[j].position.set(Math.cos(a)*r,y,Math.sin(a)*r);v.motes[j].material.opacity=(.18+.28*Math.sin(now/170+j)**2)*formed*fade;}}
+  for(let i=0;i<anim.cycloneMeshes.length;i++){const v=anim.cycloneMeshes[i],c=anim.ciclones.find(x=>Number(x.id)===Number(v.id))||anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);v.root.position.set(pos[0]+.5,.25,pos[1]+.5);v.root.rotation.y=now/_tempestadeCycloneSpinMs(c,i)+i;v.funnel.scale.set(.88+.10*pulse,Math.max(.02,formed*(.78+.20*pulse)),.88+.10*pulse);v.funnel.rotation.z=Math.sin(now/310+i)*.06;v.funnel.material.opacity=(.10+.045*pulse)*formed*fade;for(let j=0;j<v.rings.length;j++){const ring=v.rings[j];ring.rotation.z=now/(250+j*52)*(j%2?-1:1)+i;ring.scale.setScalar(.82+.12*Math.sin(now/110+j+i));ring.material.opacity=(.33+.20*pulse)*(formed*.72+.28)*fade;}v.base.rotation.z=-now/310-i;v.base.material.opacity=(.42+.18*pulse)*formed*fade;for(let j=0;j<v.motes.length;j++){const a=now/600+_tempestadeHash(anim.seed+i*97+j*13)*Math.PI*2,r=.22+(j%5)*.095,y=.22+((now/1100+j*.13+_tempestadeHash(anim.seed+j*17))%1)*1.28;v.motes[j].position.set(Math.cos(a)*r,y,Math.sin(a)*r);v.motes[j].material.opacity=(.18+.28*Math.sin(now/170+j)**2)*formed*fade;}}
+  _tempestadeSyncTargetSpins(GS.gameState);
   const flashAge=anim.lightningAt?now-anim.lightningAt:-1,lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS,lf=lightning?Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS)):0;anim.lightningFlash.visible=lightning;anim.lightningRing.visible=lightning;anim.lightningFlash.scale.setScalar(.45+1.8*lf);anim.lightningFlash.material.opacity=.68*lf;anim.lightningRing.scale.setScalar(.65+1.75*lf);anim.lightningRing.material.opacity=.8*lf;
-  for(let i=0;i<anim.boltMeshes.length;i++){const line=anim.boltMeshes[i];line.visible=lightning&&i<Math.max(2,Math.min(anim.boltMeshes.length,2+anim.ciclones.length*2));if(!line.visible)continue;const c=anim.ciclones[i%Math.max(1,anim.ciclones.length)],pos=_tempestadeCyclonePosition(c,now),tx=pos[0]+(_tempestadeHash(anim.seed+i*7)*1.7-.35),tz=pos[1]+(_tempestadeHash(anim.seed+i*11)*1.7-.35);_tempestadeBuildBolt(line,[pos[0]+.5,1.60,pos[1]+.5],[tx,.28,tz],anim.seed+i*41,window.THREE);line.material.opacity=(.70+.25*pulse)*lf;}
+  for(let i=0;i<anim.boltMeshes.length;i++){const line=anim.boltMeshes[i];const strikeCount=Math.max(4,Math.min(anim.boltMeshes.length,4+anim.ciclones.length*2));line.visible=lightning&&i<strikeCount;if(!line.visible)continue;const targetTile=anim.tiles.length?anim.tiles[(i*7+Math.floor(anim.seed%anim.tiles.length))%anim.tiles.length]:anim.center;const nextTile=anim.tiles.length?anim.tiles[(i*11+3+Math.floor(anim.seed%anim.tiles.length))%anim.tiles.length]:anim.center;const tx=targetTile[0]+.5+(_tempestadeHash(anim.seed+i*7)*.72-.36),tz=targetTile[1]+.5+(_tempestadeHash(anim.seed+i*11)*.72-.36);if(i%4===3&&anim.tiles.length>1){_tempestadeBuildBolt(line,[tx,.30,tz],[nextTile[0]+.5,.33,nextTile[1]+.5],anim.seed+i*41,window.THREE);}else{const sx=anim.center[0]+.5+(_tempestadeHash(anim.seed+i*17)*1.8-.9),sz=anim.center[1]+.5+(_tempestadeHash(anim.seed+i*19)*1.8-.9);_tempestadeBuildBolt(line,[sx,2.45+(i%3)*.28,sz],[tx,.28,tz],anim.seed+i*41,window.THREE);}line.material.opacity=(.70+.25*pulse)*lf;}
+}
+function _tempestadeDrawLightning2D(ctx,state,anim,now,fade,pulse){
+  const flashAge=anim.lightningAt?now-anim.lightningAt:-1;
+  const lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS;
+  if(!lightning)return;
+  const lf=Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS));
+  const count=Math.max(4,Math.min(8,4+anim.ciclones.length*2));
+  const tiles=anim.tiles.length?anim.tiles:[anim.center];
+  ctx.save();ctx.lineCap='round';ctx.shadowColor='#bff8ff';ctx.shadowBlur=CELL*.18;
+  for(let i=0;i<count;i++){
+    const target=tiles[(i*7+Math.floor(anim.seed%tiles.length))%tiles.length];
+    const next=tiles[(i*11+3+Math.floor(anim.seed%tiles.length))%tiles.length];
+    const tx=(target[0]+.5+(_tempestadeHash(anim.seed+i*7)*.72-.36))*CELL;
+    const ty=(target[1]+.5+(_tempestadeHash(anim.seed+i*11)*.72-.36))*CELL;
+    const points=[];
+    if(i%4===3&&tiles.length>1){
+      const sx=(target[0]+.5)*CELL,sy=(target[1]+.5)*CELL,ex=(next[0]+.5)*CELL,ey=(next[1]+.5)*CELL;
+      points.push([sx,sy]);for(let j=1;j<5;j++){const q=j/5;points.push([sx+(ex-sx)*q+(_tempestadeHash(anim.seed+i*23+j*3)-.5)*CELL*.20,sy+(ey-sy)*q]);}points.push([ex,ey]);
+    }else{
+      const sx=(anim.center[0]+.5+(_tempestadeHash(anim.seed+i*17)*1.8-.9))*CELL;
+      const sy=(anim.center[1]-1.9-(_tempestadeHash(anim.seed+i*19)*1.3))*CELL;
+      points.push([sx,sy]);for(let j=1;j<6;j++){const q=j/6;points.push([sx+(tx-sx)*q+(_tempestadeHash(anim.seed+i*23+j*3)-.5)*CELL*.22,sy+(ty-sy)*q]);}points.push([tx,ty]);
+    }
+    ctx.strokeStyle=`rgba(87,212,255,${((.30+.06*pulse)*lf*fade).toFixed(3)})`;ctx.lineWidth=Math.max(5,CELL*.10);ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let j=1;j<points.length;j++)ctx.lineTo(points[j][0],points[j][1]);ctx.stroke();
+    ctx.strokeStyle=`rgba(242,255,255,${(.84*lf).toFixed(3)})`;ctx.lineWidth=Math.max(1.5,CELL*.028);ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let j=1;j<points.length;j++)ctx.lineTo(points[j][0],points[j][1]);ctx.stroke();
+  }
+  for(const [tx,ty] of (anim.lightningTiles.length?anim.lightningTiles:anim.tiles)){if(!_tempestadeVisible(state,[tx,ty]))continue;ctx.fillStyle=`rgba(210,250,255,${(.12+.24*lf).toFixed(3)})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}
+  ctx.restore();
+}
+function _tempestadeDrawTrappedTargets2D(ctx,state,anim,now,fade){
+  for(const rec of (anim.trappedTargets||[]).values()){
+    const pos=_tempestadeTargetPos(state,rec),cyclone=anim.ciclones.find(c=>Number(c.id)===Number(rec.cycloneId));
+    const ent=_tempestadeEntity(state,rec);
+    if(!pos || !ent || ent.alive===false || Number(ent.hp ?? ent.vida_atual ?? 1)<=0
+       || !_tempestadeCicloneContem(cyclone,pos) || !_tempestadeVisible(state,pos)) continue;
+    const cidx=anim.ciclones.indexOf(cyclone);
+    const x=(pos[0]+.5)*CELL,y=(pos[1]+.5)*CELL,spin=_tempestadeCycloneSpinMs(cyclone,cidx)/2,angle=now/spin;
+    ctx.save();ctx.translate(x,y);ctx.globalCompositeOperation='lighter';ctx.shadowColor='#9de8f4';ctx.shadowBlur=CELL*.12;
+    for(let j=0;j<3;j++){
+      const radius=CELL*(.33+j*.08),a=angle*(j%2?-1:1)+j*.95;
+      ctx.strokeStyle=`rgba(180,248,255,${(.62-j*.12)*fade})`;ctx.lineWidth=Math.max(1.5,CELL*.028);
+      ctx.beginPath();ctx.arc(0,0,radius,a,a+Math.PI*1.18);ctx.stroke();
+    }
+    ctx.font=`bold ${Math.max(10,CELL*.24)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillStyle=`rgba(225,252,255,${(.78*fade).toFixed(3)})`;ctx.fillText('🌪️',0,-CELL*.48);
+    ctx.restore();
+  }
 }
 function _tempestadeDraw2D(ctx,state,anim,now){
   if(!_tempestadeVisible(state,anim.origin)&&!_tempestadeVisible(state,anim.center)&&!anim.tiles.some(p=>_tempestadeVisible(state,p)))return;
   const p=_tempestadeProgress(anim,now),fade=p.fade,pulse=.5+.5*Math.sin(now/145+anim.seed);ctx.save();ctx.globalCompositeOperation='lighter';
+  if(p.charging&&_tempestadeVisible(state,anim.origin)){
+    const ox=(anim.origin[0]+.5)*CELL,oy=(anim.origin[1]+.5)*CELL,q=p.charge,fadeIn=Math.min(1,p.elapsed/170),castPulse=.72+.28*Math.sin(now/92+anim.seed);
+    ctx.shadowColor='#65d8ef';ctx.shadowBlur=CELL*(.18+.10*castPulse);
+    for(let i=0;i<3;i++){const radius=CELL*(.20+i*.105+.03*Math.sin(now/110+i));ctx.strokeStyle=`rgba(${i===1?218:101},${i===1?252:226},${i===1?255:239},${((.30+i*.11)*fadeIn*(1-q*.16)).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*(.024+i*.008));ctx.beginPath();const a=now/360*(i%2?-1:1);ctx.arc(ox,oy,radius,a,a+Math.PI*(1.3+i*.22));ctx.stroke();}
+    const glow=ctx.createRadialGradient(ox,oy,0,ox,oy,CELL*(.70+.18*castPulse));glow.addColorStop(0,`rgba(238,255,255,${(.62*fadeIn).toFixed(3)})`);glow.addColorStop(.25,`rgba(60,205,238,${(.34*fadeIn).toFixed(3)})`);glow.addColorStop(1,'rgba(0,80,150,0)');ctx.fillStyle=glow;ctx.beginPath();ctx.arc(ox,oy,CELL*.88,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<12;i++){const a=now/560+i*Math.PI*2/12,r=CELL*(.18+(i%4)*.065+.10*q),lift=(now/760+i*.13)%1;ctx.fillStyle=`rgba(${150+(i%3)*25},${225+(i%2)*18},255,${(.28+.32*Math.sin(now/110+i)**2).toFixed(3)})`;ctx.beginPath();ctx.arc(ox+Math.cos(a)*r,oy+Math.sin(a)*r-lift*CELL*.34,Math.max(2,CELL*.024+(i%3)),0,Math.PI*2);ctx.fill();}
+    ctx.font=`bold ${Math.max(15,CELL*.25)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(238,255,255,${(.70+.20*castPulse).toFixed(3)})`;ctx.fillText('🌪️',ox,oy);
+  }
+  // Névoa rasteira e correntes de vento continuam circulando pela área mesmo
+  // depois que a concentração termina, deixando a zona com presença visual.
+  if(anim.tiles.length){
+    const minX=Math.min(...anim.tiles.map(p=>p[0])),maxX=Math.max(...anim.tiles.map(p=>p[0]));
+    const minY=Math.min(...anim.tiles.map(p=>p[1])),maxY=Math.max(...anim.tiles.map(p=>p[1]));
+    const ax=(minX+maxX+1)/2*CELL,ay=(minY+maxY+1)/2*CELL;
+    for(let i=0;i<9;i++){
+      const phase=_tempestadeHash(anim.seed+i*61),u=(now/1900+phase)%1;
+      const x=(minX+.25+_tempestadeHash(anim.seed+i*71)*(maxX-minX+.5))*CELL+Math.sin(now/620+i)*CELL*.10;
+      const y=(minY+.25+_tempestadeHash(anim.seed+i*79)*(maxY-minY+.5))*CELL+Math.cos(now/710+i)*CELL*.10;
+      const radius=CELL*(.34+(i%4)*.13),g=ctx.createRadialGradient(x,y,0,x,y,radius*1.7);
+      g.addColorStop(0,`rgba(174,242,255,${(.035+.025*Math.sin(now/180+i)**2)*fade})`);g.addColorStop(.56,`rgba(82,190,222,${(.022+.018*u)*fade})`);g.addColorStop(1,'rgba(20,90,145,0)');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,radius*1.45,radius*.52,Math.sin(now/900+i),0,Math.PI*2);ctx.fill();
+    }
+    ctx.shadowColor='#71e8ff';ctx.shadowBlur=CELL*.10;ctx.lineWidth=Math.max(1,CELL*.018);
+    for(let i=0;i<5;i++){const r=CELL*(.55+i*.28),a=now/560*(i%2?-1:1)+i*.7;ctx.strokeStyle=`rgba(182,247,255,${(.16+.10*pulse)*fade})`;ctx.beginPath();ctx.arc(ax,ay,r,a,a+Math.PI*(.72+.12*Math.sin(now/200+i)));ctx.stroke();}
+  }
   for(const [tx,ty] of anim.tiles){if(!_tempestadeVisible(state,[tx,ty]))continue;ctx.fillStyle=`rgba(50,170,210,${(.08+.04*pulse)*fade})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}
-  for(let i=0;i<anim.ciclones.length;i++){const c=anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now),x=(pos[0]+1)*CELL,y=(pos[1]+1)*CELL,r=CELL*(.62+.06*pulse),formed=p.formed;if(!_tempestadeVisible(state,[Math.floor(pos[0]),Math.floor(pos[1])]))continue;ctx.fillStyle=`rgba(35,125,165,${(.12+.05*pulse)*formed*fade})`;ctx.fillRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL*2-4,CELL*2-4);ctx.strokeStyle=`rgba(180,248,255,${(.55+.25*pulse)*formed*fade})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.shadowColor='#64e6ff';ctx.shadowBlur=CELL*.16;for(let j=0;j<3;j++){const rr=r*(.42+j*.25),a=now/260*(j%2?-1:1)+i;ctx.beginPath();ctx.arc(x,y,rr,a,a+Math.PI*1.42);ctx.stroke();}ctx.strokeStyle=`rgba(220,252,255,${(.30+.25*pulse)*formed*fade})`;ctx.beginPath();ctx.arc(x,y,r*(.54+.10*pulse),0,Math.PI*2);ctx.stroke();ctx.font=`bold ${Math.max(12,CELL*.42)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(225,252,255,${(.55+.28*pulse)*formed*fade})`;ctx.fillText('🌪️',x,y);}
-  const flashAge=anim.lightningAt?now-anim.lightningAt:-1,lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS,lf=lightning?Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS)):0;if(lightning){for(let i=0;i<Math.max(2,anim.ciclones.length*2);i++){const c=anim.ciclones[i%Math.max(1,anim.ciclones.length)],pos=_tempestadeCyclonePosition(c,now),sx=(pos[0]+1)*CELL,sy=(pos[1]+.15)*CELL,tx=(pos[0]+.5+_tempestadeHash(anim.seed+i*7)*1.7-.35)*CELL,ty=(pos[1]+.5+_tempestadeHash(anim.seed+i*11)*1.7-.35)*CELL;ctx.beginPath();ctx.moveTo(sx,sy);for(let j=1;j<6;j++){const q=j/6;ctx.lineTo(sx+(tx-sx)*q+(_tempestadeHash(anim.seed+i*23+j*3)-.5)*CELL*.22,sy+(ty-sy)*q);}ctx.lineTo(tx,ty);ctx.strokeStyle=`rgba(235,255,255,${(.72*lf).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.stroke();}for(const [tx,ty] of (anim.lightningTiles.length?anim.lightningTiles:anim.tiles)){ctx.fillStyle=`rgba(210,250,255,${(.12+.24*lf).toFixed(3)})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}}
+  for(let i=0;i<anim.ciclones.length;i++){const c=anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now),x=(pos[0]+1)*CELL,y=(pos[1]+1)*CELL,r=CELL*(.62+.06*pulse),formed=p.formed;if(!_tempestadeVisible(state,[Math.floor(pos[0]),Math.floor(pos[1])]))continue;ctx.fillStyle=`rgba(35,125,165,${(.12+.05*pulse)*formed*fade})`;ctx.fillRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL*2-4,CELL*2-4);ctx.strokeStyle=`rgba(180,248,255,${(.55+.25*pulse)*formed*fade})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.shadowColor='#64e6ff';ctx.shadowBlur=CELL*.16;for(let j=0;j<3;j++){const rr=r*(.42+j*.25),a=now/(_tempestadeCycloneSpinMs(c,i)/2)*(j%2?-1:1)+i;ctx.beginPath();ctx.arc(x,y,rr,a,a+Math.PI*1.42);ctx.stroke();}ctx.strokeStyle=`rgba(220,252,255,${(.30+.25*pulse)*formed*fade})`;ctx.beginPath();ctx.arc(x,y,r*(.54+.10*pulse),0,Math.PI*2);ctx.stroke();ctx.font=`bold ${Math.max(12,CELL*.42)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(225,252,255,${(.55+.28*pulse)*formed*fade})`;ctx.fillText('🌪️',x,y);}
+  _tempestadeDrawTrappedTargets2D(ctx,state,anim,now,fade);
+  _tempestadeDrawLightning2D(ctx,state,anim,now,fade,pulse);
   ctx.restore();
 }
 function _tempestadeTick(now){
-  let active=false;for(let i=_tempestadeAnims.length-1;i>=0;i--){const anim=_tempestadeAnims[i],p=_tempestadeProgress(anim,now);if(p.impacting&&!anim.impactReached){anim.impactReached=true;_liberarDadosMagia();}if(p.finished){_tempestadeDispose3D(anim);_tempestadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_tempestadeUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_tempestadeRaf=active?_scheduleVisualFrame(_tempestadeTick):null;
+  let active=false;for(let i=_tempestadeAnims.length-1;i>=0;i--){const anim=_tempestadeAnims[i],p=_tempestadeProgress(anim,now);if(p.impacting&&!anim.impactReached){anim.impactReached=true;_liberarDadosMagia();}if(p.finished){_tempestadeDispose3D(anim);_tempestadeAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_tempestadeUpdate3D(anim,now);}if(mode3D&&g3)_tempestadeSyncTargetSpins(GS.gameState);if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_tempestadeRaf=active?_scheduleVisualFrame(_tempestadeTick):null;
 }
 
 function _receberAnimacaoTempestade(msg){
   if(!msg||msg.spell_id!=='tempestade_ciclones')return;
   const now=performance.now(),id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_tempestadeAnims.find(a=>a.animationId===id);
   if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast(t('ui.magia.tempestade_toast_aproxima'),'#9de8f4');}
-  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
+  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
   else if(msg.phase==='cyclone_move'){if(anim){const c=anim.ciclones.find(x=>Number(x.id)===Number(msg.ciclone_id));if(c&&Array.isArray(msg.from_pos)&&Array.isArray(msg.to_pos)){c.fromPos=msg.from_pos.map(Number);c.toPos=msg.to_pos.map(Number);c.pos=c.toPos.slice();c.moveStart=now;}}}
-  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast(t('ui.magia.tempestade_toast_raios'),'#e8f7ff');}
+  else if(msg.phase==='cyclone_target'){
+    if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}
+    if(!anim.trappedTargets) anim.trappedTargets=new Map();
+    if(Array.isArray(msg.ciclones)) anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0,spinMs:520+i*48}));
+    const key=_tempestadeTargetKey(msg.target_kind,msg.target_id);
+    if(msg.trapped && !msg.passed) anim.trappedTargets.set(key,{
+      id:String(msg.target_id),kind:msg.target_kind||'entity',
+      cycloneId:Number(msg.cyclone_id),spinMs:Number(msg.spin_ms)||520,
+      pos:Array.isArray(msg.target_pos)?msg.target_pos.map(Number):null,
+    });
+    else anim.trappedTargets.delete(key);
+  }
+  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast(t('ui.magia.tempestade_toast_raios'),'#e8f7ff');}
   else if(msg.phase==='expire'){if(anim)anim.endingAt=now;}
   if(!_tempestadeRaf)_tempestadeRaf=_scheduleVisualFrame(_tempestadeTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
+}
+
+// ── Magias de privação — correntes, drenagem e deterioração do chão ────────
+// Estas magias compartilham o mesmo relógio visual, mas têm leituras distintas:
+// Maldição prende o alvo, Desnutrição puxa sua energia e Definhar se espalha
+// casa a casa pela área. O servidor continua autoritativo sobre save, recurso
+// e duração; este bloco só desenha os eventos spell_animation.
+const _privacaoAnims = [];
+let _privacaoRaf = null;
+const PRIVACAO_FADE_MS = 760;
+const PRIVACAO_LIFE_MS = 1900;
+const PRIVACAO_STYLE = {
+  maldicao_corpo_pesado: {base:[104,30,137], accent:[226,139,255], glow:0xb84de8, icon:'⛓️'},
+  desnutricao: {base:[155,91,34], accent:[255,216,126], glow:0xe1a24e, icon:'◌'},
+  definhar: {base:[91,67,48], accent:[206,142,96], glow:0x9b6e4e, icon:'🥀'},
+};
+
+function _privacaoClamp(v,a=0,b=1){return Math.max(a,Math.min(b,Number(v)||0));}
+function _privacaoHash(n){n=(n|0)^0x6d2b79f5;n=Math.imul(n^(n>>>15),0x85ebca6b);return((n^(n>>>13))>>>0)/4294967296;}
+function _privacaoStyle(anim){return PRIVACAO_STYLE[anim.kind]||PRIVACAO_STYLE.desnutricao;}
+function _privacaoKind(id){return ['maldicao_corpo_pesado','desnutricao','definhar'].includes(id)?id:null;}
+function _privacaoTiles(raw,center){
+  const seen=new Set();return(Array.isArray(raw)?raw:[]).filter(p=>Array.isArray(p)&&p.length>=2)
+    .map(p=>[Number(p[0]),Number(p[1])]).filter(p=>p.every(Number.isFinite))
+    .filter(p=>{const k=p.join(',');if(seen.has(k))return false;seen.add(k);return true;})
+    .sort((a,b)=>Math.max(Math.abs(a[0]-center[0]),Math.abs(a[1]-center[1]))-
+      Math.max(Math.abs(b[0]-center[0]),Math.abs(b[1]-center[1])));
+}
+function _privacaoAnimFromMessage(msg){
+  const kind=_privacaoKind(String(msg.spell_id||''));
+  const origin=Array.isArray(msg.origin)?msg.origin.map(Number):[0,0];
+  const target=Array.isArray(msg.target)?msg.target.map(Number):origin.slice();
+  const center=Array.isArray(msg.center)?msg.center.map(Number):target.slice();
+  const targets=Array.isArray(msg.targets)?msg.targets.map((t,i)=>({
+    id:t?.id==null?String(i):String(t.id),pos:Array.isArray(t?.pos)?t.pos.map(Number):center.slice()
+  })):msg.target_id!=null?[{id:String(msg.target_id),pos:target.slice()}]:[];
+  const tiles=_privacaoTiles(msg.tiles,center);
+  return {kind,animationId:msg.animation_id==null?null:String(msg.animation_id),casterId:msg.caster_id==null?null:String(msg.caster_id),
+    targetId:msg.target_id==null?null:String(msg.target_id),origin,target,center,targets,tiles,side:Number(msg.side)||3,
+    chargeMs:Math.max(360,Number(msg.charge_ms)||680),travelMs:Math.max(320,Number(msg.travel_ms)||520),
+    impactMs:Math.max(420,Number(msg.impact_ms)||760),start:performance.now(),resolved:false,resolveAt:0,
+    passed:false,immune:false,activeIds:new Set(),endingAt:null,impactReached:false,group:null,
+    core:null,coreGlow:null,beam:null,beamGlow:null,castRings:[],areaTiles:[],targetRings:[],motes:[],chains:[],seed:
+      ((origin[0]*73856093)^(origin[1]*19349663)^(center[0]*83492791)^Date.now())>>>0};
+}
+function _privacaoEntity(state,id){
+  if(!state||id==null)return null;const sid=String(id);
+  return(state.players||[]).find(e=>String(e.id)===sid)||(state.monsters||[]).find(e=>String(e.id)===sid)||null;
+}
+function _privacaoTargetPos(anim,target){
+  const live=_privacaoEntity(GS.gameState,target?.id);return live&&Array.isArray(live.pos)?live.pos:(target?.pos||anim.center);
+}
+function _privacaoFocus(anim){
+  if(anim.kind==='definhar')return anim.center;
+  const live=_privacaoEntity(GS.gameState,anim.targetId);return live&&Array.isArray(live.pos)?live.pos:anim.target;
+}
+function _privacaoVisible(state,anim){
+  if(!state||GS.isMaster()||state.test_mode)return true;
+  const visible=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  return [anim.origin,anim.center,...anim.tiles,...anim.targets.map(t=>_privacaoTargetPos(anim,t))]
+    .some(p=>Array.isArray(p)&&visible.has(`${Math.floor(p[0])},${Math.floor(p[1])}`));
+}
+function _privacaoProgress(anim,now){
+  const elapsed=Math.max(0,now-anim.start),pathEnd=anim.start+anim.chargeMs+anim.travelMs;
+  const charge=_privacaoClamp(elapsed/anim.chargeMs),travel=_privacaoClamp((elapsed-anim.chargeMs)/anim.travelMs);
+  const impactStart=Math.max(pathEnd,anim.resolveAt||0),impact=anim.resolved?_privacaoClamp((now-impactStart)/anim.impactMs):0;
+  const fade=anim.endingAt==null?1:_privacaoClamp(1-(now-anim.endingAt)/PRIVACAO_FADE_MS);
+  return {elapsed,charge,travel,charging:elapsed<anim.chargeMs,traveling:elapsed>=anim.chargeMs&&elapsed<anim.chargeMs+anim.travelMs,
+    pathDone:elapsed>=anim.chargeMs+anim.travelMs,impact,effect:_privacaoClamp(impact),fade};
+}
+function _privacaoDrawCharge2D(ctx,anim,p,now){
+  const style=_privacaoStyle(anim),x=(anim.origin[0]+.5)*CELL,y=(anim.origin[1]+.5)*CELL,q=p.charge,fadeIn=Math.min(1,p.elapsed/150);
+  ctx.shadowColor=`rgb(${style.accent.join(',')})`;ctx.shadowBlur=CELL*(.13+.13*q);
+  for(let i=0;i<3;i++){const r=CELL*(.16+i*.105+.025*Math.sin(now/110+i));ctx.strokeStyle=`rgba(${style.accent[0]},${style.accent[1]},${style.accent[2]},${((.28+i*.10)*fadeIn).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.022+i);ctx.beginPath();ctx.arc(x,y,r,(now/420)*(i%2?-1:1),now/420*(i%2?-1:1)+Math.PI*(1.2+i*.2));ctx.stroke();}
+  const g=ctx.createRadialGradient(x,y,0,x,y,CELL*.70);g.addColorStop(0,`rgba(${style.accent.join(',')},${(.48*fadeIn).toFixed(3)})`);g.addColorStop(1,`rgba(${style.base.join(',')},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,CELL*.78,0,Math.PI*2);ctx.fill();
+  ctx.font=`${Math.round(CELL*.25)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(${style.accent.join(',')},${(.78*fadeIn).toFixed(3)})`;ctx.fillText(style.icon,x,y);
+}
+function _privacaoDraw2D(ctx,state,anim,now){
+  if(!_privacaoVisible(state,anim))return;const p=_privacaoProgress(anim,now),style=_privacaoStyle(anim),focus=_privacaoFocus(anim);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  if(p.charging)_privacaoDrawCharge2D(ctx,anim,p,now);
+  if(p.traveling){const ox=(anim.origin[0]+.5)*CELL,oy=(anim.origin[1]+.5)*CELL,fx=(anim.origin[0]+(focus[0]-anim.origin[0])*p.travel+.5)*CELL,fy=(anim.origin[1]+(focus[1]-anim.origin[1])*p.travel+.5)*CELL;
+    const beam=ctx.createLinearGradient(ox,oy,fx,fy);beam.addColorStop(0,`rgba(${style.base.join(',')},0)`);beam.addColorStop(.55,`rgba(${style.accent.join(',')},.46)`);beam.addColorStop(1,`rgba(${style.accent.join(',')},.88)`);ctx.strokeStyle=beam;ctx.shadowColor=`#${style.glow.toString(16).padStart(6,'0')}`;ctx.shadowBlur=CELL*.18;ctx.lineCap='round';ctx.lineWidth=Math.max(5,CELL*.11);ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(fx,fy);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle=`rgba(255,245,215,.72)`;ctx.lineWidth=Math.max(1.5,CELL*.032);ctx.stroke();}
+  const effect=p.effect,fx=(focus[0]+.5)*CELL,fy=(focus[1]+.5)*CELL;
+  if(anim.kind==='definhar'&&anim.tiles.length){for(let i=0;i<anim.tiles.length;i++){const [tx,ty]=anim.tiles[i],tileQ=_privacaoClamp((effect-(i/anim.tiles.length)*.58)/.42);if(tileQ<=0)continue;const x=tx*CELL,y=ty*CELL;ctx.fillStyle=`rgba(${style.base.join(',')},${(.22*tileQ).toFixed(3)})`;ctx.fillRect(x+2,y+2,CELL-4,CELL-4);ctx.strokeStyle=`rgba(${style.accent.join(',')},${(.52*tileQ).toFixed(3)})`;ctx.lineWidth=Math.max(1,CELL*.022);ctx.beginPath();ctx.moveTo(x+CELL*.18,y+CELL*.18);ctx.lineTo(x+CELL*.44,y+CELL*.53);ctx.lineTo(x+CELL*.29,y+CELL*.82);ctx.moveTo(x+CELL*.72,y+CELL*.12);ctx.lineTo(x+CELL*.55,y+CELL*.43);ctx.lineTo(x+CELL*.82,y+CELL*.76);ctx.stroke();}}
+  else if(effect>0){const pulse=.5+.5*Math.sin(now/170+anim.seed),r=CELL*(.25+effect*.63),g=ctx.createRadialGradient(fx,fy,0,fx,fy,Math.max(CELL,r));g.addColorStop(0,`rgba(${style.base.join(',')},${(.30*Math.sin(Math.PI*effect)).toFixed(3)})`);g.addColorStop(.72,`rgba(${style.base.join(',')},${(.16*Math.sin(Math.PI*effect)).toFixed(3)})`);g.addColorStop(1,`rgba(${style.base.join(',')},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(fx,fy,Math.max(CELL,r),0,Math.PI*2);ctx.fill();ctx.strokeStyle=`rgba(${style.accent.join(',')},${(.58*effect+.12*pulse).toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.035);ctx.beginPath();ctx.arc(fx,fy,r*(.88+.08*pulse),0,Math.PI*2);ctx.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4+now/600,rr=r*(.65+.14*Math.sin(now/130+i));ctx.beginPath();ctx.moveTo(fx+Math.cos(a)*rr,fy+Math.sin(a)*rr);ctx.lineTo(fx+Math.cos(a)*rr*.35,fy+Math.sin(a)*rr*.35);ctx.stroke();}}
+  ctx.restore();
+}
+function _privacaoDrawForeground2D(ctx,state,anim,now){
+  if(!_privacaoVisible(state,anim))return;const p=_privacaoProgress(anim,now),style=_privacaoStyle(anim),pulse=.5+.5*Math.sin(now/190+anim.seed);ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const target of anim.targets){const pos=_privacaoTargetPos(anim,target),active=anim.activeIds.has(String(target.id)),resisted=anim.resolved&&anim.passed&&!anim.immune&&String(target.id)===String(anim.targetId),immune=anim.resolved&&anim.immune&&String(target.id)===String(anim.targetId);if(!active&&!resisted&&!immune)continue;const x=(pos[0]+.5)*CELL,y=(pos[1]+.5)*CELL,j=Math.sin(now/70+_privacaoHash(anim.seed+(Number(target.id)||0))*8)*CELL*.025;const alpha=active?(.42+.20*pulse)*p.fade:Math.max(0,1-(now-anim.resolveAt)/650)*.85;ctx.strokeStyle=active?`rgba(${style.accent.join(',')},${alpha.toFixed(3)})`:`rgba(232,242,255,${alpha.toFixed(3)})`;ctx.lineWidth=Math.max(2,CELL*.034);ctx.beginPath();ctx.arc(x+j,y,CELL*(active?.39:.27),0,Math.PI*2);ctx.stroke();if(active){ctx.font=`${Math.round(CELL*.20)}px serif`;ctx.fillStyle=`rgba(${style.accent.join(',')},${p.fade.toFixed(3)})`;ctx.fillText(anim.kind==='maldicao_corpo_pesado'?'⛓️':anim.kind==='desnutricao'?'◌':'🥀',x+j,y-CELL*.42);}}
+  if(anim.kind==='definhar'&&p.effect>0){for(let i=0;i<Math.min(8,anim.tiles.length);i++){const [tx,ty]=anim.tiles[i],q=_privacaoClamp((p.effect-(i/anim.tiles.length)*.58)/.42);if(q<=0)continue;ctx.fillStyle=`rgba(${style.accent.join(',')},${(.12*q*p.fade).toFixed(3)})`;ctx.font=`${Math.round(CELL*.15)}px serif`;ctx.fillText('✣',tx*CELL+CELL*.50,ty*CELL+CELL*.50);}}
+  ctx.restore();
+}
+function _privacaoBuild3D(anim){
+  if(!g3||!g3.scene||!window.THREE)return false;const T=window.THREE,style=_privacaoStyle(anim),group=new T.Group();group.name=`${anim.kind}-animation`;
+  anim.castRings=[];anim.areaTiles=[];anim.targetRings=[];anim.motes=[];anim.chains=[];
+  const mk=(geo,color,order=76,extra={})=>{const mat=new T.MeshBasicMaterial({color,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending,...extra});const mesh=new T.Mesh(geo,mat);mesh.renderOrder=order;group.add(mesh);return mesh;};
+  anim.coreGlow=mk(new T.SphereGeometry(.38,14,10),style.glow,74);anim.core=mk(new T.OctahedronGeometry(.15,0),style.accent.reduce((v,c)=>v*256+c,0),75);
+  for(let i=0;i<3;i++){const r=mk(new T.TorusGeometry(.24+i*.11,.018,7,28),style.accent.reduce((v,c)=>v*256+c,0),76,{side:T.DoubleSide});r.rotation.x=-Math.PI/2;group.add(r);anim.castRings.push(r);}
+  anim.beamGlow=mk(new T.BufferGeometry(),style.glow,70);anim.beamCore=mk(new T.BufferGeometry(),style.accent.reduce((v,c)=>v*256+c,0),71);
+  for(const tilePos of anim.tiles){const tile=mk(new T.PlaneGeometry(.92,.92),style.glow,68,{side:T.DoubleSide});tile.rotation.x=-Math.PI/2;tile.position.set(tilePos[0],.27,tilePos[1]);tile.userData.order=anim.areaTiles.length;anim.areaTiles.push(tile);}
+  for(const target of anim.targets){const ring=mk(new T.TorusGeometry(.23,.028,7,24),style.glow,78,{side:T.DoubleSide});ring.rotation.x=-Math.PI/2;ring.userData.id=target.id;anim.targetRings.push(ring);}
+  for(let i=0;i<16;i++)anim.motes.push(mk(new T.SphereGeometry(.018+(i%3)*.009,7,5),i%3?style.glow:style.accent.reduce((v,c)=>v*256+c,0),77));
+  for(let i=0;i<12;i++)anim.chains.push(mk(new T.SphereGeometry(.032+(i%3)*.012,7,5),style.glow,79));
+  g3.scene.add(group);anim.group=group;return true;
+}
+function _privacaoDispose3D(anim){if(!anim.group)return;if(anim.group.parent)anim.group.parent.remove(anim.group);anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});anim.group=null;}
+function _privacaoTube(mesh,from,to,radius){if(!window.THREE)return;const T=window.THREE,mid=[(from[0]+to[0])/2,(from[1]+to[1])/2+.08,(from[2]+to[2])/2],curve=new T.CatmullRomCurve3([new T.Vector3(...from),new T.Vector3(...mid),new T.Vector3(...to)]);if(mesh.geometry)mesh.geometry.dispose();mesh.geometry=new T.TubeGeometry(curve,12,radius,6,false);}
+function _privacaoUpdate3D(anim,now){
+  if(!g3||!window.THREE)return;if(!anim.group||anim.group.parent!==g3.scene){_privacaoDispose3D(anim);if(!_privacaoBuild3D(anim))return;}
+  const T=window.THREE,style=_privacaoStyle(anim),p=_privacaoProgress(anim,now),focus=_privacaoFocus(anim),pulse=.5+.5*Math.sin(now/170+anim.seed),chargeFade=p.charging?_privacaoClamp(p.elapsed/150)*_privacaoClamp((anim.chargeMs-p.elapsed)/130):0;
+  anim.core.visible=anim.coreGlow.visible=chargeFade>0;anim.core.position.set(anim.origin[0],.77,anim.origin[1]);anim.coreGlow.position.copy(anim.core.position);anim.core.scale.setScalar(.72+.28*p.charge);anim.coreGlow.scale.setScalar(1+.25*p.charge);anim.core.material.opacity=.72*chargeFade;anim.coreGlow.material.opacity=.27*chargeFade;
+  for(let i=0;i<anim.castRings.length;i++){const r=anim.castRings[i];r.position.set(anim.origin[0],.32+i*.035,anim.origin[1]);r.rotation.z=(i%2?-1:1)*now/(330+i*70);r.scale.setScalar(.72+.34*p.charge);r.material.opacity=(.25+i*.10)*chargeFade;}
+  const beam=p.traveling&&p.fade>0,front=[anim.origin[0]+(focus[0]-anim.origin[0])*p.travel,.74,anim.origin[1]+(focus[1]-anim.origin[1])*p.travel];anim.beamGlow.visible=anim.beamCore.visible=beam;if(beam){_privacaoTube(anim.beamGlow,[anim.origin[0],.74,anim.origin[1]],front,.10);_privacaoTube(anim.beamCore,[anim.origin[0],.74,anim.origin[1]],front,.038);anim.beamGlow.material.opacity=.34;anim.beamCore.material.opacity=.82;}
+  const effect=p.effect,areaEffect=anim.kind==='definhar'?effect:0;for(const tile of anim.areaTiles){const q=_privacaoClamp((areaEffect-(tile.userData.order/Math.max(1,anim.areaTiles.length))*.58)/.42);tile.material.opacity=(.08+.15*q)*p.fade;tile.scale.setScalar(.90+.08*q);}
+  for(let i=0;i<anim.targetRings.length;i++){const ring=anim.targetRings[i],target=anim.targets[i],pos=_privacaoTargetPos(anim,target),active=anim.activeIds.has(String(target.id)),resisted=anim.resolved&&anim.passed&&!anim.immune&&String(target.id)===String(anim.targetId);ring.position.set(pos[0],.72,pos[1]);ring.material.color.setHex(resisted?0xdfeeff:style.glow);ring.material.opacity=(active?(.34+.20*pulse):resisted?Math.max(0,1-(now-anim.resolveAt)/650)*.85:0)*p.fade;ring.scale.setScalar(active?1+.12*Math.sin(now/180):.72);}
+  const center=anim.kind==='definhar'?focus:focus;for(let i=0;i<anim.motes.length;i++){const m=anim.motes[i],a=now/720+_privacaoHash(anim.seed+i*31)*Math.PI*2,r=anim.kind==='definhar'?(.22+_privacaoHash(anim.seed+i*17)*Math.max(1,anim.side)*.55):(.18+(i%5)*.085);m.position.set(center[0]+Math.cos(a)*r,.34+.18*Math.sin(now/210+i),center[1]+Math.sin(a)*r);m.material.opacity=(anim.kind==='definhar'?.16+.18*areaEffect:.18+.25*effect)*p.fade;}
+  for(let i=0;i<anim.chains.length;i++){const c=anim.chains[i],a=now/600+i*Math.PI*2/anim.chains.length,r=anim.kind==='maldicao_corpo_pesado'?.30+.18*Math.sin(now/120+i):.24+(i%4)*.08;c.position.set(center[0]+Math.cos(a)*r,.40+.20*Math.sin(now/180+i),center[1]+Math.sin(a)*r);c.material.opacity=(anim.kind==='maldicao_corpo_pesado'?(activeSet(anim)?(.24+.22*pulse)*p.fade:0):anim.kind==='desnutricao'?(.12+.22*effect)*p.fade:.08*areaEffect*p.fade);c.scale.setScalar(.65+.30*pulse);}
+}
+function activeSet(anim){return anim.activeIds.size>0;}
+function _privacaoTick(now){let active=false;for(let i=_privacaoAnims.length-1;i>=0;i--){const anim=_privacaoAnims[i],p=_privacaoProgress(anim,now),finishAt=Math.max(anim.start+anim.chargeMs+anim.travelMs,anim.resolveAt||0)+anim.impactMs+PRIVACAO_LIFE_MS;if(anim.resolved&&now>finishAt){_privacaoDispose3D(anim);_privacaoAnims.splice(i,1);continue;}if(!anim.resolved&&now-anim.start>9000){_privacaoDispose3D(anim);_privacaoAnims.splice(i,1);continue;}if(p.pathDone&&!anim.impactReached){anim.impactReached=true;_liberarDadosMagia();}active=true;if(mode3D&&g3)_privacaoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_privacaoRaf=active?_scheduleVisualFrame(_privacaoTick):null;}
+function _receberAnimacaoPrivacao(msg){
+  const kind=_privacaoKind(String(msg?.spell_id||''));if(!kind)return;const id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_privacaoAnims.find(a=>a.animationId===id);const now=performance.now();
+  if(msg.phase==='start'){if(anim)return;anim=_privacaoAnimFromMessage(msg);_privacaoAnims.push(anim);}
+  else if(msg.phase==='resolve'){
+    if(!anim){anim=_privacaoAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_privacaoAnims.push(anim);}anim.resolved=true;anim.resolveAt=now;anim.passed=!!msg.passed;anim.immune=!!msg.immune;
+    if(kind==='definhar')anim.activeIds=new Set((msg.affected||[]).map(x=>String(x?.id)).filter(Boolean));
+    else if(!anim.passed&&!anim.immune&&anim.targetId!=null)anim.activeIds.add(String(anim.targetId));
+  } else if(msg.phase==='expire'&&anim&&anim.endingAt==null)anim.endingAt=now;
+  if(!_privacaoRaf)_privacaoRaf=_scheduleVisualFrame(_privacaoTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
 }
 
 function _liberarDadosMagia(){
@@ -45602,6 +46705,7 @@ GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // o impacto quanto os indicadores persistentes nos alvos adormecidos.
 const _spellAnimationReceivers = [
   _receberAnimacaoTempestade,
+  _receberAnimacaoPrivacao,
   _receberAnimacaoSono,
   _receberAnimacaoRelampago,
   _receberAnimacaoBolaFogo,
@@ -45655,7 +46759,7 @@ GS.on('sorteReacao', msg => {
   GS.responderSorteReacao(aceitar);
 });
 
-GS.on('trapResult',  msg  => queueTrapResult(msg));
+GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
 GS.on('survivalResult', msg => queueTrapResult(msg));
 GS.on('fallResult',  msg  => {
   _receiveFlightFall(msg);
