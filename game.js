@@ -34693,6 +34693,99 @@ function _atualizarTerrenoAnimado3D(t){
   }
 }
 
+// ── Aplicação da pose da cena de combate no peão ─────────────────────────────
+// Por CHAVE (o Group pode ser reconstruído no meio da cena). Idempotente: a
+// base é gridX/gridY + footprint; ao terminar, restaura uma vez e não escreve
+// mais. A inclinação usa rotateOnWorldAxis porque rotation é Euler XYZ e o
+// facing (rotation.y) misturaria os eixos.
+const _sceneAxis = new (window.THREE ? window.THREE.Vector3 : Object)();
+function _figSceneKey(fig){
+  const u = fig.userData || {};
+  return u.pid != null ? `p:${u.pid}`
+    : u.monId != null ? `m:${u.monId}`
+    : u.animadoId != null ? `a:${u.animadoId}`
+    : u.prisoner ? 'pr:singleton' : null;
+}
+function _materiaisCena(fig){
+  const u = fig.userData;
+  if(u._sceneMats) return u._sceneMats;
+  const lista = [];
+  fig.traverse(o => {
+    if(!(o.isMesh || o.isSprite) || !o.material) return;
+    const ud = o.userData || {};
+    if(ud.isOutline || ud.isGroundDecal || ud.isPulseRing || ud.isSelectionRing) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const clones = mats.map(m => { const c = m.clone(); c.userData._sceneOwned = true; return c; });
+    o.material = Array.isArray(o.material) ? clones : clones[0];
+    for(const c of clones) lista.push({
+      mat: c,
+      color: c.color ? c.color.clone() : null,
+      emissive: c.emissive ? c.emissive.clone() : null,
+      opacity: c.opacity, transparent: c.transparent,
+    });
+  });
+  u._sceneMats = lista;
+  return lista;
+}
+function _pintarMateriaisCena(fig, pose){
+  for(const e of _materiaisCena(fig)){
+    const m = e.mat, flash = pose.flash || 0;
+    if(e.emissive){
+      if(flash) m.emissive.setRGB(flash, flash, flash); else m.emissive.copy(e.emissive);
+    }
+    if(e.color){
+      m.color.copy(e.color);
+      if(flash && !e.emissive) m.color.addScalar(flash);        // sprites: clareia
+      if(pose.darken !== undefined) m.color.multiplyScalar(pose.darken);
+    }
+    if(pose.opacity !== undefined){ m.transparent = true; m.opacity = e.opacity * pose.opacity; }
+    else { m.transparent = e.transparent; m.opacity = e.opacity; }
+  }
+}
+function _restaurarMateriaisCena(fig){
+  for(const e of (fig.userData._sceneMats || [])){
+    const m = e.mat;
+    if(e.color) m.color.copy(e.color);
+    if(e.emissive) m.emissive.copy(e.emissive);
+    m.opacity = e.opacity; m.transparent = e.transparent;
+  }
+}
+function _aplicarPoseCena(fig, now){
+  if(!window.CombatScene) return;
+  const key = _figSceneKey(fig);
+  if(!key) return;
+  const pose = CombatScene.poseFor(key, now);
+  const u = fig.userData;
+  if(!pose){
+    if(u._scenePoseAtiva){
+      u._scenePoseAtiva = false;
+      fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0);
+      fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0);
+      fig.rotation.set(0, u._sceneBaseRotY || 0, u._hitBaseRotationZ || 0);
+      if(u._sceneBaseScale) fig.scale.copy(u._sceneBaseScale);
+      _restaurarMateriaisCena(fig);
+    }
+    return;
+  }
+  if(!u._scenePoseAtiva){
+    u._scenePoseAtiva = true;
+    u._sceneBaseRotY = fig.rotation.y || 0;
+    u._sceneBaseScale = fig.scale.clone();
+  }
+  fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0) + pose.dx;
+  fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0) + pose.dz;
+  fig.rotation.set(0, u._sceneBaseRotY, 0);
+  if(pose.tilt){
+    const d = pose.tiltDir;
+    _sceneAxis.set(d[1], 0, -d[0]).normalize();      // eixo ⟂ à direção: y × d
+    fig.rotateOnWorldAxis(_sceneAxis, pose.tilt);
+  }
+  const b = u._sceneBaseScale;
+  fig.scale.set(b.x, b.y * (pose.scaleY == null ? 1 : pose.scaleY), b.z);
+  if(pose.flash || pose.opacity !== undefined || pose.darken !== undefined) _pintarMateriaisCena(fig, pose);
+  else if(u._sceneMats) _restaurarMateriaisCena(fig);
+}
+
 // Shake de câmera do crítico/morte. OrbitControls recalcula a câmera a partir de
 // position − target a cada update(): o offset precisa ser retirado ANTES e
 // posto de volta DEPOIS, senão vira deriva permanente.
@@ -34704,9 +34797,9 @@ function _reduzMovimento(){
   catch(e){ return false; }
 }
 function _aplicarShakeCamera(now){
-  if(!g3 || !window.CombatScene || _reduzMovimento()) return;
-  const sh = CombatScene.shake(now);
-  if(!sh) return;
+  if(!g3 || !window.CombatScene) return;
+  const sh = CombatScene.shake(now);        // consome/limpa a lista mesmo com movimento reduzido
+  if(!sh || _reduzMovimento()) return;
   const T = g3.T, q = g3.camera.quaternion;
   const off = new T.Vector3(1,0,0).applyQuaternion(q).multiplyScalar(sh.x)
     .add(new T.Vector3(0,1,0).applyQuaternion(q).multiplyScalar(sh.y));
@@ -34938,6 +35031,7 @@ function startLoop3D(){
       if(isHov) hovFigY = fig.position.y + 0.30;   // light tracks above base
       // Slow Y-rotation while selected (~3 rpm)
       if(isSel) fig.rotation.y += 0.008;
+      _aplicarPoseCena(fig, now);
     });
     // Fade vitrine spotlight in/out
     if(hovP && hspot){
@@ -36211,6 +36305,7 @@ function encerrarSeguimentoCamera(){
 // THREE.js NÃO libera geometria/material/textura ao remover da cena — sem este
 // descarte, cada game_state vazava dezenas de buffers (lentidão progressiva).
 function _disposeEntityTree(root){
+  for(const e of ((root.userData && root.userData._sceneMats) || [])) e.mat.dispose();   // clones do flash (Material.dispose não toca texturas)
   root.traverse(o => {
     // Clones GLB compartilham geometria/material/texturas com o template em
     // cache (_heroGLBCache) — descartar aqui quebraria os próximos clones.
@@ -36857,6 +36952,7 @@ function _renderMovePreview3D(state, terrainSet, TH){
 // troca. Capturamos somente os dados da visão — nenhum objeto da cena antiga
 // é reutilizado depois do dispose3D().
 function _capturarCamera3D(){
+  _desfazerShakeCamera();   // o offset do shake nunca pode ser assado numa cena reconstruída
   if(!g3?.camera || !g3?.controls) return null;
   return {
     position: g3.camera.position.clone(),
@@ -37734,6 +37830,7 @@ function renderMap3D(state){
       if(!step) continue;
       const mesh = getMonsterMesh(id) || getAnimadoMesh(id);
       if(!mesh) continue;
+      if(window.CombatScene && CombatScene.poseFor(_figSceneKey(mesh), performance.now())) continue;
       if(mesh.userData._stepBaseY === undefined) mesh.userData._stepBaseY = mesh.position.y;
       // entity_step usa a âncora do servidor. Criaturas 2x2 deslizam com o
       // mesmo offset visual usado no estado parado, sem voltar para o canto.
