@@ -2322,8 +2322,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > espera `isDying`; o comando `end` chama `rec.concluir()` **sincronamente** antes da
 > travessia do mesmo frame, senão o morto reaparece em pé por alguns quadros; herói é
 > reinjetado `alive:true` em `_estadoComMortosVisuais`; cadáver `visible=false` até o fim).
+> Vale para **monstro e herói**; servo animado e prisioneiro ficam **fora** (não há registro
+> de morte pendente para eles — o peão some no próximo `game_state`; a cena expira sozinha).
+> **Ressalva:** `rec.concluir()` é síncrono EXCETO enquanto uma miniatura anda
+> (`renderMap3D` retorna cedo com `estadoMovimento.emMovimento`) — por isso o ramo `end`
+> esconde a fig do morto (`visible=false`) ANTES de concluir; o reconcile a descarta depois.
+> **Spoiler do resultado:** com cena, o banner legado (`_attackFeedbacks`) e o cue de
+> crítico/erro NÃO saem no `result` (que chega 1–3 s antes do golpe): `_receiveAttackFeedback`
+> põe `resultAt=Infinity` + `cueAdiado`, e o comando `impact` (não-tardio) revela e toca;
+> `end` (cena expirada) e o tick do banner (cena sumida por `reset()`) destravam por segurança.
+> Um d20 descartado no ar por `_clearDiceVisuals` (novo burst) chama `dieSettled` antes de
+> sumir, senão a cena esperaria o `waitDieMs`. Uma cena cujo `result` já é ERRO nunca é
+> candidata a hand-off (`cenaParaHandoff`) — senão absorveria o número do acerto seguinte.
 > `dispose3D` faz `CombatScene.reset()`. Números em `VC.feedback.combat.scene`. Provado no
 > navegador (2026-09-11): número do acerto saiu no golpe (2,36 s), 100 ms após o dado
 > assentar; morte tombou e desvaneceu antes da lápide. Teste: `tools/test_combat_scene.js`
-> (198 checks: módulo + checagens estáticas de fiação). Spec/plano em
+> (204 checks: módulo + checagens estáticas de fiação). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-10-animacao-combate-hibrida*`.

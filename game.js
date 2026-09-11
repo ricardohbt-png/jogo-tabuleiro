@@ -10524,8 +10524,14 @@ function _attackFeedbackModeLabel(mode){
   return mode === 'advantage' ? 'VANTAGEM' : mode === 'disadvantage' ? 'DESVANTAGEM' : 'NORMAL';
 }
 
+// Com cena de combate (3D), o result chega ~240 ms depois do d20 mas o GOLPE
+// só acontece quando o dado assenta (1–3 s): até lá o banner não pode revelar
+// acerto/erro. `resultAt === Infinity` é a marca "esperando o golpe" que
+// _receiveAttackFeedback põe e o `impact` de _executarComandoCena tira.
+function _attackFeedbackAguardaGolpe(f){ return !!f.result && f.resultAt === Infinity; }
+
 function _attackFeedbackResultLabel(f){
-  if(!f.result) return 'PREPARANDO';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return '1 NATURAL — FALHA!';
   if(f.crit) return t('ui.hud.critico');
@@ -10533,7 +10539,7 @@ function _attackFeedbackResultLabel(f){
 }
 
 function _attackFeedbackColor(f){
-  if(!f.result) return '#ffe18a';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return '#ffe18a';
   if(f.natural_critical || f.crit) return '#ffd34d';
   if(f.natural_fumble) return '#d978ff';
   return f.hit ? '#7dffad' : '#ff7373';
@@ -10843,6 +10849,15 @@ function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
 function _executarComandoCena(c){
   if(!c) return;
   if(c.cmd === 'end'){
+    // Cena que expirou sem golpear deixaria o banner legado imortal
+    // (resultAt=Infinity nunca passa → o tick de _receiveAttackFeedback nunca
+    // o descarta): destrava aqui, revelando o resultado.
+    const fEnd = _attackFeedbacks.find(x => x.id === c.id);
+    if(fEnd && fEnd.resultAt === Infinity){
+      fEnd.resultAt = performance.now();
+      _drawAttackFeedbackTexture3D(fEnd);
+      if(fEnd.cueAdiado){ _playCombatCue(fEnd.cueAdiado.kind, fEnd.cueAdiado.opts); fEnd.cueAdiado = null; }
+    }
     if(!c.death) return;
     // O fim do tombo é AUTORITATIVO para a cópia visual do monstro: a cena
     // já saiu da lista (poseFor → null) e o laço deste mesmo frame restauraria
@@ -10851,7 +10866,16 @@ function _executarComandoCena(c){
     // Concluir agora apaga a cópia e re-renderiza de forma síncrona, então a
     // fig é descartada ANTES da travessia por fig (_tickCombatScene roda antes
     // do entityGroup.children.forEach em startLoop3D).
-    const mid = typeof c.targetKey === 'string' && c.targetKey.startsWith('m:') ? c.targetKey.slice(2) : null;
+    // EXCEÇÃO: renderMap3D retorna cedo enquanto uma miniatura anda
+    // (estadoMovimento/estadoMininoMov.emMovimento) — o reconcile ficaria para
+    // o próximo render e a fig do morto ressuscitaria em pé neste frame. Por
+    // isso a fig é escondida AGORA; o reconcile a descarta depois.
+    const tk = typeof c.targetKey === 'string' ? c.targetKey : '';
+    const figMorto = tk.startsWith('m:') ? getMonsterMesh(tk.slice(2))
+                   : tk.startsWith('p:') ? getPeaoMesh(tk.slice(2))
+                   : tk.startsWith('a:') ? getAnimadoMesh(tk.slice(2)) : null;
+    if(figMorto) figMorto.visible = false;
+    const mid = tk.startsWith('m:') ? tk.slice(2) : null;
     const rec = mid != null ? _mortesVisuaisPendentes.get(String(mid)) : null;
     if(rec && typeof rec.concluir === 'function'){
       if(rec.timer) clearTimeout(rec.timer);
@@ -10864,6 +10888,16 @@ function _executarComandoCena(c){
   }
   if(c.cmd !== 'impact') return;
   const now = performance.now();
+  if(!c.tardio){
+    // O golpe aconteceu: agora o banner legado pode mostrar ACERTO/ERRO/CRÍTICO
+    // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
+    const f = _attackFeedbacks.find(x => x.id === c.id);
+    if(f && f.result && !(f.resultAt < now)){   // ainda não revelado (Infinity ou futuro)
+      f.resultAt = now;
+      _drawAttackFeedbackTexture3D(f);
+      if(f.cueAdiado){ _playCombatCue(f.cueAdiado.kind, f.cueAdiado.opts); f.cueAdiado = null; }
+    }
+  }
   const feedbacks = Array.isArray(c.feedbacks) ? c.feedbacks : [];
   for(const fb of feedbacks){
     if(!fb) continue;
@@ -10914,16 +10948,27 @@ function _receiveAttackFeedback(msg){
     if(!f) return;
     Object.assign(f,{result:true,resultAt:now+f.prepDuration,roll:msg.roll,total:msg.total,hit:!!msg.hit,crit:!!msg.crit,
       natural:msg.natural,natural_critical:!!msg.natural_critical,natural_fumble:!!msg.natural_fumble});
-    if(msg.natural_critical || msg.crit)
-      _playCombatCue('critical', {repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1});
-    else if(!msg.hit || msg.natural_fumble)
-      _playCombatCue('error', {repeatKey:'error', volume:.82});
+    const cue = (msg.natural_critical || msg.crit)
+      ? {kind:'critical', opts:{repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1}}
+      : (!msg.hit || msg.natural_fumble) ? {kind:'error', opts:{repeatKey:'error', volume:.82}} : null;
+    if(_cenaAtiva() && CombatScene.phaseOf(id)){
+      // Há cena para este ataque: o banner e o cue de crítico/erro esperam o
+      // GOLPE (comando `impact` em _executarComandoCena), que é quando o
+      // resultado deixa de ser spoiler. `end` destrava se a cena expirar.
+      f.resultAt = Infinity;
+      f.cueAdiado = cue;
+    } else if(cue){
+      _playCombatCue(cue.kind, cue.opts);
+    }
     _drawAttackFeedbackTexture3D(f);
   }
   if(mode3D && g3) _buildAttackFeedback3D(_attackFeedbacks[_attackFeedbacks.length-1]);
   if(!_attackFeedbackRaf){
     const tick=()=>{_attackFeedbackRaf=null; const n=performance.now();
-      for(let i=_attackFeedbacks.length-1;i>=0;i--){const f=_attackFeedbacks[i],q=_attackFeedbackProgress(f,n);if(f.result&&q.done){_disposeAttackFeedback(f);_attackFeedbacks.splice(i,1);}}
+      for(let i=_attackFeedbacks.length-1;i>=0;i--){const f=_attackFeedbacks[i];
+        // Esperando o golpe mas a cena sumiu sem `end` (CombatScene.reset em dispose3D/troca 2D): revela, senão o banner nunca morre.
+        if(f.resultAt===Infinity && !(window.CombatScene && CombatScene.phaseOf(f.id))){ f.resultAt=n; _drawAttackFeedbackTexture3D(f); f.cueAdiado=null; }
+        const q=_attackFeedbackProgress(f,n);if(f.result&&q.done){_disposeAttackFeedback(f);_attackFeedbacks.splice(i,1);}}
       if(!mode3D&&GS.gameState) renderMap(GS.gameState); if(mode3D&&g3) _updateAttackFeedback3D(n);
       if(_attackFeedbacks.length) _attackFeedbackRaf=_scheduleVisualFrame(tick);
     }; _attackFeedbackRaf=_scheduleVisualFrame(tick);
@@ -12061,6 +12106,11 @@ function _clearDiceVisuals(){
     for(let i=_tweens.length-1; i>=0; i--)
       if(diceMeshes.has(_tweens[i].mesh)) _tweens.splice(i,1);
     for(const die of _dice3){
+      // d20 descartado no ar (rolling/snapping — nunca assentou): a cena de
+      // combate que esperava ESTE dado ficaria em ESPERANDO_DADO até o
+      // waitDieMs; libera-a agora, como se o dado tivesse assentado.
+      if(die.dieType === 'd20' && die.phase !== 'settling' && die.phase !== 'fading' && window.CombatScene)
+        CombatScene.dieSettled({die:'d20', value: die.value}, performance.now());
       if(_d3._diceGroup) _d3._diceGroup.remove(die.mesh);
       _disposeDieMaterials(die.mats);
       _disposeTopBadge(die.topBadge);

@@ -513,6 +513,45 @@ CS.reset(); CS.configure({});
     impM && impM.death === true && impM.feedbacks.length === 2 && impM.feedbacks[0].text === "☠" && impM.feedbacks[1].text === "12");
 }
 
+console.log("\n[32f] Cena que ERROU não absorve o hand-off do próximo acerto no mesmo alvo");
+CS.reset(); CS.configure({});
+{
+  const RESULT_MISS = { ...RESULT_HIT, hit: false };
+  // (a) A (erro, ainda não golpeou) criada ANTES de B (acerto, ainda não golpeou)
+  CS.start(START, 0); CS.tick(0);
+  CS.result(RESULT_MISS, 1);                                       // A: result conhecido = erro
+  CS.start({ ...START, attack_id: "atk_1_2" }, 2); CS.tick(2);     // B fica em FILA (impactAt null)
+  CS.result({ ...RESULT_HIT, attack_id: "atk_1_2" }, 3);           // B: result conhecido = acerto
+  check("(a) pendingFor pula A (erro) e devolve B", CS.pendingFor("m:id_9", 4) === "atk_1_2");
+  check("(a) hand-off cai em B, não em A",
+    CS.handoff("m:id_9", { feedback: { text: "7", kind: "damage" }, death: false, onImpact: [] }, 4) === null
+    && CS._scenes.find(x => x.id === "atk_1_2").handoffs === 1
+    && CS._scenes.find(x => x.id === "atk_1_1").handoffs === 0);
+
+  // (b) ordem inversa: A (acerto) criada antes, B (erro) criada depois → A
+  CS.reset();
+  CS.start(START, 0); CS.tick(0);
+  CS.result(RESULT_HIT, 1);
+  CS.start({ ...START, attack_id: "atk_1_2" }, 2); CS.tick(2);
+  CS.result({ ...RESULT_MISS, attack_id: "atk_1_2" }, 3);
+  check("(b) pendingFor devolve A (acerto), ignorando B (erro)", CS.pendingFor("m:id_9", 4) === "atk_1_1");
+  check("(b) hand-off cai em A",
+    CS.handoff("m:id_9", { feedback: { text: "9", kind: "damage" }, death: false, onImpact: [] }, 4) === null
+    && CS._scenes.find(x => x.id === "atk_1_1").handoffs === 1
+    && CS._scenes.find(x => x.id === "atk_1_2").handoffs === 0);
+
+  // (c) só um erro no alvo → nenhuma cena candidata
+  CS.reset();
+  CS.start(START, 0); CS.tick(0);
+  CS.result(RESULT_MISS, 1);
+  check("(c) alvo só com cena que errou → pendingFor null", CS.pendingFor("m:id_9", 2) === null);
+
+  // (d) result desconhecido continua candidato (o hand-off pode chegar antes do result)
+  CS.reset();
+  CS.start(START, 0); CS.tick(0);
+  check("(d) cena sem result ainda é candidata", CS.pendingFor("m:id_9", 1) === "atk_1_1");
+}
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');

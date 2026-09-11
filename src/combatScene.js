@@ -271,12 +271,16 @@
   // (Fúria com 2 golpes no mesmo alvo → cada golpe ganha o seu número);
   // exceção: a primeira que já carrega `impact.death` continua recebendo —
   // a morte e o número do mesmo game_state ficam no mesmo golpe.
+  // Cena cujo result JÁ É ERRO nunca é candidata (um erro não tem número a
+  // receber): sem isso, o erro absorveria o hand-off do próximo acerto no
+  // mesmo alvo. Result desconhecido (null) continua candidato.
   function cenaParaHandoff(targetKey, now) {
     let semImpacto = null, semImpactoLivre = null, comImpacto = null;
     for (const s of scenes) {
       if (s.done || s.targetKey !== targetKey) continue;
       if (now != null && now - s.createdAt > cfg.expireMs) continue;
       if (s.impactAt == null) {
+        if (s.result && !s.result.hit) continue;
         if (!semImpacto) semImpacto = s;
         if (!semImpactoLivre && s.handoffs === 0) semImpactoLivre = s;
       }
