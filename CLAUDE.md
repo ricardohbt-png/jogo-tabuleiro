@@ -2290,3 +2290,40 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `esconderijo de Leonel` (`world_adventures.json`) — todos criados nos editores. A
 > guarda por id preserva o texto do autor de propósito; traduzi-los exigiria um campo
 > de nome por idioma no editor, que é feature, não correção.
+
+> **Animação de combate híbrida (3D):** o atacante **arma, espera o d20 assentar e
+> golpeia**; o alvo balança (acerto) ou esquiva (erro); **crítico e morte** ganham flash
+> emissivo, empurrão maior, hit-stop, shake de câmera e partículas; o peão morto **tomba**
+> antes de virar lápide. Núcleo: módulo puro `src/combatScene.js` (`window.CombatScene`,
+> sem DOM/THREE, testável em node) com **uma cena por `attack_id`** — fases
+> `FILA→ARMANDO→ESPERANDO_DADO→GOLPE→(HOLD)→RECUPERANDO→AGUARDANDO_HANDOFF/MORRENDO→FIM`
+> — que devolve **poses por chave de entidade** (`poseFor(key, now)` → `{base,dx,dz,tilt,
+> tiltDir,scaleY,flash,opacity,darken,dying}`) e comandos (`impact`/`end`). **Sem mudança
+> de servidor:** `attack_feedback` (start/result) já traz tudo. Sincronia: o d20 3D chama
+> `CombatScene.dieSettled` ao assentar e a cena mais antiga com `result` consome o primeiro
+> dado; fallbacks `waitDieMs` (3,5 s), `instant` (colapsa), `result` sem `start` (só
+> impacto), `expireMs` (6 s) — **timeouts NÃO passam pela `duration` injetada** (em
+> `instant` ela devolve 0,001 ms e a cena expiraria no frame seguinte; foi um defeito do
+> plano pego em revisão). **Hand-off:** `_detectHpChanges` entrega o dano
+> (`CombatScene.pendingFor(key, now)` → `handoff`) à cena, que solta número/cue no golpe;
+> hand-offs **acumulam** (`impact.feedbacks[]`) — a morte do herói chega por
+> `_capturarDerrotasERessurreicoes` e o número pelo diff de HP, no mesmo golpe; uma cena já
+> golpeada recebe o hand-off tardio como comando `tardio:true` (sem repetir partículas). Sem
+> cena (magia, armadilha, veneno) o caminho antigo segue intocado; 2D não muda.
+> **Aplicação** em `_aplicarPoseCena` (fim do laço por peão de `startLoop3D`): a base é
+> **`pose.base`** (posição autoritativa que veio no `attack_feedback`), gravada em
+> `userData.gridX/gridY` na trava da pose — `gridX` sozinho fica DESATUALIZADO quando um
+> monstro anda (`entity_step`) e ataca sem `game_state` no meio; inclinação por
+> `rotateOnWorldAxis` (Euler XYZ + facing misturaria eixos); materiais **clonados por peão**
+> no primeiro flash (`_sceneMats`; o GLB é marcado `isGroundDecal` E `isGLB` — o filtro é
+> `isGroundDecal && !isGLB`, senão o flash nunca alcança a miniatura; contorno recebe só
+> opacidade). **Shake**: subtrai o offset antes de `controls.update()` e soma depois (senão o
+> OrbitControls absorve). **Morte** reusa `_mortesVisuaisPendentes` (`_agendarFimMorteVisual`
+> espera `isDying`; o comando `end` chama `rec.concluir()` **sincronamente** antes da
+> travessia do mesmo frame, senão o morto reaparece em pé por alguns quadros; herói é
+> reinjetado `alive:true` em `_estadoComMortosVisuais`; cadáver `visible=false` até o fim).
+> `dispose3D` faz `CombatScene.reset()`. Números em `VC.feedback.combat.scene`. Provado no
+> navegador (2026-09-11): número do acerto saiu no golpe (2,36 s), 100 ms após o dado
+> assentar; morte tombou e desvaneceu antes da lápide. Teste: `tools/test_combat_scene.js`
+> (198 checks: módulo + checagens estáticas de fiação). Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-09-10-animacao-combate-hibrida*`.
