@@ -94,9 +94,15 @@ No laço por peão de `renderMap3D` (onde já se escreve `fig.rotation.z = base 
 
 ### 3.7 Morte: o peão sobrevive ao `game_state` que o remove
 
-Na varredura de descarte (`for(const [key, ent] of figCache) if(!figsUsadas.has(key)) …`), se `CombatScene.isDying(key)`, o fig é **transferido** para `g3._dyingFigs` em vez de descartado. O driver da morte é dono total do transform dele (fora do laço normal — o tombo gira em eixo arbitrário sem disputar `rotation.z`) e chama `_disposeEntityTree` ao terminar. O cadáver (`corp:`/`hero-corpse:`) nasce `visible=false` e liga quando a morte acaba. Se a remoção chegar antes do impacto (caso normal), o fig espera parado em `_dyingFigs` até o dado assentar.
+O cliente **já mantém** o monstro morto no estado renderizado por um tempo: `_capturarMortesVisuais` grava uma cópia (`hp=1`) em `_mortesVisuaisPendentes`, `_estadoComMortosVisuais(state)` a reinjeta em `state.monsters` e `_agendarFimMorteVisual` só a solta após `MORTE_VISUAL_MIN_MS` (ou até `maxAte` quando há magia em voo). O fig `mon:<id>`, portanto, **não é descartado no frame da morte** — a cena reusa esse mecanismo em vez de criar um `_dyingFigs` próprio:
 
-Vale para monstro, servo animado, prisioneiro e herói.
+- ao detectar a morte com cena pendente para `m:<id>`, `_capturarMortesVisuais` faz o **hand-off com `death:true`** (texto "☠ DERROTADO", anel de derrota e som viram `onImpact`) e estende `maxAte` para `agora + expireMs`;
+- `_agendarFimMorteVisual` acrescenta `CombatScene.isDying('m:<id>')` às condições de espera (limitado por `maxAte`);
+- o **tombo** é apenas a pose de morte devolvida por `poseFor` para o alvo, aplicada pelo laço normal (3.5) — não há transform fora do laço;
+- **herói**: `_estadoComMortosVisuais` ganha um ramo para `players`: enquanto `isDying('p:<pid>')`, o jogador com `alive=false` é reinjetado com `alive:true` (cópia rasa) para o fig `pl:<pid>` continuar existindo; `_capturarDerrotasERessurreicoes` faz o hand-off de morte do herói;
+- o cadáver (`corp:<id>` / `hero-corpse:<pid>`) nasce `visible=false` enquanto `isDying` e o comando `end` da cena força um re-render, que o mostra.
+
+Se a remoção chegar antes do impacto (caso normal), a cópia fica parada até o dado assentar. Vale para monstro, servo animado, prisioneiro e herói.
 
 ### 3.8 Shake de câmera
 
@@ -157,7 +163,7 @@ scene: {
 ## 6. Testes
 
 - **`tools/test_combat_scene.js`** (node, puro): os cenários de ordem de eventos — `game_state` antes do dado (normal), dado antes do `game_state`, dois ataques seguidos do mesmo atacante (fila), reroll (último d20 vale), erro sem dano (esquiva), morte no hand-off; os fallbacks — sem dado em 3,5 s, `instant`, `result` sem `start`, expiração em 6 s; `poseFor` por fase (deslocamento aponta para o alvo; zero no `FIM`); corpo a corpo × à distância pela distância; `isDying` e `pendingFor`.
-- **`tools/test_interface.py`**: checagem estática de que o diff de HP em `game.js` consulta `CombatScene.pendingFor` antes de `_spawnCombatFeedback`/`_triggerHitReaction` no ramo 3D (anti-regressão do hand-off).
+- **Checagem estática** (seção própria do mesmo `tools/test_combat_scene.js`, lendo o texto do `game.js`): o diff de HP (`_detectHpChanges`) consulta `CombatScene.pendingFor` antes de `_spawnCombatFeedback`/`_triggerHitReaction` (anti-regressão do hand-off); `index.html` carrega `src/combatScene.js`.
 - **Prova em navegador** (obrigatória): servidor **reiniciado**, `?v=` no cache-buster, 3D; um acerto corpo a corpo, um erro, um crítico (alvo `dormindo` → crítico automático no servidor) e uma morte — screenshot no instante do impacto de cada um; medidor de FPS sem custo fora do golpe.
 
 ## 7. Riscos e decisões registradas
@@ -166,3 +172,5 @@ scene: {
 - **Materiais compartilhados:** o flash clona por peão sob demanda (3.6); nunca pintar o material do template.
 - **OrbitControls absorve offsets:** o shake subtrai-antes/soma-depois (3.8); esquecer isso faz a câmera derivar.
 - **Fig reconstruído no meio da cena:** pose por chave (3.5); nunca guardar o `Group` na cena.
+- **Inclinação com `facing`:** `fig.rotation` é Euler XYZ e o peão pode ter `rotation.y` de facing — somar em `rotation.x`/`rotation.z` inclinaria num eixo misturado. A aplicação zera para `(0, baseY, 0)` e usa `rotateOnWorldAxis(eixo ⟂ à direção do golpe, ângulo)`; `baseY` é capturado ao começar a pose e restaurado ao fim.
+- **`game.js` tem WIP do autor** (+981 linhas não commitadas em 2026-09-10): o plano referencia **funções por nome**, nunca por linha; executar num worktree limpo e integrar depois.
