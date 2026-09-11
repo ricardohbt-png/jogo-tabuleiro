@@ -46,6 +46,65 @@ check("windup.dist preservado", perto(CS.cfg().windup.dist, 0.15));
 check("waitDieMs preservado", CS.cfg().waitDieMs === 3500);
 CS.configure({});
 
+console.log("\n[3] O d20 assentado dispara o golpe");
+CS.reset(); CS.configure({});
+CS.start(START, 0); CS.tick(0);
+CS.result(RESULT_HIT, 50); CS.tick(180);
+check("ESPERANDO_DADO após windup+result", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+CS.dieSettled({ die: "d20", value: 17 }, 900);
+CS.tick(900);
+check("dado assentado → GOLPE", CS.phaseOf("atk_1_1") === "GOLPE");
+check("dado sem cena esperando é ignorado (não lança)", CS.dieSettled({ die: "d20", value: 3 }, 901) === null);
+
+console.log("\n[4] Dado que assenta ANTES do windup terminar");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+CS.result(RESULT_HIT, 10); CS.dieSettled({ die: "d20", value: 12 }, 20);
+CS.tick(100);
+check("ainda ARMANDO (windup não acabou)", CS.phaseOf("atk_1_1") === "ARMANDO");
+CS.tick(180);
+check("windup acabou com dado já assentado → GOLPE direto", CS.phaseOf("atk_1_1") === "GOLPE");
+
+console.log("\n[5] Modo instant colapsa no result");
+CS.reset(); CS.configure({ instant: () => true });
+CS.start(START, 0); CS.tick(0);
+CS.result(RESULT_HIT, 5);
+const cmdsI = CS.tick(5);
+check("impact emitido no mesmo tick do result", cmdsI.some(c => c.cmd === "impact"));
+CS.configure({ instant: () => false });
+
+console.log("\n[6] result sem start → só impacto");
+CS.reset();
+CS.result(RESULT_HIT, 0); CS.tick(0);
+check("cena órfã entra direto em ESPERANDO_DADO", CS.phaseOf("atk_1_1") === "ESPERANDO_DADO");
+CS.dieSettled({ die: "d20", value: 9 }, 10); CS.tick(10);
+check("recebe o dado e vai a GOLPE", CS.phaseOf("atk_1_1") === "GOLPE");
+check("atacante de cena órfã não tem pose", CS.poseFor("p:id_1", 50) === null);
+
+console.log("\n[7] Fila: 2º ataque do mesmo atacante espera o 1º terminar");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+CS.start({ ...START, attack_id: "atk_1_2" }, 1); CS.tick(1);
+check("2ª cena fica em FILA", CS.phaseOf("atk_1_2") === "FILA");
+CS.result(RESULT_HIT, 2); CS.result({ ...RESULT_HIT, attack_id: "atk_1_2" }, 3);
+CS.dieSettled({ die: "d20", value: 11 }, 4); CS.dieSettled({ die: "d20", value: 15 }, 5);
+CS.tick(180);                                  // 1ª: windup pronto + dado → GOLPE
+check("1ª cena em GOLPE", CS.phaseOf("atk_1_1") === "GOLPE");
+CS.tick(180 + 110);                            // impacto da 1ª
+CS.tick(180 + 110 + 260);                      // recuperou sem hand-off → AGUARDANDO_HANDOFF
+check("1ª aguarda hand-off", CS.phaseOf("atk_1_1") === "AGUARDANDO_HANDOFF");
+CS.tick(180 + 110 + 261);
+check("2ª cena saiu da FILA quando a 1ª deixou de ocupar o atacante", CS.phaseOf("atk_1_2") === "ARMANDO");
+CS.tick(180 + 110 + 261 + 180);
+check("2ª usa o 2º dado, já assentado → GOLPE", CS.phaseOf("atk_1_2") === "GOLPE");
+
+console.log("\n[8] Expiração fecha cena órfã e restaura");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+const cmdsE = CS.tick(6001);
+check("cena expirada emite end", cmdsE.some(c => c.cmd === "end" && c.id === "atk_1_1"));
+check("phaseOf devolve null após expirar", CS.phaseOf("atk_1_1") === null);
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

@@ -49,7 +49,7 @@
 
   function configure(opts) {
     opts = opts || {};
-    if (opts.cfg) cfg = mergeCfg(DEFAULT_CFG, opts.cfg);
+    cfg = mergeCfg(DEFAULT_CFG, opts.cfg || {});   // não cumulativo: cada chamada recomeça do DEFAULT_CFG
     if (typeof opts.duration === 'function') durationFn = opts.duration;
     if (typeof opts.instant === 'function') instantFn = opts.instant;
   }
@@ -194,10 +194,23 @@
     return cmds;
   }
 
+  // O primeiro d20 que assenta vai para a cena MAIS ANTIGA que já tem result
+  // e ainda não recebeu dado — independe da fase (a 2ª cena da Fúria pode
+  // receber o dado ainda em FILA). Devolve a cena ou null (dado ignorado).
+  function dieSettled(info, now) {
+    if (info && info.die && info.die !== 'd20') return null;
+    const s = scenes.find(x => !x.done && x.result && x.dieAt == null && x.impactAt == null);
+    if (!s) return null;
+    s.dieAt = now;
+    return s;
+  }
+
+  function poseFor(key, now) { return null; }   // Task 3
+
   function phaseOf(id) { const s = scenes.find(x => x.id === String(id) && !x.done); return s ? s.phase : null; }
 
   root.CombatScene = {
-    configure, reset, start, result, tick, phaseOf,
+    configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
   };
