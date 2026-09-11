@@ -205,7 +205,69 @@
     return s;
   }
 
-  function poseFor(key, now) { return null; }   // Task 3
+  function poseAtacante(s, now) {
+    if (s.soImpacto) return null;
+    const d = s.dir;
+    const w = cfg.windup.dist;
+    const st = (s.result && s.result.fumble) ? cfg.fumble.dist : cfg.strike.dist;
+    let dist = 0, tilt = 0;
+    if (!s.melee) {
+      if (s.phase === 'GOLPE')            dist = -cfg.ranged.recoil * easeOut(clamp01((now - s.phaseAt) / D(cfg.ranged.msOut)));
+      else if (s.phase === 'HOLD')        dist = -cfg.ranged.recoil;
+      else if (s.phase === 'RECUPERANDO') dist = -cfg.ranged.recoil * (1 - easeOut(clamp01((now - s.phaseAt) / D(cfg.ranged.msBack))));
+      else return null;
+      return { dx: d[0] * dist, dz: d[1] * dist, tilt: 0, tiltDir: d };
+    }
+    switch (s.phase) {
+      case 'ARMANDO':        dist = -w * easeOut(clamp01((now - s.phaseAt) / D(cfg.windup.ms))); break;
+      case 'ESPERANDO_DADO': dist = -w; break;
+      case 'GOLPE': {
+        const p = easeIn(clamp01((now - s.phaseAt) / D(cfg.strike.ms)));
+        dist = -w + (st + w) * p; tilt = cfg.strike.tiltX * p; break;
+      }
+      case 'HOLD': dist = st; tilt = cfg.strike.tiltX; break;
+      case 'RECUPERANDO': {
+        const p = clamp01((now - s.phaseAt) / D(cfg.recover.ms)), e = easeOut(p);
+        dist = st * (1 - e) - cfg.recover.overshoot * Math.sin(p * Math.PI);
+        tilt = cfg.strike.tiltX * (1 - e);
+        if (s.result && s.result.fumble)
+          tilt += cfg.hit.angle * Math.sin(p * Math.PI * 2 * cfg.fumble.wobbleCycles) * (1 - p);
+        break;
+      }
+      default: return null;
+    }
+    return { dx: d[0] * dist, dz: d[1] * dist, tilt, tiltDir: d };
+  }
+
+  function poseAlvo(s, now) { return null; }    // Task 4
+
+  function somar(a, b) {
+    if (!a) return b; if (!b) return a;
+    return {
+      dx: a.dx + b.dx, dz: a.dz + b.dz,
+      tilt: Math.abs(a.tilt) >= Math.abs(b.tilt) ? a.tilt : b.tilt,
+      tiltDir: Math.abs(a.tilt) >= Math.abs(b.tilt) ? a.tiltDir : b.tiltDir,
+      scaleY: Math.min(a.scaleY == null ? 1 : a.scaleY, b.scaleY == null ? 1 : b.scaleY),
+      flash: Math.max(a.flash || 0, b.flash || 0),
+      opacity: Math.min(a.opacity == null ? 1 : a.opacity, b.opacity == null ? 1 : b.opacity),
+      darken: Math.min(a.darken == null ? 1 : a.darken, b.darken == null ? 1 : b.darken),
+      dying: !!(a.dying || b.dying),
+    };
+  }
+
+  // Pose visual de uma entidade AGORA: soma o que ela faz como atacante e o
+  // que sofre como alvo (uma criatura pode ser as duas coisas em cenas
+  // distintas). null = nenhuma cena a toca → o laço não escreve nada.
+  function poseFor(key, now) {
+    if (!key) return null;
+    let pose = null;
+    for (const s of scenes) {
+      if (s.done) continue;
+      if (s.attackerKey === key) pose = somar(pose, poseAtacante(s, now));
+      if (s.targetKey === key)   pose = somar(pose, poseAlvo(s, now));
+    }
+    return pose;
+  }
 
   function phaseOf(id) { const s = scenes.find(x => x.id === String(id) && !x.done); return s ? s.phase : null; }
 

@@ -105,6 +105,54 @@ const cmdsE = CS.tick(6001);
 check("cena expirada emite end", cmdsE.some(c => c.cmd === "end" && c.id === "atk_1_1"));
 check("phaseOf devolve null após expirar", CS.phaseOf("atk_1_1") === null);
 
+console.log("\n[9] Pose do atacante corpo a corpo");
+CS.reset(); CS.configure({});
+CS.start(START, 0); CS.tick(0);                 // ARMANDO em t=0, alvo a leste (dir = [1,0])
+let pa = CS.poseFor("p:id_1", 90);
+check("armando recua para longe do alvo (dx negativo)", pa && pa.dx < 0);
+check("armando não inclina", pa && pa.tilt === 0);
+pa = CS.poseFor("p:id_1", 180);
+check("windup completo = -windup.dist", pa && perto(pa.dx, -0.15) && perto(pa.dz, 0));
+CS.result(RESULT_HIT, 1); CS.tick(180);         // ESPERANDO_DADO
+check("esperando o dado mantém a pose armada", perto(CS.poseFor("p:id_1", 1000).dx, -0.15));
+CS.dieSettled({ die: "d20" }, 1000); CS.tick(1000);   // GOLPE em t=1000
+pa = CS.poseFor("p:id_1", 1110);
+check("fim do golpe = +strike.dist rumo ao alvo", pa && perto(pa.dx, 0.35));
+check("golpe inclina para frente (tilt = strike.tiltX)", pa && perto(pa.tilt, 0.12));
+check("tiltDir aponta para o alvo", pa && perto(pa.tiltDir[0], 1) && perto(pa.tiltDir[1], 0));
+CS.tick(1110);                                  // impacto → RECUPERANDO em 1110
+pa = CS.poseFor("p:id_1", 1110 + 220);
+check("recuperado volta a ~0 (sem overshoot no fim)", pa && Math.abs(pa.dx) < 1e-6);
+CS.tick(1110 + 260);                            // AGUARDANDO_HANDOFF
+check("aguardando hand-off não tem pose", CS.poseFor("p:id_1", 1500) === null);
+check("chave desconhecida devolve null", CS.poseFor("m:nao", 1500) === null);
+
+console.log("\n[10] Pose do atacante à distância (coice)");
+CS.reset();
+const LONGE = { ...START, attacker_pos: [0, 0], target_pos: [4, 0] };
+CS.start(LONGE, 0); CS.tick(0);
+check("não é melee", CS._scenes[0].melee === false);
+check("à distância não arma (pose null em ARMANDO)", CS.poseFor("p:id_1", 100) === null);
+CS.result({ ...LONGE, hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+pa = CS.poseFor("p:id_1", 590);
+check("coice recua recoil no fim de msOut", pa && perto(pa.dx, -0.10));
+CS.tick(590);                                   // impacto (msOut=90) → RECUPERANDO
+pa = CS.poseFor("p:id_1", 590 + 200);
+check("coice volta a 0 em msBack", pa && Math.abs(pa.dx) < 1e-6);
+
+console.log("\n[11] Fumble: golpe passa direto e oscila na volta");
+CS.reset();
+CS.start(START, 0); CS.tick(0);
+CS.result({ ...RESULT_HIT, hit: false, natural_fumble: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20", value: 1 }, 500); CS.tick(500);
+pa = CS.poseFor("p:id_1", 610);
+check("fumble avança fumble.dist", pa && perto(pa.dx, 0.50));
+CS.tick(610);                                   // RECUPERANDO
+const pb = CS.poseFor("p:id_1", 610 + 27);      // p≈0.123 → sin(2π·2·0.123)≈sin(1.55)≈1
+check("na volta do fumble há oscilação extra além do tilt do golpe", pb && pb.tilt > 0.12 * (1 - easeOutT(27 / 220)) + 0.05);
+
+function easeOutT(t) { return 1 - Math.pow(1 - t, 2); }
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
