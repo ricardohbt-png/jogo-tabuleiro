@@ -69,7 +69,8 @@ def test_sites():
     st = feedbacks(r)
     check("herói com arco: start emitido", len(st) == 1)
     check("herói com arco: projectile arrow", st and st[0].get("projectile") == {"kind": "arrow"})
-    check("result não carrega projectile", all("projectile" not in m for m in feedbacks(r, "result")))
+    rs = feedbacks(r, "result")
+    check("result não carrega projectile", len(rs) == 1 and "projectile" not in rs[0])
 
     r, p = sala(); r._msgs.clear()
     p["weapon"] = {"id": "espada", "name": "Espada", "die": "1d8", "stat": "str_", "categoria": "cortante"}
@@ -94,6 +95,33 @@ def test_sites():
     asyncio.run(r._execute_one_monster_attack(m, dict(m["attacks"][0]), {"kind": "player", "obj": p}))
     st = feedbacks(r)
     check("kobold besteiro: start com bolt", st and st[-1].get("projectile") == {"kind": "bolt"})
+
+    # Arma do EDITOR pelo caminho real: p["weapon"] vem de _sincronizar_arma_de_combate,
+    # cuja whitelist não leva `ammo` — o projétil tem de sair do RANGED_AMMO registrado.
+    print("\n[2b] Arma do editor (besta custom) pelo caminho real")
+    ok, it = S._validate_custom_item({
+        "id": "besta_custom_t", "name": "Besta Custom", "emoji": "🏹", "item_type": "weapon",
+        "die": "1d8", "stat": "dex", "categoria": "perfurante", "range": 8, "ammo": "virotes",
+        "allowed_classes": [], "price": 40,
+        "disponibilidade": {"loja": True, "baus": False, "loot_monstro": False}})
+    check("arma custom validada", ok)
+    S._apply_custom_items([it])
+    try:
+        check("registrada no RANGED_AMMO com virotes", (S.RANGED_AMMO.get("besta_custom_t") or [None])[0] == "virotes")
+        r, p = sala(); r._msgs.clear()
+        p["gear"]["arma"] = dict(S.WEAPONS.get("besta_custom_t") or it)
+        p["weapon"] = None
+        r._sincronizar_arma_de_combate(p, p["gear"]["arma"])
+        check("cópia de combate sem `ammo` (whitelist)", p.get("weapon") and "ammo" not in p["weapon"] and p["weapon"].get("id") == "besta_custom_t")
+        p["gear"]["off_hand"] = {"id": "virotes", "name": "Virotes", "effect": "ammo", "ammo_type": "virotes", "ammo_count": 10}
+        random.seed(3)
+        asyncio.run(r.handle_attack("p1", "m1"))
+        st = feedbacks(r)
+        check("besta do editor: start emitido", len(st) == 1)
+        check("besta do editor: projectile bolt", st and st[0].get("projectile") == {"kind": "bolt"})
+    finally:
+        S._apply_custom_items([])
+    check("cleanup: fora do RANGED_AMMO", "besta_custom_t" not in S.RANGED_AMMO)
 
 def test_throw():
     print("\n[3] Arremesso mirado emite attack_feedback")
@@ -121,6 +149,7 @@ def test_throw():
     st = feedbacks(r); rs = feedbacks(r, "result")
     check("start emitido", len(st) == 1)
     check("start: target_id None e target_pos = casa", st and st[0]["target_id"] is None and st[0]["target_pos"] == [4, 1])
+    check("start: target_name vazio (alvo sintético de área)", st and st[0]["target_name"] == "")
     pj = st[0].get("projectile") if st else None
     check("start: projectile area + sem_dado + area_raio", pj and pj.get("kind") == "item" and pj.get("area") is True
           and pj.get("sem_dado") is True and pj.get("area_raio") == defn.get("area_raio", 1) and pj.get("item_id") == "bomba_incendiaria")

@@ -1368,7 +1368,12 @@ def _projetil_de(defn, monstro=False):
     explicito = defn.get("projectile")
     if explicito in _PROJETIL_KINDS:
         return {"kind": explicito}
-    kind = _PROJETIL_POR_ARMA.get(defn.get("id")) or _PROJETIL_POR_MUNICAO.get(defn.get("ammo"))
+    # A cópia de combate `p["weapon"]` (via `_sincronizar_arma_de_combate`) NÃO
+    # carrega `ammo`; a arma do editor cai no `RANGED_AMMO`, onde o merge
+    # (`_apply_custom_items`) a registra com a família de munição aceita.
+    kind = (_PROJETIL_POR_ARMA.get(defn.get("id"))
+            or _PROJETIL_POR_MUNICAO.get(defn.get("ammo"))
+            or _PROJETIL_POR_MUNICAO.get((RANGED_AMMO.get(defn.get("id")) or [None])[0]))
     if kind:
         return {"kind": kind}
     if monstro:
@@ -23623,12 +23628,14 @@ class GameRoom:
             return
         if resultado.get("projectile") is None:
             resultado.pop("projectile", None)      # só o start com projétil leva a chave
+        # Alvo sintético de área (sem id) não ganha o nome falso "Alvo".
+        nome_alvo = (alvo.get("name") or alvo.get("nome") or "Alvo") if alvo.get("id") is not None else ""
         await self.broadcast({
             "type": "attack_feedback", "phase": fase,
             "attack_id": ataque_id,
             "attacker_id": atacante.get("id"), "target_id": alvo.get("id"),
             "attacker_name": atacante.get("name") or atacante.get("nome", "Atacante"),
-            "target_name": alvo.get("name") or alvo.get("nome", "Alvo"),
+            "target_name": nome_alvo,
             "attack_name": ataque or "Ataque",
             "attacker_pos": list(atacante.get("pos", [0, 0])),
             "target_pos": list(alvo.get("pos", [0, 0])),
