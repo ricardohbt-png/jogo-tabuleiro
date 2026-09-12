@@ -11140,11 +11140,201 @@ function _entityKeyById(id){
 
 function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
 
+// ── Projéteis (frente B) ───────────────────────────────────────────────────────
+// Um voo por comando `launch` da CombatScene. Objeto de cena independente (não
+// é filho do peão), materiais PRÓPRIOS (nunca os clones _sceneMats do peão),
+// posições vindas do próprio comando (nunca de userData.gridX). Família dos
+// efeitos _bolaFogo*: build/update/dispose + lista + tick no laço 3D.
+const _projeteis = [];
+let _projetilGeo = null;   // geometrias/materiais base por tipo, criados uma vez
+
+function _projetilCfg(){ return VC.feedback?.combat?.scene?.projectile || {}; }
+
+function _projetilBases(T){
+  if(_projetilGeo) return _projetilGeo;
+  const madeira = new T.MeshStandardMaterial({ color: 0x5a3a1e, roughness: .8 });
+  const aco     = new T.MeshStandardMaterial({ color: 0x9aa3ad, roughness: .35, metalness: .7 });
+  const pena    = new T.MeshStandardMaterial({ color: 0xe8e2d0, roughness: .9, side: T.DoubleSide });
+  const mk = (comp, raio, ponta, empenas) => {
+    const g = new T.Group();
+    const haste = new T.Mesh(new T.CylinderGeometry(raio, raio, comp, 6), madeira);
+    haste.rotation.x = Math.PI / 2;                       // eixo Z = direção do voo
+    g.add(haste);
+    const tip = new T.Mesh(new T.ConeGeometry(raio * 2.4, ponta, 6), aco);
+    tip.rotation.x = Math.PI / 2; tip.position.z = comp / 2 + ponta / 2; g.add(tip);
+    for(let i = 0; i < empenas; i++){
+      const e = new T.Mesh(new T.PlaneGeometry(0.08, 0.05), pena);
+      e.position.z = -comp / 2 + 0.05; e.rotation.z = i * Math.PI / 2; g.add(e);
+    }
+    g.userData.comp = comp;
+    return g;
+  };
+  _projetilGeo = {
+    arrow: mk(0.55, 0.012, 0.06, 2),
+    bolt:  mk(0.35, 0.018, 0.06, 1),
+    spear: mk(0.95, 0.016, 0.10, 0),
+    mats: [madeira, aco, pena],
+  };
+  return _projetilGeo;
+}
+
+function _projetilSpriteItem(T, itemId, emoji){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+  const c2 = cv.getContext('2d');
+  c2.font = '48px serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle';
+  c2.fillText(emoji || '🧪', 32, 36);
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const mat = new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+  const spr = new T.Sprite(mat); spr.scale.set(0.35, 0.35, 0.35);
+  if(itemId){
+    // PNG real do item quando existe; falha (404/rede) mantém o emoji.
+    new T.TextureLoader().load(_assetURL(`assets/itens/${itemId}.png`), png => {
+      if(!spr.parent) { png.dispose(); return; }        // voo já acabou
+      png._owned = true; mat.map = png; mat.needsUpdate = true; tex.dispose();
+    }, undefined, () => {});
+  }
+  return spr;
+}
+
+function _projetilLancar(c){
+  if(!g3 || !g3.scene || !window.THREE) return;
+  const pc = _projetilCfg();
+  if(pc.enabled === false) return;
+  if(!(c.flightMs >= 20)) return;                       // instant/fast extremo: sem voo
+  const T = g3.T;
+  const kind = c.kind;
+  let obj;
+  if(kind === 'item') obj = _projetilSpriteItem(T, c.item_id, c.item_emoji);
+  else obj = _projetilBases(T)[kind === 'bolt' ? 'bolt' : kind === 'spear' ? 'spear' : 'arrow'].clone();
+  const dist = Math.max(1, Math.hypot(c.to[0] - c.from[0], c.to[1] - c.from[1]));
+  const arcCfg = pc.arc || {};
+  const arco = kind === 'arrow' ? (arcCfg.arrow ?? .25) + (arcCfg.arrowPerTile ?? .04) * dist
+             : kind === 'bolt' ? (arcCfg.bolt ?? .08) : kind === 'spear' ? (arcCfg.spear ?? .35) : (arcCfg.item ?? .55);
+  const anim = {
+    id: c.id, kind, obj, hit: !!c.hit, fumble: !!c.fumble, area: !!c.area, area_raio: c.area_raio || 0,
+    from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]],
+    y0: pc.launchY ?? .45, y1: (!c.hit || c.fumble) ? 0.02 : (pc.landY ?? .35), arco,
+    start: performance.now(), flightMs: c.flightMs, travelMs: c.travelMs,
+    impactAt: performance.now() + c.travelMs,
+    lingerMs: (!c.hit || c.fumble) ? (pc.stickMs ?? 900) : (pc.hitLingerMs ?? 300),
+    spin: (pc.itemSpinPerSec ?? 2.5) * Math.PI * 2,
+    pousado: false, quebrado: false, ring: null,
+  };
+  obj.position.set(anim.from[0], anim.y0, anim.from[1]);
+  g3.scene.add(obj);
+  _projeteis.push(anim);
+}
+
+function _projetilPos(anim, u){
+  const x = anim.from[0] + (anim.to[0] - anim.from[0]) * u;
+  const z = anim.from[1] + (anim.to[1] - anim.from[1]) * u;
+  const y = anim.y0 + (anim.y1 - anim.y0) * u + 4 * anim.arco * u * (1 - u);
+  return [x, y, z];
+}
+
+function _projetilQuebrar(anim, now){
+  if(anim.quebrado || !g3) return;
+  anim.quebrado = true;
+  const T = g3.T, pc = _projetilCfg();
+  const [x, y, z] = _projetilPos(anim, 1);
+  let cor = 0xbfbfbf, n = 14;
+  if(anim.area){
+    cor = 0xff8a32;
+    n = (pc.areaBurst?.base ?? 18) + (pc.areaBurst?.perRadius ?? 8) * anim.area_raio;
+    // Anel no chão que expande e desvanece (como o anel de derrota).
+    const mat = new T.MeshBasicMaterial({ color: 0xffb060, transparent: true, opacity: .8, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
+    const ring = new T.Mesh(new T.TorusGeometry(.35, .03, 8, 32), mat);
+    ring.rotation.x = Math.PI / 2; ring.position.set(x, .03, z); ring.renderOrder = 135;
+    g3.scene.add(ring); anim.ring = { mesh: ring, start: now, raio: Math.max(1, anim.area_raio) };
+  } else if(anim.kind === 'item'){
+    cor = 0xff8a32;
+  }
+  _spawnBurstParticles(T, g3.scene, { x, y: Math.max(.1, y), z }, cor, n);
+}
+
+function _projetilUpdate3D(anim, now){
+  const el = now - anim.start;
+  const u = Math.min(1, el / Math.max(1, anim.flightMs));
+  const [x, y, z] = _projetilPos(anim, u);
+  const obj = anim.obj;
+  if(u < 1){
+    obj.position.set(x, y, z);
+    if(anim.kind === 'item'){
+      obj.material.rotation = (el / 1000) * anim.spin;
+    } else {
+      const [x2, y2, z2] = _projetilPos(anim, Math.min(1, u + 0.02));
+      obj.lookAt(x2, y2, z2);                             // eixo Z do grupo = ponta
+    }
+    return;
+  }
+  if(!anim.pousado){
+    anim.pousado = true; anim.pousoAt = now;
+    obj.position.set(x, y, z);
+    if(anim.kind === 'item'){
+      _projetilQuebrar(anim, now);
+      obj.visible = false;                                // o sprite some; ficam partículas/anel
+    } else {
+      if(!anim.hit || anim.fumble){
+        // Cravada ~35°: guinada pela direção do voo (não pelo Euler que o lookAt
+        // deixou) e ponta para baixo. R_x(θ)·(0,0,1) = (0, −sinθ, cosθ), logo
+        // θ>0 leva a ponta (+Z local) para −Y, o chão. Sinal validado no navegador (Task 7).
+        const yaw = Math.atan2(anim.to[0] - anim.from[0], anim.to[1] - anim.from[1]);
+        obj.rotation.set(0, yaw, 0); obj.rotateX(Math.PI * 0.19);
+      }
+      // Materiais próprios UMA vez: o clone() do Object3D compartilha os do base,
+      // e o desvanecer abaixo não pode tocar neles (outros voos os reusam).
+      obj.traverse(o => { if(o.material && !o.material.userData._projOwned){ o.material = o.material.clone(); o.material.transparent = true; o.material.userData._projOwned = true; } });
+    }
+  }
+  // Cravada/caída: some no fim do linger (seta acertada some junto com a reação).
+  const p = Math.min(1, (now - anim.pousoAt) / Math.max(1, anim.lingerMs));
+  if(anim.kind !== 'item') obj.traverse(o => { if(o.material && o.material.userData._projOwned) o.material.opacity = 1 - p; });
+  if(anim.ring){
+    const q = Math.min(1, (now - anim.ring.start) / 400);
+    anim.ring.mesh.scale.setScalar(1 + q * anim.ring.raio * 2.2);
+    anim.ring.mesh.material.opacity = .8 * (1 - q);
+  }
+  anim.fim = (p >= 1) && (!anim.ring || now - anim.ring.start >= 400);
+}
+
+function _projetilDispose3D(anim){
+  if(anim.obj){
+    if(anim.obj.parent) anim.obj.parent.remove(anim.obj);
+    anim.obj.traverse(o => {
+      if(o.material && o.material.userData && o.material.userData._projOwned) o.material.dispose();
+      if(o.isSprite && o.material){ if(o.material.map && o.material.map._owned) o.material.map.dispose(); o.material.dispose(); }
+    });
+  }
+  if(anim.ring && anim.ring.mesh){
+    if(anim.ring.mesh.parent) anim.ring.mesh.parent.remove(anim.ring.mesh);
+    anim.ring.mesh.geometry.dispose(); anim.ring.mesh.material.dispose();
+  }
+}
+
+function _projetilTickTodos(now){
+  for(let i = _projeteis.length - 1; i >= 0; i--){
+    const anim = _projeteis[i];
+    _projetilUpdate3D(anim, now);
+    if(anim.fim){ _projetilDispose3D(anim); _projeteis.splice(i, 1); }
+  }
+}
+
+function _projetilLimparTodos(){
+  for(const anim of _projeteis) _projetilDispose3D(anim);
+  _projeteis.length = 0;
+  if(_projetilGeo){
+    for(const k of ['arrow', 'bolt', 'spear']) _projetilGeo[k].traverse(o => { if(o.geometry) o.geometry.dispose(); });
+    for(const m of _projetilGeo.mats) m.dispose();
+    _projetilGeo = null;
+  }
+}
+
 // Executa um comando devolvido por CombatScene.tick/handoff. O `impact` é o
 // único que desenha: número flutuante, cue de dano, callbacks (anel/som de
 // derrota) e partículas de crítico/morte.
 function _executarComandoCena(c){
   if(!c) return;
+  if(c.cmd === 'launch'){ _projetilLancar(c); return; }
   if(c.cmd === 'end'){
     // Cena que expirou sem golpear deixaria o banner legado imortal
     // (resultAt=Infinity nunca passa → o tick de _receiveAttackFeedback nunca
@@ -11218,6 +11408,7 @@ function _executarComandoCena(c){
 function _tickCombatScene(now){
   if(!window.CombatScene) return;
   for(const c of CombatScene.tick(now)) _executarComandoCena(c);
+  if(_projeteis.length) _projetilTickTodos(now);
 }
 
 function _receiveAttackFeedback(msg){
@@ -33579,6 +33770,7 @@ function init3D(state){
   if(!window.THREE.OrbitControls){ console.error('OrbitControls not loaded'); return; }
   if(g3) dispose3D();
   if(window.CombatScene) CombatScene.reset();
+  _projetilLimparTodos();
 
   const T   = window.THREE;
   const boardVisualSig = _assinaturaVisualTabuleiro3D(state);
@@ -35287,6 +35479,7 @@ function dispose3D(){
   // "tombando" para sempre (isDying) e seria desenhado vivo no 2D. Lacuna
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
+  _projetilLimparTodos();
   g3.resizeObs.disconnect();
   if(g3.controls) g3.controls.dispose();
 

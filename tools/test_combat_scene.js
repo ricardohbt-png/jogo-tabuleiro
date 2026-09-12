@@ -715,6 +715,10 @@ check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeC
 check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
 check("visualConfig tem scene.projectile", /projectile:\s*\{/.test(vcSrc) && /msPerTile/.test(vcSrc));
 check("_receiveAttackFeedback repassa msg.projectile", /projectile:\s*msg\.projectile/.test(gameSrc));
+check("game.js tem o render de projéteis", ["function _projetilLancar(", "function _projetilUpdate3D(", "function _projetilDispose3D(", "function _projetilTickTodos("].every(s => gameSrc.includes(s)));
+check("comando launch é consumido", gameSrc.includes("c.cmd === 'launch'"));
+check("tick anima os projéteis", gameSrc.includes("_projetilTickTodos(now)"));
+check("dispose3D limpa os projéteis", (() => { const i = gameSrc.indexOf("\nfunction dispose3D("); return i > 0 && gameSrc.slice(i, i + 1500).includes("_projetilLimparTodos()"); })());
 
 console.log("\n[34] Morte (Task 10): fiação em game.js");
 {
