@@ -713,6 +713,8 @@ check("_materiaisCena inclui o contorno marcado como outline", /outline:\s*!!ud\
 check("laço 3D usa _figSceneKey para a reação de impacto", gameSrc.includes("_hitReaction3DAngle(_figSceneKey(fig)"));
 check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeCamera();") > 0 && gameSrc.indexOf("_desfazerShakeCamera();") < gameSrc.indexOf("if(!configCamera.seguindoPeao) g3.controls.update();"));
 check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
+check("visualConfig tem scene.projectile", /projectile:\s*\{/.test(vcSrc) && /msPerTile/.test(vcSrc));
+check("_receiveAttackFeedback repassa msg.projectile", /projectile:\s*msg\.projectile/.test(gameSrc));
 
 console.log("\n[34] Morte (Task 10): fiação em game.js");
 {

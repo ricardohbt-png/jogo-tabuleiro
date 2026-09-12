@@ -11226,7 +11226,7 @@ function _receiveAttackFeedback(msg){
   const id=String(msg.attack_id), now=performance.now();
   if(_cenaAtiva()){
     const base = {attack_id:id, attacker_key:_entityKeyById(msg.attacker_id), target_key:_entityKeyById(msg.target_id),
-      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos};
+      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos, projectile: msg.projectile || null};
     if(msg.phase==='start') CombatScene.start(base, now);
     else if(msg.phase==='result') CombatScene.result({...base, hit:!!msg.hit, crit:!!msg.crit,
       natural_critical:!!msg.natural_critical, natural_fumble:!!msg.natural_fumble}, now);
