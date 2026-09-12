@@ -95,10 +95,46 @@ def test_sites():
     st = feedbacks(r)
     check("kobold besteiro: start com bolt", st and st[-1].get("projectile") == {"kind": "bolt"})
 
+def test_throw():
+    print("\n[3] Arremesso mirado emite attack_feedback")
+    r, p = sala(); r._msgs.clear()
+    defn = S.ARREMESSAVEIS["frasco_oleo"]
+    p["bag"] = [{"id": "frasco_oleo", "name": defn["name"], "emoji": defn["emoji"], "item_slot": "bag"}]
+    random.seed(4321)
+    asyncio.run(r.handle_throw_item("p1", {"item_id": "frasco_oleo", "target_id": "m1"}))
+    st = feedbacks(r); rs = feedbacks(r, "result")
+    check("start emitido", len(st) == 1)
+    check("start: kind item + item_id + emoji", st and st[0].get("projectile") == {"kind": "item", "item_id": "frasco_oleo", "item_emoji": defn["emoji"]})
+    check("start: alvo e posições", st and st[0]["target_id"] == "m1" and st[0]["attacker_pos"] == [1, 1] and st[0]["target_pos"] == [4, 1])
+    check("result emitido com o mesmo attack_id", rs and rs[0]["attack_id"] == st[0]["attack_id"])
+    check("result carrega hit/crit/natural", rs and all(k in rs[0] for k in ("hit", "crit", "natural", "natural_critical", "natural_fumble")))
+    i_start = next(i for i, m in enumerate(r._msgs) if m.get("type") == "attack_feedback")
+    i_dado = next(i for i, m in enumerate(r._msgs) if m.get("type") == "dice_roll")
+    check("start sai ANTES do d20", i_start < i_dado)
+
+    print("\n[4] Arremesso de área emite attack_feedback sem alvo")
+    r, p = sala(); r._msgs.clear()
+    defn = S.ARREMESSAVEIS["bomba_incendiaria"]
+    p["bag"] = [{"id": "bomba_incendiaria", "name": defn["name"], "emoji": defn["emoji"], "item_slot": "bag"}]
+    random.seed(11)
+    asyncio.run(r.handle_throw_item("p1", {"item_id": "bomba_incendiaria", "tx": 4, "ty": 1}))
+    st = feedbacks(r); rs = feedbacks(r, "result")
+    check("start emitido", len(st) == 1)
+    check("start: target_id None e target_pos = casa", st and st[0]["target_id"] is None and st[0]["target_pos"] == [4, 1])
+    pj = st[0].get("projectile") if st else None
+    check("start: projectile area + sem_dado + area_raio", pj and pj.get("kind") == "item" and pj.get("area") is True
+          and pj.get("sem_dado") is True and pj.get("area_raio") == defn.get("area_raio", 1) and pj.get("item_id") == "bomba_incendiaria")
+    check("result imediato com hit True", rs and rs[0].get("hit") is True and rs[0]["attack_id"] == st[0]["attack_id"])
+    i_start = next(i for i, m in enumerate(r._msgs) if m.get("type") == "attack_feedback")
+    i_res = next(i for i, m in enumerate(r._msgs) if m.get("type") == "attack_feedback" and m.get("phase") == "result")
+    dados = [i for i, m in enumerate(r._msgs) if m.get("type") == "dice_roll"]
+    check("start e result saem antes de qualquer dado da área", not dados or i_res < dados[0])
+
 if __name__ == "__main__":
     print("=" * 60); print("  TESTE — Projéteis (frente B)"); print("=" * 60)
     test_helper()
     test_sites()
+    test_throw()
     print("\n" + "=" * 60)
     print(f"  {PASS} passaram, {FAIL} falharam")
     print("=" * 60)

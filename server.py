@@ -16019,6 +16019,9 @@ class GameRoom:
 
         # Rolagem por DESTREZA (1 natural = falha; 20 = crÃ­tico).
         dex_mod = mod(p.get("dex", 12))
+        attack_feedback_id = await self._emitir_feedback_ataque(
+            "start", p, target, defn.get("name") or item.get("name") or "Arremesso", "normal",
+            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"), "item_emoji": defn.get("emoji") or item.get("emoji")})
         roll = random.randint(1, 20)
         total = roll + p["atk_bonus"]
         nat1 = (roll == 1); crit = (roll == 20)
@@ -16026,6 +16029,11 @@ class GameRoom:
         hit = (not nat1) and (crit or total >= target_ac)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                               "label": f"Arremesso ({defn['name']})", "hit": hit, "crit": crit})
+        await self._emitir_feedback_ataque(
+            "result", p, target, defn.get("name") or item.get("name") or "Arremesso", "normal",
+            attack_id=attack_feedback_id, roll=roll, total=total,
+            hit=bool(hit), crit=bool(crit), natural=int(roll),
+            natural_critical=bool(roll == 20), natural_fumble=bool(nat1))
 
         # Consome o item (espatifa) â€” em acerto ou erro.
         p["bag"].remove(item)
@@ -16106,6 +16114,19 @@ class GameRoom:
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         raio = defn.get("area_raio", 1)
+        # Feedback visual: o frasco voa até a casa; sem alvo único e sem d20
+        # de ataque (os saves rolam durante o voo). Alvo sintético só com pos.
+        alvo_area = {"id": None, "name": "", "pos": [cx, cy]}
+        nome_arr = defn.get("name") or item.get("name") or "Arremesso"
+        attack_feedback_id = await self._emitir_feedback_ataque(
+            "start", p, alvo_area, nome_arr, "normal",
+            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"),
+                        "item_emoji": defn.get("emoji") or item.get("emoji"),
+                        "area": True, "area_raio": int(raio), "sem_dado": True})
+        await self._emitir_feedback_ataque(
+            "result", p, alvo_area, nome_arr, "normal",
+            attack_id=attack_feedback_id, hit=True, crit=False,
+            natural_critical=False, natural_fumble=False)
         await self.gm_say(T("narracao.arremessa_em", defn_emoji=defn['emoji'], heroi=p['name'], defn=nome_item(defn), cx=cx, cy=cy))
 
         # Dano de Ã¡rea com save de Reflexos (metade no sucesso).
