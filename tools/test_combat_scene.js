@@ -607,6 +607,13 @@ check("fumble: travelMs = flightMs = metade", l6 && l6.travelMs === 110 && l6.fl
 CS.tick(610);
 check("fumble: impact no fim do voo curto", CS._scenes[0].impactAt === 610);
 check("fumble: alvo NÃO esquiva (nem foi alcançado)", CS.poseFor("m:id_9", 660) === null);
+// Erro com travelMs SATURADO no clamp: a casa a mais voa na velocidade efetiva
+// (220 ms/casa aqui, não os 55 nominais), senão o render cruzaria o alvo cedo.
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_6b", target_pos: [1, 0] }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_6b", hit: false }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const l6b = CS.tick(500).find(c => c.cmd === "launch");
+check("erro a 1 casa: travelMs 220 (clamp) e flightMs 440 (220 × 2/1)", l6b && l6b.travelMs === 220 && l6b.flightMs === 440);
 
 console.log("\n[38] Projétil sem_dado (área): sem espera de dado, sem alvo, fecha sozinho");
 CS.reset();
@@ -614,11 +621,12 @@ const BOMBA = { attack_id: "bmb_1", attacker_key: "p:id_1", target_key: null,
                 attacker_pos: [0, 0], target_pos: [3, 0],
                 projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", area: true, area_raio: 1, sem_dado: true } };
 CS.start(BOMBA, 0); CS.tick(0); CS.result({ ...BOMBA, hit: true }, 1);
-CS.tick(180);
+const cmds38 = CS.tick(180);
+const lb = cmds38.find(c => c.cmd === "launch");
 check("sem_dado: entra em GOLPE assim que o windup acaba, sem ESPERANDO_DADO", CS.phaseOf("bmb_1") === "GOLPE");
 check("dieSettled ignora cena sem_dado", CS.dieSettled({ die: "d20" }, 200) === null);
-check("launch de área com item_id/emoji/area_raio", (() => {
-  const l = CS._ultimoLaunch; return l && l.kind === "item" && l.item_id === "bomba_incendiaria" && l.item_emoji === "💣" && l.area === true && l.area_raio === 1; })());
+check("launch de área com item_id/emoji/area_raio",
+  lb && lb.kind === "item" && lb.item_id === "bomba_incendiaria" && lb.item_emoji === "💣" && lb.area === true && lb.area_raio === 1);
 check("pendingFor nunca devolve cena de área", CS.pendingFor("m:id_9", 200) === null && CS.pendingFor(null, 200) === null);
 const cmdsB = CS.tick(180 + 270);
 const ib = cmdsB.find(c => c.cmd === "impact");
@@ -638,6 +646,42 @@ CS.reset(); CS.configure({ cfg: { projectile: { enabled: false } } });
 CS.start(ARCO, 0); CS.tick(0);
 check("projectile.enabled=false: a cena ignora o campo", CS._scenes[0].projectile === null);
 CS.configure({});
+
+console.log("\n[40] Projétil: cfg parcial, dado durante o voo, fila do mesmo atacante");
+// mergeCfg funde só um nível: msPerTile parcial substitui o mapa inteiro.
+CS.reset(); CS.configure({ cfg: { projectile: { msPerTile: { bolt: 45 } } } });
+CS.start(ARCO, 0); CS.tick(0);
+check("msPerTile parcial (só bolt): arrow cai no default, travelMs finito", Number.isFinite(CS._scenes[0].travelMs) && CS._scenes[0].travelMs === 220);
+CS.result({ ...ARCO, hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+CS.tick(720);
+check("msPerTile parcial: a cena chega ao impacto (não trava no GOLPE)", CS._scenes[0].impactAt === 720);
+check("reset() zera _ultimoLaunch", (CS.reset(), CS._ultimoLaunch === null));
+CS.configure({});
+// (a) d20 que assenta DURANTE o voo não é consumido pela cena em voo
+CS.reset();
+CS.start(ARCO, 0); CS.tick(0); CS.result({ ...ARCO, hit: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+check("(a) cena em voo já tem dieAt", CS.phaseOf("arc_1") === "GOLPE" && CS._scenes[0].dieAt === 500);
+check("(a) 2º dado durante o voo não é consumido (nenhuma cena espera)", CS.dieSettled({ die: "d20" }, 600) === null);
+check("(a) o voo segue e o impacto sai na chegada", CS.tick(720).some(c => c.cmd === "impact") && CS._scenes[0].impactAt === 720);
+// (b) duas cenas de projétil do mesmo atacante: a 2ª espera na FILA
+CS.reset();
+CS.start(ARCO, 0);
+CS.start({ ...ARCO, attack_id: "arc_1b", target_pos: [2, 0] }, 0);
+CS.tick(0);
+check("(b) 2ª cena fica em FILA enquanto a 1ª arma", CS.phaseOf("arc_1") === "ARMANDO" && CS.phaseOf("arc_1b") === "FILA");
+CS.result({ ...ARCO, hit: true }, 1); CS.result({ ...ARCO, attack_id: "arc_1b", hit: true }, 1);
+CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const cb1 = CS.tick(500);
+check("(b) só a 1ª lança", cb1.filter(c => c.cmd === "launch").length === 1 && cb1[0].id === "arc_1" && CS.phaseOf("arc_1b") === "FILA");
+CS.tick(720);                                      // impacto da 1ª
+check("(b) 2ª ainda em FILA durante a recuperação da 1ª", CS.phaseOf("arc_1b") === "FILA");
+CS.tick(720 + 260);                                // 1ª → AGUARDANDO_HANDOFF, 2ª sai da fila
+check("(b) 1ª em AGUARDANDO_HANDOFF libera a 2ª para ARMANDO", CS.phaseOf("arc_1") === "AGUARDANDO_HANDOFF" && CS.phaseOf("arc_1b") === "ARMANDO");
+CS.tick(980 + 180); CS.dieSettled({ die: "d20" }, 1200);
+const cb2 = CS.tick(1200);
+const lb2 = cb2.find(c => c.cmd === "launch");
+check("(b) 2ª lança com o SEU launch (id/to próprios)", lb2 && lb2.id === "arc_1b" && lb2.to[0] === 2 && lb2.travelMs === 220);
 
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");

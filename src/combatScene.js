@@ -62,7 +62,18 @@
     durationFn = (typeof opts.duration === 'function') ? opts.duration : (ms => ms);
     instantFn  = (typeof opts.instant  === 'function') ? opts.instant  : (() => false);
   }
-  function reset() { scenes.length = 0; shakes.length = 0; }
+  function reset() {
+    scenes.length = 0; shakes.length = 0;
+    if (root.CombatScene) root.CombatScene._ultimoLaunch = null;
+  }
+
+  // ms por casa do projétil. `mergeCfg` só funde um nível: um override parcial
+  // de `msPerTile` (ex.: só `bolt`) substitui o mapa inteiro, e um `kind` fora
+  // dele daria NaN → travelMs NaN → GOLPE nunca termina. Cai no default.
+  function msPorCasa(kind) {
+    const pc = cfg.projectile || {}, mp = pc.msPerTile;
+    return (mp && mp[kind]) || (mp && mp.arrow) || DEFAULT_CFG.projectile.msPerTile[kind] || 55;
+  }
 
   // Campo `projectile` do attack_feedback → dict normalizado ou null.
   // `enabled:false` no cfg ignora o campo (o servidor continua mandando).
@@ -77,7 +88,7 @@
   }
   function travelMsDe(kind, distCasas) {
     const pc = cfg.projectile;
-    const ms = Math.max(1, distCasas) * (pc.msPerTile[kind] || pc.msPerTile.arrow);
+    const ms = Math.max(1, distCasas) * msPorCasa(kind);
     return D(Math.max(pc.travelMinMs, Math.min(pc.travelMaxMs, ms)));
   }
 
@@ -158,7 +169,11 @@
       s.travelMs = travelMs;                          // o impacto (sem esquiva) fecha no fim do voo curto
     } else if (!hit) {
       to = [to[0] + s.dir[0] * pc.missOvershootTiles, to[1] + s.dir[1] * pc.missOvershootTiles];
-      flightMs = travelMs + Math.round(pc.missOvershootTiles * D(pc.msPerTile[s.projectile.kind] || pc.msPerTile.arrow));
+      // A casa a mais voa na velocidade EFETIVA (travelMs já passou pelo clamp
+      // e pela duration): o render anda uniforme de from→to em flightMs, então
+      // só assim ele cruza o alvo exatamente em travelMs.
+      const dist = Math.max(1, s.distCasas);
+      flightMs = Math.round(travelMs * (dist + pc.missOvershootTiles) / dist);
     }
     s.launchAt = now;
     const c = {
@@ -171,6 +186,10 @@
     cmds.push(c);
   }
 
+  // Um `impact` pode carregar `projectile` SEM ter havido um `launch` antes:
+  // a cena expira (finalizar) com hand-off guardado e ainda em ARMANDO/
+  // ESPERANDO_DADO, ou o modo instant colapsa direto para o impacto. O
+  // consumidor tolera isso (não há projétil em voo para retirar).
   // `tardio` marca um comando `impact` emitido por um hand-off que chegou
   // DEPOIS do golpe (ver handoff) — o consumidor usa isso para não repetir
   // partículas/callbacks já disparados no impact do golpe em si.
