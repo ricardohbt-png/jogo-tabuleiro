@@ -24,6 +24,7 @@ Ataques com arco/besta e itens arremessados não têm projétil: hoje é a linha
 projectile: {
   kind: 'arrow' | 'bolt' | 'spear' | 'item',
   item_id?: str,        // kind 'item' — para achar o PNG
+  item_emoji?: str,     // kind 'item' — fallback quando não há PNG
   area?: bool,          // arremesso de área (sem alvo único)
   area_raio?: int,      // com area — raio Chebyshev
   sem_dado?: bool       // não há d20 a esperar: lança assim que o result chega
