@@ -22,6 +22,13 @@
     death:    { fallMs: 380, bounceDeg: 4, darken: 0.35, fadeMs: 200, squashY: 0.85 },
     waitDieMs: 3500,
     expireMs:  6000,
+    projectile: {
+      enabled: true,
+      msPerTile: { arrow: 55, bolt: 45, spear: 75, item: 90 },
+      travelMinMs: 220, travelMaxMs: 900,
+      missOvershootTiles: 1,
+      fumbleFraction: 0.5,
+    },
   };
 
   function mergeCfg(base, extra) {
@@ -57,6 +64,23 @@
   }
   function reset() { scenes.length = 0; shakes.length = 0; }
 
+  // Campo `projectile` do attack_feedback → dict normalizado ou null.
+  // `enabled:false` no cfg ignora o campo (o servidor continua mandando).
+  function normalizarProjetil(p) {
+    if (!p || typeof p !== 'object' || !cfg.projectile || cfg.projectile.enabled === false) return null;
+    const kind = ['arrow', 'bolt', 'spear', 'item'].includes(p.kind) ? p.kind : null;
+    if (!kind) return null;
+    return {
+      kind, item_id: p.item_id || null, item_emoji: p.item_emoji || null,
+      area: !!p.area, area_raio: Math.max(0, Number(p.area_raio) || 0), sem_dado: !!p.sem_dado,
+    };
+  }
+  function travelMsDe(kind, distCasas) {
+    const pc = cfg.projectile;
+    const ms = Math.max(1, distCasas) * (pc.msPerTile[kind] || pc.msPerTile.arrow);
+    return D(Math.max(pc.travelMinMs, Math.min(pc.travelMaxMs, ms)));
+  }
+
   function novaCena(msg, soImpacto, now) {
     // Sem posição → null (nunca [0,0]): `pose.base` nulo deixa o peão onde o
     // render o pôs, em vez de teleportá-lo para a casa (0,0). O servidor sempre
@@ -71,6 +95,9 @@
       dir = [ddx / len, ddz / len];
       melee = Math.max(Math.abs(ddx), Math.abs(ddz)) <= cfg.meleeRange;
     }
+    const pj = normalizarProjetil(msg.projectile);
+    if (pj) melee = false;                         // projétil nunca é corpo a corpo
+    const distCasas = (aPos && tPos) ? Math.max(Math.abs(tPos[0] - aPos[0]), Math.abs(tPos[1] - aPos[1])) : 1;
     const s = {
       id: String(msg.attack_id),
       attackerKey: msg.attacker_key || null,
@@ -78,6 +105,9 @@
       aPos, tPos,
       dir,
       melee,
+      projectile: pj, distCasas,
+      travelMs: pj ? travelMsDe(pj.kind, distCasas) : 0,
+      launchAt: null,
       soImpacto: !!soImpacto,
       phase: 'FILA', phaseAt: now, createdAt: now,
       result: null, resultAt: null, dieAt: null,
@@ -112,6 +142,35 @@
 
   function entrar(s, phase, now) { s.phase = phase; s.phaseAt = now; }
 
+  // GOLPE = lançamento quando há projétil: emite `launch` com o destino já
+  // resolvido (erro passa reto 1 casa além; natural 1 cai a meio caminho) e o
+  // impacto fica para a CHEGADA (travelMs). Sem projétil, o GOLPE é o de sempre.
+  function entrarGolpe(s, now, cmds) {
+    entrar(s, 'GOLPE', now);
+    if (!s.projectile) return;
+    const pc = cfg.projectile, hit = !!(s.result && s.result.hit), fumble = !!(s.result && s.result.fumble);
+    const from = s.aPos ? s.aPos.slice() : [0, 0];
+    let to = s.tPos ? s.tPos.slice() : from.slice();
+    let travelMs = s.travelMs, flightMs = s.travelMs;
+    if (fumble) {
+      to = [from[0] + (to[0] - from[0]) * pc.fumbleFraction, from[1] + (to[1] - from[1]) * pc.fumbleFraction];
+      travelMs = flightMs = Math.round(s.travelMs * pc.fumbleFraction);
+      s.travelMs = travelMs;                          // o impacto (sem esquiva) fecha no fim do voo curto
+    } else if (!hit) {
+      to = [to[0] + s.dir[0] * pc.missOvershootTiles, to[1] + s.dir[1] * pc.missOvershootTiles];
+      flightMs = travelMs + Math.round(pc.missOvershootTiles * D(pc.msPerTile[s.projectile.kind] || pc.msPerTile.arrow));
+    }
+    s.launchAt = now;
+    const c = {
+      cmd: 'launch', id: s.id, attackerKey: s.attackerKey, targetKey: s.targetKey,
+      kind: s.projectile.kind, item_id: s.projectile.item_id, item_emoji: s.projectile.item_emoji,
+      from, to, dir: s.dir.slice(), travelMs, flightMs, hit, fumble,
+      crit: !!(s.result && s.result.crit), area: s.projectile.area, area_raio: s.projectile.area_raio,
+    };
+    if (root.CombatScene) root.CombatScene._ultimoLaunch = c;   // só para testes
+    cmds.push(c);
+  }
+
   // `tardio` marca um comando `impact` emitido por um hand-off que chegou
   // DEPOIS do golpe (ver handoff) — o consumidor usa isso para não repetir
   // partículas/callbacks já disparados no impact do golpe em si.
@@ -122,6 +181,9 @@
       targetPos: s.tPos ? s.tPos.slice() : null, dir: s.dir.slice(),
       hit: !!(s.result && s.result.hit), crit: !!(s.result && s.result.crit),
       fumble: !!(s.result && s.result.fumble),
+      projectile: s.projectile ? s.projectile.kind : null,
+      area: !!(s.projectile && s.projectile.area),
+      area_raio: s.projectile ? s.projectile.area_raio : 0,
       feedbacks: s.impact.feedbacks.splice(0),   // emitido UMA vez
       death: !!s.impact.death,
       onImpact: s.impact.onImpact.splice(0),
@@ -171,16 +233,19 @@
         }
         case 'ARMANDO':
           if (s.result && instantFn()) { irParaImpacto(s, now, cmds); break; }
-          if (s.result && now - s.phaseAt >= D(cfg.windup.ms))
-            entrar(s, s.dieAt != null ? 'GOLPE' : 'ESPERANDO_DADO', now);
+          if (s.result && now - s.phaseAt >= D(cfg.windup.ms)) {
+            if (s.dieAt != null || (s.projectile && s.projectile.sem_dado)) entrarGolpe(s, now, cmds);
+            else entrar(s, 'ESPERANDO_DADO', now);
+          }
           break;
         case 'ESPERANDO_DADO':
           if (!s.result) break;
           if (instantFn()) { irParaImpacto(s, now, cmds); break; }
-          if (s.dieAt != null || now - s.resultAt >= cfg.waitDieMs) entrar(s, 'GOLPE', now);   // timeout: NÃO passa por D()
+          if (s.dieAt != null || (s.projectile && s.projectile.sem_dado) || now - s.resultAt >= cfg.waitDieMs)   // timeout: NÃO passa por D()
+            entrarGolpe(s, now, cmds);
           break;
         case 'GOLPE': {
-          const dur = s.melee ? D(cfg.strike.ms) : D(cfg.ranged.msOut);
+          const dur = s.projectile ? s.travelMs : (s.melee ? D(cfg.strike.ms) : D(cfg.ranged.msOut));
           if (now - s.phaseAt >= dur) irParaImpacto(s, now, cmds);
           break;
         }
@@ -192,7 +257,7 @@
           const reacao = s.result && s.result.hit ? D(cfg.hit.ms) : D(cfg.dodge.ms);
           if (now - s.phaseAt >= Math.max(volta, reacao)) {
             if (s.impact.death) entrar(s, 'MORRENDO', now);
-            else if (s.handoffs > 0 || !(s.result && s.result.hit)) finalizar(s, cmds, now);
+            else if (s.handoffs > 0 || !(s.result && s.result.hit) || (s.projectile && s.projectile.area)) finalizar(s, cmds, now);
             else entrar(s, 'AGUARDANDO_HANDOFF', now);
           }
           break;
@@ -218,6 +283,7 @@
   function dieSettled(info, now) {
     if (info && info.die && info.die !== 'd20') return null;
     const s = scenes.find(x => !x.done && x.result && x.dieAt == null && x.impactAt == null
+      && !(x.projectile && x.projectile.sem_dado)   // área não rola d20: o dado é de outra cena
       && now - x.createdAt <= cfg.expireMs);   // rAF pode ter pausado: ignora cena já expirada
     if (!s) return null;
     s.dieAt = now;
@@ -277,7 +343,7 @@
   function cenaParaHandoff(targetKey, now) {
     let semImpacto = null, semImpactoLivre = null, comImpacto = null;
     for (const s of scenes) {
-      if (s.done || s.targetKey !== targetKey) continue;
+      if (s.done || s.targetKey == null || s.targetKey !== targetKey) continue;   // área (sem alvo) nunca recebe hand-off
       if (now != null && now - s.createdAt > cfg.expireMs) continue;
       if (s.impactAt == null) {
         if (s.result && !s.result.hit) continue;
@@ -356,7 +422,10 @@
     const d = s.dir, p = progressoReacao(s, now);
     if (p >= 1) return null;
     const wave = Math.sin(p * Math.PI);
-    if (!s.result.hit) return { dx: 0, dz: 0, tilt: cfg.dodge.angle * wave, tiltDir: d, base: s.tPos };
+    if (!s.result.hit) {
+      if (s.projectile && s.result.fumble) return null;   // o projétil caiu antes: o alvo nem esquiva
+      return { dx: 0, dz: 0, tilt: cfg.dodge.angle * wave, tiltDir: d, base: s.tPos };
+    }
     const crit = s.result.crit;
     const push = (crit ? cfg.crit.push : cfg.hit.push) * wave;
     let flash = 0;
@@ -433,5 +502,6 @@
     pendingFor, handoff, shake, isDying,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
+    _ultimoLaunch: null, // só para testes: último comando `launch` emitido
   };
 })(typeof window !== 'undefined' ? window : (typeof global !== 'undefined' ? global : this));

@@ -552,6 +552,93 @@ CS.reset(); CS.configure({});
   check("(d) cena sem result ainda é candidata", CS.pendingFor("m:id_9", 1) === "atk_1_1");
 }
 
+console.log("\n[35] Projétil: launch na entrada do GOLPE e impacto na chegada");
+CS.reset(); CS.configure({});
+const ARCO = { attack_id: "arc_1", attacker_key: "p:id_1", target_key: "m:id_9",
+               attacker_pos: [0, 0], target_pos: [4, 0], projectile: { kind: "arrow" } };
+CS.start(ARCO, 0); CS.tick(0);
+check("cena com projétil não é melee", CS._scenes[0].melee === false);
+check("travelMs = 4 casas × 55 = 220 (clamp min 220)", CS._scenes[0].travelMs === 220);
+CS.result({ ...ARCO, hit: true }, 1); CS.tick(180);
+check("espera o dado como qualquer ataque", CS.phaseOf("arc_1") === "ESPERANDO_DADO");
+CS.dieSettled({ die: "d20" }, 500);
+const cmdsL = CS.tick(500);
+const launch = cmdsL.find(c => c.cmd === "launch");
+check("GOLPE emite launch", !!launch);
+check("launch carrega kind/from/to/hit/travelMs", launch && launch.kind === "arrow" && launch.hit === true
+  && launch.from[0] === 0 && launch.to[0] === 4 && launch.to[1] === 0 && launch.travelMs === 220 && launch.flightMs === 220);
+check("impact NÃO sai no lançamento", !cmdsL.some(c => c.cmd === "impact"));
+check("alvo ainda sem pose durante o voo", CS.poseFor("m:id_9", 600) === null);
+check("atacante faz o coice durante o voo", CS.poseFor("p:id_1", 545).dx < 0);
+const cmdsImp = CS.tick(720);
+check("impact sai só na chegada (500 + 220)", cmdsImp.some(c => c.cmd === "impact") && CS._scenes[0].impactAt === 720);
+check("impact carrega projectile kind", cmdsImp.find(c => c.cmd === "impact").projectile === "arrow");
+check("alvo reage após a chegada", CS.poseFor("m:id_9", 720 + 130).dx > 0);
+
+console.log("\n[36] Projétil: distância longa satura no travelMaxMs e instant colapsa");
+CS.reset(); CS.configure({});
+CS.start({ ...ARCO, attack_id: "arc_2", target_pos: [30, 0] }, 0); CS.tick(0);
+check("30 casas × 55 = 1650 → clamp 900", CS._scenes[0].travelMs === 900);
+CS.reset(); CS.configure({ duration: ms => ms * 0.5 });
+CS.start({ ...ARCO, attack_id: "arc_3" }, 0); CS.tick(0);
+check("travelMs passa pela duration (fast 0,5× → 110)", CS._scenes[0].travelMs === 110);
+CS.reset(); CS.configure({ instant: () => true, duration: () => 0.001 });
+CS.start({ ...ARCO, attack_id: "arc_4" }, 0); CS.tick(0); CS.result({ ...ARCO, attack_id: "arc_4", hit: true }, 1);
+const cmdsInst = CS.tick(1);
+check("instant: impact imediato e SEM launch", cmdsInst.some(c => c.cmd === "impact") && !cmdsInst.some(c => c.cmd === "launch"));
+CS.configure({});
+
+console.log("\n[37] Projétil: erro passa reto, fumble cai a meio caminho");
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_5" }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_5", hit: false }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+let l5 = CS.tick(500).find(c => c.cmd === "launch");
+check("erro: to estendido 1 casa além do alvo", l5 && l5.hit === false && Math.abs(l5.to[0] - 5) < 1e-9);
+check("erro: travelMs até o alvo, flightMs inclui a casa a mais", l5 && l5.travelMs === 220 && l5.flightMs === 275);
+CS.tick(720);
+check("erro: impact na chegada ao alvo (não no fim do voo)", CS._scenes[0].impactAt === 720);
+check("erro: alvo esquiva", CS.poseFor("m:id_9", 720 + 100).tilt > 0);
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_6" }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_6", hit: false, natural_fumble: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const l6 = CS.tick(500).find(c => c.cmd === "launch");
+check("fumble: to a meio caminho", l6 && l6.fumble === true && Math.abs(l6.to[0] - 2) < 1e-9);
+check("fumble: travelMs = flightMs = metade", l6 && l6.travelMs === 110 && l6.flightMs === 110);
+CS.tick(610);
+check("fumble: impact no fim do voo curto", CS._scenes[0].impactAt === 610);
+check("fumble: alvo NÃO esquiva (nem foi alcançado)", CS.poseFor("m:id_9", 660) === null);
+
+console.log("\n[38] Projétil sem_dado (área): sem espera de dado, sem alvo, fecha sozinho");
+CS.reset();
+const BOMBA = { attack_id: "bmb_1", attacker_key: "p:id_1", target_key: null,
+                attacker_pos: [0, 0], target_pos: [3, 0],
+                projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", area: true, area_raio: 1, sem_dado: true } };
+CS.start(BOMBA, 0); CS.tick(0); CS.result({ ...BOMBA, hit: true }, 1);
+CS.tick(180);
+check("sem_dado: entra em GOLPE assim que o windup acaba, sem ESPERANDO_DADO", CS.phaseOf("bmb_1") === "GOLPE");
+check("dieSettled ignora cena sem_dado", CS.dieSettled({ die: "d20" }, 200) === null);
+check("launch de área com item_id/emoji/area_raio", (() => {
+  const l = CS._ultimoLaunch; return l && l.kind === "item" && l.item_id === "bomba_incendiaria" && l.item_emoji === "💣" && l.area === true && l.area_raio === 1; })());
+check("pendingFor nunca devolve cena de área", CS.pendingFor("m:id_9", 200) === null && CS.pendingFor(null, 200) === null);
+const cmdsB = CS.tick(180 + 270);
+const ib = cmdsB.find(c => c.cmd === "impact");
+check("impact de área na chegada (3 casas × 90 = 270)", ib && ib.area === true && ib.area_raio === 1 && ib.targetPos[0] === 3);
+CS.tick(180 + 270 + 260);
+check("cena de área fecha após recuperar (não fica esperando hand-off)", CS.phaseOf("bmb_1") === null);
+
+console.log("\n[39] Sem projectile no start → byte-idêntico (ranged de haste continua coice + impacto imediato)");
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_7", projectile: undefined }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_7", hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const c7 = CS.tick(500);
+check("sem projectile: nenhum launch", !c7.some(c => c.cmd === "launch"));
+CS.tick(590);
+check("sem projectile: impact no msOut do coice (90 ms)", CS._scenes[0].impactAt === 590);
+CS.reset(); CS.configure({ cfg: { projectile: { enabled: false } } });
+CS.start(ARCO, 0); CS.tick(0);
+check("projectile.enabled=false: a cena ignora o campo", CS._scenes[0].projectile === null);
+CS.configure({});
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
