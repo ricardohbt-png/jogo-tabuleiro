@@ -1354,6 +1354,29 @@ RANGED_AMMO = {
     "hand_crossbow": ["virotes", "virotes_incendiarios", "virotes_prata"],
 }
 
+# ── Projétil visual de um ataque (frente B — só afeta a animação do cliente) ──
+# Devolve {"kind": ...} ou None. Herói: pela arma (id nativo ou `ammo` do
+# editor); arma de haste com `range` (chicote, alabarda) NÃO tem projétil.
+# Monstro/servo: `projectile` explícito no ataque, senão range≥2 + perfurante.
+_PROJETIL_POR_ARMA    = {"arco_curto": "arrow", "longbow": "arrow", "besta": "bolt", "hand_crossbow": "bolt"}
+_PROJETIL_POR_MUNICAO = {"flechas": "arrow", "virotes": "bolt"}
+_PROJETIL_KINDS       = ("arrow", "bolt", "spear")
+
+def _projetil_de(defn, monstro=False):
+    if not defn or not isinstance(defn, dict):
+        return None
+    explicito = defn.get("projectile")
+    if explicito in _PROJETIL_KINDS:
+        return {"kind": explicito}
+    kind = _PROJETIL_POR_ARMA.get(defn.get("id")) or _PROJETIL_POR_MUNICAO.get(defn.get("ammo"))
+    if kind:
+        return {"kind": kind}
+    if monstro:
+        rng = defn.get("range")
+        if isinstance(rng, (int, float)) and rng >= 2 and defn.get("categoria") == "perfurante":
+            return {"kind": "arrow"}
+    return None
+
 # â”€â”€â”€ GUILDA DOS HERÃ“IS â€” persistÃªncia por personagem (Fase 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Save por class_id (6 personagens fixos), global ao processo. Guarda sÃ³ posse +
 # equipar da guilda; ouro/HP/nÃ­vel continuam por-sessÃ£o. Ver spec Fase 0 Â§5.
@@ -4359,7 +4382,7 @@ MONSTER_DEFS = [
         "attacks": [
             {"name": "Besta de Mão", "atk_bonus": 4, "damage": "1d4+2",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
-             "range": 4},
+             "range": 4, "projectile": "bolt"},
         ],
         "special_abilities": [
             {"id": "covardia_kobold","name": "Covardia Instintiva",   "action_type": "passiva",
@@ -15438,7 +15461,8 @@ class GameRoom:
             attack_name = (weapon_here or {}).get("name") or (weapon_here or {}).get("id") or "Ataque"
             attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
             attack_feedback_id = await self._emitir_feedback_ataque(
-                "start", p, target, attack_name, attack_mode)
+                "start", p, target, attack_name, attack_mode,
+                projectile=_projetil_de(weapon_here))
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
@@ -17673,7 +17697,8 @@ class GameRoom:
         attack_name = ataque.get("name") or a.get("nome") or "Ataque"
         attack_mode = "advantage" if _esc == "vantagem" else "disadvantage" if _esc == "desvantagem" else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
-            "start", a, m, attack_name, attack_mode)
+            "start", a, m, attack_name, attack_mode,
+            projectile=_projetil_de(ataque, monstro=True))
         await self._emitir_feedback_ataque(
             "result", a, m, attack_name, attack_mode,
             attack_id=attack_feedback_id, roll=roll, total=total,
@@ -23575,6 +23600,8 @@ class GameRoom:
             ataque_id = resultado.pop("attack_id", None)
         if not ataque_id:
             return
+        if resultado.get("projectile") is None:
+            resultado.pop("projectile", None)      # só o start com projétil leva a chave
         await self.broadcast({
             "type": "attack_feedback", "phase": fase,
             "attack_id": ataque_id,
@@ -33311,6 +33338,7 @@ class GameRoom:
             item["veneno_id"] = veneno_id
         atk = dict(m.get("attacks", [{}])[0])
         atk["range"] = 4
+        atk["projectile"] = "spear"
         atk["attack_attribute"] = "str_"
         atk["damage_attribute"] = "str_"
         if veneno_id:
@@ -33469,7 +33497,8 @@ class GameRoom:
         attack_name = atk_def.get("name") or "Ataque"
         attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
-            "start", m, target, attack_name, attack_mode)
+            "start", m, target, attack_name, attack_mode,
+            projectile=_projetil_de(atk_def, monstro=True))
 
         if vantagem or desvantagem:
             hit, roll, total, crit, discarded = self._rolar_ataque(
