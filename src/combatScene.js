@@ -380,6 +380,25 @@
     return s ? s.id : null;
   }
 
+  // Instante estimado da CHEGADA de um arremesso de ÁREA que cobre `pos` (null se nenhum).
+  // Consultado pelo diff de HP, que roda ANTES de a cena emitir o `launch` (o game_state
+  // chega na mesma rajada do start): estima pelo windup + travelMs enquanto não lançou.
+  function areaImpactAt(pos, now) {
+    if (!Array.isArray(pos)) return null;
+    let t = null;
+    for (const s of scenes) {
+      const pj = s.projectile;
+      if (s.done || !pj || !pj.area || !s.tPos) continue;
+      if (s.impactAt != null && now >= s.impactAt) continue;      // já chegou
+      const d = Math.max(Math.abs(s.tPos[0] - pos[0]), Math.abs(s.tPos[1] - pos[1]));
+      if (d > pj.area_raio) continue;
+      const eta = s.launchAt != null ? s.launchAt + s.travelMs
+                : (s.phaseAt != null && s.phase === 'ARMANDO' ? s.phaseAt : now) + D(cfg.windup.ms) + s.travelMs;
+      t = t == null ? eta : Math.max(t, eta);
+    }
+    return t;
+  }
+
   // Entrega o feedback de dano à cena pendente do alvo. Hand-offs ACUMULAM:
   // feedbacks e callbacks são empilhados e `death` é OR — a morte
   // (_capturarDerrotasERessurreicoes) e o número (_detectHpChanges) do mesmo
@@ -518,7 +537,7 @@
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
-    pendingFor, handoff, shake, isDying,
+    pendingFor, handoff, shake, isDying, areaImpactAt,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
     _ultimoLaunch: null, // só para testes: último comando `launch` emitido

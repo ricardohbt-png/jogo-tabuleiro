@@ -11219,7 +11219,9 @@ function _projetilLancar(c){
     id: c.id, kind, obj, hit: !!c.hit, fumble: !!c.fumble, area: !!c.area, area_raio: c.area_raio || 0,
     elemento: c.item_elemento || null,
     from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]],
-    y0: pc.launchY ?? .45, y1: (!c.hit || c.fumble) ? 0.02 : (pc.landY ?? .35), arco,
+    // Erro/fumble pousa no chão: seta cravada quase rente (0.02); o sprite do item
+    // (0.35 de altura) fica a 0.15 para não ser cortado pelo piso.
+    y0: pc.launchY ?? .45, y1: (!c.hit || c.fumble) ? (kind === 'item' ? 0.15 : 0.02) : (pc.landY ?? .35), arco,
     start: performance.now(), flightMs: c.flightMs, travelMs: c.travelMs,
     impactAt: performance.now() + c.travelMs,
     lingerMs: (!c.hit || c.fumble) ? (pc.stickMs ?? 900) : (pc.hitLingerMs ?? 300),
@@ -11315,8 +11317,9 @@ function _projetilDispose3D(anim){
   if(anim.obj){
     if(anim.obj.parent) anim.obj.parent.remove(anim.obj);
     anim.obj.traverse(o => {
-      if(o.material && o.material.userData && o.material.userData._projOwned) o.material.dispose();
-      if(o.isSprite && o.material){ if(o.material.map && o.material.map._owned) o.material.map.dispose(); o.material.dispose(); }
+      if(!o.material) return;
+      if(o.isSprite){ if(o.material.map && o.material.map._owned) o.material.map.dispose(); o.material.dispose(); return; }
+      if(o.material.userData && o.material.userData._projOwned) o.material.dispose();
     });
   }
   if(anim.ring && anim.ring.mesh){
@@ -11706,6 +11709,9 @@ function _bolaFogoFeedbackStartAt(entry){
 
 // Irmã do portão da bola de fogo: quem está no raio de um arremesso de ÁREA em
 // voo só mostra o número quando o frasco chega (os saves rolam durante o voo).
+// Consulta a CENA além da lista de render: o game_state com o dano chega na
+// mesma rajada do start, ANTES de o laço 3D emitir o `launch` que povoa
+// `_projeteis` — só a cena sabe estimar a chegada (windup + travelMs).
 function _projetilFeedbackStartAt(entry){
   if(!entry || !Array.isArray(entry.pos)) return null;
   const px = Number(entry.pos[0]), py = Number(entry.pos[1]);
@@ -11717,6 +11723,9 @@ function _projetilFeedbackStartAt(entry){
     if(d > anim.area_raio) continue;
     liberarEm = liberarEm == null ? anim.impactAt : Math.max(liberarEm, anim.impactAt);
   }
+  const daCena = (window.CombatScene && typeof CombatScene.areaImpactAt === 'function')
+    ? CombatScene.areaImpactAt([px, py], performance.now()) : null;
+  if(daCena != null) liberarEm = liberarEm == null ? daCena : Math.max(liberarEm, daCena);
   return liberarEm;
 }
 

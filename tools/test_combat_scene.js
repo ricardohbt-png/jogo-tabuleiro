@@ -684,6 +684,26 @@ const cb2 = CS.tick(1200);
 const lb2 = cb2.find(c => c.cmd === "launch");
 check("(b) 2ª lança com o SEU launch (id/to próprios)", lb2 && lb2.id === "arc_1b" && lb2.to[0] === 2 && lb2.travelMs === 220);
 
+console.log("\n[41] areaImpactAt: o diff de HP consulta a cena ANTES do launch (estimativa windup + voo)");
+CS.reset(); CS.configure({});
+const BOMBA41 = { attack_id: "bmb_41", attacker_key: "p:id_1", target_key: null,
+                  attacker_pos: [0, 0], target_pos: [3, 0],
+                  projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", area: true, area_raio: 1, sem_dado: true } };
+CS.start(BOMBA41, 0); CS.tick(0); CS.result({ ...BOMBA41, hit: true }, 1);
+check("antes do launch: casa no raio estima windup(180) + voo(3×90=270) = 450", CS.areaImpactAt([3, 0], 1) === 450);
+check("antes do launch: casa vizinha (raio 1) também espera", CS.areaImpactAt([4, 1], 1) === 450);
+check("antes do launch: casa fora do raio → null", CS.areaImpactAt([5, 0], 1) === null);
+check("pos inválida → null", CS.areaImpactAt(null, 1) === null);
+const cmds41 = CS.tick(180);
+check("launch emitido aos 180 ms", cmds41.some(c => c.cmd === "launch"));
+check("depois do launch: chegada = launchAt + travelMs = 450", CS.areaImpactAt([3, 0], 200) === 450);
+CS.tick(450);
+check("depois do impacto → null (já chegou)", CS.areaImpactAt([3, 0], 450) === null);
+CS.reset();
+CS.start(ARCO, 0); CS.tick(0); CS.result({ ...ARCO, hit: true }, 1);
+check("cena sem área (flecha) → null mesmo na casa do alvo", CS.areaImpactAt(ARCO.target_pos, 1) === null);
+CS.reset();
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
@@ -722,6 +742,7 @@ check("comando launch é consumido", gameSrc.includes("c.cmd === 'launch'"));
 check("tick anima os projéteis", gameSrc.includes("_projetilTickTodos(now)"));
 check("dispose3D limpa os projéteis", (() => { const i = gameSrc.indexOf("\nfunction dispose3D("); return i > 0 && gameSrc.slice(i, i + 1500).includes("_projetilLimparTodos()"); })());
 check("diff de HP consulta _projetilFeedbackStartAt", corpoDaFuncao("_detectHpChanges").includes("_projetilFeedbackStartAt(entry)"));
+check("_projetilFeedbackStartAt consulta a cena (CombatScene.areaImpactAt), não só o render", corpoDaFuncao("_projetilFeedbackStartAt").includes("CombatScene.areaImpactAt"));
 
 console.log("\n[34] Morte (Task 10): fiação em game.js");
 {
