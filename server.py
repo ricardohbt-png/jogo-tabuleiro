@@ -760,6 +760,7 @@ for _cenas in CITY_SCENES.values():
 PRIS_HP = 7         # vida do prisioneiro (Fase 3)
 PRIS_AC = 10        # classe de armadura do prisioneiro
 PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
+PROTETOR_PRISIONEIRO_ID = "__prisioneiro__"
 OBJ_BONUS_XP = 50   # XP concedido por objetivo secundÃ¡rio cumprido (Fase 3)
 OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundÃ¡rio cumprido (Fase 3)
 
@@ -3074,13 +3075,13 @@ GUILD_CATALOG = {
         "id": "paladino_defensor_2", "categoria": "especializacao", "classe": "paladin",
         "linha": "paladino_defensor", "nivel": 2, "requer": None, "exclusiva": False,
         "preco": 150, "nome": "Defensor II", "icon": "🛡️",
-        "desc": "O alcance da proteção aumenta para 5 quadrados.",
+        "desc": "O alcance aumenta para 5; dano não proveniente de ataque fica 65% no alvo e 35% em Richard.",
     },
     "paladino_defensor_3": {
         "id": "paladino_defensor_3", "categoria": "especializacao", "classe": "paladin",
         "linha": "paladino_defensor", "nivel": 3, "requer": "paladino_defensor_2", "exclusiva": False,
         "preco": 200, "nome": "Defensor III", "icon": "🛡️",
-        "desc": "O dano dividido cai para 40%/40% (20% é mitigado).",
+        "desc": "Todo dano sofrido pelo alvo é dividido 50%/50%; Richard reduz 3 de todo dano enquanto o Protetor estiver ativo.",
     },
     "paladino_regen_2": {
         "id": "paladino_regen_2", "categoria": "especializacao", "classe": "paladin",
@@ -3505,7 +3506,7 @@ CLASSES = {
             {
                 "id": "protetor",
                 "name": "Protetor",
-                "description": "Aliado recebe metade do dano. A outra metade vai para Richard",
+                "description": "Ataques: 50/50. Outras fontes: 75% no aliado e 25% em Richard. Richard reduz 3 de todo dano.",
                 "icon": "🛡️",
                 "tipo": "buff_aliado",
                 "target": "ally",
@@ -7879,6 +7880,7 @@ GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
                           "saciar", "criar_alimentos", "clarividencia", "raio_divino",
                           "abencoar", "amaldicoar", "abencoar_arma",
                           "maldicao_corpo_pesado",
+                          "vinculo_maldito_da_dor",
                           "sono", "medo", "comando", "dominar_mente",
                           "dominar_morto_vivo", "lentidao",
                           "invisibilidade", "regeneracao_magica", "jato_ar",
@@ -8062,6 +8064,17 @@ GRIMORIO = {
         "duracao": "1d4",
         "descricao": "Área 4x4. Sem magias nem bônus de Canção Heroica dentro. Dura 1d4 rodadas.",
     },
+    "vinculo_maldito_da_dor": {
+        "id": "vinculo_maldito_da_dor", "nome": "Vínculo Maldito da Dor",
+        "circulo": "segundo", "classe": ["mage", "cleric"],
+        "icone": "⛓️", "tipo": "alvo_inimigo", "alcance_los": True,
+        "save": "vontade", "duracao": "1d4", "duracao_por_nivel": 1,
+        "max_alvos": 4, "fracao_transferida": 25,
+        "descricao": "Liga o conjurador a um inimigo por 1d4 + nível de conjurador rodadas. "
+                     "Vontade nega. Cada vínculo transfere 25% do dano sofrido pelo "
+                     "conjurador ao inimigo, até 4 inimigos; os vínculos podem coexistir. "
+                     "O inimigo atingido sofre -1 no próximo ataque, sem acumular.",
+    },
     "chamado_inverno": {
         "id": "chamado_inverno", "nome": "Chamado do Inverno",
         "circulo": "segundo", "classe": ["cleric"],
@@ -8122,11 +8135,11 @@ GRIMORIO = {
         "icone": "🌪️", "tipo": "area_fixa",
         "alcance_base": 6, "alcance_escala": 1, "alcance_por_niveis": 2,
         "area_lado": 3, "area_lado_niveis": 3,
-        "ciclone_lado": 2, "ciclones_por_niveis": 4,
+        "ciclone_lado": 1, "ciclones": "2d4",
         "ciclone_movimento": 2,
         "dano_inicial": "2d8", "dano_raio": "1d8", "dano_ciclone": "1d8",
         "duracao": "1d4+1", "duracao_por_nivel": 2,
-        "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
+        "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 2d4 ciclones de 1 casa, com posição inicial escolhida pelo clérigo. Cada ciclone pode andar 2 casas por rodada. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
     },
     "teleporte": {
         "id": "teleporte", "nome": "Teleporte",
@@ -8570,7 +8583,8 @@ def make_player(pid, name, cls_id, slot):
         # â”€â”€ Estado das habilidades do paladino (Richard) â€” inerte p/ outras classes â”€â”€
         "golpe_sagrado_ativo": False,  # +1d8 sagrado por ataque (manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1)
         "protetor_ativo":      False,  # divide o dano recebido por um aliado protegido
-        "protetor_alvo":       None,   # pid do aliado sob Protetor
+        "protetor_alvo":       None,   # pid ou __prisioneiro__ sob Protetor
+        "vinculos_malditos_dor": [],   # vínculos ativos do conjurador
         "regeneracao_ativa":   False,  # +1 HP por turno (manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1)
         "guerreiro_luz_ativo": False,  # buff de combate (visÃ£o/ataque/dano/CA)
         "guerreiro_luz_bonus": {},     # {"visao","ataque","dano","ca"} â€” 0..2 cada
@@ -10546,13 +10560,69 @@ class GameRoom:
         """Alcance do Protetor (4 base / 5 com paladino_defensor_2)."""
         return 5 if tem_espec(p, "paladino_defensor_2") else 4
 
-    def _defensor_split(self, richard, dano):
-        """Divisão do dano do Protetor: 50/50 base; 40/40 (20% mitigado) com paladino_defensor_3."""
-        if tem_espec(richard, "paladino_defensor_3"):
-            parte = (dano * 2) // 5   # 40% (floor); 20% mitigado
-            return parte, parte
-        metade = dano // 2
-        return metade, metade
+    def _defensor_split(self, richard, dano, is_attack=True):
+        """Retorna (dano_no_alvo, dano_em_richard) do Protetor.
+
+        Ataques continuam 50/50 nos três níveis. No dano que não é ataque,
+        o nível base deixa 75% no alvo, o II deixa 65% e o III divide 50/50.
+        O restante sempre vai para Richard, preservando o dano total em
+        instâncias ímpares. A redução plana de Richard é aplicada depois.
+        """
+        dano = max(0, int(dano or 0))
+        if is_attack or tem_espec(richard, "paladino_defensor_3"):
+            percentual_alvo = 50
+        elif tem_espec(richard, "paladino_defensor_2"):
+            percentual_alvo = 65
+        else:
+            percentual_alvo = 75
+        dano_alvo = (dano * percentual_alvo) // 100
+        return dano_alvo, dano - dano_alvo
+
+    def _protetor_target_id(self, alvo):
+        """ID estável usado pelo vínculo, inclusive para o prisioneiro singleton."""
+        if self._eh_jogador(alvo):
+            return alvo.get("id")
+        if alvo is self.prisoner:
+            return PROTETOR_PRISIONEIRO_ID
+        return None
+
+    def _protetor_target(self, alvo_id):
+        if str(alvo_id) == PROTETOR_PRISIONEIRO_ID:
+            return self.prisoner
+        return self.players.get(alvo_id)
+
+    def _reduzir_dano_protetor(self, alvo, dano):
+        """Redução pessoal de Richard enquanto mantém o Protetor ativo."""
+        if (dano <= 0 or not self._eh_jogador(alvo)
+                or alvo.get("class_id") != "paladin"
+                or not alvo.get("protetor_ativo")):
+            return dano
+        return max(0, int(dano) - 3)
+
+    async def _aplicar_dano_protetor_direto(self, alvo, dano, elemento,
+                                            killer_pid=None, *, is_attack=False,
+                                            piso_hp=0):
+        """Aplica uma fonte que já possui suas próprias regras defensivas.
+
+        Usado por efeitos de maldição/status que historicamente descontam HP
+        diretamente: adiciona a divisão e a redução de Richard sem introduzir
+        escudo/energia/barreira que não faziam parte daquele efeito.
+        """
+        dano_alvo, transferencia = await self._processar_dano_protetor(
+            alvo, dano, is_attack=is_attack)
+        parcelas = [(alvo, dano_alvo)]
+        if transferencia:
+            parcelas.append(transferencia)
+        for recipiente, parcela in parcelas:
+            parcela = self._reduzir_dano_protetor(recipiente, parcela)
+            minimo = max(0, int(piso_hp or 0)) if recipiente is alvo else 0
+            perda = min(parcela, max(0, recipiente.get("hp", 0) - minimo))
+            recipiente["hp"] = max(minimo, recipiente.get("hp", 0) - perda)
+            if recipiente["hp"] <= 0:
+                if self._eh_jogador(recipiente):
+                    await self._player_dies(recipiente["id"])
+                elif recipiente is self.prisoner:
+                    await self._prisioneiro_morre()
 
     def _regen_raio(self, p):
         """Raio de cura de aliados da Regeneração Divina (0 base / 1 / 2)."""
@@ -14434,8 +14504,10 @@ class GameRoom:
                         descricao="Um buraco disfarçado se abre sob seus pés.",
                         efeitos_extra=[], tipo_id='buraco_escondido')
                 else:
-                    dano_trap = self._reduzir_dano_escudo(p, trap["damage"])
-                    p["hp"] = max(0, p["hp"] - dano_trap)
+                    hp_antes = p.get("hp", 0)
+                    await self._aplicar_dano_alvo(
+                        p, trap["damage"], DMG_PHYSICAL, pid)
+                    dano_trap = max(0, hp_antes - p.get("hp", 0))
                     await self.gm_say(T("narracao.falhou_em_reflexos_e_sofre_de_dano",
                                         prefix=prefix, heroi=p["name"], dano=dano_trap))
                     await self._enviar_trap_result(
@@ -14991,6 +15063,7 @@ class GameRoom:
         if target["id"] in luccas.get("furtivo_reativo_alvos", set()):
             return
         luccas["furtivo_reativo_alvos"].add(target["id"])
+        self._face_toward(luccas, target["pos"])
         nd4 = self._dados_furtivo(luccas.get("level", 1))
         dano = sum(random.randint(1, 4) for _ in range(nd4))
         await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano,
@@ -15003,6 +15076,7 @@ class GameRoom:
         direto (não chama handle_attack → sem recursão). Furtivo se rogue elegível."""
         if not atacante or not atacante.get("alive") or not alvo or alvo.get("hp", 0) <= 0:
             return
+        self._face_toward(atacante, alvo["pos"])
         w = atacante.get("weapon") or {}
         atk = atacante.get("atk_bonus", 0)
         hit, roll, total, crit, _d = self._rolar_ataque(atk, alvo.get("ac", 10), False, False)
@@ -15298,6 +15372,11 @@ class GameRoom:
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_ortogonal", alvo=target["name"])
                     })
                     return
+
+            # A pose acompanha a casa do alvo escolhida pelo jogador, inclusive
+            # quando o monstro ocupa mais de uma casa. Só chega aqui depois das
+            # validações, portanto ataques recusados não alteram a orientação.
+            self._face_toward(p, target_tile)
 
             # Um ataque válido revela a posição do herói mesmo quando ele sai
             # da linha de visão antes da fase inimiga. O monstro alvo e seus
@@ -16877,6 +16956,7 @@ class GameRoom:
             ) if eh_eletrico else self._cardinal_adjacent(a["pos"], target["pos"])
 
             if pode_atacar:
+                self._face_toward(a, target["pos"])
                 self._monster_register_attack_alert(a, target)
                 if eh_elemental:
                     # O elemental conjurado é uma criatura do bestiário, não um
@@ -17050,6 +17130,39 @@ class GameRoom:
         m.pop("_ja_executou_acao", None)
         await self.push_state()
 
+    async def handle_mestre_adicionar_heroi_teste(self, pid, class_id, tx, ty):
+        """Adiciona um peão de herói à mesa livre do editor.
+
+        A sessão de teste não representa uma partida nem ocupa personagens
+        globais: os heróis existem somente como peões/targets autoritativos
+        para ensaiar combate e renderização e desaparecem junto com a sessão.
+        """
+        if (pid != self.master_pid or not getattr(self, "test_mode", False)
+                or self.phase != "playing" or class_id not in CLASSES):
+            return
+        try:
+            tx, ty = int(tx), int(ty)
+        except (TypeError, ValueError):
+            return
+        test_pid = f"test_hero_{class_id}"
+        if test_pid in self.players:
+            await self.send_to(pid, {"type": "error",
+                "msg": "Esse herói já está na mesa de teste."})
+            return
+        # `_tile_livre_para_reforco` cobre terreno, loot, baús e peões; a
+        # segunda checagem inclui cada casa de monstros com footprint grande.
+        if (not self._tile_livre_para_reforco(tx, ty)
+                or self._entity_blocks(tx, ty)):
+            await self.send_to(pid, {"type": "error",
+                "msg": "Escolha uma casa livre para posicionar o herói."})
+            return
+        hero = make_player(test_pid, CLASSES[class_id]["name"], class_id,
+                           len(self.players))
+        hero["pos"] = [tx, ty]
+        hero["test_hero"] = True
+        self.players[test_pid] = hero
+        await self.push_state()
+
     async def handle_mestre_atacar_monstro(self, pid, monster_id, target_id, attack_index=None):
         """Manual: o monstro da janela desfere UM golpe do índice pedido.
         As cargas vêm de num_attacks (master_attack_charges) e podem ser
@@ -17165,10 +17278,9 @@ class GameRoom:
             return
         m["_master_furia_dada"] = True
         extra = roll_dice("1d6")
-        alvo["hp"] = max(0, alvo["hp"] - extra)
+        await self._aplicar_dano_alvo(alvo, extra, DMG_PHYSICAL, m.get("id"),
+                                      is_attack=True)
         await self.gm_say(T("narracao.furia_bestial_sofre_de_dano", alvo=nome_criatura(alvo), extra=extra))
-        if alvo["hp"] <= 0:
-            await self._player_dies(alvo["id"])
 
     async def _dilacerar_mestre(self, m, alvo, idx, acertou):
         ability = self._garaloux_ability(m, "dilacerar")
@@ -17183,13 +17295,12 @@ class GameRoom:
             return
         done.append(alvo["id"])
         extra = roll_dice(str(ability.get("damage", "2d6")))
-        alvo["hp"] = max(0, alvo["hp"] - extra)
+        await self._aplicar_dano_alvo(alvo, extra, DMG_PHYSICAL, m.get("id"),
+                                      is_attack=True)
         await self.gm_say(T("narracao.dilacera_e_causa_de_dano_extra", monstro=nome_criatura(m), alvo_get_name_alvo=nome_criatura(alvo), extra=extra))
         if alvo.get("hp", 0) > 0 and ability.get("causa_sangramento", True):
             if self._aplicar_sangramento(alvo):
                 await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_dilacerar", alvo=nome_criatura(alvo)))
-        if alvo["hp"] <= 0:
-            await self._player_dies(alvo["id"])
 
     async def handle_mestre_encerrar_monstro(self, pid, monster_id):
         """Manual: encerra a vez do monstro; libera o laço de iniciativa."""
@@ -17652,6 +17763,7 @@ class GameRoom:
 
         # O ataque de um lacaio também revela sua posição e desperta os
         # monstros da sala, assim como o ataque de um jogador.
+        self._face_toward(a, m["pos"])
         self._monster_register_attack_alert(a, m)
 
         if a.get("senhor_da_morte") or eh_elemental:
@@ -19001,8 +19113,9 @@ class GameRoom:
         if alvo_id == pid:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.voce_nao_pode_curar_a_si_mesmo_com_esta")}); return
-        alvo = self.players.get(alvo_id)
-        if not alvo or not alvo.get("alive"):
+        alvo = self._protetor_target(alvo_id)
+        if (not alvo or not alvo.get("alive")
+                or (alvo is self.prisoner and not alvo.get("freed"))):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error",
@@ -19075,8 +19188,9 @@ class GameRoom:
         alvo_id = data.get("target_id") if data else None
         if alvo_id == pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.richard_nao_pode_se_proteger_com_esta_ha")}); return
-        alvo = self.players.get(alvo_id)
-        if not alvo or not alvo.get("alive"):
+        alvo = self._protetor_target(alvo_id)
+        if (not alvo or not alvo.get("alive")
+                or (alvo is self.prisoner and not alvo.get("freed"))):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, self._defensor_raio(p)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_fora_do_raio_de_quadrados", raio=self._defensor_raio(p))}); return
@@ -19239,7 +19353,7 @@ class GameRoom:
 
         # Protetor â€” manutenÃ§Ã£o ðŸ–-1; cai se aliado morrer/sair do raio
         if p.get("protetor_ativo"):
-            alvo = self.players.get(p.get("protetor_alvo"))
+            alvo = self._protetor_target(p.get("protetor_alvo"))
             if p["fome"] < 1:
                 p["protetor_ativo"] = False
                 p["protetor_alvo"] = None
@@ -19266,39 +19380,49 @@ class GameRoom:
                 if p.get("guerreiro_luz_bonus", {}).get("visao", 0) > 0:
                     self._revelar_armadilhas_raio(p, self._gdl_trap_raio(p))
 
-    async def _processar_dano_protetor(self, alvo_id, dano_original):
-        """Se `alvo_id` está sob Protetor de um Richard vivo e no raio, divide o
-        dano (ambos arredondam para baixo). Retorna (dano_no_alvo, transferencia),
-        onde transferencia é (richard, dano_richard) ou None."""
+    async def _processar_dano_protetor(self, alvo_ou_id, dano_original, is_attack=True):
+        """Divide dano de um herói/prisioneiro protegido e retorna a transferência.
+
+        ``is_attack`` mantém ataques em 50/50 nos níveis 1 e 2; todos os demais
+        danos usam a progressão 75/25, 65/35 e 50/50. A redução pessoal de 3
+        de Richard é aplicada no funil que efetivamente desconta o HP dele.
+        """
+        alvo_id = (self._protetor_target_id(alvo_ou_id)
+                   if isinstance(alvo_ou_id, dict) else alvo_ou_id)
+        alvo = self._protetor_target(alvo_id)
+        if not alvo or self._protetor_target_id(alvo) is None:
+            return dano_original, None
         richard = next(
             (q for q in self.players.values()
              if q.get("class_id") == "paladin"
              and q.get("protetor_ativo")
-             and q.get("protetor_alvo") == alvo_id
+             and str(q.get("protetor_alvo")) == str(alvo_id)
              and q.get("alive")),
             None)
         if not richard:
-            # TÃ¡tica Defensiva (tÃ©cnica genÃ©rica): split 50/50, expira por rodada, sem upkeep.
-            tatico = next(
-                (q for q in self.players.values()
-                 if q.get("tatica_alvo") == alvo_id and q.get("tatica_ate", 0) >= self.round_num
-                 and q.get("alive") and q["id"] != alvo_id),
-                None)
-            if tatico:
-                dano_aliado = dano_original // 2
-                dano_tatico = dano_original - dano_aliado
-                alvo_nome = self.players.get(alvo_id, {}).get("name", "aliado")
-                await self.gm_say(
-                    T("narracao.tatica_defensiva_assume_do_dano_de_que_s", tatico=nome_criatura(tatico), dano_tatico=dano_tatico, alvo_nome=alvo_nome, dano_aliado=dano_aliado))
-                return dano_aliado, (tatico, dano_tatico)
+            # Tática Defensiva (técnica genérica) só intercepta ataques, como
+            # antes; ela não deve começar a proteger armadilhas/status por
+            # compartilhar este funil geral de dano.
+            if is_attack and self._eh_jogador(alvo):
+                tatico = next(
+                    (q for q in self.players.values()
+                     if q.get("tatica_alvo") == alvo_id and q.get("tatica_ate", 0) >= self.round_num
+                     and q.get("alive") and q["id"] != alvo_id),
+                    None)
+                if tatico:
+                    dano_alvo = dano_original // 2
+                    dano_tatico = dano_original - dano_alvo
+                    await self.gm_say(
+                        T("narracao.tatica_defensiva_assume_do_dano_de_que_s", tatico=nome_criatura(tatico), dano_tatico=dano_tatico, alvo_nome=nome_criatura(alvo), dano_aliado=dano_alvo))
+                    return dano_alvo, (tatico, dano_tatico)
             return dano_original, None
-        alvo = self.players.get(alvo_id)
-        if not alvo or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
+        if not alvo.get("alive") or (alvo is self.prisoner and not alvo.get("freed")) \
+                or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
             richard["protetor_ativo"] = False
             richard["protetor_alvo"] = None
             await self.gm_say(T("narracao.protetor_de_se_desfaz_aliado_saiu_do_rai", richard=richard['name']))
             return dano_original, None
-        dano_aliado, dano_richard = self._defensor_split(richard, dano_original)
+        dano_aliado, dano_richard = self._defensor_split(richard, dano_original, is_attack=is_attack)
         await self.gm_say(
             T("narracao.protetor_absorve_recebe_recebe", alvo=nome_criatura(alvo), dano_aliado=dano_aliado, richard=richard['name'], dano_richard=dano_richard))
         return dano_aliado, (richard, dano_richard)
@@ -21093,6 +21217,9 @@ class GameRoom:
         dano = dano_sangramento + (1 if alvo.get("ferida_aberta") else 0)
         if "vida_atual" in alvo:
             alvo["vida_atual"] = max(0, alvo.get("vida_atual", 0) - dano)
+        elif self._eh_jogador(alvo) or alvo is self.prisoner:
+            await self._aplicar_dano_alvo(alvo, dano, DMG_PHYSICAL,
+                                          alvo.get("id"))
         else:
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
         await self.gm_say(T(
@@ -21104,12 +21231,9 @@ class GameRoom:
         if not self._vivo(alvo):
             if "vida_atual" in alvo:
                 await self._animado_morre(alvo, None)
-            elif self._eh_jogador(alvo):
-                await self._player_dies(alvo["id"])
-            elif alvo is self.prisoner:
-                # Mesma ordem de _dano_em_alvo: sem este ramo o prisioneiro
-                # morria por _monster_dies, que e o caminho errado.
-                await self._prisioneiro_morre()
+            elif self._eh_jogador(alvo) or alvo is self.prisoner:
+                # _aplicar_dano_alvo já concluiu a morte desses alvos.
+                pass
             else:
                 await self._monster_dies(alvo, None)
             return
@@ -21163,7 +21287,8 @@ class GameRoom:
         if self._tem_maldicao(p, "sangramento_profano"):
             anterior = p.get("_hp_turno_anterior")
             if anterior is not None and p.get("hp", 0) < anterior and p.get("hp", 0) > 0:
-                p["hp"] = max(1, p["hp"] - 1)
+                await self._aplicar_dano_protetor_direto(
+                    p, 1, DMG_PHYSICAL, None, piso_hp=1)
                 await self.gm_say(T("narracao.sangramento_profano_abre_as_feridas_de_1", heroi=p['name']))
         p["_hp_turno_anterior"] = p.get("hp", 0)
 
@@ -21177,7 +21302,8 @@ class GameRoom:
             return
         if p.get("hp", 0) <= 1:
             return
-        p["hp"] = max(1, p["hp"] - 1)
+        await self._aplicar_dano_protetor_direto(
+            p, 1, DMG_PHYSICAL, None, piso_hp=1)
         await self.gm_say(T("narracao.dor_constante_cobra_seu_preco_de_1_de_da", heroi=p['name']))
 
     ECO_MORTE_DANO = 10
@@ -21188,14 +21314,15 @@ class GameRoom:
         os viraria 12 e uma resistência os reduziria, e o número que o catálogo
         promete deixaria de ser o número real.
 
-        NÃO pode matar (piso de 1): sem isso, uma morte viraria efeito dominó
-        recursivo dentro do próprio _player_dies."""
+        O dano agora passa pelo funil do Protetor, inclusive quando o portador
+        é Richard; mortes decorrentes do efeito seguem o fluxo normal."""
         for q in self.players.values():
             if q is morto or not q.get("alive"):
                 continue
             if not self._tem_maldicao(q, "eco_morte"):
                 continue
-            q["hp"] = max(1, q.get("hp", 1) - self.ECO_MORTE_DANO)
+            await self._aplicar_dano_protetor_direto(
+                q, self.ECO_MORTE_DANO, DMG_PHYSICAL, None, piso_hp=1)
             await self.gm_say(T("narracao.o_eco_da_morte_atravessa_de_dano", q=nome_criatura(q), self_eco_morte_dano=self.ECO_MORTE_DANO))
 
     async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
@@ -21686,6 +21813,24 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_alvo_vivo_para_o_teleporte")}); return
             if not self._teleporte_alvo_visivel(p, alvo):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.a_linha_de_visao_esta_bloqueada")}); return
+
+        # Vínculo Maldito da Dor valida o alvo antes de consumir a ação, slot ou
+        # recursos: é um alvo único, monstro vivo, em linha de visão e com no
+        # máximo quatro vínculos simultâneos.
+        if magia_id == "vinculo_maldito_da_dor":
+            alvo_vinculo = self._alvo_monstro((data or {}).get("target_id"))
+            if not self._entidade_viva(alvo_vinculo):
+                await self.send_to(pid, {"type": "error", "msg": "Escolha um inimigo vivo como alvo."}); return
+            if not self._tem_linha_de_visao(p["pos"], alvo_vinculo["pos"]):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.parede_bloqueia_magia", alvo=nome_criatura(alvo_vinculo))}); return
+            vinculos_atuais = self._vinculos_malditos_dor_ativos(p)
+            if any(v.get("target_id") == alvo_vinculo.get("id") for v, _ in vinculos_atuais):
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Esse inimigo já está ligado ao Vínculo Maldito da Dor."}); return
+            if len(vinculos_atuais) >= int(magia.get("max_alvos", 4) or 4):
+                await self.send_to(pid, {"type": "error",
+                    "msg": "Vínculo Maldito da Dor já está ligado a 4 inimigos."}); return
 
         if magia_id == "chamado_inverno":
             terreno = (data or {}).get("terreno")
@@ -22364,6 +22509,8 @@ class GameRoom:
             await self._executar_saciar(caster, magia, data)
         elif mid == "maldicao_corpo_pesado":
             await self._executar_maldicao_corpo_pesado(caster, magia, data, dur_bonus)
+        elif mid == "vinculo_maldito_da_dor":
+            await self._executar_vinculo_maldito_da_dor(caster, magia, data, dur_bonus)
         elif mid == "desnutricao":
             await self._executar_desnutricao(caster, magia, data)
         elif mid == "definhar":
@@ -22551,6 +22698,33 @@ class GameRoom:
         cur["rodadas"] = max(cur.get("rodadas", 0), rodadas)
         alvo["mods_magia"] = cur
 
+    def _consumir_penalidade_vinculo_dor(self, monstro):
+        """-1 no próximo ataque do inimigo atingido, sem acumular."""
+        return -1 if monstro.pop("vinculo_dor_proximo_ataque", False) else 0
+
+    async def _aplicar_vinculo_maldito_da_dor(self, conjurador, dano, elemento,
+                                               killer_pid=None, is_attack=False):
+        """Transfere parcelas do dano já reduzido pelo conjurador aos vínculos.
+
+        Cada inimigo recebe 25% arredondado para baixo, com mínimo de 1; o
+        restante continua no conjurador. O bypass impede redistribuição recursiva.
+        """
+        if dano <= 0 or not self._eh_jogador(conjurador):
+            return dano
+        ativos = self._vinculos_malditos_dor_ativos(conjurador)
+        if not ativos:
+            return dano
+        parcela = max(1, int(dano * 25 // 100))
+        dano_conjurador = max(0, int(dano * (100 - 25 * len(ativos)) // 100))
+        for _vinculo, inimigo in ativos:
+            if not self._entidade_viva(inimigo):
+                continue
+            inimigo["vinculo_dor_proximo_ataque"] = True
+            await self._aplicar_dano_alvo(
+                inimigo, parcela, elemento, killer_pid,
+                is_attack=is_attack, _vinculo_bypass=True)
+        return dano_conjurador
+
     async def _processar_mods_magia_turno(self, alvo):
         m = alvo.get("mods_magia")
         if m:
@@ -22639,6 +22813,84 @@ class GameRoom:
             await self.gm_say(
                 f"{alvo['name']} sofre a Maldição do Corpo Pesado: seus custos de "
                 f"Fome e Sede ficam duplicados por {duracao} rodadas.")
+
+    def _vinculos_malditos_dor_ativos(self, caster):
+        """Retorna os vínculos ainda válidos e remove mortos/expirados."""
+        ativos = []
+        for vinculo in list(caster.get("vinculos_malditos_dor") or []):
+            if not isinstance(vinculo, dict):
+                continue
+            try:
+                expira_em = int(vinculo.get("expira_em", 0) or 0)
+            except (TypeError, ValueError):
+                continue
+            alvo = self._alvo_monstro(vinculo.get("target_id"))
+            if expira_em <= self.round_num or not self._entidade_viva(alvo):
+                continue
+            ativos.append({
+                "target_id": alvo.get("id"),
+                "expira_em": expira_em,
+                "duracao": max(1, int(vinculo.get("duracao", 1) or 1)),
+            })
+        caster["vinculos_malditos_dor"] = ativos[:4]
+        return [(v, self._alvo_monstro(v["target_id"])) for v in ativos[:4]]
+
+    async def _executar_vinculo_maldito_da_dor(self, caster, magia, data, dur_bonus=0):
+        """Liga o conjurador a um monstro: cada vínculo redireciona 25% do dano."""
+        alvo = self._alvo_monstro((data or {}).get("target_id"))
+        if not self._entidade_viva(alvo):
+            await self.send_to(caster["id"], {"type": "error", "msg": "Escolha um inimigo vivo como alvo."})
+            return
+        if not self._tem_linha_de_visao(caster["pos"], alvo["pos"]):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": T("erro.parede_bloqueia_magia", alvo=nome_criatura(alvo))})
+            return
+
+        ativos = self._vinculos_malditos_dor_ativos(caster)
+        if any(v.get("target_id") == alvo.get("id") for v, _ in ativos):
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": "Esse inimigo já está ligado ao Vínculo Maldito da Dor."})
+            return
+        max_alvos = max(1, int(magia.get("max_alvos", 4) or 4))
+        if len(ativos) >= max_alvos:
+            await self.send_to(caster["id"], {"type": "error",
+                "msg": f"Vínculo Maldito da Dor já está ligado a {max_alvos} inimigos."})
+            return
+
+        animation_id = f"vinculo_maldito_da_dor_{caster['id']}_{alvo['id']}_{self.round_num}_{new_id()}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "vinculo_maldito_da_dor", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "origin": list(caster["pos"]), "target": list(alvo["pos"]),
+            "travel_ms": 520, "impact_ms": 860,
+        })
+        save_ok, *_ = await self._save_mostrado(
+            alvo, "vontade", self._dif_magia(caster, magia))
+        duracao = max(1, self._rolar_dado(magia.get("duracao", "1d4"))
+                      + self._nivel_conjurador(caster)
+                      * int(magia.get("duracao_por_nivel", 1) or 1)
+                      + int(dur_bonus or 0))
+        if not save_ok:
+            caster.setdefault("vinculos_malditos_dor", []).append({
+                "target_id": alvo["id"],
+                "expira_em": self.round_num + duracao,
+                "duracao": duracao,
+            })
+        vinculos_ids = [v.get("target_id") for v, _ in self._vinculos_malditos_dor_ativos(caster)]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "vinculo_maldito_da_dor", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": alvo["id"],
+            "origin": list(caster["pos"]), "target": list(alvo["pos"]),
+            "passed": bool(save_ok), "success": not save_ok,
+            "duration_rounds": duracao if not save_ok else 0,
+            "linked_target_ids": vinculos_ids, "max_targets": max_alvos,
+        })
+        if save_ok:
+            await self.gm_say(f"{alvo['name']} resiste ao Vínculo Maldito da Dor.")
+        else:
+            await self.gm_say(
+                f"{caster['name']} cria um Vínculo Maldito da Dor com {alvo['name']} "
+                f"por {duracao} rodadas. Cada vínculo transfere 25% do dano sofrido.")
 
     def _desnutricao_imune(self, alvo):
         """Mortos-vivos e construtos não dependem de alimento."""
@@ -22981,8 +23233,9 @@ class GameRoom:
             dano *= 2
             await self.gm_say(T("narracao.raio_divino_dobrado_contra_morto_vivo_de", alvo=nome_criatura(alvo)))
         if self._eh_jogador(alvo):
-            dano = self._reduzir_dano_escudo(alvo, dano)
-        alvo["hp"] = max(0, alvo["hp"] - dano)
+            await self._aplicar_dano_alvo(alvo, dano, DMG_HOLY, caster["id"])
+        else:
+            alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(T("narracao.atinge_com_raio_divino_de_dano_sagrado", caster=caster['name'], alvo=nome_criatura(alvo), dano=dano))
         if not save_ok:
             await self._enviar_resultado_falha_magia_dano(
@@ -22998,11 +23251,8 @@ class GameRoom:
             "save_ok": bool(save_ok), "holy_target": bool(holy_target),
             "damage": dano, "target_dead": bool(alvo.get("hp", 0) <= 0),
         })
-        if alvo["hp"] <= 0:
-            if self._eh_jogador(alvo):
-                await self._player_dies(alvo["id"])
-            else:
-                await self._monster_dies(alvo, caster["id"])
+        if alvo["hp"] <= 0 and not self._eh_jogador(alvo):
+            await self._monster_dies(alvo, caster["id"])
 
     # â”€â”€ Batch 1b: buffs/debuffs de combate (usam mods_magia) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_abencoar(self, caster, magia, dur_bonus):
@@ -23140,6 +23390,7 @@ class GameRoom:
             self._reveal_around(*p["pos"], radius=self._get_raio_visao(p))
             await self._emit_entity_step(p["id"], antes, p["pos"], "player")
         if distancia(alvo) > 1: return
+        self._face_toward(p, obj["pos"])
         base = p.get("_licantropia_atributos_base", {}).get("str_", p.get("str_", 10))
         bonus = int(p.get("atk_bonus", 0)) + mod(p.get("str_", 10)) - mod(base)
         for nome, expr in (("Garras", "1d4"), ("Garras", "1d4"), ("Mordida", "1d6")):
@@ -23151,8 +23402,17 @@ class GameRoom:
             bruto = roll_dice(expr) + mod(p.get("str_", 10))
             dano = self._apply_damage_types(bruto * (2 if dado == 20 else 1), [DMG_PHYSICAL], obj)
             if alvo["kind"] == "player":
-                dano, _ = await self._processar_dano_protetor(obj["id"], dano)
+                dano, transferencia = await self._processar_dano_protetor(obj, dano, is_attack=True)
+                dano = self._reduzir_dano_protetor(obj, dano)
                 obj["hp"] = max(0, obj["hp"] - dano)
+                if transferencia:
+                    richard, dano_richard = transferencia
+                    dano_richard = self._reduzir_dano_escudo(richard, dano_richard)
+                    dano_richard = self._reduzir_dano_barreira_arcana(richard, dano_richard)
+                    dano_richard = self._reduzir_dano_protetor(richard, dano_richard)
+                    richard["hp"] = max(0, richard["hp"] - dano_richard)
+                    if richard["hp"] <= 0:
+                        await self._player_dies(richard["id"])
                 if obj["hp"] <= 0: await self._player_dies(obj["id"])
             else:
                 obj["hp"] -= dano
@@ -23210,7 +23470,8 @@ class GameRoom:
             return
         alvo = min(outros, key=lambda o: abs(o["pos"][0]-m["pos"][0]) + abs(o["pos"][1]-m["pos"][1]))
         if self._cardinal_adjacent(m["pos"], alvo["pos"]):
-            m_atk = m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+            m_atk = m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque") \
+                    + self._consumir_penalidade_vinculo_dor(m)
             hit, roll, total, crit = d20_attack(m_atk, alvo["ac"] + self._mod_magia(alvo, "ca"))
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": f"{m['name']} (dominado)", "hit": hit, "crit": crit})
@@ -23396,6 +23657,9 @@ class GameRoom:
         out += [p for p in self.players.values()
                 if p["alive"] and not p.get("engolido") and not self._fosso_protegido(p)
                 and self._na_area(p, tx, ty, raio)]
+        if (self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed")
+                and self._na_area(self.prisoner, tx, ty, raio)):
+            out.append(self.prisoner)
         out += [a for a in self._all_animados() if self._na_area(a, tx, ty, raio)]
         return out
 
@@ -23417,6 +23681,9 @@ class GameRoom:
         out += [p for p in self.players.values()
                 if p["alive"] and not p.get("engolido") and not self._fosso_protegido(p)
                 and self._na_area_quadrada(p, tx, ty, lado)]
+        if (self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed")
+                and self._na_area_quadrada(self.prisoner, tx, ty, lado)):
+            out.append(self.prisoner)
         out += [a for a in self._all_animados()
                 if self._na_area_quadrada(a, tx, ty, lado)]
         return out
@@ -23515,7 +23782,8 @@ class GameRoom:
         # vulnerabilidade de ácido do Troll. Ela é consumida aqui para que um
         # dano que segue por `_dano_em_alvo` não seja dobrado duas vezes.
         alvo.pop("_troll_acid_already_adjusted", None)
-        context = self._damage_visual_context.pop(id(alvo), {})
+        context_store = getattr(self, "_damage_visual_context", None)
+        context = context_store.pop(id(alvo), {}) if context_store is not None else {}
         raw_types = damage_types if isinstance(damage_types, (list, tuple, set)) else [damage_types]
         types = []
         for value in raw_types:
@@ -23544,6 +23812,8 @@ class GameRoom:
             # Dano final zero sem contexto do funil normalmente veio de uma
             # barreira/absorção em heróis, que também deve ser comunicado.
             status = "ABSORVIDO"
+        if not hasattr(self, "_combat_damage_events"):
+            self._combat_damage_events = []
         self._combat_damage_events.append({
             "entity_key": key,
             "entity_kind": kind,
@@ -23589,10 +23859,29 @@ class GameRoom:
         })
         return ataque_id
 
-    async def _aplicar_dano_alvo(self, alvo, dano, elemento, killer_pid=None):
-        """Aplica dano a qualquer alvo (monstro/jogador/animado), tratando morte."""
+    async def _aplicar_dano_alvo(self, alvo, dano, elemento, killer_pid=None,
+                                 *, is_attack=False, _protetor_bypass=False,
+                                 _vinculo_bypass=False):
+        """Aplica dano a qualquer alvo (monstro/jogador/animado), tratando morte.
+
+        Este é um dos funis gerais de dano; portanto, efeitos de área, magia,
+        armadilhas e outras fontes também passam pelo Protetor. O bypass é
+        interno e evita dividir novamente a parcela já transferida.
+        """
         if dano <= 0 or self._fosso_protegido(alvo):
             return
+        if not _protetor_bypass:
+            dano_alvo, transferencia = await self._processar_dano_protetor(
+                alvo, dano, is_attack=is_attack)
+            if transferencia:
+                richard, dano_richard = transferencia
+                await self._aplicar_dano_alvo(
+                    alvo, dano_alvo, elemento, killer_pid,
+                    is_attack=is_attack, _protetor_bypass=True)
+                await self._aplicar_dano_alvo(
+                    richard, dano_richard, elemento, killer_pid,
+                    is_attack=is_attack, _protetor_bypass=True)
+                return
         if "vida_atual" in alvo:                       # animado / elemental
             dano = self._ajustar_dano_elemental(alvo, dano, elemento)
             self._registrar_dano_combate(alvo, dano, [elemento])
@@ -23603,11 +23892,20 @@ class GameRoom:
             dano = await self._absorver_energia(alvo, dano, elemento)
             dano = self._reduzir_dano_escudo(alvo, dano)
             dano = self._reduzir_dano_barreira_arcana(alvo, dano)
+            dano = self._reduzir_dano_protetor(alvo, dano)
+            if not _vinculo_bypass:
+                dano = await self._aplicar_vinculo_maldito_da_dor(
+                    alvo, dano, elemento, killer_pid, is_attack=is_attack)
             self._registrar_dano_combate(alvo, dano, [elemento])
             alvo["hp"] = max(0, alvo["hp"] - dano)
             await self._acordar_se_dormindo(alvo)      # dano acorda quem dorme
             if alvo["hp"] <= 0:
                 await self._player_dies(alvo["id"])
+        elif alvo is self.prisoner:
+            self._registrar_dano_combate(alvo, dano, [elemento])
+            alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
+            if alvo["hp"] <= 0:
+                await self._prisioneiro_morre()
         else:                                          # monstro
             # Fraquezas/imunidades elementais (ex.: fogo Ã—2 no Devorador, raio no Crocodilo).
             dano = self._apply_damage_types(dano, [_NORM_ELEMENTO.get(elemento, elemento)], alvo)
@@ -24073,10 +24371,9 @@ class GameRoom:
                                "label": f"{a['nome']} (dominado)", "hit": hit, "crit": roll == 20})
         if hit:
             dmg = max(1, roll_dice(a.get("dano", "1d4")) * (2 if roll == 20 else 1))
-            target["hp"] = max(0, target["hp"] - dmg)
+            await self._aplicar_dano_alvo(target, dmg, DMG_PHYSICAL,
+                                          a.get("owner_pid"), is_attack=True)
             await self.gm_say(T("narracao.dominado_ataca_de_dano_2", a_nome=nome_criatura(a), target=nome_criatura(target), dmg=dmg))
-            if target["hp"] <= 0:
-                await self._player_dies(target["id"])
         else:
             await self.gm_say(T("narracao.dominado_ataca_e_erra_2", a_nome=nome_criatura(a), target=nome_criatura(target)))
 
@@ -24322,6 +24619,80 @@ class GameRoom:
             self.materiais[tile] = material
         self._rebuild_materiais_index()
 
+    def _cancelar_magias_terreno_exclusivas(self):
+        """Encerra qualquer área elemental anterior antes de criar outra.
+
+        Ira da Rocha Ardente, Senhor das Águas e Chamado do Inverno ocupam o
+        mesmo espaço de terreno mágico. Uma nova conjuração substitui todas as
+        zonas anteriores desse grupo, inclusive uma área permanente do
+        Chamado. As camadas temporárias removidas voltam para a última camada
+        restante ou para o material que existia antes da magia.
+        """
+        tipos = {"ira_rocha_ardente", "senhor_das_aguas", "chamado_inverno"}
+        canceladas = []
+        bases_permanentes = {}
+        removeu_chamas = False
+
+        for zona in self.zonas_especiais:
+            if not zona.get("ativa") or zona.get("tipo") not in tipos:
+                continue
+            zona["ativa"] = False
+            canceladas.append(str(zona.get("id")))
+            if zona.get("tipo") == "ira_rocha_ardente":
+                removeu_chamas = True
+                self.decorations = [
+                    d for d in self.decorations
+                    if d.get("ira_rocha_ardente_id") != zona.get("id")
+                ]
+            if zona.get("permanente"):
+                for key, material in (zona.get("material_bases") or {}).items():
+                    bases_permanentes[str(key)] = material
+
+        if not canceladas:
+            return
+
+        canceladas_set = set(canceladas)
+        for tile, registro in list(self._terrenos_inverno.items()):
+            camadas = [c for c in registro.get("camadas", [])
+                       if str(c.get("id")) not in canceladas_set]
+            if camadas:
+                registro["camadas"] = camadas
+                self.materiais[tile] = camadas[-1]["material"]
+                continue
+            key = f"{tile[0]},{tile[1]}"
+            if key in bases_permanentes:
+                material = bases_permanentes[key]
+                if material is None:
+                    self.materiais.pop(tile, None)
+                else:
+                    self.materiais[tile] = material
+            else:
+                base = registro.get("base")
+                if base is None:
+                    self.materiais.pop(tile, None)
+                else:
+                    self.materiais[tile] = base
+            self._terrenos_inverno.pop(tile, None)
+
+        # Uma área permanente não possui camada em `_terrenos_inverno`, por
+        # isso sua restauração precisa ser aplicada diretamente ao mapa.
+        for key, material in bases_permanentes.items():
+            try:
+                x, y = (int(v) for v in key.split(",", 1))
+                tile = (x, y)
+            except (TypeError, ValueError):
+                continue
+            if tile in self._terrenos_inverno:
+                continue
+            if material is None:
+                self.materiais.pop(tile, None)
+            else:
+                self.materiais[tile] = material
+
+        if removeu_chamas:
+            self._rebuild_decor_index()
+        self._rebuild_materiais_index()
+
     def _expirar_terrenos_inverno(self):
         """Remove as camadas temporárias vencidas no começo de cada rodada."""
         alterado = False
@@ -24394,6 +24765,13 @@ class GameRoom:
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
             return
 
+        self._cancelar_magias_terreno_exclusivas()
+        permanente = bool(data.get("permanente"))
+        material_bases = {
+            f"{int(pos[0])},{int(pos[1])}": self.materiais.get((int(pos[0]), int(pos[1])))
+            for pos in tiles
+        } if permanente else None
+
         # Evento visual disparado somente depois de todas as validações. O
         # estado autoritativo do inverno continua sendo aplicado logo abaixo.
         animation_id = f"chamado_inverno_{caster['id']}_{self.round_num}_{cx}_{cy}"
@@ -24406,7 +24784,6 @@ class GameRoom:
             "charge_ms": 760, "travel_ms": travel_ms, "impact_ms": 980,
         })
 
-        permanente = bool(data.get("permanente"))
         if permanente:
             self._pagar_fome_sede(caster, int(magia.get("permanente_custo", 20)),
                                   int(magia.get("permanente_custo", 20)),
@@ -24421,7 +24798,7 @@ class GameRoom:
             "id": zone_id, "tipo": "chamado_inverno", "cx": cx, "cy": cy,
             "lado": lado, "material": terreno, "duracao": None if permanente else dur,
             "expira_em": expira_em, "permanente": permanente, "ativa": True,
-            "caster": caster.get("id"),
+            "caster": caster.get("id"), "material_bases": material_bases,
         })
         await self.broadcast({
             "type": "spell_animation", "spell_id": "chamado_inverno", "phase": "resolve",
@@ -24499,6 +24876,8 @@ class GameRoom:
             await self.send_to(caster["id"], {"type": "error",
                 "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
             return
+
+        self._cancelar_magias_terreno_exclusivas()
 
         # O cliente usa este evento para mostrar a conjuração e a onda de água
         # chegando à área. A regra continua autoritativa neste método: o
@@ -24592,6 +24971,8 @@ class GameRoom:
                 "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
             return
 
+        self._cancelar_magias_terreno_exclusivas()
+
         animation_id = f"ira_rocha_ardente_{caster['id']}_{self.round_num}_{cx}_{cy}_{new_id()}"
         travel_ms = max(620, min(1250, 520 + dist * 145))
         await self.broadcast({
@@ -24629,6 +25010,7 @@ class GameRoom:
             "disponivel_em": self.round_num + 1,
             "chamas_pendentes": quantidade_chamas,
             "chamas_roladas": rolagem_chamas,
+            "chamas_totais": quantidade_chamas,
             "chamas_permitidas": [list(tile) for tile in validos],
         })
         await self.broadcast({
@@ -24688,24 +25070,33 @@ class GameRoom:
             if tile in permitidos and tile not in vistos:
                 vistos.add(tile)
                 escolhidos.append([tile[0], tile[1]])
-        if len(escolhidos) != esperado:
+        if not escolhidos or len(escolhidos) > esperado:
             await self.send_to(pid, {"type": "error",
-                "msg": f"Escolha exatamente {esperado} casa(s) livre(s) dentro da área ampliada das Chamas Vivas."})
+                "msg": f"Escolha de 1 a {esperado} casa(s) livre(s) dentro da área ampliada das Chamas Vivas."})
             return
 
+        ja_colocadas = len(zona.get("chamas_vivas", []) or [])
         for i, pos in enumerate(escolhidos):
             self.decorations.append({
-                "id": f"{zona['id']}_chama_{i}", "type": "chama_viva", "pos": list(pos),
+                "id": f"{zona['id']}_chama_{ja_colocadas + i}", "type": "chama_viva", "pos": list(pos),
                 "visivel": True, "ativada": True, "aliada": True, "so_luccas": False,
                 "ira_rocha_ardente_id": zona["id"],
             })
         self._rebuild_decor_index()
-        zona["chamas_vivas"] = [list(pos) for pos in escolhidos]
-        zona["chamas_pendentes"] = 0
-        zona.pop("chamas_permitidas", None)
+        zona["chamas_vivas"] = (
+            [list(pos) for pos in (zona.get("chamas_vivas", []) or [])]
+            + [list(pos) for pos in escolhidos]
+        )
+        zona["chamas_pendentes"] = esperado - len(escolhidos)
+        restantes = [list(pos) for pos in zona.get("chamas_permitidas", [])
+                     if (int(pos[0]), int(pos[1])) not in vistos]
+        if zona["chamas_pendentes"] > 0 and restantes:
+            zona["chamas_permitidas"] = restantes
+        else:
+            zona.pop("chamas_permitidas", None)
         await self.broadcast({
             "type": "spell_animation", "spell_id": "ira_rocha_ardente", "phase": "flames",
-            "animation_id": f"{zona['id']}_flames", "zone_id": zona["id"],
+            "animation_id": f"{zona['id']}_flames_{ja_colocadas}", "zone_id": zona["id"],
             "caster_id": caster["id"], "tiles": [list(pos) for pos in escolhidos],
             "material": "lava", "success": True,
         })
@@ -24740,7 +25131,7 @@ class GameRoom:
 
     def _tempestade_ciclone_tiles(self, ciclone):
         x, y = ciclone.get("pos", [0, 0])
-        lado = int(ciclone.get("lado", 2) or 2)
+        lado = max(1, int(ciclone.get("lado", 1) or 1))
         return [(int(x) + dx, int(y) + dy) for dy in range(lado) for dx in range(lado)]
 
     def _tempestade_ciclone_spin_ms(self, zona, ciclone):
@@ -24912,19 +25303,19 @@ class GameRoom:
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_nao_contem_piso_valido")}); return
         dur = max(1, self._rolar_dado(magia.get("duracao", "1d4+1")) + nivel // int(magia.get("duracao_por_nivel", 2) or 2) + int(dur_bonus or 0))
         zone_id = f"tempestade_ciclones_{caster['id']}_{self.round_num}_{new_id()}"
-        anchors = []
-        for ay in range(cy - lado // 2 - 1, cy + lado // 2 + 1):
-            for ax in range(cx - lado // 2 - 1, cx + lado // 2 + 1):
-                footprint = {(ax, ay), (ax + 1, ay), (ax, ay + 1), (ax + 1, ay + 1)}
-                if footprint <= area and not any(footprint & set(self._tempestade_ciclone_tiles(c)) for c in anchors):
-                    anchors.append({"id": len(anchors) + 1, "pos": [ax, ay], "lado": 2, "movido_em": None})
-                    if len(anchors) >= max(1, nivel // 4): break
-            if len(anchors) >= max(1, nivel // 4): break
-        if not anchors:
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.nao_ha_espaco_para_um_ciclone_2x2_nessa")}); return
+        ciclone_lado = max(1, int(magia.get("ciclone_lado", 1) or 1))
+        rolagem_ciclones = self._rolar_dado(magia.get("ciclones", "2d4"))
+        quantidade_ciclones = max(2, int(rolagem_ciclones or 0))
+        if len(area) < quantidade_ciclones:
+            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.nao_ha_espaco_para_os_ciclones_nessa_area")}); return
         save_dif = self._dif_magia(caster, magia)
+        permitidos = [list(t) for t in sorted(area)]
         zona = {"id": zone_id, "tipo": "tempestade_ciclones", "cx": cx, "cy": cy,
-                "lado": lado, "tiles": [list(t) for t in sorted(area)], "ciclones": anchors,
+                "lado": lado, "tiles": permitidos, "ciclones": [],
+                "ciclone_lado": ciclone_lado,
+                "ciclones_pendentes": quantidade_ciclones,
+                "ciclones_rolados": rolagem_ciclones,
+                "ciclones_permitidos": permitidos,
                 "duracao": dur, "expira_em": self.round_num + dur, "ativa": True,
                 "caster": caster.get("id"), "criado_em": self.round_num,
                 "save_dif": save_dif, "dmg_mult": dmg_mult, "proxima_descarga": self.round_num + 2,
@@ -24934,25 +25325,80 @@ class GameRoom:
                               "animation_id": zone_id, "caster_id": caster["id"], "origin": list(caster["pos"]),
                               "center": [cx, cy], "tiles": [list(t) for t in sorted(area)], "side": lado,
                               "charge_ms": 900,
-                              "ciclones": anchors, "travel_ms": max(620, min(1250, 520 + max(abs(caster["pos"][0]-cx), abs(caster["pos"][1]-cy))*145))})
+                              "ciclones": [], "placement_required": quantidade_ciclones,
+                              "travel_ms": max(620, min(1250, 520 + max(abs(caster["pos"][0]-cx), abs(caster["pos"][1]-cy))*145))})
         self.zonas_especiais.append(zona)
+        await self.broadcast({"type": "dice_roll", "die": "2d4", "value": rolagem_ciclones,
+                              "label": "🌪️ Tempestade de Ciclones — quantidade"})
+        await self.send_to(caster["id"], {
+            "type": "tempestade_ciclones_prompt", "zone_id": zone_id,
+            "caster_id": caster["id"],
+            "count": quantidade_ciclones, "rolled": rolagem_ciclones,
+            "permitidos": permitidos, "center": [cx, cy], "side": lado,
+        })
+
+    async def handle_tempestade_ciclones_posicoes(self, pid, zone_id, tiles):
+        """Confirma as casas iniciais dos 2d4 ciclones."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        caster = self.players.get(pid)
+        if not caster or not caster.get("alive") or caster.get("class_id") != "cleric":
+            return
+        zona = next((z for z in reversed(self.zonas_especiais)
+                     if z.get("id") == zone_id and z.get("tipo") == "tempestade_ciclones"
+                     and z.get("ativa") and str(z.get("caster")) == str(pid)), None)
+        if not zona:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_uma_tempestade_de_ciclones_ativa")})
+            return
+        esperado = max(0, int(zona.get("ciclones_pendentes", 0) or 0))
+        if esperado <= 0:
+            return
+        permitidos = {(int(x), int(y)) for x, y in zona.get("ciclones_permitidos", [])}
+        escolhidos = []
+        vistos = set()
+        for pos in tiles if isinstance(tiles, list) else []:
+            if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+                continue
+            try:
+                tile = (int(pos[0]), int(pos[1]))
+            except (TypeError, ValueError):
+                continue
+            if tile in permitidos and tile not in vistos:
+                vistos.add(tile)
+                escolhidos.append([tile[0], tile[1]])
+        if len(escolhidos) != esperado:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.escolha_exatamente_n_casas_para_os_ciclones", count=esperado)})
+            return
+        lado = max(1, int(zona.get("ciclone_lado", 1) or 1))
+        zona["ciclones"] = [{"id": i + 1, "pos": list(pos), "lado": lado, "movido_em": None}
+                             for i, pos in enumerate(escolhidos)]
+        zona.pop("ciclones_pendentes", None)
+        zona.pop("ciclones_permitidos", None)
+        save_dif = int(zona.get("save_dif", 13) or 13)
         for alvo in list(self._tempestade_entidades()):
             if self._vivo(alvo) and any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
-                await self._tempestade_dano(alvo, "2d8", DMG_LIGHTNING, "reflexos", save_dif, dmg_mult, "⚡ Impacto da Tempestade")
+                await self._tempestade_dano(alvo, "2d8", DMG_LIGHTNING, "reflexos", save_dif,
+                                             zona.get("dmg_mult", 1), "⚡ Impacto da Tempestade")
                 if self._vivo(alvo): await self._tempestade_testar_voo(alvo, zona, "impacto")
                 if self._vivo(alvo): await self._tempestade_aplicar_ciclone(alvo, zona)
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "resolve",
-                              "animation_id": zone_id, "caster_id": caster["id"], "center": [cx, cy],
-                              "tiles": zona["tiles"], "side": lado, "ciclones": anchors,
-                              "zone_id": zone_id, "duration_rounds": dur, "success": True})
+                              "animation_id": zona["id"], "caster_id": caster["id"],
+                              "center": [zona.get("cx", 0), zona.get("cy", 0)],
+                              "tiles": zona["tiles"], "side": zona.get("lado", 3),
+                              "ciclones": zona["ciclones"], "zone_id": zona["id"],
+                              "duration_rounds": zona.get("duracao", 0), "success": True})
         await self.gm_say(T("narracao.tempestade_ciclones_criada",
-                            caster=caster["name"], lado=lado, ciclones=len(anchors), dur=dur))
+                            caster=caster["name"], lado=zona.get("lado", 3),
+                            ciclones=len(zona["ciclones"]), dur=zona.get("duracao", 0)))
+        await self.push_state()
 
     async def handle_tempestade_ciclones_mover(self, pid, zone_id, ciclone_id, pos):
         if not self._is_turn(pid): return
         zona = next((z for z in self._tempestade_zonas_ativas() if z.get("id") == zone_id and str(z.get("caster")) == str(pid)), None)
-        if not zona or self.round_num <= int(zona.get("criado_em", 0)):
-            await self.send_to(pid, {"type": "error", "msg": T("erro.o_ciclone_so_pode_se_mover_a_partir_da_r")}); return
+        if not zona:
+            return
         ciclone = next((c for c in zona.get("ciclones", []) if int(c.get("id")) == int(ciclone_id)), None)
         try: ax, ay = int(pos[0]), int(pos[1])
         except (TypeError, ValueError): return
@@ -24961,16 +25407,15 @@ class GameRoom:
         ox, oy = ciclone["pos"]
         if max(abs(ax - ox), abs(ay - oy)) > int(zona.get("ciclone_movimento", 2)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_ciclone_so_pode_se_mover_2_casas_por_r")}); return
-        footprint = {(ax, ay), (ax+1, ay), (ax, ay+1), (ax+1, ay+1)}
+        footprint = {(ax, ay)}
         if not footprint <= {(int(x), int(y)) for x, y in zona.get("tiles", [])} or any(c is not ciclone and footprint & set(self._tempestade_ciclone_tiles(c)) for c in zona.get("ciclones", [])):
             await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")}); return
         old = list(ciclone["pos"]); ciclone["pos"] = [ax, ay]; ciclone["movido_em"] = self.round_num
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "cyclone_move",
                               "animation_id": zona["id"], "zone_id": zona["id"], "ciclone_id": ciclone["id"],
                               "from_pos": old, "to_pos": [ax, ay], "ciclones": zona["ciclones"]})
-        # O ciclone ocupa 2x2: o alvo pode estar em qualquer uma das quatro
-        # casas, não apenas na âncora [ax, ay]. Cada criatura atingida faz o
-        # teste imediatamente; a falha também gera o marcador visual no cliente.
+        # O ciclone ocupa uma única casa. Cada criatura atingida faz o teste
+        # imediatamente; a falha também gera o marcador visual no cliente.
         for alvo in list(self._tempestade_entidades()):
             await self._tempestade_verificar_entrada(alvo, None, None, ciclone)
         await self.push_state()
@@ -25426,11 +25871,19 @@ class GameRoom:
                 else:
                     await self.gm_say(
                         T("narracao.e_atingido_em_cheio_d20_12_de_dano", pl=nome_criatura(pl), d20=d20, bonus=bonus, total=total, dano_final=dano_final))
-                d = await self._absorver_energia(pl, dano_final, "fogo")
-                d = self._reduzir_dano_escudo(pl, d)
-                pl["hp"] = max(0, pl["hp"] - d)
-                if pl["hp"] <= 0:
-                    await self._player_dies(pid)
+                await self._aplicar_dano_alvo(pl, dano_final, DMG_FIRE, kp)
+
+        # O prisioneiro liberto também ocupa a área e pode estar sob Protetor.
+        pr = self.prisoner
+        if (pr and pr.get("alive") and pr.get("freed")
+                and max(abs(pr["pos"][0] - cx), abs(pr["pos"][1] - cy)) <= raio):
+            salvou, d20, bonus, total = await self._save_mostrado(pr, "reflexos", 12)
+            dano_final = dano_total // 2 if salvou else dano_total
+            await self._aplicar_dano_alvo(pr, dano_final, DMG_FIRE, kp)
+            await self.gm_say(
+                T("narracao.esquiva_da_explosao_d20_12_de_dano", pl=nome_criatura(pr), d20=d20, bonus=bonus, total=total, dano_final=dano_final)
+                if salvou else
+                T("narracao.e_atingido_em_cheio_d20_12_de_dano", pl=nome_criatura(pr), d20=d20, bonus=bonus, total=total, dano_final=dano_final))
 
         # Outros animados/elementais (sem save â€” entidades mÃ¡gicas absorvem conforme tipo)
         for a in list(self._all_animados()):
@@ -25886,15 +26339,22 @@ class GameRoom:
             if dano <= 0: continue
             if normalizar_altura(ator.get("altura", ALTURA_MIN)) > ALTURA_MIN:
                 continue  # as chamas residuais ficam no piso
-            d = dano   # zona = R2/R3 â†’ sem teste de resistÃªncia
-            d = await self._absorver_energia(ator, d, "fogo")   # ProteÃ§Ã£o contra Energia
-            d = self._reduzir_dano_escudo(ator, d)
-            d = self._reduzir_dano_barreira_arcana(ator, d)
-            ator["hp"] = max(0, ator["hp"] - d)
+            d = dano
+            if self._eh_jogador(ator) or ator is self.prisoner:
+                hp_antes = ator.get("hp", 0)
+                await self._aplicar_dano_alvo(ator, d, DMG_FIRE,
+                                              zona.get("caster", ""))
+                d = max(0, hp_antes - ator.get("hp", 0))
+            else:
+                d = self._apply_damage_types(d, [DMG_FIRE], ator)
+                if "vida_atual" in ator:
+                    ator["vida_atual"] = max(0, ator["vida_atual"] - d)
+                else:
+                    ator["hp"] = max(0, ator["hp"] - d)
             await self.gm_say(T("narracao.entrou_na_zona_de_fogo_e_sofre", ator=nome_criatura(ator), d=d))
-            if ator["hp"] <= 0:
-                if self._eh_jogador(ator):
-                    await self._player_dies(ator["id"])
+            if not (self._eh_jogador(ator) or ator is self.prisoner) and ator.get("hp", ator.get("vida_atual", 0)) <= 0:
+                if "vida_atual" in ator:
+                    await self._animado_morre(ator, zona.get("caster", ""))
                 else:
                     await self._monster_dies(ator, zona.get("caster", ""))
             break  # um disparo por movimento
@@ -26056,8 +26516,11 @@ class GameRoom:
         # imunidades, resistências e fraquezas (ex.: Vela de Fogo recebe
         # o multiplicador de gelo da ficha personalizada).
         dano = self._apply_damage_types(dano, [DMG_COLD], alvo)
-        self._registrar_dano_combate(alvo, dano, [DMG_COLD])
-        alvo["hp"] = max(0, alvo["hp"] - dano)
+        if self._eh_jogador(alvo):
+            await self._aplicar_dano_alvo(alvo, dano, DMG_COLD, caster["id"])
+        else:
+            self._registrar_dano_combate(alvo, dano, [DMG_COLD])
+            alvo["hp"] = max(0, alvo["hp"] - dano)
         await self.gm_say(T("narracao.lanca_raio_congelante_d4_sem_save_em", caster=caster['name'], nd=nd, dano=dano, alvo=nome_criatura(alvo)))
 
         # Fortitude evita a paralisaÃ§Ã£o (nÃ£o o dano). desvantagem: CanalizaÃ§Ã£o
@@ -26385,13 +26848,13 @@ class GameRoom:
         dano = self._apply_damage_types(dano_bruto, [DMG_POISON], alvo)
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
                               "value": dano_bruto, "label": T("dado.veneno_do_lacralion")})
-        alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
+        if self._eh_jogador(alvo) or alvo is self.prisoner:
+            await self._aplicar_dano_alvo(alvo, dano, DMG_POISON, m.get("id"))
+        else:
+            alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
         await self.gm_say(T("narracao.sofre_de_dano_adicional_do_veneno", alvo_nome=nome_criatura(alvo), dano=dano))
-        if alvo.get("hp", 0) <= 0:
-            if self._eh_jogador(alvo):
-                await self._player_dies(alvo["id"])
-            else:
-                await self._monster_dies(alvo, m.get("id"))
+        if alvo.get("hp", 0) <= 0 and not (self._eh_jogador(alvo) or alvo is self.prisoner):
+            await self._monster_dies(alvo, m.get("id"))
             return
         if self._aplicar_sangramento(alvo):
             await self.gm_say(T("narracao.comeca_a_sangrar", alvo=nome_criatura(alvo)))
@@ -26753,6 +27216,11 @@ class GameRoom:
                     self._rebuild_decor_index()
                     await self.gm_say(T("narracao.ira_da_rocha_ardente_se_dissipa"))
             elif z.get("tipo") == "tempestade_ciclones":
+                # A conjuração só entra em funcionamento depois que o clérigo
+                # confirmar as casas iniciais; enquanto isso não há descarga
+                # nem dano periódico para processar.
+                if z.get("ciclones_pendentes") and self.round_num < int(z.get("expira_em", 0) or 0):
+                    continue
                 if self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
                     await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "expire", "animation_id": z.get("id")})
@@ -27387,14 +27855,13 @@ class GameRoom:
                 # Afogamento é um dano especial: a única defesa contra ele é
                 # a Fortitude acima, portanto resistências físicas não reduzem
                 # este valor.
-                criatura["hp"] = max(0, criatura.get("hp", 0) - bruto)
-                if criatura["hp"] <= 0:
-                    if criatura.get("id") in self.players and self.players.get(criatura.get("id")) is criatura:
-                        await self._player_dies(criatura["id"])
-                    elif criatura.get("id") in self.monsters and self.monsters.get(criatura.get("id")) is criatura:
+                if self._eh_jogador(criatura) or criatura is self.prisoner:
+                    await self._aplicar_dano_alvo(
+                        criatura, bruto, DMG_WATER, None)
+                else:
+                    criatura["hp"] = max(0, criatura.get("hp", 0) - bruto)
+                    if criatura["hp"] <= 0 and criatura.get("id") in self.monsters and self.monsters.get(criatura.get("id")) is criatura:
                         await self._monster_dies(criatura, None)
-                    elif self.prisoner is criatura:
-                        await self._prisioneiro_morre()
             await self.broadcast({"type": "dice_roll", "die": "d6", "value": bruto,
                                   "label": "🌊 Afogamento — Rodamoinho profundo"})
             await self._enviar_trap_result(
@@ -28982,8 +29449,14 @@ class GameRoom:
                 "dano_bruto": dano_bruto,
                 "expressao": _expressao_queda(quantidade, faces, mult)}
 
-    async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None):
-        """Subtrai HP e trata morte de jogador / monstro / animado."""
+    async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None,
+                            *, is_attack=False, _protetor_bypass=False):
+        """Subtrai HP e trata morte de jogador / monstro / animado.
+
+        Por padrão, o dano aqui é considerado não-ataque. Ataques que usam
+        este funil podem informar ``is_attack=True`` para aplicar a divisão
+        50/50 dos níveis 1 e 2.
+        """
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
         if self._fosso_protegido(alvo):
             return
@@ -28994,6 +29467,18 @@ class GameRoom:
         if (alvo.get("type") == "troll" and elemento == DMG_ACID
                 and not alvo.pop("_troll_acid_already_adjusted", False)):
             dano *= 2
+        if not _protetor_bypass:
+            dano_alvo, transferencia = await self._processar_dano_protetor(
+                alvo, dano, is_attack=is_attack)
+            if transferencia:
+                richard, dano_richard = transferencia
+                await self._dano_em_alvo(
+                    alvo, dano_alvo, elemento, killer_pid,
+                    is_attack=is_attack, _protetor_bypass=True)
+                await self._dano_em_alvo(
+                    richard, dano_richard, elemento, killer_pid,
+                    is_attack=is_attack, _protetor_bypass=True)
+                return
         if "vida_atual" in alvo:    # animado (servo do mago / elemental)
             dano = self._ajustar_dano_elemental(alvo, dano, elemento)   # resistÃªncias do elemental
             self._registrar_dano_combate(alvo, dano, [elemento])
@@ -29006,6 +29491,7 @@ class GameRoom:
             dano = await self._absorver_energia(alvo, dano, elemento)
             dano = self._reduzir_dano_escudo(alvo, dano)
             dano = self._reduzir_dano_barreira_arcana(alvo, dano)
+            dano = self._reduzir_dano_protetor(alvo, dano)
         self._registrar_dano_combate(alvo, dano, [elemento])
         alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
         await self._harpia_reagir_dano(alvo, dano, killer_pid)
@@ -30911,7 +31397,8 @@ class GameRoom:
         expr = str(ability.get("damage", "2d6"))
         extra = self._apply_damage_types(roll_dice(expr), ability.get("damage_types", ["physical"]), target)
         if target_obj["kind"] == "player":
-            target["hp"] = max(0, target["hp"] - extra)
+            await self._aplicar_dano_alvo(target, extra, DMG_PHYSICAL,
+                                          m.get("id"), is_attack=True)
         elif target_obj["kind"] == "monster":
             target["hp"] = max(0, target["hp"] - extra)
         else:
@@ -30921,9 +31408,7 @@ class GameRoom:
             if self._aplicar_sangramento(target):
                 await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_dilacerar", alvo=nome_criatura(target)))
         if not self._alvo_vivo(target_obj):
-            if target_obj["kind"] == "player":
-                await self._player_dies(target["id"])
-            elif target_obj["kind"] == "monster":
+            if target_obj["kind"] == "monster":
                 await self._monster_dies(target, m.get("id"))
             else:
                 await self._animado_morre(target, m.get("id"))
@@ -31292,12 +31777,10 @@ class GameRoom:
         if not pilhas:
             return
         dano = len(pilhas)
-        p["hp"] = max(0, p["hp"] - dano)
+        await self._aplicar_dano_alvo(p, dano, DMG_ACID, None)
         await self.gm_say(
             T("narracao.a_corrosao_consome_de_dano_hp", heroi=p['name'], dano=dano, p_hp=p['hp'], p_max_hp=p['max_hp']))
         p["corrosao_viva"] = [t - 1 for t in pilhas if t - 1 > 0]
-        if p["hp"] <= 0:
-            await self._player_dies(p["id"])
 
     async def _processar_regeneracao_pocao_turno(self, p):
         """Cura 1 HP no início do turno enquanto a reserva da poção existir.
@@ -32232,19 +32715,23 @@ class GameRoom:
         ]
 
     def _face_toward(self, m, target_pos):
-        """Vira a frente para `target_pos` quando a criatura tem footprint 2×2.
+        """Vira a frente para `target_pos` antes de executar um ataque.
 
-        Nos orientados a mudança também valida se o footprint continua cabendo;
-        nos 2×2 não orientados a ocupação permanece um bloco fixo e só a frente
-        visual/de combate é atualizada.
+        A direção é uma propriedade autoritativa compartilhada por heróis,
+        monstros e servos. Nos monstros orientados a mudança também valida se o
+        footprint continua cabendo; nos 2×2 não orientados a ocupação permanece
+        um bloco fixo e só a frente visual/de combate é atualizada.
         """
-        if not (m.get("oriented") or self._monster_is_2x2(m)):
+        if not isinstance(m, dict) or not isinstance(target_pos, (list, tuple)) \
+                or len(target_pos) != 2 or not m.get("pos"):
             return
         px, py = m["pos"]
         dx, dy = target_pos[0] - px, target_pos[1] - py
         if dx == 0 and dy == 0:
             return
         f = [1 if dx > 0 else -1, 0] if abs(dx) >= abs(dy) else [0, 1 if dy > 0 else -1]
+        # Apenas criaturas orientadas precisam testar uma nova ocupação: virar
+        # um herói ou um monstro 2×2 não desloca seu footprint.
         if (not m.get("oriented")) or self._monster_can_occupy(m, px, py, f):
             m["facing"] = f
 
@@ -33441,6 +33928,7 @@ class GameRoom:
         gigante_mira_bonus = self._gigante_mira_bonus(m)
         gigante_heroic_damage_bonus = self._gigante_heroic_damage_bonus(m)
         m_atk = (atk_def["atk_bonus"] + dynamic_attr + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+                 + self._consumir_penalidade_vinculo_dor(m)
                  + self._privacao_monstro_penalidade(m, "ataque")
                  + (2 if m.get("furia_lobisomem") else 0)
                  + m.get("equipment_attack_bonus", 0)
@@ -33640,6 +34128,10 @@ class GameRoom:
                     dmg_alvo = await self._absorver_energia(target, dmg_alvo, tipo_energia)
                 dmg_alvo = self._reduzir_dano_escudo(target, dmg_alvo)
                 dmg_alvo = self._reduzir_dano_barreira_arcana(target, dmg_alvo)
+                dmg_alvo = self._reduzir_dano_protetor(target, dmg_alvo)
+                dmg_alvo = await self._aplicar_vinculo_maldito_da_dor(
+                    target, dmg_alvo, tipo_energia or DMG_PHYSICAL,
+                    m.get("id"), is_attack=True)
                 self._registrar_dano_combate(
                     target, dmg_alvo, atk_def.get("damage_types", [DMG_PHYSICAL]),
                     critical=crit, impact_pos=target.get("pos"))
@@ -33650,6 +34142,10 @@ class GameRoom:
                 if transfer:
                     richard, dano_r = transfer
                     dano_r = self._reduzir_dano_escudo(richard, dano_r)
+                    dano_r = self._reduzir_dano_protetor(richard, dano_r)
+                    dano_r = await self._aplicar_vinculo_maldito_da_dor(
+                        richard, dano_r, tipo_energia or DMG_PHYSICAL,
+                        m.get("id"), is_attack=True)
                     richard["hp"] = max(0, richard["hp"] - dano_r)
                     if richard["hp"] <= 0:
                         await self._player_dies(richard["id"])
@@ -33693,11 +34189,11 @@ class GameRoom:
                 if atk_def.get("extra_damage") and target.get("hp", 1) > 0:
                     xdmg = roll_dice(atk_def["extra_damage"])
                     xdmg = self._apply_damage_types(xdmg, atk_def.get("extra_damage_types", []), target)
-                    self._registrar_dano_combate(target, xdmg, atk_def.get("extra_damage_types", []))
-                    target["hp"] = max(0, target["hp"] - xdmg)
+                    await self._aplicar_dano_alvo(
+                        target, xdmg,
+                        (atk_def.get("extra_damage_types") or [DMG_PHYSICAL])[0],
+                        m.get("id"), is_attack=True)
                     await self.gm_say(T("narracao.virote_incendiario_de_dano_de_fogo", xdmg=xdmg))
-                    if target["hp"] <= 0:
-                        await self._player_dies(target["id"])
                 # Ecos Dolorosos (Sino, bardo): retalia dano sonoro em quem
                 # acerta o bardo em CORPO A CORPO (range ausente = melee;
                 # ataques Ã  distÃ¢ncia/reach nÃ£o disparam a retaliaÃ§Ã£o)
@@ -33864,15 +34360,16 @@ class GameRoom:
         if (self._tem_habilidade(m, "furia_bestial") and len(hits_by_group) >= 2
                 and hits_by_group[0] and any(hits_by_group[1:]) and self._alvo_vivo(target_obj)):
             extra = roll_dice("1d6")
-            if is_player or is_monster:
+            if is_player:
+                await self._aplicar_dano_alvo(target, extra, DMG_PHYSICAL,
+                                              m.get("id"), is_attack=True)
+            elif is_monster:
                 target["hp"] = max(0, target["hp"] - extra)
             else:
                 target["vida_atual"] = max(0, target["vida_atual"] - extra)
             nome = target["name"] if is_player else target["nome"]
             await self.gm_say(T("narracao.furia_bestial_sofre_de_dano_2", nome=nome_criatura(target), extra=extra))
-            if is_player and target["hp"] <= 0:
-                await self._player_dies(target["id"])
-            elif is_monster and target["hp"] <= 0:
+            if is_monster and target["hp"] <= 0:
                 await self._monster_dies(target, m.get("id"))
             elif not is_player and not is_monster and target["vida_atual"] <= 0:
                 await self._animado_morre(target, m.get("id"))
@@ -33997,8 +34494,8 @@ class GameRoom:
             raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
             dmg = self._apply_damage_types((raw + mod(m.get("dex", 10))) * (2 if roll == 20 else 1), [damage_type], target)
             if is_player:
-                dmg = self._reduzir_dano_escudo(target, dmg)
-                target["hp"] = max(0, target["hp"] - dmg)
+                await self._aplicar_dano_alvo(
+                    target, dmg, damage_type, m.get("id"), is_attack=True)
             else:
                 target["vida_atual"] = max(0, target["vida_atual"] - dmg)
             await self.gm_say(T("narracao.sofre_de_dano_2", defn_get_emoji=defn.get('emoji', '🧪'), target_get_name_target_g=nome_criatura(target), dmg=dmg))
@@ -34006,9 +34503,7 @@ class GameRoom:
                 self._aplicar_em_chamas(target, self._rolar_dado(defn.get("chamas_dur", "1d4")), defn.get("chamas_agua_apaga", True))
             if defn.get("controle"):
                 await self._aplicar_controle_arremesso(target, defn["controle"])
-            if is_player and target["hp"] <= 0:
-                await self._player_dies(target["id"])
-            elif not is_player and target["vida_atual"] <= 0:
+            if not is_player and target["vida_atual"] <= 0:
                 await self._animado_morre(target, m.get("id"))
             return
         # Explosivos de Ã¡rea: centro no alvo e reflexos para todos no raio.
@@ -34024,10 +34519,9 @@ class GameRoom:
             if save.get("cd"):
                 passou, *_ = self._testar_save(alvo, save.get("tipo", "reflexos"), save["cd"], fonte=m)
             dmg = self._apply_damage_types((raw + 1) // 2 if passou else raw, [damage_type], alvo)
-            if self._eh_jogador(alvo):
-                alvo["hp"] = max(0, alvo["hp"] - dmg)
-                if alvo["hp"] <= 0:
-                    await self._player_dies(alvo["id"])
+            if self._eh_jogador(alvo) or alvo is self.prisoner:
+                await self._aplicar_dano_alvo(alvo, dmg, damage_type,
+                                              m.get("id"))
             elif "vida_atual" in alvo:
                 alvo["vida_atual"] = max(0, alvo["vida_atual"] - dmg)
                 if alvo["vida_atual"] <= 0:
@@ -35377,7 +35871,7 @@ class GameRoom:
             if self._is_water_tile(x, y):
                 dano_extra = roll_dice("1d6")
             dano = self._apply_damage_types(dano_base + dano_extra, [DMG_WATER], p)
-            p["hp"] = max(0, p["hp"] - dano)
+            await self._aplicar_dano_alvo(p, dano, DMG_WATER, m.get("id"))
             detalhe = f" +{dano_extra} por estar na água" if dano_extra else ""
             await self._enviar_trap_result(
                 p, T("narracao.afogamento_nome"), "🌊", sucesso=False,
@@ -35390,7 +35884,6 @@ class GameRoom:
             if p["hp"] <= 0:
                 p["preso"] = False
                 p.pop("preso_por", None)
-                await self._player_dies(p["id"])
 
     # ── Agarrão de criatura (crocodilo, cobra, …) ────────────────────────────
     # O agarrão dispara NO ACERTO, então mora no pipeline genérico de ataque
@@ -35604,13 +36097,15 @@ class GameRoom:
         ab  = self._habilidade_monstro(m, ab_id) or {}
         dmg = roll_dice(ab.get("damage") or dado)
         dmg = self._apply_damage_types(dmg, ["physical"], preso)
-        preso["hp"] = max(0, preso["hp"] - dmg)
+        if self._eh_jogador(preso) or preso is self.prisoner:
+            await self._aplicar_dano_alvo(preso, dmg, DMG_PHYSICAL,
+                                          m.get("id"))
+        else:
+            preso["hp"] = max(0, preso["hp"] - dmg)
         await self.gm_say(T(narracao, m=nome_criatura(m), a=nome_criatura(preso), d=dmg))
         if preso["hp"] <= 0:
             await self._soltar_agarrado(preso)
-            if self._eh_jogador(preso):
-                await self._player_dies(preso["id"])
-            else:
+            if not (self._eh_jogador(preso) or preso is self.prisoner):
                 await self._monster_dies(preso, m.get("id"))
 
     def _casa_livre_ao_lado(self, m, arrastado, preferida=None,
@@ -36167,11 +36662,10 @@ class GameRoom:
         total  = d20 + 4
         if d20 == 20 or total >= eff_ac:
             dmg = self._apply_damage_types(roll_dice("1d4") + 2, ["physical"], target)
-            target["hp"] = max(0, target["hp"] - dmg)
+            await self._aplicar_dano_alvo(target, dmg, DMG_PHYSICAL,
+                                          m.get("id"), is_attack=True)
             await self.gm_say(
                 T("narracao.arremessa_a_adaga_em_d20_4_vs_ca_de_dano", monstro=nome_criatura(m), target=nome_criatura(target), d20=d20, total=total, eff_ac=eff_ac, dmg=dmg))
-            if target["hp"] <= 0:
-                await self._player_dies(target["id"])
         else:
             await self.gm_say(
                 T("narracao.arremessa_a_adaga_em_mas_erra_d20_4_vs_c", monstro=nome_criatura(m), target=nome_criatura(target), d20=d20, total=total, eff_ac=eff_ac))
@@ -37195,6 +37689,9 @@ class GameRoom:
                     dano = self._apply_damage_types(bruto // 2 if passou else bruto, [DMG_PHYSICAL], alvo)
                     if item.get("kind") == "animado":
                         alvo["vida_atual"] = max(0, alvo.get("vida_atual", 0) - dano)
+                    elif item.get("kind") == "player" or alvo is self.prisoner:
+                        await self._aplicar_dano_alvo(alvo, dano, DMG_PHYSICAL,
+                                                      m.get("id"))
                     else:
                         alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
                     if passou:
@@ -37212,8 +37709,8 @@ class GameRoom:
                     if item.get("kind") == "animado":
                         if alvo.get("vida_atual", 0) <= 0:
                             await self._animado_morre(alvo, m.get("id"))
-                    elif alvo.get("hp", 0) <= 0:
-                        await self._player_dies(alvo["id"])
+                    elif item.get("kind") == "monster" and alvo.get("hp", 0) <= 0:
+                        await self._monster_dies(alvo, m.get("id"))
                 return
             # NÃ£o havia alvo na Ã¡rea: nÃ£o consome a recarga.
             m.get("ability_cooldowns", {}).pop("turbilhao", None)
@@ -37594,15 +38091,14 @@ class GameRoom:
             await self.gm_say(T("narracao.sofre_de_dano", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid"))
             if alvo["vida_atual"] <= 0:
                 await self._animado_morre(alvo, None)
+        elif self._eh_jogador(alvo) or alvo is self.prisoner:
+            await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, None)
+            await self.gm_say(T("narracao.sofre_de_dano_hp", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid", alvo_hp=alvo["hp"], alvo_get_max_hp=alvo.get("max_hp", "?")))
         else:
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
             await self.gm_say(T("narracao.sofre_de_dano_hp", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid", alvo_hp=alvo["hp"], alvo_get_max_hp=alvo.get("max_hp", "?")))
             if alvo["hp"] <= 0:
-                if self._eh_jogador(alvo):
-                    await self._player_dies(alvo["id"])
-                elif alvo is self.prisoner:
-                    await self._prisioneiro_morre()
-                else:
+                if not (self._eh_jogador(alvo) or alvo is self.prisoner):
                     await self._monster_dies(alvo, None)
         if self._eh_jogador(alvo) and alvo.get("id"):
             await self.send_to(alvo["id"], {
@@ -37653,8 +38149,11 @@ class GameRoom:
                 "residual": bool(not passou and dano > 0), "corrosion": False,
             })
             return
-        self._registrar_dano_combate(alvo, dano, [DMG_ACID])
-        alvo["hp"] = max(0, alvo["hp"] - dano)
+        if self._eh_jogador(alvo) or alvo is self.prisoner:
+            await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, m.get("id"))
+        else:
+            self._registrar_dano_combate(alvo, dano, [DMG_ACID])
+            alvo["hp"] = max(0, alvo["hp"] - dano)
         if not passou and dano > 0:
             alvo["_jato_acido_residual"] = max(
                 int(alvo.get("_jato_acido_residual", 0) or 0), dano // 2)
@@ -37672,7 +38171,8 @@ class GameRoom:
             "animation_id": animation_id, "damage": dano, "save": bool(passou),
             "residual": bool(not passou and dano > 0), "corrosion": bool(corrosion),
         })
-        if alvo["hp"] <= 0: await self._player_dies(alvo["id"])
+        if alvo["hp"] <= 0 and not (self._eh_jogador(alvo) or alvo is self.prisoner):
+            await self._monster_dies(alvo, m.get("id"))
 
     async def _grotao_cuspir_acido(self, m, target_obj):
         return await self._cuspir_acido(m, target_obj, next(
@@ -37691,13 +38191,12 @@ class GameRoom:
             if not hit:
                 continue
             dano = self._apply_damage_types(roll_dice(dano_expr) * (2 if crit else 1), [DMG_PHYSICAL], vitima)
-            vitima["hp"] = max(0, vitima["hp"] - dano)
+            await self._aplicar_dano_alvo(vitima, dano, DMG_PHYSICAL,
+                                          m.get("id"), is_attack=True)
             passou, d20, sb, st = self._testar_save(vitima, ability.get("save", "reflexos"), cd, fonte=m)
             if not passou:
                 vitima["derrubado_sem_movimento"] = True
             await self.gm_say(T("narracao.cauda_em_de_dano_reflexos_vs_cd", vitima=nome_criatura(vitima), dano=dano, e_derrubado_if_not_passo=' e derrubado' if not passou else '', st=st, cd=cd))
-            if vitima["hp"] <= 0:
-                await self._player_dies(vitima["id"])
 
     async def _ai_grotao(self, m, targets):
         """Foca armaduras; cauda ao ser cercado, ácido como ação extra e multiataque."""
@@ -38187,6 +38686,7 @@ class GameRoom:
                 # animar em vermelho, e o "usado" (menor â€” pior) marcado em verde.
                 # Penalidade de veneno no ataque do monstro (cego/escorpiÃ£o), se houver.
                 m_atk = (m["atk_bonus"] + self._pen(m, "ataque") + self._mod_magia(m, "ataque")
+                         + self._consumir_penalidade_vinculo_dor(m)
                          + self._privacao_monstro_penalidade(m, "ataque")
                          + self._acorde_atk_pen(m))  # AmaldiÃ§oar / Desnutrição / Tambor RÃºnico
                 # Desvantagem: ProvocaÃ§Ã£o OU atacar Ã s cegas na escuridÃ£o. Vantagem: ver na escuridÃ£o.
@@ -38240,6 +38740,9 @@ class GameRoom:
                         dmg_alvo, transfer = await self._processar_dano_protetor(target["id"], dmg)
                         dmg_alvo = self._reduzir_dano_escudo(target, dmg_alvo)
                         dmg_alvo = self._reduzir_dano_barreira_arcana(target, dmg_alvo)
+                        dmg_alvo = self._reduzir_dano_protetor(target, dmg_alvo)
+                        dmg_alvo = await self._aplicar_vinculo_maldito_da_dor(
+                            target, dmg_alvo, DMG_PHYSICAL, m.get("id"), is_attack=True)
                         target["hp"] = max(0, target["hp"] - dmg_alvo)
                         await self.gm_say(
                             T("narracao.ataca_d20_vs_ca_de_dano_hp", monstro=nome_criatura(m), tgt_name=nome_criatura(target), roll=roll, m_atk=m_atk, total=total, effective_ac=effective_ac, crit_str=crit_str, dmg_alvo=dmg_alvo, target_hp=target['hp'], target_max_hp=target['max_hp']))
@@ -38247,6 +38750,10 @@ class GameRoom:
                             richard, dano_richard = transfer
                             dano_richard = self._reduzir_dano_escudo(richard, dano_richard)
                             dano_richard = self._reduzir_dano_barreira_arcana(richard, dano_richard)
+                            dano_richard = self._reduzir_dano_protetor(richard, dano_richard)
+                            dano_richard = await self._aplicar_vinculo_maldito_da_dor(
+                                richard, dano_richard, DMG_PHYSICAL,
+                                m.get("id"), is_attack=True)
                             richard["hp"] = max(0, richard["hp"] - dano_richard)
                             if richard["hp"] <= 0:
                                 await self._player_dies(richard["id"])
@@ -38340,14 +38847,12 @@ class GameRoom:
                 self._registrar_aviso_desnutricao(p, esgotado)
             self._survival_depletion_masks[pid2] = esgotado
             if esgotado:
-                p["hp"] = max(0, p["hp"] - 1)
+                await self._aplicar_dano_alvo(p, 1, DMG_PHYSICAL, None)
                 motivos = []
                 if p.get("fome", 1) <= 0: motivos.append("fome")
                 if p.get("sede", 1) <= 0: motivos.append("sede")
                 await self.gm_say(
                     T("narracao.sofre_de_exaustao_1_hp", heroi=p['name'], e_join_motivos=' e '.join(motivos), p_hp=p['hp'], p_max_hp=p['max_hp']))
-                if p["hp"] <= 0:
-                    await self._player_dies(pid2)
 
     # â”€â”€ death & XP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -38761,6 +39266,7 @@ class GameRoom:
             await self._reverter_metamorfose(p, T("narracao.motivo_meta.forma_zerou"), morreu=True)
         p["alive"] = False
         p["hp"] = 0
+        p["vinculos_malditos_dor"] = []
         # Registro separado dos cadáveres de monstros: a lápide aparece no
         # tabuleiro, mas nunca pode ser selecionada por Animar Mortos.
         self.hero_corpses[p["id"]] = {
@@ -39203,10 +39709,10 @@ class GameRoom:
                     await self.gm_say(T("narracao.o_prisioneiro_esquiva_de_um_monstro"))
                     continue
                 dano = roll_dice(m.get("damage", "1d4"))
-                pr["hp"] -= dano
+                await self._aplicar_dano_alvo(
+                    pr, dano, DMG_PHYSICAL, m.get("id"), is_attack=True)
                 await self.gm_say(T("narracao.um_monstro_fere_o_prisioneiro", dano=dano))
-                if pr["hp"] <= 0:
-                    await self._prisioneiro_morre()
+                if not pr.get("alive"):
                     break
 
     async def end_game(self, victory, story=None):
@@ -39383,7 +39889,24 @@ class GameRoom:
                 self._slot_prune(p, circulo)
         players_state = []
         for p in self.players.values():
+            # A Tempestade de Ciclones é uma magia de teste liberada para todo
+            # clérigo. Fichas antigas/salvas podem não conter o id porque ele
+            # foi adicionado depois do início da partida; inclua-o no estado
+            # enviado para a carta aparecer e ficar utilizável imediatamente.
+            magias_conhecidas = list(p.get("magias_conhecidas", []) or [])
+            if p.get("class_id") == "cleric" and "tempestade_ciclones" not in magias_conhecidas:
+                magias_conhecidas.append("tempestade_ciclones")
+            # Metadado autoritativo para o HUD: a bomba de fumaça e o Manto
+            # criam zonas no mapa, então o cliente não deve precisar inferir
+            # sozinho se este personagem está dentro da área penalizada.
+            zonas_escuridao = [z for z in self.zonas_especiais
+                               if z.get("ativa") and z.get("tipo") == "escuridao"
+                               and self._zona_contem(*p.get("pos", [0, 0]), z)]
+            sofre_escuridao = bool(zonas_escuridao and not self._tem_visao_no_escuro(p))
+            duracoes_escuridao = [int(z.get("duracao", 0) or 0) for z in zonas_escuridao
+                                  if int(z.get("duracao", 0) or 0) > 0]
             snapshot = dict(p,
+                            magias_conhecidas=magias_conhecidas,
                             initiative=self.initiative_value(p),
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
@@ -39397,7 +39920,12 @@ class GameRoom:
                                              if self.temp_def.get(p["id"], 0) else 0),
                             # Mesmo metadado do payload da cidade: o bônus vem
                             # do cache de rodada e não muda nenhuma resolução.
-                            bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
+                            bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0),
+                            # Estado visual autoritativo da desvantagem por
+                            # escuridão; não altera a resolução do combate.
+                            escuridao_desvantagem=sofre_escuridao,
+                            escuridao_rodadas=(min(duracoes_escuridao)
+                                               if duracoes_escuridao else 0))
             for _privado in ("_metamorfose_original",):
                 snapshot.pop(_privado, None)
             players_state.append(snapshot)
@@ -40251,6 +40779,10 @@ async def handler(ws):
                 elif t == "mestre_selecionar_teste":
                     if room: await room.handle_mestre_selecionar_teste(pid, msg.get("monster_id"))
 
+                elif t == "mestre_adicionar_heroi_teste":
+                    if room: await room.handle_mestre_adicionar_heroi_teste(
+                        pid, msg.get("class_id"), msg.get("tx"), msg.get("ty"))
+
                 elif t == "mestre_implantar_reforco":
                     if room: await room.handle_mestre_implantar_reforco(
                         pid, msg.get("monster_type"), msg.get("tx"), msg.get("ty"))
@@ -40358,6 +40890,9 @@ async def handler(ws):
 
                 elif t == "tempestade_ciclones_mover":
                     if room: await room.handle_tempestade_ciclones_mover(pid, msg.get("zone_id"), msg.get("ciclone_id"), msg.get("pos"))
+
+                elif t == "tempestade_ciclones_posicoes":
+                    if room: await room.handle_tempestade_ciclones_posicoes(pid, msg.get("zone_id"), msg.get("tiles"))
 
                 elif t == "encerrar_prisao_chamas":
                     if room: await room.handle_encerrar_prisao_chamas(pid)

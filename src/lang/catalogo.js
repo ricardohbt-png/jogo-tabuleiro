@@ -2995,8 +2995,8 @@ window.LANG_CATALOGO = {
     "pt": "Teleporte"
   },
   "cat.magia.tempestade_ciclones.desc": {
-    "en": "3x3 area (+1 every 3 levels). Creates one 2x2 cyclone every 4 levels. The wind doubles movement cost, lightning strikes every 2 rounds, and a Fortitude save knocks flying creatures down.",
-    "pt": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras."
+    "en": "3x3 area (+1 every 3 levels). Creates 2d4 1x1 cyclones in squares chosen by the cleric. Each cyclone can move 2 squares per round. The wind doubles movement cost, lightning strikes every 2 rounds, and a Fortitude save knocks flying creatures down.",
+    "pt": "Área 3x3 (+1 a cada 3 níveis). Cria 2d4 ciclones 1x1 nas casas escolhidas pelo clérigo. Cada ciclone pode andar 2 casas por rodada. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras."
   },
   "cat.magia.tempestade_ciclones.nome": {
     "en": "Cyclone Storm",

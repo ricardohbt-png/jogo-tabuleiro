@@ -120,15 +120,33 @@ async def main():
     r = setup()
     check("raio base = 4", r._defensor_raio(paladin()) == 4)
     check("raio II = 5", r._defensor_raio(paladin(esp=["paladino_defensor_2"])) == 5)
-    check("split base = (5,5) de 10", r._defensor_split(paladin(), 10) == (5, 5))
-    check("split III = (4,4) de 10", r._defensor_split(paladin(esp=["paladino_defensor_2","paladino_defensor_3"]), 10) == (4, 4))
-    # integração: _processar_dano_protetor divide 40/40 com _3
+    check("ataque base = (5,5) de 10", r._defensor_split(paladin(), 10, is_attack=True) == (5, 5))
+    check("ataque II continua (5,5) de 10", r._defensor_split(paladin(esp=["paladino_defensor_2"]), 10, is_attack=True) == (5, 5))
+    check("outro dano base = (7,3) de 10", r._defensor_split(paladin(), 10, is_attack=False) == (7, 3))
+    check("outro dano II = (6,4) de 10", r._defensor_split(paladin(esp=["paladino_defensor_2"]), 10, is_attack=False) == (6, 4))
+    check("todo dano III = (5,5) de 10", r._defensor_split(paladin(esp=["paladino_defensor_2","paladino_defensor_3"]), 10, is_attack=False) == (5, 5))
+    # integração: _processar_dano_protetor divide 50/50 com _3
     r = setup(); p = paladin(esp=["paladino_defensor_2","paladino_defensor_3"]); p["pos"]=[0,0]
     p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p
     alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; r.players["a"]=alvo
     dano_alvo, transfer = await r._processar_dano_protetor("a", 10)
-    check("protetor III → aliado 4", dano_alvo == 4)
-    check("protetor III → richard 4", transfer is not None and transfer[1] == 4)
+    check("protetor III → aliado 5", dano_alvo == 5)
+    check("protetor III → richard 5", transfer is not None and transfer[1] == 5)
+    # nível base e II: ataques 50/50, demais fontes seguem a progressão.
+    r = setup(); p = paladin(); p["pos"]=[0,0]; p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; r.players["a"]=alvo
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10, is_attack=False)
+    check("protetor base → outro dano 7/3", (dano_alvo, transfer[1]) == (7, 3))
+    r = setup(); p = paladin(esp=["paladino_defensor_2"]); p["pos"]=[0,0]; p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p
+    alvo = make_player("a","Ana","warrior",1); alvo["pos"]=[0,1]; r.players["a"]=alvo
+    dano_alvo, transfer = await r._processar_dano_protetor("a", 10, is_attack=False)
+    check("protetor II → outro dano 6/4", (dano_alvo, transfer[1]) == (6, 4))
+    check("Richard reduz 3 do dano recebido", r._reduzir_dano_protetor(p, 10) == 7)
+    # prisioneiro liberto é um alvo válido e usa o mesmo vínculo especial.
+    r = setup(); p = paladin(); p["protetor_ativo"]=True; p["protetor_alvo"]="__prisioneiro__"; r.players["r"]=p
+    r.prisoner = {"alive": True, "freed": True, "pos": [0, 1], "hp": 7, "max_hp": 7, "ac": 10}
+    dano_alvo, transfer = await r._processar_dano_protetor("__prisioneiro__", 10, is_attack=False)
+    check("protetor aceita prisioneiro", (dano_alvo, transfer[1]) == (7, 3))
     # integração: raio 5 permite proteger a distância 5, raio 4 (base) não
     r = setup(); p = paladin(esp=["paladino_defensor_2"]); p["pos"]=[0,0]
     p["protetor_ativo"]=True; p["protetor_alvo"]="a"; r.players["r"]=p

@@ -11,8 +11,11 @@ def check(label, value):
 
 def setup(level=5):
     r = S.GameRoom("TEST")
+    r.events = []
     async def noop(*a, **k): pass
-    async def send_to(*a, **k): pass
+    async def send_to(*a, **k):
+        if len(a) >= 2 and isinstance(a[1], dict):
+            r.events.append(a[1])
     r.broadcast = noop; r.push_state = noop; r.gm_say = noop; r._broadcast_dado = noop; r.send_to = send_to
     r._tem_linha_de_visao = lambda *a, **k: True
     r._alcance_com_altura = lambda *a, **k: True
@@ -34,13 +37,22 @@ async def main():
     z = next((z for z in r.zonas_especiais if z.get("tipo")=="tempestade_ciclones"), None)
     check("zona criada no nível 5", bool(z))
     check("área 4x4 no nível 5", z and z.get("lado") == 4 and len(z.get("tiles", [])) == 16)
-    check("um ciclone no nível 5", z and len(z.get("ciclones", [])) == 1)
-    check("ciclone ocupa 2x2", z and len(r._tempestade_ciclone_tiles(z["ciclones"][0])) == 4)
+    rolagem = z.get("ciclones_rolados", 0) if z else 0
+    check("rola 2d4 ciclones", z and 2 <= rolagem <= 8 and z.get("ciclones_pendentes") == rolagem)
+    check("pede a escolha das posições iniciais", any(e.get("type") == "tempestade_ciclones_prompt" and e.get("count") == rolagem for e in r.events))
+    posicoes = [list(pos) for pos in z.get("tiles", [])[:rolagem]]
+    await r.handle_tempestade_ciclones_posicoes("c", z["id"], posicoes)
+    check("posições iniciais confirmadas", z.get("ciclones_pendentes") is None and len(z.get("ciclones", [])) == rolagem)
+    check("ciclones ocupam 1x1", z and all(len(r._tempestade_ciclone_tiles(c)) == 1 for c in z["ciclones"]))
+    check("posições iniciais são únicas", len({tuple(c["pos"]) for c in z["ciclones"]}) == rolagem)
     check("vento custa 2", r._water_step_cost(p, 5, 6, [5, 5]) == 2)
-    r.round_num = 2
     old = list(z["ciclones"][0]["pos"])
-    await r.handle_tempestade_ciclones_mover("c", z["id"], 1, [old[0] + 1, old[1]])
-    check("ciclone pode mover 2 casas", z["ciclones"][0]["pos"] != old)
+    ocupadas = {tuple(c["pos"]) for c in z["ciclones"]}
+    destino = next(([x, y] for x, y in z["tiles"]
+                    if (x, y) not in ocupadas
+                    and max(abs(x - old[0]), abs(y - old[1])) <= 2), None)
+    await r.handle_tempestade_ciclones_mover("c", z["id"], 1, destino)
+    check("ciclone pode mover 2 casas no turno da conjuração", z["ciclones"][0]["pos"] != old)
     r.round_num = 3
     await r._processar_zonas_turno()
     check("raio periódico agendado para a rodada 3", z.get("proxima_descarga") == 5)

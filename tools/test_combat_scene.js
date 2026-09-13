@@ -73,6 +73,15 @@ const cmdsI = CS.tick(5);
 check("impact emitido no mesmo tick do result", cmdsI.some(c => c.cmd === "impact"));
 CS.configure({ instant: () => false, duration: ms => ms });
 
+console.log("\n[5b] Runtime sincroniza golpe com a rolagem");
+CS.reset(); CS.configure({ cfg: { syncOnResult: true } });
+CS.start(START, 0); CS.tick(0);
+CS.result(RESULT_HIT, 50); CS.tick(180);
+check("resultado libera GOLPE sem esperar o dado assentar", CS.phaseOf("atk_1_1") === "GOLPE");
+const cmdsSync = CS.tick(290);
+check("golpe sincronizado emite impacto durante a rolagem", cmdsSync.some(c => c.cmd === "impact"));
+CS.configure({});
+
 console.log("\n[6] result sem start → só impacto");
 CS.reset();
 CS.result(RESULT_HIT, 0); CS.tick(0);

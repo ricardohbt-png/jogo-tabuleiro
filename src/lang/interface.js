@@ -264,16 +264,16 @@ window.LANG_INTERFACE = {
     "pt": "<b>Câmera 3D com controle:</b> o botão configurado para câmera alterna o analógico direito entre cursor de alvo e câmera · os gatilhos controlam o zoom · com um herói voando, segure L1+L2 para descer ou L1+R2 para subir · o botão de restaurar volta à vista padrão."
   },
   "ui.ajuda.joystick_menu": {
-    "en": "<b>Menus, city and world map:</b> D-pad or left stick navigates · right stick scrolls the world map up/down · the configured confirm button activates · the cancel button goes back. The menu button opens the hero menus; the triggers change Items, Abilities, Magic and Stats. In the inventory, Confirm selects, equips or moves items; the secondary face button uses the focused consumable, scroll or throwable; and the upper face button drops a previously selected item during a dungeon. In a hero menu, focus an action and hold the left shoulder button + one of the face buttons to assign it to a shortcut. In text fields, Confirm opens the virtual keyboard.",
-    "pt": "<b>Menus, cidade e mapa-múndi:</b> direcional ou analógico esquerdo navega · segundo direcional rola o mapa-múndi para cima/baixo · o botão de confirmar ativa · o de cancelar volta. O botão de menu abre os menus do herói; os gatilhos alternam Itens, Habilidades, Magias e Estatísticas. No inventário, Confirmar seleciona, equipa ou move itens; o botão frontal secundário usa o consumível, pergaminho ou arremessável focalizado; e o botão frontal superior larga, na masmorra, um item já selecionado. Em um menu do herói, selecione uma ação e segure o botão superior esquerdo + um botão frontal para colocá-la em um atalho. Em campos de texto, Confirmar abre o teclado virtual."
+    "en": "<b>Menus, city and world map:</b> D-pad or left stick navigates · right stick scrolls the world map up/down · the configured confirm button activates · the cancel button goes back. Menu opens pause; View opens the hero menus; the triggers change Items, Abilities, Magic and Stats. In the inventory, Confirm selects, equips or moves items; the secondary face button uses the focused consumable, scroll or throwable; and the upper face button drops a previously selected item during a dungeon. In a hero menu, focus an action and hold the left shoulder button + one of the face buttons to assign it to a shortcut. In text fields, Confirm opens the virtual keyboard.",
+    "pt": "<b>Menus, cidade e mapa-múndi:</b> direcional ou analógico esquerdo navega · segundo direcional rola o mapa-múndi para cima/baixo · o botão de confirmar ativa · o de cancelar volta. Menu abre a pausa; View abre os menus do herói; os gatilhos alternam Itens, Habilidades, Magias e Estatísticas. No inventário, Confirmar seleciona, equipa ou move itens; o botão frontal secundário usa o consumível, pergaminho ou arremessável focalizado; e o botão frontal superior larga, na masmorra, um item já selecionado. Em um menu do herói, selecione uma ação e segure o botão superior esquerdo + um botão frontal para colocá-la em um atalho. Em campos de texto, Confirmar abre o teclado virtual."
   },
   "ui.ajuda.joystick_titulo": {
     "en": "🎮 Controller",
     "pt": "🎮 Joystick"
   },
   "ui.ajuda.joystick_turno": {
-    "en": "<b>Dungeon:</b> D-pad or left stick moves the hero · Confirm activates the selected tile · Cancel leaves target mode · press the menu button twice to end your turn · R3 cycles useful targets · hold the left shoulder button + a face button to use the first four shortcuts.",
-    "pt": "<b>Masmorra:</b> direcional ou analógico esquerdo move o herói · Confirmar ativa a casa selecionada · Cancelar sai da mira · pressione duas vezes o botão de menu para encerrar o turno · R3 alterna entre alvos úteis · segure o botão superior esquerdo + um botão frontal para usar os quatro primeiros atalhos."
+    "en": "<b>Dungeon:</b> D-pad or left stick chooses a tile · Confirm activates it · Cancel leaves target mode · Menu opens pause · R3 twice ends your turn · Y cycles useful targets · LB/RB + face buttons use shortcuts 1–8 · LT+X/Y use shortcuts 9–10.",
+    "pt": "<b>Masmorra:</b> direcional ou analógico esquerdo escolhe uma casa · Confirmar ativa a casa · Cancelar sai da mira · Menu abre a pausa · R3 duas vezes encerra o turno · Y alterna entre alvos úteis · LB/RB + botões frontais usam os atalhos 1–8 · LT+X/Y usam os atalhos 9–10."
   },
   "ui.ajuda.objetivo": {
     "en": "<b>Goal:</b> explore the dungeon, defeat the boss 👹 and return to the stairs to the city (buy items, rest) before the next floor.",
@@ -2359,6 +2359,114 @@ window.LANG_INTERFACE = {
     "en": "bonus used",
     "pt": "bônus usado"
   },
+  "ui.recursos.titulo": {
+    "en": "ROUND RESOURCES",
+    "pt": "RECURSOS DA RODADA"
+  },
+  "ui.recursos.movimento": {
+    "en": "Movement",
+    "pt": "Movimento"
+  },
+  "ui.recursos.quadrados": {
+    "en": "{n} square(s)",
+    "pt": "{n} quadrado(s)"
+  },
+  "ui.recursos.acao_principal": {
+    "en": "Main action",
+    "pt": "Ação principal"
+  },
+  "ui.recursos.acao_bonus": {
+    "en": "Bonus action",
+    "pt": "Ação bônus"
+  },
+  "ui.recursos.disponivel": {
+    "en": "available",
+    "pt": "disponível"
+  },
+  "ui.recursos.usada": {
+    "en": "used",
+    "pt": "usada"
+  },
+  "ui.recursos.fora_turno": {
+    "en": "Waiting for your turn",
+    "pt": "Aguardando seu turno"
+  },
+  "ui.recursos.ainda_pode": {
+    "en": "You can still",
+    "pt": "Você ainda pode"
+  },
+  "ui.recursos.nada": {
+    "en": "No action resource remaining",
+    "pt": "Nenhum recurso de ação restante"
+  },
+  "ui.recursos.movimento_ajuda": {
+    "en": "Move up to {n} square(s)",
+    "pt": "Mover-se até {n} casa(s)"
+  },
+  "ui.recursos.acao_principal_ajuda": {
+    "en": "Attack, cast a spell, use a technique or interact",
+    "pt": "Atacar, lançar magia, usar técnica ou interagir"
+  },
+  "ui.recursos.acao_bonus_ajuda": {
+    "en": "Activate a quick ability or use a healing potion",
+    "pt": "Ativar uma habilidade rápida ou usar uma poção de cura"
+  },
+  "ui.acoes.explicacao_titulo": {
+    "en": "How actions work",
+    "pt": "Como funcionam as ações"
+  },
+  "ui.acoes.explicacao_movimento": {
+    "en": "Movement: spend blue squares to walk through the dungeon.",
+    "pt": "Movimento: gaste os quadrados azuis para andar pela masmorra."
+  },
+  "ui.acoes.explicacao_principal": {
+    "en": "Main action: normally one attack, spell, item or technique each turn.",
+    "pt": "Ação principal: normalmente um ataque, magia, item ou técnica por rodada."
+  },
+  "ui.acoes.explicacao_bonus": {
+    "en": "Bonus action: quick abilities and healing potions; once per turn.",
+    "pt": "Ação bônus: habilidades rápidas e poções de cura; uma vez por rodada."
+  },
+  "ui.acoes.explicacao_livre": {
+    "en": "Free action: small interactions that do not spend the main or bonus action.",
+    "pt": "Ação livre: interações rápidas que não gastam a ação principal ou bônus."
+  },
+  "ui.acoes.explicacao_reacao": {
+    "en": "Reaction: used in response to a specific event.",
+    "pt": "Reação: usada em resposta a um evento específico."
+  },
+  "ui.acoes.explicacao_passiva": {
+    "en": "Passive: always active; no action is spent.",
+    "pt": "Passiva: fica sempre ativa; não gasta ação."
+  },
+  "ui.acoes.tipo_principal": {
+    "en": "Main action",
+    "pt": "Ação principal"
+  },
+  "ui.acoes.tipo_bonus": {
+    "en": "Bonus action",
+    "pt": "Ação bônus"
+  },
+  "ui.acoes.tipo_livre": {
+    "en": "Free action",
+    "pt": "Ação livre"
+  },
+  "ui.acoes.tipo_reacao": {
+    "en": "Reaction",
+    "pt": "Reação"
+  },
+  "ui.acoes.tipo_passiva": {
+    "en": "Passive",
+    "pt": "Passiva"
+  },
+  "ui.acoes.custo": {
+    "en": "Cost",
+    "pt": "Custo"
+  },
+  "ui.acoes.uso": {
+    "en": "Use",
+    "pt": "Uso"
+  },
   "ui.hud.ca_temporaria": {
     "en": "Temporary AC",
     "pt": "CA temporária"
@@ -3214,6 +3322,14 @@ window.LANG_INTERFACE = {
   "ui.item.desc.regeneracao": {
     "en": "Pool of {n} HP • recovers +1 HP per round",
     "pt": "Reserva {n} HP • recupera +1 HP por rodada"
+  },
+  "ui.item.desc.cura_hp": {
+    "en": "Heals +{n} HP per use",
+    "pt": "Cura +{n} HP por uso"
+  },
+  "ui.item.desc.cura_total": {
+    "en": "Restores all HP",
+    "pt": "Restaura todos os HP"
   },
   "ui.item.desc.requer_flechas": {
     "en": "Requires arrows",
@@ -4188,8 +4304,8 @@ window.LANG_INTERFACE = {
     "pt": "<b>Efeito:</b> inimigos não podem atacar<br>\n               <b>Ataque:</b> com vantagem (2d20 maior) + furtivo<br>\n               <b>Quebra:</b> ao atacar ou lançar magia<br>\n               <b>Duração:</b> 1d6+1 rodadas"
   },
   "ui.magia.ira_rocha_aguardando": {
-    "en": "{restante} Living Flame(s) awaiting placement",
-    "pt": "{restante} Chama(s) Viva(s) aguardando colocação"
+    "en": "{restante} Living Flame(s) remaining ({colocadas}/{total} placed)",
+    "pt": "{restante} Chama(s) Viva(s) restantes ({colocadas}/{total} colocadas)"
   },
   "ui.magia.ira_rocha_ardente.desc": {
     "en": "<b>Range:</b> 4 squares +1 every 2 levels<br><b>Area:</b> 3x3 lava, +1 square every 3 levels<br><b>Effect:</b> everyone in the area takes 2d6 fire damage and the lava terrain effects<br><b>Duration:</b> 1d4 +1 round every 3 levels (minimum 2)<br><b>Living Flames:</b> from the 2nd round on, creates 2d4 decorations in an area 1x1 larger than the lava; you choose the squares<br><b>Cost:</b> 🍖-1 💧-1 + 1 fourth-circle slot",
@@ -4220,24 +4336,24 @@ window.LANG_INTERFACE = {
     "pt": "🔥 CHAMAS VIVAS — AÇÃO LIVRE"
   },
   "ui.magia.ira_rocha_chamas_colocadas": {
-    "en": "🌋 Living Flames: {postas}/{postas} already placed for this spell.",
-    "pt": "🌋 Chamas Vivas: {postas}/{postas} já colocadas nesta magia."
+    "en": "🌋 Living Flames: {postas}/{total} placed for this spell.",
+    "pt": "🌋 Chamas Vivas: {postas}/{total} colocadas nesta magia."
   },
   "ui.magia.ira_rocha_efeito_dano": {
     "en": "The flames deal fire damage and last until the lava ends.",
     "pt": "As chamas causam o dano de fogo e permanecem até o fim da lava."
   },
   "ui.magia.ira_rocha_efeito_escolha": {
-    "en": "Choose exactly {restante} square(s) in the area extended by 1x1.",
-    "pt": "Escolha exatamente {restante} casa(s) na área ampliada em 1x1."
+    "en": "Choose up to {restante} square(s) in the area extended by 1x1; the rest can be placed on later rounds.",
+    "pt": "Escolha até {restante} casa(s) na área ampliada em 1x1; o restante pode ser colocado em rodadas seguintes."
   },
   "ui.magia.ira_rocha_efeito_r2": {
     "en": "Available from the 2nd round on.",
     "pt": "Disponível a partir da 2ª rodada."
   },
   "ui.magia.ira_rocha_escolha_casas": {
-    "en": "Choose {restante} square(s) in the area extended by 1x1 around the lava.",
-    "pt": "Escolha {restante} casa(s) na área ampliada em 1x1 ao redor da lava."
+    "en": "Up to {restante} this round ({colocadas}/{total} total placed). You can leave the rest for later rounds.",
+    "pt": "Até {restante} nesta rodada ({colocadas}/{total} colocadas no total). Você pode deixar o restante para as próximas rodadas."
   },
   "ui.magia.ira_rocha_hover_fora": {
     "en": "Choose a free square inside the lava area.",
@@ -4256,8 +4372,8 @@ window.LANG_INTERFACE = {
     "pt": "Limite de {max} Chamas Vivas atingido."
   },
   "ui.magia.ira_rocha_mira_instrucao": {
-    "en": "Choose {max} square(s) inside the extended area to create the Living Flames.",
-    "pt": "Escolha {max} casa(s) dentro da área ampliada para criar as Chamas Vivas."
+    "en": "Choose 1 to {max} square(s) inside the extended area. Unplaced flames remain for later rounds.",
+    "pt": "Escolha de 1 a {max} casa(s) dentro da área ampliada. As chamas não colocadas ficam para as próximas rodadas."
   },
   "ui.magia.ira_rocha_mira_titulo": {
     "en": "🌋 WRATH OF THE BURNING ROCK",
@@ -4688,8 +4804,8 @@ window.LANG_INTERFACE = {
     "pt": "CICLONE"
   },
   "ui.magia.tempestade_ciclones.desc": {
-    "en": "<b>Range:</b> 6 +1 every 2 levels<br><b>Area:</b> 3x3, +1 square every 3 levels<br><b>Cyclones:</b> one 2x2 cyclone every 4 levels; each may move 2 squares per round<br><b>Impact:</b> 2d8 lightning, Reflex halves<br><b>Wind:</b> every square inside the storm costs 2 movement<br><b>Lightning:</b> 1d8 lightning every 2 rounds, Reflex halves<br><b>Flight:</b> a failed Fortitude save knocks you down and deals falling damage<br><b>Cyclone:</b> Reflex success loses your movement; failure loses movement and the main action<br><b>Temporary test:</b> available to the cleric with no 5th-circle slot",
-    "pt": "<b>Alcance:</b> 6 +1 a cada 2 níveis<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Ciclones:</b> 1 ciclone 2x2 a cada 4 níveis; cada um pode mover 2 casas por rodada<br>\n               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>\n               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>\n               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>\n               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>\n               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>\n               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo"
+    "en": "<b>Range:</b> 6 +1 every 2 levels<br><b>Area:</b> 3x3, +1 square every 3 levels<br><b>Cyclones:</b> creates 2d4 1x1 cyclones in squares chosen by the cleric; each may move 2 squares per round<br><b>Impact:</b> 2d8 lightning, Reflex halves<br><b>Wind:</b> every square inside the storm costs 2 movement<br><b>Lightning:</b> 1d8 lightning every 2 rounds, Reflex halves<br><b>Flight:</b> a failed Fortitude save knocks you down and deals falling damage<br><b>Cyclone:</b> Reflex success loses your movement; failure loses movement and the main action<br><b>Temporary test:</b> available to the cleric with no 5th-circle slot",
+    "pt": "<b>Alcance:</b> 6 +1 a cada 2 níveis<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Ciclones:</b> cria 2d4 ciclones 1x1 nas casas escolhidas pelo clérigo; cada um pode mover 2 casas por rodada<br>\n               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>\n               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>\n               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>\n               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>\n               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>\n               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo"
   },
   "ui.magia.tempestade_escolha_casa": {
     "en": "Choose a square inside the storm, up to 2 squares away.",
@@ -4704,24 +4820,48 @@ window.LANG_INTERFACE = {
     "pt": "Posição válida. Clique para mover."
   },
   "ui.magia.tempestade_mira_instrucao": {
-    "en": "Click the cyclone's new 2x2 position.",
-    "pt": "Clique na nova posição 2x2 do ciclone."
+    "en": "Click the cyclone's new 1x1 position.",
+    "pt": "Clique na nova posição 1x1 do ciclone."
   },
   "ui.magia.tempestade_mira_titulo": {
     "en": "🌪️ MOVE CYCLONE",
     "pt": "🌪️ MOVER CICLONE"
   },
   "ui.magia.tempestade_mova_ciclones": {
-    "en": "Move each cyclone up to 2 squares. A cyclone covers a 2x2 area.",
-    "pt": "Mova cada ciclone até 2 casas. O ciclone ocupa uma área 2x2."
+    "en": "Move each cyclone up to 2 squares. Each cyclone covers one square.",
+    "pt": "Mova cada ciclone até 2 casas. Cada ciclone ocupa uma casa."
   },
   "ui.magia.tempestade_movimento_cancelado": {
     "en": "Move cancelled.",
     "pt": "Movimento cancelado."
   },
   "ui.magia.tempestade_pos_invalida": {
-    "en": "Invalid position: use a free 2x2 area, inside the storm and up to 2 squares away.",
-    "pt": "Posição inválida: use uma área 2x2 livre, dentro da tempestade e até 2 casas."
+    "en": "Invalid position: use a free square inside the storm, up to 2 squares away.",
+    "pt": "Posição inválida: use uma casa livre dentro da tempestade, a até 2 casas."
+  },
+  "ui.magia.tempestade_posicionamento_titulo": {
+    "en": "🌪️ PLACE CYCLONES",
+    "pt": "🌪️ POSICIONAR CICLONES"
+  },
+  "ui.magia.tempestade_posicionamento_instrucao": {
+    "en": "Choose exactly {count} valid squares inside the storm for the initial cyclone positions.",
+    "pt": "Escolha exatamente {count} casas válidas dentro da tempestade para iniciar os ciclones."
+  },
+  "ui.magia.tempestade_posicionamento_confirmar": {
+    "en": "CREATE CYCLONES",
+    "pt": "CRIAR CICLONES"
+  },
+  "ui.magia.tempestade_posicionamento_ok": {
+    "en": "Valid square. Click to select or deselect it.",
+    "pt": "Casa válida. Clique para selecionar ou desmarcar."
+  },
+  "ui.magia.tempestade_posicionamento_erro": {
+    "en": "Choose a valid square inside the storm.",
+    "pt": "Escolha uma casa válida dentro da tempestade."
+  },
+  "ui.magia.tempestade_posicionamento_limite": {
+    "en": "All {count} cyclone positions are already selected.",
+    "pt": "As {count} posições de ciclone já estão selecionadas."
   },
   "ui.magia.tempestade_toast_aproxima": {
     "en": "🌪️ The storm draws near...",
@@ -4991,9 +5131,25 @@ window.LANG_INTERFACE = {
     "en": "Cursor speed",
     "pt": "Velocidade do cursor"
   },
+  "ui.menu.joystick_direct_move": {
+    "en": "Direct movement (stick commits steps)",
+    "pt": "Movimento direto (o analógico confirma os passos)"
+  },
   "ui.menu.joystick_next_target": {
     "en": "Next target",
     "pt": "Próximo alvo"
+  },
+  "ui.menu.joystick_shortcut_left": {
+    "en": "Shortcut modifier 1",
+    "pt": "Modificador de atalho 1"
+  },
+  "ui.menu.joystick_shortcut_right": {
+    "en": "Shortcut modifier 2",
+    "pt": "Modificador de atalho 2"
+  },
+  "ui.menu.joystick_shortcut_third": {
+    "en": "Shortcut modifier 3",
+    "pt": "Modificador de atalho 3"
   },
   "ui.menu.joystick_vibration": {
     "en": "Vibration",
@@ -6316,8 +6472,8 @@ window.LANG_INTERFACE = {
     "pt": "Ativa +2 no acerto neste turno. Pode combinar com outras habilidades no mesmo turno."
   },
   "ui.selecao.skill.desc.protetor": {
-    "en": "Bonus action. The chosen ally (radius 4) takes half the damage; the other half goes to Richard. 🍖-2 💧-2.",
-    "pt": "Ação Bônus. Aliado escolhido (raio 4) recebe metade do dano; a outra metade vai para Richard. 🍖-2 💧-2."
+    "en": "Bonus action. Attacks are shared 50/50. Other damage is 75% to the ally and 25% to Richard. Richard reduces all damage by 3. Prisoners can be protected. 🍖-2 💧-2.",
+    "pt": "Ação Bônus. Ataques são divididos 50/50. Outros danos ficam 75% no aliado e 25% em Richard. Richard reduz todo dano em 3. Prisioneiros podem ser protegidos. 🍖-2 💧-2."
   },
   "ui.selecao.skill.desc.provocacao": {
     "en": "Bonus action. Imposes disadvantage on the enemy and forces it to attack Henrique for 3 turns.",
@@ -6678,6 +6834,30 @@ window.LANG_INTERFACE = {
   "ui.status.escuridao": {
     "en": "🌑 Darkness",
     "pt": "🌑 Escuridão"
+  },
+  "ui.status.escuridao_efeitos_hud": {
+    "en": "Disadvantage on attacks; limited vision; ranged attacks max 2 squares",
+    "pt": "Desvantagem nos ataques; visão limitada; ataques à distância limitados a 2 casas"
+  },
+  "ui.status.escuridao_popup_status": {
+    "en": "Darkness penalty active",
+    "pt": "Penalidade de escuridão ativa"
+  },
+  "ui.status.escuridao_popup_desc": {
+    "en": "You entered an area of darkness without darkvision. These effects apply while you are affected:",
+    "pt": "Você entrou em uma área de escuridão sem Visão no Escuro. Enquanto estiver afetado:"
+  },
+  "ui.status.escuridao_popup_ataques": {
+    "en": "Your attacks have disadvantage: roll two d20s and use the lower result.",
+    "pt": "Seus ataques têm desvantagem: role dois d20 e use o menor resultado."
+  },
+  "ui.status.escuridao_popup_alcance": {
+    "en": "Affected ranged attacks are limited to 2 squares; your sight is impaired.",
+    "pt": "Ataques à distância afetados ficam limitados a 2 casas; sua visão fica prejudicada."
+  },
+  "ui.status.escuridao_popup_saida": {
+    "en": "The penalty ends when you leave the darkness or gain darkvision.",
+    "pt": "A penalidade termina ao sair da escuridão ou obter Visão no Escuro."
   },
   "ui.status.exaustao": {
     "en": "Exhaustion",
@@ -7074,6 +7254,10 @@ window.LANG_INTERFACE = {
   "ui.tooltip.efeito": {
     "en": "Effect",
     "pt": "Efeito"
+  },
+  "ui.tooltip.cura_por_uso": {
+    "en": "Healing per use",
+    "pt": "Cura por uso"
   },
   "ui.tooltip.efeito_parcial": {
     "en": "partial effect on success",

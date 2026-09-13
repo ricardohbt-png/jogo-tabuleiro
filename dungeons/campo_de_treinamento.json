@@ -629,7 +629,7 @@
       "w": 6,
       "h": 6,
       "role": "monster",
-      "locked": true,
+      "locked": false,
       "doors": [
         [
           12,
@@ -698,12 +698,7 @@
       ]
     }
   ],
-  "door_conditions": {
-    "12,3": {
-      "type": "licao",
-      "licao_id": "atrio_04"
-    }
-  },
+  "door_conditions": {},
   "entrance": null,
   "hero_spawns": [
     {
@@ -1064,7 +1059,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. Só depois disso a porta ao fundo destranca.",
+      "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. A porta ao fundo já está aberta para você avançar quando quiser.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 2
@@ -1086,20 +1081,20 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "A porta ao fundo já destrancou. Mas porta não se atravessa andando: CLIQUE nela para abrir. Abrir é de graça — não gasta movimento nem a sua ação, e vale para qualquer porta da masmorra.",
+      "texto": "A porta ao fundo já está aberta. Atravesse-a quando quiser: portas abertas deixam você passar, e abrir uma porta em outras masmorras é uma ação gratuita.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 7
       },
       "ordem": 5,
       "tarefa": {
-        "tipo": "abrir_porta",
+        "tipo": "mover_ate",
         "alvo": [
-          12,
+          13,
           3
         ],
         "vezes": 1,
-        "texto_curto": "Clique na porta ao fundo para abri-la"
+        "texto_curto": "Atravesse a porta ao fundo"
       }
     },
     {

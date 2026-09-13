@@ -707,6 +707,7 @@ const InventoryModal = (() => {
                 <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
                 <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button><div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div></div>
               </div>
+              ${typeof window._renderAcoesExplicacaoHTML === 'function' ? window._renderAcoesExplicacaoHTML() : ''}
               <div class="inv-grid"></div>
               <div class="inv-gold">🪙 <span></span></div>
               <div class="inv-bagbar"></div>
@@ -859,8 +860,8 @@ const InventoryModal = (() => {
         <div style="padding:10px 14px;">
           ${regeneracao
             ? renderLinhaTooltip('🌿', 'Reserva', `${atual.value || 0} HP; +1 HP por rodada`)
-            : renderLinhaTooltip('❤️', 'Cura por uso', `+${atual.value || 0} HP`)}
-          ${renderLinhaTooltip('⚡', 'Uso', 'Ação bônus')}
+            : renderLinhaTooltip('❤️', t('ui.tooltip.cura_por_uso'), `+${atual.value ?? atual.valor ?? 0} HP`)}
+          ${renderLinhaTooltip('⚡', t('ui.acoes.uso'), t('ui.acoes.tipo_bonus'))}
           ${doses}
         </div>`;
     } else {

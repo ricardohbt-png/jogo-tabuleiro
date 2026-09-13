@@ -21,6 +21,10 @@
                 shakeMs: 140, shakeAmp: 0.06, particles: 18 },
     death:    { fallMs: 380, bounceDeg: 4, darken: 0.35, fadeMs: 200, squashY: 0.85 },
     waitDieMs: 3500,
+    // O runtime pode sincronizar o golpe com a chegada do resultado do ataque,
+    // que ocorre junto da emissão do d20. Mantemos desligado por padrão para
+    // preservar a linha do tempo legada dos testes/consumidores externos.
+    syncOnResult: false,
     expireMs:  6000,
   };
 
@@ -107,6 +111,10 @@
       fumble: !!msg.natural_fumble,
     };
     s.resultAt = now;
+    // O servidor envia o resultado imediatamente antes do dice_roll. Quando
+    // habilitado pelo runtime, isso libera o golpe durante a animação do d20,
+    // sem esperar o dado visual terminar de assentar.
+    if (cfg.syncOnResult && s.dieAt == null) s.dieAt = now;
     return s;
   }
 

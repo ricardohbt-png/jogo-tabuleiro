@@ -84,6 +84,19 @@ async def main():
     await entrar_na_masmorra(r, "p1")
     check("facing limpo ao reentrar na masmorra", "facing" not in r.players["p1"])
 
+    print("\n[3] Ataques atualizam a frente para a casa do alvo")
+    # O helper é a mesma rotina chamada pelos ataques de heróis, monstros e
+    # servos. Testa também um monstro 1×1, que antes ficava com a direção do
+    # último movimento ao atacar lateralmente.
+    atacante = r.players["p1"]
+    atacante["pos"] = [5, 5]
+    r._face_toward(atacante, [5, 4])
+    check("herói encara o quadrado norte", atacante.get("facing") == [0, -1])
+
+    monstro = {"id": "m1", "pos": [5, 5], "oriented": False, "size": [1, 1]}
+    r._face_toward(monstro, [6, 5])
+    check("monstro 1×1 encara o quadrado leste", monstro.get("facing") == [1, 0])
+
     print(f"\n{'='*50}\nPASS={PASS} FAIL={FAIL}")
     if FAIL: sys.exit(1)
 

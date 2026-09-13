@@ -140,20 +140,29 @@ async def main():
           len(zone["chamas_permitidas"]) > len(zone["tiles"])
           and [2, 2] in zone["chamas_permitidas"])
 
-    print("\n[2] Escolha manual cria Chamas Vivas e causa dano imediato")
+    print("\n[2] Escolha parcial cria Chamas Vivas e preserva o restante")
     permitidos = zone["chamas_permitidas"]
-    escolhidos = [[4, 4]] + [pos for pos in permitidos if pos != [4, 4]][:3]
+    escolhidos = [[4, 4]]
     await room.handle_ira_rocha_ardente_chamas("c", zone["id"], escolhidos)
     check("escolha na 1ª rodada foi recusada", not room.decorations)
     room.round_num = zone["disponivel_em"]
     await room.handle_ira_rocha_ardente_chamas("c", zone["id"], escolhidos)
     flames = [d for d in room.decorations if d.get("type") == "chama_viva"]
-    check("quatro decorações foram criadas", len(flames) == 4)
+    check("uma decoração foi criada", len(flames) == 1)
     check("posições escolhidas foram respeitadas",
           {tuple(d["pos"]) for d in flames} == {tuple(p) for p in escolhidos})
+    check("chamas restantes continuam pendentes", zone["chamas_pendentes"] == 3)
+    check("casa usada saiu das opções futuras", [4, 4] not in zone["chamas_permitidas"])
     check("chamas ficam indexadas como 2d4",
           all(room._fire_damage_tiles.get(tuple(p)) == "2d4" for p in escolhidos))
     check("dano da chama soma ao dano da lava", cleric["hp"] < 44)
+
+    posteriores = zone["chamas_permitidas"][:3]
+    room.round_num += 1
+    await room.handle_ira_rocha_ardente_chamas("c", zone["id"], posteriores)
+    flames = [d for d in room.decorations if d.get("type") == "chama_viva"]
+    check("o restante pode ser colocado em rodada posterior", len(flames) == 4)
+    check("nenhuma chama ficou pendente", zone["chamas_pendentes"] == 0)
 
     print("\n[3] A área expira e restaura o mapa")
     base_tile = tuple(zone["tiles"][0])
@@ -164,13 +173,15 @@ async def main():
     check("Chamas Vivas foram removidas", not any(
         d.get("ira_rocha_ardente_id") == zone["id"] for d in room.decorations))
 
-    print("\n[4] Validação rejeita escolha incompleta")
+    print("\n[4] Validação rejeita escolha vazia e excesso")
     room, messages = setup()
     add_cleric(room, level=6)
     zone = await cast(room, messages)
     room.round_num = zone["disponivel_em"]
-    await room.handle_ira_rocha_ardente_chamas("c", zone["id"], zone["chamas_permitidas"][:1])
-    check("escolha incompleta foi recusada", not room.decorations)
+    await room.handle_ira_rocha_ardente_chamas("c", zone["id"], [])
+    check("escolha vazia foi recusada", not room.decorations)
+    await room.handle_ira_rocha_ardente_chamas("c", zone["id"], zone["chamas_permitidas"] + [[999, 999]])
+    check("escolha acima do restante foi recusada", not room.decorations)
     check("erro foi enviado", any(msg.get("type") == "error" for _, msg in messages))
 
     print("\n[5] A janela para colocar as Chamas Vivas nunca é vazia")

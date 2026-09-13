@@ -390,6 +390,7 @@ document.body.innerHTML = `
     </div>
     <div id="active-effects-hud" aria-label="Efeitos ativos" hidden></div>
     <div id="gamepad-context-hud" aria-live="polite" hidden></div>
+    <div id="gamepad-shortcuts-tray" aria-label="Atalhos do controle" hidden></div>
     <div id="gamepad-shortcuts-hud" aria-label="Atalhos do controle" hidden></div>
     <div id="map-wrap">
       <canvas id="dungeon-canvas"></canvas>
@@ -401,6 +402,9 @@ document.body.innerHTML = `
     <div id="gm-log">
       <div id="gm-log-header">
         <span data-i18n="ui.hud.mestre_do_jogo">📖 MESTRE DO JOGO</span>
+        <button id="gm-log-toggle" type="button" aria-expanded="true"
+                aria-label="Minimizar Mestre do Jogo" title="Minimizar Mestre do Jogo"
+                onclick="toggleGMLog()">−</button>
       </div>
       <!-- Histórico das últimas rolagens — os dados 3D somem em 3 s; aqui ficam -->
       <div id="dice-history"></div>
@@ -562,7 +566,7 @@ document.body.innerHTML = `
 // overflow:hidden e os HUDs são position:fixed. Mantê-los diretamente no body
 // evita que a coluna de renderização 2D/3D os recorte no navegador.
 (function _fixedGameHudsNoBody(){
-  ['active-effects-hud', 'gamepad-context-hud', 'gamepad-shortcuts-hud'].forEach(id => {
+  ['active-effects-hud', 'gamepad-context-hud', 'gamepad-shortcuts-tray', 'gamepad-shortcuts-hud'].forEach(id => {
     const hud = document.getElementById(id);
     if(hud && hud.parentNode !== document.body) document.body.appendChild(hud);
   });
@@ -741,16 +745,24 @@ function showScreen(id){
   if(id !== 'screen-game') _clearGamepadEndTurnConfirm();
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
-  if(!['screen-game', 'screen-city'].includes(id)){
+  // A barra de configuração dos atalhos também é usada na cidade, onde o
+  // jogador prepara habilidades, magias e itens para a próxima masmorra.
+  if(id !== 'screen-game' && id !== 'screen-city'){
     _atalhosAbertos = false;
     const shortcutBar = document.getElementById('shortcut-bar');
     if(shortcutBar){ shortcutBar.hidden = true; shortcutBar.innerHTML = ''; }
+  }
+  // Os HUDs de uso rápido e efeitos da partida continuam exclusivos da
+  // masmorra; não devem atravessar a transição para a cidade.
+  if(id !== 'screen-game'){
     const activeEffects = document.getElementById('active-effects-hud');
     if(activeEffects){ activeEffects.hidden = true; activeEffects.innerHTML = ''; }
     const gamepadContext = document.getElementById('gamepad-context-hud');
     if(gamepadContext){ gamepadContext.hidden = true; gamepadContext.innerHTML = ''; }
     const gamepadShortcuts = document.getElementById('gamepad-shortcuts-hud');
     if(gamepadShortcuts){ gamepadShortcuts.hidden = true; gamepadShortcuts.innerHTML = ''; }
+    const gamepadShortcutsTray = document.getElementById('gamepad-shortcuts-tray');
+    if(gamepadShortcutsTray){ gamepadShortcutsTray.hidden = true; gamepadShortcutsTray.innerHTML = ''; }
   }
   if(!['screen-game', 'screen-city', 'screen-class-select'].includes(id)){
     document.getElementById('pause-menu')?.classList.remove('open');
@@ -2745,8 +2757,10 @@ function _renderShopItems(){
   const aba = GS.shopTabIdx - (temCena ? 1 : 0);
   // Route sell tabs
   if(GS.activeShop==='ferreiro'&&aba===3){ _renderRepairItems(); return; }
-  if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('gear'); return; }
-  if(GS.activeShop==='mercador'&&aba===4){ _renderSellItems('bag');  return; }
+  // Todas as abas de venda exibem o inventário completo: equipamento e bolsa.
+  // A venda continua autoritativa no servidor, independentemente da loja.
+  if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('all'); return; }
+  if(GS.activeShop==='mercador'&&aba===4){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
   const gold=myP?myP.gold:0;
@@ -2993,6 +3007,10 @@ function _itemDesc(item){
     return t('ui.item.desc.racao', {n: item.value||0});
   if(item.effect==='regeneration')
     return t('ui.item.desc.regeneracao', {n: item.value||0});
+  if(item.effect==='heal')
+    return t('ui.item.desc.cura_hp', {n: item.value ?? item.valor ?? 0});
+  if(item.effect==='full_heal')
+    return t('ui.item.desc.cura_total');
   if(item.effect==='veil_shadow')
     return item.descricao || t('ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno');
   const v=item.value?` ${item.value}`:'';
@@ -4717,6 +4735,10 @@ function gerarConteudoTooltip(item){
   if(item.tipo === 'instrumento' && typeof _tooltipInstrumentoHTML === 'function')
     return _tooltipInstrumentoHTML(item);
 
+  const itemAcao = _itemAcaoMeta(item);
+  if(itemAcao)
+    linhas.push(renderLinhaTooltip('⚡', t('ui.acoes.uso'), _esc(t(itemAcao.label))));
+
   if(item.dano && item.dano !== '—') linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.dano'),item.dano));
   if(item.danoUmaMao){
     linhas.push(renderLinhaTooltip('🎲',t('ui.tooltip.uma_mao'),item.danoUmaMao));
@@ -4755,6 +4777,10 @@ function gerarConteudoTooltip(item){
   if(item.slotSecundario === 'flechas') linhas.push(renderLinhaTooltip('🏹',t('ui.tooltip.municao'),t('ui.tooltip.requer_flechas')));
   if(item.fome > 0) linhas.push(renderLinhaTooltip('🍖',t('ui.tooltip.fome'),`+${item.fome}`));
   if(item.sede > 0) linhas.push(renderLinhaTooltip('💧',t('ui.tooltip.sede'),`+${item.sede}`));
+  if(item.effect === 'heal')
+    linhas.push(renderLinhaTooltip('❤️',t('ui.tooltip.cura_por_uso'),`+${item.value ?? item.valor ?? 0} HP`));
+  if(item.effect === 'full_heal')
+    linhas.push(renderLinhaTooltip('❤️',t('ui.tooltip.cura_por_uso'),t('ui.item.desc.cura_total')));
   if(item.duracao) linhas.push(renderLinhaTooltip('⏱️',t('ui.tooltip.duracao'),t('ui.tooltip.rodadas',{n:item.duracao})));
   if(item.bonusVisao) linhas.push(renderLinhaTooltip('👁️',t('ui.tooltip.visao'),t('ui.tooltip.mais_quadrado',{n:item.bonusVisao})));
   if(item.quantidade && item.effect !== 'ammo' && item.tipo !== 'municao') linhas.push(renderLinhaTooltip('📦',t('ui.tooltip.quantidade'),t('ui.tooltip.unidades_slot',{n:item.quantidade})));
@@ -6745,7 +6771,7 @@ function _petrificadoFiltro2D(){
   return VC.feedback?.petrificacao?.filtro2D ?? 'grayscale(1) sepia(0.60) brightness(0.88)';
 }
 
-function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false){
+function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false, facing=null){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-2;
   // Drop shadow (ellipse at feet)
@@ -6757,6 +6783,11 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=fa
     ctx.strokeStyle=color+'cc'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.arc(0,-2,r+5,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
+  // As PNGs dos heróis têm a frente voltada para Sul no mapa 2D, mesma
+  // convenção do peão 3D. Gira somente o corpo: sombra, aro e identificação
+  // permanecem legíveis e independentes da direção do ataque.
+  ctx.save();
+  ctx.rotate(_facingAngle2D(facing));
   if(petrificado) ctx.filter=_petrificadoFiltro2D();
   // Class sprite — usa a miniatura PNG (frente.png), igual ao 3D; enquanto a
   // imagem não carrega, cai no sprite procedural (drawWarrior, …).
@@ -6784,6 +6815,7 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=fa
     }
     ctx.restore();
   }
+  ctx.restore();
   // Gold ring for me
   if(isMe){
     ctx.strokeStyle='#f0c040'; ctx.lineWidth=2.5;
@@ -6791,7 +6823,6 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=fa
   }
   // Name tag
   if(isMe||isCur){
-    ctx.restore(); ctx.save(); ctx.translate(cx,cy);
     const tagFs=Math.round(CELL*0.14); ctx.font=`bold ${tagFs}px monospace`; ctx.textAlign='center';
     // (name drawn in renderMap loop below)
   }
@@ -6864,11 +6895,13 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
   ctx.beginPath(); ctx.ellipse(0, 0, CELL*(is2x2 ? 0.82 : (isWideOriented ? fp.length * 0.43 : 0.90)), CELL*(is2x2 ? 0.68 : (isWideOriented ? fp.width * 0.38 : 0.36)), 0, 0, Math.PI*2); ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=1.5; ctx.stroke();
   ctx.restore();
-  // Criatura EM PÉ (billboard): orientação natural da arte; espelha para leste.
+  // Criatura: a arte natural aponta para Oeste (a cabeça fica à esquerda),
+  // portanto o mesmo ângulo usado pela base aponta corpo e frente para a casa
+  // atacada. A rotação também cobre Norte/Sul, que antes permaneciam de lado.
   const imageName = _monsterImageName(m);
   const img = imageName ? _getMonster2DImg(imageName) : null;
   ctx.save(); ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale);
-  if(f[0]===1) ctx.scale(-1, 1);   // encara leste → espelha (cabeça da arte é à esquerda)
+  ctx.rotate(angBase);
   if(img && img.complete && img.naturalWidth){
     if(m.petrificado) ctx.filter=_petrificadoFiltro2D();
     const ar = img.naturalWidth/img.naturalHeight;
@@ -6978,10 +7011,10 @@ function drawMonsterSprite(ctx, cx, cy, m, attackTargeted=false){
   const attackLift = attackTargeted ? CELL * .055 : 0;
   ctx.translate(0, -attackLift);
   ctx.translate(0, r * 0.82); ctx.scale(_msx * attackScale, _msy * attackScale); ctx.translate(0, -r * 0.82);
-  // Sprites 2D são billboards frontais: espelha horizontalmente o servo para
-  // acompanhar o sentido lateral do movimento sem deitar a miniatura.
+  // A frente natural das miniaturas comuns aponta para Sul no mapa 2D. Gira o
+  // peão inteiro para que ataques laterais também mostrem a frente correta.
   const _facing2D = Array.isArray(m.facing) ? m.facing : null;
-  if(_facing2D && _facing2D[0] !== 0) ctx.scale(_facing2D[0] > 0 ? -1 : 1, 1);
+  ctx.rotate(_facingAngle2D(_facing2D));
   // Drop shadow
   ctx.fillStyle='rgba(0,0,0,0.45)';
   ctx.beginPath(); ctx.ellipse(0,r*0.78,r*0.65,r*0.22,0,0,Math.PI*2); ctx.fill();
@@ -8004,11 +8037,285 @@ function _receberAnimacaoArmadilha(msg){
   else if(!_armadilha2DRaf) _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PROTETOR — vínculo dourado entre Richard e o aliado protegido
+// ═══════════════════════════════════════════════════════════════════════════
+// O efeito é derivado do estado autoritativo recebido do servidor. Assim, a
+// animação acompanha também desligamento, morte e perda de alcance do alvo.
+const _protetorVisuals = new Map();
+let _protetorVisualRaf = null;
+const PROTETOR_FX_FADE_MS = 900;
+
+function _protetorFind(state, id){
+  if(String(id) === '__prisioneiro__') return state?.prisoner || null;
+  return (state?.players || []).find(p => String(p.id) === String(id)) || null;
+}
+
+function _protetorVisible2D(state, p, visionSet){
+  if(!p || !p.alive || !Array.isArray(p.pos)) return false;
+  if(p.connected === false || p.engolido || p.bau_engolido || p.fosso_oculto) return false;
+  if(p.id === GS.myPid || GS.isMaster?.() || state.test_mode) return true;
+  return visionSet.has(`${p.pos[0]},${p.pos[1]}`);
+}
+
+function _protetorNeedsRaf(){
+  if(!_protetorVisuals.size) return false;
+  if(!mode3D) return true;
+  return [..._protetorVisuals.values()].some(fx => fx.endingAt != null);
+}
+
+function _protetorEnsureRaf(){
+  if(_protetorNeedsRaf() && !_protetorVisualRaf)
+    _protetorVisualRaf = _scheduleVisualFrame(_tickProtetorVisual);
+}
+
+function _syncProtetorVisualState(state){
+  if(!state) return;
+  const now = performance.now(), seen = new Set();
+  for(const richard of (state.players || [])){
+    if(!richard.alive || !richard.protetor_ativo || richard.protetor_alvo == null) continue;
+    const target = _protetorFind(state, richard.protetor_alvo);
+    if(!target || !target.alive) continue;
+    const targetKey = target === state.prisoner ? '__prisioneiro__' : target.id;
+    const key = `${richard.id}:${targetKey}`;
+    seen.add(key);
+    let fx = _protetorVisuals.get(key);
+    if(!fx){
+      fx = {
+        // Use a chave especial também no efeito visual: o prisioneiro não é
+        // um peão comum e precisa ser resolvido por getPrisonerMesh() no 3D.
+        key, richardId:String(richard.id), targetId:String(targetKey),
+        startedAt:now, endingAt:null, seed:Math.random()*Math.PI*2,
+        group:null, shield:null, core:null, rings:[], sourceCore:null,
+        sourceRings:[], linkGlow:null, linkCore:null, chainLinks:[], orb:null,
+        sparks:[]
+      };
+      _protetorVisuals.set(key, fx);
+    } else {
+      fx.endingAt = null;
+    }
+    fx.lastSeen = now;
+  }
+  for(const fx of _protetorVisuals.values()){
+    if(!seen.has(fx.key) && fx.endingAt == null) fx.endingAt = now;
+  }
+  _protetorEnsureRaf();
+}
+
+function _protetorFade(fx, now){
+  return fx.endingAt == null ? 1 : Math.max(0, 1 - (now - fx.endingAt) / PROTETOR_FX_FADE_MS);
+}
+
+function _protetorDraw2D(ctx, state, visionSet, foreground, now){
+  if(!ctx || !_protetorVisuals.size) return;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for(const fx of _protetorVisuals.values()){
+    const richard = _protetorFind(state, fx.richardId), target = _protetorFind(state, fx.targetId);
+    if(!_protetorVisible2D(state, target, visionSet)) continue;
+    const fade = _protetorFade(fx, now);
+    if(fade <= 0) continue;
+    const tx = target.pos[0]*CELL + CELL/2, ty = target.pos[1]*CELL + CELL/2;
+    const pulse = .5 + .5*Math.sin(now/260 + fx.seed);
+    if(!foreground){
+      // Aura de origem: deixa claro que a proteção nasce no paladino, antes
+      // de alcançar o aliado. A onda se expande toda vez que o vínculo surge.
+      if(_protetorVisible2D(state, richard, visionSet)){
+        const rx = richard.pos[0]*CELL + CELL/2, ry = richard.pos[1]*CELL + CELL/2;
+        const aura = ctx.createRadialGradient(rx, ry, CELL*.08, rx, ry, CELL*.92);
+        aura.addColorStop(0, `rgba(255,248,194,${(.24+.10*pulse)*fade})`);
+        aura.addColorStop(.36, `rgba(255,197,54,${(.16+.07*pulse)*fade})`);
+        aura.addColorStop(1, 'rgba(255,178,35,0)');
+        ctx.fillStyle=aura;ctx.beginPath();ctx.arc(rx,ry,CELL*.92,0,Math.PI*2);ctx.fill();
+        const onda=((now-fx.startedAt)%1300)/1300;
+        ctx.strokeStyle=`rgba(255,222,110,${(.56*(1-onda)*fade).toFixed(3)})`;
+        ctx.lineWidth=Math.max(1.5,CELL*.025);ctx.beginPath();ctx.arc(rx,ry,CELL*(.25+.60*onda),0,Math.PI*2);ctx.stroke();
+
+        // Corrente reta: além do brilho de base, cada elo dourado é desenhado
+        // individualmente, alternando a inclinação para parecer uma corrente.
+        const dx=tx-rx,dy=ty-ry,dist=Math.hypot(dx,dy),angle=Math.atan2(dy,dx);
+        const link = ctx.createLinearGradient(rx, ry, tx, ty);
+        link.addColorStop(0, `rgba(255,204,68,${(.38+.15*pulse)*fade})`);
+        link.addColorStop(1, `rgba(255,245,180,${(.70+.16*pulse)*fade})`);
+        ctx.shadowColor='#ffd45c';ctx.shadowBlur=CELL*.18;ctx.strokeStyle=link;
+        ctx.lineWidth=Math.max(2,CELL*.045);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(tx,ty);ctx.stroke();
+        const links=Math.max(2,Math.floor(dist/Math.max(8,CELL*.18)));
+        ctx.shadowBlur=CELL*.10;ctx.strokeStyle=`rgba(255,239,151,${(.88*fade).toFixed(3)})`;
+        ctx.lineWidth=Math.max(1.4,CELL*.026);
+        for(let i=0;i<links;i++){
+          const u=(i+.5)/links,x=rx+dx*u,y=ry+dy*u;
+          ctx.save();ctx.translate(x,y);ctx.rotate(angle+(i%2?Math.PI/2:0));
+          ctx.beginPath();ctx.ellipse(0,0,CELL*.090,CELL*.042,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+        }
+        ctx.shadowBlur=0;
+        const travel=Math.min(1,Math.max(0,(now-fx.startedAt)/720));
+        if(travel<1){
+          const ox=rx+dx*travel,oy=ry+dy*travel;
+          ctx.shadowColor='#fff0a6';ctx.shadowBlur=CELL*.24;ctx.fillStyle=`rgba(255,250,194,${(.94*fade).toFixed(3)})`;
+          ctx.beginPath();ctx.arc(ox,oy,CELL*(.075+.025*pulse),0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+        }
+      }
+      const glow=ctx.createRadialGradient(tx,ty,0,tx,ty,CELL*.92);
+      glow.addColorStop(0,`rgba(255,240,156,${(.22+.09*pulse)*fade})`);
+      glow.addColorStop(.48,`rgba(255,195,48,${(.15+.06*pulse)*fade})`);
+      glow.addColorStop(1,'rgba(255,178,35,0)');
+      ctx.fillStyle=glow;ctx.beginPath();ctx.arc(tx,ty,CELL*.92,0,Math.PI*2);ctx.fill();
+      continue;
+    }
+    // Casulo: uma película oval cobre o protegido inteiro, enquanto o selo
+    // hexagonal e os anéis dão a leitura de escudo mágico em movimento.
+    ctx.save();ctx.translate(tx,ty-CELL*.04);ctx.scale(.78,1.16);
+    const shell=ctx.createRadialGradient(0,-CELL*.16,0,0,0,CELL*.64);
+    shell.addColorStop(0,`rgba(255,255,220,${(.16+.08*pulse)*fade})`);
+    shell.addColorStop(.56,`rgba(255,205,66,${(.08+.045*pulse)*fade})`);
+    shell.addColorStop(1,'rgba(255,183,28,0)');
+    ctx.fillStyle=shell;ctx.beginPath();ctx.ellipse(0,0,CELL*.54,CELL*.62,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='#ffd45c';ctx.shadowBlur=CELL*.18;ctx.strokeStyle=`rgba(255,231,130,${(.74+.16*pulse)*fade})`;
+    ctx.lineWidth=Math.max(1.5,CELL*.030);ctx.beginPath();ctx.ellipse(0,0,CELL*.53,CELL*.61,0,0,Math.PI*2);ctx.stroke();
+    ctx.shadowBlur=0;ctx.restore();
+    const rot = now/1200 + fx.seed, rr = CELL*(.43 + .025*pulse);
+    ctx.translate(tx, ty); ctx.rotate(Math.sin(now/900 + fx.seed)*.04);
+    ctx.beginPath();
+    for(let i=0;i<6;i++){ const a=-Math.PI/2+i*Math.PI/3, x=Math.cos(a)*rr, y=Math.sin(a)*rr*1.16; i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+    ctx.closePath();
+    ctx.fillStyle = `rgba(255,195,48,${(.055*fade).toFixed(3)})`; ctx.fill();
+    ctx.shadowColor = '#ffd45c'; ctx.shadowBlur = CELL*.13;
+    ctx.strokeStyle = `rgba(255,218,103,${(.56 + .18*pulse)*fade})`; ctx.lineWidth = Math.max(2, CELL*.034); ctx.stroke();
+    ctx.shadowBlur = 0; ctx.strokeStyle = `rgba(255,249,202,${(.74*fade).toFixed(3)})`;
+    ctx.lineWidth = Math.max(1, CELL*.016); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, 0, rr*1.18, rot, rot + Math.PI*1.22); ctx.stroke();
+    for(let i=0;i<8;i++){
+      const a = rot + i*Math.PI/4, x=Math.cos(a)*CELL*.58, y=Math.sin(a)*CELL*.58;
+      ctx.fillStyle = `rgba(255,239,149,${(.48 + .30*Math.sin(now/180+i)**2)*fade})`;
+      ctx.beginPath(); ctx.arc(x, y, CELL*(.025 + .012*pulse), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore(); ctx.save(); ctx.globalCompositeOperation='lighter';
+  }
+  ctx.restore();
+}
+
+function _protetorCylinderBetween(mesh, a, b, T){
+  const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z, len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  if(!mesh || len < .001) return;
+  mesh.position.set((a.x+b.x)/2, (a.y+b.y)/2, (a.z+b.z)/2);
+  mesh.scale.set(1, len, 1);
+  mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0), new T.Vector3(dx,dy,dz).normalize());
+}
+
+function _buildProtetor3D(fx){
+  if(!g3?.protetorEffectGroup || !window.THREE) return false;
+  const T=window.THREE, group=new T.Group(); group.name='protetor-animation';
+  const mat=(color, opacity=0) => new T.MeshBasicMaterial({color, transparent:true, opacity,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide});
+  // Casulo de luz: núcleo translúcido + malha externa, ambos grandes o
+  // bastante para envolver o peão protegido, não apenas um anel no chão.
+  const shield=new T.Mesh(new T.IcosahedronGeometry(.78,2), mat(0xffd35a)); shield.material.wireframe=true;
+  const core=new T.Mesh(new T.SphereGeometry(.64,20,14), mat(0xffd96a));
+  shield.renderOrder=89; core.renderOrder=88; group.add(core,shield);
+  fx.shield=shield; fx.core=core;
+  for(let i=0;i<3;i++){
+    const ring=new T.Mesh(new T.TorusGeometry(.78+i*.052,.016+i*.004,7,32),mat(i===1?0xffffe0:0xffc53d));
+    ring.renderOrder=90; group.add(ring); fx.rings.push(ring);
+  }
+  // Aura de origem no próprio Richard. Ela pulsa antes de alimentar a
+  // corrente, deixando explícito quem sustenta a proteção.
+  const sourceCore=new T.Mesh(new T.SphereGeometry(.22,14,10),mat(0xffffca));sourceCore.renderOrder=90;group.add(sourceCore);fx.sourceCore=sourceCore;
+  for(let i=0;i<3;i++){
+    const sourceRing=new T.Mesh(new T.TorusGeometry(.34+i*.11,.018,7,28),mat(i===1?0xffffcc:0xffc13b));
+    sourceRing.renderOrder=90;group.add(sourceRing);fx.sourceRings.push(sourceRing);
+  }
+  const linkMat=mat(0xffc83d), coreMat=mat(0xffffdf);
+  const linkGlow=new T.Mesh(new T.CylinderGeometry(.074,.074,1,8,1,true),linkMat);
+  const linkCore=new T.Mesh(new T.CylinderGeometry(.022,.022,1,6,1,true),coreMat);
+  linkGlow.renderOrder=86; linkCore.renderOrder=87; group.add(linkGlow,linkCore); fx.linkGlow=linkGlow; fx.linkCore=linkCore;
+  // Elos físicos da corrente. Mantemos uma reserva e apenas ocultamos os que
+  // excedem a distância atual para não recriar geometria a cada movimento.
+  for(let i=0;i<28;i++){
+    const elo=new T.Mesh(new T.TorusGeometry(.085,.017,6,12),mat(i%2?0xffffd5:0xffca45));
+    elo.renderOrder=91;group.add(elo);fx.chainLinks.push(elo);
+  }
+  const orb=new T.Mesh(new T.SphereGeometry(.105,12,8),mat(0xffffdc)); orb.renderOrder=91; group.add(orb); fx.orb=orb;
+  for(let i=0;i<8;i++){const spark=new T.Mesh(new T.SphereGeometry(.035,8,6),mat(0xffffaa));spark.userData.index=i;spark.renderOrder=91;group.add(spark);fx.sparks.push(spark);}
+  g3.protetorEffectGroup.add(group); fx.group=group; return true;
+}
+
+function _disposeProtetor3D(fx){
+  if(!fx?.group) return;
+  if(fx.group.parent) fx.group.parent.remove(fx.group);
+  fx.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+  fx.group=null; fx.shield=fx.core=fx.sourceCore=fx.linkGlow=fx.linkCore=fx.orb=null;
+  fx.rings=[]; fx.sourceRings=[]; fx.chainLinks=[]; fx.sparks=[];
+}
+
+function _atualizarProtetor3D(now){
+  if(!g3?.protetorEffectGroup || !window.THREE) return;
+  const T=window.THREE;
+  for(const fx of _protetorVisuals.values()){
+    if(fx.group && fx.group.parent!==g3.protetorEffectGroup) _disposeProtetor3D(fx);
+    if(!fx.group && !_buildProtetor3D(fx)) continue;
+    const richard=getPeaoMesh(fx.richardId);
+    const target=String(fx.targetId)==='__prisioneiro__' ? getPrisonerMesh() : getPeaoMesh(fx.targetId);
+    if(!richard || !target){fx.group.visible=false;continue;}
+    fx.group.visible=true;
+    const a=new T.Vector3(), b=new T.Vector3(); richard.getWorldPosition(a); target.getWorldPosition(b);
+    a.y+=.78; b.y+=.72;
+    const fade=_protetorFade(fx,now), appear=Math.min(1,Math.max(0,(now-fx.startedAt)/560)), pulse=.5+.5*Math.sin(now/250+fx.seed);
+    fx.group.visible=fade>0; if(!fx.group.visible) continue;
+    _protetorCylinderBetween(fx.linkGlow,a,b,T); _protetorCylinderBetween(fx.linkCore,a,b,T);
+    fx.linkGlow.material.opacity=(.27+.13*pulse)*fade*appear;
+    fx.linkCore.material.opacity=(.70+.20*pulse)*fade*appear;
+    // Corrente reta de elos dourados, alternando a orientação. A linha de
+    // energia continua por baixo para a conexão nunca desaparecer à distância.
+    const delta=b.clone().sub(a),dist=delta.length(),dir=delta.normalize();
+    const up=new T.Vector3(0,1,0),normal=new T.Vector3().crossVectors(dir,up);
+    if(normal.lengthSq()<.001) normal.set(1,0,0); else normal.normalize();
+    const eloQ=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,0,1),normal);
+    const eloStep=.19,elosAtivos=Math.min(fx.chainLinks.length,Math.max(2,Math.floor(dist/eloStep)));
+    for(let i=0;i<fx.chainLinks.length;i++){
+      const elo=fx.chainLinks[i];
+      if(i>=elosAtivos){elo.visible=false;continue;}
+      const u=(i+.5)/elosAtivos;
+      elo.visible=true;elo.position.copy(a).lerp(b,u);
+      elo.quaternion.copy(eloQ);
+      elo.rotateZ(i%2?Math.PI/2:0);
+      const eloPulse=.78+.22*Math.sin(now/130+i*.9);
+      elo.scale.setScalar((.88+.10*eloPulse)*appear);
+      elo.material.opacity=(.58+.27*eloPulse)*fade*appear;
+    }
+    const chargePos=a.clone().lerp(b,Math.min(1,Math.max(0,(now-fx.startedAt)/720)));
+    fx.orb.position.copy(chargePos); fx.orb.scale.setScalar(.75+.35*pulse); fx.orb.material.opacity=.90*fade*appear;
+    fx.shield.position.copy(b); fx.core.position.copy(b);
+    fx.shield.scale.set(.88+.06*pulse,1.18+.10*pulse,.88+.06*pulse); fx.core.scale.set(.88+.08*pulse,1.16+.10*pulse,.88+.08*pulse);
+    fx.shield.rotation.y=now/1200+fx.seed; fx.shield.rotation.x=.10*Math.sin(now/800+fx.seed);
+    fx.shield.material.opacity=(.45+.18*pulse)*fade*appear; fx.core.material.opacity=(.11+.06*pulse)*fade*appear;
+    for(let i=0;i<fx.rings.length;i++){const ring=fx.rings[i];ring.position.copy(b);ring.rotation.x=i===1?0:Math.PI/2;ring.rotation.y=i===1?now/980:0;ring.rotation.z=now/(720+i*120)+i;ring.material.opacity=(.34+.18*pulse)*(i===1?.72:1)*fade*appear;}
+    fx.sourceCore.position.copy(a);fx.sourceCore.scale.setScalar(.82+.30*pulse);fx.sourceCore.material.opacity=(.42+.24*pulse)*fade*appear;
+    for(let i=0;i<fx.sourceRings.length;i++){
+      const ring=fx.sourceRings[i];ring.position.copy(a);ring.position.y-=.42;
+      ring.rotation.x=Math.PI/2;ring.rotation.z=now/(510+i*160)*(i%2?1:-1);
+      ring.scale.setScalar(.84+.18*pulse+i*.035);ring.material.opacity=(.38+.20*pulse)*(1-i*.12)*fade*appear;
+    }
+    for(const spark of fx.sparks){const i=spark.userData.index,a0=now/(430+(i%3)*90)+i*Math.PI/4,r=.70+.08*Math.sin(now/370+i);spark.position.set(b.x+Math.cos(a0)*r,b.y-.05+.16*Math.sin(now/300+i),b.z+Math.sin(a0)*r);spark.scale.setScalar(.75+.35*pulse);spark.material.opacity=(.35+.40*Math.sin(now/115+i)**2)*fade*appear;}
+  }
+}
+
+function _tickProtetorVisual(now){
+  _syncProtetorVisualState(GS.gameState);
+  for(const [key,fx] of _protetorVisuals){
+    if(fx.endingAt!=null && now-fx.endingAt>PROTETOR_FX_FADE_MS){_disposeProtetor3D(fx);_protetorVisuals.delete(key);}
+  }
+  if(mode3D&&g3) _atualizarProtetor3D(now);
+  if(!mode3D&&GS.gameState&&_protetorVisuals.size) renderMap(GS.gameState);
+  _protetorVisualRaf=_protetorNeedsRaf()?_scheduleVisualFrame(_tickProtetorVisual):null;
+}
+
 function renderMap(state){
   if(!state.tiles) return;
   state = _estadoComMortosVisuais(state);
   _syncInvisibilidadeState(state);
   _syncProtecaoEnergiaState(state);
+  _syncProtetorVisualState(state);
+  _tempestadeSyncFromState(state);
   _atualizarZonasMagia(state);   // zonas persistentes (Bola de Fogo) — vale p/ 2D e 3D
   if(mode3D){ renderMap3D(state); return; }
   if(_armadilhaAnims.length && !_armadilha2DRaf)
@@ -8774,6 +9081,8 @@ function renderMap(state){
     }
   }
 
+  _protetorDraw2D(ctx, state, visionSet, false, performance.now());
+
   // ── Players: base disc then hero sprite
   ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const p of state.players){
@@ -8797,11 +9106,15 @@ function renderMap(state){
       const wolf = _getMonster2DImg(formaVisual);
       if(wolf && wolf.complete && wolf.naturalWidth){
         const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
-        if(p.petrificado) ctx.save(), ctx.filter=_petrificadoFiltro2D();
+        ctx.save();
+        ctx.translate(cx, cy-3);
+        ctx.rotate(_facingAngle2D(p.facing));
+        ctx.translate(-cx, -(cy-3));
+        if(p.petrificado) ctx.filter=_petrificadoFiltro2D();
         ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
-        if(p.petrificado) ctx.restore();
-      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
-    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado);
+        ctx.restore();
+      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing);
+    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing);
     if(_playerVortexPreso) ctx.restore();
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
@@ -8818,6 +9131,7 @@ function renderMap(state){
       ctx.textBaseline='middle';
     }
   }
+  _protetorDraw2D(ctx, state, visionSet, true, performance.now());
   // O relâmpago fica por cima das miniaturas para que a descarga seja legível
   // mesmo quando atravessa um peão ou um monstro.
   const _agoraRelampago = performance.now();
@@ -14020,11 +14334,17 @@ function abrirPainelGuerreiroLuz(){
 function _aliadosNoRaioPaladin(me, raio){
   const st = GS.gameState; if(!st) return [];
   const pp = me.pos || [0,0];
-  return (st.players || []).filter(a => a && a.alive && a.id !== me.id && a.pos &&
+  const alvos = (st.players || []).filter(a => a && a.alive && a.id !== me.id && a.pos &&
     Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
+  const pr = st.prisoner;
+  if(pr && pr.alive && pr.freed && pr.pos &&
+      Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr)){
+    alvos.push({...pr, id:'__prisioneiro__', name:pr.nome || 'Prisioneiro', emoji:'🔗'});
+  }
+  return alvos;
 }
 
-// Protetor — ação bônus (raio 4). Escolhe aliado via modal (auto-envia se 1).
+// Protetor — ação bônus. Escolhe aliado/prisioneiro via modal.
 function iniciarModoProtetor(){
   const me = GS.me;
   if(!me || me.class_id !== 'paladin') return;
@@ -14033,10 +14353,11 @@ function iniciarModoProtetor(){
   }
   if(me.bonus_action_used){ toast(t('ui.hud.acao_bonus_ja_usada'), 'var(--orange)'); return; }
   if(me.fome < 2 || me.sede < 2){ toast('Protetor requer 🍖2 e 💧2.', 'var(--orange)'); return; }
-  const alvos = _aliadosNoRaioPaladin(me, 4);
+  const raio = GS.paladinDefensorRaio ? GS.paladinDefensorRaio() : 4;
+  const alvos = _aliadosNoRaioPaladin(me, raio);
   if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
   if(alvos.length === 1){ send({ type:'protetor', target_id:alvos[0].id }); return; }
-  openTargetModal('🛡️ Protetor — Escolha o aliado (raio 4)', alvos, 'player',
+  openTargetModal(`🛡️ Protetor — Escolha o aliado (raio ${raio})`, alvos, 'player',
     id => send({ type:'protetor', target_id:id }));
 }
 
@@ -14171,18 +14492,21 @@ function _paladinSkillBtn(me, sk){
     }
   } else if(sk.id === 'protetor'){
     const _raioDef  = GS.paladinDefensorRaio  ? GS.paladinDefensorRaio()  : 4;
-    const _splitDef = GS.paladinDefensorSplit ? GS.paladinDefensorSplit() : 50;
+    const _nivelDef = GS.paladinDefensorNivel ? GS.paladinDefensorNivel() : 1;
+    const _splitDef = _nivelDef === 3 ? '50/50' : `ataques 50/50 · outros ${_nivelDef === 2 ? '65/35' : '75/25'}`;
     if(me.protetor_ativo){
-      const alvo = (GS.gameState?.players || []).find(p => p.id === me.protetor_alvo);
+      const alvo = (GS.gameState?.players || []).find(p => String(p.id) === String(me.protetor_alvo))
+        || (GS.gameState?.prisoner && String(me.protetor_alvo) === '__prisioneiro__'
+          ? {name:GS.gameState.prisoner.nome || 'Prisioneiro'} : null);
       setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
-             alvo ? `protegendo ${alvo.name} (${_splitDef}%/${_splitDef}%)` : '—',
+             alvo ? `protegendo ${alvo.name} (${_splitDef})` : '—',
              `manut. 🍖1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'desativar_protetor'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
-      setBtn(`🛡️ ${sk.name}${aviso}`, `${sk.description || sk.desc || ''} (raio ${_raioDef}, ${_splitDef}%/${_splitDef}%)`, costStr, !pode,
+      setBtn(`🛡️ ${sk.name}${aviso}`, `${sk.description || sk.desc || ''} (raio ${_raioDef}; ${_splitDef})`, costStr, !pode,
              () => iniciarModoProtetor(), false);
     }
   } else if(sk.id === 'imposicao_maos'){
@@ -15055,6 +15379,18 @@ const GRIMORIO_CLIENT = {
                <b>Duração:</b> 1d4+1 rodadas<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot`
   },
+  vinculo_maldito_da_dor: {
+    id:'vinculo_maldito_da_dor', nome:'Vínculo Maldito da Dor', icone:'⛓️',
+    circulo:'segundo', classe:['mage','cleric'],
+    tipo:'alvo_inimigo', alcance_los:true,
+    custo:'🍖-1 💧-1',
+    descricao:`<b>Alvo:</b> 1 inimigo em linha de visão (máximo 4 vínculos)<br>
+               <b>Resistência:</b> Vontade nega<br>
+               <b>Efeito:</b> cada vínculo transfere 25% do dano sofrido pelo conjurador ao inimigo ligado; o restante permanece no conjurador<br>
+               <b>Duração:</b> 1d4 + nível de conjurador rodadas<br>
+               <b>Penalidade:</b> o inimigo sofre -1 no próximo ataque, sem acumular<br>
+               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
+  },
   chamado_inverno: {
     id:'chamado_inverno', nome:'Chamado do Inverno', icone:'❄️',
     circulo:'segundo', classe:['cleric'],
@@ -15127,10 +15463,11 @@ const GRIMORIO_CLIENT = {
     id:'tempestade_ciclones', nome:'Tempestade de Ciclones', icone:'🌪️',
     circulo:'quinto', classe:['cleric'], tipo:'area_fixa', alcance_base:6,
     alcance_escala:1, alcance_por_niveis:2, area_lado:3, area_lado_niveis:3,
+    ciclones:'2d4', ciclone_lado:1, ciclone_movimento:2,
     custo:'TESTE: livre, sem slot/fome/sede',
     descricao:`<b>Alcance:</b> 6 +1 a cada 2 níveis<br>
                <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>
-               <b>Ciclones:</b> 1 ciclone 2x2 a cada 4 níveis; cada um pode mover 2 casas por rodada<br>
+               <b>Ciclones:</b> cria 2d4 ciclones 1x1; você escolhe a posição inicial de cada um; cada um pode mover 2 casas por rodada<br>
                <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>
                <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>
                <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>
@@ -15410,6 +15747,7 @@ function mostrarTooltipMagia(a, b) {
       </div>
     </div>
     <div style="color:#c8b89a; font-size:10px; line-height:1.7;">${m.descricao}</div>
+    <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; font-size:9px;">${_magiaAcaoEtiquetaHTML(m)}</div>
     <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; color:#ff851b; font-size:9px;">${m.custo}</div>
   `;
   tooltip.style.display = 'block';
@@ -15555,12 +15893,14 @@ function _renderAcaoIraRocha(heroi) {
     z && z.tipo === 'ira_rocha_ardente' && z.ativa && String(z.caster) === String(heroi.id));
   if (!zona) return '';
   const restante = _iraRochaRestante(zona);
+  const colocadas = (zona.chamas_vivas || []).length;
+  const total = Number(zona.chamas_totais ?? (colocadas + restante) ?? zona.chamas_roladas ?? 0)
+    || (colocadas + restante);
   const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
   const caixa = (borda, cor, texto) => `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid ${borda};background:rgba(255,106,36,.06);color:${cor};font-size:9px;line-height:1.5;">${texto}</div>`;
   if (restante <= 0) {
-    const postas = (zona.chamas_vivas || []).length;
     return caixa('#ff6a2444', '#e0a884',
-      t('ui.magia.ira_rocha_chamas_colocadas', {postas}));
+      t('ui.magia.ira_rocha_chamas_colocadas', {postas: colocadas, total}));
   }
   if (rodada < Number(zona.disponivel_em || 0)) {
     return caixa('#ff6a2433', '#a2837a',
@@ -15572,7 +15912,7 @@ function _renderAcaoIraRocha(heroi) {
   }
   return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #ff6a2499;background:rgba(255,106,36,.10);">
     <div style="color:#ffb168;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.ira_rocha_chamas_cabecalho')}</div>
-    <div style="color:#f0c3a5;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.ira_rocha_escolha_casas', {restante})}</div>
+    <div style="color:#f0c3a5;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.ira_rocha_escolha_casas', {restante, colocadas, total})}</div>
     <button data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaIraRocha()" style="width:100%;padding:7px;background:#6b2612;color:#fff0e8;border:1px solid #ff9a66;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.ira_rocha_btn_escolher')}</button>
   </div>`;
 }
@@ -15751,7 +16091,8 @@ const GRIMORIO_IMPLEMENTADAS_CLIENT = new Set([
   'sono', 'medo', 'comando', 'dominar_mente', 'dominar_morto_vivo', 'lentidao',
   'invisibilidade', 'regeneracao_magica', 'jato_ar', 'velocidade', 'protecao_energia',
   'conjurar_elemental', 'silencio', 'chamado_inverno', 'barreira_arcana', 'contramagica', 'voo', 'olhar_petrificante', 'metamorfose',
-  'desnutricao', 'definhar', 'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas', 'tempestade_ciclones'
+  'desnutricao', 'definhar', 'senhor_das_aguas', 'ira_rocha_ardente', 'teleporte', 'prisao_chamas', 'tempestade_ciclones',
+  'vinculo_maldito_da_dor'
 ]);
 
 function _meVivoNaVez() {
@@ -15801,7 +16142,7 @@ function castarMagia(magiaId) {
   else if (tipo === 'linha_reflexiva')                            alvoTipo = 'linha';
   else if (tipo === 'cone')                                       alvoTipo = 'cone';   // mira por direção
   else if (tipo === 'alvo')                                       alvoTipo = 'foe';
-  else if (tipo === 'alvo_inimigo')                               alvoTipo = 'foe_or_player';
+  else if (tipo === 'alvo_inimigo')                               alvoTipo = magiaId === 'vinculo_maldito_da_dor' ? 'foe' : 'foe_or_player';
   else if (tipo === 'alvo_jogador')                               alvoTipo = 'player_target';
   else if (['alvo_aliado', 'buff_aliado', 'toque'].includes(tipo)) alvoTipo = 'ally';
   else                                                            alvoTipo = 'tile'; // area / area_fixa / area_persistente
@@ -16206,7 +16547,7 @@ function _clickTileMagia(tx, ty) {
   // (o mesmo anel vermelho). Linha/cone/área-no-caster têm mira própria.
   // Pergaminho: o alcance escala pelo nível MARCADO no item (o servidor valida);
   // por isso pulamos o gate de alcance do cliente quando em modo pergaminho.
-  if (!mode.scrollItemId && !mode.alvoLivre &&
+  if (!mode.scrollItemId && !mode.alvoLivre && !m.alcance_los &&
       (mode.alvoTipo === 'tile' || mode.alvoTipo === 'foe' || mode.alvoTipo === 'foe_or_player' || mode.alvoTipo === 'player_target' || mode.alvoTipo === 'ally')) {
     const me  = GS.me;
     const alvoVisual = (mode.alvoTipo === 'foe')
@@ -16394,6 +16735,8 @@ function _iraRochaMsgDaZona(zona){
     tiles: zona?.tiles || [],
     permitidos: zona?.chamas_permitidas || [],
     count: _iraRochaRestante(zona),
+    placed: (zona?.chamas_vivas || []).length,
+    total: Number(zona?.chamas_totais ?? ((zona?.chamas_vivas || []).length + _iraRochaRestante(zona)) ?? zona?.chamas_roladas ?? 0),
     rolled: zona?.chamas_roladas,
     duration: zona?.duracao,
   };
@@ -16423,16 +16766,19 @@ function _abrirJanelaIraRocha(){
   const overlay = document.getElementById('ira-rocha-overlay');
   if(!overlay) { _iniciarSelecaoChamasIraRocha(_iraRochaMsgDaZona(zona)); return true; }
   const restante = _iraRochaRestante(zona);
+  const colocadas = (zona.chamas_vivas || []).length;
+  const total = Number(zona.chamas_totais ?? (colocadas + restante) ?? zona.chamas_roladas ?? 0)
+    || (colocadas + restante);
   const status = document.getElementById('ira-rocha-status');
   const desc = document.getElementById('ira-rocha-desc');
   const effects = document.getElementById('ira-rocha-effects');
   const create = document.getElementById('ira-rocha-create');
   const close = document.getElementById('ira-rocha-close');
-  if(status) status.textContent = t('ui.magia.ira_rocha_aguardando', {restante});
+  if(status) status.textContent = t('ui.magia.ira_rocha_aguardando', {restante, colocadas, total});
   if(desc) desc.textContent = t('ui.magia.ira_rocha_lava_ativa');
   if(effects) effects.innerHTML = `
     <li>${t('ui.magia.ira_rocha_efeito_r2')}</li>
-    <li>${t('ui.magia.ira_rocha_efeito_escolha', {restante})}</li>
+    <li>${t('ui.magia.ira_rocha_efeito_escolha', {restante, total})}</li>
     <li>${t('ui.magia.ira_rocha_efeito_dano')}</li>`;
   if(create) create.onclick = () => {
     _fecharJanelaIraRocha();
@@ -16576,16 +16922,18 @@ function _iniciarSelecaoChamasIraRocha(msg){
     .map(([x,y]) => String(x) + ',' + String(y)));
   const selecionados = new Set();
   const max = Math.max(0, Number(msg.count) || 0);
+  const colocadas = Math.max(0, Number(msg.placed) || 0);
+  const total = Math.max(max + colocadas, Number(msg.total) || 0);
   if(!permitidos.size || !max) return;
-  window._modoIraRocha = { zoneId: msg.zone_id, permitidos, selecionados, max };
+  window._modoIraRocha = { zoneId: msg.zone_id, permitidos, selecionados, max, colocadas, total };
   const atualizar = () => {
     const modo = window._modoIraRocha;
     if(!modo) return;
     _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-    _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' Chama(s) Viva(s) selecionada(s). Clique para marcar/desmarcar.', '#ffb168');
+    _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' nesta rodada · ' + modo.colocadas + '/' + modo.total + ' no total. Clique para marcar/desmarcar.', '#ffb168');
     const btn = _aimSessionState.current?.confirmButton;
     if(btn){
-      btn.disabled = modo.selecionados.size !== modo.max;
+      btn.disabled = modo.selecionados.size < 1;
       btn.style.opacity = btn.disabled ? '.45' : '1';
       btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
     }
@@ -16593,13 +16941,13 @@ function _iniciarSelecaoChamasIraRocha(msg){
   _aimStart({
     kind:'ira_rocha_ardente_chamas',
     title:t('ui.magia.ira_rocha_mira_titulo'),
-    instruction:t('ui.magia.ira_rocha_mira_instrucao', {max}),
+    instruction:t('ui.magia.ira_rocha_mira_instrucao', {max, total}),
     color:'#ff6a24', targetLabel:t('ui.magia.ira_rocha_chama_viva'), range:permitidos, area:selecionados,
     confirmText:t('ui.magia.ira_rocha_btn_criar'),
-    canConfirm:()=>window._modoIraRocha?.selecionados?.size === max,
+    canConfirm:()=>window._modoIraRocha?.selecionados?.size > 0,
     confirm:()=>{
       const modo = window._modoIraRocha;
-      if(!modo || modo.selecionados.size !== modo.max) return;
+      if(!modo || !modo.selecionados.size) return;
       GS.iraRochaArdenteConfirmarChamas(modo.zoneId,
         [...modo.selecionados].map(k=>k.split(',').map(Number)));
       _aimEnd({silent:true, reason:'resolved'});
@@ -16624,11 +16972,12 @@ function _clickTileIraRocha(tx, ty){
     return;
   }
   _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-  _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' Chama(s) Viva(s) selecionada(s). Clique para marcar/desmarcar.', '#ffb168');
+  _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' nesta rodada · ' + modo.colocadas + '/' + modo.total + ' no total. Clique para marcar/desmarcar.', '#ffb168');
   const btn = _aimSessionState.current?.confirmButton;
   if(btn){
-    btn.disabled = modo.selecionados.size !== modo.max;
+    btn.disabled = modo.selecionados.size < 1;
     btn.style.opacity = btn.disabled ? '.45' : '1';
+    btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
   }
 }
 
@@ -17042,7 +17391,7 @@ function _aimHoverPendingSkill(tx, ty) {
 function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
-    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadeMove
+    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadePlacement || window._modoTempestadeMove
     || window._modoThrowItem || window._modoAnimarMortos
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
     || (GS.pendingSkill && _aimSessionIs('habilidade')));
@@ -17094,11 +17443,19 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     _aimSetStatus(valid ? t('ui.magia.ira_rocha_hover_marcar') : t('ui.magia.ira_rocha_hover_fora'), valid ? '#ffb168' : '#ff9aa2');
     return true;
   }
+  if (window._modoTempestadePlacement) {
+    const modo = window._modoTempestadePlacement;
+    const key = `${tx},${ty}`;
+    const valid = modo.permitidos.has(key);
+    _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+    _aimSetStatus(valid ? t('ui.magia.tempestade_posicionamento_ok') : t('ui.magia.tempestade_posicionamento_erro'), valid ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
   if (window._modoTempestadeMove) {
     const mode = window._modoTempestadeMove, c = mode.cyclone, [ox,oy] = c.pos || [0,0];
     const z = (GS.gameState?.zonas_especiais || []).find(x => x.id === mode.zoneId);
     const area = new Set((z?.tiles || []).map(([x,y])=>`${x},${y}`));
-    const fp = [[tx,ty],[tx+1,ty],[tx,ty+1],[tx+1,ty+1]];
+    const fp = [[tx,ty]];
     const valid = fp.every(([x,y])=>area.has(`${x},${y}`)) && Math.max(Math.abs(tx-ox),Math.abs(ty-oy))<=2;
     _aimSetHover(tx,ty,valid?'valid':'blocked');
     _aimSetStatus(valid?t('ui.magia.tempestade_hover_ok'):t('ui.magia.tempestade_hover_erro'),valid?'#94dfb0':'#ff9aa2');
@@ -17413,7 +17770,8 @@ function _recomputarAlcanceMagia() {
   const range = new Set();
   // Relâmpago/Jato de Ar não usam círculo vermelho — o trajeto/cone (verde) já mostra o alcance.
   // alvoLivre (Clarividência): sem anel de alcance — pode mirar o mapa inteiro.
-  if (m && me && !mode.alvoLivre && mode.alvoTipo !== 'linha' && mode.alvoTipo !== 'cone') {
+  if (m && me && !mode.alvoLivre && !m.alcance_los
+      && mode.alvoTipo !== 'linha' && mode.alvoTipo !== 'cone') {
     const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level));
     if (alc > 0) _addCheb(me.pos[0], me.pos[1], alc, range);
   }
@@ -17709,10 +18067,10 @@ function _desenharSpellHL2D(ctx, exploredSet) {
       const px = x*CELL, py = y*CELL;
       if (exploredSet && !exploredSet.has(`${x},${y}`)) continue;
       ctx.save(); ctx.strokeStyle='rgba(180,245,255,.9)'; ctx.lineWidth=Math.max(2,CELL*.045);
-      ctx.fillStyle='rgba(40,110,150,.22)'; ctx.fillRect(px+2,py+2,CELL*2-4,CELL*2-4);
-      ctx.beginPath(); ctx.arc(px+CELL,py+CELL,CELL*.56,0,Math.PI*1.55); ctx.stroke();
-      ctx.beginPath(); ctx.arc(px+CELL,py+CELL,CELL*.30,Math.PI,Math.PI*2.3); ctx.stroke();
-      ctx.fillStyle='#d9fbff'; ctx.font=`${Math.max(12,CELL*.52)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🌪️',px+CELL,py+CELL); ctx.restore();
+      ctx.fillStyle='rgba(40,110,150,.28)'; ctx.fillRect(px+2,py+2,CELL-4,CELL-4);
+      ctx.beginPath(); ctx.arc(px+CELL*.5,py+CELL*.5,CELL*.34,0,Math.PI*1.55); ctx.stroke();
+      ctx.beginPath(); ctx.arc(px+CELL*.5,py+CELL*.5,CELL*.20,Math.PI,Math.PI*2.3); ctx.stroke();
+      ctx.fillStyle='#d9fbff'; ctx.font=`${Math.max(12,CELL*.30)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('🌪️',px+CELL*.5,py+CELL*.5); ctx.restore();
     }
   }
   if (hl.tempestadeFlash && hl.tempestadeFlash.until > performance.now()) {
@@ -18342,6 +18700,21 @@ function _mpAbaMestre(state){
   // Só no teste do editor: é lá que o autor precisa saber por que uma criatura
   // ou um objeto não apareceu com a arte certa.
   if(state.test_mode){
+    const classesTeste = [
+      ['warrior', '⚔️', 'Guerreiro'], ['mage', '🔮', 'Mago'],
+      ['rogue', '🗡️', 'Ladino'], ['cleric', '✝️', 'Clérigo'],
+      ['bard', '🎻', 'Bardo'], ['paladin', '🛡️', 'Paladino'],
+    ];
+    const jaNaMesa = new Set((state.players || []).map(p => p.class_id));
+    h += `<div class="mp-sec">HERÓIS DE TESTE</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">${classesTeste.map(([id, icon, nome]) =>
+        `<button class="mestre-heroi-teste-btn mp-linha ${window._modoAdicionarHeroiTeste === id ? 'atk armado' : 'hab'}"
+           data-class-id="${id}" ${jaNaMesa.has(id) ? 'disabled title="Já está na mesa"' : ''}>
+           <span class="txt">${icon} ${nome}</span>
+         </button>`).join('')}</div>
+      <div style="font-size:.6rem;color:var(--text2);margin:5px 0 8px">${window._modoAdicionarHeroiTeste
+        ? 'Clique em uma casa livre para posicionar o herói.'
+        : 'Escolha um herói e clique em uma casa livre para colocá-lo como alvo de teste.'}</div>`;
     h += `<div class="mp-sec">${t('ui.mestre.diagnostico')}</div>
       <button class="mestre-diag-btn mp-linha hab">
         <span class="txt">${t('ui.mestre.arte_3d')}</span>
@@ -18353,10 +18726,19 @@ function _mpAbaMestre(state){
 function _mpWireMestre(host, state){
   const diag = host.querySelector('.mestre-diag-btn');
   if(diag) diag.onclick = () => abrirDiagnosticoArte3D();
+  host.querySelectorAll('.mestre-heroi-teste-btn:not([disabled])').forEach(btn => {
+    btn.onclick = () => {
+      const classId = btn.dataset.classId;
+      window._modoAdicionarHeroiTeste = window._modoAdicionarHeroiTeste === classId ? null : classId;
+      window._modoImplantarReforco = null;
+      renderMasterPanel(GS.gameState);
+    };
+  });
   host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
     btn.onclick = () => {
       const t = btn.dataset.rtype;
       window._modoImplantarReforco = (window._modoImplantarReforco === t) ? null : t;
+      window._modoAdicionarHeroiTeste = null;
       renderMasterPanel(GS.gameState);
     };
   });
@@ -19233,6 +19615,113 @@ function selecionarHabilidadeAnimado(animadoId, abilityId){
 }
 window.selecionarHabilidadeAnimado = selecionarHabilidadeAnimado;
 
+// Economia de ações compartilhada pelos painéis do jogador. O servidor envia
+// `tipo` para habilidades e `action_type` para técnicas/efeitos de criaturas;
+// este mapa mantém a explicação visual consistente sem alterar a regra
+// autoritativa do turno.
+function _acaoEconomiaMeta(raw, fallback='acao_principal'){
+  const valor = typeof raw === 'string' ? raw : (raw && (
+    raw.action_type ?? raw.actionType ?? raw.tipo_acao ?? raw.acao_tipo ?? raw.acao
+    ?? (raw.acao_bonus === true || raw.acaoBonus === true ? 'acao_bonus' : null)
+    ?? (raw.acao_livre === true || raw.acaoLivre === true ? 'acao_livre' : null)
+    ?? (['passiva','acao_bonus','acao_livre','reacao','reaction'].includes(raw.tipo) ? raw.tipo : null)
+  ));
+  const tipo = String(valor || fallback).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if(tipo.includes('passiv')) return {key:'passiva', icon:'◉', label:'ui.acoes.tipo_passiva'};
+  if(tipo.includes('reac') || tipo.includes('reaction')) return {key:'reacao', icon:'↶', label:'ui.acoes.tipo_reacao'};
+  if(tipo.includes('bonus')) return {key:'bonus', icon:'⚡', label:'ui.acoes.tipo_bonus'};
+  if(tipo.includes('livre') || tipo.includes('free')) return {key:'livre', icon:'✦', label:'ui.acoes.tipo_livre'};
+  return {key:'principal', icon:'⚔️', label:'ui.acoes.tipo_principal'};
+}
+
+function _acaoEtiquetaHTML(raw, extraClass=''){
+  const meta = raw && raw.key && raw.label ? raw : _acaoEconomiaMeta(raw);
+  return `<em class="action-economy-tag action-economy-${meta.key}${extraClass ? ` ${extraClass}` : ''}" title="${_esc(t(meta.label))}">${meta.icon} ${_esc(t(meta.label))}</em>`;
+}
+
+function _magiaAcaoMeta(m){
+  // `tipo` das magias normalmente descreve mira/área. Só `reacao` é uma
+  // exceção de economia; campos explícitos continuam tendo prioridade.
+  if(m && (m.action_type || m.actionType || m.tipo_acao || m.acao_tipo || m.acao))
+    return _acaoEconomiaMeta(m);
+  if(m?.tipo === 'reacao') return _acaoEconomiaMeta('reacao');
+  return _acaoEconomiaMeta('acao_principal');
+}
+
+function _magiaAcaoEtiquetaHTML(m){
+  return _acaoEtiquetaHTML(_magiaAcaoMeta(m));
+}
+
+function _itemAcaoMeta(item){
+  if(!item) return null;
+  if(item.action_type || item.actionType || item.tipo_acao || item.acao_tipo || item.acao)
+    return _acaoEconomiaMeta(item);
+  if(item.acao_bonus === true || item.acaoBonus === true) return _acaoEconomiaMeta('acao_bonus');
+  if(item.acao_livre === true || item.acaoLivre === true) return _acaoEconomiaMeta('acao_livre');
+  // As poções portáteis já usam a ação bônus na regra do servidor.
+  if(['heal','regeneration'].includes(item.effect)) return _acaoEconomiaMeta('acao_bonus');
+  if(item.effect === 'veil_shadow') return _acaoEconomiaMeta('acao_bonus');
+  if(item.item_slot === 'bag' || item.tipo === 'consumivel' || item.arremessavel || item.effect === 'scroll')
+    return _acaoEconomiaMeta('acao_principal');
+  return null;
+}
+
+function _renderAcoesExplicacaoHTML(){
+  return `<details class="action-economy-help">
+    <summary>⚔️ ${_esc(t('ui.acoes.explicacao_titulo'))}</summary>
+    <div class="action-economy-help-body">
+      <div><b class="action-economy-help-movement">↝ ${_esc(t('ui.recursos.movimento'))}</b><span>${_esc(t('ui.acoes.explicacao_movimento'))}</span></div>
+      <div><b class="action-economy-help-main">⚔️ ${_esc(t('ui.acoes.tipo_principal'))}</b><span>${_esc(t('ui.acoes.explicacao_principal'))}</span></div>
+      <div><b class="action-economy-help-bonus">⚡ ${_esc(t('ui.acoes.tipo_bonus'))}</b><span>${_esc(t('ui.acoes.explicacao_bonus'))}</span></div>
+      <div><b class="action-economy-help-free">✦ ${_esc(t('ui.acoes.tipo_livre'))}</b><span>${_esc(t('ui.acoes.explicacao_livre'))}</span></div>
+      <div><b class="action-economy-help-reaction">↶ ${_esc(t('ui.acoes.tipo_reacao'))}</b><span>${_esc(t('ui.acoes.explicacao_reacao'))}</span></div>
+      <div><b class="action-economy-help-passive">◉ ${_esc(t('ui.acoes.tipo_passiva'))}</b><span>${_esc(t('ui.acoes.explicacao_passiva'))}</span></div>
+    </div>
+  </details>`;
+}
+window._renderAcoesExplicacaoHTML = _renderAcoesExplicacaoHTML;
+
+function _renderRecursosRodada(me, state){
+  const jogando = state?.phase === 'playing';
+  const emTurno = !!(jogando && GS.isMyTurn && me?.alive);
+  const movimentos = Math.max(0, Number(me?.moves_left) || 0);
+  const principalLivre = emTurno && !me.action_done;
+  const bonusLivre = emTurno && !me.bonus_action_used;
+  const pipCount = Math.min(movimentos, 12);
+  const pips = Array.from({length:pipCount}, () => '<i class="round-movement-pip" aria-hidden="true"></i>').join('');
+  const extra = movimentos > 12 ? `<span class="round-movement-extra">+${movimentos - 12}</span>` : '';
+  const status = disponivel => emTurno
+    ? `<span class="round-resource-state ${disponivel ? 'is-ready' : 'is-used'}">${_esc(t(disponivel ? 'ui.recursos.disponivel' : 'ui.recursos.usada'))}</span>`
+    : `<span class="round-resource-state is-waiting">${_esc(t('ui.recursos.fora_turno'))}</span>`;
+  const acoesRestantes = [];
+  if(emTurno && movimentos > 0) acoesRestantes.push(t('ui.recursos.movimento_ajuda', {n:movimentos}));
+  if(principalLivre) acoesRestantes.push(t('ui.recursos.acao_principal'));
+  if(bonusLivre) acoesRestantes.push(t('ui.recursos.acao_bonus'));
+  const contexto = !emTurno
+    ? t('ui.recursos.fora_turno')
+    : acoesRestantes.length
+      ? `${t('ui.recursos.ainda_pode')}: ${acoesRestantes.join(' · ')}`
+      : t('ui.recursos.nada');
+  return `<section class="round-resources" aria-label="${_esc(t('ui.recursos.titulo'))}">
+    <div class="round-resources-heading"><span>◈ ${_esc(t('ui.recursos.titulo'))}</span><small>${_esc(contexto)}</small></div>
+    <div class="round-resources-grid">
+      <div class="round-resource-card round-resource-movement ${movimentos ? 'is-ready' : 'is-used'}" title="${_esc(t('ui.recursos.movimento_ajuda',{n:movimentos}))}">
+        <span class="round-resource-icon movement-icon" aria-hidden="true">↝</span>
+        <span class="round-resource-copy"><b>${_esc(t('ui.recursos.movimento'))}</b><strong>${movimentos}</strong><small>${_esc(t('ui.recursos.quadrados',{n:movimentos}))}</small></span>
+        <span class="round-movement-pips" aria-label="${_esc(t('ui.recursos.quadrados',{n:movimentos}))}">${pips || '<i class="round-movement-pip empty" aria-hidden="true"></i>'}${extra}</span>
+      </div>
+      <div class="round-resource-card ${principalLivre ? 'is-ready' : 'is-used'}" title="${_esc(t('ui.recursos.acao_principal_ajuda'))}">
+        <span class="round-resource-icon" aria-hidden="true">⚔️</span>
+        <span class="round-resource-copy"><b>${_esc(t('ui.recursos.acao_principal'))}</b>${status(principalLivre)}</span>
+      </div>
+      <div class="round-resource-card ${bonusLivre ? 'is-ready' : 'is-used'}" title="${_esc(t('ui.recursos.acao_bonus_ajuda'))}">
+        <span class="round-resource-icon round-resource-potion" aria-hidden="true">${itemIconHTML({id:'health_potion',emoji:'🧪'}, '🧪')}</span>
+        <span class="round-resource-copy"><b>${_esc(t('ui.recursos.acao_bonus'))}</b>${status(bonusLivre)}</span>
+      </div>
+    </div>
+  </section>`;
+}
+
 function renderMyPanel(state){
   _atualizarBotaoEncerrarTurno(state);
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
@@ -19333,13 +19822,7 @@ function renderMyPanel(state){
 
   // ── Build HTML ──
   const statsHTML = `
-    <div class="save-row" style="margin-top:4px;">
-      <div class="save-box" style="border-color:${me.bonus_action_used?'#555':'#c8a951'}; min-width:60px;">
-        <span class="sv" style="color:${me.bonus_action_used?'#666':'#c8a951'};">🎯</span>
-        <span class="sv-val" style="color:${me.bonus_action_used?'#666':'#c8a951'}; font-size:.72rem;">${me.bonus_action_used?t('ui.hud.usada'):t('ui.hud.livre')}</span>
-        <span class="sv-sub">${t('ui.hud.bonus')}</span>
-      </div>
-    </div>
+    ${_renderRecursosRodada(me, state)}
     ${me.regeneracao_ativa ? `
     <div style="margin-top:4px; padding:5px 8px; background:rgba(248,208,64,0.12); border:1px solid #f8d04066; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
       <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
@@ -19587,7 +20070,7 @@ function renderMyPanel(state){
     <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="_abrirJanelaIraRocha()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff6a24;">
       <span style="color:#ffb168;" data-i18n="ui.hud.escolher_chamas_vivas">🔥 Escolher Chamas Vivas</span>
-      <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre_restam_casas', {n: _iraRochaRestante(_iraRochaZona)})}</small>
+      <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.ira_rocha_aguardando', {restante: _iraRochaRestante(_iraRochaZona), colocadas: (_iraRochaZona.chamas_vivas || []).length, total: Number(_iraRochaZona.chamas_totais ?? ((_iraRochaZona.chamas_vivas || []).length + _iraRochaRestante(_iraRochaZona)))})}</small>
      </button>` : '';
   const _prisaoChamasZona = me.class_id === 'mage'
     ? (state.zonas_especiais || []).slice().reverse().find(z =>
@@ -20420,6 +20903,7 @@ function _showTrapResult(msg){
   // tabela ao entrar a maldição, que seria o 15º nível.
   const imagensPorTipo = {
     doenca: 'doença.png', veneno: 'envenenado.png', maldicao: 'amaldicoado.png',
+    escuridao: 'escuridao.png',
     equipamento_danificado: 'equipamento_danificado.png',
     arma_quebrada: 'arma_quebrada.png', armadura_quebrada: 'armadura_quebrada.png',
     petrificado: 'petrificado.png', enfeiticado: 'enfeiticado.png',
@@ -20565,7 +21049,10 @@ function _showTrapResult(msg){
   });
 
   const statusEl = $('trap-status');
-  if(isFall){
+  if(msg.tipo === 'escuridao'){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.status.escuridao_popup_status');
+  } else if(isFall){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = `${msg.expressao || ''} · ${msg.dano || 0} dano`;
     tocarSomArmadilha();
@@ -20859,6 +21346,30 @@ function renderGMLog(log){
   }
   el.scrollTop=el.scrollHeight;
 }
+
+// O log do Mestre pode ser recolhido para liberar espaço do tabuleiro. A
+// preferência fica salva nesta aba para não reabrir o painel a cada troca de
+// tela/carga de estado.
+function _setGMLogMinimized(minimized, persist=true){
+  const log=$('gm-log'), btn=$('gm-log-toggle');
+  if(!log || !btn) return;
+  const value=!!minimized;
+  log.classList.toggle('gm-log-collapsed', value);
+  btn.textContent=value?'＋':'−';
+  btn.setAttribute('aria-expanded', String(!value));
+  btn.setAttribute('aria-label', value?'Restaurar Mestre do Jogo':'Minimizar Mestre do Jogo');
+  btn.title=value?'Restaurar Mestre do Jogo':'Minimizar Mestre do Jogo';
+  if(persist){
+    try{ localStorage.setItem('lfh_gm_log_minimized', value?'1':'0'); }catch(e){}
+  }
+}
+
+function toggleGMLog(){
+  const log=$('gm-log');
+  if(log) _setGMLogMinimized(!log.classList.contains('gm-log-collapsed'));
+}
+
+try{ _setGMLogMinimized(localStorage.getItem('lfh_gm_log_minimized')==='1', false); }catch(e){}
 
 function appendGM(text){
   const el=$('gm-log-body');
@@ -21283,7 +21794,7 @@ function _modificadoresTemporariosStatus(p){
   };
   (state.zonas_especiais || []).filter(z => z?.ativa && zonaContem(z)).forEach(z => {
     if(z.tipo === 'silencio') addRestante(t('ui.status.silencio'), t('ui.status.nao_pode_lancar_magias_bonus_musicais_sao'), z.duracao);
-    if(z.tipo === 'escuridao' && !p.visao_escuro && !p.visao_escuro_manto)
+    if(z.tipo === 'escuridao' && !_temVisaoNoEscuroCliente(state, p))
       addRestante(t('ui.status.escuridao'), t('ui.status.visao_limitada_e_ataques_a_distancia_preju'), z.duracao);
   });
   return out;
@@ -21472,7 +21983,7 @@ function abrirMenuMagias(pid){
     <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${podeAgir && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
-      <span><b>${m.nome}</b><small>${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
+      <span><b>${m.nome}</b><small>${_magiaAcaoEtiquetaHTML(m)} · ${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
     </div>`;
   };
   const renderMod = m => {
@@ -21485,7 +21996,7 @@ function abrirMenuMagias(pid){
     return `
     <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick} ${gamepadAction} draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(m.id)}">
       <span class="mm-mod-icon">${abilityIconHtml(m, m.icon || '✨')}</span>
-      <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${m.desc || m.description || ''}</small></span>
+      <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${_acaoEtiquetaHTML(m)} · ${m.desc || m.description || ''}</small></span>
     </div>`;
   };
 
@@ -21495,6 +22006,7 @@ function abrirMenuMagias(pid){
       <section class="menu-magias" role="dialog" aria-modal="true" aria-label="${t('ui.magia.menu_aria')}">
         <header class="mm-header"><div><b><img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.magia.grimorio')}</b><small>${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.magia.tecla_m')}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuMagias()" aria-label="${t('ui.geral.fechar')}">✕</button></header>
         <div class="mm-body">
+          ${_renderAcoesExplicacaoHTML()}
           ${_renderAcaoSenhorDasAguas(player)}
           ${_renderAcaoIraRocha(player)}
           ${_renderAcaoPrisaoChamas(player)}
@@ -21971,7 +22483,7 @@ function abrirMenuHabilidades(pid){
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
-      <span class="mh-info"><b>${nome}</b><small>${desc}</small>${custo(h) ? `<em>${custo(h)}</em>` : ''}</span>
+      <span class="mh-info"><b>${nome}</b><small>${desc}</small><span class="mh-meta">${_acaoEtiquetaHTML(ehPassiva(h) ? 'passiva' : h)}${custo(h) ? `<em class="mh-cost">${custo(h)}</em>` : ''}</span></span>
       ${equipada ? '<i>Equipada</i>' : ''}
       ${pendente ? '<i>Preparada</i>' : ''}
     </div>`;
@@ -21986,6 +22498,7 @@ function abrirMenuHabilidades(pid){
       <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
       <div class="mh-layout">
         <div class="mh-body">
+          ${_renderAcoesExplicacaoHTML()}
           ${secao(t('ui.habilidade.sec_ativas'), habilidadesAtivas, false, t('ui.habilidade.sem_ativas'))}
           ${secao(t('ui.guilda.tecnicas_caixa'), tecnicas, true, t('ui.habilidade.sem_tecnicas'))}
           ${secao(t('ui.habilidade.sec_passivas'), passivas, true, t('ui.habilidade.sem_passivas'))}
@@ -22363,9 +22876,10 @@ document.addEventListener('keydown', e=>{
     toast('Habilidade cancelada.','var(--text2)');
     e.preventDefault(); return;
   }
-  // ESC cancela o modo de implantar reforço (mestre)
-  if(e.key==='Escape' && window._modoImplantarReforco){
+  // ESC cancela o modo de posicionar reforço ou herói temporário (mestre).
+  if(e.key==='Escape' && (window._modoImplantarReforco || window._modoAdicionarHeroiTeste)){
     window._modoImplantarReforco = null;
+    window._modoAdicionarHeroiTeste = null;
     if(GS.isMaster()) renderMasterPanel(GS.gameState);
     toast(t('ui.mestre.implantacao_cancelada'), 'var(--text2)');
     e.preventDefault(); return;
@@ -22411,18 +22925,21 @@ const GAMEPAD_REPEAT_MS = 135;
 const GAMEPAD_CAMERA_TURN_SPEED = 1.75; // radianos por segundo no curso máximo
 const GAMEPAD_CAMERA_ZOOM_SPEED = 1.55;
 const _GAMEPAD_PREFS_KEY = 'lfh_gamepad';
-// L3 alterna o analógico direito entre cursor e rotação da câmera. R3 abre o
-// menu principal; Y abre o cursor de interface para botões contextuais.
-const _GAMEPAD_DEFAULT_BINDINGS = Object.freeze({ confirm:0, cancel:1, camera:10, cameraReset:2, endTurn:9, characterMenu:8, nextTarget:3, mainMenu:11 });
+// L3 alterna o analógico direito entre cursor e rotação da câmera. Menu abre a
+// pausa; R3 encerra o turno com confirmação. Y percorre alvos úteis.
+const _GAMEPAD_DEFAULT_BINDINGS = Object.freeze({ confirm:0, cancel:1, camera:10, cameraReset:2, endTurn:11, characterMenu:8, nextTarget:3, mainMenu:9, shortcutLeft:4, shortcutRight:5, shortcutThird:6 });
 const _GAMEPAD_ACTIONS = Object.freeze([
   ['confirm', 'ui.menu.joystick_confirm'], ['cancel', 'ui.menu.joystick_cancel'],
   ['camera', 'ui.menu.joystick_camera'], ['cameraReset', 'ui.menu.joystick_camera_reset'],
   ['endTurn', 'ui.menu.joystick_end_turn'], ['characterMenu', 'ui.menu.joystick_character_menu'], ['mainMenu', 'ui.pausa.titulo'],
   ['nextTarget', 'ui.menu.joystick_next_target'],
+  ['shortcutLeft', 'ui.menu.joystick_shortcut_left'], ['shortcutRight', 'ui.menu.joystick_shortcut_right'],
+  ['shortcutThird', 'ui.menu.joystick_shortcut_third'],
 ]);
 let _gamepadDeadZone = 0.48;
 let _gamepadInvertCameraY = false;
 let _gamepadVibration = true;
+let _gamepadDirectMove = false;
 let _gamepadCursorSpeed = 1;
 let _gamepadCameraSensitivity = 1;
 let _gamepadBindings = { ..._GAMEPAD_DEFAULT_BINDINGS };
@@ -22443,9 +22960,52 @@ function _gamepadButtonLabel(index){
   const labels = families[_gamepadControllerFamily()] || families.xbox;
   return labels[index] || t('ui.joystick.botao_n', {n: index + 1});
 }
+function _gamepadControlMapHTML(){
+  const button = index => _esc(_gamepadButtonLabel(index));
+  const actionButton = action => button(_gamepadBinding(action));
+  const row = (key, text) => `<div class="cfg-gamepad-map-row"><kbd>${key}</kbd><span>${_esc(text)}</span></div>`;
+  const state = typeof GS !== 'undefined' ? (GS.gameState || GS.cityState) : null;
+  const player = state && typeof _gamepadHudPlayer === 'function' ? _gamepadHudPlayer(state) : null;
+  const slots = Array.isArray(player?.shortcut_slots) ? player.shortcut_slots : [];
+  const shortcutRow = (index, combo) => {
+    const meta = _atalhoMeta(slots[index], player);
+    return `<div class="cfg-gamepad-map-row cfg-gamepad-map-shortcut"><kbd>${combo}</kbd><span><b>${_esc(t('ui.menu.joystick_map_slot', {n: index + 1}))}</b><small>${_esc(meta?.nome || t('ui.atalhos.vazio'))}</small></span></div>`;
+  };
+  const left = actionButton('shortcutLeft'), right = actionButton('shortcutRight'), third = actionButton('shortcutThird');
+  return `<div class="cfg-gamepad-map-grid">
+    <section><h4>${_esc(t('ui.menu.joystick_map_main'))}</h4>
+      ${row(actionButton('confirm'), t('ui.menu.joystick_confirm'))}
+      ${row(actionButton('cancel'), t('ui.menu.joystick_cancel'))}
+      ${row(actionButton('mainMenu'), t('ui.menu.joystick_map_pause'))}
+      ${row(actionButton('characterMenu'), t('ui.menu.joystick_character_menu'))}
+      ${row(actionButton('nextTarget'), t('ui.menu.joystick_next_target'))}
+      ${row(actionButton('endTurn'), t('ui.menu.joystick_end_turn'))}
+    </section>
+    <section><h4>${_esc(t('ui.menu.joystick_map_move'))}</h4>
+      ${row(`${button(12)} ${button(13)} ${button(14)} ${button(15)} / LS`, t('ui.menu.joystick_map_choose_tile'))}
+      ${row(`${button(10)} / L3`, t('ui.menu.joystick_camera'))}
+      ${row(actionButton('cameraReset'), t('ui.menu.joystick_camera_reset'))}
+      ${row('RS', t('ui.menu.joystick_map_right_stick'))}
+      ${row(`${button(7)}`, t('ui.menu.joystick_map_zoom'))}
+      ${row(`${third} + ${button(0)}/${button(1)}`, t('ui.menu.joystick_map_altitude'))}
+      ${row('⚙', t('ui.menu.joystick_map_direct_move'))}
+    </section>
+    <section><h4>${_esc(t('ui.menu.joystick_map_shortcuts'))}</h4>
+      ${shortcutRow(0, `${left}+${button(0)}`)}${shortcutRow(1, `${left}+${button(1)}`)}
+      ${shortcutRow(2, `${left}+${button(2)}`)}${shortcutRow(3, `${left}+${button(3)}`)}
+      ${shortcutRow(4, `${right}+${button(0)}`)}${shortcutRow(5, `${right}+${button(1)}`)}
+      ${shortcutRow(6, `${right}+${button(2)}`)}${shortcutRow(7, `${right}+${button(3)}`)}
+      ${shortcutRow(8, `${third}+${button(2)}`)}${shortcutRow(9, `${third}+${button(3)}`)}
+    </section>
+  </div>`;
+}
+function _gamepadRenderControlMap(){
+  const map = document.getElementById('cfg-gamepad-map');
+  if(map) map.innerHTML = _gamepadControlMapHTML();
+}
 function _gamepadBinding(action){ return _gamepadBindings[action] ?? _GAMEPAD_DEFAULT_BINDINGS[action]; }
 function _gamepadSavePrefs(){
-  try{ localStorage.setItem(_GAMEPAD_PREFS_KEY, JSON.stringify({ deadZone:_gamepadDeadZone, invertCameraY:_gamepadInvertCameraY, vibration:_gamepadVibration, cursorSpeed:_gamepadCursorSpeed, cameraSensitivity:_gamepadCameraSensitivity, bindings:_gamepadBindings })); }catch(e){}
+  try{ localStorage.setItem(_GAMEPAD_PREFS_KEY, JSON.stringify({ deadZone:_gamepadDeadZone, invertCameraY:_gamepadInvertCameraY, vibration:_gamepadVibration, directMove:_gamepadDirectMove, cursorSpeed:_gamepadCursorSpeed, cameraSensitivity:_gamepadCameraSensitivity, bindings:_gamepadBindings })); }catch(e){}
 }
 function _gamepadRenderPrefs(){
   const dead = document.getElementById('gp-deadzone'), deadVal = document.getElementById('gp-deadzone-val');
@@ -22453,6 +23013,7 @@ function _gamepadRenderPrefs(){
   if(deadVal) deadVal.textContent = `${Math.round(_gamepadDeadZone * 100)}%`;
   const invert = document.getElementById('gp-invert-y'); if(invert) invert.checked = _gamepadInvertCameraY;
   const vibration = document.getElementById('gp-vibration'); if(vibration) vibration.checked = _gamepadVibration;
+  const directMove = document.getElementById('gp-direct-move'); if(directMove) directMove.checked = _gamepadDirectMove;
   const cursorSpeed = document.getElementById('gp-cursor-speed'), cursorSpeedVal = document.getElementById('gp-cursor-speed-val');
   if(cursorSpeed) cursorSpeed.value = String(Math.round(_gamepadCursorSpeed * 100));
   if(cursorSpeedVal) cursorSpeedVal.textContent = `${Math.round(_gamepadCursorSpeed * 100)}%`;
@@ -22465,6 +23026,7 @@ function _gamepadRenderPrefs(){
     if(label) label.textContent = _gamepadButtonLabel(_gamepadBinding(action));
     button.classList.toggle('capturing', _gamepadBindingCapture === action);
   });
+  _gamepadRenderControlMap();
 }
 function _setGamepadDeadZone(value){
   _gamepadDeadZone = Math.max(.15, Math.min(.80, Number(value) || .48));
@@ -22472,11 +23034,12 @@ function _setGamepadDeadZone(value){
 }
 function _setGamepadInvertCameraY(value){ _gamepadInvertCameraY = !!value; _gamepadSavePrefs(); _gamepadRenderPrefs(); }
 function _setGamepadVibration(value){ _gamepadVibration = !!value; _gamepadSavePrefs(); _gamepadRenderPrefs(); }
+function _setGamepadDirectMove(value){ _gamepadDirectMove = !!value; _gamepadSavePrefs(); _gamepadRenderPrefs(); }
 function _gamepadSensitivity(value){ return Math.max(.50, Math.min(1.80, Number(value) || 1)); }
 function _setGamepadCursorSpeed(value){ _gamepadCursorSpeed = _gamepadSensitivity(value); _gamepadSavePrefs(); _gamepadRenderPrefs(); }
 function _setGamepadCameraSensitivity(value){ _gamepadCameraSensitivity = _gamepadSensitivity(value); _gamepadSavePrefs(); _gamepadRenderPrefs(); }
 function _resetGamepadPrefs(){
-  _gamepadDeadZone = .48; _gamepadInvertCameraY = false; _gamepadVibration = true; _gamepadCursorSpeed = 1; _gamepadCameraSensitivity = 1;
+  _gamepadDeadZone = .48; _gamepadInvertCameraY = false; _gamepadVibration = true; _gamepadDirectMove = false; _gamepadCursorSpeed = 1; _gamepadCameraSensitivity = 1;
   _gamepadBindings = { ..._GAMEPAD_DEFAULT_BINDINGS };
   _gamepadBindingCapture = null;
   _gamepadSavePrefs(); _gamepadRenderPrefs();
@@ -22503,6 +23066,7 @@ function _gamepadLoadPrefs(){
     if(typeof saved.deadZone === 'number') _gamepadDeadZone = Math.max(.15, Math.min(.80, saved.deadZone));
     if(typeof saved.invertCameraY === 'boolean') _gamepadInvertCameraY = saved.invertCameraY;
     if(typeof saved.vibration === 'boolean') _gamepadVibration = saved.vibration;
+    if(typeof saved.directMove === 'boolean') _gamepadDirectMove = saved.directMove;
     if(typeof saved.cursorSpeed === 'number') _gamepadCursorSpeed = _gamepadSensitivity(saved.cursorSpeed);
     if(typeof saved.cameraSensitivity === 'number') _gamepadCameraSensitivity = _gamepadSensitivity(saved.cameraSensitivity);
     if(saved.bindings && typeof saved.bindings === 'object'){
@@ -22510,8 +23074,8 @@ function _gamepadLoadPrefs(){
         const value = saved.bindings[action];
         if(Number.isInteger(value) && value >= 0 && value <= 31) _gamepadBindings[action] = value;
       }
-      // Layouts anteriores usavam Y/R3 para câmera/interface. R3 agora é menu
-      // principal e L3 alterna câmera/cursor; migra apenas os pares padrão.
+      // Layouts anteriores usavam Y/R3 para câmera/interface; L3 agora alterna
+      // câmera/cursor. Migra apenas os pares padrão.
       if(saved.bindings.camera === 3 && saved.bindings.nextTarget === 11){
         _gamepadBindings.camera = 10;
         _gamepadBindings.nextTarget = 3;
@@ -22521,6 +23085,15 @@ function _gamepadLoadPrefs(){
         && saved.bindings.mainMenu === undefined){
         _gamepadBindings.camera = 10;
         _gamepadBindings.mainMenu = 11;
+        migratedLegacyLayout = true;
+      }
+      // O layout anterior usava Menu para encerrar o turno e R3 para a pausa.
+      // Mantém configurações customizadas intactas, migrando apenas o par padrão.
+      if(saved.bindings.endTurn === 9 && (saved.bindings.mainMenu === 11
+        || (saved.bindings.mainMenu === undefined && saved.bindings.camera === 11
+            && saved.bindings.nextTarget === 3))){
+        _gamepadBindings.endTurn = 11;
+        _gamepadBindings.mainMenu = 9;
         migratedLegacyLayout = true;
       }
     }
@@ -23253,8 +23826,8 @@ function _gamepadAltitudeInput(pad, now, playing){
   const state = GS.gameState;
   const player = state?.players?.find(p => p && p.id === GS.myPid && p.alive && p.voo
     && p.pode_alterar_altura !== false);
-  const l1 = !!pad?.buttons?.[4]?.pressed;
-  const lt = _gamepadTrigger(pad, 6) >= .55;
+  const l1 = !!pad?.buttons?.[_gamepadBinding('shortcutLeft')]?.pressed;
+  const lt = _gamepadTrigger(pad, _gamepadBinding('shortcutThird')) >= .55;
   const rt = _gamepadTrigger(pad, 7) >= .55;
   const combo = !!(playing && GS.isMyTurn && player && l1
     && !_gamepadInput.uiPointer && !_gamepadInput.attackMode && !_aimAlgumModoAtivo() && (lt || rt));
@@ -23279,7 +23852,7 @@ function _gamepadCameraInput(pad, now, rotate, allowZoom = true){
   _gamepadInput.cameraLastAt = now;
   const rx = rotate ? _gamepadAxis(pad, 2) : 0;
   const ry = rotate ? _gamepadAxis(pad, 3) : 0;
-  const zoom = allowZoom ? _gamepadTrigger(pad, 7) - _gamepadTrigger(pad, 6) : 0; // RT aproxima, LT afasta
+  const zoom = allowZoom ? _gamepadTrigger(pad, 7) - _gamepadTrigger(pad, _gamepadBinding('shortcutThird')) : 0; // RT aproxima, terceiro modificador afasta
   if(!rx && !ry && !zoom) return;
 
   // Tomar a câmera manualmente encerra o seguimento automático do peão, que
@@ -23509,6 +24082,24 @@ function _gamepadAdjacentClosedDoor(state, player){
 function _gamepadNearbyInteraction(state, player){
   if(!state || !player?.pos || !GS.isMyTurn) return null;
   const adjacent = (pos) => Math.max(Math.abs(player.pos[0] - pos[0]), Math.abs(player.pos[1] - pos[1])) <= 1;
+
+  // Ataque tem precedência sobre o saque: um item pode ocupar a mesma casa
+  // que um monstro, e essa situação não deve transformar o botão de ação em
+  // um comando de coleta.
+  const groundWithAttack = (state.ground_items || [])
+    .filter(item => item.pos && GS.groundItemPickable(item, player))
+    .map(item => ({ item, attack: GS.resolveTileClick(item.pos[0], item.pos[1]) }))
+    .find(entry => entry.attack?.type === 'attack');
+  if(groundWithAttack){
+    return {
+      kind:'attack',
+      key:`attack:${groundWithAttack.attack.targetId}`,
+      ground:groundWithAttack.item,
+      attack:groundWithAttack.attack,
+      icon:'⚔️'
+    };
+  }
+
   const door = _gamepadAdjacentClosedDoor(state, player);
   if(door) return { kind:'door', key:`door:${door[0]},${door[1]}`, pos:door, icon:'🚪' };
 
@@ -23535,13 +24126,23 @@ function _gamepadActivateNearbyInteraction(state, player){
   if(interaction.kind === 'door'){
     if(GS.resolveTileClick(interaction.pos[0], interaction.pos[1])?.type !== 'open_door') return false;
     handleTileClick(interaction.pos[0], interaction.pos[1]);
+  } else if(interaction.kind === 'attack') {
+    const attack = GS.resolveTileClick(interaction.ground.pos[0], interaction.ground.pos[1]);
+    if(attack?.type !== 'attack') return false;
+    GS.notifyAttack();
+    sendAttack(attack.targetId, attack.targetPos);
   } else if(interaction.kind === 'chest') {
     openChestWindow(interaction.chest);
   } else if(interaction.kind === 'decor') {
     GS.interagirDecor(interaction.decor.id);
   } else if(interaction.kind === 'ground') {
     const attack = GS.resolveTileClick(interaction.ground.pos[0], interaction.ground.pos[1]);
-    if(!_abrirEscolhaLootOuAtaque(interaction.ground, attack)) GS.pickupItem(interaction.ground.id);
+    if(attack?.type === 'attack'){
+      GS.notifyAttack();
+      sendAttack(attack.targetId, attack.targetPos);
+    } else {
+      GS.pickupItem(interaction.ground.id);
+    }
   } else {
     return false;
   }
@@ -23572,7 +24173,12 @@ function _gamepadInteractAtCursor(state){
     item.pos?.[0] === tx && item.pos?.[1] === ty);
   if(groundItem && GS.groundItemPickable(groundItem, me)){
     const attack = GS.resolveTileClick(tx, ty);
-    if(!_abrirEscolhaLootOuAtaque(groundItem, attack)) GS.pickupItem(groundItem.id);
+    if(attack?.type === 'attack'){
+      GS.notifyAttack();
+      sendAttack(attack.targetId, attack.targetPos);
+    } else {
+      GS.pickupItem(groundItem.id);
+    }
     _gamepadRumble('confirm');
     return true;
   }
@@ -23648,13 +24254,20 @@ function _gamepadAccept(state){
     }
     return;
   }
-  // Interações físicas recebem precedência sobre o atalho de combate: assim A
-  // abre um baú ou recolhe um item selecionado, mesmo se houver inimigos no
-  // alcance da arma naquele turno.
+  // O combate recebe precedência sobre o saque: se houver item próximo e um
+  // inimigo atacável, A entra primeiro na mira de ataque.
   // Baú, item no chão e ciclo de alvos sao do HEROI e ancoram em me.pos: na
   // janela pos-turno eles agiriam pela peca errada.
   const _naJanelaServos = state?.animados_turn === GS.myPid;
-  if(!_naJanelaServos && _gamepadInteractAtCursor(state)) return;
+  if(!_naJanelaServos){
+    const player = state?.players?.find(p => p.id === GS.myPid && p.alive);
+    const saquePerto = player && (state.ground_items || []).some(item =>
+      GS.groundItemPickable(item, player));
+    if(saquePerto && _gamepadAttackTargets().length){
+      if(_gamepadEnterAttackMode(state)) return;
+    }
+    if(_gamepadInteractAtCursor(state)) return;
+  }
   if(_gamepadEnterAttackMode(state)) return;
   const cursor = _gamepadEnsureCursor(state);
   if(cursor){
@@ -23888,11 +24501,15 @@ function _pollGamepad(now){
       const me = state.players?.find(p => p.id === GS.myPid && p.alive);
       if(me){
         _clearGamepadEndTurnConfirm();
-        // O direcional escolhe a casa; A confirma o movimento. Assim o
-        // controle segue o mesmo fluxo da prévia por clique, sem mover o
-        // peão antes da confirmação do jogador.
-        _gamepadInput.followPawn = false;
-        _gamepadMoveCursor(state, boardMoveDir[0], boardMoveDir[1]);
+        if(_gamepadDirectMove){
+          // Modo opcional inspirado no movimento direto de Diablo/BG3. O modo
+          // tático continua sendo o padrão: cursor + A confirma.
+          GS.move(boardMoveDir[0], boardMoveDir[1]);
+        } else {
+          // O direcional escolhe a casa; A confirma o movimento.
+          _gamepadInput.followPawn = false;
+          _gamepadMoveCursor(state, boardMoveDir[0], boardMoveDir[1]);
+        }
         _gamepadRumble('target');
       }
     }
@@ -23910,7 +24527,9 @@ function _pollGamepad(now){
     } else {
       // Analógico direito: cursor por padrão; botão configurado alterna para câmera 3D.
       const cameraMode = mode3D && _gamepadInput.rightMode === 'camera';
-      _gamepadCameraInput(pad, now, cameraMode, !altitudeComboActive); // L2/R2 continuam zoom fora do modo altura
+      const thirdModifierButton = _gamepadBinding('shortcutThird');
+      _gamepadCameraInput(pad, now, cameraMode,
+        !altitudeComboActive && !(pad.buttons[thirdModifierButton]?.pressed && (pad.buttons[2]?.pressed || pad.buttons[3]?.pressed)));
       if(cameraMode){
         _gamepadRepeat('cursor', null, now);
       } else if(_gamepadInput.attackMode || _aimAlgumModoAtivo()){
@@ -23969,11 +24588,16 @@ function _pollGamepad(now){
     _gamepadRepeat('cursor', null, now);
   }
 
-  const l1Held = !!pad.buttons[4]?.pressed;
-  const r1Held = !!pad.buttons[5]?.pressed;
-  // L1 opera os slots 1–4; R1 abre a segunda roda, nos slots 5–8.
+  const leftShortcutButton = _gamepadBinding('shortcutLeft');
+  const rightShortcutButton = _gamepadBinding('shortcutRight');
+  const thirdShortcutButton = _gamepadBinding('shortcutThird');
+  const l1Held = !!pad.buttons[leftShortcutButton]?.pressed;
+  const r1Held = !!pad.buttons[rightShortcutButton]?.pressed;
+  const l2Held = !!pad.buttons[thirdShortcutButton]?.pressed;
+  // L1 opera os slots 1–4; R1 os slots 5–8; LT+X/LT+Y os slots 9–10.
   // Se ambos estiverem pressionados, L1 tem prioridade para evitar ambiguidade.
-  const heldModifier = l1Held ? 4 : (r1Held ? 5 : null);
+  const l2ShortcutHeld = l2Held && (pad.buttons[2]?.pressed || pad.buttons[3]?.pressed);
+  const heldModifier = l1Held ? leftShortcutButton : (r1Held ? rightShortcutButton : (l2ShortcutHeld ? thirdShortcutButton : null));
   if(heldModifier == null) _gamepadInput.shortcutWheelConsumed = false;
   const shortcutModifier = _gamepadInput.shortcutWheelConsumed ? null : heldModifier;
   if(shortcutModifier !== _gamepadInput.shortcutWheelModifier){
@@ -23998,6 +24622,13 @@ function _pollGamepad(now){
       }
     }
   }
+  if(!shortcutHandled && !_gamepadInput.shortcutWheelConsumed && l2Held && !l1Held && !r1Held){
+    if(_gamepadButtonEdge(pad, 2)){
+      shortcutHandled = _gamepadUseOrAssignShortcut(8);
+    } else if(_gamepadButtonEdge(pad, 3)){
+      shortcutHandled = _gamepadUseOrAssignShortcut(9);
+    }
+  }
   if(shortcutHandled){
     _clearGamepadEndTurnConfirm();
     // Depois de disparar/gravar um atalho, mantenha a roda aberta enquanto
@@ -24005,10 +24636,10 @@ function _pollGamepad(now){
     // impedindo que o mesmo acionamento seja repetido a cada frame.
     _renderGamepadHud(state);
   }
-  if(_gamepadButtonEdge(pad, _gamepadBinding('characterMenu')) && !l1Held && !r1Held) _gamepadOpenCharacterMenu();
-  if(!altitudeComboActive && _gamepadButtonEdge(pad, 6)){ // L2: aba anterior
+  if(_gamepadButtonEdge(pad, _gamepadBinding('characterMenu')) && !l1Held && !r1Held && !l2Held) _gamepadOpenCharacterMenu();
+  if(!shortcutHandled && !altitudeComboActive && !(l2Held && (pad.buttons[2]?.pressed || pad.buttons[3]?.pressed)) && _gamepadButtonEdge(pad, thirdShortcutButton)){ // terceiro modificador: aba anterior
     if(!_gamepadCycleShopTab(-1)) _gamepadCycleCharacterMenu(-1);
-  } else if(!altitudeComboActive && _gamepadButtonEdge(pad, 7)){ // R2: próxima aba
+  } else if(!shortcutHandled && !altitudeComboActive && _gamepadButtonEdge(pad, 7)){ // R2: próxima aba
     if(!_gamepadCycleShopTab(1)) _gamepadCycleCharacterMenu(1);
   }
 
@@ -24594,11 +25225,17 @@ function _atalhoBarElement(){
 }
 function _atalhosVisiveis(){
   const state = GS.gameState || GS.cityState;
-  const naTelaDoJogo = document.getElementById('screen-game')?.classList.contains('active')
-    || document.getElementById('screen-city')?.classList.contains('active');
-  return !!(state && naTelaDoJogo && GS.me && !GS.me.is_master);
+  const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
+  const naCidade = document.getElementById('screen-city')?.classList.contains('active');
+  return !!(state && (naMasmorra || naCidade) && GS.me && !GS.me.is_master);
 }
 function _atalhosDisponiveis(){
+  // Configuração pode acontecer na cidade; ativação de uma ação continua
+  // bloqueada fora da masmorra para não enviar comandos de combate inválidos.
+  return !!(document.getElementById('screen-game')?.classList.contains('active')
+    && GS.gameState && GS.me && !GS.me.is_master);
+}
+function _atalhosConfiguraveis(){
   return _atalhosVisiveis();
 }
 function _atalhoJogador(){ return GS.me || null; }
@@ -24743,7 +25380,7 @@ function _renderAtalhos(){
     slot.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if(entry) _ativarAtalho(entry, index); });
     slot.addEventListener('contextmenu', e => {
       e.preventDefault(); e.stopPropagation();
-      if(entry && _atalhosDisponiveis()){
+      if(entry && _atalhosConfiguraveis()){
         GS.setShortcut(index, null); toast(t('ui.atalhos.removido'), 'var(--text2)');
       }
     });
@@ -24806,6 +25443,10 @@ function _gamepadContextForCursor(state, player){
     _gamepadInput.interactionDismissedKey = null;
   } else {
     if(_gamepadInput.interactionDismissedKey === nearbyInteraction.key) return null;
+    if(nearbyInteraction.kind === 'attack')
+      return label('ui.joystick.contexto_atacar', '⚔');
+    if(nearbyInteraction.kind === 'ground' && _gamepadAttackTargets().length)
+      return label('ui.joystick.contexto_atacar', '⚔');
     return { icon: nearbyInteraction.icon, text:t('ui.joystick.contexto_interagir') };
   }
 
@@ -24814,9 +25455,13 @@ function _gamepadContextForCursor(state, player){
   const [tx, ty] = cursor;
 
   const ground = (state.ground_items || []).find(g => g.pos?.[0] === tx && g.pos?.[1] === ty);
-  if(ground) return GS.groundItemPickable(ground, player)
-    ? label('ui.joystick.contexto_pegar', '✋')
-    : label('ui.joystick.contexto_longe', '↔');
+  if(ground){
+    const attack = GS.resolveTileClick(ground.pos[0], ground.pos[1]);
+    if(attack?.type === 'attack') return label('ui.joystick.contexto_atacar', '⚔');
+    return GS.groundItemPickable(ground, player)
+      ? label('ui.joystick.contexto_pegar', '✋')
+      : label('ui.joystick.contexto_longe', '↔');
+  }
 
   const chest = (state.chests || []).find(c => c.pos?.[0] === tx && c.pos?.[1] === ty);
   if(chest){
@@ -24903,37 +25548,72 @@ function _positionGamepadShortcutWheel(state, player){
 
 function _renderGamepadHud(state = GS.gameState){
   const shortcutsHud = document.getElementById('gamepad-shortcuts-hud');
+  const shortcutsTray = document.getElementById('gamepad-shortcuts-tray');
   const contextHud = document.getElementById('gamepad-context-hud');
   if(!shortcutsHud || !contextHud) return;
   const player = _gamepadHudPlayer(state);
   if(!_gamepadHudVisible(state)){
     shortcutsHud.hidden = true; shortcutsHud.innerHTML = '';
+    if(shortcutsTray){ shortcutsTray.hidden = true; shortcutsTray.innerHTML = ''; }
     contextHud.hidden = true; contextHud.innerHTML = '';
     return;
+  }
+
+  // A barra fica sempre visível quando há controle conectado, como no Diablo:
+  // o jogador não precisa segurar um modificador para descobrir seus atalhos.
+  // LT+X/LT+Y completam os dez slots do jogo.
+  if(shortcutsTray){
+    const slots = Array.isArray(player.shortcut_slots) ? player.shortcut_slots : [];
+    const leftModifier = _gamepadBinding('shortcutLeft');
+    const rightModifier = _gamepadBinding('shortcutRight');
+    const thirdModifier = _gamepadBinding('shortcutThird');
+    const labels = [
+      `${_gamepadButtonLabel(leftModifier)}+${_gamepadButtonLabel(0)}`,
+      `${_gamepadButtonLabel(leftModifier)}+${_gamepadButtonLabel(1)}`,
+      `${_gamepadButtonLabel(leftModifier)}+${_gamepadButtonLabel(2)}`,
+      `${_gamepadButtonLabel(leftModifier)}+${_gamepadButtonLabel(3)}`,
+      `${_gamepadButtonLabel(rightModifier)}+${_gamepadButtonLabel(0)}`,
+      `${_gamepadButtonLabel(rightModifier)}+${_gamepadButtonLabel(1)}`,
+      `${_gamepadButtonLabel(rightModifier)}+${_gamepadButtonLabel(2)}`,
+      `${_gamepadButtonLabel(rightModifier)}+${_gamepadButtonLabel(3)}`,
+      `${_gamepadButtonLabel(thirdModifier)}+${_gamepadButtonLabel(2)}`,
+      `${_gamepadButtonLabel(thirdModifier)}+${_gamepadButtonLabel(3)}`,
+    ];
+    shortcutsTray.innerHTML = slots.slice(0, 10).map((entry, index) => {
+      const meta = _atalhoMeta(entry, player);
+      return `<span class="gamepad-tray-slot${meta ? '' : ' empty'}" title="${_esc(labels[index])}">
+        <span class="gamepad-tray-key">${_esc(labels[index])}</span>
+        <span class="gamepad-tray-icon">${meta ? meta.icon : '+'}</span>
+        <span class="gamepad-tray-name">${_esc(meta?.nome || '—')}</span>
+      </span>`;
+    }).join('');
+    shortcutsTray.hidden = false;
   }
 
   const modifierButton = _gamepadInput.shortcutWheelModifier;
   const modifierHeld = modifierButton != null && !!_gamepadPrimary()?.buttons?.[modifierButton]?.pressed;
   if(modifierHeld){
     const slots = Array.isArray(player.shortcut_slots) ? player.shortcut_slots : [];
-    const firstSlot = modifierButton === 5 ? 4 : 0;
+    const slotIndices = modifierButton === _gamepadBinding('shortcutLeft') ? [0,1,2,3]
+      : modifierButton === _gamepadBinding('shortcutRight') ? [4,5,6,7]
+      : [8,9,null,null];
     // A disposição reproduz os quatro botões frontais: Y em cima, X à esquerda,
     // B à direita e A embaixo (ou seus equivalentes no controle conectado).
     const positions = ['south', 'east', 'west', 'north'];
     shortcutsHud.innerHTML = `<span class="gamepad-shortcut-wheel-center">${_esc(_gamepadButtonLabel(modifierButton))}</span>` + [0,1,2,3].map(index => {
-      const slotIndex = firstSlot + index;
-      const entry = slots[slotIndex] || null;
+      const slotIndex = slotIndices[index];
+      const entry = slotIndex == null ? null : (slots[slotIndex] || null);
       const meta = _atalhoMeta(entry, player);
       const buttons = `${_gamepadButtonLabel(modifierButton)} + ${_gamepadButtonLabel(index)}`;
       const title = meta ? `${buttons}: ${meta.nome}` : `${buttons}: ${t('ui.atalhos.vazio')}`;
-      return `<button type="button" class="gamepad-shortcut gamepad-shortcut-${positions[index]}${meta ? '' : ' empty'}" data-gamepad-shortcut-slot="${slotIndex}" title="${_esc(title)}">
+      return `<button type="button" class="gamepad-shortcut gamepad-shortcut-${positions[index]}${meta ? '' : ' empty'}" data-gamepad-shortcut-slot="${slotIndex == null ? -1 : slotIndex}" title="${_esc(title)}">
         <span class="gamepad-shortcut-key">${_esc(_gamepadButtonLabel(index))}</span><span class="gamepad-shortcut-icon">${meta ? meta.icon : '+'}</span><span class="gamepad-shortcut-name">${_esc(meta?.nome || t('ui.atalhos.vazio'))}</span>
       </button>`;
     }).join('');
     shortcutsHud.querySelectorAll('[data-gamepad-shortcut-slot]').forEach(button => {
       button.addEventListener('click', () => {
         const index = Number(button.dataset.gamepadShortcutSlot);
-        const entry = slots[index];
+        const entry = index >= 0 ? slots[index] : null;
         if(entry) _ativarAtalho(entry, index);
       });
     });
@@ -24957,15 +25637,49 @@ function _renderGamepadHud(state = GS.gameState){
 // uma cópia local do último atalho usado. Assim o ícone some no mesmo estado
 // em que o servidor encerra a duração, mesmo quando o efeito foi consumido,
 // expirou no início da rodada ou foi desativado por outro jogador.
+function _zonaContemPosicaoCliente(zona, pos){
+  if(!zona || !Array.isArray(pos) || !Number.isFinite(Number(zona.cx)) || !Number.isFinite(Number(zona.cy))) return false;
+  if(zona.lado || zona.area_lado){
+    const lado = Number(zona.lado || zona.area_lado) || 4, h = Math.floor(lado / 2);
+    return pos[0] >= Number(zona.cx) - h + 1 && pos[0] <= Number(zona.cx) + h
+      && pos[1] >= Number(zona.cy) - h + 1 && pos[1] <= Number(zona.cy) + h;
+  }
+  return Math.max(Math.abs(pos[0] - Number(zona.cx)), Math.abs(pos[1] - Number(zona.cy))) <= Number(zona.raio || 0);
+}
+
+function _temVisaoNoEscuroCliente(state, player){
+  if(!player) return false;
+  if(player.visao_escuro || player.visao_escuro_missao) return true;
+  if((player.immunities || []).includes('escuridao')) return true;
+  if(!player.visao_escuro_manto) return false;
+  return (state?.zonas_especiais || []).some(z => z?.ativa && z.tipo === 'escuridao'
+    && z.concede_visao && String(z.caster) === String(player.id));
+}
+
+function _zonasEscuridaoComDesvantagem(state, player){
+  const pos = player?.pos;
+  if(!state || !player) return [];
+  // O servidor já resolveu visão no escuro e imunidades. Se ele informa que
+  // não há penalidade, a posição visual da zona não pode contradizê-lo.
+  if(player.escuridao_desvantagem === false) return [];
+  const autoritativa = player.escuridao_desvantagem === true;
+  if(!autoritativa && (!Array.isArray(pos) || _temVisaoNoEscuroCliente(state, player))) return [];
+  const zonas = (state.zonas_especiais || []).filter(z => z?.ativa && z.tipo === 'escuridao'
+    && _zonaContemPosicaoCliente(z, pos));
+  // Compatibilidade com estados antigos ou payloads que chegaram sem a zona:
+  // o servidor já informou diretamente que a penalidade está ativa.
+  return zonas.length ? zonas : (autoritativa ? [{duracao: player.escuridao_rodadas || 0}] : []);
+}
+
 function _coletarEfeitosAtivos(state, player, incluirLocais = true){
   if(!state || !player || player.alive === false || player.is_master) return [];
   const efeitos = new Map();
-  const add = (id, nome, icon, rodadas = null) => {
+  const add = (id, nome, icon, rodadas = null, descricao = '') => {
     if(!id || efeitos.has(id)) return;
     if(incluirLocais && String(player.id) === String(GS.myPid)
        && _efeitosVisuaisSuprimidos.has(`${player.id}:${id}`)) return;
     const n = Number(rodadas);
-    efeitos.set(id, {id, nome: nome || id, icon, rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
+    efeitos.set(id, {id, nome: nome || id, icon, descricao: descricao || '', rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
   };
   const nomes = {
     cancao_heroica:t('ui.hud.cancao_heroica'), esconder_sombras:'Esconder nas Sombras',
@@ -25069,6 +25783,17 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
     if(z.tipo === 'escuridao') addMagic('manto_escuridao', z.duracao);
   });
 
+  // Escuridão é uma zona do mapa e não um campo permanente do personagem.
+  // Só criamos este indicador para quem realmente sofre as penalidades; quem
+  // possui visão no escuro continua vendo apenas o próprio benefício.
+  const zonasEscuras = _zonasEscuridaoComDesvantagem(state, player);
+  if(zonasEscuras.length){
+    const duracoes = zonasEscuras.map(z => Number(z.duracao)).filter(n => Number.isFinite(n) && n > 0);
+    const icon = `<img class="active-effect-art" src="${_assetURL('assets/armadilhas/escuridao.png')}" alt="" aria-hidden="true" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="active-effect-fallback" hidden>🌑</span>`;
+    add('escuridao_desvantagem', t('ui.status.escuridao'), icon,
+      duracoes.length ? Math.min(...duracoes) : null);
+  }
+
   // Buffs/debuffs compartilhados usam mods_magia. O servidor não precisa de
   // um novo campo: o sinal dos modificadores identifica o tipo visual básico.
   const mods = player.mods_magia;
@@ -25114,10 +25839,13 @@ function _renderEfeitosAtivos(state = GS.gameState){
   hud.innerHTML = efeitos.map(e => {
     const resto = e.rodadas ? `<span class="active-effect-rounds">${e.rodadas}r</span>` : '';
     const title = `${e.nome}${e.rodadas ? ` · ${e.rodadas} rodada(s)` : ''}`;
-    return `<div class="active-effect-chip" title="${_esc(title)}" data-effect-id="${_esc(e.id)}"><span class="active-effect-icon">${e.icon}</span><span class="active-effect-label">${_esc(e.nome)}</span>${resto}</div>`;
+    const classe = e.descricao ? ' active-effect-chip-detailed' : '';
+    const descricao = e.descricao ? `<small class="active-effect-description">${_esc(e.descricao)}</small>` : '';
+    return `<div class="active-effect-chip${classe}" title="${_esc(title)}" data-effect-id="${_esc(e.id)}" role="status"><span class="active-effect-icon">${e.icon}</span><span class="active-effect-label"><b>${_esc(e.nome)}</b>${descricao}</span>${resto}</div>`;
   }).join('');
-  hud.hidden = efeitos.size === 0;
+  hud.hidden = efeitos.length === 0;
 }
+
 
 // Estado visual otimista: o servidor só devolve o novo `game_state` depois de
 // processar a ação, mas a intenção (mira de uma habilidade/magia) já é uma
@@ -25420,7 +26148,7 @@ function _ocultarAtalhosNoMenu(){
   if(_atalhosMenuAtual === 'itens') _atalhosMenuAtual = null;
 }
 function alternarMenuAtalhos(){
-  if(!_atalhosDisponiveis()) return false;
+  if(!_atalhosConfiguraveis()) return false;
   const bar = _atalhoBarElement();
   _atalhosAbertos = !_atalhosAbertos;
   if(!_atalhosAbertos){
@@ -25595,6 +26323,7 @@ function _setLang(code){
   I18N.setLang(code);
   try { localStorage.setItem(_LANG_KEY, code); } catch (e) {}
   _i18nApply(document.body);
+  _gamepadRenderPrefs();
   _syncMouseAltitudeControl(GS.gameState);
   _refreshTurnTimerOption();          // rótulos montados em JS, não por data-i18n
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
@@ -25655,6 +26384,9 @@ function _audioPanelEnsure(){
     +   '<input id="gp-camera-sensitivity" type="range" min="50" max="180" step="5" value="' + Math.round(_gamepadCameraSensitivity * 100) + '" style="width:100%;">'
     +   '<label class="cfg-access-check"><input id="gp-invert-y" type="checkbox"' + (_gamepadInvertCameraY ? ' checked' : '') + '> <span data-i18n="ui.menu.joystick_invert_y">Inverter câmera vertical</span></label>'
     +   '<label class="cfg-access-check"><input id="gp-vibration" type="checkbox"' + (_gamepadVibration ? ' checked' : '') + '> <span data-i18n="ui.menu.joystick_vibration">Vibração</span></label>'
+    +   '<label class="cfg-access-check"><input id="gp-direct-move" type="checkbox"' + (_gamepadDirectMove ? ' checked' : '') + '> <span data-i18n="ui.menu.joystick_direct_move">Movimento direto</span></label>'
+    +   '<button id="cfg-gamepad-map-toggle" class="cfg-section-button" type="button" aria-expanded="false"><span data-i18n="ui.menu.joystick_map">Mapa de controles e atalhos</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
+    +   '<section id="cfg-gamepad-map" class="cfg-gamepad-map" hidden></section>'
     +   '<button id="cfg-gamepad-toggle" class="cfg-section-button" type="button" aria-expanded="false"><span data-i18n="ui.menu.joystick_bind">Remapear botões</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
     +   '<section id="cfg-gamepad-controls" class="cfg-gamepad-controls" hidden>' + gamepadBindRows + '</section>'
     +   '<button id="gp-reset" class="cfg-gamepad-reset" type="button" data-i18n="ui.menu.joystick_reset">Restaurar padrão</button>'
@@ -25717,6 +26449,15 @@ function _audioPanelEnsure(){
     gamepadToggle.classList.toggle('open', aberto);
     gamepadToggle.setAttribute('aria-expanded', String(aberto));
   };
+  const gamepadMapToggle = wrap.querySelector('#cfg-gamepad-map-toggle');
+  const gamepadMap = wrap.querySelector('#cfg-gamepad-map');
+  gamepadMapToggle.onclick = () => {
+    const aberto = gamepadMap.hidden;
+    gamepadMap.hidden = !aberto;
+    gamepadMapToggle.classList.toggle('open', aberto);
+    gamepadMapToggle.setAttribute('aria-expanded', String(aberto));
+    if(aberto) _gamepadRenderControlMap();
+  };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');
   mSl.oninput = () => { mVal.textContent = mSl.value + '%'; _setMusicVol(mSl.value / 100); };
@@ -25741,6 +26482,8 @@ function _audioPanelEnsure(){
     _setGamepadVibration(gpVibration.checked);
     if(gpVibration.checked) _gamepadRumble('confirm');
   };
+  const gpDirectMove = wrap.querySelector('#gp-direct-move');
+  gpDirectMove.onchange = () => _setGamepadDirectMove(gpDirectMove.checked);
   wrap.querySelector('#gp-reset').onclick = _resetGamepadPrefs;
   wrap.querySelectorAll('[data-gamepad-bind]').forEach(button => {
     button.onclick = () => _gamepadStartBindingCapture(button.dataset.gamepadBind);
@@ -25976,6 +26719,19 @@ const SENHOR_AGUAS_TRAVEL_MS = 880;
 // A expansão da água precisa permanecer tempo suficiente na tela para que o
 // preenchimento casa a casa seja legível, sem alterar o ritmo da onda inicial.
 const SENHOR_AGUAS_IMPACT_MS = 1350;
+
+function _cancelarAnimsMagiasTerreno(spellId){
+  // As três áreas são mutuamente exclusivas no servidor. Limpar as filas
+  // visuais aqui evita que a conjuração anterior continue sobre a nova.
+  if(['senhor_das_aguas','chamado_inverno'].includes(spellId)){
+    for(const anim of _senhorAguasAnims) _senhorAguasDispose3D(anim);
+    _senhorAguasAnims.length = 0;
+  }
+  if(['senhor_das_aguas','chamado_inverno','ira_rocha_ardente'].includes(spellId)){
+    for(const anim of _iraRochaAnims) _iraRochaDispose3D(anim);
+    _iraRochaAnims.length = 0;
+  }
+}
 
 function _senhorAguasHash(n){
   n = (n | 0) ^ 0x6d2b79f5;
@@ -26409,6 +27165,7 @@ function _receberAnimacaoSenhorAguas(msg){
       || !['start','whirlpools'].includes(msg.phase)) return;
   const id = msg.animation_id == null ? null : String(msg.animation_id);
   if(id != null && _senhorAguasAnims.some(a => a.animationId === id)) return;
+  if(msg.phase === 'start') _cancelarAnimsMagiasTerreno(msg.spell_id);
   const anim = _senhorAguasAnimFromMessage(msg); _senhorAguasAnims.push(anim);
   _playCombatCue(msg.spell_id === 'chamado_inverno' ? 'cold' : 'water', {repeatKey:`spell:${id || msg.phase}`, volume:.95});
   if(!_senhorAguasRaf) _senhorAguasRaf = _scheduleVisualFrame(_tickSenhorAguas);
@@ -26542,11 +27299,11 @@ function _iraRochaBuild3D(anim){
   }
 
   for(const [x,z] of anim.tiles){
-    // O piso autoritativo já chega como lava no game_state. Esta cobertura
-    // escura o oculta durante a conjuração para que a lava possa subir por
-    // baixo dela, em vez de aparecer pronta no primeiro frame.
-    const coverMat = new T.MeshBasicMaterial({color:0x211612, transparent:true,
-      opacity:0.98, depthWrite:false, depthTest:false, side:T.DoubleSide});
+    // O piso autoritativo já chega como lava no game_state. A crosta é apenas
+    // um véu translúcido, para não virar uma mancha marrom sobre o tabuleiro
+    // enquanto o magma avança em onda.
+    const coverMat = new T.MeshBasicMaterial({color:0x180407, transparent:true,
+      opacity:0.22, depthWrite:false, depthTest:false, side:T.DoubleSide});
     const cover = new T.Mesh(new T.PlaneGeometry(.94, .94), coverMat);
     cover.rotation.x = -Math.PI/2; cover.position.set(x, .302, z);
     cover.renderOrder = 60; group.add(cover);
@@ -26668,9 +27425,10 @@ function _iraRochaUpdate3D(anim, now){
   for(let i=0;i<anim.tileMeshes.length;i++){
     const item=anim.tileMeshes[i], dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
     const impactElapsed = p.spellElapsed - anim.travelMs;
-    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
-    const reveal=Math.max(0,Math.min(1,(impactElapsed-dist*34)/Math.max(260,anim.impactMs*.72)));
-    item.cover.material.opacity=Math.max(0, (1-reveal)*.98*fade);
+    const waveDelay=dist*105;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-waveDelay+120)/Math.max(320,anim.impactMs*.68)));
+    const reveal=Math.max(0,Math.min(1,(impactElapsed-waveDelay)/Math.max(380,anim.impactMs*.58)));
+    item.cover.material.opacity=Math.max(0, (1-reveal)*.22*fade);
     item.cover.visible=item.cover.material.opacity>.001;
     item.tile.scale.setScalar(.01+reveal*.99);
     item.tile.material.opacity=(.18+.78*reveal)*fade;
@@ -26678,13 +27436,15 @@ function _iraRochaUpdate3D(anim, now){
   for(const item of anim.crackLines){
     const dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
     const impactElapsed=p.spellElapsed-anim.travelMs;
-    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
+    const waveDelay=dist*105;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-waveDelay+120)/Math.max(320,anim.impactMs*.68)));
     item.crack.visible=crack>0 && fade>0;
     item.crack.scale.setScalar(.35+.75*crack);
     item.crack.material.opacity=(.10+.74*crack)*fade;
   }
   for(let i=0;i<anim.tileRings.length;i++){
-    const item=anim.tileRings[i], reveal=Math.max(0,Math.min(1,(p.spellElapsed-anim.travelMs-i*28)/Math.max(240,anim.impactMs*.70)));
+    const item=anim.tileRings[i], dist=Math.hypot(item.x-anim.center[0],item.z-anim.center[1]);
+    const reveal=Math.max(0,Math.min(1,(p.spellElapsed-anim.travelMs-dist*105)/Math.max(380,anim.impactMs*.58)));
     item.ring.rotation.z=now/240+i; item.ring.scale.setScalar(.30+reveal*(.95+.12*pulse));
     item.ring.material.opacity=(.26+.65*impactFade)*reveal*fade;
   }
@@ -26757,16 +27517,17 @@ function _iraRochaDraw2D(ctx, state, anim, now){
     const pos=anim.tiles[i]; if(!_iraRochaTileVisible(state,pos)) continue;
     const dist=Math.hypot(pos[0]-anim.center[0],pos[1]-anim.center[1]);
     const impactElapsed=p.spellElapsed-anim.travelMs;
-    const crack=Math.max(0,Math.min(1,(impactElapsed-dist*34+180)/Math.max(300,anim.impactMs*.72)));
-    const reveal=Math.max(0,Math.min(1,(impactElapsed-dist*34)/Math.max(260,anim.impactMs*.72)));
+    const waveDelay=dist*105;
+    const crack=Math.max(0,Math.min(1,(impactElapsed-waveDelay+120)/Math.max(320,anim.impactMs*.68)));
+    const reveal=Math.max(0,Math.min(1,(impactElapsed-waveDelay)/Math.max(380,anim.impactMs*.58)));
     const x=pos[0]*CELL+CELL/2,y=pos[1]*CELL+CELL/2;
     // Cobre a lava que já está no piso até o líquido alcançar aquela casa.
     // A transparência diminui junto com a onda de preenchimento, revelando a
     // textura autoritativa sem um corte brusco no final da animação.
     if(reveal < 1){
-      ctx.fillStyle=`rgba(31,20,16,${(.96*(1-reveal)*fade).toFixed(3)})`;
+      ctx.fillStyle=`rgba(18,4,5,${(.22*(1-reveal)*fade).toFixed(3)})`;
       ctx.fillRect(pos[0]*CELL+1,pos[1]*CELL+1,CELL-2,CELL-2);
-      ctx.strokeStyle=`rgba(89,54,39,${(.72*(1-reveal)*fade).toFixed(3)})`;
+      ctx.strokeStyle=`rgba(255,67,18,${(.34*(1-reveal)*fade).toFixed(3)})`;
       ctx.lineWidth=Math.max(1,CELL*.018);ctx.strokeRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL-4,CELL-4);
     }
     if(reveal>0){
@@ -26843,6 +27604,7 @@ function _receberAnimacaoIraRocha(msg){
   const id=msg.animation_id==null?null:String(msg.animation_id);
   if(msg.phase==='start'){
     if(id!=null && _iraRochaAnims.some(a=>a.animationId===id)) return;
+    _cancelarAnimsMagiasTerreno(msg.spell_id);
     const anim=_iraRochaAnimFromMessage(msg);_iraRochaAnims.push(anim);
     _playCombatCue('fire',{repeatKey:`ira-rocha:${id||'start'}`,power:1.05,volume:.90});
   } else if(msg.phase==='flames'){
@@ -34976,6 +35738,12 @@ function init3D(state){
   movePreviewGroup.renderOrder = 90;
   scene.add(movePreviewGroup);
 
+  // Efeito persistente do Protetor: separado dos ícones e dos peões para não
+  // forçar reconstruções da cena quando a proteção apenas pulsa.
+  const protetorEffectGroup = new T.Group();
+  protetorEffectGroup.renderOrder = 86;
+  scene.add(protetorEffectGroup);
+
   g3 = {
     T, scene, renderer, camera, controls,
     ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
@@ -34997,7 +35765,7 @@ function init3D(state){
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
-    activeEffectGroup, movePreviewGroup,
+    activeEffectGroup, movePreviewGroup, protetorEffectGroup,
     activeEffectSprites: {},
     stairGroup,                          // staircase mesh (null if no stairs)
     heroSpawnGroups,                     // markers for separated hero starts
@@ -35311,6 +36079,11 @@ function dispose3D(){
       if(sprite.material) sprite.material.dispose();
     });
     g3.activeEffectGroup.clear?.();
+  }
+  if(g3.protetorEffectGroup){
+    for(const fx of _protetorVisuals.values())
+      if(fx.group && fx.group.parent === g3.protetorEffectGroup) _disposeProtetor3D(fx);
+    g3.protetorEffectGroup.clear?.();
   }
   _clearMovePreviewVisual();
   for(const f of _combatFeedbacks) _disposeCombatFeedback3D(f);
@@ -35699,6 +36472,7 @@ function startLoop3D(){
     if(GS.gameState && (g3._activeEffectsDirty || g3._activeEffectsState !== GS.gameState))
       _sincronizarEfeitosAtivos3DImediatamente(GS.gameState);
     _atualizarPosicoesEfeitosAtivos3D();
+    _atualizarProtetor3D(now);
 
     // ── OrbitControls damping (pausado durante o seguimento de câmera) ───────
     _desfazerShakeCamera();   // o offset do frame anterior não pode ser absorvido pelo OrbitControls
@@ -37867,6 +38641,8 @@ function renderMap3D(state){
   _syncMouseAltitudeControl(state);
   _syncInvisibilidadeState(state);
   _syncProtecaoEnergiaState(state);
+  _syncProtetorVisualState(state);
+  _tempestadeSyncFromState(state);
   // Durante a animação de movimento não reconstrói os peões (preserva o mesh
   // animado). Ao terminar, emMovimento=false e o próximo render reconcilia.
   // Idem para animação de minions (estadoMininoMov).
@@ -38743,6 +39519,7 @@ function renderMap3D(state){
 
   // Canção Heroica: anel dourado de raio 5 ao redor do bardo (3D).
   try { _sync3DCancaoRing(state); } catch(e) { console.warn('cancaoRing:', e); }
+  try { _atualizarProtetor3D(performance.now()); } catch(e) { console.warn('protetorFx:', e); }
 
   // Portraits are exclusive to the class selection screen (HTML). Not on the board.
 }
@@ -39040,11 +39817,14 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
   zumbi:             'assets/models3d/monstros/zumbi.glb',
-  ogroClava:         'assets/models3d/monstros/ogro_clava.glb',
+  // Variante recolorida conforme a referência visual do Ogro de Clava;
+  // o GLB original continua preservado.
+  ogroClava:         'assets/models3d/monstros/ogro_clava_corrigido.glb',
   ogroLanca:         'assets/models3d/monstros/ogro_lanca.glb',
   // Cobre tanto `orc_guerreiro` (ficha nova) quanto o `orc` legado, que resolve
-  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE.
-  orcGuerreiro:      'assets/models3d/monstros/orc.glb',
+  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE. A variante corrigida
+  // preserva o GLB original e aproxima a paleta da referência do bestiário.
+  orcGuerreiro:      'assets/models3d/monstros/orc_corrigido.glb',
   elemental_agua:    'assets/models3d/monstros/elemental_agua.glb',
   elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
   elemental_eletrico:'assets/models3d/monstros/elemental_eletrico.glb',
@@ -39070,10 +39850,13 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   garaloux_alfa:       'assets/models3d/monstros/garalux.glb',
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
-  medusa:            'assets/models3d/monstros/medusa.glb',
+  // A Medusa foi recalibrada em 90° para a frente acompanhar o movimento;
+  // as formas grande_medusa/grande_gorgona resolvem o mesmo identificador.
+  medusa:            'assets/models3d/monstros/medusa_corrigida.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
-  // Cobre a ficha com `image: "necromante"` e o `dark_mage` legado, que resolve
-  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE.
+  // O necromante mantém sua arte própria; o Mago das Trevas usa uma cópia
+  // calibrada em 90° para acompanhar a direção do movimento.
+  dark_mage:         'assets/models3d/monstros/mago_das_trevas.glb',
   necromante:        'assets/models3d/monstros/necromante.glb',
   vampiro:           'assets/models3d/monstros/vampiro.glb',
   vampiro_jovem:     'assets/models3d/monstros/vampiro.glb',
@@ -39082,13 +39865,16 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
   tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
   ciclope:            'assets/models3d/monstros/ciclope.glb',
-  gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro.glb',
-  gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro.glb',
+  // Variante recolorida conforme gigante_guerreiro.png; o GLB original
+  // permanece preservado para referência.
+  gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro_corrigido.glb',
+  gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro_corrigido.glb',
   gigante_runico:     'assets/models3d/monstros/gigante_runas.glb',
   troll:              'assets/models3d/monstros/troll.glb',
 
   // Fallback por `type`: importante para monstros antigos/autorados que não
   // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
+  boneco_treino:       'assets/objetos/boneco_palha_treino.glb',
   goblin:             'assets/models3d/monstros/goblin_combatente.glb',
   goblin_arqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblin_combatente:  'assets/models3d/monstros/goblin_combatente.glb',
@@ -39113,7 +39899,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   urso_negro:         'assets/models3d/monstros/urso.glb',
   urso_negro_customizado: 'assets/models3d/monstros/urso.glb',
   zumbi_infectado:    'assets/models3d/monstros/zumbi.glb',
-  ogro_clava:         'assets/models3d/monstros/ogro_clava.glb',
+  ogro_clava:         'assets/models3d/monstros/ogro_clava_corrigido.glb',
   ogro_lanca:         'assets/models3d/monstros/ogro_lanca.glb',
   escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
   rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
@@ -39130,6 +39916,8 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   vela_de_fogo:       'assets/models3d/monstros/vela_fogo.glb',
 });
 function _monsterGLBPath(imageName, monsterType){
+  if (monsterType === 'dark_mage')
+    return _MONSTER_GLB_MODELS.dark_mage;
   // A ficha antiga do escorpião pequeno ainda pode carregar a imagem
   // `escorpiaodepedra_original`; o tipo autoritativo deve prevalecer para que
   // sua miniatura 3D seja sempre o escorpião amarelo.
@@ -39254,6 +40042,12 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petr
       FOOT   / Math.max(tam.x, 1e-3),
       FOOT   / Math.max(tam.z, 1e-3)
     );
+    // A largura dos acessórios pode reduzir a escala-base pelo limite do
+    // footprint. Estes fatores equalizam o Mago ao Clérigo e deixam o
+    // Paladino só um pouco maior, mantendo o ajuste menor do Bardo.
+    const visualScale = classId === 'mage' ? 1.15
+      : classId === 'paladin' ? 1.38
+      : classId === 'bard' ? 0.82 : 1;
     // recentra o footprint e apoia os pés no chão (offset em espaço local)
     inst.position.set(
       -(box.min.x + box.max.x) / 2,
@@ -39262,7 +40056,7 @@ function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petr
     );
     const wrap = new T.Group();
     wrap.add(inst);
-    wrap.scale.setScalar(s);
+    wrap.scale.setScalar(s * visualScale);
     // Mantém a frente real do arquivo GLB alinhada à frente lógica do modelo.
     // A orientação do movimento fica no grupo-raiz do peão; como `grp` é o
     // corpo separado (usado pelo voo), não devemos gravar nele a direção do
@@ -39388,7 +40182,12 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.userData._monsterGLBPath = path;
     wrap.userData._monsterOriented = !!oriented;
     wrap.userData._monsterCenteredLength = !!(oriented && fillFootprint && !is2x2);
-    wrap.scale.setScalar(scale);
+    // Ajustes individuais de proporção sem afetar as demais miniaturas.
+    // O Mago das Trevas fica 8% menor; o Lacralion Filhote, 30% menor.
+    const monsterVisualScale = monsterType === 'dark_mage' ? 0.92
+      : monsterType === 'lacralion_filhote' ? 0.70
+      : 1;
+    wrap.scale.setScalar(scale * monsterVisualScale);
     if (oriented && fillFootprint && !is2x2) {
       // A escala normal limita o modelo pela altura e pode deixá-lo curto no
       // eixo longitudinal. Alongamos somente esse eixo até quase duas casas,
@@ -39480,6 +40279,10 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   ]);
   const movementFront = new Set([
     'ciclope',
+    // O Necromante também foi exportado 90° fora do eixo do movimento;
+    // usar a orientação-base deixa a frente acompanhar o deslocamento.
+    'necromante',
+    'minotauro', 'minotauro_elite',
     // O GLB do Troll também foi exportado 90° fora do eixo do mapa;
     // alinhar a orientação-base faz a frente acompanhar o movimento.
     'troll',
@@ -39501,7 +40304,7 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'elemental_ar', 'elemental_agua', 'elemental_eletrico',
   ]);
   if (movementFront.has(imageName) || movementFront.has(monsterType)
-      || /(?:ciclope|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
+      || /(?:ciclope|minotauro|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
     // Estes modelos foram exportados 90° de lado em relação ao eixo padrão.
     // Usar a orientação-base faz a frente acompanhar o sentido do movimento.
     return _facingToRotY(facing);
@@ -45284,6 +46087,26 @@ function get3DMonsterAtPointer(e){
   return null;
 }
 
+// O raycast do piso pode cair numa casa vizinha quando o modelo 3D do monstro
+// cobre visualmente um item largado. Para o clique normal do herói, usa a
+// criatura sob o ponteiro e escolhe uma casa do footprint que realmente pode
+// ser atacada, antes de deixar o piso decidir uma coleta.
+function _alvoAtaqueDoMonstroSobPonteiro(monster){
+  if(!monster || monster.hp <= 0 || !GS.gameState || GS.canControlMonster?.()) return null;
+  const me = GS.gameState.players?.find(p => p.id === GS.myPid && p.alive);
+  if(!me || !GS.isMyTurn || me.action_done) return null;
+  const tiles = (GS.monsterTiles?.(monster) || [monster.pos]).filter(Boolean);
+  const attack = tiles
+    .map(pos => ({ pos, action: GS.resolveTileClick(pos[0], pos[1]) }))
+    .filter(entry => entry.action?.type === 'attack')
+    .sort((a, b) =>
+      Math.max(Math.abs(me.pos[0] - a.pos[0]), Math.abs(me.pos[1] - a.pos[1]))
+      - Math.max(Math.abs(me.pos[0] - b.pos[0]), Math.abs(me.pos[1] - b.pos[1])))[0];
+  if(attack) return attack;
+  const fallback = tiles[0];
+  return fallback ? { pos: fallback, action: null } : null;
+}
+
 // Mira LIVRE no 3D: intersecta um plano matemático na altura do chão e converte
 // para coordenadas de grade. Funciona em QUALQUER casa do mapa — inclusive sob
 // névoa (meshes invisíveis são ignorados pelo raycaster). Usado pela
@@ -45343,6 +46166,11 @@ function on3DClick(e){
   if(window._modoIraRocha){
     const tIra = get3DTile(e);
     if(tIra) _clickTileIraRocha(tIra[0], tIra[1]);
+    return;
+  }
+  if(window._modoTempestadePlacement){
+    const tStormPlacement = get3DTile(e);
+    if(tStormPlacement) _clickTileTempestadePlacement(tStormPlacement[0], tStormPlacement[1]);
     return;
   }
   if(window._modoTempestadeMove){
@@ -45410,6 +46238,15 @@ function on3DClick(e){
     if(!_highlightArremesso.ativo) window._modoArremessoAtivo = false;  // arremessou → sai do modo
     return;
   }
+  const monsterUnderPointer = get3DMonsterAtPointer(e);
+  const attackUnderPointer = _alvoAtaqueDoMonstroSobPonteiro(monsterUnderPointer);
+  if(attackUnderPointer?.action?.type === 'attack'){
+    handleTileClick(attackUnderPointer.pos[0], attackUnderPointer.pos[1]);
+    return;
+  }
+  // Mesmo fora do alcance, clicar no monstro não pode cair no piso e coletar
+  // um item que esteja sob ou perto do modelo 3D.
+  if(attackUnderPointer && monsterUnderPointer) return;
   // No teste livre, a própria miniatura é clicável. O raycast anterior usava
   // somente o piso e podia selecionar a casa que aparecia atrás de uma figura alta.
   if(GS.isMaster() && GS.gameState?.test_mode){
@@ -45643,12 +46480,17 @@ function handleTileClick(tx, ty){
   // ── Mestre: clicar num monstro abre a ficha; o mestre não faz ações de herói ──
   if(GS.canControlMonster()){
     const commandControl = GS.isCommandController();
+    const st = GS.gameState;
+    if(!commandControl && st?.test_mode && window._modoAdicionarHeroiTeste){
+      GS.mestreAdicionarHeroiTeste(window._modoAdicionarHeroiTeste, tx, ty);
+      window._modoAdicionarHeroiTeste = null;
+      return;
+    }
     if(!commandControl && window._modoImplantarReforco){
       GS.mestreImplantarReforco(window._modoImplantarReforco, tx, ty);
       window._modoImplantarReforco = null;
       return;
     }
-      const st = GS.gameState;
       const mm = GS.masterManual();
       if(mm){
         const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
@@ -45696,6 +46538,7 @@ function handleTileClick(tx, ty){
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
   if(window._modoIraRocha){ _clickTileIraRocha(tx, ty); return; }
+  if(window._modoTempestadePlacement){ _clickTileTempestadePlacement(tx, ty); return; }
   if(window._modoTempestadeMove){ _clickTileTempestade(tx, ty); return; }
   if(window._modoTeleporteAlvo){ _clickTileTeleporteAlvo(tx, ty); return; }
   if(window._modoTeleporteDestino){ _clickTileTeleporteDestino(tx, ty); return; }
@@ -45734,8 +46577,11 @@ function handleTileClick(tx, ty){
       const me = _st.players.find(p=>p.id===GS.myPid&&p.alive);
       const podePegar = !!(me && GS.groundItemPickable(gi, me));
       const ataque = GS.resolveTileClick(tx, ty);
-      if(podePegar && ataque?.type === 'attack'
-        && _abrirEscolhaLootOuAtaque(gi, ataque)){
+      // O ataque é a ação prioritária quando um monstro e um item ocupam a
+      // mesma casa. A coleta só acontece se não houver ataque válido.
+      if(podePegar && ataque?.type === 'attack'){
+        GS.notifyAttack();
+        sendAttack(ataque.targetId, ataque.targetPos);
         return;
       }
       if(podePegar){ GS.pickupItem(gi.id); return; }
@@ -46243,7 +47089,7 @@ document.addEventListener('keydown', (e) => {
   const naCidade = document.getElementById('screen-city')?.classList.contains('active');
   const naMasmorra = document.getElementById('screen-game')?.classList.contains('active');
   if(!GS.myPid || (!naCidade && !naMasmorra) || GS.isMaster()) return;
-  if(!_atalhosDisponiveis()) return;
+  if(!_atalhosConfiguraveis()) return;
   const menuAberto = document.getElementById('menu-habilidades-overlay')?.classList.contains('open');
   if(!menuAberto) abrirMenuHabilidades(GS.myPid);
   else alternarMenuAtalhos();
@@ -46525,7 +47371,18 @@ function _renderAcaoTempestade(heroi) {
   const state = GS.gameState;
   if (!state || !heroi || heroi.class_id !== 'cleric' || String(heroi.id) !== String(GS.myPid)) return '';
   const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
-  const zonas = (state.zonas_especiais || []).filter(z => z.ativa && z.tipo === 'tempestade_ciclones' && String(z.caster) === String(heroi.id));
+  const zonasTodas = (state.zonas_especiais || []).filter(z => z.ativa && z.tipo === 'tempestade_ciclones'
+    && String(z.caster) === String(heroi.id));
+  const pendente = zonasTodas.slice().reverse().find(z => Number(z.ciclones_pendentes || 0) > 0);
+  if (pendente) {
+    const quantidade = Number(pendente.ciclones_pendentes) || 0;
+    return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
+      <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.tempestade_posicionamento_titulo')}</div>
+      <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.tempestade_posicionamento_instrucao', {count: quantidade})}</div>
+      <button data-gamepad-action="activate" tabindex="0" onclick="_reabrirSelecaoPosicoesTempestade('${String(pendente.id).replace(/'/g, "\\'")}')" style="width:100%;padding:7px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.tempestade_posicionamento_confirmar')}</button>
+    </div>`;
+  }
+  const zonas = zonasTodas.filter(z => !z.ciclones_pendentes);
   if (!zonas.length) return '';
   const botoes = zonas.flatMap(z => (z.ciclones || []).filter(c => c.movido_em !== rodada).map(c =>
     `<button onclick="_iniciarMovimentoTempestade('${z.id}',${c.id})" style="padding:6px 8px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;">🌪️ Ciclone ${c.id}</button>`));
@@ -46546,14 +47403,103 @@ function _iniciarMovimentoTempestade(zoneId, cicloneId) {
 }
 window._iniciarMovimentoTempestade = _iniciarMovimentoTempestade;
 
+function _mensagemSelecaoPosicoesTempestade(zona) {
+  if (!zona) return null;
+  return {
+    zone_id: zona.id,
+    caster_id: zona.caster,
+    count: Number(zona.ciclones_pendentes) || 0,
+    rolled: Number(zona.ciclones_rolados) || Number(zona.ciclones_pendentes) || 0,
+    permitidos: zona.ciclones_permitidos || zona.tiles || [],
+    center: [Number(zona.cx) || 0, Number(zona.cy) || 0],
+    side: Number(zona.lado) || 1,
+  };
+}
+
+function _reabrirSelecaoPosicoesTempestade(zoneId) {
+  const zona = (GS.gameState?.zonas_especiais || []).find(z =>
+    z && z.ativa && z.tipo === 'tempestade_ciclones' && String(z.id) === String(zoneId)
+      && String(z.caster) === String(GS.myPid) && Number(z.ciclones_pendentes || 0) > 0);
+  if (!zona) return;
+  _iniciarSelecaoPosicoesTempestade(_mensagemSelecaoPosicoesTempestade(zona));
+}
+window._reabrirSelecaoPosicoesTempestade = _reabrirSelecaoPosicoesTempestade;
+
+function _iniciarSelecaoPosicoesTempestade(msg) {
+  if (String(msg.caster_id ?? GS.myPid) !== String(GS.myPid)) return;
+  const permitidos = new Set((msg.permitidos || msg.tiles || [])
+    .map(([x, y]) => `${Number(x)},${Number(y)}`));
+  const max = Math.max(0, Number(msg.count) || 0);
+  if (!permitidos.size || !max) return;
+  const selecionados = new Set();
+  window._modoTempestadePlacement = { zoneId: msg.zone_id, permitidos, selecionados, max };
+  const atualizar = () => {
+    const modo = window._modoTempestadePlacement;
+    if (!modo) return;
+    _aimSetHighlights({ range: modo.permitidos, area: modo.selecionados });
+    _aimSetStatus(`${modo.selecionados.size}/${modo.max} ciclones posicionados. Escolha casas válidas dentro da tempestade.`, '#9de8f4');
+    const btn = _aimSessionState.current?.confirmButton;
+    if (btn) {
+      btn.disabled = modo.selecionados.size !== modo.max;
+      btn.style.opacity = btn.disabled ? '.45' : '1';
+      btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+    }
+  };
+  _aimStart({
+    kind: 'tempestade_ciclones_placement',
+    title: t('ui.magia.tempestade_posicionamento_titulo'),
+    instruction: t('ui.magia.tempestade_posicionamento_instrucao', { count: max }),
+    color: '#9de8f4', targetLabel: t('ui.magia.tempestade_ciclone'),
+    range: permitidos, area: selecionados,
+    confirmText: t('ui.magia.tempestade_posicionamento_confirmar'),
+    canConfirm: () => window._modoTempestadePlacement?.selecionados?.size === max,
+    confirm: () => {
+      const modo = window._modoTempestadePlacement;
+      if (!modo || modo.selecionados.size !== modo.max) return;
+      GS.tempestadeCiclonesConfirmarPosicoes(modo.zoneId,
+        [...modo.selecionados].map(k => k.split(',').map(Number)));
+      _aimEnd({ silent: true, reason: 'resolved' });
+    },
+    cleanup: () => { window._modoTempestadePlacement = null; },
+  });
+  atualizar();
+}
+
+function _clickTileTempestadePlacement(tx, ty) {
+  const modo = window._modoTempestadePlacement;
+  if (!modo) return;
+  const key = `${tx},${ty}`;
+  if (!modo.permitidos.has(key)) {
+    _aimSetStatus(t('ui.magia.tempestade_posicionamento_erro'), '#ff9aa2');
+    return;
+  }
+  if (modo.selecionados.has(key)) modo.selecionados.delete(key);
+  else if (modo.selecionados.size < modo.max) modo.selecionados.add(key);
+  else {
+    _aimSetStatus(t('ui.magia.tempestade_posicionamento_limite', { count: modo.max }), '#ffb168');
+    return;
+  }
+  _aimSetHighlights({ range: modo.permitidos, area: modo.selecionados });
+  _aimSetStatus(`${modo.selecionados.size}/${modo.max} ciclones posicionados.`, '#9de8f4');
+  const btn = _aimSessionState.current?.confirmButton;
+  if (btn) {
+    btn.disabled = modo.selecionados.size !== modo.max;
+    btn.style.opacity = btn.disabled ? '.45' : '1';
+    btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+  }
+}
+window._iniciarSelecaoPosicoesTempestade = _iniciarSelecaoPosicoesTempestade;
+
 function _clickTileTempestade(tx, ty) {
   const mode = window._modoTempestadeMove, state = GS.gameState;
   const z = (state?.zonas_especiais || []).find(x => x.id === mode?.zoneId);
   const c = z?.ciclones?.find(x => Number(x.id) === Number(mode?.cicloneId));
   if (!z || !c) return;
   const area = new Set((z.tiles || []).map(([x,y]) => `${x},${y}`));
-  const footprint = [[tx,ty],[tx+1,ty],[tx,ty+1],[tx+1,ty+1]];
-  const otherTiles = new Set((z.ciclones||[]).filter(o => Number(o.id)!==Number(c.id)).flatMap(o => {const [x,y]=o.pos||[];return [[x,y],[x+1,y],[x,y+1],[x+1,y+1]].map(([a,b])=>`${a},${b}`);}));
+  const footprint = [[tx,ty]];
+  const otherTiles = new Set((z.ciclones||[]).filter(o => Number(o.id)!==Number(c.id)).flatMap(o => {
+    const [x,y]=o.pos||[]; return [`${x},${y}`];
+  }));
   const [ox,oy] = c.pos || [0,0];
   const valid = footprint.every(([x,y]) => area.has(`${x},${y}`)) && footprint.every(([x,y]) => !otherTiles.has(`${x},${y}`)) && Math.max(Math.abs(tx-ox),Math.abs(ty-oy)) <= 2;
   if (!valid) { _aimSetStatus(t('ui.magia.tempestade_pos_invalida'), '#ff9aa2'); return; }
@@ -46599,7 +47545,8 @@ function _tempestadeAnimFromMessage(msg){
   const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
   const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
   const ciclones = (Array.isArray(msg.ciclones) ? msg.ciclones : []).map((c, i) => ({
-    id: Number(c.id ?? i + 1), pos: Array.isArray(c.pos) ? c.pos.map(Number) : center.slice(),
+    id: Number(c.id ?? i + 1), lado: Math.max(1, Number(c.lado) || 1),
+    pos: Array.isArray(c.pos) ? c.pos.map(Number) : center.slice(),
     fromPos:null, toPos:null, moveStart:0, spinMs:520+i*48
   }));
   const chargeMs = Math.max(420, Number(msg.charge_ms) || TEMPESTADE_CONCENTRACAO_MS);
@@ -46618,6 +47565,31 @@ function _tempestadeAnimFromMessage(msg){
     fogPuffs:[], windBands:[], areaMeshes:[], stormRings:[], cycloneMeshes:[], boltMeshes:[],
     lightningFlash:null, lightningRing:null
   };
+}
+function _tempestadeSyncFromState(state){
+  // O estado autoritativo mantém os ciclones visíveis mesmo se o evento de
+  // animação foi perdido durante uma reconexão ou enquanto a cena 3D era
+  // reconstruída. Nesse caso criamos uma animação já formada.
+  if(!state) return;
+  const now=performance.now(), ativos=new Set();
+  for(const zona of (state.zonas_especiais || [])){
+    if(!zona?.ativa || zona.tipo!=='tempestade_ciclones' || zona.id==null) continue;
+    const id=String(zona.id); ativos.add(id);
+    if(_tempestadeAnims.some(a => String(a.animationId)===id)) continue;
+    const anim=_tempestadeAnimFromMessage({
+      ...zona, animation_id:zona.id, zone_id:zona.id, caster_id:zona.caster,
+      phase:'resolve', duration_rounds:zona.duracao, side:zona.lado,
+    });
+    anim.chargeMs=0; anim.travelMs=1; anim.start=now-1000;
+    anim.resolved=true; anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;
+    _tempestadeAnims.push(anim);
+  }
+  for(const anim of _tempestadeAnims){
+    if(anim.animationId!=null && !ativos.has(String(anim.animationId)) && anim.endingAt==null)
+      anim.endingAt=now;
+  }
+  if(_tempestadeAnims.length && !_tempestadeRaf)
+    _tempestadeRaf=_scheduleVisualFrame(_tempestadeTick);
 }
 function _tempestadeProgress(anim, now){
   const elapsed=Math.max(0,now-anim.start);
@@ -46660,7 +47632,8 @@ function _tempestadeCicloneContem(c, pos){
   if(!c || !Array.isArray(pos)) return false;
   const [x,y]=c.pos||[];
   return Number.isFinite(x) && Number.isFinite(y)
-    && pos[0]>=x && pos[0]<x+2 && pos[1]>=y && pos[1]<y+2;
+    && pos[0]>=x && pos[0]<x+(Number(c.lado)||1)
+    && pos[1]>=y && pos[1]<y+(Number(c.lado)||1);
 }
 function _tempestadeTargetMesh(rec){
   if(!g3?.entityGroup || !rec) return null;
@@ -46760,14 +47733,21 @@ function _tempestadeBuild3D(anim){
   const centerMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
   const centerRing=new T.Mesh(new T.TorusGeometry(.45,.035,8,44),centerMat);centerRing.rotation.x=-Math.PI/2;centerRing.position.set(anim.center[0],.30,anim.center[1]);centerRing.renderOrder=78;group.add(centerRing);anim.stormRings.push(centerRing);
   for(const c of anim.ciclones){
-    const [x,z]=c.pos, root=new T.Group(); root.position.set(x+.5,.25,z+.5); root.renderOrder=80; group.add(root);
+    // Coordenadas 3D usam o centro da casa (x,z), assim como os peões e o
+    // restante do tabuleiro. O antigo +.5 deslocava o tornado para a casa
+    // seguinte, fazendo-o parecer ausente quando havia paredes/objetos perto.
+    const [x,z]=c.pos, root=new T.Group(); root.position.set(x,.25,z); root.renderOrder=80; group.add(root);
+    // Corpo sólido e luminoso: o cone aberto dá a silhueta de tornado mesmo
+    // em mapas escuros. A camada interna evita que ele desapareça no piso.
     const funnelMat=new T.MeshBasicMaterial({color:deep,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
-    const funnel=new T.Mesh(new T.ConeGeometry(.67,1.55,18,1,true),funnelMat);funnel.position.y=.78;root.add(funnel);
+    const funnel=new T.Mesh(new T.ConeGeometry(.40,1.55,18,1,true),funnelMat);funnel.position.y=.78;root.add(funnel);
+    const innerMat=new T.MeshBasicMaterial({color:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+    const funnelInner=new T.Mesh(new T.ConeGeometry(.30,1.38,16,1,true),innerMat);funnelInner.position.y=.75;root.add(funnelInner);
     const rings=[];
-    for(let j=0;j<4;j++){const mat=new T.MeshBasicMaterial({color:j===1?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const ring=new T.Mesh(new T.TorusGeometry(.22+j*.12,.025+j*.004,7,32),mat);ring.rotation.x=Math.PI/2;ring.position.y=.34+j*.29;root.add(ring);rings.push(ring);}
-    const baseMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const base=new T.Mesh(new T.TorusGeometry(.62,.032,8,38),baseMat);base.rotation.x=Math.PI/2;base.position.y=.08;root.add(base);
+    for(let j=0;j<5;j++){const mat=new T.MeshBasicMaterial({color:j%2?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const ring=new T.Mesh(new T.TorusGeometry(.13+j*.065,.024+j*.004,7,32),mat);ring.rotation.x=Math.PI/2;ring.position.y=.30+j*.27;root.add(ring);rings.push(ring);}
+    const baseMat=new T.MeshBasicMaterial({color:foam,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});const base=new T.Mesh(new T.TorusGeometry(.40,.028,8,38),baseMat);base.rotation.x=Math.PI/2;base.position.y=.08;root.add(base);
     const motes=[];for(let j=0;j<12;j++){const mat=new T.MeshBasicMaterial({color:j%3===0?foam:wind,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const mote=new T.Mesh(new T.SphereGeometry(j%4===0?.038:.022,7,5),mat);root.add(mote);motes.push(mote);}
-    anim.cycloneMeshes.push({id:c.id,root,funnel,rings,base,motes,spinMs:_tempestadeCycloneSpinMs(c,i)});
+    anim.cycloneMeshes.push({id:c.id,root,funnel,funnelInner,rings,base,motes,spinMs:_tempestadeCycloneSpinMs(c,i)});
   }
   const lightningGroup=new T.Group();lightningGroup.renderOrder=100;group.add(lightningGroup);
   for(let i=0;i<8;i++){const mat=new T.LineBasicMaterial({color:i%2?foam:0x8edfff,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});const line=new T.Line(new T.BufferGeometry(),mat);line.visible=false;lightningGroup.add(line);anim.boltMeshes.push(line);}
@@ -46804,7 +47784,7 @@ function _tempestadeUpdate3D(anim,now){
   for(let i=0;i<anim.windBands.length;i++){const band=anim.windBands[i];band.rotation.z=(i%2?-1:1)*now/(520+i*85);band.scale.setScalar(.88+.08*Math.sin(now/190+i));band.material.opacity=(.07+.045*pulse)*fade;}
   for(const tile of anim.areaMeshes)tile.material.opacity=(.035+.025*pulse)*fade;
   for(const ring of anim.stormRings){ring.rotation.z=now/360;ring.scale.setScalar(.75+.18*pulse+Math.min(1,p.impact)*.55);ring.material.opacity=(.25+.18*pulse)*formed*fade;}
-  for(let i=0;i<anim.cycloneMeshes.length;i++){const v=anim.cycloneMeshes[i],c=anim.ciclones.find(x=>Number(x.id)===Number(v.id))||anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);v.root.position.set(pos[0]+.5,.25,pos[1]+.5);v.root.rotation.y=now/_tempestadeCycloneSpinMs(c,i)+i;v.funnel.scale.set(.88+.10*pulse,Math.max(.02,formed*(.78+.20*pulse)),.88+.10*pulse);v.funnel.rotation.z=Math.sin(now/310+i)*.06;v.funnel.material.opacity=(.10+.045*pulse)*formed*fade;for(let j=0;j<v.rings.length;j++){const ring=v.rings[j];ring.rotation.z=now/(250+j*52)*(j%2?-1:1)+i;ring.scale.setScalar(.82+.12*Math.sin(now/110+j+i));ring.material.opacity=(.33+.20*pulse)*(formed*.72+.28)*fade;}v.base.rotation.z=-now/310-i;v.base.material.opacity=(.42+.18*pulse)*formed*fade;for(let j=0;j<v.motes.length;j++){const a=now/600+_tempestadeHash(anim.seed+i*97+j*13)*Math.PI*2,r=.22+(j%5)*.095,y=.22+((now/1100+j*.13+_tempestadeHash(anim.seed+j*17))%1)*1.28;v.motes[j].position.set(Math.cos(a)*r,y,Math.sin(a)*r);v.motes[j].material.opacity=(.18+.28*Math.sin(now/170+j)**2)*formed*fade;}}
+  for(let i=0;i<anim.cycloneMeshes.length;i++){const v=anim.cycloneMeshes[i],c=anim.ciclones.find(x=>Number(x.id)===Number(v.id))||anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);v.root.position.set(pos[0],.25,pos[1]);v.root.rotation.y=now/_tempestadeCycloneSpinMs(c,i)+i;const bodyScale=Math.max(.02,formed);v.funnel.scale.set(.96+.10*pulse,bodyScale*(.82+.18*pulse),.96+.10*pulse);v.funnelInner.scale.set(.96+.10*pulse,bodyScale*(.84+.16*pulse),.96+.10*pulse);v.funnel.rotation.z=Math.sin(now/310+i)*.06;v.funnelInner.rotation.z=-Math.sin(now/260+i)*.08;v.funnel.material.opacity=(.28+.10*pulse)*formed*fade;v.funnelInner.material.opacity=(.16+.08*pulse)*formed*fade;for(let j=0;j<v.rings.length;j++){const ring=v.rings[j];ring.rotation.z=now/(220+j*46)*(j%2?-1:1)+i;ring.scale.setScalar(.86+.15*Math.sin(now/110+j+i));ring.material.opacity=(.54+.24*pulse)*(formed*.72+.28)*fade;}v.base.rotation.z=-now/310-i;v.base.material.opacity=(.68+.22*pulse)*formed*fade;for(let j=0;j<v.motes.length;j++){const a=now/600+_tempestadeHash(anim.seed+i*97+j*13)*Math.PI*2,r=.22+(j%5)*.095,y=.22+((now/1100+j*.13+_tempestadeHash(anim.seed+j*17))%1)*1.28;v.motes[j].position.set(Math.cos(a)*r,y,Math.sin(a)*r);v.motes[j].material.opacity=(.28+.38*Math.sin(now/170+j)**2)*formed*fade;}}
   _tempestadeSyncTargetSpins(GS.gameState);
   const flashAge=anim.lightningAt?now-anim.lightningAt:-1,lightning=flashAge>=0&&flashAge<TEMPESTADE_RELAMPAGO_MS,lf=lightning?Math.sin(Math.PI*_tempestadeClamp(flashAge/TEMPESTADE_RELAMPAGO_MS)):0;anim.lightningFlash.visible=lightning;anim.lightningRing.visible=lightning;anim.lightningFlash.scale.setScalar(.45+1.8*lf);anim.lightningFlash.material.opacity=.68*lf;anim.lightningRing.scale.setScalar(.65+1.75*lf);anim.lightningRing.material.opacity=.8*lf;
   for(let i=0;i<anim.boltMeshes.length;i++){const line=anim.boltMeshes[i];const strikeCount=Math.max(4,Math.min(anim.boltMeshes.length,4+anim.ciclones.length*2));line.visible=lightning&&i<strikeCount;if(!line.visible)continue;const targetTile=anim.tiles.length?anim.tiles[(i*7+Math.floor(anim.seed%anim.tiles.length))%anim.tiles.length]:anim.center;const nextTile=anim.tiles.length?anim.tiles[(i*11+3+Math.floor(anim.seed%anim.tiles.length))%anim.tiles.length]:anim.center;const tx=targetTile[0]+.5+(_tempestadeHash(anim.seed+i*7)*.72-.36),tz=targetTile[1]+.5+(_tempestadeHash(anim.seed+i*11)*.72-.36);if(i%4===3&&anim.tiles.length>1){_tempestadeBuildBolt(line,[tx,.30,tz],[nextTile[0]+.5,.33,nextTile[1]+.5],anim.seed+i*41,window.THREE);}else{const sx=anim.center[0]+.5+(_tempestadeHash(anim.seed+i*17)*1.8-.9),sz=anim.center[1]+.5+(_tempestadeHash(anim.seed+i*19)*1.8-.9);_tempestadeBuildBolt(line,[sx,2.45+(i%3)*.28,sz],[tx,.28,tz],anim.seed+i*41,window.THREE);}line.material.opacity=(.70+.25*pulse)*lf;}
@@ -46856,6 +47836,45 @@ function _tempestadeDrawTrappedTargets2D(ctx,state,anim,now,fade){
     ctx.restore();
   }
 }
+function _tempestadeDrawCyclone2D(ctx,c,pos,index,formed,fade,pulse,now){
+  const x=(pos[0]+.5)*CELL,y=(pos[1]+.5)*CELL;
+  const strength=Math.max(0,Math.min(1,formed))*fade;
+  if(strength<=.001)return;
+  const spin=now/_tempestadeCycloneSpinMs(c,index);
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.globalCompositeOperation='lighter';
+  ctx.shadowColor='#49dfff';
+  ctx.shadowBlur=CELL*(.20+.10*pulse);
+  // Mancha escura central: separa a silhueta do piso e torna o ciclone
+  // reconhecível mesmo quando há vários efeitos sobre a mesma casa.
+  const body=ctx.createRadialGradient(0,0,0,0,0,CELL*.50);
+  body.addColorStop(0,`rgba(8,34,58,${(.72*strength).toFixed(3)})`);
+  body.addColorStop(.58,`rgba(22,111,151,${(.48*strength).toFixed(3)})`);
+  body.addColorStop(1,'rgba(55,194,231,0)');
+  ctx.fillStyle=body;ctx.beginPath();ctx.arc(0,0,CELL*.50,0,Math.PI*2);ctx.fill();
+  // Espiral luminosa em três níveis, com rotação oposta entre os níveis.
+  for(let j=0;j<4;j++){
+    const radius=CELL*(.17+j*.085),a=spin*(j%2?-1:1)+index*.9+j*.68;
+    ctx.strokeStyle=`rgba(${j%2?217:112},${j%2?253:226},255,${((.78-j*.10)*strength).toFixed(3)})`;
+    ctx.lineWidth=Math.max(2,CELL*(.035-j*.004));
+    ctx.beginPath();ctx.arc(0,0,radius,a,a+Math.PI*(1.35+.12*j));ctx.stroke();
+  }
+  // Três faixas curvas dão a leitura de funil, em vez de apenas um ícone.
+  for(let j=0;j<3;j++){
+    const a=spin*(j%2?-1:1)+j*Math.PI*2/3;
+    const r=CELL*(.20+j*.07),ex=Math.cos(a)*r,ey=Math.sin(a)*r;
+    ctx.strokeStyle=`rgba(218,253,255,${((.58-j*.10)*strength).toFixed(3)})`;
+    ctx.lineWidth=Math.max(1.5,CELL*.028);
+    ctx.beginPath();ctx.moveTo(Math.cos(a+1.25)*CELL*.10,Math.sin(a+1.25)*CELL*.10);
+    ctx.quadraticCurveTo(Math.cos(a)*CELL*.34,Math.sin(a)*CELL*.34,ex,ey);ctx.stroke();
+  }
+  ctx.shadowBlur=CELL*.10;ctx.fillStyle=`rgba(232,255,255,${(.95*strength).toFixed(3)})`;
+  ctx.beginPath();ctx.arc(0,0,CELL*(.065+.018*pulse),0,Math.PI*2);ctx.fill();
+  ctx.font=`bold ${Math.max(14,CELL*.28)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle=`rgba(235,255,255,${(.88*strength).toFixed(3)})`;ctx.fillText('🌪️',0,-CELL*.03);
+  ctx.restore();
+}
 function _tempestadeDraw2D(ctx,state,anim,now){
   if(!_tempestadeVisible(state,anim.origin)&&!_tempestadeVisible(state,anim.center)&&!anim.tiles.some(p=>_tempestadeVisible(state,p)))return;
   const p=_tempestadeProgress(anim,now),fade=p.fade,pulse=.5+.5*Math.sin(now/145+anim.seed);ctx.save();ctx.globalCompositeOperation='lighter';
@@ -46884,7 +47903,7 @@ function _tempestadeDraw2D(ctx,state,anim,now){
     for(let i=0;i<5;i++){const r=CELL*(.55+i*.28),a=now/560*(i%2?-1:1)+i*.7;ctx.strokeStyle=`rgba(182,247,255,${(.16+.10*pulse)*fade})`;ctx.beginPath();ctx.arc(ax,ay,r,a,a+Math.PI*(.72+.12*Math.sin(now/200+i)));ctx.stroke();}
   }
   for(const [tx,ty] of anim.tiles){if(!_tempestadeVisible(state,[tx,ty]))continue;ctx.fillStyle=`rgba(50,170,210,${(.08+.04*pulse)*fade})`;ctx.fillRect(tx*CELL+2,ty*CELL+2,CELL-4,CELL-4);}
-  for(let i=0;i<anim.ciclones.length;i++){const c=anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now),x=(pos[0]+1)*CELL,y=(pos[1]+1)*CELL,r=CELL*(.62+.06*pulse),formed=p.formed;if(!_tempestadeVisible(state,[Math.floor(pos[0]),Math.floor(pos[1])]))continue;ctx.fillStyle=`rgba(35,125,165,${(.12+.05*pulse)*formed*fade})`;ctx.fillRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL*2-4,CELL*2-4);ctx.strokeStyle=`rgba(180,248,255,${(.55+.25*pulse)*formed*fade})`;ctx.lineWidth=Math.max(2,CELL*.045);ctx.shadowColor='#64e6ff';ctx.shadowBlur=CELL*.16;for(let j=0;j<3;j++){const rr=r*(.42+j*.25),a=now/(_tempestadeCycloneSpinMs(c,i)/2)*(j%2?-1:1)+i;ctx.beginPath();ctx.arc(x,y,rr,a,a+Math.PI*1.42);ctx.stroke();}ctx.strokeStyle=`rgba(220,252,255,${(.30+.25*pulse)*formed*fade})`;ctx.beginPath();ctx.arc(x,y,r*(.54+.10*pulse),0,Math.PI*2);ctx.stroke();ctx.font=`bold ${Math.max(12,CELL*.42)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=`rgba(225,252,255,${(.55+.28*pulse)*formed*fade})`;ctx.fillText('🌪️',x,y);}
+  for(let i=0;i<anim.ciclones.length;i++){const c=anim.ciclones[i],pos=_tempestadeCyclonePosition(c,now);if(!_tempestadeVisible(state,[Math.floor(pos[0]),Math.floor(pos[1])]))continue;_tempestadeDrawCyclone2D(ctx,c,pos,i,p.formed,fade,pulse,now);}
   _tempestadeDrawTrappedTargets2D(ctx,state,anim,now,fade);
   _tempestadeDrawLightning2D(ctx,state,anim,now,fade,pulse);
   ctx.restore();
@@ -46897,12 +47916,12 @@ function _receberAnimacaoTempestade(msg){
   if(!msg||msg.spell_id!=='tempestade_ciclones')return;
   const now=performance.now(),id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_tempestadeAnims.find(a=>a.animationId===id);
   if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast(t('ui.magia.tempestade_toast_aproxima'),'#9de8f4');}
-  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_tempestadeAnims.push(anim);}anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
+  else if(msg.phase==='resolve'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_tempestadeAnims.push(anim);}if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),lado:Math.max(1,Number(c.lado)||1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0,spinMs:520+i*48}));anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
   else if(msg.phase==='cyclone_move'){if(anim){const c=anim.ciclones.find(x=>Number(x.id)===Number(msg.ciclone_id));if(c&&Array.isArray(msg.from_pos)&&Array.isArray(msg.to_pos)){c.fromPos=msg.from_pos.map(Number);c.toPos=msg.to_pos.map(Number);c.pos=c.toPos.slice();c.moveStart=now;}}}
   else if(msg.phase==='cyclone_target'){
     if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}
     if(!anim.trappedTargets) anim.trappedTargets=new Map();
-    if(Array.isArray(msg.ciclones)) anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0,spinMs:520+i*48}));
+    if(Array.isArray(msg.ciclones)) anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),lado:Math.max(1,Number(c.lado)||1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0,spinMs:520+i*48}));
     const key=_tempestadeTargetKey(msg.target_kind,msg.target_id);
     if(msg.trapped && !msg.passed) anim.trappedTargets.set(key,{
       id:String(msg.target_id),kind:msg.target_kind||'entity',
@@ -46911,7 +47930,7 @@ function _receberAnimacaoTempestade(msg){
     });
     else anim.trappedTargets.delete(key);
   }
-  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0}));toast(t('ui.magia.tempestade_toast_raios'),'#e8f7ff');}
+  else if(msg.phase==='lightning'){if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}anim.lightningAt=now;anim.lightningTiles=_tempestadeTiles(msg.tiles);if(Array.isArray(msg.ciclones))anim.ciclones=msg.ciclones.map((c,i)=>({id:Number(c.id??i+1),lado:Math.max(1,Number(c.lado)||1),pos:(c.pos||anim.center).map(Number),fromPos:null,toPos:null,moveStart:0,spinMs:520+i*48}));toast(t('ui.magia.tempestade_toast_raios'),'#e8f7ff');}
   else if(msg.phase==='expire'){if(anim)anim.endingAt=now;}
   if(!_tempestadeRaf)_tempestadeRaf=_scheduleVisualFrame(_tempestadeTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
 }
@@ -46927,6 +47946,7 @@ const PRIVACAO_FADE_MS = 760;
 const PRIVACAO_LIFE_MS = 1900;
 const PRIVACAO_STYLE = {
   maldicao_corpo_pesado: {base:[104,30,137], accent:[226,139,255], glow:0xb84de8, icon:'⛓️'},
+  vinculo_maldito_da_dor: {base:[114,70,18], accent:[255,220,112], glow:0xe6aa3c, icon:'⛓️'},
   desnutricao: {base:[155,91,34], accent:[255,216,126], glow:0xe1a24e, icon:'◌'},
   definhar: {base:[91,67,48], accent:[206,142,96], glow:0x9b6e4e, icon:'🥀'},
 };
@@ -46934,7 +47954,7 @@ const PRIVACAO_STYLE = {
 function _privacaoClamp(v,a=0,b=1){return Math.max(a,Math.min(b,Number(v)||0));}
 function _privacaoHash(n){n=(n|0)^0x6d2b79f5;n=Math.imul(n^(n>>>15),0x85ebca6b);return((n^(n>>>13))>>>0)/4294967296;}
 function _privacaoStyle(anim){return PRIVACAO_STYLE[anim.kind]||PRIVACAO_STYLE.desnutricao;}
-function _privacaoKind(id){return ['maldicao_corpo_pesado','desnutricao','definhar'].includes(id)?id:null;}
+function _privacaoKind(id){return ['maldicao_corpo_pesado','vinculo_maldito_da_dor','desnutricao','definhar'].includes(id)?id:null;}
 function _privacaoTiles(raw,center){
   const seen=new Set();return(Array.isArray(raw)?raw:[]).filter(p=>Array.isArray(p)&&p.length>=2)
     .map(p=>[Number(p[0]),Number(p[1])]).filter(p=>p.every(Number.isFinite))
@@ -47042,6 +48062,7 @@ function _receberAnimacaoPrivacao(msg){
   else if(msg.phase==='resolve'){
     if(!anim){anim=_privacaoAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_privacaoAnims.push(anim);}anim.resolved=true;anim.resolveAt=now;anim.passed=!!msg.passed;anim.immune=!!msg.immune;
     if(kind==='definhar')anim.activeIds=new Set((msg.affected||[]).map(x=>String(x?.id)).filter(Boolean));
+    else if(kind==='vinculo_maldito_da_dor')anim.activeIds=new Set((msg.linked_target_ids||[]).map(String));
     else if(!anim.passed&&!anim.immune&&anim.targetId!=null)anim.activeIds.add(String(anim.targetId));
   } else if(msg.phase==='expire'&&anim&&anim.endingAt==null)anim.endingAt=now;
   if(!_privacaoRaf)_privacaoRaf=_scheduleVisualFrame(_privacaoTick);if(GS.gameState&&!mode3D)renderMap(GS.gameState);
@@ -47060,7 +48081,7 @@ GS.on('diceRoll',    msg  => _receberDadoVisual(msg));
 // Cena de combate: números em VC; durações respeitam o modo de animação da
 // acessibilidade (instant colapsa a cena — sem investida, número na hora).
 if(window.CombatScene) CombatScene.configure({
-  cfg: VC.feedback?.combat?.scene,
+  cfg: {...(VC.feedback?.combat?.scene || {}), syncOnResult: true},
   duration: _animationProgressDuration,
   instant: () => _animationSpeedMode === 'instant',
 });
@@ -47119,12 +48140,26 @@ GS.on('spellAnimation', msg => {
   }
 });
 GS.on('iraRochaArdentePrompt', msg => _iniciarSelecaoChamasIraRocha(msg));
+GS.on('tempestadeCiclonesPrompt', msg => _iniciarSelecaoPosicoesTempestade(msg));
 GS.on('sorteReacao', msg => {
   const aceitar = window.confirm(`🎲 SORTE\n\n${msg.texto || 'Usar Sorte?'}`);
   GS.responderSorteReacao(aceitar);
 });
 
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
+GS.on('darknessEntered', msg => {
+  queueTrapResult({
+    tipo: 'escuridao', tipo_id: 'escuridao', nome: t('ui.status.escuridao'),
+    descricao: t('ui.status.escuridao_popup_desc'),
+    efeitos_extra: [
+      t('ui.status.escuridao_popup_ataques'),
+      t('ui.status.escuridao_popup_alcance'),
+      t('ui.status.escuridao_popup_saida'),
+      ...(Number(msg.rounds) > 0 ? [t('ui.condicao.duracao', {n: msg.rounds})] : []),
+    ],
+    duracao: msg.rounds,
+  });
+});
 GS.on('survivalResult', msg => queueTrapResult(msg));
 GS.on('fallResult',  msg  => {
   _receiveFlightFall(msg);
@@ -47526,7 +48561,7 @@ document.addEventListener('keydown', e => {
   setTimeout(() => {
     if(e.defaultPrevented) return;
     if(document.querySelector('#target-modal.open, #chest-overlay.open, #trap-overlay.open, #shop-modal.open, .guild-modal.open, #menu-status-overlay.open, #overlay-selecao-criacao, #loja-overlay, #ficha-overlay-jogo')) return;
-    if(GS.pendingSkill || GS.pendingThrow || GS.pendingAction || window._modoImplantarReforco) return;
+    if(GS.pendingSkill || GS.pendingThrow || GS.pendingAction || window._modoImplantarReforco || window._modoAdicionarHeroiTeste) return;
     const active = document.querySelector('.screen.active');
     if(!active || !['screen-game', 'screen-city', 'screen-class-select'].includes(active.id)) return;
     _toggleConfigPop(true);

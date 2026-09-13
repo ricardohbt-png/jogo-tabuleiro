@@ -1467,6 +1467,10 @@ const GS = (() => {
         break;
 
       case 'game_state':
+        // A penalidade é autoritativa no jogador. Só avisamos quando ela
+        // começa, não a cada push_state (movimento, turno ou dano).
+        const escuridaoAnterior = (gameState?.players || []).find(p => p.id === myPid)
+          ?.escuridao_desvantagem === true;
         gameState = msg;
         _captarStory(msg);
         if (msg.active_scene) _emit('sceneStart', msg.active_scene);
@@ -1507,6 +1511,11 @@ const GS = (() => {
         // (no próximo turno ficam selecionáveis de novo).
         if (warriorSelected.length && !isMyTurn) warriorSelected = [];
         _emit('gameState', msg);
+        const meEscuridao = msg.players.find(p => p.id === myPid && !p.is_master);
+        if (msg.phase === 'playing' && meEscuridao?.alive !== false
+            && meEscuridao?.escuridao_desvantagem === true && !escuridaoAnterior) {
+          _emit('darknessEntered', { rounds: meEscuridao.escuridao_rodadas || 0 });
+        }
         break;
 
       case 'scene_start':
@@ -1553,6 +1562,10 @@ const GS = (() => {
 
       case 'ira_rocha_ardente_prompt':
         _emit('iraRochaArdentePrompt', msg);
+        break;
+
+      case 'tempestade_ciclones_prompt':
+        _emit('tempestadeCiclonesPrompt', msg);
         break;
 
       case 'teleporte_save_prompt':
@@ -1895,6 +1908,9 @@ const GS = (() => {
   function tempestadeCiclonesMover(zoneId, cicloneId, pos) {
     send({ type: 'tempestade_ciclones_mover', zone_id: zoneId, ciclone_id: cicloneId, pos });
   }
+  function tempestadeCiclonesConfirmarPosicoes(zoneId, tiles) {
+    send({ type: 'tempestade_ciclones_posicoes', zone_id: zoneId, tiles });
+  }
   function encerrarPrisaoChamas() { send({ type: 'encerrar_prisao_chamas' }); }
   function responderTeleporte(requestId, falhaVoluntaria = false) {
     send({ type: 'teleporte_consent', request_id: requestId,
@@ -1963,6 +1979,10 @@ const GS = (() => {
   // Janela Manual: encerra a vez do monstro.
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
   function mestreSelecionarTeste(monsterId) { send({ type: 'mestre_selecionar_teste', monster_id: monsterId }); }
+  // Mesa livre do editor: posiciona um herói temporário, controlado pelo Mestre.
+  function mestreAdicionarHeroiTeste(classId, tx, ty) {
+    send({ type: 'mestre_adicionar_heroi_teste', class_id: classId, tx, ty });
+  }
   // Camada B: implanta um reforço da reserva do mestre numa casa livre.
   function mestreImplantarReforco(monsterType, tx, ty) { send({ type: 'mestre_implantar_reforco', monster_type: monsterType, tx, ty }); }
   // Falas de NPC: o mestre dispara uma fala com gatilho manual.
@@ -2728,8 +2748,14 @@ const GS = (() => {
   function paladinDefensorRaio() {
     return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_defensor_2') ? 5 : 4;
   }
+  function paladinDefensorNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('paladino_defensor_3')) return 3;
+    if (e.includes('paladino_defensor_2')) return 2;
+    return 1;
+  }
   function paladinDefensorSplit() {
-    return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_defensor_3') ? 40 : 50;
+    return 50;
   }
   function paladinRegenRaio() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
@@ -3197,6 +3223,7 @@ const GS = (() => {
     senhorDasAguasCriar,
     iraRochaArdenteConfirmarChamas,
     tempestadeCiclonesMover,
+    tempestadeCiclonesConfirmarPosicoes,
     encerrarPrisaoChamas,
     responderTeleporte,
     confirmarTeleporte,
@@ -3221,6 +3248,7 @@ const GS = (() => {
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
     mestreSelecionarTeste,
+    mestreAdicionarHeroiTeste,
     mestreImplantarReforco,
     dispararFala,
     isMaster,
@@ -3307,6 +3335,7 @@ const GS = (() => {
     paladinAtaqueSagradoDados,
     paladinLuzMaxAtributos,
     paladinDefensorRaio,
+    paladinDefensorNivel,
     paladinDefensorSplit,
     paladinRegenRaio,
     ladinoArmadilhasDesbloqueadas,

@@ -3742,6 +3742,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_tactics": [],
     "image": "armadura",
     "portrait": "armadura",
+    "model3d": "assets/objetos/boneco_palha_treino.glb",
     "size": [
       1,
       1

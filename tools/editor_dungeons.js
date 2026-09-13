@@ -8453,7 +8453,7 @@ window.EDITOR_DUNGEONS = [
           "w": 6,
           "h": 6,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": [
             [
               12,
@@ -8522,12 +8522,7 @@ window.EDITOR_DUNGEONS = [
           ]
         }
       ],
-      "door_conditions": {
-        "12,3": {
-          "type": "licao",
-          "licao_id": "atrio_04"
-        }
-      },
+      "door_conditions": {},
       "entrance": null,
       "hero_spawns": [
         {
@@ -8888,7 +8883,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. Só depois disso a porta ao fundo destranca.",
+          "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. A porta ao fundo já está aberta para você avançar quando quiser.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 2
@@ -8910,20 +8905,20 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "A porta ao fundo já destrancou. Mas porta não se atravessa andando: CLIQUE nela para abrir. Abrir é de graça — não gasta movimento nem a sua ação, e vale para qualquer porta da masmorra.",
+          "texto": "A porta ao fundo já está aberta. Atravesse-a quando quiser: portas abertas deixam você passar, e abrir uma porta em outras masmorras é uma ação gratuita.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 7
           },
           "ordem": 5,
           "tarefa": {
-            "tipo": "abrir_porta",
+            "tipo": "mover_ate",
             "alvo": [
-              12,
+              13,
               3
             ],
             "vezes": 1,
-            "texto_curto": "Clique na porta ao fundo para abri-la"
+            "texto_curto": "Atravesse a porta ao fundo"
           }
         },
         {
@@ -36635,10 +36630,20 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "medusa",
           "pos": [
-            2,
-            35
+            16,
+            2
           ],
           "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "soldado",
+          "pos": [
+            29,
+            31
+          ],
+          "room_id": 18,
           "boss": false,
           "target": false
         }
@@ -36884,6 +36889,22 @@ window.EDITOR_DUNGEONS = [
             3,
             30
           ]
+        },
+        {
+          "tipo": "fosso_estacas",
+          "pos": [
+            26,
+            29
+          ]
+        },
+        {
+          "tipo": "fosso_envenenado",
+          "pos": [
+            27,
+            29
+          ],
+          "dificuldade": 20,
+          "veneno_id": "ensaio_sobre_a_cegueira"
         }
       ],
       "decorations": [
@@ -38342,6 +38363,9 @@ window.EDITOR_DUNGEONS = [
         "8,10": "pedra_negra",
         "9,10": "pedra_negra"
       },
+      "pontes": [],
+      "elevacoes": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
           "type": "rescue_prisoner",

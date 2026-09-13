@@ -7864,7 +7864,7 @@ window.EDITOR_CATALOG = {
       "source_class": "paladin",
       "name": "Protetor",
       "icon": "🛡️",
-      "descricao": "Aliado recebe metade do dano. A outra metade vai para Richard",
+      "descricao": "Ataques: 50/50. Outras fontes: 75% no aliado e 25% em Richard. Richard reduz 3 de todo dano.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "monster_maintenance": true,
@@ -7875,7 +7875,7 @@ window.EDITOR_CATALOG = {
           "requires": null,
           "name": "Defensor II",
           "icon": "🛡️",
-          "description": "O alcance da proteção aumenta para 5 quadrados."
+          "description": "O alcance aumenta para 5; dano não proveniente de ataque fica 65% no alvo e 35% em Richard."
         },
         {
           "id": "paladino_defensor_3",
@@ -7883,7 +7883,7 @@ window.EDITOR_CATALOG = {
           "requires": "paladino_defensor_2",
           "name": "Defensor III",
           "icon": "🛡️",
-          "description": "O dano dividido cai para 40%/40% (20% é mitigado)."
+          "description": "Todo dano sofrido pelo alvo é dividido 50%/50%; Richard reduz 3 de todo dano enquanto o Protetor estiver ativo."
         }
       ]
     },
@@ -8481,7 +8481,7 @@ window.EDITOR_CATALOG = {
       "source_id": "paladino_defensor_2",
       "name": "Defensor II",
       "icon": "✦",
-      "descricao": "O alcance da proteção aumenta para 5 quadrados.",
+      "descricao": "O alcance aumenta para 5; dano não proveniente de ataque fica 65% no alvo e 35% em Richard.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -8492,7 +8492,7 @@ window.EDITOR_CATALOG = {
       "source_id": "paladino_defensor_3",
       "name": "Defensor III",
       "icon": "✦",
-      "descricao": "O dano dividido cai para 40%/40% (20% é mitigado).",
+      "descricao": "Todo dano sofrido pelo alvo é dividido 50%/50%; Richard reduz 3 de todo dano enquanto o Protetor estiver ativo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9644,7 +9644,8 @@ window.EDITOR_CATALOG = {
       "icone": "🛡️",
       "tipo": "buff_self",
       "descricao": "Reduz 5 de todo dano recebido por 1d6 + 1 rodada por nível. Estender aumenta a duração; Fortalecer reduz 7.",
-      "duracao": "1d6"
+      "duracao": "1d6",
+      "duracao_por_nivel": 1
     },
     {
       "id": "contramagica",
@@ -9740,7 +9741,8 @@ window.EDITOR_CATALOG = {
       "descricao": "Alvo único. Vontade nega. Durante 1d6 + nível de conjurador rodadas, os custos de Fome e Sede do alvo são duplicados.",
       "save": "vontade",
       "alcance": 6,
-      "duracao": "1d6"
+      "duracao": "1d6",
+      "duracao_por_nivel": 1
     },
     {
       "id": "silencio",
@@ -9758,6 +9760,24 @@ window.EDITOR_CATALOG = {
       "duracao": "1d4"
     },
     {
+      "id": "vinculo_maldito_da_dor",
+      "nome": "Vínculo Maldito da Dor",
+      "circulo": "segundo",
+      "classe": [
+        "mage",
+        "cleric"
+      ],
+      "icone": "⛓️",
+      "tipo": "alvo_inimigo",
+      "descricao": "Liga o conjurador a um inimigo por 1d4 + nível de conjurador rodadas. Vontade nega. Cada vínculo transfere 25% do dano sofrido pelo conjurador ao inimigo, até 4 inimigos; os vínculos podem coexistir. O inimigo atingido sofre -1 no próximo ataque, sem acumular.",
+      "save": "vontade",
+      "duracao": "1d4",
+      "alcance_los": true,
+      "duracao_por_nivel": 1,
+      "max_alvos": 4,
+      "fracao_transferida": 25
+    },
+    {
       "id": "chamado_inverno",
       "nome": "Chamado do Inverno",
       "circulo": "segundo",
@@ -9770,7 +9790,8 @@ window.EDITOR_CATALOG = {
       "save": "reflexos",
       "area_lado": 4,
       "alcance_base": 7,
-      "duracao": "1d4"
+      "duracao": "1d4",
+      "duracao_por_nivel": 1
     },
     {
       "id": "desnutricao",
@@ -9813,7 +9834,8 @@ window.EDITOR_CATALOG = {
       "descricao": "Transforma uma área em Água ou Água profunda por 1d4 + nível rodadas. A partir da segunda rodada, e em qualquer rodada seguinte enquanto a magia durar, pode marcar casas da área como redemoinho por ação livre, até somar metade do nível do clérigo no total. A cota é acumulada (dá para marcar poucas casas por vez) e os redemoinhos permanecem até o fim da magia.",
       "area_lado": 4,
       "alcance_base": 5,
-      "duracao": "1d4"
+      "duracao": "1d4",
+      "duracao_por_nivel": 1
     },
     {
       "id": "ira_rocha_ardente",
@@ -9838,10 +9860,11 @@ window.EDITOR_CATALOG = {
       ],
       "icone": "🌪️",
       "tipo": "area_fixa",
-      "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 1 ciclone 2x2 a cada 4 níveis. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
+      "descricao": "Área 3x3 (+1 a cada 3 níveis). Cria 2d4 ciclones de 1 casa, com posição inicial escolhida pelo clérigo. Cada ciclone pode andar 2 casas por rodada. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras.",
       "area_lado": 3,
       "alcance_base": 6,
-      "duracao": "1d4+1"
+      "duracao": "1d4+1",
+      "duracao_por_nivel": 2
     },
     {
       "id": "teleporte",

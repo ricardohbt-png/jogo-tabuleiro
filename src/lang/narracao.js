@@ -2733,8 +2733,8 @@ window.LANG_NARRACAO = {
     "pt": "💡 **{heroi}** torna-se **Guerreiro da Luz** | visão+{bonus_validos_visao} ataque+{bonus_validos_ataque} dano+{bonus_validos_dano} CA+{bonus_validos_ca} (manutenção 🍖-{custo_fome} 💧-{custo_sede})."
   },
   "narracao.torna_se_protetor_de_metade_do_dano_rece": {
-    "en": "🛡️ **{heroi}** becomes **Protector** of **{alvo}** — half the damage taken will be transferred to Richard! (🍖-{fome_cost} 💧-{sede_cost})",
-    "pt": "🛡️ **{heroi}** torna-se **Protetor** de **{alvo}** — metade do dano recebido será transferido a Richard! (🍖-{fome_cost} 💧-{sede_cost})"
+    "en": "🛡️ **{heroi}** becomes **Protector** of **{alvo}** — damage is shared with Richard by the Protector rules. Richard also gains −3 damage reduction. (🍖-{fome_cost} 💧-{sede_cost})",
+    "pt": "🛡️ **{heroi}** torna-se **Protetor** de **{alvo}** — o dano é dividido com Richard conforme as regras do Protetor. Richard também recebe redução de 3 no dano. (🍖-{fome_cost} 💧-{sede_cost})"
   },
   "narracao.transforma_uma_area_x_em": {
     "en": "❄️ **{caster}** turns a **{lado}x{lado}** area into **{tipo_txt}** {dur_txt}.",

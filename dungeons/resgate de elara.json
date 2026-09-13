@@ -2360,10 +2360,20 @@
     {
       "type": "medusa",
       "pos": [
-        2,
-        35
+        16,
+        2
       ],
       "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "soldado",
+      "pos": [
+        29,
+        31
+      ],
+      "room_id": 18,
       "boss": false,
       "target": false
     }
@@ -2609,6 +2619,22 @@
         3,
         30
       ]
+    },
+    {
+      "tipo": "fosso_estacas",
+      "pos": [
+        26,
+        29
+      ]
+    },
+    {
+      "tipo": "fosso_envenenado",
+      "pos": [
+        27,
+        29
+      ],
+      "dificuldade": 20,
+      "veneno_id": "ensaio_sobre_a_cegueira"
     }
   ],
   "decorations": [
@@ -4067,6 +4093,9 @@
     "8,10": "pedra_negra",
     "9,10": "pedra_negra"
   },
+  "pontes": [],
+  "elevacoes": {},
+  "transicao_altura": "rampa",
   "objectives": {
     "primary": {
       "type": "rescue_prisoner",

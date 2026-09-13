@@ -163,6 +163,7 @@ def build_catalog():
             "id", "nome", "circulo", "classe", "icone", "tipo", "descricao",
             "save", "dano", "dano_base", "dano_por_nivel", "area_raio",
             "area_lado", "alcance", "alcance_base", "duracao", "buff", "debuff",
+            "alcance_los", "duracao_por_nivel", "max_alvos", "fracao_transferida",
         ) if key in spell})
     monster_abilities = list(server._base_ability_library().values())
     return {"monsters": monsters, "monster_abilities": monster_abilities,

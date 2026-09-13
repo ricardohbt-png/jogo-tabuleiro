@@ -1057,6 +1057,22 @@ window.LANG_ERROS = {
     "en": "There is no room for a 2x2 cyclone in that area.",
     "pt": "Não há espaço para um ciclone 2x2 nessa área."
   },
+  "erro.nao_ha_espaco_para_um_ciclone_1x1_nessa": {
+    "en": "There is no room for a 1x1 cyclone in that area.",
+    "pt": "Não há espaço para um ciclone 1x1 nessa área."
+  },
+  "erro.nao_ha_espaco_para_os_ciclones_nessa_area": {
+    "en": "There is not enough room to place all the cyclones in that area.",
+    "pt": "Não há espaço suficiente para posicionar todos os ciclones nessa área."
+  },
+  "erro.nao_ha_uma_tempestade_de_ciclones_ativa": {
+    "en": "There is no active Cyclone Storm waiting for placement.",
+    "pt": "Não há uma Tempestade de Ciclones ativa aguardando posicionamento."
+  },
+  "erro.escolha_exatamente_n_casas_para_os_ciclones": {
+    "en": "Choose exactly {count} valid squares for the cyclones.",
+    "pt": "Escolha exatamente {count} casas válidas para os ciclones."
+  },
   "erro.nao_ha_monstro_sob_sua_metamorfose": {
     "en": "There is no monster under your Polymorph.",
     "pt": "Não há monstro sob sua Metamorfose."
