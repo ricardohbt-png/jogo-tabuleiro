@@ -10827,8 +10827,19 @@ function _attackFeedbackModeLabel(mode){
 // _receiveAttackFeedback põe e o `impact` de _executarComandoCena tira.
 function _attackFeedbackAguardaGolpe(f){ return !!f.result && f.resultAt === Infinity; }
 
+// Arremesso de ÁREA (frente B): o start vem com alvo sintético (target_name vazio,
+// target_pos = casa mirada) e o result não tem teste de ataque — o banner mostra a
+// casa e "ÁREA" em vez de "Alvo • ACERTO".
+function _attackFeedbackTargetName(msg){
+  if(msg.target_name) return msg.target_name;
+  if(msg.projectile && msg.projectile.area && Array.isArray(msg.target_pos))
+    return t('ui.hud.alvo_area', {x: msg.target_pos[0], y: msg.target_pos[1]});
+  return 'Alvo';
+}
+
 function _attackFeedbackResultLabel(f){
   if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
+  if(f.area) return t('ui.hud.resultado_area');
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return '1 NATURAL — FALHA!';
   if(f.crit) return t('ui.hud.critico');
@@ -11441,9 +11452,10 @@ function _receiveAttackFeedback(msg){
   }
   if(msg.phase==='start'){
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
-    const f={id, attackerName:msg.attacker_name||'Atacante', targetName:msg.target_name||'Alvo',
+    const f={id, attackerName:msg.attacker_name||'Atacante', targetName:_attackFeedbackTargetName(msg),
       attackName:msg.attack_name||'Ataque', attackerPos:(msg.attacker_pos||[0,0]).map(Number),
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
+      area:!!(msg.projectile && msg.projectile.area),
       result:false, startedAt:now, resultAt:now,
       prepDuration:_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS),
       resultDuration:_animationProgressDuration(ATTACK_FEEDBACK_RESULT_MS), group:null};
@@ -18169,15 +18181,16 @@ function _registrarHistoricoAtaque(msg){
       targetId:msg.target_id == null ? null : String(msg.target_id),
       attackerPos:Array.isArray(msg.attacker_pos) ? msg.attacker_pos.slice(0,2) : null,
       targetPos:Array.isArray(msg.target_pos) ? msg.target_pos.slice(0,2) : null,
-      attackerName:String(msg.attacker_name || 'Atacante'), targetName:String(msg.target_name || 'Alvo'),
+      attackerName:String(msg.attacker_name || 'Atacante'), targetName:String(_attackFeedbackTargetName(msg)),
       attackName:String(msg.attack_name || 'Ataque'), mode:String(msg.advantage_mode || 'normal'),
+      area:!!(msg.projectile && msg.projectile.area),
       text:'', updatedAt:Date.now(), seq:_masterHistorySeq++, result:null,
     };
     _masterActionHistory.push(item);
   }
   if(!item) return;
   if(msg.phase === 'result'){
-    item.result = _masterActionResultLabel(msg);
+    item.result = item.area ? t('ui.hud.resultado_area') : _masterActionResultLabel(msg);
     item.roll = msg.roll; item.total = msg.total;
   }
   item.updatedAt = Date.now();

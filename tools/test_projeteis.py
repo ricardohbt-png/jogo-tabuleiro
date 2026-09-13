@@ -96,6 +96,16 @@ def test_sites():
     st = feedbacks(r)
     check("kobold besteiro: start com bolt", st and st[-1].get("projectile") == {"kind": "bolt"})
 
+    # Lança do kobold (spec §7): _kobold_throw_lance monta o ataque com projectile "spear".
+    r, p = sala(); r._msgs.clear()
+    m = S.make_monster(mdef, r.rooms[0]); m["id"] = "k2"; m["pos"] = [3, 1]; m["room_id"] = "r0"; m["alertado"] = True
+    m["kobold_lance_in_hand"] = True
+    r.monsters["k2"] = m
+    lancou = asyncio.run(r._kobold_throw_lance(m, {"kind": "player", "obj": p}))
+    st = feedbacks(r)
+    check("kobold lança: arremessou e deixou a lança no chão", lancou is not False and len(r.ground_items) == 1)
+    check("kobold lança: start com spear", st and st[-1].get("projectile") == {"kind": "spear"})
+
     # Arma do EDITOR pelo caminho real: p["weapon"] vem de _sincronizar_arma_de_combate,
     # cuja whitelist não leva `ammo` — o projétil tem de sair do RANGED_AMMO registrado.
     print("\n[2b] Arma do editor (besta custom) pelo caminho real")

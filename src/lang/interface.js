@@ -2403,6 +2403,14 @@ window.LANG_INTERFACE = {
     "en": "CRITICAL!",
     "pt": "CRÍTICO!"
   },
+  "ui.hud.alvo_area": {
+    "en": "square ({x},{y})",
+    "pt": "casa ({x},{y})"
+  },
+  "ui.hud.resultado_area": {
+    "en": "AREA",
+    "pt": "ÁREA"
+  },
   "ui.hud.critico_2": {
     "en": "CRITICAL",
     "pt": "CRÍTICO"

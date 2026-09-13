@@ -2370,7 +2370,7 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **`areaImpactAt(pos, now)`** (irmã pura de `pendingFor`): instante estimado da chegada
 > de um arremesso de ÁREA que cobre `pos` — o `game_state` com o dano chega **na mesma
 > rajada** do `start`, antes de qualquer `tick`, então a estimativa pré-lançamento é
-> `phaseAt + windup + travelMs` (≤1 quadro de erro; cena enfileirada atrás de outra do mesmo
+> `(phaseAt se ARMANDO, senão now) + windup + travelMs` (≤1 quadro de erro; cena enfileirada atrás de outra do mesmo
 > atacante subestima — aceito, igual ao portão da bola de fogo). **Render (`game.js`):**
 > `_projeteis` + `_projetilLancar/_projetilUpdate3D/_projetilQuebrar/_projetilDispose3D/`
 > `_projetilTickTodos/_projetilLimparTodos` (família `_bolaFogo*`; parábola `from→to`,
