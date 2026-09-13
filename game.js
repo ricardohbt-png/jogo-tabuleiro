@@ -40045,8 +40045,8 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   esqueletoHumano:   'assets/models3d/monstros/esqueletoHumano.glb',
   esqueletoAnimal:   'assets/models3d/monstros/esqueleto_animal.glb',
   crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
-  cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
-  cobraConstritora:  'assets/models3d/monstros/cobra_constritora.glb',
+  cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa_corrigida.glb',
+  cobraConstritora:  'assets/models3d/monstros/cobra_constritora_corrigida.glb',
   bugbear:           'assets/models3d/monstros/bugbear.glb',
   // Alias legado com erro de digitação: o arquivo real é bugbear.glb.
   bugber:            'assets/models3d/monstros/bugbear.glb',
@@ -40064,15 +40064,15 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   lagartoCarniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
+  // O Zumbi Infectado mantém o mesmo GLB no fallback por tipo.
   zumbi:             'assets/models3d/monstros/zumbi.glb',
-  // Variante recolorida conforme a referência visual do Ogro de Clava;
-  // o GLB original continua preservado.
-  ogroClava:         'assets/models3d/monstros/ogro_clava_corrigido.glb',
+  ogroClava:         'assets/models3d/monstros/ogro_clava.glb',
   ogroLanca:         'assets/models3d/monstros/ogro_lanca.glb',
-  // Cobre tanto `orc_guerreiro` (ficha nova) quanto o `orc` legado, que resolve
-  // esta mesma `image` por _MONSTER_TYPE_DEFAULT_IMAGE. A variante corrigida
-  // preserva o GLB original e aproxima a paleta da referência do bestiário.
-  orcGuerreiro:      'assets/models3d/monstros/orc_corrigido.glb',
+  // O mesmo GLB atende o Orc legado, o Orc Guerreiro e suas duas formas de
+  // identificador de imagem.
+  orc:               'assets/models3d/monstros/orc.glb',
+  orcGuerreiro:      'assets/models3d/monstros/orc.glb',
+  orc_guerreiro:     'assets/models3d/monstros/orc.glb',
   elemental_agua:    'assets/models3d/monstros/elemental_agua.glb',
   elemental_ar:      'assets/models3d/monstros/elemental_ar.glb',
   elemental_eletrico:'assets/models3d/monstros/elemental_eletrico.glb',
@@ -40098,9 +40098,10 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   garaloux_alfa:       'assets/models3d/monstros/garalux.glb',
   garalux:           'assets/models3d/monstros/garalux.glb',
   lacralion:         'assets/models3d/monstros/lacralion.glb',
-  // A Medusa foi recalibrada em 90° para a frente acompanhar o movimento;
-  // as formas grande_medusa/grande_gorgona resolvem o mesmo identificador.
-  medusa:            'assets/models3d/monstros/medusa_corrigida.glb',
+  // As três fichas de Medusa compartilham a miniatura medusa.glb.
+  medusa:            'assets/models3d/monstros/medusa.glb',
+  grande_medusa:     'assets/models3d/monstros/medusa.glb',
+  grande_gorgona:    'assets/models3d/monstros/medusa.glb',
   molochos:          'assets/models3d/monstros/molochos.glb',
   // O necromante mantém sua arte própria; o Mago das Trevas usa uma cópia
   // calibrada em 90° para acompanhar a direção do movimento.
@@ -40113,10 +40114,9 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
   tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
   ciclope:            'assets/models3d/monstros/ciclope.glb',
-  // Variante recolorida conforme gigante_guerreiro.png; o GLB original
-  // permanece preservado para referência.
-  gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro_corrigido.glb',
-  gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro_corrigido.glb',
+  // O Gigante Guerreiro usa o arquivo existente gigante_guerreiro.glb.
+  gigante_guerreiro:  'assets/models3d/monstros/gigante_guerreiro.glb',
+  gigante_guerra:    'assets/models3d/monstros/gigante_guerreiro.glb',
   gigante_runico:     'assets/models3d/monstros/gigante_runas.glb',
   troll:              'assets/models3d/monstros/troll.glb',
 
@@ -40133,8 +40133,8 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   esqueleto_animal:   'assets/models3d/monstros/esqueleto_animal.glb',
   esqueleto_animal_customizado: 'assets/models3d/monstros/esqueleto_animal.glb',
   crocodilo_jovem:    'assets/models3d/monstros/crocodilo.glb',
-  cobra_venenosa:     'assets/models3d/monstros/cobra_venenosa.glb',
-  cobra_constritora:  'assets/models3d/monstros/cobra_constritora.glb',
+  cobra_venenosa:     'assets/models3d/monstros/cobra_venenosa_corrigida.glb',
+  cobra_constritora:  'assets/models3d/monstros/cobra_constritora_corrigida.glb',
   aranha_sombria:     'assets/models3d/monstros/aranha.glb',
   escorpiao_pedra:    'assets/models3d/monstros/escorpiao.glb',
   escorpiao_de_pedra_customizado: 'assets/models3d/monstros/escorpiao.glb',
@@ -40147,7 +40147,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   urso_negro:         'assets/models3d/monstros/urso.glb',
   urso_negro_customizado: 'assets/models3d/monstros/urso.glb',
   zumbi_infectado:    'assets/models3d/monstros/zumbi.glb',
-  ogro_clava:         'assets/models3d/monstros/ogro_clava_corrigido.glb',
+  ogro_clava:         'assets/models3d/monstros/ogro_clava.glb',
   ogro_lanca:         'assets/models3d/monstros/ogro_lanca.glb',
   escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
   rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
@@ -40157,8 +40157,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   rato:               'assets/models3d/monstros/rato.glb',
   gato:               'assets/models3d/monstros/gato.glb',
   ovelha:             'assets/models3d/monstros/ovelha.glb',
-  // Casa pelo `type` do monstro: a ficha do soldado tem `image` apontando para
-  // "nova_criatura_customizado", cuja arte nunca existiu.
+  // Casa pelo `type` do monstro: a ficha do soldado usa sua miniatura própria.
   soldado:            'assets/models3d/monstros/soldado.glb',
   // Fallback para fichas autoradas que chegam apenas com o `type` nativo.
   vela_de_fogo:       'assets/models3d/monstros/vela_fogo.glb',
@@ -40166,6 +40165,15 @@ const _MONSTER_GLB_MODELS = Object.freeze({
 function _monsterGLBPath(imageName, monsterType){
   if (monsterType === 'dark_mage')
     return _MONSTER_GLB_MODELS.dark_mage;
+  if (monsterType === 'medusa' || monsterType === 'grande_medusa'
+      || monsterType === 'grande_gorgona')
+    return _MONSTER_GLB_MODELS.medusa;
+  // O Zumbi Infectado compartilha a imagem `zumbi`, mas não deve herdar a
+  // variante recolorida do Zumbi comum.
+  if (monsterType === 'zumbi_infectado')
+    return _MONSTER_GLB_MODELS.zumbi_infectado;
+  if (monsterType === 'zumbi')
+    return _MONSTER_GLB_MODELS.zumbi;
   // A ficha antiga do escorpião pequeno ainda pode carregar a imagem
   // `escorpiaodepedra_original`; o tipo autoritativo deve prevalecer para que
   // sua miniatura 3D seja sempre o escorpião amarelo.
@@ -40431,9 +40439,43 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.userData._monsterOriented = !!oriented;
     wrap.userData._monsterCenteredLength = !!(oriented && fillFootprint && !is2x2);
     // Ajustes individuais de proporção sem afetar as demais miniaturas.
-    // O Mago das Trevas fica 8% menor; o Lacralion Filhote, 30% menor.
+    // O Mago das Trevas fica 8% menor; o Necromante usa 1,045 após a redução
+    // de 5% sobre o ajuste anterior; o Lacralion
+    // Filhote, 30% menor;
+    // o Lacralion Ancião fica 30% maior; o Tirano Ancestral, 20% maior; o
+    // Molochus Ancião fica 30% maior; o Molochus Jovem, 20% menor; o Zumbi
+    // fica 10% menor; o Soldado fica 20% menor; os dois tipos de Orc ficam
+    // em 90% do tamanho original; o Escorpião de Pedra e a Aranha
+    // Sombria ficam 30% menores; o Minotauro fica 10% maior e o Minotauro
+    // Elite, 20% maior; a Cobra Venenosa e a Cobra Constritora ficam 15% e
+    // 10% menores, respectivamente;
+    // o Garaloux Jovem fica 20% menor e o Alfa, 30% maior.
     const monsterVisualScale = monsterType === 'dark_mage' ? 0.92
+      : monsterType === 'necromante' ? 1.045
       : monsterType === 'lacralion_filhote' ? 0.70
+      : monsterType === 'lacralion_anciao' ? 1.30
+      : monsterType === 'zumbi' ? 0.90
+      : monsterType === 'ovelha' ? 0.80
+      : monsterType === 'tirano_ancestral' ? 1.20
+      : (monsterType === 'molochus_jovem' || monsterType === 'molochos_jovem') ? 0.80
+      : (monsterType === 'molochus_anciao' || monsterType === 'molochos_anciao') ? 1.30
+      : monsterType === 'soldado' ? 0.80
+      : (monsterType === 'cobra_venenosa' || imageName === 'cobraVenenosa'
+          || imageName === 'cobra_venenosa') ? 0.85
+      : (monsterType === 'cobra_constritora' || imageName === 'cobraConstritora'
+          || imageName === 'cobra_constritora') ? 0.90
+      : (monsterType === 'orc' || monsterType === 'orc_guerreiro'
+          || imageName === 'orc' || imageName === 'orcGuerreiro'
+          || imageName === 'orc_guerreiro') ? 0.90
+      : (monsterType === 'escorpiao_pedra' || monsterType === 'aranha_sombria'
+          || imageName === 'escorpiaodepedra' || imageName === 'aranhasombria') ? 0.70
+      : (monsterType === 'ogro_clava' || monsterType === 'ogro_lanca'
+          || imageName === 'ogroClava' || imageName === 'ogroLanca'
+          || imageName === 'ogro_clava' || imageName === 'ogro_lanca') ? 1.20
+      : monsterType === 'minotauro' ? 1.10
+      : monsterType === 'minotauro_elite' ? 1.20
+      : monsterType === 'garaloux_jovem' ? 0.80
+      : monsterType === 'garaloux_alfa' ? 1.30
       : 1;
     wrap.scale.setScalar(scale * monsterVisualScale);
     if (oriented && fillFootprint && !is2x2) {
@@ -40527,6 +40569,13 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   ]);
   const movementFront = new Set([
     'ciclope',
+    'harpia',
+    // A Aranha Sombria também precisa do giro de 90° para que a frente do
+    // GLB acompanhe o sentido indicado pelo movimento.
+    'aranhasombria', 'aranha_sombria',
+    // A Ovelha também precisa do giro de 90° para acompanhar a direção
+    // indicada pelo movimento da forma animal.
+    'ovelha',
     // O Necromante também foi exportado 90° fora do eixo do movimento;
     // usar a orientação-base deixa a frente acompanhar o deslocamento.
     'necromante',
@@ -40549,8 +40598,17 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'garaloux', 'garaloux_jovem', 'garaloux_adulto', 'garaloux_alfa',
     // Os elementais foram exportados com a frente 90° fora do eixo do mapa;
     // usam a mesma calibração dos modelos cuja frente acompanha o movimento.
-    'elemental_ar', 'elemental_agua', 'elemental_eletrico',
+    'elemental_ar', 'elemental_agua', 'elemental_eletrico', 'elemental_gelo',
+    'elemental_pedra',
+    // O Soldado também foi exportado com a frente deslocada em 90°.
+    'soldado',
   ]);
+  // O Mago das Trevas usa um GLB próprio que já foi girado 90° no arquivo.
+  // Como sua imagem legada ainda pode ser `necromante`, esta exceção precisa
+  // vir antes de movementFront para aplicar o quarto de volta complementar.
+  if (monsterType === 'dark_mage' || /mago_das_trevas\.glb$/i.test(glbPath || '')) {
+    return _facingToRotY(facing) + Math.PI / 2;
+  }
   if (movementFront.has(imageName) || movementFront.has(monsterType)
       || /(?:ciclope|minotauro|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
     // Estes modelos foram exportados 90° de lado em relação ao eixo padrão.

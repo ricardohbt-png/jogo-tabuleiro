@@ -4114,7 +4114,7 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        3
+        2
       ],
       "oriented": true,
       "porte": "grande",
@@ -4869,9 +4869,8 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
-      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 16,
@@ -4952,9 +4951,8 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
-      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 18,
@@ -5067,9 +5065,8 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
-      "oriented": true,
       "porte": "grande",
       "image": "garaloux",
       "str_": 22,

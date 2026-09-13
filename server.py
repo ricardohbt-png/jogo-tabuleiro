@@ -5051,7 +5051,7 @@ MONSTER_DEFS.extend([
     {
         "type": "tirano_ancestral", "name": "Tirano Ancestral", "emoji": "🦖",
         "tier": 10, "cr": 10, "hp": 200, "ac": 26, "natural_armor": 12,
-        "size": [2, 3], "oriented": True, "movement": 7, "movement_exception": True,
+        "size": [2, 2], "oriented": True, "movement": 7, "movement_exception": True,
         "str_": 28, "dex": 18, "con_": 26, "int_": 3,
         "fort": 15, "ref_": 7, "will": -2,
         "attacks": [
@@ -5313,7 +5313,7 @@ MONSTER_DEFS.extend([
     {
         "type": "garaloux_jovem", "name": "Garaloux Jovem", "emoji": "🦁",
         "tier": 3, "cr": 3, "hp": 50, "ac": 18, "natural_armor": 5,
-        "size": [2, 1], "oriented": True, "movement": 7, "movement_exception": True,
+        "size": [2, 2], "movement": 7, "movement_exception": True,
         "str_": 16, "dex": 16, "con_": 16, "int_": 4, "fort": 6, "ref_": 5, "will": -2,
         "attacks": [
             {"name": "Mordida", "atk_bonus": 6, "damage": "1d8+4", "damage_types": ["physical"], "num_attacks": 1},
@@ -5332,7 +5332,7 @@ MONSTER_DEFS.extend([
     {
         "type": "garaloux_adulto", "name": "Garaloux Adulto", "emoji": "🦁",
         "tier": 5, "cr": 5, "hp": 82, "ac": 21, "natural_armor": 8,
-        "size": [2, 1], "oriented": True, "movement": 7, "movement_exception": True,
+        "size": [2, 2], "movement": 7, "movement_exception": True,
         "str_": 18, "dex": 16, "con_": 18, "int_": 4, "fort": 8, "ref_": 5, "will": -2,
         "attacks": [
             {"name": "Mordida", "atk_bonus": 9, "damage": "2d6+7", "damage_types": ["physical"], "num_attacks": 1},
@@ -5358,7 +5358,7 @@ MONSTER_DEFS.extend([
     {
         "type": "garaloux_alfa", "name": "Garaloux Alfa", "emoji": "🦁",
         "tier": 8, "cr": 8, "hp": 145, "ac": 25, "natural_armor": 11,
-        "size": [2, 1], "oriented": True, "movement": 7, "movement_exception": True,
+        "size": [2, 2], "movement": 7, "movement_exception": True,
         "str_": 22, "dex": 18, "con_": 22, "int_": 4, "fort": 11, "ref_": 7, "will": -2,
         "attacks": [
             {"name": "Mordida", "atk_bonus": 12, "damage": "3d6+9", "damage_types": ["physical"], "num_attacks": 1},
