@@ -721,6 +721,7 @@ check("game.js tem o render de projéteis", ["function _projetilLancar(", "funct
 check("comando launch é consumido", gameSrc.includes("c.cmd === 'launch'"));
 check("tick anima os projéteis", gameSrc.includes("_projetilTickTodos(now)"));
 check("dispose3D limpa os projéteis", (() => { const i = gameSrc.indexOf("\nfunction dispose3D("); return i > 0 && gameSrc.slice(i, i + 1500).includes("_projetilLimparTodos()"); })());
+check("diff de HP consulta _projetilFeedbackStartAt", corpoDaFuncao("_detectHpChanges").includes("_projetilFeedbackStartAt(entry)"));
 
 console.log("\n[34] Morte (Task 10): fiação em game.js");
 {

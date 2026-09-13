@@ -11704,6 +11704,22 @@ function _bolaFogoFeedbackStartAt(entry){
   return liberarEm;
 }
 
+// Irmã do portão da bola de fogo: quem está no raio de um arremesso de ÁREA em
+// voo só mostra o número quando o frasco chega (os saves rolam durante o voo).
+function _projetilFeedbackStartAt(entry){
+  if(!entry || !Array.isArray(entry.pos)) return null;
+  const px = Number(entry.pos[0]), py = Number(entry.pos[1]);
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  let liberarEm = null;
+  for(const anim of _projeteis){
+    if(!anim.area) continue;
+    const d = Math.max(Math.abs(anim.to[0] - px), Math.abs(anim.to[1] - py));
+    if(d > anim.area_raio) continue;
+    liberarEm = liberarEm == null ? anim.impactAt : Math.max(liberarEm, anim.impactAt);
+  }
+  return liberarEm;
+}
+
 function _detectHpChanges(st){
   const entries = _gatherHpEntries(st);
   const now = performance.now();
@@ -11777,7 +11793,10 @@ function _detectHpChanges(st){
         }
         _playCombatCue('damage', cue);
         const damageIndex = damageSequenceIndex++;
-        const fireStart = _bolaFogoFeedbackStartAt(entry);
+        const fireStartBola = _bolaFogoFeedbackStartAt(entry);
+        const fireStartProj = _projetilFeedbackStartAt(entry);
+        const fireStart = fireStartBola == null ? fireStartProj
+          : fireStartProj == null ? fireStartBola : Math.max(fireStartBola, fireStartProj);
         const startAt = fireStart != null
           ? fireStart + (multipleTargets ? damageIndex * 120 : 0)
           : (multipleTargets ? now + damageIndex * 120 : null);
