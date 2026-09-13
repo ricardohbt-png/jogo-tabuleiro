@@ -16026,7 +16026,8 @@ class GameRoom:
         dex_mod = mod(p.get("dex", 12))
         attack_feedback_id = await self._emitir_feedback_ataque(
             "start", p, target, defn.get("name") or item.get("name") or "Arremesso", "normal",
-            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"), "item_emoji": defn.get("emoji") or item.get("emoji")})
+            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"), "item_emoji": defn.get("emoji") or item.get("emoji"),
+                        "item_elemento": defn.get("elemento")})
         roll = random.randint(1, 20)
         total = roll + p["atk_bonus"]
         nat1 = (roll == 1); crit = (roll == 20)
@@ -16127,6 +16128,7 @@ class GameRoom:
             "start", p, alvo_area, nome_arr, "normal",
             projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"),
                         "item_emoji": defn.get("emoji") or item.get("emoji"),
+                        "item_elemento": defn.get("elemento"),
                         "area": True, "area_raio": int(raio), "sem_dado": True})
         await self._emitir_feedback_ataque(
             "result", p, alvo_area, nome_arr, "normal",

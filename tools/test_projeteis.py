@@ -132,7 +132,7 @@ def test_throw():
     asyncio.run(r.handle_throw_item("p1", {"item_id": "frasco_oleo", "target_id": "m1"}))
     st = feedbacks(r); rs = feedbacks(r, "result")
     check("start emitido", len(st) == 1)
-    check("start: kind item + item_id + emoji", st and st[0].get("projectile") == {"kind": "item", "item_id": "frasco_oleo", "item_emoji": defn["emoji"]})
+    check("start: kind item + item_id + emoji + elemento", st and st[0].get("projectile") == {"kind": "item", "item_id": "frasco_oleo", "item_emoji": defn["emoji"], "item_elemento": "fogo"})
     check("start: alvo e posições", st and st[0]["target_id"] == "m1" and st[0]["attacker_pos"] == [1, 1] and st[0]["target_pos"] == [4, 1])
     check("result emitido com o mesmo attack_id", rs and rs[0]["attack_id"] == st[0]["attack_id"])
     check("result carrega hit/crit/natural", rs and all(k in rs[0] for k in ("hit", "crit", "natural", "natural_critical", "natural_fumble")))
@@ -153,6 +153,7 @@ def test_throw():
     pj = st[0].get("projectile") if st else None
     check("start: projectile area + sem_dado + area_raio", pj and pj.get("kind") == "item" and pj.get("area") is True
           and pj.get("sem_dado") is True and pj.get("area_raio") == defn.get("area_raio", 1) and pj.get("item_id") == "bomba_incendiaria")
+    check("start: projectile de área carrega item_elemento", pj and pj.get("item_elemento") == defn.get("elemento"))
     check("result imediato com hit True", rs and rs[0].get("hit") is True and rs[0]["attack_id"] == st[0]["attack_id"])
     i_start = next(i for i, m in enumerate(r._msgs) if m.get("type") == "attack_feedback")
     i_res = next(i for i, m in enumerate(r._msgs) if m.get("type") == "attack_feedback" and m.get("phase") == "result")

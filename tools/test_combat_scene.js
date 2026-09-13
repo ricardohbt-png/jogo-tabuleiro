@@ -619,7 +619,7 @@ console.log("\n[38] Projétil sem_dado (área): sem espera de dado, sem alvo, fe
 CS.reset();
 const BOMBA = { attack_id: "bmb_1", attacker_key: "p:id_1", target_key: null,
                 attacker_pos: [0, 0], target_pos: [3, 0],
-                projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", area: true, area_raio: 1, sem_dado: true } };
+                projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", item_elemento: "fogo", area: true, area_raio: 1, sem_dado: true } };
 CS.start(BOMBA, 0); CS.tick(0); CS.result({ ...BOMBA, hit: true }, 1);
 const cmds38 = CS.tick(180);
 const lb = cmds38.find(c => c.cmd === "launch");
@@ -627,6 +627,7 @@ check("sem_dado: entra em GOLPE assim que o windup acaba, sem ESPERANDO_DADO", C
 check("dieSettled ignora cena sem_dado", CS.dieSettled({ die: "d20" }, 200) === null);
 check("launch de área com item_id/emoji/area_raio",
   lb && lb.kind === "item" && lb.item_id === "bomba_incendiaria" && lb.item_emoji === "💣" && lb.area === true && lb.area_raio === 1);
+check("launch carrega item_elemento quando dado", lb && lb.item_elemento === "fogo");
 check("pendingFor nunca devolve cena de área", CS.pendingFor("m:id_9", 200) === null && CS.pendingFor(null, 200) === null);
 const cmdsB = CS.tick(180 + 270);
 const ib = cmdsB.find(c => c.cmd === "impact");
@@ -694,8 +695,9 @@ const gameSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 function corpoDaFuncao(nome) {
   const i = gameSrc.indexOf("\nfunction " + nome + "(");
   if (i < 0) return "";
-  const j = gameSrc.indexOf("\n}\n", i);
-  return gameSrc.slice(i, j);
+  // O checkout é CRLF: "\n}\n" nunca casaria e o corpo viraria o resto do arquivo.
+  const m = /\r?\n\}\r?\n/.exec(gameSrc.slice(i));
+  return m ? gameSrc.slice(i, i + m.index) : "";
 }
 const diff = corpoDaFuncao("_detectHpChanges");
 check("_detectHpChanges existe", diff.length > 0);

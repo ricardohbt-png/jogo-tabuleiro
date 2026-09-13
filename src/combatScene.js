@@ -82,7 +82,7 @@
     const kind = ['arrow', 'bolt', 'spear', 'item'].includes(p.kind) ? p.kind : null;
     if (!kind) return null;
     return {
-      kind, item_id: p.item_id || null, item_emoji: p.item_emoji || null,
+      kind, item_id: p.item_id || null, item_emoji: p.item_emoji || null, item_elemento: p.item_elemento || null,
       area: !!p.area, area_raio: Math.max(0, Number(p.area_raio) || 0), sem_dado: !!p.sem_dado,
     };
   }
@@ -178,7 +178,7 @@
     s.launchAt = now;
     const c = {
       cmd: 'launch', id: s.id, attackerKey: s.attackerKey, targetKey: s.targetKey,
-      kind: s.projectile.kind, item_id: s.projectile.item_id, item_emoji: s.projectile.item_emoji,
+      kind: s.projectile.kind, item_id: s.projectile.item_id, item_emoji: s.projectile.item_emoji, item_elemento: s.projectile.item_elemento,
       from, to, dir: s.dir.slice(), travelMs, flightMs, hit, fumble,
       crit: !!(s.result && s.result.crit), area: s.projectile.area, area_raio: s.projectile.area_raio,
     };

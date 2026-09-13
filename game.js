@@ -11147,6 +11147,7 @@ function _cenaAtiva(){ return !!(mode3D && g3 && window.CombatScene); }
 // efeitos _bolaFogo*: build/update/dispose + lista + tick no laço 3D.
 const _projeteis = [];
 let _projetilGeo = null;   // geometrias/materiais base por tipo, criados uma vez
+const _PROJETIL_COR_ELEMENTO = { fogo: 0xff8a32, sagrado: 0xffd700, acido: 0x76e05a };
 
 function _projetilCfg(){ return VC.feedback?.combat?.scene?.projectile || {}; }
 
@@ -11164,7 +11165,11 @@ function _projetilBases(T){
     tip.rotation.x = Math.PI / 2; tip.position.z = comp / 2 + ponta / 2; g.add(tip);
     for(let i = 0; i < empenas; i++){
       const e = new T.Mesh(new T.PlaneGeometry(0.08, 0.05), pena);
-      e.position.z = -comp / 2 + 0.05; e.rotation.z = i * Math.PI / 2; g.add(e);
+      // O plano da empena CONTÉM o eixo Z (haste), com o lado 0.08 ao longo dela —
+      // no plano XY ficaria de perfil (invisível) de qualquer vista lateral.
+      e.position.z = -comp / 2 + 0.05;
+      if(i === 0) e.rotation.set(0, Math.PI / 2, 0); else e.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+      g.add(e);
     }
     g.userData.comp = comp;
     return g;
@@ -11212,6 +11217,7 @@ function _projetilLancar(c){
              : kind === 'bolt' ? (arcCfg.bolt ?? .08) : kind === 'spear' ? (arcCfg.spear ?? .35) : (arcCfg.item ?? .55);
   const anim = {
     id: c.id, kind, obj, hit: !!c.hit, fumble: !!c.fumble, area: !!c.area, area_raio: c.area_raio || 0,
+    elemento: c.item_elemento || null,
     from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]],
     y0: pc.launchY ?? .45, y1: (!c.hit || c.fumble) ? 0.02 : (pc.landY ?? .35), arco,
     start: performance.now(), flightMs: c.flightMs, travelMs: c.travelMs,
@@ -11237,17 +11243,16 @@ function _projetilQuebrar(anim, now){
   anim.quebrado = true;
   const T = g3.T, pc = _projetilCfg();
   const [x, y, z] = _projetilPos(anim, 1);
-  let cor = 0xbfbfbf, n = 14;
+  // Cor do estilhaço pelo elemento do item (fogo/sagrado/ácido); sem elemento, vidro cinza.
+  const cor = _PROJETIL_COR_ELEMENTO[anim.elemento] || 0xbfbfbf;
+  let n = 14;
   if(anim.area){
-    cor = 0xff8a32;
     n = (pc.areaBurst?.base ?? 18) + (pc.areaBurst?.perRadius ?? 8) * anim.area_raio;
     // Anel no chão que expande e desvanece (como o anel de derrota).
     const mat = new T.MeshBasicMaterial({ color: 0xffb060, transparent: true, opacity: .8, depthWrite: false, blending: T.AdditiveBlending, side: T.DoubleSide });
     const ring = new T.Mesh(new T.TorusGeometry(.35, .03, 8, 32), mat);
     ring.rotation.x = Math.PI / 2; ring.position.set(x, .03, z); ring.renderOrder = 135;
     g3.scene.add(ring); anim.ring = { mesh: ring, start: now, raio: Math.max(1, anim.area_raio) };
-  } else if(anim.kind === 'item'){
-    cor = 0xff8a32;
   }
   _spawnBurstParticles(T, g3.scene, { x, y: Math.max(.1, y), z }, cor, n);
 }
@@ -11270,25 +11275,34 @@ function _projetilUpdate3D(anim, now){
   if(!anim.pousado){
     anim.pousado = true; anim.pousoAt = now;
     obj.position.set(x, y, z);
-    if(anim.kind === 'item'){
+    const acertou = anim.hit && !anim.fumble;             // área conta como acerto
+    if(anim.kind === 'item' && acertou){
       _projetilQuebrar(anim, now);
       obj.visible = false;                                // o sprite some; ficam partículas/anel
+      anim.quebradoVisual = true;
     } else {
-      if(!anim.hit || anim.fumble){
+      if(anim.kind !== 'item' && !acertou){
         // Cravada ~35°: guinada pela direção do voo (não pelo Euler que o lookAt
         // deixou) e ponta para baixo. R_x(θ)·(0,0,1) = (0, −sinθ, cosθ), logo
         // θ>0 leva a ponta (+Z local) para −Y, o chão. Sinal validado no navegador (Task 7).
         const yaw = Math.atan2(anim.to[0] - anim.from[0], anim.to[1] - anim.from[1]);
         obj.rotation.set(0, yaw, 0); obj.rotateX(Math.PI * 0.19);
       }
+      // Item que errou fica caído no chão (spec §5.3): para de girar e desvanece no stickMs.
       // Materiais próprios UMA vez: o clone() do Object3D compartilha os do base,
-      // e o desvanecer abaixo não pode tocar neles (outros voos os reusam).
-      obj.traverse(o => { if(o.material && !o.material.userData._projOwned){ o.material = o.material.clone(); o.material.transparent = true; o.material.userData._projOwned = true; } });
+      // e o desvanecer abaixo não pode tocar neles (outros voos os reusam). O sprite
+      // do item já nasce com material próprio (e o loader do PNG escreve nele):
+      // só recebe o marcador, sem clonar.
+      obj.traverse(o => {
+        if(!o.material || o.material.userData._projOwned) return;
+        if(!o.isSprite){ o.material = o.material.clone(); o.material.transparent = true; }
+        o.material.userData._projOwned = true;
+      });
     }
   }
   // Cravada/caída: some no fim do linger (seta acertada some junto com a reação).
   const p = Math.min(1, (now - anim.pousoAt) / Math.max(1, anim.lingerMs));
-  if(anim.kind !== 'item') obj.traverse(o => { if(o.material && o.material.userData._projOwned) o.material.opacity = 1 - p; });
+  if(!anim.quebradoVisual) obj.traverse(o => { if(o.material && o.material.userData._projOwned) o.material.opacity = 1 - p; });
   if(anim.ring){
     const q = Math.min(1, (now - anim.ring.start) / 400);
     anim.ring.mesh.scale.setScalar(1 + q * anim.ring.raio * 2.2);
