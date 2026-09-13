@@ -2339,3 +2339,57 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > assentar; morte tombou e desvaneceu antes da lápide. Teste: `tools/test_combat_scene.js`
 > (204 checks: módulo + checagens estáticas de fiação). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-10-animacao-combate-hibrida*`.
+
+> **Projéteis no 3D (frente B):** flecha/virote/lança (malha procedural orientada pela
+> trajetória) e itens arremessados (PNG do item girando; emoji em canvas como fallback)
+> **voam do atacante ao alvo quando o d20 assenta** e o impacto acontece **na chegada**.
+> **Servidor:** `_projetil_de(defn, monstro=False)` (module-level, ao lado de `RANGED_AMMO`)
+> deriva `{"kind": arrow|bolt|spear}` — herói pela arma (`_PROJETIL_POR_ARMA`, `ammo` do
+> editor **ou** a família de `RANGED_AMMO`, porque a cópia de combate `p["weapon"]` não
+> carrega `ammo`; arma de haste com `range` como chicote/alabarda NÃO tem projétil),
+> monstro/servo por `projectile` explícito no ataque ou `range≥2` + `perfurante` (kobold
+> besteiro declara `bolt`; a lança do kobold, `spear`). Vai como campo opcional
+> `projectile` no `attack_feedback start` (`_emitir_feedback_ataque` descarta `None`).
+> **`handle_throw_item` passou a emitir `attack_feedback`**: `ataque_alvo` = start antes do
+> d20 + result (`kind:"item"` + `item_id`/`item_emoji`/`item_elemento`); `area` = alvo
+> sintético `{id:None, pos:[cx,cy]}` (`target_name` vazio) com `area`/`area_raio`/`sem_dado`
+> e result imediato. Lacunas aceitas: `_monster_throw_item` (mestre/IA arremessando item)
+> não emite feedback; `handle_arremesso_lanca` do herói é **código morto** (sem despacho);
+> o save de criatura do editor descarta `categoria`/`projectile` da ficha.
+> **Cena (`src/combatScene.js`):** `projectile` normalizado na cena (`enabled:false` no cfg
+> ignora o campo), `melee=false`, `travelMs = clamp(dist×msPerTile[kind])` com cadeia de
+> fallback por kind (override parcial de `msPerTile` não dá NaN) e passando pela `duration`
+> (é animação, não timeout); `entrarGolpe` emite o comando **`launch`**
+> `{kind,item_id,item_emoji,item_elemento,from,to,dir,travelMs,flightMs,hit,fumble,crit,area,area_raio}`
+> e o `GOLPE` dura `travelMs` → impacto na chegada; erro estende `to` 1 casa além na
+> **velocidade efetiva** (`flightMs = travelMs×(dist+1)/dist`; impacto/esquiva na passagem
+> pelo alvo); fumble encurta `to` a meio caminho e o alvo **não** esquiva; `sem_dado` pula
+> `ESPERANDO_DADO` e `dieSettled` ignora a cena (senão roubaria o d20 de um save); cena de
+> área não tem `targetKey` (`cenaParaHandoff` a ignora) e fecha sozinha após recuperar.
+> `impact` carrega `projectile`/`area`/`area_raio`. Sem `projectile` → byte-idêntico.
+> **`areaImpactAt(pos, now)`** (irmã pura de `pendingFor`): instante estimado da chegada
+> de um arremesso de ÁREA que cobre `pos` — o `game_state` com o dano chega **na mesma
+> rajada** do `start`, antes de qualquer `tick`, então a estimativa pré-lançamento é
+> `(phaseAt se ARMANDO, senão now) + windup + travelMs` (≤1 quadro de erro; cena enfileirada atrás de outra do mesmo
+> atacante subestima — aceito, igual ao portão da bola de fogo). **Render (`game.js`):**
+> `_projeteis` + `_projetilLancar/_projetilUpdate3D/_projetilQuebrar/_projetilDispose3D/`
+> `_projetilTickTodos/_projetilLimparTodos` (família `_bolaFogo*`; parábola `from→to`,
+> `lookAt` na tangente; PNG via `TextureLoader` trocando o mapa do sprite de emoji quando
+> chega — esse material NÃO é clonado, o callback escreve nele; malhas clonam materiais uma
+> vez no pouso, marcados `_projOwned`; seta errada crava com guinada `atan2(dx,dz)` +
+> `rotateX(+0.19π)` — sinal positivo leva a ponta (+Z local) ao chão, validado; item errado
+> cai a `y=0.15`; item acertado quebra com burst na cor do elemento
+> `_PROJETIL_COR_ELEMENTO` + anel expansivo de 400 ms na área); tick em `_tickCombatScene`;
+> limpeza em `dispose3D`/`init3D`. Números de área esperam a chegada por
+> `_projetilFeedbackStartAt` (o mais tardio entre a lista de render e
+> `CombatScene.areaImpactAt`; o diff de HP usa o mais tardio dele e de
+> `_bolaFogoFeedbackStartAt`). Config em `VC.feedback.combat.scene.projectile`. Provado no
+> navegador (2026-09-13): flecha do herói lançou ao assentar o d20 e a morte do goblin saiu
+> em `impactAt`; flecha do arqueiro errou, cravou 1 casa além e sumiu após `stickMs`;
+> frasco errado caiu 1 casa além; bomba: anel + números com `startAt` ≈ chegada
+> (550/671 ms vs impacto 591); `instant` sem voo e sem erro no console. **Armadilha da
+> prova:** com a janela do app oculta, `requestAnimationFrame` não dispara e a cena fica
+> parada em `FILA` — polyfill de rAF por `setTimeout` + `startLoop3D()` e captura por
+> `renderer.render()` + `toDataURL()` em vez de screenshot. Testes: `tools/test_projeteis.py`
+> (servidor, 40 checks), `tools/test_combat_scene.js` (`[35]`–`[41]` + `[33]`, 264 checks).
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-09-12-projeteis-3d*`.

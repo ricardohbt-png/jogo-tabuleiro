@@ -1355,6 +1355,34 @@ RANGED_AMMO = {
     "hand_crossbow": ["virotes", "virotes_incendiarios", "virotes_prata"],
 }
 
+# ── Projétil visual de um ataque (frente B — só afeta a animação do cliente) ──
+# Devolve {"kind": ...} ou None. Herói: pela arma (id nativo ou `ammo` do
+# editor); arma de haste com `range` (chicote, alabarda) NÃO tem projétil.
+# Monstro/servo: `projectile` explícito no ataque, senão range≥2 + perfurante.
+_PROJETIL_POR_ARMA    = {"arco_curto": "arrow", "longbow": "arrow", "besta": "bolt", "hand_crossbow": "bolt"}
+_PROJETIL_POR_MUNICAO = {"flechas": "arrow", "virotes": "bolt"}
+_PROJETIL_KINDS       = ("arrow", "bolt", "spear")
+
+def _projetil_de(defn, monstro=False):
+    if not defn or not isinstance(defn, dict):
+        return None
+    explicito = defn.get("projectile")
+    if explicito in _PROJETIL_KINDS:
+        return {"kind": explicito}
+    # A cópia de combate `p["weapon"]` (via `_sincronizar_arma_de_combate`) NÃO
+    # carrega `ammo`; a arma do editor cai no `RANGED_AMMO`, onde o merge
+    # (`_apply_custom_items`) a registra com a família de munição aceita.
+    kind = (_PROJETIL_POR_ARMA.get(defn.get("id"))
+            or _PROJETIL_POR_MUNICAO.get(defn.get("ammo"))
+            or _PROJETIL_POR_MUNICAO.get((RANGED_AMMO.get(defn.get("id")) or [None])[0]))
+    if kind:
+        return {"kind": kind}
+    if monstro:
+        rng = defn.get("range")
+        if isinstance(rng, (int, float)) and rng >= 2 and defn.get("categoria") == "perfurante":
+            return {"kind": "arrow"}
+    return None
+
 # â”€â”€â”€ GUILDA DOS HERÃ“IS â€” persistÃªncia por personagem (Fase 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Save por class_id (6 personagens fixos), global ao processo. Guarda sÃ³ posse +
 # equipar da guilda; ouro/HP/nÃ­vel continuam por-sessÃ£o. Ver spec Fase 0 Â§5.
@@ -4360,7 +4388,7 @@ MONSTER_DEFS = [
         "attacks": [
             {"name": "Besta de Mão", "atk_bonus": 4, "damage": "1d4+2",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
-             "range": 4},
+             "range": 4, "projectile": "bolt"},
         ],
         "special_abilities": [
             {"id": "covardia_kobold","name": "Covardia Instintiva",   "action_type": "passiva",
@@ -15517,7 +15545,8 @@ class GameRoom:
             attack_name = (weapon_here or {}).get("name") or (weapon_here or {}).get("id") or "Ataque"
             attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
             attack_feedback_id = await self._emitir_feedback_ataque(
-                "start", p, target, attack_name, attack_mode)
+                "start", p, target, attack_name, attack_mode,
+                projectile=_projetil_de(weapon_here))
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
@@ -16074,6 +16103,10 @@ class GameRoom:
 
         # Rolagem por DESTREZA (1 natural = falha; 20 = crÃ­tico).
         dex_mod = mod(p.get("dex", 12))
+        attack_feedback_id = await self._emitir_feedback_ataque(
+            "start", p, target, defn.get("name") or item.get("name") or "Arremesso", "normal",
+            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"), "item_emoji": defn.get("emoji") or item.get("emoji"),
+                        "item_elemento": defn.get("elemento")})
         roll = random.randint(1, 20)
         total = roll + p["atk_bonus"]
         nat1 = (roll == 1); crit = (roll == 20)
@@ -16081,6 +16114,11 @@ class GameRoom:
         hit = (not nat1) and (crit or total >= target_ac)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                               "label": f"Arremesso ({defn['name']})", "hit": hit, "crit": crit})
+        await self._emitir_feedback_ataque(
+            "result", p, target, defn.get("name") or item.get("name") or "Arremesso", "normal",
+            attack_id=attack_feedback_id, roll=roll, total=total,
+            hit=bool(hit), crit=bool(crit), natural=int(roll),
+            natural_critical=bool(roll == 20), natural_fumble=bool(nat1))
 
         # Consome o item (espatifa) â€” em acerto ou erro.
         p["bag"].remove(item)
@@ -16161,6 +16199,20 @@ class GameRoom:
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         raio = defn.get("area_raio", 1)
+        # Feedback visual: o frasco voa até a casa; sem alvo único e sem d20
+        # de ataque (os saves rolam durante o voo). Alvo sintético só com pos.
+        alvo_area = {"id": None, "name": "", "pos": [cx, cy]}
+        nome_arr = defn.get("name") or item.get("name") or "Arremesso"
+        attack_feedback_id = await self._emitir_feedback_ataque(
+            "start", p, alvo_area, nome_arr, "normal",
+            projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"),
+                        "item_emoji": defn.get("emoji") or item.get("emoji"),
+                        "item_elemento": defn.get("elemento"),
+                        "area": True, "area_raio": int(raio), "sem_dado": True})
+        await self._emitir_feedback_ataque(
+            "result", p, alvo_area, nome_arr, "normal",
+            attack_id=attack_feedback_id, hit=True, crit=False,
+            natural_critical=False, natural_fumble=False)
         await self.gm_say(T("narracao.arremessa_em", defn_emoji=defn['emoji'], heroi=p['name'], defn=nome_item(defn), cx=cx, cy=cy))
 
         # Dano de Ã¡rea com save de Reflexos (metade no sucesso).
@@ -17785,7 +17837,8 @@ class GameRoom:
         attack_name = ataque.get("name") or a.get("nome") or "Ataque"
         attack_mode = "advantage" if _esc == "vantagem" else "disadvantage" if _esc == "desvantagem" else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
-            "start", a, m, attack_name, attack_mode)
+            "start", a, m, attack_name, attack_mode,
+            projectile=_projetil_de(ataque, monstro=True))
         await self._emitir_feedback_ataque(
             "result", a, m, attack_name, attack_mode,
             attack_id=attack_feedback_id, roll=roll, total=total,
@@ -23845,12 +23898,16 @@ class GameRoom:
             ataque_id = resultado.pop("attack_id", None)
         if not ataque_id:
             return
+        if resultado.get("projectile") is None:
+            resultado.pop("projectile", None)      # só o start com projétil leva a chave
+        # Alvo sintético de área (sem id) não ganha o nome falso "Alvo".
+        nome_alvo = (alvo.get("name") or alvo.get("nome") or "Alvo") if alvo.get("id") is not None else ""
         await self.broadcast({
             "type": "attack_feedback", "phase": fase,
             "attack_id": ataque_id,
             "attacker_id": atacante.get("id"), "target_id": alvo.get("id"),
             "attacker_name": atacante.get("name") or atacante.get("nome", "Atacante"),
-            "target_name": alvo.get("name") or alvo.get("nome", "Alvo"),
+            "target_name": nome_alvo,
             "attack_name": ataque or "Ataque",
             "attacker_pos": list(atacante.get("pos", [0, 0])),
             "target_pos": list(alvo.get("pos", [0, 0])),
@@ -33798,6 +33855,7 @@ class GameRoom:
             item["veneno_id"] = veneno_id
         atk = dict(m.get("attacks", [{}])[0])
         atk["range"] = 4
+        atk["projectile"] = "spear"
         atk["attack_attribute"] = "str_"
         atk["damage_attribute"] = "str_"
         if veneno_id:
@@ -33957,7 +34015,8 @@ class GameRoom:
         attack_name = atk_def.get("name") or "Ataque"
         attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
-            "start", m, target, attack_name, attack_mode)
+            "start", m, target, attack_name, attack_mode,
+            projectile=_projetil_de(atk_def, monstro=True))
 
         if vantagem or desvantagem:
             hit, roll, total, crit, discarded = self._rolar_ataque(

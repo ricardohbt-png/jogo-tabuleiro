@@ -561,6 +561,158 @@ CS.reset(); CS.configure({});
   check("(d) cena sem result ainda é candidata", CS.pendingFor("m:id_9", 1) === "atk_1_1");
 }
 
+console.log("\n[35] Projétil: launch na entrada do GOLPE e impacto na chegada");
+CS.reset(); CS.configure({});
+const ARCO = { attack_id: "arc_1", attacker_key: "p:id_1", target_key: "m:id_9",
+               attacker_pos: [0, 0], target_pos: [4, 0], projectile: { kind: "arrow" } };
+CS.start(ARCO, 0); CS.tick(0);
+check("cena com projétil não é melee", CS._scenes[0].melee === false);
+check("travelMs = 4 casas × 55 = 220 (clamp min 220)", CS._scenes[0].travelMs === 220);
+CS.result({ ...ARCO, hit: true }, 1); CS.tick(180);
+check("espera o dado como qualquer ataque", CS.phaseOf("arc_1") === "ESPERANDO_DADO");
+CS.dieSettled({ die: "d20" }, 500);
+const cmdsL = CS.tick(500);
+const launch = cmdsL.find(c => c.cmd === "launch");
+check("GOLPE emite launch", !!launch);
+check("launch carrega kind/from/to/hit/travelMs", launch && launch.kind === "arrow" && launch.hit === true
+  && launch.from[0] === 0 && launch.to[0] === 4 && launch.to[1] === 0 && launch.travelMs === 220 && launch.flightMs === 220);
+check("impact NÃO sai no lançamento", !cmdsL.some(c => c.cmd === "impact"));
+check("alvo ainda sem pose durante o voo", CS.poseFor("m:id_9", 600) === null);
+check("atacante faz o coice durante o voo", CS.poseFor("p:id_1", 545).dx < 0);
+const cmdsImp = CS.tick(720);
+check("impact sai só na chegada (500 + 220)", cmdsImp.some(c => c.cmd === "impact") && CS._scenes[0].impactAt === 720);
+check("impact carrega projectile kind", cmdsImp.find(c => c.cmd === "impact").projectile === "arrow");
+check("alvo reage após a chegada", CS.poseFor("m:id_9", 720 + 130).dx > 0);
+
+console.log("\n[36] Projétil: distância longa satura no travelMaxMs e instant colapsa");
+CS.reset(); CS.configure({});
+CS.start({ ...ARCO, attack_id: "arc_2", target_pos: [30, 0] }, 0); CS.tick(0);
+check("30 casas × 55 = 1650 → clamp 900", CS._scenes[0].travelMs === 900);
+CS.reset(); CS.configure({ duration: ms => ms * 0.5 });
+CS.start({ ...ARCO, attack_id: "arc_3" }, 0); CS.tick(0);
+check("travelMs passa pela duration (fast 0,5× → 110)", CS._scenes[0].travelMs === 110);
+CS.reset(); CS.configure({ instant: () => true, duration: () => 0.001 });
+CS.start({ ...ARCO, attack_id: "arc_4" }, 0); CS.tick(0); CS.result({ ...ARCO, attack_id: "arc_4", hit: true }, 1);
+const cmdsInst = CS.tick(1);
+check("instant: impact imediato e SEM launch", cmdsInst.some(c => c.cmd === "impact") && !cmdsInst.some(c => c.cmd === "launch"));
+CS.configure({});
+
+console.log("\n[37] Projétil: erro passa reto, fumble cai a meio caminho");
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_5" }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_5", hit: false }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+let l5 = CS.tick(500).find(c => c.cmd === "launch");
+check("erro: to estendido 1 casa além do alvo", l5 && l5.hit === false && Math.abs(l5.to[0] - 5) < 1e-9);
+check("erro: travelMs até o alvo, flightMs inclui a casa a mais", l5 && l5.travelMs === 220 && l5.flightMs === 275);
+CS.tick(720);
+check("erro: impact na chegada ao alvo (não no fim do voo)", CS._scenes[0].impactAt === 720);
+check("erro: alvo esquiva", CS.poseFor("m:id_9", 720 + 100).tilt > 0);
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_6" }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_6", hit: false, natural_fumble: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const l6 = CS.tick(500).find(c => c.cmd === "launch");
+check("fumble: to a meio caminho", l6 && l6.fumble === true && Math.abs(l6.to[0] - 2) < 1e-9);
+check("fumble: travelMs = flightMs = metade", l6 && l6.travelMs === 110 && l6.flightMs === 110);
+CS.tick(610);
+check("fumble: impact no fim do voo curto", CS._scenes[0].impactAt === 610);
+check("fumble: alvo NÃO esquiva (nem foi alcançado)", CS.poseFor("m:id_9", 660) === null);
+// Erro com travelMs SATURADO no clamp: a casa a mais voa na velocidade efetiva
+// (220 ms/casa aqui, não os 55 nominais), senão o render cruzaria o alvo cedo.
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_6b", target_pos: [1, 0] }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_6b", hit: false }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const l6b = CS.tick(500).find(c => c.cmd === "launch");
+check("erro a 1 casa: travelMs 220 (clamp) e flightMs 440 (220 × 2/1)", l6b && l6b.travelMs === 220 && l6b.flightMs === 440);
+
+console.log("\n[38] Projétil sem_dado (área): sem espera de dado, sem alvo, fecha sozinho");
+CS.reset();
+const BOMBA = { attack_id: "bmb_1", attacker_key: "p:id_1", target_key: null,
+                attacker_pos: [0, 0], target_pos: [3, 0],
+                projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", item_elemento: "fogo", area: true, area_raio: 1, sem_dado: true } };
+CS.start(BOMBA, 0); CS.tick(0); CS.result({ ...BOMBA, hit: true }, 1);
+const cmds38 = CS.tick(180);
+const lb = cmds38.find(c => c.cmd === "launch");
+check("sem_dado: entra em GOLPE assim que o windup acaba, sem ESPERANDO_DADO", CS.phaseOf("bmb_1") === "GOLPE");
+check("dieSettled ignora cena sem_dado", CS.dieSettled({ die: "d20" }, 200) === null);
+check("launch de área com item_id/emoji/area_raio",
+  lb && lb.kind === "item" && lb.item_id === "bomba_incendiaria" && lb.item_emoji === "💣" && lb.area === true && lb.area_raio === 1);
+check("launch carrega item_elemento quando dado", lb && lb.item_elemento === "fogo");
+check("pendingFor nunca devolve cena de área", CS.pendingFor("m:id_9", 200) === null && CS.pendingFor(null, 200) === null);
+const cmdsB = CS.tick(180 + 270);
+const ib = cmdsB.find(c => c.cmd === "impact");
+check("impact de área na chegada (3 casas × 90 = 270)", ib && ib.area === true && ib.area_raio === 1 && ib.targetPos[0] === 3);
+CS.tick(180 + 270 + 260);
+check("cena de área fecha após recuperar (não fica esperando hand-off)", CS.phaseOf("bmb_1") === null);
+
+console.log("\n[39] Sem projectile no start → byte-idêntico (ranged de haste continua coice + impacto imediato)");
+CS.reset();
+CS.start({ ...ARCO, attack_id: "arc_7", projectile: undefined }, 0); CS.tick(0);
+CS.result({ ...ARCO, attack_id: "arc_7", hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const c7 = CS.tick(500);
+check("sem projectile: nenhum launch", !c7.some(c => c.cmd === "launch"));
+CS.tick(590);
+check("sem projectile: impact no msOut do coice (90 ms)", CS._scenes[0].impactAt === 590);
+CS.reset(); CS.configure({ cfg: { projectile: { enabled: false } } });
+CS.start(ARCO, 0); CS.tick(0);
+check("projectile.enabled=false: a cena ignora o campo", CS._scenes[0].projectile === null);
+CS.configure({});
+
+console.log("\n[40] Projétil: cfg parcial, dado durante o voo, fila do mesmo atacante");
+// mergeCfg funde só um nível: msPerTile parcial substitui o mapa inteiro.
+CS.reset(); CS.configure({ cfg: { projectile: { msPerTile: { bolt: 45 } } } });
+CS.start(ARCO, 0); CS.tick(0);
+check("msPerTile parcial (só bolt): arrow cai no default, travelMs finito", Number.isFinite(CS._scenes[0].travelMs) && CS._scenes[0].travelMs === 220);
+CS.result({ ...ARCO, hit: true }, 1); CS.tick(180); CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+CS.tick(720);
+check("msPerTile parcial: a cena chega ao impacto (não trava no GOLPE)", CS._scenes[0].impactAt === 720);
+check("reset() zera _ultimoLaunch", (CS.reset(), CS._ultimoLaunch === null));
+CS.configure({});
+// (a) d20 que assenta DURANTE o voo não é consumido pela cena em voo
+CS.reset();
+CS.start(ARCO, 0); CS.tick(0); CS.result({ ...ARCO, hit: true }, 1); CS.tick(180);
+CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
+check("(a) cena em voo já tem dieAt", CS.phaseOf("arc_1") === "GOLPE" && CS._scenes[0].dieAt === 500);
+check("(a) 2º dado durante o voo não é consumido (nenhuma cena espera)", CS.dieSettled({ die: "d20" }, 600) === null);
+check("(a) o voo segue e o impacto sai na chegada", CS.tick(720).some(c => c.cmd === "impact") && CS._scenes[0].impactAt === 720);
+// (b) duas cenas de projétil do mesmo atacante: a 2ª espera na FILA
+CS.reset();
+CS.start(ARCO, 0);
+CS.start({ ...ARCO, attack_id: "arc_1b", target_pos: [2, 0] }, 0);
+CS.tick(0);
+check("(b) 2ª cena fica em FILA enquanto a 1ª arma", CS.phaseOf("arc_1") === "ARMANDO" && CS.phaseOf("arc_1b") === "FILA");
+CS.result({ ...ARCO, hit: true }, 1); CS.result({ ...ARCO, attack_id: "arc_1b", hit: true }, 1);
+CS.tick(180); CS.dieSettled({ die: "d20" }, 500);
+const cb1 = CS.tick(500);
+check("(b) só a 1ª lança", cb1.filter(c => c.cmd === "launch").length === 1 && cb1[0].id === "arc_1" && CS.phaseOf("arc_1b") === "FILA");
+CS.tick(720);                                      // impacto da 1ª
+check("(b) 2ª ainda em FILA durante a recuperação da 1ª", CS.phaseOf("arc_1b") === "FILA");
+CS.tick(720 + 260);                                // 1ª → AGUARDANDO_HANDOFF, 2ª sai da fila
+check("(b) 1ª em AGUARDANDO_HANDOFF libera a 2ª para ARMANDO", CS.phaseOf("arc_1") === "AGUARDANDO_HANDOFF" && CS.phaseOf("arc_1b") === "ARMANDO");
+CS.tick(980 + 180); CS.dieSettled({ die: "d20" }, 1200);
+const cb2 = CS.tick(1200);
+const lb2 = cb2.find(c => c.cmd === "launch");
+check("(b) 2ª lança com o SEU launch (id/to próprios)", lb2 && lb2.id === "arc_1b" && lb2.to[0] === 2 && lb2.travelMs === 220);
+
+console.log("\n[41] areaImpactAt: o diff de HP consulta a cena ANTES do launch (estimativa windup + voo)");
+CS.reset(); CS.configure({});
+const BOMBA41 = { attack_id: "bmb_41", attacker_key: "p:id_1", target_key: null,
+                  attacker_pos: [0, 0], target_pos: [3, 0],
+                  projectile: { kind: "item", item_id: "bomba_incendiaria", item_emoji: "💣", area: true, area_raio: 1, sem_dado: true } };
+CS.start(BOMBA41, 0); CS.tick(0); CS.result({ ...BOMBA41, hit: true }, 1);
+check("antes do launch: casa no raio estima windup(180) + voo(3×90=270) = 450", CS.areaImpactAt([3, 0], 1) === 450);
+check("antes do launch: casa vizinha (raio 1) também espera", CS.areaImpactAt([4, 1], 1) === 450);
+check("antes do launch: casa fora do raio → null", CS.areaImpactAt([5, 0], 1) === null);
+check("pos inválida → null", CS.areaImpactAt(null, 1) === null);
+const cmds41 = CS.tick(180);
+check("launch emitido aos 180 ms", cmds41.some(c => c.cmd === "launch"));
+check("depois do launch: chegada = launchAt + travelMs = 450", CS.areaImpactAt([3, 0], 200) === 450);
+CS.tick(450);
+check("depois do impacto → null (já chegou)", CS.areaImpactAt([3, 0], 450) === null);
+CS.reset();
+CS.start(ARCO, 0); CS.tick(0); CS.result({ ...ARCO, hit: true }, 1);
+check("cena sem área (flecha) → null mesmo na casa do alvo", CS.areaImpactAt(ARCO.target_pos, 1) === null);
+CS.reset();
+
 console.log("\n[33] Fiação estática (index.html, visualConfig, game.js)");
 const indexHtml = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 const iCS = indexHtml.indexOf("src/combatScene.js"), iGame = indexHtml.indexOf('"game.js?v=');
@@ -572,8 +724,9 @@ const gameSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 function corpoDaFuncao(nome) {
   const i = gameSrc.indexOf("\nfunction " + nome + "(");
   if (i < 0) return "";
-  const j = gameSrc.indexOf("\n}\n", i);
-  return gameSrc.slice(i, j);
+  // O checkout é CRLF: "\n}\n" nunca casaria e o corpo viraria o resto do arquivo.
+  const m = /\r?\n\}\r?\n/.exec(gameSrc.slice(i));
+  return m ? gameSrc.slice(i, i + m.index) : "";
 }
 const diff = corpoDaFuncao("_detectHpChanges");
 check("_detectHpChanges existe", diff.length > 0);
@@ -591,6 +744,14 @@ check("_materiaisCena inclui o contorno marcado como outline", /outline:\s*!!ud\
 check("laço 3D usa _figSceneKey para a reação de impacto", gameSrc.includes("_hitReaction3DAngle(_figSceneKey(fig)"));
 check("shake subtrai antes de controls.update", gameSrc.indexOf("_desfazerShakeCamera();") > 0 && gameSrc.indexOf("_desfazerShakeCamera();") < gameSrc.indexOf("if(!configCamera.seguindoPeao) g3.controls.update();"));
 check("configure é chamado no game.js", gameSrc.includes("CombatScene.configure("));
+check("visualConfig tem scene.projectile", /projectile:\s*\{/.test(vcSrc) && /msPerTile/.test(vcSrc));
+check("_receiveAttackFeedback repassa msg.projectile", /projectile:\s*msg\.projectile/.test(gameSrc));
+check("game.js tem o render de projéteis", ["function _projetilLancar(", "function _projetilUpdate3D(", "function _projetilDispose3D(", "function _projetilTickTodos("].every(s => gameSrc.includes(s)));
+check("comando launch é consumido", gameSrc.includes("c.cmd === 'launch'"));
+check("tick anima os projéteis", gameSrc.includes("_projetilTickTodos(now)"));
+check("dispose3D limpa os projéteis", (() => { const i = gameSrc.indexOf("\nfunction dispose3D("); return i > 0 && gameSrc.slice(i, i + 1500).includes("_projetilLimparTodos()"); })());
+check("diff de HP consulta _projetilFeedbackStartAt", corpoDaFuncao("_detectHpChanges").includes("_projetilFeedbackStartAt(entry)"));
+check("_projetilFeedbackStartAt consulta a cena (CombatScene.areaImpactAt), não só o render", corpoDaFuncao("_projetilFeedbackStartAt").includes("CombatScene.areaImpactAt"));
 
 console.log("\n[34] Morte (Task 10): fiação em game.js");
 {

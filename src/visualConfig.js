@@ -231,6 +231,20 @@ window.VC = {
         death:    { fallMs: 380, bounceDeg: 4, darken: 0.35, fadeMs: 200, squashY: 0.85 },
         waitDieMs: 3500,
         expireMs:  6000,
+        // Projéteis (frente B): tempos de voo por tipo, arcos e o que a
+        // flecha faz ao errar/errar feio. Lido pela CombatScene e pelo render.
+        projectile: {
+          enabled: true,
+          msPerTile: { arrow: 55, bolt: 45, spear: 75, item: 90 },
+          travelMinMs: 220, travelMaxMs: 900,
+          arc: { arrow: 0.25, arrowPerTile: 0.04, bolt: 0.08, spear: 0.35, item: 0.55 },
+          launchY: 0.45, landY: 0.35,
+          missOvershootTiles: 1,
+          fumbleFraction: 0.5,
+          stickMs: 900, hitLingerMs: 300,
+          itemSpinPerSec: 2.5,
+          areaBurst: { base: 18, perRadius: 8 },
+        },
       },
       resistance: {
         reflexos:  { color: '#72d8ff', icon: '💨', label: 'REFLEXOS' },
