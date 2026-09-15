@@ -2426,7 +2426,7 @@ def try_create_savegame(account, name, mode, campaign_file, has_master, group_id
 # Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
 # esses valores já estão consistentes, então restore é só sobrescrita.
 _DURABLE_FIELDS = (
-    "gold", "hp", "max_hp", "mp", "max_mp", "xp", "level", "level_bonus",
+    "gold", "hp", "max_hp", "xp", "level", "level_bonus",
     "ac", "ac_base", "atk_bonus", "base_atk_bonus", "weapon",
     "fort", "ref_", "will", "spd", "fome", "sede", "fome_max", "sede_max",
     "fome_max_base", "sede_max_base", "fome_max_modificadores", "sede_max_modificadores",
@@ -3259,7 +3259,7 @@ CLASSES = {
     # Saves: Bom = +2 base, Ruim = +0 base  |  atk_bonus = BAB + mod(STR)
     "warrior": {
         "name": "Guerreiro Anão", "emoji": "⚔️", "color": "#e74c3c",
-        "hp": 14, "mp": 0, "max_mp": 0, "spd": 6, "start_gold": 20,   # warrior nÃ£o usa mais mp â€” habilidades custam fome/sede
+        "hp": 14, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
         "str_": 18, "dex": 10, "con_": 14, "int_": 8,
         "ac_base": 12, "weapon": "machado_basico", "atk_bonus": 5,  # BAB 1 + FOR mod(18)=+4; ac_base 12=10+couro+2 | Victor: Machado de Ferro (1d6 FOR)
         "saves_base": {"fort": 2, "ref": 0, "will": 0},          # Fort bom, Ref/Von ruins
@@ -3296,15 +3296,12 @@ CLASSES = {
     },
     "mage": {
         "name": "Pedro, o Tímido", "emoji": "🔮", "color": "#9b59b6",
-        "hp": 7, "mp": 0, "max_mp": 0, "spd": 5, "start_gold": 20,   # Pedro nÃ£o usa MP â€” magias custam SLOTS por cÃ­rculo (ver MAGE_SLOTS) + fome/sede
+        "hp": 7, "spd": 5, "start_gold": 20,   # magias custam SLOTS por círculo (ver MAGE_SLOTS) + fome/sede
         "str_": 8, "dex": 12, "con_": 12, "int_": 18,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": -1,  # BAB 0 + FOR mod(8)=-1; ac_base 11=10+manto+1 | Pedro: Cajado (1d6 FOR)
         "saves_base": {"fort": 0, "ref": 0, "will": 2},       # Von bom, Fort/Ref ruins
         "desc": "Devastador com magia, mas frágil",
         "skills": [
-            {"id": "fireball",     "name": "Bola de Fogo",  "mp": 5, "desc": "4d6 fogo todos inimigos (CD15)",  "target": "all_enemies"},
-            {"id": "ice_lance",    "name": "Lança de Gelo", "mp": 3, "desc": "3d6+FOR dano em 1 inimigo",       "target": "enemy"},
-            {"id": "magic_shield", "name": "Escudo Mágico", "mp": 4, "desc": "+4 CA por 1 turno",               "target": "self"},
             # â”€â”€ Metamagia (Pedro) â€” aÃ§Ãµes livres (toggles) que MODIFICAM a magia do
             # GRIMÃ“RIO lanÃ§ada neste turno. EmpilhÃ¡veis; o custo sÃ³ Ã© cobrado ao
             # lanÃ§ar e SÃ“ se a habilidade tiver efeito na magia. Mensagens dedicadas
@@ -3343,7 +3340,7 @@ CLASSES = {
     },
     "rogue": {
         "name": "Luccas, o Astuto", "emoji": "🗡️", "color": "#2ecc71",
-        "hp": 9, "mp": 0, "max_mp": 0, "spd": 7, "start_gold": 20,   # Luccas nÃ£o usa MP â€” habilidades custam fome/sede
+        "hp": 9, "spd": 7, "start_gold": 20,   # habilidades custam fome/sede
         "str_": 10, "dex": 18, "con_": 12, "int_": 10,
         "ac_base": 14, "weapon": "dagger", "atk_bonus": 4,   # BAB 0 + DES mod(18)=+4; ac_base 14=10+couro+DES
         "saves_base": {"fort": 0, "ref": 2, "will": 0},       # Ref bom, Fort/Von ruins
@@ -3416,7 +3413,7 @@ CLASSES = {
     },
     "cleric": {
         "name": "Frade Lewis", "emoji": "✨", "color": "#f39c12",
-        "hp": 10, "mp": 0, "spd": 5, "start_gold": 20,   # Lewis nÃ£o usa MP â€” milagres custam fome/sede
+        "hp": 10, "spd": 5, "start_gold": 20,   # milagres custam fome/sede
         "str_": 10, "dex": 10, "con_": 14, "int_": 16,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": 0,   # BAB 0 + FOR mod(10)=0; ac_base 11=10+couro+1 | Lewis: Cajado (1d6 FOR)
         "saves_base": {"fort": 2, "ref": 0, "will": 2},       # Fort e Von bons, Ref ruim
@@ -3466,7 +3463,7 @@ CLASSES = {
     },
     "bard": {
         "name": "Henrique, o Bardo", "emoji": "🎶", "color": "#9b7fd4",
-        "hp": 9, "mp": 0, "max_mp": 0, "spd": 6, "start_gold": 20,   # bardo nÃ£o usa MP â€” habilidades custam fome/sede
+        "hp": 9, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
         "str_": 10, "dex": 16, "con_": 12, "int_": 12,
         "ac_base": 13, "weapon": "dagger", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Adaga (mÃ£o principal) + AlaÃºde Velho na mÃ£o do escudo (off_hand, substitui a 2Âª adaga)
         "saves_base": {"fort": 0, "ref": 2, "will": 2},           # Ref e Von bons, Fort ruim
@@ -3503,7 +3500,7 @@ CLASSES = {
     },
     "paladin": {
         "name": "Richard, o Cavaleiro", "emoji": "🛡️", "color": "#3498db",
-        "hp": 12, "mp": 0, "max_mp": 0, "spd": 6, "start_gold": 20,   # paladino nÃ£o usa MP â€” habilidades custam fome/sede
+        "hp": 12, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
         "str_": 16, "dex": 10, "con_": 14, "int_": 10,
         "ac_base": 14, "weapon": "shortsword", "atk_bonus": 4,  # BAB 1 + FOR mod(16)=+3; ac_base 14=10+cota+0
         "saves_base": {"fort": 2, "ref": 0, "will": 2},          # Fort e Von bons, Ref ruim
@@ -8544,7 +8541,6 @@ def make_player(pid, name, cls_id, slot):
         "id": pid, "name": name, "class_id": cls_id,
         "class_name": cls["name"], "emoji": cls["emoji"], "color": cls["color"],
         "hp": hp_total, "max_hp": hp_total,
-        "mp": cls["mp"], "max_mp": cls["mp"],
         # D20 ability scores
         "str_": s, "dex": d, "con_": c, "int_": i_,
         # Combat stats â€” AC = armor_base + DEX mod
@@ -9306,11 +9302,7 @@ class GameRoom:
         self.start_mode = "entrance"
         self.hero_spawns = []
         self.temp_def = {}      # pid -> bonus_def (lasts 1 turn)
-        self.temp_def_turnos = {}  # pid -> turnos restantes (>1 = duraÃ§Ã£o estendida; Aprimorar Magia do mago)
-        self.smoke = {}         # mid -> True (monsters miss next attack)
-        self.immune = {}        # pid -> turns_remaining
         self.blessed = {}       # pid -> atk_bonus
-        self.taunted = None     # pid who has taunt active
         self.chests  = {}       # chest_id -> chest dict (persistent world loot)
         self.ground_items = {}  # gid -> {"id","item","pos":[x,y]} â€” itens largados no chÃ£o (persistem como chests)
         self.shop_scrolls = []  # pergaminhos Ã  venda no mercador (renovados por visita Ã  cidade)
@@ -15482,8 +15474,7 @@ class GameRoom:
             # escolhidas ANTES da aÃ§Ã£o (este ataque); o ataque extra da FÃºria Ã©
             # resolvido inline logo abaixo, na MESMA aÃ§Ã£o.
             if buffs:
-                sel = [s for s in p.get("skills", [])
-                       if s["id"] in buffs and "mp" not in s]
+                sel = [s for s in p.get("skills", []) if s["id"] in buffs]
                 teto = self._teto_combinacao(p)
                 if len(sel) > teto:
                     sel = sel[:teto]
@@ -17432,8 +17423,6 @@ class GameRoom:
                 await self.handle_move(hero_id, _delta(payload.get("dx")), _delta(payload.get("dy")))
             elif action == "attack":
                 await self.handle_attack(hero_id, payload.get("target_id"), payload.get("buffs"), payload.get("target_pos"))
-            elif action == "skill":
-                await self.handle_skill(hero_id, payload.get("skill_id"), payload.get("target_id"))
             elif action == "magia":
                 await self.handle_magia(hero_id, payload)
             else:
@@ -18273,299 +18262,6 @@ class GameRoom:
             a["bonus_acted"] = True
         await self.push_state()
 
-    async def handle_skill(self, pid, skill_id, target_id):
-        if not self._is_turn(pid):
-            await self._avisar_controle_de_monstro(pid)
-            return
-        p = self.players[pid]
-        if not p["alive"]: return
-        if p.get("rodamoinho_profundo_preso"):
-            await self.send_to(pid, {"type": "error",
-                "msg": T("erro.o_rodamoinho_profundo_prende_voce_nao_e")})
-            return
-        if p.get("metamorfose_ativa"):
-            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_habil")})
-            return
-        if p.get("engolido") and target_id not in {None, p.get("engolido_por"), p.get("id")}: 
-            await self.send_to(pid, {"type": "error", "msg": T("erro.engolido_voce_so_pode_mirar_no_interior")})
-            return
-
-        skill = next((s for s in p["skills"] if s["id"] == skill_id), None)
-        if not skill:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_invalida")}); return
-
-        # â”€â”€ Habilidades de custo Fome/Sede (warrior) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        # NOVO MODELO: o warrior ARMA as habilidades no cliente (toggle) e o custo
-        # de fome/sede + aplicaÃ§Ã£o das flags acontece em handle_attack (ao agir),
-        # com base na lista `buffs` enviada junto do ataque. Aqui Ã© no-op para nÃ£o
-        # cobrar duas vezes caso uma mensagem `skill` chegue para essas skills.
-        # (As metamagias do mago tambÃ©m caem aqui â€” tÃªm mensagens dedicadas.)
-        if "mp" not in skill:
-            return
-
-        # (Sistema LEGADO de magias de MP â€” fireball/ice_lance/magic_shield â€”
-        # mantido oculto/inerte. Sem metamagia: Pedro lanÃ§a pelo GRIMÃ“RIO.)
-        if p["action_done"]:
-            return
-        custo_mp = skill["mp"]
-        if p["mp"] < custo_mp:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.mp_insuficiente")}); return
-
-        p["mp"]  -= custo_mp
-        p["fome"] = max(0, p["fome"] - 1)   # custo de sobrevivÃªncia da AÃ‡ÃƒO (igual ao ataque bÃ¡sico)
-        await self._apply_skill(p, skill, target_id)
-        p["action_done"] = True
-        await self.push_state()
-
-    async def _apply_skill(self, p, skill, target_id, dmg_mult=1, dur_bonus=1):
-        # dmg_mult / dur_bonus: multiplicadores da Metamagia do mago (Aprimorar
-        # Magia). Default 1/1 â†’ inerte para todas as outras classes/chamadas.
-        sid = skill["id"]
-        alive_monsters = [m for m in self.monsters.values() if m["hp"] > 0]
-        # Modificador de sobrevivÃªncia (+1 saciado / -1/-2 exaustÃ£o) â€” aplicado aos
-        # acertos e ao dano das magias, igual ao ataque bÃ¡sico do warrior.
-        surv_mod  = self._modificador_sobrevivencia(p)
-        preso_pen = -2 if p.get("preso") else 0
-
-        if sid == "heavy_blow":
-            t = self.monsters.get(target_id)
-            if t:
-                if not (p.get("engolido") and p.get("engolido_por") == t.get("id")) and not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(T("narracao.tenta_golpe_pesado_mas_o_inimigo_esta_fo", heroi=p['name'])); return
-                hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
-                await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": T("dado.golpe_pesado")})
-                if hit:
-                    weapon = p["weapon"]
-                    raw_dmg = roll_dice(weapon["die"])
-                    die_type = "d" + weapon["die"].split("d")[1]
-                    await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": T("dado.dano")})
-                    dmg = (raw_dmg + mod(p[weapon["stat"]])) * 2
-                    if crit: dmg *= 2
-                    dmg = max(1, dmg + surv_mod)
-                    if not await self._tirano_dano_interno(p, t, dmg):
-                        t["hp"] -= dmg
-                    await self.gm_say(T("narracao.usa_golpe_pesado_em_d20_vs_ca_de_dano", heroi=p['name'], t=nome_criatura(t), roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
-                    if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-                else:
-                    await self.gm_say(T("narracao.tenta_golpe_pesado_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
-
-        elif sid == "taunt":
-            self.taunted = p["id"]
-            await self.gm_say(T("narracao.usa_provocar_todos_os_monstros_agora_foc", heroi=p['name']))
-
-        elif sid == "shield_bash":
-            self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 3
-            await self.gm_say(T("narracao.ergue_o_escudo_3_ca_ate_o_proximo_turno", heroi=p['name']))
-
-        elif sid == "fireball":
-            showcase = roll_dice("4d6")
-            await self.broadcast({"type": "dice_roll", "die": "d6", "value": showcase, "label": T("dado.bola_de_fogo")})
-            total_dmg_list = []
-            # Paredes bloqueiam a explosÃ£o: sÃ³ atinge inimigos com linha de visÃ£o
-            alive_monsters = [m for m in alive_monsters
-                              if self._tem_linha_de_visao(p["pos"], m["pos"])]
-            for m in alive_monsters:
-                dmg = max(1, (roll_dice("4d6") + mod(p["int_"]) + surv_mod) * dmg_mult)
-                self._registrar_dano_combate(m, dmg, [DMG_FIRE])
-                m["hp"] -= dmg
-                total_dmg_list.append(dmg)
-            avg = sum(total_dmg_list) // max(1, len(total_dmg_list)) if total_dmg_list else 0
-            extra = " ⚡(Aprimorada x2)" if dmg_mult > 1 else ""
-            await self.gm_say(T("narracao.lanca_bola_de_fogo_inimigo_s_sofrem_de_d", heroi=p['name'], extra=extra, len_alive_monsters=len(alive_monsters), avg=avg))
-            for m in list(alive_monsters):
-                if m["hp"] <= 0: await self._monster_dies(m, p["id"])
-
-        elif sid == "ice_lance":
-            t = self.monsters.get(target_id)
-            if t:
-                if not self._tem_linha_de_visao(p["pos"], t["pos"]):
-                    await self.send_to(p["id"], {"type": "error",
-                        "msg": T("erro.parede_bloqueia_lanca_de_gelo", alvo=t["name"])}); return
-                raw_dmg = roll_dice("3d6")
-                await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_dmg, "label": T("dado.lanca_de_gelo")})
-                dmg = max(1, (raw_dmg + mod(p["int_"]) + surv_mod) * dmg_mult)
-                if not await self._tirano_dano_interno(p, t, dmg):
-                    t["hp"] -= dmg
-                extra = " ⚡(Aprimorada x2)" if dmg_mult > 1 else ""
-                await self.gm_say(T("narracao.usa_lanca_de_gelo_em_de_dano_de_frio", heroi=p['name'], extra=extra, t=nome_criatura(t), dmg=dmg))
-                if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-
-        elif sid == "magic_shield":
-            # +4 CA; Aprimorar (duraÃ§Ã£o x2) concede tambÃ©m +1 turno de validade,
-            # registrado em temp_def_turnos para sobreviver a um end_turn extra.
-            self.temp_def[p["id"]] = self.temp_def.get(p["id"], 0) + 4
-            if dur_bonus > 1:
-                self.temp_def_turnos[p["id"]] = max(self.temp_def_turnos.get(p["id"], 0), 2)
-                await self.gm_say(T("narracao.ativa_escudo_magico_aprimorado_4_ca_por", heroi=p['name']))
-            else:
-                await self.gm_say(T("narracao.ativa_escudo_magico_4_ca_ate_o_proximo_t", heroi=p['name']))
-
-        elif sid == "backstab":
-            t = self.monsters.get(target_id)
-            if t:
-                if not (p.get("engolido") and p.get("engolido_por") == t.get("id")) and not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(T("narracao.tenta_ataque_furtivo_mas_o_inimigo_esta", heroi=p['name'])); return
-                furtivo_pen = self._penalidade_furtivo_duas_cabecas(t)
-                furtivo_atk = p["atk_bonus"] + 2 + surv_mod + preso_pen + furtivo_pen
-                hit, roll, total, crit = d20_attack(furtivo_atk, t["ac"])
-                await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": T("dado.ataque_furtivo")})
-                if hit:
-                    weapon = p["weapon"]
-                    raw_wpn = roll_dice(weapon["die"])
-                    raw_snk = roll_dice("2d6")
-                    die_type = "d" + weapon["die"].split("d")[1]
-                    await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_wpn, "label": T("dado.dano")})
-                    await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_snk, "label": T("dado.furtivo")})
-                    if crit:
-                        dmg = (raw_wpn + raw_snk) * 2 + mod(p[weapon["stat"]])
-                    else:
-                        dmg = raw_wpn + raw_snk + mod(p[weapon["stat"]])
-                    dmg = max(1, dmg + surv_mod)
-                    if not await self._tirano_dano_interno(p, t, dmg):
-                        t["hp"] -= dmg
-                    await self.gm_say(T("narracao.usa_ataque_furtivo_em_d20_vs_ca_de_dano", heroi=p['name'], t=nome_criatura(t), roll=roll, furtivo_atk=furtivo_atk, total=total, t_ac=t['ac'], dmg=dmg))
-                    if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-                else:
-                    await self.gm_say(T("narracao.tenta_ataque_furtivo_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
-
-        elif sid == "detect_trap":
-            if "detect_trap" not in p["status"]: p["status"].append("detect_trap")
-            revealed = [tr for tr in self.traps if not tr["triggered"]]
-            for tr in revealed: self.explored.add(tuple(tr["pos"]))
-            await self.gm_say(T("narracao.detecta_armadilhas_armadilha_s_revelada", heroi=p['name'], len_revealed=len(revealed)))
-
-        elif sid == "smoke_bomb":
-            for m in alive_monsters:
-                self.smoke[m["id"]] = True
-            await self.gm_say(T("narracao.lanca_bomba_de_fumaca_os_inimigos_errara", heroi=p['name']))
-
-        elif sid == "heal":
-            t = self.players.get(target_id, p)
-            raw_heal = roll_dice("2d6")
-            await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_heal, "label": T("dado.cura")})
-            heal = raw_heal + 2
-            self._curar_hp(t, heal, "Cura (habilidade)")
-            await self.gm_say(T("narracao.cura_em_hp_2d6_2", heroi=p['name'], t=nome_criatura(t), heal=heal))
-
-        elif sid == "holy_light":
-            showcase = roll_dice("2d6")
-            await self.broadcast({"type": "dice_roll", "die": "d6", "value": showcase, "label": T("dado.luz_sagrada")})
-            for m in alive_monsters:
-                dmg = max(1, roll_dice("2d6") + mod(p["int_"]) + surv_mod)
-                self._registrar_dano_combate(m, dmg, [DMG_HOLY])
-                m["hp"] -= dmg
-            await self.gm_say(T("narracao.invoca_luz_sagrada_2d6_int_dano_sagrado", heroi=p['name']))
-            for m in list(alive_monsters):
-                if m["hp"] <= 0: await self._monster_dies(m, p["id"])
-
-        elif sid == "bless":
-            for p2 in self.players.values():
-                if p2["alive"]:
-                    p2["atk_bonus"] += 2
-                    self.blessed[p2["id"]] = self.blessed.get(p2["id"], 0) + 2
-            await self.gm_say(T("narracao.abencoa_o_grupo_2_bonus_de_ataque_para_t", heroi=p['name']))
-
-        elif sid == "double_shot":
-            t = self.monsters.get(target_id)
-            if t:
-                if not self._tem_linha_de_visao(p["pos"], t["pos"]):
-                    await self.send_to(p["id"], {"type": "error",
-                        "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=t["name"])}); return
-                total_dmg = 0
-                hits = 0
-                for _ in range(2):
-                    hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
-                    await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": T("dado.tiro_duplo")})
-                    if hit:
-                        weapon = p["weapon"]
-                        raw_dmg = roll_dice(weapon["die"])
-                        die_type = "d" + weapon["die"].split("d")[1]
-                        await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": T("dado.dano")})
-                        if crit: raw_dmg *= 2
-                        total_dmg += max(1, raw_dmg + mod(p[weapon["stat"]]) + surv_mod)
-                        hits += 1
-                if hits:
-                    if not await self._tirano_dano_interno(p, t, total_dmg):
-                        t["hp"] -= total_dmg
-                    await self.gm_say(T("narracao.usa_tiro_duplo_em_acerto_s_de_dano_total", heroi=p['name'], t=nome_criatura(t), hits=hits, total_dmg=total_dmg))
-                    if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-                else:
-                    await self.gm_say(T("narracao.usa_tiro_duplo_mas_ambos_os_tiros_errara", heroi=p['name']))
-
-        elif sid == "arrow_rain":
-            showcase = roll_dice("1d8")
-            await self.broadcast({"type": "dice_roll", "die": "d8", "value": showcase, "label": T("dado.chuva_de_flechas")})
-            # Flechas nÃ£o atravessam paredes: sÃ³ inimigos com linha de visÃ£o
-            alive_monsters = [m for m in alive_monsters
-                              if self._tem_linha_de_visao(p["pos"], m["pos"])]
-            for m in alive_monsters:
-                dmg = max(1, roll_dice("1d8") + mod(p["dex"]) + surv_mod)
-                self._registrar_dano_combate(m, dmg, [DMG_PHYSICAL])
-                m["hp"] -= dmg
-            await self.gm_say(T("narracao.usa_chuva_de_flechas_1d8_des_em_todos_os", heroi=p['name']))
-            for m in list(alive_monsters):
-                if m["hp"] <= 0: await self._monster_dies(m, p["id"])
-
-        elif sid == "piercing_shot":
-            t = self.monsters.get(target_id)
-            if t:
-                if not self._tem_linha_de_visao(p["pos"], t["pos"]):
-                    await self.send_to(p["id"], {"type": "error",
-                        "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=t["name"])}); return
-                weapon = p["weapon"]
-                raw_dmg = roll_dice(weapon["die"])
-                die_type = "d" + weapon["die"].split("d")[1]
-                await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg, "label": T("dado.tiro_perfurante")})
-                dmg = max(1, raw_dmg * 2 + mod(p[weapon["stat"]]) + surv_mod)
-                if not await self._tirano_dano_interno(p, t, dmg):
-                    t["hp"] -= dmg
-                await self.gm_say(T("narracao.usa_tiro_perfurante_em_de_dano_acerto_au", heroi=p['name'], t=nome_criatura(t), dmg=dmg))
-                if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-
-        elif sid == "smite":
-            t = self.monsters.get(target_id)
-            if t:
-                if not self._cardinal_adjacent(p["pos"], t["pos"]):
-                    await self.gm_say(T("narracao.tenta_golpe_divino_mas_o_inimigo_esta_fo", heroi=p['name'])); return
-                hit, roll, total, crit = d20_attack(p["atk_bonus"] + surv_mod + preso_pen, t["ac"])
-                await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll, "label": T("dado.golpe_divino")})
-                if hit:
-                    weapon = p["weapon"]
-                    raw_base = roll_dice(weapon["die"])
-                    raw_holy = roll_dice("1d6")
-                    die_type = "d" + weapon["die"].split("d")[1]
-                    await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_base, "label": T("dado.dano")})
-                    await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_holy, "label": T("dado.sagrado")})
-                    base = raw_base + mod(p[weapon["stat"]])
-                    holy = raw_holy
-                    if crit: base *= 2; holy *= 2
-                    dmg = max(1, base + holy + surv_mod)
-                    if not await self._tirano_dano_interno(p, t, dmg):
-                        t["hp"] -= dmg
-                    await self.gm_say(T("narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa", heroi=p['name'], t=nome_criatura(t), roll=roll, p_atk_bonus=p['atk_bonus'], total=total, t_ac=t['ac'], dmg=dmg))
-                    if t["hp"] <= 0: await self._monster_dies(t, p["id"])
-                else:
-                    await self.gm_say(T("narracao.tenta_golpe_divino_mas_errou_d20_vs_ca", heroi=p['name'], roll=roll, total=total, t_ac=t['ac']))
-
-        elif sid == "divine_shield":
-            t = self.players.get(target_id, p)
-            self.immune[t["id"]] = 1
-            await self.gm_say(T("narracao.protege_com_escudo_divino_imune_a_dano_p", heroi=p['name'], t=nome_criatura(t)))
-
-        elif sid == "holy_aura":
-            for p2 in self.players.values():
-                if p2["alive"]:
-                    self.temp_def[p2["id"]] = self.temp_def.get(p2["id"], 0) + 2
-            await self.gm_say(T("narracao.ativa_aura_sagrada_2_ca_para_todos_por_2", heroi=p['name']))
-
-        # â”€â”€ Bard (Henrique) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        # As habilidades do bardo (CanÃ§Ã£o Heroica e ProvocaÃ§Ã£o) NÃƒO passam por
-        # _apply_skill: tÃªm mensagens dedicadas (ativar_cancao / desativar_cancao /
-        # provocacao) porque dependem de seleÃ§Ã£o de atributos e de alvo prÃ³prio,
-        # fora do fluxo genÃ©rico de `skill`. A passiva Conhecimento das Lendas Ã©
-        # puramente de cliente (hover revela a ficha do monstro, cujos dados jÃ¡
-        # viajam no push_state). Ver handle_ativar_cancao / handle_provocacao.
-
     # â”€â”€ Mago: Metamagia (Pedro) â€” toggles de aÃ§Ã£o livre â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # 3 toggles EMPILHÃVEIS que MODIFICAM a magia do GRIMÃ“RIO lanÃ§ada neste turno
     # (aplicadas em handle_magia). NÃ£o cobram nada ao armar â€” o custo em fome/sede
@@ -18990,8 +18686,7 @@ class GameRoom:
         return 0
 
     # â”€â”€ Frade Lewis (cleric): milagres de cura â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    # As 4 habilidades de Lewis NÃƒO passam pelo fluxo genÃ©rico de `skill` (nÃ£o
-    # tÃªm "mp"): cada uma Ã© uma aÃ§Ã£o principal dedicada com custo em fome/sede,
+    # As 4 habilidades de Lewis: cada uma Ã© uma aÃ§Ã£o principal dedicada com custo em fome/sede,
     # no mesmo modelo do warrior/bardo/paladino. INT modifica a cura. Alcance via
     # _no_raio (Chebyshev). PurificaÃ§Ã£o reverte efeitos de veneno/petrificaÃ§Ã£o
     # usando _reverter_efeito_veneno (espelha a expiraÃ§Ã£o em _processar_venenos_turno).
@@ -19389,8 +19084,7 @@ class GameRoom:
         await self.push_state()
 
     # â”€â”€ Paladino (Richard): aÃ§o e honra â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    # As 5 habilidades de Richard NÃƒO passam pelo fluxo genÃ©rico de `skill` (nÃ£o
-    # tÃªm "mp"): ImposiÃ§Ã£o das MÃ£os Ã© aÃ§Ã£o principal dedicada; Golpe Sagrado e
+    # As 5 habilidades de Richard: ImposiÃ§Ã£o das MÃ£os Ã© aÃ§Ã£o principal dedicada; Golpe Sagrado e
     # Protetor sÃ£o aÃ§Ãµes bÃ´nus alternÃ¡veis; RegeneraÃ§Ã£o Divina e Guerreiro da Luz
     # sÃ£o aÃ§Ãµes livres. Custo e manutenÃ§Ã£o em fome/sede, no mesmo modelo do
     # warrior/bardo. Upkeep em _processar_manutencao_richard (inÃ­cio do turno);
@@ -30967,19 +30661,11 @@ class GameRoom:
         p["tec_ex_canalizacao_perfeita_armado"] = False
         p["tec_ex_acelerada_armado"] = False
 
-        # Clear temp effects for this player.
-        # temp_def normalmente dura 1 turno; o Escudo MÃ¡gico Aprimorado (Pedro)
-        # marca temp_def_turnos>1 e sobrevive a esse end_turn extra.
-        if self.temp_def_turnos.get(pid, 0) > 1:
-            self.temp_def_turnos[pid] -= 1
-        else:
-            self.temp_def.pop(pid, None)
-            self.temp_def_turnos.pop(pid, None)
+        # Clear temp effects for this player (temp_def dura 1 turno).
+        self.temp_def.pop(pid, None)
         if pid in self.blessed:
             self.players[pid]["atk_bonus"] = self.players[pid]["base_atk_bonus"]
             self.blessed.pop(pid)
-        if self.immune.get(pid, 0) > 0:
-            self.immune[pid] -= 1
 
         # Fila individual: apÃ³s a limpeza normal do herÃ³i, passa ao prÃ³ximo
         # ator (herÃ³i ou monstro). O bloco legado abaixo fica como fallback.
@@ -33811,9 +33497,6 @@ class GameRoom:
             if (prov_pid in self.players and self.players[prov_pid]["alive"]
                     and presente(self.players[prov_pid])):
                 return {"kind": "player", "obj": self.players[prov_pid]}
-        if (self.taunted and self.taunted in self.players and self.players[self.taunted]["alive"]
-                and presente(self.players[self.taunted])):
-            return {"kind": "player", "obj": self.players[self.taunted]}
         # Modo Semi (Mestre): forÃ§a o alvo escolhido, se ele estiver visÃ­vel.
         # Fica ABAIXO de rÃ©quiem/provocaÃ§Ã£o/taunt (compulsÃµes de habilidade tÃªm
         # prioridade) e substitui apenas a seleÃ§Ã£o padrÃ£o do mais prÃ³ximo.
@@ -34221,13 +33904,6 @@ class GameRoom:
 
         self._face_toward(m, target["pos"])   # orientado: encara o alvo ao atacar
 
-        if self.smoke.get(m["id"]):
-            self.smoke.pop(m["id"])
-            await self.gm_say(T("narracao.tenta_atacar_mas_a_fumaca_confunde", monstro=nome_criatura(m), tgt_name=nome_criatura(target)))
-            return
-        if is_player and self.immune.get(target["id"], 0) > 0:
-            await self.gm_say(T("narracao.ataca_mas_o_escudo_divino_bloqueia", monstro=nome_criatura(m), tgt_name=nome_criatura(target)))
-            return
 
         effective_ac = (self._player_effective_ac(target)
                         if is_player
@@ -37032,7 +36708,7 @@ class GameRoom:
         """Prioriza alvos com armadura leve (couro), depois sem armadura. Aplica
         Toque Putrefato e Corrosão Viva no acerto. Evita zonas de fogo."""
         players_alvo = [t for t in targets if t["kind"] == "player"]
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self._requiem_forca_bardo(m))
         if forcado or not players_alvo:
             target_obj = self._get_monster_primary_target(m, targets)
         else:
@@ -37114,7 +36790,7 @@ class GameRoom:
                 return
 
         players_alvo = [t for t in targets if t["kind"] == "player"]
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self._requiem_forca_bardo(m))
         if forcado or not players_alvo:
             target_obj = self._get_monster_primary_target(m, targets)
         else:
@@ -37432,7 +37108,7 @@ class GameRoom:
     async def _ai_lagarto_carniceiro(self, m, targets):
         """Faro da Presa Fácil: prioriza o alvo com MENOR HP. 2 mordidas (Predador
         Oportunista: +1 vs alvo <50% HP); se ambas acertam → Combo Devorador (2 garras)."""
-        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self.taunted) or bool(self._requiem_forca_bardo(m))
+        forcado = (m.get("provocado") and m.get("provocado_turnos", 0) > 0) or bool(self._requiem_forca_bardo(m))
         if forcado:
             target_obj = self._get_monster_primary_target(m, targets)
         elif targets:
@@ -38759,7 +38435,7 @@ class GameRoom:
         cds = m.setdefault("ability_cooldowns", {})
         for key in list(cds): cds[key] = max(0, cds[key] - 1)
         players = [t for t in targets if t["kind"] == "player"]
-        if players and not (m.get("provocado") or self.taunted or self._requiem_forca_bardo(m)):
+        if players and not (m.get("provocado") or self._requiem_forca_bardo(m)):
             target_obj = min(players, key=lambda t: (
                 0 if t["obj"].get("gear", {}).get("armor") else 1,
                 abs(t["obj"]["pos"][0] - m["pos"][0]) + abs(t["obj"]["pos"][1] - m["pos"][1])))
@@ -39218,13 +38894,6 @@ class GameRoom:
 
             # D20: monstros atacam sÃ³ de casas cardinalmente adjacentes
             if self._monster_attack_in_range(m, target["pos"]):
-                if self.smoke.get(m["id"]):
-                    self.smoke.pop(m["id"])
-                    await self.gm_say(T("narracao.tenta_atacar_mas_a_fumaca_confunde", monstro=nome_criatura(m), tgt_name=nome_criatura(target)))
-                    continue
-                if is_player and self.immune.get(target["id"], 0) > 0:
-                    await self.gm_say(T("narracao.ataca_mas_o_escudo_divino_bloqueia", monstro=nome_criatura(m), tgt_name=nome_criatura(target)))
-                    continue
 
                 if is_player:
                     gl_ca = (target.get("guerreiro_luz_bonus", {}).get("ca", 0)
@@ -39367,7 +39036,6 @@ class GameRoom:
         # Fase 3: prisioneiro libertado segue o herÃ³i mais prÃ³ximo e leva dano de monstros adjacentes.
         await self._processar_prisioneiro_turno()
 
-        self.taunted = None
         # Reset blessed ATK bonus
         for pid2 in list(self.blessed.keys()):
             self.players[pid2]["atk_bonus"] = self.players[pid2]["base_atk_bonus"]
@@ -40481,8 +40149,7 @@ class GameRoom:
                             # Metadado visual: a aplicação mecânica continua
                             # exclusivamente em temp_def na resolução da CA.
                             temp_ca_bonus=int(self.temp_def.get(p["id"], 0) or 0),
-                            temp_ca_rodadas=(max(1, int(self.temp_def_turnos.get(p["id"], 1) or 1))
-                                             if self.temp_def.get(p["id"], 0) else 0),
+                            temp_ca_rodadas=(1 if self.temp_def.get(p["id"], 0) else 0),
                             # Mesmo metadado do payload da cidade: o bônus vem
                             # do cache de rodada e não muda nenhuma resolução.
                             bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0),
@@ -40829,7 +40496,7 @@ async def handler(ws):
             # Habilidades dos heróis que devem produzir o feedback visual no
             # peão. O snapshot evita animar tentativas recusadas pelo handler.
             _ability_types = {
-                "skill", "usar_tecnica", "usar_instrumento", "improviso_alvo",
+                "usar_tecnica", "usar_instrumento", "improviso_alvo",
                 "aprimorar_magia", "estender_magia", "fortalecer_magia",
                 "ativar_cancao", "provocacao", "cura", "cura_area",
                 "purificacao", "ressurreicao", "imposicao_maos", "golpe_sagrado",
@@ -40844,8 +40511,7 @@ async def handler(ws):
                     _ability_watch = {
                         "before": deepcopy(_watched_player),
                         "kind": "technique" if t == "usar_tecnica" else "skill",
-                        "ability_id": (msg.get("skill_id") if t == "skill" else
-                                        msg.get("tecnica_id") if t == "usar_tecnica" else
+                        "ability_id": (msg.get("tecnica_id") if t == "usar_tecnica" else
                                         msg.get("habilidade_id") if t == "acao_livre_richard" else
                                         ("instrumento" if t in ("usar_instrumento", "improviso_alvo") else t)),
                     }
@@ -41455,9 +41121,6 @@ async def handler(ws):
                 elif t == "escapar_bau":
                     if room: await room.handle_escapar_bau(pid)
 
-                elif t == "skill":
-                    if room: await room.handle_skill(pid, msg.get("skill_id"), msg.get("target_id"))
-
                 elif t == "magia":
                     if room: await room.handle_magia(pid, msg)
 
@@ -41891,7 +41554,7 @@ def _base_ability_library():
                 out.setdefault(item["id"], item)
     for cls_id, cls in CLASSES.items():
         for skill in cls.get("skills", []):
-            if not skill.get("id") or skill.get("id") in GRIMORIO or skill.get("mp") is not None:
+            if not skill.get("id") or skill.get("id") in GRIMORIO:
                 continue  # magias pertencem exclusivamente Ã  aba Magias
             item = {
                 "id": f"hero_{cls_id}_{skill['id']}", "source": "heroi",

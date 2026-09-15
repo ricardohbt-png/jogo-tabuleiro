@@ -85,10 +85,6 @@ window.LANG_ERROS = {
     "en": "The transformed form cannot cast spells.",
     "pt": "A forma transformada não pode lançar magias."
   },
-  "erro.a_forma_transformada_nao_pode_usar_habil": {
-    "en": "The transformed form cannot use hero abilities.",
-    "pt": "A forma transformada não pode usar habilidades de herói."
-  },
   "erro.a_forma_transformada_nao_pode_usar_itens": {
     "en": "The transformed form cannot use items.",
     "pt": "A forma transformada não pode usar itens."
@@ -589,10 +585,6 @@ window.LANG_ERROS = {
     "en": "End the simulation before changing the test table.",
     "pt": "Encerre a simulação antes de alterar a mesa de teste."
   },
-  "erro.engolido_voce_so_pode_mirar_no_interior": {
-    "en": "Swallowed, you can only target the Tyrant's insides or yourself.",
-    "pt": "Engolido, você só pode mirar no interior do Tirano ou em si mesmo."
-  },
   "erro.engolir_exige_uma_criatura_presa_adjacen": {
     "en": "Swallow requires a Grappled creature adjacent and an empty stomach.",
     "pt": "Engolir exige uma criatura Presa adjacente e um estômago vazio."
@@ -881,10 +873,6 @@ window.LANG_ERROS = {
     "en": "This animated creature cannot use abilities right now.",
     "pt": "Esta criatura animada não pode usar habilidades agora."
   },
-  "erro.habilidade_invalida": {
-    "en": "Invalid ability.",
-    "pt": "Habilidade inválida."
-  },
   "erro.habilidade_livre_invalida": {
     "en": "Invalid free ability.",
     "pt": "Habilidade livre inválida."
@@ -1088,10 +1076,6 @@ window.LANG_ERROS = {
   "erro.movimento_insuficiente_casa_custa": {
     "en": "Not enough movement: this tile costs {custo}.",
     "pt": "Movimento insuficiente: esta casa custa {custo}."
-  },
-  "erro.mp_insuficiente": {
-    "en": "Insufficient MP.",
-    "pt": "MP insuficiente."
   },
   "erro.muito_longe_do_bau": {
     "en": "Too far from the chest!",
@@ -1357,10 +1341,6 @@ window.LANG_ERROS = {
     "en": "The deep whirlpool holds you; you must pass a Reflex save to get out.",
     "pt": "O rodamoinho profundo prende você; é preciso passar no teste de Reflexos para sair."
   },
-  "erro.o_rodamoinho_profundo_prende_voce_nao_e": {
-    "en": "The deep whirlpool holds you; you cannot take actions while trapped.",
-    "pt": "O rodamoinho profundo prende você; não é possível realizar ações enquanto estiver preso."
-  },
   "erro.o_teste_nao_esta_mais_disponivel": {
     "en": "The test is no longer available.",
     "pt": "O teste não está mais disponível."
@@ -1416,10 +1396,6 @@ window.LANG_ERROS = {
   "erro.parede_bloqueia_arremesso": {
     "en": "🧱 A wall blocks the throw to {alvo}!",
     "pt": "🧱 Uma parede bloqueia o arremesso até {alvo}!"
-  },
-  "erro.parede_bloqueia_lanca_de_gelo": {
-    "en": "🧱 A wall blocks Ice Lance's path to {alvo}!",
-    "pt": "🧱 Uma parede bloqueia a Lança de Gelo até {alvo}!"
   },
   "erro.parede_bloqueia_linha_de_tiro": {
     "en": "🧱 A wall blocks the line of fire to {alvo}!",

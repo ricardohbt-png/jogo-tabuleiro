@@ -272,13 +272,12 @@ const GS = (() => {
   // ── Atividade do turno (categorias são mutuamente exclusivas por turno) ─────
   // As funções de movimento/ataque/habilidade marcam flags aqui; o consumo
   // único do turno é resolvido em endTurn() escolhendo a categoria correta.
-  let _turn = { moved: false, acted: false, special: false };
-  function _resetTurnActivity() { _turn = { moved: false, acted: false, special: false }; }
+  let _turn = { moved: false, acted: false };
+  function _resetTurnActivity() { _turn = { moved: false, acted: false }; }
 
   // Resolve a categoria de consumo do turno a partir das flags acumuladas.
   function _tipoAcaoDoTurno() {
     const t = _turn;
-    if (t.special)               return t.moved ? 'habilidadeEspecialComMover' : 'habilidadeEspecialSemMover';
     if (t.moved && t.acted)      return 'movimentoMaisAcao';
     if (t.moved)                 return 'apenasMovimento';
     if (t.acted)                 return 'apenasAcao';
@@ -2445,7 +2444,6 @@ const GS = (() => {
   // Ataque/magia/habilidade têm seus sends no renderer (game.js); ele notifica
   // a atividade do turno aqui. Magia conta como ataque ('acted').
   function notifyAttack()      { _turn.acted   = true; }   // ataque ou magia
-  function notifySkill()       { _turn.special = true; }   // habilidade especial
   function notifyBonusAction() { _consumeMine('acaoBonus'); }
   function notifyDamageTaken() { _consumeMine('receberDano'); }
 
@@ -2653,35 +2651,6 @@ const GS = (() => {
     return result;
   }
 
-  // ── Skill activator: sets pendingSkill or sends directly ──────────────────
-  // Returns: 'sent' | 'pending_enemy' | 'pending_ally' | 'no_targets'
-  // Renderer uses return value to show appropriate toast / re-render panel.
-  function activateSkill(skill, state) {
-    const target = skill.target;
-    if (target === 'self') {
-      pendingSkill = null;
-      notifySkill();   // habilidade especial → consumo no fim do turno
-      send({ type: 'skill', skill_id: skill.id, target_id: myPid });
-      return 'sent';
-    }
-    if (target === 'all_enemies' || target === 'all_allies') {
-      pendingSkill = null;
-      notifySkill();   // habilidade especial → consumo no fim do turno
-      send({ type: 'skill', skill_id: skill.id, target_id: null });
-      return 'sent';
-    }
-    if (target === 'enemy') {
-      if (!state.monsters.filter(m => m.hp > 0).length) return 'no_targets';
-      pendingSkill = skill;
-      return 'pending_enemy';
-    }
-    if (target === 'ally') {
-      pendingSkill = skill;
-      return 'pending_ally';
-    }
-    return 'sent';
-  }
-
   // ── Habilidades ARMADAS do warrior (toggle, custo cobrado na ação) ─────────
   // O custo de fome/sede NÃO é cobrado aqui — só quando o jogador ataca (o send
   // do ataque inclui os ids armados e o servidor cobra/aplica). Cumulativas.
@@ -2886,8 +2855,8 @@ const GS = (() => {
   // Called by the unified handleTileClick(tx, ty) in game.html.
   // Returns one of:
   //   null                                   — nothing to do / consume click silently
-  //   {type:'skill_blocked', reason}         — melee range violation (show toast)
-  //   {type:'skill',  skillId, targetId}     — execute skill send + clear pendingSkill
+  //   {type:'skill_blocked', reason}         — desarme fora da adjacência (show toast)
+  //   {type:'disarm_trap', tx, ty}           — desarmar armadilha na casa
   //   {type:'attack', targetId}              — execute attack send
   //   {type:'move',   path}                  — execute move sends
   function resolveTileClick(tx, ty) {
@@ -2913,28 +2882,11 @@ const GS = (() => {
     }
 
     if (pendingSkill) {
-      const sk    = pendingSkill;
-      if (sk.id === 'desarmar_armadilha') {
+      // Hoje só o desarme de armadilha (Luccas) usa a mira por pendingSkill.
+      if (pendingSkill.id === 'desarmar_armadilha') {
         const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
         if (Math.max(dx, dy) <= 1) return { type: 'disarm_trap', tx, ty };
         return { type: 'skill_blocked', reason: 'trap_adjacent' };
-      }
-      const MELEE = ['heavy_blow', 'backstab', 'smite'];
-      if (sk.target === 'enemy') {
-        const m = gameState.monsters.find(m => m.hp > 0 &&
-          monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
-        if (m) {
-          if (MELEE.includes(sk.id)) {
-            const ddx = Math.abs(myP.pos[0] - tx);
-            const ddy = Math.abs(myP.pos[1] - ty);
-            if (!((ddx === 1 && ddy === 0) || (ddx === 0 && ddy === 1)))
-              return { type: 'skill_blocked', reason: 'melee_adj' };
-          }
-          return { type: 'skill', skillId: sk.id, targetId: m.id };
-        }
-      } else if (sk.target === 'ally') {
-        const pl = gameState.players.find(p => p.pos[0] === tx && p.pos[1] === ty && p.alive);
-        if (pl) return { type: 'skill', skillId: sk.id, targetId: pl.id };
       }
       return null; // consume click, stay in pending mode (ESC to cancel)
     }
@@ -3162,7 +3114,6 @@ const GS = (() => {
     },
     // Hooks de ação (renderer chama nos pontos de ataque/magia/bônus/dano)
     notifyAttack,
-    notifySkill,
     notifyBonusAction,
     notifyDamageTaken,
 
@@ -3389,7 +3340,6 @@ const GS = (() => {
     weaponReachInfo,
     resolveAttack,
     attackTargetTiles,
-    activateSkill,
     resolveTileClick,
     cadaverAdjacente,
   };

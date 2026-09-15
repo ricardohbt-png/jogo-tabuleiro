@@ -17687,13 +17687,6 @@ function _aimHoverThrow(tx, ty) {
   _aimSetStatus(valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
-function _aimHoverPendingSkill(tx, ty) {
-  const action = GS.resolveTileClick(tx, ty);
-  const valid = action?.type === 'skill';
-  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), valid ? '#94dfb0' : '#ff9aa2');
-}
-
 // Os modos que _aimPreviewAt sabe tratar. Serve de guarda nos manipuladores:
 // os modos de arremesso LEGADOS (_modoArremessoLanca/Principal/Ativo) não estão
 // aqui de propósito — eles têm caminho próprio e não passam por esta camada.
@@ -17702,8 +17695,7 @@ function _aimAlgumModoAtivo() {
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
     || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadePlacement || window._modoTempestadeMove
     || window._modoThrowItem || window._modoAnimarMortos
-    || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
-    || (GS.pendingSkill && _aimSessionIs('habilidade')));
+    || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha'));
 }
 
 // O cursor saiu do tabuleiro: apaga a prévia que seguia o cursor e o marcador.
@@ -17784,7 +17776,6 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
   }
   if (window._modoPlacementArmadilha)      { _aimSetHoverFromSets(tx, ty); return true; }
   if (_aimSessionIs('desarmar_armadilha')) { _aimSetHoverFromSets(tx, ty); return true; }
-  if (GS.pendingSkill && _aimSessionIs('habilidade')) { _aimHoverPendingSkill(tx, ty); return true; }
   return false;
 }
 
@@ -17903,39 +17894,6 @@ function _aimStart(spec) {
   // casa útil, senão o primeiro toque no direcional já sai bloqueado.
   _aimSeedGamepadCursor();
   return session;
-}
-
-// Habilidades de alvo único ainda usam GS.pendingSkill para que o resolvedor
-// puro permaneça a fonte de verdade. Esta função só transforma esse estado em
-// uma prévia visual comum para 2D, 3D, mouse, toque e controle.
-function _aimStartPendingSkill(skill) {
-  const state = GS.gameState;
-  if (!state || !skill || !['enemy', 'ally'].includes(skill.target)) return;
-  const range = new Set(), valid = new Set();
-  const candidates = skill.target === 'enemy'
-    ? (state.monsters || []).filter(m => m?.hp > 0).flatMap(m => GS.monsterTiles(m))
-    : (state.players || []).filter(p => p?.alive).map(p => p.pos);
-  for (const [x, y] of candidates) {
-    const key = `${x},${y}`;
-    range.add(key);
-    const action = GS.resolveTileClick(x, y);
-    if (action?.type === 'skill') valid.add(key);
-  }
-  const targetLabel = skill.target === 'enemy' ? 'inimigo' : 'aliado';
-  _aimStart({
-    kind: 'habilidade',
-    title: `✨ ${(skill.name || skill.nome || skill.id || t('ui.mira.habilidade')).toUpperCase()}`,
-    instruction: t('ui.mira.selecione_um_x_destacado', {alvo: targetLabel}),
-    color: skill.target === 'enemy' ? '#c98cff' : '#79bfff', targetLabel: targetLabel.toUpperCase(),
-    range, area: valid,
-    cancelText: t('ui.mira.habilidade_cancelada'),
-    cleanup: () => {
-      const active = GS.pendingSkill;
-      GS.pendingSkill = null;
-      if (active?.id) _removerEfeitoVisualLocal(active.id);
-      if (GS.gameState) renderMyPanel(GS.gameState);
-    },
-  });
 }
 
 function _aimStartDisarmTrap() {
@@ -18724,8 +18682,6 @@ function _mpHeroiTesteAtivo(state){
 function _mpAbaHeroiTesteAtivo(state, p){
   const alvos = (state.monsters || []).filter(m => m.hp > 0);
   const alvoOpts = alvos.map(m => `<option value="${_esc(m.id)}">${_esc(m.name || m.type || t('ui.mestre.monstro'))} (${m.hp}/${m.max_hp || m.hp})</option>`).join('');
-  const skills = (p.skills || []).filter(s => s && s.mp != null).map(s =>
-    `<button class="mp-linha hab mp-test-skill" data-skill="${_esc(s.id)}"><span class="txt">✨ ${_esc(s.name || s.id)}</span></button>`).join('');
   const spells = (p.magias_conhecidas || []).map(id =>
     `<button class="mp-linha hab mp-test-spell" data-spell="${_esc(id)}"><span class="txt">🔮 ${_esc(id)}</span></button>`).join('');
   return `<div class="mp-head"><span class="emoji">${_esc(p.emoji || '🧙')}</span><div style="flex:1"><div class="nome">${_esc(p.name || p.class_id || t('ui.mestre.heroi_de_teste'))}</div><div class="sub">${t('ui.mestre.heroi_de_teste_turno_ativo')}</div></div></div>
@@ -18736,7 +18692,6 @@ function _mpAbaHeroiTesteAtivo(state, p){
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px"><button class="mp-test-move" data-dx="0" data-dy="-1">↑</button><button class="mp-test-move" data-dx="-1" data-dy="0">←</button><button class="mp-test-move" data-dx="1" data-dy="0">→</button><button class="mp-test-move" data-dx="0" data-dy="1" style="grid-column:2">↓</button></div>
     <select class="mp-test-target" style="width:100%;margin-top:7px">${alvoOpts || '<option value="">'+t('ui.mestre.sem_alvo_vivo')+'</option>'}</select>
     <button class="mp-linha atk mp-test-attack" ${alvos.length ? '' : 'disabled'}><span class="txt">${t('ui.mestre.ataque_basico')}</span></button>
-    ${skills ? `<div class="mp-sec">${t('ui.mestre.habilidades_compativeis')}</div>${skills}` : ''}
     ${spells ? `<div class="mp-sec">${t('ui.mestre.magias_sec')}</div>${spells}` : ''}`;
 }
 
@@ -18745,7 +18700,6 @@ function _mpWireHeroiTesteAtivo(host, p){
   host.querySelectorAll('.mp-test-move').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'move', {dx:Number(b.dataset.dx), dy:Number(b.dataset.dy)}));
   const atk = host.querySelector('.mp-test-attack');
   if(atk) atk.onclick = () => GS.testeAcaoHeroi(p.id, 'attack', {target_id: target()});
-  host.querySelectorAll('.mp-test-skill').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'skill', {skill_id:b.dataset.skill, target_id:target()}));
   host.querySelectorAll('.mp-test-spell').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'magia', {magia_id:b.dataset.spell, target_id:target()}));
 }
 
@@ -20519,11 +20473,6 @@ function renderMyPanel(state){
       sl.appendChild(_mageSkillBtn(me, sk));
       continue;
     }
-    // Mago (Pedro): magias com custo de MP foram removidas da ficha.
-    if (me.class_id === 'mage' && sk.mp != null) continue;
-
-    // Duas famílias de habilidade: MP (demais classes) e Fome/Sede (warrior).
-    const isSurvival = sk.mp == null;
     const fomeCost = sk.fome_cost || 0;
     const sedeCost = sk.sede_cost || 0;
     const icon = abilityIconHtml(sk, sk.icon || '') + ' ';
@@ -20546,48 +20495,30 @@ function renderMyPanel(state){
     }
     const btn = document.createElement('button');
 
-    if (isSurvival) {
-      // ── Warrior: botão é um TOGGLE (arma/desarma). Custo só ao atacar. ──
-      // SEMPRE disponível durante o meu turno — NÃO há teto de custo: o jogador
-      // pode armar mesmo sem ter o recurso, esgotando fome/sede até 0 (risco de
-      // exaustão). Quem administra o recurso é o jogador.
-      const selected = _wSel(sk.id);
-      const podeMarcar = GS.isMyTurn && me.alive && state.phase === 'playing';
-      btn.className = 'skill-btn' + (selected ? ' skill-active' : '');
-      btn.disabled = !podeMarcar;
-      btn.innerHTML = `
-        <div class="skill-info">
-          <div class="skill-name">${icon}${sk.name}${selected ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.armada')}</small>` : ''}</div>
-          <div class="skill-desc">${desc}</div>
-        </div>
-        <div class="skill-cost">${[fomeCost ? `🍖${fomeCost}` : '', sedeCost ? `💧${sedeCost}` : ''].filter(Boolean).join(' ') || '—'}</div>`;
-      btn.onclick = () => {
-        if (!_wSel(sk.id) && GS.getWarriorSelected().length >= GS.warriorComboCap()) {
-          const cap = GS.warriorComboCap();
-          toast(cap === 1
-            ? t('ui.hud.compre_combinar_duas_na_guilda_para_armar')
-            : t('ui.hud.limite_habilidades',{n:cap}), 'var(--gold)');
-          return;
-        }
-        _wToggle(sk.id); renderMyPanel(GS.gameState);
-      };
-    } else {
-      // ── Demais classes: habilidade de MP (comportamento original). ──
-      const ok = canAct && (me.mp >= sk.mp);
-      const isActive = GS.pendingSkill && GS.pendingSkill.id === sk.id;
-      btn.className = 'skill-btn' + (isActive ? ' skill-active' : '');
-      btn.disabled = !ok && !isActive;
-      btn.innerHTML = `
-        <div class="skill-info">
-          <div class="skill-name">${icon}${sk.name}${isActive ? ' <small style="color:var(--gold);font-size:.65rem;">'+t('ui.hud.aguardando_alvo_bolinha')+'</small>' : ''}</div>
-          <div class="skill-desc">${desc}</div>
-        </div>
-        <div class="skill-cost">💙${sk.mp}</div>`;
-      btn.onclick = () => {
-        if(isActive){ GS.pendingSkill=null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast(t('ui.hud.habilidade_cancelada'),'var(--text2)'); }
-        else { beginSkill(sk, state); }
-      };
-    }
+    // ── Warrior: botão é um TOGGLE (arma/desarma). Custo só ao atacar. ──
+    // SEMPRE disponível durante o meu turno — NÃO há teto de custo: o jogador
+    // pode armar mesmo sem ter o recurso, esgotando fome/sede até 0 (risco de
+    // exaustão). Quem administra o recurso é o jogador.
+    const selected = _wSel(sk.id);
+    const podeMarcar = GS.isMyTurn && me.alive && state.phase === 'playing';
+    btn.className = 'skill-btn' + (selected ? ' skill-active' : '');
+    btn.disabled = !podeMarcar;
+    btn.innerHTML = `
+      <div class="skill-info">
+        <div class="skill-name">${icon}${sk.name}${selected ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.armada')}</small>` : ''}</div>
+        <div class="skill-desc">${desc}</div>
+      </div>
+      <div class="skill-cost">${[fomeCost ? `🍖${fomeCost}` : '', sedeCost ? `💧${sedeCost}` : ''].filter(Boolean).join(' ') || '—'}</div>`;
+    btn.onclick = () => {
+      if (!_wSel(sk.id) && GS.getWarriorSelected().length >= GS.warriorComboCap()) {
+        const cap = GS.warriorComboCap();
+        toast(cap === 1
+          ? t('ui.hud.compre_combinar_duas_na_guilda_para_armar')
+          : t('ui.hud.limite_habilidades',{n:cap}), 'var(--gold)');
+        return;
+      }
+      _wToggle(sk.id); renderMyPanel(GS.gameState);
+    };
     sl.appendChild(btn);
   }
 
@@ -22752,10 +22683,7 @@ function abrirMenuHabilidades(pid){
   const owned = GS.guildOwnedOf(pid);
   const equip = GS.guildEquipOf(pid);
   const catalog = GS.guildCatalogFor(player.class_id) || [];
-  // As três magias legadas do antigo sistema de MP não são habilidades do
-  // mago. A Bola de Fogo do grimório continua intacta no menu de Magias.
-  const base = [...(player.skills || [])].filter(s =>
-    !['fireball', 'ice_lance', 'magic_shield'].includes(s.id));
+  const base = [...(player.skills || [])];
   // Arremessos são habilidades temporárias fornecidas pelas armas equipadas.
   // A lista normalmente vem do servidor em `granted_hero_skills`; o helper
   // também reconstrói a entrada a partir do equipamento recebido para que a
@@ -23109,25 +23037,6 @@ function _clickTileArremessoArma(tx, ty){
   }
   GS.throwWeapon(mode.slot, monster.id);
   _aimEnd({silent:true, reason:'resolved'});
-}
-
-function beginSkill(skill, state){
-  getAudioContext();
-
-  // (Warrior usa toggle de habilidades armadas — tratado no loop de botões via
-  // GS.toggleWarriorSkill; nunca chega aqui. beginSkill cobre só skills de MP.)
-  const result = GS.activateSkill(skill, state);
-  if(result==='no_targets'){ toast(t('ui.hud.nenhum_inimigo_vivo')); return; }
-  _registrarEfeitoVisualLocal(skill.id, 'skill');
-  if(result==='pending_enemy'){
-    _aimStartPendingSkill(skill);
-    renderMyPanel(GS.gameState);
-    toast(t('ui.hud.skill_ativada_clique_inimigo', {nome: skill.name}), 'var(--purple)');
-  } else if(result==='pending_ally'){
-    _aimStartPendingSkill(skill);
-    renderMyPanel(GS.gameState);
-    toast(t('ui.hud.skill_ativada_clique_aliado', {nome: skill.name}), 'var(--blue)');
-  }
 }
 
 function openTargetModal(title, targets, kind, callback){
@@ -45754,13 +45663,6 @@ function _csfShowPanel(classId, animate){
             ${sk.fome_cost ? `🍖 -${sk.fome_cost}` : ''}
             ${sk.sede_cost ? `💧 -${sk.sede_cost}` : ''}
           </div>
-        ` : sk.mp ? `
-          <div class="cs-skill-cost" style="
-            margin-top:4px;
-            font-size:10px;
-            color:#4488ff;
-            font-family:'Cinzel',serif;
-          ">💙 ${sk.mp} mana</div>
         ` : ''}
       </div>
     </div>
@@ -47209,7 +47111,7 @@ function handleTileClick(tx, ty){
         toast(t('erro.voce_esta_petrificado_e_nao_pode_se_move'), 'var(--orange)');
       break;
     case 'skill_blocked':
-      { const msg = action.reason === 'trap_adjacent' ? t('ui.hud.selecione_uma_casa_adjacente_ao_luccas') : t('ui.hud.este_ataque_requer_inimigo_cardinalmente_a');
+      { const msg = t('ui.hud.selecione_uma_casa_adjacente_ao_luccas');
         _aimSetStatus(msg, '#ffb168'); toast(msg, 'var(--orange)'); }
       break;
     case 'disarm_trap':
@@ -47217,14 +47119,6 @@ function handleTileClick(tx, ty){
       GS.desarmarArmadilha(action.tx, action.ty);
       GS.pendingSkill = null;
       _removerEfeitoVisualLocal('desarmar_armadilha');
-      renderMyPanel(GS.gameState);
-      break;
-    case 'skill':
-      if(_aimSessionIs('habilidade')) _aimEnd({silent:true, reason:'resolved'});
-      GS.notifySkill();
-      send({type:'skill', skill_id:action.skillId, target_id:action.targetId});
-      GS.pendingSkill = null;
-      _removerEfeitoVisualLocal(action.skillId);
       renderMyPanel(GS.gameState);
       break;
     case 'attack':

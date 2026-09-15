@@ -95,7 +95,6 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `start_game` | — |
 | `move` | `dx`, `dy` |
 | `attack` | `target_id` |
-| `skill` | `skill_id`, `target_id` |
 | `animar_mortos` | `cadaver_id` (Pedro anima cadáver adjacente) |
 | `comandar_animados` | — (só no turno dos servos: todos os animados movem+atacam o monstro mais próximo automaticamente) |
 | `mover_animado` | `animado_id`, `dx`, `dy` (controle manual — 1 passo) |
@@ -2438,3 +2437,5 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `renderer.render()` + `toDataURL()` em vez de screenshot. Testes: `tools/test_projeteis.py`
 > (servidor, 40 checks), `tools/test_combat_scene.js` (`[35]`–`[41]` + `[33]`, 264 checks).
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-09-12-projeteis-3d*`.
+
+> **Sistema de MP removido (2026-09-15):** o fluxo genérico `skill` → `handle_skill` → `_apply_skill` (18 habilidades das 6 classes genéricas originais, custo em `mp`) era código morto — toda classe tinha `mp: 0`, nada o incrementava e o HUD nunca chegava ao ramo 💙. Saíram: a mensagem `skill`, `handle_skill`/`_apply_skill`, as 3 magias de MP da ficha do Pedro (`fireball`/`ice_lance`/`magic_shield`), os campos `mp`/`max_mp` do jogador (e da whitelist `_DURABLE_FIELDS` do savegame — save antigo com `mp` é ignorado), o estado que só elas alimentavam (`self.taunted`, `self.immune`, `self.smoke`, `self.temp_def_turnos` — `self.blessed` e `self.temp_def` FICAM, têm outros escritores), o ramo `skill` da mesa livre do editor, e no cliente `GS.activateSkill`/`notifySkill`, `beginSkill`, `_aimStartPendingSkill`/`_aimHoverPendingSkill` e os ramos `enemy`/`ally` de `pendingSkill` em `resolveTileClick` (o `pendingSkill` segue vivo só para o desarme de armadilha). 56 chaves de idioma órfãs apagadas (`dividas.py` limpo). Efeito colateral no instrumento: o placar de `test_interface.py` passou a reconhecer o 3º argumento de `_rotulo(id, prefixo, padrao)` como fallback (não dívida) — a sigla `DES` só era "inglês" porque a narração removida da Chuva de Flechas a continha.

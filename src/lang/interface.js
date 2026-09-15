@@ -63,10 +63,6 @@ window.LANG_INTERFACE = {
     "en": "🗡️ Attack (Off Hand)",
     "pt": "🗡️ Ataque (Mão Secundária)"
   },
-  "dado.bola_de_fogo": {
-    "en": "Fireball",
-    "pt": "Bola de Fogo"
-  },
   "dado.bordao_cd": {
     "en": "Staff — stun DC",
     "pt": "Bordão — CD do atordoamento"
@@ -86,10 +82,6 @@ window.LANG_INTERFACE = {
   "dado.chamas_vivas_ira_rocha": {
     "en": "🌋 Living Flames — Wrath of the Burning Rock",
     "pt": "🌋 Chamas Vivas — Ira da Rocha Ardente"
-  },
-  "dado.chuva_de_flechas": {
-    "en": "Arrow Rain",
-    "pt": "Chuva de Flechas"
   },
   "dado.colisao_parede_de": {
     "en": "Collision with the wall - {nome}",
@@ -179,18 +171,6 @@ window.LANG_INTERFACE = {
     "en": "{nome} — Stealth",
     "pt": "{nome} — Furtividade"
   },
-  "dado.furtivo": {
-    "en": "Sneak",
-    "pt": "Furtivo"
-  },
-  "dado.golpe_divino": {
-    "en": "Divine Strike",
-    "pt": "Golpe Divino"
-  },
-  "dado.golpe_pesado": {
-    "en": "Heavy Blow",
-    "pt": "Golpe Pesado"
-  },
   "dado.golpe_sagrado": {
     "en": "Holy Strike",
     "pt": "Golpe Sagrado"
@@ -207,10 +187,6 @@ window.LANG_INTERFACE = {
     "en": "Flaming Charge - {nome}",
     "pt": "Investida Flamejante - {nome}"
   },
-  "dado.lanca_de_gelo": {
-    "en": "Ice Lance",
-    "pt": "Lança de Gelo"
-  },
   "dado.lava": {
     "en": "🔥 Lava",
     "pt": "🔥 Lava"
@@ -226,10 +202,6 @@ window.LANG_INTERFACE = {
   "dado.linha": {
     "en": "⚡ Line",
     "pt": "⚡ Linha"
-  },
-  "dado.luz_sagrada": {
-    "en": "Holy Light",
-    "pt": "Luz Sagrada"
   },
   "dado.mare_viva_de": {
     "en": "🌊 Living Tide — {nome}",
@@ -303,10 +275,6 @@ window.LANG_INTERFACE = {
     "en": "Save",
     "pt": "Resistência"
   },
-  "dado.sagrado": {
-    "en": "Holy",
-    "pt": "Sagrado"
-  },
   "dado.save.forca": {
     "en": "Strength",
     "pt": "Força"
@@ -350,14 +318,6 @@ window.LANG_INTERFACE = {
   "dado.tempestade_ciclones_quantidade": {
     "en": "🌪️ Cyclone Storm — count",
     "pt": "🌪️ Tempestade de Ciclones — quantidade"
-  },
-  "dado.tiro_duplo": {
-    "en": "Double Shot",
-    "pt": "Tiro Duplo"
-  },
-  "dado.tiro_perfurante": {
-    "en": "Piercing Shot",
-    "pt": "Tiro Perfurante"
   },
   "dado.veneno_da_medusa": {
     "en": "Medusa's Venom",
@@ -2931,10 +2891,6 @@ window.LANG_INTERFACE = {
     "en": "Actions",
     "pt": "Ações"
   },
-  "ui.hud.aguardando_alvo_bolinha": {
-    "en": "● awaiting target",
-    "pt": "● aguardando alvo"
-  },
   "ui.hud.aguardando_alvo_parens": {
     "en": "(awaiting target)",
     "pt": "(aguardando alvo)"
@@ -3406,10 +3362,6 @@ window.LANG_INTERFACE = {
   "ui.hud.estancar_sangramento": {
     "en": "🩸 Staunch Bleeding {n}",
     "pt": "🩸 Estancar Sangramento {n}"
-  },
-  "ui.hud.este_ataque_requer_inimigo_cardinalmente_a": {
-    "en": "⚠ This attack requires an orthogonally adjacent enemy!",
-    "pt": "⚠ Este ataque requer inimigo cardinalmente adjacente!"
   },
   "ui.hud.estender_magia": {
     "en": "Extend Spell",
@@ -3958,14 +3910,6 @@ window.LANG_INTERFACE = {
   "ui.hud.sigla_xp": {
     "en": "XP",
     "pt": "XP"
-  },
-  "ui.hud.skill_ativada_clique_aliado": {
-    "en": "✨ {nome} activated — click the ally (or yourself) on the map!",
-    "pt": "✨ {nome} ativado — clique no aliado (ou em si mesmo) no mapa!"
-  },
-  "ui.hud.skill_ativada_clique_inimigo": {
-    "en": "✨ {nome} activated — click the enemy on the map!",
-    "pt": "✨ {nome} ativado — clique no inimigo no mapa!"
   },
   "ui.hud.slot.arma": {
     "en": "Weapon",
@@ -7079,10 +7023,6 @@ window.LANG_INTERFACE = {
     "en": "ABILITIES",
     "pt": "HABILIDADES"
   },
-  "ui.mestre.habilidades_compativeis": {
-    "en": "Compatible abilities",
-    "pt": "Habilidades compatíveis"
-  },
   "ui.mestre.habilidades_titulo": {
     "en": "Abilities",
     "pt": "Habilidades"
@@ -7435,10 +7375,6 @@ window.LANG_INTERFACE = {
     "en": "Valid target — confirm to throw.",
     "pt": "Alvo válido — confirmar para arremessar."
   },
-  "ui.mira.alvo_valido_confirme_para_usar": {
-    "en": "Valid target — confirm to use.",
-    "pt": "Alvo válido — confirme para usar."
-  },
   "ui.mira.atacar_titulo": {
     "en": "{icone} ATTACK",
     "pt": "{icone} ATACAR"
@@ -7499,14 +7435,6 @@ window.LANG_INTERFACE = {
     "en": "Out of range: {dist}sq horizontal, effective range {alcance}sq.",
     "pt": "Fora do alcance: {dist}q horizontais, alcance efetivo {alcance}q."
   },
-  "ui.mira.habilidade": {
-    "en": "ABILITY",
-    "pt": "HABILIDADE"
-  },
-  "ui.mira.habilidade_cancelada": {
-    "en": "Ability cancelled.",
-    "pt": "Habilidade cancelada."
-  },
   "ui.mira.inimigo": {
     "en": "ENEMY",
     "pt": "INIMIGO"
@@ -7550,10 +7478,6 @@ window.LANG_INTERFACE = {
   "ui.mira.selecione_um_inimigo_visivel_dentro_do_alc": {
     "en": "Select a visible enemy within range.",
     "pt": "Selecione um inimigo visível dentro do alcance."
-  },
-  "ui.mira.selecione_um_x_destacado": {
-    "en": "Select a highlighted {alvo}.",
-    "pt": "Selecione um {alvo} destacado."
   },
   "ui.mira.valida_altura_alcance": {
     "en": "Valid aim · altitude {de} → {para} · effective range {alcance}sq.",

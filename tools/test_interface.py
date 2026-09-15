@@ -163,6 +163,19 @@ _PT_DICIONARIZADO = _pt_dicionarizado()
 # literais atrás de texto acentuado FORA de um elemento com data-i18n.
 RE_MARKUP_I18N = re.compile(r"data-i18n")
 
+# O 3º argumento de `_rotulo(id, prefixo, padrao)` é o FALLBACK em português
+# de uma chave `ui.<prefixo>.<id>` que já existe — a tradução mora na chave,
+# como o `pt` de um catálogo mora no objeto. Não é dívida. Apareceu no placar
+# quando a remoção do sistema de MP (2026-09-15) apagou a única frase em
+# inglês que continha "DES" e a sigla passou a contar como vocabulário pt.
+RE_ROTULO_PADRAO = re.compile(r"_rotulo\([^()]*?,\s*'([^']*)'\s*\)")
+GAME_LINHAS = GAME.split("\n")
+
+
+def _e_padrao_de_rotulo(linha, txt):
+    l = GAME_LINHAS[linha - 1] if 0 < linha <= len(GAME_LINHAS) else ""
+    return txt in RE_ROTULO_PADRAO.findall(l)
+
 # `console.log/warn/error` é diagnóstico para o desenvolvedor — o jogador nunca
 # vê, e traduzi-lo tornaria a saída de depuração dependente do idioma. Mesma
 # posição que o plano do Lote 3 registra para o gameState.js.
@@ -242,6 +255,8 @@ def _pendente(linha, txt):
     if txt in LITERAIS_INTENCIONAIS:
         return False
     if _e_arg_de_console(linha):
+        return False
+    if _e_padrao_de_rotulo(linha, txt):
         return False
     return True
 
@@ -408,6 +423,17 @@ def _rodar_verificacoes():
           _pendente(_dentro, "Texto inventado que não existe no dicionário"))
     check("dicionarizado DENTRO da faixa não conta",
           not _pendente(_dentro, _traduzido))
+    # O fallback do _rotulo não é dívida (a chave é a tradução); mas SÓ o
+    # último argumento do _rotulo — outro literal na mesma linha continua
+    # contando. Usa a 1ª linha real do game.js que tenha um _rotulo com padrão.
+    _l_rot = next((i + 1 for i, l in enumerate(GAME_LINHAS)
+                   if any(len(x) >= 3 for x in RE_ROTULO_PADRAO.findall(l))), None)
+    check("há uma linha com _rotulo(..., padrao) no game.js", _l_rot is not None)
+    if _l_rot is not None:
+        _pad = next(x for x in RE_ROTULO_PADRAO.findall(GAME_LINHAS[_l_rot - 1]) if len(x) >= 3)
+        check(f"o padrão do _rotulo não conta ({_pad!r})", not _pendente(_l_rot, _pad))
+        check("outro literal na MESMA linha continua contando",
+              _pendente(_l_rot, "Texto inventado que não existe no dicionário"))
     # Uma faixa que não fecha direito FALHA EM SILÊNCIO: vira uma linha só e o
     # bloco volta a contar inteiro, sem erro nenhum. Já aconteceu —
     # ARMADILHAS_LUCCAS é um ARRAY, e o casador que só via `{` fechava no

@@ -120,10 +120,6 @@ window.LANG_NARRACAO = {
     "en": "✨ **{caster}** blesses {n} ally(ies): +1 attack/damage/AC/resistance for {dur} round(s).",
     "pt": "✨ **{caster}** abençoa {n} aliado(s): +1 ataque/dano/CA/resistência por {dur} rodada(s)."
   },
-  "narracao.abencoa_o_grupo_2_bonus_de_ataque_para_t": {
-    "en": "🙏 **{heroi}** blesses the group! +2 Attack Bonus for everyone for 1 turn.",
-    "pt": "🙏 **{heroi}** abençoa o grupo! +2 Bônus de Ataque para todos por 1 turno."
-  },
   "narracao.acelera_acoes_dobradas_e_movimento_dobra": {
     "en": "⚡ **{caster}** hastens — doubled actions and doubled movement for {dur} round(s)!",
     "pt": "⚡ **{caster}** acelera — ações dobradas e movimento dobrado por {dur} rodada(s)!"
@@ -336,10 +332,6 @@ window.LANG_NARRACAO = {
     "en": "⛓️ **{heroi}** attacks while restrained — **-2** to hit!",
     "pt": "⛓️ **{heroi}** ataca enquanto preso — **-2** no acerto!"
   },
-  "narracao.ataca_mas_o_escudo_divino_bloqueia": {
-    "en": "🛡️ **{monstro}** attacks **{tgt_name}** but the Divine Shield blocks it!",
-    "pt": "🛡️ **{monstro}** ataca **{tgt_name}** mas o Escudo Divino bloqueia!"
-  },
   "narracao.ataca_sustentando_a_cancao": {
     "en": "🎵⚔️ **{heroi}** attacks while sustaining the song (🍖-{custo_extra_fome} 💧-{custo_extra_sede}).",
     "pt": "🎵⚔️ **{heroi}** ataca sustentando a canção (🍖-{custo_extra_fome} 💧-{custo_extra_sede})."
@@ -376,21 +368,9 @@ window.LANG_NARRACAO = {
     "en": "🔷 {monstro} activates **Runic Regeneration** for {m_runico_regen_rounds} rounds.",
     "pt": "{monstro} ativa a Regeneração Rúnica por {m_runico_regen_rounds} rodadas."
   },
-  "narracao.ativa_aura_sagrada_2_ca_para_todos_por_2": {
-    "en": "✨ **{heroi}** activates **Holy Aura**! +2 AC for everyone for 2 turns.",
-    "pt": "✨ **{heroi}** ativa **Aura Sagrada**! +2 CA para todos por 2 turnos."
-  },
   "narracao.ativa_brutalidade_todos_os_ataques_deste": {
     "en": "{nome_criatura_m} activates Brutality: every attack this turn deals +2 damage.",
     "pt": "{nome_criatura_m} ativa Brutalidade: todos os ataques deste turno causam +2 de dano."
-  },
-  "narracao.ativa_escudo_magico_4_ca_ate_o_proximo_t": {
-    "en": "✨ **{heroi}** activates **Magic Shield**! +4 AC until the next turn.",
-    "pt": "✨ **{heroi}** ativa **Escudo Mágico**! +4 CA até o próximo turno."
-  },
-  "narracao.ativa_escudo_magico_aprimorado_4_ca_por": {
-    "en": "✨ **{heroi}** activates **Magic Shield** ⚡(Enhanced)! +4 AC for 2 turns.",
-    "pt": "✨ **{heroi}** ativa **Escudo Mágico** ⚡(Aprimorado)! +4 CA por 2 turnos."
   },
   "narracao.ativa_para_ganhar_vantagem_no_combate": {
     "en": "✦ **{m_get_name_o_monstro}** activates **{ab_get_name_ab_get_id}** to gain the upper hand in combat!",
@@ -700,10 +680,6 @@ window.LANG_NARRACAO = {
     "en": "🙌 **{heroi}** heals **{alvo}** — {num_dados}d8({dados_str}){if_bonus_int_0_else}{bonus_int} = **{cura_real}** HP ({alvo_hp}/{alvo_max_hp}) | range {alcance_tiles}sq (🍖-{custo_fome} 💧-{custo_sede})",
     "pt": "🙌 **{heroi}** cura **{alvo}** — {num_dados}d8({dados_str}){if_bonus_int_0_else}{bonus_int} = **{cura_real}** HP ({alvo_hp}/{alvo_max_hp}) | alcance {alcance_tiles}q (🍖-{custo_fome} 💧-{custo_sede})"
   },
-  "narracao.cura_em_hp_2d6_2": {
-    "en": "💚 **{heroi}** heals **{t}** for **{heal}** HP! (2d6+2)",
-    "pt": "💚 **{heroi}** cura **{t}** em **{heal}** HP! (2d6+2)"
-  },
   "narracao.d20_vs_cd_a": {
     "en": "🦂 **{alvo_nome}** — {save_title} d20={d20}{if_sb_0_else}{sb}={total} vs DC {dc} → {resistiu_if_ok_else_falh} {nome}.",
     "pt": "🦂 **{alvo_nome}** — {save_title} d20={d20}{if_sb_0_else}{sb}={total} vs CD {dc} → {resistiu_if_ok_else_falh} a {nome}."
@@ -839,10 +815,6 @@ window.LANG_NARRACAO = {
   "narracao.deteccao_de_cessa_sede_insuficiente": {
     "en": "🔍 **{heroi}**'s Detection ceases — insufficient thirst.",
     "pt": "🔍 Detecção de **{heroi}** cessa — sede insuficiente."
-  },
-  "narracao.detecta_armadilhas_armadilha_s_revelada": {
-    "en": "👁️ **{heroi}** detects traps! {len_revealed} trap(s) revealed.",
-    "pt": "👁️ **{heroi}** detecta armadilhas! {len_revealed} armadilha(s) revelada(s)."
   },
   "narracao.devora_do_chao": {
     "en": "🍖 **{monstro}** devours **{it_get_name_metal}** off the ground!",
@@ -1127,10 +1099,6 @@ window.LANG_NARRACAO = {
   "narracao.equipou_2a_arma_mao_esquerda": {
     "en": "{frase} (2nd weapon — off hand)",
     "pt": "{frase} (2ª arma — mão esquerda)"
-  },
-  "narracao.ergue_o_escudo_3_ca_ate_o_proximo_turno": {
-    "en": "🛡️ **{heroi}** raises the shield! +3 AC until the next turn.",
-    "pt": "🛡️ **{heroi}** ergue o escudo! +3 CA até o próximo turno."
   },
   "narracao.ergue_uma_barreira_arcana_reduz_de_todo": {
     "en": "🛡️ **{caster}** raises an **Arcane Barrier** — reduces **{reducao}** of all damage taken for **{dur} round(s)**.",
@@ -1668,10 +1636,6 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{heroi}** calls on **Holy Strike** — +1d8 holy damage per attack! (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "⚔️ **{heroi}** invoca **Golpe Sagrado** — +1d8 de dano sagrado por ataque! (🍖-{fome_cost} 💧-{sede_cost})"
   },
-  "narracao.invoca_luz_sagrada_2d6_int_dano_sagrado": {
-    "en": "☀️ **{heroi}** invokes **Holy Light**! 2d6+INT holy damage to all enemies!",
-    "pt": "☀️ **{heroi}** invoca **Luz Sagrada**! 2d6+INT dano sagrado em todos os inimigos!"
-  },
   "narracao.ira_da_rocha_ardente_cria_lava": {
     "en": "🌋 **{caster}** invokes **Wrath of the Burning Rock**: a **{lado}x{lado}** lava area rises for **{dur}** round(s), at a range of **{alcance}** squares. **{chamas}** Living Flame(s) await tile selection.",
     "pt": "🌋 **{caster}** invoca **Ira da Rocha Ardente**: uma área de lava **{lado}x{lado}** surge por **{dur}** rodada(s), ao alcance de **{alcance}** casas. **{chamas}** Chama(s) Viva(s) aguardam a escolha das casas."
@@ -1704,17 +1668,9 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{monstro}** casts **Curse** on {n} hero(es): -1 attack/damage/AC/saves for {dur} round(s)!",
     "pt": "☠️ **{monstro}** lança **Amaldiçoar** em {n} herói(s): -1 ataque/dano/CA/resistência por {dur} rodada(s)!"
   },
-  "narracao.lanca_bola_de_fogo_inimigo_s_sofrem_de_d": {
-    "en": "🔥 **{heroi}** casts **Fireball**{extra}! {len_alive_monsters} enemy(ies) take ~**{avg}** damage (4d6+INT)!",
-    "pt": "🔥 **{heroi}** lança **Bola de Fogo**{extra}! {len_alive_monsters} inimigo(s) sofrem ~**{avg}** de dano (4d6+INT)!"
-  },
   "narracao.lanca_bola_de_fogo_nivel_alcance_q_area": {
     "en": "🔥 **{caster}** casts **Fireball** (level {nivel}) — {dano_txt} | range {alcance}sq | 3x3 area | {atingidos} hit.",
     "pt": "🔥 **{caster}** lança **Bola de Fogo** (nível {nivel}) — {dano_txt} | alcance {alcance}q | área 3x3 | {atingidos} atingido(s)."
-  },
-  "narracao.lanca_bomba_de_fumaca_os_inimigos_errara": {
-    "en": "💨 **{heroi}** throws a **Smoke Bomb**! Enemies will miss their next attack.",
-    "pt": "💨 **{heroi}** lança **Bomba de Fumaça**! Os inimigos errarão o próximo ataque."
   },
   "narracao.lanca_clarividencia": {
     "en": "🔮 **{caster}** casts Clairvoyance — {partes} ({dur} round(s)).",
@@ -2127,10 +2083,6 @@ window.LANG_NARRACAO = {
   "narracao.protecao_de_absorve_de_resta": {
     "en": "🛡️ **{alvo}**'s protection absorbs {absorvido} of {tipo} ({alvo_protecao_restante} remaining).",
     "pt": "🛡️ Proteção de **{alvo}** absorve {absorvido} de {tipo} (resta {alvo_protecao_restante})."
-  },
-  "narracao.protege_com_escudo_divino_imune_a_dano_p": {
-    "en": "🛡️ **{heroi}** protects **{t}** with **Divine Shield**! Immune to damage for 1 turn.",
-    "pt": "🛡️ **{heroi}** protege **{t}** com **Escudo Divino**! Imune a dano por 1 turno."
   },
   "narracao.protetor_absorve_recebe_recebe": {
     "en": "🛡️ **Protector** absorbs it! **{alvo}** takes {dano_aliado}, **{richard}** takes {dano_richard}.",
@@ -2740,18 +2692,6 @@ window.LANG_NARRACAO = {
     "en": "🎲 **{heroi}** tries Luck again, but misses once more!",
     "pt": "🎲 **{heroi}** tenta a Sorte de novo, mas erra outra vez!"
   },
-  "narracao.tenta_atacar_mas_a_fumaca_confunde": {
-    "en": "💨 **{monstro}** tries to attack **{tgt_name}** but the smoke confuses it!",
-    "pt": "💨 **{monstro}** tenta atacar **{tgt_name}** mas a fumaça confunde!"
-  },
-  "narracao.tenta_ataque_furtivo_mas_errou_d20_vs_ca": {
-    "en": "🗡️ **{heroi}** attempts **Sneak Attack** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
-    "pt": "🗡️ **{heroi}** tenta **Ataque Furtivo** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
-  },
-  "narracao.tenta_ataque_furtivo_mas_o_inimigo_esta": {
-    "en": "⚠ **{heroi}** attempts **Sneak Attack** but the enemy is out of range!",
-    "pt": "⚠ **{heroi}** tenta **Ataque Furtivo** mas o inimigo está fora de alcance!"
-  },
   "narracao.tenta_desarmar_d20_des_vs_dif": {
     "en": "🔧 **{heroi}** tries to disarm **{tipo_get_nome_arm_tipo}**: d20({d20})+DEX({bonus})={total} vs DC {dif}.",
     "pt": "🔧 **{heroi}** tenta desarmar **{tipo_get_nome_arm_tipo}**: d20({d20})+DES({bonus})={total} vs dif {dif}."
@@ -2759,22 +2699,6 @@ window.LANG_NARRACAO = {
   "narracao.tenta_escapar_mas_falha_vs_cd_perde_o_mo": {
     "en": "⛓️ **{heroi}** tries to break free but fails! ({detalhe} vs DC {dc}) — loses the movement!",
     "pt": "⛓️ **{heroi}** tenta escapar mas falha! ({detalhe} vs CD {dc}) — perde o movimento!"
-  },
-  "narracao.tenta_golpe_divino_mas_errou_d20_vs_ca": {
-    "en": "⚡ **{heroi}** attempts **Divine Strike** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
-    "pt": "⚡ **{heroi}** tenta **Golpe Divino** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
-  },
-  "narracao.tenta_golpe_divino_mas_o_inimigo_esta_fo": {
-    "en": "⚠ **{heroi}** attempts **Divine Strike** but the enemy is out of range!",
-    "pt": "⚠ **{heroi}** tenta **Golpe Divino** mas o inimigo está fora de alcance!"
-  },
-  "narracao.tenta_golpe_pesado_mas_errou_d20_vs_ca": {
-    "en": "💥 **{heroi}** attempts **Heavy Strike** but **MISSED** (d20={roll}={total} vs AC {t_ac})!",
-    "pt": "💥 **{heroi}** tenta **Golpe Pesado** mas **ERROU** (d20={roll}={total} vs CA {t_ac})!"
-  },
-  "narracao.tenta_golpe_pesado_mas_o_inimigo_esta_fo": {
-    "en": "⚠ **{heroi}** attempts **Heavy Strike** but the enemy is out of range!",
-    "pt": "⚠ **{heroi}** tenta **Golpe Pesado** mas o inimigo está fora de alcance!"
   },
   "narracao.terreno.agua": {
     "en": "Water",
@@ -2888,17 +2812,9 @@ window.LANG_NARRACAO = {
     "en": "{defn_get_emoji} **{monstro}** uses **{defn}**!",
     "pt": "{defn_get_emoji} **{monstro}** usa **{defn}**!"
   },
-  "narracao.usa_ataque_furtivo_em_d20_vs_ca_de_dano": {
-    "en": "🗡️ **{heroi}** uses **Sneak Attack** on **{t}** (d20={roll}+{furtivo_atk}={total} vs AC {t_ac}): **{dmg}** sneak damage!",
-    "pt": "🗡️ **{heroi}** usa **Ataque Furtivo** em **{t}** (d20={roll}+{furtivo_atk}={total} vs CA {t_ac}): **{dmg}** de dano furtivo!"
-  },
   "narracao.usa_bonus_de_ataque_neste_turno": {
     "en": "{item_emoji} **{heroi}** uses **{item}**! +{val} Attack Bonus this turn!",
     "pt": "{item_emoji} **{heroi}** usa **{item}**! +{val} Bônus de Ataque neste turno!"
-  },
-  "narracao.usa_chuva_de_flechas_1d8_des_em_todos_os": {
-    "en": "🏹 **{heroi}** uses **Arrow Rain**! 1d8+DES on all enemies!",
-    "pt": "🏹 **{heroi}** usa **Chuva de Flechas**! 1d8+DES em todos os inimigos!"
   },
   "narracao.usa_de_ataque": {
     "en": "⚗️ **{m_get_name_o_monstro}** uses **{item}**: +{val} attack.",
@@ -2936,14 +2852,6 @@ window.LANG_NARRACAO = {
     "en": "🌋 **{monstro}** uses **Steam Burst** in a {ability_get_range_3}-square cone.",
     "pt": "🌋 **{monstro}** usa **Explosão de Vapor** em cone de {ability_get_range_3} quadrados."
   },
-  "narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa": {
-    "en": "⚡ **{heroi}** uses **Divine Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** holy damage!",
-    "pt": "⚡ **{heroi}** usa **Golpe Divino** em **{t}** (d20={roll}+{p_atk_bonus}={total} vs CA {t_ac}): **{dmg}** de dano sagrado!"
-  },
-  "narracao.usa_golpe_pesado_em_d20_vs_ca_de_dano": {
-    "en": "💥 **{heroi}** uses **Heavy Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** damage!",
-    "pt": "💥 **{heroi}** usa **Golpe Pesado** em **{t}** (d20={roll}+{p_atk_bonus}={total} vs CA {t_ac}): **{dmg}** de dano!"
-  },
   "narracao.usa_imposicao_das_maos_em_cura_hp": {
     "en": "🙏 **{heroi}** uses **Lay on Hands** on **{alvo}** — heals **{cura_efetiva}** HP ({alvo_hp}/{alvo_max_hp})! (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "🙏 **{heroi}** usa **Imposição das Mãos** em **{alvo}** — cura **{cura_efetiva}** HP ({alvo_hp}/{alvo_max_hp})! (🍖-{fome_cost} 💧-{sede_cost})"
@@ -2955,10 +2863,6 @@ window.LANG_NARRACAO = {
   "narracao.usa_investida_heroica_e_dobra_seu_desloc_2": {
     "en": "{nome_criatura_m} uses Heroic Charge and doubles its movement.",
     "pt": "{nome_criatura_m} usa Investida Heroica e dobra seu deslocamento."
-  },
-  "narracao.usa_lanca_de_gelo_em_de_dano_de_frio": {
-    "en": "🧊 **{heroi}** uses **Ice Lance**{extra} on **{t}**: **{dmg}** cold damage!",
-    "pt": "🧊 **{heroi}** usa **Lança de Gelo**{extra} em **{t}**: **{dmg}** de dano de frio!"
   },
   "narracao.usa_o_pergaminho_de_dominar_morto_vivo_e": {
     "en": "🧙 **{monstro}** uses the **Scroll of Dominate Undead** on **{alvo_nome}**!",
@@ -2980,25 +2884,9 @@ window.LANG_NARRACAO = {
     "en": "{nome_criatura_m} uses Constant Pressure: -2 AC for 2 rounds.",
     "pt": "{nome_criatura_m} usa Pressão Constante: -2 de CA por 2 rodadas."
   },
-  "narracao.usa_provocar_todos_os_monstros_agora_foc": {
-    "en": "😤 **{heroi}** uses **Taunt** — all monsters now focus on them!",
-    "pt": "😤 **{heroi}** usa **Provocar** — todos os monstros agora focam nele!"
-  },
   "narracao.usa_sopro_de_dragao_de_em": {
     "en": "🐉 **{monstro}** uses **Dragon's Breath** of {labels_get_element_eleme} in a {shape}!",
     "pt": "🐉 **{monstro}** usa **Sopro de Dragão** de {labels_get_element_eleme} em {shape}!"
-  },
-  "narracao.usa_tiro_duplo_em_acerto_s_de_dano_total": {
-    "en": "🏹 **{heroi}** uses **Double Shot** on **{t}**: {hits} hit(s), **{total_dmg}** total damage!",
-    "pt": "🏹 **{heroi}** usa **Tiro Duplo** em **{t}**: {hits} acerto(s), **{total_dmg}** de dano total!"
-  },
-  "narracao.usa_tiro_duplo_mas_ambos_os_tiros_errara": {
-    "en": "🏹 **{heroi}** uses **Double Shot** but both shots **MISSED**!",
-    "pt": "🏹 **{heroi}** usa **Tiro Duplo** mas ambos os tiros **ERRARAM**!"
-  },
-  "narracao.usa_tiro_perfurante_em_de_dano_acerto_au": {
-    "en": "🎯 **{heroi}** uses **Piercing Shot** on **{t}**: **{dmg}** damage (automatic hit, ignores AC)!",
-    "pt": "🎯 **{heroi}** usa **Tiro Perfurante** em **{t}**: **{dmg}** de dano (acerto automático, ignora CA)!"
   },
   "narracao.usou_acao_bonus_fome_sede": {
     "en": "🎯 **{heroi}** used a bonus action! 🍖 Hunger: {fome}/10 | 💧 Thirst: {sede}/10",

@@ -1722,10 +1722,6 @@ window.LANG_CATALOGO = {
     "en": "Extend Spell",
     "pt": "Estender Magia"
   },
-  "cat.habilidade.fireball.nome": {
-    "en": "Fireball",
-    "pt": "Bola de Fogo"
-  },
   "cat.habilidade.fortalecer_magia.desc": {
     "en": "Free action. Multiplies the spell's damage by 1.5. 🍖-6 💧-6 when casting.",
     "pt": "Ação livre. Multiplica o dano da magia por 1,5. 🍖-6 💧-6 ao lançar."
@@ -1766,10 +1762,6 @@ window.LANG_CATALOGO = {
     "en": "Warrior of Light",
     "pt": "Guerreiro da Luz"
   },
-  "cat.habilidade.ice_lance.nome": {
-    "en": "Ice Lance",
-    "pt": "Lança de Gelo"
-  },
   "cat.habilidade.imposicao_maos.desc": {
     "en": "Heals 1d6 + Strength bonus on an adjacent ally",
     "pt": "Cura 1d6 + bônus Força em aliado adjacente"
@@ -1777,10 +1769,6 @@ window.LANG_CATALOGO = {
   "cat.habilidade.imposicao_maos.nome": {
     "en": "Lay on Hands",
     "pt": "Imposição das Mãos"
-  },
-  "cat.habilidade.magic_shield.nome": {
-    "en": "Magic Shield",
-    "pt": "Escudo Mágico"
   },
   "cat.habilidade.mira_certeira.desc": {
     "en": "+2 on the to-hit die this turn",
