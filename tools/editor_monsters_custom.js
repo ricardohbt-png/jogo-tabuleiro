@@ -1506,9 +1506,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "portrait": "crocodilo_jovem",
     "size": [
       2,
-      1
+      2
     ],
-    "oriented": true,
     "porte": "medio",
     "spawn_min": 1,
     "spawn_max": 2,
@@ -2096,9 +2095,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "portrait": "lagarto_carniceiro",
     "size": [
       2,
-      1
+      2
     ],
-    "oriented": true,
     "porte": "grande",
     "spawn_min": 1,
     "spawn_max": 1,

@@ -1791,7 +1791,8 @@ window.EDITOR_CATALOG = {
           ],
           "num_attacks": 1,
           "on_hit": null,
-          "range": 4
+          "range": 4,
+          "projectile": "bolt"
         }
       ],
       "special_abilities": [
@@ -3961,6 +3962,120 @@ window.EDITOR_CATALOG = {
       "percepcao": 13
     },
     {
+      "type": "tiranossauro_rex",
+      "name": "Tiranossauro Rex",
+      "emoji": "🦖",
+      "boss": false,
+      "tier": 8,
+      "cr": 8,
+      "hp": 156,
+      "ac": 23,
+      "natural_armor": 13,
+      "movement": 8,
+      "movement_exception": true,
+      "vision_base": 0,
+      "percepcao": 14,
+      "size": [
+        2,
+        2
+      ],
+      "porte": "enorme",
+      "image": "tiranossauro_rex",
+      "str_": 25,
+      "dex": 10,
+      "con_": 19,
+      "int_": 2,
+      "fort": 10,
+      "ref_": 3,
+      "will": -1,
+      "attacks": [
+        {
+          "name": "Mordida Esmagadora",
+          "atk_bonus": 13,
+          "damage": "4d12+7",
+          "damage_types": [
+            "physical"
+          ],
+          "categoria": "perfurante",
+          "num_attacks": 1,
+          "melee": true,
+          "reach": 2
+        },
+        {
+          "name": "Caudada",
+          "atk_bonus": 13,
+          "damage": "3d8+7",
+          "damage_types": [
+            "physical"
+          ],
+          "categoria": "contundente",
+          "num_attacks": 1,
+          "melee": true,
+          "reach": 2
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "mandibulas_colossais",
+          "name": "Mandíbulas Aprisionadoras",
+          "action_type": "passiva",
+          "attack_index": 0,
+          "dc": 17,
+          "save": "fortitude",
+          "escape_saves": [
+            "forca",
+            "fortitude"
+          ],
+          "automatic_damage": "4d12+7",
+          "max_targets": 1,
+          "descricao": "Ao acertar a Mordida, Fortitude CD 17 ou fica Preso. No início do turno seguinte do Tiranossauro, a presa é sacudida (Sacudida Jurássica)."
+        },
+        {
+          "id": "arrastar",
+          "name": "Arrastar",
+          "action_type": "passiva",
+          "descricao": "A criatura Presa acompanha os movimentos do Tiranossauro, permanecendo adjacente."
+        },
+        {
+          "id": "sacudida_jurassica",
+          "name": "Sacudida Jurássica",
+          "action_type": "passiva",
+          "bite_damage": "4d12+7",
+          "extra_damage": "2d6",
+          "wall_damage": "2d6",
+          "damage_types": [
+            "physical"
+          ],
+          "throw_distance": 4,
+          "descricao": "No início do turno do Tiranossauro, a criatura Presa sofre o dano da Mordida (4d12+7) +2d6, é solta e arremessada 4 casas. Se colidir com um obstáculo sólido antes do fim do arremesso, sofre +2d6 de dano físico."
+        },
+        {
+          "id": "cauda_derrubadora",
+          "name": "Caudada Derrubadora",
+          "action_type": "passiva",
+          "attack_index": 1,
+          "dc": 16,
+          "save": "reflexos",
+          "descricao": "Ao acertar a Caudada, Reflexos CD 16 ou fica Derrubado e perde o movimento no próximo turno."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [],
+      "resistances": [
+        {
+          "type": "physical",
+          "reduction": 4,
+          "common_weapon_only": true
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "tiranossauro_rex",
+      "undead": false,
+      "subtipo": "animal"
+    },
+    {
       "type": "tirano_da_mata",
       "name": "Tirano da Mata",
       "emoji": "🦖",
@@ -4116,7 +4231,6 @@ window.EDITOR_CATALOG = {
         2,
         2
       ],
-      "oriented": true,
       "porte": "grande",
       "image": "tirano_da_mata",
       "str_": 28,
@@ -5196,7 +5310,7 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
       "oriented": true,
       "porte": "grande",
@@ -5299,7 +5413,7 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
       "oriented": true,
       "porte": "grande",
@@ -5445,7 +5559,7 @@ window.EDITOR_CATALOG = {
       "vision_base": 0,
       "size": [
         2,
-        1
+        2
       ],
       "oriented": true,
       "porte": "grande",
@@ -6698,25 +6812,49 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "mandibulas_colossais",
-      "name": "Mandíbulas Colossais",
+      "name": "Mandíbulas Aprisionadoras",
       "action_type": "passiva",
       "attack_index": 0,
-      "dc": 18,
+      "dc": 17,
       "save": "fortitude",
       "escape_saves": [
         "forca",
         "fortitude"
       ],
-      "automatic_damage": "2d10+10",
+      "automatic_damage": "4d12+7",
       "max_targets": 1,
-      "descricao": "Ao acertar a Mordida, Fortitude CD 18 ou fica Preso. O alvo acompanha o Tirano e sofre a Mordida no início do turno dele.",
+      "descricao": "Ao acertar a Mordida, Fortitude CD 17 ou fica Preso. No início do turno seguinte do Tiranossauro, a presa é sacudida (Sacudida Jurássica).",
       "source": "monstro"
     },
     {
       "id": "arrastar",
       "name": "Arrastar",
       "action_type": "passiva",
-      "descricao": "Uma criatura Presa acompanha todos os movimentos do Tirano, permanecendo adjacente.",
+      "descricao": "A criatura Presa acompanha os movimentos do Tiranossauro, permanecendo adjacente.",
+      "source": "monstro"
+    },
+    {
+      "id": "sacudida_jurassica",
+      "name": "Sacudida Jurássica",
+      "action_type": "passiva",
+      "bite_damage": "4d12+7",
+      "extra_damage": "2d6",
+      "wall_damage": "2d6",
+      "damage_types": [
+        "physical"
+      ],
+      "throw_distance": 4,
+      "descricao": "No início do turno do Tiranossauro, a criatura Presa sofre o dano da Mordida (4d12+7) +2d6, é solta e arremessada 4 casas. Se colidir com um obstáculo sólido antes do fim do arremesso, sofre +2d6 de dano físico.",
+      "source": "monstro"
+    },
+    {
+      "id": "cauda_derrubadora",
+      "name": "Caudada Derrubadora",
+      "action_type": "passiva",
+      "attack_index": 1,
+      "dc": 16,
+      "save": "reflexos",
+      "descricao": "Ao acertar a Caudada, Reflexos CD 16 ou fica Derrubado e perde o movimento no próximo turno.",
       "source": "monstro"
     },
     {
@@ -9348,6 +9486,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Ferrão dos Charcos Ancião",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Ancião.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_tiranossauro_rex",
+      "source": "guilda",
+      "source_id": "lenda_tiranossauro_rex",
+      "name": "Lenda: Tiranossauro Rex",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Tiranossauro Rex.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"

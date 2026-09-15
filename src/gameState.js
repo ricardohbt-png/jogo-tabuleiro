@@ -1959,9 +1959,10 @@ const GS = (() => {
   function mestreSetAlvo(monsterIds, targetId) { send({ type: 'mestre_set_alvo', monster_ids: monsterIds, target_id: targetId }); }
   // Janela Manual: move o monstro 1 passo ortogonal.
   function mestreMoverMonstroPara(monsterId, tx, ty) { send({ type: 'mestre_mover_monstro_para', monster_id: monsterId, tx, ty }); }
-  function mestreUsarHabilidade(monsterId, abilityId, targetId, tipoEsqueleto) {
+  function mestreUsarHabilidade(monsterId, abilityId, targetId, tipoEsqueleto, atributos) {
     const msg = { type: 'mestre_usar_habilidade', monster_id: monsterId, ability_id: abilityId, target_id: targetId };
     if (tipoEsqueleto) msg.tipo_esqueleto = tipoEsqueleto;
+    if (Array.isArray(atributos)) msg.atributos = atributos;
     send(msg);
   }
   function mestreUsarMagia(monsterId, spellId, targetId, tx, ty, dir) {
@@ -1982,6 +1983,14 @@ const GS = (() => {
   // Mesa livre do editor: posiciona um herói temporário, controlado pelo Mestre.
   function mestreAdicionarHeroiTeste(classId, tx, ty) {
     send({ type: 'mestre_adicionar_heroi_teste', class_id: classId, tx, ty });
+  }
+  // Simulador descartável do editor. Estas mensagens são recusadas pelo
+  // servidor fora de uma sala test_mode comandada pelo próprio Mestre.
+  function testeIniciarCombate() { send({ type: 'teste_iniciar_combate' }); }
+  function testeEncerrarVez() { send({ type: 'teste_encerrar_vez' }); }
+  function testeEncerrarCombate() { send({ type: 'teste_encerrar_combate' }); }
+  function testeAcaoHeroi(heroId, action, data = {}) {
+    send({ type: 'teste_acao_heroi', hero_id: heroId, action, data });
   }
   // Camada B: implanta um reforço da reserva do mestre numa casa livre.
   function mestreImplantarReforco(monsterType, tx, ty) { send({ type: 'mestre_implantar_reforco', monster_type: monsterType, tx, ty }); }
@@ -3249,6 +3258,10 @@ const GS = (() => {
     mestreEncerrarMonstro,
     mestreSelecionarTeste,
     mestreAdicionarHeroiTeste,
+    testeIniciarCombate,
+    testeEncerrarVez,
+    testeEncerrarCombate,
+    testeAcaoHeroi,
     mestreImplantarReforco,
     dispararFala,
     isMaster,

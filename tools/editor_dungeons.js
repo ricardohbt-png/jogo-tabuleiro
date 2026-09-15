@@ -35361,7 +35361,7 @@ window.EDITOR_DUNGEONS = [
           "type": "ferrao_charcos_jovem",
           "pos": [
             22,
-            6
+            7
           ],
           "room_id": null,
           "boss": false,
@@ -35371,7 +35371,7 @@ window.EDITOR_DUNGEONS = [
           "type": "ferrao_charcos_adulto",
           "pos": [
             24,
-            6
+            7
           ],
           "room_id": null,
           "boss": false,
@@ -35381,7 +35381,7 @@ window.EDITOR_DUNGEONS = [
           "type": "ferrao_charcos_anciao",
           "pos": [
             26,
-            6
+            7
           ],
           "room_id": null,
           "boss": false,
@@ -35391,17 +35391,17 @@ window.EDITOR_DUNGEONS = [
           "type": "tirano_da_mata",
           "pos": [
             19,
-            9
+            11
           ],
           "room_id": null,
           "boss": false,
           "target": false
         },
         {
-          "type": "tirano_da_mata",
+          "type": "tirano_ancestral",
           "pos": [
-            21,
-            9
+            22,
+            11
           ],
           "room_id": null,
           "boss": false,
@@ -35511,7 +35511,7 @@ window.EDITOR_DUNGEONS = [
           "type": "grande_medusa",
           "pos": [
             14,
-            7
+            8
           ],
           "room_id": null,
           "boss": false,
@@ -35521,7 +35521,7 @@ window.EDITOR_DUNGEONS = [
           "type": "grande_gorgona",
           "pos": [
             16,
-            7
+            8
           ],
           "room_id": null,
           "boss": false,
@@ -35538,7 +35538,7 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "sentinela_teste",
+          "type": "tiranossauro_rex",
           "pos": [
             28,
             14
@@ -44697,4 +44697,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

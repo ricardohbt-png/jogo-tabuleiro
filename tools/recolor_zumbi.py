@@ -10,11 +10,20 @@ from mathutils import Vector
 
 
 PALETTE = {
-    "zumbi_pele": ((0.090, 0.100, 0.082), 0.0, 0.88),
-    "zumbi_casaco": ((0.026, 0.036, 0.043), 0.0, 0.92),
-    "zumbi_calca": ((0.014, 0.012, 0.011), 0.0, 0.94),
-    "zumbi_cabelo": ((0.005, 0.004, 0.003), 0.0, 0.96),
-    "zumbi_base": ((0.010, 0.009, 0.008), 0.0, 0.98),
+    # Paleta observada na referência: pele cinza-oliva morta, sobretudo azul
+    # gasto, calça marrom-grafite e base de terra/pedra. As variações evitam o
+    # aspecto de miniatura de plástico de uma única cor.
+    "zumbi_pele": ((0.130, 0.145, 0.112), 0.0, 0.84),
+    "zumbi_pele_suja": ((0.062, 0.078, 0.052), 0.0, 0.92),
+    "zumbi_pele_ferida": ((0.170, 0.040, 0.024), 0.0, 0.88),
+    "zumbi_casaco": ((0.030, 0.055, 0.065), 0.0, 0.88),
+    "zumbi_casaco_gasto": ((0.072, 0.095, 0.096), 0.0, 0.90),
+    "zumbi_casaco_sombra": ((0.012, 0.020, 0.024), 0.0, 0.94),
+    "zumbi_calca": ((0.060, 0.047, 0.033), 0.0, 0.91),
+    "zumbi_calca_suja": ((0.024, 0.019, 0.014), 0.0, 0.96),
+    "zumbi_cabelo": ((0.010, 0.008, 0.006), 0.0, 0.98),
+    "zumbi_base": ((0.052, 0.039, 0.025), 0.0, 0.98),
+    "zumbi_pedra": ((0.098, 0.078, 0.052), 0.0, 0.97),
 }
 
 
@@ -33,6 +42,12 @@ def set_material(mat, color, metallic, roughness):
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     if bsdf is None:
         return
+    # GLB de origem traz multiplicadores de cor ligados ao shader; eles
+    # anulavam a paleta mesmo após alterar o valor-base. Para uma miniatura
+    # consistente no Three.js, a cor PBR final fica explícita e sem links.
+    for socket_name in ("Base Color", "Metallic", "Roughness"):
+        for link in list(bsdf.inputs[socket_name].links):
+            mat.node_tree.links.remove(link)
     bsdf.inputs["Base Color"].default_value = (*color, 1.0)
     bsdf.inputs["Metallic"].default_value = metallic
     bsdf.inputs["Roughness"].default_value = roughness
@@ -47,23 +62,26 @@ def ensure_materials():
     return materials
 
 
+def patch_noise(center, scale=9.0):
+    """Stable coarse variation mask: grouped patches, never salt-and-pepper."""
+    x, y, z = (round(component * scale) / scale for component in center)
+    return (x * 17.0 + y * 31.0 + z * 47.0) % 1.0
+
+
 def classify_face(center):
-    """Choose a restrained zombie material from the mesh-local face position."""
+    """Recover the miniature's readable areas from its assembled silhouette."""
     x, y, z = center
-    side = abs(x)
     radius = (x * x + y * y) ** 0.5
-
-    # The circular plinth occupies the lowest, widest ring of the mesh.
-    if z < -0.82 and radius > 0.45:
+    if z < -0.805 and radius > 0.45:
         return "zumbi_base"
-
-    # The upper cap is hair; the head and exposed extremities are dead skin.
     if z > 0.78:
         return "zumbi_cabelo"
-    if z > 0.56:
-        return "zumbi_pele"
-    if side > 0.50 and z < 0.28:
-        return "zumbi_pele"  # exposed forearms and hands
+    if z > 0.63 or (z > 0.54 and abs(x) < 0.25 and y < -0.05):
+        return "zumbi_pele"  # face and neck, excluding the coat's shoulders
+    if z < -0.69 and radius < 0.57:
+        return "zumbi_pele"  # bare feet emerging from torn trousers
+    if abs(x) > 0.49 and z < 0.34:
+        return "zumbi_pele"  # outstretched forearms and hands
     if z < -0.33:
         return "zumbi_calca"
     return "zumbi_casaco"
@@ -71,32 +89,40 @@ def classify_face(center):
 
 def recolor(meshes):
     materials = ensure_materials()
-    main = max(meshes, key=lambda obj: len(obj.data.polygons))
-
-    # Replace the single generic material on the main mesh with readable zones.
-    for mat in materials.values():
-        if main.data.materials.get(mat.name) is None:
-            main.data.materials.append(mat)
-    slot_by_name = {mat.name: idx for idx, mat in enumerate(main.data.materials)}
-    for poly in main.data.polygons:
-        poly.material_index = slot_by_name[classify_face(poly.center)]
-
-    # The small cube in the source GLB is the dark plinth/ground element.
+    variants_by_role = {
+        "zumbi_pele": ("zumbi_pele", "zumbi_pele_suja", "zumbi_pele_ferida"),
+        "zumbi_casaco": ("zumbi_casaco", "zumbi_casaco_gasto", "zumbi_casaco_sombra"),
+        "zumbi_calca": ("zumbi_calca", "zumbi_calca_suja"),
+        "zumbi_cabelo": ("zumbi_cabelo",),
+        "zumbi_base": ("zumbi_base", "zumbi_pedra"),
+    }
     for obj in meshes:
-        if obj is main:
-            continue
-        # Clear the generic imported slot so the exporter cannot retain its
-        # original light material on part of the base.
+        # Os nomes das submalhas não representam fielmente toda a anatomia.
+        # A classificação espacial mantém pele exposta, roupas e pedestal
+        # coerentes mesmo quando uma peça cruza mais de uma dessas regiões.
+        slot_names = [name for values in variants_by_role.values() for name in values]
         obj.data.materials.clear()
-        obj.data.materials.append(materials["zumbi_base"])
-        base_index = 0
+        for name in slot_names:
+            obj.data.materials.append(materials[name])
+        slots = {name: index for index, name in enumerate(slot_names)}
         for poly in obj.data.polygons:
-            poly.material_index = base_index
+            center = obj.matrix_world @ poly.center
+            role = classify_face(center)
+            amount = patch_noise(center)
+            poly.use_smooth = role != "zumbi_base"
+            if role == "zumbi_pele":
+                name = "zumbi_pele_ferida" if amount > 0.985 else "zumbi_pele_suja" if amount > 0.83 else "zumbi_pele"
+            elif role == "zumbi_casaco":
+                name = "zumbi_casaco_sombra" if amount > 0.93 else "zumbi_casaco_gasto" if amount > 0.80 else "zumbi_casaco"
+            elif role == "zumbi_calca":
+                name = "zumbi_calca_suja" if amount > 0.82 else "zumbi_calca"
+            elif role == "zumbi_base":
+                name = "zumbi_pedra" if amount > 0.80 else "zumbi_base"
+            else:
+                name = "zumbi_cabelo"
+            poly.material_index = slots[name]
         obj["palette_reference"] = "assets/pawns/monstros/zumbi/zumbi.png"
-        obj["palette_adjustment"] = "gray-green skin, dark blue-gray coat, black pants and hair"
-
-    main["palette_reference"] = "assets/pawns/monstros/zumbi/zumbi.png"
-    main["palette_adjustment"] = "gray-green skin, dark blue-gray coat, black pants and hair"
+        obj["palette_adjustment"] = "gray-green skin with grime and wounds; worn blue-gray coat; dirty brown-charcoal trousers; earthy stone base"
     return sorted(materials)
 
 
@@ -134,7 +160,7 @@ def make_preview(meshes, output: Path):
     height = max(mx.z - mn.z, 0.001)
 
     bpy.ops.object.camera_add(
-        location=(height * 2.3, -height * 3.1, center.z + height * 0.88)
+        location=(height * 1.55, -height * 2.15, center.z + height * 0.82)
     )
     camera = bpy.context.object
     look_at(camera, (center.x, center.y, center.z + height * 0.40))
@@ -171,7 +197,9 @@ def make_preview(meshes, output: Path):
     scene.render.image_settings.file_format = "PNG"
     scene.render.filepath = str(output)
     scene.world = bpy.data.worlds.new("Zombie preview world")
-    scene.world.color = (0.006, 0.006, 0.008)
+    scene.world.use_nodes = True
+    scene.world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.004, 0.004, 0.006, 1.0)
+    scene.world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.13
     scene.view_settings.look = "AgX - Medium High Contrast"
     output.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.render.render(write_still=True)
@@ -183,11 +211,15 @@ def main():
     parser.add_argument("--out-glb", type=Path, required=True)
     parser.add_argument("--out-blend", type=Path, required=True)
     parser.add_argument("--preview", type=Path, required=True)
+    parser.add_argument("--keep-materials", action="store_true")
     cli = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     args = parser.parse_args(cli)
 
     meshes = load(args.input)
-    print("materials_created", recolor(meshes))
+    if args.keep_materials:
+        print("materials_preserved")
+    else:
+        print("materials_created", recolor(meshes))
     save_asset(args.out_blend, args.out_glb)
     make_preview(meshes, args.preview)
     print("saved_glb", args.out_glb)
