@@ -32,3 +32,7 @@ groups/
 
 # Copias de seguranca do tools/otimizar_imagens.py (arte em tamanho original)
 assets_originais/
+
+# Saida temporaria do tools/normalizar_herois.py (reguas/segmentacoes) e backups do Blender
+tools/_norm/
+*.blend1
