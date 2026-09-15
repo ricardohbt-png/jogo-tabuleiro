@@ -1226,6 +1226,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Forest Tyrant",
     "pt": "Lenda: Tirano da Mata"
   },
+  "cat.guilda.lenda_tiranossauro_rex.desc": {
+    "en": "+1 to attack and +1 to saving throws against Tyrannosaurus Rex.",
+    "pt": "+1 de ataque e +1 nos saves contra Tiranossauro Rex."
+  },
+  "cat.guilda.lenda_tiranossauro_rex.nome": {
+    "en": "Lore: Tyrannosaurus Rex",
+    "pt": "Lenda: Tiranossauro Rex"
+  },
   "cat.guilda.lenda_troll.desc": {
     "en": "+1 to attack and +1 to saving throws against Troll.",
     "pt": "+1 de ataque e +1 nos saves contra Troll."
@@ -1380,7 +1388,7 @@ window.LANG_CATALOGO = {
   },
   "cat.guilda.paladino_defensor_2.desc": {
     "en": "The protection range increases to 5 squares.",
-    "pt": "O alcance da proteção aumenta para 5 quadrados."
+    "pt": "O alcance aumenta para 5; dano não proveniente de ataque fica 65% no alvo e 35% em Richard."
   },
   "cat.guilda.paladino_defensor_2.nome": {
     "en": "Defender II",
@@ -1388,7 +1396,7 @@ window.LANG_CATALOGO = {
   },
   "cat.guilda.paladino_defensor_3.desc": {
     "en": "The split damage drops to 40%/40% (20% is mitigated).",
-    "pt": "O dano dividido cai para 40%/40% (20% é mitigado)."
+    "pt": "Todo dano sofrido pelo alvo é dividido 50%/50%; Richard reduz 3 de todo dano enquanto o Protetor estiver ativo."
   },
   "cat.guilda.paladino_defensor_3.nome": {
     "en": "Defender III",
@@ -1784,7 +1792,7 @@ window.LANG_CATALOGO = {
   },
   "cat.habilidade.protetor.desc": {
     "en": "The ally takes half the damage. The other half goes to Richard",
-    "pt": "Aliado recebe metade do dano. A outra metade vai para Richard"
+    "pt": "Ataques: 50/50. Outras fontes: 75% no aliado e 25% em Richard. Richard reduz 3 de todo dano."
   },
   "cat.habilidade.protetor.nome": {
     "en": "Protector",
@@ -2826,6 +2834,22 @@ window.LANG_CATALOGO = {
     "en": "Create Food",
     "pt": "Criar Alimentos"
   },
+  "cat.magia.definhar.desc": {
+    "en": "3x3 area (+1 square every 3 levels), affecting every living creature inside. Fortitude: failure → players lose 20 Hunger and 20 Thirst; success → they lose 10 of each. Living monsters that fail can only attack or move for 2 rounds, with -2 Attack and -4 Damage. Undead and constructs are immune.",
+    "pt": "Área 3x3 (+1 casa a cada 3 níveis), afetando todas as criaturas vivas na área. Fortitude: falha → jogadores perdem 20 Fome e 20 Sede; sucesso → perdem 10 de cada. Monstros vivos que falharem podem apenas atacar ou movimentar por 2 rodadas, com -2 Ataque e -4 Dano. Mortos-vivos e construtos são imunes."
+  },
+  "cat.magia.definhar.nome": {
+    "en": "Wither",
+    "pt": "Definhar"
+  },
+  "cat.magia.desnutricao.desc": {
+    "en": "Single target. Fortitude: failure → the player loses 20 Hunger and -1 Movement for 2 rounds; success → loses 10 Hunger. Living monster: failure → for 2 rounds it can only attack or move, with -1 Attack and -2 Damage. Undead and constructs are immune.",
+    "pt": "Alvo único. Fortitude: falha → jogador perde 20 Fome e -1 Movimento por 2 rodadas; sucesso → perde 10 Fome. Monstro vivo: falha → por 2 rodadas pode apenas atacar ou movimentar, com -1 Ataque e -2 Dano. Mortos-vivos e construtos são imunes."
+  },
+  "cat.magia.desnutricao.nome": {
+    "en": "Malnutrition",
+    "pt": "Desnutrição"
+  },
   "cat.magia.dominar_mente.desc": {
     "en": "Will save or the caster controls the target on each of its turns for 1d4+1 rounds. Each time it takes damage, it makes a new Will save with a cumulative +2; passing breaks the control.",
     "pt": "Vontade ou o conjurador dirige o alvo a cada turno dele por 1d4+1 rodadas. A cada dano sofrido, faz novo teste de Vontade com +2 cumulativo; passar rompe o controle."
@@ -2873,6 +2897,14 @@ window.LANG_CATALOGO = {
   "cat.magia.lentidao.nome": {
     "en": "Slow",
     "pt": "Lentidão"
+  },
+  "cat.magia.maldicao_corpo_pesado.desc": {
+    "en": "Single target. Will negates. For 1d6 + caster level rounds, the target's Hunger and Thirst costs are doubled.",
+    "pt": "Alvo único. Vontade nega. Durante 1d6 + nível de conjurador rodadas, os custos de Fome e Sede do alvo são duplicados."
+  },
+  "cat.magia.maldicao_corpo_pesado.nome": {
+    "en": "Curse of the Heavy Body",
+    "pt": "Maldição do Corpo Pesado"
   },
   "cat.magia.manto_escuridao.desc": {
     "en": "Radius 3. Darkness — without darkvision: disadvantage. With darkvision: advantage.",
@@ -2996,7 +3028,7 @@ window.LANG_CATALOGO = {
   },
   "cat.magia.tempestade_ciclones.desc": {
     "en": "3x3 area (+1 every 3 levels). Creates 2d4 1x1 cyclones in squares chosen by the cleric. Each cyclone can move 2 squares per round. The wind doubles movement cost, lightning strikes every 2 rounds, and a Fortitude save knocks flying creatures down.",
-    "pt": "Área 3x3 (+1 a cada 3 níveis). Cria 2d4 ciclones 1x1 nas casas escolhidas pelo clérigo. Cada ciclone pode andar 2 casas por rodada. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras."
+    "pt": "Área 3x3 (+1 a cada 3 níveis). Cria 2d4 ciclones de 1 casa, com posição inicial escolhida pelo clérigo. Cada ciclone pode andar 2 casas por rodada. Vento dobra o custo de movimento, raios a cada 2 rodadas e Fortitude derruba criaturas voadoras."
   },
   "cat.magia.tempestade_ciclones.nome": {
     "en": "Cyclone Storm",
@@ -3009,6 +3041,14 @@ window.LANG_CATALOGO = {
   "cat.magia.velocidade.nome": {
     "en": "Haste",
     "pt": "Velocidade"
+  },
+  "cat.magia.vinculo_maldito_da_dor.desc": {
+    "en": "Binds the caster to an enemy for 1d4 + caster level rounds. Will negates. Each bond transfers 25% of the damage the caster takes to the enemy, up to 4 enemies; the bonds can coexist. The struck enemy takes -1 on its next attack, without stacking.",
+    "pt": "Liga o conjurador a um inimigo por 1d4 + nível de conjurador rodadas. Vontade nega. Cada vínculo transfere 25% do dano sofrido pelo conjurador ao inimigo, até 4 inimigos; os vínculos podem coexistir. O inimigo atingido sofre -1 no próximo ataque, sem acumular."
+  },
+  "cat.magia.vinculo_maldito_da_dor.nome": {
+    "en": "Cursed Bond of Pain",
+    "pt": "Vínculo Maldito da Dor"
   },
   "cat.magia.visao_escuro.desc": {
     "en": "Ally completely ignores darkness until the end of the mission.",
@@ -3337,6 +3377,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.tirano_da_mata.nome": {
     "en": "Forest Tyrant",
     "pt": "Tirano da Mata"
+  },
+  "cat.monstro.tiranossauro_rex.nome": {
+    "en": "Tyrannosaurus Rex",
+    "pt": "Tiranossauro Rex"
   },
   "cat.monstro.troll.nome": {
     "en": "Troll",

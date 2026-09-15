@@ -84,7 +84,9 @@ FECHADAS = {
 #     em português tem de continuar aqui para haver o que trocar: é a FONTE.
 #   • ABILITY_NAME_TO_ID — chave de LÓGICA, que o plano registra como
 #     intraduzível; a etapa 5.0 já a tornou dispensável para o ícone.
-BLOCOS_NAO_PENDENTES = ("GRIMORIO_CLIENT", "ARMADILHAS_LUCCAS", "ABILITY_NAME_TO_ID")
+# CLASS_ARMOR: o `name` em português é só fallback de módulo; o render resolve
+# pelo catálogo (`t('cat.item.<id>.nome')`), e um t() ali seria TDZ.
+BLOCOS_NAO_PENDENTES = ("GRIMORIO_CLIENT", "ARMADILHAS_LUCCAS", "ABILITY_NAME_TO_ID", "CLASS_ARMOR")
 
 
 def _faixas_nao_pendentes():
@@ -211,6 +213,17 @@ def _e_arg_de_console(linha, _txt=None):
 # língua, e é isso que permite achá-la sem já saber ler a interface.
 LITERAIS_INTENCIONAIS = {
     '<option value="pt">Português</option><option value="en">English</option>',
+    # Chaves de LÓGICA, não rótulos: classe CSS do botão armado no HUD do mestre
+    # e o `id.includes('ácido')` que casa o id da armadilha — traduzi-los
+    # quebraria o ramo em silêncio (o lote de 2026-09-14 chegou a fazê-lo).
+    'atk armado',
+    'ácido',
+    # Nomes próprios dos heróis (HERO_DATA): não se traduzem.
+    'Victor, o Coice Bravo',
+    'Richard, o Cavaleiro',
+    # Nome do jogador-mestre da mesa de teste do editor: vai ao servidor como
+    # `name` e casa o `master_name` no rejoin — traduzir quebraria a religação.
+    'Mestre de Teste',
 }
 
 

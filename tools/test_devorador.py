@@ -720,7 +720,7 @@ async def main():
     # ── Lagarto Carniceiro (ND 2) ────────────────────────────────────────────────
     print("\n[18] Lagarto Carniceiro (combo, predador, faro, sensível a venenos)")
     ldef = next(m for m in MONSTER_DEFS if m["type"] == "lagarto_carniceiro")
-    check("lagarto: tamanho 2x1 orientado", ldef["size"] == [2, 1] and ldef.get("oriented") is True)
+    check("lagarto: tamanho 2x2 (bloco, nao orientado)", ldef["size"] == [2, 2] and not ldef.get("oriented"))
     check("lagarto: fraqueza veneno dobrado",
           any(w.get("type") == "veneno_dobrado" for w in ldef["weaknesses"]))
     check("lagarto: garra do combo definida", ldef.get("garra_attack", {}).get("damage") == "1d6+3")

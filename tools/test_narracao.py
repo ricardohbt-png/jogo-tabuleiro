@@ -49,11 +49,14 @@ def _rodar_verificacoes():
                 and _no.func.attr == "gm_say" and len(_no.args) == 1):
             continue
         _a = _no.args[0]
-        # T(...) e gm(...) já devolvem texto tardio; Name é variável que guarda um.
-        if isinstance(_a, _ast.Name):
-            continue
-        if isinstance(_a, _ast.Call) and isinstance(_a.func, _ast.Name) \
-                and _a.func.id in ("T", "gm"):
+        # T(...) e gm(...) já devolvem texto tardio; Name é variável que guarda um;
+        # `T(...) if x else T(...)` escolhe entre dois tardios — também vale.
+        def _tardio(n):
+            if isinstance(n, _ast.Name): return True
+            if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name) and n.func.id in ("T", "gm"): return True
+            if isinstance(n, _ast.IfExp): return _tardio(n.body) and _tardio(n.orelse)
+            return False
+        if _tardio(_a):
             continue
         cruas.append((_no.lineno, (_ast.get_source_segment(FONTE, _a) or "?")
                       .replace("\n", " ")[:70]))

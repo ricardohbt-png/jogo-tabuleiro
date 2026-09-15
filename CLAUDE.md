@@ -2291,6 +2291,27 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > guarda por id preserva o texto do autor de propósito; traduzi-los exigiria um campo
 > de nome por idioma no editor, que é feature, não correção.
 
+> **Idioma — placar sem acento, fumaça do handler e placar único (2026-09-14).**
+> (1) `tools/js_strings.py` deixou de contar só literal COM acento: `parece_portugues()`
+> usa também um **vocabulário derivado do dicionário** (palavra em algum `pt` de
+> `src/lang/*.js` e em nenhum `en`, com os `{parâmetros}` removidos), descartando
+> identificador, seletor CSS e texto só dentro de tag. O placar saltou de 17 para 526 —
+> `⚔ Atacar`, `Rodada`, `SUA VEZ`, `FALHOU`, `Continuar`… estavam em português no HUD em
+> inglês com a etapa 5 "concluída". Traduzidos até sobrar o WIP do autor. O tokenizador
+> também ganhou scanner recursivo de `${}` (string, template aninhado e regex dentro do
+> buraco — `.replace(/'/g, …)` dessincronizava tudo). (2) **`tools/test_handler_smoke.py`**
+> dirige o `server.handler` REAL com um WebSocket falso (async iterator; passos podem ser
+> funções que leem `S.rooms`): ciclo do jogador em EN com queda e rejoin + mestre EN/herói
+> PT simultâneos. É a única suíte que passa pelo laço de conexão — onde morava o bug do
+> idioma no rejoin (`set_lang` grava `LANG_BY_PID` sob o pid da conexão nova; o rejoin
+> troca `pid` pela identidade antiga; corrigido carregando a entrada nos dois ramos). Use
+> `r._liberar_intro_masmorra(True)` em vez de dormir 3 s; leia posição DURANTE o roteiro
+> (a queda põe o peão em `[-1,-1]`). (3) **`tools/dividas.py`** é o placar ÚNICO das
+> dívidas de idioma — erros (inclusive f-string), `gm_say` cru, rótulos de `dice_roll`
+> crus, chaves órfãs, interface do `game.js` por função e chaves sem `en` — para traduzir
+> ao fechar cada feature; `--json` e `--strict` (sai 1 se houver dívida, p/ pre-commit).
+> Ele revelou o que nenhuma suíte cobrava: 52 rótulos de dado e 20 erros em f-string.
+
 > **Animação de combate híbrida (3D):** o atacante **arma, espera o d20 assentar e
 > golpeia**; o alvo balança (acerto) ou esquiva (erro); **crítico e morte** ganham flash
 > emissivo, empurrão maior, hit-stop, shake de câmera e partículas; o peão morto **tomba**
@@ -2339,6 +2360,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > assentar; morte tombou e desvaneceu antes da lápide. Teste: `tools/test_combat_scene.js`
 > (204 checks: módulo + checagens estáticas de fiação). Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-10-animacao-combate-hibrida*`.
+
+> **Sacudida Jurássica do Tiranossauro Rex (passiva) + RD 4 só contra armas comuns:**
+> a ficha do T-Rex (`server.py`, bloco dos tiranossaurídeos) trocou a **ação**
+> `sacudida_brutal` (recarga 5) pela **passiva** `sacudida_jurassica` (`bite_damage`/
+> `extra_damage`/`wall_damage`/`throw_distance`), e a RD virou `common_weapon_only`
+> como nos outros dois tiranos. Dispara em `_tirano_inicio_turno` — chamado no prólogo
+> `_upkeep_inicio_turno_monstro`, comum à IA e à janela Manual do mestre — para cada
+> presa adjacente: `_tirano_sacudida_jurassica` narra, rola `mordida+2d6` (físico, sem
+> save, passa pela RD da vítima), solta, arremessa `throw_distance` casas na direção
+> "para longe" (`_direcao_para_longe`, medida da casa do footprint 2×2 mais próxima, não
+> da âncora) e, se o voo parou num **obstáculo sólido**, soma `wall_damage`. **Com a
+> passiva na ficha, as Mandíbulas NÃO aplicam o `automatic_damage`** (a mordida já vem
+> embutida; a regra é do código, porque o validador do editor preenche o campo com
+> default). O T-Rex age normalmente depois. Tirano da Mata/Ancestral seguem com
+> `sacudida_brutal`+dano automático, byte-idênticos (`_tirano_bite_expr` foi extraído
+> para os dois usarem). **`_empurrar` mudou para todo mundo:** a checagem `tiles == WALL`
+> virou `_blocks_tile` (parede, porta fechada, decoração sólida) e a borda do mapa
+> passou a marcar `parede=True` — antes qualquer empurrão atravessava porta fechada e
+> decoração. Criatura no caminho continua interrompendo sem contar como parede. Editor:
+> ramo `sacudida_jurassica` no validador (2 sites) e no `editor_monster_editor.js`
+> (reusa os inputs `.me-tirano-shake-*`). Chaves `narracao.sacudida_jurassica` e
+> `narracao.sacudida_jurassica_colisao`. Spec em
+> `docs/superpowers/specs/2026-09-13-sacudida-jurassica-tiranossauro-design.md`. Teste:
+> `tools/test_tirano.py` (seções [2b]–[2g]).
 
 > **Projéteis no 3D (frente B):** flecha/virote/lança (malha procedural orientada pela
 > trajetória) e itens arremessados (PNG do item girando; emoji em canvas como fallback)

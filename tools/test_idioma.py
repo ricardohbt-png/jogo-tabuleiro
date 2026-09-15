@@ -159,6 +159,51 @@ def _rodar_verificacoes():
     check("a narração da porta usa T", 'T("narracao.abre_porta"' in fonte)
     check("o erro da porta usa T", 'T("erro.porta_longe")' in fonte)
 
+    print("\n[12] O idioma sobrevive ao rejoin (o pid da conexão vira o pid antigo)")
+    # BUG REAL visto no navegador (2026-09-14): quem religava a partida em inglês
+    # voltava a receber a narração em português. O set_lang chega ANTES do
+    # rejoin e grava LANG_BY_PID sob o pid da conexão nova; o rejoin troca `pid`
+    # pela identidade antiga, e _lang_de(pid) não achava mais nada.
+
+    class FakeWS:
+        """Conexão falsa: entrega as mensagens da lista e guarda o que recebe."""
+        def __init__(self, msgs): self.msgs, self.sent = list(msgs), []
+        def __aiter__(self): return self
+        async def __anext__(self):
+            if not self.msgs: raise StopAsyncIteration
+            return json.dumps(self.msgs.pop(0))
+        async def send(self, data): self.sent.append(data)
+        async def close(self, *a, **k): pass
+
+    async def _cenario():
+        # 1ª conexão cria a sala, escolhe classe e vai à cidade — e cai. Fora do
+        # lobby o jogador FICA em room.players, que é o que o rejoin procura.
+        ws1 = FakeWS([{"type": "set_lang", "lang": "pt"},
+                      {"type": "create_room", "name": "Reconecta"},
+                      {"type": "select_class", "class_id": "warrior"},
+                      {"type": "start_game"}])
+        await S.handler(ws1)
+        code = next(json.loads(x)["code"] for x in ws1.sent
+                    if json.loads(x).get("type") == "lobby_state")
+        # 2ª conexão: set_lang en → rejoin. A narração "reconectou-se" sai pelo
+        # gm_say, que resolve o idioma pelo pid corrente da conexão.
+        ws2 = FakeWS([{"type": "set_lang", "lang": "en"},
+                      {"type": "rejoin", "code": code, "name": "Reconecta"}])
+        await S.handler(ws2)
+        S.rooms.pop(code, None)
+        return ws2.sent
+
+    try:
+        enviados = asyncio.run(_cenario())
+        narr = [json.loads(x)["text"] for x in enviados
+                if json.loads(x).get("type") == "gm_narration"]
+        check("o rejoin narrou a reconexão", bool(narr))
+        check("a narração depois do rejoin sai em inglês",
+              any(n == S.t("narracao.reconectou_se_a_aventura", "en", name="Reconecta") for n in narr))
+        if narr and not any("reconnected" in n for n in narr): print("     saiu:", narr[:2])
+    except Exception as e:
+        check(f"cenário de rejoin rodou sem exceção ({type(e).__name__}: {e})", False)
+
 
 if __name__ == "__main__":
     print("=" * 62); print("  TESTE — Motor de idioma (PT/EN)"); print("=" * 62)

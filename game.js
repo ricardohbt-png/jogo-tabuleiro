@@ -582,7 +582,7 @@ document.body.innerHTML = `
 // Verificar se GS foi carregado corretamente
 if (typeof GS === 'undefined') {
   console.error('ERRO CRÍTICO: gameState.js não foi carregado!');
-  document.body.innerHTML = '<h1>Erro ao carregar jogo</h1><p>Feche o navegador e tente novamente via: python start.py</p>';
+  document.body.innerHTML = '<h1 data-i18n="ui.hud.erro_ao_carregar_jogo">Erro ao carregar jogo</h1><p data-i18n="ui.hud.feche_o_navegador_e_tente_novamente_via_py">Feche o navegador e tente novamente via: python start.py</p>';
   throw new Error('GS is not defined');
 }
 
@@ -891,7 +891,7 @@ function entrarPorCodigoLogado() {
 // Reconexão manual a partir da sessão salva (botão da tela inicial).
 function rejoinSaved(){
   if(!GS.rejoin()){
-    toast('Nenhuma partida salva para reconectar.', 'var(--orange)');
+    toast(t('ui.hud.nenhuma_partida_salva_para_reconectar'), 'var(--orange)');
     const b=$('btn-rejoin'); if(b) b.style.display='none';
   }
 }
@@ -1550,7 +1550,7 @@ function _updateCityHeroBar(msg){
       <div><div class="city-hcard-name">${p.name}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
     </div>`;
-  }).join('')+`<div class="city-gold-badge">💰 ${gold} Ouro</div>`;
+  }).join('')+`<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`;
   bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
     card.onclick = () => abrirFichaCidade(card.getAttribute('data-pid'));
   });
@@ -1559,9 +1559,9 @@ function _updateCityHeroBar(msg){
 function _updateCityTimeBadge(){
   const b=document.getElementById('city-time-badge'); if(!b) return;
   const tod=_cityTOD;
-  b.textContent=tod<0.15||tod>0.88?'🌙 Noite profunda':
+  b.textContent=tod<0.15||tod>0.88?t('ui.cidade.noite_profunda'):
                 tod<0.30?'🌅 Amanhecer':
-                tod<0.55?'☀ Pleno dia':
+                tod<0.55?t('ui.cidade.pleno_dia'):
                 tod<0.70?'🌇 Entardecer':'🌆 Anoitecer';
 }
 
@@ -1639,7 +1639,7 @@ function initCityImage(){
   const img = document.createElement('img');
   img.id = 'city-img';
   img.src = 'assets/city/alva_e_luz.jpg?v=' + (window.ASSET_VER || '1');
-  img.alt = 'Cidade de Alva e Luz';
+  img.alt = t('ui.cidade.cidade_de_alva_e_luz');
   img.draggable = false;
   frame.appendChild(img);
 
@@ -1846,7 +1846,7 @@ function abrirEntradaMasmorra(adventure, titulo){
   if(!info.completed) panel.appendChild(_adventureGoButton(adventure, _worldOfCityState()));
   box.appendChild(panel);
   const back = document.createElement('button'); back.className = 'btn-cancel';
-  back.textContent = '← Voltar';
+  back.textContent = t('ui.mundo.voltar');
   box.appendChild(back);
   wrap.appendChild(box);
   document.body.appendChild(wrap);
@@ -2106,7 +2106,7 @@ function _adventureInfo(adventure){
 function _adventureGoButton(adventure, world){
   const go = document.createElement('button');
   go.className = 'worldmap-travel';
-  go.textContent = 'Entrar em ' + adventure.nome;
+  go.textContent = t('ui.mundo.entrar_em', {nome: adventure.nome});
   go.disabled = GS.myPid !== GS.cityState.host;
   go.title = go.disabled ? t('ui.mundo.so_anfitriao_expedicao') : '';
   go.onclick = () => {
@@ -2291,7 +2291,7 @@ function _storyPaint() {
   });
   ov.querySelector('#story-prev').style.visibility = _storyIdx > 0 ? 'visible' : 'hidden';
   ov.querySelector('#story-continue').textContent =
-    (_storyIdx < beat.slides.length - 1) ? 'Continuar →' : 'Concluir';
+    (_storyIdx < beat.slides.length - 1) ? t('ui.hud.continuar') : t('ui.hud.concluir');
   _storyPaintMute();
 }
 
@@ -2312,9 +2312,9 @@ function renderStory() {
       + '<div id="story-box">'
       +   '<div id="story-text"></div>'
       +   '<div id="story-nav">'
-      +     '<button id="story-prev">‹ Voltar</button>'
+      +     '<button id="story-prev">' + t('ui.hud.voltar_slide') + '</button>'
       +     '<div id="story-dots"></div>'
-      +     '<button id="story-continue">Continuar →</button>'
+      +     '<button id="story-continue">' + t('ui.hud.continuar') + '</button>'
       +   '</div>'
       + '</div>';
     document.body.appendChild(ov);
@@ -2414,7 +2414,7 @@ function _scenePaint(){
   _sceneApplyVisual(ev);
   const sceneTransition=['fade','slide_left','slide_right','slide_up','slide_down','zoom','dissolve'].includes((ev.data||{}).transition) ? ev.data.transition : 'fade';
   ov.className='scene-transition-'+sceneTransition;
-  ov.innerHTML='<div class="cscene-bg"><img alt=""></div><div class="cscene-shade"></div><div class="cscene-slots"></div><div class="cscene-dialog"><div class="cscene-name"></div><div class="cscene-text"></div><div class="cscene-actions"></div></div><button class="cscene-skip">Pular cena</button>';
+  ov.innerHTML='<div class="cscene-bg"><img alt=""></div><div class="cscene-shade"></div><div class="cscene-slots"></div><div class="cscene-dialog"><div class="cscene-name"></div><div class="cscene-text"></div><div class="cscene-actions"></div></div><button class="cscene-skip" data-i18n="ui.hud.pular_cena">Pular cena</button>';
   // Imagem real, em vez de somente background-image: é mais confiável no
   // início da cena e torna falhas de carregamento visíveis no navegador.
   const bg=ov.querySelector('.cscene-bg img'); if(_sceneRun.scene.background) bg.src=_sceneRun.scene.background;
@@ -2424,11 +2424,11 @@ function _scenePaint(){
   if(ev.type==='choice'){
     (ev.data||[]).forEach(o=>{const b=document.createElement('button');b.textContent=o.text||o.id;b.onclick=()=>GS.sceneChoice(_sceneRun.scene.id,ev.id,o.id);actions.appendChild(b);});
   }else if(ev.type==='test_cd'){
-    const b=document.createElement('button');b.textContent='Realizar teste';b.onclick=()=>GS.sceneTest(_sceneRun.scene.id,ev.id);actions.appendChild(b);
+    const b=document.createElement('button');b.textContent=t('ui.hud.realizar_teste');b.onclick=()=>GS.sceneTest(_sceneRun.scene.id,ev.id);actions.appendChild(b);
   }else if(ev.type==='end'){
-    const b=document.createElement('button');b.textContent='Concluir';b.onclick=()=>GS.sceneEnd(false);actions.appendChild(b);
+    const b=document.createElement('button');b.textContent=t('ui.hud.concluir');b.onclick=()=>GS.sceneEnd(false);actions.appendChild(b);
   }else{
-    const b=document.createElement('button');b.textContent=ev.next?'Continuar ›':'Concluir cena';b.onclick=()=>{if(ev.next){_sceneRun.id=ev.next;_sceneAdvance();}else GS.sceneEnd(false);};actions.appendChild(b);
+    const b=document.createElement('button');b.textContent=ev.next?t('ui.hud.continuar_2'):t('ui.hud.concluir_cena');b.onclick=()=>{if(ev.next){_sceneRun.id=ev.next;_sceneAdvance();}else GS.sceneEnd(false);};actions.appendChild(b);
   }
   ov.querySelector('.cscene-skip').onclick=()=>{if(confirm(t('ui.cena.pular_confirm')))GS.sceneEnd(true);};
 }
@@ -2868,7 +2868,7 @@ function _renderSellItems(mode){
   }
 
   if(sellable.length===0){
-    list.innerHTML='<div style="color:var(--text2);padding:20px;text-align:center;font-size:.82rem;">Nenhum item para vender.</div>';
+    list.innerHTML='<div style="color:var(--text2);padding:20px;text-align:center;font-size:.82rem;">'+t('ui.loja.nenhum_item_para_vender')+'</div>';
     return;
   }
   list.innerHTML=sellable.map(({slot,item,sp,tag})=>`
@@ -2880,7 +2880,7 @@ function _renderSellItems(mode){
       </div>
       <span class="shop-item-price" style="color:var(--green);">+💰 ${sp}</span>
       <button class="btn-buy" style="background:var(--green);color:#000;"
-        onclick="sellItem('${slot}')">Vender</button>
+        onclick="sellItem('${slot}')" data-i18n="ui.item.vender">Vender</button>
     </div>`).join('');
   list.querySelectorAll('.shop-item').forEach((row, idx) => {
     const entry = sellable[idx];
@@ -3093,8 +3093,8 @@ function _guildItemRow(i, owned, me){
   } else {
     const can = gold >= i.preco;
     action = `<button class="guild-buy" ${can?'':'disabled'}
-                title="${can?'':'Ouro insuficiente'}"
-                onclick="GS.guildBuy('${i.id}')">Comprar 🪙${i.preco}</button>`;
+                title="${can?'':t('ui.item.ouro_insuficiente')}"
+                onclick="GS.guildBuy('${i.id}')">${t('ui.guilda.comprar_preco', {preco: i.preco})}</button>`;
   }
   return `<div class="guild-item${has?' is-owned':''}">
     <span class="gi-icon">${abilityIconHtml(i, i.icon||'✨')}</span>
@@ -3117,14 +3117,14 @@ function _renderGuild(){
   const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
   // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
   // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
-  const _faixaLabel = { 3:'Recarga Curta (3 rodadas)', 5:t('ui.guilda.recarga_media'),
-                        8:'Recarga Longa (8 rodadas)', 10:'Recarga Muito Longa (10 rodadas)' };
+  const _faixaLabel = { 3:t('ui.hud.recarga_curta_3_rodadas'), 5:t('ui.guilda.recarga_media'),
+                        8:t('ui.hud.recarga_longa_8_rodadas'), 10:t('ui.hud.recarga_muito_longa_10_rodadas') };
   const _secTecnicas = (arr) => {
     if(!arr.length) return `<div class="guild-empty">— em breve —</div>`;
     const porFaixa = {};
     arr.forEach(t => { (porFaixa[t.recarga_rodadas] = porFaixa[t.recarga_rodadas] || []).push(t); });
     return Object.keys(porFaixa).sort((a,b)=>a-b).map(rec =>
-      `<div class="guild-faixa"><h4 class="guild-faixa-tit">${_faixaLabel[rec] || ('Recarga '+rec+' rodadas')}</h4>`
+      `<div class="guild-faixa"><h4 class="guild-faixa-tit">${_faixaLabel[rec] || t('ui.guilda.recarga_n_rodadas', {n: rec})}</h4>`
       + porFaixa[rec].map(i => _guildItemRow(i, owned, me)).join('')
       + `</div>`
     ).join('');
@@ -3133,7 +3133,7 @@ function _renderGuild(){
 }
 
 function openGuild(){
-  if(!GS.cityState){ toast('Carregando guilda…','var(--blue)'); return; }
+  if(!GS.cityState){ toast(t('ui.hud.carregando_guilda'),'var(--blue)'); return; }
   const me = GS.me || (GS.cityState.players || []).find(p => p.id === GS.myPid);
   if(!me){ toast(t('ui.guilda.indisponivel'),'var(--danger)'); return; }
   let modal = $('guild-modal');
@@ -3240,7 +3240,7 @@ function animarRolagemD100(resultado, onConclucao) {
       font-size: 18px;
       letter-spacing: 4px;
       margin-bottom: 32px;
-    ">💀 ANIMAR MORTOS</div>
+    " data-i18n="ui.animar.animar_mortos">💀 ANIMAR MORTOS</div>
 
     <!-- Os dois D10 -->
     <div style="display: flex; gap: 24px; margin-bottom: 32px;">
@@ -3252,7 +3252,7 @@ function animarRolagemD100(resultado, onConclucao) {
           font-size: 9px;
           letter-spacing: 3px;
           margin-bottom: 8px;
-        ">DEZENA</div>
+        " data-i18n="ui.hud.dezena">DEZENA</div>
         <div id="d10-dezena" style="
           width: 72px; height: 72px;
           background: rgba(150,0,200,0.15);
@@ -3273,7 +3273,7 @@ function animarRolagemD100(resultado, onConclucao) {
           font-size: 9px;
           letter-spacing: 3px;
           margin-bottom: 8px;
-        ">UNIDADE</div>
+        " data-i18n="ui.hud.unidade">UNIDADE</div>
         <div id="d10-unidade" style="
           width: 72px; height: 72px;
           background: rgba(150,0,200,0.15);
@@ -3307,15 +3307,15 @@ function animarRolagemD100(resultado, onConclucao) {
       letter-spacing: 1px;
     ">
       <span style="color:#ff4136;">
-        💀 Hostil: 1–${resultado.zona_hostil || 0}
+        ${t('ui.animar.faixa_hostil', {ate: resultado.zona_hostil || 0})}
       </span>
       <span style="color:#8a7a5a;">|</span>
       <span style="color:#2ecc40;">
-        ✅ Sucesso: ${(resultado.zona_hostil || 0) + 1}–${resultado.chance}
+        ${t('ui.animar.faixa_sucesso', {de: (resultado.zona_hostil || 0) + 1, ate: resultado.chance})}
       </span>
       <span style="color:#8a7a5a;">|</span>
       <span style="color:#ff851b;">
-        ❌ Falha: ${resultado.chance + 1}–99
+        ${t('ui.animar.faixa_falha', {de: resultado.chance + 1})}
       </span>
     </div>
 
@@ -3366,7 +3366,7 @@ function animarRolagemD100(resultado, onConclucao) {
             falha:   '#ff851b'
           }
           const textos = {
-            sucesso: '✅ SUCESSO — Criatura animada!',
+            sucesso: t('ui.hud.sucesso_criatura_animada'),
             hostil:  t('ui.animar.falha_catastrofica'),
             falha:   t('ui.animar.falha')
           }
@@ -3425,14 +3425,14 @@ function renderFichaPedro(heroi) {
         border:none; border-bottom:2px solid #c8a951;
         color:#c8a951; font-family:'Cinzel',serif;
         font-size:10px; letter-spacing:2px; cursor:pointer;
-      ">📊 ATRIBUTOS</button>
+      " data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
       <button onclick="trocarAbaFicha('magias','pedro')"
         id="aba-magias" style="
         flex:1; padding:10px; background:transparent;
         border:none; border-bottom:2px solid transparent;
         color:#8a7a5a; font-family:'Cinzel',serif;
         font-size:10px; letter-spacing:2px; cursor:pointer;
-      ">💀 MAGIAS</button>
+      " data-i18n="ui.ficha.magias">💀 MAGIAS</button>
     </div>
 
     <!-- CONTEÚDO DA ABA -->
@@ -3549,7 +3549,7 @@ function renderAbaMagiasPedro(heroi) {
           background:rgba(150,0,200,0.22); border:1px solid #9900ccaa;
           color:#cc44ff; font-family:'Cinzel',serif; font-size:10px;
           letter-spacing:2px; cursor:pointer;
-        ">⚔️ AUTO-COMANDAR TODOS OS SERVOS</button>
+        " data-i18n="ui.magia.auto_comandar_todos_os_servos">⚔️ AUTO-COMANDAR TODOS OS SERVOS</button>
       ` : ''}
 
       <!-- Animados -->
@@ -3575,12 +3575,12 @@ function renderAbaMagiasPedro(heroi) {
                 font-size:11px; margin-bottom:4px;
               ">${a.nome}</div>
               ${a.dominado_por_monstro ? `
-                <div style="color:#ff4136; font-size:9px; margin-bottom:3px;">
+                <div style="color:#ff4136; font-size:9px; margin-bottom:3px;" data-i18n="ui.magia.roubado_por_necromante">
                   ⛓️ Roubado por necromante!
                 </div>` : (a.por_dominacao ? `
                 <div style="color:#cc44ff; font-size:9px; margin-bottom:3px;">
-                  🔒 Controle ${a.dominacao?.permanente ? 'PERMANENTE'
-                    : `${(a.dominacao?.rodada || 2) - 1}/3 → permanente`}
+                  ${t('ui.magia.controle_rotulo')} ${a.dominacao?.permanente ? t('ui.magia.permanente')
+                    : t('ui.magia.controle_progresso', {n: (a.dominacao?.rodada || 2) - 1})}
                 </div>` : '')}
               <div style="
                 height:4px; background:#1a1a1a;
@@ -3609,7 +3609,7 @@ function renderAbaMagiasPedro(heroi) {
             font-family:'Cinzel',serif;
             text-align:center; padding:16px;
             border:1px dashed #2a2a2a;
-          ">Nenhuma criatura animada</div>`
+          " data-i18n="ui.magia.nenhuma_criatura_animada">Nenhuma criatura animada</div>`
       }
     </div>
 
@@ -3618,7 +3618,7 @@ function renderAbaMagiasPedro(heroi) {
       <div style="
         color:#8a7a5a; font-size:9px;
         letter-spacing:3px; margin-bottom:12px;
-      ">📜 MAGIAS DO DIA</div>
+      " data-i18n="ui.magia.magias_do_dia">📜 MAGIAS DO DIA</div>
       ${renderMagiasFichaEmJogo(heroi, 'mage')}
     </div>
   `
@@ -3728,11 +3728,11 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
   const ataques = Array.isArray(a.attacks) ? a.attacks : []
   const habilidades = Array.isArray(a.special_abilities) ? a.special_abilities : []
   const listaAtaques = ataques.length
-    ? ataques.map(at => `${at.name || 'Ataque'}: +${at.atk_bonus ?? 0}, ${at.damage || a.dano}${at.num_attacks > 1 ? ` ×${at.num_attacks}` : ''}`).join('<br>')
+    ? ataques.map(at => `${at.name || t('ui.animar.ataque')}: +${at.atk_bonus ?? 0}, ${at.damage || a.dano}${at.num_attacks > 1 ? ` ×${at.num_attacks}` : ''}`).join('<br>')
     : a.dano
   const listaHabilidades = habilidades.length
     ? habilidades.map(h => h.name || h.id).join(' • ')
-    : 'Nenhuma'
+    : t('ui.animar.nenhuma')
   const alcanceAtaques = ataques.length
     ? ataques.map(at => at.range
         ? `${at.range}q${at.range_shape ? ' em linha' : ''}`
@@ -3760,7 +3760,7 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
         <div style="
           display:flex; justify-content:space-between; margin-bottom:3px;
         ">
-          <span style="color:#8a7a5a; font-size:10px;">❤️ Vida</span>
+          <span style="color:#8a7a5a; font-size:10px;" data-i18n="ui.animar.vida">❤️ Vida</span>
           <span style="color:${corVida}; font-size:11px; font-weight:bold;">
             ${a.vida_atual}/${a.vida_max}
           </span>
@@ -3771,7 +3771,7 @@ function mostrarTooltipAnimado(event, id, dadosAnimado) {
           "></div>
         </div>
       </div>
-      ${renderLinhaTooltip('🛡️', 'Classe de Armadura', a.ca)}
+      ${renderLinhaTooltip('🛡️', t('ui.animar.classe_de_armadura'), a.ca)}
       ${renderLinhaTooltip('🎲', t('ui.animar.ataques'), listaAtaques)}
       ${renderLinhaTooltip('👣', t('ui.cancao.atributo.movimento'), t('ui.animar.n_casas', {n:a.movimento}))}
       ${renderLinhaTooltip('⚔️', t('ui.animar.alcance_ataque'), alcanceAtaques)}
@@ -4050,7 +4050,7 @@ function abrirFichaEmJogo(heroiKey) {
             color:#c8a951; font-family:'Cinzel',serif;
             font-size:10px; letter-spacing:2px; cursor:pointer;
           "
-        >📊 ATRIBUTOS</button>
+         data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
         <button
           onclick="trocarAbaFichaJogo('magias','pedro')"
           id="aba-jogo-magias"
@@ -4060,7 +4060,7 @@ function abrirFichaEmJogo(heroiKey) {
             color:#8a7a5a; font-family:'Cinzel',serif;
             font-size:10px; letter-spacing:2px; cursor:pointer;
           "
-        >💀 MAGIAS</button>
+         data-i18n="ui.ficha.magias">💀 MAGIAS</button>
       </div>
       <div id="conteudo-ficha-jogo-pedro">
         ${renderConteudoAtributosFichaJogo(heroi, estadoServidor)}
@@ -4073,7 +4073,7 @@ function abrirFichaEmJogo(heroiKey) {
 
   // Botão fechar inferior
   const btnFechar = document.createElement('button')
-  btnFechar.textContent = '✕ FECHAR'
+  btnFechar.textContent = t('ui.ficha.fechar')
   btnFechar.style.cssText = `
     width:100%; padding:11px;
     background:transparent;
@@ -4419,9 +4419,9 @@ function abrirLoja(nomeLocal, heroiAtivo){
   `;
 
   const nomesLojas = {
-    ferreiro: '⚒️ Ferreiro',
-    taverna:  '🍺 Taverna',
-    mercado:  '🧙 Mercado'
+    ferreiro: t('ui.loja.ferreiro'),
+    taverna:  t('ui.loja.taverna'),
+    mercado:  t('ui.loja.mercado')
   };
 
   overlay.innerHTML = `
@@ -4432,9 +4432,9 @@ function abrirLoja(nomeLocal, heroiAtivo){
         display: flex; justify-content: space-between; align-items: center;">
         <span style="font-family: 'Cinzel Decorative', serif; color: #c8a951; font-size: 20px;">${nomesLojas[nomeLocal]}</span>
         <div style="display:flex; align-items:center; gap:20px;">
-          <span style="color:#c8b89a; font-size:13px;">💰 ${heroiAtivo.moedas} moedas</span>
+          <span style="color:#c8b89a; font-size:13px;">${t('ui.loja.moedas_n', {n: heroiAtivo.moedas})}</span>
           <button onclick="fecharLoja()" style="background: transparent; border: 1px solid #4a4a4a;
-            color: #8a7a5a; font-family: 'Cinzel', serif; font-size: 11px; padding: 6px 12px; cursor: pointer;">✕ FECHAR</button>
+            color: #8a7a5a; font-family: 'Cinzel', serif; font-size: 11px; padding: 6px 12px; cursor: pointer;" data-i18n="ui.ficha.fechar">✕ FECHAR</button>
         </div>
       </div>
       <div data-shop-scroll style="overflow-y: auto; padding: 16px 24px; display: flex; flex-direction: column; gap: 8px;">
@@ -4460,7 +4460,7 @@ function abrirLoja(nomeLocal, heroiAtivo){
                     border: 1px solid ${!podeComprar || semDinheiro || inventarioCheio ? '#4a4a4a' : '#c8a951'};
                     color: ${!podeComprar || semDinheiro || inventarioCheio ? '#4a4a4a' : '#c8a951'};
                     font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px;
-                    padding: 6px 14px; cursor: pointer;">${!podeComprar ? 'RESTRITO' : semDinheiro ? 'SEM OURO' : inventarioCheio ? 'CHEIO' : 'COMPRAR'}</button>
+                    padding: 6px 14px; cursor: pointer;">${!podeComprar ? t('ui.loja.restrito_2') : semDinheiro ? t('ui.loja.sem_ouro') : inventarioCheio ? t('ui.loja.cheio') : t('ui.loja.comprar_2')}</button>
               </div>
             </div>
           `;
@@ -4791,9 +4791,9 @@ function gerarConteudoTooltip(item){
   if(item.tipo === 'veneno' || item.effect === 'coat_poison') {
     const e = item.efeito || {};
     if(e.operacao === 'dano' && e.dano != null)
-      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.dano'),`${e.dano} por rodada`));
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.dano'),t('ui.tooltip.n_por_rodada', {n: e.dano})));
     if(e.operacao === 'reduzir' && e.atributo && e.valor != null)
-      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),`Reduz ${e.atributo} em ${e.valor}`));
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),t('ui.tooltip.reduz_atributo_em', {atributo: e.atributo, valor: e.valor})));
     if(e.operacao === 'penalidade' && Array.isArray(e.atributo))
       linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),e.atributo.map((a,i)=>`${a} ${e.valor?.[i] ?? ''}`).join(', ')));
     if(e.operacao === 'status' || e.operacao === 'petrificar' || e.operacao === 'cegar')
@@ -4864,7 +4864,7 @@ function gerarHabilidadesEspeciais(item){
       || /espada curta|espada longa|espada bastarda|espada de 2/i.test(item.name || ''))
     especiais.push(L(t('ui.habilidade.critico_espada')));
   if(item.id === 'machado_duplo' || /machado duplo/i.test(item.name || ''))
-    especiais.push(L(`🪓 <strong style="color:#c8a951">Ataque Duplo:</strong> Ao obter 19 ou 20 natural no d20, ganha um segundo ataque manual no mesmo turno.`));
+    especiais.push(L(`🪓 <strong style="color:#c8a951" data-i18n="ui.hud.ataque_duplo">Ataque Duplo:</strong> Ao obter 19 ou 20 natural no d20, ganha um segundo ataque manual no mesmo turno.`));
   if(item.id === 'lanca_curta'){
     especiais.push(t('ui.habilidade.arremesso_lanca'));
   }
@@ -4890,7 +4890,7 @@ function gerarHabilidadesEspeciais(item){
     especiais.push(L(t('ui.habilidade.duas_maos')));
   if (item.tipo === 'veneno') {
     const e = item.efeito || {};
-    especiais.push(t('ui.habilidade.veneno', {p1: item.descricao, p2: e.dificuldade, p3: e.anula ? '— anula completamente' : '— efeito parcial no sucesso'}));
+    especiais.push(t('ui.habilidade.veneno', {p1: item.descricao, p2: e.dificuldade, p3: e.anula ? t('ui.hud.anula_completamente') : t('ui.hud.efeito_parcial_no_sucesso')}));
   }
   if (typeof GS !== 'undefined' && GS.isDagger && GS.isDagger(item)) {
     especiais.push(t('ui.habilidade.ataque_bonus_secundaria'))
@@ -5011,7 +5011,7 @@ function aplicarTooltipPergaminho(elemento, item){
 function _tooltipInstrumentoHTML(inst){
   const b  = (typeof GS !== 'undefined' && GS.instrumentoBase) ? GS.instrumentoBase(inst.base) : null;
   const st = (typeof GS !== 'undefined' && GS.instrumentoStatsClient) ? GS.instrumentoStatsClient(inst) : null;
-  if(!b) return `<div style="padding:12px 14px;color:#c8b89a;font-size:11px;">${inst.name || 'Instrumento'}</div>`;
+  if(!b) return `<div style="padding:12px 14px;color:#c8b89a;font-size:11px;">${inst.name || t('ui.instrumento.instrumento')}</div>`;
   const passiva = b.modo === 'passiva';
   const maosTxt = t(b.maos === 2 ? 'ui.instrumento.duas_maos' : 'ui.instrumento.uma_mao');
   const linhas = [];
@@ -5039,7 +5039,7 @@ function _tooltipInstrumentoHTML(inst){
   return `
     <div style="padding:10px 14px;border-bottom:1px solid #c8a95133;">
       <div style="color:#e8cf7e;font-weight:bold;font-size:13px;">${b.icon} ${inst.name || b.nome}</div>
-      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-top:2px;">INSTRUMENTO${passiva ? ' · PASSIVO' : ''}</div>
+      <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-top:2px;">${t('ui.instrumento.rotulo_tipo')}${passiva ? t('ui.instrumento.passivo_sufixo') : ''}</div>
       ${detalhes ? `<div style="color:#b8a888;font-size:9px;margin-top:5px;">${detalhes}</div>` : ''}
     </div>
     <div style="padding:10px 14px;">
@@ -5160,7 +5160,7 @@ function _objIcon(status){
   return status === 'done' ? '✅' : status === 'failed' ? '❌' : '⬜';
 }
 function _objRow(o){
-  let label = _rotulo(o && o.type, 'ui.objetivo', (o && o.type) || 'Objetivo');
+  let label = _rotulo(o && o.type, 'ui.objetivo', (o && o.type) || t('ui.hud.objetivo'));
   if(o && o.progresso) label += ` (${o.progresso.feitas}/${o.progresso.total} salas)`;
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
@@ -5185,7 +5185,7 @@ function encerrarMissaoConfirm(){
     + '<button id="em-cancel" data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
     + 'background:rgba(40,32,16,0.9);color:#cbbe9c;font-weight:700;font-size:.78rem;cursor:pointer;">' + t('ui.geral.cancelar') + '</button>'
     + '<button id="em-ok" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);'
-    + 'background:rgba(60,45,12,0.96);color:var(--gold,#ffcc44);font-weight:700;font-size:.78rem;cursor:pointer;">🏁 Encerrar</button>'
+    + 'background:rgba(60,45,12,0.96);color:var(--gold,#ffcc44);font-weight:700;font-size:.78rem;cursor:pointer;">'+t('ui.objetivo.encerrar_btn')+'</button>'
     + '</div></div>';
   const close = () => { if (ov.parentNode) ov.parentNode.removeChild(ov); };
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
@@ -5238,9 +5238,9 @@ function renderObjectivesHUD(msg){
   let html = '';
   const camp = GS.campaign;   // {name, phase, total} em campanha; null caso contrário
   if(camp){
-    html += `<div class="obj-campaign">🗺️ Fase ${camp.phase} de ${camp.total} — ${camp.name}</div>`;
+    html += `<div class="obj-campaign">${t('ui.objetivo.fase_de', {atual: camp.phase, total: camp.total, nome: camp.name})}</div>`;
   }
-  html += '<div class="obj-title">🎯 Objetivos</div>';
+  html += '<div class="obj-title">'+t('ui.objetivo.titulo')+'</div>';
   if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
   const secs = obj.secondary || [];
   if(secs.length){
@@ -5279,9 +5279,9 @@ function _start2DHighlightLoop(){
 }
 
 function updateTurnBadge(msg){
-  $('round-badge').textContent = `Rodada ${msg.round}`;
+  $('round-badge').textContent = t('ui.hud.badge_rodada', {n: msg.round});
   if(msg.test_mode){
-    $('turn-badge').textContent = '🧪 TESTE LIVRE — selecione qualquer monstro';
+    $('turn-badge').textContent = t('ui.hud.badge_teste_livre');
     $('turn-badge').style.background = '#237a4b';
     $('turn-badge').style.color = '#fff';
     updateTurnTimer(msg);
@@ -5290,7 +5290,7 @@ function updateTurnBadge(msg){
   // Turno dos servos (logo após o mago): destaca em roxo.
   if(msg.animados_turn){
     const owner = msg.players.find(p=>p.id===msg.animados_turn);
-    $('turn-badge').textContent = owner ? `💀 Servos de ${owner.name}` : '💀 Servos';
+    $('turn-badge').textContent = owner ? t('ui.hud.servos_de', {nome: owner.name}) : t('ui.hud.servos');
     $('turn-badge').style.background = '#9900cc';
     $('turn-badge').style.color = '#fff';
     return;
@@ -5299,9 +5299,9 @@ function updateTurnBadge(msg){
   // Deixa explícito de quem o grupo está esperando — antes só o nome aparecia
   // e novatos não sabiam se era a vez deles.
   if(cur && cur.id === GS.myPid){
-    $('turn-badge').textContent = `▶ SUA VEZ — ${cur.emoji} ${cur.name}`;
+    $('turn-badge').textContent = t('ui.hud.badge_sua_vez', {emoji: cur.emoji, nome: cur.name});
   } else {
-    $('turn-badge').textContent = cur ? `⏳ Aguardando ${cur.emoji} ${cur.name}...` : '—';
+    $('turn-badge').textContent = cur ? t('ui.hud.aguardando_heroi', {emoji: cur.emoji, nome: cur.name}) : '—';
   }
   $('turn-badge').style.background = cur ? cur.color : 'var(--gold)';
   $('turn-badge').style.color = '#fff';
@@ -6970,13 +6970,13 @@ function _drawStatusIcons2D(ctx, X, Y, entity){
     ? Math.max(0, ...entity.efeitos_veneno.map(e => Number(e?.duracao || e?.rodadas || 0))) : 0;
   const durations = [];
   if(entity.dormindo && Number(entity.dormindo_rodadas) > 0)
-    durations.push(['🌙 Sono', Number(entity.dormindo_rodadas), '#b99cff']);
+    durations.push([t('ui.tabuleiro.sono'), Number(entity.dormindo_rodadas), '#b99cff']);
   if(poisonRounds > 0)
-    durations.push(['☠ Veneno', poisonRounds, '#d18aff']);
+    durations.push([t('ui.tabuleiro.veneno'), poisonRounds, '#d18aff']);
   if(Number(entity.paralisado_rodadas) > 0)
-    durations.push(['❄ Paralisia', Number(entity.paralisado_rodadas), '#75d7ff']);
+    durations.push([t('ui.tabuleiro.paralisia'), Number(entity.paralisado_rodadas), '#75d7ff']);
   if(Number(entity.cego_rodadas) > 0)
-    durations.push(['◼ Cegueira', Number(entity.cego_rodadas), '#d5d5d5']);
+    durations.push([t('ui.tabuleiro.cegueira'), Number(entity.cego_rodadas), '#d5d5d5']);
   if(Number(entity.petrificacao_marcas) > 0)
     durations.push([t('ui.tabuleiro.petrificacao'), `${Math.min(3, Number(entity.petrificacao_marcas))}/3`, '#c8c8c8']);
   if(durations.length){
@@ -9003,7 +9003,7 @@ function renderMap(state){
       const fs=Math.round(CELL*0.125);
       ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font=`bold ${fs}px monospace`;
       ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillText('Prisioneiro', cx, by+barH+3);
+      ctx.fillText(I18N.t('ui.hud.prisioneiro'), cx, by+barH+3);
     }
   }
 
@@ -9488,14 +9488,14 @@ function _capturarMortesVisuais(state){
       // A cena solta texto, anel e som no golpe (sincronizados com o d20) e
       // segura a cópia visual até o tombo terminar (ver _agendarFimMorteVisual).
       const cmd = CombatScene.handoff(chaveCena, {
-        feedback: {entry: anterior, text: '☠ DERROTADO', kind: 'death', damageType: null, options: {}},
+        feedback: {entry: anterior, text: t('ui.hud.derrotado'), kind: 'death', damageType: null, options: {}},
         death: true,
         onImpact: [() => { _spawnDefeatVisual(anterior, kind); _playDefeatSound(kind); }],
       }, agora);
       if(cmd) _executarComandoCena(cmd);
     } else {
       _spawnCombatFeedback(
-        anterior, '☠ DERROTADO', 'death',
+        anterior, t('ui.hud.derrotado'), 'death',
         (() => {
           const inicio = _bolaFogoFeedbackStartAt(anterior);
           return inicio != null ? inicio + (mortesPotenciais > 1 ? morteIndex * 120 : 0)
@@ -9535,7 +9535,7 @@ function _capturarDerrotasERessurreicoes(state){
       const chaveCena = `p:${id}`;
       if(_cenaAtiva() && CombatScene.pendingFor(chaveCena, performance.now())){
         const cmd = CombatScene.handoff(chaveCena, {
-          feedback: {entry: {pos: atual.pos}, text: '☠ MORTE DEFINITIVA', kind: 'death', damageType: null, options: {}},
+          feedback: {entry: {pos: atual.pos}, text: t('ui.hud.morte_definitiva'), kind: 'death', damageType: null, options: {}},
           death: true,
           onImpact: [() => { _spawnDefeatVisual(atual, 'hero'); _playDefeatSound('hero'); }],
         }, performance.now());
@@ -9543,7 +9543,7 @@ function _capturarDerrotasERessurreicoes(state){
       } else {
         _spawnDefeatVisual(atual, 'hero');
         _playDefeatSound('hero');
-        _spawnCombatFeedback({pos:atual.pos}, '☠ MORTE DEFINITIVA', 'death', performance.now());
+        _spawnCombatFeedback({pos:atual.pos}, t('ui.hud.morte_definitiva'), 'death', performance.now());
       }
     } else if(!anterior.alive && atual.alive){
       _spawnDefeatVisual(atual, 'revive');
@@ -10960,11 +10960,11 @@ function _resistanceFeedbackVisible(f, state){
 }
 
 function _resistanceOutcomeText(e){
-  if(e.immune) return 'IMUNE';
-  if(e.poison && e.passed) return 'RESISTIU AO VENENO';
+  if(e.immune) return t('ui.hud.imune');
+  if(e.poison && e.passed) return t('ui.hud.resistiu_ao_veneno');
   if(e.mitigation === 'half_damage') return e.passed
-    ? 'PASSOU — METADE DO DANO' : 'FALHOU — EFEITO COMPLETO';
-  return e.passed ? 'PASSOU' : 'FALHOU';
+    ? t('ui.hud.passou_metade_do_dano') : t('ui.hud.falhou_efeito_completo');
+  return e.passed ? t('ui.hud.passou') : t('ui.hud.falhou');
 }
 
 function _consumeResistanceEvents(state){
@@ -10974,7 +10974,7 @@ function _consumeResistanceEvents(state){
     const info = _resistanceInfo(e.save_type);
     const f = {
       pos: [Number(e.pos[0]), Number(e.pos[1])],
-      name: String(e.target_name || 'Alvo'),
+      name: String(e.target_name || t('ui.hud.alvo')),
       type: info.label,
       icon: info.icon,
       color: info.color,
@@ -10983,6 +10983,9 @@ function _consumeResistanceEvents(state){
       modifier: Number(e.modifier) || 0,
       total: Number(e.total) || 0,
       outcome: _resistanceOutcomeText(e),
+      // Cor por FLAG, não pelo texto: o rótulo é traduzido e comparar strings
+      // quebraria em silêncio ao trocar o idioma.
+      failed: !e.passed && !e.immune,
       start: performance.now(), duration: _animationProgressDuration(RESISTANCE_FEEDBACK_MS),
       mesh: null,
     };
@@ -11012,7 +11015,7 @@ function _buildResistanceFeedback3D(f){
   c.strokeStyle = 'rgba(5,3,12,0.94)'; c.lineWidth = 11;
   c.strokeText(line1, cv.width/2, 48); c.strokeText(line2, cv.width/2, 105);
   c.fillStyle = f.color; c.fillText(line1, cv.width/2, 48);
-  c.fillStyle = f.outcome === 'FALHOU — EFEITO COMPLETO' ? '#ff7474' : '#fff1b0';
+  c.fillStyle = f.failed ? '#ff7474' : '#fff1b0';
   c.fillText(line2, cv.width/2, 105);
   const tex = new T.CanvasTexture(cv); tex._owned = true;
   const mat = new T.SpriteMaterial({map:tex, transparent:true, depthWrite:false, depthTest:false, opacity:0});
@@ -11132,7 +11135,7 @@ function _attackFeedbackVisible(f, state){
 }
 
 function _attackFeedbackModeLabel(mode){
-  return mode === 'advantage' ? 'VANTAGEM' : mode === 'disadvantage' ? 'DESVANTAGEM' : 'NORMAL';
+  return mode === 'advantage' ? t('ui.hud.vantagem') : mode === 'disadvantage' ? t('ui.hud.desvantagem') : 'NORMAL';
 }
 
 // Com cena de combate (3D), o result chega ~240 ms depois do d20 mas o GOLPE
@@ -11148,16 +11151,16 @@ function _attackFeedbackTargetName(msg){
   if(msg.target_name) return msg.target_name;
   if(msg.projectile && msg.projectile.area && Array.isArray(msg.target_pos))
     return t('ui.hud.alvo_area', {x: msg.target_pos[0], y: msg.target_pos[1]});
-  return 'Alvo';
+  return t('ui.hud.alvo');
 }
 
 function _attackFeedbackResultLabel(f){
   if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
   if(f.area) return t('ui.hud.resultado_area');
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
-  if(f.natural_fumble) return '1 NATURAL — FALHA!';
+  if(f.natural_fumble) return t('ui.hud.1_natural_falha');
   if(f.crit) return t('ui.hud.critico');
-  return f.hit ? 'ACERTO' : 'ERRO';
+  return f.hit ? t('ui.hud.acerto') : t('ui.hud.erro');
 }
 
 function _attackFeedbackColor(f){
@@ -11767,7 +11770,7 @@ function _receiveAttackFeedback(msg){
   if(msg.phase==='start'){
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
     const f={id, attackerName:msg.attacker_name||'Atacante', targetName:_attackFeedbackTargetName(msg),
-      attackName:msg.attack_name||'Ataque', attackerPos:(msg.attacker_pos||[0,0]).map(Number),
+      attackName:msg.attack_name||t('ui.hud.ataque'), attackerPos:(msg.attacker_pos||[0,0]).map(Number),
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
       area:!!(msg.projectile && msg.projectile.area),
       result:false, startedAt:now, resultAt:now,
@@ -11869,7 +11872,7 @@ function _drawResistanceFeedback2D(ctx, state, now){
     ctx.strokeStyle = f.color; ctx.lineWidth = Math.max(1.5, fs * 0.10);
     ctx.beginPath(); ctx.roundRect(drawX - w/2, drawY - h/2, w, h, fs * .35); ctx.fill(); ctx.stroke();
     ctx.fillStyle = f.color; ctx.fillText(line1, drawX, drawY - fs*.52);
-    ctx.fillStyle = f.outcome === 'FALHOU — EFEITO COMPLETO' ? '#ff7474' : '#fff1b0';
+    ctx.fillStyle = f.failed ? '#ff7474' : '#fff1b0';
     ctx.fillText(line2, drawX, drawY + fs*.52);
     ctx.restore();
   }
@@ -12183,7 +12186,7 @@ function _detectHpChanges(st){
     // A confirmação só aparece depois da pequena cascata de impactos, para
     // não competir com o primeiro número de dano.
     const resumoAt = firstImpact + Math.max(0, changedDamageEntries.length - 1) * 120 + 90;
-    setTimeout(() => toast(`${changedDamageEntries.length} alvos atingidos`, '#ffd45a'),
+    setTimeout(() => toast(t('ui.hud.n_alvos_atingidos', {n: changedDamageEntries.length}), '#ffd45a'),
       Math.max(180, resumoAt - now));
   }
 }
@@ -12331,7 +12334,7 @@ function _capturarPositiveEffectChanges(state){
       const velho = anterior.get(id);
       if(!velho){
         _spawnPositiveBurst({pos:p.pos}, _positiveEffectKind(id), 0, efeito.nome);
-        toast(`Buff aplicado: ${efeito.nome}`, _positiveEffectColor(_positiveEffectKind(id)));
+        toast(t('ui.hud.buff_aplicado', {nome: efeito.nome}), _positiveEffectColor(_positiveEffectKind(id)));
       } else if(Number(efeito.rodadas || 0) > Number(velho.rodadas || 0)){
         _spawnPositiveBurst({pos:p.pos}, _positiveEffectKind(id), 0, efeito.nome);
         toast(`Buff renovado: ${efeito.nome}`, _positiveEffectColor(_positiveEffectKind(id)));
@@ -12340,14 +12343,14 @@ function _capturarPositiveEffectChanges(state){
     for(const [id, velho] of anterior){
       if(agora.has(id)) continue;
       const expirou = Number(velho.rodadas || 0) > 0;
-      toast(`${efeitoNomeSeguro(velho)} ${expirou ? 'expirou' : 'foi removido'}`, '#c8b89a');
+      toast(`${efeitoNomeSeguro(velho)} ${expirou ? 'expirou' : t('ui.hud.foi_removido')}`, '#c8b89a');
     }
   }
   _positiveEffectsSnapshot.clear();
   for(const [id, efeitos] of atual) _positiveEffectsSnapshot.set(id, efeitos);
 }
 
-function efeitoNomeSeguro(efeito){ return efeito?.nome || efeito?.id || 'Efeito positivo'; }
+function efeitoNomeSeguro(efeito){ return efeito?.nome || efeito?.id || t('ui.hud.efeito_positivo'); }
 function _limparPositiveEffectSnapshot(){ _positiveEffectsSnapshot.clear(); }
 
 // ── Keep 2D canvas sized (used only for label overlay) ──────────────────────
@@ -12854,8 +12857,8 @@ function _diceFormula(msg, dieType){
 
 function _diceRollMeta(msg, dieType, label, flags){
   const formula = _diceFormula(msg, dieType);
-  const status = flags.discarded ? '✕ DESCARTADO'
-    : flags.kept ? '✓ ESCOLHIDO'
+  const status = flags.discarded ? t('ui.hud.descartado')
+    : flags.kept ? t('ui.hud.escolhido')
     : flags.offhand ? t('ui.hud.mao_secundaria') : '';
   const context = [label, status].filter(Boolean).join(' • ');
   return { formula, status, context,
@@ -13484,9 +13487,9 @@ function renderBarrasSobrevivencia(p){
   // Bloco de DOENÇA (sistema de doenças) — só aparece se o herói estiver doente.
   let doencaHTML = '';
   if(p.doente && p.doenca){
-    const sevNome = {leve:'Leve', pesada:'Pesada', grave:'Grave'}[p.doenca.severidade] || 'Leve';
+    const sevNome = {leve:t('ui.hud.leve'), pesada:t('ui.hud.pesada'), grave:t('ui.hud.grave')}[p.doenca.severidade] || t('ui.hud.leve');
     const descs = {
-      leve:  '-1 Reflexos · -1 Fortitude · -1 movimento',
+      leve:  t('ui.hud.1_reflexos_1_fortitude_1_movimento'),
       medio: t('ui.hud.exausto_efeitos'),
       grave: '-2 CON · -2 INT'
     };
@@ -13569,7 +13572,7 @@ function renderPlayers(state){
         ${_csong ? `<span title="${t('ui.hud.inspirado_cancao')}" style="color:#4db8ff;font-size:11px;">🎵</span>` : ''}
         <span class="pcard-lvl">Lv${p.level}</span>
       </div>
-      ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">🏙️ na cidade — volta em ${fora.rodadas_restantes|0} rodada(s)</div>` : ''}
+      ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${t('ui.hud.na_cidade_volta_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">HP</span>
@@ -13580,7 +13583,7 @@ function renderPlayers(state){
       </div>`;
     // Clique no mini-card abre a ficha do herói correspondente.
     div.style.cursor = 'pointer';
-    div.title        = 'Clique para ver a ficha';
+    div.title        = t('ui.hud.clique_para_ver_a_ficha');
     div.onclick      = () => {
       const key = _classIdParaHeroiKey(p.cls || p.class_id || p.key);
       abrirFichaEmJogo(key);
@@ -13600,8 +13603,8 @@ function renderFlagsWarrior(me) {
   const armadas = (typeof GS !== 'undefined' && GS.getWarriorSelected) ? GS.getWarriorSelected() : []
   const EFEITO = {
     mira_certeira:    '<span style="color:#c8a951">⚔️ +2 acerto</span>',
-    golpe_devastador: '<span style="color:#ff851b">💥 Dano ×2</span>',
-    furia_berserker:  '<span style="color:#ff4444">🔥 Ataque extra</span>',
+    golpe_devastador: '<span style="color:#ff851b">' + t('ui.hud.dano_x2') + '</span>',
+    furia_berserker:  '<span style="color:#ff4444">' + t('ui.hud.ataque_extra') + '</span>',
   }
 
   // Caso armadas (fase de seleção, antes do ataque)
@@ -13614,7 +13617,7 @@ function renderFlagsWarrior(me) {
       <div style="margin-top:6px; padding:6px 8px; background:rgba(200,169,81,0.10);
         border:1px solid #c8a95155; font-family:'Cinzel',serif; font-size:9px; letter-spacing:1px;">
         <div style="display:flex; gap:8px; flex-wrap:wrap;">${chips.join(' | ')}</div>
-        <div style="margin-top:3px; color:#8a7a5a;">Custo ao atacar: 🍖-${fome}${sede ? ` 💧-${sede}` : ''}</div>
+        <div style="margin-top:3px; color:#8a7a5a;">${t('ui.hud.custo_ao_atacar', {fome, sede: sede ? ` 💧-${sede}` : ''})}</div>
       </div>`
   }
 
@@ -13742,27 +13745,27 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       const info = GS.weaponReachInfo?.(attacker, m.pos?.[0], m.pos?.[1], m.altura);
     if(info){
       const delta = Math.abs(info.targetAltitude - info.attackerAltitude);
-      const alcance = info.effectiveRange == null ? 'corpo a corpo' : `${Math.max(0, info.effectiveRange)}/${attacker.weapon.range}`;
+      const alcance = info.effectiveRange == null ? t('ui.ficha.corpo_a_corpo') : `${Math.max(0, info.effectiveRange)}/${attacker.weapon.range}`;
       const linhaLivre = info.effectiveRange == null || GS.hasLineOfSight?.(GS.gameState, attacker.pos[0], attacker.pos[1], m.pos[0], m.pos[1]);
       const situacao = info.effectiveRange == null
-        ? (info.inRange ? 'mesma altura' : 'alturas diferentes')
-        : (!info.inRange ? 'fora do alcance' : (linhaLivre ? 'alcance' : 'linha bloqueada'));
-      verticalHTML = `<div style="margin-top:4px;padding-top:3px;border-top:1px solid #c8a95133;color:${info.inRange && linhaLivre ? '#9ee7b3' : '#ff9b9b'};font-size:9px;">↕ Altura ${info.attackerAltitude} → ${info.targetAltitude} · Δ${delta} = ${info.verticalCost}q · ${alcance} (${situacao})</div>`;
+        ? (info.inRange ? t('ui.ficha.mesma_altura') : t('ui.ficha.alturas_diferentes'))
+        : (!info.inRange ? t('ui.ficha.fora_do_alcance') : (linhaLivre ? 'alcance' : t('ui.ficha.linha_bloqueada')));
+      verticalHTML = `<div style="margin-top:4px;padding-top:3px;border-top:1px solid #c8a95133;color:${info.inRange && linhaLivre ? '#9ee7b3' : '#ff9b9b'};font-size:9px;">${t('ui.ficha.altura_linha', {de: info.attackerAltitude, para: info.targetAltitude, delta, custo: info.verticalCost, alcance, situacao})}</div>`;
     }
   }
   if(!full) return `${nome}<br>HP ${m.hp}/${m.max_hp} | CA ${m.ac}${verticalHTML}`;
   const pct = Math.max(0, Math.min(100, (m.hp / Math.max(1,m.max_hp)) * 100));
   const cor = pct>60 ? '#2ecc40' : pct>30 ? '#ff851b' : '#ff4136';
-  const TIER = {1:'Comum', 2:'Veterano', 3:'Elite', 4:'Chefe'};
+  const TIER = {1:t('ui.ficha.comum'), 2:'Veterano', 3:'Elite', 4:t('ui.ficha.chefe')};
   const DMG_ICON = {physical:'⚔️', fire:'🔥', cold:'❄️', lightning:'⚡', holy:'✨', poison:'☠️', magic:'🔮'};
-  const SAVE_LBL = {fortitude:'Fort', reflexos:'Ref', vontade:'Von'};
+  const SAVE_LBL = {fortitude:'Fort', reflexos:'Ref', vontade:t('ui.ficha.von')};
   const ACT_LBL  = id => _rotulo(id, 'ui.mestre.acao_tipo', id);
   const mod = v => { const n = Math.floor((v-10)/2); return (n>=0?'+':'')+n; };
   const fmt = v => (v>=0?'+':'')+v;
 
   const tags = [];
-  if(m.undead) tags.push('💀 Morto-vivo');
-  if(m.boss)   tags.push('👑 Chefe');
+  if(m.undead) tags.push(t('ui.ficha.morto_vivo'));
+  if(m.boss)   tags.push(t('ui.ficha.chefe_2'));
 
   const crVal = m.cr != null ? (m.cr < 1 ? `1/${Math.round(1/m.cr)}` : String(m.cr)) : null;
 
@@ -13770,7 +13773,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
   let atribHTML = '';
   if (m.str_ != null) {
     atribHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:5px;">
-      ${[{k:'str_',l:'FOR'},{k:'dex',l:'DES'},{k:'con_',l:'CON'},{k:'int_',l:'INT'}].map(({k,l})=>`
+      ${[{k:'str_',l:t('ui.atributo.sigla.str_')},{k:'dex',l:t('ui.atributo.sigla.dex')},{k:'con_',l:t('ui.atributo.sigla.con_')},{k:'int_',l:t('ui.atributo.sigla.int_')}].map(({k,l})=>`
         <div style="background:rgba(255,255,255,0.04);padding:2px 0;text-align:center;">
           <div style="color:#8a7a5a;font-size:8px;">${l}</div>
           <div style="color:#c8b89a;font-size:10px;font-weight:bold;">${mod(m[k])}</div>
@@ -13782,9 +13785,9 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
   let savesHTML = '';
   if (m.fort != null) {
     savesHTML = `<div style="display:flex;gap:10px;margin-top:3px;font-size:9px;">
-      <span style="color:#8a7a5a;">Fort <b style="color:#c8b89a;">${fmt(m.fort)}</b></span>
-      <span style="color:#8a7a5a;">Ref <b style="color:#c8b89a;">${fmt(m.ref_)}</b></span>
-      <span style="color:#8a7a5a;">Von <b style="color:#c8b89a;">${fmt(m.will)}</b></span>
+      <span style="color:#8a7a5a;">${t('ui.save.abrev.fort')} <b style="color:#c8b89a;">${fmt(m.fort)}</b></span>
+      <span style="color:#8a7a5a;">${t('ui.save.abrev.ref')} <b style="color:#c8b89a;">${fmt(m.ref_)}</b></span>
+      <span style="color:#8a7a5a;">${t('ui.save.abrev.von')} <b style="color:#c8b89a;">${fmt(m.will)}</b></span>
     </div>`;
   }
 
@@ -13800,7 +13803,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       return `<div style="font-size:10px;color:#c8b89a;">${atk.name}: <b>${atk.damage}</b>${types}${mult} <span style="color:#8a7a5a;">(+${atk.atk_bonus})</span></div>${oh}`;
     }).join('');
     attacksHTML = `<div style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95133;">
-      <div style="color:#8a7a5a;font-size:8px;letter-spacing:1px;margin-bottom:2px;">ATAQUES</div>${rows}</div>`;
+      <div style="color:#8a7a5a;font-size:8px;letter-spacing:1px;margin-bottom:2px;">${t('ui.mestre.ataques')}</div>${rows}</div>`;
   }
 
   // Habilidades especiais
@@ -13815,7 +13818,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       return `<div style="font-size:10px;color:${color};">${ab.name} <span style="color:#8a7a5a;">[${ACT_LBL(ab.action_type)}${dcStr}${useStr}]</span></div>`;
     }).join('');
     abilitiesHTML = `<div style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95133;">
-      <div style="color:#8a7a5a;font-size:8px;letter-spacing:1px;margin-bottom:2px;">HABILIDADES</div>${rows}</div>`;
+      <div style="color:#8a7a5a;font-size:8px;letter-spacing:1px;margin-bottom:2px;">${t('ui.mestre.habilidades')}</div>${rows}</div>`;
   }
 
   // Imunidades e fraquezas
@@ -13826,14 +13829,14 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
     const immStr  = imm.map(i => DMG_ICON[i]||i).join(' ');
     const weakStr = weak.map(w => `${DMG_ICON[w.type]||w.type}${w.categoria?'/'+w.categoria:''} +${w.bonus_flat??'?'}`).join(' · ');
     resistHTML = `<div style="margin-top:4px;font-size:9px;">
-      ${imm.length  ? `<div style="color:#4ec9b0;">Imune: ${immStr}</div>` : ''}
+      ${imm.length  ? `<div style="color:#4ec9b0;">${t('ui.ficha.imune_a_lista', {lista: immStr})}</div>` : ''}
       ${weak.length ? `<div style="color:#ff6b6b;">Fraq: ${weakStr}</div>` : ''}
     </div>`;
   }
 
   // Legado: acerto/dano como linha simples (monstros antigos sem m.attacks)
   const legacyAtkHTML = !m.attacks
-    ? `<div>🎯 Acerto <b>+${m.atk_bonus}</b> &nbsp;·&nbsp; 🎲 Dano <b>${m.damage||'?'}</b></div>` : '';
+    ? `<div>${t('ui.ficha.acerto_dano', {acerto: m.atk_bonus, dano: m.damage||'?'})}</div>` : '';
 
   return `
     <div style="min-width:220px;">
@@ -13841,18 +13844,18 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
         <span style="font-size:18px;">${m.emoji||'👾'}</span>
         <div>
           <div style="color:#c8a951;font-weight:bold;">${m.name}</div>
-          <div style="color:#8a7a5a;font-size:.6rem;letter-spacing:2px;">📖 CONHECIMENTO DAS LENDAS</div>
+          <div style="color:#8a7a5a;font-size:.6rem;letter-spacing:2px;" data-i18n="ui.ficha.conhecimento_das_lendas">📖 CONHECIMENTO DAS LENDAS</div>
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;">
-        <span style="color:#8a7a5a;">❤️ Vida</span>
+        <span style="color:#8a7a5a;" data-i18n="ui.animar.vida">❤️ Vida</span>
         <span style="color:${cor};font-weight:bold;">${m.hp}/${m.max_hp}</span>
       </div>
       <div style="height:5px;background:#1a1a1a;border:1px solid #2a2a2a;margin:2px 0 6px;">
         <div style="width:${pct}%;height:100%;background:${cor};"></div>
       </div>
-      <div>🛡️ CA <b>${m.ac}</b>${crVal ? ` &nbsp;·&nbsp; ND <b>${crVal}</b>` : ''}</div>
-      <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ XP <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
+      <div>🛡️ ${t('ui.hud.sigla_ca')} <b>${m.ac}</b>${crVal ? ` &nbsp;·&nbsp; ${t('ui.hud.sigla_nd')} <b>${crVal}</b>` : ''}</div>
+      <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ ${t('ui.hud.sigla_xp')} <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
       ${verticalHTML}
       ${legacyAtkHTML}
       ${atribHTML}
@@ -13861,19 +13864,20 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       ${abilitiesHTML}
       ${resistHTML}
       ${tags.length ? `<div style="margin-top:3px;color:#ff851b;">${tags.join(' · ')}</div>` : ''}
-      ${(m.provocado && (m.provocado_turnos||0)>0) ? `<div style="margin-top:3px;color:#ff66cc;">😤 Provocado (${m.provocado_turnos}t)</div>` : ''}
+      ${(m.provocado && (m.provocado_turnos||0)>0) ? `<div style="margin-top:3px;color:#ff66cc;">${t('ui.ficha.provocado_turnos', {n: m.provocado_turnos})}</div>` : ''}
     </div>`;
 }
 
 // ── Canção Heroica: painel flutuante de seleção de atributos ────────────────
 let _selecionadosCancao = [];
 
-function abrirPainelCancao(){
+function abrirPainelCancao(opcoes = {}){
   const existente = document.getElementById('painel-cancao');
   if(existente){ existente.remove(); return; }   // toggle: reabrir fecha
-  const me = GS.me;
-  if(!me || me.class_id !== 'bard') return;
-  if(me.cancao_ativa){ send({type:'desativar_cancao'}); return; }
+  const mestreMonstro = opcoes.monstro || null;
+  const me = mestreMonstro ? null : GS.me;
+  if(!mestreMonstro && (!me || me.class_id !== 'bard')) return;
+  if(!mestreMonstro && me.cancao_ativa){ send({type:'desativar_cancao'}); return; }
 
   _selecionadosCancao = [];
   const painel = document.createElement('div');
@@ -13889,6 +13893,10 @@ function abrirPainelCancao(){
     // Canção Heroica Suprema reduz a MANUTENÇÃO em -1🍖/-1💧 (mín 0); só o preview.
     const _red   = (GS.bardoCancaoSuprema && GS.bardoCancaoSuprema()) ? 1 : 0;
     const man    = { fome: Math.max(0, custo.fome - _red), sede: Math.max(0, custo.sede - _red) };
+    const nivelCancao = attr => mestreMonstro
+      ? ((mestreMonstro.special_abilities||[]).some(a =>
+          a.source_id === `bardo_cancao_${attr.id}` || a.id === `guild_bardo_cancao_${attr.id}`) ? 2 : 1)
+      : (GS.bardoCancaoNivel ? GS.bardoCancaoNivel(attr.id) : 1);
     const linhas = CANCAO_ATRIBUTOS_CLIENT.map(attr => {
       const ativo = _selecionadosCancao.includes(attr.id);
       const cl    = attr.custo === 'sede' ? '💧' : '🍖';
@@ -13901,15 +13909,15 @@ function abrirPainelCancao(){
             background:${ativo?'#c8a951':'transparent'};display:flex;align-items:center;
             justify-content:center;font-size:10px;color:#1a1a1a;">${ativo?'✓':''}</div>
           <span style="font-size:15px;">${attr.icone}</span>
-          <div style="flex:1;color:${ativo?'#c8a951':'#c8b89a'};font-size:11px;">+${(GS.bardoCancaoNivel?GS.bardoCancaoNivel(attr.id):1)} ${_cancaoLabel(attr.id)}</div>
-          <span style="color:#8a7a5a;font-size:9px;">${cl}-1/turno</span>
+          <div style="flex:1;color:${ativo?'#c8a951':'#c8b89a'};font-size:11px;">+${nivelCancao(attr)} ${_cancaoLabel(attr.id)}</div>
+          <span style="color:#8a7a5a;font-size:9px;">${mestreMonstro ? t('ui.hud.bonus_aos_aliados') : `${cl}-1/turno`}</span>
         </div>`;
     }).join('');
 
     painel.innerHTML = `
-      <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:13px;margin-bottom:12px;text-align:center;">${t('ui.cancao.titulo')}</div>
+      <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:13px;margin-bottom:12px;text-align:center;">${mestreMonstro ? t('ui.cancao.titulo_monstro', {nome: mestreMonstro.name||t('ui.hud.xama')}) : t('ui.cancao.titulo')}</div>
       <div style="margin-bottom:12px;">${linhas}</div>
-      <div style="padding:8px 10px;margin-bottom:8px;background:rgba(255,133,27,0.06);border:1px solid #ff851b33;">
+      ${mestreMonstro ? `<div style="padding:8px 10px;margin-bottom:8px;background:rgba(200,169,81,0.06);border:1px solid #c8a95133;color:#c8b89a;font-size:10px;text-align:center;">${t('ui.cancao.aviso_monstros_raio', {raio: CANCAO_RAIO_CLIENT})}</div>` : `<div style="padding:8px 10px;margin-bottom:8px;background:rgba(255,133,27,0.06);border:1px solid #ff851b33;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
           <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">${t('ui.cancao.ativar_manutencao')}${_red?` <span style="color:#c8a951;">${t('ui.cancao.suprema')}</span>`:''}</span>
           <span style="color:#ff851b;font-size:10px;">${_selecionadosCancao.length?((man.fome||man.sede)?`${man.fome?`🍖-${man.fome} `:''}${man.sede?`💧-${man.sede}`:''}${t('ui.cancao.por_turno')}`:`🍖0 💧0${t('ui.cancao.por_turno')}`):t('ui.cancao.selecione_atributos')}</span>
@@ -13918,10 +13926,10 @@ function abrirPainelCancao(){
           <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">${t('ui.cancao.se_atacar')}</span>
           <span style="color:#ff4136;font-size:10px;">${_selecionadosCancao.length?`🍖-${ataque.fome} 💧-${ataque.sede}`:'—'}</span>
         </div>
-      </div>
+      </div>`}
       <div style="display:flex;gap:6px;">
         <button onclick="document.getElementById('painel-cancao').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">${t('ui.geral.cancelar_caixa')}</button>
-        <button onclick="confirmarCancao()" ${_selecionadosCancao.length?'':'disabled'} style="flex:2;padding:8px;background:${_selecionadosCancao.length?'rgba(200,169,81,0.15)':'transparent'};border:1px solid ${_selecionadosCancao.length?'#c8a951':'#4a4a4a'};color:${_selecionadosCancao.length?'#c8a951':'#4a4a4a'};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:${_selecionadosCancao.length?'pointer':'not-allowed'};">${t('ui.cancao.cantar')}</button>
+        <button onclick="confirmarCancao()" ${_selecionadosCancao.length?'':'disabled'} style="flex:2;padding:8px;background:${_selecionadosCancao.length?'rgba(200,169,81,0.15)':'transparent'};border:1px solid ${_selecionadosCancao.length?'#c8a951':'#4a4a4a'};color:${_selecionadosCancao.length?'#c8a951':'#4a4a4a'};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:${_selecionadosCancao.length?'pointer':'not-allowed'};">${mestreMonstro ? t('ui.hud.ativar_cancao') : t('ui.cancao.cantar')}</button>
       </div>`;
   }
 
@@ -13936,7 +13944,8 @@ function abrirPainelCancao(){
   };
   window.confirmarCancao = () => {
     if(!_selecionadosCancao.length) return;
-    send({ type:'ativar_cancao', atributos:_selecionadosCancao });
+    if(mestreMonstro) GS.mestreUsarHabilidade(mestreMonstro.id, 'hero_bard_cancao_heroica', null, null, _selecionadosCancao);
+    else send({ type:'ativar_cancao', atributos:_selecionadosCancao });
     document.getElementById('painel-cancao')?.remove();
   };
 }
@@ -13987,7 +13996,7 @@ function _bardSkillBtn(me, sk){
       btn.innerHTML = `
         <div class="skill-info">
           <div class="skill-name">🎵 ${sk.name}</div>
-          <div class="skill-desc">${sk.description || 'Buffs para aliados em 5 quadrados.'}</div>
+          <div class="skill-desc">${sk.description || t('ui.bardo.buffs_para_aliados_em_5_quadrados')}</div>
         </div>
         <div class="skill-cost">escolher</div>`;
       btn.onclick = () => abrirPainelCancao();
@@ -13999,7 +14008,7 @@ function _bardSkillBtn(me, sk){
     btn.disabled = !pode;
     const aviso = me.bonus_action_used
       ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
-      : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+      : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
     const _pnv = GS.bardoProvocacaoNivel ? GS.bardoProvocacaoNivel() : 1;
     const _pextra = _pnv >= 3
       ? ` <span style="color:#c8a951;">${t('ui.bardo.provocacao_3')}</span>`
@@ -14095,9 +14104,9 @@ function _iniciarMiraInstrumento(me, inst, b){
   _aimStart({
     kind: 'instrumento',
     title: `${b.icon} ${b.habilidade_nome.toUpperCase()}`,
-    instruction: `Selecione um inimigo destacado · alcance ${alcance}q.`,
-    color: '#ff8c66', targetLabel: 'INIMIGO', range, area: validTargets,
-    cancelText: 'Nota Cortante cancelada.',
+    instruction: t('ui.instrumento.selecione_inimigo_alcance', {alcance}),
+    color: '#ff8c66', targetLabel: t('ui.instrumento.inimigo'), range, area: validTargets,
+    cancelText: t('ui.instrumento.nota_cortante_cancelada'),
     cleanup: () => { window._modoInstrumento = null; GS.pendingInstrumento = null; },
   });
 }
@@ -14109,11 +14118,11 @@ function _clickTileInstrumento(tx, ty){
     GS.usarInstrumento({ id: r.targetId });
     _encerrarMiraInstrumento();
   } else if(r?.type === 'instrumento_blocked'){
-    const msg = r.reason === 'wall' ? '🧱 Uma parede ou porta fechada bloqueia a Nota Cortante.' : 'Fora do alcance da Nota Cortante.';
+    const msg = r.reason === 'wall' ? t('ui.instrumento.uma_parede_ou_porta_fechada_bloqueia_a_not') : t('ui.instrumento.fora_do_alcance_da_nota_cortante');
     _aimSetStatus(msg, '#ffb168');
     toast(msg, 'var(--orange)');
   } else {
-    _aimSetStatus('Selecione um inimigo vivo dentro do alcance.', '#ffb168');
+    _aimSetStatus(t('ui.instrumento.selecione_um_inimigo_vivo_dentro_do_alcanc'), '#ffb168');
   }
 }
 
@@ -14145,10 +14154,10 @@ function _iniciarMiraInstrumentoAlvo(me, b, alcance, onSelect, targetList = null
   if(!validTargets.size){ toast(t('ui.instrumento.sem_inimigo_raio', {n:alcance}), 'var(--orange)'); return false; }
   window._modoInstrumentoAlvo = { validTargets, onSelect };
   _aimStart({
-    kind:'instrumento_alvo', title:`${b.icon || '🎵'} ${(b.habilidade_nome || 'INSTRUMENTO').toUpperCase()}`,
-    instruction:targetList ? 'Selecione um inimigo destacado.' : `Selecione um inimigo destacado · alcance ${alcance}q.`,
-    color:'#ff8c66', targetLabel:'INIMIGO', range, area:validTargets,
-    cancelText:'Habilidade de instrumento cancelada.',
+    kind:'instrumento_alvo', title:`${b.icon || '🎵'} ${(b.habilidade_nome || t('ui.instrumento.instrumento_2')).toUpperCase()}`,
+    instruction:targetList ? t('ui.instrumento.selecione_um_inimigo_destacado') : t('ui.instrumento.selecione_inimigo_alcance', {alcance}),
+    color:'#ff8c66', targetLabel:t('ui.instrumento.inimigo'), range, area:validTargets,
+    cancelText:t('ui.instrumento.habilidade_de_instrumento_cancelada'),
     cleanup:()=>{ window._modoInstrumentoAlvo = null; },
   });
   return true;
@@ -14162,7 +14171,7 @@ function _clickTileInstrumentoAlvo(tx, ty){
   const valid = !!monster && mode.validTargets.has(`${tx},${ty}`);
   if(!valid){
     _aimSetHover(tx, ty, 'blocked');
-    _aimSetStatus('Selecione um inimigo destacado dentro do alcance.', '#ff9aa2');
+    _aimSetStatus(t('ui.instrumento.selecione_um_inimigo_destacado_dentro_do_a'), '#ff9aa2');
     return;
   }
   const onSelect = mode.onSelect;
@@ -14173,13 +14182,13 @@ function _clickTileInstrumentoAlvo(tx, ty){
 function _aimHoverInstrumentoAlvo(tx, ty){
   const valid = !!window._modoInstrumentoAlvo?.validTargets?.has(`${tx},${ty}`);
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.instrumento.inimigo_valido_confirme_para_usar') : 'Selecione um inimigo destacado dentro do alcance.', valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.instrumento.inimigo_valido_confirme_para_usar') : t('ui.instrumento.selecione_um_inimigo_destacado_dentro_do_a'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _keyInstrumentoEsc(e){
   if(e.key === 'Escape'){
     _encerrarMiraInstrumento();
-    toast('Nota Cortante cancelada.', '#888');
+    toast(t('ui.instrumento.nota_cortante_cancelada'), '#888');
     e.preventDefault();
   }
 }
@@ -14192,7 +14201,7 @@ function _atualizarMiraInstrumentoHover(tx, ty, tip, event){
   if(m){
     const key = `${tx},${ty}`;
     const ok = mode.range.has(key) && GS.hasLineOfSight(GS.gameState, GS.me.pos[0], GS.me.pos[1], tx, ty);
-    tip.innerHTML = `<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok ? '#f08080' : '#f09030'}">${ok ? '🎵 Clique para usar Nota Cortante' : '⚠ Fora de alcance ou bloqueado'}</span>`;
+    tip.innerHTML = `<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok ? '#f08080' : '#f09030'}">${ok ? t('ui.instrumento.clique_para_usar_nota_cortante') : t('ui.instrumento.fora_de_alcance_ou_bloqueado')}</span>`;
     // Sem evento a chamada veio do controle, que não tem ponteiro: mostrar a
     // dica a deixaria parada na última posição do mouse. O estado da mira (o
     // realce e a linha de status) já diz o mesmo sem depender da tela.
@@ -14205,7 +14214,7 @@ function _atualizarMiraInstrumentoHover(tx, ty, tip, event){
   } else {
     tip.style.display = 'none';
     _aimSetHover(tx, ty, 'blocked');
-    _aimSetStatus('Selecione um inimigo destacado dentro do alcance.', '#ff9aa2');
+    _aimSetStatus(t('ui.instrumento.selecione_um_inimigo_destacado_dentro_do_a'), '#ff9aa2');
   }
   return true;
 }
@@ -14260,7 +14269,7 @@ function escolherDirecaoInstrumento(b, onEscolher){
   _aimStart({
     kind:'instrumento_direcao',
     title:`${b.icon || '📯'} ${(b.habilidade_nome || t('ui.instrumento.escolher_direcao')).toUpperCase()}`,
-    instruction:'Selecione uma das oito casas ao redor do bardo.',
+    instruction:t('ui.instrumento.selecione_uma_das_oito_casas_ao_redor_do_b'),
     color:'#ff8c66', targetLabel:t('ui.instrumento.direcao'), range:directions, area:directions,
     cancelText:t('ui.instrumento.escolha_de_direcao_cancelada'),
     cleanup:()=>{ window._modoDirecaoInstrumento = null; },
@@ -14273,7 +14282,7 @@ function _clickTileDirecaoInstrumento(tx, ty){
   const key = `${tx},${ty}`;
   if(!mode.directions.has(key)){
     _aimSetHover(tx, ty, 'blocked');
-    _aimSetStatus('Escolha uma das oito casas ao redor do bardo.', '#ff9aa2');
+    _aimSetStatus(t('ui.instrumento.escolha_uma_das_oito_casas_ao_redor_do_bar'), '#ff9aa2');
     return;
   }
   const [dx, dy] = _dir8(tx - me.pos[0], ty - me.pos[1]);
@@ -14343,7 +14352,7 @@ function _escolherDirecaoInstrumentoLegacy(b, onEscolher){
     if(_instrumentoDirFechar === fechar) _instrumentoDirFechar = null;
   }
   function onKey(e){
-    if(e.key === 'Escape'){ fechar(); toast('Cancelado.', 'var(--text2)'); e.preventDefault(); }
+    if(e.key === 'Escape'){ fechar(); toast(t('ui.instrumento.cancelado'), 'var(--text2)'); e.preventDefault(); }
   }
   overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
   document.addEventListener('keydown', onKey);
@@ -14377,18 +14386,18 @@ function renderImprovisoQuadro(msg){
   const linhas = (msg.cascata || []).map(c => `
     <li style="font-size:.82rem; padding:4px 8px; margin-bottom:4px;
                background:var(--bg3); border-radius:var(--radius); text-align:left;">
-      🎲 ${c.res} — ${c.nome}${c.precisa_alvo ? ' <span style="color:var(--orange);">(aguardando alvo)</span>' : ''}
+      🎲 ${c.res} — ${c.nome}${c.precisa_alvo ? ' <span style="color:var(--orange);">'+t('ui.hud.aguardando_alvo_parens')+'</span>' : ''}
     </li>`).join('');
 
   let destaque = '';
-  if(msg.grande_encore) destaque = `<div style="color:var(--red); font-weight:bold; margin:6px 0;">🎺 GRANDE ENCORE!</div>`;
-  else if(msg.encore_menor) destaque = `<div style="color:var(--gold); font-weight:bold; margin:6px 0;">🎶 Encore Menor!</div>`;
+  if(msg.grande_encore) destaque = `<div style="color:var(--red); font-weight:bold; margin:6px 0;">${t('ui.instrumento.grande_encore')}</div>`;
+  else if(msg.encore_menor) destaque = `<div style="color:var(--gold); font-weight:bold; margin:6px 0;">${t('ui.instrumento.encore_menor')}</div>`;
 
   painel.innerHTML = `
-    <div style="color:var(--gold); font-weight:bold; font-size:1rem; margin-bottom:2px;">🪗 Improviso</div>
+    <div style="color:var(--gold); font-weight:bold; font-size:1rem; margin-bottom:2px;" data-i18n="ui.hud.improviso_2">🪗 Improviso</div>
     ${destaque}
     <ul style="list-style:none; padding:0; margin:10px 0 6px;">
-      ${linhas || '<li style="color:var(--text2); font-size:.82rem;">Nada aconteceu.</li>'}
+      ${linhas || '<li style="color:var(--text2); font-size:.82rem;">'+t('ui.instrumento.nada_aconteceu')+'</li>'}
     </ul>
     <button class="btn-cancel" id="improviso-ok-btn" style="color:var(--gold); border-color:var(--gold);">OK</button>`;
 
@@ -14419,8 +14428,8 @@ function aimNextImprovisoAlvo(pendentes, i){
   if(step.alvo_tipo === 'monstro'){
     const gs = GS.gameState;
     const alvos = (gs && gs.monsters || []).filter(m => m && m.hp > 0);
-    if(!alvos.length){ toast('Nenhum inimigo vivo para o Improviso.', 'var(--orange)'); return; }
-    _iniciarMiraInstrumentoAlvo(GS.me, { icon:'🪗', habilidade_nome:'Improviso' }, 0,
+    if(!alvos.length){ toast(t('ui.hud.nenhum_inimigo_vivo_para_o_improviso'), 'var(--orange)'); return; }
+    _iniciarMiraInstrumentoAlvo(GS.me, { icon:'🪗', habilidade_nome:t('ui.hud.improviso') }, 0,
       id => { GS.improvisoAlvo(id, null); aimNextImprovisoAlvo(pendentes, i + 1); }, alvos);
   } else if(step.alvo_tipo === 'direcao'){
     escolherDirecaoInstrumento({ icon: '🪗', habilidade_nome: t('ui.instrumento.improviso_direcao') },
@@ -14560,7 +14569,7 @@ function abrirPainelGuerreiroLuz(){
       const cap = GS.paladinLuzMaxAtributos ? GS.paladinLuzMaxAtributos() : 2;
       const ativos = Object.values(_bonusGuerreiro).filter(v => v > 0).length;
       if(ativos >= cap){
-        toast(`Guerreiro da Luz permite ${cap} atributo(s) ativo(s) — evolua na Guilda.`, 'var(--gold)');
+        toast(t('ui.paladino.guerreiro_luz_permite', {n: cap}), 'var(--gold)');
         return;
       }
     }
@@ -14584,7 +14593,7 @@ function _aliadosNoRaioPaladin(me, raio){
   const pr = st.prisoner;
   if(pr && pr.alive && pr.freed && pr.pos &&
       Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr)){
-    alvos.push({...pr, id:'__prisioneiro__', name:pr.nome || 'Prisioneiro', emoji:'🔗'});
+    alvos.push({...pr, id:'__prisioneiro__', name:pr.nome || t('ui.hud.prisioneiro'), emoji:'🔗'});
   }
   return alvos;
 }
@@ -14597,12 +14606,12 @@ function iniciarModoProtetor(){
     toast(t('ui.paladino.protetor_so_turno'), 'var(--orange)'); return;
   }
   if(me.bonus_action_used){ toast(t('ui.hud.acao_bonus_ja_usada'), 'var(--orange)'); return; }
-  if(me.fome < 2 || me.sede < 2){ toast('Protetor requer 🍖2 e 💧2.', 'var(--orange)'); return; }
+  if(me.fome < 2 || me.sede < 2){ toast(t('ui.hud.protetor_requer_2_e_2'), 'var(--orange)'); return; }
   const raio = GS.paladinDefensorRaio ? GS.paladinDefensorRaio() : 4;
   const alvos = _aliadosNoRaioPaladin(me, raio);
   if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
   if(alvos.length === 1){ send({ type:'protetor', target_id:alvos[0].id }); return; }
-  openTargetModal(`🛡️ Protetor — Escolha o aliado (raio ${raio})`, alvos, 'player',
+  openTargetModal(t('ui.paladino.protetor_escolha_aliado', {raio}), alvos, 'player',
     id => send({ type:'protetor', target_id:id }));
 }
 
@@ -14649,12 +14658,12 @@ function _enviarImposicaoMaos(targetId){
           style="width:26px;height:26px;background:transparent;border:1px solid ${extra<3?'#c8a951':'#2a2a2a'};color:${extra<3?'#c8a951':'#4a4a4a'};cursor:${extra<3?'pointer':'not-allowed'};font-size:15px;">+</button>
       </div>
       <div style="padding:8px 10px;margin-bottom:10px;background:rgba(255,133,27,0.06);border:1px solid #ff851b33;display:flex;justify-content:space-between;">
-        <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">CUSTO TOTAL</span>
+        <span style="color:#8a7a5a;font-size:9px;letter-spacing:2px;" data-i18n="ui.hud.custo_total">CUSTO TOTAL</span>
         <span style="color:#ff851b;font-size:10px;">🍖-${custoFome} 💧-${custoSede}</span>
       </div>
       <div style="display:flex;gap:6px;">
-        <button onclick="document.getElementById('painel-imposicao-extra').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">CANCELAR</button>
-        <button onclick="window._imposicaoExtraConfirmar()" style="flex:2;padding:8px;background:rgba(200,169,81,0.15);border:1px solid #c8a951;color:#c8a951;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">🙏 CURAR</button>
+        <button onclick="document.getElementById('painel-imposicao-extra').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
+        <button onclick="window._imposicaoExtraConfirmar()" style="flex:2;padding:8px;background:rgba(200,169,81,0.15);border:1px solid #c8a951;color:#c8a951;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.hud.curar">🙏 CURAR</button>
       </div>`;
   }
   render();
@@ -14710,7 +14719,7 @@ function _paladinSkillBtn(me, sk){
     }
   } else if(sk.id === 'regeneracao_divina'){
     const _raioRegen = GS.paladinRegenRaio ? GS.paladinRegenRaio() : 0;
-    const _descRegen = _raioRegen > 0 ? `+1 HP por turno + aliados em raio ${_raioRegen}` : '+1 HP por turno';
+    const _descRegen = _raioRegen > 0 ? t('ui.paladino.regen_aliados_raio', {raio: _raioRegen}) : t('ui.paladino.1_hp_por_turno');
     if(me.regeneracao_ativa){
       setBtn(`✨ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativa')}</small>`,
              _descRegen, `🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
@@ -14718,7 +14727,7 @@ function _paladinSkillBtn(me, sk){
     } else {
       const hpFull = (me.hp != null && me.max_hp != null && me.hp >= me.max_hp);
       const aviso  = hpFull ? ' <small style="color:var(--text2);font-size:.62rem;">HP cheio</small>'
-                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                   : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
       setBtn(`✨ ${sk.name}${aviso}`, _descRegen, costStr,
              !myTurnPlay || hpFull, () => send({type:'acao_livre_richard', habilidade_id:'regeneracao_divina'}), false);
     }
@@ -14726,23 +14735,23 @@ function _paladinSkillBtn(me, sk){
     const _dadosSagrado = GS.paladinAtaqueSagradoDados ? GS.paladinAtaqueSagradoDados() : 1;
     if(me.golpe_sagrado_ativo){
       setBtn(`⚔️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
-             `+${_dadosSagrado}d8 sagrado por ataque`, `manut. 🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
+             t('ui.paladino.d8_sagrado_por_ataque', {n: _dadosSagrado}), `manut. 🍖1 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'desativar_golpe_sagrado'}), true);
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
-                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
       setBtn(`⚔️ ${sk.name}${aviso}`, sk.description || sk.desc || '', costStr, !pode,
              () => send({type:'golpe_sagrado'}), false);
     }
   } else if(sk.id === 'protetor'){
     const _raioDef  = GS.paladinDefensorRaio  ? GS.paladinDefensorRaio()  : 4;
     const _nivelDef = GS.paladinDefensorNivel ? GS.paladinDefensorNivel() : 1;
-    const _splitDef = _nivelDef === 3 ? '50/50' : `ataques 50/50 · outros ${_nivelDef === 2 ? '65/35' : '75/25'}`;
+    const _splitDef = _nivelDef === 3 ? '50/50' : t('ui.paladino.split_defensor', {split: _nivelDef === 2 ? '65/35' : '75/25'});
     if(me.protetor_ativo){
       const alvo = (GS.gameState?.players || []).find(p => String(p.id) === String(me.protetor_alvo))
         || (GS.gameState?.prisoner && String(me.protetor_alvo) === '__prisioneiro__'
-          ? {name:GS.gameState.prisoner.nome || 'Prisioneiro'} : null);
+          ? {name:GS.gameState.prisoner.nome || t('ui.paladino.prisioneiro')} : null);
       setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
              alvo ? `protegendo ${alvo.name} (${_splitDef})` : '—',
              `manut. 🍖1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
@@ -14750,14 +14759,14 @@ function _paladinSkillBtn(me, sk){
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
-                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
       setBtn(`🛡️ ${sk.name}${aviso}`, `${sk.description || sk.desc || ''} (raio ${_raioDef}; ${_splitDef})`, costStr, !pode,
              () => iniciarModoProtetor(), false);
     }
   } else if(sk.id === 'imposicao_maos'){
     const pode  = myTurnPlay && !me.action_done && temRec;
     const aviso = me.action_done ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>`
-                : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
     const _dadosCura = GS.paladinCuraMaosDados ? GS.paladinCuraMaosDados() : 1;
     setBtn(`🙏 ${sk.name}${aviso}`, `${_dadosCura}d6 + FOR`, costStr, !pode,
            () => iniciarModoImposicaoMaos(), false);
@@ -14884,7 +14893,7 @@ function abrirPainelCriarArmadilha(){
       }).join('')}
       ${selecionada && ((ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.requer_veneno) || (ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.permite_veneno)) ? `
         <div style="margin-top:10px;">
-          <div style="color:#9900cc; font-size:9px; letter-spacing:2px; margin-bottom:6px;">ESCOLHA O VENENO:</div>
+          <div style="color:#9900cc; font-size:9px; letter-spacing:2px; margin-bottom:6px;" data-i18n="ui.armadilha.escolha_o_veneno">ESCOLHA O VENENO:</div>
           ${venenos.map(v => `
             <div onclick="selecionarVenenoPara('${v.id}')" style="
               padding:6px 10px; margin-bottom:3px;
@@ -14894,11 +14903,11 @@ function abrirPainelCriarArmadilha(){
             </div>`).join('')}
         </div>` : ''}
       <div style="display:flex; gap:6px; margin-top:12px;">
-        <button onclick="document.getElementById('painel-armadilha').remove()" style="flex:1; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;">CANCELAR</button>
+        <button onclick="document.getElementById('painel-armadilha').remove()" style="flex:1; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
         <button onclick="confirmarCriarArmadilha()" ${!selecionada ? 'disabled' : ''} style="flex:2; padding:8px;
           background:${selecionada?'rgba(200,169,81,0.15)':'transparent'};
           border:1px solid ${selecionada?'#c8a951':'#4a4a4a'};
-          color:${selecionada?'#c8a951':'#4a4a4a'}; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;">🪤 POSICIONAR</button>
+          color:${selecionada?'#c8a951':'#4a4a4a'}; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.armadilha.posicionar">🪤 POSICIONAR</button>
       </div>`;
   }
 
@@ -14910,7 +14919,7 @@ function abrirPainelCriarArmadilha(){
   window.confirmarCriarArmadilha = function(){
     if(!selecionada) return;
     const arm = ARMADILHAS_LUCCAS.find(a => a.id === selecionada);
-    if(arm?.requer_veneno && !veneno_id){ GS.adicionarLog('⚠️ Escolha um veneno para a armadilha'); return; }
+    if(arm?.requer_veneno && !veneno_id){ GS.adicionarLog(t('ui.armadilha.escolha_um_veneno_para_a_armadilha')); return; }
     document.getElementById('painel-armadilha')?.remove();
     _ativarModoPlacementArmadilha(selecionada, veneno_id);
   };
@@ -14933,10 +14942,10 @@ function _ativarModoPlacementArmadilha(tipoId, venenoId){
     }
   }
   _aimStart({
-    kind: 'armadilha', title: `🪤 ${meta?.nome || 'POSICIONAR ARMADILHA'}`,
-    instruction: meta?.apenas_objeto ? t('ui.armadilha.selecione_um_objeto_solido_adjacente') : 'Selecione a sua casa ou uma casa adjacente.',
-    color: '#c8a951', targetLabel: meta?.apenas_objeto ? 'OBJETO' : 'CASA', range, area,
-    cancelText: 'Posicionamento de armadilha cancelado.',
+    kind: 'armadilha', title: `🪤 ${meta?.nome || t('ui.armadilha.posicionar_armadilha')}`,
+    instruction: meta?.apenas_objeto ? t('ui.armadilha.selecione_um_objeto_solido_adjacente') : t('ui.armadilha.selecione_a_sua_casa_ou_uma_casa_adjacente'),
+    color: '#c8a951', targetLabel: meta?.apenas_objeto ? t('ui.armadilha.objeto') : t('ui.armadilha.casa'), range, area,
+    cancelText: t('ui.armadilha.posicionamento_de_armadilha_cancelado'),
     cleanup: () => { window._modoPlacementArmadilha = null; },
   });
 }
@@ -14957,8 +14966,8 @@ function onClickTileParaArmadilha(tx, ty){
       GS.decorTilesOf(d).some(([x,y]) => x === tx && y === ty) && !d.pisavel);
     const objeto = objetos[0];
     if(!objeto){
-      _aimSetStatus(t('ui.armadilha.selecione_um_objeto_solido_adjacente_2'), '#ffb168');
-      toast('Selecione um objeto ao alcance.', 'var(--orange)'); return;
+      _aimSetStatus(t('ui.armadilha.selecione_um_objeto_solido_adjacente'), '#ffb168');
+      toast(t('ui.armadilha.selecione_um_objeto_ao_alcance'), 'var(--orange)'); return;
     }
     send({ type:'criar_armadilha', tipo:tipoId, decor_id:objeto.id, tx:tx, ty:ty, veneno_id:venenoId || null });
   } else {
@@ -14995,7 +15004,7 @@ function abrirPainelVenenoRapido(){
         <div style="color:#cc44ff; font-size:11px; margin-bottom:3px;">${v.icone} ${v.nome}</div>
         <div style="color:#8a7a5a; font-size:9px;">${v.descricao || ''}</div>
       </div>`).join('')}
-    <button onclick="document.getElementById('painel-veneno-rapido').remove()" style="width:100%; margin-top:10px; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;">CANCELAR</button>`;
+    <button onclick="document.getElementById('painel-veneno-rapido').remove()" style="width:100%; margin-top:10px; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>`;
   document.body.appendChild(painel);
 
   window.confirmarVenenoRapido = function(venenoId){
@@ -15057,7 +15066,7 @@ function _rogueSkillBtn(me, sk){
     } else {
       const pode  = myTurnPlay && !me.bonus_action_used && temRec;
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>`
-                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                  : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
       setBtn(`🌑 ${sk.name}${aviso}`, descEsc, costStr, !pode,
              () => send({type:'esconder_sombras'}), false);
     }
@@ -15068,15 +15077,15 @@ function _rogueSkillBtn(me, sk){
     const doisSlots = GS.ladinoVeneno2Slots ? GS.ladinoVeneno2Slots() : false;
     if(me.weapon_poison){
       const hits = me.weapon_poison_hits ?? 0;
-      const slot2 = me.weapon_poison_2 ? ` + 2º veneno (${me.weapon_poison_2_hits ?? 0} golpe(s))` : (doisSlots ? ' · pode aplicar um 2º veneno' : '');
+      const slot2 = me.weapon_poison_2 ? t('ui.ladino.segundo_veneno_golpes', {n: me.weapon_poison_2_hits ?? 0}) : (doisSlots ? t('ui.ladino.pode_aplicar_segundo_veneno') : '');
       setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● ${t('ui.hud.arma_envenenada')}</small>`,
-             `${hits}/${maxHits} golpe(s) restante(s)${slot2} — clique p/ trocar`, costStr,
+             t('ui.ladino.golpes_restantes_trocar', {hits, max: maxHits, extra: slot2}), costStr,
              !(myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0),
              () => abrirPainelVenenoRapido(), true);
     } else {
       const pode  = myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0;
-      const aviso = venenos.length === 0 ? ' <small style="color:var(--red);font-size:.62rem;">sem venenos</small>' : '';
-      setBtn(`☠️ ${sk.name}${aviso}`, `dura ${maxHits} golpe(s) certeiro(s)${doisSlots?' · '+t('ui.ladino.dois_venenos'):''}`, costStr, !pode,
+      const aviso = venenos.length === 0 ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_venenos')+'</small>' : '';
+      setBtn(`☠️ ${sk.name}${aviso}`, t('ui.ladino.dura_golpes_certeiros', {n: maxHits, extra: doisSlots?' · '+t('ui.ladino.dois_venenos'):''}), costStr, !pode,
              () => abrirPainelVenenoRapido(), false);
     }
 
@@ -15094,8 +15103,8 @@ function _rogueSkillBtn(me, sk){
     const desc = t('ui.hud.criar_armadilha_desc',{b:bonusDes ? ` (+${bonusDes})` : ''})+(recupera ? ' '+t('ui.hud.recupera_ouro') : '');
     setBtn(`🔧 ${sk.name}${ativo ? ` <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.selecione_casa')}</small>` : ''}`,
            desc, '🍖1 💧1', !(pode || ativo), () => {
-             if (ativo) { GS.pendingSkill = null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast('Habilidade cancelada.', 'var(--text2)'); }
-             else { GS.pendingSkill = { ...sk, target: 'tile' }; _registrarEfeitoVisualLocal(sk.id, 'skill'); renderMyPanel(GS.gameState); toast('Selecione uma casa adjacente para desarmar.', 'var(--gold)'); }
+             if (ativo) { GS.pendingSkill = null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast(t('ui.ladino.habilidade_cancelada'), 'var(--text2)'); }
+             else { GS.pendingSkill = { ...sk, target: 'tile' }; _registrarEfeitoVisualLocal(sk.id, 'skill'); renderMyPanel(GS.gameState); toast(t('ui.ladino.selecione_uma_casa_adjacente_para_desarmar'), 'var(--gold)'); }
            }, false);
 
   } else {
@@ -15205,13 +15214,13 @@ function abrirPainelCura(){
           font-family:'Cinzel',serif;font-size:10px;cursor:pointer;">${o.l}</button>`).join('')}
       </div>
       <div style="padding:10px 12px;margin-bottom:12px;background:rgba(68,204,136,0.06);border:1px solid #44cc8833;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;">Cura estimada</span><span style="color:#44cc88;font-size:12px;font-weight:bold;">${numDados}d8 ${bonusInt>=0?'+':''}${bonusInt} INT</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;">Alcance</span><span style="color:#44cc88;font-size:11px;">${alcance} quadrado(s)</span></div>
-        <div style="display:flex;justify-content:space-between;"><span style="color:#8a7a5a;font-size:10px;">Custo</span><span style="color:#ff851b;font-size:11px;">${custoFome>0?`🍖-${custoFome} `:''}💧-${custoSede}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;" data-i18n="ui.hud.cura_estimada">Cura estimada</span><span style="color:#44cc88;font-size:12px;font-weight:bold;">${t('ui.clerigo.cura_formula', {n: numDados, sinal: bonusInt>=0?'+':'', bonus: bonusInt})}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:#8a7a5a;font-size:10px;" data-i18n="ui.pergaminho.alcance">Alcance</span><span style="color:#44cc88;font-size:11px;">${t('ui.clerigo.n_quadrados', {n: alcance})}</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="color:#8a7a5a;font-size:10px;" data-i18n="ui.acoes.custo">Custo</span><span style="color:#ff851b;font-size:11px;">${custoFome>0?`🍖-${custoFome} `:''}💧-${custoSede}</span></div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button onclick="document.getElementById('painel-cura').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">CANCELAR</button>
-        <button onclick="window._curaConfirmar()" style="flex:2;padding:8px;background:rgba(68,204,136,0.15);border:1px solid #44cc88;color:#44cc88;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">🙌 CURAR</button>
+        <button onclick="document.getElementById('painel-cura').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
+        <button onclick="window._curaConfirmar()" style="flex:2;padding:8px;background:rgba(68,204,136,0.15);border:1px solid #44cc88;color:#44cc88;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.hud.curar_2">🙌 CURAR</button>
       </div>`;
   }
 
@@ -15220,14 +15229,14 @@ function abrirPainelCura(){
   window._curaConfirmar  = () => {
     const meNow = GS.me;
     const alcance = 1 + alcanceExtra * 3;
-    if((meNow.sede||0) < numDados){ toast(`Sede insuficiente 💧${numDados}`, 'var(--orange)'); return; }
-    if((meNow.fome||0) < alcanceExtra){ toast(`Fome insuficiente 🍖${alcanceExtra}`, 'var(--orange)'); return; }
+    if((meNow.sede||0) < numDados){ toast(t('ui.clerigo.sede_insuficiente', {n: numDados}), 'var(--orange)'); return; }
+    if((meNow.fome||0) < alcanceExtra){ toast(t('ui.clerigo.fome_insuficiente', {n: alcanceExtra}), 'var(--orange)'); return; }
     const alvos = _aliadosVivosNoRaioCleric(meNow, alcance, true);
     document.getElementById('painel-cura')?.remove();
-    if(!alvos.length){ toast('Nenhum aliado no alcance.', 'var(--orange)'); return; }
+    if(!alvos.length){ toast(t('ui.hud.nenhum_aliado_no_alcance'), 'var(--orange)'); return; }
     const enviar = (id) => send({ type:'cura', target_id:id, num_dados:numDados, alcance_extra:alcanceExtra });
     if(alvos.length === 1){ enviar(alvos[0].id); return; }
-    openTargetModal(`🙌 Cura ${numDados}d8 — alcance ${alcance}q`, alvos, 'player', enviar);
+    openTargetModal(t('ui.clerigo.cura_modal_titulo', {n: numDados, alcance}), alvos, 'player', enviar);
   };
 
   render();
@@ -15267,7 +15276,7 @@ function abrirPainelCuraArea(){
         <div style="display:flex;justify-content:space-between;"><span style="color:#8a7a5a;font-size:10px;">${t('ui.instrumento.custo')}</span><span style="color:#ff851b;font-size:11px;">🍖-${custo} 💧-${custo}</span></div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button onclick="document.getElementById('painel-cura-area').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;cursor:pointer;">CANCELAR</button>
+        <button onclick="document.getElementById('painel-cura-area').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
         <button onclick="window._curaAreaConfirmar()" style="flex:2;padding:8px;background:rgba(68,204,136,0.15);border:1px solid #44cc88;color:#44cc88;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">${t('ui.clerigo.curar_area_botao')}</button>
       </div>`;
   }
@@ -15275,7 +15284,7 @@ function abrirPainelCuraArea(){
   window._curaAreaSetDados  = (n) => { numDados = n; render(); };
   window._curaAreaConfirmar = () => {
     const meNow = GS.me, custo = numDados * 4;
-    if((meNow.fome||0) < custo || (meNow.sede||0) < custo){ toast(`Recursos insuficientes 🍖${custo} 💧${custo}`, 'var(--orange)'); return; }
+    if((meNow.fome||0) < custo || (meNow.sede||0) < custo){ toast(t('ui.clerigo.recursos_insuficientes', {n: custo}), 'var(--orange)'); return; }
     send({ type:'cura_area', num_dados:numDados });
     document.getElementById('painel-cura-area')?.remove();
   };
@@ -15314,9 +15323,9 @@ function _abrirPainelEscolhaPurificacao(alvo, efeitos){
     background:rgba(10,8,5,0.97);border:1px solid #cc44ff;width:260px;z-index:200;
     padding:16px;font-family:'Cinzel',serif;`;
   painel.innerHTML = `
-    <div style="font-family:'Cinzel Decorative',serif;color:#cc44ff;font-size:12px;margin-bottom:10px;text-align:center;">✨ PURIFICAR ${(alvo.name||'').toUpperCase()}</div>
+    <div style="font-family:'Cinzel Decorative',serif;color:#cc44ff;font-size:12px;margin-bottom:10px;text-align:center;">${t('ui.clerigo.purificar_alvo_titulo', {nome: (alvo.name||'').toUpperCase()})}</div>
     ${efeitos.map(ef => `<button onclick="window._purificarConfirmar('${alvo.id}','${ef.id}')" style="width:100%;padding:10px 12px;margin-bottom:4px;background:rgba(204,68,255,0.06);border:1px solid #cc44ff44;color:#c8b89a;font-family:'Cinzel',serif;font-size:11px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;" onmouseover="this.style.borderColor='#cc44ff'" onmouseout="this.style.borderColor='#cc44ff44'"><span>${ef.icone} ${_rotulo(ef.id, 'ui.purificacao', ef.id)}</span><span style="color:#ff851b;font-size:10px;">${ef.custo}</span></button>`).join('')}
-    <button onclick="document.getElementById('painel-purificacao').remove()" style="width:100%;margin-top:6px;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">CANCELAR</button>`;
+    <button onclick="document.getElementById('painel-purificacao').remove()" style="width:100%;margin-top:6px;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>`;
   document.body.appendChild(painel);
   window._purificarConfirmar = (targetId, tipo) => {
     send({ type:'purificacao', target_id:targetId, tipo });
@@ -15372,7 +15381,7 @@ function _clericSkillBtn(me, sk){
   } else if(sk.id === 'ressurreicao'){
     const temRec = (me.fome||0) >= 10 && (me.sede||0) >= 10;
     const aviso  = acaoUsada ? avisoAcao
-                 : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">sem recursos</small>' : '';
+                 : !temRec ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_recursos')+'</small>' : '';
     setBtn(`💫 ${sk.name}${aviso}`, desc, costStr, !podePrincipal || !temRec, () => iniciarModoRessurreicao());
   } else {
     setBtn(`${sk.icon || ''} ${sk.name}`, desc, costStr, !myTurnPlay, null);
@@ -16111,7 +16120,7 @@ function _renderAcaoSenhorDasAguas(heroi) {
   const limite = _senhorAguasLimite(zona, heroi);
   const restante = _senhorAguasRestante(zona, heroi);
   if (limite > 0 && restante <= 0) {
-    return `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid #4fc3f744;background:rgba(79,195,247,.06);color:#8fcbe2;font-size:9px;line-height:1.5;">🌊 Redemoinhos: ${limite}/${limite} criados nesta magia.</div>`;
+    return `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid #4fc3f744;background:rgba(79,195,247,.06);color:#8fcbe2;font-size:9px;line-height:1.5;">${t('ui.magia.redemoinhos_criados', {n: limite, max: limite})}</div>`;
   }
   const disponivel = rodada >= Number(zona.disponivel_em || 0);
   if (!disponivel) {
@@ -16257,7 +16266,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
             const livreParaTeste = possuiTesteLivre || (cls === 'mage' && (id === 'metamorfose' || id === 'teleporte'));
             return criarCartaMagia(id, false, livreParaTeste || livres > 0, false, 'jogo');
           }).join('')}
-          ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">Nenhuma magia memorizada</div>` : ''}
+          ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">${t('ui.magia.nenhuma_magia_memorizada')}</div>` : ''}
         </div>
       </div>`;
   }
@@ -16424,7 +16433,7 @@ function _metamorfoseEscolherAlvo(id){
   const forms=catalog.filter(f=>unlocked.has(f.type) && Number(f.cr||0)<=Number(me.level||1));
   const box=document.querySelector('#metamorfose-picker section');
   if(!box) return;
-  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">Alvo: <b>${_esc(alvo.name||'criatura')}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div data-i18n="ui.magia.nenhuma_forma_desbloqueada_disponivel">Nenhuma forma desbloqueada disponível.</div>'}</div>`;
+  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;" data-i18n="ui.magia.escolha_a_forma">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">${t('ui.magia.alvo_rotulo')} <b>${_esc(alvo.name||t('ui.magia.criatura'))}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div data-i18n="ui.magia.nenhuma_forma_desbloqueada_disponivel">Nenhuma forma desbloqueada disponível.</div>'}</div>`;
   box.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
   box.querySelectorAll('[data-meta-form]').forEach(b=>b.onclick=()=>_metamorfoseEnviar(b.dataset.metaForm));
 }
@@ -16548,7 +16557,7 @@ function castarPergaminho(item) {
   if (!item || item.effect !== 'scroll') return;
   const magiaId = item.magia_id;
   const m = GRIMORIO_CLIENT[magiaId];
-  if (!m) { toast('Pergaminho com magia desconhecida.', '#ff6b6b'); return; }
+  if (!m) { toast(t('ui.hud.pergaminho_com_magia_desconhecida'), '#ff6b6b'); return; }
   const me = _meVivoNaVez();
   if (!me) { toast(t('ui.hud.fora_de_turno_ou_acao_usada'), '#ff6b6b'); return; }
   if (me.class_id !== 'mage' && me.class_id !== 'cleric') {
@@ -16660,7 +16669,7 @@ function _clickTileTeleporteDestino(tx, ty){
   if(!mode) return;
   const key = `${tx},${ty}`;
   if(!mode.destinos.has(key)){
-    _aimSetStatus('Destino bloqueado ou ocupado. Escolha uma casa verde.', '#ff9aa2');
+    _aimSetStatus(t('ui.hud.destino_bloqueado_ou_ocupado_escolha_uma_c'), '#ff9aa2');
     return;
   }
   GS.confirmarTeleporte(mode.requestId, tx, ty);
@@ -16710,9 +16719,9 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
     kind: 'magia',
     title: `${m.icone} ${m.nome.toUpperCase()}`,
     instruction: _rotulo(alvoTipo, 'ui.magia.dica', t('ui.magia.dica_padrao')),
-    color: '#c8a951', targetLabel: ['foe', 'foe_or_player'].includes(alvoTipo) ? 'ALVO' : alvoTipo === 'player_target' ? 'JOGADOR' : alvoTipo === 'ally' ? 'ALIADO' : alvoTipo === 'linha' || alvoTipo === 'cone' ? t('ui.magia.direcao') : 'CASA',
+    color: '#c8a951', targetLabel: ['foe', 'foe_or_player'].includes(alvoTipo) ? t('ui.magia.alvo') : alvoTipo === 'player_target' ? t('ui.magia.jogador') : alvoTipo === 'ally' ? t('ui.magia.aliado') : alvoTipo === 'linha' || alvoTipo === 'cone' ? t('ui.magia.direcao') : t('ui.magia.casa'),
     range: window._spellHL.range, area: window._spellHL.area, double: window._spellHL.double,
-    cancelText: 'Magia cancelada.',
+    cancelText: t('ui.magia.magia_cancelada'),
     cleanup: () => {
       const cancelada = window._modoMagia?.magiaId;
       window._modoMagia = null;
@@ -16736,7 +16745,7 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
   if (alvoTipo === 'self_area') return { ok: true, fields: {} };          // centrada no caster
   if (alvoTipo === 'adjacent_tile') {
     if (!me || Math.max(Math.abs(me.pos[0] - tx), Math.abs(me.pos[1] - ty)) !== 1)
-      return { ok: false, msg: 'Escolha uma casa adjacente.' };
+      return { ok: false, msg: t('ui.magia.escolha_uma_casa_adjacente') };
     return { ok: true, fields: { tx, ty } };
   }
   if (alvoTipo === 'tile')      return { ok: true, fields: { tx, ty } };
@@ -16749,7 +16758,7 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
   if (alvoTipo === 'player_target') {
     const alvoJogador = (gs.players || []).find(pp => pp.alive && pp.id !== me?.id
       && pp.pos[0] === tx && pp.pos[1] === ty);
-    if (!alvoJogador) return { ok: false, msg: 'Escolha outro jogador vivo.' };
+    if (!alvoJogador) return { ok: false, msg: t('ui.magia.escolha_outro_jogador_vivo') };
     if (me && !GS.hasLineOfSight(gs, me.pos[0], me.pos[1], tx, ty))
       return { ok: false, msg: t('ui.magia.parede_bloqueia') };
     return { ok: true, fields: { target_id: alvoJogador.id } };
@@ -16778,7 +16787,7 @@ function _clickTileMagia(tx, ty) {
 
   if (mode.alvoTipo === 'adjacent_tile' && !mode.validTiles?.has(`${tx},${ty}`)) {
     _aimSetStatus(t('ui.magia.casa_invalida_escolha_uma_das_casas_verdes'), '#ffb168');
-    toast('Escolha uma das casas verdes livres.', '#ff6b6b'); return;
+    toast(t('ui.magia.escolha_uma_das_casas_verdes_livres'), '#ff6b6b'); return;
   }
 
   const spec = _specAlvoMagia(mode.alvoTipo, tx, ty);
@@ -17108,7 +17117,7 @@ function _iniciarSenhorDasAguasRedemoinhos(){
     const modo = window._modoSenhorDasAguas;
     if(!modo) return;
     _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-    _aimSetStatus(`${modo.selecionados.size}/${modo.max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar.`, '#94dfb0');
+    _aimSetStatus(t('ui.magia.casas_selecionadas_confirme', {n: modo.selecionados.size, max: modo.max}), '#94dfb0');
     const btn = _aimSessionState.current?.confirmButton;
     if(btn){
       btn.disabled = modo.selecionados.size < 1;
@@ -17120,8 +17129,8 @@ function _iniciarSenhorDasAguasRedemoinhos(){
     kind:'senhor_das_aguas_rodamoinhos',
     title:t('ui.magia.redemoinhos_acao_livre'),
     instruction:t('ui.magia.escolha_ate_casas_senhor_aguas', {max}),
-    color:'#4fc3f7', targetLabel:'SELECIONADO', range:permitidos, area:selecionados,
-    confirmText:'CRIAR REDEMOINHOS',
+    color:'#4fc3f7', targetLabel:t('ui.magia.selecionado'), range:permitidos, area:selecionados,
+    confirmText:t('ui.magia.criar_redemoinhos'),
     canConfirm:()=>window._modoSenhorDasAguas?.selecionados?.size > 0,
     confirm:()=>{
       const modo = window._modoSenhorDasAguas;
@@ -17150,7 +17159,7 @@ function _clickTileSenhorDasAguas(tx, ty){
     return;
   }
   _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-  _aimSetStatus(`${modo.selecionados.size}/${modo.max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar.`, '#94dfb0');
+  _aimSetStatus(t('ui.magia.casas_selecionadas_confirme', {n: modo.selecionados.size, max: modo.max}), '#94dfb0');
   const btn = _aimSessionState.current?.confirmButton;
   if(btn){
     btn.disabled = modo.selecionados.size < 1;
@@ -17175,7 +17184,7 @@ function _iniciarSelecaoChamasIraRocha(msg){
     const modo = window._modoIraRocha;
     if(!modo) return;
     _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-    _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' nesta rodada · ' + modo.colocadas + '/' + modo.total + ' no total. Clique para marcar/desmarcar.', '#ffb168');
+    _aimSetStatus(t('ui.magia.chamas_nesta_rodada_total', {n: modo.selecionados.size, max: modo.max, feitas: modo.colocadas, total: modo.total}), '#ffb168');
     const btn = _aimSessionState.current?.confirmButton;
     if(btn){
       btn.disabled = modo.selecionados.size < 1;
@@ -17217,7 +17226,7 @@ function _clickTileIraRocha(tx, ty){
     return;
   }
   _aimSetHighlights({range: modo.permitidos, area: modo.selecionados});
-  _aimSetStatus(modo.selecionados.size + '/' + modo.max + ' nesta rodada · ' + modo.colocadas + '/' + modo.total + ' no total. Clique para marcar/desmarcar.', '#ffb168');
+  _aimSetStatus(t('ui.magia.chamas_nesta_rodada_total', {n: modo.selecionados.size, max: modo.max, feitas: modo.colocadas, total: modo.total}), '#ffb168');
   const btn = _aimSessionState.current?.confirmButton;
   if(btn){
     btn.disabled = modo.selecionados.size < 1;
@@ -17240,11 +17249,11 @@ function _iniciarModoAnimarMortos(cadaveres, versao = 'animar_mortos') {
   _addCheb(me.pos[0], me.pos[1], 3, alcance);
   _aimStart({
     kind: 'animar_mortos',
-    title: '💀 ANIMAR MORTOS',
+    title: t('ui.animar.animar_mortos'),
     instruction: t('ui.animar.modo_legenda'),
     color: '#d98cff', targetLabel: t('ui.animar.cadaver'), range: alcance,
     area: new Set(cadaveres.map(c => `${c.pos[0]},${c.pos[1]}`)),
-    cancelText: 'Animar Mortos cancelado.',
+    cancelText: t('ui.animar.animar_mortos_cancelado'),
     cleanup: () => {
       const cancelada = window._modoAnimarMortos?.versao;
       window._modoAnimarMortos = null;
@@ -17281,13 +17290,13 @@ function _encerrarModoAnimarMortos() {
 function _keyAnimarMortosEsc(e) {
   if (e.key === 'Escape') {
     _encerrarModoAnimarMortos();
-    toast('Animar Mortos cancelado.', '#888');
+    toast(t('ui.animar.animar_mortos_cancelado'), '#888');
     e.preventDefault();
   }
 }
 
 function _keyMagiaEsc(e) {
-  if (e.key === 'Escape') { _encerrarModoMagia(); toast('Magia cancelada.', '#888'); e.preventDefault(); }
+  if (e.key === 'Escape') { _encerrarModoMagia(); toast(t('ui.magia.magia_cancelada'), '#888'); e.preventDefault(); }
 }
 
 window.castarMagia = castarMagia;
@@ -17338,8 +17347,8 @@ function _iniciarMiraArremesso(item, player){
     kind: 'arremesso_item',
     title: `${catDef.emoji || item.emoji || '🔥'} ${(catDef.nome || item.name || t('ui.arremesso.arremessar')).toUpperCase()}`,
     instruction: _alvoTxt,
-    color: '#ff8c66', targetLabel: isArea ? 'CASA' : 'INIMIGO', range, area: validTargets,
-    cancelText: 'Arremesso cancelado.',
+    color: '#ff8c66', targetLabel: isArea ? t('ui.arremesso.casa') : t('ui.arremesso.inimigo'), range, area: validTargets,
+    cancelText: t('ui.arremesso.arremesso_cancelado'),
     cleanup: () => { window._modoThrowItem = null; GS.pendingThrow = null; },
   });
   GS.adicionarLog(`${catDef.emoji || '🔥'} ` + t(isArea ? 'ui.arremesso.log_mira_area' : 'ui.arremesso.log_mira_alvo'));
@@ -17357,13 +17366,13 @@ function _clickTileThrow(tx, ty){
     GS.throwItemArea(r.itemId, r.tx, r.ty);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_blocked'){
-    const msg = 'Fora do alcance ou parede no caminho.';
+    const msg = t('ui.arremesso.fora_do_alcance_ou_parede_no_caminho');
     _aimSetStatus(msg, '#ffb168');
     toast(msg, 'var(--gold)');
   } else {
     _aimSetStatus(window._modoThrowItem?.area
-      ? 'Escolha uma casa dentro do alcance e sem parede no caminho.'
-      : 'Selecione um inimigo vivo dentro do alcance.', '#ffb168');
+      ? t('ui.arremesso.escolha_uma_casa_dentro_do_alcance_e_sem_p')
+      : t('ui.arremesso.selecione_um_inimigo_vivo_dentro_do_alcanc'), '#ffb168');
   }
   // r === null → clicou fora de um monstro; permanece na mira (ESC cancela).
 }
@@ -17384,7 +17393,7 @@ function _encerrarMiraArremesso(){
 }
 
 function _keyThrowEsc(e){
-  if(e.key === 'Escape'){ _encerrarMiraArremesso(); toast('Arremesso cancelado.', '#888'); e.preventDefault(); }
+  if(e.key === 'Escape'){ _encerrarMiraArremesso(); toast(t('ui.arremesso.arremesso_cancelado'), '#888'); e.preventDefault(); }
 }
 
 // Clique-fora cancela a mira: mousedown fora dos canvas 2D/3D do tabuleiro.
@@ -17395,7 +17404,7 @@ function _clickOutsideThrow(e){
   const cv3d = (typeof g3 !== 'undefined' && g3 && g3.renderer) ? g3.renderer.domElement : null;
   if(alvo === cv2d || alvo === cv3d) return;   // clique no tabuleiro → deixa o handler de tile resolver
   _encerrarMiraArremesso();
-  toast('Arremesso cancelado.', '#888');
+  toast(t('ui.arremesso.arremesso_cancelado'), '#888');
 }
 
 window._iniciarMiraArremesso  = _iniciarMiraArremesso;
@@ -17413,15 +17422,15 @@ function _abrirPickerElemental() {
     "padding:10px 14px;z-index:1001;font-family:'Cinzel',serif;";
   // O nome do elemento vem de ui.elemental.tipo.* (o mesmo id que o servidor usa).
   const tipos = [
-    ['fogo','🔥','Elemental de Fogo · HP32 · 1d10+3'],
-    ['gelo','❄️','Elemental de Gelo · HP36 · 1d10'],
-    ['pedra','🪨','Elemental de Pedra · HP44 · 1d12'],
+    ['fogo','🔥',t('ui.elemental.elemental_de_fogo_hp32_1d10_3')],
+    ['gelo','❄️',t('ui.elemental.elemental_de_gelo_hp36_1d10')],
+    ['pedra','🪨',t('ui.elemental.elemental_de_pedra_hp44_1d12')],
     ['eletrico','⚡',t('ui.elemental.elemental_eletrico_hp32_1d10_alcance_4')],
-    ['ar','🌪️','Elemental de Ar · HP32 · 1d8 · alcance 2'],
+    ['ar','🌪️',t('ui.elemental.elemental_de_ar_hp32_1d8_alcance_2')],
     ['agua','🌊',t('ui.elemental.elemental_de_agua_hp42_1d10')],
   ];
   box.innerHTML =
-    '<span style="color:#c8a951;font-size:11px;letter-spacing:2px;margin-right:4px;">🌪️ CONJURAR</span>' +
+    '<span style="color:#c8a951;font-size:11px;letter-spacing:2px;margin-right:4px;" data-i18n="ui.elemental.conjurar">🌪️ CONJURAR</span>' +
     tipos.map(([id, ic, st]) =>
       `<button onclick="_conjurarElemental('${id}')" title="${st}" style="background:rgba(255,255,255,0.05);` +
       `border:1px solid #c8a95166;color:#e8d8b0;font-family:'Cinzel',serif;font-size:12px;padding:6px 10px;` +
@@ -17497,10 +17506,10 @@ function _aimRenderLegend(session) {
   copy.style.cssText = 'min-width:0;display:grid;gap:2px;';
   const title = document.createElement('strong');
   title.style.cssText = 'color:' + (session.color || '#c8a951') + ';font-size:11px;letter-spacing:1.3px;';
-  title.textContent = session.title || 'MIRA';
+  title.textContent = session.title || t('ui.mira.mira');
   const instruction = document.createElement('span');
   instruction.style.cssText = 'font-size:10px;line-height:1.25;color:#d4c9ae;';
-  instruction.textContent = session.instruction || 'Selecione um alvo no tabuleiro.';
+  instruction.textContent = session.instruction || t('ui.mira.selecione_um_alvo_no_tabuleiro');
   const status = document.createElement('span');
   status.className = 'aim-session-status';
   status.style.cssText = 'min-height:12px;font-size:9px;line-height:1.2;color:#94dfb0;';
@@ -17513,16 +17522,16 @@ function _aimRenderLegend(session) {
     item.style.color = color;
     guide.appendChild(item);
   };
-  chip('#78abff', 'ALCANCE');
+  chip('#78abff', t('ui.mira.alcance'));
   chip('#72e5a5', session.targetLabel || t('ui.mira.valido'));
-  chip('#ff8b92', 'BLOQUEADO');
+  chip('#ff8b92', t('ui.mira.bloqueado'));
   copy.append(title, instruction, guide, status);
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.style.cssText = 'flex:0 0 auto;border:1px solid ' + (session.color || '#c8a951') + ';'
     + 'border-radius:4px;background:rgba(255,255,255,.05);color:#f2dfad;padding:6px 8px;'
     + 'font:700 10px Cinzel,serif;letter-spacing:.7px;cursor:pointer;';
-  cancel.textContent = 'ESC · CANCELAR';
+  cancel.textContent = t('ui.mira.esc_cancelar');
   cancel.onclick = () => _aimEnd({ message: session.cancelText });
   const actions = document.createElement('div');
   actions.style.cssText = 'display:flex;flex:0 0 auto;gap:6px;align-items:center;';
@@ -17530,7 +17539,7 @@ function _aimRenderLegend(session) {
     const confirm = document.createElement('button');
     confirm.type = 'button';
     confirm.style.cssText = 'border:1px solid #72e5a5;border-radius:4px;background:rgba(114,229,165,.12);color:#bff6d2;padding:6px 8px;font:700 10px Cinzel,serif;letter-spacing:.7px;cursor:pointer;';
-    confirm.textContent = session.confirmText || 'CONFIRMAR';
+    confirm.textContent = session.confirmText || t('ui.mira.confirmar');
     confirm.disabled = session.canConfirm ? !session.canConfirm() : false;
     if (confirm.disabled) { confirm.style.opacity = '.45'; confirm.style.cursor = 'not-allowed'; }
     confirm.onclick = () => { if (!confirm.disabled) session.confirm(); };
@@ -17570,7 +17579,7 @@ function _aimSetHoverFromSets(tx, ty, explicitState = null) {
   const state = explicitState || (valid ? 'valid' : 'blocked');
   _aimSetHover(tx, ty, state);
   if (!explicitState)
-    _aimSetStatus(valid ? t('ui.mira.casa_valida_confirme_para_executar') : 'Escolha bloqueada — selecione uma casa destacada.', valid ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(valid ? t('ui.mira.casa_valida_confirme_para_executar') : t('ui.mira.escolha_bloqueada_selecione_uma_casa_desta'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _renderWeaponAimTrajectory3D() {
@@ -17613,7 +17622,7 @@ function _aimHoverMagic(tx, ty) {
     || mode.alvoTipo === 'self_area' || mode.validTiles?.has(key) || window._spellHL.range?.has(key);
   const valid = !!spec.ok && !!inRange;
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') : (spec.msg || 'Escolha uma casa destacada dentro do alcance.'), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') : (spec.msg || t('ui.mira.escolha_uma_casa_destacada_dentro_do_alcan')), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverThrow(tx, ty) {
@@ -17627,7 +17636,7 @@ function _aimHoverPendingSkill(tx, ty) {
   const action = GS.resolveTileClick(tx, ty);
   const valid = action?.type === 'skill';
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : 'Selecione um alvo destacado para esta habilidade.', valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 // Os modos que _aimPreviewAt sabe tratar. Serve de guarda nos manipuladores:
@@ -17808,8 +17817,8 @@ function _aimStart(spec) {
     instruction: spec.instruction,
     status: spec.status || '',
     color: spec.color || '#c8a951',
-    targetLabel: spec.targetLabel || t('ui.mira.valido_2'),
-    cancelText: spec.cancelText || 'Mira cancelada.',
+    targetLabel: spec.targetLabel || t('ui.mira.valido'),
+    cancelText: spec.cancelText || t('ui.mira.mira_cancelada'),
     confirmText: spec.confirmText || '',
     canConfirm: spec.canConfirm,
     confirm: spec.confirm,
@@ -17860,11 +17869,11 @@ function _aimStartPendingSkill(skill) {
   const targetLabel = skill.target === 'enemy' ? 'inimigo' : 'aliado';
   _aimStart({
     kind: 'habilidade',
-    title: `✨ ${(skill.name || skill.nome || skill.id || 'HABILIDADE').toUpperCase()}`,
-    instruction: `Selecione um ${targetLabel} destacado.`,
+    title: `✨ ${(skill.name || skill.nome || skill.id || t('ui.mira.habilidade')).toUpperCase()}`,
+    instruction: t('ui.mira.selecione_um_x_destacado', {alvo: targetLabel}),
     color: skill.target === 'enemy' ? '#c98cff' : '#79bfff', targetLabel: targetLabel.toUpperCase(),
     range, area: valid,
-    cancelText: 'Habilidade cancelada.',
+    cancelText: t('ui.mira.habilidade_cancelada'),
     cleanup: () => {
       const active = GS.pendingSkill;
       GS.pendingSkill = null;
@@ -17880,10 +17889,10 @@ function _aimStartDisarmTrap() {
   const adjacent = new Set();
   _addCheb(me.pos[0], me.pos[1], 1, adjacent);
   _aimStart({
-    kind: 'desarmar_armadilha', title: '🪤 DESARMAR ARMADILHA',
-    instruction: 'Selecione a sua casa ou uma casa adjacente.',
-    color: '#c98cff', targetLabel: 'CASA', range: adjacent, area: adjacent,
-    cancelText: 'Desarme de armadilha cancelado.',
+    kind: 'desarmar_armadilha', title: t('ui.mira.desarmar_armadilha'),
+    instruction: t('ui.mira.selecione_a_sua_casa_ou_uma_casa_adjacente'),
+    color: '#c98cff', targetLabel: t('ui.mira.casa'), range: adjacent, area: adjacent,
+    cancelText: t('ui.mira.desarme_de_armadilha_cancelado'),
     cleanup: () => {
       GS.pendingSkill = null;
       _removerEfeitoVisualLocal('desarmar_armadilha');
@@ -18427,7 +18436,7 @@ function _desenharFogoPersistente2D(ctx, exploredSet, now) {
 // Lewis (cleric): aba de magias = cartas do grimório por círculo.
 function renderAbaMagiasLewis(me){
   return `
-    <div style="color:#8a7a5a;font-size:9px;letter-spacing:3px;margin-bottom:10px;">📜 MAGIAS DO DIA</div>
+    <div style="color:#8a7a5a;font-size:9px;letter-spacing:3px;margin-bottom:10px;" data-i18n="ui.magia.magias_do_dia">📜 MAGIAS DO DIA</div>
     ${renderMagiasFichaEmJogo(me, 'cleric')}`;
 }
 
@@ -18473,7 +18482,7 @@ function renderElementaisLewis(me){
         const habilidades = Array.isArray(a.special_abilities) ? a.special_abilities : [];
         const resumoHabilidades = habilidades.length
           ? habilidades.map(ab => `${ab.icone || '✦'} ${_esc(ab.name || ab.id)}${ab.action_type !== 'passiva' ? ' · ativa' : ''}`).join('<br>')
-          : 'Nenhuma';
+          : t('ui.hud.nenhuma');
         const pct  = Math.max(0, Math.min(100, (a.vida_atual / Math.max(1, a.vida_max)) * 100));
         const corVida = pct > 60 ? '#2ecc40' : pct > 30 ? '#ff851b' : '#ff4136';
         return `
@@ -18490,10 +18499,10 @@ function renderElementaisLewis(me){
                 </div>
                 <div style="color:#8a7a5a;font-size:9px;">❤️ ${a.vida_atual}/${a.vida_max}</div>
               </div>
-              <div style="color:#44cc88;font-size:9px;letter-spacing:1px;text-align:right;line-height:1.6;">🛡️ CA ${a.ca}<br>🎲 ${ataque.damage || a.dano || '—'}<br>👣 ${a.movimento}q</div>
+              <div style="color:#44cc88;font-size:9px;letter-spacing:1px;text-align:right;line-height:1.6;">🛡️ ${t('ui.hud.sigla_ca')} ${a.ca}<br>🎲 ${ataque.damage || a.dano || '—'}<br>👣 ${a.movimento}q</div>
             </div>
             <div style="padding:6px 8px;background:rgba(0,0,0,0.25);border-left:2px solid ${cor};">
-              <div style="color:${cor};font-size:9px;letter-spacing:2px;margin-bottom:2px;">✦ HABILIDADES</div>
+              <div style="color:${cor};font-size:9px;letter-spacing:2px;margin-bottom:2px;" data-i18n="ui.hud.habilidades_2">✦ HABILIDADES</div>
               <div style="color:#c8b89a;font-size:9px;line-height:1.5;">${resumoHabilidades}</div>
             </div>
           </div>`;
@@ -18525,8 +18534,8 @@ function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').repla
 
 function _masterActionResultLabel(msg){
   if(msg.natural_critical || msg.crit) return t('ui.hud.critico_2');
-  if(msg.natural_fumble) return 'FALHA';
-  return msg.hit ? 'ACERTO' : 'ERRO';
+  if(msg.natural_fumble) return t('ui.hud.falha');
+  return msg.hit ? t('ui.hud.acerto') : t('ui.hud.erro');
 }
 
 function _registrarHistoricoAtaque(msg){
@@ -18540,7 +18549,7 @@ function _registrarHistoricoAtaque(msg){
       attackerPos:Array.isArray(msg.attacker_pos) ? msg.attacker_pos.slice(0,2) : null,
       targetPos:Array.isArray(msg.target_pos) ? msg.target_pos.slice(0,2) : null,
       attackerName:String(msg.attacker_name || 'Atacante'), targetName:String(_attackFeedbackTargetName(msg)),
-      attackName:String(msg.attack_name || 'Ataque'), mode:String(msg.advantage_mode || 'normal'),
+      attackName:String(msg.attack_name || t('ui.hud.ataque')), mode:String(msg.advantage_mode || 'normal'),
       area:!!(msg.projectile && msg.projectile.area),
       text:'', updatedAt:Date.now(), seq:_masterHistorySeq++, result:null,
     };
@@ -18590,6 +18599,7 @@ function renderMasterPanel(state){
   host.classList.add('aberto');
 
   const mm = GS.masterManual();
+  const tc = state.test_mode ? state.test_combat : null;
   const commandControl = GS.isCommandController();
   if(mm && window._mpFocoMid !== mm.mid){
     window._mpFocoMid = mm.mid;
@@ -18597,6 +18607,10 @@ function renderMasterPanel(state){
   }
   // A aba Ativo só é o default enquanto existe monstro na janela Manual.
   if(mm && window._masterTabAuto !== mm.mid){ window._masterTab = 'ativo'; window._masterTabAuto = mm.mid; }
+  const testActor = tc?.active ? tc.queue?.[tc.index] : null;
+  if(testActor?.kind === 'hero' && window._masterTabAuto !== ('test:' + testActor.id)){
+    window._masterTab = 'ativo'; window._masterTabAuto = 'test:' + testActor.id;
+  }
   if(!mm) window._masterTabAuto = null;
   const aba = commandControl ? 'ativo' : (window._masterTab || 'monstros');
 
@@ -18606,24 +18620,32 @@ function renderMasterPanel(state){
               :                      _mpAbaMestre(state);
 
   const abas = commandControl
-    ? `<div class="mp-abas"><button class="mp-aba on" data-aba="ativo">🗣️ Comando</button></div>`
+    ? `<div class="mp-abas"><button class="mp-aba on" data-aba="ativo">${t('ui.mestre.aba_comando')}</button></div>`
     : `<div class="mp-abas">
-       <button class="mp-aba${aba==='ativo'?' on':''}"    data-aba="ativo">🎯 Ativo</button>
-       <button class="mp-aba${aba==='monstros'?' on':''}" data-aba="monstros">📋 Monstros <span style="opacity:.6">${nMon}</span></button>
-       <button class="mp-aba${aba==='mestre'?' on':''}"   data-aba="mestre">⚠️ Mestre</button>
+       <button class="mp-aba${aba==='ativo'?' on':''}"    data-aba="ativo" data-i18n="ui.mestre.ativo">🎯 Ativo</button>
+       <button class="mp-aba${aba==='monstros'?' on':''}" data-aba="monstros">${t('ui.mestre.aba_monstros')} <span style="opacity:.6">${nMon}</span></button>
+       <button class="mp-aba${aba==='mestre'?' on':''}"   data-aba="mestre" data-i18n="ui.mestre.mestre">⚠️ Mestre</button>
      </div>`;
   host.innerHTML =
     abas +
      `<div class="mp-corpo"><div class="mp-preview-legend"><span><i class="mp-leg-range"></i> <span data-i18n="ui.mestre.alcance">alcance</span></span><span><i class="mp-leg-zone"></i> <span data-i18n="ui.mestre.area_efetiva">área efetiva</span></span><span><i class="mp-leg-foot"></i> <span data-i18n="ui.mestre.ocupacao">ocupação</span></span></div>${corpo}${_mpHistoricoAcoes(state)}</div>` +
-    (mm ? `<div class="mp-rodape"><button class="mp-encerrar">Encerrar monstro</button></div>` : '');
+    (tc?.active
+      ? `<div class="mp-rodape"><button class="mp-test-end">${t('ui.mestre.teste_encerrar_vez')}</button></div>`
+      : (mm ? `<div class="mp-rodape"><button class="mp-encerrar">${t('ui.mestre.encerrar_monstro')}</button></div>` : ''));
 
   host.querySelectorAll('.mp-aba').forEach(b => {
     b.onclick = () => { window._masterTab = b.dataset.aba; renderMasterPanel(GS.gameState); };
   });
   const fim = host.querySelector('.mp-encerrar');
   if(fim && mm) fim.onclick = () => GS.mestreEncerrarMonstro(mm.mid);
+  const fimTeste = host.querySelector('.mp-test-end');
+  if(fimTeste) fimTeste.onclick = () => GS.testeEncerrarVez();
 
-  if(aba === 'ativo')    _mpWireAtivo(host, state);
+  if(aba === 'ativo') {
+    _mpWireAtivo(host, state);
+    const heroiTeste = _mpHeroiTesteAtivo(state);
+    if(heroiTeste) _mpWireHeroiTesteAtivo(host, heroiTeste);
+  }
   if(aba === 'monstros') _mpWireMonstros(host, state);
   if(aba === 'mestre')   _mpWireMestre(host, state);
   host.querySelectorAll('[data-master-history]').forEach(b => {
@@ -18637,6 +18659,39 @@ function _mpMonstroAtivo(state){
   const mm = GS.masterManual();
   const id = (mm && mm.mid) || window._mpFocoMid;
   return (state.monsters || []).find(x => x.id === id) || null;
+}
+
+function _mpHeroiTesteAtivo(state){
+  const a = state?.test_combat?.active ? state.test_combat.queue?.[state.test_combat.index] : null;
+  return a?.kind === 'hero' ? (state.players || []).find(p => String(p.id) === String(a.id)) || null : null;
+}
+
+function _mpAbaHeroiTesteAtivo(state, p){
+  const alvos = (state.monsters || []).filter(m => m.hp > 0);
+  const alvoOpts = alvos.map(m => `<option value="${_esc(m.id)}">${_esc(m.name || m.type || t('ui.mestre.monstro'))} (${m.hp}/${m.max_hp || m.hp})</option>`).join('');
+  const skills = (p.skills || []).filter(s => s && s.mp != null).map(s =>
+    `<button class="mp-linha hab mp-test-skill" data-skill="${_esc(s.id)}"><span class="txt">✨ ${_esc(s.name || s.id)}</span></button>`).join('');
+  const spells = (p.magias_conhecidas || []).map(id =>
+    `<button class="mp-linha hab mp-test-spell" data-spell="${_esc(id)}"><span class="txt">🔮 ${_esc(id)}</span></button>`).join('');
+  return `<div class="mp-head"><span class="emoji">${_esc(p.emoji || '🧙')}</span><div style="flex:1"><div class="nome">${_esc(p.name || p.class_id || t('ui.mestre.heroi_de_teste'))}</div><div class="sub">${t('ui.mestre.heroi_de_teste_turno_ativo')}</div></div></div>
+    <div class="mp-recursos"><div>${t('ui.mestre.teste_movimento')}<b class="mov">${Number(p.moves_left)||0}</b></div><div>${t('ui.mestre.teste_acao')}${p.action_done ? '<b class="gasta">'+t('ui.mestre.teste_usada')+'</b>' : '<b class="livre">'+t('ui.mestre.teste_livre')+'</b>'}</div><div>${t('ui.mestre.teste_bonus')}${p.bonus_action_used ? '<b class="gasta">'+t('ui.mestre.teste_usada')+'</b>' : '<b class="livre">'+t('ui.mestre.teste_livre')+'</b>'}</div></div>
+    <div class="mp-vitais"><div class="mp-hpbar"><i style="width:${Math.max(0, Math.min(100, Math.round(100*(p.hp||0)/(p.max_hp||1))))}%"></i></div><span>${p.hp}/${p.max_hp || p.hp}</span></div>
+    <div style="font-size:.68rem;color:var(--text2)">🛡️ ${t('ui.hud.sigla_ca')} ${p.ac ?? '—'} · 🍖 ${p.fome ?? '—'} · 💧 ${p.sede ?? '—'}</div>
+    <div class="mp-sec">${t('ui.mestre.acoes_de_teste')}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px"><button class="mp-test-move" data-dx="0" data-dy="-1">↑</button><button class="mp-test-move" data-dx="-1" data-dy="0">←</button><button class="mp-test-move" data-dx="1" data-dy="0">→</button><button class="mp-test-move" data-dx="0" data-dy="1" style="grid-column:2">↓</button></div>
+    <select class="mp-test-target" style="width:100%;margin-top:7px">${alvoOpts || '<option value="">'+t('ui.mestre.sem_alvo_vivo')+'</option>'}</select>
+    <button class="mp-linha atk mp-test-attack" ${alvos.length ? '' : 'disabled'}><span class="txt">${t('ui.mestre.ataque_basico')}</span></button>
+    ${skills ? `<div class="mp-sec">${t('ui.mestre.habilidades_compativeis')}</div>${skills}` : ''}
+    ${spells ? `<div class="mp-sec">${t('ui.mestre.magias_sec')}</div>${spells}` : ''}`;
+}
+
+function _mpWireHeroiTesteAtivo(host, p){
+  const target = () => host.querySelector('.mp-test-target')?.value || null;
+  host.querySelectorAll('.mp-test-move').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'move', {dx:Number(b.dataset.dx), dy:Number(b.dataset.dy)}));
+  const atk = host.querySelector('.mp-test-attack');
+  if(atk) atk.onclick = () => GS.testeAcaoHeroi(p.id, 'attack', {target_id: target()});
+  host.querySelectorAll('.mp-test-skill').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'skill', {skill_id:b.dataset.skill, target_id:target()}));
+  host.querySelectorAll('.mp-test-spell').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'magia', {magia_id:b.dataset.spell, target_id:target()}));
 }
 
 function _mpCustoDe(a){
@@ -18669,15 +18724,17 @@ function _mpCondicoes(m){
   if(m.com_medo || m.medo_rodadas > 0) c.push('😰 amedrontado');
   if(m.perde_turno)                    c.push('💫 atordoado');
   if((m.efeitos_veneno || []).length)  c.push('🧪 envenenado');
-  if(m.mov_reduzido_rodadas > 0)       c.push('🐌 movimento reduzido');
+  if(m.mov_reduzido_rodadas > 0)       c.push(t('ui.mestre.movimento_reduzido'));
   if(m.oculto_sombras)                 c.push('🌫️ oculto');
   if(m.em_chamas_rodadas > 0)          c.push('🔥 em chamas');
   return c;
 }
 
 function _mpAbaAtivo(state){
+  const heroiTeste = _mpHeroiTesteAtivo(state);
+  if(heroiTeste) return _mpAbaHeroiTesteAtivo(state, heroiTeste);
   const m = _mpMonstroAtivo(state);
-  if(!m) return '<div class="mestre-vazio">Nenhum monstro em foco.<br>Clique num monstro no tabuleiro ou na aba Monstros.</div>';
+  if(!m) return '<div class="mestre-vazio">'+t('ui.mestre.nenhum_monstro_em_foco')+'</div>';
   const mm = GS.masterManual();
   const manual = !!(mm && mm.mid === m.id);
   const commandControl = GS.isCommandController();
@@ -18686,7 +18743,7 @@ function _mpAbaAtivo(state){
   let h = `<div class="mp-head">
       <span class="emoji">${m.emoji || '👾'}</span>
       <div style="flex:1">
-        <div class="nome">${_esc(m.name || m.type || 'Monstro')}</div>
+        <div class="nome">${_esc(m.name || m.type || t('ui.mestre.monstro'))}</div>
         <div class="sub">${m.room_id != null ? 'sala '+_esc(String(m.room_id))+' · ' : ''}ND ${m.cr != null ? m.cr : '—'}</div>
       </div>
       <div style="text-align:right">
@@ -18707,7 +18764,7 @@ function _mpAbaAtivo(state){
   }
 
   h += `<div class="mp-vitais"><div class="mp-hpbar"><i style="width:${hpPct}%"></i></div><span>${m.hp}/${m.max_hp || m.hp}</span></div>
-    <div style="font-size:.68rem;color:var(--text2)">🛡️ CA ${m.ac != null ? m.ac : '—'} · 👣 ${m.movement != null ? m.movement : '—'}</div>`;
+    <div style="font-size:.68rem;color:var(--text2)">🛡️ ${t('ui.hud.sigla_ca')} ${m.ac != null ? m.ac : '—'} · 👣 ${m.movement != null ? m.movement : '—'}</div>`;
 
   if(manual && m.voo){
     const altura = Math.max(0, Math.min(10, Math.trunc(Number(m.altura) || 0)));
@@ -18723,11 +18780,11 @@ function _mpAbaAtivo(state){
       ? `<small style="display:block;margin-top:.2rem;color:#ffb36b">${t('ui.voo.risco_queda', {faixa: t('ui.voo.faixa_' + faixaQueda), expressao: expressaoQueda})}</small>`
       : '';
     h += `<div class="mp-altura" style="margin-top:.45rem;padding:.45rem .55rem;border:1px solid rgba(120,190,255,.28);border-radius:8px;background:rgba(40,100,160,.10)">
-        <div style="font-size:.72rem;color:var(--text2);margin-bottom:.3rem">🪽 Altura <b style="color:var(--text)">${altura}</b>/<b style="color:var(--text)">${alturaMax}</b> <small>(custa ${custoAltura} movimento/ponto)</small></div>
+        <div style="font-size:.72rem;color:var(--text2);margin-bottom:.3rem">${t('ui.mestre.altura_rotulo')} <b style="color:var(--text)">${altura}</b>/<b style="color:var(--text)">${alturaMax}</b> <small>${t('ui.mestre.custa_movimento_ponto', {n: custoAltura})}</small></div>
         ${riscoQueda}
         <div style="display:flex;gap:.35rem">
-          <button class="mp-altura-btn" data-altura="-1" ${podeDescer ? '' : 'disabled'}>↓ Descer</button>
-          <button class="mp-altura-btn" data-altura="1" ${podeSubir ? '' : 'disabled'}>↑ Subir</button>
+          <button class="mp-altura-btn" data-altura="-1" ${podeDescer ? '' : 'disabled'} data-i18n="ui.mestre.descer">↓ Descer</button>
+          <button class="mp-altura-btn" data-altura="1" ${podeSubir ? '' : 'disabled'} data-i18n="ui.mestre.subir">↑ Subir</button>
         </div>
         ${podeAlterar ? '' : '<small style="color:var(--text2)" data-i18n="ui.mestre.a_altura_desta_criatura_e_fixa">A altura desta criatura é fixa.</small>'}
       </div>`;
@@ -18736,12 +18793,12 @@ function _mpAbaAtivo(state){
   const cond = _mpCondicoes(m);
   if(cond.length) h += `<div class="mp-cond">${cond.map(c=>`<span>${c}</span>`).join('')}</div>`;
 
-  h += `<div class="mp-attrs">FOR ${m.str_ ?? '—'} · DES ${m.dex ?? '—'} · CON ${m.con_ ?? '—'} · INT ${m.int_ ?? '—'}
-        &nbsp;|&nbsp; Fort ${m.fort ?? '—'} · Ref ${m.ref_ ?? '—'} · Von ${m.will ?? '—'}</div>`;
+  h += `<div class="mp-attrs">${t('ui.atributo.sigla.str_')} ${m.str_ ?? '—'} · ${t('ui.atributo.sigla.dex')} ${m.dex ?? '—'} · ${t('ui.atributo.sigla.con_')} ${m.con_ ?? '—'} · ${t('ui.atributo.sigla.int_')} ${m.int_ ?? '—'}
+        &nbsp;|&nbsp; ${t('ui.save.abrev.fort')} ${m.fort ?? '—'} · ${t('ui.save.abrev.ref')} ${m.ref_ ?? '—'} · ${t('ui.save.abrev.von')} ${m.will ?? '—'}</div>`;
 
   // ── Ataques ──
   const ataques = (m.attacks && m.attacks.length) ? m.attacks
-                : (m.atk_bonus != null ? [{name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}] : []);
+                : (m.atk_bonus != null ? [{name:t('ui.mestre.ataque'), atk_bonus:m.atk_bonus, damage:m.damage, num_attacks:1}] : []);
   if(ataques.length){
     h += `<div class="mp-sec">${t('ui.mestre.ataques')} <span style="color:var(--text2);letter-spacing:0">${t('ui.mestre.gastam_acao')}</span></div>`;
     ataques.forEach((a, i) => {
@@ -18754,7 +18811,7 @@ function _mpAbaAtivo(state){
       const armado = window._mpGolpeArmado === i ? ' armado' : '';
       h += `<div class="mp-linha ${pode ? 'atk'+armado : 'off'}" data-atk="${i}">
           <span style="font-size:1rem">${a.range ? '🎯' : '⚔️'}</span>
-          <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}${window._mpGolpeArmado === i ? ' <small class="mp-armado-label">ARMADO</small>' : ''}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
+          <div class="txt"><b>${_esc(a.name || t('ui.mestre.ataque'))}${window._mpGolpeArmado === i ? ' <small class="mp-armado-label">'+t('ui.mestre.armado_label')+'</small>' : ''}</b><div class="meta">${b} · ${_esc(a.damage || '')} · ${alc}</div></div>
           <span class="mp-cargas" title="${t('ui.mestre.ataques_disponiveis_gastos', {disp: cargas, gastos: gastas})}">${'●'.repeat(cargas) || '—'}<small>${cargas}/${totalCargas} ${t('ui.mestre.disp_abrev')}</small>${gastas ? `<em>${gastas} gasto(s)</em>` : ''}</span>
         </div>`;
     });
@@ -18774,7 +18831,7 @@ function _mpAbaAtivo(state){
       const pode = manual && ativavel && !bloqueado && recarga <= 0;
       const motivo = naoImpl ? t('ui.mestre.nao_implementada')
                    : !ativavel ? t('ui.mestre.ia_apenas')
-                   : recarga > 0 ? `⏳ recarga: ${recarga} rodada(s)`
+                   : recarga > 0 ? t('ui.mestre.recarga_n_rodadas', {n: recarga})
                    : bloqueado ? t('ui.mestre.acao_gasta') : '';
       h += `<div class="mp-linha ${pode ? 'hab' : 'off'}${recarga > 0 ? ' mp-em-recarga' : ''}" data-hab="${_esc(a.id)}">
           <span style="font-size:1rem">✦</span>
@@ -18787,7 +18844,7 @@ function _mpAbaAtivo(state){
   // ── Itens ──
   const cons = m.equipment_consumables || [];
   if(cons.length){
-    h += `<div class="mp-sec">ITENS (bolsa)</div>`;
+    h += `<div class="mp-sec">${t('ui.mestre.itens_bolsa')}</div>`;
     cons.forEach(it => {
       const principal = it.effect === 'throwable' || it.effect === 'scroll';
       const inutil = ['food','ration','wine','ale'].includes(it.effect);
@@ -18796,7 +18853,7 @@ function _mpAbaAtivo(state){
       h += `<div class="mp-linha ${pode ? 'item' : 'off'}" data-item="${_esc(it.id)}">
           <span style="font-size:1rem">${it.emoji || '🎒'}</span>
           <div class="txt"><b>${_esc(it.name || it.id)}</b> <span class="mp-custo">${t(principal?'ui.mestre.custo.principal':'ui.mestre.custo.bonus')}</span>
-            <div class="meta">${inutil ? 'sem efeito em monstros' : _esc(it.descricao || it.desc || '')}</div></div>
+            <div class="meta">${inutil ? t('ui.mestre.sem_efeito_em_monstros') : _esc(it.descricao || it.desc || '')}</div></div>
         </div>`;
     });
   }
@@ -18808,7 +18865,7 @@ function _mpAbaAtivo(state){
     .forEach(i => eq.push('🛡️ ' + _esc(i.name)));
   const passivas = (m.special_abilities || []).filter(a => !a.action_type || a.action_type === 'passiva');
   if(eq.length || passivas.length){
-    h += `<details><summary class="mp-sec" style="cursor:pointer">EQUIPADO (${eq.length}) · PASSIVAS (${passivas.length})</summary>
+    h += `<details><summary class="mp-sec" style="cursor:pointer">${t('ui.mestre.equipado_passivas', {eq: eq.length, pas: passivas.length})}</summary>
       ${eq.map(e=>`<div class="meta">${e}</div>`).join('')}
       ${passivas.map(p=>`<div class="meta"><b>${_esc(p.name||p.id)}</b> — ${_esc(p.descricao||p.desc||'')}</div>`).join('')}
     </details>`;
@@ -18826,12 +18883,12 @@ function _mpWireAtivo(host, state){
     el.onclick = () => {
       const i = parseInt(el.dataset.atk, 10);
       window._mpGolpeArmado = (window._mpGolpeArmado === i) ? null : i;
-      if(window._mpGolpeArmado == null){ _limparMiraMestre(); toast('Golpe desarmado.', 'var(--gold)'); }
+      if(window._mpGolpeArmado == null){ _limparMiraMestre(); toast(t('ui.mestre.golpe_desarmado'), 'var(--gold)'); }
       else {
         const atk=(m.attacks||[{}])[i]||{};
         _iniciarMiraMestre({kind:'attack',caster:m,attackIndex:i,attackDef:atk,
-          range:atk.range ?? 1, icon:'⚔️',label:atk.name||'Golpe'});
-        toast('Golpe armado — clique numa casa vermelha.', 'var(--gold)');
+          range:atk.range ?? 1, icon:'⚔️',label:atk.name||t('ui.mestre.golpe')});
+        toast(t('ui.mestre.golpe_armado_clique_numa_casa_vermelha'), 'var(--gold)');
       }
     };
   });
@@ -18882,15 +18939,15 @@ function _mpAbaMonstros(state){
   }).join('');
   const heroOpts = (state.players || []).filter(p => p.alive)
     .map(p => `<option value="${_esc(p.id)}">${_esc(p.name)}</option>`).join('');
-  return `<div class="mestre-lista">${rows || '<div class="mestre-vazio">Nenhum monstro na masmorra.</div>'}</div>
-    <div style="font-size:.6rem;color:var(--text2);margin-bottom:3px">${_masterSel.size} selecionado(s) — aplicar a todos:</div>
+  return `<div class="mestre-lista">${rows || '<div class="mestre-vazio">'+t('ui.mestre.nenhum_monstro_na_masmorra')+'</div>'}</div>
+    <div style="font-size:.6rem;color:var(--text2);margin-bottom:3px">${t('ui.mestre.selecionados_aplicar_todos', {n: _masterSel.size})}</div>
     <div class="mestre-modos" style="display:flex;gap:4px;margin-bottom:6px">
-      <button data-modo="auto" style="flex:1">Auto</button>
-      <button data-modo="semi" style="flex:1">Semi</button>
-      <button data-modo="manual" style="flex:1">Manual</button>
+      <button data-modo="auto" style="flex:1" data-i18n="ui.mestre.auto">Auto</button>
+      <button data-modo="semi" style="flex:1" data-i18n="ui.mestre.semi">Semi</button>
+      <button data-modo="manual" style="flex:1" data-i18n="ui.mestre.manual">Manual</button>
     </div>
     <select class="mestre-alvo" style="width:100%">
-      <option value="">— alvo (Semi) —</option>${heroOpts}
+      <option value="" data-i18n="ui.mestre.alvo_semi">— alvo (Semi) —</option>${heroOpts}
     </select>`;
 }
 
@@ -18946,21 +19003,29 @@ function _mpAbaMestre(state){
   // Só no teste do editor: é lá que o autor precisa saber por que uma criatura
   // ou um objeto não apareceu com a arte certa.
   if(state.test_mode){
+    const simulacao = state.test_combat || {active:false, round:0, queue:[], index:0};
+    const ator = simulacao.active ? simulacao.queue?.[simulacao.index] : null;
+    const nomeAtor = ator?.kind === 'hero'
+      ? (state.players || []).find(p => String(p.id) === String(ator.id))?.name
+      : (state.monsters || []).find(m => String(m.id) === String(ator?.id))?.name;
+    h += `<div class="mp-sec">${t('ui.mestre.simulacao_de_combate')}</div>
+      <div style="font-size:.68rem;color:var(--text2);margin:3px 0 6px">${simulacao.active ? t('ui.mestre.rodada_vez_de', {n: simulacao.round, nome: _esc(nomeAtor || t('ui.mestre.ator'))}) : t('ui.mestre.mesa_livre_posicione')}</div>
+      <button class="mestre-test-combat-btn mp-linha ${simulacao.active ? 'atk' : 'hab'}" data-test-combat="${simulacao.active ? 'stop' : 'start'}"><span class="txt">${simulacao.active ? t('ui.mestre.encerrar_simulacao') : t('ui.mestre.iniciar_combate')}</span></button>`;
     const classesTeste = [
-      ['warrior', '⚔️', 'Guerreiro'], ['mage', '🔮', 'Mago'],
-      ['rogue', '🗡️', 'Ladino'], ['cleric', '✝️', 'Clérigo'],
-      ['bard', '🎻', 'Bardo'], ['paladin', '🛡️', 'Paladino'],
+      ['warrior', '⚔️', t('ui.mestre.guerreiro')], ['mage', '🔮', t('ui.mestre.mago')],
+      ['rogue', '🗡️', t('ui.mestre.ladino')], ['cleric', '✝️', t('ui.mestre.clerigo')],
+      ['bard', '🎻', t('ui.mestre.bardo')], ['paladin', '🛡️', t('ui.mestre.paladino')],
     ];
     const jaNaMesa = new Set((state.players || []).map(p => p.class_id));
-    h += `<div class="mp-sec">HERÓIS DE TESTE</div>
+    h += `<div class="mp-sec" data-i18n="ui.mestre.herois_de_teste">HERÓIS DE TESTE</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">${classesTeste.map(([id, icon, nome]) =>
         `<button class="mestre-heroi-teste-btn mp-linha ${window._modoAdicionarHeroiTeste === id ? 'atk armado' : 'hab'}"
-           data-class-id="${id}" ${jaNaMesa.has(id) ? 'disabled title="Já está na mesa"' : ''}>
+           data-class-id="${id}" ${jaNaMesa.has(id) ? `disabled title="${t('ui.mestre.ja_esta_na_mesa')}"` : ''}>
            <span class="txt">${icon} ${nome}</span>
          </button>`).join('')}</div>
       <div style="font-size:.6rem;color:var(--text2);margin:5px 0 8px">${window._modoAdicionarHeroiTeste
-        ? 'Clique em uma casa livre para posicionar o herói.'
-        : 'Escolha um herói e clique em uma casa livre para colocá-lo como alvo de teste.'}</div>`;
+        ? t('ui.mestre.clique_em_uma_casa_livre_para_posicionar_o')
+        : t('ui.mestre.escolha_um_heroi_e_clique_em_uma_casa_livr')}</div>`;
     h += `<div class="mp-sec">${t('ui.mestre.diagnostico')}</div>
       <button class="mestre-diag-btn mp-linha hab">
         <span class="txt">${t('ui.mestre.arte_3d')}</span>
@@ -18980,6 +19045,8 @@ function _mpWireMestre(host, state){
       renderMasterPanel(GS.gameState);
     };
   });
+  const sim = host.querySelector('.mestre-test-combat-btn');
+  if(sim) sim.onclick = () => sim.dataset.testCombat === 'start' ? GS.testeIniciarCombate() : GS.testeEncerrarCombate();
   host.querySelectorAll('.mestre-reforco-btn').forEach(btn => {
     btn.onclick = () => {
       const t = btn.dataset.rtype;
@@ -19006,7 +19073,7 @@ function _limparMiraMestre(){
   if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='default';
   document.removeEventListener('keydown', _keyMestreMira);
 }
-function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast('Mira cancelada.', '#888'); e.preventDefault(); } }
+function _keyMestreMira(e){ if(e.key==='Escape'){ _limparMiraMestre(); toast(t('ui.mestre.mira_cancelada'), '#888'); e.preventDefault(); } }
 function _mestreMiraErro(motivo){
   const msg = t('ui.mestre.alvo_invalido_motivo', {motivo});
   _aimSetStatus(msg, '#ffb168');
@@ -19345,7 +19412,7 @@ function _iniciarMiraMestre(spec){
     kind:'mestre',
     title:`${spec.icon || '🎯'} ${spec.label || t('ui.mestre.custo.principal')}`,
     instruction:t('ui.mestre.escolha_uma_casa_ou_criatura_dentro_da_are'),
-    color:'#ff8c66', targetLabel: spec.kind === 'attack' ? t('ui.mestre.heroi') : 'ALVO',
+    color:'#ff8c66', targetLabel: spec.kind === 'attack' ? t('ui.mestre.heroi') : t('ui.mestre.alvo'),
     range:alcance,
     cleanup:()=>{ window._modoMestreMira = null; },
   });
@@ -19408,9 +19475,9 @@ function _mestreAtivarHabilidade(m, abid){
     return;
   }
   if(abid === 'mestre_dos_mortos'){
-    openTargetModal(`${ab.name||abid} — Escolha os esqueletos`, [
-      {id:'esqueleto_humano', emoji:'💀', name:'Esqueleto Humano'},
-      {id:'esqueleto_animal', emoji:'🦴', name:'Esqueleto Animal'}
+    openTargetModal(t('ui.mestre.escolha_os_esqueletos', {nome: ab.name||abid}), [
+      {id:'esqueleto_humano', emoji:'💀', name:t('ui.hud.esqueleto_humano')},
+      {id:'esqueleto_animal', emoji:'🦴', name:t('ui.hud.esqueleto_animal')}
     ], 'choice', tipo=>GS.mestreUsarHabilidade(m.id, abid, null, tipo));
     return;
   }
@@ -19422,6 +19489,10 @@ function _mestreAtivarHabilidade(m, abid){
   // resolve sozinho, então não há mira a fazer aqui.
   if(_MP_ESMAGAR_PRESO.includes(abid)){
     GS.mestreUsarHabilidade(m.id, abid, null); return;
+  }
+  if(abid === 'hero_bard_cancao_heroica' || ab.source_id === 'cancao_heroica'){
+    abrirPainelCancao({monstro:m});
+    return;
   }
   // Habilidade de editor (herói/guilda): self-buff, ativa direto sem alvo.
   if((ab.source === 'heroi' || ab.source === 'guilda') && !(ab.save != null && ab.dc != null)){
@@ -19449,7 +19520,7 @@ function _monstroSelecionadoTeste(){
 }
 
 function _fmtFichaMonstroLista(lista){
-  if(!Array.isArray(lista) || !lista.length) return 'Nenhuma';
+  if(!Array.isArray(lista) || !lista.length) return t('ui.ficha.nenhuma');
   return lista.map(v => {
     if(typeof v === 'string') return v.replaceAll('_', ' ');
     if(!v || typeof v !== 'object') return String(v);
@@ -19469,23 +19540,23 @@ function fecharFichaMonstro(){
 }
 
 function abrirFichaMonstro(m){
-  if(!m){ toast('Selecione um monstro primeiro.', 'var(--gold)'); return; }
+  if(!m){ toast(t('ui.ficha.selecione_um_monstro_primeiro'), 'var(--gold)'); return; }
   fecharMenuHabilidades();
   fecharMenuMagias();
   fecharFichaMonstro();
   const overlay = document.createElement('div');
   overlay.id = 'ficha-monstro-overlay';
   const ataques = (m.attacks && m.attacks.length) ? m.attacks
-    : (m.atk_bonus != null ? [{name:'Ataque', atk_bonus:m.atk_bonus, damage:m.damage}] : []);
+    : (m.atk_bonus != null ? [{name:t('ui.ficha.ataque'), atk_bonus:m.atk_bonus, damage:m.damage}] : []);
   const habilidades = m.special_abilities || [];
   const magias = (m.monster_spells || []).map(cfg => {
     const magia = GRIMORIO_CLIENT[cfg.id] || {nome:cfg.id};
     const detalhes = [];
     if(m.caster_level != null) detalhes.push(t('ui.mestre.conjurador_nivel', {n:m.caster_level}));
     if(cfg.limit_mode === 'cooldown' && cfg.cooldown_turns != null)
-      detalhes.push(`recarga ${cfg.cooldown_turns} rodadas`);
+      detalhes.push(t('ui.mestre.recarga_rodadas_curta', {n: cfg.cooldown_turns}));
     else if(cfg.uses_per_combat != null)
-      detalhes.push(`${cfg.uses_per_combat} uso(s) por combate`);
+      detalhes.push(t('ui.mestre.usos_por_combate', {n: cfg.uses_per_combat}));
     return `${magia.icone || '✦'} ${magia.nome || cfg.id}${detalhes.length ? ` — ${detalhes.join(' · ')}` : ''}`;
   });
   const imageName = _monsterImageName(m);
@@ -19498,7 +19569,7 @@ function abrirFichaMonstro(m){
       <button onclick="fecharFichaMonstro()" aria-label="${t('ui.geral.fechar')}">✕</button>
     </header>
     <div class="fm-body">
-      <div class="fm-vitais"><b>❤ ${m.hp}/${m.max_hp || m.hp}</b><b>🛡 CA ${m.ac ?? '—'}</b><b>👣 ${m.movement ?? '—'}</b><b>👁 ${m.vision_radius ?? '—'}</b></div>
+      <div class="fm-vitais"><b>❤ ${m.hp}/${m.max_hp || m.hp}</b><b>🛡 ${t('ui.hud.sigla_ca')} ${m.ac ?? '—'}</b><b>👣 ${m.movement ?? '—'}</b><b>👁 ${m.vision_radius ?? '—'}</b></div>
       <section><h3>${t('ui.mestre.atributos_resistencias')}</h3><div class="fm-grid">
         ${atributo(t('ui.atributo.sigla.str_'),m.str_)}${atributo(t('ui.atributo.sigla.dex'),m.dex)}${atributo(t('ui.atributo.sigla.con_'),m.con_)}${atributo(t('ui.atributo.sigla.int_'),m.int_)}
         ${atributo(t('ui.save.sigla.fort'),m.fort)}${atributo(t('ui.save.sigla.ref'),m.ref_)}${atributo(t('ui.save.sigla.von'),m.will)}${atributo(t('ui.mestre.porte'),m.porte||t('ui.mestre.porte_medio'))}
@@ -19509,7 +19580,7 @@ function abrirFichaMonstro(m){
       <section><h3>${t('ui.mestre.defesas')}</h3><div class="fm-linha"><b>${t('ui.mestre.imunidades')}</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>${t('ui.mestre.resistencias')}</b><span>${_esc(_fmtFichaMonstroLista(m.resistances))}</span></div><div class="fm-linha"><b>${t('ui.mestre.fraquezas')}</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
       <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b data-i18n="ui.ficha.protecao">Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
     </div>
-    <footer><span>C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()">FECHAR</button></footer>
+    <footer><span data-i18n="ui.ficha.c_ficha_h_habilidades_m_magias">C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()" data-i18n="ui.ficha.fechar_2">FECHAR</button></footer>
   </article>`;
   overlay.onclick = e => { if(e.target === overlay) fecharFichaMonstro(); };
   document.body.appendChild(overlay);
@@ -19537,12 +19608,12 @@ function abrirMenuHabilidadesMonstro(m){
     return `<div class="mh-card${pode?' mh-acionavel':''}${recarga?' mh-cooldown':''}" data-monster-ability="${_esc(a.id)}"
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${_esc(a.id)}')" onmouseleave="ocultarTooltipMagia()">
       ${recarga ? `<strong class="mh-cooldown-badge">⏳ ${recarga} R</strong>` : ''}
-      <span class="mh-icon">${abilityIconHtml(a,a.icon||a.icone||'✦')}</span><span class="mh-info"><b>${_esc(a.name||a.id)}</b><small>${_esc(a.descricao||a.description||a.desc||'')}</small><em>${ativa ? `${_rotulo(custo, 'ui.mestre.custo', t('ui.mestre.custo.principal'))}${usos!=null?` · ${usos}/${usosMax} usos`:''}` : 'PASSIVA'}</em></span>
+      <span class="mh-icon">${abilityIconHtml(a,a.icon||a.icone||'✦')}</span><span class="mh-info"><b>${_esc(a.name||a.id)}</b><small>${_esc(a.descricao||a.description||a.desc||'')}</small><em>${ativa ? `${_rotulo(custo, 'ui.mestre.custo', t('ui.mestre.custo.principal'))}${usos!=null?` · ${usos}/${usosMax} usos`:''}` : t('ui.hud.passiva_2')}</em></span>
     </div>`;
   };
-  overlay.innerHTML = `<section class="menu-habilidades" role="dialog" aria-modal="true"><header class="mh-header"><div><b>✦ HABILIDADES DO MONSTRO</b><small>${_esc(m.name||m.type)} · tecla H</small></div><button onclick="fecharMenuHabilidades()">✕</button></header><div class="mh-body">
-    <section class="mh-section"><h3>HABILIDADES ATIVAS</h3><div class="mh-list">${ativas.length?ativas.map(a=>card(a,true)).join(''):'<p class="mh-empty">Nenhuma habilidade ativa.</p>'}</div></section>
-    <section class="mh-section"><h3>PASSIVAS</h3><div class="mh-list">${passivas.length?passivas.map(a=>card(a,false)).join(''):'<p class="mh-empty">Nenhuma passiva.</p>'}</div></section>
+  overlay.innerHTML = `<section class="menu-habilidades" role="dialog" aria-modal="true"><header class="mh-header"><div><b data-i18n="ui.hud.habilidades_do_monstro">✦ HABILIDADES DO MONSTRO</b><small>${_esc(m.name||m.type)}${t('ui.mestre.tecla_h_sufixo')}</small></div><button onclick="fecharMenuHabilidades()">✕</button></header><div class="mh-body">
+    <section class="mh-section"><h3 data-i18n="ui.habilidade.sec_ativas">HABILIDADES ATIVAS</h3><div class="mh-list">${ativas.length?ativas.map(a=>card(a,true)).join(''):'<p class="mh-empty">'+t('ui.mestre.nenhuma_habilidade_ativa')+'</p>'}</div></section>
+    <section class="mh-section"><h3 data-i18n="ui.hud.passivas">PASSIVAS</h3><div class="mh-list">${passivas.length?passivas.map(a=>card(a,false)).join(''):'<p class="mh-empty">'+t('ui.mestre.nenhuma_passiva')+'</p>'}</div></section>
   </div></section>`;
   overlay.querySelectorAll('.mh-card.mh-acionavel[data-monster-ability]').forEach(el => el.onclick=()=>{ fecharMenuHabilidades(); _mestreAtivarHabilidade(m,el.dataset.monsterAbility); });
   requestAnimationFrame(()=>overlay.classList.add('open'));
@@ -19573,7 +19644,7 @@ function _mestreAtivarMagia(m, sid){
     return alcanceLegacy <= 0 || d <= alcanceLegacy;
   });
   if(!alvos.length){ toast(t('ui.mestre.sem_alvo_monstro'), 'var(--orange)'); return; }
-  openTargetModal(`${magia.icone||'✦'} ${magia.nome||sid} — escolha o alvo`,alvos,'monster',id=>GS.mestreUsarMagia(m.id,sid,id));
+  openTargetModal(t('ui.mestre.escolha_o_alvo_min', {icone: magia.icone||'✦', nome: magia.nome||sid}),alvos,'monster',id=>GS.mestreUsarMagia(m.id,sid,id));
 }
 
 function abrirMenuMagiasMonstro(m){
@@ -19607,7 +19678,7 @@ function _mestreUsarItemFicha(m, iid){
   if(it.effect === 'throwable' || it.effect === 'scroll'){
     const alvos = (st.players||[]).filter(p=>p.alive);
     if(!alvos.length){ toast(t('ui.mestre.sem_heroi_vivo'), 'var(--orange)'); return; }
-    openTargetModal(`${it.name||iid} — Escolha o alvo`, alvos, 'player',
+    openTargetModal(t('ui.mestre.escolha_o_alvo_item', {nome: it.name||iid}), alvos, 'player',
       (alvoId)=> GS.mestreUsarItem(m.id, iid, alvoId, null, null));
     return;
   }
@@ -19821,13 +19892,13 @@ function _renderAnimadoManualControls(state, me){
   const pending = window._animadoAbilityPending;
   return `
     <div style="margin-top:8px;padding:8px;border:1px solid #8f303066;background:rgba(70,0,0,.12);">
-      <div style="color:#e06b6b;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:1px;margin-bottom:6px;">${a.tipo === 'elemental' ? '🌪️ HABILIDADES DO ELEMENTAL' : '☠️ HABILIDADES DO SENHOR DA MORTE'}</div>
-      <div style="color:#b78a8a;font-size:.62rem;margin-bottom:6px;">Selecione uma habilidade e depois clique no monstro-alvo.</div>
+      <div style="color:#e06b6b;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:1px;margin-bottom:6px;">${a.tipo === 'elemental' ? t('ui.animar.habilidades_do_elemental') : t('ui.animar.habilidades_do_senhor_da_morte')}</div>
+      <div style="color:#b78a8a;font-size:.62rem;margin-bottom:6px;" data-i18n="ui.animar.selecione_uma_habilidade_e_depois_clique_n">Selecione uma habilidade e depois clique no monstro-alvo.</div>
       ${abilities.map(ab => {
-        const custo = (ab.action_type === 'acao_bonus') ? t('ui.animar.bonus') : (ab.action_type === 'acao_livre' ? 'LIVRE' : t('ui.animar.acao'));
+        const custo = (ab.action_type === 'acao_bonus') ? t('ui.animar.bonus') : (ab.action_type === 'acao_livre' ? t('ui.animar.livre') : t('ui.animar.acao'));
         const selected = pending && pending.animadoId === a.id && pending.abilityId === ab.id;
         const label = _esc(ab.nome || ab.name || ab.id);
-        const desc = _esc(ab.descricao || ab.description || 'Habilidade da ficha original.');
+        const desc = _esc(ab.descricao || ab.description || t('ui.animar.habilidade_da_ficha_original'));
         return `<button class="skill-btn${selected ? ' skill-active' : ''}" style="width:100%;margin:3px 0;border-color:${selected ? '#e06b6b' : '#8f303066'};" onclick="selecionarHabilidadeAnimado(${JSON.stringify(a.id)},${JSON.stringify(ab.id)})">
           <div class="skill-info"><div class="skill-name">${ab.icone || '☠️'} ${label} <small style="color:#e06b6b;font-size:.58rem;">${custo}</small></div><div class="skill-desc">${desc}</div></div>
         </button>`;
@@ -19856,7 +19927,7 @@ function selecionarHabilidadeAnimado(animadoId, abilityId){
     return;
   }
   window._animadoAbilityPending = { animadoId, abilityId };
-  toast('Selecione um monstro para usar esta habilidade.', '#e06b6b');
+  toast(t('ui.animar.selecione_um_monstro_para_usar_esta_habili'), '#e06b6b');
   renderMyPanel(state);
 }
 window.selecionarHabilidadeAnimado = selecionarHabilidadeAnimado;
@@ -20039,18 +20110,18 @@ function renderMyPanel(state){
 
   // ── Weapon info ──
   const weapon = (me.weapon && typeof me.weapon === 'object') ? me.weapon : null;
-  const STAT_LABEL = {str_:'FOR', dex:'DES', con_:'CON', int_:'INT'};
+  const STAT_LABEL = {str_:t('ui.atributo.sigla.str_'), dex:t('ui.atributo.sigla.dex'), con_:t('ui.atributo.sigla.con_'), int_:t('ui.atributo.sigla.int_')};
   const wStat = weapon ? weapon.stat : 'str_';
   const wStatVal = (me[wStat] != null) ? Number(me[wStat]) : 10;
   const wMod = Math.floor((wStatVal - 10) / 2);
   const wModStr = (wMod >= 0 ? '+' : '') + wMod;
   let dmgFmt = '—';
   if(weapon && weapon.die){
-    const sl = STAT_LABEL[wStat] || 'FOR';
+    const sl = STAT_LABEL[wStat] || t('ui.atributo.sigla.str_');
     dmgFmt = `${weapon.die} ${wModStr} (${sl})`;
   } else {
     const strM = Math.floor((vStr - 10) / 2);
-    dmgFmt = `1 ${strM >= 0 ? '+' : ''}${strM} (FOR)`;
+    dmgFmt = `1 ${strM >= 0 ? '+' : ''}${strM} (${t('ui.atributo.sigla.str_')})`;
   }
 
   // ── Damage label for attack button (use weapon's actual stat — DEX for crossbow, STR for melee) ──
@@ -20061,10 +20132,13 @@ function renderMyPanel(state){
   const atkModStr = (atkWMod >= 0 ? '+' : '') + atkWMod;
 
   // ── Armor info ──
-  const armorDef = CLASS_ARMOR[me.class_id] || {id:'none', name:'Sem Armadura'};
+  const armorDef = CLASS_ARMOR[me.class_id] || {id:'none', name:t('ui.hud.sem_armadura')};
   const equippedArmor = me.gear && me.gear.armor;
   const armorId   = equippedArmor ? (equippedArmor.id || 'none') : armorDef.id;
-  const armorName = equippedArmor ? equippedArmor.name : armorDef.name;
+  // O nome da armadura inicial sai do catálogo traduzido (cat.item.<id>.nome);
+  // CLASS_ARMOR guarda o português só como fallback de módulo (sem t() ali — TDZ).
+  const armorName = equippedArmor ? equippedArmor.name
+    : (armorDef.id && armorDef.id !== 'none' ? t('cat.item.' + armorDef.id + '.nome') : armorDef.name);
 
   // ── Build HTML ──
   const statsHTML = `
@@ -20140,13 +20214,13 @@ function renderMyPanel(state){
 
     <div class="equip-row">
       <div class="equip-item" style="position:relative;">
-        <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">⚔ ARMA</div>
-        <div id="weapon-canvas" class="equip-item-image" title="Passe o mouse para ver o alcance da arma">${itemIconHTML(weapon, '⚔️')}</div>
-        <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${weapon ? weapon.name : 'Desarmado'}</div>
+        <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;" data-i18n="ui.hud.arma">⚔ ARMA</div>
+        <div id="weapon-canvas" class="equip-item-image" title="Passe o mouse para ver o alcance da arma" data-i18n-title="ui.hud.passe_o_mouse_para_ver_o_alcance_da_arma">${itemIconHTML(weapon, '⚔️')}</div>
+        <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${weapon ? weapon.name : t('ui.hud.desarmado')}</div>
         <div class="equip-stat" style="color:#f8c840;font-size:.72rem;">${dmgFmt}${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</div>
       </div>
       <div class="equip-item" style="position:relative;">
-        <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;">🛡 ARMADURA</div>
+        <div class="gear-slot-label" style="align-self:flex-start;margin-bottom:2px;" data-i18n="ui.hud.armadura">🛡 ARMADURA</div>
         <div id="armor-canvas" class="equip-item-image">${itemIconHTML(equippedArmor || {id:armorId, emoji:'🛡️'}, '🛡️')}</div>
         <div class="equip-name" style="color:#e8e0c8;font-weight:bold;">${armorName}</div>
       </div>
@@ -20160,8 +20234,8 @@ function renderMyPanel(state){
     const aba = (_painelAbaPedro === 'magias') ? 'magias' : 'atributos';
     const abasHTML = `
       <div style="display:flex; border-bottom:1px solid #c8a95133; margin-bottom:8px;">
-        <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">📊 ATRIBUTOS</button>
-        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">💀 MAGIAS</button>
+        <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
+        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.magias">💀 MAGIAS</button>
       </div>`;
     // Sincroniza animados autoritativos (me.animados) no registro do Pedro p/ a aba Magias.
     const heroiPedro = HERO_DATA.pedro;
@@ -20181,8 +20255,8 @@ function renderMyPanel(state){
     const aba = (_painelAbaPedro === 'magias') ? 'magias' : 'atributos';
     const abasHTML = `
       <div style="display:flex; border-bottom:1px solid #44cc8833; margin-bottom:8px;">
-        <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">📊 ATRIBUTOS</button>
-        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">✨ MAGIAS</button>
+        <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
+        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.hud.magias">✨ MAGIAS</button>
       </div>`;
     const corpo = (aba === 'magias')
       ? (renderElementaisLewis(me) + renderMagiasFichaEmJogo(me, 'cleric'))
@@ -20234,10 +20308,10 @@ function renderMyPanel(state){
     const die = tw.item.die || '1d4';
     return `<button class="btn-action" ${can?'':'disabled'} onclick="beginThrowSlot('${tw.slot}')"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ffaa00;">
-      <span style="color:#ffc96b;">🎯 Arremessar ${tw.item.name}</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${die} +${_weaponThrowStatLabel(tw.item)} dano</small>
-      <small style="color:var(--text2);font-size:.62rem;">${tw.hand} · alcance ${tr} · perde a arma</small>
-      ${canAct && !can ? '<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">nenhum alvo no alcance</small>' : ''}
+      <span style="color:#ffc96b;">${t('ui.hud.arremessar_arma_btn', {nome: tw.item.name})}</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${t('ui.hud.arremesso_dano', {dado: die, stat: _weaponThrowStatLabel(tw.item)})}</small>
+      <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.arremesso_detalhe', {mao: tw.hand, alcance: tr})}</small>
+      ${canAct && !can ? `<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">${t('ui.hud.arremesso_sem_alvo')}</small>` : ''}
     </button>`;
   }).join('');
 
@@ -20257,9 +20331,9 @@ function renderMyPanel(state){
   const _estancarSangramentoBtn = (_sangramentoNivel > 0 && canAct) ? `
     <button class="btn-action" onclick="GS.estancarSangramento()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#c43b4b;">
-      <span style="color:#ff6477;">🩸 Estancar Sangramento ${_sangramentoNivel}</span>
+      <span style="color:#ff6477;">${t('ui.hud.estancar_sangramento', {n: _sangramentoNivel})}</span>
       <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${t('ui.hud.gasta_acao_principal')}</small>
-      ${me.ferida_aberta ? '<small style="color:#f0c36b;font-size:.62rem;">🩹 Ferida Aberta permanece</small>' : ''}
+      ${me.ferida_aberta ? '<small style="color:#f0c36b;font-size:.62rem;">'+t('ui.hud.ferida_aberta_permanece')+'</small>' : ''}
     </button>` : '';
 
   // ── Action buttons (with weapon damage formula shown) ──
@@ -20330,15 +20404,15 @@ function renderMyPanel(state){
       <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre')}</small>
     </button>` : '';
   const _wRange = me.weapon?.range ?? null;
-  const _rangeHint = _wRange != null ? `alcance ${_wRange}` : 'corpo a corpo';
+  const _rangeHint = _wRange != null ? `alcance ${_wRange}` : t('ui.hud.corpo_a_corpo');
   const _adjHint = canAct && !canAttack
-    ? `<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">${_wRange!=null?'inimigo fora de alcance':'aproxime-se!'}</small>`
+    ? `<small style="color:#e07060;display:block;font-size:.62rem;margin-top:2px;">${_wRange!=null?t('ui.hud.inimigo_fora_de_alcance'):t('ui.hud.aproxime_se')}</small>`
     : '';
   $('action-btns').innerHTML = `
     <button class="btn-action" ${canAttack ? '' : 'disabled'} onclick="beginAttack()"
       style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;">
-      <span>${_wRange!=null?'🏹':'⚔'} Atacar</span>
-      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} dano${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</small>
+      <span>${_wRange!=null?'🏹':'⚔'} ${t('ui.hud.atacar')}</span>
+      <small style="color:var(--gold);font-size:.7rem;font-weight:bold;">${atkDieStr}${atkModStr} ${t('ui.hud.dano_sufixo')}${_cancaoTag('bonus_dano')}${_richardTag('dano')}${_golpeSagradoTag()}</small>
       <small style="color:var(--text2);font-size:.62rem;">${_rangeHint}</small>
       ${_adjHint}
     </button>
@@ -20404,16 +20478,16 @@ function renderMyPanel(state){
       const _esp = (GS.guildOwnedOf(me.id).especializacoes) || [];
       if (sk.id === 'golpe_devastador')
         desc = _esp.includes('guerreiro_golpe_3')
-          ? 'Multiplica os dados de dano por 2 neste turno.'
-          : 'Multiplica os dados de dano por 1,5 neste turno.';
+          ? t('ui.hud.multiplica_os_dados_de_dano_por_2_neste_tu')
+          : t('ui.hud.multiplica_os_dados_de_dano_por_1_5_neste');
       else if (sk.id === 'mira_certeira')
         desc = _esp.includes('guerreiro_mira_3')
-          ? '+2 no acerto e +2 no dano neste turno.'
-          : '+2 no dado de acerto neste turno.';
+          ? t('ui.hud.2_no_acerto_e_2_no_dano_neste_turno')
+          : t('ui.hud.2_no_dado_de_acerto_neste_turno');
       else if (sk.id === 'furia_berserker')
         desc = _esp.includes('guerreiro_furia_3')
-          ? '2 ataques extras neste turno.'
-          : '1 ataque extra neste turno.';
+          ? t('ui.hud.2_ataques_extras_neste_turno')
+          : t('ui.hud.1_ataque_extra_neste_turno');
     }
     const btn = document.createElement('button');
 
@@ -20436,7 +20510,7 @@ function renderMyPanel(state){
         if (!_wSel(sk.id) && GS.getWarriorSelected().length >= GS.warriorComboCap()) {
           const cap = GS.warriorComboCap();
           toast(cap === 1
-            ? 'Compre "Combinar Duas" na Guilda para armar 2 habilidades por turno.'
+            ? t('ui.hud.compre_combinar_duas_na_guilda_para_armar')
             : t('ui.hud.limite_habilidades',{n:cap}), 'var(--gold)');
           return;
         }
@@ -20450,12 +20524,12 @@ function renderMyPanel(state){
       btn.disabled = !ok && !isActive;
       btn.innerHTML = `
         <div class="skill-info">
-          <div class="skill-name">${icon}${sk.name}${isActive ? ' <small style="color:var(--gold);font-size:.65rem;">● aguardando alvo</small>' : ''}</div>
+          <div class="skill-name">${icon}${sk.name}${isActive ? ' <small style="color:var(--gold);font-size:.65rem;">'+t('ui.hud.aguardando_alvo_bolinha')+'</small>' : ''}</div>
           <div class="skill-desc">${desc}</div>
         </div>
         <div class="skill-cost">💙${sk.mp}</div>`;
       btn.onclick = () => {
-        if(isActive){ GS.pendingSkill=null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast('Habilidade cancelada.','var(--text2)'); }
+        if(isActive){ GS.pendingSkill=null; _removerEfeitoVisualLocal(sk.id); renderMyPanel(GS.gameState); toast(t('ui.hud.habilidade_cancelada'),'var(--text2)'); }
         else { beginSkill(sk, state); }
       };
     }
@@ -20531,23 +20605,23 @@ function renderMyPanel(state){
       if(cat.alvo === 'monstro_adjacente'){
         const alvos = (state.monsters||[]).filter(m => m && m.hp>0 &&
           Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, 1, m));
-        if(!alvos.length){ toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
+        if(!alvos.length){ toast(t('ui.hud.nenhum_inimigo_adjacente'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
-        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster',
+        openTargetModal(t('ui.tecnica.inimigo_adjacente', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'monster',
           id => GS.usarTecnica(tid, id));
       } else if(cat.alvo === 'aliado_raio4'){
         const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id &&
           Math.max(Math.abs(pp[0]-q.pos[0]), Math.abs(pp[1]-q.pos[1])) <= _alcanceComAlturaCli(me, 4, q));
         if(!alvos.length){ toast(t('ui.hud.sem_aliado_raio4'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
-        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — aliado (4 casas)`, alvos, 'player',
+        openTargetModal(t('ui.tecnica.aliado_4_casas', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'player',
           id => GS.usarTecnica(tid, id));
       } else if(cat.alvo === 'aliado'){
         // Ataque Coordenado (Fase 2c): marca um aliado vivo (qualquer distância) como par.
         const alvos = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
         if(!alvos.length){ toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
         if(alvos.length === 1){ GS.usarTecnica(tid, alvos[0].id); return; }
-        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o par`, alvos, 'player',
+        openTargetModal(t('ui.tecnica.escolha_o_par', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'player',
           id => GS.usarTecnica(tid, id));
       } else if(cat.alvo === 'qualquer_vivo'){
         // Magia Geminada (Fase 3): 2º alvo pode ser aliado OU monstro, qualquer
@@ -20556,7 +20630,7 @@ function renderMyPanel(state){
         const monstros = (state.monsters||[]).filter(m => m && m.hp>0);
         const alvos = [...aliados, ...monstros];
         if(!alvos.length){ toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
-        openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any',
+        openTargetModal(t('ui.tecnica.escolha_o_2_alvo', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'any',
           id => GS.usarTecnica(tid, id));
       } else {
         GS.usarTecnica(tid);
@@ -20601,7 +20675,7 @@ function renderPurchasedItems(inv){
   if(equipados.length){
     const t = document.createElement('div');
     t.className = 'section-title';
-    t.textContent = _rotulo('equipado_loja', 'ui.hud', 'Equipado (Loja)');
+    t.textContent = _rotulo('equipado_loja', 'ui.hud', I18N.t('ui.item.equipado_loja'));
     inv.appendChild(t);
     const g = document.createElement('div');
     g.className = 'bag-grid';
@@ -20618,7 +20692,7 @@ function renderPurchasedItems(inv){
       aplicarTooltipAoItemDados(slot, it);
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn';
-      btn.textContent = '✕ ' + _rotulo('remover', 'ui.hud', 'Remover');
+      btn.textContent = '✕ ' + _rotulo('remover', 'ui.hud', I18N.t('ui.item.remover'));
       btn.onclick = () => desequiparComprado(key);
       slot.appendChild(btn);
       g.appendChild(slot);
@@ -20634,7 +20708,7 @@ function renderPurchasedItems(inv){
 
   const title = document.createElement('div');
   title.className = 'section-title';
-  title.textContent = `Comprados na Loja (${comprados.length})`;
+  title.textContent = I18N.t('ui.item.comprados_na_loja_n', {n: comprados.length});
   inv.appendChild(title);
 
   const grid = document.createElement('div');
@@ -20651,14 +20725,14 @@ function renderPurchasedItems(inv){
     if(it.tipo === 'consumivel'){
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn use';
-      btn.textContent = '▶ Usar';
-      btn.title = 'Recupera fome/sede';
+      btn.textContent = I18N.t('ui.item.usar');
+      btn.title = I18N.t('ui.item.recupera_fome_sede');
       btn.onclick = () => usarItemComprado(idx);
       slot.appendChild(btn);
     } else if(it.tipo !== 'municao'){
       const btn = document.createElement('button');
       btn.className = 'bag-slot-btn equip';
-      btn.textContent = '⚙ Equipar';
+      btn.textContent = I18N.t('ui.item.equipar');
       btn.onclick = () => equiparComprado(idx);
       slot.appendChild(btn);
     }
@@ -20675,7 +20749,7 @@ function usarItemComprado(index){
     GS.aplicarConsumivel(item);          // recupera fome/sede + atualiza barras
     heroi.inventario[index] = null;      // consome o item
     if(GS.gameState) renderMyPanel(GS.gameState);
-    toast(`Usou ${item.nome}`, 'var(--gold)');
+    toast(t('ui.item.usou_item', {nome: item.nome}), 'var(--gold)');
   } else {
     toast(t('ui.item.nao_consumivel'), 'var(--gold)');
   }
@@ -20841,7 +20915,7 @@ function _renderChestWindow(chest){
       </div>`;
     const btn = document.createElement('button');
     btn.className = 'chest-take-btn';
-    btn.textContent = '⬆ Pegar';
+    btn.textContent = t('ui.hud.pegar');
     const cantPick = isFull && !ammoHasSpace;
     btn.disabled = cantPick || pending?.kind === 'all';
     if(cantPick) btn.title = t('ui.bau.inventario_cheio');
@@ -21202,13 +21276,13 @@ function _showTrapResult(msg){
   if (imageName) {
     const image = new Image();
     image.src = _assetURL(`assets/armadilhas/${imageName}`);
-    image.alt = resultTitle || msg.nome || 'Armadilha';
+    image.alt = resultTitle || msg.nome || t('ui.hud.armadilha');
     trapIcon.appendChild(image);
   } else {
     trapIcon.textContent = msg.icone || '🪤';
   }
   $('trap-title').textContent = isFall ? (msg.nome || t('ui.voo.queda_titulo'))
-    : resultTitle || msg.nome || 'Armadilha';
+    : resultTitle || msg.nome || t('ui.hud.armadilha');
   $('trap-desc').textContent = isFall
     ? (msg.descricao || t('ui.voo.queda_descricao', {altura: msg.altura || 0, faixa: msg.faixa || '', dano: msg.dano || 0}))
     : isSurvivalDamage
@@ -21321,7 +21395,7 @@ function _showTrapResult(msg){
     tocarSomArmadilha();
   } else if(isMetamorfose){
     statusEl.className = 'trap-status trap-status--success';
-    statusEl.textContent = 'FORMA ALTERADA';
+    statusEl.textContent = t('ui.hud.forma_alterada');
   } else if(isCondition){
     statusEl.className = `trap-status ${isPetrificacao ? 'trap-status--partial' : 'trap-status--fail'}`;
     statusEl.textContent = isPetrificacao
@@ -21603,8 +21677,8 @@ function _setGMLogMinimized(minimized, persist=true){
   log.classList.toggle('gm-log-collapsed', value);
   btn.textContent=value?'＋':'−';
   btn.setAttribute('aria-expanded', String(!value));
-  btn.setAttribute('aria-label', value?'Restaurar Mestre do Jogo':'Minimizar Mestre do Jogo');
-  btn.title=value?'Restaurar Mestre do Jogo':'Minimizar Mestre do Jogo';
+  btn.setAttribute('aria-label', value?t('ui.hud.restaurar_mestre_do_jogo'):t('ui.hud.minimizar_mestre_do_jogo'));
+  btn.title=value?t('ui.hud.restaurar_mestre_do_jogo'):t('ui.hud.minimizar_mestre_do_jogo');
   if(persist){
     try{ localStorage.setItem('lfh_gm_log_minimized', value?'1':'0'); }catch(e){}
   }
@@ -21664,7 +21738,7 @@ function useItem(itemId, targetId){
         q.alive && (q.id === me.id ||
           Math.max(Math.abs(q.pos[0] - me.pos[0]), Math.abs(q.pos[1] - me.pos[1])) <= 1));
       if(alvos.length > 1){
-        openTargetModal(`${it.emoji || '🧪'} ${it.name} — Escolha o alvo`, alvos, 'ally',
+        openTargetModal(t('ui.item.escolha_o_alvo_consumivel', {icone: it.emoji || '🧪', nome: it.name}), alvos, 'ally',
           id => useItem(itemId, id));
         return;
       }
@@ -21723,7 +21797,7 @@ function _refreshFichaCidadePanel(){
   const closeBtn = document.createElement('button');
   closeBtn.id = 'ficha-cidade-close';
   closeBtn.textContent = '✕';
-  closeBtn.title = 'Fechar';
+  closeBtn.title = t('ui.cidade.fechar');
   closeBtn.onclick = fecharFichaCidade;
   panel.appendChild(closeBtn);
   const naCidade = document.getElementById('screen-city')?.classList.contains('active');
@@ -21916,18 +21990,18 @@ function _modificadoresTemporariosStatus(p){
     dex: _rotulo('dex', 'ui.atributo.sigla', 'DES'), destreza: _rotulo('dex', 'ui.atributo.sigla', 'DES'),
     con_: _rotulo('con_', 'ui.atributo.sigla', 'CON'), constituicao: _rotulo('con_', 'ui.atributo.sigla', 'CON'),
     int_: _rotulo('int_', 'ui.atributo.sigla', 'INT'), ataque: 'ataque', dano: 'dano', ca: 'CA', resistencia: t('ui.status.resistencia'),
-    movimento: 'movimento', percepcao: t('ui.status.percepcao'), vontade: 'Vontade', reflexos: 'Reflexos', fortitude: 'Fortitude',
+    movimento: 'movimento', percepcao: t('ui.status.percepcao'), vontade: t('ui.status.vontade'), reflexos: t('ui.status.reflexos'), fortitude: 'Fortitude',
   };
   const fmtDelta = (valor) => `${Number(valor) >= 0 ? '+' : ''}${Number(valor) || 0}`;
   const poisonName = e => e?.nome || S('envenenado');
   const poisonDetail = e => {
     const op = e?.operacao;
-    if(op === 'dano') return `${e.dano || 'dano'} de dano por rodada`;
+    if(op === 'dano') return t('ui.status.dano_por_rodada', {dano: e.dano || t('ui.tooltip.dano')});
     if(op === 'reduzir') return `-${Number(e.valor) || 0} ${attrNome[e.atributo] || e.atributo || 'atributo'}`;
-    if(op === 'penalidade') return (e.atributos || []).map(([a,v]) => `${fmtDelta(v)} ${attrNome[a] || a}`).join(' · ') || 'penalidade ativa';
+    if(op === 'penalidade') return (e.atributos || []).map(([a,v]) => `${fmtDelta(v)} ${attrNome[a] || a}`).join(' · ') || t('ui.status.penalidade_ativa');
     if(op === 'petrificar') return t('ui.status.petrificacao');
-    if(op === 'cegar') return 'cegueira e penalidade em ataques';
-    return 'efeito de veneno ativo';
+    if(op === 'cegar') return t('ui.status.cegueira_e_penalidade_em_ataques');
+    return t('ui.status.efeito_de_veneno_ativo');
   };
   const venenos = Array.isArray(p.efeitos_veneno) ? p.efeitos_veneno : [];
   if(venenos.length){
@@ -21949,11 +22023,11 @@ function _modificadoresTemporariosStatus(p){
 
   // Condições que antes só eram usadas pelo motor e não tinham representação
   // no painel de status.
-  if(p.dormindo) addRestante('🌙 Sono', 'perde o turno; acorda ao sofrer dano', p.dormindo_rodadas);
-  if(p.comandado) addRestante('🗣️ Comando', t('ui.status.o_controlador_dirige_o_proximo_turno'), p.comandado_rodadas || 1);
-  if(p.dominado) addRestante(t('ui.status.dominacao'), 'age sob controle de outra criatura', p.dominado_rodadas);
-  if(p.perde_turno) addRestante('🕸️ Imobilizado', t('ui.status.perde_o_turno_e_nao_pode_agir'), p.perde_turno_rodadas || 1);
-  if(p.preso) addRestante('⛓️ Preso', 'movimento impedido', p.preso_rodadas);
+  if(p.dormindo) addRestante(t('ui.status.sono'), t('ui.status.perde_o_turno_acorda_ao_sofrer_dano'), p.dormindo_rodadas);
+  if(p.comandado) addRestante(t('ui.status.comando'), t('ui.status.o_controlador_dirige_o_proximo_turno'), p.comandado_rodadas || 1);
+  if(p.dominado) addRestante(t('ui.status.dominacao'), t('ui.status.age_sob_controle_de_outra_criatura'), p.dominado_rodadas);
+  if(p.perde_turno) addRestante(t('ui.status.imobilizado'), t('ui.status.perde_o_turno_e_nao_pode_agir'), p.perde_turno_rodadas || 1);
+  if(p.preso) addRestante(t('ui.status.preso'), t('ui.status.movimento_impedido'), p.preso_rodadas);
   if(p.paralisado) addRestante(S('paralisado'), S('paralisado_ef'), p.paralisado_rodadas);
   if(p.cego) addRestante(S('cego'), S('cego_ef'), p.cego_rodadas);
   if(p.com_medo || p.medo_rodadas) addRestante(S('medo'), S('medo_ef'), p.medo_rodadas);
@@ -21966,7 +22040,7 @@ function _modificadoresTemporariosStatus(p){
     addRestante(`🌑 ${magicName('manto_escuridao')}`, t('ui.status.concede_visao_no_escuro_e_protege_contra_o'), p.visao_escuro_rodadas);
   if(p.visao_escuro_missao) add(`🌌 ${magicName('visao_escuro')}`, t('ui.status.visao_no_escuro_ativa'));
   if(Number(p.protecao_rodadas || 0) > 0)
-    addRestante(`🛡️ ${magicName('protecao_energia')}`, `absorve ${p.protecao_restante ?? p.protecao_max ?? 0} dano elemental`, p.protecao_rodadas);
+    addRestante(`🛡️ ${magicName('protecao_energia')}`, t('ui.status.absorve_dano_elemental', {n: p.protecao_restante ?? p.protecao_max ?? 0}), p.protecao_rodadas);
   if(Number(p.temp_ca_bonus || 0) !== 0)
     addRestante(t('ui.status.ca_temporaria'), `${fmtDelta(p.temp_ca_bonus)} CA`, p.temp_ca_rodadas);
   if(p.invisivel_magico && Number(p.invisivel_magico_rodadas || 0) > 0)
@@ -21978,13 +22052,13 @@ function _modificadoresTemporariosStatus(p){
   if(Number(p.potion_regen_pool || 0) > 0)
     add(t('ui.status.pocao_de_regeneracao'), t('ui.status.reserva_regen_pocao', {n: p.potion_regen_pool}));
   if(p.contramagica_preparada) add(`🛑 ${magicName('contramagica')}`, t('ui.status.pronta_para_reagir_a_proxima_magia'));
-  if(Number(p.voo || p.voo_magico || 0) > 0) add('🪽 Voo', `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`);
+  if(Number(p.voo || p.voo_magico || 0) > 0) add(t('ui.status.voo'), `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`);
   if(Number(p.olhar_petrificante_ate || 0) >= r && Number(p.olhar_petrificante_ate || 0) > 0)
-    add('👁️ Olhar Petrificante', t('ui.status.efeito_ativo_criaturas_que_o_veem_devem_re'), p.olhar_petrificante_ate);
+    add(t('ui.status.olhar_petrificante'), t('ui.status.efeito_ativo_criaturas_que_o_veem_devem_re'), p.olhar_petrificante_ate);
 
   if(Number(p.bonus_ataque_temporario || 0) !== 0)
     add(t('ui.status.bonus_temporario_de_ataque'), t('ui.status.bonus_ataque_ate_fim_turno', {delta: fmtDelta(p.bonus_ataque_temporario)}), null, 1);
-  if(p.vinho_ativo) addRestante('🍷 Embriaguez', '-1 ataque e -1 Reflexos', p.vinho_rodadas);
+  if(p.vinho_ativo) addRestante(t('ui.status.embriaguez'), t('ui.status.1_ataque_e_1_reflexos'), p.vinho_rodadas);
   if(p.cerveja_ativo) addRestante('🍺 Alegria', '-1 ataque', p.cerveja_rodadas);
 
   // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
@@ -21993,7 +22067,7 @@ function _modificadoresTemporariosStatus(p){
     .filter(Boolean).flatMap(w => Array.isArray(w.poison_slots) ? w.poison_slots : (w.veneno_id ? [w.veneno_id] : []));
   if(armasEnvenenadas.length){
     const nomes = armasEnvenenadas.map(id => `☠️ ${id}`).join(' · ');
-    add('🗡️ Veneno aplicado', `${armasEnvenenadas.length} carga(s) — ${nomes}`);
+    add(t('ui.status.veneno_aplicado'), `${armasEnvenenadas.length} carga(s) — ${nomes}`);
   }
 
   // Doenças e maldições são persistentes até purificação, mas precisam ser
@@ -22015,14 +22089,14 @@ function _modificadoresTemporariosStatus(p){
   const marcasPet = Number(p.petrificacao_marcas || 0);
   const resistPet = Number(p.resistencia_petrificacao_marcas || 0);
   if(marcasPet > 0 || p.olhar_petrificante_ativo || p.petrificado){
-    const estado = p.petrificado ? 'totalmente petrificado' : t('ui.status.marcas_petrificacao', {n: marcasPet});
+    const estado = p.petrificado ? t('ui.status.totalmente_petrificado') : t('ui.status.marcas_petrificacao', {n: marcasPet});
     const extra = p.olhar_petrificante_ativo ? t('ui.status.resistencia_petrificacao', {n: resistPet}) : '';
     add(t('ui.status.petrificacao_2'), `${estado}${extra}${p.petrificado ? t('ui.status.permanente_ate_purificacao') : ''}`);
   }
   const imunidades = p.imunidades_status || {};
   Object.entries(imunidades).forEach(([tipo, ate]) => {
     const n = Number(ate) - r;
-    if(n > 0) addRestante(`🛡️ Imune a ${tipo}`, t('ui.status.o_estado_correspondente_nao_pode_ser_aplic'), n);
+    if(n > 0) addRestante(t('ui.status.imune_a_tipo', {tipo}), t('ui.status.o_estado_correspondente_nao_pode_ser_aplic'), n);
   });
 
   // Silêncio e Escuridão são zonas do mapa, portanto não aparecem como campo
@@ -22242,7 +22316,7 @@ function abrirMenuMagias(pid){
     return `
     <div class="mm-modificador${onclick ? ' mm-acionavel' : ''}${_modificadorMagiaAtivo(player, m.id) || pendente ? ' mm-selecionada' : ''}" ${onclick} ${gamepadAction} draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(m.id)}">
       <span class="mm-mod-icon">${abilityIconHtml(m, m.icon || '✨')}</span>
-      <span><b>${m.nome || m.name}${pendente ? ' · PREPARADA' : ''}</b><small>${_acaoEtiquetaHTML(m)} · ${m.desc || m.description || ''}</small></span>
+      <span><b>${m.nome || m.name}${pendente ? t('ui.magia.preparada_sufixo') : ''}</b><small>${_acaoEtiquetaHTML(m)} · ${m.desc || m.description || ''}</small></span>
     </div>`;
   };
 
@@ -22269,7 +22343,7 @@ function abrirMenuMagias(pid){
         </div>
       </section>
       <aside class="mm-shortcuts" aria-label="Atalhos">
-        <div class="mm-shortcuts-heading">ATALHOS</div>
+        <div class="mm-shortcuts-heading" data-i18n="ui.atalhos.titulo">ATALHOS</div>
         <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
       </aside>
     </div>`;
@@ -22583,9 +22657,9 @@ function ativarTecnicaGuildaDoMenu(tid){
   if(cat.alvo === 'monstro_adjacente'){
     const alvos = (state.monsters||[]).filter(m => m && m.hp>0 &&
       Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, 1, m));
-    if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast('Nenhum inimigo adjacente.', 'var(--orange)'); return; }
+    if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.nenhum_inimigo_adjacente'), 'var(--orange)'); return; }
     if(alvos.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, alvos[0].id); }
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — inimigo adjacente`, alvos, 'monster', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
+    return openTargetModal(t('ui.tecnica.inimigo_adjacente', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'monster', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   const aliados = (state.players||[]).filter(q => q && q.alive && q.id !== me.id);
   if(cat.alvo === 'aliado_raio4'){
@@ -22597,12 +22671,12 @@ function ativarTecnicaGuildaDoMenu(tid){
   if(cat.alvo === 'aliado'){
     if(!aliados.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_aliado'), 'var(--orange)'); return; }
     if(aliados.length === 1){ _removerEfeitoVisualLocal(tid); return GS.usarTecnica(tid, aliados[0].id); }
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o aliado`, aliados, 'player', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
+    return openTargetModal(t('ui.tecnica.escolha_o_aliado', {icone: cat.icon||'⚔️', nome: cat.nome}), aliados, 'player', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   if(cat.alvo === 'qualquer_vivo'){
     const alvos = [...aliados, ...(state.monsters||[]).filter(m => m && m.hp>0)];
     if(!alvos.length){ _removerEfeitoVisualLocal(tid); toast(t('ui.hud.sem_alvo'), 'var(--orange)'); return; }
-    return openTargetModal(`${cat.icon||'⚔️'} ${cat.nome} — escolha o 2º alvo`, alvos, 'any', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
+    return openTargetModal(t('ui.tecnica.escolha_o_2_alvo', {icone: cat.icon||'⚔️', nome: cat.nome}), alvos, 'any', id => { _removerEfeitoVisualLocal(tid); GS.usarTecnica(tid, id); });
   }
   _removerEfeitoVisualLocal(tid);
   GS.usarTecnica(tid);
@@ -22636,11 +22710,11 @@ function abrirMenuHabilidades(pid){
   // A passiva do bardo não integra `skills` no estado antigo do servidor, mas
   // é uma habilidade-base e deve sempre constar no compêndio.
   if(player.class_id === 'bard' && !base.some(s => s.id === 'conhecimento_lendas')){
-    base.unshift({id:'conhecimento_lendas', name:'Conhecimento das Lendas', icon:'📖', tipo:'passiva',
-      description:'Revela a ficha completa de qualquer inimigo ao passar o mouse.'});
+    base.unshift({id:'conhecimento_lendas', name:t('ui.hud.conhecimento_das_lendas'), icon:'📖', tipo:'passiva',
+      description:t('ui.hud.revela_a_ficha_completa_de_qualquer_inimig')});
   }
   if(player.class_id === 'mage' && !base.some(s => s.id === 'animar_mortos')){
-    base.unshift({id:'animar_mortos', name:'Animar Mortos', icon:'💀', tipo:'acao_principal',
+    base.unshift({id:'animar_mortos', name:t('ui.hud.animar_mortos'), icon:'💀', tipo:'acao_principal',
       fome_cost:20, sede_cost:20,
       description:t('ui.animar.clique_cadaver_3')});
   }
@@ -22730,18 +22804,18 @@ function abrirMenuHabilidades(pid){
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
       <span class="mh-info"><b>${nome}</b><small>${desc}</small><span class="mh-meta">${_acaoEtiquetaHTML(ehPassiva(h) ? 'passiva' : h)}${custo(h) ? `<em class="mh-cost">${custo(h)}</em>` : ''}</span></span>
-      ${equipada ? '<i>Equipada</i>' : ''}
-      ${pendente ? '<i>Preparada</i>' : ''}
+      ${equipada ? '<i>'+t('ui.magia.equipada_i')+'</i>' : ''}
+      ${pendente ? '<i>'+t('ui.magia.preparada_i')+'</i>' : ''}
     </div>`;
   };
-  const secao = (titulo, lista, guilda=false, vazio='Nenhuma habilidade.') => `
+  const secao = (titulo, lista, guilda=false, vazio=t('ui.hud.nenhuma_habilidade')) => `
     <section class="mh-section"><h3>${titulo}</h3>${lista.length
       ? `<div class="mh-list">${lista.map(h => card(h, guilda)).join('')}</div>`
       : `<p class="mh-empty">${vazio}</p>`}</section>`;
 
   overlay.innerHTML = `
     <section class="menu-habilidades" role="dialog" aria-modal="true" aria-label="Menu de habilidades">
-      <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> HABILIDADES</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
+      <header class="mh-header"><div><b><img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> ${t('ui.mestre.habilidades')}</b><small>${comboAtivo ? t('ui.habilidade.escolha_n_habilidades', {n:comboAtivo.capacidade}) : tecelagemAtiva ? t('ui.habilidade.escolha_n_metamagias', {n:tecelagemAtiva.capacidade}) : `${player.name || t('ui.tabuleiro.heroi')} · ${t('ui.habilidade.tecla_h')}`}</small><small class="gamepad-menu-hint">${t('ui.joystick.menu_navegacao')}</small></div><button onclick="fecharMenuHabilidades()" aria-label="Fechar">✕</button></header>
       <div class="mh-layout">
         <div class="mh-body">
           ${_renderAcoesExplicacaoHTML()}
@@ -22750,7 +22824,7 @@ function abrirMenuHabilidades(pid){
           ${secao(t('ui.habilidade.sec_passivas'), passivas, true, t('ui.habilidade.sem_passivas'))}
         </div>
         <aside class="mh-shortcuts" aria-label="Atalhos">
-          <div class="mh-shortcuts-heading">ATALHOS</div>
+          <div class="mh-shortcuts-heading" data-i18n="ui.atalhos.titulo">ATALHOS</div>
           <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
         </aside>
       </div>
@@ -22796,9 +22870,9 @@ function _iniciarMiraAtaque(){
   if(!validTargets.size){ toast(t('ui.mira.nenhum_inimigo_valido_para_atacar'), 'var(--orange)'); return false; }
   window._modoAtaqueMira = { kind: 'ataque' };   // objeto (e nao `true`) por causa da identidade -- ver _aimStart
   _aimStart({
-    kind:'ataque', title:`${me.weapon?.range != null ? '🏹' : '⚔'} ATACAR`,
-    instruction:'Selecione um inimigo destacado.', color:'#e96b6b', targetLabel:'INIMIGO',
-    range, area:validTargets, cancelText:'Ataque cancelado.',
+    kind:'ataque', title:t('ui.mira.atacar_titulo', {icone: me.weapon?.range != null ? '🏹' : '⚔'}),
+    instruction:t('ui.mira.selecione_um_inimigo_destacado'), color:'#e96b6b', targetLabel:t('ui.mira.inimigo'),
+    range, area:validTargets, cancelText:t('ui.mira.ataque_cancelado'),
     cleanup:()=>{ window._modoAtaqueMira = null; },
   });
   return true;
@@ -22813,8 +22887,8 @@ function _clickTileAtaque(tx, ty){
     return;
   }
   const msg = action?.type === 'attack_blocked_wall'
-    ? 'Uma parede ou porta fechada bloqueia o ataque.'
-    : 'Selecione um inimigo destacado dentro do alcance.';
+    ? t('ui.hud.uma_parede_ou_porta_fechada_bloqueia_o_ata')
+    : t('ui.hud.selecione_um_inimigo_destacado_dentro_do_a');
   _aimSetHover(tx, ty, 'blocked');
   _aimSetStatus(msg, '#ff9aa2');
   toast(msg, 'var(--orange)');
@@ -22823,12 +22897,12 @@ function _clickTileAtaque(tx, ty){
 function _weaponAimStatus(tx, ty){
   const state = GS.gameState, me = GS.me;
   const monster = state ? _masterMonsterAtTileClient(state, tx, ty) : null;
-  if(!monster || !me) return 'Selecione um inimigo destacado dentro do alcance.';
+  if(!monster || !me) return t('ui.arremesso.selecione_um_inimigo_destacado_dentro_do_a');
   const info = GS.weaponReachInfo?.(me, tx, ty, monster.altura);
   if(info && !info.inRange){
     return info.effectiveRange != null
-      ? `Fora do alcance: ${info.horizontalDistance}q horizontais, alcance efetivo ${Math.max(0, info.effectiveRange)}q.`
-      : 'Corpo a corpo exige a mesma altura.';
+      ? t('ui.mira.fora_alcance_horizontal', {dist: info.horizontalDistance, alcance: Math.max(0, info.effectiveRange)})
+      : t('ui.arremesso.corpo_a_corpo_exige_a_mesma_altura');
   }
   if(me.weapon?.range != null && !GS.hasLineOfSight(state, me.pos[0], me.pos[1], tx, ty))
     return t('ui.arremesso.linha_bloqueada_por_uma_parede_ou_obstacul');
@@ -22879,11 +22953,11 @@ function _weaponThrowSkillEntries(player){
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
       ? t('ui.arremesso.forca')
-      : (item.finesse || item.id === 'dagger' ? t('ui.arremesso.forca_ou_destreza') : 'Destreza');
+      : (item.finesse || item.id === 'dagger' ? t('ui.arremesso.forca_ou_destreza') : t('ui.arremesso.destreza'));
     add({
       id: `arremesso_arma_${slot}`,
       source: 'arma',
-      name: `Arremessar ${nome}`,
+      name: t('ui.arremesso.nome_habilidade', {nome}),
       icon: item.emoji || '🎯',
       tipo: 'acao_principal',
       target: 'enemy',
@@ -22897,10 +22971,10 @@ function _weaponThrowSkillEntries(player){
 }
 
 function _weaponThrowStatLabel(item){
-  if(!item) return 'DES';
-  if(item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico') return 'FOR';
-  if(item.finesse || item.id === 'dagger') return 'FOR/DES';
-  return 'DES';
+  if(!item) return t('ui.atributo.sigla.dex');
+  if(item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico') return t('ui.atributo.sigla.str_');
+  if(item.finesse || item.id === 'dagger') return t('ui.atributo.sigla.str_') + '/' + t('ui.atributo.sigla.dex');
+  return t('ui.atributo.sigla.dex');
 }
 
 function _weaponThrowSkillBtn(me, skill){
@@ -22961,8 +23035,8 @@ function beginThrowSlot(slot){
   _aimStart({
     kind:'arremesso_arma', title:`🎯 ${t('ui.acao.arremessar_arma', {nome})}`,
     instruction:t('ui.arremesso.escolha_alvo', {nome, alcance:tr}),
-    color:'#ffad57', targetLabel:'INIMIGO', range, area:validTargets,
-    cancelText:'Arremesso de arma cancelado.',
+    color:'#ffad57', targetLabel:t('ui.arremesso.inimigo'), range, area:validTargets,
+    cancelText:t('ui.arremesso.arremesso_de_arma_cancelado'),
     cleanup:()=>{ window._modoArremessoArma = null; },
   });
 }
@@ -22972,11 +23046,11 @@ function _clickTileArremessoArma(tx, ty){
   const state = GS.gameState;
   if(!mode || !state) return;
   const monster = (state.monsters || []).find(m => m?.hp > 0 && GS.monsterTiles(m).some(([x,y]) => x === tx && y === ty));
-  if(!monster){ _aimSetStatus('Selecione um inimigo vivo.', '#ffb168'); return; }
-  if(!mode.range.has(`${tx},${ty}`)) { _aimSetStatus('Alvo fora do alcance.', '#ffb168'); return; }
+  if(!monster){ _aimSetStatus(t('ui.arremesso.selecione_um_inimigo_vivo'), '#ffb168'); return; }
+  if(!mode.range.has(`${tx},${ty}`)) { _aimSetStatus(t('ui.arremesso.alvo_fora_do_alcance'), '#ffb168'); return; }
   const me = GS.me;
   if(!me || !GS.hasLineOfSight(state, me.pos[0], me.pos[1], tx, ty)) {
-    _aimSetStatus('Uma parede ou porta fechada bloqueia o arremesso.', '#ffb168'); return;
+    _aimSetStatus(t('ui.arremesso.uma_parede_ou_porta_fechada_bloqueia_o_arr'), '#ffb168'); return;
   }
   GS.throwWeapon(mode.slot, monster.id);
   _aimEnd({silent:true, reason:'resolved'});
@@ -22988,16 +23062,16 @@ function beginSkill(skill, state){
   // (Warrior usa toggle de habilidades armadas — tratado no loop de botões via
   // GS.toggleWarriorSkill; nunca chega aqui. beginSkill cobre só skills de MP.)
   const result = GS.activateSkill(skill, state);
-  if(result==='no_targets'){ toast('Nenhum inimigo vivo!'); return; }
+  if(result==='no_targets'){ toast(t('ui.hud.nenhum_inimigo_vivo')); return; }
   _registrarEfeitoVisualLocal(skill.id, 'skill');
   if(result==='pending_enemy'){
     _aimStartPendingSkill(skill);
     renderMyPanel(GS.gameState);
-    toast(`✨ ${skill.name} ativado — clique no inimigo no mapa!`, 'var(--purple)');
+    toast(t('ui.hud.skill_ativada_clique_inimigo', {nome: skill.name}), 'var(--purple)');
   } else if(result==='pending_ally'){
     _aimStartPendingSkill(skill);
     renderMyPanel(GS.gameState);
-    toast(`✨ ${skill.name} ativado — clique no aliado (ou em si mesmo) no mapa!`, 'var(--blue)');
+    toast(t('ui.hud.skill_ativada_clique_aliado', {nome: skill.name}), 'var(--blue)');
   }
 }
 
@@ -23059,8 +23133,8 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
 
   const item = groundItem.item || {};
   const itemNome = item.name || item.nome || t('ui.bau.item_deixado_no_chao');
-  adicionar('🎒', `Pegar ${itemNome}`, 'Recolher o loot', () => GS.pickupItem(groundItem.id));
-  adicionar('⚔️', `Atacar ${monster.name || monster.nome || 'monstro'}`,
+  adicionar('🎒', t('ui.joystick.pegar_item', {nome: itemNome}), 'Recolher o loot', () => GS.pickupItem(groundItem.id));
+  adicionar('⚔️', t('ui.joystick.atacar_alvo', {nome: monster.name || monster.nome || t('ui.joystick.monstro')}),
     `HP ${monster.hp}/${monster.max_hp || monster.hp}`, () => {
       // Revalida no estado mais recente antes de consumir a ação.
       const atual = GS.resolveTileClick(attackAction.targetPos[0], attackAction.targetPos[1]);
@@ -23119,7 +23193,7 @@ document.addEventListener('keydown', e=>{
     GS.pendingSkill=null;
     _limparEfeitosVisuaisLocais();
     if(GS.gameState) renderMyPanel(GS.gameState);
-    toast('Habilidade cancelada.','var(--text2)');
+    toast(t('ui.hud.habilidade_cancelada'),'var(--text2)');
     e.preventDefault(); return;
   }
   // ESC cancela o modo de posicionar reforço ou herói temporário (mestre).
@@ -23614,7 +23688,7 @@ function _gamepadToggleUiPointer(){
   if(_gamepadInput.uiPointer){
     const current = controls.includes(_gamepadUi.focusEl) ? _gamepadUi.focusEl : controls[0];
     _gamepadSetUiFocus(current);
-    toast(`🖱 ${_gamepadButtonLabel(_gamepadBinding('nextTarget'))}: cursor de interface ativo`, 'var(--cyan)');
+    toast(t('ui.joystick.cursor_interface_ativo', {botao: _gamepadButtonLabel(_gamepadBinding('nextTarget'))}), 'var(--cyan)');
   } else {
     _gamepadSetUiFocus(null);
     toast('🖱 Cursor de interface fechado.', 'var(--text2)');
@@ -23707,10 +23781,10 @@ function _renderGamepadKeyboard(){
   const fieldName = _gamepadKeyboardText(input.labels?.[0]?.textContent?.trim() || input.placeholder || 'campo');
   const shownValue = input.type === 'password' ? '•'.repeat(input.value.length) : (input.value || ' ');
   host.innerHTML = `<div class="gamepad-kb-box" role="dialog" aria-modal="true" aria-label="Teclado virtual">
-    <div class="gamepad-kb-title">⌨️ Digitar: <b>${fieldName}</b></div>
+    <div class="gamepad-kb-title">${t('ui.joystick.digitar_campo', {campo: fieldName})}</div>
     <div class="gamepad-kb-value">${_gamepadKeyboardText(shownValue)}</div>
     <div class="gamepad-kb-keys">${keys}</div>
-    <div class="gamepad-kb-tools">${textTools}<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="backspace">⌫ Apagar</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="clear">Limpar</button><button type="button" class="gamepad-kb-key gamepad-kb-confirm" data-gamepad-action="submit">↵ Confirmar</button></div>
+    <div class="gamepad-kb-tools">${textTools}<button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="backspace">${t('ui.joystick.apagar')}</button><button type="button" class="gamepad-kb-key gamepad-kb-wide" data-gamepad-action="clear">${t('ui.joystick.limpar')}</button><button type="button" class="gamepad-kb-key gamepad-kb-confirm" data-gamepad-action="submit">${t('ui.joystick.confirmar')}</button></div>
     <small data-i18n="ui.joystick.direcional_selecionar_a_digitar_b_fechar">Direcional: selecionar · A: digitar · B: fechar</small>
   </div>`;
   host.querySelectorAll('[data-gamepad-char]').forEach(btn => btn.addEventListener('click', () => {
@@ -24049,7 +24123,7 @@ function _gamepadEnterAttackMode(state){
   cursor[0] = initial.x; cursor[1] = initial.y;
   _gamepadRenderCursor();
   _renderGamepadHud(state);
-  toast('⚔ Mira de ataque: use o direcional esquerdo e confirme o alvo.', 'var(--red)');
+  toast(t('ui.joystick.mira_de_ataque_use_o_direcional_esquerdo_e'), 'var(--red)');
   _gamepadRumble('target');
   return true;
 }
@@ -24480,7 +24554,7 @@ function _gamepadAccept(state){
     const target = cursor && _gamepadAttackTargets().find(t => t.x === cursor[0] && t.y === cursor[1]);
     if(!target){
       _gamepadExitAttackMode(state);
-      toast('O alvo saiu do alcance.', 'var(--gold)');
+      toast(t('ui.joystick.o_alvo_saiu_do_alcance'), 'var(--gold)');
       return;
     }
     // Resolve pelo mesmo caminho de clique do tabuleiro, preservando animação,
@@ -24662,7 +24736,7 @@ function _gamepadUseOrAssignShortcut(slot){
   }
   const slots = Array.isArray(GS.me?.shortcut_slots) ? GS.me.shortcut_slots : [];
   const saved = slots[slot];
-  if(!saved){ toast(`🎮 Atalho ${slot + 1} vazio`, 'var(--text2)'); return true; }
+  if(!saved){ toast(t('ui.joystick.atalho_vazio', {n: slot + 1}), 'var(--text2)'); return true; }
   _ativarAtalho(saved, slot);
   return true;
 }
@@ -25057,19 +25131,19 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const skillAction = GS.resolveTileClick(tx, ty);
     const skillTargetOk = skillAction?.type === 'skill';
     _aimSetHover(tx, ty, skillTargetOk ? 'valid' : 'blocked');
-    _aimSetStatus(skillTargetOk ? t('ui.tabuleiro.alvo_valido_confirme_para_usar') : 'Selecione um alvo destacado para esta habilidade.', skillTargetOk ? '#94dfb0' : '#ff9aa2');
+    _aimSetStatus(skillTargetOk ? t('ui.tabuleiro.alvo_valido_confirme_para_usar') : t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), skillTargetOk ? '#94dfb0' : '#ff9aa2');
     if(sk.target==='enemy'){
       const m=_masterMonsterAtTileClient(GS.gameState, tx, ty);
       if(m){
         const ok=skillTargetOk;
-        tip.innerHTML=`<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok?'#f08080':'#f09030'}">${ok?'⚔ Clique → '+sk.name:'⚠ Fora de alcance (corpo a corpo)'}</span>`;
+        tip.innerHTML=`<b>${m.emoji} ${m.name}</b><br>HP: ${m.hp}/${m.max_hp}<br><span style="color:${ok?'#f08080':'#f09030'}">${ok?t('ui.tabuleiro.clique_usar', {nome: sk.name}):t('ui.tabuleiro.fora_alcance_melee')}</span>`;
         tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
         $('dungeon-canvas').style.cursor=ok?'crosshair':'not-allowed'; return;
       }
     } else if(sk.target==='ally'){
       const pl=GS.gameState.players.find(p=>p.pos[0]===tx&&p.pos[1]===ty&&p.alive);
       if(pl){
-        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:${skillTargetOk ? '#80c0ff' : '#f09030'}">${skillTargetOk ? '💚 Clique → ' + sk.name : t('ui.tabuleiro.alvo_invalido_ou_bloqueado')}</span>`;
+        tip.innerHTML=`<b>${pl.emoji} ${pl.name}</b><br>HP: ${pl.hp}/${pl.max_hp}<br><span style="color:${skillTargetOk ? '#80c0ff' : '#f09030'}">${skillTargetOk ? t('ui.tabuleiro.clique_aliado', {nome: sk.name}) : t('ui.tabuleiro.alvo_invalido_ou_bloqueado')}</span>`;
         tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
         $('dungeon-canvas').style.cursor=skillTargetOk ? 'crosshair' : 'not-allowed'; return;
       }
@@ -25550,7 +25624,7 @@ function _cancelarHabilidadeDoAtalho(){
     _aimEnd({silent:true, reason:'shortcut_cancel'});
     _limparEfeitosVisuaisLocais();
     _atalhoHabilidadeAtiva = false;
-    toast('Mira cancelada.', 'var(--text2)');
+    toast(t('ui.hud.mira_cancelada'), 'var(--text2)');
     return true;
   }
   const contextoAberto = _atalhoHabilidadeContextoAberto();
@@ -25577,7 +25651,7 @@ function _cancelarHabilidadeDoAtalho(){
   document.querySelectorAll('[id^="painel-"]').forEach(el => el.remove());
   _limparEfeitosVisuaisLocais();
   _atalhoHabilidadeAtiva = false;
-  toast('Habilidade cancelada.', 'var(--text2)');
+  toast(t('ui.hud.habilidade_cancelada'), 'var(--text2)');
   return true;
 }
 function _ativarAtalho(entry, slotIndex = null){
@@ -25673,7 +25747,7 @@ function _gamepadContextForCursor(state, player){
                  : (_pecaCtx.ref.nome || _pecaCtx.ref.tipo || ''),
                mov: _pecaCtx.moves_left }) };
   }
-  if(GS.pendingMove) return { icon:'👣', text:'A / clique novamente para confirmar · B / Esc cancelar' };
+  if(GS.pendingMove) return { icon:'👣', text:t('ui.joystick.a_clique_novamente_para_confirmar_b_esc_ca') };
   if(_gamepadInput.attackMode) return label('ui.joystick.contexto_confirmar_alvo', '⚔');
 
   // Estes modos são tratados pelo renderer antes do resolvedor puro.
@@ -25928,18 +26002,18 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
     efeitos.set(id, {id, nome: nome || id, icon, descricao: descricao || '', rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
   };
   const nomes = {
-    cancao_heroica:t('ui.hud.cancao_heroica'), esconder_sombras:'Esconder nas Sombras',
-    detectar_armadilhas:'Detectar Armadilhas', regeneracao_divina:t('ui.hud.regeneracao_divina'),
-    guerreiro_luz:'Guerreiro da Luz', golpe_sagrado:'Golpe Sagrado', protetor:'Protetor',
-    brutalidade:'Brutalidade', tecnica_mira_perfeita:'Mira Perfeita',
-    tecnica_investida:'Investida Heroica', tecnica_ataque_coordenado:'Ataque Coordenado',
-    tecnica_sangue_frio:'Sangue Frio', tecnica_golpe_decisivo:'Golpe Decisivo',
+    cancao_heroica:t('ui.hud.cancao_heroica'), esconder_sombras:t('ui.hud.esconder_nas_sombras'),
+    detectar_armadilhas:t('ui.hud.detectar_armadilhas'), regeneracao_divina:t('ui.hud.regeneracao_divina'),
+    guerreiro_luz:t('ui.hud.guerreiro_da_luz'), golpe_sagrado:t('ui.hud.golpe_sagrado'), protetor:t('ui.hud.protetor'),
+    brutalidade:t('ui.hud.brutalidade'), tecnica_mira_perfeita:t('ui.hud.mira_perfeita'),
+    tecnica_investida:t('ui.hud.investida_heroica'), tecnica_ataque_coordenado:t('ui.hud.ataque_coordenado'),
+    tecnica_sangue_frio:t('ui.hud.sangue_frio'), tecnica_golpe_decisivo:t('ui.hud.golpe_decisivo'),
     tecnica_tatica_defensiva:t('ui.hud.tatica_defensiva'), tecnica_defesa_impecavel:t('ui.hud.defesa_impecavel'),
-    tecnica_passo_fantasma:'Passo Fantasma', tecnica_resistencia_absoluta:t('ui.hud.resistencia_absoluta'),
-    tecnica_contra_ataque:'Contra-Ataque', mira_certeira:'Mira Certeira',
-    golpe_devastador:'Golpe Devastador', furia_berserker:t('ui.hud.furia_berserker'),
-    aprimorar_magia:'Aprimorar Magia', estender_magia:'Estender Magia',
-    fortalecer_magia:'Fortalecer Magia', aumento_ca_temporario:t('ui.hud.ca_temporaria'),
+    tecnica_passo_fantasma:t('ui.hud.passo_fantasma'), tecnica_resistencia_absoluta:t('ui.hud.resistencia_absoluta'),
+    tecnica_contra_ataque:'Contra-Ataque', mira_certeira:t('ui.hud.mira_certeira'),
+    golpe_devastador:t('ui.hud.golpe_devastador'), furia_berserker:t('ui.hud.furia_berserker'),
+    aprimorar_magia:t('ui.hud.aprimorar_magia'), estender_magia:t('ui.hud.estender_magia'),
+    fortalecer_magia:t('ui.hud.fortalecer_magia'), aumento_ca_temporario:t('ui.hud.ca_temporaria'),
   };
   const nomeSkill = id => {
     const h = window._menuHabilidadesDados?.[id]
@@ -26019,7 +26093,7 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
   if(Number(player.regen_pool || 0) > 0) addMagic('regeneracao_magica');
   if(player.contramagica_preparada) addMagic('contramagica');
   if(Number(player.temp_ca_bonus || 0) > 0)
-    add('aumento_ca_temporario', t('ui.hud.ca_temporaria_2'), '🛡️', player.temp_ca_rodadas);
+    add('aumento_ca_temporario', t('ui.hud.ca_temporaria'), '🛡️', player.temp_ca_rodadas);
 
   // Zonas são estado do mapa, não do jogador. Mostra a zona enquanto ela
   // estiver ativa e tiver sido criada pelo herói local.
@@ -26616,9 +26690,9 @@ function _audioPanelEnsure(){
     +     '<input id="aud-music" type="range" min="0" max="100" value="' + pct(_mmVol) + '" style="width:100%;">'
     +     '<div class="cfg-audio-line"><span data-i18n="ui.menu.sons">🔊 Efeitos</span><span id="aud-sfx-val">' + pct(_sfxVol) + '%</span></div>'
     +     '<input id="aud-sfx" type="range" min="0" max="100" value="' + pct(_sfxVol) + '" style="width:100%;">'
-    +     '<div class="cfg-audio-line"><span>🌫 Ambiente</span><span id="aud-ambience-val">' + pct(_ambienceVol) + '%</span></div>'
+    +     '<div class="cfg-audio-line"><span>'+t('ui.audio.ambiente')+'</span><span id="aud-ambience-val">' + pct(_ambienceVol) + '%</span></div>'
     +     '<input id="aud-ambience" type="range" min="0" max="100" value="' + pct(_ambienceVol) + '" style="width:100%;">'
-    +     '<div class="cfg-audio-line"><span>🎲 Dados</span><span id="aud-dice-val">' + pct(_diceVol) + '%</span></div>'
+    +     '<div class="cfg-audio-line"><span>'+t('ui.audio.dados')+'</span><span id="aud-dice-val">' + pct(_diceVol) + '%</span></div>'
     +     '<input id="aud-dice" type="range" min="0" max="100" value="' + pct(_diceVol) + '" style="width:100%;">'
     +   '</section>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.joystick">🎮 Joystick</div>'
@@ -26649,14 +26723,14 @@ function _audioPanelEnsure(){
     +   '<input id="acc-font" type="range" min="100" max="200" step="10" value="' + Math.round(_accessFontScale * 100) + '" style="width:100%;">'
     +   '<div class="cfg-access-line"><span>⏱ Mensagens</span><span id="acc-duration-val">' + Math.round(_accessDurationScale * 100) + '%</span></div>'
     +   '<input id="acc-duration" type="range" min="50" max="200" step="10" value="' + Math.round(_accessDurationScale * 100) + '" style="width:100%;">'
-    +   '<label class="cfg-access-check"><input id="acc-contrast" type="checkbox"' + (_highContrast ? ' checked' : '') + '> Alto contraste</label>'
+    +   '<label class="cfg-access-check"><input id="acc-contrast" type="checkbox"' + (_highContrast ? ' checked' : '') + '> '+t('ui.audio.alto_contraste')+'</label>'
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.audio.velocidade">🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal" data-i18n="ui.audio.normal">Normal</option><option value="fast" data-i18n="ui.audio.rapida">Rápida</option><option value="instant" data-i18n="ui.audio.instantanea">Instantânea</option></select></label>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
-    +       'border:1px solid #c8a95155;border-radius:6px;color:#e8d9a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⌂ Voltar ao menu inicial</button>'
+    +       'border:1px solid #c8a95155;border-radius:6px;color:#e8d9a8;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.config.voltar_menu_inicial')+'</button>'
     +     '<button id="cfg-sair" data-i18n="ui.menu.sair" style="width:100%;padding:8px;background:rgba(60,20,20,.6);'
-    +       'border:1px solid #a0505055;border-radius:6px;color:#e8b0a8;font-family:inherit;font-size:.8rem;cursor:pointer;">⏻ Sair do jogo</button>'
+    +       'border:1px solid #a0505055;border-radius:6px;color:#e8b0a8;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.config.sair_do_jogo')+'</button>'
     +   '</div>'
     + '</div>';
   document.body.appendChild(wrap);
@@ -29287,7 +29361,7 @@ function _metamorfoseAnimFromMessage(msg){
     casterId: msg.caster_id == null ? null : String(msg.caster_id),
     targetId: msg.target_id == null ? null : String(msg.target_id),
     origin, target, formId: String(msg.forma_id || ''),
-    formName: msg.forma_nome || msg.forma_id || 'nova forma',
+    formName: msg.forma_nome || msg.forma_id || t('ui.magia.nova_forma'),
     formEmoji: msg.forma_emoji || '🦋', permanent: !!msg.permanente,
     color: visual.color, light: visual.light,
     travelMs: Math.max(300, Number(msg.travel_ms) || 620),
@@ -30120,7 +30194,7 @@ function _contramagicaDraw2D(ctx, state, anim, now){
   ctx.fillStyle = `rgba(240,255,255,${((.62 + .28*pulse) * Math.max(impactPulse, .18) * fade).toFixed(3)})`; ctx.fillText(active ? (failed ? '✕' : '🛑') : '🛑', tx, ty - CELL * (.08 + impactPulse * .18));
   if(active && p.impact > .42){
     ctx.font = `bold ${Math.max(12, CELL * .20)}px sans-serif`; ctx.fillStyle = failed ? '#ffadb2' : '#baf4ff';
-    ctx.globalAlpha = Math.min(1, (.60 + .26*pulse) * impactPulse * fade); ctx.fillText(failed ? 'falhou' : 'magia anulada', tx, ty + CELL * .34);
+    ctx.globalAlpha = Math.min(1, (.60 + .26*pulse) * impactPulse * fade); ctx.fillText(failed ? 'falhou' : t('ui.hud.magia_anulada'), tx, ty + CELL * .34);
   }
   ctx.restore();
 }
@@ -38349,7 +38423,7 @@ function _glbVaiRetentar(error, restam){
   return !alvo || typeof alvo.status !== 'number' || alvo.status === 0;
 }
 function _glbMotivo(error){
-  if(!error) return 'erro desconhecido';
+  if(!error) return t('ui.hud.erro_desconhecido');
   // O GLTFLoader entrega um ProgressEvent do XHR. String(ProgressEvent) é
   // "[object ProgressEvent]" — inútil. O que informa é o status: 0 significa
   // falha de CONEXÃO (socket morto/recusado), não resposta do servidor.
@@ -38909,7 +38983,7 @@ function renderMap3D(state){
     }
     catch(err){
       console.error('init3D failed:', err);
-      toast('❌ Erro ao iniciar 3D: ' + err.message, 'var(--red)');
+      toast(t('ui.hud.erro_ao_iniciar_3d', {erro: err.message}), 'var(--red)');
       // Fall back to 2D so the board is still visible
       mode3D = false;
       const btn=$('btn-3d-toggle'); if(btn){ btn.classList.remove('active'); btn.textContent='🎲 3D'; }
@@ -40110,7 +40184,10 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   vampiro:           'assets/models3d/monstros/vampiro.glb',
   vampiro_jovem:     'assets/models3d/monstros/vampiro.glb',
   mestre_vampiro:    'assets/models3d/monstros/mestre_vampiro.glb',
-  vampiro_anciao:    'assets/models3d/monstros/mestre_vampiro.glb',
+  vampiro_anciao:    'assets/models3d/monstros/vampiro_anciao.glb',
+  lorde_vampiro:     'assets/models3d/monstros/lorde_vampiro.glb',
+  harpia:            'assets/models3d/monstros/harpia.glb',
+  tiranossauro_rex:  'assets/models3d/monstros/tiranossauro_rex.glb',
   tirano_da_mata:    'assets/models3d/monstros/tirano_da_mata.glb',
   tirano_ancestral:  'assets/models3d/monstros/tirano_da_mata.glb',
   ciclope:            'assets/models3d/monstros/ciclope.glb',
@@ -40165,6 +40242,11 @@ const _MONSTER_GLB_MODELS = Object.freeze({
 function _monsterGLBPath(imageName, monsterType){
   if (monsterType === 'dark_mage')
     return _MONSTER_GLB_MODELS.dark_mage;
+  // A ficha legada do Vampiro Ancião usa a arte PNG `mestre_vampiro`. O tipo
+  // precisa vencer essa imagem compartilhada para carregar sua variante GLB
+  // própria, já colorida, em vez do Mestre sem materiais.
+  if (monsterType === 'vampiro_anciao')
+    return _MONSTER_GLB_MODELS.vampiro_anciao;
   if (monsterType === 'medusa' || monsterType === 'grande_medusa'
       || monsterType === 'grande_gorgona')
     return _MONSTER_GLB_MODELS.medusa;
@@ -40439,26 +40521,48 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.userData._monsterOriented = !!oriented;
     wrap.userData._monsterCenteredLength = !!(oriented && fillFootprint && !is2x2);
     // Ajustes individuais de proporção sem afetar as demais miniaturas.
-    // O Mago das Trevas fica 8% menor; o Necromante usa 1,045 após a redução
+    // As três variantes de Medusa ficam 15% menores; o Mago das Trevas fica
+    // 8% menor; o Necromante usa 1,045 após a redução
     // de 5% sobre o ajuste anterior; o Lacralion
     // Filhote, 30% menor;
-    // o Lacralion Ancião fica 30% maior; o Tirano Ancestral, 20% maior; o
-    // Molochus Ancião fica 30% maior; o Molochus Jovem, 20% menor; o Zumbi
-    // fica 10% menor; o Soldado fica 20% menor; os dois tipos de Orc ficam
-    // em 90% do tamanho original; o Escorpião de Pedra e a Aranha
+    // o Lacralion Ancião fica 30% maior; o Tirano da Mata fica 10% maior sobre
+    // a escala atual (1,20 × 1,10 = 1,32); o Tirano Ancestral fica 10% maior
+    // sobre a escala atual (1,40 × 1,10 = 1,54); o
+    // Molochus Ancião fica 17% maior (redução de 10% sobre a escala anterior
+    // de 1,30); o Molochus Jovem, 20% menor; o Zumbi (tipo real `zumbi_infectado` —
+    // não existe tipo `zumbi`, e a regra antiga só casava esse nome, por isso as
+    // reduções anteriores nunca valiam) fica em 0,85, calibrado lado a lado com o
+    // vampiro jovem (mesma altura e volume); o Soldado fica 20%
+    // menor; os dois tipos de Orc ficam em 90% do tamanho original; o
+    // Escorpião de Pedra e a Aranha
     // Sombria ficam 30% menores; o Minotauro fica 10% maior e o Minotauro
     // Elite, 20% maior; a Cobra Venenosa e a Cobra Constritora ficam 15% e
     // 10% menores, respectivamente;
-    // o Garaloux Jovem fica 20% menor e o Alfa, 30% maior.
+    // o Garaloux Jovem fica 20% menor e o Alfa fica 15% menor sobre a escala
+    // atual (1,30 × 0,85 = 1,105).
     const monsterVisualScale = monsterType === 'dark_mage' ? 0.92
       : monsterType === 'necromante' ? 1.045
       : monsterType === 'lacralion_filhote' ? 0.70
       : monsterType === 'lacralion_anciao' ? 1.30
-      : monsterType === 'zumbi' ? 0.90
-      : monsterType === 'ovelha' ? 0.80
-      : monsterType === 'tirano_ancestral' ? 1.20
+      : (monsterType === 'medusa' || monsterType === 'grande_medusa'
+          || monsterType === 'grande_gorgona') ? 0.85
+      : (monsterType === 'zumbi' || monsterType === 'zumbi_infectado') ? 0.85
+      : (monsterType === 'bugbear_sombras' || imageName === 'bugbear') ? 0.90
+      : monsterType === 'ferrao_charcos_adulto' ? 1.20
+      : monsterType === 'ferrao_charcos_anciao' ? 1.30
+      : monsterType === 'ovelha' ? 0.68
+      : monsterType === 'ciclope' ? 1.3915
+      : monsterType === 'gigante_guerra' ? 1.43
+      : monsterType === 'gigante_runico' ? 1.40
+      // O Tiranossauro Rex (bípede, 1,72 de altura × 2,50 de comprimento no GLB,
+      // com a cauda alongada) é limitado pelo comprimento na escala-base (0,74 →
+      // 1,28 casa de altura); 2.07 o leva a ~2,65 casas de altura, acima dos dois
+      // tiranos, com a cauda passando da base 2×2.
+      : monsterType === 'tiranossauro_rex' ? 2.07
+      : monsterType === 'tirano_da_mata' ? 1.452
+      : monsterType === 'tirano_ancestral' ? 1.54
       : (monsterType === 'molochus_jovem' || monsterType === 'molochos_jovem') ? 0.80
-      : (monsterType === 'molochus_anciao' || monsterType === 'molochos_anciao') ? 1.30
+      : (monsterType === 'molochus_anciao' || monsterType === 'molochos_anciao') ? 1.17
       : monsterType === 'soldado' ? 0.80
       : (monsterType === 'cobra_venenosa' || imageName === 'cobraVenenosa'
           || imageName === 'cobra_venenosa') ? 0.85
@@ -40475,9 +40579,11 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : monsterType === 'minotauro' ? 1.10
       : monsterType === 'minotauro_elite' ? 1.20
       : monsterType === 'garaloux_jovem' ? 0.80
-      : monsterType === 'garaloux_alfa' ? 1.30
+      : monsterType === 'garaloux_alfa' ? 1.105
       : 1;
     wrap.scale.setScalar(scale * monsterVisualScale);
+    if (monsterType === 'ciclope') wrap.scale.y *= 1.20;
+    if (monsterType === 'tirano_ancestral') wrap.scale.y *= 1.30;
     if (oriented && fillFootprint && !is2x2) {
       // A escala normal limita o modelo pela altura e pode deixá-lo curto no
       // eixo longitudinal. Alongamos somente esse eixo até quase duas casas,
@@ -40570,6 +40676,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   const movementFront = new Set([
     'ciclope',
     'harpia',
+    // O Goblin Arqueiro também precisa do giro de 90° para acompanhar a
+    // direção indicada pelo movimento.
+    'goblinArqueiro', 'goblin_arqueiro',
     // A Aranha Sombria também precisa do giro de 90° para que a frente do
     // GLB acompanhe o sentido indicado pelo movimento.
     'aranhasombria', 'aranha_sombria',
@@ -45649,7 +45758,7 @@ function _injetarFichaPedro() {
           color:#c8a951; font-family:'Cinzel',serif;
           font-size:10px; letter-spacing:2px; cursor:pointer;
         "
-      >📊 ATRIBUTOS</button>
+       data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
       <button
         onclick="trocarAbaFicha('magias','pedro')"
         id="aba-magias"
@@ -45659,7 +45768,7 @@ function _injetarFichaPedro() {
           color:#8a7a5a; font-family:'Cinzel',serif;
           font-size:10px; letter-spacing:2px; cursor:pointer;
         "
-      >💀 MAGIAS</button>
+       data-i18n="ui.ficha.magias">💀 MAGIAS</button>
     </div>
 
     <!-- CONTEÚDO DA ABA -->
@@ -45685,10 +45794,10 @@ function csUpdateLobbyBar(msg){
     const isMe = p.id === GS.myPid;
     const rdy  = !!p.class_id || !!p.is_master;   // Mestre não escolhe classe — já conta como "pronto"
     const cls  = (p.class_id && msg.classes) ? msg.classes[p.class_id] : null;
-    const tag  = p.is_master ? ' 🎭 Mestre' : (cls ? ` ${cls.emoji}` : '');
+    const tag  = p.is_master ? t('ui.selecao.tag_mestre') : (cls ? ` ${cls.emoji}` : '');
     // Jogo salvo: identifica de quem é cada personagem (conta) via tooltip.
     const title = (msg.savegame && p.account)
-      ? ` title="conta de ${p.account}${p.bound ? ' · personagem fixo' : ''}"` : '';
+      ? ` title="${t('ui.selecao.title_conta', {conta: p.account, fixo: p.bound ? t('ui.selecao.personagem_fixo') : ''})}"` : '';
     return `<span class="cs-player-chip${isMe?' me':''}${rdy?' ready':''}"${title}>${p.name}${tag}${p.id===msg.host?' ♛':''}</span>`;
   }).join('');
 
@@ -45718,8 +45827,8 @@ function csUpdateLobbyBar(msg){
     const campaigns = GS.lobbyCampaigns;           // getter (sem parênteses)
     const sel      = GS.lobbySelectedDungeon;     // getter (sem parênteses)
     const selCamp  = msg.selected_campaign || null;   // campanha selecionada (lobby_state)
-    const modeTxt  = (GS.lobbyMode === 'campaign') ? 'Modo: Campanha'
-                   : (GS.lobbyMode === 'authored') ? 'Modo: Masmorra' : 'Modo: Procedural';
+    const modeTxt  = (GS.lobbyMode === 'campaign') ? t('ui.selecao.modo_campanha')
+                   : (GS.lobbyMode === 'authored') ? t('ui.selecao.modo_masmorra') : t('ui.selecao.modo_procedural');
     let opts = [`<option value="">${t('ui.selecao.masmorra_procedural')}</option>`]
       .concat(dungeons.map(d =>
         `<option value="${d.file}"${d.file === sel ? ' selected' : ''}>${d.name}</option>`))
@@ -45732,7 +45841,7 @@ function csUpdateLobbyBar(msg){
         `</optgroup>`;
     }
     picker.innerHTML =
-      `<label class="cs-dungeon-lbl">Masmorra:</label>` +
+      `<label class="cs-dungeon-lbl">${t('ui.selecao.masmorra_lbl')}</label>` +
       `<select id="cs-dungeon-select"${isHost ? '' : ' disabled'}>${opts}</select>` +
       `<span class="cs-dungeon-mode">${modeTxt}</span>`;
     // Re-liga o onchange a cada render (o lobby é redesenhado a cada lobby_state).
@@ -45774,7 +45883,7 @@ function _csApplyMasterMode(){
     mimg.id = 'cs-master-portrait';
     mimg.innerHTML =
       '<img src="assets/portraits/mestre_do_jogo.jpeg" alt="Mestre do Jogo">' +
-      '<div class="cs-master-cap">📖 Mestre do Jogo</div>';
+      '<div class="cs-master-cap" data-i18n="ui.mestre.mestre_do_jogo">📖 Mestre do Jogo</div>';
     // insere no mesmo container do canvas
     if(canvas && canvas.parentNode) canvas.parentNode.appendChild(mimg);
   }
@@ -45970,7 +46079,7 @@ function onClickTileArremesso(tileClicado){
   const [tx, ty] = tileClicado;
   const meshValido = _highlightArremesso.meshes.find(m =>
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
-  if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
+  if(!meshValido){ GS.adicionarLog(t('ui.arremesso.fora_do_alcance_de_arremesso')); return; }
   const tile = meshValido.userData.tilePos;
   if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
@@ -46031,7 +46140,7 @@ function iniciarModoArremessoAdagaSecundaria(){
   return;
   // Implementação pré-sessão de mira: mantida abaixo apenas para referência
   // durante esta migração, mas não é mais alcançada.
-  if(window._modoArremessoPrincipal){ toast('Cancele o arremesso atual primeiro (ESC).', 'var(--gold)'); return; }
+  if(window._modoArremessoPrincipal){ toast(t('ui.arremesso.cancele_o_arremesso_atual_primeiro_esc'), 'var(--gold)'); return; }
   if(!g3){ toast(t('ui.arremesso.so_3d'), 'var(--gold)'); return; }
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ return; }
@@ -46041,12 +46150,12 @@ function iniciarModoArremessoAdagaSecundaria(){
   mostrarHighlightArremesso(me.pos);
   mostrarLegendaArremesso();
   if(g3.renderer) g3.renderer.domElement.style.cursor = 'crosshair';
-  GS.adicionarLog('🎯 Clique num inimigo destacado para arremessar a adaga (ESC cancela).');
+  GS.adicionarLog(t('ui.arremesso.clique_num_inimigo_destacado_para_arremess'));
   document.addEventListener('keydown', function cancelar(ev){
     if(ev.key === 'Escape'){
       limparHighlightArremesso();
       window._modoArremessoAtivo = false;
-      GS.adicionarLog('❌ Arremesso cancelado.');
+      GS.adicionarLog(t('ui.arremesso.arremesso_cancelado_4'));
       document.removeEventListener('keydown', cancelar);
       ev.preventDefault();
     }
@@ -46137,7 +46246,7 @@ function onClickTileArremessoPrincipal(tileClicado){
   const [tx, ty] = tileClicado;
   const meshValido = _highlightArremessoPrincipal.meshes.find(m =>
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
-  if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
+  if(!meshValido){ GS.adicionarLog(t('ui.arremesso.fora_do_alcance_de_arremesso')); return; }
   const tile = meshValido.userData.tilePos;
   if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
@@ -46192,7 +46301,7 @@ function iniciarModoArremessoAdagaPrincipal(){
     if(ev.key === 'Escape'){
       limparHighlightArremessoPrincipal();
       window._modoArremessoPrincipal = false;
-      GS.adicionarLog('❌ Arremesso cancelado.');
+      GS.adicionarLog(t('ui.arremesso.arremesso_cancelado_5'));
       document.removeEventListener('keydown', cancelar);
       ev.preventDefault();
     }
@@ -46281,7 +46390,7 @@ function onClickTileArremessoLanca(tileClicado){
   const [tx, ty] = tileClicado;
   const meshValido = _highlightArremessoLanca.meshes.find(m =>
     m.userData.tilePos.x === tx && m.userData.tilePos.y === ty);
-  if(!meshValido){ GS.adicionarLog('⚠️ Fora do alcance de arremesso'); return; }
+  if(!meshValido){ GS.adicionarLog(t('ui.arremesso.fora_do_alcance_de_arremesso')); return; }
   const tile = meshValido.userData.tilePos;
   if(!tile.temInimigo){ GS.adicionarLog(t('ui.arremesso.direcao_inimigo')); return; }
   const inimigo = getInimigoArremesso(tx, ty);
@@ -46334,7 +46443,7 @@ function iniciarModoArremessoLanca(){
     if(ev.key === 'Escape'){
       limparHighlightArremessoLanca();
       window._modoArremessoLanca = false;
-      GS.adicionarLog('❌ Arremesso cancelado.');
+      GS.adicionarLog(t('ui.arremesso.arremesso_cancelado_6'));
       document.removeEventListener('keydown', cancelar);
       ev.preventDefault();
     }
@@ -46662,8 +46771,8 @@ function on3DMouseMove(e){
       `${hovChest.gold>0?`🪙 ${t('ui.bau.ouros', {n:hovChest.gold})}  `:''}` +
       `${nItems>0?`📦 ${nItems} item(s)`:''}` +
       (canOpen
-        ? `<br><span style="color:#ffd040">Clique para abrir</span>`
-        : `<br><span style="color:#888">Aproxime-se para abrir</span>`);
+        ? `<br><span style="color:#ffd040">${t('ui.tabuleiro.clique_para_abrir')}</span>`
+        : `<br><span style="color:#888">${t('ui.tabuleiro.aproxime_se_para_abrir')}</span>`);
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canOpen ? 'pointer' : 'default';
     g3.hoveredPos = null;
@@ -46672,7 +46781,7 @@ function on3DMouseMove(e){
 
   const heroCorpse = (GS.gameState.hero_corpses||[]).find(c=>c.pos?.[0]===tx&&c.pos?.[1]===ty);
   if(heroCorpse){
-    tip.innerHTML=`🪦 <b>${heroCorpse.nome || t('ui.tabuleiro.heroi_derrotado_2')}</b><br><span style="color:#c7b0d8" data-i18n="ui.tabuleiro.heroi_derrotado">Herói derrotado</span>`;
+    tip.innerHTML=`🪦 <b>${heroCorpse.nome || t('ui.tabuleiro.heroi_derrotado')}</b><br><span style="color:#c7b0d8" data-i18n="ui.tabuleiro.heroi_derrotado">Herói derrotado</span>`;
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor='default';
     g3.hoveredPos=null;
@@ -46687,7 +46796,7 @@ function on3DMouseMove(e){
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';
     tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP) +
-                  (canA ? `<br><span style="color:#f88">⚔ Clique → atacar</span>` : '');
+                  (canA ? `<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '');
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canA ? 'crosshair' : 'default';
     g3.hoveredPos = [tx, ty];   // trigger hover-lift + vitrine light
@@ -46764,7 +46873,7 @@ function _cancelarPreviaMovimento(){
   GS.pendingMove = null;
   _clearMovePreviewVisual();
   if(GS.gameState) renderMap(GS.gameState);
-  toast('Movimento cancelado.', 'var(--text2)');
+  toast(t('ui.hud.movimento_cancelado'), 'var(--text2)');
   return true;
 }
 
@@ -46818,7 +46927,7 @@ function handleTileClick(tx, ty){
           if(inR && (!atk.range || GS.hasLineOfSight(st, monM.pos[0], monM.pos[1], tx, ty))){
             GS.mestreAtacarMonstro(mm.mid, alvo.id, idx); window._mpGolpeArmado = null; return;
           }
-          toast('Alvo fora do alcance deste golpe.', 'var(--orange)'); return;
+          toast(t('ui.hud.alvo_fora_do_alcance_deste_golpe'), 'var(--orange)'); return;
         }
       }
       if((st.master_manual_reach||[]).some(([x,y])=>x===tx&&y===ty)){
@@ -46893,7 +47002,7 @@ function handleTileClick(tx, ty){
       if(podePegar){ GS.pickupItem(gi.id); return; }
       // Um item distante não pode bloquear um ataque válido no mesmo tile.
       if(ataque?.type !== 'attack'){
-        toast('Muito longe do item.', 'var(--text2)'); return;
+        toast(t('ui.hud.muito_longe_do_item'), 'var(--text2)'); return;
       }
     }
   }
@@ -46980,7 +47089,7 @@ function handleTileClick(tx, ty){
             if(emAlcanceA) GS.atacarAnimado(a.id, mon.id);
             else toast(alcanceA
               ? t('ui.mestre.ataque_alcanca', {n: alcanceA, forma: ataqueA.range_shape ? t('ui.mestre.em_linha_reta') : ''})
-              : 'O servo precisa estar adjacente ao alvo.');
+              : t('ui.hud.o_servo_precisa_estar_adjacente_ao_alvo'));
             return;
           }
           // Movimento fluido: percorre o caminho inteiro até a casa clicada,
@@ -47035,17 +47144,17 @@ function handleTileClick(tx, ty){
       send({type:'open_door', tx:action.x, ty:action.y});
       break;
     case 'door_far':
-      toast('🚪 Aproxime-se da porta para abri-la.', 'var(--gold)');
+      toast(t('ui.hud.aproxime_se_da_porta_para_abri_la'), 'var(--gold)');
       break;
     case 'attack_blocked_wall':
-      toast('🧱 Uma parede bloqueia a linha de tiro!', 'var(--orange)');
+      toast(t('ui.hud.uma_parede_bloqueia_a_linha_de_tiro'), 'var(--orange)');
       break;
     case 'movement_blocked':
       if(action.reason === 'petrified')
         toast(t('erro.voce_esta_petrificado_e_nao_pode_se_move'), 'var(--orange)');
       break;
     case 'skill_blocked':
-      { const msg = action.reason === 'trap_adjacent' ? '⚠ Selecione uma casa adjacente ao Luccas.' : '⚠ Este ataque requer inimigo cardinalmente adjacente!';
+      { const msg = action.reason === 'trap_adjacent' ? t('ui.hud.selecione_uma_casa_adjacente_ao_luccas') : t('ui.hud.este_ataque_requer_inimigo_cardinalmente_a');
         _aimSetStatus(msg, '#ffb168'); toast(msg, 'var(--orange)'); }
       break;
     case 'disarm_trap':
@@ -47108,7 +47217,7 @@ GS.on('loginResult', (msg) => {
       GS.criarConta(c.url, c.name, c.password);
     }
   } else {
-    alert(msg.error || 'Falha no login.');
+    alert(msg.error || t('ui.conta.falha_no_login'));
   }
 });
 
@@ -47123,7 +47232,7 @@ GS.on('savegamesList', (list) => {
     master.parentElement.insertAdjacentElement('afterend', options);
   }
   if (!box) return;
-  box.innerHTML = list.length ? '' : '<div style="color:#8ab88a;">Nenhum jogo salvo ainda.</div>';
+  box.innerHTML = list.length ? '' : '<div style="color:#8ab88a;">'+t('ui.save.nenhum_jogo_salvo')+'</div>';
   for (const sg of list) {
     const membros = Object.keys(sg.members || {}).length;
     const el = document.createElement('div');
@@ -47131,10 +47240,10 @@ GS.on('savegamesList', (list) => {
     el.innerHTML = '<div><b>' + sg.name + '</b><br><span style="font-size:.7rem;color:#8ab88a;">'
       + (sg.mode === 'campaign' ? t('ui.save.campanha') : t('ui.save.avulso')) + t('ui.save.fase_membros',{f: (sg.campaign_phase||0)+1, n: membros}) + '</span></div>';
     const btns = document.createElement('div');
-    const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent='Continuar';
+    const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent=t('ui.save.continuar');
     cont.onclick = () => GS.loadSavegame(sg.id);
     btns.appendChild(cont);
-    const sequel = document.createElement('button'); sequel.className='btn-secondary btn-sm'; sequel.textContent='↗ Continuar';
+    const sequel = document.createElement('button'); sequel.className='btn-secondary btn-sm'; sequel.textContent=t('ui.save.continuar_sequencia');
     sequel.title=t('ui.save.sequel_title');
     sequel.onclick = () => {
       const name = prompt(t('ui.save.nome_nova_campanha'), (sg.name || t('ui.save.campanha')) + t('ui.save.sufixo_continuacao'));
@@ -47171,8 +47280,8 @@ GS.on('savegameCreated', (sg) => { GS.loadSavegame(sg.id); });
 GS.on('campaignVote', (msg) => {
   const v = msg.vote || {};
   if (v.status !== 'open' || !(v.eligible || []).includes(GS.getAccount())) {
-    if (v.status === 'approved') toast('Entrada na campanha aprovada.', 'var(--green)');
-    if (v.status === 'rejected') toast('Entrada na campanha recusada.', 'var(--red)');
+    if (v.status === 'approved') toast(t('ui.save.entrada_aprovada'), 'var(--green)');
+    if (v.status === 'rejected') toast(t('ui.save.entrada_recusada'), 'var(--red)');
     return;
   }
   const hero = v.class_id || t('ui.save.heroi');
@@ -47309,7 +47418,7 @@ GS.on('enterDungeon', (msg) => {
       : Number(msg.intro_duration_ms || 3000);
     _showCityTravelTransition(
       {transition_images:Array.isArray(msg.transition_images) ? msg.transition_images : []},
-      {nome:'Masmorra'},
+      {nome:t('ui.hud.masmorra')},
       remaining || Number(msg.intro_duration_ms || 3000));
   }
 });
@@ -47446,7 +47555,7 @@ function _atualizarFichaFab(){
   if(GS.isMaster()){
     fab.style.display = document.getElementById('screen-game')?.classList.contains('active') ? 'flex' : 'none';
     fab.textContent = '🗺️';
-    fab.title = 'Mapa de CR (mestre)';
+    fab.title = t('ui.ficha.mapa_de_cr_mestre');
     fab.onclick = () => abrirMinimapaCR();
   } else {
     fab.style.display = 'none';
@@ -47691,7 +47800,7 @@ function _renderAcaoTempestade(heroi) {
   const zonas = zonasTodas.filter(z => !z.ciclones_pendentes);
   if (!zonas.length) return '';
   const botoes = zonas.flatMap(z => (z.ciclones || []).filter(c => c.movido_em !== rodada).map(c =>
-    `<button onclick="_iniciarMovimentoTempestade('${z.id}',${c.id})" style="padding:6px 8px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;">🌪️ Ciclone ${c.id}</button>`));
+    `<button onclick="_iniciarMovimentoTempestade('${z.id}',${c.id})" style="padding:6px 8px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;">${t('ui.magia.ciclone_n', {n: c.id})}</button>`));
   return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
     <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.tempestade_cabecalho')}</div>
     <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.tempestade_mova_ciclones')}</div>
@@ -47743,7 +47852,7 @@ function _iniciarSelecaoPosicoesTempestade(msg) {
     const modo = window._modoTempestadePlacement;
     if (!modo) return;
     _aimSetHighlights({ range: modo.permitidos, area: modo.selecionados });
-    _aimSetStatus(`${modo.selecionados.size}/${modo.max} ciclones posicionados. Escolha casas válidas dentro da tempestade.`, '#9de8f4');
+    _aimSetStatus(t('ui.magia.ciclones_posicionados_escolha', {n: modo.selecionados.size, max: modo.max}), '#9de8f4');
     const btn = _aimSessionState.current?.confirmButton;
     if (btn) {
       btn.disabled = modo.selecionados.size !== modo.max;
@@ -47786,7 +47895,7 @@ function _clickTileTempestadePlacement(tx, ty) {
     return;
   }
   _aimSetHighlights({ range: modo.permitidos, area: modo.selecionados });
-  _aimSetStatus(`${modo.selecionados.size}/${modo.max} ciclones posicionados.`, '#9de8f4');
+  _aimSetStatus(t('ui.magia.ciclones_posicionados', {n: modo.selecionados.size, max: modo.max}), '#9de8f4');
   const btn = _aimSessionState.current?.confirmButton;
   if (btn) {
     btn.disabled = modo.selecionados.size !== modo.max;
@@ -48448,7 +48557,7 @@ GS.on('spellAnimation', msg => {
 GS.on('iraRochaArdentePrompt', msg => _iniciarSelecaoChamasIraRocha(msg));
 GS.on('tempestadeCiclonesPrompt', msg => _iniciarSelecaoPosicoesTempestade(msg));
 GS.on('sorteReacao', msg => {
-  const aceitar = window.confirm(`🎲 SORTE\n\n${msg.texto || 'Usar Sorte?'}`);
+  const aceitar = window.confirm(t('ui.tecnica.sorte_confirm', {texto: msg.texto || t('ui.tecnica.usar_sorte')}));
   GS.responderSorteReacao(aceitar);
 });
 
@@ -48485,12 +48594,12 @@ function _ensureTeleporteSaveOverlay(){
   overlay.id = 'teleporte-save-overlay';
   overlay.innerHTML = `<div class="trap-box" role="dialog" aria-modal="true" style="border-color:#b77cff;">
     <div class="trap-art"><img data-teleporte-art alt="Teleporte" style="width:100%;height:100%;object-fit:cover;border-radius:6px;"></div>
-    <div class="trap-content"><h3 data-teleporte-title>🌀 TELEPORTE</h3>
-      <div class="trap-status trap-status--fail" data-teleporte-status>TESTE DE VONTADE</div>
+    <div class="trap-content"><h3 data-teleporte-title data-i18n="ui.magia.teleporte_mira_titulo">🌀 TELEPORTE</h3>
+      <div class="trap-status trap-status--fail" data-teleporte-status data-i18n="ui.hud.teste_de_vontade">TESTE DE VONTADE</div>
       <p data-teleporte-desc></p><ul data-teleporte-effects></ul>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-        <button type="button" data-teleporte-resist class="trap-close" style="border-color:#75b7ff;">RESISTIR</button>
-        <button type="button" data-teleporte-fail class="trap-close" style="border-color:#d39bff;">FALHAR VOLUNTARIAMENTE</button>
+        <button type="button" data-teleporte-resist class="trap-close" style="border-color:#75b7ff;" data-i18n="ui.hud.resistir">RESISTIR</button>
+        <button type="button" data-teleporte-fail class="trap-close" style="border-color:#d39bff;" data-i18n="ui.hud.falhar_voluntariamente">FALHAR VOLUNTARIAMENTE</button>
       </div>
     </div></div>`;
   document.body.appendChild(overlay);
@@ -48549,22 +48658,22 @@ function _atualizarMetamorfoseStatus(){
   const caster=String(p?.metamorfose_caster_id||'')===String(GS.myPid) || !!monstroMeta;
   const itensInfo = view?.metamorfose_usa_equipamentos
     ? t('ui.magia.equipamentos_e_itens_continuam_utilizaveis')
-    : 'Equipamentos e itens ficam bloqueados enquanto durar.';
-  el.innerHTML=`<div style="display:flex;gap:10px;align-items:center;"><img src="${_assetURL('assets/armadilhas/metamorfose.png')}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'"><div><b style="color:#ffb06b;" data-i18n="ui.magia.metamorfose">🦋 METAMORFOSE</b><div style="font-size:12px;margin-top:4px;"><span data-i18n="ui.magia.forma_rotulo">Forma:</span> <b>${_esc(view?.metamorfose_forma_nome||view?.metamorfose_forma_type||'—')}</b><br><span data-i18n="ui.magia.pv_rotulo">PV:</span> ${view?.hp??'—'}/${view?.max_hp??'—'}<br>${itensInfo}<br><span data-i18n="ui.marcado.habilidades_de_heroi_ficam_bloqueadas_enqu">Habilidades de herói ficam bloqueadas enquanto durar.</span></div></div></div><div style="font-size:11px;color:#c8b89a;margin-top:8px;" data-i18n="ui.magia.o_mago_paga_1_e_1_por_rodada">O mago paga 🍖-1 e 💧-1 por rodada.</div>${caster?'<button data-meta-cancel style="margin-top:8px;width:100%;">Encerrar metamorfose</button>':''}${monstroMeta?'<button data-meta-perm style="margin-top:6px;width:100%;">Tentar tornar o monstro permanente</button>':''}`;
+    : t('ui.magia.equipamentos_e_itens_ficam_bloqueados_enqu');
+  el.innerHTML=`<div style="display:flex;gap:10px;align-items:center;"><img src="${_assetURL('assets/armadilhas/metamorfose.png')}" style="width:48px;height:48px;object-fit:cover;border-radius:5px;" onerror="this.style.display='none'"><div><b style="color:#ffb06b;" data-i18n="ui.magia.metamorfose">🦋 METAMORFOSE</b><div style="font-size:12px;margin-top:4px;"><span data-i18n="ui.magia.forma_rotulo">Forma:</span> <b>${_esc(view?.metamorfose_forma_nome||view?.metamorfose_forma_type||'—')}</b><br><span data-i18n="ui.magia.pv_rotulo">PV:</span> ${view?.hp??'—'}/${view?.max_hp??'—'}<br>${itensInfo}<br><span data-i18n="ui.marcado.habilidades_de_heroi_ficam_bloqueadas_enqu">Habilidades de herói ficam bloqueadas enquanto durar.</span></div></div></div><div style="font-size:11px;color:#c8b89a;margin-top:8px;" data-i18n="ui.magia.o_mago_paga_1_e_1_por_rodada">O mago paga 🍖-1 e 💧-1 por rodada.</div>${caster?'<button data-meta-cancel style="margin-top:8px;width:100%;">'+t('ui.magia.encerrar_metamorfose')+'</button>':''}${monstroMeta?'<button data-meta-perm style="margin-top:6px;width:100%;">'+t('ui.magia.tentar_tornar_permanente')+'</button>':''}`;
   el.querySelector('[data-meta-cancel]')?.addEventListener('click',()=>GS.cancelarMetamorfose());
   el.querySelector('[data-meta-perm]')?.addEventListener('click',()=>GS.tentarMetamorfosePermanente());
 }
 
 GS.on('metamorfoseSavePrompt', msg => {
   if (String(msg.target_id) !== String(GS.myPid)) return;
-  const forma = msg.forma?.name || 'criatura escolhida';
+  const forma = msg.forma?.name || t('ui.magia.criatura_escolhida');
   const falhar = confirm(t('ui.magia.metamorfose_confirmar_falha', {forma, dc: msg.dc}));
   GS.responderMetamorfose(msg.request_id, falhar);
 });
 GS.on('metamorfoseResult', msg => {
   const souAlvo = String(msg.target_id) === String(GS.myPid);
   const souConjurador = String(msg.caster_id) === String(GS.myPid);
-  if (souAlvo) toast(msg.revertida ? '🦋 A Metamorfose terminou.' : `🦋 Forma: ${msg.forma?.name || 'criatura'}`, '#c8a951');
+  if (souAlvo) toast(msg.revertida ? t('ui.magia.metamorfose_terminou') : t('ui.magia.metamorfose_forma', {nome: msg.forma?.name || t('ui.magia.criatura')}), '#c8a951');
   // O resultado chega por broadcast. A janela deve aparecer para quem sofreu
   // a transformação e também para o mago que a lançou sobre outra criatura,
   // sem abrir o mesmo popup para os demais jogadores.
@@ -48575,7 +48684,7 @@ GS.on('metamorfoseResult', msg => {
       ...msg,
       tipo: 'metamorfose',
       tipo_id: 'metamorfose',
-      nome: _rotulo('metamorfose.nome', 'cat.magia', 'Metamorfose'),
+      nome: _rotulo('metamorfose.nome', 'cat.magia', t('cat.magia.metamorfose.nome')),
       descricao: t('ui.magia.metamorfose_assumiu_forma', {alvo, forma}),
       efeitos_extra: [
         t('ui.magia.metamorfose_forma_aplicada', {forma}),
@@ -48588,7 +48697,7 @@ GS.on('metamorfoseResult', msg => {
 });
 GS.on('metamorfoseFormaDesbloqueada', msg => {
   const f = msg?.forma;
-  toast(`🦋 Nova forma desbloqueada: ${f?.name || f?.type || 'criatura'}.`, '#8fd18f');
+  toast(t('ui.magia.nova_forma_desbloqueada', {nome: f?.name || f?.type || t('ui.magia.criatura')}), '#8fd18f');
 });
 GS.on('petrifyResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
 GS.on('mentalControlResult', msg => { _queueConditionPulse(msg); queueTrapResult(msg); });
@@ -48681,7 +48790,7 @@ GS.on('improvisoResultado', renderImprovisoQuadro);
 // ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
 GS.on('decor_loot', msg => {
   abrirPainelLoot({
-    titulo: '📦 Objeto',
+    titulo: t('ui.decor.objeto'),
     gold: msg.gold || 0,
     items: msg.items || [],
     onPegarOuro: () => GS.takeFromDecor(msg.decor_id, 'gold', 0),
@@ -48699,12 +48808,12 @@ function abrirMensagemPlaca(msg){
   el.id = 'placa-message-overlay';
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;';
   const texto = _esc(msg?.texto || '');
-  const titulo = _esc(msg?.nome || 'Placa');
+  const titulo = _esc(msg?.nome || t('ui.hud.placa'));
   el.innerHTML = `<div style="width:min(560px,92vw);background:linear-gradient(145deg,#312516,#17120d);border:2px solid #c8a951;border-radius:12px;box-shadow:0 0 30px #000;padding:22px;color:#f5e7c5;text-align:center;">
     <div style="font-size:30px;line-height:1;margin-bottom:8px">${_esc(msg?.icone || '🪧')}</div>
     <div style="font-family:'Cinzel Decorative',serif;color:#c8a951;font-size:18px;letter-spacing:1px">${titulo}</div>
     <div style="margin:18px 4px 20px;white-space:pre-wrap;text-align:left;line-height:1.55;font-size:16px;color:#f4ead4">${texto}</div>
-    <button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #c8a951;border-radius:7px;background:#3b2b18;color:#f5e7c5;font-weight:700;cursor:pointer">Fechar</button>
+    <button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #c8a951;border-radius:7px;background:#3b2b18;color:#f5e7c5;font-weight:700;cursor:pointer" data-i18n="ui.cidade.fechar">Fechar</button>
   </div>`;
   document.body.appendChild(el);
   const fechar = () => {
@@ -48731,7 +48840,7 @@ window.abrirCarta = function(item){
   const el = document.createElement('div');
   el.id = 'carta-message-overlay';
   el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1300;display:flex;align-items:center;justify-content:center;padding:20px;';
-  const nome = _esc(item?.name || item?.nome || 'Carta');
+  const nome = _esc(item?.name || item?.nome || t('ui.decor.carta'));
   const texto = _esc(item?.texto || item?.mensagem || item?.descricao || t('ui.carta.sem_mensagem'));
   el.innerHTML = `<div style="width:min(620px,92vw);max-height:84vh;overflow:auto;background:linear-gradient(145deg,#f3e5c4,#d6bd8b);border:3px solid #67451e;border-radius:5px;box-shadow:0 12px 40px #000; padding:28px 30px;color:#2e2113;">
     <div style="text-align:center;border-bottom:1px solid #8a6836;padding-bottom:12px;margin-bottom:18px;">
@@ -48739,7 +48848,7 @@ window.abrirCarta = function(item){
       <div style="font-family:'Cinzel Decorative',serif;font-size:18px;letter-spacing:1px">${nome}</div>
     </div>
     <div style="white-space:pre-wrap;line-height:1.7;font-family:Georgia,serif;font-size:17px;min-height:80px">${texto}</div>
-    <div style="text-align:center;margin-top:24px"><button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #67451e;border-radius:5px;background:#7b5527;color:#fff4d8;font-weight:700;cursor:pointer">Fechar</button></div>
+    <div style="text-align:center;margin-top:24px"><button type="button" data-gamepad-cancel style="min-width:130px;padding:9px 18px;border:1px solid #67451e;border-radius:5px;background:#7b5527;color:#fff4d8;font-weight:700;cursor:pointer" data-i18n="ui.cidade.fechar">Fechar</button></div>
   </div>`;
   document.body.appendChild(el);
   let fechada = false;
@@ -48762,8 +48871,8 @@ GS.on('item_message', msg => window.abrirCarta(msg?.item || msg));
 
 GS.on('decor_mechanism', msg => {
   abrirPainelLoot({
-    titulo: '⚙ Objeto-chave', gold: 0, items: [],
-    acao: { label: '⚙ Ativar mecanismo', onClick: () => GS.activateDecorMechanism(msg.decor_id) },
+    titulo: t('ui.decor.objeto_chave'), gold: 0, items: [],
+    acao: { label: t('ui.decor.ativar_mecanismo'), onClick: () => GS.activateDecorMechanism(msg.decor_id) },
   });
 });
 
@@ -48847,7 +48956,7 @@ window._confirmarMagiasCriacao = function(){
   GS.setKnownSpells(sel);
   const el = document.getElementById('overlay-selecao-criacao');
   if (el) el.remove();
-  toast('Magias escolhidas!', 'var(--gold)');
+  toast(t('ui.magia.magias_escolhidas'), 'var(--gold)');
 };
 
 // Esc abre o menu somente quando nenhuma interface contextual está usando a
@@ -48931,7 +49040,7 @@ function _relatorioArte3D(){
     const c = cache[caminho];
     const estado = c === 'erro' ? 'erro' : (c ? 'carregado' : 'carregando');
     const out = { tipo: 'GLB', caminho, estado };
-    if(estado === 'erro') out.motivo = _glbErroMsg[caminho] || 'erro desconhecido';
+    if(estado === 'erro') out.motivo = _glbErroMsg[caminho] || t('ui.hud.erro_desconhecido');
     return out;
   };
   // Billboard PNG: o estado mora no cache de texturas, não no de GLB.
@@ -48979,7 +49088,7 @@ function _relatorioArte3D(){
 // tabuleiro. Sem ele, "não apareceu" continua sendo um relato sem dado nenhum.
 function _relatorioArte3DTexto(){
   const { objetos, monstros } = _relatorioArte3D();
-  if(!objetos) return 'Sem masmorra carregada.';
+  if(!objetos) return t('ui.hud.sem_masmorra_carregada');
   const linha = it => {
     const a = it.arte, u = it.emUso;
     const base = `${it.emoji} ${it.nome} @${(it.pos||[]).join(',')} — ${a.tipo}`
@@ -48989,13 +49098,13 @@ function _relatorioArte3DTexto(){
   const conta = arr => {
     const c = { GLB: 0, PNG: 0, procedural: 0, erro: 0 };
     for(const it of arr){ c[it.arte.tipo]++; if(it.arte.estado === 'erro') c.erro++; }
-    return `${arr.length} itens — ${c.GLB} GLB, ${c.PNG} PNG, ${c.procedural} procedural, ${c.erro} com erro`;
+    return t('ui.arte.resumo', {n: arr.length, glb: c.GLB, png: c.PNG, proc: c.procedural, erro: c.erro});
   };
   return [
     t('ui.diag.titulo', {data:new Date().toLocaleString()}),
-    `cliente: ${typeof _arteGen === 'number' ? 'atual' : 'ANTIGO (recarregue com Ctrl+Shift+R)'}`,
-    ``, `MONSTROS (${conta(monstros)})`, ...monstros.map(linha),
-    ``, `OBJETOS (${conta(objetos)})`, ...objetos.map(linha),
+    `cliente: ${typeof _arteGen === 'number' ? 'atual' : t('ui.hud.antigo_recarregue_com_ctrl_shift_r')}`,
+    ``, t('ui.arte.monstros_n', {n: conta(monstros)}), ...monstros.map(linha),
+    ``, t('ui.arte.objetos_n', {n: conta(objetos)}), ...objetos.map(linha),
   ].join('\n');
 }
 
@@ -49007,7 +49116,7 @@ function fecharDiagnosticoArte3D(){ document.getElementById('diag-arte3d')?.remo
 function abrirDiagnosticoArte3D(){
   fecharDiagnosticoArte3D();
   const { objetos, monstros } = _relatorioArte3D();
-  if(!objetos){ toast('Nenhuma masmorra carregada.', 'var(--gold)'); return; }
+  if(!objetos){ toast(t('ui.hud.nenhuma_masmorra_carregada'), 'var(--gold)'); return; }
   const cor = e => e === 'erro' ? '#ff6b6b' : e === 'carregando' ? '#ffd166' : '#8ce99a';
   const linha = it => {
     const a = it.arte, u = it.emUso;
@@ -49036,8 +49145,8 @@ function abrirDiagnosticoArte3D(){
     </div>
     ${typeof _arteGen === 'number' ? '' :
       `<div style="color:#ff6b6b">${t('ui.diag.cliente_antigo')}</div>`}
-    ${tabela('MONSTROS', monstros)}
-    ${tabela('OBJETOS', objetos)}
+    ${tabela(t('ui.hud.monstros'), monstros)}
+    ${tabela(t('ui.hud.objetos'), objetos)}
   </div>`;
   el.onclick = e => { if(e.target === el) fecharDiagnosticoArte3D(); };
   document.body.appendChild(el);

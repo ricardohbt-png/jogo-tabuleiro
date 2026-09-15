@@ -113,6 +113,19 @@ check("aplicar em português restaura o original", estatico.bola_fogo.nome === "
 I18N.setLang("en");
 I18N.aplicarCatalogo(estatico, true);
 check("aplicar de novo em inglês volta a traduzir", estatico.bola_fogo.nome === "Fireball");
+// `custo` é campo só do GRIMORIO_CLIENT: traduz por ui.magia.<id>.custo (sem par cat.*),
+// e só quando soNome=false — como as descrições.
+const comCusto = { x: { id: "x_teste", nome: "X", custo: "🍖-1 por rodada" } };
+DICT["cat.magia.x_teste.nome"] = { pt: "X", en: "X" };
+DICT["ui.magia.x_teste.custo"] = { pt: "🍖-1 por rodada", en: "🍖-1 per round" };
+I18N.aplicarCatalogo(comCusto, true);
+check("aplicarCatalogo(true) não toca no custo", comCusto.x.custo === "🍖-1 por rodada");
+I18N.aplicarCatalogo(comCusto, false);
+check("aplicarCatalogo(false) traduz o custo por ui.magia.<id>.custo", comCusto.x.custo === "🍖-1 per round");
+I18N.setLang("pt"); I18N.aplicarCatalogo(comCusto, false); I18N.setLang("en");
+check("a volta ao português restaura o custo", comCusto.x.custo === "🍖-1 por rodada");
+check("as 3 magias com custo próprio têm a chave", ["tempestade_ciclones", "olhar_petrificante", "metamorfose"]
+      .every(id => DICT["ui.magia." + id + ".custo"] && DICT["ui.magia." + id + ".custo"].en));
 
 console.log("\n[8] A fiação com o gameState existe");
 // Checagem estática: o teste não consegue carregar game.js nem gameState.js

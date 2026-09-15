@@ -15,6 +15,12 @@ def main():
     # __init__ e' quem cria `zonas_especiais` -- sem esta linha o teste estoura
     # AttributeError. Fica explicito de que estado a funcao depende hoje.
     room.zonas_especiais = []
+    # Idem para a Cancao Heroica do Xama: _water_turn_moves consulta
+    # _eh_jogador (self.players) e _cancao_monstro_bonus (self.monsters,
+    # self.round_num) antes dos descontos de terreno.
+    room.players = {}
+    room.monsters = {}
+    room.round_num = 1
     sem_armadura = {"gear": {"armor": None}}
     media = {"gear": {"armor": {"armor_category": "media"}}}
     pesada = {"gear": {"armor": {"armor_category": "pesada"}}}

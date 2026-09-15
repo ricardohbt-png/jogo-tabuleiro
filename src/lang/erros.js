@@ -133,13 +133,25 @@ window.LANG_ERROS = {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
   },
+  "erro.acao_de_teste_nao_permitida": {
+    "en": "Test action not allowed.",
+    "pt": "Ação de teste não permitida."
+  },
   "erro.acao_principal_ja_usada_neste_turno": {
     "en": "Main action already used this turn.",
     "pt": "Ação principal já usada neste turno."
   },
+  "erro.adicione_heroi_e_monstro_teste": {
+    "en": "Add at least one test hero and one monster to start the combat.",
+    "pt": "Adicione ao menos um herói de teste e um monstro para iniciar o combate."
+  },
   "erro.agarrado_por_captor_nao_pode_se_mover": {
     "en": "Grappled by {captor} — can't move.",
     "pt": "Agarrado por {captor} — não pode se mover."
+  },
+  "erro.aguarde_turno_monstro_simulacao": {
+    "en": "Wait for that monster's turn in the simulation.",
+    "pt": "Aguarde o turno desse monstro na simulação."
   },
   "erro.aliado_ainda_esta_vivo": {
     "en": "{aliado} is still alive.",
@@ -188,6 +200,10 @@ window.LANG_ERROS = {
   "erro.altura_criatura_nao_alteravel": {
     "en": "This creature's altitude cannot be changed.",
     "pt": "A altura desta criatura não pode ser alterada."
+  },
+  "erro.altura_fora_dos_limites": {
+    "en": "Height out of bounds (0–{limite}).",
+    "pt": "Altura fora dos limites (0–{limite})."
   },
   "erro.altura_personagem_nao_alteravel": {
     "en": "This character's altitude cannot be changed.",
@@ -361,6 +377,10 @@ window.LANG_ERROS = {
     "en": "Get closer to the prisoner.",
     "pt": "Aproxime-se do prisioneiro."
   },
+  "erro.area_sem_piso_valido": {
+    "en": "The chosen area has no valid floor.",
+    "pt": "A área escolhida não contém piso válido."
+  },
   "erro.arma_de_2_maos_desequipe_antes_de_usar_item": {
     "en": "You're wielding a two-handed weapon — unequip it before using {item}.",
     "pt": "Você empunha uma arma de 2 mãos — desequipe-a antes de usar {item}."
@@ -433,9 +453,17 @@ window.LANG_ERROS = {
     "en": "⚠ Center out of range (max {alcance} squares).",
     "pt": "⚠ Centro fora de alcance (máx {alcance} quadrados)."
   },
+  "erro.centro_fora_do_alcance": {
+    "en": "Centre out of range (range {alcance}).",
+    "pt": "Centro fora do alcance (alcance {alcance})."
+  },
   "erro.centro_fora_do_alcance_dist_maior_que": {
     "en": "Center out of range ({dist} > {alcance}).",
     "pt": "Centro fora do alcance ({dist} > {alcance})."
+  },
+  "erro.centro_magia_fora_alcance_dist": {
+    "en": "The spell's centre is out of range (distance {dist}, range {alcance}).",
+    "pt": "O centro da magia está fora do alcance (distância {dist}, alcance {alcance})."
   },
   "erro.classe_em_uso_em_outra_sala": {
     "en": "{classe} is already in use in another room.",
@@ -517,6 +545,10 @@ window.LANG_ERROS = {
     "en": "Invalid destination.",
     "pt": "Destino inválido."
   },
+  "erro.destino_invalido_casa_livre_ate": {
+    "en": "Invalid destination: choose a free square within {alcance} squares of you.",
+    "pt": "Destino inválido: escolha uma casa livre a até {alcance} quadrados de você."
+  },
   "erro.direcao_invalida_para_o_jato_de_ar": {
     "en": "Invalid direction for Gust of Wind.",
     "pt": "Direção inválida para o Jato de Ar."
@@ -553,6 +585,10 @@ window.LANG_ERROS = {
     "en": "End your turn first to move the minions.",
     "pt": "Encerre seu turno primeiro para mover os servos."
   },
+  "erro.encerre_simulacao_antes_mesa": {
+    "en": "End the simulation before changing the test table.",
+    "pt": "Encerre a simulação antes de alterar a mesa de teste."
+  },
   "erro.engolido_voce_so_pode_mirar_no_interior": {
     "en": "Swallowed, you can only target the Tyrant's insides or yourself.",
     "pt": "Engolido, você só pode mirar no interior do Tirano ou em si mesmo."
@@ -577,9 +613,33 @@ window.LANG_ERROS = {
     "en": "Choose the whirlpool squares.",
     "pt": "Escolha as casas dos redemoinhos."
   },
+  "erro.escolha_casa_livre_posicionar_heroi": {
+    "en": "Choose a free square to place the hero.",
+    "pt": "Escolha uma casa livre para posicionar o herói."
+  },
+  "erro.escolha_casas_livres_area_magia": {
+    "en": "Choose 1 to {n} square(s) still free inside the spell area.",
+    "pt": "Escolha de 1 a {n} casa(s) ainda livre(s) dentro da área da magia."
+  },
+  "erro.escolha_casas_livres_chamas_vivas": {
+    "en": "Choose 1 to {n} free square(s) inside the expanded Living Flames area.",
+    "pt": "Escolha de 1 a {n} casa(s) livre(s) dentro da área ampliada das Chamas Vivas."
+  },
+  "erro.escolha_centro_area_definhar": {
+    "en": "Choose the centre of the Wither area.",
+    "pt": "Escolha o centro da área de Definhar."
+  },
   "erro.escolha_exatamente_2_magias_de_1o_circul": {
     "en": "Choose exactly 2 first-circle spells.",
     "pt": "Escolha exatamente 2 magias de 1º círculo."
+  },
+  "erro.escolha_exatamente_n_casas_para_os_ciclones": {
+    "en": "Choose exactly {count} valid squares for the cyclones.",
+    "pt": "Escolha exatamente {count} casas válidas para os ciclones."
+  },
+  "erro.escolha_inimigo_vivo_como_alvo": {
+    "en": "Choose a living enemy as the target.",
+    "pt": "Escolha um inimigo vivo como alvo."
   },
   "erro.escolha_invalida": {
     "en": "Invalid choice.",
@@ -604,6 +664,10 @@ window.LANG_ERROS = {
   "erro.escolha_o_centro_e_o_tamanho_da_prisao_d": {
     "en": "Choose the center and the size of the Prison of Flames.",
     "pt": "Escolha o centro e o tamanho da Prisão de Chamas."
+  },
+  "erro.escolha_outro_jogador_corpo_pesado": {
+    "en": "Choose another living player as the target of the Curse of the Heavy Body.",
+    "pt": "Escolha outro jogador vivo como alvo da Maldição do Corpo Pesado."
   },
   "erro.escolha_pelo_menos_um_atributo_para_a_ca": {
     "en": "Choose at least one attribute for the song.",
@@ -789,6 +853,10 @@ window.LANG_ERROS = {
     "en": "Insufficient hunger/thirst.",
     "pt": "Fome/sede insuficientes."
   },
+  "erro.fome_sede_insuficientes_permanencia": {
+    "en": "Not enough hunger and thirst to attempt permanence (cost {custo}).",
+    "pt": "Fome e Sede insuficientes para tentar a permanência (custo {custo})."
+  },
   "erro.frequentador_nao_encontrado": {
     "en": "Patron not found.",
     "pt": "Frequentador não encontrado."
@@ -833,9 +901,17 @@ window.LANG_ERROS = {
     "en": "Ability has no uses left or is on cooldown.",
     "pt": "Habilidade sem usos ou em recarga."
   },
+  "erro.heroi_ja_na_mesa_de_teste": {
+    "en": "That hero is already on the test table.",
+    "pt": "Esse herói já está na mesa de teste."
+  },
   "erro.hp_ja_esta_no_maximo": {
     "en": "HP is already at maximum.",
     "pt": "HP já está no máximo."
+  },
+  "erro.inimigo_ja_ligado_vinculo_maldito": {
+    "en": "That enemy is already bound by the Cursed Bond of Pain.",
+    "pt": "Esse inimigo já está ligado ao Vínculo Maldito da Dor."
   },
   "erro.instrumento_de_2_maos_exige_concentracao": {
     "en": "A two-handed instrument requires concentration — you've already used your action.",
@@ -909,9 +985,17 @@ window.LANG_ERROS = {
     "en": "Item can't be used by the game master.",
     "pt": "Item não usável pelo mestre."
   },
+  "erro.item_reparado_por_moedas": {
+    "en": "🔧 {nome} repaired ({niveis} corrosion level(s)) for {custo} coins.",
+    "pt": "🔧 {nome} reparado ({niveis} nível(is) de corrosão) por {custo} moedas."
+  },
   "erro.item_sem_reparo_disponivel": {
     "en": "This item has no repairable corrosion.",
     "pt": "Este item não possui corrosão reparável."
+  },
+  "erro.ja_criou_redemoinhos": {
+    "en": "You have already created the {n} whirlpool(s) of this spell.",
+    "pt": "Você já criou os {n} redemoinho(s) desta magia."
   },
   "erro.ja_existe_um_mestre_nesta_sala": {
     "en": "There's already a game master in this room.",
@@ -997,6 +1081,10 @@ window.LANG_ERROS = {
     "en": "Monster has no movement left this turn.",
     "pt": "Monstro sem movimento neste turno."
   },
+  "erro.movimento_insuficiente_alterar_altura": {
+    "en": "Not enough movement (changing height costs {custo}).",
+    "pt": "Movimento insuficiente (alterar altura custa {custo})."
+  },
   "erro.movimento_insuficiente_casa_custa": {
     "en": "Not enough movement: this tile costs {custo}.",
     "pt": "Movimento insuficiente: esta casa custa {custo}."
@@ -1053,25 +1141,17 @@ window.LANG_ERROS = {
     "en": "No free space nearby for the trap to trigger.",
     "pt": "Não há espaço livre ao lado para a armadilha disparar."
   },
-  "erro.nao_ha_espaco_para_um_ciclone_2x2_nessa": {
-    "en": "There is no room for a 2x2 cyclone in that area.",
-    "pt": "Não há espaço para um ciclone 2x2 nessa área."
+  "erro.nao_ha_espaco_para_os_ciclones_nessa_area": {
+    "en": "There is not enough room to place all the cyclones in that area.",
+    "pt": "Não há espaço suficiente para posicionar todos os ciclones nessa área."
   },
   "erro.nao_ha_espaco_para_um_ciclone_1x1_nessa": {
     "en": "There is no room for a 1x1 cyclone in that area.",
     "pt": "Não há espaço para um ciclone 1x1 nessa área."
   },
-  "erro.nao_ha_espaco_para_os_ciclones_nessa_area": {
-    "en": "There is not enough room to place all the cyclones in that area.",
-    "pt": "Não há espaço suficiente para posicionar todos os ciclones nessa área."
-  },
-  "erro.nao_ha_uma_tempestade_de_ciclones_ativa": {
-    "en": "There is no active Cyclone Storm waiting for placement.",
-    "pt": "Não há uma Tempestade de Ciclones ativa aguardando posicionamento."
-  },
-  "erro.escolha_exatamente_n_casas_para_os_ciclones": {
-    "en": "Choose exactly {count} valid squares for the cyclones.",
-    "pt": "Escolha exatamente {count} casas válidas para os ciclones."
+  "erro.nao_ha_espaco_para_um_ciclone_2x2_nessa": {
+    "en": "There is no room for a 2x2 cyclone in that area.",
+    "pt": "Não há espaço para um ciclone 2x2 nessa área."
   },
   "erro.nao_ha_monstro_sob_sua_metamorfose": {
     "en": "There is no monster under your Polymorph.",
@@ -1100,6 +1180,10 @@ window.LANG_ERROS = {
   "erro.nao_ha_uma_ira_da_rocha_ardente_ativa": {
     "en": "There is no active Wrath of the Burning Rock.",
     "pt": "Não há uma Ira da Rocha Ardente ativa."
+  },
+  "erro.nao_ha_uma_tempestade_de_ciclones_ativa": {
+    "en": "There is no active Cyclone Storm waiting for placement.",
+    "pt": "Não há uma Tempestade de Ciclones ativa aguardando posicionamento."
   },
   "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
     "en": "You can't attack in the same turn you hide in the shadows.",
@@ -1593,6 +1677,10 @@ window.LANG_ERROS = {
     "en": "You can only leave on your turn.",
     "pt": "Só é possível sair no seu turno."
   },
+  "erro.so_heroi_ativo_pode_agir": {
+    "en": "Only the active hero can act now.",
+    "pt": "Só o herói ativo pode agir agora."
+  },
   "erro.so_monstros_conjuradores_podem_usar_perg": {
     "en": "Only spellcasting monsters can use scrolls.",
     "pt": "Só monstros conjuradores podem usar pergaminhos."
@@ -1681,6 +1769,18 @@ window.LANG_ERROS = {
     "en": "Invalid purification type.",
     "pt": "Tipo de purificação inválido."
   },
+  "erro.tiranossauro_cauda_presa": {
+    "en": "The tail must strike a target other than the creature held in its jaws.",
+    "pt": "A cauda deve atingir um alvo diferente da criatura presa nas mandíbulas."
+  },
+  "erro.tiranossauro_mordida_presa": {
+    "en": "The Tyrannosaurus is already holding prey in its jaws.",
+    "pt": "O Tiranossauro já segura uma presa nas mandíbulas."
+  },
+  "erro.tiranossauro_multiataque_alvos": {
+    "en": "Bite and tail must target different creatures.",
+    "pt": "Mordida e cauda devem atingir criaturas diferentes."
+  },
   "erro.todas_as_masmorras_deste_destino_ja_fora": {
     "en": "All dungeons for this destination have already been completed.",
     "pt": "Todas as masmorras deste destino já foram concluídas."
@@ -1756,6 +1856,10 @@ window.LANG_ERROS = {
   "erro.veneno_nao_encontrado_na_bolsa": {
     "en": "Poison not found in bag.",
     "pt": "Veneno não encontrado na bolsa."
+  },
+  "erro.vinculo_maldito_ja_ligado_a_n": {
+    "en": "The Cursed Bond of Pain is already bound to {n} enemies.",
+    "pt": "Vínculo Maldito da Dor já está ligado a {n} inimigos."
   },
   "erro.voce_ainda_nao_aprendeu_a_purificar_este": {
     "en": "You haven't learned to purify this affliction yet — upgrade Purification at the Guild.",

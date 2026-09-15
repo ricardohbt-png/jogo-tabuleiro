@@ -138,12 +138,33 @@ def area_de(fn):
     return AREA_PADRAO
 
 
+RE_FECHA_TOPO = re.compile(r"^[}\]]")   # `}` / `};` / `})` na coluna 0 fecha o bloco de topo
+
+
 def donos(src_linhas):
+    """Funcao de topo dona de cada linha. Um `}` na coluna 0 devolve ao nivel
+    de modulo — sem isso, um `const X = {...}` depois de uma funcao ficava
+    atribuido a ela e o migrador poria `t()` num objeto de nivel de modulo."""
     out, atual = [], "topo"
     for l in src_linhas:
         m = RE_FN.match(l)
         if m: atual = m.group(1) or m.group(2)
+        elif RE_FECHA_TOPO.match(l): atual = "topo"
         out.append(atual)
+    return out
+
+
+RE_T_LOCAL = re.compile(r"\b(?:const|let|var)\s+t\s*=|\bfunction\b[^(]*\([^)]*\bt\b[^)]*\)")
+
+
+def funcoes_com_t_local(src_linhas, dono):
+    """Funcoes de topo que declaram um `t` proprio (ex.: `const t = $('toast')`).
+    Dentro delas `t('chave')` e TypeError em runtime — o Lote 3 pagou isso 5
+    vezes. Ali a troca usa `I18N.t(...)`, o global sem sombra."""
+    out = set()
+    for l, fn in zip(src_linhas, dono):
+        if fn != "topo" and RE_T_LOCAL.search(l):
+            out.add(fn)
     return out
 
 
@@ -187,6 +208,7 @@ def main(aplicar):
     raw, dini, dfim, dic = ler_dicionario()
     usadas = set(dic)
     novas, trocas, pulados = {}, [], []
+    com_t_local = funcoes_com_t_local(linhas, dono)
 
     for linha, txt in pend:
         if "<" in txt and ">" in txt:
@@ -216,6 +238,11 @@ def main(aplicar):
             pulados.append((linha, "case", txt)); continue
 
         fn = dono[linha - 1]
+        # Nivel de modulo: um `t()` num `const` de topo roda no CARREGAMENTO e
+        # aborta o game.js (TDZ) — vira funcao, a mao.
+        if fn == "topo":
+            pulados.append((linha, "nivel de modulo", txt)); continue
+        chamada = "I18N.t" if fn in com_t_local else "t"
         base = "ui.%s.%s" % (area_de(fn), slug(txt))
         chave, n = base, 2
         while (chave in usadas and dic.get(chave, {}).get("pt") != txt) or \
@@ -224,24 +251,25 @@ def main(aplicar):
         if chave not in dic:
             novas[chave] = txt
         usadas.add(chave)
-        trocas.append((linha, formas[0], chave, txt))
+        trocas.append((linha, formas[0], chave, txt, chamada))
 
     print("literais trocaveis: %d" % len(trocas))
     print("chaves novas: %d" % len(novas))
     print("pulados: %d" % len(pulados))
     for tipo in ("markup", "interpolacao", "multilinha", "ambiguo/nao casou",
-                 "chave de objeto", "case", "linha fora do arquivo"):
+                 "chave de objeto", "case", "linha fora do arquivo", "nivel de modulo"):
         n = sum(1 for _, t, _ in pulados if t == tipo)
         if n: print("   %-22s %d" % (tipo, n))
     if not aplicar:
         for l, t, txt in pulados:
-            if t == "ambiguo/nao casou":
-                print("   ! linha %s nao casou: %r" % (l, txt[:70]))
+            if t in ("ambiguo/nao casou", "nivel de modulo"):
+                print("   ! linha %s %s: %r" % (l, t, txt[:70]))
+        print("   funcoes com `t` local (usam I18N.t): %d" % len(com_t_local))
         print("\n(dry-run — passe --aplicar para gravar)")
         return 0
 
-    for linha, forma, chave, _txt in trocas:
-        linhas[linha - 1] = linhas[linha - 1].replace(forma, "t('%s')" % chave, 1)
+    for linha, forma, chave, _txt, chamada in trocas:
+        linhas[linha - 1] = linhas[linha - 1].replace(forma, "%s('%s')" % (chamada, chave), 1)
 
     for chave, txt in novas.items():
         dic[chave] = {"pt": txt, "en": ""}

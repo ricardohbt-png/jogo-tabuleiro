@@ -59,6 +59,68 @@ def _inicia_regex(src, i):
     return False
 
 
+def _fim_regex(src, i):
+    """Índice logo após o literal de regex que começa em `src[i]` (com as
+    flags), ou None se o trecho não fecha como regex nesta linha."""
+    n = len(src)
+    j, classe = i + 1, False
+    while j < n:
+        d = src[j]
+        if d == "\\": j += 2; continue
+        if d == "\n": return None          # regex não atravessa linha
+        if d == "[": classe = True
+        elif d == "]": classe = False
+        elif d == "/" and not classe:
+            j += 1
+            while j < n and src[j].isalpha(): j += 1   # flags
+            return j if j > i + 1 else None
+        j += 1
+    return None
+
+
+def _fim_string(src, i):
+    """Índice logo após a string simples que abre em `src[i]` (' ou ")."""
+    q, n, j = src[i], len(src), i + 1
+    while j < n:
+        if src[j] == "\\": j += 2; continue
+        if src[j] == q: return j + 1
+        j += 1
+    return n
+
+
+def _fim_template(src, i):
+    """Índice logo após o template que abre em `src[i]` (crase), pulando os
+    `${}` de dentro com `_fim_expr` — que por sua vez pula templates aninhados."""
+    n, j = len(src), i + 1
+    while j < n:
+        d = src[j]
+        if d == "\\": j += 2; continue
+        if d == "`": return j + 1
+        if d == "$" and j + 1 < n and src[j + 1] == "{":
+            j = _fim_expr(src, j + 1); continue
+        j += 1
+    return n
+
+
+def _fim_expr(src, i):
+    """`src[i]` é o `{` de um `${`; devolve o índice logo após o `}` que o
+    fecha, ciente de string, template aninhado, regex e chaves aninhadas."""
+    n, prof, j = len(src), 0, i
+    while j < n:
+        e = src[j]
+        if e in "'\"": j = _fim_string(src, j); continue
+        if e == "`": j = _fim_template(src, j); continue
+        if e == "/" and _inicia_regex(src, j):
+            fim = _fim_regex(src, j)
+            if fim is not None: j = fim; continue
+        if e == "{": prof += 1
+        elif e == "}":
+            prof -= 1
+            if prof == 0: return j + 1
+        j += 1
+    return n
+
+
 def literais(src, _linha0=1):
     """[(linha_1based, aspa, texto)] de cada literal de string do fonte.
 
@@ -87,21 +149,8 @@ def literais(src, _linha0=1):
             # se fossem texto de interface, e um migrador chegou a escrever
             # dentro de um seletor por causa disso.
             if _inicia_regex(src, i):
-                j, classe = i + 1, False
-                while j < n:
-                    d = src[j]
-                    if d == "\\": j += 2; continue
-                    if d == "\n": break          # regex não atravessa linha
-                    if d == "[": classe = True
-                    elif d == "]": classe = False
-                    elif d == "/" and not classe:
-                        j += 1
-                        while j < n and src[j].isalpha(): j += 1   # flags
-                        break
-                    j += 1
-                else:
-                    j = n
-                if j > i + 1 and (j >= n or src[j - 1] != "\n"):
+                j = _fim_regex(src, i)
+                if j is not None:
                     i = j
                     continue
         # string simples
@@ -136,24 +185,15 @@ def literais(src, _linha0=1):
                     # HUD, que ficaram em portugues com o placar cravando zero.
                     # Por isso RECURSA: o buraco segue marcado como ${} no texto
                     # de fora, e o que houver de string DENTRO vira literal.
-                    prof, aspa, i = 0, None, i + 1
-                    ini_expr, linha_expr = i + 1, linha
-                    while i < n:
-                        e = src[i]
-                        if aspa:
-                            if e == "\\": i += 2; continue
-                            if e == aspa: aspa = None
-                            elif e == "\n": linha += 1
-                        elif e in "'\"`":
-                            aspa = e
-                        elif e == "{": prof += 1
-                        elif e == "}":
-                            prof -= 1
-                            if prof == 0: break
-                        elif e == "\n": linha += 1
-                        i += 1
-                    out.extend(literais(src[ini_expr:i], linha_expr))
-                    i += 1
+                    # Um trecho aninhado (`${a ? `x ${b}` : 'y'}`) tem template
+                    # dentro de template: o fim do buraco é achado por um
+                    # scanner que sabe pular string, template aninhado e regex
+                    # (`.replace(/'/g, ...)` tem aspa dentro do literal).
+                    ini_expr, linha_expr = i + 2, linha
+                    fim = _fim_expr(src, i + 1)
+                    linha += src.count("\n", i, fim)
+                    out.extend(literais(src[ini_expr:fim - 1], linha_expr))
+                    i = fim
                     buf.append("${}")     # marca o buraco, sem o conteúdo
                     continue
                 if d == "\n": linha += 1
@@ -176,14 +216,79 @@ IGNORAR = re.compile(r"\.(js|png|jpe?g|glb|css|html)$|^assets/|^#[\w-]+$|^[\w.]+
 COMENTARIO_HTML = re.compile(r"<!--.*?-->", re.S)
 
 
+# ── Português SEM acento ─────────────────────────────────────────────────
+# Até 2026-09-14 o placar só contava literal COM ACENTO, e `Rodada`, `SUA VEZ`,
+# `Aguardando`, `Continuar`, `FALHOU`, `Ouro insuficiente` ficaram em português
+# no HUD em inglês com o placar cravando zero. A segunda rede é um VOCABULÁRIO
+# derivado do próprio dicionário: toda palavra (≥3 letras) que aparece nos
+# textos `pt` de src/lang/*.js e em NENHUM texto `en` é palavra portuguesa. Um
+# literal conta quando tem uma dessas palavras FORA de tag HTML — e não parece
+# identificador (`cena-npc`, `mira_certeira`), seletor CSS ou valor todo em
+# minúsculas de uma palavra só (`'ataque'` é id de tipo, não rótulo).
+PALAVRA = re.compile(r"[A-Za-zÀ-ÿ]{3,}")
+_TAG = re.compile(r"<[^<>]*>")
+_TAG_ABERTA = re.compile(r"<[a-zA-Z][^<>]*$")
+_PARAM = re.compile(r"\{[^{}]*\}")
+_SELETOR = re.compile(r"^[.#\[]|:not\(|^[\w\s.#>,:\[\]=\"'()\-]*[.#]\w")
+_VOCAB_PT = None
+
+
+def _vocabulario_pt():
+    """Palavras que só existem no lado `pt` do dicionário (cacheado)."""
+    global _VOCAB_PT
+    if _VOCAB_PT is not None:
+        return _VOCAB_PT
+    raiz = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    pt, en = set(), set()
+    val = r'"%s":\s*"((?:[^"\\]|\\.)*)"'
+    import glob
+    for f in glob.glob(os.path.join(raiz, "src", "lang", "*.js")):
+        txt = io.open(f, encoding="utf-8").read()
+        # Os {parâmetros} têm nome em português nos DOIS lados ({rodadas}):
+        # saem antes, senão apagariam a palavra do vocabulário.
+        for m in re.finditer(val % "pt", txt):
+            pt.update(w.lower() for w in PALAVRA.findall(_PARAM.sub(" ", m.group(1))))
+        for m in re.finditer(val % "en", txt):
+            en.update(w.lower() for w in PALAVRA.findall(_PARAM.sub(" ", m.group(1))))
+    _VOCAB_PT = pt - en
+    return _VOCAB_PT
+
+
+def parece_portugues(limpo, vocab=None):
+    """True se o literal (já sem espaços nas pontas) parece texto em português
+    para o jogador — por acento OU por vocabulário."""
+    sem_coment = COMENTARIO_HTML.sub(" ", limpo)
+    if ACENTO.search(sem_coment):
+        return True
+    vocab = _vocabulario_pt() if vocab is None else vocab
+    if not vocab:
+        return False
+    # tag inteira E fragmento de tag sem fechar (`<img class="x" style="`):
+    # o que está dentro de atributo nunca é texto para o jogador
+    texto = _TAG_ABERTA.sub(" ", _TAG.sub(" ", sem_coment)).replace("${}", " ")
+    palavras = PALAVRA.findall(texto)
+    if not any(w.lower() in vocab for w in palavras):
+        return False
+    # identificador: uma "palavra" só (sem espaço no LITERAL — o buraco ${}
+    # não conta como espaço), com _ - : ou toda minúscula; ou colado a um ${}
+    if not re.search(r"\s", limpo) and (re.search(r"[_\-:]", limpo) or limpo == limpo.lower()
+                                        or limpo.startswith("${}") or limpo.endswith("${}")):
+        return False
+    if "<" not in limpo and _SELETOR.search(limpo):
+        return False
+    # frase (2+ palavras) ou rótulo com inicial maiúscula (`Rodada`, `FALHOU`)
+    return len(palavras) >= 2 or palavras[0][0].isupper()
+
+
 def texto_de_interface(src):
     """[(linha, texto)] dos literais que parecem texto para o jogador."""
     out = []
+    vocab = _vocabulario_pt()
     for linha, _aspa, t in literais(src):
         limpo = t.strip()
         if len(limpo) < 3: continue
-        if not ACENTO.search(COMENTARIO_HTML.sub(" ", limpo)): continue
         if IGNORAR.search(limpo): continue
+        if not parece_portugues(limpo, vocab): continue
         out.append((linha, limpo))
     return out
 
@@ -223,6 +328,25 @@ const d = 'depois';
     com_rotulo = "const f = `<!-- SEÇÃO -->\n  <div>Força</div>`;"
     check("mas o rótulo acentuado FORA do comentário ainda conta",
           len(texto_de_interface(com_rotulo)) == 1)
+
+    # Português SEM acento: entra por vocabulário; identificador e seletor, não.
+    v = {"rodada", "aguardando", "vez", "sua", "cena", "mira", "certeira", "ataque"}
+    check("rótulo sem acento com inicial maiúscula conta", parece_portugues("Rodada ${}", v))
+    check("frase sem acento conta", parece_portugues("SUA VEZ — ${}", v))
+    check("identificador com hífen não conta", not parece_portugues("cena-npc", v))
+    check("identificador com underscore não conta", not parece_portugues("mira_certeira", v))
+    check("valor minúsculo de uma palavra não conta", not parece_portugues("ataque", v))
+    check("id com buraco de template não conta", not parece_portugues("ira-rocha:${}:impact", v)
+          and not parece_portugues("${}Dir", {"dir"}))
+    check("seletor CSS não conta", not parece_portugues("#shop-modal .cena-npc", v))
+    check("palavra portuguesa só dentro de atributo de tag não conta",
+          not parece_portugues('<div class="cena-npc"></div>', v))
+    check("texto português entre tags conta", parece_portugues("<b>Rodada</b> ${}", v))
+    check("fragmento de tag sem fechar não conta", not parece_portugues('<img class="cena-mask" style="', v))
+    check("inglês puro não conta", not parece_portugues("Round ${}", v))
+    check("o vocabulário real tem centenas de palavras", len(_vocabulario_pt()) > 500)
+    check("`rodada` está no vocabulário real e `round` não",
+          "rodada" in _vocabulario_pt() and "round" not in _vocabulario_pt())
 
     # A linha reportada tem de ser a do INÍCIO do literal.
     linhas = {t: l for l, _, t in ls}

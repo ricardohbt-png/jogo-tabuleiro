@@ -925,6 +925,13 @@ input:focus { outline: none; border-color: var(--gold); }
 /* ── top lobby bar ── */
 #cs-lobby-bar { position:absolute; top:0; left:0; right:min(340px,36vw);
                 z-index:10; display:flex; align-items:center; gap:16px;
+                /* Abaixo de ~1100px a barra não cabe numa linha: os itens têm
+                   flex-shrink:0 e o botão "Iniciar Jogo" era empurrado para
+                   DEBAIXO do painel do herói (z-index igual, painel por cima),
+                   ficando cortado e inclicável. Com wrap, Mestre + Iniciar
+                   descem para uma 2ª linha, alinhados à direita pelo
+                   margin-left:auto que já tinham. */
+                flex-wrap:wrap; row-gap:8px;
                 padding:12px 20px; background:rgba(var(--dark-rgb),.75);
                 border-bottom:1px solid rgba(var(--gold-rgb),.15); }
 #cs-room-lbl  { font-family:var(--font-body); font-size:10px; color:#4a4a3a; letter-spacing:2px; }

@@ -19,6 +19,14 @@ window.LANG_INTERFACE = {
     "en": "To-hit",
     "pt": "Acerto"
   },
+  "dado.afogamento_rodamoinho": {
+    "en": "🌊 Drowning — Deep whirlpool",
+    "pt": "🌊 Afogamento — Rodamoinho profundo"
+  },
+  "dado.amaldicoar_de": {
+    "en": "{nome} — Curse",
+    "pt": "{nome} — Amaldiçoar"
+  },
   "dado.armadura": {
     "en": "Armour",
     "pt": "Armadura"
@@ -26,6 +34,14 @@ window.LANG_INTERFACE = {
   "dado.arremesso": {
     "en": "Throw",
     "pt": "Arremesso"
+  },
+  "dado.arremesso_de": {
+    "en": "{nome} — Throw",
+    "pt": "{nome} — Arremesso"
+  },
+  "dado.arremesso_de_item": {
+    "en": "Throw ({item})",
+    "pt": "Arremesso ({item})"
   },
   "dado.ataque_das_sombras": {
     "en": "Shadow Strike",
@@ -55,13 +71,33 @@ window.LANG_INTERFACE = {
     "en": "Staff — stun DC",
     "pt": "Bordão — CD do atordoamento"
   },
+  "dado.brasa_no_chao": {
+    "en": "Embers on the ground",
+    "pt": "Brasa no chão"
+  },
   "dado.carapaca_espinhosa": {
     "en": "Spiked Carapace",
     "pt": "Carapaça Espinhosa"
   },
+  "dado.chama_viva": {
+    "en": "Live flame",
+    "pt": "Chama viva"
+  },
+  "dado.chamas_vivas_ira_rocha": {
+    "en": "🌋 Living Flames — Wrath of the Burning Rock",
+    "pt": "🌋 Chamas Vivas — Ira da Rocha Ardente"
+  },
   "dado.chuva_de_flechas": {
     "en": "Arrow Rain",
     "pt": "Chuva de Flechas"
+  },
+  "dado.colisao_parede_de": {
+    "en": "Collision with the wall - {nome}",
+    "pt": "Colisao contra a parede - {nome}"
+  },
+  "dado.constricao_de": {
+    "en": "Constriction — {nome}",
+    "pt": "Constrição — {nome}"
   },
   "dado.corpo_eletrico": {
     "en": "⚡ Lightning Body",
@@ -83,6 +119,10 @@ window.LANG_INTERFACE = {
     "en": "Mass Heal",
     "pt": "Cura em Área"
   },
+  "dado.cuspir_acido_de": {
+    "en": "{nome} — Spit Acid",
+    "pt": "{nome} — Cuspir Ácido"
+  },
   "dado.dano": {
     "en": "Damage",
     "pt": "Dano"
@@ -95,6 +135,10 @@ window.LANG_INTERFACE = {
     "en": "Damage (throw)",
     "pt": "Dano (arremesso)"
   },
+  "dado.dano_de_item": {
+    "en": "Damage ({item})",
+    "pt": "Dano ({item})"
+  },
   "dado.dano_reacao": {
     "en": "Damage (reaction)",
     "pt": "Dano (reação)"
@@ -103,17 +147,37 @@ window.LANG_INTERFACE = {
     "en": "Retaliation Damage",
     "pt": "Dano de Retaliação"
   },
+  "dado.desarmar_de": {
+    "en": "{nome} — Disarm",
+    "pt": "{nome} — Desarmar"
+  },
   "dado.descartado": {
     "en": "{label} — discarded",
     "pt": "{label} — descartado"
+  },
+  "dado.dominado": {
+    "en": "{nome} (dominated)",
+    "pt": "{nome} (dominado)"
   },
   "dado.explosao_6d6": {
     "en": "🔥 Blast 6d6",
     "pt": "🔥 Explosão 6d6"
   },
+  "dado.fogo_da_arma_de": {
+    "en": "Weapon fire - {nome}",
+    "pt": "Fogo da arma - {nome}"
+  },
   "dado.fogueira": {
     "en": "Campfire",
     "pt": "Fogueira"
+  },
+  "dado.forca_descomunal_de": {
+    "en": "{nome} — Monstrous Strength",
+    "pt": "{nome} — Força Descomunal"
+  },
+  "dado.furtividade_de": {
+    "en": "{nome} — Stealth",
+    "pt": "{nome} — Furtividade"
   },
   "dado.furtivo": {
     "en": "Sneak",
@@ -135,9 +199,29 @@ window.LANG_INTERFACE = {
     "en": "Lay on Hands",
     "pt": "Imposição das Mãos"
   },
+  "dado.investida_brutal_de": {
+    "en": "Brutal Charge - {nome}",
+    "pt": "Investida Brutal - {nome}"
+  },
+  "dado.investida_flamejante_de": {
+    "en": "Flaming Charge - {nome}",
+    "pt": "Investida Flamejante - {nome}"
+  },
   "dado.lanca_de_gelo": {
     "en": "Ice Lance",
     "pt": "Lança de Gelo"
+  },
+  "dado.lava": {
+    "en": "🔥 Lava",
+    "pt": "🔥 Lava"
+  },
+  "dado.licantropia": {
+    "en": "Lycanthropy — {nome}",
+    "pt": "Licantropia — {nome}"
+  },
+  "dado.licantropia_pos_combate": {
+    "en": "Post-combat lycanthropy — {nome}",
+    "pt": "Licantropia pós-combate — {nome}"
   },
   "dado.linha": {
     "en": "⚡ Line",
@@ -147,13 +231,69 @@ window.LANG_INTERFACE = {
     "en": "Holy Light",
     "pt": "Luz Sagrada"
   },
+  "dado.mare_viva_de": {
+    "en": "🌊 Living Tide — {nome}",
+    "pt": "🌊 Maré Viva — {nome}"
+  },
+  "dado.modo.desvantagem": {
+    "en": "disadvantage",
+    "pt": "desvantagem"
+  },
+  "dado.modo.vantagem": {
+    "en": "advantage",
+    "pt": "vantagem"
+  },
+  "dado.morte_explosiva_de": {
+    "en": "Explosive Death — {nome}",
+    "pt": "Morte Explosiva — {nome}"
+  },
   "dado.movimento": {
     "en": "Movement",
     "pt": "Movimento"
   },
+  "dado.nome_descartado": {
+    "en": "{nome} — discarded",
+    "pt": "{nome} — descartado"
+  },
+  "dado.nome_habilidade": {
+    "en": "{nome} — {habilidade}",
+    "pt": "{nome} — {habilidade}"
+  },
+  "dado.nome_item": {
+    "en": "{nome} — {item}",
+    "pt": "{nome} — {item}"
+  },
+  "dado.nome_modo": {
+    "en": "{nome} — {modo}",
+    "pt": "{nome} — {modo}"
+  },
+  "dado.nome_save": {
+    "en": "{nome} — {save}",
+    "pt": "{nome} — {save}"
+  },
+  "dado.olhar_petrificante_alvo": {
+    "en": "Petrifying Gaze — {alvo}",
+    "pt": "Olhar Petrificante — {alvo}"
+  },
+  "dado.prisao_de_chamas": {
+    "en": "🔥 Prison of Flames{motivo}",
+    "pt": "🔥 Prisão de Chamas{motivo}"
+  },
+  "dado.reacao_de": {
+    "en": "{nome} — reaction",
+    "pt": "{nome} — reação"
+  },
+  "dado.recuperar_de": {
+    "en": "{nome} — Recover",
+    "pt": "{nome} — Recuperar"
+  },
   "dado.reflexos": {
     "en": "Reflex",
     "pt": "Reflexos"
+  },
+  "dado.reflexos_explosao_vapor": {
+    "en": "Reflex — Steam Burst",
+    "pt": "Reflexos — Explosão de Vapor"
   },
   "dado.reflexos_morte_explosiva": {
     "en": "Reflex — Explosive Death",
@@ -167,9 +307,29 @@ window.LANG_INTERFACE = {
     "en": "Holy",
     "pt": "Sagrado"
   },
+  "dado.save.forca": {
+    "en": "Strength",
+    "pt": "Força"
+  },
+  "dado.save.fortitude": {
+    "en": "Fortitude",
+    "pt": "Fortitude"
+  },
+  "dado.save.reflexos": {
+    "en": "Reflex",
+    "pt": "Reflexos"
+  },
+  "dado.save.vontade": {
+    "en": "Will",
+    "pt": "Vontade"
+  },
   "dado.sobrecarga": {
     "en": "Overload",
     "pt": "Sobrecarga"
+  },
+  "dado.sopro_de_dragao_de": {
+    "en": "{nome} — Dragon Breath",
+    "pt": "{nome} — Sopro de Dragão"
   },
   "dado.sorte_2_no_ataque": {
     "en": "🎲 Luck (+2 to the attack)",
@@ -183,6 +343,14 @@ window.LANG_INTERFACE = {
     "en": "🎲 Luck (reroll)",
     "pt": "🎲 Sorte (nova rolagem)"
   },
+  "dado.sorte_rerrola": {
+    "en": "🎲 Luck — {nome} rerolls (−2)",
+    "pt": "🎲 Sorte — {nome} rerrola (−2)"
+  },
+  "dado.tempestade_ciclones_quantidade": {
+    "en": "🌪️ Cyclone Storm — count",
+    "pt": "🌪️ Tempestade de Ciclones — quantidade"
+  },
   "dado.tiro_duplo": {
     "en": "Double Shot",
     "pt": "Tiro Duplo"
@@ -190,6 +358,10 @@ window.LANG_INTERFACE = {
   "dado.tiro_perfurante": {
     "en": "Piercing Shot",
     "pt": "Tiro Perfurante"
+  },
+  "dado.veneno_da_medusa": {
+    "en": "Medusa's Venom",
+    "pt": "Veneno da Medusa"
   },
   "dado.veneno_do_lacralion": {
     "en": "Lacralion Venom",
@@ -214,6 +386,62 @@ window.LANG_INTERFACE = {
   "ui.acao.ataque_extra_adaga_desc": {
     "en": "1d4 + DEX adjacent",
     "pt": "1d4 + DES adjacente"
+  },
+  "ui.acoes.custo": {
+    "en": "Cost",
+    "pt": "Custo"
+  },
+  "ui.acoes.explicacao_bonus": {
+    "en": "Bonus action: quick abilities and healing potions; once per turn.",
+    "pt": "Ação bônus: habilidades rápidas e poções de cura; uma vez por rodada."
+  },
+  "ui.acoes.explicacao_livre": {
+    "en": "Free action: small interactions that do not spend the main or bonus action.",
+    "pt": "Ação livre: interações rápidas que não gastam a ação principal ou bônus."
+  },
+  "ui.acoes.explicacao_movimento": {
+    "en": "Movement: spend blue squares to walk through the dungeon.",
+    "pt": "Movimento: gaste os quadrados azuis para andar pela masmorra."
+  },
+  "ui.acoes.explicacao_passiva": {
+    "en": "Passive: always active; no action is spent.",
+    "pt": "Passiva: fica sempre ativa; não gasta ação."
+  },
+  "ui.acoes.explicacao_principal": {
+    "en": "Main action: normally one attack, spell, item or technique each turn.",
+    "pt": "Ação principal: normalmente um ataque, magia, item ou técnica por rodada."
+  },
+  "ui.acoes.explicacao_reacao": {
+    "en": "Reaction: used in response to a specific event.",
+    "pt": "Reação: usada em resposta a um evento específico."
+  },
+  "ui.acoes.explicacao_titulo": {
+    "en": "How actions work",
+    "pt": "Como funcionam as ações"
+  },
+  "ui.acoes.tipo_bonus": {
+    "en": "Bonus action",
+    "pt": "Ação bônus"
+  },
+  "ui.acoes.tipo_livre": {
+    "en": "Free action",
+    "pt": "Ação livre"
+  },
+  "ui.acoes.tipo_passiva": {
+    "en": "Passive",
+    "pt": "Passiva"
+  },
+  "ui.acoes.tipo_principal": {
+    "en": "Main action",
+    "pt": "Ação principal"
+  },
+  "ui.acoes.tipo_reacao": {
+    "en": "Reaction",
+    "pt": "Reação"
+  },
+  "ui.acoes.uso": {
+    "en": "Use",
+    "pt": "Uso"
   },
   "ui.afogamento.dano": {
     "en": "{dano} drowning damage",
@@ -299,6 +527,18 @@ window.LANG_INTERFACE = {
     "en": "Adjacent to the corpse",
     "pt": "Adjacente ao cadáver"
   },
+  "ui.animar.animar_mortos": {
+    "en": "💀 ANIMATE DEAD",
+    "pt": "💀 ANIMAR MORTOS"
+  },
+  "ui.animar.animar_mortos_cancelado": {
+    "en": "Animate Dead cancelled.",
+    "pt": "Animar Mortos cancelado."
+  },
+  "ui.animar.ataque": {
+    "en": "Attack",
+    "pt": "Ataque"
+  },
   "ui.animar.ataques": {
     "en": "Attacks",
     "pt": "Ataques"
@@ -318,6 +558,10 @@ window.LANG_INTERFACE = {
   "ui.animar.classe_acao": {
     "en": "Class Ability • Main Action",
     "pt": "Habilidade de Classe • Ação Principal"
+  },
+  "ui.animar.classe_de_armadura": {
+    "en": "Armor Class",
+    "pt": "Classe de Armadura"
   },
   "ui.animar.clique_cadaver": {
     "en": "Click a highlighted corpse within range.",
@@ -355,6 +599,18 @@ window.LANG_INTERFACE = {
     "en": "💀 ANIMATED ARMY",
     "pt": "💀 EXÉRCITO ANIMADO"
   },
+  "ui.animar.faixa_falha": {
+    "en": "❌ Failure: {de}–99",
+    "pt": "❌ Falha: {de}–99"
+  },
+  "ui.animar.faixa_hostil": {
+    "en": "💀 Hostile: 1–{ate}",
+    "pt": "💀 Hostil: 1–{ate}"
+  },
+  "ui.animar.faixa_sucesso": {
+    "en": "✅ Success: {de}–{ate}",
+    "pt": "✅ Sucesso: {de}–{ate}"
+  },
   "ui.animar.falha": {
     "en": "❌ FAILURE — The corpse stays inert",
     "pt": "❌ FALHA — O cadáver permanece inerte"
@@ -362,6 +618,22 @@ window.LANG_INTERFACE = {
   "ui.animar.falha_catastrofica": {
     "en": "💀 CATASTROPHIC FAILURE — Hostile creature!",
     "pt": "💀 FALHA CATASTRÓFICA — Criatura hostil!"
+  },
+  "ui.animar.habilidade_da_ficha_original": {
+    "en": "Ability from the original stat block.",
+    "pt": "Habilidade da ficha original."
+  },
+  "ui.animar.habilidades_do_elemental": {
+    "en": "🌪️ ELEMENTAL ABILITIES",
+    "pt": "🌪️ HABILIDADES DO ELEMENTAL"
+  },
+  "ui.animar.habilidades_do_senhor_da_morte": {
+    "en": "☠️ LORD OF DEATH ABILITIES",
+    "pt": "☠️ HABILIDADES DO SENHOR DA MORTE"
+  },
+  "ui.animar.livre": {
+    "en": "FREE",
+    "pt": "LIVRE"
   },
   "ui.animar.lore": {
     "en": "Pedro focuses dark energy upon a corpse, tearing out its vital essence and binding it into a lifeless body to serve for eternity.",
@@ -378,6 +650,10 @@ window.LANG_INTERFACE = {
   "ui.animar.n_casas": {
     "en": "{n} squares",
     "pt": "{n} casas"
+  },
+  "ui.animar.nenhuma": {
+    "en": "None",
+    "pt": "Nenhuma"
   },
   "ui.animar.nivel_abaixo": {
     "en": "{n} level below",
@@ -447,6 +723,14 @@ window.LANG_INTERFACE = {
     "en": "RULES OF THE ANIMATED",
     "pt": "REGRAS DOS ANIMADOS"
   },
+  "ui.animar.selecione_um_monstro_para_usar_esta_habili": {
+    "en": "Select a monster to use this ability.",
+    "pt": "Selecione um monstro para usar esta habilidade."
+  },
+  "ui.animar.selecione_uma_habilidade_e_depois_clique_n": {
+    "en": "Select an ability, then click the target monster.",
+    "pt": "Selecione uma habilidade e depois clique no monstro-alvo."
+  },
   "ui.animar.sem_cadaver": {
     "en": "No corpse within 3 squares to animate.",
     "pt": "Nenhum cadáver a até 3 casas para animar."
@@ -507,6 +791,10 @@ window.LANG_INTERFACE = {
     "en": "1 square (4 directions)",
     "pt": "1 casa (4 direções)"
   },
+  "ui.animar.vida": {
+    "en": "❤️ Health",
+    "pt": "❤️ Vida"
+  },
   "ui.armadilha.a_magia": {
     "en": "the spell",
     "pt": "a magia"
@@ -562,6 +850,14 @@ window.LANG_INTERFACE = {
   "ui.armadilha.buraco.desc": {
     "en": "Reflex DC 10 or lose your movement. Permanent.",
     "pt": "Reflexos dif 10 ou perde movimento. Permanente."
+  },
+  "ui.armadilha.camara_gas.desc": {
+    "en": "When triggered, affects the entire room for 1d6+1 rounds. Fortitude DC 13 each turn; failure causes 1d6 damage.",
+    "pt": "Ao ativar, afeta toda a sala por 1d6+1 rodadas. Fortitude CD 13 a cada turno; falha causa 1d6 de dano."
+  },
+  "ui.armadilha.casa": {
+    "en": "SQUARE",
+    "pt": "CASA"
   },
   "ui.armadilha.congelamento": {
     "en": "❄️ {nome} affected you.",
@@ -627,6 +923,14 @@ window.LANG_INTERFACE = {
     "en": "✅ You escaped!",
     "pt": "✅ Você escapou!"
   },
+  "ui.armadilha.escolha_o_veneno": {
+    "en": "CHOOSE THE POISON:",
+    "pt": "ESCOLHA O VENENO:"
+  },
+  "ui.armadilha.escolha_um_veneno_para_a_armadilha": {
+    "en": "⚠️ Choose a poison for the trap",
+    "pt": "⚠️ Escolha um veneno para a armadilha"
+  },
   "ui.armadilha.estagio": {
     "en": " — stage {n}",
     "pt": " — estágio {n}"
@@ -635,17 +939,25 @@ window.LANG_INTERFACE = {
     "en": "💥 You failed the save against {nome} and took {dano} damage.",
     "pt": "💥 Você falhou no teste contra {nome} e sofreu {dano} de dano."
   },
+  "ui.armadilha.fosso.desc": {
+    "en": "Reflex DC 15 avoids. On a failure, takes 1d6, loses its movement and the next round; stays hidden and protected during that time.",
+    "pt": "Reflexos CD 15 evita. Na falha, sofre 1d6, perde o movimento e a próxima rodada; fica oculto e protegido nesse período."
+  },
   "ui.armadilha.fosso_envenenado.desc": {
     "en": "1d6 damage + the chosen poison. Becomes visible once triggered.",
     "pt": "1d6 dano + veneno escolhido. Fica visível após ativar."
+  },
+  "ui.armadilha.fosso_envenenado.nome": {
+    "en": "Poisoned Pit",
+    "pt": "Fosso Envenenado"
   },
   "ui.armadilha.fosso_estacas.desc": {
     "en": "1d6 damage + lose your movement. Becomes visible once triggered.",
     "pt": "1d6 dano + perde movimento. Fica visível após ativar."
   },
   "ui.armadilha.guilhotina.desc": {
-    "en": "Reflex DC 15 avoids. On a failure, takes 1d6, loses its movement and the next round; stays hidden and protected during that time.",
-    "pt": "Reflexos CD 15 evita. Na falha, sofre 1d6, perde o movimento e a próxima rodada; fica oculto e protegido nesse período."
+    "en": "Reflex DC 14 avoids. On a failure, takes 3d6 damage.",
+    "pt": "Reflexos CD 14 evita. Na falha, sofre 3d6 de dano."
   },
   "ui.armadilha.jato_acido.desc": {
     "en": "Reflex DC 18 avoids. On a failure, 2d6 acid + 1 corrosion level on equipment; half the damage on the next round.",
@@ -679,6 +991,10 @@ window.LANG_INTERFACE = {
     "en": "-1d6 CON for 3 rounds in an area. Fortitude save DC 13.",
     "pt": "-1d6 CON por 3 rodadas em área. Save Fortitude dif 13."
   },
+  "ui.armadilha.objeto": {
+    "en": "OBJECT",
+    "pt": "OBJETO"
+  },
   "ui.armadilha.parcial": {
     "en": "🟡 You partly resisted!",
     "pt": "🟡 Você resistiu parcialmente!"
@@ -691,15 +1007,31 @@ window.LANG_INTERFACE = {
     "en": "🗿 PERMANENTLY PETRIFIED",
     "pt": "🗿 PETRIFICADO PERMANENTEMENTE"
   },
+  "ui.armadilha.posicionamento_de_armadilha_cancelado": {
+    "en": "Trap placement cancelled.",
+    "pt": "Posicionamento de armadilha cancelado."
+  },
+  "ui.armadilha.posicionar": {
+    "en": "🪤 PLACE",
+    "pt": "🪤 POSICIONAR"
+  },
+  "ui.armadilha.posicionar_armadilha": {
+    "en": "PLACE TRAP",
+    "pt": "POSICIONAR ARMADILHA"
+  },
   "ui.armadilha.rede.desc": {
     "en": "Lose the whole round. Vanishes once triggered.",
     "pt": "Perde a rodada inteira. Some após ativar."
   },
-  "ui.armadilha.selecione_um_objeto_solido_adjacente": {
-    "en": "Select an adjacent solid object.",
-    "pt": "Selecione um objeto sólido adjacente."
+  "ui.armadilha.selecione_a_sua_casa_ou_uma_casa_adjacente": {
+    "en": "Select your own square or an adjacent one.",
+    "pt": "Selecione a sua casa ou uma casa adjacente."
   },
-  "ui.armadilha.selecione_um_objeto_solido_adjacente_2": {
+  "ui.armadilha.selecione_um_objeto_ao_alcance": {
+    "en": "Select an object within reach.",
+    "pt": "Selecione um objeto ao alcance."
+  },
+  "ui.armadilha.selecione_um_objeto_solido_adjacente": {
     "en": "Select an adjacent solid object.",
     "pt": "Selecione um objeto sólido adjacente."
   },
@@ -718,6 +1050,10 @@ window.LANG_INTERFACE = {
   "ui.armadilha.temporaria": {
     "en": "temporary",
     "pt": "temporária"
+  },
+  "ui.armadilha.teto_esmagador.desc": {
+    "en": "When triggered, affects the entire room. Reflex DC 20 avoids; on a failure, takes 4d6 damage.",
+    "pt": "Ao ativar, afeta toda a sala. Reflexos CD 20 evita; na falha, sofre 4d6 de dano."
   },
   "ui.armadilha.titulo_padrao": {
     "en": "Trap",
@@ -739,17 +1075,61 @@ window.LANG_INTERFACE = {
     "en": "You can't throw right now.",
     "pt": "Não é possível arremessar agora."
   },
+  "ui.arremesso.alvo_fora_do_alcance": {
+    "en": "Target out of range.",
+    "pt": "Alvo fora do alcance."
+  },
   "ui.arremesso.arremessar": {
     "en": "Throw",
     "pt": "Arremessar"
+  },
+  "ui.arremesso.arremesso_cancelado": {
+    "en": "Throw cancelled.",
+    "pt": "Arremesso cancelado."
+  },
+  "ui.arremesso.arremesso_cancelado_4": {
+    "en": "❌ Throw cancelled.",
+    "pt": "❌ Arremesso cancelado."
+  },
+  "ui.arremesso.arremesso_cancelado_5": {
+    "en": "❌ Throw cancelled.",
+    "pt": "❌ Arremesso cancelado."
+  },
+  "ui.arremesso.arremesso_cancelado_6": {
+    "en": "❌ Throw cancelled.",
+    "pt": "❌ Arremesso cancelado."
+  },
+  "ui.arremesso.arremesso_de_arma_cancelado": {
+    "en": "Weapon throw cancelled.",
+    "pt": "Arremesso de arma cancelado."
+  },
+  "ui.arremesso.cancele_o_arremesso_atual_primeiro_esc": {
+    "en": "Cancel the current throw first (ESC).",
+    "pt": "Cancele o arremesso atual primeiro (ESC)."
   },
   "ui.arremesso.cancele_primeiro": {
     "en": "Cancel the current throw first (ESC).",
     "pt": "Cancele o arremesso atual primeiro (ESC)."
   },
+  "ui.arremesso.casa": {
+    "en": "SQUARE",
+    "pt": "CASA"
+  },
+  "ui.arremesso.clique_num_inimigo_destacado_para_arremess": {
+    "en": "🎯 Click a highlighted enemy to throw the dagger (ESC cancels).",
+    "pt": "🎯 Clique num inimigo destacado para arremessar a adaga (ESC cancela)."
+  },
+  "ui.arremesso.corpo_a_corpo_exige_a_mesma_altura": {
+    "en": "Melee requires the same height.",
+    "pt": "Corpo a corpo exige a mesma altura."
+  },
   "ui.arremesso.descricao_arma": {
     "en": "Throws {nome} up to {alcance} squares. Uses {atributo} for the attack roll and damage; the weapon leaves your hand.",
     "pt": "Arremessa {nome} até {alcance} casas. Usa {atributo} para acerto e dano; a arma deixa a mão."
+  },
+  "ui.arremesso.destreza": {
+    "en": "Dexterity",
+    "pt": "Destreza"
   },
   "ui.arremesso.direcao_inimigo": {
     "en": "⚠️ Throw towards an enemy",
@@ -763,6 +1143,18 @@ window.LANG_INTERFACE = {
     "en": "Choose a valid target or square, with no wall in the way.",
     "pt": "Escolha um alvo ou casa válida, sem parede no caminho."
   },
+  "ui.arremesso.escolha_uma_casa_dentro_do_alcance_e_sem_p": {
+    "en": "Choose a square within range with no wall in the way.",
+    "pt": "Escolha uma casa dentro do alcance e sem parede no caminho."
+  },
+  "ui.arremesso.fora_do_alcance_de_arremesso": {
+    "en": "⚠️ Out of throwing range",
+    "pt": "⚠️ Fora do alcance de arremesso"
+  },
+  "ui.arremesso.fora_do_alcance_ou_parede_no_caminho": {
+    "en": "Out of range or a wall is in the way.",
+    "pt": "Fora do alcance ou parede no caminho."
+  },
   "ui.arremesso.forca": {
     "en": "Strength",
     "pt": "Força"
@@ -770,6 +1162,10 @@ window.LANG_INTERFACE = {
   "ui.arremesso.forca_ou_destreza": {
     "en": "Strength or Dexterity",
     "pt": "Força ou Destreza"
+  },
+  "ui.arremesso.inimigo": {
+    "en": "ENEMY",
+    "pt": "INIMIGO"
   },
   "ui.arremesso.inimigo_nao_encontrado": {
     "en": "⚠️ Enemy not found",
@@ -835,6 +1231,22 @@ window.LANG_INTERFACE = {
     "en": "Valid aim — confirm to throw.",
     "pt": "Mira válida — confirme para arremessar."
   },
+  "ui.arremesso.nome_habilidade": {
+    "en": "Throw {nome}",
+    "pt": "Arremessar {nome}"
+  },
+  "ui.arremesso.selecione_um_inimigo_destacado_dentro_do_a": {
+    "en": "Select a highlighted enemy within range.",
+    "pt": "Selecione um inimigo destacado dentro do alcance."
+  },
+  "ui.arremesso.selecione_um_inimigo_vivo": {
+    "en": "Select a living enemy.",
+    "pt": "Selecione um inimigo vivo."
+  },
+  "ui.arremesso.selecione_um_inimigo_vivo_dentro_do_alcanc": {
+    "en": "Select a living enemy within range.",
+    "pt": "Selecione um inimigo vivo dentro do alcance."
+  },
   "ui.arremesso.sem_acoes": {
     "en": "No actions available to throw.",
     "pt": "Sem ações disponíveis para arremessar."
@@ -862,6 +1274,22 @@ window.LANG_INTERFACE = {
   "ui.arremesso.so_3d": {
     "en": "Aimed throwing is only available in the 3D view.",
     "pt": "Arremesso com mira disponível apenas na visão 3D."
+  },
+  "ui.arremesso.uma_parede_ou_porta_fechada_bloqueia_o_arr": {
+    "en": "A wall or closed door blocks the throw.",
+    "pt": "Uma parede ou porta fechada bloqueia o arremesso."
+  },
+  "ui.arte.monstros_n": {
+    "en": "MONSTERS ({n})",
+    "pt": "MONSTROS ({n})"
+  },
+  "ui.arte.objetos_n": {
+    "en": "OBJECTS ({n})",
+    "pt": "OBJETOS ({n})"
+  },
+  "ui.arte.resumo": {
+    "en": "{n} items — {glb} GLB, {png} PNG, {proc} procedural, {erro} with errors",
+    "pt": "{n} itens — {glb} GLB, {png} PNG, {proc} procedural, {erro} com erro"
   },
   "ui.atalhos.ajuda": {
     "en": "S to toggle · drag actions here",
@@ -947,6 +1375,18 @@ window.LANG_INTERFACE = {
     "en": "Sight",
     "pt": "Visão"
   },
+  "ui.audio.alto_contraste": {
+    "en": "High contrast",
+    "pt": "Alto contraste"
+  },
+  "ui.audio.ambiente": {
+    "en": "🌫 Ambience",
+    "pt": "🌫 Ambiente"
+  },
+  "ui.audio.dados": {
+    "en": "🎲 Dice",
+    "pt": "🎲 Dados"
+  },
   "ui.audio.instantanea": {
     "en": "Instant",
     "pt": "Instantânea"
@@ -966,6 +1406,10 @@ window.LANG_INTERFACE = {
   "ui.audio.velocidade": {
     "en": "🎞 Speed",
     "pt": "🎞 Velocidade"
+  },
+  "ui.bardo.buffs_para_aliados_em_5_quadrados": {
+    "en": "Buffs for allies within 5 squares.",
+    "pt": "Buffs para aliados em 5 quadrados."
   },
   "ui.bardo.provocacao_2": {
     "en": "II: the disadvantage lasts the whole taunt; Henrique gains +2 AC and attacks the target with advantage.",
@@ -1131,6 +1575,10 @@ window.LANG_INTERFACE = {
     "en": "Resistance",
     "pt": "Resistência"
   },
+  "ui.cancao.aviso_monstros_raio": {
+    "en": "The bonuses apply to allied monsters within {raio} squares for 4 rounds.",
+    "pt": "Os bônus serão aplicados aos monstros aliados em raio {raio} por 4 rodadas."
+  },
   "ui.cancao.cantar": {
     "en": "🎵 SING",
     "pt": "🎵 CANTAR"
@@ -1154,6 +1602,10 @@ window.LANG_INTERFACE = {
   "ui.cancao.titulo": {
     "en": "🎵 HEROIC SONG",
     "pt": "🎵 CANÇÃO HEROICA"
+  },
+  "ui.cancao.titulo_monstro": {
+    "en": "{nome} — Heroic Song",
+    "pt": "{nome} — Canção Heroica"
   },
   "ui.carta.sem_mensagem": {
     "en": "This letter has no message.",
@@ -1279,6 +1731,10 @@ window.LANG_INTERFACE = {
     "en": "Drag the reference points to the right places and click Save points.",
     "pt": "Arraste os pontos de referência para os locais corretos e clique em Salvar pontos."
   },
+  "ui.cidade.badge_ouro": {
+    "en": "💰 {n} Gold",
+    "pt": "💰 {n} Ouro"
+  },
   "ui.cidade.cancelar_ajuste": {
     "en": "✕ Cancel adjustment",
     "pt": "✕ Cancelar ajuste"
@@ -1290,6 +1746,10 @@ window.LANG_INTERFACE = {
   "ui.cidade.carregando": {
     "en": "⏳ Loading…",
     "pt": "⏳ Carregando…"
+  },
+  "ui.cidade.cidade_de_alva_e_luz": {
+    "en": "City of Alva e Luz",
+    "pt": "Cidade de Alva e Luz"
   },
   "ui.cidade.clique_abrir": {
     "en": "▶ CLICK TO OPEN",
@@ -1315,6 +1775,10 @@ window.LANG_INTERFACE = {
     "en": "⚔ Enter the Dungeon",
     "pt": "⚔ Entrar na Masmorra"
   },
+  "ui.cidade.fechar": {
+    "en": "Close",
+    "pt": "Fechar"
+  },
   "ui.cidade.guilda_missoes_em_breve": {
     "en": "⚔ Heroes' Guild — Quests coming soon!",
     "pt": "⚔ Guilda dos Heróis — Missões em breve!"
@@ -1334,6 +1798,14 @@ window.LANG_INTERFACE = {
   "ui.cidade.mapa_mundi": {
     "en": "🧭 World map",
     "pt": "🧭 Mapa-múndi"
+  },
+  "ui.cidade.noite_profunda": {
+    "en": "🌙 Deep night",
+    "pt": "🌙 Noite profunda"
+  },
+  "ui.cidade.pleno_dia": {
+    "en": "☀ Broad daylight",
+    "pt": "☀ Pleno dia"
   },
   "ui.cidade.ponto.caravana": {
     "en": "Travelling Caravan",
@@ -1439,6 +1911,14 @@ window.LANG_INTERFACE = {
     "en": "HEALING DICE — 💧-1 per die",
     "pt": "DADOS DE CURA — 💧-1 por dado"
   },
+  "ui.clerigo.cura_formula": {
+    "en": "{n}d8 {sinal}{bonus} INT",
+    "pt": "{n}d8 {sinal}{bonus} INT"
+  },
+  "ui.clerigo.cura_modal_titulo": {
+    "en": "🙌 Heal {n}d8 — range {alcance}sq",
+    "pt": "🙌 Cura {n}d8 — alcance {alcance}q"
+  },
   "ui.clerigo.cura_titulo": {
     "en": "🙌 HEAL",
     "pt": "🙌 CURA"
@@ -1451,13 +1931,25 @@ window.LANG_INTERFACE = {
     "en": "🌟 HEAL AREA",
     "pt": "🌟 CURAR ÁREA"
   },
+  "ui.clerigo.fome_insuficiente": {
+    "en": "Not enough hunger 🍖{n}",
+    "pt": "Fome insuficiente 🍖{n}"
+  },
   "ui.clerigo.milagre_so_turno": {
     "en": "Miracles can only be used on your turn.",
     "pt": "Só é possível usar milagres no seu turno."
   },
+  "ui.clerigo.n_quadrados": {
+    "en": "{n} square(s)",
+    "pt": "{n} quadrado(s)"
+  },
   "ui.clerigo.purificar_alvo_limpo": {
     "en": "{nome} has no effects you know how to cleanse.",
     "pt": "{nome} não tem efeitos que você saiba purificar."
+  },
+  "ui.clerigo.purificar_alvo_titulo": {
+    "en": "✨ PURIFY {nome}",
+    "pt": "✨ PURIFICAR {nome}"
   },
   "ui.clerigo.purificar_sem_alvo": {
     "en": "No adjacent ally with an effect you know how to cleanse.",
@@ -1466,6 +1958,10 @@ window.LANG_INTERFACE = {
   "ui.clerigo.purificar_titulo": {
     "en": "✨ Cleanse — Adjacent ally",
     "pt": "✨ Purificação — Aliado adjacente"
+  },
+  "ui.clerigo.recursos_insuficientes": {
+    "en": "Not enough resources 🍖{n} 💧{n}",
+    "pt": "Recursos insuficientes 🍖{n} 💧{n}"
   },
   "ui.clerigo.ressur_custo": {
     "en": "Resurrection requires 🍖{n} and 💧{n}.",
@@ -1486,6 +1982,10 @@ window.LANG_INTERFACE = {
   "ui.clerigo.ressur_titulo": {
     "en": "💫 Resurrection ({efeito}) — Adjacent dead ally",
     "pt": "💫 Ressurreição ({efeito}) — Aliado morto adjacente"
+  },
+  "ui.clerigo.sede_insuficiente": {
+    "en": "Not enough thirst 💧{n}",
+    "pt": "Sede insuficiente 💧{n}"
   },
   "ui.clerigo.sem_aliado_morto": {
     "en": "No adjacent dead ally.",
@@ -1611,6 +2111,14 @@ window.LANG_INTERFACE = {
     "en": "❌ Server not found. Run iniciar.bat first!",
     "pt": "❌ Servidor não encontrado. Execute iniciar.bat primeiro!"
   },
+  "ui.config.sair_do_jogo": {
+    "en": "⏻ Quit the game",
+    "pt": "⏻ Sair do jogo"
+  },
+  "ui.config.voltar_menu_inicial": {
+    "en": "⌂ Back to the main menu",
+    "pt": "⌂ Voltar ao menu inicial"
+  },
   "ui.connect.hint_host": {
     "en": "⚙️ <b style=\"color:#6fc96f;\">How to play:</b> Double-click <code style=\"background:#1a2a1a;padding:1px 5px;border-radius:3px;color:#a0e0a0;\">iniciar.bat</code> to start the server and open the game automatically.",
     "pt": "⚙️ <b style=\"color:#6fc96f;\">Como jogar:</b> Clique duas vezes em <code style=\"background:#1a2a1a;padding:1px 5px;border-radius:3px;color:#a0e0a0;\">iniciar.bat</code> para iniciar o servidor e abrir o jogo automaticamente."
@@ -1623,6 +2131,10 @@ window.LANG_INTERFACE = {
     "en": "Choose a nickname.",
     "pt": "Escolha um apelido."
   },
+  "ui.conta.falha_no_login": {
+    "en": "Login failed.",
+    "pt": "Falha no login."
+  },
   "ui.conta.senha_curta": {
     "en": "The password must be at least 8 characters.",
     "pt": "A senha precisa ter pelo menos 8 caracteres."
@@ -1630,6 +2142,22 @@ window.LANG_INTERFACE = {
   "ui.dano_tipo.fogo": {
     "en": "fire",
     "pt": "fogo"
+  },
+  "ui.decor.ativar_mecanismo": {
+    "en": "⚙ Activate mechanism",
+    "pt": "⚙ Ativar mecanismo"
+  },
+  "ui.decor.carta": {
+    "en": "Letter",
+    "pt": "Carta"
+  },
+  "ui.decor.objeto": {
+    "en": "📦 Object",
+    "pt": "📦 Objeto"
+  },
+  "ui.decor.objeto_chave": {
+    "en": "⚙ Key object",
+    "pt": "⚙ Objeto-chave"
   },
   "ui.diag.arquivo_nao_carregou": {
     "en": "file did not load (404 or network)",
@@ -1691,6 +2219,10 @@ window.LANG_INTERFACE = {
     "en": "🌪️ SUMMONED ELEMENTALS",
     "pt": "🌪️ ELEMENTAIS CONJURADOS"
   },
+  "ui.elemental.conjurar": {
+    "en": "🌪️ CONJURE",
+    "pt": "🌪️ CONJURAR"
+  },
   "ui.elemental.desc.eletrico": {
     "en": "Its attack hits everyone in a straight 3-square line.",
     "pt": "Seu ataque atinge todos numa linha reta de 3 quadrados."
@@ -1710,6 +2242,22 @@ window.LANG_INTERFACE = {
   "ui.elemental.elemental_de_agua_hp42_1d10": {
     "en": "Water Elemental · HP42 · 1d10",
     "pt": "Elemental de Água · HP42 · 1d10"
+  },
+  "ui.elemental.elemental_de_ar_hp32_1d8_alcance_2": {
+    "en": "Air Elemental · HP32 · 1d8 · range 2",
+    "pt": "Elemental de Ar · HP32 · 1d8 · alcance 2"
+  },
+  "ui.elemental.elemental_de_fogo_hp32_1d10_3": {
+    "en": "Fire Elemental · HP32 · 1d10+3",
+    "pt": "Elemental de Fogo · HP32 · 1d10+3"
+  },
+  "ui.elemental.elemental_de_gelo_hp36_1d10": {
+    "en": "Ice Elemental · HP36 · 1d10",
+    "pt": "Elemental de Gelo · HP36 · 1d10"
+  },
+  "ui.elemental.elemental_de_pedra_hp44_1d12": {
+    "en": "Stone Elemental · HP44 · 1d12",
+    "pt": "Elemental de Pedra · HP44 · 1d12"
   },
   "ui.elemental.elemental_eletrico_hp32_1d10_alcance_4": {
     "en": "Lightning Elemental · HP32 · 1d10 · range 4",
@@ -1775,9 +2323,53 @@ window.LANG_INTERFACE = {
     "en": "❌ {item} cannot be equipped in this slot",
     "pt": "❌ {item} não pode ser equipado neste slot"
   },
+  "ui.ficha.acerto_dano": {
+    "en": "🎯 Hit <b>+{acerto}</b> &nbsp;·&nbsp; 🎲 Damage <b>{dano}</b>",
+    "pt": "🎯 Acerto <b>+{acerto}</b> &nbsp;·&nbsp; 🎲 Dano <b>{dano}</b>"
+  },
+  "ui.ficha.altura_linha": {
+    "en": "↕ Height {de} → {para} · Δ{delta} = {custo}sq · {alcance} ({situacao})",
+    "pt": "↕ Altura {de} → {para} · Δ{delta} = {custo}q · {alcance} ({situacao})"
+  },
+  "ui.ficha.alturas_diferentes": {
+    "en": "different heights",
+    "pt": "alturas diferentes"
+  },
+  "ui.ficha.ataque": {
+    "en": "Attack",
+    "pt": "Ataque"
+  },
+  "ui.ficha.atributos": {
+    "en": "📊 ATTRIBUTES",
+    "pt": "📊 ATRIBUTOS"
+  },
+  "ui.ficha.c_ficha_h_habilidades_m_magias": {
+    "en": "C sheet · H abilities · M spells",
+    "pt": "C ficha · H habilidades · M magias"
+  },
+  "ui.ficha.chefe": {
+    "en": "Boss",
+    "pt": "Chefe"
+  },
+  "ui.ficha.chefe_2": {
+    "en": "👑 Boss",
+    "pt": "👑 Chefe"
+  },
   "ui.ficha.compre_tecnicas": {
     "en": "Buy techniques at the Heroes' Guild.",
     "pt": "Compre técnicas na Guilda dos Heróis."
+  },
+  "ui.ficha.comum": {
+    "en": "Common",
+    "pt": "Comum"
+  },
+  "ui.ficha.conhecimento_das_lendas": {
+    "en": "📖 LORE OF LEGENDS",
+    "pt": "📖 CONHECIMENTO DAS LENDAS"
+  },
+  "ui.ficha.corpo_a_corpo": {
+    "en": "melee",
+    "pt": "corpo a corpo"
   },
   "ui.ficha.doenca": {
     "en": "{tipo} disease",
@@ -1787,9 +2379,21 @@ window.LANG_INTERFACE = {
     "en": "EXPERIENCE",
     "pt": "EXPERIÊNCIA"
   },
+  "ui.ficha.fechar": {
+    "en": "✕ CLOSE",
+    "pt": "✕ FECHAR"
+  },
+  "ui.ficha.fechar_2": {
+    "en": "CLOSE",
+    "pt": "FECHAR"
+  },
   "ui.ficha.fome": {
     "en": "HUNGER",
     "pt": "FOME"
+  },
+  "ui.ficha.fora_do_alcance": {
+    "en": "out of range",
+    "pt": "fora do alcance"
   },
   "ui.ficha.habilidade_classe": {
     "en": "⚗️ CLASS ABILITY",
@@ -1803,17 +2407,45 @@ window.LANG_INTERFACE = {
     "en": "Abilities (H)",
     "pt": "Habilidades (H)"
   },
+  "ui.ficha.imune_a_lista": {
+    "en": "Immune: {lista}",
+    "pt": "Imune: {lista}"
+  },
   "ui.ficha.iniciativa": {
     "en": "INITIATIVE",
     "pt": "INICIATIVA"
+  },
+  "ui.ficha.linha_bloqueada": {
+    "en": "line blocked",
+    "pt": "linha bloqueada"
+  },
+  "ui.ficha.magias": {
+    "en": "💀 SPELLS",
+    "pt": "💀 MAGIAS"
   },
   "ui.ficha.magias_title": {
     "en": "Spells",
     "pt": "Magias"
   },
+  "ui.ficha.mapa_de_cr_mestre": {
+    "en": "CR Map (master)",
+    "pt": "Mapa de CR (mestre)"
+  },
+  "ui.ficha.mesma_altura": {
+    "en": "same height",
+    "pt": "mesma altura"
+  },
   "ui.ficha.modificadores_males": {
     "en": "TEMPORARY MODIFIERS — AFFLICTIONS",
     "pt": "MODIFICADORES TEMPORÁRIOS — MALES"
+  },
+  "ui.ficha.morto_vivo": {
+    "en": "💀 Undead",
+    "pt": "💀 Morto-vivo"
+  },
+  "ui.ficha.nenhuma": {
+    "en": "None",
+    "pt": "Nenhuma"
   },
   "ui.ficha.nenhuma_exclusiva": {
     "en": "— no exclusive —",
@@ -1843,6 +2475,10 @@ window.LANG_INTERFACE = {
     "en": "Protection:",
     "pt": "Proteção:"
   },
+  "ui.ficha.provocado_turnos": {
+    "en": "😤 Provoked ({n}t)",
+    "pt": "😤 Provocado ({n}t)"
+  },
   "ui.ficha.raio_visao": {
     "en": "VISION RADIUS",
     "pt": "RAIO DE VISÃO"
@@ -1850,6 +2486,10 @@ window.LANG_INTERFACE = {
   "ui.ficha.sede": {
     "en": "THIRST",
     "pt": "SEDE"
+  },
+  "ui.ficha.selecione_um_monstro_primeiro": {
+    "en": "Select a monster first.",
+    "pt": "Selecione um monstro primeiro."
   },
   "ui.ficha.so_leitura": {
     "en": "read only",
@@ -1878,6 +2518,10 @@ window.LANG_INTERFACE = {
   "ui.ficha.ver_magias": {
     "en": "View spells (M)",
     "pt": "Ver magias (M)"
+  },
+  "ui.ficha.von": {
+    "en": "Will",
+    "pt": "Von"
   },
   "ui.fim.derrota_msg": {
     "en": "Darkness won... this time.",
@@ -1991,6 +2635,10 @@ window.LANG_INTERFACE = {
     "en": "Sight",
     "pt": "Visão"
   },
+  "ui.guilda.comprar_preco": {
+    "en": "Buy 🪙{preco}",
+    "pt": "Comprar 🪙{preco}"
+  },
   "ui.guilda.especializacoes": {
     "en": "🌟 Specialisations",
     "pt": "🌟 Especializações"
@@ -2010,6 +2658,10 @@ window.LANG_INTERFACE = {
   "ui.guilda.recarga_media": {
     "en": "Medium Recharge (5 rounds)",
     "pt": "Recarga Média (5 rodadas)"
+  },
+  "ui.guilda.recarga_n_rodadas": {
+    "en": "Cooldown {n} rounds",
+    "pt": "Recarga {n} rodadas"
   },
   "ui.guilda.requer": {
     "en": "🔒 Requires {nome}",
@@ -2227,9 +2879,33 @@ window.LANG_INTERFACE = {
     "en": "DWARF WARRIOR",
     "pt": "GUERREIRO ANÃO"
   },
+  "ui.hud.1_ataque_extra_neste_turno": {
+    "en": "1 extra attack this turn.",
+    "pt": "1 ataque extra neste turno."
+  },
+  "ui.hud.1_natural_falha": {
+    "en": "NATURAL 1 — FUMBLE!",
+    "pt": "1 NATURAL — FALHA!"
+  },
+  "ui.hud.1_reflexos_1_fortitude_1_movimento": {
+    "en": "-1 Reflexes · -1 Fortitude · -1 movement",
+    "pt": "-1 Reflexos · -1 Fortitude · -1 movimento"
+  },
   "ui.hud.20_natural_critico": {
     "en": "NATURAL 20 — CRITICAL!",
     "pt": "20 NATURAL — CRÍTICO!"
+  },
+  "ui.hud.2_ataques_extras_neste_turno": {
+    "en": "2 extra attacks this turn.",
+    "pt": "2 ataques extras neste turno."
+  },
+  "ui.hud.2_no_acerto_e_2_no_dano_neste_turno": {
+    "en": "+2 to hit and +2 damage this turn.",
+    "pt": "+2 no acerto e +2 no dano neste turno."
+  },
+  "ui.hud.2_no_dado_de_acerto_neste_turno": {
+    "en": "+2 to the attack roll this turn.",
+    "pt": "+2 no dado de acerto neste turno."
   },
   "ui.hud.acao_bonus_ja_usada": {
     "en": "Bonus action already used this turn.",
@@ -2243,9 +2919,25 @@ window.LANG_INTERFACE = {
     "en": "action used",
     "pt": "ação usada"
   },
+  "ui.hud.acerto": {
+    "en": "HIT",
+    "pt": "ACERTO"
+  },
   "ui.hud.acoes": {
     "en": "Actions",
     "pt": "Ações"
+  },
+  "ui.hud.aguardando_alvo_bolinha": {
+    "en": "● awaiting target",
+    "pt": "● aguardando alvo"
+  },
+  "ui.hud.aguardando_alvo_parens": {
+    "en": "(awaiting target)",
+    "pt": "(aguardando alvo)"
+  },
+  "ui.hud.aguardando_heroi": {
+    "en": "⏳ Waiting for {emoji} {nome}...",
+    "pt": "⏳ Aguardando {emoji} {nome}..."
   },
   "ui.hud.ajuda_title": {
     "en": "How to play",
@@ -2271,9 +2963,49 @@ window.LANG_INTERFACE = {
     "en": "Altitude can only be changed on your turn.",
     "pt": "A altura só pode ser alterada no seu turno."
   },
+  "ui.hud.alvo": {
+    "en": "Target",
+    "pt": "Alvo"
+  },
+  "ui.hud.alvo_area": {
+    "en": "square ({x},{y})",
+    "pt": "casa ({x},{y})"
+  },
+  "ui.hud.alvo_fora_do_alcance_deste_golpe": {
+    "en": "Target out of range for this strike.",
+    "pt": "Alvo fora do alcance deste golpe."
+  },
+  "ui.hud.animar_mortos": {
+    "en": "Animate Dead",
+    "pt": "Animar Mortos"
+  },
+  "ui.hud.antigo_recarregue_com_ctrl_shift_r": {
+    "en": "OUTDATED (reload with Ctrl+Shift+R)",
+    "pt": "ANTIGO (recarregue com Ctrl+Shift+R)"
+  },
+  "ui.hud.anula_completamente": {
+    "en": "— negates completely",
+    "pt": "— anula completamente"
+  },
   "ui.hud.apagar_chamas": {
     "en": "Put out flames",
     "pt": "Apagar chamas"
+  },
+  "ui.hud.aprimorar_magia": {
+    "en": "Enhance Spell",
+    "pt": "Aprimorar Magia"
+  },
+  "ui.hud.aproxime_se": {
+    "en": "move closer!",
+    "pt": "aproxime-se!"
+  },
+  "ui.hud.aproxime_se_da_porta_para_abri_la": {
+    "en": "🚪 Move next to the door to open it.",
+    "pt": "🚪 Aproxime-se da porta para abri-la."
+  },
+  "ui.hud.arma": {
+    "en": "⚔ WEAPON",
+    "pt": "⚔ ARMA"
   },
   "ui.hud.arma_envenenada": {
     "en": "poisoned weapon",
@@ -2283,6 +3015,50 @@ window.LANG_INTERFACE = {
     "en": "readied",
     "pt": "armada"
   },
+  "ui.hud.armadilha": {
+    "en": "Trap",
+    "pt": "Armadilha"
+  },
+  "ui.hud.armadura": {
+    "en": "🛡 ARMOR",
+    "pt": "🛡 ARMADURA"
+  },
+  "ui.hud.arremessar_arma_btn": {
+    "en": "🎯 Throw {nome}",
+    "pt": "🎯 Arremessar {nome}"
+  },
+  "ui.hud.arremesso_dano": {
+    "en": "{dado} +{stat} damage",
+    "pt": "{dado} +{stat} dano"
+  },
+  "ui.hud.arremesso_detalhe": {
+    "en": "{mao} · range {alcance} · you lose the weapon",
+    "pt": "{mao} · alcance {alcance} · perde a arma"
+  },
+  "ui.hud.arremesso_sem_alvo": {
+    "en": "no target in range",
+    "pt": "nenhum alvo no alcance"
+  },
+  "ui.hud.atacar": {
+    "en": "Attack",
+    "pt": "Atacar"
+  },
+  "ui.hud.ataque": {
+    "en": "Attack",
+    "pt": "Ataque"
+  },
+  "ui.hud.ataque_coordenado": {
+    "en": "Coordinated Attack",
+    "pt": "Ataque Coordenado"
+  },
+  "ui.hud.ataque_duplo": {
+    "en": "Double Attack:",
+    "pt": "Ataque Duplo:"
+  },
+  "ui.hud.ataque_extra": {
+    "en": "🔥 Extra attack",
+    "pt": "🔥 Ataque extra"
+  },
   "ui.hud.ate_atributos": {
     "en": "up to {n} simultaneous attribute(s)",
     "pt": "até {n} atributo(s) simultâneo(s)"
@@ -2291,6 +3067,10 @@ window.LANG_INTERFACE = {
     "en": "on",
     "pt": "ativa"
   },
+  "ui.hud.ativar_cancao": {
+    "en": "ACTIVATE SONG",
+    "pt": "ATIVAR CANÇÃO"
+  },
   "ui.hud.ativo": {
     "en": "on",
     "pt": "ativo"
@@ -2298,6 +3078,18 @@ window.LANG_INTERFACE = {
   "ui.hud.aventureiros": {
     "en": "Adventurers",
     "pt": "Aventureiros"
+  },
+  "ui.hud.badge_rodada": {
+    "en": "Round {n}",
+    "pt": "Rodada {n}"
+  },
+  "ui.hud.badge_sua_vez": {
+    "en": "▶ YOUR TURN — {emoji} {nome}",
+    "pt": "▶ SUA VEZ — {emoji} {nome}"
+  },
+  "ui.hud.badge_teste_livre": {
+    "en": "🧪 FREE TEST — select any monster",
+    "pt": "🧪 TESTE LIVRE — selecione qualquer monstro"
   },
   "ui.hud.banner_chamas_rodadas": {
     "en": "{n} ROUND(S)",
@@ -2355,123 +3147,23 @@ window.LANG_INTERFACE = {
     "en": "bonus",
     "pt": "bônus"
   },
+  "ui.hud.bonus_aos_aliados": {
+    "en": "bonus to allies",
+    "pt": "bônus aos aliados"
+  },
   "ui.hud.bonus_usado": {
     "en": "bonus used",
     "pt": "bônus usado"
   },
-  "ui.recursos.titulo": {
-    "en": "ROUND RESOURCES",
-    "pt": "RECURSOS DA RODADA"
+  "ui.hud.brutalidade": {
+    "en": "Brutality",
+    "pt": "Brutalidade"
   },
-  "ui.recursos.movimento": {
-    "en": "Movement",
-    "pt": "Movimento"
-  },
-  "ui.recursos.quadrados": {
-    "en": "{n} square(s)",
-    "pt": "{n} quadrado(s)"
-  },
-  "ui.recursos.acao_principal": {
-    "en": "Main action",
-    "pt": "Ação principal"
-  },
-  "ui.recursos.acao_bonus": {
-    "en": "Bonus action",
-    "pt": "Ação bônus"
-  },
-  "ui.recursos.disponivel": {
-    "en": "available",
-    "pt": "disponível"
-  },
-  "ui.recursos.usada": {
-    "en": "used",
-    "pt": "usada"
-  },
-  "ui.recursos.fora_turno": {
-    "en": "Waiting for your turn",
-    "pt": "Aguardando seu turno"
-  },
-  "ui.recursos.ainda_pode": {
-    "en": "You can still",
-    "pt": "Você ainda pode"
-  },
-  "ui.recursos.nada": {
-    "en": "No action resource remaining",
-    "pt": "Nenhum recurso de ação restante"
-  },
-  "ui.recursos.movimento_ajuda": {
-    "en": "Move up to {n} square(s)",
-    "pt": "Mover-se até {n} casa(s)"
-  },
-  "ui.recursos.acao_principal_ajuda": {
-    "en": "Attack, cast a spell, use a technique or interact",
-    "pt": "Atacar, lançar magia, usar técnica ou interagir"
-  },
-  "ui.recursos.acao_bonus_ajuda": {
-    "en": "Activate a quick ability or use a healing potion",
-    "pt": "Ativar uma habilidade rápida ou usar uma poção de cura"
-  },
-  "ui.acoes.explicacao_titulo": {
-    "en": "How actions work",
-    "pt": "Como funcionam as ações"
-  },
-  "ui.acoes.explicacao_movimento": {
-    "en": "Movement: spend blue squares to walk through the dungeon.",
-    "pt": "Movimento: gaste os quadrados azuis para andar pela masmorra."
-  },
-  "ui.acoes.explicacao_principal": {
-    "en": "Main action: normally one attack, spell, item or technique each turn.",
-    "pt": "Ação principal: normalmente um ataque, magia, item ou técnica por rodada."
-  },
-  "ui.acoes.explicacao_bonus": {
-    "en": "Bonus action: quick abilities and healing potions; once per turn.",
-    "pt": "Ação bônus: habilidades rápidas e poções de cura; uma vez por rodada."
-  },
-  "ui.acoes.explicacao_livre": {
-    "en": "Free action: small interactions that do not spend the main or bonus action.",
-    "pt": "Ação livre: interações rápidas que não gastam a ação principal ou bônus."
-  },
-  "ui.acoes.explicacao_reacao": {
-    "en": "Reaction: used in response to a specific event.",
-    "pt": "Reação: usada em resposta a um evento específico."
-  },
-  "ui.acoes.explicacao_passiva": {
-    "en": "Passive: always active; no action is spent.",
-    "pt": "Passiva: fica sempre ativa; não gasta ação."
-  },
-  "ui.acoes.tipo_principal": {
-    "en": "Main action",
-    "pt": "Ação principal"
-  },
-  "ui.acoes.tipo_bonus": {
-    "en": "Bonus action",
-    "pt": "Ação bônus"
-  },
-  "ui.acoes.tipo_livre": {
-    "en": "Free action",
-    "pt": "Ação livre"
-  },
-  "ui.acoes.tipo_reacao": {
-    "en": "Reaction",
-    "pt": "Reação"
-  },
-  "ui.acoes.tipo_passiva": {
-    "en": "Passive",
-    "pt": "Passiva"
-  },
-  "ui.acoes.custo": {
-    "en": "Cost",
-    "pt": "Custo"
-  },
-  "ui.acoes.uso": {
-    "en": "Use",
-    "pt": "Uso"
+  "ui.hud.buff_aplicado": {
+    "en": "Buff applied: {nome}",
+    "pt": "Buff aplicado: {nome}"
   },
   "ui.hud.ca_temporaria": {
-    "en": "Temporary AC",
-    "pt": "CA temporária"
-  },
-  "ui.hud.ca_temporaria_2": {
     "en": "Temporary AC",
     "pt": "CA temporária"
   },
@@ -2491,6 +3183,10 @@ window.LANG_INTERFACE = {
     "en": "singing",
     "pt": "cantando"
   },
+  "ui.hud.carregando_guilda": {
+    "en": "Loading guild…",
+    "pt": "Carregando guilda…"
+  },
   "ui.hud.chamas_agua_ou_acao": {
     "en": "WATER OR THE ACTION PUTS IT OUT",
     "pt": "ÁGUA OU AÇÃO APAGA"
@@ -2498,6 +3194,38 @@ window.LANG_INTERFACE = {
   "ui.hud.chamas_so_acao": {
     "en": "ONLY THE ACTION PUTS IT OUT (GREEK FIRE)",
     "pt": "SÓ A AÇÃO APAGA (FOGO GREGO)"
+  },
+  "ui.hud.clique_para_ver_a_ficha": {
+    "en": "Click to view the sheet",
+    "pt": "Clique para ver a ficha"
+  },
+  "ui.hud.compre_combinar_duas_na_guilda_para_armar": {
+    "en": "Buy \"Combine Two\" at the Guild to arm 2 abilities per turn.",
+    "pt": "Compre \"Combinar Duas\" na Guilda para armar 2 habilidades por turno."
+  },
+  "ui.hud.concluir": {
+    "en": "Finish",
+    "pt": "Concluir"
+  },
+  "ui.hud.concluir_cena": {
+    "en": "Finish scene",
+    "pt": "Concluir cena"
+  },
+  "ui.hud.conhecimento_das_lendas": {
+    "en": "Lore of Legends",
+    "pt": "Conhecimento das Lendas"
+  },
+  "ui.hud.continuar": {
+    "en": "Continue →",
+    "pt": "Continuar →"
+  },
+  "ui.hud.continuar_2": {
+    "en": "Continue ›",
+    "pt": "Continuar ›"
+  },
+  "ui.hud.corpo_a_corpo": {
+    "en": "melee",
+    "pt": "corpo a corpo"
   },
   "ui.hud.criar_armadilha_desc": {
     "en": "Pick an adjacent square. DEX check{b}; a natural 1 sets the trap off on you.",
@@ -2511,25 +3239,73 @@ window.LANG_INTERFACE = {
     "en": "CRITICAL!",
     "pt": "CRÍTICO!"
   },
-  "ui.hud.alvo_area": {
-    "en": "square ({x},{y})",
-    "pt": "casa ({x},{y})"
-  },
-  "ui.hud.resultado_area": {
-    "en": "AREA",
-    "pt": "ÁREA"
-  },
   "ui.hud.critico_2": {
     "en": "CRITICAL",
     "pt": "CRÍTICO"
+  },
+  "ui.hud.cura_estimada": {
+    "en": "Estimated healing",
+    "pt": "Cura estimada"
+  },
+  "ui.hud.curar": {
+    "en": "🙏 HEAL",
+    "pt": "🙏 CURAR"
+  },
+  "ui.hud.curar_2": {
+    "en": "🙌 HEAL",
+    "pt": "🙌 CURAR"
+  },
+  "ui.hud.custo_ao_atacar": {
+    "en": "Cost when attacking: 🍖-{fome}{sede}",
+    "pt": "Custo ao atacar: 🍖-{fome}{sede}"
+  },
+  "ui.hud.custo_total": {
+    "en": "TOTAL COST",
+    "pt": "CUSTO TOTAL"
+  },
+  "ui.hud.dano_sufixo": {
+    "en": "damage",
+    "pt": "dano"
+  },
+  "ui.hud.dano_x2": {
+    "en": "💥 Damage ×2",
+    "pt": "💥 Dano ×2"
   },
   "ui.hud.defesa_impecavel": {
     "en": "Flawless Defense",
     "pt": "Defesa Impecável"
   },
+  "ui.hud.derrotado": {
+    "en": "☠ DEFEATED",
+    "pt": "☠ DERROTADO"
+  },
+  "ui.hud.desarmado": {
+    "en": "Unarmed",
+    "pt": "Desarmado"
+  },
+  "ui.hud.descartado": {
+    "en": "✕ DISCARDED",
+    "pt": "✕ DESCARTADO"
+  },
+  "ui.hud.destino_bloqueado_ou_ocupado_escolha_uma_c": {
+    "en": "Destination blocked or occupied. Choose a green square.",
+    "pt": "Destino bloqueado ou ocupado. Escolha uma casa verde."
+  },
+  "ui.hud.desvantagem": {
+    "en": "DISADVANTAGE",
+    "pt": "DESVANTAGEM"
+  },
+  "ui.hud.detectar_armadilhas": {
+    "en": "Detect Traps",
+    "pt": "Detectar Armadilhas"
+  },
   "ui.hud.detectar_desc": {
     "en": "reveals nearby traps and does not set them off",
     "pt": "revela armadilhas próximas e não as dispara"
+  },
+  "ui.hud.dezena": {
+    "en": "TENS",
+    "pt": "DEZENA"
   },
   "ui.hud.doenca_curavel": {
     "en": "curable by a cleric or the temple",
@@ -2538,6 +3314,14 @@ window.LANG_INTERFACE = {
   "ui.hud.doenca_titulo": {
     "en": "🦠 {sev} DISEASE",
     "pt": "🦠 DOENÇA {sev}"
+  },
+  "ui.hud.efeito_parcial_no_sucesso": {
+    "en": "— partial effect on success",
+    "pt": "— efeito parcial no sucesso"
+  },
+  "ui.hud.efeito_positivo": {
+    "en": "Positive effect",
+    "pt": "Efeito positivo"
   },
   "ui.hud.encerrar_prisao_chamas": {
     "en": "🔥 End Prison of Flames",
@@ -2559,6 +3343,22 @@ window.LANG_INTERFACE = {
     "en": "Equipped (Shop)",
     "pt": "Equipado (Loja)"
   },
+  "ui.hud.erro": {
+    "en": "MISS",
+    "pt": "ERRO"
+  },
+  "ui.hud.erro_ao_carregar_jogo": {
+    "en": "Error loading the game",
+    "pt": "Erro ao carregar jogo"
+  },
+  "ui.hud.erro_ao_iniciar_3d": {
+    "en": "❌ Error starting 3D: {erro}",
+    "pt": "❌ Erro ao iniciar 3D: {erro}"
+  },
+  "ui.hud.erro_desconhecido": {
+    "en": "unknown error",
+    "pt": "erro desconhecido"
+  },
   "ui.hud.escapar_bau": {
     "en": "Escape the chest",
     "pt": "Escapar do baú"
@@ -2566,6 +3366,14 @@ window.LANG_INTERFACE = {
   "ui.hud.escolher_chamas_vivas": {
     "en": "🔥 Choose Living Flames",
     "pt": "🔥 Escolher Chamas Vivas"
+  },
+  "ui.hud.escolhido": {
+    "en": "✓ CHOSEN",
+    "pt": "✓ ESCOLHIDO"
+  },
+  "ui.hud.esconder_nas_sombras": {
+    "en": "Hide in Shadows",
+    "pt": "Esconder nas Sombras"
   },
   "ui.hud.espaco_ok": {
     "en": "✓ Spacing 0.94",
@@ -2583,17 +3391,65 @@ window.LANG_INTERFACE = {
     "en": "↶ Spacing 0.94",
     "pt": "↶ Espaço 0,94"
   },
+  "ui.hud.esqueleto_animal": {
+    "en": "Animal Skeleton",
+    "pt": "Esqueleto Animal"
+  },
+  "ui.hud.esqueleto_humano": {
+    "en": "Human Skeleton",
+    "pt": "Esqueleto Humano"
+  },
+  "ui.hud.estancar_sangramento": {
+    "en": "🩸 Staunch Bleeding {n}",
+    "pt": "🩸 Estancar Sangramento {n}"
+  },
+  "ui.hud.este_ataque_requer_inimigo_cardinalmente_a": {
+    "en": "⚠ This attack requires an orthogonally adjacent enemy!",
+    "pt": "⚠ Este ataque requer inimigo cardinalmente adjacente!"
+  },
+  "ui.hud.estender_magia": {
+    "en": "Extend Spell",
+    "pt": "Estender Magia"
+  },
   "ui.hud.exausto_efeitos": {
     "en": "-2 DEX · -2 STR · +1 hunger/thirst per action",
     "pt": "-2 DES · -2 FOR · +1 fome/sede por ação"
+  },
+  "ui.hud.falha": {
+    "en": "FUMBLE",
+    "pt": "FALHA"
+  },
+  "ui.hud.falhar_voluntariamente": {
+    "en": "FAIL ON PURPOSE",
+    "pt": "FALHAR VOLUNTARIAMENTE"
+  },
+  "ui.hud.falhou": {
+    "en": "FAILED",
+    "pt": "FALHOU"
+  },
+  "ui.hud.falhou_efeito_completo": {
+    "en": "FAILED — FULL EFFECT",
+    "pt": "FALHOU — EFEITO COMPLETO"
   },
   "ui.hud.fechar_ficha": {
     "en": "✕ Close sheet",
     "pt": "✕ Fechar ficha"
   },
+  "ui.hud.feche_o_navegador_e_tente_novamente_via_py": {
+    "en": "Close the browser and try again via: python start.py",
+    "pt": "Feche o navegador e tente novamente via: python start.py"
+  },
+  "ui.hud.ferida_aberta_permanece": {
+    "en": "🩹 Open Wound remains",
+    "pt": "🩹 Ferida Aberta permanece"
+  },
   "ui.hud.fisico": {
     "en": "Physical",
     "pt": "Físico"
+  },
+  "ui.hud.foi_removido": {
+    "en": "was removed",
+    "pt": "foi removido"
   },
   "ui.hud.fora_de_turno_ou_acao_usada": {
     "en": "It's not your turn or the action was already used.",
@@ -2610,6 +3466,14 @@ window.LANG_INTERFACE = {
   "ui.hud.forcar_saida": {
     "en": "Force your way out",
     "pt": "Forçar saída"
+  },
+  "ui.hud.forma_alterada": {
+    "en": "FORM CHANGED",
+    "pt": "FORMA ALTERADA"
+  },
+  "ui.hud.fortalecer_magia": {
+    "en": "Strengthen Spell",
+    "pt": "Fortalecer Magia"
   },
   "ui.hud.furia_berserker": {
     "en": "Berserker Rage",
@@ -2631,13 +3495,61 @@ window.LANG_INTERFACE = {
     "en": "uses your main action",
     "pt": "gasta a ação principal"
   },
+  "ui.hud.golpe_decisivo": {
+    "en": "Decisive Strike",
+    "pt": "Golpe Decisivo"
+  },
+  "ui.hud.golpe_devastador": {
+    "en": "Devastating Blow",
+    "pt": "Golpe Devastador"
+  },
+  "ui.hud.golpe_sagrado": {
+    "en": "Holy Strike",
+    "pt": "Golpe Sagrado"
+  },
+  "ui.hud.grave": {
+    "en": "Severe",
+    "pt": "Grave"
+  },
+  "ui.hud.guerreiro_da_luz": {
+    "en": "Warrior of Light",
+    "pt": "Guerreiro da Luz"
+  },
   "ui.hud.guilda": {
     "en": "GUILD",
     "pt": "GUILDA"
   },
+  "ui.hud.habilidade_cancelada": {
+    "en": "Ability cancelled.",
+    "pt": "Habilidade cancelada."
+  },
   "ui.hud.habilidades": {
     "en": "Abilities",
     "pt": "Habilidades"
+  },
+  "ui.hud.habilidades_2": {
+    "en": "✦ ABILITIES",
+    "pt": "✦ HABILIDADES"
+  },
+  "ui.hud.habilidades_do_monstro": {
+    "en": "✦ MONSTER ABILITIES",
+    "pt": "✦ HABILIDADES DO MONSTRO"
+  },
+  "ui.hud.improviso": {
+    "en": "Improvisation",
+    "pt": "Improviso"
+  },
+  "ui.hud.improviso_2": {
+    "en": "🪗 Improvisation",
+    "pt": "🪗 Improviso"
+  },
+  "ui.hud.imune": {
+    "en": "IMMUNE",
+    "pt": "IMUNE"
+  },
+  "ui.hud.inimigo_fora_de_alcance": {
+    "en": "enemy out of range",
+    "pt": "inimigo fora de alcance"
   },
   "ui.hud.inspirado_cancao": {
     "en": "Inspired by the Heroic Song",
@@ -2647,6 +3559,10 @@ window.LANG_INTERFACE = {
     "en": "Inventory",
     "pt": "Inventário"
   },
+  "ui.hud.investida_heroica": {
+    "en": "Heroic Charge",
+    "pt": "Investida Heroica"
+  },
   "ui.hud.invisivel": {
     "en": "invisible",
     "pt": "invisível"
@@ -2654,6 +3570,10 @@ window.LANG_INTERFACE = {
   "ui.hud.invisivel_desc": {
     "en": "monsters cannot target you until you attack",
     "pt": "não é alvo dos monstros até atacar"
+  },
+  "ui.hud.leve": {
+    "en": "Mild",
+    "pt": "Leve"
   },
   "ui.hud.libertar_prisioneiro": {
     "en": "🔓 Free the prisoner",
@@ -2671,6 +3591,14 @@ window.LANG_INTERFACE = {
     "en": "❌ Main action already used",
     "pt": "❌ Ação principal já usada"
   },
+  "ui.hud.magia_anulada": {
+    "en": "spell negated",
+    "pt": "magia anulada"
+  },
+  "ui.hud.magias": {
+    "en": "✨ SPELLS",
+    "pt": "✨ MAGIAS"
+  },
   "ui.hud.mais_ca_revelar": {
     "en": "+2 AC on revealing",
     "pt": "+2 CA ao revelar"
@@ -2687,6 +3615,10 @@ window.LANG_INTERFACE = {
     "en": "CR Map (master)",
     "pt": "Mapa de CR (mestre)"
   },
+  "ui.hud.masmorra": {
+    "en": "Dungeon",
+    "pt": "Masmorra"
+  },
   "ui.hud.mestre_do_jogo": {
     "en": "📖 GAME MASTER",
     "pt": "📖 MESTRE DO JOGO"
@@ -2695,6 +3627,30 @@ window.LANG_INTERFACE = {
     "en": "My Character",
     "pt": "Meu Personagem"
   },
+  "ui.hud.minimizar_mestre_do_jogo": {
+    "en": "Minimize Game Master",
+    "pt": "Minimizar Mestre do Jogo"
+  },
+  "ui.hud.mira_cancelada": {
+    "en": "Aim cancelled.",
+    "pt": "Mira cancelada."
+  },
+  "ui.hud.mira_certeira": {
+    "en": "Careful Aim",
+    "pt": "Mira Certeira"
+  },
+  "ui.hud.mira_perfeita": {
+    "en": "Perfect Aim",
+    "pt": "Mira Perfeita"
+  },
+  "ui.hud.monstros": {
+    "en": "MONSTERS",
+    "pt": "MONSTROS"
+  },
+  "ui.hud.morte_definitiva": {
+    "en": "☠ FINAL DEATH",
+    "pt": "☠ MORTE DEFINITIVA"
+  },
   "ui.hud.mova_prisioneiro": {
     "en": "🧍 Move the prisoner — click them and then a square; then end the turn.",
     "pt": "🧍 Mova o prisioneiro — clique nele e depois numa casa; então encerre o turno."
@@ -2702,6 +3658,74 @@ window.LANG_INTERFACE = {
   "ui.hud.mover_mais": {
     "en": "move",
     "pt": "mover"
+  },
+  "ui.hud.movimento_cancelado": {
+    "en": "Movement cancelled.",
+    "pt": "Movimento cancelado."
+  },
+  "ui.hud.muito_longe_do_item": {
+    "en": "Too far from the item.",
+    "pt": "Muito longe do item."
+  },
+  "ui.hud.multiplica_os_dados_de_dano_por_1_5_neste": {
+    "en": "Multiplies damage dice by 1.5 this turn.",
+    "pt": "Multiplica os dados de dano por 1,5 neste turno."
+  },
+  "ui.hud.multiplica_os_dados_de_dano_por_2_neste_tu": {
+    "en": "Multiplies damage dice by 2 this turn.",
+    "pt": "Multiplica os dados de dano por 2 neste turno."
+  },
+  "ui.hud.n_alvos_atingidos": {
+    "en": "{n} targets hit",
+    "pt": "{n} alvos atingidos"
+  },
+  "ui.hud.na_cidade_volta_em": {
+    "en": "🏙️ in town — back in {n} round(s)",
+    "pt": "🏙️ na cidade — volta em {n} rodada(s)"
+  },
+  "ui.hud.nenhum_aliado_no_alcance": {
+    "en": "No ally within range.",
+    "pt": "Nenhum aliado no alcance."
+  },
+  "ui.hud.nenhum_inimigo_adjacente": {
+    "en": "No adjacent enemy.",
+    "pt": "Nenhum inimigo adjacente."
+  },
+  "ui.hud.nenhum_inimigo_vivo": {
+    "en": "No living enemy!",
+    "pt": "Nenhum inimigo vivo!"
+  },
+  "ui.hud.nenhum_inimigo_vivo_para_o_improviso": {
+    "en": "No living enemy for the Improvisation.",
+    "pt": "Nenhum inimigo vivo para o Improviso."
+  },
+  "ui.hud.nenhuma": {
+    "en": "None",
+    "pt": "Nenhuma"
+  },
+  "ui.hud.nenhuma_habilidade": {
+    "en": "No abilities.",
+    "pt": "Nenhuma habilidade."
+  },
+  "ui.hud.nenhuma_masmorra_carregada": {
+    "en": "No dungeon loaded.",
+    "pt": "Nenhuma masmorra carregada."
+  },
+  "ui.hud.nenhuma_partida_salva_para_reconectar": {
+    "en": "No saved game to reconnect to.",
+    "pt": "Nenhuma partida salva para reconectar."
+  },
+  "ui.hud.o_servo_precisa_estar_adjacente_ao_alvo": {
+    "en": "The minion must be adjacent to the target.",
+    "pt": "O servo precisa estar adjacente ao alvo."
+  },
+  "ui.hud.objetivo": {
+    "en": "Objective",
+    "pt": "Objetivo"
+  },
+  "ui.hud.objetos": {
+    "en": "OBJECTS",
+    "pt": "OBJETOS"
   },
   "ui.hud.oportunidade": {
     "en": "Opportunity",
@@ -2723,17 +3747,85 @@ window.LANG_INTERFACE = {
     "en": "stop",
     "pt": "parar"
   },
+  "ui.hud.passe_o_mouse_para_ver_o_alcance_da_arma": {
+    "en": "Hover to see the weapon's range",
+    "pt": "Passe o mouse para ver o alcance da arma"
+  },
   "ui.hud.passiva": {
     "en": "passive",
     "pt": "passiva"
+  },
+  "ui.hud.passiva_2": {
+    "en": "PASSIVE",
+    "pt": "PASSIVA"
+  },
+  "ui.hud.passivas": {
+    "en": "PASSIVES",
+    "pt": "PASSIVAS"
+  },
+  "ui.hud.passo_fantasma": {
+    "en": "Phantom Step",
+    "pt": "Passo Fantasma"
+  },
+  "ui.hud.passou": {
+    "en": "PASSED",
+    "pt": "PASSOU"
+  },
+  "ui.hud.passou_metade_do_dano": {
+    "en": "PASSED — HALF DAMAGE",
+    "pt": "PASSOU — METADE DO DANO"
+  },
+  "ui.hud.pegar": {
+    "en": "⬆ Pick up",
+    "pt": "⬆ Pegar"
+  },
+  "ui.hud.pergaminho_com_magia_desconhecida": {
+    "en": "Scroll with an unknown spell.",
+    "pt": "Pergaminho com magia desconhecida."
   },
   "ui.hud.personagem_title": {
     "en": "Character (actions and abilities)",
     "pt": "Personagem (ações e habilidades)"
   },
+  "ui.hud.pesada": {
+    "en": "Heavy",
+    "pt": "Pesada"
+  },
+  "ui.hud.placa": {
+    "en": "Sign",
+    "pt": "Placa"
+  },
   "ui.hud.prisioneiro": {
     "en": "Prisoner",
     "pt": "Prisioneiro"
+  },
+  "ui.hud.protetor": {
+    "en": "Protector",
+    "pt": "Protetor"
+  },
+  "ui.hud.protetor_requer_2_e_2": {
+    "en": "Protector requires 🍖2 and 💧2.",
+    "pt": "Protetor requer 🍖2 e 💧2."
+  },
+  "ui.hud.pular_cena": {
+    "en": "Skip scene",
+    "pt": "Pular cena"
+  },
+  "ui.hud.realizar_teste": {
+    "en": "Make the check",
+    "pt": "Realizar teste"
+  },
+  "ui.hud.recarga_curta_3_rodadas": {
+    "en": "Short Cooldown (3 rounds)",
+    "pt": "Recarga Curta (3 rodadas)"
+  },
+  "ui.hud.recarga_longa_8_rodadas": {
+    "en": "Long Cooldown (8 rounds)",
+    "pt": "Recarga Longa (8 rodadas)"
+  },
+  "ui.hud.recarga_muito_longa_10_rodadas": {
+    "en": "Very Long Cooldown (10 rounds)",
+    "pt": "Recarga Muito Longa (10 rodadas)"
   },
   "ui.hud.recupera_ouro": {
     "en": "You may recover the gold.",
@@ -2763,9 +3855,33 @@ window.LANG_INTERFACE = {
     "en": "Absolute Resilience",
     "pt": "Resistência Absoluta"
   },
+  "ui.hud.resistir": {
+    "en": "RESIST",
+    "pt": "RESISTIR"
+  },
+  "ui.hud.resistiu_ao_veneno": {
+    "en": "RESISTED THE POISON",
+    "pt": "RESISTIU AO VENENO"
+  },
+  "ui.hud.restaurar_mestre_do_jogo": {
+    "en": "Restore Game Master",
+    "pt": "Restaurar Mestre do Jogo"
+  },
+  "ui.hud.resultado_area": {
+    "en": "AREA",
+    "pt": "ÁREA"
+  },
+  "ui.hud.revela_a_ficha_completa_de_qualquer_inimig": {
+    "en": "Reveals the full stat block of any enemy on hover.",
+    "pt": "Revela a ficha completa de qualquer inimigo ao passar o mouse."
+  },
   "ui.hud.sair": {
     "en": "exit",
     "pt": "sair"
+  },
+  "ui.hud.sangue_frio": {
+    "en": "Cold Blood",
+    "pt": "Sangue Frio"
   },
   "ui.hud.segunda_mao": {
     "en": "off hand",
@@ -2778,6 +3894,14 @@ window.LANG_INTERFACE = {
   "ui.hud.selecione_casa": {
     "en": "pick the square",
     "pt": "selecione a casa"
+  },
+  "ui.hud.selecione_um_inimigo_destacado_dentro_do_a": {
+    "en": "Select a highlighted enemy within range.",
+    "pt": "Selecione um inimigo destacado dentro do alcance."
+  },
+  "ui.hud.selecione_uma_casa_adjacente_ao_luccas": {
+    "en": "⚠ Select a square adjacent to Luccas.",
+    "pt": "⚠ Selecione uma casa adjacente ao Luccas."
   },
   "ui.hud.sem_aliado": {
     "en": "No ally available.",
@@ -2794,6 +3918,50 @@ window.LANG_INTERFACE = {
   "ui.hud.sem_alvo": {
     "en": "No target available.",
     "pt": "Nenhum alvo disponível."
+  },
+  "ui.hud.sem_armadura": {
+    "en": "No Armor",
+    "pt": "Sem Armadura"
+  },
+  "ui.hud.sem_masmorra_carregada": {
+    "en": "No dungeon loaded.",
+    "pt": "Sem masmorra carregada."
+  },
+  "ui.hud.sem_recursos": {
+    "en": "no resources",
+    "pt": "sem recursos"
+  },
+  "ui.hud.sem_venenos": {
+    "en": "no poisons",
+    "pt": "sem venenos"
+  },
+  "ui.hud.servos": {
+    "en": "💀 Minions",
+    "pt": "💀 Servos"
+  },
+  "ui.hud.servos_de": {
+    "en": "💀 {nome}'s Minions",
+    "pt": "💀 Servos de {nome}"
+  },
+  "ui.hud.sigla_ca": {
+    "en": "AC",
+    "pt": "CA"
+  },
+  "ui.hud.sigla_nd": {
+    "en": "CR",
+    "pt": "ND"
+  },
+  "ui.hud.sigla_xp": {
+    "en": "XP",
+    "pt": "XP"
+  },
+  "ui.hud.skill_ativada_clique_aliado": {
+    "en": "✨ {nome} activated — click the ally (or yourself) on the map!",
+    "pt": "✨ {nome} ativado — clique no aliado (ou em si mesmo) no mapa!"
+  },
+  "ui.hud.skill_ativada_clique_inimigo": {
+    "en": "✨ {nome} activated — click the enemy on the map!",
+    "pt": "✨ {nome} ativado — clique no inimigo no mapa!"
   },
   "ui.hud.slot.arma": {
     "en": "Weapon",
@@ -2823,6 +3991,10 @@ window.LANG_INTERFACE = {
     "en": "Only on your turn.",
     "pt": "Só no seu turno."
   },
+  "ui.hud.sucesso_criatura_animada": {
+    "en": "✅ SUCCESS — Creature animated!",
+    "pt": "✅ SUCESSO — Criatura animada!"
+  },
   "ui.hud.tag_automatica": {
     "en": "AUTOMATIC",
     "pt": "AUTOMÁTICA"
@@ -2834,6 +4006,10 @@ window.LANG_INTERFACE = {
   "ui.hud.tatica_defensiva": {
     "en": "Defensive Tactic",
     "pt": "Tática Defensiva"
+  },
+  "ui.hud.teste_de_vontade": {
+    "en": "WILL SAVE",
+    "pt": "TESTE DE VONTADE"
   },
   "ui.hud.three_indisponivel": {
     "en": "⚠ Three.js unavailable — check your internet connection.",
@@ -2847,13 +4023,37 @@ window.LANG_INTERFACE = {
     "en": "Round 1",
     "pt": "Turno 1"
   },
+  "ui.hud.uma_parede_bloqueia_a_linha_de_tiro": {
+    "en": "🧱 A wall blocks the line of fire!",
+    "pt": "🧱 Uma parede bloqueia a linha de tiro!"
+  },
+  "ui.hud.uma_parede_ou_porta_fechada_bloqueia_o_ata": {
+    "en": "A wall or closed door blocks the attack.",
+    "pt": "Uma parede ou porta fechada bloqueia o ataque."
+  },
+  "ui.hud.unidade": {
+    "en": "UNITS",
+    "pt": "UNIDADE"
+  },
   "ui.hud.usada": {
     "en": "used",
     "pt": "usada"
   },
+  "ui.hud.vantagem": {
+    "en": "ADVANTAGE",
+    "pt": "VANTAGEM"
+  },
   "ui.hud.visao_mais": {
     "en": "👁️ Sight +{n} squares",
     "pt": "👁️ Visão +{n} quadrados"
+  },
+  "ui.hud.voltar_slide": {
+    "en": "‹ Back",
+    "pt": "‹ Voltar"
+  },
+  "ui.hud.xama": {
+    "en": "Shaman",
+    "pt": "Xamã"
   },
   "ui.instrumento.alvo_bloqueado_fora_do_alcance_ou_atras_de": {
     "en": "Target blocked: out of range or behind a wall.",
@@ -2862,6 +4062,14 @@ window.LANG_INTERFACE = {
   "ui.instrumento.alvo_valido_confirmar_para_usar": {
     "en": "Valid target — confirm to use.",
     "pt": "Alvo válido — confirmar para usar."
+  },
+  "ui.instrumento.cancelado": {
+    "en": "Cancelled.",
+    "pt": "Cancelado."
+  },
+  "ui.instrumento.clique_para_usar_nota_cortante": {
+    "en": "🎵 Click to use Cutting Note",
+    "pt": "🎵 Clique para usar Nota Cortante"
   },
   "ui.instrumento.custo": {
     "en": "Cost",
@@ -2883,6 +4091,10 @@ window.LANG_INTERFACE = {
     "en": "2 hands — attack OR play in the same turn",
     "pt": "2 mãos — atacar OU tocar no mesmo turno"
   },
+  "ui.instrumento.encore_menor": {
+    "en": "🎶 Minor Encore!",
+    "pt": "🎶 Encore Menor!"
+  },
   "ui.instrumento.escolha_alvo": {
     "en": "{icone} {nome} — Choose the target (range {alcance}sq)",
     "pt": "{icone} {nome} — Escolha o alvo (alcance {alcance}q)"
@@ -2899,17 +4111,61 @@ window.LANG_INTERFACE = {
     "en": "Choose the direction of the call",
     "pt": "Escolha a direção do chamado"
   },
+  "ui.instrumento.escolha_uma_das_oito_casas_ao_redor_do_bar": {
+    "en": "Choose one of the eight squares around the bard.",
+    "pt": "Escolha uma das oito casas ao redor do bardo."
+  },
   "ui.instrumento.escolher_direcao": {
     "en": "CHOOSE DIRECTION",
     "pt": "ESCOLHER DIREÇÃO"
+  },
+  "ui.instrumento.fora_de_alcance_ou_bloqueado": {
+    "en": "⚠ Out of range or blocked",
+    "pt": "⚠ Fora de alcance ou bloqueado"
+  },
+  "ui.instrumento.fora_do_alcance_da_nota_cortante": {
+    "en": "Out of range for Cutting Note.",
+    "pt": "Fora do alcance da Nota Cortante."
+  },
+  "ui.instrumento.grande_encore": {
+    "en": "🎺 GRAND ENCORE!",
+    "pt": "🎺 GRANDE ENCORE!"
+  },
+  "ui.instrumento.habilidade_de_instrumento_cancelada": {
+    "en": "Instrument ability cancelled.",
+    "pt": "Habilidade de instrumento cancelada."
   },
   "ui.instrumento.improviso_direcao": {
     "en": "Improvisation — Direction",
     "pt": "Improviso — Direção"
   },
+  "ui.instrumento.inimigo": {
+    "en": "ENEMY",
+    "pt": "INIMIGO"
+  },
   "ui.instrumento.inimigo_valido_confirme_para_usar": {
     "en": "Valid enemy — confirm to use.",
     "pt": "Inimigo válido — confirme para usar."
+  },
+  "ui.instrumento.instrumento": {
+    "en": "Instrument",
+    "pt": "Instrumento"
+  },
+  "ui.instrumento.instrumento_2": {
+    "en": "INSTRUMENT",
+    "pt": "INSTRUMENTO"
+  },
+  "ui.instrumento.nada_aconteceu": {
+    "en": "Nothing happened.",
+    "pt": "Nada aconteceu."
+  },
+  "ui.instrumento.nota_cortante_cancelada": {
+    "en": "Cutting Note cancelled.",
+    "pt": "Nota Cortante cancelada."
+  },
+  "ui.instrumento.passivo_sufixo": {
+    "en": " · PASSIVE",
+    "pt": " · PASSIVO"
   },
   "ui.instrumento.quadrados": {
     "en": "{n} squares",
@@ -2923,6 +4179,30 @@ window.LANG_INTERFACE = {
     "en": "{n} rounds",
     "pt": "{n} rodadas"
   },
+  "ui.instrumento.rotulo_tipo": {
+    "en": "INSTRUMENT",
+    "pt": "INSTRUMENTO"
+  },
+  "ui.instrumento.selecione_inimigo_alcance": {
+    "en": "Select a highlighted enemy · range {alcance}sq.",
+    "pt": "Selecione um inimigo destacado · alcance {alcance}q."
+  },
+  "ui.instrumento.selecione_um_inimigo_destacado": {
+    "en": "Select a highlighted enemy.",
+    "pt": "Selecione um inimigo destacado."
+  },
+  "ui.instrumento.selecione_um_inimigo_destacado_dentro_do_a": {
+    "en": "Select a highlighted enemy within range.",
+    "pt": "Selecione um inimigo destacado dentro do alcance."
+  },
+  "ui.instrumento.selecione_um_inimigo_vivo_dentro_do_alcanc": {
+    "en": "Select a living enemy within range.",
+    "pt": "Selecione um inimigo vivo dentro do alcance."
+  },
+  "ui.instrumento.selecione_uma_das_oito_casas_ao_redor_do_b": {
+    "en": "Select one of the eight squares around the bard.",
+    "pt": "Selecione uma das oito casas ao redor do bardo."
+  },
   "ui.instrumento.sem_inimigo_raio": {
     "en": "No enemy within {n} squares.",
     "pt": "Nenhum inimigo a até {n} quadrados."
@@ -2930,6 +4210,10 @@ window.LANG_INTERFACE = {
   "ui.instrumento.uma_mao": {
     "en": "1 hand — attack AND play in the same turn",
     "pt": "1 mão — atacar E tocar no mesmo turno"
+  },
+  "ui.instrumento.uma_parede_ou_porta_fechada_bloqueia_a_not": {
+    "en": "🧱 A wall or closed door blocks the Cutting Note.",
+    "pt": "🧱 Uma parede ou porta fechada bloqueia a Nota Cortante."
   },
   "ui.inv.bau_compartilhado_caixa": {
     "en": "SHARED CHEST",
@@ -3163,6 +4447,10 @@ window.LANG_INTERFACE = {
     "en": "Throw (4 sq., DEX attack). The target rolls Reflex DC 12; on a failure its movement is halved for 2 rounds.",
     "pt": "Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; se falhar, fica com o movimento reduzido à metade por 2 rodadas."
   },
+  "ui.item.comprados_na_loja_n": {
+    "en": "Bought at the Shop ({n})",
+    "pt": "Comprados na Loja ({n})"
+  },
   "ui.item.cota_malha.nome": {
     "en": "Chain Mail",
     "pt": "Cota de Malha"
@@ -3251,6 +4539,14 @@ window.LANG_INTERFACE = {
     "en": "Natural 20: triple damage",
     "pt": "20 natural: dano triplicado"
   },
+  "ui.item.desc.cura_hp": {
+    "en": "Heals +{n} HP per use",
+    "pt": "Cura +{n} HP por uso"
+  },
+  "ui.item.desc.cura_total": {
+    "en": "Restores all HP",
+    "pt": "Restaura todos os HP"
+  },
   "ui.item.desc.dano": {
     "en": "Damage: {dano}",
     "pt": "Dano: {dano}"
@@ -3331,14 +4627,6 @@ window.LANG_INTERFACE = {
     "en": "Pool of {n} HP • recovers +1 HP per round",
     "pt": "Reserva {n} HP • recupera +1 HP por rodada"
   },
-  "ui.item.desc.cura_hp": {
-    "en": "Heals +{n} HP per use",
-    "pt": "Cura +{n} HP por uso"
-  },
-  "ui.item.desc.cura_total": {
-    "en": "Restores all HP",
-    "pt": "Restaura todos os HP"
-  },
   "ui.item.desc.requer_flechas": {
     "en": "Requires arrows",
     "pt": "Requer flechas"
@@ -3418,6 +4706,18 @@ window.LANG_INTERFACE = {
   "ui.item.efeito.temp_atk": {
     "en": "Temporary attack",
     "pt": "Ataque temporário"
+  },
+  "ui.item.equipado_loja": {
+    "en": "Equipped (Shop)",
+    "pt": "Equipado (Loja)"
+  },
+  "ui.item.equipar": {
+    "en": "⚙ Equip",
+    "pt": "⚙ Equipar"
+  },
+  "ui.item.escolha_o_alvo_consumivel": {
+    "en": "{icone} {nome} — Choose the target",
+    "pt": "{icone} {nome} — Escolha o alvo"
   },
   "ui.item.escudo_leve.nome": {
     "en": "Light Shield",
@@ -3519,6 +4819,10 @@ window.LANG_INTERFACE = {
     "en": "This item is not consumable.",
     "pt": "Este item não é consumível."
   },
+  "ui.item.ouro_insuficiente": {
+    "en": "Not enough gold",
+    "pt": "Ouro insuficiente"
+  },
   "ui.item.pao_duro.nome": {
     "en": "Stale Bread",
     "pt": "Pão Duro"
@@ -3531,6 +4835,10 @@ window.LANG_INTERFACE = {
     "en": "Hydrating Potion",
     "pt": "Poção Hidratante"
   },
+  "ui.item.recupera_fome_sede": {
+    "en": "Restores hunger/thirst",
+    "pt": "Recupera fome/sede"
+  },
   "ui.item.rede_arremesso.desc": {
     "en": "Throw (4 sq., DEX attack). The target is trapped; to escape it spends the turn on a Fortitude DC 12 check.",
     "pt": "Arremesse (4 quad., ataque por DES). O alvo fica preso; para escapar gasta o turno num teste de Fortitude CD 12."
@@ -3538,6 +4846,10 @@ window.LANG_INTERFACE = {
   "ui.item.refeicao_completa.nome": {
     "en": "Full Meal",
     "pt": "Refeição Completa"
+  },
+  "ui.item.remover": {
+    "en": "Remove",
+    "pt": "Remover"
   },
   "ui.item.robes.nome": {
     "en": "Robes",
@@ -3635,6 +4947,14 @@ window.LANG_INTERFACE = {
     "en": "Torch",
     "pt": "Tocha"
   },
+  "ui.item.usar": {
+    "en": "▶ Use",
+    "pt": "▶ Usar"
+  },
+  "ui.item.usou_item": {
+    "en": "Used {nome}",
+    "pt": "Usou {nome}"
+  },
   "ui.item.varinha_arcana.desc": {
     "en": "Stores 3 spells. Casting = bonus action.",
     "pt": "Armazena 3 magias. Usar magia = ação bônus."
@@ -3658,6 +4978,10 @@ window.LANG_INTERFACE = {
   "ui.item.varinha_simples.nome": {
     "en": "Simple Wand",
     "pt": "Varinha Simples"
+  },
+  "ui.item.vender": {
+    "en": "Sell",
+    "pt": "Vender"
   },
   "ui.item.veneno_agonia_sufocante.desc": {
     "en": "LEGENDARY. Coated on the weapon: 1d4 damage per round for up to 1d4 rounds. Each round, Fortitude DC 14 neutralises the poison.",
@@ -3703,6 +5027,10 @@ window.LANG_INTERFACE = {
     "en": "Incendiary Bolts (10)",
     "pt": "Virotes Incendiários (10)"
   },
+  "ui.joystick.a_clique_novamente_para_confirmar_b_esc_ca": {
+    "en": "A / click again to confirm · B / Esc to cancel",
+    "pt": "A / clique novamente para confirmar · B / Esc cancelar"
+  },
   "ui.joystick.analogico_direito_camera_gatilhos_zoom": {
     "en": "🎮 Right stick: camera · Triggers: zoom",
     "pt": "🎮 Analógico direito: câmera · Gatilhos: zoom"
@@ -3711,6 +5039,18 @@ window.LANG_INTERFACE = {
     "en": "🎯 Right stick: target cursor · Triggers: zoom",
     "pt": "🎯 Analógico direito: cursor de alvo · Gatilhos: zoom"
   },
+  "ui.joystick.apagar": {
+    "en": "⌫ Delete",
+    "pt": "⌫ Apagar"
+  },
+  "ui.joystick.atacar_alvo": {
+    "en": "Attack {nome}",
+    "pt": "Atacar {nome}"
+  },
+  "ui.joystick.atalho_vazio": {
+    "en": "🎮 Shortcut {n} empty",
+    "pt": "🎮 Atalho {n} vazio"
+  },
   "ui.joystick.botao_n": {
     "en": "Button {n}",
     "pt": "Botão {n}"
@@ -3718,6 +5058,10 @@ window.LANG_INTERFACE = {
   "ui.joystick.configuracao_do_joystick_restaurada": {
     "en": "🎮 Gamepad settings restored.",
     "pt": "🎮 Configuração do joystick restaurada."
+  },
+  "ui.joystick.confirmar": {
+    "en": "↵ Confirm",
+    "pt": "↵ Confirmar"
   },
   "ui.joystick.confirmar_encerrar_turno": {
     "en": "Press {botao} again to end your turn.",
@@ -3771,6 +5115,14 @@ window.LANG_INTERFACE = {
     "en": "🎮 Controller connected: {id} · {botao} toggles cursor and 3D camera",
     "pt": "🎮 Controle conectado: {id} · {botao} alterna cursor e câmera 3D"
   },
+  "ui.joystick.cursor_interface_ativo": {
+    "en": "🖱 {botao}: interface cursor active",
+    "pt": "🖱 {botao}: cursor de interface ativo"
+  },
+  "ui.joystick.digitar_campo": {
+    "en": "⌨️ Type: <b>{campo}</b>",
+    "pt": "⌨️ Digitar: <b>{campo}</b>"
+  },
   "ui.joystick.direcional_selecionar_a_digitar_b_fechar": {
     "en": "D-pad: select · A: type · B: close",
     "pt": "Direcional: selecionar · A: digitar · B: fechar"
@@ -3778,6 +5130,10 @@ window.LANG_INTERFACE = {
   "ui.joystick.espaco": {
     "en": "Space",
     "pt": "Espaço"
+  },
+  "ui.joystick.limpar": {
+    "en": "Clear",
+    "pt": "Limpar"
   },
   "ui.joystick.maiusculas": {
     "en": "⇧ Shift",
@@ -3787,9 +5143,25 @@ window.LANG_INTERFACE = {
     "en": "🎮 D-pad: navigate · Confirm: activate · Cancel: back",
     "pt": "🎮 Direcional: navegar · Confirmar: ativar · Cancelar: voltar"
   },
+  "ui.joystick.mira_de_ataque_use_o_direcional_esquerdo_e": {
+    "en": "⚔ Attack aim: use the left stick and confirm the target.",
+    "pt": "⚔ Mira de ataque: use o direcional esquerdo e confirme o alvo."
+  },
+  "ui.joystick.monstro": {
+    "en": "monster",
+    "pt": "monstro"
+  },
   "ui.joystick.nenhum_inimigo_esta_ao_alcance_da_arma": {
     "en": "No enemy is within the weapon's range.",
     "pt": "Nenhum inimigo está ao alcance da arma."
+  },
+  "ui.joystick.o_alvo_saiu_do_alcance": {
+    "en": "The target left the range.",
+    "pt": "O alvo saiu do alcance."
+  },
+  "ui.joystick.pegar_item": {
+    "en": "Pick up {nome}",
+    "pt": "Pegar {nome}"
   },
   "ui.joystick.pressione_botao_para": {
     "en": "🎮 Press the button you want for: {acao}",
@@ -3827,9 +5199,25 @@ window.LANG_INTERFACE = {
     "en": "up to 2 simultaneous poisons",
     "pt": "até 2 venenos simultâneos"
   },
+  "ui.ladino.dura_golpes_certeiros": {
+    "en": "lasts {n} successful hit(s){extra}",
+    "pt": "dura {n} golpe(s) certeiro(s){extra}"
+  },
   "ui.ladino.esconder_desc": {
     "en": "Stealth check{b} — bonus action",
     "pt": "Teste de furtividade{b} — ação bônus"
+  },
+  "ui.ladino.golpes_restantes_trocar": {
+    "en": "{hits}/{max} hit(s) left{extra} — click to swap",
+    "pt": "{hits}/{max} golpe(s) restante(s){extra} — clique p/ trocar"
+  },
+  "ui.ladino.habilidade_cancelada": {
+    "en": "Ability cancelled.",
+    "pt": "Habilidade cancelada."
+  },
+  "ui.ladino.pode_aplicar_segundo_veneno": {
+    "en": " · can apply a 2nd poison",
+    "pt": " · pode aplicar um 2º veneno"
   },
   "ui.ladino.requer_veneno_falta": {
     "en": "⚠️ No poison in the inventory",
@@ -3842,6 +5230,14 @@ window.LANG_INTERFACE = {
   "ui.ladino.sede_insuficiente": {
     "en": "❌ Not enough thirst 💧-1",
     "pt": "❌ Sede insuficiente 💧-1"
+  },
+  "ui.ladino.segundo_veneno_golpes": {
+    "en": " + 2nd poison ({n} hit(s))",
+    "pt": " + 2º veneno ({n} golpe(s))"
+  },
+  "ui.ladino.selecione_uma_casa_adjacente_para_desarmar": {
+    "en": "Select an adjacent square to disarm.",
+    "pt": "Selecione uma casa adjacente para desarmar."
   },
   "ui.ladino.sem_venenos": {
     "en": "❌ No poisons in the inventory",
@@ -3907,6 +5303,10 @@ window.LANG_INTERFACE = {
     "en": "Loading shop…",
     "pt": "Carregando loja…"
   },
+  "ui.loja.cheio": {
+    "en": "FULL",
+    "pt": "CHEIO"
+  },
   "ui.loja.classe_restrita": {
     "en": "Class restricted",
     "pt": "Classe restrita"
@@ -3914,6 +5314,10 @@ window.LANG_INTERFACE = {
   "ui.loja.comprar": {
     "en": "Buy",
     "pt": "Comprar"
+  },
+  "ui.loja.comprar_2": {
+    "en": "BUY",
+    "pt": "COMPRAR"
   },
   "ui.loja.conhecida": {
     "en": "Learned",
@@ -3931,6 +5335,10 @@ window.LANG_INTERFACE = {
     "en": "shield",
     "pt": "escudo"
   },
+  "ui.loja.ferreiro": {
+    "en": "⚒️ Smithy",
+    "pt": "⚒️ Ferreiro"
+  },
   "ui.loja.ja_conhecida": {
     "en": "already learned",
     "pt": "já conhecida"
@@ -3946,6 +5354,18 @@ window.LANG_INTERFACE = {
   "ui.loja.log_ouro_insuficiente": {
     "en": "❌ {nome}: not enough gold",
     "pt": "❌ {nome}: ouro insuficiente"
+  },
+  "ui.loja.mercado": {
+    "en": "🧙 Market",
+    "pt": "🧙 Mercado"
+  },
+  "ui.loja.moedas_n": {
+    "en": "💰 {n} coins",
+    "pt": "💰 {n} moedas"
+  },
+  "ui.loja.nenhum_item_para_vender": {
+    "en": "No item to sell.",
+    "pt": "Nenhum item para vender."
   },
   "ui.loja.ouro": {
     "en": "💰 Gold:",
@@ -3982,6 +5402,14 @@ window.LANG_INTERFACE = {
   "ui.loja.restrito": {
     "en": "Restricted",
     "pt": "Restrito"
+  },
+  "ui.loja.restrito_2": {
+    "en": "RESTRICTED",
+    "pt": "RESTRITO"
+  },
+  "ui.loja.sem_ouro": {
+    "en": "NO GOLD",
+    "pt": "SEM OURO"
   },
   "ui.loja.subtitulo.ferreiro": {
     "en": "Buy and sell weapons, armour and ammunition.",
@@ -4042,6 +5470,10 @@ window.LANG_INTERFACE = {
   "ui.loja.tag.ring2": {
     "en": "Ring",
     "pt": "Anel"
+  },
+  "ui.loja.taverna": {
+    "en": "🍺 Tavern",
+    "pt": "🍺 Taverna"
   },
   "ui.loja.title_classe_restrita": {
     "en": "Your class cannot use this item",
@@ -4119,17 +5551,33 @@ window.LANG_INTERFACE = {
     "en": "free action · {n} square(s) left",
     "pt": "ação livre · restam {n} casa(s)"
   },
+  "ui.magia.aliado": {
+    "en": "ALLY",
+    "pt": "ALIADO"
+  },
   "ui.magia.aliado_invalido": {
     "en": "Click a valid ally.",
     "pt": "Clique num aliado válido."
+  },
+  "ui.magia.alvo": {
+    "en": "TARGET",
+    "pt": "ALVO"
   },
   "ui.magia.alvo_invalido_para_esta_magia": {
     "en": "Invalid target for this spell.",
     "pt": "Alvo inválido para esta magia."
   },
+  "ui.magia.alvo_rotulo": {
+    "en": "Target:",
+    "pt": "Alvo:"
+  },
   "ui.magia.amaldicoar.desc": {
     "en": "<b>Area:</b> 3x3 centred on the target<br>\n               <b>Debuff:</b> -1 attack, damage, AC, resistance<br>\n               <b>Duration:</b> 1d4+1 rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Área:</b> 3x3 centrado no alvo<br>\n               <b>Debuff:</b> -1 ataque, dano, CA, resistência<br>\n               <b>Duração:</b> 1d4+1 rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.auto_comandar_todos_os_servos": {
+    "en": "⚔️ AUTO-COMMAND ALL MINIONS",
+    "pt": "⚔️ AUTO-COMANDAR TODOS OS SERVOS"
   },
   "ui.magia.barreira_arcana.desc": {
     "en": "<b>Effect:</b> reduces all incoming damage by 5<br>\n               <b>Duration:</b> 1d6 + 1 round per mage level + 1 fixed round<br>\n               <b>Extend:</b> +1 round<br>\n               <b>Empower:</b> reduction becomes 7<br>\n               <b>Heighten:</b> does not apply (no saving throw)",
@@ -4139,6 +5587,10 @@ window.LANG_INTERFACE = {
     "en": "<b>Range:</b> 5 squares<br>\n               <b>Area:</b> 3×3, centred on the chosen point<br>\n               <b>R1:</b> 1d6 per level | Reflex: half<br>\n               <b>R2:</b> half of the R1 damage<br>\n               <b>R3:</b> half of the R2 damage (Extend: +1 residual round)<br>\n               <b>Area persists:</b> entering takes damage, leaving avoids further<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> 5 casas<br>\n               <b>Área:</b> 3×3, centrada no ponto escolhido<br>\n               <b>R1:</b> 1d6 por nível | Reflexos: metade<br>\n               <b>R2:</b> metade do dano R1<br>\n               <b>R3:</b> metade do dano R2 (Estender: +1 rodada residual)<br>\n               <b>Área persiste:</b> entrar sofre dano, sair evita futuro<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
+  "ui.magia.casa": {
+    "en": "SQUARE",
+    "pt": "CASA"
+  },
   "ui.magia.casa_fora_da_area_da_magia": {
     "en": "Square outside the spell's area.",
     "pt": "Casa fora da área da magia."
@@ -4147,9 +5599,29 @@ window.LANG_INTERFACE = {
     "en": "Invalid square: choose one of the free green squares.",
     "pt": "Casa inválida: escolha uma das casas verdes livres."
   },
+  "ui.magia.casas_selecionadas_confirme": {
+    "en": "{n}/{max} square(s) selected. Click to mark/unmark; confirm when done.",
+    "pt": "{n}/{max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar."
+  },
   "ui.magia.chamado_inverno.desc": {
     "en": "<b>Range:</b> 6 squares +1 per cleric level (7 at level 1)<br><b>Area:</b> 4x4 square, +1 square every 2 levels<br><b>Effect:</b> choose Frozen Floor or Snowy Plain; affects allies and enemies inside the area<br><b>Duration:</b> 1d4 + cleric level<br><b>Permanent:</b> +20 Hunger and +20 Thirst, on top of the normal cost<br><b>Cost:</b> 🍖-1 💧-1 + 1 second-circle slot",
     "pt": "<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>\n               <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>\n               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área<br>\n               <b>Duração:</b> 1d4 + nível do clérigo<br>\n               <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo"
+  },
+  "ui.magia.chamas_nesta_rodada_total": {
+    "en": "{n}/{max} this round · {feitas}/{total} in total. Click to mark/unmark.",
+    "pt": "{n}/{max} nesta rodada · {feitas}/{total} no total. Clique para marcar/desmarcar."
+  },
+  "ui.magia.ciclone_n": {
+    "en": "🌪️ Cyclone {n}",
+    "pt": "🌪️ Ciclone {n}"
+  },
+  "ui.magia.ciclones_posicionados": {
+    "en": "{n}/{max} cyclones placed.",
+    "pt": "{n}/{max} ciclones posicionados."
+  },
+  "ui.magia.ciclones_posicionados_escolha": {
+    "en": "{n}/{max} cyclones placed. Choose valid squares inside the storm.",
+    "pt": "{n}/{max} ciclones posicionados. Escolha casas válidas dentro da tempestade."
   },
   "ui.magia.circulo.primeiro": {
     "en": "1st Circle",
@@ -4195,13 +5667,37 @@ window.LANG_INTERFACE = {
     "en": "<b>Type:</b> Reaction (off-turn)<br>\n               <b>Mechanic:</b> d20+INT vs the enemy's d20+bonus<br>\n               <b>Success:</b> spell cancelled + enemy loses its action<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot on use",
     "pt": "<b>Tipo:</b> Reação (fora do turno)<br>\n               <b>Mecânica:</b> d20+INT vs inimigo d20+bônus<br>\n               <b>Sucesso:</b> magia cancelada + inimigo perde ação<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot ao usar"
   },
+  "ui.magia.controle_progresso": {
+    "en": "{n}/3 → permanent",
+    "pt": "{n}/3 → permanente"
+  },
+  "ui.magia.controle_rotulo": {
+    "en": "🔒 Control",
+    "pt": "🔒 Controle"
+  },
   "ui.magia.criar_alimentos.desc": {
     "en": "<b>Creates:</b> a chest on a free adjacent square<br>\n               <b>Contents:</b> 1d4+2 random tavern foods<br>\n               <b>Empower:</b> multiplies the final item count<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Cria:</b> baú em uma casa adjacente livre<br>\n               <b>Conteúdo:</b> 1d4+2 alimentos aleatórios da taverna<br>\n               <b>Fortalecer:</b> multiplica a quantidade final de itens<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
+  "ui.magia.criar_redemoinhos": {
+    "en": "CREATE WHIRLPOOLS",
+    "pt": "CRIAR REDEMOINHOS"
+  },
+  "ui.magia.criatura": {
+    "en": "creature",
+    "pt": "criatura"
+  },
   "ui.magia.criatura_escolhida": {
-    "en": "the chosen creature",
+    "en": "chosen creature",
     "pt": "criatura escolhida"
+  },
+  "ui.magia.definhar.desc": {
+    "en": "<b>Range:</b> 6 squares<br>\n               <b>Area:</b> 3x3 +1 square every 3 levels<br>\n               <b>Targets:</b> every living creature in the area, allies and the cleric included<br>\n               <b>Save:</b> Fortitude<br>\n               <b>Players — failure:</b> -20 Hunger and -20 Thirst<br>\n               <b>Players — success:</b> -10 Hunger and -10 Thirst<br>\n               <b>Living monsters — failure:</b> for 2 rounds they can only attack or move; -2 Attack and -4 Damage<br>\n               <b>Immunities:</b> undead and constructs are unaffected<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 3rd-circle slot",
+    "pt": "<b>Alcance:</b> 6 casas<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Alvos:</b> todas as criaturas vivas na área, incluindo aliados e o clérigo<br>\n               <b>Resistência:</b> Fortitude<br>\n               <b>Jogadores — falha:</b> -20 Fome e -20 Sede<br>\n               <b>Jogadores — sucesso:</b> -10 Fome e -10 Sede<br>\n               <b>Monstros vivos — falha:</b> por 2 rodadas podem apenas atacar ou movimentar; -2 Ataque e -4 Dano<br>\n               <b>Imunidades:</b> mortos-vivos e construtos não são afetados<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 3º círculo"
+  },
+  "ui.magia.desnutricao.desc": {
+    "en": "<b>Range:</b> 6 squares<br>\n               <b>Save:</b> Fortitude<br>\n               <b>Player — failure:</b> -20 Hunger and -1 Movement for 2 rounds<br>\n               <b>Player — success:</b> -10 Hunger<br>\n               <b>Living monster — failure:</b> for 2 rounds it can only attack or move; -1 Attack and -2 Damage<br>\n               <b>Immunities:</b> undead and constructs are unaffected<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 2nd-circle slot",
+    "pt": "<b>Alcance:</b> 6 casas<br>\n               <b>Resistência:</b> Fortitude<br>\n               <b>Jogador — falha:</b> -20 Fome e -1 Movimento por 2 rodadas<br>\n               <b>Jogador — sucesso:</b> -10 Fome<br>\n               <b>Monstro vivo — falha:</b> por 2 rodadas pode apenas atacar ou movimentar; -1 Ataque e -2 Dano<br>\n               <b>Imunidades:</b> mortos-vivos e construtos não são afetados<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo"
   },
   "ui.magia.dica.adjacent_tile": {
     "en": "Click an adjacent GREEN SQUARE to create the chest",
@@ -4251,9 +5747,21 @@ window.LANG_INTERFACE = {
     "en": "{icone} {nome} is still in development.",
     "pt": "{icone} {nome} ainda está em desenvolvimento."
   },
+  "ui.magia.encerrar_metamorfose": {
+    "en": "End metamorphosis",
+    "pt": "Encerrar metamorfose"
+  },
+  "ui.magia.equipada_i": {
+    "en": "Equipped",
+    "pt": "Equipada"
+  },
   "ui.magia.equipamentos_e_itens_continuam_utilizaveis": {
     "en": "Equipment and items remain usable.",
     "pt": "Equipamentos e itens continuam utilizáveis."
+  },
+  "ui.magia.equipamentos_e_itens_ficam_bloqueados_enqu": {
+    "en": "Equipment and items stay locked while it lasts.",
+    "pt": "Equipamentos e itens ficam bloqueados enquanto durar."
   },
   "ui.magia.esc_cancela": {
     "en": "ESC cancels",
@@ -4267,6 +5775,10 @@ window.LANG_INTERFACE = {
     "en": "CHOOSE {n} SPELL OF THE 1ST CIRCLE",
     "pt": "ESCOLHA {n} MAGIA DE 1º CÍRCULO"
   },
+  "ui.magia.escolha_a_forma": {
+    "en": "🦋 Choose the form",
+    "pt": "🦋 Escolha a forma"
+  },
   "ui.magia.escolha_ate_casas_senhor_aguas": {
     "en": "Choose up to {max} square(s) inside the Lord of Waters area.",
     "pt": "Escolha até {max} casa(s) dentro da área do Senhor das Águas."
@@ -4279,13 +5791,25 @@ window.LANG_INTERFACE = {
     "en": "Choose the terrain for the area. That choice also sets which whirlpool type you get later:",
     "pt": "Escolha o terreno da área. A escolha também define o tipo de redemoinho disponível depois:"
   },
+  "ui.magia.escolha_outro_jogador_vivo": {
+    "en": "Choose another living player.",
+    "pt": "Escolha outro jogador vivo."
+  },
   "ui.magia.escolha_quem_sera_transformado": {
     "en": "Choose who will be transformed:",
     "pt": "Escolha quem será transformado:"
   },
+  "ui.magia.escolha_uma_casa_adjacente": {
+    "en": "Choose an adjacent square.",
+    "pt": "Escolha uma casa adjacente."
+  },
   "ui.magia.escolha_uma_casa_dentro_da_area_do_senhor": {
     "en": "Choose a square inside the Lord of Waters area.",
     "pt": "Escolha uma casa dentro da área do Senhor das Águas."
+  },
+  "ui.magia.escolha_uma_das_casas_verdes_livres": {
+    "en": "Choose one of the free green squares.",
+    "pt": "Escolha uma das casas verdes livres."
   },
   "ui.magia.ficha_indisponivel": {
     "en": "Spell sheet unavailable right now.",
@@ -4403,6 +5927,10 @@ window.LANG_INTERFACE = {
     "en": "<b>Cone:</b> 4 squares long, 4 wide at the base<br>\n               <b>Damage:</b> 1d6 per level<br>\n               <b>Failed Reflex:</b> pushes 1d6 squares<br>\n               <b>Success:</b> pushes 2 squares<br>\n               <b>Wall collision:</b> +1d4 damage",
     "pt": "<b>Cone:</b> 4 quadrados comp., 4 base<br>\n               <b>Dano:</b> 1d6 por nível<br>\n               <b>Falha Reflexos:</b> empurra 1d6 quadrados<br>\n               <b>Sucesso:</b> empurra 2 quadrados<br>\n               <b>Colisão parede:</b> +1d4 dano"
   },
+  "ui.magia.jogador": {
+    "en": "PLAYER",
+    "pt": "JOGADOR"
+  },
   "ui.magia.lancada": {
     "en": "{icone} {nome} cast!",
     "pt": "{icone} {nome} lançada!"
@@ -4415,9 +5943,25 @@ window.LANG_INTERFACE = {
     "en": "The limit is {max} whirlpool square(s).",
     "pt": "O limite é de {max} casa(s) de redemoinho."
   },
+  "ui.magia.magia_cancelada": {
+    "en": "Spell cancelled.",
+    "pt": "Magia cancelada."
+  },
+  "ui.magia.magias_do_dia": {
+    "en": "📜 SPELLS OF THE DAY",
+    "pt": "📜 MAGIAS DO DIA"
+  },
+  "ui.magia.magias_escolhidas": {
+    "en": "Spells chosen!",
+    "pt": "Magias escolhidas!"
+  },
   "ui.magia.magias_iniciais": {
     "en": "STARTING SPELLS",
     "pt": "MAGIAS INICIAIS"
+  },
+  "ui.magia.maldicao_corpo_pesado.desc": {
+    "en": "<b>Range:</b> 6 squares<br>\n               <b>Target:</b> 1 living player<br>\n               <b>Save:</b> Will negates<br>\n               <b>Effect:</b> Hunger and Thirst costs doubled<br>\n               <b>Duration:</b> 1d6 + caster level rounds<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 1st-circle slot",
+    "pt": "<b>Alcance:</b> 6 casas<br>\n               <b>Alvo:</b> 1 jogador vivo<br>\n               <b>Resistência:</b> Vontade nega<br>\n               <b>Efeito:</b> custos de Fome e Sede duplicados<br>\n               <b>Duração:</b> 1d6 + nível de conjurador rodadas<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 1º círculo"
   },
   "ui.magia.manto_escuridao.desc": {
     "en": "<b>Radius:</b> 3 squares centred on the caster<br>\n               <b>Without night vision:</b> attacks roll 2d20 and use the lower<br>\n               <b>With night vision:</b> 2d20 uses the higher vs the blinded<br>\n               <b>Caster:</b> gains darkvision for the cloak's duration<br>\n               <b>Maximum ranged distance:</b> 2 squares<br>\n               <b>Duration:</b> 1d4 rounds",
@@ -4434,6 +5978,10 @@ window.LANG_INTERFACE = {
   "ui.magia.metamorfose": {
     "en": "🦋 POLYMORPH",
     "pt": "🦋 METAMORFOSE"
+  },
+  "ui.magia.metamorfose.custo": {
+    "en": "🍖-1 💧-1 per round",
+    "pt": "🍖-1 💧-1 por rodada"
   },
   "ui.magia.metamorfose.desc": {
     "en": "<b>Target:</b> yourself, an ally or a living creature<br><b>Form:</b> an unlocked creature from the bestiary<br><b>Effect:</b> takes on the form's attributes, attacks, defense, movement and abilities<br><b>Resistance:</b> Will DC 8 + the mage's INT + 4",
@@ -4459,9 +6007,17 @@ window.LANG_INTERFACE = {
     "en": "Gear and hero abilities follow the shape's rules while it lasts.",
     "pt": "Equipamentos e habilidades de herói seguem as regras da forma enquanto durar."
   },
+  "ui.magia.metamorfose_forma": {
+    "en": "🦋 Form: {nome}",
+    "pt": "🦋 Forma: {nome}"
+  },
   "ui.magia.metamorfose_forma_aplicada": {
     "en": "Shape applied: {forma}.",
     "pt": "Forma aplicada: {forma}."
+  },
+  "ui.magia.metamorfose_terminou": {
+    "en": "🦋 The Metamorphosis has ended.",
+    "pt": "🦋 A Metamorfose terminou."
   },
   "ui.magia.metamorfose_titulo": {
     "en": "🦋 Polymorph",
@@ -4487,6 +6043,10 @@ window.LANG_INTERFACE = {
     "en": "No spell known.",
     "pt": "Nenhuma magia conhecida."
   },
+  "ui.magia.nenhuma_criatura_animada": {
+    "en": "No animated creature",
+    "pt": "Nenhuma criatura animada"
+  },
   "ui.magia.nenhuma_disponivel": {
     "en": "No spell available",
     "pt": "Nenhuma magia disponível"
@@ -4495,6 +6055,18 @@ window.LANG_INTERFACE = {
     "en": "No unlocked form available.",
     "pt": "Nenhuma forma desbloqueada disponível."
   },
+  "ui.magia.nenhuma_magia_memorizada": {
+    "en": "No spell memorized",
+    "pt": "Nenhuma magia memorizada"
+  },
+  "ui.magia.nova_forma": {
+    "en": "new form",
+    "pt": "nova forma"
+  },
+  "ui.magia.nova_forma_desbloqueada": {
+    "en": "🦋 New form unlocked: {nome}.",
+    "pt": "🦋 Nova forma desbloqueada: {nome}."
+  },
   "ui.magia.o_alvo": {
     "en": "The target",
     "pt": "O alvo"
@@ -4502,6 +6074,10 @@ window.LANG_INTERFACE = {
   "ui.magia.o_mago_paga_1_e_1_por_rodada": {
     "en": "The mage pays 🍖-1 and 💧-1 per round.",
     "pt": "O mago paga 🍖-1 e 💧-1 por rodada."
+  },
+  "ui.magia.olhar_petrificante.custo": {
+    "en": "📜 Scroll",
+    "pt": "📜 Pergaminho"
   },
   "ui.magia.olhar_petrificante.desc": {
     "en": "<b>Duration:</b> 1d4 + 1 round every 3 levels<br><b>Range:</b> uses the victim's sight and requires the caster in their LOS<br><b>Saves:</b> 1 save at the start; 2 per turn while visible; up to 5 final saves after losing sight<br><b>Will:</b> DC 8 + INT + 4<br><b>Failure:</b> 1 Petrification mark; 3 = permanent petrification<br><b>Success:</b> 1 Resistance mark; 3 ends the effect<br><b>Block:</b> Cloak of Darkness stops the gaze without darkvision",
@@ -4547,6 +6123,10 @@ window.LANG_INTERFACE = {
     "en": "🧱 A wall blocks the spell to the target!",
     "pt": "🧱 Uma parede bloqueia o feitiço até o alvo!"
   },
+  "ui.magia.permanente": {
+    "en": "PERMANENT",
+    "pt": "PERMANENTE"
+  },
   "ui.magia.piso_congelado": {
     "en": "🧊 Frozen Floor",
     "pt": "🧊 Piso congelado"
@@ -4554,6 +6134,14 @@ window.LANG_INTERFACE = {
   "ui.magia.planicie_nevada": {
     "en": "🌨️ Snowy Plain",
     "pt": "🌨️ Planície nevada"
+  },
+  "ui.magia.preparada_i": {
+    "en": "Prepared",
+    "pt": "Preparada"
+  },
+  "ui.magia.preparada_sufixo": {
+    "en": " · PREPARED",
+    "pt": " · PREPARADA"
   },
   "ui.magia.prisao_chamas.desc": {
     "en": "<b>Centre:</b> choose the central point of the area<br><b>Size:</b> a 2x2, 3x3 or 4x4 square; only the edges burn<br><b>Range:</b> 4 squares +1 every 2 mage levels<br><b>Effect:</b> wall squares are ignored; allies may cross, but take damage<br><b>Heat:</b> adjacent creatures, diagonals included, take 2d4 when it appears and at the start of their turn<br><b>Flames:</b> standing on, entering or crossing a burning edge deals 2d8 fire damage<br><b>Duration:</b> 10 rounds; ending it is a free action<br><b>Cost:</b> 🍖-1 💧-1 + 1 fourth-circle slot",
@@ -4607,6 +6195,10 @@ window.LANG_INTERFACE = {
     "en": "🌪️ WHIRLPOOLS — FREE ACTION",
     "pt": "🌪️ REDEMOINHOS — AÇÃO LIVRE"
   },
+  "ui.magia.redemoinhos_criados": {
+    "en": "🌊 Whirlpools: {n}/{max} created by this spell.",
+    "pt": "🌊 Redemoinhos: {n}/{max} criados nesta magia."
+  },
   "ui.magia.redemoinhos_disponiveis_a_partir_da_2a_rod": {
     "en": "🌊 Whirlpools available from the 2nd round on.",
     "pt": "🌊 Redemoinhos disponíveis a partir da 2ª rodada."
@@ -4623,9 +6215,17 @@ window.LANG_INTERFACE = {
     "en": "{restante} of {limite} square(s) left{extra}. The quota lasts until the spell ends — you can mark more squares in the coming rounds.",
     "pt": "Restam {restante} de {limite} casa(s){extra}. A cota vale até a magia acabar — dá para marcar mais casas nas próximas rodadas."
   },
+  "ui.magia.roubado_por_necromante": {
+    "en": "⛓️ Stolen by a necromancer!",
+    "pt": "⛓️ Roubado por necromante!"
+  },
   "ui.magia.saciar.desc": {
     "en": "<b>Range:</b> adjacent<br>\n               <b>Effect:</b> +20 hunger and +20 thirst<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> adjacente<br>\n               <b>Efeito:</b> +25 fome e +25 sede<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
+  },
+  "ui.magia.selecionado": {
+    "en": "SELECTED",
+    "pt": "SELECIONADO"
   },
   "ui.magia.sem_magias": {
     "en": "This character has no spells.",
@@ -4811,9 +6411,13 @@ window.LANG_INTERFACE = {
     "en": "CYCLONE",
     "pt": "CICLONE"
   },
+  "ui.magia.tempestade_ciclones.custo": {
+    "en": "TEST: free, no slot/hunger/thirst",
+    "pt": "TESTE: livre, sem slot/fome/sede"
+  },
   "ui.magia.tempestade_ciclones.desc": {
-    "en": "<b>Range:</b> 6 +1 every 2 levels<br><b>Area:</b> 3x3, +1 square every 3 levels<br><b>Cyclones:</b> creates 2d4 1x1 cyclones in squares chosen by the cleric; each may move 2 squares per round<br><b>Impact:</b> 2d8 lightning, Reflex halves<br><b>Wind:</b> every square inside the storm costs 2 movement<br><b>Lightning:</b> 1d8 lightning every 2 rounds, Reflex halves<br><b>Flight:</b> a failed Fortitude save knocks you down and deals falling damage<br><b>Cyclone:</b> Reflex success loses your movement; failure loses movement and the main action<br><b>Temporary test:</b> available to the cleric with no 5th-circle slot",
-    "pt": "<b>Alcance:</b> 6 +1 a cada 2 níveis<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Ciclones:</b> cria 2d4 ciclones 1x1 nas casas escolhidas pelo clérigo; cada um pode mover 2 casas por rodada<br>\n               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>\n               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>\n               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>\n               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>\n               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>\n               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo"
+    "en": "<b>Range:</b> 6 +1 every 2 levels<br>\n               <b>Area:</b> 3x3 +1 square every 3 levels<br>\n               <b>Cyclones:</b> creates 2d4 1x1 cyclones; you choose each one's starting position; each can move 2 squares per round<br>\n               <b>Impact:</b> 2d8 lightning, Reflex halves<br>\n               <b>Wind:</b> each square inside the storm costs 2 movement<br>\n               <b>Lightning:</b> 1d8 lightning every 2 rounds, Reflex halves<br>\n               <b>Flight:</b> a failed Fortitude save knocks down and applies fall damage<br>\n               <b>Cyclone:</b> Reflex success loses movement; failure loses movement and main action<br>\n               <b>Temporary test:</b> available to the cleric without a 5th-circle slot",
+    "pt": "<b>Alcance:</b> 6 +1 a cada 2 níveis<br>\n               <b>Área:</b> 3x3 +1 casa a cada 3 níveis<br>\n               <b>Ciclones:</b> cria 2d4 ciclones 1x1; você escolhe a posição inicial de cada um; cada um pode mover 2 casas por rodada<br>\n               <b>Impacto:</b> 2d8 elétrico, Reflexos reduz à metade<br>\n               <b>Vento:</b> cada casa na tempestade custa 2 movimentos<br>\n               <b>Raios:</b> 1d8 elétrico a cada 2 rodadas, Reflexos reduz à metade<br>\n               <b>Voo:</b> Fortitude falha derruba e aplica dano de queda<br>\n               <b>Ciclone:</b> Reflexos sucesso perde movimento; falha perde movimento e ação principal<br>\n               <b>Teste temporário:</b> acessível ao clérigo sem slot de 5º círculo"
   },
   "ui.magia.tempestade_escolha_casa": {
     "en": "Choose a square inside the storm, up to 2 squares away.",
@@ -4847,29 +6451,29 @@ window.LANG_INTERFACE = {
     "en": "Invalid position: use a free square inside the storm, up to 2 squares away.",
     "pt": "Posição inválida: use uma casa livre dentro da tempestade, a até 2 casas."
   },
-  "ui.magia.tempestade_posicionamento_titulo": {
-    "en": "🌪️ PLACE CYCLONES",
-    "pt": "🌪️ POSICIONAR CICLONES"
-  },
-  "ui.magia.tempestade_posicionamento_instrucao": {
-    "en": "Choose exactly {count} valid squares inside the storm for the initial cyclone positions.",
-    "pt": "Escolha exatamente {count} casas válidas dentro da tempestade para iniciar os ciclones."
-  },
   "ui.magia.tempestade_posicionamento_confirmar": {
     "en": "CREATE CYCLONES",
     "pt": "CRIAR CICLONES"
-  },
-  "ui.magia.tempestade_posicionamento_ok": {
-    "en": "Valid square. Click to select or deselect it.",
-    "pt": "Casa válida. Clique para selecionar ou desmarcar."
   },
   "ui.magia.tempestade_posicionamento_erro": {
     "en": "Choose a valid square inside the storm.",
     "pt": "Escolha uma casa válida dentro da tempestade."
   },
+  "ui.magia.tempestade_posicionamento_instrucao": {
+    "en": "Choose exactly {count} valid squares inside the storm for the initial cyclone positions.",
+    "pt": "Escolha exatamente {count} casas válidas dentro da tempestade para iniciar os ciclones."
+  },
   "ui.magia.tempestade_posicionamento_limite": {
     "en": "All {count} cyclone positions are already selected.",
     "pt": "As {count} posições de ciclone já estão selecionadas."
+  },
+  "ui.magia.tempestade_posicionamento_ok": {
+    "en": "Valid square. Click to select or deselect it.",
+    "pt": "Casa válida. Clique para selecionar ou desmarcar."
+  },
+  "ui.magia.tempestade_posicionamento_titulo": {
+    "en": "🌪️ PLACE CYCLONES",
+    "pt": "🌪️ POSICIONAR CICLONES"
   },
   "ui.magia.tempestade_toast_aproxima": {
     "en": "🌪️ The storm draws near...",
@@ -4891,6 +6495,10 @@ window.LANG_INTERFACE = {
     "en": "⏳ Temporary — 1d4 + cleric level rounds",
     "pt": "⏳ Temporário — 1d4 + nível de clérigo rodadas"
   },
+  "ui.magia.tentar_tornar_permanente": {
+    "en": "Try to make the monster permanent",
+    "pt": "Tentar tornar o monstro permanente"
+  },
   "ui.magia.terreno_selecionado_escolha_duracao": {
     "en": "{terreno} selected. Choose the duration:",
     "pt": "{terreno} selecionado. Escolha a duração:"
@@ -4906,6 +6514,10 @@ window.LANG_INTERFACE = {
   "ui.magia.versao_alternativa_ficha_completa_nd_2_slo": {
     "en": "Alternate version · full sheet · CR + 2 slots",
     "pt": "Versão alternativa · ficha completa · ND + 2 slots"
+  },
+  "ui.magia.vinculo_maldito_da_dor.desc": {
+    "en": "<b>Target:</b> 1 enemy in line of sight (up to 4 bonds)<br>\n               <b>Save:</b> Will negates<br>\n               <b>Effect:</b> each bond transfers 25% of the damage the caster takes to the bound enemy; the rest stays on the caster<br>\n               <b>Duration:</b> 1d4 + caster level rounds<br>\n               <b>Penalty:</b> the enemy takes -1 on its next attack, without stacking<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 2nd-circle slot",
+    "pt": "<b>Alvo:</b> 1 inimigo em linha de visão (máximo 4 vínculos)<br>\n               <b>Resistência:</b> Vontade nega<br>\n               <b>Efeito:</b> cada vínculo transfere 25% do dano sofrido pelo conjurador ao inimigo ligado; o restante permanece no conjurador<br>\n               <b>Duração:</b> 1d4 + nível de conjurador rodadas<br>\n               <b>Penalidade:</b> o inimigo sofre -1 no próximo ataque, sem acumular<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo"
   },
   "ui.magia.visao_escuro.desc": {
     "en": "<b>Effect:</b> ignores the darkness system entirely<br>\n               <b>Duration:</b> until you leave the dungeon<br>\n               <b>Cost:</b> 🍖-1 💧-1 + 1 slot",
@@ -5167,6 +6779,14 @@ window.LANG_INTERFACE = {
     "en": "This creature's altitude is fixed.",
     "pt": "A altura desta criatura é fixa."
   },
+  "ui.mestre.aba_comando": {
+    "en": "🗣️ Command",
+    "pt": "🗣️ Comando"
+  },
+  "ui.mestre.aba_monstros": {
+    "en": "📋 Monsters",
+    "pt": "📋 Monstros"
+  },
   "ui.mestre.acao": {
     "en": "⚡ ACTION",
     "pt": "⚡ AÇÃO"
@@ -5195,6 +6815,10 @@ window.LANG_INTERFACE = {
     "en": "passive",
     "pt": "passiva"
   },
+  "ui.mestre.acoes_de_teste": {
+    "en": "Test actions",
+    "pt": "Ações de teste"
+  },
   "ui.mestre.alcance": {
     "en": "range",
     "pt": "alcance"
@@ -5207,13 +6831,29 @@ window.LANG_INTERFACE = {
     "en": "range {n}sq",
     "pt": "alcance {n}q"
   },
+  "ui.mestre.altura_rotulo": {
+    "en": "🪽 Height",
+    "pt": "🪽 Altura"
+  },
+  "ui.mestre.alvo": {
+    "en": "TARGET",
+    "pt": "ALVO"
+  },
   "ui.mestre.alvo_invalido_motivo": {
     "en": "Invalid target: {motivo}",
     "pt": "Alvo inválido: {motivo}"
   },
+  "ui.mestre.alvo_semi": {
+    "en": "— target (Semi) —",
+    "pt": "— alvo (Semi) —"
+  },
   "ui.mestre.area_efetiva": {
     "en": "effective area",
     "pt": "área efetiva"
+  },
+  "ui.mestre.armado_label": {
+    "en": "ARMED",
+    "pt": "ARMADO"
   },
   "ui.mestre.arte_3d": {
     "en": "🔎 3D art (models and images)",
@@ -5227,6 +6867,10 @@ window.LANG_INTERFACE = {
     "en": "The attack reaches {n} square(s){forma}.",
     "pt": "O ataque alcança {n} quadrado(s){forma}."
   },
+  "ui.mestre.ataque_basico": {
+    "en": "⚔️ Basic attack",
+    "pt": "⚔️ Ataque básico"
+  },
   "ui.mestre.ataques": {
     "en": "ATTACKS",
     "pt": "ATAQUES"
@@ -5235,9 +6879,25 @@ window.LANG_INTERFACE = {
     "en": "{disp} attack(s) available; {gastos} used",
     "pt": "{disp} ataque(s) disponível(is); {gastos} gasto(s)"
   },
+  "ui.mestre.ativo": {
+    "en": "🎯 Active",
+    "pt": "🎯 Ativo"
+  },
+  "ui.mestre.ator": {
+    "en": "actor",
+    "pt": "ator"
+  },
   "ui.mestre.atributos_resistencias": {
     "en": "ATTRIBUTES AND SAVES",
     "pt": "ATRIBUTOS E RESISTÊNCIAS"
+  },
+  "ui.mestre.auto": {
+    "en": "Auto",
+    "pt": "Auto"
+  },
+  "ui.mestre.bardo": {
+    "en": "Bard",
+    "pt": "Bardo"
   },
   "ui.mestre.bonus": {
     "en": "✨ BONUS",
@@ -5259,6 +6919,10 @@ window.LANG_INTERFACE = {
     "en": "the square is not in {alvo}'s effective area",
     "pt": "a casa não está na área efetiva de {alvo}"
   },
+  "ui.mestre.clerigo": {
+    "en": "Cleric",
+    "pt": "Clérigo"
+  },
   "ui.mestre.clique_criatura_valida": {
     "en": "Click a valid creature inside the red squares.",
     "pt": "Clique numa criatura válida dentro dos quadrados vermelhos."
@@ -5266,6 +6930,10 @@ window.LANG_INTERFACE = {
   "ui.mestre.clique_em_um_heroi_dentro_das_casas_vermel": {
     "en": "click a hero inside the strike's red squares.",
     "pt": "clique em um herói dentro das casas vermelhas do golpe."
+  },
+  "ui.mestre.clique_em_uma_casa_livre_para_posicionar_o": {
+    "en": "Click a free square to place the hero.",
+    "pt": "Clique em uma casa livre para posicionar o herói."
   },
   "ui.mestre.clique_em_uma_criatura_valida_dentro_da_ar": {
     "en": "click a valid creature inside the highlighted area.",
@@ -5287,6 +6955,10 @@ window.LANG_INTERFACE = {
     "en": "average CR",
     "pt": "CR médio"
   },
+  "ui.mestre.custa_movimento_ponto": {
+    "en": "(costs {n} movement/point)",
+    "pt": "(custa {n} movimento/ponto)"
+  },
   "ui.mestre.custo.bonus": {
     "en": "BONUS",
     "pt": "BÔNUS"
@@ -5303,6 +6975,10 @@ window.LANG_INTERFACE = {
     "en": "BESTIARY DEFENCES",
     "pt": "DEFESAS DO BESTIÁRIO"
   },
+  "ui.mestre.descer": {
+    "en": "↓ Descend",
+    "pt": "↓ Descer"
+  },
   "ui.mestre.diagnostico": {
     "en": "DIAGNOSTICS",
     "pt": "DIAGNÓSTICO"
@@ -5315,9 +6991,37 @@ window.LANG_INTERFACE = {
     "en": " in a straight line",
     "pt": " em linha reta"
   },
+  "ui.mestre.encerrar_monstro": {
+    "en": "End monster's turn",
+    "pt": "Encerrar monstro"
+  },
+  "ui.mestre.encerrar_simulacao": {
+    "en": "■ End simulation",
+    "pt": "■ Encerrar simulação"
+  },
+  "ui.mestre.equipado_passivas": {
+    "en": "EQUIPPED ({eq}) · PASSIVES ({pas})",
+    "pt": "EQUIPADO ({eq}) · PASSIVAS ({pas})"
+  },
   "ui.mestre.escolha_alvo": {
     "en": "{nome} — Choose the target",
     "pt": "{nome} — Escolha o alvo"
+  },
+  "ui.mestre.escolha_o_alvo_item": {
+    "en": "{nome} — Choose the target",
+    "pt": "{nome} — Escolha o alvo"
+  },
+  "ui.mestre.escolha_o_alvo_min": {
+    "en": "{icone} {nome} — choose the target",
+    "pt": "{icone} {nome} — escolha o alvo"
+  },
+  "ui.mestre.escolha_os_esqueletos": {
+    "en": "{nome} — Choose the skeletons",
+    "pt": "{nome} — Escolha os esqueletos"
+  },
+  "ui.mestre.escolha_um_heroi_e_clique_em_uma_casa_livr": {
+    "en": "Choose a hero and click a free square to place them as a test target.",
+    "pt": "Escolha um herói e clique em uma casa livre para colocá-lo como alvo de teste."
   },
   "ui.mestre.escolha_uma_casa_ou_criatura_dentro_da_are": {
     "en": "Choose a square or creature inside the highlighted area.",
@@ -5351,9 +7055,29 @@ window.LANG_INTERFACE = {
     "en": "— they use the action",
     "pt": "— gastam a ação"
   },
+  "ui.mestre.golpe": {
+    "en": "Strike",
+    "pt": "Golpe"
+  },
+  "ui.mestre.golpe_armado_clique_numa_casa_vermelha": {
+    "en": "Strike armed — click a red square.",
+    "pt": "Golpe armado — clique numa casa vermelha."
+  },
+  "ui.mestre.golpe_desarmado": {
+    "en": "Strike disarmed.",
+    "pt": "Golpe desarmado."
+  },
+  "ui.mestre.guerreiro": {
+    "en": "Warrior",
+    "pt": "Guerreiro"
+  },
   "ui.mestre.habilidades": {
     "en": "ABILITIES",
     "pt": "HABILIDADES"
+  },
+  "ui.mestre.habilidades_compativeis": {
+    "en": "Compatible abilities",
+    "pt": "Habilidades compatíveis"
   },
   "ui.mestre.habilidades_titulo": {
     "en": "Abilities",
@@ -5362,6 +7086,18 @@ window.LANG_INTERFACE = {
   "ui.mestre.heroi": {
     "en": "HERO",
     "pt": "HERÓI"
+  },
+  "ui.mestre.heroi_de_teste": {
+    "en": "Test hero",
+    "pt": "Herói de teste"
+  },
+  "ui.mestre.heroi_de_teste_turno_ativo": {
+    "en": "Test hero · active turn",
+    "pt": "Herói de teste · turno ativo"
+  },
+  "ui.mestre.herois_de_teste": {
+    "en": "TEST HEROES",
+    "pt": "HERÓIS DE TESTE"
   },
   "ui.mestre.historico_recente": {
     "en": "📜 RECENT HISTORY",
@@ -5383,6 +7119,22 @@ window.LANG_INTERFACE = {
     "en": "Immunities",
     "pt": "Imunidades"
   },
+  "ui.mestre.iniciar_combate": {
+    "en": "▶ Start combat",
+    "pt": "▶ Iniciar combate"
+  },
+  "ui.mestre.itens_bolsa": {
+    "en": "ITEMS (bag)",
+    "pt": "ITENS (bolsa)"
+  },
+  "ui.mestre.ja_esta_na_mesa": {
+    "en": "Already on the table",
+    "pt": "Já está na mesa"
+  },
+  "ui.mestre.ladino": {
+    "en": "Rogue",
+    "pt": "Ladino"
+  },
   "ui.mestre.magias": {
     "en": "SPELLS",
     "pt": "MAGIAS"
@@ -5399,9 +7151,33 @@ window.LANG_INTERFACE = {
     "en": "✦ MONSTER SPELLS",
     "pt": "✦ MAGIAS DO MONSTRO"
   },
+  "ui.mestre.magias_sec": {
+    "en": "Spells",
+    "pt": "Magias"
+  },
+  "ui.mestre.mago": {
+    "en": "Mage",
+    "pt": "Mago"
+  },
+  "ui.mestre.manual": {
+    "en": "Manual",
+    "pt": "Manual"
+  },
   "ui.mestre.mapa_cr": {
     "en": "🗺️ CR Map",
     "pt": "🗺️ Mapa de CR"
+  },
+  "ui.mestre.mesa_livre_posicione": {
+    "en": "Free table: place heroes and monsters before starting.",
+    "pt": "Mesa livre: posicione heróis e monstros antes de iniciar."
+  },
+  "ui.mestre.mestre": {
+    "en": "⚠️ Master",
+    "pt": "⚠️ Mestre"
+  },
+  "ui.mestre.mestre_do_jogo": {
+    "en": "📖 Game Master",
+    "pt": "📖 Mestre do Jogo"
   },
   "ui.mestre.metade_dano": {
     "en": "half damage",
@@ -5410,6 +7186,10 @@ window.LANG_INTERFACE = {
   "ui.mestre.minimapa_indisponivel": {
     "en": "Minimap unavailable.",
     "pt": "Minimapa indisponível."
+  },
+  "ui.mestre.mira_cancelada": {
+    "en": "Aim cancelled.",
+    "pt": "Mira cancelada."
   },
   "ui.mestre.mira_legenda": {
     "en": "{icone} {rotulo} — click a red square | ESC cancels",
@@ -5431,6 +7211,10 @@ window.LANG_INTERFACE = {
     "en": "👣 MOVEMENT",
     "pt": "👣 MOVIMENTO"
   },
+  "ui.mestre.movimento_reduzido": {
+    "en": "🐌 reduced movement",
+    "pt": "🐌 movimento reduzido"
+  },
   "ui.mestre.nao_implementada": {
     "en": "not implemented",
     "pt": "não implementada"
@@ -5439,9 +7223,25 @@ window.LANG_INTERFACE = {
     "en": "CR {nd} · level {nivel}",
     "pt": "ND {nd} · nível {nivel}"
   },
+  "ui.mestre.nenhum_monstro_em_foco": {
+    "en": "No monster in focus.<br>Click a monster on the board or in the Monsters tab.",
+    "pt": "Nenhum monstro em foco.<br>Clique num monstro no tabuleiro ou na aba Monstros."
+  },
+  "ui.mestre.nenhum_monstro_na_masmorra": {
+    "en": "No monster in the dungeon.",
+    "pt": "Nenhum monstro na masmorra."
+  },
   "ui.mestre.nenhuma_acao_registrada": {
     "en": "No action recorded.",
     "pt": "Nenhuma ação registrada."
+  },
+  "ui.mestre.nenhuma_habilidade_ativa": {
+    "en": "No active ability.",
+    "pt": "Nenhuma habilidade ativa."
+  },
+  "ui.mestre.nenhuma_passiva": {
+    "en": "No passive.",
+    "pt": "Nenhuma passiva."
   },
   "ui.mestre.o_proprio_monstro_nao_pode_ser_escolhido_c": {
     "en": "the monster itself cannot be chosen as the target.",
@@ -5450,6 +7250,10 @@ window.LANG_INTERFACE = {
   "ui.mestre.ocupacao": {
     "en": "footprint",
     "pt": "ocupação"
+  },
+  "ui.mestre.paladino": {
+    "en": "Paladin",
+    "pt": "Paladino"
   },
   "ui.mestre.percepcao_nota": {
     "en": "sheet base · +1 per living ally within 3 squares during stealth",
@@ -5467,6 +7271,14 @@ window.LANG_INTERFACE = {
     "en": "medium",
     "pt": "médio"
   },
+  "ui.mestre.recarga_n_rodadas": {
+    "en": "⏳ cooldown: {n} round(s)",
+    "pt": "⏳ recarga: {n} rodada(s)"
+  },
+  "ui.mestre.recarga_rodadas_curta": {
+    "en": "cooldown {n} rounds",
+    "pt": "recarga {n} rodadas"
+  },
   "ui.mestre.reducao": {
     "en": "reduction {n}",
     "pt": "redução {n}"
@@ -5478,6 +7290,14 @@ window.LANG_INTERFACE = {
   "ui.mestre.resistencias": {
     "en": "Resistances",
     "pt": "Resistências"
+  },
+  "ui.mestre.rodada_vez_de": {
+    "en": "Round {n} · {nome}'s turn",
+    "pt": "Rodada {n} · vez de {nome}"
+  },
+  "ui.mestre.selecionados_aplicar_todos": {
+    "en": "{n} selected — apply to all:",
+    "pt": "{n} selecionado(s) — aplicar a todos:"
   },
   "ui.mestre.sem_alvo_adj": {
     "en": "No adjacent target.",
@@ -5491,9 +7311,17 @@ window.LANG_INTERFACE = {
     "en": "No target within {n}sq.",
     "pt": "Nenhum alvo a até {n}q."
   },
+  "ui.mestre.sem_alvo_vivo": {
+    "en": "No living target",
+    "pt": "Sem alvo vivo"
+  },
   "ui.mestre.sem_ataque": {
     "en": "No attack registered.",
     "pt": "Nenhum ataque cadastrado."
+  },
+  "ui.mestre.sem_efeito_em_monstros": {
+    "en": "no effect on monsters",
+    "pt": "sem efeito em monstros"
   },
   "ui.mestre.sem_habilidade": {
     "en": "No ability.",
@@ -5510,6 +7338,50 @@ window.LANG_INTERFACE = {
   "ui.mestre.sem_reforcos": {
     "en": "No reinforcements or lines in this dungeon.",
     "pt": "Sem reforços nem falas nesta masmorra."
+  },
+  "ui.mestre.semi": {
+    "en": "Semi",
+    "pt": "Semi"
+  },
+  "ui.mestre.simulacao_de_combate": {
+    "en": "COMBAT SIMULATION",
+    "pt": "SIMULAÇÃO DE COMBATE"
+  },
+  "ui.mestre.subir": {
+    "en": "↑ Ascend",
+    "pt": "↑ Subir"
+  },
+  "ui.mestre.tecla_h_sufixo": {
+    "en": " · key H",
+    "pt": " · tecla H"
+  },
+  "ui.mestre.teste_acao": {
+    "en": "Action",
+    "pt": "Ação"
+  },
+  "ui.mestre.teste_bonus": {
+    "en": "Bonus",
+    "pt": "Bônus"
+  },
+  "ui.mestre.teste_encerrar_vez": {
+    "en": "⏭ End turn",
+    "pt": "⏭ Encerrar vez"
+  },
+  "ui.mestre.teste_livre": {
+    "en": "free",
+    "pt": "livre"
+  },
+  "ui.mestre.teste_movimento": {
+    "en": "Movement",
+    "pt": "Movimento"
+  },
+  "ui.mestre.teste_usada": {
+    "en": "used",
+    "pt": "usada"
+  },
+  "ui.mestre.usos_por_combate": {
+    "en": "{n} use(s) per combat",
+    "pt": "{n} uso(s) por combate"
   },
   "ui.metamagia.aprimorar": {
     "en": "Free action. +{n} to the spell's saving throw DC.",
@@ -5551,6 +7423,10 @@ window.LANG_INTERFACE = {
     "en": "Three metamagics armed. Choose the spell and the target manually.",
     "pt": "Três metamagias armadas. Escolha a magia e o alvo manualmente."
   },
+  "ui.mira.alcance": {
+    "en": "RANGE",
+    "pt": "ALCANCE"
+  },
   "ui.mira.alvo_valido_confirmar_para_arremessar": {
     "en": "Valid target — confirm to throw.",
     "pt": "Alvo válido — confirmar para arremessar."
@@ -5559,9 +7435,25 @@ window.LANG_INTERFACE = {
     "en": "Valid target — confirm to use.",
     "pt": "Alvo válido — confirme para usar."
   },
+  "ui.mira.atacar_titulo": {
+    "en": "{icone} ATTACK",
+    "pt": "{icone} ATACAR"
+  },
+  "ui.mira.ataque_cancelado": {
+    "en": "Attack cancelled.",
+    "pt": "Ataque cancelado."
+  },
+  "ui.mira.bloqueado": {
+    "en": "BLOCKED",
+    "pt": "BLOQUEADO"
+  },
   "ui.mira.cadaver_valido_confirme_para_animar": {
     "en": "Valid corpse — confirm to animate.",
     "pt": "Cadáver válido — confirme para animar."
+  },
+  "ui.mira.casa": {
+    "en": "SQUARE",
+    "pt": "CASA"
   },
   "ui.mira.casa_valida_clique_para_marcar_ou_desmarca": {
     "en": "Valid square — click to mark or unmark.",
@@ -5571,9 +7463,57 @@ window.LANG_INTERFACE = {
     "en": "Valid square — confirm to execute.",
     "pt": "Casa válida — confirme para executar."
   },
+  "ui.mira.confirmar": {
+    "en": "CONFIRM",
+    "pt": "CONFIRMAR"
+  },
+  "ui.mira.desarmar_armadilha": {
+    "en": "🪤 DISARM TRAP",
+    "pt": "🪤 DESARMAR ARMADILHA"
+  },
+  "ui.mira.desarme_de_armadilha_cancelado": {
+    "en": "Trap disarm cancelled.",
+    "pt": "Desarme de armadilha cancelado."
+  },
+  "ui.mira.esc_cancelar": {
+    "en": "ESC · CANCEL",
+    "pt": "ESC · CANCELAR"
+  },
+  "ui.mira.escolha_bloqueada_selecione_uma_casa_desta": {
+    "en": "Choice blocked — select a highlighted square.",
+    "pt": "Escolha bloqueada — selecione uma casa destacada."
+  },
   "ui.mira.escolha_uma_casa_dentro_da_area_da_magia": {
     "en": "Choose a square inside the spell's area.",
     "pt": "Escolha uma casa dentro da área da magia."
+  },
+  "ui.mira.escolha_uma_casa_destacada_dentro_do_alcan": {
+    "en": "Choose a highlighted square within range.",
+    "pt": "Escolha uma casa destacada dentro do alcance."
+  },
+  "ui.mira.fora_alcance_horizontal": {
+    "en": "Out of range: {dist}sq horizontal, effective range {alcance}sq.",
+    "pt": "Fora do alcance: {dist}q horizontais, alcance efetivo {alcance}q."
+  },
+  "ui.mira.habilidade": {
+    "en": "ABILITY",
+    "pt": "HABILIDADE"
+  },
+  "ui.mira.habilidade_cancelada": {
+    "en": "Ability cancelled.",
+    "pt": "Habilidade cancelada."
+  },
+  "ui.mira.inimigo": {
+    "en": "ENEMY",
+    "pt": "INIMIGO"
+  },
+  "ui.mira.mira": {
+    "en": "AIM",
+    "pt": "MIRA"
+  },
+  "ui.mira.mira_cancelada": {
+    "en": "Aim cancelled.",
+    "pt": "Mira cancelada."
   },
   "ui.mira.mira_valida_confirme_para_lancar": {
     "en": "Valid aim — confirm to cast.",
@@ -5583,23 +7523,39 @@ window.LANG_INTERFACE = {
     "en": "No valid enemy to attack.",
     "pt": "Nenhum inimigo válido para atacar."
   },
+  "ui.mira.selecione_a_sua_casa_ou_uma_casa_adjacente": {
+    "en": "Select your own square or an adjacent one.",
+    "pt": "Selecione a sua casa ou uma casa adjacente."
+  },
+  "ui.mira.selecione_um_alvo_destacado_para_esta_habi": {
+    "en": "Select a highlighted target for this ability.",
+    "pt": "Selecione um alvo destacado para esta habilidade."
+  },
+  "ui.mira.selecione_um_alvo_no_tabuleiro": {
+    "en": "Select a target on the board.",
+    "pt": "Selecione um alvo no tabuleiro."
+  },
   "ui.mira.selecione_um_cadaver_destacado": {
     "en": "Select a highlighted corpse.",
     "pt": "Selecione um cadáver destacado."
   },
+  "ui.mira.selecione_um_inimigo_destacado": {
+    "en": "Select a highlighted enemy.",
+    "pt": "Selecione um inimigo destacado."
+  },
   "ui.mira.selecione_um_inimigo_visivel_dentro_do_alc": {
     "en": "Select a visible enemy within range.",
     "pt": "Selecione um inimigo visível dentro do alcance."
+  },
+  "ui.mira.selecione_um_x_destacado": {
+    "en": "Select a highlighted {alvo}.",
+    "pt": "Selecione um {alvo} destacado."
   },
   "ui.mira.valida_altura_alcance": {
     "en": "Valid aim · altitude {de} → {para} · effective range {alcance}sq.",
     "pt": "Mira válida · altura {de} → {para} · alcance efetivo {alcance}q."
   },
   "ui.mira.valido": {
-    "en": "VALID",
-    "pt": "VÁLIDO"
-  },
-  "ui.mira.valido_2": {
     "en": "VALID",
     "pt": "VÁLIDO"
   },
@@ -5650,6 +7606,10 @@ window.LANG_INTERFACE = {
   "ui.mundo.entrada_masmorra_desc": {
     "en": "Expedition: 🍖 -{fome} and 💧 -{sede} for each hero.",
     "pt": "Expedição: 🍖 -{fome} e 💧 -{sede} para cada herói."
+  },
+  "ui.mundo.entrar_em": {
+    "en": "Enter {nome}",
+    "pt": "Entrar em {nome}"
   },
   "ui.mundo.escolha_destino_desc": {
     "en": "Select a connected city or village to check the travel cost.",
@@ -5743,6 +7703,10 @@ window.LANG_INTERFACE = {
     "en": "Travel to {nome}",
     "pt": "Viajar para {nome}"
   },
+  "ui.mundo.voltar": {
+    "en": "← Back",
+    "pt": "← Voltar"
+  },
   "ui.mundo.voltar_cidade": {
     "en": "← Back to the city",
     "pt": "← Voltar à cidade"
@@ -5754,6 +7718,14 @@ window.LANG_INTERFACE = {
   "ui.objetivo.all_heroes_at_exit": {
     "en": "All heroes at the exit",
     "pt": "Todos os heróis na saída"
+  },
+  "ui.objetivo.encerrar_btn": {
+    "en": "🏁 Finish",
+    "pt": "🏁 Encerrar"
+  },
+  "ui.objetivo.fase_de": {
+    "en": "🗺️ Stage {atual} of {total} — {nome}",
+    "pt": "🗺️ Fase {atual} de {total} — {nome}"
   },
   "ui.objetivo.kill_all": {
     "en": "Defeat every monster",
@@ -5783,6 +7755,14 @@ window.LANG_INTERFACE = {
     "en": "Secondary",
     "pt": "Secundários"
   },
+  "ui.objetivo.titulo": {
+    "en": "🎯 Objectives",
+    "pt": "🎯 Objetivos"
+  },
+  "ui.paladino.1_hp_por_turno": {
+    "en": "+1 HP per turn",
+    "pt": "+1 HP por turno"
+  },
   "ui.paladino.ativar": {
     "en": "💡 ACTIVATE",
     "pt": "💡 ATIVAR"
@@ -5791,9 +7771,17 @@ window.LANG_INTERFACE = {
     "en": "COST/TURN",
     "pt": "CUSTO/TURNO"
   },
+  "ui.paladino.d8_sagrado_por_ataque": {
+    "en": "+{n}d8 holy per attack",
+    "pt": "+{n}d8 sagrado por ataque"
+  },
   "ui.paladino.dados_extra": {
     "en": "+{n}d6 extra",
     "pt": "+{n}d6 extra"
+  },
+  "ui.paladino.guerreiro_luz_permite": {
+    "en": "Warrior of Light allows {n} active attribute(s) — upgrade at the Guild.",
+    "pt": "Guerreiro da Luz permite {n} atributo(s) ativo(s) — evolua na Guilda."
   },
   "ui.paladino.imposicao_custo": {
     "en": "Lay on Hands requires 🍖3 and 💧2.",
@@ -5823,13 +7811,29 @@ window.LANG_INTERFACE = {
     "en": "💡 WARRIOR OF LIGHT",
     "pt": "💡 GUERREIRO DA LUZ"
   },
+  "ui.paladino.prisioneiro": {
+    "en": "Prisoner",
+    "pt": "Prisioneiro"
+  },
+  "ui.paladino.protetor_escolha_aliado": {
+    "en": "🛡️ Protector — Choose the ally (radius {raio})",
+    "pt": "🛡️ Protetor — Escolha o aliado (raio {raio})"
+  },
   "ui.paladino.protetor_so_turno": {
     "en": "Protector can only be used on your turn.",
     "pt": "Só é possível usar Protetor no seu turno."
   },
+  "ui.paladino.regen_aliados_raio": {
+    "en": "+1 HP per turn + allies within {raio}",
+    "pt": "+1 HP por turno + aliados em raio {raio}"
+  },
   "ui.paladino.selecione_bonus": {
     "en": "Select bonuses",
     "pt": "Selecione bônus"
+  },
+  "ui.paladino.split_defensor": {
+    "en": "attacks 50/50 · others {split}",
+    "pt": "ataques 50/50 · outros {split}"
   },
   "ui.pausa.continuar": {
     "en": "Keep playing <kbd>Esc</kbd>",
@@ -5970,6 +7974,58 @@ window.LANG_INTERFACE = {
   "ui.purificacao.veneno": {
     "en": "Poison",
     "pt": "Veneno"
+  },
+  "ui.recursos.acao_bonus": {
+    "en": "Bonus action",
+    "pt": "Ação bônus"
+  },
+  "ui.recursos.acao_bonus_ajuda": {
+    "en": "Activate a quick ability or use a healing potion",
+    "pt": "Ativar uma habilidade rápida ou usar uma poção de cura"
+  },
+  "ui.recursos.acao_principal": {
+    "en": "Main action",
+    "pt": "Ação principal"
+  },
+  "ui.recursos.acao_principal_ajuda": {
+    "en": "Attack, cast a spell, use a technique or interact",
+    "pt": "Atacar, lançar magia, usar técnica ou interagir"
+  },
+  "ui.recursos.ainda_pode": {
+    "en": "You can still",
+    "pt": "Você ainda pode"
+  },
+  "ui.recursos.disponivel": {
+    "en": "available",
+    "pt": "disponível"
+  },
+  "ui.recursos.fora_turno": {
+    "en": "Waiting for your turn",
+    "pt": "Aguardando seu turno"
+  },
+  "ui.recursos.movimento": {
+    "en": "Movement",
+    "pt": "Movimento"
+  },
+  "ui.recursos.movimento_ajuda": {
+    "en": "Move up to {n} square(s)",
+    "pt": "Mover-se até {n} casa(s)"
+  },
+  "ui.recursos.nada": {
+    "en": "No action resource remaining",
+    "pt": "Nenhum recurso de ação restante"
+  },
+  "ui.recursos.quadrados": {
+    "en": "{n} square(s)",
+    "pt": "{n} quadrado(s)"
+  },
+  "ui.recursos.titulo": {
+    "en": "ROUND RESOURCES",
+    "pt": "RECURSOS DA RODADA"
+  },
+  "ui.recursos.usada": {
+    "en": "used",
+    "pt": "usada"
   },
   "ui.refugio.abrir_bau_heroi": {
     "en": "🛏️ Open the hero's chest",
@@ -6139,6 +8195,18 @@ window.LANG_INTERFACE = {
     "en": "TRAPPED IN DEEP WHIRLPOOL",
     "pt": "PRESO NO REDEMOINHO PROFUNDO"
   },
+  "ui.save.abrev.fort": {
+    "en": "Fort",
+    "pt": "Fort"
+  },
+  "ui.save.abrev.ref": {
+    "en": "Ref",
+    "pt": "Ref"
+  },
+  "ui.save.abrev.von": {
+    "en": "Will",
+    "pt": "Von"
+  },
   "ui.save.apagar_confirm": {
     "en": "Delete \"{nome}\"? This is permanent.",
     "pt": "Apagar \"{nome}\"? Isso é permanente."
@@ -6154,6 +8222,14 @@ window.LANG_INTERFACE = {
   "ui.save.codigo_4_letras": {
     "en": "The code must have 4 letters.",
     "pt": "O código deve ter 4 letras."
+  },
+  "ui.save.continuar": {
+    "en": "Continue",
+    "pt": "Continuar"
+  },
+  "ui.save.continuar_sequencia": {
+    "en": "↗ Continue",
+    "pt": "↗ Continuar"
   },
   "ui.save.de_nome_ao_jogo": {
     "en": "Give the game a name.",
@@ -6171,6 +8247,10 @@ window.LANG_INTERFACE = {
     "en": "Ends this Master campaign and keeps it as history",
     "pt": "Encerra esta campanha de Mestre e preserva-a como histórico"
   },
+  "ui.save.entrada_aprovada": {
+    "en": "Campaign entry approved.",
+    "pt": "Entrada na campanha aprovada."
+  },
   "ui.save.entrada_auto": {
     "en": "Automatic",
     "pt": "Automática"
@@ -6178,6 +8258,10 @@ window.LANG_INTERFACE = {
   "ui.save.entrada_novos": {
     "en": "New players joining",
     "pt": "Entrada de novos jogadores"
+  },
+  "ui.save.entrada_recusada": {
+    "en": "Campaign entry rejected.",
+    "pt": "Entrada na campanha recusada."
   },
   "ui.save.entrada_voto": {
     "en": "Vote of the active members",
@@ -6190,6 +8274,10 @@ window.LANG_INTERFACE = {
   "ui.save.heroi": {
     "en": "hero",
     "pt": "herói"
+  },
+  "ui.save.nenhum_jogo_salvo": {
+    "en": "No saved game yet.",
+    "pt": "Nenhum jogo salvo ainda."
   },
   "ui.save.nome_nova_campanha": {
     "en": "Name of the new campaign:",
@@ -6347,6 +8435,10 @@ window.LANG_INTERFACE = {
     "en": "Character already chosen by another player.",
     "pt": "Personagem já escolhido por outro jogador."
   },
+  "ui.selecao.masmorra_lbl": {
+    "en": "Dungeon:",
+    "pt": "Masmorra:"
+  },
   "ui.selecao.masmorra_procedural": {
     "en": "Procedural (random)",
     "pt": "Procedural (aleatória)"
@@ -6355,6 +8447,18 @@ window.LANG_INTERFACE = {
     "en": "🎭 Master — click to become a hero",
     "pt": "🎭 Mestre — clique para virar herói"
   },
+  "ui.selecao.modo_campanha": {
+    "en": "Mode: Campaign",
+    "pt": "Modo: Campanha"
+  },
+  "ui.selecao.modo_masmorra": {
+    "en": "Mode: Dungeon",
+    "pt": "Modo: Masmorra"
+  },
+  "ui.selecao.modo_procedural": {
+    "en": "Mode: Procedural",
+    "pt": "Modo: Procedural"
+  },
   "ui.selecao.partir_aventura": {
     "en": "⚔ Set Out on the Adventure",
     "pt": "⚔ Partir para a Aventura"
@@ -6362,6 +8466,10 @@ window.LANG_INTERFACE = {
   "ui.selecao.percepcao": {
     "en": "👁‍🗨 PERCEPTION",
     "pt": "👁‍🗨 PERCEPÇÃO"
+  },
+  "ui.selecao.personagem_fixo": {
+    "en": " · fixed character",
+    "pt": " · personagem fixo"
   },
   "ui.selecao.raio_visao": {
     "en": "👁 SIGHT RADIUS",
@@ -6567,6 +8675,14 @@ window.LANG_INTERFACE = {
     "en": "Quick Poison",
     "pt": "Veneno Rápido"
   },
+  "ui.selecao.tag_mestre": {
+    "en": " 🎭 Master",
+    "pt": " 🎭 Mestre"
+  },
+  "ui.selecao.title_conta": {
+    "en": "account of {conta}{fixo}",
+    "pt": "conta de {conta}{fixo}"
+  },
   "ui.selecao.ver_caracteristicas_title": {
     "en": "See the hero's traits",
     "pt": "Ver características do herói"
@@ -6675,6 +8791,14 @@ window.LANG_INTERFACE = {
     "en": "THIRST",
     "pt": "SEDE"
   },
+  "ui.status.1_ataque_e_1_reflexos": {
+    "en": "-1 attack and -1 Reflexes",
+    "pt": "-1 ataque e -1 Reflexos"
+  },
+  "ui.status.absorve_dano_elemental": {
+    "en": "absorbs {n} elemental damage",
+    "pt": "absorve {n} dano elemental"
+  },
   "ui.status.acerto_total": {
     "en": "Total to-hit",
     "pt": "Acerto total"
@@ -6686,6 +8810,10 @@ window.LANG_INTERFACE = {
   "ui.status.acido_residual": {
     "en": "🧪 Residual acid",
     "pt": "🧪 Ácido residual"
+  },
+  "ui.status.age_sob_controle_de_outra_criatura": {
+    "en": "acts under another creature's control",
+    "pt": "age sob controle de outra criatura"
   },
   "ui.status.aria": {
     "en": "Character status",
@@ -6779,9 +8907,17 @@ window.LANG_INTERFACE = {
     "en": "Penalty on ranged attacks",
     "pt": "Penalidade em ataques à distância"
   },
+  "ui.status.cegueira_e_penalidade_em_ataques": {
+    "en": "blindness and attack penalty",
+    "pt": "cegueira e penalidade em ataques"
+  },
   "ui.status.classe_armadura": {
     "en": "Armour Class",
     "pt": "Classe de Armadura"
+  },
+  "ui.status.comando": {
+    "en": "🗣️ Command",
+    "pt": "🗣️ Comando"
   },
   "ui.status.combate": {
     "en": "COMBAT",
@@ -6790,6 +8926,10 @@ window.LANG_INTERFACE = {
   "ui.status.concede_visao_no_escuro_e_protege_contra_o": {
     "en": "grants darkvision and protects against the petrifying gaze",
     "pt": "concede visão no escuro e protege contra o olhar petrificante"
+  },
+  "ui.status.dano_por_rodada": {
+    "en": "{dano} damage per round",
+    "pt": "{dano} de dano por rodada"
   },
   "ui.status.defesa_impecavel": {
     "en": "Flawless Defence",
@@ -6819,6 +8959,10 @@ window.LANG_INTERFACE = {
     "en": "effect active: creatures that see you must resist petrification",
     "pt": "efeito ativo: criaturas que o veem devem resistir à petrificação"
   },
+  "ui.status.efeito_de_veneno_ativo": {
+    "en": "poison effect active",
+    "pt": "efeito de veneno ativo"
+  },
   "ui.status.efeito_magico_ativo": {
     "en": "magic effect active",
     "pt": "efeito mágico ativo"
@@ -6830,6 +8974,10 @@ window.LANG_INTERFACE = {
   "ui.status.em_chamas_ef": {
     "en": "Takes damage for {n} round(s)",
     "pt": "Sofre dano por {n} rodada(s)"
+  },
+  "ui.status.embriaguez": {
+    "en": "🍷 Drunkenness",
+    "pt": "🍷 Embriaguez"
   },
   "ui.status.envenenado": {
     "en": "Poisoned",
@@ -6847,25 +8995,25 @@ window.LANG_INTERFACE = {
     "en": "Disadvantage on attacks; limited vision; ranged attacks max 2 squares",
     "pt": "Desvantagem nos ataques; visão limitada; ataques à distância limitados a 2 casas"
   },
-  "ui.status.escuridao_popup_status": {
-    "en": "Darkness penalty active",
-    "pt": "Penalidade de escuridão ativa"
-  },
-  "ui.status.escuridao_popup_desc": {
-    "en": "You entered an area of darkness without darkvision. These effects apply while you are affected:",
-    "pt": "Você entrou em uma área de escuridão sem Visão no Escuro. Enquanto estiver afetado:"
+  "ui.status.escuridao_popup_alcance": {
+    "en": "Affected ranged attacks are limited to 2 squares; your sight is impaired.",
+    "pt": "Ataques à distância afetados ficam limitados a 2 casas; sua visão fica prejudicada."
   },
   "ui.status.escuridao_popup_ataques": {
     "en": "Your attacks have disadvantage: roll two d20s and use the lower result.",
     "pt": "Seus ataques têm desvantagem: role dois d20 e use o menor resultado."
   },
-  "ui.status.escuridao_popup_alcance": {
-    "en": "Affected ranged attacks are limited to 2 squares; your sight is impaired.",
-    "pt": "Ataques à distância afetados ficam limitados a 2 casas; sua visão fica prejudicada."
+  "ui.status.escuridao_popup_desc": {
+    "en": "You entered an area of darkness without darkvision. These effects apply while you are affected:",
+    "pt": "Você entrou em uma área de escuridão sem Visão no Escuro. Enquanto estiver afetado:"
   },
   "ui.status.escuridao_popup_saida": {
     "en": "The penalty ends when you leave the darkness or gain darkvision.",
     "pt": "A penalidade termina ao sair da escuridão ou obter Visão no Escuro."
+  },
+  "ui.status.escuridao_popup_status": {
+    "en": "Darkness penalty active",
+    "pt": "Penalidade de escuridão ativa"
   },
   "ui.status.exaustao": {
     "en": "Exhaustion",
@@ -6931,6 +9079,14 @@ window.LANG_INTERFACE = {
     "en": "ignores physical reductions/immunities",
     "pt": "ignora reduções/imunidades físicas"
   },
+  "ui.status.imobilizado": {
+    "en": "🕸️ Immobilized",
+    "pt": "🕸️ Imobilizado"
+  },
+  "ui.status.imune_a_tipo": {
+    "en": "🛡️ Immune to {tipo}",
+    "pt": "🛡️ Imune a {tipo}"
+  },
   "ui.status.indisponivel": {
     "en": "Status unavailable right now.",
     "pt": "Status indisponível agora."
@@ -6991,6 +9147,10 @@ window.LANG_INTERFACE = {
     "en": "extra movement and action",
     "pt": "movimento e ação extra"
   },
+  "ui.status.movimento_impedido": {
+    "en": "movement prevented",
+    "pt": "movimento impedido"
+  },
   "ui.status.nao_pode_lancar_magias_bonus_musicais_sao": {
     "en": "cannot cast spells; musical bonuses are suppressed",
     "pt": "não pode lançar magias; bônus musicais são suprimidos"
@@ -7007,6 +9167,10 @@ window.LANG_INTERFACE = {
     "en": "the matching condition cannot be applied",
     "pt": "o estado correspondente não pode ser aplicado"
   },
+  "ui.status.olhar_petrificante": {
+    "en": "👁️ Petrifying Gaze",
+    "pt": "👁️ Olhar Petrificante"
+  },
   "ui.status.paralisado": {
     "en": "Paralysed",
     "pt": "Paralisado"
@@ -7015,9 +9179,17 @@ window.LANG_INTERFACE = {
     "en": "Cannot act",
     "pt": "Não pode agir"
   },
+  "ui.status.penalidade_ativa": {
+    "en": "penalty active",
+    "pt": "penalidade ativa"
+  },
   "ui.status.percepcao": {
     "en": "perception",
     "pt": "percepção"
+  },
+  "ui.status.perde_o_turno_acorda_ao_sofrer_dano": {
+    "en": "skips the turn; wakes up when damaged",
+    "pt": "perde o turno; acorda ao sofrer dano"
   },
   "ui.status.perde_o_turno_e_nao_pode_agir": {
     "en": "loses the turn and cannot act",
@@ -7043,9 +9215,17 @@ window.LANG_INTERFACE = {
     "en": "🧪 Regeneration Potion",
     "pt": "🧪 Poção de Regeneração"
   },
+  "ui.status.preso": {
+    "en": "⛓️ Held",
+    "pt": "⛓️ Preso"
+  },
   "ui.status.pronta_para_reagir_a_proxima_magia": {
     "en": "ready to react to the next spell",
     "pt": "pronta para reagir à próxima magia"
+  },
+  "ui.status.reflexos": {
+    "en": "Reflexes",
+    "pt": "Reflexos"
   },
   "ui.status.regeneracao_divina": {
     "en": "Divine Regeneration",
@@ -7111,6 +9291,10 @@ window.LANG_INTERFACE = {
     "en": "🔇 Silence",
     "pt": "🔇 Silêncio"
   },
+  "ui.status.sono": {
+    "en": "🌙 Sleep",
+    "pt": "🌙 Sono"
+  },
   "ui.status.tecla_s": {
     "en": "E key",
     "pt": "tecla E"
@@ -7118,6 +9302,14 @@ window.LANG_INTERFACE = {
   "ui.status.titulo": {
     "en": "📊 STATUS",
     "pt": "📊 STATUS"
+  },
+  "ui.status.totalmente_petrificado": {
+    "en": "fully petrified",
+    "pt": "totalmente petrificado"
+  },
+  "ui.status.veneno_aplicado": {
+    "en": "🗡️ Poison applied",
+    "pt": "🗡️ Veneno aplicado"
   },
   "ui.status.visao_limitada_e_ataques_a_distancia_preju": {
     "en": "limited vision and ranged attacks impaired",
@@ -7127,6 +9319,14 @@ window.LANG_INTERFACE = {
     "en": "darkvision active",
     "pt": "visão no escuro ativa"
   },
+  "ui.status.vontade": {
+    "en": "Will",
+    "pt": "Vontade"
+  },
+  "ui.status.voo": {
+    "en": "🪽 Flight",
+    "pt": "🪽 Voo"
+  },
   "ui.tabuleiro.alvo_invalido_ou_bloqueado": {
     "en": "⚠ Invalid or blocked target",
     "pt": "⚠ Alvo inválido ou bloqueado"
@@ -7135,9 +9335,21 @@ window.LANG_INTERFACE = {
     "en": "Valid target — confirm to use.",
     "pt": "Alvo válido — confirme para usar."
   },
+  "ui.tabuleiro.aproxime_se_para_abrir": {
+    "en": "Move closer to open",
+    "pt": "Aproxime-se para abrir"
+  },
   "ui.tabuleiro.caido": {
     "en": "DOWNED",
     "pt": "CAÍDO"
+  },
+  "ui.tabuleiro.cegueira": {
+    "en": "◼ Blindness",
+    "pt": "◼ Cegueira"
+  },
+  "ui.tabuleiro.clique_aliado": {
+    "en": "💚 Click → {nome}",
+    "pt": "💚 Clique → {nome}"
   },
   "ui.tabuleiro.clique_atacar": {
     "en": "Click to attack",
@@ -7146,6 +9358,18 @@ window.LANG_INTERFACE = {
   "ui.tabuleiro.clique_novamente_para_confirmar": {
     "en": "👣 Click the tile again to confirm · Esc cancels",
     "pt": "👣 Clique novamente na casa para confirmar · Esc cancela"
+  },
+  "ui.tabuleiro.clique_para_abrir": {
+    "en": "Click to open",
+    "pt": "Clique para abrir"
+  },
+  "ui.tabuleiro.clique_seta_atacar": {
+    "en": "⚔ Click → attack",
+    "pt": "⚔ Clique → atacar"
+  },
+  "ui.tabuleiro.clique_usar": {
+    "en": "⚔ Click → {nome}",
+    "pt": "⚔ Clique → {nome}"
   },
   "ui.tabuleiro.clique_voltar_cidade": {
     "en": "Click to return to the city",
@@ -7163,6 +9387,10 @@ window.LANG_INTERFACE = {
     "en": "Exit Stairs",
     "pt": "Escada de Saída"
   },
+  "ui.tabuleiro.fora_alcance_melee": {
+    "en": "⚠ Out of range (melee)",
+    "pt": "⚠ Fora de alcance (corpo a corpo)"
+  },
   "ui.tabuleiro.heroi": {
     "en": "Hero",
     "pt": "Herói"
@@ -7171,13 +9399,13 @@ window.LANG_INTERFACE = {
     "en": "Hero down",
     "pt": "Herói derrotado"
   },
-  "ui.tabuleiro.heroi_derrotado_2": {
-    "en": "Hero down",
-    "pt": "Herói derrotado"
-  },
   "ui.tabuleiro.inicio": {
     "en": "{classe} START",
     "pt": "INÍCIO {classe}"
+  },
+  "ui.tabuleiro.paralisia": {
+    "en": "❄ Paralysis",
+    "pt": "❄ Paralisia"
   },
   "ui.tabuleiro.perto_da_escada": {
     "en": "Get closer to the stairs to leave.",
@@ -7207,9 +9435,37 @@ window.LANG_INTERFACE = {
     "en": "You can only leave on your turn.",
     "pt": "Só é possível sair no seu turno."
   },
+  "ui.tabuleiro.sono": {
+    "en": "🌙 Sleep",
+    "pt": "🌙 Sono"
+  },
+  "ui.tabuleiro.veneno": {
+    "en": "☠ Poison",
+    "pt": "☠ Veneno"
+  },
+  "ui.tecnica.aliado_4_casas": {
+    "en": "{icone} {nome} — ally (4 squares)",
+    "pt": "{icone} {nome} — aliado (4 casas)"
+  },
   "ui.tecnica.automatica": {
     "en": "This technique is automatic.",
     "pt": "Esta técnica é automática."
+  },
+  "ui.tecnica.escolha_o_2_alvo": {
+    "en": "{icone} {nome} — choose the 2nd target",
+    "pt": "{icone} {nome} — escolha o 2º alvo"
+  },
+  "ui.tecnica.escolha_o_aliado": {
+    "en": "{icone} {nome} — choose the ally",
+    "pt": "{icone} {nome} — escolha o aliado"
+  },
+  "ui.tecnica.escolha_o_par": {
+    "en": "{icone} {nome} — choose the partner",
+    "pt": "{icone} {nome} — escolha o par"
+  },
+  "ui.tecnica.inimigo_adjacente": {
+    "en": "{icone} {nome} — adjacent enemy",
+    "pt": "{icone} {nome} — inimigo adjacente"
   },
   "ui.tecnica.recarrega_em": {
     "en": "Technique recharges in {n} round(s).",
@@ -7218,6 +9474,14 @@ window.LANG_INTERFACE = {
   "ui.tecnica.so_turno_masmorra": {
     "en": "The technique can only be used on your turn in the dungeon.",
     "pt": "A técnica só pode ser usada no seu turno na masmorra."
+  },
+  "ui.tecnica.sorte_confirm": {
+    "en": "🎲 LUCK\n\n{texto}",
+    "pt": "🎲 SORTE\n\n{texto}"
+  },
+  "ui.tecnica.usar_sorte": {
+    "en": "Use Luck?",
+    "pt": "Usar Sorte?"
   },
   "ui.tooltip.acao": {
     "en": "Action",
@@ -7243,6 +9507,10 @@ window.LANG_INTERFACE = {
     "en": "AC Bonus",
     "pt": "Bônus CA"
   },
+  "ui.tooltip.cura_por_uso": {
+    "en": "Healing per use",
+    "pt": "Cura por uso"
+  },
   "ui.tooltip.dano": {
     "en": "Damage",
     "pt": "Dano"
@@ -7262,10 +9530,6 @@ window.LANG_INTERFACE = {
   "ui.tooltip.efeito": {
     "en": "Effect",
     "pt": "Efeito"
-  },
-  "ui.tooltip.cura_por_uso": {
-    "en": "Healing per use",
-    "pt": "Cura por uso"
   },
   "ui.tooltip.efeito_parcial": {
     "en": "partial effect on success",
@@ -7298,6 +9562,10 @@ window.LANG_INTERFACE = {
   "ui.tooltip.municao": {
     "en": "Ammunition",
     "pt": "Munição"
+  },
+  "ui.tooltip.n_por_rodada": {
+    "en": "{n} per round",
+    "pt": "{n} por rodada"
   },
   "ui.tooltip.nao_permitido": {
     "en": "Not allowed",
@@ -7342,6 +9610,10 @@ window.LANG_INTERFACE = {
   "ui.tooltip.reducao_dano_val": {
     "en": "−{n} per attack/effect, no per-round cap",
     "pt": "−{n} por ataque/efeito, sem limite por rodada"
+  },
+  "ui.tooltip.reduz_atributo_em": {
+    "en": "Reduces {atributo} by {valor}",
+    "pt": "Reduz {atributo} em {valor}"
   },
   "ui.tooltip.requer_duas_maos": {
     "en": "Requires two hands",

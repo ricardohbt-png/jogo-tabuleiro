@@ -205,6 +205,16 @@
           if (typeof o[campo] === 'string') { o[campo] = t(kDesc); break; }
         }
       }
+      // `custo` é campo só do GRIMORIO_CLIENT (o servidor não o manda), então a
+      // chave é sempre ui.<família>.<id>.custo — sem par cat.*.
+      if (baseUi && !soNome && typeof o.custo === 'string' && tem(baseUi + '.custo')) {
+        o.custo = t(baseUi + '.custo');
+      }
+      // `custo` é campo só do GRIMORIO_CLIENT (o servidor não o manda), então a
+      // chave é sempre ui.<família>.<id>.custo — sem par cat.*.
+      if (baseUi && !soNome && typeof o.custo === 'string' && tem(baseUi + '.custo')) {
+        o.custo = t(baseUi + '.custo');
+      }
       for (const k in o) anda(o[k], k);
     })(obj, null);
     return obj;

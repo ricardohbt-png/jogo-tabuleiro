@@ -512,6 +512,14 @@ window.LANG_NARRACAO = {
     "en": "🎵 **{heroi}**'s Heroic Song [{labels}] — upkeep 🍖-{custo_fome} 💧-{custo_sede}.",
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
   },
+  "narracao.cancao_monstro.entoa": {
+    "en": "{nome} sings the Heroic Song and strengthens the allied monsters.",
+    "pt": "{nome} entoa a Canção Heroica e fortalece os monstros aliados."
+  },
+  "narracao.cancao_monstro.entoa_atributos": {
+    "en": "{nome} sings the Heroic Song ({atributos}) for the allied monsters.",
+    "pt": "{nome} entoa a Canção Heroica ({atributos}) para os monstros aliados."
+  },
   "narracao.cauda_em_de_dano_reflexos_vs_cd": {
     "en": "🦂 Tail on **{vitima}**: **{dano}** damage{e_derrubado_if_not_passo}! (Reflex {st} vs DC {cd})",
     "pt": "🦂 Cauda em **{vitima}**: **{dano}** de dano{e_derrubado_if_not_passo}! (Reflexos {st} vs CD {cd})"
@@ -648,6 +656,18 @@ window.LANG_NARRACAO = {
     "en": "🛑 **{alvo_get_name_alvo}**'s **Counterspell** wins the opposed check ({meu} vs {op}) and cancels the spell!",
     "pt": "🛑 **Contramágica** de **{alvo_get_name_alvo}** vence o teste oposto ({meu} vs {op}) e cancela a magia!"
   },
+  "narracao.corpo_pesado.dissipa": {
+    "en": "The Curse of the Heavy Body fades from {alvo}.",
+    "pt": "A Maldição do Corpo Pesado se dissipa de {alvo}."
+  },
+  "narracao.corpo_pesado.resiste": {
+    "en": "{alvo} resists the Curse of the Heavy Body.",
+    "pt": "{alvo} resiste à Maldição do Corpo Pesado."
+  },
+  "narracao.corpo_pesado.sofre": {
+    "en": "{alvo} suffers the Curse of the Heavy Body: their Hunger and Thirst costs are doubled for {n} rounds.",
+    "pt": "{alvo} sofre a Maldição do Corpo Pesado: seus custos de Fome e Sede ficam duplicados por {n} rodadas."
+  },
   "narracao.corrosao_viva_em_agora_de_dano_por_turno": {
     "en": "☣️ **Living Corrosion** on **{heroi}** — now **{n}** damage per turn (2 rounds)!",
     "pt": "☣️ **Corrosão Viva** em **{heroi}** — agora **{n}** de dano por turno (2 rodadas)!"
@@ -720,6 +740,10 @@ window.LANG_NARRACAO = {
     "en": "🦷 **{label}**: **{heroi}**'s {nome_peca} withstood the blow without taking damage!",
     "pt": "🦷 **{label}**: {nome_peca} de **{heroi}** resistiu ao golpe sem sofrer dano!"
   },
+  "narracao.definhar.area": {
+    "en": "{caster} withers the life in a {lado}x{lado} area: {afetados} target(s) affected and {imunes} immune.",
+    "pt": "{caster} faz a vida definhar em uma área {lado}x{lado}: {afetados} alvo(s) afetado(s) e {imunes} imune(s)."
+  },
   "narracao.deixou_moeda_s": {
     "en": "💰 **{monstro}** dropped {gold} coin(s).",
     "pt": "💰 **{monstro}** deixou {gold} moeda(s)."
@@ -775,6 +799,38 @@ window.LANG_NARRACAO = {
   "narracao.desfere_um_golpe_brutal_para_finalizar_2": {
     "en": "💥 **{monstro}** delivers a **Brutal Strike** to finish it off (+2 damage)!",
     "pt": "💥 **{monstro}** desfere um **Golpe Brutal** para finalizar (+2 dano)!"
+  },
+  "narracao.desnutricao.efeito_ataque": {
+    "en": "-1 Attack",
+    "pt": "-1 Ataque"
+  },
+  "narracao.desnutricao.efeito_dano": {
+    "en": "-2 Damage",
+    "pt": "-2 Dano"
+  },
+  "narracao.desnutricao.efeito_fome": {
+    "en": "-{n} Hunger",
+    "pt": "-{n} Fome"
+  },
+  "narracao.desnutricao.efeito_movimento": {
+    "en": "-1 Movement for {n} rounds",
+    "pt": "-1 Movimento por {n} rodadas"
+  },
+  "narracao.desnutricao.efeito_resistiu": {
+    "en": "resisted Malnutrition",
+    "pt": "resistiu à Desnutrição"
+  },
+  "narracao.desnutricao.efeito_so_atacar_mover": {
+    "en": "can only attack or move for {n} rounds",
+    "pt": "pode apenas atacar ou movimentar por {n} rodadas"
+  },
+  "narracao.desnutricao.resiste": {
+    "en": "{alvo} resists Malnutrition: {efeitos}.",
+    "pt": "{alvo} resiste à Desnutrição: {efeitos}."
+  },
+  "narracao.desnutricao.sofre": {
+    "en": "{alvo} suffers the effects of Malnutrition: {efeitos}.",
+    "pt": "{alvo} sofre os efeitos da Desnutrição: {efeitos}."
   },
   "narracao.desperta": {
     "en": "🌙 **{monstro}** wakes up.",
@@ -1147,6 +1203,10 @@ window.LANG_NARRACAO = {
   "narracao.esta_imobilizado_e_perdera_o_proximo_tur": {
     "en": "🕸️ **{tgt_name}** is immobilized and will lose the next turn!",
     "pt": "🕸️ **{tgt_name}** está imobilizado e perderá o próximo turno!"
+  },
+  "narracao.esta_imune_nao_faz_efeito": {
+    "en": "🛡️ **{alvo}** is immune — **{magia}** has no effect.",
+    "pt": "🛡️ **{alvo}** está imune — **{magia}** não faz efeito."
   },
   "narracao.esta_imunizado_contra_doencas": {
     "en": "🛡️ **{p_get_name_o_heroi}** is immune to diseases.",
@@ -2392,6 +2452,14 @@ window.LANG_NARRACAO = {
     "en": "💧 **{caster}** sates **{alvo}** (+{fb} hunger, +{sb} thirst).",
     "pt": "💧 **{caster}** sacia **{alvo}** (+{fb} fome, +{sb} sede)."
   },
+  "narracao.sacudida_jurassica": {
+    "en": "🦖 **{monstro}** shakes **{alvo}** violently in its jaws and hurls them away! (Jurassic Shake)",
+    "pt": "🦖 **{monstro}** sacode **{alvo}** violentamente nas mandíbulas e o arremessa! (Sacudida Jurássica)"
+  },
+  "narracao.sacudida_jurassica_colisao": {
+    "en": "💥 **{alvo}** slams into an obstacle and takes {dano} more damage!",
+    "pt": "💥 **{alvo}** se choca contra um obstáculo e sofre {dano} de dano a mais!"
+  },
   "narracao.sai_das_sombras": {
     "en": "🌑 **{heroi}** steps out of the shadows.",
     "pt": "🌑 **{heroi}** sai das sombras."
@@ -2728,6 +2796,14 @@ window.LANG_NARRACAO = {
     "en": "💥 **{monstro}** rolls a **1** on the throw — the dagger **breaks**!",
     "pt": "💥 **{monstro}** tira **1** no arremesso — a adaga **se quebra**!"
   },
+  "narracao.tiranossauro_cauda_derruba": {
+    "en": "🦖 **{monstro}** knocks **{alvo}** down with its tail! (d20={d20}{bonus}={total} vs DC {dc}) — no movement next turn.",
+    "pt": "🦖 **{monstro}** derruba **{alvo}** com a cauda! (d20={d20}{bonus}={total} vs CD {dc}) — sem movimento no próximo turno."
+  },
+  "narracao.tiranossauro_resiste_cauda": {
+    "en": "🦖 **{alvo}** keeps their footing against the Tyrannosaurus's tail! (Reflex {total} vs DC {dc})",
+    "pt": "🦖 **{alvo}** resiste à cauda do Tiranossauro! (Reflexos {total} vs CD {dc})"
+  },
   "narracao.torna_se_guerreiro_da_luz_visao_ataque_d": {
     "en": "💡 **{heroi}** becomes a **Warrior of Light** | vision+{bonus_validos_visao} attack+{bonus_validos_ataque} damage+{bonus_validos_dano} AC+{bonus_validos_ca} (upkeep 🍖-{custo_fome} 💧-{custo_sede}).",
     "pt": "💡 **{heroi}** torna-se **Guerreiro da Luz** | visão+{bonus_validos_visao} ataque+{bonus_validos_ataque} dano+{bonus_validos_dano} CA+{bonus_validos_ca} (manutenção 🍖-{custo_fome} 💧-{custo_sede})."
@@ -2935,6 +3011,14 @@ window.LANG_NARRACAO = {
   "narracao.varre_a_cauda_pela_retaguarda": {
     "en": "🦂 **{monstro}** sweeps its tail through the back ranks!",
     "pt": "🦂 **{monstro}** varre a cauda pela retaguarda!"
+  },
+  "narracao.vinculo_maldito.cria": {
+    "en": "{caster} forges a Cursed Bond of Pain with {alvo} for {n} rounds. Each bond transfers 25% of the damage taken.",
+    "pt": "{caster} cria um Vínculo Maldito da Dor com {alvo} por {n} rodadas. Cada vínculo transfere 25% do dano sofrido."
+  },
+  "narracao.vinculo_maldito.resiste": {
+    "en": "{alvo} resists the Cursed Bond of Pain.",
+    "pt": "{alvo} resiste ao Vínculo Maldito da Dor."
   },
   "narracao.vira_a_fome_sede_mas_fica_alegre_1_ataqu": {
     "en": "{item_emoji} **{heroi}** downs the **{item}** (+{val} hunger/thirst), but turns merry: **-1 attack** for 10 rounds!",
