@@ -5,8 +5,8 @@
       "id": "nova_cena",
       "name": "Nova cena",
       "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
-      "music": "assets/cenas/audio/a_song_of_old_stones.mp3",
-      "ambience": "assets/cenas/audio/a_song_of_old_stones.mp3",
+      "music": "assets/story/a_song_of_old_stones.mp3",
+      "ambience": "assets/story/a_song_of_old_stones.mp3",
       "start": "ev_z3lsbn",
       "events": [
         {
@@ -50,7 +50,7 @@
           "next": "",
           "mandatory": false,
           "data": {
-            "background": "assets/cenas/fundos/mercado.png",
+            "background": "assets/story/mercado.png",
             "image": "assets/cenas/personagens/bardo4.png",
             "w": 90.26828672827743,
             "h": 208.72358782181573,
@@ -63,8 +63,8 @@
     "ad_hadal": {
       "id": "ad_hadal",
       "name": "Ad´Hadal",
-      "background": "assets/cenas/fundos/WhatsApp_Image_2026-04-02_at_22.15.40__1_.jpeg",
-      "music": "assets/cenas/audio/a_song_of_old_stones.mp3",
+      "background": "assets/story/WhatsApp_Image_2026-04-02_at_22.15.40__1_.jpeg",
+      "music": "assets/story/a_song_of_old_stones.mp3",
       "ambience": "",
       "start": "inicio",
       "events": [
@@ -95,7 +95,7 @@
           "next": "2",
           "mandatory": false,
           "data": {
-            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__3_.jpeg",
+            "image": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__3_.jpeg",
             "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.32.jpeg"
           }
         },
@@ -129,7 +129,7 @@
           "next": "5",
           "mandatory": false,
           "data": {
-            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__1_.jpeg",
+            "image": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__1_.jpeg",
             "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__2_.jpeg"
           }
         },
@@ -141,7 +141,7 @@
           "next": "4",
           "mandatory": false,
           "data": {
-            "image": "assets/cenas/personagens/WhatsApp_Image_2026-08-04_at_21.56.31__2_.jpeg",
+            "image": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__2_.jpeg",
             "background": "assets/cenas/fundos/WhatsApp_Image_2026-08-04_at_21.56.31__3_.jpeg"
           }
         },

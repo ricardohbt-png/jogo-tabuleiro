@@ -2,7 +2,7 @@
   "alva_e_luz": {
     "taverna": {
       "nome": "Taverna",
-      "background": "assets/tavern/taverna.png",
+      "background": "assets/city/taverna.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "assets/tavern/frequentadores.png",
@@ -285,7 +285,7 @@
     },
     "mercado_28bt": {
       "nome": "mercado",
-      "background": "assets/tavern/mercano.png",
+      "background": "assets/story/mercado.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
@@ -336,7 +336,7 @@
     },
     "refugio_dos_herois_y09i": {
       "nome": "Refugio dos Heróis",
-      "background": "assets/tavern/fazenda_do_leste.png",
+      "background": "assets/city/refugio_fazenda_do_leste.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
@@ -344,7 +344,7 @@
     },
     "area_compartilhada_48uz": {
       "nome": "Area compartilhada",
-      "background": "assets/tavern/area_compartilhada.png",
+      "background": "assets/city/refugio_area_compartilhada.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
@@ -352,7 +352,7 @@
     },
     "quarto_do_heroi_a7kb": {
       "nome": "Quarto do herói",
-      "background": "assets/tavern/quarto_heroi.png",
+      "background": "assets/city/refugio_quarto_heroi.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
@@ -719,7 +719,7 @@
         {
           "id": "patrono_fundo",
           "name": "Bardo Misterioso",
-          "image": "assets/tavern/bardo3.png",
+          "image": "assets/cenas/personagens/bardo3.png",
           "x": 63.9,
           "y": 33.8,
           "w": 25.3,
