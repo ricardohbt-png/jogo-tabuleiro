@@ -36,3 +36,6 @@ assets_originais/
 # Saida temporaria do tools/normalizar_herois.py (reguas/segmentacoes) e backups do Blender
 tools/_norm/
 *.blend1
+
+# Rascunho do tools/gerar_via_tripo.py (vistas + download da API)
+assets/pawns/_tripo_tmp/
