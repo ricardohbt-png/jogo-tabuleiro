@@ -3075,6 +3075,24 @@ function _gamepadBackFromShop(){
 //    servidor (GS.guildBuy → guild_buy) e o city_state re-broadcast reabre/
 //    re-renderiza o painel. Equipar técnica é feito na FICHA (não aqui).
 // ═══════════════════════════════════════════════════════════════════════════
+// Especializações que compartilham uma `linha` grande (ex.: as ~30 Lendas do
+// Bardo, todas com linha "bardo_lendas") viram um grupo colapsável para não
+// afogar a aba. Ícones conhecidos por linha; o rótulo vem de ui.guilda.linha.<key>
+// (resolvido no render, nunca num const de módulo — t() ainda não existe no boot).
+const GUILD_LINE_ICONS = { bardo_lendas: '📖' };
+const GUILD_GROUP_THRESHOLD = 6;  // linhas com mais itens que isso colapsam
+const _guildOpenGroups = new Set();  // linhas expandidas pelo usuário (persiste re-render)
+
+function _guildToggleGroup(linha, open){
+  if(open) _guildOpenGroups.add(linha); else _guildOpenGroups.delete(linha);
+}
+
+function _guildLineLabel(key){
+  const seg = String(key).split('_').slice(1).join(' ') || String(key);
+  const fallback = seg.charAt(0).toUpperCase() + seg.slice(1);
+  return { icon: GUILD_LINE_ICONS[key] || '📚', label: _rotulo(key, 'ui.guilda.linha', fallback) };
+}
+
 function _guildItemRow(i, owned, me){
   const lista = i.categoria === 'tecnica' ? (owned.tecnicas || []) : (owned.especializacoes || []);
   const has   = lista.includes(i.id);
@@ -3102,6 +3120,43 @@ function _guildItemRow(i, owned, me){
     ${action}</div>`;
 }
 
+// Renderiza as especializações agrupando por `linha`: grupos pequenos ficam
+// planos (aparência atual das outras classes intacta); grupos grandes viram um
+// <details> colapsável, ordenado por preço (tier) e depois nome.
+function _guildSpecHtml(specs, owned, me){
+  if(!specs.length) return `<div class="guild-empty">— em breve —</div>`;
+  const order = [];
+  const groups = new Map();
+  for(const i of specs){
+    const key = i.linha || i.id;
+    if(!groups.has(key)){ groups.set(key, []); order.push(key); }
+    groups.get(key).push(i);
+  }
+  const ownedSpecs = owned.especializacoes || [];
+  let html = '';
+  for(const key of order){
+    const items = groups.get(key);
+    if(items.length <= GUILD_GROUP_THRESHOLD){
+      html += items.map(i => _guildItemRow(i, owned, me)).join('');
+      continue;
+    }
+    const meta = _guildLineLabel(key);
+    const ownedCount = items.filter(i => ownedSpecs.includes(i.id)).length;
+    const sorted = items.slice().sort((a, b) =>
+      (a.preco - b.preco) || String(a.nome).localeCompare(String(b.nome)));
+    const open = _guildOpenGroups.has(key) ? ' open' : '';
+    html += `<details class="guild-group"${open} ontoggle="_guildToggleGroup('${key}', this.open)">
+      <summary class="guild-group-sum">
+        <span class="ggl-icon">${meta.icon}</span>
+        <span class="ggl-label">${meta.label}</span>
+        <span class="ggl-count">${ownedCount}/${items.length}</span>
+      </summary>
+      <div class="guild-group-body">${sorted.map(i => _guildItemRow(i, owned, me)).join('')}</div>
+    </details>`;
+  }
+  return html;
+}
+
 function _renderGuild(){
   const modal = $('guild-modal'); if(!modal) return;
   const me = GS.me || ((GS.cityState && GS.cityState.players) || []).find(p => p.id === GS.myPid);
@@ -3114,7 +3169,7 @@ function _renderGuild(){
   const sec = (arr) => arr.length
     ? arr.map(i => _guildItemRow(i, owned, me)).join('')
     : `<div class="guild-empty">— em breve —</div>`;
-  const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = sec(specs);
+  const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = _guildSpecHtml(specs, owned, me);
   // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
   // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
   const _faixaLabel = { 3:t('ui.hud.recarga_curta_3_rodadas'), 5:t('ui.guilda.recarga_media'),

@@ -2655,6 +2655,10 @@ window.LANG_INTERFACE = {
     "en": "Owned ✓",
     "pt": "Possuído ✓"
   },
+  "ui.guilda.linha.bardo_lendas": {
+    "en": "Legends",
+    "pt": "Lendas"
+  },
   "ui.guilda.recarga_media": {
     "en": "Medium Recharge (5 rounds)",
     "pt": "Recarga Média (5 rodadas)"
