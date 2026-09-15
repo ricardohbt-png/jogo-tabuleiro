@@ -446,45 +446,6 @@ const GS = (() => {
     return heroi;
   }
 
-  // Validação de equipar item (regras de classe / slot / duas mãos vs escudo).
-  // `item.permitidoPara`: lista de heroKeys autorizados (ausente = sem restrição —
-  //   ex.: varinhas terão permitidoPara: ['lewis','pedro'] e slot 'secundario').
-  // `item.slot`: slot fixo do item (se declarado). `item.duasMaos`: arma 2 mãos.
-  // `item.tipo`: ex. 'escudo'. Loga via 'survivalLog' (adicionarLog) — DOM-free.
-  function podeEquipar(heroi, item, slot) {
-    const nome = heroi.name || heroi.nome || 'Herói';
-
-    // Restrição de classe/herói ('todos' = curinga; ausência = sem restrição)
-    if (Array.isArray(item.permitidoPara) &&
-        !item.permitidoPara.includes('todos') &&
-        !item.permitidoPara.includes(heroi.key)) {
-      adicionarLog(_t('ui.equipar.classe_nao_usa', `❌ ${nome} não pode usar ${item.nome}`, { heroi: nome, item: item.nome }));
-      return false;
-    }
-
-    // Compatibilidade de slot (só valida se o item declara um slot fixo)
-    if (item.slot && item.slot !== slot) {
-      adicionarLog(_t('ui.equipar.slot_incompativel', `❌ ${item.nome} não pode ser equipado neste slot`, { item: item.nome }));
-      return false;
-    }
-
-    // Arma de duas mãos vs escudo já equipado na secundária
-    if (item.duasMaos && heroi.equipado?.secundario?.tipo === 'escudo') {
-      adicionarLog(_t('ui.equipar.duas_maos', `❌ ${item.nome} requer duas mãos — remova o escudo primeiro`, { item: item.nome }));
-      return false;
-    }
-
-    // Escudo na secundária vs arma de duas mãos já equipada
-    if (slot === 'secundario' && item.tipo === 'escudo') {
-      if (heroi.equipado?.arma?.duasMaos) {
-        adicionarLog(_t('ui.equipar.escudo_com_duas_maos', '❌ Não pode usar escudo com arma de duas mãos'));
-        return false;
-      }
-    }
-
-    return true;
-  }
-
   /*
    * LEGENDS FOR HIRE — LOCAIS DE VENDA
    *
@@ -762,82 +723,6 @@ const GS = (() => {
       _heroiAtivoCache[pid] = h;
     }
     return _heroiAtivoCache[pid];
-  }
-
-  // Usa um consumível: RECUPERA fome/sede do herói local (cap no máximo),
-  // sai do colapso se aplicável, loga e notifica para as barras atualizarem.
-  // Retorna o herói de sobrevivência afetado (ou null).
-  function aplicarConsumivel(item) {
-    if (!item) return null;
-    const h = _ensureSurvival(myPid || '_local');
-    if (!h) return null;
-    const max = SOBREVIVENCIA_CONFIG.maximo;
-    const fAntes = h.fome, sAntes = h.sede;
-    if (item.fome) h.fome = Math.min(max, h.fome + item.fome);
-    if (item.sede) h.sede = Math.min(max, h.sede + item.sede);
-    if (h.emColapsoTotal && (h.fome > 0 || h.sede > 0)) {
-      h.emColapsoTotal = false;
-      h.contadorMorte = 0;
-    }
-    adicionarLog(
-      `🍽️ ${h.name} usou ${item.nome} — ` +
-      `Fome: ${fAntes}→${h.fome} | Sede: ${sAntes}→${h.sede}`
-    );
-    _emit('survivalChanged', myPid);
-    return h;
-  }
-
-  // Slot de equipamento (heroi.equipado) para um item do catálogo.
-  // null = não-equipável (consumível, munição).
-  function _slotDoItem(item) {
-    switch (item.tipo) {
-      case 'arma':
-      case 'armaDistancia': return 'arma';
-      case 'armadura':      return 'armadura';
-      case 'escudo':
-      case 'secundario':
-      case 'varinha':       return 'secundario';
-      case 'itemMagico':    return 'magico';     // → magico1 / magico2
-      default:              return null;
-    }
-  }
-
-  // Equipa um item comprado (getHeroiAtivo().inventario[index]) no herói local.
-  // Valida via podeEquipar. Troca com o ocupante do slot. Retorna true/false.
-  function equiparItemComprado(index) {
-    const heroi = getHeroiAtivo();
-    const item = heroi && heroi.inventario ? heroi.inventario[index] : null;
-    if (!item) return false;
-    const fam = _slotDoItem(item);
-    if (!fam) { adicionarLog(_t('ui.equipar.sem_slot', `❌ ${item.nome} não pode ser equipado`, { item: item.nome })); return false; }
-
-    let slot = fam;
-    if (fam === 'magico') {
-      slot = !heroi.equipado.magico1 ? 'magico1'
-           : (!heroi.equipado.magico2 ? 'magico2' : 'magico1');
-    }
-    // Normaliza o slot fixo do item (ex.: 'magico') para o slot concreto.
-    const itemV = (item.slot && item.slot !== slot) ? { ...item, slot } : item;
-    if (!podeEquipar(heroi, itemV, slot)) return false;   // podeEquipar loga a recusa
-
-    const ocupante = heroi.equipado[slot] || null;
-    heroi.equipado[slot] = item;
-    heroi.inventario[index] = ocupante;        // ocupante volta ao inventário (ou null)
-    adicionarLog(`🔧 ${heroi.name || heroi.nome || 'Herói'} equipou ${item.nome}`);
-    return true;
-  }
-
-  // Desequipa um slot do herói local, devolvendo o item ao inventário (1º livre).
-  function desequiparItemComprado(slot) {
-    const heroi = getHeroiAtivo();
-    const item = heroi && heroi.equipado ? heroi.equipado[slot] : null;
-    if (!item) return false;
-    const livre = heroi.inventario.findIndex(s => s === null);
-    if (livre === -1) { adicionarLog(_t('ui.equipar.bolsa_cheia', '❌ Inventário cheio — sem espaço para desequipar')); return false; }
-    heroi.equipado[slot] = null;
-    heroi.inventario[livre] = item;
-    adicionarLog(`📤 ${heroi.name || heroi.nome || 'Herói'} desequipou ${item.nome}`);
-    return true;
   }
 
   // ── Portas: conjuntos abertas/fechadas a partir das salas ──────────────────
@@ -3086,14 +2971,10 @@ const GS = (() => {
     HERO_DATA,
     EQUIPAMENTOS_INICIAIS,
     inicializarHeroi,
-    podeEquipar,
 
     // ── Catálogo de itens / loja ──
     CATALOGO_ITENS,
     getHeroiAtivo,
-    aplicarConsumivel,
-    equiparItemComprado,
-    desequiparItemComprado,
     classToHeroKey: _classToHeroKey,
     adicionarLog,
 

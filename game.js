@@ -348,11 +348,6 @@ document.body.innerHTML = `
   <div id="city-time-badge" data-i18n="ui.cidade.carregando">⏳ Carregando…</div>
   <div id="city-bldg-tooltip" style="display:none"></div>
   <div id="city-hero-bar"></div>
-  <div id="city-dungeon-bar">
-    <span id="city-host-hint"></span>
-    <button class="btn-enter-dungeon" id="btn-enter-dungeon"
-            onclick="triggerDungeonEntrance()" data-i18n="ui.cidade.entrar_masmorra">⚔ Entrar na Masmorra</button>
-  </div>
   <!-- Legacy IDs kept for shop/compat -->
   <div id="city-players-bar" style="display:none"></div>
 </div>
@@ -1484,13 +1479,6 @@ function _cityMouseMove(e){
     if(id) _cityShowTooltip(id,e); else _cityHideTooltip();
   } else if(id) _cityMoveTooltip(e);
 }
-// Mapeamento de ids do raycaster (meshes 3D) → ids das lojas (abrirLoja).
-// Corrige a divergência mercador→mercado sem alterar os ids dos meshes 3D.
-const MAPA_IDS_LOJA = {
-  ferreiro: 'ferreiro',
-  taverna:  'taverna',
-  mercador: 'mercado'   // corrige a divergência
-};
 
 // O raycaster dos meshes 3D conhece tipo de prédio, não ponto. Resolve para o
 // primeiro ponto daquele tipo na cidade atual.
@@ -1503,8 +1491,7 @@ function _cityClick(e){
   if(!_city3) return;
   const id=_cityPickBldg(e);
   if(!id) return;
-  if(id==='dungeon') triggerDungeonEntrance();
-  else if(id==='caravana') showWorldMap();
+  if(id==='caravana') showWorldMap();
   else if(id==='guilda') toast(t('ui.cidade.guilda_missoes_em_breve'),'var(--gold)');
   else _cityHotspotClick(_pontoDoTipo(id), id);
 }
@@ -1563,48 +1550,6 @@ function _updateCityTimeBadge(){
                 tod<0.30?'🌅 Amanhecer':
                 tod<0.55?t('ui.cidade.pleno_dia'):
                 tod<0.70?'🌇 Entardecer':'🌆 Anoitecer';
-}
-
-function triggerDungeonEntrance(){
-  if(!GS.ws||GS.ws.readyState!==1){
-    toast(t('ui.conexao.sem_servidor_reinicie'),'var(--red)'); return;
-  }
-  getAudioContext();
-  // Web Audio: heavy gate sound
-  try{
-    const actx=getAudioContext();
-    if(actx){
-      const now=actx.currentTime;
-      // Sawtooth gate creak: 80hz → 40hz
-      const osc=actx.createOscillator(), g=actx.createGain();
-      osc.type='sawtooth';
-      osc.frequency.setValueAtTime(80,now);
-      osc.frequency.linearRampToValueAtTime(40,now+1.0);
-      g.gain.setValueAtTime(0.4,now); g.gain.linearRampToValueAtTime(0,now+1.3);
-      osc.connect(g); g.connect(_sfxBus());
-      osc.start(now); osc.stop(now+1.3);
-      // Low rumble
-      const osc2=actx.createOscillator(), g2=actx.createGain();
-      osc2.type='sine'; osc2.frequency.value=38;
-      g2.gain.setValueAtTime(0.28,now); g2.gain.linearRampToValueAtTime(0,now+1.6);
-      osc2.connect(g2); g2.connect(_sfxBus());
-      osc2.start(now); osc2.stop(now+1.6);
-    }
-  }catch(ex){}
-
-  // Fade overlay
-  let fo=document.getElementById('city-fade-overlay');
-  if(!fo){ fo=document.createElement('div'); fo.id='city-fade-overlay'; fo.className='city-fade-overlay'; document.body.appendChild(fo); }
-
-  // Camera zoom into portal
-  if(_city3){
-    _city3.zoomTween={startFV:_city3.fV, endFV:_city3.fV*0.3, tx:12,tz:26, duration:1.5, elapsed:0, onDone:null};
-  }
-
-  requestAnimationFrame(()=>{
-    fo.classList.add('on');
-    setTimeout(()=>{ send({type:'enter_dungeon'}); }, 900);
-  });
 }
 
 function destroyCity3D(){
@@ -1749,7 +1694,7 @@ function _cityHotspotClick(pointId, type){
     GS.openRefugio(); return;
   }
   // openShop espera o id do prédio cru (ex.: 'mercador'); é o que o servidor usa
-  // como chave da loja. (NÃO usar MAPA_IDS_LOJA: 'mercado' aponta p/ loja vazia.)
+  // como chave da loja ('mercado' apontaria p/ loja vazia).
   openShop(pointId, tipo);
 }
 
@@ -1953,8 +1898,6 @@ function _refreshCityLocation(msg){
     btn.innerHTML='<span class="ch-glow" aria-hidden="true"></span><span class="ch-pin"><span class="ch-emoji">'+emoji+'</span><span class="ch-name">'+label+'</span></span>';
     btn.addEventListener('click',()=>_cityHotspotClick(id, point.type)); _cityImg.hotWrap.appendChild(btn);
   });
-  const dungeonBar = document.getElementById('city-dungeon-bar');
-  if(dungeonBar) dungeonBar.style.display = 'none';
   const cityHost = _cityImg.stage.parentElement;
   let nav = cityHost.querySelector('#city-world-nav');
   if(!nav){
@@ -2452,17 +2395,6 @@ function handleCityState(msg){
       <span style="color:var(--text2);font-size:.75rem;">${_classeNome(p)}</span>
       <span class="city-pcard-gold">💰 ${p.gold}</span></div>`;
   }).join('');
-  // Host controls
-  const btnD=$('btn-enter-dungeon'), hint=$('city-host-hint');
-  const dungBar=$('city-dungeon-bar');
-  if(btnD){
-    const isHost=GS.myPid&&GS.myPid===msg.host;
-    // Em campanha, o botão indica a próxima fase a entrar.
-    btnD.textContent = msg.campaign ? t('ui.cidade.ir_aventura_fase', {n:msg.campaign.phase}) : t('ui.cidade.ir_aventura_btn');
-    btnD.style.display=isHost?'inline-block':'none';
-    if(dungBar) dungBar.style.display=isHost?'flex':'none';
-    if(hint) hint.textContent = t(isHost ? 'ui.cidade.dica_anfitriao' : 'ui.cidade.dica_convidado');
-  }
   // Shop
   if(GS.activeShop) _renderShopItems();
   if(GS.pendingShopOpen){ const s=GS.pendingShopOpen; GS.pendingShopOpen=null; openShop(s); }
@@ -2477,12 +2409,6 @@ function handleCityState(msg){
   if(fo){ fo.classList.remove('on'); setTimeout(()=>{ if(fo.parentNode) fo.remove(); },1200); }
   renderStory();   // Fase 4b: encerramento da fase (mostrado na cidade)
 }
-
-// ── Legacy 2D city data ──
-// O CITY_BUILDINGS (nome/desc/abas dos 4 prédios) foi REMOVIDO: nenhum leitor
-// restou no cliente, e português sem ponto de uso não tem onde chamar t()
-// — mesma decisão do Lote 1. O CITY_DUNGEON abaixo é só geometria.
-const CITY_DUNGEON = { id: 'dungeon', x: 305, y: 352, w: 90, h: 88 };
 
 // Um ponto da ilustração resolve DUAS coisas independentes: uma cena (se o
 // ponto tem `scene`) e uma loja (se o tipo do ponto é uma loja que a cidade
@@ -3443,59 +3369,6 @@ function animarRolagemD100(resultado, onConclucao) {
       }, 300)
     }
   }, 60)
-}
-
-// ── Ficha do Pedro com aba de Magias (PASSO 4) ───────────────────────────────
-// Renderers puros: retornam HTML (string) a partir de um objeto `heroi` que
-// carrega os campos adicionados em HERO_DATA.pedro no PASSO 1
-// (habilidadeClasse, animados, magiasConhecidas, magiasUsadasHoje,
-// statsModificados.inteligencia).
-//
-// NOTA — ainda NÃO roteados a nenhum painel. Estado dos handlers referenciados:
-//   • esconderTooltip()                   → existe (linha ~1488)
-//   • mostrarTooltipHabilidade(ev, id)    → existe (PASSO 5, abaixo)
-//   • mostrarTooltipAnimado(ev, id, obj)  → existe (PASSO 5, abaixo)
-//   • trocarAbaFicha(aba, heroKey)        → NÃO existe (alterna ATRIBUTOS/MAGIAS)
-//   • mostrarTooltipMagia(ev, id)         → NÃO existe
-//   • renderConteudoAtributos(heroi)      → NÃO existe (citado só em comentário)
-// A render em si funciona; os handlers ausentes só disparam em clique/hover e
-// lançariam ReferenceError até serem implementados num passo futuro.
-function renderFichaPedro(heroi) {
-  const nivel     = heroi.nivel || 1
-  const hab       = heroi.habilidadeClasse
-  const slots     = hab.calcularSlots(nivel, heroi.statsModificados.inteligencia)
-  const animados  = heroi.animados || []
-  const slotsUsados = animados.reduce((s, a) => s + a.slots, 0)
-
-  return `
-    <!-- ABAS -->
-    <div style="
-      display: flex;
-      border-bottom: 1px solid #c8a95133;
-      margin-bottom: 16px;
-    ">
-      <button onclick="trocarAbaFicha('atributos','pedro')"
-        id="aba-atributos" style="
-        flex:1; padding:10px; background:transparent;
-        border:none; border-bottom:2px solid #c8a951;
-        color:#c8a951; font-family:'Cinzel',serif;
-        font-size:10px; letter-spacing:2px; cursor:pointer;
-      " data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
-      <button onclick="trocarAbaFicha('magias','pedro')"
-        id="aba-magias" style="
-        flex:1; padding:10px; background:transparent;
-        border:none; border-bottom:2px solid transparent;
-        color:#8a7a5a; font-family:'Cinzel',serif;
-        font-size:10px; letter-spacing:2px; cursor:pointer;
-      " data-i18n="ui.ficha.magias">💀 MAGIAS</button>
-    </div>
-
-    <!-- CONTEÚDO DA ABA -->
-    <div id="conteudo-ficha-pedro">
-      <!-- Atributos ficam aqui por padrão -->
-      <!-- renderConteudoAtributos(heroi) -->
-    </div>
-  `
 }
 
 function renderAbaMagiasPedro(heroi) {
@@ -4648,12 +4521,6 @@ function fecharLoja(){
   setTimeout(() => overlay.remove(), 300);
 }
 
-// Handlers de edifício (spec). Disponíveis para uso; os edifícios da cidade
-// permanecem ligados à loja autoritativa do servidor (openShop) por _cityClick.
-const onClicarFerreiro = () => abrirLoja('ferreiro', GS.getHeroiAtivo());
-const onClicarTaverna  = () => abrirLoja('taverna',  GS.getHeroiAtivo());
-const onClicarMercado  = () => abrirLoja('mercado',  GS.getHeroiAtivo());
-
 // ═══════════════════════════════════════════════════════════════════════════
 // TOOLTIP DE ITEM — sistema global reutilizável (loja, inventário, HUD).
 // Lê GS.CATALOGO_ITENS. Aplicar em qualquer elemento de item via
@@ -4699,17 +4566,6 @@ function _initItemTooltip(){
     t.style.left = x + 'px';
     t.style.top  = y + 'px';
   });
-}
-
-function mostrarTooltip(itemId, event){
-  _initItemTooltip();
-  const item = GS.CATALOGO_ITENS[itemId];
-  if(!item) return;
-  _marcarDonoTooltip(event && (event.currentTarget || event.target));
-  const t = document.getElementById('item-tooltip');
-  t.innerHTML = gerarConteudoTooltip(item);
-  t.style.borderColor = corBordaPorPreco(item.preco);   // raridade por preço
-  t.style.opacity = '1';
 }
 
 function esconderTooltip(){
@@ -4956,13 +4812,6 @@ function gerarHabilidadesEspeciais(item){
   }
 
   return especiais.length > 0 ? especiais.join('') : null;
-}
-
-// Aplica os eventos de tooltip a um elemento de item (loja/inventário/HUD).
-function aplicarTooltipAoItem(elemento, itemId){
-  if(!elemento || !itemId) return;
-  elemento.addEventListener('mouseenter', (e) => mostrarTooltip(itemId, e));
-  elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
 // Itens vindos de baús/decorações chegam como instâncias do servidor e nem
@@ -5420,425 +5269,6 @@ function centerOnPlayer(state){
   requestAnimationFrame(()=>{ wrap.scrollLeft=tl; wrap.scrollTop=tt; });
 }
 
-// ══ WEAPON ICONS ═══════════════════════════════════════════════════════════
-
-function drawWeapon(ctx, id, cx, cy){
-  ctx.save(); ctx.translate(cx, cy);
-  switch(id){
-    case 'longsword':     _wLongsword(ctx);    break;
-    case 'shortsword':    _wShortsword(ctx);   break;
-    case 'staff':         _wStaff(ctx);        break;
-    case 'bordao':        _wBordao(ctx);       break;
-    case 'dagger':        _wDagger(ctx);       break;
-    case 'warhammer':     _wWarhammer(ctx);    break;
-    case 'longbow':       _wLongbow(ctx);      break;
-    case 'hand_crossbow': _wHandCrossbow(ctx); break;
-    case 'bastsword':     _wBastSword(ctx);    break;
-    default:              _wLongsword(ctx);
-  }
-  ctx.restore();
-}
-
-function _wLongsword(ctx){
-  // Blade
-  ctx.fillStyle='#c4cdd8';
-  ctx.beginPath(); ctx.moveTo(0,-23); ctx.lineTo(-3,-6); ctx.lineTo(-3,7); ctx.lineTo(3,7); ctx.lineTo(3,-6); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#7888a0'; ctx.lineWidth=0.6; ctx.stroke();
-  // Groove
-  ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,-21); ctx.lineTo(0,5); ctx.stroke();
-  // Crossguard
-  ctx.fillStyle='#b08840'; ctx.fillRect(-10,6,20,3);
-  // Grip
-  ctx.fillStyle='#4a2e14'; ctx.fillRect(-2.5,9,5,12);
-  ctx.strokeStyle='#c09040'; ctx.lineWidth=0.9;
-  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-2.5,11+i*3.5); ctx.lineTo(2.5,11+i*3.5); ctx.stroke(); }
-  // Pommel
-  ctx.fillStyle='#b08840'; ctx.beginPath(); ctx.ellipse(0,22,4,3,0,0,Math.PI*2); ctx.fill();
-}
-
-function _wStaff(ctx){
-  // Shaft — stays within 44×68 canvas (center at 22,34)
-  ctx.fillStyle='#6e4c28'; ctx.fillRect(-2,-16,4,34);
-  ctx.strokeStyle='#9a7040'; ctx.lineWidth=0.5; ctx.strokeRect(-2,-16,4,34);
-  // Bindings
-  ctx.strokeStyle='#d0a040'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-2,-10); ctx.lineTo(2,-10); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-2,-8);  ctx.lineTo(2,-8);  ctx.stroke();
-  // Orb — positioned to stay within canvas top (y=-28 from center means y=6 from top — OK)
-  ctx.fillStyle='#6030b8'; ctx.beginPath(); ctx.ellipse(0,-20,7,8,0,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#9050e0'; ctx.lineWidth=1; ctx.stroke();
-  // Orb highlight
-  ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.ellipse(-2.5,-22,2.5,2,0,0,Math.PI*2); ctx.fill();
-  // Glow ring (max y reach: -20+9=-29 → canvas y=34-29=5 — just inside)
-  ctx.strokeStyle='rgba(180,100,255,0.5)'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.ellipse(0,-20,9,10,0,0,Math.PI*2); ctx.stroke();
-}
-
-function _wDagger(ctx){
-  // Blade
-  ctx.fillStyle='#c4cdd8';
-  ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(-2.5,-4); ctx.lineTo(2.5,-4); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#7888a0'; ctx.lineWidth=0.6; ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=0.9;
-  ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(0,-5); ctx.stroke();
-  // Guard
-  ctx.fillStyle='#8890a0'; ctx.fillRect(-7,-5,14,2.5);
-  // Grip
-  ctx.fillStyle='#2a1a08'; ctx.fillRect(-2,-3,4,11);
-  ctx.strokeStyle='#d0a040'; ctx.lineWidth=0.9;
-  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-2,-1+i*3.2); ctx.lineTo(2,-1+i*3.2); ctx.stroke(); }
-  // Pommel
-  ctx.fillStyle='#8890a0'; ctx.beginPath(); ctx.ellipse(0,10,3.5,2.5,0,0,Math.PI*2); ctx.fill();
-}
-
-function _wWarhammer(ctx){
-  // Handle
-  ctx.fillStyle='#5c3a1e'; ctx.fillRect(-2,-14,4,30);
-  ctx.strokeStyle='#8a6040'; ctx.lineWidth=0.5;
-  // Bindings
-  ctx.strokeStyle='#d0a040'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-2,10); ctx.lineTo(2,10); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-2,12); ctx.lineTo(2,12); ctx.stroke();
-  // Hammer head
-  ctx.fillStyle='#6a6878'; ctx.fillRect(-9,-20,18,10);
-  ctx.strokeStyle='#9090a8'; ctx.lineWidth=0.7; ctx.strokeRect(-9,-20,18,10);
-  ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fillRect(-8,-19,16,2);
-  // Top spike (y=-26 from center = canvas y=8 — fits in 68px)
-  ctx.fillStyle='#505060';
-  ctx.beginPath(); ctx.moveTo(0,-26); ctx.lineTo(-3,-20); ctx.lineTo(3,-20); ctx.closePath(); ctx.fill();
-}
-
-function _wLongbow(ctx){
-  // Bow stave
-  ctx.strokeStyle='#7a5430'; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.moveTo(0,-22); ctx.bezierCurveTo(15,-10,15,10,0,22); ctx.stroke();
-  // String
-  ctx.strokeStyle='#d8c888'; ctx.lineWidth=0.9;
-  ctx.beginPath(); ctx.moveTo(0,-22); ctx.lineTo(0,22); ctx.stroke();
-  // Arrow shaft
-  ctx.strokeStyle='#9a7840'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(0,18); ctx.stroke();
-  // Arrowhead
-  ctx.fillStyle='#a8b8c8';
-  ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(-2.5,-8); ctx.lineTo(2.5,-8); ctx.closePath(); ctx.fill();
-  // Fletching
-  ctx.strokeStyle='#c84040'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,18); ctx.lineTo(-3,14); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0,18); ctx.lineTo(3,14); ctx.stroke();
-}
-
-function _wBastSword(ctx){
-  // Wide blade
-  ctx.fillStyle='#b8c0d0';
-  ctx.beginPath(); ctx.moveTo(0,-25); ctx.lineTo(-5,-4); ctx.lineTo(-4.5,8); ctx.lineTo(4.5,8); ctx.lineTo(5,-4); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#7080a0'; ctx.lineWidth=0.6; ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(0,-23); ctx.lineTo(0,6); ctx.stroke();
-  // Large crossguard
-  ctx.fillStyle='#b09040'; ctx.fillRect(-13,7,26,4);
-  ctx.strokeStyle='#d0b060'; ctx.lineWidth=0.6; ctx.strokeRect(-13,7,26,4);
-  // Two-handed grip
-  ctx.fillStyle='#3a2010'; ctx.fillRect(-3,11,6,14);
-  ctx.strokeStyle='#c09040'; ctx.lineWidth=0.9;
-  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-3,13+i*4); ctx.lineTo(3,13+i*4); ctx.stroke(); }
-  // Pommel
-  ctx.fillStyle='#b09040'; ctx.beginPath(); ctx.ellipse(0,26,5.5,4,0,0,Math.PI*2); ctx.fill();
-}
-
-// ── Short sword (like longsword but smaller blade)
-function _wShortsword(ctx){
-  // Blade — shorter and slightly wider than longsword
-  ctx.fillStyle='#c4cdd8';
-  ctx.beginPath(); ctx.moveTo(0,-17); ctx.lineTo(-3.5,-4); ctx.lineTo(-3,7); ctx.lineTo(3,7); ctx.lineTo(3.5,-4); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#7888a0'; ctx.lineWidth=0.6; ctx.stroke();
-  // Fuller groove
-  ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,5); ctx.stroke();
-  // Crossguard
-  ctx.fillStyle='#b08840'; ctx.fillRect(-9,6,18,3);
-  // Grip
-  ctx.fillStyle='#4a2e14'; ctx.fillRect(-2.5,9,5,10);
-  ctx.strokeStyle='#c09040'; ctx.lineWidth=0.9;
-  for(let i=0;i<2;i++){ ctx.beginPath(); ctx.moveTo(-2.5,11+i*3.8); ctx.lineTo(2.5,11+i*3.8); ctx.stroke(); }
-  // Pommel
-  ctx.fillStyle='#b08840'; ctx.beginPath(); ctx.ellipse(0,20,3.5,2.5,0,0,Math.PI*2); ctx.fill();
-}
-
-// ── Bordão / Quarterstaff — simple thick walking staff with iron tips
-function _wBordao(ctx){
-  // Main shaft
-  ctx.fillStyle='#7a5c30'; ctx.fillRect(-2.5,-24,5,48);
-  ctx.strokeStyle='#a07840'; ctx.lineWidth=0.5; ctx.strokeRect(-2.5,-24,5,48);
-  // Wood grain lines
-  ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=0.7;
-  for(let y=-20;y<24;y+=7){ ctx.beginPath(); ctx.moveTo(-2,y); ctx.lineTo(2,y+2); ctx.stroke(); }
-  // Iron cap top
-  ctx.fillStyle='#808898'; ctx.fillRect(-3.5,-26,7,5);
-  ctx.strokeStyle='#a0a8b0'; ctx.lineWidth=0.6; ctx.strokeRect(-3.5,-26,7,5);
-  // Iron cap bottom
-  ctx.fillStyle='#808898'; ctx.fillRect(-3.5,21,7,5);
-  ctx.strokeStyle='#a0a8b0'; ctx.lineWidth=0.6; ctx.strokeRect(-3.5,21,7,5);
-  // Bindings in middle
-  ctx.strokeStyle='#c0a030'; ctx.lineWidth=1.4;
-  for(const y of [-6,-3,0,3,6]){ ctx.beginPath(); ctx.moveTo(-3,y); ctx.lineTo(3,y); ctx.stroke(); }
-}
-
-// ── Hand Crossbow — compact crossbow with short tiller
-function _wHandCrossbow(ctx){
-  // Tiller (stock) — horizontal
-  ctx.fillStyle='#5c3a18'; ctx.fillRect(-18,-2,26,6);
-  ctx.strokeStyle='#8a5830'; ctx.lineWidth=0.6; ctx.strokeRect(-18,-2,26,6);
-  // Prod (bow arms) — vertical centered
-  ctx.strokeStyle='#6B4226'; ctx.lineWidth=4; ctx.lineCap='round';
-  ctx.beginPath(); ctx.moveTo(-2,-16); ctx.lineTo(-2,16); ctx.stroke();
-  // String
-  ctx.strokeStyle='rgba(220,210,180,0.9)'; ctx.lineWidth=0.8;
-  ctx.beginPath(); ctx.moveTo(-2,-16); ctx.lineTo(8,1); ctx.lineTo(-2,16); ctx.stroke();
-  // Bolt / quarrel
-  ctx.strokeStyle='#9a7840'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-16,1); ctx.lineTo(5,1); ctx.stroke();
-  // Bolt tip
-  ctx.fillStyle='#a8b8c8';
-  ctx.beginPath(); ctx.moveTo(5,-1.5); ctx.lineTo(10,1); ctx.lineTo(5,3.5); ctx.closePath(); ctx.fill();
-  // Trigger guard
-  ctx.strokeStyle='#a08050'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-2,4); ctx.quadraticCurveTo(2,12,-6,12); ctx.quadraticCurveTo(-10,12,-10,4); ctx.stroke();
-  // Handle/grip
-  ctx.fillStyle='#4a2e14'; ctx.fillRect(-12,3,6,14);
-  ctx.strokeStyle='#c09040'; ctx.lineWidth=0.8;
-  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-12,5+i*4); ctx.lineTo(-6,5+i*4); ctx.stroke(); }
-}
-
-// ══ ARMOR ICONS ════════════════════════════════════════════════════════════
-
-function drawArmor(ctx, id, cx, cy){
-  ctx.save(); ctx.translate(cx, cy);
-  switch(id){
-    case 'plate':     _aPlate(ctx);    break;
-    case 'robes':     _aRobes(ctx);    break;
-    case 'leather':   _aLeather(ctx);  break;
-    case 'chainmail': _aChainmail(ctx);break;
-    case 'fullplate': _aFullPlate(ctx);break;
-    case 'cloak':     _aCloak(ctx);    break;
-    case 'none':      _aNoArmor(ctx);  break;
-    default:          _aNoArmor(ctx);
-  }
-  ctx.restore();
-}
-
-// No armor — simple tunic outline with "10" CA marker
-function _aNoArmor(ctx){
-  // Simple cloth tunic
-  ctx.fillStyle='#3a3020';
-  ctx.beginPath();
-  ctx.moveTo(-11,-16); ctx.lineTo(11,-16);
-  ctx.lineTo(13,20); ctx.lineTo(-13,20);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#6a5838'; ctx.lineWidth=0.8; ctx.stroke();
-  // Collar V
-  ctx.strokeStyle='#8a7040'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-5,-16); ctx.lineTo(0,-10); ctx.lineTo(5,-16); ctx.stroke();
-  // Simple seam
-  ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=0.8;
-  ctx.beginPath(); ctx.moveTo(0,-10); ctx.lineTo(0,18); ctx.stroke();
-  // Fabric folds
-  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.6;
-  for(const y of [-4,4,12]){
-    ctx.beginPath(); ctx.moveTo(-10,y); ctx.lineTo(10,y); ctx.stroke();
-  }
-  // Belt
-  ctx.fillStyle='#7a6030'; ctx.fillRect(-9,9,18,3);
-  ctx.strokeStyle='#c0a040'; ctx.lineWidth=0.6; ctx.strokeRect(-9,9,18,3);
-  // "CA 10" text label
-  ctx.fillStyle='rgba(180,160,100,0.85)'; ctx.font='bold 7px monospace';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText('CA 10',0,-24);
-}
-
-// Robe (mage) — purple flowing robe with arcane stars
-function _aRobes(ctx){
-  // Main body — trapezoid
-  ctx.fillStyle='#3a1860';
-  ctx.beginPath();
-  ctx.moveTo(-12,-16); ctx.lineTo(12,-16);
-  ctx.lineTo(17,22); ctx.lineTo(-17,22);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#6a30b0'; ctx.lineWidth=0.8; ctx.stroke();
-  // Collar
-  ctx.fillStyle='#28104a';
-  ctx.beginPath();
-  ctx.moveTo(-7,-16); ctx.quadraticCurveTo(0,-20,7,-16);
-  ctx.quadraticCurveTo(3,-10,0,-8); ctx.quadraticCurveTo(-3,-10,-7,-16);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#9050e0'; ctx.lineWidth=0.6; ctx.stroke();
-  // Arcane stars
-  ctx.fillStyle='#e0c040';
-  for(const [sx,sy] of [[-6,-4],[7,-2],[0,4],[-8,11],[8,13],[1,-10]]){
-    ctx.beginPath(); ctx.arc(sx,sy,1.4,0,Math.PI*2); ctx.fill();
-  }
-  // Belt
-  ctx.fillStyle='#7040a0'; ctx.fillRect(-11,8,22,3);
-  ctx.strokeStyle='#c080f0'; ctx.lineWidth=0.5; ctx.strokeRect(-11,8,22,3);
-  // Belt buckle
-  ctx.fillStyle='#d0a030'; ctx.fillRect(-3,7,6,5);
-  ctx.strokeStyle='#f0c040'; ctx.lineWidth=0.6; ctx.strokeRect(-3,7,6,5);
-}
-
-// Leather (rogue/ranger) — brown vest with rivets
-function _aLeather(ctx){
-  ctx.fillStyle='#6b3e1e';
-  ctx.beginPath();
-  ctx.moveTo(-12,-17); ctx.lineTo(12,-17);
-  ctx.lineTo(14,20); ctx.lineTo(-14,20);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#9a6030'; ctx.lineWidth=0.8; ctx.stroke();
-  // Shoulder straps
-  ctx.fillStyle='#8b5226';
-  ctx.fillRect(-12,-17,5,9); ctx.fillRect(7,-17,5,9);
-  ctx.strokeStyle='#6a3015'; ctx.lineWidth=0.5;
-  ctx.strokeRect(-12,-17,5,9); ctx.strokeRect(7,-17,5,9);
-  // Center seam
-  ctx.strokeStyle='#4a2808'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(0,-17); ctx.lineTo(0,20); ctx.stroke();
-  // Stud rivets
-  ctx.fillStyle='#c8b860';
-  for(const [rx,ry] of [[-7,-10],[7,-10],[-7,-1],[7,-1],[-7,8],[7,8]]){
-    ctx.beginPath(); ctx.arc(rx,ry,1.5,0,Math.PI*2); ctx.fill();
-  }
-  // Belt
-  ctx.fillStyle='#c0a030'; ctx.fillRect(-9,11,18,3);
-  ctx.strokeStyle='#e0c040'; ctx.lineWidth=0.5; ctx.strokeRect(-9,11,18,3);
-  // Buckle
-  ctx.strokeStyle='#f0d040'; ctx.lineWidth=1;
-  ctx.strokeRect(-4,10,8,5);
-}
-
-// Chainmail (cleric) — metal rings with holy cross
-function _aChainmail(ctx){
-  ctx.fillStyle='#585870';
-  ctx.beginPath();
-  ctx.moveTo(-13,-17); ctx.lineTo(13,-17);
-  ctx.lineTo(15,20); ctx.lineTo(-15,20);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#8080a0'; ctx.lineWidth=0.7; ctx.stroke();
-  // Chain ring pattern
-  ctx.strokeStyle='#9898b8'; ctx.lineWidth=0.7;
-  for(let row=0;row<7;row++){
-    for(let col=0;col<5;col++){
-      const bx=-10+col*5+(row%2)*2.5;
-      const by=-14+row*5;
-      ctx.beginPath(); ctx.ellipse(bx,by,2.1,1.4,0,0,Math.PI*2); ctx.stroke();
-    }
-  }
-  // Shoulder guards
-  ctx.strokeStyle='#a0a0c0'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.ellipse(-13,-12,5,7,-0.3,0,Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(13,-12,5,7,0.3,0,Math.PI*2); ctx.stroke();
-  // Holy cross symbol
-  ctx.strokeStyle='#f0c040'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(0,6); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-5,0); ctx.lineTo(5,0); ctx.stroke();
-}
-
-// Plate (warrior) — steel breastplate with pauldrons
-function _aPlate(ctx){
-  // Breastplate body
-  ctx.fillStyle='#6878a8';
-  ctx.beginPath();
-  ctx.moveTo(-13,-17); ctx.lineTo(13,-17);
-  ctx.lineTo(15,18); ctx.lineTo(-15,18);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#9090c8'; ctx.lineWidth=0.8; ctx.stroke();
-  // Metal sheen highlight
-  ctx.fillStyle='rgba(255,255,255,0.14)';
-  ctx.fillRect(-11,-16,22,5);
-  // Center ridge
-  ctx.strokeStyle='#a8b0d0'; ctx.lineWidth=1.4;
-  ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,16); ctx.stroke();
-  // Horizontal plates
-  ctx.strokeStyle='#8888b0'; ctx.lineWidth=0.9;
-  for(const y of [-7,1,9]){
-    ctx.beginPath(); ctx.moveTo(-12,y); ctx.lineTo(12,y); ctx.stroke();
-  }
-  // Pauldrons (shoulders)
-  ctx.fillStyle='#5870a0';
-  ctx.beginPath(); ctx.ellipse(-15,-12,6,9,-0.2,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#8090c0'; ctx.lineWidth=0.7; ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(15,-12,6,9,0.2,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  // Collar
-  ctx.strokeStyle='#c0c8e8'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.arc(0,-17,6,Math.PI,0); ctx.stroke();
-}
-
-// Full plate (paladin) — ornate with holy symbol
-function _aFullPlate(ctx){
-  // Breastplate
-  ctx.fillStyle='#4060c0';
-  ctx.beginPath();
-  ctx.moveTo(-14,-18); ctx.lineTo(14,-18);
-  ctx.lineTo(16,19); ctx.lineTo(-16,19);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#7090e0'; ctx.lineWidth=0.8; ctx.stroke();
-  // Gold top trim
-  ctx.fillStyle='#d0a030'; ctx.fillRect(-14,-18,28,4);
-  // Center ridge
-  ctx.strokeStyle='#90b0f8'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(0,17); ctx.stroke();
-  // Horizontal bands
-  ctx.strokeStyle='#6080c0'; ctx.lineWidth=0.9;
-  for(const y of [-6,2,10]){
-    ctx.beginPath(); ctx.moveTo(-13,y); ctx.lineTo(13,y); ctx.stroke();
-  }
-  // Large pauldrons (gold-trimmed)
-  ctx.fillStyle='#3050b0';
-  ctx.beginPath(); ctx.ellipse(-16,-13,7,10,-0.2,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#7090d8'; ctx.lineWidth=0.7; ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(16,-13,7,10,0.2,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle='#d0a030'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.ellipse(-16,-13,7,10,-0.2,0,Math.PI*2); ctx.stroke();
-  ctx.beginPath(); ctx.ellipse(16,-13,7,10,0.2,0,Math.PI*2); ctx.stroke();
-  // Sun/cross holy symbol
-  ctx.strokeStyle='#f8d840'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(0,-8); ctx.lineTo(0,9); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(-6,1); ctx.lineTo(6,1); ctx.stroke();
-  ctx.strokeStyle='#f8d840'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.arc(0,1,7,0,Math.PI*2); ctx.stroke();
-  // Collar
-  ctx.strokeStyle='#d0a030'; ctx.lineWidth=1.8;
-  ctx.beginPath(); ctx.arc(0,-18,7,Math.PI,0); ctx.stroke();
-}
-
-// Cloak (mage/ranger) — hooded travel cloak, dark with silver clasp
-function _aCloak(ctx){
-  // Main cloak body — flowing trapezoid
-  ctx.fillStyle='#1e1430';
-  ctx.beginPath();
-  ctx.moveTo(-14,-16); ctx.lineTo(14,-16);
-  ctx.lineTo(18,22); ctx.lineTo(-18,22);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#3a2858'; ctx.lineWidth=0.8; ctx.stroke();
-  // Hood opening
-  ctx.fillStyle='#110c20';
-  ctx.beginPath();
-  ctx.moveTo(-8,-16); ctx.quadraticCurveTo(0,-24,8,-16);
-  ctx.quadraticCurveTo(4,-12,0,-10); ctx.quadraticCurveTo(-4,-12,-8,-16);
-  ctx.closePath(); ctx.fill();
-  ctx.strokeStyle='#5040a0'; ctx.lineWidth=0.6; ctx.stroke();
-  // Cloak fold lines
-  ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
-  for(const [x1,y1,x2,y2] of [[-4,-14,-6,20],[4,-14,6,20],[0,-12,0,22]]){
-    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-  }
-  // Silver clasp at neck
-  ctx.fillStyle='#c0c8d8'; ctx.beginPath(); ctx.ellipse(0,-13,4,3,0,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='#e0e8f0'; ctx.lineWidth=0.7; ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(-1,-14,1,0,Math.PI*2); ctx.fill();
-  // Hem trim (faint silver border at bottom)
-  ctx.strokeStyle='rgba(160,140,220,0.4)'; ctx.lineWidth=1.2;
-  ctx.beginPath(); ctx.moveTo(-17,20); ctx.lineTo(17,20); ctx.stroke();
-}
-
 // ══ SPRITE ENGINE ══════════════════════════════════════════════════════════
 
 function _cl(hex, f) {
@@ -5873,14 +5303,6 @@ function drawFace(ctx, hx, hy, skin){
   ctx.beginPath(); ctx.arc(hx+2.0,hy-1.4,0.55,0,Math.PI*2); ctx.fill();
   // Nose shadow
   ctx.fillStyle='rgba(0,0,0,0.13)'; ctx.beginPath(); ctx.arc(hx,hy+1.8,1.5,0,Math.PI*2); ctx.fill();
-}
-
-function drawLegs(ctx, lc){
-  ctx.fillStyle=lc; rr(ctx,-8,6,5,14,2); ctx.fill(); rr(ctx,3,6,5,14,2); ctx.fill();
-  // Leg highlight
-  ctx.fillStyle='rgba(255,255,255,0.13)'; ctx.fillRect(-7.5,7,2.5,12); ctx.fillRect(3.5,7,2.5,12);
-  // Leg shadow
-  ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(-4,7,1.5,12); ctx.fillRect(7,7,1.5,12);
 }
 
 // ── Hero class sprites (drawn at origin = tile center) ─────────────────────
@@ -10705,19 +10127,11 @@ const _pendingDiceColors = new Set();
 let _d3      = null;   // dice state (animFrame + cfr counter only — no separate scene)
 const _dice3 = [];    // active die objects
 
-// Floor Y = top surface of game board tiles (TH = 0.22)
-const DICE_FLOOR_Y = 0.22;
-
 /**
  * Bottom-right corner of the visible board near the active hero.
  * In the SW-225° isometric view, "bottom-right" = +X, +Z direction.
  * Falls back to board centre when game state is unavailable.
  */
-function _getDiceArea(){
-  if(!g3) return { x:5, z:5 };
-  const cx = (g3.W-1)/2, cz = (g3.H-1)/2;
-  return { x: Math.round(cx), z: Math.round(cz) };
-}
 
 // ══ DICE AUDIO — Web Audio API ═══════════════════════════════════════════════
 
@@ -13713,37 +13127,6 @@ const HERO_PORTRAIT_PATHS = {
   mage:    'assets/portraits/pedro.jpeg',
 };
 
-// ── Botões de ação bônus para a adaga secundária (scaffolding) ───────────────
-// NOTA: inserido verbatim conforme especificação. AINDA NÃO é chamado por
-// renderMyPanel — o painel de ação bônus atual é construído inline lá e lê o
-// estado AUTORITATIVO do servidor (`me.gear.off_hand`), não o modelo client-side
-// da loja (`heroi.equipado.secundario`) que esta função usa. Os `tipo`
-// ('ataqueAdagaSecundaria'/'arremessarAdagaSecundaria') também ainda não têm
-// handlers. Mantido para a futura reconciliação modelo-loja ↔ estado-de-combate.
-function renderBotoesAcaoBonus(heroi){
-  const acoes = [];
-
-  const secundario = heroi.equipado?.secundario
-
-  if (secundario && secundario.id === 'adaga_secundaria') {
-    // Ataque extra adjacente
-    acoes.push({
-      label: t('ui.acao.ataque_extra_adaga'),
-      descricao: t('ui.acao.ataque_extra_adaga_desc'),
-      tipo: 'ataqueAdagaSecundaria'
-    })
-
-    // Arremesso
-    acoes.push({
-      label: t('ui.acao.arremessar_adaga'),
-      descricao: t('ui.acao.arremessar_adaga_desc'),
-      tipo: 'arremessarAdagaSecundaria'
-    })
-  }
-
-  return acoes;
-}
-
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
@@ -14309,12 +13692,8 @@ window.acionarInstrumento = acionarInstrumento;
 // interferir em nenhum estado de magia/arremesso em andamento.
 // Convenção dx,dy (mesma da Relâmpago/movimento — ver _facingToRotY,
 // GS.move): +y = Sul, -y = Norte, +x = Leste, -x = Oeste.
-// Referência de fechamento da invocação aberta de escolherDirecaoInstrumento
-// (permite remover o listener de keydown dela ao reabrir — ver função abaixo).
-let _instrumentoDirFechar = null;
 
 function escolherDirecaoInstrumento(b, onEscolher){
-  if(_instrumentoDirFechar) _instrumentoDirFechar();
   const me = GS.me;
   if(!me?.pos) return;
   const directions = new Set();
@@ -14344,74 +13723,6 @@ function _clickTileDirecaoInstrumento(tx, ty){
   const onEscolher = mode.onEscolher;
   _aimEnd({silent:true, reason:'resolved'});
   onEscolher(dx, dy);
-}
-
-// Mantido apenas como fallback para sessões antigas já abertas antes de uma
-// atualização em tempo real. Entradas novas usam a mira do tabuleiro acima.
-function _escolherDirecaoInstrumentoLegacy(b, onEscolher){
-  // Fecha uma invocação anterior ainda aberta (remove o overlay E o listener
-  // de keydown dela — senão cada reabertura empilhava mais um listener no
-  // document, que nunca era removido).
-  if(_instrumentoDirFechar) _instrumentoDirFechar();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'instrumento-dir-overlay';
-  overlay.style.cssText = `
-    position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.55);
-    display:flex; align-items:center; justify-content:center;`;
-
-  const painel = document.createElement('div');
-  painel.style.cssText = `
-    background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
-    padding:20px 24px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,.6);`;
-  painel.innerHTML = `
-    <div style="color:var(--gold); font-weight:bold; margin-bottom:4px;">
-      ${b.icon || '📯'} ${b.habilidade_nome || t('ui.instrumento.escolha_direcao')}
-    </div>
-    <div style="color:var(--text2); font-size:.75rem; margin-bottom:14px;">
-      ${t('ui.instrumento.escolha_direcao_dica')} &nbsp;|&nbsp; ${t('ui.magia.esc_cancela')}
-    </div>`;
-
-  const grid = document.createElement('div');
-  grid.style.cssText = `display:grid; grid-template-columns:repeat(3,52px);
-    grid-template-rows:repeat(3,52px); gap:4px; justify-content:center;`;
-
-  // [label, dx, dy, posição na grade 3x3 (row,col), 0-indexed]
-  const dirs = [
-    ['↖','NO',-1,-1,0,0], ['↑','N',0,-1,0,1], ['↗','NE',1,-1,0,2],
-    ['←','O',-1,0,1,0],   [null,null,null,null,1,1], ['→','L',1,0,1,2],
-    ['↙','SO',-1,1,2,0],  ['↓','S',0,1,2,1], ['↘','SE',1,1,2,2],
-  ];
-  for(const [icon, label, dx, dy, row, col] of dirs){
-    const cell = document.createElement(icon ? 'button' : 'div');
-    cell.style.cssText = `grid-row:${row+1}; grid-column:${col+1};
-      display:flex; align-items:center; justify-content:center;`;
-    if(icon){
-      cell.className = 'btn-secondary';
-      cell.style.fontSize = '1.3rem';
-      cell.title = label;
-      cell.onclick = () => { fechar(); onEscolher(dx, dy); };
-    }
-    grid.appendChild(cell);
-  }
-  painel.appendChild(grid);
-  overlay.appendChild(painel);
-  document.body.appendChild(overlay);
-
-  let fechado = false;
-  function fechar(){
-    if(fechado) return;      // idempotente — click, Esc e reabertura podem chamar 2x
-    fechado = true;
-    document.removeEventListener('keydown', onKey);
-    overlay.remove();
-    if(_instrumentoDirFechar === fechar) _instrumentoDirFechar = null;
-  }
-  function onKey(e){
-    if(e.key === 'Escape'){ fechar(); toast(t('ui.instrumento.cancelado'), 'var(--text2)'); e.preventDefault(); }
-  }
-  overlay.onclick = e => { if(e.target === overlay){ fechar(); } };
-  document.addEventListener('keydown', onKey);
-  _instrumentoDirFechar = fechar;
 }
 
 // ── Improviso da Gaita (Fase 5) — quadro da cascata + fila de mira ──────────
@@ -14890,15 +14201,6 @@ function _rogueMyTurn(me){
   return !!(GS.isMyTurn && me && me.alive !== false && GS.gameState && GS.gameState.phase === 'playing');
 }
 
-function _temArmadilhaAdjacente(me){
-  const armadilhas = (GS.gameState && GS.gameState.armadilhas) || [];
-  const px = (me.pos||[0,0])[0], py = (me.pos||[0,0])[1];
-  return armadilhas.some(arm => {
-    const [ax,ay] = arm.pos || [99,99];
-    return Math.max(Math.abs(ax-px), Math.abs(ay-py)) <= 1;
-  });
-}
-
 // ── Painel: Criar Armadilha (ação principal) ────────────────────────────────
 function abrirPainelCriarArmadilha(){
   const existente = document.getElementById('painel-armadilha');
@@ -15165,25 +14467,6 @@ function _rogueSkillBtn(me, sk){
   } else {
     setBtn(`${sk.icon || ''} ${sk.name}`, sk.description || sk.desc || '', costStr, !myTurnPlay, null, false);
   }
-  return btn;
-}
-
-// Botão "Desarmar Armadilha" — aparece só quando há armadilha na casa/adjacente.
-function _rogueDesarmarBtn(me){
-  if(!_temArmadilhaAdjacente(me)) return null;
-  const btn = document.createElement('button');
-  const pode = _rogueMyTurn(me) && !me.action_done;
-  const bonusDes = GS.ladinoDesarmeBonus ? GS.ladinoDesarmeBonus() : 0;
-  const recupera = GS.ladinoDesarmeRecupera ? GS.ladinoDesarmeRecupera() : false;
-  btn.className = 'skill-btn';
-  btn.disabled = !pode;
-  btn.innerHTML = `
-    <div class="skill-info">
-      <div class="skill-name" data-ability-id="desarmar_armadilha">${t('ui.ladino.desarmar_nome')}${me.action_done ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.acao_usada')}</small>` : ''}</div>
-      <div class="skill-desc">${t('ui.ladino.desarmar_desc', {b: bonusDes>0?` (+${bonusDes})`:''})}${recupera?' · '+t('ui.hud.recupera_ouro_curto'):''}</div>
-    </div>
-    <div class="skill-cost">principal</div>`;
-  btn.onclick = () => send({type:'desarmar_armadilha'});
   return btn;
 }
 
@@ -18024,12 +17307,6 @@ function _addCheb(cx, cy, raio, out) {
     for (let x = cx - raio; x <= cx + raio; x++)
       if (Math.max(Math.abs(x - cx), Math.abs(y - cy)) <= raio) out.add(`${x},${y}`);
 }
-function _addLinha(x1, y1, x2, y2, out) {
-  const dx = x2 - x1, dy = y2 - y1, steps = Math.max(Math.abs(dx), Math.abs(dy));
-  if (steps === 0) { out.add(`${x1},${y1}`); return; }
-  for (let i = 0; i <= steps; i++)
-    out.add(`${Math.round(x1 + dx * i / steps)},${Math.round(y1 + dy * i / steps)}`);
-}
 
 function _recomputarAlcanceMagia() {
   const mode = window._modoMagia; if (!mode) return;
@@ -19517,10 +18794,6 @@ function _mestreAtivarHabilidade(m, abid){
   openTargetModal(t('ui.mestre.escolha_alvo', {nome:ab.name||abid}), alvos, st.test_mode ? 'monster' : 'player',
     (alvoId)=> GS.mestreUsarHabilidade(m.id, abid, alvoId));
 }
-function _monConjurador(m){
-  return (m.monster_spells && m.monster_spells.length > 0) ||
-         (m.special_abilities||[]).some(a => a.action_type === 'magia');
-}
 
 function _monstroSelecionadoTeste(){
   const st = GS.gameState;
@@ -20637,117 +19910,6 @@ function renderMyPanel(state){
 }
 
 // ── Itens comprados na loja client-side (GS.getHeroiAtivo().inventario) ──────
-// Renderiza os itens comprados no overlay de loja. Consumíveis ganham "Usar"
-// (recupera fome/sede via GS.aplicarConsumivel). Equipamento ainda não é
-// autoritativo no servidor — ver VISUAL_CONTRACT.
-const _TIPO_ITEM_EMOJI = {
-  arma:'⚔️', armaDistancia:'🏹', armadura:'🛡️', escudo:'🛡️',
-  secundario:'🔦', consumivel:'🍖', municao:'🎯', varinha:'✨', itemMagico:'🎒'
-};
-
-const _EQUIPADO_SLOTS = [
-  {key:'arma'},      {key:'armadura'}, {key:'cabeca'},
-  {key:'secundario'}, {key:'magico1'},  {key:'magico2'},
-];
-
-function renderPurchasedItems(inv){
-  const heroi = GS.getHeroiAtivo ? GS.getHeroiAtivo() : null;
-  if(!heroi) return;
-
-  // ── Equipado (da loja, modelo client-side) ──
-  const equipados = _EQUIPADO_SLOTS
-    .map(s => ({ ...s, it: heroi.equipado && heroi.equipado[s.key] }))
-    .filter(x => x.it);
-  if(equipados.length){
-    const t = document.createElement('div');
-    t.className = 'section-title';
-    t.textContent = _rotulo('equipado_loja', 'ui.hud', I18N.t('ui.item.equipado_loja'));
-    inv.appendChild(t);
-    const g = document.createElement('div');
-    g.className = 'bag-grid';
-    for(const {key, it} of equipados){
-      // _rotulo (e nao t) porque `t` esta sombreado por um <div> nesta funcao.
-      const label = _rotulo(key, 'ui.hud.slot', key);
-      const slot = document.createElement('div');
-      slot.className = 'bag-slot filled';
-      slot.title = it.nome;
-      slot.innerHTML = `
-        <div class="bag-slot-num" style="font-size:.5rem;opacity:.7">${label}</div>
-        <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
-        <div class="bag-slot-name">${it.nome}</div>`;
-      aplicarTooltipAoItemDados(slot, it);
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn';
-      btn.textContent = '✕ ' + _rotulo('remover', 'ui.hud', I18N.t('ui.item.remover'));
-      btn.onclick = () => desequiparComprado(key);
-      slot.appendChild(btn);
-      g.appendChild(slot);
-    }
-    inv.appendChild(g);
-  }
-
-  // ── Inventário comprado (client-side) ──
-  const comprados = Array.isArray(heroi.inventario)
-    ? heroi.inventario.map((it,idx)=>({it,idx})).filter(x=>x.it)
-    : [];
-  if(!comprados.length) return;
-
-  const title = document.createElement('div');
-  title.className = 'section-title';
-  title.textContent = I18N.t('ui.item.comprados_na_loja_n', {n: comprados.length});
-  inv.appendChild(title);
-
-  const grid = document.createElement('div');
-  grid.className = 'bag-grid';
-  for(const {it, idx} of comprados){
-    const slot = document.createElement('div');
-    slot.className = 'bag-slot filled';
-    slot.title = it.nome;
-    slot.innerHTML = `
-      <div class="bag-slot-emoji">${_TIPO_ITEM_EMOJI[it.tipo] || '📦'}</div>
-      <div class="bag-slot-name">${it.nome}</div>
-      <div class="bag-slot-type">${_rotulo(it.tipo, 'ui.item.tipo', '📦 Item')}</div>`;
-    aplicarTooltipAoItemDados(slot, it);
-    if(it.tipo === 'consumivel'){
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn use';
-      btn.textContent = I18N.t('ui.item.usar');
-      btn.title = I18N.t('ui.item.recupera_fome_sede');
-      btn.onclick = () => usarItemComprado(idx);
-      slot.appendChild(btn);
-    } else if(it.tipo !== 'municao'){
-      const btn = document.createElement('button');
-      btn.className = 'bag-slot-btn equip';
-      btn.textContent = I18N.t('ui.item.equipar');
-      btn.onclick = () => equiparComprado(idx);
-      slot.appendChild(btn);
-    }
-    grid.appendChild(slot);
-  }
-  inv.appendChild(grid);
-}
-
-function usarItemComprado(index){
-  const heroi = GS.getHeroiAtivo();
-  const item = heroi && heroi.inventario && heroi.inventario[index];
-  if(!item) return;
-  if(item.tipo === 'consumivel'){
-    GS.aplicarConsumivel(item);          // recupera fome/sede + atualiza barras
-    heroi.inventario[index] = null;      // consome o item
-    if(GS.gameState) renderMyPanel(GS.gameState);
-    toast(t('ui.item.usou_item', {nome: item.nome}), 'var(--gold)');
-  } else {
-    toast(t('ui.item.nao_consumivel'), 'var(--gold)');
-  }
-}
-
-function equiparComprado(index){
-  if(GS.equiparItemComprado(index) && GS.gameState) renderMyPanel(GS.gameState);
-}
-
-function desequiparComprado(slot){
-  if(GS.desequiparItemComprado(slot) && GS.gameState) renderMyPanel(GS.gameState);
-}
 
 let _openChestId = null;   // currently-open chest id (for auto-refresh)
 let _openDecorLootId = null;   // currently-open decor loot id (for auto-refresh)
@@ -21709,7 +20871,6 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
-const ACOES_BONUS = ['beberPocao', 'usarItemMagico', 'envenenarArma', 'usarItem'];
 const BONUS_ACTION_EFFECTS = new Set(['heal', 'regeneration', 'atk_bonus', 'antidote']);
 
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
@@ -24989,12 +24150,6 @@ window.addEventListener('gamepaddisconnected', e => {
 });
 _startGamepadLoop(); // também detecta controles conectados antes de abrir a página
 
-// ── Mobile / touch helpers ──────────────────────────────────────────────────
-function isMobile(){
-  return window.matchMedia('(max-width: 820px)').matches
-      || (('ontouchstart' in window) && window.innerWidth < 920);
-}
-
 // Converte um ponto da tela (clientX/Y) na casa [tx,ty] do tabuleiro 2D.
 // Robusto a: hi-DPI (canvas.width = cssW×dpr) e zoom por toque (canvas.style.width
 // alterado). A "casa em px de CSS" = rect.width / (nº de casas na horizontal).
@@ -25419,10 +24574,6 @@ function _setFpsMostrar(v){
 
 function _setHighContrast(v){ _highContrast=!!v; _applyAccessibilityPrefs(); _accessSavePrefs(); if(GS.gameState) _redrawMasterSelection(); }
 function _setAnimationSpeedMode(v){ _animationSpeedMode=['normal','fast','instant'].includes(v)?v:'normal'; _applyAccessibilityPrefs(); _accessSavePrefs(); }
-function _animationDuration(base){
-  const n = Math.max(0, Number(base) || 0) * _accessDurationScale;
-  return _animationSpeedMode === 'instant' ? 0 : _animationSpeedMode === 'fast' ? n * .55 : n;
-}
 function _animationProgressDuration(base){
   const n = Math.max(0, Number(base) || 0) * _accessDurationScale;
   return _animationSpeedMode === 'instant' ? 0.001 : _animationSpeedMode === 'fast' ? n * .55 : n;
@@ -33434,7 +32585,6 @@ const PROTECAO_ENERGIA_COLORS = {
 };
 
 function _protecaoEnergiaColor(element){return PROTECAO_ENERGIA_COLORS[String(element||'').toLowerCase()]||0x8eeaff;}
-function _protecaoEnergiaHash(n){n=(n|0)^0x51ed270b;n=Math.imul(n^(n>>>15),0x2c1b3c6d);return((n^(n>>>13))>>>0)/4294967296;}
 
 function _protecaoEnergiaAnimFromMessage(msg){
   const origin=Array.isArray(msg.target)?msg.target.map(Number):(Array.isArray(msg.origin)?msg.origin.map(Number):[0,0]);
@@ -39971,7 +39121,6 @@ function _mWood(hex){ return {color:new g3.T.Color(hex??0x7a4a18), roughness:0.6
 function _mGlw(hex,i){ const c=new g3.T.Color(hex); return {color:c,emissive:c,emissiveIntensity:i??1.2,roughness:0.22,metalness:0.05}; }
 
 // Cobblestone texture: cached procedural CanvasTexture (deterministic pattern).
-let _stoneTopTex = null;
 
 // ── Tampo de MADEIRA ESCURA para a base dos peões (corte de tora: anéis) ──────
 let _woodTopTex = null;
@@ -39999,29 +39148,6 @@ function _getWoodTopTex(T){
   }
   _woodTopTex = new T.CanvasTexture(c);
   return _woodTopTex;
-}
-
-function _getStoneTopTex(T){
-  if(_stoneTopTex) return _stoneTopTex;
-  const c = document.createElement('canvas');
-  c.width = 64; c.height = 64;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#09090b';
-  ctx.fillRect(0,0,64,64);
-  const stones = [
-    [ 1, 1,20,14],[23, 1,18,16],[ 1,17,22,14],[25,19,18,14],
-    [ 1,33,24,14],[27,35,20,14],[ 1,49,22,12],[25,51,20,10],
-    [45, 1,18,16],[45,19,18,16],[45,37,18,14],[45,53,18,10]
-  ];
-  for(const [sx,sy,sw,sh] of stones){
-    ctx.fillStyle = 'rgb(18,18,22)';
-    ctx.fillRect(sx,sy,sw,sh);
-    ctx.strokeStyle = '#040406';
-    ctx.lineWidth = 1.2;
-    ctx.strokeRect(sx+0.5,sy+0.5,sw-1,sh-1);
-  }
-  _stoneTopTex = new T.CanvasTexture(c);
-  return _stoneTopTex;
 }
 
 // Gold name-plate sprite (billboards toward camera — always readable).
@@ -45320,18 +44446,6 @@ function _tempestadeCicloneContem(c, pos){
   return Number.isFinite(x) && Number.isFinite(y)
     && pos[0]>=x && pos[0]<x+(Number(c.lado)||1)
     && pos[1]>=y && pos[1]<y+(Number(c.lado)||1);
-}
-function _tempestadeTargetMesh(rec){
-  if(!g3?.entityGroup || !rec) return null;
-  const id=String(rec.id), kind=String(rec.kind || '');
-  return g3.entityGroup.children.find(fig=>{
-    const u=fig.userData||{};
-    if(kind==='player') return u.pid!=null && String(u.pid)===id;
-    if(kind==='monster') return u.monId!=null && String(u.monId)===id;
-    if(kind==='animado') return u.animadoId!=null && String(u.animadoId)===id;
-    if(kind==='prisoner') return !!u.prisoner;
-    return [u.pid,u.monId,u.animadoId].some(x=>x!=null&&String(x)===id) || !!u.prisoner;
-  }) || null;
 }
 function _tempestadeSyncTargetSpins(state){
   if(!g3?.entityGroup) return;

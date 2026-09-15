@@ -327,25 +327,9 @@ window.LANG_INTERFACE = {
     "en": "Lacralion Venom",
     "pt": "Veneno do Lacralion"
   },
-  "ui.acao.arremessar_adaga": {
-    "en": "🎯 Throw Off-hand Dagger",
-    "pt": "🎯 Arremessar Adaga Secundária"
-  },
-  "ui.acao.arremessar_adaga_desc": {
-    "en": "1d4 + DEX — up to 3 squares",
-    "pt": "1d4 + DES — até 3 quadrados"
-  },
   "ui.acao.arremessar_arma": {
     "en": "🎯 Throw {nome}",
     "pt": "🎯 Arremessar {nome}"
-  },
-  "ui.acao.ataque_extra_adaga": {
-    "en": "🗡️ Extra Attack — Off-hand Dagger",
-    "pt": "🗡️ Ataque Extra — Adaga Secundária"
-  },
-  "ui.acao.ataque_extra_adaga_desc": {
-    "en": "1d4 + DEX adjacent",
-    "pt": "1d4 + DES adjacente"
   },
   "ui.acoes.custo": {
     "en": "Cost",
@@ -1719,21 +1703,9 @@ window.LANG_INTERFACE = {
     "en": "▶ CLICK TO ENTER",
     "pt": "▶ CLIQUE PARA ENTRAR"
   },
-  "ui.cidade.dica_anfitriao": {
-    "en": "You are the host — click the Gate or here to enter.",
-    "pt": "Você é o anfitrião — clique no Portão ou aqui para entrar."
-  },
-  "ui.cidade.dica_convidado": {
-    "en": "Waiting for the host to start the adventure…",
-    "pt": "Aguardando o anfitrião iniciar a aventura…"
-  },
   "ui.cidade.entrada_sem_destino": {
     "en": "⚠ This entrance is not linked to any destination.",
     "pt": "⚠ Esta entrada não está vinculada a nenhum destino."
-  },
-  "ui.cidade.entrar_masmorra": {
-    "en": "⚔ Enter the Dungeon",
-    "pt": "⚔ Entrar na Masmorra"
   },
   "ui.cidade.fechar": {
     "en": "Close",
@@ -1746,14 +1718,6 @@ window.LANG_INTERFACE = {
   "ui.cidade.ir_aventura": {
     "en": "Go on the adventure",
     "pt": "Ir para a aventura"
-  },
-  "ui.cidade.ir_aventura_btn": {
-    "en": "▶ Go on the adventure",
-    "pt": "▶ Ir para a aventura"
-  },
-  "ui.cidade.ir_aventura_fase": {
-    "en": "▶ Go on the adventure — Phase {n}",
-    "pt": "▶ Ir para a aventura — Fase {n}"
   },
   "ui.cidade.mapa_mundi": {
     "en": "🧭 World map",
@@ -2258,30 +2222,6 @@ window.LANG_INTERFACE = {
   "ui.elemental.tipo.pedra": {
     "en": "Stone",
     "pt": "Pedra"
-  },
-  "ui.equipar.bolsa_cheia": {
-    "en": "❌ Inventory full — no room to unequip",
-    "pt": "❌ Inventário cheio — sem espaço para desequipar"
-  },
-  "ui.equipar.classe_nao_usa": {
-    "en": "❌ {heroi} cannot use {item}",
-    "pt": "❌ {heroi} não pode usar {item}"
-  },
-  "ui.equipar.duas_maos": {
-    "en": "❌ {item} requires two hands — remove the shield first",
-    "pt": "❌ {item} requer duas mãos — remova o escudo primeiro"
-  },
-  "ui.equipar.escudo_com_duas_maos": {
-    "en": "❌ Cannot use a shield with a two-handed weapon",
-    "pt": "❌ Não pode usar escudo com arma de duas mãos"
-  },
-  "ui.equipar.sem_slot": {
-    "en": "❌ {item} cannot be equipped",
-    "pt": "❌ {item} não pode ser equipado"
-  },
-  "ui.equipar.slot_incompativel": {
-    "en": "❌ {item} cannot be equipped in this slot",
-    "pt": "❌ {item} não pode ser equipado neste slot"
   },
   "ui.ficha.acerto_dano": {
     "en": "🎯 Hit <b>+{acerto}</b> &nbsp;·&nbsp; 🎲 Damage <b>{dano}</b>",
@@ -3299,10 +3239,6 @@ window.LANG_INTERFACE = {
     "en": "⏭ End Turn",
     "pt": "⏭ Encerrar Turno"
   },
-  "ui.hud.equipado_loja": {
-    "en": "Equipped (Shop)",
-    "pt": "Equipado (Loja)"
-  },
   "ui.hud.erro": {
     "en": "MISS",
     "pt": "ERRO"
@@ -3787,10 +3723,6 @@ window.LANG_INTERFACE = {
     "en": "You may recover the gold.",
     "pt": "Pode recuperar o ouro."
   },
-  "ui.hud.recupera_ouro_curto": {
-    "en": "chance to recover the gold",
-    "pt": "chance de recuperar o ouro"
-  },
   "ui.hud.regeneracao": {
     "en": "REGENERATION",
     "pt": "REGENERAÇÃO"
@@ -3798,10 +3730,6 @@ window.LANG_INTERFACE = {
   "ui.hud.regeneracao_divina": {
     "en": "Divine Regeneration",
     "pt": "Regeneração Divina"
-  },
-  "ui.hud.remover": {
-    "en": "Remove",
-    "pt": "Remover"
   },
   "ui.hud.resistencia": {
     "en": "RESISTANCE",
@@ -3911,30 +3839,6 @@ window.LANG_INTERFACE = {
     "en": "XP",
     "pt": "XP"
   },
-  "ui.hud.slot.arma": {
-    "en": "Weapon",
-    "pt": "Arma"
-  },
-  "ui.hud.slot.armadura": {
-    "en": "Armour",
-    "pt": "Armadura"
-  },
-  "ui.hud.slot.cabeca": {
-    "en": "Head",
-    "pt": "Cabeça"
-  },
-  "ui.hud.slot.magico1": {
-    "en": "Magic 1",
-    "pt": "Mágico 1"
-  },
-  "ui.hud.slot.magico2": {
-    "en": "Magic 2",
-    "pt": "Mágico 2"
-  },
-  "ui.hud.slot.secundario": {
-    "en": "Off hand",
-    "pt": "Secundário"
-  },
   "ui.hud.so_no_seu_turno": {
     "en": "Only on your turn.",
     "pt": "Só no seu turno."
@@ -4011,10 +3915,6 @@ window.LANG_INTERFACE = {
     "en": "Valid target — confirm to use.",
     "pt": "Alvo válido — confirmar para usar."
   },
-  "ui.instrumento.cancelado": {
-    "en": "Cancelled.",
-    "pt": "Cancelado."
-  },
   "ui.instrumento.clique_para_usar_nota_cortante": {
     "en": "🎵 Click to use Cutting Note",
     "pt": "🎵 Clique para usar Nota Cortante"
@@ -4050,14 +3950,6 @@ window.LANG_INTERFACE = {
   "ui.instrumento.escolha_de_direcao_cancelada": {
     "en": "Direction choice cancelled.",
     "pt": "Escolha de direção cancelada."
-  },
-  "ui.instrumento.escolha_direcao": {
-    "en": "Choose the direction",
-    "pt": "Escolha a direção"
-  },
-  "ui.instrumento.escolha_direcao_dica": {
-    "en": "Choose the direction of the call",
-    "pt": "Escolha a direção do chamado"
   },
   "ui.instrumento.escolha_uma_das_oito_casas_ao_redor_do_bar": {
     "en": "Choose one of the eight squares around the bard.",
@@ -4395,10 +4287,6 @@ window.LANG_INTERFACE = {
     "en": "Throw (4 sq., DEX attack). The target rolls Reflex DC 12; on a failure its movement is halved for 2 rounds.",
     "pt": "Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; se falhar, fica com o movimento reduzido à metade por 2 rodadas."
   },
-  "ui.item.comprados_na_loja_n": {
-    "en": "Bought at the Shop ({n})",
-    "pt": "Comprados na Loja ({n})"
-  },
   "ui.item.cota_malha.nome": {
     "en": "Chain Mail",
     "pt": "Cota de Malha"
@@ -4655,14 +4543,6 @@ window.LANG_INTERFACE = {
     "en": "Temporary attack",
     "pt": "Ataque temporário"
   },
-  "ui.item.equipado_loja": {
-    "en": "Equipped (Shop)",
-    "pt": "Equipado (Loja)"
-  },
-  "ui.item.equipar": {
-    "en": "⚙ Equip",
-    "pt": "⚙ Equipar"
-  },
   "ui.item.escolha_o_alvo_consumivel": {
     "en": "{icone} {nome} — Choose the target",
     "pt": "{icone} {nome} — Escolha o alvo"
@@ -4763,10 +4643,6 @@ window.LANG_INTERFACE = {
     "en": "Traveller's Backpack",
     "pt": "Mochila do Viajante"
   },
-  "ui.item.nao_consumivel": {
-    "en": "This item is not consumable.",
-    "pt": "Este item não é consumível."
-  },
   "ui.item.ouro_insuficiente": {
     "en": "Not enough gold",
     "pt": "Ouro insuficiente"
@@ -4783,10 +4659,6 @@ window.LANG_INTERFACE = {
     "en": "Hydrating Potion",
     "pt": "Poção Hidratante"
   },
-  "ui.item.recupera_fome_sede": {
-    "en": "Restores hunger/thirst",
-    "pt": "Recupera fome/sede"
-  },
   "ui.item.rede_arremesso.desc": {
     "en": "Throw (4 sq., DEX attack). The target is trapped; to escape it spends the turn on a Fortitude DC 12 check.",
     "pt": "Arremesse (4 quad., ataque por DES). O alvo fica preso; para escapar gasta o turno num teste de Fortitude CD 12."
@@ -4794,10 +4666,6 @@ window.LANG_INTERFACE = {
   "ui.item.refeicao_completa.nome": {
     "en": "Full Meal",
     "pt": "Refeição Completa"
-  },
-  "ui.item.remover": {
-    "en": "Remove",
-    "pt": "Remover"
   },
   "ui.item.robes.nome": {
     "en": "Robes",
@@ -4815,41 +4683,13 @@ window.LANG_INTERFACE = {
     "en": "Piercing",
     "pt": "Perfurante"
   },
-  "ui.item.tipo.arma": {
-    "en": "⚔ Weapon",
-    "pt": "⚔ Arma"
-  },
   "ui.item.tipo.armaDistancia": {
     "en": "🏹 Ranged",
     "pt": "🏹 Distância"
   },
-  "ui.item.tipo.armadura": {
-    "en": "🛡 Armor",
-    "pt": "🛡 Armadura"
-  },
-  "ui.item.tipo.consumivel": {
-    "en": "🍖 Consumable",
-    "pt": "🍖 Consumível"
-  },
-  "ui.item.tipo.escudo": {
-    "en": "🛡 Shield",
-    "pt": "🛡 Escudo"
-  },
   "ui.item.tipo.itemMagico": {
     "en": "🎒 Magic Item",
     "pt": "🎒 Item Mágico"
-  },
-  "ui.item.tipo.municao": {
-    "en": "🎯 Ammunition",
-    "pt": "🎯 Munição"
-  },
-  "ui.item.tipo.secundario": {
-    "en": "🔦 Accessory",
-    "pt": "🔦 Acessório"
-  },
-  "ui.item.tipo.varinha": {
-    "en": "✨ Wand",
-    "pt": "✨ Varinha"
   },
   "ui.item.tipo_label.arma": {
     "en": "WEAPON",
@@ -4894,14 +4734,6 @@ window.LANG_INTERFACE = {
   "ui.item.tocha.nome": {
     "en": "Torch",
     "pt": "Tocha"
-  },
-  "ui.item.usar": {
-    "en": "▶ Use",
-    "pt": "▶ Usar"
-  },
-  "ui.item.usou_item": {
-    "en": "Used {nome}",
-    "pt": "Usou {nome}"
   },
   "ui.item.varinha_arcana.desc": {
     "en": "Stores 3 spells. Casting = bonus action.",
@@ -5134,14 +4966,6 @@ window.LANG_INTERFACE = {
   "ui.ladino.criar_armadilha_titulo": {
     "en": "🪤 SET TRAP",
     "pt": "🪤 CRIAR ARMADILHA"
-  },
-  "ui.ladino.desarmar_desc": {
-    "en": "DEX check{b} on your square or an adjacent one (nat 1 sets it off on you)",
-    "pt": "Teste de DES{b} na casa/adjacente (nat1 dispara em você)"
-  },
-  "ui.ladino.desarmar_nome": {
-    "en": "🔧 Disarm Trap",
-    "pt": "🔧 Desarmar Armadilha"
   },
   "ui.ladino.dois_venenos": {
     "en": "up to 2 simultaneous poisons",
@@ -5710,10 +5534,6 @@ window.LANG_INTERFACE = {
   "ui.magia.equipamentos_e_itens_ficam_bloqueados_enqu": {
     "en": "Equipment and items stay locked while it lasts.",
     "pt": "Equipamentos e itens ficam bloqueados enquanto durar."
-  },
-  "ui.magia.esc_cancela": {
-    "en": "ESC cancels",
-    "pt": "ESC cancela"
   },
   "ui.magia.escolha_1_do_circulo": {
     "en": "Choose 1 spell of the {circulo} circle",

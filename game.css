@@ -624,9 +624,6 @@ input:focus { outline: none; border-color: var(--gold); }
               display: flex; align-items: center; gap: 8px; font-size: .84rem; }
 .city-pcard.me { border-color: var(--gold); }
 .city-pcard-gold { color: var(--gold); font-weight: bold; }
-.btn-enter-dungeon { background: var(--red); color: #fff; font-weight: bold;
-                     padding: 11px 28px; font-size: .96rem; letter-spacing: 1px; }
-.btn-enter-dungeon:hover { background: #c0392b; }
 
 /* ── Shop Modal ── */
 #shop-modal { position: fixed; inset: 0; background: #000c; display: none;
@@ -1034,19 +1031,6 @@ input:focus { outline: none; border-color: var(--gold); }
                    color:var(--gold); background:rgba(0,0,0,.5);
                    border:1px solid rgba(var(--gold-rgb),.32); border-radius:4px;
                    padding:5px 12px; flex-shrink:0; letter-spacing:1px; }
-#city-dungeon-bar { display:none!important; position:absolute; bottom:78px; left:50%; transform:translateX(-50%);
-                    z-index:20; display:none; flex-direction:column; align-items:center; gap:8px; }
-#city-host-hint { font-family:var(--font-body); font-size:10px; letter-spacing:2px;
-                  color:#7a6a5a; text-align:center; }
-.btn-enter-dungeon { background:linear-gradient(135deg,#8a1010,#cc2020);
-                     color:#fff; font-family:var(--font-title); font-weight:700;
-                     font-size:clamp(11px,1.2vw,13px); letter-spacing:3px;
-                     padding:clamp(10px,1.2vh,14px) clamp(24px,3vw,44px);
-                     border:1px solid #ff4040; border-radius:3px;
-                     box-shadow:0 0 18px rgba(220,30,30,.4);
-                     transition:all .2s; cursor:pointer; }
-.btn-enter-dungeon:hover { background:linear-gradient(135deg,#aa1515,#ee3030);
-                           box-shadow:0 0 28px rgba(255,50,50,.6); }
 .city-fade-overlay { position:fixed; inset:0; background:#000; opacity:0;
                      pointer-events:none; z-index:9999;
                      transition:opacity .85s cubic-bezier(.4,0,.6,1); }
