@@ -40,6 +40,9 @@ def lewis(r, nivel=6, pos=(4, 4)):
     p.update(pos=list(pos), level=nivel, alive=True, fome=40, sede=40)
     p["magias_conhecidas"] = ["senhor_das_aguas"]
     r.players["c"] = p; r.player_order = ["c"]
+    # Caminho REAL do jogo: a rodada vira em _advance_initiative (o fallback
+    # sem iniciativa de handle_end_turn foi removido).
+    r.initiative_active = True
     r._rebuild_initiative()
     return p
 

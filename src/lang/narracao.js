@@ -2768,10 +2768,6 @@ window.LANG_NARRACAO = {
     "en": "💀 **{heroi}**'s control turn ({partes}) — move and end the turn again.{recursos}",
     "pt": "💀 Turno de controle de **{heroi}** ({partes}) — mova e encerre o turno novamente.{recursos}"
   },
-  "narracao.turno_de_imobilizado_encerre_o_turno_par": {
-    "en": "🕸️ **{next_p}**'s turn — immobilized! End the turn to continue.",
-    "pt": "🕸️ Turno de **{next_p}** — imobilizado! Encerre o turno para continuar."
-  },
   "narracao.turno_de_iniciativa": {
     "en": "🎲 **{heroi}**'s turn (Initiative {actor_initiative}).",
     "pt": "🎲 Turno de **{heroi}** (Iniciativa {actor_initiative})."

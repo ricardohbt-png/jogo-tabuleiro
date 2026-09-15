@@ -117,7 +117,12 @@ async def main():
     p2 = make_player("p2", "B", "mage", 1)
     room.players = {"p1": p1, "p2": p2}
     room.player_order = ["p1", "p2"]
-    room.turn_index = 0
+    # Caminho REAL do jogo: fila de iniciativa (o fallback sem iniciativa
+    # de handle_end_turn foi removido). Ordem fixa p1 → p2.
+    room.initiative_active = True
+    room.initiative_order = [{"kind": "player", "id": "p1", "seq": 0, "initiative": 10},
+                             {"kind": "player", "id": "p2", "seq": 1, "initiative": 9}]
+    room.initiative_index = 0
     p2["fosso_oculto"] = True
     p2["fosso_pular_proximo_turno"] = True
     await room.handle_end_turn("p1")
