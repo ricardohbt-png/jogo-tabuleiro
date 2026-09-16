@@ -889,6 +889,18 @@ window.LANG_ERROS = {
     "en": "Ability has no uses left or is on cooldown.",
     "pt": "Habilidade sem usos ou em recarga."
   },
+  "erro.investida_exige_3_casas": {
+    "en": "Brutal Charge requires moving at least 3 squares this turn first.",
+    "pt": "A Investida Brutal exige mover ao menos 3 casas neste turno antes."
+  },
+  "erro.sem_magia_neste_turno": {
+    "en": "Concentration was lost — no spell this turn.",
+    "pt": "Perdeu a concentração — sem magia neste turno."
+  },
+  "erro.dominar_sem_alvo": {
+    "en": "No animated undead in range to dominate (or the scroll was already used).",
+    "pt": "Nenhum morto-vivo animado ao alcance para dominar (ou o pergaminho já foi usado)."
+  },
   "erro.heroi_ja_na_mesa_de_teste": {
     "en": "That hero is already on the test table.",
     "pt": "Esse herói já está na mesa de teste."

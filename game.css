@@ -1527,11 +1527,42 @@ input:focus { outline: none; border-color: var(--gold); }
 .mp-linha .txt { flex: 1; }
 .mp-linha .txt b { font-size: .72rem; }
 .mp-linha .meta { font-size: .6rem; opacity: .85; }
+.mp-linha.mp-test-skill-info { cursor: default; }
 .mp-linha.atk   { background: #2a1a16; border-color: #7a2a20; }
 .mp-linha.hab   { background: #1e1a30; border-color: #5a4a8a; }
 .mp-linha.item  { background: #16223a; border-color: #2a5a7a; }
 .mp-linha.off   { background: var(--bg2); border-color: var(--border); opacity: .45; cursor: not-allowed; }
 .mp-linha.armado { box-shadow: 0 0 0 2px var(--gold) inset; }
+/* A ficha do herói-teste usa linhas próprias para não alterar as fichas
+   normais. Reforça o contraste do nome e da descrição das habilidades. */
+#hud-mestre .mp-test-hero-skill,
+#hud-mestre .mp-test-skill,
+#hud-mestre .mp-test-skill-info { background: linear-gradient(135deg, #292044, #211a37); border-color: #8065b2; }
+#hud-mestre .mp-test-hero-skill .txt b,
+#hud-mestre .mp-test-skill .txt b,
+#hud-mestre .mp-test-skill-info .txt b { color: #fff0b8; text-shadow: 0 1px 2px #000; }
+#hud-mestre .mp-test-hero-skill .meta,
+#hud-mestre .mp-test-skill .meta,
+#hud-mestre .mp-test-skill-info .meta { color: #e8e0d2; opacity: 1; }
+#hud-mestre .mestre-test-combat-btn {
+  width: 100%; justify-content: center; min-height: 34px; margin: 7px 0 2px;
+  color: #fff8dc; font-size: .78rem; font-weight: 800; letter-spacing: .25px;
+  opacity: 1; cursor: pointer; transition: filter .15s, transform .1s, box-shadow .15s;
+}
+#hud-mestre .mestre-test-combat-btn[data-test-combat="start"] {
+  background: linear-gradient(135deg, #245c42, #3b9a63);
+  border-color: #82e0a4; box-shadow: 0 0 10px rgba(87, 218, 137, .28);
+}
+#hud-mestre .mestre-test-combat-btn[data-test-combat="stop"] {
+  background: linear-gradient(135deg, #7c2929, #c34b3e);
+  border-color: #ff9a82; box-shadow: 0 0 10px rgba(255, 104, 82, .28);
+}
+#hud-mestre .mestre-test-combat-btn:hover,
+#hud-mestre .mestre-test-combat-btn:focus-visible {
+  filter: brightness(1.2); transform: translateY(-1px); outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+#hud-mestre .mestre-test-combat-btn:active { transform: translateY(0); filter: brightness(.98); }
 .mp-cargas { font-size: .78rem; color: #e88; letter-spacing: 1px; }
 .mp-cargas small,.mp-cargas em { display:block; font-size:.48rem; letter-spacing:0; white-space:nowrap; font-style:normal; }
 .mp-cargas small { color:#b7d99b; }

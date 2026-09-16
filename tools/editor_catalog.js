@@ -5495,8 +5495,9 @@ window.EDITOR_CATALOG = {
           "name": "Explosão de Vapor",
           "action_type": "acao",
           "cooldown_turns": 6,
-          "range": 3,
-          "shape": "cone",
+          "range": 2,
+          "shape": "circle",
+          "area_raio": 2,
           "damage": "4d6",
           "damage_types": [
             "fire"
@@ -5504,7 +5505,7 @@ window.EDITOR_CATALOG = {
           "save": "reflexos",
           "dc": 16,
           "success_effect": "metade",
-          "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade."
+          "descricao": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 16 reduz 4d6 de fogo à metade."
         },
         {
           "id": "morte_explosiva",
@@ -5641,8 +5642,9 @@ window.EDITOR_CATALOG = {
           "name": "Explosão de Vapor",
           "action_type": "acao",
           "cooldown_turns": 6,
-          "range": 3,
-          "shape": "cone",
+          "range": 2,
+          "shape": "circle",
+          "area_raio": 2,
           "damage": "8d6",
           "damage_types": [
             "fire"
@@ -5650,7 +5652,7 @@ window.EDITOR_CATALOG = {
           "save": "reflexos",
           "dc": 18,
           "success_effect": "metade",
-          "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 18 reduz 8d6 de fogo à metade."
+          "descricao": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 18 reduz 8d6 de fogo à metade."
         },
         {
           "id": "morte_explosiva",
@@ -7197,8 +7199,9 @@ window.EDITOR_CATALOG = {
       "name": "Explosão de Vapor",
       "action_type": "acao",
       "cooldown_turns": 6,
-      "range": 3,
-      "shape": "cone",
+      "range": 2,
+      "shape": "circle",
+      "area_raio": 2,
       "damage": "4d6",
       "damage_types": [
         "fire"
@@ -7206,7 +7209,7 @@ window.EDITOR_CATALOG = {
       "save": "reflexos",
       "dc": 16,
       "success_effect": "metade",
-      "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade.",
+      "descricao": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 16 reduz 4d6 de fogo à metade.",
       "source": "monstro"
     },
     {

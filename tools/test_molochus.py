@@ -109,11 +109,15 @@ async def main():
         await r._execute_one_monster_attack(m, m["attacks"][2], {"kind": "player", "obj": p})
         check("investida flamejante usa movimento", any("Investida Flamejante" in f for f in r._falas) or p["hp"] < p["max_hp"])
 
-        r2 = room(); m2 = creature(r2, "molochus_adulto", "m2"); p2 = hero(r2, "h2", [5, 8])
+        # Explosão de Vapor é um círculo de raio 2 ao redor do Molochus (antes:
+        # cone de 3). Um herói a 2 casas entra; um a 3 fica de fora.
+        r2 = room(); m2 = creature(r2, "molochus_adulto", "m2"); p2 = hero(r2, "h2", [5, 7])
+        p_fora = hero(r2, "h3", [5, 9])
         target = {"kind": "player", "obj": p2}
-        targets = [target]
+        targets = [target, {"kind": "player", "obj": p_fora}]
         used = await r2._usar_explosao_vapor(m2, next(a for a in m2["special_abilities"] if a["id"] == "explosao_vapor"), target, targets)
-        check("vapor usa cone", used and p2["hp"] < p2["max_hp"])
+        check("vapor usa círculo de raio 2", used and p2["hp"] < p2["max_hp"])
+        check("vapor não alcança a 3 casas", p_fora["hp"] == p_fora["max_hp"])
         check("vapor tem recarga 6", m2["ability_cooldowns"].get("explosao_vapor") == 6)
         check("vapor nao repete em recarga", not await r2._monster_try_explosao_vapor(m2, targets))
     finally:

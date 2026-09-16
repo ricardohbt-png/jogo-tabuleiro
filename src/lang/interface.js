@@ -2627,6 +2627,10 @@ window.LANG_INTERFACE = {
     "en": "Combination armed. Choose the target manually to attack.",
     "pt": "Combinação armada. Escolha o alvo manualmente para atacar."
   },
+  "ui.habilidade.teto_combinacao": {
+    "en": "This hero can arm at most {n} skill(s) per turn.",
+    "pt": "Este herói só arma até {n} habilidade(s) por turno."
+  },
   "ui.habilidade.combinacao_cancelada": {
     "en": "Attack combination cancelled.",
     "pt": "Combinação de ataque cancelada."
@@ -3878,6 +3882,10 @@ window.LANG_INTERFACE = {
   "ui.hud.uma_parede_bloqueia_a_linha_de_tiro": {
     "en": "🧱 A wall blocks the line of fire!",
     "pt": "🧱 Uma parede bloqueia a linha de tiro!"
+  },
+  "ui.hud.movimento_bloqueado": {
+    "en": "Movement is blocked.",
+    "pt": "O movimento está bloqueado."
   },
   "ui.hud.uma_parede_ou_porta_fechada_bloqueia_o_ata": {
     "en": "A wall or closed door blocks the attack.",
@@ -6583,10 +6591,6 @@ window.LANG_INTERFACE = {
     "en": "passive",
     "pt": "passiva"
   },
-  "ui.mestre.acoes_de_teste": {
-    "en": "Test actions",
-    "pt": "Ações de teste"
-  },
   "ui.mestre.alcance": {
     "en": "range",
     "pt": "alcance"
@@ -6747,6 +6751,10 @@ window.LANG_INTERFACE = {
     "en": "↓ Descend",
     "pt": "↓ Descer"
   },
+  "ui.mestre.desativar": {
+    "en": "Deactivate",
+    "pt": "Desativar"
+  },
   "ui.mestre.diagnostico": {
     "en": "DIAGNOSTICS",
     "pt": "DIAGNÓSTICO"
@@ -6843,6 +6851,10 @@ window.LANG_INTERFACE = {
     "en": "ABILITIES",
     "pt": "HABILIDADES"
   },
+  "ui.mestre.habilidades_do_heroi": {
+    "en": "Hero abilities",
+    "pt": "Habilidades do herói"
+  },
   "ui.mestre.habilidades_titulo": {
     "en": "Abilities",
     "pt": "Habilidades"
@@ -6858,6 +6870,10 @@ window.LANG_INTERFACE = {
   "ui.mestre.heroi_de_teste_turno_ativo": {
     "en": "Test hero · active turn",
     "pt": "Herói de teste · turno ativo"
+  },
+  "ui.mestre.heroi_teste_aguarde_turno": {
+    "en": "Wait for this hero's turn to control it.",
+    "pt": "Aguarde o turno deste herói para controlá-lo."
   },
   "ui.mestre.herois_de_teste": {
     "en": "TEST HEROES",
@@ -6886,6 +6902,10 @@ window.LANG_INTERFACE = {
   "ui.mestre.iniciar_combate": {
     "en": "▶ Start combat",
     "pt": "▶ Iniciar combate"
+  },
+  "ui.mestre.instrumento": {
+    "en": "Use instrument",
+    "pt": "Usar instrumento"
   },
   "ui.mestre.itens_bolsa": {
     "en": "ITEMS (bag)",
@@ -7058,6 +7078,14 @@ window.LANG_INTERFACE = {
   "ui.mestre.rodada_vez_de": {
     "en": "Round {n} · {nome}'s turn",
     "pt": "Rodada {n} · vez de {nome}"
+  },
+  "ui.mestre.simulacao_fim_herois": {
+    "en": "Simulation ended: all test heroes were defeated.",
+    "pt": "Simulação encerrada: todos os heróis de teste foram derrotados."
+  },
+  "ui.mestre.simulacao_fim_monstros": {
+    "en": "Simulation ended: all monsters were defeated.",
+    "pt": "Simulação encerrada: todos os monstros foram derrotados."
   },
   "ui.mestre.selecionados_aplicar_todos": {
     "en": "{n} selected — apply to all:",
@@ -8911,6 +8939,10 @@ window.LANG_INTERFACE = {
     "en": "the controller drives the next turn",
     "pt": "o controlador dirige o próximo turno"
   },
+  "ui.status.oculto": {
+    "en": "🌫️ Hidden",
+    "pt": "🌫️ Oculto"
+  },
   "ui.status.o_estado_correspondente_nao_pode_ser_aplic": {
     "en": "the matching condition cannot be applied",
     "pt": "o estado correspondente não pode ser aplicado"
@@ -8930,6 +8962,18 @@ window.LANG_INTERFACE = {
   "ui.status.penalidade_ativa": {
     "en": "penalty active",
     "pt": "penalidade ativa"
+  },
+  "ui.status.provocacao": {
+    "en": "😤 Taunted",
+    "pt": "😤 Provocado"
+  },
+  "ui.status.provocacao_ef": {
+    "en": "must focus attacks on the taunter",
+    "pt": "deve concentrar os ataques no provocador"
+  },
+  "ui.status.desvantagem_proximo_ataque": {
+    "en": "disadvantage on the next attack",
+    "pt": "desvantagem no próximo ataque"
   },
   "ui.status.percepcao": {
     "en": "perception",

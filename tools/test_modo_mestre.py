@@ -599,6 +599,142 @@ async def main():
     await r.handle_mestre_usar_habilidade("m1", "g1", "petrificar", "hA")
     check("já-agiu recusado", any("agiu" in e.lower() for e in r._errs))
 
+    print("\n[26c] Arremesso Colossal — somente no simulador do Gigante")
+    r = playing_room_com_mestre()
+    r.test_mode = True
+    m = {"id": "g1", "name": "Gigante da Guerra", "type": "gigante_guerra",
+         "hp": 60, "max_hp": 60, "pos": [1, 1], "size": [2, 2],
+         "control_mode": "manual", "_master_acted": False,
+         "special_abilities": [{"id": "arremesso_colossal", "name": "Arremesso Colossal",
+                                "action_type": "acao", "range": 8,
+                                "attack_bonus": 7, "damage": "2d6"}],
+         "attacks": [{"name": "Espada", "atk_bonus": 9, "damage": "2d8+6",
+                      "num_attacks": 1, "melee": True, "reach": 2}]}
+    r.monsters = {"g1": m}; r.master_manual_mid = "g1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [8, 1],
+                         "alive": True, "hp": 20, "max_hp": 20, "ac": 12}}
+    arremessos = []
+    async def fake_arremesso(mm, atk_def, target_obj):
+        arremessos.append((dict(atk_def), target_obj["obj"]["id"]))
+        return True
+    r._execute_one_monster_attack = fake_arremesso
+    r._tem_linha_de_visao = lambda _a, _b: True
+    await r.handle_mestre_usar_habilidade("m1", "g1", "arremesso_colossal", "hA")
+    check("arremesso manual executado", len(arremessos) == 1)
+    check("usa alcance 8 e atributos corretos",
+          arremessos[0][0].get("range") == 8
+          and arremessos[0][0].get("attack_attribute") == "dex"
+          and arremessos[0][0].get("damage_attribute") == "str_")
+    check("consome a ação principal", m.get("_master_acted") is True)
+    r.test_mode = False; m["_master_acted"] = False; r._errs.clear(); arremessos.clear()
+    await r.handle_mestre_usar_habilidade("m1", "g1", "arremesso_colossal", "hA")
+    check("fora do simulador continua bloqueado", not arremessos and r._errs)
+
+    print("\n[26d] Maré Viva — cura no início do turno do simulador")
+    r = playing_room_com_mestre(); r.test_mode = True
+    r.materiais = {(2, 2): "agua"}
+    m = {"id": "e1", "name": "Elemental de Água", "type": "elemental_agua",
+         "hp": 10, "max_hp": 20, "pos": [2, 2], "size": [1, 1], "movement": 6,
+         "special_abilities": [{"id": "mare_viva", "action_type": "passiva"}]}
+    r.monsters = {"e1": m}
+    r.test_combat = {"active": True, "round": 1,
+                     "queue": [{"kind": "monster", "id": "e1"}], "index": 0}
+    await r._teste_combate_preparar_ator()
+    check("cura sobre água no simulador", m["hp"] > 10)
+    check("passiva reconhece o terreno", m.get("mare_viva_ativa") is True)
+
+    r.test_combat = {"active": False, "round": 0, "queue": [], "index": 0}
+    r.master_manual_mid = None; m["hp"] = 10
+    await r.handle_mestre_selecionar_teste("m1", "e1")
+    check("cura também na seleção livre", m["hp"] > 10)
+
+    print("\n[26e] Arremesso Colossal — Ciclope no simulador")
+    r = playing_room_com_mestre(); r.test_mode = True
+    m = {"id": "c1", "name": "Ciclope", "type": "ciclope", "hp": 40, "max_hp": 40,
+         "pos": [1, 1], "size": [2, 2], "control_mode": "manual",
+         "_master_acted": False,
+         "special_abilities": [{"id": "arremesso_colossal", "name": "Arremesso Colossal",
+                                "action_type": "acao", "range": 8,
+                                "attack_bonus": 1, "damage": "2d6"}],
+         "attacks": [{"name": "Clava Gigante", "atk_bonus": 8, "damage": "2d6+7",
+                      "num_attacks": 1, "melee": True, "reach": 2}]}
+    r.monsters = {"c1": m}; r.master_manual_mid = "c1"
+    r.players = {"hA": {"id": "hA", "name": "Vic", "pos": [8, 1],
+                         "alive": True, "hp": 20, "max_hp": 20, "ac": 12}}
+    arremessos = []
+    async def fake_arremesso_ciclope(mm, atk_def, target_obj):
+        arremessos.append((dict(atk_def), target_obj["obj"]["id"]))
+        return True
+    r._execute_one_monster_attack = fake_arremesso_ciclope
+    r._tem_linha_de_visao = lambda _a, _b: True
+    await r.handle_mestre_usar_habilidade("m1", "c1", "arremesso_colossal", "hA")
+    check("Ciclope arremessa manualmente", len(arremessos) == 1)
+    check("Ciclope mantém alcance 8 e dano 2d6",
+          arremessos[0][0].get("range") == 8
+          and arremessos[0][0].get("damage") == "2d6")
+
+    print("\n[26f] Corpo Energético — travessia manual dos elementais no simulador")
+    for tipo in ("elemental_eletrico", "elemental_fogo"):
+        r = playing_room_com_mestre(); r.test_mode = True
+        # Fecha os três lados do elemental para que o único caminho até (4,2)
+        # seja atravessar o herói em (3,2).
+        for x, y in ((2, 1), (2, 3), (1, 2), (1, 1), (1, 3), (3, 1), (3, 3)):
+            r.tiles[y][x] = S.WALL
+        definicao = next(d for d in S.MONSTER_DEFS if d["type"] == tipo)
+        m = S.make_monster(definicao, {"id": "r", "cx": 2, "cy": 2})
+        m.update({"id": "e1", "pos": [2, 2], "control_mode": "manual",
+                  "master_moves_left": 6, "_water_moves_left": 6})
+        h = make_player("hA", "Vic", "warrior", 0)
+        h.update({"test_hero": True, "pos": [3, 2], "alive": True,
+                  "hp": 100, "max_hp": 100})
+        r.monsters = {"e1": m}; r.players = {"hA": h}; r.master_manual_mid = "e1"
+        caminho = r._master_path_to(m, 4, 2, 6)
+        hp_antes = h["hp"]
+        await r.handle_mestre_mover_monstro_para("m1", "e1", 4, 2)
+        check(f"{tipo}: atravessa a criatura", caminho == [[4, 2]] and m["pos"] == [4, 2])
+        check(f"{tipo}: causa dano na travessia", h["hp"] < hp_antes)
+
+    print("\n[26g] Fúria Berserker — uma preparação concede somente o ataque extra do turno")
+    r = playing_room_com_mestre(); r.test_mode = True
+    h = make_player("test_hero_warrior", "Anão", "warrior", 0)
+    h.update({"test_hero": True, "pos": [2, 2], "alive": True,
+              "hp": 100, "max_hp": 100, "fome": 100, "sede": 100})
+    definicao = next(d for d in S.MONSTER_DEFS if d["type"] == "goblin")
+    m = S.make_monster(definicao, {"id": "g1", "cx": 2, "cy": 3})
+    m.update({"id": "g1", "pos": [2, 3], "hp": 1000, "max_hp": 1000, "ac": 1})
+    r.players = {h["id"]: h}; r.monsters = {m["id"]: m}
+    r.test_combat = {"active": True, "round": 1,
+                     "queue": [{"kind": "hero", "id": h["id"]}], "index": 0}
+    r.round_num = 1
+    await r._teste_combate_preparar_ator()
+    r._rolar_ataque = lambda *_args, **_kwargs: (True, 10, 10, False, None)
+    antes = m["hp"]
+    payload = {"target_id": "g1", "buffs": ["furia_berserker"]}
+    await r.handle_teste_acao_heroi("m1", h["id"], "attack", payload)
+    apos_primeiro = m["hp"]
+    check("primeiro ataque arma a Fúria sem encerrar a ação", apos_primeiro < antes and h.get("action_done") is False)
+    await r.handle_teste_acao_heroi("m1", h["id"], "attack", payload)
+    apos_segundo = m["hp"]
+    check("segundo clique usa exatamente o ataque extra", apos_segundo < apos_primeiro and h.get("action_done") is True)
+    await r.handle_teste_acao_heroi("m1", h["id"], "attack", payload)
+    check("terceiro clique não cria ataques infinitos", m["hp"] == apos_segundo)
+
+    print("\n[26h] Elemental de Água — movimento normal em água e água profunda")
+    r = playing_room_com_mestre(); r.test_mode = True
+    r.materiais = {(2, 2): "agua", (3, 2): "agua_profunda"}
+    definicao = next(d for d in S.MONSTER_DEFS if d["type"] == "elemental_agua")
+    elemental = S.make_monster(definicao, {"id": "e1", "cx": 1, "cy": 2})
+    elemental.update({"id": "e1", "pos": [1, 2]})
+    goblin_def = next(d for d in S.MONSTER_DEFS if d["type"] == "goblin")
+    goblin = S.make_monster(goblin_def, {"id": "g1", "cx": 1, "cy": 2})
+    # Remove a armadura natural derivada do goblin legado para isolar apenas
+    # o custo-base do terreno nesta contraprova.
+    goblin.update({"id": "g1", "pos": [1, 2], "natural_armor": 0})
+    check("Elemental entra em Água por 1 ponto", r._water_step_cost(elemental, 2, 2, [1, 2]) == 1)
+    check("Elemental entra em Água Profunda por 1 ponto", r._water_step_cost(elemental, 3, 2, [2, 2]) == 1)
+    check("outras criaturas continuam pagando Água", r._water_step_cost(goblin, 2, 2, [1, 2]) == 2)
+    check("outras criaturas continuam pagando Água Profunda", r._water_step_cost(goblin, 3, 2, [2, 2]) == 3)
+
     print("\n[27] mestre_usar_item — heal (bônus), throwable (principal), food recusado")
     r = playing_room_com_mestre()
     heal_calls = {"n": 0}
