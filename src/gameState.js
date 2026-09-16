@@ -1107,7 +1107,9 @@ const GS = (() => {
     if (kind === 'areia_deserto' || kind === 'lava') return 2 + custoElevacao;
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
         && kind !== 'rodamoinho_profundo') return 1 + custoElevacao;
-    if ((actor.special_abilities || []).some(h => h &&
+    const tipoCriatura = String(actor.type || '').toLowerCase();
+    if (tipoCriatura === 'elemental_agua' || tipoCriatura === 'elemental_água'
+        || (actor.special_abilities || []).some(h => h &&
         ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return 1;
     let cost = (kind === 'agua_profunda' || kind === 'rodamoinho_profundo') ? 3 : 2;
     const armor = actor.gear?.armor || {};
@@ -1489,12 +1491,20 @@ const GS = (() => {
         // casa, com o mesmo orçamento de movimento e ainda no turno. Isso
         // evita confirmar uma rota velha depois de uma atualização autoritativa.
         if (pendingMove && myPid) {
-          const pme = msg.players.find(p => p.id === myPid);
+          const testPreview = pendingMove.testHeroId != null && msg.test_mode;
+          const pme = testPreview
+            ? msg.players.find(p => String(p.id) === String(pendingMove.testHeroId))
+            : msg.players.find(p => p.id === myPid);
           const mesmaOrigem = pme && Array.isArray(pendingMove.origin)
             && pme.pos?.[0] === pendingMove.origin[0]
             && pme.pos?.[1] === pendingMove.origin[1];
           const mesmoOrcamento = pme && Number(pme.moves_left) === Number(pendingMove.moves_left);
-          if (!isMyTurn || !mesmaOrigem || !mesmoOrcamento) pendingMove = null;
+          const atorTeste = msg.test_mode && msg.test_combat?.active
+            ? msg.test_combat.queue?.[msg.test_combat.index] : null;
+          const turnoTesteValido = !testPreview ||
+            (atorTeste?.kind === 'hero' && String(atorTeste.id) === String(pendingMove.testHeroId));
+          if ((!testPreview && !isMyTurn) || !mesmaOrigem || !mesmoOrcamento || !turnoTesteValido)
+            pendingMove = null;
         }
         // (Sobrevivência cliente 0–100 desativada — fome/sede são autoritativos do
         // servidor, escala 0–100. Sem consumo/colapso fantasma no cliente.)
@@ -2022,6 +2032,13 @@ const GS = (() => {
   // Bloco da janela Manual (null fora dela). Ver _master_manual_payload no servidor.
   function masterManual() {
     return (gameState && (gameState.master_manual || gameState.command_control || gameState.mind_control)) || null;
+  }
+  // Rotas autoritativas para a prévia de movimento do Mestre. Fica separado
+  // de masterManual() porque command_control/mind_control não devem ganhar a
+  // nova interação visual do Mestre Manual.
+  function masterManualMovePaths() {
+    const mm = gameState && gameState.master_manual;
+    return (mm && mm.move_paths) || {};
   }
   // Cargas restantes de um golpe pelo índice em attacks[]. O payload vem com
   // chaves string (JSON não tem chave inteira), por isso o String(idx).
@@ -3016,6 +3033,43 @@ const GS = (() => {
     return null;
   }
 
+  // Resolver exclusivo do simulador do editor. Mantém o resolvedor normal
+  // intacto: o Mestre apenas escolhe qual herói-teste é o ator da fila e o
+  // mesmo contrato de alcance/LOS/caminho é reaproveitado para a decisão.
+  function resolveTestHeroTileClick(heroId, tx, ty) {
+    if (!gameState || !gameState.test_mode || gameState.phase !== 'playing') return null;
+    const actor = gameState.test_combat?.active
+      ? gameState.test_combat.queue?.[gameState.test_combat.index] : null;
+    if (!actor || actor.kind !== 'hero' || String(actor.id) !== String(heroId)) return null;
+    const hero = (gameState.players || []).find(p =>
+      String(p.id) === String(heroId) && p.alive && p.test_hero);
+    if (!hero) return null;
+
+    const monster = (gameState.monsters || []).find(m => m && m.hp > 0 &&
+      monsterTiles(m).some(([bx, by]) => bx === tx && by === ty));
+    if (monster && !hero.action_done) {
+      if (hero.engolido && monster.id === hero.engolido_por)
+        return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
+      const inRange = weaponCanReachTile(hero, tx, ty, monster.altura);
+      if (inRange) {
+        if (hero.weapon?.range == null || hasLineOfSight(gameState,
+          hero.pos[0], hero.pos[1], tx, ty, hero))
+          return { type: 'attack', targetId: monster.id, targetPos: [tx, ty] };
+        return { type: 'attack_blocked_wall' };
+      }
+    }
+
+    if (hero.petrificado) return { type: 'movement_blocked', reason: 'petrified' };
+    if ((hero.moves_left || 0) <= 0 || (tx === hero.pos[0] && ty === hero.pos[1])) return null;
+    const explored = new Set((gameState.explored || []).map(([x, y]) => `${x},${y}`));
+    for (const [x, y] of (gameState.revealed || [])) explored.add(`${x},${y}`);
+    const path = findPath(gameState.tiles, explored, hero.pos[0], hero.pos[1],
+      tx, ty, hero.moves_left, true, {
+        state: gameState, materiais: gameState.materiais, actor: hero
+      });
+    return path && path.length ? { type: 'move', path } : null;
+  }
+
   // ── Contas / Jogos Salvos (Fase 3) ──────────────────────────────────────────
   function loginConta(url, name, password) {
     connect(url, name, 'login');
@@ -3269,6 +3323,7 @@ const GS = (() => {
     canControlMonster,
     masterManualMid,
     masterManual,
+    masterManualMovePaths,
     masterAttackCharges,
     masterPodeAtacar,
     licaoAtual,
@@ -3391,6 +3446,7 @@ const GS = (() => {
     attackTargetTiles,
     activateSkill,
     resolveTileClick,
+    resolveTestHeroTileClick,
     cadaverAdjacente,
   };
 })();

@@ -223,9 +223,13 @@ async def main():
     r.player_order = ["p1"]
     targets = [{"kind": "player", "obj": adj}]
     orc["hp"] = 10   # sofreu dano (max 17) antes do 1º turno
+    # O snapshot mora no prólogo comum (`_upkeep_inicio_turno_monstro`), que a
+    # gm_phase roda antes da IA — assim vale também no controle Manual.
+    await r._upkeep_inicio_turno_monstro(orc, [orc])
     await r._ai_orc_guerreiro(orc, targets)
     check("enfurece após perder HP", orc["furia_cega"] is True)
     # próximo turno sem novo dano → calmo
+    await r._upkeep_inicio_turno_monstro(orc, [orc])
     await r._ai_orc_guerreiro(orc, targets)
     check("acalma se não sofreu novo dano", orc["furia_cega"] is False)
 

@@ -5470,8 +5470,8 @@ MONSTER_DEFS.extend([
              "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 1d6 de dano de fogo."},
             {"id": "investida_flamejante", "name": "Investida Flamejante", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "2d6", "damage_types": ["fire"],
              "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."},
-            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 3, "shape": "cone", "damage": "4d6", "damage_types": ["fire"], "save": "reflexos", "dc": 16, "success_effect": "metade",
-             "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 16 reduz 4d6 de fogo à metade."},
+            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 2, "shape": "circle", "area_raio": 2, "damage": "4d6", "damage_types": ["fire"], "save": "reflexos", "dc": 16, "success_effect": "metade",
+             "descricao": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 16 reduz 4d6 de fogo à metade."},
             {"id": "morte_explosiva", "name": "Morte Explosiva", "action_type": "passiva", "radius": 2, "damage": "4d6", "damage_types": ["fire"], "save": "reflexos", "dc": 16, "duration": 2, "tick_damage": "1d6",
              "descricao": "Ao morrer, explode em raio 2. Reflexos CD 16 reduz 4d6 à metade; o chão fica em chamas por 2 rodadas."},
         ],
@@ -5498,8 +5498,8 @@ MONSTER_DEFS.extend([
              "descricao": "Quem acertar a criatura com um ataque corpo a corpo sofre 2d6 de dano de fogo."},
             {"id": "investida_flamejante", "name": "Investida Flamejante", "action_type": "passiva", "attack_index": 2, "move_required": 3, "damage": "2d6", "damage_types": ["fire"],
              "descricao": "Após mover 3 quadrados, a Chifrada causa +2d6 de fogo."},
-            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 3, "shape": "cone", "damage": "8d6", "damage_types": ["fire"], "save": "reflexos", "dc": 18, "success_effect": "metade",
-             "descricao": "Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD 18 reduz 8d6 de fogo à metade."},
+            {"id": "explosao_vapor", "name": "Explosão de Vapor", "action_type": "acao", "cooldown_turns": 6, "range": 2, "shape": "circle", "area_raio": 2, "damage": "8d6", "damage_types": ["fire"], "save": "reflexos", "dc": 18, "success_effect": "metade",
+             "descricao": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 18 reduz 8d6 de fogo à metade."},
             {"id": "morte_explosiva", "name": "Morte Explosiva", "action_type": "passiva", "radius": 3, "damage": "8d6", "damage_types": ["fire"], "save": "reflexos", "dc": 18, "duration": 3, "tick_damage": "1d6",
              "descricao": "Ao morrer, explode em raio 3. Reflexos CD 18 reduz 8d6 à metade; o chão fica em chamas por 3 rodadas."},
         ],
@@ -9363,6 +9363,14 @@ class GameRoom:
         # Heróis de teste não possuem conexão própria. Durante uma ação
         # delegada, mensagens privadas (erros de validação, por exemplo) voltam
         # exclusivamente ao Mestre da mesma sala descartável.
+        # Efeitos passivos no início de um turno (como Afogar) não passam por
+        # `handle_teste_acao_heroi`, então também precisam ser roteados para o
+        # Mestre quando o destinatário é um herói temporário.
+        if (not ws and getattr(self, "test_mode", False)
+                and isinstance(self.players.get(pid), dict)
+                and self.players.get(pid, {}).get("test_hero")):
+            ws = self.connections.get(self.master_pid)
+            pid = self.master_pid
         if (not ws and getattr(self, "test_mode", False)
                 and getattr(self, "_test_action_actor", None) == pid):
             ws = self.connections.get(self.master_pid)
@@ -13250,6 +13258,29 @@ class GameRoom:
             self._relatar_falha(rotulo)
             return False
 
+    async def _virada_de_rodada(self):
+        """Passos comuns ao fechar uma rodada: contador, recarga de slots,
+        expiração das revelações mágicas e os ticks por rodada (armadilhas,
+        chamas, ácido, zonas, exaustão, retorno à masmorra).
+
+        Compartilhado pela fila de iniciativa (`_advance_initiative`) e pela
+        fila descartável do simulador do editor (`_teste_combate_avancar`) —
+        sem isto o simulador virava a rodada só no contador, e nada ticava."""
+        self.round_num += 1
+        self._processar_recarga_slots_rodada()
+        self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
+        # Cada passo da virada e isolado: um defeito num deles nao pode
+        # impedir os demais nem, sobretudo, o _activate_initiative_actor()
+        # no fim do chamador -- sem ele ninguem recebe turno.
+        self._isolar_sync(self._expirar_armadilhas_duracao, "expirar armadilhas")
+        for passo in (self._processar_efeitos_armadilha_turno,
+                      self._processar_em_chamas_turno,
+                      self._processar_acido_residual_turno,
+                      self._processar_zonas_turno,
+                      self._aplicar_exaustao_rodada,
+                      self._tick_retorno_masmorra):
+            await self._isolar(passo(), f"virada de rodada: {passo.__name__}")
+
     async def _advance_initiative(self):
         if not self.initiative_active or self._intro_masmorra_bloqueada():
             return
@@ -13275,20 +13306,7 @@ class GameRoom:
                          or self.monsters.get(entry["id"], {}).get("troll_regenerando")))
                 for entry in self.initiative_order[self.initiative_index:])
         if terminou_fila_viva:
-            self.round_num += 1
-            self._processar_recarga_slots_rodada()
-            self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
-            # Cada passo da virada e isolado: um defeito num deles nao pode
-            # impedir os demais nem, sobretudo, o _activate_initiative_actor()
-            # no fim deste metodo -- sem ele ninguem recebe turno.
-            self._isolar_sync(self._expirar_armadilhas_duracao, "expirar armadilhas")
-            for passo in (self._processar_efeitos_armadilha_turno,
-                          self._processar_em_chamas_turno,
-                          self._processar_acido_residual_turno,
-                          self._processar_zonas_turno,
-                          self._aplicar_exaustao_rodada,
-                          self._tick_retorno_masmorra):
-                await self._isolar(passo(), f"virada de rodada: {passo.__name__}")
+            await self._virada_de_rodada()
             self._isolar_sync(self._rebuild_initiative, "rebuild da iniciativa")
         # mortos/desconectados podem ter ficado na lista desta rodada.
         attempts = 0
@@ -15482,8 +15500,20 @@ class GameRoom:
             # escolhidas ANTES da aÃ§Ã£o (este ataque); o ataque extra da FÃºria Ã©
             # resolvido inline logo abaixo, na MESMA aÃ§Ã£o.
             if buffs:
+                # Em um herói temporário do simulador, Fúria é consumida na
+                # primeira ação de ataque e não pode ser rearmada nos cliques
+                # seguintes do mesmo turno (inclusive se o cliente reenviar o
+                # pacote antes de receber o novo estado).
+                _teste_furia_ja_consumida = bool(
+                    p.get("test_hero") and getattr(self, "test_mode", False)
+                    and getattr(self, "test_combat", {}).get("active")
+                    and p.get("_teste_furia_consumida_round") == self.round_num)
+                _buffs_para_resolver = list(buffs) if isinstance(buffs, (list, tuple, set)) else []
+                if _teste_furia_ja_consumida:
+                    _buffs_para_resolver = [sid for sid in _buffs_para_resolver
+                                            if sid != "furia_berserker"]
                 sel = [s for s in p.get("skills", [])
-                       if s["id"] in buffs and "mp" not in s]
+                       if s["id"] in _buffs_para_resolver and "mp" not in s]
                 teto = self._teto_combinacao(p)
                 if len(sel) > teto:
                     sel = sel[:teto]
@@ -15511,6 +15541,15 @@ class GameRoom:
                         p["skill_dobrar_dano"] = True
                     elif sid == "furia_berserker":
                         p["skill_ataques_extras"] = self._furia_extras(p)
+                        # No simulador do Mestre a ficha local pode reenviar a
+                        # seleção enquanto ainda há ataques extras pendentes.
+                        # A Fúria, porém, é preparada uma única vez por turno;
+                        # sem esta marca cada clique rearmaria o contador e
+                        # criaria ataques infinitos. A marca é exclusiva de
+                        # heróis temporários do teste e não toca partidas reais.
+                        if (p.get("test_hero") and getattr(self, "test_mode", False)
+                                and getattr(self, "test_combat", {}).get("active")):
+                            p["_teste_furia_consumida_round"] = self.round_num
                     nomes.append(f"{s.get('icon','')}{s.get('name', sid)}")
                 if sel:
                     await self.gm_say(
@@ -17200,6 +17239,20 @@ class GameRoom:
                 [1, 0], [-1, 0], [0, 1], [0, -1]
             ) else None
             origem = list(m["pos"])
+            # No simulador, os elementais com Corpo Energético podem atravessar
+            # uma criatura e terminar na casa livre seguinte. O BFS representa
+            # essa travessia como um salto de duas casas; reaproveitar o
+            # movimento automático garante o dano e todos os efeitos de entrada
+            # sem alterar o movimento manual das partidas normais.
+            if (self._mestre_corpo_energetico_teste(m)
+                    and abs(step_facing[0]) + abs(step_facing[1]) == 2):
+                await self._monster_move_step(m, [nx, ny])
+                if m.get("pos") == [nx, ny]:
+                    m["master_moves_left"] = max(
+                        0, m.get("master_moves_left", 0) - 2)
+                    if m.get("hp", 0) <= 0:
+                        break
+                    continue
             if not self._monster_can_occupy(m, nx, ny, candidate_facing, origem):
                 break
             passo_custo = self._water_step_cost(m, nx, ny, origem)
@@ -17229,6 +17282,10 @@ class GameRoom:
         if not m or m.get("hp", 0) <= 0:
             return
         self.master_manual_mid = monster_id
+        # O modo livre não passa pelo prólogo normal da IA. Processa somente a
+        # passiva de água neste ponto, uma vez por seleção de turno, sem trazer
+        # venenos, controles ou outros efeitos do jogo normal para o editor.
+        await self._processar_mare_viva_turno(m)
         # MESMO preparo da janela do mestre: o movimento tem DOIS contadores e
         # renovar só o visível (`master_moves_left`) trava o monstro em silêncio.
         # Quem `_commit_monster_step` debita a cada passo é `_water_moves_left`
@@ -17274,8 +17331,27 @@ class GameRoom:
                            len(self.players))
         hero["pos"] = [tx, ty]
         hero["test_hero"] = True
+        self._equipar_kit_heroi_teste(hero)
         self.players[test_pid] = hero
         await self.push_state()
+
+    def _equipar_kit_heroi_teste(self, hero):
+        """Kit do herói-teste: o que no jogo real vem do lobby/cidade e que a
+        ficha crua do `make_player` não tem. Sem isto, mago/clérigo nasciam com
+        `magias_conhecidas=[]` (menu de magias vazio) e o Ladino sem frasco
+        (Veneno Rápido sempre recusado). Só na sala descartável do editor."""
+        cls = hero.get("class_id")
+        if cls in ("mage", "cleric"):
+            # Todas as magias IMPLEMENTADAS da classe — os slots por círculo
+            # continuam limitando o que pode ser lançado no nível do herói.
+            hero["magias_conhecidas"] = [
+                mid for mid, magia in GRIMORIO.items()
+                if mid in GRIMORIO_IMPLEMENTADAS and cls in magia.get("classe", [])]
+        if cls == "rogue":
+            frasco = next((dict(i) for i in SHOP_MERCHANT
+                           if i.get("effect") == "coat_poison" and i.get("veneno_id")), None)
+            if frasco:
+                hero.setdefault("bag", []).append(frasco)
 
     # ── Simulador de combate do editor ─────────────────────────────────────
     # Esta máquina de estados existe SOMENTE em salas descartáveis criadas pelo
@@ -17295,14 +17371,43 @@ class GameRoom:
             return None
         return queue[index]
 
+    def _teste_combate_monstro_vivo(self, m):
+        """Monstro que ainda recebe turno na fila do simulador: HP > 0 OU um
+        troll caído regenerando — o mesmo critério de `_advance_initiative`.
+        Sem isto o troll a 0 HP saía da fila e a simulação encerrava como
+        "monstros eliminados" em vez de vê-lo voltar."""
+        return bool(m and (m.get("hp", 0) > 0 or m.get("troll_regenerando")))
+
     def _teste_combate_ator_vivo(self, actor):
         if not actor:
             return False
         if actor.get("kind") == "hero":
             p = self.players.get(actor.get("id"))
             return bool(p and p.get("test_hero") and p.get("alive"))
-        m = self.monsters.get(actor.get("id"))
-        return bool(m and m.get("hp", 0) > 0)
+        return self._teste_combate_monstro_vivo(self.monsters.get(actor.get("id")))
+
+    def _teste_combate_verificar_fim(self):
+        """Fecha a simulação quando um dos lados deixa de ter combatentes.
+
+        O teste do editor não dispara ``end_game`` nem recompensa de missão.
+        Apenas congela a fila descartável e informa o motivo no estado enviado
+        ao Mestre. Isso evita que uma fila sem monstros/heróis continue criando
+        rodadas indefinidamente e não altera o fluxo de partidas normais.
+        """
+        test = getattr(self, "test_combat", {})
+        if not test.get("active"):
+            return False
+        tem_heroi = any(p.get("test_hero") and p.get("alive")
+                        for p in getattr(self, "players", {}).values())
+        tem_monstro = any(self._teste_combate_monstro_vivo(m)
+                          for m in getattr(self, "monsters", {}).values())
+        if tem_heroi and tem_monstro:
+            return False
+        test["active"] = False
+        test["ended_reason"] = ("herois_eliminados" if not tem_heroi
+                                 else "monstros_eliminados")
+        self.master_manual_mid = None
+        return True
 
     def _teste_combate_fila(self, round_num):
         entries = []
@@ -17314,7 +17419,7 @@ class GameRoom:
                                 "int": self._initiative_attribute(p, "int_")})
         offset = len(entries)
         for seq, m in enumerate(self.monsters.values()):
-            if m.get("hp", 0) > 0:
+            if self._teste_combate_monstro_vivo(m):
                 entries.append({"kind": "monster", "id": m["id"], "seq": offset + seq,
                                 "initiative": self.initiative_value(m),
                                 "dex": self._initiative_attribute(m, "dex"),
@@ -17325,53 +17430,104 @@ class GameRoom:
                                                e["seq"]))
 
     async def _teste_combate_preparar_ator(self):
+        """Abre o turno do ator da fila. Retorna False quando o turno NÃO deve
+        acontecer (ator morto ou turno consumido no prólogo — petrificado,
+        paralisado, rede, sono/medo…): o chamador avança a fila.
+
+        Passa pelos MESMOS prólogos do jogo real — `_start_initiative_player_turn`
+        para o herói e `_upkeep_inicio_turno_monstro` + `_upkeep_inicio_turno_manual`
+        para o monstro (como a janela do Mestre) — em vez de uma "preparação
+        enxuta": esta pulava recargas, ticks de veneno/chamas, regeneração,
+        manutenções de classe e todo o controle de multidão, então nada disso
+        funcionava no simulador. Continua sem tocar `initiative_order`/IA."""
         actor = self._teste_combate_ator()
         if not actor:
             return False
-        if actor["kind"] == "hero":
+        if actor.get("kind") == "hero":
             p = self.players.get(actor["id"])
             if not p or not p.get("test_hero") or not p.get("alive"):
                 return False
-            # Preparação enxuta e exclusiva do simulador. Não chama o ciclo
-            # normal de turno, que poderia abrir fases de servos/IA.
-            p["moves_left"] = self._water_turn_moves(p, self._moves_base(p))
-            p["action_done"] = False
-            p["bonus_action_used"] = False
-            p["moved_this_turn"] = False
-            p["instrumento_usado"] = False
+            # A Fúria armada no turno anterior nunca atravessa a troca de
+            # iniciativa. O campo só existe para a proteção do simulador.
+            p.pop("_teste_furia_consumida_round", None)
             p.pop("_water_min_step_used", None)
             self.master_manual_mid = None
-        else:
-            m = self.monsters.get(actor["id"])
-            if not m or m.get("hp", 0) <= 0:
-                return False
-            self.master_manual_mid = m["id"]
-            self._preparar_janela_controle_monstro(m)
+            await self._start_initiative_player_turn(p)
+            return bool(p.get("alive"))
+        m = self.monsters.get(actor["id"])
+        if not self._teste_combate_monstro_vivo(m):
+            return False
+        # Prólogo completo (veneno, regeneração, recargas de espécie, CC…).
+        # False = turno consumido; o monstro não abre janela.
+        if not await self._upkeep_inicio_turno_monstro(m, [m]):
+            return False
+        self.master_manual_mid = m["id"]
+        # Afogar vem logo depois do prólogo, como no fluxo normal da IA.
+        await self._processar_onda_envolvente_turno(m)
+        if m.get("hp", 0) <= 0:
+            return False
+        self._preparar_janela_controle_monstro(m)
+        await self._upkeep_inicio_turno_manual(m)
         return True
 
-    async def _teste_combate_avancar(self):
+    def _teste_combate_proximo(self):
+        """Move o índice da fila para o próximo ator vivo. Retorna True se a
+        rodada virou (o chamador aplica `_virada_de_rodada` e remonta a fila)."""
         test = self.test_combat
-        self.master_manual_mid = None
         queue = test.get("queue") or []
         test["index"] = int(test.get("index", 0) or 0) + 1
         while test["index"] < len(queue) and not self._teste_combate_ator_vivo(queue[test["index"]]):
             test["index"] += 1
-        if test["index"] >= len(queue):
-            test["round"] = int(test.get("round", 1) or 1) + 1
-            # `round_num` é usado por recargas e só é espelhado nesta sala de
-            # teste descartável; partidas normais nunca entram neste ramo.
-            self.round_num = test["round"]
-            test["queue"] = self._teste_combate_fila(test["round"])
-            test["index"] = 0
-        while test.get("queue") and not self._teste_combate_ator_vivo(self._teste_combate_ator()):
-            test["index"] += 1
-            if test["index"] >= len(test["queue"]):
-                test["active"] = False
-                self.master_manual_mid = None
+        return test["index"] >= len(queue)
+
+    async def _teste_combate_avancar(self):
+        test = self.test_combat
+        if self._teste_combate_verificar_fim():
+            await self.push_state()
+            return
+        self.master_manual_mid = None
+        # Um ator cujo turno foi consumido no prólogo é pulado; o laço é
+        # limitado para uma fila em que todos perdem o turno não girar sem fim.
+        for _ in range(2 * len(test.get("queue") or []) + 2):
+            if self._teste_combate_proximo():
+                # `round_num` é usado por recargas e só é espelhado nesta sala de
+                # teste descartável; partidas normais nunca entram neste ramo.
+                await self._virada_de_rodada()
+                test["round"] = self.round_num
+                test["queue"] = self._teste_combate_fila(test["round"])
+                test["index"] = 0
+                if self._teste_combate_verificar_fim():
+                    await self.push_state()
+                    return
+                while test.get("queue") and not self._teste_combate_ator_vivo(self._teste_combate_ator()):
+                    test["index"] += 1
+                    if test["index"] >= len(test["queue"]):
+                        test["active"] = False
+                        self.master_manual_mid = None
+                        break
+                if not test.get("active"):
+                    break
+            if self._teste_combate_verificar_fim():
                 break
-        if test.get("active"):
-            await self._teste_combate_preparar_ator()
+            if await self._teste_combate_preparar_ator():
+                break
         await self.push_state()
+
+    async def _teste_combate_fechar_vez_atual(self):
+        """Limpeza de fim de turno do ator ativo, antes de avançar a fila."""
+        actor = self._teste_combate_ator()
+        if not actor:
+            return
+        if actor.get("kind") == "monster":
+            m = self.monsters.get(actor.get("id"))
+            if m:
+                await self._encerrar_ultimo_esforco_monstro_turno(m)
+            return
+        p = self.players.get(actor.get("id"))
+        if p and p.get("test_hero"):
+            # Mesmo reset do `handle_end_turn`: buffs de turno, metamagia, temp_def.
+            self._reset_fim_turno_jogador(p)
+
 
     async def handle_teste_iniciar_combate(self, pid):
         if (pid != self.master_pid or pid not in self.connections
@@ -17383,7 +17539,8 @@ class GameRoom:
         if len(queue) < 2 or not any(e["kind"] == "hero" for e in queue) or not any(e["kind"] == "monster" for e in queue):
             await self.send_to(pid, {"type": "error", "msg": T("erro.adicione_heroi_e_monstro_teste")})
             return
-        self.test_combat = {"active": True, "round": 1, "queue": queue, "index": 0}
+        self.test_combat = {"active": True, "round": 1, "queue": queue,
+                            "index": 0, "ended_reason": None}
         self.round_num = 1
         await self._teste_combate_preparar_ator()
         await self.push_state()
@@ -17391,19 +17548,17 @@ class GameRoom:
     async def handle_teste_encerrar_vez(self, pid):
         if not self._teste_combate_autorizado(pid):
             return
-        actor = self._teste_combate_ator()
-        if actor and actor.get("kind") == "monster":
-            m = self.monsters.get(actor.get("id"))
-            if m:
-                await self._encerrar_ultimo_esforco_monstro_turno(m)
+        await self._teste_combate_fechar_vez_atual()
         await self._teste_combate_avancar()
+
 
     async def handle_teste_encerrar_combate(self, pid):
         if (pid != self.master_pid or pid not in self.connections
                 or not getattr(self, "test_mode", False)):
             return
         self.master_manual_mid = None
-        self.test_combat = {"active": False, "round": 0, "queue": [], "index": 0}
+        self.test_combat = {"active": False, "round": 0, "queue": [],
+                            "index": 0, "ended_reason": None}
         await self.push_state()
 
     async def handle_teste_acao_heroi(self, pid, hero_id, action, data):
@@ -17436,8 +17591,80 @@ class GameRoom:
                 await self.handle_skill(hero_id, payload.get("skill_id"), payload.get("target_id"))
             elif action == "magia":
                 await self.handle_magia(hero_id, payload)
+            elif action == "hero_skill":
+                skill_id = payload.get("skill_id")
+                # Habilidades que já possuem handlers próprios não passam pelo
+                # fluxo legado de ``skill`` (que só entende MP). A lista é
+                # explícita para impedir que o editor vire um encaminhador de
+                # mensagens arbitrárias.
+                handlers = {
+                    "cancao_heroica": self.handle_ativar_cancao,
+                    "desativar_cancao": self.handle_desativar_cancao,
+                    "provocacao": self.handle_provocacao,
+                    "cura": self.handle_cura,
+                    "cura_area": self.handle_cura_area,
+                    "purificacao": self.handle_purificacao,
+                    "ressurreicao": self.handle_ressurreicao,
+                    "imposicao_maos": self.handle_imposicao_maos,
+                    "golpe_sagrado": self.handle_golpe_sagrado,
+                    "desativar_golpe_sagrado": self.handle_desativar_golpe_sagrado,
+                    "protetor": self.handle_protetor,
+                    "desativar_protetor": self.handle_desativar_protetor,
+                    "regeneracao_divina": self.handle_acao_livre_richard,
+                    "guerreiro_luz": self.handle_acao_livre_richard,
+                    "usar_instrumento": self.handle_usar_instrumento,
+                    "detectar_armadilhas": self.handle_detectar_armadilhas,
+                    "esconder_sombras": self.handle_esconder_sombras,
+                    "veneno_rapido": self.handle_veneno_rapido,
+                    "criar_armadilha": self.handle_criar_armadilha,
+                    "desarmar_armadilha": self.handle_desarmar_armadilha,
+                    "aprimorar_magia": self.handle_aprimorar_magia,
+                    "estender_magia": self.handle_estender_magia,
+                    "fortalecer_magia": self.handle_fortalecer_magia,
+                }
+                handler = handlers.get(skill_id)
+                if not handler:
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.acao_de_teste_nao_permitida")})
+                else:
+                    dados = dict(payload)
+                    if skill_id == "cancao_heroica" and not dados.get("atributos"):
+                        # Um preset seguro permite testar o botão sem abrir um
+                        # segundo painel; o Mestre ainda pode enviar atributos
+                        # diferentes por cliente/editor.
+                        dados["atributos"] = ["acerto"]
+                    if skill_id in {"regeneracao_divina", "guerreiro_luz"}:
+                        dados["habilidade_id"] = skill_id
+                    if skill_id == "guerreiro_luz" and not dados.get("bonus"):
+                        # O jogo real abre um painel para distribuir os bônus;
+                        # a ficha do simulador manda só o id — sem preset a
+                        # habilidade respondia sempre "escolha um bônus".
+                        dados["bonus"] = {"ataque": 1}
+                    if skill_id == "purificacao" and not dados.get("tipo"):
+                        # Idem: o painel de tipo não existe na ficha do
+                        # simulador. Infere pelo que o alvo tem de fato.
+                        alvo_p = self.players.get(dados.get("target_id"))
+                        if alvo_p:
+                            if alvo_p.get("efeitos_veneno") or alvo_p.get("envenenado"):
+                                dados["tipo"] = "veneno"
+                            elif alvo_p.get("doente"):
+                                dados["tipo"] = "doenca"
+                            elif alvo_p.get("petrificado"):
+                                dados["tipo"] = "petrificacao"
+                            elif self._maldicoes(alvo_p):
+                                dados["tipo"] = "maldicao"
+                            else:
+                                dados["tipo"] = "veneno"
+                    if skill_id in {"desativar_golpe_sagrado", "desativar_protetor"}:
+                        await handler(hero_id)
+                    else:
+                        await handler(hero_id, dados)
             else:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.acao_de_teste_nao_permitida")})
+            if self._teste_combate_verificar_fim():
+                # A ação autoritativa normalmente já publicou um estado; este
+                # segundo envio apenas anuncia imediatamente o fim da simulação
+                # quando o golpe acabou com o último monstro.
+                await self.push_state()
         finally:
             self._test_action_actor = None
 
@@ -17531,9 +17758,24 @@ class GameRoom:
         m["_master_acao_tipo"] = "ataque"
         m["_ja_executou_acao"] = True
         m["_master_touched"] = True
+        # Efeitos de espécie que só viviam dentro da IA e não chegavam ao
+        # ataque manual (Mestre/simulador): Caça em Bando e Derrubar do lobo,
+        # Mordida Corrosiva do Devorador de Metal.
+        if m.get("type") == "lobo_cinzento" and idx == 0:
+            atk_def = await self._lobo_bando_atk(m, alvo, dict(atk_def))
         hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo})
+        if m.get("type") == "lobo_cinzento":
+            await self._lobo_derrubar(m, {"kind": alvo_kind, "obj": alvo}, hit)
+        if (hit and m.get("type") == "devorador_metal" and idx == 0
+                and alvo_kind == "player" and alvo.get("hp", 1) > 0):
+            await self._aplicar_mordida_corrosiva(m, alvo)
         await self._furia_bestial_mestre(m, alvo, idx, hit)
         await self._dilacerar_mestre(m, alvo, idx, hit)
+        # No simulador do Mestre, as cargas são gastas uma a uma. O Combo
+        # Devorador precisa observar cada Mordida manualmente para manter a
+        # mesma regra da IA: duas Mordidas acertadas no mesmo alvo no turno.
+        if getattr(self, "test_mode", False) and pid == self.master_pid:
+            await self._combo_devorador_mestre(m, alvo, alvo_kind, idx, hit)
         m.pop("_golpe_brutal_ativo", None)   # Golpe Brutal vale para um golpe só
         if hit and m.get("veneno_arma_ativo"):
             m["veneno_arma_ativo"] = False
@@ -17598,6 +17840,44 @@ class GameRoom:
         if alvo.get("hp", 0) > 0 and ability.get("causa_sangramento", True):
             if self._aplicar_sangramento(alvo):
                 await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_dilacerar", alvo=nome_criatura(alvo)))
+
+    async def _combo_devorador_mestre(self, m, alvo, alvo_kind, idx, acertou):
+        """Replica no ataque manual do simulador o combo nativo do Lagarto.
+
+        O contador é por alvo e por janela/turno. As Garras extras são ataques
+        do próprio combo e não consomem as cargas exibidas da Mordida.
+        """
+        if not acertou or m.get("type") != "lagarto_carniceiro":
+            return
+        ability = next((ab for ab in m.get("special_abilities", [])
+                        if ab.get("id") == "combo_devorador"), None)
+        if not ability or idx != 0 or not alvo:
+            return
+        if alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+            return
+        hits = m.setdefault("_master_combo_devorador_hits", {})
+        alvo_id = alvo.get("id")
+        hits[alvo_id] = int(hits.get(alvo_id, 0) or 0) + 1
+        if hits[alvo_id] < int(ability.get("hits_needed", 2) or 2):
+            return
+        done = m.setdefault("_master_combo_devorador_done", [])
+        if alvo_id in done:
+            return
+        done.append(alvo_id)
+        garra = m.get("garra_attack")
+        if not garra:
+            return
+        target_obj = {"kind": alvo_kind, "obj": alvo}
+        garradas = 0
+        for _ in range(2):
+            if alvo.get("hp", alvo.get("vida_atual", 0)) <= 0:
+                break
+            if await self._execute_one_monster_attack(m, dict(garra), target_obj):
+                garradas += 1
+        if garradas:
+            await self.gm_say(T("narracao.combo_devorador_crava_2_garras", monstro=nome_criatura(m)))
+            if alvo.get("hp", alvo.get("vida_atual", 0)) > 0 and self._aplicar_sangramento(alvo):
+                await self.gm_say(T("narracao.comeca_a_sangrar_apos_o_combo_devorador", alvo=nome_criatura(alvo)))
 
     async def handle_mestre_encerrar_monstro(self, pid, monster_id):
         """Manual: encerra a vez do monstro; libera o laço de iniciativa."""
@@ -17741,7 +18021,9 @@ class GameRoom:
         m["_garaloux_charge_consumed"] = False
         m["_molochus_move_count"] = 0
         m["_tirano_move_count"] = 0
+        m["_troll_move_count"] = 0
         m["_tirano_passo_disparado"] = False
+        m.pop("_editor_ability_dobrar_dano", None)
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
         m["_master_acao_tipo"] = None
@@ -17750,6 +18032,8 @@ class GameRoom:
         m["_master_furia_dada"] = False
         m["_master_dilacerar_hits"] = {}
         m["_master_dilacerar_done"] = []
+        m["_master_combo_devorador_hits"] = {}
+        m["_master_combo_devorador_done"] = []
         m.pop("_minotauro_charge_manual_used", None)
         m.pop("_master_touched", None)
         m.pop("_golpe_brutal_ativo", None)
@@ -17913,7 +18197,9 @@ class GameRoom:
         m["_garaloux_charge_consumed"] = False
         m["_molochus_move_count"] = 0
         m["_tirano_move_count"] = 0
+        m["_troll_move_count"] = 0
         m["_tirano_passo_disparado"] = False
+        m.pop("_editor_ability_dobrar_dano", None)
         m["_master_acted"] = False
         m["_master_bonus_acted"] = False
         m["_master_acao_tipo"] = None
@@ -27799,7 +28085,8 @@ class GameRoom:
         cura = min(roll_dice("1d6"), monstro["max_hp"] - monstro["hp"])
         monstro["hp"] += cura
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": cura,
-                              "label": T("dado.mare_viva_de", nome=nome_criatura(monstro))})
+                              "label": T("dado.mare_viva_de", nome=nome_criatura(monstro)),
+                              "dice_theme": "regeneration"})
         await self.gm_say(T("narracao.e_revigorado_pela_agua_e_recupera_hp", monstro=nome_criatura(monstro), cura=cura))
 
     def _armor_category_of(self, criatura):
@@ -27823,10 +28110,19 @@ class GameRoom:
         return None
 
     def _ignora_penalidade_agua(self, criatura):
-        """Movimento Errático preserva o movimento normal em qualquer água."""
+        """Retorna se a criatura atravessa água sem custo adicional.
+
+        Além das habilidades aquáticas declaradas, o Elemental de Água é
+        naturalmente fluido e mantém o custo de uma casa normal tanto em
+        Água quanto em Água Profunda. A exceção é restrita ao custo de
+        movimento; outras regras de redemoinho permanecem independentes.
+        """
+        tipo = str((criatura or {}).get("type") or "").strip().lower()
+        if tipo in {"elemental_agua", "elemental_água"}:
+            return True
         return any(isinstance(habilidade, dict)
                    and habilidade.get("id") in {"movimento_erratico", "movimento_aquatico"}
-                   for habilidade in criatura.get("special_abilities", []))
+                   for habilidade in (criatura or {}).get("special_abilities", []))
 
     def _ignora_rodamoinho(self, criatura):
         """Voo, natação/movimento aquático e imunidade aquática atravessam o
@@ -30792,6 +31088,62 @@ class GameRoom:
             return
         await self.push_state()
 
+    def _reset_fim_turno_jogador(self, p):
+        """Limpeza de fim de turno do herói: movimento/ações, buffs de turno
+        (guerreiro, metamagia, técnicas armadas), temp_def/blessed/immune.
+
+        Extraído de `handle_end_turn` para a fila descartável do simulador do
+        editor (`handle_teste_encerrar_vez`) fechar a vez do herói-teste com a
+        MESMA limpeza — antes, Golpe Devastador e metamagias ficavam armados
+        para sempre ali. Byte-idêntico ao bloco original para o jogo real."""
+        pid = p["id"]
+        p["moves_left"]        = self._water_turn_moves(p, p["spd"])
+        p["action_done"]       = False
+        p["bonus_action_used"] = False
+        p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
+        self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo nÃ£o usados expiram
+        p["moved_this_turn"]   = False   # reabre o custo de sobrevivencia no novo turno
+        # buffs de turno do warrior expiram ao fim do turno (flags planas)
+        p["skill_bonus_acerto"] = 0
+        p["skill_bonus_dano"]   = 0
+        p["skill_dobrar_dano"]  = False
+        p["skill_ataques_extras"] = 0
+        p["machado_duplo_ataque_extra"] = False
+        p["tecnica_buff_dano_arma"] = 0   # buff de tÃ©cnica de turno (Brutalidade) expira
+        p["tecnica_mira_perfeita"] = False   # Mira Perfeita nÃ£o usada expira no fim do turno
+        p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo nÃ£o usado expira no fim do turno
+        p["ultimo_ataque_perdido"] = None   # Sorte: janela de reroll fecha no fim do turno
+        p["investida_armada"] = False   # Investida nÃ£o usada expira no fim do turno
+        p["investida_origem"] = None
+        p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno
+        p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canÃ§Ã£o no novo turno
+        # metamagia do mago expira ao fim do turno (flags planas)
+        p["aprimorar_ativo"]   = False
+        p["estender_ativo"]    = False
+        p["fortalecer_ativo"]  = False
+        # tÃ©cnicas exclusivas da Guilda (Fase 3) nÃ£o usadas expiram ao fim do turno
+        p["tec_ex_aprimorar_armado"] = False
+        p["tec_ex_estender_armado"] = False
+        p["tec_ex_canalizacao_armado"] = False
+        p["tec_ex_empoderar_armado"] = False
+        p["tec_ex_geminada_alvo2_id"] = None
+        p["tec_ex_canalizacao_perfeita_armado"] = False
+        p["tec_ex_acelerada_armado"] = False
+
+        # Clear temp effects for this player.
+        # temp_def normalmente dura 1 turno; o Escudo MÃ¡gico Aprimorado (Pedro)
+        # marca temp_def_turnos>1 e sobrevive a esse end_turn extra.
+        if self.temp_def_turnos.get(pid, 0) > 1:
+            self.temp_def_turnos[pid] -= 1
+        else:
+            self.temp_def.pop(pid, None)
+            self.temp_def_turnos.pop(pid, None)
+        if pid in self.blessed:
+            self.players[pid]["atk_bonus"] = self.players[pid]["base_atk_bonus"]
+            self.blessed.pop(pid)
+        if self.immune.get(pid, 0) > 0:
+            self.immune[pid] -= 1
+
     async def handle_end_turn(self, pid):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
@@ -30934,52 +31286,7 @@ class GameRoom:
             for key in ("fosso_oculto", "fosso_turno_perdido", "fosso_pular_proximo_turno"):
                 p.pop(key, None)
 
-        p["moves_left"]        = self._water_turn_moves(p, p["spd"])
-        p["action_done"]       = False
-        p["bonus_action_used"] = False
-        p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
-        self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo nÃ£o usados expiram
-        p["moved_this_turn"]   = False   # reabre o custo de sobrevivencia no novo turno
-        # buffs de turno do warrior expiram ao fim do turno (flags planas)
-        p["skill_bonus_acerto"] = 0
-        p["skill_bonus_dano"]   = 0
-        p["skill_dobrar_dano"]  = False
-        p["skill_ataques_extras"] = 0
-        p["machado_duplo_ataque_extra"] = False
-        p["tecnica_buff_dano_arma"] = 0   # buff de tÃ©cnica de turno (Brutalidade) expira
-        p["tecnica_mira_perfeita"] = False   # Mira Perfeita nÃ£o usada expira no fim do turno
-        p["tecnica_golpe_decisivo_armado"] = False   # Golpe Decisivo nÃ£o usado expira no fim do turno
-        p["ultimo_ataque_perdido"] = None   # Sorte: janela de reroll fecha no fim do turno
-        p["investida_armada"] = False   # Investida nÃ£o usada expira no fim do turno
-        p["investida_origem"] = None
-        p["coordenado_alvo"] = None   # Ataque Coordenado expira no fim do turno
-        p["cancao_atacou_apos"] = False   # reabre o custo extra de atacar sob a canÃ§Ã£o no novo turno
-        # metamagia do mago expira ao fim do turno (flags planas)
-        p["aprimorar_ativo"]   = False
-        p["estender_ativo"]    = False
-        p["fortalecer_ativo"]  = False
-        # tÃ©cnicas exclusivas da Guilda (Fase 3) nÃ£o usadas expiram ao fim do turno
-        p["tec_ex_aprimorar_armado"] = False
-        p["tec_ex_estender_armado"] = False
-        p["tec_ex_canalizacao_armado"] = False
-        p["tec_ex_empoderar_armado"] = False
-        p["tec_ex_geminada_alvo2_id"] = None
-        p["tec_ex_canalizacao_perfeita_armado"] = False
-        p["tec_ex_acelerada_armado"] = False
-
-        # Clear temp effects for this player.
-        # temp_def normalmente dura 1 turno; o Escudo MÃ¡gico Aprimorado (Pedro)
-        # marca temp_def_turnos>1 e sobrevive a esse end_turn extra.
-        if self.temp_def_turnos.get(pid, 0) > 1:
-            self.temp_def_turnos[pid] -= 1
-        else:
-            self.temp_def.pop(pid, None)
-            self.temp_def_turnos.pop(pid, None)
-        if pid in self.blessed:
-            self.players[pid]["atk_bonus"] = self.players[pid]["base_atk_bonus"]
-            self.blessed.pop(pid)
-        if self.immune.get(pid, 0) > 0:
-            self.immune[pid] -= 1
+        self._reset_fim_turno_jogador(p)
 
         # Fila individual: apÃ³s a limpeza normal do herÃ³i, passa ao prÃ³ximo
         # ator (herÃ³i ou monstro). O bloco legado abaixo fica como fallback.
@@ -31388,6 +31695,25 @@ class GameRoom:
             return False
         await self.gm_say(T("narracao.entra_em_furia_berserker_e_desfere_um_at", monstro=nome_criatura(m)))
         await self._monster_execute_attacks(m, target_obj)
+        return True
+
+    async def _gigante_ativar_furia_teste(self, m, target_obj):
+        """Fúria do Gigante no simulador do editor.
+
+        Na IA, a Fúria é chamada depois do ataque normal da criatura, então a
+        chamada de ``_gigante_ativar_furia`` representa somente o golpe extra.
+        A janela manual do simulador, porém, recebe o clique diretamente na
+        habilidade e não passou pelo ataque normal. Reproduzimos aqui a mesma
+        sequência (ataque normal + ataque extra) sem alterar o fluxo da partida
+        nem o controle Mestre-jogador.
+        """
+        ability = self._gigante_ability(m, "furia_berserker")
+        if not ability or not self._ativar_habilidade_nativa(m, ability):
+            return False
+        await self.gm_say(T("narracao.entra_em_furia_berserker_e_desfere_um_at", monstro=nome_criatura(m)))
+        await self._monster_execute_attacks(m, target_obj)
+        if self._alvo_vivo(target_obj):
+            await self._monster_execute_attacks(m, target_obj)
         return True
 
     def _alcance_com_altura(self, origem, destino_pos, alcance, destino=None,
@@ -32628,6 +32954,8 @@ class GameRoom:
             m["_garaloux_move_count"] = m.get("_garaloux_move_count", 0) + 1
         if m.get("type") in TIRANO_TYPES:
             m["_tirano_move_count"] = m.get("_tirano_move_count", 0) + 1
+        if m.get("type") == "troll":
+            m["_troll_move_count"] = m.get("_troll_move_count", 0) + 1
         if m.get("type") in {"minotauro", "minotauro_elite"}:
             m["_minotauro_move_count"] = m.get("_minotauro_move_count", 0) + 1
         if self._molochus_ability(m, "investida_flamejante"):
@@ -33091,6 +33419,12 @@ class GameRoom:
                 return False
         return True
 
+    def _mestre_corpo_energetico_teste(self, m):
+        """Habilita a travessia manual apenas para os elementais do simulador."""
+        return bool(getattr(self, "test_mode", False)
+                    and m and m.get("type") in {"elemental_eletrico", "elemental_fogo"}
+                    and self._tem_habilidade(m, "corpo_energetico"))
+
     def _master_reach_bfs(self, m, budget):
         """BFS ortogonal footprint-aware a partir da âncora de m, ≤ budget passos.
         Retorna prev {(x,y): (px,py)|None} de todas as casas alcançáveis (inclui a
@@ -33111,7 +33445,24 @@ class GameRoom:
                 # com a facing antiga fazia o Tirano 2×3 parecer bloqueado em
                 # viradas que cabiam perfeitamente com a nova orientação.
                 candidate_facing = [dx, dy] if m.get("oriented") else None
-                if (nx, ny) in prev or not self._monster_can_occupy(m, nx, ny, candidate_facing, [x, y]):
+                if (nx, ny) in prev:
+                    continue
+                if not self._monster_can_occupy(m, nx, ny, candidate_facing, [x, y]):
+                    # A travessia custa duas casas de movimento: a casa
+                    # ocupada é atravessada e a seguinte precisa estar livre.
+                    # Esta exceção existe somente para o simulador e somente
+                    # para elementais que declaram Corpo Energético.
+                    if self._mestre_corpo_energetico_teste(m):
+                        bx, by = nx + dx, ny + dy
+                        if (not self._blocks_tile(nx, ny)
+                                and self._occupants_at(nx, ny, exclude_mid=m.get("id"))
+                                and self._monster_can_occupy(m, bx, by, candidate_facing)
+                                and dist[(x, y)] + 2 <= budget
+                                and ((bx, by) not in prev
+                                     or dist[(x, y)] + 2 < dist[(bx, by)])):
+                            prev[(bx, by)] = (x, y)
+                            dist[(bx, by)] = dist[(x, y)] + 2
+                            q.append((bx, by))
                     continue
                 passo = self._custo_passo_elevacao(m, [x, y], [nx, ny], m.get("facing"), candidate_facing)
                 if passo is None:
@@ -33147,6 +33498,24 @@ class GameRoom:
         m = self.monsters.get(mid)
         if not m or m.get("hp", 0) <= 0:
             return None
+        # O Mestre precisa visualizar a rota antes de confirmá-la, mas o
+        # cálculo continua autoritativo: o cliente não tenta reproduzir as
+        # regras de footprint, orientação, terreno e travessia do servidor.
+        move_paths = {}
+        budget = int(m.get("master_moves_left", 0) or 0)
+        if budget > 0 and not (m.get("preso") and self._captor_ativo(m)):
+            sx, sy = m["pos"]
+            prev = self._master_reach_bfs(m, budget)
+            for dest in prev:
+                if dest == (sx, sy):
+                    continue
+                path = []
+                cur = dest
+                while cur != (sx, sy):
+                    path.append([cur[0], cur[1]])
+                    cur = prev[cur]
+                path.reverse()
+                move_paths[f"{dest[0]},{dest[1]}"] = path
         return {
             "mid": mid,
             "moves_left": int(m.get("master_moves_left", 0) or 0),
@@ -33155,6 +33524,7 @@ class GameRoom:
             "bonus": bool(m.get("_master_bonus_acted")),
             "restante": max(0, round(self.master_manual_deadline - time.monotonic())),
             "attack_charges": {str(k): v for k, v in (m.get("master_attack_charges") or {}).items()},
+            "move_paths": move_paths,
         }
 
     def _command_control_payload(self):
@@ -34355,8 +34725,10 @@ class GameRoom:
                 self._aplicar_hemorragia(target)
             if atk_def.get("aplica_hemorragia"):
                 self._aplicar_hemorragia(target)
+            editor_devastador = bool(m.get("_editor_ability_dobrar_dano"))
             raw_dmg = (self._rolar_dados_dobrados(atk_def["damage"])
-                       if troll_devastador else roll_dice(atk_def["damage"]))
+                       if (troll_devastador or editor_devastador)
+                       else roll_dice(atk_def["damage"]))
             if crit:
                 raw_dmg *= 2
             sneak_damage = self._monster_editor_sneak_damage(m)
@@ -35061,6 +35433,35 @@ class GameRoom:
         m["cancao_expira_em"] = self.round_num + duracao
         return True
 
+    async def _emitir_animacao_cancao_monstro(self, m):
+        """Emite o mesmo efeito visual da Canção do bardo para o Xamã.
+
+        A área continua sendo calculada pelo servidor somente quando os bônus
+        são usados. Este evento é exclusivamente visual e fica restrito ao
+        modo ``Testar como mestre`` para não alterar a partida normal.
+        """
+        if not getattr(self, "test_mode", False) or not m or not m.get("pos"):
+            return
+        origin = list(m["pos"])
+        targets = []
+        for aliado in self.monsters.values():
+            if aliado.get("hp", 0) <= 0 or not aliado.get("pos"):
+                continue
+            if max(abs(origin[0] - aliado["pos"][0]),
+                   abs(origin[1] - aliado["pos"][1])) > CANCAO_RAIO:
+                continue
+            targets.append({"id": aliado.get("id"), "pos": list(aliado["pos"])})
+        animation_id = f"cancao_heroica_monstro_{m.get('id')}_{self.round_num}_{new_id()}"
+        payload = {
+            "type": "spell_animation", "spell_id": "cancao_heroica",
+            "animation_id": animation_id, "caster_id": m.get("id"),
+            "target_id": m.get("id"), "origin": origin, "target": origin,
+            "targets": targets, "atributos": list(m.get("cancao_atributos", [])),
+            "raio": CANCAO_RAIO, "travel_ms": 420, "impact_ms": 1100,
+        }
+        await self.broadcast(dict(payload, phase="start"))
+        await self.broadcast(dict(payload, phase="resolve", success=True))
+
     def _expirar_cancao_monstro(self, m):
         if (m.get("cancao_ativa")
                 and int(m.get("cancao_expira_em", -1) or -1) <= self.round_num):
@@ -35098,8 +35499,9 @@ class GameRoom:
     def _ativar_editor_ability(self, m, ab, target_obj=None):
         """Aplica o efeito genérico de uma habilidade de editor (herói/guilda):
         gasta uso+recarga (monster_ability_*) e concede vantagem+dano no próximo
-        golpe. Compartilhado pela IA e pelo controle manual do mestre. Retorna
-        True se ativou, False se sem usos / em recarga."""
+        golpe. O Golpe Devastador adaptado é a exceção: dobra os dados durante
+        o turno. Compartilhado pela IA e pelo controle manual do mestre.
+        Retorna True se ativou, False se sem usos / em recarga."""
         aid = ab.get("id")
         uses = m.setdefault("monster_ability_uses", {})
         cds = m.setdefault("monster_ability_cooldowns", {})
@@ -35133,6 +35535,12 @@ class GameRoom:
             target["minotauro_pressao_ca"] = int(ab.get("ca_penalty", 2) or 2)
             target["minotauro_pressao_ate"] = self.round_num + max(1, int(ab.get("duration_rounds", 2) or 2))
             return True
+        if (ab.get("source") == "heroi"
+                and ab.get("source_id") == "golpe_devastador"):
+            # A habilidade original dobra os dados de dano neste turno. O
+            # fallback genérico (vantagem +1) não reproduzia esse efeito.
+            m["_editor_ability_dobrar_dano"] = True
+            return True
         # Para habilidades cujo efeito original pertence a herÃ³is, aplicamos
         # um equivalente seguro e universal no monstro: vantagem no prÃ³ximo
         # golpe e dano adicional. Isso evita habilidades apenas decorativas.
@@ -35164,6 +35572,7 @@ class GameRoom:
                 # atributos, enquanto o Mestre escolhe explicitamente.
                 if self._ativar_cancao_monstro(m, [a["id"] for a in CANCAO_ATRIBUTOS]):
                     m["_monster_editor_action_consumed"] = True
+                    await self._emitir_animacao_cancao_monstro(m)
                     await self.gm_say(T("narracao.cancao_monstro.entoa", nome=nome_criatura(m)))
                     return True
                 continue
@@ -35196,6 +35605,29 @@ class GameRoom:
                 if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
                     continue
                 if self._blocks_tile(tx, ty) or not self._tem_linha_de_visao([ox, oy], [tx, ty]):
+                    continue
+                tiles.add((tx, ty))
+        return tiles
+
+    def _explosao_vapor_tiles(self, m, raio=2):
+        """Casas do círculo centrado no Molochus para a Explosão de Vapor.
+
+        O raio usa a mesma distância Chebyshev das demais áreas do tabuleiro:
+        diagonais contam como uma casa. Paredes, portas e objetos sólidos
+        continuam interrompendo a linha de visão a partir do monstro.
+        """
+        ox, oy = m["pos"]
+        raio = _monster_int(raio, 2, 1, 20)
+        tiles = set()
+        for ty in range(oy - raio, oy + raio + 1):
+            for tx in range(ox - raio, ox + raio + 1):
+                if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
+                    continue
+                if max(abs(tx - ox), abs(ty - oy)) > raio:
+                    continue
+                if self._blocks_tile(tx, ty):
+                    continue
+                if not self._tem_linha_de_visao([ox, oy], [tx, ty]):
                     continue
                 tiles.add((tx, ty))
         return tiles
@@ -35292,7 +35724,8 @@ class GameRoom:
         return bool(target and await self._usar_sopro_dragao(m, ability, target, targets))
 
     async def _usar_explosao_vapor(self, m, ability, target_obj, targets):
-        tiles = self._sopro_dragao_tiles(m, target_obj["obj"]["pos"], ability)
+        raio = _monster_int(ability.get("area_raio", 2), 2, 1, 20)
+        tiles = self._explosao_vapor_tiles(m, raio)
         if tuple(target_obj["obj"]["pos"]) not in tiles:
             return False
         victims = [item for item in targets if tuple(item["obj"].get("pos", [])) in tiles
@@ -35371,6 +35804,16 @@ class GameRoom:
 
     def _custo_acao_ability(self, ability):
         """'principal' | 'bonus' | 'livre' — o que esta habilidade consome."""
+        # Golpe Devastador é uma preparação do ataque do guerreiro. No modo
+        # testar como mestre ele deve deixar a ação principal disponível para
+        # o ataque no mesmo turno, sem alterar o fluxo normal dos heróis.
+        if ((ability or {}).get("source") == "heroi"
+                and (ability or {}).get("source_id") == "golpe_devastador"):
+            return "bonus"
+        if (ability or {}).get("id") in {"investida_brutal_troll", "dominar_morto_vivo"}:
+            # Investida: preparação automática do golpe após o deslocamento;
+            # Dominar: pergaminho — na IA é uma conjuração antes do ataque.
+            return "livre" if ability.get("id") == "investida_brutal_troll" else "principal"
         at = (ability or {}).get("action_type")
         return self._CUSTO_POR_ACTION_TYPE.get(at, "principal")
 
@@ -35404,6 +35847,10 @@ class GameRoom:
                    "passo_fantasma_runico", "provocacao_runica", "cauda_varredora"} or aid in self._ESMAGAR_PRESO:
             return True
         if aid in {"nuvem_acida", "sacudida_brutal", "engolir", "cuspir_acido"}:
+            return True
+        # Técnicas que só a IA disparava e agora o Mestre arma à mão.
+        if aid in {"golpe_devastador_troll", "pressao_constante_troll",
+                   "investida_brutal_troll", "arremesso", "dominar_morto_vivo"}:
             return True
         if ability.get("action_type") == "passiva":
             return False
@@ -35475,7 +35922,12 @@ class GameRoom:
         if not m or m["hp"] <= 0:
             return
         ability = next((a for a in m.get("special_abilities", []) if a.get("id") == ability_id), None)
-        if not self._habilidade_ativavel_manual(ability):
+        arremesso_colossal_teste = bool(
+            getattr(self, "test_mode", False)
+            and pid == self.master_pid
+            and m.get("type") in {"gigante_guerra", "ciclope"}
+            and ability_id == "arremesso_colossal")
+        if not self._habilidade_ativavel_manual(ability) and not arremesso_colossal_teste:
             await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_nao_ativavel_manualmente_ia_a")}); return
         custo = self._custo_acao_ability(ability)
         if custo == "principal" and m.get("_master_acted"):
@@ -35488,11 +35940,60 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_pelo_menos_um_bonus")}); return
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
+            await self._emitir_animacao_cancao_monstro(m)
             nomes = ", ".join(m.get("cancao_atributos", []))
             await self.gm_say(T("narracao.cancao_monstro.entoa_atributos", nome=nome_criatura(m), atributos=nomes))
             await self.push_state(); return
+        if ability_id in {"golpe_devastador_troll", "pressao_constante_troll",
+                          "investida_brutal_troll"} and m.get("type") == "troll":
+            cds = m.setdefault("ability_cooldowns", {})
+            if cds.get(ability_id, 0) > 0:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            if m.get("_troll_investida_ataque") or m.get("_troll_devastador_ataque"):
+                # Uma técnica de combate por turno, como na IA.
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            if ability_id == "investida_brutal_troll":
+                if int(m.get("_troll_move_count", 0) or 0) < 3:
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.investida_exige_3_casas")}); return
+                m["_troll_investida_ataque"] = True
+                cds[ability_id] = 5
+                await self.gm_say(T("narracao.prepara_investida_brutal", monstro=nome_criatura(m)))
+            elif ability_id == "golpe_devastador_troll":
+                m["_troll_devastador_ataque"] = True
+                cds[ability_id] = 4
+                await self.gm_say(T("narracao.desfere_golpe_devastador", monstro=nome_criatura(m)))
+            else:
+                alvo, alvo_kind = self._alvo_manual_mestre(target_id)
+                if not alvo or alvo_kind != "player" or not self._is_adjacent_to_monster(alvo.get("pos", []), m):
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
+                alvo["troll_pressao_ca"] = 2
+                alvo["troll_pressao_ca_ate"] = self.round_num + 2
+                cds[ability_id] = 4
+                await self.gm_say(T("narracao.impoe_pressao_constante", monstro=nome_criatura(m)))
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state(); return
+        if ability_id == "arremesso" and m.get("pode_arremessar") is not None:
+            if not m.get("pode_arremessar"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            alvo, alvo_kind = self._alvo_manual_mestre(target_id)
+            if not alvo or alvo_kind != "player" or not self._goblin_arremesso_alcanca(m, alvo):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
+            m["_master_touched"] = True
+            await self._goblin_arremesso_em(m, {"kind": alvo_kind, "obj": alvo})
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state(); return
+        if ability_id == "dominar_morto_vivo":
+            if m.get("_sem_magia_turno"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.sem_magia_neste_turno")}); return
+            if not await self._necro_tentar_dominar(m):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.dominar_sem_alvo")}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
         if ability.get("action_type") == "magia":
             sid = ability_id
+            if m.get("_sem_magia_turno"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.sem_magia_neste_turno")}); return
             if not self._magia_monstro_disponivel(m, sid):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.magia_sem_usos_ou_em_recarga")}); return
             magia = GRIMORIO.get(sid, {})
@@ -35530,6 +36031,33 @@ class GameRoom:
             # de lançar, para não gastar carga num alvo claramente inválido.
             # A checagem exata de alcance continua sendo a do executor.
             await self._lancar_magia_monstro(m, sid, data)
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            m["_ja_executou_acao"] = True
+            await self.push_state(); return
+        if arremesso_colossal_teste:
+            alvo, alvo_kind = self._alvo_manual_mestre(target_id)
+            if not alvo or alvo is m:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
+            alcance = max(1, int(ability.get("range", 8) or 8))
+            arremesso = {
+                "name": ability.get("name", "Arremesso Colossal"),
+                "atk_bonus": int(ability.get("attack_bonus", 7) or 7),
+                "damage": ability.get("damage", "2d6"),
+                "damage_types": [DMG_PHYSICAL], "num_attacks": 1,
+                "range": alcance, "attack_attribute": "dex",
+                "damage_attribute": "str_", "apply_attribute_damage": True,
+            }
+            alvo_tiles = (self._monster_tiles(alvo) if alvo_kind == "monster"
+                          else [alvo["pos"]])
+            if not any(self._monster_attack_in_range(m, tile, arremesso)
+                       for tile in alvo_tiles):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
+            if not any(self._tem_linha_de_visao(m["pos"], tile) for tile in alvo_tiles):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=nome_criatura(alvo))}); return
+            m["_master_touched"] = True
+            await self._execute_one_monster_attack(
+                m, arremesso, {"kind": alvo_kind, "obj": alvo})
             self._debitar_acao_mestre(m, custo, "habilidade")
             m["_ja_executou_acao"] = True
             await self.push_state(); return
@@ -35641,11 +36169,28 @@ class GameRoom:
                         or not self._ciclope_attack_in_range(m, alvo, ataque):
                     await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
                 alvo_obj = {"kind": alvo_kind, "obj": alvo}
-                used = (await self._harpia_ativar_furia(m, alvo_obj)
-                        if m.get("type") == "harpia"
-                        else await self._gigante_ativar_furia(m, alvo_obj))
+                if m.get("type") == "harpia":
+                    used = await self._harpia_ativar_furia(m, alvo_obj)
+                elif (getattr(self, "test_mode", False)
+                      and getattr(self, "test_combat", {}).get("active")):
+                    # No simulador, o clique na Fúria substitui a sequência
+                    # normal do turno: ataque básico + ataque adicional. O
+                    # modo Mestre-jogador continua usando o fluxo original.
+                    used = await self._gigante_ativar_furia_teste(m, alvo_obj)
+                else:
+                    used = await self._gigante_ativar_furia(m, alvo_obj)
             if not used:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            # A IA usa _water_moves_left; o alcance exibido no controle manual
+            # usa master_moves_left. Sincronize somente no simulador para que a
+            # Investida Heroica do gigante mostre o deslocamento dobrado sem
+            # alterar o fluxo normal do Mestre-jogador.
+            if (getattr(self, "test_mode", False)
+                    and m.get("type") == "gigante_guerra"
+                    and ability_id == "investida_heroica"):
+                m["master_moves_left"] = max(
+                    int(m.get("master_moves_left", 0) or 0),
+                    int(m.get("_water_moves_left", 0) or 0))
             self._debitar_acao_mestre(m, custo, "habilidade")
             if custo == "principal":
                 m["_ja_executou_acao"] = True
@@ -36239,22 +36784,28 @@ class GameRoom:
         if not self._is_adjacent_to_monster(target["pos"], m):
             return
 
-        # CaÃ§a em Bando: +2 ataque se outro lobo adjacente ao alvo
+        atk = await self._lobo_bando_atk(m, target, dict(m["attacks"][0]))
+        hit = await self._execute_one_monster_attack(m, atk, target_obj)
+        await self._lobo_derrubar(m, target_obj, hit)
+
+    async def _lobo_bando_atk(self, m, target, atk):
+        """Caça em Bando: +2 ataque se outro lobo adjacente ao alvo. Devolve o
+        ataque (possivelmente bonificado). Compartilhado pela IA e pelo ataque
+        manual do Mestre — antes vivia só dentro de `_ai_lobo_cinzento`."""
         outros_lobos = [m2 for m2 in self.monsters.values()
                         if m2["id"] != m["id"]
                         and m2.get("type") == "lobo_cinzento"
                         and m2["hp"] > 0]
         bando_bonus = 2 if any(self._is_adjacent_to_monster(target["pos"], m2)
                                 for m2 in outros_lobos) else 0
-
-        atk = dict(m["attacks"][0])
         if bando_bonus:
             atk = {**atk, "atk_bonus": atk["atk_bonus"] + bando_bonus}
             await self.gm_say(T("narracao.ataca_em_bando_2_acerto", monstro=nome_criatura(m)))
+        return atk
 
-        hit = await self._execute_one_monster_attack(m, atk, target_obj)
-
-        # Derrubar: Ref CD 11 ao acertar
+    async def _lobo_derrubar(self, m, target_obj, hit):
+        """Derrubar: Ref CD 11 ao acertar um herói. IA e Manual."""
+        target = target_obj["obj"]
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
             derrubar = next((ab for ab in m.get("special_abilities", [])
                              if ab["id"] == "derrubar"), None)
@@ -37150,14 +37701,8 @@ class GameRoom:
     async def _ai_orc_guerreiro(self, m, targets):
         """Investida Brutal (+2 se mover antes de atacar) e Fúria Cega (enfurece se
         sofreu dano desde o turno anterior: +1 dano, -1 CA)."""
-        # FÃºria Cega: snapshot de HP entre turnos do orc.
-        ref = m.get("_furia_cega_hp_ref", m.get("max_hp", m["hp"]))
-        enfurecido = m["hp"] < ref
-        if enfurecido and not m.get("furia_cega"):
-            await self.gm_say(T("narracao.entra_em_furia_cega_1_de_dano_mas_1_ca", monstro=nome_criatura(m)))
-        m["furia_cega"] = enfurecido
-        m["_furia_cega_hp_ref"] = m["hp"]
-
+        # FÃºria Cega: o snapshot de HP entre turnos mora no prólogo comum
+        # (`_upkeep_inicio_turno_monstro`), que roda antes desta IA.
         m["_investiu"] = False   # reseta a Investida deste turno
 
         target_obj = self._get_monster_primary_target(m, targets)
@@ -37198,6 +37743,16 @@ class GameRoom:
             return
         target_obj = min(cands, key=lambda t: max(abs(m["pos"][0] - t["obj"]["pos"][0]),
                                                   abs(m["pos"][1] - t["obj"]["pos"][1])))
+        await self._goblin_arremesso_em(m, target_obj)
+
+    def _goblin_arremesso_alcanca(self, m, alvo):
+        """Alvo do Arremesso: até 3 casas (Chebyshev) e com linha de visão."""
+        return (max(abs(m["pos"][0] - alvo["pos"][0]),
+                    abs(m["pos"][1] - alvo["pos"][1])) <= 3
+                and self._tem_linha_de_visao(m["pos"], alvo["pos"]))
+
+    async def _goblin_arremesso_em(self, m, target_obj):
+        """Resolve o Arremesso num alvo já escolhido (IA ou Mestre)."""
         target = target_obj["obj"]
         d20  = random.randint(1, 20)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
@@ -38387,10 +38942,16 @@ class GameRoom:
         que não deveria acontecer) e merece trabalho próprio — não acrescente
         aqui sem esse cuidado."""
         await self._expirar_oculto_sombras(m)
+        # Recargas que o prólogo de espécie (`_upkeep_inicio_turno_monstro`) já
+        # baixou neste turno não andam de novo — sem isto a Explosão de Vapor
+        # caía 6→4 por rodada no Manual (e nunca no auto).
+        ja_andaram = m.pop("_cds_antes_prologo", None) or {}
         for chave in ("ability_cooldowns", "monster_ability_cooldowns"):
             cds = m.get(chave)
             if cds:
                 for k in list(cds):
+                    if chave == "ability_cooldowns" and k in ja_andaram and cds[k] < ja_andaram[k]:
+                        continue
                     cds[k] = max(0, cds[k] - 1)
 
     async def _tentar_desaparecer_sombras(self, m, target):
@@ -38865,18 +39426,9 @@ class GameRoom:
             if await self._conjurar_mestre_dos_mortos(
                     m, random.choice(("esqueleto_humano", "esqueleto_animal"))):
                 return
-        ref    = m.get("_cs_hp_ref", m.get("max_hp", m["hp"]))
-        sofreu = m["hp"] < ref
-        m["_cs_hp_ref"] = m["hp"]
-        pode_magia = True
-        if sofreu and (any(ab["id"] == "concentracao_sombria" for ab in m.get("special_abilities", []))
-                       or any(w.get("type") == "concentracao_fragil" for w in m.get("weaknesses", []))):
-            ok, d20, sb, tot = self._testar_save(m, "vontade", 10)
-            if ok:
-                await self.gm_say(T("narracao.mantem_a_concentracao_vontade_vs_cd_10", monstro=nome_criatura(m), tot=tot))
-            else:
-                pode_magia = False
-                await self.gm_say(T("narracao.perde_a_concentracao_sem_magia_neste_tur", monstro=nome_criatura(m), tot=tot))
+        # Concentração Sombria: o teste de Vontade mora no prólogo comum
+        # (`_upkeep_inicio_turno_monstro`); aqui só se lê o resultado.
+        pode_magia = not m.get("_sem_magia_turno")
 
         heroes = [p for p in self.players.values() if self._ativo(p)]
         uses   = m.get("ability_uses", {})
@@ -39024,6 +39576,11 @@ class GameRoom:
         m.pop("_monster_turn_damage_bonus", None)
         m.pop("_minotauro_movement_multiplier", None)
         m.pop("_water_min_step_used", None)
+        # Snapshot das recargas ANTES dos decrementos de espécie abaixo: a
+        # janela Manual (`_upkeep_inicio_turno_manual`) baixa todas as recargas
+        # genericamente e usa este snapshot para não baixar duas vezes as que
+        # já andaram aqui (Explosão de Vapor, tiranos, rúnico, harpia).
+        m["_cds_antes_prologo"] = dict(m.get("ability_cooldowns") or {})
         if m.get("type") == "harpia":
             for aid in list(m.get("ability_cooldowns", {})):
                 m["ability_cooldowns"][aid] = max(
@@ -39073,6 +39630,29 @@ class GameRoom:
                 m["furia_lobisomem"] = True
         if m["hp"] <= 0:
             return False
+        # Snapshots de HP entre turnos que viviam dentro de `_ai_orc_guerreiro` /
+        # `_ai_necromante` — e portanto nunca rodavam no Manual (Mestre e
+        # simulador). Aqui valem para IA e Manual; as IAs só leem o resultado.
+        if m.get("type") == "orc_guerreiro":
+            ref = m.get("_furia_cega_hp_ref", m.get("max_hp", m["hp"]))
+            enfurecido = m["hp"] < ref
+            if enfurecido and not m.get("furia_cega"):
+                await self.gm_say(T("narracao.entra_em_furia_cega_1_de_dano_mas_1_ca", monstro=nome_criatura(m)))
+            m["furia_cega"] = enfurecido
+            m["_furia_cega_hp_ref"] = m["hp"]
+        m.pop("_sem_magia_turno", None)
+        if m.get("type") == "necromante":
+            ref    = m.get("_cs_hp_ref", m.get("max_hp", m["hp"]))
+            sofreu = m["hp"] < ref
+            m["_cs_hp_ref"] = m["hp"]
+            if sofreu and (any(ab["id"] == "concentracao_sombria" for ab in m.get("special_abilities", []))
+                           or any(w.get("type") == "concentracao_fragil" for w in m.get("weaknesses", []))):
+                ok, d20, sb, tot = self._testar_save(m, "vontade", 10)
+                if ok:
+                    await self.gm_say(T("narracao.mantem_a_concentracao_vontade_vs_cd_10", monstro=nome_criatura(m), tot=tot))
+                else:
+                    m["_sem_magia_turno"] = True
+                    await self.gm_say(T("narracao.perde_a_concentracao_sem_magia_neste_tur", monstro=nome_criatura(m), tot=tot))
         # Réquiem Final (Violino): dano crescente no início do turno do alvo.
         await self._processar_requiem_turno(m)
         if m["hp"] <= 0:
@@ -39165,7 +39745,9 @@ class GameRoom:
             m["_garaloux_charge_consumed"] = False
             m["_molochus_move_count"] = 0
             m["_tirano_move_count"] = 0
+            m["_troll_move_count"] = 0
             m["_tirano_passo_disparado"] = False
+            m.pop("_editor_ability_dobrar_dano", None)
             m["_ciclope_move_count"] = 0
             m["_ciclope_straight"] = True
             m["_ciclope_last_step_dir"] = None
@@ -40491,7 +41073,7 @@ class GameRoom:
                             escuridao_desvantagem=sofre_escuridao,
                             escuridao_rodadas=(min(duracoes_escuridao)
                                                if duracoes_escuridao else 0))
-            for _privado in ("_metamorfose_original",):
+            for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
             players_state.append(snapshot)
         monsters_state = [dict(m, initiative=self.initiative_value(m),
@@ -40501,11 +41083,16 @@ class GameRoom:
         for snapshot in monsters_state:
             snapshot.pop("_metamorfose_original", None)
             snapshot.pop("metamorfose_dano_por_jogador", None)
+            # Controle interno da Fúria Bestial no ataque manual. O conjunto
+            # guarda quais grupos já acertaram cada alvo, mas não faz parte do
+            # estado visual e não pode ser serializado como JSON.
+            snapshot.pop("_master_furia_hits", None)
+            snapshot.pop("_cds_antes_prologo", None)
         actor = self.current_actor()
         msg_state = {
             "type": "game_state",
             "test_mode": bool(getattr(self, "test_mode", False)),
-            "test_combat": (deepcopy(getattr(self, "test_combat", {"active": False, "round": 0, "queue": [], "index": 0}))
+            "test_combat": (deepcopy(getattr(self, "test_combat", {"active": False, "round": 0, "queue": [], "index": 0, "ended_reason": None}))
                             if getattr(self, "test_mode", False) else None),
             "master_pid": self.master_pid,
             "host": self.host_pid,
@@ -40714,7 +41301,8 @@ def _criar_sala_teste_masmorra(defn):
     room.player_order = []
     room.initiative_order = []
     room.turn_index = 0
-    room.test_combat = {"active": False, "round": 0, "queue": [], "index": 0}
+    room.test_combat = {"active": False, "round": 0, "queue": [],
+                        "index": 0, "ended_reason": None}
     room._test_action_actor = None
     room.animados_phase_pid = None
     room.last_stand_pid = None
@@ -42530,10 +43118,10 @@ def _validate_custom_monster(raw):
             base_damage = str(ability.get("damage", "4d6"))
             dice = _monster_int(config.get("damage_dice", base_damage.split("d", 1)[0]), 4, 1, 20)
             faces = _monster_int(config.get("damage_faces", base_damage.split("d", 1)[-1]), 6, 4, 20)
-            ability.update({"damage": f"{dice}d{faces}", "damage_types": [DMG_FIRE], "range": 3,
-                            "shape": "cone", "save": "reflexos", "dc": _monster_int(config.get("dc", ability.get("dc", 16)), 16, 1, 40),
+            ability.update({"damage": f"{dice}d{faces}", "damage_types": [DMG_FIRE], "range": 2,
+                            "shape": "circle", "area_raio": 2, "save": "reflexos", "dc": _monster_int(config.get("dc", ability.get("dc", 16)), 16, 1, 40),
                             "success_effect": "metade"})
-            ability["descricao"] = f"Recarga fixa de 6 rodadas. Cone de 3 quadrados; Reflexos CD {ability['dc']} reduz {ability['damage']} de fogo à metade."
+            ability["descricao"] = f"Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD {ability['dc']} reduz {ability['damage']} de fogo à metade."
             cooldown = 6
             ability["cooldown_turns"] = 6
         if aid == "morte_explosiva":
@@ -42683,7 +43271,7 @@ def _validate_custom_monster(raw):
             entry.update({"attack_index": ability["attack_index"], "move_required": ability["move_required"],
                           "damage_dice": dice, "damage_faces": faces})
         if aid == "explosao_vapor":
-            entry.update({"damage_dice": dice, "damage_faces": faces, "range": 3, "shape": "cone",
+            entry.update({"damage_dice": dice, "damage_faces": faces, "range": 2, "shape": "circle", "area_raio": 2,
                           "save": "reflexos", "dc": ability["dc"], "cooldown_turns": 6})
         if aid == "morte_explosiva":
             entry.update({"damage_dice": dice, "damage_faces": faces, "radius": ability["radius"],

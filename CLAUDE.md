@@ -1085,6 +1085,40 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > plano em `docs/superpowers/{specs,plans}/2026-07-17-modo-mestre-inventario-monstro-sp2*`.
 > Teste: `tools/test_modo_mestre.py` (seções [27]/[28]).
 
+> **Simulador do editor ("🧪 Testar como Mestre") — mesma tubulação de turno do
+> jogo:** a sala descartável (`_criar_sala_teste_masmorra`) tem **heróis-teste**
+> (`handle_mestre_adicionar_heroi_teste` → `make_player` + `test_hero=True` +
+> `_equipar_kit_heroi_teste`: mago/clérigo recebem TODAS as magias implementadas da
+> classe, o ladino um frasco de veneno) e uma **fila própria** `self.test_combat`
+> (`_teste_combate_fila/_preparar_ator/_proximo/_avancar/_fechar_vez_atual`),
+> deliberadamente separada de `initiative_order`. As ações do herói-teste passam por
+> `handle_teste_acao_heroi` (ponte com lista explícita; a ação `hero_skill` supre os
+> painéis que a ficha do simulador não tem — `tipo` da Purificação inferido do alvo,
+> `bonus` do Guerreiro da Luz por preset, `atributos` da Canção). **Regra:** o
+> simulador NÃO tem "preparação enxuta" — cada ator passa pelos MESMOS prólogos do
+> jogo real: herói = `_start_initiative_player_turn` ao abrir e
+> `_reset_fim_turno_jogador` (extraído de `handle_end_turn`) ao fechar; monstro =
+> `_upkeep_inicio_turno_monstro` (False = turno consumido → a fila pula o ator) +
+> `_processar_onda_envolvente_turno` + `_preparar_janela_controle_monstro` +
+> `_upkeep_inicio_turno_manual`; virada de rodada = `_virada_de_rodada` (extraída de
+> `_advance_initiative`). Sem isso recargas, ticks de veneno/chamas, regeneração,
+> manutenções de classe, buffs de turno (Golpe Devastador/metamagia viravam
+> permanentes) e todo o controle de multidão ficavam congelados ali. Troll a 0 HP
+> (`troll_regenerando`) continua na fila (`_teste_combate_monstro_vivo`). **Fix
+> irmão na janela Manual real:** `_upkeep_inicio_turno_monstro` grava
+> `_cds_antes_prologo` e `_upkeep_inicio_turno_manual` não baixa de novo a recarga
+> que o prólogo de espécie já baixou (Explosão de Vapor caía 6→4 por rodada). E o
+> mesmo padrão recorrente de [[modo-mestre-manual-pula-gm-phase]] fechado para mais
+> espécies: Caça em Bando/Derrubar do lobo (`_lobo_bando_atk`/`_lobo_derrubar`,
+> IA+Manual), Mordida Corrosiva do Devorador de Metal (no ataque manual), Fúria Cega
+> do orc e Concentração Sombria do necromante (snapshots de HP movidos para o
+> prólogo comum; as IAs só leem `furia_cega`/`_sem_magia_turno`), e as técnicas
+> `golpe_devastador_troll`/`pressao_constante_troll`/`investida_brutal_troll`
+> (contador `_troll_move_count`), `arremesso` do goblin (`_goblin_arremesso_em`) e
+> `dominar_morto_vivo` viraram ativáveis em `handle_mestre_usar_habilidade`
+> (cliente: `_MP_HAB_EXTRAIDAS`/`_MP_HAB_SEM_MIRA`). Teste:
+> `tools/test_simulador_turno.py` (42 checks, dirige a sala real sem navegador).
+
 > **Agarrão de criatura (crocodilo/cobra) — efeito NO ACERTO mora no pipeline de
 > ataque:** `agarrar` (Crocodilo, Fort CD 12) e `constricao` (Cobra, Fort CD 11)
 > disparavam só dentro de `_ai_crocodilo_jovem`/`_ai_cobra_constritora`, depois da

@@ -7751,7 +7751,9 @@ function _drawFloorHighlights2D(ctx, x, y, isReachable, isAttackable, isWeaponPr
 
 function _drawMovePreview2D(ctx, state, terrainSet){
   const preview = GS.pendingMove;
-  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  const me = preview?.testHeroId != null
+    ? state?.players?.find(p => String(p.id) === String(preview.testHeroId) && p.alive)
+    : state?.players?.find(p => p.id === GS.myPid && p.alive);
   if(!preview?.path?.length || !me) return;
   const origin = Array.isArray(preview.origin) ? preview.origin : me.pos;
   let x = origin[0], y = origin[1];
@@ -7801,6 +7803,43 @@ function _drawMovePreview2D(ctx, state, terrainSet){
   ctx.closePath();
   ctx.fill();
   ctx.restore();
+}
+
+function _drawMasterMonsterMovePreview2D(ctx, state, terrainSet){
+  const preview = _masterMonsterMovePreviewAtual(state);
+  if(!preview?.path?.length) return;
+  let x = preview.origin[0], y = preview.origin[1];
+  const points = [];
+  if(terrainSet.has(`${x},${y}`)) points.push([x * CELL + CELL / 2, y * CELL + CELL / 2]);
+  for(const step of preview.path){
+    x += step[0]; y += step[1];
+    if(!terrainSet.has(`${x},${y}`)) break;
+    points.push([x * CELL + CELL / 2, y * CELL + CELL / 2]);
+  }
+  if(points.length < 2) return;
+  ctx.save();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.shadowColor = 'rgba(255, 145, 36, .95)';
+  ctx.shadowBlur = Math.max(5, CELL * .18);
+  ctx.strokeStyle = 'rgba(255, 156, 48, .88)';
+  ctx.lineWidth = Math.max(4, CELL * .13);
+  ctx.beginPath(); ctx.moveTo(points[0][0], points[0][1]);
+  for(let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(255, 235, 150, .98)';
+  ctx.lineWidth = Math.max(1.5, CELL * .045); ctx.stroke();
+  ctx.fillStyle = 'rgba(255, 184, 68, .98)';
+  for(const [px, py] of points.slice(1)){
+    ctx.beginPath(); ctx.arc(px, py, Math.max(2.5, CELL * .065), 0, Math.PI * 2); ctx.fill();
+  }
+  const tip = points[points.length - 1], prev = points[points.length - 2];
+  const angle = Math.atan2(tip[1] - prev[1], tip[0] - prev[0]);
+  ctx.translate(tip[0], tip[1]); ctx.rotate(angle);
+  ctx.fillStyle = 'rgba(255, 240, 168, .99)';
+  ctx.beginPath(); ctx.moveTo(CELL * .24, 0);
+  ctx.lineTo(-CELL * .16, -CELL * .16); ctx.lineTo(-CELL * .16, CELL * .16);
+  ctx.closePath(); ctx.fill(); ctx.restore();
 }
 
 // ── Animações visuais das armadilhas ───────────────────────────────────────
@@ -8399,6 +8438,11 @@ function renderMap(state){
     terrainSet  = full;
   }
   const me=state.players.find(p=>p.id===GS.myPid&&p.alive);
+  const testeHeroiAtivo = state.test_mode ? _testeHeroiAtivoNoMapa(state) : null;
+  const testeHeroiSelecionado = state.test_mode ? _testeHeroiSelecionado(state) : null;
+  const testeHeroiControlado = testeHeroiSelecionado && testeHeroiAtivo
+    && String(testeHeroiSelecionado.id) === String(testeHeroiAtivo.id)
+    ? testeHeroiSelecionado : null;
   let visionSet=computeVisionSet(state, me);
   if(GS.isMaster() || state.test_mode) visionSet = new Set(exploredSet);
   const {closed:doorClosed} = GS.doorSets(state);
@@ -8418,6 +8462,11 @@ function renderMap(state){
     bfsReachable(state.tiles,exploredSet,selPris2D.pos[0],selPris2D.pos[1],selPris2D.moves_left,reachable);
   else if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&me.moves_left>0)
     bfsReachable(state.tiles,exploredSet,me.pos[0],me.pos[1],me.moves_left,reachable);
+  if(testeHeroiControlado && (testeHeroiControlado.moves_left || 0) > 0){
+    bfsReachable(state.tiles, exploredSet, testeHeroiControlado.pos[0], testeHeroiControlado.pos[1],
+      testeHeroiControlado.moves_left, reachable,
+      {state, materiais: state.materiais, actor: testeHeroiControlado});
+  }
 
   if(GS.isMaster()){
     _masterReachSet(state).forEach(k => reachable.add(k));
@@ -8433,6 +8482,17 @@ function renderMap(state){
       const inR=_alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
       if(inR) attackable.add(`${m.pos[0]},${m.pos[1]}`);
+    }
+  }
+  if(testeHeroiControlado && !testeHeroiControlado.action_done){
+    for(const m of state.monsters || []){
+      if(!m || m.hp <= 0 || m._morteVisualPendente) continue;
+      for(const [tx,ty] of GS.monsterTiles(m)){
+        if(GS.weaponCanReachTile(testeHeroiControlado, tx, ty, m.altura)
+          && (testeHeroiControlado.weapon?.range == null
+            || GS.hasLineOfSight(state, testeHeroiControlado.pos[0], testeHeroiControlado.pos[1], tx, ty, testeHeroiControlado)))
+          attackable.add(`${tx},${ty}`);
+      }
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
@@ -8599,16 +8659,24 @@ function renderMap(state){
   vig.addColorStop(1,'rgba(0,0,0,0.72)');
   ctx.fillStyle=vig; ctx.fillRect(0,0,vW,vH);
 
-  // ── Canção Heroica: anel dourado de raio 5 ao redor do bardo cantando ──
-  const _bardo = state.players.find(p => p.class_id==='bard' && p.alive && p.cancao_ativa);
-  if(_bardo && exploredSet.has(`${_bardo.pos[0]},${_bardo.pos[1]}`)){
-    const bcx=_bardo.pos[0]*CELL+CELL/2, bcy=_bardo.pos[1]*CELL+CELL/2;
-    const r=(CANCAO_RAIO_CLIENT+0.5)*CELL;
-    const pulso=0.25+0.18*(0.5+0.5*Math.sin(performance.now()/520));
+  // ── Canção Heroica: anel dourado de raio 5 ───────────────────────────────
+  // O bardo já usava este indicador. No modo de teste, os Xamãs controlados
+  // pelo Mestre usam exatamente a mesma leitura visual, sem criar buffs locais
+  // no cliente (os bônus continuam autoritativos no servidor).
+  const _cantores = state.players
+    .filter(p => p.class_id === 'bard' && p.alive && p.cancao_ativa)
+    .concat(state.test_mode ? (state.monsters || []).filter(m =>
+      m && m.hp > 0 && m.cancao_ativa && Array.isArray(m.pos)) : []);
+  for(const _cantor of _cantores){
+    if(!_cantor.pos || !exploredSet.has(`${_cantor.pos[0]},${_cantor.pos[1]}`)) continue;
+    const cx = _cantor.pos[0] * CELL + CELL / 2;
+    const cy = _cantor.pos[1] * CELL + CELL / 2;
+    const r = (CANCAO_RAIO_CLIENT + 0.5) * CELL;
+    const pulso = 0.25 + 0.18 * (0.5 + 0.5 * Math.sin(performance.now() / 520));
     ctx.save();
-    ctx.beginPath(); ctx.arc(bcx,bcy,r,0,Math.PI*2);
-    ctx.fillStyle='rgba(200,169,81,0.05)'; ctx.fill();
-    ctx.lineWidth=2; ctx.strokeStyle=`rgba(200,169,81,${pulso.toFixed(3)})`; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(200,169,81,0.05)'; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = `rgba(200,169,81,${pulso.toFixed(3)})`; ctx.stroke();
     ctx.restore();
   }
 
@@ -8911,6 +8979,7 @@ function renderMap(state){
   _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet);
   _drawMasterHistoryFocus2D(ctx, state, terrainSet);
   _drawMovePreview2D(ctx, state, terrainSet);
+  _drawMasterMonsterMovePreview2D(ctx, state, terrainSet);
 
   // ── Monsters: only visible within player's vision radius
   const _vortexSpin2D = performance.now() / 260;
@@ -8959,6 +9028,11 @@ function renderMap(state){
     const nomeVisivel = `${alturaVisivel > 0 ? `↑${alturaVisivel} ` : ''}${m.name}`.slice(0,10);
     ctx.fillText(nomeVisivel, cx, barY+barH+3);
     _drawStatusIcons2D(ctx, barX-3, barY, m);
+    // Ícones de magias em monstros são exclusivos do simulador do mestre.
+    // O jogo normal continua exibindo somente os indicadores de condição
+    // existentes acima, sem expor efeitos fora do modo de teste.
+    if(state.test_mode && GS.isMaster?.())
+      _drawEfeitosAtivos2D(ctx, state, m, cx, cy, _coletarEfeitosMagicosMonstro(state, m));
   }
 
   // ── Corpses (cadáveres): alvos de Animar Mortos — ícone esmaecido roxo ──────
@@ -9149,6 +9223,8 @@ function renderMap(state){
     const [hitX, hitY] = _hitReaction2D(`p:${p.id}`);
     const X=px*CELL+hitX, Y=py*CELL+hitY, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
+    const isTesteSel = !!(state.test_mode && testeHeroiSelecionado
+      && String(p.id) === String(testeHeroiSelecionado.id));
     const formaVisual = _metamorfoseVisualName(p);
     const _invisP = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
     const _playerVortexPreso = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
@@ -9156,7 +9232,7 @@ function renderMap(state){
     if(_playerVortexPreso){
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
     }
-    drawMiniBase(ctx, cx, cy, p.color, isCur||isMe);
+    drawMiniBase(ctx, cx, cy, p.color, isCur||isMe||isTesteSel);
     if(formaVisual){
       const wolf = _getMonster2DImg(formaVisual);
       if(wolf && wolf.complete && wolf.naturalWidth){
@@ -9174,14 +9250,14 @@ function renderMap(state){
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
-    if(isMe||isCur){
+    if(isMe||isCur||isTesteSel){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
       ctx.font=`bold ${tagFs}px monospace`; ctx.textAlign='center';
       const tw=ctx.measureText(label).width;
       ctx.fillStyle='rgba(0,0,0,0.88)';
       ctx.fillRect(cx-tw/2-4,Y+CELL-tagFs-4,tw+8,tagFs+2);
-      ctx.fillStyle=isMe?'#f0c040':'#ffffff';
+      ctx.fillStyle=isMe?'#f0c040':isTesteSel?'#ffd04a':'#ffffff';
       ctx.textBaseline='top'; ctx.fillText(label,cx,Y+CELL-tagFs-3);
       ctx.textBaseline='middle';
     }
@@ -12878,7 +12954,11 @@ function _diceVisibleColors(){
 function _nextDiceColor(dieType, msg){
   // Estados de vantagem/desvantagem e mão secundária mantêm semântica própria,
   // mas recebem variações para não repetir uma cor que ainda está em cena.
-  const semantic = msg.discarded ? ['#c0392b','#e74c3c','#922b21','#ff6b6b']
+  // Regeneração tem uma identidade visual própria, independente do tipo físico
+  // do dado (a Maré Viva é 1d6, mas não deve herdar o vermelho padrão do d6).
+  const semantic = msg.dice_theme === 'regeneration'
+    ? ['#27ae60','#2ecc71','#168a4b','#58d68d']
+    : msg.discarded ? ['#c0392b','#e74c3c','#922b21','#ff6b6b']
     : msg.kept ? ['#27ae60','#2ecc71','#168a4b','#58d68d']
     : msg.offhand ? ['#e67e22','#f39c12','#d35400','#ffb347']
     : (DIE_COLOR_VARIANTS[dieType] || [DIE_COLORS[dieType] || VC.dice.colors.d20]);
@@ -14496,26 +14576,40 @@ function aimNextImprovisoAlvo(pendentes, i){
 function _sync3DCancaoRing(state){
   if(!g3 || !g3.scene || !window.THREE) return;
   const T = window.THREE;
-  const bardo = (state.players||[]).find(p => p.class_id==='bard' && p.alive && p.cancao_ativa);
-  if(!bardo){
-    if(g3._cancaoRing){ g3.scene.remove(g3._cancaoRing); g3._cancaoRing = null; }
-    return;
+  const cantores = (state.players || [])
+    .filter(p => p.class_id === 'bard' && p.alive && p.cancao_ativa && Array.isArray(p.pos))
+    .concat(state.test_mode ? (state.monsters || []).filter(m =>
+      m && m.hp > 0 && m.cancao_ativa && Array.isArray(m.pos)) : []);
+  const wanted = new Map(cantores.map(c => [String(c.id), c]));
+  if(!g3._cancaoRings) g3._cancaoRings = new Map();
+  // Compatibilidade com uma cena criada antes da coleção de anéis existir.
+  if(g3._cancaoRing && !g3._cancaoRings.size){
+    g3._cancaoRings.set('__legacy__', g3._cancaoRing);
+    g3._cancaoRing = null;
   }
-  if(!g3._cancaoRing){
-    const grupo = new T.Group();
-    const raio  = CANCAO_RAIO_CLIENT + 0.5;   // cobre o tile do bardo + 5 ao redor
-    const area  = new T.Mesh(
-      new T.CircleGeometry(raio, 64).rotateX(-Math.PI/2),
-      new T.MeshBasicMaterial({ color:0xc8a951, transparent:true, opacity:0.06, depthWrite:false }));
-    const borda = new T.Mesh(
-      new T.RingGeometry(raio-0.12, raio, 64).rotateX(-Math.PI/2),
-      new T.MeshBasicMaterial({ color:0xc8a951, transparent:true, opacity:0.35, depthWrite:false }));
-    grupo.add(area); grupo.add(borda);
-    g3.scene.add(grupo);
-    g3._cancaoRing = grupo;
+  for(const [id, grupo] of g3._cancaoRings){
+    if(wanted.has(id)) continue;
+    if(grupo.parent) grupo.parent.remove(grupo);
+    g3._cancaoRings.delete(id);
   }
-  const w = casaParaMundo(bardo.pos[0], bardo.pos[1]);
-  g3._cancaoRing.position.set(w.x, 0.02, w.z);
+  for(const [id, cantor] of wanted){
+    let grupo = g3._cancaoRings.get(id);
+    if(!grupo){
+      grupo = new T.Group();
+      const raio = CANCAO_RAIO_CLIENT + 0.5; // tile do cantor + 5 ao redor
+      const area = new T.Mesh(
+        new T.CircleGeometry(raio, 64).rotateX(-Math.PI/2),
+        new T.MeshBasicMaterial({ color:0xc8a951, transparent:true, opacity:0.06, depthWrite:false }));
+      const borda = new T.Mesh(
+        new T.RingGeometry(raio-0.12, raio, 64).rotateX(-Math.PI/2),
+        new T.MeshBasicMaterial({ color:0xc8a951, transparent:true, opacity:0.35, depthWrite:false }));
+      grupo.add(area); grupo.add(borda);
+      g3.scene.add(grupo);
+      g3._cancaoRings.set(id, grupo);
+    }
+    const w = casaParaMundo(cantor.pos[0], cantor.pos[1]);
+    grupo.position.set(w.x, 0.02, w.z);
+  }
 }
 
 // Exposição global p/ onclick inline e integração externa.
@@ -15703,7 +15797,7 @@ const GRIMORIO_CLIENT = {
   chamado_inverno: {
     id:'chamado_inverno', nome:'Chamado do Inverno', icone:'❄️',
     circulo:'segundo', classe:['cleric'],
-    tipo:'area_fixa', alcance_base:7, alcance_escala:1, area_lado:4,
+    tipo:'area_fixa', alcance_base:7, alcance_escala:1, area_lado:4, area_lado_niveis:2,
     custo:'🍖-1 💧-1 (permanente: +🍖20 💧20)',
     descricao:`<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>
                <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>
@@ -16837,6 +16931,10 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
 function _clickTileMagia(tx, ty) {
   const mode = window._modoMagia;
   if (!mode) return;
+  if(mode.testHeroId != null){
+    _clickTileMagiaTeste(tx, ty);
+    return;
+  }
   const magiaId = mode.magiaId;
   const m  = GRIMORIO_CLIENT[magiaId];
 
@@ -17694,6 +17792,14 @@ function _aimHoverPendingSkill(tx, ty) {
   _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), valid ? '#94dfb0' : '#ff9aa2');
 }
 
+function _aimHoverHabilidadeTeste(tx, ty) {
+  const mode = window._modoHabilidadeTeste;
+  if(!mode) return;
+  const valid = !!mode.validTiles?.has(`${tx},${ty}`);
+  _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+  _aimSetStatus(valid ? t('ui.mira.alvo_valido_confirme_para_usar') : t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), valid ? '#94dfb0' : '#ff9aa2');
+}
+
 // Os modos que _aimPreviewAt sabe tratar. Serve de guarda nos manipuladores:
 // os modos de arremesso LEGADOS (_modoArremessoLanca/Principal/Ativo) não estão
 // aqui de propósito — eles têm caminho próprio e não passam por esta camada.
@@ -17701,7 +17807,7 @@ function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
     || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadePlacement || window._modoTempestadeMove
-    || window._modoThrowItem || window._modoAnimarMortos
+    || window._modoThrowItem || window._modoAnimarMortos || window._modoHabilidadeTeste
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha')
     || (GS.pendingSkill && _aimSessionIs('habilidade')));
 }
@@ -17771,6 +17877,7 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     return true;
   }
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
+  if (window._modoHabilidadeTeste) { _aimHoverHabilidadeTeste(tx, ty); return true; }
   if (window._modoThrowItem) {
     if (window._modoThrowItem.area) _recomputarAreaThrow(tx, ty);
     _aimHoverThrow(tx, ty);
@@ -18029,12 +18136,56 @@ function _coneTilesCli(ox, oy, dx, dy, comp, base) {
   }
   return out;
 }
+// Cone das habilidades de monstros (Sopro de Dragão).
+// Espelha _sopro_dragao_tiles no servidor: a largura começa em 1 e cresce
+// para 3, 5, 7... a cada passo, sempre respeitando as casas de chão.
+function _coneTilesMonstroCli(ox, oy, dx, dy, alcance) {
+  const st = GS.gameState;
+  const isWall = (x, y) => {
+    const row = st && st.tiles && st.tiles[y];
+    return !row || row[x] === undefined || row[x] !== TILE_FLOOR;
+  };
+  const px = -dy, py = dx, out = new Set();
+  const reach = Math.max(1, Math.floor(Number(alcance) || 1));
+  for (let distance = 1; distance <= reach; distance++) {
+    for (let lane = -(distance - 1); lane < distance; lane++) {
+      const tx = ox + dx * distance + px * lane;
+      const ty = oy + dy * distance + py * lane;
+      if (!isWall(tx, ty)) out.add(`${tx},${ty}`);
+    }
+  }
+  return out;
+}
 function _areaRaioMagiaCli(m) {
   // Algumas magias novas (Bola de Fogo) usam o nome do campo do servidor.
   // Ele tem prioridade para que a prévia verde replique a área autoritativa.
   if (m.area_raio != null) return m.area_raio;
   if (m.area != null) return m.area;
   return ['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo) ? 2 : 0;
+}
+// O nível que dimensiona as magias de um monstro é independente do nível/ND
+// geral da criatura. A ficha autoritativa usa `caster_level`; os fallbacks
+// mantêm a mira compatível com fichas antigas que ainda não o possuem.
+function _nivelConjuradorMonstroCli(monstro) {
+  const n = Number(monstro?.caster_level ?? monstro?.level ?? monstro?.tier ?? 1);
+  return Number.isFinite(n) ? Math.max(1, Math.trunc(n)) : 1;
+}
+
+// Espelha o crescimento de áreas quadradas do grimório no servidor
+// (area_lado + floor(nível / area_lado_niveis)).
+function _areaLadoMagiaMonstroCli(magia, nivel) {
+  const base = Number(magia?.area_lado);
+  if (!Number.isFinite(base)) return 0;
+  const passo = Number(magia?.area_lado_niveis);
+  const incremento = Number.isFinite(passo) && passo > 0
+    ? Math.floor(nivel / passo) : 0;
+  return Math.max(1, Math.trunc(base) + incremento);
+}
+
+// Os quadrados de área do servidor mantêm a mesma âncora para lados pares e
+// ímpares. O helper dedicado também evita que um lado 3 seja desenhado como 2x2.
+function _addQuadradoMagiaMonstro(cx, cy, lado, out) {
+  _addQuadradoChamadoInverno(cx, cy, lado, out);
 }
 function _cajadoArcanoAreaLado(heroi, m, scroll = false) {
   if (scroll || !heroi || !m) return 0;
@@ -18585,6 +18736,10 @@ let _masterSel = new Set();
 const _masterActionHistory = [];
 let _masterHistoryFocus = null;
 let _masterHistorySeq = 0;
+// Prévia separada da dos heróis. O estado `GS.pendingMove` é validado pelo
+// gameState para jogadores/test-heroes; misturar o monstro nele faria a
+// reconciliação autoritativa tratar o monstro como um jogador.
+let _masterMonsterMovePreview = null;
 function _esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 function _masterActionResultLabel(msg){
@@ -18663,6 +18818,28 @@ function renderMasterPanel(state){
   // A aba Ativo só é o default enquanto existe monstro na janela Manual.
   if(mm && window._masterTabAuto !== mm.mid){ window._masterTab = 'ativo'; window._masterTabAuto = mm.mid; }
   const testActor = tc?.active ? tc.queue?.[tc.index] : null;
+  // A troca de vez na fila é também uma troca de foco visual. O identificador
+  // local evita sobrescrever a seleção enquanto o Mestre ainda está agindo no
+  // mesmo ator, mas garante que o próximo ator seja selecionado assim que o
+  // botão "Encerrar vez" receber a confirmação do servidor.
+  const testActorKey = testActor ? `${tc.round || 0}:${tc.index}:${testActor.kind}:${testActor.id}` : null;
+  if(testActorKey !== window._testeActorSelecionadoAuto){
+    window._testeActorSelecionadoAuto = testActorKey;
+    if(testActor?.kind === 'hero'){
+      window._testeHeroiSelecionadoId = testActor.id;
+      window._mpFocoMid = null;
+      const hero = (state.players || []).find(p => String(p.id) === String(testActor.id));
+      if(g3) g3.selectedPos = hero?.pos ? [hero.pos[0], hero.pos[1]] : null;
+    } else if(testActor?.kind === 'monster'){
+      window._testeHeroiSelecionadoId = null;
+      window._mpFocoMid = testActor.id;
+      const monster = (state.monsters || []).find(m => String(m.id) === String(testActor.id));
+      if(g3) g3.selectedPos = monster?.pos ? [monster.pos[0], monster.pos[1]] : null;
+    } else {
+      window._testeHeroiSelecionadoId = null;
+    }
+    if(GS.gameState && (mode3D ? g3 : true)) _redrawMasterSelection();
+  }
   if(testActor?.kind === 'hero' && window._masterTabAuto !== ('test:' + testActor.id)){
     window._masterTab = 'ativo'; window._masterTabAuto = 'test:' + testActor.id;
   }
@@ -18721,35 +18898,296 @@ function _mpHeroiTesteAtivo(state){
   return a?.kind === 'hero' ? (state.players || []).find(p => String(p.id) === String(a.id)) || null : null;
 }
 
+// Seleção no tabuleiro do simulador. O identificador vive apenas no renderer:
+// não é enviado ao servidor e nunca participa do modo Mestre-jogador.
+function _testeHeroiAtivoNoMapa(state){ return _mpHeroiTesteAtivo(state); }
+function _testeHeroiSelecionado(state){
+  if(!state?.test_mode || window._testeHeroiSelecionadoId == null) return null;
+  return (state.players || []).find(p => p.alive && p.test_hero
+    && String(p.id) === String(window._testeHeroiSelecionadoId)) || null;
+}
+// O Mestre controla um herói-teste somente quando ele é o ator atual da fila.
+// Este guarda fica no renderer para liberar os menus sem alterar a permissão
+// do jogador normal (que continua dependendo de GS.myPid/GS.isMyTurn).
+function _testeHeroiPodeAgir(state, pid){
+  if(!state?.test_mode || !GS.isMaster?.()) return false;
+  const actor = state.test_combat?.active
+    ? state.test_combat.queue?.[state.test_combat.index] : null;
+  return !!(actor?.kind === 'hero'
+    && String(actor.id) === String(pid)
+    && String(window._testeHeroiSelecionadoId) === String(pid)
+    && (state.players || []).some(p => p.test_hero && p.alive
+      && String(p.id) === String(pid)));
+}
+function _testeHeroiNaCasa(state, tx, ty){
+  return (state?.players || []).find(p => p.alive && p.test_hero
+    && p.pos?.[0] === tx && p.pos?.[1] === ty) || null;
+}
+function _selecionarTesteHeroiMapa(hero){
+  if(!hero) return false;
+  window._testeHeroiSelecionadoId = hero.id;
+  GS.pendingMove = null;
+  _clearMovePreviewVisual();
+  if(g3) g3.selectedPos = hero.pos ? [hero.pos[0], hero.pos[1]] : null;
+  if(GS.gameState) renderMap(GS.gameState);
+  return true;
+}
+function _selecionarPreviaMovimentoTeste(action, hero, tx, ty){
+  if(!hero?.pos || !action?.path?.length) return false;
+  GS.pendingMove = {
+    target: [tx, ty], path: action.path.map(step => [step[0], step[1]]),
+    origin: [hero.pos[0], hero.pos[1]], moves_left: Number(hero.moves_left) || 0,
+    testHeroId: hero.id
+  };
+  renderMap(GS.gameState);
+  toast(t('ui.tabuleiro.clique_novamente_para_confirmar'), 'var(--gold)');
+  return true;
+}
+function _executarMovimentoTesteConfirmado(action, hero){
+  if(!hero || !action?.path?.length) return;
+  const passos = action.path.map(step => [Number(step[0]), Number(step[1])]);
+  if(mode3D && g3){
+    const peao = getPeaoMesh(hero.id);
+    if(peao){
+      let cx = hero.pos[0], cy = hero.pos[1];
+      const caminho = [];
+      for(const [dx, dy] of passos){ cx += dx; cy += dy; caminho.push({x:cx, z:cy, rotY:_facingToRotY([dx,dy])}); }
+      for(const [dx,dy] of passos) GS.testeAcaoHeroi(hero.id, 'move', {dx, dy});
+      moverPeaoAoCaminho(peao, hero, caminho, () => { if(GS.gameState) renderMap3D(GS.gameState); });
+      return;
+    }
+  }
+  for(const [dx,dy] of passos) GS.testeAcaoHeroi(hero.id, 'move', {dx, dy});
+  if(GS.gameState) renderMap(GS.gameState);
+}
+function _handleTesteHeroiTileClick(tx, ty){
+  const st = GS.gameState;
+  if(!st?.test_mode || !GS.isMaster?.()) return false;
+  const clicado = _testeHeroiNaCasa(st, tx, ty);
+  if(clicado){
+    // Durante a vez do monstro, o herói-teste é um alvo do ataque manual.
+    // Deixe o clique seguir para o bloco Mestre abaixo; só a vez de um herói
+    // usa o clique na própria miniatura para selecioná-la.
+    const atorTeste = st.test_combat?.active
+      ? st.test_combat.queue?.[st.test_combat.index] : null;
+    if(atorTeste?.kind === 'monster') return false;
+    _selecionarTesteHeroiMapa(clicado);
+    const ativo = _testeHeroiAtivoNoMapa(st);
+    if(!ativo || String(ativo.id) !== String(clicado.id))
+      toast(t('ui.mestre.heroi_teste_aguarde_turno'), 'var(--text2)');
+    return true;
+  }
+  const hero = _testeHeroiSelecionado(st);
+  const ativo = _testeHeroiAtivoNoMapa(st);
+  if(!hero || !ativo || String(hero.id) !== String(ativo.id)) return false;
+
+  const action = GS.resolveTestHeroTileClick(hero.id, tx, ty);
+  const preview = GS.pendingMove?.testHeroId != null ? GS.pendingMove : null;
+  if(preview){
+    const same = preview.target?.[0] === tx && preview.target?.[1] === ty;
+    if(same && action?.type === 'move'){
+      GS.pendingMove = null; _clearMovePreviewVisual();
+      _executarMovimentoTesteConfirmado(action, hero); return true;
+    }
+    if(!same && action?.type === 'move'){
+      _selecionarPreviaMovimentoTeste(action, hero, tx, ty); return true;
+    }
+    GS.pendingMove = null; _clearMovePreviewVisual();
+  }
+  if(action?.type === 'attack'){
+    GS.testeAcaoHeroi(hero.id, 'attack', {
+      target_id: action.targetId, target_pos: action.targetPos,
+      buffs: _testeHeroiBuffs(hero.id)
+    });
+    _testeConsumirFuriaAposAtaque(hero.id);
+    return true;
+  }
+  if(action?.type === 'attack_blocked_wall'){
+    toast(t('ui.hud.uma_parede_bloqueia_a_linha_de_tiro'), 'var(--orange)'); return true;
+  }
+  if(action?.type === 'movement_blocked'){
+    toast(t('ui.hud.movimento_bloqueado'), 'var(--orange)'); return true;
+  }
+  if(action?.type === 'move'){
+    _selecionarPreviaMovimentoTeste(action, hero, tx, ty); return true;
+  }
+  return true;
+}
+
+const _MP_TESTE_HERO_SKILLS = new Set([
+  'cancao_heroica','provocacao','cura','cura_area','purificacao','ressurreicao',
+  'imposicao_maos','golpe_sagrado','protetor','regeneracao_divina','guerreiro_luz',
+  'detectar_armadilhas','esconder_sombras','veneno_rapido','criar_armadilha',
+  'desarmar_armadilha','aprimorar_magia','estender_magia','fortalecer_magia'
+]);
+const _MP_TESTE_WARRIOR_SKILLS = new Set(['mira_certeira','golpe_devastador','furia_berserker']);
+function _testeHeroiBuffs(heroId){
+  return Array.isArray(window._testeHeroiBuffs?.[heroId])
+    ? window._testeHeroiBuffs[heroId].slice() : [];
+}
+
+// A Fúria Berserker é uma preparação de um único turno. No simulador, a
+// seleção fica apenas no navegador (o herói temporário não possui um cliente
+// próprio), então removemos o marcador depois de enviá-la para que o segundo
+// ataque consuma somente a carga extra já concedida, sem rearmá-la.
+function _testeConsumirFuriaAposAtaque(heroId){
+  const all = window._testeHeroiBuffs;
+  if(!all || !Array.isArray(all[heroId]) || !all[heroId].includes('furia_berserker')) return;
+  all[heroId] = all[heroId].filter(id => id !== 'furia_berserker');
+  if(GS.gameState) renderMasterPanel(GS.gameState);
+}
+
+function _ativarHabilidadeTesteDoMenu(skillId, options = {}){
+  const state = GS.gameState;
+  const hero = _testeHeroiSelecionado(state);
+  if(!hero || !_testeHeroiPodeAgir(state, hero.id)){
+    toast(t('ui.habilidade.nao_e_sua_vez'), '#ff6b6b'); return;
+  }
+  // No guerreiro estas habilidades são preparadas e consumidas junto do
+  // próximo ataque. Mantemos essa preparação local ao simulador; o jogo real
+  // continua usando GS.toggleWarriorSkill normalmente.
+  if(_MP_TESTE_WARRIOR_SKILLS.has(skillId)){
+    const all = window._testeHeroiBuffs || (window._testeHeroiBuffs = {});
+    const atual = new Set(all[hero.id] || []);
+    // Mesmo teto de combinação do jogo real (o servidor trunca em silêncio o
+    // que passar dele): 1 sem especialização, 2 com Combinar, 3 com Mestre.
+    const esp = (GS.guildOwnedOf?.(hero.id)?.especializacoes) || [];
+    const teto = esp.includes('guerreiro_mestre_combate') ? 3 : esp.includes('guerreiro_combinar_2') ? 2 : 1;
+    if(!atual.has(skillId) && atual.size >= teto){
+      toast(t('ui.habilidade.teto_combinacao', {n: teto}), 'var(--orange)'); return;
+    }
+    if(atual.has(skillId)) atual.delete(skillId); else atual.add(skillId);
+    all[hero.id] = [...atual];
+    if(options.reopen === false) renderMasterPanel(state);
+    else abrirMenuHabilidades(hero.id);
+    toast(atual.has(skillId) ? t('ui.habilidade.combinacao_armada') : t('ui.habilidade.combinacao_cancelada'), 'var(--gold)');
+    return;
+  }
+  const base = (hero.skills || []).find(s => s && s.id === skillId) || {};
+  let actionId = skillId;
+  if(skillId.startsWith('instrumento_')) actionId = 'usar_instrumento';
+  if(skillId === 'cancao_heroica' && hero.cancao_ativa) actionId = 'desativar_cancao';
+  if(skillId === 'golpe_sagrado' && hero.golpe_sagrado_ativo) actionId = 'desativar_golpe_sagrado';
+  if(skillId === 'protetor' && hero.protetor_ativo) actionId = 'desativar_protetor';
+  const enviar = targetId => {
+    fecharMenuHabilidades();
+    const instrumentoAlvo = actionId === 'usar_instrumento' && !targetId
+      ? (state.monsters || []).find(m => m.hp > 0)?.id : null;
+    const data = {skill_id: actionId, target_id: targetId || instrumentoAlvo || null};
+    if(actionId === 'criar_armadilha') { data.tipo = 'buraco'; data.tx = hero.pos?.[0]; data.ty = hero.pos?.[1]; }
+    if(actionId === 'desarmar_armadilha') { data.tx = hero.pos?.[0]; data.ty = hero.pos?.[1]; }
+    if(actionId === 'veneno_rapido') {
+      const frasco = (hero.bag || []).find(i => i?.veneno_id || i?.poison_id);
+      data.veneno_id = frasco?.veneno_id || frasco?.poison_id || null;
+    }
+    GS.testeAcaoHeroi(hero.id, 'hero_skill', data);
+  };
+  if(actionId === 'cancao_heroica' || actionId === 'cura_area'
+      || actionId === 'regeneracao_divina' || actionId === 'guerreiro_luz'
+      || actionId === 'golpe_sagrado'
+      || actionId.startsWith('desativar_') || actionId === 'detectar_armadilhas'
+      || actionId === 'esconder_sombras' || actionId === 'veneno_rapido'
+      || actionId === 'criar_armadilha' || actionId === 'desarmar_armadilha'
+      || actionId === 'usar_instrumento'
+      || actionId.startsWith('mago_') || ['aprimorar_magia','estender_magia','fortalecer_magia'].includes(actionId)){
+    enviar(null); return;
+  }
+  let targets = [], kind = 'monster';
+  if(base.target === 'enemy') targets = (state.monsters || []).filter(m => m.hp > 0);
+  else if(base.target === 'ally'){
+    targets = (state.players || []).filter(p => p.alive && p.test_hero);
+    kind = 'player';
+  }
+  if(!targets.length){ toast(t('ui.mestre.sem_alvo_vivo'), 'var(--orange)'); return; }
+  fecharMenuHabilidades();
+  // No simulador, a ficha não abre uma janela de alvos. A ação fica armada e
+  // o Mestre escolhe diretamente a miniatura no tabuleiro.
+  _iniciarMiraHabilidadeTeste(hero, skillId, base, enviar, kind);
+}
+
 function _mpAbaHeroiTesteAtivo(state, p){
   const alvos = (state.monsters || []).filter(m => m.hp > 0);
-  const alvoOpts = alvos.map(m => `<option value="${_esc(m.id)}">${_esc(m.name || m.type || t('ui.mestre.monstro'))} (${m.hp}/${m.max_hp || m.hp})</option>`).join('');
-  const skills = (p.skills || []).filter(s => s && s.mp != null).map(s =>
-    `<button class="mp-linha hab mp-test-skill" data-skill="${_esc(s.id)}"><span class="txt">✨ ${_esc(s.name || s.id)}</span></button>`).join('');
+  const fichaSkills = [...(p.skills || [])];
+  if(p.class_id === 'bard' && !fichaSkills.some(s => s?.id === 'conhecimento_lendas'))
+    fichaSkills.push({id:'conhecimento_lendas', name:t('ui.hud.conhecimento_das_lendas'), icon:'📖', tipo:'passiva', description:t('ui.hud.revela_a_ficha_completa_de_qualquer_inimig')});
+  if(p.class_id === 'mage' && !fichaSkills.some(s => s?.id === 'animar_mortos'))
+    fichaSkills.push({id:'animar_mortos', name:t('ui.hud.animar_mortos'), icon:'💀', tipo:'acao_principal', description:t('ui.animar.clique_cadaver_3')});
+  const skills = fichaSkills.filter(s => s && s.mp != null
+    && !['fireball', 'ice_lance', 'magic_shield'].includes(s.id)).map(s =>
+    `<button class="mp-linha hab mp-test-skill" data-skill="${_esc(s.id)}"><span class="txt"><b>✨ ${_esc(s.name || s.id)}</b><small class="meta">${_esc(s.description || s.desc || '')}</small></span><span class="meta">💙${_esc(s.mp)}</span></button>`).join('');
+  const heroSkills = fichaSkills.filter(s => s && (_MP_TESTE_HERO_SKILLS.has(s.id)
+    || _MP_TESTE_WARRIOR_SKILLS.has(s.id))).map(s => {
+    let id = s.id, nome = s.name || s.id;
+    if(id === 'cancao_heroica' && p.cancao_ativa){ id = 'desativar_cancao'; nome = t('ui.mestre.desativar'); }
+    if(id === 'golpe_sagrado' && p.golpe_sagrado_ativo){ id = 'desativar_golpe_sagrado'; nome = t('ui.mestre.desativar'); }
+    if(id === 'protetor' && p.protetor_ativo){ id = 'desativar_protetor'; nome = t('ui.mestre.desativar'); }
+    const custo = [s.fome_cost ? `🍖${s.fome_cost}` : '', s.sede_cost ? `💧${s.sede_cost}` : ''].filter(Boolean).join(' ');
+    const armada = _MP_TESTE_WARRIOR_SKILLS.has(s.id) && _testeHeroiBuffs(p.id).includes(s.id);
+    return `<button class="mp-linha hab mp-test-hero-skill${armada ? ' armado' : ''}" data-skill="${_esc(id)}"><span class="txt"><b>${_esc(s.icon || '✨')} ${_esc(nome)}${armada ? ` <small style="color:var(--gold);font-size:.6rem;">● ${t('ui.hud.armada')}</small>` : ''}</b><small class="meta">${_esc(s.description || s.desc || '')}</small></span>${custo ? `<span class="meta">${custo}</span>` : ''}</button>`;
+  }).join('');
+  // Habilidades passivas e habilidades de classe ainda não possuem um botão
+  // de execução nesta ponte do simulador, mas devem aparecer como na ficha
+  // básica, sem transformar a descrição em uma ação falsa.
+  const infoSkills = fichaSkills.filter(s => s && s.mp == null
+    && !_MP_TESTE_HERO_SKILLS.has(s.id) && !_MP_TESTE_WARRIOR_SKILLS.has(s.id)).map(s =>
+    `<div class="mp-linha hab mp-test-skill-info"><span class="txt"><b>${_esc(s.icon || '✨')} ${_esc(s.name || s.id)}</b><small class="meta">${_esc(s.description || s.desc || '')}</small></span></div>`).join('');
+  // Só instrumentos ATIVADOS têm botão; o Alaúde (passivo) respondia sempre
+  // "Sinfonia Heroica é passiva" ao clique.
+  const instrumento = p.class_id === 'bard' && p.gear?.off_hand?.tipo_item === 'instrumento'
+      && GS.instrumentoBase?.(p.gear.off_hand.base)?.modo === 'ativada'
+    ? `<button class="mp-linha hab mp-test-hero-skill" data-skill="usar_instrumento"><span class="txt">🎵 ${t('ui.mestre.instrumento')}</span></button>` : '';
   const spells = (p.magias_conhecidas || []).map(id =>
     `<button class="mp-linha hab mp-test-spell" data-spell="${_esc(id)}"><span class="txt">🔮 ${_esc(id)}</span></button>`).join('');
   return `<div class="mp-head"><span class="emoji">${_esc(p.emoji || '🧙')}</span><div style="flex:1"><div class="nome">${_esc(p.name || p.class_id || t('ui.mestre.heroi_de_teste'))}</div><div class="sub">${t('ui.mestre.heroi_de_teste_turno_ativo')}</div></div></div>
     <div class="mp-recursos"><div>${t('ui.mestre.teste_movimento')}<b class="mov">${Number(p.moves_left)||0}</b></div><div>${t('ui.mestre.teste_acao')}${p.action_done ? '<b class="gasta">'+t('ui.mestre.teste_usada')+'</b>' : '<b class="livre">'+t('ui.mestre.teste_livre')+'</b>'}</div><div>${t('ui.mestre.teste_bonus')}${p.bonus_action_used ? '<b class="gasta">'+t('ui.mestre.teste_usada')+'</b>' : '<b class="livre">'+t('ui.mestre.teste_livre')+'</b>'}</div></div>
     <div class="mp-vitais"><div class="mp-hpbar"><i style="width:${Math.max(0, Math.min(100, Math.round(100*(p.hp||0)/(p.max_hp||1))))}%"></i></div><span>${p.hp}/${p.max_hp || p.hp}</span></div>
     <div style="font-size:.68rem;color:var(--text2)">🛡️ ${t('ui.hud.sigla_ca')} ${p.ac ?? '—'} · 🍖 ${p.fome ?? '—'} · 💧 ${p.sede ?? '—'}</div>
-    <div class="mp-sec">${t('ui.mestre.acoes_de_teste')}</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px"><button class="mp-test-move" data-dx="0" data-dy="-1">↑</button><button class="mp-test-move" data-dx="-1" data-dy="0">←</button><button class="mp-test-move" data-dx="1" data-dy="0">→</button><button class="mp-test-move" data-dx="0" data-dy="1" style="grid-column:2">↓</button></div>
-    <select class="mp-test-target" style="width:100%;margin-top:7px">${alvoOpts || '<option value="">'+t('ui.mestre.sem_alvo_vivo')+'</option>'}</select>
-    <button class="mp-linha atk mp-test-attack" ${alvos.length ? '' : 'disabled'}><span class="txt">${t('ui.mestre.ataque_basico')}</span></button>
+    <button class="mp-linha atk mp-test-attack" ${alvos.length ? '' : 'disabled'}><span class="txt">${t('ui.mestre.ataque_basico')} · ${t('ui.mira.selecione_um_alvo_no_tabuleiro')}</span></button>
+    ${heroSkills || infoSkills || instrumento ? `<div class="mp-sec">${t('ui.mestre.habilidades_do_heroi')}</div>${heroSkills}${infoSkills}${instrumento}` : ''}
     ${skills ? `<div class="mp-sec">${t('ui.mestre.habilidades_compativeis')}</div>${skills}` : ''}
     ${spells ? `<div class="mp-sec">${t('ui.mestre.magias_sec')}</div>${spells}` : ''}`;
 }
 
 function _mpWireHeroiTesteAtivo(host, p){
-  const target = () => host.querySelector('.mp-test-target')?.value || null;
-  host.querySelectorAll('.mp-test-move').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'move', {dx:Number(b.dataset.dx), dy:Number(b.dataset.dy)}));
   const atk = host.querySelector('.mp-test-attack');
-  if(atk) atk.onclick = () => GS.testeAcaoHeroi(p.id, 'attack', {target_id: target()});
-  host.querySelectorAll('.mp-test-skill').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'skill', {skill_id:b.dataset.skill, target_id:target()}));
-  host.querySelectorAll('.mp-test-spell').forEach(b => b.onclick = () => GS.testeAcaoHeroi(p.id, 'magia', {magia_id:b.dataset.spell, target_id:target()}));
+  if(atk) atk.onclick = () => {
+    if(GS.gameState?.test_mode && _testeHeroiPodeAgir(GS.gameState, p.id)){
+      fecharMenuHabilidades(); fecharMenuMagias();
+      _iniciarMiraAtaqueTeste(p);
+    }
+  };
+  host.querySelectorAll('.mp-test-skill').forEach(b => b.onclick = () => {
+    if(GS.gameState?.test_mode && _testeHeroiPodeAgir(GS.gameState, p.id)){
+      const skill = (p.skills || []).find(s => s && s.id === b.dataset.skill)
+        || {id:b.dataset.skill, name:b.dataset.skill, icon:'✨'};
+      const kind = skill.target === 'ally' ? 'player' : 'monster';
+      _iniciarMiraHabilidadeTeste(p, b.dataset.skill, skill,
+        targetId => GS.testeAcaoHeroi(p.id, 'skill', {skill_id:b.dataset.skill, target_id:targetId}), kind);
+    }
+  });
+  host.querySelectorAll('.mp-test-hero-skill').forEach(b => b.onclick = () => {
+    const skillId = b.dataset.skill;
+    if(GS.gameState?.test_mode && _testeHeroiPodeAgir(GS.gameState, p.id)){
+      // Na ficha lateral, o mestre permanece na própria ficha após armar uma
+      // habilidade do guerreiro; o menu H continua usando a reabertura normal.
+      _ativarHabilidadeTesteDoMenu(skillId, {reopen:false});
+      return;
+    }
+    GS.testeAcaoHeroi(p.id, 'hero_skill', {skill_id:skillId, target_id:null});
+  });
+  host.querySelectorAll('.mp-test-spell').forEach(b => b.onclick = () => {
+    if(GS.gameState?.test_mode && _testeHeroiPodeAgir(GS.gameState, p.id))
+      _ativarMagiaTesteDoMenu(b.dataset.spell);
+    else
+      GS.testeAcaoHeroi(p.id, 'magia', {magia_id:b.dataset.spell, target_id:null});
+  });
 }
 
 function _mpCustoDe(a){
+  // Cópia do Golpe Devastador usada por monstros: prepara o ataque e deixa
+  // a ação principal disponível no mesmo turno.
+  if(a && a.source === 'heroi' && a.source_id === 'golpe_devastador') return 'bonus';
+  if(a && a.id === 'investida_brutal_troll') return 'livre';   // espelha _custo_acao_ability
   const at = a && a.action_type;
   if(at === 'acao_bonus') return 'bonus';
   if(at === 'acao_livre') return 'livre';
@@ -18758,15 +19196,38 @@ function _mpCustoDe(a){
 // Espelha _habilidade_ativavel_manual no servidor. O servidor é a autoridade;
 // isto só decide o que fica clicável.
 const _MP_HAB_EXTRAIDAS = ['mestre_dos_mortos','sopro_dragao','amaldicoar_monstro',
-                           'golpe_brutal','desaparecer_nas_sombras','soltar_presa'];
+                           'golpe_brutal','desaparecer_nas_sombras','soltar_presa',
+                           // Técnicas que só a IA disparava; o servidor agora as
+                           // aceita no controle manual (troll, goblin, necromante).
+                           'golpe_devastador_troll','pressao_constante_troll',
+                           'investida_brutal_troll','arremesso','dominar_morto_vivo'];
+// Ativações manuais sem mira: o servidor resolve sozinho (self-buff ou
+// escolha automática do alvo).
+const _MP_HAB_SEM_MIRA = new Set(['golpe_devastador_troll','investida_brutal_troll',
+                                  'dominar_morto_vivo']);
+// Habilidades nativas do Gigante da Guerra e do Ciclope que o servidor aceita
+// no controle manual. A exceção fica separada e só é usada no modo de teste,
+// para não abrir ações novas no modo Mestre-jogador.
+const _MP_HAB_GIGANTE_TESTE = new Set(['mira_certeira','investida_heroica','furia_berserker',
+                                       'arremesso_colossal']);
 // Dano automático em quem já está agarrado. A ficha as declara 'passiva', mas
 // são A ação do turno da criatura — por isso passam na frente do corte abaixo.
 const _MP_ESMAGAR_PRESO = ['atq_mandibula','esmagar'];
+// A Sacudida Brutal também resolve automaticamente a presa agarrada, mas fica
+// liberada somente no simulador do Mestre. O modo Mestre-jogador permanece com
+// o comportamento visual anterior.
+const _MP_SACUDIDA_PRESA_TESTE = new Set(['sacudida_brutal']);
+const _MP_TIRANO_TYPES_TESTE = new Set(['tiranossauro_rex','tirano_da_mata','tirano_ancestral']);
 const _MP_NAO_IMPLEMENTADAS = ['encantar_vampirico','encantar_area_vampirico',
                                'encantar_supremo_vampirico'];
-function _mpAtivavel(a){
+function _mpAtivavel(a, monster = null){
   if(!a) return false;
   if(_MP_NAO_IMPLEMENTADAS.includes(a.id)) return false;
+  if((monster?.type === 'gigante_guerra' || monster?.type === 'ciclope')
+      && GS.gameState?.test_mode
+      && _MP_HAB_GIGANTE_TESTE.has(a.id)) return true;
+  if(GS.gameState?.test_mode && _MP_TIRANO_TYPES_TESTE.has(monster?.type)
+      && _MP_SACUDIDA_PRESA_TESTE.has(a.id)) return true;
   if(_MP_HAB_EXTRAIDAS.includes(a.id) || _MP_ESMAGAR_PRESO.includes(a.id)) return true;
   if(a.action_type === 'passiva') return false;
   if(a.action_type === 'magia') return true;   // servidor recusa as não implementadas
@@ -18783,6 +19244,133 @@ function _mpCondicoes(m){
   if(m.oculto_sombras)                 c.push('🌫️ oculto');
   if(m.em_chamas_rodadas > 0)          c.push('🔥 em chamas');
   return c;
+}
+
+// Efeitos temporários do monstro para a ficha aberta com C no modo de teste.
+// O servidor continua sendo a autoridade: este helper só organiza os campos
+// que já chegam no snapshot de game_state, sem inferir ou aplicar regras.
+function _modificadoresTemporariosMonstroStatus(m){
+  if(!m) return [];
+  const out = [];
+  const state = GS.gameState || {};
+  const round = Number(state.round || state.round_num || 0);
+  const add = (nome, efeito, rodadas = null, ate = null) => out.push({nome, efeito, rodadas, ate});
+  const addRestante = (nome, efeito, rodadas) => {
+    const n = Number(rodadas);
+    add(nome, efeito, Number.isFinite(n) && n > 0 ? n : null);
+  };
+  const S = (slug, params) => t('ui.status.' + slug, params);
+  const fmtDelta = n => `${Number(n) >= 0 ? '+' : ''}${Number(n) || 0}`;
+  const attr = {
+    ataque: _rotulo('ataque', 'ui.status.atrib', t('ui.status.atrib.ataque')),
+    dano: _rotulo('dano', 'ui.status.atrib', t('ui.status.atrib.dano')),
+    ca: _rotulo('ca', 'ui.status.atrib', t('ui.status.atrib.ca')),
+    resistencia: _rotulo('bonus_res', 'ui.status.atrib', t('ui.status.atrib.bonus_res')),
+    movimento: _rotulo('movimento', 'ui.status.atrib', t('ui.status.atrib.bonus_mov')),
+  };
+
+  const mods = m.mods_magia;
+  if(mods && Number(mods.rodadas || 0) > 0){
+    const partes = ['ataque', 'dano', 'ca', 'resistencia'].filter(k => Number(mods[k] || 0))
+      .map(k => `${fmtDelta(mods[k])} ${attr[k]}`);
+    if(mods.arma_ignora_resistencia) partes.push(S('ignora_reducoes_imunidades_fisicas'));
+    addRestante(S('modificador_magico'), partes.join(' · ') || S('efeito_magico_ativo'), mods.rodadas);
+  }
+
+  const poisonName = e => e?.nome || S('envenenado');
+  const poisonDetail = e => {
+    const op = e?.operacao;
+    if(op === 'dano') return t('ui.status.dano_por_rodada', {dano: e.dano || t('ui.tooltip.dano')});
+    if(op === 'reduzir') return `-${Number(e.valor) || 0} ${attr[e.atributo] || e.atributo || t('ui.status.atrib.dano')}`;
+    if(op === 'penalidade') return (e.atributos || []).map(([a,v]) => `${fmtDelta(v)} ${attr[a] || a}`).join(' · ') || S('penalidade_ativa');
+    if(op === 'petrificar') return S('petrificacao');
+    if(op === 'cegar') return S('cegueira_e_penalidade_em_ataques');
+    return S('efeito_de_veneno_ativo');
+  };
+  (Array.isArray(m.efeitos_veneno) ? m.efeitos_veneno : []).forEach(e => {
+    addRestante(`☠️ ${poisonName(e)}`, poisonDetail(e), e.duracao ?? e.rodadas);
+  });
+
+  if(m.provocado){
+    const efeito = m.provocado_turno_efeito
+      ? `${S('provocacao_ef')} · ${S('desvantagem_proximo_ataque')}`
+      : S('provocacao_ef');
+    addRestante(S('provocacao'), efeito, m.provocado_turnos);
+  }
+  if(m.dormindo) addRestante(S('sono'), S('perde_o_turno_acorda_ao_sofrer_dano'), m.dormindo_rodadas);
+  if(m.comandado) addRestante(S('comando'), S('o_controlador_dirige_o_proximo_turno'), 1);
+  if(m.dominado || m.dominio_mente_rodadas || m.dominio_mente_pendente_pid){
+    const permanente = !!m.domina_permanente || !!m.dominado_permanente;
+    addRestante(S('dominacao'), S('age_sob_controle_de_outra_criatura'), permanente ? null : (m.dominado_rodadas ?? m.dominio_mente_rodadas));
+  }
+  if(m.perde_turno) addRestante(S('imobilizado'), S('perde_o_turno_e_nao_pode_agir'), m.perde_turno_rodadas || 1);
+  if(m.preso) addRestante(S('preso'), S('movimento_impedido'), m.preso_rodadas);
+  if(m.enredado) addRestante(S('preso'), S('movimento_impedido'), m.enredado_rodadas);
+  if(m.paralisado){
+    const max = Number(m.paralisado_rodada_max || 0);
+    const atual = Number(m.paralisado_rodadas || 0);
+    const restante = max > 0 ? Math.max(1, max - atual) : null;
+    addRestante(S('paralisado'), S('paralisado_ef'), restante);
+  }
+  if(m.petrificado){
+    addRestante(S('petrificacao_2'), m.petrificado_permanente ? S('permanente_ate_purificacao') : S('paralisado_ef'), m.petrificado_permanente ? null : m.petrificado_rodadas);
+  }
+  if(m.cego) addRestante(S('cego'), S('cegueira_e_penalidade_em_ataques'), m.cego_rodadas);
+  if(m.com_medo || m.medo_rodadas) addRestante(S('medo'), S('medo_ef'), m.medo_rodadas);
+  if(m.lento || m.lento_rodadas) addRestante(S('lentidao'), S('lentidao_ef'), m.lento_rodadas);
+  if(Number(m.mov_reduzido_rodadas || 0) > 0)
+    addRestante(t('ui.mestre.movimento_reduzido'), `${t('ui.mestre.movimento_reduzido')}${m.movement != null ? ` · ${attr.movimento}: ${m.movement}` : ''}`, m.mov_reduzido_rodadas);
+
+  const desnutricao = Number(m.desnutricao_rodadas || 0);
+  if(desnutricao > 0){
+    const atk = m.desnutricao_ataque_penalidade ?? -1;
+    const dmg = m.desnutricao_dano_penalidade ?? -2;
+    addRestante(S('exaustao'), `${fmtDelta(atk)} ${attr.ataque} · ${fmtDelta(dmg)} ${attr.dano}`, desnutricao);
+  }
+  const definhar = Number(m.definhar_rodadas || 0);
+  if(definhar > 0){
+    const atk = m.definhar_ataque_penalidade ?? -2;
+    const dmg = m.definhar_dano_penalidade ?? -4;
+    addRestante(S('exaustao'), `${fmtDelta(atk)} ${attr.ataque} · ${fmtDelta(dmg)} ${attr.dano}`, definhar);
+  }
+  if(Number(m.em_chamas_rodadas || 0) > 0)
+    addRestante(S('em_chamas'), S('em_chamas_ef', {n: m.em_chamas_rodadas}), m.em_chamas_rodadas);
+  if(Number(m.temp_ca_bonus || 0) !== 0)
+    addRestante(S('ca_temporaria'), `${fmtDelta(m.temp_ca_bonus)} ${attr.ca}`, m.temp_ca_rodadas);
+  if(Number(m.bonus_ataque_temporario || 0) !== 0)
+    addRestante(S('bonus_temporario_de_ataque'), S('bonus_ataque_ate_fim_turno', {delta: fmtDelta(m.bonus_ataque_temporario)}), 1);
+  if(m.lento_previsivel_ativo)
+    addRestante(S('ca_temporaria'), `${fmtDelta(-2)} ${attr.ca}`, 1);
+  if(m.vinculo_dor_proximo_ataque)
+    addRestante(S('penalidade_ativa'), `${fmtDelta(-1)} ${attr.ataque}`, 1);
+  if(Number(m.pressao_ca_val || 0) && Number(m.pressao_ca_ate || 0) >= round)
+    add(S('ca_temporaria'), `${fmtDelta(-Math.abs(Number(m.pressao_ca_val)))} ${attr.ca}`, null, m.pressao_ca_ate);
+  if(Number(m.acorde_atk_pen_ate || 0) >= round && Number(m.acorde_atk_pen_ate || 0) > 0)
+    add(S('penalidade_ativa'), `${fmtDelta(-1)} ${attr.ataque}`, null, m.acorde_atk_pen_ate);
+  if(m.acido_residual) add(S('acido_residual'), S('acido_dano_proximo_turno', {n: m.acido_residual}));
+  if(m.oculto_sombras || m.oculto_item) add(S('oculto'), S('efeito_magico_ativo'));
+  if(m.cancao_ativa){
+    const labels = (m.cancao_atributos || []).map(id => _cancaoLabel(id)).filter(Boolean);
+    add(S('cancao_heroica'), labels.length ? labels.join(' · ') : S('bencao_ativa'), null, m.cancao_expira_em);
+  }
+
+  // Penalidades agregadas continuam úteis para efeitos antigos/customizados
+  // que não guardam uma entrada detalhada em efeitos_veneno.
+  const penalidades = Object.entries(m.penalidades || {}).filter(([,v]) => Number(v));
+  if(penalidades.length && !(m.efeitos_veneno || []).length){
+    add(S('penalidade_ativa'), penalidades.map(([k,v]) => `${fmtDelta(v)} ${attr[k] || k}`).join(' · '));
+  }
+  return out;
+}
+
+function _modificadoresTemporariosMarkup(efeitos){
+  if(!efeitos.length) return `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`;
+  const state = GS.gameState || {};
+  const round = Number(state.round || state.round_num || 0);
+  return efeitos.map(e => {
+    const n = e.rodadas != null ? Number(e.rodadas) : (e.ate != null ? Math.max(0, Number(e.ate) - round) : null);
+    return `<div class="st-effect"><b>${_esc(e.nome)}</b><span>${_esc(e.efeito)}</span>${n != null && n > 0 ? `<em>${t('ui.status.rodadas_restantes', {n:n})}</em>` : ''}</div>`;
+  }).join('');
 }
 
 function _mpAbaAtivo(state){
@@ -18879,7 +19467,7 @@ function _mpAbaAtivo(state){
     h += `<div class="mp-sec">${t('ui.mestre.magias_habilidades')}</div>`;
     abis.forEach(a => {
       const naoImpl = _MP_NAO_IMPLEMENTADAS.includes(a.id);
-      const ativavel = _mpAtivavel(a);
+      const ativavel = _mpAtivavel(a, m);
       const custo = _mpCustoDe(a);
       const bloqueado = custo === 'principal' ? !!(mm && mm.acao) : custo === 'bonus' ? !!(mm && mm.bonus) : false;
       const recarga = _mpRecargaRestante(m, a.id, state);
@@ -19015,6 +19603,14 @@ function _mpWireMonstros(host, state){
         if(window._modoMestreMira) _limparMiraMestre();
       }
       if (state.test_mode) {
+        // Um foco de herói escolhido anteriormente não pode continuar
+        // comandando o atalho M quando o Mestre seleciona um monstro. Durante
+        // a vez de um herói, porém, preservamos o foco para que ele ainda
+        // possa escolher suas próprias magias/ações.
+        const atorTeste = state.test_combat?.active
+          ? state.test_combat.queue?.[state.test_combat.index] : null;
+        if(!atorTeste || atorTeste.kind === 'monster')
+          window._testeHeroiSelecionadoId = null;
         window._mpFocoMid = mid;
         _redrawMasterSelection();
         GS.mestreSelecionarTeste(mid);
@@ -19063,8 +19659,13 @@ function _mpAbaMestre(state){
     const nomeAtor = ator?.kind === 'hero'
       ? (state.players || []).find(p => String(p.id) === String(ator.id))?.name
       : (state.monsters || []).find(m => String(m.id) === String(ator?.id))?.name;
+    const fimSimulacao = simulacao.ended_reason === 'herois_eliminados'
+      ? t('ui.mestre.simulacao_fim_herois')
+      : simulacao.ended_reason === 'monstros_eliminados'
+        ? t('ui.mestre.simulacao_fim_monstros')
+        : null;
     h += `<div class="mp-sec">${t('ui.mestre.simulacao_de_combate')}</div>
-      <div style="font-size:.68rem;color:var(--text2);margin:3px 0 6px">${simulacao.active ? t('ui.mestre.rodada_vez_de', {n: simulacao.round, nome: _esc(nomeAtor || t('ui.mestre.ator'))}) : t('ui.mestre.mesa_livre_posicione')}</div>
+      <div style="font-size:.68rem;color:${fimSimulacao ? 'var(--orange)' : 'var(--text2)'};margin:3px 0 6px">${simulacao.active ? t('ui.mestre.rodada_vez_de', {n: simulacao.round, nome: _esc(nomeAtor || t('ui.mestre.ator'))}) : (fimSimulacao || t('ui.mestre.mesa_livre_posicione'))}</div>
       <button class="mestre-test-combat-btn mp-linha ${simulacao.active ? 'atk' : 'hab'}" data-test-combat="${simulacao.active ? 'stop' : 'start'}"><span class="txt">${simulacao.active ? t('ui.mestre.encerrar_simulacao') : t('ui.mestre.iniciar_combate')}</span></button>`;
     const classesTeste = [
       ['warrior', '⚔️', t('ui.mestre.guerreiro')], ['mage', '🔮', t('ui.mestre.mago')],
@@ -19135,10 +19736,21 @@ function _mestreMiraErro(motivo){
   toast(msg, 'var(--orange)');
   appendGM(`⚠️ ${msg}`);
 }
-function _mestreLinhaRangeTiles(state, caster, range){
+function _mestreLinhaRangeTiles(state, caster, range, ricochete=false){
   const out = new Set(), pos = caster?.pos || [], ox = Number(pos[0]), oy = Number(pos[1]);
   if(!state?.tiles || !Number.isFinite(ox) || !Number.isFinite(oy)) return out;
   const reach = Math.max(1, _alcanceComAlturaCli(caster, range));
+  if(ricochete){
+    // Relâmpago aceita as oito direções e pode ricochetear. Reaproveitamos o
+    // mesmo caminho visual da magia dos heróis para que alcance e área coincidam
+    // com o que o servidor executará.
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
+      for(const key of _caminhoRelampagoCli(ox, oy, dx, dy, reach).keys()) out.add(key);
+    }
+    return out;
+  }
+  // Habilidades lineares legadas (ex.: Cuspar Ácido) continuam com a mira
+  // cardinal original; somente Relâmpago usa o trajeto 8-way/ricochete.
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
     for(let passo=1; passo<=reach; passo++){
       const x=ox+dx*passo, y=oy+dy*passo, row=state.tiles[y];
@@ -19458,11 +20070,31 @@ function _iniciarMiraMestre(spec){
     : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster))
     ? new Set(_monsterFrontAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : spec.lineRange
-    ? _mestreLinhaRangeTiles(GS.gameState, spec.caster, range)
+    ? _mestreLinhaRangeTiles(GS.gameState, spec.caster, range, !!spec.lineSpell)
     : new Set();
   const usesFootprintAttackZone = !!spec.rearAttack ||
     (spec.kind === 'attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster));
-  if(!spec.lineRange && !usesFootprintAttackZone && range>0) _addCheb(x,y,range,alcance);
+  const footprintRangedAbility = spec.kind === 'ability'
+    && spec.attackDef && spec.attackDef.range != null;
+  if(!footprintRangedAbility
+      && ((!spec.lineRange && !spec.cone && !usesFootprintAttackZone && range>0)
+          || (spec.cone && spec.showConeRange && range>0))) _addCheb(x,y,range,alcance);
+  if(footprintRangedAbility && GS.gameState?.tiles){
+    // Ataques à distância de uma criatura 2×2 partem de qualquer casa do
+    // footprint. A prévia precisa refletir isso, em vez de medir apenas pela
+    // âncora visual do monstro.
+    alcance.clear();
+    const body = new Set((GS.monsterTiles(spec.caster) || [])
+      .map(([bx, by]) => `${bx},${by}`));
+    const H = GS.gameState.tiles.length;
+    const W = GS.gameState.tiles[0]?.length || 0;
+    for(let ty = 0; ty < H; ty++) for(let tx = 0; tx < W; tx++){
+      const tile = GS.gameState.tiles[ty]?.[tx];
+      if((tile !== TILE_FLOOR && tile !== TILE_DOOR) || body.has(`${tx},${ty}`)) continue;
+      if(_monsterAttackInRangeClient(spec.caster, [tx, ty], spec.attackDef))
+        alcance.add(`${tx},${ty}`);
+    }
+  }
   _aimStart({
     kind:'mestre',
     title:`${spec.icon || '🎯'} ${spec.label || t('ui.mestre.custo.principal')}`,
@@ -19471,13 +20103,51 @@ function _iniciarMiraMestre(spec){
     range:alcance,
     cleanup:()=>{ window._modoMestreMira = null; },
   });
+  // O Mestre não tem GS.me para semear o cursor de controle. Mostra desde
+  // já a direção inicial da ficha, sem esperar um primeiro movimento.
+  if(spec.lineSpell || spec.cone){
+    const f = Array.isArray(spec.caster.facing) && (spec.caster.facing[0] || spec.caster.facing[1])
+      ? spec.caster.facing : [0, 1];
+    _atualizarMiraMestre(x + f[0], y + f[1]);
+  } else if(spec.centerArea){
+    _atualizarMiraMestre(x, y);
+  }
 }
 function _atualizarMiraMestre(tx,ty){
   const mode=window._modoMestreMira; if(!mode) return;
-  if(tx == null || ty == null){ window._spellHL.area=new Set(); _aplicarSpellHL(); return; }
-  const area=new Set(); if(mode.areaRadius>0) _addCheb(tx,ty,mode.areaRadius,area);
-  else if(mode.areaLado) _addQuadrado(tx,ty,mode.areaLado,area);
-  window._spellHL.area=area; _aplicarSpellHL();
+  if(tx == null || ty == null){
+    window._spellHL.area=new Set(); window._spellHL.double=new Set(); _aplicarSpellHL(); return;
+  }
+  const area=new Set();
+  const double=new Set();
+  const [ox, oy] = mode.caster?.pos || [0, 0];
+  if(mode.lineSpell){
+    const [dx, dy] = _dir8(tx - ox, ty - oy);
+    mode.dir = [dx, dy];
+    if(dx || dy){
+      const caminho = _caminhoRelampagoCli(ox, oy, dx, dy, Math.max(1, Math.floor(mode.range)));
+      for(const [key, vezes] of caminho){
+        if(vezes >= 2) double.add(key); else area.add(key);
+      }
+    }
+  } else if(mode.cone){
+    const [dx, dy] = _dir8(tx - ox, ty - oy);
+    mode.dir = [dx, dy];
+    if(dx || dy){
+      const magia = GRIMORIO_CLIENT[mode.id] || {};
+      const tiles = mode.monsterCone
+        ? _coneTilesMonstroCli(ox, oy, dx, dy, Number(mode.rawRange ?? mode.range ?? 4))
+        : _coneTilesCli(ox, oy, dx, dy,
+            Number(magia.comprimento || magia.range || 4),
+            Number(magia.base || magia.base_largura || 4));
+      for(const key of tiles) area.add(key);
+    }
+  } else if(mode.areaRadius>0){
+    const [cx, cy] = mode.centerArea ? [ox, oy] : [tx, ty];
+    _addCheb(cx, cy, mode.areaRadius, area);
+  }
+  else if(mode.areaLado) _addQuadradoMagiaMonstro(tx,ty,mode.areaLado,area);
+  window._spellHL.area=area; window._spellHL.double=double; _aplicarSpellHL();
 }
 function _clickMiraMestre(tx,ty){
   const mode=window._modoMestreMira, st=GS.gameState; if(!mode||!st) return;
@@ -19485,9 +20155,30 @@ function _clickMiraMestre(tx,ty){
   const targetHero = (st.players||[]).find(p=>p.alive&&p.pos[0]===tx&&p.pos[1]===ty);
   const targetEntity = targetMonster || targetHero;
   const d=Math.max(Math.abs(mode.caster.pos[0]-tx),Math.abs(mode.caster.pos[1]-ty));
-  const inRange = mode.rearAttack
+  let dir = mode.dir;
+  let spellPath = null;
+  if((mode.lineSpell || mode.cone) && (tx !== mode.caster.pos[0] || ty !== mode.caster.pos[1])){
+    const [dx, dy] = _dir8(tx - mode.caster.pos[0], ty - mode.caster.pos[1]);
+    dir = [dx, dy];
+    mode.dir = dir;
+    if(mode.lineRange){
+      spellPath = _caminhoRelampagoCli(mode.caster.pos[0], mode.caster.pos[1], dx, dy,
+        Math.max(1, Math.floor(mode.range)));
+    } else if (mode.monsterCone) {
+      spellPath = _coneTilesMonstroCli(mode.caster.pos[0], mode.caster.pos[1], dx, dy,
+        Math.max(1, Math.floor(Number(mode.rawRange ?? mode.range ?? 4))));
+    } else {
+      const magia = GRIMORIO_CLIENT[mode.id] || {};
+      spellPath = _coneTilesCli(mode.caster.pos[0], mode.caster.pos[1], dx, dy,
+        Number(magia.comprimento || magia.range || 4),
+        Number(magia.base || magia.base_largura || 4));
+    }
+  }
+  const inRange = mode.lineSpell || mode.cone
+    ? !!spellPath?.has(`${tx},${ty}`)
+    : mode.rearAttack
     ? _monsterRearAttackTilesClient(mode.caster,1).some(([x,y])=>x===tx&&y===ty)
-    : mode.kind==='attack' && mode.attackDef
+    : (mode.kind==='attack' || mode.kind==='ability') && mode.attackDef
     ? _monsterAttackInRangeClient(mode.caster,[tx,ty],mode.attackDef)
     : mode.range <= 0 || d <= _alcanceComAlturaCli(mode.caster, mode.rawRange ?? mode.range, targetEntity);
   if(!inRange){
@@ -19496,7 +20187,7 @@ function _clickMiraMestre(tx,ty){
       : t('ui.mestre.casa_fora_alcance', {alvo: mode.label || t('ui.mestre.esta_habilidade'), n: mode.range});
     _mestreMiraErro(descricao); return;
   }
-  if(mode.lineRange && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
+  if(mode.lineRange && !mode.lineSpell && tx !== mode.caster.pos[0] && ty !== mode.caster.pos[1]){
     _mestreMiraErro(t('ui.mestre.este_ataque_so_pode_ser_usado_em_linha_ret')); return;
   }
   const alvo=targetHero
@@ -19513,7 +20204,7 @@ function _clickMiraMestre(tx,ty){
   }
   if(mode.kind==='attack') GS.mestreAtacarMonstro(mode.caster.id,alvo.id,mode.attackIndex);
   else if(mode.kind==='ability') GS.mestreUsarHabilidade(mode.caster.id,mode.id,alvo.id);
-  else GS.mestreUsarMagia(mode.caster.id,mode.id,alvo.id,tx,ty,mode.dir);
+  else GS.mestreUsarMagia(mode.caster.id,mode.id,alvo.id,tx,ty,dir);
   _limparMiraMestre();
 }
 
@@ -19521,6 +20212,35 @@ function _mestreAtivarHabilidade(m, abid){
   const st = GS.gameState; if(!st) return;
   const ab = (m.special_abilities||[]).find(a=>a.id===abid);
   if(!ab) return;
+  // O Gigante da Guerra e o Ciclope têm ações manuais implementadas no servidor,
+  // mas elas não seguem o formato genérico de habilidade com save/CD. No
+  // simulador, encaminhe cada uma para o fluxo que já existe no backend.
+  if(st.test_mode && (m.type === 'gigante_guerra' || m.type === 'ciclope')
+      && _MP_HAB_GIGANTE_TESTE.has(abid)){
+    if(abid === 'mira_certeira' || abid === 'investida_heroica'){
+      GS.mestreUsarHabilidade(m.id, abid, null);
+      return;
+    }
+    if(abid === 'arremesso_colossal'){
+      // O arremesso usa a geometria do footprint 2x2 do Gigante para a
+      // prévia e para a validação do alcance, sem reaproveitar o ataque
+      // básico (que consumiria a carga errada).
+      const ataque = {
+        range: Math.max(1, Number(ab.range || 8)),
+        attack_attribute: 'dex', damage_attribute: 'str_',
+        apply_attribute_damage: true,
+      };
+      _iniciarMiraMestre({kind:'ability', caster:m, id:abid,
+        range:ataque.range, attackDef:ataque,
+        icon:ab.icon||ab.icone, label:ab.name||abid});
+      return;
+    }
+    const ataque = (m.attacks || [])[0] || {};
+    const alcance = Math.max(1, Number(ataque.reach || 1), Number(ataque.range || 0));
+    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:alcance,
+      icon:ab.icon||ab.icone, label:ab.name||abid});
+    return;
+  }
   // Fichas legadas do Necromante/Xamã guardam magias em
   // special_abilities. Elas precisam usar o catálogo GRIMORIO_CLIENT, que
   // contém alcance, área e escala corretos; o fallback de habilidade entende
@@ -19536,13 +20256,21 @@ function _mestreAtivarHabilidade(m, abid){
     ], 'choice', tipo=>GS.mestreUsarHabilidade(m.id, abid, null, tipo));
     return;
   }
-  if(abid === 'soltar_presa'){
+  if(abid === 'soltar_presa' || _MP_HAB_SEM_MIRA.has(abid)){
     GS.mestreUsarHabilidade(m.id, abid, null);
+    return;
+  }
+  if(abid === 'arremesso'){
+    // Adaga do goblin: até 3 casas com linha de visão, ação bônus.
+    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:3,
+      icon:ab.icon||ab.icone, label:ab.name||abid});
     return;
   }
   // Esmagar/Mandíbula: o alvo é sempre quem já está agarrado — o servidor o
   // resolve sozinho, então não há mira a fazer aqui.
-  if(_MP_ESMAGAR_PRESO.includes(abid)){
+  if(_MP_ESMAGAR_PRESO.includes(abid)
+      || (st.test_mode && _MP_TIRANO_TYPES_TESTE.has(m.type)
+          && _MP_SACUDIDA_PRESA_TESTE.has(abid))){
     GS.mestreUsarHabilidade(m.id, abid, null); return;
   }
   if(abid === 'hero_bard_cancao_heroica' || ab.source_id === 'cancao_heroica'){
@@ -19554,9 +20282,14 @@ function _mestreAtivarHabilidade(m, abid){
     GS.mestreUsarHabilidade(m.id, abid, null); return;
   }
   const rng = ab.range || null;
+  const ehCone = String(ab.shape || '').toLowerCase() === 'cone';
+  const coneMonstro = ehCone && (abid === 'sopro_dragao' || abid === 'explosao_vapor');
+  const areaRadius = Number(ab.area_raio ?? ab.area_radius ?? (typeof ab.area === 'number' ? ab.area : 0)) || 0;
   _iniciarMiraMestre({kind:'ability',caster:m,id:abid,range:rng ?? 1,
     lineRange:abid === 'cuspir_acido',
-    areaRadius:Number(ab.area_raio ?? ab.area_radius ?? (typeof ab.area==='number'?ab.area:0))||0,
+    cone:ehCone, monsterCone:coneMonstro, showConeRange:coneMonstro,
+    areaRadius,
+    centerArea:abid === 'explosao_vapor' && areaRadius > 0,
     icon:ab.icon||ab.icone,label:ab.name||abid});
   return;
   if(!alvos.length){ toast(t(rng?'ui.mestre.sem_alvo_raio':'ui.mestre.sem_alvo_adj', {n:rng}), 'var(--orange)'); return; }
@@ -19616,6 +20349,7 @@ function abrirFichaMonstro(m){
   });
   const imageName = _monsterImageName(m);
   const imageSrc = imageName ? _assetURL(`assets/pawns/monstros/${imageName}/${imageName}.png`) : '';
+  const efeitosTemporarios = _modificadoresTemporariosMonstroStatus(m);
   const atributo = (rotulo, valor) => `<div><span>${rotulo}</span><b>${valor ?? '—'}</b></div>`;
   overlay.innerHTML = `<article class="ficha-monstro" role="dialog" aria-modal="true" aria-label="${t('ui.mestre.ficha_de', {nome:_esc(m.name||m.type)})}"><div class="fm-perception-line"><b>${t('ui.ficha.percepcao')}</b><span>${m.percepcao ?? (10 + Math.floor(Number(m.vision_radius || 1) / 2))}</span><small>${t('ui.mestre.percepcao_nota')}</small></div>
     <header class="fm-header">
@@ -19631,6 +20365,7 @@ function abrirFichaMonstro(m){
       </div></section>
       <section><h3>${t('ui.mestre.ataques')}</h3>${ataques.length ? ataques.map(a => `<div class="fm-linha"><b>${_esc(a.name||t('ui.mestre.ataque'))}</b><span>${a.atk_bonus>=0?'+':''}${a.atk_bonus ?? '—'} · ${_esc(a.damage||'—')} · ${a.range ? t('ui.mestre.alcance_n', {n:a.range}) : a.reach ? t('ui.mestre.corpo_a_corpo') + ' · ' + t('ui.mestre.alcance_n', {n:a.reach}) : t('ui.mestre.corpo_a_corpo')} · ${a.num_attacks||1}×</span></div>`).join('') : `<p>${t('ui.mestre.sem_ataque')}</p>`}</section>
       <section><h3>${t('ui.mestre.habilidades')}</h3>${habilidades.length ? habilidades.map(a => `<div class="fm-linha"><b>${_esc(a.name||a.id)}</b><span>${_esc(a.descricao||a.description||a.desc||a.action_type||'')}</span></div>`).join('') : `<p>${t('ui.mestre.sem_habilidade')}</p>`}</section>
+      <section><h3>${t('ui.status.modificadores_temp')}</h3><div class="fm-status-effects">${_modificadoresTemporariosMarkup(efeitosTemporarios)}</div></section>
       <section><h3>${t('ui.mestre.magias')}</h3><p>${magias.length ? _esc(magias.join(' · ')) : t('ui.mestre.sem_magia')}</p></section>
       <section><h3>${t('ui.mestre.defesas')}</h3><div class="fm-linha"><b>${t('ui.mestre.imunidades')}</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>${t('ui.mestre.resistencias')}</b><span>${_esc(_fmtFichaMonstroLista(m.resistances))}</span></div><div class="fm-linha"><b>${t('ui.mestre.fraquezas')}</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
       <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b data-i18n="ui.ficha.protecao">Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
@@ -19659,7 +20394,7 @@ function abrirMenuHabilidadesMonstro(m){
     const usosMax = a.uses_per_day ?? a.uses_per_combat;
     const usos = usosMax == null ? null : (m.ability_uses?.[a.id] ?? usosMax);
     const recarga = m.ability_cooldowns?.[a.id] || 0;
-    const pode = ativa && manual && _mpAtivavel(a) && !bloqueada && (!recarga) && (usos == null || usos > 0);
+    const pode = ativa && manual && _mpAtivavel(a, m) && !bloqueada && (!recarga) && (usos == null || usos > 0);
     return `<div class="mh-card${pode?' mh-acionavel':''}${recarga?' mh-cooldown':''}" data-monster-ability="${_esc(a.id)}"
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${_esc(a.id)}')" onmouseleave="ocultarTooltipMagia()">
       ${recarga ? `<strong class="mh-cooldown-badge">⏳ ${recarga} R</strong>` : ''}
@@ -19678,12 +20413,19 @@ function _mestreAtivarMagia(m, sid){
   const magia = GRIMORIO_CLIENT[sid] || {};
   const tipo = magia.tipo;
   if(['buff_self','area_centrada'].includes(tipo)) return GS.mestreUsarMagia(m.id,sid,m.id);
-  const alcance = _alcanceMagiaCli(magia, m.level || m.tier || 1);
-  const raio = magia.area_raio != null ? magia.area_raio
-    : (magia.area != null ? magia.area : (['area','area_persistente','area_fixa'].includes(tipo) ? 2 : 0));
+  const nivel = _nivelConjuradorMonstroCli(m);
+  const ehLinha = tipo === 'linha_reflexiva';
+  const ehCone = tipo === 'cone';
+  const tiposArea = ['area','area_persistente','area_fixa'];
+  const alcance = ehCone ? 0 : _alcanceMagiaCli(magia, nivel);
   _iniciarMiraMestre({kind:'spell',caster:m,id:sid,range:alcance,
-    allowEmpty:['area','area_persistente','area_fixa'].includes(tipo),
-    areaRadius:Number(raio)||0, areaLado:magia.area_lado,
+    lineRange:ehLinha, lineSpell:ehLinha, cone:ehCone,
+    allowEmpty:tiposArea.includes(tipo),
+    // Quando a ficha define lado, a área é quadrada (não um raio Chebyshev).
+    // Isso é especialmente importante para Silêncio 4x4 e para as áreas que
+    // crescem com o nível de conjurador.
+    areaRadius:magia.area_lado != null ? 0 : Number(_areaRaioMagiaCli(magia))||0,
+    areaLado:_areaLadoMagiaMonstroCli(magia, nivel),
     icon:magia.icone,label:magia.nome||sid});
   return;
   const st=GS.gameState;
@@ -19693,7 +20435,7 @@ function _mestreAtivarMagia(m, sid){
   const fonte = noTeste || suporteMonstro
     ? (st.monsters||[]).filter(o=>o.hp>0 && (incluirSelf || o.id!==m.id))
     : (st.players||[]).filter(o=>o.alive);
-  const alcanceLegacy = _alcanceMagiaCli(magia, m.level || m.tier || 1);
+  const alcanceLegacy = _alcanceMagiaCli(magia, nivel);
   const alvos=fonte.filter(o=>{
     const d=Math.max(Math.abs(m.pos[0]-o.pos[0]),Math.abs(m.pos[1]-o.pos[1]));
     return alcanceLegacy <= 0 || d <= alcanceLegacy;
@@ -19754,6 +20496,65 @@ function _masterReachSet(state){
     state.master_manual_reach.forEach(([x,y]) => s.add(`${x},${y}`));
   return s;
 }
+
+// Retorna a prévia somente para a janela do Mestre Manual. `canControlMonster`
+// também cobre command/mind control, que deliberadamente continuam com o
+// comportamento antigo e não recebem esta confirmação em dois cliques.
+function _masterMonsterMovePreviewAtual(state){
+  const p = _masterMonsterMovePreview;
+  if(!p || !state || !GS.isMaster?.() || !state.master_manual) return null;
+  const mm = GS.masterManual();
+  if(!mm || String(mm.mid) !== String(p.mid)) return null;
+  const mon = (state.monsters || []).find(m => String(m.id) === String(p.mid) && m.hp > 0);
+  if(!mon || !Array.isArray(mon.pos) || !Array.isArray(p.origin)
+    || mon.pos[0] !== p.origin[0] || mon.pos[1] !== p.origin[1]
+    || Number(mm.moves_left) !== Number(p.moves_left)) return null;
+  const key = `${p.target[0]},${p.target[1]}`;
+  const routes = GS.masterManualMovePaths?.() || {};
+  const route = routes[key];
+  if(!Array.isArray(route) || JSON.stringify(route) !== JSON.stringify(p.route)) return null;
+  return p;
+}
+
+function _clearMasterMonsterMovePreview(redraw=false){
+  const had = !!_masterMonsterMovePreview;
+  _masterMonsterMovePreview = null;
+  if(had) _clearMovePreviewVisual();
+  if(redraw && GS.gameState) _redrawMasterSelection();
+  return had;
+}
+
+function _masterMonsterPreviewRoute(state, tx, ty){
+  if(!state || !GS.isMaster?.() || !state.master_manual) return null;
+  const mm = GS.masterManual();
+  if(!mm) return null;
+  const mon = (state.monsters || []).find(m => String(m.id) === String(mm.mid) && m.hp > 0);
+  if(!mon?.pos) return null;
+  const route = (GS.masterManualMovePaths?.() || {})[`${tx},${ty}`];
+  if(!Array.isArray(route) || !route.length) return null;
+  let ox = Number(mon.pos[0]), oy = Number(mon.pos[1]);
+  const path = [];
+  for(const cell of route){
+    if(!Array.isArray(cell) || cell.length < 2) return null;
+    const nx = Number(cell[0]), ny = Number(cell[1]);
+    path.push([nx - ox, ny - oy]);
+    ox = nx; oy = ny;
+  }
+  return { mid: mm.mid, target: [Number(tx), Number(ty)], path,
+    route: route.map(([x,y]) => [Number(x), Number(y)]),
+    origin: [Number(mon.pos[0]), Number(mon.pos[1])],
+    moves_left: Number(mm.moves_left) || 0 };
+}
+
+function _setMasterMonsterMovePreview(state, tx, ty){
+  const preview = _masterMonsterPreviewRoute(state, tx, ty);
+  if(!preview) return false;
+  _masterMonsterMovePreview = preview;
+  if(state) renderMap(state);
+  toast(t('ui.tabuleiro.clique_novamente_para_confirmar'), 'var(--gold)');
+  return true;
+}
+
 // Heróis no alcance de ataque do monstro Manual (realce vermelho + clique-atacar).
 function _masterAttackSet(state){
   const s = new Set();
@@ -22309,6 +23110,178 @@ function _atualizarMenuMagiasSeAberto(){
   if(_playerMenuMagias(_menuMagiasPid)) abrirMenuMagias(_menuMagiasPid);
 }
 
+function _testeEnviarMagia(hero, magiaId, fields = {}){
+  if(!hero || !_testeHeroiPodeAgir(GS.gameState, hero.id)) return false;
+  GS.testeAcaoHeroi(hero.id, 'magia', {magia_id: magiaId, ...fields});
+  return true;
+}
+
+// Mira de habilidades do herói-teste. A ficha apenas arma a ação; o alvo é
+// escolhido diretamente no tabuleiro, como no fluxo de um jogador. Este modo
+// existe somente no simulador e não usa o modal global de alvos.
+function _iniciarMiraHabilidadeTeste(hero, skillId, skill, onSelect, targetKind = 'monster'){
+  if(!hero || !skill || !onSelect) return false;
+  const state = GS.gameState;
+  // Uma janela antiga eventualmente deixada aberta não pode bloquear o mapa
+  // quando o Mestre inicia a nova mira direta.
+  closeTargetModal();
+  const targets = targetKind === 'player'
+    ? (state?.players || []).filter(p => p.alive && p.test_hero)
+    : (state?.monsters || []).filter(m => m && m.hp > 0);
+  if(!targets.length){ toast(t('ui.mestre.sem_alvo_vivo'), 'var(--orange)'); return false; }
+  const validTiles = new Set();
+  for(const alvo of targets){
+    const tiles = targetKind === 'player' ? [alvo.pos] : GS.monsterTiles(alvo);
+    for(const pos of tiles || []){
+      if(Array.isArray(pos) && Number.isFinite(pos[0]) && Number.isFinite(pos[1]))
+        validTiles.add(`${pos[0]},${pos[1]}`);
+    }
+  }
+  window._modoHabilidadeTeste = { heroId: hero.id, skillId, targetKind, onSelect, validTiles };
+  _aimStart({
+    kind:'teste_hero_skill',
+    title:`${skill.icon || skill.icone || '✨'} ${(skill.name || skill.nome || skillId).toUpperCase()}`,
+    instruction:t('ui.mira.selecione_um_alvo_no_tabuleiro'),
+    color:'#c8a951', targetLabel: targetKind === 'player' ? t('ui.magia.aliado') : t('ui.mira.inimigo'),
+    range:validTiles, area:validTiles,
+    cancelText:t('ui.mira.habilidade_cancelada'),
+    cleanup:()=>{ window._modoHabilidadeTeste = null; },
+  });
+  return true;
+}
+
+function _clickTileHabilidadeTeste(tx, ty){
+  const mode = window._modoHabilidadeTeste;
+  const state = GS.gameState;
+  const hero = (state?.players || []).find(p => String(p.id) === String(mode?.heroId));
+  if(!mode || !hero || !_testeHeroiPodeAgir(state, hero.id)) return false;
+  const key = `${tx},${ty}`;
+  let alvo = null;
+  if(mode.targetKind === 'player'){
+    alvo = (state.players || []).find(p => p.alive && p.test_hero
+      && p.pos?.[0] === tx && p.pos?.[1] === ty);
+  }else{
+    alvo = (state.monsters || []).find(m => m && m.hp > 0
+      && GS.monsterTiles(m).some(([x,y]) => x === tx && y === ty));
+  }
+  if(!alvo || !mode.validTiles?.has(key)){
+    _aimSetHover(tx, ty, 'blocked');
+    _aimSetStatus(t('ui.mira.selecione_um_alvo_destacado_para_esta_habi'), '#ff9aa2');
+    return true;
+  }
+  const onSelect = mode.onSelect;
+  _aimEnd({silent:true, reason:'resolved'});
+  onSelect(alvo.id);
+  return true;
+}
+
+function _iniciarMiraAtaqueTeste(hero){
+  const skill = {id:'ataque_basico', name:t('ui.mestre.ataque_basico'), icon:'⚔️'};
+  return _iniciarMiraHabilidadeTeste(hero, skill.id, skill, targetId => {
+    GS.testeAcaoHeroi(hero.id, 'attack', {
+      target_id: targetId, buffs: _testeHeroiBuffs(hero.id)
+    });
+    _testeConsumirFuriaAposAtaque(hero.id);
+  }, 'monster');
+}
+
+// Mira simplificada para o menu do simulador. O Mestre não possui GS.me, por
+// isso o fluxo normal de mira não consegue resolver o alvo; aqui mantemos a
+// mesma escolha por alvo/casa, mas enviamos pela ponte autorizada do teste.
+function _iniciarModoMagiaTeste(hero, magiaId, alvoTipo){
+  const m = GRIMORIO_CLIENT[magiaId];
+  if(!hero || !m) return false;
+  window._modoMagia = { magiaId, alvoTipo, testHeroId: hero.id, alvoLivre: false,
+    areaLado: 0, scrollItemId: null };
+  window._spellHL = {range:new Set(), area:new Set(), double:new Set(), hover:null};
+  _aimStart({
+    kind:'magia', title:`${m.icone} ${m.nome.toUpperCase()}`,
+    instruction:t('ui.magia.dica_padrao'), color:'#c8a951',
+    targetLabel:t('ui.magia.casa'), range:new Set(), area:new Set(),
+    cancelText:t('ui.magia.magia_cancelada'),
+    cleanup:()=>{ if(window._modoMagia?.testHeroId != null) window._modoMagia = null; }
+  });
+  return true;
+}
+
+function _clickTileMagiaTeste(tx, ty){
+  const mode = window._modoMagia;
+  const state = GS.gameState;
+  const hero = (state?.players || []).find(p => String(p.id) === String(mode?.testHeroId));
+  if(!mode?.testHeroId || !hero || !_testeHeroiPodeAgir(state, hero.id)) return false;
+  const fields = {};
+  const alvoNoTile = (tipo) => {
+    if(tipo === 'foe' || tipo === 'foe_or_player'){
+      const mon = (state.monsters || []).find(m => m.hp > 0 && GS.monsterTiles(m).some(([x,y]) => x === tx && y === ty));
+      if(mon) return mon;
+      if(tipo === 'foe') return null;
+    }
+    return (state.players || []).find(p => p.alive && String(p.id) !== String(hero.id)
+      && p.test_hero && p.pos?.[0] === tx && p.pos?.[1] === ty) || null;
+  };
+  if(['foe','foe_or_player','player_target','ally'].includes(mode.alvoTipo)){
+    const alvo = alvoNoTile(mode.alvoTipo === 'player_target' || mode.alvoTipo === 'ally' ? 'player' : mode.alvoTipo);
+    if(!alvo){ toast(t('ui.magia.alvo_invalido_para_esta_magia'), '#ff6b6b'); return true; }
+    fields.target_id = alvo.id;
+  } else if(mode.alvoTipo === 'linha' || mode.alvoTipo === 'cone') {
+    const dx = tx - hero.pos[0], dy = ty - hero.pos[1];
+    if(!dx && !dy){ toast(t('ui.magia.mire_direcao'), '#ff6b6b'); return true; }
+    fields.dir = [_dir8(dx, dy)[0], _dir8(dx, dy)[1]];
+  } else if(mode.alvoTipo !== 'self_area') {
+    fields.tx = tx; fields.ty = ty;
+  }
+  if(mode.magiaId === 'chamado_inverno') fields.terreno = 'piso_congelado';
+  if(mode.magiaId === 'senhor_das_aguas') fields.terreno = 'agua';
+  if(mode.magiaId === 'prisao_chamas') fields.lado = 2;
+  _testeEnviarMagia(hero, mode.magiaId, fields);
+  _encerrarModoMagia();
+  return true;
+}
+
+function _ativarMagiaTesteDoMenu(magiaId){
+  const state = GS.gameState;
+  const hero = _testeHeroiSelecionado(state);
+  const m = GRIMORIO_CLIENT[magiaId];
+  if(!hero || !m || !_testeHeroiPodeAgir(state, hero.id)){
+    toast(t('ui.habilidade.nao_e_sua_vez'), '#ff6b6b'); return;
+  }
+  if(!GRIMORIO_IMPLEMENTADAS_CLIENT.has(magiaId)){
+    toast(t('ui.magia.em_desenvolvimento', {icone:m.icone, nome:m.nome}), '#c8a951'); return;
+  }
+  const tipo = m.tipo;
+  const enviar = fields => { fecharMenuMagias(); _testeEnviarMagia(hero, magiaId, fields); };
+  if(magiaId === 'metamorfose'){
+    const alvo = (state.monsters || []).find(x => x.hp > 0) || hero;
+    enviar({target_id: alvo.id, forma_id:'rato'}); return;
+  }
+  if(magiaId === 'teleporte'){
+    enviar({target_id: hero.id}); return;
+  }
+  if(['buff_self','utilidade','reacao','invocacao'].includes(tipo) || magiaId === 'manto_escuridao'){
+    enviar({}); return;
+  }
+  let alvoTipo = 'tile', targets = [], kind = 'monster';
+  if(tipo === 'alvo' || tipo === 'alvo_inimigo'){
+    alvoTipo = 'foe'; targets = (state.monsters || []).filter(x => x.hp > 0); kind = 'monster';
+  } else if(tipo === 'alvo_jogador'){
+    alvoTipo = 'player_target'; targets = (state.players || []).filter(x => x.alive && x.test_hero); kind = 'player';
+  } else if(['alvo_aliado','buff_aliado','toque'].includes(tipo)){
+    alvoTipo = 'ally'; targets = (state.players || []).filter(x => x.alive && x.test_hero); kind = 'player';
+  } else if(tipo === 'linha_reflexiva') alvoTipo = 'linha';
+  else if(tipo === 'cone') alvoTipo = 'cone';
+  else if(tipo === 'area_centrada' || (['area','area_fixa','area_persistente'].includes(tipo) && !m.alcance && !m.alcance_base)) alvoTipo = 'self_area';
+  if(targets.length){
+    fecharMenuMagias();
+    const done = id => _testeEnviarMagia(hero, magiaId, {target_id:id});
+    // A escolha de alvo do simulador acontece no próprio tabuleiro. O modal
+    // global continua existindo para o jogo normal, mas não participa deste
+    // fluxo de teste.
+    _iniciarMiraHabilidadeTeste(hero, magiaId, m, done, kind); return;
+  }
+  fecharMenuMagias();
+  _iniciarModoMagiaTeste(hero, magiaId, alvoTipo);
+}
+
 function ativarMagiaDoMenu(magiaId){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
   if(!me || GS.gameState.phase !== 'playing') { toast(t('ui.magia.so_na_masmorra')); return; }
@@ -22350,15 +23323,17 @@ function abrirMenuMagias(pid){
     .map(id => GRIMORIO_CLIENT[id]).filter(Boolean);
   const porCirculo = ['primeiro', 'segundo', 'terceiro', 'quarto'];
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
+  const testePodeAgir = _testeHeroiPodeAgir(GS.gameState, pid);
   const slots = _slotsMenuMagias(player);
   const renderMagia = m => {
-    const acionavel = podeAgir && slots[m.circulo]?.livres > 0;
+    const acionavel = (podeAgir || testePodeAgir) && slots[m.circulo]?.livres > 0;
     const gamepadAction = acionavel ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(m.nome)}"` : '';
+    const click = testePodeAgir ? `onclick="_ativarMagiaTesteDoMenu('${m.id}')"` : `onclick="ativarMagiaDoMenu('${m.id}')"`;
     return `
-    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${podeAgir && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? `onclick="ativarMagiaDoMenu('${m.id}')"` : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
+    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${(podeAgir || testePodeAgir) && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? click : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
       onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
-      <span><b>${m.nome}</b><small>${_magiaAcaoEtiquetaHTML(m)} · ${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${podeAgir && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
+      <span><b>${m.nome}</b><small>${_magiaAcaoEtiquetaHTML(m)} · ${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${(podeAgir || testePodeAgir) && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
     </div>`;
   };
   const renderMod = m => {
@@ -22411,6 +23386,7 @@ function abrirMenuMagias(pid){
 window.abrirMenuMagias = abrirMenuMagias;
 window.fecharMenuMagias = fecharMenuMagias;
 window.ativarMagiaDoMenu = ativarMagiaDoMenu;
+window._ativarMagiaTesteDoMenu = _ativarMagiaTesteDoMenu;
 
 // ── Menu de Habilidades ─────────────────────────────────────────────────────
 // Reúne as habilidades nativas enviadas pelo servidor e tudo que foi comprado
@@ -22834,6 +23810,7 @@ function abrirMenuHabilidades(pid){
   window._menuHabilidadesDados = Object.fromEntries([...baseComGraduacao, ...especializacoes, ...tecnicas]
     .map(h => [h.id, h]));
   const podeAgir = document.getElementById('screen-game')?.classList.contains('active') && pid === GS.myPid;
+  const testePodeAgir = _testeHeroiPodeAgir(GS.gameState, pid);
   const comboAtivo = player.class_id === 'warrior' && window._comboGuerreiroMenu;
   const tecelagemAtiva = player.class_id === 'mage' && window._comboTecelagemArcanaMenu;
   const card = (h, guilda=false) => {
@@ -22845,9 +23822,16 @@ function abrirMenuHabilidades(pid){
     const tecnicaAtivavel = guilda && h.categoria === 'tecnica' && equipada && !h.automatica && restante === 0 && !pendente;
     const comboGuilda = guilda && player.class_id === 'warrior' && (h.id === 'guerreiro_combinar_2' || h.id === 'guerreiro_mestre_combate');
     const tecelagemGuilda = guilda && player.class_id === 'mage' && (h.id === 'mago_tecelagem_2' || h.id === 'mago_tecelagem_3');
+    const testeSelecionada = testePodeAgir && !!player.test_hero
+      && _MP_TESTE_WARRIOR_SKILLS.has(h.id)
+      && _testeHeroiBuffs(player.id).includes(h.id);
     const selecionada = _modificadorMagiaAtivo(player, h.id) || _habilidadeSustentadaAtiva(player, h.id)
-      || (player.class_id === 'warrior' && !!GS.isWarriorSkillSelected?.(h.id));
-    const onclick = !guilda && podeAgir ? `onclick="ativarHabilidadeDoMenu('${h.id}')"`
+      || (player.class_id === 'warrior' && !!GS.isWarriorSkillSelected?.(h.id))
+      || testeSelecionada;
+    const testeHabilidade = !guilda && (testePodeAgir && (_MP_TESTE_HERO_SKILLS.has(h.id)
+      || _MP_TESTE_WARRIOR_SKILLS.has(h.id) || h.id === 'instrumento_'+(player.gear?.off_hand?.base || '')));
+    const onclick = testeHabilidade ? `onclick="_ativarHabilidadeTesteDoMenu('${h.id}')"`
+      : !guilda && podeAgir ? `onclick="ativarHabilidadeDoMenu('${h.id}')"`
       : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
       : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
@@ -22893,6 +23877,7 @@ function abrirMenuHabilidades(pid){
 window.abrirMenuHabilidades = abrirMenuHabilidades;
 window.fecharMenuHabilidades = fecharMenuHabilidades;
 window.ativarHabilidadeDoMenu = ativarHabilidadeDoMenu;
+window._ativarHabilidadeTesteDoMenu = _ativarHabilidadeTesteDoMenu;
 window.ativarTecnicaGuildaDoMenu = ativarTecnicaGuildaDoMenu;
 window.mostrarTooltipMenuHabilidade = mostrarTooltipMenuHabilidade;
 window.iniciarComboGuerreiroMenu = iniciarComboGuerreiroMenu;
@@ -26307,8 +27292,57 @@ function _efeitoIconImg2D(src){
   _efeitoIconImgs2D.set(src, img);
   return img;
 }
-function _drawEfeitosAtivos2D(ctx, state, player, cx, cy){
-  const efeitos = _coletarEfeitosAtivos(state, player);
+function _coletarEfeitosMagicosMonstro(state, monstro){
+  if(!state || !monstro || Number(monstro.hp || 0) <= 0) return [];
+  const efeitos = new Map();
+  const add = (id, nome, icon, rodadas = null) => {
+    if(!id || efeitos.has(id)) return;
+    const n = Number(rodadas);
+    efeitos.set(id, {id, nome: nome || id, icon, rodadas: Number.isFinite(n) && n > 0 ? Math.ceil(n) : null});
+  };
+  const addMagic = (id, rodadas = null) => {
+    const magia = GRIMORIO_CLIENT[id];
+    if(magia) add(id, magia.nome || id, magiaIconHTML(magia, 30), rodadas);
+  };
+  const ativo = campo => Number(monstro[campo] || 0) > 0;
+
+  // Estes são os mesmos campos autoritativos usados na resolução do combate.
+  // O cliente apenas os traduz em ícones; não cria duração nem altera regras.
+  const mods = monstro.mods_magia;
+  if(mods && Number(mods.rodadas || 0) > 0){
+    const chaves = ['ataque', 'dano', 'ca', 'resistencia'];
+    if(mods.arma_ignora_resistencia) addMagic('abencoar_arma', mods.rodadas);
+    else if(chaves.some(k => Number(mods[k] || 0) > 0)) addMagic('abencoar', mods.rodadas);
+    if(chaves.some(k => Number(mods[k] || 0) < 0))
+      addMagic(Number(mods.ca || 0) < 0 ? 'lentidao' : 'amaldicoar', mods.rodadas);
+  }
+  if(ativo('barreira_arcana_rodadas')) addMagic('barreira_arcana', monstro.barreira_arcana_rodadas);
+  if(ativo('protecao_rodadas')) addMagic('protecao_energia', monstro.protecao_rodadas);
+  if(ativo('invisivel_magico_rodadas') && monstro.invisivel_magico)
+    addMagic('invisibilidade', monstro.invisivel_magico_rodadas);
+  if(ativo('velocidade_rodadas')) addMagic('velocidade', monstro.velocidade_rodadas);
+  if(Number(monstro.regen_pool || 0) > 0) addMagic('regeneracao_magica');
+  if(monstro.contramagica_preparada) addMagic('contramagica');
+  if(monstro.visao_escuro_missao) addMagic('visao_escuro');
+  if(monstro.visao_escuro_manto || ativo('visao_escuro_rodadas'))
+    addMagic('manto_escuridao', monstro.visao_escuro_rodadas);
+  if(monstro.dormindo) addMagic('sono', monstro.dormindo_rodadas);
+  if(monstro.com_medo) addMagic('medo', monstro.medo_rodadas);
+  if(monstro.lento && !efeitos.has('lentidao')) addMagic('lentidao', monstro.lento_rodadas);
+
+  // Silêncio e escuridão são zonas do mapa. Só aparecem para o monstro que
+  // realmente está dentro da zona ativa, evitando marcar toda a mesa.
+  for(const zona of (state.zonas_especiais || [])){
+    if(!zona?.ativa || !_zonaContemPosicaoCliente(zona, monstro.pos)) continue;
+    if(zona.tipo === 'silencio') addMagic('silencio', zona.duracao);
+    if(zona.tipo === 'escuridao' && !(monstro.visao_escuro || (monstro.immunities || []).includes('escuridao')))
+      addMagic('manto_escuridao', zona.duracao);
+  }
+  return [...efeitos.values()];
+}
+
+function _drawEfeitosAtivos2D(ctx, state, player, cx, cy, efeitosOverride = null){
+  const efeitos = efeitosOverride || _coletarEfeitosAtivos(state, player);
   if(!efeitos.length) return;
   const max = 8;
   const visiveis = efeitos.slice(0, max);
@@ -26437,9 +27471,31 @@ function _posicionarEfeitoAtivo3D(sprite, player, indice, total){
   sprite.userData.effectTotal = total;
 }
 
+function _posicionarEfeitoMagicoMonstro3D(sprite, monstro, indice, total){
+  const [px, py] = monstro.pos || [];
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return;
+  const figura = getMonsterMesh(monstro.id);
+  const x = figura ? figura.position.x : px;
+  const z = figura ? figura.position.z : py;
+  const y = (figura ? figura.position.y : 0) + 1.58;
+  sprite.position.set(x + (indice - (total - 1) / 2) * .38, y, z);
+  sprite.userData.effectOwnerId = monstro.id;
+  sprite.userData.effectOwnerType = 'monster';
+  sprite.userData.effectIndex = indice;
+  sprite.userData.effectTotal = total;
+}
+
 function _atualizarPosicoesEfeitosAtivos3D(){
   if(!g3?.activeEffectSprites) return;
   Object.values(g3.activeEffectSprites).forEach(sprite => {
+    if(sprite.userData.effectOwnerType === 'monster'){
+      const monstro = GS.gameState?.monsters?.find(m =>
+        String(m.id) === String(sprite.userData.effectOwnerId));
+      if(monstro && Number(monstro.hp || 0) > 0)
+        _posicionarEfeitoMagicoMonstro3D(sprite, monstro, sprite.userData.effectIndex || 0,
+          sprite.userData.effectTotal || 1);
+      return;
+    }
     const player = GS.gameState?.players?.find(p =>
       String(p.id) === String(sprite.userData.effectOwnerId));
     if(player && player.alive !== false)
@@ -26450,12 +27506,12 @@ function _atualizarPosicoesEfeitosAtivos3D(){
 
 function _syncEfeitosAtivos3D(state, visionSet){
   if(!g3?.activeEffectGroup) return;
-  if(!state?.players){
+  if(!state || (!state.players && !state.monsters)){
     _limparEfeitosAtivos3D();
     return;
   }
   const usados = new Set();
-  for(const p of state.players){
+  for(const p of (state.players || [])){
     if(!p.alive || p.is_master || p.engolido || p.bau_engolido || p.fosso_oculto || p.connected === false) continue;
     const [px, py] = p.pos || [];
     if(!Number.isFinite(px) || !Number.isFinite(py)) continue;
@@ -26463,7 +27519,7 @@ function _syncEfeitosAtivos3D(state, visionSet){
     const efeitos = _coletarEfeitosAtivos(state, p);
     const total = Math.min(8, efeitos.length);
     efeitos.slice(0, total).forEach((efeito, i) => {
-      const key = `${p.id}:${efeito.id}`;
+      const key = `p:${p.id}:${efeito.id}`;
       usados.add(key);
       let sprite = g3.activeEffectSprites[key];
       const info = _efeitoIconInfo(efeito);
@@ -26487,6 +27543,42 @@ function _syncEfeitosAtivos3D(state, visionSet){
       _posicionarEfeitoAtivo3D(sprite, p, i, total);
       sprite.visible = true;
     });
+  }
+  // O mesmo conjunto de sprites só é usado para monstros no simulador do
+  // mestre. A guarda dupla impede que o Mestre-jogador ou uma partida normal
+  // revelem efeitos que antes não eram desenhados para ele.
+  if(state.test_mode && GS.isMaster?.()){
+    for(const m of (state.monsters || [])){
+      if(!m || Number(m.hp || 0) <= 0 || !Array.isArray(m.pos)) continue;
+      const [px, py] = m.pos;
+      if(!Number.isFinite(px) || !Number.isFinite(py)) continue;
+      if(visionSet && !visionSet.has(`${px},${py}`)) continue;
+      const efeitos = _coletarEfeitosMagicosMonstro(state, m);
+      const total = Math.min(8, efeitos.length);
+      efeitos.slice(0, total).forEach((efeito, i) => {
+        const key = `m:${m.id}:${efeito.id}`;
+        usados.add(key);
+        const info = _efeitoIconInfo(efeito);
+        const texEntry = _efeitoIconTexture3D(g3.T, efeito);
+        let sprite = g3.activeEffectSprites[key];
+        if(!sprite){
+          const mat = new g3.T.SpriteMaterial({map:texEntry.tex, transparent:true,
+            depthTest:false, depthWrite:false});
+          sprite = new g3.T.Sprite(mat);
+          sprite.scale.set(.38, .38, 1);
+          sprite.renderOrder = 80;
+          sprite.userData.iconKey = `${info.src || ''}|${info.fallback}`;
+          g3.activeEffectGroup.add(sprite);
+          g3.activeEffectSprites[key] = sprite;
+        }else if(sprite.userData.iconKey !== texEntry.key){
+          sprite.material.map = texEntry.tex;
+          sprite.material.needsUpdate = true;
+          sprite.userData.iconKey = texEntry.key;
+        }
+        _posicionarEfeitoMagicoMonstro3D(sprite, m, i, total);
+        sprite.visible = true;
+      });
+    }
   }
   Object.entries(g3.activeEffectSprites).forEach(([key, sprite]) => {
     if(usados.has(key)) return;
@@ -38921,7 +40013,9 @@ function _renderMovePreview3D(state, terrainSet, TH){
   if(!group) return;
   _clearMovePreviewVisual();
   const preview = GS.pendingMove;
-  const me = state?.players?.find(p => p.id === GS.myPid && p.alive);
+  const me = preview?.testHeroId != null
+    ? state?.players?.find(p => String(p.id) === String(preview.testHeroId) && p.alive)
+    : state?.players?.find(p => p.id === GS.myPid && p.alive);
   if(!preview?.path?.length || !me) return;
   const origin = Array.isArray(preview.origin) ? preview.origin : me.pos;
   let x = origin[0], y = origin[1];
@@ -38982,6 +40076,58 @@ function _renderMovePreview3D(state, terrainSet, TH){
   ring.renderOrder = 91;
   ring.userData.noRay = true;
   group.add(ring);
+}
+
+function _renderMasterMonsterMovePreview3D(state, terrainSet, TH){
+  const group = g3?.movePreviewGroup;
+  if(!group) return;
+  const preview = _masterMonsterMovePreviewAtual(state);
+  if(!preview?.path?.length) return;
+  let x = preview.origin[0], y = preview.origin[1];
+  const cells = [];
+  if(terrainSet.has(`${x},${y}`)) cells.push([x, y]);
+  for(const step of preview.path){
+    x += step[0]; y += step[1];
+    if(!terrainSet.has(`${x},${y}`)) break;
+    cells.push([x, y]);
+  }
+  if(cells.length < 2) return;
+  const { T } = g3;
+  const mat = new T.MeshBasicMaterial({
+    color: 0xffa43d, transparent: true, opacity: .94,
+    depthWrite: false, depthTest: false
+  });
+  const up = new T.Vector3(0, 1, 0);
+  for(let i = 1; i < cells.length; i++){
+    const [ax, ay] = cells[i - 1], [bx, by] = cells[i];
+    const dir = new T.Vector3(bx - ax, 0, by - ay);
+    const len = dir.length();
+    const mesh = new T.Mesh(new T.CylinderGeometry(.042, .042, len, 8), mat);
+    mesh.position.set((ax + bx) / 2,
+      (topoSuperficie3D(state, ax, ay, TH) + topoSuperficie3D(state, bx, by, TH)) / 2 + .08,
+      (ay + by) / 2);
+    mesh.quaternion.setFromUnitVectors(up, dir.normalize());
+    mesh.renderOrder = 93; mesh.userData.noRay = true; group.add(mesh);
+  }
+  const nodeGeo = new T.SphereGeometry(.082, 8, 6);
+  for(const [cx, cy] of cells.slice(1)){
+    const node = new T.Mesh(nodeGeo, mat);
+    node.position.set(cx, topoSuperficie3D(state, cx, cy, TH) + .08, cy);
+    node.renderOrder = 94; node.userData.noRay = true; group.add(node);
+  }
+  const [px, py] = cells[cells.length - 1], [ox, oy] = cells[cells.length - 2];
+  const arrowDir = new T.Vector3(px - ox, 0, py - oy).normalize();
+  const arrow = new T.Mesh(new T.ConeGeometry(.18, .38, 6), mat);
+  arrow.position.set(px + arrowDir.x * .13,
+    topoSuperficie3D(state, px, py, TH) + .08, py + arrowDir.z * .13);
+  arrow.quaternion.setFromUnitVectors(up, arrowDir);
+  arrow.renderOrder = 95; arrow.userData.noRay = true; group.add(arrow);
+  const ring = new T.Mesh(new T.TorusGeometry(.32, .028, 6, 24),
+    new T.MeshBasicMaterial({color: 0xffffa8, transparent: true, opacity: .94,
+      depthWrite: false, depthTest: false}));
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(px, topoSuperficie3D(state, px, py, TH) + .08, py);
+  ring.renderOrder = 94; ring.userData.noRay = true; group.add(ring);
 }
 
 // A cena 3D pode precisar ser recriada quando o chão muda de material. A
@@ -39080,6 +40226,11 @@ function renderMap3D(state){
   }
   const { closed:doorClosed3D } = GS.doorSets(state);
   const me = state.players.find(p => p.id===GS.myPid && p.alive);
+  const testeHeroiAtivo = state.test_mode ? _testeHeroiAtivoNoMapa(state) : null;
+  const testeHeroiSelecionado = state.test_mode ? _testeHeroiSelecionado(state) : null;
+  const testeHeroiControlado = testeHeroiSelecionado && testeHeroiAtivo
+    && String(testeHeroiSelecionado.id) === String(testeHeroiAtivo.id)
+    ? testeHeroiSelecionado : null;
   let visionSet = computeVisionSet(state, me);
   if(GS.isMaster() || state.test_mode) visionSet = new Set(exploredSet);
 
@@ -39099,6 +40250,11 @@ function renderMap3D(state){
     bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable);
   else if(!isAnimadosTurn3D && GS.isMyTurn && me && me.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, me.pos[0], me.pos[1], me.moves_left, reachable);
+  if(testeHeroiControlado && (testeHeroiControlado.moves_left || 0) > 0){
+    bfsReachable(state.tiles, exploredSet, testeHeroiControlado.pos[0], testeHeroiControlado.pos[1],
+      testeHeroiControlado.moves_left, reachable,
+      {state, materiais: state.materiais, actor: testeHeroiControlado});
+  }
   if(GS.isMaster()){
     _masterReachSet(state).forEach(k => reachable.add(k));
   }
@@ -39114,6 +40270,17 @@ function renderMap3D(state){
       const inR = _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
       if(inR) attackable3d.add(`${m.pos[0]},${m.pos[1]}`);
+    }
+  }
+  if(testeHeroiControlado && !testeHeroiControlado.action_done){
+    for(const m of state.monsters || []){
+      if(!m || m.hp <= 0 || m._morteVisualPendente) continue;
+      for(const [tx,ty] of GS.monsterTiles(m)){
+        if(GS.weaponCanReachTile(testeHeroiControlado, tx, ty, m.altura)
+          && (testeHeroiControlado.weapon?.range == null
+            || GS.hasLineOfSight(state, testeHeroiControlado.pos[0], testeHeroiControlado.pos[1], tx, ty, testeHeroiControlado)))
+          attackable3d.add(`${tx},${ty}`);
+      }
     }
   }
   // Alcance de ataque do animado selecionado (turno dos servos) ou em hover — aditivo
@@ -39236,6 +40403,7 @@ function renderMap3D(state){
   // ── Movement highlight overlay visibility (blue planes)
   _overlayShowOnly(g3.moveHighlightMeshes, _soExploradas(reachable));
   _renderMovePreview3D(state, terrainSet, TH);
+  _renderMasterMonsterMovePreview3D(state, terrainSet, TH);
 
   // ── Attack highlight overlay visibility (red planes)
   _overlayShowOnly(g3.atkHighlightMeshes, _soExploradas(attackable3d));
@@ -39682,7 +40850,9 @@ function renderMap3D(state){
     if(p.connected === false) continue;   // desconectado: fora da masmorra, não desenha
     const [px,py] = p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
-    const pSel = g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py;
+    const pSel = (g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py)
+      || !!(state.test_mode && testeHeroiSelecionado
+        && String(p.id) === String(testeHeroiSelecionado.id));
     const isCur = p.id===state.current_turn;
     const formaVisual = _metamorfoseVisualName(p);
     const _figInvis = obterFig(`pl:${p.id}`,
@@ -39894,7 +41064,7 @@ function renderMap3D(state){
     }
   }
 
-  // Canção Heroica: anel dourado de raio 5 ao redor do bardo (3D).
+  // Canção Heroica: anel dourado de raio 5 ao redor de bardos e Xamãs de teste.
   try { _sync3DCancaoRing(state); } catch(e) { console.warn('cancaoRing:', e); }
   try { _atualizarProtetor3D(performance.now()); } catch(e) { console.warn('protetorFx:', e); }
 
@@ -46557,6 +47727,29 @@ function get3DMonsterAtPointer(e){
   return null;
 }
 
+function get3DTestHeroAtPointer(e){
+  if(!g3?.entityGroup || !GS.gameState?.test_mode) return null;
+  const {T, renderer, raycaster, camera, entityGroup} = g3;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const my = ((e.clientY - rect.top) / rect.height) * -2 + 1;
+  raycaster.setFromCamera(new T.Vector2(mx, my), camera);
+  const hits = raycaster.intersectObjects(entityGroup.children, true);
+  for(const hit of hits){
+    let obj = hit.object;
+    while(obj && obj !== entityGroup){
+      const pid = obj.userData?.pid;
+      if(pid != null){
+        const hero = (GS.gameState.players || []).find(p => p.test_hero && p.alive
+          && String(p.id) === String(pid));
+        if(hero) return hero;
+      }
+      obj = obj.parent;
+    }
+  }
+  return null;
+}
+
 // O raycast do piso pode cair numa casa vizinha quando o modelo 3D do monstro
 // cobre visualmente um item largado. Para o clique normal do herói, usa a
 // criatura sob o ponteiro e escolhe uma casa do footprint que realmente pode
@@ -46665,6 +47858,11 @@ function on3DClick(e){
     if(tMag) _clickTileMagia(tMag[0], tMag[1]);
     return;
   }
+  if(window._modoHabilidadeTeste){
+    const tSkill = get3DTile(e);
+    if(tSkill) _clickTileHabilidadeTeste(tSkill[0], tSkill[1]);
+    return;
+  }
   if(window._modoAnimarMortos){
     const tAni = get3DTile(e);
     if(tAni) _clickTileAnimarMortos(tAni[0], tAni[1]);
@@ -46717,6 +47915,13 @@ function on3DClick(e){
   // Mesmo fora do alcance, clicar no monstro não pode cair no piso e coletar
   // um item que esteja sob ou perto do modelo 3D.
   if(attackUnderPointer && monsterUnderPointer) return;
+  if(GS.isMaster() && GS.gameState?.test_mode){
+    const heroDireto = get3DTestHeroAtPointer(e);
+    if(heroDireto){
+      handleTileClick(heroDireto.pos[0], heroDireto.pos[1]);
+      return;
+    }
+  }
   // No teste livre, a própria miniatura é clicável. O raycast anterior usava
   // somente o piso e podia selecionar a casa que aparecia atrás de uma figura alta.
   if(GS.isMaster() && GS.gameState?.test_mode){
@@ -46924,8 +48129,11 @@ function _executarMovimentoConfirmado(action){
 }
 
 function _cancelarPreviaMovimento(){
-  if(!GS.pendingMove) return false;
-  GS.pendingMove = null;
+  const tinhaHeroi = !!GS.pendingMove;
+  const tinhaMonstro = !!_masterMonsterMovePreview;
+  if(!tinhaHeroi && !tinhaMonstro) return false;
+  if(tinhaHeroi) GS.pendingMove = null;
+  if(tinhaMonstro) _clearMasterMonsterMovePreview();
   _clearMovePreviewVisual();
   if(GS.gameState) renderMap(GS.gameState);
   toast(t('ui.hud.movimento_cancelado'), 'var(--text2)');
@@ -46947,6 +48155,17 @@ function handleTileClick(tx, ty){
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
   if(window._modoPlacementArmadilha){ onClickTileParaArmadilha(tx, ty); return; }
+  // Durante a mira de uma magia do herói-teste, o clique pertence à magia
+  // mesmo que caia sobre um monstro/peão; o painel do Mestre só pode capturar
+  // cliques fora desse fluxo exclusivo do simulador.
+  if(window._modoMagia?.testHeroId != null){ _clickTileMagia(tx, ty); return; }
+  // Habilidades e ataque do herói-teste também capturam o clique no mapa antes
+  // de qualquer seleção de miniatura ou ficha do Mestre.
+  if(window._modoHabilidadeTeste){ _clickTileHabilidadeTeste(tx, ty); return; }
+  // No simulador do editor, o clique em herói/monstro passa primeiro pelo
+  // mesmo resolvedor de alcance e caminho usado por um jogador. Fora de
+  // `test_mode` esta guarda é falsa e o fluxo mestre normal segue intacto.
+  if(_handleTesteHeroiTileClick(tx, ty)) return;
   // ── Mestre: clicar num monstro abre a ficha; o mestre não faz ações de herói ──
   if(GS.canControlMonster()){
     const commandControl = GS.isCommandController();
@@ -46964,11 +48183,12 @@ function handleTileClick(tx, ty){
       const mm = GS.masterManual();
       if(mm){
         const monM = (st.monsters||[]).find(x=>x.id===mm.mid);
-        const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
-        const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty)
+      const targetMonster = _masterMonsterAtTileClient(st, tx, ty);
+      const alvo = (st.players||[]).find(p=>p.alive && p.pos[0]===tx && p.pos[1]===ty)
         || ((st.test_mode || commandControl) && targetMonster && targetMonster.id!==mm.mid
              ? targetMonster : null);
       if(monM && alvo && GS.masterPodeAtacar()){
+        _clearMasterMonsterMovePreview();
         // Golpe armado na ficha manda; sem golpe armado, o primeiro com carga.
         let idx = window._mpGolpeArmado;
         if(idx == null){
@@ -46986,12 +48206,29 @@ function handleTileClick(tx, ty){
         }
       }
       if((st.master_manual_reach||[]).some(([x,y])=>x===tx&&y===ty)){
-        GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
+        // Assim como para os heróis, o primeiro clique apenas arma a rota e o
+        // segundo confirma. O servidor continua recalculando/validando o
+        // caminho quando recebe o comando.
+        const prev = _masterMonsterMovePreviewAtual(st);
+        if(prev && prev.target[0] === tx && prev.target[1] === ty){
+          _clearMasterMonsterMovePreview();
+          GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
+        }
+        if(_setMasterMonsterMovePreview(st, tx, ty)) return;
+        _clearMasterMonsterMovePreview();
+        return;
       }
     }
     if(commandControl) return;
+    _clearMasterMonsterMovePreview();
     const mon = _monstroEmCasa(tx, ty);
     if(mon){
+      if(st.test_mode){
+        const atorTeste = st.test_combat?.active
+          ? st.test_combat.queue?.[st.test_combat.index] : null;
+        if(!atorTeste || atorTeste.kind === 'monster')
+          window._testeHeroiSelecionadoId = null;
+      }
       window._mpFocoMid = mon.id; window._masterTab = 'ativo';
       if(st.test_mode) GS.mestreSelecionarTeste(mon.id);
       else renderMasterPanel(GS.gameState);
@@ -47521,6 +48758,21 @@ document.addEventListener('keydown', (e) => {
   if(!GS.myPid || (!naCidade && !naMasmorra)) return;
 
   if(naMasmorra && GS.gameState?.test_mode && GS.isMaster()){
+    // Durante a simulação, a vez atual é a fonte de verdade para decidir
+    // qual grimório o atalho M deve abrir. A seleção visual de um herói pode
+    // sobreviver a uma troca de vez (ou a um clique anterior no mapa); se ela
+    // vencer aqui, o Xamã abre o grimório do herói e a mira fica bloqueada,
+    // parecendo que a magia deixou de ser utilizável. Fora de uma simulação,
+    // a seleção local continua permitindo abrir o grimório do herói escolhido.
+    const atorTeste = GS.gameState.test_combat?.active
+      ? GS.gameState.test_combat.queue?.[GS.gameState.test_combat.index] : null;
+    const heroiTeste = atorTeste?.kind === 'monster'
+      ? null : _testeHeroiSelecionado(GS.gameState);
+    if(heroiTeste){
+      if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) fecharMenuMagias();
+      else abrirMenuMagias(heroiTeste.id);
+      e.preventDefault(); return;
+    }
     if(document.getElementById('menu-magias-overlay')?.classList.contains('open')) fecharMenuMagias();
     else abrirMenuMagiasMonstro(_monstroSelecionadoTeste());
     e.preventDefault(); return;
@@ -47541,6 +48793,12 @@ document.addEventListener('keydown', (e) => {
   if(!GS.myPid || (!naCidade && !naMasmorra)) return;
 
   if(naMasmorra && GS.gameState?.test_mode && GS.isMaster()){
+    const heroiTeste = _testeHeroiSelecionado(GS.gameState);
+    if(heroiTeste){
+      if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) fecharMenuHabilidades();
+      else abrirMenuHabilidades(heroiTeste.id);
+      e.preventDefault(); return;
+    }
     if(document.getElementById('menu-habilidades-overlay')?.classList.contains('open')) fecharMenuHabilidades();
     else abrirMenuHabilidadesMonstro(_monstroSelecionadoTeste());
     e.preventDefault(); return;

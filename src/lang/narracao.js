@@ -2933,8 +2933,8 @@ window.LANG_NARRACAO = {
     "pt": "✨ **{monstro}** usa **{ab_name}** em **{tgt_name}**! Save {ability_save}: d20({d20}){sb_str}={stot} vs CD {ability_dc} — {resistiu_if_save_ok_else}"
   },
   "narracao.usa_explosao_de_vapor_em_cone_de_quadrad": {
-    "en": "🌋 **{monstro}** uses **Steam Burst** in a {ability_get_range_3}-square cone.",
-    "pt": "🌋 **{monstro}** usa **Explosão de Vapor** em cone de {ability_get_range_3} quadrados."
+    "en": "🌋 **{monstro}** uses **Steam Burst** in a circle with a radius of {ability_get_range_3} squares.",
+    "pt": "🌋 **{monstro}** usa **Explosão de Vapor** em um círculo de raio {ability_get_range_3} quadrados."
   },
   "narracao.usa_golpe_divino_em_d20_vs_ca_de_dano_sa": {
     "en": "⚡ **{heroi}** uses **Divine Strike** on **{t}** (d20={roll}+{p_atk_bonus}={total} vs AC {t_ac}): **{dmg}** holy damage!",
