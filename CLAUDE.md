@@ -2564,3 +2564,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > cobrar; multiplicador de dano gravado na zona; véu/portão visual até a chegada. Testes:
 > `tools/test_senhor_das_aguas.py` (30→51, seções [R1]–[R3]) e
 > `tools/test_senhor_aguas_cliente.js` (36→43, seção [V]).
+
+> **Chamado do Inverno — 3 correções (2026-09-17):** **(1)** `_chamado_inverno_preflight`
+> em `handle_magia` (terreno, custo do permanente, alcance, parede, chão) antes de cobrar —
+> o pré-check antigo só via terreno e o +20/+20; alcance/parede/chão cobravam o slot de 2º
+> círculo. Com isto **as cinco magias de terreno/área** (Ira, Tempestade, Prisão, Senhor,
+> Chamado) seguem o mesmo molde. **(2)** `handle_mover_prisioneiro` chama
+> `_aplicar_piso_congelado_se_pisar` (era o único caminho de movimento sem o gelo; o hook já
+> roda os dois de redemoinho por dentro, que estavam ali soltos). **(3)** o BFS de alcance do
+> cliente e o `findPath` (`src/gameState.js`) modelam a neve: entrar na Planície Nevada
+> divide pela metade o movimento RESTANTE (espelho de `_apply_snow_entry_penalty`), então cada
+> nó carrega um **teto efetivo** por caminho e o "melhor por casa" passou a ser medido em
+> movimento restante, não em custo gasto (um caminho que pisou a neve mais tarde tem mais
+> sobra); quem começa o turno na neve (ou já tem `_snow_movement_reduced`) não divide de
+> novo, porque o `moves_left` do servidor já veio reduzido. Medido: com 6 de movimento o
+> servidor anda 3 casas de neve; o cliente mostrava 6 e o caminho parava no meio com erro —
+> mesma classe do vento da Tempestade. Vale para neve autoral também. Testes:
+> `tools/test_chamado_inverno.py` (17) e `tools/test_chamado_inverno_cliente.js` (9, extrai
+> `bfsReachable`/`findPath` reais com stubs de `_walkable`).

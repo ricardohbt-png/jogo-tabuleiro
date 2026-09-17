@@ -21909,18 +21909,6 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.vinculo_maldito_ja_ligado_a_n", n=4)}); return
 
-        if magia_id == "chamado_inverno":
-            terreno = (data or {}).get("terreno")
-            if terreno not in {"piso_congelado", "planicie_nevada"}:
-                await self.send_to(pid, {"type": "error",
-                    "msg": T("erro.escolha_piso_congelado_ou_planicie_nevad")})
-                return
-            # A versão permanente soma 20/20 ao custo normal de toda magia.
-            # Validar antes de gastar ação, slot ou recursos evita desperdício.
-            if (data or {}).get("permanente") and (p.get("fome", 0) < 21 or p.get("sede", 0) < 21):
-                await self.send_to(pid, {"type": "error",
-                    "msg": T("erro.voce_precisa_de_pelo_menos_21_de_fome_e")})
-                return
 
         # Custo do cÃ­rculo: 1 SLOT do mesmo cÃ­rculo (estrito). NinguÃ©m usa MP.
         # Criar Alimentos materializa um baú numa casa adjacente livre. Validar
@@ -22016,6 +22004,16 @@ class GameRoom:
                 return
             data = dict(data or {})
             data["_senhor_das_aguas_preflight"] = preflight
+        # Chamado do Inverno: terreno, custo do permanente (+20/+20), alcance,
+        # parede e chão validados antes de cobrar.
+        if magia_id == "chamado_inverno":
+            ok, preflight = self._chamado_inverno_preflight(p, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(pid, {"type": "error", "msg": T(chave, **params)})
+                return
+            data = dict(data or {})
+            data["_chamado_inverno_preflight"] = preflight
         # Fraqueza Arcana (maldição): metade do dano. Entra DEPOIS da metamagia
         # e das técnicas — dmg_mult só é atribuído dentro do ramo Fortalecer, e
         # aplicar antes perderia o efeito em quem não usa Fortalecer.
@@ -24854,43 +24852,58 @@ class GameRoom:
                 out.append(alvo)
         return out
 
-    async def _executar_chamado_inverno(self, caster, magia, data, dur_bonus, alcance_bonus=0):
-        """Converte uma área quadrada em Piso congelado ou Planície nevada."""
+    def _chamado_inverno_preflight(self, caster, magia, data, alcance_bonus=0):
+        """Valida a mira do Chamado do Inverno sem alterar o estado.
+
+        Mesmo molde das outras magias de terreno/área: `handle_magia` chama
+        isto ANTES de cobrar slot/🍖💧/ação; o executor reusa o resultado.
+        Antes só terreno e o custo do permanente eram pré-validados —
+        alcance/parede/chão devolviam o erro com o slot de 2º círculo gasto.
+        Em falha retorna (chave_i18n, parâmetros).
+        """
         data = data or {}
         terreno = data.get("terreno")
         if terreno not in {"piso_congelado", "planicie_nevada"}:
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.escolha_piso_congelado_ou_planicie_nevad")})
-            return
+            return False, ("erro.escolha_piso_congelado_ou_planicie_nevad", {})
+        permanente = bool(data.get("permanente"))
+        custo_perm = int(magia.get("permanente_custo", 20) or 20)
+        if permanente and (caster.get("fome", 0) < custo_perm + 1 or caster.get("sede", 0) < custo_perm + 1):
+            return False, ("erro.voce_precisa_de_pelo_menos_21_de_fome_e", {})
         nivel = self._nivel_conjurador(caster)
         alcance = 6 + nivel + int(alcance_bonus or 0)
         try:
             cx, cy = int(data.get("tx")), int(data.get("ty"))
         except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.escolha_o_centro_da_area_do_chamado_do_i")})
-            return
+            return False, ("erro.escolha_o_centro_da_area_do_chamado_do_i", {})
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
-            return
+            return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
         if not self._alcance_com_altura(caster, [cx, cy], alcance):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.centro_magia_fora_alcance_dist", dist=dist, alcance=alcance)})
-            return
+            return False, ("erro.centro_magia_fora_alcance_dist", {"dist": dist, "alcance": alcance})
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_cham")})
-            return
-
+            return False, ("erro.uma_parede_bloqueia_a_trajetoria_do_cham", {})
         lado_base = int(magia.get("area_lado", 4) or 4) + (nivel // int(magia.get("area_lado_niveis", 2) or 2))
         lado = self._cajado_arcano_area_lado(caster, magia) or lado_base
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
-            return
+            return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
+        return True, {"terreno": terreno, "permanente": permanente, "nivel": nivel, "alcance": alcance,
+                      "dist": dist, "cx": cx, "cy": cy, "lado": lado, "tiles": tiles}
+
+    async def _executar_chamado_inverno(self, caster, magia, data, dur_bonus, alcance_bonus=0):
+        """Converte uma área quadrada em Piso congelado ou Planície nevada."""
+        data = data or {}
+        pre = data.get("_chamado_inverno_preflight")
+        if not pre:
+            ok, pre = self._chamado_inverno_preflight(caster, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = pre
+                await self.send_to(caster["id"], {"type": "error", "msg": T(chave, **params)})
+                return
+        terreno, permanente, nivel, dist = pre["terreno"], pre["permanente"], pre["nivel"], pre["dist"]
+        cx, cy, lado, tiles = pre["cx"], pre["cy"], pre["lado"], pre["tiles"]
 
         self._cancelar_magias_terreno_exclusivas()
-        permanente = bool(data.get("permanente"))
         material_bases = {
             f"{int(pos[0])},{int(pos[1])}": self.materiais.get((int(pos[0]), int(pos[1])))
             for pos in tiles
@@ -40302,8 +40315,9 @@ class GameRoom:
         await self._aplicar_lava_se_pisar(pr)
         await self._aplicar_prisao_chamas_se_pisar(pr)
         await self._aplicar_fogueira_se_pisar(pr)
-        await self._aplicar_rodamoinho_profundo_se_pisar(pr)
-        await self._aplicar_rodamoinho_se_pisar(pr)
+        # Gelo (Reflexos CD 10; falha zera o movimento) — era o único caminho de
+        # movimento sem ele. O hook já roda os dois de redemoinho por dentro.
+        await self._aplicar_piso_congelado_se_pisar(pr)
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):

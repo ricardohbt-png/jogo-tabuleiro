@@ -1032,32 +1032,53 @@ const GS = (() => {
     const occupied  = _occupiedSet(sx, sy);
     const swampStart = !_ponteEm(sx, sy, moveCtx?.state || gameState)
       && moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
-    const q   = [[sx, sy, 0, swampStart]];
-    const best = new Map([[`${sx},${sy},${swampStart ? 1 : 0}`, 0]]);
+    const snowStart = _neveJaCobrada(moveCtx, sx, sy);
+    // Cada nó carrega o TETO efetivo do caminho: entrar na neve divide pela
+    // metade o movimento restante (espelha `_apply_snow_entry_penalty`), então
+    // o teto passa a depender de quando a neve foi pisada. Por isso o melhor
+    // por casa é medido em movimento RESTANTE, não em custo gasto.
+    const q   = [[sx, sy, 0, swampStart, snowStart, maxSteps]];
+    const best = new Map([[`${sx},${sy},${swampStart ? 1 : 0},${snowStart ? 1 : 0}`, maxSteps]]);
     while (q.length) {
       q.sort((a,b) => a[2]-b[2]);
-      const [x, y, s, swampUsed] = q.shift();
+      const [x, y, s, swampUsed, snowUsed, cap] = q.shift();
       result.add(`${x},${y}`);
-      if (s >= maxSteps) continue;
+      if (s >= cap) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
           && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+        const entersSnow = !vooNoAr && !snowUsed && _entraNaNeve(moveCtx, nx, ny);
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
         // atravessada mesmo se o orçamento não cobrir o custo inteiro.
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
-        const nextCost = (s === 0 && terrainCost > maxSteps) ? maxSteps : s + terrainCost;
+        const nextCost = (s === 0 && terrainCost > cap) ? cap : s + terrainCost;
+        const nextCap = entersSnow ? nextCost + Math.floor((cap - nextCost) / 2) : cap;
         const nextSwampUsed = swampUsed || entersSwamp;
-        const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (exploredSet.has(k) && nextCost <= maxSteps && _walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
-            && (best.get(bestKey) === undefined || nextCost < best.get(bestKey))) {
-          best.set(bestKey, nextCost);
-          q.push([nx, ny, nextCost, nextSwampUsed]);
+        const nextSnowUsed = snowUsed || entersSnow;
+        const bestKey = `${k},${nextSwampUsed ? 1 : 0},${nextSnowUsed ? 1 : 0}`;
+        const restante = nextCap - nextCost;
+        if (exploredSet.has(k) && nextCost <= cap && _walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
+            && (best.get(bestKey) === undefined || restante > best.get(bestKey))) {
+          best.set(bestKey, restante);
+          q.push([nx, ny, nextCost, nextSwampUsed, nextSnowUsed, nextCap]);
         }
       }
     }
+  }
+
+  // Neve (Planície Nevada): o servidor divide pela metade o movimento restante
+  // ao entrar nela UMA vez por turno; quem começa o turno na neve já recebeu o
+  // orçamento reduzido (`_snow_movement_reduced`), e o `moves_left` que chega
+  // do servidor reflete isso — não se divide de novo.
+  function _entraNaNeve(moveCtx, x, y) {
+    return !_ponteEm(x, y, moveCtx?.state || gameState)
+      && moveCtx?.materiais?.[`${x},${y}`] === 'planicie_nevada';
+  }
+  function _neveJaCobrada(moveCtx, sx, sy) {
+    return !!(moveCtx?.actor?._snow_movement_reduced) || _entraNaNeve(moveCtx, sx, sy);
   }
 
   // ── Pure logic: BFS pathfinding — returns [[dx,dy],...] or null ────────────
@@ -1077,31 +1098,39 @@ const GS = (() => {
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
     const swampStart = moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
-    const q   = [[fx, fy, [], 0, swampStart]];
-    const bestCost = new Map([[`${fx},${fy},${swampStart ? 1 : 0}`, 0]]);
+    const snowStart = _neveJaCobrada(moveCtx, fx, fy);
+    // Mesmo teto efetivo por caminho do bfsReachable (neve divide o restante):
+    // é este algoritmo que dirige a caminhada, e um caminho que o servidor
+    // interrompe no meio vale menos que nenhum.
+    const q   = [[fx, fy, [], 0, swampStart, snowStart, maxSteps]];
+    const bestRest = new Map([[`${fx},${fy},${swampStart ? 1 : 0},${snowStart ? 1 : 0}`, maxSteps]]);
     let best = { path: [], dist: Math.abs(fx-tx) + Math.abs(fy-ty) };
     while (q.length) {
       q.sort((a,b) => a[3]-b[3]);
-      const [x, y, path, spent, swampUsed] = q.shift();
-      if (spent >= maxSteps) continue;
+      const [x, y, path, spent, swampUsed, snowUsed, cap] = q.shift();
+      if (spent >= cap) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
           && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+        const entersSnow = !vooNoAr && !snowUsed && _entraNaNeve(moveCtx, nx, ny);
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
-        const nextCost = (spent === 0 && terrainCost > maxSteps) ? maxSteps : spent + terrainCost;
+        const nextCost = (spent === 0 && terrainCost > cap) ? cap : spent + terrainCost;
+        const nextCap = entersSnow ? nextCost + Math.floor((cap - nextCost) / 2) : cap;
         const nextSwampUsed = swampUsed || entersSwamp;
-        const bestKey = `${k},${nextSwampUsed ? 1 : 0}`;
-        if (!exploredSet.has(k) || nextCost > maxSteps || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
-            || (bestCost.get(bestKey) !== undefined && bestCost.get(bestKey) <= nextCost)) continue;
+        const nextSnowUsed = snowUsed || entersSnow;
+        const bestKey = `${k},${nextSwampUsed ? 1 : 0},${nextSnowUsed ? 1 : 0}`;
+        const restante = nextCap - nextCost;
+        if (!exploredSet.has(k) || nextCost > cap || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
+            || (bestRest.get(bestKey) !== undefined && bestRest.get(bestKey) >= restante)) continue;
         const np = [...path, [dx, dy]];
         if (nx === tx && ny === ty) return np;
         const dist = Math.abs(nx-tx) + Math.abs(ny-ty);
         if (dist < best.dist) best = { path: np, dist };
-        bestCost.set(bestKey, nextCost);
-        q.push([nx, ny, np, nextCost, nextSwampUsed]);
+        bestRest.set(bestKey, restante);
+        q.push([nx, ny, np, nextCost, nextSwampUsed, nextSnowUsed, nextCap]);
       }
     }
     return partial && best.path.length ? best.path : null;
