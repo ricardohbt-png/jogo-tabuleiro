@@ -127,6 +127,82 @@ async def main():
     check("payload traz a lista de redemoinhos", zc and zc.get("redemoinhos") == [[4, 4]])
 
     print("\n" + "=" * 62)
+    print("\n[R1] Quem estava preso é liberado quando a água some (expiração)")
+    # Nenhum hook de início de turno conferia se a criatura AINDA está numa
+    # casa de redemoinho: com a zona expirada e o chão seco, a vítima seguia
+    # presa, perdia movimento/ação, afogava (1d6) e pagava 🍖/💧 por turno.
+    async def falha(*a, **k):
+        return (False, 1, 0, 0)
+    for terreno, flag in (("agua", "rodamoinho_preso"), ("agua_profunda", "rodamoinho_profundo_preso")):
+        r = setup(14); lewis(r, nivel=5, pos=(1, 1))
+        w = make_player("w", "Ana", "warrior", 1)
+        w.update(level=1, pos=[6, 6], alive=True, hp=60, max_hp=60, moves_left=4, fome=30, sede=30)
+        r.players["w"] = w
+        z = await conjurar(r, terreno, 6, 6)
+        r._save_mostrado = falha
+        r.round_num = z["disponivel_em"]
+        await criar(r, [[6, 6]])
+        check(f"{terreno}: Ana presa pelo redemoinho", w.get(flag) is True)
+        r.round_num = z["expira_em"]
+        await r._processar_zonas_turno()
+        check(f"{terreno}: água sumiu", r.materiais.get((6, 6)) is None)
+        check(f"{terreno}: liberada já na expiração", not w.get(flag))
+        w["moves_left"] = 4; w["action_done"] = False; hp, fome = w["hp"], w["fome"]
+        if terreno == "agua":
+            ok = await r._testar_rodamoinho_inicio_turno(w)
+        else:
+            ok = await r._testar_rodamoinho_profundo_inicio_turno(w)
+        check(f"{terreno}: no turno seguinte age normalmente", ok is True and w["moves_left"] == 4 and not w["action_done"])
+        check(f"{terreno}: sem afogamento nem 🍖/💧 em chão seco", w["hp"] == hp and w["fome"] == fome)
+
+    print("\n[R2] Liberação também ao ser arrastado/teleportado para fora e no cancelamento")
+    r = setup(14); lewis(r, nivel=5, pos=(1, 1))
+    r.players["c"]["magias_conhecidas"].append("ira_rocha_ardente")
+    w = make_player("w", "Ana", "warrior", 1)
+    w.update(level=1, pos=[6, 6], alive=True, hp=60, max_hp=60, moves_left=4, fome=30, sede=30)
+    r.players["w"] = w
+    z = await conjurar(r, "agua_profunda", 6, 6)
+    r._save_mostrado = falha
+    r.round_num = z["disponivel_em"]
+    await criar(r, [[6, 6]])
+    w["pos"] = [0, 0]                       # empurrada/teleportada para fora, zona ainda ativa
+    w["moves_left"] = 4; w["action_done"] = False; hp = w["hp"]
+    ok = await r._testar_rodamoinho_profundo_inicio_turno(w)
+    check("fora da casa do redemoinho: o teste de turno libera sem afogar", ok is True and not w.get("rodamoinho_profundo_preso") and w["hp"] == hp)
+    w["pos"] = [6, 6]; w.pop("_rodamoinho_profundo_ultima_pos", None)
+    await r._aplicar_rodamoinho_profundo_se_pisar(w)
+    check("voltou e foi presa de novo", w.get("rodamoinho_profundo_preso") is True)
+    r.players["c"]["action_done"] = False; r.round_num += 1
+    await r.handle_magia("c", {"magia_id": "ira_rocha_ardente", "tx": 11, "ty": 11})   # cancela a água
+    check("Ira cancelou a água", r.materiais.get((6, 6)) is None)
+    check("cancelamento também libera", not w.get("rodamoinho_profundo_preso"))
+
+    print("\n[R3] Mira inválida não cobra slot, 🍖/💧 nem ação (preflight)")
+    # Só o `terreno` era validado antes do pagamento; alcance/parede/chão
+    # ficavam no executor, depois de handle_magia cobrar tudo.
+    r = setup(14); c = lewis(r, nivel=5, pos=(1, 1))
+    del r._tem_linha_de_visao; del r._alcance_com_altura
+    def recursos(p):
+        return (r._slots_disponiveis(p, "terceiro"), p["fome"], p["sede"], p["action_done"])
+    async def tenta(dados):
+        r._errs.clear()
+        await r.handle_magia("c", {"magia_id": "senhor_das_aguas", "terreno": "agua", **dados})
+        return list(r._errs)
+    antes = recursos(c)
+    check("fora do alcance: erro", bool(await tenta({"tx": 13, "ty": 13})))     # dist 12 > 10
+    check("fora do alcance: recursos intactos", recursos(c) == antes)
+    for y in range(14):
+        r.tiles[y][4] = S.WALL
+    check("parede no caminho: erro", bool(await tenta({"tx": 8, "ty": 1})))
+    check("parede no caminho: recursos intactos", recursos(c) == antes)
+    r.tiles = [[S.WALL] * 14 for _ in range(14)]; r.tiles[1][1] = S.FLOOR
+    check("sem chão na área: erro", bool(await tenta({"tx": 1, "ty": 3})))
+    check("sem chão na área: recursos intactos", recursos(c) == antes)
+    r.tiles = [[S.FLOOR] * 14 for _ in range(14)]
+    check("mira válida: slot e ação gastos",
+          not await tenta({"tx": 1, "ty": 6}) and recursos(c) != antes)
+
+    print("\n" + "=" * 62)
     print(f"  {PASS} passaram, {FAIL} falharam")
     print("=" * 62)
     return 1 if FAIL else 0

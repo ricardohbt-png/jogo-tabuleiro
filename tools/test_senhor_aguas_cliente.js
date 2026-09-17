@@ -153,6 +153,45 @@ const srcCancel = fonteDaFuncao("_gamepadCancel");
 check("B fecha o popup do Senhor das Águas",
   !!srcCancel && /senhor-aguas-overlay/.test(srcCancel) && /_fecharJanelaSenhorDasAguas\(\)/.test(srcCancel));
 
+console.log("\n[V] Um véu esconde o terreno novo até a frente da onda revelar a casa");
+// A água/gelo chega no game_state junto do `start` e o tabuleiro já a mostrava
+// enquanto a concentração + viagem ainda rodavam (mesma classe do véu da Ira).
+{
+  const declSource = (name) => {
+    const m = GAME.match(new RegExp("^(?:const|let) " + name + " = [\\s\\S]*?;[ \\t]*$", "m"));
+    return m ? m[0].replace(/^(const|let) /, "var ") : null;
+  };
+  const veu = declSource("TERRENO_MAGIA_VEU_OPACIDADE");
+  let val = null; try { val = new Function(veu + "\nreturn TERRENO_MAGIA_VEU_OPACIDADE;")(); } catch (e) {}
+  check("existe a constante do véu e é opaca o bastante (≥ 0.85)", typeof val === "number" && val >= 0.85);
+  const build = fonteDaFuncao("_senhorAguasBuild3D"), upd = fonteDaFuncao("_senhorAguasUpdate3D"), d2 = fonteDaFuncao("_senhorAguasDraw2D");
+  check("3D: o build cria o véu com a constante e depthTest ligado",
+    /opacity:\s*TERRENO_MAGIA_VEU_OPACIDADE/.test(build) && /cover[\s\S]{0,200}depthTest:\s*true/.test(build));
+  check("3D: o update desvanece o véu com o reveal", /cover\.material\.opacity[^\n]*\(1\s*-\s*reveal\)[^\n]*TERRENO_MAGIA_VEU_OPACIDADE|cover\.material\.opacity[^\n]*TERRENO_MAGIA_VEU_OPACIDADE[^\n]*\(1\s*-\s*reveal\)/.test(upd));
+  check("2D: o preenchimento do véu usa a constante e o reveal", /TERRENO_MAGIA_VEU_OPACIDADE\s*\*\s*\(1\s*-\s*reveal\)/.test(d2));
+  // Comportamento com stubs: véu cheio no início, zerado depois da frente; redemoinhos sem véu.
+  try {
+    const fns = ["_senhorAguasHash","_senhorAguasAnimFromMessage","_senhorAguasProgress","_senhorAguasSetLine","_senhorAguasBuild3D","_senhorAguasDispose3D","_senhorAguasUpdate3D"];
+    const code = [declSource("SENHOR_AGUAS_CONCENTRACAO_MS"), declSource("CHAMADO_INVERNO_CONCENTRACAO_MS"), declSource("SENHOR_AGUAS_TRAVEL_MS"),
+      declSource("SENHOR_AGUAS_IMPACT_MS"), veu, declSource("TERRENO_MAGIA_VEU_COR") || "", ...fns.map(f => fonteDaFuncao(f))].join("\n");
+    class V { constructor(){ this.x=0; this.y=0; this.z=0; } set(){ return this; } copy(){ return this; } setScalar(){ return this; } lerp(){ return this; } }
+    class Obj { constructor(){ this.position=new V(); this.scale=new V(); this.rotation=new V(); this.userData={}; this.visible=true; this.material={opacity:0,dispose(){}}; this.geometry={dispose(){}}; this.children=[]; this.parent=null; } add(...c){ for(const x of c){ x.parent=this; this.children.push(x);} } remove(){} traverse(f){ f(this); this.children.forEach(c=>c.traverse(f)); } lookAt(){} }
+    class Mat { constructor(o){ Object.assign(this,o||{}); this.opacity=this.opacity||0; } dispose(){} }
+    const THREE = new Proxy({AdditiveBlending:1, DoubleSide:2}, { get:(t,k)=> k in t ? t[k] : String(k).endsWith("Material") ? Mat : k==="Vector3" ? V : k==="BufferGeometry" ? class { setFromPoints(){ return this; } dispose(){} } : Obj });
+    const g3 = { scene: new Obj() };
+    const api = new Function("g3", "window", "performance", code + "\nreturn {from:_senhorAguasAnimFromMessage, upd:_senhorAguasUpdate3D};")(g3, {THREE}, {now:()=>0});
+    const anim = api.from({spell_id:"senhor_das_aguas", phase:"start", origin:[1,1], center:[4,4], tiles:[[3,3],[4,3],[3,4],[4,4]], material:"agua", charge_ms:820, travel_ms:800, impact_ms:1350});
+    api.upd(anim, 100);
+    const cover = anim.tileMeshes[0].cover;
+    check("no início o véu está cheio", !!cover && cover.material.opacity >= val - 0.01);
+    api.upd(anim, 820 + 800 + 1350 + 400);
+    check("depois da frente o véu sumiu", cover.material.opacity <= 0.01);
+    const whirl = api.from({spell_id:"senhor_das_aguas", phase:"whirlpools", origin:[1,1], tiles:[[3,3]], material:"rodamoinho", travel_ms:420, impact_ms:720});
+    api.upd(whirl, 100);
+    check("marcação de redemoinhos não tem véu", !whirl.tileMeshes[0].cover);
+  } catch (e) { check("comportamento do véu com stubs (" + e.message + ")", false); }
+}
+
 console.log("\n==============================================================");
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log("==============================================================");

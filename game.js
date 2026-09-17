@@ -27300,6 +27300,13 @@ const SENHOR_AGUAS_TRAVEL_MS = 880;
 // A expansão da água precisa permanecer tempo suficiente na tela para que o
 // preenchimento casa a casa seja legível, sem alterar o ritmo da onda inicial.
 const SENHOR_AGUAS_IMPACT_MS = 1350;
+// Véu de pedra que cobre cada casa até a frente da onda/geada revelá-la. O
+// material novo (água, gelo, neve) chega no game_state junto do `start`, e
+// sem o véu o tabuleiro já o mostrava enquanto a concentração + viagem ainda
+// rodavam — irmão da crosta da Ira (IRA_ROCHA_CROSTA_OPACIDADE). Só no cast:
+// a marcação de redemoinhos é um marcador curto e não cobre nada.
+const TERRENO_MAGIA_VEU_OPACIDADE = 0.9;
+const TERRENO_MAGIA_VEU_COR = 0x5e5a56;
 
 function _cancelarAnimsMagiasTerreno(spellId){
   // As três áreas são mutuamente exclusivas no servidor. Limpar as filas
@@ -27473,7 +27480,16 @@ function _senhorAguasBuild3D(anim){
     const tileMat = new T.MeshBasicMaterial({color:water, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
     const tile = new T.Mesh(new T.PlaneGeometry(.94, .94), tileMat);
     tile.rotation.x = -Math.PI / 2; tile.position.set(x, .285, z); tile.scale.setScalar(.01); tile.renderOrder = 60; group.add(tile);
-    const item = {x, z, tile, index:i, ring:null, floodRing:null};
+    const item = {x, z, tile, index:i, ring:null, floodRing:null, cover:null};
+    if(!anim.whirlpools){
+      // depthTest LIGADO só no véu: quase opaco, com depthTest:false ele
+      // pintaria por cima dos peões parados na casa.
+      const coverMat = new T.MeshBasicMaterial({color:TERRENO_MAGIA_VEU_COR, transparent:true,
+        opacity: TERRENO_MAGIA_VEU_OPACIDADE, depthWrite:false, depthTest:true, side:T.DoubleSide});
+      const cover = new T.Mesh(new T.PlaneGeometry(.94, .94), coverMat);
+      cover.rotation.x = -Math.PI / 2; cover.position.set(x, .302, z); cover.renderOrder = 59;
+      group.add(cover); item.cover = cover;
+    }
     if(anim.whirlpools){
       const whirlMat = new T.MeshBasicMaterial({color:foam, transparent:true, opacity:0, blending:T.AdditiveBlending, depthWrite:false, depthTest:false, side:T.DoubleSide});
       const ring = new T.Mesh(new T.TorusGeometry(.22, .030, 7, 30), whirlMat);
@@ -27596,6 +27612,10 @@ function _senhorAguasUpdate3D(anim, now){
     const reveal = Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
     item.tile.scale.setScalar(.01 + reveal * .99);
     item.tile.material.opacity = (anim.whirlpools ? .12 : (anim.cold ? .12 + .13 * reveal : .16 + .16 * reveal)) * fade;
+    if(item.cover){
+      item.cover.material.opacity = Math.max(0, (1 - reveal) * TERRENO_MAGIA_VEU_OPACIDADE * fade);
+      item.cover.visible = item.cover.material.opacity > .001;
+    }
     if(item.ring){
       item.ring.rotation.z = now / 260 + item.index;
       item.ring.scale.setScalar(.20 + reveal * (.86 + .12 * Math.sin(now / 120 + item.index)));
@@ -27702,6 +27722,13 @@ function _senhorAguasDraw2D(ctx, state, anim, now){
       : (anim.cold ? (anim.tileOrders[i] || 0) * 520 : dist * 150);
     const reveal = Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay) / Math.max(240, anim.impactMs * .72)));
     const lead = anim.whirlpools ? reveal : Math.max(0, Math.min(1, (p.waterElapsed - anim.travelMs - delay + 170) / Math.max(280, anim.impactMs * .58)));
+    // Véu sobre o material novo até a frente revelar a casa (só no cast).
+    if(!anim.whirlpools && reveal < 1 && _senhorAguasTileVisible(state, tx, ty)){
+      ctx.save(); ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(94,90,86,${(TERRENO_MAGIA_VEU_OPACIDADE * (1 - reveal) * fade).toFixed(3)})`;
+      ctx.fillRect(tx * CELL + 1, ty * CELL + 1, CELL - 2, CELL - 2);
+      ctx.restore();
+    }
     if(lead <= 0) continue;
     const x = tx * CELL + CELL / 2, y = ty * CELL + CELL / 2;
     if(!anim.whirlpools){

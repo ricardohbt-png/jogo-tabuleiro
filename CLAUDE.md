@@ -2545,3 +2545,22 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **parâmetro de `T()` que é frase também tem de ser `T`** — o `dividas.py` não vê
 > literal passado como parâmetro. Testes: `tools/test_prisao_chamas.py` (14→30, seções
 > [2]–[4]) e `tools/test_prisao_chamas_cliente.js` (12).
+
+> **Senhor das Águas — 3 correções (2026-09-17):** **(1)** quem estava preso num
+> redemoinho continuava preso depois que a água sumia — expirada ou cancelada por Ira/
+> Chamado — e, no profundo, **afogava em chão seco** (1d6 + −1🍖/💧 por turno, sem movimento
+> nem ação, até passar Reflexos 18). Raiz: `_testar_rodamoinho_inicio_turno` e
+> `_testar_rodamoinho_profundo_inicio_turno` não conferiam se a criatura ainda está sobre
+> uma casa de redemoinho; agora liberam quando `_rodamoinho(_profundo)_tiles_of` é vazio
+> (cobre também arrasto/teleporte). Varredura `_liberar_presos_sem_rodamoinho` em
+> `_expirar_terrenos_inverno` e `_cancelar_magias_terreno_exclusivas` para o estado não
+> ficar "preso" até o turno da vítima. **(2)** `_senhor_das_aguas_preflight` em `handle_magia`
+> (só o `terreno` era pré-validado; alcance/parede/chão cobravam o slot de 3º círculo).
+> **(3)** véu `TERRENO_MAGIA_VEU_OPACIDADE`/`_COR` por casa na animação compartilhada com o
+> Chamado do Inverno (3D com `depthTest`, 2D em `source-over` dentro do `lighter`), que
+> desvanece com o `reveal` da frente — a água/gelo chegava no `game_state` junto do `start`.
+> Só no cast; a marcação de redemoinhos não tem véu. **As 4 magias de terreno/área do
+> clérigo e do mago agora seguem o mesmo molde:** preflight em `handle_magia` antes de
+> cobrar; multiplicador de dano gravado na zona; véu/portão visual até a chegada. Testes:
+> `tools/test_senhor_das_aguas.py` (30→51, seções [R1]–[R3]) e
+> `tools/test_senhor_aguas_cliente.js` (36→43, seção [V]).

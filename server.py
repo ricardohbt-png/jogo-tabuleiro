@@ -21921,12 +21921,6 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.voce_precisa_de_pelo_menos_21_de_fome_e")})
                 return
-        if magia_id == "senhor_das_aguas":
-            terreno = (data or {}).get("terreno")
-            if terreno not in {"agua", "agua_profunda"}:
-                await self.send_to(pid, {"type": "error",
-                    "msg": T("erro.escolha_agua_ou_agua_profunda_para_o_sen")})
-                return
 
         # Custo do cÃ­rculo: 1 SLOT do mesmo cÃ­rculo (estrito). NinguÃ©m usa MP.
         # Criar Alimentos materializa um baú numa casa adjacente livre. Validar
@@ -22012,6 +22006,16 @@ class GameRoom:
                 return
             data = dict(data or {})
             data["_prisao_chamas_preflight"] = preflight
+        # Senhor das Águas: terreno, alcance, parede e chão validados antes de
+        # cobrar (antes só o terreno era pré-checado; o resto ficava no executor).
+        if magia_id == "senhor_das_aguas":
+            ok, preflight = self._senhor_das_aguas_preflight(p, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(pid, {"type": "error", "msg": T(chave, **params)})
+                return
+            data = dict(data or {})
+            data["_senhor_das_aguas_preflight"] = preflight
         # Fraqueza Arcana (maldição): metade do dano. Entra DEPOIS da metamagia
         # e das técnicas — dmg_mult só é atribuído dentro do ramo Fortalecer, e
         # aplicar antes perderia o efeito em quem não usa Fortalecer.
@@ -24792,6 +24796,25 @@ class GameRoom:
         if removeu_chamas:
             self._rebuild_decor_index()
         self._rebuild_materiais_index()
+        self._liberar_presos_sem_rodamoinho()
+
+    def _liberar_presos_sem_rodamoinho(self):
+        """Solta quem está marcado como preso num redemoinho que não existe mais.
+
+        O teste de início de turno já confere a casa (raiz do bug), mas sem esta
+        varredura o estado ficava "preso" entre a expiração/cancelamento da
+        água e o turno da vítima — inclusive no HUD e nas guardas de movimento.
+        """
+        alvos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
+        if self.prisoner:
+            alvos.append(self.prisoner)
+        for c in alvos:
+            if c.get("rodamoinho_preso") and not self._rodamoinho_tiles_of(c):
+                c.pop("rodamoinho_preso", None)
+                c["_rodamoinho_bloqueado_turno"] = False
+            if c.get("rodamoinho_profundo_preso") and not self._rodamoinho_profundo_tiles_of(c):
+                c.pop("rodamoinho_profundo_preso", None)
+                c["_rodamoinho_profundo_bloqueado_turno"] = False
 
     def _expirar_terrenos_inverno(self):
         """Remove as camadas temporárias vencidas no começo de cada rodada."""
@@ -24813,6 +24836,7 @@ class GameRoom:
             alterado = True
         if alterado:
             self._rebuild_materiais_index()
+            self._liberar_presos_sem_rodamoinho()
 
     def _alvos_no_inverno(self, tiles):
         """Retorna vivos dentro da área, incluindo aliados, inimigos e servos."""
@@ -24923,6 +24947,47 @@ class GameRoom:
         await self.gm_say(
             T("narracao.transforma_uma_area_x_em", caster=caster['name'], lado=lado, tipo_txt=tipo_txt, dur_txt=dur_txt))
 
+    def _senhor_das_aguas_preflight(self, caster, magia, data, alcance_bonus=0):
+        """Valida a mira do Senhor das Águas sem alterar o estado.
+
+        Mesmo molde de `_ira_rocha_preflight`/`_tempestade_preflight`/
+        `_prisao_chamas_preflight`: `handle_magia` chama isto ANTES de cobrar
+        slot/🍖💧/ação; o executor reusa o resultado. Antes só o `terreno` era
+        pré-validado — alcance/parede/chão devolviam o erro com o slot de 3º
+        círculo já gasto. Em falha retorna (chave_i18n, parâmetros).
+        """
+        data = data or {}
+        terreno = data.get("terreno")
+        if terreno not in {"agua", "agua_profunda"}:
+            return False, ("erro.escolha_agua_ou_agua_profunda_para_o_sen", {})
+        nivel = self._nivel_conjurador(caster)
+        alcance = 5 + nivel + int(alcance_bonus or 0)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            return False, ("erro.escolha_o_centro_da_area_do_senhor_das_a", {})
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
+            return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
+        dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
+        if not self._alcance_com_altura(caster, [cx, cy], alcance):
+            return False, ("erro.centro_magia_fora_alcance_dist", {"dist": dist, "alcance": alcance})
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            return False, ("erro.uma_parede_bloqueia_a_trajetoria_do_senh", {})
+        nivel_area = int(magia.get("area_lado_niveis", 2) or 2)
+        if terreno == "agua_profunda":
+            lado_base = int(magia.get("area_lado_agua_profunda", 3) or 3)
+        else:
+            lado_base = int(magia.get("area_lado", 4) or 4)
+        lado = lado_base + (nivel // nivel_area)
+        # Senhor das Águas usa dois lados-base diferentes (4 para água e 3
+        # para água profunda); o bônus genérico do cajado não substitui essa
+        # escolha feita pelo jogador.
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        if not tiles:
+            return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
+        return True, {"terreno": terreno, "nivel": nivel, "alcance": alcance, "dist": dist,
+                      "cx": cx, "cy": cy, "lado": lado, "tiles": tiles}
+
     async def _executar_senhor_das_aguas(self, caster, magia, data, dur_bonus,
                                          alcance_bonus=0):
         """Cria uma área temporária de água e registra a janela opcional de
@@ -24935,47 +25000,15 @@ class GameRoom:
         testes e afogamento.
         """
         data = data or {}
-        terreno = data.get("terreno")
-        if terreno not in {"agua", "agua_profunda"}:
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.escolha_agua_ou_agua_profunda_para_o_sen")})
-            return
-        nivel = self._nivel_conjurador(caster)
-        alcance = 5 + nivel + int(alcance_bonus or 0)
-        try:
-            cx, cy = int(data.get("tx")), int(data.get("ty"))
-        except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.escolha_o_centro_da_area_do_senhor_das_a")})
-            return
-        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
-            return
-        dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
-        if not self._alcance_com_altura(caster, [cx, cy], alcance):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.centro_magia_fora_alcance_dist", dist=dist, alcance=alcance)})
-            return
-        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_senh")})
-            return
-
-        nivel_area = int(magia.get("area_lado_niveis", 2) or 2)
-        if terreno == "agua_profunda":
-            lado_base = int(magia.get("area_lado_agua_profunda", 3) or 3)
-        else:
-            lado_base = int(magia.get("area_lado", 4) or 4)
-        lado = lado_base + (nivel // nivel_area)
-        # Senhor das Águas usa dois lados-base diferentes (4 para água e 3
-        # para água profunda); o bônus genérico do cajado não substitui essa
-        # escolha feita pelo jogador.
-        tiles = self._inverno_area_tiles(cx, cy, lado)
-        if not tiles:
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
-            return
+        pre = data.get("_senhor_das_aguas_preflight")
+        if not pre:
+            ok, pre = self._senhor_das_aguas_preflight(caster, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = pre
+                await self.send_to(caster["id"], {"type": "error", "msg": T(chave, **params)})
+                return
+        terreno, nivel, dist = pre["terreno"], pre["nivel"], pre["dist"]
+        cx, cy, lado, tiles = pre["cx"], pre["cy"], pre["lado"], pre["tiles"]
 
         self._cancelar_magias_terreno_exclusivas()
 
@@ -27913,7 +27946,11 @@ class GameRoom:
         if not criatura.get("rodamoinho_preso"):
             criatura["_rodamoinho_bloqueado_turno"] = False
             return True
-        if self._ignora_rodamoinho(criatura):
+        # Só se está preso quem ainda ESTÁ sobre um redemoinho: a zona pode ter
+        # expirado ou sido cancelada por outra magia de terreno, e a criatura
+        # pode ter sido arrastada/teleportada — antes ela seguia presa em chão
+        # seco até passar no Reflexos.
+        if self._ignora_rodamoinho(criatura) or not self._rodamoinho_tiles_of(criatura):
             criatura.pop("rodamoinho_preso", None)
             criatura["_rodamoinho_bloqueado_turno"] = False
             return True
@@ -28005,7 +28042,11 @@ class GameRoom:
         if not criatura.get("rodamoinho_profundo_preso"):
             criatura["_rodamoinho_profundo_bloqueado_turno"] = False
             return True
-        if self._ignora_rodamoinho_profundo(criatura):
+        # Idem ao redemoinho simples: fora de uma casa de redemoinho profundo
+        # (água que expirou/foi cancelada, arrasto, teleporte) não há prisão —
+        # e muito menos afogamento em chão seco.
+        if (self._ignora_rodamoinho_profundo(criatura)
+                or not self._rodamoinho_profundo_tiles_of(criatura)):
             criatura.pop("rodamoinho_profundo_preso", None)
             criatura["_rodamoinho_profundo_bloqueado_turno"] = False
             return True
