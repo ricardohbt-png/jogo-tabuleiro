@@ -11599,6 +11599,24 @@ function _iraRochaFeedbackStartAt(entry){
   return liberarEm;
 }
 
+// Prisão de Chamas: o dano de impacto (2d8 na borda, 2d4 no calor a ≤1 casa —
+// inclusive o interior) chega no game_state junto do `start`; o número só sai
+// quando o projétil chega às chamas.
+function _prisaoChamasFeedbackStartAt(entry){
+  if(!entry || !Array.isArray(entry.pos)) return null;
+  const px = Number(entry.pos[0]), py = Number(entry.pos[1]);
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  let liberarEm = null;
+  for(const anim of _prisaoChamasAnims){
+    const chamas = anim.flames || anim.tiles || [];
+    const perto = chamas.some(([x, y]) => Math.max(Math.abs(x - px), Math.abs(y - py)) <= 1);
+    if(!perto) continue;
+    const chegada = anim.start + anim.travelMs;
+    liberarEm = liberarEm == null ? chegada : Math.max(liberarEm, chegada);
+  }
+  return liberarEm;
+}
+
 // Irmã do portão da bola de fogo: quem está no raio de um arremesso de ÁREA em
 // voo só mostra o número quando o frasco chega (os saves rolam durante o voo).
 // Consulta a CENA além da lista de render: o game_state com o dano chega na
@@ -11696,6 +11714,7 @@ function _detectHpChanges(st){
         const damageIndex = damageSequenceIndex++;
         const fireStartCandidatos = [
           _bolaFogoFeedbackStartAt(entry), _projetilFeedbackStartAt(entry), _iraRochaFeedbackStartAt(entry),
+          _prisaoChamasFeedbackStartAt(entry),
         ].filter(v => v != null);
         const fireStart = fireStartCandidatos.length ? Math.max(...fireStartCandidatos) : null;
         const startAt = fireStart != null
@@ -11744,7 +11763,8 @@ function _detectHpChanges(st){
   if(healed) playHeal();
   if(multipleTargets){
     const fireStarts = changedDamageEntries
-      .map(e => Math.max(_bolaFogoFeedbackStartAt(e) ?? -Infinity, _iraRochaFeedbackStartAt(e) ?? -Infinity))
+      .map(e => Math.max(_bolaFogoFeedbackStartAt(e) ?? -Infinity, _iraRochaFeedbackStartAt(e) ?? -Infinity,
+                         _prisaoChamasFeedbackStartAt(e) ?? -Infinity))
       .filter(v => Number.isFinite(v));
     const firstImpact = fireStarts.length ? Math.max(...fireStarts) : now + 180;
     // A confirmação só aparece depois da pequena cascata de impactos, para
@@ -17628,7 +17648,7 @@ function _aplicarSpellHL3D() {
     }
   };
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) {
+    if (_zonaFogoLiberada(z)) {
       adicionarZona(z, zonaSet);
       adicionarZona(z, z.tipo === 'prisao_chamas' ? chamasVivasSet : fogoSet);
     }
@@ -17783,7 +17803,7 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const k of hl.range) draw(k, AIM_COLORS.range.fill);       // alcance — azul
   const zonaSet = new Set();                                     // zona de fogo persistente — laranja
   for (const z of hl.zonas)
-    if (_bolaFogoZonaLiberada(z)) {
+    if (_zonaFogoLiberada(z)) {
       if (Array.isArray(z.tiles) && z.tiles.length) for (const [x, y] of z.tiles) zonaSet.add(`${x},${y}`);
       else z.lado ? _addQuadrado(z.cx, z.cy, z.lado, zonaSet) : _addCheb(z.cx, z.cy, z.raio, zonaSet);
     }
@@ -17847,7 +17867,7 @@ function _desenharFogoPersistente2D(ctx, exploredSet, now) {
   if (!zonas.length) return;
   const tiles = new Set();
   for (const z of zonas)
-    if (_bolaFogoZonaLiberada(z)) {
+    if (_zonaFogoLiberada(z)) {
       if (Array.isArray(z.tiles) && z.tiles.length) for (const [x, y] of z.tiles) tiles.add(`${x},${y}`);
       else z.lado ? _addQuadrado(z.cx, z.cy, z.lado, tiles) : _addCheb(z.cx, z.cy, z.raio, tiles);
     }
@@ -28461,6 +28481,10 @@ function _tickPrisaoChamas(now){
       anim.impactPlayed = true;
       _playCombatCue('fire', {repeatKey:`prisao-chamas:${anim.animationId || anim.start}:impact`, power:1.42, volume:.96});
       _liberarDadosMagia();
+      // Reavalia o portão `_zonaFogoLiberada`: é agora que a parede de fogo
+      // persistente (pool spellLivingFlameFx) pode acender. Em 2D o tick já
+      // redesenha a cada quadro.
+      if(mode3D && GS.gameState) renderMap3D(GS.gameState);
     }
     if(p.finished){ _prisaoChamasDispose3D(anim); _prisaoChamasAnims.splice(i, 1); continue; }
     active = true; if(mode3D && g3) _prisaoChamasUpdate3D(anim, now);
@@ -31065,6 +31089,25 @@ function _bolaFogoZonaLiberada(zona){
   const anim = (window._bolaFogoAnims || []).find(a => a.animationId === id);
   if(!anim) return true; // reconexão no meio da zona: mostra o estado autoritativo
   return _bolaFogoProgress(anim, performance.now()).exploding;
+}
+
+// Irmã da de cima para a Prisão de Chamas: a zona chega no game_state junto
+// do `start`, mas o projétil ainda vai voar 0,5–1,1 s; a parede de fogo
+// persistente (pool spellLivingFlameFx / overlay 2D) só acende na chegada.
+function _prisaoChamasZonaLiberada(zona){
+  const id = zona && zona.visualId;
+  if(!id) return true;
+  const anim = (typeof _prisaoChamasAnims !== 'undefined' ? _prisaoChamasAnims : []).find(a => a.animationId === id);
+  if(!anim) return true; // reconexão no meio da zona: mostra o estado autoritativo
+  return _prisaoChamasProgress(anim, performance.now()).impacting;
+}
+
+// Portão único dos pontos de render das zonas de fogo persistentes: despacha
+// pelo tipo. Antes os 3 sites chamavam só o da Bola de Fogo, que devolvia
+// `true` para qualquer outro tipo — a Prisão acendia antes do projétil chegar.
+function _zonaFogoLiberada(zona){
+  if(zona && zona.tipo === 'prisao_chamas') return _prisaoChamasZonaLiberada(zona);
+  return _bolaFogoZonaLiberada(zona);
 }
 
 function _bolaFogoProgress(anim, now){

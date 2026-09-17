@@ -2527,3 +2527,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > 8 listas, não 4 (rebuild acumulava malhas do grupo descartado). Testes:
 > `tools/test_tempestade_correcoes.py` (15) e `tools/test_tempestade_cliente.js` (12; as
 > seções [1]/[2] se pulam num checkout sem a reconciliação).
+
+> **Prisão de Chamas — 4 correções (2026-09-17):** **(1)** `_prisao_chamas_preflight`
+> (lado ∈ {2,3,4}, centro, alcance, LOS, chão) chamado em `handle_magia` ANTES de cobrar
+> slot/🍖💧/ação — e antes de consumir as técnicas armadas: uma mira inválida desarmava o
+> Empoderar de graça. **(2)** `dano_mult` gravado na zona e lido ao pisar e no início do
+> turno (Empoderar ×1,5 / Fortalecer ×1,25 valiam só no impacto), igual à lava da Ira.
+> **(3)** portão único `_zonaFogoLiberada(z)` (despacha por tipo: Bola de Fogo →
+> `_bolaFogoZonaLiberada`, Prisão → `_prisaoChamasZonaLiberada`) nos 3 pontos de render
+> das zonas de fogo — a parede persistente (`spellLivingFlameFx`/overlay 2D) acendia com o
+> projétil ainda no ar, porque o portão antigo só olhava as anims da Bola de Fogo; o tick
+> da Prisão faz `renderMap3D` no impacto para reavaliar o portão (como o da Bola de Fogo).
+> Portão de feedback `_prisaoChamasFeedbackStartAt` (chama e calor a ≤1 casa) em
+> `_detectHpChanges`. **(4)** o `motivo` do rótulo do dado era texto cru em português
+> dentro de um `T()` (em EN saía "Prison of Flames — calor no início do turno") — virou
+> 5 chaves `dado.prisao_de_chamas.<motivo>` resolvidas por `T` aninhado. Regra que fica:
+> **parâmetro de `T()` que é frase também tem de ser `T`** — o `dividas.py` não vê
+> literal passado como parâmetro. Testes: `tools/test_prisao_chamas.py` (14→30, seções
+> [2]–[4]) e `tools/test_prisao_chamas_cliente.js` (12).

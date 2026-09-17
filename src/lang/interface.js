@@ -251,6 +251,26 @@ window.LANG_INTERFACE = {
     "en": "🔥 Prison of Flames{motivo}",
     "pt": "🔥 Prisão de Chamas{motivo}"
   },
+  "dado.prisao_de_chamas.contato": {
+    "en": " — contact",
+    "pt": " — contato"
+  },
+  "dado.prisao_de_chamas.calor": {
+    "en": " — heat",
+    "pt": " — calor"
+  },
+  "dado.prisao_de_chamas.entrada": {
+    "en": " — entering",
+    "pt": " — entrada"
+  },
+  "dado.prisao_de_chamas.inicio_turno": {
+    "en": " — start of turn",
+    "pt": " — início do turno"
+  },
+  "dado.prisao_de_chamas.calor_inicio_turno": {
+    "en": " — heat at start of turn",
+    "pt": " — calor no início do turno"
+  },
   "dado.reacao_de": {
     "en": "{nome} — reaction",
     "pt": "{nome} — reação"

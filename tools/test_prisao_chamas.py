@@ -137,6 +137,85 @@ async def main():
         room.round_num = zone["expira_em"]
         await room._processar_zonas_turno()
         check("zona expira após 10 rodadas", not zone["ativa"])
+
+        print("\n[2] Mira inválida não cobra slot, 🍖/💧, ação nem desarma o Empoderar")
+        # Toda a validação morava no executor, depois do pagamento em
+        # handle_magia (mesma classe de erro corrigida na Ira e na Tempestade).
+        room = setup()
+        del room._tem_linha_de_visao
+        del room._alcance_com_altura
+        mage = add_mage(room, level=5, pos=(1, 1))
+
+        def recursos(p):
+            return (room._slots_disponiveis(p, "quarto"), p["fome"], p["sede"],
+                    p["action_done"], bool(p.get("tec_ex_empoderar_armado")))
+
+        async def tenta(dados):
+            room._errors.clear()
+            await room.handle_magia("p", {"magia_id": "prisao_chamas", **dados})
+            return list(room._errors)
+
+        mage["tec_ex_empoderar_armado"] = True
+        antes = recursos(mage)
+        check("lado inválido: erro", bool(await tenta({"tx": 3, "ty": 3, "lado": 7})))
+        check("lado inválido: recursos e Empoderar intactos", recursos(mage) == antes)
+        check("fora do alcance: erro", bool(await tenta({"tx": 11, "ty": 11, "lado": 2})))
+        check("fora do alcance: recursos intactos", recursos(mage) == antes)
+        for y in range(12):
+            room.tiles[y][4] = S.WALL
+        check("parede no caminho: erro", bool(await tenta({"tx": 6, "ty": 1, "lado": 2})))
+        check("parede no caminho: recursos intactos", recursos(mage) == antes)
+        room.tiles = [[S.FLOOR] * 12 for _ in range(12)]
+        room.tiles[3][3] = S.WALL; room.tiles[3][2] = S.WALL; room.tiles[2][3] = S.WALL; room.tiles[2][2] = S.WALL
+        check("sem chão na área: erro", bool(await tenta({"tx": 3, "ty": 3, "lado": 2})))
+        check("sem chão na área: recursos intactos", recursos(mage) == antes)
+        check("mira válida: slot, ação e Empoderar gastos",
+              not await tenta({"tx": 1, "ty": 6, "lado": 3}) and recursos(mage) != antes
+              and not mage.get("tec_ex_empoderar_armado"))
+
+        print("\n[3] O multiplicador de dano vale enquanto a prisão existir")
+        # A zona não guardava o dmg_mult (Empoderar ×1,5 / Fortalecer ×1,25):
+        # só o impacto multiplicava; entrar e iniciar o turno usavam 1 fixo.
+        room = setup()
+        mage = add_mage(room, level=5, pos=(1, 1))
+        alvo = S.make_player("w", "Ana", "warrior", 0)
+        alvo.update(level=1, pos=[5, 4], alive=True, hp=200, max_hp=200)   # borda da 3x3 em (5,5)
+        room.players["w"] = alvo
+        mage["tec_ex_empoderar_armado"] = True
+        await room.handle_magia("p", {"magia_id": "prisao_chamas", "tx": 5, "ty": 5, "lado": 3})
+        check("impacto multiplicado (2d8=8 → 12)", alvo["hp"] == 188)
+        hp = alvo["hp"]
+        await room._aplicar_prisao_chamas_se_pisar(alvo)
+        check("entrar na chama também multiplica (12)", alvo["hp"] == hp - 12)
+        hp = alvo["hp"]
+        await room._processar_prisao_chamas_inicio_turno(alvo)
+        check("início do turno na chama também multiplica (12)", alvo["hp"] == hp - 12)
+        alvo["pos"] = [5, 3]; hp = alvo["hp"]
+        await room._processar_prisao_chamas_inicio_turno(alvo)
+        check("calor adjacente multiplicado (2d4=4 → 6)", alvo["hp"] == hp - 6)
+
+        print("\n[4] O rótulo do dado é traduzível (motivo é chave, não texto cru)")
+        # `motivo` era " — contato"/" — calor"/… em português cru dentro de um T():
+        # em inglês o dado mostrava "Prison of Flames — calor no início do turno".
+        room = setup()
+        dados = []
+        async def broadcast(msg, *a, **k):
+            if isinstance(msg, dict) and msg.get("type") == "dice_roll":
+                dados.append(msg)
+        room.broadcast = broadcast
+        mage = add_mage(room, level=5, pos=(1, 1))
+        alvo = S.make_player("w", "Ana", "warrior", 0)
+        alvo.update(level=1, pos=[5, 4], alive=True, hp=200, max_hp=200)
+        room.players["w"] = alvo
+        await room.handle_magia("p", {"magia_id": "prisao_chamas", "tx": 5, "ty": 5, "lado": 3})
+        await room._aplicar_prisao_chamas_se_pisar(alvo)
+        await room._processar_prisao_chamas_inicio_turno(alvo)
+        rotulos = [d.get("label") for d in dados]
+        check("houve dados de prisão", len(rotulos) >= 3)
+        en = [S._t_render(r, "en") for r in rotulos]
+        check("nenhum rótulo em inglês contém português",
+              all(not any(pt in s for pt in ("contato", "calor", "entrada", "início")) for s in en))
+        check("os rótulos continuam distinguindo o motivo", len(set(en)) >= 2)
     finally:
         S.roll_dice = old_roll
 

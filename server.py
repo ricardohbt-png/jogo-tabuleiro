@@ -22002,6 +22002,16 @@ class GameRoom:
                 return
             data = dict(data or {})
             data["_ira_rocha_preflight"] = preflight
+        # Prisão de Chamas: idem — lado/alcance/parede/chão validados antes
+        # de cobrar (e antes de consumir o Empoderar armado).
+        if magia_id == "prisao_chamas":
+            ok, preflight = self._prisao_chamas_preflight(p, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(pid, {"type": "error", "msg": T(chave, **params)})
+                return
+            data = dict(data or {})
+            data["_prisao_chamas_preflight"] = preflight
         # Fraqueza Arcana (maldição): metade do dano. Entra DEPOIS da metamagia
         # e das técnicas — dmg_mult só é atribuído dentro do ramo Fortalecer, e
         # aplicar antes perderia o efeito em quem não usa Fortalecer.
@@ -25569,7 +25579,7 @@ class GameRoom:
             return "adjacente"
         return None
 
-    async def _prisao_chamas_dano(self, alvo, expressao, dmg_mult=1, motivo=""):
+    async def _prisao_chamas_dano(self, alvo, expressao, dmg_mult=1, motivo=None):
         if not alvo or not self._vivo(alvo) or self._fosso_protegido(alvo):
             return
         raw = self._rolar_dado(expressao)
@@ -25579,7 +25589,7 @@ class GameRoom:
             dano_bruto = raw
         await self.broadcast({
             "type": "dice_roll", "die": "d4" if "d4" in str(expressao) else "d8",
-            "value": dano_bruto, "label": T("dado.prisao_de_chamas", motivo=motivo),
+            "value": dano_bruto, "label": T("dado.prisao_de_chamas", motivo=motivo if motivo is not None else ""),
         })
         dano = dano_bruto if "vida_atual" in alvo else self._apply_damage_types(
             dano_bruto, [DMG_FIRE], alvo)
@@ -25593,10 +25603,10 @@ class GameRoom:
             relacao = self._prisao_chamas_relacao(alvo, zona)
             if relacao == "chamas":
                 await self._prisao_chamas_dano(alvo, zona.get("dano_chamas", "2d8"),
-                                                dmg_mult, " — contato")
+                                                dmg_mult, T("dado.prisao_de_chamas.contato"))
             elif relacao == "adjacente":
                 await self._prisao_chamas_dano(alvo, zona.get("dano_adjacente", "2d4"),
-                                                dmg_mult, " — calor")
+                                                dmg_mult, T("dado.prisao_de_chamas.calor"))
 
     async def _aplicar_prisao_chamas_se_pisar(self, criatura):
         """Dano de 2d8 ao entrar/atravessar uma borda em chamas."""
@@ -25607,7 +25617,7 @@ class GameRoom:
                 continue
             if self._prisao_chamas_relacao(criatura, zona) == "chamas":
                 await self._prisao_chamas_dano(criatura, zona.get("dano_chamas", "2d8"),
-                                                1, " — entrada")
+                                                float(zona.get("dano_mult") or 1), T("dado.prisao_de_chamas.entrada"))
                 if not self._vivo(criatura):
                     return
 
@@ -25621,16 +25631,23 @@ class GameRoom:
             relacao = self._prisao_chamas_relacao(criatura, zona)
             if relacao == "chamas":
                 await self._prisao_chamas_dano(criatura, zona.get("dano_chamas", "2d8"),
-                                                1, " — início do turno")
+                                                float(zona.get("dano_mult") or 1), T("dado.prisao_de_chamas.inicio_turno"))
             elif relacao == "adjacente":
                 await self._prisao_chamas_dano(criatura, zona.get("dano_adjacente", "2d4"),
-                                                1, " — calor no início do turno")
+                                                float(zona.get("dano_mult") or 1), T("dado.prisao_de_chamas.calor_inicio_turno"))
             if not self._vivo(criatura):
                 return
 
-    async def _executar_prisao_chamas(self, caster, magia, data, dmg_mult=1,
-                                      dur_bonus=0, alcance_bonus=0):
-        """Cria a borda de chamas persistente da Prisão de Chamas."""
+    def _prisao_chamas_preflight(self, caster, magia, data, alcance_bonus=0):
+        """Valida a mira da Prisão sem alterar o estado.
+
+        Mesmo molde de `_ira_rocha_preflight`/`_tempestade_preflight`:
+        `handle_magia` chama isto ANTES de cobrar slot/🍖💧/ação e de consumir
+        as técnicas armadas; o executor reusa o resultado. Antes a validação
+        morava no executor, e um `lado` inválido ou uma área sem chão
+        devolvia o erro com o slot de 4º círculo, a ação e o Empoderar já
+        gastos. Em falha retorna (chave_i18n, parâmetros).
+        """
         data = data or {}
         nivel = self._nivel_conjurador(caster)
         alcance = int(magia.get("alcance_base", 4) or 4) + (
@@ -25640,22 +25657,16 @@ class GameRoom:
             cx, cy = int(data.get("tx")), int(data.get("ty"))
             lado = int(data.get("lado"))
         except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.escolha_o_centro_e_o_tamanho_da_prisao_d")})
-            return
+            return False, ("erro.escolha_o_centro_e_o_tamanho_da_prisao_d", {})
         if lado not in {2, 3, 4}:
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4")})
-            return
+            return False, ("erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4", {})
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
-            return
+            return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
         if not self._alcance_com_altura(caster, [cx, cy], alcance):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.centro_magia_fora_alcance_dist", dist=dist, alcance=alcance)})
-            return
+            return False, ("erro.centro_magia_fora_alcance_dist", {"dist": dist, "alcance": alcance})
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.uma_parede_bloqueia_a_trajetoria_da_pris")})
-            return
-
+            return False, ("erro.uma_parede_bloqueia_a_trajetoria_da_pris", {})
         deslocamento = lado // 2 - (1 if lado % 2 == 0 else 0)
         x0, y0 = cx - deslocamento, cy - deslocamento
         x1, y1 = x0 + lado - 1, y0 + lado - 1
@@ -25666,8 +25677,24 @@ class GameRoom:
             [(x, y) for x, y in chao if x in (x0, x1) or y in (y0, y1)],
             key=lambda pos: (pos[1], pos[0]))
         if not flame_tiles:
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_escolhida_nao_contem_chao_para_fo")})
-            return
+            return False, ("erro.a_area_escolhida_nao_contem_chao_para_fo", {})
+        return True, {"cx": cx, "cy": cy, "lado": lado, "dist": dist, "alcance": alcance,
+                      "chao": sorted(chao, key=lambda p: (p[1], p[0])),
+                      "flame_tiles": flame_tiles}
+
+    async def _executar_prisao_chamas(self, caster, magia, data, dmg_mult=1,
+                                      dur_bonus=0, alcance_bonus=0):
+        """Cria a borda de chamas persistente da Prisão de Chamas."""
+        data = data or {}
+        pre = data.get("_prisao_chamas_preflight")
+        if not pre:
+            ok, pre = self._prisao_chamas_preflight(caster, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = pre
+                await self.send_to(caster["id"], {"type": "error", "msg": T(chave, **params)})
+                return
+        cx, cy, lado, dist = pre["cx"], pre["cy"], pre["lado"], pre["dist"]
+        chao, flame_tiles = pre["chao"], pre["flame_tiles"]
 
         animation_id = f"prisao_chamas_{caster['id']}_{self.round_num}_{cx}_{cy}_{new_id()}"
         dur = max(1, int(magia.get("duracao", 10) or 10) + int(dur_bonus or 0))
@@ -25679,6 +25706,9 @@ class GameRoom:
             "caster": caster.get("id"), "criado_em": self.round_num,
             "dano_adjacente": magia.get("dano_adjacente", "2d4"),
             "dano_chamas": magia.get("dano_chamas", "2d8"),
+            # Empoderar (×1,5) / Fortalecer (×1,25) valem enquanto a prisão existir,
+            # não só no impacto — igual à lava da Ira (`dano_mult` na zona).
+            "dano_mult": float(dmg_mult or 1),
         }
         travel_ms = max(520, min(1100, 460 + dist * 125))
         await self.broadcast({
