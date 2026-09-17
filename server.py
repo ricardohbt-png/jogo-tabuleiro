@@ -17563,6 +17563,14 @@ class GameRoom:
         vivo = bool(alvo) and (alvo.get("alive", alvo.get("hp", 0) > 0)) and alvo.get("hp", 1) > 0
         return (alvo, kind) if vivo else (None, None)
 
+    def _alvo_manual_tiles(self, alvo, kind):
+        """Casas que um alvo manual ocupa: herói = 1 casa; criatura = o
+        footprint inteiro (um 2×2 é alcançável por qualquer das 4 casas, não
+        só pela âncora). Mesma regra que handle_mestre_atacar_monstro."""
+        if not alvo:
+            return []
+        return self._monster_tiles(alvo) if kind == "monster" else [alvo["pos"]]
+
     async def _furia_bestial_mestre(self, m, alvo, idx, acertou):
         """Fúria Bestial no controle Manual. A IA (_monster_execute_attacks) dá
         +1d6 quando o PRIMEIRO grupo de ataque e ao menos um outro acertam o
@@ -33938,8 +33946,10 @@ class GameRoom:
             effective_ac -= self._metal_armor_ac(target)
         if is_player:
             effective_ac += self._provocacao_ca_bonus(target, m)   # ProvocaÃ§Ã£o II
-            if target.get("troll_pressao_ca_ate", 0) >= self.round_num:
-                effective_ac -= int(target.get("troll_pressao_ca", 2) or 2)
+        # Pressão Constante do Troll: vale em herói e em criatura (o mestre
+        # pode pressionar outro monstro na mesa livre do editor).
+        if target.get("troll_pressao_ca_ate", 0) >= self.round_num:
+            effective_ac -= int(target.get("troll_pressao_ca", 2) or 2)
 
         attr_key = atk_def.get("attack_attribute") or ("dex" if atk_def.get("range") else "str_")
         attr_mod = mod(m.get(attr_key, 10))
@@ -35295,7 +35305,11 @@ class GameRoom:
                 await self.gm_say(T("narracao.desfere_golpe_devastador", monstro=nome_criatura(m)))
             else:
                 alvo, alvo_kind = self._alvo_manual_mestre(target_id)
-                if not alvo or alvo_kind != "player" or not self._is_adjacent_to_monster(alvo.get("pos", []), m):
+                # Herói OU criatura (mesa livre do editor), por qualquer casa
+                # do footprint — mesma regra do ataque normal do mestre.
+                if not alvo or alvo is m or not any(
+                        self._is_adjacent_to_monster(tile, m)
+                        for tile in self._alvo_manual_tiles(alvo, alvo_kind)):
                     await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
                 alvo["troll_pressao_ca"] = 2
                 alvo["troll_pressao_ca_ate"] = self.round_num + 2
@@ -35307,7 +35321,10 @@ class GameRoom:
             if not m.get("pode_arremessar"):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
             alvo, alvo_kind = self._alvo_manual_mestre(target_id)
-            if not alvo or alvo_kind != "player" or not self._goblin_arremesso_alcanca(m, alvo):
+            # Herói OU criatura (mesa livre), alcançável por qualquer casa do footprint.
+            if not alvo or alvo is m or not any(
+                    self._goblin_arremesso_alcanca(m, {"pos": tile})
+                    for tile in self._alvo_manual_tiles(alvo, alvo_kind)):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
             m["_master_touched"] = True
             await self._goblin_arremesso_em(m, {"kind": alvo_kind, "obj": alvo})
@@ -35496,8 +35513,13 @@ class GameRoom:
             else:
                 alvo, alvo_kind = self._alvo_manual_mestre(target_id)
                 ataque = (m.get("attacks") or [None])[0]
-                if not alvo or alvo_kind != "player" or not ataque \
-                        or not self._ciclope_attack_in_range(m, alvo, ataque):
+                # Mesma regra de alvo do ataque normal (handle_mestre_atacar_monstro):
+                # na mesa livre do editor o alvo é outra criatura, e um alvo
+                # grande pode ser alcançado por qualquer casa do footprint —
+                # validar só herói/âncora recusava alvos adjacentes.
+                if not alvo or alvo is m or not ataque \
+                        or not any(self._monster_attack_in_range(m, tile, ataque)
+                                   for tile in self._alvo_manual_tiles(alvo, alvo_kind)):
                     await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_do_alcance")}); return
                 alvo_obj = {"kind": alvo_kind, "obj": alvo}
                 if m.get("type") == "harpia":
@@ -37093,7 +37115,11 @@ class GameRoom:
             m["guaranteed_loot"] = [g for g in m.get("guaranteed_loot", []) if g != "dagger"]
             await self.gm_say(T("narracao.tira_1_no_arremesso_a_adaga_se_quebra", monstro=nome_criatura(m)))
             return
-        eff_ac = self._player_effective_ac(target)
+        # CA pelo tipo do alvo, como em _execute_one_monster_attack: herói tem
+        # a CA efetiva de jogador; criatura (alvo do mestre na mesa livre)
+        # usa a própria CA. _player_effective_ac leria campos de jogador.
+        eff_ac = (self._player_effective_ac(target) if target_obj["kind"] == "player"
+                  else target.get("ac", target.get("ca", 10)) + self._cancao_monstro_bonus(target, "ca"))
         total  = d20 + 4
         if d20 == 20 or total >= eff_ac:
             dmg = self._apply_damage_types(roll_dice("1d4") + 2, ["physical"], target)

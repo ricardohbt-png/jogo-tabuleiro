@@ -19296,15 +19296,17 @@ function _iniciarMiraMestre(spec){
     : new Set();
   const usesFootprintAttackZone = !!spec.rearAttack ||
     (spec.kind === 'attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster));
-  const footprintRangedAbility = spec.kind === 'ability'
-    && spec.attackDef && spec.attackDef.range != null;
+  // Habilidade que reusa a geometria de um ataque da ficha (Arremesso Colossal,
+  // Fúria Berserker): à distância ou corpo a corpo, a prévia é a mesma regra
+  // que o clique e o servidor aplicam (_monsterAttackInRangeClient).
+  const footprintRangedAbility = spec.kind === 'ability' && !!spec.attackDef;
   if(!footprintRangedAbility
       && ((!spec.lineRange && !spec.cone && !usesFootprintAttackZone && range>0)
           || (spec.cone && spec.showConeRange && range>0))) _addCheb(x,y,range,alcance);
   if(footprintRangedAbility && GS.gameState?.tiles){
-    // Ataques à distância de uma criatura 2×2 partem de qualquer casa do
-    // footprint. A prévia precisa refletir isso, em vez de medir apenas pela
-    // âncora visual do monstro.
+    // Ataques de uma criatura 2×2 partem de qualquer casa do footprint (à
+    // distância) ou das faces ortogonais do bloco (corpo a corpo). A prévia
+    // precisa refletir isso, em vez de medir apenas pela âncora visual.
     alcance.clear();
     const body = new Set((GS.monsterTiles(spec.caster) || [])
       .map(([bx, by]) => `${bx},${by}`));
@@ -19457,9 +19459,13 @@ function _mestreAtivarHabilidade(m, abid){
         icon:ab.icon||ab.icone, label:ab.name||abid});
       return;
     }
+    // Fúria Berserker: o servidor valida com a geometria do 1º ataque da ficha
+    // (faces ortogonais do bloco 2×2, alcance `reach`). Passar o attackDef faz
+    // a prévia e o clique usarem a MESMA regra — sem ele a mira era Chebyshev
+    // da âncora e pintava diagonais que o servidor recusa.
     const ataque = (m.attacks || [])[0] || {};
     const alcance = Math.max(1, Number(ataque.reach || 1), Number(ataque.range || 0));
-    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:alcance,
+    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:alcance, attackDef:ataque,
       icon:ab.icon||ab.icone, label:ab.name||abid});
     return;
   }

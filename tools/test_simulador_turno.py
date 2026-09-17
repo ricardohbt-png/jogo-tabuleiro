@@ -302,6 +302,72 @@ async def main():
     await r.handle_teste_acao_heroi(MASTER, lad["id"], "hero_skill", {"skill_id": "veneno_rapido", "veneno_id": (frasco or {}).get("veneno_id")})
     check("Veneno Rápido untou a arma", not r._errs and bool(r._weapon_poison_slots(lad)))
 
+    print("\n[19] Fúria Berserker do Gigante no Manual aceita criatura adjacente (mesa livre)")
+    # O simulador exige um herói na fila, mas o alvo da Fúria é OUTRA criatura:
+    # o ramo recusava tudo que não fosse herói com "Alvo fora do alcance".
+    r = sala([{"type": "gigante_guerra", "pos": [6, 6]}, {"type": "goblin", "pos": [5, 6]}])
+    h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
+    await iniciar(r); g = monstro(r, "gigante_guerra"); gob = monstro(r, "goblin")
+    gob["hp"] = gob["max_hp"] = 500
+    await ir_para(r, "monster", g["id"]); r._errs.clear(); acerta_sempre(r)
+    golpes = []
+    _orig = r._execute_one_monster_attack
+    async def _conta(m, atk, tobj, *a, **k):
+        golpes.append(tobj["obj"].get("id")); return await _orig(m, atk, tobj, *a, **k)
+    r._execute_one_monster_attack = _conta
+    await r.handle_mestre_usar_habilidade(MASTER, g["id"], "furia_berserker", gob["id"])
+    check("sem erro de alcance contra o goblin adjacente", not r._errs)
+    check("dois golpes no goblin (ataque + adicional)", golpes == [gob["id"]] * 2)
+    check("goblin sofreu dano", gob["hp"] < 500)
+
+    print("\n[19b] Fúria contra criatura 2×2 adjacente pela casa que não é a âncora")
+    r = sala([{"type": "gigante_guerra", "pos": [6, 6]}, {"type": "gigante_guerra", "pos": [8, 5]}])
+    h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
+    await iniciar(r)
+    gs = [m for m in r.monsters.values() if m["type"] == "gigante_guerra"]
+    g = next(m for m in gs if m["pos"] == [6, 6]); alvo = next(m for m in gs if m["pos"] == [8, 5])
+    await ir_para(r, "monster", g["id"]); r._errs.clear()
+    await r.handle_mestre_usar_habilidade(MASTER, g["id"], "furia_berserker", alvo["id"])
+    check("o footprint do alvo conta, não só a âncora", not r._errs)
+
+    print("\n[19c] Pressão Constante do Troll no Manual aceita criatura adjacente e a penaliza")
+    r = sala([{"type": "troll", "pos": [6, 6]}, {"type": "goblin", "pos": [7, 6]}])
+    h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
+    await iniciar(r); tr = monstro(r, "troll"); gob = monstro(r, "goblin")
+    gob["hp"] = gob["max_hp"] = 500
+    await ir_para(r, "monster", tr["id"]); r._errs.clear()
+    await r.handle_mestre_usar_habilidade(MASTER, tr["id"], "pressao_constante_troll", gob["id"])
+    check("sem erro de alcance contra o goblin adjacente", not r._errs)
+    check("goblin ficou sob pressão", gob.get("troll_pressao_ca_ate", 0) >= r.round_num)
+    # A penalidade precisa valer quando OUTRO monstro ataca o goblin pressionado.
+    cas = []
+    _orig_d20 = S.d20_attack
+    def _espiao(atk, ac, *a, **k):
+        cas.append(ac); return _orig_d20(atk, ac, *a, **k)
+    S.d20_attack = _espiao
+    try:
+        await r._execute_one_monster_attack(tr, dict(tr["attacks"][0]), {"kind": "monster", "obj": gob})
+    finally:
+        S.d20_attack = _orig_d20
+    ca_base = gob.get("ac", 10) + r._cancao_monstro_bonus(gob, "ca")
+    check("a CA do goblin pressionado caiu 2 no ataque de monstro", cas and cas[-1] == ca_base - 2)
+
+    print("\n[19d] Arremesso do Goblin no Manual aceita criatura a até 3 casas")
+    r = sala([{"type": "goblin_combatente", "pos": [6, 6]}, {"type": "troll", "pos": [8, 6]}])
+    h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
+    await iniciar(r); gob = monstro(r, "goblin_combatente"); tr = monstro(r, "troll")
+    tr["hp"] = tr["max_hp"] = 500
+    await ir_para(r, "monster", gob["id"]); r._errs.clear()
+    import random as _rnd
+    _orig_randint = _rnd.randint
+    _rnd.randint = lambda a, b: 20 if (a, b) == (1, 20) else _orig_randint(a, b)
+    try:
+        await r.handle_mestre_usar_habilidade(MASTER, gob["id"], "arremesso", tr["id"])
+    finally:
+        _rnd.randint = _orig_randint
+    check("sem erro de alcance contra o troll a 2 casas", not r._errs)
+    check("o troll sofreu o dano da adaga", tr["hp"] < 500)
+
     print(f"\n{PASS} passaram, {FAIL} falharam")
     if FAIL: sys.exit(1)
 
