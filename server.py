@@ -16850,6 +16850,7 @@ class GameRoom:
                             self._apply_snow_entry_penalty(a, frm, a["pos"])
                             await self._aplicar_lava_se_pisar(a)
                             await self._aplicar_prisao_chamas_se_pisar(a)
+                            await self._aplicar_fogueira_se_pisar(a)
                             await self._aplicar_piso_congelado_se_pisar(a)
                             await self._emit_entity_step(a["id"], frm, a["pos"], "animado")
                             break
@@ -18079,6 +18080,7 @@ class GameRoom:
         self._apply_snow_entry_penalty(a, old_pos, a["pos"])
         await self._aplicar_lava_se_pisar(a)
         await self._aplicar_prisao_chamas_se_pisar(a)
+        await self._aplicar_fogueira_se_pisar(a)
         await self._aplicar_piso_congelado_se_pisar(a)
         if a.get("vida_atual", 0) > 0:
             await self._verificar_entrada_zona_molochus(a, nx, ny)
@@ -21989,6 +21991,16 @@ class GameRoom:
         dc_bonus  += tec_dc
         dur_bonus += tec_dur
         dmg_mult  *= tec_mult
+        # Ira da Rocha Ardente: mesma regra — mira inválida (centro, alcance,
+        # parede, área sem piso) não pode custar o slot de 4º círculo.
+        if magia_id == "ira_rocha_ardente":
+            ok, preflight = self._ira_rocha_preflight(p, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(pid, {"type": "error", "msg": T(chave, **params)})
+                return
+            data = dict(data or {})
+            data["_ira_rocha_preflight"] = preflight
         # Fraqueza Arcana (maldição): metade do dano. Entra DEPOIS da metamagia
         # e das técnicas — dmg_mult só é atribuído dentro do ramo Fortalecer, e
         # aplicar antes perderia o efeito em quem não usa Fortalecer.
@@ -22638,7 +22650,7 @@ class GameRoom:
         elif mid == "senhor_das_aguas":
             await self._executar_senhor_das_aguas(caster, magia, data, dur_bonus, alcance_bonus)
         elif mid == "ira_rocha_ardente":
-            await self._executar_ira_rocha_ardente(caster, magia, data, dur_bonus, alcance_bonus)
+            await self._executar_ira_rocha_ardente(caster, magia, data, dur_bonus, alcance_bonus, dmg_mult)
         elif mid == "tempestade_ciclones":
             await self._executar_tempestade_ciclones(caster, magia, data, dmg_mult, dur_bonus, alcance_bonus)
         elif mid == "prisao_chamas":
@@ -23455,6 +23467,7 @@ class GameRoom:
             self._apply_snow_entry_penalty(p, antes, p["pos"])
             await self._aplicar_lava_se_pisar(p)
             await self._aplicar_prisao_chamas_se_pisar(p)
+            await self._aplicar_fogueira_se_pisar(p)
             await self._aplicar_piso_congelado_se_pisar(p)
             self._reveal_around(*p["pos"], radius=self._get_raio_visao(p))
             await self._emit_entity_step(p["id"], antes, p["pos"], "player")
@@ -24428,6 +24441,7 @@ class GameRoom:
                         self._apply_snow_entry_penalty(a, antes, a["pos"])
                         await self._aplicar_lava_se_pisar(a)
                         await self._aplicar_prisao_chamas_se_pisar(a)
+                        await self._aplicar_fogueira_se_pisar(a)
                         await self._aplicar_piso_congelado_se_pisar(a)
                         moved = True; break
                 if not moved:
@@ -25003,12 +25017,14 @@ class GameRoom:
                 continue
         return sorted(area - ocupadas, key=lambda pos: (pos[1], pos[0]))
 
-    async def _executar_ira_rocha_ardente(self, caster, magia, data, dur_bonus,
-                                          alcance_bonus=0):
-        """Cria lava temporária e reserva a escolha das Chamas Vivas.
+    def _ira_rocha_preflight(self, caster, magia, data, alcance_bonus=0):
+        """Valida a mira da Ira sem alterar o estado.
 
-        A escolha é uma ação livre separada, disponível a partir da segunda
-        rodada, seguindo o mesmo ciclo de Senhor das Águas.
+        Espelha `_tempestade_preflight`: `handle_magia` chama isto ANTES de
+        cobrar slot/🍖💧/ação, e o executor reusa o resultado. Antes a
+        validação morava dentro do executor — um centro atrás de uma parede
+        devolvia o erro com o slot de 4º círculo e a ação já gastos.
+        Em falha retorna (chave_i18n, parâmetros).
         """
         data = data or {}
         nivel = self._nivel_conjurador(caster)
@@ -25018,31 +25034,45 @@ class GameRoom:
         try:
             cx, cy = int(data.get("tx")), int(data.get("ty"))
         except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.escolha_o_centro_da_area_da_ira_da_rocha")})
-            return
+            return False, ("erro.escolha_o_centro_da_area_da_ira_da_rocha", {})
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.o_centro_da_magia_esta_fora_do_mapa")})
-            return
+            return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
         if not self._alcance_com_altura(caster, [cx, cy], alcance):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.centro_magia_fora_alcance_dist", dist=dist, alcance=alcance)})
-            return
+            return False, ("erro.centro_magia_fora_alcance_dist",
+                           {"dist": dist, "alcance": alcance})
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.uma_parede_bloqueia_a_trajetoria_da_ira_da_rocha")})
-            return
-
+            return False, ("erro.uma_parede_bloqueia_a_trajetoria_da_ira_da_rocha", {})
         lado = int(magia.get("area_lado", 3) or 3) + (
             nivel // int(magia.get("area_lado_niveis", 3) or 3)
         )
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
-            await self.send_to(caster["id"], {"type": "error",
-                "msg": T("erro.a_area_escolhida_nao_contem_piso_valido")})
-            return
+            return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
+        return True, {"cx": cx, "cy": cy, "lado": lado, "alcance": alcance,
+                      "dist": dist, "nivel": nivel,
+                      "tiles": [list(tile) for tile in tiles]}
+
+    async def _executar_ira_rocha_ardente(self, caster, magia, data, dur_bonus,
+                                          alcance_bonus=0, dmg_mult=1):
+        """Cria lava temporária e reserva a escolha das Chamas Vivas.
+
+        A escolha é uma ação livre separada, disponível a partir da segunda
+        rodada, seguindo o mesmo ciclo de Senhor das Águas. `dmg_mult`
+        (Empoderar Magia) fica gravado na zona e vale para a lava dela
+        enquanto existir — ver `_dano_lava_em`.
+        """
+        data = data or {}
+        pre = data.get("_ira_rocha_preflight")
+        if not pre:
+            ok, pre = self._ira_rocha_preflight(caster, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = pre
+                await self.send_to(caster["id"], {"type": "error", "msg": T(chave, **params)})
+                return
+        nivel, alcance, dist = pre["nivel"], pre["alcance"], pre["dist"]
+        cx, cy, lado = pre["cx"], pre["cy"], pre["lado"]
+        tiles = [list(tile) for tile in pre["tiles"]]
 
         self._cancelar_magias_terreno_exclusivas()
 
@@ -25068,10 +25098,12 @@ class GameRoom:
         expira_em = self.round_num + dur
         self._aplicar_camadas_terreno_inverno(
             tiles, "lava", animation_id, permanente=False, expira_em=expira_em)
-        # As Chamas Vivas podem ocupar uma área com lado uma casa maior que a
-        # lava. A lava/dano continuam restritos a `tiles`; somente a seleção
-        # das decorações usa esta área ampliada.
-        area_chamas = self._inverno_area_tiles(cx, cy, lado + 1)
+        # As Chamas Vivas podem ocupar a lava MAIS um anel de uma casa ao
+        # redor dela. Com a mesma âncora, isso é `lado + 2` — `lado + 1` caía
+        # na assimetria do quadrado par e deixava a casa extra só de um lado
+        # (direita/abaixo no lado ímpar, esquerda/acima no par). A lava/dano
+        # continuam restritos a `tiles`; só a seleção usa a área ampliada.
+        area_chamas = self._inverno_area_tiles(cx, cy, lado + 2)
         validos = self._ira_rocha_chama_tiles_validos(tiles, area_chamas)
         rolagem_chamas = self._rolar_dado(magia.get("chamas_vivas", "2d4"))
         quantidade_chamas = min(rolagem_chamas, len(validos))
@@ -25080,6 +25112,8 @@ class GameRoom:
             "lado": lado, "material": "lava", "tiles": [list(tile) for tile in tiles],
             "duracao": dur, "expira_em": expira_em, "ativa": True,
             "caster": caster.get("id"), "chamas_vivas": [],
+            "dano_lava": str(magia.get("dano_lava", "2d6") or "2d6"),
+            "dano_mult": float(dmg_mult or 1),
             "disponivel_em": self.round_num + 1,
             "chamas_pendentes": quantidade_chamas,
             "chamas_roladas": rolagem_chamas,
@@ -25130,7 +25164,10 @@ class GameRoom:
         esperado = max(0, int(zona.get("chamas_pendentes", 0) or 0))
         if esperado <= 0:
             return
-        permitidos = {(int(x), int(y)) for x, y in zona.get("chamas_permitidas", [])}
+        # Revalida contra as decorações de AGORA: a lista da zona é da hora da
+        # conjuração, e uma decoração que surgiu depois não pode receber chama.
+        permitidos = {(int(x), int(y)) for x, y in self._ira_rocha_chama_tiles_validos(
+            zona.get("tiles", []), zona.get("chamas_permitidas", []))}
         escolhidos = []
         vistos = set()
         for pos in tiles if isinstance(tiles, list) else []:
@@ -25176,9 +25213,12 @@ class GameRoom:
         # Uma chama escolhida sob uma criatura causa dano imediatamente.
         for alvo in self._alvos_no_inverno(escolhidos):
             await self._aplicar_fogueira_se_pisar(alvo)
+        # Rodadas RESTANTES da lava (não a duração total): as chamas morrem
+        # junto com a zona, em `expira_em`.
+        restantes = max(0, int(zona.get("expira_em", self.round_num) or 0) - self.round_num)
         await self.gm_say(T("narracao.ira_da_rocha_chamas_vivas_colocadas",
                             caster=caster["name"], chamas=len(escolhidos),
-                            dur=zona.get("duracao", 0)))
+                            dur=restantes))
         await self.push_state()
 
     def _tempestade_entidades(self):
@@ -27708,6 +27748,22 @@ class GameRoom:
             tiles = [pos]
         return [(int(x), int(y)) for x, y in tiles if self._is_lava_tile(int(x), int(y))]
 
+    def _dano_lava_em(self, tiles):
+        """(dado, multiplicador) da lava sob `tiles`.
+
+        Lava criada pela Ira da Rocha Ardente carrega o dado da magia e o
+        multiplicador de Empoderar Magia na própria zona; lava do mapa (ou
+        de zona já expirada) usa o 2d6 padrão sem multiplicador.
+        """
+        area = {(int(x), int(y)) for x, y in tiles}
+        for zona in reversed(self.zonas_especiais):
+            if not zona.get("ativa") or zona.get("tipo") != "ira_rocha_ardente":
+                continue
+            if any((int(x), int(y)) in area for x, y in zona.get("tiles", [])):
+                return (str(zona.get("dano_lava") or "2d6"),
+                        float(zona.get("dano_mult") or 1))
+        return "2d6", 1.0
+
     async def _aplicar_lava_se_pisar(self, criatura):
         """Aplica 2d6 de fogo ao entrar ou permanecer sobre lava.
 
@@ -27715,9 +27771,13 @@ class GameRoom:
         resistências e vulnerabilidades. Servos elementais usam seu ajuste
         específico no próprio _dano_em_alvo.
         """
-        if not criatura or self._voo_imune_terreno(criatura) or not self._lava_tiles_of(criatura):
+        if not criatura or self._voo_imune_terreno(criatura):
             return
-        raw = roll_dice("2d6")
+        lava = self._lava_tiles_of(criatura)
+        if not lava:
+            return
+        dado, mult = self._dano_lava_em(lava)
+        raw = int(roll_dice(dado) * mult + 0.5)
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw,
                               "label": T("dado.lava")})
         if "vida_atual" in criatura:
@@ -32242,10 +32302,22 @@ class GameRoom:
         sobre sua casa sofre o dano, inclusive ao sobrevoá-la.
         """
         pos = criatura.get("pos")
-        tile = (pos[0], pos[1]) if pos else None
-        dado = getattr(self, "_fire_damage_tiles", {}).get(tile)
-        if not dado:
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
             return
+        # Footprint inteiro (como `_lava_tiles_of`): um monstro 2×2 com a
+        # chama sob a casa de trás também queima. Conta UMA vez por criatura;
+        # com mais de um fogo sob ela, vale o dado mais forte.
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        fogos = getattr(self, "_fire_damage_tiles", {})
+        ordem = {"1": 0, "1d4": 1, "2d4": 2}
+        dados = [fogos[(int(x), int(y))] for x, y in tiles if (int(x), int(y)) in fogos]
+        if not dados:
+            return
+        dado = max(dados, key=lambda d: ordem.get(d, -1))
         if dado == "1d4" and self._voo_imune_terreno(criatura):
             return
         bruto = roll_dice(dado)
@@ -40150,6 +40222,7 @@ class GameRoom:
         self._apply_snow_entry_penalty(pr, old_pos, pr["pos"])
         await self._aplicar_lava_se_pisar(pr)
         await self._aplicar_prisao_chamas_se_pisar(pr)
+        await self._aplicar_fogueira_se_pisar(pr)
         await self._aplicar_rodamoinho_profundo_se_pisar(pr)
         await self._aplicar_rodamoinho_se_pisar(pr)
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).

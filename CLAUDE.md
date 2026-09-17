@@ -2479,3 +2479,30 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **Miniaturas procedurais de herói removidas (2026-09-15):** as 14 funções `_miniWarrior/_miniMage/_miniRogue/_miniCleric/_miniVictor/_miniPaladin/_miniBard/_miniGenericHero` (peão 3D da masmorra) e `_cWarrior/_cMage/_cRogue/_cCleric/_cBard/_cPaladin` (vitrine da seleção), mais as 6 fábricas de material `_cClth/_cGold/_cLth/_cWood/_cSkin/_cGlow` que só elas usavam — ~2.680 linhas de `game.js` sem nenhuma referência. O herói na masmorra é GLB (`_GLB_ENABLED_CLASSES`) ou billboard PNG (`_makeCharacterPawn`); a seleção usa `_cHeroPNG`. As `_miniGoblin/_miniSkeleton/…` de **monstro** continuam vivas como último fallback (GLB → PNG → procedural) dos 6 legados.
 
 > **Órfãs do cliente removidas (2026-09-15):** 21 funções do `game.js` sem nenhuma referência + os helpers que só elas usavam (~890 linhas) — resquícios do **modelo client-side de loja** (`renderPurchasedItems`, `renderFichaPedro`, `renderBotoesAcaoBonus`, `onClicarTaverna/Ferreiro/Mercado`, `usarItemComprado`/`equiparComprado`/`desequiparComprado`, `GS.aplicarConsumivel`/`equiparItemComprado`/`desequiparItemComprado`/`podeEquipar`), os **ícones 2D em canvas** (`drawWeapon`/`drawArmor`/`drawLegs` + 16 `_w*`/`_a*`; o sprite 2D procedural `drawWarrior…` FICA como fallback da `frente.png`), cópias antigas de coisas vivas (`_escolherDirecaoInstrumentoLegacy` → mira no tabuleiro; `_rogueDesarmarBtn` → ramo de `_rogueSkillBtn`; `_animationDuration` → `_animationProgressDuration`; `_getDiceArea`; `_getStoneTopTex`; `_tempestadeTargetMesh`; `_addLinha`; `_monConjurador`; `isMobile`; `aplicarTooltipAoItem`/`mostrarTooltip`; `_protecaoEnergiaHash`) e o **botão oculto "Entrar na Masmorra"** (`triggerDungeonEntrance`, `#city-dungeon-bar`, CSS) — a entrada é pelo ponto de masmorra (`abrirEntradaMasmorra`); no `_cityClick` da cidade 3D (`CITY_MODE` fixo em `'image'`) o id `dungeon` passa a cair no `_cityHotspotClick`. 45 chaves `ui.*` órfãs apagadas. **Ficaram por decisão do autor** (features prontas, nunca ligadas): `_abrirEscolhaLootOuAtaque` (escolha "pegar item ou atacar" com monstro sobre item) e `playHeroHurt`/`playCreatureHit` (sons de dano distintos).
+
+> **Ira da Rocha Ardente — 7 correções de mecânica/animação (2026-09-17):** **(1)** a
+> validação da mira (centro/alcance/parede/piso) saiu do executor para um
+> **`_ira_rocha_preflight`** chamado em `handle_magia` ANTES de cobrar slot/🍖💧/ação
+> (espelha `_tempestade_preflight`; antes um clique atrás de uma parede gastava o slot de
+> 4º círculo sem efeito) e o cliente ganhou `MAGIAS_AREA_EXIGEM_LOS` em `_specAlvoMagia`
+> — só as 7 magias de área cujo executor exige LOS ao centro (Silêncio/Clarividência ficam
+> de fora). **(2)** a área das Chamas Vivas é `lado + 2` (anel completo); `lado + 1` caía na
+> âncora assimétrica do quadrado par e a casa extra ficava só de um lado, mudando de lado
+> com o nível. **(3)** `_iraRochaUpdate3D` usava `bright`, declarado só em `_iraRochaBuild3D`
+> → `ReferenceError` no exato instante do impacto em 3D (onda nunca aparecia, véus ficavam,
+> e `_iraRochaRaf` guardava um id morto, então NENHUMA Ira seguinte animava na sessão).
+> Paleta em `IRA_ROCHA_CORES`; `_tickIraRocha` isola o erro por animação e renova o raf num
+> `finally`. **(4)** `dmg_mult` (Empoderar Magia ×1,5) agora chega à Ira e fica gravado na
+> zona (`dano_lava`/`dano_mult`); `_aplicar_lava_se_pisar` consulta `_dano_lava_em(tiles)`
+> — lava do mapa segue 2d6. **(5)** `_aplicar_fogueira_se_pisar` é footprint-aware (chama sob
+> a casa de trás de um monstro 2×2 queima; conta 1× por criatura, vale o dado mais forte).
+> **(6)** servo animado, prisioneiro e licantropo passaram a chamar a fogueira ao pisar (5
+> caminhos de movimento só aplicavam lava). **(7)** portão `_iraRochaFeedbackStartAt` em
+> `_detectHpChanges` (números de dano esperam a onda chegar à casa, como a Bola de Fogo) e
+> crosta `IRA_ROCHA_CROSTA_OPACIDADE=0.92` com `depthTest:true` (a lava autoritativa chega no
+> `game_state` junto do `start`; com 0.22 estava 78% visível desde o 1º quadro). Menores: a
+> colocação das chamas revalida contra as decorações de agora; a narração cita rodadas
+> RESTANTES. Testes: `tools/test_ira_rocha_ardente.py` (51, seções [6]–[11]) e
+> `tools/test_ira_rocha_cliente.js` (19, node — extrai as funções do `game.js` e roda com
+> stubs de THREE). **Atenção ao editar:** `game.js`, `server.py` e `CLAUDE.md` estão em
+> **CRLF** — script Python com `replace("...\n...")` não casa; use a ferramenta de edição.

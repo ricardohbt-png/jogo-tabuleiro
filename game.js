@@ -11581,6 +11581,24 @@ function _bolaFogoFeedbackStartAt(entry){
   return liberarEm;
 }
 
+// Irmã do portão da bola de fogo para a Ira da Rocha Ardente: o game_state
+// com o HP já descontado chega junto do `start`, mas a rocha ainda vai
+// carregar e viajar; o número só sai quando a onda de lava alcança a casa
+// (o mesmo `dist*105` que revela a fissura em _iraRochaUpdate3D/_iraRochaDraw2D).
+function _iraRochaFeedbackStartAt(entry){
+  if(!entry || !Array.isArray(entry.pos)) return null;
+  const px = Number(entry.pos[0]), py = Number(entry.pos[1]);
+  if(!Number.isFinite(px) || !Number.isFinite(py)) return null;
+  let liberarEm = null;
+  for(const anim of _iraRochaAnims){
+    if(anim.isFlames || !anim.tiles.some(([x, y]) => x === px && y === py)) continue;
+    const dist = Math.hypot(px - anim.center[0], py - anim.center[1]);
+    const chegada = anim.start + anim.chargeMs + anim.travelMs + dist * 105;
+    liberarEm = liberarEm == null ? chegada : Math.max(liberarEm, chegada);
+  }
+  return liberarEm;
+}
+
 // Irmã do portão da bola de fogo: quem está no raio de um arremesso de ÁREA em
 // voo só mostra o número quando o frasco chega (os saves rolam durante o voo).
 // Consulta a CENA além da lista de render: o game_state com o dano chega na
@@ -11676,10 +11694,10 @@ function _detectHpChanges(st){
         }
         _playCombatCue('damage', cue);
         const damageIndex = damageSequenceIndex++;
-        const fireStartBola = _bolaFogoFeedbackStartAt(entry);
-        const fireStartProj = _projetilFeedbackStartAt(entry);
-        const fireStart = fireStartBola == null ? fireStartProj
-          : fireStartProj == null ? fireStartBola : Math.max(fireStartBola, fireStartProj);
+        const fireStartCandidatos = [
+          _bolaFogoFeedbackStartAt(entry), _projetilFeedbackStartAt(entry), _iraRochaFeedbackStartAt(entry),
+        ].filter(v => v != null);
+        const fireStart = fireStartCandidatos.length ? Math.max(...fireStartCandidatos) : null;
         const startAt = fireStart != null
           ? fireStart + (multipleTargets ? damageIndex * 120 : 0)
           : (multipleTargets ? now + damageIndex * 120 : null);
@@ -11725,7 +11743,8 @@ function _detectHpChanges(st){
   // continua com um impacto grave e curto.
   if(healed) playHeal();
   if(multipleTargets){
-    const fireStarts = changedDamageEntries.map(_bolaFogoFeedbackStartAt)
+    const fireStarts = changedDamageEntries
+      .map(e => Math.max(_bolaFogoFeedbackStartAt(e) ?? -Infinity, _iraRochaFeedbackStartAt(e) ?? -Infinity))
       .filter(v => Number.isFinite(v));
     const firstImpact = fireStarts.length ? Math.max(...fireStarts) : now + 180;
     // A confirmação só aparece depois da pequena cascata de impactos, para
@@ -16168,6 +16187,14 @@ function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
   });
 }
 
+// Magias de área (mira `tile`) cujo executor no servidor testa
+// `_tem_linha_de_visao(caster, centro)`. Espelha o servidor: Silêncio e
+// Clarividência, por exemplo, NÃO estão aqui porque lá não exigem LOS.
+const MAGIAS_AREA_EXIGEM_LOS = new Set([
+  'bola_fogo', 'definhar', 'chamado_inverno', 'senhor_das_aguas',
+  'ira_rocha_ardente', 'tempestade_ciclones', 'prisao_chamas',
+]);
+
 // Extrai o "spec" de alvo de um clique conforme o tipo de mira. Retorna
 // { ok:true, fields:{...} } com os campos do protocolo `magia` (target_id /
 // tx,ty / dir), ou { ok:false, msg } se o clique não é um alvo válido.
@@ -16180,7 +16207,17 @@ function _specAlvoMagia(alvoTipo, tx, ty) {
       return { ok: false, msg: t('ui.magia.escolha_uma_casa_adjacente') };
     return { ok: true, fields: { tx, ty } };
   }
-  if (alvoTipo === 'tile')      return { ok: true, fields: { tx, ty } };
+  if (alvoTipo === 'tile') {
+    // Magias de área cujo executor no servidor exige linha de visão ao
+    // CENTRO. Sem este gate o clique atrás de uma parede chegava ao servidor
+    // e voltava como erro — e, na Ira, já tinha custado o slot de 4º círculo.
+    // Clarividência (alvoLivre) mira na névoa de propósito e fica de fora.
+    const modo = window._modoMagia || {};
+    if (me && !modo.alvoLivre && MAGIAS_AREA_EXIGEM_LOS.has(String(modo.magiaId))
+        && !GS.hasLineOfSight(gs, me.pos[0], me.pos[1], tx, ty))
+      return { ok: false, msg: t('ui.magia.parede_bloqueia') };
+    return { ok: true, fields: { tx, ty } };
+  }
   if (alvoTipo === 'linha' || alvoTipo === 'cone') {
     if (!me) return { ok: false };
     const [dx, dy] = _dir8(tx - me.pos[0], ty - me.pos[1]);
@@ -27704,6 +27741,16 @@ const _iraRochaAnims = [];
 let _iraRochaRaf = null;
 const IRA_ROCHA_DEFAULT_TRAVEL_MS = 820;
 const IRA_ROCHA_DEFAULT_IMPACT_MS = 980;
+// Paleta compartilhada entre a construção e o tick. Antes `bright` só existia
+// dentro de _iraRochaBuild3D e o anel de impacto em _iraRochaUpdate3D lançava
+// ReferenceError no exato instante do impacto — em 3D a onda de lava nunca
+// aparecia e o laço de quadros morria (ver _tickIraRocha).
+const IRA_ROCHA_CORES = { hot: 0xff4a00, orange: 0xff8a12, bright: 0xffe78a };
+// Opacidade da crosta escura que cobre cada casa até a onda de magma a
+// revelar. O piso autoritativo já chega como lava no game_state (junto do
+// `start`); com 0.22 a lava ficava 78% visível desde o 1º quadro e a onda não
+// tinha o que revelar. A crosta desvanece com `reveal` (2D e 3D).
+const IRA_ROCHA_CROSTA_OPACIDADE = 0.92;
 
 function _iraRochaHash(n){
   n = (n | 0) ^ 0x6d2b79f5;
@@ -27781,7 +27828,7 @@ function _iraRochaBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
   const T = window.THREE, group = new T.Group();
   group.name = anim.isFlames ? 'ira-rocha-chamas-vivas' : 'ira-rocha-ardente';
-  const hot = 0xff4a00, orange = 0xff8a12, bright = 0xffe78a;
+  const { hot, orange, bright } = IRA_ROCHA_CORES;
   const glowMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
     depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
   const orbMat = new T.MeshBasicMaterial({color:orange, transparent:true, opacity:0,
@@ -27823,11 +27870,12 @@ function _iraRochaBuild3D(anim){
   }
 
   for(const [x,z] of anim.tiles){
-    // O piso autoritativo já chega como lava no game_state. A crosta é apenas
-    // um véu translúcido, para não virar uma mancha marrom sobre o tabuleiro
-    // enquanto o magma avança em onda.
+    // O piso autoritativo já chega como lava no game_state. A crosta escura
+    // o esconde até a onda de magma alcançar a casa (ver a constante).
+    // depthTest LIGADO só aqui: agora que a crosta é quase opaca, com
+    // depthTest:false ela pintaria por cima dos peões parados na casa.
     const coverMat = new T.MeshBasicMaterial({color:0x180407, transparent:true,
-      opacity:0.22, depthWrite:false, depthTest:false, side:T.DoubleSide});
+      opacity: IRA_ROCHA_CROSTA_OPACIDADE, depthWrite:false, depthTest:true, side:T.DoubleSide});
     const cover = new T.Mesh(new T.PlaneGeometry(.94, .94), coverMat);
     cover.rotation.x = -Math.PI/2; cover.position.set(x, .302, z);
     cover.renderOrder = 60; group.add(cover);
@@ -27902,6 +27950,7 @@ function _iraRochaUpdate3D(anim, now){
   if(!g3 || !window.THREE) return;
   if(!anim.group || anim.group.parent !== g3.scene){ _iraRochaDispose3D(anim); if(!_iraRochaBuild3D(anim)) return; }
   const p = _iraRochaProgress(anim, now), T = window.THREE;
+  const { bright } = IRA_ROCHA_CORES;
   const dx = anim.center[0]-anim.origin[0], dz = anim.center[1]-anim.origin[1];
   const front = [anim.origin[0] + dx*p.travel, anim.origin[1] + dz*p.travel];
   const fade = p.finished ? Math.max(0, 1-(p.elapsed-anim.duration)/300) : 1;
@@ -27952,7 +28001,7 @@ function _iraRochaUpdate3D(anim, now){
     const waveDelay=dist*105;
     const crack=Math.max(0,Math.min(1,(impactElapsed-waveDelay+120)/Math.max(320,anim.impactMs*.68)));
     const reveal=Math.max(0,Math.min(1,(impactElapsed-waveDelay)/Math.max(380,anim.impactMs*.58)));
-    item.cover.material.opacity=Math.max(0, (1-reveal)*.22*fade);
+    item.cover.material.opacity=Math.max(0, (1-reveal)*IRA_ROCHA_CROSTA_OPACIDADE*fade);
     item.cover.visible=item.cover.material.opacity>.001;
     item.tile.scale.setScalar(.01+reveal*.99);
     item.tile.material.opacity=(.18+.78*reveal)*fade;
@@ -28049,7 +28098,7 @@ function _iraRochaDraw2D(ctx, state, anim, now){
     // A transparência diminui junto com a onda de preenchimento, revelando a
     // textura autoritativa sem um corte brusco no final da animação.
     if(reveal < 1){
-      ctx.fillStyle=`rgba(18,4,5,${(.22*(1-reveal)*fade).toFixed(3)})`;
+      ctx.fillStyle=`rgba(18,4,5,${(IRA_ROCHA_CROSTA_OPACIDADE*(1-reveal)*fade).toFixed(3)})`;
       ctx.fillRect(pos[0]*CELL+1,pos[1]*CELL+1,CELL-2,CELL-2);
       ctx.strokeStyle=`rgba(255,67,18,${(.34*(1-reveal)*fade).toFixed(3)})`;
       ctx.lineWidth=Math.max(1,CELL*.018);ctx.strokeRect(pos[0]*CELL+2,pos[1]*CELL+2,CELL-4,CELL-4);
@@ -28113,14 +28162,26 @@ function _iraRochaPlayImpactSound(anim){
 
 function _tickIraRocha(now){
   let active=false;
-  for(let i=_iraRochaAnims.length-1;i>=0;i--){
-    const anim=_iraRochaAnims[i], p=_iraRochaProgress(anim,now);
-    if(p.impacting && !anim.impactPlayed){anim.impactPlayed=true;_iraRochaPlayImpactSound(anim);_liberarDadosMagia();if(mode3D&&GS.gameState)renderMap3D(GS.gameState);}
-    if(p.finished){_iraRochaDispose3D(anim);_iraRochaAnims.splice(i,1);continue;}
-    active=true;if(mode3D&&g3)_iraRochaUpdate3D(anim,now);
+  try{
+    for(let i=_iraRochaAnims.length-1;i>=0;i--){
+      const anim=_iraRochaAnims[i], p=_iraRochaProgress(anim,now);
+      if(p.impacting && !anim.impactPlayed){anim.impactPlayed=true;_iraRochaPlayImpactSound(anim);_liberarDadosMagia();if(mode3D&&GS.gameState)renderMap3D(GS.gameState);}
+      if(p.finished){_iraRochaDispose3D(anim);_iraRochaAnims.splice(i,1);continue;}
+      active=true;
+      if(mode3D&&g3){
+        // Um erro visual numa animação descarta SÓ ela: o laço segue vivo
+        // para as demais e para a próxima conjuração.
+        try{ _iraRochaUpdate3D(anim,now); }
+        catch(err){ console.error('ira rocha update3D:', err); _iraRochaDispose3D(anim); _iraRochaAnims.splice(i,1); }
+      }
+    }
+    if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  } finally {
+    // Sempre renova (ou zera) o id do quadro. Com um id morto aqui,
+    // `_receberAnimacaoIraRocha` (que só agenda quando !_iraRochaRaf) nunca
+    // mais animaria uma Ira nesta sessão.
+    _iraRochaRaf=(active&&_iraRochaAnims.length)?_scheduleVisualFrame(_tickIraRocha):null;
   }
-  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
-  _iraRochaRaf=active?_scheduleVisualFrame(_tickIraRocha):null;
 }
 
 function _receberAnimacaoIraRocha(msg){
