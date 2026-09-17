@@ -979,29 +979,49 @@ const GS = (() => {
     const actor = moveCtx?.actor || {};
     if (actor.rodamoinho_preso || actor.rodamoinho_profundo_preso) return 9999;
     const vooNoAr = !!(actor.voo && alturaDe(actor) > 0);
-    if (vooNoAr) return 1;
-    const custoElevacao = (fromX == null || fromY == null) ? 0
+    const custoElevacao = (fromX == null || fromY == null || vooNoAr) ? 0
       : _custoElevacao(moveCtx, fromX, fromY, x, y);
     if (custoElevacao > 1) return 9999;
+    // Vento da Tempestade de Ciclones (espelha `_water_step_cost` do servidor):
+    // entrar numa casa da tempestade custa 2, vale também para quem voa, e uma
+    // prévia ainda sem ciclones não conta. Sem isto as casas azuis mostravam o
+    // dobro do alcance real e o caminho parava no meio com erro do servidor.
+    const vento = _custoVentoTempestade(moveCtx?.state || gameState, x, y, custoElevacao);
+    if (vooNoAr) return Math.max(1, vento);
     // A ponte é a superfície efetivamente ocupada: o material que está
     // abaixo dela não aumenta o custo de movimento nem aplica penalidades.
-    if (_ponteEm(x, y, moveCtx?.state || gameState)) return 1 + custoElevacao;
+    if (_ponteEm(x, y, moveCtx?.state || gameState)) return Math.max(1 + custoElevacao, vento);
     const kind = moveCtx?.materiais?.[`${x},${y}`];
-    if (kind === 'piso_congelado') return 1 + custoElevacao;
-    if (kind === 'areia_deserto' || kind === 'lava') return 2 + custoElevacao;
+    if (kind === 'piso_congelado') return Math.max(1 + custoElevacao, vento);
+    if (kind === 'areia_deserto' || kind === 'lava') return Math.max(2 + custoElevacao, vento);
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
-        && kind !== 'rodamoinho_profundo') return 1 + custoElevacao;
+        && kind !== 'rodamoinho_profundo') return Math.max(1 + custoElevacao, vento);
     const tipoCriatura = String(actor.type || '').toLowerCase();
     if (tipoCriatura === 'elemental_agua' || tipoCriatura === 'elemental_água'
         || (actor.special_abilities || []).some(h => h &&
-        ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return 1;
+        ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return Math.max(1, vento);
     let cost = (kind === 'agua_profunda' || kind === 'rodamoinho_profundo') ? 3 : 2;
     const armor = actor.gear?.armor || {};
     const category = armor.armor_category;
     if (category === 'media') cost += 1;
     else if (category === 'pesada') cost += 2;
     else if (actor.natural_armor > 0) cost += 1;
-    return Math.max(1, cost + custoElevacao);
+    return Math.max(1, cost + custoElevacao, vento);
+  }
+
+  // Custo de vento de uma casa de destino: 2 (+ elevação) se ela cai numa
+  // Tempestade de Ciclones ativa e já confirmada; 0 fora. A prévia (com
+  // `ciclones_pendentes`) ainda não é tempestade — o servidor também a ignora.
+  function _custoVentoTempestade(state, x, y, custoElevacao=0) {
+    const zonas = state?.zonas_especiais;
+    if (!Array.isArray(zonas) || !zonas.length) return 0;
+    const tx = Number(x), ty = Number(y);
+    for (const z of zonas) {
+      if (!z || !z.ativa || z.tipo !== 'tempestade_ciclones' || z.ciclones_pendentes) continue;
+      if ((z.tiles || []).some(t => Array.isArray(t) && Number(t[0]) === tx && Number(t[1]) === ty))
+        return 2 + custoElevacao;
+    }
+    return 0;
   }
 
   function bfsReachable(tiles, exploredSet, sx, sy, maxSteps, result, moveCtx=null) {

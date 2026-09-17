@@ -2506,3 +2506,24 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_ira_rocha_cliente.js` (19, node — extrai as funções do `game.js` e roda com
 > stubs de THREE). **Atenção ao editar:** `game.js`, `server.py` e `CLAUDE.md` estão em
 > **CRLF** — script Python com `replace("...\n...")` não casa; use a ferramenta de edição.
+
+> **Tempestade de Ciclones — 6 correções (2026-09-17):** **(1+2)** o prólogo do monstro
+> (`_upkeep_inicio_turno_monstro`) consome `turbilhao_perde_movimento` com **`pop`** — com
+> `get`, o `return False` da perda de ação pulava os `pop` tardios de `gm_phase` e o monstro
+> que falhava o Reflexos perdia o movimento em DOIS turnos; e o caminho legado da IA (fichas
+> sem `ai_type`: skeleton/orc/dark_mage/dragon/pombo/rato/gato/ovelha) não tinha `pop`
+> nenhum — um esqueleto atingido uma vez ficava imóvel para sempre. **(3)** o BFS de alcance
+> do cliente cobra o vento: `terrainMoveCost` (`src/gameState.js`) soma
+> `_custoVentoTempestade` (2 por casa de tempestade confirmada, também para voadores — a
+> prévia com `ciclones_pendentes` não conta), espelhando `_water_step_cost`; antes as casas
+> azuis mostravam o dobro do alcance e o caminho parava no meio com erro do servidor.
+> **(6)** `handle_comandar_animados`, `_animado_ataca_jogador` e `_turno_licantropo` chamam
+> `_tempestade_verificar_entrada` ao pisar (só os caminhos manuais chamavam). **(4+5,
+> só no cliente e dependentes do WIP da reconciliação de ciclones):** a prévia pendente
+> entra em `ativos` no `_tempestadeSyncFromState` (a anim do `start` era morta pelo
+> `game_state` que chega junto dele) e `_tempestadeUpdate3D` refaz o grupo quando
+> `cycloneMeshes` não bate com `anim.ciclones` (as malhas nasciam com 0 ciclones e o
+> resolve nunca as criava — tempestade sem tornado em 3D); `_tempestadeBuild3D` zera as
+> 8 listas, não 4 (rebuild acumulava malhas do grupo descartado). Testes:
+> `tools/test_tempestade_correcoes.py` (15) e `tools/test_tempestade_cliente.js` (12; as
+> seções [1]/[2] se pulam num checkout sem a reconciliação).

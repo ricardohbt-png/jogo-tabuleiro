@@ -16851,6 +16851,7 @@ class GameRoom:
                             await self._aplicar_lava_se_pisar(a)
                             await self._aplicar_prisao_chamas_se_pisar(a)
                             await self._aplicar_fogueira_se_pisar(a)
+                            await self._tempestade_verificar_entrada(a, frm, a["pos"])
                             await self._aplicar_piso_congelado_se_pisar(a)
                             await self._emit_entity_step(a["id"], frm, a["pos"], "animado")
                             break
@@ -23468,6 +23469,7 @@ class GameRoom:
             await self._aplicar_lava_se_pisar(p)
             await self._aplicar_prisao_chamas_se_pisar(p)
             await self._aplicar_fogueira_se_pisar(p)
+            await self._tempestade_verificar_entrada(p, antes, p["pos"])
             await self._aplicar_piso_congelado_se_pisar(p)
             self._reveal_around(*p["pos"], radius=self._get_raio_visao(p))
             await self._emit_entity_step(p["id"], antes, p["pos"], "player")
@@ -24442,6 +24444,7 @@ class GameRoom:
                         await self._aplicar_lava_se_pisar(a)
                         await self._aplicar_prisao_chamas_se_pisar(a)
                         await self._aplicar_fogueira_se_pisar(a)
+                        await self._tempestade_verificar_entrada(a, antes, a["pos"])
                         await self._aplicar_piso_congelado_se_pisar(a)
                         moved = True; break
                 if not moved:
@@ -39095,7 +39098,12 @@ class GameRoom:
                 m["master_moves_left"] = 0
             else:
                 await self._soltar_agarrado(m)
-        if m.get("turbilhao_perde_movimento", False):
+        # `pop`, não `get`: o flag vale para UM turno. Com `get`, o `return
+        # False` logo abaixo (perda de ação) pulava os `pop` tardios da IA e o
+        # monstro perdia o movimento de novo no turno seguinte; e o caminho
+        # legado (sem ai_type) não tinha `pop` nenhum — o esqueleto atingido
+        # uma vez ficava imóvel para sempre.
+        if m.pop("turbilhao_perde_movimento", False):
             m["_water_moves_left"] = 0
             m["master_moves_left"] = 0
         if m.pop("turbilhao_perde_acao", False):
