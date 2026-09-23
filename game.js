@@ -8232,9 +8232,16 @@ function renderMap(state){
     cglow.addColorStop(0,'rgba(255,200,40,0.38)');
     cglow.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=cglow; ctx.fillRect(X,Y,CELL,CELL);
-    // Chest icon
-    ctx.font=`${Math.round(CELL*0.58)}px serif`;
-    ctx.fillText('🎁',X+CELL/2,Y+CELL/2);
+    // Imagem do baú (mesma arte da Arca de Tesouros). O emoji só aparece
+    // enquanto o PNG não carregou (ou se o arquivo faltar).
+    const chestImg=_getObjeto2DImg('bau.png');
+    if(chestImg){
+      const S=CELL*0.86;
+      ctx.drawImage(chestImg,X+(CELL-S)/2,Y+(CELL-S)/2,S,S);
+    } else {
+      ctx.font=`${Math.round(CELL*0.58)}px serif`;
+      ctx.fillText('🎁',X+CELL/2,Y+CELL/2);
+    }
     // Item count badge
     const total=(chest.items||[]).length+(chest.gold>0?1:0);
     if(total>0){
@@ -37989,48 +37996,12 @@ function buildChest3D(T, chest){
   grp.position.set(chest.pos[0], TH, chest.pos[1]);
   grp.userData.chestId = chest.id;
 
-  const woodMat = new T.MeshStandardMaterial({
-    color: new T.Color(0x4a2008), roughness: 0.95, metalness: 0.0
-  });
-  const metalMat = new T.MeshStandardMaterial({
-    color: new T.Color(0x9a7820), roughness: 0.30, metalness: 0.88
-  });
   const glowMat = new T.MeshStandardMaterial({
     color:    new T.Color(0xffaa00),
     emissive: new T.Color(0xffaa00),
     emissiveIntensity: 1.0,
     transparent: true, opacity: 0.40, depthWrite: false
   });
-
-  // Body
-  const body = new T.Mesh(new T.BoxGeometry(0.50, 0.22, 0.36), woodMat);
-  body.position.set(0, 0.11, 0);
-  body.castShadow = body.receiveShadow = true;
-  grp.add(body);
-
-  // Lid (slightly open — hinged at back)
-  const lid = new T.Mesh(new T.BoxGeometry(0.50, 0.11, 0.36), woodMat);
-  lid.position.set(0, 0.26, -0.09);
-  lid.rotation.x = -0.38;   // ~22° open
-  lid.castShadow = lid.receiveShadow = true;
-  grp.add(lid);
-
-  // Front metal strap
-  const strap = new T.Mesh(new T.BoxGeometry(0.52, 0.035, 0.035), metalMat);
-  strap.position.set(0, 0.14, 0.185);
-  grp.add(strap);
-
-  // Horizontal corner bands (top/bottom of body)
-  for(const y of [0.03, 0.20]){
-    const band = new T.Mesh(new T.BoxGeometry(0.52, 0.03, 0.38), metalMat);
-    band.position.set(0, y, 0);
-    grp.add(band);
-  }
-
-  // Lock hasp
-  const lock = new T.Mesh(new T.BoxGeometry(0.09, 0.09, 0.06), metalMat);
-  lock.position.set(0, 0.235, 0.19);
-  grp.add(lock);
 
   // Gold glow halo on the floor around the chest
   const glow = new T.Mesh(new T.PlaneGeometry(0.90, 0.90), glowMat);
@@ -38039,11 +38010,19 @@ function buildChest3D(T, chest){
   glow.userData.isChestGlow = true;
   grp.add(glow);
 
-  // O GLB substitui o baú geométrico provisório assim que terminar de carregar.
-  // A montagem antiga fica visível enquanto isso (e como fallback se o arquivo
-  // estiver indisponível), sem alterar a lógica de abrir/coletar tesouros.
+  // O baú é SÓ o GLB — não há mais baú geométrico provisório (as caixas de
+  // madeira/metal da primeira versão do jogo). Enquanto o arquivo carrega, só o
+  // halo dourado marca a casa. Com o GLB já em cache o callback roda
+  // SÍNCRONO, antes do chamador fazer scene.add(grp): por isso NÃO há guarda
+  // por `grp.parent` aqui — era ela que descartava o GLB de todo baú criado
+  // depois do primeiro, deixando o provisório na tela para sempre.
   _loadDecorGLB(T, 'assets/objetos/bau.glb', template => {
-    if (!template || !grp.parent) return;
+    if (!template) {
+      // Falha de rede: o renderMap3D reconstrói este baú quando a marca de erro
+      // sair do cache (_agendarRecargaArte).
+      grp.userData.chestSemGLB = true;
+      return;
+    }
     const inst = template.clone();
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
@@ -38068,8 +38047,6 @@ function buildChest3D(T, chest){
     wrap.userData.isChestGLB = true;
     wrap.scale.setScalar(scale);
     wrap.add(inst);
-    // Remove exclusivamente a geometria provisória; o halo dourado permanece.
-    [...grp.children].filter(child => !child.userData.isChestGlow).forEach(child => grp.remove(child));
     grp.add(wrap);
   });
 
@@ -39735,6 +39712,13 @@ function renderMap3D(state){
   // Add new chest meshes + update visibility
   for(const chest of chests){
     const key = `${chest.pos[0]},${chest.pos[1]}`;
+    // Baú cujo GLB falhou: refaz quando a retentativa limpar a marca de erro.
+    const antigo = g3.chestMeshes[chest.id];
+    if(antigo && antigo.userData.chestSemGLB
+       && _decorGLBCache['assets/objetos/bau.glb'] !== 'erro'){
+      g3.scene.remove(antigo);
+      delete g3.chestMeshes[chest.id];
+    }
     if(!g3.chestMeshes[chest.id]){
       const grp = buildChest3D(g3.T, chest);
       g3.scene.add(grp);
