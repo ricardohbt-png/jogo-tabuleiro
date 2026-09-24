@@ -123,6 +123,8 @@ console.log('\n[4] _somGolpe / _somDor');
   check('dor física em monstro → dor_criatura', f._somDor({ hit: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_criatura');
   tocados.length = 0;
   check('dano de fogo não usa dor (fica a síntese)', f._somDor({ hit: true, targetKey: 'm:9' }, { damageType: ['fire'] }) === false && tocados.length === 0);
+  tocados.length = 0;
+  check('dor física em prisioneiro → dor_heroi', f._somDor({ hit: true, targetKey: 'pr:singleton', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
 }
 
 console.log('\n[5] Fiação de combate');
@@ -132,6 +134,70 @@ check('cue adiado só toca sem amostra', /if\(f\.cueAdiado\)\{ if\(!tocouGolpe\)
 check('dor tenta amostra antes da síntese', /if\(fb\.cue && !_somDor\(c, fb\)\) _playCombatCue\('damage', fb\.cue\);/.test(GAME));
 check('2D (sem cena) também tenta amostra', /const tocou = _somGolpe\(\{/.test(GAME));
 check('_detectHpChanges tenta _somDor antes do cue sem cena', /if\(!_somDor\(\{hit:true, targetKey:key, targetPos: impact \|\| entry\.pos\}, \{damageType: primaryDamageType\}\)\) _playCombatCue\('damage', cue\);/.test(GAME));
+
+console.log('\n[6] _somMorteMonstro');
+{
+  const tocados = [], sintese = [];
+  const f = montar(['_somMorteMonstro'], {
+    SoundBank: SB,
+    sfx: (e) => { tocados.push(e); return true; },
+    _playDefeatSound: k => sintese.push(k),
+  });
+  f._somMorteMonstro({ type: 'goblin', pos: [1, 1] }, 'common');
+  check('goblin → morte_humanoide, sem síntese', tocados.join() === 'morte_humanoide' && sintese.length === 0);
+  tocados.length = 0;
+  f._somMorteMonstro({ type: 'elemental_fogo', pos: [1, 1] }, 'magic');
+  check('sem família → síntese antiga', tocados.length === 0 && sintese.join() === 'magic');
+}
+{
+  const sintese = [];
+  const f = montar(['_somMorteMonstro'], { SoundBank: SB, sfx: () => false, _playDefeatSound: k => sintese.push(k) });
+  f._somMorteMonstro({ type: 'goblin', pos: [1, 1] }, 'boss');
+  check('amostra ausente → síntese antiga', sintese.join() === 'boss');
+}
+
+console.log('\n[7] _capturarSonsDeEstado');
+{
+  const tocados = [];
+  const stubs = {
+    SoundBank: SB,
+    GS: { myPid: 'h1', doorSets: st => ({ open: new Set(st.abertas || []) }) },
+    sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
+    _sfxVisaoDe: () => new Set(['2,2', '4,4']),
+  };
+  // O snapshot `_sonsSnap` é estado de módulo do game.js: recriado aqui, com reset.
+  const src = extrair('_capturarSonsDeEstado');
+  const f = new Function(...Object.keys(stubs),
+    'let _sonsSnap = null;\n' + src + '\nreturn { _capturarSonsDeEstado, reset(){ _sonsSnap = null; } };')(...Object.values(stubs));
+  const st = (extra) => Object.assign({ players: [{ id: 'h1', pos: [0, 0], gold: 5, bag: [], gear: {}, level: 1 }],
+    monsters: [{ id: 'm1', type: 'goblin', hp: 5, pos: [2, 2] }], current_turn: 'x', abertas: [] }, extra);
+  f.reset();
+  f._capturarSonsDeEstado(st());
+  check('1º estado não toca', tocados.length === 0);
+  f._capturarSonsDeEstado(st({ current_turn: 'h1', abertas: ['4,4'] }));
+  const nomes = tocados.map(x => x[0]);
+  check('porta aberta e sua vez', nomes.includes('porta_abre') && nomes.includes('sua_vez'));
+  check('porta leva a posição', tocados.find(x => x[0] === 'porta_abre')[1][0] === 4);
+  tocados.length = 0;
+  f._capturarSonsDeEstado(st({ current_turn: 'h1', abertas: ['4,4'],
+    monsters: [{ id: 'm1', type: 'goblin', hp: 5, pos: [2, 2] }, { id: 'm2', type: 'lobo_cinzento', hp: 5, pos: [9, 9] }] }));
+  check('monstro fora da visão NÃO ruge', tocados.length === 0);
+  f._capturarSonsDeEstado(st({ current_turn: 'h1', abertas: ['4,4'],
+    monsters: [{ id: 'm1', type: 'goblin', hp: 5, pos: [2, 2] }, { id: 'm2', type: 'lobo_cinzento', hp: 5, pos: [4, 4] }] }));
+  check('ao entrar na visão ruge', tocados.map(x => x[0]).join() === 'rugido_fera');
+  tocados.length = 0;
+  f._capturarSonsDeEstado(st({ current_turn: 'h1', abertas: ['4,4'],
+    monsters: [{ id: 'm3', type: 'goblin', hp: 0, pos: [2, 2] }] }));
+  check('monstro morto não ruge', tocados.length === 0);
+}
+
+console.log('\n[8] Fiação de estado, morte e ambiente');
+check('morte sem cena usa _somMorteMonstro', /_spawnDefeatVisual\(anterior, kind\);\s*_somMorteMonstro\(anterior, kind\);/.test(GAME));
+check('morte com cena usa _somMorteMonstro', /onImpact: \[\(\) => \{ _spawnDefeatVisual\(anterior, kind\); _somMorteMonstro\(anterior, kind\); \}\]/.test(GAME));
+check('gameState chama _capturarSonsDeEstado', /_detectHpChanges\(msg\);[^\n]*\n\s*_capturarSonsDeEstado\(msg\);/.test(GAME));
+check('gameState garante o ambiente', /_capturarSonsDeEstado\(msg\);\s*\n\s*_ambienciaGarantir\(msg\);/.test(GAME));
+check('enterDungeon zera sons e toca escada', /GS\.on\('enterDungeon'[\s\S]{0,3000}_sonsReset\(\);\s*sfx\('escada'\);/.test(GAME));
+check('cityState para o ambiente e pré-carrega', /GS\.on\('cityState'[\s\S]{0,1500}_ambienciaParar\(\);\s*_sonsReset\(\);\s*_sfxPreCarregar\(\);/.test(GAME));
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
