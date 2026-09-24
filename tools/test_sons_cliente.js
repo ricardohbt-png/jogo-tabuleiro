@@ -200,5 +200,22 @@ check('cityState para o ambiente e pré-carrega (em try/catch)', /GS\.on\('cityS
 check('handleGameOver para o ambiente', /function handleGameOver\(msg\)\{\s*_ambienciaParar\(\);/.test(GAME));
 check('showScreen para o ambiente ao sair da masmorra/cidade', /if\(id !== 'screen-game' && id !== 'screen-city'\)\{[\s\S]{0,600}_ambienciaParar\(\);/.test(GAME));
 
+console.log('\n[9] Interface');
+const regs = GAME.match(/GS\.on\('serverError'/g) || [];
+check('um único GS.on(serverError)', regs.length === 1);
+check('o ouvinte único limpa a prévia do Ataque Giratório',
+  /GS\.on\('serverError', msg  => \{[\s\S]{0,300}_limparPreviewAtaqueGiratorio\(\)/.test(GAME));
+check('o ouvinte único toca recusa', /GS\.on\('serverError', msg  => \{[\s\S]{0,400}sfx\('recusa'\)/.test(GAME));
+check('clique delegado em botões', /closest\('button'\)[\s\S]{0,80}sfx\('clique'\)/.test(GAME));
+check('_ambienciaGarantir só roda com a tela da masmorra ativa',
+  /function _ambienciaGarantir\(state\)\{\s*if\(!document\.getElementById\('screen-game'\)\?\.classList\.contains\('active'\)\) return;/.test(GAME));
+check('reconnectFailed para o ambiente',
+  /GS\.on\('reconnectFailed', \(\) => \{[\s\S]{0,120}_ambienciaParar\(\);/.test(GAME));
+
+console.log('\n[10] Nenhum GS.on duplicado no game.js');
+const nomes = [...GAME.matchAll(/^GS\.on\('([A-Za-z_]+)'/gm)].map(m => m[1]);
+const dup = nomes.filter((n, i) => nomes.indexOf(n) !== i);
+check('sem duplicatas (GS.on substitui o anterior): ' + (dup.join(',') || 'ok'), dup.length === 0);
+
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
