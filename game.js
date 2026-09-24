@@ -40593,6 +40593,8 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   // Variantes de machado compartilham o mesmo modelo 3D do Machado Duplo.
   // A família é resolvida abaixo para também cobrir prata e futuros machados.
   machado: {path: 'assets/itens/machado.glb', layFlat: true, footprint: 0.78},
+  // Bordões e cajados compartilham a miniatura do bastão no chão.
+  bastao: {path: 'assets/itens/bastao.glb', layFlat: true, footprint: 0.78},
   // O mesmo modelo representa as variantes de espada no chão; nomes em
   // português e IDs do catálogo do servidor precisam apontar para o GLB.
   espada_curta: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
@@ -40626,7 +40628,11 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
 function _groundItemGlbConfig(gi){
   const itemId = String(gi?.item?.id || '').trim().toLowerCase();
   return _GROUND_ITEM_GLB_MODELS[itemId]
-    || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null);
+    || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null)
+    || ((itemId === 'staff' || itemId.startsWith('staff_')
+      || itemId === 'bordao' || itemId.startsWith('bordao_')
+      || itemId === 'cajado_madeira' || itemId.startsWith('cajado_madeira_'))
+      ? _GROUND_ITEM_GLB_MODELS.bastao : null);
 }
 
 function buildGroundItem3D(T, gi, animateDrop=false){
