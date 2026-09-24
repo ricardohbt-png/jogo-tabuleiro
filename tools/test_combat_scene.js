@@ -775,6 +775,36 @@ console.log("\n[34] Morte (Task 10): fiação em game.js");
   check("no laço 3D, _tickCombatScene roda ANTES da travessia que aplica a pose", iTick > 0 && iPose > iTick);
 }
 
+console.log("\n[35] Tremor visual curto para efeitos de área");
+CS.reset();
+CS.pulseShake(1000, 170, 0.025, 1.25);
+const acordeShake = CS.shake(1000);
+check("pulseShake cria um tremor ativo no instante do rompimento", acordeShake !== null);
+check("a amplitude do tremor pode permanecer sutil", Math.abs(acordeShake?.x || 0) <= 0.025 && Math.abs(acordeShake?.y || 0) <= 0.015);
+check("o tremor termina sozinho após a duração definida", CS.shake(1170) === null);
+
+console.log("\n[S1] impacto viaja da mensagem ao comando impact (sons)");
+{
+  // Nota: `configure` só lê overrides de cfg dentro de `opts.cfg` (ver [2]/[3]);
+  // `{ waitDieMs: 0 }` no nível de topo é ignorado e a cena travaria para
+  // sempre em ESPERANDO_DADO. Ajuste da linha de acionamento do teste; as
+  // duas checagens abaixo são as do plano, inalteradas.
+  CS.reset(); CS.configure({ cfg: { waitDieMs: 0 } });
+  CS.start({ ...START, attack_id: "snd1", impacto: "cortante" }, 0);
+  CS.result({ ...RESULT_HIT, attack_id: "snd1" }, 1);
+  let imp = null;
+  for (let t = 0; t < 3000 && !imp; t += 16) for (const c of CS.tick(t)) if (c.cmd === "impact") imp = c;
+  check("impact traz impacto=cortante", imp && imp.impacto === "cortante");
+
+  CS.reset(); CS.configure({ cfg: { waitDieMs: 0 } });
+  CS.start({ ...START, attack_id: "snd2", impacto: "lixo" }, 0);
+  CS.result({ ...RESULT_HIT, attack_id: "snd2" }, 1);
+  imp = null;
+  for (let t = 0; t < 3000 && !imp; t += 16) for (const c of CS.tick(t)) if (c.cmd === "impact") imp = c;
+  check("impacto inválido vira null", imp && imp.impacto === null);
+  CS.reset(); CS.configure({});
+}
+
 console.log("\n" + "=".repeat(50));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

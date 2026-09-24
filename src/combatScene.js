@@ -7,6 +7,9 @@
 (function (root) {
   'use strict';
 
+  // Som do golpe (spec 2026-09-23-sons): só viaja da mensagem até o `impact`.
+  const IMPACTOS = ['cortante', 'perfurante', 'contundente', 'natural'];
+
   const DEFAULT_CFG = {
     enabled: true,
     meleeRange: 1.5,
@@ -121,6 +124,7 @@
       dir,
       melee,
       projectile: pj, distCasas,
+      impacto: IMPACTOS.indexOf(msg.impacto) >= 0 ? msg.impacto : null,
       travelMs: pj ? travelMsDe(pj.kind, distCasas) : 0,
       launchAt: null,
       soImpacto: !!soImpacto,
@@ -209,6 +213,7 @@
       hit: !!(s.result && s.result.hit), crit: !!(s.result && s.result.crit),
       fumble: !!(s.result && s.result.fumble),
       projectile: s.projectile ? s.projectile.kind : null,
+      impacto: s.impacto,
       area: !!(s.projectile && s.projectile.area),
       area_raio: s.projectile ? s.projectile.area_raio : 0,
       feedbacks: s.impact.feedbacks.splice(0),   // emitido UMA vez
@@ -437,6 +442,12 @@
     shakes.push({ start: now, ms: D(cfg.crit.shakeMs), amp: cfg.crit.shakeAmp, seed: Math.random() * 6.28 });
   }
 
+  function pulseShake(now, ms = 160, amp = 0.025, seed = Math.random() * 6.28) {
+    if (!Number.isFinite(now)) return;
+    shakes.push({ start: now, ms: Math.max(1, Number(ms) || 160),
+      amp: Math.max(0, Number(amp) || 0), seed: Number.isFinite(seed) ? seed : 0 });
+  }
+
   function shake(now) {
     let x = 0, y = 0, any = false;
     for (let i = shakes.length - 1; i >= 0; i--) {
@@ -545,7 +556,7 @@
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
-    pendingFor, handoff, shake, isDying, areaImpactAt,
+    pendingFor, handoff, shake, pulseShake, isDying, areaImpactAt,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
     _ultimoLaunch: null, // só para testes: último comando `launch` emitido
