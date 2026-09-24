@@ -1495,6 +1495,18 @@ window.LANG_INTERFACE = {
     "en": "Ice elemental",
     "pt": "Elemental de gelo"
   },
+  "ui.somteste.ev.fumaca_puff": {
+    "en": "Smoke bomb — pop",
+    "pt": "Bomba de fumaça — estouro"
+  },
+  "ui.somteste.ev.fumaca_chiado": {
+    "en": "Smoke bomb — hiss",
+    "pt": "Bomba de fumaça — chiado"
+  },
+  "ui.somteste.ev.incendio": {
+    "en": "Incendiary (Greek fire, oil, incendiary bomb)",
+    "pt": "Incendiário (fogo grego, óleo, bomba incendiária)"
+  },
   "ui.audio.passos": {
     "en": "👣 Pawn movement",
     "pt": "👣 Movimento dos peões"

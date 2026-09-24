@@ -98,6 +98,38 @@ async def main():
           dd and dd[0].get("retaliacao_tipo") == "elemental_eletrico" and dd[0].get("retaliacao_pos") == [4, 3])
     check("damage_type continua o do elemento", dd and dd[0].get("damage_type") == "lightning")
 
+    print("\n[6] Bomba de fumaça: a zona se identifica como fumaça (visual_id)")
+    r = setup()
+    p = make_player("p1", "A", "rogue", 0); p["pos"] = [5, 5]; r.players = {"p1": p}
+    item = {"id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨", "item_slot": "bag", "effect": "throwable"}
+    p["bag"] = [item]
+    r._tem_linha_de_visao = lambda *a, **k: True
+    await r._throw_item_area(p, server.ARREMESSAVEIS["bomba_fumaca"], item, 7, 5)
+    zz = [z for z in r.zonas_especiais if z.get("tipo") == "escuridao"]
+    check("herói: zona com visual_id fumaca_*", len(zz) == 1 and str(zz[0].get("visual_id", "")).startswith("fumaca_") and zz[0]["cx"] == 7)
+    r = setup()
+    p = make_player("p1", "A", "warrior", 0); p["pos"] = [5, 5]; r.players = {"p1": p}
+    sold = make_monster(next(d for d in server.MONSTER_DEFS if d["type"] == "goblin"), {"id": 1, "cx": 2, "cy": 5})
+    sold["pos"] = [2, 5]; r.monsters = {sold["id"]: sold}
+    r._tem_linha_de_visao = lambda *a, **k: True
+    await r._monster_throw_item(sold, {"obj": p, "kind": "player"}, {"id": "bomba_fumaca"})
+    zz = [z for z in r.zonas_especiais if z.get("tipo") == "escuridao"]
+    check("monstro (Soldado): zona com visual_id fumaca_*", len(zz) == 1 and str(zz[0].get("visual_id", "")).startswith("fumaca_"))
+    ii = [m for m in r.pub if m.get("type") == "item_impacto"]
+    check("…e o aviso item_impacto sai para a bomba também", len(ii) == 1 and ii[0]["item_id"] == "bomba_fumaca")
+
+    print("\n[7] Monstro arremessa óleo/fogo grego (acerto em alvo) → item_impacto com hit")
+    for d20, esperado in ((20, True), (1, False)):
+        r = setup()
+        p = make_player("p1", "A", "warrior", 0); p["pos"] = [5, 5]; r.players = {"p1": p}
+        mob = make_monster(next(d for d in server.MONSTER_DEFS if d["type"] == "goblin"), {"id": 1, "cx": 3, "cy": 5})
+        mob["pos"] = [3, 5]; r.monsters = {mob["id"]: mob}
+        _o = server.random.randint; server.random.randint = rng(d20)
+        await r._monster_throw_item(mob, {"obj": p, "kind": "player"}, {"id": "fogo_grego"})
+        server.random.randint = _o
+        ii = [m for m in r.pub if m.get("type") == "item_impacto"]
+        check(f"d20={d20}: item_impacto fogo_grego com hit={esperado}", len(ii) == 1 and ii[0]["item_id"] == "fogo_grego" and ii[0]["hit"] is esperado and ii[0]["pos"] == [5, 5])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

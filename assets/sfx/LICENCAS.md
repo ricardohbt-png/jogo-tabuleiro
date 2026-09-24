@@ -123,3 +123,40 @@ de um arquivo com vários sons.
 | combate/explosao_3.ogg | Kenney Sci-Fi Sounds | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/sci-fi-sounds | lowFrequency_explosion_000.ogg + explosionCrunch_003.ogg | **derivado** — baque grave no tom 0,88 + estrondo (passa-baixa 2,6 kHz, ×0,6), 1,7 s com saída de 0,5 s |
 | combate/relampago_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_thunder_01.ogg | **derivado** — estalo do trovão, trecho 0,65–1,9 s |
 | combate/relampago_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_thunder_01.ogg | **derivado** — estalo do trovão, trecho 0,65–1,7 s, tom 1,15 |
+| combate/fumaca_puff_1.ogg | 100 CC0 SFX #2 + Kenney Impact Sounds | rubberduck + Kenney (kenney.nl) | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 + https://kenney.nl/assets/impact-sounds | sfx100v2_air_03.ogg + impactSoft_heavy_003.ogg | **derivado** — sopro no tom 0,55 com passa-baixa 1,8 kHz + baque macio |
+| combate/fumaca_puff_2.ogg | 100 CC0 SFX #2 + Kenney Impact Sounds | rubberduck + Kenney (kenney.nl) | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 + https://kenney.nl/assets/impact-sounds | sfx100v2_air_03.ogg + impactSoft_heavy_004.ogg | **derivado** — sopro no tom 0,5 com passa-baixa 1,8 kHz + baque macio |
+| combate/fumaca_chiado_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_misc_28.ogg | **derivado** — entrada de 0,08 s e saída de 1,2 s |
+| combate/fumaca_chiado_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_misc_22.ogg | **derivado** — trecho 0–2,6 s, entrada de 0,08 s e saída de 1,4 s |
+| combate/incendio_1.ogg | Kenney Sci-Fi Sounds + 100 CC0 SFX #2 + Fire Crackling | Kenney (kenney.nl) + rubberduck + AntumDeluge | CC0 1.0 | https://kenney.nl/assets/sci-fi-sounds + https://opengameart.org/content/100-cc0-sfx-2 + https://opengameart.org/content/fire-crackling | lowFrequency_explosion_001.ogg + sfx100v2_air_02.ogg + fire-1.ogg | **derivado** — estouro no tom 1,2 (0,45 s) + ignição (air_02, tom 0,8) + labaredas (fire-1, 0–1,7 s) |
+| combate/incendio_2.ogg | Kenney Sci-Fi Sounds + 100 CC0 SFX #2 + Fire Crackling | Kenney (kenney.nl) + rubberduck + AntumDeluge | CC0 1.0 | https://kenney.nl/assets/sci-fi-sounds + https://opengameart.org/content/100-cc0-sfx-2 + https://opengameart.org/content/fire-crackling | lowFrequency_explosion_000.ogg + sfx100v2_air_02.ogg + fire-1.ogg | **derivado** — estouro no tom 1,3 (0,5 s) + ignição (air_02, tom 0,75) + labaredas (fire-1, 1,5–3,2 s) |
+| combate/incendio_3.ogg | Kenney Sci-Fi Sounds + 100 CC0 SFX #2 + Fire Crackling | Kenney (kenney.nl) + rubberduck + AntumDeluge | CC0 1.0 | https://kenney.nl/assets/sci-fi-sounds + https://opengameart.org/content/100-cc0-sfx-2 + https://opengameart.org/content/fire-crackling | explosionCrunch_000.ogg + sfx100v2_air_02.ogg + fire-1.ogg | **derivado** — estouro no tom 0,8 (0,4 s) + ignição (air_02, tom 0,85) + labaredas (fire-1, 0,8–2,4 s) |
+| criaturas/rugido_fera_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr14.wav |  |
+| criaturas/rugido_fera_4.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr9.wav |  |
+| criaturas/rugido_humanoide_3.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | grunt_08.ogg |  |
+| criaturas/rugido_humanoide_4.ogg | 80 CC0 creature SFX | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creature-sfx | troll_03.ogg |  |
+| criaturas/rugido_morto_vivo_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade12.wav |  |
+| criaturas/rugido_morto_vivo_4.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade13.wav |  |
+| criaturas/rugido_reptil_inseto_3.ogg | 80 CC0 creature SFX | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creature-sfx | bug_03.ogg |  |
+| criaturas/rugido_reptil_inseto_4.ogg | 80 CC0 creature SFX | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creature-sfx | bug_04.ogg |  |
+| criaturas/rugido_grande_3.ogg | 80 CC0 creature SFX | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creature-sfx | roar_01.ogg |  |
+| criaturas/rugido_grande_4.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | roar_06.ogg |  |
+| criaturas/morte_fera_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr5.wav |  |
+| criaturas/morte_humanoide_3.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | human_04.ogg |  |
+| criaturas/morte_morto_vivo_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade6.wav |  |
+| criaturas/morte_reptil_inseto_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/slime/slime5.wav |  |
+| criaturas/morte_grande_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/giant/giant5.wav |  |
+| criaturas/dor_fera_1.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr1.wav |  |
+| criaturas/dor_fera_2.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr3.wav |  |
+| criaturas/dor_fera_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/gutteral beast/mnstr12.wav |  |
+| criaturas/dor_humanoide_1.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | human_01.ogg |  |
+| criaturas/dor_humanoide_2.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | human_05.ogg |  |
+| criaturas/dor_humanoide_3.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | human_07.ogg |  |
+| criaturas/dor_morto_vivo_1.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade1.wav |  |
+| criaturas/dor_morto_vivo_2.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade3.wav |  |
+| criaturas/dor_morto_vivo_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/shade/shade5.wav |  |
+| criaturas/dor_reptil_inseto_1.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | bug_05.ogg |  |
+| criaturas/dor_reptil_inseto_2.ogg | 80 CC0 creature SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/80-cc0-creture-sfx-2 | bug_08.ogg |  |
+| criaturas/dor_reptil_inseto_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/beetle/bite-small2.wav |  |
+| criaturas/dor_grande_1.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/ogre/ogre1.wav |  |
+| criaturas/dor_grande_2.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/ogre/ogre5.wav |  |
+| criaturas/dor_grande_3.ogg | RPG Sound Pack | artisticdude | CC0 1.0 | https://opengameart.org/content/rpg-sound-pack | NPC/giant/giant4.wav |  |

@@ -82,7 +82,7 @@ console.log('\n[4] _somGolpe / _somDor');
     { id: 'h2', gear: { off_hand: null } },
     { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
-  const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
+  const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave', '_familiaDaChave'], {
     SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
     GS: { gameState: estado },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
@@ -111,7 +111,7 @@ console.log('\n[4] _somGolpe / _somDor');
   [r, t] = golpe({ hit: false, impacto: null, targetPos: [1, 1], targetKey: 'p:h2' });
   check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
-    const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
+    const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave', '_familiaDaChave'], {
     SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
       GS: { gameState: estado },
       sfx: (e) => e !== 'golpe_critico',
@@ -124,7 +124,7 @@ console.log('\n[4] _somGolpe / _somDor');
   tocados.length = 0;
   check('dor física em herói → dor_heroi', f._somDor({ hit: true, targetKey: 'p:h1', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
   tocados.length = 0;
-  check('dor física em monstro → dor_criatura', f._somDor({ hit: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_criatura');
+  check('dor física em goblin → gemido da família (dor_humanoide)', f._somDor({ hit: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_humanoide');
   tocados.length = 0;
   check('dano de fogo em elemental de fogo → dor_elem_fogo', f._somDor({ hit: true, targetKey: 'm:e1', targetPos: [2, 2] }, { damageType: 'fire' }) && tocados[0][0] === 'dor_elem_fogo');
   tocados.length = 0;
@@ -300,21 +300,29 @@ console.log('\n[13] Explosão da Mina Terrestre (armadilha_disparo)');
   check('constante do código bate com o teste', /const SOM_DISPARO_ARMADILHA = \{ mina_terrestre: 'explosao' \};/.test(GAME) && /const ATRASO_IMPACTO_ARMADILHA_MS = 240;/.test(GAME));
 }
 
-console.log('\n[14] Explosão das granadas (herói: impact da cena; Soldado: item_impacto)');
+console.log('\n[14] Impacto de itens: granadas (explosão) e incendiários (estouro + labaredas)');
 {
   const CSJS = fs.readFileSync(path.join(raiz, 'src', 'combatScene.js'), 'utf8');
   const GSJS = fs.readFileSync(path.join(raiz, 'src', 'gameState.js'), 'utf8');
   check('impact da CombatScene carrega item_id', /function emitirImpacto[\s\S]{0,800}item_id: s\.projectile \? \(s\.projectile\.item_id \|\| null\) : null/.test(CSJS));
-  check('impact não-tardio toca a explosão do item', /const tocouGolpe = !c\.tardio && _somGolpe\(c\);\s*if\(!c\.tardio\) try\{ _somExplosaoItem\(c\.item_id, c\.targetPos\);[^}]*\}catch\(e\)\{\}/.test(GAME));
+  check('impact não-tardio toca o som do item (área sempre, alvo só no acerto)', /const tocouGolpe = !c\.tardio && _somGolpe\(c\);\s*if\(!c\.tardio\) try\{ _somExplosaoItem\(c\.item_id, c\.targetPos, c\.area \|\| c\.hit\);[^}]*\}catch\(e\)\{\}/.test(GAME));
+  check('sem cena (2D) também toca, pelo itemId guardado no start', /itemId: \(msg\.projectile && msg\.projectile\.item_id\) \|\| null/.test(GAME) && /_somExplosaoItem\(f\.itemId, msg\.target_pos, f\.area \|\| !!msg\.hit\)/.test(GAME));
   check('gameState repassa item_impacto', /case 'item_impacto':\s*(\/\/[^\n]*)?\s*_emit\('itemImpacto', msg\)/.test(GSJS));
-  check('game.js escuta itemImpacto', /^GS\.on\('itemImpacto', msg => \{ try\{ _somExplosaoItem\(msg && msg\.item_id, msg && msg\.pos\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  check('game.js escuta itemImpacto (com hit)', /^GS\.on\('itemImpacto', msg => \{ try\{ _somExplosaoItem\(msg && msg\.item_id, msg && msg\.pos, msg && msg\.hit !== false\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  const mapa = GAME.match(/const SOM_IMPACTO_ITEM = \{[\s\S]*?\};/)[0];
   const tocados = [];
-  const f = new Function('GS', 'sfx', "const ITENS_EXPLOSIVOS = new Set(['granada', 'granada_superior']);\n" + extrair('_somExplosaoItem') + '\nreturn _somExplosaoItem;')(
+  const f = new Function('GS', 'sfx', mapa + '\n' + extrair('_somExplosaoItem') + '\nreturn _somExplosaoItem;')(
     { isPreview: false }, (e, o) => { tocados.push([e, o.pos]); return true; });
   f('granada', [4, 4]); f('granada_superior', [1, 2]); f('bomba_fumaca', [1, 1]); f('frasco_acido', [1, 1]); f(null, null);
-  check('só as duas granadas explodem', tocados.map(x => x[0]).join() === 'explosao,explosao');
+  check('granadas explodem; fumaça e ácido não', tocados.map(x => x[0]).join() === 'explosao,explosao');
   check('na casa do impacto', tocados[0][1][0] === 4 && tocados[1][1][1] === 2);
-  check('conjunto do código bate com o teste', /const ITENS_EXPLOSIVOS = new Set\(\['granada', 'granada_superior'\]\);/.test(GAME));
+  tocados.length = 0;
+  f('bomba_incendiaria', [2, 2]); f('fogo_grego', [3, 3], true); f('frasco_oleo', [5, 5], true);
+  check('bomba incendiária, fogo grego e óleo: estouro + labaredas', tocados.map(x => x[0]).join() === 'incendio,incendio,incendio');
+  tocados.length = 0;
+  f('fogo_grego', [3, 3], false); f('frasco_oleo', [5, 5], false);
+  check('fogo grego / óleo que ERRAM não pegam fogo (sem som)', tocados.length === 0);
+  check('catálogo tem incendio com 3 versões', SB.SFX.incendio && SB.SFX.incendio.arquivos.length === 3);
 }
 
 console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação');
@@ -331,7 +339,7 @@ console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
   };
   const corpo = 'const ATRASO_DOR_ELEMENTAL_MS = 90; let _rugiram = new Set();\n'
-    + ['_familiaElementalDaChave', '_somAtaqueElemental', '_somRugidoAoAgir', '_somDor'].map(extrair).join('\n')
+    + ['_familiaElementalDaChave', '_familiaDaChave', '_somAtaqueElemental', '_somRugidoAoAgir', '_somDor'].map(extrair).join('\n')
     + '\nreturn { _somAtaqueElemental, _somRugidoAoAgir, _somDor, marcar: id => _rugiram.add(id) };';
   const f = new Function(...Object.keys(stubs), corpo)(...Object.values(stubs));
   check('raio do elemental elétrico → ataque_elem_eletrico', f._somAtaqueElemental({ attackerKey: 'm:e1', targetPos: [4, 3] }) && tocados.pop()[0] === 'ataque_elem_eletrico');
@@ -354,9 +362,9 @@ console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação
   f._somRugidoAoAgir('heroi_1');
   check('herói não ruge', tocados.length === 0);
   check('rugido ao agir ligado no start do attack_feedback', /_playCombatCue\('attack', \{repeatKey:'attack', volume:\.9\}\);\s*try\{ _somRugidoAoAgir\(msg\.attacker_id\); \}catch\(e\)\{\}/.test(GAME));
-  check('ataque elemental no impact da cena', /_somExplosaoItem\(c\.item_id, c\.targetPos\); _somAtaqueElemental\(c\);/.test(GAME));
+  check('ataque elemental no impact da cena', /_somExplosaoItem\(c\.item_id, c\.targetPos, c\.area \|\| c\.hit\); _somAtaqueElemental\(c\);/.test(GAME));
   check('ataque elemental também sem cena (2D)', /_somAtaqueElemental\(\{ attackerKey: _entityKeyById\(msg\.attacker_id\), targetPos: msg\.target_pos \}\)/.test(GAME));
-  check('rugido do estado marca o id; reset zera', /if\(e\.id != null\) _rugiram\.add\(String\(e\.id\)\);/.test(GAME) && /_rugiram = new Set\(\); \}/.test(GAME));
+  check('rugido do estado marca o id; reset zera', /if\(e\.id != null\) _rugiram\.add\(String\(e\.id\)\);/.test(GAME) && /_rugiram = new Set\(\);[^}]*\}/.test(GAME));
   check('diffSons manda o id no rugido', SB.diffSons(SB.diffSons(null, { monstros: [] }).snap, { monstros: [{ id: 'k', type: 'goblin', pos: [0, 0] }] }).eventos[0].id === 'k');
 }
 
@@ -432,6 +440,79 @@ console.log('\n[18] Choque da aura (retaliação) com o som do elemento');
   check('dado comum (sem retaliacao_tipo) ignorado', f._somRetaliacao({ type: 'dice_roll', value: 3 }) === false);
   check('ligado no GS.on(diceRoll)', /^GS\.on\('diceRoll', +msg +=> \{ _receberDadoVisual\(msg\); try\{ _somRetaliacao\(msg\); \}catch\(e\)\{\} \}\);/m.test(GAME));
   check('_somDor avisa a retaliação quando a dor do elemental toca', /sfx\('dor_' \+ famEl, \{pos\}\); _retaliacaoAposDor\(famEl\);/.test(GAME));
+}
+
+console.log('\n[19] Bomba de fumaça: nuvem guiada pela zona');
+{
+  let agora = 10000;
+  const tocados = [], timers = [];
+  const stubs = {
+    GS: { isPreview: false }, mode3D: true, g3: null,
+    performance: { now: () => agora },
+    CombatScene: { areaImpactAt: () => 10700 },
+    sfx: (e, o) => { tocados.push([e, o && o.pos && o.pos.join(',')]); return true; },
+    setTimeout: (fn, ms) => { timers.push([ms, fn]); return 1; },
+    _scheduleVisualFrame: () => 1,
+    _tickFumaca2D: () => {},
+  };
+  global.window.CombatScene = stubs.CombatScene;
+  const nomes = ['_ehZonaFumaca', '_fumacaReset', '_fumacaSync', '_fumacaAvancar', '_fumacaFase'];
+  const corpo = "const FUMACA_NASCER_MS = 1100, FUMACA_SAIR_MS = 1600, FUMACA_ANEL_MS = 450;\n"
+    + GAME.match(/const FUMACA_NOVELOS[^\n]*/)[0] + '\n'
+    + "const FUMACA_CORES = [1,2,3,4]; const _fumacaNuvens = new Map(); let _fumacaBaseline = true; let _fumaca2DRaf = null;\n"
+    + "function _fumacaDispose3D(n){ n.group = null; }\n"
+    + nomes.map(extrair).join('\n') + '\nreturn { ' + nomes.join(', ') + ', mapa: _fumacaNuvens };';
+  const f = new Function(...Object.keys(stubs), 'window', corpo)(...Object.values(stubs), { CombatScene: stubs.CombatScene });
+  const zona = (vid, extra) => Object.assign({ tipo: 'escuridao', ativa: true, cx: 5, cy: 4, raio: 1, duracao: 2, visual_id: vid }, extra);
+  check('zona da bomba é fumaça; Manto não é', f._ehZonaFumaca(zona('fumaca_p1_3_5_4')) && !f._ehZonaFumaca(zona('manto_x')) && !f._ehZonaFumaca(zona(null)));
+  f._fumacaSync({ round: 3, zonas_especiais: [zona('fumaca_p1_2_1_1', { cx: 1, cy: 1 })] });
+  const velha = f.mapa.get('fumaca_p1_2_1_1');
+  check('1º estado (entrou com a zona já ativa): nuvem nasce pronta e muda', velha && velha.somTocado && f._fumacaFase(velha, agora).nasc === 1);
+  f._fumacaSync({ round: 3, zonas_especiais: [zona('fumaca_p1_2_1_1', { cx: 1, cy: 1 }), zona('fumaca_p1_3_5_4')] });
+  const nova = f.mapa.get('fumaca_p1_3_5_4');
+  check('bomba desta rodada nasce na CHEGADA do frasco (areaImpactAt)', nova && nova.nasceEm === 10700 && !nova.somTocado);
+  f._fumacaAvancar(agora);
+  check('antes da chegada: sem som', tocados.length === 0 && f._fumacaFase(nova, agora).antes);
+  agora = 10710; f._fumacaAvancar(agora);
+  check('na chegada: puff na casa da bomba', tocados.map(x => x.join('@')).join() === 'fumaca_puff@5,4');
+  timers.find(t => t[0] === 120)[1]();
+  check('…e o chiado 120 ms depois', tocados[1] && tocados[1][0] === 'fumaca_chiado');
+  f._fumacaSync({ round: 4, zonas_especiais: [zona('fumaca_p1_3_5_4', { duracao: 1 })] });
+  check('última rodada: nuvem afina', nova.ultima === true && f._fumacaFase(nova, agora).alvo === Number(/FUMACA_OPACIDADE_FIM = ([\d.]+)/.exec(GAME)[1]));
+  check('zona que sumiu começa a se desfazer', velha.saiEm === agora);
+  agora += 1700; f._fumacaAvancar(agora);
+  check('depois de 1,6 s a nuvem desfeita é removida', !f.mapa.has('fumaca_p1_2_1_1') && f.mapa.has('fumaca_p1_3_5_4'));
+  f._fumacaReset();
+  check('reset (masmorra nova) limpa tudo', f.mapa.size === 0);
+  check('fumaça fora da névoa roxa do Manto', /zz\.filter\(z => z\.ativa && z\.tipo === 'escuridao' && !_ehZonaFumaca\(z\)\)/.test(GAME));
+  check('ligada no renderMap, no laço 3D e no desenho 2D', /_tempestadeSyncFromState\(state\);\s*_fumacaSync\(state\);/.test(GAME)
+    && /_updateArmadilhas3D\(now\);\s*_updateFumaca3D\(now\);/.test(GAME) && /_fumacaDraw2D\(ctx, state, _agoraRelampago\);/.test(GAME));
+  check('catálogo tem fumaca_puff e fumaca_chiado', SB.SFX.fumaca_puff && SB.SFX.fumaca_chiado && SB.SFX.fumaca_puff.arquivos.length === 2);
+}
+
+console.log('\n[20] Gemido de dano por família de criatura');
+{
+  const tocados = [], timers = [];
+  const estado = { monsters: [
+    { id: 'l', type: 'lobo_cinzento', pos: [1, 1] }, { id: 'z', type: 'zumbi_infectado', pos: [2, 2] },
+    { id: 'a', type: 'aranha_gigante', pos: [3, 3] }, { id: 'o', type: 'ogro_das_cavernas', pos: [4, 4] },
+    { id: 'b', type: 'boneco_treino', pos: [5, 5] } ] };
+  const stubs = { GS: { gameState: estado }, SoundBank: SB, _sfxPronto: () => true,
+    setTimeout: (fn, ms) => { timers.push(ms); fn(); }, ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
+    sfx: (e) => { tocados.push(e); return true; }, _combatPrimaryDamageType: t => t };
+  const f = montar(['_familiaElementalDaChave', '_familiaDaChave', '_somDor'], stubs);
+  const dor = k => { tocados.length = 0; timers.length = 0; f._somDor({ hit: true, targetKey: 'm:' + k, targetPos: [0, 0] }, { damageType: 'physical' }); return tocados[0]; };
+  check('lobo (fera) → dor_fera', dor('l') === 'dor_fera');
+  check('…90 ms depois do golpe (não encoberto)', timers[0] === 90);
+  check('zumbi → dor_morto_vivo', dor('z') === 'dor_morto_vivo');
+  check('aranha → dor_reptil_inseto', dor('a') === 'dor_reptil_inseto');
+  check('ogro → dor_grande', dor('o') === 'dor_grande');
+  check('boneco (sem voz) → dor_criatura genérico', dor('b') === 'dor_criatura');
+  check('fogo em lobo não geme (só dano físico)', (tocados.length = 0, f._somDor({ hit: true, targetKey: 'm:l' }, { damageType: 'fire' }) === false && tocados.length === 0));
+  for (const fam of SB.FAMILIAS) {
+    check(`${fam}: 4 aparições, 3 mortes, 3 gemidos`, SB.SFX['rugido_' + fam].arquivos.length === 4
+      && SB.SFX['morte_' + fam].arquivos.length === 3 && SB.SFX['dor_' + fam].arquivos.length === 3);
+  }
 }
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);

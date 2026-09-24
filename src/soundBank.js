@@ -32,7 +32,10 @@
     golpe_natural:     E(n('combate/golpe_natural', 3), 0.80, 60),
     golpe_critico:     E(n('combate/golpe_critico', 2), 0.70, 60),
     explosao:          E(n('combate/explosao', 3), 0.95, 150),
+    incendio:          E(n('combate/incendio', 3), 0.90, 150),
     relampago:         E(n('combate/relampago', 2), 0.85, 150),
+    fumaca_puff:       E(n('combate/fumaca_puff', 2), 0.85, 150),
+    fumaca_chiado:     E(n('combate/fumaca_chiado', 2), 0.55, 300),
     golpe_erro:        E(n('combate/golpe_erro', 3), 0.55, 60),
     escudo_bloqueio:   E(n('combate/escudo_bloqueio', 2), 0.75, 60),
     dor_heroi:         E(n('combate/dor_heroi', 3), 0.60, 120),
@@ -56,9 +59,12 @@
     amb_penumbra:      AMB('ambiente/amb_penumbra.ogg'),
     amb_ar_livre:      AMB('ambiente/amb_ar_livre.ogg'),
   };
+  // 4 aparições, 3 mortes e 3 gemidos de dano por família (o gemido era um só,
+  // `dor_criatura`, para todas — um lobo e um esqueleto gemiam igual).
   for (const f of FAMILIAS) {
-    SFX['rugido_' + f] = E(n('criaturas/rugido_' + f, 2), 0.75, 400);
-    SFX['morte_' + f] = E(n('criaturas/morte_' + f, 2), 0.70, 150);
+    SFX['rugido_' + f] = E(n('criaturas/rugido_' + f, 4), 0.75, 400);
+    SFX['morte_' + f] = E(n('criaturas/morte_' + f, 3), 0.70, 150);
+    SFX['dor_' + f] = E(n('criaturas/dor_' + f, 3), 0.65, 120);
   }
   for (const f of FAMILIAS_ELEMENTO) {
     SFX['rugido_' + f] = E(n('criaturas/rugido_' + f, 2), 0.75, 400);

@@ -7601,6 +7601,211 @@ function _tickArmadilhas2D(now){
   if(_armadilhaAnims.length) _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// BOMBA DE FUMAÇA — nuvem guiada pela zona (zonas_especiais, visual_id "fumaca_*")
+// ═══════════════════════════════════════════════════════════════════════════
+// A mecânica é a zona de escuridão de sempre; só o VISUAL é outro: em vez da
+// névoa roxa do Manto, uma nuvem de fumaça que (1) nasce quando o frasco chega
+// — anel rente ao chão + novelos que incham, com "puff" e chiado —, (2) fica
+// viva enquanto a zona existe, (3) afina na última rodada e (4) se desfaz para
+// cima quando a zona some. Vale para o herói e para o Soldado (mesma zona).
+const FUMACA_NASCER_MS = 1100, FUMACA_SAIR_MS = 1600, FUMACA_ANEL_MS = 450;
+// Opacidade medida no render (2026-09-24): com 0,5 e textura rala a nuvem só escurecia
+// o piso claro em ~13 níveis de cor — existia, mas não se via.
+const FUMACA_NOVELOS = 16, FUMACA_OPACIDADE = 0.85, FUMACA_OPACIDADE_FIM = 0.45;
+const FUMACA_CORES = [0x8a8f99, 0x9aa0a8, 0x7c828c, 0xa3a7ae];
+const _fumacaNuvens = new Map();       // visual_id -> nuvem
+let _fumacaBaseline = true;            // 1º estado após reset: zonas antigas nascem prontas e mudas
+let _fumaca2DRaf = null;
+let _fumacaTextura = null;             // textura de novelo (canvas), reusada
+
+function _ehZonaFumaca(z){ return !!(z && z.tipo === 'escuridao' && String(z.visual_id || '').startsWith('fumaca_')); }
+
+function _fumacaReset(){
+  for(const n of _fumacaNuvens.values()) _fumacaDispose3D(n);
+  _fumacaNuvens.clear();
+  _fumacaBaseline = true;
+}
+
+function _fumacaSync(state){
+  if(!state) return;
+  const now = performance.now();
+  const rodada = Number(state.round ?? state.round_num ?? 0) || 0;
+  const vivas = new Set();
+  for(const z of (state.zonas_especiais || [])){
+    if(!z.ativa || !_ehZonaFumaca(z)) continue;
+    const id = String(z.visual_id);
+    vivas.add(id);
+    let n = _fumacaNuvens.get(id);
+    if(!n){
+      const partes = id.split('_');
+      const rodadaCriada = Number(partes[partes.length - 3]);
+      const nova = !_fumacaBaseline && !GS.isPreview && rodadaCriada === rodada;
+      const pos = [Number(z.cx), Number(z.cy)];
+      const chegada = (nova && window.CombatScene && CombatScene.areaImpactAt) ? CombatScene.areaImpactAt(pos, now) : null;
+      let semente = (pos[0] * 73856093) ^ (pos[1] * 19349663) ^ (rodadaCriada * 83492791);
+      const rnd = () => { semente = (semente * 1103515245 + 12345) & 0x7fffffff; return semente / 0x7fffffff; };
+      const r = Math.max(1, Number(z.raio) || 1);
+      n = { id, cx: pos[0], cy: pos[1], raio: r,
+        nasceEm: nova ? Math.max(now, chegada || now) : now - FUMACA_NASCER_MS - FUMACA_ANEL_MS,
+        saiEm: null, ultima: false, group: null, somTocado: !nova,
+        novelos: Array.from({length: FUMACA_NOVELOS}, (_, i) => ({
+          dx: (rnd() * 2 - 1) * (r + 0.1), dz: (rnd() * 2 - 1) * (r + 0.1),
+          y: 0.15 + rnd() * 0.75, esc: 1.6 + rnd() * 0.9, giro: (rnd() * 2 - 1) * 0.35,
+          fase: rnd() * Math.PI * 2, atraso: i * 45, cor: FUMACA_CORES[i % FUMACA_CORES.length] })) };
+      _fumacaNuvens.set(id, n);
+    }
+    n.ultima = Number(z.duracao) <= 1;
+  }
+  for(const n of _fumacaNuvens.values())
+    if(!vivas.has(n.id) && n.saiEm == null) n.saiEm = now;
+  _fumacaBaseline = false;
+  if(!(mode3D && g3) && _fumacaNuvens.size && !_fumaca2DRaf) _fumaca2DRaf = _scheduleVisualFrame(_tickFumaca2D);
+}
+
+// Sons e limpeza são comuns a 2D e 3D (chamados pelo tick de cada modo).
+function _fumacaAvancar(now){
+  for(const [id, n] of _fumacaNuvens){
+    if(!n.somTocado && now >= n.nasceEm){
+      n.somTocado = true;
+      const pos = [n.cx, n.cy];
+      try{ sfx('fumaca_puff', {pos}); setTimeout(() => sfx('fumaca_chiado', {pos}), 120); }catch(e){}
+    }
+    if(n.saiEm != null && now - n.saiEm >= FUMACA_SAIR_MS){ _fumacaDispose3D(n); _fumacaNuvens.delete(id); }
+  }
+}
+
+// Estado de um instante: nascimento (0→1), opacidade-alvo e saída (0→1).
+function _fumacaFase(n, now){
+  const nasc = Math.max(0, Math.min(1, (now - n.nasceEm) / FUMACA_NASCER_MS));
+  const anel = Math.max(0, Math.min(1, (now - n.nasceEm) / FUMACA_ANEL_MS));
+  const saida = n.saiEm == null ? 0 : Math.max(0, Math.min(1, (now - n.saiEm) / FUMACA_SAIR_MS));
+  const alvo = n.ultima ? FUMACA_OPACIDADE_FIM : FUMACA_OPACIDADE;
+  return { antes: now < n.nasceEm, nasc, anel, saida, alvo };
+}
+
+function _fumacaTexturaNovelo(T){
+  if(_fumacaTextura) return _fumacaTextura;
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  // Várias manchas macias sobrepostas: borda irregular, miolo mais denso.
+  const bolhas = [[64,64,54,.85],[46,56,36,.6],[82,54,34,.6],[58,80,32,.55],[80,78,30,.55],[64,44,28,.5]];
+  for(const [bx, by, br, a] of bolhas){
+    const g = x.createRadialGradient(bx, by, 0, bx, by, br);
+    g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(.6, `rgba(255,255,255,${a * .45})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  }
+  _fumacaTextura = new T.CanvasTexture(c);
+  return _fumacaTextura;
+}
+
+function _fumacaBuild3D(n){
+  if(!g3?.scene || !g3.T || n.group) return;
+  const T = g3.T, group = new T.Group();
+  group.name = 'fumaca-' + n.id;
+  const tex = _fumacaTexturaNovelo(T);
+  for(const nv of n.novelos){
+    const mat = new T.SpriteMaterial({ map: tex, color: nv.cor, transparent: true, opacity: 0, depthWrite: false });
+    const sp = new T.Sprite(mat);
+    sp.userData.fumacaNovelo = nv;
+    group.add(sp);
+  }
+  const anel = new T.Mesh(new T.RingGeometry(0.2, 0.32, 40),
+    new T.MeshBasicMaterial({ color: 0xa9adb4, transparent: true, opacity: 0, depthWrite: false, side: T.DoubleSide }));
+  anel.rotation.x = -Math.PI / 2; anel.position.y = 0.05;
+  anel.userData.fumacaAnel = true;
+  group.add(anel);
+  const w = casaParaMundo(n.cx, n.cy);
+  group.position.set(w.x, 0, w.z);
+  g3.scene.add(group); n.group = group;
+}
+
+function _fumacaDispose3D(n){
+  const g = n && n.group; if(!g) return;
+  if(g.parent) g.parent.remove(g);
+  g.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });   // a textura é compartilhada: fica
+  n.group = null;
+}
+
+function _updateFumaca3D(now){
+  _fumacaAvancar(now);
+  if(!g3?.scene) return;
+  const vis = g3.spellVisibleSet;
+  for(const n of _fumacaNuvens.values()){
+    if(n.group && n.group.parent !== g3.scene){ _fumacaDispose3D(n); }
+    if(!n.group) _fumacaBuild3D(n);
+    const g = n.group; if(!g) continue;
+    const f = _fumacaFase(n, now);
+    g.visible = !f.antes && (!vis || vis.has(`${n.cx},${n.cy}`));
+    if(!g.visible) continue;
+    const easeNasc = 1 - Math.pow(1 - f.nasc, 3);
+    for(const o of g.children){
+      if(o.userData.fumacaAnel){
+        const s = 1 + f.anel * ((n.raio + 0.6) / 0.26 - 1);
+        o.scale.set(s, s, 1);
+        o.material.opacity = 0.6 * (1 - f.anel);
+        continue;
+      }
+      const nv = o.userData.fumacaNovelo; if(!nv) continue;
+      const loc = Math.max(0, Math.min(1, (now - n.nasceEm - nv.atraso) / FUMACA_NASCER_MS));
+      const eLoc = 1 - Math.pow(1 - loc, 3);
+      const resp = 1 + 0.06 * Math.sin(now / 900 + nv.fase);
+      const esc = nv.esc * (0.25 + 0.75 * eLoc) * resp * (1 + 0.3 * f.saida);
+      o.scale.set(esc, esc, 1);
+      o.position.set(nv.dx + Math.sin(now / 2600 + nv.fase) * 0.08,
+                     nv.y * (0.6 + 0.4 * easeNasc) + f.saida * 0.6,
+                     nv.dz + Math.cos(now / 2900 + nv.fase) * 0.08);
+      o.material.rotation = nv.fase + now / 1000 * nv.giro;
+      o.material.opacity = f.alvo * eLoc * (1 - f.saida);
+    }
+  }
+}
+
+// 2D: disco de fumaça por casa com borda esfumaçada; pulsa devagar enquanto
+// dura, nasce/some com a mesma linha do tempo do 3D.
+function _fumacaDraw2D(ctx, state, now){
+  if(!_fumacaNuvens.size) return;
+  for(const n of _fumacaNuvens.values()){
+    const f = _fumacaFase(n, now);
+    if(f.antes) continue;
+    const a = f.alvo * (1 - Math.pow(1 - f.nasc, 3)) * (1 - f.saida);
+    const puls = 1 + 0.05 * Math.sin(now / 900 + n.cx);
+    const cx = (n.cx + 0.5) * CELL, cy = (n.cy + 0.5) * CELL;
+    const r = (n.raio + 0.55) * CELL * puls * (0.35 + 0.65 * f.nasc) * (1 + 0.2 * f.saida);
+    ctx.save();
+    const grad = ctx.createRadialGradient(cx, cy, r * 0.15, cx, cy, r);
+    // Máx. ~65% no miolo: o peão por baixo fica meio encoberto, não some.
+    grad.addColorStop(0, `rgba(150,156,166,${a * 0.75})`);
+    grad.addColorStop(0.65, `rgba(130,136,146,${a * 0.6})`);
+    grad.addColorStop(1, 'rgba(120,126,136,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    if(f.anel < 1){
+      ctx.strokeStyle = `rgba(175,180,188,${0.6 * (1 - f.anel)})`;
+      ctx.lineWidth = CELL * 0.12;
+      ctx.beginPath(); ctx.arc(cx, cy, (0.3 + f.anel * (n.raio + 0.5)) * CELL, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function _tickFumaca2D(now){
+  _fumaca2DRaf = null;
+  _fumacaAvancar(now);
+  if(mode3D && g3) return;
+  if(!GS.gameState || !_fumacaNuvens.size) return;
+  renderMap(GS.gameState);
+  if(!_fumacaNuvens.size || _fumaca2DRaf) return;
+  // Nascendo/saindo: quadro a quadro. Parada: o pulsar é lento — ~8 quadros/s
+  // bastam, e redesenhar o mapa 2D a 60 fps por 2 rodadas seria caro à toa.
+  const animando = [..._fumacaNuvens.values()].some(n => {
+    const f = _fumacaFase(n, now); return f.antes || f.nasc < 1 || f.saida > 0 || !n.somTocado;
+  });
+  if(animando) _fumaca2DRaf = _scheduleVisualFrame(_tickFumaca2D);
+  else _fumaca2DRaf = setTimeout(() => { _fumaca2DRaf = _scheduleVisualFrame(_tickFumaca2D); }, 120);
+}
+
 function _receberAnimacaoArmadilha(msg){
   // Outros popups também usam trap_result; condições e quedas já possuem seus
   // próprios efeitos e não devem receber uma segunda animação de armadilha.
@@ -7894,6 +8099,7 @@ function renderMap(state){
   _syncProtecaoEnergiaState(state);
   _syncProtetorVisualState(state);
   _tempestadeSyncFromState(state);
+  _fumacaSync(state);
   _requiemFinalSyncFromState(state);
   _atualizarZonasMagia(state);   // zonas persistentes (Bola de Fogo) — vale p/ 2D e 3D
   if(mode3D){ renderMap3D(state); return; }
@@ -8865,6 +9071,7 @@ function renderMap(state){
     _habilidadeFxDraw2D(ctx, state, _animHabilidade, _agoraRelampago);
   for(const _animArmadilha of _armadilhaAnims)
     _armadilhaDraw2D(ctx, state, _animArmadilha, _agoraRelampago);
+  _fumacaDraw2D(ctx, state, _agoraRelampago);   // por cima dos peões: eles ficam meio encobertos
   _drawAttackFeedback2D(ctx, state, _agoraRelampago);
   // Números de dano/cura e resultado de derrota ficam no primeiro plano para
   // permanecerem legíveis mesmo quando uma magia atravessa a miniatura.
@@ -11704,7 +11911,7 @@ function _executarComandoCena(c){
   if(c.cmd !== 'impact') return;
   const now = performance.now();
   const tocouGolpe = !c.tardio && _somGolpe(c);
-  if(!c.tardio) try{ _somExplosaoItem(c.item_id, c.targetPos); _somAtaqueElemental(c); }catch(e){}
+  if(!c.tardio) try{ _somExplosaoItem(c.item_id, c.targetPos, c.area || c.hit); _somAtaqueElemental(c); }catch(e){}
   if(!c.tardio){
     // O golpe aconteceu: agora o banner legado pode mostrar ACERTO/ERRO/CRÍTICO
     // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
@@ -11762,6 +11969,7 @@ function _receiveAttackFeedback(msg){
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
       holyStrike:!!msg.holy_strike, holyLevel:Math.max(1,Math.min(3,Number(msg.holy_level)||1)), holyType:msg.holy_type||'holy', holyStrikeAt:msg.holy_strike&&!_cenaAtiva()?now+_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS):null,
       area:!!(msg.projectile && msg.projectile.area), impacto: msg.impacto || null,
+      itemId: (msg.projectile && msg.projectile.item_id) || null,
       result:false, startedAt:now, resultAt:now,
       prepDuration:_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS),
       resultDuration:_animationProgressDuration(ATTACK_FEEDBACK_RESULT_MS), group:null};
@@ -11786,6 +11994,7 @@ function _receiveAttackFeedback(msg){
         fumble: !!msg.natural_fumble, impacto: f.impacto, area: f.area,
         targetPos: msg.target_pos, targetKey: _entityKeyById(msg.target_id) });
       try{ _somAtaqueElemental({ attackerKey: _entityKeyById(msg.attacker_id), targetPos: msg.target_pos }); }catch(e){}
+      try{ _somExplosaoItem(f.itemId, msg.target_pos, f.area || !!msg.hit); }catch(e){}   // 2D: granada/incendiário
       if(!tocou && cue) _playCombatCue(cue.kind, cue.opts);
     }
     _drawAttackFeedbackTexture3D(f);
@@ -18392,7 +18601,8 @@ function _atualizarZonasMagia(state) {
     }
   }
   window._spellHL.camarasGas = gasTiles;
-  window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao')
+  // A fumaça da bomba tem visual próprio (nuvem): fica fora da névoa roxa do Manto.
+  window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao' && !_ehZonaFumaca(z))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 3, lado: z.area_lado || 0,
                                   visualId: z.visual_id || z.animation_id || z.id || null }));
   window._spellHL.silencio  = zz.filter(z => z.ativa && z.tipo === 'silencio')
@@ -22460,14 +22670,19 @@ function _somDisparoArmadilha(msg){
   setTimeout(() => sfx(ev, {pos}), ATRASO_IMPACTO_ARMADILHA_MS);
 }
 
-// ── Explosão de item arremessado (granadas) ───────────────────────────────
+// ── Som do impacto de item arremessado (granadas, incendiários) ────────────
 // Herói: no `impact` da CombatScene, quando o frasco chega à casa (o voo já
-// deu o tempo). Monstro (Soldado): pela mensagem pública `item_impacto`, sem
-// animação de voo — toca na hora.
-const ITENS_EXPLOSIVOS = new Set(['granada', 'granada_superior']);
-function _somExplosaoItem(itemId, pos){
-  if(!ITENS_EXPLOSIVOS.has(String(itemId || '')) || GS.isPreview) return false;
-  return sfx('explosao', {pos: Array.isArray(pos) ? pos : undefined});
+// deu o tempo). Monstro: pela mensagem pública `item_impacto`, sem animação de
+// voo — toca na hora. Itens de ÁREA soam sempre; os de acerto em alvo
+// (óleo, fogo grego) só quando acertam — `acertou` vem do impact/servidor.
+const SOM_IMPACTO_ITEM = {
+  granada: 'explosao', granada_superior: 'explosao',
+  bomba_incendiaria: 'incendio', fogo_grego: 'incendio', frasco_oleo: 'incendio',
+};
+function _somExplosaoItem(itemId, pos, acertou = true){
+  const ev = SOM_IMPACTO_ITEM[String(itemId || '')];
+  if(!ev || !acertou || GS.isPreview) return false;
+  return sfx(ev, {pos: Array.isArray(pos) ? pos : undefined});
 }
 
 // ── Som de baú — arpejo dourado curto (mesma infra WebAudio dos dados) ──────
@@ -26755,7 +26970,22 @@ function _somDor(c, fb){
   }
   if(_combatPrimaryDamageType(fb && fb.damageType || 'physical') !== 'physical') return false;
   const heroi = k.startsWith('p:') || k.startsWith('pr:');
+  // Monstro geme com a voz da família (fera rosna, morto-vivo lamenta, inseto
+  // chia...), também 90 ms depois do golpe. Sem família (boneco) ou sem
+  // amostra pronta: o gemido genérico de sempre.
+  const fam = heroi ? null : _familiaDaChave(k);
+  if(fam && _sfxPronto('dor_' + fam)){
+    setTimeout(() => sfx('dor_' + fam, {pos}), ATRASO_DOR_ELEMENTAL_MS);
+    return true;
+  }
   return sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos});
+}
+// 'm:<id>' → família de voz do monstro (humanoide, fera...); null se não houver.
+function _familiaDaChave(k){
+  if(!k.startsWith('m:') || !window.SoundBank) return null;
+  const id = k.slice(2);
+  const m = ((GS.gameState && GS.gameState.monsters) || []).find(x => String(x.id) === id);
+  return m ? SoundBank.familiaDe(m) : null;
 }
 // 'm:<id>' → 'elem_fogo' etc. quando o monstro é um elemental; senão null.
 // 'a:<id>' → idem para o elemental INVOCADO (servo animado com
@@ -26854,7 +27084,7 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); }
+function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
   _sonsPassosDeEstado(state);
@@ -39237,6 +39467,9 @@ function dispose3D(){
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
+  // As nuvens de fumaça continuam (a zona segue ativa); só os objetos da cena
+  // morrem com ela e são refeitos no próximo init3D/2D.
+  for(const n of _fumacaNuvens.values()) _fumacaDispose3D(n);
   g3.resizeObs.disconnect();
   if(g3.controls) g3.controls.dispose();
 
@@ -39723,6 +39956,7 @@ function startLoop3D(){
     // cada quadro, e não só durante a animação de conjuração.
     _animarChamasVivasPersistentes3D(now);
     _updateArmadilhas3D(now);
+    _updateFumaca3D(now);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
     if(g3.dustPts && g3.dustPts.visible &&
@@ -49274,7 +49508,7 @@ GS.on('sorteReacao', msg => {
 
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
 GS.on('armadilhaDisparo', msg => { try{ _somDisparoArmadilha(msg); }catch(e){} });
-GS.on('itemImpacto', msg => { try{ _somExplosaoItem(msg && msg.item_id, msg && msg.pos); }catch(e){} });
+GS.on('itemImpacto', msg => { try{ _somExplosaoItem(msg && msg.item_id, msg && msg.pos, msg && msg.hit !== false); }catch(e){} });
 GS.on('darknessEntered', msg => {
   queueTrapResult({
     tipo: 'escuridao', tipo_id: 'escuridao', nome: t('ui.status.escuridao'),

@@ -16901,7 +16901,10 @@ class GameRoom:
         # Zona (Bomba de FumaÃ§a = escuridÃ£o centrada no tile).
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
-            await self._aplicar_escuridao(p, raio=raio, duracao=zona.get("duracao", 2), pos=[cx, cy])
+            # visual_id "fumaca_*": o cliente desenha nuvem de fumaça (e não a
+            # névoa roxa do Manto de Escuridão) para esta zona.
+            await self._aplicar_escuridao(p, raio=raio, duracao=zona.get("duracao", 2), pos=[cx, cy],
+                                          visual_id=f"fumaca_{p['id']}_{self.round_num}_{cx}_{cy}")
 
         await self.push_state()
 
@@ -35798,6 +35801,9 @@ class GameRoom:
             hit = roll != 1 and (roll == 20 or roll + atk >= ac)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": T("dado.nome_item", nome=nome_criatura(m), item=defn['name']), "hit": hit, "crit": roll == 20})
+            # Aviso público (só som): frasco incendiário que acerta estoura em chamas.
+            await self.broadcast({"type": "item_impacto", "item_id": item.get("id"),
+                                  "pos": list(target["pos"]), "hit": hit})
             if not hit:
                 await self.gm_say(T("narracao.erra_o_arremesso_em", defn_get_emoji=defn.get('emoji', '🧪'), monstro=nome_criatura(m), target_get_name_target_g=nome_criatura(target)))
                 return
@@ -35852,7 +35858,8 @@ class GameRoom:
             await self.gm_say(T("narracao.sofre_de_dano_3", defn_get_emoji=defn.get('emoji', '💥'), alvo_get_name_alvo_get_n=nome_criatura(alvo), dmg=dmg))
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
-            await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"])
+            await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"],
+                                          visual_id=f"fumaca_{m['id']}_{self.round_num}_{target['pos'][0]}_{target['pos'][1]}")
 
     def _monster_e_conjurador(self, m):
         """True se o monstro tem conjuração na ficha (monster_spells não-vazio ou

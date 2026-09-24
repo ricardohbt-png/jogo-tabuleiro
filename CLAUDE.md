@@ -2727,6 +2727,14 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > agir. (4) `_familiaElementalDaChave` reconhece também o elemental **invocado** (`a:<id>`, servo
 > com `tipo:'elemental'` + `tipo_elemental`). (5) O raio do Elemental Elétrico em linha
 > (`spell_animation` `elemental_raio`) toca `relampago` (estalo de trovão) ao sair.
+> **Vozes das criaturas ampliadas (2026-09-24):** cada família (`humanoide`, `fera`,
+> `morto_vivo`, `reptil_inseto`, `grande`) tem 4 aparições, 3 mortes e — novo — **3 gemidos de
+> dano próprios** (`dor_<família>`; antes todo monstro gemia com o mesmo `dor_criatura`). A fera
+> usa os rosnados guturais do RPG Sound Pack (`NPC/gutteral beast`), o morto-vivo os lamentos das
+> sombras (`NPC/shade`), o grande ogro/gigante, o inseto chiados/estalos, o humanoide gemidos
+> humanos. `_somDor` resolve a família por `_familiaDaChave` e toca 90 ms depois do golpe (mesmo
+> motivo do elemental: no mesmo instante era encoberto); sem família (boneco) ou sem amostra,
+> `dor_criatura`. Teste: `tools/test_sons_cliente.js` [20].
 > **Subir de nível e objetivo — fanfarras (2026-09-24):** as vinhetas antigas (Kenney Music
 > Jingles PIZZI07/PIZZI03) terminavam em acorde **menor** e a de nível ainda descia 3,5 st —
 > soavam como falha. Trocadas por fanfarras CC0 medidas (contorno melódico + acorde final por
@@ -2734,6 +2742,28 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > no topo em Mi maior, 2,2 s); `objetivo_1` = trecho da *Just a random fanfare* (Spring Spring;
 > metais e pratos, sobe 24 st, Dó maior, 2,9 s). **Critério para som de "vitória":** ascendente
 > e acorde final maior — conferir antes de trocar, sem depender de ouvir.
+> **Incendiários (Fogo Grego, Frasco de Óleo, Bomba Incendiária):** evento `incendio` (3 versões
+> em `combate/incendio_*`: estouro curto e grave + "vuuush" de ignição + labaredas crepitando que
+> somem em ~1,6 s; montado de explosões da Kenney Sci-Fi + `air_02` + `fire-1`). O mapa
+> `SOM_IMPACTO_ITEM` (game.js, `item_id → evento`) substituiu o conjunto das granadas; área soa
+> sempre, acerto em alvo (óleo, fogo grego) só no **acerto** (`c.area || c.hit` no impact;
+> `f.area || msg.hit` no `result` sem cena, que agora guarda `itemId` — antes a granada ficava
+> muda no 2D). O arremesso de monstro com item de alvo também manda `item_impacto` com `hit`.
+> **Bomba de fumaça — nuvem (2026-09-24):** a zona continua sendo a `escuridao` de sempre
+> (mecânica intocada); o servidor só passa `visual_id="fumaca_<quem>_<rodada>_<cx>_<cy>"` nos dois
+> arremessos (`_throw_item_area` do herói e `_monster_throw_item` do Soldado). No cliente,
+> `_ehZonaFumaca` tira essas zonas da névoa roxa do Manto e `_fumacaSync` (no topo do
+> `renderMap`, 2D e 3D) mantém `_fumacaNuvens`: nasce na chegada do frasco
+> (`CombatScene.areaImpactAt`) com anel rente ao chão + 16 novelos (sprites com textura de canvas)
+> que incham, toca `fumaca_puff` e `fumaca_chiado` (+120 ms), fica viva enquanto a zona existir,
+> afina na última rodada (`duracao <= 1`) e se desfaz para cima em 1,6 s quando a zona some.
+> Zona já ativa no 1º estado ou de rodada anterior (entrar/reconectar) nasce pronta e muda
+> (`_fumacaBaseline` + rodada do `visual_id`). 3D em `_updateFumaca3D` (laço do `startLoop3D`);
+> 2D em `_fumacaDraw2D` (disco com borda esfumaçada, máx. ~65% no miolo), com tick a ~8 quadros/s
+> quando parada. Opacidade calibrada **medindo** o render (a 1ª versão só escurecia o piso claro
+> em 13 níveis). Nota: no 2D, monstro dentro de zona de escuridão já não era desenhado (regra
+> antiga, vale também para o Manto); no 3D ele aparece meio encoberto pela nuvem. Testes:
+> `tools/test_sons_cliente.js` [19], `tools/test_som_armadilha.py` [6].
 > **Choque da aura (Dano de Retaliação):** `_dano_retaliacao` manda no `dice_roll` também
 > `retaliacao_tipo` (tipo da criatura que retaliou) e `retaliacao_pos` (casa de quem levou o
 > choque). No cliente, `_somRetaliacao` (no `GS.on('diceRoll')`) toca `ataque_elem_<x>` quando
