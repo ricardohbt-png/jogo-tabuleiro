@@ -98,7 +98,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `animar_mortos` | `cadaver_id` (Pedro anima cadáver adjacente) |
 | `comandar_animados` | — (só no turno dos servos: todos os animados movem+atacam o monstro mais próximo automaticamente) |
 | `mover_animado` | `animado_id`, `dx`, `dy` (controle manual — 1 passo) |
-| `atacar_animado` | `animado_id`, `target_id` (controle manual — ataque) |
+| `atacar_animado` | `animado_id`, `target_id` opcional, `target_pos` opcional (controle manual — ataque; o Raio do Elemental Elétrico aceita uma casa vazia para escolher a direção e atinge todas as criaturas na linha) |
 | `libertar_prisioneiro` | — (herói adjacente liberta o prisioneiro; grava `rescuer_pid`). O prisioneiro (`prisoner`: CA10/mov6/7HP) é **controlado pelo resgatador**, não anda sozinho. |
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
 | `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
@@ -134,7 +134,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `guild_buy` | `item_id` — compra uma especialização/técnica na **Guilda dos Heróis** (id em `GUILD_CATALOG`). Só na cidade; valida classe, pré-requisito, posse e ouro; grava o save do personagem. |
 | `guild_equip` | `slot` (`tecnica`\|`tecnica_exclusiva`), `item_id` (ou `null` p/ desequipar) — equipa uma técnica possuída no 4º slot. Só na cidade. `tecnica_exclusiva` só para mago/clérigo e só técnicas `exclusiva:true`. |
 | `usar_tecnica` | `tecnica_id`, `target_id` opcional — ativa a técnica equipada na masmorra (no turno do herói). Valida equipada/fora de recarga/fome-sede; aplica efeito, debita 🍖/💧 e entra em recarga (`round_num + recarga_rodadas`). |
-| `usar_instrumento` | `target_id` opcional — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) mira 1 monstro; Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. Gaita (Improviso): rola 2d6 numa cascata que invoca a habilidade de outro instrumento; passos que exigem alvo/direção (Nota Cortante, Réquiem, Chamado) ficam enfileirados até o cliente responder com `improviso_alvo`. |
+| `usar_instrumento` | `target_id`/`dir` opcionais — o bardo (Henrique) ativa a habilidade do instrumento equipado na **mão do escudo** (`off_hand`; só se `tipo_item=="instrumento"` e `modo:"ativada"`). Nota Cortante (Harpa) exige uma direção ortogonal e atinge todos os monstros na linha até o alcance; paredes/portas bloqueiam sem ricochete. Sucesso em Reflexos reduz o dano à metade (arredondado para baixo, mínimo 1); Harpa Rúnica soma +2 à CD de Reflexos. Acorde Trovejante (Tambor) e Ecos Dolorosos (Sino) são auto-centrados; Sinfonia Heroica (Alaúde) é passiva (sem mensagem — reforça a Canção). Economia de ação: 2 mãos = atacar OU tocar; 1 mão = atacar E tocar; máx. 1 instrumento/turno (`instrumento_usado`, resetado no fim do turno). Custo em 🍖/💧 dos stats derivados; sem recarga. Gaita (Improviso): rola 2d6 numa cascata que invoca a habilidade de outro instrumento; passos que exigem alvo/direção (Nota Cortante ortogonal, Réquiem, Chamado) ficam enfileirados até o cliente responder com `improviso_alvo`. |
 | `improviso_alvo` | `target_id` opcional, `dir` opcional — resolve um passo pendente do Improviso (Gaita) que precisa de alvo/direção: mira um monstro (Nota Cortante/Réquiem) ou escolhe direção (Chamado); o servidor processa a fila FIFO (`improviso_pendente`). |
 | `claim_role` | `role` (`"master"`\|`"hero"`) — no lobby, um jogador assume/solta o papel de **Mestre** (Modo Mestre Jogador). Mestre: `class_id=None`, não conta no teto de 6 heróis, não escolhe classe. |
 | `mestre_set_modo` | `monster_ids[]`, `modo` (`auto`\|`semi`\|`manual`) — o mestre troca o modo de controle de 1+ monstros (base da Seleção em Lote). Só na masmorra. |
@@ -821,7 +821,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `_cobrar_manutencao_requiem` (-2🍖/-2💧 no turno do bardo; sem recursos encerra).
 > `_encerrar_requiem` (idempotente) chamado em morte do alvo/bardo, quebra de concentração,
 > sem recursos, desequipar, recast e toggle. Cliente: mira como Nota Cortante (ou toggle-off
-> se já ativo) + banner de status roxo em `renderMyPanel`. Fase 4 Rúnico: Violino Rúnico dá
+> se já ativo) + banner de status roxo em `renderMyPanel`. Animação visual: notas carmesim
+> orbitam o alvo nos modos 2D/3D durante a sustentação; no turno em que o alvo falha Vontade,
+> o enxame converge no impacto. Eventos `spell_animation` start/attack/end acompanham a ativação,
+> dano e todos os caminhos de encerramento sem alterar a mecânica. Fase 4 Rúnico: Violino Rúnico dá
 > -1 Vontade ao alvo. Testes: `tools/test_instrumentos_bardo.py`.
 
 > **Fase 4a (Origens Élfica/Anã):** popula o eixo Origem (plumbado desde a Fase 1). Afixos por
@@ -862,6 +865,11 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `_alaude_runico_resist` soma +1 em Fortitude/Vontade aos aliados sob a Canção (via `_testar_save`,
 > escopo amplo; "sob a Canção" = chave `buffs_cancao` presente). Fase 5: Improviso/Gaita. Testes:
 > `tools/test_instrumentos_bardo.py`.
+
+> **Animação da Nota Cortante:** o servidor emite `spell_animation` após validar alvo/linha, sem
+> interferir na resolução; `game.js` desenha a lâmina de vento atravessando o trajeto e a clave de
+> sol dissonante no impacto, tanto em 2D quanto em 3D. Harpa Rúnica anima cada alvo da linha em
+> sequência espacial. Testes: `tools/test_instrumentos_bardo.py`.
 
 > **Fase 5 (Improviso/Gaita):** fecha o roadmap dos instrumentos. Base nova `gaita` (🪗, 1 mão,
 > ativada, custo 3🍖/3💧) com a habilidade **Improviso**: `_instr_improviso` rola uma cascata 2d6
@@ -2582,3 +2590,99 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > mesma classe do vento da Tempestade. Vale para neve autoral também. Testes:
 > `tools/test_chamado_inverno.py` (17) e `tools/test_chamado_inverno_cliente.js` (9, extrai
 > `bfsReachable`/`findPath` reais com stubs de `_walkable`).
+
+> **Cajado Arcano nas 5 magias de terreno (2026-09-17):** o `staff` promete "+1 quadrado em
+> cada dimensão" a toda magia de área, mas Ira da Rocha Ardente, Tempestade de Ciclones,
+> Definhar, Senhor das Águas e Prisão de Chamas o ignoravam no servidor — e a prévia verde do
+> cliente, com o cajado equipado, usava `_cajadoArcanoAreaLado` (`area_lado + 1`, cego ao
+> nível) em vez do lado por nível: a lava da Ira crescia e a prévia ficava em 4x4. Agora há
+> **dois helpers** no servidor: `_cajado_arcano_area_lado` (devolve o lado inteiro — Manto,
+> Clarividência, Silêncio, Chamado do Inverno e as magias de `area_raio`) e
+> `_cajado_arcano_area_bonus` (0/1 **aditivo** ao lado por nível/escolha — os 5 preflights de
+> terreno; na Prisão soma DEPOIS de validar o 2/3/4 escolhido, que é o que o cliente envia via
+> `_prisaoChamasLadoEscolhido`, nunca `mode.areaLado`). Cliente: `_areaLadoMiraMagia` (puro,
+> extraído de `_iniciarModoMagia`) + `MAGIAS_AREA_CAJADO_ADITIVO` + `_cajadoArcanoAreaBonus`
+> (espelho só pelo `tipo`, porque a Prisão não tem `area_lado` no catálogo). Magia de área
+> nova: somar o bônus no preflight E na prévia. Testes: `tools/test_ira_rocha_ardente.py`
+> [12] e `tools/test_ira_rocha_cliente.js` [6].
+
+> **Ataque Giratório da Guilda (2026-09-21):** nova técnica universal de recarga de 6
+> rodadas, custo extra de 4🍖/4💧 e preço intermediário 220 (entre os tiers de 5 e 8
+> rodadas). Consome a ação principal, faz um único d20 compartilhado pelos alvos e rola
+> o dano separadamente por inimigo nos quatro quadrados ortogonais adjacentes, incluindo
+> footprints grandes uma única vez. Permite desarmado e armas arremessáveis sem arremessá-las;
+> rejeita arcos/bestas e outros projéteis. Executor autoritativo em `server.py`, catálogo e
+> traduções gerados, com regressão em `tools/test_ataque_giratorio.py`.
+
+> **Redemoinho da Morte (2026-09-21):** evolução do Ataque Giratório, exclusiva do Guerreiro
+> Anão e dependente da técnica anterior. O menu permite escolher 1 giro (4🍖/4💧, recarga 6),
+> 2 giros (8🍖/8💧, recarga 8) ou 3 giros (14🍖/14💧, recarga 10); o terceiro exige a
+> especialização `guerreiro_furia_3` (Fúria Berserker III). A sequência consome uma única
+> ação e reavalia os inimigos adjacentes a cada giro. Preço: 350🪙, igual ao tier de 10
+> rodadas. Cliente envia a quantidade escolhida em `usar_tecnica.ataques`.
+
+> **Animação do giro (2026-09-21):** `attack_feedback` de Ataque Giratório/Redemoinho
+> carrega `spin_id`, `spin_index`, `spin_count` e `ability_id`; o cliente agrupa os alvos
+> pelo `spin_id` para girar o peão uma única vez por varredura. O 3D aplica 360° ao peão
+> após a pose do `CombatScene`, com anel e quatro rastros radiais; o 2D gira o sprite e
+> desenha cortes/anel equivalentes. Redemoinho da Morte usa aura vermelho-sangue distinta.
+
+> **Golpe Sagrado — corte de luz no ataque 3D:** o `attack_feedback start` de um ataque
+> corpo a corpo carrega `holy_strike` quando o buff está ativo. O corte inicia ao entrar
+> na fase `GOLPE` da `CombatScene`, junto do avanço do peão; `impact` é fallback. O acerto mostra glifo no alvo, enquanto o erro só mostra o
+> arco. O nível vai no feedback visual: nível 2 aumenta faixa/brilho em 20%, nível 3 em
+> 40%, nos renderizadores 2D/3D. Após acerto no nível 3, o prenúncio visual do Raio Divino
+> começa 84 ms após o início do arco e o feixe chega ao alvo em 210 ms (metade do arco),
+> sem disparar magia, dano ou dado. As faixas 3D
+> usam geometria dinâmica com `frustumCulled=false` e atualizam a bounding sphere; não
+> deixar geometrias vazias serem renderizadas antes do golpe e depois
+> mudar seus vértices sem invalidar os limites, pois o frustum pode ocultá-las no tabuleiro.
+
+> **Cores semânticas dos dados de dano (2026-09-22):** `dice_roll.damage_type` escolhe a
+> paleta em `VC.dice.damageTypeVariants` (`src/visualConfig.js`), compartilhada pela rolagem
+> 2D/3D. Físico usa grafite/preto com números marfim e contorno escuro; fogo vermelho, frio
+> azul, ácido verde, veneno roxo, eletricidade amarela e sagrado/luz dourado. D20 de ataque,
+> cura, regeneração e dano sem um dos tipos mapeados mantêm o tema anterior; rótulos e ícones
+> permanecem. Ao acrescentar rolagem de dano, enviar `damage_type` canônico no `dice_roll`;
+> não inferir pelo texto localizado do rótulo. Tipos ainda sem paleta (ex.: água/som) caem na
+> cor do formato do dado.
+
+> **Sons e efeitos sonoros (2026-09-24):** 68 amostras CC0 em `assets/sfx/<grupo>/`
+> (`combate`, `exploracao`, `criaturas`, `interface`, `ambiente`; origem e licença de cada
+> arquivo em `assets/sfx/LICENCAS.md`) para combate físico, exploração/loot, criaturas,
+> interface e ambiente; as magias seguem sintetizadas. **`src/soundBank.js`** (puro,
+> `window.SoundBank`) guarda o catálogo `SFX` (`evento → {arquivos, volume, intervaloMs,
+> pitchJitter, volJitter, canal}`), `familiaDe` (tipo de monstro → humanoide/fera/morto_vivo/
+> reptil_inseto/grande; `null` = sem voz, ex. elementais e bonecos), `audibilidade` (fora da
+> visão: 0,35, abafado, sem pan; mestre nunca abafado; `visao=null` = sem névoa, Set vazio =
+> tudo na névoa), `escolherVariante`, `criarLimitador` (intervalo por evento, teto 8
+> simultâneos — o novo é descartado) e `diffSons` (porta/ouro/bolsa/equipar/poção/nível/
+> turno/objetivo/rugido por diferença de estado; o chamador passa `prev=null` a cada
+> masmorra nova; largar poção no chão toca "beber" — falso positivo aceito). No `game.js`,
+> **`sfx(evento, {pos})`** devolve `true` quando tratou o som e `false` quando não há
+> amostra pronta — aí o chamador toca a síntese antiga (`_playCombatCue`,
+> `_playDefeatSound`): nada fica mudo. Variante não carregada cai numa irmã já pronta. O pan
+> é pela projeção na câmera (a câmera orbita). Ganchos: golpe/erro/escudo/dor no `impact`
+> da `CombatScene` (e no `result` sem cena), dor também no dano físico sem cena
+> (`_detectHpChanges`), morte em `_somMorteMonstro`, estado em `_capturarSonsDeEstado`
+> (dentro de try/catch — som nunca pode derrubar a atualização de estado), clique delegado
+> em botões, recusa no `serverError`. Ambiente: `_ambienciaGarantir(state)` (idempotente, a
+> cada `game_state`, só com `#screen-game` ativo) toca o loop do preset `ambiente`;
+> `_ambienciaParar` em `cityState`, `showScreen` fora da masmorra, `handleGameOver` e
+> `reconnectFailed`. Servidor: só o campo opcional **`impacto`** (`cortante|perfurante|
+> contundente|natural`) no `attack_feedback start`, por `_impacto_de` ao lado de
+> `_projetil_de` (herói pela `categoria` da arma, desarmado/sem categoria → `contundente`;
+> monstro: nome natural > categoria > nome da arma > `contundente`), inclusive no Ataque
+> Giratório. **Ausência do campo = "não é golpe físico"** (só ataque elemental de monstro e
+> item arremessado): o cliente então não toca golpe nem *whoosh* e deixa a síntese do
+> elemento. Golpe que mata não toca dor (a morte toca no lugar); falha de rede no carregar
+> tem 1 nova tentativa (404 não). **`GS.on`
+> substitui o ouvinte anterior** — havia dois `GS.on('serverError')` e o primeiro (limpar a
+> prévia do Ataque Giratório) nunca rodava; foram fundidos, e `tools/test_sons_cliente.js`
+> [10] proíbe `GS.on` duplicado. Trocar um som = trocar o arquivo; volume = número no
+> catálogo; preparar um arquivo novo: `python tools/preparar_sfx.py <origem> <destino>`
+> (`--loop`, `--ss/--to`, `--pitch`). Provado em partida (sala de teste do editor):
+> ambiente, golpe, erro, crítico, dor, morte, clique e recusa tocam uma vez cada; 68
+> arquivos decodificam sem erro. Testes: `tools/test_sound_bank.js`,
+> `tools/test_sons_cliente.js`, `tools/test_sons_impacto.py`, `tools/test_sfx_arquivos.js`.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-09-23-sons-efeitos-sonoros*`.
