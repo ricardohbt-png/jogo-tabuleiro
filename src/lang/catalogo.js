@@ -546,6 +546,14 @@ window.LANG_CATALOGO = {
     "en": "Sure Aim III",
     "pt": "Mira Certeira III"
   },
+  "cat.guilda.guarda_maxima.desc": {
+    "en": "Passive. While equipped, doubles the armor bonus and damage reduction of all shields.",
+    "pt": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos."
+  },
+  "cat.guilda.guarda_maxima.nome": {
+    "en": "Maximum Guard",
+    "pt": "Guarda Máxima"
+  },
   "cat.guilda.ladino_armadilha_incendiaria.desc": {
     "en": "Permanently unlocks crafting the Incendiary Trap.",
     "pt": "Desbloqueia permanentemente a fabricação de Armadilha Incendiária."
@@ -1370,6 +1378,14 @@ window.LANG_CATALOGO = {
     "en": "Holy Strike II",
     "pt": "Ataque Sagrado II"
   },
+  "cat.guilda.paladino_ataque_sagrado_3.desc": {
+    "en": "Holy Strike deals +2d8 holy and +1d8 fire, ice, lightning or holy chosen per attack.",
+    "pt": "Golpe Sagrado causa +2d8 sagrado e +1d8 de fogo, gelo, eletricidade ou sagrado escolhido por ataque."
+  },
+  "cat.guilda.paladino_ataque_sagrado_3.nome": {
+    "en": "Holy Strike III",
+    "pt": "Ataque Sagrado III"
+  },
   "cat.guilda.paladino_cura_maos_2.desc": {
     "en": "Lay on Hands heals 2d6 + STR.",
     "pt": "Imposição das Mãos cura 2d6 + FOR."
@@ -1506,6 +1522,14 @@ window.LANG_CATALOGO = {
     "en": "Coordinated Attack",
     "pt": "Ataque Coordenado"
   },
+  "cat.guilda.tecnica_ataque_giratorio.desc": {
+    "en": "Main action. Make one attack roll against every enemy in the four orthogonally adjacent squares; roll damage separately for each hit. Cannot use ranged weapons or throw the weapon.",
+    "pt": "Ação principal. Faz uma única jogada de ataque contra todos os inimigos nos quatro quadrados ortogonais adjacentes; cada acerto rola o dano separadamente. Não funciona com armas à distância nem arremessa a arma."
+  },
+  "cat.guilda.tecnica_ataque_giratorio.nome": {
+    "en": "Spinning Attack",
+    "pt": "Ataque Giratório"
+  },
   "cat.guilda.tecnica_contra_ataque.desc": {
     "en": "Until your next turn, whenever an enemy misses you (with a melee/reach weapon or hand crossbow, and it's within range), you strike back.",
     "pt": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta."
@@ -1601,6 +1625,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.tecnica_pressao_constante.nome": {
     "en": "Constant Pressure",
     "pt": "Pressão Constante"
+  },
+  "cat.guilda.tecnica_redemoinho_morte.desc": {
+    "en": "Choose 1, 2, or 3 Spinning Attacks. Costs 4/8/14 hunger and thirst and recharges in 6/8/10 rounds. The 3-attack option requires Berserker Fury III.",
+    "pt": "Escolha 1, 2 ou 3 Ataques Giratórios. Custa 4/8/14 de fome e sede e recarrega em 6/8/10 rodadas. A opção de 3 exige Fúria Berserker III."
+  },
+  "cat.guilda.tecnica_redemoinho_morte.nome": {
+    "en": "Death Whirlwind",
+    "pt": "Redemoinho da Morte"
   },
   "cat.guilda.tecnica_resistencia_absoluta.desc": {
     "en": "Gain +2 to all saving throws for 2 rounds.",
@@ -1731,8 +1763,8 @@ window.LANG_CATALOGO = {
     "pt": "Fortalecer Magia"
   },
   "cat.habilidade.furia_berserker.desc": {
-    "en": "Extra attack this turn with active abilities",
-    "pt": "Ataque extra neste turno com habilidades ativas"
+    "en": "Extra attack this turn with active abilities; Berserker Fury III lets you choose 2 or 3 attacks",
+    "pt": "Ataque extra neste turno com habilidades ativas; Fúria Berserker III permite escolher 2 ou 3 ataques"
   },
   "cat.habilidade.furia_berserker.nome": {
     "en": "Berserker Fury",

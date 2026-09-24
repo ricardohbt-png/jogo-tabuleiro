@@ -137,6 +137,18 @@ window.LANG_ERROS = {
     "en": "Main action already used this turn.",
     "pt": "Ação principal já usada neste turno."
   },
+  "erro.ataque_giratorio_nao_funciona_a_distancia": {
+    "en": "Spinning Attack requires a melee weapon or no weapon; ranged weapons cannot use it.",
+    "pt": "O Ataque Giratório exige uma arma corpo a corpo ou nenhum armamento; armas à distância não podem usá-lo."
+  },
+  "erro.redemoinho_morte_nivel_invalido": {
+    "en": "Choose 1, 2, or 3 spinning attacks.",
+    "pt": "Escolha 1, 2 ou 3 ataques giratórios."
+  },
+  "erro.redemoinho_morte_requer_furia_iii": {
+    "en": "Three spinning attacks require Berserker Fury III.",
+    "pt": "Três ataques giratórios exigem Fúria Berserker III."
+  },
   "erro.adicione_heroi_e_monstro_teste": {
     "en": "Add at least one test hero and one monster to start the combat.",
     "pt": "Adicione ao menos um herói de teste e um monstro para iniciar o combate."
@@ -706,8 +718,8 @@ window.LANG_ERROS = {
     "pt": "Escolha uma casa adjacente para o baú."
   },
   "erro.escolha_uma_direcao_para_a_nota_cortante": {
-    "en": "Choose a direction for the runic Cutting Note.",
-    "pt": "Escolha uma direção para a Nota Cortante rúnica."
+    "en": "Choose one of the four orthogonal directions for Cutting Note.",
+    "pt": "Escolha uma das quatro direções ortogonais para a Nota Cortante."
   },
   "erro.escolha_uma_direcao_para_o_chamado": {
     "en": "Choose a direction for the General's Call.",
@@ -860,6 +872,14 @@ window.LANG_ERROS = {
   "erro.golpe_sagrado_ja_esta_ativo": {
     "en": "Holy Strike is already active.",
     "pt": "Golpe Sagrado já está ativo."
+  },
+  "erro.golpe_sagrado_nivel_indisponivel": {
+    "en": "Holy Strike level {nivel} is not unlocked.",
+    "pt": "O nível {nivel} do Golpe Sagrado ainda não foi desbloqueado."
+  },
+  "erro.golpe_sagrado_tipo_extra_invalido": {
+    "en": "At level 3, choose fire, ice, lightning or holy damage.",
+    "pt": "No nível 3, escolha dano de fogo, gelo, eletricidade ou sagrado."
   },
   "erro.guerreiro_da_luz_permite_atributos_ativos": {
     "en": "Warrior of Light allows {max_atributos} active attribute(s) — upgrade at the Guild.",
@@ -1180,6 +1200,10 @@ window.LANG_ERROS = {
   "erro.nao_ha_uma_tempestade_de_ciclones_ativa": {
     "en": "There is no active Cyclone Storm waiting for placement.",
     "pt": "Não há uma Tempestade de Ciclones ativa aguardando posicionamento."
+  },
+  "erro.tempestade_ciclones_posicionamento_pendente": {
+    "en": "Confirm the cyclone positions before ending your turn.",
+    "pt": "Confirme as posições dos ciclones antes de encerrar o turno."
   },
   "erro.nao_pode_atacar_no_mesmo_turno_em_que_se_esconde": {
     "en": "You can't attack in the same turn you hide in the shadows.",

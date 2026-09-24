@@ -42,6 +42,7 @@ const GS = (() => {
   let pendingThrow    = null;   // arremessável aguardando alvo no mapa: {id, alcance}
   let warriorSelected = [];     // warrior: ids de habilidades ARMADAS (toggle) —
                                 // custo de fome/sede cobrado só na ação (ataque)
+  let warriorFuriaAttacks = 2;  // ataques totais da Fúria (2 normal, 3 com Fúria III)
   let isMyTurn        = false;
   let activeShop      = null;   // id of the shop currently open in city UI
   let activeScene     = null;   // id da cena aberta no modal (null = nenhuma)
@@ -1453,6 +1454,7 @@ const GS = (() => {
         // Warrior: ao deixar de ser meu turno, descarta habilidades armadas
         // (no próximo turno ficam selecionáveis de novo).
         if (warriorSelected.length && !isMyTurn) warriorSelected = [];
+        if (!isMyTurn) warriorFuriaAttacks = 2;
         _emit('gameState', msg);
         const meEscuridao = msg.players.find(p => p.id === myPid && !p.is_master);
         if (msg.phase === 'playing' && meEscuridao?.alive !== false
@@ -1872,7 +1874,11 @@ const GS = (() => {
   function comandarAnimados() { send({ type: 'comandar_animados' }); }
   // Controle manual de UM animado (no turno do Pedro).
   function moverAnimado(animadoId, dx, dy) { send({ type: 'mover_animado', animado_id: animadoId, dx, dy }); }
-  function atacarAnimado(animadoId, targetId) { send({ type: 'atacar_animado', animado_id: animadoId, target_id: targetId }); }
+  function atacarAnimado(animadoId, targetId, targetPos) {
+    const msg = { type: 'atacar_animado', animado_id: animadoId, target_id: targetId };
+    if (Array.isArray(targetPos)) msg.target_pos = targetPos.slice(0, 2);
+    send(msg);
+  }
   function usarHabilidadeAnimado(animadoId, abilityId, targetId) {
     send({ type: 'usar_habilidade_animado', animado_id: animadoId, ability_id: abilityId, target_id: targetId });
   }
@@ -2032,7 +2038,10 @@ const GS = (() => {
   function refugioGold(scope, action, amount) { send({ type:'refugio_gold', scope, action, amount }); }
   function quartoCustomize(background, trophies) { send({ type:'quarto_customize', background, trophies }); }
   function guildEquip(slot, itemId)   { send({ type: 'guild_equip', slot: slot, item_id: itemId }); }
-  function usarTecnica(tid, targetId) { send({ type: 'usar_tecnica', tecnica_id: tid, target_id: targetId != null ? targetId : null }); }
+  function usarTecnica(tid, targetId, ataques = 1) {
+    send({ type: 'usar_tecnica', tecnica_id: tid,
+      target_id: targetId != null ? targetId : null, ataques });
+  }
   function responderSorteReacao(usar) { send({ type: 'sorte_reacao', usar: !!usar }); }
   function usarOportunidadeMovimento() { send({ type: 'usar_oportunidade_movimento' }); }
   function responderMetamorfose(requestId, aceitar) {
@@ -2094,8 +2103,8 @@ const GS = (() => {
   }
 
   // ── Instrumentos do Bardo (Fase 1/2) ─────────────────────────────────────
-  // dir: [dx,dy] opcional — usado pela Trompa (Chamado do General, mira por
-  // direção, mesmo padrão da Relâmpago). As demais habilidades não usam dir.
+  // dir: [dx,dy] opcional — usado por Nota Cortante e Trompa (Chamado do
+  // General), ambas selecionam uma direção no tabuleiro.
   function usarInstrumento(target, dir) {
     send({ type: 'usar_instrumento',
            target_id: (target && target.id != null) ? target.id : null,
@@ -2579,6 +2588,39 @@ const GS = (() => {
     return out;
   }
 
+  function animadoAttackRangeTiles(animado) {
+    if (!gameState || !animado || !animado.pos || animado.vida_atual <= 0) return [];
+    const atk = (animado.attacks || [])[0] || {};
+    const eletrico = animado.tipo_elemental === 'eletrico'
+      && String(atk.name || '').toLocaleLowerCase() === 'raio'
+      && (atk.damage_types || []).some(t => ['lightning', 'eletricidade'].includes(String(t).toLowerCase()));
+    if (!eletrico) return [];
+    const alcance = Math.max(1, Number(atk.range) || 4);
+    const [ax, ay] = animado.pos, tiles = gameState.tiles || [], portas = doorSets(gameState).open;
+    const out = [];
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+      for (let d = 1; d <= alcance; d++) {
+        const x = ax + dx*d, y = ay + dy*d, tile = tiles[y]?.[x];
+        if (tile == null) break;
+        const key = `${x},${y}`;
+        const piso = tile === TILE_FLOOR || (tile === TILE_DOOR && portas.has(key)) || _ponteEm(x, y, gameState);
+        if (!piso || !hasLineOfSight(gameState, ax, ay, x, y, animado)) break;
+        out.push({x, y});
+      }
+    }
+    return out;
+  }
+
+  function animadoRayTargetAt(animado, x, y) {
+    const [ax, ay] = animado?.pos || [];
+    if (!Number.isFinite(ax) || !Number.isFinite(ay)
+        || !animadoAttackRangeTiles(animado).some(p => p.x === x && p.y === y)) return null;
+    const dx = Math.sign(x - ax), dy = Math.sign(y - ay);
+    return animadoAttackTargetTiles(animado)
+      .filter(p => (p.x-ax)*dy === (p.y-ay)*dx && (p.x-ax)*dx + (p.y-ay)*dy > 0)
+      .sort((a,b) => Math.abs(a.x-ax)+Math.abs(a.y-ay) - (Math.abs(b.x-ax)+Math.abs(b.y-ay)))[0] || null;
+  }
+
   function attackTargetTiles() {
     if (!gameState || gameState.phase !== 'playing' || !isMyTurn) return [];
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
@@ -2608,9 +2650,13 @@ const GS = (() => {
   function isWarriorSkillSelected(id) { return warriorSelected.includes(id); }
   function toggleWarriorSkill(id) {
     const i = warriorSelected.indexOf(id);
-    if (i >= 0) warriorSelected.splice(i, 1);
+    if (i >= 0) {
+      warriorSelected.splice(i, 1);
+      if (id === 'furia_berserker') warriorFuriaAttacks = 2;
+    }
     else {
       warriorSelected.push(id);
+      if (id === 'furia_berserker' && warriorFuriaAttacks !== 3) warriorFuriaAttacks = 2;
       const p = (gameState?.players || []).find(q => q.id === myPid);
       if (p?.pos) _emit('abilityActivation', {
         player_id: myPid, ability_id: id, kind: 'skill',
@@ -2620,7 +2666,12 @@ const GS = (() => {
     return warriorSelected.slice();
   }
   function getWarriorSelected()  { return warriorSelected.slice(); }
-  function clearWarriorSelected() { warriorSelected = []; }
+  function getWarriorFuriaAttacks() { return warriorFuriaAttacks; }
+  function setWarriorFuriaAttacks(n) {
+    warriorFuriaAttacks = Number(n) === 3 ? 3 : 2;
+    return warriorFuriaAttacks;
+  }
+  function clearWarriorSelected() { warriorSelected = []; warriorFuriaAttacks = 2; }
   // Teto de habilidades armadas do warrior pela posse de especializações da Guilda.
   function warriorComboCap() {
     const esp = (guildOwnedOf(myPid).especializacoes) || [];
@@ -2667,6 +2718,12 @@ const GS = (() => {
   }
   function paladinAtaqueSagradoDados() {
     return (guildOwnedOf(myPid).especializacoes || []).includes('paladino_ataque_sagrado_2') ? 2 : 1;
+  }
+  function paladinAtaqueSagradoNivel() {
+    const e = (guildOwnedOf(myPid).especializacoes) || [];
+    if (e.includes('paladino_ataque_sagrado_3')) return 3;
+    if (e.includes('paladino_ataque_sagrado_2')) return 2;
+    return 1;
   }
   function paladinLuzMaxAtributos() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
@@ -3120,6 +3177,8 @@ const GS = (() => {
     alterarAltura,
     encerrarAnimado,
     animadoAttackTargetTiles,
+    animadoAttackRangeTiles,
+    animadoRayTargetAt,
     animadoJaEncerrou,
     animadoSelecaoValida,
     pecaControlada,
@@ -3273,6 +3332,8 @@ const GS = (() => {
     isWarriorSkillSelected,
     toggleWarriorSkill,
     getWarriorSelected,
+    getWarriorFuriaAttacks,
+    setWarriorFuriaAttacks,
     clearWarriorSelected,
     warriorComboCap,
     clericCuraTeto,
@@ -3282,6 +3343,7 @@ const GS = (() => {
     paladinCuraMaosDados,
     paladinCuraMaosExtra,
     paladinAtaqueSagradoDados,
+    paladinAtaqueSagradoNivel,
     paladinLuzMaxAtributos,
     paladinDefensorRaio,
     paladinDefensorNivel,

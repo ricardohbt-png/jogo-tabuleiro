@@ -175,6 +175,10 @@ window.LANG_INTERFACE = {
     "en": "Holy Strike",
     "pt": "Golpe Sagrado"
   },
+  "dado.golpe_sagrado_extra": {
+    "en": "Holy Strike — chosen damage",
+    "pt": "Golpe Sagrado — dano escolhido"
+  },
   "dado.imposicao_das_maos": {
     "en": "Lay on Hands",
     "pt": "Imposição das Mãos"
@@ -1027,14 +1031,6 @@ window.LANG_INTERFACE = {
     "en": "☠️ Poisoned — duration: {n} round(s).",
     "pt": "☠️ Envenenado — duração: {n} rodada(s)."
   },
-  "ui.arremesso.acao_bonus": {
-    "en": "BONUS ACTION",
-    "pt": "AÇÃO BÔNUS"
-  },
-  "ui.arremesso.acao_principal": {
-    "en": "MAIN ACTION",
-    "pt": "AÇÃO PRINCIPAL"
-  },
   "ui.arremesso.agora_nao": {
     "en": "You can't throw right now.",
     "pt": "Não é possível arremessar agora."
@@ -1051,37 +1047,13 @@ window.LANG_INTERFACE = {
     "en": "Throw cancelled.",
     "pt": "Arremesso cancelado."
   },
-  "ui.arremesso.arremesso_cancelado_4": {
-    "en": "❌ Throw cancelled.",
-    "pt": "❌ Arremesso cancelado."
-  },
-  "ui.arremesso.arremesso_cancelado_5": {
-    "en": "❌ Throw cancelled.",
-    "pt": "❌ Arremesso cancelado."
-  },
-  "ui.arremesso.arremesso_cancelado_6": {
-    "en": "❌ Throw cancelled.",
-    "pt": "❌ Arremesso cancelado."
-  },
   "ui.arremesso.arremesso_de_arma_cancelado": {
     "en": "Weapon throw cancelled.",
     "pt": "Arremesso de arma cancelado."
   },
-  "ui.arremesso.cancele_o_arremesso_atual_primeiro_esc": {
-    "en": "Cancel the current throw first (ESC).",
-    "pt": "Cancele o arremesso atual primeiro (ESC)."
-  },
-  "ui.arremesso.cancele_primeiro": {
-    "en": "Cancel the current throw first (ESC).",
-    "pt": "Cancele o arremesso atual primeiro (ESC)."
-  },
   "ui.arremesso.casa": {
     "en": "SQUARE",
     "pt": "CASA"
-  },
-  "ui.arremesso.clique_num_inimigo_destacado_para_arremess": {
-    "en": "🎯 Click a highlighted enemy to throw the dagger (ESC cancels).",
-    "pt": "🎯 Clique num inimigo destacado para arremessar a adaga (ESC cancela)."
   },
   "ui.arremesso.corpo_a_corpo_exige_a_mesma_altura": {
     "en": "Melee requires the same height.",
@@ -1139,37 +1111,9 @@ window.LANG_INTERFACE = {
     "en": "Valid enemy — confirm to attack.",
     "pt": "Inimigo válido — confirme para atacar."
   },
-  "ui.arremesso.legenda_casa": {
-    "en": "Valid square",
-    "pt": "Casa válida"
-  },
-  "ui.arremesso.legenda_esc": {
-    "en": "ESC to cancel",
-    "pt": "ESC para cancelar"
-  },
-  "ui.arremesso.legenda_inimigo": {
-    "en": "Enemy",
-    "pt": "Inimigo"
-  },
-  "ui.arremesso.legenda_lanca": {
-    "en": "🏹 SPEAR THROW {acao}",
-    "pt": "🏹 ARREMESSO DE LANÇA {acao}"
-  },
-  "ui.arremesso.legenda_modo": {
-    "en": "🎯 THROW MODE",
-    "pt": "🎯 MODO ARREMESSO"
-  },
-  "ui.arremesso.legenda_principal": {
-    "en": "🎯 THROW {acao}",
-    "pt": "🎯 ARREMESSO {acao}"
-  },
   "ui.arremesso.linha_bloqueada_por_uma_parede_ou_obstacul": {
     "en": "Line blocked by a wall or a tall obstacle.",
     "pt": "Linha bloqueada por uma parede ou obstáculo alto."
-  },
-  "ui.arremesso.log_lanca": {
-    "en": "🏹 Spear throw mode — {acao}. Click an enemy (ESC cancels).",
-    "pt": "🏹 Modo arremesso de lança — {acao}. Clique num inimigo (ESC cancela)."
   },
   "ui.arremesso.log_mira_alvo": {
     "en": "Throw aim — click a highlighted enemy (ESC cancels).",
@@ -1178,10 +1122,6 @@ window.LANG_INTERFACE = {
   "ui.arremesso.log_mira_area": {
     "en": "Throw aim — click a square (the green area follows the cursor) (ESC cancels).",
     "pt": "Mira de arremesso — clique numa casa (área verde segue o cursor) (ESC cancela)."
-  },
-  "ui.arremesso.log_principal": {
-    "en": "🎯 Throw mode (main hand) — {acao}. Click an enemy (ESC cancels).",
-    "pt": "🎯 Modo arremesso (mão principal) — {acao}. Clique num inimigo (ESC cancela)."
   },
   "ui.arremesso.mira_alvo": {
     "en": "Click an ENEMY (range {alcance})",
@@ -1211,18 +1151,6 @@ window.LANG_INTERFACE = {
     "en": "Select a living enemy within range.",
     "pt": "Selecione um inimigo vivo dentro do alcance."
   },
-  "ui.arremesso.sem_acoes": {
-    "en": "No actions available to throw.",
-    "pt": "Sem ações disponíveis para arremessar."
-  },
-  "ui.arremesso.sem_adaga": {
-    "en": "No throwable dagger in the main hand.",
-    "pt": "Nenhuma adaga arremessável na mão principal."
-  },
-  "ui.arremesso.sem_adaga_secundaria": {
-    "en": "No throwable off-hand dagger equipped.",
-    "pt": "Nenhuma adaga secundária arremessável equipada."
-  },
   "ui.arremesso.sem_arma_na_mao": {
     "en": "No throwing weapon in that hand.",
     "pt": "Nenhuma arma de arremesso nessa mão."
@@ -1230,14 +1158,6 @@ window.LANG_INTERFACE = {
   "ui.arremesso.sem_inimigo_a_vista": {
     "en": "No enemy in sight within {n} squares to throw at.",
     "pt": "Nenhum inimigo à vista a até {n} quadrados para arremessar."
-  },
-  "ui.arremesso.sem_lanca": {
-    "en": "Short spear not equipped.",
-    "pt": "Lança curta não equipada."
-  },
-  "ui.arremesso.so_3d": {
-    "en": "Aimed throwing is only available in the 3D view.",
-    "pt": "Arremesso com mira disponível apenas na visão 3D."
   },
   "ui.arremesso.uma_parede_ou_porta_fechada_bloqueia_o_arr": {
     "en": "A wall or closed door blocks the throw.",
@@ -2655,6 +2575,18 @@ window.LANG_INTERFACE = {
     "en": "Attack combination cancelled.",
     "pt": "Combinação de ataque cancelada."
   },
+  "ui.habilidade.furia_escolha": {
+    "en": "Choose how many attacks Berserker Fury should grant.",
+    "pt": "Escolha quantos ataques a Fúria Berserker concederá."
+  },
+  "ui.habilidade.furia_opcao": {
+    "en": "{n} attacks · 🍖-{fome} 💧-{sede}",
+    "pt": "{n} ataques · 🍖-{fome} 💧-{sede}"
+  },
+  "ui.habilidade.furia_titulo": {
+    "en": "Berserker Fury III",
+    "pt": "Fúria Berserker III"
+  },
   "ui.habilidade.combo_so_turno": {
     "en": "The combination can only be prepared on the warrior's turn.",
     "pt": "A combinação só pode ser preparada no turno do guerreiro."
@@ -3979,6 +3911,10 @@ window.LANG_INTERFACE = {
     "en": "Direction choice cancelled.",
     "pt": "Escolha de direção cancelada."
   },
+  "ui.instrumento.escolha_uma_das_quatro_casas_ortogonais": {
+    "en": "Choose a square on one of the four orthogonal lines.",
+    "pt": "Escolha uma casa em uma das quatro linhas ortogonais."
+  },
   "ui.instrumento.escolha_uma_das_oito_casas_ao_redor_do_bar": {
     "en": "Choose one of the eight squares around the bard.",
     "pt": "Escolha uma das oito casas ao redor do bardo."
@@ -4070,6 +4006,10 @@ window.LANG_INTERFACE = {
   "ui.instrumento.selecione_uma_das_oito_casas_ao_redor_do_b": {
     "en": "Select one of the eight squares around the bard.",
     "pt": "Selecione uma das oito casas ao redor do bardo."
+  },
+  "ui.instrumento.selecione_uma_das_quatro_casas_ortogonais": {
+    "en": "Hover a line, then click any square along its path.",
+    "pt": "Passe o cursor sobre uma linha e clique em qualquer casa do trajeto."
   },
   "ui.instrumento.sem_inimigo_raio": {
     "en": "No enemy within {n} squares.",
@@ -6799,17 +6739,9 @@ window.LANG_INTERFACE = {
     "en": "EQUIPPED ({eq}) · PASSIVES ({pas})",
     "pt": "EQUIPADO ({eq}) · PASSIVAS ({pas})"
   },
-  "ui.mestre.escolha_alvo": {
-    "en": "{nome} — Choose the target",
-    "pt": "{nome} — Escolha o alvo"
-  },
   "ui.mestre.escolha_o_alvo_item": {
     "en": "{nome} — Choose the target",
     "pt": "{nome} — Escolha o alvo"
-  },
-  "ui.mestre.escolha_o_alvo_min": {
-    "en": "{icone} {nome} — choose the target",
-    "pt": "{icone} {nome} — escolha o alvo"
   },
   "ui.mestre.escolha_os_esqueletos": {
     "en": "{nome} — Choose the skeletons",
@@ -7110,18 +7042,6 @@ window.LANG_INTERFACE = {
   "ui.mestre.selecionados_aplicar_todos": {
     "en": "{n} selected — apply to all:",
     "pt": "{n} selecionado(s) — aplicar a todos:"
-  },
-  "ui.mestre.sem_alvo_adj": {
-    "en": "No adjacent target.",
-    "pt": "Nenhum alvo adjacente."
-  },
-  "ui.mestre.sem_alvo_monstro": {
-    "en": "No monster available as a target.",
-    "pt": "Nenhum monstro disponível como alvo."
-  },
-  "ui.mestre.sem_alvo_raio": {
-    "en": "No target within {n}sq.",
-    "pt": "Nenhum alvo a até {n}q."
   },
   "ui.mestre.sem_alvo_vivo": {
     "en": "No living target",
@@ -7570,6 +7490,58 @@ window.LANG_INTERFACE = {
   "ui.paladino.d8_sagrado_por_ataque": {
     "en": "+{n}d8 holy per attack",
     "pt": "+{n}d8 sagrado por ataque"
+  },
+  "ui.paladino.escolher_nivel": {
+    "en": "Choose level",
+    "pt": "Escolher nível"
+  },
+  "ui.paladino.golpe_custos": {
+    "en": "Activate 🍖-{fome} 💧-{sede} · upkeep 🍖-{manut_fome} 💧-{manut_sede}",
+    "pt": "Ativar 🍖-{fome} 💧-{sede} · manutenção 🍖-{manut_fome} 💧-{manut_sede}"
+  },
+  "ui.paladino.golpe_escolha_intensidade": {
+    "en": "Choose the strength and cost of this activation.",
+    "pt": "Escolha a intensidade e o custo desta ativação."
+  },
+  "ui.paladino.golpe_escolha_tipo": {
+    "en": "Choose the extra d8 damage type. The target's vulnerabilities still apply.",
+    "pt": "Escolha o tipo do d8 adicional. Vulnerabilidades do alvo serão aplicadas normalmente."
+  },
+  "ui.paladino.golpe_extra_por_ataque": {
+    "en": "+2d8 holy +1d8 {tipo} per attack",
+    "pt": "+2d8 sagrado +1d8 {tipo} por ataque"
+  },
+  "ui.paladino.golpe_nivel": {
+    "en": "Level {n}",
+    "pt": "Nível {n}"
+  },
+  "ui.paladino.golpe_titulo": {
+    "en": "Holy Strike",
+    "pt": "Golpe Sagrado"
+  },
+  "ui.paladino.golpe_titulo_nivel3": {
+    "en": "Holy Strike III",
+    "pt": "Golpe Sagrado III"
+  },
+  "ui.paladino.tipo_escolhido": {
+    "en": "chosen",
+    "pt": "escolhido"
+  },
+  "ui.paladino.tipo_eletricidade": {
+    "en": "Lightning",
+    "pt": "Eletricidade"
+  },
+  "ui.paladino.tipo_fogo": {
+    "en": "Fire",
+    "pt": "Fogo"
+  },
+  "ui.paladino.tipo_gelo": {
+    "en": "Ice",
+    "pt": "Gelo"
+  },
+  "ui.paladino.tipo_sagrado": {
+    "en": "Holy",
+    "pt": "Sagrado"
   },
   "ui.paladino.dados_extra": {
     "en": "+{n}d6 extra",
@@ -8368,8 +8340,8 @@ window.LANG_INTERFACE = {
     "pt": "Dobra cada dado de dano neste turno. O bônus de Força não é dobrado."
   },
   "ui.selecao.skill.desc.golpe_sagrado": {
-    "en": "Bonus action. +1d8 holy damage per attack. Doubled against undead and demons. 🍖-3 💧-3.",
-    "pt": "Ação Bônus. +1d8 dano sagrado por ataque. Dobrado contra mortos-vivos e demônios. 🍖-3 💧-3."
+    "en": "Bonus action. Choose level 1/2/3: +1d8/+2d8 holy, and level 3 adds +1d8 fire, ice, lightning or holy. Activation 🍖-3/4/5 💧-3/3/4; upkeep 🍖-1/2/2 💧-1/1/2.",
+    "pt": "Ação Bônus. Escolha nível 1/2/3: +1d8/+2d8 sagrado; nível 3 adiciona +1d8 de fogo, gelo, eletricidade ou sagrado. Ativação 🍖-3/4/5 💧-3/3/4; manutenção 🍖-1/2/2 💧-1/1/2."
   },
   "ui.selecao.skill.desc.guerreiro_luz": {
     "en": "Free action. +1 or +2 to Vision, Attack, Damage and AC. Fixed bonuses until switched off. Variable cost per turn.",
@@ -9282,6 +9254,18 @@ window.LANG_INTERFACE = {
   "ui.tecnica.recarrega_em": {
     "en": "Technique recharges in {n} round(s).",
     "pt": "Técnica recarrega em {n} rodada(s)."
+  },
+  "ui.tecnica.redemoinho_escolha": {
+    "en": "Choose how many spinning attacks to unleash.",
+    "pt": "Escolha quantos ataques giratórios liberar."
+  },
+  "ui.tecnica.redemoinho_opcao": {
+    "en": "{n} attack(s) · {custo} · cooldown {recarga} rounds",
+    "pt": "{n} ataque(s) · {custo} · recarga de {recarga} rodadas"
+  },
+  "ui.tecnica.redemoinho_requer": {
+    "en": "Requires Berserker Fury III",
+    "pt": "Requer Fúria Berserker III"
   },
   "ui.tecnica.so_turno_masmorra": {
     "en": "The technique can only be used on your turn in the dungeon.",

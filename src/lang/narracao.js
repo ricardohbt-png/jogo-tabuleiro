@@ -312,6 +312,14 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{heroi}** attacks **{target}** (d20={roll}+{eff_atk}={total} vs AC {target_ac}): **MISS!**",
     "pt": "⚔️ **{heroi}** ataca **{target}** (d20={roll}+{eff_atk}={total} vs CA {target_ac}): **ERROU!**"
   },
+  "narracao.ataque_giratorio": {
+    "en": "🌀 **{heroi}** spins in a sweeping attack: {acertos} hit(s) among {alvos} adjacent target(s).",
+    "pt": "🌀 **{heroi}** gira em um ataque varredor: {acertos} acerto(s) entre {alvos} alvo(s) adjacente(s)."
+  },
+  "narracao.redemoinho_morte": {
+    "en": "☠️ **{heroi}** unleashes {ataques} spinning attack(s) of the Death Whirlwind (cooldown {recarga} rounds).",
+    "pt": "☠️ **{heroi}** libera {ataques} ataque(s) giratório(s) do Redemoinho da Morte (recarga de {recarga} rodadas)."
+  },
   "narracao.ataca_d20_vs_ca_errou_2": {
     "en": "💢 **{monstro}** attacks **{tgt_name}** (d20={roll}+{m_atk}={total} vs AC {effective_ac}): **MISS!**",
     "pt": "💢 **{monstro}** ataca **{tgt_name}** (d20={roll}+{m_atk}={total} vs CA {effective_ac}): **ERROU!**"
@@ -1588,6 +1596,10 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{heroi}**'s Holy Strike sustained 🍖-1 💧-1.",
     "pt": "⚔️ Golpe Sagrado de **{heroi}** sustentado 🍖-1 💧-1."
   },
+  "narracao.golpe_sagrado_de_sustentado": {
+    "en": "⚔️ **{heroi}**'s Holy Strike sustained 🍖-{fome_cost} 💧-{sede_cost}.",
+    "pt": "⚔️ Golpe Sagrado de **{heroi}** sustentado 🍖-{fome_cost} 💧-{sede_cost}."
+  },
   "narracao.golpeia_o_tambor_de_guerra_onda_sonora_r": {
     "en": "🥁 **{heroi}** strikes the **War Drum** — sound wave (radius {st_raio})!",
     "pt": "🥁 **{heroi}** golpeia o **Tambor de Guerra** — onda sonora (raio {st_raio})!"
@@ -1635,6 +1647,10 @@ window.LANG_NARRACAO = {
   "narracao.invoca_golpe_sagrado_1d8_de_dano_sagrado": {
     "en": "⚔️ **{heroi}** calls on **Holy Strike** — +1d8 holy damage per attack! (🍖-{fome_cost} 💧-{sede_cost})",
     "pt": "⚔️ **{heroi}** invoca **Golpe Sagrado** — +1d8 de dano sagrado por ataque! (🍖-{fome_cost} 💧-{sede_cost})"
+  },
+  "narracao.invoca_golpe_sagrado_nivel": {
+    "en": "⚔️ **{heroi}** invokes **Holy Strike** level {nivel} — {descricao} (🍖-{fome_cost} 💧-{sede_cost})",
+    "pt": "⚔️ **{heroi}** invoca **Golpe Sagrado** nível {nivel} — {descricao} (🍖-{fome_cost} 💧-{sede_cost})"
   },
   "narracao.ira_da_rocha_ardente_cria_lava": {
     "en": "🌋 **{caster}** invokes **Wrath of the Burning Rock**: a **{lado}x{lado}** lava area rises for **{dur}** round(s), at a range of **{alcance}** squares. **{chamas}** Living Flame(s) await tile selection.",
@@ -2003,6 +2019,10 @@ window.LANG_NARRACAO = {
   "narracao.pegou_ouros_do_bau": {
     "en": "🪙 **{heroi}** picked up **{recebido}** gold from the chest!",
     "pt": "🪙 **{heroi}** pegou **{recebido}** ouros do baú!"
+  },
+  "narracao.pegou_ouros_do_chao": {
+    "en": "🪙 **{heroi}** picked up **{recebido}** gold from the ground!",
+    "pt": "🪙 **{heroi}** pegou **{recebido}** ouros do chão!"
   },
   "narracao.pegou_ouros_do_objeto": {
     "en": "🪙 **{heroi}** picked up **{recebido}** gold from the object!",
