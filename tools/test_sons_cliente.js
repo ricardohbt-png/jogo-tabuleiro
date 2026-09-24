@@ -194,10 +194,11 @@ console.log('\n[7] _capturarSonsDeEstado');
 console.log('\n[8] Fiação de estado, morte e ambiente');
 check('morte sem cena usa _somMorteMonstro', /_spawnDefeatVisual\(anterior, kind\);\s*_somMorteMonstro\(anterior, kind\);/.test(GAME));
 check('morte com cena usa _somMorteMonstro', /onImpact: \[\(\) => \{ _spawnDefeatVisual\(anterior, kind\); _somMorteMonstro\(anterior, kind\); \}\]/.test(GAME));
-check('gameState chama _capturarSonsDeEstado', /_detectHpChanges\(msg\);[^\n]*\n\s*_capturarSonsDeEstado\(msg\);/.test(GAME));
-check('gameState garante o ambiente', /_capturarSonsDeEstado\(msg\);\s*\n\s*_ambienciaGarantir\(msg\);/.test(GAME));
-check('enterDungeon zera sons e toca escada', /GS\.on\('enterDungeon'[\s\S]{0,3000}_sonsReset\(\);\s*sfx\('escada'\);/.test(GAME));
-check('cityState para o ambiente e pré-carrega', /GS\.on\('cityState'[\s\S]{0,1500}_ambienciaParar\(\);\s*_sonsReset\(\);\s*_sfxPreCarregar\(\);/.test(GAME));
+check('gameState envolve sons/ambiente em try/catch', /_detectHpChanges\(msg\);[^\n]*\n\s*try\{ _capturarSonsDeEstado\(msg\); _ambienciaGarantir\(msg\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
+check('enterDungeon zera sons e toca escada (em try/catch)', /GS\.on\('enterDungeon'[\s\S]{0,3000}try\{ _sfxPreCarregar\(\); _sonsReset\(\); sfx\('escada'\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
+check('cityState para o ambiente e pré-carrega (em try/catch)', /GS\.on\('cityState'[\s\S]{0,1500}try\{ _ambienciaParar\(\); _sonsReset\(\); _sfxPreCarregar\(\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
+check('handleGameOver para o ambiente', /function handleGameOver\(msg\)\{\s*_ambienciaParar\(\);/.test(GAME));
+check('showScreen para o ambiente ao sair da masmorra/cidade', /if\(id !== 'screen-game' && id !== 'screen-city'\)\{[\s\S]{0,600}_ambienciaParar\(\);/.test(GAME));
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
