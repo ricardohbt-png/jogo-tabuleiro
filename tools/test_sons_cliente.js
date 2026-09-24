@@ -80,6 +80,7 @@ console.log('\n[4] _somGolpe / _somDor');
   const estado = { players: [
     { id: 'h1', gear: { off_hand: { id: 'escudo_p', kind: 'shield' } } },
     { id: 'h2', gear: { off_hand: null } },
+    { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
   const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
     GS: { gameState: estado },
@@ -102,6 +103,19 @@ console.log('\n[4] _somGolpe / _somDor');
   [r, t] = golpe({ hit: true, area: true, targetPos: [1, 1] });
   check('arremesso de área não toca golpe', r === false && t.length === 0);
   check('pos do alvo vai junto', (golpe({ hit: true, impacto: 'cortante', targetPos: [4, 5], targetKey: 'm:9' }), tocados[0][1][0] === 4));
+  [r, t] = golpe({ hit: true, impacto: 'xyz', targetPos: [1, 1], targetKey: 'm:9' });
+  check('impacto inválido → golpe_contundente', t.join() === 'golpe_contundente');
+  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h3' });
+  check('escudo custom (item_slot) → escudo_bloqueio', t.join() === 'escudo_bloqueio');
+  {
+    const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
+      GS: { gameState: estado },
+      sfx: (e) => e !== 'golpe_critico',
+      _combatPrimaryDamageType: t2 => Array.isArray(t2) ? t2[0] : t2,
+    });
+    const rCrit = fCritFalha._somGolpe({ hit: true, crit: true, impacto: 'cortante', targetPos: [1, 1], targetKey: 'm:9' });
+    check('crítico sem amostra → _somGolpe devolve false', rCrit === false);
+  }
 
   tocados.length = 0;
   check('dor física em herói → dor_heroi', f._somDor({ hit: true, targetKey: 'p:h1', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
@@ -117,6 +131,7 @@ check('impact chama _somGolpe antes do cue adiado', /const tocouGolpe = !c\.tard
 check('cue adiado só toca sem amostra', /if\(f\.cueAdiado\)\{ if\(!tocouGolpe\) _playCombatCue\(f\.cueAdiado\.kind, f\.cueAdiado\.opts\); f\.cueAdiado = null; \}/.test(GAME));
 check('dor tenta amostra antes da síntese', /if\(fb\.cue && !_somDor\(c, fb\)\) _playCombatCue\('damage', fb\.cue\);/.test(GAME));
 check('2D (sem cena) também tenta amostra', /const tocou = _somGolpe\(\{/.test(GAME));
+check('_detectHpChanges tenta _somDor antes do cue sem cena', /if\(!_somDor\(\{hit:true, targetKey:key, targetPos: impact \|\| entry\.pos\}, \{damageType: primaryDamageType\}\)\) _playCombatCue\('damage', cue\);/.test(GAME));
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
