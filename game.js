@@ -8145,6 +8145,7 @@ function renderMap(state){
   if(!state.tiles) return;
   state = _estadoComMortosVisuais(state);
   if(!mode3D) _ensureCancaoHeroicaAura2D(state);
+  if(!mode3D) _ensureEcosDolorososAura2D(state);
   _guardaMaximaSyncState(state);
   _syncInvisibilidadeState(state);
   _syncProtecaoEnergiaState(state);
@@ -8979,6 +8980,7 @@ function renderMap(state){
   }
 
   _protetorDraw2D(ctx, state, visionSet, false, performance.now());
+  _desenharEcosDolorososAura2D(ctx, state, performance.now(), exploredSet);
 
   // ── Players: base disc then hero sprite
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -9002,6 +9004,8 @@ function renderMap(state){
     if(_playerVortexPreso){
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
     }
+    if(_duetoFantasmaAtivo(p, state))
+      _desenharSombraDuetoFantasma2D(ctx, p, cx, cy, performance.now(), exploredSet);
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe||isTesteSel);
     if(formaVisual){
       const wolf = _getMonster2DImg(formaVisual);
@@ -9084,8 +9088,14 @@ function renderMap(state){
     _jatoArDraw2D(ctx, state, _animJatoAr, _agoraRelampago);
   for(const _animNotaCortante of _notaCortanteAnims)
     _notaCortanteDraw2D(ctx, state, _animNotaCortante, _agoraRelampago);
+  for(const _animEcos of _ecosDolorososAnims)
+    _ecosDolorososDraw2D(ctx, state, _animEcos, _agoraRelampago);
   for(const _animAcordeTrovejante of _acordeTrovejanteAnims)
     _acordeTrovejanteDraw2D(ctx, state, _animAcordeTrovejante, _agoraRelampago);
+  for(const _animChamado of _chamadoGeneralAnims)
+    _chamadoGeneralDraw2D(ctx, state, _animChamado, _agoraRelampago);
+  for(const _animDuetoMarcial of _duetoMarcialAnims)
+    _duetoMarcialDraw2D(ctx, state, _animDuetoMarcial, _agoraRelampago);
   for(const _animRequiem of _requiemFinalAnims)
     _requiemFinalDraw2D(ctx, state, _animRequiem, _agoraRelampago);
   for(const _animSopro of _soproDragaoAnims)
@@ -9282,6 +9292,7 @@ function _visualTemAnimacaoDeMagia(){
     _silencioAnims, _medoAnims,
     _senhorAguasAnims,
     _requiemFinalAnims,
+    _duetoMarcialAnims,
     _olharPetrificanteAnims,
     _conjurarElementalAnims,
     _iraRochaAnims,
@@ -10830,7 +10841,7 @@ function _spellHasDedicatedSound(id){
     'clarividencia','regeneracao','velocidade','lentidao','abencoar','abencoar_arma',
     'senhor_das_aguas','chamado_inverno','olhar_petrificante','conjurar_elemental','voo','criar_alimentos','cura','cura_area','purificacao','ressurreicao','metamorfose','guerreiro_luz','cancao_heroica','saciar','contramagica',
     'ira_rocha_ardente','prisao_chamas',
-    'requiem_final',
+    'requiem_final','dueto_marcial',
   ]).has(String(id || '').toLowerCase());
 }
 
@@ -12052,6 +12063,7 @@ function _receiveAttackFeedback(msg){
       try{ _somExplosaoItem(f.itemId, msg.target_pos, f.area || !!msg.hit); }catch(e){}   // 2D: granada/incendiário
       if(!tocou && cue) _playCombatCue(cue.kind, cue.opts);
     }
+    if(!_cenaAtiva()) _registrarEcoDuetoFantasma2D(f, now);
     _drawAttackFeedbackTexture3D(f);
   }
   if(mode3D && g3) _buildAttackFeedback3D(_attackFeedbacks[_attackFeedbacks.length-1]);
@@ -12427,12 +12439,15 @@ function _detectHpChanges(st){
         }
         if(!_somDor({hit:true, targetKey:key, targetPos: impact || entry.pos}, {damageType: primaryDamageType})) _playCombatCue('damage', cue);
         const damageIndex = damageSequenceIndex++;
+        const ecosStart = damageEvents.some(e => e.source === 'ecos_dolorosos')
+          ? _ecosDolorososFeedbackStartAt(entry) : null;
         const fireStartCandidatos = [
           _bolaFogoFeedbackStartAt(entry), _projetilFeedbackStartAt(entry), _iraRochaFeedbackStartAt(entry),
           _prisaoChamasFeedbackStartAt(entry),
         ].filter(v => v != null);
         const fireStart = fireStartCandidatos.length ? Math.max(...fireStartCandidatos) : null;
-        const startAt = fireStart != null
+        const startAt = ecosStart != null ? ecosStart
+          : fireStart != null
           ? fireStart + (multipleTargets ? damageIndex * 120 : 0)
           : (multipleTargets ? now + damageIndex * 120 : null);
         _triggerHitReaction(entry, damageEvents.some(e => e.critical), startAt);
@@ -14100,6 +14115,246 @@ function _desenharNotasCancao2D(ctx, state, now, exploredSet){
   ctx.restore();
 }
 
+// Ecos Dolorosos (Sino): aura compacta de ressonância. A duração continua
+// autoritativa no servidor; o cliente só desenha enquanto o sino permanece
+// empunhado e o estado recebido ainda a declara ativa.
+let _ecosDolorososAura2DRaf = null;
+let _ecosDolorososAura2DLastFrame = 0;
+let _ecosDolorososAura2DState = null;
+
+function _bardosComEcosDolorosos(state){
+  const round = Number(state?.round || 0);
+  return (state?.players || []).filter(p => p?.class_id === 'bard' && p.alive
+    && Array.isArray(p.pos) && Number(p.ecos_ate || 0) >= round
+    && ['sino', 'gaita'].includes(p.gear?.off_hand?.base));
+}
+
+function _ensureEcosDolorososAura2D(state){
+  _ecosDolorososAura2DState = state;
+  if(!_bardosComEcosDolorosos(state).length || _ecosDolorososAura2DRaf != null) return;
+  _ecosDolorososAura2DRaf = _scheduleVisualFrame(_tickEcosDolorososAura2D);
+}
+
+function _tickEcosDolorososAura2D(now){
+  _ecosDolorososAura2DRaf = null;
+  if(mode3D) return;
+  const state = GS.gameState || _ecosDolorososAura2DState;
+  if(!state || !_bardosComEcosDolorosos(state).length) return;
+  if(now - _ecosDolorososAura2DLastFrame >= 45){
+    _ecosDolorososAura2DLastFrame = now;
+    renderMap(state);
+  } else _ecosDolorososAura2DRaf = _scheduleVisualFrame(_tickEcosDolorososAura2D);
+}
+
+function _desenharEcosDolorososAura2D(ctx, state, now, exploredSet){
+  const bardos = _bardosComEcosDolorosos(state);
+  if(!bardos.length) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for(const bardo of bardos){
+    if(!exploredSet.has(`${bardo.pos[0]},${bardo.pos[1]}`)) continue;
+    const cx = (bardo.pos[0] + .5) * CELL, cy = (bardo.pos[1] + .5) * CELL;
+    const pulse = .5 + .5 * Math.sin(now / 310 + bardo.pos[0] * 1.7 + bardo.pos[1]);
+    const glow = ctx.createRadialGradient(cx, cy, CELL * .10, cx, cy, CELL * .74);
+    glow.addColorStop(0, `rgba(214,126,255,${(.12 + .06 * pulse).toFixed(3)})`);
+    glow.addColorStop(.55, `rgba(73,206,255,${(.07 + .04 * pulse).toFixed(3)})`);
+    glow.addColorStop(1, 'rgba(47,150,255,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, CELL * .74, 0, Math.PI * 2); ctx.fill();
+    for(let i = 0; i < 3; i++){
+      const phase = (now / 1100 + i / 3) % 1;
+      const radius = CELL * (.22 + phase * .45);
+      ctx.strokeStyle = `rgba(${i === 1 ? '221,160,255' : '105,224,255'},${(.42 * (1 - phase) + .10 * pulse).toFixed(3)})`;
+      ctx.lineWidth = Math.max(1.2, CELL * .021 * (1 - phase * .4));
+      ctx.beginPath(); ctx.ellipse(cx, cy, radius, radius * .64, -now / 1800 + i * .4, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.font = `bold ${Math.max(12, CELL * .25)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = `rgba(230,242,255,${(.48 + .30 * pulse).toFixed(3)})`;
+    ctx.shadowColor = '#8edfff'; ctx.shadowBlur = CELL * .18;
+    ctx.fillText('♩', cx + CELL * .27, cy - CELL * (.27 + .08 * pulse));
+  }
+  ctx.restore();
+}
+
+// Dueto Fantasma: o reflexo mantém um pequeno histórico da pose/posição visual.
+// Em 3D esse histórico também replica as poses produzidas pelo CombatScene.
+const DUETO_FANTASMA_DELAY_MS = 135;
+const DUETO_FANTASMA_ECHO_MS = 310;
+const _duetoFantasma2DHistory = new Map();
+const _duetoFantasma2DEchoes = [];
+let _duetoFantasma2DRaf = null;
+const _duetoFantasma3DDelay = DUETO_FANTASMA_DELAY_MS;
+
+function _duetoFantasmaAtivo(p, state){
+  const round = Number(state?.round ?? state?.round_num ?? 0);
+  const ate = Number(p?.dueto_fantasma_ate || 0);
+  return p?.class_id === 'bard' && p.alive && Array.isArray(p.pos)
+    && ate > 0 && ate >= round
+    && ['flauta', 'gaita'].includes(p.gear?.off_hand?.base);
+}
+
+function _duetoFantasma2DPos(pid, now, currentX, currentY){
+  const key = String(pid);
+  let samples = _duetoFantasma2DHistory.get(key);
+  if(!samples) _duetoFantasma2DHistory.set(key, samples = []);
+  const last = samples[samples.length - 1];
+  if(!last || now - last.at >= 18) samples.push({at:now, x:currentX, y:currentY});
+  while(samples.length && now - samples[0].at > 700) samples.shift();
+  const wanted = now - DUETO_FANTASMA_DELAY_MS;
+  let delayed = samples[0] || {x:currentX, y:currentY};
+  for(let i = samples.length - 1; i >= 0; i--){
+    if(samples[i].at <= wanted){ delayed = samples[i]; break; }
+  }
+  return delayed;
+}
+
+function _ecoDuetoFantasmaLunge(pid, now){
+  for(let i = _duetoFantasma2DEchoes.length - 1; i >= 0; i--){
+    const fx = _duetoFantasma2DEchoes[i];
+    if(fx.pid !== String(pid)) continue;
+    const elapsed = now - fx.startAt;
+    if(elapsed < 0 || elapsed > DUETO_FANTASMA_ECHO_MS) continue;
+    const q = elapsed / DUETO_FANTASMA_ECHO_MS;
+    const envelope = Math.sin(Math.PI * q);
+    return {x:fx.dx * envelope, y:fx.dy * envelope, angle:fx.angle * envelope};
+  }
+  return {x:0, y:0, angle:0};
+}
+
+function _desenharSombraDuetoFantasma2D(ctx, p, cx, cy, now, exploredSet){
+  if(exploredSet && !exploredSet.has(`${p.pos[0]},${p.pos[1]}`)) return;
+  const delayed = _duetoFantasma2DPos(p.id, now, cx, cy);
+  const lunge = _ecoDuetoFantasmaLunge(p.id, now);
+  const sx = delayed.x - CELL * .13 + lunge.x;
+  const sy = delayed.y + CELL * .035 + lunge.y;
+  ctx.save();
+  ctx.globalAlpha *= .48;
+  ctx.filter = 'brightness(.38) saturate(.55)';
+  ctx.translate(sx, sy);
+  ctx.rotate(lunge.angle);
+  drawHeroSprite(ctx, 0, -3, p.class_id, '#25212a', false, false, false, p.facing, 0);
+  ctx.restore();
+}
+
+function _registrarEcoDuetoFantasma2D(attack, now){
+  if(!attack || attack.attackerId == null || !Array.isArray(attack.attackerPos) || !Array.isArray(attack.targetPos)) return;
+  const state = GS.gameState;
+  const bard = state?.players?.find(p => String(p.id) === String(attack.attackerId));
+  if(!_duetoFantasmaAtivo(bard, state)) return;
+  const dx = Number(attack.targetPos[0]) - Number(attack.attackerPos[0]);
+  const dy = Number(attack.targetPos[1]) - Number(attack.attackerPos[1]);
+  const mag = Math.hypot(dx, dy) || 1;
+  _duetoFantasma2DEchoes.push({
+    id:attack.id, pid:String(attack.attackerId),
+    dx:dx / mag * CELL * .18, dy:dy / mag * CELL * .18,
+    angle:Math.atan2(dy, dx) * .08,
+    startAt:now + Math.max(0, Number(attack.prepDuration) || 0) + DUETO_FANTASMA_DELAY_MS,
+  });
+  _tickDuetoFantasma2D(now);
+}
+
+function _tickDuetoFantasma2D(now){
+  _duetoFantasma2DRaf = null;
+  _duetoFantasma2DEchoes.splice(0, _duetoFantasma2DEchoes.length,
+    ..._duetoFantasma2DEchoes.filter(fx => now - fx.startAt <= DUETO_FANTASMA_ECHO_MS));
+  if(!mode3D && GS.gameState) renderMap(GS.gameState);
+  if(_duetoFantasma2DEchoes.length)
+    _duetoFantasma2DRaf = _scheduleVisualFrame(_tickDuetoFantasma2D);
+}
+
+function _disposeDuetoFantasmaShadow3D(grupo){
+  if(!grupo) return;
+  if(grupo.parent) grupo.parent.remove(grupo);
+  grupo.traverse(obj => {
+    if(!obj.material) return;
+    (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(mat => mat.dispose());
+  });
+}
+
+function _makeDuetoFantasmaShadow3D(source){
+  const clone = source.clone(true);
+  clone.name = 'dueto-fantasma-reflexo';
+  clone.userData = {...clone.userData, pid:null, isDuetoFantasmaShadow:true};
+  clone.traverse(obj => {
+    obj.userData = {...obj.userData, pid:null, isDuetoFantasmaShadow:true};
+    obj.castShadow = false;
+    obj.receiveShadow = false;
+    if(!obj.material) return;
+    const darken = mat => {
+      const copy = mat.clone();
+      copy.color?.multiplyScalar(.42);
+      copy.emissive?.multiplyScalar(.22);
+      copy.transparent = true;
+      copy.opacity = (Number.isFinite(mat.opacity) ? mat.opacity : 1) * .46;
+      copy.depthWrite = false;
+      copy.userData._duetoFantasmaBaseOpacity = copy.opacity;
+      return copy;
+    };
+    obj.material = Array.isArray(obj.material) ? obj.material.map(darken) : darken(obj.material);
+  });
+  return clone;
+}
+
+function _syncDuetoFantasmaSombras3D(state){
+  if(!g3?.scene || !window.THREE) return;
+  const wanted = new Map((state?.players || []).filter(p => _duetoFantasmaAtivo(p, state)).map(p => [String(p.id), p]));
+  if(!g3._duetoFantasmaSombras) g3._duetoFantasmaSombras = new Map();
+  for(const [id, fx] of g3._duetoFantasmaSombras){
+    if(wanted.has(id)) continue;
+    _disposeDuetoFantasmaShadow3D(fx.group);
+    g3._duetoFantasmaSombras.delete(id);
+  }
+  for(const [id] of wanted){
+    const source = g3._figCache?.get(`pl:${id}`)?.fig;
+    if(!source) continue;
+    const prior = g3._duetoFantasmaSombras.get(id);
+    let shapeCount = 0;
+    source.traverse(() => shapeCount++);
+    if(prior && prior.sourceUuid === source.uuid && prior.shapeCount === shapeCount) continue;
+    if(prior) _disposeDuetoFantasmaShadow3D(prior.group);
+    const group = _makeDuetoFantasmaShadow3D(source);
+    group.visible = false;
+    g3.scene.add(group);
+    g3._duetoFantasmaSombras.set(id, {group, source, sourceUuid:source.uuid, shapeCount, history:[], appearedAt:performance.now()});
+  }
+}
+
+function _atualizarSombrasDuetoFantasma3D(now){
+  const sombras = g3?._duetoFantasmaSombras;
+  if(!sombras?.size) return;
+  const T = window.THREE;
+  for(const fx of sombras.values()){
+    const source = fx.source, root = fx.group;
+    if(!source || !root) continue;
+    source.updateWorldMatrix(true, false);
+    const sample = {
+      at:now,
+      position:source.getWorldPosition(new T.Vector3()),
+      quaternion:source.getWorldQuaternion(new T.Quaternion()),
+      scale:source.getWorldScale(new T.Vector3()),
+      visible:source.visible && !source.userData.magicalInvisible,
+    };
+    const last = fx.history[fx.history.length - 1];
+    if(!last || now - last.at >= 16) fx.history.push(sample);
+    while(fx.history.length && now - fx.history[0].at > 700) fx.history.shift();
+    const targetAt = now - _duetoFantasma3DDelay;
+    let delayed = fx.history[0] || sample;
+    for(let i = fx.history.length - 1; i >= 0; i--){
+      if(fx.history[i].at <= targetAt){ delayed = fx.history[i]; break; }
+    }
+    root.visible = delayed.visible;
+    root.position.copy(delayed.position);
+    root.quaternion.copy(delayed.quaternion);
+    root.scale.copy(delayed.scale);
+    root.position.add(new T.Vector3(-.075, 0, 0).applyQuaternion(delayed.quaternion));
+    const fadeIn = Math.min(1, Math.max(0, (now - fx.appearedAt) / 260));
+    root.traverse(obj => {
+      if(!obj.material) return;
+      (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(mat => {
+        mat.opacity = (mat.userData._duetoFantasmaBaseOpacity || .46) * fadeIn;
+      });
+    });
+  }
+}
+
 // O rótulo vem de ui.cancao.atributo.<id>; aqui fica só icone e custo.
 const CANCAO_ATRIBUTOS_CLIENT = [
   { id:'acerto',      icone:'⚔️', custo:'sede' },
@@ -14781,18 +15036,25 @@ function renderImprovisoQuadro(msg){
   const painel = document.createElement('div');
   painel.style.cssText = `
     background:var(--bg2); border:2px solid var(--gold); border-radius:12px;
-    padding:20px 26px; text-align:center; max-width:340px;
+    padding:20px 26px; text-align:center; width:min(620px,94vw); max-height:86vh; overflow-y:auto;
     box-shadow:0 8px 32px rgba(0,0,0,.6);`;
 
   const linhas = (msg.cascata || []).map(c => `
-    <li style="font-size:.82rem; padding:4px 8px; margin-bottom:4px;
+    <li style="font-size:.82rem; padding:7px 9px; margin-bottom:5px;
                background:var(--bg3); border-radius:var(--radius); text-align:left;">
-      🎲 ${c.res} — ${c.nome}${c.precisa_alvo ? ' <span style="color:var(--orange);">'+t('ui.hud.aguardando_alvo_parens')+'</span>' : ''}
+      <div>🎲 ${c.res} — ${c.nome}${c.precisa_alvo ? ' <span style="color:var(--orange);">'+t('ui.hud.aguardando_alvo_parens')+'</span>' : ''}</div>
+      <div style="color:var(--text2);font-size:.76rem;line-height:1.4;margin:3px 0 0 25px;">${t(`ui.instrumento.improviso_resultado_${c.res}`)}</div>
     </li>`).join('');
 
-  let destaque = '';
-  if(msg.grande_encore) destaque = `<div style="color:var(--red); font-weight:bold; margin:6px 0;">${t('ui.instrumento.grande_encore')}</div>`;
-  else if(msg.encore_menor) destaque = `<div style="color:var(--gold); font-weight:bold; margin:6px 0;">${t('ui.instrumento.encore_menor')}</div>`;
+  const destaques = [];
+  if(Number(msg.encore_count)>0) destaques.push(`<div style="color:var(--gold);margin:6px 0;">${t('ui.instrumento.encore_count',{n:msg.encore_count})}</div>`);
+  if(msg.encore_menor) destaques.push(`<div style="color:var(--gold);font-weight:bold;margin:6px 0;">${t('ui.instrumento.encore_menor')}<div style="font-size:.76rem;font-weight:normal;color:var(--text2);margin-top:2px;">${t('ui.instrumento.encore_menor_desc')}</div></div>`);
+  if(msg.grande_encore) destaques.push(`<div style="color:var(--red);font-weight:bold;margin:6px 0;">${t('ui.instrumento.grande_encore')}<div style="font-size:.76rem;font-weight:normal;color:var(--text2);margin-top:2px;">${t('ui.instrumento.grande_encore_desc')}</div></div>`);
+  const destaque = destaques.join('');
+  const ajudaEncore = `<details style="margin-top:10px;padding:8px 10px;background:var(--bg3);border-radius:var(--radius);text-align:left;font-size:.75rem;color:var(--text2);">
+    <summary style="cursor:pointer;color:var(--gold);">${t('ui.instrumento.encore_ajuda_titulo')}</summary>
+    <div style="margin-top:6px;line-height:1.45;">${t('ui.instrumento.encore_explicacao')}<br><br>${t('ui.instrumento.encore_menor_desc')}<br><br>${t('ui.instrumento.grande_encore_desc')}</div>
+  </details>`;
 
   painel.innerHTML = `
     <div style="color:var(--gold); font-weight:bold; font-size:1rem; margin-bottom:2px;" data-i18n="ui.hud.improviso_2">🪗 Improviso</div>
@@ -14800,6 +15062,7 @@ function renderImprovisoQuadro(msg){
     <ul style="list-style:none; padding:0; margin:10px 0 6px;">
       ${linhas || '<li style="color:var(--text2); font-size:.82rem;">'+t('ui.instrumento.nada_aconteceu')+'</li>'}
     </ul>
+    ${ajudaEncore}
     <button class="btn-cancel" id="improviso-ok-btn" style="color:var(--gold); border-color:var(--gold);">OK</button>`;
 
   overlay.appendChild(painel);
@@ -14931,6 +15194,60 @@ function _atualizarCancaoHeroicaAura3D(now){
       sprite.material.opacity = Math.sin(Math.PI * phase) * .9;
       const size = .30 + .07 * Math.sin(Math.PI * phase);
       sprite.scale.set(size, size, 1);
+    }
+  }
+}
+
+function _disposeEcosDolorososAura3D(grupo){
+  if(!grupo) return;
+  if(grupo.parent) grupo.parent.remove(grupo);
+  grupo.traverse(obj => {
+    if(obj.geometry) obj.geometry.dispose();
+    if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(mat => mat.dispose());
+  });
+}
+
+function _sync3DEcosDolorososAura(state){
+  if(!g3?.scene || !window.THREE) return;
+  const T = window.THREE, wanted = new Map(_bardosComEcosDolorosos(state).map(p => [String(p.id), p]));
+  if(!g3._ecosDolorososAuras) g3._ecosDolorososAuras = new Map();
+  for(const [id, grupo] of g3._ecosDolorososAuras){
+    if(wanted.has(id)) continue;
+    _disposeEcosDolorososAura3D(grupo); g3._ecosDolorososAuras.delete(id);
+  }
+  for(const [id, bardo] of wanted){
+    let grupo = g3._ecosDolorososAuras.get(id);
+    if(!grupo){
+      grupo = new T.Group(); grupo.name = 'ecos-dolorosos-aura';
+      const rings = [
+        new T.Mesh(new T.TorusGeometry(.27, .014, 6, 32), new T.MeshBasicMaterial({color:0x6edfff, transparent:true, opacity:.44, depthWrite:false, blending:T.AdditiveBlending})),
+        new T.Mesh(new T.TorusGeometry(.42, .011, 6, 32), new T.MeshBasicMaterial({color:0xc58cff, transparent:true, opacity:.32, depthWrite:false, blending:T.AdditiveBlending})),
+      ];
+      rings.forEach((ring, i) => { ring.rotation.x = Math.PI / 2; ring.position.y = .025 + i * .026; ring.renderOrder = 133; grupo.add(ring); });
+      const motes = [];
+      for(let i = 0; i < 6; i++){
+        const mote = new T.Mesh(new T.SphereGeometry(.028, 6, 5), new T.MeshBasicMaterial({color:i % 2 ? 0xbe8cff : 0x73e8ff, transparent:true, opacity:.58, depthWrite:false, blending:T.AdditiveBlending}));
+        mote.renderOrder = 134; mote.userData.ecosIndex = i; grupo.add(mote); motes.push(mote);
+      }
+      grupo.userData.ecosAura = {rings, motes}; g3.scene.add(grupo); g3._ecosDolorososAuras.set(id, grupo);
+    }
+    const world = casaParaMundo(bardo.pos[0], bardo.pos[1]);
+    grupo.position.set(world.x, topoTerreno3D(state, bardo.pos[0], bardo.pos[1], .22) - .22, world.z);
+  }
+}
+
+function _atualizarEcosDolorososAura3D(now){
+  if(!g3?._ecosDolorososAuras) return;
+  for(const grupo of g3._ecosDolorososAuras.values()){
+    const fx = grupo.userData.ecosAura; if(!fx) continue;
+    const pulse = .5 + .5 * Math.sin(now / 310);
+    fx.rings[0].scale.setScalar(1 + .10 * pulse); fx.rings[0].material.opacity = .30 + .22 * pulse;
+    fx.rings[1].scale.setScalar(1.04 + .12 * (1 - pulse)); fx.rings[1].material.opacity = .20 + .20 * (1 - pulse);
+    fx.rings[1].rotation.z = -now / 1250;
+    for(const mote of fx.motes){
+      const i = mote.userData.ecosIndex, phase = now / 980 + i * Math.PI * 2 / fx.motes.length;
+      mote.position.set(Math.cos(phase) * (.30 + .05 * Math.sin(now / 260 + i)), .15 + .10 * Math.sin(phase * 1.7), Math.sin(phase) * .30);
+      mote.material.opacity = .28 + .34 * (.5 + .5 * Math.sin(now / 180 + i));
     }
   }
 }
@@ -34284,6 +34601,278 @@ function _receberAnimacaoNotaCortante(msg){
   _notaCortanteAnims.push(anim);if(!_notaCortanteRaf)_notaCortanteRaf=_scheduleVisualFrame(_tickNotaCortante);
 }
 
+// DUETO MARCIAL — o acorde do aliado é respondido pelo contra-ataque do Bardo.
+const _duetoMarcialAnims=[];
+let _duetoMarcialRaf=null;
+const DUETO_MARCIAL_DURATION_MS=650;
+
+function _duetoMarcialAnimFromMessage(msg){
+  const point=v=>Array.isArray(v)&&v.length>=2?v.slice(0,2).map(Number):null;
+  const origin=point(msg?.origin),ally=point(msg?.ally_pos),target=point(msg?.target_pos);
+  if(!origin||!ally||!target||![...origin,...ally,...target].every(Number.isFinite))return null;
+  return{id:msg.animation_id==null?`dueto_marcial_${Date.now()}_${Math.random()}`:String(msg.animation_id),
+    casterId:msg.caster_id==null?null:String(msg.caster_id),origin,ally,target,start:performance.now(),group:null,
+    facing:point(msg.facing),hit:null,flare:null,chord:null,slash:null,slashHead:null,impact:[],sparks:[]};
+}
+
+function _duetoMarcialDispose3D(anim){
+  if(!anim?.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(obj=>{
+    if(obj.geometry)obj.geometry.dispose();
+    if(obj.material)(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(mat=>mat.dispose());
+  });
+  anim.group=null;
+}
+
+function _duetoMarcialBuild3D(anim){
+  if(!g3?.scene||!window.THREE)return false;
+  const T=window.THREE,root=new T.Group();root.name='dueto-marcial-fx';
+  const mat=(color,opacity=0)=>new T.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,depthTest:false,blending:T.AdditiveBlending,toneMapped:false});
+  const ring=(r,t,color,order=164)=>{
+    const mesh=new T.Mesh(new T.TorusGeometry(r,t,7,32),mat(color));
+    mesh.rotation.x=Math.PI/2;mesh.position.y=.29;mesh.renderOrder=order;root.add(mesh);return mesh;
+  };
+  anim.flare=new T.Mesh(new T.SphereGeometry(.10,10,8),mat(0xffe28a));
+  anim.flare.position.set(anim.origin[0],.55,anim.origin[1]);anim.flare.renderOrder=166;root.add(anim.flare);
+  anim.flareRings=[ring(.18,.018,0xffd35e),ring(.29,.012,0xfff0b3)];
+  const chordStart=new T.Vector3(anim.ally[0],.46,anim.ally[1]);
+  const chordEnd=new T.Vector3(anim.target[0],.46,anim.target[1]);
+  const chordControl=new T.Vector3((anim.ally[0]+anim.target[0])/2,.83,(anim.ally[1]+anim.target[1])/2);
+  const chordCurve=new T.QuadraticBezierCurve3(chordStart,chordControl,chordEnd);
+  anim.chord=new T.Line(new T.BufferGeometry().setFromPoints(chordCurve.getPoints(24)),
+    new T.LineBasicMaterial({color:0xffe58b,transparent:true,opacity:.86,depthWrite:false,depthTest:false,blending:T.AdditiveBlending,toneMapped:false}));
+  anim.chord.renderOrder=165;root.add(anim.chord);
+  const slashPositions=new Float32Array(6);
+  const slashGeometry=new T.BufferGeometry();slashGeometry.setAttribute('position',new T.BufferAttribute(slashPositions,3));
+  anim.slash=new T.Line(slashGeometry,new T.LineBasicMaterial({color:0xfff1b0,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending,toneMapped:false}));
+  anim.slash.renderOrder=168;root.add(anim.slash);
+  anim.slashHead=new T.Mesh(new T.SphereGeometry(.055,8,6),mat(0xffed9a));anim.slashHead.renderOrder=169;root.add(anim.slashHead);
+  anim.impact=[ring(.22,.020,0xffdb69,170),ring(.36,.014,0xfff0b3,170),ring(.49,.010,0xffae4e,170)];
+  anim.sparks=[];
+  for(let i=0;i<5;i++){
+    const spark=new T.Mesh(new T.SphereGeometry(.025,6,5),mat(i%2?0xfff5c5:0xffbd4a,0));
+    spark.renderOrder=171;spark.userData.sparkIndex=i;root.add(spark);anim.sparks.push(spark);
+  }
+  g3.scene.add(root);anim.group=root;return true;
+}
+
+function _duetoMarcialUpdate3D(anim,now){
+  if(!g3?.scene||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_duetoMarcialDispose3D(anim);if(!_duetoMarcialBuild3D(anim))return;}
+  const T=window.THREE,elapsed=now-anim.start;
+  const flare=Math.max(0,1-elapsed/210),flarePulse=.5+.5*Math.sin(elapsed/24);
+  anim.flare.material.opacity=.92*flare;
+  anim.flare.scale.setScalar(.75+.55*flarePulse);
+  anim.flareRings.forEach((r,i)=>{const q=Math.max(0,Math.min(1,elapsed/(180+i*45)));r.scale.setScalar(.55+q*(1.65+i*.35));r.material.opacity=(.82-i*.18)*(1-q);r.rotation.z=elapsed/(260+i*80);});
+  anim.chord.material.opacity=.82*Math.max(0,1-elapsed/300);
+  const swipe=Math.max(0,Math.min(1,(elapsed-145)/205)),eased=swipe*swipe*(3-2*swipe);
+  const x=anim.origin[0]+(anim.target[0]-anim.origin[0])*eased;
+  const z=anim.origin[1]+(anim.target[1]-anim.origin[1])*eased;
+  const y=.35+Math.sin(Math.PI*eased)*.24;
+  const attr=anim.slash.geometry.attributes.position;
+  attr.setXYZ(0,anim.origin[0],.36,anim.origin[1]);attr.setXYZ(1,x,y,z);attr.needsUpdate=true;
+  anim.slash.geometry.computeBoundingSphere();anim.slash.material.opacity=swipe>0&&swipe<1?.95:0;
+  anim.slashHead.visible=swipe>0&&swipe<1;anim.slashHead.position.set(x,y,z);anim.slashHead.material.opacity=anim.slashHead.visible?.96:0;
+  const impact=Math.max(0,Math.min(1,(elapsed-350)/270)),impactPower=anim.hit===false?0:1;
+  anim.impact.forEach((r,i)=>{r.position.set(anim.target[0],.30+i*.004,anim.target[1]);r.scale.setScalar(.35+impact*(1.45+i*.25));r.material.opacity=(.85-i*.14)*impact*(1-impact)*impactPower;});
+  for(const spark of anim.sparks){
+    const i=spark.userData.sparkIndex,a=i*Math.PI*2/anim.sparks.length+.45;
+    const travel=impact*(.18+.25*((i%3)+1)/3),height=.22+impact*(.20+(i%2)*.11);
+    spark.position.set(anim.target[0]+Math.cos(a)*travel,.34+height,anim.target[1]+Math.sin(a)*travel);
+    spark.material.opacity=Math.sin(Math.PI*impact)*.95*impactPower;
+  }
+}
+
+function _duetoMarcialDraw2D(ctx,state,anim,now){
+  const visible=new Set([...(state?.explored||[]),...(state?.revealed||[])].map(([x,y])=>`${x},${y}`));
+  const canSee=p=>visible.has(`${Math.floor(p[0])},${Math.floor(p[1])}`)||GS.isMaster()||state?.test_mode;
+  if(!canSee(anim.origin)&&!canSee(anim.ally)&&!canSee(anim.target))return;
+  const e=now-anim.start,cell=CELL,cx=(x)=> (x+.5)*cell,cy=(y)=> (y+.5)*cell;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  const flare=Math.max(0,1-e/210),pulse=.5+.5*Math.sin(e/24),ox=cx(anim.origin[0]),oy=cy(anim.origin[1]);
+  if(canSee(anim.origin)){
+    ctx.globalAlpha=.92*flare;ctx.strokeStyle='#ffd35e';ctx.shadowColor='#ffcf52';ctx.shadowBlur=cell*.28;ctx.lineWidth=Math.max(2,cell*.04);
+    for(let i=0;i<2;i++){const r=cell*(.16+i*.09+Math.max(0,e/180)*(1+i*.25));ctx.beginPath();ctx.arc(ox,oy,r,0,Math.PI*2);ctx.stroke();}
+    ctx.fillStyle='#fff6cf';ctx.font=`bold ${Math.max(16,cell*.35)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('♫',ox,oy-cell*(.18+.08*pulse));
+  }
+  if(canSee(anim.ally)&&canSee(anim.target)&&e<310){
+    const a={x:cx(anim.ally[0]),y:cy(anim.ally[1])},b={x:cx(anim.target[0]),y:cy(anim.target[1])};
+    const fade=Math.max(0,1-e/310);ctx.globalAlpha=.82*fade;ctx.strokeStyle='#ffe48a';ctx.shadowColor='#ffe18a';ctx.shadowBlur=cell*.22;ctx.lineWidth=Math.max(1.5,cell*.028);
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo((a.x+b.x)/2,(a.y+b.y)/2-cell*.36,b.x,b.y);ctx.stroke();
+    ctx.fillStyle='#fff3bf';ctx.font=`bold ${Math.max(13,cell*.22)}px serif`;ctx.fillText('♪',(a.x+b.x)/2,(a.y+b.y)/2-cell*.36);
+  }
+  const swipe=Math.max(0,Math.min(1,(e-145)/205)),headX=ox+(cx(anim.target[0])-ox)*swipe,headY=oy+(cy(anim.target[1])-oy)*swipe-Math.sin(Math.PI*swipe)*cell*.28;
+  if(canSee(anim.origin)&&swipe>0&&swipe<1){
+    const bard=state?.players?.find(p=>String(p.id)===String(anim.casterId));
+    if(bard){
+      const q=Math.sin(Math.PI*swipe);
+      ctx.save();ctx.globalAlpha=.48*q;ctx.filter='sepia(.78) brightness(1.12)';
+      drawHeroSprite(ctx,headX,headY-3,bard.class_id,'#f3c75e',false,false,false,anim.facing||bard.facing,0);
+      ctx.restore();
+    }
+    ctx.globalAlpha=.92*(1-swipe*.35);ctx.strokeStyle='#fff4c2';ctx.shadowColor='#ffc947';ctx.shadowBlur=cell*.24;ctx.lineWidth=Math.max(2,cell*.06);
+    ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(headX,headY);ctx.stroke();
+    ctx.globalAlpha=.86;ctx.beginPath();ctx.moveTo(headX-cell*.12,headY-cell*.10);ctx.lineTo(headX+cell*.12,headY+cell*.10);ctx.stroke();
+  }
+  const impact=Math.max(0,Math.min(1,(e-350)/270)),tx=cx(anim.target[0]),ty=cy(anim.target[1]);
+  if(canSee(anim.target)&&impact>0&&anim.hit!==false){
+    for(let i=0;i<3;i++){ctx.globalAlpha=(.84-i*.14)*impact*(1-impact);ctx.strokeStyle=i===1?'#fff2b0':'#ffbd4a';ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=cell*.22;ctx.lineWidth=Math.max(1.5,cell*.035);ctx.beginPath();ctx.ellipse(tx,ty,cell*(.16+impact*(.45+i*.12)),cell*(.12+impact*(.30+i*.08)),0,0,Math.PI*2);ctx.stroke();}
+    ctx.globalAlpha=Math.sin(Math.PI*impact)*.92;ctx.fillStyle='#fff4c2';ctx.shadowColor='#ffce54';ctx.shadowBlur=cell*.25;ctx.font=`bold ${Math.max(15,cell*.32)}px serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('♪',tx-cell*(.14+impact*.22),ty-cell*(.20+impact*.32));ctx.fillText('♫',tx+cell*(.18+impact*.28),ty-cell*(.08+impact*.4));
+  }
+  ctx.restore();
+}
+
+function _tickDuetoMarcial(now){
+  let active=false;
+  for(let i=_duetoMarcialAnims.length-1;i>=0;i--){
+    const anim=_duetoMarcialAnims[i];
+    if(now>=anim.start+DUETO_MARCIAL_DURATION_MS){_duetoMarcialDispose3D(anim);_duetoMarcialAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_duetoMarcialUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _duetoMarcialRaf=active?_scheduleVisualFrame(_tickDuetoMarcial):null;
+}
+
+function _receberAnimacaoDuetoMarcial(msg){
+  if(!msg||msg.spell_id!=='dueto_marcial')return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='resolve'){
+    const existing=_duetoMarcialAnims.find(a=>a.id===id);
+    if(existing){existing.hit=!!msg.hit;existing.crit=!!msg.crit;}
+    return;
+  }
+  if(msg.phase!=='start')return;
+  if(id!=null&&_duetoMarcialAnims.some(a=>a.id===id))return;
+  const anim=_duetoMarcialAnimFromMessage(msg);if(!anim)return;
+  _duetoMarcialAnims.push(anim);if(!_duetoMarcialRaf)_duetoMarcialRaf=_scheduleVisualFrame(_tickDuetoMarcial);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ECOS DOLOROSOS — o sino pulsa no bardo e devolve uma onda ao agressor
+// ═══════════════════════════════════════════════════════════════════════════
+const _ecosDolorososAnims=[];
+let _ecosDolorososRaf=null;
+const ECOS_DOLOROSOS_START_MS=760;
+const ECOS_DOLOROSOS_TRAVEL_MS=360;
+const ECOS_DOLOROSOS_IMPACT_MS=430;
+
+function _ecosDolorososAnimFromMessage(msg){
+  const origin=Array.isArray(msg?.origin)?msg.origin.map(Number):null;
+  if(!origin||origin.length<2||!origin.every(Number.isFinite))return null;
+  const phase=msg.phase==='retaliate'?'retaliate':'start';
+  const target=Array.isArray(msg.target_pos)?msg.target_pos.map(Number):null;
+  if(phase==='retaliate'&&(!target||target.length<2||!target.every(Number.isFinite)))return null;
+  const id=msg.animation_id==null?`ecos_${Date.now()}_${Math.random()}`:String(msg.animation_id);
+  return {id,phase,origin,target,start:performance.now(),
+    casterId:msg.caster_id==null?null:String(msg.caster_id),targetId:msg.target_id==null?null:String(msg.target_id),
+    pulseMs:Math.max(260,Number(msg.pulse_ms)||ECOS_DOLOROSOS_START_MS),
+    travelMs:Math.max(160,Number(msg.travel_ms)||ECOS_DOLOROSOS_TRAVEL_MS),
+    impactMs:Math.max(180,Number(msg.impact_ms)||ECOS_DOLOROSOS_IMPACT_MS),group:null,wave:null,impact:[]};
+}
+
+function _ecosDolorososDispose3D(anim){
+  if(!anim?.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+  anim.group=null;anim.wave=null;anim.impact=[];
+}
+
+function _ecosDolorososBuild3D(anim){
+  if(!g3?.scene||!window.THREE)return false;
+  const T=window.THREE,root=new T.Group(),mk=(r,t,color)=>{
+    const mesh=new T.Mesh(new T.TorusGeometry(r,t,7,32),new T.MeshBasicMaterial({color,transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending}));
+    mesh.rotation.x=Math.PI/2;mesh.renderOrder=164;root.add(mesh);return mesh;
+  };
+  root.name='ecos-dolorosos-fx';
+  if(anim.phase==='start'){
+    anim.wave=[mk(.19,.016,0x7ceaff),mk(.31,.013,0xd39aff),mk(.44,.010,0xbef7ff)];
+    root.position.set(anim.origin[0],.27,anim.origin[1]);
+  } else {
+    const wave=mk(.17,.021,0x8defff);const core=new T.Mesh(new T.SphereGeometry(.065,8,6),new T.MeshBasicMaterial({color:0xf0fdff,transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending}));
+    core.renderOrder=165;root.add(core);anim.wave=[wave,core];
+    anim.impact=[mk(.22,.020,0xb58cff),mk(.36,.014,0x79e9ff),mk(.50,.010,0xecf8ff)];
+    root.position.set(anim.origin[0],.31,anim.origin[1]);
+  }
+  g3.scene.add(root);anim.group=root;return true;
+}
+
+function _ecosDolorososUpdate3D(anim,now){
+  if(!g3?.scene||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_ecosDolorososDispose3D(anim);if(!_ecosDolorososBuild3D(anim))return;}
+  const elapsed=now-anim.start,pulse=.5+.5*Math.sin(now/55);
+  if(anim.phase==='start'){
+    const q=Math.max(0,Math.min(1,elapsed/anim.pulseMs));
+    for(let i=0;i<anim.wave.length;i++){const ring=anim.wave[i];ring.visible=true;ring.scale.setScalar(.35+q*(1.45+i*.35));ring.material.opacity=(.60-i*.10)*(1-q);ring.rotation.z=now/(430+i*90);}
+    return;
+  }
+  const travel=Math.max(0,Math.min(1,elapsed/anim.travelMs));
+  if(travel<1){
+    anim.group.position.set(anim.origin[0]+(anim.target[0]-anim.origin[0])*travel,.34,anim.origin[1]+(anim.target[1]-anim.origin[1])*travel);
+    anim.wave.forEach((obj,i)=>{obj.visible=true;obj.material.opacity=i?(.80+.15*pulse):.84;obj.scale.setScalar(i?.9:1.05+.18*pulse);});
+    anim.impact.forEach(r=>r.visible=false);
+  } else {
+    const q=Math.max(0,Math.min(1,(elapsed-anim.travelMs)/anim.impactMs));
+    anim.group.position.set(anim.target[0],.34,anim.target[1]);anim.wave.forEach(o=>o.visible=false);
+    anim.impact.forEach((ring,i)=>{ring.visible=true;ring.scale.setScalar(.45+q*(1.35+i*.30));ring.material.opacity=(.82-i*.13)*(1-q);ring.rotation.z=now/(260+i*80);});
+  }
+}
+
+function _ecosDolorososDraw2D(ctx,state,anim,now){
+  const visible=new Set([...(state?.explored||[]),...(state?.revealed||[])].map(([x,y])=>`${x},${y}`));
+  const canSee=pos=>visible.has(`${pos[0]},${pos[1]}`)||GS.isMaster()||state?.test_mode;
+  if(!canSee(anim.origin)&&(anim.phase!=='retaliate'||!canSee(anim.target)))return;
+  const elapsed=now-anim.start;ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  const ring=(x,y,r,a,color,flatten=.66)=>{ctx.strokeStyle=color;ctx.globalAlpha=Math.max(0,a);ctx.lineWidth=Math.max(1.5,CELL*.035);ctx.shadowColor=color;ctx.shadowBlur=CELL*.16;ctx.beginPath();ctx.ellipse((x+.5)*CELL,(y+.5)*CELL,r*CELL,r*CELL*flatten,0,0,Math.PI*2);ctx.stroke();};
+  if(anim.phase==='start'){
+    const q=Math.max(0,Math.min(1,elapsed/anim.pulseMs));
+    for(let i=0;i<3;i++)ring(anim.origin[0],anim.origin[1],.18+q*(.78+i*.12),(.72-i*.12)*(1-q),i===1?'#d297ff':'#7aeaff');
+  } else {
+    const travel=Math.max(0,Math.min(1,elapsed/anim.travelMs));
+    if(travel<1){
+      const x=anim.origin[0]+(anim.target[0]-anim.origin[0])*travel,y=anim.origin[1]+(anim.target[1]-anim.origin[1])*travel;
+      ctx.globalAlpha=.22;ctx.strokeStyle='#78eaff';ctx.lineWidth=Math.max(1,CELL*.018);ctx.beginPath();ctx.moveTo((anim.origin[0]+.5)*CELL,(anim.origin[1]+.5)*CELL);ctx.lineTo((x+.5)*CELL,(y+.5)*CELL);ctx.stroke();
+      ring(x,y,.19,.85,'#7deeff');ring(x,y,.31,.56,'#c897ff');
+    } else {
+      const q=Math.max(0,Math.min(1,(elapsed-anim.travelMs)/anim.impactMs));
+      for(let i=0;i<3;i++)ring(anim.target[0],anim.target[1],.22+q*(.72+i*.16),(.86-i*.15)*(1-q),i===1?'#c693ff':'#8aefff');
+      const cx=(anim.target[0]+.5)*CELL,cy=(anim.target[1]+.5)*CELL;ctx.globalAlpha=(1-q)*.9;ctx.fillStyle='#f4fcff';ctx.shadowColor='#a76aff';ctx.shadowBlur=CELL*.28;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`bold ${Math.max(16,CELL*.42)}px serif`;ctx.fillText('♬',cx,cy-CELL*.16);
+    }
+  }
+  ctx.restore();
+}
+
+function _ecosDolorososFeedbackStartAt(entry){
+  const targetId=String(entry?.key||'').replace(/^m:/,'');
+  let start=null;
+  for(const anim of _ecosDolorososAnims){
+    if(anim.phase!=='retaliate'||String(anim.targetId)!==targetId)continue;
+    const at=anim.start+anim.travelMs;start=start==null?at:Math.max(start,at);
+  }
+  return start;
+}
+
+function _tickEcosDolorosos(now){
+  let active=false;
+  for(let i=_ecosDolorososAnims.length-1;i>=0;i--){
+    const anim=_ecosDolorososAnims[i],end=anim.start+(anim.phase==='start'?anim.pulseMs:anim.travelMs+anim.impactMs);
+    if(now>end+80){_ecosDolorososDispose3D(anim);_ecosDolorososAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_ecosDolorososUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _ecosDolorososRaf=active?_scheduleVisualFrame(_tickEcosDolorosos):null;
+}
+
+function _receberAnimacaoEcosDolorosos(msg){
+  if(!msg||msg.spell_id!=='ecos_dolorosos'||!['start','retaliate'].includes(msg.phase))return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(id!=null&&_ecosDolorososAnims.some(a=>a.id===id))return;
+  const anim=_ecosDolorososAnimFromMessage(msg);if(!anim)return;_ecosDolorososAnims.push(anim);
+  if(!_ecosDolorososRaf)_ecosDolorososRaf=_scheduleVisualFrame(_tickEcosDolorosos);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ACORDE TROVEJANTE — cúpula sonora que cresce e se estilhaça
 // ═══════════════════════════════════════════════════════════════════════════
@@ -34464,6 +35053,151 @@ function _receberAnimacaoAcordeTrovejante(msg){
   const anim=_acordeTrovejanteAnimFromMessage(msg);if(!anim)return;
   _acordeTrovejanteAnims.push(anim);
   if(!_acordeTrovejanteRaf)_acordeTrovejanteRaf=_scheduleVisualFrame(_acordeTrovejanteTick);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHAMADO DO GENERAL — a ordem percorre o cone e marca a reação de cada alvo
+// ═══════════════════════════════════════════════════════════════════════════
+const _chamadoGeneralAnims=[];
+let _chamadoGeneralRaf=null;
+const CHAMADO_GENERAL_TRAVEL_MS=780;
+const CHAMADO_GENERAL_IMPACT_MS=720;
+
+function _chamadoGeneralAnimFromMessage(msg){
+  const origin=Array.isArray(msg?.origin)?msg.origin.map(Number):null;
+  const dir=Array.isArray(msg?.dir)?msg.dir.map(Number):null;
+  if(!origin||origin.length<2||!origin.every(Number.isFinite)||!dir||dir.length<2||!dir.every(Number.isFinite))return null;
+  const tiles=(msg.tiles||[]).filter(p=>Array.isArray(p)&&p.length>=2).map(p=>p.map(Number)).filter(p=>p.every(Number.isFinite));
+  const targets=(msg.targets||[]).filter(t=>Array.isArray(t?.pos)&&t.pos.length>=2).map(t=>({id:t.target_id==null?null:String(t.target_id),pos:t.pos.map(Number),result:null,fx:null}));
+  if(!tiles.length)return null;
+  const maxProjection=Math.max(1,...tiles.map(([x,y])=>(x-origin[0])*dir[0]+(y-origin[1])*dir[1]));
+  const dirLen2=Math.max(1,dir[0]*dir[0]+dir[1]*dir[1]);
+  return {id:msg.animation_id==null?`chamado_${Date.now()}_${Math.random()}`:String(msg.animation_id),
+    casterId:msg.caster_id==null?null:String(msg.caster_id),origin,dir,dirLen2,cone:Math.max(1,Number(msg.cone)||1),tiles,targets,maxProjection:maxProjection/dirLen2,
+    start:performance.now(),travelMs:Math.max(240,Number(msg.travel_ms)||CHAMADO_GENERAL_TRAVEL_MS),
+    impactMs:Math.max(260,Number(msg.impact_ms)||CHAMADO_GENERAL_IMPACT_MS),resolvedAt:null,group:null,tileMeshes:[],front:null};
+}
+
+function _chamadoGeneralDispose3D(anim){
+  if(!anim?.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.map)m.map.dispose();m.dispose();});});
+  anim.group=null;anim.tileMeshes=[];anim.front=null;
+  for(const target of anim.targets)target.fx=null;
+}
+
+function _chamadoGeneralBuild3D(anim){
+  if(!g3?.scene||!window.THREE)return false;
+  const T=window.THREE,root=new T.Group();root.name='chamado-do-general-fx';
+  anim.tileMeshes=[];anim.targets.forEach(t=>t.fx=null);
+  for(const [x,y] of anim.tiles){
+    const mat=new T.MeshBasicMaterial({color:0xf3c85f,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending});
+    const tile=new T.Mesh(new T.PlaneGeometry(.88,.88).rotateX(-Math.PI/2),mat);
+    tile.position.set(x-anim.origin[0],.16,y-anim.origin[1]);tile.renderOrder=144;
+    tile.userData.projection=((x-anim.origin[0])*anim.dir[0]+(y-anim.origin[1])*anim.dir[1])/anim.dirLen2;
+    root.add(tile);anim.tileMeshes.push(tile);
+  }
+  const ringMat=new T.MeshBasicMaterial({color:0xffedaa,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending,side:T.DoubleSide});
+  anim.front=new T.Mesh(new T.TorusGeometry(.16,.026,7,32),ringMat);anim.front.rotation.x=Math.PI/2;anim.front.position.y=.23;anim.front.renderOrder=146;root.add(anim.front);
+  for(const target of anim.targets){
+    const marker=new T.Group();marker.visible=false;marker.position.set(target.pos[0]-anim.origin[0],.22,target.pos[1]-anim.origin[1]);
+    const ring=new T.Mesh(new T.TorusGeometry(.25,.025,7,32),new T.MeshBasicMaterial({color:0xff5269,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending}));
+    ring.rotation.x=Math.PI/2;ring.renderOrder=148;marker.add(ring);
+    const makeMark=(glyph,color)=>{
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d');
+      c.textAlign='center';c.textBaseline='middle';c.font='bold 88px sans-serif';c.shadowBlur=16;
+      c.fillStyle='#fff4d4';c.shadowColor=color;c.fillText(glyph,64,66);
+      const texture=new T.CanvasTexture(canvas),sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending}));
+      sprite.position.y=.84;sprite.scale.set(.40,.48,1);sprite.renderOrder=149;marker.add(sprite);return sprite;
+    };
+    const fearMark=makeMark('!','#ff344d'),resistMark=makeMark('✦','#41dcff');
+    target.fx={marker,ring,fearMark,resistMark};root.add(marker);
+  }
+  root.position.set(anim.origin[0],0,anim.origin[1]);g3.scene.add(root);anim.group=root;return true;
+}
+
+function _chamadoGeneralUpdate3D(anim,now){
+  if(!g3?.scene||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_chamadoGeneralDispose3D(anim);if(!_chamadoGeneralBuild3D(anim))return;}
+  const elapsed=now-anim.start,progress=Math.max(0,Math.min(1,elapsed/anim.travelMs)),frontDistance=progress*anim.maxProjection;
+  for(const tile of anim.tileMeshes){
+    const d=tile.userData.projection,q=Math.max(0,Math.min(1,(frontDistance-d+.65)/.65));
+    tile.material.opacity=.20*q*(1-Math.max(0,progress-.92)*.8);
+  }
+  const perpX=-anim.dir[1],perpZ=anim.dir[0],halfWidth=Math.max(.18,progress*anim.cone*.54);
+  anim.front.position.set(anim.dir[0]*frontDistance,.23,anim.dir[1]*frontDistance);
+  anim.front.scale.set(halfWidth/.16,1,.72);anim.front.material.opacity=progress<1?.92:0;
+  for(const target of anim.targets){
+    const fx=target.fx;if(!fx||!target.result)continue;
+    const q=Math.max(0,Math.min(1,(now-anim.resolvedAt)/anim.impactMs)),fade=1-q;
+    fx.marker.visible=fade>0;fx.ring.material.color.setHex(target.result.resisted?0x74eaff:0xff5269);
+    fx.ring.material.opacity=fade*(target.result.resisted?.74:.92);fx.ring.scale.setScalar(target.result.resisted?1-q*.55:.82+q*.48);
+    const mark=target.result.resisted?fx.resistMark:fx.fearMark;
+    fx.fearMark.visible=!target.result.resisted;fx.resistMark.visible=target.result.resisted;
+    mark.material.opacity=fade*.96;mark.position.y=.72+q*.34+(target.result.resisted?0:Math.sin(now/35)*.035);
+    mark.scale.set(.40+q*.10,.48+q*.10,1);
+    if(!target.result.resisted){fx.marker.position.x=target.pos[0]-anim.origin[0]+Math.sin(now/24)*.035*fade;}
+  }
+}
+
+function _chamadoGeneralDraw2D(ctx,state,anim,now){
+  const visible=new Set([...(state?.explored||[]),...(state?.revealed||[])].map(([x,y])=>`${x},${y}`));
+  const canSee=p=>visible.has(`${p[0]},${p[1]}`)||GS.isMaster()||state?.test_mode;
+  if(!canSee(anim.origin)&&!anim.tiles.some(canSee))return;
+  const elapsed=now-anim.start,progress=Math.max(0,Math.min(1,elapsed/anim.travelMs)),front=progress*anim.maxProjection;
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(const [x,y] of anim.tiles){
+    if(!canSee([x,y]))continue;
+    const d=((x-anim.origin[0])*anim.dir[0]+(y-anim.origin[1])*anim.dir[1])/anim.dirLen2,reveal=Math.max(0,Math.min(1,(front-d+.72)/.72));
+    if(!reveal)continue;
+    const fade=1-Math.max(0,progress-.92)*.82;ctx.globalAlpha=.20*reveal*fade;ctx.fillStyle='#f4c95f';ctx.shadowColor='#ffe9a1';ctx.shadowBlur=CELL*.10;
+    ctx.fillRect(x*CELL+1,y*CELL+1,CELL-2,CELL-2);
+  }
+  const ox=(anim.origin[0]+.5)*CELL,oy=(anim.origin[1]+.5)*CELL,fx=ox+anim.dir[0]*front*CELL,fy=oy+anim.dir[1]*front*CELL;
+  if(progress<1){
+    const half=CELL*Math.max(.12,progress*anim.cone*.54),px=-anim.dir[1],py=anim.dir[0];
+    ctx.globalAlpha=.95;ctx.strokeStyle='#fff2b4';ctx.lineWidth=Math.max(2,CELL*.045);ctx.shadowColor='#ffcf5e';ctx.shadowBlur=CELL*.22;
+    ctx.beginPath();ctx.moveTo(fx-px*half,fy-py*half);ctx.lineTo(fx+px*half,fy+py*half);ctx.stroke();
+    ctx.globalAlpha=.62;ctx.beginPath();ctx.arc(ox,oy,CELL*.23,0,Math.PI*2);ctx.stroke();
+  }
+  for(const target of anim.targets){
+    if(!target.result||!canSee(target.pos))continue;
+    const q=Math.max(0,Math.min(1,(now-anim.resolvedAt)/anim.impactMs)),fade=1-q,cx=(target.pos[0]+.5)*CELL,cy=(target.pos[1]+.5)*CELL;
+    ctx.globalAlpha=fade*.92;ctx.strokeStyle=target.result.resisted?'#76eaff':'#ff5367';ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=CELL*.25;ctx.lineWidth=Math.max(2,CELL*.045);
+    ctx.beginPath();ctx.ellipse(cx,cy,CELL*(.24+q*.40),CELL*(.20+q*.28),0,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=fade;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`bold ${Math.max(18,CELL*.54)}px sans-serif`;
+    ctx.fillStyle=target.result.resisted?'#c9f8ff':'#ff6673';ctx.shadowBlur=CELL*.24;
+    ctx.fillText(target.result.resisted?'✦':'!',cx,cy-CELL*(.18+q*.34));
+    if(!target.result.resisted&&q<.72){ctx.globalAlpha=fade*.78;ctx.strokeStyle='#ff9a79';ctx.lineWidth=Math.max(1.5,CELL*.025);ctx.beginPath();ctx.moveTo(cx-CELL*.22,cy+CELL*.08);ctx.lineTo(cx+CELL*.22,cy+CELL*.08);ctx.stroke();}
+  }
+  ctx.restore();
+}
+
+function _tickChamadoGeneral(now){
+  let active=false;
+  for(let i=_chamadoGeneralAnims.length-1;i>=0;i--){
+    const anim=_chamadoGeneralAnims[i],end=Math.max(anim.start+anim.travelMs,anim.resolvedAt==null?0:anim.resolvedAt+anim.impactMs)+90;
+    if(now>=end){_chamadoGeneralDispose3D(anim);_chamadoGeneralAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_chamadoGeneralUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _chamadoGeneralRaf=active?_scheduleVisualFrame(_tickChamadoGeneral):null;
+}
+
+function _receberAnimacaoChamadoGeneral(msg){
+  if(!msg||msg.spell_id!=='chamado_general'||!['start','resolve'].includes(msg.phase))return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_chamadoGeneralAnims.find(a=>a.id===id);
+  if(msg.phase==='start'){
+    if(anim)return;anim=_chamadoGeneralAnimFromMessage(msg);if(!anim)return;_chamadoGeneralAnims.push(anim);
+  } else {
+    if(!anim){anim=_chamadoGeneralAnimFromMessage(msg);if(!anim)return;anim.start=performance.now()-anim.travelMs;_chamadoGeneralAnims.push(anim);}
+    anim.resolvedAt=performance.now();
+    for(const result of msg.targets||[]){
+      const target=anim.targets.find(t=>String(t.id)===String(result.target_id));
+      if(target){target.result={resisted:!!result.resisted};if(Array.isArray(result.pos))target.pos=result.pos.map(Number);}
+    }
+  }
+  if(!_chamadoGeneralRaf)_chamadoGeneralRaf=_scheduleVisualFrame(_tickChamadoGeneral);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -39640,6 +40374,10 @@ function dispose3D(){
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
+  for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
+  for(const fx of g3._duetoFantasmaSombras?.values() || [])
+    _disposeDuetoFantasmaShadow3D(fx.group);
+  g3._duetoFantasmaSombras?.clear();
   // As nuvens de fumaça continuam (a zona segue ativa); só os objetos da cena
   // morrem com ela e são refeitos no próximo init3D/2D.
   for(const n of _fumacaNuvens.values()) _fumacaDispose3D(n);
@@ -40063,8 +40801,10 @@ function startLoop3D(){
       _sincronizarEfeitosAtivos3DImediatamente(GS.gameState);
     if(GS.gameState){
       try { _sync3DCancaoRing(GS.gameState); } catch(e) { console.warn('cancaoAura3D:', e); }
+      try { _sync3DEcosDolorososAura(GS.gameState); } catch(e) { console.warn('ecosAura3D:', e); }
     }
     _atualizarCancaoHeroicaAura3D(now);
+    _atualizarEcosDolorososAura3D(now);
     _atualizarPosicoesEfeitosAtivos3D();
     _atualizarProtetor3D(now);
     _atualizarProvocacaoMarks3D(now);
@@ -40289,6 +41029,7 @@ function startLoop3D(){
       // O giro vem depois da pose do CombatScene para não ser sobrescrito.
       _aplicarGiroAtaque3D(fig, now);
     });
+    _atualizarSombrasDuetoFantasma3D(now);
     // Fade vitrine spotlight in/out
     if(hovP && hspot){
       hspot.position.set(hovP[0], hovFigY, hovP[1]);
@@ -43456,6 +44197,8 @@ function renderMap3D(state){
 
   // Canção Heroica: anel dourado de raio 5 ao redor de bardos e Xamãs de teste.
   try { _sync3DCancaoRing(state); } catch(e) { console.warn('cancaoRing:', e); }
+  try { _sync3DEcosDolorososAura(state); } catch(e) { console.warn('ecosAura:', e); }
+  try { _syncDuetoFantasmaSombras3D(state); } catch(e) { console.warn('duetoFantasmaShadow:', e); }
   try { _atualizarProtetor3D(performance.now()); } catch(e) { console.warn('protetorFx:', e); }
 
   // Portraits are exclusive to the class selection screen (HTML). Not on the board.
@@ -49768,7 +50511,10 @@ const _spellAnimationReceivers = [
   _receberAnimacaoRaioDivino,
   _receberAnimacaoJatoAr,
   _receberAnimacaoNotaCortante,
+  _receberAnimacaoEcosDolorosos,
+  _receberAnimacaoDuetoMarcial,
   _receberAnimacaoAcordeTrovejante,
+  _receberAnimacaoChamadoGeneral,
   _receberAnimacaoRequiemFinal,
   _receberAnimacaoSoproDragao,
   _receberAnimacaoCuspeAcido,

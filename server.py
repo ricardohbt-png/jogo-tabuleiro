@@ -1131,9 +1131,13 @@ INSTRUMENTOS_BASE = {
     "gaita": {
         "nome": "Gaita", "icon": "🪗", "maos": 1, "modo": "ativada",
         "habilidade_nome": "Improviso",
-        "desc": "Rola 2d6 e improvisa a habilidade de outro instrumento (no tier da "
-                "Gaita). 12 = Encore: toca de novo duas vezes. A Gaita Rúnica pode "
-                "escalar até o Grande Encore.",
+        "desc": "Improvisa um efeito conforme 2d6: 2 Desafinado (-1 em ataques e CD do Bardo); "
+                "3 Falha (nada); 4 Ecos Dolorosos; 5 Dueto Marcial; 6 Dueto Fantasma; "
+                "7 Nota Cortante (escolha uma linha); 8 Acorde Trovejante (área próxima); "
+                "9 Réquiem (escolha um alvo); 10 Sinfonia Heroica (+1 aos atributos da Canção); "
+                "11 Chamado do General (escolha direção). 12 = Encore: rola mais dois resultados. "
+                "Na Gaita Rúnica, 12s encadeiam Encores; o segundo concede Encore Menor e o "
+                "terceiro, Grande Encore.",
         "efeito": {"tipo": "improviso"},
         "custo_fome": 3, "custo_sede": 3,
         "afixos_validos": ["fome", "sede"],
@@ -11564,13 +11568,14 @@ class GameRoom:
         12 = Encore -> rola +2x. O 2o 12 na cadeia liga encore_menor.
         So a Gaita Runica recursa em cada 12; o 3o 12 liga grande_encore."""
         passos = []
-        meta = {"encore_menor": False, "grande_encore": False}
+        meta = {"encore_menor": False, "grande_encore": False, "encore_count": 0}
         contador = [0]
         TETO = 40
 
         def _encore():
             # um "12" acabou de sair: conta e rola +2x, processando cada resultado.
             contador[0] += 1
+            meta["encore_count"] = contador[0]
             if contador[0] >= 2:
                 meta["encore_menor"] = True
             if contador[0] >= 3 and runico:
@@ -11584,6 +11589,7 @@ class GameRoom:
                         _encore()          # cada 12 gera seus proprios 2 rerolls
                     else:
                         contador[0] += 1   # nao-runica: conta o 12 (liga encore_menor) mas nao recursa
+                        meta["encore_count"] = contador[0]
                         if contador[0] >= 2:
                             meta["encore_menor"] = True
                 else:
@@ -11769,6 +11775,12 @@ class GameRoom:
         monstro que acertar o bardo em corpo a corpo sofre `dano` sonoro."""
         p["ecos_ate"] = self.round_num + st["duracao"]
         p["ecos_dano"] = st["dano"]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ecos_dolorosos", "phase": "start",
+            "animation_id": f"ecos_dolorosos_{p['id']}_{time.time_ns()}",
+            "caster_id": p["id"], "origin": list(p["pos"]),
+            "duration_rounds": st["duracao"], "pulse_ms": 760,
+        })
         await self.gm_say(T("narracao.faz_o_sino_ressoar_ecos_dolorosos_por_ro", heroi=p['name'], st_duracao=st['duracao']))
         return True
 
@@ -11785,6 +11797,16 @@ class GameRoom:
         if m.get("hp", 0) <= 0:
             return
         dano = await self._rolar_dano_mostrado(*_ndfaces(p.get("ecos_dano", "1d4")), "🔔 Ecos")
+        travel_ms = 360
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ecos_dolorosos", "phase": "retaliate",
+            "animation_id": f"ecos_retalhar_{p['id']}_{m['id']}_{time.time_ns()}",
+            "caster_id": p["id"], "target_id": m["id"],
+            "origin": list(p["pos"]), "target_pos": list(m["pos"]),
+            "travel_ms": travel_ms, "impact_ms": 430,
+        })
+        self._registrar_dano_combate(m, dano, ["sound"], impact_pos=m.get("pos"),
+                                     source="ecos_dolorosos")
         m["hp"] = max(0, m["hp"] - dano)
         await self.gm_say(T("narracao.os_ecos_dolorosos_ferem_em", monstro=nome_criatura(m), dano=dano))
         if m["hp"] <= 0:
@@ -11804,10 +11826,22 @@ class GameRoom:
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_cone")}); return False
+        animation_id = f"chamado_general_{p['id']}_{time.time_ns()}"
+        if hasattr(self, "connections") or "broadcast" in self.__dict__:
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "chamado_general", "phase": "start",
+                "animation_id": animation_id, "caster_id": p["id"],
+                "origin": list(p["pos"]), "dir": [dx, dy], "cone": comp,
+                "tiles": [list(t) for t in sorted(tiles, key=lambda t: (t[0] * dx + t[1] * dy, t[1], t[0]))],
+                "targets": [{"target_id": m.get("id"), "pos": list(m["pos"])} for m in alvos],
+                "travel_ms": 780, "impact_ms": 720,
+            })
         await self.gm_say(T("narracao.sopra_o_chamado_do_general_cone", heroi=p['name'], comp=comp))
         cd = self._instrumento_cd(p, inst)
+        resultados = []
         for m in alvos:
             save_ok, *_ = await self._save_mostrado(m, "vontade", cd)
+            resultados.append({"target_id": m.get("id"), "pos": list(m["pos"]), "resisted": bool(save_ok)})
             if not save_ok:
                 m["com_medo"] = True
                 m["medo_rodadas"] = st["medo"]
@@ -11818,6 +11852,14 @@ class GameRoom:
                 if st.get("pen_sucesso", 0) > 0:
                     self._reduzir_mov_monstro(m, st["pen_sucesso"], 1)
                 await self.gm_say(T("narracao.resiste_mas_hesita", monstro=nome_criatura(m)))
+        if hasattr(self, "connections") or "broadcast" in self.__dict__:
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "chamado_general", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": p["id"],
+                "origin": list(p["pos"]), "dir": [dx, dy], "cone": comp,
+                "tiles": [list(t) for t in sorted(tiles, key=lambda t: (t[0] * dx + t[1] * dy, t[1], t[0]))],
+                "targets": resultados, "travel_ms": 780, "impact_ms": 720,
+            })
         return True
 
     async def _instr_dueto_marcial(self, p, inst, st, data):
@@ -11903,6 +11945,7 @@ class GameRoom:
         await self.send_to(p["id"], {
             "type": "improviso_resultado", "cascata": cascata_cli,
             "encore_menor": meta["encore_menor"], "grande_encore": meta["grande_encore"],
+            "encore_count": meta["encore_count"],
             "pendentes": [{"res": x["res"], "alvo_tipo": x["alvo_tipo"]}
                           for x in p["improviso_pendente"]]})
         return True
@@ -12095,7 +12138,21 @@ class GameRoom:
             bardo = self._bardo_dueto_marcial(atacante, alvo)
             if bardo:
                 bardo["dueto_marcial_usos"] = bardo.get("dueto_marcial_usos", 0) + 1
-                await self._ataque_basico_reativo(bardo, alvo)
+                self._face_toward(bardo, alvo["pos"])
+                animation_id = f"dueto_marcial_{bardo['id']}_{time.time_ns()}"
+                await self.broadcast({
+                    "type": "spell_animation", "spell_id": "dueto_marcial", "phase": "start",
+                    "animation_id": animation_id,
+                    "caster_id": bardo["id"], "origin": list(bardo.get("pos", [0, 0])),
+                    "facing": list(bardo.get("facing", [0, 1])),
+                    "ally_id": atacante.get("id"), "ally_pos": list(atacante.get("pos", [0, 0])),
+                    "target_id": alvo.get("id"), "target_pos": list(alvo.get("pos", [0, 0])),
+                })
+                bardo["_dueto_marcial_feedback_animation_id"] = animation_id
+                try:
+                    await self._ataque_basico_reativo(bardo, alvo)
+                finally:
+                    bardo.pop("_dueto_marcial_feedback_animation_id", None)
 
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
@@ -15720,16 +15777,32 @@ class GameRoom:
 
     async def _ataque_basico_reativo(self, atacante, alvo):
         """Ataque básico disparado por uma reação (fora do turno). Aplica dano
-        direto (não chama handle_attack → sem recursão). Furtivo se rogue elegível."""
+        direto (não chama handle_attack → sem recursão). O feedback visual é
+        opcional; Furtivo se rogue elegível."""
         if not atacante or not atacante.get("alive") or not alvo or alvo.get("hp", 0) <= 0:
             return
         self._face_toward(atacante, alvo["pos"])
+        feedback_animation_id = atacante.pop("_dueto_marcial_feedback_animation_id", None)
+        feedback_attack = "Dueto Marcial" if feedback_animation_id else None
+        feedback_id = None
+        if feedback_attack:
+            feedback_id = await self._emitir_feedback_ataque(
+                "start", atacante, alvo, feedback_attack)
         w = atacante.get("weapon") or {}
         atk = atacante.get("atk_bonus", 0)
         hit, roll, total, crit, _d = self._rolar_ataque(atk, alvo.get("ac", 10), False, False)
+        if feedback_animation_id:
+            await self.broadcast({"type": "spell_animation", "spell_id": "dueto_marcial",
+                                  "phase": "resolve", "animation_id": feedback_animation_id,
+                                  "hit": bool(hit), "crit": bool(crit)})
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                "label": T("dado.reacao_de", nome=nome_criatura(atacante)), "hit": hit, "crit": crit})
         if not hit:
+            if feedback_id:
+                await self._emitir_feedback_ataque(
+                    "result", atacante, alvo, feedback_attack, attack_id=feedback_id,
+                    roll=roll, total=total, hit=False, crit=False, natural=int(roll),
+                    natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
             await self.gm_say(T("narracao.reage_mas_erra", atacante=nome_criatura(atacante), alvo=nome_criatura(alvo)))
             return
         die = w.get("die")
@@ -15743,6 +15816,11 @@ class GameRoom:
             fdano = sum(random.randint(1, 4) for _ in range(nd4))
             dmg += fdano; extra = f" +🗡️{fdano} furtivo [{nd4}d4]"
         alvo["hp"] = max(0, alvo["hp"] - dmg)
+        if feedback_id:
+            await self._emitir_feedback_ataque(
+                "result", atacante, alvo, feedback_attack, attack_id=feedback_id,
+                roll=roll, total=total, hit=True, crit=bool(crit), natural=int(roll),
+                natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
         await self.broadcast({"type": "dice_roll", "die": "d" + (die.split("d")[1] if die else "6"),
                                "value": base, "label": T("dado.dano_reacao"), "damage_type": DMG_PHYSICAL})
         await self.gm_say(T("narracao.reage_e_atinge_de_dano_hp", atacante=nome_criatura(atacante), alvo=nome_criatura(alvo), dmg=dmg, extra=extra, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp']))
@@ -24615,7 +24693,8 @@ class GameRoom:
         }
 
     def _registrar_dano_combate(self, alvo, dano, damage_types, *,
-                                critical=False, impact_pos=None, status=None):
+                                critical=False, impact_pos=None, status=None,
+                                source=None):
         """Registra metadado visual do dano já resolvido pelo servidor.
 
         Não altera HP nem regras de combate. O payload é consumido no próximo
@@ -24676,6 +24755,7 @@ class GameRoom:
             "critical": bool(critical),
             "damage_type": types[0],
             "damage_types": types,
+            "source": source or None,
         })
 
     async def _emitir_feedback_ataque(self, fase, atacante, alvo, ataque,

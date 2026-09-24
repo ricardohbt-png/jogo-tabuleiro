@@ -54,6 +54,7 @@ def _room_bardo():
     }
     room.players["p1"] = p
     room.turn_order = ["p1"]
+    room.prisoner = None
     room._is_turn = lambda pid: pid == "p1"
     room.map_w = server.MAP_W
     room.map_h = server.MAP_H
@@ -245,6 +246,17 @@ def test_ecos_ativa_aura():
     assert p["instrumento_usado"] is True
     assert p["action_done"] is False   # 1 mão: pode atacar depois
 
+def test_ecos_emite_pulso_visual_ao_ativar():
+    room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")
+    _run(room.handle_usar_instrumento("p1", {}))
+    anim = next(e for e in eventos if e.get("spell_id") == "ecos_dolorosos")
+    assert anim["phase"] == "start" and anim["origin"] == [5, 5]
+    assert anim["duration_rounds"] == 3 and anim["pulse_ms"] > 0
+
 def test_ecos_retaliacao():
     room, p = _room_bardo(); _mute(room)
     p["ecos_ate"] = room.round_num + 2
@@ -256,6 +268,24 @@ def test_ecos_retaliacao():
     room._rolar_dano_mostrado = _dano3
     _run(room._instr_ecos_retaliar(p, m))
     assert m["hp"] == 17
+
+def test_ecos_retaliacao_emite_onda_e_marca_dano_sonoro():
+    room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
+    p["ecos_ate"] = room.round_num + 2; p["ecos_dano"] = "1d4"
+    p["gear"]["off_hand"] = server.criar_instrumento("sino", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 20, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    async def _dano3(n, faces, label): return 3
+    room._rolar_dano_mostrado = _dano3
+    _run(room._instr_ecos_retaliar(p, m))
+    anim = next(e for e in eventos if e.get("spell_id") == "ecos_dolorosos")
+    assert anim["phase"] == "retaliate" and anim["origin"] == [5, 5] and anim["target_pos"] == [6, 5]
+    assert anim["travel_ms"] > 0 and anim["impact_ms"] > 0
+    evento_dano = room._combat_damage_events[-1]
+    assert evento_dano["source"] == "ecos_dolorosos" and evento_dano["damage_types"] == ["sound"]
 
 def test_ecos_expira():
     room, p = _room_bardo(); _mute(room)
@@ -1182,7 +1212,7 @@ def test_cascata_sem_encore():
     room._rolar_2d6 = lambda: 7
     passos, meta = room._improviso_rolar_cascata(runico=False)
     assert passos == [7]
-    assert meta == {"encore_menor": False, "grande_encore": False}
+    assert meta == {"encore_menor": False, "grande_encore": False, "encore_count": 0}
 
 def test_cascata_encore_simples():
     room, p = _room_bardo()
@@ -1302,7 +1332,7 @@ def test_grande_encore_sob_cancao():
 def _bardo_com_gaita(qual="padrao", runico=False):
     room, p = _room_bardo()
     async def noop(*a, **k): pass
-    room.gm_say = noop; room.send_to = noop; room.push_state = noop
+    room.gm_say = noop; room.send_to = noop; room.push_state = noop; room.broadcast = noop
     p["gear"]["off_hand"] = server.criar_instrumento(
         "gaita", qual, encantamento=("runico" if runico else "nenhum"))
     return room, p

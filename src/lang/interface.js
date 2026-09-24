@@ -4155,6 +4155,18 @@ window.LANG_INTERFACE = {
     "en": "🎶 Minor Encore!",
     "pt": "🎶 Encore Menor!"
   },
+  "ui.instrumento.encore_count": {
+    "en": "🎶 The cascade rolled 12 a total of {n} time(s).",
+    "pt": "🎶 A cascata tirou 12 um total de {n} vez(es)."
+  },
+  "ui.instrumento.encore_explicacao": {
+    "en": "The first 12 rolls two extra results, and both effects apply. On normal Bagpipes, extra 12s count toward Minor Encore but do not add more rolls. Runic Bagpipes roll two more whenever an extra result is 12.",
+    "pt": "O primeiro 12 gera dois resultados extras, e os dois efeitos são aplicados. Na Gaita comum, 12 nos extras conta para o Encore Menor, mas não gera novas jogadas. Na Gaita Rúnica, cada 12 extra gera mais dois resultados."
+  },
+  "ui.instrumento.encore_ajuda_titulo": {
+    "en": "What are Encore, Minor Encore, and Great Encore?",
+    "pt": "O que são Encore, Encore Menor e Grande Encore?"
+  },
   "ui.instrumento.escolha_alvo": {
     "en": "{icone} {nome} — Choose the target (range {alcance}sq)",
     "pt": "{icone} {nome} — Escolha o alvo (alcance {alcance}q)"
@@ -4186,6 +4198,58 @@ window.LANG_INTERFACE = {
   "ui.instrumento.grande_encore": {
     "en": "🎺 GRAND ENCORE!",
     "pt": "🎺 GRANDE ENCORE!"
+  },
+  "ui.instrumento.grande_encore_desc": {
+    "en": "Runic Bagpipes only: the third 12 grants allies under the Heroic Song zero Hunger/Thirst and spell costs for 1d4 rounds.",
+    "pt": "Só com a Gaita Rúnica: o terceiro 12 faz os aliados sob a Canção Heroica não pagarem Fome, Sede nem custo de magia por 1d4 rodadas."
+  },
+  "ui.instrumento.encore_menor_desc": {
+    "en": "The second 12 grants you and living allies within 5 squares, for this round, 1 less Hunger and Thirst per cost. Mages and Clerics also get one free spell.",
+    "pt": "O segundo 12 concede a você e aos aliados vivos em até 5 casas, nesta rodada, -1 de Fome e Sede por custo. Magos e Clérigos também recebem uma magia grátis."
+  },
+  "ui.instrumento.improviso_resultado_2": {
+    "en": "The Bard is Out of Tune: -1 to attacks and instrument save DC for 1 round.",
+    "pt": "O Bardo fica Desafinado: -1 em ataques e na CD de instrumentos por 1 rodada."
+  },
+  "ui.instrumento.improviso_resultado_3": {
+    "en": "The note fizzles. No effect.",
+    "pt": "A nota falha. Nenhum efeito."
+  },
+  "ui.instrumento.improviso_resultado_4": {
+    "en": "For 1 round, a melee monster that hits the Bard takes sonic damage.",
+    "pt": "Por 1 rodada, monstros que acertarem o Bardo em corpo a corpo sofrem dano sonoro."
+  },
+  "ui.instrumento.improviso_resultado_5": {
+    "en": "For 1 round, when a nearby ally hits an enemy also next to the Bard, the Bard makes a free basic counterattack.",
+    "pt": "Por 1 rodada, quando um aliado próximo acerta um inimigo também adjacente ao Bardo, o Bardo faz um contra-ataque básico grátis."
+  },
+  "ui.instrumento.improviso_resultado_6": {
+    "en": "For 1 round, each successful basic attack by the Bard echoes on the same target for a fraction of its damage.",
+    "pt": "Por 1 rodada, cada ataque básico acertado pelo Bardo ecoa no mesmo alvo e causa uma fração do dano."
+  },
+  "ui.instrumento.improviso_resultado_7": {
+    "en": "Choose an orthogonal direction: a sonic blade hits enemies in that line. A successful Reflex save halves the damage.",
+    "pt": "Escolha uma direção ortogonal: uma lâmina sonora atinge inimigos na linha. Sucesso em Reflexos reduz o dano à metade."
+  },
+  "ui.instrumento.improviso_resultado_8": {
+    "en": "A sonic blast hits enemies near the Bard. Reflex halves the damage; a failed save also causes a push (or movement loss, depending on tier).",
+    "pt": "Uma onda sonora atinge inimigos próximos do Bardo. Reflexos reduz o dano à metade; falhar também causa empurrão (ou perda de movimento, conforme o nível)."
+  },
+  "ui.instrumento.improviso_resultado_9": {
+    "en": "Choose an enemy in range: a successful Will save avoids the Requiem's immediate first pulse; failure deals damage.",
+    "pt": "Escolha um inimigo ao alcance: sucesso em Vontade evita o primeiro pulso imediato do Réquiem; falha causa dano."
+  },
+  "ui.instrumento.improviso_resultado_10": {
+    "en": "For 1 round, attributes boosted by an active Heroic Song gain +1. Requires the Song to be active.",
+    "pt": "Por 1 rodada, atributos reforçados por uma Canção Heroica ativa recebem +1. A Canção precisa estar ativa."
+  },
+  "ui.instrumento.improviso_resultado_11": {
+    "en": "Choose a direction for a cone: failed Will saves cause fear and a larger movement penalty; success causes a smaller penalty.",
+    "pt": "Escolha a direção de um cone: falhar em Vontade causa medo e uma penalidade maior de movimento; sucesso causa uma penalidade menor."
+  },
+  "ui.instrumento.improviso_resultado_12": {
+    "en": "Encore: roll two extra 2d6 results and apply both. Runic Bagpipes chain another Encore if either extra result is 12.",
+    "pt": "Encore: role mais dois resultados de 2d6 e aplique ambos. Na Gaita Rúnica, se algum extra também for 12, role mais dois."
   },
   "ui.instrumento.habilidade_de_instrumento_cancelada": {
     "en": "Instrument ability cancelled.",

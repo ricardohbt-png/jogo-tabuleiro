@@ -1875,8 +1875,8 @@ window.LANG_CATALOGO = {
     "pt": "Flauta"
   },
   "cat.instrumento.gaita.desc": {
-    "en": "Rolls 2d6 and improvises the ability of another instrument (at the Bagpipes' tier). 12 = Encore: plays again twice. The Runic Bagpipes can escalate all the way to the Great Encore.",
-    "pt": "Rola 2d6 e improvisa a habilidade de outro instrumento (no tier da Gaita). 12 = Encore: toca de novo duas vezes. A Gaita Rúnica pode escalar até o Grande Encore."
+    "en": "Roll 2d6: 2 Out of Tune (-1 to Bard attacks and instrument DC); 3 Miss (no effect); 4 Painful Echoes (retaliation aura); 5 Martial Duet (nearby ally hits trigger a counterattack); 6 Ghost Duet (successful basic hits echo); 7 Cutting Note (choose an orthogonal line); 8 Thunderous Chord (nearby area); 9 Requiem (choose a target); 10 Heroic Symphony (+1 to attributes boosted by an active Heroic Song); 11 General's Call (choose a cone direction). 12 = Encore: roll and apply two more results. The second 12 grants Minor Encore: allies within 5 squares pay 1 less Hunger/Thirst per cost this round, and Mages/Clerics get a free spell. With Runic Bagpipes, each further 12 chains; the third grants Great Encore, making allies under Heroic Song pay no costs for 1d4 rounds.",
+    "pt": "Role 2d6: 2 Desafinado (-1 em ataques e CD de instrumentos do Bardo); 3 Falha (sem efeito); 4 Ecos Dolorosos (aura de retaliação); 5 Dueto Marcial (aliado próximo que acerta permite contra-ataque); 6 Dueto Fantasma (ataques básicos acertados ecoam); 7 Nota Cortante (escolha uma linha ortogonal); 8 Acorde Trovejante (área próxima); 9 Réquiem (escolha um alvo); 10 Sinfonia Heroica (+1 aos atributos de uma Canção Heroica ativa); 11 Chamado do General (escolha a direção do cone). 12 = Encore: role e aplique mais dois resultados. O segundo 12 concede Encore Menor: aliados em até 5 casas pagam 1 a menos de Fome/Sede por custo nesta rodada, e Magos/Clérigos recebem uma magia grátis. Com a Gaita Rúnica, cada novo 12 encadeia outro Encore; o terceiro concede Grande Encore, e aliados sob a Canção Heroica não pagam custos por 1d4 rodadas."
   },
   "cat.instrumento.gaita.nome": {
     "en": "Bagpipes",
