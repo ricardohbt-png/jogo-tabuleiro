@@ -34,12 +34,14 @@ def main(source: str, destination: str) -> None:
     vertices = np.asarray(mesh.vertices, dtype=float)
     center = vertices.mean(axis=0)
     _, _, axes = np.linalg.svd(vertices - center, full_matrices=False)
-    axial = (vertices - center) @ axes[0]
+    axis = axes[0]
+    axial = (vertices - center) @ axis
     # Neste modelo, a cabeça larga fica no extremo positivo do eixo principal.
     if axial.max() < -axial.min():
         axial = -axial
+        axis = -axis
     radial = np.linalg.norm(
-        (vertices - center) - np.outer(axial, axes[0]), axis=1
+        (vertices - center) - np.outer(axial, axis), axis=1
     )
 
     fa = axial[mesh.faces].mean(axis=1)
