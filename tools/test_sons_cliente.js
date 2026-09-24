@@ -77,12 +77,13 @@ console.log('\n[3] sfx(): variante indisponível cai para outra pronta');
 console.log('\n[4] _somGolpe / _somDor');
 {
   const tocados = [];
-  const estado = { players: [
+  const estado = { monsters: [{ id: 'e1', type: 'elemental_fogo', pos: [2, 2] }, { id: 9, type: 'goblin', pos: [1, 1] }], players: [
     { id: 'h1', gear: { off_hand: { id: 'escudo_p', kind: 'shield' } } },
     { id: 'h2', gear: { off_hand: null } },
     { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
-  const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
+  const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
+    SoundBank: SB,
     GS: { gameState: estado },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
@@ -110,7 +111,8 @@ console.log('\n[4] _somGolpe / _somDor');
   [r, t] = golpe({ hit: false, impacto: null, targetPos: [1, 1], targetKey: 'p:h2' });
   check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
-    const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
+    const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
+    SoundBank: SB,
       GS: { gameState: estado },
       sfx: (e) => e !== 'golpe_critico',
       _combatPrimaryDamageType: t2 => Array.isArray(t2) ? t2[0] : t2,
@@ -123,6 +125,12 @@ console.log('\n[4] _somGolpe / _somDor');
   check('dor física em herói → dor_heroi', f._somDor({ hit: true, targetKey: 'p:h1', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
   tocados.length = 0;
   check('dor física em monstro → dor_criatura', f._somDor({ hit: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_criatura');
+  tocados.length = 0;
+  check('dano de fogo em elemental de fogo → dor_elem_fogo', f._somDor({ hit: true, targetKey: 'm:e1', targetPos: [2, 2] }, { damageType: 'fire' }) && tocados[0][0] === 'dor_elem_fogo');
+  tocados.length = 0;
+  check('dano físico em elemental → dor_elem_fogo (não dor_criatura)', f._somDor({ hit: true, targetKey: 'm:e1', targetPos: [2, 2] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_elem_fogo');
+  tocados.length = 0;
+  check('golpe que mata elemental não toca dor', f._somDor({ hit: true, death: true, targetKey: 'm:e1' }, { damageType: 'fire' }) === true && tocados.length === 0);
   tocados.length = 0;
   check('dano de fogo não usa dor (fica a síntese)', f._somDor({ hit: true, targetKey: 'm:9' }, { damageType: ['fire'] }) === false && tocados.length === 0);
   tocados.length = 0;
@@ -150,7 +158,7 @@ console.log('\n[6] _somMorteMonstro');
   f._somMorteMonstro({ type: 'goblin', pos: [1, 1] }, 'common');
   check('goblin → morte_humanoide, sem síntese', tocados.join() === 'morte_humanoide' && sintese.length === 0);
   tocados.length = 0;
-  f._somMorteMonstro({ type: 'elemental_fogo', pos: [1, 1] }, 'magic');
+  f._somMorteMonstro({ type: 'boneco_treino', pos: [1, 1] }, 'magic');
   check('sem família → síntese antiga', tocados.length === 0 && sintese.join() === 'magic');
 }
 {

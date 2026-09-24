@@ -2696,3 +2696,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > em `DURACAO_PASSO_MS`; salto >4 casas = teleporte, sem som; o seu peão entra aqui só no 2D; a
 > mesa de teste do editor fica de fora). Passo em casa fora da sua visão não soa
 > (`_somPassoEm`). Teste: `tools/test_sons_cliente.js` [11].
+> **Voz dos elementais:** os 6 elementais (`elemental_fogo|ar|agua|pedra|eletrico|gelo`) têm
+> família própria `elem_<elemento>` (`FAMILIAS_ELEMENTO` em `src/soundBank.js`; `familiaDe`
+> casa `^elemental_<x>$` ANTES das regras — os demais `elemental_*`, como o Descontrolado,
+> seguem sem voz). Cada família tem `rugido_`/`dor_`/`morte_` (2 versões, 36 arquivos em
+> `assets/sfx/criaturas/*_elem_*`): labareda, ventania, correnteza, desmoronamento,
+> faíscas/trovão e gelo rachando. A dor de elemental vale para **qualquer** tipo de dano (a
+> magia que o acerta também soa nele), via `_familiaElementalDaChave` em `_somDor`; os outros
+> monstros seguem com dor só no dano físico. `tools/preparar_sfx.py` ganhou `--fade=S` (rampa
+> de entrada/saída para trechos cortados de som contínuo).

@@ -79,3 +79,39 @@ de um arquivo com vários sons.
 | ambiente/amb_masmorra.ogg | Loopable Dungeon Ambience | JaggedStone | CC0 1.0 | https://opengameart.org/content/loopable-dungeon-ambience | dungeon_ambient_1.ogg |  |
 | ambiente/amb_penumbra.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | emenda de loop com crossfade de 1 s |
 | ambiente/amb_ar_livre.ogg | Birds and Wind – Ambient | Spring | CC0 1.0 | https://opengameart.org/content/birds-and-wind-ambient | birds_wind.ogg | emenda de loop com crossfade de 1 s |
+| criaturas/rugido_elem_fogo_1.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 0–1,3 s com rampas |
+| criaturas/rugido_elem_fogo_2.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 1,5–2,8 s com rampas |
+| criaturas/dor_elem_fogo_1.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 0,7–1,1 s |
+| criaturas/dor_elem_fogo_2.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 2,4–2,8 s |
+| criaturas/morte_elem_fogo_1.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 0–1,8 s, tom 0,8, saída longa |
+| criaturas/morte_elem_fogo_2.ogg | Fire Crackling | AntumDeluge | CC0 1.0 | https://opengameart.org/content/fire-crackling | fire-1.ogg | **derivado** — trecho 2–3,5 s, tom 0,75, saída longa |
+| criaturas/rugido_elem_ar_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_01.ogg | **derivado** — trecho 0–1,6 s |
+| criaturas/rugido_elem_ar_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_02.ogg |  |
+| criaturas/dor_elem_ar_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_03.ogg |  |
+| criaturas/dor_elem_ar_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_02.ogg | **derivado** — trecho 0–0,45 s, tom 1,2 |
+| criaturas/morte_elem_ar_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_01.ogg | **derivado** — tom 0,75 |
+| criaturas/morte_elem_ar_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_air_02.ogg | **derivado** — tom 0,7 |
+| criaturas/rugido_elem_agua_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_01.ogg | **derivado** — trecho 0,5–1,8 s com rampas |
+| criaturas/rugido_elem_agua_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_03.ogg | **derivado** — trecho 3–4,3 s com rampas |
+| criaturas/dor_elem_agua_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_03.ogg | **derivado** — trecho 5,2–5,6 s |
+| criaturas/dor_elem_agua_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_03.ogg | **derivado** — trecho 8–8,4 s |
+| criaturas/morte_elem_agua_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_02.ogg | **derivado** — trecho 1–2,8 s, tom 0,8, saída longa |
+| criaturas/morte_elem_agua_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_loop_water_01.ogg | **derivado** — trecho 3–4,8 s, tom 0,75, saída longa |
+| criaturas/rugido_elem_pedra_1.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_falling_01.ogg |  |
+| criaturas/rugido_elem_pedra_2.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_falling_03.ogg |  |
+| criaturas/dor_elem_pedra_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_stones_01.ogg |  |
+| criaturas/dor_elem_pedra_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_stones_02.ogg |  |
+| criaturas/morte_elem_pedra_1.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_breaking_01.ogg |  |
+| criaturas/morte_elem_pedra_2.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_breaking_02.ogg | **derivado** — tom 0,85 |
+| criaturas/rugido_elem_eletrico_1.ogg | Electricity Sound Effects | BMacZero (Brian MacIntosh) | CC0 1.0 | https://opengameart.org/content/electricity-sound-effects-0 | spark.wav + continuousspark.wav | **derivado** — emenda spark + continuousspark + spark (tom 0,9) |
+| criaturas/rugido_elem_eletrico_2.ogg | Electricity Sound Effects | BMacZero (Brian MacIntosh) | CC0 1.0 | https://opengameart.org/content/electricity-sound-effects-0 | continuousspark.wav + spark.wav | **derivado** — emenda continuousspark + spark (tom 1,1) + continuousspark (tom 0,85) |
+| criaturas/dor_elem_eletrico_1.ogg | Electricity Sound Effects | BMacZero (Brian MacIntosh) | CC0 1.0 | https://opengameart.org/content/electricity-sound-effects-0 | spark.wav | **derivado** — tom 1,25 |
+| criaturas/dor_elem_eletrico_2.ogg | Electricity Sound Effects | BMacZero (Brian MacIntosh) | CC0 1.0 | https://opengameart.org/content/electricity-sound-effects-0 | continuousspark.wav | **derivado** — tom 1,2 |
+| criaturas/morte_elem_eletrico_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_thunder_01.ogg | **derivado** — trecho 0,6–3,8 s |
+| criaturas/morte_elem_eletrico_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_thunder_01.ogg | **derivado** — trecho 0,6–3,2 s, tom 0,85 |
+| criaturas/rugido_elem_gelo_1.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_glass_02.ogg | **derivado** — tom 0,7 |
+| criaturas/rugido_elem_gelo_2.ogg | 100 CC0 SFX #2 | rubberduck | CC0 1.0 | https://opengameart.org/content/100-cc0-sfx-2 | sfx100v2_glass_03.ogg | **derivado** — tom 0,75 |
+| criaturas/dor_elem_gelo_1.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_glass_hit_01.ogg | **derivado** — tom 0,8 |
+| criaturas/dor_elem_gelo_2.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_glass_hit_02.ogg | **derivado** — tom 0,8 |
+| criaturas/morte_elem_gelo_1.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_glass_breaking_01.ogg | **derivado** — tom 0,8 |
+| criaturas/morte_elem_gelo_2.ogg | 75 CC0 breaking / falling / hit sfx | rubberduck | CC0 1.0 | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_glass_breaking_03.ogg | **derivado** — tom 0,8 |

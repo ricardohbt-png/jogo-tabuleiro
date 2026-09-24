@@ -26606,10 +26606,25 @@ function _somGolpe(c){
 function _somDor(c, fb){
   if(!c || !c.hit) return false;
   if(c.death) return true;
-  if(_combatPrimaryDamageType(fb && fb.damageType || 'physical') !== 'physical') return false;
   const k = String(c.targetKey || '');
+  const pos = Array.isArray(c.targetPos) ? c.targetPos : undefined;
+  // Elemental tem dor do próprio elemento (chiado, rajada, pedra lascando...)
+  // e ela vale para QUALQUER tipo de dano: a criatura é o elemento, então
+  // a magia que a acerta também soa nela. Sem amostra pronta cai no recuo
+  // abaixo como qualquer criatura.
+  const famEl = _familiaElementalDaChave(k);
+  if(famEl && sfx('dor_' + famEl, {pos})) return true;
+  if(_combatPrimaryDamageType(fb && fb.damageType || 'physical') !== 'physical') return false;
   const heroi = k.startsWith('p:') || k.startsWith('pr:');
-  return sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos: Array.isArray(c.targetPos) ? c.targetPos : undefined});
+  return sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos});
+}
+// 'm:<id>' → 'elem_fogo' etc. quando o monstro é um elemental; senão null.
+function _familiaElementalDaChave(k){
+  if(!k.startsWith('m:') || !window.SoundBank) return null;
+  const id = k.slice(2);
+  const m = ((GS.gameState && GS.gameState.monsters) || []).find(x => String(x.id) === id);
+  const fam = m ? SoundBank.familiaDe(m) : null;
+  return fam && fam.startsWith('elem_') ? fam : null;
 }
 
 function _somMorteMonstro(m, kind){

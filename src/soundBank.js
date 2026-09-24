@@ -12,6 +12,10 @@
   const TETO_SIMULTANEOS = 8;
 
   const FAMILIAS = ['humanoide', 'fera', 'morto_vivo', 'reptil_inseto', 'grande'];
+  // Elementais têm voz própria, do elemento (labareda, ventania, correnteza,
+  // desmoronamento, faísca/trovão, gelo rachando) — e também som de dano.
+  const ELEMENTOS = ['fogo', 'ar', 'agua', 'pedra', 'eletrico', 'gelo'];
+  const FAMILIAS_ELEMENTO = ELEMENTOS.map(e => 'elem_' + e);
 
   // `arquivos` são relativos a assets/sfx/. Lista vazia = sem amostra: o
   // chamador toca a síntese antiga (ou fica em silêncio se não houver).
@@ -53,6 +57,11 @@
     SFX['rugido_' + f] = E(n('criaturas/rugido_' + f, 2), 0.75, 400);
     SFX['morte_' + f] = E(n('criaturas/morte_' + f, 2), 0.70, 150);
   }
+  for (const f of FAMILIAS_ELEMENTO) {
+    SFX['rugido_' + f] = E(n('criaturas/rugido_' + f, 2), 0.75, 400);
+    SFX['dor_' + f] = E(n('criaturas/dor_' + f, 2), 0.60, 120);
+    SFX['morte_' + f] = E(n('criaturas/morte_' + f, 2), 0.75, 150);
+  }
 
   // Ordem importa: a 1ª regra que casar decide. `null` = criatura sem voz.
   const REGRAS_FAMILIA = [
@@ -66,6 +75,8 @@
 
   function familiaDe(m) {
     const tipo = String((m && m.type) || '');
+    const el = /^elemental_([a-z]+)$/.exec(tipo);
+    if (el && ELEMENTOS.includes(el[1])) return 'elem_' + el[1];
     for (const [re, fam] of REGRAS_FAMILIA) if (re.test(tipo)) return fam;
     const s = m && Array.isArray(m.size) ? m.size : [1, 1];
     return (Number(s[0]) || 1) * (Number(s[1]) || 1) > 1 ? 'grande' : 'humanoide';
@@ -194,7 +205,7 @@
   }
 
   root.SoundBank = {
-    SFX, FAMILIAS, familiaDe, audibilidade, escolherVariante, criarLimitador,
+    SFX, FAMILIAS, FAMILIAS_ELEMENTO, familiaDe, audibilidade, escolherVariante, criarLimitador,
     diffSons, eventoAmbiente,
     GANHO_NEVOA, GANHO_LONGE, DIST_LONGE, TETO_SIMULTANEOS,
   };

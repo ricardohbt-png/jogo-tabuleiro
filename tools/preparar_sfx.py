@@ -1,6 +1,6 @@
 """Prepara um som para assets/sfx/ (spec 2026-09-23-sons).
 Uso: python tools/preparar_sfx.py <origem> <destino relativo a assets/sfx>
-        [--loop] [--ja-loop] [--stereo] [--ss=S] [--to=S] [--pitch=F] [--q=N]
+        [--loop] [--ja-loop] [--stereo] [--ss=S] [--to=S] [--pitch=F] [--fade=S] [--q=N]
 - efeito: corta silêncio nas pontas, ganho fixo p/ -18 LUFS (pico <= -2 dBTP), mono, .ogg q4
 - --loop: sem corte; loudness -26 LUFS; emenda com crossfade de 1 s (o fim
   funde no começo), estéreo.
@@ -10,6 +10,8 @@ Uso: python tools/preparar_sfx.py <origem> <destino relativo a assets/sfx>
   arquivos com vários sons em sequência.
 - --pitch=F: abaixa/sobe o tom por reamostragem (0.8 = mais grave e mais
   longo). Gera um DERIVADO — registre assim no LICENCAS.md.
+- --fade=S: rampa de entrada e de saída de S segundos (efeito) — para trechos
+  cortados do meio de um som contínuo (fogo, água, vento), que estalariam.
 - --q=N: qualidade Vorbis (padrão 4 efeito, 3 ambiente).
 O loudnorm trabalha internamente a 192 kHz; a saída é forçada a 44,1 kHz."""
 import json, os, subprocess, sys
@@ -35,7 +37,7 @@ def _ganho_efeito(entrada, corte):
 
 
 def preparar(origem, destino, loop=False, ja_loop=False, stereo=False,
-             ss=None, to=None, pitch=None, q=None):
+             ss=None, to=None, pitch=None, q=None, fade=None):
     saida = os.path.join(RAIZ, "assets", "sfx", destino)
     os.makedirs(os.path.dirname(saida), exist_ok=True)
     entrada = ["-i", origem]
@@ -64,6 +66,9 @@ def preparar(origem, destino, loop=False, ja_loop=False, stereo=False,
         mix = "" if stereo else "aformat=channel_layouts=mono,"
         corte = (pre + mix + "silenceremove=start_periods=1:start_threshold=-50dB,areverse,"
                  "silenceremove=start_periods=1:start_threshold=-50dB,areverse")
+        if fade:
+            f = float(fade)
+            corte += f",afade=t=in:d={f},areverse,afade=t=in:d={f},areverse"
         filtro = corte + f",volume={_ganho_efeito(entrada, corte):.2f}dB"
         cmd = ["ffmpeg", "-y", "-loglevel", "error"] + entrada + ["-af", filtro,
                "-ac", "2" if stereo else "1", "-ar", TAXA, "-c:a", "libvorbis",
@@ -85,5 +90,5 @@ if __name__ == "__main__":
         sys.exit(__doc__)
     tam = preparar(args[0], args[1], loop="--loop" in sys.argv,
                    ja_loop="--ja-loop" in sys.argv, stereo="--stereo" in sys.argv,
-                   ss=_opt("ss"), to=_opt("to"), pitch=_opt("pitch"), q=_opt("q"))
+                   ss=_opt("ss"), to=_opt("to"), pitch=_opt("pitch"), q=_opt("q"), fade=_opt("fade"))
     print(f"{args[1]}  {tam/1024:.1f} KB")

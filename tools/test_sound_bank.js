@@ -32,7 +32,11 @@ check('cobra_venenosa → reptil_inseto', fam('cobra_venenosa') === 'reptil_inse
 check('tirano_da_mata → grande', fam('tirano_da_mata') === 'grande');
 check('grande_medusa → grande (antes de medusa)', fam('grande_medusa') === 'grande');
 check('medusa → humanoide', fam('medusa') === 'humanoide');
-check('elemental_fogo → null (sem voz)', fam('elemental_fogo') === null);
+for (const e of ['fogo', 'ar', 'agua', 'pedra', 'eletrico', 'gelo'])
+  check('elemental_' + e + ' → elem_' + e, fam('elemental_' + e) === 'elem_' + e);
+check('elemental_descontrolado → null (sem voz própria)', fam('elemental_descontrolado') === null);
+for (const f of SB.FAMILIAS_ELEMENTO) for (const ev of ['rugido_', 'dor_', 'morte_'])
+  check('catálogo tem ' + ev + f, !!SB.SFX[ev + f] && SB.SFX[ev + f].arquivos.length === 2);
 check('boneco_treino → null', fam('boneco_treino') === null);
 check('desconhecido 1×1 → humanoide', SB.familiaDe({ type: 'coisa_nova', size: [1, 1] }) === 'humanoide');
 check('desconhecido 2×2 → grande', SB.familiaDe({ type: 'coisa_nova', size: [2, 2] }) === 'grande');
@@ -115,7 +119,7 @@ check('monstros novos visíveis → UM rugido só', r.eventos.filter(e => e.even
 check('rugido do primeiro novo, com família e pos', r.eventos[0].evento === 'rugido_fera' && r.eventos[0].pos[0] === 4);
 check('os dois novos ficam ouvidos', r.snap.ouvidos.has('m2') && r.snap.ouvidos.has('m3'));
 check('monstro já ouvido não ruge de novo', ev(r.snap, { ...base, monstros: [{ id: 'm2', type: 'lobo_cinzento', pos: [4, 4] }] }).length === 0);
-check('monstro sem voz (elemental) não ruge', ev(s0, { ...base, monstros: [{ id: 'e1', type: 'elemental_fogo', pos: [1, 1] }] }).length === 0);
+check('monstro sem voz (boneco) não ruge', ev(s0, { ...base, monstros: [{ id: 'e1', type: 'boneco_treino', pos: [1, 1] }] }).length === 0);
 check('sem herói (mestre): não quebra, só eventos globais', ev(s0, { ...base, me: null, missao: true }).join() === 'objetivo');
 
 console.log('\n[7] eventoAmbiente');
