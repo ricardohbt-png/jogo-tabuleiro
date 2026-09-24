@@ -83,7 +83,7 @@ console.log('\n[4] _somGolpe / _somDor');
     { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
   const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
-    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90,
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
     GS: { gameState: estado },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
@@ -112,7 +112,7 @@ console.log('\n[4] _somGolpe / _somDor');
   check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
     const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
-    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90,
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
       GS: { gameState: estado },
       sfx: (e) => e !== 'golpe_critico',
       _combatPrimaryDamageType: t2 => Array.isArray(t2) ? t2[0] : t2,
@@ -327,7 +327,7 @@ console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação
   const stubs = {
     GS: { gameState: estado }, SoundBank: SB,
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
-    _sfxPronto: () => true, setTimeout: (fn, ms) => timers.push([ms, fn]),
+    _sfxPronto: () => true, setTimeout: (fn, ms) => timers.push([ms, fn]), _retaliacaoAposDor: () => {},
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
   };
   const corpo = 'const ATRASO_DOR_ELEMENTAL_MS = 90; let _rugiram = new Set();\n'
@@ -395,6 +395,43 @@ console.log('\n[17] Teste de som (⚙️ → Áudio)');
   for (const ev of ['passo', 'bau_arpejo', 'armadilha']) pedidas.add('ui.somteste.ev.' + ev);
   const faltam = [...pedidas].filter(k => !(D[k] && D[k].pt && D[k].en));
   check('todo nome do catálogo tem chave pt/en: ' + (faltam.join(', ') || 'ok'), faltam.length === 0);
+}
+
+console.log('\n[18] Choque da aura (retaliação) com o som do elemento');
+{
+  const tocados = [], timers = [];
+  let agora = 1000;
+  const f = new Function('GS', 'SoundBank', 'sfx', 'setTimeout', 'clearTimeout', 'performance',
+    'const RETALIACAO_APOS_DOR_MS = 120; const RETALIACAO_ESPERA_MAX_MS = 3500; const _retaliacaoPend = new Map(); const _dorElementalEm = new Map();\n'
+    + extrair('_somRetaliacao') + extrair('_retaliacaoAposDor') + '\nreturn { _somRetaliacao, _retaliacaoAposDor };')(
+    { isPreview: false }, SB, (e, o) => { tocados.push([e, o && o.pos]); return true; },
+    (fn, ms) => { timers.push({ fn, ms, vivo: true }); return timers.length - 1; }, (id) => { if (timers[id]) timers[id].vivo = false; },
+    { now: () => agora });
+  const rodar = () => { const t = timers.filter(x => x.vivo); timers.length = 0; t.forEach(x => x.fn()); };
+  const msg = { type: 'dice_roll', retaliacao_tipo: 'elemental_eletrico', retaliacao_pos: [4, 3], damage_type: 'lightning' };
+  f._somRetaliacao(msg);
+  check('com cena: o choque espera o golpe (nada toca ainda)', tocados.length === 0 && timers.length === 1 && timers[0].ms === 3500);
+  f._retaliacaoAposDor('elem_eletrico');
+  check('a dor do elemental solta o choque 120 ms depois', timers.filter(x => x.vivo).map(x => x.ms).join() === '120');
+  rodar();
+  check('toca a faísca (ataque_elem_eletrico) na casa de quem levou o choque', tocados.length === 1 && tocados[0][0] === 'ataque_elem_eletrico' && tocados[0][1][0] === 4);
+  tocados.length = 0; agora = 5000;
+  f._retaliacaoAposDor('elem_eletrico');    // sem cena: a dor veio ANTES do dado
+  agora = 5200;
+  f._somRetaliacao(msg);
+  check('sem cena (dor acabou de tocar): choque sai já, 120 ms depois', timers.filter(x => x.vivo).map(x => x.ms).join() === '120');
+  rodar(); tocados.length = 0;
+  agora = 20000;
+  f._somRetaliacao(msg); rodar();
+  check('sem golpe nenhum: a rede de segurança toca mesmo assim', tocados.length === 1);
+  tocados.length = 0;
+  f._somRetaliacao({ ...msg, retaliacao_tipo: 'elemental_fogo' }); rodar();
+  check('elemental de fogo: labareda', tocados.map(x => x[0]).join() === 'ataque_elem_fogo');
+  tocados.length = 0; timers.length = 0;
+  check('carapaça espinhosa (não elemental) não usa som de elemento', f._somRetaliacao({ ...msg, retaliacao_tipo: 'aranha_espinhosa' }) === false && timers.length === 0);
+  check('dado comum (sem retaliacao_tipo) ignorado', f._somRetaliacao({ type: 'dice_roll', value: 3 }) === false);
+  check('ligado no GS.on(diceRoll)', /^GS\.on\('diceRoll', +msg +=> \{ _receberDadoVisual\(msg\); try\{ _somRetaliacao\(msg\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  check('_somDor avisa a retaliação quando a dor do elemental toca', /sfx\('dor_' \+ famEl, \{pos\}\); _retaliacaoAposDor\(famEl\);/.test(GAME));
 }
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);

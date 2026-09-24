@@ -26750,7 +26750,7 @@ function _somDor(c, fb){
   // encobriam a dor (provado na mesa do editor — tocava e não se ouvia).
   const famEl = _familiaElementalDaChave(k);
   if(famEl && _sfxPronto('dor_' + famEl)){
-    setTimeout(() => sfx('dor_' + famEl, {pos}), ATRASO_DOR_ELEMENTAL_MS);
+    setTimeout(() => { sfx('dor_' + famEl, {pos}); _retaliacaoAposDor(famEl); }, ATRASO_DOR_ELEMENTAL_MS);
     return true;
   }
   if(_combatPrimaryDamageType(fb && fb.damageType || 'physical') !== 'physical') return false;
@@ -26804,6 +26804,45 @@ function _somRugidoAoAgir(attackerId){
   const fam = SoundBank.familiaDe(m);
   // Elemental não ruge ao agir: o golpe dele já é o som do elemento.
   if(fam && !fam.startsWith('elem_')) sfx('rugido_' + fam, {pos: Array.isArray(m.pos) ? m.pos : undefined});
+}
+
+// Retaliação de aura (dado com `retaliacao_tipo`): quando quem retaliou é um
+// elemental, o choque soa o elemento — a faísca do Elétrico, a labareda do de
+// Fogo — na casa de quem levou o choque. Outras criaturas (Carapaça
+// Espinhosa...) seguem com o som de dano de sempre.
+// TEMPO: o dado da retaliação chega assim que o servidor resolve o ataque, mas
+// com cena o golpe só aparece quando o d20 assenta (1–3 s depois). Então o
+// choque ESPERA a dor do elemental (_somDor avisa por _retaliacaoAposDor) e
+// soa logo depois; se a dor já tocou há pouco (sem cena, o golpe soa no
+// `result`, antes do dado), toca já; se nada vier, a rede de segurança toca.
+const RETALIACAO_APOS_DOR_MS = 120;
+const RETALIACAO_ESPERA_MAX_MS = 3500;
+const _retaliacaoPend = new Map();      // fam -> {pos, timer}
+const _dorElementalEm = new Map();      // fam -> performance.now() da última dor
+function _somRetaliacao(msg){
+  if(!msg || !msg.retaliacao_tipo || !window.SoundBank || GS.isPreview) return false;
+  const fam = SoundBank.familiaDe({type: msg.retaliacao_tipo});
+  if(!fam || !fam.startsWith('elem_')) return false;
+  const pos = Array.isArray(msg.retaliacao_pos) && msg.retaliacao_pos.length >= 2 ? msg.retaliacao_pos : undefined;
+  const tocar = () => { _retaliacaoPend.delete(fam); sfx('ataque_' + fam, {pos}); };
+  if(performance.now() - (_dorElementalEm.get(fam) || -1e9) < 600){
+    setTimeout(tocar, RETALIACAO_APOS_DOR_MS);
+    return true;
+  }
+  const ant = _retaliacaoPend.get(fam);
+  if(ant) clearTimeout(ant.timer);
+  _retaliacaoPend.set(fam, {pos, tocar, timer: setTimeout(tocar, RETALIACAO_ESPERA_MAX_MS)});
+  return true;
+}
+// Chamado quando a dor de um elemental toca: registra o instante e solta o
+// choque que estava esperando por esse golpe.
+function _retaliacaoAposDor(fam){
+  _dorElementalEm.set(fam, performance.now());
+  const p = _retaliacaoPend.get(fam);
+  if(!p) return;
+  _retaliacaoPend.delete(fam);          // já na hora: uma 2ª dor não repete o choque
+  clearTimeout(p.timer);
+  setTimeout(p.tocar, RETALIACAO_APOS_DOR_MS);
 }
 
 function _somMorteMonstro(m, kind){
@@ -49148,7 +49187,7 @@ function _liberarDadosMagia(){
   }
 }
 
-GS.on('diceRoll',    msg  => _receberDadoVisual(msg));
+GS.on('diceRoll',    msg  => { _receberDadoVisual(msg); try{ _somRetaliacao(msg); }catch(e){} });
 // Cena de combate: números em VC; durações respeitam o modo de animação da
 // acessibilidade (instant colapsa a cena — sem investida, número na hora).
 if(window.CombatScene) CombatScene.configure({

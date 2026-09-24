@@ -51,8 +51,8 @@ de um arquivo com vários sons.
 | exploracao/escada_1.ogg | Kenney RPG Audio | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/rpg-audio | footstep00.ogg |  |
 | exploracao/escada_2.ogg | Kenney RPG Audio | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/rpg-audio | footstep01.ogg |  |
 | interface/sua_vez_1.ogg | Kenney Interface Sounds | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/interface-sounds | confirmation_001.ogg |  |
-| interface/nivel_1.ogg | Kenney Music Jingles | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/music-jingles | jingles_PIZZI07.ogg |  |
-| interface/objetivo_1.ogg | Kenney Music Jingles | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/music-jingles | jingles_PIZZI03.ogg |  |
+| interface/nivel_1.ogg | Victory Fanfare Short | cynicmusic | CC0 1.0 | https://opengameart.org/content/victory-fanfare-short | Heavy_ConceptB.wav | **derivado** — abertura 0,15–2,4 s (sobe 19 st, termina em Mi maior), saída de 0,5 s |
+| interface/objetivo_1.ogg | Just a random fanfare | Spring Spring (Julie Damsgaard) | CC0 1.0 | https://opengameart.org/content/just-a-random-fanfare | fanfare_0.ogg | **derivado** — trecho 2,45–5,4 s (metais e pratos, sobe 24 st, termina em Dó maior), saída de 0,5 s |
 | interface/clique_1.ogg | Kenney Interface Sounds | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/interface-sounds | click_002.ogg |  |
 | interface/clique_2.ogg | Kenney Interface Sounds | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/interface-sounds | click_003.ogg |  |
 | interface/recusa_1.ogg | Kenney Interface Sounds | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/interface-sounds | error_004.ogg |  |

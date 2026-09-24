@@ -28197,9 +28197,14 @@ class GameRoom:
         elemento = tipos[0]
         bruto = roll_dice(dano_str)
         dano = self._apply_damage_types(bruto, tipos, atacante)
+        # `retaliacao_tipo`/`retaliacao_pos`: só para o som no cliente (a faísca
+        # da aura do Elemental Elétrico, a labareda do de Fogo...). O dado não
+        # dizia QUEM retaliou, e o dano chegava como um dano qualquer.
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
                               "value": bruto, "label": T("dado.dano_retaliacao"),
-                              "damage_type": elemento})
+                              "damage_type": elemento,
+                              "retaliacao_tipo": criatura.get("type"),
+                              "retaliacao_pos": list(atacante.get("pos") or [])})
         await self._dano_em_alvo(atacante, dano, elemento, criatura.get("id"))
         labels = {DMG_PHYSICAL: "fisico", DMG_WATER: "agua", DMG_FIRE: "fogo",
                   DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade", DMG_POISON: "veneno",

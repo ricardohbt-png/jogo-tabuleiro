@@ -2727,6 +2727,22 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > agir. (4) `_familiaElementalDaChave` reconhece também o elemental **invocado** (`a:<id>`, servo
 > com `tipo:'elemental'` + `tipo_elemental`). (5) O raio do Elemental Elétrico em linha
 > (`spell_animation` `elemental_raio`) toca `relampago` (estalo de trovão) ao sair.
+> **Subir de nível e objetivo — fanfarras (2026-09-24):** as vinhetas antigas (Kenney Music
+> Jingles PIZZI07/PIZZI03) terminavam em acorde **menor** e a de nível ainda descia 3,5 st —
+> soavam como falha. Trocadas por fanfarras CC0 medidas (contorno melódico + acorde final por
+> cromagrama): `nivel_1` = abertura da *Victory Fanfare Short* (cynicmusic; sobe 19 st, termina
+> no topo em Mi maior, 2,2 s); `objetivo_1` = trecho da *Just a random fanfare* (Spring Spring;
+> metais e pratos, sobe 24 st, Dó maior, 2,9 s). **Critério para som de "vitória":** ascendente
+> e acorde final maior — conferir antes de trocar, sem depender de ouvir.
+> **Choque da aura (Dano de Retaliação):** `_dano_retaliacao` manda no `dice_roll` também
+> `retaliacao_tipo` (tipo da criatura que retaliou) e `retaliacao_pos` (casa de quem levou o
+> choque). No cliente, `_somRetaliacao` (no `GS.on('diceRoll')`) toca `ataque_elem_<x>` quando
+> quem retaliou é elemental — faísca do Elétrico, labareda do de Fogo; outras criaturas seguem
+> com o som de dano. **Tempo:** o dado chega quando o servidor resolve o ataque, 1–3 s antes do
+> golpe aparecer (a cena espera o d20); por isso o choque espera a dor do elemental
+> (`_retaliacaoAposDor`, chamado de `_somDor`) e soa 120 ms depois dela; se a dor tocou há
+> <600 ms (sem cena), sai já; se nada vier, rede de segurança em 3,5 s. Testes:
+> `tools/test_som_armadilha.py` [5], `tools/test_sons_cliente.js` [18].
 > **Teste de som** (⚙️ → Áudio → "🎧 Teste de som", `abrirSoundTest`): overlay `#som-teste`
 > que lista TODO o `SoundBank.SFX`, agrupado pela pasta do 1º arquivo (combate/exploracao/
 > criaturas/interface/ambiente), com um ▶ por versão (tooltip = caminho do arquivo) + os sons

@@ -86,6 +86,18 @@ async def main():
     st = [m for m in r.pub if m.get("type") == "attack_feedback" and m.get("phase") == "start"]
     check("start com projectile item granada", bool(st) and (st[0].get("projectile") or {}).get("item_id") == "granada")
 
+    print("\n[5] Retaliação do Elemental Elétrico: o dado diz quem retaliou (som da faísca)")
+    r = setup()
+    p = make_player("p1", "A", "warrior", 0); p["pos"] = [4, 3]; r.players = {"p1": p}
+    el = make_monster(next(d for d in server.MONSTER_DEFS if d["type"] == "elemental_eletrico"), {"id": 1, "cx": 3, "cy": 3})
+    el["pos"] = [3, 3]; r.monsters = {el["id"]: el}
+    await r._dano_retaliacao(el, p, True, 5)
+    dd = [m for m in r.pub if m.get("type") == "dice_roll"]
+    check("um dado de retaliação", len(dd) == 1)
+    check("leva retaliacao_tipo e a casa de quem levou o choque",
+          dd and dd[0].get("retaliacao_tipo") == "elemental_eletrico" and dd[0].get("retaliacao_pos") == [4, 3])
+    check("damage_type continua o do elemento", dd and dd[0].get("damage_type") == "lightning")
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 
