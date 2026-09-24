@@ -63,6 +63,11 @@ def _room_bardo():
     # como vazio (nenhuma oclusão) para os caminhos de visão de monstro.
     room._decor_tall_tiles = set()
     room._mat_oclui_tiles = set()
+    room._decor_block_tiles = set()
+    room._mat_solid_tiles = set()
+    room.opened_doors = set()
+    room.door_conditions = {}
+    room.door_rooms = {}
     # Filas efêmeras do feedback visual de combate (dano, efeito positivo e
     # resultado de resistência). São consumidas junto do próximo game_state;
     # como o room aqui nasce de __new__, sem elas qualquer save dispara
@@ -136,6 +141,7 @@ def test_um_instrumento_por_turno():
 async def _save_falha(*a, **k): return (False, 1, 0, 1)
 async def _save_passa(*a, **k): return (True, 20, 0, 20)
 async def _dano10(n, faces, label): return 10
+async def _dano1(n, faces, label): return 1
 
 def test_nota_cortante_dano_cheio_na_falha():
     room, p = _room_bardo(); _mute(room)
@@ -144,7 +150,7 @@ def test_nota_cortante_dano_cheio_na_falha():
     room.monsters["m1"] = m
     room._save_mostrado = _save_falha
     room._rolar_dano_mostrado = _dano10
-    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
     assert m["hp"] == 20     # 30 - 10 (cheio)
 
 def test_nota_cortante_meia_no_sucesso():
@@ -154,8 +160,18 @@ def test_nota_cortante_meia_no_sucesso():
     room.monsters["m1"] = m
     room._save_mostrado = _save_passa
     room._rolar_dano_mostrado = _dano10
-    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
     assert m["hp"] == 25     # 30 - 5 (metade)
+
+def test_nota_cortante_save_bem_sucedido_mantem_dano_minimo_1():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._save_mostrado = _save_passa
+    room._rolar_dano_mostrado = _dano1
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert m["hp"] == 29
 
 def test_nota_cortante_fora_de_alcance_recusa():
     room, p = _room_bardo(); _mute(room)
@@ -163,7 +179,7 @@ def test_nota_cortante_fora_de_alcance_recusa():
     m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [10, 5], "alive": True}
     room.monsters["m1"] = m
     fome0 = p["fome"]
-    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
     assert m["hp"] == 30 and p["fome"] == fome0   # nada, sem custo
 
 def test_ndfaces():
@@ -191,6 +207,22 @@ def test_acorde_aoe_falha_empurra():
     assert m["hp"] == 22          # 30 - 8 (cheio)
     assert far["hp"] == 30        # fora do raio
     assert ("m1", 1, 0, 2) in empurrados   # empurrado 2 casas em +x
+
+def test_acorde_trovejante_emite_inicio_da_animacao_com_raio_real():
+    room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
+    p["gear"]["off_hand"] = server.criar_instrumento("tambor", "padrao")
+    m = {"id": "m1", "name": "Goblin", "hp": 30, "pos": [6, 5], "alive": True}
+    room.monsters = {"m1": m}
+    room._save_mostrado = _save_passa
+    room._rolar_dano_mostrado = _dano8
+    _run(room.handle_usar_instrumento("p1", {}))
+    anim = next(e for e in eventos if e.get("spell_id") == "acorde_trovejante")
+    assert anim["phase"] == "start" and anim["origin"] == [5, 5]
+    assert anim["radius"] == 2
+    assert anim["expand_ms"] > 0 and anim["shatter_ms"] >= anim["expand_ms"]
 
 def test_acorde_sucesso_meia_sem_empurrao():
     room, p = _room_bardo(); _mute(room)
@@ -568,6 +600,29 @@ def test_requiem_ativa():
     assert m["requiem_por"] == "p1"
     assert p["action_done"] is True
 
+def test_requiem_animacao_inicio_enxame_e_fim():
+    room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
+    p["pos"] = [5, 5]
+    p["gear"]["off_hand"] = server.criar_instrumento("violino", "padrao")
+    m = {"id": "m1", "name": "Lich", "hp": 30, "max_hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters["m1"] = m
+    room._tem_linha_de_visao = lambda a, b: True
+    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    async def _falha(*a, **k): return (False, 1, 0, 1)
+    room._save_mostrado = _falha
+    orig_roll = server.roll_dice; server.roll_dice = lambda s: 3
+    try:
+        _run(room._processar_requiem_turno(m))
+    finally:
+        server.roll_dice = orig_roll
+    _run(room._encerrar_requiem(p, "teste"))
+    assert [e["phase"] for e in eventos if e.get("spell_id") == "requiem_final"] == ["start", "attack", "end"]
+    assert eventos[0]["target_pos"] == [8, 5]
+    assert next(e for e in eventos if e.get("phase") == "attack")["damage"] == 3
+
 def test_requiem_toggle_off():
     room, p = _room_bardo(); _mute(room)
     p["pos"] = [5, 5]
@@ -591,7 +646,7 @@ def test_requiem_fora_de_alcance_recusa():
     room.monsters["m1"] = m
     room._tem_linha_de_visao = lambda a, b: True
     fome0 = p["fome"]
-    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
     assert p.get("requiem_alvo") is None and p["fome"] == fome0
 
 def test_requiem_escalada_e_teto():
@@ -865,6 +920,12 @@ def test_afixo_cd_aumenta_instrumento_cd():
                                                               origem="elfica", origem_bonus="cd"))
     assert elf_cd == base_cd + 1
 
+def test_harpa_runica_bonus_cd_resistencia_mais_dois():
+    room, p = _room_bardo(); _mute(room)   # DEX 16 → CD base 11
+    normal = room._instrumento_cd(p, server.criar_instrumento("harpa", "padrao"))
+    runica = room._instrumento_cd(p, server.criar_instrumento("harpa", "padrao", encantamento="runico"))
+    assert runica == normal + 2
+
 def test_alaude_runico_resist():
     room, p = _room_bardo()
     p["gear"]["off_hand"] = server.criar_instrumento("alaude", "padrao", encantamento="runico")
@@ -932,8 +993,11 @@ def test_tambor_normal_nao_atordoa():
     _run(room.handle_usar_instrumento("p1", {}))
     assert m.get("perde_turno") is None
 
-def test_harpa_runica_linha():
+def test_harpa_runica_linha_ortogonal_sem_ricochete():
     room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
     p["pos"] = [5, 5]
     p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao", encantamento="runico")  # alcance 5
     a = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
@@ -945,6 +1009,10 @@ def test_harpa_runica_linha():
     _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
     assert a["hp"] == 20 and b["hp"] == 20   # ambos na linha +x (dano cheio 10)
     assert fora["hp"] == 30                  # fora da linha
+    anim = next(e for e in eventos if e.get("spell_id") == "nota_cortante")
+    assert anim["phase"] == "start" and anim["origin"] == [5, 5]
+    assert [t["target_id"] for t in anim["targets"]] == ["m1", "m2"]
+    assert anim["path"] == [[6, 5], [7, 5], [8, 5], [9, 5], [10, 5]]
 
 def test_harpa_runica_sem_direcao_recusa():
     room, p = _room_bardo(); _mute(room)
@@ -955,8 +1023,11 @@ def test_harpa_runica_sem_direcao_recusa():
     _run(room.handle_usar_instrumento("p1", {}))   # sem dir
     assert m["hp"] == 30 and p["fome"] == fome0
 
-def test_harpa_normal_ainda_alvo_unico():
+def test_harpa_normal_atinge_todos_na_linha_ortogonal():
     room, p = _room_bardo(); _mute(room)
+    eventos = []
+    async def _broadcast(msg): eventos.append(msg)
+    room.broadcast = _broadcast
     p["pos"] = [5, 5]
     p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")   # não Rúnica
     a = {"id": "m1", "name": "A", "hp": 30, "pos": [6, 5], "alive": True}
@@ -964,8 +1035,33 @@ def test_harpa_normal_ainda_alvo_unico():
     room.monsters = {"m1": a, "m2": b}
     room._save_mostrado = _save_falha
     room._rolar_dano_mostrado = _dano10
-    _run(room.handle_usar_instrumento("p1", {"target_id": "m1"}))
-    assert a["hp"] == 20 and b["hp"] == 30   # só o alvo
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert a["hp"] == 20 and b["hp"] == 20   # todos na linha, não só o primeiro
+    anim = next(e for e in eventos if e.get("spell_id") == "nota_cortante")
+    assert anim["phase"] == "start" and anim["origin"] == [5, 5]
+    assert [t["target_id"] for t in anim["targets"]] == ["m1", "m2"]
+
+def test_nota_cortante_para_na_parede_sem_ricochete():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")
+    room.tiles[5][7] = server.WALL
+    antes = {"id": "m1", "name": "Antes", "hp": 30, "pos": [6, 5], "alive": True}
+    depois = {"id": "m2", "name": "Depois", "hp": 30, "pos": [8, 5], "alive": True}
+    room.monsters = {"m1": antes, "m2": depois}
+    room._save_mostrado = _save_falha
+    room._rolar_dano_mostrado = _dano10
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 0]}))
+    assert antes["hp"] == 20
+    assert depois["hp"] == 30
+
+def test_nota_cortante_rejeita_direcao_diagonal():
+    room, p = _room_bardo(); _mute(room)
+    p["gear"]["off_hand"] = server.criar_instrumento("harpa", "padrao")
+    m = {"id": "m1", "name": "Diagonal", "hp": 30, "pos": [6, 6], "alive": True}
+    room.monsters = {"m1": m}
+    fome0, sede0 = p["fome"], p["sede"]
+    _run(room.handle_usar_instrumento("p1", {"dir": [1, 1]}))
+    assert m["hp"] == 30 and p["fome"] == fome0 and p["sede"] == sede0
 
 def test_skus_runico_lendario():
     ids = {i.get("id") for i in server.SHOP_MERCHANT}
@@ -1246,11 +1342,11 @@ def test_improviso_resultado_desafinado():
 
 def test_improviso_enfileira_alvo():
     room, p = _bardo_com_gaita()
-    room._rolar_2d6 = lambda: 7          # Nota Cortante — precisa de alvo
+    room._rolar_2d6 = lambda: 7          # Nota Cortante — precisa de direção ortogonal
     st = server.GameRoom._instrumento_stats(p["gear"]["off_hand"])
     _run(room._instr_improviso(p, p["gear"]["off_hand"], st, {}))
     fila = p.get("improviso_pendente", [])
-    assert len(fila) == 1 and fila[0]["res"] == 7 and fila[0]["alvo_tipo"] == "monstro"
+    assert len(fila) == 1 and fila[0]["res"] == 7 and fila[0]["alvo_tipo"] == "direcao_ortogonal"
 
 def test_improviso_encore_aplica_meta():
     room, p = _bardo_com_gaita()
@@ -1278,8 +1374,8 @@ def test_improviso_alvo_nota_cortante():
                             "def_reflexos": 0}}
     room._save_mostrado = _make_save(False); room._rolar_dano_mostrado = _make_dano(6)
     room._instrumento_cd = lambda p, inst: 11
-    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
-    _run(room.handle_improviso_alvo("p1", {"target_id": "m1"}))
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "direcao_ortogonal"}]
+    _run(room.handle_improviso_alvo("p1", {"dir": [1, 0]}))
     assert room.monsters["m1"]["hp"] == 24
     assert p["improviso_pendente"] == []
 
@@ -1309,7 +1405,7 @@ def test_usar_instrumento_gaita_1mao():
 
 def test_end_turn_limpa_fila_improviso():
     room, p = _bardo_com_gaita()
-    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "monstro"}]
+    p["improviso_pendente"] = [{"res": 7, "tier": "padrao", "alvo_tipo": "direcao_ortogonal"}]
     room._limpar_improviso_pendente(p)
     assert p.get("improviso_pendente") in (None, [])
 

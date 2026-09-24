@@ -138,6 +138,40 @@ check('servo morto nao mira nada',
       GS.animadoAttackTargetTiles(servo('x', { pos:[2,2], vida_atual:0 })).length === 0);
 check('sem animado devolve vazio', GS.animadoAttackTargetTiles(null).length === 0);
 
+console.log('\n[11] Raio do Elemental Elétrico — prévia de linha e bloqueios');
+const elementalRaio = servo('raio', {
+  tipo: 'elemental', tipo_elemental: 'eletrico', pos: [3, 3],
+  attacks: [{ name: 'Raio', range: 4, range_shape: 'orthogonal', damage_types: ['lightning'] }],
+});
+function raioComMapa(animado, tiles, decorations = []) {
+  GS.injectPreviewState({
+    type: 'game_state', master_pid: 'm', tiles,
+    explored: [], chests: [], decorations, monsters: [],
+    players: [{ id:'m', name:'Pedro', alive:true, pos:[0,0], animados:[animado] }],
+  });
+  return GS.animadoAttackRangeTiles(animado).map(t => `${t.x},${t.y}`).sort();
+}
+const mapaRaio = Array.from({length:8}, () => Array(8).fill(1));
+check('prévia inclui alcance ortogonal de quatro casas',
+      raioComMapa(elementalRaio, mapaRaio).length === 14);
+const mapaParede = mapaRaio.map(row => row.slice());
+mapaParede[3][5] = 0;
+const alcanceParede = raioComMapa(elementalRaio, mapaParede);
+check('parede bloqueia e não destaca casas atrás dela',
+      !alcanceParede.includes('5,3') && !alcanceParede.includes('6,3')
+        && alcanceParede.includes('4,3'));
+const mapaBorda = Array.from({length:4}, () => Array(4).fill(1));
+check('casas fora do mapa não entram na prévia',
+      raioComMapa(elementalRaio, mapaBorda).every(k => {
+        const [x,y] = k.split(',').map(Number); return x < 4 && y < 4;
+      }));
+const raioOutroElemento = servo('vento', {
+  tipo:'elemental', tipo_elemental:'ar', pos:[3,3],
+  attacks:[{name:'Raio',range:4,range_shape:'orthogonal',damage_types:['lightning']}],
+});
+check('outros elementais não recebem a nova prévia',
+      raioComMapa(raioOutroElemento, mapaRaio).length === 0);
+
 console.log('\n[9] Escolha fora de ordem nao deixa a selecao presa numa peca gasta');
 // Cenario do revisor: o atual e "a", o jogador escolhe "c" (adiante na fila) e
 // encerra. `animados_atual` NAO muda -- continua "a" --, entao um espelho que so

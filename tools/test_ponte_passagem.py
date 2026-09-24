@@ -137,7 +137,9 @@ r = sala(altura_json=0)
 r.round_num = 1
 async def noop(*a, **k): pass
 r.broadcast = noop; r.send_to = noop; r.gm_say = noop
-async def _dado(q, f, label=None): return q * f
+async def _dado(q, f, label=None, damage_type=None):
+    assert damage_type == S.DMG_PHYSICAL, damage_type
+    return q * f
 r._rolar_dano_mostrado = _dado
 h = {"id": "h", "name": "H", "class_id": "warrior", "alive": True, "hp": 40,
      "max_hp": 40, "pos": [5, 5], "altura": 0, "resistances": []}

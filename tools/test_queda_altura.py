@@ -29,8 +29,8 @@ async def test_resolucao():
     broadcasts = []
     damages = []
 
-    async def fake_roll(n, faces, label):
-        rolls.append((n, faces, label))
+    async def fake_roll(n, faces, label, damage_type=None):
+        rolls.append((n, faces, label, damage_type))
         return n * faces
 
     async def fake_damage(target, damage, element, killer_pid=None):
@@ -53,6 +53,7 @@ async def test_resolucao():
     assert resultado["dano_bruto"] == 36
     assert alvo["altura"] == 0
     assert rolls[0][0:2] == (6, 6)
+    assert rolls[0][3] == server.DMG_PHYSICAL
     assert damages == [(alvo, 36, server.DMG_PHYSICAL, "p1")]
     assert broadcasts[-1]["type"] == "fall_result"
     assert broadcasts[-1]["altura"] == 8
@@ -70,8 +71,8 @@ async def test_petrificado_triplica():
     rolls, damages, broadcasts = [], [], []
     bruto = [None]          # valor que o dado devolve, controlado por caso
 
-    async def fake_roll(n, faces, label):
-        rolls.append((n, faces))
+    async def fake_roll(n, faces, label, damage_type=None):
+        rolls.append((n, faces, damage_type))
         return n * faces if bruto[0] is None else bruto[0]
 
     async def fake_damage(target, damage, element, killer_pid=None):
@@ -95,7 +96,8 @@ async def test_petrificado_triplica():
     alvo = {"id": "m1", "name": "Estatua", "hp": 500, "alive": True,
             "pos": [4, 4], "altura": 8, "petrificado": True}
     r = await room._aplicar_queda(alvo, "petrificacao", None)
-    assert rolls[0] == (6, 6), rolls
+    assert rolls[0][0:2] == (6, 6), rolls
+    assert rolls[0][2] == server.DMG_PHYSICAL, rolls
     assert r["multiplicador"] == 3 and r["dano_bruto"] == 108, r
     assert r["expressao"] == "6d6 ×3", r["expressao"]
     assert damages == [108], damages

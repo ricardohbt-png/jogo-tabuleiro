@@ -36,12 +36,13 @@ async def main():
     # [1] Catálogo
     print("\n[1] Catálogo do Paladino")
     ids = [i["id"] for i in S.guild_items_for_class("paladin")]
-    for eid in ["paladino_cura_maos_2","paladino_cura_maos_3","paladino_ataque_sagrado_2",
+    for eid in ["paladino_cura_maos_2","paladino_cura_maos_3","paladino_ataque_sagrado_2","paladino_ataque_sagrado_3",
                 "paladino_luz_2","paladino_luz_3","paladino_defensor_2","paladino_defensor_3",
                 "paladino_regen_2","paladino_regen_3"]:
         check(f"catálogo tem {eid}", eid in ids)
     check("cura_maos_3 requer _2", S.guild_item("paladino_cura_maos_3")["requer"] == "paladino_cura_maos_2")
     check("ataque_sagrado_2 sem requer", S.guild_item("paladino_ataque_sagrado_2")["requer"] is None)
+    check("ataque_sagrado_3 requer _2", S.guild_item("paladino_ataque_sagrado_3")["requer"] == "paladino_ataque_sagrado_2")
     check("luz_3 requer luz_2", S.guild_item("paladino_luz_3")["requer"] == "paladino_luz_2")
     check("preço II = 150", S.guild_item("paladino_defensor_2")["preco"] == 150)
     check("preço III = 200", S.guild_item("paladino_regen_3")["preco"] == 200)
@@ -79,6 +80,36 @@ async def main():
     r = setup()
     check("sagrado base = 1 d8", r._ataque_sagrado_dados(paladin()) == 1)
     check("sagrado II = 2 d8", r._ataque_sagrado_dados(paladin(esp=["paladino_ataque_sagrado_2"])) == 2)
+    check("sagrado III nível = 3", r._ataque_sagrado_nivel(paladin(esp=["paladino_ataque_sagrado_2", "paladino_ataque_sagrado_3"])) == 3)
+    check("sagrado III mantém 2d8 sagrados", r._ataque_sagrado_dados(paladin(esp=["paladino_ataque_sagrado_2", "paladino_ataque_sagrado_3"])) == 2)
+    # ativação e manutenção por nível
+    for nivel, esp, custo, manut in [
+        (1, [], (3, 3), (1, 1)),
+        (2, ["paladino_ataque_sagrado_2"], (4, 3), (2, 1)),
+        (3, ["paladino_ataque_sagrado_2", "paladino_ataque_sagrado_3"], (5, 4), (2, 2)),
+    ]:
+        r = setup(); p = paladin(esp=esp); p["fome"] = p["sede"] = 50; r.players["r"] = p
+        await r.handle_golpe_sagrado("r", {"nivel": nivel, "tipo_extra": "fogo"})
+        check(f"ativação nível {nivel} cobra fome/sede", (p["fome"], p["sede"]) == (50-custo[0], 50-custo[1]))
+        await r._processar_manutencao_richard(p)
+        check(f"manutenção nível {nivel} cobra fome/sede", (p["fome"], p["sede"]) == (50-custo[0]-manut[0], 50-custo[1]-manut[1]))
+    # Nível III usa o d8 escolhido e respeita vulnerabilidade do alvo.
+    r = setup(); p = paladin(esp=["paladino_ataque_sagrado_2", "paladino_ataque_sagrado_3"])
+    p.update({"golpe_sagrado_ativo": True, "golpe_sagrado_nivel": 3, "golpe_sagrado_tipo_extra": "fogo"})
+    alvo = {"type": "alvo", "subtipo": "raca_padrao", "weaknesses": [{"type": S.DMG_FIRE, "multiplier": 2}], "resistances": [], "immunities": []}
+    mensagens_dado = []
+    async def broadcast_captura(msg):
+        mensagens_dado.append(msg)
+    r.broadcast = broadcast_captura
+    _orig = S.roll_dice; S.roll_dice = lambda expr: 4
+    try:
+        total, detail, tipos = await r._rolar_dano_golpe_sagrado(p, alvo)
+        check("nível III rola 2d8 sagrado +1d8 fogo", total == 16 and S.DMG_FIRE in tipos)
+        check("d8 extra respeita vulnerabilidade", "+⚡8 fogo" in detail)
+        check("dados do Golpe Sagrado enviam o tipo correto",
+              [m.get("damage_type") for m in mensagens_dado] == [S.DMG_HOLY, S.DMG_FIRE])
+    finally:
+        S.roll_dice = _orig
 
     # [4] Guerreiro da Luz: teto de atributos
     print("\n[4] Guerreiro da Luz (atributos)")

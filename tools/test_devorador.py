@@ -552,6 +552,7 @@ async def main():
     print("\n[16] Necromante (essência profana, magias, concentração, loot)")
     necro_def = next(m for m in MONSTER_DEFS if m["type"] == "necromante")
     check("necromante nível 2", necro_def.get("level") == 2)
+    check("necromante conjura no nível 2", necro_def.get("caster_level") == 2)
     # Os 2 esqueletos deixaram de nascer junto do necromante: agora vêm de
     # Mestre dos Mortos, gasto como AÇÃO na primeira vez (ver
     # tools/test_mestre_dos_mortos.py).
@@ -566,6 +567,7 @@ async def main():
     r = setup()
     nec = make_monster(necro_def, {"id": 1, "cx": 5, "cy": 5}); nec["pos"] = [5, 5]
     r.monsters[nec["id"]] = nec
+    check("nível de conjurador efetivo do necromante = 2", r._nivel_conjurador(nec) == 2)
     check("essência profana: sagrado ×2 (5→10)", r._apply_damage_types(5, ["holy"], nec) == 10)
     nec["hp"] = nec["max_hp"]
     await r._aplicar_dano_alvo(nec, 5, "sagrado")

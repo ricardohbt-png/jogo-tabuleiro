@@ -369,6 +369,57 @@ async def main():
     check("narração cita as rodadas restantes, não a duração total",
           narr is not None and narr.params.get("dur") == restantes and restantes != zone["duracao"])
 
+    print("\n[12] Cajado Arcano soma +1 ao lado das 5 magias de terreno (aditivo ao nível)")
+    # O item promete "+1 quadrado em cada dimensão" a toda magia de área, mas
+    # os preflights das magias de terreno calculavam só area_lado + nível//N.
+    # O bônus é ADITIVO: não substitui o lado por nível nem a escolha do
+    # jogador (terreno do Senhor das Águas, tamanho da Prisão).
+    room, messages = setup()
+    cleric = add_cleric(room, level=6)
+    for mid in ("tempestade_ciclones", "definhar", "senhor_das_aguas", "prisao_chamas"):
+        cleric["magias_conhecidas"].append(mid)
+    ira, temp = S.GRIMORIO["ira_rocha_ardente"], S.GRIMORIO["tempestade_ciclones"]
+    senhor, prisao = S.GRIMORIO["senhor_das_aguas"], S.GRIMORIO["prisao_chamas"]
+    sem = {}
+    ok, sem["ira"] = room._ira_rocha_preflight(cleric, ira, {"tx": 4, "ty": 4}); assert ok
+    ok, sem["temp"] = room._tempestade_preflight(cleric, temp, {"tx": 4, "ty": 4}); assert ok
+    ok, sem["senhor"] = room._senhor_das_aguas_preflight(cleric, senhor, {"tx": 4, "ty": 4, "terreno": "agua_profunda"}); assert ok
+    ok, sem["prisao"] = room._prisao_chamas_preflight(cleric, prisao, {"tx": 4, "ty": 4, "lado": 3}); assert ok
+    check("sem cajado: Ira 3 + 6//3 = 5", sem["ira"]["lado"] == 5)
+    check("sem cajado: Senhor (profunda) 3 + 6//2 = 6", sem["senhor"]["lado"] == 6)
+    check("sem cajado: Prisão 3 (escolha do jogador)", sem["prisao"]["lado"] == 3)
+    cleric["gear"]["weapon"] = dict(S.WEAPONS["staff"])
+    check("cajado reconhecido como equipado", room._cajado_arcano_equipado(cleric))
+    com = {}
+    ok, com["ira"] = room._ira_rocha_preflight(cleric, ira, {"tx": 4, "ty": 4}); assert ok
+    ok, com["temp"] = room._tempestade_preflight(cleric, temp, {"tx": 4, "ty": 4}); assert ok
+    ok, com["senhor"] = room._senhor_das_aguas_preflight(cleric, senhor, {"tx": 4, "ty": 4, "terreno": "agua_profunda"}); assert ok
+    ok, com["prisao"] = room._prisao_chamas_preflight(cleric, prisao, {"tx": 4, "ty": 4, "lado": 3}); assert ok
+    check("com cajado: Ira 5 → 6 e tiles 6x6", com["ira"]["lado"] == 6 and len(com["ira"]["tiles"]) == 36)
+    check("com cajado: Tempestade 5 → 6", com["temp"]["lado"] == 6 and sem["temp"]["lado"] == 5)
+    check("com cajado: Senhor (profunda) 6 → 7 — bônus soma, não substitui a escolha do terreno",
+          com["senhor"]["lado"] == 7)
+    check("com cajado: Prisão 3 → 4 (o jogador segue escolhendo 2/3/4)",
+          com["prisao"]["lado"] == 4)
+    ok, err = room._prisao_chamas_preflight(cleric, prisao, {"tx": 4, "ty": 4, "lado": 5})
+    check("com cajado: Prisão ainda recusa lado 5 pedido pelo cliente (validação antes do bônus)",
+          not ok and err[0] == "erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4")
+    # Definhar não tem preflight: o lado sai no broadcast da animação.
+    lados = []
+    async def cap(msg):
+        if msg.get("type") == "spell_animation" and msg.get("spell_id") == "definhar":
+            lados.append(msg.get("side"))
+    room.broadcast = cap
+    await room._executar_definhar(cleric, S.GRIMORIO["definhar"], {"tx": 4, "ty": 4})
+    cleric["gear"]["weapon"] = None
+    await room._executar_definhar(cleric, S.GRIMORIO["definhar"], {"tx": 4, "ty": 4})
+    check(f"Definhar: 6 com cajado, 5 sem (obtido {lados})", bool(lados) and lados[0] == 6 and lados[-1] == 5)
+    # A zona da Ira guarda o lado bonificado (chamas em lado+2 seguem dele).
+    cleric["gear"]["weapon"] = dict(S.WEAPONS["staff"])
+    zone = await cast(room, messages)
+    check("zona da Ira grava o lado com o cajado (6) e chamas em 8x8",
+          zone["lado"] == 6 and len(zone["chamas_permitidas"]) == 64)
+
     print("\n" + "=" * 62)
     print(f"  {PASS} passaram, {FAIL} falharam")
     print("=" * 62)

@@ -155,6 +155,70 @@ console.log('\n[5] A crosta cobre a lava até a onda revelar a casa');
   check('crosta é opaca o bastante para esconder a lava (≥ 0.85)', typeof val === 'number' && val >= 0.85);
 }
 
+console.log('\n[6] A área verde da mira acompanha o nível — com ou sem Cajado Arcano');
+{
+  // Espelha `_ira_rocha_preflight` & cia: lado = area_lado + nível//N, MAIS
+  // +1 aditivo do Cajado Arcano (`_cajado_arcano_area_bonus`). O cliente
+  // escolhia o lado do cajado (area_lado + 1, cego ao nível) antes do lado
+  // por nível: com o cajado equipado a prévia ficava presa em 4x4 enquanto a
+  // lava real crescia com o nível.
+  const code = [declSource('MAGIAS_AREA_CAJADO_ADITIVO'), fnSource('_prisaoChamasLadoEscolhido'),
+    fnSource('_cajadoArcanoAreaLado'), fnSource('_cajadoArcanoAreaBonus'), fnSource('_areaLadoMiraMagia')].join('\n');
+  const grim = {
+    ira_rocha_ardente:    { id: 'ira_rocha_ardente',    tipo: 'area_fixa', area_lado: 3, area_lado_niveis: 3 },
+    tempestade_ciclones:  { id: 'tempestade_ciclones',  tipo: 'area_fixa', area_lado: 3, area_lado_niveis: 3 },
+    definhar:             { id: 'definhar',             tipo: 'area_fixa', area_lado: 3, area_lado_niveis: 3 },
+    senhor_das_aguas:     { id: 'senhor_das_aguas',     tipo: 'area_fixa', area_lado: 4, area_lado_niveis: 2 },
+    prisao_chamas:        { id: 'prisao_chamas',        tipo: 'area_fixa', lado_min: 2, lado_max: 4 },
+    chamado_inverno:      { id: 'chamado_inverno',      tipo: 'area_fixa', area_lado: 4, area_lado_niveis: 2 },
+    silencio:             { id: 'silencio',             tipo: 'area_fixa', area_lado: 4 },
+  };
+  // (terreno do Senhor, tamanho da Prisão) — globais de módulo lidas pelo helper.
+  const mk = (terreno, prisaoLado) => new Function('_senhorDasAguasTerreno', '_prisaoChamasLado',
+    code + '\nreturn _areaLadoMiraMagia;')(terreno, prisaoLado);
+  let fn = null, erro = null;
+  try { fn = mk('agua_profunda', 3); } catch(e){ erro = e.message; }
+  check('helper _areaLadoMiraMagia existe' + (erro ? ' (' + erro + ')' : ''), typeof fn === 'function');
+  if(fn){
+    const semCajado = lvl => ({ level: lvl, gear: { weapon: { id: 'cajado_madeira' } } });
+    const comCajado = lvl => ({ level: lvl, gear: { weapon: { id: 'staff' } } });
+    const servidor = lvl => 3 + Math.floor(lvl / 3);
+    for(const lvl of [1, 3, 6, 9]){
+      check(`Ira nível ${lvl} sem cajado: prévia ${servidor(lvl)}x${servidor(lvl)}`,
+        fn('ira_rocha_ardente', grim.ira_rocha_ardente, semCajado(lvl), false) === servidor(lvl));
+      check(`Ira nível ${lvl} COM Cajado Arcano: prévia ${servidor(lvl) + 1}x${servidor(lvl) + 1} (nível + 1 do cajado)`,
+        fn('ira_rocha_ardente', grim.ira_rocha_ardente, comCajado(lvl), false) === servidor(lvl) + 1);
+    }
+    check('Tempestade nível 6 com cajado: 5 + 1 = 6',
+      fn('tempestade_ciclones', grim.tempestade_ciclones, comCajado(6), false) === 6);
+    check('Definhar nível 6 com cajado: 5 + 1 = 6',
+      fn('definhar', grim.definhar, comCajado(6), false) === 6);
+    check('Senhor das Águas (profunda) nível 6 com cajado: 3 + 3 + 1 = 7 (a escolha do terreno fica)',
+      fn('senhor_das_aguas', grim.senhor_das_aguas, comCajado(6), false) === 7);
+    check('Senhor das Águas (profunda) nível 6 sem cajado: 6',
+      fn('senhor_das_aguas', grim.senhor_das_aguas, semCajado(6), false) === 6);
+    check('Prisão de Chamas escolhida 3 com cajado: prévia 4',
+      fn('prisao_chamas', grim.prisao_chamas, comCajado(1), false) === 4);
+    check('Prisão de Chamas escolhida 3 sem cajado: prévia 3',
+      fn('prisao_chamas', grim.prisao_chamas, semCajado(1), false) === 3);
+    check('pergaminho nunca ganha o bônus do cajado (Ira nível 6 → 5)',
+      fn('ira_rocha_ardente', grim.ira_rocha_ardente, comCajado(6), true) === 5);
+    // Onde o servidor já honrava o cajado, o cliente continua honrando.
+    check('Chamado do Inverno nível 4 com cajado: 4 + 2 + 1 = 7',
+      fn('chamado_inverno', grim.chamado_inverno, comCajado(4), false) === 7);
+    check('Silêncio com cajado: 4 + 1 = 5',
+      fn('silencio', grim.silencio, comCajado(1), false) === 5);
+    check('Silêncio sem cajado: 4',
+      fn('silencio', grim.silencio, semCajado(1), false) === 4);
+  }
+  // O envio da Prisão manda o tamanho ESCOLHIDO, não a área já bonificada
+  // (o servidor recusa lado 5).
+  const envio = fnSource('_clickTileMagia');
+  check('Prisão envia _prisaoChamasLadoEscolhido(), não mode.areaLado',
+    /prisao_chamas'\)\s*fields\.lado\s*=\s*_prisaoChamasLadoEscolhido\(\)/.test(envio)
+    && !/fields\.lado\s*=\s*mode\.areaLado/.test(envio));
+}
+
 console.log('\n' + '='.repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log('='.repeat(62));

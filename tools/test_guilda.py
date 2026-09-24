@@ -81,6 +81,31 @@ async def main():
     check("sorrateiro custa zero", sorrateiro["preco"] == 0 and sorrateiro["custo_fome"] == 0 and sorrateiro["custo_sede"] == 0)
     itens_w = S.guild_items_for_class("warrior")
     check("brutalidade aplicável a warrior", any(i["id"] == "brutalidade" for i in itens_w))
+    guarda = S.guild_item("guarda_maxima")
+    check("Guarda Máxima é técnica passiva do paladino",
+          guarda and guarda["categoria"] == "tecnica"
+          and guarda["classe"] == "paladin" and guarda.get("automatica"))
+    check("Guarda Máxima custa 250 moedas",
+          guarda and guarda["preco"] == 250
+          and guarda["custo_fome"] == 0 and guarda["custo_sede"] == 0)
+    check("Guarda Máxima não aparece para guerreiro",
+          not any(i["id"] == "guarda_maxima" for i in itens_w))
+    pal = make_player("guard", "Richard", "paladin", 0)
+    escudo = S._normalizar_item_defesa_equipavel({
+        "id": "escudo_g", "name": "Escudo Grande", "kind": "shield",
+        "ac_bonus": 2, "damage_reduction": 2,
+    })
+    pal["gear"]["off_hand"] = escudo
+    S._recalculate_ac(pal)
+    ac_sem_guarda = pal["ac"]
+    pal["guild_equip"]["tecnicas"] = ["guarda_maxima"]
+    pal["guild_equip"]["tecnica"] = "guarda_maxima"
+    S._recalculate_ac(pal)
+    room_sem_init = GameRoom.__new__(GameRoom)
+    check("Guarda Máxima dobra o bônus de CA do escudo",
+          pal["ac"] == ac_sem_guarda + 2)
+    check("Guarda Máxima dobra a redução de dano do escudo",
+          room_sem_init._reducao_dano_escudo(pal) == 4)
     check("item None → não existe", S.guild_item("nao_existe") is None)
 
     # [4] Trava de personagem em uso
@@ -168,6 +193,11 @@ async def main():
         r._errs.clear()
         await r.handle_guild_equip("p1", "tecnica", "brutalidade_fantasma")
         check("recusa técnica não possuída", w["guild_equip"]["tecnica"] is None and r._errs)
+        w["guild_owned"]["tecnicas"].append("guarda_maxima")
+        r._errs.clear()
+        await r.handle_guild_equip("p1", "tecnica", "guarda_maxima")
+        check("paladino exclusivo não equipa em guerreiro",
+              w["guild_equip"]["tecnica"] is None and r._errs)
         r._errs.clear()
         await r.handle_guild_equip("p1", "tecnica_exclusiva", "brutalidade")
         check("warrior recusa slot exclusivo", w["guild_equip"]["tecnica_exclusiva"] is None and r._errs)

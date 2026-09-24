@@ -76,6 +76,9 @@ async def main():
     room.monsters = {}
     room.prisoner = None
     room._ignora_rodamoinho_profundo = lambda _creature: False
+    # O cenário representa a criatura ainda presa em um redemoinho ativo;
+    # sem tiles, o código atual corretamente a libera sem afogamento.
+    room._rodamoinho_profundo_tiles_of = lambda _creature: [(2, 2)]
     room._imune_afogamento = lambda _creature: False
     room._save_mostrado = lambda *_args, **_kwargs: asyncio.sleep(0)
     saves = iter([(False, 1, 0, 1), (False, 1, 0, 1)])

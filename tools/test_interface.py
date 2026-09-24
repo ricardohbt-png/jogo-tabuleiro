@@ -231,6 +231,8 @@ LITERAIS_INTENCIONAIS = {
     # quebraria o ramo em silêncio (o lote de 2026-09-14 chegou a fazê-lo).
     'atk armado',
     'ácido',
+    # Fase interna da animação de ataque; não aparece como texto de interface.
+    'GOLPE',
     # Nomes próprios dos heróis (HERO_DATA): não se traduzem.
     'Victor, o Coice Bravo',
     'Richard, o Cavaleiro',
