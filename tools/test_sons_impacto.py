@@ -15,8 +15,8 @@ print("\n[1] Herói: pela categoria da arma")
 check("espada longa → cortante", S._impacto_de({"id": "espada2m", "categoria": "cortante"}) == "cortante")
 check("adaga → perfurante", S._impacto_de(S.WEAPONS["dagger"]) == "perfurante")
 check("categoria contundente", S._impacto_de({"categoria": "contundente"}) == "contundente")
-check("herói desarmado (None) → None", S._impacto_de(None) is None)
-check("arma de herói sem categoria → None", S._impacto_de({"id": "x", "name": "Garra"}) is None)
+check("herói desarmado (None) → contundente", S._impacto_de(None) == "contundente")
+check("arma de herói sem categoria → contundente", S._impacto_de({"id": "x", "name": "Garra"}) == "contundente")
 
 print("\n[2] Monstro: nome natural vence a categoria")
 check("Mordida perfurante → natural",
@@ -36,14 +36,14 @@ print("\n[4] Monstro: elemental e desconhecido não têm impacto")
 check("Chama (fire) → None", S._impacto_de({"name": "Chama", "damage_types": ["fire"]}, monstro=True) is None)
 check("Garra Congelante (cold) → None",
       S._impacto_de({"name": "Garra Congelante", "damage_types": ["cold"]}, monstro=True) is None)
-check("'Ataque' genérico → None", S._impacto_de({"name": "Ataque"}, monstro=True) is None)
+check("'Ataque' genérico → contundente", S._impacto_de({"name": "Ataque"}, monstro=True) == "contundente")
 
-print("\n[5] Todo ataque físico de MONSTER_DEFS tem impacto ou é genérico conhecido")
+print("\n[5] Todo ataque físico de MONSTER_DEFS tem impacto (nenhum None)")
 sem = sorted({a.get("name") for d in S.MONSTER_DEFS for a in (d.get("attacks") or [])
               if (a.get("damage_types") or ["physical"]) == ["physical"]
               and S._impacto_de(a, monstro=True) is None})
 print("     sem impacto:", sem)
-check("só nomes genéricos ficam sem impacto", set(sem) <= {"Ataque", "Golpe", "Toque Corrosivo"})
+check("nenhum ataque físico volta None", len(sem) == 0)
 
 print("\n[6] _emitir_feedback_ataque: sem impacto a chave some")
 import asyncio

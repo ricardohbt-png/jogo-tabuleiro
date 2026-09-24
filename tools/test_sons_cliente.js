@@ -93,20 +93,22 @@ console.log('\n[4] _somGolpe / _somDor');
   [r, t] = golpe({ hit: true, crit: true, impacto: 'natural', targetPos: [1, 1], targetKey: 'm:9' });
   check('crítico soma golpe_critico', t.join() === 'golpe_natural,golpe_critico');
   [r, t] = golpe({ hit: true, impacto: null, targetPos: [1, 1], targetKey: 'm:9' });
-  check('sem impacto → contundente', t.join() === 'golpe_contundente');
-  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h1' });
+  check('acerto sem impacto → nada toca (não é golpe físico)', r === false && t.length === 0);
+  [r, t] = golpe({ hit: false, impacto: 'cortante', targetPos: [1, 1], targetKey: 'p:h1' });
   check('erro em herói com escudo → escudo_bloqueio', t.join() === 'escudo_bloqueio');
-  [r, t] = golpe({ hit: false, fumble: true, targetPos: [1, 1], targetKey: 'p:h1' });
+  [r, t] = golpe({ hit: false, fumble: true, impacto: 'cortante', targetPos: [1, 1], targetKey: 'p:h1' });
   check('falha crítica não é bloqueio → golpe_erro', t.join() === 'golpe_erro');
-  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h2' });
+  [r, t] = golpe({ hit: false, impacto: 'cortante', targetPos: [1, 1], targetKey: 'p:h2' });
   check('erro sem escudo → golpe_erro', t.join() === 'golpe_erro');
   [r, t] = golpe({ hit: true, area: true, targetPos: [1, 1] });
   check('arremesso de área não toca golpe', r === false && t.length === 0);
   check('pos do alvo vai junto', (golpe({ hit: true, impacto: 'cortante', targetPos: [4, 5], targetKey: 'm:9' }), tocados[0][1][0] === 4));
   [r, t] = golpe({ hit: true, impacto: 'xyz', targetPos: [1, 1], targetKey: 'm:9' });
-  check('impacto inválido → golpe_contundente', t.join() === 'golpe_contundente');
-  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h3' });
+  check('impacto inválido → nada toca', r === false && t.length === 0);
+  [r, t] = golpe({ hit: false, impacto: 'cortante', targetPos: [1, 1], targetKey: 'p:h3' });
   check('escudo custom (item_slot) → escudo_bloqueio', t.join() === 'escudo_bloqueio');
+  [r, t] = golpe({ hit: false, impacto: null, targetPos: [1, 1], targetKey: 'p:h2' });
+  check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
     const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
       GS: { gameState: estado },
@@ -125,6 +127,8 @@ console.log('\n[4] _somGolpe / _somDor');
   check('dano de fogo não usa dor (fica a síntese)', f._somDor({ hit: true, targetKey: 'm:9' }, { damageType: ['fire'] }) === false && tocados.length === 0);
   tocados.length = 0;
   check('dor física em prisioneiro → dor_heroi', f._somDor({ hit: true, targetKey: 'pr:singleton', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
+  tocados.length = 0;
+  check('golpe fatal (c.death) suprime a dor e o cue de dano', f._somDor({ hit: true, death: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: ['physical'] }) === true && tocados.length === 0);
 }
 
 console.log('\n[5] Fiação de combate');
