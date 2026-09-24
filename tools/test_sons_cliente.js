@@ -74,5 +74,49 @@ console.log('\n[3] sfx(): variante indisponível cai para outra pronta');
   check('_sfxCarregar foi chamado para a variante 0 indisponível', carregouChamadas.includes(arquivos[0]));
 }
 
+console.log('\n[4] _somGolpe / _somDor');
+{
+  const tocados = [];
+  const estado = { players: [
+    { id: 'h1', gear: { off_hand: { id: 'escudo_p', kind: 'shield' } } },
+    { id: 'h2', gear: { off_hand: null } },
+  ] };
+  const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor'], {
+    GS: { gameState: estado },
+    sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
+    _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
+  });
+  const golpe = (c) => { tocados.length = 0; const r = f._somGolpe(c); return [r, tocados.map(x => x[0])]; };
+  let [r, t] = golpe({ hit: true, impacto: 'cortante', targetPos: [1, 1], targetKey: 'm:9' });
+  check('acerto cortante → golpe_cortante', r && t.join() === 'golpe_cortante');
+  [r, t] = golpe({ hit: true, crit: true, impacto: 'natural', targetPos: [1, 1], targetKey: 'm:9' });
+  check('crítico soma golpe_critico', t.join() === 'golpe_natural,golpe_critico');
+  [r, t] = golpe({ hit: true, impacto: null, targetPos: [1, 1], targetKey: 'm:9' });
+  check('sem impacto → contundente', t.join() === 'golpe_contundente');
+  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h1' });
+  check('erro em herói com escudo → escudo_bloqueio', t.join() === 'escudo_bloqueio');
+  [r, t] = golpe({ hit: false, fumble: true, targetPos: [1, 1], targetKey: 'p:h1' });
+  check('falha crítica não é bloqueio → golpe_erro', t.join() === 'golpe_erro');
+  [r, t] = golpe({ hit: false, targetPos: [1, 1], targetKey: 'p:h2' });
+  check('erro sem escudo → golpe_erro', t.join() === 'golpe_erro');
+  [r, t] = golpe({ hit: true, area: true, targetPos: [1, 1] });
+  check('arremesso de área não toca golpe', r === false && t.length === 0);
+  check('pos do alvo vai junto', (golpe({ hit: true, impacto: 'cortante', targetPos: [4, 5], targetKey: 'm:9' }), tocados[0][1][0] === 4));
+
+  tocados.length = 0;
+  check('dor física em herói → dor_heroi', f._somDor({ hit: true, targetKey: 'p:h1', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
+  tocados.length = 0;
+  check('dor física em monstro → dor_criatura', f._somDor({ hit: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: 'physical' }) && tocados[0][0] === 'dor_criatura');
+  tocados.length = 0;
+  check('dano de fogo não usa dor (fica a síntese)', f._somDor({ hit: true, targetKey: 'm:9' }, { damageType: ['fire'] }) === false && tocados.length === 0);
+}
+
+console.log('\n[5] Fiação de combate');
+check('base da cena leva impacto', /attacker_pos:msg\.attacker_pos, target_pos:msg\.target_pos, projectile: msg\.projectile \|\| null, impacto: msg\.impacto \|\| null/.test(GAME));
+check('impact chama _somGolpe antes do cue adiado', /const tocouGolpe = !c\.tardio && _somGolpe\(c\);/.test(GAME));
+check('cue adiado só toca sem amostra', /if\(f\.cueAdiado\)\{ if\(!tocouGolpe\) _playCombatCue\(f\.cueAdiado\.kind, f\.cueAdiado\.opts\); f\.cueAdiado = null; \}/.test(GAME));
+check('dor tenta amostra antes da síntese', /if\(fb\.cue && !_somDor\(c, fb\)\) _playCombatCue\('damage', fb\.cue\);/.test(GAME));
+check('2D (sem cena) também tenta amostra', /const tocou = _somGolpe\(\{/.test(GAME));
+
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
