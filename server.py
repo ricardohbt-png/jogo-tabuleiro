@@ -30535,6 +30535,11 @@ class GameRoom:
         """Armadilhas de área (mina/gás): cada alvo no raio testa o próprio save."""
         cx, cy = arm["pos"]
         r = tipo.get("area", 1)
+        # Aviso público do disparo (só efeito sonoro/visual no cliente): o
+        # trap_result é privado de quem foi atingido, então sem isto a mina
+        # que um MONSTRO pisa — ou que atinge outro herói — explodiria muda.
+        await self.broadcast({"type": "armadilha_disparo", "tipo_id": arm["tipo"],
+                              "pos": [cx, cy], "area": r})
         alvos = [p for p in self.players.values()
                  if p["alive"] and not self._fosso_protegido(p)
                  and not self._voo_imune_terreno(p)
@@ -35809,6 +35814,11 @@ class GameRoom:
         # Explosivos de Ã¡rea: centro no alvo e reflexos para todos no raio.
         raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
         raio = int(defn.get("area_raio", 1))
+        # Aviso público da queda (só som no cliente): o arremesso de monstro
+        # não emite attack_feedback, então sem isto a granada do Soldado
+        # explodiria muda. O herói usa o `impact` da CombatScene.
+        await self.broadcast({"type": "item_impacto", "item_id": item.get("id"),
+                              "pos": list(target["pos"]), "area": raio})
         save = defn.get("save") or {}
         for alvo in self._alvos_na_area(target["pos"][0], target["pos"][1], raio):
             if not defn.get("dano"):

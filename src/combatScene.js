@@ -213,6 +213,7 @@
       hit: !!(s.result && s.result.hit), crit: !!(s.result && s.result.crit),
       fumble: !!(s.result && s.result.fumble),
       projectile: s.projectile ? s.projectile.kind : null,
+      item_id: s.projectile ? (s.projectile.item_id || null) : null,
       impacto: s.impacto,
       area: !!(s.projectile && s.projectile.area),
       area_raio: s.projectile ? s.projectile.area_raio : 0,

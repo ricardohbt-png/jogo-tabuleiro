@@ -149,7 +149,16 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`, `fala`
+`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`
+
+> **`armadilha_disparo`** (`tipo_id`, `pos`, `area`) — broadcast público emitido no início de
+> `_aplicar_armadilha_area` (Mina Terrestre, Nuvem de Gás), antes das rolagens de save. Só
+> alimenta som/efeito no cliente: o `trap_result` é privado de quem foi atingido, então sem
+> ele a mina que um monstro pisa explodiria muda.
+>
+> **`item_impacto`** (`item_id`, `pos`, `area`) — broadcast público emitido no ramo de área de
+> `_monster_throw_item` (granada do Soldado), antes dos saves. O arremesso de monstro não tem
+> `attack_feedback`; o do herói não precisa disto (o `impact` da CombatScene já traz o `item_id`).
 
 > `game_state` inclui `corpses` (cadáveres) e `armadilhas` (colocáveis — ver
 > abaixo). `animar_result` traz
@@ -2705,3 +2714,41 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > magia que o acerta também soa nele), via `_familiaElementalDaChave` em `_somDor`; os outros
 > monstros seguem com dor só no dano físico. `tools/preparar_sfx.py` ganhou `--fade=S` (rampa
 > de entrada/saída para trechos cortados de som contínuo).
+> **Correções achadas na mesa do editor (2026-09-24):** (1) a dor do elemental toca
+> `ATRASO_DOR_ELEMENTAL_MS` (90 ms) depois do golpe — no mesmo instante a batida e o crítico a
+> encobriam; decide-se na hora por `_sfxPronto` (amostra decodificada?) para o recuo continuar
+> funcionando. (2) Golpe de elemental soa o próprio elemento: `ataque_elem_<x>` (mesmos arquivos
+> da aparição) no `impact` da cena e no `result` sem cena, por `_somAtaqueElemental`; o elemental
+> não tem `impacto` físico, então antes só soava o genérico. (3) **Rugido na primeira ação**
+> (`_somRugidoAoAgir`, no `start` do `attack_feedback`): o rugido "ao entrar na visão" nunca
+> dispara para quem já estava à vista no 1º estado (linha de base) — a mesa de teste e a visão
+> total do mestre começam assim; conjunto `_rugiram` (zerado em `_sonsReset`, alimentado pelo `id`
+> que o `diffSons` passou a mandar no rugido) garante 1 rugido por monstro; elemental não ruge ao
+> agir. (4) `_familiaElementalDaChave` reconhece também o elemental **invocado** (`a:<id>`, servo
+> com `tipo:'elemental'` + `tipo_elemental`). (5) O raio do Elemental Elétrico em linha
+> (`spell_animation` `elemental_raio`) toca `relampago` (estalo de trovão) ao sair.
+> **Teste de som** (⚙️ → Áudio → "🎧 Teste de som", `abrirSoundTest`): overlay `#som-teste`
+> que lista TODO o `SoundBank.SFX`, agrupado pela pasta do 1º arquivo (combate/exploracao/
+> criaturas/interface/ambiente), com um ▶ por versão (tooltip = caminho do arquivo) + os sons
+> gerados (`_SOMTESTE_SINTETIZADOS`: passo, arpejo do baú, armadilha). Toca direto no canal do
+> evento, sem limitador/névoa/sorteio, um por vez (`_somTesteAtual`, botão Parar; fechar para).
+> Nomes: `ui.somteste.ev.<evento>` ou, para criatura, `ui.somteste.acao.<rugido|ataque|dor|morte>`
+> + `ui.somteste.familia.<família>`. **Evento novo no catálogo precisa de nome** — o
+> `test_sons_cliente.js` [17] cobra pt/en de todo nome que o painel pede. O clique delegado de
+> botões ignora `#som-teste` (senão o clique se misturaria ao som ouvido).
+> **Armadilha de prova:** com o painel do navegador oculto o `requestAnimationFrame` não roda e
+> a CombatScene nunca chega ao `impact` — nenhum som de golpe sai. Troque o rAF por
+> `setTimeout` antes de medir.
+> **Baú velho:** `openChestWindow` toca `bau_abre` (3 versões em `exploracao/bau_abre_*`: dobradiça
+> rangendo em tom grave + tampa de madeira batendo, montadas de rangidos da Kenney com batidas de
+> madeira) e só cai no arpejo sintetizado `tocarSomBau` sem amostra pronta.
+> **Explosão da mina:** `GS.on('armadilhaDisparo')` → `_somDisparoArmadilha` toca `explosao`
+> (3 versões em `combate/explosao_*`, baque grave + estrondo da Kenney Sci-Fi Sounds) na casa da
+> mina, 240 ms depois (impacto da animação de armadilha), para toda a sala — inclusive quando
+> quem pisa é monstro e mesmo que o herói passe no save. Mapa `SOM_DISPARO_ARMADILHA` (só
+> `mina_terrestre` hoje). Testes: `tools/test_som_armadilha.py`, `tools/test_sons_cliente.js` [13].
+> **Explosão das granadas** (`granada`, `granada_superior` — `ITENS_EXPLOSIVOS`): o mesmo `explosao`,
+> por `_somExplosaoItem`. Arremesso do herói: no comando `impact` não-tardio da CombatScene, que
+> passou a carregar `item_id` (toca quando o frasco chega à casa). Arremesso do Soldado: pela
+> mensagem `item_impacto`, na hora. Testes: `tools/test_som_armadilha.py` [3]/[4],
+> `tools/test_sons_cliente.js` [14].

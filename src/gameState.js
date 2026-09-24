@@ -1533,6 +1533,14 @@ const GS = (() => {
         _emit('trapResult', msg);
         break;
 
+      case 'armadilha_disparo':   // público: armadilha de área disparou (som)
+        _emit('armadilhaDisparo', msg);
+        break;
+
+      case 'item_impacto':        // público: item de área de monstro caiu (som)
+        _emit('itemImpacto', msg);
+        break;
+
       case 'survival_result':
         _emit('survivalResult', msg);
         break;

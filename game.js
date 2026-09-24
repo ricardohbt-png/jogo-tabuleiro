@@ -11704,6 +11704,7 @@ function _executarComandoCena(c){
   if(c.cmd !== 'impact') return;
   const now = performance.now();
   const tocouGolpe = !c.tardio && _somGolpe(c);
+  if(!c.tardio) try{ _somExplosaoItem(c.item_id, c.targetPos); _somAtaqueElemental(c); }catch(e){}
   if(!c.tardio){
     // O golpe aconteceu: agora o banner legado pode mostrar ACERTO/ERRO/CRÍTICO
     // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
@@ -11755,6 +11756,7 @@ function _receiveAttackFeedback(msg){
   if(msg.phase==='start'){
     if(msg.spin_id) _registrarGiroAtaque(msg, now);
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
+    try{ _somRugidoAoAgir(msg.attacker_id); }catch(e){}
     const f={id, attackerName:msg.attacker_name||'Atacante', targetName:_attackFeedbackTargetName(msg),
       attackerId:msg.attacker_id, targetId:msg.target_id, attackName:msg.attack_name||t('ui.hud.ataque'), attackerPos:(msg.attacker_pos||[0,0]).map(Number),
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
@@ -11783,6 +11785,7 @@ function _receiveAttackFeedback(msg){
       const tocou = _somGolpe({ hit: !!msg.hit, crit: !!(msg.crit || msg.natural_critical),
         fumble: !!msg.natural_fumble, impacto: f.impacto, area: f.area,
         targetPos: msg.target_pos, targetKey: _entityKeyById(msg.target_id) });
+      try{ _somAtaqueElemental({ attackerKey: _entityKeyById(msg.attacker_id), targetPos: msg.target_pos }); }catch(e){}
       if(!tocou && cue) _playCombatCue(cue.kind, cue.opts);
     }
     _drawAttackFeedbackTexture3D(f);
@@ -21621,7 +21624,9 @@ function clearPendingChestTake({ restore = false } = {}){
 function openChestWindow(chest){
   _openChestId = chest.id;
   _openDecorLootId = null;   // disarm decor auto-refresh
-  tocarSomBau();
+  // Baú velho: dobradiça rangendo + tampa batendo. Sem amostra pronta, o
+  // arpejo sintetizado de antes.
+  if(!sfx('bau_abre')) tocarSomBau();
   const titleEl = $('chest-title');
   if (titleEl) titleEl.textContent = t('ui.bau.titulo');
   _renderChestWindow(chest);
@@ -22439,6 +22444,30 @@ function toggleAjuda(){
     </div>`;
   document.body.appendChild(p);
   _gamepadFocusMapPoint('#painel-ajuda button');
+}
+
+// ── Som do disparo de armadilha de área (mensagem pública armadilha_disparo) ─
+// O trap_result é privado de quem foi atingido; este aviso chega à sala toda,
+// então a mina soa também quando um monstro pisa nela. Toca no instante do
+// impacto da animação de armadilha (23% de 1050 ms ≈ 240 ms). Casa fora da
+// visão: abafado e sem pan (regra de sfx/audibilidade).
+const SOM_DISPARO_ARMADILHA = { mina_terrestre: 'explosao' };
+const ATRASO_IMPACTO_ARMADILHA_MS = 240;
+function _somDisparoArmadilha(msg){
+  const ev = msg && SOM_DISPARO_ARMADILHA[String(msg.tipo_id || '')];
+  if(!ev || GS.isPreview) return;
+  const pos = Array.isArray(msg.pos) ? msg.pos : undefined;
+  setTimeout(() => sfx(ev, {pos}), ATRASO_IMPACTO_ARMADILHA_MS);
+}
+
+// ── Explosão de item arremessado (granadas) ───────────────────────────────
+// Herói: no `impact` da CombatScene, quando o frasco chega à casa (o voo já
+// deu o tempo). Monstro (Soldado): pela mensagem pública `item_impacto`, sem
+// animação de voo — toca na hora.
+const ITENS_EXPLOSIVOS = new Set(['granada', 'granada_superior']);
+function _somExplosaoItem(itemId, pos){
+  if(!ITENS_EXPLOSIVOS.has(String(itemId || '')) || GS.isPreview) return false;
+  return sfx('explosao', {pos: Array.isArray(pos) ? pos : undefined});
 }
 
 // ── Som de baú — arpejo dourado curto (mesma infra WebAudio dos dados) ──────
@@ -26503,6 +26532,101 @@ function _sfxPreCarregar(){
   if(!window.SoundBank) return;
   for(const def of Object.values(SoundBank.SFX)) for(const a of def.arquivos) _sfxCarregar(a);
 }
+
+// ── Teste de som (⚙️ → Áudio → 🎧 Teste de som) ────────────────────────────
+// Lista TODO o catálogo do SoundBank agrupado pela pasta do arquivo, com um
+// botão por versão. Toca direto (sem limitador, sem névoa, sem sorteio), no
+// canal do evento — os sliders de volume valem aqui também. Um som por vez.
+const _SOMTESTE_GRUPOS = ['combate', 'exploracao', 'criaturas', 'interface', 'ambiente'];
+const _SOMTESTE_SINTETIZADOS = [
+  ['passo', () => tocarSomPasso()],
+  ['bau_arpejo', () => tocarSomBau()],
+  ['armadilha', () => tocarSomArmadilha()],
+];
+let _somTesteAtual = null;                 // AudioBufferSourceNode tocando
+function _somTesteNome(ev){
+  const m = /^(rugido|ataque|dor|morte)_(.+)$/.exec(ev);
+  if(m && ev !== 'dor_heroi' && ev !== 'dor_criatura')
+    return t('ui.somteste.acao.' + m[1]) + ' — ' + t('ui.somteste.familia.' + m[2]);
+  return t('ui.somteste.ev.' + ev);
+}
+function _somTesteParar(){
+  if(_somTesteAtual){ try{ _somTesteAtual.stop(); }catch(e){} _somTesteAtual = null; }
+}
+async function _somTesteTocar(evento, idx){
+  const def = window.SoundBank && SoundBank.SFX[evento];
+  const ctx = getAudioContext();
+  if(!def || !ctx) return;
+  try{ if(ctx.state !== 'running') await ctx.resume(); }catch(e){}
+  const caminho = def.arquivos[idx];
+  _sfxCarregar(caminho);
+  for(let i = 0; i < 60 && !(_sfxBuffers.get(caminho) instanceof AudioBuffer); i++){
+    if(_sfxBuffers.get(caminho) === 'erro') break;
+    await new Promise(r => setTimeout(r, 50));
+  }
+  const buf = _sfxBuffers.get(caminho);
+  if(!(buf instanceof AudioBuffer)){ toast(caminho + ' ✗', 'var(--red)'); return; }
+  _somTesteParar();
+  const src = ctx.createBufferSource(), g = ctx.createGain();
+  src.buffer = buf;
+  g.gain.value = def.volume;
+  src.connect(g); g.connect(def.canal === 'ambiente' ? _ambienceBus() : _sfxBus());
+  src.onended = () => { if(_somTesteAtual === src) _somTesteAtual = null; };
+  src.start();
+  _somTesteAtual = src;
+}
+function abrirSoundTest(){
+  if(!window.SoundBank) return;
+  let ov = document.getElementById('som-teste');
+  if(ov){ ov.remove(); }
+  const porGrupo = {};
+  for(const [ev, def] of Object.entries(SoundBank.SFX)){
+    const g = String(def.arquivos[0] || '').split('/')[0];
+    (porGrupo[g] = porGrupo[g] || []).push(ev);
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const linha = (ev, nome, botoes) =>
+    `<div class="som-teste-linha"><div class="som-teste-nome">${esc(nome)}<code>${esc(ev)}</code></div>`
+    + `<div class="som-teste-botoes">${botoes}</div></div>`;
+  let html = '';
+  for(const g of _SOMTESTE_GRUPOS){
+    const evs = porGrupo[g]; if(!evs) continue;
+    html += `<h4>${esc(t('ui.somteste.grupo.' + g))}</h4>`;
+    for(const ev of evs){
+      const arqs = SoundBank.SFX[ev].arquivos;
+      const bts = arqs.map((a, i) =>
+        `<button type="button" data-som-ev="${esc(ev)}" data-som-i="${i}" title="${esc('assets/sfx/' + a)}"`
+        + ` aria-label="${esc(t('ui.somteste.tocar_versao', {n: i + 1}))}">▶ ${i + 1}</button>`).join('');
+      html += linha(ev, _somTesteNome(ev), bts);
+    }
+  }
+  html += `<h4>${esc(t('ui.somteste.grupo.sintetizados'))}</h4>`;
+  _SOMTESTE_SINTETIZADOS.forEach(([ev], i) => {
+    html += linha(ev, t('ui.somteste.ev.' + ev),
+      `<button type="button" data-som-sint="${i}" aria-label="${esc(t('ui.somteste.tocar_versao', {n: 1}))}">▶</button>`);
+  });
+  ov = document.createElement('div');
+  ov.id = 'som-teste';
+  ov.innerHTML = `<div class="som-teste-caixa" role="dialog" aria-label="${esc(t('ui.somteste.titulo'))}">`
+    + `<div class="som-teste-topo"><b>${esc(t('ui.somteste.titulo'))}</b>`
+    + `<button type="button" data-som-parar>${esc(t('ui.somteste.parar'))}</button>`
+    + `<button type="button" data-som-fechar>${esc(t('ui.somteste.fechar'))}</button></div>`
+    + `<p class="som-teste-dica">${esc(t('ui.somteste.dica'))}</p>`
+    + `<div class="som-teste-lista">${html}</div></div>`;
+  ov.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if(e.target === ov || (b && b.hasAttribute('data-som-fechar'))){ _somTesteParar(); ov.remove(); return; }
+    if(!b) return;
+    if(b.hasAttribute('data-som-parar')) _somTesteParar();
+    else if(b.dataset.somEv) _somTesteTocar(b.dataset.somEv, Number(b.dataset.somI) || 0);
+    else if(b.dataset.somSint != null){
+      const ctx = getAudioContext();
+      Promise.resolve(ctx && ctx.state !== 'running' ? ctx.resume() : null)
+        .catch(() => {}).then(() => _SOMTESTE_SINTETIZADOS[Number(b.dataset.somSint)][1]());
+    }
+  });
+  document.body.appendChild(ov);
+}
 function _sfxMe(){
   const st = GS.gameState;
   return st ? ((st.players || []).find(p => String(p.id) === String(GS.myPid)) || null) : null;
@@ -26525,6 +26649,16 @@ function _sfxPan(pos){
     if(me && Array.isArray(me.pos)) x = (pos[0] - me.pos[0]) / 12;
   }
   return Math.max(-0.6, Math.min(0.6, x * 0.6));
+}
+// Há pelo menos uma variante do evento decodificada e o áudio está rodando?
+// Para quem agenda o som (setTimeout) e precisa decidir JÁ se usa o recuo.
+function _sfxPronto(evento){
+  const def = window.SoundBank && SoundBank.SFX[evento];
+  const ctx = getAudioContext();
+  if(!def || !def.arquivos.length || !ctx || ctx.state !== 'running') return false;
+  if(def.arquivos.some(a => _sfxBuffers.get(a) instanceof AudioBuffer)) return true;
+  for(const a of def.arquivos) _sfxCarregar(a);
+  return false;
 }
 function sfx(evento, opts = {}){
   const SB = window.SoundBank;
@@ -26612,19 +26746,64 @@ function _somDor(c, fb){
   // e ela vale para QUALQUER tipo de dano: a criatura é o elemento, então
   // a magia que a acerta também soa nela. Sem amostra pronta cai no recuo
   // abaixo como qualquer criatura.
+  // Toca ~90 ms depois do golpe: no mesmo instante, a batida e o crítico
+  // encobriam a dor (provado na mesa do editor — tocava e não se ouvia).
   const famEl = _familiaElementalDaChave(k);
-  if(famEl && sfx('dor_' + famEl, {pos})) return true;
+  if(famEl && _sfxPronto('dor_' + famEl)){
+    setTimeout(() => sfx('dor_' + famEl, {pos}), ATRASO_DOR_ELEMENTAL_MS);
+    return true;
+  }
   if(_combatPrimaryDamageType(fb && fb.damageType || 'physical') !== 'physical') return false;
   const heroi = k.startsWith('p:') || k.startsWith('pr:');
   return sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos});
 }
 // 'm:<id>' → 'elem_fogo' etc. quando o monstro é um elemental; senão null.
+// 'a:<id>' → idem para o elemental INVOCADO (servo animado com
+// tipo:'elemental' + tipo_elemental), que usa as mesmas vozes.
 function _familiaElementalDaChave(k){
-  if(!k.startsWith('m:') || !window.SoundBank) return null;
-  const id = k.slice(2);
-  const m = ((GS.gameState && GS.gameState.monsters) || []).find(x => String(x.id) === id);
+  if(!window.SoundBank) return null;
+  const st = GS.gameState || {};
+  let m = null;
+  if(k.startsWith('m:')){
+    const id = k.slice(2);
+    m = (st.monsters || []).find(x => String(x.id) === id) || null;
+  } else if(k.startsWith('a:')){
+    const id = k.slice(2);
+    for(const p of (st.players || [])){
+      const a = (p.animados || []).find(x => String(x.id) === id);
+      if(a){ if(a.tipo === 'elemental' && a.tipo_elemental) m = {type: 'elemental_' + a.tipo_elemental}; break; }
+    }
+  }
   const fam = m ? SoundBank.familiaDe(m) : null;
   return fam && fam.startsWith('elem_') ? fam : null;
+}
+
+const ATRASO_DOR_ELEMENTAL_MS = 90;
+
+// Golpe de elemental: o som do próprio elemento no instante do impacto,
+// acerte ou erre (o raio/chama/rajada acontece de qualquer jeito). O ataque
+// de elemental não tem `impacto` físico, então sem isto só soava o genérico.
+function _somAtaqueElemental(c){
+  const fam = _familiaElementalDaChave(String(c && c.attackerKey || ''));
+  if(!fam) return false;
+  return sfx('ataque_' + fam, {pos: Array.isArray(c.targetPos) ? c.targetPos : undefined});
+}
+
+// Rugido também na PRIMEIRA ação de um monstro que ainda não rugiu. O rugido
+// "ao entrar na visão" não cobre quem já estava à vista quando a masmorra
+// abriu — a mesa de teste do editor e a visão total do mestre começam com
+// todos os monstros visíveis, e o 1º estado é só a linha de base.
+let _rugiram = new Set();
+function _somRugidoAoAgir(attackerId){
+  if(attackerId == null || !window.SoundBank) return;
+  const id = String(attackerId);
+  if(_rugiram.has(id)) return;
+  const m = ((GS.gameState && GS.gameState.monsters) || []).find(x => String(x.id) === id);
+  if(!m) return;                                   // herói/servo: não ruge
+  _rugiram.add(id);
+  const fam = SoundBank.familiaDe(m);
+  // Elemental não ruge ao agir: o golpe dele já é o som do elemento.
+  if(fam && !fam.startsWith('elem_')) sfx('rugido_' + fam, {pos: Array.isArray(m.pos) ? m.pos : undefined});
 }
 
 function _somMorteMonstro(m, kind){
@@ -26636,7 +26815,7 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; _passosReset(); }
+function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
   _sonsPassosDeEstado(state);
@@ -26654,7 +26833,10 @@ function _capturarSonsDeEstado(state){
     monstros,
   });
   _sonsSnap = r.snap;
-  for(const e of r.eventos) sfx(e.evento, e.pos ? { pos: e.pos } : {});
+  for(const e of r.eventos){
+    if(e.id != null) _rugiram.add(String(e.id));
+    sfx(e.evento, e.pos ? { pos: e.pos } : {});
+  }
 }
 
 // ── Ambiente: um loop por preset da masmorra, canal "ambiente" ──────────────
@@ -26715,7 +26897,8 @@ function _ambienciaParar(){
 // Clique de botão: um ouvinte só, em captura, para toda a interface.
 document.addEventListener('click', e => {
   const b = e.target && e.target.closest && e.target.closest('button');
-  if(b && !b.disabled) sfx('clique');
+  // O teste de som fica fora: o clique se misturaria ao som sendo ouvido.
+  if(b && !b.disabled && !b.closest('#som-teste')) sfx('clique');
 }, true);
 
 const _ACCESS_KEY = 'lfh_accessibility';
@@ -28187,6 +28370,7 @@ function _audioPanelEnsure(){
     +     '<input id="aud-dice" type="range" min="0" max="100" value="' + pct(_diceVol) + '" style="width:100%;">'
     +     '<div class="cfg-audio-line"><span data-i18n="ui.audio.passos">👣 Movimento dos peões</span><span id="aud-steps-val">' + pct(_stepsVol) + '%</span></div>'
     +     '<input id="aud-steps" type="range" min="0" max="100" value="' + pct(_stepsVol) + '" style="width:100%;">'
+    +     '<button id="aud-som-teste" class="cfg-som-teste-btn" type="button" data-i18n="ui.somteste.abrir">🎧 Teste de som</button>'
     +   '</section>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.joystick">🎮 Joystick</div>'
     +   '<div class="cfg-access-line"><span data-i18n="ui.menu.joystick_deadzone">Zona morta</span><span id="gp-deadzone-val">' + Math.round(_gamepadDeadZone * 100) + '%</span></div>'
@@ -28280,6 +28464,7 @@ function _audioPanelEnsure(){
   aSl.oninput = () => { aVal.textContent = aSl.value + '%'; _setAmbienceVol(aSl.value / 100); };
   const dSl = wrap.querySelector('#aud-dice'), dVal = wrap.querySelector('#aud-dice-val');
   dSl.oninput = () => { dVal.textContent = dSl.value + '%'; _setDiceVol(dSl.value / 100); };
+  wrap.querySelector('#aud-som-teste').onclick = () => { pop.style.display = 'none'; abrirSoundTest(); };
   const pSl = wrap.querySelector('#aud-steps'), pVal = wrap.querySelector('#aud-steps-val');
   pSl.oninput = () => {
     pVal.textContent = pSl.value + '%'; _setStepsVol(pSl.value / 100);
@@ -32808,6 +32993,9 @@ function _receberAnimacaoRaioElemental(msg){
   if(msg.animation_id!=null&&_elementalRaioAnims.some(a=>a.id===String(msg.animation_id)))return;
   const anim=_elementalRaioAnimFromMessage(msg);if(!anim)return;_elementalRaioAnims.push(anim);
   if(!_elementalRaioRaf)_elementalRaioRaf=_scheduleVisualFrame(_elementalRaioTick);
+  // Estalo de trovão quando o raio sai (o dano de cada alvo vem depois, pelo
+  // attack_feedback, com a faísca de ataque_elem_eletrico).
+  try{ if(!GS.isPreview) sfx('relampago',{pos:Array.isArray(msg.origin)?msg.origin:undefined}); }catch(e){}
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -49036,6 +49224,8 @@ GS.on('sorteReacao', msg => {
 });
 
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
+GS.on('armadilhaDisparo', msg => { try{ _somDisparoArmadilha(msg); }catch(e){} });
+GS.on('itemImpacto', msg => { try{ _somExplosaoItem(msg && msg.item_id, msg && msg.pos); }catch(e){} });
 GS.on('darknessEntered', msg => {
   queueTrapResult({
     tipo: 'escuridao', tipo_id: 'escuridao', nome: t('ui.status.escuridao'),

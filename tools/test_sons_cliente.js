@@ -83,7 +83,7 @@ console.log('\n[4] _somGolpe / _somDor');
     { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
   const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
-    SoundBank: SB,
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90,
     GS: { gameState: estado },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
@@ -112,7 +112,7 @@ console.log('\n[4] _somGolpe / _somDor');
   check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
     const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave'], {
-    SoundBank: SB,
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90,
       GS: { gameState: estado },
       sfx: (e) => e !== 'golpe_critico',
       _combatPrimaryDamageType: t2 => Array.isArray(t2) ? t2[0] : t2,
@@ -181,7 +181,7 @@ console.log('\n[7] _capturarSonsDeEstado');
   // O snapshot `_sonsSnap` é estado de módulo do game.js: recriado aqui, com reset.
   const src = extrair('_capturarSonsDeEstado');
   const f = new Function(...Object.keys(stubs),
-    'let _sonsSnap = null;\n' + src + '\nreturn { _capturarSonsDeEstado, reset(){ _sonsSnap = null; } };')(...Object.values(stubs));
+    'let _sonsSnap = null; let _rugiram = new Set();\n' + src + '\nreturn { _capturarSonsDeEstado, reset(){ _sonsSnap = null; } };')(...Object.values(stubs));
   const st = (extra) => Object.assign({ players: [{ id: 'h1', pos: [0, 0], gold: 5, bag: [], gear: {}, level: 1 }],
     monsters: [{ id: 'm1', type: 'goblin', hp: 5, pos: [2, 2] }], current_turn: 'x', abertas: [] }, extra);
   f.reset();
@@ -219,7 +219,7 @@ check('um único GS.on(serverError)', regs.length === 1);
 check('o ouvinte único limpa a prévia do Ataque Giratório',
   /GS\.on\('serverError', msg  => \{[\s\S]{0,300}_limparPreviewAtaqueGiratorio\(\)/.test(GAME));
 check('o ouvinte único toca recusa', /GS\.on\('serverError', msg  => \{[\s\S]{0,400}sfx\('recusa'\)/.test(GAME));
-check('clique delegado em botões', /closest\('button'\)[\s\S]{0,80}sfx\('clique'\)/.test(GAME));
+check('clique delegado em botões', /closest\('button'\)[\s\S]{0,200}sfx\('clique'\)/.test(GAME));
 check('_ambienciaGarantir só roda com a tela da masmorra ativa',
   /function _ambienciaGarantir\(state\)\{\s*if\(!document\.getElementById\('screen-game'\)\?\.classList\.contains\('active'\)\) return;/.test(GAME));
 check('reconnectFailed para o ambiente',
@@ -273,6 +273,128 @@ check('_sonsReset zera as posições', /function _sonsReset\(\)\{[^}]*_passosRes
   f._passosReset(); tocados.length = 0;
   f._sonsPassosDeEstado(stubs.GS.gameState = st([2, 0], [6, 5]));
   check('após reset o 1º estado não toca', timers.length === 0);
+}
+
+console.log('\n[12] Baú velho ao abrir');
+check('catálogo tem bau_abre com 3 versões', SB.SFX.bau_abre && SB.SFX.bau_abre.arquivos.length === 3);
+check('openChestWindow toca bau_abre e recua para o arpejo', /function openChestWindow\(chest\)\{[\s\S]{0,400}if\(!sfx\('bau_abre'\)\) tocarSomBau\(\);/.test(GAME));
+
+console.log('\n[13] Explosão da Mina Terrestre (armadilha_disparo)');
+{
+  const GSJS = fs.readFileSync(path.join(raiz, 'src', 'gameState.js'), 'utf8');
+  check('gameState repassa armadilha_disparo', /case 'armadilha_disparo':\s*(\/\/[^\n]*)?\s*_emit\('armadilhaDisparo', msg\)/.test(GSJS));
+  check('game.js escuta armadilhaDisparo', /^GS\.on\('armadilhaDisparo', msg => \{ try\{ _somDisparoArmadilha\(msg\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  check('catálogo tem explosao com 3 versões', SB.SFX.explosao && SB.SFX.explosao.arquivos.length === 3);
+  const tocados = [], timers = [];
+  const src = extrair('_somDisparoArmadilha');
+  const f = new Function('GS', 'sfx', 'setTimeout',
+    "const SOM_DISPARO_ARMADILHA = { mina_terrestre: 'explosao' }; const ATRASO_IMPACTO_ARMADILHA_MS = 240;\n" + src + '\nreturn _somDisparoArmadilha;')(
+    { isPreview: false }, (e, o) => { tocados.push([e, o.pos]); return true; }, (fn, ms) => timers.push([ms, fn]));
+  f({ type: 'armadilha_disparo', tipo_id: 'mina_terrestre', pos: [3, 4] });
+  check('explosão agendada no impacto (240 ms)', timers.length === 1 && timers[0][0] === 240);
+  timers[0][1]();
+  check('toca explosao na casa da mina', tocados.length === 1 && tocados[0][0] === 'explosao' && tocados[0][1][0] === 3);
+  timers.length = 0;
+  f({ type: 'armadilha_disparo', tipo_id: 'nuvem_gas', pos: [3, 4] });
+  check('nuvem de gás não explode', timers.length === 0);
+  check('constante do código bate com o teste', /const SOM_DISPARO_ARMADILHA = \{ mina_terrestre: 'explosao' \};/.test(GAME) && /const ATRASO_IMPACTO_ARMADILHA_MS = 240;/.test(GAME));
+}
+
+console.log('\n[14] Explosão das granadas (herói: impact da cena; Soldado: item_impacto)');
+{
+  const CSJS = fs.readFileSync(path.join(raiz, 'src', 'combatScene.js'), 'utf8');
+  const GSJS = fs.readFileSync(path.join(raiz, 'src', 'gameState.js'), 'utf8');
+  check('impact da CombatScene carrega item_id', /function emitirImpacto[\s\S]{0,800}item_id: s\.projectile \? \(s\.projectile\.item_id \|\| null\) : null/.test(CSJS));
+  check('impact não-tardio toca a explosão do item', /const tocouGolpe = !c\.tardio && _somGolpe\(c\);\s*if\(!c\.tardio\) try\{ _somExplosaoItem\(c\.item_id, c\.targetPos\);[^}]*\}catch\(e\)\{\}/.test(GAME));
+  check('gameState repassa item_impacto', /case 'item_impacto':\s*(\/\/[^\n]*)?\s*_emit\('itemImpacto', msg\)/.test(GSJS));
+  check('game.js escuta itemImpacto', /^GS\.on\('itemImpacto', msg => \{ try\{ _somExplosaoItem\(msg && msg\.item_id, msg && msg\.pos\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  const tocados = [];
+  const f = new Function('GS', 'sfx', "const ITENS_EXPLOSIVOS = new Set(['granada', 'granada_superior']);\n" + extrair('_somExplosaoItem') + '\nreturn _somExplosaoItem;')(
+    { isPreview: false }, (e, o) => { tocados.push([e, o.pos]); return true; });
+  f('granada', [4, 4]); f('granada_superior', [1, 2]); f('bomba_fumaca', [1, 1]); f('frasco_acido', [1, 1]); f(null, null);
+  check('só as duas granadas explodem', tocados.map(x => x[0]).join() === 'explosao,explosao');
+  check('na casa do impacto', tocados[0][1][0] === 4 && tocados[1][1][1] === 2);
+  check('conjunto do código bate com o teste', /const ITENS_EXPLOSIVOS = new Set\(\['granada', 'granada_superior'\]\);/.test(GAME));
+}
+
+console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação');
+{
+  const tocados = [], timers = [];
+  const estado = { monsters: [
+    { id: 'e1', type: 'elemental_eletrico', pos: [3, 3] },
+    { id: 'g1', type: 'goblin', pos: [4, 3] },
+  ] };
+  const stubs = {
+    GS: { gameState: estado }, SoundBank: SB,
+    sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
+    _sfxPronto: () => true, setTimeout: (fn, ms) => timers.push([ms, fn]),
+    _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
+  };
+  const corpo = 'const ATRASO_DOR_ELEMENTAL_MS = 90; let _rugiram = new Set();\n'
+    + ['_familiaElementalDaChave', '_somAtaqueElemental', '_somRugidoAoAgir', '_somDor'].map(extrair).join('\n')
+    + '\nreturn { _somAtaqueElemental, _somRugidoAoAgir, _somDor, marcar: id => _rugiram.add(id) };';
+  const f = new Function(...Object.keys(stubs), corpo)(...Object.values(stubs));
+  check('raio do elemental elétrico → ataque_elem_eletrico', f._somAtaqueElemental({ attackerKey: 'm:e1', targetPos: [4, 3] }) && tocados.pop()[0] === 'ataque_elem_eletrico');
+  check('ataque de goblin não toca som de elemento', f._somAtaqueElemental({ attackerKey: 'm:g1', targetPos: [3, 3] }) === false && tocados.length === 0);
+  check('catálogo tem ataque_ para os 6 elementos', SB.FAMILIAS_ELEMENTO.every(x => SB.SFX['ataque_' + x] && SB.SFX['ataque_' + x].arquivos.length === 2));
+  f._somDor({ hit: true, targetKey: 'm:e1', targetPos: [3, 3] }, { damageType: 'physical' });
+  check('dor do elemental é agendada 90 ms depois do golpe', timers.length === 1 && timers[0][0] === 90 && tocados.length === 0);
+  timers[0][1](); timers.length = 0;
+  check('…e toca dor_elem_eletrico', tocados.pop()[0] === 'dor_elem_eletrico');
+  f._somRugidoAoAgir('g1');
+  check('1ª ação do goblin ruge', tocados.length === 1 && tocados[0][0] === 'rugido_humanoide');
+  f._somRugidoAoAgir('g1');
+  check('2ª ação não ruge de novo', tocados.length === 1);
+  tocados.length = 0;
+  f._somRugidoAoAgir('e1');
+  check('elemental não ruge ao agir (o golpe já é o som dele)', tocados.length === 0);
+  f.marcar('x9'); estado.monsters.push({ id: 'x9', type: 'orc', pos: [1, 1] });
+  f._somRugidoAoAgir('x9');
+  check('quem já rugiu ao ser visto não ruge ao agir', tocados.length === 0);
+  f._somRugidoAoAgir('heroi_1');
+  check('herói não ruge', tocados.length === 0);
+  check('rugido ao agir ligado no start do attack_feedback', /_playCombatCue\('attack', \{repeatKey:'attack', volume:\.9\}\);\s*try\{ _somRugidoAoAgir\(msg\.attacker_id\); \}catch\(e\)\{\}/.test(GAME));
+  check('ataque elemental no impact da cena', /_somExplosaoItem\(c\.item_id, c\.targetPos\); _somAtaqueElemental\(c\);/.test(GAME));
+  check('ataque elemental também sem cena (2D)', /_somAtaqueElemental\(\{ attackerKey: _entityKeyById\(msg\.attacker_id\), targetPos: msg\.target_pos \}\)/.test(GAME));
+  check('rugido do estado marca o id; reset zera', /if\(e\.id != null\) _rugiram\.add\(String\(e\.id\)\);/.test(GAME) && /_rugiram = new Set\(\); \}/.test(GAME));
+  check('diffSons manda o id no rugido', SB.diffSons(SB.diffSons(null, { monstros: [] }).snap, { monstros: [{ id: 'k', type: 'goblin', pos: [0, 0] }] }).eventos[0].id === 'k');
+}
+
+console.log('\n[16] Raio do elemental e elemental invocado (servo)');
+{
+  const tocados = [];
+  const estado = { monsters: [], players: [{ id: 'h1', animados: [
+    { id: 's1', tipo: 'elemental', tipo_elemental: 'gelo', pos: [2, 2] },
+    { id: 's2', tipo: 'esqueleto', pos: [3, 3] } ] }] };
+  const f = new Function('GS', 'SoundBank', 'sfx', extrair('_familiaElementalDaChave') + extrair('_somAtaqueElemental') + '\nreturn { _familiaElementalDaChave, _somAtaqueElemental };')(
+    { gameState: estado }, SB, (e, o) => { tocados.push(e); return true; });
+  check('servo elemental de gelo → elem_gelo', f._familiaElementalDaChave('a:s1') === 'elem_gelo');
+  check('servo esqueleto → sem voz de elemento', f._familiaElementalDaChave('a:s2') === null);
+  f._somAtaqueElemental({ attackerKey: 'a:s1', targetPos: [1, 1] });
+  check('golpe do servo elemental toca ataque_elem_gelo', tocados.join() === 'ataque_elem_gelo');
+  check('catálogo tem relampago com 2 versões', SB.SFX.relampago && SB.SFX.relampago.arquivos.length === 2);
+  check('raio do elemental toca relampago ao sair', /function _receberAnimacaoRaioElemental\(msg\)\{[\s\S]{0,700}sfx\('relampago',\{pos:Array\.isArray\(msg\.origin\)\?msg\.origin:undefined\}\)/.test(GAME));
+}
+
+console.log('\n[17] Teste de som (⚙️ → Áudio)');
+{
+  check('botão no painel de áudio', GAME.includes('id="aud-som-teste"') && /#aud-som-teste'\)\.onclick = \(\) => \{ pop\.style\.display = 'none'; abrirSoundTest\(\); \}/.test(GAME));
+  check('clique delegado ignora o painel de teste', /!b\.closest\('#som-teste'\)\) sfx\('clique'\)/.test(GAME));
+  const f = new Function('t', "const _SOMTESTE_GRUPOS = [];\n" + extrair('_somTesteNome') + '\nreturn _somTesteNome;')(k => k);
+  check('nome de criatura = ação + família', f('ataque_elem_eletrico') === 'ui.somteste.acao.ataque — ui.somteste.familia.elem_eletrico');
+  check('dor_heroi usa nome próprio (não vira ação+família)', f('dor_heroi') === 'ui.somteste.ev.dor_heroi');
+  // Toda chave que o painel pode pedir existe no dicionário (pt e en).
+  global.window.LANG_STRINGS = {};
+  eval(fs.readFileSync(path.join(raiz, 'src', 'lang', 'interface.js'), 'utf8'));
+  const D = global.window.LANG_STRINGS;
+  const pedidas = new Set(['ui.somteste.abrir', 'ui.somteste.titulo', 'ui.somteste.dica', 'ui.somteste.parar', 'ui.somteste.fechar', 'ui.somteste.tocar_versao', 'ui.somteste.grupo.sintetizados']);
+  for (const [ev, def] of Object.entries(SB.SFX)) {
+    pedidas.add('ui.somteste.grupo.' + def.arquivos[0].split('/')[0]);
+    for (const k of f(ev).split(' — ')) pedidas.add(k);
+  }
+  for (const ev of ['passo', 'bau_arpejo', 'armadilha']) pedidas.add('ui.somteste.ev.' + ev);
+  const faltam = [...pedidas].filter(k => !(D[k] && D[k].pt && D[k].en));
+  check('todo nome do catálogo tem chave pt/en: ' + (faltam.join(', ') || 'ok'), faltam.length === 0);
 }
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
