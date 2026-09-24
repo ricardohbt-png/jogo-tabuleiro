@@ -58,5 +58,16 @@ asyncio.run(r._emitir_feedback_ataque("start", atacante, alvo, "Soco", impacto=N
 check("com impacto a chave vai", enviados[0].get("impacto") == "cortante")
 check("sem impacto a chave NÃO vai", "impacto" not in enviados[1])
 
+print("\n[7] Ataque Giratório: o start emite impacto (fiação estática)")
+with open(os.path.join(os.path.dirname(__file__), "..", "server.py"), encoding="utf-8") as fh:
+    _src = fh.read()
+_anc = _src.find("async def _executar_ataque_giratorio(")
+check("achou a função do Ataque Giratório", _anc != -1)
+_call = _src.find("_emitir_feedback_ataque(", _anc) if _anc != -1 else -1
+check("achou a chamada _emitir_feedback_ataque dentro da função", _call != -1)
+_janela = _src[_call:_call + 400] if _call != -1 else ""
+check("chamada é de 'start'", '"start"' in _janela)
+check("chamada inclui impacto=_impacto_de(", "impacto=_impacto_de(" in _janela)
+
 print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
 sys.exit(1 if FAIL else 0)
