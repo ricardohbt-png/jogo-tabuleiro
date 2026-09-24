@@ -41857,7 +41857,7 @@ function buildGroundItem3D(T, gi, animateDrop=false){
       visual.add(model);
       grp.userData.groundModelPath = modelPath;
       grp.userData.groundModelFailed = false;
-    }, 'item largado no chão');
+    }, 'ground_item');   // rótulo técnico: só aparece no console.warn do GLB
   }
 
   const glowColor = gi.kind === 'gold' ? 0xffc640 : 0x8ce08c;
@@ -42683,7 +42683,7 @@ function _glbMotivo(error){
 const _decorGLBCache = {};
 const _decorGLBQueue = {};
 
-function _loadDecorGLB(T, path, cb, assetType='decoração'){
+function _loadDecorGLB(T, path, cb, assetType='decor'){   // assetType: rótulo do console.warn
   const cached = _decorGLBCache[path];
   if (cached && cached !== 'erro') { cb(cached); return; }
   if (cached === 'erro' || !T.GLTFLoader) { cb(null); return; }
