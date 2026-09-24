@@ -32,5 +32,47 @@ for (const f of ['sfx', '_sfxCarregar', '_sfxPreCarregar', '_sfxPan', '_ambience
   check('game.js define ' + f, GAME.includes('\nfunction ' + f + '('));
 check('_setAmbienceVol atualiza o canal', /function _setAmbienceVol\(v\)\{[\s\S]{0,200}_ambBusNode/.test(GAME));
 
+console.log('\n[3] sfx(): variante indisponível cai para outra pronta');
+{
+  class FakeAudioBuffer { constructor(duration) { this.duration = duration; } }
+  const EV = 'clique';
+  const arquivos = SB.SFX[EV].arquivos;
+  check('evento de teste tem 2 variantes', arquivos.length === 2);
+
+  const buffers = new Map();
+  buffers.set(arquivos[0], 'carregando');
+  buffers.set(arquivos[1], new FakeAudioBuffer(1));
+  const ultimaVariante = new Map();
+  ultimaVariante.set(EV, 1); // força escolherVariante(2,1) -> 0 (só resta 1 posição)
+  const carregouChamadas = [];
+  const ctx = {
+    state: 'running',
+    createBufferSource: () => ({ buffer: null, playbackRate: { value: 1 }, connect() {}, start() {} }),
+    createGain: () => ({ gain: { value: 0 }, connect() {} }),
+    createBiquadFilter: () => ({ type: '', frequency: { value: 0 }, connect() {} }),
+    createStereoPanner: () => ({ pan: { value: 0 }, connect() {} }),
+  };
+  const stubs = {
+    getAudioContext: () => ctx,
+    GS: { gameState: null, isMaster: () => false },
+    _sfxMe: () => null,
+    _sfxVisaoDe: () => null,
+    _sfxPan: () => 0,
+    _sfxBus: () => ({}),
+    _sfxCarregar: (c) => { carregouChamadas.push(c); },
+    _sfxContagem: {},
+    _sfxUltimaVariante: ultimaVariante,
+    _sfxLimitador: SB.criarLimitador(),
+    _sfxBuffers: buffers,
+    AudioBuffer: FakeAudioBuffer,
+  };
+  const { sfx: sfxTeste } = montar(['sfx'], stubs);
+  const ok = sfxTeste(EV, {});
+
+  check('sfx() devolve true usando a variante alternativa', ok === true);
+  check('tocou a variante 1 (pronta), não a 0 (carregando)', ultimaVariante.get(EV) === 1);
+  check('_sfxCarregar foi chamado para a variante 0 indisponível', carregouChamadas.includes(arquivos[0]));
+}
+
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
