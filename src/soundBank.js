@@ -59,9 +59,9 @@
     [/^(boneco_|sentinela_teste$|vela_de_fogo$|elemental_)/, null],
     [/^(skeleton|esqueleto_|zumbi_)/, 'morto_vivo'],
     [/^(dragon|tirano_|tiranossauro|troll|ogro_|gigante_|ciclope|minotauro|grande_)/, 'grande'],
-    [/^(aranha_|cobra_|crocodilo_|escorpiao_|ferrao_charcos|lagarto_|grotao|devorador_|estrangulador|lacralion_|molochus_)/, 'reptil_inseto'],
-    [/^(lobo_|urso_|gato$|rato|pombo$|ovelha$|garaloux_|lobisomem|harpia)/, 'fera'],
-    [/^(goblin|orc|kobold_|bugbear_|dark_mage|necromante|soldado|xama_|medusa|lorde_vampiro|vampiro_|escravo_vampirico)/, 'humanoide'],
+    [/^(aranha_|cobra_|crocodilo_|escorpiao_|ferrao_charcos|lagarto_|grotao|devorador_|lacralion_)/, 'reptil_inseto'],
+    [/^(lobo_|urso_|gato$|rato|pombo$|ovelha$|garaloux_|lobisomem|harpia|molochus_)/, 'fera'],
+    [/^(goblin|orc|kobold_|bugbear_|dark_mage|necromante|soldado|xama_|medusa|lorde_vampiro|vampiro_|escravo_vampirico|estrangulador)/, 'humanoide'],
   ];
 
   function familiaDe(m) {

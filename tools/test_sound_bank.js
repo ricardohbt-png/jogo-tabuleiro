@@ -37,6 +37,8 @@ check('boneco_treino → null', fam('boneco_treino') === null);
 check('desconhecido 1×1 → humanoide', SB.familiaDe({ type: 'coisa_nova', size: [1, 1] }) === 'humanoide');
 check('desconhecido 2×2 → grande', SB.familiaDe({ type: 'coisa_nova', size: [2, 2] }) === 'grande');
 check('sem type → humanoide', SB.familiaDe({}) === 'humanoide');
+check('molochus_adulto → fera', fam('molochus_adulto') === 'fera');
+check('estrangulador → humanoide', fam('estrangulador') === 'humanoide');
 
 console.log('\n[3] audibilidade');
 const vis = new Set(['5,5', '6,5', '17,5']);
