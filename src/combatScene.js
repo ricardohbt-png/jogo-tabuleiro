@@ -389,6 +389,15 @@
     return semImpactoLivre || semImpacto || comImpacto;
   }
 
+  // Há golpe AINDA NÃO desferido contra `targetKey` (acerto ou result ainda
+  // desconhecido)? Usado por sons que o game_state revela antes do golpe
+  // aparecer (corrosão do equipamento) para esperarem o impacto.
+  function awaitingHit(targetKey, now) {
+    return scenes.some(s => !s.done && s.targetKey != null && s.targetKey === targetKey
+      && s.impactAt == null && !(s.result && !s.result.hit)
+      && !(now != null && now - s.createdAt > cfg.expireMs));
+  }
+
   function pendingFor(targetKey, now) {
     const s = cenaParaHandoff(targetKey, now);
     return s ? s.id : null;
@@ -557,7 +566,7 @@
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
-    pendingFor, handoff, shake, pulseShake, isDying, areaImpactAt,
+    pendingFor, awaitingHit, handoff, shake, pulseShake, isDying, areaImpactAt,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
     _ultimoLaunch: null, // só para testes: último comando `launch` emitido

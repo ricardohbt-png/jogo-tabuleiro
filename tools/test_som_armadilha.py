@@ -130,6 +130,43 @@ async def main():
         ii = [m for m in r.pub if m.get("type") == "item_impacto"]
         check(f"d20={d20}: item_impacto fogo_grego com hit={esperado}", len(ii) == 1 and ii[0]["item_id"] == "fogo_grego" and ii[0]["hit"] is esperado and ii[0]["pos"] == [5, 5])
 
+    print("\n[8] Aviso de armadilha traz QUEM foi atingido (gemido no cliente)")
+    r = setup()
+    mob = make_monster(next(d for d in server.MONSTER_DEFS if d["type"] == "goblin"), {"id": 1, "cx": 4, "cy": 4})
+    mob["pos"] = [4, 4]; r.monsters = {mob["id"]: mob}
+    arm = {"id": "l1", "tipo": "lamina_escondida", "pos": [4, 4], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = rng(2)
+    await r._disparar_armadilha(mob, arm)
+    server.random.randint = _o
+    d = disparos(r)
+    check("lâmina escondida em monstro: 1 aviso com o monstro nos alvos",
+          len(d) == 1 and d[0]["tipo_id"] == "lamina_escondida" and d[0]["alvos"] == [mob["id"]] and not d[0].get("tick"))
+    r = setup()
+    p = make_player("p1", "A", "warrior", 0); p["pos"] = [5, 5]; r.players = {"p1": p}
+    m2 = make_monster(next(d for d in server.MONSTER_DEFS if d["type"] == "goblin"), {"id": 1, "cx": 6, "cy": 5})
+    m2["pos"] = [6, 5]; r.monsters = {m2["id"]: m2}
+    arm = {"id": "m1", "tipo": "mina_terrestre", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = rng(2)
+    await r._disparar_armadilha(p, arm)
+    server.random.randint = _o
+    d = disparos(r)
+    check("mina: 1 aviso só, com herói e monstro do raio nos alvos",
+          len(d) == 1 and set(d[0]["alvos"]) == {"p1", m2["id"]} and d[0]["area"] == 1)
+    r = setup()
+    p = make_player("p1", "A", "warrior", 0); p["pos"] = [5, 5]; r.players = {"p1": p}
+    arm = {"id": "i1", "tipo": "armadilha_incendiaria", "pos": [5, 5], "ativada": False}
+    r.armadilhas = [arm]
+    _o = server.random.randint; server.random.randint = rng(1)
+    await r._disparar_armadilha(p, arm)
+    r.pub.clear(); r.round_num += 1
+    await r._processar_efeitos_armadilha_turno()
+    server.random.randint = _o
+    d = disparos(r)
+    check("incendiária: dano progressivo avisa com tick=True e o herói nos alvos",
+          len(d) == 1 and d[0].get("tick") is True and d[0]["alvos"] == ["p1"])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     sys.exit(1 if FAIL else 0)
 

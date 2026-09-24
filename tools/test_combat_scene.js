@@ -172,10 +172,12 @@ check("pendingFor de outro alvo é null", CS.pendingFor("m:id_8") === null);
 const FB = { feedback: { text: "7", kind: "damage" }, death: false, onImpact: [] };
 check("handoff antes do impacto devolve null (guardado)", CS.handoff("m:id_9", FB, 200) === null);
 check("depois do hand-off CONTINUA pendente (acumula até o golpe)", CS.pendingFor("m:id_9") === "atk_1_1");
+check("awaitingHit: golpe ainda não desferido mesmo após o hand-off", CS.awaitingHit("m:id_9", 200) && !CS.awaitingHit("m:id_8", 200));
 CS.dieSettled({ die: "d20" }, 500); CS.tick(500);
 const cmdsH = CS.tick(610);
 const imp = cmdsH.find(c => c.cmd === "impact");
 check("impact carrega o feedback guardado", imp && imp.feedbacks.length === 1 && imp.feedbacks[0].text === "7");
+check("awaitingHit: falso depois do golpe", !CS.awaitingHit("m:id_9", 610));
 CS.tick(610 + 260);
 check("com hand-off já feito, RECUPERANDO → fecha (phase null)", CS.phaseOf("atk_1_1") === null);
 

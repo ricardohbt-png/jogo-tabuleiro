@@ -15150,6 +15150,7 @@ class GameRoom:
                         efeitos_extra=[], tipo_id='buraco_escondido')
                 else:
                     hp_antes = p.get("hp", 0)
+                    await self._avisar_armadilha("buraco_escondido", [nx, ny], [p])
                     await self._aplicar_dano_alvo(
                         p, trap["damage"], DMG_PHYSICAL, pid)
                     dano_trap = max(0, hp_antes - p.get("hp", 0))
@@ -29998,6 +29999,8 @@ class GameRoom:
         nome = tipo["nome"]
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
         await self.gm_say(T("narracao.ativou", alvo_nome=nome_criatura(alvo), nome=nome_cat("armadilha", arm["tipo"], nome)))
+        if not tipo.get("area"):   # as de área avisam em _aplicar_armadilha_area, com todos os atingidos
+            await self._avisar_armadilha(arm["tipo"], alvo.get("pos") or arm.get("pos"), [alvo])
 
         # Armadilhas autoradas com comportamento prÃ³prio (a seleÃ§Ã£o de saÃ­da e
         # veneno fica gravada no JSON da masmorra, nÃ£o no catÃ¡logo global).
@@ -30539,15 +30542,29 @@ class GameRoom:
             if zona.get("ativa") and zona.get("tipo") == "camara_gas":
                 await self._resolver_camara_gas_turno(alvo, zona)
 
+    async def _avisar_armadilha(self, tipo_id, pos, alvos=(), area=0, tick=False):
+        """Aviso público `armadilha_disparo` (só som/efeito no cliente): o tipo da
+        armadilha, onde disparou e QUEM ela atingiu — o cliente toca o som do
+        disparo (explosão, labareda, lâmina) e o gemido de cada atingido que
+        perder vida, em vez do som genérico de dano. `tick` = dano progressivo
+        (sem som de disparo, só o gemido)."""
+        ids = []
+        for a in alvos:
+            if a is None:
+                continue
+            ids.append("__prisioneiro__" if a is self.prisoner else a.get("id"))
+        msg = {"type": "armadilha_disparo", "tipo_id": tipo_id,
+               "pos": list(pos or []), "alvos": [i for i in ids if i is not None]}
+        if area:
+            msg["area"] = area
+        if tick:
+            msg["tick"] = True
+        await self.broadcast(msg)
+
     async def _aplicar_armadilha_area(self, arm, tipo):
         """Armadilhas de área (mina/gás): cada alvo no raio testa o próprio save."""
         cx, cy = arm["pos"]
         r = tipo.get("area", 1)
-        # Aviso público do disparo (só efeito sonoro/visual no cliente): o
-        # trap_result é privado de quem foi atingido, então sem isto a mina
-        # que um MONSTRO pisa — ou que atinge outro herói — explodiria muda.
-        await self.broadcast({"type": "armadilha_disparo", "tipo_id": arm["tipo"],
-                              "pos": [cx, cy], "area": r})
         alvos = [p for p in self.players.values()
                  if p["alive"] and not self._fosso_protegido(p)
                  and not self._voo_imune_terreno(p)
@@ -30560,6 +30577,10 @@ class GameRoom:
                 and not self._voo_imune_terreno(pr) \
                 and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r:
             alvos.append(pr)
+        # Aviso público do disparo antes dos saves (som da explosão + gemido de
+        # quem foi atingido): o trap_result é privado, então sem isto a mina que
+        # um MONSTRO pisa — ou que atinge outro herói — explodiria muda.
+        await self._avisar_armadilha(arm["tipo"], [cx, cy], alvos, area=r)
         for alvo in alvos:
             alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
             save_ok, d20, sb, stot = self._testar_save(alvo, tipo["save"], _trap_cd(arm, tipo))
@@ -31167,6 +31188,7 @@ class GameRoom:
 
     async def _processar_efeitos_armadilha_turno(self):
         """Tica o dano progressivo (incendiária) uma vez por rodada."""
+        avisados = set()   # 1 aviso de gemido por alvo por armadilha, mesmo com 2 efeitos ticando
         for arm in list(self.armadilhas):
             restantes = []
             tipo_meta = ARMADILHAS.get(arm["tipo"], {})
@@ -31184,6 +31206,9 @@ class GameRoom:
                     continue
                 if alvo and (alvo.get("alive") or alvo.get("hp", 0) > 0):
                     dano = self._rolar_dado(ef["valor"])
+                    if (arm["id"], aid) not in avisados:
+                        avisados.add((arm["id"], aid))
+                        await self._avisar_armadilha(arm["tipo"], alvo.get("pos"), [alvo], tick=True)
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
                     await self._concentracao_requiem(alvo, dano)   # RÃ©quiem Final (Fase 3)
                     await self._enviar_trap_result(

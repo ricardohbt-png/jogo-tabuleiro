@@ -18,9 +18,12 @@ for (const e of ['golpe_cortante','golpe_perfurante','golpe_contundente','golpe_
 for (const f of SB.FAMILIAS) check('rugido e morte de ' + f, !!SB.SFX['rugido_' + f] && !!SB.SFX['morte_' + f]);
 check('todo evento tem lista de arquivos, volume e canal válido', eventos.every(e => {
   const d = SB.SFX[e];
-  return Array.isArray(d.arquivos) && d.volume > 0 && d.volume <= 1 && (d.canal === 'efeitos' || d.canal === 'ambiente');
+  // Até 2: som grave (explosão, incendiário) sai da normalização com pico
+  // baixo (~0,3–0,5) e precisa de ganho acima de 1 para soar alto sem distorcer.
+  return Array.isArray(d.arquivos) && d.volume > 0 && d.volume <= 2 && (d.canal === 'efeitos' || d.canal === 'ambiente' || d.canal === 'passos');
 }));
 check('só os amb_* são do canal ambiente', eventos.every(e => (SB.SFX[e].canal === 'ambiente') === e.startsWith('amb_')));
+check('só os passo_* são do canal passos (tocados por tocarSomPasso, não pelo sfx)', eventos.every(e => (SB.SFX[e].canal === 'passos') === e.startsWith('passo_')));
 
 console.log('\n[2] familiaDe');
 const fam = t => SB.familiaDe({ type: t });

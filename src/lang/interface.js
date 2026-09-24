@@ -1507,6 +1507,18 @@ window.LANG_INTERFACE = {
     "en": "Incendiary (Greek fire, oil, incendiary bomb)",
     "pt": "Incendiário (fogo grego, óleo, bomba incendiária)"
   },
+  "ui.somteste.ev.passo_agua": {
+    "en": "Footstep in water / swamp (splashing through a puddle)",
+    "pt": "Passo na água / pântano (pisar numa poça)"
+  },
+  "ui.somteste.ev.acido": {
+    "en": "Acid corrosion (acid flask, Grotão's spit, corroded equipment)",
+    "pt": "Corrosão por ácido (frasco de ácido, cuspe do Grotão, equipamento corroído)"
+  },
+  "ui.somteste.ev.armadilha_lamina": {
+    "en": "Trap — hidden blade / guillotine",
+    "pt": "Armadilha — lâmina escondida / guilhotina"
+  },
   "ui.audio.passos": {
     "en": "👣 Pawn movement",
     "pt": "👣 Movimento dos peões"

@@ -31,8 +31,10 @@
     golpe_contundente: E(n('combate/golpe_contundente', 3), 0.80, 60),
     golpe_natural:     E(n('combate/golpe_natural', 3), 0.80, 60),
     golpe_critico:     E(n('combate/golpe_critico', 2), 0.70, 60),
-    explosao:          E(n('combate/explosao', 3), 0.95, 150),
-    incendio:          E(n('combate/incendio', 3), 0.90, 150),
+    explosao:          E(n('combate/explosao', 3), 1.75, 150),
+    armadilha_lamina:  E(['combate/golpe_cortante_1.ogg'], 0.90, 150),
+    incendio:          E(n('combate/incendio', 3), 1.60, 150),
+    acido:             E(n('combate/acido', 3), 1.25, 200),
     relampago:         E(n('combate/relampago', 2), 0.85, 150),
     fumaca_puff:       E(n('combate/fumaca_puff', 2), 0.85, 150),
     fumaca_chiado:     E(n('combate/fumaca_chiado', 2), 0.55, 300),
@@ -43,6 +45,9 @@
     // exploração e loot
     porta_abre:        E(n('exploracao/porta_abre', 3), 0.70, 150),
     bau_abre:          E(n('exploracao/bau_abre', 3), 0.75, 300),
+    // Passo em água/pântano: toca pelo canal dos passos (slider "Movimento dos
+    // peões"), não pelo sfx() — ver tocarSomPasso no game.js.
+    passo_agua:        E(n('exploracao/passo_agua', 3), 0.55, 0, { canal: 'passos', pitchJitter: 0.08 }),
     moedas:            E(n('exploracao/moedas', 2), 0.60, 250),
     item_pegar:        E(n('exploracao/item_pegar', 2), 0.50, 200),
     equipar:           E(n('exploracao/equipar', 3), 0.50, 200),

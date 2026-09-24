@@ -6401,6 +6401,57 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
 
 // Indicadores de dano contínuo no canto superior direito da casa.
 // (X,Y) = canto superior esquerdo da casa em pixels.
+// ── Chamas vivas no peão em chamas (2D) ────────────────────────────────────
+// Três labaredas tremulando aos pés do peão + brasas subindo (mistura normal:
+// a aditiva some sobre piso claro). Enquanto houver alguém em chamas à vista, o mapa 2D se redesenha a
+// ~12 quadros/s (_agendarChamas2D) — o bastante para o fogo mexer sem custar
+// um redesenho a 60 fps.
+let _chamas2DTimer = null;
+function _agendarChamas2D(){
+  if(_chamas2DTimer) return;
+  _chamas2DTimer = setTimeout(() => {
+    _chamas2DTimer = null;
+    if(!(mode3D && g3) && GS.gameState) renderMap(GS.gameState);
+  }, 80);
+}
+function _semente2D(id){
+  let s = 0; for(const ch of String(id)) s = (s * 31 + ch.charCodeAt(0)) % 997;
+  return s;
+}
+const _CHAMAS_2D_CAMADAS = [
+  [1.00, 'rgba(255,80,10,0.75)',   'rgba(200,20,0,0)'],
+  [0.62, 'rgba(255,200,60,0.9)',   'rgba(255,120,10,0)'],
+  [0.32, 'rgba(255,250,215,0.95)', 'rgba(255,220,110,0)'],
+];
+function _desenharChamasPeao2D(ctx, cx, baseY, larg, now, seed){
+  ctx.save();
+  for(let i = 0; i < 3; i++){
+    const fase = seed * 1.3 + i * 2.1;
+    const x = cx + (i - 1) * larg * 0.28 + Math.sin(now * 0.008 + fase) * larg * 0.03;
+    const f = 0.78 + 0.16 * Math.sin(now * 0.013 + fase) + 0.08 * Math.sin(now * 0.037 + fase * 2.3);
+    const h = larg * (i === 1 ? 0.80 : 0.60) * f, w = larg * (i === 1 ? 0.26 : 0.21);
+    for(const [esc, cor0, cor1] of _CHAMAS_2D_CAMADAS){
+      const hh = h * esc, ww = w * esc;
+      ctx.beginPath(); ctx.moveTo(x, baseY);
+      ctx.bezierCurveTo(x - ww, baseY - hh * 0.05, x - ww * 0.8, baseY - hh * 0.5, x, baseY - hh);
+      ctx.bezierCurveTo(x + ww * 0.8, baseY - hh * 0.5, x + ww, baseY - hh * 0.05, x, baseY);
+      const g = ctx.createLinearGradient(0, baseY, 0, baseY - hh);
+      g.addColorStop(0, cor0); g.addColorStop(0.55, cor0); g.addColorStop(1, cor1);
+      ctx.fillStyle = g; ctx.fill();
+    }
+  }
+  ctx.fillStyle = 'rgba(255,190,80,1)';
+  for(let i = 0; i < 3; i++){
+    const vida = 1100, p = ((now + i * 367 + seed * 97) % vida) / vida;
+    const x = cx + (i - 1) * larg * 0.2 + Math.sin(now * 0.01 + i) * larg * 0.05;
+    const y = baseY - larg * 0.15 - p * larg * 0.9;
+    ctx.globalAlpha = Math.max(0, 1 - p);
+    ctx.beginPath(); ctx.arc(x, y, Math.max(1, larg * 0.025), 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+  _agendarChamas2D();
+}
+
 function _drawStatusIcons2D(ctx, X, Y, entity){
   const fs = Math.round(CELL*0.34);
   ctx.save();
@@ -8723,6 +8774,8 @@ function renderMap(state){
       drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
     }
     if(_monVortexPreso) ctx.restore();
+    if(m.em_chamas_rodadas > 0)
+      _desenharChamasPeao2D(ctx, cx, cy + fp.logicalH * CELL * 0.36, fp.logicalW * CELL * 0.8, performance.now(), _semente2D(m.id));
     // HP bar
     const pct=_combatHpRatio(`m:${m.id}`, m.hp, m.max_hp);
     const barH=Math.max(4,Math.round(CELL*0.08));
@@ -8964,6 +9017,8 @@ function renderMap(state){
       } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
     } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
     if(_playerVortexPreso) ctx.restore();
+    if(p.em_chamas_rodadas > 0 && !_invisP)
+      _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.36, CELL * 0.8, performance.now(), _semente2D(p.id));
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
@@ -22491,9 +22546,11 @@ function _showTrapResult(msg){
     statusEl.className = 'trap-status trap-status--success';
     statusEl.textContent = t('ui.armadilha.escapou');
   } else {
+    // Sem som aqui: o golpe da armadilha já soou no disparo (armadilha_disparo)
+    // com o gemido do herói — o aviso dissonante de 1,2 s depois era o "som
+    // mecânico" que o autor pediu para trocar.
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.atingido');
-    tocarSomArmadilha();
   }
 
   $('trap-overlay').classList.add('open');
@@ -22661,13 +22718,53 @@ function toggleAjuda(){
 // então a mina soa também quando um monstro pisa nela. Toca no instante do
 // impacto da animação de armadilha (23% de 1050 ms ≈ 240 ms). Casa fora da
 // visão: abafado e sem pan (regra de sfx/audibilidade).
-const SOM_DISPARO_ARMADILHA = { mina_terrestre: 'explosao' };
+const SOM_DISPARO_ARMADILHA = {
+  mina_terrestre: 'explosao',
+  armadilha_incendiaria: 'incendio',
+  lamina_escondida: 'armadilha_lamina', guilhotina: 'armadilha_lamina',
+  jato_acido: 'acido',
+};
 const ATRASO_IMPACTO_ARMADILHA_MS = 240;
+// O Jato de Ácido também corrói o equipamento de quem atingiu: o chiado do
+// disparo já é o da corrosão, então _somCorrosao não repete para essas chaves.
+const _acidoArmadilhaAte = new Map();   // chave -> performance.now() limite
+// Gemido de quem a armadilha atingiu: o aviso traz os `alvos`; quando a vida de
+// um deles cair logo em seguida, `_somDor` toca o gemido DELE (herói, fera,
+// morto-vivo...) para qualquer tipo de dano — fogo e ácido caíam no som genérico.
+// Marca por chave de entidade, válida por alguns segundos; o gemido sai depois
+// do som do disparo (impacto + ATRASO_DOR_ELEMENTAL_MS).
+const DOR_ARMADILHA_VALIDADE_MS = 4000;
+const _dorArmadilha = new Map();   // chave -> {ate, apos}
 function _somDisparoArmadilha(msg){
-  const ev = msg && SOM_DISPARO_ARMADILHA[String(msg.tipo_id || '')];
-  if(!ev || GS.isPreview) return;
+  if(!msg || GS.isPreview) return;
+  const agora = performance.now();
+  const impacto = msg.tick ? 0 : ATRASO_IMPACTO_ARMADILHA_MS;
+  for(const id of (msg.alvos || [])){
+    const k = id === '__prisioneiro__' ? 'pr:singleton' : _entityKeyById(id);
+    if(k) _dorArmadilha.set(k, { ate: agora + DOR_ARMADILHA_VALIDADE_MS, apos: agora + impacto + ATRASO_DOR_ELEMENTAL_MS });
+  }
+  const ev = !msg.tick && SOM_DISPARO_ARMADILHA[String(msg.tipo_id || '')];
+  if(!ev) return;
+  if(ev === 'acido') for(const id of (msg.alvos || [])){
+    const k = id === '__prisioneiro__' ? 'pr:singleton' : _entityKeyById(id);
+    if(k) _acidoArmadilhaAte.set(k, agora + DOR_ARMADILHA_VALIDADE_MS);
+  }
   const pos = Array.isArray(msg.pos) ? msg.pos : undefined;
-  setTimeout(() => sfx(ev, {pos}), ATRASO_IMPACTO_ARMADILHA_MS);
+  setTimeout(() => sfx(ev, {pos}), impacto);
+}
+// Consome a marca de "atingido por armadilha" da chave e toca o gemido certo.
+// Devolve true se tratou (havia marca).
+function _somDorArmadilha(k, pos){
+  const m = _dorArmadilha.get(k);
+  if(!m) return false;
+  _dorArmadilha.delete(k);
+  const agora = performance.now();
+  if(agora > m.ate) return false;
+  const heroi = k.startsWith('p:') || k.startsWith('pr:');
+  const fam = heroi ? null : (_familiaElementalDaChave(k) || _familiaDaChave(k));
+  const ev = heroi ? 'dor_heroi' : (fam && _sfxPronto('dor_' + fam) ? 'dor_' + fam : 'dor_criatura');
+  setTimeout(() => sfx(ev, {pos}), Math.max(0, m.apos - agora));
+  return true;
 }
 
 // ── Som do impacto de item arremessado (granadas, incendiários) ────────────
@@ -22678,11 +22775,79 @@ function _somDisparoArmadilha(msg){
 const SOM_IMPACTO_ITEM = {
   granada: 'explosao', granada_superior: 'explosao',
   bomba_incendiaria: 'incendio', fogo_grego: 'incendio', frasco_oleo: 'incendio',
+  frasco_acido: 'acido', vidro_acido_grande: 'acido',
 };
 function _somExplosaoItem(itemId, pos, acertou = true){
   const ev = SOM_IMPACTO_ITEM[String(itemId || '')];
   if(!ev || !acertou || GS.isPreview) return false;
   return sfx(ev, {pos: Array.isArray(pos) ? pos : undefined});
+}
+
+// ── Corrosão de equipamento de herói (Devorador, cuspe do Grotão, Ferrugem) ──
+// A corrosão não tem mensagem pública: o aviso `equipment_damage_result` é só
+// de quem sofreu. Então ela se ouve pelo estado — a soma dos níveis de
+// `player.corrosao` subiu. TEMPO: o game_state chega quando o servidor resolve
+// o ataque, 1–3 s antes do golpe aparecer (a cena espera o d20); por isso o
+// chiado ESPERA a dor desse herói (_somDor avisa por _corrosaoAposDor) e soa
+// logo depois. Sem golpe pendente (Maldição da Ferrugem) toca já; se a dor não
+// vier, a rede de segurança toca. Cuspe do Grotão em voo nesse herói: o
+// impacto do cuspe já soa o ácido — não repete.
+const CORROSAO_APOS_DOR_MS = 150;
+const CORROSAO_ESPERA_MAX_MS = 3500;
+const _corrosaoNivel = new Map();       // pid -> soma dos *_lvl de player.corrosao
+const _corrosaoPend = new Map();        // chave -> {tocar, timer}
+const _dorHeroiEm = new Map();          // chave -> performance.now() da última dor
+function _corrosaoSoma(p){
+  const c = p && p.corrosao;
+  if(!c || typeof c !== 'object') return 0;
+  let s = 0;
+  for(const k in c) if(k.endsWith('_lvl')) s += Number(c[k]) || 0;
+  return s;
+}
+function _corrosaoReset(){
+  _corrosaoNivel.clear();
+  for(const p of _corrosaoPend.values()) clearTimeout(p.timer);
+  _corrosaoPend.clear();
+}
+function _sonsCorrosaoDeEstado(state){
+  const vistos = new Set();
+  for(const p of (state && state.players) || []){
+    if(!p || p.id == null) continue;
+    const id = String(p.id);
+    vistos.add(id);
+    const soma = _corrosaoSoma(p), ant = _corrosaoNivel.get(id);
+    _corrosaoNivel.set(id, soma);
+    if(ant == null || soma <= ant) continue;          // 1º estado só semeia
+    if(!Array.isArray(p.pos) || p.pos[0] < 0) continue;
+    _somCorrosao('p:' + id, p.pos, id);
+  }
+  for(const id of [..._corrosaoNivel.keys()]) if(!vistos.has(id)) _corrosaoNivel.delete(id);
+}
+function _somCorrosao(k, pos, pid){
+  if(typeof _cuspeAcidoAnims !== 'undefined' && _cuspeAcidoAnims.some(a => a.targetId === pid)) return false;
+  if(performance.now() < (_acidoArmadilhaAte.get(k) || 0)) return false;   // o jato de ácido já soou
+  const tocar = () => { _corrosaoPend.delete(k); sfx('acido', {pos}); };
+  const agora = performance.now();
+  if(agora - (_dorHeroiEm.get(k) || -1e9) < 600){
+    setTimeout(tocar, CORROSAO_APOS_DOR_MS);
+    return true;
+  }
+  if(window.CombatScene && CombatScene.awaitingHit && CombatScene.awaitingHit(k, agora)){
+    const ant = _corrosaoPend.get(k);
+    if(ant) clearTimeout(ant.timer);
+    _corrosaoPend.set(k, {tocar, timer: setTimeout(tocar, CORROSAO_ESPERA_MAX_MS)});
+    return true;
+  }
+  return sfx('acido', {pos});
+}
+// Chamado quando a dor de alguém toca: solta o chiado que esperava esse golpe.
+function _corrosaoAposDor(k){
+  _dorHeroiEm.set(k, performance.now());
+  const p = _corrosaoPend.get(k);
+  if(!p) return;
+  _corrosaoPend.delete(k);
+  clearTimeout(p.timer);
+  setTimeout(p.tocar, CORROSAO_APOS_DOR_MS);
 }
 
 // ── Som de baú — arpejo dourado curto (mesma infra WebAudio dos dados) ──────
@@ -26785,7 +26950,8 @@ async function _somTesteTocar(evento, idx){
   const src = ctx.createBufferSource(), g = ctx.createGain();
   src.buffer = buf;
   g.gain.value = def.volume;
-  src.connect(g); g.connect(def.canal === 'ambiente' ? _ambienceBus() : _sfxBus());
+  src.connect(g);
+  g.connect(def.canal === 'ambiente' ? _ambienceBus() : def.canal === 'passos' ? _stepsBus() : _sfxBus());
   src.onended = () => { if(_somTesteAtual === src) _somTesteAtual = null; };
   src.start();
   _somTesteAtual = src;
@@ -26954,9 +27120,13 @@ function _somGolpe(c){
 }
 function _somDor(c, fb){
   if(!c || !c.hit) return false;
+  _corrosaoAposDor(String(c.targetKey || ''));
   if(c.death) return true;
   const k = String(c.targetKey || '');
   const pos = Array.isArray(c.targetPos) ? c.targetPos : undefined;
+  // Dano de armadilha (qualquer tipo — fogo, ácido, físico): o gemido de quem
+  // foi atingido, e não o som genérico de dano.
+  if(_somDorArmadilha(k, pos)) return true;
   // Elemental tem dor do próprio elemento (chiado, rajada, pedra lascando...)
   // e ela vale para QUALQUER tipo de dano: a criatura é o elemento, então
   // a magia que a acerta também soa nela. Sem amostra pronta cai no recuo
@@ -27084,11 +27254,12 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); }
+function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); _corrosaoReset(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
   _sonsPassosDeEstado(state);
   if(!window.SoundBank || !state) return;
+  _sonsCorrosaoDeEstado(state);
   const me = (state.players || []).find(p => String(p.id) === String(GS.myPid)) || null;
   const visao = _sfxVisaoDe(state, me);
   const monstros = (state.monsters || [])
@@ -34990,7 +35161,7 @@ function _cuspeAcidoHash(n){
 function _cuspeAcidoAnimFromMessage(msg){
   const origin=Array.isArray(msg.origin)?msg.origin.map(Number):[0,0], target=Array.isArray(msg.target)?msg.target.map(Number):origin.slice();
   const dir=Array.isArray(msg.dir)?msg.dir.map(Number):[1,0], length=Math.max(1,Number(msg.length)||1);
-  return {animationId:msg.animation_id==null?null:String(msg.animation_id),origin,target,dir,length,
+  return {animationId:msg.animation_id==null?null:String(msg.animation_id),targetId:msg.target_id==null?null:String(msg.target_id),origin,target,dir,length,
     tiles:(msg.tiles||[]).filter(p=>Array.isArray(p)&&p.length>=2).map(p=>[Number(p[0]),Number(p[1])]),
     travelMs:Math.max(360,Number(msg.travel_ms)||760),impactMs:Math.max(320,Number(msg.impact_ms)||720),start:performance.now(),
     seed:(origin[0]*73856093)^(origin[1]*19349663)^Date.now(),impactPlayed:false,save:false,residual:false,corrosion:false,
@@ -35020,7 +35191,9 @@ function _tocarSomCuspeAcido(anim){
   try{const now=ctx.currentTime,bus=_sfxBus(),dur=Math.max(.42,anim.travelMs/1000+.20),o=ctx.createOscillator(),g=ctx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(520,now);o.frequency.exponentialRampToValueAtTime(120,now+dur);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.08,now+.05);g.gain.exponentialRampToValueAtTime(.001,now+dur);o.connect(g);g.connect(bus);o.start(now);o.stop(now+dur+.04);anim.sound={ctx,sources:[o]};}catch(e){}
 }
 function _pararSomCuspeAcido(anim){if(!anim.sound)return;try{for(const src of anim.sound.sources)src.stop(anim.sound.ctx.currentTime+.01);}catch(e){}anim.sound=null;}
-function _tocarSomCuspeAcidoImpacto(){
+function _tocarSomCuspeAcidoImpacto(anim){
+  // Amostra de corrosão (respingo + chiado) na casa atingida; sem ela, o baque sintetizado.
+  if(anim&&sfx('acido',{pos:anim.target}))return;
   const ctx=getAudioContext();if(!ctx||ctx.state!=='running')return;
   try{const now=ctx.currentTime,bus=_sfxBus(),o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(210,now);o.frequency.exponentialRampToValueAtTime(64,now+.28);g.gain.setValueAtTime(.001,now);g.gain.exponentialRampToValueAtTime(.12,now+.012);g.gain.exponentialRampToValueAtTime(.001,now+.32);o.connect(g);g.connect(bus);o.start(now);o.stop(now+.35);}catch(e){}
 }
@@ -35084,7 +35257,7 @@ function _cuspeAcidoDraw2D(ctx,state,anim,now){
 }
 
 function _tickCuspeAcido(now){
-  let active=false;for(let i=_cuspeAcidoAnims.length-1;i>=0;i--){const anim=_cuspeAcidoAnims[i],p=_cuspeAcidoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomCuspeAcidoImpacto();_liberarDadosMagia();}if(now-anim.start>=anim.travelMs+anim.impactMs+720){_pararSomCuspeAcido(anim);_cuspeAcidoDispose3D(anim);_cuspeAcidoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_cuspeAcidoUpdate3D(anim,now);}
+  let active=false;for(let i=_cuspeAcidoAnims.length-1;i>=0;i--){const anim=_cuspeAcidoAnims[i],p=_cuspeAcidoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomCuspeAcidoImpacto(anim);_liberarDadosMagia();}if(now-anim.start>=anim.travelMs+anim.impactMs+720){_pararSomCuspeAcido(anim);_cuspeAcidoDispose3D(anim);_cuspeAcidoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_cuspeAcidoUpdate3D(anim,now);}
   if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_cuspeAcidoRaf=active?_scheduleVisualFrame(_tickCuspeAcido):null;
 }
 function _garantirLoopCuspeAcido(){if(!_cuspeAcidoRaf)_cuspeAcidoRaf=_scheduleVisualFrame(_tickCuspeAcido);}
@@ -39957,6 +40130,7 @@ function startLoop3D(){
     _animarChamasVivasPersistentes3D(now);
     _updateArmadilhas3D(now);
     _updateFumaca3D(now);
+    _updateChamasFx3D(now);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
     if(g3.dustPts && g3.dustPts.visible &&
@@ -41324,12 +41498,53 @@ function _animarCaminhoPeao3D(peao, tilesAbs, onDone, startPos){
 const PASSO_GANHO_SAIDA = 6;
 const PASSO_INTERVALO_MIN_S = 0.04;   // vários peões pousando juntos = 1 batida
 let _passoUltimoT = -1;
+// ── Passo em água/pântano: chapinhar numa poça em vez da batida de plástico ──
+// Decide pela casa de CHEGADA (`state.materiais`); em cima de uma ponte o pé
+// não toca a água. Toca a amostra `passo_agua` pelo canal dos passos (slider
+// "Movimento dos peões"); sem amostra pronta, cai na batida sintetizada.
+const _MATERIAIS_MOLHADOS = new Set(['agua', 'agua_profunda', 'rodamoinho', 'rodamoinho_profundo', 'pantano']);
+function _passoMolhadoEm(casa){
+  const st = GS.gameState;
+  if(!st || !Array.isArray(casa)) return false;
+  const x = Math.round(Number(casa[0])), y = Math.round(Number(casa[1]));
+  if(!_MATERIAIS_MOLHADOS.has(st.materiais && st.materiais[`${x},${y}`])) return false;
+  return !(typeof baseSuperficiePonte3D === 'function' && baseSuperficiePonte3D(st, x, y) !== null);
+}
+function _tocarPassoAgua(ctx, opts){
+  const def = window.SoundBank && SoundBank.SFX.passo_agua;
+  if(!def || !def.arquivos.length) return false;
+  const prontos = def.arquivos.filter(a => _sfxBuffers.get(a) instanceof AudioBuffer);
+  if(!prontos.length){ for(const a of def.arquivos) _sfxCarregar(a); return false; }
+  const ult = _sfxUltimaVariante.has('passo_agua') ? _sfxUltimaVariante.get('passo_agua') : -1;
+  let idx = SoundBank.escolherVariante(def.arquivos.length, ult);
+  let buf = _sfxBuffers.get(def.arquivos[idx]);
+  if(!(buf instanceof AudioBuffer)){ idx = def.arquivos.indexOf(prontos[0]); buf = _sfxBuffers.get(prontos[0]); }
+  try{
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = 1 + (Math.random() * 2 - 1) * (def.pitchJitter || 0);
+    const g = ctx.createGain();
+    g.gain.value = def.volume * (1 + (Math.random() * 2 - 1) * (def.volJitter || 0));
+    src.connect(g);
+    let fim = g;
+    if(Array.isArray(opts.pos) && ctx.createStereoPanner){
+      const pan = ctx.createStereoPanner();
+      pan.pan.value = _sfxPan(opts.pos);
+      g.connect(pan); fim = pan;
+    }
+    fim.connect(_stepsBus());
+    src.start();
+    _sfxUltimaVariante.set('passo_agua', idx);
+    return true;
+  }catch(e){ return false; }
+}
 // opts.pos: casa de quem pisou — dá panorâmica pela tela (sem pos = centro).
 function tocarSomPasso(opts = {}){
   const ctx = getAudioContext();
   if(!ctx || ctx.state !== 'running') return;
   if(ctx.currentTime - _passoUltimoT < PASSO_INTERVALO_MIN_S) return;
   _passoUltimoT = ctx.currentTime;
+  if(_passoMolhadoEm(opts.casa || opts.pos) && _tocarPassoAgua(ctx, opts)) return;
   try{
     const now = ctx.currentTime;
     const variacao = 0.85 + Math.random() * 0.30;
@@ -41487,7 +41702,7 @@ function _animarPasso(peao, destino, onPasso){
       }
       if(progress >= 0.88 && !peao._somTocado){
         peao._somTocado = true;
-        tocarSomPasso();
+        tocarSomPasso({ casa: [destino.x, destino.z] });
       }
     }
 
@@ -44532,9 +44747,9 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
   // Indicador "em chamas": 🔥 no MESMO centro (midX,midZ) do billboard da criatura
   // (não no tile-âncora), senão flutuaria sobre a casa vizinha nas de 2 casas.
   if(emChamas){
-    const fs = _makeChamasSprite3D();
-    fs.position.set(midX, _BB_H_ALVO * 0.85, midZ);
-    grp.add(fs);
+    const fx = _makeChamasFx3D(0.45);
+    fx.position.set(midX, 0.29, midZ);
+    grp.add(fx);
   }
 
   grp.position.set(gx, 0, gy);
@@ -44758,8 +44973,8 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   // ambient + dirMain + dirPawn + visionLamp já garante visibilidade, e cada
   // luz a menos por peão reduz o custo de TODOS os materiais da cena.
 
-  // Indicador "em chamas": 🔥 flutuando acima da cabeça (sprite billboard).
-  if(emChamas) bodyGrp.add(_makeChamasSprite3D());
+  // Indicador "em chamas": labaredas vivas no corpo (ver _makeChamasFx3D).
+  if(emChamas){ const fx = _makeChamasFx3D(baseR); fx.position.y = Y0; bodyGrp.add(fx); }
   if(acidoResidual) bodyGrp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
   if(envenenado) bodyGrp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
 
@@ -44767,20 +44982,118 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
   return grp;
 }
 
-// Sprite 🔥 (emoji em canvas) que flutua sobre um peão/monstro em chamas.
-function _makeChamasSprite3D(){
-  const T = g3.T;
-  const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+// ── Chamas vivas no peão em chamas (status `em_chamas_rodadas`) ─────────────
+// Labaredas (sprites com textura de gota de fogo) em volta do
+// corpo e brasas subindo. Substitui o 🔥 parado sobre a cabeça. Cada efeito
+// criado entra em `_chamasFx3D`; `_updateChamasFx3D` (laço do startLoop3D)
+// anima e solta os que saíram da cena (a figura foi reconstruída/descartada).
+// Texturas compartilhadas (não `_owned`): o descarte da figura não as apaga.
+const _chamasFx3D = new Set();
+let _chamasTexLabareda = null, _chamasTexBrasa = null;
+const CHAMAS_FX = { labaredas: 7, brasas: 7, vidaBrasaMs: 1100 };
+function _chamasTexturas3D(T){
+  if(_chamasTexLabareda) return;
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128;
   const c = cv.getContext('2d');
-  c.font = '48px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  c.fillText('🔥', 32, 36);
-  const tex = new T.CanvasTexture(cv);
-  tex._owned = true;
-  const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
-  sp.scale.set(0.5, 0.5, 1);
-  sp.position.set(0, _BB_H_ALVO * 0.85, 0);   // acima da cabeça (deriva da altura-alvo do peão)
-  sp.userData.isChamasSprite = true;
-  return sp;
+  const gota = (esc, cor0, cor1, blur) => {
+    c.save(); c.filter = `blur(${blur}px)`;
+    c.translate(32, 122); c.scale(esc, esc);
+    c.beginPath(); c.moveTo(0, 0);
+    c.bezierCurveTo(-30, -4, -24, -56, 0, -114);
+    c.bezierCurveTo(24, -56, 30, -4, 0, 0); c.closePath();
+    const g = c.createLinearGradient(0, 0, 0, -114);
+    g.addColorStop(0, cor0); g.addColorStop(0.55, cor0); g.addColorStop(1, cor1);
+    c.fillStyle = g; c.fill(); c.restore();
+  };
+  gota(1.00, 'rgba(255,70,10,0.95)',  'rgba(200,20,0,0)',    4);
+  gota(0.66, 'rgba(255,190,50,1)',    'rgba(255,110,10,0)',  3);
+  gota(0.36, 'rgba(255,250,215,1)',   'rgba(255,220,110,0)', 2);
+  _chamasTexLabareda = new T.CanvasTexture(cv);
+  const cb = document.createElement('canvas'); cb.width = cb.height = 16;
+  const b = cb.getContext('2d');
+  const rg = b.createRadialGradient(8, 8, 0, 8, 8, 8);
+  rg.addColorStop(0, 'rgba(255,245,200,1)'); rg.addColorStop(0.4, 'rgba(255,150,40,0.9)'); rg.addColorStop(1, 'rgba(255,60,0,0)');
+  b.fillStyle = rg; b.fillRect(0, 0, 16, 16);
+  _chamasTexBrasa = new T.CanvasTexture(cb);
+}
+// `raio`: raio da base do peão (0,32 herói; maior em criatura grande) — o fogo
+// escala junto. A origem do grupo fica no chão, no centro do peão.
+function _makeChamasFx3D(raio){
+  const T = g3.T;
+  _chamasTexturas3D(T);
+  const s = Math.max(1, (Number(raio) || 0.32) / 0.32);
+  const grp = new T.Group();
+  grp.userData.isChamasFx = true;
+  grp.userData.criadoEm = performance.now();
+  grp.userData.raio = raio;
+  // Mistura NORMAL: a aditiva sumia sobre piso claro e sobre o próprio modelo
+  // (fogo + branco = branco). Sem tone mapping: o ACES com exposição alta
+  // desbotava o laranja para quase branco — os dois medidos na mesa de teste.
+  const mat = (map, op) => new T.SpriteMaterial({ map, transparent: true, opacity: op,
+    depthWrite: false, toneMapped: false });
+  const n = CHAMAS_FX.labaredas;
+  for(let i = 0; i < n; i++){
+    const sp = new T.Sprite(mat(_chamasTexLabareda, 0.9));
+    sp.center.set(0.5, 0.04);                       // ancorada na base da labareda
+    const a = (i / n) * Math.PI * 2 + (i % 2) * 0.4;
+    const r = raio * (i % 3 === 0 ? 0.35 : 0.72);
+    const w = (0.34 + (i % 3) * 0.07) * s, h = (0.66 + ((i * 7) % 5) * 0.10) * s;
+    const y = 0.02 + ((i * 5) % 4) * 0.20 * s;      // do pé à cintura, lambendo o corpo
+    sp.position.set(Math.cos(a) * r, y, Math.sin(a) * r);
+    sp.userData.chama = { w, h, y, x: sp.position.x, z: sp.position.z, fase: i * 1.7 + Math.random() * 3 };
+    sp.renderOrder = 6;
+    grp.add(sp);
+  }
+  for(let i = 0; i < CHAMAS_FX.brasas; i++){
+    const sp = new T.Sprite(mat(_chamasTexBrasa, 0));
+    const a = Math.random() * Math.PI * 2;
+    sp.userData.brasa = { x: Math.cos(a) * raio * 0.6, z: Math.sin(a) * raio * 0.6,
+      atraso: (i / CHAMAS_FX.brasas) * CHAMAS_FX.vidaBrasaMs, deriva: (Math.random() - 0.5) * 0.5, s };
+    sp.scale.set(0.07 * s, 0.07 * s, 1);
+    sp.renderOrder = 7;
+    grp.add(sp);
+  }
+  _chamasFx3D.add(grp);
+  return grp;
+}
+function _updateChamasFx3D(now){
+  if(!_chamasFx3D.size || !g3 || !g3.scene) return;
+  for(const grp of _chamasFx3D){
+    let raiz = grp; while(raiz.parent) raiz = raiz.parent;
+    if(raiz !== g3.scene){
+      // Recém-criado ainda pode não estar na cena; passado 1 s fora dela, a
+      // figura foi descartada — solta a referência (o descarte cuida da GPU).
+      if(now - grp.userData.criadoEm > 1000) _chamasFx3D.delete(grp);
+      continue;
+    }
+    if(!grp.visible) continue;
+    const t = now;
+    // O anel de fogo fica DENTRO do volume do modelo, que escondia as
+    // labaredas de trás: puxa o anel para o lado da câmera (no espaço local
+    // do grupo, que gira com o peão).
+    const cam = g3.camera.position.clone();
+    grp.worldToLocal(cam);
+    const dl = Math.hypot(cam.x, cam.z) || 1;
+    const puxa = grp.userData.raio * 1.4;   // 0,9 deixava ~60% do fogo atrás do corpo (medido)
+    const ox = cam.x / dl * puxa, oz = cam.z / dl * puxa;
+    for(const sp of grp.children){
+      const c = sp.userData.chama;
+      if(c){
+        const f = 0.78 + 0.16 * Math.sin(t * 0.013 + c.fase) + 0.08 * Math.sin(t * 0.037 + c.fase * 2.3);
+        sp.scale.set(c.w * (0.88 + 0.12 * Math.sin(t * 0.021 + c.fase)), c.h * f, 1);
+        sp.position.x = c.x + ox + 0.03 * Math.sin(t * 0.009 + c.fase);
+        sp.position.z = c.z + oz;
+        sp.material.opacity = Math.min(1, 0.70 + 0.3 * f);
+        continue;
+      }
+      const b = sp.userData.brasa;
+      if(!b) continue;
+      const vida = CHAMAS_FX.vidaBrasaMs;
+      const p = ((t + b.atraso) % vida) / vida;
+      sp.position.set(b.x + ox + b.deriva * p * 0.4 + 0.04 * Math.sin(t * 0.01 + b.atraso), 0.3 * b.s + p * 1.5 * b.s, b.z + oz);
+      sp.material.opacity = p < 0.15 ? p / 0.15 : Math.max(0, 1 - (p - 0.15) / 0.85);
+    }
+  }
 }
 
 function _makeProvocacaoSprite3D(){

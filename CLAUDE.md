@@ -151,10 +151,12 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
 `decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`
 
-> **`armadilha_disparo`** (`tipo_id`, `pos`, `area`) — broadcast público emitido no início de
-> `_aplicar_armadilha_area` (Mina Terrestre, Nuvem de Gás), antes das rolagens de save. Só
-> alimenta som/efeito no cliente: o `trap_result` é privado de quem foi atingido, então sem
-> ele a mina que um monstro pisa explodiria muda.
+> **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `tick?`) — broadcast público
+> de `_avisar_armadilha`, emitido em TODO disparo: `_disparar_armadilha` (alvo único),
+> `_aplicar_armadilha_area` (uma vez, com todos do raio), `_verificar_trap_procedural` (buraco) e
+> o dano progressivo de `_processar_efeitos_armadilha_turno` (`tick:true`, 1 por alvo por rodada).
+> Só alimenta som no cliente: o `trap_result` é privado de quem foi atingido; `alvos` diz de quem
+> é o gemido (prisioneiro = `"__prisioneiro__"`).
 >
 > **`item_impacto`** (`item_id`, `pos`, `area`) — broadcast público emitido no ramo de área de
 > `_monster_throw_item` (granada do Soldado), antes dos saves. O arremesso de monstro não tem
@@ -2705,6 +2707,14 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > em `DURACAO_PASSO_MS`; salto >4 casas = teleporte, sem som; o seu peão entra aqui só no 2D; a
 > mesa de teste do editor fica de fora). Passo em casa fora da sua visão não soa
 > (`_somPassoEm`). Teste: `tools/test_sons_cliente.js` [11].
+> **Passo em água/pântano:** casa de chegada com `materiais` em `agua`/`agua_profunda`/
+> `rodamoinho`/`rodamoinho_profundo`/`pantano` (e sem ponte — `baseSuperficiePonte3D`) toca
+> `passo_agua` (3 versões em `exploracao/passo_agua_*`: passo molhado + borbulha curta) em vez da
+> batida sintetizada. O evento é do canal **`passos`** — o `sfx()` só toca `efeitos`, então quem
+> toca é o próprio `tocarSomPasso` (`_passoMolhadoEm` + `_tocarPassoAgua`, direto no `_stepsBus`,
+> slider "Movimento dos peões"); sem amostra pronta, cai na batida. O seu peão no 3D passa a
+> casa por `opts.casa` (sem pan, como antes); os demais já passavam `pos`. Pico medido 0,37 contra
+> 0,28–0,36 do passo seco. Teste: `tools/test_sons_cliente.js` [22].
 > **Voz dos elementais:** os 6 elementais (`elemental_fogo|ar|agua|pedra|eletrico|gelo`) têm
 > família própria `elem_<elemento>` (`FAMILIAS_ELEMENTO` em `src/soundBank.js`; `familiaDe`
 > casa `^elemental_<x>$` ANTES das regras — os demais `elemental_*`, como o Descontrolado,
@@ -2788,6 +2798,38 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **Baú velho:** `openChestWindow` toca `bau_abre` (3 versões em `exploracao/bau_abre_*`: dobradiça
 > rangendo em tom grave + tampa de madeira batendo, montadas de rangidos da Kenney com batidas de
 > madeira) e só cai no arpejo sintetizado `tocarSomBau` sem amostra pronta.
+> **Corrosão por ácido:** evento `acido` (3 versões em `combate/acido_*`: respingo viscoso +
+> borbulha + chiado de fritura — o crepitar do `fire-1` em passa-alta 2,2 kHz — que some em
+> ~1,5 s). Toca em três pontos: (1) **Frasco de Ácido / Vidro de Ácido Grande** no acerto, pelo
+> `SOM_IMPACTO_ITEM`; (2) **cuspe do Grotão** no impacto da animação (`_tocarSomCuspeAcidoImpacto(anim)`,
+> na casa atingida; o baque sintetizado ficou de recuo); (3) **equipamento de herói corroído**
+> (Devorador, cuspe, Maldição da Ferrugem) — sem mensagem pública (o `equipment_damage_result` é
+> privado), então vem do estado: `_sonsCorrosaoDeEstado` soma os `*_lvl` de `player.corrosao` e
+> toca quando sobe. Como o `game_state` chega antes do golpe aparecer, o chiado espera a dor do
+> herói (`_corrosaoAposDor`, chamado em `_somDor`) se `CombatScene.awaitingHit(chave)` diz que há
+> golpe ainda não desferido (rede de segurança 3,5 s); sem golpe pendente toca já; com cuspe em voo
+> no herói não repete. A **armadilha Jato de Ácido** (`jato_acido`) toca `acido` no disparo
+> (`SOM_DISPARO_ARMADILHA`) e marca os atingidos em `_acidoArmadilhaAte` (4 s), para a corrosão
+> que ela causa não repetir o chiado. Testes: `tools/test_sons_cliente.js` [21], `tools/test_combat_scene.js` [12].
+> **Chamas vivas no peão (status `em_chamas_rodadas`):** o 🔥 parado sobre a cabeça virou fogo
+> animado no corpo. 3D: `_makeChamasFx3D(raio)` (7 labaredas-sprite com textura de gota de fogo
+> + 7 brasas subindo, texturas compartilhadas não `_owned`) em `build3DFig` e em
+> `_buildOrientedCreature3D`; `_updateChamasFx3D` (laço do `startLoop3D`) tremula, sobe as brasas e
+> **puxa o anel para o lado da câmera** (no espaço local do grupo, 1,4× o raio) — sem isso o próprio
+> modelo escondia ~60% do fogo; solta do registro a figura fora da cena há >1 s. Medido na mesa de
+> teste: mistura **aditiva** sumia sobre piso claro (fogo + branco = branco) e o **tone mapping**
+> ACES (exposição 1,55) desbotava o laranja — por isso mistura normal e `toneMapped:false`. 2D:
+> `_desenharChamasPeao2D` (3 labaredas + brasas aos pés), que agenda um redesenho a ~12 quadros/s
+> (`_agendarChamas2D`) enquanto houver alguém em chamas à vista. O ícone 🔥 da fileira de status
+> 2D continua. Teste: `tools/test_chamas_peao.js`.
+> **Armadilhas — gemido de quem foi atingido (2026-09-24):** `_somDisparoArmadilha` marca cada
+> chave de `alvos` em `_dorArmadilha` (validade 4 s); quando a vida dela cai, `_somDor` consulta
+> `_somDorArmadilha` ANTES do filtro de dano físico e toca o gemido do atingido (`dor_heroi`,
+> `dor_<família>`, elemental, ou `dor_criatura`) depois do som do disparo, para **qualquer** tipo
+> de dano (fogo/ácido caíam no som gerado). O popup "atingido" não toca mais o aviso dissonante
+> `tocarSomArmadilha`. Som do disparo em `SOM_DISPARO_ARMADILHA`: mina → `explosao` (volume 1,75 — o mesmo das granadas; `incendio` 1,6; picos medidos 0,79–0,94, logo abaixo do corte;
+> antes 1,3/0,63), incendiária → `incendio`, lâmina escondida/guilhotina → `armadilha_lamina`
+> (= `golpe_cortante_1`). Testes: `tools/test_sons_cliente.js` [13], `tools/test_som_armadilha.py` [8].
 > **Explosão da mina:** `GS.on('armadilhaDisparo')` → `_somDisparoArmadilha` toca `explosao`
 > (3 versões em `combate/explosao_*`, baque grave + estrondo da Kenney Sci-Fi Sounds) na casa da
 > mina, 240 ms depois (impacto da animação de armadilha), para toda a sala — inclusive quando

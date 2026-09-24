@@ -83,7 +83,7 @@ console.log('\n[4] _somGolpe / _somDor');
     { id: 'h3', gear: { off_hand: { id: 'escudo_custom', item_slot: 'shield' } } },
   ] };
   const f = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave', '_familiaDaChave'], {
-    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {}, _somDorArmadilha: () => false, _corrosaoAposDor: () => {},
     GS: { gameState: estado },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
@@ -112,7 +112,7 @@ console.log('\n[4] _somGolpe / _somDor');
   check('erro sem impacto (elemental/item) → nada toca', r === false && t.length === 0);
   {
     const fCritFalha = montar(['_jogadorDaChave', '_temEscudo', '_somGolpe', '_somDor', '_familiaElementalDaChave', '_familiaDaChave'], {
-    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
+    SoundBank: SB, _sfxPronto: () => true, setTimeout: (fn) => fn(), ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {}, _somDorArmadilha: () => false, _corrosaoAposDor: () => {},
       GS: { gameState: estado },
       sfx: (e) => e !== 'golpe_critico',
       _combatPrimaryDamageType: t2 => Array.isArray(t2) ? t2[0] : t2,
@@ -176,7 +176,7 @@ console.log('\n[7] _capturarSonsDeEstado');
     GS: { myPid: 'h1', doorSets: st => ({ open: new Set(st.abertas || []) }) },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _sfxVisaoDe: () => new Set(['2,2', '4,4']),
-    _sonsPassosDeEstado: () => {},
+    _sonsPassosDeEstado: () => {}, _sonsCorrosaoDeEstado: () => {},
   };
   // O snapshot `_sonsSnap` é estado de módulo do game.js: recriado aqui, com reset.
   const src = extrair('_capturarSonsDeEstado');
@@ -286,18 +286,55 @@ console.log('\n[13] Explosão da Mina Terrestre (armadilha_disparo)');
   check('game.js escuta armadilhaDisparo', /^GS\.on\('armadilhaDisparo', msg => \{ try\{ _somDisparoArmadilha\(msg\); \}catch\(e\)\{\} \}\);/m.test(GAME));
   check('catálogo tem explosao com 3 versões', SB.SFX.explosao && SB.SFX.explosao.arquivos.length === 3);
   const tocados = [], timers = [];
-  const src = extrair('_somDisparoArmadilha');
-  const f = new Function('GS', 'sfx', 'setTimeout',
-    "const SOM_DISPARO_ARMADILHA = { mina_terrestre: 'explosao' }; const ATRASO_IMPACTO_ARMADILHA_MS = 240;\n" + src + '\nreturn _somDisparoArmadilha;')(
-    { isPreview: false }, (e, o) => { tocados.push([e, o.pos]); return true; }, (fn, ms) => timers.push([ms, fn]));
-  f({ type: 'armadilha_disparo', tipo_id: 'mina_terrestre', pos: [3, 4] });
+  let agora = 1000;
+  const estado = { players: [{ id: 'h1', pos: [1, 1] }], monsters: [{ id: 'l1', type: 'lobo_cinzento', pos: [2, 2] }] };
+  const consts = GAME.match(/const SOM_DISPARO_ARMADILHA = \{[\s\S]*?\};/)[0] + '\n'
+    + GAME.match(/const ATRASO_IMPACTO_ARMADILHA_MS = \d+;/)[0] + '\n'
+    + GAME.match(/const DOR_ARMADILHA_VALIDADE_MS = \d+;/)[0] + '\nconst _dorArmadilha = new Map(), _acidoArmadilhaAte = new Map(); const ATRASO_DOR_ELEMENTAL_MS = 90;\n';
+  const stubs = { GS: { isPreview: false, gameState: estado }, SoundBank: SB,
+    sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
+    setTimeout: (fn, ms) => timers.push([ms, fn]), performance: { now: () => agora }, _sfxPronto: () => true };
+  const f = new Function(...Object.keys(stubs), consts
+    + ['_entityKeyById', '_familiaElementalDaChave', '_familiaDaChave', '_somDisparoArmadilha', '_somDorArmadilha'].map(extrair).join('\n')
+    + '\nreturn { _somDisparoArmadilha, _somDorArmadilha, acidoAte: _acidoArmadilhaAte };')(...Object.values(stubs));
+  const rodar = () => { const t = timers.slice(); timers.length = 0; t.forEach(([, fn]) => fn()); };
+  f._somDisparoArmadilha({ type: 'armadilha_disparo', tipo_id: 'mina_terrestre', pos: [3, 4], alvos: [] });
   check('explosão agendada no impacto (240 ms)', timers.length === 1 && timers[0][0] === 240);
-  timers[0][1]();
+  rodar();
   check('toca explosao na casa da mina', tocados.length === 1 && tocados[0][0] === 'explosao' && tocados[0][1][0] === 3);
+  check('explosão mais alta (volume > 1)', SB.SFX.explosao.volume > 1);
+  const disparo = tipo => { tocados.length = 0; timers.length = 0; f._somDisparoArmadilha({ tipo_id: tipo, pos: [0, 0], alvos: [] }); rodar(); return tocados.map(x => x[0]).join(); };
+  check('armadilha incendiária → incendio', disparo('armadilha_incendiaria') === 'incendio');
+  check('lâmina escondida → golpe cortante 1', disparo('lamina_escondida') === 'armadilha_lamina');
+  check('guilhotina → golpe cortante 1', disparo('guilhotina') === 'armadilha_lamina');
+  check('armadilha_lamina é o golpe_cortante_1', SB.SFX.armadilha_lamina.arquivos.join() === 'combate/golpe_cortante_1.ogg');
+  check('nuvem de gás sem som de disparo', disparo('nuvem_gas') === '');
+  check('jato de ácido → acido', disparo('jato_acido') === 'acido');
+  tocados.length = 0; timers.length = 0;
+  f._somDisparoArmadilha({ tipo_id: 'jato_acido', pos: [1, 1], alvos: ['h1'] }); rodar();
+  check('jato de ácido marca o atingido (a corrosão dele não repete o chiado)', f.acidoAte.get('p:h1') > agora);
+  f._somDorArmadilha('p:h1', [1, 1]); rodar(); tocados.length = 0;
+  // gemido de quem a armadilha atingiu (qualquer tipo de dano)
+  tocados.length = 0; timers.length = 0;
+  f._somDisparoArmadilha({ tipo_id: 'armadilha_incendiaria', pos: [1, 1], alvos: ['h1', 'l1'] });
   timers.length = 0;
-  f({ type: 'armadilha_disparo', tipo_id: 'nuvem_gas', pos: [3, 4] });
-  check('nuvem de gás não explode', timers.length === 0);
-  check('constante do código bate com o teste', /const SOM_DISPARO_ARMADILHA = \{ mina_terrestre: 'explosao' \};/.test(GAME) && /const ATRASO_IMPACTO_ARMADILHA_MS = 240;/.test(GAME));
+  check('herói atingido: gemido do herói', f._somDorArmadilha('p:h1', [1, 1]) === true && timers[0][0] === 330);
+  rodar();
+  check('…é o dor_heroi', tocados[0][0] === 'dor_heroi');
+  tocados.length = 0;
+  f._somDorArmadilha('m:l1', [2, 2]); rodar();
+  check('lobo atingido: gemido de fera', tocados[0][0] === 'dor_fera');
+  check('marca é consumida (1 gemido por disparo)', f._somDorArmadilha('m:l1', [2, 2]) === false);
+  tocados.length = 0; timers.length = 0;
+  f._somDisparoArmadilha({ tipo_id: 'armadilha_incendiaria', pos: [1, 1], alvos: ['h1'], tick: true });
+  check('dano progressivo: sem som de disparo', timers.length === 0);
+  f._somDorArmadilha('p:h1', [1, 1]); rodar();
+  check('…mas o herói geme na hora', tocados.map(x => x[0]).join() === 'dor_heroi');
+  f._somDisparoArmadilha({ tipo_id: 'lamina_escondida', pos: [1, 1], alvos: ['h1'] }); timers.length = 0;
+  agora += 5000;
+  check('marca vencida não toca', f._somDorArmadilha('p:h1', [1, 1]) === false);
+  check('_somDor consulta a armadilha antes do tipo de dano', /const pos = Array\.isArray\(c\.targetPos\)[^\n]*\n[\s\S]{0,200}if\(_somDorArmadilha\(k, pos\)\) return true;/.test(GAME));
+  check('popup "atingido" não toca mais o aviso dissonante', !/t\('ui\.armadilha\.atingido'\);\s*tocarSomArmadilha\(\);/.test(GAME));
 }
 
 console.log('\n[14] Impacto de itens: granadas (explosão) e incendiários (estouro + labaredas)');
@@ -314,7 +351,7 @@ console.log('\n[14] Impacto de itens: granadas (explosão) e incendiários (esto
   const f = new Function('GS', 'sfx', mapa + '\n' + extrair('_somExplosaoItem') + '\nreturn _somExplosaoItem;')(
     { isPreview: false }, (e, o) => { tocados.push([e, o.pos]); return true; });
   f('granada', [4, 4]); f('granada_superior', [1, 2]); f('bomba_fumaca', [1, 1]); f('frasco_acido', [1, 1]); f(null, null);
-  check('granadas explodem; fumaça e ácido não', tocados.map(x => x[0]).join() === 'explosao,explosao');
+  check('granadas explodem, ácido corrói; fumaça não', tocados.map(x => x[0]).join() === 'explosao,explosao,acido');
   check('na casa do impacto', tocados[0][1][0] === 4 && tocados[1][1][1] === 2);
   tocados.length = 0;
   f('bomba_incendiaria', [2, 2]); f('fogo_grego', [3, 3], true); f('frasco_oleo', [5, 5], true);
@@ -335,7 +372,7 @@ console.log('\n[15] Elementais: ataque, dor atrasada e rugido na primeira ação
   const stubs = {
     GS: { gameState: estado }, SoundBank: SB,
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
-    _sfxPronto: () => true, setTimeout: (fn, ms) => timers.push([ms, fn]), _retaliacaoAposDor: () => {},
+    _sfxPronto: () => true, setTimeout: (fn, ms) => timers.push([ms, fn]), _retaliacaoAposDor: () => {}, _somDorArmadilha: () => false, _corrosaoAposDor: () => {},
     _combatPrimaryDamageType: t => Array.isArray(t) ? t[0] : t,
   };
   const corpo = 'const ATRASO_DOR_ELEMENTAL_MS = 90; let _rugiram = new Set();\n'
@@ -498,7 +535,7 @@ console.log('\n[20] Gemido de dano por família de criatura');
     { id: 'a', type: 'aranha_gigante', pos: [3, 3] }, { id: 'o', type: 'ogro_das_cavernas', pos: [4, 4] },
     { id: 'b', type: 'boneco_treino', pos: [5, 5] } ] };
   const stubs = { GS: { gameState: estado }, SoundBank: SB, _sfxPronto: () => true,
-    setTimeout: (fn, ms) => { timers.push(ms); fn(); }, ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {},
+    setTimeout: (fn, ms) => { timers.push(ms); fn(); }, ATRASO_DOR_ELEMENTAL_MS: 90, _retaliacaoAposDor: () => {}, _somDorArmadilha: () => false, _corrosaoAposDor: () => {},
     sfx: (e) => { tocados.push(e); return true; }, _combatPrimaryDamageType: t => t };
   const f = montar(['_familiaElementalDaChave', '_familiaDaChave', '_somDor'], stubs);
   const dor = k => { tocados.length = 0; timers.length = 0; f._somDor({ hit: true, targetKey: 'm:' + k, targetPos: [0, 0] }, { damageType: 'physical' }); return tocados[0]; };
@@ -515,5 +552,90 @@ console.log('\n[20] Gemido de dano por família de criatura');
   }
 }
 
+
+console.log('\n[21] Corrosão por ácido');
+{
+  check('catálogo tem acido (3 versões)', SB.SFX.acido && SB.SFX.acido.arquivos.length === 3);
+  check('frasco de ácido e vidro grande soam acido no impacto',
+    /frasco_acido: 'acido', vidro_acido_grande: 'acido'/.test(GAME));
+  check('impacto do cuspe do Grotão toca a amostra na casa atingida',
+    /function _tocarSomCuspeAcidoImpacto\(anim\)\{[\s\S]{0,200}sfx\('acido',\{pos:anim\.target\}\)/.test(GAME)
+    && /_tocarSomCuspeAcidoImpacto\(anim\);/.test(GAME));
+  check('_somDor avisa a corrosão pendente', /function _somDor\(c, fb\)\{[\s\S]{0,120}_corrosaoAposDor\(/.test(GAME));
+  check('_sonsReset limpa a corrosão', /function _sonsReset\(\)\{[^\n]*_corrosaoReset\(\)/.test(GAME));
+
+  const tocados = [];
+  const corpo = 'const CORROSAO_APOS_DOR_MS = 150, CORROSAO_ESPERA_MAX_MS = 3500;\n'
+    + 'const _corrosaoNivel = new Map(), _corrosaoPend = new Map(), _dorHeroiEm = new Map(), _acidoArmadilhaAte = new Map();\n'
+    + ['_corrosaoSoma', '_corrosaoReset', '_sonsCorrosaoDeEstado', '_somCorrosao', '_corrosaoAposDor'].map(extrair).join('\n')
+    + '\nreturn { _sonsCorrosaoDeEstado, _corrosaoAposDor, pend: _corrosaoPend, acidoAte: _acidoArmadilhaAte };';
+  const montarC = ({ aguardando = false, anims = [], setTimeout }) => {
+    const cs = { awaitingHit: () => aguardando };
+    const stubs = {
+      sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
+      setTimeout, clearTimeout: () => {}, performance: { now: () => 1000 },
+      window: { CombatScene: cs }, CombatScene: cs, _cuspeAcidoAnims: anims,
+    };
+    return new Function(...Object.keys(stubs), corpo)(...Object.values(stubs));
+  };
+  const est = (lvl, arma = 0) => ({ players: [{ id: 'h1', pos: [3, 4], corrosao: { armadura_lvl: lvl, arma_lvl: arma, armadura_destruida: false } }] });
+  {
+    const f = montarC({ setTimeout: (fn) => { fn(); return 1; } });
+    f._sonsCorrosaoDeEstado(est(0));
+    check('1º estado só semeia', tocados.length === 0);
+    f._sonsCorrosaoDeEstado(est(1));
+    check('nível subiu sem golpe pendente (Ferrugem) → acido na casa do herói', tocados.length === 1 && tocados[0][0] === 'acido' && tocados[0][1][0] === 3);
+    tocados.length = 0;
+    f._sonsCorrosaoDeEstado(est(1));
+    check('sem mudança → nada', tocados.length === 0);
+    f._sonsCorrosaoDeEstado(est(1, 1));
+    check('outra peça (arma) corroída → toca de novo', tocados.length === 1);
+  }
+  tocados.length = 0;
+  {
+    const t2 = [], pend = [];
+    const g = montarC({ aguardando: true, setTimeout: (fn, ms) => { t2.push(ms); pend.push(fn); return t2.length; } });
+    g._sonsCorrosaoDeEstado(est(0)); g._sonsCorrosaoDeEstado(est(1));
+    check('golpe ainda não desferido → espera (rede de segurança 3,5 s)', tocados.length === 0 && t2[0] === 3500 && g.pend.has('p:h1'));
+    g._corrosaoAposDor('p:h1');
+    check('a dor do herói solta o chiado 150 ms depois', t2[1] === 150 && !g.pend.has('p:h1'));
+    pend[1]();
+    check('…e toca acido', tocados.length === 1 && tocados[0][0] === 'acido');
+  }
+  tocados.length = 0;
+  {
+    const g = montarC({ anims: [{ targetId: 'h1' }], setTimeout: (fn) => { fn(); return 1; } });
+    g._sonsCorrosaoDeEstado(est(0)); g._sonsCorrosaoDeEstado(est(1));
+    check('cuspe do Grotão em voo nesse herói: não repete (o impacto já soa)', tocados.length === 0);
+  }
+  {
+    const g = montarC({ setTimeout: (fn) => { fn(); return 1; } });
+    g.acidoAte.set('p:h1', 5000);
+    g._sonsCorrosaoDeEstado(est(0)); g._sonsCorrosaoDeEstado(est(1));
+    check('jato de ácido acabou de soar nesse herói: a corrosão não repete', tocados.length === 0);
+  }
+}
+
+console.log('\n[22] Passo em água/pântano');
+{
+  check('catálogo tem passo_agua (3 versões) no canal dos passos', SB.SFX.passo_agua && SB.SFX.passo_agua.arquivos.length === 3 && SB.SFX.passo_agua.canal === 'passos');
+  check('sfx() não toca canal passos (só efeitos)', /if\(!def \|\| def\.canal !== 'efeitos'/.test(GAME));
+  check('tocarSomPasso tenta a poça antes da batida sintetizada',
+    /_passoUltimoT = ctx\.currentTime;\s*if\(_passoMolhadoEm\(opts\.casa \|\| opts\.pos\) && _tocarPassoAgua\(ctx, opts\)\) return;/.test(GAME));
+  check('seu peão (3D) passa a casa de chegada', /tocarSomPasso\(\{ casa: \[destino\.x, destino\.z\] \}\)/.test(GAME));
+  check('teste de som toca canal passos no slider dos passos', /def\.canal === 'passos' \? _stepsBus\(\)/.test(GAME));
+  let ponte = false;
+  const st = { materiais: { '1,1': 'agua', '2,1': 'pantano', '3,1': 'agua_profunda', '4,1': 'pedra', '5,1': 'rodamoinho' } };
+  const f = new Function('GS', 'baseSuperficiePonte3D', GAME.match(/const _MATERIAIS_MOLHADOS = new Set\([^)]*\);/)[0] + '\n'
+    + extrair('_passoMolhadoEm') + '\nreturn _passoMolhadoEm;')({ gameState: st }, () => (ponte ? 0.5 : null));
+  check('água → molhado', f([1, 1]) === true);
+  check('pântano → molhado', f([2, 1]) === true);
+  check('água profunda e redemoinho → molhado', f([3, 1]) && f([5, 1]));
+  check('pedra → seco', f([4, 1]) === false);
+  check('posição fracionária arredonda', f([1.2, 0.8]) === true);
+  check('sem casa → seco', f(undefined) === false);
+  ponte = true;
+  check('ponte sobre a água → seco (o pé não toca a água)', f([1, 1]) === false);
+}
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);
