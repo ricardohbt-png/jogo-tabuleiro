@@ -1850,6 +1850,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "medio",
       "image": "necromante",
+      "caster_level": 2,
       "str_": 8,
       "dex": 12,
       "con_": 12,
@@ -7634,7 +7635,7 @@ window.EDITOR_CATALOG = {
       "source_class": "warrior",
       "name": "Fúria Berserker",
       "icon": "🔥",
-      "descricao": "Ataque extra neste turno com habilidades ativas",
+      "descricao": "Ataque extra neste turno com habilidades ativas (Fúria Berserker III permite escolher 2 ou 3 ataques)",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_progressions": [
@@ -7980,7 +7981,7 @@ window.EDITOR_CATALOG = {
       "source_class": "paladin",
       "name": "Golpe Sagrado",
       "icon": "⚔️",
-      "descricao": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios",
+      "descricao": "Escolha nível 1/2/3: +1d8/+2d8 sagrado; no nível 3, +1d8 de fogo, gelo, eletricidade ou sagrado. Ativação 🍖-3/4/5 💧-3/3/4; manutenção 🍖-1/2/2 💧-1/1/2.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "monster_maintenance": true,
@@ -7992,6 +7993,14 @@ window.EDITOR_CATALOG = {
           "name": "Ataque Sagrado II",
           "icon": "⚔️",
           "description": "Golpe Sagrado causa +2d8 de dano sagrado por ataque."
+        },
+        {
+          "id": "paladino_ataque_sagrado_3",
+          "level": 3,
+          "requires": "paladino_ataque_sagrado_2",
+          "name": "Ataque Sagrado III",
+          "icon": "⚔️",
+          "description": "Golpe Sagrado causa +2d8 sagrado e +1d8 de fogo, gelo, eletricidade ou sagrado escolhido por ataque."
         }
       ]
     },
@@ -8191,6 +8200,39 @@ window.EDITOR_CATALOG = {
       "name": "Resistência Absoluta",
       "icon": "✦",
       "descricao": "Recebe +2 em todos os testes de resistência por 2 rodadas.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica"
+    },
+    {
+      "id": "guild_tecnica_ataque_giratorio",
+      "source": "guilda",
+      "source_id": "tecnica_ataque_giratorio",
+      "name": "Ataque Giratório",
+      "icon": "✦",
+      "descricao": "Ação principal. Faz uma única jogada de ataque contra todos os inimigos nos quatro quadrados ortogonais adjacentes; cada acerto rola o dano separadamente. Não funciona com armas à distância nem arremessa a arma.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica"
+    },
+    {
+      "id": "guild_guarda_maxima",
+      "source": "guilda",
+      "source_id": "guarda_maxima",
+      "name": "Guarda Máxima",
+      "icon": "✦",
+      "descricao": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "guild_category": "tecnica"
+    },
+    {
+      "id": "guild_tecnica_redemoinho_morte",
+      "source": "guilda",
+      "source_id": "tecnica_redemoinho_morte",
+      "name": "Redemoinho da Morte",
+      "icon": "✦",
+      "descricao": "Escolha 1, 2 ou 3 Ataques Giratórios. Custa 4/8/14 de fome e sede e recarrega em 6/8/10 rodadas. A opção de 3 exige Fúria Berserker III.",
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "guild_category": "tecnica"
@@ -8587,6 +8629,17 @@ window.EDITOR_CATALOG = {
       "name": "Ataque Sagrado II",
       "icon": "✦",
       "descricao": "Golpe Sagrado causa +2d8 de dano sagrado por ataque.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_paladino_ataque_sagrado_3",
+      "source": "guilda",
+      "source_id": "paladino_ataque_sagrado_3",
+      "name": "Ataque Sagrado III",
+      "icon": "✦",
+      "descricao": "Golpe Sagrado causa +2d8 sagrado e +1d8 de fogo, gelo, eletricidade ou sagrado escolhido por ataque.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
