@@ -39,6 +39,9 @@ check('desconhecido 2×2 → grande', SB.familiaDe({ type: 'coisa_nova', size: [
 check('sem type → humanoide', SB.familiaDe({}) === 'humanoide');
 check('molochus_adulto → fera', fam('molochus_adulto') === 'fera');
 check('estrangulador → humanoide', fam('estrangulador') === 'humanoide');
+check('rato_gigante → fera', fam('rato_gigante') === 'fera');
+check('orc_guerreiro → humanoide', fam('orc_guerreiro') === 'humanoide');
+check('ratazana (não é "rato"): cai no fallback por tamanho → grande', SB.familiaDe({ type: 'ratazana', size: [2, 2] }) === 'grande');
 
 console.log('\n[3] audibilidade');
 const vis = new Set(['5,5', '6,5', '17,5']);
@@ -66,18 +69,25 @@ let repetiu = false, ult = -1;
 for (let i = 0; i < 200; i++) { const v = SB.escolherVariante(3, ult); if (v === ult) repetiu = true; if (v < 0 || v > 2) repetiu = true; ult = v; }
 check('3 variantes: nunca repete a anterior e fica no intervalo', !repetiu);
 check('rnd injetável e determinístico', SB.escolherVariante(3, 0, () => 0) === 1 && SB.escolherVariante(3, 2, () => 0) === 0);
+check('sem anterior válido: sorteia entre TODAS (rnd=0.99 → última)', SB.escolherVariante(3, -1, () => 0.99) === 2);
+check('anterior fora do intervalo (ex.: qtd mudou): também sorteia entre TODAS', SB.escolherVariante(3, 5, () => 0.99) === 2);
+{
+  const vistos = new Set();
+  for (let i = 0; i < 3000; i++) vistos.add(SB.escolherVariante(3, -1));
+  check('3000 sorteios sem anterior: os 3 índices aparecem (inclusive o último)', vistos.size === 3 && vistos.has(0) && vistos.has(1) && vistos.has(2));
+}
 
 console.log('\n[5] criarLimitador');
 const L = SB.criarLimitador(3);
-check('primeiro toca', L.pode('moedas', 0, 0.5));
+check('primeiro toca', L.pode('moedas', 0));
 L.registrar('moedas', 0, 400, 0.5);
-check('mesmo evento dentro do intervalo NÃO toca', !L.pode('moedas', 100, 0.5));
-check('depois do intervalo toca', L.pode('moedas', SB.SFX.moedas.intervaloMs + 1, 0.5));
+check('mesmo evento dentro do intervalo NÃO toca', !L.pode('moedas', 100));
+check('depois do intervalo toca', L.pode('moedas', SB.SFX.moedas.intervaloMs + 1));
 L.reset();
 L.registrar('golpe_cortante', 0, 1000, 0.5); L.registrar('golpe_perfurante', 0, 1000, 0.5); L.registrar('clique', 0, 1000, 0.1);
-check('teto cheio: descarta o novo', !L.pode('porta_abre', 10, 0.9));
-check('teto libera quando os sons terminam', L.pode('porta_abre', 1001, 0.9));
-check('evento desconhecido nunca toca', !L.pode('nao_existe', 5000, 1));
+check('teto cheio: descarta o novo', !L.pode('porta_abre', 10));
+check('teto libera quando os sons terminam', L.pode('porta_abre', 1001));
+check('evento desconhecido nunca toca', !L.pode('nao_existe', 5000));
 
 console.log('\n[6] diffSons');
 const base = { portas: ['3,4'], me: { ouro: 10, bag: [{ id: 'x' }, null], gear: { weapon: { id: 'dagger' } }, nivel: 1 },

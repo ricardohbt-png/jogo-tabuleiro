@@ -60,8 +60,8 @@
     [/^(skeleton|esqueleto_|zumbi_)/, 'morto_vivo'],
     [/^(dragon|tirano_|tiranossauro|troll|ogro_|gigante_|ciclope|minotauro|grande_)/, 'grande'],
     [/^(aranha_|cobra_|crocodilo_|escorpiao_|ferrao_charcos|lagarto_|grotao|devorador_|lacralion_)/, 'reptil_inseto'],
-    [/^(lobo_|urso_|gato$|rato|pombo$|ovelha$|garaloux_|lobisomem|harpia|molochus_)/, 'fera'],
-    [/^(goblin|orc|kobold_|bugbear_|dark_mage|necromante|soldado|xama_|medusa|lorde_vampiro|vampiro_|escravo_vampirico|estrangulador)/, 'humanoide'],
+    [/^(lobo_|urso_|gato$|rato($|_)|pombo$|ovelha$|garaloux_|lobisomem|harpia|molochus_)/, 'fera'],
+    [/^(goblin|orc($|_)|kobold_|bugbear_|dark_mage|necromante|soldado|xama_|medusa|lorde_vampiro|vampiro_|escravo_vampirico|estrangulador)/, 'humanoide'],
   ];
 
   function familiaDe(m) {
@@ -72,6 +72,9 @@
   }
 
   // o = { pos, visao: Set('x,y')|null, mePos, mestre }
+  // `visao === null` (ou ausente) = sem névoa a considerar (cidade/prévia do
+  // editor): tudo é tratado como visível. Um Set VAZIO é o oposto — o herói
+  // não vê casa nenhuma ainda, então tudo cai em abafado/névoa.
   function audibilidade(o) {
     o = o || {};
     const pos = o.pos;
@@ -87,8 +90,12 @@
   function escolherVariante(qtd, ultimo, rnd) {
     if (!(qtd > 0)) return -1;
     if (qtd === 1) return 0;
-    let i = Math.floor((rnd || Math.random)() * (qtd - 1));
-    if (ultimo >= 0 && i >= ultimo) i++;
+    const r = rnd || Math.random;
+    // Sem anterior válido (primeira vez, ou índice fora do intervalo atual):
+    // sorteia entre TODAS as variantes, senão a última nunca seria escolhida.
+    if (!(ultimo >= 0) || ultimo >= qtd) return Math.floor(r() * qtd);
+    let i = Math.floor(r() * (qtd - 1));
+    if (i >= ultimo) i++;
     return i;
   }
 
@@ -107,6 +114,8 @@
       },
       registrar(evento, agora, duracaoMs, ganho) {
         ultimo.set(evento, agora);
+        // `ganho` fica guardado no registro mas não é lido por `pode`/`reset`
+        // hoje — reservado para uma futura política de descarte por volume.
         ativos.push({ fim: agora + (duracaoMs || 0), ganho });
       },
       reset() { ultimo.clear(); ativos = []; },
@@ -133,6 +142,12 @@
   // atual = { portas:['x,y'], me:{ouro,bag,gear,nivel}|null, meuTurno, missao,
   //           monstros:[{id,type,size,pos}] (só os VISÍVEIS para mim) }
   // Devolve { eventos:[{evento,pos?}], snap } — o snap vira o `prev` seguinte.
+  // Contrato do chamador: `prev = null` a cada NOVA masmorra (reseta `ouvidos`
+  // — sem isso um monstro visto numa masmorra anterior nunca rugiria na
+  // próxima). `beber` é detectado por doses de poção CAINDO na bolsa — então
+  // LARGAR uma poção no chão da masmorra também toca o som (falso positivo
+  // aceito); vender/guardar não passam por aqui porque diffSons não corre na
+  // cidade (só na masmorra, onde não há loja).
   function diffSons(prev, atual) {
     atual = atual || {};
     const eventos = [];
