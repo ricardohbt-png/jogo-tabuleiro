@@ -168,6 +168,7 @@ console.log('\n[7] _capturarSonsDeEstado');
     GS: { myPid: 'h1', doorSets: st => ({ open: new Set(st.abertas || []) }) },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _sfxVisaoDe: () => new Set(['2,2', '4,4']),
+    _sonsPassosDeEstado: () => {},
   };
   // O snapshot `_sonsSnap` é estado de módulo do game.js: recriado aqui, com reset.
   const src = extrair('_capturarSonsDeEstado');
@@ -220,6 +221,51 @@ console.log('\n[10] Nenhum GS.on duplicado no game.js');
 const nomes = [...GAME.matchAll(/^GS\.on\('([A-Za-z_]+)'/gm)].map(m => m[1]);
 const dup = nomes.filter((n, i) => nomes.indexOf(n) !== i);
 check('sem duplicatas (GS.on substitui o anterior): ' + (dup.join(',') || 'ok'), dup.length === 0);
+
+console.log('\n[11] Passos dos peões: canal próprio, monstros e outros jogadores');
+check('canal _stepsBus existe', GAME.includes('\nfunction _stepsBus('));
+check('tocarSomPasso sai pelo canal dos passos', /function tocarSomPasso\([\s\S]{0,1500}fim\.connect\(_stepsBus\(\)\)/.test(GAME));
+check('ganho de saída depois do compressor', /comp\.connect\(saida\)/.test(GAME));
+check('volume dos passos é salvo', /steps: _stepsVol/.test(GAME) && /o\.steps/.test(GAME));
+check('slider no painel de áudio', GAME.includes('id="aud-steps"') && /_setStepsVol\(pSl\.value \/ 100\)/.test(GAME));
+check('entity_step de monstro/servo agenda o passo', /function _onEntityStep[\s\S]{0,1200}msg\.kind !== 'player'[\s\S]{0,300}_somPassoEm\(to\)/.test(GAME));
+check('_capturarSonsDeEstado chama o diff de passos', /function _capturarSonsDeEstado\(state\)\{[\s\S]{0,80}_sonsPassosDeEstado\(state\)/.test(GAME));
+check('_sonsReset zera as posições', /function _sonsReset\(\)\{[^}]*_passosReset\(\)/.test(GAME));
+{
+  const timers = [], tocados = [];
+  const stubs = {
+    GS: { myPid: 'h1', isPreview: false, gameState: null },
+    _sfxVisaoDe: () => new Set(['1,0', '2,0', '3,0', '5,5', '6,5']),
+    tocarSomPasso: (o) => tocados.push(o.pos.join(',')),
+    setTimeout: (fn, ms) => timers.push([ms, fn]),
+    performance: { now: () => 1000 },
+    DURACAO_PASSO_MS: 250,
+    mode3D: true,
+  };
+  const corpo = 'let _passosPosAnt = new Map(); const _passosProxT = new Map();\n'
+    + ['_somPassoEm', '_passosReset', '_sonsPassosDeEstado'].map(extrair).join('\n')
+    + '\nreturn { _somPassoEm, _passosReset, _sonsPassosDeEstado };';
+  const f = new Function(...Object.keys(stubs), corpo)(...Object.values(stubs));
+  const st = (h1, h2) => ({ players: [{ id: 'h1', alive: true, pos: h1 }, { id: 'h2', alive: true, pos: h2 }] });
+  const rodar = () => { timers.sort((a, b) => a[0] - b[0]).forEach(([, fn]) => fn()); timers.length = 0; };
+  f._sonsPassosDeEstado(stubs.GS.gameState = st([0, 0], [0, 0]));
+  check('1º estado não toca passo', timers.length === 0);
+  f._sonsPassosDeEstado(stubs.GS.gameState = st([1, 0], [3, 0]));
+  check('outro jogador andou 3 casas → 3 passos espaçados (seu peão 3D fica de fora)',
+    timers.map(t => t[0]).sort((a, b) => a - b).join() === '0,250,500');
+  rodar();
+  check('passos nas casas do caminho', tocados.join(' ') === '1,0 2,0 3,0');
+  tocados.length = 0;
+  f._sonsPassosDeEstado(stubs.GS.gameState = st([1, 0], [9, 9]));
+  check('salto grande (teleporte) não toca', timers.length === 0);
+  f._somPassoEm([8, 8]);
+  check('passo na névoa não toca', tocados.length === 0);
+  f._somPassoEm([5, 5]);
+  check('passo visível toca', tocados.join() === '5,5');
+  f._passosReset(); tocados.length = 0;
+  f._sonsPassosDeEstado(stubs.GS.gameState = st([2, 0], [6, 5]));
+  check('após reset o 1º estado não toca', timers.length === 0);
+}
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);

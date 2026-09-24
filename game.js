@@ -26371,6 +26371,7 @@ let _mmVol       = 0.6;   // música (0..1) — sobrescrito por localStorage
 let _ambienceVol = 0.7;   // ambiente (0..1); pronto para trilhas/sons de cenário
 let _sfxVol      = 1.0;   // efeitos (0..1) — mantido como alias compatível
 let _diceVol     = 0.82;  // dados (0..1)
+let _stepsVol    = 1.0;   // passos dos peões — heróis, monstros e servos (0..1)
 let _accessFontScale = 1.0;
 let _accessDurationScale = 1.0;
 let _highContrast = false;
@@ -26386,12 +26387,14 @@ function _audioLoadPrefs(){
     if (typeof o.sfx === 'number') _sfxVol = Math.max(0, Math.min(1, o.sfx));
     if (typeof o.effects === 'number') _sfxVol = Math.max(0, Math.min(1, o.effects));
     if (typeof o.dice === 'number') _diceVol = Math.max(0, Math.min(1, o.dice));
+    if (typeof o.steps === 'number') _stepsVol = Math.max(0, Math.min(1, o.steps));
   } catch (e) {}
 }
 function _audioSavePrefs(){
   try {
     localStorage.setItem(_AUDIO_KEY, JSON.stringify({
       music: _mmVol, ambience: _ambienceVol, effects: _sfxVol, sfx: _sfxVol, dice: _diceVol,
+      steps: _stepsVol,
     }));
   } catch (e) {}
 }
@@ -26435,6 +26438,24 @@ function _setAmbienceVol(v){
 function _setDiceVol(v){
   _diceVol = Math.max(0, Math.min(1, v));
   if (_diceBusNode) _diceBusNode.gain.value = _diceVol;
+  _audioSavePrefs();
+}
+// Canal próprio dos passos (independente de Efeitos, como o dos dados).
+let _stepsBusNode = null, _stepsBusCtx = null;
+function _stepsBus(){
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  if (_stepsBusCtx !== ctx || !_stepsBusNode){
+    _stepsBusNode = ctx.createGain();
+    _stepsBusNode.gain.value = _stepsVol;
+    _stepsBusNode.connect(ctx.destination);
+    _stepsBusCtx = ctx;
+  }
+  return _stepsBusNode;
+}
+function _setStepsVol(v){
+  _stepsVol = Math.max(0, Math.min(1, v));
+  if (_stepsBusNode) _stepsBusNode.gain.value = _stepsVol;
   _audioSavePrefs();
 }
 
@@ -26600,9 +26621,10 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; }
+function _sonsReset(){ _sonsSnap = null; _passosReset(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
+  _sonsPassosDeEstado(state);
   if(!window.SoundBank || !state) return;
   const me = (state.players || []).find(p => String(p.id) === String(GS.myPid)) || null;
   const visao = _sfxVisaoDe(state, me);
@@ -28148,6 +28170,8 @@ function _audioPanelEnsure(){
     +     '<input id="aud-ambience" type="range" min="0" max="100" value="' + pct(_ambienceVol) + '" style="width:100%;">'
     +     '<div class="cfg-audio-line"><span>'+t('ui.audio.dados')+'</span><span id="aud-dice-val">' + pct(_diceVol) + '%</span></div>'
     +     '<input id="aud-dice" type="range" min="0" max="100" value="' + pct(_diceVol) + '" style="width:100%;">'
+    +     '<div class="cfg-audio-line"><span data-i18n="ui.audio.passos">👣 Movimento dos peões</span><span id="aud-steps-val">' + pct(_stepsVol) + '%</span></div>'
+    +     '<input id="aud-steps" type="range" min="0" max="100" value="' + pct(_stepsVol) + '" style="width:100%;">'
     +   '</section>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.joystick">🎮 Joystick</div>'
     +   '<div class="cfg-access-line"><span data-i18n="ui.menu.joystick_deadzone">Zona morta</span><span id="gp-deadzone-val">' + Math.round(_gamepadDeadZone * 100) + '%</span></div>'
@@ -28241,6 +28265,11 @@ function _audioPanelEnsure(){
   aSl.oninput = () => { aVal.textContent = aSl.value + '%'; _setAmbienceVol(aSl.value / 100); };
   const dSl = wrap.querySelector('#aud-dice'), dVal = wrap.querySelector('#aud-dice-val');
   dSl.oninput = () => { dVal.textContent = dSl.value + '%'; _setDiceVol(dSl.value / 100); };
+  const pSl = wrap.querySelector('#aud-steps'), pVal = wrap.querySelector('#aud-steps-val');
+  pSl.oninput = () => {
+    pVal.textContent = pSl.value + '%'; _setStepsVol(pSl.value / 100);
+    tocarSomPasso();   // amostra ao ajustar, para calibrar de ouvido
+  };
   const gpDead = wrap.querySelector('#gp-deadzone');
   gpDead.oninput = () => _setGamepadDeadZone(gpDead.value / 100);
   wrap.querySelector('#gp-deadzone-down').onclick = () => _setGamepadDeadZone(_gamepadDeadZone - .05);
@@ -40555,6 +40584,60 @@ function _onEntityStep(msg){
     _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur: SERVER_STEP_DUR_MS });
   }
   if(!_serverStepRaf) _serverStepRaf = _scheduleVisualFrame(_tickServerStep);
+  // Som de passo no pouso da casa (~85% do segmento). Heróis ('player') ficam
+  // de fora: o diff de posição do game_state já cobre os peões de jogador.
+  if(msg.kind !== 'player'){
+    try{
+      const e = _serverStepAnim.get(id);
+      const pousoEm = e.startTime + (e.pts.length - 2 + 0.85) * e.segDur;
+      setTimeout(() => _somPassoEm(to), Math.max(0, pousoEm - performance.now()));
+    }catch(err){}
+  }
+}
+
+// Passo de um peão que não é o que você está animando: só soa se a casa
+// (de chegada) estiver na sua visão — um passo na névoa entregaria o monstro.
+function _somPassoEm(pos){
+  if(GS.isPreview || !Array.isArray(pos)) return;
+  const st = GS.gameState;
+  if(!st) return;
+  const me = (st.players || []).find(p => String(p.id) === String(GS.myPid)) || null;
+  const visao = _sfxVisaoDe(st, me);
+  if(visao && !visao.has(`${pos[0]},${pos[1]}`)) return;
+  tocarSomPasso({ pos });
+}
+
+// Peões de JOGADOR vistos de fora: o servidor não manda entity_step no
+// movimento comum — o peão só muda de casa entre dois game_state. Compara as
+// posições e toca um passo por casa andada, espaçados no ritmo da animação
+// (DURACAO_PASSO_MS). O seu peão no 3D já soa pela própria animação
+// (_animarPasso); no 2D ele entra aqui. A mesa de teste do editor move os
+// heróis-teste com a animação 3D local, então fica de fora (tocaria dobrado).
+let _passosPosAnt = new Map();          // pid -> [x,y]
+const _passosProxT = new Map();         // pid -> performance.now() do próximo passo livre
+function _passosReset(){ _passosPosAnt = new Map(); _passosProxT.clear(); }
+function _sonsPassosDeEstado(state){
+  if(GS.isPreview || !state || state.test_mode) return;
+  const atual = new Map();
+  for(const p of (state.players || [])){
+    if(!p || !p.alive || !Array.isArray(p.pos) || p.pos[0] < 0) continue;
+    atual.set(String(p.id), p.pos);
+    const ant = _passosPosAnt.get(String(p.id));
+    if(!ant) continue;
+    if(String(p.id) === String(GS.myPid) && mode3D) continue;
+    const d = Math.max(Math.abs(p.pos[0] - ant[0]), Math.abs(p.pos[1] - ant[1]));
+    if(d < 1 || d > 4) continue;          // 0 = parado; >4 = teleporte/reentrada
+    const agora = performance.now();
+    let t = Math.max(agora, _passosProxT.get(String(p.id)) || 0);
+    for(let i = 1; i <= d; i++){
+      const casa = [ant[0] + Math.round((p.pos[0] - ant[0]) * i / d),
+                    ant[1] + Math.round((p.pos[1] - ant[1]) * i / d)];
+      setTimeout(() => _somPassoEm(casa), t - agora);
+      t += DURACAO_PASSO_MS;
+    }
+    _passosProxT.set(String(p.id), t);
+  }
+  _passosPosAnt = atual;
 }
 
 // Posição interpolada atual de uma entidade em deslize (ou null se não há).
@@ -40747,9 +40830,20 @@ function _animarCaminhoPeao3D(peao, tilesAbs, onDone, startPos){
 // (tom do plástico ~280Hz + ressonância grave da madeira + clique de superfície),
 // com leve variação aleatória e compressor para evitar distorção. Reusa o
 // AudioContext existente (getAudioContext).
-function tocarSomPasso(){
+// Ganho de saída DEPOIS do compressor: subir as camadas antes dele seria
+// esmagado pelo próprio compressor. Medido em 2026-09-24 (pico no canal): o
+// passo saía a 0,05, abaixo até do clique de botão (0,16) e encoberto pelo
+// loop grave do ambiente (mesma faixa, 80–280 Hz). ×6 ≈ +15,5 dB → pico ~0,29,
+// entre o clique e a porta (0,39); o golpe fica em 0,69.
+const PASSO_GANHO_SAIDA = 6;
+const PASSO_INTERVALO_MIN_S = 0.04;   // vários peões pousando juntos = 1 batida
+let _passoUltimoT = -1;
+// opts.pos: casa de quem pisou — dá panorâmica pela tela (sem pos = centro).
+function tocarSomPasso(opts = {}){
   const ctx = getAudioContext();
   if(!ctx || ctx.state !== 'running') return;
+  if(ctx.currentTime - _passoUltimoT < PASSO_INTERVALO_MIN_S) return;
+  _passoUltimoT = ctx.currentTime;
   try{
     const now = ctx.currentTime;
     const variacao = 0.85 + Math.random() * 0.30;
@@ -40760,7 +40854,16 @@ function tocarSomPasso(){
     comp.ratio.value     = 6;
     comp.attack.value    = 0.001;
     comp.release.value   = 0.08;
-    comp.connect(_sfxBus());
+    const saida = ctx.createGain();
+    saida.gain.value = PASSO_GANHO_SAIDA;
+    comp.connect(saida);
+    let fim = saida;
+    if(Array.isArray(opts.pos) && ctx.createStereoPanner){
+      const pan = ctx.createStereoPanner();
+      pan.pan.value = _sfxPan(opts.pos);
+      saida.connect(pan); fim = pan;
+    }
+    fim.connect(_stepsBus());
 
     // CAMADA 1 — Tom principal do plástico (ruído filtrado, bandpass ~280Hz)
     const bufSize = Math.floor(ctx.sampleRate * 0.06);

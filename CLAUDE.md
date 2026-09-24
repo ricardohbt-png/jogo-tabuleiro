@@ -2686,3 +2686,13 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > arquivos decodificam sem erro. Testes: `tools/test_sound_bank.js`,
 > `tools/test_sons_cliente.js`, `tools/test_sons_impacto.py`, `tools/test_sfx_arquivos.js`.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-09-23-sons-efeitos-sonoros*`.
+> **Passos dos peões:** o som sintetizado `tocarSomPasso` ganhou canal próprio (`_stepsBus`,
+> slider "👣 Movimento dos peões" no painel ⚙️, salvo como `steps` em `lfh_audio`) e ganho de
+> saída ×6 **depois** do compressor (medido: o pico era 0,05, abaixo do clique, e sumia sob o
+> ambiente). Soa para todos os peões: o seu no 3D pela animação (`_animarPasso`); monstros e
+> servos auto-comandados no pouso de cada `entity_step` (`_onEntityStep`, exceto `kind:'player'`);
+> os outros heróis — que no movimento comum não recebem `entity_step`, só mudam de casa entre
+> dois `game_state` — por diff de posição (`_sonsPassosDeEstado`, um passo por casa, espaçado
+> em `DURACAO_PASSO_MS`; salto >4 casas = teleporte, sem som; o seu peão entra aqui só no 2D; a
+> mesa de teste do editor fica de fora). Passo em casa fora da sua visão não soa
+> (`_somPassoEm`). Teste: `tools/test_sons_cliente.js` [11].

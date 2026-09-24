@@ -1271,6 +1271,10 @@ window.LANG_INTERFACE = {
     "en": "🎲 Dice",
     "pt": "🎲 Dados"
   },
+  "ui.audio.passos": {
+    "en": "👣 Pawn movement",
+    "pt": "👣 Movimento dos peões"
+  },
   "ui.audio.instantanea": {
     "en": "Instant",
     "pt": "Instantânea"
