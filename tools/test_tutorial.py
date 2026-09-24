@@ -944,6 +944,89 @@ async def main():
     check("o bau tem tudo que as licoes pedem",
           _pedidos - _ids <= {"boneco_treino"})
 
+    print("\n[23] Sala de Kit completa: a segunda habilidade de cada classe")
+    _m23 = S.carregar_dungeon("campo_de_treinamento.json")
+    for _cls in S.LICAO_CLASSES:
+        _fins = [f["id"] for f in _m23["falas"]
+                 if f.get("classe") == _cls and "Feito isso, abra a porta ao fundo e siga" in f["texto"]]
+        check(f"{_cls}: so a ultima licao de kit manda seguir", len(_fins) == 1)
+    _fonte23 = open(S.__file__, encoding="utf-8").read()
+    for _hid in ("provocacao", "cura_area", "guerreiro_luz", "regeneracao_divina",
+                 "esconder_sombras", "ataque_furtivo", "veneno_rapido"):
+        check(f"o gancho de {_hid} existe",
+              f'_licao_evento(p, "usar_habilidade", alvo="{_hid}")' in _fonte23)
+
+    async def _sala_kit(_cls, _lid):
+        r = GameRoom("T")
+        async def _noop(*a, **k): pass
+        r.gm_say = _noop; r.broadcast = _noop; r.send_to = _noop
+        r.broadcast_city_state = _noop; r.push_state = _noop; r._broadcast_dado = _noop
+        p = make_player("h1", "Heroi", _cls, 0)
+        r.players["h1"] = p; r.host_pid = "h1"; r.connections["h1"] = object()
+        r.phase = "city"
+        await r.handle_world_adventure("h1", "treinamento")
+        r._is_turn = lambda pid: True
+        r._no_raio = lambda a, b, raio, *x, **k: True
+        r._tem_linha_de_visao = lambda *a, **k: True
+        p["magias_conhecidas"] = ["bola_fogo"]
+        concluir_ate(r, p, _lid)
+        await r._verificar_falas(p, None)
+        _alvo = next(m for m in r.monsters.values()
+                     if m["type"] == "boneco_treino" and m["pos"][0] >= 20)
+        return r, p, _alvo
+
+    # Cada acao comeca um turno novo: a licao anterior ja gastou acao/bonus.
+    def _turno(p):
+        p["action_done"] = False; p["bonus_action_used"] = False
+        p["fome"] = p["sede"] = 100
+
+    _casos = {
+        "mage":    ("mago_04",     lambda r, p, m: r.handle_fortalecer_magia("h1"),
+                    lambda r, p, m: r.handle_magia("h1", {"magia_id": "bola_fogo",
+                                                          "tx": m["pos"][0], "ty": m["pos"][1]})),
+        "cleric":  ("clerigo_04",  None, lambda r, p, m: r.handle_cura_area("h1", {"num_dados": 1})),
+        "bard":    ("bardo_04",    None, lambda r, p, m: r.handle_provocacao("h1", {"target_id": m["id"]})),
+        "paladin": ("paladino_04", None, lambda r, p, m: r.handle_acao_livre_richard(
+                        "h1", {"habilidade_id": "guerreiro_luz", "bonus": {"ataque": 1}})),
+    }
+    for _cls, (_lid, _prep, _acao) in _casos.items():
+        r, p, _alvo = await _sala_kit(_cls, _lid)
+        check(f"{_cls}: a licao nova dispara", p["licao_atual"] == _lid)
+        _turno(p)
+        if _cls == "mage":
+            p["pos"] = [_alvo["pos"][0] - 3, _alvo["pos"][1]]
+        if _prep: await _prep(r, p, _alvo)
+        await _acao(r, p, _alvo)
+        check(f"{_cls}: usar a habilidade cumpre", _lid in p["licoes_feitas"])
+
+    # Mago: magia SEM metamagia nao cumpre a licao de metamagia.
+    r, p, _alvo = await _sala_kit("mage", "mago_04")
+    _turno(p); p["pos"] = [_alvo["pos"][0] - 3, _alvo["pos"][1]]
+    await r.handle_magia("h1", {"magia_id": "bola_fogo", "tx": _alvo["pos"][0], "ty": _alvo["pos"][1]})
+    check("mage: magia sem metamagia nao cumpre", "mago_04" not in p["licoes_feitas"])
+
+    # Ladino: esconder (so o sucesso conta) e depois acertar escondido.
+    r, p, _alvo = await _sala_kit("rogue", "ladino_esconder")
+    check("rogue: a licao de esconder dispara", p["licao_atual"] == "ladino_esconder")
+    p["pos"] = [_alvo["pos"][0] - 1, _alvo["pos"][1]]
+    for _ in range(40):
+        if "ladino_esconder" in p["licoes_feitas"]: break
+        _turno(p)
+        await r.handle_esconder_sombras("h1", {})
+    check("rogue: esconder com sucesso cumpre", "ladino_esconder" in p["licoes_feitas"])
+    check("rogue: e pede o Ataque Furtivo", p["licao_atual"] == "ladino_furtivo")
+    for _ in range(60):
+        if "ladino_furtivo" in p["licoes_feitas"]: break
+        _turno(p); _alvo["hp"] = 999
+        if not p.get("invisivel_sombras"):
+            await r.handle_esconder_sombras("h1", {})
+            continue
+        await r.handle_attack("h1", _alvo["id"])
+    check("rogue: acertar escondido cumpre", "ladino_furtivo" in p["licoes_feitas"])
+    check("rogue: desarmar continua sendo a ultima da trilha",
+          max(l["ordem"] for l in r.licoes if l.get("classe") == "rogue")
+          == next(l["ordem"] for l in r.licoes if l["id"] == "ladino_04"))
+
     sys.exit(1 if FAIL else 0)
 
 asyncio.run(main())

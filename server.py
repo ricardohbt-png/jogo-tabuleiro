@@ -16422,6 +16422,7 @@ class GameRoom:
                                            "dice_theme": "sneak_attack"})
                     _bonus_extra += dano_furtivo
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
+                    await self._licao_evento(p, "usar_habilidade", alvo="ataque_furtivo")
                 # A muniÃ§Ã£o de prata empresta sua propriedade ao disparo, sem
                 # transformar permanentemente a arma equipada em uma arma de prata.
                 damage_weapon = {**(p.get("weapon") or {})}
@@ -19376,6 +19377,7 @@ class GameRoom:
 
         await self.gm_say(
             T("narracao.provoca_desvantagem_no_proximo_ataque_e", heroi=p['name'], alvo=nome_criatura(alvo), fome_cost=fome_cost, sede_cost=sede_cost))
+        await self._licao_evento(p, "usar_habilidade", alvo="provocacao")
         await self.push_state()
 
     def _provocador(self, monstro):
@@ -19598,6 +19600,7 @@ class GameRoom:
         dados_str = "+".join(str(d) for d in dados)
         await self.gm_say(
             T("narracao.invoca_cura_em_area_d8_hp_no_raio_q_cura", heroi=p['name'], num_dados=num_dados, dados_str=dados_str, if_bonus_int_0_else='+' if bonus_int >= 0 else '', bonus_int=bonus_int, raio=raio, len_curados=len(curados), join_curados_if_curados=': ' + ', '.join(curados) if curados else '', custo_fome=custo_fome, custo_sede=custo_sede))
+        await self._licao_evento(p, "usar_habilidade", alvo="cura_area")
         await self.push_state()
 
     def _reverter_efeito_veneno(self, alvo, efeito):
@@ -20042,6 +20045,7 @@ class GameRoom:
         p["sede"] = max(0, p["sede"] - sede_cost)
         p["regeneracao_ativa"] = True
         await self.gm_say(T("narracao.ativa_regeneracao_divina_1_hp_por_turno", heroi=p['name'], fome_cost=fome_cost, sede_cost=sede_cost))
+        await self._licao_evento(p, "usar_habilidade", alvo="regeneracao_divina")
 
     async def _ativar_guerreiro_luz(self, p, pid, data):
         if p.get("guerreiro_luz_ativo"):
@@ -20091,6 +20095,7 @@ class GameRoom:
         })
         await self.gm_say(
             T("narracao.torna_se_guerreiro_da_luz_visao_ataque_d", heroi=p['name'], bonus_validos_visao=bonus_validos['visao'], bonus_validos_ataque=bonus_validos['ataque'], bonus_validos_dano=bonus_validos['dano'], bonus_validos_ca=bonus_validos['ca'], custo_fome=custo_fome, custo_sede=custo_sede))
+        await self._licao_evento(p, "usar_habilidade", alvo="guerreiro_luz")
         # Revela imediatamente com o novo raio (o bÃ´nus de VisÃ£o expande a nÃ©voa
         # jÃ¡ na casa atual, sem esperar o prÃ³ximo movimento). explored Ã© cumulativo.
         if bonus_validos["visao"] > 0 and p.get("pos"):
@@ -22756,6 +22761,7 @@ class GameRoom:
         # Fortalecer (dano Ã—1,5). EMPILHÃVEIS; o custo em ðŸ–/ðŸ’§ Ã© pago AGORA e SÃ“ se
         # a habilidade tiver efeito nesta magia (tem dano / duraÃ§Ã£o / teste). â”€â”€â”€â”€â”€
         dmg_mult, dur_bonus, dc_bonus = 1, 0, 0
+        partes = []
         if is_mage:
             dmg_mult, dur_bonus, dc_bonus, mm_fome, mm_sede, partes, excedeu = self._resolver_metamagia(p, magia)
             if excedeu:
@@ -22922,6 +22928,14 @@ class GameRoom:
         if not usou_acelerada:
             p["action_done"] = True
         await self._licao_evento(p, "usar_magia", alvo=magia_id)
+        # Metamagia aplicada neste lançamento (as partes vêm de _resolver_metamagia,
+        # que só lista o que era aplicável E coube no teto).
+        for _parte in partes:
+            for _pref, _hid in (("Fortalecer", "fortalecer_magia"),
+                                ("Estender", "estender_magia"),
+                                ("Aprimorar", "aprimorar_magia")):
+                if _parte.startswith(_pref):
+                    await self._licao_evento(p, "usar_habilidade", alvo=_hid)
         await self.push_state()
 
     def _magia_tem_dano(self, magia):
@@ -31200,6 +31214,8 @@ class GameRoom:
             p["invisivel_sombras"] = True
             await self.gm_say(
                 T("narracao.desaparece_nas_sombras_d20_vs_invisivel", heroi=p['name'], d20=d20, bonus_dex=bonus_dex, total=total, dificuldade=dificuldade))
+            # Só o sucesso conta: a lição seguinte (Ataque Furtivo) exige estar oculto.
+            await self._licao_evento(p, "usar_habilidade", alvo="esconder_sombras")
         else:
             await self.gm_say(
                 T("narracao.falha_em_se_esconder_d20_vs", heroi=p['name'], d20=d20, bonus_dex=bonus_dex, total=total, dificuldade=dificuldade))
@@ -31250,6 +31266,7 @@ class GameRoom:
                        else "o próximo golpe certeiro envenena o alvo")
         await self.gm_say(
             T("narracao.aplica_na_arma_acao_livre", heroi=p['name'], venenos_vid_nome=VENENOS[vid]['nome'], desc_veneno=desc_veneno, custo_sede=custo_sede))
+        await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
         await self.push_state()
 
     async def _processar_inicio_turno_luccas(self, p):
