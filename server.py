@@ -1383,6 +1383,47 @@ def _projetil_de(defn, monstro=False):
             return {"kind": "arrow"}
     return None
 
+# ── Som do golpe (sons e efeitos sonoros — só afeta o áudio do cliente) ──
+# Devolve "cortante" | "perfurante" | "contundente" | "natural" ou None.
+# Herói: só a `categoria` da arma. Monstro: nome natural (mordida, garra…)
+# vence a categoria; depois a categoria; depois o nome da arma. Ataque com
+# dano elemental não tem impacto físico (o cliente usa o som do elemento).
+_IMPACTOS = ("cortante", "perfurante", "contundente")
+_IMPACTO_NATURAL = ("mordida", "garra", "ferrao", "ferroes", "pinca", "chifr",
+                    "tentaculo", "cauda", "cabecada", "cobras", "rajada")
+_IMPACTO_POR_NOME = (("espada", "cortante"), ("machado", "cortante"),
+                     ("alabarda", "cortante"), ("adaga", "perfurante"),
+                     ("lanca", "perfurante"), ("arco", "perfurante"),
+                     ("besta", "perfurante"), ("clava", "contundente"),
+                     ("martelo", "contundente"), ("cajado", "contundente"),
+                     ("rocha", "contundente"))
+
+def _impacto_de(defn, monstro=False):
+    # None só significa "não é um golpe físico" (dano elemental do monstro).
+    # Herói: sempre um golpe físico — desarmado ou arma sem categoria cai em
+    # "contundente" (soco/pancada), nunca None.
+    if not monstro:
+        if not defn or not isinstance(defn, dict):
+            return "contundente"
+        cat = defn.get("categoria")
+        return cat if cat in _IMPACTOS else "contundente"
+    if not defn or not isinstance(defn, dict):
+        return None
+    tipos = defn.get("damage_types") or ["physical"]
+    if any(t != "physical" for t in tipos):
+        return None
+    nome = unicodedata.normalize("NFKD", str(defn.get("name") or "")) \
+        .encode("ascii", "ignore").decode().lower()
+    if any(p in nome for p in _IMPACTO_NATURAL):
+        return "natural"
+    cat = defn.get("categoria")
+    if cat in _IMPACTOS:
+        return cat
+    for palavra, impacto in _IMPACTO_POR_NOME:
+        if palavra in nome:
+            return impacto
+    return "contundente"
+
 # â”€â”€â”€ GUILDA DOS HERÃ“IS â€” persistÃªncia por personagem (Fase 0) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Save por class_id (6 personagens fixos), global ao processo. Guarda sÃ³ posse +
 # equipar da guilda; ouro/HP/nÃ­vel continuam por-sessÃ£o. Ver spec Fase 0 Â§5.
@@ -2739,6 +2780,31 @@ GUILD_CATALOG = {
         "desc": "Recebe +2 em todos os testes de resistência por 2 rodadas.",
         "efeito": {"tipo": "buff_saves", "saves": 2, "rodadas": 2},
     },
+    "tecnica_ataque_giratorio": {
+        "id": "tecnica_ataque_giratorio", "categoria": "tecnica", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        # Faixa intermediária entre as técnicas de 5 e 8 rodadas.
+        "preco": 220, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 6,
+        "nome": "Ataque Giratório", "icon": "🌀",
+        "desc": "Ação principal. Faz uma única jogada de ataque contra todos os inimigos nos quatro quadrados ortogonais adjacentes; cada acerto rola o dano separadamente. Não funciona com armas à distância nem arremessa a arma.",
+        "efeito": {"tipo": "ataque_giratorio"},
+    },
+    "guarda_maxima": {
+        "id": "guarda_maxima", "categoria": "tecnica", "classe": "paladin",
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 250, "custo_fome": 0, "custo_sede": 0, "recarga_rodadas": 0,
+        "automatica": True, "nome": "Guarda Máxima", "icon": "🛡️",
+        "desc": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos.",
+        "efeito": {"tipo": "guarda_maxima"},
+    },
+    "tecnica_redemoinho_morte": {
+        "id": "tecnica_redemoinho_morte", "categoria": "tecnica", "classe": "warrior",
+        "linha": None, "nivel": None, "requer": "tecnica_ataque_giratorio", "exclusiva": False,
+        "preco": 350, "custo_fome": 4, "custo_sede": 4, "recarga_rodadas": 6,
+        "nome": "Redemoinho da Morte", "icon": "☠️",
+        "desc": "Escolha 1, 2 ou 3 Ataques Giratórios. Custa 4/8/14 de fome e sede e recarrega em 6/8/10 rodadas. A opção de 3 exige Fúria Berserker III.",
+        "efeito": {"tipo": "redemoinho_morte", "ataques": [1, 2, 3]},
+    },
     "tecnica_contra_ataque": {
         "id": "tecnica_contra_ataque", "categoria": "tecnica", "classe": None,
         "linha": None, "nivel": None, "requer": None, "exclusiva": False,
@@ -3087,6 +3153,12 @@ GUILD_CATALOG = {
         "preco": 150, "nome": "Ataque Sagrado II", "icon": "⚔️",
         "desc": "Golpe Sagrado causa +2d8 de dano sagrado por ataque.",
     },
+    "paladino_ataque_sagrado_3": {
+        "id": "paladino_ataque_sagrado_3", "categoria": "especializacao", "classe": "paladin",
+        "linha": "paladino_ataque_sagrado", "nivel": 3, "requer": "paladino_ataque_sagrado_2", "exclusiva": False,
+        "preco": 200, "nome": "Ataque Sagrado III", "icon": "⚔️",
+        "desc": "Golpe Sagrado causa +2d8 sagrado e +1d8 de fogo, gelo, eletricidade ou sagrado escolhido por ataque.",
+    },
     "paladino_luz_2": {
         "id": "paladino_luz_2", "categoria": "especializacao", "classe": "paladin",
         "linha": "paladino_luz", "nivel": 2, "requer": None, "exclusiva": False,
@@ -3286,7 +3358,7 @@ CLASSES = {
             {
                 "id":          "furia_berserker",
                 "name":        "Fúria Berserker",
-                "description": "Ataque extra neste turno com habilidades ativas",
+                "description": "Ataque extra neste turno com habilidades ativas (Fúria Berserker III permite escolher 2 ou 3 ataques)",
                 "fome_cost":   5,
                 "sede_cost":   5,
                 "target":      "self",
@@ -3519,7 +3591,7 @@ CLASSES = {
             {
                 "id": "golpe_sagrado",
                 "name": "Golpe Sagrado",
-                "description": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios",
+                "description": "Escolha nível 1/2/3: +1d8/+2d8 sagrado; no nível 3, +1d8 de fogo, gelo, eletricidade ou sagrado. Ativação 🍖-3/4/5 💧-3/3/4; manutenção 🍖-1/2/2 💧-1/1/2.",
                 "icon": "⚔️",
                 "tipo": "buff_ativo",
                 "target": "self",
@@ -4410,7 +4482,7 @@ MONSTER_DEFS = [
     # â”€â”€ Necromante (ND 2): mago nÃ­vel 2, conjurador + mestre dos mortos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {
         "type": "necromante", "name": "Necromante", "emoji": "🧙",
-        "tier": 2, "cr": 2, "level": 2,        # mago nÃ­vel 2 (escala Bola de Fogo p/ 2d6, CD 12)
+        "tier": 2, "cr": 2, "level": 2, "caster_level": 2,  # mago nÃ­vel 2 (escala Bola de Fogo p/ 2d6, CD 12)
         "hp": 16, "ac": 12, "size": [1, 1], "movement": 5,
         "str_": 8, "dex": 12, "con_": 12, "int_": 16,
         "fort": 4, "ref_": 4, "will": 6,
@@ -8495,10 +8567,16 @@ def _recalculate_ac(p):
     armor = gear.get("armor")
     armor_val = _armor_ac_bonus(armor)
     bonus = 0
+    guarda_maxima = (p.get("class_id") == "paladin"
+                     and tem_tecnica_equipada(p, "guarda_maxima"))
     for slot in GEAR_BONUS_SLOTS:
         g = gear.get(slot)
         if g and g.get("effect") == "def_":
-            bonus += g.get("value", 0)
+            valor = g.get("value", 0)
+            if (guarda_maxima and slot == "off_hand"
+                    and (g.get("kind") == "shield" or g.get("item_slot") == "shield")):
+                valor *= 2
+            bonus += valor
     p["ac_base"] = 10 + mod(p["dex"]) + armor_val
     p["ac"]      = p["ac_base"] + bonus
 
@@ -8645,7 +8723,9 @@ def make_player(pid, name, cls_id, slot):
         "cancao_atacou_apos": False,   # jÃ¡ pagou o custo extra de ataque sob canÃ§Ã£o neste turno?
         # buffs_cancao Ã© injetado/removido nos aliados no raio (ver _aplicar_buffs_cancao)
         # â”€â”€ Estado das habilidades do paladino (Richard) â€” inerte p/ outras classes â”€â”€
-        "golpe_sagrado_ativo": False,  # +1d8 sagrado por ataque (manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1)
+        "golpe_sagrado_ativo": False,  # dados/elemento escolhidos ficam nos campos abaixo
+        "golpe_sagrado_nivel": 0,
+        "golpe_sagrado_tipo_extra": None,
         "protetor_ativo":      False,  # divide o dano recebido por um aliado protegido
         "protetor_alvo":       None,   # pid ou __prisioneiro__ sob Protetor
         "vinculos_malditos_dor": [],   # vínculos ativos do conjurador
@@ -9293,6 +9373,7 @@ class GameRoom:
         # Fica fora do estado serializado e é consumido pelo próximo registro.
         self._damage_visual_context = {}
         self._attack_feedback_seq = 0
+        self._spin_feedback_seq = 0
         self._pending_teleporte = None
         self.explored = set()   # (x,y) tuples visible to all
         self.door_rooms = {}    # (x,y) -> [room_id,...] â€” salas que cada porta destranca
@@ -10367,12 +10448,20 @@ class GameRoom:
         if item_id is None:   # desequipar
             slots[slot] = None
             p["guild_equip"]["tecnica"] = slots[0] if slots else None
+            # Guarda Máxima altera a CA derivada do escudo já vestido; recalcule
+            # imediatamente para equipar/desequipar ser simétrico.
+            if p.get("gear"):
+                _recalculate_ac(p)
             self._persistir_guilda(p)
             await self.push_state_or_city()
             return
         item = guild_item(item_id)
         if not item or item["categoria"] != "tecnica":
             await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_desconhecida")})
+            return
+        if not _guild_classe_ok(item.get("classe"), p.get("class_id")):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.este_aprimoramento_nao_e_da_sua_classe")})
             return
         if item_id not in p["guild_owned"]["tecnicas"]:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_possui_esta_tecnica")})
@@ -10386,6 +10475,8 @@ class GameRoom:
             return
         slots[slot] = item_id
         p["guild_equip"]["tecnica"] = slots[0] if slots else None
+        if p.get("gear"):
+            _recalculate_ac(p)
         self._persistir_guilda(p)
         await self.push_state_or_city()
 
@@ -10414,6 +10505,370 @@ class GameRoom:
     def _tecnica_bonus_dano(self, p):
         """+N de dano de arma concedido por técnica de turno (Brutalidade)."""
         return p.get("tecnica_buff_dano_arma", 0)
+
+    @staticmethod
+    def _ataque_giratorio_arma_distancia(weapon):
+        """Classifica armas de projétil para o Ataque Giratório.
+
+        `range` sozinho não basta: chicote e alabarda usam esse campo para
+        alcance corpo a corpo e continuam permitidos. A mesma fonte usada
+        pelos projéteis reconhece arcos/bestas nativos e armas autorais com
+        munição/projétil explícitos.
+        """
+        if not isinstance(weapon, dict):
+            return False
+        return bool(_projetil_de(weapon) or weapon.get("ammo")
+                    or weapon.get("ammo_type"))
+
+    def _ataque_giratorio_alvos(self, p):
+        """Retorna (monstro, casa atingida) uma vez por monstro nos quatro
+        quadrados ortogonais adjacentes ao personagem.
+
+        A habilidade é uma varredura de combate corpo a corpo: mesmo uma arma
+        de alcance (lança/alabarda/chicote) não projeta o golpe para além do
+        anel adjacente e nunca inclui diagonais. Footprints grandes entram uma
+        única vez quando qualquer casa do corpo toca o anel.
+        """
+        px, py = p.get("pos", [0, 0])
+        anel = {(px + dx, py + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))}
+        alvos = []
+        for alvo in self.monsters.values():
+            if alvo.get("hp", 0) <= 0:
+                continue
+            corpo = self._monster_tiles(alvo)
+            casa = next((tile for tile in corpo if tuple(tile) in anel), None)
+            if casa is not None:
+                alvos.append((alvo, list(casa)))
+        return alvos
+
+    async def _executar_ataque_giratorio(self, pid, p, tecnica_id, item,
+                                         _consumir=True, _pular_bloqueio=False,
+                                         _narrar=True, _spin_id=None,
+                                         _spin_index=1, _spin_count=1):
+        """Executa o Ataque Giratório como uma única ação.
+
+        O d20 é rolado uma vez para toda a varredura. Cada alvo ainda passa por
+        sua própria CA/modificadores e, em caso de acerto, recebe uma rolagem
+        de dano independente pelo funil normal de dano físico.
+        """
+        weapon = p.get("weapon") or {}
+        if _spin_id is None:
+            self._spin_feedback_seq += 1
+            _spin_id = f"spin_{self.round_num}_{self._spin_feedback_seq}"
+        if self._ataque_giratorio_arma_distancia(weapon):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.ataque_giratorio_nao_funciona_a_distancia")})
+            return False
+
+        song = (p.get("class_id") == "bard" and p.get("cancao_ativa")
+                and not p.get("cancao_atacou_apos"))
+        if song:
+            song_fome, song_sede = 2, 1
+            sf, ss = self._custo_fome_sede_efetivo(p, song_fome, song_sede)
+            if p.get("fome", 0) < sf or p.get("sede", 0) < ss:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.sem_folego_atacar_sob_cancao",
+                              fome=song_fome, sede=song_sede)})
+                return False
+
+        # A técnica realiza a ação principal inteira; oportunidade/velocidade
+        # continuam podendo liberar essa ação pelo portão central. A validação
+        # da canção vem antes porque _acao_bloqueada pode consumir esse crédito.
+        if not _pular_bloqueio and self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return False
+
+        pares = self._ataque_giratorio_alvos(p)
+        alvos = [alvo for alvo, _tile in pares]
+
+        # Bônus e estados que pertencem ao ataque, não a cada alvo.
+        surv_mod = self._modificador_sobrevivencia(p)
+        preso_pen = -2 if p.get("preso") else 0
+        cancao_acerto = self._cancao_bonus(p, "bonus_acerto")
+        cancao_dano = self._cancao_bonus(p, "bonus_dano")
+        gl = p.get("guerreiro_luz_bonus", {}) if p.get("guerreiro_luz_ativo") else {}
+        gl_atk, gl_dano = gl.get("ataque", 0), gl.get("dano", 0)
+        maldicao_atk = self._maldicao_mod(p, "ataque")
+        base_atk = (_hero_attack_bonus_with_weapon(p, weapon) + surv_mod + preso_pen
+                    + cancao_acerto + gl_atk + self._pen(p, "ataque")
+                    + self._mod_magia(p, "ataque")
+                    + int(weapon.get("atk_bonus", 0) or 0) + maldicao_atk)
+
+        # Técnicas previamente armadas modificam também este ataque; a técnica
+        # giratória em si é consumida imediatamente, abaixo.
+        if p.get("tecnica_buff_dano_arma"):
+            self._consumir_tecnica_apos_efeito(p, "brutalidade")
+        investida = self._investida_tecnica_bonus(p, is_ranged=False)
+        if investida:
+            self._consumir_tecnica_apos_efeito(p, "tecnica_investida")
+        forca_critico = bool(p.get("tecnica_golpe_decisivo_armado")
+                             or p.get("ultimo_esforco_ativo"))
+        if p.get("tecnica_golpe_decisivo_armado"):
+            self._consumir_tecnica_apos_efeito(p, "tecnica_golpe_decisivo")
+
+        esc_modes = [self._verificar_escuridao(p, alvo) for alvo in alvos]
+        vantagem = bool(p.get("invisivel_magico") or p.get("oculto_vela")
+                        or p.get("ultimo_esforco_ativo")
+                        or any(self._provocacao_atk_vantagem(p, alvo) for alvo in alvos)
+                        or "vantagem" in esc_modes)
+        desvantagem = bool(p.get("runico_provocacao_efeito")
+                           or "desvantagem" in esc_modes)
+        if p.get("runico_provocacao_efeito"):
+            p.pop("runico_provocacao_efeito", None)
+        ataque_mode = ("advantage" if vantagem and not desvantagem
+                       else "disadvantage" if desvantagem and not vantagem else "normal")
+
+        feedback_ids = {}
+        for alvo, tile in pares:
+            feedback_ids[alvo["id"]] = await self._emitir_feedback_ataque(
+                "start", p, alvo, weapon.get("name") or "Ataque Giratório",
+                ataque_mode, spin_id=_spin_id, spin_index=_spin_index,
+                spin_count=_spin_count, ability_id=tecnica_id,
+                impacto=_impacto_de(weapon))
+
+        resultados = []
+        roll = total = None
+        descartado = None
+        if alvos:
+            # O valor da CA usado para escolher vantagem/desvantagem não muda o
+            # d20 selecionado; os resultados finais são recalculados por alvo.
+            primeiro, primeiro_tile = pares[0]
+            primeira_ca = primeiro.get("ac", 10)
+            _hit0, roll, total, _crit0, descartado = self._rolar_ataque(
+                base_atk, primeira_ca, vantagem, desvantagem)
+            for alvo, tile in pares:
+                eff_atk = base_atk
+                eff_atk += self._ciclope_cercado_bonus(alvo)
+                eff_atk += self._lenda_atk_bonus(p, alvo)
+                if alvo.get("oculto_sombras"):
+                    eff_atk -= 4
+                eff_ac = (alvo.get("ac", 10) + self._ciclope_furia_ca(alvo)
+                          + self._mod_magia(alvo, "ca")
+                          + self._camuflagem_bonus(alvo)
+                          + self._cacador_trevas_ca_bonus(alvo)
+                          - self._pressao_ca_pen(alvo)
+                          - self._furia_cega_ca_pen(alvo)
+                          - self._lento_previsivel_ca_pen(alvo))
+                eff_ac = self._ponto_vulneravel_ac(alvo, tile, eff_ac, attacker_id=pid)
+                hit = bool(roll == 20 or roll + eff_atk >= eff_ac)
+                crit = bool(hit and roll == 20)
+                crit_min_nat = weapon.get("crit_min_nat_roll")
+                if hit and crit_min_nat is not None and roll >= int(crit_min_nat):
+                    crit = True
+                if hit and alvo.get("type") == "ciclope" and roll >= 19:
+                    crit = True
+                resultados.append({"alvo": alvo, "tile": tile, "eff_atk": eff_atk,
+                                   "eff_ac": eff_ac, "hit": hit, "crit": crit})
+
+            # Sangue Frio trata a varredura como um único ataque: no máximo um
+            # reroll para todos os alvos, nunca um reroll por direção.
+            if resultados and not any(r["hit"] for r in resultados) and self._sangue_frio_consumir(p):
+                await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente",
+                                    heroi=p["name"]))
+                _hit0, roll, total, _crit0, descartado = self._rolar_ataque(
+                    base_atk, primeira_ca, vantagem, desvantagem)
+                for r in resultados:
+                    r["hit"] = bool(roll == 20 or roll + r["eff_atk"] >= r["eff_ac"])
+                    r["crit"] = bool(r["hit"] and roll == 20)
+                    crit_min_nat = weapon.get("crit_min_nat_roll")
+                    if r["hit"] and crit_min_nat is not None and roll >= int(crit_min_nat):
+                        r["crit"] = True
+                    if r["hit"] and r["alvo"].get("type") == "ciclope" and roll >= 19:
+                        r["crit"] = True
+
+            if any(r["crit"] for r in resultados) and self._azar_consome_critico(p, roll):
+                for r in resultados:
+                    r["crit"] = False
+                await self.gm_say(T("narracao.azar_sobrenatural_rouba_o_critico_de_o_g",
+                                    heroi=p["name"]))
+
+            await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                                  "label": T("dado.ataque_mao_principal"),
+                                  "hit": any(r["hit"] for r in resultados),
+                                  "crit": any(r["crit"] for r in resultados),
+                                  "kept": True, "modifier": base_atk,
+                                  "total": roll + base_atk})
+            if descartado is not None:
+                await self.broadcast({"type": "dice_roll", "die": "d20", "value": descartado,
+                                      "label": T("dado.descartado",
+                                                  label=T("dado.ataque_mao_principal")),
+                                      "discarded": True, "modifier": base_atk})
+
+        acertos = 0
+        poison_slots = list(self._weapon_poison_slots(p)) if weapon.get("die") else []
+        for resultado in resultados:
+            alvo, tile = resultado["alvo"], resultado["tile"]
+            hit, crit = resultado["hit"], resultado["crit"]
+            await self._emitir_feedback_ataque(
+                "result", p, alvo, weapon.get("name") or "Ataque Giratório",
+                ataque_mode, attack_id=feedback_ids.get(alvo["id"]),
+                roll=roll, total=roll + resultado["eff_atk"], hit=bool(hit),
+                crit=bool(crit), natural=int(roll), natural_critical=bool(roll == 20),
+                natural_fumble=bool(roll == 1), spin_id=_spin_id,
+                spin_index=_spin_index, spin_count=_spin_count,
+                ability_id=tecnica_id)
+            if not hit or alvo.get("hp", 0) <= 0:
+                await self.gm_say(T("narracao.ataca_d20_vs_ca_errou", heroi=p["name"],
+                                    target=nome_criatura(alvo), roll=roll,
+                                    eff_atk=resultado["eff_atk"], total=roll + resultado["eff_atk"],
+                                    target_ac=resultado["eff_ac"]))
+                continue
+
+            acertos += 1
+            await self._resolver_critico_bordao(p, alvo, roll, weapon)
+            causa_sangramento = bool(weapon.get("causa_sangramento")
+                                     or weapon.get("granted_ability") == "causar_sangramento"
+                                     or p.get("ataque_causa_sangramento"))
+            if causa_sangramento:
+                sangramento = self._aplicar_sangramento(alvo)
+                if sangramento and crit:
+                    self._aplicar_hemorragia(alvo)
+            if weapon.get("aplica_hemorragia") or p.get("ataque_aplica_hemorragia"):
+                self._aplicar_hemorragia(alvo)
+
+            bonus_extra = investida
+            furtivo_detail = ""
+            if p.get("class_id") == "rogue" and self._verificar_ataque_furtivo(p, alvo):
+                nd4 = self._dados_furtivo(p.get("level", 1))
+                fdano = sum(random.randint(1, 4) for _ in range(nd4))
+                await self.broadcast({"type": "dice_roll", "die": "d4", "value": fdano,
+                                      "label": T("dado.ataque_furtivo"), "damage_type": DMG_PHYSICAL,
+                                      "dice_theme": "sneak_attack"})
+                bonus_extra += fdano
+                furtivo_detail = f" +🗡️{fdano} furtivo [{nd4}d4]"
+            damage_weapon = {**weapon}
+            dmg, weapon_name, dmg_detail, raw_dmg, die_str = self._resolver_dano_ataque_basico(
+                p, alvo, crit, roll, forca_critico=forca_critico,
+                surv_mod=surv_mod, cancao_dano=cancao_dano, gl_dano=gl_dano,
+                bonus_extra=bonus_extra + int(weapon.get("damage_bonus", 0) or 0),
+                target_pos=tile, weapon_override=damage_weapon, attacker_id=pid)
+            if die_str:
+                await self.broadcast({"type": "dice_roll", "die": "d" + die_str.split("d")[1],
+                                      "value": raw_dmg, "label": T("dado.dano"),
+                                      "modifier": dmg - raw_dmg, "total": dmg,
+                                      "expression": die_str, "damage_type": DMG_PHYSICAL})
+
+            golpe_detail = ""
+            golpe_types = []
+            if p.get("golpe_sagrado_ativo"):
+                golpe_bonus, golpe_detail, golpe_types = await self._rolar_dano_golpe_sagrado(p, alvo)
+                dmg += golpe_bonus
+
+            self._registrar_dano_combate(alvo, dmg, [DMG_PHYSICAL] + golpe_types,
+                                         critical=crit, impact_pos=tile)
+            alvo["hp"] = max(0, alvo.get("hp", 0) - dmg)
+            await self._registrar_dano_desbloqueio_metamorfose(p, alvo, dmg)
+            await self._harpia_reagir_dano(alvo, dmg, pid)
+            await self._furtivo_reativo(p, alvo)
+            await self._dano_retaliacao(alvo, p, True, dmg)
+            await self.gm_say(T("narracao.ataca_com_d20_vs_ca_dano", heroi=p["name"],
+                                target=nome_criatura(alvo), weapon_name=weapon_name,
+                                roll=roll, eff_atk=resultado["eff_atk"], total=roll + resultado["eff_atk"],
+                                target_ac=alvo.get("ac", 10),
+                                crit_str=" **CRÍTICO!**" if crit else "",
+                                dmg_detail=dmg_detail, holy_detail=golpe_detail,
+                                furtivo_detail=furtivo_detail, dmg=dmg))
+
+            for extra in weapon.get("extra_damages", []) or []:
+                if not isinstance(extra, dict) or alvo.get("hp", 0) <= 0:
+                    continue
+                extra_roll = roll_dice(extra.get("die", "0"))
+                if extra_roll <= 0:
+                    continue
+                extra_roll = self._apply_damage_types(extra_roll, [extra.get("type")], alvo)
+                self._registrar_dano_combate(alvo, extra_roll, [extra.get("type")])
+                alvo["hp"] = max(0, alvo.get("hp", 0) - extra_roll)
+
+            if alvo.get("hp", 0) <= 0:
+                await self._monster_dies(alvo, pid)
+            elif poison_slots:
+                poison_id = poison_slots.pop(0)
+                await self._aplicar_veneno(alvo, poison_id, fonte="ataque")
+
+            await self._licao_evento(p, "atacar", alvo=alvo.get("type"))
+
+        if weapon.get("die"):
+            self._set_weapon_poison_slots(p, poison_slots)
+        if p.get("tecnica_golpe_decisivo_armado"):
+            p["tecnica_golpe_decisivo_armado"] = False
+        if p.get("invisivel_magico"):
+            p["invisivel_magico"] = False
+            p.pop("invisivel_magico_rodadas", None)
+        if _consumir and song:
+            self._pagar_fome_sede(p, 2, 1)
+            p["cancao_atacou_apos"] = True
+        if _consumir:
+            self._pagar_fome_sede(p, item["custo_fome"], item["custo_sede"])
+            self._consumir_recursos(p, "apenas_acao")
+            p["action_done"] = True
+            p["technique_cooldowns"][tecnica_id] = self.round_num + item["recarga_rodadas"]
+            await self._licao_evento(p, "usar_tecnica", alvo=tecnica_id)
+        if _narrar:
+            await self._narracao_ataque_giratorio(p, len(alvos), acertos)
+        if p.get("class_id") == "rogue":
+            await self._quebrar_invisibilidade(p, "ao atacar")
+        return True
+
+    async def _narracao_ataque_giratorio(self, p, alvos, acertos):
+        await self.gm_say(T("narracao.ataque_giratorio", heroi=p["name"],
+                            alvos=alvos, acertos=acertos))
+
+    async def _executar_redemoinho_morte(self, pid, p, tecnica_id, item, ataques=1):
+        """Executa 1–3 varreduras do Ataque Giratório como uma única ação."""
+        try:
+            ataques = int(ataques or 1)
+        except (TypeError, ValueError):
+            ataques = 0
+        opcoes = {1: (4, 4, 6), 2: (8, 8, 8), 3: (14, 14, 10)}
+        if ataques not in opcoes:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.redemoinho_morte_nivel_invalido")})
+            return False
+        if ataques == 3 and not tem_espec(p, "guerreiro_furia_3"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.redemoinho_morte_requer_furia_iii")})
+            return False
+        if self._ataque_giratorio_arma_distancia(p.get("weapon") or {}):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.ataque_giratorio_nao_funciona_a_distancia")})
+            return False
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return False
+
+        fome, sede, recarga = opcoes[ataques]
+        fome_ef, sede_ef = self._custo_fome_sede_efetivo(p, fome, sede)
+        song = (p.get("class_id") == "bard" and p.get("cancao_ativa")
+                and not p.get("cancao_atacou_apos"))
+        song_fome, song_sede = (2, 1) if song else (0, 0)
+        sf, ss = self._custo_fome_sede_efetivo(p, song_fome, song_sede)
+        if p.get("fome", 0) < fome_ef + sf or p.get("sede", 0) < sede_ef + ss:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.fome_sede_insuficientes")})
+            return False
+
+        for spin_index in range(1, ataques + 1):
+            self._spin_feedback_seq += 1
+            spin_id = f"spin_{self.round_num}_{self._spin_feedback_seq}"
+            await self._executar_ataque_giratorio(
+                pid, p, tecnica_id, item, _consumir=False,
+                _pular_bloqueio=True, _narrar=False, _spin_id=spin_id,
+                _spin_index=spin_index, _spin_count=ataques)
+
+        if song:
+            self._pagar_fome_sede(p, song_fome, song_sede)
+            p["cancao_atacou_apos"] = True
+        self._pagar_fome_sede(p, fome, sede)
+        self._consumir_recursos(p, "apenas_acao")
+        p["action_done"] = True
+        p["technique_cooldowns"][tecnica_id] = self.round_num + recarga
+        await self._licao_evento(p, "usar_tecnica", alvo=tecnica_id)
+        await self.gm_say(T("narracao.redemoinho_morte", heroi=p["name"], ataques=ataques,
+                            fome=fome, recarga=recarga))
+        if p.get("class_id") == "rogue":
+            await self._quebrar_invisibilidade(p, "ao atacar")
+        return True
 
     def _pressao_ca_pen(self, m):
         """-CA da Pressão Constante enquanto ativa no monstro."""
@@ -10616,8 +11071,71 @@ class GameRoom:
         return 2 if tem_espec(p, "paladino_cura_maos_2") else 1
 
     def _ataque_sagrado_dados(self, p):
-        """Dados do dano sagrado do Golpe Sagrado (1 base / 2 com paladino_ataque_sagrado_2)."""
+        """Dados sagrados por ataque (1 base / 2 com Ataque Sagrado II ou III)."""
         return 2 if tem_espec(p, "paladino_ataque_sagrado_2") else 1
+
+    def _ataque_sagrado_nivel(self, p):
+        """Nível máximo do Golpe Sagrado liberado pela Guilda."""
+        if tem_espec(p, "paladino_ataque_sagrado_3"): return 3
+        if tem_espec(p, "paladino_ataque_sagrado_2"): return 2
+        return 1
+
+    def _golpe_sagrado_tipo_extra(self, p):
+        """Tipo normalizado do d8 extra do nível III, quando escolhido."""
+        if self._ataque_sagrado_nivel(p) < 3:
+            return None
+        return _NORM_ELEMENTO.get(str(p.get("golpe_sagrado_tipo_extra") or "").strip().lower())
+
+    @staticmethod
+    def _golpe_sagrado_dobra_contra(alvo):
+        return bool(alvo.get("undead") or alvo.get("type") in
+                    ("undead", "demon", "skeleton", "esqueleto_humano"))
+
+    async def _rolar_dano_golpe_sagrado(self, p, alvo):
+        """Rola os dados escolhidos do Golpe Sagrado e aplica fraquezas por tipo.
+
+        O bônus sagrado continua dobrando contra mortos-vivos/demônios. O d8
+        elemental do nível III passa pelo funil normal de resistências e
+        vulnerabilidades; ele só recebe a dobra especial se o jogador escolher
+        sagrado, nunca por ser fogo/gelo/eletricidade.
+        """
+        try:
+            nivel_atual = int(p.get("golpe_sagrado_nivel") or 1)
+        except (TypeError, ValueError):
+            nivel_atual = 1
+        nivel = min(max(nivel_atual, 1), self._ataque_sagrado_nivel(p))
+        dados_sagrados = 2 if nivel >= 2 else 1
+        holy_roll = sum(roll_dice("1d8") for _ in range(dados_sagrados))
+        await self.broadcast({"type": "dice_roll", "die": "d8", "value": holy_roll,
+                              "label": T("dado.golpe_sagrado"), "damage_type": DMG_HOLY})
+        holy = self._apply_damage_types(holy_roll, [DMG_HOLY], alvo, None)
+        holy_dobrado = self._golpe_sagrado_dobra_contra(alvo)
+        # O funil de dano já dobra mortos-vivos/abissais pelo subtipo. A dobra
+        # manual só é necessária para fichas legadas que informam apenas o tipo,
+        # evitando transformar o bônus em 4× sem querer.
+        subtipo = alvo.get("subtipo", _subtipo_padrao_monstro(alvo))
+        if holy_dobrado and subtipo not in ("morto_vivo", "abissal"):
+            holy *= 2
+        detail = f" +⚡{holy} sagrado" + (" (DOBRADO!)" if holy_dobrado else "")
+        types = [DMG_HOLY]
+        total = holy
+
+        extra_type = self._golpe_sagrado_tipo_extra(p) if nivel >= 3 else None
+        if extra_type:
+            extra_roll = roll_dice("1d8")
+            await self.broadcast({"type": "dice_roll", "die": "d8", "value": extra_roll,
+                                  "label": T("dado.golpe_sagrado_extra"),
+                                  "damage_type": extra_type})
+            extra = self._apply_damage_types(extra_roll, [extra_type], alvo, None)
+            extra_dobrado = extra_type == DMG_HOLY and holy_dobrado
+            if extra_dobrado and subtipo not in ("morto_vivo", "abissal"):
+                extra *= 2
+            extra_label = {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade",
+                           DMG_HOLY: "sagrado"}.get(extra_type, extra_type)
+            detail += f" +⚡{extra} {extra_label}" + (" (DOBRADO!)" if extra_dobrado else "")
+            total += extra
+            types.append(extra_type)
+        return total, detail, types
 
     def _gdl_max_atributos(self, p):
         """Máx. de atributos simultâneos do Guerreiro da Luz (2 base / 3 / 4)."""
@@ -10851,7 +11369,7 @@ class GameRoom:
             return passou, d20, bonus, total
         return resultado
 
-    async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None):
+    async def handle_usar_tecnica(self, pid, tecnica_id, target_id=None, ataques=1):
         """Ativa uma técnica equipada da Guilda (ação no turno do herói, incluindo
         a janela do Último Esforço — mesma checagem de `_is_turn` usada pelos
         demais handlers de ação)."""
@@ -10886,6 +11404,15 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.fome_sede_insuficientes")})
             return
         ef = item.get("efeito", {})
+        if ef.get("tipo") == "ataque_giratorio":
+            if await self._executar_ataque_giratorio(pid, p, tecnica_id, item):
+                await self.push_state()
+            return
+        if ef.get("tipo") == "redemoinho_morte":
+            if await self._executar_redemoinho_morte(
+                    pid, p, tecnica_id, item, ataques=ataques):
+                await self.push_state()
+            return
         if ef.get("tipo") == "sorte":
             await self.send_to(pid, {"type": "error", "msg": T("erro.sorte_e_passiva_e_reage_automaticamente")})
             return
@@ -11136,49 +11663,46 @@ class GameRoom:
         await self.push_state()
 
     async def _instr_nota_cortante(self, p, inst, st, data):
-        """Alvo único até `alcance` casas; Reflexos → metade. Rúnica: linha reta direcional."""
-        if inst.get("encantamento") == "runico":
-            return await self._nota_cortante_linha(p, inst, st, data)
-        alvo_id = (data or {}).get("target_id")
-        m = self.monsters.get(alvo_id)
-        if not m or m.get("hp", 0) <= 0:
-            await self.send_to(p["id"], {"type": "error", "msg": T("erro.alvo_invalido")}); return False
-        if not self._tem_linha_de_visao(p["pos"], m["pos"]):
-            await self.send_to(p["id"], {"type": "error", "msg": T("erro.parede_bloqueia_nota_cortante")}); return False
-        if not self._alcance_com_altura(p, m["pos"], st["alcance"], destino=m):
-            await self.send_to(p["id"], {"type": "error",
-                "msg": T("erro.alvo_fora_do_alcance_casas", alcance=st["alcance"])}); return False
-        await self.gm_say(T("narracao.dispara_nota_cortante_em", heroi=p['name'], monstro=nome_criatura(m)))
-        dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
-        save_ok, *_ = await self._save_mostrado(m, "reflexos", self._instrumento_cd(p, inst))
-        if save_ok:
-            dano = dano // 2
-        m["hp"] = max(0, m["hp"] - dano)
-        await self.gm_say(T("narracao.sofre_de_dano_sonoro", monstro=nome_criatura(m), dano=dano, metade_resistiu_if_save=' (metade — resistiu)' if save_ok else ''))
-        if m["hp"] <= 0:
-            await self._monster_dies(m, p["id"])
-        return True
+        """Nota Cortante atinge todos os monstros numa linha ortogonal; Reflexos reduz à metade."""
+        return await self._nota_cortante_linha(p, inst, st, data)
 
     async def _nota_cortante_linha(self, p, inst, st, data):
-        """Harpa Rúnica: reta direcional; cada monstro na linha faz seu Reflexos-meia."""
+        """Linha ortogonal sem ricochete; paredes/portas bloqueiam e cada alvo testa Reflexos."""
         dirv = (data or {}).get("dir") or [0, 0]
         dx = 1 if dirv[0] > 0 else -1 if dirv[0] < 0 else 0
         dy = 1 if dirv[1] > 0 else -1 if dirv[1] < 0 else 0
-        if dx == 0 and dy == 0:
+        if abs(dx) + abs(dy) != 1:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.escolha_uma_direcao_para_a_nota_cortante")}); return False
-        tiles = {tuple(t) for t in self._caminho_relampago(p["pos"], dx, dy, st["alcance"])}
+        caminho = []
+        x, y = p["pos"]
+        for _ in range(st["alcance"]):
+            x, y = x + dx, y + dy
+            if self._blocks_tile(x, y):
+                break
+            caminho.append((x, y))
+        tiles = set(caminho)
         alvos = [m for m in self.monsters.values()
                  if m.get("hp", 0) > 0 and tuple(m["pos"]) in tiles
                  and self._alcance_com_altura(p, m["pos"], st["alcance"], destino=m)]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_na_linha")}); return False
+        animation_id = f"nota_cortante_{p['id']}_{time.time_ns()}"
+        if hasattr(self, "connections") or "broadcast" in self.__dict__:
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "nota_cortante", "phase": "start",
+                "animation_id": animation_id, "caster_id": p["id"],
+                "origin": list(p["pos"]),
+                "path": [list(t) for t in caminho],
+                "targets": [{"target_id": m.get("id"), "pos": list(m["pos"])} for m in alvos],
+                "travel_ms": 620, "impact_ms": 760,
+            })
         await self.gm_say(T("narracao.dispara_nota_cortante_numa_linha_reta", heroi=p['name']))
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
             dano = await self._rolar_dano_mostrado(*_ndfaces(st["dano"]), "🎵 Dano sonoro")
             save_ok, *_ = await self._save_mostrado(m, "reflexos", cd)
             if save_ok:
-                dano = dano // 2
+                dano = max(1, dano // 2)
             m["hp"] = max(0, m["hp"] - dano)
             await self.gm_say(T("narracao.sofre", monstro=nome_criatura(m), dano=dano, metade_if_save_ok_else=' (metade)' if save_ok else ''))
             if m["hp"] <= 0:
@@ -11206,6 +11730,14 @@ class GameRoom:
                  and self._alcance_com_altura(p, m["pos"], st["raio"], destino=m)]
         if not alvos:
             await self.send_to(p["id"], {"type": "error", "msg": T("erro.nenhum_inimigo_no_alcance")}); return False
+        if hasattr(self, "connections") or "broadcast" in self.__dict__:
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "acorde_trovejante", "phase": "start",
+                "animation_id": f"acorde_trovejante_{p['id']}_{time.time_ns()}",
+                "caster_id": p["id"], "origin": list(p["pos"]),
+                "radius": st["raio"], "expand_ms": 690, "shatter_ms": 720,
+                "shard_ms": 610,
+            })
         await self.gm_say(T("narracao.golpeia_o_tambor_de_guerra_onda_sonora_r", heroi=p['name'], st_raio=st['raio']))
         cd = self._instrumento_cd(p, inst)
         for m in alvos:
@@ -11315,11 +11847,12 @@ class GameRoom:
         p["requiem_alvo"] = m["id"]
         p["requiem_contador"] = 0
         m["requiem_por"] = p["id"]
+        await self._broadcast_requiem_animation(p, "start", m)
         await self.gm_say(T("narracao.inicia_o_requiem_final_sobre", heroi=p['name'], monstro=nome_criatura(m)))
         return True
 
     # â”€â”€ Improviso (Gaita â€” Fase 5) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    _IMPROVISO_ALVO = {7: ("nota_cortante", "monstro"),
+    _IMPROVISO_ALVO = {7: ("nota_cortante", "direcao_ortogonal"),
                        9: ("requiem_tick", "monstro"),
                        11: ("chamado_general", "direcao")}
     _IMPROVISO_AUTO = {
@@ -11433,7 +11966,7 @@ class GameRoom:
         virt_base = {7: "harpa", 9: "violino", 11: "trompa"}[passo["res"]]
         virt, vst = self._improviso_virt_st(inst, virt_base)
         if passo["res"] == 7:
-            await self._instr_nota_cortante(p, virt, vst, {"target_id": (data or {}).get("target_id")})
+            await self._instr_nota_cortante(p, virt, vst, {"dir": (data or {}).get("dir")})
         elif passo["res"] == 9:
             m = self.monsters.get((data or {}).get("target_id"))
             if m and self._alcance_com_altura(p, m["pos"], vst.get("alcance", 6), destino=m):
@@ -11450,10 +11983,29 @@ class GameRoom:
         if p.get("improviso_pendente"):
             p["improviso_pendente"] = []
 
+    async def _broadcast_requiem_animation(self, bardo, phase, target=None, **extra):
+        """Publica eventos exclusivamente visuais do Réquiem; não altera regras."""
+        target_id = (target or {}).get("id") or bardo.get("requiem_alvo")
+        if target_id is None or (not hasattr(self, "connections") and "broadcast" not in self.__dict__):
+            return
+        if target is None:
+            target = self.monsters.get(target_id)
+        payload = {
+            "type": "spell_animation", "spell_id": "requiem_final", "phase": phase,
+            "animation_id": f"requiem_final_{bardo.get('id')}_{target_id}",
+            "caster_id": bardo.get("id"), "target_id": target_id,
+            "origin": list(bardo.get("pos", [0, 0])),
+        }
+        if target and isinstance(target.get("pos"), (list, tuple)):
+            payload["target_pos"] = list(target["pos"])
+        payload.update(extra)
+        await self.broadcast(payload)
+
     async def _encerrar_requiem(self, bardo, motivo):
         if not bardo.get("requiem_alvo"):
             return
         m = self.monsters.get(bardo.get("requiem_alvo"))
+        await self._broadcast_requiem_animation(bardo, "end", m)
         if m:
             m.pop("requiem_por", None)
         bardo["requiem_alvo"] = None
@@ -13142,6 +13694,7 @@ class GameRoom:
             p["moves_left"] = 0
         if p.pop("turbilhao_perde_acao", False):
             p["action_done"] = True
+            self._limpar_tempestade_ciclones_presos(p)
         if p.pop("derrubado_sem_movimento", False):
             p["moves_left"] = 0
             await self.gm_say(T("narracao.esta_derrubado_e_perde_o_movimento_deste", heroi=p['name']))
@@ -13450,6 +14003,7 @@ class GameRoom:
         avançar; repete até o turno realmente passar (limite de segurança)."""
         if self.phase != "playing" or self.current_pid() != pid:
             return
+        await self._cancelar_tempestades_pendentes(pid)
         if motivo:
             await self.gm_say(motivo)
         for _ in range(4):
@@ -15158,7 +15712,8 @@ class GameRoom:
         nd4 = self._dados_furtivo(luccas.get("level", 1))
         dano = sum(random.randint(1, 4) for _ in range(nd4))
         await self.broadcast({"type": "dice_roll", "die": "d4", "value": dano,
-                               "label": T("dado.ataque_furtivo_reacao")})
+                               "label": T("dado.ataque_furtivo_reacao"), "damage_type": DMG_PHYSICAL,
+                               "dice_theme": "sneak_attack"})
         target["hp"] -= dano
         await self.gm_say(T("narracao.reage_ao_ataque_de_ataque_furtivo_suprem", luccas=nome_criatura(luccas), atacante=nome_criatura(atacante), dano=dano, nd4=nd4, target=nome_criatura(target)))
 
@@ -15188,7 +15743,7 @@ class GameRoom:
             dmg += fdano; extra = f" +🗡️{fdano} furtivo [{nd4}d4]"
         alvo["hp"] = max(0, alvo["hp"] - dmg)
         await self.broadcast({"type": "dice_roll", "die": "d" + (die.split("d")[1] if die else "6"),
-                               "value": base, "label": T("dado.dano_reacao")})
+                               "value": base, "label": T("dado.dano_reacao"), "damage_type": DMG_PHYSICAL})
         await self.gm_say(T("narracao.reage_e_atinge_de_dano_hp", atacante=nome_criatura(atacante), alvo=nome_criatura(alvo), dmg=dmg, extra=extra, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp']))
         if alvo["hp"] <= 0:
             await self._monster_dies(alvo, atacante.get("id"))
@@ -15287,7 +15842,8 @@ class GameRoom:
                     return s.get("name") or hab_id
         return hab_id
 
-    async def handle_attack(self, pid, target_id, buffs=None, target_pos=None):
+    async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
+                            furia_attacks=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -15515,8 +16071,17 @@ class GameRoom:
                 if len(sel) > teto:
                     sel = sel[:teto]
                     await self.gm_say(T("narracao.so_pode_combinar_habilidade_s_por_turno", heroi=p['name'], teto=teto))
-                total_fome = sum(s.get("fome_cost", 0) for s in sel)
-                total_sede = sum(s.get("sede_cost", 0) for s in sel)
+                furia_sel = next((s for s in sel if s.get("id") == "furia_berserker"), None)
+                furia_total = 2
+                if furia_sel:
+                    try:
+                        furia_total = 3 if int(furia_attacks) == 3 and tem_espec(p, "guerreiro_furia_3") else 2
+                    except (TypeError, ValueError):
+                        furia_total = 2
+                total_fome = sum((10 if s.get("id") == "furia_berserker" and furia_total == 3
+                                  else s.get("fome_cost", 0)) for s in sel)
+                total_sede = sum((10 if s.get("id") == "furia_berserker" and furia_total == 3
+                                  else s.get("sede_cost", 0)) for s in sel)
                 # SEM teto: o jogador pode sempre gastar â€” pode esgotar fome/sede
                 # atÃ© 0 (risco de exaustÃ£o). Nada bloqueia o uso por falta de recurso.
                 p["fome"] = max(0, p["fome"] - total_fome)
@@ -15537,7 +16102,7 @@ class GameRoom:
                     elif sid == "golpe_devastador":
                         p["skill_dobrar_dano"] = True
                     elif sid == "furia_berserker":
-                        p["skill_ataques_extras"] = self._furia_extras(p)
+                        p["skill_ataques_extras"] = max(1, furia_total - 1)
                         # No simulador do Mestre a ficha local pode reenviar a
                         # seleção enquanto ainda há ataques extras pendentes.
                         # A Fúria, porém, é preparada uma única vez por turno;
@@ -15629,7 +16194,12 @@ class GameRoom:
             attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
             attack_feedback_id = await self._emitir_feedback_ataque(
                 "start", p, target, attack_name, attack_mode,
-                projectile=_projetil_de(weapon_here))
+                projectile=_projetil_de(weapon_here),
+                impacto=_impacto_de(weapon_here),
+                holy_strike=bool(p.get("golpe_sagrado_ativo") and w_range is None),
+                holy_level=int(p.get("golpe_sagrado_nivel") or 1)
+                    if p.get("golpe_sagrado_ativo") and w_range is None else 0,
+                holy_type=p.get("golpe_sagrado_tipo_extra") or "holy")
             hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
@@ -15768,7 +16338,9 @@ class GameRoom:
                     nd4 = self._dados_furtivo(p.get("level", 1))
                     dano_furtivo = sum(random.randint(1, 4) for _ in range(nd4))
                     await self.broadcast({"type": "dice_roll", "die": "d4",
-                                           "value": dano_furtivo, "label": T("dado.ataque_furtivo")})
+                                           "value": dano_furtivo, "label": T("dado.ataque_furtivo"),
+                                           "damage_type": DMG_PHYSICAL,
+                                           "dice_theme": "sneak_attack"})
                     _bonus_extra += dano_furtivo
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
                 # A muniÃ§Ã£o de prata empresta sua propriedade ao disparo, sem
@@ -15793,20 +16365,13 @@ class GameRoom:
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": T("dado.dano"),
                                            "modifier": dmg - raw_dmg, "total": dmg,
-                                           "expression": die_str})
-                # Golpe Sagrado (Richard): +1d8 sagrado, dobrado vs morto-vivo/demÃ´nio
-                holy_detail = ""
-                holy = 0
+                                           "expression": die_str, "damage_type": DMG_PHYSICAL})
+                # Golpe Sagrado (Richard): bônus sagrado + eventual d8 elemental III.
+                golpe_detail = ""
+                golpe_types = []
                 if p.get("golpe_sagrado_ativo"):
-                    holy_roll = sum(roll_dice("1d8") for _ in range(self._ataque_sagrado_dados(p)))
-                    await self.broadcast({"type": "dice_roll", "die": "d8", "value": holy_roll, "label": T("dado.golpe_sagrado")})
-                    holy = self._apply_damage_types(holy_roll, [DMG_HOLY], target, None)
-                    if target.get("undead") or target.get("type") in ("undead", "demon", "skeleton", "esqueleto_humano"):
-                        holy *= 2
-                        holy_detail = f" +⚡{holy} sagrado (DOBRADO!)"
-                    else:
-                        holy_detail = f" +⚡{holy} sagrado"
-                dmg += holy
+                    golpe_bonus, golpe_detail, golpe_types = await self._rolar_dano_golpe_sagrado(p, target)
+                    dmg += golpe_bonus
                 # O Ataque Furtivo (Luccas, passiva) foi resolvido acima, junto
                 # do dano da arma, para que resistências e reduções incidam
                 # sobre o golpe inteiro. `furtivo_detail` já está preenchido.
@@ -15815,7 +16380,7 @@ class GameRoom:
                     await self._tirano_dano_interno(p, target, dmg)
                 else:
                     self._registrar_dano_combate(
-                        target, dmg, [DMG_PHYSICAL] + ([DMG_HOLY] if holy else []),
+                        target, dmg, [DMG_PHYSICAL] + golpe_types,
                         critical=crit, impact_pos=target_tile)
                     target["hp"] -= dmg
                     await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
@@ -15825,7 +16390,7 @@ class GameRoom:
                     dmg_detail += f" +{_ammo_damage_bonus} prata"
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
-                    T("narracao.ataca_com_d20_vs_ca_dano", heroi=p['name'], target=nome_criatura(target), weapon_name=weapon_name, roll=roll, eff_atk=eff_atk, total=total, target_ac=target['ac'], crit_str=crit_str, dmg_detail=dmg_detail, holy_detail=holy_detail, furtivo_detail=furtivo_detail, dmg=dmg))
+                    T("narracao.ataca_com_d20_vs_ca_dano", heroi=p['name'], target=nome_criatura(target), weapon_name=weapon_name, roll=roll, eff_atk=eff_atk, total=total, target_ac=target['ac'], crit_str=crit_str, dmg_detail=dmg_detail, holy_detail=golpe_detail, furtivo_detail=furtivo_detail, dmg=dmg))
                 # â”€â”€ Dano extra de projÃ©til incendiÃ¡rio â”€â”€
                 await self._dano_retaliacao(target, p, w_range is None, dmg)
                 if _ammo_extra_dmg and target.get("hp", 1) > 0:
@@ -15956,7 +16521,8 @@ class GameRoom:
                     odmg = max(1, (oraw + off_stat_mod) * (2 if ocrit else 1) + surv_mod)
                     odie_type = "d" + off["die"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
-                                           "value": oraw, "label": T("dado.dano_2a_mao")})
+                                           "value": oraw, "label": T("dado.dano_2a_mao"),
+                                           "damage_type": DMG_PHYSICAL})
                     tgt["hp"] -= odmg
                     await self._registrar_dano_desbloqueio_metamorfose(p, tgt, odmg)
                     ocrit_str = " **CRÍTICO!**" if ocrit else ""
@@ -16099,7 +16665,8 @@ class GameRoom:
             dmg = max(1, (raw + throw_stat_mod) * (2 if crit else 1))
             die_type = "d" + die_str.split("d")[1]
             await self.broadcast({"type": "dice_roll", "die": die_type,
-                                   "value": raw, "label": T("dado.dano_arremesso")})
+                                   "value": raw, "label": T("dado.dano_arremesso"),
+                                   "damage_type": DMG_PHYSICAL})
             target["hp"] -= dmg
             await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
             await self._furtivo_reativo(p, target)
@@ -16226,7 +16793,8 @@ class GameRoom:
                     dmg = 0
                 die_type = "d" + defn["dano"].split("d")[1]
                 await self.broadcast({"type": "dice_roll", "die": die_type,
-                                      "value": raw, "label": T("dado.dano_arremesso")})
+                                      "value": raw, "label": T("dado.dano_arremesso"),
+                                      "damage_type": _NORM_ELEMENTO.get(str(defn.get("elemento") or "").lower(), DMG_PHYSICAL)})
                 crit_str = " **CRÍTICO!**" if crit else ""
                 await self.gm_say(
                     T("narracao.arremessa_em_d20_vs_ca_de", defn_emoji=defn['emoji'], heroi=p['name'], defn=nome_item(defn), target=nome_criatura(target), roll=roll, p_atk_bonus=p['atk_bonus'], total=total, target_ac=target['ac'], crit_str=crit_str, dmg=dmg, defn_elemento=defn['elemento']))
@@ -16305,7 +16873,8 @@ class GameRoom:
             raw = roll_dice(defn["dano"])
             die_type = "d" + defn["dano"].split("d")[1]
             await self.broadcast({"type": "dice_roll", "die": die_type,
-                                  "value": raw, "label": T("dado.dano_de_item", item=defn['name'])})
+                                  "value": raw, "label": T("dado.dano_de_item", item=defn['name']),
+                                  "damage_type": _NORM_ELEMENTO.get(str(defn.get("elemento") or "").lower(), DMG_PHYSICAL)})
             save = defn.get("save") or {}
             cd = save.get("cd")
             for alvo in self._alvos_na_area(cx, cy, raio):
@@ -16875,7 +17444,22 @@ class GameRoom:
                     # O elemental conjurado é uma criatura do bestiário, não um
                     # ataque simplificado: aplica dano, resistências, efeitos
                     # on-hit e passivas pelo executor comum.
-                    await self._monster_execute_attacks(a, {"kind": "monster", "obj": target})
+                    if self._elemental_raio_eletrico(a):
+                        # Em footprint grande, a âncora pode estar fora da
+                        # linha embora outra casa do monstro esteja alinhada.
+                        linha = []
+                        for casa in self._monster_tiles(target):
+                            candidata = self._elemental_raio_linha(a, casa, ataque)
+                            if casa in candidata:
+                                linha = candidata
+                                break
+                        alvos_linha = self._elemental_raio_alvos(a, linha)
+                        if linha and alvos_linha:
+                            await self._elemental_raio_atacar(a, linha, alvos_linha, pid)
+                        else:
+                            await self._monster_execute_attacks(a, {"kind": "monster", "obj": target})
+                    else:
+                        await self._monster_execute_attacks(a, {"kind": "monster", "obj": target})
                 else:
                     bonus_ataque = ataque.get("atk_bonus", a.get("nivel", 1))
                     roll, _esc = self._rolar_d20_escuridao(a, target)
@@ -17359,7 +17943,8 @@ class GameRoom:
             if action == "move":
                 await self.handle_move(hero_id, _delta(payload.get("dx")), _delta(payload.get("dy")))
             elif action == "attack":
-                await self.handle_attack(hero_id, payload.get("target_id"), payload.get("buffs"), payload.get("target_pos"))
+                await self.handle_attack(hero_id, payload.get("target_id"), payload.get("buffs"),
+                                         payload.get("target_pos"), payload.get("furia_attacks"))
             elif action == "magia":
                 await self.handle_magia(hero_id, payload)
             elif action == "hero_skill":
@@ -17592,7 +18177,8 @@ class GameRoom:
             return
         if m.get("_master_furia_dada"):
             return
-        if not alvo.get("alive") or alvo.get("hp", 0) <= 0:
+        # Monstro não tem o campo "alive": só o herói é testado por ele.
+        if alvo.get("hp", 0) <= 0 or (self._eh_jogador(alvo) and not alvo.get("alive")):
             return
         m["_master_furia_dada"] = True
         extra = roll_dice("1d6")
@@ -18084,12 +18670,14 @@ class GameRoom:
         await self._aplicar_fogueira_se_pisar(a)
         await self._aplicar_piso_congelado_se_pisar(a)
         if a.get("vida_atual", 0) > 0:
+            await self._tempestade_verificar_entrada(a, old_pos, a["pos"])
+        if a.get("vida_atual", 0) > 0:
             await self._verificar_entrada_zona_molochus(a, nx, ny)
         await self._verificar_avistamento()
         await self.push_state()
 
-    async def handle_atacar_animado(self, pid, animado_id, target_id):
-        """Controle manual: UM animado ataca um monstro adjacente (1 ataque/rodada)."""
+    async def handle_atacar_animado(self, pid, animado_id, target_id, target_pos=None):
+        """Controle manual de ataque do servo; alguns ataques miram uma direção."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -18106,15 +18694,33 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_dormindo")}); return
         if a.get("acted"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.servo_ja_atacou_neste_turno")}); return
-        m = self.monsters.get(target_id)
-        if not m or m["hp"] <= 0:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         # Servos elementais usam o alcance real do ataque do bestiário. O ramo
         # elétrico abaixo permanece apenas para compatibilidade com invocações
         # antigas, criadas antes da ficha completa ser incorporada.
         eh_elemental = a.get("tipo") == "elemental" and bool(a.get("tipo_elemental"))
         eh_eletrico = a.get("especial") == "linha_3q"
         ataque = (a.get("attacks") or [{}])[0]
+        if self._elemental_raio_eletrico(a):
+            alvo_pos = target_pos
+            if not isinstance(alvo_pos, (list, tuple)) or len(alvo_pos) < 2:
+                alvo = self.monsters.get(target_id)
+                alvo_pos = alvo.get("pos") if alvo and alvo.get("hp", 0) > 0 else None
+            linha = self._elemental_raio_linha(a, alvo_pos, ataque)
+            if not linha:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.o_elemental_eletrico_ataca_em_linha_reta")}); return
+            alvos_linha = self._elemental_raio_alvos(a, linha)
+            if not alvos_linha:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
+            if a.get("acted"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.servo_ja_atacou_neste_turno")}); return
+            a["acted"] = True
+            await self._elemental_raio_atacar(a, linha, alvos_linha, pid)
+            await self.push_state()
+            return
+
+        m = self.monsters.get(target_id)
+        if not m or m["hp"] <= 0:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
         if eh_elemental:
             if not self._animado_attack_in_range(a, m, ataque):
                 await self.send_to(pid, {"type": "error",
@@ -18157,7 +18763,8 @@ class GameRoom:
         attack_mode = "advantage" if _esc == "vantagem" else "disadvantage" if _esc == "desvantagem" else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
             "start", a, m, attack_name, attack_mode,
-            projectile=_projetil_de(ataque, monstro=True))
+            projectile=_projetil_de(ataque, monstro=True),
+            impacto=_impacto_de(ataque, monstro=True))
         await self._emitir_feedback_ataque(
             "result", a, m, attack_name, attack_mode,
             attack_id=attack_feedback_id, roll=roll, total=total,
@@ -18449,10 +19056,11 @@ class GameRoom:
             st["cd_bonus"] = st.get("cd_bonus", 0) + 1
 
     def _instrumento_cd(self, bardo, inst):
-        """CD do save do instrumento: 8 + mod(DES) + afixo de CD (Fase 4) - 1 se
-        Desafinado (Fase 5, improviso resultado 2)."""
+        """CD do save: base 8 + mod(DES) + afixo; Harpa Rúnica +2; Desafinado -1."""
         st = self._instrumento_stats(inst)
         cd = 8 + mod(bardo.get("dex", 10)) + st.get("cd_bonus", 0)
+        if inst.get("base") == "harpa" and inst.get("encantamento") == "runico":
+            cd += 2
         if bardo.get("desafinado_ate", -1) >= self.round_num:
             cd -= 1
         return cd
@@ -19225,17 +19833,38 @@ class GameRoom:
         if p.get("bonus_action_used"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
 
-        fome_cost, sede_cost = 3, 3
+        data = data if isinstance(data, dict) else {}
+        try:
+            nivel = int(data.get("nivel", 1))
+        except (TypeError, ValueError):
+            nivel = 1
+        nivel_max = self._ataque_sagrado_nivel(p)
+        if nivel < 1 or nivel > nivel_max:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_sagrado_nivel_indisponivel", nivel=nivel)})
+            return
+        tipo_extra = None
+        if nivel == 3:
+            tipo_extra = _NORM_ELEMENTO.get(str(data.get("tipo_extra") or "").strip().lower())
+            if tipo_extra not in {DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_HOLY}:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.golpe_sagrado_tipo_extra_invalido")})
+                return
+        fome_cost, sede_cost = {1: (3, 3), 2: (4, 3), 3: (5, 4)}[nivel]
         if p["fome"] < fome_cost or p["sede"] < sede_cost:
             await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_fome_sede", fome=fome_cost, sede=sede_cost)}); return
 
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
         p["golpe_sagrado_ativo"] = True
+        p["golpe_sagrado_nivel"] = nivel
+        p["golpe_sagrado_tipo_extra"] = tipo_extra
         p["bonus_action_used"] = True
 
+        descricao = {1: "+1d8 sagrado", 2: "+2d8 sagrado"}.get(nivel)
+        if nivel == 3:
+            descricao = "+2d8 sagrado +1d8 " + {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade", DMG_HOLY: "sagrado"}[tipo_extra]
         await self.gm_say(
-            T("narracao.invoca_golpe_sagrado_1d8_de_dano_sagrado", heroi=p['name'], fome_cost=fome_cost, sede_cost=sede_cost))
+            T("narracao.invoca_golpe_sagrado_nivel", heroi=p['name'], nivel=nivel,
+              descricao=descricao, fome_cost=fome_cost, sede_cost=sede_cost))
         await self._licao_evento(p, "usar_habilidade", alvo="golpe_sagrado")
         await self.push_state()
 
@@ -19244,6 +19873,8 @@ class GameRoom:
         if not p or not _pode_hab_heroi(p, "paladin", "hero_paladin_golpe_sagrado") \
                 or not p.get("golpe_sagrado_ativo"): return
         p["golpe_sagrado_ativo"] = False
+        p["golpe_sagrado_nivel"] = 0
+        p["golpe_sagrado_tipo_extra"] = None
         await self.gm_say(T("narracao.baixa_a_lamina_sagrada_golpe_sagrado_des", heroi=p['name']))
         await self.push_state()
 
@@ -19418,15 +20049,23 @@ class GameRoom:
                     if curados:
                         await self.gm_say(T("narracao.regeneracao_divina_de_tambem_cura_1_hp", heroi=p['name'], join_curados=', '.join(curados)))
 
-        # Golpe Sagrado â€” manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1
+        # Golpe Sagrado — manutenção conforme o nível escolhido.
         if p.get("golpe_sagrado_ativo"):
-            if p["fome"] < 1 or p["sede"] < 1:
+            try:
+                nivel_atual = int(p.get("golpe_sagrado_nivel") or 1)
+            except (TypeError, ValueError):
+                nivel_atual = 1
+            nivel = min(max(nivel_atual, 1), self._ataque_sagrado_nivel(p))
+            manut_fome, manut_sede = {1: (1, 1), 2: (2, 1), 3: (2, 2)}[nivel]
+            if p["fome"] < manut_fome or p["sede"] < manut_sede:
                 p["golpe_sagrado_ativo"] = False
+                p["golpe_sagrado_nivel"] = 0
+                p["golpe_sagrado_tipo_extra"] = None
                 await self.gm_say(T("narracao.golpe_sagrado_de_se_desfaz_recursos_insu", heroi=p['name']))
             else:
-                p["fome"] = max(0, p["fome"] - 1)
-                p["sede"] = max(0, p["sede"] - 1)
-                await self.gm_say(T("narracao.golpe_sagrado_de_sustentado_1_1", heroi=p['name']))
+                p["fome"] = max(0, p["fome"] - manut_fome)
+                p["sede"] = max(0, p["sede"] - manut_sede)
+                await self.gm_say(T("narracao.golpe_sagrado_de_sustentado", heroi=p['name'], fome_cost=manut_fome, sede_cost=manut_sede))
 
         # Protetor â€” manutenÃ§Ã£o ðŸ–-1; cai se aliado morrer/sair do raio
         if p.get("protetor_ativo"):
@@ -20150,6 +20789,13 @@ class GameRoom:
         # consistente após a migração para a fórmula universal.
         if item.get("item_slot") == "armor":
             value = _armor_ac_bonus(item)
+        # A Guarda Máxima dobra apenas os bônus do escudo. Aplicar o fator no
+        # caminho incremental mantém equipar, trocar e desequipar simétricos;
+        # _recalculate_ac cobre restauração de saves e mudanças da técnica.
+        if (item.get("kind") == "shield" or item.get("item_slot") == "shield") \
+                and p.get("class_id") == "paladin" \
+                and tem_tecnica_equipada(p, "guarda_maxima"):
+            value *= 2
         self._apply_single_effect(p, item.get("effect"), value, equipping)
         for b in item.get("bonuses", []) or []:
             if not isinstance(b, dict):
@@ -20191,8 +20837,13 @@ class GameRoom:
             return 0
         off = p.get("gear", {}).get("off_hand") or {}
         if off.get("damage_reduction") is not None:
-            return max(0, int(off.get("damage_reduction", 0) or 0))
-        return {"escudo_p": 1, "escudo_g": 2}.get(off.get("id"), 0)
+            reducao = max(0, int(off.get("damage_reduction", 0) or 0))
+        else:
+            reducao = {"escudo_p": 1, "escudo_g": 2}.get(off.get("id"), 0)
+        if (p.get("class_id") == "paladin"
+                and tem_tecnica_equipada(p, "guarda_maxima")):
+            reducao *= 2
+        return reducao
 
     def _reduzir_dano_escudo(self, alvo, dano):
         """Reduz cada instância de dano recebida por um herói com escudo.
@@ -20203,6 +20854,22 @@ class GameRoom:
         if dano <= 0 or not self._eh_jogador(alvo):
             return dano
         reducao = self._reducao_dano_escudo(alvo)
+        absorvido = min(int(dano), reducao) if reducao else 0
+        if absorvido > 0 and alvo.get("class_id") == "paladin" \
+                and tem_tecnica_equipada(alvo, "guarda_maxima"):
+            # O cálculo continua síncrono e autoritativo; a mensagem é apenas
+            # um evento visual, como a Barreira Arcana, e não altera o dano.
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self.broadcast({
+                    "type": "spell_animation", "spell_id": "guarda_maxima",
+                    "phase": "hit", "caster_id": alvo["id"],
+                    "target_id": alvo["id"], "target": list(alvo.get("pos", [0, 0])),
+                    "reduction": absorvido, "incoming_damage": int(dano),
+                    "remaining_damage": max(0, int(dano) - absorvido),
+                }))
+            except RuntimeError:
+                pass
         return max(0, int(dano) - reducao) if reducao else dano
 
     def _off_hand_ocupa_mao(self, p):
@@ -20740,6 +21407,40 @@ class GameRoom:
         }
         return cid
 
+    def _spawn_ground_gold(self, pos, amount):
+        """Place a gold pile on a free neighboring tile; False means no room."""
+        amount = max(0, int(amount or 0))
+        if amount <= 0:
+            return False
+        tile = self._free_drop_tile_near(pos)
+        if tile is None:
+            return False
+        gid = new_id()
+        self.ground_items[gid] = {
+            "id": gid,
+            "kind": "gold",
+            "amount": amount,
+            "item": {"id": "gold_coins", "name": "Moedas de Ouro", "emoji": "🪙"},
+            "pos": tile,
+            "drop_from": list(pos),
+        }
+        return True
+
+    def _spawn_monster_loot(self, pos, gold, items, source_id=None):
+        """Gold-only monster loot is a ground pickup; mixed loot stays in a chest.
+
+        If no neighboring floor tile is free, retain the gold in a chest rather
+        than losing loot or placing a ground item under another entity.
+        """
+        gold = max(0, int(gold or 0))
+        items = list(items or [])
+        if gold > 0 and not items and self._spawn_ground_gold(pos, gold):
+            return "ground_gold"
+        if gold > 0 or items:
+            self._spawn_chest(pos, gold, items, source_id=source_id)
+            return "chest"
+        return None
+
     async def _spawn_chest_from_room(self, room):
         """Spawn a physical chest at room centre (replaces _auto_pickup_chest)."""
         room["looted"] = True
@@ -20920,7 +21621,8 @@ class GameRoom:
             if slot_key == "weapon":
                 p["weapon"] = {**WEAPONS["unarmed"]}
         gid = new_id()   # UM id sÃ³ â€” usado como chave e como campo "id"
-        self.ground_items[gid] = {"id": gid, "item": item, "pos": tile}
+        self.ground_items[gid] = {"id": gid, "item": item, "pos": tile,
+                                  "drop_from": list(p.get("pos", tile))}
         await self.gm_say(T("narracao.largou_no_chao", heroi=p['name'], item=nome_item(item)))
         await self.push_state()
 
@@ -20936,6 +21638,12 @@ class GameRoom:
         gx, gy = gi["pos"]; px, py = p["pos"]
         if max(abs(px - gx), abs(py - gy)) > 1:
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_item")}); return
+        if gi.get("kind") == "gold":
+            recebido = await self._ganhar_ouro(p, gi.get("amount", 0), "do chão")
+            del self.ground_items[ground_id]
+            await self.gm_say(T("narracao.pegou_ouros_do_chao", heroi=p["name"], recebido=recebido))
+            await self.push_state()
+            return
         res = self._route_acquired_item(p, gi["item"])
         if res == "full":
             await self.send_to(pid, {"type": "error",
@@ -21790,6 +22498,22 @@ class GameRoom:
                 return None
         return None
 
+    def _cajado_arcano_area_bonus(self, caster, magia):
+        """+1 de lado do Cajado Arcano, ADITIVO ao lado por nível.
+
+        Irmão de `_cajado_arcano_area_lado` (que devolve o lado inteiro e é
+        cego ao nível). As magias de terreno — Ira, Tempestade, Definhar,
+        Senhor das Águas, Prisão de Chamas — calculam o lado por nível e/ou
+        por escolha do jogador (terreno, tamanho), então o cajado precisa
+        SOMAR ao lado delas, não substituí-lo. Devolve 0 sem o cajado ou
+        para magia que não é de área.
+        """
+        if not self._cajado_arcano_equipado(caster):
+            return 0
+        if magia.get("tipo") not in ("area", "area_persistente", "area_fixa", "area_centrada"):
+            return 0
+        return 1
+
     def _slots_disponiveis(self, p, circulo):
         """Slots livres no círculo = máximo do nível − gastos ainda em cooldown."""
         self._slot_prune(p, circulo)
@@ -21974,6 +22698,25 @@ class GameRoom:
         dc_bonus  += tec_dc
         dur_bonus += tec_dur
         dmg_mult  *= tec_mult
+        # Tempestade de Ciclones precisa ser validada antes de qualquer custo.
+        # O efeito tem uma segunda etapa (posicionamento manual); portanto uma
+        # falha de mira ou uma área sem espaço não pode consumir ação, recursos
+        # ou deixar uma zona parcialmente funcional no mapa.
+        if magia_id == "tempestade_ciclones":
+            ok, preflight = self._tempestade_preflight(p, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(pid, {"type": "error", "msg": T(chave, **params)})
+                return
+            rolagem_ciclones = self._rolar_dado(magia.get("ciclones", "2d4"))
+            quantidade_ciclones = max(2, int(rolagem_ciclones or 0))
+            if len(preflight["area"]) < quantidade_ciclones:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.nao_ha_espaco_para_os_ciclones_nessa_area")})
+                return
+            data = dict(data or {})
+            data["_tempestade_ciclones_preflight"] = preflight
+            data["_tempestade_ciclones_rolados"] = rolagem_ciclones
         # Ira da Rocha Ardente: mesma regra — mira inválida (centro, alcance,
         # parede, área sem piso) não pode custar o slot de 4º círculo.
         if magia_id == "ira_rocha_ardente":
@@ -22370,15 +23113,20 @@ class GameRoom:
                     destinos.append([tx, ty])
         return destinos, alcance
 
-    async def _teleporte_pedir_destino(self, caster, alvo, dc=None):
+    async def _teleporte_pedir_destino(self, caster, alvo, dc=None, animation_id=None):
         destinos, alcance = self._teleporte_destinos_validos(caster, alvo)
         if not destinos:
+            if animation_id:
+                await self.broadcast({"type": "spell_animation", "spell_id": "teleporte",
+                                      "phase": "resolve", "animation_id": animation_id,
+                                      "target_id": alvo["id"], "success": False})
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.nao_ha_uma_casa_livre_valida_no_alcance")})
             return False
         request_id = f"teleporte_{caster['id']}_{self.round_num}_{new_id()}"
         self._pending_teleporte = {
             "request_id": request_id, "caster_id": caster["id"],
             "target_id": alvo["id"], "dc": dc, "round": self.round_num,
+            "animation_id": animation_id,
         }
         await self.send_to(caster["id"], {
             "type": "teleporte_destino_prompt", "request_id": request_id,
@@ -22429,7 +23177,7 @@ class GameRoom:
                                       "animation_id": animation_id, "target_id": alvo["id"], "success": False})
                 await self.push_state()
                 return
-        await self._teleporte_pedir_destino(caster, alvo, dc)
+        await self._teleporte_pedir_destino(caster, alvo, dc, animation_id)
 
     async def handle_teleporte_consent(self, pid, request_id, falha_voluntaria=False):
         req = getattr(self, "_pending_teleporte", None)
@@ -22448,7 +23196,8 @@ class GameRoom:
                                       "animation_id": req.get("animation_id"), "target_id": alvo["id"], "success": False})
                 await self.push_state()
                 return
-        await self._teleporte_pedir_destino(caster, alvo, req.get("dc"))
+        await self._teleporte_pedir_destino(
+            caster, alvo, req.get("dc"), req.get("animation_id"))
 
     async def handle_teleporte_destino(self, pid, request_id, tx, ty):
         req = getattr(self, "_pending_teleporte", None)
@@ -23094,7 +23843,8 @@ class GameRoom:
             return
 
         lado = int(magia.get("area_lado", 3) or 3) + (
-            nivel // int(magia.get("area_lado_niveis", 3) or 3))
+            nivel // int(magia.get("area_lado_niveis", 3) or 3)
+        ) + self._cajado_arcano_area_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             await self.send_to(caster["id"], {"type": "error",
@@ -23317,12 +24067,12 @@ class GameRoom:
             "target": list(alvo["pos"]), "travel_ms": travel_ms, "impact_ms": 860,
         })
 
-        dano = int((((await self._rolar_dano_mostrado(nivel, 6, "✨ Dano")) + nivel) * dmg_mult) + 0.5) \
+        dano = int((((await self._rolar_dano_mostrado(nivel, 6, "✨ Dano", DMG_HOLY)) + nivel) * dmg_mult) + 0.5) \
             + int(caster.get("_cajado_arcano_dano_bonus", 0) or 0)
         save_ok, *_ = await self._save_mostrado(alvo, "reflexos", self._dif_magia(caster, magia),
                                                 mitigacao="half_damage")
         if save_ok:
-            dano //= 2
+            dano = max(1, dano // 2)
         if holy_target:
             dano *= 2
             await self.gm_say(T("narracao.raio_divino_dobrado_contra_morto_vivo_de", alvo=nome_criatura(alvo)))
@@ -23943,6 +24693,8 @@ class GameRoom:
             return
         if resultado.get("projectile") is None:
             resultado.pop("projectile", None)      # só o start com projétil leva a chave
+        if resultado.get("impacto") is None:
+            resultado.pop("impacto", None)          # sem impacto: payload idêntico ao antigo
         # Alvo sintético de área (sem id) não ganha o nome falso "Alvo".
         nome_alvo = (alvo.get("name") or alvo.get("nome") or "Alvo") if alvo.get("id") is not None else ""
         await self.broadcast({
@@ -24991,10 +25743,11 @@ class GameRoom:
             lado_base = int(magia.get("area_lado_agua_profunda", 3) or 3)
         else:
             lado_base = int(magia.get("area_lado", 4) or 4)
-        lado = lado_base + (nivel // nivel_area)
         # Senhor das Águas usa dois lados-base diferentes (4 para água e 3
-        # para água profunda); o bônus genérico do cajado não substitui essa
-        # escolha feita pelo jogador.
+        # para água profunda); por isso o cajado entra como bônus ADITIVO
+        # (`_cajado_arcano_area_bonus`) e não pelo `_cajado_arcano_area_lado`,
+        # que substituiria a escolha do jogador e o nível.
+        lado = lado_base + (nivel // nivel_area) + self._cajado_arcano_area_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
@@ -25104,7 +25857,7 @@ class GameRoom:
             return False, ("erro.uma_parede_bloqueia_a_trajetoria_da_ira_da_rocha", {})
         lado = int(magia.get("area_lado", 3) or 3) + (
             nivel // int(magia.get("area_lado_niveis", 3) or 3)
-        )
+        ) + self._cajado_arcano_area_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
@@ -25298,8 +26051,60 @@ class GameRoom:
             return [(int(x), int(y)) for x, y in self._monster_tiles(alvo)]
         return [(int(pos[0]), int(pos[1]))]
 
+    def _tempestade_preflight(self, caster, magia, data, alcance_bonus=0):
+        """Valida a parte geométrica da tempestade sem alterar o estado.
+
+        O lançamento só pode cobrar recursos depois desta etapa. O retorno de
+        sucesso é reutilizado pelo executor para que a confirmação manual não
+        reinterprete a mira; em falha retorna (chave_i18n, parâmetros).
+        """
+        data = data or {}
+        nivel = self._nivel_conjurador(caster)
+        alcance = int(magia.get("alcance_base", 6)) + (
+            nivel // int(magia.get("alcance_por_niveis", 2))) + int(alcance_bonus or 0)
+        try:
+            cx, cy = int(data.get("tx")), int(data.get("ty"))
+        except (TypeError, ValueError):
+            return False, ("erro.escolha_o_centro_da_tempestade", {})
+        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h) \
+                or not self._alcance_com_altura(caster, [cx, cy], alcance):
+            return False, ("erro.centro_fora_do_alcance", {"alcance": alcance})
+        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
+            return False, ("erro.uma_parede_bloqueia_a_tempestade", {})
+        lado = int(magia.get("area_lado", 3)) + (
+            nivel // int(magia.get("area_lado_niveis", 3) or 3)
+        ) + self._cajado_arcano_area_bonus(caster, magia)
+        tiles = self._inverno_area_tiles(cx, cy, lado)
+        area = {(int(x), int(y)) for x, y in tiles}
+        if not area:
+            return False, ("erro.a_area_nao_contem_piso_valido", {})
+        return True, {"cx": cx, "cy": cy, "lado": lado,
+                      "tiles": [list(t) for t in sorted(area)],
+                      "area": area, "alcance": alcance}
+
     def _tempestade_zonas_ativas(self):
-        return [z for z in self.zonas_especiais if z.get("ativa") and z.get("tipo") == "tempestade_ciclones"]
+        # Uma tempestade pendente ainda é apenas uma prévia de posicionamento:
+        # não impõe vento, não testa voo e não pode ser atingida por gatilhos.
+        return [z for z in self.zonas_especiais
+                if z.get("ativa") and z.get("tipo") == "tempestade_ciclones"
+                and not z.get("ciclones_pendentes")]
+
+    async def _cancelar_tempestades_pendentes(self, pid):
+        """Cancela prévias quando o turno é encerrado à força.
+
+        Timeout, desconexão ou saída da masmorra não podem deixar uma zona
+        aguardando confirmação para sempre, nem bloquear a iniciativa futura.
+        """
+        for zona in self.zonas_especiais:
+            if (not zona.get("ativa") or zona.get("tipo") != "tempestade_ciclones"
+                    or str(zona.get("caster")) != str(pid)
+                    or not zona.get("ciclones_pendentes")):
+                continue
+            zona["ativa"] = False
+            self._tempestade_remover_origem_zona(zona.get("id"))
+            await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones",
+                                  "phase": "expire", "animation_id": zona.get("id"),
+                                  "cancelled": True})
 
     def _tempestade_ciclone_tiles(self, ciclone):
         x, y = ciclone.get("pos", [0, 0])
@@ -25324,6 +26129,19 @@ class GameRoom:
             return "prisoner"
         return "entity"
 
+    def _tempestade_target_key(self, alvo):
+        """Chave de cooldown por entidade, sem colisão entre coleções.
+
+        IDs de jogadores, monstros e servos não são obrigados a compartilhar um
+        namespace. Usar apenas `str(alvo['id'])` fazia um monstro com id "1"
+        herdar o bloqueio de um jogador com id "1" na mesma rodada.
+        """
+        kind = self._tempestade_target_kind(alvo)
+        ident = alvo.get("id") if isinstance(alvo, dict) else None
+        if ident is None:
+            ident = f"obj:{id(alvo)}"
+        return f"{kind}:{ident}"
+
     def _tempestade_em_tiles(self, posicoes, zona):
         area = {(int(x), int(y)) for x, y in zona.get("tiles", [])}
         return any(pos in area for pos in posicoes)
@@ -25332,7 +26150,17 @@ class GameRoom:
                                dif=0, dmg_mult=1, label="🌪️ Tempestade"):
         if not alvo or not self._vivo(alvo) or self._fosso_protegido(alvo):
             return False
-        raw = await self._rolar_dano_mostrado(1 if expressao == "1d8" else 2, 8, label)
+        texto = str(expressao or "1d8").strip().lower().replace(" ", "")
+        dado = re.fullmatch(r"(\d+)d(\d+)(?:([+-])(\d+))?", texto)
+        if dado:
+            quantidade = max(1, min(100, int(dado.group(1))))
+            faces = max(1, min(1000, int(dado.group(2))))
+            ajuste = int(dado.group(4) or 0)
+            if dado.group(3) == "-":
+                ajuste = -ajuste
+        else:
+            quantidade, faces, ajuste = 1, 8, 0
+        raw = await self._rolar_dano_mostrado(quantidade, faces, label, elemento) + ajuste
         dano = max(1, int(round(raw * float(dmg_mult or 1))))
         passou = True
         if save_tipo:
@@ -25345,16 +26173,34 @@ class GameRoom:
         return passou
 
     async def _tempestade_testar_voo(self, alvo, zona, motivo="vento"):
-        if not alvo or not self._vivo(alvo) or not alvo.get("voo"):
+        if (not alvo or not self._vivo(alvo) or self._fosso_protegido(alvo)
+                or not alvo.get("voo")):
             return False
         if normalizar_altura(alvo.get("altura", ALTURA_MIN)) <= ALTURA_MIN:
             return False
+        target_key = self._tempestade_target_key(alvo)
+        # O teste de voo pertence ao alvo + zona + rodada, e não apenas ao
+        # resultado "caiu". Sem este registro, um alvo que passasse no save
+        # poderia rolar de novo ao cruzar outro ciclone, no início do turno e
+        # na descarga do raio dentro da mesma rodada.
+        testes = zona.setdefault("testes_voo_tempestade_rodada", {})
+        for chave, rodada in list(testes.items()):
+            if rodada != self.round_num:
+                testes.pop(chave, None)
+        if testes.get(target_key) == self.round_num:
+            return False
+        # Compatibilidade com zonas criadas antes deste campo existir: uma
+        # queda já registrada também encerra o teste da rodada atual.
+        if zona.get("quedas_tempestade_rodada", {}).get(target_key) == self.round_num:
+            testes[target_key] = self.round_num
+            return False
+        testes[target_key] = self.round_num
         passou, *_ = await self._save_mostrado(alvo, "fortitude", int(zona.get("save_dif", 13) or 13),
                                                 mitigacao="queda")
         if passou:
             return False
         await self._aplicar_queda(alvo, "tempestade_ciclones_" + str(motivo), zona.get("caster"))
-        zona.setdefault("quedas_tempestade_rodada", {})[str(alvo.get("id"))] = self.round_num
+        zona.setdefault("quedas_tempestade_rodada", {})[target_key] = self.round_num
         return True
 
     async def _tempestade_notificar_alvo_ciclone(self, alvo, zona, ciclone, passou):
@@ -25371,8 +26217,42 @@ class GameRoom:
             "ciclones": zona.get("ciclones", []),
         })
 
+    def _tempestade_registrar_prisao(self, alvo, zona, ciclone, preso):
+        """Mantém a origem exata da perda de ação para zonas sobrepostas."""
+        zona_id = zona.get("id")
+        if zona_id is None:
+            return
+        presos = alvo.setdefault("tempestade_ciclones_presos", {})
+        chave = str(zona_id)
+        if preso and ciclone is not None:
+            presos[chave] = ciclone.get("id")
+        else:
+            presos.pop(chave, None)
+            if not presos:
+                alvo.pop("tempestade_ciclones_presos", None)
+
+    def _limpar_tempestade_ciclones_presos(self, alvo):
+        if alvo:
+            alvo.pop("tempestade_ciclones_presos", None)
+
+    def _tempestade_remover_origem_zona(self, zona_id):
+        """Remove somente o vínculo visual de uma zona que deixou de existir."""
+        if zona_id is None:
+            return
+        chave = str(zona_id)
+        alvos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
+        if self.prisoner:
+            alvos.append(self.prisoner)
+        for alvo in alvos:
+            presos = alvo.get("tempestade_ciclones_presos")
+            if not isinstance(presos, dict) or chave not in presos:
+                continue
+            presos.pop(chave, None)
+            if not presos:
+                alvo.pop("tempestade_ciclones_presos", None)
+
     async def _tempestade_aplicar_ciclone(self, alvo, zona, ciclone=None):
-        if not alvo or not self._vivo(alvo):
+        if not alvo or not self._vivo(alvo) or self._fosso_protegido(alvo):
             return None
         posicoes = self._tempestade_posicoes(alvo)
         if ciclone is None:
@@ -25393,27 +26273,40 @@ class GameRoom:
             return None
         vistos = zona.setdefault("alvos_ciclone_rodada", {})
         aid = str(alvo.get("id"))
-        if vistos.get(aid) == self.round_num:
+        target_key = self._tempestade_target_key(alvo)
+        if vistos.get(target_key) == self.round_num:
             return None
-        vistos[aid] = self.round_num
-        if zona.get("quedas_tempestade_rodada", {}).get(aid) == self.round_num:
-            return None
-        passou = await self._tempestade_dano(alvo, "1d8", DMG_PHYSICAL, "reflexos",
+        vistos[target_key] = self.round_num
+        passou = await self._tempestade_dano(alvo, zona.get("dano_ciclone", "1d8"), DMG_PHYSICAL, "reflexos",
                                              zona.get("save_dif", 13), zona.get("dmg_mult", 1),
                                              "🌪️ Ciclone")
-        alvo["turbilhao_perde_movimento"] = True
-        if not passou:
-            alvo["turbilhao_perde_acao"] = True
+        # O dano é resolvido antes das condições. Um alvo que morreu (ou foi
+        # removido por uma defesa automática durante o dano) não pode carregar
+        # perda de movimento/ação para um turno futuro.
+        if self._vivo(alvo):
+            alvo["turbilhao_perde_movimento"] = True
+            if not passou:
+                alvo["turbilhao_perde_acao"] = True
+                self._tempestade_registrar_prisao(alvo, zona, ciclone, True)
+            else:
+                self._tempestade_registrar_prisao(alvo, zona, ciclone, False)
+        else:
+            self._tempestade_registrar_prisao(alvo, zona, ciclone, False)
         await self._tempestade_notificar_alvo_ciclone(alvo, zona, ciclone, passou)
         return {"target_id": aid, "target_kind": self._tempestade_target_kind(alvo),
                 "cyclone_id": ciclone.get("id"), "passed": bool(passou),
                 "trapped": not bool(passou)}
 
-    async def _tempestade_verificar_entrada(self, alvo, origem=None, destino=None, ciclone=None):
+    async def _tempestade_verificar_entrada(self, alvo, origem=None, destino=None,
+                                            ciclone=None, origem_facing=None):
         if not alvo or not self._vivo(alvo):
             return
-        old = {(int(origem[0]), int(origem[1]))} if origem else set()
-        new = self._tempestade_posicoes(alvo)
+        if origem and alvo in self.monsters.values():
+            old = {(int(x), int(y)) for x, y in self._monster_tiles_at(
+                alvo, int(origem[0]), int(origem[1]), facing=origem_facing)}
+        else:
+            old = {(int(origem[0]), int(origem[1]))} if origem else set()
+        new = set(self._tempestade_posicoes(alvo))
         for zona in self._tempestade_zonas_ativas():
             if ciclone is not None:
                 if not any(c is ciclone or int(c.get("id", -1)) == int(ciclone.get("id", -2))
@@ -25427,7 +26320,9 @@ class GameRoom:
                 continue
             if not any(self._tempestade_em_tiles([p], zona) for p in new):
                 continue
-            entrou = not old or any(self._tempestade_em_tiles([p], zona) for p in new) and not any(self._tempestade_em_tiles([p], zona) for p in old)
+            entrou = (not old or
+                      (any(self._tempestade_em_tiles([p], zona) for p in new)
+                       and not any(self._tempestade_em_tiles([p], zona) for p in old)))
             if entrou:
                 await self._tempestade_testar_voo(alvo, zona, "entrada")
             await self._tempestade_aplicar_ciclone(alvo, zona)
@@ -25445,7 +26340,7 @@ class GameRoom:
         for alvo in list(self._tempestade_entidades()):
             if not self._vivo(alvo) or not any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
                 continue
-            await self._tempestade_dano(alvo, "1d8", DMG_LIGHTNING, "reflexos",
+            await self._tempestade_dano(alvo, zona.get("dano_raio", "1d8"), DMG_LIGHTNING, "reflexos",
                                          zona.get("save_dif", 13), zona.get("dmg_mult", 1),
                                          "⚡ Raio da Tempestade")
             if self._vivo(alvo):
@@ -25457,26 +26352,23 @@ class GameRoom:
 
     async def _executar_tempestade_ciclones(self, caster, magia, data, dmg_mult=1,
                                              dur_bonus=0, alcance_bonus=0):
-        data = data or {}
+        data = dict(data or {})
         nivel = self._nivel_conjurador(caster)
-        alcance = int(magia.get("alcance_base", 6)) + (nivel // int(magia.get("alcance_por_niveis", 2))) + int(alcance_bonus or 0)
-        try:
-            cx, cy = int(data.get("tx")), int(data.get("ty"))
-        except (TypeError, ValueError):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.escolha_o_centro_da_tempestade")}); return
-        if not (0 <= cx < self.map_w and 0 <= cy < self.map_h) or not self._alcance_com_altura(caster, [cx, cy], alcance):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.centro_fora_do_alcance", alcance=alcance)}); return
-        if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.uma_parede_bloqueia_a_tempestade")}); return
-        lado = int(magia.get("area_lado", 3)) + nivel // int(magia.get("area_lado_niveis", 3) or 3)
-        tiles = self._inverno_area_tiles(cx, cy, lado)
-        area = {(int(x), int(y)) for x, y in tiles}
-        if not area:
-            await self.send_to(caster["id"], {"type": "error", "msg": T("erro.a_area_nao_contem_piso_valido")}); return
+        preflight = data.pop("_tempestade_ciclones_preflight", None)
+        if not isinstance(preflight, dict):
+            ok, preflight = self._tempestade_preflight(caster, magia, data, alcance_bonus)
+            if not ok:
+                chave, params = preflight
+                await self.send_to(caster["id"], {"type": "error", "msg": T(chave, **params)})
+                return
+        cx, cy = preflight["cx"], preflight["cy"]
+        lado, tiles, area = preflight["lado"], preflight["tiles"], preflight["area"]
         dur = max(1, self._rolar_dado(magia.get("duracao", "1d4+1")) + nivel // int(magia.get("duracao_por_nivel", 2) or 2) + int(dur_bonus or 0))
         zone_id = f"tempestade_ciclones_{caster['id']}_{self.round_num}_{new_id()}"
         ciclone_lado = max(1, int(magia.get("ciclone_lado", 1) or 1))
-        rolagem_ciclones = self._rolar_dado(magia.get("ciclones", "2d4"))
+        rolagem_ciclones = data.pop("_tempestade_ciclones_rolados", None)
+        if rolagem_ciclones is None:
+            rolagem_ciclones = self._rolar_dado(magia.get("ciclones", "2d4"))
         quantidade_ciclones = max(2, int(rolagem_ciclones or 0))
         if len(area) < quantidade_ciclones:
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.nao_ha_espaco_para_os_ciclones_nessa_area")}); return
@@ -25486,13 +26378,19 @@ class GameRoom:
                 "lado": lado, "tiles": permitidos, "ciclones": [],
                 "ciclone_lado": ciclone_lado,
                 "ciclones_pendentes": quantidade_ciclones,
-                "ciclones_rolados": rolagem_ciclones,
-                "ciclones_permitidos": permitidos,
-                "duracao": dur, "expira_em": self.round_num + dur, "ativa": True,
-                "caster": caster.get("id"), "criado_em": self.round_num,
-                "save_dif": save_dif, "dmg_mult": dmg_mult, "proxima_descarga": self.round_num + 2,
-                "ciclone_movimento": int(magia.get("ciclone_movimento", 2) or 2),
-                "alvos_ciclone_rodada": {}, "quedas_tempestade_rodada": {}}
+                 "ciclones_rolados": rolagem_ciclones,
+                 "ciclones_permitidos": permitidos,
+                 # A duração só começa quando o posicionamento manual for
+                 # confirmado; enquanto pendente a zona é apenas uma prévia.
+                 "duracao": dur, "expira_em": None, "ativa": True,
+                 "dano_inicial": str(magia.get("dano_inicial", "2d8") or "2d8"),
+                 "dano_raio": str(magia.get("dano_raio", "1d8") or "1d8"),
+                 "dano_ciclone": str(magia.get("dano_ciclone", "1d8") or "1d8"),
+                 "caster": caster.get("id"), "criado_em": self.round_num,
+                 "save_dif": save_dif, "dmg_mult": dmg_mult, "proxima_descarga": None,
+                 "ciclone_movimento": int(magia.get("ciclone_movimento", 2) or 2),
+                 "alvos_ciclone_rodada": {}, "quedas_tempestade_rodada": {},
+                 "testes_voo_tempestade_rodada": {}}
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "start",
                               "animation_id": zone_id, "caster_id": caster["id"], "origin": list(caster["pos"]),
                               "center": [cx, cy], "tiles": [list(t) for t in sorted(area)], "side": lado,
@@ -25507,6 +26405,7 @@ class GameRoom:
             "caster_id": caster["id"],
             "count": quantidade_ciclones, "rolled": rolagem_ciclones,
             "permitidos": permitidos, "center": [cx, cy], "side": lado,
+            "ciclone_lado": ciclone_lado,
         })
 
     async def handle_tempestade_ciclones_posicoes(self, pid, zone_id, tiles):
@@ -25527,8 +26426,10 @@ class GameRoom:
         if esperado <= 0:
             return
         permitidos = {(int(x), int(y)) for x, y in zona.get("ciclones_permitidos", [])}
+        lado = max(1, int(zona.get("ciclone_lado", 1) or 1))
         escolhidos = []
         vistos = set()
+        ocupadas = set()
         for pos in tiles if isinstance(tiles, list) else []:
             if not isinstance(pos, (list, tuple)) or len(pos) < 2:
                 continue
@@ -25536,22 +26437,29 @@ class GameRoom:
                 tile = (int(pos[0]), int(pos[1]))
             except (TypeError, ValueError):
                 continue
-            if tile in permitidos and tile not in vistos:
+            footprint = set(self._tempestade_ciclone_tiles({"pos": list(tile), "lado": lado}))
+            if (tile in permitidos and tile not in vistos
+                    and footprint <= permitidos and not (footprint & ocupadas)):
                 vistos.add(tile)
                 escolhidos.append([tile[0], tile[1]])
+                ocupadas.update(footprint)
         if len(escolhidos) != esperado:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.escolha_exatamente_n_casas_para_os_ciclones", count=esperado)})
             return
-        lado = max(1, int(zona.get("ciclone_lado", 1) or 1))
         zona["ciclones"] = [{"id": i + 1, "pos": list(pos), "lado": lado, "movido_em": None}
                              for i, pos in enumerate(escolhidos)]
         zona.pop("ciclones_pendentes", None)
         zona.pop("ciclones_permitidos", None)
+        # Só agora a tempestade passa a existir mecanicamente: a duração e o
+        # primeiro pulso são relativos à rodada de confirmação, não à mira.
+        zona["ativada_em"] = self.round_num
+        zona["expira_em"] = self.round_num + max(1, int(zona.get("duracao", 1) or 1))
+        zona["proxima_descarga"] = self.round_num + 2
         save_dif = int(zona.get("save_dif", 13) or 13)
         for alvo in list(self._tempestade_entidades()):
             if self._vivo(alvo) and any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
-                await self._tempestade_dano(alvo, "2d8", DMG_LIGHTNING, "reflexos", save_dif,
+                await self._tempestade_dano(alvo, zona.get("dano_inicial", "2d8"), DMG_LIGHTNING, "reflexos", save_dif,
                                              zona.get("dmg_mult", 1), "⚡ Impacto da Tempestade")
                 if self._vivo(alvo): await self._tempestade_testar_voo(alvo, zona, "impacto")
                 if self._vivo(alvo): await self._tempestade_aplicar_ciclone(alvo, zona)
@@ -25567,19 +26475,49 @@ class GameRoom:
         await self.push_state()
 
     async def handle_tempestade_ciclones_mover(self, pid, zone_id, ciclone_id, pos):
-        if not self._is_turn(pid): return
+        # `_is_turn` também cobre janelas transitórias (servos animados e
+        # Último Esforço). O deslocamento do ciclone é um recurso do turno
+        # principal do conjurador e não pode ser usado nessas subfases.
+        if (not self._is_turn(pid) or self.current_pid() != pid
+                or self.animados_phase_pid == pid or self.last_stand_pid == pid):
+            return
+        caster = self.players.get(pid)
+        if not caster or not caster.get("alive") or not caster.get("connected", True):
+            return
         zona = next((z for z in self._tempestade_zonas_ativas() if z.get("id") == zone_id and str(z.get("caster")) == str(pid)), None)
         if not zona:
             return
-        ciclone = next((c for c in zona.get("ciclones", []) if int(c.get("id")) == int(ciclone_id)), None)
-        try: ax, ay = int(pos[0]), int(pos[1])
-        except (TypeError, ValueError): return
+        try:
+            ciclone_id = int(ciclone_id)
+        except (TypeError, ValueError):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")})
+            return
+        ciclone = next((c for c in zona.get("ciclones", [])
+                        if int(c.get("id", -1)) == ciclone_id), None)
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")})
+            return
+        try:
+            ax, ay = int(pos[0]), int(pos[1])
+            if float(pos[0]) != ax or float(pos[1]) != ay:
+                raise ValueError
+        except (TypeError, ValueError, OverflowError):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")})
+            return
         if not ciclone or ciclone.get("movido_em") == self.round_num:
             return
         ox, oy = ciclone["pos"]
+        if ax == ox and ay == oy:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")})
+            return
         if max(abs(ax - ox), abs(ay - oy)) > int(zona.get("ciclone_movimento", 2)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_ciclone_so_pode_se_mover_2_casas_por_r")}); return
-        footprint = {(ax, ay)}
+        # A casa enviada é a âncora; a validação precisa considerar todo o
+        # footprint do ciclone, exatamente como a colocação inicial e o cliente
+        # já fazem. Caso contrário, um ciclone 2x2 poderia sair da área ou
+        # atravessar outro ocupante mantendo a âncora em uma casa válida.
+        lado = max(1, int(ciclone.get("lado", zona.get("ciclone_lado", 1)) or 1))
+        footprint = set(self._tempestade_ciclone_tiles({"pos": [ax, ay], "lado": lado}))
         if not footprint <= {(int(x), int(y)) for x, y in zona.get("tiles", [])} or any(c is not ciclone and footprint & set(self._tempestade_ciclone_tiles(c)) for c in zona.get("ciclones", [])):
             await self.send_to(pid, {"type": "error", "msg": T("erro.a_nova_posicao_do_ciclone_e_invalida")}); return
         old = list(ciclone["pos"]); ciclone["pos"] = [ax, ay]; ciclone["movido_em"] = self.round_num
@@ -25636,6 +26574,7 @@ class GameRoom:
         await self.broadcast({
             "type": "dice_roll", "die": "d4" if "d4" in str(expressao) else "d8",
             "value": dano_bruto, "label": T("dado.prisao_de_chamas", motivo=motivo if motivo is not None else ""),
+            "damage_type": DMG_FIRE,
         })
         dano = dano_bruto if "vida_atual" in alvo else self._apply_damage_types(
             dano_bruto, [DMG_FIRE], alvo)
@@ -25706,6 +26645,9 @@ class GameRoom:
             return False, ("erro.escolha_o_centro_e_o_tamanho_da_prisao_d", {})
         if lado not in {2, 3, 4}:
             return False, ("erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4", {})
+        # O jogador escolhe 2/3/4 (validado acima); o Cajado Arcano soma +1
+        # por cima da escolha — o cliente segue mandando o tamanho escolhido.
+        lado += self._cajado_arcano_area_bonus(caster, magia)
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
             return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
@@ -26035,7 +26977,8 @@ class GameRoom:
         })
 
         await self.broadcast({"type": "dice_roll", "die": "d6",
-                               "value": dano_total, "label": T("dado.explosao_6d6")})
+                               "value": dano_total, "label": T("dado.explosao_6d6"),
+                               "damage_type": DMG_FIRE})
         await self.gm_say(
             T("narracao.a_explosao_causa_ate_de_dano_em_chamas_r", dano_total=dano_total, raio=raio))
         kp = killer_pid or elem.get("owner", "")
@@ -26087,6 +27030,78 @@ class GameRoom:
                 if a["vida_atual"] <= 0:
                     await self._animado_morre(a, kp)
 
+    def _elemental_raio_eletrico(self, a):
+        ataque = (a.get("attacks") or [{}])[0]
+        tipos = {str(tipo).lower() for tipo in (ataque.get("damage_types") or [])}
+        return (a.get("tipo") == "elemental" and a.get("tipo_elemental") == "eletrico"
+                and str(ataque.get("name", "")).strip().lower() == "raio"
+                and bool(tipos & {"lightning", "eletricidade"}))
+
+    def _elemental_raio_linha(self, a, alvo_pos, ataque=None):
+        """Traça a descarga cardinal até o alcance ou o primeiro bloqueio."""
+        if not isinstance(alvo_pos, (list, tuple)) or len(alvo_pos) < 2:
+            return []
+        try:
+            tx, ty = int(alvo_pos[0]), int(alvo_pos[1])
+        except (TypeError, ValueError):
+            return []
+        origem = a.get("pos") or []
+        ataque = ataque or (a.get("attacks") or [{}])[0]
+        alcance = max(1, int(ataque.get("range", 4) or 4))
+        if not self._em_linha_cardinal(origem, [tx, ty], alcance):
+            return []
+        dx = 0 if tx == origem[0] else (1 if tx > origem[0] else -1)
+        dy = 0 if ty == origem[1] else (1 if ty > origem[1] else -1)
+        linha = []
+        for distancia in range(1, alcance + 1):
+            casa = [origem[0] + dx*distancia, origem[1] + dy*distancia]
+            if self._blocks_tile(*casa) or not self._tem_linha_de_visao(origem, casa):
+                break
+            linha.append(casa)
+        return linha if [tx, ty] in linha else []
+
+    def _elemental_raio_alvos(self, a, linha):
+        casas = {tuple(pos) for pos in linha}
+        alvos = []
+        for jogador in self.players.values():
+            if jogador.get("alive") and jogador.get("hp", 0) > 0 \
+                    and tuple(jogador.get("pos", [])) in casas:
+                alvos.append(("player", jogador))
+        for monstro in self.monsters.values():
+            if monstro.get("hp", 0) > 0 and any(tuple(pos) in casas for pos in self._monster_tiles(monstro)):
+                alvos.append(("monster", monstro))
+        for animado in self._all_animados():
+            if animado is not a and animado.get("vida_atual", 0) > 0 \
+                    and tuple(animado.get("pos", [])) in casas:
+                alvos.append(("animado", animado))
+        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("hp", 0) > 0 \
+                and tuple(self.prisoner.get("pos", [])) in casas:
+            alvos.append(("prisoner", self.prisoner))
+        ordem = {tuple(pos): i for i, pos in enumerate(linha)}
+        def distancia_na_linha(item):
+            tipo, entidade = item
+            footprint = self._monster_tiles(entidade) if tipo == "monster" else [entidade.get("pos", [])]
+            return min((ordem[tuple(pos)] for pos in footprint if tuple(pos) in casas), default=len(linha))
+        alvos.sort(key=distancia_na_linha)
+        return alvos
+
+    async def _elemental_raio_atacar(self, a, linha, alvos, pid=None):
+        origem = list(a.get("pos", [0, 0]))
+        self._face_toward(a, linha[-1])
+        self._elemental_raio_anim_seq = getattr(self, "_elemental_raio_anim_seq", 0) + 1
+        animation_id = f"elemental_raio_{a.get('id', 'servo')}_{self.round_num}_{self._elemental_raio_anim_seq}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "elemental_raio", "phase": "start",
+            "animation_id": animation_id, "caster_id": a.get("id"),
+            "origin": origem, "path": [origem, *[list(pos) for pos in linha]],
+            "step_ms": 58, "duration_ms": 760,
+        })
+        for tipo, alvo in alvos:
+            target_obj = {"kind": tipo, "obj": alvo}
+            if tipo == "monster":
+                self._monster_register_attack_alert(a, alvo)
+            await self._monster_execute_attacks(a, target_obj)
+
     async def _linha_eletrica(self, a, alvo_pos, pid):
         """Elemental Elétrico: descarrega uma linha de 3 casas (alvo + 2 além, na direção)."""
         if a.get("especial") != "linha_3q":
@@ -26101,7 +27116,8 @@ class GameRoom:
             extra = next((mm for mm in self.monsters.values() if mm["hp"] > 0 and mm["pos"] == [tx, ty]), None)
             if extra:
                 d2 = max(1, roll_dice(a.get("dano", "1d8")))
-                await self.broadcast({"type": "dice_roll", "die": f"d{faces}", "value": d2, "label": T("dado.linha")})
+                await self.broadcast({"type": "dice_roll", "die": f"d{faces}", "value": d2,
+                                      "label": T("dado.linha"), "damage_type": DMG_LIGHTNING})
                 extra["hp"] = max(0, extra["hp"] - d2)
                 await self.gm_say(T("narracao.a_linha_eletrica_do_atinge_de_dano", a_nome=nome_criatura(a), extra=nome_criatura(extra), d2=d2))
                 if extra["hp"] <= 0:
@@ -26325,16 +27341,19 @@ class GameRoom:
         await self.gm_say(T("narracao.lanca_jato_de_ar_alvo_s_no_cone", caster=caster['name'], n=n))
 
     # â”€â”€ Dados de magia exibidos no cliente (anima cada dado via handleDiceRoll) â”€â”€
-    async def _broadcast_dado(self, die, value, label):
-        await self.broadcast({"type": "dice_roll", "die": die, "value": value, "label": label})
+    async def _broadcast_dado(self, die, value, label, damage_type=None):
+        payload = {"type": "dice_roll", "die": die, "value": value, "label": label}
+        if damage_type:
+            payload["damage_type"] = _NORM_ELEMENTO.get(str(damage_type).strip().lower(), damage_type)
+        await self.broadcast(payload)
 
-    async def _rolar_dano_mostrado(self, n, faces, label):
+    async def _rolar_dano_mostrado(self, n, faces, label, damage_type=None):
         """Rola n dados de `faces`, anima CADA dado no cliente e retorna a soma."""
         total = 0
         for _ in range(max(1, int(n))):
             v = random.randint(1, faces)
             total += v
-            await self._broadcast_dado(f"d{faces}", v, label)
+            await self._broadcast_dado(f"d{faces}", v, label, damage_type)
         return total
 
     def _save_weakness_pen(self, alvo, tipo):
@@ -26432,7 +27451,7 @@ class GameRoom:
 
         # R1 = 1d6 por nível; cada rodada residual vale metade da anterior.
         # Estender acrescenta rodada(s) residual(is) mantendo essa progressão.
-        dano_r1 = int((await self._rolar_dano_mostrado(nivel, 6, "🔥 Dano")) * dmg_mult + 0.5) \
+        dano_r1 = int((await self._rolar_dano_mostrado(nivel, 6, "🔥 Dano", DMG_FIRE)) * dmg_mult + 0.5) \
             + int(caster.get("_cajado_arcano_dano_bonus", 0) or 0)
         rodadas_max = max(1, int(magia.get("rodadas", 3)) + dur_bonus)
         danos_por_rodada = {1: dano_r1}
@@ -26481,7 +27500,7 @@ class GameRoom:
             if com_save:
                 save_ok, *_ = await self._save_mostrado(alvo, "reflexos", save_dif,
                                                         mitigacao="half_damage")
-                d = dano // 2 if save_ok else dano; extra = ' (½)' if save_ok else ''
+                d = max(1, dano // 2) if save_ok else dano; extra = ' (½)' if save_ok else ''
             else:
                 d = dano; extra = ''
             if ehjog:
@@ -26646,11 +27665,11 @@ class GameRoom:
             ehjog = self._eh_jogador(alvo)
             if ehjog and await self._reacao_anti_magia(alvo, caster):   # Barreira/ContramÃ¡gica
                 continue
-            d = int((await self._rolar_dano_mostrado(nivel, 6, "⚡ Dano")) * dmg_mult + 0.5) \
+            d = int((await self._rolar_dano_mostrado(nivel, 6, "⚡ Dano", DMG_LIGHTNING)) * dmg_mult + 0.5) \
                 + int(caster.get("_cajado_arcano_dano_bonus", 0) or 0)
             save_ok, *_ = await self._save_mostrado(alvo, "reflexos", save_dif,
                                                     mitigacao="half_damage")
-            d = d // 2 if save_ok else d
+            d = max(1, d // 2) if save_ok else d
             if ehjog:
                 d = await self._absorver_energia(alvo, d, "eletricidade")   # ProteÃ§Ã£o contra Energia
             aid = alvo.get("id")
@@ -26707,7 +27726,7 @@ class GameRoom:
 
         # Dano: 3d4 + 2d4 a cada 2 nÃ­veis â€” SEM save de Reflexos. (anima cada d4)
         nd   = 3 + ((nivel - 1) // 2) * 2
-        dano = int((await self._rolar_dano_mostrado(nd, 4, "❄️ Dano")) * dmg_mult + 0.5) \
+        dano = int((await self._rolar_dano_mostrado(nd, 4, "❄️ Dano", DMG_COLD)) * dmg_mult + 0.5) \
             + int(caster.get("_cajado_arcano_dano_bonus", 0) or 0)
         # Raio Congelante causa dano elemental de frio: passa pelo funil de
         # imunidades, resistências e fraquezas (ex.: Vela de Fogo recebe
@@ -26824,6 +27843,7 @@ class GameRoom:
             return
         dano = roll_dice(f"{n}{st['dado']}")
         m["hp"] = max(0, m["hp"] - dano)
+        await self._broadcast_requiem_animation(bardo, "attack", m, damage=dano, attack_ms=680)
         await self.gm_say(T("narracao.o_requiem_final_dilacera", monstro=nome_criatura(m), n=n, st_dado=st['dado'], dano=dano))
         if m["hp"] <= 0:
             await self._monster_dies(m, bid)
@@ -27044,7 +28064,8 @@ class GameRoom:
         dano_bruto = roll_dice(dano_str)
         dano = self._apply_damage_types(dano_bruto, [DMG_POISON], alvo)
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
-                              "value": dano_bruto, "label": T("dado.veneno_do_lacralion")})
+                              "value": dano_bruto, "label": T("dado.veneno_do_lacralion"),
+                              "damage_type": DMG_POISON})
         if self._eh_jogador(alvo) or alvo is self.prisoner:
             await self._aplicar_dano_alvo(alvo, dano, DMG_POISON, m.get("id"))
         else:
@@ -27114,7 +28135,8 @@ class GameRoom:
             dano_expr = str(ability.get("damage", "1d6+5"))
             dano = roll_dice(dano_expr)
             await self.broadcast({"type": "dice_roll", "die": "d6", "value": dano,
-                                  "label": T("dado.constricao_de", nome=nome_criatura(m))})
+                                  "label": T("dado.constricao_de", nome=nome_criatura(m)),
+                                  "damage_type": (ability.get("damage_types") or [DMG_PHYSICAL])[0]})
             await self._aplicar_dano_alvo(alvo, dano, (ability.get("damage_types") or ["physical"])[0], m.get("id"))
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
             await self.gm_say(T("narracao.causa_de_constricao_em", monstro=nome_criatura(m), dano=dano, nome=nome_criatura(alvo)))
@@ -27176,7 +28198,8 @@ class GameRoom:
         bruto = roll_dice(dano_str)
         dano = self._apply_damage_types(bruto, tipos, atacante)
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
-                              "value": bruto, "label": T("dado.dano_retaliacao")})
+                              "value": bruto, "label": T("dado.dano_retaliacao"),
+                              "damage_type": elemento})
         await self._dano_em_alvo(atacante, dano, elemento, criatura.get("id"))
         labels = {DMG_PHYSICAL: "fisico", DMG_WATER: "agua", DMG_FIRE: "fogo",
                   DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade", DMG_POISON: "veneno",
@@ -27416,15 +28439,32 @@ class GameRoom:
                 # A conjuração só entra em funcionamento depois que o clérigo
                 # confirmar as casas iniciais; enquanto isso não há descarga
                 # nem dano periódico para processar.
-                if z.get("ciclones_pendentes") and self.round_num < int(z.get("expira_em", 0) or 0):
-                    continue
-                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                if z.get("ciclones_pendentes"):
+                    caster = self.players.get(z.get("caster"))
+                    if not caster or not caster.get("alive") or not caster.get("connected", True):
+                        z["ativa"] = False
+                        self._tempestade_remover_origem_zona(z.get("id"))
+                        await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "expire", "animation_id": z.get("id")})
+                        continue
+                    expira_em = z.get("expira_em")
+                    if expira_em is None or self.round_num < int(expira_em or 0):
+                        continue
                     z["ativa"] = False
+                    self._tempestade_remover_origem_zona(z.get("id"))
                     await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "expire", "animation_id": z.get("id")})
                     await self.gm_say(T("narracao.tempestade_ciclones_dissipa"))
-                elif self.round_num >= int(z.get("proxima_descarga", 0) or 0):
+                    continue
+                # Se o segundo pulso cair exatamente na rodada de expiração,
+                # ele ainda acontece antes da tempestade se dissipar. A ordem
+                # anterior fazia a duração mínima terminar sem nenhum raio.
+                if self.round_num >= int(z.get("proxima_descarga", 0) or 0):
                     await self._tempestade_descarga(z)
                     z["proxima_descarga"] = self.round_num + 2
+                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    self._tempestade_remover_origem_zona(z.get("id"))
+                    await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "expire", "animation_id": z.get("id")})
+                    await self.gm_say(T("narracao.tempestade_ciclones_dissipa"))
             elif z.get("tipo") == "prisao_chamas":
                 if self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
@@ -27793,8 +28833,22 @@ class GameRoom:
         # A ponte substitui a superfície do piso inferior: entrar nela custa
         # como uma casa normal, mesmo que o material de baixo seja lava/água.
         custo_vento = 0
+        destino_tiles = [(int(x), int(y))]
+        if criatura in self.monsters.values():
+            # O custo de vento é pago por qualquer parte do footprint que entre
+            # na tempestade, não apenas pela âncora visual do monstro. Para
+            # criaturas orientadas, uma mudança cardinal usa a face do passo;
+            # nos demais casos preservamos a orientação atual.
+            destino_facing = None
+            if criatura.get("oriented") and isinstance(origem, (list, tuple)) and len(origem) >= 2:
+                dx, dy = int(x) - int(origem[0]), int(y) - int(origem[1])
+                if [dx, dy] in ([1, 0], [-1, 0], [0, 1], [0, -1]):
+                    destino_facing = [dx, dy]
+            destino_tiles = [(int(tx), int(ty)) for tx, ty in self._monster_tiles_at(
+                criatura, int(x), int(y), facing=destino_facing)]
         for z in self._tempestade_zonas_ativas():
-            if (int(x), int(y)) in {(int(a), int(b)) for a, b in z.get("tiles", [])}:
+            area = {(int(a), int(b)) for a, b in z.get("tiles", [])}
+            if any(tile in area for tile in destino_tiles):
                 custo_vento = max(custo_vento, 2 + custo_elevacao)
         if self._voo_imune_terreno(criatura):
             return max(1, custo_vento)
@@ -27858,7 +28912,7 @@ class GameRoom:
         dado, mult = self._dano_lava_em(lava)
         raw = int(roll_dice(dado) * mult + 0.5)
         await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw,
-                              "label": T("dado.lava")})
+                              "label": T("dado.lava"), "damage_type": DMG_FIRE})
         if "vida_atual" in criatura:
             dano = raw
         else:
@@ -28384,7 +29438,7 @@ class GameRoom:
             dano_extra = self._apply_damage_types(dano_extra, [DMG_POISON], alvo)
             await self.broadcast({"type": "dice_roll", "die": "d4" if not save_ok else "flat",
                                   "value": dano_extra, "label": T("dado.veneno_da_medusa"),
-                                  "total": dano_extra})
+                                  "total": dano_extra, "damage_type": DMG_POISON})
             await self._dano_em_alvo(alvo, dano_extra, DMG_POISON)
             if not self._entidade_viva(alvo):
                 return
@@ -29605,7 +30659,7 @@ class GameRoom:
         alvo["altura"] = ALTURA_MIN
         mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
-            quantidade, faces, T("dado.dano_queda")) * mult
+            quantidade, faces, T("dado.dano_queda"), DMG_PHYSICAL) * mult
         dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, killer_pid)
         await self.broadcast({
@@ -29663,7 +30717,7 @@ class GameRoom:
         quantidade, faces = dados
         mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
-            quantidade, faces, T("dado.dano_queda")) * mult
+            quantidade, faces, T("dado.dano_queda"), DMG_PHYSICAL) * mult
         dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, killer_pid)
         faixa = faixa_altura_queda(queda)
@@ -30603,6 +31657,8 @@ class GameRoom:
             return False
         if a.get("dormindo"):
             return False
+        if a.get("_tempestade_turno_bloqueado"):
+            return False
         if a.get("_rodamoinho_bloqueado_turno") or a.get("_rodamoinho_profundo_bloqueado_turno"):
             return False
         return True
@@ -30628,7 +31684,8 @@ class GameRoom:
                 return aid
         pr = self.prisoner
         if (not self.prisioneiro_done and pr and pr.get("freed") and pr.get("alive")
-                and pr.get("rescuer_pid") == pid):
+                and pr.get("rescuer_pid") == pid
+                and not pr.get("_tempestade_turno_bloqueado")):
             return "prisoner"
         return None
 
@@ -30771,6 +31828,16 @@ class GameRoom:
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
+        # O lançamento da Tempestade tem uma segunda etapa obrigatória. Não
+        # avance a iniciativa deixando uma zona sem ciclones: além de perder a
+        # janela de confirmação, isso criava uma duração parcialmente gasta.
+        if any(z.get("ativa") and z.get("tipo") == "tempestade_ciclones"
+               and str(z.get("caster")) == str(pid)
+               and int(z.get("ciclones_pendentes", 0) or 0) > 0
+               for z in self.zonas_especiais):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.tempestade_ciclones_posicionamento_pendente")})
+            return
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por
         # esse caminho o dano não cobra.
@@ -30834,10 +31901,14 @@ class GameRoom:
             for a in list(animados_vivos):
                 await self._aplicar_lava_se_pisar(a)
                 await self._processar_prisao_chamas_inicio_turno(a)
+                if a.get("vida_atual", 0) > 0:
+                    await self._processar_tempestade_inicio_turno(a)
             animados_vivos = [a for a in animados_vivos if a.get("vida_atual", 0) > 0]
             if controla_prisioneiro:
                 await self._aplicar_lava_se_pisar(pr)
                 await self._processar_prisao_chamas_inicio_turno(pr)
+                if pr.get("alive"):
+                    await self._processar_tempestade_inicio_turno(pr)
                 controla_prisioneiro = bool(pr.get("alive"))
         if (animados_vivos or controla_prisioneiro) and self.animados_phase_pid != pid and not fosso_encerrando:
             self.animados_phase_pid = pid
@@ -30858,6 +31929,11 @@ class GameRoom:
                     await self._testar_rodamoinho_inicio_turno(a)
                     if a.get("_rodamoinho_bloqueado_turno"):
                         a["moves_left"] = 0
+                    if a.pop("turbilhao_perde_movimento", False):
+                        a["moves_left"] = 0
+                    if a.pop("turbilhao_perde_acao", False):
+                        a["_tempestade_turno_bloqueado"] = True
+                        self._limpar_tempestade_ciclones_presos(a)
                     if not a.get("_rodamoinho_profundo_bloqueado_turno"):
                         a["acted"] = False
                     # Sono/LentidÃ£o em minions (de magias em Ã¡rea): expiram aqui.
@@ -30876,6 +31952,11 @@ class GameRoom:
                 await self._testar_rodamoinho_inicio_turno(pr)
                 if pr.get("_rodamoinho_bloqueado_turno"):
                     pr["moves_left"] = 0
+                if pr.pop("turbilhao_perde_movimento", False):
+                    pr["moves_left"] = 0
+                if pr.pop("turbilhao_perde_acao", False):
+                    pr["_tempestade_turno_bloqueado"] = True
+                    self._limpar_tempestade_ciclones_presos(pr)
                 partes.append(T("narracao.o_prisioneiro"))
             # DEPOIS do upkeep, nao antes: o laco acima roda os testes de
             # rodamoinho desta rodada e ACORDA quem teve o sono expirado. Consumir
@@ -30896,6 +31977,10 @@ class GameRoom:
                                     heroi=p["name"], partes=partes, recursos=recursos))
                 await self.push_state()
                 return
+        for a in animados_vivos:
+            a.pop("_tempestade_turno_bloqueado", None)
+        if pr:
+            pr.pop("_tempestade_turno_bloqueado", None)
         self.animados_phase_pid = None
         self.animados_order = []
         self.animados_done = set()
@@ -30956,7 +32041,7 @@ class GameRoom:
         bruto = roll_dice(str(expressao or "1d4"))
         ajustado = self._apply_damage_types(bruto, [DMG_FIRE], alvo)
         await self.broadcast({"type": "dice_roll", "die": "d" + str(expressao).split("d", 1)[-1].split("+", 1)[0],
-                              "value": bruto, "label": motivo})
+                              "value": bruto, "label": motivo, "damage_type": DMG_FIRE})
         if ajustado > 0:
             await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, fonte)
         return ajustado
@@ -32415,13 +33500,13 @@ class GameRoom:
                 else self._apply_damage_types(bruto, [DMG_FIRE], criatura))
         nome = criatura.get("name") or criatura.get("nome", "Alguém")
         if dado == "1d4":
-            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": T("dado.fogueira")})
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": T("dado.fogueira"), "damage_type": DMG_FIRE})
             await self.gm_say(T("narracao.pisou_na_fogueira_e_sofre_de_fogo", nome=nome_criatura(criatura), dano=dano))
         elif dado == "2d4":
-            await self.broadcast({"type": "dice_roll", "die": "2d4", "value": bruto, "label": T("dado.chama_viva")})
+            await self.broadcast({"type": "dice_roll", "die": "2d4", "value": bruto, "label": T("dado.chama_viva"), "damage_type": DMG_FIRE})
             await self.gm_say(T("narracao.passa_sobre_a_chama_viva_e_sofre_de_dano", nome_criatura_criatura=nome_criatura(criatura), dano=dano))
         else:
-            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": T("dado.brasa_no_chao")})
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": bruto, "label": T("dado.brasa_no_chao"), "damage_type": DMG_FIRE})
             await self.gm_say(T("narracao.passa_sobre_a_brasa_e_sofre_de_dano_de_f", nome_criatura_criatura=nome_criatura(criatura), dano=dano))
         await self._dano_em_alvo(criatura, dano, "fogo")
 
@@ -32433,6 +33518,7 @@ class GameRoom:
         if m.get("preso") and self._captor_ativo(m):
             return False
         old_x, old_y = m["pos"]
+        old_facing = list(m.get("facing")) if isinstance(m.get("facing"), (list, tuple)) else None
         step_facing = [nx - old_x, ny - old_y]
         if not self._passo_seguro(m, [old_x, old_y], [nx, ny], step_facing):
             return False
@@ -32484,7 +33570,8 @@ class GameRoom:
         await self._aplicar_fogueira_se_pisar(m)
         await self._aplicar_piso_congelado_se_pisar(m)
         if m.get("hp", 0) > 0:
-            await self._tempestade_verificar_entrada(m, [old_x, old_y], m["pos"])
+            await self._tempestade_verificar_entrada(
+                m, [old_x, old_y], m["pos"], origem_facing=old_facing)
         if m.get("hp", 0) > 0:
             await self._verificar_entrada_zona_molochus(m, nx, ny)
         await self._arrastar_preso(m, [old_x, old_y])
@@ -33925,7 +35012,7 @@ class GameRoom:
             bruto = roll_dice(expressao)
             dano = self._apply_damage_types(bruto, tipos, alvo)
             await self.broadcast({"type": "dice_roll", "die": "d" + expressao.split("d", 1)[1].split("+", 1)[0], "value": bruto,
-                                  "label": T("dado.corpo_energetico")})
+                                  "label": T("dado.corpo_energetico"), "damage_type": tipo})
             await self._dano_em_alvo(alvo, dano, tipo, None)
 
     def _kobold_lance_attack(self, m, item=None):
@@ -34086,6 +35173,7 @@ class GameRoom:
         target   = target_obj["obj"]
         is_player = target_obj["kind"] == "player"
         is_monster = target_obj["kind"] == "monster"
+        is_prisoner = target_obj["kind"] == "prisoner"
         tgt_name = target.get("name") or target.get("nome", "Alvo")
 
         # Authoritative guard: melee attacks cannot cross altitude levels;
@@ -34149,7 +35237,8 @@ class GameRoom:
         attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
         attack_feedback_id = await self._emitir_feedback_ataque(
             "start", m, target, attack_name, attack_mode,
-            projectile=_projetil_de(atk_def, monstro=True))
+            projectile=_projetil_de(atk_def, monstro=True),
+            impacto=_impacto_de(atk_def, monstro=True))
 
         if vantagem or desvantagem:
             hit, roll, total, crit, discarded = self._rolar_ataque(
@@ -34235,7 +35324,8 @@ class GameRoom:
             sombra_dano = self._sombras_dano_bonus(m, target)        # Ataque das Sombras (+1d6)
             if sombra_dano:
                 await self.broadcast({"type": "dice_roll", "die": "d6",
-                                       "value": sombra_dano, "label": T("dado.ataque_das_sombras")})
+                                       "value": sombra_dano, "label": T("dado.ataque_das_sombras"),
+                                       "damage_type": DMG_PHYSICAL})
             damage_attr_key = atk_def.get("damage_attribute") or attr_key
             damage_attr_mod = mod(m.get(damage_attr_key, 10))
             attr_dmg = damage_attr_mod if atk_def.get("apply_attribute_damage") else 0
@@ -34244,19 +35334,22 @@ class GameRoom:
                 investida_roll = roll_dice("2d6")
                 charge_bonus += investida_roll
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": investida_roll,
-                                      "label": T("dado.investida_brutal_de", nome=nome_criatura(m))})
+                                      "label": T("dado.investida_brutal_de", nome=nome_criatura(m)),
+                                      "damage_type": DMG_PHYSICAL})
             if charge and charge.get("investida"):
                 investida_expr = str(charge["investida"].get("damage", "2d6"))
                 investida_roll = roll_dice(investida_expr)
                 charge_bonus += investida_roll
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": investida_roll,
-                                      "label": T("dado.investida_brutal_de", nome=nome_criatura(m))})
+                                      "label": T("dado.investida_brutal_de", nome=nome_criatura(m)),
+                                      "damage_type": DMG_PHYSICAL})
             if charge and charge.get("salto") and self._garaloux_alvo_contra_parede(m, target):
                 collision_expr = str(charge["salto"].get("collision_damage", "1d6"))
                 collision = roll_dice(collision_expr)
                 charge_bonus += collision
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": collision,
-                                      "label": T("dado.colisao_parede_de", nome=nome_criatura(m))})
+                                      "label": T("dado.colisao_parede_de", nome=nome_criatura(m)),
+                                      "damage_type": DMG_PHYSICAL})
             flame_charge = self._molochus_investida_fogo(m, atk_def)
             if flame_charge:
                 flame_expr = str(flame_charge.get("damage", "2d6"))
@@ -34264,7 +35357,8 @@ class GameRoom:
                 flame_damage = self._apply_damage_types(flame_roll, [DMG_FIRE], target)
                 charge_bonus += flame_damage
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": flame_roll,
-                                      "label": T("dado.investida_flamejante_de", nome=nome_criatura(m))})
+                                      "label": T("dado.investida_flamejante_de", nome=nome_criatura(m)),
+                                      "damage_type": DMG_FIRE})
             if ciclope_charge:
                 charge_damage = int(ciclope_charge.get("damage_bonus", 4) or 4)
                 # O bônus de acerto já foi incluído em ``m_atk`` antes da
@@ -34297,21 +35391,23 @@ class GameRoom:
                 fire_damage = self._apply_damage_types(fire_roll, [DMG_FIRE], target)
                 dmg += fire_damage
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": fire_roll,
-                                      "label": T("dado.fogo_da_arma_de", nome=nome_criatura(m))})
+                                      "label": T("dado.fogo_da_arma_de", nome=nome_criatura(m)),
+                                      "damage_type": DMG_FIRE})
             if (self._tem_habilidade(m, "sobrecarga")
                     and m.get("sobrecarga_target_id") == target.get("id")
                     and m.get("sobrecarga_round") == self.round_num - 1):
                 sobrecarga = self._apply_damage_types(roll_dice("1d4"), [DMG_LIGHTNING], target)
                 dmg += sobrecarga
                 await self.broadcast({"type": "dice_roll", "die": "d4", "value": sobrecarga,
-                                      "label": T("dado.sobrecarga")})
+                                      "label": T("dado.sobrecarga"), "damage_type": DMG_LIGHTNING})
             if self._tem_habilidade(m, "sobrecarga"):
                 m["sobrecarga_target_id"] = target.get("id")
                 m["sobrecarga_round"] = self.round_num
             die_type = "d" + atk_def["damage"].split("d")[1].split("+")[0]
             await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg,
                                   "label": T("dado.dano"), "modifier": dmg - raw_dmg,
-                                  "total": dmg, "expression": atk_def["damage"]})
+                                  "total": dmg, "expression": atk_def["damage"],
+                                  "damage_type": (atk_def.get("damage_types") or [DMG_PHYSICAL])[0]})
             crit_str = " **CRÍTICO!**" if crit else ""
             atk_name = atk_def.get("name", "Ataque")
             dano_sofrido = 0
@@ -34418,6 +35514,19 @@ class GameRoom:
                     lacralion_poison = self._veneno_lacralion_do_ataque(m, atk_def)
                     if lacralion_poison:
                         await self._aplicar_veneno_lacralion(m, target, lacralion_poison)
+            elif is_prisoner:
+                self._registrar_dano_combate(
+                    target, dmg, atk_def.get("damage_types", [DMG_PHYSICAL]),
+                    critical=crit, impact_pos=target.get("pos"))
+                target["hp"] = max(0, target.get("hp", 0) - dmg)
+                dano_sofrido = dmg
+                await self.gm_say(
+                    T("narracao.em_d20_vs_ca_de_dano_hp_2", monstro=nome_criatura(m), atk_name=atk_name,
+                      tgt_name=nome_criatura(target), roll=roll, m_atk=m_atk, total=total,
+                      effective_ac=effective_ac, crit_str=crit_str, dmg=dmg,
+                      target_hp=target["hp"], target_max_hp=target.get("max_hp", target.get("hp", 0))))
+                if target["hp"] <= 0:
+                    await self._prisioneiro_morre()
             else:
                 dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")
                 self._registrar_dano_combate(
@@ -34543,6 +35652,8 @@ class GameRoom:
                     return
                 if target_obj["kind"] == "animado" and target.get("vida_atual", 0) <= 0:
                     return
+                if target_obj["kind"] == "prisoner" and (not target.get("alive") or target.get("hp", 0) <= 0):
+                    return
                 if self._monster_attack_adaptively_suppressed(m, target_obj, atk_def):
                     continue
                 if self._monster_attack_expected_damage(target, atk_def) <= 0:
@@ -34557,19 +35668,11 @@ class GameRoom:
         if (self._tem_habilidade(m, "furia_bestial") and len(hits_by_group) >= 2
                 and hits_by_group[0] and any(hits_by_group[1:]) and self._alvo_vivo(target_obj)):
             extra = roll_dice("1d6")
-            if is_player:
-                await self._aplicar_dano_alvo(target, extra, DMG_PHYSICAL,
-                                              m.get("id"), is_attack=True)
-            elif is_monster:
-                target["hp"] = max(0, target["hp"] - extra)
-            else:
-                target["vida_atual"] = max(0, target["vida_atual"] - extra)
-            nome = target["name"] if is_player else target["nome"]
+            # O funil geral trata herói, monstro e servo animado — inclusive a
+            # morte —, como o caminho Manual (_furia_bestial_mestre) já fazia.
+            await self._aplicar_dano_alvo(target, extra, DMG_PHYSICAL,
+                                          m.get("id"), is_attack=True)
             await self.gm_say(T("narracao.furia_bestial_sofre_de_dano_2", nome=nome_criatura(target), extra=extra))
-            if is_monster and target["hp"] <= 0:
-                await self._monster_dies(target, m.get("id"))
-            elif not is_player and not is_monster and target["vida_atual"] <= 0:
-                await self._animado_morre(target, m.get("id"))
 
     async def _monster_try_equipment_item(self, m, target_obj=None):
         """Uso simples de itens de bolsa: cura de emergência e elixir ofensivo.
@@ -35882,12 +36985,22 @@ class GameRoom:
         m["_ja_executou_acao"] = True
         await self.push_state()
 
+    async def _emitir_animacao_turbilhao_elemental(self, m, centro, raio=1):
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "turbilhao_elemental_ar",
+            "phase": "start",
+            "animation_id": f"turbilhao_{m.get('id', 'elemental')}_{time.time_ns()}",
+            "origin": list(m.get("pos", centro)), "center": list(centro),
+            "radius": int(raio or 1),
+        })
+
     async def _usar_turbilhao_controlado(self, m, ability, target_obj):
         """Executa o Turbilhão quando o elemental de ar é controlado pelo jogador."""
         if not self._ativar_habilidade_nativa(m, ability):
             return False
         centro = target_obj["obj"]["pos"]
         raio = int(ability.get("radius", 1) or 1)
+        await self._emitir_animacao_turbilhao_elemental(m, centro, raio)
         alvos = [monstro for monstro in self.monsters.values()
                  if monstro.get("hp", 0) > 0
                  and max(abs(monstro["pos"][0] - centro[0]),
@@ -36045,8 +37158,6 @@ class GameRoom:
             arma_item = next((w for w in SHOP_WEAPONS if w["id"] == arma_id), None)
             if arma_item:
                 items.append(deepcopy(arma_item))
-        if items:
-            self._spawn_chest(list(m["pos"]), 0, items)
         # Gold adicional (tabela)
         gold_roll = random.randint(1, 100)
         gold = 0
@@ -36054,11 +37165,11 @@ class GameRoom:
             gold = 2
         elif gold_roll >= 91:
             gold = 4
-        if gold > 0:
-            for p in self.players.values():
-                if p["alive"]:
-                    p["gold"] = p.get("gold", 0) + gold
+        delivery = self._spawn_monster_loot(list(m["pos"]), gold, items)
+        if delivery == "ground_gold":
             await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
+        elif delivery == "chest" and gold > 0:
+            await self.gm_say(T("narracao.um_bau_de_saque_apareceu"))
 
     # â”€â”€ Loot Kobold â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _kobold_loot(self, m):
@@ -36139,16 +37250,10 @@ class GameRoom:
         elif 71 <= base_roll <= 90:
             gold_total += 2
 
-        # Distribui ouro entre jogadores vivos
-        if gold_total > 0:
-            for p in self.players.values():
-                if p["alive"]:
-                    p["gold"] = p.get("gold", 0) + gold_total
+        delivery = self._spawn_monster_loot(list(m["pos"]), gold_total, items_sempre)
+        if delivery == "ground_gold":
             await self.gm_say(T("narracao.deixou_moeda_s_2", monstro=nome_criatura(m), gold_total=gold_total))
-
-        # Spawna baÃº com itens fÃ­sicos (se houver)
-        if items_sempre:
-            self._spawn_chest(list(m["pos"]), 0, items_sempre)
+        elif delivery == "chest" and items_sempre:
             await self.gm_say(T("narracao.loot_de_deixado_no_chao", monstro=nome_criatura(m)))
 
     async def _necromante_loot(self, m):
@@ -36175,8 +37280,10 @@ class GameRoom:
         if not m.get("usou_dominar"):
             dom = gerar_pergaminho(3, magia_id="dominar_morto_vivo")
             if dom: itens.append(dom)
-        if gold > 0 or itens:
-            self._spawn_chest(list(m["pos"]), gold, itens)
+        delivery = self._spawn_monster_loot(list(m["pos"]), gold, itens)
+        if delivery == "ground_gold":
+            await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
+        elif delivery == "chest":
             await self.gm_say(T("narracao.um_bau_de_saque_apareceu"))
 
     # â”€â”€ Covardia Instintiva (kobolds) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -38309,6 +39416,8 @@ class GameRoom:
             alvos = [t for t in targets if max(abs(t["obj"]["pos"][0] - m["pos"][0]),
                                                  abs(t["obj"]["pos"][1] - m["pos"][1])) <= 1]
             if alvos:
+                await self._emitir_animacao_turbilhao_elemental(
+                    m, m.get("pos", [0, 0]), turbilhao.get("radius", 1))
                 for item in alvos:
                     alvo = item["obj"]
                     passou, *_ = self._testar_save(alvo, "reflexos", int(turbilhao.get("dc", 13)), fonte=m)
@@ -38417,6 +39526,8 @@ class GameRoom:
             return o.get("alive") and o.get("hp", 0) > 0 and not self._fosso_protegido(o)
         if target_obj["kind"] == "monster":
             return o.get("hp", 0) > 0
+        if target_obj["kind"] == "prisoner":
+            return o.get("alive") and o.get("hp", 0) > 0
         return o.get("vida_atual", 0) > 0
 
     async def _ativar_desaparecer_sombras(self, m):
@@ -39191,6 +40302,7 @@ class GameRoom:
             m["_water_moves_left"] = 0
             m["master_moves_left"] = 0
         if m.pop("turbilhao_perde_acao", False):
+            self._limpar_tempestade_ciclones_presos(m)
             return False
         # Petrificado: perde o turno (não move nem ataca).
         if m.get("petrificado"):
@@ -39387,7 +40499,8 @@ class GameRoom:
                                  if m.get("_desnutricao_restrito_turno") else 0))
                     die_type = "d" + m["damage"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": die_type,
-                                           "value": raw_dmg, "label": T("dado.dano")})
+                                           "value": raw_dmg, "label": T("dado.dano"),
+                                           "damage_type": (m.get("damage_types") or [DMG_PHYSICAL])[0]})
                     crit_str = " **CRÍTICO!**" if crit else ""
                     if is_player:
                         # Protetor (Richard): divide o dano com o paladino, se ativo
@@ -39520,7 +40633,8 @@ class GameRoom:
         cd = int(ability.get("dc", 13) or 13)
         centro = list(m.get("pos", [0, 0]))
         await self.broadcast({"type": "dice_roll", "die": "d" + expressao.split("d", 1)[-1].split("+", 1)[0],
-                              "value": bruto, "label": T("dado.morte_explosiva_de", nome=nome_criatura(m))})
+                              "value": bruto, "label": T("dado.morte_explosiva_de", nome=nome_criatura(m)),
+                              "damage_type": (ability.get("damage_types") or [DMG_FIRE])[0]})
         await self.gm_say(T("narracao.explode_ao_morrer_de_fogo_em_raio_reflex", monstro=nome_criatura(m), expressao=expressao, raio=raio, cd=cd))
         for alvo in list(self._alvos_na_area(centro[0], centro[1], raio)):
             if alvo is m or not self._vivo(alvo):
@@ -39765,10 +40879,14 @@ class GameRoom:
                         # catálogo na hora de traduzir.
                         item["corrosao_inicial"] = 1
                     itens.append(item)
-            self._spawn_chest(list(m["pos"]), gold, itens)
             detalhe = " Um item intacto estava preso na carapaça!" if roll <= 10 else (
                 " Um item parcialmente corroído foi encontrado." if roll <= 40 else "")
-            await self.gm_say(T("narracao.foi_derrotado_xp_um_bau_de_saque_aparece_2", monstro=nome_criatura(m), share_xp=share_xp, detalhe=detalhe))
+            delivery = self._spawn_monster_loot(list(m["pos"]), gold, itens)
+            if delivery == "ground_gold":
+                await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=""))
+                await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
+            else:
+                await self.gm_say(T("narracao.foi_derrotado_xp_um_bau_de_saque_aparece_2", monstro=nome_criatura(m), share_xp=share_xp, detalhe=detalhe))
             return
 
         if "loot_table" in m:
@@ -39841,11 +40959,11 @@ class GameRoom:
                 )
                 if gdef:
                     loot_items.append(deepcopy(gdef))
-            chest_msg = ""
-            if loot_items or gold > 0:
-                self._spawn_chest(list(m["pos"]), gold, loot_items)
-                chest_msg = " Um **baú de saque** apareceu!"
+            delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
+            chest_msg = " Um **baú de saque** apareceu!" if delivery == "chest" else ""
             await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=chest_msg))
+            if delivery == "ground_gold":
+                await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
         else:
             # Sistema legado: baÃº sÃ³ quando a sala toda Ã© limpa
             gold = m.get("gold", 0)
@@ -39857,9 +40975,12 @@ class GameRoom:
                     loot_items = []
                     if random.random() < 0.65:
                         loot_items.append(deepcopy(random.choice(CHEST_ITEMS)))
-                    if loot_items or gold > 0:
-                        self._spawn_chest(list(m["pos"]), gold, loot_items)
+                    delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
+                    if delivery == "chest":
                         await self.gm_say(T("narracao.foi_derrotado_xp_um_bau_de_saque_aparece", monstro=nome_criatura(m), share_xp=share_xp))
+                    elif delivery == "ground_gold":
+                        await self.gm_say(T("narracao.foi_derrotado_xp", monstro=nome_criatura(m), share_xp=share_xp))
+                        await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
                     else:
                         await self.gm_say(T("narracao.foi_derrotado_xp", monstro=nome_criatura(m), share_xp=share_xp))
                 else:
@@ -39962,6 +41083,8 @@ class GameRoom:
         # Paladino incapacitado: todas as habilidades sustentadas se desfazem.
         if p.get("class_id") == "paladin":
             p["golpe_sagrado_ativo"] = False
+            p["golpe_sagrado_nivel"] = 0
+            p["golpe_sagrado_tipo_extra"] = None
             p["protetor_ativo"]      = False
             p["protetor_alvo"]       = None
             p["regeneracao_ativa"]   = False
@@ -40318,6 +41441,8 @@ class GameRoom:
         # Gelo (Reflexos CD 10; falha zera o movimento) — era o único caminho de
         # movimento sem ele. O hook já roda os dois de redemoinho por dentro.
         await self._aplicar_piso_congelado_se_pisar(pr)
+        if pr.get("alive"):
+            await self._tempestade_verificar_entrada(pr, old_pos, pr["pos"])
         # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
@@ -40931,7 +42056,7 @@ async def handler(ws):
             # Habilidades dos heróis que devem produzir o feedback visual no
             # peão. O snapshot evita animar tentativas recusadas pelo handler.
             _ability_types = {
-                "usar_tecnica", "usar_instrumento", "improviso_alvo",
+                "usar_tecnica", "usar_instrumento", "improviso_alvo", "guild_equip",
                 "aprimorar_magia", "estender_magia", "fortalecer_magia",
                 "ativar_cancao", "provocacao", "cura", "cura_area",
                 "purificacao", "ressurreicao", "imposicao_maos", "golpe_sagrado",
@@ -40945,8 +42070,9 @@ async def handler(ws):
                 if _watched_player and not _watched_player.get("is_master"):
                     _ability_watch = {
                         "before": deepcopy(_watched_player),
-                        "kind": "technique" if t == "usar_tecnica" else "skill",
-                        "ability_id": (msg.get("tecnica_id") if t == "usar_tecnica" else
+                        "kind": "technique" if t in ("usar_tecnica", "guild_equip") else "skill",
+                        "ability_id": (msg.get("item_id") if t == "guild_equip" else
+                                        msg.get("tecnica_id") if t == "usar_tecnica" else
                                         msg.get("habilidade_id") if t == "acao_livre_richard" else
                                         ("instrumento" if t in ("usar_instrumento", "improviso_alvo") else t)),
                     }
@@ -41482,7 +42608,8 @@ async def handler(ws):
                     if room: await room.handle_guild_equip(pid, msg.get("slot"), msg.get("item_id"))
 
                 elif t == "usar_tecnica":
-                    if room: await room.handle_usar_tecnica(pid, msg.get("tecnica_id"), msg.get("target_id"))
+                    if room: await room.handle_usar_tecnica(
+                        pid, msg.get("tecnica_id"), msg.get("target_id"), msg.get("ataques", 1))
 
                 elif t == "sorte_reacao":
                     if room: await room.handle_sorte_reacao(pid, msg.get("usar"))
@@ -41533,7 +42660,8 @@ async def handler(ws):
                     if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
-                    if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"), msg.get("target_pos"))
+                    if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
+                                                       msg.get("target_pos"), msg.get("furia_attacks"))
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))
@@ -41660,7 +42788,8 @@ async def handler(ws):
                     if room: await room.handle_encerrar_animado(pid, msg.get("animado_id"))
 
                 elif t == "atacar_animado":
-                    if room: await room.handle_atacar_animado(pid, msg.get("animado_id"), msg.get("target_id"))
+                    if room: await room.handle_atacar_animado(
+                        pid, msg.get("animado_id"), msg.get("target_id"), msg.get("target_pos"))
 
                 elif t == "usar_habilidade_animado":
                     if room:
