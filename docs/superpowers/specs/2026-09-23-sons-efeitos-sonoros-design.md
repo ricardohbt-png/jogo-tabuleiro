@@ -32,14 +32,18 @@ Exporta `window.SoundBank` no navegador e `module.exports` no node.
   O canal é `efeitos` ou `ambiente`. Os caminhos são relativos a `assets/sfx/`.
 - **Famílias de criatura** `FAMILIA_CRIATURA`: `tipo de monstro → humanoide | fera | morto_vivo | reptil_inseto | grande`.
   Espécie ausente no mapa: `grande` se o `size` ocupar mais de 1×1, senão `humanoide`.
-- **`audibilidade(pos, estado, meuHeroi)`** → `{ ganho, abafado, pan }`:
-  - sem `pos` (som de interface ou do próprio herói): ganho 1, sem abafar, pan 0;
-  - casa **visível**: ganho de 1 caindo linearmente até 0,4 a 12 casas; `pan` pelo eixo X relativo ao herói, limitado a ±0,6;
-  - casa **fora da visão** (névoa ou atrás de porta fechada): ganho 0,35, `abafado: true`, **pan 0** (não revela o lado);
-  - sem herói (mestre, espectador): ganho 1 no visível; o mestre vê o mapa inteiro, então nada sai abafado para ele.
+- **`audibilidade({pos, visao, mePos, mestre})`** → `{ ganho, abafado, panLivre }`:
+  - sem `pos` (som de interface ou do próprio herói): ganho 1, sem abafar, sem pan;
+  - casa **visível**: ganho de 1 caindo linearmente até 0,4 a 12 casas; pan permitido;
+  - casa **fora da visão** (névoa ou atrás de porta fechada): ganho 0,35, `abafado: true`, **sem pan** (não revela o lado);
+  - mestre: ganho 1, nunca abafado (vê o mapa inteiro).
+  - O **valor** do pan é calculado no `game.js` pela projeção da casa na câmera (a câmera
+    orbita, então "direita" é da tela, não do mundo); no 2D, pelo X relativo ao herói.
+    Limitado a ±0,6.
 - **`escolherVariante(evento, ultimo)`**: sorteia entre os arquivos sem repetir o último.
-- **Controle de avalanche** (`podeTocar(evento, agora, tocando)`): respeita o `intervaloMs` por evento e o teto de
-  **8 sons simultâneos**; acima do teto, o som novo de menor ganho é descartado.
+- **Controle de avalanche** (`criarLimitador()` → `pode`/`registrar`): respeita o `intervaloMs` por evento e o
+  teto de **8 sons simultâneos**; com o teto cheio, o som **novo** é descartado (não há como calar um já tocando
+  sem guardar os nós, e 8 simultâneos já é ruído demais para importar qual cai).
 
 A visibilidade de uma casa é lida do mesmo estado que o render usa (`explored`/`visible`
 do `game_state`); o módulo recebe esses dados por parâmetro e não os calcula.
@@ -90,8 +94,16 @@ Nenhuma mensagem nova e nenhum outro campo.
 | Interface | `sua_vez` | o turno passou a ser seu | só você |
 | Interface | `nivel` | o **seu** `level` subiu | só você |
 | Interface | `objetivo` | `mission_complete_pending` ligou | todos |
-| Interface | `clique` / `painel` | abrir/fechar painéis e botões principais | só você |
+| Interface | `clique` | qualquer botão habilitado (um ouvinte delegado) | só você |
 | Interface | `recusa` | mensagem `error` do servidor | só você |
+
+`painel` saiu: abrir painel pelo botão já soa como `clique`, e um som próprio de painel
+tocaria dobrado. Painéis abertos por tecla (S/M/H) ficam em silêncio.
+
+**`GS.on` substitui o ouvinte anterior** (não soma). Havia dois `GS.on('serverError')` e o
+primeiro — que limpa a prévia do Ataque Giratório quando o servidor recusa a técnica —
+nunca rodava. A implementação funde os dois (o som de recusa entra no ouvinte único) e um
+teste proíbe `GS.on` duplicado no `game.js`.
 | Ambiente | `amb_masmorra` / `amb_penumbra` / `amb_ar_livre` | entrar na masmorra | só você |
 
 Volumes relativos no catálogo: interface bem abaixo do combate; `sua_vez` e `nivel` acima da interface.
