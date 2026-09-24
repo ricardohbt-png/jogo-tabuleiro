@@ -259,7 +259,9 @@ const InventoryModal = (() => {
       if(_readOnly || !gsNow || gsNow.phase !== 'playing'){ refresh(); return; }  // só na masmorra, não em só-leitura
       if(sel.kind === 'bag') GS.dropItem('bag', sel.index);
       else                   GS.dropItem('gear', sel.slotKey);
-      close();
+      // O descarte é uma ação do inventário: mantenha o painel aberto para que
+      // o jogador possa continuar organizando os itens sem reabri-lo.
+      refresh();
     });
     document.body.appendChild(overlay);
   }
@@ -1301,14 +1303,14 @@ const InventoryModal = (() => {
         _confirmarDesequiparBota(player, sel.slotKey, () => {
           _selected = null;
           GS.dropItem('gear', sel.slotKey);
-          close();
+          refresh();
         }, () => {});
         return true;
       }
       GS.dropItem('gear', sel.slotKey);
     } else return false;
     _selected = null;
-    close();
+    refresh();
     return true;
   }
 

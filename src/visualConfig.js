@@ -123,10 +123,29 @@ window.VC = {
     screenAnchor:      { x: 0.72, y: 0.68 },
     screenScatter:     { x: 0.10, y: 0.07 },
     numberFontSize:    140,       // px — single digit; scaled proportionally for 2-digit
-    numberStroke:      20,        // px MAXIMUM stroke — boldest white halo for absolute contrast
+    numberStroke:      20,        // px — outline adapts to the face for contrast
     borderWidth:        8,        // px black chamfer border on each face
     numberColor:      '#000000',  // black fill — maximum contrast on vivid backgrounds
     strokeColor:      '#FFFFFF',  // white stroke drawn before fill for visibility
+    darkFaceNumberColor: '#fffdf5', // white-ivory numerals on dark physical-damage dice
+    darkFaceNumberStrokeColor: '#17191d', // dark outline keeps white numerals crisp
+    // Dano usa cor semântica, não a cor clássica do formato do dado. As listas
+    // mantêm variações dentro da mesma família para rolagens simultâneas.
+    damageTypeVariants: {
+      physical:  ['#17191d', '#25282e', '#33373e', '#41464e', '#505660', '#5e646e'],
+      fire:      ['#ff6a00', '#ff7f11', '#f45100', '#ff8c1a', '#e85d04', '#ff9f1c'],
+      cold:      ['#1877d2', '#258be8', '#1261b0', '#45a3f5', '#3478c8', '#5bb8ff'],
+      acid:      ['#3f9f3a', '#55b947', '#287e31', '#70c95a', '#338b49', '#8bd66b'],
+      poison:    ['#7628a8', '#8d3fc2', '#5d2187', '#a257d1', '#7135bd', '#bd75db'],
+      lightning: ['#e2b900', '#f0cf19', '#c99c00', '#ffdf38', '#d8ad12', '#f3d65c'],
+      holy:      ['#c99518', '#dcae2b', '#ad7c10', '#efc84b', '#bd9228', '#f2d477'],
+    },
+    // Temas pontuais preservam o tipo mecânico do dano, mas permitem
+    // distinguir efeitos especiais como regeneração e Ataque Furtivo.
+    themeVariants: {
+      regeneration: ['#27ae60', '#2ecc71', '#168a4b', '#58d68d'],
+      sneak_attack: ['#ff1744', '#e60033', '#c11236', '#a4133c', '#800f2f', '#5a0c2e'],
+    },
       scale:             1.495,     // +15% sobre o tamanho anterior — melhor leitura no tabuleiro
       // Faces menores pedem algarismos menores para não atravessar suas bordas.
       faceFontScale: { d4:0.50, d6:1.00, d8:0.64, d10:0.58, d12:0.76 },
