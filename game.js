@@ -40590,6 +40590,9 @@ function buildChest3D(T, chest){
 // é resolvido por casa em handleTileClick (o raycast pega o chão sob o sprite).
 const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   gold_coins: {path: 'assets/itens/moedas_ouro.glb', footprint: 0.68},
+  // Variantes de machado compartilham o mesmo modelo 3D do Machado Duplo.
+  // A família é resolvida abaixo para também cobrir prata e futuros machados.
+  machado: {path: 'assets/itens/machado.glb', layFlat: true, footprint: 0.78},
   // O mesmo modelo representa as variantes de espada no chão; nomes em
   // português e IDs do catálogo do servidor precisam apontar para o GLB.
   espada_curta: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
@@ -40622,7 +40625,8 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
 
 function _groundItemGlbConfig(gi){
   const itemId = String(gi?.item?.id || '').trim().toLowerCase();
-  return _GROUND_ITEM_GLB_MODELS[itemId] || null;
+  return _GROUND_ITEM_GLB_MODELS[itemId]
+    || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null);
 }
 
 function buildGroundItem3D(T, gi, animateDrop=false){
