@@ -264,6 +264,10 @@ ARTES_PEDIDAS = []
 
 
 def historia(chave, slides, audio=None):
+    """Registra os pedidos de arte de `slides` em ARTES_PEDIDAS (módulo) e devolve
+    o beat pronto para `intro`/`outro`/`outro_rota`. Só deve ser chamada de dentro
+    de `destinos()`, que limpa ARTES_PEDIDAS no início — chamar fora dali acumula
+    pedidos de uma chamada anterior."""
     out = []
     for i, (texto, arte) in enumerate(slides):
         ARTES_PEDIDAS.append((f"{chave}#{i + 1}", arte))
@@ -419,7 +423,14 @@ def salas_alcancaveis(defn, passagens_abertas=False):
 
 # ─── Montagem ────────────────────────────────────────────────────────────────
 def preparar():
-    """Monta e valida TUDO em memória. Levanta ValueError na primeira invalidez."""
+    """Monta e valida TUDO em memória. Levanta ValueError na primeira invalidez.
+
+    Registrar o anel com `S._apply_custom_items` MUTA os catálogos globais do
+    servidor no processo que importou este módulo (é assim que o baú do Trono
+    encontra `ANEL_ID` na validação). É seguro aqui porque cada suíte deste
+    repositório roda no seu próprio processo; quem importar este módulo dentro
+    de um processo de vida longa (ex. o próprio server.py rodando) precisa
+    saber que ele altera o catálogo de itens vivo desse processo."""
     ok, anel = S._validate_custom_item(anel_bruto())
     if not ok:
         raise ValueError(f"anel inválido: {anel}")
@@ -430,5 +441,12 @@ def preparar():
         ok, msg = S.validar_dungeon(defn)
         if not ok:
             raise ValueError(f"{arquivo}: {msg}")
-    return {"masmorras": mm, "destinos": destinos(), "anel": anel,
+    dst = destinos()
+    if set(mm) != set(ARQUIVOS):
+        raise ValueError(f"masmorras() != ARQUIVOS: {sorted(mm)} vs {sorted(ARQUIVOS)}")
+    for did, destino in dst.items():
+        for etapa in destino["dungeons"]:
+            if etapa["file"] not in mm:
+                raise ValueError(f"{did}: etapa referencia arquivo desconhecido {etapa['file']!r}")
+    return {"masmorras": mm, "destinos": dst, "anel": anel,
             "conversa": S._clean_scene_conversations([conversa_bartender()], "")[0]}
