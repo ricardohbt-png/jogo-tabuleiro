@@ -690,6 +690,23 @@ def test_eco_da_morte():
     check("o morto não ecoa em si mesmo", p2["hp"] == 40)
 
 
+def test_nenhuma_maldicao_inerte():
+    """Sonda de inércia: a auditoria que achou 18/25 maldições sem efeito foi
+    feita à mão. Isto a mantém de pé — toda entrada de MALDICOES precisa ter
+    efeito declarativo (`mods`/`estagios`) ou ser lida pelo código FORA do
+    catálogo. Uma maldição nova só com nome e descrição deixa isto vermelho."""
+    import re
+    print("\n[sonda] Nenhuma maldição do catálogo é inerte")
+    src = open(S.__file__, encoding="utf-8").read()
+    ini = src.index("MALDICOES = ")
+    fim = src.index("\n}", ini)
+    fora = src[:ini] + src[fim:]
+    inertes = [mid for mid, d in S.MALDICOES.items()
+               if not (d.get("mods") or d.get("estagios"))
+               and not re.search(r"[\"']" + re.escape(mid) + r"[\"']", fora)]
+    check(f"todas as {len(S.MALDICOES)} têm efeito (inertes: {inertes})", not inertes)
+
+
 def test_maldicao_ferrugem():
     print("\n[29] Maldição da Ferrugem")
     r, p = sala()
@@ -734,6 +751,7 @@ def main():
     test_dor_constante()
     test_eco_da_morte()
     test_maldicao_ferrugem()
+    test_nenhuma_maldicao_inerte()
     print(f"\n===== {PASS} passaram, {FAIL} falharam =====")
     sys.exit(1 if FAIL else 0)
 
