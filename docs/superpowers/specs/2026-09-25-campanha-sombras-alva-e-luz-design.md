@@ -27,6 +27,18 @@ Decisões tomadas no brainstorming:
 - **Construção por script gerador** (reexecutável), não à mão nem pelo editor.
 - **Campanha primeiro, curva de XP depois** (ver "Curva de XP" abaixo).
 
+## Pré-requisito: salas obrigatórias perdidas no carregador (defeito do jogo)
+
+Achado ao prototipar os Salões: `GameRoom.load_authored_dungeon` monta cada sala só com
+`id`/posição/`role`/`locked`/`doors`/`door_orientations` e **descarta `required` e
+`required_mode`**. Com nenhuma sala marcada, `_objetivo_cumprido("salas_obrigatorias")` faz
+`all([])` e o objetivo **se cumpre no instante em que o grupo entra**. O objetivo nunca
+funcionou numa masmorra real — o teste da Camada C ([23] de `test_modo_mestre.py`) monta
+`r.rooms` à mão e não passa pelo carregador. Correção (primeira tarefa do plano): o
+carregador preserva os dois campos, e uma lista vazia de salas obrigatórias passa a
+**não** cumprir o objetivo (o validador já recusa `salas_obrigatorias` sem sala marcada;
+a guarda é defesa em profundidade).
+
 ## Curva de XP — pré-condição conhecida, fora desta spec
 
 A curva atual dispara: o XP por monstro é `150 × nível_médio × 2^(ND−1)` dividido entre os
@@ -59,7 +71,7 @@ para as velhas minas de Pedra-Funda.
 **2 · Minas de Pedra-Funda.** Túneis de kobolds cheios de armadilhas; aranhas nas galerias
 fundas; um ogro guardando o cofre da companhia de caravanas. Dentro do cofre, frascos de
 ácido e de óleo que os kobolds nunca entenderam, e um bilhete com o sinal do bando — uma
-garra negra — que fala do "guardião que não morre".
+garra negra — que fala do "guardião que não morre" (item `carta` com texto, que já existe).
 
 **3 · Covil da Garra Negra.**
 - **Salões de Cima:** a guarnição do bando (goblins veteranos, orcs mercenários, um mago
@@ -110,7 +122,9 @@ ND da sala = soma de `monster_cr` dos monstros + `trap_cr` das armadilhas autora
 ### 1 · Emboscada no Vau — `sombras_1_vau.json`
 
 `ambiente: ar_livre` · `expected_party {4,1}` (poder 4) · objetivo `rescue_prisoner`
-(xp 0, reward: 40 ouro) · `saida_permitida: true`.
+(xp 0, reward: 40 ouro) · `saida_permitida: true`. **O objetivo é uma escolta:** o servidor só
+o dá por cumprido quando Tomé, já solto, está a 1 casa da **saída** — que fica na borda leste
+do Acampamento ("a estrada segue para a vila").
 
 | Sala | Conteúdo | ND | Faixa |
 |---|---|---|---|
@@ -161,9 +175,10 @@ Todas Fácil (0,21–0,29) de propósito: o peso do Covil é não recuperar ante
 | Esconderijo (secreto) | `bugbear_sombras`, 2 `aranha_sombria`; baú com o **Anel da Garra Negra** | 2,5 | Fácil no número (luta no escuro) |
 
 **Passagem secreta:** `type: mechanism`, na parede entre o Poço antigo e o Esconderijo,
-aberta pela decoração `estante_livros` do Poço, que leva `key_objective: true` (exigência
-do validador para chave de mecanismo; interagir com ela marca o objetivo de baú-chave, que
-aqui não é o objetivo — sem efeito). O Esconderijo não é `required` nem contém o alvo:
+aberta pela decoração `estante_livros` do Poço. A estante **não** leva `key_objective` (esse
+campo só é exigido de decorações que abrem *portas*; numa decoração sem passagem ligada ele
+marcaria o objetivo de baú-chave). A estante fica **ao lado** da casa que dá acesso à
+passagem — nunca em cima dela, senão a passagem aberta seria inalcançável. O Esconderijo não é `required` nem contém o alvo:
 enfrentar o Bugbear é opcional, antes ou depois do Troll (o jogo deixa explorar até alguém
 clicar "Encerrar missão").
 
@@ -172,12 +187,15 @@ um corredor do outro lado." O Detectar Armadilhas do ladino também revela a pas
 
 ### Validador de design do editor
 
-As 4 masmorras devem sair sem aviso de conectividade (R4), de descanso antes do chefe no
+Os avisos do validador de design moram no `tools/editor.js` (JavaScript, dependente do
+estado do editor), então o teste automático cobre a **conectividade** em Python (toda sala
+alcançável a pé da entrada; o Esconderijo só depois de abrir a passagem) e os avisos do
+editor são conferidos abrindo cada masmorra nele. As 4 masmorras devem sair sem aviso de conectividade (R4), de descanso antes do chefe no
 Trono (R5 — satisfeito pelo Poço antigo, ND 0, vizinho do Trono) e de picos bruscos entre
 salas obrigatórias (R3). **Avisos esperados e aceitos:** R2 no Trono (só 2 salas entre a
 entrada e o chefe — o andar é a continuação dos Salões, emendado) e R1 (rota alternativa)
-em todas, porque masmorras curtas e lineares são intencionais aqui. O teste confere que os
-avisos emitidos são exatamente esses.
+em todas, porque masmorras curtas e lineares são intencionais aqui. A conferência final no
+editor registra que os avisos emitidos são exatamente esses.
 
 ## Itens
 
@@ -220,12 +238,13 @@ Rodado da raiz: `python tools/gerar_campanha_sombras.py [--forcar] [--simular]`.
 - **Valida antes de gravar, tudo ou nada.** Cada masmorra por `validar_dungeon`, o anel por
   `_validate_custom_item`, os destinos pelo mesmo formato que `_world_adventures_editor`
   aceita. Qualquer falha aborta sem gravar arquivo nenhum.
-- **Mapas por código.** Salas retangulares em grade, ligadas por corredores de 1 casa com
-  portas nas entradas das salas (salas começam trancadas, exceto a entrada); monstros,
-  armadilhas, baús, falas e decorações posicionados em casas livres dentro de cada sala,
-  com semente fixa (a regeneração produz o mesmo mapa).
-- **`--simular`** imprime, sem gravar: ND e faixa por sala, avisos do validador de design
-  e a lista de artes pedidas pelos slides.
+- **Mapas por código.** Salas retangulares separadas por UMA parede, com a porta entre duas
+  salas vizinhas nessa parede (listada nas duas salas; salas começam trancadas, exceto a
+  entrada e o Esconderijo, que só se alcança pela passagem); monstros, armadilhas, baús,
+  falas e decorações em posições fixas relativas ao canto de cada sala — sem sorteio, então
+  a regeneração produz o mesmo mapa.
+- **`--simular`** imprime, sem gravar: ND e faixa por sala e a lista de artes pedidas pelos
+  slides.
 
 ## Testes — `tools/test_campanha_sombras.py`
 
