@@ -74,7 +74,7 @@ check("o raio vem dos stats do instrumento", /instrumentoStatsClient\([\s\S]{0,1
 console.log("\n[2c] Nenhum contorno: o alcance é pintado, como os demais");
 check("não sobrou função de contorno", !/_aimRenderRangeOutline3D|_aimBordaDoAlcance/.test(GAME));
 check("o 2D pinta o alcance com o preenchimento da paleta",
-  /for \(const k of hl\.range\) draw\(k, AIM_COLORS\.range\.fill\)/.test(GAME));
+  /const rangeFill=[^;]*: AIM_COLORS\.range\.fill;/.test(GAME) && /for \(const k of hl\.range\) draw\(k, rangeFill\)/.test(GAME));
 check("o 3D acende o alcance pelo pool de casas",
   /toggle\(g3\.spellRangeMeshes,\s+hl\.range\);/.test(GAME));
 

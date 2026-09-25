@@ -71,9 +71,9 @@ console.log('\n[2] Prévia vermelha e linha verde');
 check('a função de hover mantém a área possível em vermelho e pinta a linha sob o cursor de verde',
   /range:mode\.possibleArea,\s*area:_notaCortantePreviewTiles\(GS\.me,mode\.alcanceNota,dir\)/.test(SRC));
 check('os quadrados vermelhos usam a paleta de bloqueio vermelha apenas para Nota Cortante',
-  /const rangeFill=window\._modoDirecaoInstrumento\?\.previewNota\s*\? AIM_COLORS\.blocked\.fill\s*: AIM_COLORS\.range\.fill/.test(SRC));
+  /const rangeFill=window\._modoDirecaoInstrumento\?\.previewNota(?: \|\| window\._acordeTrovejantePreview)?\s*\? AIM_COLORS\.blocked\.fill\s*: AIM_COLORS\.range\.fill/.test(SRC));
 check('o mesmo vermelho e verde é aplicado no renderizador 3D',
-  /mat\.color\.setHex\(notaCortanteAim\?AIM_COLORS\.blocked\.hex:AIM_COLORS\.range\.hex\)/.test(SRC)
+  /const vermelhoAim=!!window\._modoDirecaoInstrumento\?\.previewNota/.test(SRC) && /mat\.color\.setHex\(vermelhoAim\?AIM_COLORS\.blocked\.hex:AIM_COLORS\.range\.hex\)/.test(SRC)
     && /toggle\(g3\.spellAreaMeshes,\s*hl\.area\)/.test(SRC));
 
 console.log('\n[3] Clique inválido não dispara a habilidade');

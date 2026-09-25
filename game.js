@@ -27767,7 +27767,12 @@ function _somDor(c, fb){
     setTimeout(() => sfx('dor_' + fam, {pos}), ATRASO_DOR_ELEMENTAL_MS);
     return true;
   }
-  return sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos});
+  if(sfx(heroi ? 'dor_heroi' : 'dor_criatura', {pos})) return true;
+  // Sem amostra pronta (falha de rede, arquivo ausente): os gemidos
+  // sintetizados, que distinguem o herói (grito agudo que desce) da criatura
+  // (baque grave) — antes os dois caíam no mesmo "tum" do _playCombatCue.
+  (heroi ? playHeroHurt : playCreatureHit)();
+  return true;
 }
 // 'm:<id>' → família de voz do monstro (humanoide, fera...); null se não houver.
 function _familiaDaChave(k){

@@ -521,7 +521,7 @@ console.log('\n[19] Bomba de fumaça: nuvem guiada pela zona');
   check('depois de 1,6 s a nuvem desfeita é removida', !f.mapa.has('fumaca_p1_2_1_1') && f.mapa.has('fumaca_p1_3_5_4'));
   f._fumacaReset();
   check('reset (masmorra nova) limpa tudo', f.mapa.size === 0);
-  check('fumaça fora da névoa roxa do Manto', /zz\.filter\(z => z\.ativa && z\.tipo === 'escuridao' && !_ehZonaFumaca\(z\)\)/.test(GAME));
+  check('fumaça fora da névoa roxa do Manto', /zz\.filter\(z => z\.ativa && z\.tipo === 'escuridao' && !_ehZonaFumaca\(z\)[ )&]/.test(GAME));
   check('ligada no renderMap, no laço 3D e no desenho 2D', /_tempestadeSyncFromState\(state\);\s*_fumacaSync\(state\);/.test(GAME)
     && /_updateArmadilhas3D\(now\);\s*_updateFumaca3D\(now\);/.test(GAME) && /_fumacaDraw2D\(ctx, state, _agoraRelampago\);/.test(GAME));
   check('catálogo tem fumaca_puff e fumaca_chiado', SB.SFX.fumaca_puff && SB.SFX.fumaca_chiado && SB.SFX.fumaca_puff.arquivos.length === 2);
@@ -636,6 +636,20 @@ console.log('\n[22] Passo em água/pântano');
   check('sem casa → seco', f(undefined) === false);
   ponte = true;
   check('ponte sobre a água → seco (o pé não toca a água)', f([1, 1]) === false);
+}
+
+console.log('\n[23] Recuo da dor sem amostra: herói e criatura soam diferente');
+{
+  const tocados = [];
+  const fn = new Function('sfx', 'playHeroHurt', 'playCreatureHit', '_corrosaoAposDor', '_somDorArmadilha',
+    '_familiaElementalDaChave', '_sfxPronto', '_combatPrimaryDamageType', '_familiaDaChave', '_retaliacaoAposDor',
+    'ATRASO_DOR_ELEMENTAL_MS', extrair('_somDor') + '\nreturn _somDor;')(
+    () => false,                                   // nenhuma amostra pronta
+    () => tocados.push('heroi'), () => tocados.push('criatura'),
+    () => {}, () => false, () => null, () => false, t => t, () => null, () => {}, 90);
+  check('herói sem amostra → gemido sintetizado do herói', fn({ hit: true, targetKey: 'p:1' }, {}) === true && tocados.pop() === 'heroi');
+  check('monstro sem amostra → baque sintetizado da criatura', fn({ hit: true, targetKey: 'm:9' }, {}) === true && tocados.pop() === 'criatura');
+  check('golpe que mata não geme (a morte toca no lugar)', fn({ hit: true, death: true, targetKey: 'm:9' }, {}) === true && tocados.length === 0);
 }
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);

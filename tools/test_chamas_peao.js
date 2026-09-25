@@ -16,7 +16,7 @@ console.log('\n[1] Fiação');
 check('figura comum usa _makeChamasFx3D (não o 🔥 parado)', /if\(emChamas\)\{ const fx = _makeChamasFx3D\(baseR\);/.test(GAME));
 check('criatura orientada usa _makeChamasFx3D', /const fx = _makeChamasFx3D\(0\.45\);/.test(GAME));
 check('_makeChamasSprite3D removido', !GAME.includes('function _makeChamasSprite3D('));
-check('laço 3D anima as chamas', /_updateFumaca3D\(now\);\s*_updateChamasFx3D\(now\);/.test(GAME));
+check('laço 3D anima as chamas', /_updateFumaca3D\(now\);\s*(?:_updateSombras3D\(now\);\s*)?_updateChamasFx3D\(now\);/.test(GAME));
 check('2D: monstro em chamas desenha labaredas', /if\(m\.em_chamas_rodadas > 0\)\s*_desenharChamasPeao2D\(/.test(GAME));
 check('2D: herói em chamas desenha labaredas', /if\(p\.em_chamas_rodadas > 0 && !_invisP\)\s*_desenharChamasPeao2D\(/.test(GAME));
 check('sprites sem tone mapping e sem mistura aditiva', /depthWrite: false, toneMapped: false \}\)/.test(GAME)
