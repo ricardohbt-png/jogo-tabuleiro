@@ -8716,6 +8716,7 @@ function renderMap(state){
     const X=tx*CELL, Y=ty*CELL;
     ctx.fillStyle='rgba(200,30,30,0.22)'; ctx.fillRect(X+4,Y+4,CELL-8,CELL-8);
     ctx.font=`${Math.round(CELL*0.55)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#ff5a4a';   // opaco: o alfa do fundo (0,22) valia também para o glifo
     ctx.fillText('⚠',X+CELL/2,Y+CELL/2);
   }
 
@@ -8742,6 +8743,7 @@ function renderMap(state){
       ctx.drawImage(_aImg, X+(CELL-dw)/2, Y+(CELL-dh)/2, dw, dh);
     } else {
       ctx.font=`${Math.round(CELL*0.5)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='#fff';      // opaco: senão o ícone herdava o alfa do fundo (0,18–0,28)
       ctx.fillText(arm.icone||'🪤',X+CELL/2,Y+CELL/2);
     }
   }
@@ -8938,9 +8940,14 @@ function renderMap(state){
           ctx.restore();
         }
       } else if (_sx === 1 && _sy === 1) {
+        // fillStyle OPACO antes do emoji: o Chrome aplica o alfa do fillStyle
+        // também ao glifo colorido, e o que estava em vigor era o do realce
+        // (0,12) — toda decoração sem PNG saía fantasma (medido: 31/255).
+        ctx.fillStyle = '#fff';
         ctx.font = `${Math.floor(CELL * 0.8)}px serif`;
         ctx.fillText(d.emoji || '🪑', ecx, ecy);
       } else {
+        ctx.fillStyle = '#fff';
         // emoji escalado: ancorado na base do footprint, crescendo p/ cima
         const baseY = (Math.max(...tiles.map(t => t[1])) + 1) * CELL + _oy;
         ctx.font = `${Math.floor(CELL * 0.8 * Math.max(_sx, _sy))}px serif`;
