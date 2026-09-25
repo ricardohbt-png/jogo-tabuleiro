@@ -7857,6 +7857,267 @@ function _tickFumaca2D(now){
   else _fumaca2DRaf = setTimeout(() => { _fumaca2DRaf = _scheduleVisualFrame(_tickFumaca2D); }, 120);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// MANTO DA ESCURIDÃO — nuvem de sombras guiada pela zona de escuridão
+// ═══════════════════════════════════════════════════════════════════════════
+// Irmã da fumaça da bomba, em tom enegrecido: vale para toda zona `escuridao`
+// que não seja fumaça (o Manto do herói E o do monstro, que não tem animação
+// própria). Diferenças da fumaça: (1) cobre as casas REAIS da zona (quadrado de
+// `area_lado` com Cajado Arcano, ou raio de Chebyshev) — é a área que dá
+// desvantagem, então a nuvem precisa bater com ela; (2) nasce em onda do centro
+// para fora; (3) acompanha o conjurador (`seguir_caster`), deslizando; (4) fica
+// mais baixa, para o peão não sumir; (5) alguns novelos viram fios de sombra que
+// sobem e se desfazem. O som é o do Manto (_tocarSomMantoEscuridao).
+const SOMBRA_NASCER_MS = 1300, SOMBRA_SAIR_MS = 1400, SOMBRA_ANEL_MS = 700;
+const SOMBRA_OPACIDADE = 0.92, SOMBRA_OPACIDADE_FIM = 0.55;
+const SOMBRA_POR_CASA = 2.0, SOMBRA_MIN_NOVELOS = 24, SOMBRA_MAX_NOVELOS = 128;
+const SOMBRA_CORES = [0x0b0a10, 0x141019, 0x1b1622, 0x08070b, 0x221a2e];
+const _sombraNuvens = new Map();       // id da zona -> nuvem
+let _sombraBaseline = true;            // 1º estado após reset: zonas antigas nascem prontas e mudas
+let _sombra2DRaf = null;
+
+function _ehZonaSombra(z){ return !!(z && z.tipo === 'escuridao' && !_ehZonaFumaca(z)); }
+
+// Casas da zona relativas ao centro, pelas MESMAS regras do realce de área.
+function _sombraCasasRelativas(z){
+  const cx = Number(z.cx), cy = Number(z.cy), set = new Set();
+  const lado = Number(z.area_lado) || 0;
+  if(lado) _addQuadrado(cx, cy, lado, set);
+  else _addCheb(cx, cy, Math.max(1, Number(z.raio) || 3), set);
+  return [...set].map(k => { const [x, y] = k.split(',').map(Number); return [x - cx, y - cy]; });
+}
+
+function _sombraReset(){
+  for(const n of _sombraNuvens.values()){ _sombraDispose3D(n); _pararSomMantoEscuridao(n); }
+  _sombraNuvens.clear();
+  _sombraBaseline = true;
+}
+
+function _sombrasSync(state){
+  if(!state) return;
+  const now = performance.now();
+  const rodada = Number(state.round ?? state.round_num ?? 0) || 0;
+  const vivas = new Set();
+  for(const z of (state.zonas_especiais || [])){
+    if(!z.ativa || !_ehZonaSombra(z)) continue;
+    const id = String(z.visual_id || z.id || `${z.caster}_${z.cx}_${z.cy}`);
+    vivas.add(id);
+    let n = _sombraNuvens.get(id);
+    if(!n){
+      // visual_id do Manto: manto_escuridao_<caster>_<rodada>_<x>_<y>;
+      // id da zona do monstro: escuridao_<caster>_<rodada>.
+      const partes = id.split('_');
+      const rodadaCriada = Number(partes[partes.length - (z.visual_id ? 3 : 1)]);
+      const nova = !_sombraBaseline && !GS.isPreview && rodadaCriada === rodada;
+      let semente = (Number(z.cx) * 73856093) ^ (Number(z.cy) * 19349663) ^ (rodadaCriada * 83492791);
+      const rnd = () => { semente = (semente * 1103515245 + 12345) & 0x7fffffff; return semente / 0x7fffffff; };
+      const casas = _sombraCasasRelativas(z);
+      const total = Math.max(SOMBRA_MIN_NOVELOS, Math.min(SOMBRA_MAX_NOVELOS, Math.round(casas.length * SOMBRA_POR_CASA)));
+      const alcance = casas.reduce((m, [ox, oy]) => Math.max(m, Math.abs(ox), Math.abs(oy)), 0);
+      n = { id, cx: Number(z.cx), cy: Number(z.cy), rx: Number(z.cx), ry: Number(z.cy), tCentro: null,
+        alcance, nasceEm: nova ? now : now - SOMBRA_NASCER_MS - 2000,
+        saiEm: null, ultima: false, group: null, somIniciado: !nova, sound: null,
+        // A 1ª volta cobre cada casa uma vez (a borda da nuvem bate com a da
+        // zona); o resto engrossa casas sorteadas.
+        novelos: Array.from({length: total}, (_, i) => {
+          const [ox, oy] = i < casas.length ? casas[i] : casas[Math.floor(rnd() * casas.length)];
+          const fio = i % 6 === 5;
+          return { dx: ox + (rnd() - 0.5) * 0.8, dz: oy + (rnd() - 0.5) * 0.8,
+            y: 0.1 + rnd() * 0.6, esc: (fio ? 0.8 : 1.7) + rnd() * 0.9,
+            giro: (rnd() * 2 - 1) * 0.3, fase: rnd() * Math.PI * 2, fio,
+            atraso: Math.hypot(ox, oy) * 110 + rnd() * 140,   // onda do centro para fora
+            cor: SOMBRA_CORES[i % SOMBRA_CORES.length] };
+        }) };
+      _sombraNuvens.set(id, n);
+    }
+    n.cx = Number(z.cx); n.cy = Number(z.cy);   // segue o conjurador
+    n.ultima = Number(z.duracao) <= 1;
+  }
+  for(const n of _sombraNuvens.values())
+    if(!vivas.has(n.id) && n.saiEm == null){ n.saiEm = now; _pararSomMantoEscuridao(n); }
+  _sombraBaseline = false;
+  if(!(mode3D && g3) && _sombraNuvens.size && !_sombra2DRaf) _sombra2DRaf = _scheduleVisualFrame(_tickSombras2D);
+}
+
+function _sombrasAvancar(now){
+  for(const [id, n] of _sombraNuvens){
+    if(!n.somIniciado && now >= n.nasceEm && n.saiEm == null){
+      n.somIniciado = true;
+      _tocarSomMantoEscuridao(n);
+    }
+    if(n.saiEm != null && now - n.saiEm >= SOMBRA_SAIR_MS){
+      _sombraDispose3D(n); _pararSomMantoEscuridao(n); _sombraNuvens.delete(id);
+    }
+  }
+}
+
+function _sombraFase(n, now){
+  const saida = n.saiEm == null ? 0 : Math.max(0, Math.min(1, (now - n.saiEm) / SOMBRA_SAIR_MS));
+  const anel = Math.max(0, Math.min(1, (now - n.nasceEm) / SOMBRA_ANEL_MS));
+  return { antes: now < n.nasceEm, anel, saida, alvo: n.ultima ? SOMBRA_OPACIDADE_FIM : SOMBRA_OPACIDADE };
+}
+
+// Nascimento de um novelo (0→1, com a onda do centro para fora).
+function _sombraNascNovelo(n, nv, now){
+  const loc = Math.max(0, Math.min(1, (now - n.nasceEm - nv.atraso) / SOMBRA_NASCER_MS));
+  return 1 - Math.pow(1 - loc, 3);
+}
+
+// Centro de desenho: persegue o centro autoritativo (o conjurador anda e a
+// zona pula de casa em casa; a nuvem desliza atrás dele).
+function _sombraCentro(n, now){
+  const dt = n.tCentro == null ? 1e9 : Math.max(0, now - n.tCentro);
+  const k = 1 - Math.exp(-dt / 140);
+  n.rx += (n.cx - n.rx) * k; n.ry += (n.cy - n.ry) * k;
+  if(Math.abs(n.cx - n.rx) + Math.abs(n.cy - n.ry) > 3){ n.rx = n.cx; n.ry = n.cy; }   // teleporte: sem arrastar
+  n.tCentro = now;
+  return { x: n.rx, y: n.ry, movendo: Math.abs(n.cx - n.rx) + Math.abs(n.cy - n.ry) > 0.01 };
+}
+
+// Posição/escala/opacidade de um novelo num instante (comum a 2D e 3D).
+function _sombraNoveloEstado(n, nv, f, now){
+  const e = _sombraNascNovelo(n, nv, now);
+  if(nv.fio){
+    // Fio de sombra: sobe devagar e se desfaz, em ciclo.
+    const t = ((now / 1000 + nv.fase) % 3.4) / 3.4;
+    return { x: nv.dx + Math.sin(t * 6.28 + nv.fase) * 0.12, y: 0.12 + t * 1.15, z: nv.dz,
+      esc: nv.esc * 0.6 * (1 - 0.45 * t) * (0.3 + 0.7 * e),
+      a: f.alvo * 0.75 * e * (1 - f.saida) * Math.sin(Math.PI * t) };
+  }
+  const resp = 1 + 0.07 * Math.sin(now / 1100 + nv.fase);
+  return { x: nv.dx + Math.sin(now / 3100 + nv.fase) * 0.10,
+    y: nv.y * (0.5 + 0.5 * e) + f.saida * 0.55,
+    z: nv.dz + Math.cos(now / 3400 + nv.fase) * 0.10,
+    esc: nv.esc * (0.3 + 0.7 * e) * resp * (1 + 0.25 * f.saida),
+    a: f.alvo * e * (1 - f.saida) };
+}
+
+function _sombraBuild3D(n){
+  if(!g3?.scene || !g3.T || n.group) return;
+  const T = g3.T, group = new T.Group();
+  group.name = 'sombra-' + n.id;
+  const tex = _fumacaTexturaNovelo(T);
+  for(const nv of n.novelos){
+    // toneMapped:false — com o ACES do jogo o preto virava cinza-azulado.
+    const mat = new T.SpriteMaterial({ map: tex, color: nv.cor, transparent: true, opacity: 0,
+      depthWrite: false, toneMapped: false });
+    const sp = new T.Sprite(mat);
+    sp.userData.sombraNovelo = nv;
+    group.add(sp);
+  }
+  const anel = new T.Mesh(new T.RingGeometry(0.2, 0.34, 48),
+    new T.MeshBasicMaterial({ color: 0x1a1424, transparent: true, opacity: 0, depthWrite: false,
+      side: T.DoubleSide, toneMapped: false }));
+  anel.rotation.x = -Math.PI / 2; anel.position.y = 0.05;
+  anel.userData.sombraAnel = true;
+  group.add(anel);
+  g3.scene.add(group); n.group = group;
+}
+
+function _sombraDispose3D(n){
+  const g = n && n.group; if(!g) return;
+  if(g.parent) g.parent.remove(g);
+  g.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });   // a textura é compartilhada: fica
+  n.group = null;
+}
+
+function _updateSombras3D(now){
+  _sombrasAvancar(now);
+  if(!g3?.scene) return;
+  const vis = g3.spellVisibleSet;
+  for(const n of _sombraNuvens.values()){
+    if(n.group && n.group.parent !== g3.scene){ _sombraDispose3D(n); }
+    if(!n.group) _sombraBuild3D(n);
+    const g = n.group; if(!g) continue;
+    const f = _sombraFase(n, now);
+    g.visible = !f.antes && (!vis || vis.has(`${n.cx},${n.cy}`));
+    if(!g.visible) continue;
+    const c = _sombraCentro(n, now);
+    const w = casaParaMundo(c.x, c.y);
+    g.position.set(w.x, 0, w.z);
+    for(const o of g.children){
+      if(o.userData.sombraAnel){
+        const s = 1 + f.anel * ((n.alcance + 0.8) / 0.27 - 1);
+        o.scale.set(s, s, 1);
+        o.material.opacity = 0.7 * (1 - f.anel);
+        continue;
+      }
+      const nv = o.userData.sombraNovelo; if(!nv) continue;
+      const st = _sombraNoveloEstado(n, nv, f, now);
+      o.scale.set(st.esc, st.esc, 1);
+      o.position.set(st.x, st.y, st.z);
+      o.material.rotation = nv.fase + now / 1000 * nv.giro;
+      o.material.opacity = st.a;
+    }
+  }
+}
+
+// 2D: um borrão escuro por novelo (a mesma nuvem vista de cima), por cima dos
+// peões como a fumaça, mas com teto de opacidade menor para o peão não sumir.
+function _sombrasDraw2D(ctx, state, now){
+  if(!_sombraNuvens.size) return;
+  for(const n of _sombraNuvens.values()){
+    const f = _sombraFase(n, now);
+    if(f.antes) continue;
+    const c = _sombraCentro(n, now);
+    ctx.save();
+    const pontos = [];
+    for(const nv of n.novelos){
+      const st = _sombraNoveloEstado(n, nv, f, now);
+      if(st.a <= 0.01) continue;
+      // Vista de cima: a altura vira um leve deslocamento para "cima" na tela.
+      pontos.push({ nv, a: st.a, px: (c.x + st.x + 0.5) * CELL,
+        py: (c.y + st.z + 0.5) * CELL - st.y * CELL * 0.35, r: Math.max(2, st.esc * 0.42 * CELL) });
+    }
+    // O piso do 2D é escuro (luminância ~30/255, medido): preto sobre ele não se
+    // lê. A 1ª passada desenha uma orla violeta-acinzentada, mais clara que o
+    // piso, que dá o CONTORNO da nuvem; a 2ª, o miolo escuro por cima.
+    for(const p of pontos){
+      const r = p.r * 1.3, a = p.a * (p.nv.fio ? 0.30 : 0.16);
+      const halo = ctx.createRadialGradient(p.px, p.py, p.r * 0.55, p.px, p.py, r);
+      halo.addColorStop(0, `rgba(96,82,122,${a})`);
+      halo.addColorStop(1, 'rgba(96,82,122,0)');
+      ctx.fillStyle = halo;
+      ctx.beginPath(); ctx.arc(p.px, p.py, r, 0, Math.PI * 2); ctx.fill();
+    }
+    for(const p of pontos){
+      if(p.nv.fio) continue;   // os fios são só a névoa clara que sobe
+      const a = p.a * 0.30;
+      const grad = ctx.createRadialGradient(p.px, p.py, p.r * 0.1, p.px, p.py, p.r * 0.8);
+      grad.addColorStop(0, `rgba(5,4,9,${a})`);
+      grad.addColorStop(0.6, `rgba(10,8,16,${a * 0.6})`);
+      grad.addColorStop(1, 'rgba(10,8,16,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(p.px, p.py, p.r * 0.8, 0, Math.PI * 2); ctx.fill();
+    }
+    if(f.anel < 1){
+      const cx = (c.x + 0.5) * CELL, cy = (c.y + 0.5) * CELL;
+      ctx.strokeStyle = `rgba(110,94,140,${0.55 * (1 - f.anel)})`;
+      ctx.lineWidth = CELL * 0.14;
+      ctx.beginPath(); ctx.arc(cx, cy, (0.3 + f.anel * (n.alcance + 0.6)) * CELL, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+function _tickSombras2D(now){
+  _sombra2DRaf = null;
+  _sombrasAvancar(now);
+  if(mode3D && g3) return;
+  if(!GS.gameState || !_sombraNuvens.size) return;
+  renderMap(GS.gameState);
+  if(!_sombraNuvens.size || _sombra2DRaf) return;
+  // Nascendo, saindo ou seguindo o conjurador: quadro a quadro. Parada, os
+  // fios de sombra ainda sobem — ~12 quadros/s bastam.
+  const animando = [..._sombraNuvens.values()].some(n => {
+    const f = _sombraFase(n, now);
+    return f.antes || f.anel < 1 || f.saida > 0 || now - n.nasceEm < SOMBRA_NASCER_MS + 1200
+      || Math.abs(n.cx - n.rx) + Math.abs(n.cy - n.ry) > 0.01;
+  });
+  if(animando) _sombra2DRaf = _scheduleVisualFrame(_tickSombras2D);
+  else _sombra2DRaf = setTimeout(() => { _sombra2DRaf = _scheduleVisualFrame(_tickSombras2D); }, 80);
+}
+
 function _receberAnimacaoArmadilha(msg){
   // Outros popups também usam trap_result; condições e quedas já possuem seus
   // próprios efeitos e não devem receber uma segunda animação de armadilha.
@@ -8152,6 +8413,7 @@ function renderMap(state){
   _syncProtetorVisualState(state);
   _tempestadeSyncFromState(state);
   _fumacaSync(state);
+  _sombrasSync(state);
   _requiemFinalSyncFromState(state);
   _atualizarZonasMagia(state);   // zonas persistentes (Bola de Fogo) — vale p/ 2D e 3D
   if(mode3D){ renderMap3D(state); return; }
@@ -8300,8 +8562,6 @@ function renderMap(state){
     _privacaoDraw2D(ctx, state, _animPrivacao, performance.now());
   for(const _animPrisaoChamas of _prisaoChamasAnims)
     _prisaoChamasDraw2D(ctx, state, _animPrisaoChamas, performance.now());
-  for(const _animMantoEsc of _mantoEscuridaoAnims)
-    _mantoEscuridaoDraw2D(ctx, state, _animMantoEsc, performance.now());
   for(const _animClarividencia of _clarividenciaAnims)
     _clarividenciaDraw2D(ctx, state, _animClarividencia, performance.now());
   for(const _animRegeneracao of _regeneracaoAnims)
@@ -9122,8 +9382,6 @@ function renderMap(state){
     _maldicaoDrawForeground2D(ctx, state, _animMaldicao, _agoraRelampago);
   for(const _animPrivacao of _privacaoAnims)
     _privacaoDrawForeground2D(ctx, state, _animPrivacao, _agoraRelampago);
-  for(const _animMantoEsc of _mantoEscuridaoAnims)
-    _mantoEscuridaoDrawForeground2D(ctx, state, _animMantoEsc, _agoraRelampago);
   for(const _animClarividencia of _clarividenciaAnims)
     _clarividenciaDrawForeground2D(ctx, state, _animClarividencia, _agoraRelampago);
   for(const _animRegeneracao of _regeneracaoAnims)
@@ -9137,6 +9395,7 @@ function renderMap(state){
   for(const _animArmadilha of _armadilhaAnims)
     _armadilhaDraw2D(ctx, state, _animArmadilha, _agoraRelampago);
   _fumacaDraw2D(ctx, state, _agoraRelampago);   // por cima dos peões: eles ficam meio encobertos
+  _sombrasDraw2D(ctx, state, _agoraRelampago);  // Manto: mesma ideia, em sombra
   _drawAttackFeedback2D(ctx, state, _agoraRelampago);
   // Números de dano/cura e resultado de derrota ficam no primeiro plano para
   // permanecerem legíveis mesmo quando uma magia atravessa a miniatura.
@@ -19015,8 +19274,8 @@ function _atualizarZonasMagia(state) {
     }
   }
   window._spellHL.camarasGas = gasTiles;
-  // A fumaça da bomba tem visual próprio (nuvem): fica fora da névoa roxa do Manto.
-  window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao' && !_ehZonaFumaca(z))
+  // Fumaça e Manto têm visual próprio (nuvens): ficam fora do véu por casa.
+  window._spellHL.escuridao = zz.filter(z => z.ativa && z.tipo === 'escuridao' && !_ehZonaFumaca(z) && !_ehZonaSombra(z))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 3, lado: z.area_lado || 0,
                                   visualId: z.visual_id || z.animation_id || z.id || null }));
   window._spellHL.silencio  = zz.filter(z => z.ativa && z.tipo === 'silencio')
@@ -27614,7 +27873,7 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); _corrosaoReset(); }
+function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); _sombraReset(); _corrosaoReset(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
   _sonsPassosDeEstado(state);
@@ -37736,48 +37995,8 @@ function _receberAnimacaoInvisibilidade(msg){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MANTO DA ESCURIDÃO — expansão, névoa viva e dissipação do véu
+// MANTO DA ESCURIDÃO — som (o visual é a nuvem de sombras, ver _sombrasSync)
 // ═══════════════════════════════════════════════════════════════════════════
-const _mantoEscuridaoAnims = [];
-let _mantoEscuridaoRaf = null;
-const MANTO_ESCURIDAO_DEFAULT_EXPAND_MS = 920;
-const MANTO_ESCURIDAO_DEFAULT_END_MS = 900;
-
-function _mantoEscuridaoHash(n){
-  n = (n | 0) ^ 0x6d2b79f5;
-  n = Math.imul(n ^ (n >>> 15), 0x85ebca6b);
-  return ((n ^ (n >>> 13)) >>> 0) / 4294967296;
-}
-
-function _mantoEscuridaoAnimFromMessage(msg){
-  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
-  return {
-    animationId: msg.animation_id == null ? null : String(msg.animation_id),
-    casterId: msg.caster_id == null ? null : String(msg.caster_id),
-    origin, radius: Math.max(1, Number(msg.radius) || 3),
-    expandMs: Math.max(420, Number(msg.expand_ms) || MANTO_ESCURIDAO_DEFAULT_EXPAND_MS),
-    start: performance.now(), endingAt: null,
-    seed: (origin[0] * 73856093) ^ (origin[1] * 19349663) ^ Date.now(),
-    group: null, veil: null, fogVolume: null, fogInner: null,
-    ring: null, ring2: null, casterHalo: null,
-    motes: [], sound: null
-  };
-}
-
-function _mantoEscuridaoAtivoNoEstado(anim, state){
-  if(!state) return false;
-  return (state.zonas_especiais || []).some(z => z.ativa && z.tipo === 'escuridao'
-    && String(z.visual_id || z.animation_id || z.id || '') === String(anim.animationId));
-}
-
-function _mantoEscuridaoCentroNoEstado(anim, state){
-  const zona = (state?.zonas_especiais || []).find(z => z.ativa && z.tipo === 'escuridao'
-    && String(z.visual_id || z.animation_id || z.id || '') === String(anim.animationId));
-  if (zona && Number.isFinite(Number(zona.cx)) && Number.isFinite(Number(zona.cy)))
-    return [Number(zona.cx), Number(zona.cy)];
-  return anim.origin;
-}
-
 function _tocarSomMantoEscuridao(anim){
   const ctx = getAudioContext(); if(!ctx || ctx.state !== 'running') return;
   try{
@@ -37802,177 +38021,6 @@ function _pararSomMantoEscuridao(anim){
     for(const src of sound.sources) src.stop(now + .38);
   }catch(e){}
   anim.sound = null;
-}
-
-function _mantoEscuridaoBuild3D(anim){
-  if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group(); group.name = 'manto-escuridao-animation';
-  group.position.set(anim.origin[0], 0, anim.origin[1]);
-  const veilMat = new T.MeshBasicMaterial({ color:0x090518, transparent:true, opacity:.22, depthWrite:false, depthTest:false, side:T.DoubleSide });
-  const ringMat = new T.MeshBasicMaterial({ color:0x744cff, transparent:true, opacity:.50, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
-  const ring2Mat = new T.MeshBasicMaterial({ color:0x35bfff, transparent:true, opacity:.28, depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide });
-  const fogMat = new T.MeshBasicMaterial({ color:0x080412, transparent:true, opacity:.15, depthWrite:false, depthTest:false, side:T.DoubleSide });
-  const fogInnerMat = new T.MeshBasicMaterial({ color:0x1b0c38, transparent:true, opacity:.08, depthWrite:false, depthTest:false, side:T.DoubleSide, blending:T.AdditiveBlending });
-  const veil = new T.Mesh(new T.CircleGeometry(anim.radius, 48), veilMat); veil.rotation.x = -Math.PI / 2; veil.position.y = .255; veil.renderOrder = 22; group.add(veil);
-  // Volume baixo: o topo fica aproximadamente na metade do peão, criando a
-  // leitura de névoa que envolve as pernas sem esconder rosto/ícone.
-  const fogVolume = new T.Mesh(new T.CylinderGeometry(anim.radius * 1.02, anim.radius * 1.10, .43, 48, 1, false), fogMat);
-  fogVolume.position.y = .47; fogVolume.renderOrder = 25; group.add(fogVolume);
-  const fogInner = new T.Mesh(new T.CylinderGeometry(anim.radius * .72, anim.radius * .84, .29, 40, 1, false), fogInnerMat);
-  fogInner.position.y = .40; fogInner.renderOrder = 26; group.add(fogInner);
-  const ring = new T.Mesh(new T.TorusGeometry(anim.radius * .82, .035, 8, 48), ringMat); ring.rotation.x = Math.PI / 2; ring.position.y = .275; ring.renderOrder = 23; group.add(ring);
-  const ring2 = new T.Mesh(new T.TorusGeometry(anim.radius * .98, .022, 8, 48), ring2Mat); ring2.rotation.x = Math.PI / 2; ring2.position.y = .278; ring2.renderOrder = 23; group.add(ring2);
-  const halo = new T.Mesh(new T.TorusGeometry(.42, .025, 7, 24), ring2Mat.clone()); halo.rotation.x = Math.PI / 2; halo.position.y = .30; halo.renderOrder = 24; group.add(halo);
-  anim.veil = veil; anim.fogVolume = fogVolume; anim.fogInner = fogInner;
-  anim.ring = ring; anim.ring2 = ring2; anim.casterHalo = halo;
-  for(let i = 0; i < 26; i++){
-    const angle = _mantoEscuridaoHash(anim.seed + i * 13) * Math.PI * 2;
-    const dist = .35 + _mantoEscuridaoHash(anim.seed + i * 29) * anim.radius * .92;
-    const mat = new T.MeshBasicMaterial({ color:i % 4 ? 0x6c4dd4 : 0x94eaff, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending });
-    const mote = new T.Mesh(new T.SphereGeometry(.018 + (i % 3) * .008, 6, 4), mat);
-    mote.userData.angle = angle; mote.userData.dist = dist; mote.userData.phase = _mantoEscuridaoHash(anim.seed + i * 41) * Math.PI * 2;
-    group.add(mote); anim.motes.push(mote);
-  }
-  g3.scene.add(group); anim.group = group; return true;
-}
-
-function _mantoEscuridaoDispose3D(anim){
-  if(!anim.group) return;
-  if(anim.group.parent) anim.group.parent.remove(anim.group);
-  anim.group.traverse(obj => { if(obj.geometry) obj.geometry.dispose(); if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose()); });
-  anim.group = null;
-}
-
-function _mantoEscuridaoUpdate3D(anim, now){
-  if(!g3 || !window.THREE) return;
-  if(!anim.group || anim.group.parent !== g3.scene){ _mantoEscuridaoDispose3D(anim); if(!_mantoEscuridaoBuild3D(anim)) return; }
-  const centro = _mantoEscuridaoCentroNoEstado(anim, GS.gameState);
-  anim.group.position.set(centro[0], 0, centro[1]);
-  const elapsed = now - anim.start;
-  let scale = Math.min(1, Math.max(0, elapsed / anim.expandMs));
-  if(anim.endingAt != null) scale = Math.max(0, 1 - (now - anim.endingAt) / MANTO_ESCURIDAO_DEFAULT_END_MS);
-  const pulse = .5 + .5 * Math.sin(now / 760 + anim.seed);
-  anim.veil.scale.setScalar(scale); anim.veil.material.opacity = (.14 + .08 * pulse) * scale;
-  anim.fogVolume.scale.set(scale, 1, scale); anim.fogVolume.material.opacity = (.12 + .06 * pulse) * scale;
-  anim.fogInner.scale.set(scale, 1, scale); anim.fogInner.material.opacity = (.06 + .05 * pulse) * scale;
-  anim.ring.scale.setScalar(scale * (1 + .05 * pulse)); anim.ring.material.opacity = (.30 + .22 * pulse) * scale;
-  anim.ring2.scale.setScalar(scale * (1.02 + .08 * pulse)); anim.ring2.material.opacity = (.16 + .16 * pulse) * scale;
-  anim.casterHalo.scale.setScalar(1 + .12 * Math.sin(now / 240)); anim.casterHalo.material.opacity = .28 + .22 * pulse;
-  for(let i = 0; i < anim.motes.length; i++){
-    const mote = anim.motes[i], ud = mote.userData, a = ud.angle + now / 1500 * (i % 2 ? -1 : 1);
-    const d = ud.dist * scale, bob = .18 + .08 * Math.sin(now / 390 + ud.phase);
-    mote.position.set(Math.cos(a) * d, bob, Math.sin(a) * d);
-    mote.material.opacity = scale * (.16 + .28 * (0.5 + 0.5 * Math.sin(now / 280 + ud.phase)));
-  }
-}
-
-function _mantoEscuridaoDraw2D(ctx, state, anim, now){
-  const centro = _mantoEscuridaoCentroNoEstado(anim, state);
-  const centerKey = `${centro[0]},${centro[1]}`;
-  const explored = new Set([...(state.explored || []), ...(state.revealed || [])].map(([x,y]) => `${x},${y}`));
-  if(!explored.has(centerKey) && !GS.isMaster() && !state.test_mode) return;
-  const elapsed = now - anim.start;
-  let scale = Math.min(1, Math.max(0, elapsed / anim.expandMs));
-  if(anim.endingAt != null) scale = Math.max(0, 1 - (now - anim.endingAt) / MANTO_ESCURIDAO_DEFAULT_END_MS);
-  if(scale <= 0) return;
-  const x = centro[0] * CELL + CELL / 2, y = centro[1] * CELL + CELL / 2;
-  const pulse = .5 + .5 * Math.sin(now / 760 + anim.seed), radius = anim.radius * CELL * scale;
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  const dark = ctx.createRadialGradient(x, y, radius * .18, x, y, radius * 1.08);
-  dark.addColorStop(0, `rgba(5,2,18,${(.33 + .08 * pulse).toFixed(3)})`);
-  dark.addColorStop(.70, `rgba(16,7,42,${(.28 + .08 * pulse).toFixed(3)})`);
-  dark.addColorStop(1, 'rgba(8,3,24,0)');
-  ctx.fillStyle = dark; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.strokeStyle = `rgba(122,74,230,${(.22 + .13 * pulse).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .035);
-  ctx.beginPath(); ctx.arc(x, y, radius * (.92 + .025 * pulse), 0, Math.PI * 2); ctx.stroke();
-  ctx.strokeStyle = `rgba(73,196,255,${(.12 + .08 * pulse).toFixed(3)})`; ctx.setLineDash([CELL * .12, CELL * .22]);
-  ctx.beginPath(); ctx.arc(x, y, radius * .73, -now / 1500, Math.PI * 1.25 - now / 1500); ctx.stroke(); ctx.setLineDash([]);
-  // Névoa baixa em espirais e pontos roxo-azulados dentro do manto.
-  for(let i = 0; i < 18; i++){
-    const a = _mantoEscuridaoHash(anim.seed + i * 17) * Math.PI * 2 + now / 1300 * (i % 2 ? -1 : 1);
-    const d = radius * (.18 + _mantoEscuridaoHash(anim.seed + i * 31) * .72);
-    const mx = x + Math.cos(a) * d, my = y + Math.sin(a) * d * .72;
-    const r = Math.max(1.5, CELL * (.018 + _mantoEscuridaoHash(anim.seed + i * 43) * .025));
-    ctx.fillStyle = i % 4 ? `rgba(91,61,183,${(.18 + .20 * pulse).toFixed(3)})` : `rgba(145,229,255,${(.20 + .20 * pulse).toFixed(3)})`;
-    ctx.beginPath(); ctx.arc(mx, my, r, 0, Math.PI * 2); ctx.fill();
-  }
-  // Halo do conjurador: indica que ele enxerga dentro do próprio manto.
-  const halo = .40 * CELL * (1 + .08 * Math.sin(now / 240));
-  ctx.strokeStyle = `rgba(112,211,255,${(.42 + .18 * pulse).toFixed(3)})`; ctx.lineWidth = Math.max(2, CELL * .035);
-  ctx.beginPath(); ctx.arc(x, y, halo, 0, Math.PI * 2); ctx.stroke();
-  ctx.restore();
-}
-
-function _mantoEscuridaoDrawForeground2D(ctx, state, anim, now){
-  const centro = _mantoEscuridaoCentroNoEstado(anim, state);
-  const centerKey = `${centro[0]},${centro[1]}`;
-  const explored = new Set([...(state.explored || []), ...(state.revealed || [])].map(([x,y]) => `${x},${y}`));
-  if(!explored.has(centerKey) && !GS.isMaster() && !state.test_mode) return;
-  const elapsed = now - anim.start;
-  let scale = Math.min(1, Math.max(0, elapsed / anim.expandMs));
-  if(anim.endingAt != null) scale = Math.max(0, 1 - (now - anim.endingAt) / MANTO_ESCURIDAO_DEFAULT_END_MS);
-  if(scale <= 0) return;
-  const pulse = .5 + .5 * Math.sin(now / 760 + anim.seed);
-  const minX = Math.floor(centro[0] - anim.radius * scale), maxX = Math.ceil(centro[0] + anim.radius * scale);
-  const minY = Math.floor(centro[1] - anim.radius * scale), maxY = Math.ceil(centro[1] + anim.radius * scale);
-  ctx.save();
-  // Camada de primeiro plano: neblina baixa cobrindo só a metade inferior de
-  // cada quadrado, para que o peão ainda mantenha rosto e identificação.
-  for(let ty = minY; ty <= maxY; ty++) for(let tx = minX; tx <= maxX; tx++){
-    const dist = Math.max(Math.abs(tx - centro[0]), Math.abs(ty - centro[1]));
-    if(dist > anim.radius * scale + .35 || !explored.has(`${tx},${ty}`)) continue;
-    const top = ty * CELL + CELL * (.48 + .035 * Math.sin(now / 340 + tx * 1.7 + ty));
-    const bottom = (ty + 1) * CELL + 2;
-    const fog = ctx.createLinearGradient(0, top, 0, bottom);
-    fog.addColorStop(0, 'rgba(7,3,22,0)');
-    fog.addColorStop(.38, `rgba(10,4,28,${(.16 + .05 * pulse).toFixed(3)})`);
-    fog.addColorStop(1, `rgba(4,2,14,${(.34 + .08 * pulse).toFixed(3)})`);
-    ctx.fillStyle = fog; ctx.fillRect(tx * CELL, top, CELL, bottom - top);
-    ctx.strokeStyle = `rgba(95,65,180,${(.10 + .07 * pulse).toFixed(3)})`; ctx.lineWidth = Math.max(1.2, CELL * .018);
-    ctx.beginPath();
-    ctx.moveTo(tx * CELL - 2, top + CELL * .18 + Math.sin(now / 260 + tx) * 3);
-    ctx.bezierCurveTo(tx * CELL + CELL * .28, top - CELL * .04, tx * CELL + CELL * .68, top + CELL * .28, (tx + 1) * CELL + 2, top + CELL * .08);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function _tickMantoEscuridao(now){
-  let active = false;
-  for(let i = _mantoEscuridaoAnims.length - 1; i >= 0; i--){
-    const anim = _mantoEscuridaoAnims[i], zoneActive = _mantoEscuridaoAtivoNoEstado(anim, GS.gameState);
-    // O evento de animação chega antes do game_state que contém a zona. Dê
-    // tempo para essa confirmação autoritativa chegar; sem essa tolerância a
-    // animação iniciava e era marcada como expirada no primeiro frame.
-    const aguardandoZona = !zoneActive && anim.endingAt == null
-      && now - anim.start < Math.max(1500, anim.expandMs + 320);
-    if(!zoneActive && !aguardandoZona && anim.endingAt == null) anim.endingAt = now;
-    if(anim.endingAt != null && now - anim.endingAt >= MANTO_ESCURIDAO_DEFAULT_END_MS){ _pararSomMantoEscuridao(anim); _mantoEscuridaoDispose3D(anim); _mantoEscuridaoAnims.splice(i, 1); continue; }
-    active = true; if(mode3D && g3) _mantoEscuridaoUpdate3D(anim, now);
-  }
-  if(!mode3D && GS.gameState && active) renderMap(GS.gameState);
-  _mantoEscuridaoRaf = active ? _scheduleVisualFrame(_tickMantoEscuridao) : null;
-}
-
-function _garantirLoopMantoEscuridao(){ if(!_mantoEscuridaoRaf) _mantoEscuridaoRaf = _scheduleVisualFrame(_tickMantoEscuridao); }
-
-function _receberAnimacaoMantoEscuridao(msg){
-  if(!msg || msg.spell_id !== 'manto_escuridao' || msg.phase === 'resolve') return;
-  const id = msg.animation_id == null ? null : String(msg.animation_id);
-  if(msg.phase === 'expire'){
-    const anim = _mantoEscuridaoAnims.find(a => a.animationId === id);
-    if(anim){
-      if(Array.isArray(msg.origin)) anim.origin = msg.origin.map(Number);
-      if(anim.endingAt == null) anim.endingAt = performance.now();
-    }
-    _garantirLoopMantoEscuridao();
-    return;
-  }
-  if(_mantoEscuridaoAnims.some(a => a.animationId === id)) return;
-  const anim = _mantoEscuridaoAnimFromMessage(msg); _mantoEscuridaoAnims.push(anim);
-  _tocarSomMantoEscuridao(anim); _garantirLoopMantoEscuridao();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -40424,6 +40472,7 @@ function dispose3D(){
   // As nuvens de fumaça continuam (a zona segue ativa); só os objetos da cena
   // morrem com ela e são refeitos no próximo init3D/2D.
   for(const n of _fumacaNuvens.values()) _fumacaDispose3D(n);
+  for(const n of _sombraNuvens.values()) _sombraDispose3D(n);
   g3.resizeObs.disconnect();
   if(g3.controls) g3.controls.dispose();
 
@@ -40913,6 +40962,7 @@ function startLoop3D(){
     _animarChamasVivasPersistentes3D(now);
     _updateArmadilhas3D(now);
     _updateFumaca3D(now);
+    _updateSombras3D(now);
     _updateChamasFx3D(now);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
@@ -49316,7 +49366,6 @@ GS.on('gameState', msg => {
   _garantirLoopBolaFogo();  // mantém as chamas residuais pulsando até a zona expirar
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
   _garantirLoopJatoAr();     // mantém o cone visível até o impacto terminar
-  _garantirLoopMantoEscuridao(); // mantém a névoa pulsando enquanto a zona existir
   _atualizarMenuMagiasSeAberto();
   _refreshTurnTimerOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
@@ -50572,7 +50621,6 @@ const _spellAnimationReceivers = [
   _receberAnimacaoMaldicao,
   _receberAnimacaoInvisibilidade,
   _receberAnimacaoProtecaoEnergia,
-  _receberAnimacaoMantoEscuridao,
   _receberAnimacaoClarividencia,
   _receberAnimacaoRegeneracao,
   _receberAnimacaoVelocidade,

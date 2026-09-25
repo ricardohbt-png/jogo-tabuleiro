@@ -2753,6 +2753,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > no topo em Mi maior, 2,2 s); `objetivo_1` = trecho da *Just a random fanfare* (Spring Spring;
 > metais e pratos, sobe 24 st, Dó maior, 2,9 s). **Critério para som de "vitória":** ascendente
 > e acorde final maior — conferir antes de trocar, sem depender de ouvir.
+> **Manto da Escuridão — nuvem de sombras (2026-09-24):** irmã da nuvem da bomba de fumaça,
+> em tom enegrecido, para TODA zona `escuridao` que não seja fumaça (`_ehZonaSombra`): o Manto
+> do herói e o do monstro (Bugbear das Sombras, que antes só tinha o véu por casa). Substituiu a
+> animação antiga do Manto (anéis roxo/ciano, faíscas, halo — removida) e o véu roxo por casa
+> dessas zonas; o som grave do Manto ficou (`_tocarSomMantoEscuridao`, ligado ao nascimento e à
+> dissipação da nuvem). `_sombrasSync` distribui os novelos pelas casas REAIS da zona
+> (`_sombraCasasRelativas`, mesmas `_addQuadrado`/`_addCheb` do realce — com Cajado Arcano o
+> lado 8 usa a âncora assimétrica), nasce em onda do centro para fora (só se criada nesta rodada;
+> `visual_id manto_escuridao_<c>_<rodada>_<x>_<y>` ou id `escuridao_<m>_<rodada>`), acompanha o
+> conjurador deslizando (`_sombraCentro`; salto > 3 casas encaixa) e alguns novelos são fios que
+> sobem. 3D: sprites com a textura da fumaça, `toneMapped:false` (o ACES acinzentava o preto).
+> 2D: o piso é escuro (luminância ~30/255, medido), então preto não se lê — cada novelo tem uma
+> orla violeta-acinzentada (contorno) e um miolo escuro com teto baixo (o peão fica meio
+> encoberto). Teste: `tools/test_manto_sombras_cliente.js`.
 > **Incendiários (Fogo Grego, Frasco de Óleo, Bomba Incendiária):** evento `incendio` (3 versões
 > em `combate/incendio_*`: estouro curto e grave + "vuuush" de ignição + labaredas crepitando que
 > somem em ~1,6 s; montado de explosões da Kenney Sci-Fi + `air_02` + `fire-1`). O mapa
