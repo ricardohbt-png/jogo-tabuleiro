@@ -95,6 +95,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `start_game` | — |
 | `move` | `dx`, `dy` |
 | `attack` | `target_id` |
+| `prever_ataque` | `target_id`, `target_pos`, `buffs`, `chave` — prévia do ataque básico para o tooltip do monstro (só leitura, não gasta nada). Resposta privada `previsao_ataque` (`chance` 0–100, `vantagem`, `desvantagem`, `dano_dado`, `dano_fixo`, `golpe_mult`, `furtivo_d4`, `chave`). Acerto/CA/vantagem vêm de `_modificadores_ataque_heroi`, o MESMO helper do `handle_attack` — modificador novo de ataque entra lá e vale para os dois. Cache no cliente (`GS.previsaoAtaque`/`pedirPrevisaoAtaque`), invalidado a cada `game_state`. Teste: `tools/test_previsao_ataque.py`. |
 | `animar_mortos` | `cadaver_id` (Pedro anima cadáver adjacente) |
 | `comandar_animados` | — (só no turno dos servos: todos os animados movem+atacam o monstro mais próximo automaticamente) |
 | `mover_animado` | `animado_id`, `dx`, `dy` (controle manual — 1 passo) |
