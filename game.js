@@ -14383,6 +14383,48 @@ function _partyTemBardoVivo(){
 
 // Tooltip do inimigo. `full=false` → só o nome + HP/CA (visão comum).
 // `full=true` (com Henrique no grupo) → ficha completa do monstro.
+// ── Prévia de acerto no tooltip do monstro ────────────────────────────────────
+// A chance e o dano vêm do servidor (prever_ataque → previsao_ataque), com os
+// mesmos modificadores do ataque real; aqui só se desenha. O pedido sai no hover
+// e a resposta chega um instante depois: o evento atualiza a linha no lugar.
+let _tipPrevisaoAlvo = null;   // {id, pos} do monstro cujo tooltip está aberto
+function _htmlPrevisaoAtaque(prev){
+  if(!prev) return `<span style="color:#8a7a5a">🎯 ${t('ui.previsao.calculando')}</span>`;
+  const pct = Number(prev.chance) || 0;
+  const cor = pct >= 70 ? '#7ee08a' : pct >= 40 ? '#ffd24a' : '#ff7b7b';
+  const tags = [];
+  if(prev.vantagem)    tags.push(t('ui.previsao.vantagem'));
+  if(prev.desvantagem) tags.push(t('ui.previsao.desvantagem'));
+  const fixo = Number(prev.dano_fixo) || 0;
+  let expr = String(prev.dano_dado || '1');
+  if(Number(prev.golpe_mult) > 1){
+    const mult = String(prev.golpe_mult);
+    expr += '×' + (window.I18N?.lang === 'en' ? mult : mult.replace('.', ','));
+  }
+  if(fixo) expr += (fixo > 0 ? '+' : '') + fixo;
+  if(prev.furtivo_d4) expr += ` +${prev.furtivo_d4}d4🗡️`;
+  const tagsHTML = tags.length ? ` <span style="color:#c8b89a">(${tags.join(', ')})</span>` : '';
+  return `🎯 <b style="color:${cor}">${t('ui.previsao.chance', {pct})}</b>${tagsHTML}`
+       + `<br><span style="color:#c8b89a" title="${t('ui.previsao.dica')}">⚔ ${t('ui.previsao.dano', {media: GS.danoMedioPrevisao(prev), expr})}</span>`;
+}
+function _linhaPrevisaoAtaque(monster, tx, ty, myP){
+  if(!myP || !monster || !GS.gameState || GS.gameState.phase !== 'playing' || GS.isMaster?.()){
+    _tipPrevisaoAlvo = null;
+    return '';
+  }
+  _tipPrevisaoAlvo = {id: monster.id, pos: [tx, ty]};
+  const prev = GS.previsaoAtaque(monster.id, [tx, ty]);
+  if(!prev) GS.pedirPrevisaoAtaque(monster.id, [tx, ty]);
+  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>`;
+}
+GS.on('previsaoAtaque', msg => {
+  const alvo = _tipPrevisaoAlvo;
+  const el = document.getElementById('tip-previsao');
+  if(!el || !alvo || alvo.id !== msg.target_id) return;
+  const prev = GS.previsaoAtaque(alvo.id, alvo.pos);
+  if(prev) el.innerHTML = _htmlPrevisaoAtaque(prev);
+});
+
 function fichaInimigoTooltipHTML(m, full, attacker=null){
   const nome = `<b>${m.emoji||'👾'} ${m.name}</b>`;
   let verticalHTML = '';
@@ -27002,7 +27044,8 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&lineClear&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} ${t('ui.tabuleiro.clique_atacar')}</span>`:'';
     // Conhecimento das Lendas (passiva do Henrique): ficha completa se há bardo vivo.
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)+atkLabel;
+    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)
+                  +_linhaPrevisaoAtaque(monster, tx, ty, myP)+atkLabel;
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -48420,7 +48463,8 @@ function on3DMouseMove(e){
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';
     tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP) +
-                  (canA ? `<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '');
+                  _linhaPrevisaoAtaque(monster, tx, ty, myP) +
+                  (canA ?`<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '');
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canA ? 'crosshair' : 'default';
     g3.hoveredPos = [tx, ty];   // trigger hover-lift + vitrine light

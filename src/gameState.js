@@ -1145,6 +1145,47 @@ const GS = (() => {
     return true;
   }
 
+  // ── Prévia de ataque (tooltip "chance de acerto") ──────────────────────────
+  // O servidor calcula com os MESMOS modificadores do ataque real
+  // (_modificadores_ataque_heroi) e responde só a quem pediu. Aqui fica o
+  // cache: uma resposta vale até o próximo game_state (qualquer mudança de
+  // estado pode mexer na chance) e cada combinação alvo+casa+habilidades
+  // armadas é pedida uma única vez nesse intervalo.
+  let _previsoes = {};
+  let _previsoesPedidas = {};
+  function _previsaoChave(targetId, targetPos) {
+    const pos = Array.isArray(targetPos) ? targetPos.join(',') : '';
+    return `${targetId}|${pos}|${warriorSelected.join(',')}`;
+  }
+  function previsaoAtaque(targetId, targetPos) {
+    return _previsoes[_previsaoChave(targetId, targetPos)] || null;
+  }
+  function pedirPrevisaoAtaque(targetId, targetPos) {
+    const chave = _previsaoChave(targetId, targetPos);
+    if (_previsoes[chave] || _previsoesPedidas[chave]) return;
+    if (send({ type: 'prever_ataque', target_id: targetId,
+               target_pos: Array.isArray(targetPos) ? targetPos : null,
+               buffs: warriorSelected.slice(), chave })) {
+      _previsoesPedidas[chave] = true;
+    }
+  }
+  function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
+  // Média de uma expressão "NdX" (ou de um número puro, no ataque desarmado).
+  function _mediaDado(expr) {
+    const m = /^(\d+)d(\d+)$/.exec(String(expr || '').trim());
+    if (m) return Number(m[1]) * (Number(m[2]) + 1) / 2;
+    const n = Number(expr);
+    return Number.isFinite(n) ? n : 0;
+  }
+  // Dano médio de um ACERTO comum, antes de resistências/fraquezas do alvo
+  // (que o servidor só resolve ao aplicar o golpe). Mesmo piso de 1 do servidor.
+  function danoMedioPrevisao(prev) {
+    if (!prev) return 0;
+    const dado = _mediaDado(prev.dano_dado) * (Number(prev.golpe_mult) || 1);
+    const furtivo = (Number(prev.furtivo_d4) || 0) * 2.5;
+    return Math.max(1, Math.round(dado + (Number(prev.dano_fixo) || 0) + furtivo));
+  }
+
   // ── Idioma ────────────────────────────────────────────────────────────────
   // O servidor traduz narração e erros no idioma de cada conexão; esta é a
   // única coisa que ele precisa saber. Guardado aqui para ser reenviado em toda
@@ -1408,6 +1449,7 @@ const GS = (() => {
         const escuridaoAnterior = (gameState?.players || []).find(p => p.id === myPid)
           ?.escuridao_desvantagem === true;
         gameState = msg;
+        _limparPrevisoes();
         _captarStory(msg);
         if (msg.active_scene) _emit('sceneStart', msg.active_scene);
         // A sessão de teste não passa pelo lobby, onde normalmente o Mestre
@@ -1481,6 +1523,14 @@ const GS = (() => {
 
       case 'fala':
         _emit('fala', msg);   // {falante:{nome,emoji}, texto, pos}
+        break;
+
+      case 'previsao_ataque':
+        if (msg.chave) {
+          _previsoes[msg.chave] = msg;
+          delete _previsoesPedidas[msg.chave];
+        }
+        _emit('previsaoAtaque', msg);
         break;
 
       case 'game_over':
@@ -3340,6 +3390,9 @@ const GS = (() => {
     isWarriorSkillSelected,
     toggleWarriorSkill,
     getWarriorSelected,
+    previsaoAtaque,
+    pedirPrevisaoAtaque,
+    danoMedioPrevisao,
     getWarriorFuriaAttacks,
     setWarriorFuriaAttacks,
     clearWarriorSelected,

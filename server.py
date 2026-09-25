@@ -854,6 +854,19 @@ def d20_attack(atk_bonus, target_ac):
     crit = (roll == 20)
     return (crit or total >= target_ac), roll, total, crit
 
+
+def chance_acerto_d20(atk_bonus, target_ac, vantagem=False, desvantagem=False):
+    """Probabilidade (0–100, inteiro) de d20_attack acertar: o 20 natural sempre
+    acerta e o 1 natural NÃO erra automaticamente (espelha d20_attack). Com
+    vantagem/desvantagem vale o melhor/pior de 2d20; os dois juntos se anulam."""
+    faces = sum(1 for r in range(1, 21) if r == 20 or r + atk_bonus >= target_ac)
+    q = faces / 20
+    if vantagem and not desvantagem:
+        q = 1 - (1 - q) ** 2
+    elif desvantagem and not vantagem:
+        q = q * q
+    return int(round(q * 100))
+
 # â”€â”€â”€ SOBREVIVÃŠNCIA â€” fome/sede unificado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # O SERVIDOR Ã© a fonte autoritativa, escala 0â€“100 (player["fome"], player["sede"],
 # mÃ¡ximo SOBREVIVENCIA_MAX=100). Cliente e servidor usam a MESMA escala (0â€“100),
@@ -11239,6 +11252,136 @@ class GameRoom:
             return True
         return False
 
+    def _bonus_atributo_dano_arma(self, p, weapon):
+        """Modificador de atributo somado ao dado da arma (acuidade usa o melhor
+        de FOR/DES). Compartilhado pelo dano real e pela prévia do tooltip."""
+        if _weapon_uses_finesse(weapon):
+            return max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
+        return mod(p.get(weapon["stat"], 12))
+
+    def _bonus_fixo_dano_arma(self, p, weapon, surv_mod, cancao_dano, gl_dano, bonus_extra):
+        """Parcela FIXA do dano armado (tudo além do dado e do atributo), antes do
+        piso de 1 e das resistências. Compartilhada pelo dano real e pela prévia."""
+        return (surv_mod + cancao_dano + gl_dano
+                + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
+                + bonus_extra + weapon.get("dmg_bonus", 0)
+                + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p)
+                + self._pen(p, "dano")                      # veneno (era inerte)
+                + self._maldicao_mod(p, "dano_fisico"))     # Lâmina Enferrujada
+
+    def _modificadores_ataque_heroi(self, p, target, target_tile, w_range,
+                                    attacker_id=None, previa=False, acerto_extra=0):
+        """Acerto efetivo, CA efetiva do alvo e vantagem/desvantagem do ataque
+        básico de um herói. Fonte ÚNICA para handle_attack e para a prévia do
+        tooltip (handle_prever_ataque). Não narra nem consome nada, exceto a
+        Camuflagem Natural quando `previa=False` (o ataque real a gasta)."""
+        surv_mod  = self._modificador_sobrevivencia(p)
+        preso_pen = -2 if p.get("preso") else 0
+        cancao_acerto = self._cancao_bonus(p, "bonus_acerto")
+        cancao_dano   = self._cancao_bonus(p, "bonus_dano")
+        # Guerreiro da Luz (Richard): +acerto/+dano enquanto o buff estiver ativo
+        gl = p.get("guerreiro_luz_bonus", {}) if p.get("guerreiro_luz_ativo") else {}
+        gl_atk  = gl.get("ataque", 0)
+        gl_dano = gl.get("dano", 0)
+        maldicao_atk = self._maldicao_mod(p, "ataque")
+        main_attack_base = _hero_attack_bonus_with_weapon(p, p.get("weapon"))
+        eff_atk = (main_attack_base + p.get("skill_bonus_acerto", 0) + acerto_extra
+                   + surv_mod + preso_pen
+                   + cancao_acerto + gl_atk + self._pen(p, "ataque")
+                   + self._mod_magia(p, "ataque")                        # Abençoar
+                   + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
+                   + self._ciclope_cercado_bonus(target)
+                   + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
+                   - self._corrosao_arma_pen(p)                          # arma de madeira corroída
+                   + maldicao_atk
+                   + self._aura_profana_pen(p)                           # Aura Profana de aliado adjacente
+                   - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
+                   - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
+        if p.get("ciclope_ataque_penalty_ate", 0) >= self.round_num:
+            eff_atk -= 1
+        furtivo_planejado = (p.get("class_id") == "rogue"
+                             and self._verificar_ataque_furtivo(p, target))
+        penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
+        eff_atk += penalidade_furtivo
+        # Amaldiçoar reduz a CA do alvo (mod_magia ca negativo) → mais fácil de acertar.
+        # Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque.
+        # Fúria Cega (orc): -1 CA enquanto enfurecido.
+        eff_target_ac = (target["ac"] + self._ciclope_furia_ca(target) + self._mod_magia(target, "ca")
+                         + self._camuflagem_bonus(target, consumir=not previa)
+                         + self._cacador_trevas_ca_bonus(target)        # Caçador das Trevas: +2 CA em área escura
+                         - self._pressao_ca_pen(target)                 # Pressão Constante: -2 CA
+                         - self._furia_cega_ca_pen(target)
+                         - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA após errar
+        eff_target_ac = self._ponto_vulneravel_ac(target, target_tile, eff_target_ac, attacker_id=attacker_id)
+        # Vantagem (Invisibilidade ou Visão no Escuro na escuridão) vs Desvantagem
+        # (atacar às cegas na escuridão). Vantagem+desvantagem se anulam.
+        esc = self._verificar_escuridao(p, target)
+        mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
+        investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
+        # Nota: só o Último Esforço concede vantagem aqui — o Golpe Decisivo sozinho
+        # NÃO dá vantagem, apenas força o multiplicador de crítico (_forca_critico).
+        vantagem = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
+                    or esc == "vantagem"
+                    or self._provocacao_atk_vantagem(p, target)
+                    or mira_ranged or investida or bool(p.get("ultimo_esforco_ativo")))
+        desvantagem = esc == "desvantagem" or bool(p.get("runico_provocacao_efeito"))
+        return {"surv_mod": surv_mod, "preso_pen": preso_pen,
+                "cancao_dano": cancao_dano, "gl_dano": gl_dano,
+                "main_attack_base": main_attack_base,
+                "eff_atk": eff_atk, "eff_target_ac": eff_target_ac,
+                "furtivo_planejado": furtivo_planejado, "penalidade_furtivo": penalidade_furtivo,
+                "esc": esc, "mira_ranged": mira_ranged, "investida": investida,
+                "vantagem": vantagem, "desvantagem": desvantagem}
+
+    async def handle_prever_ataque(self, pid, data):
+        """Prévia do ataque básico para o tooltip: chance de acerto e dano, com os
+        MESMOS modificadores do ataque real. Só leitura — responde a quem pediu
+        (`previsao_ataque`) e não gasta nada. `buffs` são as habilidades que o
+        guerreiro armou no cliente e ainda não pagou."""
+        p = self.players.get(pid)
+        data = data if isinstance(data, dict) else {}
+        target = self.monsters.get(data.get("target_id"))
+        if (self.phase != "playing" or not p or not p.get("alive") or not p.get("pos")
+                or not target or target.get("hp", 0) <= 0):
+            return
+        target_tile = self._target_tile(target, data.get("target_pos"))
+        weapon = p.get("weapon")
+        w_range = weapon.get("range") if weapon else None
+        buffs = data.get("buffs") if isinstance(data.get("buffs"), list) else []
+        armadas = [s["id"] for s in p.get("skills", []) if s["id"] in buffs][:self._teto_combinacao(p)]
+        acerto_extra = 2 if "mira_certeira" in armadas else 0
+        mods = self._modificadores_ataque_heroi(p, target, target_tile, w_range,
+                                                previa=True, acerto_extra=acerto_extra)
+        vant, desv = mods["vantagem"], mods["desvantagem"]
+        if vant and desv:
+            vant = desv = False
+        chance = chance_acerto_d20(mods["eff_atk"], mods["eff_target_ac"], vant, desv)
+        bonus_extra = (2 if mods["mira_ranged"] else 0) + (2 if mods["investida"] else 0)
+        dano_mira = self._mira_dano_bonus(p) if "mira_certeira" in armadas else 0
+        die_str = weapon.get("die") if weapon else None
+        if die_str:
+            fixo = (self._bonus_atributo_dano_arma(p, weapon)
+                    + self._bonus_fixo_dano_arma(p, weapon, mods["surv_mod"], mods["cancao_dano"],
+                                                 mods["gl_dano"], bonus_extra) + dano_mira)
+            golpe = bool(p.get("skill_dobrar_dano") or "golpe_devastador" in armadas)
+        else:
+            base = 2 if (p.get("skill_dobrar_dano") or "golpe_devastador" in armadas) else 1
+            die_str = str(base)
+            fixo = (mod(p.get("str_", 12)) + mods["surv_mod"] + mods["cancao_dano"] + mods["gl_dano"]
+                    + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p))
+            golpe = False
+        furtivo = self._dados_furtivo(p.get("level", 1)) if mods["furtivo_planejado"] else 0
+        await self.send_to(pid, {
+            "type": "previsao_ataque", "target_id": target["id"],
+            "target_pos": list(target_tile),
+            "chance": chance,
+            "vantagem": vant, "desvantagem": desv,
+            "dano_dado": die_str, "dano_fixo": fixo,
+            "golpe_mult": ((2 if tem_espec(p, "guerreiro_golpe_3") else 1.5) if golpe else 1),
+            "furtivo_d4": furtivo,
+            "chave": str(data.get("chave") or "")[:120],
+        })
+
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
                                        surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,
                                        target_pos=None, weapon_override=None, attacker_id=None):
@@ -11262,10 +11405,7 @@ class GameRoom:
         if die_str:
             raw_dmg = roll_dice(die_str)
             raw_dmg = self._golpe_raw(p, raw_dmg)
-            if _weapon_uses_finesse(weapon):
-                stat_bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
-            else:
-                stat_bonus = mod(p.get(weapon["stat"], 12))
+            stat_bonus = self._bonus_atributo_dano_arma(p, weapon)
             dmg = raw_dmg + stat_bonus
             if crit:
                 crit_multiplier = weapon.get("crit_nat20_multiplier", 0) if roll == 20 else 0
@@ -11275,12 +11415,8 @@ class GameRoom:
                     dmg = int(dmg * float(crit_multiplier))
                 else:
                     dmg *= (3 if (forca_critico and roll == 20) else 2)
-            dmg = max(1, dmg + surv_mod + cancao_dano + gl_dano
-                      + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
-                      + bonus_extra + weapon.get("dmg_bonus", 0)
-                      + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p)
-                      + self._pen(p, "dano")                      # veneno (era inerte)
-                      + self._maldicao_mod(p, "dano_fisico"))     # Lâmina Enferrujada
+            dmg = max(1, dmg + self._bonus_fixo_dano_arma(p, weapon, surv_mod, cancao_dano,
+                                                             gl_dano, bonus_extra))
             dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, weapon, p.get("pos"), target_pos, attacker_id)
             weapon_name = weapon.get("name", "arma")
             sb = f"+{stat_bonus}" if stat_bonus >= 0 else str(stat_bonus)
@@ -16196,54 +16332,22 @@ class GameRoom:
                     await self.gm_say(
                         T("narracao.ativa_3", heroi=p['name'], join_nomes=', '.join(nomes), total_fome=total_fome, f_total_sede_if_total_se=f' 💧-{total_sede}' if total_sede else ''))
 
-            # â”€â”€ Buffs de turno (flags planas) + modificador de sobrevivÃªncia â”€â”€
-            # surv_mod: +1 (saciado, fome&sede>80) ou -1/-2 (exaustÃ£o, <20).
-            surv_mod  = self._modificador_sobrevivencia(p)
-            preso_pen = -2 if p.get("preso") else 0
-            cancao_acerto = self._cancao_bonus(p, "bonus_acerto")
-            cancao_dano   = self._cancao_bonus(p, "bonus_dano")
-            # Guerreiro da Luz (Richard): +acerto/+dano enquanto o buff estiver ativo
-            gl = p.get("guerreiro_luz_bonus", {}) if p.get("guerreiro_luz_ativo") else {}
-            gl_atk  = gl.get("ataque", 0)
-            gl_dano = gl.get("dano", 0)
-            maldicao_atk = self._maldicao_mod(p, "ataque")
-            main_attack_base = _hero_attack_bonus_with_weapon(p, p.get("weapon"))
-            eff_atk = (main_attack_base + p.get("skill_bonus_acerto", 0) + surv_mod + preso_pen
-                       + cancao_acerto + gl_atk + self._pen(p, "ataque")
-                       + self._mod_magia(p, "ataque")                        # AbenÃ§oar
-                       + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
-                       + self._ciclope_cercado_bonus(target)
-                       + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espÃ©cie)
-                       - self._corrosao_arma_pen(p)                          # arma de madeira corroÃ­da
-                       + maldicao_atk
-                       + self._aura_profana_pen(p)                           # Aura Profana de aliado adjacente
-                       - (4 if target.get("oculto_sombras") else 0)          # alvo oculto nas sombras (corpo a corpo)
-                       - (1 if p.get("desafinado_ate", -1) >= self.round_num else 0))  # Gaita: Desafinado (Fase 5)
-            if p.get("ciclope_ataque_penalty_ate", 0) >= self.round_num:
-                eff_atk -= 1
-            furtivo_planejado = (p.get("class_id") == "rogue"
-                                 and self._verificar_ataque_furtivo(p, target))
-            penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
-            eff_atk += penalidade_furtivo
+            # Acerto, CA efetiva e vantagem/desvantagem vêm do MESMO helper que a
+            # prévia de acerto do tooltip (prever_ataque) usa — mudar um modificador
+            # aqui muda os dois. As narrações e consumos continuam neste handler.
+            _mods = self._modificadores_ataque_heroi(p, target, target_tile, w_range, attacker_id=pid)
+            surv_mod = _mods["surv_mod"]; preso_pen = _mods["preso_pen"]
+            cancao_dano = _mods["cancao_dano"]; gl_dano = _mods["gl_dano"]
+            main_attack_base = _mods["main_attack_base"]
+            eff_atk = _mods["eff_atk"]; eff_target_ac = _mods["eff_target_ac"]
+            furtivo_planejado = _mods["furtivo_planejado"]
+            penalidade_furtivo = _mods["penalidade_furtivo"]
+            esc = _mods["esc"]; _mira_ranged = _mods["mira_ranged"]; _investida = _mods["investida"]
+            vantagem = _mods["vantagem"]; desvantagem = _mods["desvantagem"]
             if penalidade_furtivo:
                 await self.gm_say(T("narracao.antecipa_o_ataque_furtivo_2_no_acerto", target=nome_criatura(target)))
             if preso_pen:
                 await self.gm_say(T("narracao.ataca_enquanto_preso_2_no_acerto", heroi=p['name']))
-            # AmaldiÃ§oar reduz a CA do alvo (mod_magia ca negativo) â†’ mais fÃ¡cil de acertar.
-            # Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque.
-            # FÃºria Cega (orc): -1 CA enquanto enfurecido.
-            eff_target_ac = (target["ac"] + self._ciclope_furia_ca(target) + self._mod_magia(target, "ca")
-                             + self._camuflagem_bonus(target)
-                             + self._cacador_trevas_ca_bonus(target)        # CaÃ§ador das Trevas: +2 CA em Ã¡rea escura
-                             - self._pressao_ca_pen(target)                 # PressÃ£o Constante: -2 CA
-                             - self._furia_cega_ca_pen(target)
-                             - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA apÃ³s errar
-            eff_target_ac = self._ponto_vulneravel_ac(target, target_tile, eff_target_ac, attacker_id=pid)
-            # Vantagem (Invisibilidade ou VisÃ£o no Escuro na escuridÃ£o) vs Desvantagem
-            # (atacar Ã s cegas na escuridÃ£o). Vantagem+desvantagem se anulam.
-            esc = self._verificar_escuridao(p, target)
-            _mira_ranged = bool(w_range is not None and p.get("tecnica_mira_perfeita"))
-            _investida = bool(w_range is None and self._investida_tecnica_bonus(p, is_ranged=False))
             # Técnicas apenas armadas tornam-se gastas quando modificam de fato
             # este ataque; até aqui um clique no menu não iniciava recarga.
             if p.get("tecnica_buff_dano_arma"):
@@ -16254,21 +16358,8 @@ class GameRoom:
                 self._consumir_tecnica_apos_efeito(p, "tecnica_investida")
             if p.get("tecnica_golpe_decisivo_armado"):
                 self._consumir_tecnica_apos_efeito(p, "tecnica_golpe_decisivo")
-            # Latch compartilhado de "forÃ§a crÃ­tico automÃ¡tico": hoje usado pelo Golpe
-            # Decisivo (Fase 2e) e, futuramente, pelo Ãšltimo EsforÃ§o â€” qualquer nova
-            # fonte de crÃ­tico garantido deve entrar neste OR em vez de duplicar a lÃ³gica.
             _forca_critico = bool(p.get("tecnica_golpe_decisivo_armado")) or bool(p.get("ultimo_esforco_ativo"))
-            vantagem    = (bool(p.get("invisivel_magico")) or bool(p.get("oculto_vela"))
-                           or esc == "vantagem"
-                           or self._provocacao_atk_vantagem(p, target)
-                           # Nota: sÃ³ o Ãšltimo EsforÃ§o concede vantagem aqui â€” o Golpe Decisivo
-                           # sozinho NÃƒO dÃ¡ vantagem, apenas forÃ§a o multiplicador de crÃ­tico
-                           # via _forca_critico (ver acima).
-                           or _mira_ranged or _investida or bool(p.get("ultimo_esforco_ativo")))
-            runico_provocacao_ataque = bool(p.get("runico_provocacao_efeito"))
-            desvantagem = esc == "desvantagem" or runico_provocacao_ataque
-            if runico_provocacao_ataque:
-                p.pop("runico_provocacao_efeito", None)
+            p.pop("runico_provocacao_efeito", None)
             attack_name = (weapon_here or {}).get("name") or (weapon_here or {}).get("id") or "Ataque"
             attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
             attack_feedback_id = await self._emitir_feedback_ataque(
@@ -32134,15 +32225,18 @@ class GameRoom:
         # mora em _activate_initiative_actor; a virada de rodada, em _advance_initiative.
         await self._advance_initiative()
 
-    def _camuflagem_bonus(self, target):
+    def _camuflagem_bonus(self, target, consumir=True):
         """Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque
         recebido (consumido após o primeiro uso). O dungeon é tratado como
-        terreno natural, então a camuflagem está sempre disponível 1×."""
+        terreno natural, então a camuflagem está sempre disponível 1×.
+        `consumir=False` só lê — é o que a prévia de acerto do tooltip usa, senão
+        passar o mouse sobre a cobra gastaria a camuflagem."""
         if target.get("camuflagem_usada"):
             return 0
         if any(ab.get("id") == "camuflagem_natural"
                for ab in target.get("special_abilities", [])):
-            target["camuflagem_usada"] = True
+            if consumir:
+                target["camuflagem_usada"] = True
             return 2
         return 0
 
@@ -42806,6 +42900,10 @@ async def handler(ws):
                 elif t == "attack":
                     if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
                                                        msg.get("target_pos"), msg.get("furia_attacks"))
+
+                elif t == "prever_ataque":
+                    if room: await room.handle_prever_ataque(
+                        pid, {**msg, "target_id": _key(msg.get("target_id"))})
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))

@@ -9802,6 +9802,30 @@ window.LANG_INTERFACE = {
   "ui.voo.queda_petrificado": {
     "en": "🗿 Petrified: a body of stone, fall damage ×{mult}",
     "pt": "🗿 Petrificado: corpo de pedra, dano da queda ×{mult}"
+  },
+  "ui.previsao.chance": {
+    "en": "{pct}% to hit",
+    "pt": "{pct}% de acerto"
+  },
+  "ui.previsao.dano": {
+    "en": "~{media} damage ({expr})",
+    "pt": "~{media} de dano ({expr})"
+  },
+  "ui.previsao.vantagem": {
+    "en": "advantage",
+    "pt": "vantagem"
+  },
+  "ui.previsao.desvantagem": {
+    "en": "disadvantage",
+    "pt": "desvantagem"
+  },
+  "ui.previsao.calculando": {
+    "en": "calculating chance…",
+    "pt": "calculando chance…"
+  },
+  "ui.previsao.dica": {
+    "en": "before the target's resistances and weaknesses",
+    "pt": "antes das resistências e fraquezas do alvo"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
