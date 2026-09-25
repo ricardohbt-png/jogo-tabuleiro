@@ -9826,6 +9826,10 @@ window.LANG_INTERFACE = {
   "ui.previsao.dica": {
     "en": "before the target's resistances and weaknesses",
     "pt": "antes das resistências e fraquezas do alvo"
+  },
+  "ui.bau.recolher_loot": {
+    "en": "Pick up the loot",
+    "pt": "Recolher o loot"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

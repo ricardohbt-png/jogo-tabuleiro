@@ -25271,7 +25271,7 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
 
   const item = groundItem.item || {};
   const itemNome = item.name || item.nome || t('ui.bau.item_deixado_no_chao');
-  adicionar('🎒', t('ui.joystick.pegar_item', {nome: itemNome}), 'Recolher o loot', () => GS.pickupItem(groundItem.id));
+  adicionar('🎒', t('ui.joystick.pegar_item', {nome: itemNome}), t('ui.bau.recolher_loot'), () => GS.pickupItem(groundItem.id));
   adicionar('⚔️', t('ui.joystick.atacar_alvo', {nome: monster.name || monster.nome || t('ui.joystick.monstro')}),
     `HP ${monster.hp}/${monster.max_hp || monster.hp}`, () => {
       // Revalida no estado mais recente antes de consumir a ação.
@@ -48747,9 +48747,11 @@ function handleTileClick(tx, ty){
       const me = _st.players.find(p=>p.id===GS.myPid&&p.alive);
       const podePegar = !!(me && GS.groundItemPickable(gi, me));
       const ataque = GS.resolveTileClick(tx, ty);
-      // O ataque é a ação prioritária quando um monstro e um item ocupam a
-      // mesma casa. A coleta só acontece se não houver ataque válido.
+      // Monstro e item na mesma casa: o jogador escolhe (antes o clique
+      // atacava sem perguntar e o item ficava inalcançável até o monstro sair).
+      // Se o painel não puder abrir, o ataque continua sendo o padrão.
       if(podePegar && ataque?.type === 'attack'){
+        if(_abrirEscolhaLootOuAtaque(gi, ataque)) return;
         GS.notifyAttack();
         sendAttack(ataque.targetId, ataque.targetPos);
         return;
