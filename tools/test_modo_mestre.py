@@ -509,6 +509,32 @@ async def main():
     ok, _ = S.validar_dungeon(base_rm)
     check("required_mode inválido rejeitado", ok is False)
 
+    print("\n[23b] Salas obrigatórias sobrevivem ao carregador de masmorra")
+    d_req = {"schema_version": 1, "id": "req", "name": "req", "grid": {"w": 12, "h": 5},
+             "tiles": [[S.FLOOR] * 12 for _ in range(5)], "entrance": {"x": 0, "y": 0},
+             "rooms": [{"id": 0, "x": 0, "y": 0, "w": 4, "h": 5, "role": "entrance",
+                        "locked": False, "doors": []},
+                       {"id": 1, "x": 6, "y": 0, "w": 6, "h": 5, "role": "monster",
+                        "locked": False, "doors": [], "required": True, "required_mode": "clear"}],
+             "monsters": [{"type": "goblin", "pos": [8, 2], "room_id": 1}],
+             "chests": [], "traps": [], "decorations": [], "secret_passages": [], "falas": [],
+             "objectives": {"primary": {"type": "salas_obrigatorias"}, "secondary": []}}
+    check("fixture válida", S.validar_dungeon(d_req)[0] is True)
+    r = S.GameRoom("REQ")
+    r.load_authored_dungeon(d_req)
+    sala1 = next(rm for rm in r.rooms if rm["id"] == 1)
+    check("o carregador preserva required", sala1.get("required") is True)
+    check("o carregador preserva required_mode", sala1.get("required_mode") == "clear")
+    obj_req = {"type": "salas_obrigatorias"}
+    check("goblin vivo: objetivo NÃO cumprido", r._objetivo_cumprido(obj_req) is False)
+    for m in r.monsters.values():
+        m["hp"] = 0
+    check("goblin morto: cumprido", r._objetivo_cumprido(obj_req) is True)
+    r3 = playing_room_com_mestre()
+    r3.rooms = [{"id": 0, "x": 0, "y": 0, "w": 3, "h": 3}]
+    r3.monsters = {}
+    check("nenhuma sala marcada: o objetivo NÃO se cumpre sozinho", r3._objetivo_cumprido(obj_req) is False)
+
     print("\n[24] Falas de NPC")
     r = playing_room_com_mestre()
     r.rooms = [{"id":0,"x":0,"y":0,"w":5,"h":5,"cleared":True}]

@@ -12735,6 +12735,11 @@ class GameRoom:
                 "looted": False,
                 "locked": bool(r.get("locked", role != "entrance")),
                 "doors": [list(d) for d in r.get("doors", [])],
+                # Salas obrigatórias (Camada C). Sem estes dois campos o objetivo
+                # salas_obrigatorias se cumpria no instante da entrada (all([]) é True).
+                "required": bool(r.get("required", False)),
+                "required_mode": (r.get("required_mode")
+                                  if r.get("required_mode") in ("visit", "clear") else "clear"),
                 # Rotação relativa à orientação inferida pelas paredes. Campo
                 # ausente mantém o comportamento dos mapas antigos.
                 "door_orientations": {
@@ -41474,7 +41479,9 @@ class GameRoom:
             return max(abs(px - destino[0]), abs(py - destino[1])) <= 1
         if t == "salas_obrigatorias":
             req = [rm for rm in self.rooms if rm.get("required")]
-            return all(self._sala_obrigatoria_ok(rm) for rm in req)
+            # validar_dungeon já recusa o objetivo sem sala marcada; a guarda é
+            # defesa em profundidade contra o all([]) == True.
+            return bool(req) and all(self._sala_obrigatoria_ok(rm) for rm in req)
         return False
 
     def _sala_obrigatoria_ok(self, rm):
