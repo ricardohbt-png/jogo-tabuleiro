@@ -177,8 +177,9 @@ Todas Fácil (0,21–0,29) de propósito: o peso do Covil é não recuperar ante
 **Passagem secreta:** `type: mechanism`, na parede entre o Poço antigo e o Esconderijo,
 aberta pela decoração `estante_livros` do Poço. A estante **não** leva `key_objective` (esse
 campo só é exigido de decorações que abrem *portas*; numa decoração sem passagem ligada ele
-marcaria o objetivo de baú-chave). A estante fica **ao lado** da casa que dá acesso à
-passagem — nunca em cima dela, senão a passagem aberta seria inalcançável. O Esconderijo não é `required` nem contém o alvo:
+marcaria o objetivo de baú-chave). A estante fica **fora** da casa que dá acesso à
+passagem (a casa do Poço logo acima dela) — nunca em cima, senão a passagem aberta seria
+inalcançável; basta o herói estar adjacente à estante para ativá-la. O Esconderijo não é `required` nem contém o alvo:
 enfrentar o Bugbear é opcional, antes ou depois do Troll (o jogo deixa explorar até alguém
 clicar "Encerrar missão").
 
@@ -208,7 +209,9 @@ editor registra que os avisos emitidos são exatamente esses.
     classe — Fase I/J do Editor de Itens);
   - disponibilidade: **só baús** (`loja: false`, `baus: true`, `loot: false`), sem
     estoque em cidade nenhuma;
-  - preço de referência pelo `suggestPriceAccessory`.
+  - preço **autoral de 250**: o `suggestPriceAccessory` do editor soma só os bônus numéricos
+    (daria 12) e não precifica a habilidade concedida, que é o valor real do anel — a
+    recompensa do chefe secreto não pode valer 12 de ouro.
 
 ## Cidade
 
