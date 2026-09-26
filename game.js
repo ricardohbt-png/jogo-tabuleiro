@@ -6695,6 +6695,28 @@ function _drawProvocacaoBadge2D(ctx, cx, cy, footprint, now){
   ctx.restore();
 }
 
+// "!" vermelho: o monstro está à procura de um herói (campo `procurando` do
+// servidor — pista válida e nenhum herói à vista). `dx` desloca para o lado
+// quando o 😠 da Provocação também está sobre a cabeça.
+function _drawProcurandoBadge2D(ctx, cx, cy, footprint, now, dx=0){
+  const altura = CELL * (1.10 + Math.max(0, (footprint?.logicalH || 1) - 1) * 0.62);
+  const x = cx + dx;
+  const y = cy - altura + Math.sin(now / 230) * CELL * 0.03;
+  const pulse = 0.80 + 0.20 * (0.5 + 0.5 * Math.sin(now / 170));
+  ctx.save();
+  ctx.globalAlpha = pulse;
+  ctx.font = `900 ${Math.max(20, CELL * 0.46)}px "Segoe UI", Arial, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(3, CELL * 0.07);
+  ctx.strokeStyle = 'rgba(20,0,0,0.95)';
+  ctx.strokeText('!', x, y);
+  ctx.shadowColor = '#ff1a1a'; ctx.shadowBlur = CELL * 0.16;
+  ctx.fillStyle = '#ff2b2b';
+  ctx.fillText('!', x, y);
+  ctx.restore();
+}
+
 function drawMonsterSprite(ctx, cx, cy, m, attackTargeted=false){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-3;
@@ -9210,8 +9232,11 @@ function renderMap(state){
     const nomeVisivel = `${alturaVisivel > 0 ? `↑${alturaVisivel} ` : ''}${m.name}`.slice(0,10);
     ctx.fillText(nomeVisivel, cx, barY+barH+3);
     _drawStatusIcons2D(ctx, barX-3, barY, m);
-    if(m.provocado && Number(m.provocado_turnos) > 0)
+    const _provocadoAtivo = !!(m.provocado && Number(m.provocado_turnos) > 0);
+    if(_provocadoAtivo)
       _drawProvocacaoBadge2D(ctx, cx, cy, fp, performance.now());
+    if(m.procurando)
+      _drawProcurandoBadge2D(ctx, cx, cy, fp, performance.now(), _provocadoAtivo ? CELL * 0.30 : 0);
     // Ícones de magias em monstros são exclusivos do simulador do mestre.
     // O jogo normal continua exibindo somente os indicadores de condição
     // existentes acima, sem expor efeitos fora do modo de teste.
@@ -41445,6 +41470,7 @@ function startLoop3D(){
     _atualizarPosicoesEfeitosAtivos3D();
     _atualizarProtetor3D(now);
     _atualizarProvocacaoMarks3D(now);
+    _atualizarProcurandoMarks3D(now);
 
     // ── OrbitControls damping (pausado durante o seguimento de câmera) ───────
     _desfazerShakeCamera();   // o offset do frame anterior não pode ser absorvido pelo OrbitControls
@@ -44525,7 +44551,7 @@ function renderMap3D(state){
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.size, a.oriented, a.facing])]),
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
     m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura,
-    !!(m.provocado && Number(m.provocado_turnos) > 0)]),
+    !!(m.provocado && Number(m.provocado_turnos) > 0), !!m.procurando]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
     state.corpses || [],
     state.hero_corpses || [],
@@ -44701,6 +44727,7 @@ function renderMap3D(state){
       mx, my, m.altura);
     _monFig3D.userData.whirlpoolTrapped = !!(m.rodamoinho_preso || m.rodamoinho_profundo_preso);
     _syncProvocacaoMark3D(_monFig3D, m);
+    _syncProcurandoMark3D(_monFig3D, m);
     // m.pos continua sendo a âncora autoritativa para seleção e colisão; a
     // raiz visual é deslocada para o centro geométrico do footprint.
     // A âncora é a fileira frontal. Centralizamos qualquer footprint orientado
@@ -46520,6 +46547,54 @@ function _atualizarProvocacaoMarks3D(now){
     if(!sprite) continue;
     sprite.position.set(0, _BB_H_ALVO + .24 + Math.sin(now / 260) * .045, 0);
     sprite.material.opacity = .82 + .18 * (0.5 + 0.5 * Math.sin(now / 190));
+  }
+}
+
+// "!" vermelho sobre o monstro à procura de um herói (campo `procurando`).
+function _makeProcurandoSprite3D(){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const c = cv.getContext('2d');
+  c.font = '900 112px "Segoe UI", Arial, sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineJoin = 'round'; c.lineWidth = 14; c.strokeStyle = 'rgba(20,0,0,0.95)';
+  c.strokeText('!', 64, 66);
+  c.shadowColor = '#ff1a1a'; c.shadowBlur = 18;
+  c.fillStyle = '#ff2b2b'; c.fillText('!', 64, 66);
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const sp = new T.Sprite(new T.SpriteMaterial({
+    map:tex, transparent:true, depthWrite:false, depthTest:false,
+  }));
+  sp.scale.set(.58, .58, 1); sp.renderOrder = 91;
+  sp.userData.isProcurandoSprite = true;
+  return sp;
+}
+
+function _syncProcurandoMark3D(fig, monstro){
+  if(!fig) return;
+  const active = !!monstro?.procurando;
+  let sprite = fig.userData.procurandoSprite;
+  if(active && !sprite){
+    sprite = _makeProcurandoSprite3D();
+    fig.userData.procurandoSprite = sprite;
+    fig.add(sprite);
+  } else if(!active && sprite){
+    fig.remove(sprite);
+    if(sprite.material?.map) sprite.material.map.dispose();
+    if(sprite.material) sprite.material.dispose();
+    delete fig.userData.procurandoSprite;
+  }
+  if(sprite && active)
+    sprite.userData.dx = fig.userData.provocacaoSprite ? .30 : 0;   // ao lado do 😠
+}
+
+function _atualizarProcurandoMarks3D(now){
+  if(!g3?.entityGroup) return;
+  for(const fig of g3.entityGroup.children){
+    const sprite = fig.userData?.procurandoSprite;
+    if(!sprite) continue;
+    sprite.position.set(sprite.userData.dx || 0, _BB_H_ALVO + .26 + Math.sin(now / 230) * .05, 0);
+    sprite.material.opacity = .80 + .20 * (0.5 + 0.5 * Math.sin(now / 170));
   }
 }
 

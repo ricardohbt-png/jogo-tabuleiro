@@ -231,6 +231,42 @@ def secao_gancho():
     check("alerta depois do despacho", "await room._alertar_monstros_feridos(pid, _hp_watch)" in src)
 
 
+# ─── [7] indicador "!" de monstro procurando ─────────────────────────────────
+def _procurando_no_payload(r, m):
+    snap = next(x for x in r._game_state_payload()["monsters"] if x["id"] == m["id"])
+    return snap.get("procurando")
+
+
+async def secao_indicador():
+    print("\n[7] Campo `procurando` do game_state (o \"!\" vermelho sobre o monstro)")
+    r, h, m, narr = cena()
+    check("sem pista: não está procurando", _procurando_no_payload(r, m) is False)
+    lembrar(r, m)
+    check("com pista e sem ver o herói: procurando", _procurando_no_payload(r, m) is True)
+    h["pos"] = [8, 5]
+    check("vendo o herói: não está procurando (está lutando)", _procurando_no_payload(r, m) is False)
+    h["pos"] = list(HEROI_LONGE)
+    r.round_num += 4
+    check("pista vencida (mais de 3 rodadas): não está procurando",
+          _procurando_no_payload(r, m) is False)
+    check("a checagem não apaga a memória (só lê)", m.get("ai_last_seen") is not None)
+
+    r, h, m, narr = cena()
+    antes = r._hp_monstros()
+    m["hp"] -= 2
+    await r._alertar_monstros_feridos("h", antes)
+    check("atingido de longe: procurando já antes do turno dele", _procurando_no_payload(r, m) is True)
+
+
+def secao_cliente():
+    print("\n[8] O cliente desenha o \"!\" no 2D e no 3D a partir do campo")
+    js = open(os.path.join(os.path.dirname(S.__file__), "game.js"), encoding="utf-8").read()
+    check("2D desenha o badge quando m.procurando", "if(m.procurando)" in js and "_drawProcurandoBadge2D(" in js)
+    check("3D sincroniza o sprite pelo campo", "_syncProcurandoMark3D(_monFig3D, m)" in js)
+    check("3D anima o sprite no laço", "_atualizarProcurandoMarks3D(now)" in js)
+    check("assinatura 3D inclui o campo (senão o sprite não troca)", "!!m.procurando]" in js)
+
+
 async def main():
     await secao_sucesso()
     await secao_falha()
@@ -238,6 +274,8 @@ async def main():
     await secao_prazo()
     await secao_alerta()
     secao_gancho()
+    await secao_indicador()
+    secao_cliente()
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)
 

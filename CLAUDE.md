@@ -2891,6 +2891,11 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > dele, e o controle de servos, que já grava a posição do servo. **Rastro:** ao chegar à última
 > posição sem ver o herói, `_monster_tentar_rastro` testa `d20 + distância÷2 ≤ Percepção` da
 > ficha; no sucesso a pista vira a posição atual do herói (sem renovar o prazo), uma vez por
-> chegada, por monstro. Invisível não deixa rastro, salvo Faro Implacável. Teste:
-> `tools/test_perseguicao.py`. Spec/plano em
+> chegada, por monstro. Invisível não deixa rastro, salvo Faro Implacável. **"!" vermelho:**
+> cada monstro do `game_state` traz `procurando` (`_monstro_procurando`, SÓ LEITURA: pista
+> válida há ≤3 rodadas e nenhum alvo à vista — liga logo após um ataque de longe, desliga ao
+> ver o herói ou esquecer). Cliente: `_drawProcurandoBadge2D` (acima do nome) e
+> `_makeProcurandoSprite3D`/`_syncProcurandoMark3D`/`_atualizarProcurandoMarks3D`, espelhando a
+> marca 😠 da Provocação; com os dois ativos o "!" vai para o lado. O campo entra na assinatura
+> de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.

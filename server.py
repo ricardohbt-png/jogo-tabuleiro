@@ -15001,6 +15001,25 @@ class GameRoom:
             if self._mestre_ativo():
                 aliado["alertado"] = True
 
+    def _monstro_procurando(self, m, alvos=None):
+        """Monstro à procura de um herói: tem uma pista válida (viu ou foi
+        atacado, há no máximo 3 rodadas) e agora não enxerga nenhum alvo. Vai no
+        game_state como `procurando` → "!" vermelho sobre a cabeça. Só LÊ: a
+        pista vencida é apagada por `_monster_last_seen_goal`, no turno dele."""
+        memoria = m.get("ai_last_seen")
+        if m.get("hp", 0) <= 0 or not isinstance(memoria, dict) or not memoria.get("pos"):
+            return False
+        try:
+            rodada = int(memoria.get("round", -999))
+        except (TypeError, ValueError):
+            rodada = -999
+        if (int(self.round_num) - rodada > 3
+                or memoria.get("room_id") != m.get("room_id")):
+            return False
+        if alvos is None:
+            alvos = self._alvos_hostis_para_monstros()
+        return not self._alvos_visiveis_para_monstro(m, alvos)
+
     def _hp_monstros(self):
         """{id: hp} dos monstros vivos — a foto de antes de uma ação do herói,
         comparada por `_alertar_monstros_feridos` depois dela."""
@@ -42096,9 +42115,11 @@ class GameRoom:
             for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
             players_state.append(snapshot)
+        _alvos_hostis = self._alvos_hostis_para_monstros()
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m),
-                               percepcao=self._get_percepcao_monstro(m))
+                               percepcao=self._get_percepcao_monstro(m),
+                               procurando=self._monstro_procurando(m, _alvos_hostis))
                           for m in self.monsters.values() if m["hp"] > 0]
         for snapshot in monsters_state:
             snapshot.pop("_metamorfose_original", None)
