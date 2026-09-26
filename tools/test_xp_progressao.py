@@ -128,9 +128,45 @@ async def secao_concessao():
     check("mago sobe e ganha escolha de magia", b["level"] == 2 and b.get("pending_spell_pick"))
 
 
+# ─── [3] Saves antigos e payload ────────────────────────────────────────────
+def secao_migracao_payload():
+    print("\n[3] Migração de save e xp_nivel/xp_proximo no payload")
+    p = make_player("p1", "A", "warrior", 0)
+    check("ficha nova nasce no modelo 2", p.get("xp_modelo") == 2)
+    check("xp_modelo é durável", "xp_modelo" in S.snapshot_character(p))
+
+    antigo = {"level": 2, "xp": 30}              # save antigo: sem xp_modelo
+    novo = make_player("p1", "A", "warrior", 0)
+    S.restore_character(novo, antigo)
+    check("save antigo: nível 2 com 30/60 → 2000", novo["level"] == 2 and novo["xp"] == 2000)
+    check("save antigo ganha a marca", novo.get("xp_modelo") == 2)
+
+    atual = {"level": 2, "xp": 1234, "xp_modelo": 2}
+    outro = make_player("p1", "A", "warrior", 0)
+    S.restore_character(outro, atual)
+    check("save já migrado fica intacto", outro["xp"] == 1234)
+
+    inflado = {"level": 38, "xp": 5}
+    alto = make_player("p1", "A", "warrior", 0)
+    S.restore_character(alto, inflado)
+    check("ficha inflada mantém o nível", alto["level"] == 38 and alto["xp"] == S.xp_limiar(20))
+
+    r = sala()
+    q = make_player("p1", "A", "warrior", 0)
+    q["xp"] = 1500; q["level"] = 2
+    r.players = {"p1": q}
+    cidade = r._city_state_payload()["players"][0]
+    check("city_state traz xp_nivel/xp_proximo",
+          cidade["xp_nivel"] == 1000 and cidade["xp_proximo"] == 3000)
+    q["level"] = 20
+    cidade = r._city_state_payload()["players"][0]
+    check("nível 20 → xp_proximo None", cidade["xp_proximo"] is None)
+
+
 async def main():
     secao_regras()
     await secao_concessao()
+    secao_migracao_payload()
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)
 

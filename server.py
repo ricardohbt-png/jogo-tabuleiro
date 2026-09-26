@@ -2484,7 +2484,7 @@ def try_create_savegame(account, name, mode, campaign_file, has_master, group_id
 # Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
 # esses valores já estão consistentes, então restore é só sobrescrita.
 _DURABLE_FIELDS = (
-    "gold", "hp", "max_hp", "xp", "level", "level_bonus",
+    "gold", "hp", "max_hp", "xp", "xp_modelo", "level", "level_bonus",
     "ac", "ac_base", "atk_bonus", "base_atk_bonus", "weapon",
     "fort", "ref_", "will", "spd", "fome", "sede", "fome_max", "sede_max",
     "fome_max_base", "sede_max_base", "fome_max_modificadores", "sede_max_modificadores",
@@ -2540,6 +2540,11 @@ def restore_character(player, snap):
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
+    # Curva de XP 3.5 (2026-09-26): ficha salva antes dela guarda a SOBRA dentro do
+    # nível (limiar nível×30). Converte para o acumulado mantendo nível e progresso.
+    if snap.get("xp_modelo") != 2:
+        player["xp"] = xp_migrado(player.get("level", 1), snap.get("xp", 0))
+        player["xp_modelo"] = 2
     # Migra fichas antigas e garante que a CA seja derivada do equipamento
     # atual, em vez de reutilizar um valor previamente embutido na classe.
     if player.get("gear"):
@@ -8651,7 +8656,7 @@ def make_player(pid, name, cls_id, slot):
         "will": sb["will"] + mod(i_) + level_bonus,
         "level_bonus": level_bonus,
         "spd": cls["spd"],
-        "xp": 0, "level": 1, "renome_individual": 0,
+        "xp": 0, "xp_modelo": 2, "level": 1, "renome_individual": 0,
         "gold": cls.get("start_gold", 20),
         "bag": [],
         "bag_size": 6,            # inventÃ¡rio base (expansÃ­vel por mochilas)
@@ -10071,6 +10076,8 @@ class GameRoom:
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             initiative=self.initiative_value(p),
+                            xp_nivel=xp_limiar(p.get("level", 1)),
+                            xp_proximo=xp_proximo_nivel(p.get("level", 1)),
                             repair_options=self._opcoes_reparo_ferreiro(p),
                             # Bênção Divina, bênção de grupo e elixires usam um
                             # cache de combate interno. Expor só este metadado
@@ -41994,6 +42001,8 @@ class GameRoom:
             snapshot = dict(p,
                             magias_conhecidas=magias_conhecidas,
                             initiative=self.initiative_value(p),
+                            xp_nivel=xp_limiar(p.get("level", 1)),
+                            xp_proximo=xp_proximo_nivel(p.get("level", 1)),
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             granted_hero_skills=(self._granted_hero_skills(p)
