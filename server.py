@@ -15001,6 +15001,25 @@ class GameRoom:
             if self._mestre_ativo():
                 aliado["alertado"] = True
 
+    def _hp_monstros(self):
+        """{id: hp} dos monstros vivos — a foto de antes de uma ação do herói,
+        comparada por `_alertar_monstros_feridos` depois dela."""
+        return {mid: m.get("hp", 0) for mid, m in self.monsters.items()
+                if m.get("hp", 0) > 0}
+
+    async def _alertar_monstros_feridos(self, pid, hp_antes):
+        """Todo monstro que perdeu HP durante a ação do herói `pid` ganha a
+        posição dele como origem do ataque — cobre magia, arremesso,
+        instrumento e técnica, sem gancho por executor.
+        Spec: 2026-09-26-perseguicao-monstros-design.md."""
+        heroi = self.players.get(pid)
+        if not self._ativo(heroi) or not hp_antes:
+            return
+        for mid, hp in hp_antes.items():
+            m = self.monsters.get(mid)
+            if m and m.get("hp", 0) < hp:
+                self._monster_register_attack_alert(heroi, m)
+
     def _monster_last_seen_goal(self, m):
         """Retorna o ponto de busca enquanto a memória ainda for confiável."""
         memoria = m.get("ai_last_seen")
@@ -42391,6 +42410,13 @@ class _WS:
                 break
 
 
+# Mensagens em que a queda de HP dos monstros NÃO é um ataque do herói que a
+# enviou: o turno dos monstros roda DENTRO do end_turn (zonas, retaliação,
+# veneno), e o controle de servos já grava a posição do SERVO no alerta.
+_MENSAGENS_SEM_ALERTA_DE_DANO = frozenset(
+    {"end_turn", "comandar_animados", "mover_animado", "atacar_animado"})
+
+
 async def handler(ws):
     global SCENE_LIBRARY
     pid = new_id()
@@ -42438,6 +42464,13 @@ async def handler(ws):
                                         msg.get("habilidade_id") if t == "acao_livre_richard" else
                                         ("instrumento" if t in ("usar_instrumento", "improviso_alvo") else t)),
                     }
+
+            # Todo dano que o herói causar nesta ação dá aos monstros feridos a
+            # origem do ataque (ver _alertar_monstros_feridos).
+            _hp_watch = None
+            if (room and room.phase == "playing" and pid in room.players
+                    and t not in _MENSAGENS_SEM_ALERTA_DE_DANO):
+                _hp_watch = room._hp_monstros()
 
             try:
                 # Idioma desta conexão. Vem antes de qualquer sala: vale já na
@@ -43301,6 +43334,9 @@ async def handler(ws):
                 elif t == "get_city_state":
                     if room and room.phase == "city":
                         await room.broadcast_city_state()
+
+                if _hp_watch is not None and room:
+                    await room._alertar_monstros_feridos(pid, _hp_watch)
 
                 if _ability_watch and room:
                     _after = room.players.get(pid)

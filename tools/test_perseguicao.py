@@ -184,11 +184,60 @@ async def secao_prazo():
           mem.get("pos") == [8, 5] and not mem.get("searches"))
 
 
+# ─── [5] todo dano alerta ────────────────────────────────────────────────────
+async def secao_alerta():
+    print("\n[5] Dano de qualquer ação do herói dá ao monstro a origem do ataque")
+    r, h, m, narr = cena()
+    h["pos"] = [15, 9]
+    antes = r._hp_monstros()
+    await r._dano_em_alvo(m, 3, "fogo", "h")          # ex.: uma magia
+    await r._alertar_monstros_feridos("h", antes)
+    mem = m.get("ai_last_seen") or {}
+    check("magia: grava a posição do herói", mem.get("pos") == [15, 9])
+    check("magia: marcada como ataque", mem.get("reason") == "attack")
+
+    r, h, m, narr = cena()
+    antes = r._hp_monstros()
+    await r._alertar_monstros_feridos("h", antes)
+    check("sem dano: nada gravado", "ai_last_seen" not in m)
+
+    r, h, m, narr = cena()
+    antes = r._hp_monstros()
+    m["hp"] = 0
+    await r._alertar_monstros_feridos("h", antes)
+    check("monstro morto na ação: nada gravado", "ai_last_seen" not in m)
+
+    r, h, m, narr = cena()
+    h["fora_masmorra"] = {"rodadas_restantes": 2}
+    antes = r._hp_monstros()
+    m["hp"] -= 2
+    await r._alertar_monstros_feridos("h", antes)
+    check("herói fora do tabuleiro: nada gravado", "ai_last_seen" not in m)
+
+    r, h, m, narr = cena()
+    antes = r._hp_monstros()
+    m["hp"] -= 2
+    await r._alertar_monstros_feridos("mestre", antes)
+    check("pid que não é herói: nada gravado", "ai_last_seen" not in m)
+
+# ─── [6] gancho no laço de mensagens ─────────────────────────────────────────
+def secao_gancho():
+    print("\n[6] O laço de mensagens chama o alerta, exceto no fim de turno e no controle de servos")
+    src = open(S.__file__, encoding="utf-8").read()
+    check("exclusões declaradas",
+          S._MENSAGENS_SEM_ALERTA_DE_DANO == frozenset(
+              {"end_turn", "comandar_animados", "mover_animado", "atacar_animado"}))
+    check("foto do HP antes do despacho", "_hp_watch = room._hp_monstros()" in src)
+    check("alerta depois do despacho", "await room._alertar_monstros_feridos(pid, _hp_watch)" in src)
+
+
 async def main():
     await secao_sucesso()
     await secao_falha()
     await secao_invisivel()
     await secao_prazo()
+    await secao_alerta()
+    secao_gancho()
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)
 
