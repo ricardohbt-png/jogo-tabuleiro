@@ -1,0 +1,793 @@
+{
+  "schema_version": 1,
+  "id": "sombras_1_vau",
+  "name": "Emboscada no Vau",
+  "ambiente": "ar_livre",
+  "saida_permitida": true,
+  "start_mode": "entrance",
+  "grid": {
+    "w": 36,
+    "h": 12
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 2,
+      "w": 10,
+      "h": 8,
+      "role": "entrance",
+      "locked": false,
+      "doors": [
+        [
+          11,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "x": 12,
+      "y": 2,
+      "w": 10,
+      "h": 8,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          11,
+          5
+        ],
+        [
+          22,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "x": 23,
+      "y": 2,
+      "w": 12,
+      "h": 8,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          22,
+          5
+        ]
+      ]
+    }
+  ],
+  "door_conditions": {},
+  "entrance": {
+    "x": 1,
+    "y": 5
+  },
+  "exit": {
+    "x": 34,
+    "y": 5
+  },
+  "monsters": [
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        9,
+        3
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        9,
+        8
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        8,
+        5
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        16,
+        4
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        16,
+        7
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        18,
+        5
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "lobo_cinzento_customizado",
+      "pos": [
+        19,
+        8
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        26,
+        4
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_combatente",
+      "pos": [
+        26,
+        7
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        31,
+        3
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        31,
+        8
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_dual",
+      "pos": [
+        29,
+        6
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    }
+  ],
+  "chests": [
+    {
+      "pos": [
+        20,
+        3
+      ],
+      "gold": 12,
+      "items": []
+    }
+  ],
+  "traps": [
+    {
+      "tipo": "armadilha_urso",
+      "pos": [
+        5,
+        5
+      ]
+    }
+  ],
+  "decorations": [
+    {
+      "id": "vau_carroca",
+      "type": "carroca",
+      "pos": [
+        13,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "vau_arvore_1",
+      "type": "arvore",
+      "pos": [
+        2,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "vau_arvore_2",
+      "type": "arvore_grande",
+      "pos": [
+        3,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "vau_arvore_3",
+      "type": "arvore_seca",
+      "pos": [
+        12,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "vau_arvore_4",
+      "type": "arvore",
+      "pos": [
+        23,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "vau_fogueira",
+      "type": "fogueira",
+      "pos": [
+        28,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    }
+  ],
+  "secret_passages": [],
+  "master_reinforcements": [],
+  "falas": [
+    {
+      "id": "vau_tome",
+      "pos": [
+        33,
+        3
+      ],
+      "falante": {
+        "nome": "Tomé",
+        "emoji": "🧔"
+      },
+      "texto": "Aqui! Tirem-me destas cordas! A estrada para casa segue logo ali.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      }
+    }
+  ],
+  "expected_party": {
+    "heroes": 4,
+    "level": 1
+  },
+  "objectives": {
+    "primary": {
+      "type": "rescue_prisoner",
+      "xp": 0,
+      "reward": {
+        "gold": 40,
+        "items": []
+      }
+    },
+    "secondary": []
+  },
+  "prisoner": {
+    "pos": [
+      33,
+      3
+    ],
+    "room_id": 2
+  }
+}

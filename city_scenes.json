@@ -50,6 +50,23 @@
                 "item_id": ""
               },
               "uma_vez": true
+            },
+            {
+              "id": "sombras_caravanas",
+              "texto": "As caravanas que saem pela Estrada do Vau não chegam do outro lado. O último cocheiro, Tomé, sumiu com a carga há três luas. Se vocês forem para os lados do Vau... tomem cuidado com o mato.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "sombras_caravanas",
+                "item_id": ""
+              },
+              "uma_vez": true
             }
           ],
           "z": 1.0

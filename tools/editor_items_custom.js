@@ -151,6 +151,35 @@ window.EDITOR_CUSTOM_ITEMS = [
       "baus": true,
       "loot_monstro": false
     }
+  },
+  {
+    "id": "anel_garra_negra",
+    "name": "Anel da Garra Negra",
+    "emoji": "💍",
+    "item_type": "ring",
+    "kind": "ring",
+    "item_slot": "ring",
+    "custom": true,
+    "bonuses": [
+      {
+        "effect": "atk_bonus",
+        "value": 1
+      },
+      {
+        "effect": "vision",
+        "value": 1
+      }
+    ],
+    "granted_ability": "hero_rogue_esconder_sombras",
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [],
+    "price": 250,
+    "disponibilidade": {
+      "loja": false,
+      "baus": true,
+      "loot_monstro": false
+    }
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de itens.

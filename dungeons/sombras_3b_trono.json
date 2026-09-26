@@ -1,0 +1,719 @@
+{
+  "schema_version": 1,
+  "id": "sombras_3b_trono",
+  "name": "Covil da Garra Negra — O Trono de Pedra",
+  "ambiente": "masmorra",
+  "saida_permitida": true,
+  "start_mode": "entrance",
+  "grid": {
+    "w": 24,
+    "h": 18
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 1,
+      "w": 8,
+      "h": 8,
+      "role": "entrance",
+      "locked": false,
+      "doors": [
+        [
+          9,
+          4
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "x": 10,
+      "y": 1,
+      "w": 13,
+      "h": 10,
+      "role": "boss",
+      "locked": true,
+      "doors": [
+        [
+          9,
+          4
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "x": 1,
+      "y": 10,
+      "w": 8,
+      "h": 6,
+      "role": "monster",
+      "locked": false,
+      "doors": []
+    }
+  ],
+  "door_conditions": {},
+  "entrance": {
+    "x": 2,
+    "y": 2
+  },
+  "monsters": [
+    {
+      "type": "troll",
+      "pos": [
+        19,
+        5
+      ],
+      "room_id": 1,
+      "boss": true,
+      "target": true
+    },
+    {
+      "type": "orc_guerreiro",
+      "pos": [
+        17,
+        3
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        21,
+        2
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        21,
+        9
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "bugbear_sombras",
+      "pos": [
+        5,
+        14
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        2,
+        13
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        7,
+        13
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    }
+  ],
+  "chests": [
+    {
+      "pos": [
+        7,
+        11
+      ],
+      "gold": 30,
+      "items": [
+        {
+          "id": "anel_garra_negra"
+        }
+      ]
+    }
+  ],
+  "traps": [],
+  "decorations": [
+    {
+      "id": "trono_fonte",
+      "type": "fonte",
+      "pos": [
+        6,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "charges": 3
+    },
+    {
+      "id": "trono_estante",
+      "type": "estante_livros",
+      "pos": [
+        6,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "trono_braseiro_1",
+      "type": "fogueira",
+      "pos": [
+        16,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    },
+    {
+      "id": "trono_braseiro_2",
+      "type": "fogueira",
+      "pos": [
+        16,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null
+    }
+  ],
+  "secret_passages": [
+    {
+      "id": "trono_passagem",
+      "type": "mechanism",
+      "pos": [
+        4,
+        9
+      ],
+      "key_decor_ids": [
+        "trono_estante"
+      ],
+      "keys_mode": "any"
+    }
+  ],
+  "master_reinforcements": [],
+  "falas": [
+    {
+      "id": "trono_pista",
+      "pos": [
+        4,
+        6
+      ],
+      "falante": {
+        "nome": "Vento",
+        "emoji": "🌬️"
+      },
+      "texto": "O vento assobia atrás da estante… como se houvesse um corredor do outro lado.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 2
+      }
+    }
+  ],
+  "expected_party": {
+    "heroes": 4,
+    "level": 3
+  },
+  "objectives": {
+    "primary": {
+      "type": "kill_target",
+      "xp": 0,
+      "reward": {
+        "gold": 120,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}

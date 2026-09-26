@@ -1,0 +1,856 @@
+{
+  "schema_version": 1,
+  "id": "sombras_2_minas",
+  "name": "Minas de Pedra-Funda",
+  "ambiente": "masmorra",
+  "saida_permitida": true,
+  "start_mode": "entrance",
+  "grid": {
+    "w": 42,
+    "h": 12
+  },
+  "tiles": [
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 3,
+      "w": 8,
+      "h": 6,
+      "role": "entrance",
+      "locked": false,
+      "doors": [
+        [
+          9,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "x": 10,
+      "y": 3,
+      "w": 10,
+      "h": 6,
+      "role": "trap",
+      "locked": true,
+      "doors": [
+        [
+          9,
+          5
+        ],
+        [
+          20,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "x": 21,
+      "y": 3,
+      "w": 9,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          20,
+          5
+        ],
+        [
+          30,
+          5
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "x": 31,
+      "y": 2,
+      "w": 10,
+      "h": 8,
+      "role": "chest",
+      "locked": true,
+      "doors": [
+        [
+          30,
+          5
+        ]
+      ]
+    }
+  ],
+  "door_conditions": {},
+  "entrance": {
+    "x": 1,
+    "y": 5
+  },
+  "monsters": [
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        6,
+        4
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        6,
+        7
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        7,
+        5
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_besteiro",
+      "pos": [
+        8,
+        3
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_besteiro",
+      "pos": [
+        8,
+        8
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_besteiro",
+      "pos": [
+        19,
+        3
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_besteiro",
+      "pos": [
+        19,
+        8
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        24,
+        4
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        24,
+        7
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        27,
+        3
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "aranha_sombria",
+      "pos": [
+        27,
+        8
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "cobra_venenosa",
+      "pos": [
+        28,
+        5
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "ogro_clava",
+      "pos": [
+        38,
+        5
+      ],
+      "room_id": 3,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_dual",
+      "pos": [
+        36,
+        3
+      ],
+      "room_id": 3,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        36,
+        8
+      ],
+      "room_id": 3,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "kobold_lanceiro",
+      "pos": [
+        34,
+        6
+      ],
+      "room_id": 3,
+      "boss": false,
+      "target": false
+    }
+  ],
+  "chests": [
+    {
+      "pos": [
+        40,
+        5
+      ],
+      "gold": 60,
+      "key_objective": true,
+      "items": [
+        {
+          "id": "frasco_acido"
+        },
+        {
+          "id": "frasco_acido"
+        },
+        {
+          "id": "frasco_oleo"
+        },
+        {
+          "id": "carta",
+          "texto": "Ordem da Garra Negra: levem tudo o que brilha ao Covil. O guardião que não morre não gosta de esperar — e nunca, NUNCA, levem fogo para perto dele."
+        }
+      ]
+    }
+  ],
+  "traps": [
+    {
+      "tipo": "fosso_estacas",
+      "pos": [
+        13,
+        5
+      ]
+    },
+    {
+      "tipo": "buraco",
+      "pos": [
+        16,
+        6
+      ]
+    }
+  ],
+  "decorations": [],
+  "secret_passages": [],
+  "master_reinforcements": [],
+  "falas": [
+    {
+      "id": "minas_kobold",
+      "pos": [
+        10,
+        5
+      ],
+      "falante": {
+        "nome": "Kobold ferido",
+        "emoji": "🦎"
+      },
+      "texto": "Cuidado com as estacas... o chefe manda pisar só nas pedras escuras.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 3
+      }
+    }
+  ],
+  "expected_party": {
+    "heroes": 4,
+    "level": 2
+  },
+  "objectives": {
+    "primary": {
+      "type": "open_key_chest",
+      "xp": 0,
+      "reward": {
+        "gold": 60,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}
