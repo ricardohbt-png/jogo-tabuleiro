@@ -323,6 +323,62 @@ async def secao_segredo():
               "hero_rogue_esconder_sombras" in S._habilidades_concedidas(guerreiro))
 
 
+# ─── [6] Gravação não destrutiva ─────────────────────────────────────────────
+def secao_gravacao():
+    print("\n[6] O gerador só toca no que é dele")
+    tmp = tempfile.mkdtemp(prefix="sombras_grava_")
+    try:
+        c = {"dungeons_dir": os.path.join(tmp, "dungeons"),
+             "adventures": os.path.join(tmp, "world_adventures.json"),
+             "scenes": os.path.join(tmp, "city_scenes.json"),
+             "items": os.path.join(tmp, "itens_personalizados.json"),
+             "items_index": os.path.join(tmp, "editor_items_custom.js"),
+             "assinaturas": os.path.join(tmp, "assinaturas.json")}
+        for chave, origem in (("adventures", S.WORLD_ADVENTURES_FILE), ("scenes", S.CITY_SCENES_FILE),
+                              ("items", S.CUSTOM_ITEMS_FILE)):
+            if os.path.exists(origem):
+                shutil.copy(origem, c[chave])
+            else:
+                with open(c[chave], "w", encoding="utf-8") as f:
+                    f.write("[]" if chave == "items" else "{}")
+        antes = {k: json.load(open(c[k], encoding="utf-8")) for k in ("adventures", "scenes", "items")}
+        G.aplicar(ART, caminhos=c, regen_editor=False)
+        depois = {k: json.load(open(c[k], encoding="utf-8")) for k in ("adventures", "scenes", "items")}
+        check("destinos alheios intactos",
+              {k: v for k, v in depois["adventures"].items() if not k.startswith("sombras_")}
+              == {k: v for k, v in antes["adventures"].items() if not k.startswith("sombras_")})
+        check("os 3 destinos da campanha gravados", {"sombras_vau", "sombras_minas", "sombras_covil"} <= set(depois["adventures"]))
+        def sem_conversa(cenas):
+            cenas = deepcopy(cenas)
+            for s in cenas["alva_e_luz"]["taverna"]["slots"]:
+                if s.get("id") == "barman":
+                    s["conversations"] = [cv for cv in s.get("conversations", []) if cv.get("id") != G.CONVERSA_ID]
+            return cenas
+        check("cenas intactas fora da conversa nova", sem_conversa(depois["scenes"]) == sem_conversa(antes["scenes"]))
+        check("itens alheios intactos",
+              [i for i in depois["items"] if i.get("id") != G.ANEL_ID] == [i for i in antes["items"] if i.get("id") != G.ANEL_ID])
+        bytes1 = {k: open(c[k], "rb").read() for k in ("adventures", "scenes", "items")}
+        G.aplicar(ART, caminhos=c, regen_editor=False)
+        check("rodar de novo produz os mesmos bytes", all(open(c[k], "rb").read() == v for k, v in bytes1.items()))
+        vau = os.path.join(c["dungeons_dir"], "sombras_1_vau.json")
+        editado = json.load(open(vau, encoding="utf-8"))
+        editado["name"] = "Emboscada no Vau (editada no editor)"
+        json.dump(editado, open(vau, "w", encoding="utf-8"), ensure_ascii=False)
+        cenas_antes = open(c["scenes"], "rb").read()
+        try:
+            G.aplicar(ART, caminhos=c, regen_editor=False)
+            check("masmorra editada à mão faz o gerador recusar", False)
+        except G.Conflito:
+            check("masmorra editada à mão faz o gerador recusar", True)
+        check("…sem gravar nada (tudo ou nada)",
+              json.load(open(vau, encoding="utf-8"))["name"].endswith("(editada no editor)")
+              and open(c["scenes"], "rb").read() == cenas_antes)
+        G.aplicar(ART, caminhos=c, forcar=True, regen_editor=False)
+        check("--forcar regrava", json.load(open(vau, encoding="utf-8"))["name"] == "Emboscada no Vau")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 # ─── [7] Régua da curva de XP (relatório) ────────────────────────────────────
 def secao_curva():
     print("\n[7] Régua da curva de XP — RELATÓRIO, não cobrança (conserto é o próximo subprojeto)")
@@ -349,6 +405,7 @@ async def main():
     await secao_objetivos()
     await secao_troll()
     await secao_segredo()
+    secao_gravacao()
     secao_curva()
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)

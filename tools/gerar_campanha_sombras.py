@@ -450,3 +450,124 @@ def preparar():
                 raise ValueError(f"{did}: etapa referencia arquivo desconhecido {etapa['file']!r}")
     return {"masmorras": mm, "destinos": dst, "anel": anel,
             "conversa": S._clean_scene_conversations([conversa_bartender()], "")[0]}
+
+
+# ─── Gravação ────────────────────────────────────────────────────────────────
+def caminhos_padrao():
+    return {"dungeons_dir": S.DUNGEONS_DIR, "adventures": S.WORLD_ADVENTURES_FILE,
+            "scenes": S.CITY_SCENES_FILE, "items": S.CUSTOM_ITEMS_FILE,
+            "items_index": S.CUSTOM_ITEMS_INDEX, "assinaturas": ASSINATURAS}
+
+
+def _ler_json(caminho, padrao):
+    try:
+        with open(caminho, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return padrao
+
+
+def _gravar_json(caminho, dados):
+    tmp = caminho + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(dados, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, caminho)
+
+
+def assinatura(defn):
+    texto = json.dumps(defn, sort_keys=True, ensure_ascii=False)
+    return hashlib.sha256(texto.encode("utf-8")).hexdigest()
+
+
+class Conflito(Exception):
+    pass
+
+
+def aplicar(artefatos, caminhos=None, forcar=False, regen_editor=True):
+    """Grava os artefatos. Só toca no que é da campanha. Tudo ou nada: confere
+    conflitos antes de gravar o primeiro arquivo."""
+    c = dict(caminhos_padrao(), **(caminhos or {}))
+    assin = _ler_json(c["assinaturas"], {})
+    conflitos = []
+    for arquivo in artefatos["masmorras"]:
+        caminho = os.path.join(c["dungeons_dir"], arquivo)
+        if os.path.exists(caminho) and not forcar:
+            atual = _ler_json(caminho, None)
+            if atual is None or assin.get(arquivo) != assinatura(atual):
+                conflitos.append(arquivo)
+    if conflitos:
+        raise Conflito("editadas depois de geradas (use --forcar): " + ", ".join(conflitos))
+    cenas = _ler_json(c["scenes"], {})
+    slots = ((cenas.get("alva_e_luz") or {}).get("taverna") or {}).get("slots") or []
+    barman = next((s for s in slots if isinstance(s, dict) and s.get("id") == "barman"), None)
+    if barman is None:
+        raise ValueError("city_scenes.json: Bartender (alva_e_luz/taverna/barman) não encontrado.")
+
+    os.makedirs(c["dungeons_dir"], exist_ok=True)
+    for arquivo, defn in artefatos["masmorras"].items():
+        _gravar_json(os.path.join(c["dungeons_dir"], arquivo), defn)
+        assin[arquivo] = assinatura(defn)
+    _gravar_json(c["assinaturas"], assin)
+
+    aventuras = _ler_json(c["adventures"], {})
+    for did, dest in artefatos["destinos"].items():
+        aventuras[did] = dest
+    _gravar_json(c["adventures"], aventuras)
+
+    convs = [cv for cv in (barman.get("conversations") or []) if cv.get("id") != CONVERSA_ID]
+    barman["conversations"] = convs + [artefatos["conversa"]]
+    _gravar_json(c["scenes"], cenas)
+
+    itens = [r for r in _ler_json(c["items"], []) if isinstance(r, dict) and r.get("id") != ANEL_ID]
+    itens.append(artefatos["anel"])
+    _gravar_json(c["items"], itens)
+    antigo = S.CUSTOM_ITEMS_INDEX
+    S.CUSTOM_ITEMS_INDEX = c["items_index"]
+    try:
+        S._regen_custom_items_index(itens)
+    finally:
+        S.CUSTOM_ITEMS_INDEX = antigo
+    if regen_editor:
+        S._regen_dungeons_index()
+
+
+def relatorio(artefatos):
+    linhas = []
+    for arquivo, defn in artefatos["masmorras"].items():
+        poder = defn["expected_party"]["heroes"] * defn["expected_party"]["level"]
+        linhas.append(f"{arquivo}  (poder {poder})")
+        for rid, nd in nd_por_sala(defn).items():
+            linhas.append(f"   sala {rid}: ND {nd:g} -> {faixa(nd, poder)} ({nd / poder:.2f})")
+    linhas.append("Artes pedidas pelos slides:")
+    linhas += [f"   {k}: {arte}" for k, arte in ARTES_PEDIDAS]
+    return "\n".join(linhas)
+
+
+def main(argv=None):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    ap = argparse.ArgumentParser(description="Gera a campanha Sombras sob Alva e Luz.")
+    ap.add_argument("--simular", action="store_true", help="só relata, não grava")
+    ap.add_argument("--forcar", action="store_true", help="regrava masmorra editada à mão")
+    args = ap.parse_args(argv)
+    try:
+        artefatos = preparar()
+    except ValueError as e:
+        print(f"ERRO: {e}  (nada foi gravado)")
+        return 1
+    print(relatorio(artefatos))
+    if args.simular:
+        return 0
+    try:
+        aplicar(artefatos, forcar=args.forcar)
+    except (Conflito, ValueError) as e:
+        print(f"RECUSADO: {e}  (nada foi gravado)")
+        return 2
+    print("OK: 4 masmorras, 3 destinos, conversa do Bartender e anel gravados.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
