@@ -2861,6 +2861,17 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `_desenharChamasPeao2D` (3 labaredas + brasas aos pés), que agenda um redesenho a ~12 quadros/s
 > (`_agendarChamas2D`) enquanto houver alguém em chamas à vista. O ícone 🔥 da fileira de status
 > 2D continua. Teste: `tools/test_chamas_peao.js`.
+> **Todo fogo contínuo acende o peão (2026-09-26):** as chamas vivas passaram a seguir o campo
+> `queimando` do `game_state` (herói e monstro), calculado no servidor por `_queimando(ent)` —
+> SÓ LEITURA, com a mesma regra de quem sofre o dano: status em chamas, fogo progressivo da
+> Armadilha Incendiária (`efeitos_ativos` da armadilha), lava sob os pés (`_lava_tiles_of`),
+> parede da Prisão de Chamas (`_prisao_chamas_relacao == "chamas"`; o calor ao lado não conta),
+> chamas residuais da Bola de Fogo (no chão) e do Molochus. A fogueira fica de fora (só queima ao
+> pisar). Cliente: helper `_queimando(x)` (recua para `em_chamas_rodadas` se o campo faltar) no 2D
+> e nas 6 linhas do 3D (assinatura, chave e argumento do `build3DFig`); o ícone 🔥, o banner "EM
+> CHAMAS" e o botão "Apagar chamas" seguem no STATUS, que é o que se apaga. **Bug corrigido junto:**
+> o arremesso de ÁREA do monstro (Bomba Incendiária do Soldado) só dava o dano da explosão e nunca
+> aplicava o status em chamas — o do herói aplicava. Teste: `tools/test_queimando.py`.
 > **Armadilhas — gemido de quem foi atingido (2026-09-24):** `_somDisparoArmadilha` marca cada
 > chave de `alvos` em `_dorArmadilha` (validade 4 s); quando a vida dela cai, `_somDor` consulta
 > `_somDorArmadilha` ANTES do filtro de dano físico e toca o gemido do atingido (`dor_heroi`,

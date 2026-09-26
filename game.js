@@ -6570,6 +6570,14 @@ const _CHAMAS_2D_CAMADAS = [
   [0.62, 'rgba(255,200,60,0.9)',   'rgba(255,120,10,0)'],
   [0.32, 'rgba(255,250,215,0.95)', 'rgba(255,220,110,0)'],
 ];
+// Pegando fogo AGORA (herói ou monstro): o servidor calcula `queimando` para
+// todo fogo contínuo — status em chamas, Armadilha Incendiária, lava, parede da
+// Prisão de Chamas, chamas da Bola de Fogo/Molochus. `em_chamas_rodadas` é o
+// recuo para um servidor que ainda não mande o campo.
+function _queimando(x){
+  return !!(x && (x.queimando || Number(x.em_chamas_rodadas) > 0));
+}
+
 function _desenharChamasPeao2D(ctx, cx, baseY, larg, now, seed){
   ctx.save();
   for(let i = 0; i < 3; i++){
@@ -9212,7 +9220,7 @@ function renderMap(state){
       drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
     }
     if(_monVortexPreso) ctx.restore();
-    if(m.em_chamas_rodadas > 0)
+    if(_queimando(m))
       _desenharChamasPeao2D(ctx, cx, cy + fp.logicalH * CELL * 0.36, fp.logicalW * CELL * 0.8, performance.now(), _semente2D(m.id));
     // HP bar
     const pct=_combatHpRatio(`m:${m.id}`, m.hp, m.max_hp);
@@ -9464,7 +9472,7 @@ function renderMap(state){
       } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
     } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
     if(_playerVortexPreso) ctx.restore();
-    if(p.em_chamas_rodadas > 0 && !_invisP)
+    if(_queimando(p) && !_invisP)
       _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.36, CELL * 0.8, performance.now(), _semente2D(p.id));
     if(_alphaSombras < .999) ctx.restore();
     if(_invisP) ctx.restore();
@@ -44546,10 +44554,10 @@ function renderMap3D(state){
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const gamepadAttackTarget3D = _gamepadSelectedAttackTarget(state);
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, !!p.metamorfose_ativa, p.metamorfose_forma_type, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), p.em_chamas_rodadas > 0,
+    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, !!p.metamorfose_ativa, p.metamorfose_forma_type, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), _queimando(p),
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.size, a.oriented, a.facing])]),
-    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0,
+    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m),
     m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura,
     !!(m.provocado && Number(m.provocado_turnos) > 0), !!m.procurando]),
     state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
@@ -44652,12 +44660,12 @@ function renderMap3D(state){
     const isCur = p.id===state.current_turn;
     const formaVisual = _metamorfoseVisualName(p);
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, p.em_chamas_rodadas > 0, !!p.petrificado,
+      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, _queimando(p), !!p.petrificado,
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
           formaVisual ? (p.metamorfose_forma_type || formaVisual) : null, pSel, formaVisual,
-          undefined, undefined, p.facing, p.em_chamas_rodadas > 0,
+          undefined, undefined, p.facing, _queimando(p),
           // Os `undefined` cobrem monsterVisionRadius, mModel3D, mFillFootprint
           // e mSize — parâmetros só de monstro. Faltava o de mSize, então
           // `petrificado` caía uma posição antes e o herói NUNCA virava pedra.
@@ -44706,10 +44714,10 @@ function renderMap3D(state){
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
-      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, m.em_chamas_rodadas > 0, !!m.petrificado,
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), !!m.petrificado,
         m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.altura, GS.sorrateiroAtivo(), _arteGen]),
       () => {
-        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, m.em_chamas_rodadas > 0,
+        const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, _queimando(m),
           m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d, !!m.fill_footprint_3d, m.size, !!m.petrificado);
         const vs = Array.isArray(m.vscale) ? m.vscale : [1, 1];
         const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));

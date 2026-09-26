@@ -15001,6 +15001,48 @@ class GameRoom:
             if self._mestre_ativo():
                 aliado["alertado"] = True
 
+    def _queimando(self, ent):
+        """Herói/monstro pegando fogo AGORA — vai no game_state como `queimando`
+        e o cliente desenha as chamas vivas no peão. Só LÊ, com a mesma regra de
+        quem sofre o dano contínuo: status em chamas (itens de fogo), fogo
+        progressivo da Armadilha Incendiária, lava sob os pés, parede da Prisão
+        de Chamas, chamas residuais da Bola de Fogo e do Molochus. A fogueira não
+        entra: ela só queima ao pisar, não é fogo contínuo."""
+        if not ent or not ent.get("pos"):
+            return False
+        if int(ent.get("em_chamas_rodadas", 0) or 0) > 0:
+            return True
+        aid = ent.get("id")
+        for arm in self.armadilhas:
+            for ef in arm.get("efeitos_ativos", []) or []:
+                if (ef.get("alvo_id") == aid
+                        and int(ef.get("rodadas_restantes", 0) or 0) > 0
+                        and str(ef.get("elemento", "fogo")).lower() in ("fogo", "fire")):
+                    return True
+        if self._voo_imune_terreno(ent):
+            return False
+        if self._lava_tiles_of(ent):
+            return True
+        no_chao = normalizar_altura(ent.get("altura", ALTURA_MIN)) <= ALTURA_MIN
+        x, y = ent["pos"][0], ent["pos"][1]
+        for zona in self.zonas_especiais:
+            if not zona.get("ativa"):
+                continue
+            tipo = zona.get("tipo")
+            if tipo == "prisao_chamas":
+                if self._prisao_chamas_relacao(ent, zona) == "chamas":
+                    return True
+            elif tipo == "bola_fogo" and no_chao:
+                lado = zona.get("area_lado")
+                dentro = (self._na_area_quadrada(ent, zona["cx"], zona["cy"], lado) if lado
+                          else self._na_area(ent, zona["cx"], zona["cy"], zona.get("raio", 2)))
+                if dentro:
+                    return True
+            elif tipo == "molochus_chamas":
+                if max(abs(x - zona["cx"]), abs(y - zona["cy"])) <= int(zona.get("raio", 1) or 1):
+                    return True
+        return False
+
     def _monstro_procurando(self, m, alvos=None):
         """Monstro à procura de um herói: tem uma pista válida (viu ou foi
         atacado, há no máximo 3 rodadas) e agora não enxerga nenhum alvo. Vai no
@@ -36232,6 +36274,13 @@ class GameRoom:
                 if alvo["hp"] <= 0:
                     await self._monster_dies(alvo, None)
             await self.gm_say(T("narracao.sofre_de_dano_3", defn_get_emoji=defn.get('emoji', '💥'), alvo_get_name_alvo_get_n=nome_criatura(alvo), dmg=dmg))
+            # Explosivo incendiário (Bomba Incendiária): deixa em chamas quem
+            # sobreviveu, igual ao arremesso de área do herói. Antes só dava o
+            # dano da explosão e o fogo contínuo nunca começava.
+            if defn.get("em_chamas") and dmg > 0 and self._vivo(alvo):
+                dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
+                self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
+                await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome_criatura(alvo), dur=dur))
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
             await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"],
@@ -42095,6 +42144,7 @@ class GameRoom:
             snapshot = dict(p,
                             magias_conhecidas=magias_conhecidas,
                             initiative=self.initiative_value(p),
+                            queimando=self._queimando(p),
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             granted_hero_skills=(self._granted_hero_skills(p)
@@ -42119,7 +42169,8 @@ class GameRoom:
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m),
                                percepcao=self._get_percepcao_monstro(m),
-                               procurando=self._monstro_procurando(m, _alvos_hostis))
+                               procurando=self._monstro_procurando(m, _alvos_hostis),
+                               queimando=self._queimando(m))
                           for m in self.monsters.values() if m["hp"] > 0]
         for snapshot in monsters_state:
             snapshot.pop("_metamorfose_original", None)
