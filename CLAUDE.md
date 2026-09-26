@@ -1679,6 +1679,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > preenchido, e preencher um re-renderiza o painel para habilitá-lo. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-destino-oculto-ate-liberar*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [18]-[18c].
+> **Só na cidade (2026-09-26):** destino com `so_na_cidade` continua no payload (o ponto de
+> masmorra da cidade depende dele), mas o mapa-múndi do cliente não desenha o marcador — entra-se
+> só pelo ponto da ilustração. Checkbox "🏘️ só na cidade" no `tools/editor_world.js`. O Campo de
+> Treinamento usa. Teste: seção [20].
 
 > **Fim da rota:** além do `intro`/`outro` de cada etapa, o **destino** tem um campo de
 > história próprio, `outro_rota` (mesmo formato: string ou `{slides, audio}`, salvo por
@@ -1694,6 +1698,23 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > um overlay de tela cheia, então o jogador lê antes de ver a cidade. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-fim-da-rota*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [19]/[19b].
+
+> **Campanha "Sombras sob Alva e Luz" (2026-09-25):** primeira campanha de conteúdo, gerada por
+> `tools/gerar_campanha_sombras.py` (reexecutável; só toca nas entradas `sombras_*`/
+> `anel_garra_negra` e recusa sobrescrever masmorra editada à mão sem `--forcar`, por hash em
+> `tools/.sombras_assinaturas.json`; `--simular` relata ND por sala e as artes pedidas pelos
+> slides). Gancho: conversa `sombras_caravanas` do Bartender de Alva e Luz → fato → destinos
+> ocultos em corrente Vau (escolta de Tomé até a saída, nível 1) → Minas (baú-chave com
+> ácido/óleo e o bilhete, nível 2) → Covil (Salões com salas obrigatórias, emendados no Trono do
+> Troll, nível 3). Chefe secreto: Bugbear das Sombras atrás da estante-mecanismo, guardando o
+> **Anel da Garra Negra** (item custom: +1 acerto, +1 visão, concede Esconder nas Sombras).
+> Achado no caminho: `load_authored_dungeon` descartava `required`/`required_mode` e o objetivo
+> `salas_obrigatorias` se cumpria ao entrar — corrigido (`test_modo_mestre` [23b]). A curva de XP
+> é a do master ("15 encontros por nível"); os objetivos da campanha não dão XP, e a seção [7]
+> da suíte só relata o nível atingido (a fórmula dela ainda é a da curva antiga). Avisos do
+> validador de design esperados: "sem boss" em Vau/Minas/Salões (sem chefe por design), "sem sala
+> obrigatória" onde o objetivo é outro, e no Trono R2 (chefe perto da entrada) e R4 na sala #2 —
+> o Esconderijo só se liga ao mapa quando a estante abre. Teste: `tools/test_campanha_sombras.py`.
 
 > **Prévia fiel do editor (`index.html?preview=1`):** o botão "◈ Visualizar em 3D" do
 > editor deixou de ter renderer próprio — `tools/editor_preview_3d.js` era uma

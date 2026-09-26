@@ -199,6 +199,39 @@ def test_flag_persistida():
         server.WORLD_ADVENTURES = salvos
         server._save_world_adventures()
 
+async def test_so_na_cidade():
+    print("\n[20] destino só na cidade (fora do mapa-múndi)")
+    salvos = server.WORLD_ADVENTURES
+    import tempfile, shutil
+    tmp = tempfile.mkdtemp()
+    arquivos = (server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE)
+    server.WORLD_ADVENTURES_FILE = os.path.join(tmp, "world_adventures.json")
+    server.WORLD_MAP_POINTS_FILE = os.path.join(tmp, "world_map_points.json")
+    try:
+        a = _aventura_oculta(False, renome_min=0)
+        a.update(id="test_cidade", so_na_cidade=True)
+        server.WORLD_ADVENTURES = {"test_cidade": a}
+        r = setup_room()
+        pay = next((x for x in r._city_state_payload()["world"]["adventures"]
+                    if x["id"] == "test_cidade"), None)
+        check("continua no payload (o ponto da cidade precisa dele)", pay is not None)
+        check("payload leva so_na_cidade para o cliente", pay and pay.get("so_na_cidade") is True)
+        ok, _ = server._save_world_adventures_upload([], [dict(a)])
+        check("flag preservado no save do editor",
+              ok and server.WORLD_ADVENTURES["test_cidade"].get("so_na_cidade") is True)
+        b = dict(a); b.pop("so_na_cidade")
+        server._save_world_adventures_upload([], [b])
+        check("ausente vira False", server.WORLD_ADVENTURES["test_cidade"].get("so_na_cidade") is False)
+        base = os.path.dirname(os.path.abspath(__file__))
+        js = open(os.path.join(base, "..", "game.js"), encoding="utf-8").read()
+        check("mapa-múndi do cliente pula so_na_cidade", "filter(a => !a.so_na_cidade)" in js)
+        check("Campo de Treinamento está só na cidade",
+              salvos.get("treinamento", {}).get("so_na_cidade") is True)
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE = arquivos
+        shutil.rmtree(tmp, ignore_errors=True)
+
 def _aventura(encadear):
     return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
             "fome": 1, "sede": 1, "renome_recompensa": 1,
@@ -571,6 +604,7 @@ async def main():
     await test_destino_oculto()
     await test_oculto_recusa_generica()
     await test_destino_some_apos_concluir()
+    await test_so_na_cidade()
     await test_fim_da_rota()
     await test_saida_recusada()
     await test_saida_efetiva()

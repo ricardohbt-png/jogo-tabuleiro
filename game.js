@@ -2166,7 +2166,9 @@ function showWorldMap(){
     marker.onclick = () => showWorldLocationPreview(world, loc);
     frame.appendChild(marker);
   });
-  if(!editing) (world.adventures || []).forEach(adventure => {
+  // Destino "só na cidade" (ex.: Campo de Treinamento) entra pelo ponto da
+  // ilustração da cidade; no mapa-múndi ele não vira marcador.
+  if(!editing) (world.adventures || []).filter(a => !a.so_na_cidade).forEach(adventure => {
     const marker = document.createElement('button'); marker.type = 'button';
     marker.className = 'worldmap-marker adventure'; marker.style.left = adventure.x + '%'; marker.style.top = adventure.y + '%';
     marker.dataset.worldName = adventure.nome; marker.setAttribute('aria-label', adventure.nome); marker.title = adventure.nome;

@@ -495,6 +495,9 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
                         "ocultar_apos_concluir": bool(row.get("ocultar_apos_concluir")),
                         "revisitavel": bool(row.get("revisitavel")),
+                        # Não vira marcador no mapa-múndi: só se entra pelo
+                        # ponto da ilustração da cidade que o vincula.
+                        "so_na_cidade": bool(row.get("so_na_cidade")),
                         "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
@@ -12789,6 +12792,11 @@ class GameRoom:
                 "looted": False,
                 "locked": bool(r.get("locked", role != "entrance")),
                 "doors": [list(d) for d in r.get("doors", [])],
+                # Salas obrigatórias (Camada C). Sem estes dois campos o objetivo
+                # salas_obrigatorias se cumpria no instante da entrada (all([]) é True).
+                "required": bool(r.get("required", False)),
+                "required_mode": (r.get("required_mode")
+                                  if r.get("required_mode") in ("visit", "clear") else "clear"),
                 # Rotação relativa à orientação inferida pelas paredes. Campo
                 # ausente mantém o comportamento dos mapas antigos.
                 "door_orientations": {
@@ -41550,7 +41558,9 @@ class GameRoom:
             return max(abs(px - destino[0]), abs(py - destino[1])) <= 1
         if t == "salas_obrigatorias":
             req = [rm for rm in self.rooms if rm.get("required")]
-            return all(self._sala_obrigatoria_ok(rm) for rm in req)
+            # validar_dungeon já recusa o objetivo sem sala marcada; a guarda é
+            # defesa em profundidade contra o all([]) == True.
+            return bool(req) and all(self._sala_obrigatoria_ok(rm) for rm in req)
         return False
 
     def _sala_obrigatoria_ok(self, rm):

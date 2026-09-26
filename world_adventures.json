@@ -363,7 +363,8 @@
       "fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 0
+    "renome_recompensa": 0,
+    "so_na_cidade": true
   },
   "destino_9": {
     "id": "destino_9",
@@ -397,5 +398,194 @@
       "aventura_id": ""
     },
     "renome_recompensa": 15
+  },
+  "sombras_vau": {
+    "id": "sombras_vau",
+    "nome": "Emboscada no Vau",
+    "x": 69.5,
+    "y": 54.41,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "sombras_1_vau.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "A Estrada do Vau atravessa o bosque a leste de Alva e Luz. Há três luas nenhuma caravana chega do outro lado.",
+              "fit": "contain"
+            },
+            {
+              "text": "Na curva do rio, uma carroça tombada. Cordas cortadas. E, entre as árvores, o brilho de olhos pequenos e amarelos.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "— Não era só roubo — diz Tomé, esfregando os pulsos. — Eles levavam a carga para as velhas minas de Pedra-Funda. Falavam de uma garra negra.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "sombras_caravanas",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "sombras_minas": {
+    "id": "sombras_minas",
+    "nome": "Minas de Pedra-Funda",
+    "x": 74.5,
+    "y": 47.41,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "sombras_2_minas.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "As minas de Pedra-Funda foram abandonadas quando a veia de prata secou. Agora, dizem os mineiros, a montanha voltou a ranger à noite.",
+              "fit": "contain"
+            },
+            {
+              "text": "Pegadas miúdas e rastros de carga arrastada descem para o escuro.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "No cofre, frascos que os kobolds nunca entenderam — ácido e óleo — e um bilhete com o sinal de uma garra negra: o Covil, e um guardião que não morre.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": "sombras_vau"
+    },
+    "renome_recompensa": 1
+  },
+  "sombras_covil": {
+    "id": "sombras_covil",
+    "nome": "Covil da Garra Negra",
+    "x": 79.5,
+    "y": 42.41,
+    "fome": 3,
+    "sede": 3,
+    "dungeons": [
+      {
+        "file": "sombras_3a_saloes.json",
+        "encadear": true,
+        "intro": {
+          "slides": [
+            {
+              "text": "O Covil da Garra Negra fica numa fortaleza em ruínas, na encosta sobre as minas.",
+              "fit": "contain"
+            },
+            {
+              "text": "Daqui não há volta até o fim: os andares se emendam, e o que for gasto lá dentro não se recupera.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "A escadaria desce para o calor. Cheiro de fumaça e de carne podre. Algo enorme respira lá embaixo.",
+              "fit": "contain"
+            }
+          ]
+        }
+      },
+      {
+        "file": "sombras_3b_trono.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "No Trono de Pedra, entre braseiros, o guardião se levanta: um troll. As feridas que os heróis abrem se fecham diante dos olhos.",
+              "fit": "contain"
+            },
+            {
+              "text": "Ácido e fogo. É o que diz o bilhete. É o que sobrou do cofre.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/the_kraken_s_overture.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "O troll tomba de vez. O bando da Garra Negra se desfaz na noite.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "Semanas depois, as caravanas voltam a cruzar o Vau. Em Alva e Luz, o nome do grupo corre de mesa em mesa na taverna.",
+          "fit": "contain"
+        },
+        {
+          "text": "E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez ninguém tenha encontrado.",
+          "fit": "contain"
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "aventura_id": "sombras_minas"
+    },
+    "renome_recompensa": 2
   }
 }
