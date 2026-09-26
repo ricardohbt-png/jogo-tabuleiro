@@ -92,7 +92,7 @@ def secao_regras():
     print("\n[1] Regras puras — xp_premio / xp_limiar / nivel_por_xp")
     check("nível 1 × ND 1 = 300", S.xp_premio(1, 1) == 300)
     check("ND igual ao nível = 300 × nível", all(S.xp_premio(n, n) == 300 * n for n in range(1, 21)))
-    check("nível 1 × ND 3 = 3× o ND 1", S.xp_premio(1, 3) == 900)
+    check("nível 1 × ND 3 = 2× o ND 1 (dobra a cada 2 NDs)", S.xp_premio(1, 3) == 600)
     check("ND fracionário = fração do ND 1 (goblin ¼ no nível 1 → 75)", S.xp_premio(1, 0.25) == 75)
     check("ND fracionário segue o nível (¼ no nível 5 → 94)", S.xp_premio(5, 0.25) == 94)
     check("ND 0 não rende", S.xp_premio(1, 0) == 0)

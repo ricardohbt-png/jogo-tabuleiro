@@ -8810,8 +8810,6 @@ _TERRENO_MAGIA_CHAVE = {
     "agua_profunda": "narracao.terreno.agua_profunda",
 }
 
-TRAP_XP_POR_CR = 20
-
 def trap_cr(meta):
     """cr unificado da armadilha (Camada C). Usa o cr explícito quando presente;
     senão deriva da dificuldade do save (DC 8→0.0 … escala suave, teto 1.0);
@@ -8827,9 +8825,65 @@ def trap_cr(meta):
         return max(0.1, min(1.0, round((dif - 8) / 6.0, 2)))
     return 0.3
 
-def trap_xp(cr):
-    """XP de uma armadilha derivado do seu cr (dividido entre os heróis vivos)."""
-    return round(float(cr) * TRAP_XP_POR_CR)
+# ─── Progressão de XP — modelo D&D 3.5 ──────────────────────────────────────
+# Spec: docs/superpowers/specs/2026-09-26-progressao-xp-dnd35-design.md
+# O XP do jogador é ACUMULADO (nunca subtraído); o nível é consequência dele.
+XP_NIVEL_MAX = 20
+
+
+def xp_premio(nivel, nd):
+    """Prêmio TOTAL de um desafio de ND `nd` para um herói de nível `nivel`, antes de
+    dividir pelo grupo. É a fórmula que gera a tabela 2-6 do DMG 3.5: ND abaixo de 1
+    vale a fração do ND 1; 8 NDs abaixo do herói não rende; acima de nível+7, trava."""
+    L = max(1, min(XP_NIVEL_MAX, int(nivel or 1)))
+    try:
+        nd = float(nd)
+    except (TypeError, ValueError):
+        return 0
+    if nd <= 0:
+        return 0
+    if nd < 1:
+        return round(nd * xp_premio(L, 1))
+    if nd <= L - 8:
+        return 0
+    nd = min(nd, L + 7)
+    return round(300 * L * 2 ** ((nd - L) / 2))
+
+
+def xp_por_heroi(nivel, nd, vivos):
+    """Parte de UM herói: prêmio com o nível DELE ÷ heróis vivos (mín. 1 se houver prêmio)."""
+    premio = xp_premio(nivel, nd)
+    return max(1, premio // max(1, int(vivos))) if premio > 0 else 0
+
+
+def xp_limiar(n):
+    """XP ACUMULADO exigido para estar no nível n: 0, 1000, 3000, 6000 … 190000."""
+    n = max(1, int(n))
+    return 500 * n * (n - 1)
+
+
+def nivel_por_xp(xp):
+    """Maior nível (≤ XP_NIVEL_MAX) cujo limiar cabe em `xp`."""
+    n = 1
+    while n < XP_NIVEL_MAX and xp_limiar(n + 1) <= xp:
+        n += 1
+    return n
+
+
+def xp_proximo_nivel(nivel):
+    """Limiar do próximo nível, ou None no nível máximo (vai ao cliente)."""
+    return None if int(nivel) >= XP_NIVEL_MAX else xp_limiar(int(nivel) + 1)
+
+
+def xp_migrado(nivel, xp_antigo):
+    """Converte o XP da curva antiga (sobra DENTRO do nível, limiar nível×30) para o
+    acumulado 3.5, preservando o nível e a fração de progresso."""
+    L = max(1, min(XP_NIVEL_MAX, int(nivel or 1)))
+    base = xp_limiar(L)
+    if L >= XP_NIVEL_MAX:
+        return base
+    frac = min(1.0, max(0.0, float(xp_antigo or 0) / (L * 30)))
+    return base + round(frac * (xp_limiar(L + 1) - base))
 
 def _aplicar_equipamentos_monstro(m):
     """Equipa a criatura com itens da mesma loja usada pelos heróis.

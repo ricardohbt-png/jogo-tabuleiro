@@ -45,7 +45,8 @@ nivel_por_xp(xp) -> int          # maior n ≤ XP_NIVEL_MAX com xp_limiar(n) ≤
 ```
 
 Cada herói vivo recebe `xp_premio(seu nível, ND) // nº de heróis vivos`, com mínimo 1 quando
-o prêmio é positivo. Um ND 3 vale 3× um ND 1 para um herói de nível 1, e um ND 5 vale 6×.
+o prêmio é positivo. O prêmio dobra a cada 2 NDs: para um herói de nível 1, um ND 3 vale 2× um ND 1 e um ND 5
+vale 4×.
 
 A fórmula gera a tabela 2-6 do DMG 3.5 de forma aproximada. A irregularidade dos níveis 1–3
 do livro não é reproduzida.
