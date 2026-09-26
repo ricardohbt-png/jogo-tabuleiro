@@ -2879,3 +2879,18 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > passou a carregar `item_id` (toca quando o frasco chega à casa). Arremesso do Soldado: pela
 > mensagem `item_impacto`, na hora. Testes: `tools/test_som_armadilha.py` [3]/[4],
 > `tools/test_sons_cliente.js` [14].
+
+> **Perseguição dos monstros (2026-09-26):** a memória que já existia (`ai_last_seen`,
+> `_monster_remember_visible_targets`, `_monster_register_attack_alert`,
+> `_monster_search_last_seen`: ver o herói ou ser atacado → busca a última posição por 3
+> rodadas, alerta compartilhado com a sala de origem) ganhou dois acréscimos. **Todo dano
+> alerta:** o `handler` tira uma foto do HP dos monstros (`_hp_monstros`) antes de cada mensagem
+> de herói na masmorra e chama `_alertar_monstros_feridos` depois — magia, arremesso,
+> instrumento e técnica passam a gravar a origem do ataque sem gancho por executor. Ficam de
+> fora (`_MENSAGENS_SEM_ALERTA_DE_DANO`) o `end_turn`, porque o turno dos monstros roda dentro
+> dele, e o controle de servos, que já grava a posição do servo. **Rastro:** ao chegar à última
+> posição sem ver o herói, `_monster_tentar_rastro` testa `d20 + distância÷2 ≤ Percepção` da
+> ficha; no sucesso a pista vira a posição atual do herói (sem renovar o prazo), uma vez por
+> chegada, por monstro. Invisível não deixa rastro, salvo Faro Implacável. Teste:
+> `tools/test_perseguicao.py`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
