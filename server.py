@@ -494,6 +494,12 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
                         "revisitavel": bool(row.get("revisitavel")),
+                        # Some de vez (mapa, ponto da cidade e entrada) quando
+                        # todas as etapas foram concluídas — ex.: tutorial.
+                        "ocultar_ao_concluir": bool(row.get("ocultar_ao_concluir")),
+                        # Não vira marcador no mapa-múndi: só se entra pelo
+                        # ponto da ilustração da cidade que o vincula.
+                        "so_na_cidade": bool(row.get("so_na_cidade")),
                         "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
     try:
@@ -13128,6 +13134,14 @@ class GameRoom:
                 reasons.append(T("erro.requisito.rota_anterior"))
         return not reasons, reasons
 
+    def _aventura_concluida(self, adventure):
+        """Todas as etapas do destino já foram concluídas por esta sala."""
+        try:
+            feitas = int(self.world_adventure_progress.get(adventure.get("id"), 0))
+        except (TypeError, ValueError):
+            feitas = 0
+        return feitas >= len(adventure.get("dungeons") or [])
+
     def _aventura_visivel(self, adventure):
         """Destino oculto some do mapa até o requisito ser cumprido. Sem o flag,
         o destino é sempre visível (bloqueado ou não), como sempre foi.
@@ -13135,6 +13149,8 @@ class GameRoom:
         sem nenhum requisito, não esconde nada."""
         # Rascunhos do editor não viram destinos clicáveis no mapa do jogo.
         if not adventure.get("dungeons"):
+            return False
+        if adventure.get("ocultar_ao_concluir") and self._aventura_concluida(adventure):
             return False
         if not adventure.get("oculto_ate_liberar"):
             return True
@@ -13431,7 +13447,10 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
-        if not adventure:
+        # Destino concluído que "some ao concluir" responde como inexistente:
+        # ele já não aparece no mapa nem na cidade.
+        if not adventure or (adventure.get("ocultar_ao_concluir")
+                             and self._aventura_concluida(adventure)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.destino_de_aventura_invalido")})
             return
         allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))

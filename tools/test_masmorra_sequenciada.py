@@ -195,6 +195,69 @@ def test_flag_persistida():
         server.WORLD_ADVENTURES = salvos
         server._save_world_adventures()
 
+def _aventura_treino(**flags):
+    a = _aventura_oculta(False, renome_min=0)
+    a.update(id="test_treino", **flags)
+    return a
+
+async def test_ocultar_ao_concluir_e_so_na_cidade():
+    print("\n[20] destino que some ao concluir e destino só na cidade")
+    salvos = server.WORLD_ADVENTURES
+    # O save do editor grava world_adventures.json e world_map_points.json: aqui
+    # eles vão para uma pasta temporária, para o teste nunca tocar nos reais.
+    import tempfile, shutil
+    tmp = tempfile.mkdtemp()
+    arquivos = (server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE)
+    server.WORLD_ADVENTURES_FILE = os.path.join(tmp, "world_adventures.json")
+    server.WORLD_MAP_POINTS_FILE = os.path.join(tmp, "world_map_points.json")
+    try:
+        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino(ocultar_ao_concluir=True,
+                                                                   so_na_cidade=True)}
+        r = setup_room()
+        check("antes de concluir, está no payload", "test_treino" in _ids_no_mapa(r))
+        pay = next(a for a in r._city_state_payload()["world"]["adventures"]
+                   if a["id"] == "test_treino")
+        check("payload leva so_na_cidade para o cliente", pay.get("so_na_cidade") is True)
+        r.world_adventure_progress["test_treino"] = 1           # 1 etapa: concluído
+        check("concluído com ocultar_ao_concluir some", "test_treino" not in _ids_no_mapa(r))
+        erros = []
+        async def cap(pid, msg):
+            if msg.get("type") == "error": erros.append(msg["msg"])
+        r.send_to = cap
+        await r.handle_world_adventure("p1", "test_treino")
+        check("concluído recusa entrar como id inválido",
+              r.phase == "city" and erros and erros[-1] == "Destino de aventura inválido.")
+        # sem o flag, destino concluído continua visível (não-regressão)
+        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino()}
+        r2 = setup_room(); r2.world_adventure_progress["test_treino"] = 1
+        check("sem o flag, concluído continua visível", "test_treino" in _ids_no_mapa(r2))
+        # os dois flags sobrevivem ao save do editor; ausentes viram False
+        row = dict(_aventura_treino(ocultar_ao_concluir=True, so_na_cidade=True))
+        ok, _ = server._save_world_adventures_upload([], [row])
+        salvo = server.WORLD_ADVENTURES.get("test_treino", {})
+        check("flags preservados no save",
+              ok and salvo.get("ocultar_ao_concluir") is True and salvo.get("so_na_cidade") is True)
+        row2 = dict(row); row2.pop("ocultar_ao_concluir"); row2.pop("so_na_cidade")
+        server._save_world_adventures_upload([], [row2])
+        salvo = server.WORLD_ADVENTURES.get("test_treino", {})
+        check("ausentes viram False",
+              salvo.get("ocultar_ao_concluir") is False and salvo.get("so_na_cidade") is False)
+    finally:
+        server.WORLD_ADVENTURES = salvos
+        server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE = arquivos
+        shutil.rmtree(tmp, ignore_errors=True)
+
+def test_treinamento_configurado():
+    print("\n[20b] o Campo de Treinamento só na cidade e some ao concluir")
+    t = server.WORLD_ADVENTURES.get("treinamento") or {}
+    check("treinamento existe", bool(t))
+    check("treinamento some ao concluir", t.get("ocultar_ao_concluir") is True)
+    check("treinamento fora do mapa-múndi", t.get("so_na_cidade") is True)
+    pontos = server.CITY_MAP_POINTS.get("alva_e_luz", {})
+    check("há um ponto em Alva e Luz ligado ao treinamento",
+          any(p.get("type") == "dungeon" and p.get("aventura") == "treinamento"
+              for p in pontos.values()))
+
 def _aventura(encadear):
     return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
             "fome": 1, "sede": 1, "renome_recompensa": 1,
@@ -546,6 +609,8 @@ async def main():
     await test_beat_encerramento()
     await test_destino_oculto()
     await test_oculto_recusa_generica()
+    await test_ocultar_ao_concluir_e_so_na_cidade()
+    test_treinamento_configurado()
     await test_fim_da_rota()
     await test_saida_recusada()
     await test_saida_efetiva()
