@@ -8,6 +8,10 @@ window.LANG_NARRACAO = {
     "en": "🛡️ **{alvo}**'s Arcane Barrier ends.",
     "pt": "🛡️ A Barreira Arcana de **{alvo}** termina."
   },
+  "narracao.encontra_o_rastro": {
+    "en": "🐾 {monstro} picks up {heroi}'s trail!",
+    "pt": "🐾 {monstro} encontra o rastro de {heroi}!"
+  },
   "narracao.a_caiu_no_chao_perto_do_alvo_aproxime_se": {
     "en": "🗡️ The **{dagger}** fell to the ground near the target — get closer to retrieve it.",
     "pt": "🗡️ A **{dagger}** caiu no chão perto do alvo — aproxime-se para recuperá-la."

@@ -15020,38 +15020,76 @@ class GameRoom:
             return None
         return list(memoria["pos"])
 
+    def _heroi_rastreavel(self, m, alvo_id):
+        """Herói que ainda deixa rastro para o monstro `m`: vivo, no tabuleiro,
+        com posição e visível. Invisibilidade (Sombras, magia, Vela) apaga o
+        rastro, exceto para quem tem Faro Implacável."""
+        p = self.players.get(alvo_id)
+        if not self._ativo(p) or not p.get("pos"):
+            return None
+        if ((p.get("invisivel_sombras") or p.get("invisivel_magico") or p.get("oculto_vela"))
+                and not self._tem_habilidade(m, "faro_implacavel_minotauro")):
+            return None
+        return p
+
+    async def _monster_tentar_rastro(self, m, memoria):
+        """Teste de Percepção ao chegar à última posição conhecida sem ver o herói.
+
+        Sucesso se d20 + (distância até o herói ÷ 2) <= Percepção da ficha. No
+        sucesso a pista passa à posição ATUAL do herói (o prazo de 3 rodadas não
+        é renovado). Um teste por chegada: parado no mesmo ponto, não testa de
+        novo. Spec: 2026-09-26-perseguicao-monstros-design.md."""
+        pos = list(m.get("pos", []))
+        if memoria.get("rastro_testado_em") == pos:
+            return None
+        p = self._heroi_rastreavel(m, memoria.get("target_id"))
+        if not p:
+            return None
+        memoria["rastro_testado_em"] = pos
+        dist = max(abs(pos[0] - p["pos"][0]), abs(pos[1] - p["pos"][1]))
+        if random.randint(1, 20) + dist // 2 > self._get_percepcao_monstro(m):
+            return None
+        memoria["pos"] = list(p["pos"])
+        await self.gm_say(T("narracao.encontra_o_rastro",
+                            monstro=nome_criatura(m), heroi=p["name"]))
+        return list(p["pos"])
+
     async def _monster_search_last_seen(self, m):
-        """Procura a última posição conhecida, sem abandonar a própria sala."""
+        """Procura a última posição conhecida; ao chegar sem ver o herói, tenta
+        seguir o rastro (`_monster_tentar_rastro`)."""
         goal = self._monster_last_seen_goal(m)
         if not goal:
             return False
 
         # Uma chamada corresponde ao turno de busca deste monstro. Contar o
         # turno desde o início garante exatamente três tentativas, mesmo que a
-        # criatura ainda esteja a caminho do ponto conhecido.
+        # criatura ainda esteja a caminho do ponto conhecido — e mesmo que ela
+        # ache o rastro: o rastro não renova o prazo.
         memoria = m.get("ai_last_seen") or {}
         memoria["searches"] = int(memoria.get("searches", 0) or 0) + 1
         buscas = memoria["searches"]
-        if list(m.get("pos", [])) == goal:
-            # Cada turno sem visão conta como uma rodada de busca, inclusive
-            # quando o monstro já chegou ao último ponto conhecido.
-            if buscas >= 3:
-                m.pop("ai_last_seen", None)
-                m.pop("ai_alert_until", None)
-            return False
 
+        # Passo a passo pelo BFS/ocupação já usado pelo restante da IA. Ao
+        # chegar à pista, testa o rastro UMA vez por turno; no sucesso a pista
+        # passa à posição atual do herói e o monstro segue com o movimento que
+        # sobrou.
         moveu = False
-        # O caminho respeita o BFS/ocupação já usado pelo restante da IA. Como
-        # a memória foi compartilhada pela sala, cada passo pode aproximar
-        # aliados diferentes sem formar uma fila única.
-        while m.get("_water_moves_left", 0) > 0:
+        rastreou = False
+        while True:
+            if list(m.get("pos", [])) == goal:
+                if rastreou:
+                    break
+                novo = await self._monster_tentar_rastro(m, memoria)
+                if not novo:
+                    break
+                goal, rastreou = novo, True
+            if m.get("_water_moves_left", 0) <= 0:
+                break
             antes = list(m.get("pos", []))
             await self._monster_move_to_goal(m, goal)
             if list(m.get("pos", [])) == antes:
                 break
             moveu = True
-            if list(m.get("pos", [])) == goal:
-                break
         if buscas >= 3:
             m.pop("ai_last_seen", None)
             m.pop("ai_alert_until", None)
