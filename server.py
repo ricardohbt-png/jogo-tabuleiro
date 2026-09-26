@@ -494,9 +494,6 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
                         "revisitavel": bool(row.get("revisitavel")),
-                        # Some de vez (mapa, ponto da cidade e entrada) quando
-                        # todas as etapas foram concluídas — ex.: tutorial.
-                        "ocultar_ao_concluir": bool(row.get("ocultar_ao_concluir")),
                         # Não vira marcador no mapa-múndi: só se entra pelo
                         # ponto da ilustração da cidade que o vincula.
                         "so_na_cidade": bool(row.get("so_na_cidade")),
@@ -572,8 +569,6 @@ def _load_city_map_points():
                     aventura_ref = str(point.get("aventura") or "").strip().lower()
                     if re.fullmatch(r"[a-z0-9_-]{1,48}", aventura_ref):
                         item["aventura"] = aventura_ref
-                    if point.get("ocultar_ao_concluir"):
-                        item["ocultar_ao_concluir"] = bool(point.get("ocultar_ao_concluir"))
                     req = point.get("requisito") if isinstance(point.get("requisito"), dict) else {}
                     if req:
                         item["requisito"] = _clean_requirement(req)
@@ -13077,14 +13072,6 @@ class GameRoom:
                 reasons.append(T("erro.requisito.rota_anterior"))
         return not reasons, reasons
 
-    def _aventura_concluida(self, adventure):
-        """Todas as etapas do destino já foram concluídas por esta sala."""
-        try:
-            feitas = int(self.world_adventure_progress.get(adventure.get("id"), 0))
-        except (TypeError, ValueError):
-            feitas = 0
-        return feitas >= len(adventure.get("dungeons") or [])
-
     def _aventura_visivel(self, adventure):
         """Destino oculto some do mapa até o requisito ser cumprido. Sem o flag,
         o destino é sempre visível (bloqueado ou não), como sempre foi.
@@ -13092,8 +13079,6 @@ class GameRoom:
         sem nenhum requisito, não esconde nada."""
         # Rascunhos do editor não viram destinos clicáveis no mapa do jogo.
         if not adventure.get("dungeons"):
-            return False
-        if adventure.get("ocultar_ao_concluir") and self._aventura_concluida(adventure):
             return False
         if not adventure.get("oculto_ate_liberar"):
             return True
@@ -13114,10 +13099,6 @@ class GameRoom:
                 if str(ponto.get("type") or "") == "dungeon":
                     adventure = WORLD_ADVENTURES.get(str(ponto.get("aventura") or ""))
                     if not adventure or not self._aventura_visivel(adventure):
-                        continue
-                    # Flag do PRÓPRIO ponto: some da cidade quando o destino
-                    # vinculado foi concluído (o destino pode seguir no mapa-múndi).
-                    if ponto.get("ocultar_ao_concluir") and self._aventura_concluida(adventure):
                         continue
                 if str(ponto.get("type") or "") == "refugio":
                     item = deepcopy(ponto)
@@ -13394,10 +13375,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
-        # Destino concluído que "some ao concluir" responde como inexistente:
-        # ele já não aparece no mapa nem na cidade.
-        if not adventure or (adventure.get("ocultar_ao_concluir")
-                             and self._aventura_concluida(adventure)):
+        if not adventure:
             await self.send_to(pid, {"type": "error", "msg": T("erro.destino_de_aventura_invalido")})
             return
         allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))
@@ -45473,8 +45451,6 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                 aventura_ref = str(point.get("aventura") or "").strip().lower()
                 if aventura_ref in WORLD_ADVENTURES:
                     item["aventura"] = aventura_ref
-                if point_type == "dungeon" and point.get("ocultar_ao_concluir"):
-                    item["ocultar_ao_concluir"] = bool(point.get("ocultar_ao_concluir"))
                 if isinstance(point.get("requisito"), dict): item["requisito"] = _clean_requirement(point.get("requisito"))
                 if point_type == "refugio":
                     fundo = str(point.get("fundo_basico") or "").strip()

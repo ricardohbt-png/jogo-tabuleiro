@@ -195,119 +195,37 @@ def test_flag_persistida():
         server.WORLD_ADVENTURES = salvos
         server._save_world_adventures()
 
-def _aventura_treino(**flags):
-    a = _aventura_oculta(False, renome_min=0)
-    a.update(id="test_treino", **flags)
-    return a
-
-async def test_ocultar_ao_concluir_e_so_na_cidade():
-    print("\n[20] destino que some ao concluir e destino só na cidade")
+async def test_so_na_cidade():
+    print("\n[20] destino só na cidade (fora do mapa-múndi)")
     salvos = server.WORLD_ADVENTURES
-    # O save do editor grava world_adventures.json e world_map_points.json: aqui
-    # eles vão para uma pasta temporária, para o teste nunca tocar nos reais.
     import tempfile, shutil
     tmp = tempfile.mkdtemp()
     arquivos = (server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE)
     server.WORLD_ADVENTURES_FILE = os.path.join(tmp, "world_adventures.json")
     server.WORLD_MAP_POINTS_FILE = os.path.join(tmp, "world_map_points.json")
     try:
-        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino(ocultar_ao_concluir=True,
-                                                                   so_na_cidade=True)}
+        a = _aventura_oculta(False, renome_min=0)
+        a.update(id="test_cidade", so_na_cidade=True)
+        server.WORLD_ADVENTURES = {"test_cidade": a}
         r = setup_room()
-        check("antes de concluir, está no payload", "test_treino" in _ids_no_mapa(r))
-        pay = next(a for a in r._city_state_payload()["world"]["adventures"]
-                   if a["id"] == "test_treino")
-        check("payload leva so_na_cidade para o cliente", pay.get("so_na_cidade") is True)
-        r.world_adventure_progress["test_treino"] = 1           # 1 etapa: concluído
-        check("concluído com ocultar_ao_concluir some", "test_treino" not in _ids_no_mapa(r))
-        erros = []
-        async def cap(pid, msg):
-            if msg.get("type") == "error": erros.append(msg["msg"])
-        r.send_to = cap
-        await r.handle_world_adventure("p1", "test_treino")
-        check("concluído recusa entrar como id inválido",
-              r.phase == "city" and erros and erros[-1] == "Destino de aventura inválido.")
-        # sem o flag, destino concluído continua visível (não-regressão)
-        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino()}
-        r2 = setup_room(); r2.world_adventure_progress["test_treino"] = 1
-        check("sem o flag, concluído continua visível", "test_treino" in _ids_no_mapa(r2))
-        # os dois flags sobrevivem ao save do editor; ausentes viram False
-        row = dict(_aventura_treino(ocultar_ao_concluir=True, so_na_cidade=True))
-        ok, _ = server._save_world_adventures_upload([], [row])
-        salvo = server.WORLD_ADVENTURES.get("test_treino", {})
-        check("flags preservados no save",
-              ok and salvo.get("ocultar_ao_concluir") is True and salvo.get("so_na_cidade") is True)
-        row2 = dict(row); row2.pop("ocultar_ao_concluir"); row2.pop("so_na_cidade")
-        server._save_world_adventures_upload([], [row2])
-        salvo = server.WORLD_ADVENTURES.get("test_treino", {})
-        check("ausentes viram False",
-              salvo.get("ocultar_ao_concluir") is False and salvo.get("so_na_cidade") is False)
+        pay = next((x for x in r._city_state_payload()["world"]["adventures"]
+                    if x["id"] == "test_cidade"), None)
+        check("continua no payload (o ponto da cidade precisa dele)", pay is not None)
+        check("payload leva so_na_cidade para o cliente", pay and pay.get("so_na_cidade") is True)
+        ok, _ = server._save_world_adventures_upload([], [dict(a)])
+        check("flag preservado no save do editor",
+              ok and server.WORLD_ADVENTURES["test_cidade"].get("so_na_cidade") is True)
+        b = dict(a); b.pop("so_na_cidade")
+        server._save_world_adventures_upload([], [b])
+        check("ausente vira False", server.WORLD_ADVENTURES["test_cidade"].get("so_na_cidade") is False)
+        base = os.path.dirname(os.path.abspath(__file__))
+        js = open(os.path.join(base, "..", "game.js"), encoding="utf-8").read()
+        check("mapa-múndi do cliente pula so_na_cidade", "filter(a => !a.so_na_cidade)" in js)
+        check("Campo de Treinamento está só na cidade",
+              salvos.get("treinamento", {}).get("so_na_cidade") is True)
     finally:
         server.WORLD_ADVENTURES = salvos
         server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE = arquivos
-        shutil.rmtree(tmp, ignore_errors=True)
-
-async def test_ponto_cidade_some_ao_concluir():
-    print("\n[20c] ponto de masmorra da cidade que some ao concluir")
-    salvos_av, salvos_pt = server.WORLD_ADVENTURES, server.CITY_MAP_POINTS
-    try:
-        # O DESTINO não tem o flag: quem esconde é o próprio ponto da cidade.
-        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino()}
-        server.CITY_MAP_POINTS = {"alva_e_luz": {
-            "p_some": {"x": 1, "y": 1, "type": "dungeon", "aventura": "test_treino",
-                       "ocultar_ao_concluir": True},
-            "p_fica": {"x": 2, "y": 2, "type": "dungeon", "aventura": "test_treino"}}}
-        r = setup_room()
-        pts = lambda: r._city_points_payload().get("alva_e_luz", {})
-        check("antes de concluir, os dois pontos aparecem", {"p_some", "p_fica"} <= set(pts()))
-        r.world_adventure_progress["test_treino"] = 1
-        check("concluído: o ponto com o flag some", "p_some" not in pts())
-        check("concluído: o ponto sem o flag continua", "p_fica" in pts())
-        check("o destino continua no mapa-múndi", "test_treino" in _ids_no_mapa(r))
-    finally:
-        server.WORLD_ADVENTURES, server.CITY_MAP_POINTS = salvos_av, salvos_pt
-
-def test_treinamento_configurado():
-    print("\n[20b] o Campo de Treinamento só na cidade e some ao concluir")
-    t = server.WORLD_ADVENTURES.get("treinamento") or {}
-    check("treinamento existe", bool(t))
-    check("treinamento some ao concluir", t.get("ocultar_ao_concluir") is True)
-    check("treinamento fora do mapa-múndi", t.get("so_na_cidade") is True)
-    pontos = server.CITY_MAP_POINTS.get("alva_e_luz", {})
-    check("há um ponto em Alva e Luz ligado ao treinamento",
-          any(p.get("type") == "dungeon" and p.get("aventura") == "treinamento"
-              for p in pontos.values()))
-    check("o ponto do treinamento some ao concluir (flag carregado do arquivo)",
-          any(p.get("aventura") == "treinamento" and p.get("ocultar_ao_concluir") is True
-              for p in pontos.values()))
-    js = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_city.js"),
-              encoding="utf-8").read()
-    check("editor de cidade tem o checkbox do ponto", "citymap-hide-done" in js)
-    # Save real do editor, com os três arquivos redirecionados para uma pasta
-    # temporária e o estado global restaurado no fim.
-    import tempfile, shutil, copy
-    tmp = tempfile.mkdtemp()
-    nomes = ("CITY_MAP_POINTS_FILE", "CITY_SCENES_FILE", "CITY_SHOPS_FILE")
-    arquivos = {n: getattr(server, n) for n in nomes}
-    estado = {n: copy.deepcopy(getattr(server, n)) for n in ("CITY_MAP_POINTS", "CITY_SCENES", "CITY_SHOPS")}
-    try:
-        for n in nomes:
-            setattr(server, n, os.path.join(tmp, n.lower() + ".json"))
-        env = copy.deepcopy(server.CITY_MAP_POINTS)
-        pid = next(k for k, p in env["alva_e_luz"].items() if p.get("aventura") == "treinamento")
-        env["alva_e_luz"][pid]["ocultar_ao_concluir"] = False
-        server._save_city_shops_upload({}, None, env)
-        check("save do editor: desmarcado não grava o flag",
-              "ocultar_ao_concluir" not in server.CITY_MAP_POINTS["alva_e_luz"][pid])
-        env["alva_e_luz"][pid]["ocultar_ao_concluir"] = True
-        server._save_city_shops_upload({}, None, env)
-        check("save do editor: marcado preserva o flag",
-              server.CITY_MAP_POINTS["alva_e_luz"][pid].get("ocultar_ao_concluir") is True)
-    finally:
-        for n, v in arquivos.items():
-            setattr(server, n, v)
-        for n, v in estado.items():
-            getattr(server, n).clear(); getattr(server, n).update(v)
         shutil.rmtree(tmp, ignore_errors=True)
 
 def _aventura(encadear):
@@ -661,9 +579,7 @@ async def main():
     await test_beat_encerramento()
     await test_destino_oculto()
     await test_oculto_recusa_generica()
-    await test_ocultar_ao_concluir_e_so_na_cidade()
-    await test_ponto_cidade_some_ao_concluir()
-    test_treinamento_configurado()
+    await test_so_na_cidade()
     await test_fim_da_rota()
     await test_saida_recusada()
     await test_saida_efetiva()

@@ -1676,17 +1676,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > preenchido, e preencher um re-renderiza o painel para habilitá-lo. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-destino-oculto-ate-liberar*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [18]-[18c].
-> **Dois flags irmãos (2026-09-26):** `ocultar_ao_concluir` — concluídas todas as etapas
-> (`_aventura_concluida`, pelo `world_adventure_progress` da sala), o destino sai do payload
-> (logo some do mapa E do ponto da cidade) e `handle_world_adventure` o recusa como id
-> inexistente; vence o `revisitavel`. `so_na_cidade` — o destino continua no payload (o ponto
-> de masmorra da cidade precisa dele), mas o mapa-múndi do cliente não desenha o marcador.
-> O Campo de Treinamento usa os dois: só se entra pelo ponto em Alva e Luz, e ele some depois
-> de concluído. Checkboxes "🧹 some depois de concluído" e "🏘️ só na cidade" no
-> `tools/editor_world.js`. O **ponto de masmorra da cidade** tem o seu próprio
-> `ocultar_ao_concluir` (checkbox no `tools/editor_city.js`, preservado no save do editor e no
-> boot): com ele, só o ponto some quando o destino vinculado é concluído — o destino pode
-> seguir no mapa-múndi. Teste: seções [20]/[20b]/[20c].
+> **Só na cidade (2026-09-26):** destino com `so_na_cidade` continua no payload (o ponto de
+> masmorra da cidade depende dele), mas o mapa-múndi do cliente não desenha o marcador — entra-se
+> só pelo ponto da ilustração. Checkbox "🏘️ só na cidade" no `tools/editor_world.js`. O Campo de
+> Treinamento usa. Teste: seção [20].
 
 > **Fim da rota:** além do `intro`/`outro` de cada etapa, o **destino** tem um campo de
 > história próprio, `outro_rota` (mesmo formato: string ou `{slides, audio}`, salvo por

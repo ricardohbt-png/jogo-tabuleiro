@@ -346,7 +346,6 @@
     },
     "oculto_ate_liberar": false,
     "revisitavel": true,
-    "ocultar_ao_concluir": true,
     "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
