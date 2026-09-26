@@ -1683,7 +1683,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > de masmorra da cidade precisa dele), mas o mapa-múndi do cliente não desenha o marcador.
 > O Campo de Treinamento usa os dois: só se entra pelo ponto em Alva e Luz, e ele some depois
 > de concluído. Checkboxes "🧹 some depois de concluído" e "🏘️ só na cidade" no
-> `tools/editor_world.js`. Teste: seções [20]/[20b].
+> `tools/editor_world.js`. O **ponto de masmorra da cidade** tem o seu próprio
+> `ocultar_ao_concluir` (checkbox no `tools/editor_city.js`, preservado no save do editor e no
+> boot): com ele, só o ponto some quando o destino vinculado é concluído — o destino pode
+> seguir no mapa-múndi. Teste: seções [20]/[20b]/[20c].
 
 > **Fim da rota:** além do `intro`/`outro` de cada etapa, o **destino** tem um campo de
 > história próprio, `outro_rota` (mesmo formato: string ou `{slides, audio}`, salvo por

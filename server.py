@@ -572,6 +572,8 @@ def _load_city_map_points():
                     aventura_ref = str(point.get("aventura") or "").strip().lower()
                     if re.fullmatch(r"[a-z0-9_-]{1,48}", aventura_ref):
                         item["aventura"] = aventura_ref
+                    if point.get("ocultar_ao_concluir"):
+                        item["ocultar_ao_concluir"] = bool(point.get("ocultar_ao_concluir"))
                     req = point.get("requisito") if isinstance(point.get("requisito"), dict) else {}
                     if req:
                         item["requisito"] = _clean_requirement(req)
@@ -13171,6 +13173,10 @@ class GameRoom:
                 if str(ponto.get("type") or "") == "dungeon":
                     adventure = WORLD_ADVENTURES.get(str(ponto.get("aventura") or ""))
                     if not adventure or not self._aventura_visivel(adventure):
+                        continue
+                    # Flag do PRÓPRIO ponto: some da cidade quando o destino
+                    # vinculado foi concluído (o destino pode seguir no mapa-múndi).
+                    if ponto.get("ocultar_ao_concluir") and self._aventura_concluida(adventure):
                         continue
                 if str(ponto.get("type") or "") == "refugio":
                     item = deepcopy(ponto)
@@ -45530,6 +45536,8 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                 aventura_ref = str(point.get("aventura") or "").strip().lower()
                 if aventura_ref in WORLD_ADVENTURES:
                     item["aventura"] = aventura_ref
+                if point_type == "dungeon" and point.get("ocultar_ao_concluir"):
+                    item["ocultar_ao_concluir"] = bool(point.get("ocultar_ao_concluir"))
                 if isinstance(point.get("requisito"), dict): item["requisito"] = _clean_requirement(point.get("requisito"))
                 if point_type == "refugio":
                     fundo = str(point.get("fundo_basico") or "").strip()

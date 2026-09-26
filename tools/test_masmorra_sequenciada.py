@@ -247,6 +247,26 @@ async def test_ocultar_ao_concluir_e_so_na_cidade():
         server.WORLD_ADVENTURES_FILE, server.WORLD_MAP_POINTS_FILE = arquivos
         shutil.rmtree(tmp, ignore_errors=True)
 
+async def test_ponto_cidade_some_ao_concluir():
+    print("\n[20c] ponto de masmorra da cidade que some ao concluir")
+    salvos_av, salvos_pt = server.WORLD_ADVENTURES, server.CITY_MAP_POINTS
+    try:
+        # O DESTINO não tem o flag: quem esconde é o próprio ponto da cidade.
+        server.WORLD_ADVENTURES = {"test_treino": _aventura_treino()}
+        server.CITY_MAP_POINTS = {"alva_e_luz": {
+            "p_some": {"x": 1, "y": 1, "type": "dungeon", "aventura": "test_treino",
+                       "ocultar_ao_concluir": True},
+            "p_fica": {"x": 2, "y": 2, "type": "dungeon", "aventura": "test_treino"}}}
+        r = setup_room()
+        pts = lambda: r._city_points_payload().get("alva_e_luz", {})
+        check("antes de concluir, os dois pontos aparecem", {"p_some", "p_fica"} <= set(pts()))
+        r.world_adventure_progress["test_treino"] = 1
+        check("concluído: o ponto com o flag some", "p_some" not in pts())
+        check("concluído: o ponto sem o flag continua", "p_fica" in pts())
+        check("o destino continua no mapa-múndi", "test_treino" in _ids_no_mapa(r))
+    finally:
+        server.WORLD_ADVENTURES, server.CITY_MAP_POINTS = salvos_av, salvos_pt
+
 def test_treinamento_configurado():
     print("\n[20b] o Campo de Treinamento só na cidade e some ao concluir")
     t = server.WORLD_ADVENTURES.get("treinamento") or {}
@@ -257,6 +277,38 @@ def test_treinamento_configurado():
     check("há um ponto em Alva e Luz ligado ao treinamento",
           any(p.get("type") == "dungeon" and p.get("aventura") == "treinamento"
               for p in pontos.values()))
+    check("o ponto do treinamento some ao concluir (flag carregado do arquivo)",
+          any(p.get("aventura") == "treinamento" and p.get("ocultar_ao_concluir") is True
+              for p in pontos.values()))
+    js = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "editor_city.js"),
+              encoding="utf-8").read()
+    check("editor de cidade tem o checkbox do ponto", "citymap-hide-done" in js)
+    # Save real do editor, com os três arquivos redirecionados para uma pasta
+    # temporária e o estado global restaurado no fim.
+    import tempfile, shutil, copy
+    tmp = tempfile.mkdtemp()
+    nomes = ("CITY_MAP_POINTS_FILE", "CITY_SCENES_FILE", "CITY_SHOPS_FILE")
+    arquivos = {n: getattr(server, n) for n in nomes}
+    estado = {n: copy.deepcopy(getattr(server, n)) for n in ("CITY_MAP_POINTS", "CITY_SCENES", "CITY_SHOPS")}
+    try:
+        for n in nomes:
+            setattr(server, n, os.path.join(tmp, n.lower() + ".json"))
+        env = copy.deepcopy(server.CITY_MAP_POINTS)
+        pid = next(k for k, p in env["alva_e_luz"].items() if p.get("aventura") == "treinamento")
+        env["alva_e_luz"][pid]["ocultar_ao_concluir"] = False
+        server._save_city_shops_upload({}, None, env)
+        check("save do editor: desmarcado não grava o flag",
+              "ocultar_ao_concluir" not in server.CITY_MAP_POINTS["alva_e_luz"][pid])
+        env["alva_e_luz"][pid]["ocultar_ao_concluir"] = True
+        server._save_city_shops_upload({}, None, env)
+        check("save do editor: marcado preserva o flag",
+              server.CITY_MAP_POINTS["alva_e_luz"][pid].get("ocultar_ao_concluir") is True)
+    finally:
+        for n, v in arquivos.items():
+            setattr(server, n, v)
+        for n, v in estado.items():
+            getattr(server, n).clear(); getattr(server, n).update(v)
+        shutil.rmtree(tmp, ignore_errors=True)
 
 def _aventura(encadear):
     return {"id": "test_seq", "nome": "Rota Encadeada", "x": 10, "y": 10,
@@ -610,6 +662,7 @@ async def main():
     await test_destino_oculto()
     await test_oculto_recusa_generica()
     await test_ocultar_ao_concluir_e_so_na_cidade()
+    await test_ponto_cidade_some_ao_concluir()
     test_treinamento_configurado()
     await test_fim_da_rota()
     await test_saida_recusada()

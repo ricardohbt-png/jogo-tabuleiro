@@ -68,6 +68,7 @@
       "name": "Campo de Treinamento",
       "emoji": "🎯",
       "aventura": "treinamento",
+      "ocultar_ao_concluir": true,
       "oculto_ate_liberar": false
     }
   },

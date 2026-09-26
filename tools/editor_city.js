@@ -350,7 +350,8 @@
             ? '<small class="cityed-warn">⚠ O destino vinculado não existe mais.</small>'
             : !escolhido.dungeons
               ? '<small class="cityed-warn">⚠ Este destino ainda não tem masmorra.</small>' : '';
-        campo = '<label>Destino vinculado<select id="citymap-aventura">'+opts+'</select></label>'+aviso;
+        campo = '<label>Destino vinculado<select id="citymap-aventura">'+opts+'</select></label>'+aviso
+          +'<label title="Quando todas as etapas do destino vinculado forem concluídas, este ponto some da ilustração da cidade (ex.: Campo de Treinamento)."><input id="citymap-hide-done" type="checkbox"'+(selected.ocultar_ao_concluir?' checked':'')+'> 🧹 some depois de concluído</label>';
       } else {
         const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join('');
         campo = '<label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label>';
@@ -375,6 +376,7 @@
           const dest=root.querySelector('#citymap-aventura').value;
           selected.type='dungeon';
           if(dest)selected.aventura=dest;else delete selected.aventura;
+          if(root.querySelector('#citymap-hide-done')?.checked)selected.ocultar_ao_concluir=true;else delete selected.ocultar_ao_concluir;
         } else {
           selected.type=root.querySelector('#citymap-type').value;
           // Só limpa um vínculo que este ponto nunca poderia usar: o tipo é fixado
