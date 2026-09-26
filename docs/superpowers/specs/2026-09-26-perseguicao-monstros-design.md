@@ -46,8 +46,13 @@ Isso cobre magia, arremesso, instrumento, técnica, ataque básico e fontes futu
 por executor. Monstro morto na ação é ignorado (`_monster_register_attack_alert` já recusa
 alvo com HP ≤ 0).
 
+- **Mensagens excluídas** (`_MENSAGENS_SEM_ALERTA_DE_DANO`): `end_turn`, porque o turno dos
+  monstros roda DENTRO dele e o dano que sofrem ali (zonas, retaliação, veneno) não é um ataque
+  de quem encerrou o turno; e `comandar_animados`/`mover_animado`/`atacar_animado`, porque o
+  alerta dos servos já grava a posição do SERVO e o gancho a sobrescreveria com a do herói.
 - As 4 chamadas atuais continuam: repetem a mesma memória (idempotente), e as de servos gravam
   a posição do SERVO, que é quem atacou.
+- Herói fora do tabuleiro (`_ativo` falso, ex.: na cidade) não gera alerta.
 - Dano contínuo (veneno, chamas, zonas, armadilhas) não passa por uma ação do herói e não
   alerta.
 - Herói ausente (`fora_masmorra`) ou sem posição: nada é gravado (a função já recusa atacante
