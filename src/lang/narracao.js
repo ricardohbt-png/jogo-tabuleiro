@@ -216,6 +216,10 @@ window.LANG_NARRACAO = {
     "en": "✨ Trap overcome — +{share} XP for the group!",
     "pt": "✨ Armadilha superada — +{share} XP para o grupo!"
   },
+  "narracao.armadilha_superada_xp_variavel": {
+    "en": "✨ Trap overcome — the group gains experience!",
+    "pt": "✨ Armadilha superada — o grupo ganha experiência!"
+  },
   "narracao.arrasta": {
     "en": "🐊 **{monstro}** drags **{c}**!",
     "pt": "🐊 **{monstro}** arrasta **{c}**!"

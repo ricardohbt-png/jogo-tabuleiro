@@ -116,8 +116,7 @@ async def main():
     async def cap_send2(pid, m):
         if m.get("type") == "spell_pick_prompt": prompts.append(m)
     r.send_to = cap_send2
-    p["xp"] = 999   # garante subir de nível
-    await r._check_level_up(p)
+    await r._conceder_xp(p, 1000)   # limiar do nível 2
     check("subiu para nível 2", p["level"] == 2)
     check("slot novo de 1º entra cheio (3)", r._slots_disponiveis(p, "primeiro") == 3)
     check("fila de escolha tem 1 círculo", p["pending_spell_pick"] == ["primeiro"])

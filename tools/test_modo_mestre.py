@@ -458,11 +458,11 @@ async def main():
     ok, _ = S.validar_dungeon(_com_ep("naoobj"))
     check("não-objeto rejeitado", ok is False)
 
-    print("\n[21] ND/XP de armadilha — trap_cr/trap_xp")
+    print("\n[21] ND/XP de armadilha — trap_cr + tabela 3.5")
     check("cr explícito", S.trap_cr({"cr": 0.5}) == 0.5)
     check("fallback por dificuldade (>0)", S.trap_cr({"dificuldade": 14}) > 0)
     check("fallback default sem nada", S.trap_cr({}) == 0.3)
-    check("trap_xp deriva do cr", S.trap_xp(0.5) == round(0.5 * S.TRAP_XP_POR_CR))
+    check("XP de armadilha segue a tabela 3.5 pelo cr", S.xp_por_heroi(1, 0.5, 1) == 150)
     check("mina cr 0.75", S.trap_cr(S.ARMADILHAS["mina_terrestre"]) == 0.75)
     check("buraco cr 0.1", S.trap_cr(S.ARMADILHAS["buraco"]) == 0.1)
     check("todas ARMADILHAS resolvem cr>0", all(S.trap_cr(m) > 0 for m in S.ARMADILHAS.values()))
@@ -474,7 +474,7 @@ async def main():
                       "con_":12,"int_":10}
     arm = {"id":"a1","tipo":"mina_terrestre","pos":[2,2]}
     await r._conceder_xp_armadilha(arm)
-    check("XP concedido no 1º (mina cr .75 → 15)", r.players["h"]["xp"] == 15)
+    check("XP concedido no 1º (mina cr .75, nível 1 → 225)", r.players["h"]["xp"] == 225)
     check("marca xp_concedido", arm.get("xp_concedido") is True)
     x1 = r.players["h"]["xp"]; await r._conceder_xp_armadilha(arm)
     check("não concede 2ª vez", r.players["h"]["xp"] == x1)

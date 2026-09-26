@@ -66,8 +66,71 @@ def secao_regras():
     check("migração: nível 20+ fica no limiar do 20", S.xp_migrado(38, 5) == S.xp_limiar(20))
 
 
+# ─── [2] Concessão ──────────────────────────────────────────────────────────
+async def secao_concessao():
+    print("\n[2] Concessão — _conceder_xp, monstro, armadilha, objetivo")
+    r = sala()
+    p = make_player("p1", "A", "warrior", 0)
+    r.players = {"p1": p}
+    await r._conceder_xp(p, 999)
+    check("999 XP: continua no nível 1, XP acumulado", p["level"] == 1 and p["xp"] == 999)
+    await r._conceder_xp(p, 1)
+    check("1000 XP: nível 2 sem descontar XP", p["level"] == 2 and p["xp"] == 1000)
+    await r._conceder_xp(p, 9000)
+    check("vários níveis de uma vez (10000 → nível 5)", p["level"] == 5 and p["xp"] == 10000)
+    check("ganhos por nível aplicados a cada nível", p["level_bonus"] == 5)
+    await r._conceder_xp(p, 0)
+    await r._conceder_xp(p, -50)
+    check("zero/negativo não mexe", p["xp"] == 10000)
+    await r._conceder_xp(p, 10 ** 7)
+    check("teto no nível 20", p["level"] == 20)
+
+    # Ficha migrada acima do XP: não rebaixa nem sobe de novo
+    q = make_player("p9", "Q", "warrior", 0)
+    q["level"] = 7; q["xp"] = 100
+    await r._conceder_xp(q, 50)
+    check("nível acima do XP não é rebaixado", q["level"] == 7 and q["xp"] == 150)
+
+    # Monstro: cada herói com o PRÓPRIO nível
+    r = sala(); r.rooms = []
+    r.tiles = [[S.FLOOR] * S.MAP_W for _ in range(S.MAP_H)]
+    a = make_player("p1", "A", "warrior", 0)
+    b = make_player("p2", "B", "warrior", 0)
+    await r._conceder_xp(b, S.xp_limiar(5))
+    r.players = {"p1": a, "p2": b}
+    gdef = next(m for m in S.MONSTER_DEFS if m["type"] == "goblin")
+    g = S.make_monster(gdef, {"id": 1, "cx": 5, "cy": 5}); g["pos"] = [5, 5]; g["hp"] = 0
+    r.monsters[g["id"]] = g
+    xa, xb = a["xp"], b["xp"]
+    await r._monster_dies(g, "p1")
+    check("goblin: nível 1 ganha 75÷2 = 37", a["xp"] - xa == 37)
+    check("goblin: nível 5 ganha 94÷2 = 47", b["xp"] - xb == 47)
+
+    # Armadilha: tabela 3.5 com o trap_cr
+    r = sala()
+    h = make_player("h", "H", "warrior", 0)
+    r.players = {"h": h}
+    arm = {"id": "a1", "tipo": "mina_terrestre", "pos": [2, 2]}
+    await r._conceder_xp_armadilha(arm)
+    check("mina (cr .75) no nível 1 → 225", h["xp"] == 225)
+    x1 = h["xp"]; await r._conceder_xp_armadilha(arm)
+    check("armadilha não concede 2ª vez", h["xp"] == x1)
+
+    # Objetivo: total do autor dividido pelos vivos, pela porta única
+    r = sala()
+    a = make_player("p1", "A", "warrior", 0)
+    b = make_player("p2", "B", "mage", 0)
+    r.players = {"p1": a, "p2": b}
+    loot = []
+    await r._conceder_objetivo_reward({"type": "kill_all", "xp": 2400, "reward": {"gold": 0}},
+                                      is_primary=True, loot_acc=loot)
+    check("objetivo 2400 ÷ 2 = 1200 cada, nível 2", a["xp"] == 1200 and a["level"] == 2)
+    check("mago sobe e ganha escolha de magia", b["level"] == 2 and b.get("pending_spell_pick"))
+
+
 async def main():
     secao_regras()
+    await secao_concessao()
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)
 
