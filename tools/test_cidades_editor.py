@@ -280,7 +280,8 @@ def _rodar_verificacoes():
     try:
         enviados = {"alva_e_luz": {
             "cripta": {"x": 40.0, "y": 55.0, "type": "dungeon", "name": "Cripta",
-                       "emoji": "🚪", "aventura": "destino_teste"},
+                       "emoji": "🚪", "aventura": "destino_teste",
+                       "ocultar_apos_concluir": True},
             "fantasma": {"x": 10.0, "y": 10.0, "type": "dungeon", "name": "Sem destino",
                          "aventura": "nao_existe"},
         }}
@@ -290,6 +291,8 @@ def _rodar_verificacoes():
         check("tipo dungeon preservado", salvos["cripta"].get("type") == "dungeon")
         check("vínculo válido preservado", salvos["cripta"].get("aventura") == "destino_teste")
         check("emoji do ponto preservado", salvos["cripta"].get("emoji") == "🚪")
+        check("ocultar após concluir é preservado",
+              salvos["cripta"].get("ocultar_apos_concluir") is True)
         check("vínculo inexistente é descartado", "aventura" not in salvos["fantasma"])
         check("ponto sem vínculo continua salvo", "fantasma" in salvos)
         # Round-trip pelo arquivo: o vínculo tem de sobreviver ao boot.
@@ -300,6 +303,8 @@ def _rodar_verificacoes():
               S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("aventura") == "destino_teste")
         check("emoji sobrevive ao boot",
               S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("emoji") == "🚪")
+        check("ocultar após concluir sobrevive ao boot",
+              S.CITY_MAP_POINTS["alva_e_luz"].get("cripta", {}).get("ocultar_apos_concluir") is True)
         # O boot só checa FORMATO: sem WORLD_ADVENTURES carregado (arquivo ausente
         # ou corrompido) o vínculo não pode ser apagado da memória, senão o próximo
         # save do editor gravaria a perda em disco.
@@ -349,6 +354,9 @@ def _rodar_verificacoes():
                                            "aventura": "oculto_teste"}
         pontos_cidade["torre"] = {"x": 45.0, "y": 55.0, "type": "dungeon",
                                   "aventura": "bloqueado_teste"}
+        pontos_cidade["treino_concluido"] = {"x": 45.5, "y": 55.0, "type": "dungeon",
+                                               "aventura": "bloqueado_teste",
+                                               "ocultar_apos_concluir": True}
         pontos_cidade["solto"] = {"x": 46.0, "y": 56.0, "type": "dungeon"}
         pontos_cidade["sem_tipo"] = {"x": 47.0, "y": 57.0, "aventura": "bloqueado_teste"}
         sala = S.GameRoom("PAYLOAD")
@@ -356,6 +364,7 @@ def _rodar_verificacoes():
         visiveis = sala._city_points_payload()["alva_e_luz"]
         check("ponto de destino oculto some do payload", "cripta_secreta" not in visiveis)
         check("ponto de destino bloqueado (visível) permanece", "torre" in visiveis)
+        check("entrada marcada aparece antes de concluir", "treino_concluido" in visiveis)
         check("ponto de masmorra sem vínculo some do payload", "solto" not in visiveis)
         check("ponto de loja não é afetado", "mercador" in visiveis)
         check("ponto sem type não é filtrado (filtro só vale para type=dungeon)",
@@ -363,6 +372,9 @@ def _rodar_verificacoes():
         sala.renome = 99
         check("ponto aparece quando o requisito é cumprido",
               "cripta_secreta" in sala._city_points_payload()["alva_e_luz"])
+        sala.world_adventure_progress["bloqueado_teste"] = 1
+        check("entrada marcada some ao concluir o destino",
+              "treino_concluido" not in sala._city_points_payload()["alva_e_luz"])
         check("dicionário global não é mutado",
               "cripta_secreta" in S.CITY_MAP_POINTS["alva_e_luz"])
         check("outras cidades continuam no payload",

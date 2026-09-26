@@ -386,17 +386,22 @@ const InventoryModal = (() => {
     const ehCaster = player?.class_id === 'mage' || player?.class_id === 'cleric';
     const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
     const isMyOwnDungeonTurn = !_readOnly && player?.id === GS.myPid && gsNow && gsNow.phase === 'playing'
-      && GS.isMyTurn && player.alive && !player.action_done;
-    const bonusBloqueado = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
-      && BONUS_ACTION_EFFECTS.has(item.effect) && !!player.bonus_action_used;
+      && GS.isMyTurn && player.alive;
+    // A ação principal e a bônus são recursos independentes. Não bloquear uma
+    // poção só porque o herói já atacou; bloquear apenas se a própria ação
+    // bônus já foi consumida. Pergaminhos e arremessáveis continuam principais.
+    const isBonusAction = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
+      && BONUS_ACTION_EFFECTS.has(item.effect);
+    const bonusBloqueado = isBonusAction && !!player.bonus_action_used;
     const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
       ? GS.CATALOGO_ITENS[item && item.id] : null;
     const isArremessavel = !!(catDef && catDef.arremessavel);
     return {
       isCarta, isScroll, isConsumable, isArremessavel,
       podeLer: isCarta,
-      podeUsar: isMyOwnDungeonTurn && isConsumable && !bonusBloqueado,
-      podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster,
+      podeUsar: isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
+        && !bonusBloqueado,
+      podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster && !player.action_done,
       podeArremessar: isMyOwnDungeonTurn && isArremessavel && !player.action_done,
     };
   }

@@ -5,38 +5,44 @@
       "y": 46.0,
       "type": "taverna",
       "scene": "taverna",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "templo": {
       "x": 67.0,
       "y": 35.0,
       "type": "templo",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ferreiro": {
       "x": 83.0,
       "y": 38.0,
       "type": "ferreiro",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "guilda": {
       "x": 52.0,
       "y": 21.0,
       "type": "guilda",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "mercador": {
       "x": 50.0,
       "y": 40.0,
       "type": "mercador",
       "scene": "mercado_28bt",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "caravana": {
       "x": 24.54,
       "y": 84.01,
       "type": "caravana",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ponto_1": {
       "x": 14.97,
@@ -59,16 +65,18 @@
       "fundo_externo": "assets/city/refugio_fazenda_do_leste.png",
       "fundo_comum": "assets/city/refugio_area_compartilhada.png",
       "fundo_quarto": "assets/city/refugio_quarto_heroi.png",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "treinamento": {
-      "x": 64.0,
-      "y": 22.0,
+      "x": 26.89,
+      "y": 63.32,
       "type": "dungeon",
       "name": "Campo de Treinamento",
       "emoji": "🎯",
       "aventura": "treinamento",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
     }
   },
   "vila_riacho": {
@@ -77,31 +85,36 @@
       "y": 47.69,
       "type": "taverna",
       "scene": "taverna",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "templo": {
       "x": 32.51,
       "y": 34.64,
       "type": "templo",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ferreiro": {
       "x": 64.73,
       "y": 49.23,
       "type": "ferreiro",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "mercador": {
       "x": 44.59,
       "y": 36.33,
       "type": "mercador",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "caravana": {
       "x": 24.5,
       "y": 67.98,
       "type": "caravana",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     }
   },
   "vila_corvin": {
@@ -110,31 +123,36 @@
       "y": 39.55,
       "type": "taverna",
       "scene": "taverna",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "templo": {
       "x": 41.78,
       "y": 28.89,
       "type": "templo",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ferreiro": {
       "x": 10.96,
       "y": 51.89,
       "type": "ferreiro",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "mercador": {
       "x": 45.34,
       "y": 38.85,
       "type": "mercador",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "caravana": {
       "x": 55.74,
       "y": 71.39,
       "type": "caravana",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     }
   },
   "graciero": {
@@ -143,31 +161,36 @@
       "y": 46.0,
       "type": "taverna",
       "scene": "taverna",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "templo": {
       "x": 59.02,
       "y": 42.36,
       "type": "templo",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ferreiro": {
       "x": 68.95,
       "y": 39.13,
       "type": "ferreiro",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "mercador": {
       "x": 43.37,
       "y": 47.41,
       "type": "mercador",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "caravana": {
       "x": 20.13,
       "y": 68.52,
       "type": "caravana",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     }
   },
   "vila_dos_charcos": {
@@ -176,14 +199,16 @@
       "y": 75.04,
       "type": "caravana",
       "name": "Caravana de Viajem",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     },
     "ponto_2": {
       "x": 30.44,
       "y": 52.45,
       "type": "taverna",
       "name": "Taverna",
-      "oculto_ate_liberar": false
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     }
   }
 }

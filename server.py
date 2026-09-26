@@ -493,6 +493,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "fome": fome, "sede": sede, "dungeons": etapas,
                         "espera_retorno": _clean_espera(row.get("espera_retorno")),
                         "oculto_ate_liberar": bool(row.get("oculto_ate_liberar")),
+                        "ocultar_apos_concluir": bool(row.get("ocultar_apos_concluir")),
                         "revisitavel": bool(row.get("revisitavel")),
                         "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
@@ -578,6 +579,7 @@ def _load_city_map_points():
                             val = str(point.get(key) or "").strip()
                             if val: item[key] = val[:240]
                     item["oculto_ate_liberar"] = bool(point.get("oculto_ate_liberar", False))
+                    item["ocultar_apos_concluir"] = bool(point.get("ocultar_apos_concluir", False))
                     CITY_MAP_POINTS[city_id][point_id] = item
     except (OSError, ValueError, TypeError, json.JSONDecodeError):
         pass
@@ -761,6 +763,8 @@ PRIS_HP = 7         # vida do prisioneiro (Fase 3)
 PRIS_AC = 10        # classe de armadura do prisioneiro
 PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
 PROTETOR_PRISIONEIRO_ID = "__prisioneiro__"
+XP_POR_NIVEL = 300  # custo para avançar do nível N ao N+1: N × este valor
+XP_MONSTRO_POR_ND = 80  # XP total de um monstro por ponto de ND, antes do ajuste relativo
 OBJ_BONUS_XP = 50   # XP concedido por objetivo secundÃ¡rio cumprido (Fase 3)
 OBJ_BONUS_OURO = 25 # ouro concedido por objetivo secundÃ¡rio cumprido (Fase 3)
 
@@ -1144,13 +1148,18 @@ INSTRUMENTOS_BASE = {
     "gaita": {
         "nome": "Gaita", "icon": "🪗", "maos": 1, "modo": "ativada",
         "habilidade_nome": "Improviso",
-        "desc": "Improvisa um efeito conforme 2d6: 2 Desafinado (-1 em ataques e CD do Bardo); "
-                "3 Falha (nada); 4 Ecos Dolorosos; 5 Dueto Marcial; 6 Dueto Fantasma; "
-                "7 Nota Cortante (escolha uma linha); 8 Acorde Trovejante (área próxima); "
-                "9 Réquiem (escolha um alvo); 10 Sinfonia Heroica (+1 aos atributos da Canção); "
-                "11 Chamado do General (escolha direção). 12 = Encore: rola mais dois resultados. "
-                "Na Gaita Rúnica, 12s encadeiam Encores; o segundo concede Encore Menor e o "
-                "terceiro, Grande Encore.",
+        "desc": "Improvisa um efeito conforme 2d6: 2 Desafinado (-1 em ataques e CD de instrumentos); "
+                "3 Falha (nada); 4 Ecos Dolorosos (aura que retalia ataques corpo a corpo); "
+                "5 Dueto Marcial (contra-ataque quando aliado próximo acerta inimigo adjacente); "
+                "6 Dueto Fantasma (ataques básicos ecoam no alvo); 7 Nota Cortante (linha ortogonal); "
+                "8 Acorde Trovejante (dano em área e empurrão/perda de movimento); "
+                "9 Réquiem (pulso de dano em alvo escolhido); 10 Sinfonia Heroica (+1 nos atributos "
+                "da Canção ativa); 11 Chamado do General (cone de medo). 12 = Encore: aplica o efeito "
+                "e gera duas rolagens extras. O segundo 12 concede Encore Menor: aliados vivos em "
+                "até 5 casas pagam 1 a menos de Fome e Sede por custo nesta rodada; Magos e Clérigos "
+                "também recebem uma magia grátis. Na Gaita Rúnica, cada 12 extra gera mais duas "
+                "rolagens; o terceiro 12 concede Grande Encore: aliados sob a Canção Heroica não "
+                "pagam custos por 1d4 rodadas.",
         "efeito": {"tipo": "improviso"},
         "custo_fome": 3, "custo_sede": 3,
         "afixos_validos": ["fome", "sede"],
@@ -9763,7 +9772,7 @@ class GameRoom:
                     levels = [int(s.get("level", 1)) for s in self.savegame["characters"].values() if isinstance(s, dict)]
                     target = max(1, round(sum(levels) / len(levels))) if levels else 1
                     while fresh["level"] < target:
-                        fresh["xp"] = fresh["level"] * 30
+                        fresh["xp"] = fresh["level"] * XP_POR_NIVEL
                         await self._check_level_up(fresh)
                 self.savegame["characters"][class_id] = snapshot_character(fresh)
             vote["status"] = "approved"
@@ -12067,11 +12076,37 @@ class GameRoom:
             self._aplicar_grande_encore(p)
         if meta["encore_menor"]:
             self._aplicar_encore_menor(p)
+        if meta["encore_count"] > 0:
+            origin = list(p.get("pos", [0, 0]))
+            menor_targets = [{"id": q["id"], "pos": list(q.get("pos", origin))}
+                            for q in self.players.values()
+                            if q.get("alive") and _distancia_chebyshev(q["pos"], p["pos"]) <= 5]
+            grande_targets = [{"id": q["id"], "pos": list(q.get("pos", origin))}
+                              for q in self.players.values()
+                              if q.get("alive") and "buffs_cancao" in q]
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "gaita_encore", "phase": "start",
+                "animation_id": f"gaita_encore_{p['id']}_{self.round_num}_{new_id()}",
+                "caster_id": p["id"], "origin": origin,
+                "encore_count": meta["encore_count"],
+                "encore_menor": meta["encore_menor"],
+                "grande_encore": meta["grande_encore"],
+                "encore_menor_targets": menor_targets,
+                "grande_targets": grande_targets,
+                "duration_ms": 1420,
+            })
         p.setdefault("improviso_pendente", [])
         cascata_cli = []
         for res in passos:
             cascata_cli.append({"res": res, "nome": self._improviso_nome_passo(res),
                                 "precisa_alvo": res in self._IMPROVISO_ALVO})
+            if res == 2:
+                await self.broadcast({
+                    "type": "spell_animation", "spell_id": "desafinado_gaita", "phase": "start",
+                    "animation_id": f"desafinado_gaita_{p['id']}_{time.time_ns()}",
+                    "caster_id": p["id"], "origin": list(p.get("pos", [0, 0])),
+                    "duration_ms": 1120,
+                })
             if res in self._IMPROVISO_ALVO:
                 _tipo, alvo_tipo = self._IMPROVISO_ALVO[res]
                 p["improviso_pendente"].append(
@@ -12099,6 +12134,25 @@ class GameRoom:
             _virt, vst = self._improviso_virt_st(inst, "alaude")
             p["sinfonia_temp_ate"] = self.round_num + 1
             p["sinfonia_temp_atributos"] = list(vst.get("atributos", []))
+            # Reutiliza a animação da Canção Heroica para comunicar o reforço
+            # temporário da Sinfonia, sem ativar nem alterar a Canção em si.
+            animation_id = f"sinfonia_gaita_{p['id']}_{self.round_num}_{new_id()}"
+            origin = list(p.get("pos", [0, 0]))
+            affected = [{"id": jogador["id"], "pos": list(jogador.get("pos", origin))}
+                        for jogador in self.players.values()
+                        if jogador.get("alive") and self._no_raio(p, jogador, CANCAO_RAIO)]
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "cancao_heroica", "phase": "start",
+                "animation_id": animation_id, "caster_id": p["id"], "target_id": p["id"],
+                "origin": origin, "target": origin, "targets": affected,
+                "atributos": list(vst.get("atributos", [])), "raio": CANCAO_RAIO,
+                "travel_ms": 420, "impact_ms": 1100,
+            })
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "cancao_heroica", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": p["id"], "target_id": p["id"],
+                "targets": affected, "atributos": list(vst.get("atributos", [])), "success": True,
+            })
             await self.gm_say(T("narracao.improvisa_a_sinfonia_heroica_por_1_rodad", heroi=p['name']))
             return
         base, forca_dur = self._IMPROVISO_AUTO[res]
@@ -13065,16 +13119,29 @@ class GameRoom:
         return not reasons, reasons
 
     def _aventura_visivel(self, adventure):
-        """Destino oculto some do mapa até o requisito ser cumprido. Sem o flag,
-        o destino é sempre visível (bloqueado ou não), como sempre foi.
-        Cuidado: requisito vazio passa em _avaliar_requisito — o flag sozinho,
-        sem nenhum requisito, não esconde nada."""
+        """Decide se um destino deve chegar ao mapa e às entradas da cidade."""
         # Rascunhos do editor não viram destinos clicáveis no mapa do jogo.
         if not adventure.get("dungeons"):
+            return False
+        # A conclusão significa terminar a rota inteira, não apenas uma de suas
+        # etapas. Isto também prevalece sobre `revisitavel`: um destino oculto
+        # não pode ser reaberto por uma mensagem manual com o id antigo.
+        if adventure.get("ocultar_apos_concluir") and self._aventura_concluida(adventure):
             return False
         if not adventure.get("oculto_ate_liberar"):
             return True
         return self._avaliar_requisito(adventure.get("requisito"))[0]
+
+    def _aventura_concluida(self, adventure):
+        """Retorna se todas as etapas autoradas deste destino foram concluídas."""
+        stages = list(adventure.get("dungeons") or [])
+        if not stages:
+            return False
+        try:
+            progresso = max(0, int(self.world_adventure_progress.get(adventure.get("id"), 0)))
+        except (TypeError, ValueError):
+            progresso = 0
+        return progresso >= len(stages)
 
     def _city_points_payload(self):
         """Cópia RASA de CITY_MAP_POINTS (só os dois níveis externos; os dicts
@@ -13090,7 +13157,9 @@ class GameRoom:
             for point_id, ponto in pontos.items():
                 if str(ponto.get("type") or "") == "dungeon":
                     adventure = WORLD_ADVENTURES.get(str(ponto.get("aventura") or ""))
-                    if not adventure or not self._aventura_visivel(adventure):
+                    if (not adventure or not self._aventura_visivel(adventure)
+                            or (ponto.get("ocultar_apos_concluir")
+                                and self._aventura_concluida(adventure))):
                         continue
                 if str(ponto.get("type") or "") == "refugio":
                     item = deepcopy(ponto)
@@ -13367,7 +13436,7 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
-        if not adventure:
+        if not adventure or not self._aventura_visivel(adventure):
             await self.send_to(pid, {"type": "error", "msg": T("erro.destino_de_aventura_invalido")})
             return
         allowed, reasons = self._avaliar_requisito(adventure.get("requisito"))
@@ -16456,7 +16525,8 @@ class GameRoom:
                 "result", p, target, attack_name, attack_mode,
                 attack_id=attack_feedback_id, roll=roll, total=total,
                 hit=bool(hit), crit=bool(crit), natural=int(roll),
-                natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
+                natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1),
+                sneak_attack=bool(hit and furtivo_planejado))
             # Label distingue claramente da MÃ£o SecundÃ¡ria â€” evita confusÃ£o visual
             # com "rolagem de desvantagem" quando o jogador Ã© dual-wielder (Henrique).
             # A UI recebe os dois d20 quando há vantagem/desvantagem para poder
@@ -33558,14 +33628,20 @@ class GameRoom:
         return sum(p.get("level", 1) for p in alive) / len(alive)
 
     def _calc_monster_xp(self, m):
-        """Retorna (xp_por_jogador, qtd_jogadores_vivos)."""
+        """Retorna (xp_por_jogador, qtd_jogadores_vivos).
+
+        A base é fixa pelo ND do monstro. O nível médio não multiplica o
+        prêmio: ele só aplica +10%/-10% por ponto inteiro ou fracionário de
+        diferença entre ND e grupo. Com quatro heróis, um monstro de ND igual
+        ao nível do grupo concede 20 × nível XP a cada um; como o próximo
+        nível custa 300 × nível, são 15 encontros equivalentes por nível.
+        """
         alive_count = max(1, len([p for p in self.players.values() if p["alive"]]))
-        if "cr" in m:
-            cr = m["cr"]
-            xp_total = int(300 * self._avg_level() * (2 ** (cr - 1)) / 2)
-            return max(1, xp_total // alive_count), alive_count
-        share = m.get("xp", 0) // alive_count
-        return share, alive_count
+        cr = max(0.0, float(monster_cr(m)))
+        nivel_grupo = self._avg_level()
+        modificador = max(0.0, 1.0 + 0.10 * (cr - nivel_grupo))
+        xp_total = XP_MONSTRO_POR_ND * cr * modificador
+        return int(round(xp_total / alive_count)), alive_count
 
     async def _conceder_xp_armadilha(self, arm, alvo=None):
         """XP de uma armadilha AUTORADA vencida (desarmada ou disparada-e-sobrevivida):
@@ -41357,7 +41433,7 @@ class GameRoom:
             "type": "spell_pick_prompt", "circulo": circ, "count": 1, "opcoes": opcoes})
 
     async def _check_level_up(self, p):
-        threshold = p["level"] * 30
+        threshold = p["level"] * XP_POR_NIVEL
         if p["xp"] >= threshold:
             p["level"] += 1
             p["level_bonus"] = p["level"]   # level bonus = current level
@@ -45451,6 +45527,7 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                         val = str(point.get(key) or "").strip()
                         if val: item[key] = val[:240]
                 item["oculto_ate_liberar"] = bool(point.get("oculto_ate_liberar", False))
+                item["ocultar_apos_concluir"] = bool(point.get("ocultar_apos_concluir", False))
                 cleaned[point_id] = item
             if cleaned: CITY_MAP_POINTS[city_id] = cleaned
     _garantir_pontos_implicitos()

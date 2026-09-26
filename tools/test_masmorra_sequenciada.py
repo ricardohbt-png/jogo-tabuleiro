@@ -191,6 +191,10 @@ def test_flag_persistida():
         server._save_world_adventures_upload([], [row2])
         check("ausente vira False",
               server.WORLD_ADVENTURES["rota_normal"]["oculto_ate_liberar"] is False)
+        row3 = dict(row, id="rota_final", ocultar_apos_concluir=True)
+        server._save_world_adventures_upload([], [row3])
+        check("ocultar após concluir é preservado",
+              server.WORLD_ADVENTURES["rota_final"]["ocultar_apos_concluir"] is True)
     finally:
         server.WORLD_ADVENTURES = salvos
         server._save_world_adventures()
@@ -218,6 +222,26 @@ def setup_room(encadear=True):
     r.player_order = list(r.players.keys()); r.host_pid = "p1"
     r.phase = "city"
     return r
+
+async def test_destino_some_apos_concluir():
+    print("\n[18d] destino some ao concluir a rota")
+    salvos = server.WORLD_ADVENTURES
+    try:
+        r = setup_room(encadear=False)
+        adventure = server.WORLD_ADVENTURES["test_seq"]
+        adventure["ocultar_apos_concluir"] = True
+        adventure["revisitavel"] = True
+        r.world_adventure_progress["test_seq"] = len(adventure["dungeons"])
+        check("destino concluído não aparece no mapa", "test_seq" not in _ids_no_mapa(r))
+        check("helper reconhece a rota concluída", r._aventura_concluida(adventure) is True)
+        erros = []
+        async def cap(pid, msg):
+            if msg.get("type") == "error": erros.append(msg["msg"])
+        r.send_to = cap
+        await r.handle_world_adventure("p1", "test_seq")
+        check("id antigo não reabre destino oculto", erros and erros[-1] == "Destino de aventura inválido.")
+    finally:
+        server.WORLD_ADVENTURES = salvos
 
 async def _concluir_etapa(r):
     """Mata tudo, recalcula objetivos e encerra a missão pelo host."""
@@ -546,6 +570,7 @@ async def main():
     await test_beat_encerramento()
     await test_destino_oculto()
     await test_oculto_recusa_generica()
+    await test_destino_some_apos_concluir()
     await test_fim_da_rota()
     await test_saida_recusada()
     await test_saida_efetiva()

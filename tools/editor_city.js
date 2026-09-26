@@ -350,7 +350,8 @@
             ? '<small class="cityed-warn">⚠ O destino vinculado não existe mais.</small>'
             : !escolhido.dungeons
               ? '<small class="cityed-warn">⚠ Este destino ainda não tem masmorra.</small>' : '';
-        campo = '<label>Destino vinculado<select id="citymap-aventura">'+opts+'</select></label>'+aviso;
+        const esconderDepois = '<label title="Quando a rota do destino vinculado for concluída, esta entrada deixa de aparecer na cidade."><input id="citymap-hide-completed" type="checkbox"'+(selected.ocultar_apos_concluir?' checked':'')+(selected.aventura?'':' disabled')+'> 🏁 ocultar esta entrada após concluir a rota</label>';
+        campo = '<label>Destino vinculado<select id="citymap-aventura">'+opts+'</select></label>'+esconderDepois+aviso;
       } else {
         const typeOptions=Object.entries(types).map(([id,label])=>'<option value="'+id+'"'+((selected.type||selectedCityPointId)===id?' selected':'')+'>'+label+'</option>').join('');
         campo = '<label>Tipo / loja vinculada<select id="citymap-type">'+typeOptions+'</select></label>';
@@ -375,6 +376,7 @@
           const dest=root.querySelector('#citymap-aventura').value;
           selected.type='dungeon';
           if(dest)selected.aventura=dest;else delete selected.aventura;
+          selected.ocultar_apos_concluir=!!root.querySelector('#citymap-hide-completed')?.checked;
         } else {
           selected.type=root.querySelector('#citymap-type').value;
           // Só limpa um vínculo que este ponto nunca poderia usar: o tipo é fixado
@@ -390,7 +392,7 @@
           selected.fundo_quarto=(root.querySelector('#citymap-ref-room')?.value||'').trim();
           root.querySelectorAll('[data-ref-scene]').forEach(el=>{ if(el.value) selected[el.dataset.refScene]=el.value; else delete selected[el.dataset.refScene]; });
           selected.fundos_disponiveis=(root.querySelector('#citymap-room-bgs')?.value||'').split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
-        } else { delete selected.requisito; delete selected.oculto_ate_liberar; }
+        } else { delete selected.requisito; delete selected.oculto_ate_liberar; if(!isDungeon)delete selected.ocultar_apos_concluir; }
         selected.x=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-x').value)||0));
         selected.y=Math.max(0,Math.min(100,Number(root.querySelector('#citymap-y').value)||0));
       };

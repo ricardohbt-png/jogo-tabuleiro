@@ -902,6 +902,9 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `_sinfonia_bonus`) passam a aceitar `off base=="gaita"`. Aquisição: SKUs na loja + `gaita` em
 > `_ROLLER_BASES` (loot procedural). Cliente: `game.js` `renderImprovisoQuadro` (quadro da
 > cascata) + fila de mira; `src/gameState.js` `improvisoAlvo` + evento `improvisoResultado`.
+> **Animações da Gaita:** `desafinado_gaita` desenha notas tortas tremendo e se desfazendo;
+> resultado 10 reaproveita `cancao_heroica`; `gaita_encore` divide a nota em pares e, no Grande
+> Encore, expande uma onda dourada até os aliados sob a Canção. Efeitos em 2D/3D, sem alterar regras.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-12-instrumentos-bardo-fase5*`. Teste:
 > `tools/test_instrumentos_bardo.py`.
 

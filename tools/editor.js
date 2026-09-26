@@ -99,7 +99,7 @@
     rooms: [], nextRoomId: 0,
     startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoner: null,
     heroSpawnClass: "warrior",
-    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextPassageId: 0, nextFalaId: 0,
+    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
@@ -1568,7 +1568,7 @@
         break;
       }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
-      case "trap": S.traps.push({ tipo: S.trapType || ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "trap": S.traps.push({ id: "trap_" + S.nextTrapId++, tipo: S.trapType || ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
       case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
@@ -2626,6 +2626,11 @@
       const hasLoot = !!ref.loot;
       const decorTrap = ref.trap || null;
       const trapOptions = (CAT.traps || []).map(t => ({ v: t.tipo, name: `${t.icone || '🪤'} ${t.nome || t.tipo}` }));
+      const remoteTrapIds = new Set(Array.isArray(ref.disable_trap_ids) ? ref.disable_trap_ids : []);
+      const remoteTrapChoices = S.traps.map(t => {
+        const meta = CAT.traps.find(c => c.tipo === t.tipo) || {};
+        return { id: t.id, label: `${meta.icone || '⚠️'} ${meta.nome || t.tipo} (${t.pos[0]}, ${t.pos[1]})` };
+      });
       const decorTrapMeta = decorTrap ? (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}) : null;
       const decorTrapDefaultDamage = trapPrimaryDamage(decorTrapMeta);
       const decorTrapDefaultDifficulty = decorTrapMeta?.dificuldade || "";
@@ -2661,6 +2666,8 @@
           ${curseFieldsHTML(decorTrap, "d")}
           ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>local de saída</label><div style="display:flex;gap:4px"><input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"><input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></div><button id="d-pick-trap-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="d-trap-out-help" style="color:#8a7a5a">Escolha uma casa de chão no mapa.</small>` : ""}
           <small style="color:#8a7a5a">Dispara ao investigar. Encontrar Armadilhas revela o objeto e permite desarmá-lo.</small>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-disable-traps" ${Array.isArray(ref.disable_trap_ids) ? "checked" : ""}> mecanismo desativa armadilhas do mapa</label>
+        ${Array.isArray(ref.disable_trap_ids) ? `<div class="trap-overrides compact"><b>⚙️ Armadilhas desligadas por este objeto</b>${remoteTrapChoices.length ? remoteTrapChoices.map(t => `<label style="display:block"><input type="checkbox" class="d-disable-trap" data-id="${t.id}"${remoteTrapIds.has(t.id) ? " checked" : ""}> ${t.label}</label>`).join("") : '<small>Crie primeiro uma armadilha no mapa.</small>'}<small>Ao ativar este objeto no jogo, as armadilhas selecionadas são desativadas permanentemente.</small></div>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
           <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
@@ -2707,6 +2714,16 @@
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
       if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
+      document.getElementById("d-disable-traps").onchange = e => {
+        if (e.target.checked) ref.disable_trap_ids = [];
+        else delete ref.disable_trap_ids;
+        renderPanel();
+      };
+      panel.querySelectorAll(".d-disable-trap").forEach(box => box.onchange = e => {
+        const ids = ref.disable_trap_ids || (ref.disable_trap_ids = []);
+        if (e.target.checked) { if (!ids.includes(e.target.dataset.id)) ids.push(e.target.dataset.id); }
+        else ref.disable_trap_ids = ids.filter(id => id !== e.target.dataset.id);
+      });
       document.getElementById("d-trap").onchange = e => {
         if (e.target.checked) ref.trap = { tipo: (CAT.traps[0] || {}).tipo || "buraco" };
         else delete ref.trap;
@@ -3058,7 +3075,7 @@
       }),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(exportLootItem), key_objective: !!c.key_objective })),
       traps: S.traps.map(t => {
-        const o = { tipo: t.tipo, pos: t.pos.slice() };
+        const o = { id: t.id, tipo: t.tipo, pos: t.pos.slice() };
         if (t.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, t.dificuldade | 0));
         if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
         if (t.veneno_id) o.veneno_id = t.veneno_id;
@@ -3088,6 +3105,8 @@
             if (o.trap.curse_mode === "aleatoria") o.trap.curse_category = d.trap.curse_category || "leve";
           }
         }
+        if (Array.isArray(d.disable_trap_ids) && d.disable_trap_ids.length)
+          o.disable_trap_ids = d.disable_trap_ids.slice();
         const m = decorMeta(d.type);
         if (m && m.special === "plaque" && d.texto?.trim()) o.texto = d.texto.trim();
         if (m && m.special === "fountain") o.charges = d.charges | 0;
@@ -3433,8 +3452,22 @@
       ...(m.ignora_obstaculos_voo !== undefined ? { ignora_obstaculos_voo: !!m.ignora_obstaculos_voo } : {}),
     }));
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(exportLootItem), key_objective: !!c.key_objective }));
-    S.traps = (obj.traps || []).map(t => {
-      const o = { tipo: t.tipo, pos: t.pos.slice() };
+    const rawTraps = obj.traps || [];
+    const usedTrapIds = new Set();
+    let loadNextTrapId = rawTraps.reduce((next, t) => {
+      const m = /^trap_(\d+)$/.exec((t && t.id) || "");
+      return m ? Math.max(next, Number(m[1]) + 1) : next;
+    }, 0);
+    const uniqueLoadedTrapId = id => {
+      if (typeof id === "string" && id && !usedTrapIds.has(id)) {
+        usedTrapIds.add(id); return id;
+      }
+      while (usedTrapIds.has("trap_" + loadNextTrapId)) loadNextTrapId++;
+      const generated = "trap_" + loadNextTrapId++;
+      usedTrapIds.add(generated); return generated;
+    };
+    S.traps = rawTraps.map((t, i) => {
+      const o = { id: uniqueLoadedTrapId(t.id || ("trap_" + i)), tipo: t.tipo, pos: t.pos.slice() };
       if (t.dificuldade != null) o.dificuldade = Number(t.dificuldade) | 0;
       if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
       if (t.veneno_id) o.veneno_id = t.veneno_id;
@@ -3447,6 +3480,10 @@
       if (t.image) o.image = t.image;
       return o;
     });
+    S.nextTrapId = S.traps.reduce((next, t) => {
+      const m = /^trap_(\d+)$/.exec(t.id || "");
+      return m ? Math.max(next, Number(m[1]) + 1) : next;
+    }, 0);
     // Mapas criados por versões anteriores podiam ter IDs repetidos após
     // apagar/colar objetos. Repara somente a identidade interna ao abrir —
     // posição, tipo e todas as configurações da decoração são preservados.
@@ -3471,6 +3508,7 @@
       key_objective: !!d.key_objective,
       ...(typeof d.texto === "string" ? { texto: d.texto.slice(0, 600) } : {}),
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
+      ...(Array.isArray(d.disable_trap_ids) ? { disable_trap_ids: d.disable_trap_ids.filter(id => typeof id === "string") } : {}),
       ...(d.trap?.tipo ? { trap: {
         tipo: d.trap.tipo,
         ...(d.trap.dificuldade != null ? { dificuldade: Number(d.trap.dificuldade) | 0 } : {}),

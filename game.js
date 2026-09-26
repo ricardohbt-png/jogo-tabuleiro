@@ -6311,6 +6311,151 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=fa
   ctx.restore();
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// LADINO — dissolução e retorno às sombras (estado visual, sem alterar regras)
+// ═══════════════════════════════════════════════════════════════════════════
+const _ladinoSombrasAnims = new Map();
+let _ladinoSombrasRaf = null;
+const LADINO_SOMBRAS_ENTRA_MS = 680;
+const LADINO_SOMBRAS_SAI_MS = 430;
+const LADINO_SOMBRAS_OPACIDADE = .40;
+
+function _ladinoSombrasAnim(id){
+  return _ladinoSombrasAnims.get(String(id)) || null;
+}
+
+function _ladinoSombrasOpacity(id, now=performance.now()){
+  const anim = _ladinoSombrasAnim(id);
+  if(!anim) return 1;
+  if(anim.transicaoInicio == null) return anim.escondido ? LADINO_SOMBRAS_OPACIDADE : 1;
+  const p = Math.max(0, Math.min(1, (now-anim.transicaoInicio)/Math.max(1,anim.duracao)));
+  const suave = p*p*(3-2*p);
+  return anim.de + (anim.para-anim.de)*suave;
+}
+
+function _syncLadinoSombrasState(state){
+  if(!state) return;
+  const now = performance.now(), vistos = new Set();
+  for(const p of (state.players || [])){
+    if(!p || p.id == null) continue;
+    const id = String(p.id), escondido = !!p.invisivel_sombras;
+    vistos.add(id);
+    let anim = _ladinoSombrasAnims.get(id);
+    if(!anim){
+      if(!escondido || !p.alive) continue;
+      anim = {id, escondido, pos:Array.isArray(p.pos)?p.pos.slice():[0,0],
+        seed:(Number(p.pos?.[0]||0)*73856093)^(Number(p.pos?.[1]||0)*19349663)^Date.now(),
+        transicaoInicio: escondido ? now : null,
+        duracao: escondido ? LADINO_SOMBRAS_ENTRA_MS : 0,
+        de:1, para:escondido?LADINO_SOMBRAS_OPACIDADE:1,
+        inicio:now, group:null, wisps:[], ring:null};
+      _ladinoSombrasAnims.set(id,anim);
+    } else if(anim.escondido !== escondido || (!p.alive && anim.escondido)){
+      const atual = _ladinoSombrasOpacity(id,now);
+      anim.escondido = escondido && !!p.alive;
+      anim.transicaoInicio = now;
+      anim.duracao = anim.escondido ? LADINO_SOMBRAS_ENTRA_MS : LADINO_SOMBRAS_SAI_MS;
+      anim.de = atual;
+      anim.para = anim.escondido ? LADINO_SOMBRAS_OPACIDADE : 1;
+      anim.inicio = now;
+    }
+    anim.pos = Array.isArray(p.pos) ? p.pos.slice() : anim.pos;
+    anim.vivo = !!p.alive;
+  }
+  for(const [id,anim] of _ladinoSombrasAnims){
+    if(vistos.has(id)) continue;
+    if(anim.escondido){
+      anim.escondido = false; anim.transicaoInicio = now;
+      anim.duracao = LADINO_SOMBRAS_SAI_MS;
+      anim.de = _ladinoSombrasOpacity(id,now); anim.para = 1; anim.inicio = now;
+    }
+  }
+  if(!_ladinoSombrasRaf && _ladinoSombrasAnims.size)
+    _ladinoSombrasRaf = _scheduleVisualFrame(_tickLadinoSombras);
+}
+
+function _ladinoSombrasDraw2D(ctx,state,anim,now){
+  const p = (state.players||[]).find(x=>String(x.id)===anim.id);
+  if(!p || !p.alive || !p.pos) return;
+  const [tx,ty]=p.pos, key=`${tx},${ty}`;
+  const explored=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  if(p.id!==GS.myPid&&!explored.has(key)&&!GS.isMaster()&&!state.test_mode)return;
+  const entering=anim.escondido?Math.max(0,Math.min(1,(now-anim.inicio)/LADINO_SOMBRAS_ENTRA_MS)):1;
+  const fading=anim.escondido?1:Math.max(0,1-(now-anim.inicio)/LADINO_SOMBRAS_SAI_MS);
+  const vis=Math.max(entering,fading), cx=tx*CELL+CELL/2, cy=ty*CELL+CELL*.60;
+  ctx.save(); ctx.globalCompositeOperation='multiply';
+  const pulse=.5+.5*Math.sin(now/210+anim.seed);
+  ctx.fillStyle=`rgba(24,14,38,${(.18*vis).toFixed(3)})`;
+  ctx.beginPath(); ctx.ellipse(cx,ty*CELL+CELL*.83,CELL*(.40+.05*pulse),CELL*.13,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.save();
+  for(let i=0;i<5;i++){
+    const a=now/780+i*Math.PI*2/5+(anim.seed%97)*.01;
+    const r=CELL*(.23+.12*Math.sin(now/300+i+anim.seed));
+    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*CELL*(.38+.05*Math.sin(now/260+i));
+    const size=CELL*(.075+.025*Math.sin(now/170+i));
+    const grad=ctx.createRadialGradient(x,y,1,x,y,size);
+    grad.addColorStop(0,`rgba(43,27,65,${(.24*vis).toFixed(3)})`);
+    grad.addColorStop(1,'rgba(24,14,38,0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.arc(x,y,size,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function _ladinoSombrasBuild3D(anim){
+  if(!g3||!g3.scene||!window.THREE)return false;
+  const T=window.THREE, group=new T.Group(); group.name='ladino-sombras';
+  const ringMat=new T.MeshBasicMaterial({color:0x24142f,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
+  const ring=new T.Mesh(new T.TorusGeometry(.39,.025,6,32),ringMat);ring.rotation.x=-Math.PI/2;ring.position.y=.035;group.add(ring);anim.ring=ring;
+  for(let i=0;i<7;i++){
+    const mat=new T.MeshBasicMaterial({color:i%2?0x20142b:0x34203e,transparent:true,opacity:0,depthWrite:false});
+    const mesh=new T.Mesh(new T.SphereGeometry(.10+(i%3)*.025,8,6),mat);
+    mesh.userData.phase=i*Math.PI*2/7;mesh.userData.radius=.24+(i%4)*.045;mesh.userData.index=i;
+    group.add(mesh);anim.wisps.push(mesh);
+  }
+  g3.scene.add(group);anim.group=group;return true;
+}
+
+function _ladinoSombrasDispose3D(anim){
+  if(!anim.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+  anim.group=null;anim.wisps=[];anim.ring=null;
+}
+
+function _ladinoSombrasUpdate3D(anim,now){
+  if(!g3||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_ladinoSombrasDispose3D(anim);if(!_ladinoSombrasBuild3D(anim))return;}
+  const p=(GS.gameState?.players||[]).find(x=>String(x.id)===anim.id),pos=(p&&p.pos)||anim.pos;
+  if(!pos)return;
+  const enter=anim.escondido?Math.max(0,Math.min(1,(now-anim.inicio)/LADINO_SOMBRAS_ENTRA_MS)):1;
+  const fade=anim.escondido?1:Math.max(0,1-(now-anim.inicio)/LADINO_SOMBRAS_SAI_MS);
+  const vis=Math.max(enter,fade),pulse=.5+.5*Math.sin(now/210+anim.seed);
+  const altitude=Math.max(0,Math.min(10,Math.trunc(Number(p?.altura)||0)))*FLIGHT_ALTITUDE_STEP;
+  const floorY=topoSuperficie3D(GS.gameState,Number(pos[0]),Number(pos[1]),.22)-.22;
+  anim.group.position.set(Number(pos[0])+.5,floorY+altitude,Number(pos[1])+.5);
+  anim.ring.material.opacity=(.22+.10*pulse)*vis;
+  anim.ring.scale.setScalar(.88+.16*pulse);
+  for(const mesh of anim.wisps){
+    const i=mesh.userData.index,a=now/740+mesh.userData.phase,r=mesh.userData.radius;
+    mesh.position.set(Math.cos(a)*r,.22+(i%4)*.16+.09*Math.sin(now/240+i),Math.sin(a)*r);
+    mesh.scale.set(1+.28*Math.sin(now/190+i),.78+.3*Math.sin(now/230+i),1+.28*Math.sin(now/190+i));
+    mesh.material.opacity=(.15+.12*Math.sin(now/175+i)**2)*vis;
+  }
+}
+
+function _tickLadinoSombras(now){
+  let active=false;
+  for(const [id,anim] of _ladinoSombrasAnims){
+    const complete=anim.transicaoInicio!=null&&now-anim.transicaoInicio>anim.duracao;
+    if(!anim.escondido&&complete){_ladinoSombrasDispose3D(anim);_ladinoSombrasAnims.delete(id);continue;}
+    active=true;
+    if(mode3D&&g3)_ladinoSombrasUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _ladinoSombrasRaf=active?_scheduleVisualFrame(_tickLadinoSombras):null;
+}
+
 // Footprint visual do monstro. O servidor mantém m.pos como a casa-âncora
 // (frente, nos monstros orientados), mas a arte deve ser desenhada no centro
 // geométrico de todas as casas ocupadas.
@@ -8409,6 +8554,7 @@ function renderMap(state){
   if(!mode3D) _ensureEcosDolorososAura2D(state);
   _guardaMaximaSyncState(state);
   _syncInvisibilidadeState(state);
+  _syncLadinoSombrasState(state);
   _syncProtecaoEnergiaState(state);
   _syncProtetorVisualState(state);
   _tempestadeSyncFromState(state);
@@ -9259,7 +9405,8 @@ function renderMap(state){
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
     const [hitX, hitY] = _hitReaction2D(`p:${p.id}`);
     const [holyX,holyY]=_holyStrikeLunge(p.id,performance.now());
-    const X=px*CELL+hitX+holyX, Y=py*CELL+hitY+holyY, cx=X+CELL/2, cy=Y+CELL/2;
+    const [sneakX,sneakY]=_ataqueFurtivoLunge(p.id,performance.now());
+    const X=px*CELL+hitX+holyX+sneakX, Y=py*CELL+hitY+holyY+sneakY, cx=X+CELL/2, cy=Y+CELL/2;
     const isCur=p.id===state.current_turn, isMe=p.id===GS.myPid;
     const isTesteSel = !!(state.test_mode && testeHeroiSelecionado
       && String(p.id) === String(testeHeroiSelecionado.id));
@@ -9268,6 +9415,8 @@ function renderMap(state){
     const _playerVortexPreso = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
     const _spinAngle2D = _spinAttackAngle2D(p.id, performance.now());
     if(_invisP) ctx.save(), ctx.globalAlpha=.18;
+    const _alphaSombras = _ladinoSombrasOpacity(p.id,performance.now());
+    if(_alphaSombras < .999){ ctx.save(); ctx.globalAlpha *= _alphaSombras; }
     if(_playerVortexPreso){
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
     }
@@ -9290,6 +9439,7 @@ function renderMap(state){
     if(_playerVortexPreso) ctx.restore();
     if(p.em_chamas_rodadas > 0 && !_invisP)
       _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.36, CELL * 0.8, performance.now(), _semente2D(p.id));
+    if(_alphaSombras < .999) ctx.restore();
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
@@ -9313,6 +9463,8 @@ function renderMap(state){
   const _agoraRelampago = performance.now();
   for(const _animInvis of _invisibilidadeAnims)
     _invisibilidadeDraw2D(ctx, state, _animInvis, _agoraRelampago);
+  for(const _animSombras of _ladinoSombrasAnims.values())
+    _ladinoSombrasDraw2D(ctx, state, _animSombras, _agoraRelampago);
   for(const _animProtecao of _protecaoEnergiaAnims)
     _protecaoEnergiaDrawForeground2D(ctx, state, _animProtecao, _agoraRelampago);
   for(const _animOlhar of _olharPetrificanteAnims)
@@ -9357,6 +9509,10 @@ function renderMap(state){
     _notaCortanteDraw2D(ctx, state, _animNotaCortante, _agoraRelampago);
   for(const _animEcos of _ecosDolorososAnims)
     _ecosDolorososDraw2D(ctx, state, _animEcos, _agoraRelampago);
+  for(const _animDesafinado of _desafinadoGaitaAnims)
+    _desafinadoGaitaDraw2D(ctx, state, _animDesafinado, _agoraRelampago);
+  for(const _animEncore of _gaitaEncoreAnims)
+    _gaitaEncoreDraw2D(ctx, state, _animEncore, _agoraRelampago);
   for(const _animAcordeTrovejante of _acordeTrovejanteAnims)
     _acordeTrovejanteDraw2D(ctx, state, _animAcordeTrovejante, _agoraRelampago);
   for(const _animChamado of _chamadoGeneralAnims)
@@ -11735,6 +11891,62 @@ function _holyStrikeLunge(playerId, now){
   return [((tx-ax)/len)*CELL*.18*travel,((ty-ay)/len)*CELL*.18*travel];
 }
 
+function _ataqueFurtivoLunge(playerId,now){
+  let chosen=null;
+  for(const f of _attackFeedbacks){
+    if(!f.sneakAttack||String(f.attackerId)!==String(playerId)||!Number.isFinite(f.sneakAttackAt))continue;
+    const age=now-f.sneakAttackAt;
+    if(age<0||age>300)continue;
+    if(!chosen||f.sneakAttackAt>chosen.sneakAttackAt)chosen=f;
+  }
+  if(!chosen)return [0,0];
+  const age=Math.max(0,Math.min(1,(now-chosen.sneakAttackAt)/300));
+  const impulse=Math.sin(Math.PI*age)*CELL*.24;
+  const dx=chosen.targetPos[0]-chosen.attackerPos[0],dy=chosen.targetPos[1]-chosen.attackerPos[1],len=Math.max(.001,Math.hypot(dx,dy));
+  return [dx/len*impulse,dy/len*impulse];
+}
+
+function _drawAtaqueFurtivo2D(ctx,state,f,now){
+  if(!f.sneakAttack||!Number.isFinite(f.sneakAttackAt))return;
+  const age=now-f.sneakAttackAt;if(age<0||age>620)return;
+  const fade=age<400?1:Math.max(0,1-(age-400)/220),
+    ax=(f.attackerPos[0]+.5)*CELL,ay=(f.attackerPos[1]+.5)*CELL,
+    tx=(f.targetPos[0]+.5)*CELL,ty=(f.targetPos[1]+.5)*CELL,
+    dx=tx-ax,dy=ty-ay,len=Math.max(1,Math.hypot(dx,dy)),ux=dx/len,uy=dy/len,px=-uy,py=ux,
+    travel=Math.max(0,Math.min(1,age/155));
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';ctx.globalAlpha=fade;
+  // Rastro escuro do bote.
+  const sx=ax+ux*CELL*.10,sy=ay+uy*CELL*.10,ex=sx+dx*travel,ey=sy+dy*travel;
+  ctx.shadowColor='#7d36b4';ctx.shadowBlur=CELL*.18;ctx.strokeStyle='rgba(79,34,112,.75)';ctx.lineWidth=Math.max(4,CELL*.12);
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.quadraticCurveTo((sx+ex)/2+px*CELL*.12,(sy+ey)/2+py*CELL*.12,ex,ey);ctx.stroke();
+  // Pequena silhueta deixada para trás durante o avanço.
+  const gp=Math.min(1,age/180),gx=ax+dx*.28*gp-ux*CELL*.08,gy=ay+dy*.28*gp-uy*CELL*.08;
+  ctx.save();ctx.translate(gx,gy);ctx.rotate(Math.atan2(dy,dx));ctx.globalAlpha=fade*(.34*(1-gp*.45));
+  ctx.fillStyle='#21132d';ctx.shadowColor='#8d4fbd';ctx.shadowBlur=CELL*.12;
+  ctx.beginPath();ctx.arc(0,-CELL*.14,CELL*.065,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-CELL*.07,-CELL*.07);ctx.quadraticCurveTo(0,-CELL*.15,CELL*.07,-CELL*.07);ctx.lineTo(CELL*.11,CELL*.17);ctx.quadraticCurveTo(0,CELL*.22,-CELL*.11,CELL*.17);ctx.closePath();ctx.fill();
+  ctx.restore();
+  // Segundo corte sombrio, levemente atrasado em relação ao impacto normal.
+  const second=Math.max(0,Math.min(1,(age-105)/175)),slashFade=(1-Math.max(0,(age-285)/180));
+  if(second>0){
+    ctx.globalAlpha=fade*slashFade;ctx.shadowColor='#bd78ff';ctx.shadowBlur=CELL*.22;
+    for(let i=0;i<2;i++){
+      const side=i===0?-.11:.11,off=side*CELL;
+      const x1=tx-ux*CELL*.34+px*(off-CELL*.12),y1=ty-uy*CELL*.34+py*(off-CELL*.12);
+      const x2=tx+ux*CELL*.32+px*(off+CELL*.12),y2=ty+uy*CELL*.32+py*(off+CELL*.12);
+      const mx=x1+(x2-x1)*second,my=y1+(y2-y1)*second;
+      ctx.strokeStyle=i===0?'rgba(178,105,236,.96)':'rgba(232,210,255,.90)';ctx.lineWidth=Math.max(2,CELL*(i===0?.055:.026));
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo(tx+px*CELL*.18,ty+py*CELL*.18,mx,my);ctx.stroke();
+    }
+  }
+  const labelAlpha=Math.max(0,1-age/550);
+  if(labelAlpha>0){
+    ctx.globalAlpha=labelAlpha;ctx.shadowBlur=0;ctx.font=`900 ${Math.max(10,Math.round(CELL*.12))}px Arial Black, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    const label=t('dado.ataque_furtivo'),ly=ty-CELL*.43;ctx.lineWidth=Math.max(3,CELL*.045);ctx.strokeStyle='rgba(18,10,26,.92)';ctx.strokeText(label,tx,ly);ctx.fillStyle='#d9b4ff';ctx.fillText(label,tx,ly);
+  }
+  ctx.restore();
+}
+
 function _drawHolyStrike2D(ctx, f, now){
   const q=_holyStrikeProgress(f,now);
   if(!q?.active) return;
@@ -11766,6 +11978,7 @@ function _drawAttackFeedback2D(ctx, state, now){
   for(const f of _attackFeedbacks){
     if(!_attackFeedbackVisible(f, state)) continue;
     _drawHolyStrike2D(ctx,f,now);
+    _drawAtaqueFurtivo2D(ctx,state,f,now);
     const progress = _attackFeedbackProgress(f, now);
     if(progress.done) continue;
     const prep = progress.preparing;
@@ -11848,6 +12061,64 @@ function _buildAttackFeedback3D(f){
   _drawAttackFeedbackTexture3D(f);
 }
 
+function _buildAtaqueFurtivo3D(f){
+  if(!f?.sneakAttack||!f.group||f.sneakGroup||!g3||!window.THREE)return;
+  const T=g3.T,group=new T.Group();group.name='sneak-attack-impact';
+  const ring=new T.Mesh(new T.TorusGeometry(.34,.018,6,28),new T.MeshBasicMaterial({color:0x9c59d0,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending}));
+  ring.rotation.x=Math.PI/2;ring.position.y=.255;ring.renderOrder=139;group.add(ring);f.sneakRing=ring;
+  f.sneakSlashes=[];
+  for(let i=0;i<2;i++){
+    const points=[];
+    for(let j=0;j<=24;j++){
+      const u=j/24,side=i===0?1:-1;
+      const x=(u-.5)*.72,z=side*((u-.5)*.50)+Math.sin(Math.PI*u)*side*.05;
+      points.push(new T.Vector3(x,.22+Math.sin(Math.PI*u)*.94,z));
+    }
+    const geo=new T.BufferGeometry().setFromPoints(points);geo.setDrawRange(0,0);
+    const mat=new T.LineBasicMaterial({color:i===0?0x7e36ac:0xe0c2ff,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+    const line=new T.Line(geo,mat);line.renderOrder=140+i;group.add(line);f.sneakSlashes.push(line);
+  }
+  f.sneakMotes=[];
+  for(let i=0;i<6;i++){
+    const mat=new T.MeshBasicMaterial({color:i%2?0xc38af0:0x4b2866,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+    const mote=new T.Mesh(new T.SphereGeometry(.025+(i%3)*.009,6,5),mat);
+    mote.userData.phase=i*Math.PI/3;group.add(mote);f.sneakMotes.push(mote);
+  }
+  const cv=document.createElement('canvas');cv.width=640;cv.height=72;
+  const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);c.font='900 32px Arial Black,sans-serif';c.textAlign='center';c.textBaseline='middle';
+  c.lineWidth=8;c.strokeStyle='rgba(18,10,26,.94)';c.strokeText(t('dado.ataque_furtivo').toUpperCase(),320,36);
+  c.fillStyle='#d9b4ff';c.shadowColor='#8d4fbd';c.shadowBlur=12;c.fillText(t('dado.ataque_furtivo').toUpperCase(),320,36);
+  const tex=new T.CanvasTexture(cv);tex._owned=true;
+  const label=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,opacity:0,depthWrite:false,depthTest:false}));
+  label.scale.set(1.55,.19,1);label.position.set(0,1.48,0);label.renderOrder=142;group.add(label);
+  f.sneakLabel=label;f.sneakTexture=tex;
+  const st=GS.gameState||{},target=(st.monsters||[]).find(m=>String(m.id)===String(f.targetId))
+    ||(st.players||[]).find(p=>String(p.id)===String(f.targetId));
+  const floorY=topoSuperficie3D(st,Number(f.targetPos[0]),Number(f.targetPos[1]),.22)-.22;
+  const altitude=Math.max(0,Math.min(10,Math.trunc(Number(target?.altura)||0)))*FLIGHT_ALTITUDE_STEP;
+  group.position.set(f.targetPos[0]+.5,floorY+altitude,f.targetPos[1]+.5);f.group.add(group);f.sneakGroup=group;
+}
+
+function _updateAtaqueFurtivo3D(f,now){
+  if(!f?.sneakAttack||!Number.isFinite(f.sneakAttackAt)||!f.group)return;
+  _buildAtaqueFurtivo3D(f);if(!f.sneakGroup)return;
+  const age=now-f.sneakAttackAt,fade=age<390?1:Math.max(0,1-(age-390)/230);
+  const phase1=Math.max(0,Math.min(1,age/145)),phase2=Math.max(0,Math.min(1,(age-105)/180));
+  f.sneakGroup.visible=age>=0&&age<620;
+  f.sneakRing.material.opacity=(.55+.25*Math.sin(now/75))*fade;
+  f.sneakRing.scale.setScalar(.82+.38*Math.max(0,Math.min(1,age/250)));
+  f.sneakSlashes[0].geometry.setDrawRange(0,Math.floor(phase1*24)+1);
+  f.sneakSlashes[0].material.opacity=.95*fade;
+  f.sneakSlashes[1].geometry.setDrawRange(0,Math.floor(phase2*24)+1);
+  f.sneakSlashes[1].material.opacity=.88*fade;
+  f.sneakLabel.material.opacity=Math.max(0,1-age/520);f.sneakLabel.position.y=1.42+.18*Math.min(1,Math.max(0,age/250));
+  for(let i=0;i<f.sneakMotes.length;i++){
+    const m=f.sneakMotes[i],a=now/350+m.userData.phase,r=.27+.05*Math.sin(now/100+i);
+    m.position.set(Math.cos(a)*r,.40+(i%3)*.22+.12*Math.sin(now/115+i),Math.sin(a)*r);
+    m.material.opacity=(.35+.3*Math.sin(now/90+i)**2)*fade;
+  }
+}
+
 function _drawAttackFeedbackTexture3D(f){
   if(!f.canvas) return;
   const c=f.canvas.getContext('2d'), color=_attackFeedbackColor(f);
@@ -11900,6 +12171,7 @@ function _updateAttackFeedback3D(now){
     if(!f.group || f.group.parent!==g3.scene) _buildAttackFeedback3D(f);
     if(!f.group) continue;
     const q=_attackFeedbackProgress(f,now), prep=q.preparing;
+    _updateAtaqueFurtivo3D(f,now);
     const ax=f.attackerPos[0]+.5, az=f.attackerPos[1]+.5;
     const tx=f.targetPos[0]+.5, tz=f.targetPos[1]+.5;
     const ex=prep ? ax+(tx-ax)*q.p : tx, ez=prep ? az+(tz-az)*q.p : tz;
@@ -11949,6 +12221,7 @@ function _disposeAttackFeedback(f){
   if(f.group.parent) f.group.parent.remove(f.group);
   f.group.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material){ const m=Array.isArray(o.material)?o.material:[o.material]; m.forEach(x=>x.dispose()); }});
   if(f.texture && f.texture._owned) f.texture.dispose();
+  if(f.sneakTexture && f.sneakTexture._owned) f.sneakTexture.dispose();
   f.group=null;
 }
 
@@ -12249,6 +12522,7 @@ function _executarComandoCena(c){
     // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
     const f = _attackFeedbacks.find(x => x.id === c.id);
     if(f?.holyStrike && !Number.isFinite(f.holyStrikeAt)) f.holyStrikeAt=now;
+    if(f?.sneakAttack && !Number.isFinite(f.sneakAttackAt)) f.sneakAttackAt=now;
     if(f && f.result && !(f.resultAt < now)){   // ainda não revelado (Infinity ou futuro)
       f.resultAt = now;
       _drawAttackFeedbackTexture3D(f);
@@ -12310,7 +12584,9 @@ function _receiveAttackFeedback(msg){
     const f=_attackFeedbacks.find(x=>x.id===id);
     if(!f) return;
     Object.assign(f,{result:true,resultAt:now+f.prepDuration,roll:msg.roll,total:msg.total,hit:!!msg.hit,crit:!!msg.crit,
-      natural:msg.natural,natural_critical:!!msg.natural_critical,natural_fumble:!!msg.natural_fumble});
+      natural:msg.natural,natural_critical:!!msg.natural_critical,natural_fumble:!!msg.natural_fumble,
+      sneakAttack:!!msg.sneak_attack&&!!msg.hit,
+      sneakAttackAt:!!msg.sneak_attack&&!!msg.hit&&(!_cenaAtiva()||!CombatScene.phaseOf(id))?now+f.prepDuration:null});
     const cue = (msg.natural_critical || msg.crit)
       ? {kind:'critical', opts:{repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1}}
       : (!msg.hit || msg.natural_fumble) ? {kind:'error', opts:{repeatKey:'error', volume:.82}} : null;
@@ -18989,6 +19265,11 @@ function _aimStart(spec) {
   _aimSessionState.outsideHandler = event => {
     if (!_aimSessionState.current) return;
     if (event.target.closest?.('#aim-session-hud')) return;
+    // O alvo visual pode estar sobre uma camada/filho do mapa (p.ex. o canvas
+    // 3D ou uma sobreposição click-through). Cliques dentro da área do tabuleiro
+    // pertencem à mira; só a interface realmente externa deve cancelá-la.
+    const mapWrap = document.getElementById('map-wrap');
+    if (mapWrap?.contains(event.target)) return;
     const canvas2d = document.getElementById('dungeon-canvas');
     const canvas3d = (typeof g3 !== 'undefined' && g3?.renderer) ? g3.renderer.domElement : null;
     if (event.target === canvas2d || event.target === canvas3d) return;
@@ -23076,7 +23357,6 @@ function _showTrapResult(msg){
   } else if(isFall){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = `${msg.expressao || ''} · ${msg.dano || 0} dano`;
-    tocarSomArmadilha();
   } else if(isSurvival){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = msg.status || (isSurvivalDamage
@@ -23563,7 +23843,10 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
-const BONUS_ACTION_EFFECTS = new Set(['heal', 'regeneration', 'atk_bonus', 'antidote']);
+const BONUS_ACTION_EFFECTS = new Set([
+  'heal', 'regeneration', 'atk_bonus', 'antidote', 'coat_poison',
+  'veil_shadow', 'cure_poison', 'cure_petrification', 'cure_disease'
+]);
 
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
 // ADJACENTE — se o alvo não veio, abre o modal de alvo (o servidor revalida).
@@ -35065,6 +35348,236 @@ function _receberAnimacaoDuetoMarcial(msg){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// DESAFINADO DA GAITA — notas deformadas tremem ao redor do bardo e se desfazem
+// ═══════════════════════════════════════════════════════════════════════════
+const _desafinadoGaitaAnims=[];
+let _desafinadoGaitaRaf=null;
+const DESAFINADO_GAITA_DURATION_MS=1120;
+const DESAFINADO_GAITA_GLYPHS=['♫','♬','♪','♩','♬','♫','♪'];
+
+function _desafinadoGaitaAnimFromMessage(msg){
+  const origin=Array.isArray(msg?.origin)?msg.origin.map(Number):null;
+  if(!origin||origin.length<2||!origin.every(Number.isFinite))return null;
+  return {id:String(msg.animation_id??`desafinado_${Date.now()}_${Math.random()}`),origin,
+    casterId:msg.caster_id==null?null:String(msg.caster_id),start:performance.now(),
+    duration:Math.max(650,Number(msg.duration_ms)||DESAFINADO_GAITA_DURATION_MS),group:null,notes:[]};
+}
+
+function _desafinadoGaitaDispose3D(anim){
+  if(!anim?.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{
+    if(o.geometry)o.geometry.dispose();
+    if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.map)m.map.dispose();m.dispose();});
+  });
+  anim.group=null;anim.notes=[];
+}
+
+function _desafinadoGaitaBuild3D(anim){
+  if(!g3?.scene||!window.THREE)return false;
+  const T=window.THREE,root=new T.Group();root.name='desafinado-gaita-fx';
+  const colors=['#b45b84','#8c477d','#d77a8b','#734c91','#c46b6b','#9a5d9e','#d18b78'];
+  anim.notes=[];
+  for(let i=0;i<DESAFINADO_GAITA_GLYPHS.length;i++){
+    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
+    const ctx=canvas.getContext('2d'),angle=(i%3-1)*.22;
+    ctx.translate(64,64);ctx.rotate(angle);ctx.transform(1,.12*Math.sin(i),.20*Math.cos(i*2),.78,0,0);
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 88px serif';
+    ctx.fillStyle=colors[i];ctx.shadowColor=colors[i];ctx.shadowBlur=15;
+    ctx.fillText(DESAFINADO_GAITA_GLYPHS[i],0,0);
+    ctx.globalAlpha=.65;ctx.shadowBlur=0;ctx.fillStyle='#e9a5b3';ctx.fillText(DESAFINADO_GAITA_GLYPHS[i],4,-3);
+    const texture=new T.CanvasTexture(canvas),material=new T.SpriteMaterial({map:texture,transparent:true,opacity:0,depthWrite:false,depthTest:false});
+    const sprite=new T.Sprite(material);sprite.scale.set(.29+(i%3)*.035,.36+(i%2)*.04,1);sprite.renderOrder=178+i;
+    sprite.userData.noteIndex=i;root.add(sprite);anim.notes.push(sprite);
+  }
+  root.position.set(anim.origin[0]+.5,.58,anim.origin[1]+.5);g3.scene.add(root);anim.group=root;return true;
+}
+
+function _desafinadoGaitaUpdate3D(anim,now){
+  if(!g3?.scene||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_desafinadoGaitaDispose3D(anim);if(!_desafinadoGaitaBuild3D(anim))return;}
+  const elapsed=now-anim.start,q=Math.max(0,Math.min(1,elapsed/anim.duration)),fade=Math.pow(1-q,.72);
+  for(const note of anim.notes){
+    const i=note.userData.noteIndex,delay=(i%4)*.055,p=Math.max(0,Math.min(1,(q-delay)/(1-delay)));
+    const angle=i*Math.PI*2/anim.notes.length+Math.sin(elapsed/72+i*3)*.20;
+    const radius=.20+p*(.40+(i%3)*.07);
+    note.position.set(Math.cos(angle)*radius+Math.sin(elapsed/48+i)*.035,
+      .10+p*(.48+(i%3)*.09)+Math.sin(elapsed/52+i*2)*.045,Math.sin(angle)*radius);
+    note.material.opacity=fade*(.85-.20*(i%3));
+    note.material.rotation=angle*.45+Math.sin(elapsed/58+i*2)*.16;
+    note.scale.set((.29+(i%3)*.035)*(1-p*.18),(.36+(i%2)*.04)*(1-p*.18),1);
+  }
+}
+
+function _desafinadoGaitaDraw2D(ctx,state,anim,now){
+  const visible=new Set([...(state?.explored||[]),...(state?.revealed||[])].map(([x,y])=>`${x},${y}`));
+  const key=`${anim.origin[0]},${anim.origin[1]}`;
+  if(!visible.has(key)&&!GS.isMaster()&&!state?.test_mode)return;
+  const elapsed=now-anim.start,q=Math.max(0,Math.min(1,elapsed/anim.duration)),fade=Math.pow(1-q,.72),cx=(anim.origin[0]+.5)*CELL,cy=(anim.origin[1]+.5)*CELL;
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalCompositeOperation='source-over';
+  ctx.beginPath();
+  for(let s=0;s<=24;s++){
+    const x=cx-CELL*.36+s*CELL*.03,y=cy-CELL*.04+Math.sin(s*.77+elapsed/48)*CELL*.035;
+    if(!s)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+  ctx.strokeStyle=`rgba(142,62,112,${(.48*fade).toFixed(3)})`;ctx.lineWidth=Math.max(1.4,CELL*.022);ctx.stroke();
+  for(let i=0;i<DESAFINADO_GAITA_GLYPHS.length;i++){
+    const delay=(i%4)*.055,p=Math.max(0,Math.min(1,(q-delay)/(1-delay))),angle=i*Math.PI*2/DESAFINADO_GAITA_GLYPHS.length+Math.sin(elapsed/72+i*3)*.20;
+    const radius=CELL*(.20+p*(.40+(i%3)*.07)),x=cx+Math.cos(angle)*radius+Math.sin(elapsed/48+i)*CELL*.035;
+    const y=cy-CELL*(.16+p*(.48+(i%3)*.09))+Math.sin(elapsed/52+i*2)*CELL*.045;
+    ctx.save();ctx.translate(x,y);ctx.rotate((i%3-1)*.22+Math.sin(elapsed/58+i*2)*.16);ctx.transform(1,.12*Math.sin(i),.20*Math.cos(i*2),.78,0,0);
+    const color=['#bd6b91','#9d5c91','#d18491','#856294','#bd7373','#9f6caa','#c78a7e'][i];
+    ctx.globalAlpha=fade*(.88-.18*(i%3));ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=CELL*.09;
+    ctx.font=`bold ${Math.round(CELL*(.31+(i%3)*.025))}px serif`;ctx.fillText(DESAFINADO_GAITA_GLYPHS[i],0,0);
+    ctx.globalAlpha*=.64;ctx.shadowBlur=0;ctx.fillStyle='#edbac8';ctx.fillText(DESAFINADO_GAITA_GLYPHS[i],CELL*.025,-CELL*.025);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function _tickDesafinadoGaita(now){
+  let active=false;
+  for(let i=_desafinadoGaitaAnims.length-1;i>=0;i--){
+    const anim=_desafinadoGaitaAnims[i];
+    if(now-anim.start>=anim.duration){_desafinadoGaitaDispose3D(anim);_desafinadoGaitaAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_desafinadoGaitaUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _desafinadoGaitaRaf=active?_scheduleVisualFrame(_tickDesafinadoGaita):null;
+}
+
+function _receberAnimacaoDesafinadoGaita(msg){
+  if(!msg||msg.spell_id!=='desafinado_gaita'||msg.phase!=='start')return;
+  const id=String(msg.animation_id??'');if(id&&_desafinadoGaitaAnims.some(a=>a.id===id))return;
+  const anim=_desafinadoGaitaAnimFromMessage(msg);if(!anim)return;
+  _desafinadoGaitaAnims.push(anim);if(!_desafinadoGaitaRaf)_desafinadoGaitaRaf=_scheduleVisualFrame(_tickDesafinadoGaita);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENCORE DA GAITA — uma nota se divide em duas; o Grande Encore culmina em onda
+// ═══════════════════════════════════════════════════════════════════════════
+const _gaitaEncoreAnims=[];
+let _gaitaEncoreRaf=null;
+const GAITA_ENCORE_DURATION_MS=1420;
+
+function _gaitaEncoreAnimFromMessage(msg){
+  const origin=Array.isArray(msg?.origin)?msg.origin.map(Number):null;
+  if(!origin||origin.length<2||!origin.every(Number.isFinite))return null;
+  const readTargets=value=>(Array.isArray(value)?value:[]).map(item=>({
+    id:item?.id==null?null:String(item.id),pos:Array.isArray(item)?item.map(Number):Array.isArray(item?.pos)?item.pos.map(Number):null
+  })).filter(item=>item.pos?.length>=2&&item.pos.every(Number.isFinite));
+  return {id:String(msg.animation_id??`gaita_encore_${Date.now()}_${Math.random()}`),origin,
+    casterId:msg.caster_id==null?null:String(msg.caster_id),start:performance.now(),
+    duration:Math.max(850,Number(msg.duration_ms)||GAITA_ENCORE_DURATION_MS),
+    count:Math.max(1,Math.min(5,Number(msg.encore_count)||1)),minor:!!msg.encore_menor,
+    grande:!!msg.grande_encore,minorTargets:readTargets(msg.encore_menor_targets),
+    grandeTargets:readTargets(msg.grande_targets),group:null,notes:[],targetFx:[]};
+}
+
+function _gaitaEncoreDispose3D(anim){
+  if(!anim?.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{
+    if(o.geometry)o.geometry.dispose();
+    if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{if(m.map)m.map.dispose();m.dispose();});
+  });
+  anim.group=null;anim.notes=[];anim.targetFx=[];
+}
+
+function _gaitaEncoreBuild3D(anim){
+  if(!g3?.scene||!window.THREE)return false;
+  const state=GS.gameState,T=window.THREE,root=new T.Group();root.name='gaita-encore-fx';anim.notes=[];anim.targetFx=[];
+  const makeGlyph=(glyph,color,size,order,parent)=>{
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=128;const c=canvas.getContext('2d');
+    c.textAlign='center';c.textBaseline='middle';c.font='bold 94px serif';c.fillStyle=color;c.shadowColor=color;c.shadowBlur=18;c.fillText(glyph,64,66);
+    const texture=new T.CanvasTexture(canvas),mat=new T.SpriteMaterial({map:texture,transparent:true,opacity:0,depthWrite:false,depthTest:false,blending:T.AdditiveBlending});
+    const sprite=new T.Sprite(mat);sprite.scale.set(size,size,1);sprite.renderOrder=order;parent.add(sprite);return sprite;
+  };
+  anim.notes.push(makeGlyph('♫','#ffe39a',.48,181,root));
+  for(let i=0;i<anim.count*2;i++)anim.notes.push(makeGlyph(i%2?'♪':'♬','#ffd267',.34+(i%2)*.035,182+i,root));
+  const visibleTarget=target=>!state||_senhorAguasTileVisible(state,target.pos[0],target.pos[1]);
+  const addTargets=(targets,kind)=>{
+    for(const target of targets){
+      if(!visibleTarget(target))continue;
+      const x=target.pos[0]-anim.origin[0],z=target.pos[1]-anim.origin[1],fx=new T.Group();fx.position.set(x,.025,z);root.add(fx);
+      const ring=new T.Mesh(new T.TorusGeometry(.24,.025,7,32),new T.MeshBasicMaterial({color:kind==='grande'?0xffd34f:0xffe8a0,transparent:true,opacity:0,depthWrite:false,depthTest:false,side:T.DoubleSide,blending:T.AdditiveBlending}));
+      ring.rotation.x=Math.PI/2;ring.renderOrder=179;fx.add(ring);
+      const mark=makeGlyph(kind==='grande'?'✦':'♪',kind==='grande'?'#fff0a8':'#ffe7a5',.40,180,fx);mark.position.y=.68;
+      anim.targetFx.push({group:fx,ring,mark,kind});
+    }
+  };
+  if(anim.minor)addTargets(anim.minorTargets,'minor');
+  if(anim.grande)addTargets(anim.grandeTargets,'grande');
+  root.position.set(anim.origin[0]+.5,0,anim.origin[1]+.5);g3.scene.add(root);anim.group=root;return true;
+}
+
+function _gaitaEncoreUpdate3D(anim,now){
+  if(!g3?.scene||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_gaitaEncoreDispose3D(anim);if(!_gaitaEncoreBuild3D(anim))return;}
+  const elapsed=now-anim.start,q=Math.max(0,Math.min(1,elapsed/anim.duration)),fade=Math.pow(1-q,.72),main=anim.notes[0];
+  main.position.set(Math.sin(elapsed/88)*.035,.48+Math.min(1,elapsed/250)*.42,0);main.material.opacity=fade;
+  main.material.rotation=Math.sin(elapsed/75)*.10;main.scale.setScalar(.43+.08*Math.sin(elapsed/85));
+  for(let i=0;i<anim.count*2;i++){
+    const note=anim.notes[i+1],pair=Math.floor(i/2),side=i%2?-1:1,delay=.19+pair*.11,p=Math.max(0,Math.min(1,(elapsed-anim.duration*delay)/(anim.duration*(.72-delay))));
+    note.position.set(side*p*(.34+pair*.13),.64+p*(.32+pair*.025)+Math.sin(elapsed/58+i)*.035,-p*(.10+pair*.07));
+    note.material.opacity=fade*Math.max(0,Math.min(1,(elapsed-anim.duration*delay)/100+.35));
+    note.material.rotation=side*(.16+p*.27)+Math.sin(elapsed/62+i)*.10;
+  }
+  for(const fx of anim.targetFx){
+    const q0=fx.kind==='grande'?Math.max(0,Math.min(1,(q-.35)/.58)):Math.max(0,Math.min(1,(q-.42)/.45)),left=Math.max(0,1-q0);
+    fx.ring.scale.setScalar(.35+q0*2.5);fx.ring.material.opacity=left*(fx.kind==='grande'?.88:.56);
+    fx.mark.position.y=.55+q0*.30+Math.sin(elapsed/68+(fx.group.position.x*9))* .035;
+    fx.mark.material.opacity=left*(fx.kind==='grande'?1:.72);fx.mark.scale.setScalar((fx.kind==='grande'?.40:.30)*(1+q0*.35));
+  }
+}
+
+function _gaitaEncoreDraw2D(ctx,state,anim,now){
+  const visible=new Set([...(state?.explored||[]),...(state?.revealed||[])].map(([x,y])=>`${x},${y}`));
+  const canSee=pos=>visible.has(`${pos[0]},${pos[1]}`)||GS.isMaster()||state?.test_mode;
+  if(!canSee(anim.origin))return;
+  const elapsed=now-anim.start,q=Math.max(0,Math.min(1,elapsed/anim.duration)),fade=Math.pow(1-q,.72),cx=(anim.origin[0]+.5)*CELL,cy=(anim.origin[1]+.5)*CELL;
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineCap='round';
+  const pop=1-Math.min(1,elapsed/190),pulse=.5+.5*Math.sin(elapsed/58);
+  ctx.strokeStyle=`rgba(255,211,91,${(.55*pop+ .12*fade).toFixed(3)})`;ctx.shadowColor='#ffda73';ctx.shadowBlur=CELL*.22;ctx.lineWidth=Math.max(2,CELL*.035);
+  ctx.beginPath();ctx.arc(cx,cy-CELL*.18,CELL*(.23+pop*.18),0,Math.PI*2);ctx.stroke();
+  ctx.font=`bold ${Math.round(CELL*(.42+.04*pulse))}px serif`;ctx.fillStyle=`rgba(255,241,186,${fade.toFixed(3)})`;ctx.fillText('♫',cx,cy-CELL*(.20+Math.min(1,elapsed/260)*.32));
+  for(let pair=0;pair<anim.count;pair++)for(let side of [-1,1]){
+    const delay=.19+pair*.11,p=Math.max(0,Math.min(1,(elapsed-anim.duration*delay)/(anim.duration*(.72-delay))));if(!p)continue;
+    const x=cx+side*CELL*p*(.34+pair*.13),y=cy-CELL*(.30+p*(.34+pair*.025))+Math.sin(elapsed/58+pair*2+side)*CELL*.035;
+    ctx.globalAlpha=fade*(.86-.08*pair);ctx.strokeStyle='#ffc94b';ctx.shadowColor='#ffd76f';ctx.shadowBlur=CELL*.13;ctx.lineWidth=Math.max(1.5,CELL*.025);
+    ctx.beginPath();ctx.moveTo(cx,cy-CELL*.22);ctx.quadraticCurveTo((cx+x)/2,y-CELL*.08,x,y);ctx.stroke();
+    ctx.fillStyle='#fff0ad';ctx.font=`bold ${Math.round(CELL*(.28-.015*pair))}px serif`;ctx.fillText((pair+side)%2?'♪':'♬',x,y);
+  }
+  for(const [kind,targets] of [['minor',anim.minorTargets],['grande',anim.grandeTargets]]){
+    if(kind==='minor'&&!anim.minor||kind==='grande'&&!anim.grande)continue;
+    const start=kind==='grande'?.35:.42,duration=kind==='grande'?.58:.45,local=Math.max(0,Math.min(1,(q-start)/duration));if(!local)continue;
+    const left=1-local;
+    for(const target of targets){if(!canSee(target.pos))continue;const x=(target.pos[0]+.5)*CELL,y=(target.pos[1]+.5)*CELL,r=CELL*(.18+local*(kind==='grande'?.72:.40));
+      ctx.globalAlpha=left*(kind==='grande'?.88:.56);ctx.strokeStyle=kind==='grande'?'#ffd34f':'#ffe6a0';ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=CELL*.18;ctx.lineWidth=Math.max(1.5,CELL*.032);
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=left*(kind==='grande'?1:.72);ctx.fillStyle='#fff0a8';ctx.font=`bold ${Math.round(CELL*(kind==='grande'?.32:.23))}px serif`;ctx.fillText(kind==='grande'?'✦':'♪',x,y-CELL*(.18+local*.28));
+    }
+  }
+  ctx.restore();
+}
+
+function _tickGaitaEncore(now){
+  let active=false;
+  for(let i=_gaitaEncoreAnims.length-1;i>=0;i--){const anim=_gaitaEncoreAnims[i];
+    if(now-anim.start>=anim.duration){_gaitaEncoreDispose3D(anim);_gaitaEncoreAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_gaitaEncoreUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _gaitaEncoreRaf=active?_scheduleVisualFrame(_tickGaitaEncore):null;
+}
+
+function _receberAnimacaoGaitaEncore(msg){
+  if(!msg||msg.spell_id!=='gaita_encore'||msg.phase!=='start')return;
+  const id=String(msg.animation_id??'');if(id&&_gaitaEncoreAnims.some(a=>a.id===id))return;
+  const anim=_gaitaEncoreAnimFromMessage(msg);if(!anim)return;
+  _gaitaEncoreAnims.push(anim);if(!_gaitaEncoreRaf)_gaitaEncoreRaf=_scheduleVisualFrame(_tickGaitaEncore);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // ECOS DOLOROSOS — o sino pulsa no bardo e devolve uma onda ao agressor
 // ═══════════════════════════════════════════════════════════════════════════
 const _ecosDolorososAnims=[];
@@ -40854,6 +41367,24 @@ function _aplicarPoseCena(fig, now){
   else if(u._sceneMats) _restaurarMateriaisCena(fig);
 }
 
+function _aplicarOpacidadeLadinoSombras3D(fig,now){
+  const pid=fig?.userData?.pid;
+  if(pid==null)return;
+  const alpha=_ladinoSombrasOpacity(pid,now);
+  if(alpha>=.999&&fig.userData._ladinoSombrasAlpha===undefined)return;
+  fig.userData._ladinoSombrasAlpha=alpha;
+  const lista=_materiaisCena(fig), pose=window.CombatScene&&_figSceneKey(fig)
+    ? CombatScene.poseFor(_figSceneKey(fig),now) : null;
+  const poseAlpha=pose&&pose.opacity!==undefined?pose.opacity:1;
+  for(const e of lista){
+    const m=e.mat, op=e.opacity*poseAlpha*alpha;
+    const transparent=e.transparent||alpha<.999||(pose&&pose.opacity!==undefined);
+    if(m.transparent!==transparent){m.transparent=transparent;m.needsUpdate=true;}
+    m.opacity=op;
+  }
+  if(alpha>=.999) delete fig.userData._ladinoSombrasAlpha;
+}
+
 // Shake de câmera do crítico/morte. OrbitControls recalcula a câmera a partir de
 // position − target a cada update(): o offset precisa ser retirado ANTES e
 // posto de volta DEPOIS, senão vira deriva permanente.
@@ -41131,6 +41662,7 @@ function startLoop3D(){
       // Slow Y-rotation while selected (~3 rpm)
       if(isSel) fig.rotation.y += 0.008;
       _aplicarPoseCena(fig, now);
+      _aplicarOpacidadeLadinoSombras3D(fig,now);
       // O giro vem depois da pose do CombatScene para não ser sobrescrito.
       _aplicarGiroAtaque3D(fig, now);
     });
@@ -43367,6 +43899,7 @@ function renderMap3D(state){
   _requiemFinalSyncFromState(state);
   _syncMouseAltitudeControl(state);
   _syncInvisibilidadeState(state);
+  _syncLadinoSombrasState(state);
   _syncProtecaoEnergiaState(state);
   _syncProtetorVisualState(state);
   _tempestadeSyncFromState(state);
@@ -50607,6 +51140,8 @@ GS.on('attackFeedback', msg => _receiveAttackFeedback(msg));
 // interromper a fila inteira — especialmente o Sono, que precisa criar tanto
 // o impacto quanto os indicadores persistentes nos alvos adormecidos.
 const _spellAnimationReceivers = [
+  _receberAnimacaoDesafinadoGaita,
+  _receberAnimacaoGaitaEncore,
   _receberAnimacaoTempestade,
   _receberAnimacaoTurbilhaoElemental,
   _receberAnimacaoPrivacao,

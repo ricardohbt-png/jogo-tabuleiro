@@ -6517,7 +6517,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "lagarto_carniceiro",
           "pos": [
-            24,
+            26,
             32
           ],
           "room_id": 13,
@@ -6858,6 +6858,7 @@ window.EDITOR_DUNGEONS = [
       ],
       "traps": [
         {
+          "id": "trap_0",
           "tipo": "lamina_pendulo",
           "pos": [
             10,
@@ -6865,6 +6866,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_1",
           "tipo": "armadilha_raio_congelante",
           "pos": [
             22,
@@ -6872,6 +6874,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_2",
           "tipo": "rede",
           "pos": [
             22,
@@ -6879,6 +6882,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_3",
           "tipo": "teto_esmagador",
           "pos": [
             29,
@@ -6886,6 +6890,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_4",
           "tipo": "fosso_envenenado",
           "pos": [
             17,
@@ -6894,6 +6899,7 @@ window.EDITOR_DUNGEONS = [
           "veneno_id": "veneno_fungo_acre"
         },
         {
+          "id": "trap_5",
           "tipo": "camara_gas",
           "pos": [
             8,
@@ -6901,6 +6907,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_6",
           "tipo": "mina_terrestre",
           "pos": [
             49,
@@ -6908,6 +6915,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_7",
           "tipo": "guilhotina",
           "pos": [
             53,
@@ -6915,6 +6923,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_8",
           "tipo": "armadilha_teletransporte",
           "pos": [
             29,
@@ -6926,6 +6935,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_9",
           "tipo": "jato_acido",
           "pos": [
             52,
@@ -6933,6 +6943,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_10",
           "tipo": "fosso",
           "pos": [
             22,
@@ -6940,6 +6951,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_11",
           "tipo": "armadilha_teletransporte",
           "pos": [
             34,
@@ -6952,6 +6964,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_12",
           "tipo": "armadilha_teletransporte",
           "pos": [
             30,
@@ -6964,6 +6977,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_13",
           "tipo": "lamina_pendulo",
           "pos": [
             49,
@@ -6971,6 +6985,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_14",
           "tipo": "armadilha_incendiaria",
           "pos": [
             51,
@@ -6978,6 +6993,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_15",
           "tipo": "mina_terrestre",
           "pos": [
             43,
@@ -6985,6 +7001,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_16",
           "tipo": "rede",
           "pos": [
             39,
@@ -6993,6 +7010,7 @@ window.EDITOR_DUNGEONS = [
           "dificuldade": 13
         },
         {
+          "id": "trap_17",
           "tipo": "rede",
           "pos": [
             38,
@@ -7001,6 +7019,7 @@ window.EDITOR_DUNGEONS = [
           "dificuldade": 13
         },
         {
+          "id": "trap_18",
           "tipo": "mina_terrestre",
           "pos": [
             26,
@@ -7009,6 +7028,7 @@ window.EDITOR_DUNGEONS = [
           "dificuldade": 14
         },
         {
+          "id": "trap_19",
           "tipo": "armadilha_dardos_envenenados",
           "pos": [
             33,
@@ -7045,7 +7065,22 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "disable_trap_ids": [
+            "trap_1"
+          ],
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            1.5,
+            1.5
+          ],
+          "voffset": [
+            0,
+            -0.3
+          ]
         },
         {
           "id": "decor_calabouco_03",
@@ -7100,8 +7135,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "veneno_polvo_abissal"
+              },
+              {
+                "id": "vidro_acido_grande"
+              }
+            ]
+          },
+          "key_objective": false,
+          "vscale": [
+            1,
+            1.5
+          ]
         },
         {
           "id": "decor_calabouco_07",
@@ -7130,7 +7179,19 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            1.2,
+            1.5
+          ],
+          "voffset": [
+            0,
+            -0.3
+          ]
         },
         {
           "id": "decor_calabouco_09",
@@ -7162,8 +7223,8 @@ window.EDITOR_DUNGEONS = [
           "chest_trap_monster_type": "elemental_pedra",
           "image": "tumba_lapide.png",
           "vscale": [
-            1.3,
-            1.6
+            1.5,
+            2.5
           ]
         },
         {
@@ -7388,7 +7449,11 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "image": "cripta.png"
+          "image": "cripta.png",
+          "vscale": [
+            1.2,
+            1.4
+          ]
         },
         {
           "id": "decor_calabouco_23",
@@ -8811,6 +8876,16 @@ window.EDITOR_DUNGEONS = [
           "room_id": 4,
           "boss": false,
           "target": false
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            24,
+            5
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
         }
       ],
       "chests": [
@@ -9482,7 +9557,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto. Feito isso, abra a porta ao fundo e siga.",
+          "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -9505,7 +9580,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis. Feito isso, abra a porta ao fundo e siga.",
+          "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -9529,7 +9604,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu. Feito isso, abra a porta ao fundo e siga.",
+          "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -9553,7 +9628,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate. Feito isso, abra a porta ao fundo e siga.",
+          "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -9577,7 +9652,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos. Feito isso, abra a porta ao fundo e siga.",
+          "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -9739,7 +9814,7 @@ window.EDITOR_DUNGEONS = [
             "raio": 4
           },
           "classe": "rogue",
-          "ordem": 4,
+          "ordem": 6,
           "tarefa": {
             "tipo": "desarmar_armadilha",
             "vezes": 1,
@@ -9816,6 +9891,149 @@ window.EDITOR_DUNGEONS = [
             "alvo": "esqueleto_humano",
             "vezes": 1,
             "texto_curto": "Derrube o esqueleto com a maça"
+          }
+        },
+        {
+          "id": "mago_04",
+          "pos": [
+            21,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Agora a sua arte, Pedro: a Metamagia. Antes de lançar, você pode armar Fortalecer (mais dano), Estender (a magia dura mais) ou Aprimorar (resistir a ela fica mais difícil). Cada uma cobra comida e água, e só vale se combinar com a magia: Fortalecer numa magia de dano, Estender numa que dure, Aprimorar numa que peça teste de resistência. No começo só cabe uma por lançamento. No próximo turno, arme a que combina com a sua magia e lance de novo num boneco. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "mage",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "vezes": 1,
+            "texto_curto": "Lance uma magia com metamagia armada"
+          }
+        },
+        {
+          "id": "ladino_esconder",
+          "pos": [
+            23,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "A sua melhor arma é não ser visto, Luccas. Esconder nas Sombras é um teste de Destreza contra a percepção de quem está olhando: se passar, os inimigos não te escolhem como alvo até você atacar ou andar. Por isso, pare AO LADO de um boneco antes de se esconder. Se falhar, tente de novo no próximo turno.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "esconder_sombras",
+            "vezes": 1,
+            "texto_curto": "Esconda-se ao lado de um boneco"
+          }
+        },
+        {
+          "id": "ladino_furtivo",
+          "pos": [
+            23,
+            2
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Escondido, o seu próximo golpe pega o alvo desprevenido: o Ataque Furtivo soma dados de d4 ao dano. Ataque o boneco sem sair do lugar. Se errar, você é revelado e precisa se esconder de novo. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "rogue",
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "ataque_furtivo",
+            "vezes": 1,
+            "texto_curto": "Acerte um boneco escondido (Ataque Furtivo)"
+          }
+        },
+        {
+          "id": "clerigo_04",
+          "pos": [
+            23,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "A Cura em Área alcança de uma vez todos os aliados perto de você, inclusive você. Custa bem mais comida e água por dado, então guarde-a para quando o grupo inteiro estiver ferido. No próximo turno, use-a com 1 dado. A Purificação e a Ressurreição você vai usar com o grupo: as duas pedem um aliado ao seu lado. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "cleric",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "cura_area",
+            "vezes": 1,
+            "texto_curto": "Use a Cura em Área com 1 dado"
+          }
+        },
+        {
+          "id": "bardo_04",
+          "pos": [
+            21,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "A Provocação é o seu escudo para os frágeis: com uma ação bônus, você obriga um inimigo próximo a vir atrás de você, e o próximo golpe dele sai com desvantagem. Provoque um boneco. Se a Canção já gastou a sua ação bônus neste turno, faça no próximo. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "bard",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "provocacao",
+            "vezes": 1,
+            "texto_curto": "Provoque um boneco"
+          }
+        },
+        {
+          "id": "paladino_04",
+          "pos": [
+            23,
+            3
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Guerreiro da Luz é uma ação livre, Richard: reforça até dois atributos entre visão, ataque, dano e CA, e cobra comida e água a cada turno enquanto brilha. Ative-o agora com o bônus que quiser. A Imposição das Mãos e o Protetor você usa nos aliados; a Regeneração Divina, quando estiver ferido. Feito isso, abra a porta ao fundo e siga.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "classe": "paladin",
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "alvo": "guerreiro_luz",
+            "vezes": 1,
+            "texto_curto": "Ative o Guerreiro da Luz"
           }
         }
       ],
@@ -44800,4 +45018,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).
