@@ -1317,14 +1317,11 @@ input:focus { outline: none; border-color: var(--gold); }
 .fc-head-name{ font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:14px; }
 .fc-head-class{ color:#8a7a5a; font-size:10px; letter-spacing:2px; margin-top:2px; }
 .fc-head-lvl{ color:#c8b89a; font-size:10px; margin-top:3px; }
-.fc-xp-display{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+.fc-xp-display{ display:flex; align-items:center; justify-content:space-between;
   margin:10px 16px 0; padding:7px 9px; border:1px solid rgba(200,169,81,.32);
   border-radius:3px; background:rgba(200,169,81,.08); font-family:'Cinzel',serif; }
 .fc-xp-display span{ color:#8a7a5a; font-size:9px; letter-spacing:1.5px; }
 .fc-xp-display b{ color:#f0d98a; font-size:12px; }
-.fc-xp-bar{ flex-basis:100%; height:4px; margin-top:5px; border-radius:2px;
-  background:rgba(0,0,0,.35); overflow:hidden; }
-.fc-xp-bar > div{ height:100%; background:#f0d98a; }
 .fc-body{ padding:14px 16px; overflow-y:auto; flex:1; }
 #ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
   outline-offset:-2px; }

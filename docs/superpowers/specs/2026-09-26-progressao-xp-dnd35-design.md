@@ -1,7 +1,10 @@
 # Progressão de XP no modelo D&D 3.5 — design
 
 **Data:** 2026-09-26
-**Status:** aprovado em brainstorming
+**Status:** implementado e depois **descartado** (2026-09-26). O autor escolheu o modelo
+paralelo feito no master ("15 encontros por nível", `XP_MONSTRO_POR_ND`/`XP_POR_NIVEL`),
+por ser mais lento contra monstros fracos. Os commits do 3.5 foram revertidos no branch
+`feat/campanha-sombras`; este documento fica só como registro.
 **Motivo:** a curva atual dispara. A campanha "Sombras sob Alva e Luz", desenhada para os
 níveis 1→2→3, leva o grupo do nível 1 ao 38 (`tools/test_campanha_sombras.py`, seção [7]).
 
@@ -45,8 +48,7 @@ nivel_por_xp(xp) -> int          # maior n ≤ XP_NIVEL_MAX com xp_limiar(n) ≤
 ```
 
 Cada herói vivo recebe `xp_premio(seu nível, ND) // nº de heróis vivos`, com mínimo 1 quando
-o prêmio é positivo. O prêmio dobra a cada 2 NDs: para um herói de nível 1, um ND 3 vale 2× um ND 1 e um ND 5
-vale 4×.
+o prêmio é positivo. Um ND 3 vale 3× um ND 1 para um herói de nível 1, e um ND 5 vale 6×.
 
 A fórmula gera a tabela 2-6 do DMG 3.5 de forma aproximada. A irregularidade dos níveis 1–3
 do livro não é reproduzida.

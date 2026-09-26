@@ -775,7 +775,7 @@
   "objectives": {
     "primary": {
       "type": "rescue_prisoner",
-      "xp": 2900,
+      "xp": 0,
       "reward": {
         "gold": 40,
         "items": []

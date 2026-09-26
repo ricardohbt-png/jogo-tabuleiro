@@ -2492,7 +2492,7 @@ def try_create_savegame(account, name, mode, campaign_file, has_master, group_id
 # Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
 # esses valores já estão consistentes, então restore é só sobrescrita.
 _DURABLE_FIELDS = (
-    "gold", "hp", "max_hp", "xp", "xp_modelo", "level", "level_bonus",
+    "gold", "hp", "max_hp", "xp", "level", "level_bonus",
     "ac", "ac_base", "atk_bonus", "base_atk_bonus", "weapon",
     "fort", "ref_", "will", "spd", "fome", "sede", "fome_max", "sede_max",
     "fome_max_base", "sede_max_base", "fome_max_modificadores", "sede_max_modificadores",
@@ -2548,11 +2548,6 @@ def restore_character(player, snap):
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
-    # Curva de XP 3.5 (2026-09-26): ficha salva antes dela guarda a SOBRA dentro do
-    # nível (limiar nível×30). Converte para o acumulado mantendo nível e progresso.
-    if snap.get("xp_modelo") != 2:
-        player["xp"] = xp_migrado(player.get("level", 1), snap.get("xp", 0))
-        player["xp_modelo"] = 2
     # Migra fichas antigas e garante que a CA seja derivada do equipamento
     # atual, em vez de reutilizar um valor previamente embutido na classe.
     if player.get("gear"):
@@ -8664,7 +8659,7 @@ def make_player(pid, name, cls_id, slot):
         "will": sb["will"] + mod(i_) + level_bonus,
         "level_bonus": level_bonus,
         "spd": cls["spd"],
-        "xp": 0, "xp_modelo": 2, "level": 1, "renome_individual": 0,
+        "xp": 0, "level": 1, "renome_individual": 0,
         "gold": cls.get("start_gold", 20),
         "bag": [],
         "bag_size": 6,            # inventÃ¡rio base (expansÃ­vel por mochilas)
@@ -8823,6 +8818,8 @@ _TERRENO_MAGIA_CHAVE = {
     "agua_profunda": "narracao.terreno.agua_profunda",
 }
 
+TRAP_XP_POR_CR = 20
+
 def trap_cr(meta):
     """cr unificado da armadilha (Camada C). Usa o cr explícito quando presente;
     senão deriva da dificuldade do save (DC 8→0.0 … escala suave, teto 1.0);
@@ -8838,65 +8835,9 @@ def trap_cr(meta):
         return max(0.1, min(1.0, round((dif - 8) / 6.0, 2)))
     return 0.3
 
-# ─── Progressão de XP — modelo D&D 3.5 ──────────────────────────────────────
-# Spec: docs/superpowers/specs/2026-09-26-progressao-xp-dnd35-design.md
-# O XP do jogador é ACUMULADO (nunca subtraído); o nível é consequência dele.
-XP_NIVEL_MAX = 20
-
-
-def xp_premio(nivel, nd):
-    """Prêmio TOTAL de um desafio de ND `nd` para um herói de nível `nivel`, antes de
-    dividir pelo grupo. É a fórmula que gera a tabela 2-6 do DMG 3.5: ND abaixo de 1
-    vale a fração do ND 1; 8 NDs abaixo do herói não rende; acima de nível+7, trava."""
-    L = max(1, min(XP_NIVEL_MAX, int(nivel or 1)))
-    try:
-        nd = float(nd)
-    except (TypeError, ValueError):
-        return 0
-    if nd <= 0:
-        return 0
-    if nd < 1:
-        return round(nd * xp_premio(L, 1))
-    if nd <= L - 8:
-        return 0
-    nd = min(nd, L + 7)
-    return round(300 * L * 2 ** ((nd - L) / 2))
-
-
-def xp_por_heroi(nivel, nd, vivos):
-    """Parte de UM herói: prêmio com o nível DELE ÷ heróis vivos (mín. 1 se houver prêmio)."""
-    premio = xp_premio(nivel, nd)
-    return max(1, premio // max(1, int(vivos))) if premio > 0 else 0
-
-
-def xp_limiar(n):
-    """XP ACUMULADO exigido para estar no nível n: 0, 1000, 3000, 6000 … 190000."""
-    n = max(1, int(n))
-    return 500 * n * (n - 1)
-
-
-def nivel_por_xp(xp):
-    """Maior nível (≤ XP_NIVEL_MAX) cujo limiar cabe em `xp`."""
-    n = 1
-    while n < XP_NIVEL_MAX and xp_limiar(n + 1) <= xp:
-        n += 1
-    return n
-
-
-def xp_proximo_nivel(nivel):
-    """Limiar do próximo nível, ou None no nível máximo (vai ao cliente)."""
-    return None if int(nivel) >= XP_NIVEL_MAX else xp_limiar(int(nivel) + 1)
-
-
-def xp_migrado(nivel, xp_antigo):
-    """Converte o XP da curva antiga (sobra DENTRO do nível, limiar nível×30) para o
-    acumulado 3.5, preservando o nível e a fração de progresso."""
-    L = max(1, min(XP_NIVEL_MAX, int(nivel or 1)))
-    base = xp_limiar(L)
-    if L >= XP_NIVEL_MAX:
-        return base
-    frac = min(1.0, max(0.0, float(xp_antigo or 0) / (L * 30)))
-    return base + round(frac * (xp_limiar(L + 1) - base))
+def trap_xp(cr):
+    """XP de uma armadilha derivado do seu cr (dividido entre os heróis vivos)."""
+    return round(float(cr) * TRAP_XP_POR_CR)
 
 def _aplicar_equipamentos_monstro(m):
     """Equipa a criatura com itens da mesma loja usada pelos heróis.
@@ -9829,7 +9770,9 @@ class GameRoom:
                 if rule == "experienced":
                     levels = [int(s.get("level", 1)) for s in self.savegame["characters"].values() if isinstance(s, dict)]
                     target = max(1, round(sum(levels) / len(levels))) if levels else 1
-                    await self._conceder_xp(fresh, xp_limiar(target) - fresh.get("xp", 0))
+                    while fresh["level"] < target:
+                        fresh["xp"] = fresh["level"] * 30
+                        await self._check_level_up(fresh)
                 self.savegame["characters"][class_id] = snapshot_character(fresh)
             vote["status"] = "approved"
             text = f"Entrada aprovada: {candidate} assumiu {HERO_IDENTITIES.get(class_id, class_id)}"
@@ -10084,8 +10027,6 @@ class GameRoom:
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             initiative=self.initiative_value(p),
-                            xp_nivel=xp_limiar(p.get("level", 1)),
-                            xp_proximo=xp_proximo_nivel(p.get("level", 1)),
                             repair_options=self._opcoes_reparo_ferreiro(p),
                             # Bênção Divina, bênção de grupo e elixires usam um
                             # cache de combate interno. Expor só este metadado
@@ -33640,10 +33581,26 @@ class GameRoom:
         values = set(alvo.get("immunities", []))
         return wanted in values or efeito in values
 
+    def _avg_level(self):
+        alive = [p for p in self.players.values() if p["alive"]]
+        if not alive:
+            return 1
+        return sum(p.get("level", 1) for p in alive) / len(alive)
+
+    def _calc_monster_xp(self, m):
+        """Retorna (xp_por_jogador, qtd_jogadores_vivos)."""
+        alive_count = max(1, len([p for p in self.players.values() if p["alive"]]))
+        if "cr" in m:
+            cr = m["cr"]
+            xp_total = int(300 * self._avg_level() * (2 ** (cr - 1)) / 2)
+            return max(1, xp_total // alive_count), alive_count
+        share = m.get("xp", 0) // alive_count
+        return share, alive_count
+
     async def _conceder_xp_armadilha(self, arm, alvo=None):
         """XP de uma armadilha AUTORADA vencida (desarmada ou disparada-e-sobrevivida):
-        concedido UMA vez (flag xp_concedido), pela tabela 3.5 com o nível de cada
-        herói, dividido entre os vivos. As armadilhas aliadas (do Luccas) não dão XP."""
+        concedido UMA vez (flag xp_concedido), dividido entre os heróis vivos. As
+        armadilhas aliadas (do Luccas) não dão XP."""
         if not arm or arm.get("aliada") or arm.get("xp_concedido"):
             return
         meta = ARMADILHAS.get(arm.get("tipo"))
@@ -33656,19 +33613,15 @@ class GameRoom:
         vivos = [p for p in self.players.values() if p.get("alive")]
         if not vivos:
             return
-        nd = trap_cr(meta)
+        total = trap_xp(trap_cr(meta))
         arm["xp_concedido"] = True
-        partes = {p["id"]: xp_por_heroi(p.get("level", 1), nd, len(vivos)) for p in vivos}
-        if not any(partes.values()):
+        if total <= 0:
             return
+        share = max(1, total // len(vivos))
         for p in vivos:
-            await self._conceder_xp(p, partes[p["id"]])
-        valores = set(partes.values())
-        if len(valores) == 1:
-            await self.gm_say(T("narracao.armadilha_superada_xp_para_o_grupo", share=valores.pop()))
-        else:
-            # Heróis de níveis diferentes ganham valores diferentes: sem número.
-            await self.gm_say(T("narracao.armadilha_superada_xp_variavel"))
+            p["xp"] = p.get("xp", 0) + share
+            await self._check_level_up(p)
+        await self.gm_say(T("narracao.armadilha_superada_xp_para_o_grupo", share=share))
 
     def _roll_monster_loot(self, m):
         """Rola a tabela de loot do monstro. Retorna dict de item ou None."""
@@ -41143,18 +41096,12 @@ class GameRoom:
                 "weaknesses": deepcopy(m.get("weaknesses", [])),
             }
 
-        # XP (modelo 3.5): cada herói vivo consulta a tabela com o PRÓPRIO nível.
-        vivos = [p for p in self.players.values() if p["alive"]]
-        nd = monster_cr(m)
-        for p in vivos:
-            await self._conceder_xp(p, xp_por_heroi(p.get("level", 1), nd, len(vivos)))
-        # Narração: a parte de quem matou (ou de um herói vivo, se foi um servo/
-        # armadilha). Exata quando o grupo tem o mesmo nível; o XP real de cada
-        # herói já foi concedido acima, com o nível dele.
-        narrador = self.players.get(killer_pid)
-        if not (narrador and narrador.get("alive")):
-            narrador = vivos[0] if vivos else None
-        share_xp = xp_por_heroi(narrador.get("level", 1), nd, len(vivos)) if narrador else 0
+        # XP: monstros novos usam fÃ³rmula por CR+nÃ­vel mÃ©dio; legados usam valor fixo
+        share_xp, alive_count = self._calc_monster_xp(m)
+        for p in self.players.values():
+            if p["alive"]:
+                p["xp"] += share_xp
+                await self._check_level_up(p)
 
         # Loot: monstros novos tÃªm tabela prÃ³pria por monstro; legados usam sala+65%
         mroom = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
@@ -41439,46 +41386,37 @@ class GameRoom:
         await self.send_to(p["id"], {
             "type": "spell_pick_prompt", "circulo": circ, "count": 1, "opcoes": opcoes})
 
-    async def _conceder_xp(self, p, qtd):
-        """Porta ÚNICA de XP (modelo 3.5): soma ao acumulado e sobe quantos níveis
-        couberem. Nunca subtrai XP. Ficha migrada com nível acima do que o XP
-        justifica não é rebaixada — só volta a subir quando o XP alcançar."""
-        qtd = int(qtd or 0)
-        if qtd <= 0:
-            return
-        p["xp"] = int(p.get("xp", 0) or 0) + qtd
-        while p.get("level", 1) < nivel_por_xp(p["xp"]):
-            await self._subir_um_nivel(p)
-
-    async def _subir_um_nivel(self, p):
-        """Ganhos de UM nível. Quem decide subir é `_conceder_xp`."""
-        p["level"] += 1
-        p["level_bonus"] = p["level"]   # level bonus = current level
-        regra = LEVEL_PROGRESSAO[p["class_id"]]
-        ganho_hp = regra["hp"] + get_bonus_constituicao(p["con_"])
-        p["max_hp"] += ganho_hp
-        p["hp"] = min(p["max_hp"], p["hp"] + ganho_hp)
-        p["atk_bonus"] += 1
-        p["base_atk_bonus"] += 1
-        if p["level"] >= 3 and p["level"] % 2 == 1:
-            for save in regra["saves_2"]:
-                p[save] += 1
-        if p["level"] >= 4 and (p["level"] - 1) % 3 == 0:
-            for save in regra["saves_3"]:
-                p[save] += 1
-        p["fome_max_base"] = int(p.get("fome_max_base", p.get("fome_max", 100))) + regra["fome"]
-        p["sede_max_base"] = int(p.get("sede_max_base", p.get("sede_max", 100))) + regra["sede"]
-        _recalcular_maximos_sobrevivencia(p)
-        p["fome"] = min(p["fome_max"], p["fome"] + regra["fome"])
-        p["sede"] = min(p["sede_max"], p["sede"] + regra["sede"])
-        _garantir_slots_guilda(p)
-        await self.gm_say(T("narracao.subiu_para_o_nivel_pv_e_1_em_ataque_ganh", heroi=p['name'], p_level=p['level'], ganho_hp=ganho_hp))
-        if p.get("class_id") in ("mage", "cleric"):
-            # Slot novo do nível já entra cheio (slots_max_para usa o novo level).
-            circ = NIVEL_NOVA_MAGIA.get(p["level"])
-            if circ:
-                p.setdefault("pending_spell_pick", []).append(circ)
-                await self._enviar_spell_pick_prompt(p)
+    async def _check_level_up(self, p):
+        threshold = p["level"] * 30
+        if p["xp"] >= threshold:
+            p["level"] += 1
+            p["level_bonus"] = p["level"]   # level bonus = current level
+            p["xp"] -= threshold
+            regra = LEVEL_PROGRESSAO[p["class_id"]]
+            ganho_hp = regra["hp"] + get_bonus_constituicao(p["con_"])
+            p["max_hp"] += ganho_hp
+            p["hp"] = min(p["max_hp"], p["hp"] + ganho_hp)
+            p["atk_bonus"] += 1
+            p["base_atk_bonus"] += 1
+            if p["level"] >= 3 and p["level"] % 2 == 1:
+                for save in regra["saves_2"]:
+                    p[save] += 1
+            if p["level"] >= 4 and (p["level"] - 1) % 3 == 0:
+                for save in regra["saves_3"]:
+                    p[save] += 1
+            p["fome_max_base"] = int(p.get("fome_max_base", p.get("fome_max", 100))) + regra["fome"]
+            p["sede_max_base"] = int(p.get("sede_max_base", p.get("sede_max", 100))) + regra["sede"]
+            _recalcular_maximos_sobrevivencia(p)
+            p["fome"] = min(p["fome_max"], p["fome"] + regra["fome"])
+            p["sede"] = min(p["sede_max"], p["sede"] + regra["sede"])
+            _garantir_slots_guilda(p)
+            await self.gm_say(T("narracao.subiu_para_o_nivel_pv_e_1_em_ataque_ganh", heroi=p['name'], p_level=p['level'], ganho_hp=ganho_hp))
+            if p.get("class_id") in ("mage", "cleric"):
+                # Slot novo do nÃ­vel jÃ¡ entra cheio (slots_max_para usa o novo level).
+                circ = NIVEL_NOVA_MAGIA.get(p["level"])
+                if circ:
+                    p.setdefault("pending_spell_pick", []).append(circ)
+                    await self._enviar_spell_pick_prompt(p)
 
     # â”€â”€ Fase 3: avaliaÃ§Ã£o de objetivos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -41515,7 +41453,8 @@ class GameRoom:
         for p in vivos:
             if ouro_share: await self._ganhar_ouro(p, ouro_share, "da recompensa")
             if xp_share:
-                await self._conceder_xp(p, xp_share)
+                p["xp"] += xp_share
+                await self._check_level_up(p)
         itens_nomes = []
         for it in (reward.get("items") or []):
             idef = self._resolve_reward_item(it.get("id"))
@@ -42026,8 +41965,6 @@ class GameRoom:
             snapshot = dict(p,
                             magias_conhecidas=magias_conhecidas,
                             initiative=self.initiative_value(p),
-                            xp_nivel=xp_limiar(p.get("level", 1)),
-                            xp_proximo=xp_proximo_nivel(p.get("level", 1)),
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
                             granted_hero_skills=(self._granted_hero_skills(p)

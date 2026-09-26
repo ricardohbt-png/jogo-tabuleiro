@@ -998,10 +998,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 
 > **Camada C — ND/XP de armadilha:** cada tipo de `ARMADILHAS` tem `cr`; helpers
 > module-level `trap_cr(meta)` (cr explícito, senão derivado da `dificuldade`, senão
-> 0.3); o XP sai da tabela 3.5 (`xp_por_heroi` com o `cr`). Só armadilhas **autoradas**
+> 0.3) e `trap_xp(cr)=round(cr×TRAP_XP_POR_CR)` (=20). Só armadilhas **autoradas**
 > (não as `aliada` do Luccas nem os buracos procedurais). **XP:** `_conceder_xp_armadilha`
-> concede uma vez (flag `xp_concedido`), dividido entre os heróis vivos (pela porta
-> `_conceder_xp`), ao **desarmar** (`handle_desarmar_armadilha`, sucesso) OU ao
+> concede uma vez (flag `xp_concedido`), dividido entre os heróis vivos (com
+> `_check_level_up`), ao **desarmar** (`handle_desarmar_armadilha`, sucesso) OU ao
 > **disparar e o herói-alvo sobreviver** (`_disparar_armadilha`, nos 3 pontos de saída:
 > alvo-único, teletransporte e dardos). **cr no termômetro/minimapa:** o `cr` das
 > autoradas vai em `game_state.armadilhas` (`_serializar_armadilhas`; `aliada`→0) e no
@@ -1713,32 +1713,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Troll, nível 3). Chefe secreto: Bugbear das Sombras atrás da estante-mecanismo, guardando o
 > **Anel da Garra Negra** (item custom: +1 acerto, +1 visão, concede Esconder nas Sombras).
 > Achado no caminho: `load_authored_dungeon` descartava `required`/`required_mode` e o objetivo
-> `salas_obrigatorias` se cumpria ao entrar — corrigido (`test_modo_mestre` [23b]). O XP dos
-> objetivos principais é calibrado pelo gerador (`calibrar_xp_objetivos`, `METAS_NIVEL`) para o
-> grupo de 4 sair do Vau no nível 2, das Minas no 3 e do Trono no 4 — a seção [7] da suíte cobra
-> (ver "Progressão de XP 3.5"). Avisos do
+> `salas_obrigatorias` se cumpria ao entrar — corrigido (`test_modo_mestre` [23b]). A curva de XP
+> é a do master ("15 encontros por nível"); os objetivos da campanha não dão XP, e a seção [7]
+> da suíte só relata o nível atingido (a fórmula dela ainda é a da curva antiga). Avisos do
 > validador de design esperados: "sem boss" em Vau/Minas/Salões (sem chefe por design), "sem sala
 > obrigatória" onde o objetivo é outro, e no Trono R2 (chefe perto da entrada) e R4 na sala #2 —
 > o Esconderijo só se liga ao mapa quando a estante abre. Teste: `tools/test_campanha_sombras.py`.
-
-> **Progressão de XP 3.5 (2026-09-26):** o XP do jogador é **acumulado** (nunca subtraído)
-> e o nível é consequência dele. Funções puras module-level em `server.py`: `xp_premio(nível,
-> ND)` = `300 × nível × 2^((ND−nível)/2)` — o prêmio dobra a cada 2 NDs; ND < 1 vale a fração do
-> ND 1; 8 NDs abaixo não rende; trava em nível+7 —, `xp_por_heroi` (÷ vivos, mín. 1),
-> `xp_limiar(n) = 500·n·(n−1)` (1000, 3000, 6000 … 190000), `nivel_por_xp`, teto
-> `XP_NIVEL_MAX = 20`. Cada herói consulta a tabela com o **próprio** nível, então quem está
-> atrás alcança os outros sozinho. **Porta única** `_conceder_xp(p, qtd)`: sobe quantos níveis
-> couberem via `_subir_um_nivel` (o antigo `_check_level_up`, que subtraía `nível×30` e subia 1
-> por vez). Monstro (`monster_cr`, inclusive os 6 legados — o campo `xp` fixo da ficha não vale
-> mais e saiu do tooltip e da ficha do mestre), armadilha (`trap_cr`; com heróis de níveis
-> diferentes a narração sai sem número), objetivo (total autoral ÷ vivos) e entrada "experiente"
-> passam por ela. A narração da morte do monstro cita a parte de quem matou. **Saves:**
-> `xp_modelo: 2` em `_DURABLE_FIELDS`; ficha sem a marca é convertida em `restore_character`
-> (único caminho de carga, chamado em `start_game`) por `xp_migrado`, mantendo nível e fração
-> de progresso — ficha inflada pela curva antiga NÃO é rebaixada. Payload: `xp_nivel`/
-> `xp_proximo` por jogador → barra na ficha da cidade (`renderFichaCidadeBody`). Teste:
-> `tools/test_xp_progressao.py`. Spec/plano em
-> `docs/superpowers/{specs,plans}/2026-09-26-progressao-xp-dnd35*`.
 
 > **Prévia fiel do editor (`index.html?preview=1`):** o botão "◈ Visualizar em 3D" do
 > editor deixou de ter renderer próprio — `tools/editor_preview_3d.js` era uma

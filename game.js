@@ -14810,7 +14810,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
         <div style="width:${pct}%;height:100%;background:${cor};"></div>
       </div>
       <div>🛡️ ${t('ui.hud.sigla_ca')} <b>${m.ac}</b>${crVal ? ` &nbsp;·&nbsp; ${t('ui.hud.sigla_nd')} <b>${crVal}</b>` : ''}</div>
-      <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
+      <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ ${t('ui.hud.sigla_xp')} <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
       ${verticalHTML}
       ${legacyAtkHTML}
       ${atribHTML}
@@ -21358,7 +21358,7 @@ function abrirFichaMonstro(m){
       <section><h3>${t('ui.status.modificadores_temp')}</h3><div class="fm-status-effects">${_modificadoresTemporariosMarkup(efeitosTemporarios)}</div></section>
       <section><h3>${t('ui.mestre.magias')}</h3><p>${magias.length ? _esc(magias.join(' · ')) : t('ui.mestre.sem_magia')}</p></section>
       <section><h3>${t('ui.mestre.defesas')}</h3><div class="fm-linha"><b>${t('ui.mestre.imunidades')}</b><span>${_esc(_fmtFichaMonstroLista(m.immunities))}</span></div><div class="fm-linha"><b>${t('ui.mestre.resistencias')}</b><span>${_esc(_fmtFichaMonstroLista(m.resistances))}</span></div><div class="fm-linha"><b>${t('ui.mestre.fraquezas')}</b><span>${_esc(_fmtFichaMonstroLista(m.weaknesses))}</span></div></section>
-      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b data-i18n="ui.ficha.protecao">Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
+      <section><h3>${t('ui.mestre.caracteristicas')}</h3><p>${t('ui.mestre.caract_linha', {ia:_esc(m.ai_type||m.ai_profile||t('ui.mestre.ia_padrao')), tam:_esc((m.size||[1,1]).join('×')), xp:m.xp ?? '—', ouro:m.gold ?? '—'})}${m.armor_description ? `<br><b data-i18n="ui.ficha.protecao">Proteção:</b> ${_esc(m.armor_description)}` : ''}</p></section>
     </div>
     <footer><span data-i18n="ui.ficha.c_ficha_h_habilidades_m_magias">C ficha · H habilidades · M magias</span><button onclick="fecharFichaMonstro()" data-i18n="ui.ficha.fechar_2">FECHAR</button></footer>
   </article>`;
@@ -23672,19 +23672,7 @@ function renderFichaCidadeBody(panel, player, editable){
 
   const xp = document.createElement('div');
   xp.className = 'fc-xp-display';
-  // XP acumulado (modelo 3.5): o servidor manda o início (xp_nivel) e o fim
-  // (xp_proximo) do nível atual — o cliente não duplica a tabela.
-  const xpTotal = Number(player.xp ?? 0);
-  const fmtXp = n => Number(n).toLocaleString(I18N.lang === 'en' ? 'en-US' : 'pt-BR');
-  if (player.xp_proximo != null) {
-    const base = Number(player.xp_nivel ?? 0), prox = Number(player.xp_proximo);
-    const pct = Math.max(0, Math.min(100, (xpTotal - base) / Math.max(1, prox - base) * 100));
-    xp.innerHTML = `<span>${t('ui.ficha.experiencia')}</span>`
-      + `<b>${t('ui.ficha.xp_de', {xp: fmtXp(xpTotal), prox: fmtXp(prox)})}</b>`
-      + `<div class="fc-xp-bar"><div style="width:${pct.toFixed(1)}%"></div></div>`;
-  } else {
-    xp.innerHTML = `<span>${t('ui.ficha.experiencia')}</span><b>${fmtXp(xpTotal)} XP</b>`;
-  }
+  xp.innerHTML = `<span>${t('ui.ficha.experiencia')}</span><b>${player.xp ?? 0} XP</b>`;
   panel.appendChild(xp);
 
   const body = document.createElement('div');

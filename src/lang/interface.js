@@ -2471,10 +2471,6 @@ window.LANG_INTERFACE = {
     "en": "EXPERIENCE",
     "pt": "EXPERIÊNCIA"
   },
-  "ui.ficha.xp_de": {
-    "en": "{xp} / {prox} XP",
-    "pt": "{xp} / {prox} XP"
-  },
   "ui.ficha.fechar": {
     "en": "✕ CLOSE",
     "pt": "✕ FECHAR"
@@ -4046,6 +4042,10 @@ window.LANG_INTERFACE = {
   "ui.hud.sigla_nd": {
     "en": "CR",
     "pt": "ND"
+  },
+  "ui.hud.sigla_xp": {
+    "en": "XP",
+    "pt": "XP"
   },
   "ui.hud.so_no_seu_turno": {
     "en": "Only on your turn.",
@@ -6952,8 +6952,8 @@ window.LANG_INTERFACE = {
     "pt": "✨ BÔNUS"
   },
   "ui.mestre.caract_linha": {
-    "en": "AI: {ia} · size {tam} · gold {ouro}",
-    "pt": "IA: {ia} · tamanho {tam} · ouro {ouro}"
+    "en": "AI: {ia} · size {tam} · XP {xp} · gold {ouro}",
+    "pt": "IA: {ia} · tamanho {tam} · XP {xp} · ouro {ouro}"
   },
   "ui.mestre.caracteristicas": {
     "en": "TRAITS",

@@ -1,5 +1,8 @@
 # Progressão de XP no modelo D&D 3.5 — Implementation Plan
 
+> **DESCARTADO (2026-09-26):** executado e depois revertido — o autor ficou com o modelo de
+> XP do master. Ver o status na spec. Não executar.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Trocar a curva de XP que dispara por uma progressão 3.5 (prêmio por ND × nível próprio de cada herói, limiares 1000/3000/6000…, teto 20) e recalibrar a campanha Sombras para o ritmo 1→2→3→4.
@@ -92,7 +95,7 @@ def secao_regras():
     print("\n[1] Regras puras — xp_premio / xp_limiar / nivel_por_xp")
     check("nível 1 × ND 1 = 300", S.xp_premio(1, 1) == 300)
     check("ND igual ao nível = 300 × nível", all(S.xp_premio(n, n) == 300 * n for n in range(1, 21)))
-    check("nível 1 × ND 3 = 2× o ND 1 (dobra a cada 2 NDs)", S.xp_premio(1, 3) == 600)
+    check("nível 1 × ND 3 = 3× o ND 1", S.xp_premio(1, 3) == 900)
     check("ND fracionário = fração do ND 1 (goblin ¼ no nível 1 → 75)", S.xp_premio(1, 0.25) == 75)
     check("ND fracionário segue o nível (¼ no nível 5 → 94)", S.xp_premio(5, 0.25) == 94)
     check("ND 0 não rende", S.xp_premio(1, 0) == 0)

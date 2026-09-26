@@ -421,61 +421,6 @@ def salas_alcancaveis(defn, passagens_abertas=False):
                    for y in range(r["y"], r["y"] + r["h"]))}
 
 
-# ─── Curva de XP (spec 2026-09-26, seção 5) ──────────────────────────────────
-HEROIS_CAMPANHA = 4
-# Nível com que o grupo deve SAIR de cada masmorra. Os Salões não têm meta: o
-# Covil é um destino só, medido no fim do Trono.
-METAS_NIVEL = {"sombras_1_vau.json": 2, "sombras_2_minas.json": 3,
-               "sombras_3b_trono.json": 4}
-
-
-def _opcional(arquivo, mo):
-    """O esconderijo do Trono (sala 2) é o chefe secreto: fora da conta."""
-    return arquivo == "sombras_3b_trono.json" and mo["room_id"] == 2
-
-
-def _xp_monstros(defn, arquivo, xp, herois):
-    """XP acumulado de UM herói depois dos monstros obrigatórios da masmorra."""
-    defs = {m["type"]: m for m in S.MONSTER_DEFS}
-    for mo in defn["monsters"]:
-        if not _opcional(arquivo, mo):
-            xp += S.xp_por_heroi(S.nivel_por_xp(xp), S.monster_cr(defs[mo["type"]]), herois)
-    return xp
-
-
-def curva_campanha(mm, herois=HEROIS_CAMPANHA):
-    """Percurso completo sem o esconderijo, grupo inteiro vivo:
-    [(arquivo, nível de entrada, XP de saída, nível de saída)]."""
-    xp, linhas = 0, []
-    for arquivo in ARQUIVOS:
-        defn = mm[arquivo]
-        ini = S.nivel_por_xp(xp)
-        xp = _xp_monstros(defn, arquivo, xp, herois)
-        total = int(defn["objectives"]["primary"].get("xp", 0))
-        if total > 0:
-            xp += max(1, total // herois)
-        linhas.append((arquivo, ini, xp, S.nivel_por_xp(xp)))
-    return linhas
-
-
-def calibrar_xp_objetivos(mm, herois=HEROIS_CAMPANHA):
-    """Põe no objetivo principal de cada masmorra com meta o XP TOTAL do grupo que
-    falta para sair no nível de METAS_NIVEL (múltiplo de 100, para cima). Muta e
-    devolve `mm`. Armadilhas ficam de fora: o que elas rendem é folga."""
-    xp = 0
-    for arquivo in ARQUIVOS:
-        prim = mm[arquivo]["objectives"]["primary"]
-        prim["xp"] = 0
-        xp = _xp_monstros(mm[arquivo], arquivo, xp, herois)
-        meta = METAS_NIVEL.get(arquivo)
-        if meta:
-            falta = max(0, S.xp_limiar(meta) - xp)
-            prim["xp"] = -(-falta * herois // 100) * 100
-            if prim["xp"]:
-                xp += max(1, prim["xp"] // herois)
-    return mm
-
-
 # ─── Montagem ────────────────────────────────────────────────────────────────
 def preparar():
     """Monta e valida TUDO em memória. Levanta ValueError na primeira invalidez.
@@ -491,7 +436,7 @@ def preparar():
         raise ValueError(f"anel inválido: {anel}")
     outros = [r for r in S._read_custom_items() if isinstance(r, dict) and r.get("id") != ANEL_ID]
     S._apply_custom_items(outros + [anel])      # o baú do Trono precisa achar o anel
-    mm = calibrar_xp_objetivos(masmorras())
+    mm = masmorras()
     for arquivo, defn in mm.items():
         ok, msg = S.validar_dungeon(defn)
         if not ok:
@@ -593,10 +538,6 @@ def relatorio(artefatos):
         linhas.append(f"{arquivo}  (poder {poder})")
         for rid, nd in nd_por_sala(defn).items():
             linhas.append(f"   sala {rid}: ND {nd:g} -> {faixa(nd, poder)} ({nd / poder:.2f})")
-    linhas.append(f"Curva de XP (grupo de {HEROIS_CAMPANHA}, sem o esconderijo):")
-    for arquivo, ini, xp, fim in curva_campanha(artefatos["masmorras"]):
-        xp_obj = artefatos["masmorras"][arquivo]["objectives"]["primary"]["xp"]
-        linhas.append(f"   {arquivo}: entra no {ini}, sai no {fim} ({xp} XP; objetivo {xp_obj})")
     linhas.append("Artes pedidas pelos slides:")
     linhas += [f"   {k}: {arte}" for k, arte in ARTES_PEDIDAS]
     return "\n".join(linhas)

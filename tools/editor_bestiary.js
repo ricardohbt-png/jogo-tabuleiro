@@ -23,7 +23,7 @@
   };
 
   // Calibração do ND contra os seis heróis iniciais reais do servidor. Os
-  // números abaixo espelham make_player + _subir_um_nivel: equipamentos
+  // números abaixo espelham make_player + _check_level_up: equipamentos
   // iniciais, CA corrigida, Finesse, segunda adaga do Ladino e crítico 19–20
   // da espada curta do Paladino. O editor não importa server.py, portanto esta
   // é a representação declarativa compartilhada pela estimativa visual.
