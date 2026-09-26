@@ -68,7 +68,9 @@ class Ambiente:
         self.cena_antiga = deepcopy(S.CITY_SCENES["alva_e_luz"]["taverna"])
         S.DUNGEONS_DIR = self.tmp
         S.WORLD_ADVENTURES.update(deepcopy(ART["destinos"]))
-        barman = next(s for s in S.CITY_SCENES["alva_e_luz"]["taverna"]["slots"] if s.get("id") == "barman")
+        barman = next((s for s in S.CITY_SCENES["alva_e_luz"]["taverna"]["slots"]
+                       if s.get("id") == "barman"), None)
+        assert barman is not None, "slot 'barman' não encontrado na taverna de alva_e_luz"
         barman["conversations"] = [c for c in barman.get("conversations", [])
                                    if c.get("id") != G.CONVERSA_ID] + [deepcopy(ART["conversa"])]
         return self
@@ -329,7 +331,7 @@ def secao_curva():
     for arquivo in G.ARQUIVOS:
         ini = nivel
         for mo in MM[arquivo]["monsters"]:
-            if mo["type"] == "bugbear_sombras" or mo["room_id"] == 2 and arquivo == "sombras_3b_trono.json":
+            if mo["type"] == "bugbear_sombras" or (mo["room_id"] == 2 and arquivo == "sombras_3b_trono.json"):
                 continue    # o esconderijo é opcional
             cr = S.monster_cr(defs[mo["type"]])
             xp += max(1, int(150 * nivel * (2 ** (cr - 1))) // 4)
