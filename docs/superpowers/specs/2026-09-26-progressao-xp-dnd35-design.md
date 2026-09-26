@@ -88,8 +88,9 @@ do livro não é reproduzida.
 
 ## 4. Cliente
 
-- O servidor anexa `xp_proximo` a cada jogador do `game_state`/`city_state`: o
-  `xp_limiar(level+1)`, ou `null` no nível 20. O cliente não duplica a tabela.
+- O servidor anexa a cada jogador do `game_state`/`city_state` o `xp_nivel`
+  (`xp_limiar(level)`, início da barra) e o `xp_proximo` (`xp_limiar(level+1)`, ou `null` no
+  nível 20). O cliente não duplica a tabela.
 - A ficha (`game.js`, ao lado de `ui.ficha.experiencia`) mostra "4.500 / 6.000 XP" com uma
   barra fina, ou só o total no nível máximo. Textos novos entram em `src/lang/interface.js`
   (pt/en).
@@ -127,7 +128,7 @@ meta de ritmo é ao fim de cada destino (grupo de 4, todos vivos):
   - nível próprio: dois heróis de níveis diferentes recebendo valores diferentes pelo mesmo
     monstro;
   - armadilha e objetivo passando por `_conceder_xp`;
-  - migração de save (nível 2 com 30/60 vira 4500; ficha já marcada fica intacta);
+  - migração de save (nível 2 com 30/60 vira 2000; ficha já marcada fica intacta);
   - `xp_proximo` no payload.
 - Suítes que mexem com XP e nível precisam continuar verdes; onde cravarem os números
   antigos, o número é atualizado, não a regra. Entre elas: `test_modo_mestre` (XP de
