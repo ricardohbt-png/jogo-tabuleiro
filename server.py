@@ -41116,9 +41116,13 @@ class GameRoom:
         nd = monster_cr(m)
         for p in vivos:
             await self._conceder_xp(p, xp_por_heroi(p.get("level", 1), nd, len(vivos)))
-        # Narração (flavor text): valor representativo, exato quando o grupo tem
-        # níveis iguais (caso comum) — o XP real já foi concedido acima, por herói.
-        share_xp = xp_por_heroi(vivos[0].get("level", 1), nd, len(vivos)) if vivos else 0
+        # Narração: a parte de quem matou (ou de um herói vivo, se foi um servo/
+        # armadilha). Exata quando o grupo tem o mesmo nível; o XP real de cada
+        # herói já foi concedido acima, com o nível dele.
+        narrador = self.players.get(killer_pid)
+        if not (narrador and narrador.get("alive")):
+            narrador = vivos[0] if vivos else None
+        share_xp = xp_por_heroi(narrador.get("level", 1), nd, len(vivos)) if narrador else 0
 
         # Loot: monstros novos tÃªm tabela prÃ³pria por monstro; legados usam sala+65%
         mroom = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
