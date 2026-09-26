@@ -845,7 +845,7 @@
   "objectives": {
     "primary": {
       "type": "open_key_chest",
-      "xp": 0,
+      "xp": 5200,
       "reward": {
         "gold": 60,
         "items": []

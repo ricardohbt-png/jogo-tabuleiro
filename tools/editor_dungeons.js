@@ -43348,7 +43348,7 @@ window.EDITOR_DUNGEONS = [
       "objectives": {
         "primary": {
           "type": "rescue_prisoner",
-          "xp": 0,
+          "xp": 2900,
           "reward": {
             "gold": 40,
             "items": []
@@ -44216,7 +44216,7 @@ window.EDITOR_DUNGEONS = [
       "objectives": {
         "primary": {
           "type": "open_key_chest",
-          "xp": 0,
+          "xp": 5200,
           "reward": {
             "gold": 60,
             "items": []
@@ -45687,7 +45687,7 @@ window.EDITOR_DUNGEONS = [
       "objectives": {
         "primary": {
           "type": "kill_target",
-          "xp": 0,
+          "xp": 6200,
           "reward": {
             "gold": 120,
             "items": []

@@ -708,7 +708,7 @@
   "objectives": {
     "primary": {
       "type": "kill_target",
-      "xp": 0,
+      "xp": 6200,
       "reward": {
         "gold": 120,
         "items": []
