@@ -418,6 +418,18 @@
   }
 
   function cloneDecor(source) { return JSON.parse(JSON.stringify(source)); }
+
+  // Nível de visão por objeto (espelho de DECOR_VISAO_NIVEIS/decor_visao do
+  // servidor): livre não bloqueia; baixo deixa ver e atirar por cima e dá meia
+  // cobertura (+2 CA); alto tapa visão e tiro. Só a visão muda — o objeto sólido
+  // continua barrando o passo. Sem `visao` no objeto, vale o padrão do tipo.
+  const VISAO_NIVEIS = ["livre", "baixo", "alto"];
+  const VISAO_ROTULO = {
+    livre: "livre — não bloqueia a visão",
+    baixo: "baixo — vê e atira por cima, meia cobertura (+2 CA)",
+    alto: "alto — bloqueia visão e tiro, projeta sombra",
+  };
+  function decorVisaoPadrao(m) { return m && m.alto ? "alto" : (m && m.pisavel ? "livre" : "baixo"); }
   function nextDecorId() {
     const used = new Set(S.decorations.map(d => d.id));
     while (used.has("decor_" + S.nextDecorId)) S.nextDecorId++;
@@ -2039,7 +2051,7 @@
     if (!S.rooms || !S.rooms.length) return avisos;
     var g = _grafoSalas(), nd = _ndSalaMap();
     var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
-    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push("R4: sala #" + r.id + " isolada do mapa principal."); });
+    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push("R4: sala " + _salaRef(r.id) + " isolada do mapa principal."); });
     if (g.bossId == null) { avisos.push("R2/R5: sem sala com role 'boss' (regras puladas)."); }
     else {
       var dist = _distSalas(g.adj, g.entradaId, g.bossId);
@@ -2052,7 +2064,7 @@
         var gargalos = S.rooms.filter(function (r) {
           return r.id !== g.entradaId && r.id !== g.bossId && g.reach.has(r.id) &&
                  !_alcancaSemSala(g.adj, g.entradaId, g.bossId, r.id);
-        }).map(function (r) { return "#" + r.id; });
+        }).map(function (r) { return _salaRef(r.id); });
         if (gargalos.length) avisos.push("R1: rota única — sem caminho alternativo até o boss (gargalo em " + gargalos.join(", ") + ").");
       }
     }
@@ -2065,7 +2077,7 @@
       var ord = req.slice().sort(function (a, b) { return _distSalas(g.adj, g.entradaId, a.id) - _distSalas(g.adj, g.entradaId, b.id); });
       for (var i = 1; i < ord.length; i++) {
         var delta = Math.abs((nd[ord[i-1].id] || 0) - (nd[ord[i].id] || 0));
-        if (delta > VALID_MAX_PICO) avisos.push("R3: pico de ND entre salas #" + ord[i-1].id + " e #" + ord[i].id + " (Δ=" + delta.toFixed(2) + ").");
+        if (delta > VALID_MAX_PICO) avisos.push("R3: pico de ND entre salas " + _salaRef(ord[i-1].id) + " e " + _salaRef(ord[i].id) + " (Δ=" + delta.toFixed(2) + ").");
       }
     }
     return avisos;
@@ -2100,7 +2112,59 @@
       '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>preview jogadores:</span>' + sel + '</div>';
   }
 
+  // ── Coordenadas nas descrições ────────────────────────────────────────────
+  // Toda entidade selecionada mostra onde está no grid (x = coluna, y = linha,
+  // contando a partir de 0 no canto superior esquerdo) — a mesma convenção dos
+  // avisos de validação e do indicador de cursor na barra de status.
+  function _xy(p) { return "(" + p[0] + "," + p[1] + ")"; }
+  function _faixaXY(tiles) {
+    if (!tiles || !tiles.length) return "";
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const [x, y] of tiles) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    return x0 === x1 && y0 === y1 ? _xy([x0, y0]) : _xy([x0, y0]) + " → " + _xy([x1, y1]);
+  }
+  function _salaDe(p) {
+    const rid = p ? roomIdAt(p[0], p[1]) : null;
+    return rid == null ? "fora de sala" : "sala #" + rid;
+  }
+  // Referência curta de uma sala: "#3 (4,2)→(9,7)".
+  function _salaRef(id) {
+    const r = S.rooms.find(r => r.id === id);
+    return r ? "#" + id + " " + _xy([r.x, r.y]) + "→" + _xy([r.x + r.w - 1, r.y + r.h - 1]) : "#" + id;
+  }
+  function _coordsSelecao(sel) {
+    const k = sel.kind, ref = sel.ref;
+    if (k === "room") return _xy([ref.x, ref.y]) + " → " + _xy([ref.x + ref.w - 1, ref.y + ref.h - 1]) + " · " + ref.w + "×" + ref.h + " casas";
+    if (k === "door") return _xy([ref.x, ref.y]) + " · " + _salaDe([ref.x, ref.y]);
+    if (k === "bridge") return _xy(ref.inicio) + " → " + _xy(ref.fim);
+    if (k === "monster") return _faixaXY(monsterTiles(ref)) + " · " + _salaDe(ref.pos);
+    if (k === "decor") {
+      const base = isWallDecor(ref) ? _xy(ref.pos) + " (parede)" : _faixaXY(decorTiles(ref));
+      return base + " · " + _salaDe(ref.pos);
+    }
+    const pos = ref && ref.pos ? ref.pos : sel.pos;
+    return pos ? _xy(pos) + " · " + _salaDe(pos) : "";
+  }
+
+  function _mostrarCoordsCursor(c) {
+    const el = document.getElementById("cursor-coords");
+    if (!el) return;
+    el.textContent = c ? "📍 " + _xy(c) + " · " + _salaDe(c) : "";
+  }
+  board.addEventListener("mouseleave", () => _mostrarCoordsCursor(null));
+
   function renderPanel() {
+    _renderPanelCorpo();
+    if (!S.sel) return;
+    const txt = _coordsSelecao(S.sel);
+    if (!txt) return;
+    const head = panel.querySelector("b");
+    const html = `<div class="sel-coords" style="margin-top:4px;color:#f0c867;font-size:12px">📍 ${txt}</div>`;
+    if (head) head.insertAdjacentHTML("afterend", html);
+    else panel.insertAdjacentHTML("afterbegin", html);
+  }
+
+  function _renderPanelCorpo() {
     if (!S.sel) {
       const OBJ = ["kill_target", "kill_all", "reach_exit", "all_heroes_at_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"];
       const o = S.objectives;
@@ -2221,7 +2285,6 @@
       const keyDecors = S.decorations.filter(d => d.key_objective);
       const selectedDecorKeys = new Set(condition?.key_decor_ids || []);
       panel.innerHTML = `<b>🚪 Porta</b>
-        <div style="margin-top:6px;color:#b9a87f">Posição: (${ref.x},${ref.y})</div>
         <div style="margin-top:6px;color:#f0c867"><b>Frente da imagem: ${doorFrontLabel(ref.x, ref.y)}</b></div>
         <div style="font-size:11px;color:#8a7a5a;margin-top:4px">Giros aplicados: ${rot} × 90°</div>
         <button id="door-rotate" style="margin-top:8px">↻ Girar 90° (R)</button>
@@ -2237,7 +2300,7 @@
           ${condition?.type === "licao" ? (() => {
             const licoes = S.falas.filter(f => f.tarefa && f.tarefa.tipo);
             if (!licoes.length) return '<small style="color:#d8a0a0">Crie primeiro uma fala com tarefa.</small>';
-            return `<label>lição necessária</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
+            return `<label>lição necessária</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} ${_xy(l.pos)} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
           })() : ""}
           ${condition?.type === "item" ? `<label>item necessário</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
           ${condition?.type === "decor" ? `<label>modo das ativações</label><select id="door-condition-mode">
@@ -2245,7 +2308,7 @@
               <option value="all"${condition.keys_mode === "all" ? " selected" : ""}>todos os objetos</option>
             </select>
             <label>objetos-chave</label>
-            ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${d.type} — (${d.pos[0]},${d.pos[1]})</label>`).join("") : '<small style="color:#d8a0a0">Marque primeiro uma decoração como objeto-chave.</small>'}` : ""}
+            ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${decorMeta(d.type)?.nome || d.type} ${_xy(d.pos)}</label>`).join("") : '<small style="color:#d8a0a0">Marque primeiro uma decoração como objeto-chave.</small>'}` : ""}
         </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
       document.getElementById("door-condition-type").onchange = e => {
@@ -2269,7 +2332,6 @@
     } else if (k === "hero_spawn") {
       const h = heroSpawnMeta(ref.class_id);
       panel.innerHTML = `<b>${h.emoji} Início: ${h.name}</b>
-        <div style="margin-top:6px;color:#b9a87f">Posição: (${ref.pos[0]},${ref.pos[1]})</div>
         <small>Para trocar de herói, selecione a ferramenta "início herói" e escolha outra classe.</small>`;
     } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
@@ -2583,7 +2645,6 @@
         ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
         : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem — usará o emoji padrão</div>`;
       panel.innerHTML = `<b>🧍 Prisioneiro</b>
-        <div style="color:#8a7a5a;font-size:11px">sala ${ref.room_id ?? "—"}</div>
         ${img}
         <label>miniatura</label>
         <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
@@ -2643,6 +2704,12 @@
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
         ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
+        ${!isWall ? `<label style="display:block;margin-top:8px">👁️ visão
+          <select id="d-visao">
+            <option value=""${!VISAO_NIVEIS.includes(ref.visao) ? " selected" : ""}>padrão do tipo (${decorVisaoPadrao(m)})</option>
+            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${VISAO_ROTULO[v]}</option>`).join("")}
+          </select></label>
+          <small style="display:block;color:#8a7a5a">Só muda a visão: ${m.pisavel ? "o objeto continua pisável." : "o objeto continua barrando o passo."}</small>` : ""}
         ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
         ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ Duplicar em casa adjacente</button>` : ""}
         <button id="d-brush" style="margin-top:7px">🖌️ Copiar e preencher área</button>
@@ -2703,6 +2770,11 @@
             <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
+      const visaoSel = document.getElementById("d-visao");
+      if (visaoSel) visaoSel.onchange = e => {
+        if (VISAO_NIVEIS.includes(e.target.value)) ref.visao = e.target.value; else delete ref.visao;
+        render();
+      };
       if (m.gira) document.getElementById("d-rot").onclick = () => { rotateDecorPending(); renderPanel(); };
       const duplicate = document.getElementById("d-duplicate"); if (duplicate) duplicate.onclick = () => {
         if (duplicateDecorAdjacent(ref)) { renderPanel(); render(); }
@@ -2850,7 +2922,7 @@
         } catch (err) { imgSt.textContent = "falha: " + err.message; }
       };
     } else {
-      panel.innerHTML = `<b>${k}</b>`;
+      panel.innerHTML = `<b>${k === "entrance" ? "🪜 Entrada" : k === "exit" ? "🚩 Saída" : k}</b>`;
     }
   }
 
@@ -2935,6 +3007,7 @@
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
+    _mostrarCoordsCursor(c);
     if (S.ponteDrag) {
       S.ponteDrag.end = c.slice(); render(); return;
     }
@@ -3115,6 +3188,7 @@
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
         if (Array.isArray(d.voffset) && (d.voffset[0] !== 0 || d.voffset[1] !== 0)) o.voffset = [d.voffset[0], d.voffset[1]];
+        if (VISAO_NIVEIS.includes(d.visao)) o.visao = d.visao;
         return o;
       }),
       secret_passages: S.secretPassages.map(p => ({
@@ -3203,7 +3277,7 @@
       if (!S.heroSpawns.length) e.push("falta ao menos uma posição inicial de herói");
       const classes = new Set();
       for (const s of S.heroSpawns) {
-        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(`classe inicial inválida: ${s.class_id}`);
+        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(`classe inicial inválida: ${s.class_id} em ${s.pos}`);
         if (classes.has(s.class_id)) e.push(`classe inicial duplicada: ${s.class_id}`);
         classes.add(s.class_id);
         if (isWall(s.pos)) e.push(`posição inicial em parede: ${s.pos}`);
@@ -3212,38 +3286,38 @@
     if (S.rooms.length === 0) e.push("precisa de ao menos uma sala");
     if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
     for (const m of S.monsters) {
-      if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type}`);
+      if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type} em ${m.pos}`);
       if (isWall(m.pos)) e.push(`monstro em parede: ${m.pos}`);
-      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(`monstro room_id inexistente: ${m.room_id}`);
+      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(`monstro em ${m.pos} com room_id inexistente: ${m.room_id}`);
     }
     for (const c of S.chests) {
       if (isWall(c.pos)) e.push(`baú em parede: ${c.pos}`);
       for (const it of c.items) {
-        if (!items.has(it.id)) e.push(`item inválido: ${it.id}`);
-        validateCarta(it, "Carta do baú");
+        if (!items.has(it.id)) e.push(`item inválido: ${it.id} no baú em ${c.pos}`);
+        validateCarta(it, `Carta do baú em ${c.pos}`);
       }
     }
     for (const t of S.traps) {
-      if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo}`);
-      if (CAT.traps.find(c => c.tipo === t.tipo)?.apenas_objeto) e.push(`${t.tipo} só pode ser colocado em uma decoração/objeto`);
+      if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo} em ${t.pos}`);
+      if (CAT.traps.find(c => c.tipo === t.tipo)?.apenas_objeto) e.push(`${t.tipo} em ${t.pos} só pode ser colocado em uma decoração/objeto`);
       if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
-      if (t.dificuldade != null && (!Number.isInteger(t.dificuldade) || t.dificuldade < 1 || t.dificuldade > 40)) e.push(`${t.tipo} com CD inválida: ${t.dificuldade}`);
-      if (t.dano != null && !validTrapDamage(t.dano)) e.push(`${t.tipo} com dano inválido: ${t.dano}`);
-      if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} sem veneno válido`);
-      if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte sem saída em chão");
+      if (t.dificuldade != null && (!Number.isInteger(t.dificuldade) || t.dificuldade < 1 || t.dificuldade > 40)) e.push(`${t.tipo} em ${t.pos} com CD inválida: ${t.dificuldade}`);
+      if (t.dano != null && !validTrapDamage(t.dano)) e.push(`${t.tipo} em ${t.pos} com dano inválido: ${t.dano}`);
+      if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} em ${t.pos} sem veneno válido`);
+      if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte em ${t.pos} sem saída em chão`);
       if (t.tipo === "armadilha_maldicao") {
         const mode = t.curse_mode || "aleatoria";
-        if (!["especifica", "aleatoria"].includes(mode)) e.push("armadilha_maldicao com modo inválido");
-        if (mode === "especifica" && !curses.has(t.curse_id)) e.push("armadilha_maldicao sem maldição válida");
-        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(t.curse_category || "leve")) e.push("armadilha_maldicao com gravidade inválida");
+        if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha_maldicao em ${t.pos} com modo inválido`);
+        if (mode === "especifica" && !curses.has(t.curse_id)) e.push(`armadilha_maldicao em ${t.pos} sem maldição válida`);
+        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(t.curse_category || "leve")) e.push(`armadilha_maldicao em ${t.pos} com gravidade inválida`);
       }
     }
-    if (S.prisoner && isWall(S.prisoner.pos)) e.push("prisioneiro em parede");
+    if (S.prisoner && isWall(S.prisoner.pos)) e.push(`prisioneiro em parede: ${S.prisoner.pos}`);
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
     if (S.startMode === "entrance") {
       if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
     } else {
-      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(`posição inicial inacessível: ${s.class_id}`);
+      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(`posição inicial inacessível: ${s.class_id} em ${s.pos}`);
     }
     if (S.objectives.primary.type === "all_heroes_at_exit" && !S.exit)
       e.push("o objetivo all_heroes_at_exit exige uma saída");
@@ -3251,12 +3325,12 @@
     const decOcc = new Set();
     const wallDecOcc = new Set();
     for (const d of S.decorations) {
-      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type}`); continue; }
+      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type} em ${d.pos}`); continue; }
       const decorCat = decorMeta(d.type);
       if (decorCat?.special === "plaque" && !String(d.texto || "").trim())
-        e.push(`placa ${d.id} precisa de uma mensagem`);
+        e.push(`placa ${d.id} em ${d.pos} precisa de uma mensagem`);
       if (decorCat?.special === "plaque" && String(d.texto || "").length > 600)
-        e.push(`placa ${d.id} excede 600 caracteres`);
+        e.push(`placa ${d.id} em ${d.pos} excede 600 caracteres`);
       if (isWallDecor(d)) {
         const [wx, wy] = d.pos;
         const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
@@ -3266,8 +3340,8 @@
         if (wallDecOcc.has(wallKey)) e.push(`decorações sobrepostas na mesma face de parede em ${wx},${wy}`);
         wallDecOcc.add(wallKey);
         if (d.loot) for (const it of d.loot.items) {
-          if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
-          validateCarta(it, "Carta da decoração");
+          if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
+          validateCarta(it, `Carta da decoração em ${d.pos}`);
         }
         continue;
       }
@@ -3279,21 +3353,21 @@
         decOcc.add(key);
       }
       if (d.loot) for (const it of d.loot.items) {
-        if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id}`);
-        validateCarta(it, "Carta da decoração");
+        if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
+        validateCarta(it, `Carta da decoração em ${d.pos}`);
       }
-      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push("baú-armadilha com monstro inválido");
+      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(`baú-armadilha em ${d.pos} com monstro inválido`);
       if (d.trap) {
-        if (!traps.has(d.trap.tipo)) e.push("armadilha de decoração inválida");
-        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(`${d.trap.tipo} na decoração com CD inválida`);
-        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(`${d.trap.tipo} na decoração com dano inválido`);
-        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração sem veneno válido`);
-        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push("armadilha de teletransporte na decoração sem saída em chão");
+        if (!traps.has(d.trap.tipo)) e.push(`armadilha de decoração inválida em ${d.pos}`);
+        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com CD inválida`);
+        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com dano inválido`);
+        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração em ${d.pos} sem veneno válido`);
+        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte na decoração em ${d.pos} sem saída em chão`);
         if (d.trap.tipo === "armadilha_maldicao") {
           const mode = d.trap.curse_mode || "aleatoria";
-          if (!["especifica", "aleatoria"].includes(mode)) e.push("armadilha de decoração com modo de maldição inválido");
-          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push("armadilha de decoração sem maldição válida");
-          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push("armadilha de decoração com gravidade inválida");
+          if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha de decoração em ${d.pos} com modo de maldição inválido`);
+          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push(`armadilha de decoração em ${d.pos} sem maldição válida`);
+          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(`armadilha de decoração em ${d.pos} com gravidade inválida`);
         }
       }
     }
@@ -3315,7 +3389,7 @@
         if (!["any", "all"].includes(c.keys_mode || "any")) e.push(`modo de objetos-chave inválido na porta ${key}`);
         if (Array.isArray(c.key_decor_ids)) for (const id of c.key_decor_ids) {
           const d = S.decorations.find(x => x.id === id);
-          if (d && !d.key_objective) e.push(`objeto ${id} da porta ${key} precisa estar marcado como objeto-chave`);
+          if (d && !d.key_objective) e.push(`objeto ${id} em ${d.pos} da porta ${key} precisa estar marcado como objeto-chave`);
         }
       }
     }
@@ -3323,29 +3397,29 @@
     for (const p of S.secretPassages) {
       if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
       passageIds.add(p.id);
-      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push("passagem secreta deve ficar em uma parede");
-      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push("textura de passagem secreta inválida");
-      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push("passagem com decoração-chave inválida");
-      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push("passagem secreta sem decoração-chave");
+      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push(`passagem secreta ${p.id} em ${p.pos} deve ficar em uma parede`);
+      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push(`textura da passagem secreta em ${p.pos} inválida`);
+      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push(`passagem em ${p.pos} com decoração-chave inválida`);
+      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push(`passagem secreta em ${p.pos} sem decoração-chave`);
     }
     const ordensLicao = new Set();
     for (const f of S.falas) {
       if (isWall(f.pos)) e.push(`fala de NPC em parede: ${f.pos}`);
-      if (!(f.texto || "").trim()) e.push("fala de NPC sem texto");
+      if (!(f.texto || "").trim()) e.push(`fala de NPC em ${f.pos} sem texto`);
       const tipo = (f.trigger || {}).tipo;
-      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC com gatilho inválido: ${tipo}`);
+      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC em ${f.pos} com gatilho inválido: ${tipo}`);
       const ehLicao = !!(f.classe || f.tarefa || f.efeito || f.ordem != null);
       if (!ehLicao) continue;
-      if (tipo === "manual") e.push(`lição ${f.id} não pode ter gatilho manual`);
-      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} com classe inválida: ${f.classe}`);
+      if (tipo === "manual") e.push(`lição ${f.id} em ${f.pos} não pode ter gatilho manual`);
+      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} em ${f.pos} com classe inválida: ${f.classe}`);
       if (f.ordem != null) {
         const chave = `${f.classe || ""}#${f.ordem}`;
         if (ordensLicao.has(chave)) e.push(`duas lições com a mesma ordem ${f.ordem} para ${f.classe || "todas as classes"}`);
         ordensLicao.add(chave);
       }
       if (f.tarefa) {
-        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(`lição ${f.id} com tarefa inválida: ${f.tarefa.tipo}`);
-        if (!(f.tarefa.texto_curto || "").trim()) e.push(`lição ${f.id} sem texto curto`);
+        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(`lição ${f.id} em ${f.pos} com tarefa inválida: ${f.tarefa.tipo}`);
+        if (!(f.tarefa.texto_curto || "").trim()) e.push(`lição ${f.id} em ${f.pos} sem texto curto`);
         if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(`lição ${f.id}: alvo deveria ser uma casa x,y`);
       }
     }
@@ -3373,10 +3447,10 @@
       bridgeIds.add(bridge.id);
       const tiles = bridgeTilesOf(bridge);
       if (!tiles.length) { e.push(`ponte ${bridge.id} precisa ser reta e ter início/fim distintos`); continue; }
-      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(`ponte ${bridge.id} fora do grid`);
+      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) fora do grid`);
       if (![FLOOR, DOOR].includes(S.tiles[bridge.inicio?.[1]]?.[bridge.inicio?.[0]])
-          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(`ponte ${bridge.id} precisa começar e terminar em chão ou porta`);
-      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(`ponte ${bridge.id} liga alturas diferentes`);
+          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) precisa começar e terminar em chão ou porta`);
+      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) liga alturas diferentes`);
       for (const [x, y] of tiles) {
         const key = `${x},${y}`;
         if (bridgeOccupied.has(key)) e.push(`pontes sobrepostas em ${key}`);
@@ -3528,6 +3602,7 @@
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
       ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),
+      ...(VISAO_NIVEIS.includes(d.visao) ? { visao: d.visao } : {}),
     }));
     // O maior sufixo existente, e não o tamanho da lista, define o próximo ID.
     // Depois de apagar ou colar em um mapa antigo, os dois valores podem divergir.

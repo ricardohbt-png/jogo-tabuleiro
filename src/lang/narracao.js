@@ -2943,6 +2943,10 @@ window.LANG_NARRACAO = {
   "narracao.visao_de_expandida_para_raio": {
     "en": "👁️ **{heroi}**'s vision expanded to radius {raio}.",
     "pt": "👁️ Visão de **{heroi}** expandida para raio {raio}."
+  },
+  "narracao.cobertura_baixa": {
+    "en": "🛡️ {alvo} is behind low cover: +{bonus} AC (half cover).",
+    "pt": "🛡️ {alvo} está atrás de um obstáculo baixo: +{bonus} de CA (meia cobertura)."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);
