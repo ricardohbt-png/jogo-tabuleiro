@@ -34612,18 +34612,13 @@ class GameRoom:
         sx, sy = m["pos"]
         return [[x, y] for (x, y) in prev if (x, y) != (sx, sy)]
 
-    def _master_manual_payload(self):
-        """Bloco de estado da janela Manual para o HUD do mestre, ou None.
-        Aditivo: master_manual_mid e master_manual_reach seguem no payload."""
-        mid = self.master_manual_mid
-        if not mid:
-            return None
-        m = self.monsters.get(mid)
-        if not m or m.get("hp", 0) <= 0:
-            return None
-        # O Mestre precisa visualizar a rota antes de confirmá-la, mas o
-        # cálculo continua autoritativo: o cliente não tenta reproduzir as
-        # regras de footprint, orientação, terreno e travessia do servidor.
+    def _manual_move_paths(self, m):
+        """Rotas {"x,y": [[x,y],...]} alcançáveis pelo monstro da janela
+        manual (Mestre, Comando ou Dominar Mente). Quem controla precisa
+        visualizar a rota antes de confirmá-la (1º clique arma, 2º confirma,
+        como no movimento do herói), mas o cálculo continua autoritativo: o
+        cliente não tenta reproduzir as regras de footprint, orientação,
+        terreno e travessia do servidor."""
         move_paths = {}
         budget = int(m.get("master_moves_left", 0) or 0)
         if budget > 0 and not (m.get("preso") and self._captor_ativo(m)):
@@ -34639,6 +34634,18 @@ class GameRoom:
                     cur = prev[cur]
                 path.reverse()
                 move_paths[f"{dest[0]},{dest[1]}"] = path
+        return move_paths
+
+    def _master_manual_payload(self):
+        """Bloco de estado da janela Manual para o HUD do mestre, ou None.
+        Aditivo: master_manual_mid e master_manual_reach seguem no payload."""
+        mid = self.master_manual_mid
+        if not mid:
+            return None
+        m = self.monsters.get(mid)
+        if not m or m.get("hp", 0) <= 0:
+            return None
+        move_paths = self._manual_move_paths(m)
         return {
             "mid": mid,
             "moves_left": int(m.get("master_moves_left", 0) or 0),
@@ -34667,6 +34674,7 @@ class GameRoom:
             "bonus": bool(m.get("_master_bonus_acted")),
             "restante": max(0, round(self.command_control_deadline - time.monotonic())),
             "attack_charges": {str(k): v for k, v in (m.get("master_attack_charges") or {}).items()},
+            "move_paths": self._manual_move_paths(m),
         }
 
     def _mind_control_payload(self):
@@ -34690,6 +34698,7 @@ class GameRoom:
             "restante": max(0, round(self.mind_control_deadline - time.monotonic())),
             "rodadas_restantes": int(m.get("dominio_mente_rodadas", 0) or 0),
             "attack_charges": {str(k): v for k, v in (m.get("master_attack_charges") or {}).items()},
+            "move_paths": self._manual_move_paths(m),
         }
 
     def _master_path_to(self, m, tx, ty, budget):
