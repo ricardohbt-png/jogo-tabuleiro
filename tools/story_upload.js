@@ -8,6 +8,7 @@
 // fallback de download).
 (function () {
   const IMG = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+  const PRISONER_EXT = IMG.concat([".glb"]);
   const AUD = [".mp3", ".ogg", ".wav", ".m4a"];
   const OK_EXT = IMG.concat(AUD);
   const MAX = 25 * 1024 * 1024;   // limite por arquivo; abaixo do max_size do servidor (34MB) de propósito
@@ -116,8 +117,8 @@
   }
 
   async function uploadPrisoner(file) {
-    if (IMG.indexOf(extOf(file.name)) < 0)
-      throw new Error("envie uma imagem (png/jpg/webp/gif)");
+    if (PRISONER_EXT.indexOf(extOf(file.name)) < 0)
+      throw new Error("envie uma imagem ou uma miniatura .glb");
     if (file.size > MAX) throw new Error("arquivo grande demais");
     const data = await toBase64(file);
     const m = await request("upload_prisoner", { name: file.name, data: data });

@@ -3435,6 +3435,42 @@ window.LANG_INTERFACE = {
     "en": "🔥 End Prison of Flames",
     "pt": "🔥 Encerrar Prisão de Chamas"
   },
+  "ui.hud.encerrar_magia_zona": {
+    "en": "⏹ End {nome}",
+    "pt": "⏹ Encerrar {nome}"
+  },
+  "ui.hud.chamado_inverno_congelar": {
+    "en": "Freeze creatures",
+    "pt": "Congelar criaturas"
+  },
+  "ui.magia.chamado_inverno_alvos_disponiveis": {
+    "en": "Up to {n} target(s)",
+    "pt": "Até {n} alvo(s)"
+  },
+  "ui.magia.chamado_inverno_escolher_alvos": {
+    "en": "Choose creatures to freeze",
+    "pt": "Escolha criaturas para congelar"
+  },
+  "ui.magia.chamado_inverno_selecione": {
+    "en": "Select up to {max} creatures in the area. Allies can also be selected.",
+    "pt": "Selecione até {max} criaturas na área. Aliados também podem ser escolhidos."
+  },
+  "ui.magia.chamado_inverno_selecao_contagem": {
+    "en": "{n}/{max} selected",
+    "pt": "{n}/{max} selecionados"
+  },
+  "ui.magia.chamado_inverno_confirmar": {
+    "en": "Apply",
+    "pt": "Aplicar"
+  },
+  "ui.magia.chamado_inverno_sem_alvos": {
+    "en": "There are no living creatures in the affected area.",
+    "pt": "Não há criaturas vivas na área afetada."
+  },
+  "ui.magia.zona_magica_restante": {
+    "en": "{restante} round(s) left.",
+    "pt": "Restam {restante} rodada(s)."
+  },
   "ui.hud.encerrar_prisioneiro": {
     "en": "⏭ End prisoner",
     "pt": "⏭ Encerrar prisioneiro"
@@ -5660,8 +5696,8 @@ window.LANG_INTERFACE = {
     "pt": "{n}/{max} casa(s) selecionada(s). Clique para marcar/desmarcar; confirme quando terminar."
   },
   "ui.magia.chamado_inverno.desc": {
-    "en": "<b>Range:</b> 6 squares +1 per cleric level (7 at level 1)<br><b>Area:</b> 4x4 square, +1 square every 2 levels<br><b>Effect:</b> choose Frozen Floor or Snowy Plain; affects allies and enemies inside the area<br><b>Duration:</b> 1d4 + cleric level<br><b>Permanent:</b> +20 Hunger and +20 Thirst, on top of the normal cost<br><b>Cost:</b> 🍖-1 💧-1 + 1 second-circle slot",
-    "pt": "<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>\n               <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>\n               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área<br>\n               <b>Duração:</b> 1d4 + nível do clérigo<br>\n               <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo"
+    "en": "<b>Range:</b> 6 squares +1 per cleric level (7 at level 1)<br><b>Area:</b> 4x4 square, +1 square every 2 levels<br><b>Effect:</b> choose Frozen Floor or Snowy Plain; affects allies and enemies inside the area. While it lasts, once per cleric turn choose up to 1d4 creatures there; failed Fortitude saves freeze them until their next turn<br><b>Duration:</b> 1d4 + cleric level<br><b>Permanent:</b> terrain only; no freezing effect. +20 Hunger and +20 Thirst, on top of the normal cost<br><b>Cost:</b> 🍖-1 💧-1 + 1 second-circle slot",
+    "pt": "<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>\n               <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>\n               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área. Enquanto durar, uma vez por turno do clérigo escolha até 1d4 criaturas na área; quem falhar em Fortitude fica congelado até seu próximo turno<br>\n               <b>Duração:</b> 1d4 + nível do clérigo<br>\n               <b>Permanente:</b> apenas o terreno; não aplica congelamento. +20 Fome e +20 Sede, além do custo normal<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo"
   },
   "ui.magia.chamas_nesta_rodada_total": {
     "en": "{n}/{max} this round · {feitas}/{total} in total. Click to mark/unmark.",
@@ -6512,8 +6548,8 @@ window.LANG_INTERFACE = {
     "pt": "Escolha uma casa válida dentro da tempestade."
   },
   "ui.magia.tempestade_posicionamento_instrucao": {
-    "en": "Choose exactly {count} valid squares inside the storm for the initial cyclone positions.",
-    "pt": "Escolha exatamente {count} casas válidas dentro da tempestade para iniciar os ciclones."
+    "en": "Choose 1 to {count} valid squares inside the storm. You can position the rest in later turns.",
+    "pt": "Escolha de 1 a {count} casas válidas dentro da tempestade. Você pode posicionar o restante em turnos posteriores."
   },
   "ui.magia.tempestade_posicionamento_limite": {
     "en": "All {count} cyclone positions are already selected.",
@@ -9854,6 +9890,134 @@ window.LANG_INTERFACE = {
   "ui.tabuleiro.cobertura_baixa": {
     "en": "🛡️ Half cover: +{bonus} AC (low object in the way)",
     "pt": "🛡️ Meia cobertura: +{bonus} de CA (objeto baixo no caminho)"
+  },
+  "ui.magia.6o_circulo": {
+    "en": "6th Circle",
+    "pt": "6º círculo"
+  },
+  "ui.magia.7o_circulo": {
+    "en": "7th Circle",
+    "pt": "7º círculo"
+  },
+  "ui.magia.8o_circulo": {
+    "en": "8th Circle",
+    "pt": "8º círculo"
+  },
+  "ui.magia.9o_circulo": {
+    "en": "9th Circle",
+    "pt": "9º círculo"
+  },
+  "ui.magia.escolha_n_do_circulo": {
+    "en": "Choose {n} spells of the {circulo} circle (one at a time)",
+    "pt": "Escolha {n} magias do {circulo} círculo (uma por vez)"
+  },
+  "ui.heroteste.titulo": {
+    "en": "Configure test hero",
+    "pt": "Configurar herói de teste"
+  },
+  "ui.heroteste.nivel": {
+    "en": "Level",
+    "pt": "Nível"
+  },
+  "ui.heroteste.espacos": {
+    "en": "Slots: {lista}",
+    "pt": "Espaços: {lista}"
+  },
+  "ui.heroteste.sem_espacos": {
+    "en": "No spell slots",
+    "pt": "Sem espaços de magia"
+  },
+  "ui.heroteste.equipamento": {
+    "en": "Equipment (empty slots stay without an item)",
+    "pt": "Equipamento (espaços vazios permanecem sem item)"
+  },
+  "ui.heroteste.vazio": {
+    "en": "Empty",
+    "pt": "Vazio"
+  },
+  "ui.heroteste.slot.weapon": {
+    "en": "Main weapon",
+    "pt": "Arma principal"
+  },
+  "ui.heroteste.slot.off_hand": {
+    "en": "Off hand",
+    "pt": "Mão secundária"
+  },
+  "ui.heroteste.slot.armor": {
+    "en": "Armor",
+    "pt": "Armadura"
+  },
+  "ui.heroteste.slot.head": {
+    "en": "Head",
+    "pt": "Cabeça"
+  },
+  "ui.heroteste.slot.boots": {
+    "en": "Boots",
+    "pt": "Botas"
+  },
+  "ui.heroteste.slot.ring1": {
+    "en": "Ring 1",
+    "pt": "Anel 1"
+  },
+  "ui.heroteste.slot.ring2": {
+    "en": "Ring 2",
+    "pt": "Anel 2"
+  },
+  "ui.heroteste.slot.item1": {
+    "en": "Item 1",
+    "pt": "Item 1"
+  },
+  "ui.heroteste.slot.item2": {
+    "en": "Item 2",
+    "pt": "Item 2"
+  },
+  "ui.heroteste.magias": {
+    "en": "Spells",
+    "pt": "Magias"
+  },
+  "ui.heroteste.todas_magias": {
+    "en": "All spells available at this level",
+    "pt": "Todas as magias disponíveis para este nível"
+  },
+  "ui.heroteste.todas_magias_dica": {
+    "en": "The character gets every implemented spell of the class it can already cast at this level.",
+    "pt": "O personagem recebe todas as magias implementadas da classe que já pode lançar neste nível."
+  },
+  "ui.heroteste.sem_escolha_magia": {
+    "en": "This level grants no new spell choices.",
+    "pt": "Este nível não libera novas escolhas de magia."
+  },
+  "ui.heroteste.circulo_escolha": {
+    "en": "{circulo} circle — choose {n}",
+    "pt": "{circulo} círculo — escolha {n}"
+  },
+  "ui.heroteste.selecionadas": {
+    "en": "Selected: {n}/{max}",
+    "pt": "Selecionadas: {n}/{max}"
+  },
+  "ui.heroteste.evolucoes": {
+    "en": "Guild upgrades (one selector per ability)",
+    "pt": "Evoluções da guilda (um seletor por habilidade)"
+  },
+  "ui.heroteste.sem_evolucao": {
+    "en": "No upgrade",
+    "pt": "Sem evolução"
+  },
+  "ui.heroteste.nivel_n": {
+    "en": "(level {n})",
+    "pt": "(nível {n})"
+  },
+  "ui.heroteste.sem_evolucoes": {
+    "en": "No upgrades available.",
+    "pt": "Nenhuma evolução disponível."
+  },
+  "ui.heroteste.cancelar": {
+    "en": "Cancel",
+    "pt": "Cancelar"
+  },
+  "ui.heroteste.confirmar": {
+    "en": "Confirm and choose position",
+    "pt": "Confirmar e escolher posição"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

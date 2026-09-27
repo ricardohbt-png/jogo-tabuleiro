@@ -2348,6 +2348,22 @@ window.LANG_NARRACAO = {
     "en": "❄️ **{alvo}** resisted paralysis.",
     "pt": "❄️ **{alvo}** resistiu à paralisação."
   },
+  "narracao.chamado_inverno_congelado": {
+    "en": "❄️ **{alvo}** failed the Fortitude save and is frozen until their next turn.",
+    "pt": "❄️ **{alvo}** falhou no teste de Fortitude e fica congelado até seu próximo turno."
+  },
+  "narracao.chamado_inverno_perde_turno": {
+    "en": "🧊 **{alvo}** loses this turn, frozen by the Call of Winter.",
+    "pt": "🧊 **{alvo}** perde este turno, congelado pelo Chamado do Inverno."
+  },
+  "narracao.chamado_inverno_descongela": {
+    "en": "💧 **{alvo}** thaws and can act again.",
+    "pt": "💧 **{alvo}** descongela e pode agir novamente."
+  },
+  "narracao.chamado_inverno_ja_congelado": {
+    "en": "❄️ **{alvo}** is already paralyzed; the freeze is not extended.",
+    "pt": "❄️ **{alvo}** já está paralisado; o congelamento não é prolongado."
+  },
   "narracao.resistiu_ao": {
     "en": "☑️ **{alvo_nome}** resisted **{nome}**!",
     "pt": "☑️ **{alvo_nome}** resistiu ao **{nome}**!"

@@ -293,6 +293,14 @@ window.VC = {
       emissiva: [0.030, 0.025, 0.019],
       filtro2D: 'grayscale(1) sepia(0.60) brightness(0.88)',
     },
+
+    // Paralisia causada pelo frio: conserva a arte da miniatura, mas a tinge
+    // de azul-gelo. Diferente da petrificação, não remove a textura original.
+    congelamento: {
+      cor:      [0.38, 0.78, 1.00],
+      emissiva: [0.035, 0.130, 0.220],
+      filtro2D: 'grayscale(0.24) sepia(0.28) hue-rotate(155deg) saturate(1.55) brightness(1.08) contrast(1.04)',
+    },
   },
 
   // ── Typography ─────────────────────────────────────────────────────────────

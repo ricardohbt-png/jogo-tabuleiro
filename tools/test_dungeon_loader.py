@@ -46,7 +46,7 @@ def sample_dungeon():
         "chests": [{"pos": [2, 3], "gold": 20,
                     "items": [{"id": "health_potion"}], "key_objective": False}],
         "traps": [{"tipo": "fosso_estacas", "pos": [4, 1]}],
-        "prisoner": {"pos": [4, 4], "room_id": 0},
+        "prisoner": {"pos": [4, 4], "room_id": 0, "model3d": "refem.glb"},
         "objectives": {"primary": {"type": "kill_all"}, "secondary": []},
     }
 
@@ -108,6 +108,12 @@ def test_validacao():
     recusa_sem_crashar("gold não-numérico recusa sem crashar", d)
     d = sample_dungeon(); d["prisoner"] = "x"
     recusa_sem_crashar("prisoner não-dict recusa sem crashar", d)
+    d = sample_dungeon(); d["prisoner"]["model3d"] = "refem.glb"
+    ok, _ = validar_dungeon(d); check("modelo GLB do prisioneiro é aceito", ok is True)
+    d = sample_dungeon(); d["prisoner"]["model3d"] = 3
+    ok, _ = validar_dungeon(d); check("modelo GLB não-texto do prisioneiro recusa", ok is False)
+    d = sample_dungeon(); d["prisoner"]["model3d"] = "../fora.glb"
+    ok, _ = validar_dungeon(d); check("caminho de modelo GLB do prisioneiro recusa", ok is False)
     d = sample_dungeon(); d["chests"][0]["items"] = None
     nao_crasha("items=None tratado como vazio sem crashar", d)
     d = sample_dungeon(); d["rooms"][0]["doors"] = None
@@ -192,6 +198,8 @@ async def test_load_authored():
     check("stairs na entrada", r.stairs_pos == [2, 2])
     check("dungeon_def guardado p/ Fase 3", r.dungeon_def is not None
           and r.dungeon_def.get("prisoner") is not None)
+    check("modelo GLB do prisioneiro chega ao estado da partida",
+          r.prisoner is not None and r.prisoner.get("model3d") == "refem.glb")
     check("entrada revelada (névoa)", (2, 2) in r.explored)
 
 async def test_select_dungeon():

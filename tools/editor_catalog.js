@@ -3676,7 +3676,8 @@ window.EDITOR_CATALOG = {
           "id": "movimento_aquatico",
           "name": "Movimento Aquático",
           "action_type": "passiva",
-          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+          "ignora_pantano": true,
+          "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."
         },
         {
           "id": "veneno_charcos",
@@ -3765,7 +3766,8 @@ window.EDITOR_CATALOG = {
           "id": "movimento_aquatico",
           "name": "Movimento Aquático",
           "action_type": "passiva",
-          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+          "ignora_pantano": true,
+          "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."
         },
         {
           "id": "tentaculos_imobilizar",
@@ -3894,7 +3896,8 @@ window.EDITOR_CATALOG = {
           "id": "movimento_aquatico",
           "name": "Movimento Aquático",
           "action_type": "passiva",
-          "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."
+          "ignora_pantano": true,
+          "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."
         },
         {
           "id": "tentaculos_imobilizar",

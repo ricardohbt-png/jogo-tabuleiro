@@ -2598,6 +2598,7 @@ def try_open_savegame_room(account, sid, rooms):
     room.scene_conversations_done = _migrar_chaves_conversa(
         sg.get("scene_conversations_done") or sg.get("tavern_conversations_done") or [])
     room.scene_triggers_done = {str(x) for x in (sg.get("scene_triggers_done") or []) if str(x)}
+    room.story_beats_done = {str(x) for x in (sg.get("story_beats_done") or []) if str(x)}
     if isinstance(sg.get("active_scene"), dict):
         room.active_scene = deepcopy(sg["active_scene"])
     if isinstance(sg.get("scene_variables"), dict):
@@ -4087,6 +4088,9 @@ MONSTER_DEFS = [
             {"id": "agarrar",         "name": "Agarrar",          "action_type": "passiva",
              "dc": 12, "save": "fortitude",
              "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso"},
+            {"id": "movimento_agua_sem_penalidade", "name": "Deslocamento Aquático", "action_type": "passiva",
+             "ignora_penalidade_agua": True,
+             "descricao": "Move normalmente em água e água profunda, sem custo adicional de movimento. Não evita efeitos de redemoinhos."},
             {"id": "atq_mandibula",   "name": "Ataque de Mandíbula", "action_type": "passiva",
              "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)"},
             {"id": "arrastar",        "name": "Arrastar",          "action_type": "passiva",
@@ -5056,7 +5060,7 @@ MONSTER_DEFS.extend([
             {"name": "Ferrão", "atk_bonus": 5, "damage": "1d6", "damage_types": ["physical"], "num_attacks": 1},
         ],
         "special_abilities": [
-            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "ignora_pantano": True, "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."},
             {"id": "veneno_charcos", "name": "Veneno", "action_type": "passiva", "attack_index": 3, "poison_dc": 15, "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 15; falha: perde a ação de movimento no próximo turno."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
@@ -5073,7 +5077,7 @@ MONSTER_DEFS.extend([
             {"name": "Ferrão", "atk_bonus": 9, "damage": "1d6+2", "damage_types": ["physical"], "num_attacks": 1},
         ],
         "special_abilities": [
-            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "ignora_pantano": True, "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."},
             {"id": "tentaculos_imobilizar", "name": "Tentáculos", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "dc": 17, "save": "fortitude", "escape_saves": ["fortitude"], "max_targets": 1, "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Escape: Fortitude CD 17."},
             {"id": "constricao_charcos", "name": "Constrição", "action_type": "passiva", "damage": "1d6+5", "damage_types": ["physical"], "descricao": "No início do turno, criaturas Imobilizadas sofrem 1d6+5. Enquanto presas, não podem se afastar."},
             {"id": "ferrao_paralitico", "name": "Ferrão Paralítico", "action_type": "passiva", "attack_index": 3, "dc": 17, "save": "fortitude", "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."},
@@ -5093,7 +5097,7 @@ MONSTER_DEFS.extend([
             {"name": "Ferrões", "atk_bonus": 12, "damage": "2d6+4", "damage_types": ["physical"], "num_attacks": 2},
         ],
         "special_abilities": [
-            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "descricao": "Move 6 quadrados normalmente em terra, água e água profunda."},
+            {"id": "movimento_aquatico", "name": "Movimento Aquático", "action_type": "passiva", "ignora_pantano": True, "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano."},
             {"id": "tentaculos_imobilizar", "name": "Tentáculos", "action_type": "passiva", "attack_index": 1, "hits_needed": 2, "dc": 17, "save": "fortitude", "escape_saves": ["fortitude"], "max_targets": 2, "descricao": "Se dois Tentáculos acertarem o mesmo alvo, ele fica Imobilizado. Pode manter dois alvos. Escape: Fortitude CD 17."},
             {"id": "constricao_charcos", "name": "Constrição", "action_type": "passiva", "damage": "2d6+8", "damage_types": ["physical"], "descricao": "No início do turno, criaturas Imobilizadas sofrem 2d6+8. Enquanto presas, não podem se afastar."},
             {"id": "ferrao_paralitico", "name": "Ferrão Paralítico", "action_type": "passiva", "attack_index": 3, "dc": 17, "save": "fortitude", "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 17; falha: perde a ação de movimento no próximo turno."},
@@ -6449,6 +6453,11 @@ def validar_dungeon(defn):
             return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
         if pr.get("image") is not None and not isinstance(pr.get("image"), str):
             return False, "prisoner.image deve ser uma string (caminho do arquivo)."
+        if pr.get("model3d") is not None and not isinstance(pr.get("model3d"), str):
+            return False, "prisoner.model3d deve ser uma string (caminho do arquivo)."
+        if pr.get("model3d") and (os.path.basename(pr["model3d"]) != pr["model3d"]
+                                   or os.path.splitext(pr["model3d"])[1].lower() != ".glb"):
+            return False, "prisoner.model3d deve ser o nome de um arquivo .glb."
 
     ex = defn.get("exit")
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
@@ -8043,6 +8052,44 @@ SLOT_BONUS_CLERIGO = {"quarto": 1}
 SLOTS_TESTE_MAGO = {"quarto": 3}
 # Rodadas para um slot gasto regenerar, por cÃ­rculo.
 SLOT_REGEN = {"primeiro": 10, "segundo": 15, "terceiro": 20, "quarto": 25}
+# Progressão D&D 3.5 usada somente pelos heróis temporários do modo de teste.
+# A coluna de truques foi removida; o nível 1 começa com os dois espaços de
+# primeiro círculo definidos para este jogo.
+_CIRCULOS_MAGIA_TESTE = ("primeiro", "segundo", "terceiro", "quarto", "quinto",
+                         "sexto", "setimo", "oitavo", "nono")
+_SLOTS_MAGO_TESTE = (
+    (2,0,0,0,0,0,0,0,0), (2,0,0,0,0,0,0,0,0),
+    (2,1,0,0,0,0,0,0,0), (3,2,0,0,0,0,0,0,0),
+    (3,2,1,0,0,0,0,0,0), (3,3,2,0,0,0,0,0,0),
+    (4,3,2,1,0,0,0,0,0), (4,3,3,2,0,0,0,0,0),
+    (4,4,3,2,1,0,0,0,0), (4,4,3,3,2,0,0,0,0),
+    (4,4,4,3,2,1,0,0,0), (4,4,4,3,3,2,0,0,0),
+    (4,4,4,4,3,2,1,0,0), (4,4,4,4,3,3,2,0,0),
+    (4,4,4,4,4,3,2,1,0), (4,4,4,4,4,3,3,2,0),
+    (4,4,4,4,4,4,3,2,1), (4,4,4,4,4,4,3,3,2),
+    (4,4,4,4,4,4,4,3,3), (4,4,4,4,4,4,4,4,4),
+)
+_SLOTS_CLERIGO_TESTE = (
+    (2,0,0,0,0,0,0,0,0), (2,0,0,0,0,0,0,0,0),
+    (2,1,0,0,0,0,0,0,0), (3,2,0,0,0,0,0,0,0),
+    (3,2,1,0,0,0,0,0,0), (3,3,2,0,0,0,0,0,0),
+    (4,3,2,1,0,0,0,0,0), (4,3,3,2,0,0,0,0,0),
+    (4,4,3,2,1,0,0,0,0), (4,4,3,3,2,0,0,0,0),
+    (5,4,4,3,2,1,0,0,0), (5,4,4,3,3,2,0,0,0),
+    (5,5,4,4,3,2,1,0,0), (5,5,4,4,3,3,2,0,0),
+    (5,5,5,4,4,3,2,1,0), (5,5,5,4,4,3,3,2,0),
+    (5,5,5,5,4,4,3,2,1), (5,5,5,5,4,4,3,3,2),
+    (5,5,5,5,5,4,4,3,3), (5,5,5,5,5,4,4,4,4),
+)
+_SLOTS_TESTE_POR_CLASSE = {"mage": _SLOTS_MAGO_TESTE, "cleric": _SLOTS_CLERIGO_TESTE}
+
+def _slot_circulos_para(p):
+    return _CIRCULOS_MAGIA_TESTE if p.get("test_hero") else tuple(SLOT_REGEN)
+
+def _slot_recarga_para(p, circulo):
+    if p.get("test_hero") and circulo in _CIRCULOS_MAGIA_TESTE:
+        return 10 + 5 * _CIRCULOS_MAGIA_TESTE.index(circulo)
+    return SLOT_REGEN[circulo]
 # O Cajado Arcano possui um slot de 1º círculo separado dos slots normais.
 # Ele só pode ser usado depois que os slots normais do círculo se esgotarem.
 CAJADO_ARCANO_SLOT_CIRCULO = "primeiro"
@@ -8052,6 +8099,10 @@ NIVEL_NOVA_MAGIA = {2: "primeiro", 3: "segundo", 4: "segundo", 5: "terceiro"}
 
 def slots_max_para(p):
     """Máximo de slots por círculo do jogador, pela tabela de nível (cap no 5)."""
+    if p.get("test_hero") and p.get("class_id") in _SLOTS_TESTE_POR_CLASSE:
+        nivel = min(max(int(p.get("level", 1) or 1), 1), 20)
+        linha = _SLOTS_TESTE_POR_CLASSE[p["class_id"]][nivel - 1]
+        return {circ: linha[i] for i, circ in enumerate(_CIRCULOS_MAGIA_TESTE)}
     nivel = min(max(p.get("level", 1), 1), 5)
     slots = dict(SLOTS_POR_NIVEL[nivel])
     if p.get("class_id") == "mage":
@@ -8061,6 +8112,35 @@ def slots_max_para(p):
         for circulo, bonus in SLOT_BONUS_CLERIGO.items():
             slots[circulo] = slots.get(circulo, 0) + int(bonus or 0)
     return slots
+
+def escolhas_magias_teste(class_id, level):
+    """Escolhas acumuladas de magias: 2 ao abrir um círculo, +1 por slot novo.
+
+    Só conta magias implementadas que ainda existam no grimório da classe;
+    círculos sem opções atuais não geram escolhas impossíveis.
+    """
+    if class_id not in _SLOTS_TESTE_POR_CLASSE:
+        return {}
+    nivel = min(max(int(level or 1), 1), 20)
+    anterior = {c: 0 for c in _CIRCULOS_MAGIA_TESTE}
+    escolhas = {c: 0 for c in _CIRCULOS_MAGIA_TESTE}
+    for n in range(1, nivel + 1):
+        p = {"test_hero": True, "class_id": class_id, "level": n}
+        atual = slots_max_para(p)
+        for circ in _CIRCULOS_MAGIA_TESTE:
+            antes, depois = anterior[circ], atual.get(circ, 0)
+            if antes == 0 and depois > 0:
+                escolhas[circ] += 2
+            elif depois > antes:
+                escolhas[circ] += depois - antes
+        anterior = atual
+    for circ, quantidade in escolhas.items():
+        disponiveis = sum(1 for mid, magia in GRIMORIO.items()
+                          if mid in GRIMORIO_IMPLEMENTADAS
+                          and class_id in magia.get("classe", [])
+                          and magia.get("circulo") == circ)
+        escolhas[circ] = min(quantidade, disponiveis)
+    return escolhas
 
 # Magias cuja lÃ³gica jÃ¡ estÃ¡ implementada (as demais retornam "em desenvolvimento").
 GRIMORIO_IMPLEMENTADAS = {"manto_escuridao", "visao_escuro",
@@ -9335,6 +9415,7 @@ class GameRoom:
         self.fatos = set()
         self.scene_conversations_done = set()
         self.scene_triggers_done = set()  # gatilhos narrativos da campanha já consumidos
+        self.story_beats_done = set()     # slides narrativos já concluídos pelo anfitrião
         self.location_scene_trigger = None # cena da entrada atual do mapa-múndi
         self._pending_dungeon_entry = None  # entrada aguardando fim da cena narrativa
         # Preset de iluminaÃ§Ã£o do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
@@ -9885,7 +9966,9 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.nenhuma_escolha_de_magia_pendente")}); return
         circ = fila[0]
         m = GRIMORIO.get(magia_id)
-        if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != circ:
+        if (not m or p["class_id"] not in m.get("classe", [])
+                or m.get("circulo") != circ
+                or (p.get("test_hero") and magia_id not in GRIMORIO_IMPLEMENTADAS)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.magia_invalida_para_este_circulo_classe")}); return
         if magia_id in p.get("magias_conhecidas", []):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_ja_conhece_essa_magia")}); return
@@ -10254,6 +10337,55 @@ class GameRoom:
             self.scene_triggers_done.add(key)
             self._checkpoint_savegame()
         return ok
+
+    async def _continuar_entrada_pendente(self):
+        """Retoma a viagem somente quando os slides e cenas anteriores terminaram."""
+        pending = self._pending_dungeon_entry
+        if not pending or self.active_scene:
+            return
+        story_key = pending.get("story_key")
+        if story_key and not pending.get("story_done"):
+            return
+
+        trigger = pending.get("location_scene_trigger")
+        if trigger and not pending.get("location_scene_started"):
+            pending["location_scene_started"] = True
+            if await self._trigger_location_scene(
+                    trigger, pending.get("location_scene_key") or ""):
+                return
+
+        self._pending_dungeon_entry = None
+        if story_key and self._story_encadeada and self._story_encadeada.get("key") == story_key:
+            self._story_encadeada = None
+        if pending.get("emendando"):
+            # A etapa anterior ainda está aberta no cliente; mantenha-a sem
+            # iniciativa até a transição para a nova masmorra.
+            self.dungeon_intro_active = False
+            self.dungeon_intro_until_ms = None
+            self._emendando = True
+            try:
+                await self.enter_dungeon(pending.get("pid") or self.host_pid,
+                                         from_world_adventure=True)
+            finally:
+                self._emendando = False
+            return
+        await self.enter_dungeon(pending.get("pid") or self.host_pid,
+                                 from_world_adventure=bool(pending.get("from_world_adventure")))
+
+    async def handle_story_complete(self, pid, key):
+        """O anfitrião concluiu os slides que bloqueiam uma entrada de masmorra."""
+        pending = self._pending_dungeon_entry
+        if (pid != self.host_pid or not pending or not key
+                or str(key) != str(pending.get("story_key"))):
+            return
+        pending["story_done"] = True
+        self.story_beats_done.add(str(key))
+        if self._story_encadeada and self._story_encadeada.get("key") == str(key):
+            self._story_encadeada = None
+        self._checkpoint_savegame()
+        # Fecha o slideshow também nos clientes que ainda o estavam lendo.
+        await self.broadcast({"type": "story_complete", "key": str(key)})
+        await self._continuar_entrada_pendente()
 
     async def iniciar_cena(self, sid, fonte="evento"):
         """Abre uma cena para a sala toda. A navegação de fala é local; escolhas
@@ -12996,7 +13128,8 @@ class GameRoom:
         pr = defn.get("prisoner")
         self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
-                          "image": pr.get("image"), "rescuer_pid": None, "moves_left": 0,
+                          "image": pr.get("image"), "model3d": pr.get("model3d"),
+                          "rescuer_pid": None, "moves_left": 0,
                           "nome": "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
                           "freed": False, "alive": True}
                          if pr else None)
@@ -13522,19 +13655,29 @@ class GameRoom:
         self._story_encadeada = _story_beat(
             f"aventura:{adventure['id']}:{stage_index}",
             [_etapa_obj(stages[stage_index]).get("intro")])
+        if self._story_encadeada and self._story_encadeada["key"] in self.story_beats_done:
+            self._story_encadeada = None
         self.dungeon_generated = False
         await self.gm_say(T("narracao.o_grupo_parte_para_etapa_fome_sede_por_h", adventure_nome=nome_criatura(adventure), stage_index_1=stage_index + 1, len_stages=len(stages), fome=fome, sede=sede))
         # A cena narrativa da etapa acontece ainda na cidade, antes de mudar
         # para a tela da masmorra. Se não houver cena válida, a entrada segue
         # imediatamente e o cliente mostra a transição de viagem como fallback.
-        trigger = self.location_scene_trigger
-        self.location_scene_trigger = None
         scene_key = f"world:{adventure['id']}:{stage_index}:enter"
-        self._pending_dungeon_entry = {"pid": pid, "from_world_adventure": True}
-        if await self._trigger_location_scene(trigger, scene_key):
+        self._pending_dungeon_entry = {
+            "pid": pid,
+            "from_world_adventure": True,
+            "story_key": self._story_encadeada.get("key") if self._story_encadeada else None,
+            "story_done": self._story_encadeada is None,
+            "location_scene_trigger": self.location_scene_trigger,
+            "location_scene_key": scene_key,
+        }
+        self.location_scene_trigger = None
+        if self._story_encadeada:
+            # O cliente exibe os slides na cidade; a confirmação do anfitrião
+            # libera primeiro a cena do destino e depois a masmorra.
+            await self.broadcast_city_state()
             return
-        self._pending_dungeon_entry = None
-        await self.enter_dungeon(pid, from_world_adventure=True)
+        await self._continuar_entrada_pendente()
 
     async def handle_city_map_points(self, pid, city_id, points):
         await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_da_cidade_so_podem_ser_ajustad")})
@@ -13587,6 +13730,21 @@ class GameRoom:
         return list(fallback or self.stairs_pos or [0, 0])
 
     async def enter_dungeon(self, pid, from_world_adventure=False):
+        # Uma emenda autorada pode carregar slides de abertura da nova etapa.
+        # Trave a iniciativa da masmorra antiga enquanto o anfitrião os lê.
+        story = self._story_encadeada
+        if (self._emendando and story and str(story.get("key", "")).startswith("encadeada:")
+                and story.get("key") not in self.story_beats_done):
+            self._pending_dungeon_entry = {
+                "pid": pid, "from_world_adventure": True,
+                "story_key": story["key"], "story_done": False,
+                "emendando": True,
+            }
+            self.dungeon_intro_active = True
+            self.dungeon_intro_until_ms = None
+            self._cancelar_timer_turno()
+            await self.push_state()
+            return
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.conclua_ou_pule_a_cena_antes_de_entrar_n")})
             return
@@ -13605,6 +13763,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_destino_no_mapa_do_mundo_para")})
             return
 
+        nova = not self.dungeon_generated
+
         # A cena de campanha vinculada à entrada também acontece na cidade.
         # Para aventuras do mapa-múndi, a cena específica da etapa já pode ter
         # sido exibida; este segundo gatilho só abre se houver outro válido.
@@ -13614,6 +13774,29 @@ class GameRoom:
             if await self._trigger_campaign_scene("dungeon_enter"):
                 return
             self._pending_dungeon_entry = None
+
+        # Slides autorados da campanha são uma etapa obrigatória da entrada.
+        # A fase, a iniciativa e o cronômetro só começam após a confirmação.
+        if (self.phase == "city" and not self._emendando and nova
+                and self.mode == "campaign" and self.campaign):
+            stages = self.campaign.get("dungeons") or []
+            if 0 <= self.campaign_phase < len(stages):
+                phase = _fase_obj(stages[self.campaign_phase])
+                parts = []
+                if self.campaign_phase == 0:
+                    parts.append(self.campaign.get("intro"))
+                parts.append(phase.get("intro"))
+                story = _story_beat(f"intro:{self.campaign_phase}", parts)
+                if story and story["key"] not in self.story_beats_done:
+                    self._story_encadeada = story
+                    self._pending_dungeon_entry = {
+                        "pid": pid,
+                        "from_world_adventure": bool(from_world_adventure),
+                        "story_key": story["key"],
+                        "story_done": False,
+                    }
+                    await self.broadcast_city_state()
+                    return
 
         # Ponto seguro: fotografa o estado "cidade concluída" ANTES da aventura —
         # compras/equips da cidade não se perdem se a expedição cair no meio.
@@ -13630,7 +13813,6 @@ class GameRoom:
         # Toda volta da cidade apenas a RETOMA â€” nada do mundo Ã© regenerado nem
         # limpo, entÃ£o mapa/monstros/baÃºs/portas/nÃ©voa/armadilhas ficam exatamente
         # como o herÃ³i deixou. Ver self.dungeon_generated.
-        nova = not self.dungeon_generated
         pids = [pid2 for pid2, player in self.players.items()
                 if not player.get("is_master") and player.get("class_id")]
         # Campanha: a 1Âª entrada de cada fase carrega a masmorra da fase atual.
@@ -13964,7 +14146,11 @@ class GameRoom:
             p["moves_left"] = 0
             p["action_done"] = True
             p["bonus_action_used"] = True
-        if p.get("paralisado"): await self._processar_paralisacao_turno(p)
+        congelado_pula_turno = False
+        if p.get("paralisado"):
+            continua_paralisado = await self._processar_paralisacao_turno(p)
+            congelado_pula_turno = bool(
+                continua_paralisado and p.get("_paralisado_chamado_inverno"))
         await self._processar_status_jogador_turno(p)
         await self._processar_mods_magia_turno(p)
         await self._processar_nuvem_acida_inicio_turno(p)
@@ -14004,6 +14190,11 @@ class GameRoom:
             p["fosso_turno_perdido"] = True
             p["action_done"] = p["bonus_action_used"] = True; p["moves_left"] = 0
             await self.gm_say(T("narracao.fosso_perde_proxima_rodada", heroi=p['name']))
+        if congelado_pula_turno:
+            p["moves_left"] = 0
+            p["action_done"] = True
+            p["bonus_action_used"] = True
+        self._preparar_congelamento_chamado_inverno_turno(p)
         self._iniciar_timer_turno()
 
     async def _activate_initiative_actor(self):
@@ -18117,7 +18308,196 @@ class GameRoom:
         m.pop("_ja_executou_acao", None)
         await self.push_state()
 
-    async def handle_mestre_adicionar_heroi_teste(self, pid, class_id, tx, ty):
+    def _opcoes_equipamento_heroi_teste(self, class_id):
+        fontes = list(_DUNGEON_ITEM_CATALOG.values()) + list(WEAPONS.values())
+        por_id = {}
+        for bruto in fontes:
+            if not isinstance(bruto, dict) or not bruto.get("id"):
+                continue
+            # A entrada do catálogo de loja prevalece sobre WEAPONS, que só
+            # descreve atributos de combate e não contém restrições de classe.
+            if bruto["id"] in por_id:
+                continue
+            item = deepcopy(bruto)
+            if item.get("id") == "unarmed":
+                continue
+            if item.get("id") in {w.get("id") for w in WEAPONS.values()}:
+                item.setdefault("item_slot", "weapon")
+            allowed = item.get("allowed_classes")
+            if allowed and class_id not in allowed:
+                continue
+            por_id[item["id"]] = _normalizar_item_defesa_equipavel(item)
+
+        categorias = {
+            "weapon": "weapon", "off_hand": "off_hand", "armor": "armor",
+            "head": "head", "boots": "boots", "ring1": "ring", "ring2": "ring",
+            "item1": "item", "item2": "item",
+        }
+        opcoes = {slot: [] for slot in GEAR_SLOTS}
+        for item in por_id.values():
+            categoria = self._slot_category_for_item(item)
+            for slot, categoria_slot in categorias.items():
+                if categoria != categoria_slot:
+                    continue
+                opcoes[slot].append({"id": item["id"], "name": item.get("name") or item["id"],
+                                     "emoji": item.get("emoji") or item.get("icon") or "🎒"})
+        for lista in opcoes.values():
+            lista.sort(key=lambda i: str(i["name"]).casefold())
+        return opcoes
+
+    async def handle_mestre_opcoes_heroi_teste(self, pid, class_id):
+        if (pid != self.master_pid or not getattr(self, "test_mode", False)
+                or self.phase != "playing" or class_id not in CLASSES):
+            return
+        if getattr(self, "test_combat", {}).get("active"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_simulacao_antes_mesa")})
+            return
+        if f"test_hero_{class_id}" in self.players:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.heroi_ja_na_mesa_de_teste")})
+            return
+        spells = [{"id": mid, "name": magia.get("nome", mid),
+                   "icon": magia.get("icone", "✨"), "circle": magia.get("circulo")}
+                  for mid, magia in GRIMORIO.items()
+                  if mid in GRIMORIO_IMPLEMENTADAS and class_id in magia.get("classe", [])]
+        guild = [{"id": item_id, "name": item.get("nome", item_id),
+                  "icon": item.get("icon", "✦"), "line": item.get("linha"),
+                  "level": item.get("nivel"), "required": item.get("requer")}
+                 for item_id, item in GUILD_CATALOG.items()
+                 if item.get("categoria") == "especializacao" and item.get("linha")
+                 and _guild_classe_ok(item.get("classe"), class_id)]
+        slots_by_level = {str(n): slots_max_para({"test_hero": True,
+                                                   "class_id": class_id, "level": n})
+                          for n in range(1, 21)} if class_id in _SLOTS_TESTE_POR_CLASSE else {}
+        choices_by_level = {str(n): escolhas_magias_teste(class_id, n)
+                            for n in range(1, 21)} if class_id in _SLOTS_TESTE_POR_CLASSE else {}
+        await self.send_to(pid, {
+            "type": "mestre_heroi_teste_opcoes", "class_id": class_id,
+            "gear_slots": list(GEAR_SLOTS), "gear_options": self._opcoes_equipamento_heroi_teste(class_id),
+            "spells": spells, "guild": guild, "slots_by_level": slots_by_level,
+            "choices_by_level": choices_by_level,
+        })
+
+    def _aplicar_nivel_teste(self, hero, level):
+        level = min(max(int(level), 1), 20)
+        regra = LEVEL_PROGRESSAO[hero["class_id"]]
+        for novo_nivel in range(2, level + 1):
+            ganho_hp = regra["hp"] + get_bonus_constituicao(hero["con_"])
+            hero["max_hp"] += ganho_hp
+            hero["hp"] += ganho_hp
+            hero["level"] = novo_nivel
+            hero["level_bonus"] = novo_nivel
+            hero["atk_bonus"] += 1
+            hero["base_atk_bonus"] += 1
+            if novo_nivel >= 3 and novo_nivel % 2 == 1:
+                for save in regra["saves_2"]:
+                    hero[save] += 1
+            if novo_nivel >= 4 and (novo_nivel - 1) % 3 == 0:
+                for save in regra["saves_3"]:
+                    hero[save] += 1
+            hero["fome_max_base"] = int(hero.get("fome_max_base", hero.get("fome_max", 100))) + regra["fome"]
+            hero["sede_max_base"] = int(hero.get("sede_max_base", hero.get("sede_max", 100))) + regra["sede"]
+            _recalcular_maximos_sobrevivencia(hero)
+            hero["fome"] = hero["fome_max"]
+            hero["sede"] = hero["sede_max"]
+        hero["xp"] = 0
+        _garantir_slots_guilda(hero)
+
+    def _validar_config_heroi_teste(self, class_id, config):
+        if not isinstance(config, dict):
+            return None, "Configuração do herói inválida."
+        try:
+            if isinstance(config.get("level", 1), bool):
+                raise ValueError("boolean level")
+            level = int(config.get("level", 1))
+        except (TypeError, ValueError):
+            return None, "Nível inválido."
+        if not 1 <= level <= 20:
+            return None, "O nível deve estar entre 1 e 20."
+
+        gear_in = config.get("gear") if isinstance(config.get("gear"), dict) else {}
+        gear_options = self._opcoes_equipamento_heroi_teste(class_id)
+        catalog = dict(_DUNGEON_ITEM_CATALOG)
+        for item in WEAPONS.values():
+            catalog.setdefault(item.get("id"), item)
+        gear_ids = {}
+        for slot in GEAR_SLOTS:
+            item_id = gear_in.get(slot)
+            if item_id in (None, ""):
+                continue
+            if not isinstance(item_id, str):
+                return None, f"O item escolhido para {slot} é inválido."
+            if not any(opt["id"] == item_id for opt in gear_options.get(slot, [])):
+                return None, f"O item escolhido não pode ser equipado no espaço {slot}."
+            gear_ids[slot] = item_id
+
+        weapon_id = gear_ids.get("weapon")
+        off_id = gear_ids.get("off_hand")
+        if weapon_id and off_id and catalog.get(weapon_id, {}).get("two_handed"):
+            return None, "Uma arma de duas mãos não pode ser usada com item na mão secundária."
+
+        spells = []
+        all_spells_value = config.get("all_spells", True)
+        if not isinstance(all_spells_value, bool):
+            return None, "A opção de magias está inválida."
+        all_spells = all_spells_value
+        if class_id in _SLOTS_TESTE_POR_CLASSE:
+            pools = {circ: [mid for mid, magia in GRIMORIO.items()
+                            if mid in GRIMORIO_IMPLEMENTADAS
+                            and class_id in magia.get("classe", [])
+                            and magia.get("circulo") == circ]
+                     for circ in _CIRCULOS_MAGIA_TESTE}
+            known_input = config.get("spells") if isinstance(config.get("spells"), list) else []
+            if all_spells:
+                slots = slots_max_para({"test_hero": True, "class_id": class_id, "level": level})
+                spells = [mid for circ, pool in pools.items() if slots.get(circ, 0) > 0 for mid in pool]
+            else:
+                if any(not isinstance(mid, str) for mid in known_input):
+                    return None, "A lista de magias escolhidas é inválida."
+                if len(known_input) != len(set(known_input)):
+                    return None, "Não escolha a mesma magia mais de uma vez."
+                allowed = {mid for pool in pools.values() for mid in pool}
+                if any(mid not in allowed for mid in known_input):
+                    return None, "Uma das magias escolhidas não está disponível para esta classe."
+                expected = escolhas_magias_teste(class_id, level)
+                for circ, pool in pools.items():
+                    picked = [mid for mid in known_input if mid in pool]
+                    if len(picked) != expected.get(circ, 0):
+                        return None, f"Escolha {expected.get(circ, 0)} magia(s) do círculo {circ}."
+                spells = list(known_input)
+
+        guild_input = config.get("guild_evolutions") if isinstance(config.get("guild_evolutions"), dict) else {}
+        owned = set()
+        for line, item_id in guild_input.items():
+            if item_id in (None, ""):
+                continue
+            if not isinstance(item_id, str):
+                return None, "Uma evolução da guilda é inválida."
+            item = GUILD_CATALOG.get(item_id)
+            if (not item or item.get("categoria") != "especializacao"
+                    or not item.get("linha") or not _guild_classe_ok(item.get("classe"), class_id)
+                    or str(item.get("linha")) != str(line)
+                    or int(item.get("nivel", 0) or 0) > level):
+                return None, "Uma evolução da guilda é inválida para esta classe ou nível."
+            atual = item
+            visitados = set()
+            while atual:
+                aid = atual.get("id")
+                if aid in visitados:
+                    return None, "Há uma dependência circular nas evoluções da guilda."
+                visitados.add(aid)
+                owned.add(aid)
+                requer = atual.get("requer")
+                atual = GUILD_CATALOG.get(requer) if requer else None
+                if atual and (atual.get("categoria") != "especializacao"
+                              or atual.get("linha") != item.get("linha")
+                              or not _guild_classe_ok(atual.get("classe"), class_id)
+                              or int(atual.get("nivel", 0) or 0) > level):
+                    return None, "Um pré-requisito da evolução da guilda não está disponível."
+
+        return {"level": level, "gear": gear_ids, "all_spells": all_spells,
+                "spells": spells, "guild_evolutions": sorted(owned)}, None
+
+    async def handle_mestre_adicionar_heroi_teste(self, pid, class_id, tx, ty, config=None):
         """Adiciona um peão de herói à mesa livre do editor.
 
         A sessão de teste não representa uma partida nem ocupa personagens
@@ -18146,26 +18526,45 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.escolha_casa_livre_posicionar_heroi")})
             return
+        config, erro_config = self._validar_config_heroi_teste(class_id, config or {"level": 1})
+        if erro_config:
+            await self.send_to(pid, {"type": "error", "msg": erro_config})
+            return
         hero = make_player(test_pid, CLASSES[class_id]["name"], class_id,
                            len(self.players))
         hero["pos"] = [tx, ty]
         hero["test_hero"] = True
-        self._equipar_kit_heroi_teste(hero)
+        self._aplicar_nivel_teste(hero, config["level"])
+        self._equipar_kit_heroi_teste(hero, config)
+        hero["guild_owned"]["especializacoes"] = list(config["guild_evolutions"])
+        # O herói temporário começa sem kit herdado. Slots não selecionados
+        # ficam vazios e a CA volta à base antes de aplicar as escolhas.
+        hero["gear"] = {slot: None for slot in GEAR_SLOTS}
+        hero["weapon"] = deepcopy(WEAPONS["unarmed"])
+        hero["ac_base"] = 10 + mod(hero["dex"])
+        hero["ac"] = hero["ac_base"]
+        catalog = dict(_DUNGEON_ITEM_CATALOG)
+        for item_def in WEAPONS.values():
+            catalog.setdefault(item_def.get("id"), item_def)
+        for slot, item_id in config["gear"].items():
+            item = deepcopy(_DUNGEON_ITEM_CATALOG.get(item_id) or catalog.get(item_id))
+            if not item:
+                continue
+            item = _normalizar_item_defesa_equipavel(item)
+            self._rescue_equip(hero, item, slot)
+        _recalculate_ac(hero)
+        self._atualizar_voo_heroi(hero)
         self.players[test_pid] = hero
         await self.push_state()
 
-    def _equipar_kit_heroi_teste(self, hero):
+    def _equipar_kit_heroi_teste(self, hero, config=None):
         """Kit do herói-teste: o que no jogo real vem do lobby/cidade e que a
         ficha crua do `make_player` não tem. Sem isto, mago/clérigo nasciam com
         `magias_conhecidas=[]` (menu de magias vazio) e o Ladino sem frasco
         (Veneno Rápido sempre recusado). Só na sala descartável do editor."""
         cls = hero.get("class_id")
         if cls in ("mage", "cleric"):
-            # Todas as magias IMPLEMENTADAS da classe — os slots por círculo
-            # continuam limitando o que pode ser lançado no nível do herói.
-            hero["magias_conhecidas"] = [
-                mid for mid, magia in GRIMORIO.items()
-                if mid in GRIMORIO_IMPLEMENTADAS and cls in magia.get("classe", [])]
+            hero["magias_conhecidas"] = list((config or {}).get("spells", []))
         if cls == "rogue":
             frasco = next((dict(i) for i in SHOP_MERCHANT
                            if i.get("effect") == "coat_poison" and i.get("veneno_id")), None)
@@ -20807,6 +21206,7 @@ class GameRoom:
         self.savegame["fatos"] = sorted(self.fatos)
         self.savegame["scene_conversations_done"] = sorted(self.scene_conversations_done)
         self.savegame["scene_triggers_done"] = sorted(self.scene_triggers_done)
+        self.savegame["story_beats_done"] = sorted(self.story_beats_done)
         self.savegame["active_scene"] = deepcopy(self.active_scene)
         self.savegame["scene_variables"] = deepcopy(self.scene_variables)
         self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
@@ -22900,7 +23300,7 @@ class GameRoom:
         lançar outra magia.
         """
         for p in self.players.values():
-            for circulo in SLOT_REGEN:
+            for circulo in _slot_circulos_para(p):
                 self._slot_prune(p, circulo)
 
     def _cajado_arcano_equipado(self, p):
@@ -22987,9 +23387,10 @@ class GameRoom:
         return slots_max_para(p).get(circulo, 0) - usados
 
     def _gastar_slot(self, p, circulo):
-        """Marca 1 slot do círculo como gasto: volta em SLOT_REGEN[circulo] rodadas."""
+        """Marca 1 slot gasto com o tempo de recarga aplicável ao personagem."""
         p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []})
-        p["slots_cooldown"].setdefault(circulo, []).append(self.round_num + SLOT_REGEN[circulo])
+        p["slots_cooldown"].setdefault(circulo, []).append(
+            self.round_num + _slot_recarga_para(p, circulo))
 
     def _proximo_slot_rodadas(self, p, circulo):
         """Menor contagem regressiva (rodadas) até liberar 1 slot do círculo, ou None."""
@@ -23009,7 +23410,7 @@ class GameRoom:
         contagem já convertida para o cliente não depender de estado local.
         """
         out = {}
-        for circulo in SLOT_REGEN:
+        for circulo in _slot_circulos_para(p):
             self._slot_prune(p, circulo)
             out[circulo] = sorted(
                 max(0, int(ready_at) - self.round_num)
@@ -23020,7 +23421,7 @@ class GameRoom:
 
     def _recarregar_slots(self, p):
         """Recarga total (descanso na cidade): zera todos os cooldowns."""
-        p["slots_cooldown"] = {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []}
+        p["slots_cooldown"] = {circ: [] for circ in _slot_circulos_para(p)}
         p["cajado_arcano_slot_pronto_em"] = 0
 
     # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -24328,8 +24729,9 @@ class GameRoom:
         area_set = {(int(x), int(y)) for x, y in tiles}
         alvos = []
         for alvo in self._alvos_no_inverno(tiles):
-            posicoes = (self._monster_tiles(alvo)
-                        if alvo.get("id") in self.monsters else [alvo.get("pos", [])])
+            is_monster = self.monsters.get(alvo.get("id")) is alvo
+            posicoes = (self._monster_tiles(alvo) if is_monster
+                        else [alvo.get("pos", [])])
             if any(self._tem_linha_de_visao([cx, cy], pos)
                    for pos in posicoes
                    if len(pos) >= 2 and (int(pos[0]), int(pos[1])) in area_set):
@@ -25950,7 +26352,7 @@ class GameRoom:
             self.materiais[tile] = material
         self._rebuild_materiais_index()
 
-    def _cancelar_magias_terreno_exclusivas(self):
+    def _cancelar_magias_terreno_exclusivas(self, zona_ids=None):
         """Encerra qualquer área elemental anterior antes de criar outra.
 
         Ira da Rocha Ardente, Senhor das Águas e Chamado do Inverno ocupam o
@@ -25963,9 +26365,12 @@ class GameRoom:
         canceladas = []
         bases_permanentes = {}
         removeu_chamas = False
+        ids_alvo = None if zona_ids is None else {str(zid) for zid in zona_ids}
 
         for zona in self.zonas_especiais:
             if not zona.get("ativa") or zona.get("tipo") not in tipos:
+                continue
+            if ids_alvo is not None and str(zona.get("id")) not in ids_alvo:
                 continue
             zona["ativa"] = False
             canceladas.append(str(zona.get("id")))
@@ -26081,6 +26486,52 @@ class GameRoom:
                 out.append(alvo)
         return out
 
+    def _preparar_congelamento_chamado_inverno_turno(self, caster):
+        """Rola uma vez por turno do clérigo quantos alvos pode congelar."""
+        if (not caster or caster.get("class_id") != "cleric" or not caster.get("alive")
+                or caster.get("paralisado") or caster.get("petrificado")
+                or caster.get("perde_turno")):
+            return
+        for zona in reversed(self.zonas_especiais):
+            if (zona.get("tipo") != "chamado_inverno" or not zona.get("ativa")
+                    or zona.get("permanente")
+                    or str(zona.get("caster")) != str(caster.get("id"))):
+                continue
+            if self.round_num < int(zona.get("congelamento_disponivel_em", 0) or 0):
+                continue
+            if self.round_num >= int(zona.get("expira_em", 0) or 0):
+                continue
+            if int(zona.get("congelamento_rodada", 0) or 0) == self.round_num:
+                continue
+            max_alvos = max(1, int(self._rolar_dado("1d4") or 1))
+            zona["congelamento_rodada"] = self.round_num
+            zona["congelamento_alvos_rolados"] = max_alvos
+            zona["congelamento_alvos_restantes"] = max_alvos
+            zona["congelamento_alvos_usados"] = []
+
+    def _chamado_inverno_alvos_identificados(self, zona):
+        """Entidades vivas na área mapeadas por tipo e id, para seleção segura."""
+        por_identidade = {}
+        for alvo in self.players.values():
+            por_identidade[id(alvo)] = ("player", alvo)
+        for alvo in self.monsters.values():
+            por_identidade[id(alvo)] = ("monster", alvo)
+        for alvo in self._all_animados():
+            por_identidade[id(alvo)] = ("animado", alvo)
+        if self.prisoner:
+            por_identidade[id(self.prisoner)] = ("prisoner", self.prisoner)
+        identificados = {}
+        for alvo in self._alvos_no_inverno(zona.get("tiles", [])):
+            tipo, entidade = por_identidade.get(id(alvo), (None, None))
+            if not tipo or entidade is not alvo:
+                continue
+            alvo_id = alvo.get("id")
+            if alvo_id is None and tipo == "prisoner":
+                alvo_id = "__prisoner__"
+            if alvo_id is not None:
+                identificados[(tipo, str(alvo_id))] = alvo
+        return identificados
+
     def _chamado_inverno_preflight(self, caster, magia, data, alcance_bonus=0):
         """Valida a mira do Chamado do Inverno sem alterar o estado.
 
@@ -26162,9 +26613,16 @@ class GameRoom:
             tiles, terreno, zone_id, permanente=permanente, expira_em=expira_em)
         self.zonas_especiais.append({
             "id": zone_id, "tipo": "chamado_inverno", "cx": cx, "cy": cy,
-            "lado": lado, "material": terreno, "duracao": None if permanente else dur,
+            "lado": lado, "tiles": [list(tile) for tile in tiles],
+            "material": terreno, "duracao": None if permanente else dur,
             "expira_em": expira_em, "permanente": permanente, "ativa": True,
             "caster": caster.get("id"), "material_bases": material_bases,
+            "congelamento_disponivel_em": None if permanente else self.round_num + 1,
+            "congelamento_cd": None if permanente else self._dif_magia(caster, magia),
+            "congelamento_rodada": None,
+            "congelamento_alvos_rolados": 0,
+            "congelamento_alvos_restantes": 0,
+            "congelamento_alvos_usados": [],
         })
         await self.broadcast({
             "type": "spell_animation", "spell_id": "chamado_inverno", "phase": "resolve",
@@ -26188,6 +26646,75 @@ class GameRoom:
                    else T("narracao.duracao.por_rodadas", dur=dur))
         await self.gm_say(
             T("narracao.transforma_uma_area_x_em", caster=caster['name'], lado=lado, tipo_txt=tipo_txt, dur_txt=dur_txt))
+
+    async def handle_chamado_inverno_congelar(self, pid, zone_id, targets):
+        """Resolve a seleção livre de criaturas para congelar nesta rodada."""
+        if (not self._is_turn(pid) or self.current_pid() != pid
+                or self.animados_phase_pid == pid or self.last_stand_pid == pid):
+            return
+        caster = self.players.get(pid)
+        if (not caster or not caster.get("alive") or caster.get("class_id") != "cleric"
+                or caster.get("paralisado") or caster.get("petrificado")
+                or caster.get("perde_turno")):
+            return
+        zona = next((z for z in reversed(self.zonas_especiais)
+                     if z.get("tipo") == "chamado_inverno" and z.get("ativa")
+                     and str(z.get("id")) == str(zone_id)
+                     and str(z.get("caster")) == str(pid)), None)
+        if not zona or zona.get("permanente"):
+            return
+        rodada = self.round_num
+        if (rodada < int(zona.get("congelamento_disponivel_em", 0) or 0)
+                or rodada >= int(zona.get("expira_em", 0) or 0)
+                or int(zona.get("congelamento_rodada", 0) or 0) != rodada):
+            return
+        restantes = max(0, int(zona.get("congelamento_alvos_restantes", 0) or 0))
+        if not restantes or not isinstance(targets, list) or not targets or len(targets) > restantes:
+            return
+
+        validos = self._chamado_inverno_alvos_identificados(zona)
+        escolhidos = []
+        vistos = set()
+        for item in targets:
+            if not isinstance(item, dict):
+                return
+            kind = str(item.get("kind") or "")
+            target_id = str(item.get("id")) if item.get("id") is not None else ""
+            chave = (kind, target_id)
+            alvo = validos.get(chave)
+            if not alvo or chave in vistos:
+                return
+            vistos.add(chave)
+            escolhidos.append((chave, alvo))
+
+        # Consome o limite antes dos testes (que podem ceder execução). Reenvios
+        # do mesmo pedido não podem aplicar a magia duas vezes na rodada.
+        zona["congelamento_alvos_restantes"] = 0
+        zona["congelamento_alvos_usados"] = [
+            {"kind": kind, "id": target_id} for (kind, target_id), _ in escolhidos]
+        cd = max(1, int(zona.get("congelamento_cd", 12) or 12))
+        for _ref, alvo in escolhidos:
+            if self._tem_imunidade(alvo, "paralisia"):
+                await self.gm_say(T("narracao.e_imune_a_paralisia", alvo=nome_criatura(alvo)))
+                continue
+            save_ok, *_ = await self._save_mostrado(alvo, "fortitude", cd)
+            if save_ok:
+                await self.gm_say(T("narracao.resistiu_a_paralisacao", alvo=nome_criatura(alvo)))
+                continue
+            if alvo.get("paralisado"):
+                await self.gm_say(T("narracao.chamado_inverno_ja_congelado",
+                                    alvo=nome_criatura(alvo)))
+                continue
+            alvo["paralisado"] = True
+            alvo["paralisado_rodadas"] = 0
+            alvo["paralisado_save"] = "fortitude"
+            alvo["paralisado_dificuldade"] = cd
+            alvo["paralisado_rodada_max"] = 1
+            alvo["_paralisado_chamado_inverno"] = True
+            alvo["_chamado_inverno_pular_turno"] = True
+            await self.gm_say(T("narracao.chamado_inverno_congelado",
+                                alvo=nome_criatura(alvo), caster=caster.get("name", "")))
+        await self.push_state()
 
     def _senhor_das_aguas_preflight(self, caster, magia, data, alcance_bonus=0):
         """Valida a mira do Senhor das Águas sem alterar o estado.
@@ -26560,11 +27087,12 @@ class GameRoom:
                       "area": area, "alcance": alcance}
 
     def _tempestade_zonas_ativas(self):
-        # Uma tempestade pendente ainda é apenas uma prévia de posicionamento:
-        # não impõe vento, não testa voo e não pode ser atingida por gatilhos.
+        # Uma zona ainda sem nenhum ciclone é apenas uma prévia de posicionamento.
+        # Depois da primeira colocação, a tempestade funciona enquanto o clérigo
+        # distribui o restante da cota em rodadas posteriores.
         return [z for z in self.zonas_especiais
                 if z.get("ativa") and z.get("tipo") == "tempestade_ciclones"
-                and not z.get("ciclones_pendentes")]
+                and (not z.get("ciclones_pendentes") or z.get("ativada_em"))]
 
     async def _cancelar_tempestades_pendentes(self, pid):
         """Cancela prévias quando o turno é encerrado à força.
@@ -26575,7 +27103,7 @@ class GameRoom:
         for zona in self.zonas_especiais:
             if (not zona.get("ativa") or zona.get("tipo") != "tempestade_ciclones"
                     or str(zona.get("caster")) != str(pid)
-                    or not zona.get("ciclones_pendentes")):
+                    or not zona.get("ciclones_pendentes") or zona.get("ativada_em")):
                 continue
             zona["ativa"] = False
             self._tempestade_remover_origem_zona(zona.get("id"))
@@ -26886,12 +27414,16 @@ class GameRoom:
         })
 
     async def handle_tempestade_ciclones_posicoes(self, pid, zone_id, tiles):
-        """Confirma as casas iniciais dos 2d4 ciclones."""
+        """Posiciona parte ou toda a cota de ciclones ainda pendente."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
+        if (self.current_pid() != pid or self.animados_phase_pid == pid
+                or self.last_stand_pid == pid):
+            return
         caster = self.players.get(pid)
-        if not caster or not caster.get("alive") or caster.get("class_id") != "cleric":
+        if (not caster or not caster.get("alive") or not caster.get("connected", True)
+                or caster.get("class_id") != "cleric"):
             return
         zona = next((z for z in reversed(self.zonas_especiais)
                      if z.get("id") == zone_id and z.get("tipo") == "tempestade_ciclones"
@@ -26902,53 +27434,90 @@ class GameRoom:
         esperado = max(0, int(zona.get("ciclones_pendentes", 0) or 0))
         if esperado <= 0:
             return
+        if (zona.get("ativada_em") and zona.get("expira_em") is not None
+                and self.round_num >= int(zona.get("expira_em") or 0)):
+            return
         permitidos = {(int(x), int(y)) for x, y in zona.get("ciclones_permitidos", [])}
         lado = max(1, int(zona.get("ciclone_lado", 1) or 1))
+        ciclones_atuais = list(zona.get("ciclones", []))
         escolhidos = []
         vistos = set()
         ocupadas = set()
-        for pos in tiles if isinstance(tiles, list) else []:
+        for ciclone in ciclones_atuais:
+            ocupadas.update(self._tempestade_ciclone_tiles(ciclone))
+        if not isinstance(tiles, list) or not tiles or len(tiles) > esperado:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.escolha_casas_livres_area_magia", n=esperado)})
+            return
+        for pos in tiles:
             if not isinstance(pos, (list, tuple)) or len(pos) < 2:
-                continue
+                escolhidos = []
+                break
             try:
                 tile = (int(pos[0]), int(pos[1]))
             except (TypeError, ValueError):
-                continue
+                escolhidos = []
+                break
             footprint = set(self._tempestade_ciclone_tiles({"pos": list(tile), "lado": lado}))
             if (tile in permitidos and tile not in vistos
                     and footprint <= permitidos and not (footprint & ocupadas)):
                 vistos.add(tile)
                 escolhidos.append([tile[0], tile[1]])
                 ocupadas.update(footprint)
-        if len(escolhidos) != esperado:
+            else:
+                escolhidos = []
+                break
+        if not escolhidos or len(escolhidos) > esperado:
             await self.send_to(pid, {"type": "error",
-                "msg": T("erro.escolha_exatamente_n_casas_para_os_ciclones", count=esperado)})
+                "msg": T("erro.escolha_casas_livres_area_magia", n=esperado)})
             return
-        zona["ciclones"] = [{"id": i + 1, "pos": list(pos), "lado": lado, "movido_em": None}
-                             for i, pos in enumerate(escolhidos)]
-        zona.pop("ciclones_pendentes", None)
-        zona.pop("ciclones_permitidos", None)
-        # Só agora a tempestade passa a existir mecanicamente: a duração e o
-        # primeiro pulso são relativos à rodada de confirmação, não à mira.
-        zona["ativada_em"] = self.round_num
-        zona["expira_em"] = self.round_num + max(1, int(zona.get("duracao", 1) or 1))
-        zona["proxima_descarga"] = self.round_num + 2
-        save_dif = int(zona.get("save_dif", 13) or 13)
-        for alvo in list(self._tempestade_entidades()):
-            if self._vivo(alvo) and any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
-                await self._tempestade_dano(alvo, zona.get("dano_inicial", "2d8"), DMG_LIGHTNING, "reflexos", save_dif,
-                                             zona.get("dmg_mult", 1), "⚡ Impacto da Tempestade")
-                if self._vivo(alvo): await self._tempestade_testar_voo(alvo, zona, "impacto")
-                if self._vivo(alvo): await self._tempestade_aplicar_ciclone(alvo, zona)
+        primeiro_posicionamento = not bool(zona.get("ativada_em"))
+        proximo_id = max((int(c.get("id", 0) or 0) for c in ciclones_atuais), default=0) + 1
+        novos = [{"id": proximo_id + i, "pos": list(pos), "lado": lado, "movido_em": None}
+                 for i, pos in enumerate(escolhidos)]
+        zona["ciclones"] = ciclones_atuais + novos
+        total = max(0, int(zona.get("ciclones_rolados", len(zona["ciclones"])) or 0))
+        restante = max(0, total - len(zona["ciclones"]))
+        if restante:
+            zona["ciclones_pendentes"] = restante
+        else:
+            zona.pop("ciclones_pendentes", None)
+            zona.pop("ciclones_permitidos", None)
+        if primeiro_posicionamento:
+            # A duração e o primeiro pulso começam quando a tempestade ganha
+            # seus primeiros ciclones. Os demais podem ser posicionados depois.
+            zona["ativada_em"] = self.round_num
+            zona["expira_em"] = self.round_num + max(1, int(zona.get("duracao", 1) or 1))
+            zona["proxima_descarga"] = self.round_num + 2
+            save_dif = int(zona.get("save_dif", 13) or 13)
+            for alvo in list(self._tempestade_entidades()):
+                if self._vivo(alvo) and any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
+                    await self._tempestade_dano(alvo, zona.get("dano_inicial", "2d8"), DMG_LIGHTNING, "reflexos", save_dif,
+                                                 zona.get("dmg_mult", 1), "⚡ Impacto da Tempestade")
+                    if self._vivo(alvo): await self._tempestade_testar_voo(alvo, zona, "impacto")
+                    if self._vivo(alvo): await self._tempestade_aplicar_ciclone(alvo, zona)
+        else:
+            # Uma leva posterior só afeta imediatamente quem estiver sob os
+            # novos ciclones; o impacto inicial da área não se repete.
+            for ciclone in novos:
+                cyclone_tiles = set(self._tempestade_ciclone_tiles(ciclone))
+                for alvo in list(self._tempestade_entidades()):
+                    if (self._vivo(alvo) and any(
+                            self._tempestade_em_tiles([p], zona) and p in cyclone_tiles
+                            for p in self._tempestade_posicoes(alvo))):
+                        await self._tempestade_testar_voo(alvo, zona, "entrada")
+                        if self._vivo(alvo):
+                            await self._tempestade_aplicar_ciclone(alvo, zona, ciclone)
         await self.broadcast({"type": "spell_animation", "spell_id": "tempestade_ciclones", "phase": "resolve",
                               "animation_id": zona["id"], "caster_id": caster["id"],
                               "center": [zona.get("cx", 0), zona.get("cy", 0)],
                               "tiles": zona["tiles"], "side": zona.get("lado", 3),
                               "ciclones": zona["ciclones"], "zone_id": zona["id"],
                               "duration_rounds": zona.get("duracao", 0), "success": True})
-        await self.gm_say(T("narracao.tempestade_ciclones_criada",
-                            caster=caster["name"], lado=zona.get("lado", 3),
-                            ciclones=len(zona["ciclones"]), dur=zona.get("duracao", 0)))
+        if primeiro_posicionamento:
+            await self.gm_say(T("narracao.tempestade_ciclones_criada",
+                                caster=caster["name"], lado=zona.get("lado", 3),
+                                ciclones=len(zona["ciclones"]), dur=zona.get("duracao", 0)))
         await self.push_state()
 
     async def handle_tempestade_ciclones_mover(self, pid, zone_id, ciclone_id, pos):
@@ -27196,8 +27765,64 @@ class GameRoom:
         await self.gm_say(T("narracao.prisao_de_chamas_criada",
                             caster=caster["name"], lado=lado, dur=dur))
 
+    async def handle_encerrar_magia_zona(self, pid, zone_id):
+        """Encerra uma zona persistente do próprio conjurador como ação livre."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        caster = self.players.get(pid)
+        if not caster or not caster.get("alive"):
+            return
+
+        classes_por_tipo = {
+            "chamado_inverno": "cleric",
+            "senhor_das_aguas": "cleric",
+            "ira_rocha_ardente": "cleric",
+            "tempestade_ciclones": "cleric",
+            "prisao_chamas": "mage",
+        }
+        zona = next((z for z in reversed(self.zonas_especiais)
+                     if z.get("ativa") and str(z.get("id")) == str(zone_id)
+                     and str(z.get("caster")) == str(pid)), None)
+        if not zona or classes_por_tipo.get(zona.get("tipo")) != caster.get("class_id"):
+            return
+        # Chamado permanente é um efeito deliberadamente sem duração; a opção
+        # de encerramento antecipado vale apenas para as conjurações temporárias.
+        if zona.get("tipo") == "chamado_inverno" and zona.get("permanente"):
+            return
+        # Uma formação já ativada pode ser encerrada mesmo se ainda houver
+        # ciclones da cota aguardando posicionamento.
+        if (zona.get("tipo") == "tempestade_ciclones" and zona.get("ciclones_pendentes")
+                and not zona.get("ativada_em")):
+            return
+
+        tipo = zona.get("tipo")
+        zona_id_real = zona.get("id")
+        if tipo in {"chamado_inverno", "senhor_das_aguas", "ira_rocha_ardente"}:
+            # Remove apenas a camada e os adornos desta conjuração, mantendo
+            # intactas outras camadas/materiais e qualquer outra magia ativa.
+            self._cancelar_magias_terreno_exclusivas([zona_id_real])
+        else:
+            zona["ativa"] = False
+            if tipo == "tempestade_ciclones":
+                self._tempestade_remover_origem_zona(zona_id_real)
+                await self.broadcast({
+                    "type": "spell_animation", "spell_id": "tempestade_ciclones",
+                    "phase": "expire", "animation_id": zona_id_real,
+                })
+
+        narracao_por_tipo = {
+            "chamado_inverno": "narracao.o_terreno_criado_pelo_chamado_do_inverno",
+            "senhor_das_aguas": "narracao.o_terreno_criado_pelo_senhor_das_aguas_v",
+            "ira_rocha_ardente": "narracao.ira_da_rocha_ardente_se_dissipa",
+            "tempestade_ciclones": "narracao.tempestade_ciclones_dissipa",
+            "prisao_chamas": "narracao.encerra_a_prisao_de_chamas",
+        }
+        await self.gm_say(T(narracao_por_tipo[tipo], caster=caster.get("name", "")))
+        await self.push_state()
+
     async def handle_encerrar_prisao_chamas(self, pid):
-        """Encerra uma Prisão de Chamas como ação livre do mago."""
+        """Compatibilidade com clientes antigos; encerra a prisão mais recente."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -27210,9 +27835,7 @@ class GameRoom:
         if not zona:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_possui_uma_prisao_de_chamas_ati")})
             return
-        zona["ativa"] = False
-        await self.gm_say(T("narracao.encerra_a_prisao_de_chamas", caster=caster["name"]))
-        await self.push_state()
+        await self.handle_encerrar_magia_zona(pid, zona.get("id"))
 
     def _senhor_das_aguas_zona_ativa(self, pid):
         """Retorna a zona de Senhor das Águas ainda ativa do clérigo."""
@@ -28273,6 +28896,18 @@ class GameRoom:
         """Início do turno do paralisado: testa o escape configurado.
         Retorna True se continua paralisado."""
         if not alvo.get("paralisado"): return False
+        if alvo.get("_paralisado_chamado_inverno"):
+            if alvo.pop("_chamado_inverno_pular_turno", False):
+                await self.gm_say(T("narracao.chamado_inverno_perde_turno",
+                                    alvo=nome_criatura(alvo)))
+                return True
+            for key in ("paralisado", "paralisado_rodadas", "paralisado_save",
+                        "paralisado_dificuldade", "paralisado_rodada_max",
+                        "_paralisado_chamado_inverno"):
+                alvo.pop(key, None)
+            await self.gm_say(T("narracao.chamado_inverno_descongela",
+                                alvo=nome_criatura(alvo)))
+            return False
         dif   = alvo.get("paralisado_dificuldade", 12)
         max_r = alvo.get("paralisado_rodada_max", 2)
         save_ok, *_ = self._testar_save(alvo, alvo.get("paralisado_save", "fortitude"), dif)
@@ -28918,10 +29553,10 @@ class GameRoom:
                     self._rebuild_decor_index()
                     await self.gm_say(T("narracao.ira_da_rocha_ardente_se_dissipa"))
             elif z.get("tipo") == "tempestade_ciclones":
-                # A conjuração só entra em funcionamento depois que o clérigo
-                # confirmar as casas iniciais; enquanto isso não há descarga
-                # nem dano periódico para processar.
-                if z.get("ciclones_pendentes"):
+                # Antes da primeira colocação a tempestade é apenas uma
+                # prévia. Depois de ativada, recebe novas levas e segue com
+                # descargas/duração enquanto houver ciclones pendentes.
+                if z.get("ciclones_pendentes") and not z.get("ativada_em"):
                     caster = self.players.get(z.get("caster"))
                     if not caster or not caster.get("alive") or not caster.get("connected", True):
                         z["ativa"] = False
@@ -29165,6 +29800,13 @@ class GameRoom:
     def _swamp_under(self, criatura):
         return bool(self._swamp_tiles_of(criatura))
 
+    def _ignora_penalidade_pantano(self, criatura):
+        """Voo e habilidades com exceção explícita ignoram o custo do pântano."""
+        if self._voo_imune_terreno(criatura):
+            return True
+        return any(isinstance(habilidade, dict) and habilidade.get("ignora_pantano")
+                   for habilidade in (criatura or {}).get("special_abilities", []))
+
     def _snow_tiles_of(self, criatura):
         """Casas de planície nevada sob uma criatura, incluindo footprints."""
         pos = criatura.get("pos") if criatura else None
@@ -29232,7 +29874,7 @@ class GameRoom:
                 return category
         return None
 
-    def _ignora_penalidade_agua(self, criatura):
+    def _ignora_penalidade_agua(self, criatura, terreno=None):
         """Retorna se a criatura atravessa água sem custo adicional.
 
         Além das habilidades aquáticas declaradas, o Elemental de Água é
@@ -29243,9 +29885,14 @@ class GameRoom:
         tipo = str((criatura or {}).get("type") or "").strip().lower()
         if tipo in {"elemental_agua", "elemental_água"}:
             return True
+        habilidades = (criatura or {}).get("special_abilities", [])
+        if terreno in {"agua", "agua_profunda"} and any(
+                isinstance(habilidade, dict) and habilidade.get("ignora_penalidade_agua")
+                for habilidade in habilidades):
+            return True
         return any(isinstance(habilidade, dict)
                    and habilidade.get("id") in {"movimento_erratico", "movimento_aquatico"}
-                   for habilidade in (criatura or {}).get("special_abilities", []))
+                   for habilidade in habilidades)
 
     def _ignora_rodamoinho(self, criatura):
         """Voo, natação/movimento aquático e imunidade aquática atravessam o
@@ -29340,7 +29987,8 @@ class GameRoom:
         if material in {"areia_deserto", "lava"}:
             return max(2 + custo_elevacao, custo_vento)
         kind = self._water_tile_kind(x, y)
-        if not kind or self._ignora_penalidade_agua(criatura) or self._ignora_rodamoinho(criatura):
+        if (not kind or self._ignora_penalidade_agua(criatura, kind)
+                or self._ignora_rodamoinho(criatura)):
             return max(1 + custo_elevacao, custo_vento)
         cost = 3 if kind in {"agua_profunda", "rodamoinho_profundo"} else 2
         category = self._armor_category_of(criatura)
@@ -29664,7 +30312,8 @@ class GameRoom:
             return 0
         if self._voo_imune_terreno(criatura):
             return max(1, base)
-        if self._swamp_under(criatura):
+        if (self._swamp_under(criatura)
+                and not self._ignora_penalidade_pantano(criatura)):
             criatura["_swamp_penalty_applied"] = True
             base = max(0, base - 1)
         if self._snow_under(criatura):
@@ -29700,7 +30349,7 @@ class GameRoom:
 
     def _apply_swamp_entry_penalty(self, criatura, nx=None, ny=None):
         """Consome -1 do movimento total ao primeiro contato com pântano no turno."""
-        if self._voo_imune_terreno(criatura):
+        if self._ignora_penalidade_pantano(criatura):
             return
         if criatura.get("_swamp_penalty_applied"):
             return
@@ -32342,11 +32991,12 @@ class GameRoom:
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
-        # O lançamento da Tempestade tem uma segunda etapa obrigatória. Não
-        # avance a iniciativa deixando uma zona sem ciclones: além de perder a
-        # janela de confirmação, isso criava uma duração parcialmente gasta.
+        # Antes da primeira colocação ainda não há tempestade ativa; exija ao
+        # menos uma leva inicial. Depois disso, o restante pode ser distribuído
+        # nas rodadas seguintes, como a cota de redemoinhos do Senhor das Águas.
         if any(z.get("ativa") and z.get("tipo") == "tempestade_ciclones"
                and str(z.get("caster")) == str(pid)
+               and not z.get("ativada_em")
                and int(z.get("ciclones_pendentes", 0) or 0) > 0
                for z in self.zonas_especiais):
             await self.send_to(pid, {"type": "error",
@@ -41671,13 +42321,20 @@ class GameRoom:
         opcoes = [mid for mid, m in GRIMORIO.items()
                   if p["class_id"] in m.get("classe", [])
                   and m.get("circulo") == circ
+                  and (not p.get("test_hero") or mid in GRIMORIO_IMPLEMENTADAS)
                   and mid not in p.get("magias_conhecidas", [])]
+        count = 0
+        for item in fila:
+            if item != circ:
+                break
+            count += 1
         await self.send_to(p["id"], {
-            "type": "spell_pick_prompt", "circulo": circ, "count": 1, "opcoes": opcoes})
+            "type": "spell_pick_prompt", "circulo": circ, "count": count, "opcoes": opcoes})
 
     async def _check_level_up(self, p):
         threshold = p["level"] * XP_POR_NIVEL
         if p["xp"] >= threshold:
+            slots_antes = slots_max_para(p) if p.get("test_hero") else None
             p["level"] += 1
             p["level_bonus"] = p["level"]   # level bonus = current level
             p["xp"] -= threshold
@@ -41700,7 +42357,24 @@ class GameRoom:
             p["sede"] = min(p["sede_max"], p["sede"] + regra["sede"])
             _garantir_slots_guilda(p)
             await self.gm_say(T("narracao.subiu_para_o_nivel_pv_e_1_em_ataque_ganh", heroi=p['name'], p_level=p['level'], ganho_hp=ganho_hp))
-            if p.get("class_id") in ("mage", "cleric"):
+            if p.get("test_hero") and p.get("class_id") in ("mage", "cleric"):
+                slots_depois = slots_max_para(p)
+                for circ in _CIRCULOS_MAGIA_TESTE:
+                    anteriores = int((slots_antes or {}).get(circ, 0) or 0)
+                    atuais = int(slots_depois.get(circ, 0) or 0)
+                    quantidade = 2 if anteriores == 0 and atuais > 0 else max(0, atuais - anteriores)
+                    if not quantidade:
+                        continue
+                    disponiveis = sum(
+                        1 for mid, magia in GRIMORIO.items()
+                        if mid in GRIMORIO_IMPLEMENTADAS
+                        and p["class_id"] in magia.get("classe", [])
+                        and magia.get("circulo") == circ
+                        and mid not in p.get("magias_conhecidas", []))
+                    p.setdefault("pending_spell_pick", []).extend([circ] * min(quantidade, disponiveis))
+                if p.get("pending_spell_pick"):
+                    await self._enviar_spell_pick_prompt(p)
+            elif p.get("class_id") in ("mage", "cleric"):
                 # Slot novo do nÃ­vel jÃ¡ entra cheio (slots_max_para usa o novo level).
                 circ = NIVEL_NOVA_MAGIA.get(p["level"])
                 if circ:
@@ -41937,6 +42611,8 @@ class GameRoom:
         self._story_encadeada = _story_beat(
             f"encadeada:{adventure.get('id')}:{indice}",
             [anterior.get("outro"), proxima.get("intro")])
+        if self._story_encadeada and self._story_encadeada["key"] in self.story_beats_done:
+            self._story_encadeada = None
         self.mode = "authored"; self.selected_dungeon = proxima["file"]; self.dungeon_def = defn
         self.world_adventure_index = indice
         self.dungeon_generated = False
@@ -42121,14 +42797,9 @@ class GameRoom:
                # anterior abortava o game_start antes da cena inicial.
                "total": len(stages),
                "story": None}
-        if self.phase == "playing" and 0 <= self.campaign_phase < len(stages):
-            fase = _fase_obj(stages[self.campaign_phase])
-            parts = []
-            if self.campaign_phase == 0:
-                parts.append(self.campaign.get("intro"))
-            parts.append(fase.get("intro"))
-            pay["story"] = _story_beat(f"intro:{self.campaign_phase}", parts)
-        elif self.phase == "city" and self._campaign_outro:
+        # A abertura da fase é enviada em `game_state.story` antes da entrada e
+        # aguarda a confirmação do anfitrião. Não a regenere já em `playing`.
+        if self.phase == "city" and self._campaign_outro:
             pay["story"] = self._campaign_outro
         return pay
 
@@ -42231,7 +42902,7 @@ class GameRoom:
         # Slots cuja rodada de recarga já chegou não devem continuar ocupando
         # espaço no estado enviado ao cliente.
         for p in self.players.values():
-            for circulo in SLOT_REGEN:
+            for circulo in _slot_circulos_para(p):
                 self._slot_prune(p, circulo)
         players_state = []
         for p in self.players.values():
@@ -42259,6 +42930,7 @@ class GameRoom:
                             percepcao=self._get_percepcao_heroi(p),
                             granted_hero_skills=(self._granted_hero_skills(p)
                                                  + self._weapon_throw_skills(p)),
+                            slots_max=slots_max_para(p),
                             slots_remaining=self._slots_restantes_payload(p),
                             # Metadado visual: a aplicação mecânica continua
                             # exclusivamente em temp_def na resolução da CA.
@@ -43158,9 +43830,14 @@ async def handler(ws):
                 elif t == "mestre_selecionar_teste":
                     if room: await room.handle_mestre_selecionar_teste(pid, msg.get("monster_id"))
 
+                elif t == "mestre_opcoes_heroi_teste":
+                    if room: await room.handle_mestre_opcoes_heroi_teste(
+                        pid, msg.get("class_id"))
+
                 elif t == "mestre_adicionar_heroi_teste":
                     if room: await room.handle_mestre_adicionar_heroi_teste(
-                        pid, msg.get("class_id"), msg.get("tx"), msg.get("ty"))
+                        pid, msg.get("class_id"), msg.get("tx"), msg.get("ty"),
+                        msg.get("config"))
 
                 elif t == "teste_iniciar_combate":
                     if room: await room.handle_teste_iniciar_combate(pid)
@@ -43280,11 +43957,18 @@ async def handler(ws):
                 elif t == "ira_rocha_ardente_chamas":
                     if room: await room.handle_ira_rocha_ardente_chamas(pid, msg.get("zone_id"), msg.get("tiles"))
 
+                elif t == "chamado_inverno_congelar":
+                    if room: await room.handle_chamado_inverno_congelar(
+                        pid, msg.get("zone_id"), msg.get("targets"))
+
                 elif t == "tempestade_ciclones_mover":
                     if room: await room.handle_tempestade_ciclones_mover(pid, msg.get("zone_id"), msg.get("ciclone_id"), msg.get("pos"))
 
                 elif t == "tempestade_ciclones_posicoes":
                     if room: await room.handle_tempestade_ciclones_posicoes(pid, msg.get("zone_id"), msg.get("tiles"))
+
+                elif t == "encerrar_magia_zona":
+                    if room: await room.handle_encerrar_magia_zona(pid, msg.get("zone_id"))
 
                 elif t == "encerrar_prisao_chamas":
                     if room: await room.handle_encerrar_prisao_chamas(pid)
@@ -43475,6 +44159,9 @@ async def handler(ws):
 
                 elif t == "scene_end":
                     if room: await room.handle_scene_end(pid, bool(msg.get("force")))
+
+                elif t == "story_complete":
+                    if room: await room.handle_story_complete(pid, msg.get("key"))
 
                 elif t == "scene_visit":
                     if room: await room.handle_scene_visit(pid, msg.get("scene_id"), msg.get("event_id"))
@@ -46158,16 +46845,17 @@ def _save_refugio_art_upload(name, data_b64):
     return True, "assets/city/refugio_" + safe
 
 PRISONER_DIR = os.path.join(BASE_DIR, "assets", "pawns", "prisioneiros")
+PRISONER_MODEL_DIR = os.path.join(BASE_DIR, "assets", "models3d", "prisioneiros")
 
 def _save_prisoner_upload(name, data_b64):
-    """Grava uma imagem de prisioneiro em assets/pawns/prisioneiros/. Só imagens.
+    """Grava a imagem ou modelo GLB de prisioneiro no diretório apropriado.
     Mesma proteção (path-traversal, tamanho) do _save_story_upload.
     Retorna (ok: bool, basename_salvo | mensagem_de_erro)."""
     base = os.path.basename(str(name or ""))
     if not base or "\x00" in base:
         return False, "nome inválido"
     ext = os.path.splitext(base)[1].lower()
-    if ext not in _STORY_IMG_EXT:
+    if ext not in _STORY_IMG_EXT and ext != ".glb":
         return False, "extensão não permitida"
     if not isinstance(data_b64, str) or not data_b64:
         return False, "dados inválidos"
@@ -46179,9 +46867,13 @@ def _save_prisoner_upload(name, data_b64):
         return False, "dados inválidos"
     if len(raw) > STORY_UPLOAD_MAX:
         return False, "arquivo grande demais"
+    if ext == ".glb" and (len(raw) < 12 or raw[:4] != b"glTF"
+                          or int.from_bytes(raw[4:8], "little") != 2):
+        return False, "GLB inválido"
     try:
-        os.makedirs(PRISONER_DIR, exist_ok=True)
-        with open(os.path.join(PRISONER_DIR, base), "wb") as f:
+        target_dir = PRISONER_MODEL_DIR if ext == ".glb" else PRISONER_DIR
+        os.makedirs(target_dir, exist_ok=True)
+        with open(os.path.join(target_dir, base), "wb") as f:
             f.write(raw)
     except OSError:
         return False, "falha ao gravar"

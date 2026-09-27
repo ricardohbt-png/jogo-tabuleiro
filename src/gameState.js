@@ -1129,7 +1129,10 @@ const GS = (() => {
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
         && kind !== 'rodamoinho_profundo') return Math.max(1 + custoElevacao, vento);
     const tipoCriatura = String(actor.type || '').toLowerCase();
+    const ignoraAguaSemRedemoinho = (kind === 'agua' || kind === 'agua_profunda')
+      && (actor.special_abilities || []).some(h => h && h.ignora_penalidade_agua === true);
     if (tipoCriatura === 'elemental_agua' || tipoCriatura === 'elemental_água'
+        || ignoraAguaSemRedemoinho
         || (actor.special_abilities || []).some(h => h &&
         ['movimento_erratico', 'movimento_aquatico', 'nadar', 'natacao', 'natação'].includes(h.id))) return Math.max(1, vento);
     let cost = (kind === 'agua_profunda' || kind === 'rodamoinho_profundo') ? 3 : 2;
@@ -1141,15 +1144,22 @@ const GS = (() => {
     return Math.max(1, cost + custoElevacao, vento);
   }
 
+  function _ignoraPenalidadePantano(moveCtx) {
+    const actor = moveCtx?.actor || {};
+    return !!(actor.voo && alturaDe(actor) > 0)
+      || (actor.special_abilities || []).some(h => h && h.ignora_pantano === true);
+  }
+
   // Custo de vento de uma casa de destino: 2 (+ elevação) se ela cai numa
-  // Tempestade de Ciclones ativa e já confirmada; 0 fora. A prévia (com
-  // `ciclones_pendentes`) ainda não é tempestade — o servidor também a ignora.
+  // Tempestade de Ciclones ativa e já confirmada; a prévia inicial ainda
+  // aguarda pelo menos uma colocação, mas levas restantes não a desativam.
   function _custoVentoTempestade(state, x, y, custoElevacao=0) {
     const zonas = state?.zonas_especiais;
     if (!Array.isArray(zonas) || !zonas.length) return 0;
     const tx = Number(x), ty = Number(y);
     for (const z of zonas) {
-      if (!z || !z.ativa || z.tipo !== 'tempestade_ciclones' || z.ciclones_pendentes) continue;
+      if (!z || !z.ativa || z.tipo !== 'tempestade_ciclones'
+          || (z.ciclones_pendentes && !z.ativada_em)) continue;
       if ((z.tiles || []).some(t => Array.isArray(t) && Number(t[0]) === tx && Number(t[1]) === ty))
         return 2 + custoElevacao;
     }
@@ -1162,7 +1172,8 @@ const GS = (() => {
     if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) { result.add(`${sx},${sy}`); return; }
     const openDoors = doorSets(gameState).open;
     const occupied  = _occupiedSet(sx, sy);
-    const swampStart = !_ponteEm(sx, sy, moveCtx?.state || gameState)
+    const ignoraPantano = _ignoraPenalidadePantano(moveCtx);
+    const swampStart = !ignoraPantano && !_ponteEm(sx, sy, moveCtx?.state || gameState)
       && moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
     const snowStart = _neveJaCobrada(moveCtx, sx, sy);
     // Cada nó carrega o TETO efetivo do caminho: entrar na neve divide pela
@@ -1181,7 +1192,7 @@ const GS = (() => {
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
-          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !ignoraPantano;
         const entersSnow = !vooNoAr && !snowUsed && _entraNaNeve(moveCtx, nx, ny);
         // Garantia de uma casa: no primeiro passo, água cara ainda pode ser
         // atravessada mesmo se o orçamento não cobrir o custo inteiro.
@@ -1229,7 +1240,8 @@ const GS = (() => {
     const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied, moveCtx);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
-    const swampStart = moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
+    const ignoraPantano = _ignoraPenalidadePantano(moveCtx);
+    const swampStart = !ignoraPantano && moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
     const snowStart = _neveJaCobrada(moveCtx, fx, fy);
     // Mesmo teto efetivo por caminho do bfsReachable (neve divide o restante):
     // é este algoritmo que dirige a caminhada, e um caminho que o servidor
@@ -1246,7 +1258,7 @@ const GS = (() => {
         const rawCost = terrainMoveCost(moveCtx, nx, ny, x, y);
         const vooNoAr = !!(moveCtx?.actor?.voo && alturaDe(moveCtx.actor) > 0);
         const entersSwamp = !_ponteEm(nx, ny, moveCtx?.state || gameState)
-          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !vooNoAr;
+          && moveCtx?.materiais?.[k] === 'pantano' && !swampUsed && !ignoraPantano;
         const entersSnow = !vooNoAr && !snowUsed && _entraNaNeve(moveCtx, nx, ny);
         const terrainCost = rawCost + (entersSwamp ? 1 : 0);
         const nextCost = (spent === 0 && terrainCost > cap) ? cap : spent + terrainCost;
@@ -1643,6 +1655,10 @@ const GS = (() => {
       case 'scene_test_result': _emit('sceneTestResult', msg); break;
       case 'scene_end_warning': _emit('sceneEndWarning', msg); break;
       case 'scene_end': _emit('sceneEnd', msg); break;
+      case 'story_complete':
+        if (msg.key) _storyShown.add(msg.key);
+        _emit('storyComplete', msg);
+        break;
 
       case 'gm_narration':
         _emit('gmNarration', msg.text);
@@ -1821,6 +1837,10 @@ const GS = (() => {
 
       case 'spell_pick_prompt':
         _emit('spellPickPrompt', msg);   // {circulo, count, opcoes}
+        break;
+
+      case 'mestre_heroi_teste_opcoes':
+        _emit('mestreHeroiTesteOpcoes', msg);
         break;
 
       case 'decor_loot':
@@ -2045,6 +2065,12 @@ const GS = (() => {
   function tempestadeCiclonesConfirmarPosicoes(zoneId, tiles) {
     send({ type: 'tempestade_ciclones_posicoes', zone_id: zoneId, tiles });
   }
+  function chamadoInvernoCongelar(zoneId, targets) {
+    send({ type: 'chamado_inverno_congelar', zone_id: zoneId, targets });
+  }
+  function encerrarMagiaZona(zoneId) {
+    send({ type: 'encerrar_magia_zona', zone_id: zoneId });
+  }
   function encerrarPrisaoChamas() { send({ type: 'encerrar_prisao_chamas' }); }
   function responderTeleporte(requestId, falhaVoluntaria = false) {
     send({ type: 'teleporte_consent', request_id: requestId,
@@ -2119,8 +2145,11 @@ const GS = (() => {
   function mestreEncerrarMonstro(monsterId) { send({ type: 'mestre_encerrar_monstro', monster_id: monsterId }); }
   function mestreSelecionarTeste(monsterId) { send({ type: 'mestre_selecionar_teste', monster_id: monsterId }); }
   // Mesa livre do editor: posiciona um herói temporário, controlado pelo Mestre.
-  function mestreAdicionarHeroiTeste(classId, tx, ty) {
-    send({ type: 'mestre_adicionar_heroi_teste', class_id: classId, tx, ty });
+  function mestrePedirOpcoesHeroiTeste(classId) {
+    send({ type: 'mestre_opcoes_heroi_teste', class_id: classId });
+  }
+  function mestreAdicionarHeroiTeste(classId, tx, ty, config) {
+    send({ type: 'mestre_adicionar_heroi_teste', class_id: classId, tx, ty, config });
   }
   // Simulador descartável do editor. Estas mensagens são recusadas pelo
   // servidor fora de uma sala test_mode comandada pelo próprio Mestre.
@@ -2574,19 +2603,25 @@ const GS = (() => {
   function selectCampaign(file) { send({ type: 'select_campaign', file: file || null }); }
 
   // ── Fase 4b (história): beat pendente + de-dup por key ───────────────────────
-  // O servidor expõe um "beat" {key,text} em game_state.campaign.story (abertura),
-  // city_state.campaign.story (encerramento) e game_over.story (final). Cada
-  // jogador exibe/fecha localmente; o de-dup por key garante que apareça 1×.
+  // O servidor expõe um "beat" {key,slides} nos estados de campanha. Aberturas
+  // pré-masmorra aguardam a confirmação do anfitrião para liberar a entrada.
   const _storyShown = new Set();
   let _lastStory = null;   // beat mais recente recebido (game_state/city_state/game_over)
   function _captarStory(msg) {
-    const beat = (msg && msg.campaign && msg.campaign.story) || (msg && msg.story) || null;
+    const beat = (msg && msg.story) || (msg && msg.campaign && msg.campaign.story) || null;
     if (beat && beat.key) _lastStory = beat;
   }
   function pendingStory() {
     return (_lastStory && !_storyShown.has(_lastStory.key)) ? _lastStory : null;
   }
-  function marcarStoryVista(key) { if (key) _storyShown.add(key); }
+  function marcarStoryVista(key) {
+    if (!key) return;
+    _storyShown.add(key);
+    const host = (gameState && gameState.host) || (cityState && cityState.host);
+    if (/^(aventura|encadeada|intro):/.test(String(key))
+        && myPid && host && String(myPid) === String(host))
+      send({ type:'story_complete', key:String(key) });
+  }
 
   // ── Hooks de sobrevivência chamados pelo renderer nos pontos de ação ───────
   // Ataque/magia/habilidade têm seus sends no renderer (game.js); ele notifica
@@ -3417,6 +3452,8 @@ const GS = (() => {
     iraRochaArdenteConfirmarChamas,
     tempestadeCiclonesMover,
     tempestadeCiclonesConfirmarPosicoes,
+    chamadoInvernoCongelar,
+    encerrarMagiaZona,
     encerrarPrisaoChamas,
     responderTeleporte,
     confirmarTeleporte,
@@ -3441,6 +3478,7 @@ const GS = (() => {
     mestreAtacarMonstro,
     mestreEncerrarMonstro,
     mestreSelecionarTeste,
+    mestrePedirOpcoesHeroiTeste,
     mestreAdicionarHeroiTeste,
     testeIniciarCombate,
     testeEncerrarVez,

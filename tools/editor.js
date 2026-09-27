@@ -2643,27 +2643,36 @@
     } else if (k === "prisoner") {
       const img = ref.image
         ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
-        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem — usará o emoji padrão</div>`;
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem 2D — usará o emoji padrão nessa visão</div>`;
+      const model = ref.model3d
+        ? `<div style="color:#9fc9e8;font-size:11px;margin:6px 0">modelo 3D: ${ref.model3d}</div>`
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem modelo 3D — usará a imagem 2D no tabuleiro 3D</div>`;
       panel.innerHTML = `<b>🧍 Prisioneiro</b>
         ${img}
-        <label>miniatura</label>
+        ${model}
+        <label>imagem 2D (PNG/JPG/WebP/GIF)</label>
         <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
+        <label>miniatura 3D (GLB)</label>
+        <input type="file" id="p-pris-glb" accept="model/gltf-binary,.glb">
         <div id="p-pris-status" style="color:#8a7a5a;font-size:11px;margin-top:4px"></div>`;
       const inp = document.getElementById("p-pris-img");
+      const glbInp = document.getElementById("p-pris-glb");
       const st = document.getElementById("p-pris-status");
-      inp.onchange = async (e) => {
+      const enviarMiniatura = async (e, campo) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
         st.textContent = "enviando…";
         try {
           const name = await window.PRISONER_UPLOAD.upload(file);
-          ref.image = name;
+          ref[campo] = name;
           st.textContent = "enviada ✓";
           renderPanel(); render();
         } catch (err) {
           st.textContent = "falha: " + err.message;
         }
       };
+      inp.onchange = e => enviarMiniatura(e, "image");
+      glbInp.onchange = e => enviarMiniatura(e, "model3d");
     } else if (k === "secret_passage") {
       const keys = S.decorations.filter(d => d.key_objective);
       const wallMaterial = WALL_MATERIAL_IDS.has(ref.wall_material)
@@ -3218,7 +3227,7 @@
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}) } : null,
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}) } : null,
       materiais: { ...S.materiais },
       pontes: S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),
       elevacoes: Object.fromEntries(Object.entries(S.elevacoes)

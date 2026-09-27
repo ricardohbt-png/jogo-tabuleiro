@@ -2956,3 +2956,23 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > marca 😠 da Provocação; com os dois ativos o "!" vai para o lado. O campo entra na assinatura
 > de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
+
+> **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
+> confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
+> ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
+> restante para os próximos turnos, acessível no painel de ações e na aba Magias. Cada
+> leva soma ciclones à zona, preserva os IDs já colocados e rejeita footprints ocupados.
+> A tempestade parcialmente posicionada continua ativa, pode ser movida/encerrada e
+> expira normalmente; a prévia sem nenhuma colocação ainda exige uma leva inicial.
+
+> **Ferrão dos Charcos — pântano (2026-09-27):** Jovem, Adulto e Ancião carregam
+> `ignora_pantano` na passiva `movimento_aquatico`. O servidor consulta a exceção ao
+> montar movimento no início do turno e ao entrar no pântano; `src/gameState.js` também
+> a espelha no alcance/caminho previsto. Água e água profunda continuam usando a regra
+> existente de movimento aquático. Catálogo do editor sincronizado em
+> `tools/editor_catalog.js`.
+
+> **Crocodilo Jovem — deslocamento aquático (2026-09-27):** habilidade passiva
+> `movimento_agua_sem_penalidade` marca `ignora_penalidade_agua`; servidor e previsão
+> do cliente cobram custo normal em Água e Água Profunda. O ID não ativa a imunidade
+> separada a redemoinhos (`_ignora_rodamoinho`).

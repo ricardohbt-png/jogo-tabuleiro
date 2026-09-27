@@ -119,6 +119,33 @@ async def main():
     await r.handle_mover_prisioneiro("c", 0, -1)
     check("sem movimento, não anda mais", r.prisoner["pos"] == [6, 9])
 
+    print("\n[3] O Chamado do Inverno seleciona até 1d4 criaturas e congela por um turno")
+    r = setup(); c = lewis(r, nivel=5, pos=(1, 1))
+    alvo = S.make_player("h", "Ana", "warrior", 1)
+    alvo.update(pos=[6, 6], alive=True, hp=40, max_hp=40, action_done=False)
+    r.players["h"] = alvo; r.player_order.append("h")
+    r.initiative_active = True; r._rebuild_initiative()
+    r.round_num = 2
+    zona = {"id":"winter-test", "tipo":"chamado_inverno", "ativa":True,
+            "caster":"c", "permanente":False, "tiles":[[6,6],[6,7]],
+            "expira_em":5, "congelamento_disponivel_em":2,
+            "congelamento_cd":14, "congelamento_rodada":None,
+            "congelamento_alvos_restantes":0, "congelamento_alvos_usados":[]}
+    r.zonas_especiais.append(zona)
+    r._rolar_dado = lambda _expr: 1
+    r._preparar_congelamento_chamado_inverno_turno(c)
+    check("rola 1d4 uma vez no turno do clérigo", zona["congelamento_alvos_restantes"] == 1)
+    async def falha(alvo_, *a, **k): return (False, 1, 0, 0)
+    r._save_mostrado = falha
+    await r.handle_chamado_inverno_congelar("c", zona["id"], [{"kind":"player", "id":"h"}])
+    check("falha em Fortitude aplica paralisia", alvo.get("paralisado") and alvo.get("_paralisado_chamado_inverno"))
+    check("a cota não pode ser reutilizada", zona["congelamento_alvos_restantes"] == 0)
+    check("alvo anotado como gasto", zona["congelamento_alvos_usados"] == [{"kind":"player", "id":"h"}])
+    pulou = await r._processar_paralisacao_turno(alvo)
+    check("primeiro turno congelado é pulado", pulou and alvo.get("paralisado"))
+    pulou = await r._processar_paralisacao_turno(alvo)
+    check("no turno seguinte descongela", not pulou and not alvo.get("paralisado"))
+
     print("\n" + "=" * 62)
     print(f"  {PASS} passaram, {FAIL} falharam")
     print("=" * 62)

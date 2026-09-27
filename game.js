@@ -2245,6 +2245,13 @@ function _storyPaint() {
   _storyPaintMute();
 }
 
+function _storyComplete(msg){
+  const ov=document.getElementById('story-overlay');
+  if(!ov || ov.dataset.key !== msg?.key) return;
+  ov.style.display='none';
+  _storyAudioStop();
+}
+
 function renderStory() {
   const beat = GS.pendingStory && GS.pendingStory();
   let ov = document.getElementById('story-overlay');
@@ -6254,8 +6261,18 @@ const _FILL_WIDTH_FRAC  = 0.98;
 function _petrificadoFiltro2D(){
   return VC.feedback?.petrificacao?.filtro2D ?? 'grayscale(1) sepia(0.60) brightness(0.88)';
 }
+// A paralisia por gelo preserva a arte do peão; só dá a ela o tom frio.  A
+// regra autoritativa continua sendo o booleano `paralisado` recebido do servidor.
+function _congeladoFiltro2D(){
+  return VC.feedback?.congelamento?.filtro2D
+    ?? 'grayscale(0.24) sepia(0.28) hue-rotate(155deg) saturate(1.55) brightness(1.08) contrast(1.04)';
+}
+function _estaParalisado(x){ return !!x?.paralisado; }
+function _filtroEstadoPeao2D(x){
+  return x?.petrificado ? _petrificadoFiltro2D() : (_estaParalisado(x) ? _congeladoFiltro2D() : 'none');
+}
 
-function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false, facing=null, extraRotation=0){
+function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false, facing=null, extraRotation=0, congelado=false){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-2;
   // Drop shadow (ellipse at feet)
@@ -6273,6 +6290,7 @@ function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=fa
   ctx.save();
   ctx.rotate(_facingAngle2D(facing) + (Number(extraRotation) || 0));
   if(petrificado) ctx.filter=_petrificadoFiltro2D();
+  else if(congelado) ctx.filter=_congeladoFiltro2D();
   // Class sprite — usa a miniatura PNG (frente.png), igual ao 3D; enquanto a
   // imagem não carrega, cai no sprite procedural (drawWarrior, …).
   const heroImg = _getHero2DImg(classId);
@@ -6531,8 +6549,9 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
   const img = imageName ? _getMonster2DImg(imageName) : null;
   ctx.save(); ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale);
   ctx.rotate(angBase);
+  const filtroEstado = _filtroEstadoPeao2D(m);
+  if(filtroEstado !== 'none') ctx.filter=filtroEstado;
   if(img && img.complete && img.naturalWidth){
-    if(m.petrificado) ctx.filter=_petrificadoFiltro2D();
     const ar = img.naturalWidth/img.naturalHeight;
     const visualSpan = isWideOriented && !is2x2 ? Math.max(fp.w, fp.h) : 1;
     let w = CELL*(is2x2 ? 1.80 : (visualSpan > 1 ? visualSpan * 0.90 : 1.9)), h = w/ar;
@@ -6603,6 +6622,24 @@ function _desenharChamasPeao2D(ctx, cx, baseY, larg, now, seed){
     ctx.globalAlpha = Math.max(0, 1 - p);
     ctx.beginPath(); ctx.arc(x, y, Math.max(1, larg * 0.025), 0, Math.PI * 2); ctx.fill();
   }
+  ctx.restore();
+  _agendarChamas2D();
+}
+
+// Geada discreta aos pés: mantém o peão legível e, junto ao tom azul, deixa
+// inequívoco que a paralisia é causada por frio. Usa o mesmo agendamento leve
+// do fogo (12 fps) e não cria estado paralelo ao `paralisado` do servidor.
+function _desenharGeadaPeao2D(ctx, cx, baseY, larg, now, seed){
+  const fase = seed * 0.77;
+  const pulso = 0.78 + 0.22 * Math.sin(now * 0.004 + fase);
+  ctx.save();
+  ctx.translate(cx, baseY);
+  ctx.scale(1, 0.42);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, larg * 0.52 * pulso, larg * 0.52 * pulso, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = `rgba(108, 220, 255, ${0.44 + 0.18 * pulso})`;
+  ctx.shadowColor = '#75d7ff'; ctx.shadowBlur = Math.max(2, larg * 0.12);
+  ctx.lineWidth = Math.max(1, larg * 0.042); ctx.stroke();
   ctx.restore();
   _agendarChamas2D();
 }
@@ -6755,7 +6792,8 @@ function drawMonsterSprite(ctx, cx, cy, m, attackTargeted=false){
   // na base, SEM recorte circular. Sem imagem (ex.: servos animados) → procedural.
   const imageName = _monsterImageName(m);
   const mImg = imageName ? _getMonster2DImg(imageName) : null;
-  if(m.petrificado) ctx.filter=_petrificadoFiltro2D();
+  const filtroEstado = _filtroEstadoPeao2D(m);
+  if(filtroEstado !== 'none') ctx.filter=filtroEstado;
   if(mImg && mImg.complete && mImg.naturalWidth){
     const ar = mImg.naturalWidth / mImg.naturalHeight;
     if(_m2x2){
@@ -9323,6 +9361,8 @@ function renderMap(state){
       drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
     }
     if(_monVortexPreso) ctx.restore();
+    if(_estaParalisado(m))
+      _desenharGeadaPeao2D(ctx, cx, cy + fp.logicalH * CELL * 0.36, fp.logicalW * CELL * 0.8, performance.now(), _semente2D(m.id));
     if(_queimando(m))
       _desenharChamasPeao2D(ctx, cx, cy + fp.logicalH * CELL * 0.36, fp.logicalW * CELL * 0.8, performance.now(), _semente2D(m.id));
     // HP bar
@@ -9569,12 +9609,15 @@ function renderMap(state){
         ctx.translate(cx, cy-3);
         ctx.rotate(_facingAngle2D(p.facing) + _spinAngle2D);
         ctx.translate(-cx, -(cy-3));
-        if(p.petrificado) ctx.filter=_petrificadoFiltro2D();
+        const filtroEstado = _filtroEstadoPeao2D(p);
+        if(filtroEstado !== 'none') ctx.filter=filtroEstado;
         ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
         ctx.restore();
-      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
-    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D);
+      } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D, _estaParalisado(p));
+    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D, _estaParalisado(p));
     if(_playerVortexPreso) ctx.restore();
+    if(_estaParalisado(p) && !_invisP)
+      _desenharGeadaPeao2D(ctx, cx, cy + CELL * 0.36, CELL * 0.8, performance.now(), _semente2D(p.id));
     if(_queimando(p) && !_invisP)
       _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.36, CELL * 0.8, performance.now(), _semente2D(p.id));
     if(_alphaSombras < .999) ctx.restore();
@@ -17157,9 +17200,9 @@ const GRIMORIO_CLIENT = {
     custo:'🍖-1 💧-1 (permanente: +🍖20 💧20)',
     descricao:`<b>Alcance:</b> 6 quadrados +1 por nível do clérigo (7 no nível 1)<br>
                <b>Área:</b> quadrado 4x4 +1 casa a cada 2 níveis<br>
-               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área<br>
+               <b>Efeito:</b> escolha Piso congelado ou Planície nevada; afeta aliados e inimigos dentro da área. Enquanto durar, uma vez por turno do clérigo escolha até 1d4 criaturas na área; quem falhar em Fortitude fica congelado até seu próximo turno<br>
                <b>Duração:</b> 1d4 + nível do clérigo<br>
-               <b>Permanente:</b> +20 Fome e +20 Sede, além do custo normal<br>
+               <b>Permanente:</b> apenas o terreno; não aplica congelamento. +20 Fome e +20 Sede, além do custo normal<br>
                <b>Custo:</b> 🍖-1 💧-1 + 1 slot de 2º círculo`
   },
   desnutricao: {
@@ -17676,21 +17719,198 @@ function _renderAcaoIraRocha(heroi) {
   </div>`;
 }
 
-function _renderAcaoPrisaoChamas(heroi) {
+// Mantém a seleção de criaturas do Chamado do Inverno na mesma área da aba
+// Magias onde Senhor das Águas e Ira da Rocha Ardente exibem suas ações de zona.
+function _renderAcaoChamadoInverno(heroi) {
   const state = GS.gameState;
-  if (!state || !heroi || heroi.class_id !== 'mage' || String(heroi.id) !== String(GS.myPid)) return '';
-  const zona = (state.zonas_especiais || []).slice().reverse().find(z =>
-    z && z.tipo === 'prisao_chamas' && z.ativa && String(z.caster) === String(heroi.id));
-  const noTurno = !!(GS.isMyTurn || String(state.current_turn) === String(heroi.id));
-  if (!zona || !noTurno || state.animados_turn) return '';
-  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
-  const restante = Math.max(0, Number(zona.expira_em || rodada) - rodada);
-  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #ff6a2499;background:rgba(255,106,36,.10);">
-    <div style="color:#ffb168;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.prisao_chamas_cabecalho')}</div>
-    <div style="color:#f0c3a5;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.prisao_chamas_restante', {restante})}</div>
-    <button data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarPrisaoChamas()" style="width:100%;padding:7px;background:#6b2612;color:#fff0e8;border:1px solid #ff9a66;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.prisao_chamas_btn_encerrar')}</button>
+  const zona = _chamadoInvernoZonaDisponivel(heroi, state);
+  if (!zona) return '';
+  const candidatos = _chamadoInvernoCandidatos(zona, state);
+  const max = Math.min(Number(zona.congelamento_alvos_restantes) || 0, candidatos.length);
+  if (!max) {
+    return `<div style="margin:8px 0 14px;padding:8px 10px;border:1px solid #83c8d844;background:rgba(131,200,216,.05);color:#91aeb7;font-size:9px;line-height:1.5;">${t('ui.magia.chamado_inverno_sem_alvos')}</div>`;
+  }
+  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #83c8d899;background:rgba(131,200,216,.10);">
+    <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">❄️ ${t('ui.hud.chamado_inverno_congelar')}</div>
+    <div style="color:#c6d8dd;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.chamado_inverno_alvos_disponiveis', {n:max})} · ${t('ui.magia.acao_livre')}</div>
+    <button data-gamepad-action="activate" tabindex="0" onclick="_iniciarSelecaoCongelamentoInverno('${zona.id}')" style="width:100%;padding:7px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.chamado_inverno_escolher_alvos')}</button>
   </div>`;
 }
+
+const _magiasEncerraveisInfo = {
+  chamado_inverno: {classe:'cleric', nome:'cat.magia.chamado_inverno.nome', icone:'❄️'},
+  senhor_das_aguas: {classe:'cleric', nome:'cat.magia.senhor_das_aguas.nome', icone:'🌊'},
+  ira_rocha_ardente: {classe:'cleric', nome:'cat.magia.ira_rocha_ardente.nome', icone:'🌋'},
+  tempestade_ciclones: {classe:'cleric', nome:'cat.magia.tempestade_ciclones.nome', icone:'🌪️'},
+  prisao_chamas: {classe:'mage', nome:'cat.magia.prisao_chamas.nome', icone:'🔥'},
+};
+
+function _zonasMagicasQuePossoEncerrar(heroi, state = GS.gameState) {
+  if (!state || !heroi || String(heroi.id) !== String(GS.myPid)) return [];
+  const noTurno = !!(GS.isMyTurn || String(state.current_turn) === String(heroi.id));
+  if (!noTurno || state.animados_turn) return [];
+  return (state.zonas_especiais || []).filter(z => {
+    const info = z && _magiasEncerraveisInfo[z.tipo];
+    if (!info || !z.ativa || info.classe !== heroi.class_id
+        || String(z.caster) !== String(heroi.id) || !z.id) return false;
+    if (z.tipo === 'chamado_inverno' && z.permanente) return false;
+    if (z.tipo === 'tempestade_ciclones' && z.ciclones_pendentes && !z.ativada_em) return false;
+    return true;
+  });
+}
+
+function _renderAcoesEncerrarMagias(heroi) {
+  const state = GS.gameState;
+  const zonas = _zonasMagicasQuePossoEncerrar(heroi, state);
+  if (!zonas.length) return '';
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  return zonas.map(zona => {
+    const info = _magiasEncerraveisInfo[zona.tipo];
+    const nome = t(info.nome);
+    const restante = Math.max(0, Number(zona.expira_em || rodada) - rodada);
+    return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #6aa6b899;background:rgba(60,130,160,.10);">
+      <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${info.icone} ${_esc(nome)}</div>
+      <div style="color:#c6d8dd;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.zona_magica_restante', {restante})}</div>
+      <button data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarMagiaZona('${zona.id}')" style="width:100%;padding:7px;background:#263f4a;color:#e9fbff;border:1px solid #83c8d8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.hud.encerrar_magia_zona', {nome:_esc(nome)})}</button>
+    </div>`;
+  }).join('');
+}
+
+function _chamadoInvernoZonaDisponivel(heroi, state = GS.gameState) {
+  if (!state || !heroi || heroi.class_id !== 'cleric'
+      || String(heroi.id) !== String(GS.myPid)
+      || !(GS.isMyTurn || String(state.current_turn) === String(heroi.id))
+      || state.animados_turn || heroi.paralisado || heroi.petrificado || heroi.perde_turno) return null;
+  const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+  return (state.zonas_especiais || []).slice().reverse().find(z =>
+    z && z.tipo === 'chamado_inverno' && z.ativa && !z.permanente
+      && String(z.caster) === String(heroi.id)
+      && Number(z.congelamento_rodada) === rodada
+      && Number(z.congelamento_alvos_restantes) > 0
+      && rodada < Number(z.expira_em || 0)) || null;
+}
+
+function _chamadoInvernoCandidatos(zona, state = GS.gameState) {
+  if (!zona || !state) return [];
+  const area = new Set((zona.tiles || []).map(([x,y]) => `${x},${y}`));
+  const dentro = pos => Array.isArray(pos) && pos.length >= 2 && area.has(`${pos[0]},${pos[1]}`);
+  const lista = [];
+  const add = (kind, entity, positions) => {
+    if (!entity || entity.alive === false || Number(entity.hp ?? entity.vida_atual ?? 1) <= 0
+        || entity.fosso_oculto || !positions.some(dentro)) return;
+    lista.push({kind, id:String(entity.id ?? (kind === 'prisoner' ? '__prisoner__' : '')), name:entity.name || entity.nome || entity.tipo || kind,
+      pos:entity.pos || positions[0], tiles:positions.filter(dentro)});
+  };
+  (state.players || []).forEach(e => add('player', e, [e.pos]));
+  (state.monsters || []).forEach(e => {
+    let positions = [e.pos];
+    try { if (GS.monsterTiles) positions = GS.monsterTiles(e); } catch (_) {}
+    add('monster', e, positions);
+  });
+  (state.players || []).forEach(p => (p.animados || []).forEach(e => add('animado', e, [e.pos])));
+  if (state.prisoner) add('prisoner', state.prisoner, [state.prisoner.pos]);
+  return lista;
+}
+
+// A mira segue o mesmo padrão de seleção direta no tabuleiro usado pelos
+// redemoinhos e pelas Chamas Vivas. Cada alvo recebe uma identidade própria,
+// enquanto as casas destacadas cobrem apenas a parte da criatura dentro da área.
+function _iniciarSelecaoCongelamentoInverno(zoneId) {
+  const state = GS.gameState, me = GS.me;
+  const zona = _chamadoInvernoZonaDisponivel(me, state);
+  if (!zona || String(zona.id) !== String(zoneId)) return;
+  const candidatos = _chamadoInvernoCandidatos(zona, state);
+  const max = Math.min(Number(zona.congelamento_alvos_restantes) || 0, candidatos.length);
+  if (!max) { toast(t('ui.magia.chamado_inverno_sem_alvos'), '#8bd7e8'); return; }
+  const porIdentidade = new Map(candidatos.map(alvo => [`${alvo.kind}:${alvo.id}`, alvo]));
+  const porCasa = new Map();
+  const permitidos = new Set();
+  for (const alvo of candidatos) {
+    const id = `${alvo.kind}:${alvo.id}`;
+    for (const [x,y] of alvo.tiles || []) {
+      const casa = `${x},${y}`;
+      permitidos.add(casa);
+      if (!porCasa.has(casa)) porCasa.set(casa, []);
+      porCasa.get(casa).push(id);
+    }
+  }
+  const selecionados = new Set();
+  window._modoCongelamentoInverno = {zoneId:zona.id, candidatos, porIdentidade, porCasa, permitidos, selecionados, max};
+  const casasSelecionadas = () => {
+    const casas = new Set();
+    const modo = window._modoCongelamentoInverno;
+    if (!modo) return casas;
+    for (const id of modo.selecionados)
+      for (const [x,y] of (modo.porIdentidade.get(id)?.tiles || [])) casas.add(`${x},${y}`);
+    return casas;
+  };
+  const atualizar = () => {
+    const modo = window._modoCongelamentoInverno;
+    if (!modo) return;
+    _aimSetHighlights({range:modo.permitidos, area:casasSelecionadas()});
+    _aimSetStatus(t('ui.magia.chamado_inverno_selecao_contagem', {n:modo.selecionados.size,max:modo.max}), '#94dfb0');
+    const btn = _aimSessionState.current?.confirmButton;
+    if (btn) {
+      btn.disabled = modo.selecionados.size < 1;
+      btn.style.opacity = btn.disabled ? '.45' : '1';
+      btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+    }
+  };
+  _aimStart({
+    kind:'chamado_inverno_congelar',
+    title:`❄️ ${t('ui.hud.chamado_inverno_congelar').toUpperCase()}`,
+    instruction:t('ui.magia.chamado_inverno_selecione', {max}),
+    color:'#83c8d8', targetLabel:t('ui.magia.selecionado'), range:permitidos,
+    area:casasSelecionadas(),
+    confirmText:t('ui.magia.chamado_inverno_confirmar'),
+    canConfirm:()=>window._modoCongelamentoInverno?.selecionados?.size > 0,
+    confirm:()=>{
+      const modo = window._modoCongelamentoInverno;
+      if (!modo || !modo.selecionados.size) return;
+      const targets = [...modo.selecionados].map(id => {
+        const alvo = modo.porIdentidade.get(id);
+        return {kind:alvo.kind, id:alvo.id};
+      });
+      GS.chamadoInvernoCongelar(modo.zoneId, targets);
+      _aimEnd({silent:true, reason:'resolved'});
+    },
+    cleanup:()=>{ window._modoCongelamentoInverno = null; },
+  });
+  atualizar();
+}
+
+function _clickTileCongelamentoInverno(tx, ty) {
+  const modo = window._modoCongelamentoInverno;
+  if (!modo) return;
+  const ids = modo.porCasa.get(`${tx},${ty}`) || [];
+  if (!ids.length) {
+    _aimSetStatus(t('ui.magia.chamado_inverno_selecione', {max:modo.max}), '#ff9aa2');
+    return;
+  }
+  // Se mais de uma peça ocupar a casa, alterna o primeiro alvo ainda não
+  // marcado; um clique numa peça já marcada desfaz aquela seleção.
+  const id = ids.find(alvoId => !modo.selecionados.has(alvoId)) || ids[0];
+  if (modo.selecionados.has(id)) modo.selecionados.delete(id);
+  else if (modo.selecionados.size < modo.max) modo.selecionados.add(id);
+  else {
+    _aimSetStatus(t('ui.magia.chamado_inverno_selecao_contagem', {n:modo.selecionados.size,max:modo.max}), '#ffb168');
+    return;
+  }
+  _aimSetHighlights({range:modo.permitidos, area:(()=>{
+    const casas = new Set();
+    for (const alvoId of modo.selecionados)
+      for (const [x,y] of (modo.porIdentidade.get(alvoId)?.tiles || [])) casas.add(`${x},${y}`);
+    return casas;
+  })()});
+  _aimSetStatus(t('ui.magia.chamado_inverno_selecao_contagem', {n:modo.selecionados.size,max:modo.max}), '#94dfb0');
+  const btn = _aimSessionState.current?.confirmButton;
+  if (btn) {
+    btn.disabled = modo.selecionados.size < 1;
+    btn.style.opacity = btn.disabled ? '.45' : '1';
+    btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
+  }
+}
+window._iniciarSelecaoCongelamentoInverno = _iniciarSelecaoCongelamentoInverno;
 
 // Tabela de slots por nível (espelha SLOTS_POR_NIVEL no server). Mesma p/ as 2 classes.
 const SLOTS_POR_NIVEL_CLIENT = {
@@ -17705,6 +17925,8 @@ const SLOTS_POR_NIVEL_CLIENT = {
 // Ira da Rocha Ardente. Mantemos a tabela-base intacta para o mago e apenas
 // aplicamos o bônus ao herói que realmente é clérigo.
 function _slotsMaxParaHeroi(heroi){
+  if(heroi?.test_hero && heroi.slots_max && typeof heroi.slots_max === 'object')
+    return {...heroi.slots_max};
   const nivel = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
   const base = {...(SLOTS_POR_NIVEL_CLIENT[nivel] || SLOTS_POR_NIVEL_CLIENT[1])};
   // Espaço temporário de teste: o mago mantém 3 slots de 4º círculo para
@@ -17780,13 +18002,18 @@ function renderMagiasFichaEmJogo(heroi, cls) {
     <div style="padding:4px 0;">
       ${_renderAcaoSenhorDasAguas(heroi)}
       ${_renderAcaoIraRocha(heroi)}
+      ${_renderAcaoChamadoInverno(heroi)}
       ${_renderAcaoTempestade(heroi)}
-      ${_renderAcaoPrisaoChamas(heroi)}
+      ${_renderAcoesEncerrarMagias(heroi)}
       ${renderCirculoMagias('primeiro', t('ui.magia.circulo_caixa.primeiro'))}
       ${renderCirculoMagias('segundo',  t('ui.magia.circulo_caixa.segundo'))}
       ${renderCirculoMagias('terceiro', t('ui.magia.circulo_caixa.terceiro'))}
       ${renderCirculoMagias('quarto', t('ui.magia.4o_circulo'))}
       ${renderCirculoMagias('quinto', t('ui.magia.5o_circulo_teste'))}
+      ${renderCirculoMagias('sexto', t('ui.magia.6o_circulo'))}
+      ${renderCirculoMagias('setimo', t('ui.magia.7o_circulo'))}
+      ${renderCirculoMagias('oitavo', t('ui.magia.8o_circulo'))}
+      ${renderCirculoMagias('nono', t('ui.magia.9o_circulo'))}
     </div>`;
 }
 
@@ -19211,7 +19438,7 @@ function _aimHoverHabilidadeTeste(tx, ty) {
 function _aimAlgumModoAtivo() {
   return !!(window._modoDirecaoInstrumento || window._modoAtaqueMira || window._modoInstrumentoAlvo
     || window._modoArremessoArma || window._modoInstrumento || window._modoMestreMira
-    || window._modoMagia || window._modoSenhorDasAguas || window._modoIraRocha || window._modoTempestadePlacement || window._modoTempestadeMove
+    || window._modoMagia || window._modoSenhorDasAguas || window._modoCongelamentoInverno || window._modoIraRocha || window._modoTempestadePlacement || window._modoTempestadeMove
     || window._modoThrowItem || window._modoAnimarMortos || window._modoHabilidadeTeste
     || window._modoPlacementArmadilha || _aimSessionIs('desarmar_armadilha'));
 }
@@ -19266,6 +19493,14 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
     const valid = modo.permitidos.has(`${tx},${ty}`);
     _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
     _aimSetStatus(valid ? t('ui.mira.casa_valida_clique_para_marcar_ou_desmarca') : t('ui.mira.escolha_uma_casa_dentro_da_area_da_magia'), valid ? '#94dfb0' : '#ff9aa2');
+    return true;
+  }
+  if (window._modoCongelamentoInverno) {
+    const modo = window._modoCongelamentoInverno;
+    const valid = modo.porCasa.has(`${tx},${ty}`);
+    _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
+    _aimSetStatus(valid ? t('ui.mira.casa_valida_clique_para_marcar_ou_desmarca')
+      : t('ui.magia.chamado_inverno_selecione', {max:modo.max}), valid ? '#94dfb0' : '#ff9aa2');
     return true;
   }
   if (window._modoIraRocha) {
@@ -21101,7 +21336,7 @@ function _mpAbaMestre(state){
     const jaNaMesa = new Set((state.players || []).map(p => p.class_id));
     h += `<div class="mp-sec" data-i18n="ui.mestre.herois_de_teste">HERÓIS DE TESTE</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">${classesTeste.map(([id, icon, nome]) =>
-        `<button class="mestre-heroi-teste-btn mp-linha ${window._modoAdicionarHeroiTeste === id ? 'atk armado' : 'hab'}"
+        `<button class="mestre-heroi-teste-btn mp-linha ${(window._modoAdicionarHeroiTeste?.class_id || window._modoAdicionarHeroiTeste) === id ? 'atk armado' : 'hab'}"
            data-class-id="${id}" ${jaNaMesa.has(id) ? `disabled title="${t('ui.mestre.ja_esta_na_mesa')}"` : ''}>
            <span class="txt">${icon} ${nome}</span>
          </button>`).join('')}</div>
@@ -21116,15 +21351,130 @@ function _mpAbaMestre(state){
   return h || `<div class="mestre-vazio">${t('ui.mestre.sem_reforcos')}</div>`;
 }
 
+// Rótulo de cada espaço = chave ui.heroteste.slot.<slot>, resolvida no render
+// (t() não pode rodar no carregamento do módulo).
+const _HEROTEST_SLOTS = ['weapon','off_hand','armor','head','boots','ring1','ring2','item1','item2'];
+const _HEROTEST_CIRCULOS = ['primeiro','segundo','terceiro','quarto','quinto','sexto','setimo','oitavo','nono'];
+const _HEROTEST_CIRCULO_LABEL = {primeiro:'1º',segundo:'2º',terceiro:'3º',quarto:'4º',quinto:'5º',sexto:'6º',setimo:'7º',oitavo:'8º',nono:'9º'};
+let _heroTestConfigRoot = null;
+
+function _heroTestDraftRender(){
+  const d = window._heroTestConfigDraft;
+  const root = _heroTestConfigRoot;
+  if(!d || !root) return;
+  const m = d.meta, level = Number(d.level) || 1;
+  const caster = ['mage','cleric'].includes(d.classId);
+  const gearHTML = _HEROTEST_SLOTS.map(slot => {
+    const opts = m.gear_options?.[slot] || [];
+    return `<label style="display:grid;grid-template-columns:145px 1fr;gap:8px;align-items:center;margin:5px 0;color:#ddd;font-size:12px">
+      <span>${t('ui.heroteste.slot.' + slot)}</span><select data-test-gear="${slot}" style="background:#17202a;color:#eee;border:1px solid #53606b;padding:6px;border-radius:4px">
+        <option value="">${t('ui.heroteste.vazio')}</option>${opts.map(x=>`<option value="${_esc(x.id)}" ${d.gear[slot]===x.id?'selected':''}>${_esc(x.emoji||'')} ${_esc(x.name)}</option>`).join('')}
+      </select></label>`;
+  }).join('');
+  const slots = m.slots_by_level?.[String(level)] || {};
+  const slotsSummary = caster ? _HEROTEST_CIRCULOS.filter(c=>slots[c]>0)
+    .map(c=>`${_HEROTEST_CIRCULO_LABEL[c]}: ${slots[c]}`).join(' · ') || t('ui.heroteste.sem_espacos') : '';
+  const spellGroups = caster && !d.allSpells ? _HEROTEST_CIRCULOS.map(c => {
+    const count = Number(m.choices_by_level?.[String(level)]?.[c] || 0);
+    if(!count) return '';
+    const options = (m.spells||[]).filter(s=>s.circle===c);
+    const selected = d.spells.filter(id=>options.some(s=>s.id===id));
+    return `<section style="border:1px solid #4b5966;padding:8px;margin:8px 0;border-radius:5px">
+      <strong style="color:#e6c56a">${t('ui.heroteste.circulo_escolha', {circulo:_HEROTEST_CIRCULO_LABEL[c], n:count})}</strong>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:4px;margin-top:7px">
+        ${options.map(s=>`<label style="font-size:12px;color:#ddd"><input type="checkbox" data-test-spell="${_esc(s.id)}" ${selected.includes(s.id)?'checked':''} ${!selected.includes(s.id)&&selected.length>=count?'disabled':''}> ${_esc(s.icon||'✨')} ${_esc(s.name)}</label>`).join('')}
+      </div><small style="color:${selected.length===count?'#7de0a1':'#e8a56a'}">${t('ui.heroteste.selecionadas', {n:selected.length, max:count})}</small></section>`;
+  }).join('') : '';
+  const guildLines = [...new Set((m.guild||[]).map(x=>x.line).filter(Boolean))].sort();
+  const guildHTML = guildLines.map(line=>{
+    const opts=(m.guild||[]).filter(x=>x.line===line&&Number(x.level)<=level).sort((a,b)=>a.level-b.level);
+    const choice=d.guild[line]||'';
+    const selectedAvailable=opts.some(x=>x.id===choice);
+    const title=String(line).replace(/^[a-z]+_/, '').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
+    return `<label style="display:grid;grid-template-columns:165px 1fr;gap:8px;align-items:center;margin:5px 0;color:#ddd;font-size:12px">
+      <span>${_esc(title)}</span><select data-test-guild="${_esc(line)}" style="background:#17202a;color:#eee;border:1px solid #53606b;padding:6px;border-radius:4px">
+        <option value="">${t('ui.heroteste.sem_evolucao')}</option>${opts.map(x=>`<option value="${_esc(x.id)}" ${selectedAvailable&&choice===x.id?'selected':''}>${_esc(x.icon||'✦')} ${_esc(x.name)} ${t('ui.heroteste.nivel_n', {n:x.level})}</option>`).join('')}
+      </select></label>`;
+  }).join('');
+  const spellsOK = !caster || d.allSpells || _HEROTEST_CIRCULOS.every(c=>{
+    const required=Number(m.choices_by_level?.[String(level)]?.[c]||0);
+    const count=(m.spells||[]).filter(s=>s.circle===c&&d.spells.includes(s.id)).length;
+    return count===required;
+  });
+  root.innerHTML = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10020;display:flex;align-items:center;justify-content:center;padding:18px">
+    <div style="width:min(760px,96vw);max-height:92vh;overflow:auto;background:#121820;color:#eee;border:1px solid #a78949;border-radius:8px;padding:18px;box-shadow:0 16px 70px #000">
+      <h2 style="margin:0 0 12px;color:#e6c56a">${t('ui.heroteste.titulo')}</h2>
+      <label style="display:flex;gap:12px;align-items:center;margin-bottom:14px">${t('ui.heroteste.nivel')}
+        <select data-test-level style="background:#17202a;color:#eee;border:1px solid #53606b;padding:6px">${Array.from({length:20},(_,i)=>i+1).map(n=>`<option value="${n}" ${level===n?'selected':''}>${n}</option>`).join('')}</select>
+        ${caster?`<span style="color:#9caab5;font-size:12px">${t('ui.heroteste.espacos', {lista:slotsSummary})}</span>`:''}</label>
+      <details open><summary style="cursor:pointer;color:#e6c56a;margin:12px 0">${t('ui.heroteste.equipamento')}</summary>${gearHTML}</details>
+      ${caster?`<details open><summary style="cursor:pointer;color:#e6c56a;margin:12px 0">${t('ui.heroteste.magias')}</summary>
+        <label style="display:block;margin:8px 0"><input type="checkbox" data-test-all-spells ${d.allSpells?'checked':''}> ${t('ui.heroteste.todas_magias')}</label>
+        ${d.allSpells?`<p style="color:#9caab5;font-size:12px">${t('ui.heroteste.todas_magias_dica')}</p>`:spellGroups||`<p style="color:#9caab5">${t('ui.heroteste.sem_escolha_magia')}</p>`}
+      </details>`:''}
+      <details open><summary style="cursor:pointer;color:#e6c56a;margin:12px 0">${t('ui.heroteste.evolucoes')}</summary>${guildHTML||`<p style="color:#9caab5">${t('ui.heroteste.sem_evolucoes')}</p>`}</details>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+        <button data-test-cancel style="padding:8px 14px">${t('ui.heroteste.cancelar')}</button>
+        <button data-test-confirm ${spellsOK?'':'disabled'} style="padding:8px 14px;background:${spellsOK?'#725c2b':'#39434b'};color:#fff;border:1px solid #b69b58;border-radius:4px;cursor:${spellsOK?'pointer':'not-allowed'}">${t('ui.heroteste.confirmar')}</button>
+      </div>
+    </div></div>`;
+  const rerender = () => _heroTestDraftRender();
+  root.querySelector('[data-test-level]').onchange=e=>{
+    d.level=Number(e.target.value);
+    const expected=m.choices_by_level?.[String(d.level)]||{};
+    for(const c of _HEROTEST_CIRCULOS){
+      const allowed=(m.spells||[]).filter(s=>s.circle===c).map(s=>s.id);
+      const kept=d.spells.filter(id=>allowed.includes(id)).slice(0,Number(expected[c]||0));
+      d.spells=d.spells.filter(id=>!allowed.includes(id)).concat(kept);
+    }
+    for(const [line,id] of Object.entries(d.guild)){
+      const option=(m.guild||[]).find(x=>x.id===id);
+      if(!option||Number(option.level)>d.level)delete d.guild[line];
+    }
+    rerender();
+  };
+  root.querySelectorAll('[data-test-gear]').forEach(el=>el.onchange=e=>{d.gear[e.target.dataset.testGear]=e.target.value;});
+  const all=root.querySelector('[data-test-all-spells]');
+  if(all) all.onchange=e=>{d.allSpells=e.target.checked;rerender();};
+  root.querySelectorAll('[data-test-spell]').forEach(el=>el.onchange=e=>{
+    const id=e.target.dataset.testSpell;
+    d.spells=e.target.checked?[...d.spells,id]:d.spells.filter(x=>x!==id);
+    rerender();
+  });
+  root.querySelectorAll('[data-test-guild]').forEach(el=>el.onchange=e=>{
+    const line=e.target.dataset.testGuild;
+    if(e.target.value)d.guild[line]=e.target.value;else delete d.guild[line];
+  });
+  root.querySelector('[data-test-cancel]').onclick=()=>{root.remove();_heroTestConfigRoot=null;window._heroTestConfigDraft=null;};
+  root.querySelector('[data-test-confirm]').onclick=()=>{
+    if(!spellsOK)return;
+    const config={level:d.level,gear:{...d.gear},all_spells:d.allSpells,spells:d.spells.slice(),guild_evolutions:{...d.guild}};
+    root.remove();_heroTestConfigRoot=null;window._heroTestConfigDraft=null;
+    window._modoAdicionarHeroiTeste={class_id:d.classId,config};
+    window._modoImplantarReforco=null;
+    renderMasterPanel(GS.gameState);
+  };
+}
+
+function abrirConfiguracaoHeroiTeste(meta){
+  if(!meta||!meta.class_id)return;
+  if(_heroTestConfigRoot)_heroTestConfigRoot.remove();
+  const root=document.createElement('div');root.id='hero-test-config-modal';document.body.appendChild(root);
+  _heroTestConfigRoot=root;
+  window._heroTestConfigDraft={meta,classId:meta.class_id,level:1,allSpells:true,gear:{},spells:[],guild:{}};
+  _heroTestDraftRender();
+}
+GS.on('mestreHeroiTesteOpcoes', abrirConfiguracaoHeroiTeste);
+
 function _mpWireMestre(host, state){
   const diag = host.querySelector('.mestre-diag-btn');
   if(diag) diag.onclick = () => abrirDiagnosticoArte3D();
   host.querySelectorAll('.mestre-heroi-teste-btn:not([disabled])').forEach(btn => {
     btn.onclick = () => {
       const classId = btn.dataset.classId;
-      window._modoAdicionarHeroiTeste = window._modoAdicionarHeroiTeste === classId ? null : classId;
+      window._modoAdicionarHeroiTeste = null;
       window._modoImplantarReforco = null;
-      renderMasterPanel(GS.gameState);
+      GS.mestrePedirOpcoesHeroiTeste(classId);
     };
   });
   const sim = host.querySelector('.mestre-test-combat-btn');
@@ -22661,17 +23011,40 @@ function renderMyPanel(state){
       <span style="color:#ffb168;" data-i18n="ui.hud.escolher_chamas_vivas">🔥 Escolher Chamas Vivas</span>
       <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.ira_rocha_aguardando', {restante: _iraRochaRestante(_iraRochaZona), colocadas: (_iraRochaZona.chamas_vivas || []).length, total: Number(_iraRochaZona.chamas_totais ?? ((_iraRochaZona.chamas_vivas || []).length + _iraRochaRestante(_iraRochaZona)))})}</small>
      </button>` : '';
-  const _prisaoChamasZona = me.class_id === 'mage'
-    ? (state.zonas_especiais || []).slice().reverse().find(z =>
-        z && z.tipo === 'prisao_chamas' && z.ativa && String(z.caster) === String(me.id))
+  const _tempestadePendencia = me.class_id === 'cleric'
+    ? (state.zonas_especiais || []).slice().reverse().find(z => z && z.ativa
+        && z.tipo === 'tempestade_ciclones' && Number(z.ciclones_pendentes || 0) > 0
+        && String(z.caster) === String(me.id))
     : null;
-  const _prisaoChamasPodeEncerrar = !!(_prisaoChamasZona && _senhorAguasMeuTurno && !state.animados_turn);
-  const _encerrarPrisaoChamasBtn = _prisaoChamasPodeEncerrar ? `
-    <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarPrisaoChamas()"
-      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#ff6a24;">
-      <span style="color:#ffb168;" data-i18n="ui.hud.encerrar_prisao_chamas">🔥 Encerrar Prisão de Chamas</span>
-      <small style="color:#f0c3a5;font-size:.7rem;font-weight:bold;">${t('ui.magia.acao_livre')}</small>
+  const _tempestadePendenciaBtn = (_tempestadePendencia
+    && _tempestadeControlePrincipalValido(state, GS.myPid, me)) ? `
+    <button class="btn-action" data-gamepad-action="activate" tabindex="0"
+      onclick="_reabrirSelecaoPosicoesTempestade('${String(_tempestadePendencia.id).replace(/'/g, "\\'")}')"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#4fc3f7;">
+      <span style="color:#9de8f4;">🌪️ ${t('ui.magia.tempestade_posicionamento_titulo')}</span>
+      <small style="color:#bdd4da;font-size:.7rem;font-weight:bold;">${t('ui.magia.tempestade_posicionamento_instrucao', {count:Number(_tempestadePendencia.ciclones_pendentes) || 0})}</small>
     </button>` : '';
+  const _chamadoInvernoZona = _chamadoInvernoZonaDisponivel(me, state);
+  const _congelarAlvos = _chamadoInvernoZona
+    ? Math.min(Number(_chamadoInvernoZona.congelamento_alvos_restantes) || 0,
+        _chamadoInvernoCandidatos(_chamadoInvernoZona, state).length) : 0;
+  const _congelarInvernoBtn = _congelarAlvos ? `
+    <button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="_iniciarSelecaoCongelamentoInverno('${_chamadoInvernoZona.id}')"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#83c8d8;">
+      <span style="color:#9de8f4;">❄️ ${t('ui.hud.chamado_inverno_congelar')}</span>
+      <small style="color:#c6d8dd;font-size:.7rem;font-weight:bold;">${t('ui.magia.chamado_inverno_alvos_disponiveis', {n:_congelarAlvos})} · ${t('ui.magia.acao_livre')}</small>
+    </button>` : '';
+  const _encerrarMagiasBtns = _zonasMagicasQuePossoEncerrar(me, state).map(zona => {
+    const info = _magiasEncerraveisInfo[zona.tipo];
+    const nome = t(info.nome);
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    const restante = Math.max(0, Number(zona.expira_em || rodada) - rodada);
+    return `<button class="btn-action" data-gamepad-action="activate" tabindex="0" onclick="GS.encerrarMagiaZona('${zona.id}')"
+      style="display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 6px;border-color:#83c8d8;">
+      <span style="color:#9de8f4;">${info.icone} ${t('ui.hud.encerrar_magia_zona', {nome:_esc(nome)})}</span>
+      <small style="color:#c6d8dd;font-size:.7rem;font-weight:bold;">${t('ui.magia.zona_magica_restante', {restante})} · ${t('ui.magia.acao_livre')}</small>
+    </button>`;
+  }).join('');
   const _wRange = me.weapon?.range ?? null;
   const _rangeHint = _wRange != null ? `alcance ${_wRange}` : t('ui.hud.corpo_a_corpo');
   const _adjHint = canAct && !canAttack
@@ -22692,7 +23065,9 @@ function renderMyPanel(state){
     ${_escaparBauBtn}
     ${_redemoinhosBtn}
     ${_chamasVivasBtn}
-    ${_encerrarPrisaoChamasBtn}
+    ${_tempestadePendenciaBtn}
+    ${_congelarInvernoBtn}
+    ${_encerrarMagiasBtns}
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
@@ -24785,7 +25160,8 @@ function abrirMenuMagias(pid){
           ${_renderAcoesExplicacaoHTML()}
           ${_renderAcaoSenhorDasAguas(player)}
           ${_renderAcaoIraRocha(player)}
-          ${_renderAcaoPrisaoChamas(player)}
+          ${_renderAcaoChamadoInverno(player)}
+          ${_renderAcoesEncerrarMagias(player)}
           <section><h3>${t('ui.magia.modificadores')}</h3>
             ${modificadores.length ? `<div class="mm-list">${modificadores.map(renderMod).join('')}</div>`
               : `<p class="mm-empty">${t('ui.magia.sem_modificadores')}</p>`}
@@ -41672,6 +42048,7 @@ function startLoop3D(){
     _updateFumaca3D(now);
     _updateSombras3D(now);
     _updateChamasFx3D(now);
+    _updateCongelamentoFx3D(now);
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
     if(g3.dustPts && g3.dustPts.visible &&
@@ -44684,13 +45061,13 @@ function renderMap3D(state){
   // luzes força o Three.js a recompilar shaders (travadas perceptíveis).
   const gamepadAttackTarget3D = _gamepadSelectedAttackTarget(state);
   const entitySig = JSON.stringify([
-    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, !!p.metamorfose_ativa, p.metamorfose_forma_type, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _invisibilidadeAnimAtiva(p.id), _queimando(p),
+    state.players.map(p => [p.id, p.pos, p.altura, p.alive, p.color, p.class_id, p.pawn_override, !!p.metamorfose_ativa, p.metamorfose_forma_type, p.bau_engolido, p.fosso_oculto, !!p.invisivel_magico, !!p.petrificado, _estaParalisado(p), _invisibilidadeAnimAtiva(p.id), _queimando(p),
       p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
       (p.animados||[]).map(a => [a.id, a.pos, a.vida_atual, a.tipo, a.image, a.porte, a.size, a.oriented, a.facing])]),
-    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m),
+    state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), _estaParalisado(m),
     m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura,
     !!(m.provocado && Number(m.provocado_turnos) > 0), !!m.procurando]),
-    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, _prisSel] : null,
+    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, state.prisoner.model3d, _prisSel] : null,
     state.corpses || [],
     state.hero_corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
@@ -44790,7 +45167,7 @@ function renderMap3D(state){
     const isCur = p.id===state.current_turn;
     const formaVisual = _metamorfoseVisualName(p);
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, _queimando(p), !!p.petrificado,
+      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, _queimando(p), !!p.petrificado, _estaParalisado(p),
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
@@ -44800,7 +45177,7 @@ function renderMap3D(state){
           // e mSize — parâmetros só de monstro. Faltava o de mSize, então
           // `petrificado` caía uma posição antes e o herói NUNCA virava pedra.
           p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
-          undefined, undefined, undefined, undefined, !!p.petrificado);
+          undefined, undefined, undefined, undefined, !!p.petrificado, _estaParalisado(p));
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
         return f;
       }, px, py, p.altura);
@@ -44820,7 +45197,7 @@ function renderMap3D(state){
       const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
         && _pris3D.rescuer_pid === GS.myPid);
       const _prisFig3D = obterFig('prisoner',
-        JSON.stringify([_pris3D.freed, _pris3D.image, prisSelNow]),
+        JSON.stringify([_pris3D.freed, _pris3D.image, _pris3D.model3d, prisSelNow]),
         () => {
           const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
           f.userData.prisoner = true;   // permite getPrisonerMesh() p/ animação
@@ -44844,11 +45221,11 @@ function renderMap3D(state){
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
-      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), !!m.petrificado,
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), !!m.petrificado, _estaParalisado(m),
         m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.altura, GS.sorrateiroAtivo(), _arteGen]),
       () => {
         const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, _queimando(m),
-          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d, !!m.fill_footprint_3d, m.size, !!m.petrificado);
+          m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.model3d, !!m.fill_footprint_3d, m.size, !!m.petrificado, _estaParalisado(m));
         const vs = Array.isArray(m.vscale) ? m.vscale : [1, 1];
         const sx = Math.max(.2, Math.min(4, Number(vs[0]) || 1));
         const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
@@ -45505,11 +45882,47 @@ function _makePetrified3D(T, root) {
   });
 }
 
-function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petrificado=false) {
+// Gelo não transforma a criatura em outro material: mantém a textura e aplica
+// somente uma tonalidade fria. Cada material é clonado para nunca contaminar o
+// template GLB compartilhado por outros peões.
+function _makeFrozen3D(T, root) {
+  const tom = VC.feedback?.congelamento || {};
+  const cor = Array.isArray(tom.cor) ? tom.cor : [0.38, 0.78, 1.00];
+  const emi = Array.isArray(tom.emissiva) ? tom.emissiva : [0.035, 0.130, 0.220];
+  const gelo = new T.Color().setRGB(cor[0], cor[1], cor[2]);
+  const brilho = new T.Color().setRGB(emi[0], emi[1], emi[2]);
+  root.traverse(o => {
+    if(!o.isMesh || !o.material || o.userData?.materialCongelado) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    const gelados = mats.map(src => {
+      const mat = src.clone();
+      if(mat.color) mat.color.lerp(gelo, 0.46);
+      if(mat.emissive){
+        mat.emissive.lerp(brilho, 0.80);
+        mat.emissiveIntensity = Math.max(Number(mat.emissiveIntensity) || 0, 0.65);
+      }
+      if(mat.roughness !== undefined) mat.roughness = Math.min(Number(mat.roughness) || 0.7, 0.68);
+      mat.needsUpdate = true;
+      return mat;
+    });
+    o.material = Array.isArray(o.material) ? gelados : gelados[0];
+    o.userData.materialCongelado = true;
+  });
+}
+function _tingirSpriteCongelado3D(mat){
+  const tom = VC.feedback?.congelamento || {};
+  const cor = Array.isArray(tom.cor) ? tom.cor : [0.38, 0.78, 1.00];
+  mat.color.setRGB(cor[0], cor[1], cor[2]);
+  mat.opacity = Math.min(Number(mat.opacity) || 1, 0.96);
+  mat.needsUpdate = true;
+}
+
+function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petrificado=false, congelado=false) {
   const montar = tpl => {
     if (!tpl) { if (onMissing) onMissing(); return; }
     const inst = tpl.clone();
     if(petrificado) _makePetrified3D(T, inst);
+    else if(congelado) _makeFrozen3D(T, inst);
     // Limite de 1 quadrado: a peça nunca ultrapassa o tile (1.0) no chão.
     const box = new T.Box3().setFromObject(inst);
     const tam = box.getSize(new T.Vector3());
@@ -45611,13 +46024,14 @@ function _loadMonsterGLB(T, path, cb) {
 // tabelas e descartava o `model3d`: build3DFig entrava no ramo "tem GLB" e aqui
 // dava `path = null` → onMissing → peão genérico, justamente nas criaturas cujo
 // modelo foi escolhido no editor.
-function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented, onMissing, glbPath, fillFootprint, mSize, petrificado=false) {
+function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented, onMissing, glbPath, fillFootprint, mSize, petrificado=false, congelado=false) {
   const path = glbPath || _monsterGLBPath(imageName, monsterType);
   if (!path) { if (onMissing) onMissing(); return false; }
   const montar = template => {
     if (!template) { if (onMissing) onMissing(); return; }
     const inst = template.clone();
     if(petrificado) _makePetrified3D(T, inst);
+    else if(congelado) _makeFrozen3D(T, inst);
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
     // No enquadramento geral do modo de teste, o limite antigo de 0,94 deixava
@@ -45919,18 +46333,47 @@ function _setMonsterMeshFacing3D(mesh, facing){
   }
 }
 
-function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY, petrificado=false) {
+function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY, petrificado=false, congelado=false) {
   const cacheKey = classId || 'generic';
   const billboard = () => _makeBillboardSprite(T, grp,
-    `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0, undefined, undefined, undefined, petrificado);
+    `assets/pawns/${cacheKey}/frente.png`, '__spr_' + cacheKey, Y0, undefined, undefined, undefined, petrificado, congelado);
   if (_GLB_ENABLED_CLASSES.has(classId)) {
-    _makeCharacterPawn3D(T, grp, classId, Y0, rotY || 0, _BB_H_ALVO, billboard, petrificado);
+    _makeCharacterPawn3D(T, grp, classId, Y0, rotY || 0, _BB_H_ALVO, billboard, petrificado, congelado);
     return;
   }
   billboard();
 }
 
-// Peão 3D do prisioneiro: base + billboard com a imagem editável (fallback: só a base).
+// Modelo GLB escolhido no editor para o prisioneiro. Compartilha o carregador e
+// cache de modelos do jogo, mas mantém uma escala de humano independente.
+function _makePrisonerModel3D(T, grp, modelName, Y0, onMissing){
+  const path = `assets/models3d/prisioneiros/${modelName}`;
+  const montar = template => {
+    if(!template){ if(onMissing) onMissing(); return; }
+    const inst = template.clone();
+    const box = new T.Box3().setFromObject(inst);
+    const size = box.getSize(new T.Vector3());
+    const scale = Math.min(
+      1.78 / Math.max(size.y, 1e-3),
+      0.88 / Math.max(size.x, size.z, 1e-3)
+    );
+    inst.position.set(
+      -(box.min.x + box.max.x) / 2,
+      -box.min.y,
+      -(box.min.z + box.max.z) / 2
+    );
+    const wrap = new T.Group();
+    wrap.add(inst);
+    wrap.scale.setScalar(scale);
+    wrap.position.y = Y0;
+    inst.traverse(o => { if(o.isMesh){ o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
+    grp.add(wrap);
+  };
+  _loadMonsterGLB(T, path, montar);
+}
+
+// Peão 3D do prisioneiro: base + GLB escolhido no editor. Uma imagem 2D segue
+// como fallback quando o modelo ainda não existe ou não carrega.
 // `sel` desenha um anel branco de seleção (controle manual na janela pós-turno).
 function build3DPrisoner(T, pris, sel){
   const TH = 0.22;
@@ -45950,9 +46393,15 @@ function build3DPrisoner(T, pris, sel){
     ring.position.y = 0.13;
     grp.add(ring);
   }
-  if(pris.image){
+  const billboard = () => {
+    if(!pris.image) return;
     _makeBillboardSprite(T, grp, `assets/pawns/prisioneiros/${pris.image}`,
       `_pris_${pris.image}`, Y0);
+  };
+  if(pris.model3d){
+    _makePrisonerModel3D(T, grp, pris.model3d, Y0, billboard);
+  } else {
+    billboard();
   }
   return grp;
 }
@@ -46046,7 +46495,7 @@ function _texturaPetrificada(T, cacheKey, tex){
 
 // `onErro` é chamado quando a textura não carrega, para que quem constrói o peão
 // possa cair numa miniatura procedural em vez de deixar a base sozinha.
-function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, onErro, petrificado=false) {
+function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, onErro, petrificado=false, congelado=false) {
   const sf = sizeFactor || 1;
   if (_pawnTexErro[cacheKey]) { if (onErro) onErro(); return null; }
   let tex = _pawnTexCache[cacheKey];
@@ -46066,6 +46515,8 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
     const cor = VC.feedback?.petrificacao?.cor || [0.44, 0.375, 0.30];
     const k = 0.48 / Math.max(cor[0], cor[1], cor[2], 1e-3);
     mat.color.setRGB(cor[0] * k, cor[1] * k, cor[2] * k);
+  } else if(congelado) {
+    _tingirSpriteCongelado3D(mat);
   }
   // Troca o mapa pela cópia de pedra e devolve a cor ao branco — sem isso o
   // escurecimento provisório se somaria ao da textura e a estátua sairia preta.
@@ -46174,12 +46625,12 @@ function _makeBillboardSprite(T, grp, texUrl, cacheKey, Y0, sizeFactor, mode, on
 }
 
 // Billboard PNG para monstros com campo `image` (apenas frente.png).
-function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro, petrificado=false) {
+function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro, petrificado=false, congelado=false) {
   const mode = _FIT_TILE_PAWNS.has(imageName)   ? 'box'
              : _FILL_WIDTH_PAWNS.has(imageName) ? 'width'
              : null;
   _makeBillboardSprite(T, grp, `assets/pawns/monstros/${imageName}/${imageName}.png`,
-                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode, onErro, petrificado);
+                       '__mon_' + imageName, Y0, _pawnScaleFactor(porte), mode, onErro, petrificado, congelado);
 }
 
 // Monstros ORIENTADOS (croc/lagarto): no 3D a criatura fica EM PÉ (billboard)
@@ -46187,7 +46638,7 @@ function _makeMonsterBillboard(T, grp, imageName, Y0, porte, onErro, petrificado
 // facing) indica a direção. Espelha para leste; norte/sul ficam em pé e a base
 // mostra a direção. O flag `oriented` e o `facing` vêm do servidor. A arte é
 // horizontal com a cabeça à ESQUERDA.
-function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emChamas, petrificado=false){
+function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emChamas, petrificado=false, congelado=false){
   const TH  = 0.22;
   const grp = new T.Group();
   grp.userData.gridX = gx; grp.userData.gridY = gy;
@@ -46270,6 +46721,8 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
     const cor = VC.feedback?.petrificacao?.cor || [0.44, 0.375, 0.30];
     const k = 0.48 / Math.max(cor[0], cor[1], cor[2], 1e-3);
     mat.color.setRGB(cor[0] * k, cor[1] * k, cor[2] * k);
+  } else if(congelado) {
+    _tingirSpriteCongelado3D(mat);
   }
   let tex = _pawnTexCache[cacheKey];
   if (tex) {
@@ -46299,6 +46752,11 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
     fx.position.set(midX, 0.29, midZ);
     grp.add(fx);
   }
+  if(congelado){
+    const fx = _makeCongelamentoFx3D(0.48);
+    fx.position.set(midX, TH + 0.082, midZ);
+    grp.add(fx);
+  }
 
   grp.position.set(gx, 0, gy);
   return grp;
@@ -46311,7 +46769,7 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 // mOriented/mFacing — monstro de 2 casas em pé cobrindo as 2 casas (croc/lagarto).
 // mFacing também é reaproveitado pro peão GLB de herói (direção do último passo).
 
-function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius, mModel3D, mFillFootprint, mSize, petrificado=false){
+function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType, isSelected, mImage, mPorte, mOriented, mFacing, emChamas, acidoResidual, envenenado, monsterVisionRadius, mModel3D, mFillFootprint, mSize, petrificado=false, congelado=false){
   const T   = g3.T;
   const monsterGLBPath = isMonster ? (mModel3D || _monsterGLBPath(mImage, mType)) : null;
   // No mapa 3D, inclusive no teste livre do Mestre, a miniatura deve ser o GLB
@@ -46322,7 +46780,7 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
     // billboard, não no tile-âncora — senão flutuaria sobre a casa vizinha).
     // `petrificado` também: esta saída é ANTES do _makePetrified3D do fim da
     // função, então sem passá-lo a criatura orientada nunca viraria estátua.
-    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas, petrificado);
+    return _buildOrientedCreature3D(T, gx, gy, mImage, mFacing, isSelected, emChamas, petrificado, congelado);
   }
   const TH  = 0.22;                        // floor tile thickness (must match init3D)
   const grp = new T.Group();
@@ -46452,14 +46910,18 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
     // Cadeia de fallback: GLB → billboard PNG → miniatura procedural. O último
     // elo é o que garante que a criatura NUNCA vire uma base vazia no tabuleiro
     // quando a arte estiver faltando (nome de pasta errado, PNG não enviado).
-    const semArte = () => { _miniGenericMonster(bodyGrp, clr, Y0); if(petrificado) _makePetrified3D(T, bodyGrp); };
+    const semArte = () => {
+      _miniGenericMonster(bodyGrp, clr, Y0);
+      if(petrificado) _makePetrified3D(T, bodyGrp);
+      else if(congelado) _makeFrozen3D(T, bodyGrp);
+    };
     if(monsterGLBPath){
       _makeMonsterPawn3D(T, bodyGrp, mImage, mType, Y0, mFacing, mOriented,
-        () => mImage ? _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado)
+        () => mImage ? _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado, congelado)
                      : semArte(),
-        monsterGLBPath, mFillFootprint, mSize, petrificado);
+        monsterGLBPath, mFillFootprint, mSize, petrificado, congelado);
     } else if(mImage){
-      _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado);
+      _makeMonsterBillboard(T, bodyGrp, mImage, Y0, mPorte, semArte, petrificado, congelado);
     } else {
       switch(mType){
         case 'goblin':    _miniGoblin(bodyGrp, clr, Y0);    break;
@@ -46472,10 +46934,11 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
       }
     }
   } else {
-    _makeCharacterPawn(T, bodyGrp, classId, clr, Y0, _facingToRotY(mFacing), petrificado);
+    _makeCharacterPawn(T, bodyGrp, classId, clr, Y0, _facingToRotY(mFacing), petrificado, congelado);
   }
   });
   if(petrificado) _makePetrified3D(T, bodyGrp);
+  else if(congelado) _makeFrozen3D(T, bodyGrp);
 
   // ── Selection ring — golden glowing torus at base, excluded from outline ──────
   if(isSelected){
@@ -46523,6 +46986,9 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   // Indicador "em chamas": labaredas vivas no corpo (ver _makeChamasFx3D).
   if(emChamas){ const fx = _makeChamasFx3D(baseR); fx.position.y = Y0; bodyGrp.add(fx); }
+  // No corpo, e não na base: se a criatura estiver voando, a geada acompanha o
+  // peão em vez de ficar marcada no chão.
+  if(congelado){ const fx = _makeCongelamentoFx3D(baseR); fx.position.y = TH + 0.082; bodyGrp.add(fx); }
   if(acidoResidual) bodyGrp.add(_makeStatusDropSprite3D('#55df74', emChamas ? 0.20 : 0));
   if(envenenado) bodyGrp.add(_makeStatusDropSprite3D('#a85cff', (emChamas ? 0.20 : 0) + (acidoResidual ? 0.20 : 0)));
 
@@ -46641,6 +47107,40 @@ function _updateChamasFx3D(now){
       sp.position.set(b.x + ox + b.deriva * p * 0.4 + 0.04 * Math.sin(t * 0.01 + b.atraso), 0.3 * b.s + p * 1.5 * b.s, b.z + oz);
       sp.material.opacity = p < 0.15 ? p / 0.15 : Math.max(0, 1 - (p - 0.15) / 0.85);
     }
+  }
+}
+
+// A paralisia não recebe uma nova miniatura: o aro gelado apenas reforça a
+// leitura do tom azul e pulsa de leve sob a peça. Como o grupo pertence ao
+// peão, acompanha movimento, altura e descarte do cache de figuras.
+const _congelamentoFx3D = new Set();
+function _makeCongelamentoFx3D(raio){
+  const T = g3.T;
+  const grp = new T.Group();
+  grp.userData.criadoEm = performance.now();
+  const r = Math.max(0.32, Number(raio) || 0.32) + 0.075;
+  const mat = new T.MeshBasicMaterial({ color:0x75d7ff, transparent:true,
+    opacity:0.58, depthWrite:false, toneMapped:false, side:T.DoubleSide });
+  const ring = new T.Mesh(new T.TorusGeometry(r, Math.max(0.010, r * 0.035), 6, 36), mat);
+  ring.rotation.x = Math.PI / 2; ring.renderOrder = 5;
+  grp.userData.aro = ring; grp.add(ring);
+  _congelamentoFx3D.add(grp);
+  return grp;
+}
+function _updateCongelamentoFx3D(now){
+  if(!_congelamentoFx3D.size || !g3?.scene) return;
+  for(const grp of _congelamentoFx3D){
+    let raiz = grp; while(raiz.parent) raiz = raiz.parent;
+    if(raiz !== g3.scene){
+      if(now - grp.userData.criadoEm > 1000) _congelamentoFx3D.delete(grp);
+      continue;
+    }
+    const aro = grp.userData.aro;
+    if(!aro || !grp.visible) continue;
+    const p = 0.5 + 0.5 * Math.sin(now / 360);
+    const escala = 0.94 + p * 0.10;
+    aro.scale.set(escala, escala, escala);
+    aro.material.opacity = 0.38 + p * 0.28;
   }
 }
 
@@ -49043,6 +49543,11 @@ function on3DClick(e){
     if(tAgua) _clickTileSenhorDasAguas(tAgua[0], tAgua[1]);
     return;
   }
+  if(window._modoCongelamentoInverno){
+    const tInverno = get3DTile(e);
+    if(tInverno) _clickTileCongelamentoInverno(tInverno[0], tInverno[1]);
+    return;
+  }
   if(window._modoIraRocha){
     const tIra = get3DTile(e);
     if(tIra) _clickTileIraRocha(tIra[0], tIra[1]);
@@ -49400,7 +49905,9 @@ function handleTileClick(tx, ty){
     const commandControl = GS.isCommandController();
     const st = GS.gameState;
     if(!commandControl && st?.test_mode && window._modoAdicionarHeroiTeste){
-      GS.mestreAdicionarHeroiTeste(window._modoAdicionarHeroiTeste, tx, ty);
+      const modoHeroiTeste = window._modoAdicionarHeroiTeste;
+      const classId = modoHeroiTeste.class_id || modoHeroiTeste;
+      GS.mestreAdicionarHeroiTeste(classId, tx, ty, modoHeroiTeste.config || {level:1});
       window._modoAdicionarHeroiTeste = null;
       return;
     }
@@ -49475,6 +49982,7 @@ function handleTileClick(tx, ty){
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
+  if(window._modoCongelamentoInverno){ _clickTileCongelamentoInverno(tx, ty); return; }
   if(window._modoIraRocha){ _clickTileIraRocha(tx, ty); return; }
   if(window._modoTempestadePlacement){ _clickTileTempestadePlacement(tx, ty); return; }
   if(window._modoTempestadeMove){ _clickTileTempestade(tx, ty); return; }
@@ -49851,6 +50359,7 @@ GS.on('sceneBranch', _sceneBranch);
 GS.on('sceneTestResult', msg => { toast(t(msg.success?'ui.cena.teste_sucesso':'ui.cena.teste_falha', {total:msg.total, cd:msg.cd}), msg.success?'var(--green)':'var(--red)'); });
 GS.on('sceneEndWarning', msg => { if(confirm(t('ui.cena.encerrar_com_pendencias', {n:msg.missing.length}))) GS.sceneEnd(true); });
 GS.on('sceneEnd', _sceneEnd);
+GS.on('storyComplete', _storyComplete);
 GS.on('cityState', msg => {
   fecharQuadrosFlutuantes();
   _limparMortesVisuais();
@@ -50360,23 +50869,26 @@ function _renderAcaoTempestade(heroi) {
   const zonasTodas = (state.zonas_especiais || []).filter(z => z.ativa && z.tipo === 'tempestade_ciclones'
     && String(z.caster) === String(heroi.id));
   const pendente = zonasTodas.slice().reverse().find(z => Number(z.ciclones_pendentes || 0) > 0);
+  let posicionamento = '';
   if (pendente) {
     const quantidade = Number(pendente.ciclones_pendentes) || 0;
-    return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
+    posicionamento = `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
       <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.tempestade_posicionamento_titulo')}</div>
       <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.tempestade_posicionamento_instrucao', {count: quantidade})}</div>
       <button data-gamepad-action="activate" tabindex="0" onclick="_reabrirSelecaoPosicoesTempestade('${String(pendente.id).replace(/'/g, "\\'")}')" style="width:100%;padding:7px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;">${t('ui.magia.tempestade_posicionamento_confirmar')}</button>
     </div>`;
+    if (!pendente.ativada_em) return posicionamento;
   }
-  const zonas = zonasTodas.filter(z => !z.ciclones_pendentes);
-  if (!zonas.length) return '';
+  const zonas = zonasTodas.filter(z => !z.ciclones_pendentes || z.ativada_em);
+  if (!zonas.length) return posicionamento;
   const botoes = zonas.flatMap(z => (z.ciclones || []).filter(c => c.movido_em !== rodada).map(c =>
     `<button onclick="_iniciarMovimentoTempestade('${z.id}',${c.id})" style="padding:6px 8px;background:#183746;color:#e7faff;border:1px solid #8bd7e8;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:9px;">${t('ui.magia.ciclone_n', {n: c.id})}</button>`));
-  return `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
+  const movimento = `<div style="margin:8px 0 14px;padding:9px 10px;border:1px solid #4fc3f799;background:rgba(79,195,247,.10);">
     <div style="color:#9de8f4;font-size:10px;letter-spacing:1px;margin-bottom:5px;">${t('ui.magia.tempestade_cabecalho')}</div>
     <div style="color:#bdd4da;font-size:9px;line-height:1.5;margin-bottom:8px;">${t('ui.magia.tempestade_mova_ciclones')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:5px;">${botoes.join('') || `<span style="color:#7898a2;font-size:9px;">${t('ui.magia.tempestade_todos_moveram')}</span>`}</div>
   </div>`;
+  return posicionamento + movimento;
 }
 
 function _iniciarMovimentoTempestade(zoneId, cicloneId) {
@@ -50408,6 +50920,7 @@ function _mensagemSelecaoPosicoesTempestade(zona) {
     caster_id: zona.caster,
     count: Number(zona.ciclones_pendentes) || 0,
     rolled: Number(zona.ciclones_rolados) || Number(zona.ciclones_pendentes) || 0,
+    ciclones: Array.isArray(zona.ciclones) ? zona.ciclones : [],
     permitidos: zona.ciclones_permitidos || zona.tiles || [],
     center: [Number(zona.cx) || 0, Number(zona.cy) || 0],
     side: Number(zona.lado) || 1,
@@ -50441,8 +50954,9 @@ function _encerrarSelecaoPosicoesTempestade(zoneId, reason = 'expired') {
 function _iniciarSelecaoPosicoesTempestade(msg) {
   if (String(msg.caster_id ?? GS.myPid) !== String(GS.myPid)) return;
   if (!_tempestadeControlePrincipalValido(GS.gameState, GS.myPid)) return;
-  const permitidos = new Set((msg.permitidos || msg.tiles || [])
+  const areaPermitidos = new Set((msg.permitidos || msg.tiles || [])
     .map(([x, y]) => `${Number(x)},${Number(y)}`));
+  const permitidos = new Set(areaPermitidos);
   const max = Math.max(0, Number(msg.count) || 0);
   if (!permitidos.size || !max) return;
   const lado = Math.max(1, Number(msg.ciclone_lado) || 1);
@@ -50454,15 +50968,26 @@ function _iniciarSelecaoPosicoesTempestade(msg) {
   };
   const selecionados = new Set();
   const ocupadas = new Set();
+  const ocupadasExistentes = new Set();
+  for (const ciclone of (msg.ciclones || []))
+    for (const [x, y] of tilesOf(ciclone.pos)) ocupadasExistentes.add(`${x},${y}`);
+  for (const key of [...permitidos]) {
+    const [x, y] = key.split(',').map(Number);
+    const footprint = tilesOf([x, y]);
+    if (footprint.some(([tx, ty]) => !areaPermitidos.has(`${tx},${ty}`)
+        || ocupadasExistentes.has(`${tx},${ty}`))) permitidos.delete(key);
+  }
   const recomputarOcupadas = () => {
     ocupadas.clear();
+    for (const key of ocupadasExistentes) ocupadas.add(key);
     for (const key of selecionados) {
       const [x, y] = key.split(',').map(Number);
       for (const [tx, ty] of tilesOf([x, y])) ocupadas.add(`${tx},${ty}`);
     }
   };
-  window._modoTempestadePlacement = { zoneId: msg.zone_id, permitidos,
-    selecionados, ocupadas, max, lado, tilesOf, recomputarOcupadas };
+  recomputarOcupadas();
+  window._modoTempestadePlacement = { zoneId: msg.zone_id, areaPermitidos, permitidos,
+    selecionados, ocupadas, ocupadasExistentes, max, lado, tilesOf, recomputarOcupadas };
   const atualizar = () => {
     const modo = window._modoTempestadePlacement;
     if (!modo) return;
@@ -50470,7 +50995,7 @@ function _iniciarSelecaoPosicoesTempestade(msg) {
     _aimSetStatus(t('ui.magia.ciclones_posicionados_escolha', {n: modo.selecionados.size, max: modo.max}), '#9de8f4');
     const btn = _aimSessionState.current?.confirmButton;
     if (btn) {
-      btn.disabled = modo.selecionados.size !== modo.max;
+      btn.disabled = modo.selecionados.size < 1;
       btn.style.opacity = btn.disabled ? '.45' : '1';
       btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
     }
@@ -50482,10 +51007,10 @@ function _iniciarSelecaoPosicoesTempestade(msg) {
     color: '#9de8f4', targetLabel: t('ui.magia.tempestade_ciclone'),
     range: permitidos, area: ocupadas,
     confirmText: t('ui.magia.tempestade_posicionamento_confirmar'),
-    canConfirm: () => window._modoTempestadePlacement?.selecionados?.size === max,
+    canConfirm: () => window._modoTempestadePlacement?.selecionados?.size > 0,
     confirm: () => {
       const modo = window._modoTempestadePlacement;
-      if (!modo || modo.selecionados.size !== modo.max) return;
+      if (!modo || modo.selecionados.size < 1 || modo.selecionados.size > modo.max) return;
       GS.tempestadeCiclonesConfirmarPosicoes(modo.zoneId,
         [...modo.selecionados].map(k => k.split(',').map(Number)));
       _aimEnd({ silent: true, reason: 'resolved' });
@@ -50511,7 +51036,7 @@ function _clickTileTempestadePlacement(tx, ty) {
     return;
   } else {
     const footprint = modo.tilesOf([tx, ty]).map(([x, y]) => `${x},${y}`);
-    if (footprint.some(tile => !modo.permitidos.has(tile) || modo.ocupadas.has(tile))) {
+    if (footprint.some(tile => !modo.areaPermitidos.has(tile) || modo.ocupadas.has(tile))) {
       _aimSetStatus(t('ui.magia.tempestade_posicionamento_erro'), '#ff9aa2');
       return;
     }
@@ -50522,7 +51047,7 @@ function _clickTileTempestadePlacement(tx, ty) {
   _aimSetStatus(t('ui.magia.ciclones_posicionados', {n: modo.selecionados.size, max: modo.max}), '#9de8f4');
   const btn = _aimSessionState.current?.confirmButton;
   if (btn) {
-    btn.disabled = modo.selecionados.size !== modo.max;
+    btn.disabled = modo.selecionados.size < 1;
     btn.style.opacity = btn.disabled ? '.45' : '1';
     btn.style.cursor = btn.disabled ? 'not-allowed' : 'pointer';
   }
@@ -50685,7 +51210,7 @@ function _tempestadeSyncFromState(state){
     // Uma zona ainda aguardando as casas iniciais é apenas uma prévia de mira;
     // não recrie a animação formada ao reconectar o cliente.
     if(!zona?.ativa || zona.tipo!=='tempestade_ciclones'
-      || zona.ciclones_pendentes || zona.id==null) continue;
+      || (zona.ciclones_pendentes && !zona.ativada_em) || zona.id==null) continue;
     const id=String(zona.id); ativos.add(id);
     const existente=_tempestadeAnims.find(a => String(a.animationId)===id);
     if(existente){
@@ -50719,7 +51244,8 @@ function _tempestadeSyncFromState(state){
   if(movimento){
     const zonaMov=(state.zonas_especiais||[]).find(z=>z?.ativa
       &&z.tipo==='tempestade_ciclones' && String(z.id)===String(movimento.zoneId)
-      &&String(z.caster)===String(GS.myPid) && !z.ciclones_pendentes);
+      &&String(z.caster)===String(GS.myPid)
+      &&(!z.ciclones_pendentes || z.ativada_em));
     const cicloneMov=zonaMov?.ciclones?.find(c=>Number(c.id)===Number(movimento.cicloneId));
     const casterMov=(state.players||[]).find(p=>String(p.id)===String(GS.myPid));
     const rodadaAtual=Number(state.round ?? state.round_num);
@@ -51134,7 +51660,7 @@ function _receberAnimacaoTempestade(msg){
   if(!msg||msg.spell_id!=='tempestade_ciclones')return;
   const now=performance.now(),id=msg.animation_id==null?null:String(msg.animation_id);let anim=id==null?null:_tempestadeAnims.find(a=>a.animationId===id);
   if(msg.phase==='start'){if(anim)return;anim=_tempestadeAnimFromMessage(msg);_tempestadeAnims.push(anim);toast(t('ui.magia.tempestade_toast_aproxima'),'#9de8f4');}
-  else if(msg.phase==='resolve'){_encerrarSelecaoPosicoesTempestade(msg.zone_id??id,'resolved');if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_tempestadeAnims.push(anim);}if(Array.isArray(msg.ciclones))_tempestadeAtualizarCiclones(anim,msg.ciclones);anim.resolved=true;anim.resolvedAt=now;anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}
+  else if(msg.phase==='resolve'){_encerrarSelecaoPosicoesTempestade(msg.zone_id??id,'resolved');const jaFormada=!!anim?.resolved;if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs;_tempestadeAnims.push(anim);}if(Array.isArray(msg.ciclones))_tempestadeAtualizarCiclones(anim,msg.ciclones);anim.resolved=true;if(!jaFormada){anim.resolvedAt=now;toast(t('ui.magia.tempestade_toast_formada', {lado: msg.side||''}),'#9de8f4');}anim.durationRounds=Number(msg.duration_rounds)||anim.durationRounds;}
   else if(msg.phase==='cyclone_move'){if(anim){const c=anim.ciclones.find(x=>Number(x.id)===Number(msg.ciclone_id));if(c&&Array.isArray(msg.from_pos)&&Array.isArray(msg.to_pos)){c.fromPos=msg.from_pos.map(Number);c.toPos=msg.to_pos.map(Number);c.pos=c.toPos.slice();c.moveStart=now;}}}
   else if(msg.phase==='cyclone_target'){
     if(!anim){anim=_tempestadeAnimFromMessage(msg);anim.start=now-anim.chargeMs-anim.travelMs-TEMPESTADE_IMPACTO_MS;anim.resolved=true;anim.resolvedAt=now-TEMPESTADE_IMPACTO_MS;_tempestadeAnims.push(anim);}
@@ -51623,6 +52149,7 @@ function mostrarOverlayEscolhaMagia(msg){
   ocultarTooltipMagia();
   esconderTooltip();
   const rotulo = {primeiro:'1º', segundo:'2º', terceiro:'3º'}[msg.circulo] || msg.circulo;
+  const escolhas = Math.max(1, Number(msg.count) || 1);
   const opcoes = (msg.opcoes || []).filter(id => window.GRIMORIO_CLIENT && GRIMORIO_CLIENT[id]);
   const cartas = opcoes.map(id => {
     const m = GRIMORIO_CLIENT[id];
@@ -51644,7 +52171,7 @@ function mostrarOverlayEscolhaMagia(msg){
   el.id = 'overlay-escolha-magia';
   el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
   el.innerHTML = `
-    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">${t('ui.magia.subiu_de_nivel')}<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">${t('ui.magia.escolha_1_do_circulo', {circulo:rotulo})}</span></div>
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">${t('ui.magia.subiu_de_nivel')}<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">${escolhas > 1 ? t('ui.magia.escolha_n_do_circulo', {n:escolhas, circulo:rotulo}) : t('ui.magia.escolha_1_do_circulo', {circulo:rotulo})}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || `<div style="color:#8a7a5a;">${t('ui.magia.nenhuma_disponivel')}</div>`}</div>`;
   document.body.appendChild(el);
 }

@@ -57,8 +57,8 @@ def sala(monsters):
     room.send_to = send_to; room.broadcast = broadcast; room.gm_say = gm_say; room.push_state = push_state
     return room
 
-async def heroi(room, cls, x, y):
-    await room.handle_mestre_adicionar_heroi_teste(MASTER, cls, x, y)
+async def heroi(room, cls, x, y, config=None):
+    await room.handle_mestre_adicionar_heroi_teste(MASTER, cls, x, y, config)
     return room.players[f"test_hero_{cls}"]
 
 def monstro(room, tipo=None):
@@ -244,7 +244,7 @@ async def main():
 
     print("\n[13] Devorador de Metal: Mordida Corrosiva no acerto manual")
     r = sala([{"type": "devorador_metal", "pos": [6, 6]}])
-    h = await heroi(r, "paladin", 5, 6); h["hp"] = h["max_hp"] = 500; h["ac"] = 0
+    h = await heroi(r, "paladin", 5, 6, {"gear": {"armor": "chainmail"}}); h["hp"] = h["max_hp"] = 500; h["ac"] = 0
     await iniciar(r); m = monstro(r)
     await ir_para(r, "monster", m["id"]); acerta_sempre(r)
     n = len(r._narr)
