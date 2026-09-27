@@ -389,9 +389,9 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -415,9 +415,9 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -502,7 +502,7 @@
       "w": 13,
       "h": 10,
       "role": "boss",
-      "locked": true,
+      "locked": false,
       "doors": [
         [
           9,
@@ -526,6 +526,8 @@
     "x": 2,
     "y": 2
   },
+  "hero_spawns": [],
+  "exit": null,
   "monsters": [
     {
       "type": "troll",
@@ -609,10 +611,51 @@
         {
           "id": "anel_garra_negra"
         }
+      ],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        16,
+        14
+      ],
+      "gold": 0,
+      "items": [
+        {
+          "id": "health_potion_concentrated"
+        },
+        {
+          "id": "fogo_grego"
+        },
+        {
+          "id": "frasco_acido"
+        },
+        {
+          "id": "virote_incendiario"
+        },
+        {
+          "id": "flecha_incendiaria"
+        },
+        {
+          "id": "veneno_dor_escarlate"
+        },
+        {
+          "id": "health_potion_concentrated"
+        }
+      ],
+      "key_objective": false
+    }
+  ],
+  "traps": [
+    {
+      "id": "trap_0",
+      "tipo": "teto_esmagador",
+      "pos": [
+        14,
+        14
       ]
     }
   ],
-  "traps": [],
   "decorations": [
     {
       "id": "trono_fonte",
@@ -626,6 +669,7 @@
         1
       ],
       "loot": null,
+      "key_objective": false,
       "charges": 3
     },
     {
@@ -633,13 +677,22 @@
       "type": "estante_livros",
       "pos": [
         6,
-        7
+        8
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": true,
+      "size": [
+        1,
+        1
+      ],
+      "voffset": [
+        0,
+        0.3
+      ]
     },
     {
       "id": "trono_braseiro_1",
@@ -652,7 +705,8 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "trono_braseiro_2",
@@ -665,7 +719,133 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_0",
+      "type": "mesa_tortura",
+      "pos": [
+        13,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "mesa_tortura.png",
+      "vscale": [
+        1.3,
+        1.3
+      ]
+    },
+    {
+      "id": "decor_1",
+      "type": "trono",
+      "pos": [
+        22,
+        5
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.5,
+        1.5
+      ]
+    },
+    {
+      "id": "decor_2",
+      "type": "armadura",
+      "pos": [
+        22,
+        4
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "armadura.png",
+      "voffset": [
+        0.3,
+        0
+      ]
+    },
+    {
+      "id": "decor_3",
+      "type": "armadura",
+      "pos": [
+        22,
+        6
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "armadura.png",
+      "voffset": [
+        0.3,
+        0
+      ]
+    },
+    {
+      "id": "decor_4",
+      "type": "gaiola",
+      "pos": [
+        2,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "disable_trap_ids": [
+        "trap_0"
+      ]
+    },
+    {
+      "id": "decor_5",
+      "type": "gaiola",
+      "pos": [
+        1,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "pao"
+          },
+          {
+            "id": "garrafa_vinho"
+          },
+          {
+            "id": "caneca_cerveja"
+          }
+        ]
+      },
+      "key_objective": false
     }
   ],
   "secret_passages": [
@@ -680,9 +860,63 @@
         "trono_estante"
       ],
       "keys_mode": "any"
+    },
+    {
+      "id": "passage_1",
+      "type": "illusion",
+      "pos": [
+        13,
+        14
+      ],
+      "wall_material": "enegrecida",
+      "key_decor_ids": [],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_2",
+      "type": "illusion",
+      "pos": [
+        12,
+        14
+      ],
+      "wall_material": "enegrecida",
+      "key_decor_ids": [],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_3",
+      "type": "illusion",
+      "pos": [
+        11,
+        14
+      ],
+      "wall_material": "enegrecida",
+      "key_decor_ids": [],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_4",
+      "type": "illusion",
+      "pos": [
+        10,
+        14
+      ],
+      "wall_material": "enegrecida",
+      "key_decor_ids": [],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_5",
+      "type": "illusion",
+      "pos": [
+        9,
+        14
+      ],
+      "wall_material": "enegrecida",
+      "key_decor_ids": [],
+      "keys_mode": "any"
     }
   ],
-  "master_reinforcements": [],
   "falas": [
     {
       "id": "trono_pista",
@@ -701,10 +935,317 @@
       }
     }
   ],
+  "master_reinforcements": [],
   "expected_party": {
     "heroes": 4,
     "level": 3
   },
+  "prisoner": null,
+  "materiais": {
+    "0,0": "enegrecida",
+    "1,0": "enegrecida",
+    "2,0": "enegrecida",
+    "3,0": "enegrecida",
+    "4,0": "enegrecida",
+    "5,0": "enegrecida",
+    "6,0": "enegrecida",
+    "7,0": "enegrecida",
+    "8,0": "enegrecida",
+    "9,0": "enegrecida",
+    "10,0": "enegrecida",
+    "11,0": "enegrecida",
+    "12,0": "enegrecida",
+    "13,0": "enegrecida",
+    "14,0": "enegrecida",
+    "15,0": "enegrecida",
+    "16,0": "enegrecida",
+    "17,0": "enegrecida",
+    "18,0": "enegrecida",
+    "19,0": "enegrecida",
+    "23,0": "enegrecida",
+    "22,0": "enegrecida",
+    "21,0": "enegrecida",
+    "20,0": "enegrecida",
+    "23,1": "enegrecida",
+    "23,3": "enegrecida",
+    "23,2": "enegrecida",
+    "23,5": "enegrecida",
+    "23,4": "enegrecida",
+    "23,6": "enegrecida",
+    "23,7": "enegrecida",
+    "23,8": "enegrecida",
+    "23,9": "enegrecida",
+    "23,10": "enegrecida",
+    "23,11": "enegrecida",
+    "23,12": "enegrecida",
+    "23,13": "enegrecida",
+    "23,14": "enegrecida",
+    "22,14": "enegrecida",
+    "22,15": "enegrecida",
+    "22,16": "enegrecida",
+    "23,16": "enegrecida",
+    "23,17": "enegrecida",
+    "22,17": "enegrecida",
+    "21,17": "enegrecida",
+    "20,17": "enegrecida",
+    "19,17": "enegrecida",
+    "18,17": "enegrecida",
+    "17,17": "enegrecida",
+    "16,17": "enegrecida",
+    "15,17": "enegrecida",
+    "14,17": "enegrecida",
+    "13,17": "enegrecida",
+    "12,17": "enegrecida",
+    "11,17": "enegrecida",
+    "10,17": "enegrecida",
+    "9,17": "enegrecida",
+    "9,16": "enegrecida",
+    "9,15": "enegrecida",
+    "9,14": "enegrecida",
+    "9,13": "enegrecida",
+    "9,12": "enegrecida",
+    "9,11": "enegrecida",
+    "9,10": "enegrecida",
+    "9,9": "enegrecida",
+    "9,8": "enegrecida",
+    "9,7": "enegrecida",
+    "9,6": "enegrecida",
+    "9,5": "enegrecida",
+    "9,3": "enegrecida",
+    "9,2": "enegrecida",
+    "9,1": "enegrecida",
+    "5,9": "enegrecida",
+    "6,9": "enegrecida",
+    "7,9": "enegrecida",
+    "8,9": "enegrecida",
+    "3,9": "enegrecida",
+    "2,9": "enegrecida",
+    "1,9": "enegrecida",
+    "0,9": "enegrecida",
+    "0,8": "enegrecida",
+    "0,7": "enegrecida",
+    "0,6": "enegrecida",
+    "0,5": "enegrecida",
+    "0,4": "enegrecida",
+    "0,3": "enegrecida",
+    "0,2": "enegrecida",
+    "0,1": "enegrecida",
+    "0,10": "enegrecida",
+    "0,11": "enegrecida",
+    "0,12": "enegrecida",
+    "0,13": "enegrecida",
+    "0,14": "enegrecida",
+    "0,15": "enegrecida",
+    "0,16": "enegrecida",
+    "0,17": "enegrecida",
+    "1,17": "enegrecida",
+    "8,17": "enegrecida",
+    "7,17": "enegrecida",
+    "6,17": "enegrecida",
+    "5,17": "enegrecida",
+    "4,17": "enegrecida",
+    "3,17": "enegrecida",
+    "2,17": "enegrecida",
+    "1,16": "enegrecida",
+    "2,16": "enegrecida",
+    "3,16": "enegrecida",
+    "4,16": "enegrecida",
+    "5,16": "enegrecida",
+    "6,16": "enegrecida",
+    "7,16": "enegrecida",
+    "8,16": "enegrecida",
+    "10,16": "enegrecida",
+    "10,15": "enegrecida",
+    "11,15": "enegrecida",
+    "11,14": "enegrecida",
+    "11,13": "enegrecida",
+    "10,13": "enegrecida",
+    "10,11": "enegrecida",
+    "11,11": "enegrecida",
+    "12,11": "enegrecida",
+    "13,11": "enegrecida",
+    "14,11": "enegrecida",
+    "15,11": "enegrecida",
+    "16,11": "enegrecida",
+    "17,11": "enegrecida",
+    "18,11": "enegrecida",
+    "19,11": "enegrecida",
+    "20,11": "enegrecida",
+    "21,11": "enegrecida",
+    "22,11": "enegrecida",
+    "22,12": "enegrecida",
+    "22,13": "enegrecida",
+    "23,15": "enegrecida",
+    "21,16": "enegrecida",
+    "20,16": "enegrecida",
+    "19,16": "enegrecida",
+    "18,16": "enegrecida",
+    "17,16": "enegrecida",
+    "16,16": "enegrecida",
+    "15,16": "enegrecida",
+    "14,16": "enegrecida",
+    "13,16": "enegrecida",
+    "12,16": "enegrecida",
+    "11,16": "enegrecida",
+    "10,14": "enegrecida",
+    "10,12": "enegrecida",
+    "11,12": "enegrecida",
+    "12,12": "enegrecida",
+    "13,12": "enegrecida",
+    "14,12": "enegrecida",
+    "15,12": "enegrecida",
+    "16,12": "enegrecida",
+    "17,12": "enegrecida",
+    "18,12": "enegrecida",
+    "19,12": "enegrecida",
+    "20,12": "enegrecida",
+    "21,12": "enegrecida",
+    "21,13": "enegrecida",
+    "21,14": "enegrecida",
+    "21,15": "enegrecida",
+    "20,15": "enegrecida",
+    "19,15": "enegrecida",
+    "18,15": "enegrecida",
+    "17,15": "enegrecida",
+    "16,15": "pedra_negra",
+    "15,15": "pedra_negra",
+    "14,15": "pedra_negra",
+    "13,15": "enegrecida",
+    "12,15": "enegrecida",
+    "12,13": "enegrecida",
+    "13,13": "enegrecida",
+    "14,13": "enegrecida",
+    "15,13": "enegrecida",
+    "16,13": "enegrecida",
+    "17,13": "enegrecida",
+    "18,13": "enegrecida",
+    "19,13": "enegrecida",
+    "20,13": "enegrecida",
+    "20,14": "enegrecida",
+    "19,14": "enegrecida",
+    "18,14": "enegrecida",
+    "17,14": "enegrecida",
+    "16,14": "pedra_negra",
+    "15,14": "pedra_negra",
+    "14,14": "pedra_negra",
+    "13,14": "enegrecida",
+    "12,14": "enegrecida",
+    "1,10": "pedra_negra",
+    "2,10": "pedra_negra",
+    "3,10": "pedra_negra",
+    "4,10": "pedra_negra",
+    "5,10": "pedra_negra",
+    "6,10": "pedra_negra",
+    "7,10": "pedra_negra",
+    "8,10": "pedra_negra",
+    "8,11": "pedra_negra",
+    "8,12": "pedra_negra",
+    "8,13": "pedra_negra",
+    "8,14": "pedra_negra",
+    "8,15": "pedra_negra",
+    "7,15": "pedra_negra",
+    "6,15": "pedra_negra",
+    "5,15": "pedra_negra",
+    "4,15": "pedra_negra",
+    "3,15": "pedra_negra",
+    "2,15": "pedra_negra",
+    "1,15": "pedra_negra",
+    "1,14": "pedra_negra",
+    "1,13": "pedra_negra",
+    "1,12": "pedra_negra",
+    "1,11": "pedra_negra",
+    "2,11": "pedra_negra",
+    "3,11": "pedra_negra",
+    "4,11": "pedra_negra",
+    "5,11": "pedra_negra",
+    "6,11": "pedra_negra",
+    "7,11": "pedra_negra",
+    "7,12": "pedra_negra",
+    "7,13": "pedra_negra",
+    "7,14": "pedra_negra",
+    "6,14": "pedra_negra",
+    "5,14": "pedra_negra",
+    "4,14": "pedra_negra",
+    "3,14": "pedra_negra",
+    "2,14": "pedra_negra",
+    "2,13": "pedra_negra",
+    "2,12": "pedra_negra",
+    "3,12": "pedra_negra",
+    "4,12": "pedra_negra",
+    "5,12": "pedra_negra",
+    "6,12": "pedra_negra",
+    "6,13": "pedra_negra",
+    "5,13": "pedra_negra",
+    "4,13": "pedra_negra",
+    "3,13": "pedra_negra",
+    "1,1": "madeira_escura",
+    "1,2": "madeira_escura",
+    "1,3": "madeira_escura",
+    "1,4": "madeira_escura",
+    "1,5": "madeira_escura",
+    "1,6": "madeira_escura",
+    "1,7": "madeira_escura",
+    "1,8": "madeira_escura",
+    "2,8": "madeira_escura",
+    "3,8": "madeira_escura",
+    "4,8": "madeira_escura",
+    "5,8": "madeira_escura",
+    "6,8": "madeira_escura",
+    "7,8": "madeira_escura",
+    "8,8": "madeira_escura",
+    "8,7": "madeira_escura",
+    "8,6": "madeira_escura",
+    "8,5": "madeira_escura",
+    "8,4": "madeira_escura",
+    "8,3": "madeira_escura",
+    "8,2": "madeira_escura",
+    "8,1": "madeira_escura",
+    "7,1": "madeira_escura",
+    "6,1": "madeira_escura",
+    "5,1": "madeira_escura",
+    "4,1": "madeira_escura",
+    "3,1": "madeira_escura",
+    "2,1": "madeira_escura",
+    "2,2": "madeira_escura",
+    "2,3": "madeira_escura",
+    "2,4": "madeira_escura",
+    "2,5": "madeira_escura",
+    "2,6": "madeira_escura",
+    "2,7": "madeira_escura",
+    "3,7": "madeira_escura",
+    "4,7": "madeira_escura",
+    "5,7": "madeira_escura",
+    "6,7": "madeira_escura",
+    "7,7": "madeira_escura",
+    "7,6": "madeira_escura",
+    "7,5": "madeira_escura",
+    "7,4": "madeira_escura",
+    "7,3": "madeira_escura",
+    "7,2": "madeira_escura",
+    "6,2": "madeira_escura",
+    "5,2": "madeira_escura",
+    "4,2": "madeira_escura",
+    "3,2": "madeira_escura",
+    "3,3": "madeira_escura",
+    "3,4": "madeira_escura",
+    "3,5": "madeira_escura",
+    "3,6": "madeira_escura",
+    "4,6": "madeira_escura",
+    "5,6": "madeira_escura",
+    "6,6": "madeira_escura",
+    "6,5": "madeira_escura",
+    "6,4": "madeira_escura",
+    "6,3": "madeira_escura",
+    "5,3": "madeira_escura",
+    "4,3": "madeira_escura",
+    "4,4": "madeira_escura",
+    "4,5": "madeira_escura",
+    "5,5": "madeira_escura",
+    "5,4": "madeira_escura"
+  },
+  "pontes": [],
+  "elevacoes": {},
+  "transicao_altura": "rampa",
   "objectives": {
     "primary": {
       "type": "kill_target",
