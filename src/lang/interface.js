@@ -9822,6 +9822,10 @@ window.LANG_INTERFACE = {
   "ui.sombra.entulho": {
     "en": "The rubble",
     "pt": "O entulho"
+  },
+  "ui.tabuleiro.cobertura_baixa": {
+    "en": "🛡️ Half cover: +{bonus} AC (low object in the way)",
+    "pt": "🛡️ Meia cobertura: +{bonus} de CA (objeto baixo no caminho)"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

@@ -12168,7 +12168,7 @@ window.EDITOR_CATALOG = {
         2
       ],
       "gira": true,
-      "alto": false,
+      "alto": true,
       "pisavel": false,
       "loot_capaz": true,
       "special": null,
@@ -12364,7 +12364,7 @@ window.EDITOR_CATALOG = {
         2
       ],
       "gira": true,
-      "alto": false,
+      "alto": true,
       "pisavel": false,
       "loot_capaz": true,
       "special": null,
@@ -12544,7 +12544,7 @@ window.EDITOR_CATALOG = {
         2
       ],
       "gira": true,
-      "alto": true,
+      "alto": false,
       "pisavel": false,
       "loot_capaz": false,
       "special": null,

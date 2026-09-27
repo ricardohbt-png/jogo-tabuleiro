@@ -246,6 +246,22 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > no 3D via `get3DTilePlane` porque casa nunca vista não tem malha). Mostra o formato do
 > chão, nunca o conteúdo. Por herói: cada jogador vê a própria sombra. Teste de paridade
 > cliente×servidor: `tools/test_sombra_objetos.py`.
+>
+> **Três níveis de visão por objeto (sem campo novo — derivado de `pisavel`/`alto`):**
+> **livre** (pisável: fogueira, placa, brasa, chão) não bloqueia nada; **baixo** (sólido e
+> não alto: barril, mesa, cama, baú, altar, trono, grades, gaiola, lápide, mesa de tortura)
+> barra o **passo** mas NÃO a visão nem o tiro — antes `_tem_linha_de_visao` bloqueava com
+> todo `_decor_block_tiles`, contra o que a doc sempre disse, e o barril fazia sombra de
+> coluna; **alto** (coluna, estante, árvore, cripta, casa, lareira, carroça) bloqueia visão e
+> tiro, e só ele (mais o entulho) projeta a penumbra. Cliente espelha em `_losBlocks`.
+> **Meia cobertura:** `_cobertura_baixa_bonus(atacante, alvo, alvo_tile)` (`COBERTURA_BAIXA_CA`
+> = +2) quando a linha supercover do ataque passa por um objeto baixo numa casa
+> **intermediária** (corpo a corpo adjacente nunca tem; quem está no ar não dá nem recebe);
+> aplicada em `handle_attack`, `_throw_item_alvo` e `_execute_one_monster_attack`, com a
+> narração `narracao.cobertura_baixa`. Espelho `GS.coberturaBaixa` alimenta a linha "🛡️ Meia
+> cobertura" no tooltip do monstro (2D/3D, `_coberturaTooltipHTML`). Reclassificados:
+> `mesa_tortura` baixa, `lareira`/`carroca` altas (`editor_catalog.js` editado à mão nos 3
+> campos). Teste: `tools/test_sombra_objetos.py` [2], [6]–[8].
 
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,

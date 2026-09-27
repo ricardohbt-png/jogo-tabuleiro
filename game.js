@@ -6842,6 +6842,13 @@ function _sombraObjetos(state){
   return mapa;
 }
 
+// Meia cobertura: alvo atrás de objeto baixo ganha +2 CA contra o seu ataque.
+function _coberturaTooltipHTML(me, alvo, tx, ty){
+  if(!me || !alvo || !GS.gameState) return '';
+  const bonus = GS.coberturaBaixa(GS.gameState, me, alvo, [tx, ty]);
+  return bonus ? `<br><span style="color:#9fc7ff">${t('ui.tabuleiro.cobertura_baixa', {bonus})}</span>` : '';
+}
+
 function _sombraTooltipHTML(tx, ty){
   const st = GS.gameState;
   const s = _sombraObjetos(st).get(`${tx},${ty}`);
@@ -27115,7 +27122,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&lineClear&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} ${t('ui.tabuleiro.clique_atacar')}</span>`:'';
     // Conhecimento das Lendas (passiva do Henrique): ficha completa se há bardo vivo.
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)+atkLabel;
+    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)+atkLabel+_coberturaTooltipHTML(myP, monster, tx, ty);
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -48549,7 +48556,8 @@ function on3DMouseMove(e){
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';
     tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP) +
-                  (canA ? `<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '');
+                  (canA ? `<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '') +
+                  _coberturaTooltipHTML(myP, monster, tx, ty);
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canA ? 'crosshair' : 'default';
     g3.hoveredPos = [tx, ty];   // trigger hover-lift + vitrine light

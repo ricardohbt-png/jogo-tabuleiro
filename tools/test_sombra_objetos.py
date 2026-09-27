@@ -64,7 +64,8 @@ def esperado_servidor(r, hx, hy, raio):
     """Casas que um objeto esconde, pela regra do próprio servidor."""
     r.explored = set()
     r._reveal_around(hx, hy, radius=raio)
-    objetos = r._decor_block_tiles | r._decor_tall_tiles | r._mat_oclui_tiles | r._mat_solid_tiles
+    # Só quem tapa a visão: objeto alto e material opaco (o baixo não conta).
+    objetos = r._decor_tall_tiles | r._mat_oclui_tiles | r._mat_solid_tiles
     out = set()
     for y in range(max(0, hy - raio), min(r.map_h, hy + raio + 1)):
         for x in range(max(0, hx - raio), min(r.map_w, hx + raio + 1)):
@@ -106,10 +107,13 @@ check("a própria coluna não é sombreada", (8, 8) not in {(c["x"], c["y"]) for
 check("a sombra aponta a coluna como causa",
       all(c["objeto"] == {"tipo": "decor", "id": "coluna"} for c in got))
 
-print("\n[2] objeto baixo e sólido (barril) também tapa a visão")
+print("\n[2] objeto baixo (barril, mesa) NÃO tapa a visão — não faz sombra")
 r = sala()
-montar(r, [("barril", 7, 7)])
-comparar("barril", r, 5, 5, 6)
+montar(r, [("barril", 7, 7), ("mesa_cadeiras", 9, 4), ("mesa_tortura", 4, 9)])
+got, exp = comparar("objetos baixos", r, 5, 5, 6)
+check("nenhuma sombra atrás de objeto baixo", not got and not exp)
+check("o servidor vê por cima do barril", r._tem_linha_de_visao([5, 5], [9, 9]))
+check("o barril continua barrando o passo", r._blocks_tile(7, 7))
 
 print("\n[3] estante 1x2 + entulho + parede + sala trancada juntos")
 r = sala()
@@ -136,6 +140,101 @@ r = sala()
 montar(r, [("coluna", 8, 8), ("barril", 9, 9), ("estante", 6, 10)], mats={(10, 7): "entulho"})
 for (hx, hy) in [(3, 3), (13, 13), (8, 3), (3, 12), (12, 8)]:
     comparar(f"herói em {hx},{hy}", r, hx, hy, 6)
+
+
+# ── Meia cobertura ───────────────────────────────────────────────────────────
+NODE_COB = r"""
+const fs = require('fs'), vm = require('vm'), path = require('path');
+const ctx = { console, setTimeout, clearTimeout };
+vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(path.join(process.argv[1], 'src', 'gameState.js'), 'utf8'), ctx);
+const GS = vm.runInContext('GS', ctx);
+const { state, casos } = JSON.parse(fs.readFileSync(0, 'utf8'));
+console.log(JSON.stringify(casos.map(([a, b]) => GS.coberturaBaixa(state, a, b))));
+"""
+
+def cobertura_cliente(r, casos):
+    state = {"tiles": r.tiles, "decorations": r._serializar_decoracoes(),
+             "materiais": r._serializar_materiais()}
+    res = subprocess.run(["node", "-e", NODE_COB, RAIZ], input=json.dumps(
+        {"state": state, "casos": casos}), capture_output=True, text=True, check=True)
+    return json.loads(res.stdout)
+
+print("\n[6] meia cobertura: cliente = servidor")
+r = sala()
+montar(r, [("barril", 8, 8), ("mesa_cadeiras", 4, 12), ("coluna", 12, 4), ("fogueira", 10, 10)])
+casos = []
+for ax, ay in [(3, 8), (8, 3), (3, 3), (13, 13), (5, 12), (8, 7), (2, 12)]:
+    for bx, by in [(12, 8), (8, 13), (11, 11), (8, 9), (4, 14), (9, 8), (1, 14)]:
+        if (ax, ay) != (bx, by):
+            casos.append([{"pos": [ax, ay]}, {"pos": [bx, by]}])
+srv = [r._cobertura_baixa_bonus(a, b) for a, b in casos]
+cli = cobertura_cliente(r, casos)
+check(f"{len(casos)} linhas: mesmas coberturas", srv == cli,
+      str([(c[0]["pos"], c[1]["pos"], s1, c1) for c, s1, c1 in zip(casos, srv, cli) if s1 != c1][:5]))
+check("há linhas com e sem cobertura no conjunto", 2 in srv and 0 in srv)
+check("tiro por cima do barril: +2", r._cobertura_baixa_bonus({"pos": [3, 8]}, {"pos": [12, 8]}) == 2)
+check("colado ao barril mas atacante adjacente ao alvo: sem cobertura",
+      r._cobertura_baixa_bonus({"pos": [8, 9]}, {"pos": [8, 10]}) == 0)
+check("o próprio alvo em cima do objeto não conta", r._cobertura_baixa_bonus({"pos": [3, 8]}, {"pos": [8, 8]}) == 0)
+check("fogueira (pisável) não dá cobertura", r._cobertura_baixa_bonus({"pos": [7, 10]}, {"pos": [13, 10]}) == 0)
+check("coluna (alta) não é cobertura — ela bloqueia a visão",
+      r._cobertura_baixa_bonus({"pos": [12, 1]}, {"pos": [12, 7]}) == 0
+      and not r._tem_linha_de_visao([12, 1], [12, 7]))
+check("atacante no ar ignora a cobertura",
+      r._cobertura_baixa_bonus({"pos": [3, 8], "altura": 2}, {"pos": [12, 8]}) == 0)
+check("cliente: atacante no ar ignora",
+      cobertura_cliente(r, [[{"pos": [3, 8], "altura": 2}, {"pos": [12, 8]}]]) == [0])
+
+print("\n[7] ataques reais passam por cima e aplicam a cobertura")
+import asyncio, random
+import server as S
+
+def sala_combate():
+    r = sala(14, 14)
+    r._falas = []
+    async def fala(msg, *a, **k): r._falas.append(getattr(msg, "key", str(msg)))
+    async def noop(*a, **k): pass
+    r.gm_say = fala; r.broadcast = noop; r.push_state = noop; r.send_to = noop
+    r.broadcast_city_state = noop
+    r._is_turn = lambda pid: True
+    r.phase = "playing"
+    montar(r, [("barril", 4, 1)])   # antes da sala: montar() zera r.rooms
+    r.rooms = [{"id": "r0", "x": 0, "y": 0, "w": 14, "h": 14, "cx": 7, "cy": 7, "locked": False}]
+    r.chests = {}; r.ground_items = {}
+    p = S.make_player("p1", "Victor", "warrior", 0); r.players["p1"] = p
+    p["pos"] = [1, 1]; p["atk_bonus"] = 50; p["alive"] = True; p["connected"] = True
+    r.connections["p1"] = object()
+    r.monsters["m1"] = {"id": "m1", "name": "Alvo", "type": "orc", "hp": 999, "ac": 1,
+                        "pos": [7, 1], "alive": True, "special_abilities": [],
+                        "alertado": True, "room_id": "r0"}
+    return r, p
+
+r, p = sala_combate()
+p["weapon"] = {"id": "arco_curto", "name": "Arco Curto", "die": "1d6", "stat": "dex", "range": 8, "categoria": "perfurante"}
+p["gear"]["off_hand"] = {"id": "flechas", "name": "Flechas", "effect": "ammo", "ammo_type": "flechas", "ammo_count": 10}
+random.seed(5)
+asyncio.run(r.handle_attack("p1", "m1"))
+check("herói atira por cima do barril (há linha de visão)", p.get("action_done"))
+check("narra a meia cobertura do alvo", "narracao.cobertura_baixa" in r._falas)
+
+r, p = sala_combate()
+r.monsters["m1"]["pos"] = [2, 1]
+p["weapon"] = {"id": "espada", "name": "Espada", "die": "1d8", "stat": "str_", "categoria": "cortante"}
+asyncio.run(r.handle_attack("p1", "m1"))
+check("corpo a corpo adjacente: sem cobertura", "narracao.cobertura_baixa" not in r._falas)
+
+r, p = sala_combate()
+mdef = next(d for d in S.MONSTER_DEFS if d.get("type") == "goblin_arqueiro")
+m = S.make_monster(mdef, r.rooms[0]); m["id"] = "g1"; m["pos"] = [7, 1]; m["room_id"] = "r0"; m["alertado"] = True
+r.monsters = {"g1": m}
+asyncio.run(r._execute_one_monster_attack(m, dict(m["attacks"][0]), {"kind": "player", "obj": p}))
+check("arqueiro inimigo: o herói atrás do barril ganha a cobertura", "narracao.cobertura_baixa" in r._falas)
+
+print("\n[8] reclassificação dos objetos")
+check("mesa de tortura é baixa", S.DECOR_TYPES["mesa_tortura"]["alto"] is False)
+check("lareira é alta", S.DECOR_TYPES["lareira"]["alto"] is True)
+check("carroça é alta", S.DECOR_TYPES["carroca"]["alto"] is True)
 
 print(f"\n{PASS} passaram, {FAIL} falharam")
 sys.exit(1 if FAIL else 0)

@@ -929,11 +929,13 @@ const GS = (() => {
     if (ignorarObjetos && !vooLivre)
       return !_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key));
     const decoracoes = (state?.decorations || []);
+    // Só o objeto ALTO tapa a visão (espelho de `_tem_linha_de_visao`). O baixo
+    // e sólido (barril, mesa, baú…) barra o passo, mas se vê e se atira por
+    // cima — e dá meia cobertura a quem está atrás (`coberturaBaixa`).
     const alto = decoracoes.some(d => d.alto && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
-    const solido = decoracoes.some(d => !d.pisavel && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
     const materialOpaco = MATERIAIS_OPACOS.has(state?.materiais?.[key]);
     if (vooLivre) return alto || materialOpaco;
-    return (!_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key) || solido || materialOpaco));
+    return (!_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key) || alto || materialOpaco));
   }
   function hasLineOfSight(state, ax, ay, bx, by, observer=null, ignorarObjetos=false) {
     const tiles = state && state.tiles;
@@ -997,7 +999,7 @@ const GS = (() => {
   function _objetoOcluiEm(state, x, y) {
     const key = `${x},${y}`;
     for (const d of (state.decorations || [])) {
-      if (!d || d.special === 'wall' || (d.pisavel && !d.alto)) continue;
+      if (!d || d.special === 'wall' || !d.alto) continue;   // objeto baixo não tapa a visão
       if (decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y)) return { tipo: 'decor', id: d.type };
     }
     const mat = state.materiais?.[key];
@@ -1042,6 +1044,41 @@ const GS = (() => {
     }
     return null;
   }
+  // Meia cobertura (espelho de `_cobertura_baixa_bonus` do servidor): +2 de CA
+  // quando a linha do ataque passa por cima de um objeto baixo e sólido numa
+  // casa INTERMEDIÁRIA. Quem está no ar não dá nem recebe cobertura.
+  const COBERTURA_BAIXA_CA = 2;
+  function coberturaBaixa(state, atacante, alvo, alvoTile = null) {
+    if (!state || !atacante || !alvo) return 0;
+    if (alturaDe(atacante) > 0 || alturaDe(alvo) > 0) return 0;
+    const baixos = new Set();
+    for (const d of (state.decorations || [])) {
+      if (!d || d.special === 'wall' || d.pisavel || d.alto) continue;
+      for (const [x, y] of decorTilesOf(d)) baixos.add(`${x},${y}`);
+    }
+    if (!baixos.size) return 0;
+    const dest = alvoTile || alvo.pos;
+    if (!Array.isArray(dest) || !Array.isArray(atacante.pos)) return 0;
+    const [x0, y0] = atacante.pos, [x1, y1] = dest;
+    const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+    const sx = x1 > x0 ? 1 : -1, sy = y1 > y0 ? 1 : -1;
+    const fim = `${x1},${y1}`;
+    let x = x0, y = y0, ix = 0, iy = 0;
+    while (x !== x1 || y !== y1) {
+      const tX = (2 * ix + 1) * dy, tY = (2 * iy + 1) * dx;
+      if (tX < tY) { x += sx; ix++; }
+      else if (tX > tY) { y += sy; iy++; }
+      else {
+        const a = `${x + sx},${y}`, b = `${x},${y + sy}`;
+        if ((baixos.has(a) && a !== fim) || (baixos.has(b) && b !== fim)) return COBERTURA_BAIXA_CA;
+        x += sx; ix++; y += sy; iy++;
+      }
+      if (x === x1 && y === y1) break;
+      if (baixos.has(`${x},${y}`)) return COBERTURA_BAIXA_CA;
+    }
+    return 0;
+  }
+
   function sombraDeObjetos(state, hero, raio) {
     const out = new Map();
     const tiles = state && state.tiles;
@@ -3160,6 +3197,7 @@ const GS = (() => {
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
     hasLineOfSight,
     sombraDeObjetos,
+    coberturaBaixa,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
 
