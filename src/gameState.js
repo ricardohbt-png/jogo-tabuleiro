@@ -1980,11 +1980,10 @@ const GS = (() => {
   function masterManual() {
     return (gameState && (gameState.master_manual || gameState.command_control || gameState.mind_control)) || null;
   }
-  // Rotas autoritativas para a prévia de movimento do Mestre. Fica separado
-  // de masterManual() porque command_control/mind_control não devem ganhar a
-  // nova interação visual do Mestre Manual.
+  // Rotas autoritativas para a prévia de movimento do monstro controlado
+  // (Mestre Manual, Comando ou Dominar Mente): 1º clique arma, 2º confirma.
   function masterManualMovePaths() {
-    const mm = gameState && gameState.master_manual;
+    const mm = masterManual();
     return (mm && mm.move_paths) || {};
   }
   // Cargas restantes de um golpe pelo índice em attacks[]. O payload vem com

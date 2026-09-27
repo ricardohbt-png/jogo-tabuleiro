@@ -21184,7 +21184,7 @@ function _masterReachSet(state){
 // comportamento antigo e não recebem esta confirmação em dois cliques.
 function _masterMonsterMovePreviewAtual(state){
   const p = _masterMonsterMovePreview;
-  if(!p || !state || !GS.isMaster?.() || !state.master_manual) return null;
+  if(!p || !state || !GS.canControlMonster?.()) return null;
   const mm = GS.masterManual();
   if(!mm || String(mm.mid) !== String(p.mid)) return null;
   const mon = (state.monsters || []).find(m => String(m.id) === String(p.mid) && m.hp > 0);
@@ -21207,7 +21207,7 @@ function _clearMasterMonsterMovePreview(redraw=false){
 }
 
 function _masterMonsterPreviewRoute(state, tx, ty){
-  if(!state || !GS.isMaster?.() || !state.master_manual) return null;
+  if(!state || !GS.canControlMonster?.()) return null;
   const mm = GS.masterManual();
   if(!mm) return null;
   const mon = (state.monsters || []).find(m => String(m.id) === String(mm.mid) && m.hp > 0);
@@ -48597,8 +48597,10 @@ function handleTileClick(tx, ty){
           GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
         }
         if(_setMasterMonsterMovePreview(st, tx, ty)) return;
+        // Sem rota de prévia (payload antigo/inconsistente): envia direto —
+        // o servidor recalcula e valida o caminho. Nunca engolir o clique.
         _clearMasterMonsterMovePreview();
-        return;
+        GS.mestreMoverMonstroPara(mm.mid, tx, ty); return;
       }
     }
     if(commandControl) return;

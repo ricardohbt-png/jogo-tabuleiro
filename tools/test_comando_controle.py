@@ -134,6 +134,42 @@ async def main():
               any("control" in s.lower() for s in msgs), f"({msgs})")
 
     print()
+    print("[6] quem lancou Comando anda com o monstro e DEPOIS ataca (como um heroi)")
+    # Bug relatado: o cliente só armava a prévia de rota com o bloco
+    # `master_manual.move_paths`, que o payload de Comando não tinha — o clique
+    # na casa azul era engolido e o monstro nunca andava.
+    r3, p3, q3, m3 = montar()
+    # O alvo padrão do montar() é o pombo, que voa e não alcança o chão;
+    # aqui precisamos de uma criatura terrestre de golpe corpo a corpo.
+    gob = make_monster(next(d for d in MONSTER_DEFS if d["type"] == "goblin"),
+                       {"id": "r0", "cx": 6, "cy": 5})
+    gob.update({"id": "m1", "pos": [6, 5], "hp": 20, "room_id": "r0", "alertado": True})
+    r3.monsters = {"m1": gob}; m3 = gob
+    r3._rebuild_initiative()
+    r3.initiative_index = next(i for i, e in enumerate(r3.initiative_order)
+                               if e["kind"] == "player" and e["id"] == "p1")
+    q3["pos"] = [6, 9]; q3["hp"] = q3["max_hp"] = 200
+    await abrir_janela(r3, p3, m3)
+    cc = r3._command_control_payload() or {}
+    paths = cc.get("move_paths") or {}
+    check("payload de Comando traz as rotas de movimento", bool(paths), f"({cc})")
+    check("rota ate uma casa adjacente ao alvo existe", "6,8" in paths, f"({sorted(paths)[:10]})")
+    mv_antes = m3.get("master_moves_left", 0)
+    await r3.handle_mestre_mover_monstro_para("p1", "m1", 6, 8)
+    check("o monstro andou ate a casa escolhida", m3["pos"] == [6, 8], f"(pos={m3['pos']})")
+    check("o movimento foi descontado", m3.get("master_moves_left", 0) < mv_antes)
+    check("a janela continua aberta depois de andar", r3.command_control_mid == "m1")
+    hp_antes = q3["hp"]
+    await r3.handle_mestre_atacar_monstro("p1", "m1", "p2")
+    check("depois de andar, o ataque foi aceito", m3.get("_master_acted") is True,
+          f"({r3.erros.get('p1')})")
+    rot = r3._command_control_payload() or {}
+    check("as rotas do payload acompanham a nova posicao",
+          "6,8" not in (rot.get("move_paths") or {}))
+    await r3.handle_mestre_encerrar_monstro("p1", "m1")
+    await asyncio.sleep(0.2)
+
+    print()
     print(f"===== {OK} OK / {FAIL} FALHAS =====")
     return 1 if FAIL else 0
 
