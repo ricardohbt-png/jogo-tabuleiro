@@ -6822,6 +6822,101 @@ function computeVisionSet(state, me){
   return set;
 }
 
+// ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
+// Casas que o seu herói veria se um objeto (estante, pilar, entulho…) não
+// tapasse a linha de visão. Sem ela, "atrás da estante" era o mesmo preto da
+// névoa de uma sala nunca visitada e o jogador não ligava a escuridão ao
+// objeto. Cálculo puro em GS.sombraDeObjetos; aqui só cache e desenho.
+// Mestre e mesa de teste enxergam tudo — sem sombra.
+let _sombraCache = { state: null, chave: '', mapa: new Map() };
+const SOMBRA_VAZIA = new Map();
+function _sombraObjetos(state){
+  if(!state || !state.tiles || GS.isMaster() || state.test_mode) return SOMBRA_VAZIA;
+  const me = (state.players || []).find(p => p.id === GS.myPid && p.alive);
+  if(!me || !Array.isArray(me.pos)) return SOMBRA_VAZIA;
+  const raio = getSightRadius(me);
+  const chave = `${me.pos[0]},${me.pos[1]}|${raio}`;
+  if(_sombraCache.state === state && _sombraCache.chave === chave) return _sombraCache.mapa;
+  const mapa = GS.sombraDeObjetos(state, me, raio);
+  _sombraCache = { state, chave, mapa };
+  return mapa;
+}
+
+function _sombraTooltipHTML(tx, ty){
+  const st = GS.gameState;
+  const s = _sombraObjetos(st).get(`${tx},${ty}`);
+  if(!s) return null;
+  let nome = null;
+  if(s.objeto?.tipo === 'decor'){
+    const chave = `cat.decor.${s.objeto.id}.nome`;
+    const txt = t(chave);
+    const dec = (st.decorations || []).find(d => d.type === s.objeto.id);
+    nome = `${dec?.emoji ? dec.emoji + ' ' : ''}${txt !== chave ? txt : s.objeto.id}`;
+  } else if(s.objeto?.tipo === 'material'){
+    nome = t('ui.sombra.entulho');
+  }
+  const linha = nome ? t('ui.sombra.por_objeto', {objeto: nome}) : t('ui.sombra.sem_objeto');
+  return `<b>${t('ui.sombra.titulo')}</b><br>${linha}<br><span style="color:#9fb0cf">${t('ui.sombra.dica')}</span>`;
+}
+
+let _sombraHachura2D = null;
+function _desenharSombraObjetos2D(ctx, state, terrainSet){
+  const sombra = _sombraObjetos(state);
+  if(!sombra.size) return;
+  if(!_sombraHachura2D){
+    // Hachura diagonal: é o que diferencia a sombra da névoa lisa.
+    const c = document.createElement('canvas'); c.width = c.height = 12;
+    const g = c.getContext('2d');
+    g.strokeStyle = 'rgba(150,175,225,0.22)'; g.lineWidth = 1.2;
+    g.beginPath(); g.moveTo(-3, 3); g.lineTo(3, -3); g.moveTo(0, 12); g.lineTo(12, 0); g.moveTo(9, 15); g.lineTo(15, 9); g.stroke();
+    _sombraHachura2D = ctx.createPattern(c, 'repeat');
+  }
+  ctx.save();
+  for(const { x, y } of sombra.values()){
+    const X = x * CELL, Y = y * CELL;
+    // Já explorada: escurece o que está desenhado. Nunca vista: silhueta do
+    // chão em cinza-azulado sobre o preto — mostra que ali EXISTE espaço, sem
+    // revelar o que há nele.
+    ctx.fillStyle = terrainSet.has(`${x},${y}`) ? 'rgba(10,16,32,0.55)' : 'rgba(44,56,84,0.62)';
+    ctx.fillRect(X, Y, CELL, CELL);
+    ctx.fillStyle = _sombraHachura2D;
+    ctx.fillRect(X, Y, CELL, CELL);
+  }
+  ctx.restore();
+}
+
+function _renderSombraObjetos3D(state, TH){
+  const group = g3?.sombraGroup;
+  if(!group) return;
+  const sombra = _sombraObjetos(state);
+  const explorado = new Set((state.explored || []).map(([x, y]) => `${x},${y}`));
+  const assinatura = [...sombra.keys()].map(k => k + (explorado.has(k) ? 'e' : 'n')).join(';');
+  if(group.userData.assinatura === assinatura) return;
+  group.userData.assinatura = assinatura;
+  for(const m of [...group.children]) group.remove(m);
+  if(!sombra.size) return;
+  const { T } = g3;
+  if(!g3.sombraGeo){
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, 64, 64);
+    g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 5;
+    for(let i = -64; i < 128; i += 16){ g.beginPath(); g.moveTo(i, 64); g.lineTo(i + 64, 0); g.stroke(); }
+    const tex = new T.CanvasTexture(c);
+    g3.sombraGeo = new T.PlaneGeometry(1, 1);
+    g3.sombraMatExplorado = new T.MeshBasicMaterial({ color: 0x0a1020, map: tex, transparent: true, opacity: .55, depthWrite: false });
+    g3.sombraMatNovo = new T.MeshBasicMaterial({ color: 0x3a4a6c, map: tex, transparent: true, opacity: .7, depthWrite: false });
+  }
+  for(const [k, { x, y }] of sombra){
+    const mesh = new T.Mesh(g3.sombraGeo, explorado.has(k) ? g3.sombraMatExplorado : g3.sombraMatNovo);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(x, topoSuperficie3D(state, x, y, TH) + .02, y);
+    mesh.renderOrder = 60;
+    mesh.userData.noRay = true;
+    group.add(mesh);
+  }
+}
+
 function _alvoNoAlcanceArmaClient(me, tx, ty, targetAltitude = 0) {
   return GS.weaponCanReachTile(me, tx, ty, targetAltitude);
 }
@@ -8351,6 +8446,7 @@ function renderMap(state){
     if(!terrainSet.has(`${x},${y}`))
       ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
   }
+  _desenharSombraObjetos2D(ctx, state, terrainSet);
   _desenharAimHover2D(ctx);   // cursor da mira por cima da névoa — ver a função
 
   // ── PASS 5: Dramatic Diablo torchlight (multi-layer, orange-red inferno glow)
@@ -27035,7 +27131,11 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     $('dungeon-canvas').style.cursor='default';
     return;
   }
-  tip.style.display='none';
+  const sombraTip = _sombraTooltipHTML(tx, ty);
+  if(sombraTip){
+    tip.innerHTML = sombraTip;
+    tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
+  } else tip.style.display='none';
 
   // Pointer cursor on reachable tiles when it's my turn
   if(GS.isMyTurn&&GS.gameState.phase==='playing'){
@@ -40072,6 +40172,10 @@ function init3D(state){
   movePreviewGroup.renderOrder = 90;
   scene.add(movePreviewGroup);
 
+  // Sombra dos objetos (penumbra): placas hachuradas sobre o piso.
+  const sombraGroup = new T.Group();
+  scene.add(sombraGroup);
+
   // Efeito persistente do Protetor: separado dos ícones e dos peões para não
   // forçar reconstruções da cena quando a proteção apenas pulsa.
   const protetorEffectGroup = new T.Group();
@@ -40099,7 +40203,7 @@ function init3D(state){
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
-    activeEffectGroup, movePreviewGroup, protetorEffectGroup,
+    activeEffectGroup, movePreviewGroup, protetorEffectGroup, sombraGroup,
     activeEffectSprites: {},
     stairGroup,                          // staircase mesh (null if no stairs)
     heroSpawnGroups,                     // markers for separated hero starts
@@ -43523,6 +43627,7 @@ function renderMap3D(state){
   _overlayShowOnly(g3.moveHighlightMeshes, _soExploradas(reachable));
   _renderMovePreview3D(state, terrainSet, TH);
   _renderMasterMonsterMovePreview3D(state, terrainSet, TH);
+  _renderSombraObjetos3D(state, TH);
 
   // ── Attack highlight overlay visibility (red planes)
   _overlayShowOnly(g3.atkHighlightMeshes, _soExploradas(attackable3d));
@@ -48378,7 +48483,13 @@ function on3DMouseMove(e){
   const tile = get3DTile(e);
   const tip  = $('tooltip');
   if(!tile){
-    tip.style.display='none';
+    // Casa nunca vista não tem malha clicável; a sombra ainda explica o escuro.
+    const plano = get3DTilePlane(e);
+    const sombraTip = plano ? _sombraTooltipHTML(plano[0], plano[1]) : null;
+    if(sombraTip){
+      tip.innerHTML = sombraTip;
+      tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
+    } else tip.style.display='none';
     g3.renderer.domElement.style.cursor='default';
     g3.hoveredPos = null;
     _setMasterMonsterHover(null);
@@ -48456,7 +48567,11 @@ function on3DMouseMove(e){
 
   // Empty tile — clear hover state
   g3.hoveredPos = null;
-  tip.style.display='none';
+  const sombraTip = _sombraTooltipHTML(tx, ty);
+  if(sombraTip){
+    tip.innerHTML = sombraTip;
+    tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
+  } else tip.style.display='none';
   if(GS.isMyTurn && GS.gameState.phase==='playing' && myP && myP.moves_left>0)
     el.style.cursor='pointer';
   else

@@ -229,6 +229,24 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > Validação em `validar_dungeon`; catálogo exportado p/ o editor via
 > `export_catalog.py`. Testes: `tools/test_decoracoes.py`, `tools/test_decor_roundtrip.py`.
 
+> **Sombra dos objetos (penumbra):** o servidor não revela a casa cuja linha de visão um
+> objeto corta — decoração sólida (`_decor_block_tiles`, via `_tem_linha_de_visao`), alta
+> (`_tall_oclui_caminho`) ou material opaco (entulho). Antes isso ficava no mesmo preto da
+> névoa de sala nunca visitada. Agora `GS.sombraDeObjetos(state, hero, raio)` (puro,
+> `src/gameState.js`) devolve as casas de chão no raio do herói com visão livre **só por
+> parede/porta** (`hasLineOfSight(..., ignorarObjetos=true)`, espelho de `ignorar_objetos`)
+> que a visão completa ou o traçado alto barram — excluindo a própria casa do objeto, sala
+> trancada e `revealed` — e qual objeto tapa cada uma (`{tipo:'decor'|'material', id}`).
+> `_altoOcluiCaminho` usa `_pyRound`: o `round()` do Python arredonda .5 para o par e o
+> traçado tem de bater casa a casa. `game.js`: `_sombraObjetos` (cache por estado+posição+
+> raio; vazio para Mestre/mesa de teste) → `_desenharSombraObjetos2D` (logo após a névoa:
+> silhueta cinza-azulada hachurada sobre o preto, escurecimento sobre casa já explorada) e
+> `_renderSombraObjetos3D` (placas hachuradas em `g3.sombraGroup`, reconstruídas só quando a
+> assinatura muda); tooltip "🌑 Visão bloqueada — {objeto} tapa…" (`_sombraTooltipHTML`,
+> no 3D via `get3DTilePlane` porque casa nunca vista não tem malha). Mostra o formato do
+> chão, nunca o conteúdo. Por herói: cada jogador vê a própria sombra. Teste de paridade
+> cliente×servidor: `tools/test_sombra_objetos.py`.
+
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,
 `icone`, `nome`, `visivel`, `ativada`, `aliada` (criador é jogador), `so_luccas`.
