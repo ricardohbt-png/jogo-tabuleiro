@@ -13261,11 +13261,22 @@ function _ensureDiceDismissHandlers(){
   }
 }
 
+// O dice-canvas cobre o tabuleiro inteiro. Enquanto ele aceita o clique (para
+// dispensar os dados), o mouse NÃO chega ao tabuleiro: a prévia da mira não
+// segue o cursor e o 1º clique numa casa caía no "clique fora" da sessão de
+// mira, cancelando a magia/arremesso. Por isso: (a) durante uma mira ele nunca
+// captura o mouse; (b) quando o último dado some, ele solta o mouse — antes
+// ficava com pointer-events:auto para sempre depois de qualquer rolagem, até
+// alguém clicar nele.
 function _setDiceDismissable(active){
   const dc = $('dice-canvas');
   if(!dc) return;
+  if(active && _aimSessionIs()) active = false;
   dc.classList.toggle('dice-dismissable', !!active);
   dc.style.pointerEvents = active ? 'auto' : 'none';
+}
+function _syncDiceDismissable(){
+  _setDiceDismissable(_dice2.length > 0 || _dice3.length > 0);
 }
 
 function handleDiceRoll(msg){
@@ -13559,6 +13570,7 @@ function _startDiceLoop2D(){
       _d2Frame = null;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, dc.width, dc.height);
+      _syncDiceDismissable();
     }
   }
   _d2Frame = _scheduleVisualFrame(frame);
@@ -13828,6 +13840,7 @@ function _updateDiceLoop3D(now){
         _disposeTopBadge(_dice3[i].topBadge);
         _dice3[i].geo.dispose();
         _dice3.splice(i, 1);
+        if(!_dice3.length) _syncDiceDismissable();
       }
     }
 
@@ -18606,6 +18619,7 @@ function _aimEnd({ silent = false, message = null, reason = 'cancel' } = {}) {
   _limparSpellHLMira();
   _aimSetBoardCursor('default');
   document.getElementById('aim-session-hud')?.remove();
+  _syncDiceDismissable();   // dados ainda na tela voltam a poder ser dispensados
   if (!silent && (message || session.cancelText)) toast(message || session.cancelText, '#888');
   return true;
 }
@@ -18670,6 +18684,9 @@ function _aimStart(spec) {
   };
   session.modosNoInicio = _aimModeSnapshot();   // base da proxima troca de mira
   _aimSessionState.current = session;
+  // Os dados da rolagem anterior ainda podem estar na tela: o dice-canvas não
+  // pode interceptar o mouse durante a mira (ver _setDiceDismissable).
+  _setDiceDismissable(false);
   _aimSetHighlights({ range: spec.range || new Set(), area: spec.area || new Set(), double: spec.double || new Set() });
   _aimSetBoardCursor('crosshair');
   _aimRenderLegend(session);
@@ -40396,6 +40413,7 @@ function dispose3D(){
   }
   _dice3.length = 0;
   _d3 = null;
+  _syncDiceDismissable();
 
   g3.renderer.dispose();
   const el = g3.renderer.domElement;
