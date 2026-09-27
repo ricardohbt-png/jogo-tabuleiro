@@ -113,8 +113,16 @@ def sala_na_cidade():
     return r
 
 
+async def concluir_historia(r):
+    """O anfitrião termina os slides que seguram a entrada (`story_complete`)."""
+    pend = r._pending_dungeon_entry
+    if pend and pend.get("story_key") and not pend.get("story_done"):
+        await r.handle_story_complete(r.host_pid, pend["story_key"])
+
+
 async def entrar(r, destino):
     await r.handle_world_adventure("h0", destino)
+    await concluir_historia(r)
     await r._liberar_intro_masmorra(True)
 
 
@@ -249,6 +257,7 @@ async def secao_objetivos():
         check("limpar as 3 salas obrigatórias cumpre", r.mission_complete_pending)
         r.players["h1"]["hp"] = 3
         await r.handle_encerrar_missao("h0")
+        await concluir_historia(r)   # slides de transição Salões → Trono
         await r._liberar_intro_masmorra(True)
         check("encerrar emenda direto no Trono", r.phase == "playing" and r.selected_dungeon == "sombras_3b_trono.json")
         check("…sem recuperar HP (3 → 3)", r.players["h1"]["hp"] == 3)
@@ -274,6 +283,7 @@ async def secao_troll():
             m["hp"] = 0
         await r._check_objectives()
         await r.handle_encerrar_missao("h0")
+        await concluir_historia(r)
         await r._liberar_intro_masmorra(True)
         troll = next(m for m in r.monsters.values() if m["type"] == "troll")
         p = r.players["h2"]
@@ -304,6 +314,7 @@ async def secao_segredo():
             m["hp"] = 0
         await r._check_objectives()
         await r.handle_encerrar_missao("h0")
+        await concluir_historia(r)
         await r._liberar_intro_masmorra(True)
         sp = r.secret_passages[0]
         x, y = sp["pos"]

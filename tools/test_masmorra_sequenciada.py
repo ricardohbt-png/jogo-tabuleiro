@@ -276,6 +276,14 @@ async def test_destino_some_apos_concluir():
     finally:
         server.WORLD_ADVENTURES = salvos
 
+async def _concluir_historia(r):
+    """O anfitrião termina os slides que seguram a entrada na masmorra
+    (`story_complete`); sem isso a entrada fica pendente e a sala não sai
+    da cidade nem emenda a etapa seguinte."""
+    pend = r._pending_dungeon_entry
+    if pend and pend.get("story_key") and not pend.get("story_done"):
+        await r.handle_story_complete(r.host_pid, pend["story_key"])
+
 async def _concluir_etapa(r):
     """Mata tudo, recalcula objetivos e encerra a missão pelo host."""
     for m in r.monsters.values(): m["hp"] = 0
@@ -293,6 +301,12 @@ async def test_encadeamento():
     p1["fome"] = 7; p1["sede"] = 5
     await _concluir_etapa(r)
     check("NÃO passou pela cidade", r.phase == "playing")
+    check("beat de história encadeada montado",
+          r._story_encadeada and [s.get("text") for s in r._story_encadeada["slides"]]
+          == ["FECHA-1", "ABRE-2"])
+    check("a etapa 2 espera o fim dos slides",
+          (r._pending_dungeon_entry or {}).get("story_key") == r._story_encadeada["key"])
+    await _concluir_historia(r)   # o anfitrião termina os slides de transição
     check("carregou a etapa 2 (12×8)", r.map_w == 12 and r.map_h == 8)
     check("índice avançou", r.world_adventure_index == 1)
     check("progresso gravado", r.world_adventure_progress.get("test_seq") == 1)
@@ -302,9 +316,6 @@ async def test_encadeamento():
           r.players["p1"]["technique_cooldowns"] == {"brutalidade": 99})
     check("fome/sede não se recuperam e não são cobradas de novo",
           r.players["p1"]["fome"] == 7 and r.players["p1"]["sede"] == 5)
-    check("beat de história encadeada montado",
-          r._story_encadeada and [s.get("text") for s in r._story_encadeada["slides"]]
-          == ["FECHA-1", "ABRE-2"])
     # última etapa: sem próxima, encerra normalmente pela cidade
     await _concluir_etapa(r)
     check("última etapa volta à cidade", r.phase == "city")
@@ -370,7 +381,8 @@ async def test_fim_da_rota():
           _textos(r._story_encadeada) == ["FECHA-1"])
     # segunda (e última) etapa
     await r.handle_world_adventure("p1", "test_seq")
-    check("entrou na etapa 2", r.world_adventure_index == 1)
+    await _concluir_historia(r)   # slides de abertura da etapa 2
+    check("entrou na etapa 2", r.world_adventure_index == 1 and r.phase == "playing")
     server.WORLD_ADVENTURES["test_seq"]["dungeons"][1]["outro"] = "FECHA-2"
     await _concluir_etapa(r)
     check("última etapa: encerramento da etapa + fim da rota, nessa ordem",
