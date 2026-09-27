@@ -6197,6 +6197,26 @@ def _contar_chao_alcancavel(tiles, w, h, start, limite, pontes=None):
                 visto.add((nx, ny)); pilha.append((nx, ny))
     return conta
 
+# Nível de visão de uma decoração: "livre" não bloqueia nada, "baixo" deixa ver
+# e atirar por cima e dá meia cobertura, "alto" tapa visão e tiro. O padrão
+# vem do tipo (pisável → livre, alto → alto, sólido → baixo); o editor pode
+# sobrepor por objeto com o campo `visao`. Só a visão muda: um objeto sólido
+# continua barrando o passo em qualquer nível.
+DECOR_VISAO_NIVEIS = ("livre", "baixo", "alto")
+
+
+def decor_visao_padrao(meta):
+    if meta.get("alto"):
+        return "alto"
+    return "livre" if meta.get("pisavel") else "baixo"
+
+
+def decor_visao(d, meta=None):
+    meta = meta or DECOR_TYPES.get((d or {}).get("type")) or {}
+    v = (d or {}).get("visao")
+    return v if v in DECOR_VISAO_NIVEIS else decor_visao_padrao(meta)
+
+
 def validar_dungeon(defn):
     """Valida um dict de masmorra autorada. Retorna (ok: bool, msg: str)."""
     if not isinstance(defn, dict):
@@ -6440,6 +6460,8 @@ def validar_dungeon(defn):
         elif not (isinstance(facing, list) and len(facing) == 2
                   and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)):
             return False, f"decoração com facing inválido: {facing!r}."
+        if de.get("visao") is not None and de.get("visao") not in DECOR_VISAO_NIVEIS:
+            return False, f"decoração {dtype} com visão inválida: {de.get('visao')!r}."
         if meta["special"] == "wall":
             # A face aponta para a casa jogÃ¡vel diante da parede. Assim a arte
             # nunca aparece do lado externo/fechado da masmorra.
@@ -9401,6 +9423,7 @@ class GameRoom:
         self.licoes_feitas = set() # ids de lição cumpridos por qualquer herói
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
+        self._decor_low_tiles = set()
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
         self._terrenos_inverno = {}
@@ -12731,6 +12754,8 @@ class GameRoom:
                and all(isinstance(c, (int, float)) and not isinstance(c, bool) and math.isfinite(c) for c in vo):
                 # Deslocamento puramente visual dentro da mesma casa (não muda colisão).
                 dec["voffset"] = [max(-0.45, min(0.45, float(vo[0]))), max(-0.45, min(0.45, float(vo[1])))]
+            if d.get("visao") in DECOR_VISAO_NIVEIS:
+                dec["visao"] = d["visao"]   # sobreposição por objeto (editor)
             self.decorations.append(dec)
         self._rebuild_decor_index()
 
@@ -15569,9 +15594,8 @@ class GameRoom:
     COBERTURA_BAIXA_CA = 2
 
     def _tiles_baixos_cobertura(self):
-        """Casas de objeto sólido que NÃO é alto: barram o passo, não a visão."""
-        return (getattr(self, "_decor_block_tiles", set())
-                - getattr(self, "_decor_tall_tiles", set()))
+        """Casas de objeto de visão "baixo": vê-se por cima, dá meia cobertura."""
+        return getattr(self, "_decor_low_tiles", set())
 
     def _cobertura_baixa_bonus(self, atacante, alvo, alvo_tile=None):
         """+2 de CA quando a linha do ataque passa por cima de um objeto baixo
@@ -33619,17 +33643,21 @@ class GameRoom:
         """Recalcula os índices rápidos de bloqueio/visão das decorações."""
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
+        self._decor_low_tiles = set()    # nível "baixo": dá meia cobertura
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
         for d in getattr(self, "decorations", []):
             meta = DECOR_TYPES[d["type"]]
             if meta["special"] == "wall":
                 continue
+            visao = decor_visao(d, meta)
             for tx, ty in self._decor_tiles(d):
                 if not meta["pisavel"]:
                     self._decor_block_tiles.add((tx, ty))
-                if meta["alto"]:
+                if visao == "alto":
                     self._decor_tall_tiles.add((tx, ty))
+                elif visao == "baixo":
+                    self._decor_low_tiles.add((tx, ty))
                 if meta["special"] == "campfire":
                     self._campfire_tiles.add((tx, ty))
                     self._fire_damage_tiles[(tx, ty)] = "1d4"
@@ -34056,7 +34084,8 @@ class GameRoom:
                 "trap_revealed": bool(d.get("trap_revealed")),
                 "key_objective": bool(d.get("key_objective")),
                 "charges": d.get("charges"),
-                "alto": meta["alto"], "pisavel": meta["pisavel"],
+                "alto": decor_visao(d, meta) == "alto", "visao": decor_visao(d, meta),
+                "pisavel": meta["pisavel"],
                 "special": meta["special"], "emoji": meta["emoji"],
                 "size": self._decor_base_size(d),
                 "vscale": d.get("vscale") or [1, 1],

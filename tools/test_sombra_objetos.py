@@ -51,8 +51,11 @@ def sala(w=18, h=18):
 def montar(r, decs, mats=None, paredes=(), trancadas=()):
     for (x, y) in paredes:
         r.tiles[y][x] = WALL
-    for i, (tipo, x, y) in enumerate(decs):
-        r.decorations.append({"id": f"d{i}", "type": tipo, "pos": [x, y], "facing": [0, 1]})
+    for i, (tipo, x, y, *resto) in enumerate(decs):
+        dec = {"id": f"d{i}", "type": tipo, "pos": [x, y], "facing": [0, 1]}
+        if resto:
+            dec["visao"] = resto[0]   # sobreposição por objeto (editor)
+        r.decorations.append(dec)
     r.materiais = dict(mats or {})
     r.rooms = [dict(id=i, x=x, y=y, w=w, h=h, locked=True, role="monster", doors=[])
                for i, (x, y, w, h) in enumerate(trancadas)]
@@ -235,6 +238,63 @@ print("\n[8] reclassificação dos objetos")
 check("mesa de tortura é baixa", S.DECOR_TYPES["mesa_tortura"]["alto"] is False)
 check("lareira é alta", S.DECOR_TYPES["lareira"]["alto"] is True)
 check("carroça é alta", S.DECOR_TYPES["carroca"]["alto"] is True)
+
+print("\n[9] visão sobreposta por objeto (editor)")
+check("padrão do tipo: barril baixo, coluna alta, fogueira livre",
+      (S.decor_visao({"type": "barril"}), S.decor_visao({"type": "coluna"}),
+       S.decor_visao({"type": "fogueira"})) == ("baixo", "alto", "livre"))
+check("sobreposição vale", S.decor_visao({"type": "barril", "visao": "alto"}) == "alto")
+check("valor inválido cai no padrão", S.decor_visao({"type": "barril", "visao": "xx"}) == "baixo")
+
+def defn_com(decs):
+    tiles = [[S.FLOOR] * 12 for _ in range(12)]
+    return {"schema_version": 1, "id": "t", "name": "T", "grid": {"w": 12, "h": 12}, "tiles": tiles,
+            "rooms": [{"id": 0, "x": 0, "y": 0, "w": 12, "h": 12, "role": "entrance", "locked": False, "doors": []}],
+            "entrance": {"x": 1, "y": 1}, "exit": None, "prisoner": None,
+            "monsters": [], "chests": [], "traps": [], "decorations": decs,
+            "objectives": {"primary": {"type": "kill_all"}, "secondary": []}}
+
+ok, _ = S.validar_dungeon(defn_com([{"id": "a", "type": "barril", "pos": [5, 5], "visao": "alto"}]))
+check("validar_dungeon aceita visão válida", ok)
+ok, msg = S.validar_dungeon(defn_com([{"id": "a", "type": "barril", "pos": [5, 5], "visao": "transparente"}]))
+check("validar_dungeon recusa visão inválida", not ok and "visão" in msg)
+
+r = sala(12, 12)
+r.load_authored_dungeon(defn_com([
+    {"id": "b", "type": "barril", "pos": [5, 5], "visao": "alto"},      # barril que tapa (ex.: pilha alta)
+    {"id": "c", "type": "coluna", "pos": [5, 8], "visao": "baixo"},     # coluna quebrada
+    {"id": "g", "type": "gaiola", "pos": [8, 2], "visao": "livre"},     # gaiola vazada
+    {"id": "n", "type": "barril", "pos": [9, 9]}]))                      # sem sobreposição
+dec = {d["id"]: d for d in r._serializar_decoracoes()}
+check("carga guarda a sobreposição e o payload manda visão e alto efetivos",
+      dec["b"]["visao"] == "alto" and dec["b"]["alto"] is True
+      and dec["c"]["visao"] == "baixo" and dec["c"]["alto"] is False
+      and dec["g"]["visao"] == "livre" and dec["n"]["visao"] == "baixo")
+check("barril 'alto' tapa a visão", not r._tem_linha_de_visao([2, 5], [8, 5]))
+check("coluna 'baixa' deixa ver e dá cobertura",
+      r._tem_linha_de_visao([2, 8], [8, 8]) and r._cobertura_baixa_bonus({"pos": [2, 8]}, {"pos": [8, 8]}) == 2)
+check("gaiola 'livre' não tapa nem dá cobertura",
+      r._tem_linha_de_visao([8, 0], [8, 5]) and r._cobertura_baixa_bonus({"pos": [8, 0]}, {"pos": [8, 5]}) == 0)
+check("só a visão muda: todos continuam barrando o passo",
+      all(r._blocks_tile(*t) for t in [(5, 5), (5, 8), (8, 2), (9, 9)]))
+casos = [[{"pos": [2, 8]}, {"pos": [8, 8]}], [{"pos": [8, 0]}, {"pos": [8, 5]}], [{"pos": [2, 5]}, {"pos": [8, 5]}]]
+check("cliente respeita a sobreposição na cobertura",
+      cobertura_cliente(r, casos) == [r._cobertura_baixa_bonus(a, b) for a, b in casos])
+
+r = sala()
+montar(r, [("barril", 8, 8, "alto"), ("coluna", 8, 4, "baixo"), ("estante", 4, 11, "livre")])
+got, exp = comparar("sombra com sobreposições", r, 4, 7, 6)
+gset = {(c["x"], c["y"]) for c in got}
+check("barril 'alto' projeta sombra", (10, 9) in gset or (9, 8) in gset)
+check("coluna 'baixa' não projeta sombra", not any(c["objeto"] and c["objeto"]["id"] == "coluna" for c in got))
+
+src_ed = open(os.path.join(RAIZ, "tools", "editor.js"), encoding="utf-8").read()
+import re as _re
+m = _re.search(r'const VISAO_NIVEIS = \[([^\]]*)\]', src_ed)
+check("editor e servidor têm os mesmos níveis de visão",
+      m and tuple(x.strip().strip('"') for x in m.group(1).split(",")) == S.DECOR_VISAO_NIVEIS)
+check("editor salva e carrega o campo visao",
+      "o.visao = d.visao" in src_ed and "visao: d.visao" in src_ed)
 
 print(f"\n{PASS} passaram, {FAIL} falharam")
 sys.exit(1 if FAIL else 0)

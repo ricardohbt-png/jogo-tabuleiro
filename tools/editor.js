@@ -418,6 +418,18 @@
   }
 
   function cloneDecor(source) { return JSON.parse(JSON.stringify(source)); }
+
+  // Nível de visão por objeto (espelho de DECOR_VISAO_NIVEIS/decor_visao do
+  // servidor): livre não bloqueia; baixo deixa ver e atirar por cima e dá meia
+  // cobertura (+2 CA); alto tapa visão e tiro. Só a visão muda — o objeto sólido
+  // continua barrando o passo. Sem `visao` no objeto, vale o padrão do tipo.
+  const VISAO_NIVEIS = ["livre", "baixo", "alto"];
+  const VISAO_ROTULO = {
+    livre: "livre — não bloqueia a visão",
+    baixo: "baixo — vê e atira por cima, meia cobertura (+2 CA)",
+    alto: "alto — bloqueia visão e tiro, projeta sombra",
+  };
+  function decorVisaoPadrao(m) { return m && m.alto ? "alto" : (m && m.pisavel ? "livre" : "baixo"); }
   function nextDecorId() {
     const used = new Set(S.decorations.map(d => d.id));
     while (used.has("decor_" + S.nextDecorId)) S.nextDecorId++;
@@ -2687,6 +2699,12 @@
       panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
         <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
         ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
+        ${!isWall ? `<label style="display:block;margin-top:8px">👁️ visão
+          <select id="d-visao">
+            <option value=""${!VISAO_NIVEIS.includes(ref.visao) ? " selected" : ""}>padrão do tipo (${decorVisaoPadrao(m)})</option>
+            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${VISAO_ROTULO[v]}</option>`).join("")}
+          </select></label>
+          <small style="display:block;color:#8a7a5a">Só muda a visão: ${m.pisavel ? "o objeto continua pisável." : "o objeto continua barrando o passo."}</small>` : ""}
         ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
         ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ Duplicar em casa adjacente</button>` : ""}
         <button id="d-brush" style="margin-top:7px">🖌️ Copiar e preencher área</button>
@@ -2745,6 +2763,11 @@
             <span id="d-img-st" style="font-size:11px;color:#8a7a5a"></span>
           </div>
         </div>`;
+      const visaoSel = document.getElementById("d-visao");
+      if (visaoSel) visaoSel.onchange = e => {
+        if (VISAO_NIVEIS.includes(e.target.value)) ref.visao = e.target.value; else delete ref.visao;
+        render();
+      };
       if (m.gira) document.getElementById("d-rot").onclick = () => { rotateDecorPending(); renderPanel(); };
       const duplicate = document.getElementById("d-duplicate"); if (duplicate) duplicate.onclick = () => {
         if (duplicateDecorAdjacent(ref)) { renderPanel(); render(); }
@@ -3146,6 +3169,7 @@
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
         if (Array.isArray(d.voffset) && (d.voffset[0] !== 0 || d.voffset[1] !== 0)) o.voffset = [d.voffset[0], d.voffset[1]];
+        if (VISAO_NIVEIS.includes(d.visao)) o.visao = d.visao;
         return o;
       }),
       secret_passages: S.secretPassages.map(p => ({
@@ -3540,6 +3564,7 @@
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
       ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),
+      ...(VISAO_NIVEIS.includes(d.visao) ? { visao: d.visao } : {}),
     }));
     // O maior sufixo existente, e não o tamanho da lista, define o próximo ID.
     // Depois de apagar ou colar em um mapa antigo, os dois valores podem divergir.

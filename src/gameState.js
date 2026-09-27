@@ -1053,7 +1053,10 @@ const GS = (() => {
     if (alturaDe(atacante) > 0 || alturaDe(alvo) > 0) return 0;
     const baixos = new Set();
     for (const d of (state.decorations || [])) {
-      if (!d || d.special === 'wall' || d.pisavel || d.alto) continue;
+      if (!d || d.special === 'wall') continue;
+      // `visao` vem do servidor (sobreposição por objeto); sem ele, o padrão do tipo.
+      const nivel = d.visao || (d.alto ? 'alto' : d.pisavel ? 'livre' : 'baixo');
+      if (nivel !== 'baixo') continue;
       for (const [x, y] of decorTilesOf(d)) baixos.add(`${x},${y}`);
     }
     if (!baixos.size) return 0;

@@ -262,6 +262,18 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > cobertura" no tooltip do monstro (2D/3D, `_coberturaTooltipHTML`). Reclassificados:
 > `mesa_tortura` baixa, `lareira`/`carroca` altas (`editor_catalog.js` editado à mão nos 3
 > campos). Teste: `tools/test_sombra_objetos.py` [2], [6]–[8].
+>
+> **Visão por objeto (editor):** cada decoração colocada aceita `visao` (`livre`|`baixo`|
+> `alto`, `DECOR_VISAO_NIVEIS`); ausente = padrão do tipo (`decor_visao_padrao`: alto →
+> alto, pisável → livre, sólido → baixo). `decor_visao(d, meta)` é o ponto único: alimenta
+> `_rebuild_decor_index` (`_decor_tall_tiles` ← alto, `_decor_low_tiles` ← baixo, a cobertura
+> lê este último) e o payload (`_serializar_decoracoes` manda `visao` e o `alto` **efetivo**,
+> então `_losBlocks`/sombra do cliente não mudaram; `GS.coberturaBaixa` lê `visao`). **Só a
+> visão muda:** `_decor_block_tiles` (movimento) segue vindo de `pisavel` do tipo. Validado em
+> `validar_dungeon`, preservado em `load_authored_dungeon`. Editor (`tools/editor.js`):
+> seletor "👁️ visão" no painel da decoração (fora das de parede), `VISAO_NIVEIS` salvo/
+> carregado em `buildJSON`/`loadJSON`; "padrão do tipo" apaga o campo. Teste:
+> `tools/test_sombra_objetos.py` [9] (inclui sincronia dos níveis editor×servidor).
 
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,
