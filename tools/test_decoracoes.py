@@ -85,7 +85,7 @@ def test_catalog():
           and d["prisao"]["gira"] and d["prisao"]["alto"]
           and not d["prisao"]["pisavel"])
     check("mesa de tortura usa PNG/GLB e ocupa 1x2", d["mesa_tortura"]["size"] == [1, 2]
-          and d["mesa_tortura"]["gira"] and d["mesa_tortura"]["alto"]
+          and d["mesa_tortura"]["gira"] and not d["mesa_tortura"]["alto"]   # baixa: vê-se por cima
           and not d["mesa_tortura"]["pisavel"] and not d["mesa_tortura"]["loot_capaz"]
           and d["mesa_tortura"]["image"] == "mesa_tortura.png"
           and server.DECOR_MODEL3D["mesa_tortura"].endswith("mesa_tortura.glb"))

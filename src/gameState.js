@@ -921,17 +921,23 @@ const GS = (() => {
   // Supercover de Bresenham: paredes E portas fechadas barram ataques/magias à
   // distância. Os extremos (origem/alvo) não bloqueiam. Usado para impedir mira
   // através de paredes no cliente (o servidor já recusa, isto evita oferecer).
-  function _losBlocks(tiles, closed, x, y, state, vooLivre=false) {
+  function _losBlocks(tiles, closed, x, y, state, vooLivre=false, ignorarObjetos=false) {
     if (y < 0 || x < 0 || y >= tiles.length || x >= tiles[0].length) return true;
     const key = `${x},${y}`;
+    // Espelha `ignorar_objetos` de `_tem_linha_de_visao` (servidor): só parede
+    // e porta fechada contam; decorações e materiais opacos são ignorados.
+    if (ignorarObjetos && !vooLivre)
+      return !_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key));
     const decoracoes = (state?.decorations || []);
+    // Só o objeto ALTO tapa a visão (espelho de `_tem_linha_de_visao`). O baixo
+    // e sólido (barril, mesa, baú…) barra o passo, mas se vê e se atira por
+    // cima — e dá meia cobertura a quem está atrás (`coberturaBaixa`).
     const alto = decoracoes.some(d => d.alto && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
-    const solido = decoracoes.some(d => !d.pisavel && decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
     const materialOpaco = MATERIAIS_OPACOS.has(state?.materiais?.[key]);
     if (vooLivre) return alto || materialOpaco;
-    return (!_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key) || solido || materialOpaco));
+    return (!_ponteEm(x, y, state) && (tiles[y][x] === TILE_WALL || closed.has(key) || alto || materialOpaco));
   }
-  function hasLineOfSight(state, ax, ay, bx, by, observer=null) {
+  function hasLineOfSight(state, ax, ay, bx, by, observer=null, ignorarObjetos=false) {
     const tiles = state && state.tiles;
     if (!tiles) return true;
     const closed = doorSets(state).closed;
@@ -955,7 +961,7 @@ const GS = (() => {
       return _elevacaoTerreno(x, y, state) > raioZ + 1e-6;
     };
     const bloqueia = (x, y) => bloqueiaPorElevacao(x, y) ||
-      _losBlocks(tiles, closed, x, y, state, vooLivre);
+      _losBlocks(tiles, closed, x, y, state, vooLivre, ignorarObjetos);
     const x1 = bx | 0, y1 = by | 0;
     let x = ax | 0, y = ay | 0, ix = 0, iy = 0;
     const dx = Math.abs(x1 - x), dy = Math.abs(y1 - y);
@@ -973,6 +979,131 @@ const GS = (() => {
       if (bloqueia(x, y)) return false;
     }
     return true;
+  }
+
+  // ── Sombra dos objetos (penumbra) ──────────────────────────────────────────
+  // O servidor não revela uma casa quando um objeto (decoração sólida/alta ou
+  // material opaco) tapa a linha de visão do herói (`_reveal_around` →
+  // `_tem_linha_de_visao` + `_tall_oclui_caminho`). Sem isso destacado, o
+  // jogador não distinguia "atrás da estante" de "ainda não explorado". Esta
+  // função devolve as casas que o herói VERIA se não fosse um objeto — dentro
+  // do raio, com visão livre considerando só paredes/portas — e qual objeto
+  // tapa cada uma. Pura: o renderer decide como desenhar.
+  function _pyRound(v) {
+    // round() do Python arredonda .5 para o PAR (banker's rounding); o traçado
+    // de `_tall_oclui_caminho` depende disso e tem de bater casa a casa.
+    const f = Math.floor(v), d = v - f;
+    if (Math.abs(d - 0.5) < 1e-9) return (f % 2 === 0) ? f : f + 1;
+    return Math.round(v);
+  }
+  function _objetoOcluiEm(state, x, y) {
+    const key = `${x},${y}`;
+    for (const d of (state.decorations || [])) {
+      if (!d || d.special === 'wall' || !d.alto) continue;   // objeto baixo não tapa a visão
+      if (decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y)) return { tipo: 'decor', id: d.type };
+    }
+    const mat = state.materiais?.[key];
+    if (MATERIAIS_OPACOS.has(mat)) return { tipo: 'material', id: mat };
+    return null;
+  }
+  // Espelho de `_tall_oclui_caminho`: só decoração ALTA e material opaco.
+  function _altoEm(state, x, y) {
+    if (MATERIAIS_OPACOS.has(state.materiais?.[`${x},${y}`])) return true;
+    return (state.decorations || []).some(d => d && d.alto && d.special !== 'wall'
+      && decorTilesOf(d).some(([a, b]) => a === x && b === y));
+  }
+  function _altoOcluiCaminho(state, x0, y0, x1, y1) {
+    const dx = x1 - x0, dy = y1 - y0, passos = Math.max(Math.abs(dx), Math.abs(dy));
+    for (let s = 1; s < passos; s++)
+      if (_altoEm(state, _pyRound(x0 + dx * s / passos), _pyRound(y0 + dy * s / passos))) return true;
+    return false;
+  }
+  // Mesmo traçado supercover de hasLineOfSight, para achar o objeto que
+  // de fato cortou a linha; a linha arredondada do objeto alto vem depois.
+  function _primeiroObjetoNoCaminho(state, x0, y0, x1, y1) {
+    let x = x0, y = y0, ix = 0, iy = 0;
+    const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+    const sx = x1 > x0 ? 1 : -1, sy = y1 > y0 ? 1 : -1;
+    while (x !== x1 || y !== y1) {
+      const tX = (2 * ix + 1) * dy, tY = (2 * iy + 1) * dx;
+      if (tX < tY) { x += sx; ix++; }
+      else if (tX > tY) { y += sy; iy++; }
+      else {
+        const o = _objetoOcluiEm(state, x + sx, y) || _objetoOcluiEm(state, x, y + sy);
+        if (o) return o;
+        x += sx; ix++; y += sy; iy++;
+      }
+      if (x === x1 && y === y1) break;
+      const o = _objetoOcluiEm(state, x, y);
+      if (o) return o;
+    }
+    const passos = Math.max(dx, dy);
+    for (let s = 1; s < passos; s++) {
+      const o = _objetoOcluiEm(state, _pyRound(x0 + (x1 - x0) * s / passos), _pyRound(y0 + (y1 - y0) * s / passos));
+      if (o) return o;
+    }
+    return null;
+  }
+  // Meia cobertura (espelho de `_cobertura_baixa_bonus` do servidor): +2 de CA
+  // quando a linha do ataque passa por cima de um objeto baixo e sólido numa
+  // casa INTERMEDIÁRIA. Quem está no ar não dá nem recebe cobertura.
+  const COBERTURA_BAIXA_CA = 2;
+  function coberturaBaixa(state, atacante, alvo, alvoTile = null) {
+    if (!state || !atacante || !alvo) return 0;
+    if (alturaDe(atacante) > 0 || alturaDe(alvo) > 0) return 0;
+    const baixos = new Set();
+    for (const d of (state.decorations || [])) {
+      if (!d || d.special === 'wall') continue;
+      // `visao` vem do servidor (sobreposição por objeto); sem ele, o padrão do tipo.
+      const nivel = d.visao || (d.alto ? 'alto' : d.pisavel ? 'livre' : 'baixo');
+      if (nivel !== 'baixo') continue;
+      for (const [x, y] of decorTilesOf(d)) baixos.add(`${x},${y}`);
+    }
+    if (!baixos.size) return 0;
+    const dest = alvoTile || alvo.pos;
+    if (!Array.isArray(dest) || !Array.isArray(atacante.pos)) return 0;
+    const [x0, y0] = atacante.pos, [x1, y1] = dest;
+    const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+    const sx = x1 > x0 ? 1 : -1, sy = y1 > y0 ? 1 : -1;
+    const fim = `${x1},${y1}`;
+    let x = x0, y = y0, ix = 0, iy = 0;
+    while (x !== x1 || y !== y1) {
+      const tX = (2 * ix + 1) * dy, tY = (2 * iy + 1) * dx;
+      if (tX < tY) { x += sx; ix++; }
+      else if (tX > tY) { y += sy; iy++; }
+      else {
+        const a = `${x + sx},${y}`, b = `${x},${y + sy}`;
+        if ((baixos.has(a) && a !== fim) || (baixos.has(b) && b !== fim)) return COBERTURA_BAIXA_CA;
+        x += sx; ix++; y += sy; iy++;
+      }
+      if (x === x1 && y === y1) break;
+      if (baixos.has(`${x},${y}`)) return COBERTURA_BAIXA_CA;
+    }
+    return 0;
+  }
+
+  function sombraDeObjetos(state, hero, raio) {
+    const out = new Map();
+    const tiles = state && state.tiles;
+    if (!tiles || !hero || !Array.isArray(hero.pos) || !(raio > 0)) return out;
+    const [px, py] = hero.pos;
+    const H = tiles.length, W = tiles[0].length;
+    const revelado = new Set((state.revealed || []).map(([x, y]) => `${x},${y}`));
+    const trancadas = (state.rooms || []).filter(r => r && r.locked);
+    for (let y = Math.max(0, py - raio); y <= Math.min(H - 1, py + raio); y++) {
+      for (let x = Math.max(0, px - raio); x <= Math.min(W - 1, px + raio); x++) {
+        if (x === px && y === py) continue;
+        if (tiles[y][x] === TILE_WALL) continue;   // só o chão desenha a silhueta
+        const key = `${x},${y}`;
+        if (revelado.has(key)) continue;
+        if (_objetoOcluiEm(state, x, y)) continue;   // o próprio objeto continua à vista
+        if (trancadas.some(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)) continue;
+        if (!hasLineOfSight(state, px, py, x, y, hero, true)) continue;   // parede/porta: névoa normal
+        if (hasLineOfSight(state, px, py, x, y, hero) && !_altoOcluiCaminho(state, px, py, x, y)) continue;
+        out.set(key, { x, y, objeto: _primeiroObjetoNoCaminho(state, px, py, x, y) });
+      }
+    }
+    return out;
   }
 
   // ── Pure logic: BFS — all reachable floor tiles within maxSteps ────────────
@@ -3068,6 +3199,8 @@ const GS = (() => {
 
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
     hasLineOfSight,
+    sombraDeObjetos,
+    coberturaBaixa,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
 

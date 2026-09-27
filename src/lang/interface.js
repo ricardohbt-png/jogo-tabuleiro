@@ -9802,6 +9802,30 @@ window.LANG_INTERFACE = {
   "ui.voo.queda_petrificado": {
     "en": "🗿 Petrified: a body of stone, fall damage ×{mult}",
     "pt": "🗿 Petrificado: corpo de pedra, dano da queda ×{mult}"
+  },
+  "ui.sombra.titulo": {
+    "en": "🌑 Sight blocked",
+    "pt": "🌑 Visão bloqueada"
+  },
+  "ui.sombra.por_objeto": {
+    "en": "{objeto} blocks your view of this area.",
+    "pt": "{objeto} tapa a visão desta área."
+  },
+  "ui.sombra.sem_objeto": {
+    "en": "An object blocks your view of this area.",
+    "pt": "Um objeto tapa a visão desta área."
+  },
+  "ui.sombra.dica": {
+    "en": "Move around it to see what is here.",
+    "pt": "Contorne o objeto para ver o que há aqui."
+  },
+  "ui.sombra.entulho": {
+    "en": "The rubble",
+    "pt": "O entulho"
+  },
+  "ui.tabuleiro.cobertura_baixa": {
+    "en": "🛡️ Half cover: +{bonus} AC (low object in the way)",
+    "pt": "🛡️ Meia cobertura: +{bonus} de CA (objeto baixo no caminho)"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
