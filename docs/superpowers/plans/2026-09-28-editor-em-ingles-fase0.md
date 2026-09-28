@@ -890,3 +890,5 @@ git commit -m "docs: registra a Fase 0 do editor em inglês"
 
 - A aba Masmorra monta a barra de ferramentas uma vez (`buildToolbar()` em `editor.js`); o `setTab("masmorra")` não a remonta. A Fase 1 precisa fazer o `trocarIdioma` (ou o `setTab`) chamar `buildToolbar()` também, senão a barra fica no idioma antigo.
 - Ao fechar uma aba, acrescentar o arquivo em `FECHADAS` no `tools/test_editor_idioma.py`.
+- O editor de criaturas agrupa as seções em abas comparando o texto dos `<h2>` com nomes em PORTUGUÊS (`editor_monster_editor.js` ~801). Ao traduzir os títulos na fase Criaturas, trocar essa comparação por um id (`data-*`), senão o agrupamento quebra em silêncio.
+- `read()` do editor de criaturas força `ai_type='agressivo'` e `movement=6` no rascunho; o `sincronizar()` da troca de idioma passa por ele. Sem efeito persistido (o salvar também passa), mas não comparar rascunho com o original contando com esses campos.

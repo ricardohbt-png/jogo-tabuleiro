@@ -3815,12 +3815,20 @@
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) {
       // soRedesenhar (troca de idioma) NÃO pode descartar rascunho não
       // sincronizado: render() reconstrói o form via innerHTML a partir de
-      // `draft`, então texto digitado e ainda não sincronizado sumiria.
-      if (soRedesenhar && window.EDITOR_MONSTER_EDITOR.sincronizar) window.EDITOR_MONSTER_EDITOR.sincronizar();
+      // `draft`, então texto digitado e ainda não sincronizado sumiria. Um
+      // sincronizar() com defeito não pode derrubar a troca de idioma —
+      // isola o erro e segue para o render() mesmo assim.
+      if (soRedesenhar && window.EDITOR_MONSTER_EDITOR.sincronizar) {
+        try { window.EDITOR_MONSTER_EDITOR.sincronizar(); }
+        catch (e) { console.error("[editor-idioma] sincronizar falhou:", e); }
+      }
       window.EDITOR_MONSTER_EDITOR.render();
     }
     else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) {
-      if (soRedesenhar && window.EDITOR_ITEMS_EDITOR.sincronizar) window.EDITOR_ITEMS_EDITOR.sincronizar();
+      if (soRedesenhar && window.EDITOR_ITEMS_EDITOR.sincronizar) {
+        try { window.EDITOR_ITEMS_EDITOR.sincronizar(); }
+        catch (e) { console.error("[editor-idioma] sincronizar falhou:", e); }
+      }
       window.EDITOR_ITEMS_EDITOR.render();
     }
     else if (cityEditor && window.EDITOR_CITY) window.EDITOR_CITY.render();

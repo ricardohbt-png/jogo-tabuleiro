@@ -58,17 +58,13 @@ def secao_editor_js():
     check("aba inicial registrada junto do window.setTab",
           re.search(r"window\.setTab = setTab;\s*\n\s*window\._abaAtualEditor = window\._abaAtualEditor \|\| \"masmorra\";",
                     src) is not None)
-    # O corpo INTEIRO de setTab (até o próximo "window.setTab = setTab;", que
-    # é a linha logo após a função fechar) — a checagem de 200 chars acima não
-    # alcança os ramos do editor de criaturas/itens, mais abaixo no corpo.
-    fim = src.index("window.setTab = setTab;", i)
-    corpo_setTab = src[i:fim]
-    check("troca de idioma sincroniza o rascunho do editor de criaturas antes de redesenhar",
-          re.search(r"soRedesenhar\s*&&\s*window\.EDITOR_MONSTER_EDITOR\.sincronizar", corpo_setTab)
-          is not None)
-    check("troca de idioma sincroniza o rascunho do editor de itens antes de redesenhar",
-          re.search(r"soRedesenhar\s*&&\s*window\.EDITOR_ITEMS_EDITOR\.sincronizar", corpo_setTab)
-          is not None)
+    # O COMPORTAMENTO de setTab (ordem sincronizar→render sob soRedesenhar,
+    # ausência de sincronizar sem a flag, try/catch em volta do sincronizar)
+    # é exercitado de verdade em tools/test_editor_settab.js — regex de texto
+    # aqui só provaria que a chamada aparece em algum lugar da função, não que
+    # ela roda na ordem certa nem que uma exceção não derruba o redesenho.
+    # Este teste cobre só o que regex sabe fazer bem: os dois módulos EXPÕEM
+    # o método que aquele teste comportamental vai chamar.
     monster_src = ler("tools", "editor_monster_editor.js")
     check("editor_monster_editor.js exporta sincronizar em EDITOR_MONSTER_EDITOR",
           re.search(r"window\.EDITOR_MONSTER_EDITOR\s*=\s*\{[^}]*\bsincronizar\b", monster_src)
