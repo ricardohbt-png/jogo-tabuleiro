@@ -12,7 +12,11 @@
 // • nomeCat(família, id, padrão): nome de catálogo traduzido pelo id; sem chave
 //   (item/monstro criado pelo autor) devolve o padrão — o nome do autor.
 // • Idioma em localStorage["lfh_lang"], a MESMA chave do jogo: o editor é
-//   servido pelo mesmo servidor (/tools/editor.html), logo mesma origem.
+//   servido pelo mesmo servidor (/tools/editor.html), logo mesma origem — o
+//   idioma só é compartilhado com o jogo quando o editor é aberto assim
+//   (http://localhost:8765/tools/editor.html). Aberto via file:// o editor
+//   tem sua PRÓPRIA origem (null), então localStorage é isolado e não
+//   compartilha nada com o jogo.
 // • trocarIdioma: reaplica a moldura (data-i18n) e redesenha a aba ativa por
 //   setTab(abaAtual), que reconstrói a aba a partir do estado do módulo.
 (function () {

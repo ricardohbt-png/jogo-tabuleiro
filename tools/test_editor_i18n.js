@@ -76,5 +76,77 @@ let ok = true;
 try { window.EDITOR_I18N.trocarIdioma("pt"); } catch (e) { ok = false; }
 check("trocarIdioma sobrevive a localStorage que lança", ok && window.I18N.lang === "pt");
 
+console.log("\n[5] Início com armazenamento ruim");
+// A partir daqui window.I18N já foi trocado várias vezes pelo teste; o motor
+// guarda o idioma no fechamento da IIFE, então reavaliar src/i18n.js cria um
+// window.I18N NOVO (lang volta a "pt") sem precisar mexer em módulo nenhum —
+// é assim que cada sub-teste começa de um início limpo de verdade.
+function reavaliarI18N() {
+  eval(fs.readFileSync(path.join(raiz, "src", "i18n.js"), "utf8"));
+}
+function reavaliarEditorI18N() {
+  eval(fs.readFileSync(path.join(raiz, "tools", "editor_i18n.js"), "utf8"));
+}
+
+// [5a] lfh_lang guardado é inválido ("xx") — iniciar() tenta setLang("xx"),
+// o motor recusa (fora de SUPORTADOS) e o idioma fica no padrão do I18N novo.
+loja["lfh_lang"] = "xx";
+window.localStorage.getItem = k => (k in loja ? loja[k] : null);
+window.localStorage.setItem = (k, v) => { loja[k] = String(v); };
+reavaliarI18N();
+reavaliarEditorI18N();
+check("lfh_lang inválido cai no padrão (pt)", window.I18N.lang === "pt");
+check("seletor reflete o padrão (pt)", ELS.seletor.value === "pt");
+
+// [5b] localStorage.getItem lança na inicialização — lerIdioma() cai no catch
+// e usa window.I18N.PADRAO; nada escapa para fora do eval.
+loja["lfh_lang"] = "en";
+window.localStorage.getItem = () => { throw new Error("bloqueado"); };
+window.localStorage.setItem = (k, v) => { loja[k] = String(v); };
+reavaliarI18N();
+let okInicio = true;
+try { reavaliarEditorI18N(); } catch (e) { okInicio = false; }
+check("getItem que lança na inicialização não derruba", okInicio);
+check("cai no padrão (pt) quando getItem lança", window.I18N.lang === "pt");
+
+// Restaura o localStorage saudável para as duas checagens seguintes, que
+// olham o comportamento normal de trocarIdioma, não o de leitura.
+window.localStorage.getItem = k => (k in loja ? loja[k] : null);
+window.localStorage.setItem = (k, v) => { loja[k] = String(v); };
+
+// [5c] trocarIdioma para o idioma ATUAL não chama setTab — o guard de topo
+// (`code === window.I18N.lang`) já corta antes de tocar em qualquer coisa.
+loja["lfh_lang"] = "pt";
+reavaliarI18N();
+reavaliarEditorI18N();
+window._abaAtualEditor = "cidade";
+abaRedesenhada = null;
+window.EDITOR_I18N.trocarIdioma("pt");
+check("trocar para o idioma atual não redesenha", abaRedesenhada === null);
+
+// [5d] window._abaAtualEditor AUSENTE — o idioma troca de verdade (moldura
+// reaplicada), mas setTab não é chamado porque não há aba pra redesenhar.
+delete window._abaAtualEditor;
+abaRedesenhada = null;
+window.EDITOR_I18N.trocarIdioma("en");
+check("troca o idioma mesmo sem aba atual", window.I18N.lang === "en");
+check("sem _abaAtualEditor não chama setTab", abaRedesenhada === null);
+window._abaAtualEditor = "cidade"; // devolve o estado pro resto do teste
+
+// [5e] document.getElementById não acha #ed-lang (null) — nem iniciar() nem
+// trocarIdioma podem lançar por causa disso.
+loja["lfh_lang"] = "pt";
+const getElementByIdOriginal = document.getElementById;
+document.getElementById = () => null;
+reavaliarI18N();
+let okSemSeletor = true;
+try {
+  reavaliarEditorI18N();
+  window._abaAtualEditor = "cidade";
+  window.EDITOR_I18N.trocarIdioma("en");
+} catch (e) { okSemSeletor = false; }
+check("sem #ed-lang, início e troca de idioma não lançam", okSemSeletor);
+document.getElementById = getElementByIdOriginal;
+
 console.log(`\n  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);
