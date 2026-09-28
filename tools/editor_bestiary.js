@@ -484,7 +484,8 @@
     // Retratos antigos podem ter sido salvos com o id da miniatura (campo
     // `image`) em vez do id interno da criatura (campo `type`). Tenta o padrão
     // oficial primeiro e, se ele não existir, usa esse nome alternativo.
-    const onError = "const alt=this.dataset.alt;if(alt){this.dataset.alt='';this.src=alt}else{this.remove();this.parentElement.classList.add('empty')}";
+    // O pai é lido ANTES do remove(): depois dele parentElement é null.
+    const onError = "const alt=this.dataset.alt;if(alt){this.dataset.alt='';this.src=alt}else{const box=this.parentElement;this.remove();if(box)box.classList.add('empty')}";
     return `<div class="${cls}"><img src="${esc(src)}" data-alt="${esc(alternateSrc)}" alt="" onerror="${onError}"><span>${esc(fallback)}</span></div>`;
   }
   function loot(m) {

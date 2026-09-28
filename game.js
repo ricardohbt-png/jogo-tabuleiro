@@ -42941,6 +42941,10 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   lanca: {path: 'assets/itens/lanca.glb', layFlat: true, footprint: 0.78},
   lanca_curta: {path: 'assets/itens/lanca.glb', layFlat: true, footprint: 0.78},
   alabarda: {path: 'assets/itens/alabarda.glb', layFlat: true, footprint: 0.78},
+  // Loot do Gigante: o mesmo modelo da arma comum, sem escala própria (é
+  // tesouro na bolsa, não arma equipável — o tamanho no chão fica o mesmo).
+  alabarda_colossal: {path: 'assets/itens/alabarda.glb', layFlat: true, footprint: 0.78},
+  espada_longa_colossal: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
   besta_mao: {path: 'assets/itens/besta.glb', footprint: 0.78},
   hand_crossbow: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta: {path: 'assets/itens/besta.glb', footprint: 0.78},
