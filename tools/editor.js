@@ -20,14 +20,14 @@
   // recarregar o catálogo gerado pelo servidor.
   if (!(CAT.decorations || []).some(d => d && d.type === "fonte_de_parede")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "fonte_de_parede", nome: "Fonte de parede", emoji: "⛲",
+      type: "fonte_de_parede", nome: nomeCat("decor", "fonte_de_parede", "fonte_de_parede"), emoji: "⛲",
       size: [1, 1], gira: true, alto: true, pisavel: false,
       loot_capaz: false, special: null, image: "fonte_de_parede.png",
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "armadura")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "armadura", nome: "Armadura", emoji: "🛡️",
+      type: "armadura", nome: nomeCat("decor", "armadura", "armadura"), emoji: "🛡️",
       size: [1, 1], gira: true, alto: true, pisavel: false,
       loot_capaz: false, special: null, image: "armadura.png",
     });
@@ -36,14 +36,14 @@
   // continuar disponível nas decorações de chão mesmo antes do recarregamento.
   if (!(CAT.decorations || []).some(d => d && d.type === "chama_viva")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "chama_viva", nome: "Chama viva", emoji: "🔥",
+      type: "chama_viva", nome: nomeCat("decor", "chama_viva", "chama_viva"), emoji: "🔥",
       size: [1, 1], gira: false, alto: false, pisavel: true,
       loot_capaz: false, special: "living_flame", image: null,
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "placa")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "placa", nome: "Placa", emoji: "🪧",
+      type: "placa", nome: nomeCat("decor", "placa", "placa"), emoji: "🪧",
       size: [1, 1], gira: false, alto: false, pisavel: true,
       loot_capaz: false, special: "plaque", image: null,
     });
@@ -64,36 +64,36 @@
   // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
   const HERO_SPAWN_META = [
-    { id: "warrior", name: "Guerreiro", emoji: "⚔️", mark: "G" },
-    { id: "mage", name: "Mago", emoji: "🔮", mark: "M" },
-    { id: "rogue", name: "Ladino", emoji: "🗡️", mark: "L" },
-    { id: "cleric", name: "Clérigo", emoji: "✚", mark: "C" },
-    { id: "bard", name: "Bardo", emoji: "🎻", mark: "B" },
-    { id: "paladin", name: "Paladino", emoji: "🛡️", mark: "P" },
+    { id: "warrior", emoji: "⚔️", mark: "G" },
+    { id: "mage", emoji: "🔮", mark: "M" },
+    { id: "rogue", emoji: "🗡️", mark: "L" },
+    { id: "cleric", emoji: "✚", mark: "C" },
+    { id: "bard", emoji: "🎻", mark: "B" },
+    { id: "paladin", emoji: "🛡️", mark: "P" },
   ];
   // Tutorial: verbos que uma tarefa de lição pode cobrar. Espelha
   // LICAO_VERBOS no server.py — mudar um exige mudar o outro.
   const LICAO_VERBOS = [
-    { v: "mover_ate", nome: "chegar a uma casa" },
-    { v: "abrir_porta", nome: "abrir uma porta" },
-    { v: "atacar", nome: "acertar um ataque" },
-    { v: "matar", nome: "derrotar um monstro" },
-    { v: "pegar_item", nome: "pegar um item" },
-    { v: "equipar", nome: "equipar um item" },
-    { v: "encerrar_turno", nome: "encerrar o turno" },
-    { v: "usar_item", nome: "usar um item (comer, beber, poção)" },
-    { v: "usar_magia", nome: "lançar uma magia" },
-    { v: "usar_habilidade", nome: "usar uma habilidade de classe" },
-    { v: "usar_tecnica", nome: "usar uma técnica da Guilda" },
-    { v: "usar_instrumento", nome: "tocar o instrumento (bardo)" },
-    { v: "arremessar_item", nome: "arremessar um item (óleo, bomba)" },
-    { v: "desarmar_armadilha", nome: "desarmar uma armadilha" },
+    { v: "mover_ate" },
+    { v: "abrir_porta" },
+    { v: "atacar" },
+    { v: "matar" },
+    { v: "pegar_item" },
+    { v: "equipar" },
+    { v: "encerrar_turno" },
+    { v: "usar_item" },
+    { v: "usar_magia" },
+    { v: "usar_habilidade" },
+    { v: "usar_tecnica" },
+    { v: "usar_instrumento" },
+    { v: "arremessar_item" },
+    { v: "desarmar_armadilha" },
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
-  const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { name: id, emoji: "⚔️", mark: "H" };
+  const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra", saida_permitida: true },
+    meta: { schema_version: 1, id: "nova_masmorra", name: t("ui.editor.masmorra.nome_padrao"), ambiente: "masmorra", saida_permitida: true },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
@@ -424,11 +424,7 @@
   // cobertura (+2 CA); alto tapa visão e tiro. Só a visão muda — o objeto sólido
   // continua barrando o passo. Sem `visao` no objeto, vale o padrão do tipo.
   const VISAO_NIVEIS = ["livre", "baixo", "alto"];
-  const VISAO_ROTULO = {
-    livre: "livre — não bloqueia a visão",
-    baixo: "baixo — vê e atira por cima, meia cobertura (+2 CA)",
-    alto: "alto — bloqueia visão e tiro, projeta sombra",
-  };
+  function visaoRotulo(nivel) { return t("ui.editor.masmorra.visao." + nivel); }
   function decorVisaoPadrao(m) { return m && m.alto ? "alto" : (m && m.pisavel ? "livre" : "baixo"); }
   function nextDecorId() {
     const used = new Set(S.decorations.map(d => d.id));
@@ -1148,25 +1144,25 @@
   }
 
   const TOOLS = [
-    { id: "wall", label: "parede", group: "tiles" },
-    { id: "floor", label: "chão", group: "tiles" },
-    { id: "door", label: "porta", group: "tiles" },
-    { id: "altura", label: "altura", group: "tiles" },
-    { id: "ponte", label: "ponte", group: "tiles" },
-    { id: "entrance", label: "entrada", group: "entidades" },
-    { id: "hero_spawn", label: "início herói", group: "entidades" },
-    { id: "exit", label: "saída", group: "entidades" },
-    { id: "monster", label: "monstro", group: "entidades" },
-    { id: "chest", label: "baú", group: "entidades" },
-    { id: "trap", label: "armadilha", group: "entidades" },
-    { id: "prisoner", label: "prisioneiro", group: "entidades" },
-    { id: "decor", label: "decoração", group: "entidades" },
-    { id: "secret_mechanism", label: "passagem secreta", group: "entidades" },
-    { id: "illusion_wall", label: "parede ilusória", group: "entidades" },
-    { id: "fala", label: "fala NPC", group: "entidades" },
-    { id: "room", label: "sala", group: "ações" },
-    { id: "select", label: "selecionar", group: "ações" },
-    { id: "erase", label: "apagar", group: "ações" },
+    { id: "wall", group: "tiles" },
+    { id: "floor", group: "tiles" },
+    { id: "door", group: "tiles" },
+    { id: "altura", group: "tiles" },
+    { id: "ponte", group: "tiles" },
+    { id: "entrance", group: "entidades" },
+    { id: "hero_spawn", group: "entidades" },
+    { id: "exit", group: "entidades" },
+    { id: "monster", group: "entidades" },
+    { id: "chest", group: "entidades" },
+    { id: "trap", group: "entidades" },
+    { id: "prisoner", group: "entidades" },
+    { id: "decor", group: "entidades" },
+    { id: "secret_mechanism", group: "entidades" },
+    { id: "illusion_wall", group: "entidades" },
+    { id: "fala", group: "entidades" },
+    { id: "room", group: "acoes" },
+    { id: "select", group: "acoes" },
+    { id: "erase", group: "acoes" },
   ];
 
   function buildToolbar() {
@@ -1177,11 +1173,11 @@
     for (const tool of visibleTools) {
       if (tool.group !== lastGroup) {
         if (lastGroup) { const s = document.createElement("span"); s.className = "sep"; tb.appendChild(s); }
-        const g = document.createElement("span"); g.className = "group-label"; g.textContent = tool.group; tb.appendChild(g);
+        const g = document.createElement("span"); g.className = "group-label"; g.textContent = t("ui.editor.masmorra.grupo." + tool.group); tb.appendChild(g);
         lastGroup = tool.group;
       }
       const b = document.createElement("button");
-      b.textContent = tool.label; b.dataset.tool = tool.id;
+      b.textContent = t("ui.editor.masmorra.ferramenta." + tool.id); b.dataset.tool = tool.id;
       if (tool.id === S.tool) b.classList.add("active");
       b.onclick = () => {
         S.tool = tool.id;
@@ -1195,7 +1191,7 @@
       const sel = document.createElement("select");
       sel.id = "hero-spawn-class";
       sel.innerHTML = HERO_SPAWN_META.map(h =>
-        `<option value="${h.id}"${h.id === S.heroSpawnClass ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("");
+        `<option value="${h.id}"${h.id === S.heroSpawnClass ? " selected" : ""}>${h.emoji} ${nomeCat("classe", h.id, h.id)}</option>`).join("");
       sel.onchange = e => { S.heroSpawnClass = e.target.value; renderPanel(); };
       tb.appendChild(sel);
       const hint = document.createElement("small");
@@ -1731,31 +1727,34 @@
   // O item continua sendo salvo pelo mesmo ID; esta camada só agrupa e ordena
   // as opções para facilitar a busca no editor.
   const LOOT_ITEM_GROUPS = [
-    "Armas", "Armaduras", "Escudos", "Venenos", "Arremessáveis",
-    "Instrumentos", "Munições", "Poções e consumíveis", "Anéis e acessórios", "Outros",
+    "armas", "armaduras", "escudos", "venenos", "arremessaveis",
+    "instrumentos", "municoes", "pocoes", "aneis", "outros",
   ];
+  // Normaliza acento fora — assim uma única grafia (sem acento) na lista de
+  // comparação cobre também a variante acentuada gravada em save antigo.
+  function semAcento(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, ""); }
   function lootItemCategory(item) {
     const id = String(item.id || "").toLowerCase();
-    const type = String(item.tipo_item || item.item_type || item.type || "").toLowerCase();
-    const slot = String(item.item_slot || "").toLowerCase();
+    const type = semAcento(String(item.tipo_item || item.item_type || item.type || "").toLowerCase());
+    const slot = semAcento(String(item.item_slot || "").toLowerCase());
     const effect = String(item.effect || "").toLowerCase();
-    if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "Armaduras";
-    if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "Escudos";
-    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "Venenos";
-    if (effect === "throwable" || ["throwable", "arremessavel", "arremessável"].includes(type)) return "Arremessáveis";
-    if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "Instrumentos";
-    if (item.ammo_type || item.ammo_count != null || ["ammo", "municao", "munição"].includes(type)) return "Munições";
-    if (item.die || item.range != null || item.reach || item.throw_range != null || item.categoria || ["weapon", "arma"].includes(type)) return "Armas";
-    if (item.kind === "accessory" || ["ring", "anel", "accessory", "acessorio", "acessório"].includes(type) || ["ring", "item", "accessory", "acessorio", "acessório"].includes(slot)) return "Anéis e acessórios";
-    if (slot === "bag" || effect || type === "consumable" || type === "consumivel" || type === "consumível") return "Poções e consumíveis";
-    return "Outros";
+    if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "armaduras";
+    if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "escudos";
+    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "venenos";
+    if (effect === "throwable" || ["throwable", "arremessavel"].includes(type)) return "arremessaveis";
+    if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "instrumentos";
+    if (item.ammo_type || item.ammo_count != null || ["ammo", "municao"].includes(type)) return "municoes";
+    if (item.die || item.range != null || item.reach || item.throw_range != null || item.categoria || ["weapon", "arma"].includes(type)) return "armas";
+    if (item.kind === "accessory" || ["ring", "anel", "accessory", "acessorio"].includes(type) || ["ring", "item", "accessory", "acessorio"].includes(slot)) return "aneis";
+    if (slot === "bag" || effect || type === "consumable" || type === "consumivel") return "pocoes";
+    return "outros";
   }
   function lootItemSelectHTML(id) {
     const groups = new Map(LOOT_ITEM_GROUPS.map(name => [name, []]));
     for (const item of CAT.items) groups.get(lootItemCategory(item)).push(item);
     return `<select id="${id}">${LOOT_ITEM_GROUPS.map(group => {
       const items = groups.get(group).slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), "pt-BR"));
-      return items.length ? `<optgroup label="${group}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
+      return items.length ? `<optgroup label="${t("ui.editor.masmorra.loot." + group)}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
     }).join("")}</select>`;
   }
   function editorEscapeText(value) {
@@ -1781,7 +1780,7 @@
           </select>
         </label>
         ${curseMode === "especifica" ? `<select data-carta-curse-id data-i="${index}">${opt(curses.map(c => ({ v: c.id, name: c.name || c.nome || c.id })), curseId, o => o.name)}</select>` : ""}
-        ${curseMode === "aleatoria" ? `<select data-carta-curse-category data-i="${index}">${opt(CURSE_CATEGORIES, item.curse_category || "leve", o => o.name)}</select>` : ""}` : ""}
+        ${curseMode === "aleatoria" ? `<select data-carta-curse-category data-i="${index}">${opt(CURSE_CATEGORIES, item.curse_category || "leve", o => t("ui.editor.masmorra.maldicao." + o.v))}</select>` : ""}` : ""}
     </div>`;
   }
   function wireCartaTextFields(root, items, rerender) {
@@ -1837,9 +1836,9 @@
   }
 
   const CURSE_CATEGORIES = [
-    { v: "leve", name: "Leve" },
-    { v: "media", name: "Média" },
-    { v: "grave", name: "Grave" },
+    { v: "leve" },
+    { v: "media" },
+    { v: "grave" },
   ];
   function curseCatalog() { return CAT.curses || []; }
   function curseFieldsHTML(trap, prefix) {
@@ -1858,7 +1857,7 @@
       ${mode === "especifica"
         ? `<select id="${prefix}-curse-id">${opt(curses.map(c => ({ v: c.id, name: c.name })), curseId, o => o.name)}</select>
            <small id="${prefix}-curse-desc" style="display:block;color:#b9a87f">${selected ? (selected.description || "") : ""}</small>`
-        : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => o.name)}</select>
+        : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => t("ui.editor.masmorra.maldicao." + o.v))}</select>
            <small style="display:block;color:#b9a87f">Escolhe uma maldição não progressiva desta gravidade.</small>`}
     </div>`;
   }
@@ -2173,7 +2172,7 @@
       const spawnList = S.heroSpawns.map((s, i) => {
         const h = heroSpawnMeta(s.class_id);
         return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-          <span>${h.emoji} ${h.name} <small>(${s.pos[0]},${s.pos[1]})</small></span>
+          <span>${h.emoji} ${nomeCat("classe", h.id, h.id)} <small>(${s.pos[0]},${s.pos[1]})</small></span>
           <button class="hero-spawn-rm" data-i="${i}">×</button>
         </div>`;
       }).join("") || '<small style="color:#8a7a5a">Nenhuma posição inicial definida.</small>';
@@ -2331,7 +2330,7 @@
       });
     } else if (k === "hero_spawn") {
       const h = heroSpawnMeta(ref.class_id);
-      panel.innerHTML = `<b>${h.emoji} Início: ${h.name}</b>
+      panel.innerHTML = `<b>${h.emoji} Início: ${nomeCat("classe", h.id, h.id)}</b>
         <small>Para trocar de herói, selecione a ferramenta "início herói" e escolha outra classe.</small>`;
     } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
@@ -2551,14 +2550,14 @@
           <label>para a classe</label>
           <select id="f-classe">
             <option value=""${!ref.classe ? " selected" : ""}>todas as classes</option>
-            ${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.classe === h.id ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("")}
+            ${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.classe === h.id ? " selected" : ""}>${h.emoji} ${nomeCat("classe", h.id, h.id)}</option>`).join("")}
           </select>
           <label>ordem na trilha (vazio = sem ordem)</label>
           <input id="f-ordem" type="number" min="1" value="${ref.ordem ?? ""}" style="width:70px">
           <label><input type="checkbox" id="f-tem-tarefa"${tar ? " checked" : ""}> cobra uma tarefa</label>
           ${tar ? `
             <label>tarefa</label>
-            <select id="f-tarefa-tipo">${LICAO_VERBOS.map(o => `<option value="${o.v}"${tar.tipo === o.v ? " selected" : ""}>${o.nome}</option>`).join("")}</select>
+            <select id="f-tarefa-tipo">${LICAO_VERBOS.map(o => `<option value="${o.v}"${tar.tipo === o.v ? " selected" : ""}>${t("ui.editor.masmorra.licao." + o.v)}</option>`).join("")}</select>
             <label>alvo ${ehCasa ? "(casa x,y — vazio = qualquer)" : "(tipo do monstro ou id do item — vazio = qualquer)"}</label>
             <input id="f-tarefa-alvo" value="${ehCasa ? (Array.isArray(tar.alvo) ? tar.alvo.join(",") : "") : (typeof tar.alvo === "string" ? tar.alvo : "")}" placeholder="${ehCasa ? "12,5" : "goblin"}">
             <label>vezes</label><input id="f-tarefa-vezes" type="number" min="1" value="${tar.vezes || 1}" style="width:70px">
@@ -2716,7 +2715,7 @@
         ${!isWall ? `<label style="display:block;margin-top:8px">👁️ visão
           <select id="d-visao">
             <option value=""${!VISAO_NIVEIS.includes(ref.visao) ? " selected" : ""}>padrão do tipo (${decorVisaoPadrao(m)})</option>
-            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${VISAO_ROTULO[v]}</option>`).join("")}
+            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${visaoRotulo(v)}</option>`).join("")}
           </select></label>
           <small style="display:block;color:#8a7a5a">Só muda a visão: ${m.pisavel ? "o objeto continua pisável." : "o objeto continua barrando o passo."}</small>` : ""}
         ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
