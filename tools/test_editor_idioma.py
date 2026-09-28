@@ -59,8 +59,82 @@ def secao_editor_js():
                     src) is not None)
 
 
+# Texto que fica sempre na própria língua (as opções do seletor de idioma).
+HTML_INTENCIONAIS = {"Português", "English"}
+
+
+class _Moldura(HTMLParser):
+    """Texto e atributos de interface do editor.html que ficaram SEM marcador."""
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.pilha = []          # [(tag, attrs)]
+        self.sem_marca = []      # textos pt sem data-i18n no elemento pai
+        self.attr_sem_marca = [] # title/placeholder pt sem data-i18n-title/-ph
+        self.chaves = set()
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        for k in ("data-i18n", "data-i18n-title", "data-i18n-ph"):
+            if a.get(k): self.chaves.add(a[k])
+        for attr, marca in (("title", "data-i18n-title"), ("placeholder", "data-i18n-ph")):
+            v = (a.get(attr) or "").strip()
+            if v and parece_portugues(v) and not a.get(marca):
+                self.attr_sem_marca.append(f"<{tag} {attr}={v!r}>")
+        if tag not in ("input", "meta", "link", "br", "img"):
+            self.pilha.append((tag, a))
+    def handle_endtag(self, tag):
+        while self.pilha:
+            t_, _ = self.pilha.pop()
+            if t_ == tag: break
+    def handle_data(self, data):
+        txt = data.strip()
+        if not txt or not self.pilha: return
+        tag, a = self.pilha[-1]
+        if tag in ("script", "style"): return
+        if txt in HTML_INTENCIONAIS: return
+        if parece_portugues(txt) and not a.get("data-i18n"):
+            self.sem_marca.append(txt)
+
+
+def secao_html():
+    print("\n[2b] editor.html: scripts, seletor e moldura")
+    html = ler("tools", "editor.html")
+    ordem = ["../src/lang/strings.js", "../src/lang/catalogo.js", "../src/lang/composto.js",
+             "../src/lang/interface.js", "../src/lang/editor.js", "../src/i18n.js",
+             "editor_i18n.js", "editor.js"]
+    pos = [html.find('"' + s + '"') for s in ordem]
+    check("carrega idioma → motor → cola → módulos, nessa ordem",
+          all(p >= 0 for p in pos) and pos == sorted(pos))
+    check("seletor de idioma #ed-lang com pt e en",
+          re.search(r'<select id="ed-lang"[^>]*>\s*<option value="pt">Português</option>\s*'
+                    r'<option value="en">English</option>\s*</select>', html) is not None)
+    p = _Moldura(); p.feed(html)
+    check(f"nenhum texto da moldura sem data-i18n ({p.sem_marca[:4]})", not p.sem_marca)
+    check(f"nenhum title/placeholder sem marcador ({p.attr_sem_marca[:3]})", not p.attr_sem_marca)
+    faltam = sorted(k for k in p.chaves if k not in S.LANG_STRINGS)
+    check(f"toda chave data-i18n do editor.html existe ({faltam[:4]})", not faltam)
+
+
+# Arquivos do editor medidos pelo placar. Gerados e testes ficam de fora.
+MODULOS = ["editor.js", "editor_monster_editor.js", "editor_items_editor.js",
+           "editor_items_logic.js", "editor_city.js", "editor_world.js",
+           "editor_bestiary.js", "editor_scenes.js", "editor_campaign.js",
+           "story_upload.js", "editor_preview_3d.js", "editor_story.js"]
+RE_CHAVE_USADA = re.compile(r"""\bt\(\s*['"`](ui\.editor\.[\w.]+)['"`]""")
+
+
+def secao_chaves_usadas():
+    print("\n[3] Chaves ui.editor.* usadas nos módulos existem")
+    usadas = set()
+    for f in MODULOS + ["editor_i18n.js"]:
+        usadas |= set(RE_CHAVE_USADA.findall(ler("tools", f)))
+    faltam = sorted(k for k in usadas if not k.endswith(".") and k not in S.LANG_STRINGS)
+    check(f"toda chave usada existe ({len(usadas)} usadas; faltam {faltam[:4]})", not faltam)
+
+
 if __name__ == "__main__":
     secao_dicionario()
     secao_editor_js()
+    secao_html()
+    secao_chaves_usadas()
     print(f"\n  {PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

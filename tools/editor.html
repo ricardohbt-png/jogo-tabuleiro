@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Editor de Masmorras — Legends for Hire</title>
+<title data-i18n="ui.editor.topo.titulo">Editor de Masmorras — Legends for Hire</title>
 <link rel="stylesheet" href="editor.css?v=20260726-tavern-resize">
 <!-- Sem Three.js aqui de propósito: a prévia da masmorra roda o cliente do jogo
      num iframe (index.html?preview=1), que carrega o seu próprio Three.js. -->
@@ -12,46 +12,52 @@
   <header id="topbar">
     <span class="brand">🗺️ Editor</span>
     <span id="tabs">
-      <button id="tab-masmorra" class="tab active">Masmorra</button>
-      <button id="tab-bestiario" class="tab">Bestiário</button>
-      <button id="tab-editor-monstros" class="tab">Editor de criaturas</button>
-      <button id="tab-editor-itens" class="tab">Editor de itens</button>
-      <button id="tab-cidade" class="tab">Cidade</button>
-      <button id="tab-mapa-mundi" class="tab">Mapa do Mundo</button>
-      <button id="tab-campanha" class="tab">Campanha</button>
-      <button id="tab-cenas" class="tab">Cenas</button>
+      <button id="tab-masmorra" class="tab active" data-i18n="ui.editor.topo.aba.masmorra">Masmorra</button>
+      <button id="tab-bestiario" class="tab" data-i18n="ui.editor.topo.aba.bestiario">Bestiário</button>
+      <button id="tab-editor-monstros" class="tab" data-i18n="ui.editor.topo.aba.editor_monstros">Editor de criaturas</button>
+      <button id="tab-editor-itens" class="tab" data-i18n="ui.editor.topo.aba.editor_itens">Editor de itens</button>
+      <button id="tab-cidade" class="tab" data-i18n="ui.editor.topo.aba.cidade">Cidade</button>
+      <button id="tab-mapa-mundi" class="tab" data-i18n="ui.editor.topo.aba.mapa_mundi">Mapa do Mundo</button>
+      <button id="tab-campanha" class="tab" data-i18n="ui.editor.topo.aba.campanha">Campanha</button>
+      <button id="tab-cenas" class="tab" data-i18n="ui.editor.topo.aba.cenas">Cenas</button>
     </span>
     <span id="dungeon-controls">
       <label>id <input id="m-id" value="nova_masmorra" size="12"></label>
-      <label>nome <input id="m-name" value="Nova Masmorra" size="14"></label>
-      <label>ambiente
+      <label><span data-i18n="ui.editor.topo.nome">nome</span> <input id="m-name" value="Nova Masmorra" size="14"></label>
+      <label><span data-i18n="ui.editor.topo.ambiente">ambiente</span>
         <select id="m-ambiente">
-          <option value="masmorra">Masmorra</option>
-          <option value="penumbra">Penumbra (escuro)</option>
-          <option value="ar_livre">Ar livre (claro)</option>
+          <option value="masmorra" data-i18n="ui.editor.topo.ambiente.masmorra">Masmorra</option>
+          <option value="penumbra" data-i18n="ui.editor.topo.ambiente.penumbra">Penumbra (escuro)</option>
+          <option value="ar_livre" data-i18n="ui.editor.topo.ambiente.ar_livre">Ar livre (claro)</option>
         </select>
       </label>
-      <label title="Se desmarcado, os heróis não podem deixar a masmorra pela escada de entrada">
-        <input type="checkbox" id="m-saida" checked> 🚪 saída pela escada
+      <label title="Se desmarcado, os heróis não podem deixar a masmorra pela escada de entrada" data-i18n-title="ui.editor.topo.saida_escada_dica">
+        <input type="checkbox" id="m-saida" checked> <span data-i18n="ui.editor.topo.saida_escada">🚪 saída pela escada</span>
       </label>
       <label>grid
         <input id="g-w" type="number" min="1" max="60" value="16" style="width:46px">×
         <input id="g-h" type="number" min="1" max="60" value="12" style="width:46px">
       </label>
-      <button id="btn-resize">Aplicar grid</button>
-      <button id="btn-load">Carregar</button>
+      <button id="btn-resize" data-i18n="ui.editor.topo.aplicar_grid">Aplicar grid</button>
+      <button id="btn-load" data-i18n="ui.editor.topo.carregar">Carregar</button>
       <input id="file-input" type="file" accept="application/json,.json" hidden>
-      <button id="btn-save">Salvar</button>
-      <button id="btn-preview-3d" title="Visualiza a masmorra atual sem salvar">◈ Visualizar em 3D</button>
-      <button id="btn-test-dungeon" title="Abre uma sessão temporária para testar monstros e habilidades">🧪 Testar como Mestre</button>
+      <button id="btn-save" data-i18n="ui.editor.topo.salvar">Salvar</button>
+      <button id="btn-preview-3d" title="Visualiza a masmorra atual sem salvar" data-i18n="ui.editor.topo.visualizar_3d" data-i18n-title="ui.editor.topo.visualizar_3d_dica">◈ Visualizar em 3D</button>
+      <button id="btn-test-dungeon" title="Abre uma sessão temporária para testar monstros e habilidades" data-i18n="ui.editor.topo.testar_mestre" data-i18n-title="ui.editor.topo.testar_mestre_dica">🧪 Testar como Mestre</button>
     </span>
     <span id="campaign-controls" style="display:none"></span>
+    <label id="ed-lang-wrap" title="Idioma" data-i18n-title="ui.editor.topo.idioma">🌐
+      <select id="ed-lang">
+        <option value="pt">Português</option>
+        <option value="en">English</option>
+      </select>
+    </label>
   </header>
 
   <div id="toolbar"></div>
   <main id="workspace">
     <div id="canvas-wrap"><canvas id="board" width="448" height="336"></canvas></div>
-    <aside id="panel"><em>Selecione uma ferramenta e desenhe.</em></aside>
+    <aside id="panel"><em data-i18n="ui.editor.topo.painel_vazio">Selecione uma ferramenta e desenhe.</em></aside>
   </main>
 
   <div id="campaign-view" style="display:none"></div>
@@ -62,9 +68,9 @@
   <div id="world-editor-view" style="display:none"></div>
   <div id="scenes-editor-view" style="display:none"></div>
 
-  <footer id="statusbar"><span id="cursor-coords" title="Casa sob o cursor: (x = coluna, y = linha), contando de 0 no canto superior esquerdo"></span><span id="status"></span></footer>
+  <footer id="statusbar"><span id="cursor-coords" title="Casa sob o cursor: (x = coluna, y = linha), contando de 0 no canto superior esquerdo" data-i18n-title="ui.editor.topo.coordenadas_dica"></span><span id="status"></span></footer>
 
   <!-- Cache-buster (espelha index.html): evita JS/catálogo do editor servido em cache antigo. -->
-  <script>(function(){var v=Date.now();var s=["../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_preview_3d.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js","editor_scenes.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
+  <script>(function(){var v=Date.now();var s=["../src/lang/strings.js","../src/lang/catalogo.js","../src/lang/composto.js","../src/lang/interface.js","../src/lang/editor.js","../src/i18n.js","editor_i18n.js","../src/difficulty.js","editor_items_logic.js","editor_items_custom.js","editor_catalog.js","editor_monsters_custom.js","editor_dungeons.js","editor.js","editor_preview_3d.js","editor_bestiary.js","editor_monster_editor.js","story_upload.js","editor_story.js","editor_campaign.js","editor_items_editor.js","editor_city.js","editor_world.js","editor_scenes.js"];for(var i=0;i<s.length;i++)document.write('<script src="'+s[i]+'?v='+v+'"><\/script>');})();</script>
 </body>
 </html>

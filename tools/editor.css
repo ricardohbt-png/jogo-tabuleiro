@@ -234,3 +234,5 @@ button.active { background:#d9b061; color:#1d1812; border-color:#d9b061; }
 .trap-overrides label{margin-top:5px}
 .trap-overrides small{display:block;color:#9f927b;font-size:10px;margin-top:3px}
 @media(max-width:900px){.trap-characteristics.compact{display:block;max-width:none;margin:6px 0 0}}
+
+#ed-lang-wrap { margin-left: auto; white-space: nowrap; }
