@@ -47,7 +47,20 @@ def secao_dicionario():
     check(f"paridade de {{parâmetros}} pt×en ({ruins[:3]})", not ruins)
 
 
+def secao_editor_js():
+    print("\n[2a] editor.js lembra a aba atual para o redesenho")
+    src = ler("tools", "editor.js")
+    i = src.index("function setTab(tab) {")
+    corpo = src[i:i + 200]
+    check("setTab grava window._abaAtualEditor logo no início",
+          "window._abaAtualEditor = tab;" in corpo)
+    check("aba inicial registrada junto do window.setTab",
+          re.search(r"window\.setTab = setTab;\s*\n\s*window\._abaAtualEditor = window\._abaAtualEditor \|\| \"masmorra\";",
+                    src) is not None)
+
+
 if __name__ == "__main__":
     secao_dicionario()
+    secao_editor_js()
     print(f"\n  {PASS} passaram, {FAIL} falharam")
     sys.exit(1 if FAIL else 0)

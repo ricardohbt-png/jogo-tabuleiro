@@ -3783,6 +3783,7 @@
   };
 
   function setTab(tab) {
+    window._abaAtualEditor = tab;   // trocarIdioma (editor_i18n.js) redesenha esta aba
     const dung = tab === "masmorra";
     const bestiary = tab === "bestiario";
     const monsterEditor = tab === "editor_monstros";
@@ -3819,6 +3820,7 @@
     else if (scenesEditor && window.EDITOR_SCENES) window.EDITOR_SCENES.load();
   }
   window.setTab = setTab;
+  window._abaAtualEditor = window._abaAtualEditor || "masmorra";
   document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
   document.getElementById("tab-bestiario").onclick = () => setTab("bestiario");
   document.getElementById("tab-editor-monstros").onclick = () => setTab("editor_monstros");
