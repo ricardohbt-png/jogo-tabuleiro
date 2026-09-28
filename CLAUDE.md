@@ -2976,3 +2976,24 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `movimento_agua_sem_penalidade` marca `ignora_penalidade_agua`; servidor e previsão
 > do cliente cobram custo normal em Água e Água Profunda. O ID não ativa a imunidade
 > separada a redemoinhos (`_ignora_rodamoinho`).
+
+> **Editor em inglês — Fase 0 (infraestrutura, 2026-09-28):** o editor (`tools/editor.html`)
+> carrega o motor de idioma do jogo (`src/lang/*.js` + `src/i18n.js`) e a cola
+> **`tools/editor_i18n.js`**: `t()` global, `nomeCat(família, id, padrão)` (nome de catálogo
+> pelo id; sem chave → nome do autor), `data-i18n`/`-title`/`-ph` na moldura, idioma em
+> `localStorage["lfh_lang"]` (a MESMA chave do jogo — só compartilha se o editor for aberto pelo
+> servidor, não por `file://`) e `trocarIdioma`, que reaplica a moldura e chama
+> `setTab(window._abaAtualEditor, true)`. O 2º argumento (`soRedesenhar`) faz a aba Cenas
+> redesenhar sem recarregar do servidor e chama o `sincronizar()` dos editores de Criaturas e
+> Itens antes do `render()` — eles guardam texto digitado só no DOM até salvar, e o redesenho o
+> apagaria. **Aba nova com formulário que só lê os campos ao salvar precisa de um
+> `sincronizar()` do mesmo jeito.** Seletor 🌐 `#ed-lang` na barra. Dicionário à mão
+> **`src/lang/editor.js`** (`ui.editor.<aba>.<slug>`; moldura em `ui.editor.topo.*`). Rótulo
+> com campo dentro leva o texto num `<span data-i18n>` (há checagem de `data-i18n` com filhos).
+> Texto que o código troca em runtime também usa `t()` (o botão "Testar como Mestre").
+> **Placar:** `tools/test_editor_idioma.py` ([4] por arquivo/função, `FECHADAS` cobradas —
+> hoje 1.204 textos; [5] `t` local que sombreia o global — renomeie antes de migrar o arquivo).
+> Cola testada em `tools/test_editor_i18n.js`. Próximas fases, uma aba por vez: Masmorra (a
+> barra de ferramentas é montada uma vez por `buildToolbar()` e precisa ser remontada na troca)
+> → Criaturas → Itens → Cidade → pequenas; por último as mensagens do servidor ao editor.
+> Spec/plano em `docs/superpowers/{specs,plans}/2026-09-28-editor-em-ingles*`.

@@ -3743,7 +3743,7 @@
     // Abre durante o gesto de clique; abrir só depois do await é bloqueado como
     // popup pela maioria dos navegadores.
     const abaTeste = window.open("about:blank", "_blank");
-    const btn = document.getElementById("btn-test-dungeon"); btn.disabled = true; btn.textContent = "🧪 Abrindo teste…";
+    const btn = document.getElementById("btn-test-dungeon"); btn.disabled = true; btn.textContent = t("ui.editor.topo.abrindo_teste");
     try {
       const test = await window.EDITOR_SAVE.createTestDungeon(buildJSON());
       // Mesmo motivo da prévia: em file:// o cliente não consegue baixar .glb
@@ -3757,7 +3757,7 @@
       if (abaTeste) abaTeste.close();
       alert("Não foi possível iniciar o teste: " + err.message);
     }
-    finally { btn.disabled = false; btn.textContent = "🧪 Testar como Mestre"; }
+    finally { btn.disabled = false; btn.textContent = t("ui.editor.topo.testar_mestre"); }
   };
   document.getElementById("btn-load").onclick = () => document.getElementById("file-input").click();
   document.getElementById("file-input").onchange = (ev) => {
@@ -3782,7 +3782,8 @@
     render();
   };
 
-  function setTab(tab) {
+  function setTab(tab, soRedesenhar) {
+    window._abaAtualEditor = tab;   // trocarIdioma (editor_i18n.js) redesenha esta aba
     const dung = tab === "masmorra";
     const bestiary = tab === "bestiario";
     const monsterEditor = tab === "editor_monstros";
@@ -3811,14 +3812,35 @@
     document.getElementById("tab-cenas").classList.toggle("active", scenesEditor);
     if (dung) { render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
-    else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
-    else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) window.EDITOR_ITEMS_EDITOR.render();
+    else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) {
+      // soRedesenhar (troca de idioma) NÃO pode descartar rascunho não
+      // sincronizado: render() reconstrói o form via innerHTML a partir de
+      // `draft`, então texto digitado e ainda não sincronizado sumiria. Um
+      // sincronizar() com defeito não pode derrubar a troca de idioma —
+      // isola o erro e segue para o render() mesmo assim.
+      if (soRedesenhar && window.EDITOR_MONSTER_EDITOR.sincronizar) {
+        try { window.EDITOR_MONSTER_EDITOR.sincronizar(); }
+        catch (e) { console.error("[editor-idioma] sincronizar falhou:", e); }
+      }
+      window.EDITOR_MONSTER_EDITOR.render();
+    }
+    else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) {
+      if (soRedesenhar && window.EDITOR_ITEMS_EDITOR.sincronizar) {
+        try { window.EDITOR_ITEMS_EDITOR.sincronizar(); }
+        catch (e) { console.error("[editor-idioma] sincronizar falhou:", e); }
+      }
+      window.EDITOR_ITEMS_EDITOR.render();
+    }
     else if (cityEditor && window.EDITOR_CITY) window.EDITOR_CITY.render();
     else if (worldEditor && window.EDITOR_WORLD) window.EDITOR_WORLD.render();
     else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
-    else if (scenesEditor && window.EDITOR_SCENES) window.EDITOR_SCENES.load();
+    else if (scenesEditor && window.EDITOR_SCENES) {
+      if (soRedesenhar) window.EDITOR_SCENES.render();
+      else window.EDITOR_SCENES.load();
+    }
   }
   window.setTab = setTab;
+  window._abaAtualEditor = window._abaAtualEditor || "masmorra";
   document.getElementById("tab-masmorra").onclick = () => setTab("masmorra");
   document.getElementById("tab-bestiario").onclick = () => setTab("bestiario");
   document.getElementById("tab-editor-monstros").onclick = () => setTab("editor_monstros");

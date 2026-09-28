@@ -962,5 +962,18 @@
     };
     updateCalculated();
   }
-  window.EDITOR_MONSTER_EDITOR = { render };
+  // Sincroniza `draft` com os campos que o usuário digitou mas ainda não
+  // dispararam um onchange específico (a maioria dos campos de texto só
+  // atualiza `draft` em pontos avulsos — ver os `draft = read()` espalhados
+  // pelo arquivo; texto ainda "solto" no DOM não está lá). Chamada pelo
+  // editor.js ANTES de um render() disparado por troca de idioma
+  // (setTab(tab, true)): sem isso, o innerHTML novo apagaria o que estava
+  // sendo digitado. Guarda pela presença de "me-name" — 1º campo que read()
+  // lê sem checagem de nulo; sua ausência significa que este sub-editor não
+  // está montado agora (outra aba do editor de masmorras está ativa).
+  function sincronizar() {
+    if (!document.getElementById("me-name")) return;
+    draft = read();
+  }
+  window.EDITOR_MONSTER_EDITOR = { render, sincronizar };
 })();
