@@ -39,7 +39,8 @@ for (const f of ["strings", "catalogo", "composto", "interface", "erros", "narra
   eval(fs.readFileSync(path.join(raiz, "src", "lang", f + ".js"), "utf8"));
 eval(fs.readFileSync(path.join(raiz, "src", "i18n.js"), "utf8"));
 let abaRedesenhada = null;
-window.setTab = tab => { abaRedesenhada = tab; };
+let abaRedesenhadaSoRedesenhar = null;
+window.setTab = (tab, soRedesenhar) => { abaRedesenhada = tab; abaRedesenhadaSoRedesenhar = soRedesenhar; };
 eval(fs.readFileSync(path.join(raiz, "tools", "editor_i18n.js"), "utf8"));
 
 console.log("\n[1] Início: lê o idioma do jogo e aplica a moldura");
@@ -62,6 +63,7 @@ check("troca o idioma", window.I18N.lang === "pt");
 check("grava lfh_lang", loja["lfh_lang"] === "pt");
 check("reaplica a moldura", ELS.aba.textContent === "Cidade");
 check("redesenha a aba ativa", abaRedesenhada === "cidade");
+check("redesenha sem recarregar do servidor (soRedesenhar=true)", abaRedesenhadaSoRedesenhar === true);
 check("atualiza lang do documento", document.documentElement.lang === "pt-BR");
 window.EDITOR_I18N.trocarIdioma("en");
 check("volta ao inglês", ELS.aba.textContent === "City" && document.documentElement.lang === "en");

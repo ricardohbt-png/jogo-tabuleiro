@@ -5,6 +5,7 @@ Roda da raiz:  python -X utf8 tools/test_editor_idioma.py
 Seções:
   [1] dicionário src/lang/editor.js (carrega no servidor, tem en, paridade de {params})
   [2] editor.html: ordem dos scripts, seletor, moldura marcada com data-i18n
+      (inclui: nenhum data-i18n com filho elemento — textContent o apagaria)
   [3] chaves ui.editor.* usadas nos tools/*.js e no editor.html existem
   [4] placar por arquivo/função (relata) + FECHADAS (cobra)
   [5] `t` sombreado: relata por arquivo, cobra nos FECHADOS
@@ -50,7 +51,7 @@ def secao_dicionario():
 def secao_editor_js():
     print("\n[2a] editor.js lembra a aba atual para o redesenho")
     src = ler("tools", "editor.js")
-    i = src.index("function setTab(tab) {")
+    i = src.index("function setTab(tab, soRedesenhar) {")
     corpo = src[i:i + 200]
     check("setTab grava window._abaAtualEditor logo no início",
           "window._abaAtualEditor = tab;" in corpo)
@@ -63,6 +64,9 @@ def secao_editor_js():
 HTML_INTENCIONAIS = {"Português", "English"}
 
 
+VOID_TAGS = ("input", "meta", "link", "br", "img", "source", "hr", "wbr")
+
+
 class _Moldura(HTMLParser):
     """Texto e atributos de interface do editor.html que ficaram SEM marcador."""
     def __init__(self):
@@ -71,6 +75,10 @@ class _Moldura(HTMLParser):
         self.sem_marca = []      # textos pt sem data-i18n no elemento pai
         self.attr_sem_marca = [] # title/placeholder pt sem data-i18n-title/-ph
         self.chaves = set()
+        # data-i18n troca o TEXTO inteiro do elemento (textContent) — qualquer
+        # filho elemento (não texto) que estivesse dentro seria apagado ao
+        # trocar de idioma. Registra o filho ofensor com a tag-mãe marcada.
+        self.filho_em_data_i18n = []
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
         for k in ("data-i18n", "data-i18n-title", "data-i18n-ph"):
@@ -79,7 +87,12 @@ class _Moldura(HTMLParser):
             v = (a.get(attr) or "").strip()
             if v and parece_portugues(v) and not a.get(marca):
                 self.attr_sem_marca.append(f"<{tag} {attr}={v!r}>")
-        if tag not in ("input", "meta", "link", "br", "img"):
+        if self.pilha:
+            pai_tag, pai_a = self.pilha[-1]
+            if pai_a.get("data-i18n"):
+                self.filho_em_data_i18n.append(
+                    f"<{pai_tag} data-i18n={pai_a['data-i18n']!r}> contém <{tag}>")
+        if tag not in VOID_TAGS:
             self.pilha.append((tag, a))
     def handle_endtag(self, tag):
         while self.pilha:
@@ -112,6 +125,8 @@ def secao_html():
     check(f"nenhum title/placeholder sem marcador ({p.attr_sem_marca[:3]})", not p.attr_sem_marca)
     faltam = sorted(k for k in p.chaves if k not in S.LANG_STRINGS)
     check(f"toda chave data-i18n do editor.html existe ({faltam[:4]})", not faltam)
+    check(f"nenhum elemento com data-i18n tem filhos ({p.filho_em_data_i18n[:4]})",
+          not p.filho_em_data_i18n)
 
 
 # Arquivos do editor medidos pelo placar. Gerados e testes ficam de fora.
@@ -131,12 +146,16 @@ def secao_chaves_usadas():
     check(f"toda chave usada existe ({len(usadas)} usadas; faltam {faltam[:4]})", not faltam)
 
 
-# Funções de "topo" dos módulos do editor: os módulos são IIFEs, então o topo
-# fica a 2 espaços (`  function x(` / `  const x = (…) =>`). Arquivos sem IIFE
-# (story_upload.js, editor_story.js) têm topo na coluna 0 — o 2º ramo cobre.
+# Dono do texto de topo dos módulos do editor: os módulos são IIFEs, então o
+# topo fica a 2 espaços (`  function x(` / `  const X = …`); a indentação
+# opcional cobre os dois casos — nunca há arquivo com IIFE na coluna 0 e outro
+# sem ela na coluna 2, é a mesma regra pros dois níveis onde um módulo pode
+# começar. Qualquer `const|let|var NOME =` de topo vira dono — não só função
+# nem só função/arrow —, senão dado de módulo (ex.: um mapa `HERO_SPAWN_META`)
+# ficava contado sob a função anterior em vez de sob si mesmo.
 RE_FN_ED = re.compile(
     r"^(?:  )?(?:async\s+)?function\s+(\w+)"
-    r"|^(?:  )?(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:function\b|\(?[\w,\s]*\)?\s*=>)")
+    r"|^(?:  )?(?:const|let|var)\s+(\w+)\s*=")
 
 # Arquivos (ou "arquivo:função") já traduzidos: o placar COBRA zero neles. Cada
 # fase acrescenta os seus ao fechar. Fase 0 não fecha módulo nenhum — a moldura
@@ -147,7 +166,9 @@ FECHADAS = set()
 # vira TypeError em runtime. Renomeie o local antes de migrar o arquivo.
 RE_T_SOMBREADO = re.compile(
     r"\b(?:const|let|var)\s+t\s*[=,;]"      # const t = …
+    r"|\b(?:const|let|var)\s+t\s+(?:of|in)\b"  # for (const t of …) / for (let t in …)
     r"|\(\s*t\s*[,)]"                       # (t) => / function (t, …)
+    r"|,\s*t\s*[,)]"                        # (next, t) => / function f(a, t)
     r"|(?<![\w$.])t\s*=>")                  # t => …
 
 

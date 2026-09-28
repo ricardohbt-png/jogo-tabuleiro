@@ -18,7 +18,9 @@
 //   tem sua PRÓPRIA origem (null), então localStorage é isolado e não
 //   compartilha nada com o jogo.
 // • trocarIdioma: reaplica a moldura (data-i18n) e redesenha a aba ativa por
-//   setTab(abaAtual), que reconstrói a aba a partir do estado do módulo.
+//   setTab(abaAtual, true), que reconstrói a aba a partir do estado do módulo
+//   sem recarregar dados do servidor (o 2º parâmetro evita, p.ex., que a aba
+//   Cenas descarte edições não salvas ao só trocar de idioma).
 (function () {
   const CHAVE = "lfh_lang";
   const LANG_HTML = { pt: "pt-BR", en: "en" };
@@ -60,7 +62,7 @@
     aplicar(document);
     sincronizar();
     if (typeof window.setTab === "function" && window._abaAtualEditor)
-      window.setTab(window._abaAtualEditor);
+      window.setTab(window._abaAtualEditor, true);
   }
 
   function iniciar() {

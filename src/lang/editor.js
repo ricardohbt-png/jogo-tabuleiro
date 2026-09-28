@@ -100,6 +100,10 @@ window.LANG_EDITOR = {
     "en": "🧪 Test as Game Master",
     "pt": "🧪 Testar como Mestre"
   },
+  "ui.editor.topo.abrindo_teste": {
+    "en": "🧪 Opening test…",
+    "pt": "🧪 Abrindo teste…"
+  },
   "ui.editor.topo.testar_mestre_dica": {
     "en": "Opens a temporary session to test monsters and abilities",
     "pt": "Abre uma sessão temporária para testar monstros e habilidades"
