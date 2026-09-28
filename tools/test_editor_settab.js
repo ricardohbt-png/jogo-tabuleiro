@@ -50,6 +50,7 @@ global.document = { getElementById: id => ELS[id] || elStub() };
 // livres no escopo em que o eval() roda, não em window/document.
 function render() { calls.push("render()"); }
 function renderPanel() { calls.push("renderPanel()"); }
+function buildToolbar() { calls.push("buildToolbar()"); }
 
 function novosModulos() {
   window.EDITOR_SCENES = {
@@ -142,6 +143,28 @@ setTab("cidade");
 check("aba 'cidade' gravada", window._abaAtualEditor === "cidade");
 setTab("mapa_mundi", true);
 check("aba 'mapa_mundi' gravada mesmo com soRedesenhar", window._abaAtualEditor === "mapa_mundi");
+
+// ── (h) setTab('masmorra', true) remonta a barra de ferramentas ANTES de
+//        render()/renderPanel() (troca de idioma: buildToolbar lê t() de novo) ──
+calls = [];
+setTab("masmorra", true);
+console.log("\n[h1] setTab('masmorra', true)");
+check("chamou buildToolbar", calls.includes("buildToolbar()"));
+check("chamou render", calls.includes("render()"));
+check("chamou renderPanel", calls.includes("renderPanel()"));
+check("buildToolbar veio antes de render",
+      calls.indexOf("buildToolbar()") < calls.indexOf("render()"));
+check("buildToolbar veio antes de renderPanel",
+      calls.indexOf("buildToolbar()") < calls.indexOf("renderPanel()"));
+
+// ── (i) setTab('masmorra') sem soRedesenhar NÃO remonta a barra (comportamento
+//        de hoje: troca de aba comum não precisa reconstruir os botões) ──────
+calls = [];
+setTab("masmorra");
+console.log("\n[i] setTab('masmorra') sem soRedesenhar");
+check("NÃO chamou buildToolbar", !calls.includes("buildToolbar()"));
+check("chamou render", calls.includes("render()"));
+check("chamou renderPanel", calls.includes("renderPanel()"));
 
 console.log(`\n  ${PASS} passaram, ${FAIL} falharam`);
 process.exit(FAIL ? 1 : 0);

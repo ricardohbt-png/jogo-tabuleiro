@@ -1195,7 +1195,7 @@
       sel.onchange = e => { S.heroSpawnClass = e.target.value; renderPanel(); };
       tb.appendChild(sel);
       const hint = document.createElement("small");
-      hint.textContent = "Clique no mapa para posicionar ou mover este herói.";
+      hint.textContent = t("ui.editor.masmorra.barra.hint_heroi");
       hint.style.color = "#b9a87f";
       hint.style.marginLeft = "6px";
       tb.appendChild(hint);
@@ -1204,7 +1204,7 @@
       const trapSelect = document.createElement("select");
       trapSelect.id = "trap-type-tool";
       trapSelect.innerHTML = CAT.traps.filter(tr => !tr.apenas_objeto).map(tr =>
-        `<option value="${tr.tipo}"${tr.tipo === S.trapType ? " selected" : ""}>${tr.icone || "⚠️"} ${tr.nome}</option>`).join("");
+        `<option value="${tr.tipo}"${tr.tipo === S.trapType ? " selected" : ""}>${tr.icone || "⚠️"} ${nomeCat("armadilha", tr.tipo, tr.nome)}</option>`).join("");
       trapSelect.onchange = e => {
         S.trapType = e.target.value;
         const info = document.getElementById("trap-tool-info");
@@ -1221,32 +1221,32 @@
       sel.id = "decor-type";
       const floor = CAT.decorations.filter(d => d.special !== "wall");
       const walls = CAT.decorations.filter(d => d.special === "wall");
-      sel.innerHTML = `<optgroup label="Decorações de chão">${floor.map(d =>
-        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup><optgroup label="Decorações de parede">${walls.map(d =>
-        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup>`;
+      sel.innerHTML = `<optgroup label="${t("ui.editor.masmorra.barra.decor_chao")}">${floor.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup><optgroup label="${t("ui.editor.masmorra.barra.decor_parede")}">${walls.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup>`;
       sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
       tb.appendChild(sel);
       const rot = document.createElement("button");
-      rot.textContent = "girar 90° (R)";
+      rot.textContent = t("ui.editor.masmorra.barra.girar_90");
       rot.onclick = () => { rotateDecorPending(); };
       tb.appendChild(rot);
       const brush = document.createElement("button");
-      brush.textContent = decorBrushActive ? "🖌️ pincel de área ativo" : "🖌️ usar cópia como pincel";
+      brush.textContent = decorBrushActive ? t("ui.editor.masmorra.barra.pincel_ativo") : t("ui.editor.masmorra.barra.pincel_usar");
       brush.disabled = !decorClipboard && !(S.sel && S.sel.kind === "decor");
-      brush.title = "Com o pincel ativo, arraste no mapa para preencher a área com cópias.";
+      brush.title = t("ui.editor.masmorra.barra.pincel_title");
       brush.onclick = () => { activateDecorBrush(); };
       tb.appendChild(brush);
       if (decorBrushActive) {
         const hint = document.createElement("small");
-        hint.textContent = "Arraste para preencher; casas inválidas são ignoradas.";
+        hint.textContent = t("ui.editor.masmorra.barra.arraste_preencher");
         hint.style.color = "#b9a87f";
         tb.appendChild(hint);
       }
     }
     if (S.sel && S.sel.kind === "door") {
       const rot = document.createElement("button");
-      rot.textContent = "↻ porta 90° (R)";
-      rot.title = "Girar a imagem da porta selecionada";
+      rot.textContent = t("ui.editor.masmorra.barra.porta_girar");
+      rot.title = t("ui.editor.masmorra.barra.porta_girar_title");
       rot.onclick = rotateDoorSelected;
       tb.appendChild(rot);
     }
@@ -1259,12 +1259,12 @@
       const sel = document.createElement("select");
       sel.id = "mat-id";
       sel.innerHTML = opts.map(m =>
-        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}${Number(m.custo_mov) > 1 ? ` (−${Number(m.custo_mov) - 1} movimento)` : ""}</option>`).join("");
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}${Number(m.custo_mov) > 1 ? t("ui.editor.masmorra.barra.movimento_penalidade", { n: Number(m.custo_mov) - 1 }) : ""}</option>`).join("");
       sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
       tb.appendChild(sel);
       const fill = document.createElement("button");
-      fill.textContent = S.matFill ? "balde: ON" : "balde: OFF";
-      fill.title = "Preenche a região contígua de mesma estrutura";
+      fill.textContent = S.matFill ? t("ui.editor.masmorra.barra.balde_on") : t("ui.editor.masmorra.barra.balde_off");
+      fill.title = t("ui.editor.masmorra.barra.balde_title");
       fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
       tb.appendChild(fill);
     }
@@ -1274,40 +1274,41 @@
       // Gerado a partir do intervalo, não escrito à mão: mexer em ELEVACAO_MIN/MAX
       // passa a bastar. Os rótulos nomeiam só os degraus baixos, que são os que
       // o autor distingue de olho; daí para cima o número já diz tudo.
-      const NOME_NIVEL = { "-1": "depressão", 0: "nivelar", 1: "elevado", 2: "muito elevado" };
+      const NOME_NIVEL_CHAVE = { "-1": "depressao", 0: "nivelar", 1: "elevado", 2: "muito_elevado" };
       const niveis = [];
       for (let n = ELEVACAO_MAX; n >= ELEVACAO_MIN; n--) niveis.push(n);
       level.innerHTML = niveis.map(n => {
         const sinal = n > 0 ? "+" + n : (n < 0 ? "−" + Math.abs(n) : "0");
-        const nome = NOME_NIVEL[n];
-        return `<option value="${n}"${n === Number(S.elevacaoValor) ? " selected" : ""}>${sinal} · ${nome || "nível " + n}</option>`;
+        const chaveNivel = NOME_NIVEL_CHAVE[n];
+        const nome = chaveNivel ? t("ui.editor.masmorra.barra.nivel." + chaveNivel) : "";
+        return `<option value="${n}"${n === Number(S.elevacaoValor) ? " selected" : ""}>${sinal} · ${nome || t("ui.editor.masmorra.barra.nivel_generico", { n })}</option>`;
       }).join("");
       level.onchange = e => { S.elevacaoValor = Number(e.target.value); render(); };
       tb.appendChild(level);
       const transition = document.createElement("select");
       transition.id = "terrain-height-transition";
-      transition.title = "Escolhe a aparência das transições entre níveis diferentes";
-      transition.innerHTML = `<option value="rampa"${S.transicaoAltura === "rampa" ? " selected" : ""}>transição: rampa</option><option value="declive"${S.transicaoAltura === "declive" ? " selected" : ""}>transição: declive</option>`;
+      transition.title = t("ui.editor.masmorra.barra.transicao_title");
+      transition.innerHTML = `<option value="rampa"${S.transicaoAltura === "rampa" ? " selected" : ""}>${t("ui.editor.masmorra.barra.transicao_rampa")}</option><option value="declive"${S.transicaoAltura === "declive" ? " selected" : ""}>${t("ui.editor.masmorra.barra.transicao_declive")}</option>`;
       transition.onchange = e => { S.transicaoAltura = e.target.value === "declive" ? "declive" : "rampa"; render(); };
       tb.appendChild(transition);
       const hint = document.createElement("small");
-      hint.textContent = "Clique e arraste no chão; a altura é apenas visual nesta fase.";
+      hint.textContent = t("ui.editor.masmorra.barra.altura_hint");
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
     if (S.tool === "ponte") {
       const width = document.createElement("select");
       width.id = "bridge-width";
-      width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>largura: ${n} quadrado${n > 1 ? "s" : ""}</option>`).join("");
+      width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>${t(n > 1 ? "ui.editor.masmorra.barra.ponte_largura_plural" : "ui.editor.masmorra.barra.ponte_largura_singular", { n })}</option>`).join("");
       width.onchange = e => { S.ponteLargura = Math.max(1, Math.min(3, Number(e.target.value) | 0)); render(); };
       tb.appendChild(width);
       const material = document.createElement("select");
       material.id = "bridge-material";
-      material.innerHTML = `<option value="madeira"${S.ponteMaterial === "madeira" ? " selected" : ""}>material: madeira</option><option value="pedra_rustica"${S.ponteMaterial === "pedra_rustica" ? " selected" : ""}>material: pedra rústica</option>`;
+      material.innerHTML = `<option value="madeira"${S.ponteMaterial === "madeira" ? " selected" : ""}>${t("ui.editor.masmorra.barra.ponte_material_madeira")}</option><option value="pedra_rustica"${S.ponteMaterial === "pedra_rustica" ? " selected" : ""}>${t("ui.editor.masmorra.barra.ponte_material_pedra")}</option>`;
       material.onchange = e => { S.ponteMaterial = e.target.value === "pedra_rustica" ? "pedra_rustica" : "madeira"; render(); };
       tb.appendChild(material);
       const hint = document.createElement("small");
-      hint.textContent = "Arraste entre pontos da mesma altura; a ponte não altera o terreno abaixo.";
+      hint.textContent = t("ui.editor.masmorra.barra.ponte_hint");
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
@@ -3809,7 +3810,7 @@
     document.getElementById("tab-mapa-mundi").classList.toggle("active", worldEditor);
     document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
     document.getElementById("tab-cenas").classList.toggle("active", scenesEditor);
-    if (dung) { render(); renderPanel(); }
+    if (dung) { if (soRedesenhar) buildToolbar(); render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) {
       // soRedesenhar (troca de idioma) NÃO pode descartar rascunho não

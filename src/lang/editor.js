@@ -327,6 +327,118 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.maldicao.grave": {
     "en": "Severe",
     "pt": "Grave"
+  },
+  "ui.editor.masmorra.barra.hint_heroi": {
+    "en": "Click the map to place or move this hero.",
+    "pt": "Clique no mapa para posicionar ou mover este herói."
+  },
+  "ui.editor.masmorra.barra.decor_chao": {
+    "en": "Floor decorations",
+    "pt": "Decorações de chão"
+  },
+  "ui.editor.masmorra.barra.decor_parede": {
+    "en": "Wall decorations",
+    "pt": "Decorações de parede"
+  },
+  "ui.editor.masmorra.barra.girar_90": {
+    "en": "rotate 90° (R)",
+    "pt": "girar 90° (R)"
+  },
+  "ui.editor.masmorra.barra.pincel_ativo": {
+    "en": "🖌️ area brush active",
+    "pt": "🖌️ pincel de área ativo"
+  },
+  "ui.editor.masmorra.barra.pincel_usar": {
+    "en": "🖌️ use copy as brush",
+    "pt": "🖌️ usar cópia como pincel"
+  },
+  "ui.editor.masmorra.barra.pincel_title": {
+    "en": "With the brush active, drag on the map to fill the area with copies.",
+    "pt": "Com o pincel ativo, arraste no mapa para preencher a área com cópias."
+  },
+  "ui.editor.masmorra.barra.arraste_preencher": {
+    "en": "Drag to fill; invalid squares are ignored.",
+    "pt": "Arraste para preencher; casas inválidas são ignoradas."
+  },
+  "ui.editor.masmorra.barra.porta_girar": {
+    "en": "↻ door 90° (R)",
+    "pt": "↻ porta 90° (R)"
+  },
+  "ui.editor.masmorra.barra.porta_girar_title": {
+    "en": "Rotate the selected door's image",
+    "pt": "Girar a imagem da porta selecionada"
+  },
+  "ui.editor.masmorra.barra.movimento_penalidade": {
+    "en": " (−{n} movement)",
+    "pt": " (−{n} movimento)"
+  },
+  "ui.editor.masmorra.barra.balde_on": {
+    "en": "bucket: ON",
+    "pt": "balde: ON"
+  },
+  "ui.editor.masmorra.barra.balde_off": {
+    "en": "bucket: OFF",
+    "pt": "balde: OFF"
+  },
+  "ui.editor.masmorra.barra.balde_title": {
+    "en": "Fills the contiguous region of the same structure",
+    "pt": "Preenche a região contígua de mesma estrutura"
+  },
+  "ui.editor.masmorra.barra.nivel.depressao": {
+    "en": "depression",
+    "pt": "depressão"
+  },
+  "ui.editor.masmorra.barra.nivel.nivelar": {
+    "en": "level out",
+    "pt": "nivelar"
+  },
+  "ui.editor.masmorra.barra.nivel.elevado": {
+    "en": "raised",
+    "pt": "elevado"
+  },
+  "ui.editor.masmorra.barra.nivel.muito_elevado": {
+    "en": "very raised",
+    "pt": "muito elevado"
+  },
+  "ui.editor.masmorra.barra.nivel_generico": {
+    "en": "level {n}",
+    "pt": "nível {n}"
+  },
+  "ui.editor.masmorra.barra.transicao_title": {
+    "en": "Chooses the appearance of transitions between different levels",
+    "pt": "Escolhe a aparência das transições entre níveis diferentes"
+  },
+  "ui.editor.masmorra.barra.transicao_rampa": {
+    "en": "transition: ramp",
+    "pt": "transição: rampa"
+  },
+  "ui.editor.masmorra.barra.transicao_declive": {
+    "en": "transition: slope",
+    "pt": "transição: declive"
+  },
+  "ui.editor.masmorra.barra.altura_hint": {
+    "en": "Click and drag on the floor; height is only visual in this phase.",
+    "pt": "Clique e arraste no chão; a altura é apenas visual nesta fase."
+  },
+  "ui.editor.masmorra.barra.ponte_largura_singular": {
+    "en": "width: {n} square",
+    "pt": "largura: {n} quadrado"
+  },
+  "ui.editor.masmorra.barra.ponte_largura_plural": {
+    "en": "width: {n} squares",
+    "pt": "largura: {n} quadrados"
+  },
+  "ui.editor.masmorra.barra.ponte_material_madeira": {
+    "en": "material: wood",
+    "pt": "material: madeira"
+  },
+  "ui.editor.masmorra.barra.ponte_material_pedra": {
+    "en": "material: rough stone",
+    "pt": "material: pedra rústica"
+  },
+  "ui.editor.masmorra.barra.ponte_hint": {
+    "en": "Drag between points of the same height; the bridge doesn't change the terrain below.",
+    "pt": "Arraste entre pontos da mesma altura; a ponte não altera o terreno abaixo."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);
