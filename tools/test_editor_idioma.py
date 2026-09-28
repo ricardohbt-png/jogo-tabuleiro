@@ -58,6 +58,25 @@ def secao_editor_js():
     check("aba inicial registrada junto do window.setTab",
           re.search(r"window\.setTab = setTab;\s*\n\s*window\._abaAtualEditor = window\._abaAtualEditor \|\| \"masmorra\";",
                     src) is not None)
+    # O corpo INTEIRO de setTab (até o próximo "window.setTab = setTab;", que
+    # é a linha logo após a função fechar) — a checagem de 200 chars acima não
+    # alcança os ramos do editor de criaturas/itens, mais abaixo no corpo.
+    fim = src.index("window.setTab = setTab;", i)
+    corpo_setTab = src[i:fim]
+    check("troca de idioma sincroniza o rascunho do editor de criaturas antes de redesenhar",
+          re.search(r"soRedesenhar\s*&&\s*window\.EDITOR_MONSTER_EDITOR\.sincronizar", corpo_setTab)
+          is not None)
+    check("troca de idioma sincroniza o rascunho do editor de itens antes de redesenhar",
+          re.search(r"soRedesenhar\s*&&\s*window\.EDITOR_ITEMS_EDITOR\.sincronizar", corpo_setTab)
+          is not None)
+    monster_src = ler("tools", "editor_monster_editor.js")
+    check("editor_monster_editor.js exporta sincronizar em EDITOR_MONSTER_EDITOR",
+          re.search(r"window\.EDITOR_MONSTER_EDITOR\s*=\s*\{[^}]*\bsincronizar\b", monster_src)
+          is not None)
+    items_src = ler("tools", "editor_items_editor.js")
+    check("editor_items_editor.js exporta sincronizar em EDITOR_ITEMS_EDITOR",
+          re.search(r"window\.EDITOR_ITEMS_EDITOR\s*=\s*\{[^}]*\bsincronizar\b", items_src)
+          is not None)
 
 
 # Texto que fica sempre na própria língua (as opções do seletor de idioma).

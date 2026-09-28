@@ -1166,5 +1166,23 @@
     } catch (e) { status.textContent = "❌ " + (e && e.message || "falha ao salvar"); }
   }
 
-  window.EDITOR_ITEMS_EDITOR = { render: render };
+  // Sincroniza o rascunho com o texto que o usuário digitou mas ainda não
+  // "confirmou" (só onchange/blur sincroniza os campos normais — ver a
+  // função current*DraftFromForm() do tipo ativo). Chamada pelo editor.js
+  // ANTES de um render() que troca o idioma (setTab(tab, true)): sem isso,
+  // o innerHTML novo apagaria o que estava sendo digitado. Todas as 6
+  // funções current*DraftFromForm() leem "#ie-name" como 1º campo — sua
+  // ausência é o sinal de que este sub-editor não está montado agora
+  // (outra aba do editor de masmorras está ativa).
+  function sincronizar() {
+    if (!root.querySelector("#ie-name")) return;
+    if (activeType === "armaduras" || activeType === "escudos") currentArmorDraftFromForm();
+    else if (activeType === "aneis" || activeType === "botas") currentAccessoryDraftFromForm();
+    else if (activeType === "pocoes") currentPotionDraftFromForm();
+    else if (activeType === "arremessaveis") currentThrowableDraftFromForm();
+    else if (activeType === "venenos") currentPoisonDraftFromForm();
+    else currentDraftFromForm();
+  }
+
+  window.EDITOR_ITEMS_EDITOR = { render: render, sincronizar: sincronizar };
 })();

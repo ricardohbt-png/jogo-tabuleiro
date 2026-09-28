@@ -3812,8 +3812,17 @@
     document.getElementById("tab-cenas").classList.toggle("active", scenesEditor);
     if (dung) { render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
-    else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) window.EDITOR_MONSTER_EDITOR.render();
-    else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) window.EDITOR_ITEMS_EDITOR.render();
+    else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) {
+      // soRedesenhar (troca de idioma) NÃO pode descartar rascunho não
+      // sincronizado: render() reconstrói o form via innerHTML a partir de
+      // `draft`, então texto digitado e ainda não sincronizado sumiria.
+      if (soRedesenhar && window.EDITOR_MONSTER_EDITOR.sincronizar) window.EDITOR_MONSTER_EDITOR.sincronizar();
+      window.EDITOR_MONSTER_EDITOR.render();
+    }
+    else if (itemsEditor && window.EDITOR_ITEMS_EDITOR) {
+      if (soRedesenhar && window.EDITOR_ITEMS_EDITOR.sincronizar) window.EDITOR_ITEMS_EDITOR.sincronizar();
+      window.EDITOR_ITEMS_EDITOR.render();
+    }
     else if (cityEditor && window.EDITOR_CITY) window.EDITOR_CITY.render();
     else if (worldEditor && window.EDITOR_WORLD) window.EDITOR_WORLD.render();
     else if (tab === "campanha" && window.EDITOR_CAMPAIGN) window.EDITOR_CAMPAIGN.renderCampaign();
