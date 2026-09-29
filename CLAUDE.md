@@ -2997,3 +2997,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > barra de ferramentas é montada uma vez por `buildToolbar()` e precisa ser remontada na troca)
 > → Criaturas → Itens → Cidade → pequenas; por último as mensagens do servidor ao editor.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-09-28-editor-em-ingles*`.
+
+> **Editor em inglês — Fase 1 (aba Masmorra, 2026-09-28):** `tools/editor.js` fechado no placar
+> (`FECHADAS = {"editor.js"}` em `tools/test_editor_idioma.py`; 304 textos → 0). Chaves em
+> `src/lang/editor.js` sob `ui.editor.masmorra.<área>.<slug>` (`barra`, `painel`, `valid`,
+> `armadilha`, `design`, `salvar`, `status`…) + `ui.editor.material.*` e `ui.editor.masmorra.direcao.*`.
+> **Estruturas de módulo guardam id, não texto:** `TOOLS` (grupos `tiles`/`entidades`/`acoes`),
+> `LOOT_ITEM_GROUPS` (o agrupamento de `lootItemCategory` decidia por texto em português — agora
+> por id, com `semAcento`), `HERO_SPAWN_META`, `LICAO_VERBOS` (só `{v}`), `CURSE_CATEGORIES` e o
+> rótulo de visão (`visaoRotulo`) resolvem o texto na hora de desenhar. Nome de catálogo por
+> `nomeCat(família, id, padrão)` (armadilhas, itens de loot/recompensa, venenos, classes);
+> descrição por `descCat` (novo, em `editor.js`); material por `nomeMaterial`. A barra é montada
+> uma vez, então `setTab(tab, true)` chama `buildToolbar()` antes do redesenho. 50 `t` locais que
+> sombreavam o tradutor foram renomeados. **Fica em português de propósito:** conteúdo autoral
+> (nomes de sala, textos de fala, itens/monstros do editor) e os nomes de catálogo que não têm
+> chave nenhuma no dicionário do jogo (ex.: armas colossais, Armadura Rúnica, Grotão) — lacuna do
+> `gerar_vocabulario.py`, não do editor. Conferido no navegador em inglês: 136 painéis de
+> entidade sem erro; trocar o idioma preserva a seleção e o texto digitado. Plano em
+> `docs/superpowers/plans/2026-09-28-editor-em-ingles-fase1-masmorra.md`.

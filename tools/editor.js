@@ -49,6 +49,12 @@
     });
   }
   const MAT = (CAT.materiais || []);
+  // Descrição de catálogo traduzida pelo id (cat.<família>.<id>.desc); sem chave
+  // (conteúdo do autor) fica o texto original.
+  function descCat(familia, id, padrao) {
+    const k = "cat." + familia + "." + id + ".desc";
+    return window.I18N && window.I18N.tem(k) ? t(k) : padrao;
+  }
   function nomeMaterial(m) { const k = "ui.editor.material." + m.id; return window.I18N && window.I18N.tem(k) ? t(k) : m.nome; }
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
   const WALL_MATERIALS = MAT.filter(m => m && m.categoria === "parede");
@@ -1724,7 +1730,7 @@
       <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(nomeCat("armadilha", meta.tipo, meta.nome))}</div>
       <div class="trap-characteristics-flags">${flags.map(flag => `<span>${flag}</span>`).join("")}</div>
       ${effects.length ? `<div class="trap-characteristics-effects"><b>${t(K_ARM + "efeitos")}</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
-      ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(meta.descricao)}</div>` : ""}
+      ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(descCat("armadilha", meta.tipo, meta.descricao))}</div>` : ""}
     </div>`;
   }
 
@@ -1759,7 +1765,7 @@
     for (const item of CAT.items) groups.get(lootItemCategory(item)).push(item);
     return `<select id="${id}">${LOOT_ITEM_GROUPS.map(group => {
       const items = groups.get(group).slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), "pt-BR"));
-      return items.length ? `<optgroup label="${t("ui.editor.masmorra.loot." + group)}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
+      return items.length ? `<optgroup label="${t("ui.editor.masmorra.loot." + group)}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${nomeCat("item", item.id, item.name || item.id)}</option>`).join("")}</optgroup>` : "";
     }).join("")}</select>`;
   }
   function editorEscapeText(value) {
@@ -2455,7 +2461,7 @@
           ${defaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
           <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
         </div>
-        ${meta.precisa_veneno || meta.permite_veneno ? `<label>${t("ui.editor.masmorra.painel.veneno")}${meta.permite_veneno && !meta.precisa_veneno ? ` ${t("ui.editor.masmorra.painel.opcional")}` : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        ${meta.precisa_veneno || meta.permite_veneno ? `<label>${t("ui.editor.masmorra.painel.veneno")}${meta.permite_veneno && !meta.precisa_veneno ? ` ${t("ui.editor.masmorra.painel.opcional")}` : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: nomeCat("item", v.id, v.name) })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
         ${curseFieldsHTML(ref, "p")}
         ${ref.tipo === "armadilha_teletransporte" ? `<label>${t("ui.editor.masmorra.painel.ponto_saida_xy")}</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 ${t("ui.editor.masmorra.painel.selecionar_saida_mapa")}</button><small id="p-out-help" style="color:#8a7a5a">${t("ui.editor.masmorra.painel.casa_chao_hint")}</small>` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
@@ -2710,7 +2716,7 @@
       const decorTrapMeta = decorTrap ? (CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}) : null;
       const decorTrapDefaultDamage = trapPrimaryDamage(decorTrapMeta);
       const decorTrapDefaultDifficulty = decorTrapMeta?.dificuldade || "";
-      const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: v.name || v.nome || v.id }));
+      const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: nomeCat("item", v.id, v.name || v.nome || v.id) }));
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const vo0 = Array.isArray(ref.voffset) ? ref.voffset : [0, 0];
