@@ -20,14 +20,14 @@
   // recarregar o catálogo gerado pelo servidor.
   if (!(CAT.decorations || []).some(d => d && d.type === "fonte_de_parede")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "fonte_de_parede", nome: "Fonte de parede", emoji: "⛲",
+      type: "fonte_de_parede", nome: nomeCat("decor", "fonte_de_parede", "fonte_de_parede"), emoji: "⛲",
       size: [1, 1], gira: true, alto: true, pisavel: false,
       loot_capaz: false, special: null, image: "fonte_de_parede.png",
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "armadura")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "armadura", nome: "Armadura", emoji: "🛡️",
+      type: "armadura", nome: nomeCat("decor", "armadura", "armadura"), emoji: "🛡️",
       size: [1, 1], gira: true, alto: true, pisavel: false,
       loot_capaz: false, special: null, image: "armadura.png",
     });
@@ -36,19 +36,26 @@
   // continuar disponível nas decorações de chão mesmo antes do recarregamento.
   if (!(CAT.decorations || []).some(d => d && d.type === "chama_viva")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "chama_viva", nome: "Chama viva", emoji: "🔥",
+      type: "chama_viva", nome: nomeCat("decor", "chama_viva", "chama_viva"), emoji: "🔥",
       size: [1, 1], gira: false, alto: false, pisavel: true,
       loot_capaz: false, special: "living_flame", image: null,
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "placa")) {
     CAT.decorations = (CAT.decorations || []).concat({
-      type: "placa", nome: "Placa", emoji: "🪧",
+      type: "placa", nome: nomeCat("decor", "placa", "placa"), emoji: "🪧",
       size: [1, 1], gira: false, alto: false, pisavel: true,
       loot_capaz: false, special: "plaque", image: null,
     });
   }
   const MAT = (CAT.materiais || []);
+  // Descrição de catálogo traduzida pelo id (cat.<família>.<id>.desc); sem chave
+  // (conteúdo do autor) fica o texto original.
+  function descCat(familia, id, padrao) {
+    const k = "cat." + familia + "." + id + ".desc";
+    return window.I18N && window.I18N.tem(k) ? t(k) : padrao;
+  }
+  function nomeMaterial(m) { const k = "ui.editor.material." + m.id; return window.I18N && window.I18N.tem(k) ? t(k) : m.nome; }
   const matMeta = (id) => MAT.find(m => m.id === id) || null;
   const WALL_MATERIALS = MAT.filter(m => m && m.categoria === "parede");
   const WALL_MATERIAL_IDS = new Set(WALL_MATERIALS.map(m => m.id));
@@ -64,36 +71,36 @@
   // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
   const HERO_SPAWN_META = [
-    { id: "warrior", name: "Guerreiro", emoji: "⚔️", mark: "G" },
-    { id: "mage", name: "Mago", emoji: "🔮", mark: "M" },
-    { id: "rogue", name: "Ladino", emoji: "🗡️", mark: "L" },
-    { id: "cleric", name: "Clérigo", emoji: "✚", mark: "C" },
-    { id: "bard", name: "Bardo", emoji: "🎻", mark: "B" },
-    { id: "paladin", name: "Paladino", emoji: "🛡️", mark: "P" },
+    { id: "warrior", emoji: "⚔️", mark: "G" },
+    { id: "mage", emoji: "🔮", mark: "M" },
+    { id: "rogue", emoji: "🗡️", mark: "L" },
+    { id: "cleric", emoji: "✚", mark: "C" },
+    { id: "bard", emoji: "🎻", mark: "B" },
+    { id: "paladin", emoji: "🛡️", mark: "P" },
   ];
   // Tutorial: verbos que uma tarefa de lição pode cobrar. Espelha
   // LICAO_VERBOS no server.py — mudar um exige mudar o outro.
   const LICAO_VERBOS = [
-    { v: "mover_ate", nome: "chegar a uma casa" },
-    { v: "abrir_porta", nome: "abrir uma porta" },
-    { v: "atacar", nome: "acertar um ataque" },
-    { v: "matar", nome: "derrotar um monstro" },
-    { v: "pegar_item", nome: "pegar um item" },
-    { v: "equipar", nome: "equipar um item" },
-    { v: "encerrar_turno", nome: "encerrar o turno" },
-    { v: "usar_item", nome: "usar um item (comer, beber, poção)" },
-    { v: "usar_magia", nome: "lançar uma magia" },
-    { v: "usar_habilidade", nome: "usar uma habilidade de classe" },
-    { v: "usar_tecnica", nome: "usar uma técnica da Guilda" },
-    { v: "usar_instrumento", nome: "tocar o instrumento (bardo)" },
-    { v: "arremessar_item", nome: "arremessar um item (óleo, bomba)" },
-    { v: "desarmar_armadilha", nome: "desarmar uma armadilha" },
+    { v: "mover_ate" },
+    { v: "abrir_porta" },
+    { v: "atacar" },
+    { v: "matar" },
+    { v: "pegar_item" },
+    { v: "equipar" },
+    { v: "encerrar_turno" },
+    { v: "usar_item" },
+    { v: "usar_magia" },
+    { v: "usar_habilidade" },
+    { v: "usar_tecnica" },
+    { v: "usar_instrumento" },
+    { v: "arremessar_item" },
+    { v: "desarmar_armadilha" },
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
-  const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { name: id, emoji: "⚔️", mark: "H" };
+  const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: "Nova Masmorra", ambiente: "masmorra", saida_permitida: true },
+    meta: { schema_version: 1, id: "nova_masmorra", name: t("ui.editor.masmorra.nome_padrao"), ambiente: "masmorra", saida_permitida: true },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
@@ -104,7 +111,7 @@
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
     tool: "wall", sel: null,
-    trapType: ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas",
+    trapType: ((CAT.traps.find(tr => !tr.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas",
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
     decorType: (CAT.decorations[0] || {}).type || "cama",
     decorFacing: [0, 1],
@@ -250,7 +257,7 @@
   }
   function doorFrontLabel(x, y) {
     const quarter = ((Math.round((doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
-    return ["↑ norte", "→ leste", "↓ sul", "← oeste"][quarter];
+    return t("ui.editor.masmorra.direcao." + ["norte", "leste", "sul", "oeste"][quarter]);
   }
   function rotateDoorAt(x, y) {
     const k = doorKey(x, y);
@@ -424,11 +431,7 @@
   // cobertura (+2 CA); alto tapa visão e tiro. Só a visão muda — o objeto sólido
   // continua barrando o passo. Sem `visao` no objeto, vale o padrão do tipo.
   const VISAO_NIVEIS = ["livre", "baixo", "alto"];
-  const VISAO_ROTULO = {
-    livre: "livre — não bloqueia a visão",
-    baixo: "baixo — vê e atira por cima, meia cobertura (+2 CA)",
-    alto: "alto — bloqueia visão e tiro, projeta sombra",
-  };
+  function visaoRotulo(nivel) { return t("ui.editor.masmorra.visao." + nivel); }
   function decorVisaoPadrao(m) { return m && m.alto ? "alto" : (m && m.pisavel ? "livre" : "baixo"); }
   function nextDecorId() {
     const used = new Set(S.decorations.map(d => d.id));
@@ -513,9 +516,10 @@
 
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
+  const K_CM = "ui.editor.masmorra.menu_copia.";
   const copyMenu = document.createElement("div");
   copyMenu.id = "editor-copy-menu";
-  copyMenu.innerHTML = `<button type="button" data-action="copy">Copiar objeto <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush">Usar como pincel de área</button><button type="button" data-action="paste">Colar objeto aqui <kbd>Ctrl+V</kbd></button>`;
+  copyMenu.innerHTML = `<button type="button" data-action="copy"><span data-i18n="${K_CM}copiar">${t(K_CM + "copiar")}</span> <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush"><span data-i18n="${K_CM}pincel">${t(K_CM + "pincel")}</span></button><button type="button" data-action="paste"><span data-i18n="${K_CM}colar">${t(K_CM + "colar")}</span> <kbd>Ctrl+V</kbd></button>`;
   document.body.appendChild(copyMenu);
   function hideCopyMenu() { copyMenu.classList.remove("open"); }
   function showCopyMenu(ev, cell) {
@@ -648,7 +652,7 @@
     if (S.exit) add(S.exit.x, S.exit.y, "↓", "#c99a3c");
     for (const m of S.monsters) add(m.pos[0], m.pos[1], "M", "#bc4a5a");
     for (const c of S.chests) add(c.pos[0], c.pos[1], "$", "#bd9130");
-    for (const t of S.traps) add(t.pos[0], t.pos[1], "!", "#cf6c3b");
+    for (const trap of S.traps) add(trap.pos[0], trap.pos[1], "!", "#cf6c3b");
     for (const d of S.decorations) add(d.pos[0], d.pos[1], "D", "#348d72");
     if (S.prisoner) add(S.prisoner.pos[0], S.prisoner.pos[1], "P", "#5c88c7");
     for (const f of S.falas) add(f.pos[0], f.pos[1], "…", "#8065ac");
@@ -678,8 +682,8 @@
     if (!d || !d.facing) return;
     const tiles = decorTiles(d);
     if (!tiles.length) return;
-    const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-    const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+    const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+    const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
     const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
     const cx = (minX + maxX + 1) * CELL / 2 + Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
     const cy = (minY + maxY + 1) * CELL / 2 + Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
@@ -701,7 +705,8 @@
     ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffe9a3"; ctx.strokeStyle = "#271600"; ctx.lineWidth = 3;
     const tx = cx + dx * (reach + 14), ty = cy + dy * (reach + 14);
-    ctx.strokeText("FRENTE", tx, ty); ctx.fillText("FRENTE", tx, ty);
+    const rotFrente = t("ui.editor.masmorra.canvas.frente");
+    ctx.strokeText(rotFrente, tx, ty); ctx.fillText(rotFrente, tx, ty);
     ctx.restore();
   }
 
@@ -801,8 +806,8 @@
     const tiles = bridgeTilesOf(bridge, bridge?.inicio, bridge?.fim, bridge?.largura);
     if (!tiles.length) return;
     const horizontal = bridge.inicio[1] === bridge.fim[1];
-    const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-    const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+    const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+    const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
     ctx.save();
     const pedraRustica = String(bridge.material || "madeira").toLowerCase() === "pedra_rustica";
     const base = preview
@@ -846,15 +851,15 @@
     board.height = S.grid.h * CELL;
     for (let y = 0; y < S.grid.h; y++) {
       for (let x = 0; x < S.grid.w; x++) {
-        const t = S.tiles[y][x];
+        const tile = S.tiles[y][x];
         const mid = wallMaterialAt(x, y);
         const mm = mid ? matMeta(mid) : null;
         if (mm && mm.id === "duna_deserto") drawDunePreview(x, y);
         else {
-          ctx.fillStyle = mm ? mm.cor : (t === WALL ? "#1d1812" : (t === DOOR ? "#c8841f" : "#5a4a32"));
+          ctx.fillStyle = mm ? mm.cor : (tile === WALL ? "#1d1812" : (tile === DOOR ? "#c8841f" : "#5a4a32"));
           ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
         }
-        if (t === DOOR) {
+        if (tile === DOOR) {
           // A folha e a seta dourada giram sobre o centro. A seta indica a
           // frente da imagem e continua clara nas quatro orientações.
           const px = x * CELL, py = y * CELL, s = CELL - 1;
@@ -917,8 +922,8 @@
         for (const [tx, ty] of tiles) ctx.drawImage(im, tx * CELL, ty * CELL, CELL, CELL);
         continue;
       }
-      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+      const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
       const px = minX * CELL + 2, py = minY * CELL + 2;
       const pw = (maxX - minX + 1) * CELL - 4, ph = (maxY - minY + 1) * CELL - 4;
       const vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
@@ -947,11 +952,11 @@
       }
     }
     // Preview 2D: PNG da armadilha (se houver) cobrindo a casa, proporção preservada.
-    for (const t of S.traps) {
-      if (!t.image) continue;
-      const im = objImg(t.image);
+    for (const trap of S.traps) {
+      if (!trap.image) continue;
+      const im = objImg(trap.image);
       if (!im) continue;
-      const px = t.pos[0] * CELL + 2, py = t.pos[1] * CELL + 2, sz = CELL - 4;
+      const px = trap.pos[0] * CELL + 2, py = trap.pos[1] * CELL + 2, sz = CELL - 4;
       const ar = im.naturalWidth / im.naturalHeight;
       let dw = sz, dh = sz / ar;
       if (dh > sz) { dh = sz; dw = sz * ar; }
@@ -967,14 +972,14 @@
     // Saídas das armadilhas de teletransporte: visíveis apenas no editor para
     // facilitar conferir o ponto configurado antes de salvar a masmorra.
     ctx.fillStyle = "#78d9ff"; ctx.font = "bold 15px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    for (const t of S.traps) {
-      if (t.tipo !== "armadilha_teletransporte" || !Array.isArray(t.saida)) continue;
-      ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
+    for (const trap of S.traps) {
+      if (trap.tipo !== "armadilha_teletransporte" || !Array.isArray(trap.saida)) continue;
+      ctx.fillText("⇱", trap.saida[0] * CELL + CELL / 2, trap.saida[1] * CELL + CELL / 2);
     }
     for (const d of S.decorations) {
-      const t = d.trap;
-      if (!t || t.tipo !== "armadilha_teletransporte" || !Array.isArray(t.saida)) continue;
-      ctx.fillText("⇱", t.saida[0] * CELL + CELL / 2, t.saida[1] * CELL + CELL / 2);
+      const trap = d.trap;
+      if (!trap || trap.tipo !== "armadilha_teletransporte" || !Array.isArray(trap.saida)) continue;
+      ctx.fillText("⇱", trap.saida[0] * CELL + CELL / 2, trap.saida[1] * CELL + CELL / 2);
     }
     ctx.textAlign = "start";
     // Marcadores de fala de NPC: pequeno 💬 no canto superior-esquerdo da casa
@@ -992,8 +997,8 @@
       if (d.image && (isWallDecor(d) ? wallImg(d.image) : objImg(d.image))) continue;
       const m = decorMeta(d.type); const emoji = m ? m.emoji : "🪑";
       const tiles = decorTiles(d);
-      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-      const maxY = Math.max(...tiles.map(t => t[1]));
+      const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+      const maxY = Math.max(...tiles.map(p => p[1]));
       const vo = Array.isArray(d.voffset) ? d.voffset : [0, 0];
       const cx = (minX + (maxX - minX + 1) / 2) * CELL + Math.max(-.45, Math.min(.45, Number(vo[0]) || 0)) * CELL;
       const baseY = (maxY + 1) * CELL - 4 + Math.max(-.45, Math.min(.45, Number(vo[1]) || 0)) * CELL;
@@ -1008,8 +1013,8 @@
     for (const m of S.monsters) {
       const tiles = monsterTiles(m);
       if (!tiles.length) continue;
-      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+      const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
       const fw = maxX - minX + 1, fh = maxY - minY + 1;
       const cx = (minX + fw / 2) * CELL, cy = (minY + fh / 2) * CELL;
       const vs = Array.isArray(m.vscale) ? m.vscale : null;
@@ -1059,8 +1064,8 @@
     if (S.exit) drawStairs(S.exit.x, S.exit.y, "#e5b653", false);
     if (S.sel && S.sel.kind === "monster" && S.sel.ref) {
       const tiles = monsterTiles(S.sel.ref);
-      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+      const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
       const label = (maxX - minX + 1) + "×" + (maxY - minY + 1);
@@ -1071,8 +1076,8 @@
     } else if (S.sel && S.sel.kind === "bridge" && S.sel.ref) {
       const tiles = bridgeTilesOf(S.sel.ref);
       if (tiles.length) {
-        const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-        const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+        const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+        const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
         ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2; ctx.setLineDash([4, 2]);
         ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
         ctx.setLineDash([]);
@@ -1080,8 +1085,8 @@
     } else if (S.sel && S.sel.kind === "decor" && S.sel.ref) {
       // Referência: contorno do footprint realçado + rótulo W×H (casas efetivas).
       const tiles = decorTiles(S.sel.ref);
-      const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
-      const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
+      const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
+      const minY = Math.min(...tiles.map(p => p[1])), maxY = Math.max(...tiles.map(p => p[1]));
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(minX * CELL + 1.5, minY * CELL + 1.5, (maxX - minX + 1) * CELL - 3, (maxY - minY + 1) * CELL - 3);
       const [ew, eh] = decorEffSizeOf(S.sel.ref);
@@ -1148,45 +1153,45 @@
   }
 
   const TOOLS = [
-    { id: "wall", label: "parede", group: "tiles" },
-    { id: "floor", label: "chão", group: "tiles" },
-    { id: "door", label: "porta", group: "tiles" },
-    { id: "altura", label: "altura", group: "tiles" },
-    { id: "ponte", label: "ponte", group: "tiles" },
-    { id: "entrance", label: "entrada", group: "entidades" },
-    { id: "hero_spawn", label: "início herói", group: "entidades" },
-    { id: "exit", label: "saída", group: "entidades" },
-    { id: "monster", label: "monstro", group: "entidades" },
-    { id: "chest", label: "baú", group: "entidades" },
-    { id: "trap", label: "armadilha", group: "entidades" },
-    { id: "prisoner", label: "prisioneiro", group: "entidades" },
-    { id: "decor", label: "decoração", group: "entidades" },
-    { id: "secret_mechanism", label: "passagem secreta", group: "entidades" },
-    { id: "illusion_wall", label: "parede ilusória", group: "entidades" },
-    { id: "fala", label: "fala NPC", group: "entidades" },
-    { id: "room", label: "sala", group: "ações" },
-    { id: "select", label: "selecionar", group: "ações" },
-    { id: "erase", label: "apagar", group: "ações" },
+    { id: "wall", group: "tiles" },
+    { id: "floor", group: "tiles" },
+    { id: "door", group: "tiles" },
+    { id: "altura", group: "tiles" },
+    { id: "ponte", group: "tiles" },
+    { id: "entrance", group: "entidades" },
+    { id: "hero_spawn", group: "entidades" },
+    { id: "exit", group: "entidades" },
+    { id: "monster", group: "entidades" },
+    { id: "chest", group: "entidades" },
+    { id: "trap", group: "entidades" },
+    { id: "prisoner", group: "entidades" },
+    { id: "decor", group: "entidades" },
+    { id: "secret_mechanism", group: "entidades" },
+    { id: "illusion_wall", group: "entidades" },
+    { id: "fala", group: "entidades" },
+    { id: "room", group: "acoes" },
+    { id: "select", group: "acoes" },
+    { id: "erase", group: "acoes" },
   ];
 
   function buildToolbar() {
     const tb = document.getElementById("toolbar");
     tb.innerHTML = "";
     let lastGroup = null;
-    const visibleTools = TOOLS.filter(t => !(S.startMode === "hero_spawns" && t.id === "entrance"));
-    for (const t of visibleTools) {
-      if (t.group !== lastGroup) {
+    const visibleTools = TOOLS.filter(tool => !(S.startMode === "hero_spawns" && tool.id === "entrance"));
+    for (const tool of visibleTools) {
+      if (tool.group !== lastGroup) {
         if (lastGroup) { const s = document.createElement("span"); s.className = "sep"; tb.appendChild(s); }
-        const g = document.createElement("span"); g.className = "group-label"; g.textContent = t.group; tb.appendChild(g);
-        lastGroup = t.group;
+        const g = document.createElement("span"); g.className = "group-label"; g.textContent = t("ui.editor.masmorra.grupo." + tool.group); tb.appendChild(g);
+        lastGroup = tool.group;
       }
       const b = document.createElement("button");
-      b.textContent = t.label; b.dataset.tool = t.id;
-      if (t.id === S.tool) b.classList.add("active");
+      b.textContent = t("ui.editor.masmorra.ferramenta." + tool.id); b.dataset.tool = tool.id;
+      if (tool.id === S.tool) b.classList.add("active");
       b.onclick = () => {
-        S.tool = t.id;
-        if (t.id === "hero_spawn") { S.startMode = "hero_spawns"; S.entrance = null; }
-        if (t.id === "entrance") S.startMode = "entrance";
+        S.tool = tool.id;
+        if (tool.id === "hero_spawn") { S.startMode = "hero_spawns"; S.entrance = null; }
+        if (tool.id === "entrance") S.startMode = "entrance";
         buildToolbar(); renderPanel(); render(); updateStatus();
       };
       tb.appendChild(b);
@@ -1195,11 +1200,11 @@
       const sel = document.createElement("select");
       sel.id = "hero-spawn-class";
       sel.innerHTML = HERO_SPAWN_META.map(h =>
-        `<option value="${h.id}"${h.id === S.heroSpawnClass ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("");
+        `<option value="${h.id}"${h.id === S.heroSpawnClass ? " selected" : ""}>${h.emoji} ${nomeCat("classe", h.id, h.id)}</option>`).join("");
       sel.onchange = e => { S.heroSpawnClass = e.target.value; renderPanel(); };
       tb.appendChild(sel);
       const hint = document.createElement("small");
-      hint.textContent = "Clique no mapa para posicionar ou mover este herói.";
+      hint.textContent = t("ui.editor.masmorra.barra.hint_heroi");
       hint.style.color = "#b9a87f";
       hint.style.marginLeft = "6px";
       tb.appendChild(hint);
@@ -1207,17 +1212,17 @@
     if (S.tool === "trap") {
       const trapSelect = document.createElement("select");
       trapSelect.id = "trap-type-tool";
-      trapSelect.innerHTML = CAT.traps.filter(t => !t.apenas_objeto).map(t =>
-        `<option value="${t.tipo}"${t.tipo === S.trapType ? " selected" : ""}>${t.icone || "⚠️"} ${t.nome}</option>`).join("");
+      trapSelect.innerHTML = CAT.traps.filter(tr => !tr.apenas_objeto).map(tr =>
+        `<option value="${tr.tipo}"${tr.tipo === S.trapType ? " selected" : ""}>${tr.icone || "⚠️"} ${nomeCat("armadilha", tr.tipo, tr.nome)}</option>`).join("");
       trapSelect.onchange = e => {
         S.trapType = e.target.value;
         const info = document.getElementById("trap-tool-info");
-        if (info) info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(t => t.tipo === S.trapType), true);
+        if (info) info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(tr => tr.tipo === S.trapType), true);
       };
       tb.appendChild(trapSelect);
       const info = document.createElement("div");
       info.id = "trap-tool-info";
-      info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(t => t.tipo === S.trapType), true);
+      info.innerHTML = trapCharacteristicsHTML(CAT.traps.find(tr => tr.tipo === S.trapType), true);
       tb.appendChild(info);
     }
     if (S.tool === "decor") {
@@ -1225,32 +1230,32 @@
       sel.id = "decor-type";
       const floor = CAT.decorations.filter(d => d.special !== "wall");
       const walls = CAT.decorations.filter(d => d.special === "wall");
-      sel.innerHTML = `<optgroup label="Decorações de chão">${floor.map(d =>
-        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup><optgroup label="Decorações de parede">${walls.map(d =>
-        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${d.nome}</option>`).join("")}</optgroup>`;
+      sel.innerHTML = `<optgroup label="${t("ui.editor.masmorra.barra.decor_chao")}">${floor.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup><optgroup label="${t("ui.editor.masmorra.barra.decor_parede")}">${walls.map(d =>
+        `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup>`;
       sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
       tb.appendChild(sel);
       const rot = document.createElement("button");
-      rot.textContent = "girar 90° (R)";
+      rot.textContent = t("ui.editor.masmorra.barra.girar_90");
       rot.onclick = () => { rotateDecorPending(); };
       tb.appendChild(rot);
       const brush = document.createElement("button");
-      brush.textContent = decorBrushActive ? "🖌️ pincel de área ativo" : "🖌️ usar cópia como pincel";
+      brush.textContent = decorBrushActive ? t("ui.editor.masmorra.barra.pincel_ativo") : t("ui.editor.masmorra.barra.pincel_usar");
       brush.disabled = !decorClipboard && !(S.sel && S.sel.kind === "decor");
-      brush.title = "Com o pincel ativo, arraste no mapa para preencher a área com cópias.";
+      brush.title = t("ui.editor.masmorra.barra.pincel_title");
       brush.onclick = () => { activateDecorBrush(); };
       tb.appendChild(brush);
       if (decorBrushActive) {
         const hint = document.createElement("small");
-        hint.textContent = "Arraste para preencher; casas inválidas são ignoradas.";
+        hint.textContent = t("ui.editor.masmorra.barra.arraste_preencher");
         hint.style.color = "#b9a87f";
         tb.appendChild(hint);
       }
     }
     if (S.sel && S.sel.kind === "door") {
       const rot = document.createElement("button");
-      rot.textContent = "↻ porta 90° (R)";
-      rot.title = "Girar a imagem da porta selecionada";
+      rot.textContent = t("ui.editor.masmorra.barra.porta_girar");
+      rot.title = t("ui.editor.masmorra.barra.porta_girar_title");
       rot.onclick = rotateDoorSelected;
       tb.appendChild(rot);
     }
@@ -1263,12 +1268,12 @@
       const sel = document.createElement("select");
       sel.id = "mat-id";
       sel.innerHTML = opts.map(m =>
-        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${m.nome}${Number(m.custo_mov) > 1 ? ` (−${Number(m.custo_mov) - 1} movimento)` : ""}</option>`).join("");
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${nomeMaterial(m)}${Number(m.custo_mov) > 1 ? t("ui.editor.masmorra.barra.movimento_penalidade", { n: Number(m.custo_mov) - 1 }) : ""}</option>`).join("");
       sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
       tb.appendChild(sel);
       const fill = document.createElement("button");
-      fill.textContent = S.matFill ? "balde: ON" : "balde: OFF";
-      fill.title = "Preenche a região contígua de mesma estrutura";
+      fill.textContent = S.matFill ? t("ui.editor.masmorra.barra.balde_on") : t("ui.editor.masmorra.barra.balde_off");
+      fill.title = t("ui.editor.masmorra.barra.balde_title");
       fill.onclick = () => { S.matFill = !S.matFill; buildToolbar(); };
       tb.appendChild(fill);
     }
@@ -1278,40 +1283,41 @@
       // Gerado a partir do intervalo, não escrito à mão: mexer em ELEVACAO_MIN/MAX
       // passa a bastar. Os rótulos nomeiam só os degraus baixos, que são os que
       // o autor distingue de olho; daí para cima o número já diz tudo.
-      const NOME_NIVEL = { "-1": "depressão", 0: "nivelar", 1: "elevado", 2: "muito elevado" };
+      const NOME_NIVEL_CHAVE = { "-1": "depressao", 0: "nivelar", 1: "elevado", 2: "muito_elevado" };
       const niveis = [];
       for (let n = ELEVACAO_MAX; n >= ELEVACAO_MIN; n--) niveis.push(n);
       level.innerHTML = niveis.map(n => {
         const sinal = n > 0 ? "+" + n : (n < 0 ? "−" + Math.abs(n) : "0");
-        const nome = NOME_NIVEL[n];
-        return `<option value="${n}"${n === Number(S.elevacaoValor) ? " selected" : ""}>${sinal} · ${nome || "nível " + n}</option>`;
+        const chaveNivel = NOME_NIVEL_CHAVE[n];
+        const nome = chaveNivel ? t("ui.editor.masmorra.barra.nivel." + chaveNivel) : "";
+        return `<option value="${n}"${n === Number(S.elevacaoValor) ? " selected" : ""}>${sinal} · ${nome || t("ui.editor.masmorra.barra.nivel_generico", { n })}</option>`;
       }).join("");
       level.onchange = e => { S.elevacaoValor = Number(e.target.value); render(); };
       tb.appendChild(level);
       const transition = document.createElement("select");
       transition.id = "terrain-height-transition";
-      transition.title = "Escolhe a aparência das transições entre níveis diferentes";
-      transition.innerHTML = `<option value="rampa"${S.transicaoAltura === "rampa" ? " selected" : ""}>transição: rampa</option><option value="declive"${S.transicaoAltura === "declive" ? " selected" : ""}>transição: declive</option>`;
+      transition.title = t("ui.editor.masmorra.barra.transicao_title");
+      transition.innerHTML = `<option value="rampa"${S.transicaoAltura === "rampa" ? " selected" : ""}>${t("ui.editor.masmorra.barra.transicao_rampa")}</option><option value="declive"${S.transicaoAltura === "declive" ? " selected" : ""}>${t("ui.editor.masmorra.barra.transicao_declive")}</option>`;
       transition.onchange = e => { S.transicaoAltura = e.target.value === "declive" ? "declive" : "rampa"; render(); };
       tb.appendChild(transition);
       const hint = document.createElement("small");
-      hint.textContent = "Clique e arraste no chão; a altura é apenas visual nesta fase.";
+      hint.textContent = t("ui.editor.masmorra.barra.altura_hint");
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
     if (S.tool === "ponte") {
       const width = document.createElement("select");
       width.id = "bridge-width";
-      width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>largura: ${n} quadrado${n > 1 ? "s" : ""}</option>`).join("");
+      width.innerHTML = [1, 2, 3].map(n => `<option value="${n}"${n === S.ponteLargura ? " selected" : ""}>${t(n > 1 ? "ui.editor.masmorra.barra.ponte_largura_plural" : "ui.editor.masmorra.barra.ponte_largura_singular", { n })}</option>`).join("");
       width.onchange = e => { S.ponteLargura = Math.max(1, Math.min(3, Number(e.target.value) | 0)); render(); };
       tb.appendChild(width);
       const material = document.createElement("select");
       material.id = "bridge-material";
-      material.innerHTML = `<option value="madeira"${S.ponteMaterial === "madeira" ? " selected" : ""}>material: madeira</option><option value="pedra_rustica"${S.ponteMaterial === "pedra_rustica" ? " selected" : ""}>material: pedra rústica</option>`;
+      material.innerHTML = `<option value="madeira"${S.ponteMaterial === "madeira" ? " selected" : ""}>${t("ui.editor.masmorra.barra.ponte_material_madeira")}</option><option value="pedra_rustica"${S.ponteMaterial === "pedra_rustica" ? " selected" : ""}>${t("ui.editor.masmorra.barra.ponte_material_pedra")}</option>`;
       material.onchange = e => { S.ponteMaterial = e.target.value === "pedra_rustica" ? "pedra_rustica" : "madeira"; render(); };
       tb.appendChild(material);
       const hint = document.createElement("small");
-      hint.textContent = "Arraste entre pontos da mesma altura; a ponte não altera o terreno abaixo.";
+      hint.textContent = t("ui.editor.masmorra.barra.ponte_hint");
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
@@ -1372,9 +1378,9 @@
   // Categoria do material compatível com a estrutura do tile?
   function matCompat(id, x, y) {
     const meta = matMeta(id); if (!meta) return false;
-    const t = S.tiles[y][x];
-    if (meta.categoria === "parede") return t === WALL;
-    return t === FLOOR || t === DOOR;   // piso (inclui entulho)
+    const tile = S.tiles[y][x];
+    if (meta.categoria === "parede") return tile === WALL;
+    return tile === FLOOR || tile === DOOR;   // piso (inclui entulho)
   }
   // Estrutura "pintável junta" p/ balde: parede vs. não-parede.
   function _structKind(x, y) { return S.tiles[y][x] === WALL ? "wall" : "floor"; }
@@ -1538,8 +1544,8 @@
       found.push({ kind: "monster", ref: m, pos: m.pos.slice() });
     for (const c of S.chests) if (c.pos[0] === x && c.pos[1] === y)
       found.push({ kind: "chest", ref: c, pos: c.pos.slice() });
-    for (const t of S.traps) if (t.pos[0] === x && t.pos[1] === y)
-      found.push({ kind: "trap", ref: t, pos: t.pos.slice() });
+    for (const trap of S.traps) if (trap.pos[0] === x && trap.pos[1] === y)
+      found.push({ kind: "trap", ref: trap, pos: trap.pos.slice() });
     for (const f of S.falas) if (f.pos[0] === x && f.pos[1] === y)
       found.push({ kind: "fala", ref: f, pos: f.pos.slice() });
     return found;
@@ -1580,7 +1586,7 @@
         break;
       }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
-      case "trap": S.traps.push({ id: "trap_" + S.nextTrapId++, tipo: S.trapType || ((CAT.traps.find(t => !t.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "trap": S.traps.push({ id: "trap_" + S.nextTrapId++, tipo: S.trapType || ((CAT.traps.find(tr => !tr.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
       case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
@@ -1672,19 +1678,20 @@
     return String(value == null ? "" : value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   }
 
+  const K_ARM = "ui.editor.masmorra.armadilha.";
   function trapEffectLabel(effect) {
     if (!effect) return "";
     const tipo = effect.tipo;
     if (tipo === "dano") {
       const elemento = effect.elemento && effect.elemento !== "fisico" ? ` (${trapText(effect.elemento)})` : "";
-      const rodada = effect.rodada ? ` — rodada ${effect.rodada}` : "";
-      return `${trapText(effect.valor || "dano")} de dano${elemento}${rodada}${effect.area ? " em área" : ""}`;
+      const rodada = effect.rodada ? t(K_ARM + "efeito_rodada", { n: effect.rodada }) : "";
+      return t(K_ARM + "efeito_dano", { valor: trapText(effect.valor || "dano"), elemento, rodada, area: effect.area ? t(K_ARM + "em_area") : "" });
     }
-    if (tipo === "perder_movimento") return "Perde o movimento";
-    if (tipo === "perder_rodada") return "Perde a rodada";
-    if (tipo === "veneno") return "Aplica o veneno escolhido";
-    if (tipo === "reduzir_con") return `${trapText(effect.valor || "redução")} CON por ${trapText(effect.duracao || "algumas")} rodadas${effect.area ? " em área" : ""}`;
-    return trapText(tipo || "efeito especial");
+    if (tipo === "perder_movimento") return t(K_ARM + "perde_movimento");
+    if (tipo === "perder_rodada") return t(K_ARM + "perde_rodada");
+    if (tipo === "veneno") return t(K_ARM + "aplica_veneno");
+    if (tipo === "reduzir_con") return t(K_ARM + "efeito_reduzir_con", { valor: trapText(effect.valor || t(K_ARM + "reducao")), duracao: trapText(effect.duracao || t(K_ARM + "algumas")), area: effect.area ? t(K_ARM + "em_area") : "" });
+    return trapText(tipo || t(K_ARM + "efeito_especial"));
   }
 
   function trapPrimaryDamage(meta) {
@@ -1702,28 +1709,28 @@
     if (!meta || !meta.nome) return "";
     const difficulty = instance && instance.dificuldade != null ? instance.dificuldade : meta.dificuldade;
     const damage = instance && instance.dano != null ? instance.dano : trapPrimaryDamage(meta);
-    const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : "Sem teste padrão";
-    const scope = meta.area_sala ? "Sala inteira" : meta.area ? `Área: ${meta.area} casa${meta.area === 1 ? "" : "s"}` : "Alvo na casa";
-    const duration = meta.duracao_rodadas ? `${meta.duracao_rodadas} rodadas` : (meta.persiste ? "Permanece ativa" : "Uso único");
+    const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : t(K_ARM + "sem_teste");
+    const scope = meta.area_sala ? t(K_ARM + "sala_inteira") : meta.area ? t(K_ARM + (meta.area === 1 ? "area_casa" : "area_casas"), { n: meta.area }) : t(K_ARM + "alvo_casa");
+    const duration = meta.duracao_rodadas ? t(K_ARM + "duracao_rodadas", { n: meta.duracao_rodadas }) : (meta.persiste ? t(K_ARM + "permanece") : t(K_ARM + "uso_unico"));
     const flags = [
       `🎲 ${save}`, `🎯 ${scope}`, `⏱️ ${duration}`,
-      damage ? `💥 Dano: ${trapText(damage)}` : "",
-      meta.custo_ouro != null ? `🪙 Custo: ${meta.custo_ouro} ouro` : "",
-      meta.save_reduz ? "🛡️ Sucesso reduz o dano" : "",
-      meta.precisa_veneno ? "☠️ Exige veneno" : (meta.permite_veneno ? "☠️ Veneno opcional" : ""),
-      meta.visivel_apos ? "👁️ Revela após ativar" : "",
-      meta.escape_save ? `↗️ Escape: ${trapText(meta.escape_save)}${meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : ""}` : "",
-      meta.apenas_objeto ? "📦 Só em objeto/decoração" : "",
+      damage ? t(K_ARM + "dano", { v: trapText(damage) }) : "",
+      meta.custo_ouro != null ? t(K_ARM + "custo", { n: meta.custo_ouro }) : "",
+      meta.save_reduz ? t(K_ARM + "sucesso_reduz") : "",
+      meta.precisa_veneno ? t(K_ARM + "exige_veneno") : (meta.permite_veneno ? t(K_ARM + "veneno_opcional") : ""),
+      meta.visivel_apos ? t(K_ARM + "revela") : "",
+      meta.escape_save ? t(K_ARM + "escape", { v: trapText(meta.escape_save), cd: meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : "" }) : "",
+      meta.apenas_objeto ? t(K_ARM + "so_objeto") : "",
     ].filter(Boolean);
     const effects = (meta.efeitos || []).map((effect, index) => {
       if (damage && index === (meta.efeitos || []).findIndex(e => e && e.tipo === "dano")) return { ...effect, valor: damage };
       return effect;
     }).map(trapEffectLabel).filter(Boolean);
     return `<div class="trap-characteristics${compact ? " compact" : ""}">
-      <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(meta.nome)}</div>
+      <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(nomeCat("armadilha", meta.tipo, meta.nome))}</div>
       <div class="trap-characteristics-flags">${flags.map(flag => `<span>${flag}</span>`).join("")}</div>
-      ${effects.length ? `<div class="trap-characteristics-effects"><b>Efeitos</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
-      ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(meta.descricao)}</div>` : ""}
+      ${effects.length ? `<div class="trap-characteristics-effects"><b>${t(K_ARM + "efeitos")}</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
+      ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(descCat("armadilha", meta.tipo, meta.descricao))}</div>` : ""}
     </div>`;
   }
 
@@ -1731,31 +1738,34 @@
   // O item continua sendo salvo pelo mesmo ID; esta camada só agrupa e ordena
   // as opções para facilitar a busca no editor.
   const LOOT_ITEM_GROUPS = [
-    "Armas", "Armaduras", "Escudos", "Venenos", "Arremessáveis",
-    "Instrumentos", "Munições", "Poções e consumíveis", "Anéis e acessórios", "Outros",
+    "armas", "armaduras", "escudos", "venenos", "arremessaveis",
+    "instrumentos", "municoes", "pocoes", "aneis", "outros",
   ];
+  // Normaliza acento fora — assim uma única grafia (sem acento) na lista de
+  // comparação cobre também a variante acentuada gravada em save antigo.
+  function semAcento(s) { return s.normalize("NFD").replace(/[̀-ͯ]/g, ""); }
   function lootItemCategory(item) {
     const id = String(item.id || "").toLowerCase();
-    const type = String(item.tipo_item || item.item_type || item.type || "").toLowerCase();
-    const slot = String(item.item_slot || "").toLowerCase();
+    const type = semAcento(String(item.tipo_item || item.item_type || item.type || "").toLowerCase());
+    const slot = semAcento(String(item.item_slot || "").toLowerCase());
     const effect = String(item.effect || "").toLowerCase();
-    if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "Armaduras";
-    if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "Escudos";
-    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "Venenos";
-    if (effect === "throwable" || ["throwable", "arremessavel", "arremessável"].includes(type)) return "Arremessáveis";
-    if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "Instrumentos";
-    if (item.ammo_type || item.ammo_count != null || ["ammo", "municao", "munição"].includes(type)) return "Munições";
-    if (item.die || item.range != null || item.reach || item.throw_range != null || item.categoria || ["weapon", "arma"].includes(type)) return "Armas";
-    if (item.kind === "accessory" || ["ring", "anel", "accessory", "acessorio", "acessório"].includes(type) || ["ring", "item", "accessory", "acessorio", "acessório"].includes(slot)) return "Anéis e acessórios";
-    if (slot === "bag" || effect || type === "consumable" || type === "consumivel" || type === "consumível") return "Poções e consumíveis";
-    return "Outros";
+    if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "armaduras";
+    if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "escudos";
+    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "venenos";
+    if (effect === "throwable" || ["throwable", "arremessavel"].includes(type)) return "arremessaveis";
+    if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "instrumentos";
+    if (item.ammo_type || item.ammo_count != null || ["ammo", "municao"].includes(type)) return "municoes";
+    if (item.die || item.range != null || item.reach || item.throw_range != null || item.categoria || ["weapon", "arma"].includes(type)) return "armas";
+    if (item.kind === "accessory" || ["ring", "anel", "accessory", "acessorio"].includes(type) || ["ring", "item", "accessory", "acessorio"].includes(slot)) return "aneis";
+    if (slot === "bag" || effect || type === "consumable" || type === "consumivel") return "pocoes";
+    return "outros";
   }
   function lootItemSelectHTML(id) {
     const groups = new Map(LOOT_ITEM_GROUPS.map(name => [name, []]));
     for (const item of CAT.items) groups.get(lootItemCategory(item)).push(item);
     return `<select id="${id}">${LOOT_ITEM_GROUPS.map(group => {
       const items = groups.get(group).slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), "pt-BR"));
-      return items.length ? `<optgroup label="${group}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${item.name || item.id}</option>`).join("")}</optgroup>` : "";
+      return items.length ? `<optgroup label="${t("ui.editor.masmorra.loot." + group)}">${items.map(item => `<option value="${item.id}">${item.emoji ? item.emoji + " " : ""}${nomeCat("item", item.id, item.name || item.id)}</option>`).join("")}</optgroup>` : "";
     }).join("")}</select>`;
   }
   function editorEscapeText(value) {
@@ -1763,25 +1773,26 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+  const K_CURSE = "ui.editor.masmorra.maldicao.";
   function lootItemRowHTML(item, index, removeClass) {
     const def = CAT.items.find(x => x.id === item.id) || {};
-    const label = `${def.emoji || "📦"} ${def.name || item.id}`;
+    const label = `${def.emoji || "📦"} ${nomeCat("item", item.id, def.name || item.id)}`;
     const carta = item.id === "carta";
     const curseMode = carta ? (item.curse_mode || "") : "";
     const curses = curseCatalog();
     const curseId = item.curse_id || (curses[0] && curses[0].id) || "";
     return `<div style="margin:4px 0;padding:4px;border:1px solid ${carta ? "#9c783a" : "transparent"};border-radius:4px;">
       <span>${editorEscapeText(label)}</span> <button data-i="${index}" class="${removeClass}">×</button>
-      ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="Texto da carta...">${editorEscapeText(item.texto || "")}</textarea>
-        <label style="display:block;margin-top:5px">maldição ao ler
+      ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="${t(K_CURSE + "texto_carta")}">${editorEscapeText(item.texto || "")}</textarea>
+        <label style="display:block;margin-top:5px">${t(K_CURSE + "ao_ler")}
           <select data-carta-curse-mode data-i="${index}">
-            <option value=""${!curseMode ? " selected" : ""}>Sem maldição</option>
-            <option value="especifica"${curseMode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
-            <option value="aleatoria"${curseMode === "aleatoria" ? " selected" : ""}>Aleatória por gravidade</option>
+            <option value=""${!curseMode ? " selected" : ""}>${t(K_CURSE + "sem")}</option>
+            <option value="especifica"${curseMode === "especifica" ? " selected" : ""}>${t(K_CURSE + "escolhida")}</option>
+            <option value="aleatoria"${curseMode === "aleatoria" ? " selected" : ""}>${t(K_CURSE + "aleatoria_gravidade")}</option>
           </select>
         </label>
         ${curseMode === "especifica" ? `<select data-carta-curse-id data-i="${index}">${opt(curses.map(c => ({ v: c.id, name: c.name || c.nome || c.id })), curseId, o => o.name)}</select>` : ""}
-        ${curseMode === "aleatoria" ? `<select data-carta-curse-category data-i="${index}">${opt(CURSE_CATEGORIES, item.curse_category || "leve", o => o.name)}</select>` : ""}` : ""}
+        ${curseMode === "aleatoria" ? `<select data-carta-curse-category data-i="${index}">${opt(CURSE_CATEGORIES, item.curse_category || "leve", o => t("ui.editor.masmorra.maldicao." + o.v))}</select>` : ""}` : ""}
     </div>`;
   }
   function wireCartaTextFields(root, items, rerender) {
@@ -1837,9 +1848,9 @@
   }
 
   const CURSE_CATEGORIES = [
-    { v: "leve", name: "Leve" },
-    { v: "media", name: "Média" },
-    { v: "grave", name: "Grave" },
+    { v: "leve" },
+    { v: "media" },
+    { v: "grave" },
   ];
   function curseCatalog() { return CAT.curses || []; }
   function curseFieldsHTML(trap, prefix) {
@@ -1850,16 +1861,16 @@
     const curseId = trap.curse_id || firstId;
     const selected = curses.find(c => c.id === curseId);
     return `<div style="margin-top:8px;border-top:1px solid #4a3a2a;padding-top:8px">
-      <label>maldição aplicada</label>
+      <label>${t(K_CURSE + "aplicada")}</label>
       <select id="${prefix}-curse-mode">
-        <option value="especifica"${mode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
-        <option value="aleatoria"${mode !== "especifica" ? " selected" : ""}>Aleatória por gravidade</option>
+        <option value="especifica"${mode === "especifica" ? " selected" : ""}>${t(K_CURSE + "escolhida")}</option>
+        <option value="aleatoria"${mode !== "especifica" ? " selected" : ""}>${t(K_CURSE + "aleatoria_gravidade")}</option>
       </select>
       ${mode === "especifica"
         ? `<select id="${prefix}-curse-id">${opt(curses.map(c => ({ v: c.id, name: c.name })), curseId, o => o.name)}</select>
            <small id="${prefix}-curse-desc" style="display:block;color:#b9a87f">${selected ? (selected.description || "") : ""}</small>`
-        : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => o.name)}</select>
-           <small style="display:block;color:#b9a87f">Escolhe uma maldição não progressiva desta gravidade.</small>`}
+        : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => t("ui.editor.masmorra.maldicao." + o.v))}</select>
+           <small style="display:block;color:#b9a87f">${t(K_CURSE + "nao_progressiva")}</small>`}
     </div>`;
   }
   function prepareCurseTrap(trap, fresh) {
@@ -1900,13 +1911,14 @@
     return obj;
   }
   // HTML dos campos de recompensa de um objetivo. `pfx` é um prefixo único de ids.
+  const K_REC = "ui.editor.masmorra.recompensa.";
   function rewardFieldsHTML(obj, pfx) {
-    return `<label>XP (total, dividido entre os vivos) <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
-      <label>ouro (total, dividido) <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
-      <label>itens de recompensa</label>
+    return `<label>${t(K_REC + "xp")} <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
+      <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
+      <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
-      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
-      <button id="${pfx}-additem">+ item</button>`;
+      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) })), "", o => o.v + " — " + o.name)}</select>
+      <button id="${pfx}-additem">${t(K_REC + "add_item")}</button>`;
   }
   function wireRewardFields(obj, pfx) {
     document.getElementById(`${pfx}-xp`).onchange = e => { obj.xp = Math.max(0, Number(e.target.value) | 0); };
@@ -1929,19 +1941,19 @@
     });
     // Armadilhas autoradas: cr do catálogo; agrupadas pela sala que contém a pos, ou
     // (corredor) pela sala mais próxima (centro).
-    (S.traps || []).forEach(function (t) {
-      var meta = (CAT.traps || []).find(function (c) { return c.tipo === t.tipo; });
+    (S.traps || []).forEach(function (trap) {
+      var meta = (CAT.traps || []).find(function (c) { return c.tipo === trap.tipo; });
       var cr = meta ? (meta.cr || 0) : 0;
-      if (!cr || !t.pos) return;
+      if (!cr || !trap.pos) return;
       total += cr;
       var dentro = (S.rooms || []).find(function (rm) {
-        return t.pos[0] >= rm.x && t.pos[0] < rm.x + rm.w && t.pos[1] >= rm.y && t.pos[1] < rm.y + rm.h;
+        return trap.pos[0] >= rm.x && trap.pos[0] < rm.x + rm.w && trap.pos[1] >= rm.y && trap.pos[1] < rm.y + rm.h;
       });
       var r = dentro;
       if (!r && (S.rooms || []).length) {
         var bestD = Infinity;
         S.rooms.forEach(function (rm) {
-          var d = Math.abs(t.pos[0] - (rm.x + rm.w / 2)) + Math.abs(t.pos[1] - (rm.y + rm.h / 2));
+          var d = Math.abs(trap.pos[0] - (rm.x + rm.w / 2)) + Math.abs(trap.pos[1] - (rm.y + rm.h / 2));
           if (d < bestD) { bestD = d; r = rm; }
         });
       }
@@ -1971,13 +1983,13 @@
       var cr = window.Difficulty ? window.Difficulty.crFromEntry(e) : 0;
       if (mo.room_id != null && m[mo.room_id] != null) m[mo.room_id] += cr;
     });
-    (S.traps || []).forEach(function (t) {
-      var meta = (CAT.traps || []).find(function (c) { return c.tipo === t.tipo; });
-      var cr = meta ? (meta.cr || 0) : 0; if (!cr || !t.pos) return;
-      var r = _tileRoom(t.pos[0], t.pos[1]);
+    (S.traps || []).forEach(function (trap) {
+      var meta = (CAT.traps || []).find(function (c) { return c.tipo === trap.tipo; });
+      var cr = meta ? (meta.cr || 0) : 0; if (!cr || !trap.pos) return;
+      var r = _tileRoom(trap.pos[0], trap.pos[1]);
       if (!r && (S.rooms || []).length) {
         var bestD = Infinity;
-        S.rooms.forEach(function (rm) { var d = Math.abs(t.pos[0]-(rm.x+rm.w/2))+Math.abs(t.pos[1]-(rm.y+rm.h/2)); if (d < bestD) { bestD = d; r = rm; } });
+        S.rooms.forEach(function (rm) { var d = Math.abs(trap.pos[0]-(rm.x+rm.w/2))+Math.abs(trap.pos[1]-(rm.y+rm.h/2)); if (d < bestD) { bestD = d; r = rm; } });
       }
       if (r && m[r.id] != null) m[r.id] += cr;
     });
@@ -2051,33 +2063,33 @@
     if (!S.rooms || !S.rooms.length) return avisos;
     var g = _grafoSalas(), nd = _ndSalaMap();
     var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
-    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push("R4: sala " + _salaRef(r.id) + " isolada do mapa principal."); });
-    if (g.bossId == null) { avisos.push("R2/R5: sem sala com role 'boss' (regras puladas)."); }
+    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push(t("ui.editor.masmorra.design.r4", { sala: _salaRef(r.id) })); });
+    if (g.bossId == null) { avisos.push(t("ui.editor.masmorra.design.r2r5_sem_boss")); }
     else {
       var dist = _distSalas(g.adj, g.entradaId, g.bossId);
-      if (dist !== Infinity && dist < VALID_MIN_SALAS) avisos.push("R2: boss a só " + dist + " sala(s) do spawn (mín " + VALID_MIN_SALAS + ").");
+      if (dist !== Infinity && dist < VALID_MIN_SALAS) avisos.push(t("ui.editor.masmorra.design.r2", { dist: dist, min: VALID_MIN_SALAS }));
       var viz = Array.from(g.adj[g.bossId] || []);
       var temDescanso = viz.some(function (id) { var rm = S.rooms.find(function (x) { return x.id === id; }); return rm && (rm.role === "empty" || (nd[id] || 0) <= pod * VALID_REST_FATOR); });
-      if (viz.length && !temDescanso) avisos.push("R5: sem sala de descanso (ND baixo) logo antes do boss.");
+      if (viz.length && !temDescanso) avisos.push(t("ui.editor.masmorra.design.r5"));
       // R1: gargalos (cut vertices) — salas cuja remoção isola o boss do spawn.
       if (dist !== Infinity) {
         var gargalos = S.rooms.filter(function (r) {
           return r.id !== g.entradaId && r.id !== g.bossId && g.reach.has(r.id) &&
                  !_alcancaSemSala(g.adj, g.entradaId, g.bossId, r.id);
         }).map(function (r) { return _salaRef(r.id); });
-        if (gargalos.length) avisos.push("R1: rota única — sem caminho alternativo até o boss (gargalo em " + gargalos.join(", ") + ").");
+        if (gargalos.length) avisos.push(t("ui.editor.masmorra.design.r1", { gargalos: gargalos.join(", ") }));
       }
     }
     var req = S.rooms.filter(function (r) { return r.required; });
-    if (!req.length) { avisos.push("R3/R6: nenhuma sala marcada como obrigatória (rota crítica)."); }
+    if (!req.length) { avisos.push(t("ui.editor.masmorra.design.r3r6_sem_obrigatoria")); }
     else {
       var media = req.reduce(function (a, r) { return a + (nd[r.id] || 0); }, 0) / req.length;
       var teto = pod * VALID_R6_FATOR;
-      if (media > teto) avisos.push("R6: rota crítica pesada (ND médio " + media.toFixed(2) + " > teto " + teto.toFixed(2) + ").");
+      if (media > teto) avisos.push(t("ui.editor.masmorra.design.r6", { media: media.toFixed(2), teto: teto.toFixed(2) }));
       var ord = req.slice().sort(function (a, b) { return _distSalas(g.adj, g.entradaId, a.id) - _distSalas(g.adj, g.entradaId, b.id); });
       for (var i = 1; i < ord.length; i++) {
         var delta = Math.abs((nd[ord[i-1].id] || 0) - (nd[ord[i].id] || 0));
-        if (delta > VALID_MAX_PICO) avisos.push("R3: pico de ND entre salas " + _salaRef(ord[i-1].id) + " e " + _salaRef(ord[i].id) + " (Δ=" + delta.toFixed(2) + ").");
+        if (delta > VALID_MAX_PICO) avisos.push(t("ui.editor.masmorra.design.r3", { a: _salaRef(ord[i-1].id), b: _salaRef(ord[i].id), delta: delta.toFixed(2) }));
       }
     }
     return avisos;
@@ -2085,8 +2097,8 @@
 
   function _avisosDesignHTML() {
     var av = _validarDesign();
-    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ Sem avisos de design.</div>';
-    return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ Avisos de design (' + av.length + ')</label>' +
+    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ ' + t("ui.editor.masmorra.design.sem_avisos") + '</div>';
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ ' + t("ui.editor.masmorra.design.avisos", { n: av.length }) + '</label>' +
       av.map(function (a) { return '<div style="color:#d8b06a;font-size:11px;margin-top:2px">• ' + a + '</div>'; }).join("");
   }
 
@@ -2099,7 +2111,7 @@
       var f = window.Difficulty.faixa(valor, pod);
       var pct = Math.max(4, Math.min(100, (valor / (pod * 1.5)) * 100));
       return '<div style="margin-top:4px"><span>' + rot + ': <b>' + valor.toFixed(2) + '</b> — ' +
-        '<span style="color:' + f.color + '">' + f.label + '</span></span>' +
+        '<span style="color:' + f.color + '">' + t("ui.dificuldade." + f.key) + '</span></span>' +
         '<div style="height:8px;background:#241d14;border-radius:4px;overflow:hidden;margin-top:2px">' +
         '<div style="height:100%;width:' + pct + '%;background:' + f.color + '"></div></div></div>';
     }
@@ -2107,9 +2119,9 @@
     var sel = [2, 4, 6].map(function (n) {
       return '<button data-ndprev="' + n + '" class="ndprev' + (atual === n ? ' on' : '') + '">' + n + '</button>';
     }).join("");
-    return '<hr style="border-color:#3a3022;margin:10px 0"><label>🌡️ termômetro (poder ' + pod + ')</label>' +
-      linha("Total", nd.total) + linha("Pior sala", nd.pior) +
-      '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>preview jogadores:</span>' + sel + '</div>';
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>🌡️ ' + t("ui.editor.masmorra.termometro.titulo", { poder: pod }) + '</label>' +
+      linha(t("ui.editor.masmorra.termometro.total"), nd.total) + linha(t("ui.editor.masmorra.termometro.pior_sala"), nd.pior) +
+      '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>' + t("ui.editor.masmorra.termometro.preview") + '</span>' + sel + '</div>';
   }
 
   // ── Coordenadas nas descrições ────────────────────────────────────────────
@@ -2125,7 +2137,7 @@
   }
   function _salaDe(p) {
     const rid = p ? roomIdAt(p[0], p[1]) : null;
-    return rid == null ? "fora de sala" : "sala #" + rid;
+    return rid == null ? t("ui.editor.masmorra.canvas.fora_de_sala") : t("ui.editor.masmorra.canvas.sala_n", { n: rid });
   }
   // Referência curta de uma sala: "#3 (4,2)→(9,7)".
   function _salaRef(id) {
@@ -2134,7 +2146,7 @@
   }
   function _coordsSelecao(sel) {
     const k = sel.kind, ref = sel.ref;
-    if (k === "room") return _xy([ref.x, ref.y]) + " → " + _xy([ref.x + ref.w - 1, ref.y + ref.h - 1]) + " · " + ref.w + "×" + ref.h + " casas";
+    if (k === "room") return _xy([ref.x, ref.y]) + " → " + _xy([ref.x + ref.w - 1, ref.y + ref.h - 1]) + " · " + t("ui.editor.masmorra.painel.tamanho_casas", { w: ref.w, h: ref.h });
     if (k === "door") return _xy([ref.x, ref.y]) + " · " + _salaDe([ref.x, ref.y]);
     if (k === "bridge") return _xy(ref.inicio) + " → " + _xy(ref.fim);
     if (k === "monster") return _faixaXY(monsterTiles(ref)) + " · " + _salaDe(ref.pos);
@@ -2173,48 +2185,48 @@
       const spawnList = S.heroSpawns.map((s, i) => {
         const h = heroSpawnMeta(s.class_id);
         return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-          <span>${h.emoji} ${h.name} <small>(${s.pos[0]},${s.pos[1]})</small></span>
+          <span>${h.emoji} ${nomeCat("classe", h.id, h.id)} <small>(${s.pos[0]},${s.pos[1]})</small></span>
           <button class="hero-spawn-rm" data-i="${i}">×</button>
         </div>`;
-      }).join("") || '<small style="color:#8a7a5a">Nenhuma posição inicial definida.</small>';
-      panel.innerHTML = `<b>🗺️ Masmorra</b>
-        <label>modo de início</label>
+      }).join("") || `<small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.nenhuma_posicao_inicial")}</small>`;
+      panel.innerHTML = `<b>🗺️ ${t("ui.editor.masmorra.painel.titulo")}</b>
+        <label>${t("ui.editor.masmorra.painel.modo_inicio")}</label>
         <select id="start-mode">
-          <option value="entrance"${S.startMode === "entrance" ? " selected" : ""}>Entrada tradicional</option>
-          <option value="hero_spawns"${S.startMode === "hero_spawns" ? " selected" : ""}>Heróis separados</option>
+          <option value="entrance"${S.startMode === "entrance" ? " selected" : ""}>${t("ui.editor.masmorra.painel.entrada_tradicional")}</option>
+          <option value="hero_spawns"${S.startMode === "hero_spawns" ? " selected" : ""}>${t("ui.editor.masmorra.painel.herois_separados")}</option>
         </select>
-        ${S.startMode === "hero_spawns" ? `<div style="margin-top:6px;color:#b9a87f;font-size:11px">Posicione cada classe com a ferramenta <b>início herói</b>. A masmorra não terá escada de entrada.</div><div id="hero-spawn-list">${spawnList}</div>` : ""}
+        ${S.startMode === "hero_spawns" ? `<div style="margin-top:6px;color:#b9a87f;font-size:11px">${t("ui.editor.masmorra.painel.posicione_classe")}</div><div id="hero-spawn-list">${spawnList}</div>` : ""}
         <hr style="border-color:#3a3022;margin:10px 0">
-        <label>objetivo principal</label>
-        <select id="o-prim">${OBJ.map(t => `<option value="${t}"${o.primary.type === t ? " selected" : ""}>${t === "all_heroes_at_exit" ? "todos os heróis na saída" : t}</option>`).join("")}</select>
+        <label>${t("ui.editor.masmorra.painel.objetivo_principal")}</label>
+        <select id="o-prim">${OBJ.map(objId => `<option value="${objId}"${o.primary.type === objId ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + objId)}</option>`).join("")}</select>
         ${rewardFieldsHTML(o.primary, "o-prim-rw")}
         <hr style="border-color:#3a3022;margin:10px 0">
-        <label>objetivos secundários</label>
+        <label>${t("ui.editor.masmorra.painel.objetivos_secundarios")}</label>
         <div id="o-sec">${o.secondary.map((s, i) => `<div class="o-sec-item" style="border-top:1px solid #3a3022;padding-top:6px;margin-top:6px">
-          <select data-i="${i}" class="o-secsel">${OBJ.map(t => `<option value="${t}"${s.type === t ? " selected" : ""}>${t}</option>`).join("")}</select>
-          <button data-i="${i}" class="o-rm">× remover</button>
+          <select data-i="${i}" class="o-secsel">${OBJ.map(objId => `<option value="${objId}"${s.type === objId ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + objId)}</option>`).join("")}</select>
+          <button data-i="${i}" class="o-rm">× ${t("ui.editor.masmorra.painel.remover")}</button>
           ${rewardFieldsHTML(s, "o-sec" + i + "-rw")}
         </div>`).join("")}</div>
-        <button id="o-add">+ secundário</button>
+        <button id="o-add">+ ${t("ui.editor.masmorra.painel.secundario")}</button>
         <hr style="border-color:#3a3022;margin:10px 0">
-        <label>⚠️ reforços do mestre</label>
+        <label>⚠️ ${t("ui.editor.masmorra.painel.reforcos_mestre")}</label>
         <div id="reinforce-list">${S.masterReinforcements.map((r, i) => {
           const meta = CAT.monsters.find(m => m.type === r.type) || {};
           return `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
-            <span>${meta.emoji || "👾"} ${meta.name || r.type} ×${r.count}</span>
+            <span>${meta.emoji || "👾"} ${nomeCat("monstro", r.type, meta.name || r.type)} ×${r.count}</span>
             <button data-i="${i}" class="reinforce-rm">×</button>
           </div>`;
-        }).join("") || '<small style="color:#8a7a5a">Nenhum reforço cadastrado.</small>'}</div>
+        }).join("") || `<small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.nenhum_reforco")}</small>`}</div>
         <div style="display:flex;gap:4px;align-items:flex-end;margin-top:6px">
-          <select id="reinforce-type" style="flex:1">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), "", o => o.v + " — " + o.name)}</select>
+          <select id="reinforce-type" style="flex:1">${opt(CAT.monsters.map(m => ({ v: m.type, name: nomeCat("monstro", m.type, m.name) })), "", o => o.v + " — " + o.name)}</select>
           <input id="reinforce-count" type="number" min="1" value="1" style="width:56px">
           <button id="reinforce-add-btn">+</button>
         </div>
         <hr style="border-color:#3a3022;margin:10px 0">
-        <label>👥 grupo esperado</label>
+        <label>👥 ${t("ui.editor.masmorra.painel.grupo_esperado")}</label>
         <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
-          <span>heróis</span><input id="ep-heroes" type="number" min="1" max="6" value="${S.expectedParty.heroes}" style="width:48px">
-          <span>nível</span><input id="ep-level" type="number" min="1" value="${S.expectedParty.level}" style="width:48px">
+          <span>${t("ui.editor.masmorra.painel.herois")}</span><input id="ep-heroes" type="number" min="1" max="6" value="${S.expectedParty.heroes}" style="width:48px">
+          <span>${t("ui.editor.masmorra.painel.nivel")}</span><input id="ep-level" type="number" min="1" value="${S.expectedParty.level}" style="width:48px">
         </div>
         ${_termometroHTML()}
         ${_avisosDesignHTML()}`;
@@ -2263,13 +2275,13 @@
     const k = S.sel.kind, ref = S.sel.ref;
     if (k === "bridge") {
       const tiles = bridgeTilesOf(ref);
-      panel.innerHTML = `<b>🌉 Ponte</b>
-        <div style="color:#a89773;font-size:11px;line-height:1.5;margin-top:6px">${tiles.length} casas · largura ${ref.largura} · altura ${ref.altura}</div>
-        <label style="display:block;margin-top:8px;font-size:11px;color:#b9a87f">Material
-          <select id="bridge-selected-material"><option value="madeira"${ref.material !== "pedra_rustica" ? " selected" : ""}>Madeira</option><option value="pedra_rustica"${ref.material === "pedra_rustica" ? " selected" : ""}>Pedra rústica</option></select>
+      panel.innerHTML = `<b>🌉 ${t("ui.editor.masmorra.painel.ponte_titulo")}</b>
+        <div style="color:#a89773;font-size:11px;line-height:1.5;margin-top:6px">${t("ui.editor.masmorra.painel.ponte_info", { casas: tiles.length, largura: ref.largura, altura: ref.altura })}</div>
+        <label style="display:block;margin-top:8px;font-size:11px;color:#b9a87f">${t("ui.editor.masmorra.painel.material")}
+          <select id="bridge-selected-material"><option value="madeira"${ref.material !== "pedra_rustica" ? " selected" : ""}>${t("ui.editor.masmorra.painel.madeira")}</option><option value="pedra_rustica"${ref.material === "pedra_rustica" ? " selected" : ""}>${t("ui.editor.masmorra.painel.pedra_rustica")}</option></select>
         </label>
-        <div style="color:#8a7a5a;font-size:11px;margin-top:6px">A ponte não altera o terreno abaixo. Criaturas podem cair pelas laterais ao serem empurradas.</div>
-        <button id="bridge-delete" style="margin-top:10px">🗑 Deletar ponte</button>`;
+        <div style="color:#8a7a5a;font-size:11px;margin-top:6px">${t("ui.editor.masmorra.painel.ponte_hint")}</div>
+        <button id="bridge-delete" style="margin-top:10px">🗑 ${t("ui.editor.masmorra.painel.deletar_ponte")}</button>`;
       document.getElementById("bridge-selected-material").onchange = e => {
         ref.material = e.target.value === "pedra_rustica" ? "pedra_rustica" : "madeira";
         renderPanel(); render();
@@ -2281,34 +2293,34 @@
       const rot = doorRotationAt(ref.x, ref.y);
       const conditionKey = doorKey(ref.x, ref.y);
       const condition = doorConditionAt(ref.x, ref.y);
-      const keyItems = CAT.items.map(it => ({ v: it.id, name: it.name }));
+      const keyItems = CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) }));
       const keyDecors = S.decorations.filter(d => d.key_objective);
       const selectedDecorKeys = new Set(condition?.key_decor_ids || []);
-      panel.innerHTML = `<b>🚪 Porta</b>
-        <div style="margin-top:6px;color:#f0c867"><b>Frente da imagem: ${doorFrontLabel(ref.x, ref.y)}</b></div>
-        <div style="font-size:11px;color:#8a7a5a;margin-top:4px">Giros aplicados: ${rot} × 90°</div>
-        <button id="door-rotate" style="margin-top:8px">↻ Girar 90° (R)</button>
-        <small style="display:block;color:#8a7a5a;margin-top:6px">A seta dourada no mapa mostra a frente. A orientação é salva nesta porta.</small>
+      panel.innerHTML = `<b>🚪 ${t("ui.editor.masmorra.painel.porta_titulo")}</b>
+        <div style="margin-top:6px;color:#f0c867"><b>${t("ui.editor.masmorra.painel.frente_imagem", { frente: doorFrontLabel(ref.x, ref.y) })}</b></div>
+        <div style="font-size:11px;color:#8a7a5a;margin-top:4px">${t("ui.editor.masmorra.painel.giros_aplicados", { n: rot })}</div>
+        <button id="door-rotate" style="margin-top:8px">↻ ${t("ui.editor.masmorra.painel.girar_90_r")}</button>
+        <small style="display:block;color:#8a7a5a;margin-top:6px">${t("ui.editor.masmorra.painel.seta_dourada_hint")}</small>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>🔐 Condição opcional de abertura</b>
+          <b>🔐 ${t("ui.editor.masmorra.painel.condicao_abertura")}</b>
           <select id="door-condition-type">
-            <option value="none"${!condition ? " selected" : ""}>Sem condição</option>
-            <option value="item"${condition?.type === "item" ? " selected" : ""}>Item-chave</option>
-            <option value="decor"${condition?.type === "decor" ? " selected" : ""}>Objeto-chave ativado</option>
-            <option value="licao"${condition?.type === "licao" ? " selected" : ""}>Lição cumprida</option>
+            <option value="none"${!condition ? " selected" : ""}>${t("ui.editor.masmorra.painel.sem_condicao")}</option>
+            <option value="item"${condition?.type === "item" ? " selected" : ""}>${t("ui.editor.masmorra.painel.item_chave")}</option>
+            <option value="decor"${condition?.type === "decor" ? " selected" : ""}>${t("ui.editor.masmorra.painel.objeto_chave_ativado")}</option>
+            <option value="licao"${condition?.type === "licao" ? " selected" : ""}>${t("ui.editor.masmorra.painel.licao_cumprida")}</option>
           </select>
           ${condition?.type === "licao" ? (() => {
             const licoes = S.falas.filter(f => f.tarefa && f.tarefa.tipo);
-            if (!licoes.length) return '<small style="color:#d8a0a0">Crie primeiro uma fala com tarefa.</small>';
-            return `<label>lição necessária</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} ${_xy(l.pos)} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
+            if (!licoes.length) return `<small style="color:#d8a0a0">${t("ui.editor.masmorra.painel.crie_fala_tarefa")}</small>`;
+            return `<label>${t("ui.editor.masmorra.painel.licao_necessaria")}</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} ${_xy(l.pos)} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
           })() : ""}
-          ${condition?.type === "item" ? `<label>item necessário</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
-          ${condition?.type === "decor" ? `<label>modo das ativações</label><select id="door-condition-mode">
-              <option value="any"${condition.keys_mode !== "all" ? " selected" : ""}>qualquer objeto</option>
-              <option value="all"${condition.keys_mode === "all" ? " selected" : ""}>todos os objetos</option>
+          ${condition?.type === "item" ? `<label>${t("ui.editor.masmorra.painel.item_necessario")}</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+          ${condition?.type === "decor" ? `<label>${t("ui.editor.masmorra.painel.modo_ativacoes")}</label><select id="door-condition-mode">
+              <option value="any"${condition.keys_mode !== "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.qualquer_objeto")}</option>
+              <option value="all"${condition.keys_mode === "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.todos_objetos")}</option>
             </select>
-            <label>objetos-chave</label>
-            ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${decorMeta(d.type)?.nome || d.type} ${_xy(d.pos)}</label>`).join("") : '<small style="color:#d8a0a0">Marque primeiro uma decoração como objeto-chave.</small>'}` : ""}
+            <label>${t("ui.editor.masmorra.painel.objetos_chave")}</label>
+            ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} ${_xy(d.pos)}</label>`).join("") : `<small style="color:#d8a0a0">${t("ui.editor.masmorra.painel.marque_decor_chave")}</small>`}` : ""}
         </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
       document.getElementById("door-condition-type").onchange = e => {
@@ -2331,8 +2343,8 @@
       });
     } else if (k === "hero_spawn") {
       const h = heroSpawnMeta(ref.class_id);
-      panel.innerHTML = `<b>${h.emoji} Início: ${h.name}</b>
-        <small>Para trocar de herói, selecione a ferramenta "início herói" e escolha outra classe.</small>`;
+      panel.innerHTML = `<b>${h.emoji} ${t("ui.editor.masmorra.painel.inicio_classe", { classe: nomeCat("classe", h.id, h.id) })}</b>
+        <small>${t("ui.editor.masmorra.painel.trocar_heroi_hint")}</small>`;
     } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const flightMeta = monsterFlightMeta(ref);
@@ -2345,25 +2357,25 @@
       const defaultIgnoreFlightObstacles = !!(flightMeta && flightMeta.ignora_obstaculos_voo);
       const altitude = altitudeClamp(ref.altura, defaultAltitude);
       const maxAltitude = Math.max(altitude, altitudeClamp(ref.altura_max, defaultMaxAltitude));
-      panel.innerHTML = `<b>👹 Monstro</b>
-        <label>tipo</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: m.name })), ref.type, o => o.v + " — " + o.name)}</select>
+      panel.innerHTML = `<b>👹 ${t("ui.editor.masmorra.painel.monstro_titulo")}</b>
+        <label>${t("ui.editor.masmorra.painel.tipo")}</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: nomeCat("monstro", m.type, m.name) })), ref.type, o => o.v + " — " + o.name)}</select>
         <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
-        <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> chefe (boss)</label>
-        <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> alvo do objetivo</label>
+        <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> ${t("ui.editor.masmorra.painel.chefe_boss")}</label>
+        <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> ${t("ui.editor.masmorra.painel.alvo_objetivo")}</label>
         ${isFlying ? `<div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>🪽 Voo e altitude</b>
-          <div style="font-size:11px;color:#8a7a5a">A altura usa a escala 0–10 e afeta o alcance das armas.</div>
-          <label>altura inicial <input id="p-altitude" type="number" min="0" max="10" step="1" value="${altitude}"></label>
-          <label>altura máxima <input id="p-altitude-max" type="number" min="0" max="10" step="1" value="${maxAltitude}"></label>
-          <label><input type="checkbox" id="p-altitude-change"${(ref.pode_alterar_altura ?? defaultCanChangeAltitude) ? " checked" : ""}> pode subir/descer</label>
-          <label>custo vertical <input id="p-altitude-cost" type="number" min="1" max="10" step="1" value="${Math.max(1, Math.min(10, Number(ref.custo_mov_altura) || defaultAltitudeMoveCost))}"> movimento por ponto</label>
-          <label><input type="checkbox" id="p-flight-obstacles"${(ref.ignora_obstaculos_voo ?? defaultIgnoreFlightObstacles) ? " checked" : ""}> ignora obstáculos no voo</label>
-        </div>` : `<small style="display:block;margin-top:8px;color:#8a7a5a">Este tipo não possui a habilidade Voo.</small>`}
+          <b>🪽 ${t("ui.editor.masmorra.painel.voo_altitude")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.altura_escala_hint")}</div>
+          <label>${t("ui.editor.masmorra.painel.altura_inicial")} <input id="p-altitude" type="number" min="0" max="10" step="1" value="${altitude}"></label>
+          <label>${t("ui.editor.masmorra.painel.altura_maxima")} <input id="p-altitude-max" type="number" min="0" max="10" step="1" value="${maxAltitude}"></label>
+          <label><input type="checkbox" id="p-altitude-change"${(ref.pode_alterar_altura ?? defaultCanChangeAltitude) ? " checked" : ""}> ${t("ui.editor.masmorra.painel.pode_subir_descer")}</label>
+          <label>${t("ui.editor.masmorra.painel.custo_vertical")} <input id="p-altitude-cost" type="number" min="1" max="10" step="1" value="${Math.max(1, Math.min(10, Number(ref.custo_mov_altura) || defaultAltitudeMoveCost))}"> ${t("ui.editor.masmorra.painel.movimento_por_ponto")}</label>
+          <label><input type="checkbox" id="p-flight-obstacles"${(ref.ignora_obstaculos_voo ?? defaultIgnoreFlightObstacles) ? " checked" : ""}> ${t("ui.editor.masmorra.painel.ignora_obstaculos_voo")}</label>
+        </div>` : `<small style="display:block;margin-top:8px;color:#8a7a5a">${t("ui.editor.masmorra.painel.sem_voo")}</small>`}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>Tamanho visual do sprite</b>
-          <div style="font-size:11px;color:#8a7a5a">não muda as casas ocupadas nem as regras de combate.</div>
-          <label>escala largura <input id="p-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs[0]}"></label>
-          <label>escala altura <input id="p-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs[1]}"></label>
+          <b>${t("ui.editor.masmorra.painel.tamanho_visual_sprite")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.tamanho_visual_hint")}</div>
+          <label>${t("ui.editor.masmorra.painel.escala_largura")} <input id="p-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs[0]}"></label>
+          <label>${t("ui.editor.masmorra.painel.escala_altura")} <input id="p-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs[1]}"></label>
         </div>`;
       document.getElementById("p-type").onchange = e => {
         ref.type = e.target.value;
@@ -2424,40 +2436,40 @@
         };
       }
     } else if (k === "chest") {
-      panel.innerHTML = `<b>🧰 Baú</b>
-        <label>ouro <input id="p-gold" type="number" value="${ref.gold}"></label>
-        <label><input type="checkbox" id="p-key" ${ref.key_objective ? "checked" : ""}> baú-chave</label>
-        <label>itens</label>
+      panel.innerHTML = `<b>🧰 ${t("ui.editor.masmorra.painel.bau_titulo")}</b>
+        <label>${t("ui.editor.masmorra.painel.ouro")} <input id="p-gold" type="number" value="${ref.gold}"></label>
+        <label><input type="checkbox" id="p-key" ${ref.key_objective ? "checked" : ""}> ${t("ui.editor.masmorra.painel.bau_chave")}</label>
+        <label>${t("ui.editor.masmorra.painel.itens")}</label>
         <div id="p-items">${ref.items.map((it, i) => lootItemRowHTML(it, i, "rm-item")).join("")}</div>
         ${lootItemSelectHTML("p-add")}
-        <button id="p-additem">+ item</button>`;
+        <button id="p-additem">+ ${t("ui.editor.masmorra.painel.item")}</button>`;
       document.getElementById("p-gold").onchange = e => { ref.gold = Math.max(0, Number(e.target.value) | 0); };
       document.getElementById("p-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("p-additem").onclick = () => { const id = document.getElementById("p-add").value; if (id) ref.items.push({ id }); renderPanel(); };
       wireCartaTextFields(panel, ref.items, renderPanel);
       panel.querySelectorAll(".rm-item").forEach(b => b.onclick = () => { ref.items.splice(Number(b.dataset.i), 1); renderPanel(); });
     } else if (k === "trap") {
-      const meta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
+      const meta = CAT.traps.find(tr => tr.tipo === ref.tipo) || {};
       const defaultDamage = trapPrimaryDamage(meta);
       const defaultDifficulty = meta.dificuldade || "";
-      panel.innerHTML = `<b>⚠️ Armadilha</b>
-        <label>tipo</label><select id="p-tt">${opt(CAT.traps.filter(t => !t.apenas_objeto).map(t => ({ v: t.tipo, name: t.nome })), ref.tipo, o => o.v + " — " + o.name)}</select>
+      panel.innerHTML = `<b>⚠️ ${t("ui.editor.masmorra.painel.armadilha_titulo")}</b>
+        <label>${t("ui.editor.masmorra.painel.tipo")}</label><select id="p-tt">${opt(CAT.traps.filter(tr => !tr.apenas_objeto).map(tr => ({ v: tr.tipo, name: nomeCat("armadilha", tr.tipo, tr.nome) })), ref.tipo, o => o.v + " — " + o.name)}</select>
         ${trapCharacteristicsHTML(meta, false, ref)}
         <div class="trap-overrides">
-          <b>⚙️ Ajustes desta armadilha</b>
-          <label>CD do teste <input id="p-trap-cd" type="number" min="1" max="40" value="${ref.dificuldade ?? defaultDifficulty}"></label>
-          ${defaultDamage ? `<label>dano principal <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">Formato: 1d6, 2d8+2 ou 3.</small>` : `<small>Esta armadilha não possui dano direto configurável.</small>`}
-          <small>Apague o valor para voltar ao padrão do catálogo.</small>
+          <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
+          <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="p-trap-cd" type="number" min="1" max="40" value="${ref.dificuldade ?? defaultDifficulty}"></label>
+          ${defaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
+          <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
         </div>
-        ${meta.precisa_veneno || meta.permite_veneno ? `<label>veneno${meta.permite_veneno && !meta.precisa_veneno ? " (opcional)" : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: v.name })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+        ${meta.precisa_veneno || meta.permite_veneno ? `<label>${t("ui.editor.masmorra.painel.veneno")}${meta.permite_veneno && !meta.precisa_veneno ? ` ${t("ui.editor.masmorra.painel.opcional")}` : ""}</label><select id="p-ven">${opt(CAT.venoms.map(v => ({ v: v.id, name: nomeCat("item", v.id, v.name) })), ref.veneno_id || "", o => o.v + " — " + o.name)}</select>` : ""}
         ${curseFieldsHTML(ref, "p")}
-        ${ref.tipo === "armadilha_teletransporte" ? `<label>ponto de saída (x, y)</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="p-out-help" style="color:#8a7a5a">Casa de chão; se ocupada no jogo, usa a adjacente livre mais próxima.</small>` : ""}
+        ${ref.tipo === "armadilha_teletransporte" ? `<label>${t("ui.editor.masmorra.painel.ponto_saida_xy")}</label><div style="display:flex;gap:4px"><input id="p-out-x" type="number" min="0" max="${S.grid.w - 1}" value="${ref.saida ? ref.saida[0] : ref.pos[0]}"><input id="p-out-y" type="number" min="0" max="${S.grid.h - 1}" value="${ref.saida ? ref.saida[1] : ref.pos[1]}"></div><button id="p-pick-out" style="margin-top:5px">📍 ${t("ui.editor.masmorra.painel.selecionar_saida_mapa")}</button><small id="p-out-help" style="color:#8a7a5a">${t("ui.editor.masmorra.painel.casa_chao_hint")}</small>` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>Imagem</b>
-          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — visível no jogo só quando a armadilha for revelada.</div>
+          <b>${t("ui.editor.masmorra.painel.imagem")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.imagem_hint_armadilha")}</div>
           <div style="margin-top:4px">
             <select id="t-img-sel"></select>
-            <button id="t-img-refresh" title="recarregar lista">↻</button>
+            <button id="t-img-refresh" title="${t("ui.editor.masmorra.painel.recarregar_lista")}">↻</button>
           </div>
           <div style="margin-top:4px">
             <input id="t-img-file" type="file" accept="image/png" style="font-size:11px">
@@ -2468,7 +2480,7 @@
         ref.tipo = e.target.value;
         delete ref.dificuldade;
         delete ref.dano;
-        const nextMeta = CAT.traps.find(t => t.tipo === ref.tipo) || {};
+        const nextMeta = CAT.traps.find(tr => tr.tipo === ref.tipo) || {};
         if (!(nextMeta.precisa_veneno || nextMeta.permite_veneno)) delete ref.veneno_id;
         if (ref.tipo !== "armadilha_teletransporte") delete ref.saida;
         prepareCurseTrap(ref, true);
@@ -2486,7 +2498,7 @@
         const raw = e.target.value.trim().replace(/\s/g, "");
         const help = document.getElementById("p-trap-damage-help");
         if (!raw) { delete ref.dano; renderPanel(); render(); updateStatus(); return; }
-        if (!validTrapDamage(raw)) { if (help) help.textContent = "Valor inválido. Use 1d6, 2d8+2 ou 3."; e.target.focus(); return; }
+        if (!validTrapDamage(raw)) { if (help) help.textContent = t("ui.editor.masmorra.painel.valor_invalido_dano"); e.target.focus(); return; }
         ref.dano = raw; renderPanel(); render(); updateStatus();
       };
       if (meta.precisa_veneno || meta.permite_veneno) document.getElementById("p-ven").onchange = e => { ref.veneno_id = e.target.value || null; };
@@ -2497,84 +2509,84 @@
         document.getElementById("p-out-y").onchange = setSaida;
         document.getElementById("p-pick-out").onclick = () => {
           S.teleportExitPick = ref;
-          document.getElementById("p-out-help").textContent = "Clique agora em uma casa de chão no mapa para definir a saída.";
+          document.getElementById("p-out-help").textContent = t("ui.editor.masmorra.painel.clique_casa_chao");
         };
       }
       // Seletor de imagem (espelha o das decorações — pasta assets/objetos via OBJETO_UPLOAD).
       const tImgSel = document.getElementById("t-img-sel");
       const tImgSt = document.getElementById("t-img-st");
       function fillTrapImg(list) {
-        const opts = ['<option value="">(nenhuma — ícone padrão)</option>']
+        const opts = [`<option value="">${t("ui.editor.masmorra.painel.nenhuma_icone_padrao")}</option>`]
           .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
         if (ref.image && list.indexOf(ref.image) < 0)
-          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+          opts.push(`<option value="${ref.image}" selected>${ref.image} ${t("ui.editor.masmorra.painel.atual_sufixo")}</option>`);
         tImgSel.innerHTML = opts.join("");
       }
       fillTrapImg([]);
       function loadTrapImgList() {
-        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "(offline: lista/upload indisponível)"; return; }
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = t("ui.editor.masmorra.painel.offline_lista_upload"); return; }
         window.OBJETO_UPLOAD.list()
           .then(list => fillTrapImg(list))
-          .catch(() => { tImgSt.textContent = "servidor offline"; });
+          .catch(() => { tImgSt.textContent = t("ui.editor.masmorra.painel.servidor_offline"); });
       }
       loadTrapImgList();
       tImgSel.onchange = e => { ref.image = e.target.value || null; render(); };
       document.getElementById("t-img-refresh").onclick = loadTrapImgList;
       document.getElementById("t-img-file").onchange = async e => {
         const file = e.target.files[0]; if (!file) return;
-        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = "servidor offline"; return; }
-        tImgSt.textContent = "enviando…";
+        if (!window.OBJETO_UPLOAD) { tImgSt.textContent = t("ui.editor.masmorra.painel.servidor_offline"); return; }
+        tImgSt.textContent = t("ui.editor.masmorra.painel.enviando");
         try {
           const name = await window.OBJETO_UPLOAD.upload(file);
           ref.image = name;
-          tImgSt.textContent = "enviada ✓";
+          tImgSt.textContent = t("ui.editor.masmorra.painel.enviada_ok");
           loadTrapImgList(); render();
-        } catch (err) { tImgSt.textContent = "falha: " + err.message; }
+        } catch (err) { tImgSt.textContent = t("ui.editor.masmorra.painel.falha_dois_pontos") + err.message; }
       };
     } else if (k === "fala") {
       const tg = ref.trigger || (ref.trigger = { tipo: "proximidade", raio: 2 });
       const fal = ref.falante || (ref.falante = { nome: "", emoji: "🧙" });
       const tar = ref.tarefa || null;
       const ehCasa = tar && LICAO_VERBOS_CASA.has(tar.tipo);
-      panel.innerHTML = `<b>💬 Fala / lição</b>
-        <label>emoji do falante</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
-        <label>nome do falante</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="(opcional)">
-        <label>texto</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
-        <label>gatilho</label><select id="f-tipo">
-          <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>proximidade (raio)</option>
-          <option value="sala"${tg.tipo === "sala" ? " selected" : ""}>entrar na sala</option>
-          <option value="manual"${tg.tipo === "manual" ? " selected" : ""}>manual (mestre)</option>
+      panel.innerHTML = `<b>💬 ${t("ui.editor.masmorra.painel.fala_licao_titulo")}</b>
+        <label>${t("ui.editor.masmorra.painel.emoji_falante")}</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
+        <label>${t("ui.editor.masmorra.painel.nome_falante")}</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.opcional")}">
+        <label>${t("ui.editor.masmorra.painel.texto")}</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
+        <label>${t("ui.editor.masmorra.painel.gatilho")}</label><select id="f-tipo">
+          <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_proximidade")}</option>
+          <option value="sala"${tg.tipo === "sala" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_sala")}</option>
+          <option value="manual"${tg.tipo === "manual" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_manual")}</option>
         </select>
-        ${tg.tipo === "proximidade" ? `<label>raio (casas)</label><input id="f-raio" type="number" min="1" max="20" value="${tg.raio || 2}" style="width:60px">` : ""}
+        ${tg.tipo === "proximidade" ? `<label>${t("ui.editor.masmorra.painel.raio_casas")}</label><input id="f-raio" type="number" min="1" max="20" value="${tg.raio || 2}" style="width:60px">` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>🎓 Lição de tutorial</b>
-          <label>para a classe</label>
+          <b>🎓 ${t("ui.editor.masmorra.painel.licao_tutorial")}</b>
+          <label>${t("ui.editor.masmorra.painel.para_a_classe")}</label>
           <select id="f-classe">
-            <option value=""${!ref.classe ? " selected" : ""}>todas as classes</option>
-            ${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.classe === h.id ? " selected" : ""}>${h.emoji} ${h.name}</option>`).join("")}
+            <option value=""${!ref.classe ? " selected" : ""}>${t("ui.editor.masmorra.painel.todas_classes")}</option>
+            ${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.classe === h.id ? " selected" : ""}>${h.emoji} ${nomeCat("classe", h.id, h.id)}</option>`).join("")}
           </select>
-          <label>ordem na trilha (vazio = sem ordem)</label>
+          <label>${t("ui.editor.masmorra.painel.ordem_na_trilha")}</label>
           <input id="f-ordem" type="number" min="1" value="${ref.ordem ?? ""}" style="width:70px">
-          <label><input type="checkbox" id="f-tem-tarefa"${tar ? " checked" : ""}> cobra uma tarefa</label>
+          <label><input type="checkbox" id="f-tem-tarefa"${tar ? " checked" : ""}> ${t("ui.editor.masmorra.painel.cobra_tarefa")}</label>
           ${tar ? `
-            <label>tarefa</label>
-            <select id="f-tarefa-tipo">${LICAO_VERBOS.map(o => `<option value="${o.v}"${tar.tipo === o.v ? " selected" : ""}>${o.nome}</option>`).join("")}</select>
-            <label>alvo ${ehCasa ? "(casa x,y — vazio = qualquer)" : "(tipo do monstro ou id do item — vazio = qualquer)"}</label>
+            <label>${t("ui.editor.masmorra.painel.tarefa")}</label>
+            <select id="f-tarefa-tipo">${LICAO_VERBOS.map(o => `<option value="${o.v}"${tar.tipo === o.v ? " selected" : ""}>${t("ui.editor.masmorra.licao." + o.v)}</option>`).join("")}</select>
+            <label>${t("ui.editor.masmorra.painel.alvo")} ${ehCasa ? t("ui.editor.masmorra.painel.alvo_hint_casa") : t("ui.editor.masmorra.painel.alvo_hint_tipo")}</label>
             <input id="f-tarefa-alvo" value="${ehCasa ? (Array.isArray(tar.alvo) ? tar.alvo.join(",") : "") : (typeof tar.alvo === "string" ? tar.alvo : "")}" placeholder="${ehCasa ? "12,5" : "goblin"}">
-            <label>vezes</label><input id="f-tarefa-vezes" type="number" min="1" value="${tar.vezes || 1}" style="width:70px">
-            <label>texto curto (aparece no HUD)</label>
-            <input id="f-tarefa-curto" value="${(tar.texto_curto || "").replace(/"/g, "&quot;")}" placeholder="Ataque o boneco de treino">
+            <label>${t("ui.editor.masmorra.painel.vezes")}</label><input id="f-tarefa-vezes" type="number" min="1" value="${tar.vezes || 1}" style="width:70px">
+            <label>${t("ui.editor.masmorra.painel.texto_curto_hud")}</label>
+            <input id="f-tarefa-curto" value="${(tar.texto_curto || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.exemplo_ataque_boneco")}">
           ` : ""}
-          <label style="display:block;margin-top:8px"><input type="checkbox" id="f-tem-efeito"${ref.efeito ? " checked" : ""}> a lição altera fome/sede ao disparar</label>
+          <label style="display:block;margin-top:8px"><input type="checkbox" id="f-tem-efeito"${ref.efeito ? " checked" : ""}> ${t("ui.editor.masmorra.painel.licao_altera_fome_sede")}</label>
           ${ref.efeito ? `
-            <small style="display:block;color:#8a7a5a">Para o jogador SENTIR a regra: chegar esfomeado à sala de provisões.</small>
-            <label>fome (0–100, vazio = não mexer)</label>
+            <small style="display:block;color:#8a7a5a">${t("ui.editor.masmorra.painel.sentir_regra_hint")}</small>
+            <label>${t("ui.editor.masmorra.painel.fome_0_100")}</label>
             <input id="f-ef-fome" type="number" min="0" max="100" value="${ref.efeito.fome ?? ""}" style="width:80px">
-            <label>sede (0–100, vazio = não mexer)</label>
+            <label>${t("ui.editor.masmorra.painel.sede_0_100")}</label>
             <input id="f-ef-sede" type="number" min="0" max="100" value="${ref.efeito.sede ?? ""}" style="width:80px">
           ` : ""}
         </div>
-        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">Dispara uma vez por herói. Lição não aceita gatilho manual.</div>`;
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">${t("ui.editor.masmorra.painel.dispara_uma_vez_hint")}</div>`;
       document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
       document.getElementById("f-nome").onchange = e => { fal.nome = e.target.value; };
       document.getElementById("f-texto").onchange = e => { ref.texto = e.target.value; };
@@ -2619,17 +2631,17 @@
       const tc = document.getElementById("f-tarefa-curto");
       if (tc) tc.onchange = e => { ref.tarefa.texto_curto = e.target.value; };
     } else if (k === "room") {
-      panel.innerHTML = `<b>▦ Sala #${ref.id}</b>
-        <label>role</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
-        <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> trancada</label>
-        <label style="display:block;margin-top:6px"><input type="checkbox" id="p-required" ${ref.required ? "checked" : ""}> sala obrigatória</label>
-        ${ref.required ? `<label>modo</label><select id="p-reqmode"><option value="clear"${(ref.required_mode||"clear")==="clear"?" selected":""}>limpar (matar monstros)</option><option value="visit"${ref.required_mode==="visit"?" selected":""}>visitar (entrar)</option></select>` : ""}
-        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">portas: ${ref.doors.length}</div>
-        <button id="p-del-room" style="margin-top:10px">🗑 Deletar sala</button>
+      panel.innerHTML = `<b>▦ ${t("ui.editor.masmorra.painel.sala_n", { n: ref.id })}</b>
+        <label>${t("ui.editor.masmorra.painel.role")}</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
+        <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> ${t("ui.editor.masmorra.painel.trancada")}</label>
+        <label style="display:block;margin-top:6px"><input type="checkbox" id="p-required" ${ref.required ? "checked" : ""}> ${t("ui.editor.masmorra.painel.sala_obrigatoria")}</label>
+        ${ref.required ? `<label>${t("ui.editor.masmorra.painel.modo")}</label><select id="p-reqmode"><option value="clear"${(ref.required_mode||"clear")==="clear"?" selected":""}>${t("ui.editor.masmorra.painel.limpar_matar_monstros")}</option><option value="visit"${ref.required_mode==="visit"?" selected":""}>${t("ui.editor.masmorra.painel.visitar_entrar")}</option></select>` : ""}
+        <div style="margin-top:8px;color:#8a7a5a;font-size:11px">${t("ui.editor.masmorra.painel.portas_n", { n: ref.doors.length })}</div>
+        <button id="p-del-room" style="margin-top:10px">🗑 ${t("ui.editor.masmorra.painel.deletar_sala")}</button>
         <div id="p-del-confirm" style="display:none;margin-top:6px">
-          <div style="font-size:11px;color:#d8a0a0;margin-bottom:4px">Deletar a sala #${ref.id}?</div>
-          <button id="p-del-keep">Deletar (manter chão)</button>
-          <button id="p-del-clear">Deletar (limpar chão)</button>
+          <div style="font-size:11px;color:#d8a0a0;margin-bottom:4px">${t("ui.editor.masmorra.painel.deletar_sala_confirmacao", { n: ref.id })}</div>
+          <button id="p-del-keep">${t("ui.editor.masmorra.painel.deletar_manter_chao")}</button>
+          <button id="p-del-clear">${t("ui.editor.masmorra.painel.deletar_limpar_chao")}</button>
         </div>`;
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
@@ -2643,16 +2655,16 @@
     } else if (k === "prisoner") {
       const img = ref.image
         ? `<img src="../assets/pawns/prisioneiros/${ref.image}" style="max-width:64px;max-height:64px;display:block;margin:6px 0;border:1px solid #5a4a2a">`
-        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem imagem 2D — usará o emoji padrão nessa visão</div>`;
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">${t("ui.editor.masmorra.painel.sem_imagem_2d_prisioneiro")}</div>`;
       const model = ref.model3d
-        ? `<div style="color:#9fc9e8;font-size:11px;margin:6px 0">modelo 3D: ${ref.model3d}</div>`
-        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">sem modelo 3D — usará a imagem 2D no tabuleiro 3D</div>`;
-      panel.innerHTML = `<b>🧍 Prisioneiro</b>
+        ? `<div style="color:#9fc9e8;font-size:11px;margin:6px 0">${t("ui.editor.masmorra.painel.modelo_3d", { nome: ref.model3d })}</div>`
+        : `<div style="color:#8a7a5a;font-size:11px;margin:6px 0">${t("ui.editor.masmorra.painel.sem_modelo_3d_prisioneiro")}</div>`;
+      panel.innerHTML = `<b>🧍 ${t("ui.editor.masmorra.painel.prisioneiro_titulo")}</b>
         ${img}
         ${model}
-        <label>imagem 2D (PNG/JPG/WebP/GIF)</label>
+        <label>${t("ui.editor.masmorra.painel.imagem_2d_formatos")}</label>
         <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
-        <label>miniatura 3D (GLB)</label>
+        <label>${t("ui.editor.masmorra.painel.miniatura_3d_glb")}</label>
         <input type="file" id="p-pris-glb" accept="model/gltf-binary,.glb">
         <div id="p-pris-status" style="color:#8a7a5a;font-size:11px;margin-top:4px"></div>`;
       const inp = document.getElementById("p-pris-img");
@@ -2661,14 +2673,14 @@
       const enviarMiniatura = async (e, campo) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
-        st.textContent = "enviando…";
+        st.textContent = t("ui.editor.masmorra.painel.enviando");
         try {
           const name = await window.PRISONER_UPLOAD.upload(file);
           ref[campo] = name;
-          st.textContent = "enviada ✓";
+          st.textContent = t("ui.editor.masmorra.painel.enviada_ok");
           renderPanel(); render();
         } catch (err) {
-          st.textContent = "falha: " + err.message;
+          st.textContent = t("ui.editor.masmorra.painel.falha_dois_pontos") + err.message;
         }
       };
       inp.onchange = e => enviarMiniatura(e, "image");
@@ -2678,11 +2690,11 @@
       const wallMaterial = WALL_MATERIAL_IDS.has(ref.wall_material)
         ? ref.wall_material : (S.materiais[ref.pos[0] + "," + ref.pos[1]] || MAT_DEFAULT.parede);
       const wallMaterialOptions = WALL_MATERIALS.map(m =>
-        `<option value="${m.id}"${m.id === wallMaterial ? " selected" : ""}>🧱 ${m.nome}</option>`).join("");
-      panel.innerHTML = `<b>${ref.type === "illusion" ? "Parede ilusória" : "Passagem secreta"}</b>
-        <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? "Atravessável desde o início; somente o ladino a identifica durante Encontrar Armadilhas." : "Abre permanentemente quando suas decorações-chave forem ativadas."}</div>
-        <label>textura da parede<select id="sp-wall-material">${wallMaterialOptions}</select></label>
-        ${ref.type === "mechanism" ? `<label>ativação</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>qualquer chave</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>todas as chaves</option></select><label>decorações-chave</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${decorMeta(d.type)?.nome || d.type} (${d.pos[0]},${d.pos[1]})</label>`).join("") : '<small>Marque uma decoração como objeto-chave primeiro.</small>'}</div>` : ""}`;
+        `<option value="${m.id}"${m.id === wallMaterial ? " selected" : ""}>🧱 ${nomeMaterial(m)}</option>`).join("");
+      panel.innerHTML = `<b>${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria") : t("ui.editor.masmorra.painel.passagem_secreta")}</b>
+        <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria_hint") : t("ui.editor.masmorra.painel.passagem_secreta_hint")}</div>
+        <label>${t("ui.editor.masmorra.painel.textura_parede")}<select id="sp-wall-material">${wallMaterialOptions}</select></label>
+        ${ref.type === "mechanism" ? `<label>${t("ui.editor.masmorra.painel.ativacao")}</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>${t("ui.editor.masmorra.painel.qualquer_chave")}</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.todas_chaves")}</option></select><label>${t("ui.editor.masmorra.painel.decoracoes_chave")}</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} (${d.pos[0]},${d.pos[1]})</label>`).join("") : `<small>${t("ui.editor.masmorra.painel.marque_decor_chave_primeiro")}</small>`}</div>` : ""}`;
       document.getElementById("sp-wall-material").onchange = e => { ref.wall_material = e.target.value; render(); };
       if (ref.type === "mechanism") {
         document.getElementById("sp-mode").onchange = e => { ref.keys_mode = e.target.value; };
@@ -2695,84 +2707,84 @@
       const isWall = m.special === "wall";
       const hasLoot = !!ref.loot;
       const decorTrap = ref.trap || null;
-      const trapOptions = (CAT.traps || []).map(t => ({ v: t.tipo, name: `${t.icone || '🪤'} ${t.nome || t.tipo}` }));
+      const trapOptions = (CAT.traps || []).map(tr => ({ v: tr.tipo, name: `${tr.icone || '🪤'} ${nomeCat("armadilha", tr.tipo, tr.nome || tr.tipo)}` }));
       const remoteTrapIds = new Set(Array.isArray(ref.disable_trap_ids) ? ref.disable_trap_ids : []);
-      const remoteTrapChoices = S.traps.map(t => {
-        const meta = CAT.traps.find(c => c.tipo === t.tipo) || {};
-        return { id: t.id, label: `${meta.icone || '⚠️'} ${meta.nome || t.tipo} (${t.pos[0]}, ${t.pos[1]})` };
+      const remoteTrapChoices = S.traps.map(trap => {
+        const meta = CAT.traps.find(c => c.tipo === trap.tipo) || {};
+        return { id: trap.id, label: `${meta.icone || '⚠️'} ${nomeCat("armadilha", trap.tipo, meta.nome || trap.tipo)} (${trap.pos[0]}, ${trap.pos[1]})` };
       });
-      const decorTrapMeta = decorTrap ? (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}) : null;
+      const decorTrapMeta = decorTrap ? (CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}) : null;
       const decorTrapDefaultDamage = trapPrimaryDamage(decorTrapMeta);
       const decorTrapDefaultDifficulty = decorTrapMeta?.dificuldade || "";
-      const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: v.name || v.nome || v.id }));
+      const venomOptions = (CAT.venoms || []).map(v => ({ v: v.id, name: nomeCat("item", v.id, v.name || v.nome || v.id) }));
       const [bw, bh] = decorBaseSize(ref);
       const vs0 = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const vo0 = Array.isArray(ref.voffset) ? ref.voffset : [0, 0];
       const placaTexto = String(ref.texto || "")
         .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      panel.innerHTML = `<b>${m.emoji || "🪑"} ${m.nome || ref.type}</b>
-        <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? "· alto (oclui visão)" : ""} ${m.pisavel ? "· pisável" : ""}</div>
-        ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável.</div>` : ""}
-        ${!isWall ? `<label style="display:block;margin-top:8px">👁️ visão
+      panel.innerHTML = `<b>${m.emoji || "🪑"} ${nomeCat("decor", ref.type, m.nome || ref.type)}</b>
+        <div style="color:#8a7a5a;font-size:11px">${m.size ? m.size[0] + "×" + m.size[1] : ""} ${m.alto ? `· ${t("ui.editor.masmorra.painel.alto_oclui_visao")}` : ""} ${m.pisavel ? `· ${t("ui.editor.masmorra.painel.pisavel")}` : ""}</div>
+        ${isWall ? `<div style="color:#8a7a5a;font-size:11px;margin-top:6px">${t("ui.editor.masmorra.painel.decor_parede_hint")}</div>` : ""}
+        ${!isWall ? `<label style="display:block;margin-top:8px">👁️ ${t("ui.editor.masmorra.painel.visao_label")}
           <select id="d-visao">
-            <option value=""${!VISAO_NIVEIS.includes(ref.visao) ? " selected" : ""}>padrão do tipo (${decorVisaoPadrao(m)})</option>
-            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${VISAO_ROTULO[v]}</option>`).join("")}
+            <option value=""${!VISAO_NIVEIS.includes(ref.visao) ? " selected" : ""}>${t("ui.editor.masmorra.painel.padrao_do_tipo", { v: visaoRotulo(decorVisaoPadrao(m)) })}</option>
+            ${VISAO_NIVEIS.map(v => `<option value="${v}"${ref.visao === v ? " selected" : ""}>${visaoRotulo(v)}</option>`).join("")}
           </select></label>
-          <small style="display:block;color:#8a7a5a">Só muda a visão: ${m.pisavel ? "o objeto continua pisável." : "o objeto continua barrando o passo."}</small>` : ""}
-        ${m.gira ? `<button id="d-rot">${isWall ? "trocar face" : "girar 90°"}</button>` : ""}
-        ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ Duplicar em casa adjacente</button>` : ""}
-        <button id="d-brush" style="margin-top:7px">🖌️ Copiar e preencher área</button>
-        <small style="display:block;color:#8a7a5a;margin-top:3px">Depois, arraste no mapa. Esc desativa o pincel.</small>
+          <small style="display:block;color:#8a7a5a">${t("ui.editor.masmorra.painel.so_muda_visao")} ${m.pisavel ? t("ui.editor.masmorra.painel.objeto_continua_pisavel") : t("ui.editor.masmorra.painel.objeto_continua_barrando")}</small>` : ""}
+        ${m.gira ? `<button id="d-rot">${isWall ? t("ui.editor.masmorra.painel.trocar_face") : t("ui.editor.masmorra.painel.girar_90")}</button>` : ""}
+        ${!isWall ? `<button id="d-duplicate" style="margin-top:7px">⧉ ${t("ui.editor.masmorra.painel.duplicar_casa_adjacente")}</button>` : ""}
+        <button id="d-brush" style="margin-top:7px">🖌️ ${t("ui.editor.masmorra.painel.copiar_preencher_area")}</button>
+        <small style="display:block;color:#8a7a5a;margin-top:3px">${t("ui.editor.masmorra.painel.depois_arraste_hint")}</small>
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
-        ${m.special === "fountain" ? `<label>cargas <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
-        ${m.special === "plaque" ? `<label style="display:block;margin-top:8px">mensagem da placa<textarea id="d-texto" rows="5" maxlength="600" placeholder="Escreva a mensagem que os heróis encontrarão...">${placaTexto}</textarea></label><small style="color:#8a7a5a">Até 600 caracteres. A mensagem aparece quando um herói interagir com a placa.</small>` : ""}
-        ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> contém loot</label>` : ""}
-        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> baú-armadilha</label>
-        ${ref.chest_trap_monster_type ? `<label>monstro que surge</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:x.name})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">No primeiro clique, Reflexos CD 12; o loot só abre no próximo clique.</small>` : ""}
-        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> contém armadilha</label>
-        ${decorTrap ? `<label>armadilha</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
+        ${m.special === "fountain" ? `<label>${t("ui.editor.masmorra.painel.cargas")} <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
+        ${m.special === "plaque" ? `<label style="display:block;margin-top:8px">${t("ui.editor.masmorra.painel.mensagem_placa")}<textarea id="d-texto" rows="5" maxlength="600" placeholder="${t("ui.editor.masmorra.painel.placa_placeholder")}">${placaTexto}</textarea></label><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.placa_hint")}</small>` : ""}
+        ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> ${t("ui.editor.masmorra.painel.contem_loot")}</label>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> ${t("ui.editor.masmorra.painel.bau_armadilha")}</label>
+        ${ref.chest_trap_monster_type ? `<label>${t("ui.editor.masmorra.painel.monstro_que_surge")}</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:nomeCat("monstro", x.type, x.name)})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.bau_armadilha_hint")}</small>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> ${t("ui.editor.masmorra.painel.contem_armadilha")}</label>
+        ${decorTrap ? `<label>${t("ui.editor.masmorra.painel.armadilha")}</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
           ${trapCharacteristicsHTML(decorTrapMeta, true, decorTrap)}
           <div class="trap-overrides compact">
-            <b>⚙️ Ajustes desta armadilha</b>
-            <label>CD do teste <input id="d-trap-cd" type="number" min="1" max="40" value="${decorTrap.dificuldade ?? decorTrapDefaultDifficulty}"></label>
-            ${decorTrapDefaultDamage ? `<label>dano principal <input id="d-trap-damage" value="${trapText(decorTrap.dano ?? decorTrapDefaultDamage)}" placeholder="ex.: 2d6"></label><small id="d-trap-damage-help">Formato: 1d6, 2d8+2 ou 3.</small>` : `<small>Esta armadilha não possui dano direto configurável.</small>`}
-            <small>Apague o valor para voltar ao padrão do catálogo.</small>
+            <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
+            <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="d-trap-cd" type="number" min="1" max="40" value="${decorTrap.dificuldade ?? decorTrapDefaultDifficulty}"></label>
+            ${decorTrapDefaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="d-trap-damage" value="${trapText(decorTrap.dano ?? decorTrapDefaultDamage)}" placeholder="ex.: 2d6"></label><small id="d-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
+            <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
           </div>
-          ${((CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno || (CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno) ? `<label>veneno${(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).permite_veneno && !(CAT.traps.find(t => t.tipo === decorTrap.tipo) || {}).precisa_veneno ? " (opcional)" : ""}</label><select id="d-trap-venom">${opt(venomOptions, decorTrap.veneno_id || "", o => o.name)}</select>` : ""}
+          ${((CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}).precisa_veneno || (CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}).permite_veneno) ? `<label>${t("ui.editor.masmorra.painel.veneno")}${(CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}).permite_veneno && !(CAT.traps.find(tr => tr.tipo === decorTrap.tipo) || {}).precisa_veneno ? ` ${t("ui.editor.masmorra.painel.opcional")}` : ""}</label><select id="d-trap-venom">${opt(venomOptions, decorTrap.veneno_id || "", o => o.name)}</select>` : ""}
           ${curseFieldsHTML(decorTrap, "d")}
-          ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>local de saída</label><div style="display:flex;gap:4px"><input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"><input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></div><button id="d-pick-trap-out" style="margin-top:5px">📍 Selecionar saída no mapa</button><small id="d-trap-out-help" style="color:#8a7a5a">Escolha uma casa de chão no mapa.</small>` : ""}
-          <small style="color:#8a7a5a">Dispara ao investigar. Encontrar Armadilhas revela o objeto e permite desarmá-lo.</small>` : ""}
-        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-disable-traps" ${Array.isArray(ref.disable_trap_ids) ? "checked" : ""}> mecanismo desativa armadilhas do mapa</label>
-        ${Array.isArray(ref.disable_trap_ids) ? `<div class="trap-overrides compact"><b>⚙️ Armadilhas desligadas por este objeto</b>${remoteTrapChoices.length ? remoteTrapChoices.map(t => `<label style="display:block"><input type="checkbox" class="d-disable-trap" data-id="${t.id}"${remoteTrapIds.has(t.id) ? " checked" : ""}> ${t.label}</label>`).join("") : '<small>Crie primeiro uma armadilha no mapa.</small>'}<small>Ao ativar este objeto no jogo, as armadilhas selecionadas são desativadas permanentemente.</small></div>` : ""}
-        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> objeto-chave <small>(conclui “Abrir o baú-chave” ao interagir)</small></label>
+          ${decorTrap.tipo === "armadilha_teletransporte" ? `<label>${t("ui.editor.masmorra.painel.local_saida")}</label><div style="display:flex;gap:4px"><input id="d-trap-exit-x" type="number" min="0" max="${S.grid.w-1}" value="${decorTrap.saida?.[0] ?? ref.pos[0]}"><input id="d-trap-exit-y" type="number" min="0" max="${S.grid.h-1}" value="${decorTrap.saida?.[1] ?? ref.pos[1]}"></div><button id="d-pick-trap-out" style="margin-top:5px">📍 ${t("ui.editor.masmorra.painel.selecionar_saida_mapa")}</button><small id="d-trap-out-help" style="color:#8a7a5a">${t("ui.editor.masmorra.painel.escolha_casa_chao")}</small>` : ""}
+          <small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.dispara_investigar_hint")}</small>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-disable-traps" ${Array.isArray(ref.disable_trap_ids) ? "checked" : ""}> ${t("ui.editor.masmorra.painel.mecanismo_desativa_armadilhas")}</label>
+        ${Array.isArray(ref.disable_trap_ids) ? `<div class="trap-overrides compact"><b>⚙️ ${t("ui.editor.masmorra.painel.armadilhas_desligadas_objeto")}</b>${remoteTrapChoices.length ? remoteTrapChoices.map(trap => `<label style="display:block"><input type="checkbox" class="d-disable-trap" data-id="${trap.id}"${remoteTrapIds.has(trap.id) ? " checked" : ""}> ${trap.label}</label>`).join("") : `<small>${t("ui.editor.masmorra.painel.crie_armadilha_mapa")}</small>`}<small>${t("ui.editor.masmorra.painel.ativar_objeto_desativa_hint")}</small></div>` : ""}
+        <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> ${t("ui.editor.masmorra.painel.objeto_chave")} <small>(${t("ui.editor.masmorra.painel.objeto_chave_hint")})</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
-          <label>ouro <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
-          <label>itens</label>
+          <label>${t("ui.editor.masmorra.painel.ouro")} <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
+          <label>${t("ui.editor.masmorra.painel.itens")}</label>
         <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => lootItemRowHTML(it, i, "d-rm")).join("") : ""}</div>
           ${lootItemSelectHTML("d-add")}
-          <button id="d-additem">+ item</button>
+          <button id="d-additem">+ ${t("ui.editor.masmorra.painel.item")}</button>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          ${!isWall ? `<b>Tamanho</b>
-          <div style="font-size:11px;color:#8a7a5a">footprint em casas (quadrados ocupados)</div>
-          <label>largura <input id="d-fw" type="number" min="1" max="${S.grid.w}" value="${bw}"></label>
-          <label>altura <input id="d-fh" type="number" min="1" max="${S.grid.h}" value="${bh}"></label>
-          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>` : `<b>Tamanho visual</b>
-          <div style="font-size:11px;color:#8a7a5a">fica presa a uma única face da parede.</div>`}
-          <div style="font-size:11px;color:#8a7a5a;margin-top:4px">tamanho visual (não muda casas; altura cresce p/ cima)</div>
-          <label>escala largura <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
-          <label>escala altura <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
-          <div style="font-size:11px;color:#8a7a5a;margin-top:8px">posição visual (não muda casas; use ±0,45 para encostar na parede)</div>
-          <label>deslocamento X <input id="d-vox" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[0]}"></label>
-          <label>deslocamento Y <input id="d-voy" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[1]}"></label>
-          <button id="d-voreset" type="button" style="margin-top:5px">Centralizar objeto</button>
+          ${!isWall ? `<b>${t("ui.editor.masmorra.painel.tamanho")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.footprint_hint")}</div>
+          <label>${t("ui.editor.masmorra.painel.largura")} <input id="d-fw" type="number" min="1" max="${S.grid.w}" value="${bw}"></label>
+          <label>${t("ui.editor.masmorra.painel.altura")} <input id="d-fh" type="number" min="1" max="${S.grid.h}" value="${bh}"></label>
+          <div id="d-size-msg" style="font-size:11px;color:#d8a0a0;min-height:14px"></div>` : `<b>${t("ui.editor.masmorra.painel.tamanho_visual")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.presa_face_parede_hint")}</div>`}
+          <div style="font-size:11px;color:#8a7a5a;margin-top:4px">${t("ui.editor.masmorra.painel.tamanho_visual_altura_hint")}</div>
+          <label>${t("ui.editor.masmorra.painel.escala_largura")} <input id="d-vsx" type="number" min="0.2" max="4" step="0.1" value="${vs0[0]}"></label>
+          <label>${t("ui.editor.masmorra.painel.escala_altura")} <input id="d-vsy" type="number" min="0.2" max="4" step="0.1" value="${vs0[1]}"></label>
+          <div style="font-size:11px;color:#8a7a5a;margin-top:8px">${t("ui.editor.masmorra.painel.posicao_visual_hint")}</div>
+          <label>${t("ui.editor.masmorra.painel.deslocamento_x")} <input id="d-vox" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[0]}"></label>
+          <label>${t("ui.editor.masmorra.painel.deslocamento_y")} <input id="d-voy" type="number" min="-0.45" max="0.45" step="0.05" value="${vo0[1]}"></label>
+          <button id="d-voreset" type="button" style="margin-top:5px">${t("ui.editor.masmorra.painel.centralizar_objeto")}</button>
         </div>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
-          <b>Imagem (miniatura 3D)</b>
-          <div style="font-size:11px;color:#8a7a5a">PNG de assets/objetos — silhueta extrudada no jogo.</div>
+          <b>${t("ui.editor.masmorra.painel.imagem_miniatura_3d")}</b>
+          <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.imagem_hint_decor")}</div>
           <div style="margin-top:4px">
             <select id="d-img-sel"></select>
-            <button id="d-img-refresh" title="recarregar lista">↻</button>
+            <button id="d-img-refresh" title="${t("ui.editor.masmorra.painel.recarregar_lista")}">↻</button>
           </div>
           <div style="margin-top:4px">
             <input id="d-img-file" type="file" accept="image/png" style="font-size:11px">
@@ -2787,7 +2799,7 @@
       if (m.gira) document.getElementById("d-rot").onclick = () => { rotateDecorPending(); renderPanel(); };
       const duplicate = document.getElementById("d-duplicate"); if (duplicate) duplicate.onclick = () => {
         if (duplicateDecorAdjacent(ref)) { renderPanel(); render(); }
-        else document.getElementById("d-duplicate-msg").textContent = "Não há uma casa adjacente livre para esta cópia.";
+        else document.getElementById("d-duplicate-msg").textContent = t("ui.editor.masmorra.painel.sem_casa_adjacente_livre");
       };
       document.getElementById("d-brush").onclick = () => { copySelectedDecor(); activateDecorBrush(); };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
@@ -2828,7 +2840,7 @@
           const raw = e.target.value.trim().replace(/\s/g, "");
           const help = document.getElementById("d-trap-damage-help");
           if (!raw) { delete ref.trap.dano; renderPanel(); render(); updateStatus(); return; }
-          if (!validTrapDamage(raw)) { if (help) help.textContent = "Valor inválido. Use 1d6, 2d8+2 ou 3."; e.target.focus(); return; }
+          if (!validTrapDamage(raw)) { if (help) help.textContent = t("ui.editor.masmorra.painel.valor_invalido_dano"); e.target.focus(); return; }
           ref.trap.dano = raw; renderPanel(); render(); updateStatus();
         };
         const venom = document.getElementById("d-trap-venom"); if (venom) venom.onchange = e => { ref.trap.veneno_id = e.target.value; };
@@ -2840,7 +2852,7 @@
         if (pickTrapExit) pickTrapExit.onclick = () => {
           S.teleportExitPick = ref.trap;
           const help = document.getElementById("d-trap-out-help");
-          if (help) help.textContent = "Clique agora em uma casa de chão no mapa para definir a saída.";
+          if (help) help.textContent = t("ui.editor.masmorra.painel.clique_casa_chao");
         };
       }
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
@@ -2863,7 +2875,7 @@
           else ref.size = [nw, nh];
           msg.textContent = ""; render();
         } else {
-          msg.textContent = "não cabe (parede/fora/sobreposição) — revertido";
+          msg.textContent = t("ui.editor.masmorra.painel.nao_cabe_revertido");
           const [cw, ch] = decorBaseSize(ref);
           document.getElementById("d-fw").value = cw;
           document.getElementById("d-fh").value = ch;
@@ -2902,36 +2914,36 @@
         const catalogImages = (CAT.decorations || [])
           .map(d => d && d.image).filter(Boolean);
         list = [...new Set([...(list || []), ...catalogImages])].sort();
-        const opts = ['<option value="">(nenhuma — procedural)</option>']
+        const opts = [`<option value="">${t("ui.editor.masmorra.painel.nenhuma_procedural")}</option>`]
           .concat(list.map(n => `<option value="${n}" ${ref.image === n ? "selected" : ""}>${n}</option>`));
         // garante a imagem atual visível mesmo se a lista falhar
         if (ref.image && list.indexOf(ref.image) < 0)
-          opts.push(`<option value="${ref.image}" selected>${ref.image} (atual)</option>`);
+          opts.push(`<option value="${ref.image}" selected>${ref.image} ${t("ui.editor.masmorra.painel.atual_sufixo")}</option>`);
         imgSel.innerHTML = opts.join("");
       }
       fillImgOptions([]);
       function loadImgList() {
-        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "(offline: digite/upload indisponível)"; return; }
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = t("ui.editor.masmorra.painel.offline_digite_upload"); return; }
         window.OBJETO_UPLOAD.list()
           .then(list => fillImgOptions(list))
-          .catch(() => { imgSt.textContent = "servidor offline"; });
+          .catch(() => { imgSt.textContent = t("ui.editor.masmorra.painel.servidor_offline"); });
       }
       loadImgList();
       imgSel.onchange = e => { ref.image = e.target.value || null; render(); };
       document.getElementById("d-img-refresh").onclick = loadImgList;
       document.getElementById("d-img-file").onchange = async e => {
         const file = e.target.files[0]; if (!file) return;
-        if (!window.OBJETO_UPLOAD) { imgSt.textContent = "servidor offline"; return; }
-        imgSt.textContent = "enviando…";
+        if (!window.OBJETO_UPLOAD) { imgSt.textContent = t("ui.editor.masmorra.painel.servidor_offline"); return; }
+        imgSt.textContent = t("ui.editor.masmorra.painel.enviando");
         try {
           const name = await window.OBJETO_UPLOAD.upload(file);
           ref.image = name;
-          imgSt.textContent = "enviada ✓";
+          imgSt.textContent = t("ui.editor.masmorra.painel.enviada_ok");
           loadImgList(); render();
-        } catch (err) { imgSt.textContent = "falha: " + err.message; }
+        } catch (err) { imgSt.textContent = t("ui.editor.masmorra.painel.falha_dois_pontos") + err.message; }
       };
     } else {
-      panel.innerHTML = `<b>${k === "entrance" ? "🪜 Entrada" : k === "exit" ? "🚩 Saída" : k}</b>`;
+      panel.innerHTML = `<b>${k === "entrance" ? `🪜 ${t("ui.editor.masmorra.painel.entrada")}` : k === "exit" ? `🚩 ${t("ui.editor.masmorra.painel.saida")}` : k}</b>`;
     }
   }
 
@@ -2943,7 +2955,7 @@
     if (S.teleportExitPick) {
       if (S.tiles[y][x] !== FLOOR) {
         const help = document.getElementById("p-out-help") || document.getElementById("d-trap-out-help");
-        if (help) help.textContent = "A saída precisa ser escolhida em uma casa de chão.";
+        if (help) help.textContent = t("ui.editor.masmorra.painel.saida_precisa_ser_chao");
         return;
       }
       S.teleportExitPick.saida = [x, y];
@@ -3081,7 +3093,7 @@
       const drag = S.ponteDrag; S.ponteDrag = null;
       if (drag.start[0] !== drag.end[0] || drag.start[1] !== drag.end[1]) {
         if (!placeBridge(drag.start, drag.end, drag.width, drag.material)) {
-          alert("A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura.");
+          alert(t("ui.editor.masmorra.ponte.invalida"));
         }
       }
       renderPanel(); render(); updateStatus();
@@ -3156,18 +3168,18 @@
         return o;
       }),
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(exportLootItem), key_objective: !!c.key_objective })),
-      traps: S.traps.map(t => {
-        const o = { id: t.id, tipo: t.tipo, pos: t.pos.slice() };
-        if (t.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, t.dificuldade | 0));
-        if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
-        if (t.veneno_id) o.veneno_id = t.veneno_id;
-        if (t.saida) o.saida = t.saida.slice();
-        if (t.tipo === "armadilha_maldicao") {
-          o.curse_mode = t.curse_mode || "aleatoria";
-          if (o.curse_mode === "especifica" && t.curse_id) o.curse_id = t.curse_id;
-          if (o.curse_mode === "aleatoria") o.curse_category = t.curse_category || "leve";
+      traps: S.traps.map(trap => {
+        const o = { id: trap.id, tipo: trap.tipo, pos: trap.pos.slice() };
+        if (trap.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, trap.dificuldade | 0));
+        if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
+        if (trap.veneno_id) o.veneno_id = trap.veneno_id;
+        if (trap.saida) o.saida = trap.saida.slice();
+        if (trap.tipo === "armadilha_maldicao") {
+          o.curse_mode = trap.curse_mode || "aleatoria";
+          if (o.curse_mode === "especifica" && trap.curse_id) o.curse_id = trap.curse_id;
+          if (o.curse_mode === "aleatoria") o.curse_category = trap.curse_category || "leve";
         }
-        if (t.image) o.image = t.image;
+        if (trap.image) o.image = trap.image;
         return o;
       }),
       decorations: S.decorations.map(d => {
@@ -3207,9 +3219,9 @@
       })),
       falas: S.falas.map(f => {
         const tg = f.trigger || {};
-        const t = { tipo: tg.tipo || "proximidade" };
-        if (t.tipo === "proximidade") t.raio = tg.raio || 2;
-        const out = { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: t };
+        const trig = { tipo: tg.tipo || "proximidade" };
+        if (trig.tipo === "proximidade") trig.raio = tg.raio || 2;
+        const out = { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
         if (f.ordem != null) out.ordem = f.ordem;
         if (f.tarefa && f.tarefa.tipo) out.tarefa = {
@@ -3262,121 +3274,125 @@
 
   function validarEditor() {
     const e = [];
+    const V = (slug, params) => t("ui.editor.masmorra.valid." + slug, params);
+    const P = (p) => String(p);
     const types = new Set(CAT.monsters.map(m => m.type));
     const items = new Set(CAT.items.map(i => i.id));
-    const traps = new Set(CAT.traps.map(t => t.tipo));
+    const traps = new Set(CAT.traps.map(tr => tr.tipo));
     const curses = new Set((CAT.curses || []).map(c => c.id));
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
-    const validateCarta = (it, label) => {
+    const validateCarta = (it, rotulo) => {
       if (it?.id !== "carta" || !it.curse_mode) return;
       if (!["especifica", "aleatoria"].includes(it.curse_mode)) {
-        e.push(`${label}: modo de maldição inválido`); return;
+        e.push(V("carta_modo", { rotulo })); return;
       }
       if (it.curse_mode === "especifica" && !curses.has(it.curse_id))
-        e.push(`${label}: maldição específica inválida`);
+        e.push(V("carta_maldicao", { rotulo }));
       if (it.curse_mode === "aleatoria" && !["leve", "media", "grave"].includes(it.curse_category || "leve"))
-        e.push(`${label}: gravidade da maldição inválida`);
+        e.push(V("carta_gravidade", { rotulo }));
     };
     if (S.startMode === "entrance") {
-      if (!S.entrance) e.push("falta a entrada");
-      else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
+      if (!S.entrance) e.push(V("falta_entrada"));
+      else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push(V("entrada_em_chao"));
     } else {
-      if (!S.heroSpawns.length) e.push("falta ao menos uma posição inicial de herói");
+      if (!S.heroSpawns.length) e.push(V("falta_spawn"));
       const classes = new Set();
       for (const s of S.heroSpawns) {
-        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(`classe inicial inválida: ${s.class_id} em ${s.pos}`);
-        if (classes.has(s.class_id)) e.push(`classe inicial duplicada: ${s.class_id}`);
+        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(V("spawn_classe_invalida", { classe: s.class_id, pos: P(s.pos) }));
+        if (classes.has(s.class_id)) e.push(V("spawn_classe_duplicada", { classe: s.class_id }));
         classes.add(s.class_id);
-        if (isWall(s.pos)) e.push(`posição inicial em parede: ${s.pos}`);
+        if (isWall(s.pos)) e.push(V("spawn_em_parede", { pos: P(s.pos) }));
       }
     }
-    if (S.rooms.length === 0) e.push("precisa de ao menos uma sala");
-    if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
+    if (S.rooms.length === 0) e.push(V("sem_sala"));
+    if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push(V("sem_sala_entrada"));
     for (const m of S.monsters) {
-      if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type} em ${m.pos}`);
-      if (isWall(m.pos)) e.push(`monstro em parede: ${m.pos}`);
-      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(`monstro em ${m.pos} com room_id inexistente: ${m.room_id}`);
+      if (!types.has(m.type)) e.push(V("monstro_tipo_invalido", { tipo: m.type, pos: P(m.pos) }));
+      if (isWall(m.pos)) e.push(V("monstro_em_parede", { pos: P(m.pos) }));
+      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(V("monstro_room_id", { pos: P(m.pos), room: m.room_id }));
     }
     for (const c of S.chests) {
-      if (isWall(c.pos)) e.push(`baú em parede: ${c.pos}`);
+      if (isWall(c.pos)) e.push(V("bau_em_parede", { pos: P(c.pos) }));
       for (const it of c.items) {
-        if (!items.has(it.id)) e.push(`item inválido: ${it.id} no baú em ${c.pos}`);
-        validateCarta(it, `Carta do baú em ${c.pos}`);
+        if (!items.has(it.id)) e.push(V("item_invalido_bau", { id: it.id, pos: P(c.pos) }));
+        validateCarta(it, V("carta_bau", { pos: P(c.pos) }));
       }
     }
-    for (const t of S.traps) {
-      if (!traps.has(t.tipo)) e.push(`armadilha tipo inválido: ${t.tipo} em ${t.pos}`);
-      if (CAT.traps.find(c => c.tipo === t.tipo)?.apenas_objeto) e.push(`${t.tipo} em ${t.pos} só pode ser colocado em uma decoração/objeto`);
-      if (isWall(t.pos)) e.push(`armadilha em parede: ${t.pos}`);
-      if (t.dificuldade != null && (!Number.isInteger(t.dificuldade) || t.dificuldade < 1 || t.dificuldade > 40)) e.push(`${t.tipo} em ${t.pos} com CD inválida: ${t.dificuldade}`);
-      if (t.dano != null && !validTrapDamage(t.dano)) e.push(`${t.tipo} em ${t.pos} com dano inválido: ${t.dano}`);
-      if ((t.tipo === "fosso_envenenado" || t.tipo === "armadilha_dardos_envenenados") && !venoms.has(t.veneno_id)) e.push(`${t.tipo} em ${t.pos} sem veneno válido`);
-      if (t.tipo === "armadilha_teletransporte" && (!Array.isArray(t.saida) || S.tiles[t.saida[1]]?.[t.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte em ${t.pos} sem saída em chão`);
-      if (t.tipo === "armadilha_maldicao") {
-        const mode = t.curse_mode || "aleatoria";
-        if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha_maldicao em ${t.pos} com modo inválido`);
-        if (mode === "especifica" && !curses.has(t.curse_id)) e.push(`armadilha_maldicao em ${t.pos} sem maldição válida`);
-        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(t.curse_category || "leve")) e.push(`armadilha_maldicao em ${t.pos} com gravidade inválida`);
+    for (const trap of S.traps) {
+      const tp = { tipo: trap.tipo, pos: P(trap.pos) };
+      if (!traps.has(trap.tipo)) e.push(V("armadilha_tipo_invalido", tp));
+      if (CAT.traps.find(c => c.tipo === trap.tipo)?.apenas_objeto) e.push(V("armadilha_so_objeto", tp));
+      if (isWall(trap.pos)) e.push(V("armadilha_em_parede", { pos: P(trap.pos) }));
+      if (trap.dificuldade != null && (!Number.isInteger(trap.dificuldade) || trap.dificuldade < 1 || trap.dificuldade > 40)) e.push(V("armadilha_cd", { ...tp, cd: trap.dificuldade }));
+      if (trap.dano != null && !validTrapDamage(trap.dano)) e.push(V("armadilha_dano", { ...tp, dano: trap.dano }));
+      if ((trap.tipo === "fosso_envenenado" || trap.tipo === "armadilha_dardos_envenenados") && !venoms.has(trap.veneno_id)) e.push(V("armadilha_veneno", tp));
+      if (trap.tipo === "armadilha_teletransporte" && (!Array.isArray(trap.saida) || S.tiles[trap.saida[1]]?.[trap.saida[0]] !== FLOOR)) e.push(V("armadilha_tp_saida", { pos: P(trap.pos) }));
+      if (trap.tipo === "armadilha_maldicao") {
+        const mode = trap.curse_mode || "aleatoria";
+        if (!["especifica", "aleatoria"].includes(mode)) e.push(V("maldicao_modo", { pos: P(trap.pos) }));
+        if (mode === "especifica" && !curses.has(trap.curse_id)) e.push(V("maldicao_sem", { pos: P(trap.pos) }));
+        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(trap.curse_category || "leve")) e.push(V("maldicao_gravidade", { pos: P(trap.pos) }));
       }
     }
-    if (S.prisoner && isWall(S.prisoner.pos)) e.push(`prisioneiro em parede: ${S.prisoner.pos}`);
-    for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
+    if (S.prisoner && isWall(S.prisoner.pos)) e.push(V("prisioneiro_em_parede", { pos: P(S.prisoner.pos) }));
+    for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(V("porta_nao_door", { porta: P(d) }));
     if (S.startMode === "entrance") {
-      if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+      if (reachableFloors(6) < 6) e.push(V("poucas_casas"));
     } else {
-      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(`posição inicial inacessível: ${s.class_id} em ${s.pos}`);
+      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(V("spawn_inacessivel", { classe: s.class_id, pos: P(s.pos) }));
     }
     if (S.objectives.primary.type === "all_heroes_at_exit" && !S.exit)
-      e.push("o objetivo all_heroes_at_exit exige uma saída");
+      e.push(V("objetivo_saida"));
     const decTypes = new Set(CAT.decorations.map(d => d.type));
     const decOcc = new Set();
     const wallDecOcc = new Set();
     for (const d of S.decorations) {
-      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type} em ${d.pos}`); continue; }
+      if (!decTypes.has(d.type)) { e.push(V("decor_tipo_invalido", { tipo: d.type, pos: P(d.pos) })); continue; }
       const decorCat = decorMeta(d.type);
       if (decorCat?.special === "plaque" && !String(d.texto || "").trim())
-        e.push(`placa ${d.id} em ${d.pos} precisa de uma mensagem`);
+        e.push(V("placa_sem_mensagem", { id: d.id, pos: P(d.pos) }));
       if (decorCat?.special === "plaque" && String(d.texto || "").length > 600)
-        e.push(`placa ${d.id} em ${d.pos} excede 600 caracteres`);
+        e.push(V("placa_longa", { id: d.id, pos: P(d.pos) }));
       if (isWallDecor(d)) {
         const [wx, wy] = d.pos;
         const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
-        if (S.tiles[wy]?.[wx] !== WALL) e.push(`decoração de parede ${d.type} precisa estar em uma parede em ${wx},${wy}`);
-        else if (!validFace) e.push(`decoração de parede ${d.type} precisa apontar para um chão adjacente em ${wx},${wy}`);
+        if (S.tiles[wy]?.[wx] !== WALL) e.push(V("decor_parede_fora", { tipo: d.type, x: wx, y: wy }));
+        else if (!validFace) e.push(V("decor_parede_face", { tipo: d.type, x: wx, y: wy }));
         const wallKey = `${wx},${wy}:${(d.facing || []).join(",")}`;
-        if (wallDecOcc.has(wallKey)) e.push(`decorações sobrepostas na mesma face de parede em ${wx},${wy}`);
+        if (wallDecOcc.has(wallKey)) e.push(V("decor_parede_sobrepostas", { x: wx, y: wy }));
         wallDecOcc.add(wallKey);
         if (d.loot) for (const it of d.loot.items) {
-          if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
-          validateCarta(it, `Carta da decoração em ${d.pos}`);
+          if (!items.has(it.id)) e.push(V("loot_item_invalido", { id: it.id, pos: P(d.pos) }));
+          validateCarta(it, V("carta_decor", { pos: P(d.pos) }));
         }
         continue;
       }
       for (const [tx, ty] of decorTiles(d)) {
         if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h || S.tiles[ty]?.[tx] !== FLOOR)
-          e.push(`decoração ${d.type} fora do chão em ${tx},${ty}`);
+          e.push(V("decor_fora_chao", { tipo: d.type, x: tx, y: ty }));
         const key = tx + "," + ty;
-        if (decOcc.has(key)) e.push(`decorações sobrepostas em ${tx},${ty}`);
+        if (decOcc.has(key)) e.push(V("decor_sobrepostas", { x: tx, y: ty }));
         decOcc.add(key);
       }
       if (d.loot) for (const it of d.loot.items) {
-        if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
-        validateCarta(it, `Carta da decoração em ${d.pos}`);
+        if (!items.has(it.id)) e.push(V("loot_item_invalido", { id: it.id, pos: P(d.pos) }));
+        validateCarta(it, V("carta_decor", { pos: P(d.pos) }));
       }
-      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(`baú-armadilha em ${d.pos} com monstro inválido`);
+      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(V("bau_armadilha_monstro", { pos: P(d.pos) }));
       if (d.trap) {
-        if (!traps.has(d.trap.tipo)) e.push(`armadilha de decoração inválida em ${d.pos}`);
-        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com CD inválida`);
-        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com dano inválido`);
-        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração em ${d.pos} sem veneno válido`);
-        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte na decoração em ${d.pos} sem saída em chão`);
+        const dp = { tipo: d.trap.tipo, pos: P(d.pos) };
+        if (!traps.has(d.trap.tipo)) e.push(V("decor_trap_invalida", { pos: P(d.pos) }));
+        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(V("decor_trap_cd", dp));
+        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(V("decor_trap_dano", dp));
+        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(V("decor_trap_veneno", dp));
+        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(V("decor_trap_tp_saida", { pos: P(d.pos) }));
         if (d.trap.tipo === "armadilha_maldicao") {
           const mode = d.trap.curse_mode || "aleatoria";
-          if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha de decoração em ${d.pos} com modo de maldição inválido`);
-          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push(`armadilha de decoração em ${d.pos} sem maldição válida`);
-          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(`armadilha de decoração em ${d.pos} com gravidade inválida`);
+          if (!["especifica", "aleatoria"].includes(mode)) e.push(V("decor_maldicao_modo", { pos: P(d.pos) }));
+          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push(V("decor_maldicao_sem", { pos: P(d.pos) }));
+          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(V("decor_maldicao_gravidade", { pos: P(d.pos) }));
         }
       }
     }
@@ -3384,62 +3400,62 @@
     for (const [key, c] of Object.entries(S.doorConditions || {})) {
       const pos = key.split(",").map(Number);
       if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
-        e.push(`condição de abertura em porta inválida: ${key}`); continue;
+        e.push(V("porta_cond_invalida", { chave: key })); continue;
       }
-      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(`tipo de condição de porta inválido em ${key}`); continue; }
-      if (c.type === "item" && !items.has(c.item_id)) e.push(`item-chave inválido na porta ${key}: ${c.item_id}`);
+      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
+      if (c.type === "item" && !items.has(c.item_id)) e.push(V("porta_item_chave", { chave: key, id: c.item_id }));
       if (c.type === "licao" && !S.falas.some(f => f.id === c.licao_id && f.tarefa && f.tarefa.tipo))
-        e.push(`porta ${key} aponta para uma lição que não existe ou não tem tarefa`);
+        e.push(V("porta_licao", { chave: key }));
       if (c.type === "decor") {
         if (!Array.isArray(c.key_decor_ids) || !c.key_decor_ids.length || c.key_decor_ids.some(id => !decorIds.has(id)))
-          e.push(`porta ${key} sem objetos-chave válidos`);
+          e.push(V("porta_sem_chaves", { chave: key }));
         if (Array.isArray(c.key_decor_ids) && new Set(c.key_decor_ids).size !== c.key_decor_ids.length)
-          e.push(`porta ${key} repete um objeto-chave`);
-        if (!["any", "all"].includes(c.keys_mode || "any")) e.push(`modo de objetos-chave inválido na porta ${key}`);
+          e.push(V("porta_chave_repetida", { chave: key }));
+        if (!["any", "all"].includes(c.keys_mode || "any")) e.push(V("porta_modo_chaves", { chave: key }));
         if (Array.isArray(c.key_decor_ids)) for (const id of c.key_decor_ids) {
           const d = S.decorations.find(x => x.id === id);
-          if (d && !d.key_objective) e.push(`objeto ${id} em ${d.pos} da porta ${key} precisa estar marcado como objeto-chave`);
+          if (d && !d.key_objective) e.push(V("porta_objeto_nao_chave", { id, pos: P(d.pos), chave: key }));
         }
       }
     }
     const passageIds = new Set();
     for (const p of S.secretPassages) {
-      if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
+      if (!p.id || passageIds.has(p.id)) e.push(V("passagem_id"));
       passageIds.add(p.id);
-      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push(`passagem secreta ${p.id} em ${p.pos} deve ficar em uma parede`);
-      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push(`textura da passagem secreta em ${p.pos} inválida`);
-      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push(`passagem em ${p.pos} com decoração-chave inválida`);
-      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push(`passagem secreta em ${p.pos} sem decoração-chave`);
+      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push(V("passagem_parede", { id: p.id, pos: P(p.pos) }));
+      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push(V("passagem_textura", { pos: P(p.pos) }));
+      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push(V("passagem_chave_invalida", { pos: P(p.pos) }));
+      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push(V("passagem_sem_chave", { pos: P(p.pos) }));
     }
     const ordensLicao = new Set();
     for (const f of S.falas) {
-      if (isWall(f.pos)) e.push(`fala de NPC em parede: ${f.pos}`);
-      if (!(f.texto || "").trim()) e.push(`fala de NPC em ${f.pos} sem texto`);
+      if (isWall(f.pos)) e.push(V("fala_em_parede", { pos: P(f.pos) }));
+      if (!(f.texto || "").trim()) e.push(V("fala_sem_texto", { pos: P(f.pos) }));
       const tipo = (f.trigger || {}).tipo;
-      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC em ${f.pos} com gatilho inválido: ${tipo}`);
+      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(V("fala_gatilho", { pos: P(f.pos), tipo }));
       const ehLicao = !!(f.classe || f.tarefa || f.efeito || f.ordem != null);
       if (!ehLicao) continue;
-      if (tipo === "manual") e.push(`lição ${f.id} em ${f.pos} não pode ter gatilho manual`);
-      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} em ${f.pos} com classe inválida: ${f.classe}`);
+      if (tipo === "manual") e.push(V("licao_manual", { id: f.id, pos: P(f.pos) }));
+      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(V("licao_classe", { id: f.id, pos: P(f.pos), classe: f.classe }));
       if (f.ordem != null) {
         const chave = `${f.classe || ""}#${f.ordem}`;
-        if (ordensLicao.has(chave)) e.push(`duas lições com a mesma ordem ${f.ordem} para ${f.classe || "todas as classes"}`);
+        if (ordensLicao.has(chave)) e.push(V("licao_ordem_duplicada", { ordem: f.ordem, classe: f.classe || V("todas_classes") }));
         ordensLicao.add(chave);
       }
       if (f.tarefa) {
-        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(`lição ${f.id} em ${f.pos} com tarefa inválida: ${f.tarefa.tipo}`);
-        if (!(f.tarefa.texto_curto || "").trim()) e.push(`lição ${f.id} em ${f.pos} sem texto curto`);
-        if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(`lição ${f.id}: alvo deveria ser uma casa x,y`);
+        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(V("licao_tarefa", { id: f.id, pos: P(f.pos), tipo: f.tarefa.tipo }));
+        if (!(f.tarefa.texto_curto || "").trim()) e.push(V("licao_sem_texto_curto", { id: f.id, pos: P(f.pos) }));
+        if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(V("licao_alvo", { id: f.id }));
       }
     }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {
-      if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
+      if (!matIds.has(mid)) { e.push(V("material_invalido", { id: mid })); continue; }
       const p = key.split(",").map(Number);
-      const t = S.tiles[p[1]]?.[p[0]];
+      const tile = S.tiles[p[1]]?.[p[0]];
       const cat = matMeta(mid).categoria;
-      if (cat === "parede" && t !== WALL) e.push(`material de parede ${mid} fora de parede em ${key}`);
-      if (cat === "piso" && !(t === FLOOR || t === DOOR)) e.push(`material de piso ${mid} fora de chão em ${key}`);
+      if (cat === "parede" && tile !== WALL) e.push(V("material_parede_fora", { id: mid, chave: key }));
+      if (cat === "piso" && !(tile === FLOOR || tile === DOOR)) e.push(V("material_piso_fora", { id: mid, chave: key }));
     }
     const profundo = new Set(Object.entries(S.materiais)
       .filter(([, mid]) => mid === "rodamoinho_profundo")
@@ -3449,20 +3465,21 @@
       return profundo.has(`${x + 1},${y}`)
         && profundo.has(`${x},${y + 1}`)
         && profundo.has(`${x + 1},${y + 1}`);
-    })) e.push("rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas");
+    })) e.push(V("rodamoinho_2x2"));
     const bridgeIds = new Set(), bridgeOccupied = new Set();
     for (const bridge of S.pontes) {
-      if (!bridge || !bridge.id || bridgeIds.has(bridge.id)) { e.push("ponte com id duplicado ou vazio"); continue; }
+      if (!bridge || !bridge.id || bridgeIds.has(bridge.id)) { e.push(V("ponte_id")); continue; }
       bridgeIds.add(bridge.id);
       const tiles = bridgeTilesOf(bridge);
-      if (!tiles.length) { e.push(`ponte ${bridge.id} precisa ser reta e ter início/fim distintos`); continue; }
-      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) fora do grid`);
+      if (!tiles.length) { e.push(V("ponte_reta", { id: bridge.id })); continue; }
+      const bp = { id: bridge.id, inicio: P(bridge.inicio), fim: P(bridge.fim) };
+      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(V("ponte_fora", bp));
       if (![FLOOR, DOOR].includes(S.tiles[bridge.inicio?.[1]]?.[bridge.inicio?.[0]])
-          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) precisa começar e terminar em chão ou porta`);
-      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) liga alturas diferentes`);
+          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(V("ponte_extremos", bp));
+      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(V("ponte_alturas", bp));
       for (const [x, y] of tiles) {
         const key = `${x},${y}`;
-        if (bridgeOccupied.has(key)) e.push(`pontes sobrepostas em ${key}`);
+        if (bridgeOccupied.has(key)) e.push(V("pontes_sobrepostas", { chave: key }));
         bridgeOccupied.add(key);
       }
     }
@@ -3470,28 +3487,28 @@
       const p = key.split(",").map(Number);
       if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
           || p[0] < 0 || p[1] < 0 || p[0] >= S.grid.w || p[1] >= S.grid.h) {
-        e.push(`elevação fora do grid em ${key}`); continue;
+        e.push(V("elevacao_fora", { chave: key })); continue;
       }
       if (![FLOOR, DOOR].includes(S.tiles[p[1]]?.[p[0]]))
-        e.push(`elevação em casa que não é chão: ${key}`);
+        e.push(V("elevacao_nao_chao", { chave: key }));
       if (!Number.isInteger(value) || value < ELEVACAO_MIN || value > ELEVACAO_MAX)
-        e.push(`elevação inválida em ${key}`);
+        e.push(V("elevacao_invalida", { chave: key }));
     }
     if (!["rampa", "declive"].includes(S.transicaoAltura))
-      e.push("transição de altura inválida");
+      e.push(V("transicao_invalida"));
     return { ok: e.length === 0, erros: e };
   }
 
   function updateStatus() {
     const v = validarEditor();
     const el = document.getElementById("status");
-    if (v.ok) { el.className = "status-ok"; el.textContent = "✓ válida — pronta para salvar"; }
-    else { el.className = "status-err"; el.textContent = "✗ " + v.erros.length + " problema(s): " + v.erros.slice(0, 4).join("; ") + (v.erros.length > 4 ? " …" : ""); }
+    if (v.ok) { el.className = "status-ok"; el.textContent = t("ui.editor.masmorra.status.valida"); }
+    else { el.className = "status-err"; el.textContent = t("ui.editor.masmorra.status.problemas", { n: v.erros.length, lista: v.erros.slice(0, 4).join("; "), mais: v.erros.length > 4 ? " …" : "" }); }
     return v;
   }
 
   function loadJSON(obj) {
-    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra",
+    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
                ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
                saida_permitida: obj.saida_permitida !== false };
@@ -3537,8 +3554,8 @@
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(exportLootItem), key_objective: !!c.key_objective }));
     const rawTraps = obj.traps || [];
     const usedTrapIds = new Set();
-    let loadNextTrapId = rawTraps.reduce((next, t) => {
-      const m = /^trap_(\d+)$/.exec((t && t.id) || "");
+    let loadNextTrapId = rawTraps.reduce((next, trap) => {
+      const m = /^trap_(\d+)$/.exec((trap && trap.id) || "");
       return m ? Math.max(next, Number(m[1]) + 1) : next;
     }, 0);
     const uniqueLoadedTrapId = id => {
@@ -3549,22 +3566,22 @@
       const generated = "trap_" + loadNextTrapId++;
       usedTrapIds.add(generated); return generated;
     };
-    S.traps = rawTraps.map((t, i) => {
-      const o = { id: uniqueLoadedTrapId(t.id || ("trap_" + i)), tipo: t.tipo, pos: t.pos.slice() };
-      if (t.dificuldade != null) o.dificuldade = Number(t.dificuldade) | 0;
-      if (t.dano != null && validTrapDamage(t.dano)) o.dano = String(t.dano).replace(/\s/g, "");
-      if (t.veneno_id) o.veneno_id = t.veneno_id;
-      if (t.saida) o.saida = t.saida.slice();
-      if (t.tipo === "armadilha_maldicao") {
-        o.curse_mode = t.curse_mode || "aleatoria";
-        if (t.curse_id) o.curse_id = t.curse_id;
-        if (t.curse_category) o.curse_category = t.curse_category;
+    S.traps = rawTraps.map((trap, i) => {
+      const o = { id: uniqueLoadedTrapId(trap.id || ("trap_" + i)), tipo: trap.tipo, pos: trap.pos.slice() };
+      if (trap.dificuldade != null) o.dificuldade = Number(trap.dificuldade) | 0;
+      if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
+      if (trap.veneno_id) o.veneno_id = trap.veneno_id;
+      if (trap.saida) o.saida = trap.saida.slice();
+      if (trap.tipo === "armadilha_maldicao") {
+        o.curse_mode = trap.curse_mode || "aleatoria";
+        if (trap.curse_id) o.curse_id = trap.curse_id;
+        if (trap.curse_category) o.curse_category = trap.curse_category;
       }
-      if (t.image) o.image = t.image;
+      if (trap.image) o.image = trap.image;
       return o;
     });
-    S.nextTrapId = S.traps.reduce((next, t) => {
-      const m = /^trap_(\d+)$/.exec(t.id || "");
+    S.nextTrapId = S.traps.reduce((next, trap) => {
+      const m = /^trap_(\d+)$/.exec(trap.id || "");
       return m ? Math.max(next, Number(m[1]) + 1) : next;
     }, 0);
     // Mapas criados por versões anteriores podiam ter IDs repetidos após
@@ -3713,20 +3730,20 @@
 
   function save() {
     S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
-    S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
+    S.meta.name = document.getElementById("m-name").value.trim() || t("ui.editor.masmorra.salvar.nome_padrao");
     S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
     S.meta.saida_permitida = document.getElementById("m-saida").checked;
     const v = updateStatus();
-    if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
+    if (!v.ok) { alert(t("ui.editor.masmorra.salvar.invalida", { lista: v.erros.join("\n- ") })); return; }
     const defn = buildJSON();
     if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveDungeon) {
-      setSaveMsg("status-ok", "Salvando em dungeons/…");
+      setSaveMsg("status-ok", t("ui.editor.masmorra.salvar.salvando"));
       window.EDITOR_SAVE.saveDungeon(defn).then((res) => {
         injetarNoCatalogo(res.entry);
-        setSaveMsg("status-ok", "✓ salva em dungeons/" + res.file + " — disponível na aba Campanha");
+        setSaveMsg("status-ok", t("ui.editor.masmorra.salvar.salva", { arquivo: res.file }));
       }).catch((err) => {
         baixarMasmorra(defn);
-        setSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
+        setSaveMsg("status-err", t("ui.editor.masmorra.salvar.offline", { erro: err.message }));
       });
     } else {
       baixarMasmorra(defn);
@@ -3736,10 +3753,10 @@
   document.getElementById("btn-save").onclick = save;
   document.getElementById("btn-test-dungeon").onclick = async () => {
     if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.createTestDungeon) {
-      alert("Inicie o servidor para testar a masmorra."); return;
+      alert(t("ui.editor.masmorra.salvar.teste_sem_servidor")); return;
     }
     const valid = updateStatus();
-    if (!valid.ok) { alert("Corrija a masmorra antes de testar:\n- " + valid.erros.join("\n- ")); return; }
+    if (!valid.ok) { alert(t("ui.editor.masmorra.salvar.teste_invalida", { lista: valid.erros.join("\n- ") })); return; }
     // Abre durante o gesto de clique; abrir só depois do await é bloqueado como
     // popup pela maioria dos navegadores.
     const abaTeste = window.open("about:blank", "_blank");
@@ -3755,7 +3772,7 @@
       else window.location.assign(destino);
     } catch (err) {
       if (abaTeste) abaTeste.close();
-      alert("Não foi possível iniciar o teste: " + err.message);
+      alert(t("ui.editor.masmorra.salvar.teste_falhou", { erro: err.message }));
     }
     finally { btn.disabled = false; btn.textContent = t("ui.editor.topo.testar_mestre"); }
   };
@@ -3763,7 +3780,7 @@
   document.getElementById("file-input").onchange = (ev) => {
     const f = ev.target.files[0]; if (!f) return;
     const fr = new FileReader();
-    fr.onload = () => { try { loadJSON(JSON.parse(fr.result)); } catch (e) { alert("JSON inválido: " + e.message); } };
+    fr.onload = () => { try { loadJSON(JSON.parse(fr.result)); } catch (e) { alert(t("ui.editor.masmorra.salvar.json_invalido", { erro: e.message })); } };
     fr.readAsText(f); ev.target.value = "";
   };
   document.getElementById("btn-resize").onclick = () => {
@@ -3810,7 +3827,7 @@
     document.getElementById("tab-mapa-mundi").classList.toggle("active", worldEditor);
     document.getElementById("tab-campanha").classList.toggle("active", tab === "campanha");
     document.getElementById("tab-cenas").classList.toggle("active", scenesEditor);
-    if (dung) { render(); renderPanel(); }
+    if (dung) { if (soRedesenhar) buildToolbar(); render(); renderPanel(); }
     else if (bestiary && window.EDITOR_BESTIARY) window.EDITOR_BESTIARY.render();
     else if (monsterEditor && window.EDITOR_MONSTER_EDITOR) {
       // soRedesenhar (troca de idioma) NÃO pode descartar rascunho não

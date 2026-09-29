@@ -175,7 +175,7 @@ RE_FN_ED = re.compile(
 # Arquivos (ou "arquivo:função") já traduzidos: o placar COBRA zero neles. Cada
 # fase acrescenta os seus ao fechar. Fase 0 não fecha módulo nenhum — a moldura
 # (editor.html) é cobrada pela seção [2b].
-FECHADAS = set()
+FECHADAS = {"editor.js"}   # Fase 1: aba Masmorra
 
 # Um `t` local SOMBREIA o window.t global dentro do módulo (IIFE): t('chave') ali
 # vira TypeError em runtime. Renomeie o local antes de migrar o arquivo.
