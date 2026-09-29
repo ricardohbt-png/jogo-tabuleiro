@@ -1343,6 +1343,210 @@ window.LANG_EDITOR = {
   "ui.editor.material.madeira": {
     "en": "Varnished wood wall",
     "pt": "Parede de madeira envernizada"
+  },
+  "ui.editor.masmorra.menu_copia.copiar": {
+    "en": "Copy object",
+    "pt": "Copiar objeto"
+  },
+  "ui.editor.masmorra.menu_copia.pincel": {
+    "en": "Use as area brush",
+    "pt": "Usar como pincel de área"
+  },
+  "ui.editor.masmorra.menu_copia.colar": {
+    "en": "Paste object here",
+    "pt": "Colar objeto aqui"
+  },
+  "ui.editor.masmorra.canvas.frente": {
+    "en": "FRONT",
+    "pt": "FRENTE"
+  },
+  "ui.editor.masmorra.armadilha.efeito_rodada": {
+    "en": " — round {n}",
+    "pt": " — rodada {n}"
+  },
+  "ui.editor.masmorra.armadilha.efeito_dano": {
+    "en": "{valor} damage{elemento}{rodada}{area}",
+    "pt": "{valor} de dano{elemento}{rodada}{area}"
+  },
+  "ui.editor.masmorra.armadilha.em_area": {
+    "en": " in an area",
+    "pt": " em área"
+  },
+  "ui.editor.masmorra.armadilha.perde_movimento": {
+    "en": "Loses movement",
+    "pt": "Perde o movimento"
+  },
+  "ui.editor.masmorra.armadilha.perde_rodada": {
+    "en": "Loses the turn",
+    "pt": "Perde a rodada"
+  },
+  "ui.editor.masmorra.armadilha.aplica_veneno": {
+    "en": "Applies the chosen poison",
+    "pt": "Aplica o veneno escolhido"
+  },
+  "ui.editor.masmorra.armadilha.efeito_reduzir_con": {
+    "en": "{valor} CON for {duracao} rounds{area}",
+    "pt": "{valor} CON por {duracao} rodadas{area}"
+  },
+  "ui.editor.masmorra.armadilha.reducao": {
+    "en": "reduction",
+    "pt": "redução"
+  },
+  "ui.editor.masmorra.armadilha.algumas": {
+    "en": "a few",
+    "pt": "algumas"
+  },
+  "ui.editor.masmorra.armadilha.efeito_especial": {
+    "en": "special effect",
+    "pt": "efeito especial"
+  },
+  "ui.editor.masmorra.armadilha.sem_teste": {
+    "en": "No standard save",
+    "pt": "Sem teste padrão"
+  },
+  "ui.editor.masmorra.armadilha.sala_inteira": {
+    "en": "Whole room",
+    "pt": "Sala inteira"
+  },
+  "ui.editor.masmorra.armadilha.area_casa": {
+    "en": "Area: {n} tile",
+    "pt": "Área: {n} casa"
+  },
+  "ui.editor.masmorra.armadilha.area_casas": {
+    "en": "Area: {n} tiles",
+    "pt": "Área: {n} casas"
+  },
+  "ui.editor.masmorra.armadilha.alvo_casa": {
+    "en": "Target on the tile",
+    "pt": "Alvo na casa"
+  },
+  "ui.editor.masmorra.armadilha.duracao_rodadas": {
+    "en": "{n} rounds",
+    "pt": "{n} rodadas"
+  },
+  "ui.editor.masmorra.armadilha.permanece": {
+    "en": "Stays active",
+    "pt": "Permanece ativa"
+  },
+  "ui.editor.masmorra.armadilha.uso_unico": {
+    "en": "Single use",
+    "pt": "Uso único"
+  },
+  "ui.editor.masmorra.armadilha.dano": {
+    "en": "💥 Damage: {v}",
+    "pt": "💥 Dano: {v}"
+  },
+  "ui.editor.masmorra.armadilha.custo": {
+    "en": "🪙 Cost: {n} gold",
+    "pt": "🪙 Custo: {n} ouro"
+  },
+  "ui.editor.masmorra.armadilha.sucesso_reduz": {
+    "en": "🛡️ Success reduces the damage",
+    "pt": "🛡️ Sucesso reduz o dano"
+  },
+  "ui.editor.masmorra.armadilha.exige_veneno": {
+    "en": "☠️ Requires poison",
+    "pt": "☠️ Exige veneno"
+  },
+  "ui.editor.masmorra.armadilha.veneno_opcional": {
+    "en": "☠️ Optional poison",
+    "pt": "☠️ Veneno opcional"
+  },
+  "ui.editor.masmorra.armadilha.revela": {
+    "en": "👁️ Revealed after triggering",
+    "pt": "👁️ Revela após ativar"
+  },
+  "ui.editor.masmorra.armadilha.escape": {
+    "en": "↗️ Escape: {v}{cd}",
+    "pt": "↗️ Escape: {v}{cd}"
+  },
+  "ui.editor.masmorra.armadilha.so_objeto": {
+    "en": "📦 Only on an object/decoration",
+    "pt": "📦 Só em objeto/decoração"
+  },
+  "ui.editor.masmorra.armadilha.efeitos": {
+    "en": "Effects",
+    "pt": "Efeitos"
+  },
+  "ui.editor.masmorra.maldicao.texto_carta": {
+    "en": "Letter text...",
+    "pt": "Texto da carta..."
+  },
+  "ui.editor.masmorra.maldicao.ao_ler": {
+    "en": "curse when read",
+    "pt": "maldição ao ler"
+  },
+  "ui.editor.masmorra.maldicao.sem": {
+    "en": "No curse",
+    "pt": "Sem maldição"
+  },
+  "ui.editor.masmorra.maldicao.escolhida": {
+    "en": "Chosen curse",
+    "pt": "Maldição escolhida"
+  },
+  "ui.editor.masmorra.maldicao.aleatoria_gravidade": {
+    "en": "Random by severity",
+    "pt": "Aleatória por gravidade"
+  },
+  "ui.editor.masmorra.maldicao.aplicada": {
+    "en": "applied curse",
+    "pt": "maldição aplicada"
+  },
+  "ui.editor.masmorra.maldicao.nao_progressiva": {
+    "en": "Picks a non-progressive curse of this severity.",
+    "pt": "Escolhe uma maldição não progressiva desta gravidade."
+  },
+  "ui.editor.masmorra.recompensa.xp": {
+    "en": "XP (total, split among the living)",
+    "pt": "XP (total, dividido entre os vivos)"
+  },
+  "ui.editor.masmorra.recompensa.ouro": {
+    "en": "gold (total, split)",
+    "pt": "ouro (total, dividido)"
+  },
+  "ui.editor.masmorra.recompensa.itens": {
+    "en": "reward items",
+    "pt": "itens de recompensa"
+  },
+  "ui.editor.masmorra.recompensa.add_item": {
+    "en": "+ item",
+    "pt": "+ item"
+  },
+  "ui.editor.masmorra.design.sem_avisos": {
+    "en": "No design warnings.",
+    "pt": "Sem avisos de design."
+  },
+  "ui.editor.masmorra.design.avisos": {
+    "en": "Design warnings ({n})",
+    "pt": "Avisos de design ({n})"
+  },
+  "ui.editor.masmorra.termometro.titulo": {
+    "en": "thermometer (power {poder})",
+    "pt": "termômetro (poder {poder})"
+  },
+  "ui.editor.masmorra.termometro.total": {
+    "en": "Total",
+    "pt": "Total"
+  },
+  "ui.editor.masmorra.termometro.pior_sala": {
+    "en": "Worst room",
+    "pt": "Pior sala"
+  },
+  "ui.editor.masmorra.termometro.preview": {
+    "en": "preview players:",
+    "pt": "preview jogadores:"
+  },
+  "ui.editor.masmorra.canvas.fora_de_sala": {
+    "en": "outside any room",
+    "pt": "fora de sala"
+  },
+  "ui.editor.masmorra.canvas.sala_n": {
+    "en": "room #{n}",
+    "pt": "sala #{n}"
+  },
+  "ui.editor.masmorra.ponte.invalida": {
+    "en": "The bridge must be straight, fit on the map, not overlap another bridge and connect points of the same height.",
+    "pt": "A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);

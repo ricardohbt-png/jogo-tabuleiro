@@ -510,9 +510,10 @@
 
   const board = document.getElementById("board");
   const ctx = board.getContext("2d");
+  const K_CM = "ui.editor.masmorra.menu_copia.";
   const copyMenu = document.createElement("div");
   copyMenu.id = "editor-copy-menu";
-  copyMenu.innerHTML = `<button type="button" data-action="copy">Copiar objeto <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush">Usar como pincel de área</button><button type="button" data-action="paste">Colar objeto aqui <kbd>Ctrl+V</kbd></button>`;
+  copyMenu.innerHTML = `<button type="button" data-action="copy"><span data-i18n="${K_CM}copiar">${t(K_CM + "copiar")}</span> <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush"><span data-i18n="${K_CM}pincel">${t(K_CM + "pincel")}</span></button><button type="button" data-action="paste"><span data-i18n="${K_CM}colar">${t(K_CM + "colar")}</span> <kbd>Ctrl+V</kbd></button>`;
   document.body.appendChild(copyMenu);
   function hideCopyMenu() { copyMenu.classList.remove("open"); }
   function showCopyMenu(ev, cell) {
@@ -698,7 +699,8 @@
     ctx.font = "bold 9px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffe9a3"; ctx.strokeStyle = "#271600"; ctx.lineWidth = 3;
     const tx = cx + dx * (reach + 14), ty = cy + dy * (reach + 14);
-    ctx.strokeText("FRENTE", tx, ty); ctx.fillText("FRENTE", tx, ty);
+    const rotFrente = t("ui.editor.masmorra.canvas.frente");
+    ctx.strokeText(rotFrente, tx, ty); ctx.fillText(rotFrente, tx, ty);
     ctx.restore();
   }
 
@@ -1670,19 +1672,20 @@
     return String(value == null ? "" : value).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   }
 
+  const K_ARM = "ui.editor.masmorra.armadilha.";
   function trapEffectLabel(effect) {
     if (!effect) return "";
     const tipo = effect.tipo;
     if (tipo === "dano") {
       const elemento = effect.elemento && effect.elemento !== "fisico" ? ` (${trapText(effect.elemento)})` : "";
-      const rodada = effect.rodada ? ` — rodada ${effect.rodada}` : "";
-      return `${trapText(effect.valor || "dano")} de dano${elemento}${rodada}${effect.area ? " em área" : ""}`;
+      const rodada = effect.rodada ? t(K_ARM + "efeito_rodada", { n: effect.rodada }) : "";
+      return t(K_ARM + "efeito_dano", { valor: trapText(effect.valor || "dano"), elemento, rodada, area: effect.area ? t(K_ARM + "em_area") : "" });
     }
-    if (tipo === "perder_movimento") return "Perde o movimento";
-    if (tipo === "perder_rodada") return "Perde a rodada";
-    if (tipo === "veneno") return "Aplica o veneno escolhido";
-    if (tipo === "reduzir_con") return `${trapText(effect.valor || "redução")} CON por ${trapText(effect.duracao || "algumas")} rodadas${effect.area ? " em área" : ""}`;
-    return trapText(tipo || "efeito especial");
+    if (tipo === "perder_movimento") return t(K_ARM + "perde_movimento");
+    if (tipo === "perder_rodada") return t(K_ARM + "perde_rodada");
+    if (tipo === "veneno") return t(K_ARM + "aplica_veneno");
+    if (tipo === "reduzir_con") return t(K_ARM + "efeito_reduzir_con", { valor: trapText(effect.valor || t(K_ARM + "reducao")), duracao: trapText(effect.duracao || t(K_ARM + "algumas")), area: effect.area ? t(K_ARM + "em_area") : "" });
+    return trapText(tipo || t(K_ARM + "efeito_especial"));
   }
 
   function trapPrimaryDamage(meta) {
@@ -1700,18 +1703,18 @@
     if (!meta || !meta.nome) return "";
     const difficulty = instance && instance.dificuldade != null ? instance.dificuldade : meta.dificuldade;
     const damage = instance && instance.dano != null ? instance.dano : trapPrimaryDamage(meta);
-    const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : "Sem teste padrão";
-    const scope = meta.area_sala ? "Sala inteira" : meta.area ? `Área: ${meta.area} casa${meta.area === 1 ? "" : "s"}` : "Alvo na casa";
-    const duration = meta.duracao_rodadas ? `${meta.duracao_rodadas} rodadas` : (meta.persiste ? "Permanece ativa" : "Uso único");
+    const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : t(K_ARM + "sem_teste");
+    const scope = meta.area_sala ? t(K_ARM + "sala_inteira") : meta.area ? t(K_ARM + (meta.area === 1 ? "area_casa" : "area_casas"), { n: meta.area }) : t(K_ARM + "alvo_casa");
+    const duration = meta.duracao_rodadas ? t(K_ARM + "duracao_rodadas", { n: meta.duracao_rodadas }) : (meta.persiste ? t(K_ARM + "permanece") : t(K_ARM + "uso_unico"));
     const flags = [
       `🎲 ${save}`, `🎯 ${scope}`, `⏱️ ${duration}`,
-      damage ? `💥 Dano: ${trapText(damage)}` : "",
-      meta.custo_ouro != null ? `🪙 Custo: ${meta.custo_ouro} ouro` : "",
-      meta.save_reduz ? "🛡️ Sucesso reduz o dano" : "",
-      meta.precisa_veneno ? "☠️ Exige veneno" : (meta.permite_veneno ? "☠️ Veneno opcional" : ""),
-      meta.visivel_apos ? "👁️ Revela após ativar" : "",
-      meta.escape_save ? `↗️ Escape: ${trapText(meta.escape_save)}${meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : ""}` : "",
-      meta.apenas_objeto ? "📦 Só em objeto/decoração" : "",
+      damage ? t(K_ARM + "dano", { v: trapText(damage) }) : "",
+      meta.custo_ouro != null ? t(K_ARM + "custo", { n: meta.custo_ouro }) : "",
+      meta.save_reduz ? t(K_ARM + "sucesso_reduz") : "",
+      meta.precisa_veneno ? t(K_ARM + "exige_veneno") : (meta.permite_veneno ? t(K_ARM + "veneno_opcional") : ""),
+      meta.visivel_apos ? t(K_ARM + "revela") : "",
+      meta.escape_save ? t(K_ARM + "escape", { v: trapText(meta.escape_save), cd: meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : "" }) : "",
+      meta.apenas_objeto ? t(K_ARM + "so_objeto") : "",
     ].filter(Boolean);
     const effects = (meta.efeitos || []).map((effect, index) => {
       if (damage && index === (meta.efeitos || []).findIndex(e => e && e.tipo === "dano")) return { ...effect, valor: damage };
@@ -1720,7 +1723,7 @@
     return `<div class="trap-characteristics${compact ? " compact" : ""}">
       <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(meta.nome)}</div>
       <div class="trap-characteristics-flags">${flags.map(flag => `<span>${flag}</span>`).join("")}</div>
-      ${effects.length ? `<div class="trap-characteristics-effects"><b>Efeitos</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
+      ${effects.length ? `<div class="trap-characteristics-effects"><b>${t(K_ARM + "efeitos")}</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
       ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(meta.descricao)}</div>` : ""}
     </div>`;
   }
@@ -1764,6 +1767,7 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+  const K_CURSE = "ui.editor.masmorra.maldicao.";
   function lootItemRowHTML(item, index, removeClass) {
     const def = CAT.items.find(x => x.id === item.id) || {};
     const label = `${def.emoji || "📦"} ${def.name || item.id}`;
@@ -1773,12 +1777,12 @@
     const curseId = item.curse_id || (curses[0] && curses[0].id) || "";
     return `<div style="margin:4px 0;padding:4px;border:1px solid ${carta ? "#9c783a" : "transparent"};border-radius:4px;">
       <span>${editorEscapeText(label)}</span> <button data-i="${index}" class="${removeClass}">×</button>
-      ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="Texto da carta...">${editorEscapeText(item.texto || "")}</textarea>
-        <label style="display:block;margin-top:5px">maldição ao ler
+      ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="${t(K_CURSE + "texto_carta")}">${editorEscapeText(item.texto || "")}</textarea>
+        <label style="display:block;margin-top:5px">${t(K_CURSE + "ao_ler")}
           <select data-carta-curse-mode data-i="${index}">
-            <option value=""${!curseMode ? " selected" : ""}>Sem maldição</option>
-            <option value="especifica"${curseMode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
-            <option value="aleatoria"${curseMode === "aleatoria" ? " selected" : ""}>Aleatória por gravidade</option>
+            <option value=""${!curseMode ? " selected" : ""}>${t(K_CURSE + "sem")}</option>
+            <option value="especifica"${curseMode === "especifica" ? " selected" : ""}>${t(K_CURSE + "escolhida")}</option>
+            <option value="aleatoria"${curseMode === "aleatoria" ? " selected" : ""}>${t(K_CURSE + "aleatoria_gravidade")}</option>
           </select>
         </label>
         ${curseMode === "especifica" ? `<select data-carta-curse-id data-i="${index}">${opt(curses.map(c => ({ v: c.id, name: c.name || c.nome || c.id })), curseId, o => o.name)}</select>` : ""}
@@ -1851,16 +1855,16 @@
     const curseId = trap.curse_id || firstId;
     const selected = curses.find(c => c.id === curseId);
     return `<div style="margin-top:8px;border-top:1px solid #4a3a2a;padding-top:8px">
-      <label>maldição aplicada</label>
+      <label>${t(K_CURSE + "aplicada")}</label>
       <select id="${prefix}-curse-mode">
-        <option value="especifica"${mode === "especifica" ? " selected" : ""}>Maldição escolhida</option>
-        <option value="aleatoria"${mode !== "especifica" ? " selected" : ""}>Aleatória por gravidade</option>
+        <option value="especifica"${mode === "especifica" ? " selected" : ""}>${t(K_CURSE + "escolhida")}</option>
+        <option value="aleatoria"${mode !== "especifica" ? " selected" : ""}>${t(K_CURSE + "aleatoria_gravidade")}</option>
       </select>
       ${mode === "especifica"
         ? `<select id="${prefix}-curse-id">${opt(curses.map(c => ({ v: c.id, name: c.name })), curseId, o => o.name)}</select>
            <small id="${prefix}-curse-desc" style="display:block;color:#b9a87f">${selected ? (selected.description || "") : ""}</small>`
         : `<select id="${prefix}-curse-category">${opt(CURSE_CATEGORIES, trap.curse_category || "leve", o => t("ui.editor.masmorra.maldicao." + o.v))}</select>
-           <small style="display:block;color:#b9a87f">Escolhe uma maldição não progressiva desta gravidade.</small>`}
+           <small style="display:block;color:#b9a87f">${t(K_CURSE + "nao_progressiva")}</small>`}
     </div>`;
   }
   function prepareCurseTrap(trap, fresh) {
@@ -1901,13 +1905,14 @@
     return obj;
   }
   // HTML dos campos de recompensa de um objetivo. `pfx` é um prefixo único de ids.
+  const K_REC = "ui.editor.masmorra.recompensa.";
   function rewardFieldsHTML(obj, pfx) {
-    return `<label>XP (total, dividido entre os vivos) <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
-      <label>ouro (total, dividido) <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
-      <label>itens de recompensa</label>
+    return `<label>${t(K_REC + "xp")} <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
+      <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
+      <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
       <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
-      <button id="${pfx}-additem">+ item</button>`;
+      <button id="${pfx}-additem">${t(K_REC + "add_item")}</button>`;
   }
   function wireRewardFields(obj, pfx) {
     document.getElementById(`${pfx}-xp`).onchange = e => { obj.xp = Math.max(0, Number(e.target.value) | 0); };
@@ -2086,8 +2091,8 @@
 
   function _avisosDesignHTML() {
     var av = _validarDesign();
-    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ Sem avisos de design.</div>';
-    return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ Avisos de design (' + av.length + ')</label>' +
+    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ ' + t("ui.editor.masmorra.design.sem_avisos") + '</div>';
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ ' + t("ui.editor.masmorra.design.avisos", { n: av.length }) + '</label>' +
       av.map(function (a) { return '<div style="color:#d8b06a;font-size:11px;margin-top:2px">• ' + a + '</div>'; }).join("");
   }
 
@@ -2100,7 +2105,7 @@
       var f = window.Difficulty.faixa(valor, pod);
       var pct = Math.max(4, Math.min(100, (valor / (pod * 1.5)) * 100));
       return '<div style="margin-top:4px"><span>' + rot + ': <b>' + valor.toFixed(2) + '</b> — ' +
-        '<span style="color:' + f.color + '">' + f.label + '</span></span>' +
+        '<span style="color:' + f.color + '">' + t("ui.dificuldade." + f.key) + '</span></span>' +
         '<div style="height:8px;background:#241d14;border-radius:4px;overflow:hidden;margin-top:2px">' +
         '<div style="height:100%;width:' + pct + '%;background:' + f.color + '"></div></div></div>';
     }
@@ -2108,9 +2113,9 @@
     var sel = [2, 4, 6].map(function (n) {
       return '<button data-ndprev="' + n + '" class="ndprev' + (atual === n ? ' on' : '') + '">' + n + '</button>';
     }).join("");
-    return '<hr style="border-color:#3a3022;margin:10px 0"><label>🌡️ termômetro (poder ' + pod + ')</label>' +
-      linha("Total", nd.total) + linha("Pior sala", nd.pior) +
-      '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>preview jogadores:</span>' + sel + '</div>';
+    return '<hr style="border-color:#3a3022;margin:10px 0"><label>🌡️ ' + t("ui.editor.masmorra.termometro.titulo", { poder: pod }) + '</label>' +
+      linha(t("ui.editor.masmorra.termometro.total"), nd.total) + linha(t("ui.editor.masmorra.termometro.pior_sala"), nd.pior) +
+      '<div style="margin-top:6px;display:flex;gap:4px;align-items:center"><span>' + t("ui.editor.masmorra.termometro.preview") + '</span>' + sel + '</div>';
   }
 
   // ── Coordenadas nas descrições ────────────────────────────────────────────
@@ -2126,7 +2131,7 @@
   }
   function _salaDe(p) {
     const rid = p ? roomIdAt(p[0], p[1]) : null;
-    return rid == null ? "fora de sala" : "sala #" + rid;
+    return rid == null ? t("ui.editor.masmorra.canvas.fora_de_sala") : t("ui.editor.masmorra.canvas.sala_n", { n: rid });
   }
   // Referência curta de uma sala: "#3 (4,2)→(9,7)".
   function _salaRef(id) {
@@ -3082,7 +3087,7 @@
       const drag = S.ponteDrag; S.ponteDrag = null;
       if (drag.start[0] !== drag.end[0] || drag.start[1] !== drag.end[1]) {
         if (!placeBridge(drag.start, drag.end, drag.width, drag.material)) {
-          alert("A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura.");
+          alert(t("ui.editor.masmorra.ponte.invalida"));
         }
       }
       renderPanel(); render(); updateStatus();
