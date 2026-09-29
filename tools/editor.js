@@ -251,7 +251,7 @@
   }
   function doorFrontLabel(x, y) {
     const quarter = ((Math.round((doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
-    return ["↑ norte", "→ leste", "↓ sul", "← oeste"][quarter];
+    return t("ui.editor.masmorra.direcao." + ["norte", "leste", "sul", "oeste"][quarter]);
   }
   function rotateDoorAt(x, y) {
     const k = doorKey(x, y);
@@ -1721,7 +1721,7 @@
       return effect;
     }).map(trapEffectLabel).filter(Boolean);
     return `<div class="trap-characteristics${compact ? " compact" : ""}">
-      <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(meta.nome)}</div>
+      <div class="trap-characteristics-title">${trapText(meta.icone || "⚠️")} ${trapText(nomeCat("armadilha", meta.tipo, meta.nome))}</div>
       <div class="trap-characteristics-flags">${flags.map(flag => `<span>${flag}</span>`).join("")}</div>
       ${effects.length ? `<div class="trap-characteristics-effects"><b>${t(K_ARM + "efeitos")}</b>${effects.map(effect => `<div>• ${effect}</div>`).join("")}</div>` : ""}
       ${meta.descricao ? `<div class="trap-characteristics-desc">${trapText(meta.descricao)}</div>` : ""}
@@ -1770,7 +1770,7 @@
   const K_CURSE = "ui.editor.masmorra.maldicao.";
   function lootItemRowHTML(item, index, removeClass) {
     const def = CAT.items.find(x => x.id === item.id) || {};
-    const label = `${def.emoji || "📦"} ${def.name || item.id}`;
+    const label = `${def.emoji || "📦"} ${nomeCat("item", item.id, def.name || item.id)}`;
     const carta = item.id === "carta";
     const curseMode = carta ? (item.curse_mode || "") : "";
     const curses = curseCatalog();
@@ -1911,7 +1911,7 @@
       <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
       <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
-      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: it.name })), "", o => o.v + " — " + o.name)}</select>
+      <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) })), "", o => o.v + " — " + o.name)}</select>
       <button id="${pfx}-additem">${t(K_REC + "add_item")}</button>`;
   }
   function wireRewardFields(obj, pfx) {
@@ -2140,7 +2140,7 @@
   }
   function _coordsSelecao(sel) {
     const k = sel.kind, ref = sel.ref;
-    if (k === "room") return _xy([ref.x, ref.y]) + " → " + _xy([ref.x + ref.w - 1, ref.y + ref.h - 1]) + " · " + ref.w + "×" + ref.h + " casas";
+    if (k === "room") return _xy([ref.x, ref.y]) + " → " + _xy([ref.x + ref.w - 1, ref.y + ref.h - 1]) + " · " + t("ui.editor.masmorra.painel.tamanho_casas", { w: ref.w, h: ref.h });
     if (k === "door") return _xy([ref.x, ref.y]) + " · " + _salaDe([ref.x, ref.y]);
     if (k === "bridge") return _xy(ref.inicio) + " → " + _xy(ref.fim);
     if (k === "monster") return _faixaXY(monsterTiles(ref)) + " · " + _salaDe(ref.pos);

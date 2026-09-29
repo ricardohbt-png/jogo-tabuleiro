@@ -1975,6 +1975,26 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.salvar.json_invalido": {
     "en": "Invalid JSON: {erro}",
     "pt": "JSON inválido: {erro}"
+  },
+  "ui.editor.masmorra.direcao.norte": {
+    "en": "↑ north",
+    "pt": "↑ norte"
+  },
+  "ui.editor.masmorra.direcao.leste": {
+    "en": "→ east",
+    "pt": "→ leste"
+  },
+  "ui.editor.masmorra.direcao.sul": {
+    "en": "↓ south",
+    "pt": "↓ sul"
+  },
+  "ui.editor.masmorra.direcao.oeste": {
+    "en": "← west",
+    "pt": "← oeste"
+  },
+  "ui.editor.masmorra.painel.tamanho_casas": {
+    "en": "{w}×{h} squares",
+    "pt": "{w}×{h} casas"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);
