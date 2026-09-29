@@ -2057,33 +2057,33 @@
     if (!S.rooms || !S.rooms.length) return avisos;
     var g = _grafoSalas(), nd = _ndSalaMap();
     var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
-    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push("R4: sala " + _salaRef(r.id) + " isolada do mapa principal."); });
-    if (g.bossId == null) { avisos.push("R2/R5: sem sala com role 'boss' (regras puladas)."); }
+    S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push(t("ui.editor.masmorra.design.r4", { sala: _salaRef(r.id) })); });
+    if (g.bossId == null) { avisos.push(t("ui.editor.masmorra.design.r2r5_sem_boss")); }
     else {
       var dist = _distSalas(g.adj, g.entradaId, g.bossId);
-      if (dist !== Infinity && dist < VALID_MIN_SALAS) avisos.push("R2: boss a só " + dist + " sala(s) do spawn (mín " + VALID_MIN_SALAS + ").");
+      if (dist !== Infinity && dist < VALID_MIN_SALAS) avisos.push(t("ui.editor.masmorra.design.r2", { dist: dist, min: VALID_MIN_SALAS }));
       var viz = Array.from(g.adj[g.bossId] || []);
       var temDescanso = viz.some(function (id) { var rm = S.rooms.find(function (x) { return x.id === id; }); return rm && (rm.role === "empty" || (nd[id] || 0) <= pod * VALID_REST_FATOR); });
-      if (viz.length && !temDescanso) avisos.push("R5: sem sala de descanso (ND baixo) logo antes do boss.");
+      if (viz.length && !temDescanso) avisos.push(t("ui.editor.masmorra.design.r5"));
       // R1: gargalos (cut vertices) — salas cuja remoção isola o boss do spawn.
       if (dist !== Infinity) {
         var gargalos = S.rooms.filter(function (r) {
           return r.id !== g.entradaId && r.id !== g.bossId && g.reach.has(r.id) &&
                  !_alcancaSemSala(g.adj, g.entradaId, g.bossId, r.id);
         }).map(function (r) { return _salaRef(r.id); });
-        if (gargalos.length) avisos.push("R1: rota única — sem caminho alternativo até o boss (gargalo em " + gargalos.join(", ") + ").");
+        if (gargalos.length) avisos.push(t("ui.editor.masmorra.design.r1", { gargalos: gargalos.join(", ") }));
       }
     }
     var req = S.rooms.filter(function (r) { return r.required; });
-    if (!req.length) { avisos.push("R3/R6: nenhuma sala marcada como obrigatória (rota crítica)."); }
+    if (!req.length) { avisos.push(t("ui.editor.masmorra.design.r3r6_sem_obrigatoria")); }
     else {
       var media = req.reduce(function (a, r) { return a + (nd[r.id] || 0); }, 0) / req.length;
       var teto = pod * VALID_R6_FATOR;
-      if (media > teto) avisos.push("R6: rota crítica pesada (ND médio " + media.toFixed(2) + " > teto " + teto.toFixed(2) + ").");
+      if (media > teto) avisos.push(t("ui.editor.masmorra.design.r6", { media: media.toFixed(2), teto: teto.toFixed(2) }));
       var ord = req.slice().sort(function (a, b) { return _distSalas(g.adj, g.entradaId, a.id) - _distSalas(g.adj, g.entradaId, b.id); });
       for (var i = 1; i < ord.length; i++) {
         var delta = Math.abs((nd[ord[i-1].id] || 0) - (nd[ord[i].id] || 0));
-        if (delta > VALID_MAX_PICO) avisos.push("R3: pico de ND entre salas " + _salaRef(ord[i-1].id) + " e " + _salaRef(ord[i].id) + " (Δ=" + delta.toFixed(2) + ").");
+        if (delta > VALID_MAX_PICO) avisos.push(t("ui.editor.masmorra.design.r3", { a: _salaRef(ord[i-1].id), b: _salaRef(ord[i].id), delta: delta.toFixed(2) }));
       }
     }
     return avisos;
@@ -3268,6 +3268,8 @@
 
   function validarEditor() {
     const e = [];
+    const V = (slug, params) => t("ui.editor.masmorra.valid." + slug, params);
+    const P = (p) => String(p);
     const types = new Set(CAT.monsters.map(m => m.type));
     const items = new Set(CAT.items.map(i => i.id));
     const traps = new Set(CAT.traps.map(tr => tr.tipo));
@@ -3275,114 +3277,116 @@
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
-    const validateCarta = (it, label) => {
+    const validateCarta = (it, rotulo) => {
       if (it?.id !== "carta" || !it.curse_mode) return;
       if (!["especifica", "aleatoria"].includes(it.curse_mode)) {
-        e.push(`${label}: modo de maldição inválido`); return;
+        e.push(V("carta_modo", { rotulo })); return;
       }
       if (it.curse_mode === "especifica" && !curses.has(it.curse_id))
-        e.push(`${label}: maldição específica inválida`);
+        e.push(V("carta_maldicao", { rotulo }));
       if (it.curse_mode === "aleatoria" && !["leve", "media", "grave"].includes(it.curse_category || "leve"))
-        e.push(`${label}: gravidade da maldição inválida`);
+        e.push(V("carta_gravidade", { rotulo }));
     };
     if (S.startMode === "entrance") {
-      if (!S.entrance) e.push("falta a entrada");
-      else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push("entrada precisa estar em chão");
+      if (!S.entrance) e.push(V("falta_entrada"));
+      else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push(V("entrada_em_chao"));
     } else {
-      if (!S.heroSpawns.length) e.push("falta ao menos uma posição inicial de herói");
+      if (!S.heroSpawns.length) e.push(V("falta_spawn"));
       const classes = new Set();
       for (const s of S.heroSpawns) {
-        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(`classe inicial inválida: ${s.class_id} em ${s.pos}`);
-        if (classes.has(s.class_id)) e.push(`classe inicial duplicada: ${s.class_id}`);
+        if (!HERO_SPAWN_META.some(h => h.id === s.class_id)) e.push(V("spawn_classe_invalida", { classe: s.class_id, pos: P(s.pos) }));
+        if (classes.has(s.class_id)) e.push(V("spawn_classe_duplicada", { classe: s.class_id }));
         classes.add(s.class_id);
-        if (isWall(s.pos)) e.push(`posição inicial em parede: ${s.pos}`);
+        if (isWall(s.pos)) e.push(V("spawn_em_parede", { pos: P(s.pos) }));
       }
     }
-    if (S.rooms.length === 0) e.push("precisa de ao menos uma sala");
-    if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push("nenhuma sala com role 'entrance'");
+    if (S.rooms.length === 0) e.push(V("sem_sala"));
+    if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push(V("sem_sala_entrada"));
     for (const m of S.monsters) {
-      if (!types.has(m.type)) e.push(`monstro tipo inválido: ${m.type} em ${m.pos}`);
-      if (isWall(m.pos)) e.push(`monstro em parede: ${m.pos}`);
-      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(`monstro em ${m.pos} com room_id inexistente: ${m.room_id}`);
+      if (!types.has(m.type)) e.push(V("monstro_tipo_invalido", { tipo: m.type, pos: P(m.pos) }));
+      if (isWall(m.pos)) e.push(V("monstro_em_parede", { pos: P(m.pos) }));
+      if (m.room_id != null && !roomIds.has(m.room_id)) e.push(V("monstro_room_id", { pos: P(m.pos), room: m.room_id }));
     }
     for (const c of S.chests) {
-      if (isWall(c.pos)) e.push(`baú em parede: ${c.pos}`);
+      if (isWall(c.pos)) e.push(V("bau_em_parede", { pos: P(c.pos) }));
       for (const it of c.items) {
-        if (!items.has(it.id)) e.push(`item inválido: ${it.id} no baú em ${c.pos}`);
-        validateCarta(it, `Carta do baú em ${c.pos}`);
+        if (!items.has(it.id)) e.push(V("item_invalido_bau", { id: it.id, pos: P(c.pos) }));
+        validateCarta(it, V("carta_bau", { pos: P(c.pos) }));
       }
     }
     for (const trap of S.traps) {
-      if (!traps.has(trap.tipo)) e.push(`armadilha tipo inválido: ${trap.tipo} em ${trap.pos}`);
-      if (CAT.traps.find(c => c.tipo === trap.tipo)?.apenas_objeto) e.push(`${trap.tipo} em ${trap.pos} só pode ser colocado em uma decoração/objeto`);
-      if (isWall(trap.pos)) e.push(`armadilha em parede: ${trap.pos}`);
-      if (trap.dificuldade != null && (!Number.isInteger(trap.dificuldade) || trap.dificuldade < 1 || trap.dificuldade > 40)) e.push(`${trap.tipo} em ${trap.pos} com CD inválida: ${trap.dificuldade}`);
-      if (trap.dano != null && !validTrapDamage(trap.dano)) e.push(`${trap.tipo} em ${trap.pos} com dano inválido: ${trap.dano}`);
-      if ((trap.tipo === "fosso_envenenado" || trap.tipo === "armadilha_dardos_envenenados") && !venoms.has(trap.veneno_id)) e.push(`${trap.tipo} em ${trap.pos} sem veneno válido`);
-      if (trap.tipo === "armadilha_teletransporte" && (!Array.isArray(trap.saida) || S.tiles[trap.saida[1]]?.[trap.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte em ${trap.pos} sem saída em chão`);
+      const tp = { tipo: trap.tipo, pos: P(trap.pos) };
+      if (!traps.has(trap.tipo)) e.push(V("armadilha_tipo_invalido", tp));
+      if (CAT.traps.find(c => c.tipo === trap.tipo)?.apenas_objeto) e.push(V("armadilha_so_objeto", tp));
+      if (isWall(trap.pos)) e.push(V("armadilha_em_parede", { pos: P(trap.pos) }));
+      if (trap.dificuldade != null && (!Number.isInteger(trap.dificuldade) || trap.dificuldade < 1 || trap.dificuldade > 40)) e.push(V("armadilha_cd", { ...tp, cd: trap.dificuldade }));
+      if (trap.dano != null && !validTrapDamage(trap.dano)) e.push(V("armadilha_dano", { ...tp, dano: trap.dano }));
+      if ((trap.tipo === "fosso_envenenado" || trap.tipo === "armadilha_dardos_envenenados") && !venoms.has(trap.veneno_id)) e.push(V("armadilha_veneno", tp));
+      if (trap.tipo === "armadilha_teletransporte" && (!Array.isArray(trap.saida) || S.tiles[trap.saida[1]]?.[trap.saida[0]] !== FLOOR)) e.push(V("armadilha_tp_saida", { pos: P(trap.pos) }));
       if (trap.tipo === "armadilha_maldicao") {
         const mode = trap.curse_mode || "aleatoria";
-        if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha_maldicao em ${trap.pos} com modo inválido`);
-        if (mode === "especifica" && !curses.has(trap.curse_id)) e.push(`armadilha_maldicao em ${trap.pos} sem maldição válida`);
-        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(trap.curse_category || "leve")) e.push(`armadilha_maldicao em ${trap.pos} com gravidade inválida`);
+        if (!["especifica", "aleatoria"].includes(mode)) e.push(V("maldicao_modo", { pos: P(trap.pos) }));
+        if (mode === "especifica" && !curses.has(trap.curse_id)) e.push(V("maldicao_sem", { pos: P(trap.pos) }));
+        if (mode === "aleatoria" && !["leve", "media", "grave"].includes(trap.curse_category || "leve")) e.push(V("maldicao_gravidade", { pos: P(trap.pos) }));
       }
     }
-    if (S.prisoner && isWall(S.prisoner.pos)) e.push(`prisioneiro em parede: ${S.prisoner.pos}`);
-    for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(`porta declarada não é tile DOOR: ${d}`);
+    if (S.prisoner && isWall(S.prisoner.pos)) e.push(V("prisioneiro_em_parede", { pos: P(S.prisoner.pos) }));
+    for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(V("porta_nao_door", { porta: P(d) }));
     if (S.startMode === "entrance") {
-      if (reachableFloors(6) < 6) e.push("menos de 6 casas de chão alcançáveis da entrada");
+      if (reachableFloors(6) < 6) e.push(V("poucas_casas"));
     } else {
-      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(`posição inicial inacessível: ${s.class_id} em ${s.pos}`);
+      for (const s of S.heroSpawns) if (reachableFloors(1, s.pos) < 1) e.push(V("spawn_inacessivel", { classe: s.class_id, pos: P(s.pos) }));
     }
     if (S.objectives.primary.type === "all_heroes_at_exit" && !S.exit)
-      e.push("o objetivo all_heroes_at_exit exige uma saída");
+      e.push(V("objetivo_saida"));
     const decTypes = new Set(CAT.decorations.map(d => d.type));
     const decOcc = new Set();
     const wallDecOcc = new Set();
     for (const d of S.decorations) {
-      if (!decTypes.has(d.type)) { e.push(`decoração tipo inválido: ${d.type} em ${d.pos}`); continue; }
+      if (!decTypes.has(d.type)) { e.push(V("decor_tipo_invalido", { tipo: d.type, pos: P(d.pos) })); continue; }
       const decorCat = decorMeta(d.type);
       if (decorCat?.special === "plaque" && !String(d.texto || "").trim())
-        e.push(`placa ${d.id} em ${d.pos} precisa de uma mensagem`);
+        e.push(V("placa_sem_mensagem", { id: d.id, pos: P(d.pos) }));
       if (decorCat?.special === "plaque" && String(d.texto || "").length > 600)
-        e.push(`placa ${d.id} em ${d.pos} excede 600 caracteres`);
+        e.push(V("placa_longa", { id: d.id, pos: P(d.pos) }));
       if (isWallDecor(d)) {
         const [wx, wy] = d.pos;
         const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
-        if (S.tiles[wy]?.[wx] !== WALL) e.push(`decoração de parede ${d.type} precisa estar em uma parede em ${wx},${wy}`);
-        else if (!validFace) e.push(`decoração de parede ${d.type} precisa apontar para um chão adjacente em ${wx},${wy}`);
+        if (S.tiles[wy]?.[wx] !== WALL) e.push(V("decor_parede_fora", { tipo: d.type, x: wx, y: wy }));
+        else if (!validFace) e.push(V("decor_parede_face", { tipo: d.type, x: wx, y: wy }));
         const wallKey = `${wx},${wy}:${(d.facing || []).join(",")}`;
-        if (wallDecOcc.has(wallKey)) e.push(`decorações sobrepostas na mesma face de parede em ${wx},${wy}`);
+        if (wallDecOcc.has(wallKey)) e.push(V("decor_parede_sobrepostas", { x: wx, y: wy }));
         wallDecOcc.add(wallKey);
         if (d.loot) for (const it of d.loot.items) {
-          if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
-          validateCarta(it, `Carta da decoração em ${d.pos}`);
+          if (!items.has(it.id)) e.push(V("loot_item_invalido", { id: it.id, pos: P(d.pos) }));
+          validateCarta(it, V("carta_decor", { pos: P(d.pos) }));
         }
         continue;
       }
       for (const [tx, ty] of decorTiles(d)) {
         if (tx < 0 || ty < 0 || tx >= S.grid.w || ty >= S.grid.h || S.tiles[ty]?.[tx] !== FLOOR)
-          e.push(`decoração ${d.type} fora do chão em ${tx},${ty}`);
+          e.push(V("decor_fora_chao", { tipo: d.type, x: tx, y: ty }));
         const key = tx + "," + ty;
-        if (decOcc.has(key)) e.push(`decorações sobrepostas em ${tx},${ty}`);
+        if (decOcc.has(key)) e.push(V("decor_sobrepostas", { x: tx, y: ty }));
         decOcc.add(key);
       }
       if (d.loot) for (const it of d.loot.items) {
-        if (!items.has(it.id)) e.push(`item de loot inválido: ${it.id} na decoração em ${d.pos}`);
-        validateCarta(it, `Carta da decoração em ${d.pos}`);
+        if (!items.has(it.id)) e.push(V("loot_item_invalido", { id: it.id, pos: P(d.pos) }));
+        validateCarta(it, V("carta_decor", { pos: P(d.pos) }));
       }
-      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(`baú-armadilha em ${d.pos} com monstro inválido`);
+      if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(V("bau_armadilha_monstro", { pos: P(d.pos) }));
       if (d.trap) {
-        if (!traps.has(d.trap.tipo)) e.push(`armadilha de decoração inválida em ${d.pos}`);
-        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com CD inválida`);
-        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(`${d.trap.tipo} na decoração em ${d.pos} com dano inválido`);
-        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(`${d.trap.tipo} na decoração em ${d.pos} sem veneno válido`);
-        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(`armadilha de teletransporte na decoração em ${d.pos} sem saída em chão`);
+        const dp = { tipo: d.trap.tipo, pos: P(d.pos) };
+        if (!traps.has(d.trap.tipo)) e.push(V("decor_trap_invalida", { pos: P(d.pos) }));
+        if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(V("decor_trap_cd", dp));
+        if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(V("decor_trap_dano", dp));
+        if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(V("decor_trap_veneno", dp));
+        if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(V("decor_trap_tp_saida", { pos: P(d.pos) }));
         if (d.trap.tipo === "armadilha_maldicao") {
           const mode = d.trap.curse_mode || "aleatoria";
-          if (!["especifica", "aleatoria"].includes(mode)) e.push(`armadilha de decoração em ${d.pos} com modo de maldição inválido`);
-          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push(`armadilha de decoração em ${d.pos} sem maldição válida`);
-          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(`armadilha de decoração em ${d.pos} com gravidade inválida`);
+          if (!["especifica", "aleatoria"].includes(mode)) e.push(V("decor_maldicao_modo", { pos: P(d.pos) }));
+          if (mode === "especifica" && !curses.has(d.trap.curse_id)) e.push(V("decor_maldicao_sem", { pos: P(d.pos) }));
+          if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(V("decor_maldicao_gravidade", { pos: P(d.pos) }));
         }
       }
     }
@@ -3390,62 +3394,62 @@
     for (const [key, c] of Object.entries(S.doorConditions || {})) {
       const pos = key.split(",").map(Number);
       if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
-        e.push(`condição de abertura em porta inválida: ${key}`); continue;
+        e.push(V("porta_cond_invalida", { chave: key })); continue;
       }
-      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(`tipo de condição de porta inválido em ${key}`); continue; }
-      if (c.type === "item" && !items.has(c.item_id)) e.push(`item-chave inválido na porta ${key}: ${c.item_id}`);
+      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
+      if (c.type === "item" && !items.has(c.item_id)) e.push(V("porta_item_chave", { chave: key, id: c.item_id }));
       if (c.type === "licao" && !S.falas.some(f => f.id === c.licao_id && f.tarefa && f.tarefa.tipo))
-        e.push(`porta ${key} aponta para uma lição que não existe ou não tem tarefa`);
+        e.push(V("porta_licao", { chave: key }));
       if (c.type === "decor") {
         if (!Array.isArray(c.key_decor_ids) || !c.key_decor_ids.length || c.key_decor_ids.some(id => !decorIds.has(id)))
-          e.push(`porta ${key} sem objetos-chave válidos`);
+          e.push(V("porta_sem_chaves", { chave: key }));
         if (Array.isArray(c.key_decor_ids) && new Set(c.key_decor_ids).size !== c.key_decor_ids.length)
-          e.push(`porta ${key} repete um objeto-chave`);
-        if (!["any", "all"].includes(c.keys_mode || "any")) e.push(`modo de objetos-chave inválido na porta ${key}`);
+          e.push(V("porta_chave_repetida", { chave: key }));
+        if (!["any", "all"].includes(c.keys_mode || "any")) e.push(V("porta_modo_chaves", { chave: key }));
         if (Array.isArray(c.key_decor_ids)) for (const id of c.key_decor_ids) {
           const d = S.decorations.find(x => x.id === id);
-          if (d && !d.key_objective) e.push(`objeto ${id} em ${d.pos} da porta ${key} precisa estar marcado como objeto-chave`);
+          if (d && !d.key_objective) e.push(V("porta_objeto_nao_chave", { id, pos: P(d.pos), chave: key }));
         }
       }
     }
     const passageIds = new Set();
     for (const p of S.secretPassages) {
-      if (!p.id || passageIds.has(p.id)) e.push("id de passagem secreta duplicado ou vazio");
+      if (!p.id || passageIds.has(p.id)) e.push(V("passagem_id"));
       passageIds.add(p.id);
-      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push(`passagem secreta ${p.id} em ${p.pos} deve ficar em uma parede`);
-      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push(`textura da passagem secreta em ${p.pos} inválida`);
-      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push(`passagem em ${p.pos} com decoração-chave inválida`);
-      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push(`passagem secreta em ${p.pos} sem decoração-chave`);
+      if (!p.pos || S.tiles[p.pos[1]]?.[p.pos[0]] !== WALL) e.push(V("passagem_parede", { id: p.id, pos: P(p.pos) }));
+      if (p.wall_material != null && !WALL_MATERIAL_IDS.has(p.wall_material)) e.push(V("passagem_textura", { pos: P(p.pos) }));
+      if (!Array.isArray(p.key_decor_ids) || p.key_decor_ids.some(id => !decorIds.has(id))) e.push(V("passagem_chave_invalida", { pos: P(p.pos) }));
+      if (p.type === "mechanism" && !p.key_decor_ids.length) e.push(V("passagem_sem_chave", { pos: P(p.pos) }));
     }
     const ordensLicao = new Set();
     for (const f of S.falas) {
-      if (isWall(f.pos)) e.push(`fala de NPC em parede: ${f.pos}`);
-      if (!(f.texto || "").trim()) e.push(`fala de NPC em ${f.pos} sem texto`);
+      if (isWall(f.pos)) e.push(V("fala_em_parede", { pos: P(f.pos) }));
+      if (!(f.texto || "").trim()) e.push(V("fala_sem_texto", { pos: P(f.pos) }));
       const tipo = (f.trigger || {}).tipo;
-      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(`fala de NPC em ${f.pos} com gatilho inválido: ${tipo}`);
+      if (!["proximidade", "sala", "manual"].includes(tipo)) e.push(V("fala_gatilho", { pos: P(f.pos), tipo }));
       const ehLicao = !!(f.classe || f.tarefa || f.efeito || f.ordem != null);
       if (!ehLicao) continue;
-      if (tipo === "manual") e.push(`lição ${f.id} em ${f.pos} não pode ter gatilho manual`);
-      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(`lição ${f.id} em ${f.pos} com classe inválida: ${f.classe}`);
+      if (tipo === "manual") e.push(V("licao_manual", { id: f.id, pos: P(f.pos) }));
+      if (f.classe && !HERO_SPAWN_META.some(h => h.id === f.classe)) e.push(V("licao_classe", { id: f.id, pos: P(f.pos), classe: f.classe }));
       if (f.ordem != null) {
         const chave = `${f.classe || ""}#${f.ordem}`;
-        if (ordensLicao.has(chave)) e.push(`duas lições com a mesma ordem ${f.ordem} para ${f.classe || "todas as classes"}`);
+        if (ordensLicao.has(chave)) e.push(V("licao_ordem_duplicada", { ordem: f.ordem, classe: f.classe || V("todas_classes") }));
         ordensLicao.add(chave);
       }
       if (f.tarefa) {
-        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(`lição ${f.id} em ${f.pos} com tarefa inválida: ${f.tarefa.tipo}`);
-        if (!(f.tarefa.texto_curto || "").trim()) e.push(`lição ${f.id} em ${f.pos} sem texto curto`);
-        if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(`lição ${f.id}: alvo deveria ser uma casa x,y`);
+        if (!LICAO_VERBOS.some(o => o.v === f.tarefa.tipo)) e.push(V("licao_tarefa", { id: f.id, pos: P(f.pos), tipo: f.tarefa.tipo }));
+        if (!(f.tarefa.texto_curto || "").trim()) e.push(V("licao_sem_texto_curto", { id: f.id, pos: P(f.pos) }));
+        if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(V("licao_alvo", { id: f.id }));
       }
     }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {
-      if (!matIds.has(mid)) { e.push(`material inválido: ${mid}`); continue; }
+      if (!matIds.has(mid)) { e.push(V("material_invalido", { id: mid })); continue; }
       const p = key.split(",").map(Number);
       const tile = S.tiles[p[1]]?.[p[0]];
       const cat = matMeta(mid).categoria;
-      if (cat === "parede" && tile !== WALL) e.push(`material de parede ${mid} fora de parede em ${key}`);
-      if (cat === "piso" && !(tile === FLOOR || tile === DOOR)) e.push(`material de piso ${mid} fora de chão em ${key}`);
+      if (cat === "parede" && tile !== WALL) e.push(V("material_parede_fora", { id: mid, chave: key }));
+      if (cat === "piso" && !(tile === FLOOR || tile === DOOR)) e.push(V("material_piso_fora", { id: mid, chave: key }));
     }
     const profundo = new Set(Object.entries(S.materiais)
       .filter(([, mid]) => mid === "rodamoinho_profundo")
@@ -3455,20 +3459,21 @@
       return profundo.has(`${x + 1},${y}`)
         && profundo.has(`${x},${y + 1}`)
         && profundo.has(`${x + 1},${y + 1}`);
-    })) e.push("rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas");
+    })) e.push(V("rodamoinho_2x2"));
     const bridgeIds = new Set(), bridgeOccupied = new Set();
     for (const bridge of S.pontes) {
-      if (!bridge || !bridge.id || bridgeIds.has(bridge.id)) { e.push("ponte com id duplicado ou vazio"); continue; }
+      if (!bridge || !bridge.id || bridgeIds.has(bridge.id)) { e.push(V("ponte_id")); continue; }
       bridgeIds.add(bridge.id);
       const tiles = bridgeTilesOf(bridge);
-      if (!tiles.length) { e.push(`ponte ${bridge.id} precisa ser reta e ter início/fim distintos`); continue; }
-      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) fora do grid`);
+      if (!tiles.length) { e.push(V("ponte_reta", { id: bridge.id })); continue; }
+      const bp = { id: bridge.id, inicio: P(bridge.inicio), fim: P(bridge.fim) };
+      if (tiles.some(([x, y]) => x < 0 || y < 0 || x >= S.grid.w || y >= S.grid.h)) e.push(V("ponte_fora", bp));
       if (![FLOOR, DOOR].includes(S.tiles[bridge.inicio?.[1]]?.[bridge.inicio?.[0]])
-          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) precisa começar e terminar em chão ou porta`);
-      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(`ponte ${bridge.id} (${bridge.inicio}→${bridge.fim}) liga alturas diferentes`);
+          || ![FLOOR, DOOR].includes(S.tiles[bridge.fim?.[1]]?.[bridge.fim?.[0]])) e.push(V("ponte_extremos", bp));
+      if (elevationAt(bridge.inicio[0], bridge.inicio[1]) !== elevationAt(bridge.fim[0], bridge.fim[1])) e.push(V("ponte_alturas", bp));
       for (const [x, y] of tiles) {
         const key = `${x},${y}`;
-        if (bridgeOccupied.has(key)) e.push(`pontes sobrepostas em ${key}`);
+        if (bridgeOccupied.has(key)) e.push(V("pontes_sobrepostas", { chave: key }));
         bridgeOccupied.add(key);
       }
     }
@@ -3476,28 +3481,28 @@
       const p = key.split(",").map(Number);
       if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
           || p[0] < 0 || p[1] < 0 || p[0] >= S.grid.w || p[1] >= S.grid.h) {
-        e.push(`elevação fora do grid em ${key}`); continue;
+        e.push(V("elevacao_fora", { chave: key })); continue;
       }
       if (![FLOOR, DOOR].includes(S.tiles[p[1]]?.[p[0]]))
-        e.push(`elevação em casa que não é chão: ${key}`);
+        e.push(V("elevacao_nao_chao", { chave: key }));
       if (!Number.isInteger(value) || value < ELEVACAO_MIN || value > ELEVACAO_MAX)
-        e.push(`elevação inválida em ${key}`);
+        e.push(V("elevacao_invalida", { chave: key }));
     }
     if (!["rampa", "declive"].includes(S.transicaoAltura))
-      e.push("transição de altura inválida");
+      e.push(V("transicao_invalida"));
     return { ok: e.length === 0, erros: e };
   }
 
   function updateStatus() {
     const v = validarEditor();
     const el = document.getElementById("status");
-    if (v.ok) { el.className = "status-ok"; el.textContent = "✓ válida — pronta para salvar"; }
-    else { el.className = "status-err"; el.textContent = "✗ " + v.erros.length + " problema(s): " + v.erros.slice(0, 4).join("; ") + (v.erros.length > 4 ? " …" : ""); }
+    if (v.ok) { el.className = "status-ok"; el.textContent = t("ui.editor.masmorra.status.valida"); }
+    else { el.className = "status-err"; el.textContent = t("ui.editor.masmorra.status.problemas", { n: v.erros.length, lista: v.erros.slice(0, 4).join("; "), mais: v.erros.length > 4 ? " …" : "" }); }
     return v;
   }
 
   function loadJSON(obj) {
-    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || "Masmorra",
+    S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
                ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
                saida_permitida: obj.saida_permitida !== false };
@@ -3719,20 +3724,20 @@
 
   function save() {
     S.meta.id = document.getElementById("m-id").value.trim() || "masmorra";
-    S.meta.name = document.getElementById("m-name").value.trim() || "Masmorra";
+    S.meta.name = document.getElementById("m-name").value.trim() || t("ui.editor.masmorra.salvar.nome_padrao");
     S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
     S.meta.saida_permitida = document.getElementById("m-saida").checked;
     const v = updateStatus();
-    if (!v.ok) { alert("Masmorra inválida:\n- " + v.erros.join("\n- ")); return; }
+    if (!v.ok) { alert(t("ui.editor.masmorra.salvar.invalida", { lista: v.erros.join("\n- ") })); return; }
     const defn = buildJSON();
     if (window.EDITOR_SAVE && window.EDITOR_SAVE.saveDungeon) {
-      setSaveMsg("status-ok", "Salvando em dungeons/…");
+      setSaveMsg("status-ok", t("ui.editor.masmorra.salvar.salvando"));
       window.EDITOR_SAVE.saveDungeon(defn).then((res) => {
         injetarNoCatalogo(res.entry);
-        setSaveMsg("status-ok", "✓ salva em dungeons/" + res.file + " — disponível na aba Campanha");
+        setSaveMsg("status-ok", t("ui.editor.masmorra.salvar.salva", { arquivo: res.file }));
       }).catch((err) => {
         baixarMasmorra(defn);
-        setSaveMsg("status-err", "⚠ servidor offline (" + err.message + ") — baixada em Downloads");
+        setSaveMsg("status-err", t("ui.editor.masmorra.salvar.offline", { erro: err.message }));
       });
     } else {
       baixarMasmorra(defn);
@@ -3742,10 +3747,10 @@
   document.getElementById("btn-save").onclick = save;
   document.getElementById("btn-test-dungeon").onclick = async () => {
     if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.createTestDungeon) {
-      alert("Inicie o servidor para testar a masmorra."); return;
+      alert(t("ui.editor.masmorra.salvar.teste_sem_servidor")); return;
     }
     const valid = updateStatus();
-    if (!valid.ok) { alert("Corrija a masmorra antes de testar:\n- " + valid.erros.join("\n- ")); return; }
+    if (!valid.ok) { alert(t("ui.editor.masmorra.salvar.teste_invalida", { lista: valid.erros.join("\n- ") })); return; }
     // Abre durante o gesto de clique; abrir só depois do await é bloqueado como
     // popup pela maioria dos navegadores.
     const abaTeste = window.open("about:blank", "_blank");
@@ -3761,7 +3766,7 @@
       else window.location.assign(destino);
     } catch (err) {
       if (abaTeste) abaTeste.close();
-      alert("Não foi possível iniciar o teste: " + err.message);
+      alert(t("ui.editor.masmorra.salvar.teste_falhou", { erro: err.message }));
     }
     finally { btn.disabled = false; btn.textContent = t("ui.editor.topo.testar_mestre"); }
   };
@@ -3769,7 +3774,7 @@
   document.getElementById("file-input").onchange = (ev) => {
     const f = ev.target.files[0]; if (!f) return;
     const fr = new FileReader();
-    fr.onload = () => { try { loadJSON(JSON.parse(fr.result)); } catch (e) { alert("JSON inválido: " + e.message); } };
+    fr.onload = () => { try { loadJSON(JSON.parse(fr.result)); } catch (e) { alert(t("ui.editor.masmorra.salvar.json_invalido", { erro: e.message })); } };
     fr.readAsText(f); ev.target.value = "";
   };
   document.getElementById("btn-resize").onclick = () => {

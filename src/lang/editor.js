@@ -1547,6 +1547,434 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.ponte.invalida": {
     "en": "The bridge must be straight, fit on the map, not overlap another bridge and connect points of the same height.",
     "pt": "A ponte precisa ser reta, caber no mapa, não sobrepor outra ponte e ligar pontos da mesma altura."
+  },
+  "ui.editor.masmorra.valid.carta_bau": {
+    "en": "Chest card at {pos}",
+    "pt": "Carta do baú em {pos}"
+  },
+  "ui.editor.masmorra.valid.carta_decor": {
+    "en": "Decoration card at {pos}",
+    "pt": "Carta da decoração em {pos}"
+  },
+  "ui.editor.masmorra.valid.carta_modo": {
+    "en": "{rotulo}: invalid curse mode",
+    "pt": "{rotulo}: modo de maldição inválido"
+  },
+  "ui.editor.masmorra.valid.carta_maldicao": {
+    "en": "{rotulo}: invalid specific curse",
+    "pt": "{rotulo}: maldição específica inválida"
+  },
+  "ui.editor.masmorra.valid.carta_gravidade": {
+    "en": "{rotulo}: invalid curse severity",
+    "pt": "{rotulo}: gravidade da maldição inválida"
+  },
+  "ui.editor.masmorra.valid.falta_entrada": {
+    "en": "the entrance is missing",
+    "pt": "falta a entrada"
+  },
+  "ui.editor.masmorra.valid.entrada_em_chao": {
+    "en": "the entrance must be on floor",
+    "pt": "entrada precisa estar em chão"
+  },
+  "ui.editor.masmorra.valid.falta_spawn": {
+    "en": "at least one hero starting position is missing",
+    "pt": "falta ao menos uma posição inicial de herói"
+  },
+  "ui.editor.masmorra.valid.spawn_classe_invalida": {
+    "en": "invalid starting class: {classe} at {pos}",
+    "pt": "classe inicial inválida: {classe} em {pos}"
+  },
+  "ui.editor.masmorra.valid.spawn_classe_duplicada": {
+    "en": "duplicate starting class: {classe}",
+    "pt": "classe inicial duplicada: {classe}"
+  },
+  "ui.editor.masmorra.valid.spawn_em_parede": {
+    "en": "starting position inside a wall: {pos}",
+    "pt": "posição inicial em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.sem_sala": {
+    "en": "needs at least one room",
+    "pt": "precisa de ao menos uma sala"
+  },
+  "ui.editor.masmorra.valid.sem_sala_entrada": {
+    "en": "no room with role 'entrance'",
+    "pt": "nenhuma sala com role 'entrance'"
+  },
+  "ui.editor.masmorra.valid.monstro_tipo_invalido": {
+    "en": "invalid monster type: {tipo} at {pos}",
+    "pt": "monstro tipo inválido: {tipo} em {pos}"
+  },
+  "ui.editor.masmorra.valid.monstro_em_parede": {
+    "en": "monster inside a wall: {pos}",
+    "pt": "monstro em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.monstro_room_id": {
+    "en": "monster at {pos} with nonexistent room_id: {room}",
+    "pt": "monstro em {pos} com room_id inexistente: {room}"
+  },
+  "ui.editor.masmorra.valid.bau_em_parede": {
+    "en": "chest inside a wall: {pos}",
+    "pt": "baú em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.item_invalido_bau": {
+    "en": "invalid item: {id} in the chest at {pos}",
+    "pt": "item inválido: {id} no baú em {pos}"
+  },
+  "ui.editor.masmorra.valid.armadilha_tipo_invalido": {
+    "en": "invalid trap type: {tipo} at {pos}",
+    "pt": "armadilha tipo inválido: {tipo} em {pos}"
+  },
+  "ui.editor.masmorra.valid.armadilha_so_objeto": {
+    "en": "{tipo} at {pos} can only be placed on a decoration/object",
+    "pt": "{tipo} em {pos} só pode ser colocado em uma decoração/objeto"
+  },
+  "ui.editor.masmorra.valid.armadilha_em_parede": {
+    "en": "trap inside a wall: {pos}",
+    "pt": "armadilha em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.armadilha_cd": {
+    "en": "{tipo} at {pos} with invalid DC: {cd}",
+    "pt": "{tipo} em {pos} com CD inválida: {cd}"
+  },
+  "ui.editor.masmorra.valid.armadilha_dano": {
+    "en": "{tipo} at {pos} with invalid damage: {dano}",
+    "pt": "{tipo} em {pos} com dano inválido: {dano}"
+  },
+  "ui.editor.masmorra.valid.armadilha_veneno": {
+    "en": "{tipo} at {pos} without a valid poison",
+    "pt": "{tipo} em {pos} sem veneno válido"
+  },
+  "ui.editor.masmorra.valid.armadilha_tp_saida": {
+    "en": "teleport trap at {pos} without an exit on floor",
+    "pt": "armadilha de teletransporte em {pos} sem saída em chão"
+  },
+  "ui.editor.masmorra.valid.maldicao_modo": {
+    "en": "armadilha_maldicao at {pos} with invalid mode",
+    "pt": "armadilha_maldicao em {pos} com modo inválido"
+  },
+  "ui.editor.masmorra.valid.maldicao_sem": {
+    "en": "armadilha_maldicao at {pos} without a valid curse",
+    "pt": "armadilha_maldicao em {pos} sem maldição válida"
+  },
+  "ui.editor.masmorra.valid.maldicao_gravidade": {
+    "en": "armadilha_maldicao at {pos} with invalid severity",
+    "pt": "armadilha_maldicao em {pos} com gravidade inválida"
+  },
+  "ui.editor.masmorra.valid.prisioneiro_em_parede": {
+    "en": "prisoner inside a wall: {pos}",
+    "pt": "prisioneiro em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.porta_nao_door": {
+    "en": "declared door is not a DOOR tile: {porta}",
+    "pt": "porta declarada não é tile DOOR: {porta}"
+  },
+  "ui.editor.masmorra.valid.poucas_casas": {
+    "en": "fewer than 6 floor tiles reachable from the entrance",
+    "pt": "menos de 6 casas de chão alcançáveis da entrada"
+  },
+  "ui.editor.masmorra.valid.spawn_inacessivel": {
+    "en": "unreachable starting position: {classe} at {pos}",
+    "pt": "posição inicial inacessível: {classe} em {pos}"
+  },
+  "ui.editor.masmorra.valid.objetivo_saida": {
+    "en": "the all_heroes_at_exit objective requires an exit",
+    "pt": "o objetivo all_heroes_at_exit exige uma saída"
+  },
+  "ui.editor.masmorra.valid.decor_tipo_invalido": {
+    "en": "invalid decoration type: {tipo} at {pos}",
+    "pt": "decoração tipo inválido: {tipo} em {pos}"
+  },
+  "ui.editor.masmorra.valid.placa_sem_mensagem": {
+    "en": "plaque {id} at {pos} needs a message",
+    "pt": "placa {id} em {pos} precisa de uma mensagem"
+  },
+  "ui.editor.masmorra.valid.placa_longa": {
+    "en": "plaque {id} at {pos} exceeds 600 characters",
+    "pt": "placa {id} em {pos} excede 600 caracteres"
+  },
+  "ui.editor.masmorra.valid.decor_parede_fora": {
+    "en": "wall decoration {tipo} must be on a wall at {x},{y}",
+    "pt": "decoração de parede {tipo} precisa estar em uma parede em {x},{y}"
+  },
+  "ui.editor.masmorra.valid.decor_parede_face": {
+    "en": "wall decoration {tipo} must face an adjacent floor tile at {x},{y}",
+    "pt": "decoração de parede {tipo} precisa apontar para um chão adjacente em {x},{y}"
+  },
+  "ui.editor.masmorra.valid.decor_parede_sobrepostas": {
+    "en": "overlapping decorations on the same wall face at {x},{y}",
+    "pt": "decorações sobrepostas na mesma face de parede em {x},{y}"
+  },
+  "ui.editor.masmorra.valid.loot_item_invalido": {
+    "en": "invalid loot item: {id} in the decoration at {pos}",
+    "pt": "item de loot inválido: {id} na decoração em {pos}"
+  },
+  "ui.editor.masmorra.valid.decor_fora_chao": {
+    "en": "decoration {tipo} off the floor at {x},{y}",
+    "pt": "decoração {tipo} fora do chão em {x},{y}"
+  },
+  "ui.editor.masmorra.valid.decor_sobrepostas": {
+    "en": "overlapping decorations at {x},{y}",
+    "pt": "decorações sobrepostas em {x},{y}"
+  },
+  "ui.editor.masmorra.valid.bau_armadilha_monstro": {
+    "en": "trapped chest at {pos} with an invalid monster",
+    "pt": "baú-armadilha em {pos} com monstro inválido"
+  },
+  "ui.editor.masmorra.valid.decor_trap_invalida": {
+    "en": "invalid decoration trap at {pos}",
+    "pt": "armadilha de decoração inválida em {pos}"
+  },
+  "ui.editor.masmorra.valid.decor_trap_cd": {
+    "en": "{tipo} on the decoration at {pos} with invalid DC",
+    "pt": "{tipo} na decoração em {pos} com CD inválida"
+  },
+  "ui.editor.masmorra.valid.decor_trap_dano": {
+    "en": "{tipo} on the decoration at {pos} with invalid damage",
+    "pt": "{tipo} na decoração em {pos} com dano inválido"
+  },
+  "ui.editor.masmorra.valid.decor_trap_veneno": {
+    "en": "{tipo} on the decoration at {pos} without a valid poison",
+    "pt": "{tipo} na decoração em {pos} sem veneno válido"
+  },
+  "ui.editor.masmorra.valid.decor_trap_tp_saida": {
+    "en": "teleport trap on the decoration at {pos} without an exit on floor",
+    "pt": "armadilha de teletransporte na decoração em {pos} sem saída em chão"
+  },
+  "ui.editor.masmorra.valid.decor_maldicao_modo": {
+    "en": "decoration trap at {pos} with invalid curse mode",
+    "pt": "armadilha de decoração em {pos} com modo de maldição inválido"
+  },
+  "ui.editor.masmorra.valid.decor_maldicao_sem": {
+    "en": "decoration trap at {pos} without a valid curse",
+    "pt": "armadilha de decoração em {pos} sem maldição válida"
+  },
+  "ui.editor.masmorra.valid.decor_maldicao_gravidade": {
+    "en": "decoration trap at {pos} with invalid severity",
+    "pt": "armadilha de decoração em {pos} com gravidade inválida"
+  },
+  "ui.editor.masmorra.valid.porta_cond_invalida": {
+    "en": "invalid door opening condition: {chave}",
+    "pt": "condição de abertura em porta inválida: {chave}"
+  },
+  "ui.editor.masmorra.valid.porta_cond_tipo": {
+    "en": "invalid door condition type at {chave}",
+    "pt": "tipo de condição de porta inválido em {chave}"
+  },
+  "ui.editor.masmorra.valid.porta_item_chave": {
+    "en": "invalid key item on door {chave}: {id}",
+    "pt": "item-chave inválido na porta {chave}: {id}"
+  },
+  "ui.editor.masmorra.valid.porta_licao": {
+    "en": "door {chave} points to a lesson that does not exist or has no task",
+    "pt": "porta {chave} aponta para uma lição que não existe ou não tem tarefa"
+  },
+  "ui.editor.masmorra.valid.porta_sem_chaves": {
+    "en": "door {chave} without valid key objects",
+    "pt": "porta {chave} sem objetos-chave válidos"
+  },
+  "ui.editor.masmorra.valid.porta_chave_repetida": {
+    "en": "door {chave} repeats a key object",
+    "pt": "porta {chave} repete um objeto-chave"
+  },
+  "ui.editor.masmorra.valid.porta_modo_chaves": {
+    "en": "invalid key-object mode on door {chave}",
+    "pt": "modo de objetos-chave inválido na porta {chave}"
+  },
+  "ui.editor.masmorra.valid.porta_objeto_nao_chave": {
+    "en": "object {id} at {pos} of door {chave} must be marked as a key object",
+    "pt": "objeto {id} em {pos} da porta {chave} precisa estar marcado como objeto-chave"
+  },
+  "ui.editor.masmorra.valid.passagem_id": {
+    "en": "duplicate or empty secret passage id",
+    "pt": "id de passagem secreta duplicado ou vazio"
+  },
+  "ui.editor.masmorra.valid.passagem_parede": {
+    "en": "secret passage {id} at {pos} must be on a wall",
+    "pt": "passagem secreta {id} em {pos} deve ficar em uma parede"
+  },
+  "ui.editor.masmorra.valid.passagem_textura": {
+    "en": "invalid secret passage texture at {pos}",
+    "pt": "textura da passagem secreta em {pos} inválida"
+  },
+  "ui.editor.masmorra.valid.passagem_chave_invalida": {
+    "en": "passage at {pos} with an invalid key decoration",
+    "pt": "passagem em {pos} com decoração-chave inválida"
+  },
+  "ui.editor.masmorra.valid.passagem_sem_chave": {
+    "en": "secret passage at {pos} without a key decoration",
+    "pt": "passagem secreta em {pos} sem decoração-chave"
+  },
+  "ui.editor.masmorra.valid.fala_em_parede": {
+    "en": "NPC line inside a wall: {pos}",
+    "pt": "fala de NPC em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.fala_sem_texto": {
+    "en": "NPC line at {pos} without text",
+    "pt": "fala de NPC em {pos} sem texto"
+  },
+  "ui.editor.masmorra.valid.fala_gatilho": {
+    "en": "NPC line at {pos} with invalid trigger: {tipo}",
+    "pt": "fala de NPC em {pos} com gatilho inválido: {tipo}"
+  },
+  "ui.editor.masmorra.valid.licao_manual": {
+    "en": "lesson {id} at {pos} cannot have a manual trigger",
+    "pt": "lição {id} em {pos} não pode ter gatilho manual"
+  },
+  "ui.editor.masmorra.valid.licao_classe": {
+    "en": "lesson {id} at {pos} with invalid class: {classe}",
+    "pt": "lição {id} em {pos} com classe inválida: {classe}"
+  },
+  "ui.editor.masmorra.valid.todas_classes": {
+    "en": "all classes",
+    "pt": "todas as classes"
+  },
+  "ui.editor.masmorra.valid.licao_ordem_duplicada": {
+    "en": "two lessons with the same order {ordem} for {classe}",
+    "pt": "duas lições com a mesma ordem {ordem} para {classe}"
+  },
+  "ui.editor.masmorra.valid.licao_tarefa": {
+    "en": "lesson {id} at {pos} with invalid task: {tipo}",
+    "pt": "lição {id} em {pos} com tarefa inválida: {tipo}"
+  },
+  "ui.editor.masmorra.valid.licao_sem_texto_curto": {
+    "en": "lesson {id} at {pos} without short text",
+    "pt": "lição {id} em {pos} sem texto curto"
+  },
+  "ui.editor.masmorra.valid.licao_alvo": {
+    "en": "lesson {id}: target should be an x,y tile",
+    "pt": "lição {id}: alvo deveria ser uma casa x,y"
+  },
+  "ui.editor.masmorra.valid.material_invalido": {
+    "en": "invalid material: {id}",
+    "pt": "material inválido: {id}"
+  },
+  "ui.editor.masmorra.valid.material_parede_fora": {
+    "en": "wall material {id} outside a wall at {chave}",
+    "pt": "material de parede {id} fora de parede em {chave}"
+  },
+  "ui.editor.masmorra.valid.material_piso_fora": {
+    "en": "floor material {id} outside floor at {chave}",
+    "pt": "material de piso {id} fora de chão em {chave}"
+  },
+  "ui.editor.masmorra.valid.rodamoinho_2x2": {
+    "en": "deep whirlpool must occupy at least one continuous 2x2 area",
+    "pt": "rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas"
+  },
+  "ui.editor.masmorra.valid.ponte_id": {
+    "en": "bridge with duplicate or empty id",
+    "pt": "ponte com id duplicado ou vazio"
+  },
+  "ui.editor.masmorra.valid.ponte_reta": {
+    "en": "bridge {id} must be straight and have distinct start/end",
+    "pt": "ponte {id} precisa ser reta e ter início/fim distintos"
+  },
+  "ui.editor.masmorra.valid.ponte_fora": {
+    "en": "bridge {id} ({inicio}→{fim}) outside the grid",
+    "pt": "ponte {id} ({inicio}→{fim}) fora do grid"
+  },
+  "ui.editor.masmorra.valid.ponte_extremos": {
+    "en": "bridge {id} ({inicio}→{fim}) must start and end on floor or a door",
+    "pt": "ponte {id} ({inicio}→{fim}) precisa começar e terminar em chão ou porta"
+  },
+  "ui.editor.masmorra.valid.ponte_alturas": {
+    "en": "bridge {id} ({inicio}→{fim}) connects different heights",
+    "pt": "ponte {id} ({inicio}→{fim}) liga alturas diferentes"
+  },
+  "ui.editor.masmorra.valid.pontes_sobrepostas": {
+    "en": "overlapping bridges at {chave}",
+    "pt": "pontes sobrepostas em {chave}"
+  },
+  "ui.editor.masmorra.valid.elevacao_fora": {
+    "en": "elevation outside the grid at {chave}",
+    "pt": "elevação fora do grid em {chave}"
+  },
+  "ui.editor.masmorra.valid.elevacao_nao_chao": {
+    "en": "elevation on a tile that is not floor: {chave}",
+    "pt": "elevação em casa que não é chão: {chave}"
+  },
+  "ui.editor.masmorra.valid.elevacao_invalida": {
+    "en": "invalid elevation at {chave}",
+    "pt": "elevação inválida em {chave}"
+  },
+  "ui.editor.masmorra.valid.transicao_invalida": {
+    "en": "invalid height transition",
+    "pt": "transição de altura inválida"
+  },
+  "ui.editor.masmorra.status.valida": {
+    "en": "✓ valid — ready to save",
+    "pt": "✓ válida — pronta para salvar"
+  },
+  "ui.editor.masmorra.status.problemas": {
+    "en": "✗ {n} problem(s): {lista}{mais}",
+    "pt": "✗ {n} problema(s): {lista}{mais}"
+  },
+  "ui.editor.masmorra.design.r4": {
+    "en": "R4: room {sala} is cut off from the main map.",
+    "pt": "R4: sala {sala} isolada do mapa principal."
+  },
+  "ui.editor.masmorra.design.r2r5_sem_boss": {
+    "en": "R2/R5: no room with role 'boss' (rules skipped).",
+    "pt": "R2/R5: sem sala com role 'boss' (regras puladas)."
+  },
+  "ui.editor.masmorra.design.r2": {
+    "en": "R2: boss only {dist} room(s) from the spawn (min {min}).",
+    "pt": "R2: boss a só {dist} sala(s) do spawn (mín {min})."
+  },
+  "ui.editor.masmorra.design.r5": {
+    "en": "R5: no rest room (low CR) right before the boss.",
+    "pt": "R5: sem sala de descanso (ND baixo) logo antes do boss."
+  },
+  "ui.editor.masmorra.design.r1": {
+    "en": "R1: single route — no alternative path to the boss (bottleneck at {gargalos}).",
+    "pt": "R1: rota única — sem caminho alternativo até o boss (gargalo em {gargalos})."
+  },
+  "ui.editor.masmorra.design.r3r6_sem_obrigatoria": {
+    "en": "R3/R6: no room marked as required (critical route).",
+    "pt": "R3/R6: nenhuma sala marcada como obrigatória (rota crítica)."
+  },
+  "ui.editor.masmorra.design.r6": {
+    "en": "R6: heavy critical route (average CR {media} > cap {teto}).",
+    "pt": "R6: rota crítica pesada (ND médio {media} > teto {teto})."
+  },
+  "ui.editor.masmorra.design.r3": {
+    "en": "R3: CR spike between rooms {a} and {b} (Δ={delta}).",
+    "pt": "R3: pico de ND entre salas {a} e {b} (Δ={delta})."
+  },
+  "ui.editor.masmorra.salvar.nome_padrao": {
+    "en": "Dungeon",
+    "pt": "Masmorra"
+  },
+  "ui.editor.masmorra.salvar.invalida": {
+    "en": "Invalid dungeon:\n- {lista}",
+    "pt": "Masmorra inválida:\n- {lista}"
+  },
+  "ui.editor.masmorra.salvar.salvando": {
+    "en": "Saving to dungeons/…",
+    "pt": "Salvando em dungeons/…"
+  },
+  "ui.editor.masmorra.salvar.salva": {
+    "en": "✓ saved to dungeons/{arquivo} — available in the Campaign tab",
+    "pt": "✓ salva em dungeons/{arquivo} — disponível na aba Campanha"
+  },
+  "ui.editor.masmorra.salvar.offline": {
+    "en": "⚠ server offline ({erro}) — downloaded to Downloads",
+    "pt": "⚠ servidor offline ({erro}) — baixada em Downloads"
+  },
+  "ui.editor.masmorra.salvar.teste_sem_servidor": {
+    "en": "Start the server to test the dungeon.",
+    "pt": "Inicie o servidor para testar a masmorra."
+  },
+  "ui.editor.masmorra.salvar.teste_invalida": {
+    "en": "Fix the dungeon before testing:\n- {lista}",
+    "pt": "Corrija a masmorra antes de testar:\n- {lista}"
+  },
+  "ui.editor.masmorra.salvar.teste_falhou": {
+    "en": "Could not start the test: {erro}",
+    "pt": "Não foi possível iniciar o teste: {erro}"
+  },
+  "ui.editor.masmorra.salvar.json_invalido": {
+    "en": "Invalid JSON: {erro}",
+    "pt": "JSON inválido: {erro}"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);
