@@ -25,6 +25,17 @@ def setup_room():
     r.player_order = list(r.players.keys()); r.host_pid = "p1"
     return r
 
+async def entrar_confirmando(r, pid="p1"):
+    """Entra na masmorra como o jogo faz hoje: se a fase tem slides de abertura,
+    a entrada para esperando o anfitrião confirmar a história (story_complete).
+    Devolve o beat de abertura exibido (ou None)."""
+    await r.enter_dungeon(pid)
+    story = r._story_encadeada
+    pend = r._pending_dungeon_entry
+    if pend and pend.get("story_key") and not pend.get("story_done"):
+        await r.handle_story_complete(r.host_pid, pend["story_key"])
+    return story
+
 def test_validacao():
     print("\n[1] validar/listar campanha")
     defn = carregar_campanha("test_campanha_fases.json")
@@ -171,6 +182,9 @@ async def test_entrada_objeto():
         "dungeons": [{"file": "test_camp_a.json", "intro": "abre", "outro": "fecha"}]}
     r.campaign_phase = 0; r.phase = "city"
     await r.enter_dungeon("p1")
+    check("a abertura segura a entrada até a confirmação", r.phase == "city"
+          and (r._pending_dungeon_entry or {}).get("story_key") == "intro:0")
+    await r.handle_story_complete("p1", "intro:0")
     check("carregou a fase do objeto (10×8)", r.map_w == 10 and r.map_h == 8)
 
 def _camp_hist():
@@ -184,11 +198,11 @@ async def test_historia_runtime():
     print("\n[9] runtime da história (slides)")
     def textos(beat): return [s.get("text") for s in beat["slides"]]
     r = setup_room(); r.mode = "campaign"; r.campaign = _camp_hist(); r.campaign_phase = 0; r.phase = "city"
-    await r.enter_dungeon("p1")
-    pay = r._campaign_payload()
+    abre = await entrar_confirmando(r)
     check("abertura da fase 0 inclui abertura da campanha",
-          pay["story"] and textos(pay["story"]) == ["ABERTURA-CAMP", "ABRE-1"])
-    check("key de abertura", pay["story"]["key"] == "intro:0")
+          abre and textos(abre) == ["ABERTURA-CAMP", "ABRE-1"])
+    check("key de abertura", bool(abre) and abre["key"] == "intro:0")
+    check("entrou após confirmar", r.phase == "playing")
     for m in r.monsters.values(): m["hp"] = 0
     await r._check_objectives()
     await r.handle_encerrar_missao("p1")
@@ -196,10 +210,9 @@ async def test_historia_runtime():
     payc = r._campaign_payload()
     check("encerramento da fase 0 na cidade",
           payc["story"] and textos(payc["story"]) == ["FECHA-1"] and payc["story"]["key"] == "outro:0")
-    await r.enter_dungeon("p1")
-    pay1 = r._campaign_payload()
+    abre1 = await entrar_confirmando(r)
     check("abertura da fase 1 (sem abertura da campanha)",
-          pay1["story"] and textos(pay1["story"]) == ["ABRE-2"])
+          abre1 and textos(abre1) == ["ABRE-2"])
     cap = {}
     async def fake_end(victory, story=None): cap["victory"] = victory; cap["story"] = story
     r.end_game = fake_end
@@ -220,12 +233,11 @@ async def test_historia_audio():
                           "outro": {"slides": [{"text": "of"}], "audio": "assets/story/of.mp3"}},
                          {"file": "test_camp_b.json"}]}
     r = setup_room(); r.mode = "campaign"; r.campaign = camp; r.campaign_phase = 0; r.phase = "city"
-    await r.enter_dungeon("p1")
-    pay = r._campaign_payload()
+    abre = await entrar_confirmando(r) or {}
     check("abertura: áudio da campanha vem antes (precede a fase)",
-          pay["story"]["audio"] == "assets/story/camp.mp3")
+          abre.get("audio") == "assets/story/camp.mp3")
     check("abertura junta os 2 slides",
-          [s["text"] for s in pay["story"]["slides"]] == ["ic", "if"])
+          [s["text"] for s in abre.get("slides") or []] == ["ic", "if"])
 
 def test_validacao_story():
     print("\n[13] validação de história (string|objeto)")

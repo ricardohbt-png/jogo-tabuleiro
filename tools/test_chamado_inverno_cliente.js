@@ -25,7 +25,7 @@ function fnSource(name){
 
 // Corredor 1 casa de altura (y=5), x de 0..13; neve de x=2 em diante.
 function montar(){
-  const code = ['terrainMoveCost', '_custoVentoTempestade', 'bfsReachable', 'findPath', '_entraNaNeve', '_neveJaCobrada']
+  const code = ['terrainMoveCost', '_custoVentoTempestade', 'bfsReachable', 'findPath', '_entraNaNeve', '_neveJaCobrada', '_ignoraPenalidadePantano']
     .map(n => { try { return fnSource(n); } catch(e){ return ''; } }).join('\n');
   const materiais = {}; for(let x = 2; x < 14; x++) materiais[`${x},5`] = 'planicie_nevada';
   const ctx = {
