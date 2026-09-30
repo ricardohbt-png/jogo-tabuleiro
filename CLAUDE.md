@@ -804,6 +804,26 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > carregar a direção do peão de herói, já que nenhum herói passa pelo ramo
 > de monstro orientado. Sem animação — a rotação encaixa instantaneamente a
 > cada passo confirmado. Teste: `tools/test_peao_facing.py`.
+>
+> **Peão de herói não é mais reconstruído ao virar nem ao passar a vez (2026-09-30):**
+> a assinatura do peão (`obterFig` no laço de heróis de `renderMap3D`) incluía `isCur` e
+> `p.facing`, então passar o turno refazia DOIS peões (GLB clonado, contornos, materiais)
+> só para ligar o anel dourado, e cada passo com mudança de direção refazia o de quem
+> andou. Agora `build3DFig` cria o anel em **todo** peão de herói (`classId`), com
+> `visible` só na vez (`grp.userData.turnRing`), e `_sincronizarPeaoHeroi3D(fig, isCur,
+> facing, selecionado)` roda após o `obterFig`: liga/desliga o anel + `isCurrentFig` e gira
+> a raiz via `_girarRaizPeao3D`. A raiz tem rotações temporárias próprias (giro do ataque,
+> redemoinho, tempestade, pose de combate) que guardam uma base e a restauram ao fim — a
+> direção nova vai para a **base** delas, senão o fim do efeito desfaria o giro; o peão
+> **selecionado** (que gira devagar sem base) não é arrancado do giro. Só gira pela raiz
+> quem tem `userData.giraRaiz` (GLB de herói sem metamorfose): billboard não tem frente e o
+> metamorfoseado gira dentro do modelo de monstro (por isso a assinatura mantém `p.facing`
+> **só** com `formaVisual`). O GLB que carrega depois lê `userData._facingRotY` em vez do
+> `rotY` capturado. O deslize do `move_path` usa o mesmo `_girarRaizPeao3D`. Medido no
+> navegador, mesmo roteiro (4 turnos andando): **20 → 0** chamadas de `build3DFig`.
+> Monstros ficam de fora: a direção do GLB de monstro mora num grupo aninhado que
+> `_setMonsterMeshFacing3D` não alcança, e `m.facing` segue na assinatura. Teste:
+> `tools/test_peao_sem_reconstrucao.js`.
 
 > **Instrumentos do Bardo (Fase 1):** equipamento exclusivo do bardo (Henrique)
 > que concede uma habilidade de assinatura escalável por qualidade. **Modelo

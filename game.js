@@ -43138,6 +43138,32 @@ function podeReceberInput(){
 function casaParaMundo(x, z){ return { x: x, y: 0, z: z }; }
 
 // Mesh (Group) do peão de um jogador no entityGroup 3D (taggeado por pid).
+// Gira a raiz de um peão respeitando as rotações temporárias que também moram
+// nela (giro do ataque, redemoinho, tempestade, pose de combate): cada uma
+// guarda a rotação-base ao começar e a restaura ao terminar, então a direção
+// nova vai para a BASE delas — senão o fim do efeito desfaria o giro.
+function _girarRaizPeao3D(fig, rotY, selecionado = false){
+  const u = fig.userData;
+  u._facingRotY = rotY;
+  // Selecionado, o peão gira devagar (rotation.y += … no laço, sem base): não
+  // o arrancar do giro; a seleção muda a assinatura e o reconstrói ao sair.
+  let transiente = !!selecionado;
+  if(u._spinAttackBaseRotationY != null){ u._spinAttackBaseRotationY = rotY; transiente = true; }
+  if(u._whirlpoolWasSpinning){ u._whirlpoolBaseRotationY = rotY; transiente = true; }
+  if(u._tempestadeWasSpinning){ u._tempestadeBaseRotationY = rotY; transiente = true; }
+  if(u._scenePoseAtiva){ u._sceneBaseRotY = rotY; transiente = true; }
+  if(!transiente && fig.rotation.y !== rotY) fig.rotation.y = rotY;
+}
+
+// Estado do peão de herói que muda sem exigir peça nova: anel da vez e direção.
+function _sincronizarPeaoHeroi3D(fig, isCur, facing, selecionado = false){
+  if(!fig) return;
+  const u = fig.userData;
+  if(u.turnRing) u.turnRing.visible = !!isCur;
+  u.isCurrentFig = !!isCur;
+  if(u.giraRaiz) _girarRaizPeao3D(fig, _facingToRotY(facing), selecionado);
+}
+
 function getPeaoMesh(pid){
   if(!g3 || !g3.entityGroup) return null;
   return g3.entityGroup.children.find(c => c.userData && c.userData.pid === pid) || null;
@@ -45201,8 +45227,11 @@ function renderMap3D(state){
         && String(p.id) === String(testeHeroiSelecionado.id));
     const isCur = p.id===state.current_turn;
     const formaVisual = _metamorfoseVisualName(p);
+    // Sem `isCur` e sem `facing` (exceto metamorfoseado, cuja direção mora no
+    // modelo de monstro): virar de lado e passar a vez não reconstroem o peão —
+    // _sincronizarPeaoHeroi3D gira a raiz e liga o anel sobre a figura existente.
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, isCur, !!pSel, p.facing, _queimando(p), !!p.petrificado, _estaParalisado(p),
+      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, !!pSel, formaVisual ? p.facing : null, _queimando(p), !!p.petrificado, _estaParalisado(p),
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
@@ -45214,8 +45243,12 @@ function renderMap3D(state){
           p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
           undefined, undefined, undefined, undefined, !!p.petrificado, _estaParalisado(p));
         f.userData.pid = p.id;          // permite getPeaoMesh(pid) p/ animação
+        // Só o GLB de herói encara o passo pela raiz; billboard não tem frente e
+        // o metamorfoseado gira dentro do próprio modelo de monstro.
+        f.userData.giraRaiz = _GLB_ENABLED_CLASSES.has(p.class_id) && !formaVisual;
         return f;
       }, px, py, p.altura);
+    _sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
     _figInvis.userData.whirlpoolTrapped = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
   }
@@ -45397,8 +45430,8 @@ function renderMap3D(state){
       mesh.position.z = step.y + (Number(mesh.userData.footprintOffsetZ) || 0);
       const stepFacing = _serverStepFacing(id);
       // Herói gira pela raiz (como _makeCharacterPawn3D); monstro pelo corpo.
-      if(stepFacing && mesh.userData.pid !== undefined) mesh.rotation.y = _facingToRotY(stepFacing);
-      else if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
+      if(stepFacing && mesh.userData.giraRaiz) _girarRaizPeao3D(mesh, _facingToRotY(stepFacing));
+      else if(stepFacing && mesh.userData.pid === undefined) _setMonsterMeshFacing3D(mesh, stepFacing);
       // Saltinho do peão (efeito de movimentação) — a entidade em deslize não
       // está sob o cursor, então não conflita com o hover-lift.
       const stepAnim = _serverStepAnim.get(id);
@@ -45957,6 +45990,10 @@ function _tingirSpriteCongelado3D(mat){
 function _makeCharacterPawn3D(T, grp, classId, Y0, rotY, altura, onMissing, petrificado=false, congelado=false) {
   const montar = tpl => {
     if (!tpl) { if (onMissing) onMissing(); return; }
+    // GLB assíncrono: o peão pode ter girado (_sincronizarPeaoHeroi3D) entre a
+    // construção e a chegada da arte; o rotY capturado aqui estaria velho.
+    { const r = grp.parent || grp;
+      if(r.userData && r.userData._facingRotY != null) rotY = r.userData._facingRotY; }
     const inst = tpl.clone();
     if(petrificado) _makePetrified3D(T, inst);
     else if(congelado) _makeFrozen3D(T, inst);
@@ -46925,7 +46962,10 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
 
   // ── Active-turn halo: pulsing gold torus + warm point-light underfoot ────────
   // Both are animated each frame in startLoop3D via userData flags.
-  if(isCurrent){
+  // Todo peão de herói (classId) nasce com o anel, só VISÍVEL na vez dele: passar
+  // o turno liga/desliga o anel (_sincronizarPeaoHeroi3D) em vez de reconstruir
+  // os dois peões — GLB clonado, contornos e materiais novos a cada troca de vez.
+  if(isCurrent || classId){
     const ring = _addM(grp,
       new T.TorusGeometry(baseR+0.10, 0.026, 8, 32),
       { color:0xf0c040, emissive:new T.Color(0xf0c040), emissiveIntensity:1.8, roughness:0.18 },
@@ -46933,11 +46973,13 @@ function build3DFig(hexColor, isMonster, isMe, isCurrent, gx, gy, classId, mType
     );
     ring.rotation.x  = Math.PI / 2;
     ring.userData.isPulseRing = true;
+    ring.visible = !!isCurrent;
+    grp.userData.turnRing = ring;
 
     // A luz do halo NÃO nasce aqui: é a g3.haloLight permanente, que o laço de
     // render posiciona sobre esta figura. Criar/destruir uma PointLight junto com
     // o peão da vez muda a contagem de luzes visíveis e recompila os materiais.
-    grp.userData.isCurrentFig = true;
+    grp.userData.isCurrentFig = !!isCurrent;
   }
 
   const Y0 = TH + 0.064;    // top of base disc; all builders start from here
