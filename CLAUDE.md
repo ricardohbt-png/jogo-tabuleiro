@@ -94,8 +94,10 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `select_class` | `class_id` |
 | `start_game` | — |
 | `move` | `dx`, `dy` |
+| `move_path` | `path:[[dx,dy],…]` — caminho inteiro numa mensagem (clique numa casa distante; `GS.movePath`, 1 casa cai no `move`). O servidor (`handle_move_path`) roda cada passo pelo MESMO `handle_move` com `_push=False`, para no 1º passo recusado, emite um `entity_step` `kind:"player"` por casa para TODOS e manda UM `game_state` no fim — antes era um `game_state` completo por casa para todos, em rajada, e quem assistia via o peão saltar. Cliente: o deslize (`_serverStepAnim`) agora também move o peão de herói no 2D e no 3D (`getPeaoMesh`, giro pela raiz), no ritmo `DURACAO_PASSO_MS`; o próprio passo é ignorado enquanto o peão já anima localmente (3D); o som de passo de outro herói segue o trajeto do deslize. Teto `MAX_PASSOS_CAMINHO`=40. Teste: `tools/test_move_path.py`. |
 | `attack` | `target_id` |
 | `prever_ataque` | `target_id`, `target_pos`, `buffs`, `chave` — prévia do ataque básico para o tooltip do monstro (só leitura, não gasta nada). Resposta privada `previsao_ataque` (`chance` 0–100, `vantagem`, `desvantagem`, `dano_dado`, `dano_fixo`, `golpe_mult`, `furtivo_d4`, `chave`). Acerto/CA/vantagem vêm de `_modificadores_ataque_heroi`, o MESMO helper do `handle_attack` — modificador novo de ataque entra lá e vale para os dois. Cache no cliente (`GS.previsaoAtaque`/`pedirPrevisaoAtaque`), invalidado a cada `game_state`. Teste: `tools/test_previsao_ataque.py`. |
+| `pedir_metamorfose_catalog` | — pede o catálogo de formas da Metamorfose (enviado ao abrir a janela de formas). Resposta privada `metamorfose_catalog` (`formas:[…]`), guardada em `GS.metamorfoseCatalog`. O catálogo saiu do `game_state`, onde era ~80% de cada pacote (~96 KB a cada passo, para todos) — não devolva dado estático ao `game_state`. Teste: `tools/test_metamorfose_catalogo.py`. |
 | `animar_mortos` | `cadaver_id` (Pedro anima cadáver adjacente) |
 | `comandar_animados` | — (só no turno dos servos: todos os animados movem+atacam o monstro mais próximo automaticamente) |
 | `mover_animado` | `animado_id`, `dx`, `dy` (controle manual — 1 passo) |
@@ -150,7 +152,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`
+`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`, `metamorfose_catalog`
 
 > **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `tick?`) — broadcast público
 > de `_avisar_armadilha`, emitido em TODO disparo: `_disparar_armadilha` (alvo único),
@@ -802,6 +804,37 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > carregar a direção do peão de herói, já que nenhum herói passa pelo ramo
 > de monstro orientado. Sem animação — a rotação encaixa instantaneamente a
 > cada passo confirmado. Teste: `tools/test_peao_facing.py`.
+>
+> **Peão de herói não é mais reconstruído ao virar nem ao passar a vez (2026-09-30):**
+> a assinatura do peão (`obterFig` no laço de heróis de `renderMap3D`) incluía `isCur` e
+> `p.facing`, então passar o turno refazia DOIS peões (GLB clonado, contornos, materiais)
+> só para ligar o anel dourado, e cada passo com mudança de direção refazia o de quem
+> andou. Agora `build3DFig` cria o anel em **todo** peão de herói (`classId`), com
+> `visible` só na vez (`grp.userData.turnRing`), e `_sincronizarPeaoHeroi3D(fig, isCur,
+> facing, selecionado)` roda após o `obterFig`: liga/desliga o anel + `isCurrentFig` e gira
+> a raiz via `_girarRaizPeao3D`. A raiz tem rotações temporárias próprias (giro do ataque,
+> redemoinho, tempestade, pose de combate) que guardam uma base e a restauram ao fim — a
+> direção nova vai para a **base** delas, senão o fim do efeito desfaria o giro; o peão
+> **selecionado** (que gira devagar sem base) não é arrancado do giro. Só gira pela raiz
+> quem tem `userData.giraRaiz` (GLB de herói sem metamorfose): billboard não tem frente e o
+> metamorfoseado gira dentro do modelo de monstro (por isso a assinatura mantém `p.facing`
+> **só** com `formaVisual`). O GLB que carrega depois lê `userData._facingRotY` em vez do
+> `rotY` capturado. O deslize do `move_path` usa o mesmo `_girarRaizPeao3D`. Medido no
+> navegador, mesmo roteiro (4 turnos andando): **20 → 0** chamadas de `build3DFig`.
+> **Monstros, servos animados e herói metamorfoseado** seguem o mesmo princípio:
+> `m.facing`/`a.facing`/`p.facing` saíram das assinaturas e `_setMonsterMeshFacing3D` é
+> chamado após o `obterFig`. Para isso ele acha o grupo de direção **aninhado**
+> (`_grupoDirecaoMonstro3D`: o wrap do GLB mora em raiz → corpo → wrap, e antes só filho
+> direto era visto — por isso o deslize nunca girava GLB de monstro), guarda
+> `userData._facingAtual` na raiz (o `montar` do GLB que chega depois o reaplica) e move os
+> efeitos presos ao meio das 2 casas da criatura orientada (`userData._fxMeio`: fogo/gelo);
+> o sprite orientado que carrega depois respeita o espelho atual. **Exceção:** o monstro
+> ORIENTADO com GLB (2 casas, ex.: crocodilo) tem base/sombra dimensionadas pela direção
+> (largura×comprimento trocam) e fora do grupo que gira — `_eixoDirecaoSig` põe só o
+> **eixo** (h/v) na assinatura: virar 180° apenas gira, virar 90° reconstrói. Medido no
+> navegador com o servidor congelado e GLBs carregados (3 monstros × 6 viradas):
+> **18 → 0** reconstruções, e cada modelo girando para o ângulo certo. Teste:
+> `tools/test_peao_sem_reconstrucao.js` (43).
 
 > **Instrumentos do Bardo (Fase 1):** equipamento exclusivo do bardo (Henrique)
 > que concede uma habilidade de assinatura escalável por qualidade. **Modelo
