@@ -1966,6 +1966,14 @@ window.LANG_CATALOGO = {
     "en": "Halberd",
     "pt": "Alabarda"
   },
+  "cat.item.alabarda_colossal.desc": {
+    "en": "Two-handed weapon: 4-square reach in a straight line and 2 diagonally; 2d10+6 damage.",
+    "pt": "Arma de duas mãos: alcance de 4 quadrados em linha reta e 2 na diagonal; dano 2d10+6."
+  },
+  "cat.item.alabarda_colossal.nome": {
+    "en": "Colossal Halberd",
+    "pt": "Alabarda Colossal"
+  },
   "cat.item.alabarda_prata.desc": {
     "en": "Silver Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -1993,6 +2001,22 @@ window.LANG_CATALOGO = {
   "cat.item.arco_curto.nome": {
     "en": "Short Bow",
     "pt": "Arco Curto"
+  },
+  "cat.item.armadura_pesada_gigante.desc": {
+    "en": "Heavy armor of gigantic proportions.",
+    "pt": "Armadura pesada de proporções gigantescas."
+  },
+  "cat.item.armadura_pesada_gigante.nome": {
+    "en": "Giant's Heavy Armor",
+    "pt": "Armadura Pesada de Gigante"
+  },
+  "cat.item.armadura_runica.desc": {
+    "en": "Runic armor taken from the Rune Giant; special item for future use.",
+    "pt": "Armadura rúnica obtida do Gigante Rúnico; item especial para uso futuro."
+  },
+  "cat.item.armadura_runica.nome": {
+    "en": "Runic Armor",
+    "pt": "Armadura Rúnica"
   },
   "cat.item.backpack.nome": {
     "en": "Leather Backpack",
@@ -2089,6 +2113,14 @@ window.LANG_CATALOGO = {
   "cat.item.cantil_agua.nome": {
     "en": "Water Canteen",
     "pt": "Cantil de Água"
+  },
+  "cat.item.carta.desc": {
+    "en": "Reading it opens the written message without consuming the letter.",
+    "pt": "Ao ler, abre a mensagem escrita sem consumir a carta."
+  },
+  "cat.item.carta.nome": {
+    "en": "Letter",
+    "pt": "Carta"
   },
   "cat.item.chainmail.nome": {
     "en": "Chainmail",
@@ -2209,6 +2241,14 @@ window.LANG_CATALOGO = {
   "cat.item.espada2m_prata.nome": {
     "en": "Silver Two-Handed Sword",
     "pt": "Espada de 2 Mãos de Prata"
+  },
+  "cat.item.espada_longa_colossal.desc": {
+    "en": "A weapon of gigantic proportions: 2d8+6, 2-square reach.",
+    "pt": "Arma de proporções gigantescas: 2d8+6, alcance de 2 quadrados."
+  },
+  "cat.item.espada_longa_colossal.nome": {
+    "en": "Colossal Longsword",
+    "pt": "Espada Longa Colossal"
   },
   "cat.item.flecha_incendiaria.nome": {
     "en": "Incendiary Arrow",
@@ -2438,6 +2478,10 @@ window.LANG_CATALOGO = {
     "en": "Rustic Violin",
     "pt": "Violino Rústico"
   },
+  "cat.item.joia.nome": {
+    "en": "Jewel",
+    "pt": "Joia"
+  },
   "cat.item.lanca.desc": {
     "en": "Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares.",
     "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
@@ -2461,6 +2505,14 @@ window.LANG_CATALOGO = {
   "cat.item.lanca_curta_prata.nome": {
     "en": "Silver Short Spear",
     "pt": "Lança Curta de Prata"
+  },
+  "cat.item.lanca_longa_colossal.desc": {
+    "en": "4-square reach in a straight line, 2 diagonally, and adjacent attacks; 2d8+6 damage.",
+    "pt": "Alcance de 4 quadrados em linha reta, 2 na diagonal e ataques adjacentes; dano 2d8+6."
+  },
+  "cat.item.lanca_longa_colossal.nome": {
+    "en": "Colossal Long Spear",
+    "pt": "Lança Longa Colossal"
   },
   "cat.item.lanca_prata.desc": {
     "en": "Silver Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
@@ -2566,6 +2618,14 @@ window.LANG_CATALOGO = {
     "en": "Orcish War Axe",
     "pt": "Machado de Guerra Órquico"
   },
+  "cat.item.machado_orc_colossal.desc": {
+    "en": "Two-handed weapon: 2d10+6, 2-square reach.",
+    "pt": "Arma de duas mãos: 2d10+6, alcance de 2 quadrados."
+  },
+  "cat.item.machado_orc_colossal.nome": {
+    "en": "Colossal Orc Axe",
+    "pt": "Machado Orc Colossal"
+  },
   "cat.item.machado_orc_prata.desc": {
     "en": "Silver Orcish War Axe: 1d10 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -2597,6 +2657,14 @@ window.LANG_CATALOGO = {
   "cat.item.mangual_prata.nome": {
     "en": "Silver Flail",
     "pt": "Mangual de Prata"
+  },
+  "cat.item.martelo_runico_colossal.desc": {
+    "en": "Colossal hammer engraved with runes: 2d8+5 damage and 2-square reach.",
+    "pt": "Martelo colossal gravado com runas: dano 2d8+5 e alcance de 2 quadrados."
+  },
+  "cat.item.martelo_runico_colossal.nome": {
+    "en": "Colossal Rune Hammer",
+    "pt": "Martelo Rúnico Colossal"
   },
   "cat.item.monster_leather_plate.nome": {
     "en": "Monster Leather and Plate Armor",
@@ -2642,6 +2710,14 @@ window.LANG_CATALOGO = {
     "en": "Ring of Vitality",
     "pt": "Anel da Vitalidade"
   },
+  "cat.item.runa_ancestral.desc": {
+    "en": "Ancestral rune of magical power; special item for future use.",
+    "pt": "Runa ancestral de poder mágico; item especial para uso futuro."
+  },
+  "cat.item.runa_ancestral.nome": {
+    "en": "Ancestral Rune",
+    "pt": "Runa Ancestral"
+  },
   "cat.item.shortsword.desc": {
     "en": "Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -2669,6 +2745,10 @@ window.LANG_CATALOGO = {
   "cat.item.suco_fruta.nome": {
     "en": "Fruit Juice",
     "pt": "Suco de Fruta"
+  },
+  "cat.item.sword.nome": {
+    "en": "Serrated Iron Shortsword",
+    "pt": "Espada Curta de Ferro Serrilhado"
   },
   "cat.item.unarmed.desc": {
     "en": "Unarmed: — physical damage, using Strength.",
