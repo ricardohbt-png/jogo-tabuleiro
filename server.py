@@ -15459,7 +15459,52 @@ class GameRoom:
 
     # â”€â”€ turn actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async def handle_move(self, pid, dx, dy):
+    async def _push_se(self, push):
+        """`push_state` do movimento, exceto dentro de `handle_move_path`, que
+        manda UM estado no fim do caminho em vez de um por casa."""
+        if push:
+            await self.push_state()
+
+    # Teto de casas numa única mensagem move_path (movimento dobrado por
+    # técnicas/magias fica bem abaixo disso; o excesso é descartado).
+    MAX_PASSOS_CAMINHO = 40
+
+    async def handle_move_path(self, pid, path):
+        """Caminho inteiro numa mensagem só.
+
+        Antes o cliente mandava um `move` por casa e cada um virava um
+        `game_state` completo para TODOS os jogadores — num caminho de 6 casas,
+        6 estados em rajada, e quem assistia via o peão saltar. Agora cada passo
+        passa pelo MESMO `handle_move` (mesmas regras, armadilhas, névoa, falas),
+        os outros recebem um `entity_step` por casa para deslizar o peão, e sai
+        um único `game_state` no fim. O caminho para no primeiro passo recusado
+        (o erro já foi enviado a quem andou) ou se o herói cair."""
+        p = self.players.get(pid)
+        if not p or not isinstance(path, list):
+            return
+        andou = False
+        for passo in path[:self.MAX_PASSOS_CAMINHO]:
+            if (not isinstance(passo, (list, tuple)) or len(passo) != 2):
+                break
+            dx, dy = passo
+            if abs(dx) + abs(dy) != 1:
+                break
+            antes = list(p.get("pos") or [])
+            await self.handle_move(pid, dx, dy, _push=False)
+            depois = list(p.get("pos") or [])
+            if depois == antes:
+                break
+            andou = True
+            # Vai para todos: no 2D quem andou também desliza por aqui; no 3D o
+            # cliente ignora o próprio passo enquanto anima o peão localmente.
+            await self.broadcast({"type": "entity_step", "id": pid, "from": antes,
+                                  "to": depois, "kind": "player"})
+            if not p.get("alive") or not self._is_turn(pid):
+                break
+        if andou:
+            await self.push_state()
+
+    async def handle_move(self, pid, dx, dy, _push=True):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid):
@@ -15555,7 +15600,7 @@ class GameRoom:
         else:
             p["moves_left"] -= step_cost
         if not p.get("alive"):
-            await self.push_state()
+            await self._push_se(_push)
             return
         self._apply_swamp_entry_penalty(p)
         # O custo de sobrevivÃªncia do movimento Ã© cobrado UMA vez por turno,
@@ -15579,7 +15624,7 @@ class GameRoom:
         await self._aplicar_lava_se_pisar(p)
         await self._aplicar_prisao_chamas_se_pisar(p)
         if not p.get("alive"):
-            await self.push_state()
+            await self._push_se(_push)
             return
 
         self._apply_snow_entry_penalty(p, old_pos, p["pos"])
@@ -15626,7 +15671,7 @@ class GameRoom:
         if p["alive"]:
             await self._processar_olhar_petrificante_inicio(p)
         await self._verificar_avistamento()   # Modo Mestre: herÃ³i pode ter avistado monstros
-        await self.push_state()
+        await self._push_se(_push)
 
     async def handle_alterar_altura(self, pid, delta, monster_id=None):
         """Altera em um ponto a altura de uma criatura com Voo.
@@ -43906,6 +43951,14 @@ async def handler(ws):
                     # Exatamente 1 casa ortogonal por mensagem (regra do tabuleiro)
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_move(pid, dx, dy)
+
+                elif t == "move_path":
+                    raw_path = msg.get("path")
+                    if room and isinstance(raw_path, list):
+                        # Mesma sanitização do `move`: cada passo vira -1/0/+1.
+                        path = [[_delta(st[0]), _delta(st[1])] for st in raw_path
+                                if isinstance(st, (list, tuple)) and len(st) == 2]
+                        await room.handle_move_path(pid, path)
 
                 elif t == "alterar_altura":
                     if room:

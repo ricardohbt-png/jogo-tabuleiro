@@ -1913,6 +1913,15 @@ const GS = (() => {
 
   // ── Action senders (thin wrappers over send) ───────────────────────────────
   function move(dx, dy)    { _turn.moved = true; send({ type: 'move', dx, dy }); }
+  // Caminho inteiro numa mensagem: o servidor valida casa a casa, anima o peão
+  // para os outros (entity_step) e manda UM game_state no fim, em vez de um
+  // estado completo por casa para todos os jogadores.
+  function movePath(path) {
+    if (!Array.isArray(path) || !path.length) return;
+    if (path.length === 1) { move(path[0][0], path[0][1]); return; }
+    _turn.moved = true;
+    send({ type: 'move_path', path: path.map(([dx, dy]) => [dx, dy]) });
+  }
   function alterarAltura(delta, monsterId = null) {
     const msg = { type: 'alterar_altura', delta: Number(delta) };
     if (monsterId != null) msg.monster_id = monsterId;
@@ -3410,6 +3419,7 @@ const GS = (() => {
 
     // ── Actions ──
     move,
+    movePath,
     alterarAltura,
     encerrarAnimado,
     animadoAttackTargetTiles,

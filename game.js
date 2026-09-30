@@ -9579,8 +9579,12 @@ function renderMap(state){
     if(!p.alive) continue;
     if(p.engolido || p.bau_engolido || p.fosso_oculto) continue;
     if(p.connected === false) continue;   // desconectado: deixou a masmorra, não desenha
-    const [px,py]=p.pos;
-    if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
+    const [ptx,pty]=p.pos;
+    if(p.id !== GS.myPid && !visionSet.has(`${ptx},${pty}`)) continue;
+    // Deslize fiel (entity_step de move_path): herói de outro jogador anda casa
+    // a casa em vez de saltar direto para a posição do game_state.
+    const _pStep = _serverStepPos(p.id);
+    const px = _pStep ? _pStep.x : ptx, py = _pStep ? _pStep.y : pty;
     const [hitX, hitY] = _hitReaction2D(`p:${p.id}`);
     const [holyX,holyY]=_holyStrikeLunge(p.id,performance.now());
     const [sneakX,sneakY]=_ataqueFurtivoLunge(p.id,performance.now());
@@ -43169,14 +43173,18 @@ const SERVER_STEP_DUR_MS = 150;      // duração por casa (≥ STEP_ANIM_DELAY 
 
 function _onEntityStep(msg){
   const id = msg.id, frm = msg.from, to = msg.to;
+  // Caminho próprio já animado localmente (3D): não deslizar duas vezes.
+  if(msg.kind === 'player' && String(id) === String(GS.myPid) && estadoMovimento.emMovimento) return;
+  // Herói no ritmo da animação local; a rajada do move_path encadeia pelo tempo.
+  const segDur = msg.kind === 'player' ? DURACAO_PASSO_MS : SERVER_STEP_DUR_MS;
   const ent = _serverStepAnim.get(id);
   if(ent && ent.pts.length){
     const last = ent.pts[ent.pts.length - 1];
     // Encadeia se o novo passo continua de onde parou; senão recomeça limpo.
     if(last[0]===frm[0] && last[1]===frm[1]) ent.pts.push(to);
-    else _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur: SERVER_STEP_DUR_MS });
+    else _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur });
   } else {
-    _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur: SERVER_STEP_DUR_MS });
+    _serverStepAnim.set(id, { pts:[frm, to], startTime: performance.now(), segDur });
   }
   if(!_serverStepRaf) _serverStepRaf = _scheduleVisualFrame(_tickServerStep);
   // Som de passo no pouso da casa (~85% do segmento). Heróis ('player') ficam
@@ -43220,6 +43228,18 @@ function _sonsPassosDeEstado(state){
     const ant = _passosPosAnt.get(String(p.id));
     if(!ant) continue;
     if(String(p.id) === String(GS.myPid) && mode3D) continue;
+    // Caminho via move_path: um game_state só no fim, mas os entity_step já
+    // trouxeram o trajeto. Soa um passo por casa no pouso de cada segmento do
+    // deslize (o salto do diff pode passar de 4 casas e seria tido por teleporte).
+    const _desl = (typeof _serverStepAnim !== 'undefined') ? _serverStepAnim.get(p.id) : null;
+    if(_desl && _desl.pts.length > 1){
+      for(let i = 1; i < _desl.pts.length; i++){
+        const casa = _desl.pts[i];
+        const pouso = _desl.startTime + (i - 1 + 0.85) * _desl.segDur;
+        setTimeout(() => _somPassoEm(casa), Math.max(0, pouso - performance.now()));
+      }
+      continue;
+    }
     const d = Math.max(Math.abs(p.pos[0] - ant[0]), Math.abs(p.pos[1] - ant[1]));
     if(d < 1 || d > 4) continue;          // 0 = parado; >4 = teleporte/reentrada
     const agora = performance.now();
@@ -43275,7 +43295,7 @@ function _tickServerStep(){
     const f = (performance.now() - ent.startTime) / ent.segDur;
     if(f >= segs){
       // Concluiu todos os waypoints recebidos: restaura o y do peão 3D e descarta.
-      const mesh = getMonsterMesh(id) || getAnimadoMesh(id);
+      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id);
       if(mesh && mesh.userData._stepBaseY !== undefined){
         mesh.position.y = mesh.userData._stepBaseY;
         delete mesh.userData._stepBaseY;
@@ -45367,7 +45387,7 @@ function renderMap3D(state){
     for(const [id] of _serverStepAnim){
       const step = _serverStepPos(id);
       if(!step) continue;
-      const mesh = getMonsterMesh(id) || getAnimadoMesh(id);
+      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id);
       if(!mesh) continue;
       if(window.CombatScene && CombatScene.poseFor(_figSceneKey(mesh), performance.now())) continue;
       if(mesh.userData._stepBaseY === undefined) mesh.userData._stepBaseY = mesh.position.y;
@@ -45376,7 +45396,9 @@ function renderMap3D(state){
       mesh.position.x = step.x + (Number(mesh.userData.footprintOffsetX) || 0);
       mesh.position.z = step.y + (Number(mesh.userData.footprintOffsetZ) || 0);
       const stepFacing = _serverStepFacing(id);
-      if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
+      // Herói gira pela raiz (como _makeCharacterPawn3D); monstro pelo corpo.
+      if(stepFacing && mesh.userData.pid !== undefined) mesh.rotation.y = _facingToRotY(stepFacing);
+      else if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
       // Saltinho do peão (efeito de movimentação) — a entidade em deslize não
       // está sob o cursor, então não conflita com o hover-lift.
       const stepAnim = _serverStepAnim.get(id);
@@ -49866,14 +49888,14 @@ function _executarMovimentoConfirmado(action){
     // Envia os passos ao servidor JÁ — assim a névoa é revelada (server-side)
     // em paralelo à animação local, em vez de só iniciar o round-trip DEPOIS
     // dela. Isso elimina a demora de "continuidade do mapa" ao caminhar.
-    for(const [dx,dy] of action.path) GS.move(dx, dy);
+    GS.movePath(action.path);
     // Anima localmente; ao concluir, reconcilia com o estado autoritativo.
     moverPeaoAoCaminho(peao, myP, caminho, () => {
       if(GS.gameState) renderMap3D(GS.gameState);
     });
   } else {
     // 2D ou sem peão 3D — movimento instantâneo (comportamento anterior).
-    for(const [dx,dy] of action.path) GS.move(dx, dy);
+    GS.movePath(action.path);
   }
 }
 
