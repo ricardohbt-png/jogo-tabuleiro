@@ -239,6 +239,11 @@ LITERAIS_INTENCIONAIS = {
     # Nome do jogador-mestre da mesa de teste do editor: vai ao servidor como
     # `name` e casa o `master_name` no rejoin — traduzir quebraria a religação.
     'Mestre de Teste',
+    # Sufixo de melhoria do veneno na prévia da loja (atualizarMelhoriaVeneno):
+    # espelha o nome que o SERVIDOR grava no frasco (_VENENO nomes_melhoria, em
+    # português), e as chaves ui.veneno.* guardam esses nomes em português
+    # também no `en`. Traduzir só a prévia faria ela divergir do item comprado.
+    'Avançado',
 }
 
 

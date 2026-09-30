@@ -467,7 +467,9 @@ async def main():
     # licao presa em silencio. Um quarto handler novo cai aqui.
     import re as _re
     _equipadores = [m for m in _re.findall(r"async def (handle_\w*equip\w*)\(", fonte)
-                    if m not in ("handle_guild_equip", "handle_unequip")]
+                    if m not in ("handle_guild_equip", "handle_unequip",
+                                 # so grava a preferencia de autoequipar flechas
+                                 "handle_set_auto_equip_arrows")]
     check("ha tres caminhos de equipar conhecidos", len(_equipadores) == 3)
     for _h in _equipadores:
         _corpo = fonte.split(f"async def {_h}(")[1].split("async def ")[0]
@@ -699,7 +701,9 @@ async def main():
     r.phase = "city"
     await r.handle_world_adventure("h1", "treinamento")
     r._is_turn = lambda pid: True
-    check("a armadilha autorada virou desarmavel", len(r.armadilhas) == 1)
+    # A Sala de Perigo usa o buraco; o mapa pode ter outras armadilhas autoradas.
+    check("a armadilha autorada virou desarmavel",
+          any(a["tipo"] == "buraco" for a in r.armadilhas))
     _esq = next((m for m in r.monsters.values() if m["type"] == "esqueleto_humano"), None)
     check("o esqueleto esta la", _esq is not None)
 
@@ -783,7 +787,7 @@ async def main():
     concluir_ate(r, p, "ladino_04")
     await r._verificar_falas(p, S.player_room(r.rooms, p["pos"][0], p["pos"][1]))
     check("o ladino recebe a licao de desarme", p["licao_atual"] == "ladino_04")
-    _arm = r.armadilhas[0]; _arm["visivel"] = True
+    _arm = next(a for a in r.armadilhas if a["tipo"] == "buraco"); _arm["visivel"] = True
     p["pos"] = [_arm["pos"][0] - 1, _arm["pos"][1]]
     for _ in range(15):
         if "ladino_04" in p["licoes_feitas"]: break

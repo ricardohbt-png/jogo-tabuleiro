@@ -461,7 +461,7 @@ window.EDITOR_CATALOG = {
           "action_type": "passiva",
           "attack_index": 1,
           "veneno_id": "veneno_escorpiao_pedra",
-          "poison_dc": 9,
+          "poison_dc": 11,
           "descricao": "Vincula um veneno escolhido a um dos ataques da criatura."
         }
       ],
@@ -980,6 +980,89 @@ window.EDITOR_CATALOG = {
       "undead": true,
       "subtipo": "morto_vivo",
       "darkvision_range": 8,
+      "percepcao": 12
+    },
+    {
+      "type": "jacare",
+      "name": "Jacaré",
+      "emoji": "🐊",
+      "boss": false,
+      "tier": 2,
+      "cr": 2,
+      "hp": 34,
+      "ac": 15,
+      "natural_armor": 5,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        2,
+        2
+      ],
+      "porte": "medio",
+      "image": "jacare",
+      "str_": 18,
+      "dex": 10,
+      "con_": 16,
+      "int_": 2,
+      "fort": 6,
+      "ref_": 3,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 7,
+          "damage": "1d10+4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "agarrar",
+          "name": "Agarrar",
+          "action_type": "passiva",
+          "dc": 14,
+          "save": "fortitude",
+          "descricao": "Ao acertar a mordida, o alvo testa Fortitude CD 14; falha: fica preso."
+        },
+        {
+          "id": "atq_mandibula",
+          "name": "Ataque de Mandíbula",
+          "action_type": "passiva",
+          "damage": "1d10+4",
+          "descricao": "Se houver uma presa agarrada e adjacente, causa 1d10+4 de dano automático."
+        },
+        {
+          "id": "arrastar",
+          "name": "Arrastar",
+          "action_type": "passiva",
+          "descricao": "Uma criatura presa acompanha os movimentos do Jacaré, permanecendo adjacente."
+        },
+        {
+          "id": "movimento_agua_sem_penalidade",
+          "name": "Deslocamento Aquático",
+          "action_type": "passiva",
+          "ignora_penalidade_agua": true,
+          "descricao": "Move normalmente em água e água profunda; não evita efeitos de redemoinhos."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "lightning",
+          "multiplier": 1.5,
+          "descricao": "+50% de dano elétrico (dobrado na água)"
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "crocodilo_jovem",
+      "undead": false,
+      "subtipo": "animal",
       "percepcao": 12
     },
     {
@@ -1678,6 +1761,119 @@ window.EDITOR_CATALOG = {
         "dagger"
       ],
       "ai_type": "goblin_melee",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 13
+    },
+    {
+      "type": "goblin_assassino",
+      "name": "Assassino Goblin",
+      "emoji": "👺",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 9,
+      "ac": 13,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "goblinDual",
+      "str_": 10,
+      "dex": 14,
+      "con_": 10,
+      "int_": 10,
+      "fort": 2,
+      "ref_": 4,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Adaga",
+          "atk_bonus": 4,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        },
+        {
+          "name": "Adaga",
+          "atk_bonus": 4,
+          "damage": "1d4+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "arremesso",
+          "name": "Arremesso",
+          "action_type": "acao_bonus",
+          "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
+        },
+        {
+          "id": "envenenar_arma",
+          "name": "Envenenar Arma",
+          "action_type": "passiva",
+          "descricao": "A IA aplica uma dose da bolsa à adaga como ação livre."
+        },
+        {
+          "id": "hero_rogue_esconder_sombras",
+          "name": "Esconder-se nas Sombras",
+          "action_type": "passiva",
+          "descricao": "A IA prioriza esconder-se; fica invisível aos jogadores até atacar."
+        },
+        {
+          "id": "hero_rogue_ataque_furtivo",
+          "name": "Ataque Furtivo",
+          "action_type": "passiva",
+          "hero_level": 1,
+          "requires_hidden": true,
+          "descricao": "O primeiro ataque ao sair das sombras tem vantagem e causa +2d4 de dano."
+        },
+        {
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
+          "action_type": "passiva",
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "save_penalty",
+          "saves": [
+            "vontade"
+          ],
+          "bonus_flat": -2,
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
+        }
+      ],
+      "loot_table": {
+        "1-60": null,
+        "61-100": {
+          "tipo": "gold",
+          "valor": 10
+        }
+      },
+      "guaranteed_loot": [
+        "dagger"
+      ],
+      "ai_type": "goblin_assassin",
       "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
@@ -3615,7 +3811,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 3,
       "cr": 3,
-      "hp": 46,
+      "hp": 84,
       "ac": 18,
       "natural_armor": 5,
       "movement": 6,
@@ -3636,7 +3832,7 @@ window.EDITOR_CATALOG = {
       "attacks": [
         {
           "name": "Garras",
-          "atk_bonus": 6,
+          "atk_bonus": 7,
           "damage": "1d6+4",
           "damage_types": [
             "physical"
@@ -3645,7 +3841,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "name": "Tentáculos",
-          "atk_bonus": 6,
+          "atk_bonus": 7,
           "damage": "1d4+2",
           "damage_types": [
             "physical"
@@ -3654,7 +3850,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "name": "Mordida",
-          "atk_bonus": 6,
+          "atk_bonus": 7,
           "damage": "1d8+4",
           "damage_types": [
             "physical"
@@ -3663,7 +3859,7 @@ window.EDITOR_CATALOG = {
         },
         {
           "name": "Ferrão",
-          "atk_bonus": 5,
+          "atk_bonus": 6,
           "damage": "1d6",
           "damage_types": [
             "physical"
@@ -3705,7 +3901,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 5,
       "cr": 5,
-      "hp": 74,
+      "hp": 124,
       "ac": 20,
       "natural_armor": 7,
       "movement": 6,
@@ -3835,7 +4031,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 8,
       "cr": 8,
-      "hp": 130,
+      "hp": 178,
       "ac": 24,
       "natural_armor": 10,
       "movement": 6,
@@ -3972,7 +4168,7 @@ window.EDITOR_CATALOG = {
       "boss": false,
       "tier": 8,
       "cr": 8,
-      "hp": 156,
+      "hp": 189,
       "ac": 23,
       "natural_armor": 13,
       "movement": 8,
@@ -6120,7 +6316,7 @@ window.EDITOR_CATALOG = {
       "action_type": "passiva",
       "attack_index": 1,
       "veneno_id": "veneno_escorpiao_pedra",
-      "poison_dc": 9,
+      "poison_dc": 11,
       "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
       "source": "monstro"
     },
@@ -6201,6 +6397,38 @@ window.EDITOR_CATALOG = {
       "name": "Sem Instinto",
       "action_type": "passiva",
       "descricao": "Nunca foge nem recua — avança até ser destruído",
+      "source": "monstro"
+    },
+    {
+      "id": "agarrar",
+      "name": "Agarrar",
+      "action_type": "passiva",
+      "dc": 14,
+      "save": "fortitude",
+      "descricao": "Ao acertar a mordida, o alvo testa Fortitude CD 14; falha: fica preso.",
+      "source": "monstro"
+    },
+    {
+      "id": "atq_mandibula",
+      "name": "Ataque de Mandíbula",
+      "action_type": "passiva",
+      "damage": "1d10+4",
+      "descricao": "Se houver uma presa agarrada e adjacente, causa 1d10+4 de dano automático.",
+      "source": "monstro"
+    },
+    {
+      "id": "arrastar",
+      "name": "Arrastar",
+      "action_type": "passiva",
+      "descricao": "Uma criatura presa acompanha os movimentos do Jacaré, permanecendo adjacente.",
+      "source": "monstro"
+    },
+    {
+      "id": "movimento_agua_sem_penalidade",
+      "name": "Deslocamento Aquático",
+      "action_type": "passiva",
+      "ignora_penalidade_agua": true,
+      "descricao": "Move normalmente em água e água profunda; não evita efeitos de redemoinhos.",
       "source": "monstro"
     },
     {
@@ -6300,8 +6528,67 @@ window.EDITOR_CATALOG = {
       "id": "envenenar_arma",
       "name": "Envenenar Arma",
       "action_type": "passiva",
-      "descricao": "Usa um veneno da bolsa para envenenar a arma como ação livre",
+      "descricao": "A IA aplica uma dose da bolsa à adaga como ação livre.",
       "source": "monstro"
+    },
+    {
+      "id": "hero_rogue_esconder_sombras",
+      "source": "heroi",
+      "source_id": "esconder_sombras",
+      "source_class": "rogue",
+      "name": "Esconder nas Sombras",
+      "icon": "🌑",
+      "descricao": "Ação bônus. d20+DES vs percepção dos monstros. Pode atacar na mesma rodada usando a ação principal. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno.",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true,
+      "guild_progressions": [
+        {
+          "id": "ladino_esconder_2",
+          "level": 2,
+          "requires": null,
+          "name": "Esconder nas Sombras II",
+          "icon": "🌑",
+          "description": "+2 na chance de se esconder nas sombras."
+        },
+        {
+          "id": "ladino_esconder_3",
+          "level": 3,
+          "requires": "ladino_esconder_2",
+          "name": "Esconder nas Sombras III",
+          "icon": "🌑",
+          "description": "Ao ser revelado, +2 de CA por 1 rodada."
+        }
+      ]
+    },
+    {
+      "id": "hero_rogue_ataque_furtivo",
+      "source": "heroi",
+      "source_id": "ataque_furtivo",
+      "source_class": "rogue",
+      "name": "Ataque Furtivo",
+      "icon": "🗡️",
+      "descricao": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_progressions": [
+        {
+          "id": "ladino_furtivo_2",
+          "level": 2,
+          "requires": null,
+          "name": "Ataque Furtivo II",
+          "icon": "🗡️",
+          "description": "Ataque Furtivo também dispara se há aliado adjacente ao alvo."
+        },
+        {
+          "id": "ladino_furtivo_3",
+          "level": 3,
+          "requires": "ladino_furtivo_2",
+          "name": "Ataque Furtivo Supremo",
+          "icon": "🗡️",
+          "description": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
+        }
+      ]
     },
     {
       "id": "covardia_kobold",
@@ -6750,7 +7037,8 @@ window.EDITOR_CATALOG = {
       "id": "movimento_aquatico",
       "name": "Movimento Aquático",
       "action_type": "passiva",
-      "descricao": "Move 6 quadrados normalmente em terra, água e água profunda.",
+      "ignora_pantano": true,
+      "descricao": "Move 6 quadrados normalmente em terra, água, água profunda e pântano; ignora a penalidade de movimento do pântano.",
       "source": "monstro"
     },
     {
@@ -6830,13 +7118,6 @@ window.EDITOR_CATALOG = {
       "automatic_damage": "4d12+7",
       "max_targets": 1,
       "descricao": "Ao acertar a Mordida, Fortitude CD 17 ou fica Preso. No início do turno seguinte do Tiranossauro, a presa é sacudida (Sacudida Jurássica).",
-      "source": "monstro"
-    },
-    {
-      "id": "arrastar",
-      "name": "Arrastar",
-      "action_type": "passiva",
-      "descricao": "A criatura Presa acompanha os movimentos do Tiranossauro, permanecendo adjacente.",
       "source": "monstro"
     },
     {
@@ -7362,26 +7643,6 @@ window.EDITOR_CATALOG = {
       "cooldown_turns": 6
     },
     {
-      "id": "agarrar",
-      "name": "Agarrar",
-      "action_type": "passiva",
-      "dc": 12,
-      "save": "fortitude",
-      "descricao": "Ao acertar, alvo testa FOR ou REF CD 12 — falha: preso",
-      "source": "monstro",
-      "uses_per_day": 1,
-      "cooldown_turns": 0
-    },
-    {
-      "id": "atq_mandibula",
-      "name": "Ataque de Mandíbula",
-      "action_type": "passiva",
-      "descricao": "Se alvo preso e adjacente: 1d8+3 dano direto (sem rolagem de acerto)",
-      "source": "monstro",
-      "uses_per_day": 1,
-      "cooldown_turns": 0
-    },
-    {
       "id": "caca_em_bando",
       "name": "Caça em Bando",
       "action_type": "passiva",
@@ -7682,35 +7943,6 @@ window.EDITOR_CATALOG = {
       ]
     },
     {
-      "id": "hero_rogue_ataque_furtivo",
-      "source": "heroi",
-      "source_id": "ataque_furtivo",
-      "source_class": "rogue",
-      "name": "Ataque Furtivo",
-      "icon": "🗡️",
-      "descricao": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível.",
-      "action_type": "passiva",
-      "monster_effect": "passiva_combate",
-      "guild_progressions": [
-        {
-          "id": "ladino_furtivo_2",
-          "level": 2,
-          "requires": null,
-          "name": "Ataque Furtivo II",
-          "icon": "🗡️",
-          "description": "Ataque Furtivo também dispara se há aliado adjacente ao alvo."
-        },
-        {
-          "id": "ladino_furtivo_3",
-          "level": 3,
-          "requires": "ladino_furtivo_2",
-          "name": "Ataque Furtivo Supremo",
-          "icon": "🗡️",
-          "description": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
-        }
-      ]
-    },
-    {
       "id": "hero_rogue_detectar_armadilhas",
       "source": "heroi",
       "source_id": "detectar_armadilhas",
@@ -7721,36 +7953,6 @@ window.EDITOR_CATALOG = {
       "action_type": "acao",
       "monster_effect": "vantagem_combate",
       "monster_maintenance": true
-    },
-    {
-      "id": "hero_rogue_esconder_sombras",
-      "source": "heroi",
-      "source_id": "esconder_sombras",
-      "source_class": "rogue",
-      "name": "Esconder nas Sombras",
-      "icon": "🌑",
-      "descricao": "Ação bônus. d20+DES vs percepção dos monstros. Pode atacar na mesma rodada usando a ação principal. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno.",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "monster_maintenance": true,
-      "guild_progressions": [
-        {
-          "id": "ladino_esconder_2",
-          "level": 2,
-          "requires": null,
-          "name": "Esconder nas Sombras II",
-          "icon": "🌑",
-          "description": "+2 na chance de se esconder nas sombras."
-        },
-        {
-          "id": "ladino_esconder_3",
-          "level": 3,
-          "requires": "ladino_esconder_2",
-          "name": "Esconder nas Sombras III",
-          "icon": "🌑",
-          "description": "Ao ser revelado, +2 de CA por 1 rodada."
-        }
-      ]
     },
     {
       "id": "hero_rogue_veneno_rapido",
@@ -9187,6 +9389,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_jacare",
+      "source": "guilda",
+      "source_id": "lenda_jacare",
+      "name": "Lenda: Jacaré",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Jacaré.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_cobra_constritora",
       "source": "guilda",
       "source_id": "lenda_cobra_constritora",
@@ -9270,6 +9483,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Goblin Dual",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Goblin Dual.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_goblin_assassino",
+      "source": "guilda",
+      "source_id": "lenda_goblin_assassino",
+      "name": "Lenda: Assassino Goblin",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Assassino Goblin.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -11551,6 +11775,14 @@ window.EDITOR_CATALOG = {
       "effect": "atk",
       "value": 0,
       "descricao": "Maça de Treino: 1d6 de dano contundente, usando Força ou Destreza."
+    },
+    {
+      "id": "anel_garra_negra",
+      "name": "Anel da Garra Negra",
+      "emoji": "💍",
+      "granted_ability": "hero_rogue_esconder_sombras",
+      "kind": "ring",
+      "item_slot": "ring"
     }
   ],
   "traps": [
@@ -11920,6 +12152,20 @@ window.EDITOR_CATALOG = {
       "save": "vontade",
       "persiste": false,
       "special": "maldicao",
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "chao_illusorio",
+      "nome": "Chão Ilusório",
+      "icone": "🌀",
+      "cr": 0.8,
+      "descricao": "Reflexos CD 14 para atravessar sem cair. Na falha, a tábua cede e a criatura cai no piso abaixo; o trecho da ponte desaba.",
+      "dificuldade": 14,
+      "save": "reflexos",
+      "custo_ouro": 0,
+      "persiste": true,
+      "visivel_apos": true,
+      "special": "chao_illusorio",
       "precisa_veneno": false
     }
   ],

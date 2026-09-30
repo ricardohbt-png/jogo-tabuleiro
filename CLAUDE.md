@@ -115,6 +115,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `end_turn` | — |
 | `enter_dungeon` | — |
 | `buy_item` | `shop_id`, `item_id` |
+| `temple_resurrect` | `target_id` — na cidade, multiplayer, um herói vivo paga 30 moedas do próprio ouro para trazer um companheiro morto de volta com 1 HP; não disponível após derrota total. |
 | `magia` | `magia_id` (id em `GRIMORIO`) + alvo conforme o tipo: `target_id` (alvo/aliado), `tx`/`ty` (área), `dir:[dx,dy]` (Relâmpago — linha), ou nenhum (auto-centrado). Pedro (mage)/Lewis (cleric) lançam (ação principal). Nenhuma classe usa MP: o custo é um **slot de magia do círculo** (Lewis: `CLERIC_SLOTS`; Pedro: `MAGE_SLOTS_POR_NIVEL`, progressão por nível, resetam por turno via `slots_por_circulo`) + 🍖-1/💧-1. Conjuráveis (`GRIMORIO_IMPLEMENTADAS`): `manto_escuridao`, `visao_escuro`, `bola_fogo`, `relampago`, `raio_congelante`; o resto retorna "em desenvolvimento". O servidor anima dados via broadcast `dice_roll` (dano + d20 de save). |
 | `ativar_cancao` | `atributos` (Henrique liga a Canção Heroica com os atributos escolhidos) |
 | `desativar_cancao` | — (Henrique encerra a Canção Heroica) |
@@ -154,12 +155,13 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
 `decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`, `metamorfose_catalog`
 
-> **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `tick?`) — broadcast público
+> **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `area_sala?`, `tick?`) — broadcast público
 > de `_avisar_armadilha`, emitido em TODO disparo: `_disparar_armadilha` (alvo único),
 > `_aplicar_armadilha_area` (uma vez, com todos do raio), `_verificar_trap_procedural` (buraco) e
 > o dano progressivo de `_processar_efeitos_armadilha_turno` (`tick:true`, 1 por alvo por rodada).
-> Só alimenta som no cliente: o `trap_result` é privado de quem foi atingido; `alvos` diz de quem
-> é o gemido (prisioneiro = `"__prisioneiro__"`).
+> Alimenta som e efeitos visuais no cliente: Dardos Envenenados, Armadilha Incendiária, Mina Terrestre,
+> Lâmina Escondida, Lâmina Pêndulo, Guilhotina, Jato de Ácido e Armadilha de Raio Congelante animam o disparo quando a casa está visível. Teto Esmagador envia `area_sala:true` e anima a queda nas casas visíveis da sala em 2D/3D. O `trap_result` é privado de quem foi atingido;
+> `alvos` diz de quem é o gemido (prisioneiro = `"__prisioneiro__"`).
 >
 > **`item_impacto`** (`item_id`, `pos`, `area`) — broadcast público emitido no ramo de área de
 > `_monster_throw_item` (granada do Soldado), antes dos saves. O arremesso de monstro não tem
@@ -281,13 +283,23 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Armadilhas colocáveis (`game_state.armadilhas`)
 Sistema distinto das `traps` de masmorra. Cada item: `id`, `tipo`, `pos:[x,y]`,
 `icone`, `nome`, `visivel`, `ativada`, `aliada` (criador é jogador), `so_luccas`.
-8 tipos em `ARMADILHAS` (server.py): `buraco`, `armadilha_urso`, `fosso_estacas`,
+Tipos em `ARMADILHAS` (server.py): `buraco`, `armadilha_urso`, `fosso_estacas`,
 `rede`, `armadilha_incendiaria`, `mina_terrestre`, `fosso_envenenado`, `nuvem_gas`.
 Save de Reflexos (gás = Fortitude); persistência/visibilidade por tipo; dano
 progressivo (incendiária) tica em `_processar_efeitos_armadilha_turno`; `fosso_envenenado`
 reusa `_aplicar_veneno`; `nuvem_gas` reduz CON via `_reduzir_con_temporario`.
 
 ---
+
+**Chão Ilusório (`chao_illusorio`):** armadilha autorada somente em uma casa de
+ponte com `FLOOR` diretamente abaixo e pelo menos 1 nível de desnível. Guarda
+`ponte_id` e `pos`; Reflexos (CD padrão 14) permite atravessar. Na falha, usa a
+tabela de dano de queda do desnível real, remove a tábua da ponte naquela casa
+e coloca a criatura no piso inferior. O sucesso revela, mas mantém a armadilha
+ativa para as próximas passagens. O servidor serializa as casas ainda existentes
+da ponte em `pontes[].tiles`; cliente e pathfinding usam essa lista para mostrar
+e bloquear corretamente a parte colapsada. Editor e `validar_dungeon` verificam
+ponte vinculada, tipo de piso e altura inferior.
 
 ## Classes de Personagem
 
@@ -393,6 +405,15 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > mais no slot vazio, o bloqueio pré-compra de arma-2-mãos × escudo foi removido (o
 > item vai pra bolsa; o conflito é validado só ao equipar). Teste do servidor:
 > `tools/test_roteamento_itens.py`.
+
+> **Autoequipar flechas:** preferência por personagem `auto_equip_arrows_enabled`
+> e `auto_equip_arrows_order`, incluída em `_DURABLE_FIELDS` e no snapshot da ficha.
+> O jogador configura no modal de inventário (cidade ou masmorra) se deseja ativar
+> e a ordem entre flechas comuns, incendiárias e de prata; o painel inicia recolhido
+> e pode ser expandido/recolhido sem fechar o inventário. Ao consumir a última
+> flecha equipada em arco, o servidor move da bolsa a primeira pilha disponível
+> conforme a ordem, respeitando os tipos aceitos pela arma. Besta/virotes não usam
+> essa preferência. Mensagem autoritativa de troca: `narracao.auto_equipou_municao`.
 
 > **Largar/pegar itens no chão (`game_state.ground_items`):** na masmorra, o herói
 > larga um item numa das 8 casas adjacentes e pega de volta — inclusive item largado
@@ -1275,6 +1296,40 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > soma o modificador). Além disso `_apply_custom_monsters` força `m["movement"] = 6`
 > em toda ficha personalizada, ignorando o valor do arquivo.
 
+> **Hostilidade entre monstros no Bestiário:** cada ficha tem filtros próprios
+> em `monster_hostility.json`, editados na aba Bestiário (`tools/editor_bestiary.js`)
+> e validados em `server.py`. Os filtros são combinados por OU: todos os monstros,
+> qualquer subtipo, ou tipos específicos pelo id estável da ficha. Sem regra,
+> continua sem agressão automática entre monstros. A IA considera criaturas vivas
+> da mesma sala que consiga perceber; a escolha genérica usa o executor normal de
+> ataques e inclui o ataque básico das fichas legadas sem lista `attacks`. Um ataque
+> tentado (mesmo se errar) dá ao alvo memória curta do agressor:
+> ele prioriza a retaliação no próximo turno normal, procura a última posição
+> conhecida se o agressor sair de vista, e esquece após três rodadas. Os modos do
+> Mestre preservam o controle manual e os alvos forçados. Testes: `tools/test_monster_hostility.py`
+> e `tools/test_modo_publico.py` (handler de gravação protegido no modo público).
+> Cada monstro colocado no mapa da masmorra também pode herdar o Bestiário, desligar
+> sua hostilidade ou definir filtros próprios de todos/subtipos/tipos. O override é
+> salvo em `monsters[].hostility_override`, validado ao carregar a masmorra e tem
+> precedência apenas para aquela colocação.
+
+> **Assassino Goblin:** ficha nativa `goblin_assassino`, com estatísticas e arte 2D
+> `goblinDual` do Goblin Dual, GLB próprio `assassino_goblin.glb`, IA `goblin_assassin` e habilidades de esconder-se e
+> ataque furtivo. Ao ser percebido, tenta Furtividade contra a maior Percepção dos
+> heróis que o veem; se passar, fica invisível aos jogadores e espera o turno seguinte.
+> Ao atacar, revela-se; o primeiro ataque recebe vantagem e, se acertar, +2d4. O
+> monstro usa duas adagas (+4, 1d4+2 cada); mantém o arremesso do Goblin Dual como
+> ação bônus, mas não o usa enquanto ainda está escondido. Seu saque garantido é uma
+> adaga. Cada exemplar carrega um frasco de Fungo Acre, Dor Escarlate e Tinta do Polvo
+> Abissal; um deles recebe ao menos uma melhoria e há 10% de chance de essa dose ter
+> as três melhorias máximas (Fatal). Tem 40% de chance de soltar 10 moedas. O Mestre
+> ainda vê e seleciona o peão escondido. Começa com a adaga envenenada com Fungo Acre;
+> ao acertar, a IA consome a dose aplicada e prepara uma das doses restantes para o
+> próximo acerto, respeitando as melhorias do frasco.
+> Renderização 2D/3D e destaques de
+> alvo ignoram o monstro escondido para os jogadores; o servidor também recusa um
+> ataque direto enviado para esse alvo.
+
 > **Editor de Itens — Fase 1 (Armas):** nova aba "Editor de itens" no editor de
 > masmorras (`tools/editor.html` + `tools/editor_items_editor.js`); sub-aba
 > **Armas** funcional, as outras 7 (armaduras/escudos/anéis/botas/poções/
@@ -1380,6 +1435,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `serializeArmor` (sem tratamento especial como o `resist`). Fecha o trio **B/C/D** do
 > Editor de Itens. Testes: `tools/test_editor_itens.py` [D1] + node. Fases seguintes: as
 > outras sub-abas (anéis/botas/poções/arremessáveis/venenos) + habilidades ativáveis.
+
+> **Faixa de iniciativa multiplayer:** `game_state` já envia `initiative_order` e
+> `current_actor`; o cliente (`game.js`) mostra a ordem autoritativa numa faixa
+> horizontal independente, imediatamente acima do log `#gm-log` (“MESTRE DO JOGO”).
+> A faixa inclui heróis e monstros, destaca o ator atual e desloca a fila para mantê-lo
+> visível quando necessário. Ela se oculta no modo de combate de teste, que tem fila
+> própria, e permanece visível quando o log é minimizado.
+
+> **Resumo pré-turno multiplayer:** logo abaixo da iniciativa e acima do log, o cliente
+> mostra um painel apenas para o herói que está agindo ou será o próximo na fila. Ele
+> resume dano/cura e condições recebidos desde a última vez, PV/condições atuais,
+> inimigos visíveis ao alcance do ataque básico, slots de magia livres e aliados feridos.
+> Alvos são filtrados pela visão local; dados vêm do `game_state`, sem alterar regras,
+> turnos ou permissões. O painel se oculta para mestre, jogadores fora da vez e modo de teste.
 
 > **Editor de Itens — bônus de visão:** efeito escalar **`vision`** no motor de multi-efeito
 > (`_apply_single_effect`, mesmo ramo de `spd`/`initiative`) → `p["vision_bonus"]`, somado em
@@ -2486,7 +2555,9 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > hand-offs **acumulam** (`impact.feedbacks[]`) — a morte do herói chega por
 > `_capturarDerrotasERessurreicoes` e o número pelo diff de HP, no mesmo golpe; uma cena já
 > golpeada recebe o hand-off tardio como comando `tardio:true` (sem repetir partículas). Sem
-> cena (magia, armadilha, veneno) o caminho antigo segue intocado; 2D não muda.
+> cena (magia, armadilha, veneno) o caminho comum mostra o dano pela variação de HP. Os
+> números ficam acima e centralizados no footprint: em 3D usam o topo real da miniatura,
+> em 2D o centro e tamanho do footprint.
 > **Aplicação** em `_aplicarPoseCena` (fim do laço por peão de `startLoop3D`): a base é
 > **`pose.base`** (posição autoritativa que veio no `attack_feedback`), gravada em
 > `userData.gridX/gridY` na trava da pose — `gridX` sozinho fica DESATUALIZADO quando um
@@ -2819,6 +2890,11 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > slider "Movimento dos peões"); sem amostra pronta, cai na batida. O seu peão no 3D passa a
 > casa por `opts.casa` (sem pan, como antes); os demais já passavam `pos`. Pico medido 0,37 contra
 > 0,28–0,36 do passo seco. Teste: `tools/test_sons_cliente.js` [22].
+> **Morte Explosiva do Elemental de Fogo invocado:** `_executar_conjurar_elemental` copia a
+> ficha do Bestiário para o servo. Em `_animado_morre`, a passiva `morte_explosiva` usa
+> `_morte_explosiva` (4d6, raio 1, Reflexos CD 13 e chamas persistentes conforme a ficha),
+> igual à morte do monstro. O servidor emite `explosion_area`; o cliente destaca a área e toca
+> `sfx('explosao')` no centro. O legado `especial: explosao_6d6` continua no caminho antigo.
 > **Voz dos elementais:** os 6 elementais (`elemental_fogo|ar|agua|pedra|eletrico|gelo`) têm
 > família própria `elem_<elemento>` (`FAMILIAS_ELEMENTO` em `src/soundBank.js`; `familiaDe`
 > casa `^elemental_<x>$` ANTES das regras — os demais `elemental_*`, como o Descontrolado,
@@ -2998,6 +3074,12 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > A tempestade parcialmente posicionada continua ativa, pode ser movida/encerrada e
 > expira normalmente; a prévia sem nenhuma colocação ainda exige uma leva inicial.
 
+> **Tempestade de Ciclones — criaturas grandes (2026-09-27):**
+> `_tempestade_aplicar_ciclone` resolve cada ciclone que cruza qualquer casa do footprint
+> do alvo, com um teste de Reflexos e dano por ciclone a cada rodada. Perda de movimento
+> e de ação permanece agregada; uma falha preserva a perda de ação mesmo se outro ciclone
+> for evitado na mesma rodada.
+
 > **Ferrão dos Charcos — pântano (2026-09-27):** Jovem, Adulto e Ancião carregam
 > `ignora_pantano` na passiva `movimento_aquatico`. O servidor consulta a exceção ao
 > montar movimento no início do turno e ao entrar no pântano; `src/gameState.js` também
@@ -3009,6 +3091,19 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `movimento_agua_sem_penalidade` marca `ignora_penalidade_agua`; servidor e previsão
 > do cliente cobram custo normal em Água e Água Profunda. O ID não ativa a imunidade
 > separada a redemoinhos (`_ignora_rodamoinho`).
+
+> **Jacaré (ND 2):** ficha nativa em `MONSTER_DEFS` reutiliza a IA específica
+> `crocodilo_jovem` para perseguição, agarrão, mandíbula automática e arrasto; seu
+> dano automático vem de `special_abilities[].damage`. `image: "jacare"` seleciona
+> `assets/pawns/monstros/jacare/jacare.png` em 2D e
+> `assets/models3d/monstros/jacare.glb` em 3D. Catálogo sincronizado com
+> `python tools/export_catalog.py`.
+
+> **Veneno Ensaio sobre a Cegueira — alvos monstros (2026-09-27):** cegueira parcial
+> e total agora afetam a percepção e o raio de visão dos monstros através dos mesmos
+> campos de efeito usados para heróis; a IA também recusa ataques marcados à distância
+> enquanto estiver cega. A cegueira reaplicada após falha no reteste de Fortitude começa
+> a contar no próximo turno do alvo, sem perder uma rodada no mesmo processamento.
 
 > **Editor em inglês — Fase 0 (infraestrutura, 2026-09-28):** o editor (`tools/editor.html`)
 > carrega o motor de idioma do jogo (`src/lang/*.js` + `src/i18n.js`) e a cola

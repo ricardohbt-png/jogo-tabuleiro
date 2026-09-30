@@ -39,7 +39,8 @@ async def main():
     for tid in ["tecnica_mira_perfeita","tecnica_espirito_indomavel","tecnica_grito_guerra","tecnica_pressa"]:
         it = S.guild_item(tid)
         check(f"existe {tid}", it is not None)
-        check(f"{tid} recarga 3", it and it["recarga_rodadas"] == 3)
+        recarga_esperada = 0 if tid == "tecnica_mira_perfeita" else 3
+        check(f"{tid} recarga {recarga_esperada}", it and it["recarga_rodadas"] == recarga_esperada)
         check(f"{tid} preco 100", it and it["preco"] == 100)
         check(f"{tid} classe None", it and it["classe"] is None)
     check("pressa custa 4/4", S.guild_item("tecnica_pressa")["custo_fome"] == 4

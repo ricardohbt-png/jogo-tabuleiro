@@ -56,9 +56,9 @@ def hero(r, pid, pos):
 async def main():
     print("[1] Fichas e movimento aquático")
     expected = {
-        "ferrao_charcos_jovem": (46, 18, 6),
-        "ferrao_charcos_adulto": (74, 20, 6),
-        "ferrao_charcos_anciao": (130, 24, 6),
+        "ferrao_charcos_jovem": (84, 18, 6),
+        "ferrao_charcos_adulto": (124, 20, 6),
+        "ferrao_charcos_anciao": (178, 24, 6),
     }
     for typ, values in expected.items():
         r = room(); m = creature(r, typ, typ)

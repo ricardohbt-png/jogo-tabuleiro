@@ -5,7 +5,8 @@
   let config = null, cityId = null, storeId = "ferreiro", tabId = null, mode = "shops", loading = null, selectedNpcId = null, selectedCityPointId = null, selectedSceneId = null;
   let cityDraft = null;   // cidade em edição/criação no painel (null = painel fechado)
   const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-  const isVenom = i => i.effect === "coat_poison" || !!i.veneno_id || /^veneno_/.test(i.id || "")
+  const isVenom = i => i.item_type === "poison" || i.item_type === "veneno"
+    || i.effect === "coat_poison" || !!i.veneno_id || /^veneno_/.test(i.id || "")
     || /veneno|peçonha/i.test(i.name || "");
   const isThrowable = i => !!i.arremessavel || i.effect === "throwable"
     || /granada|fogo grego|incendiári|óleo|ácido|cola alquímica|rede/i.test(i.name || "");

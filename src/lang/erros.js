@@ -5,6 +5,10 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro.alvo_oculto_nas_sombras": {
+    "en": "That creature is hidden in the shadows and cannot be targeted.",
+    "pt": "Essa criatura está escondida nas sombras e não pode ser alvo."
+  },
   "erro._circulo_primeiro": {
     "en": "first",
     "pt": "primeiro"
@@ -188,6 +192,22 @@ window.LANG_ERROS = {
   "erro.aliado_nao_encontrado": {
     "en": "Ally not found.",
     "pt": "Aliado não encontrado."
+  },
+  "erro.templo_ressurreicao_so_na_cidade": {
+    "en": "Temple resurrection is available only after the party returns to the city.",
+    "pt": "A ressurreição do templo só está disponível quando o grupo retorna à cidade."
+  },
+  "erro.templo_ressurreicao_apenas_multiplayer": {
+    "en": "Temple resurrection is available only in multiplayer games.",
+    "pt": "A ressurreição do templo só está disponível em partidas multiplayer."
+  },
+  "erro.templo_ressurreicao_heroi_vivo": {
+    "en": "Only a living hero can pay for the resurrection.",
+    "pt": "Somente um herói vivo pode pagar pela ressurreição."
+  },
+  "erro.templo_ressurreicao_alvo_invalido": {
+    "en": "Choose a dead companion other than yourself.",
+    "pt": "Escolha um companheiro morto que não seja você."
   },
   "erro.aliado_nao_esta_amaldicoado": {
     "en": "{aliado} is not cursed.",

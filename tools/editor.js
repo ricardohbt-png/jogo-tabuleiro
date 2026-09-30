@@ -1586,7 +1586,13 @@
         break;
       }
       case "chest": S.chests.push({ pos: [x, y], gold: 0, items: [], key_objective: false }); break;
-      case "trap": S.traps.push({ id: "trap_" + S.nextTrapId++, tipo: S.trapType || ((CAT.traps.find(tr => !tr.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas", pos: [x, y] }); break;
+      case "trap": {
+        const tipo = S.trapType || ((CAT.traps.find(tr => !tr.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas";
+        const trap = { id: "trap_" + S.nextTrapId++, tipo, pos: [x, y] };
+        if (tipo === "chao_illusorio") trap.ponte_id = bridgeAt(x, y)?.id || null;
+        S.traps.push(trap);
+        break;
+      }
       case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
@@ -1719,6 +1725,7 @@
       meta.save_reduz ? t(K_ARM + "sucesso_reduz") : "",
       meta.precisa_veneno ? t(K_ARM + "exige_veneno") : (meta.permite_veneno ? t(K_ARM + "veneno_opcional") : ""),
       meta.visivel_apos ? t(K_ARM + "revela") : "",
+      meta.special === "chao_illusorio" ? t(K_ARM + "so_ponte") : "",
       meta.escape_save ? t(K_ARM + "escape", { v: trapText(meta.escape_save), cd: meta.escape_dificuldade ? ` CD ${meta.escape_dificuldade}` : "" }) : "",
       meta.apenas_objeto ? t(K_ARM + "so_objeto") : "",
     ].filter(Boolean);
@@ -1751,7 +1758,7 @@
     const effect = String(item.effect || "").toLowerCase();
     if (item.kind === "armor" || ["armor", "armadura", "helmet", "head", "body"].includes(type) || ["armor", "head"].includes(slot)) return "armaduras";
     if (item.kind === "shield" || ["shield", "escudo"].includes(type) || slot === "shield") return "escudos";
-    if (item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "venenos";
+    if (type === "poison" || type === "veneno" || item.veneno_id || effect === "coat_poison" || id.startsWith("veneno_")) return "venenos";
     if (effect === "throwable" || ["throwable", "arremessavel"].includes(type)) return "arremessaveis";
     if (type === "instrumento" || slot === "instrumento" || id.startsWith("instrumento_")) return "instrumentos";
     if (item.ammo_type || item.ammo_count != null || ["ammo", "municao"].includes(type)) return "municoes";
@@ -2165,6 +2172,78 @@
   }
   board.addEventListener("mouseleave", () => _mostrarCoordsCursor(null));
 
+  function _hostilityHtml(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[c]);
+  }
+
+  function _hostilitySubtypeLabel(id) {
+    const k = "ui.editor.subtipo." + id;
+    return window.I18N && window.I18N.tem(k) ? t(k) : id.replace(/_/g, " ");
+  }
+
+  function _monsterHostilityPanelHTML(ref) {
+    const override = ref.hostility_override && typeof ref.hostility_override === "object"
+      ? ref.hostility_override : null;
+    const mode = override ? override.mode : "bestiary";
+    const rules = mode === "custom" && override.rules && typeof override.rules === "object"
+      ? override.rules : {};
+    const selectedSubtypes = new Set(Array.isArray(rules.subtypes) ? rules.subtypes : []);
+    const selectedTypes = new Set(Array.isArray(rules.types) ? rules.types : []);
+    const subtypeIds = [...new Set(CAT.monsters.map(m => m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")))].sort();
+    const monsters = [...new Map(CAT.monsters.filter(m => m && m.type).map(m => [m.type, m])).values()]
+      .sort((a, b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
+    return `<div class="monster-hostility-override">
+      <b>⚔️ ${t("ui.editor.masmorra.hostilidade.titulo")}</b>
+      <small>${t("ui.editor.masmorra.hostilidade.so_este")}</small>
+      <select id="p-hostility-mode">
+        <option value="bestiary"${mode === "bestiary" ? " selected" : ""}>${t("ui.editor.masmorra.hostilidade.bestiario")}</option>
+        <option value="none"${mode === "none" ? " selected" : ""}>${t("ui.editor.masmorra.hostilidade.nenhuma")}</option>
+        <option value="custom"${mode === "custom" ? " selected" : ""}>${t("ui.editor.masmorra.hostilidade.escolher")}</option>
+      </select>
+      ${mode === "custom" ? `<div class="monster-hostility-options">
+        <label><input type="checkbox" id="p-hostility-all"${rules.all_monsters ? " checked" : ""}> ${t("ui.editor.masmorra.hostilidade.todos")}</label>
+        <details><summary>${t("ui.editor.masmorra.hostilidade.subtipos", { n: selectedSubtypes.size })}</summary><div>${subtypeIds.map(id =>
+          `<label><input type="checkbox" data-hostility-subtype="${_hostilityHtml(id)}"${selectedSubtypes.has(id) ? " checked" : ""}> ${_hostilityHtml(_hostilitySubtypeLabel(id))}</label>`).join("")}</div></details>
+        <details><summary>${t("ui.editor.masmorra.hostilidade.criaturas", { n: selectedTypes.size })}</summary><div>${monsters.map(m =>
+          `<label><input type="checkbox" data-hostility-type="${_hostilityHtml(m.type)}"${selectedTypes.has(m.type) ? " checked" : ""}> ${_hostilityHtml(nomeCat("monstro", m.type, m.name))}</label>`).join("")}</div></details>
+        <small>${t("ui.editor.masmorra.hostilidade.ou")}</small>
+      </div>` : ""}
+    </div>`;
+  }
+
+  function _bindMonsterHostilityPanel(ref) {
+    const modeEl = document.getElementById("p-hostility-mode");
+    if (!modeEl) return;
+    modeEl.onchange = e => {
+      const mode = e.target.value;
+      if (mode === "bestiary") delete ref.hostility_override;
+      else if (mode === "none") ref.hostility_override = { mode: "none" };
+      else {
+        const previous = ref.hostility_override && ref.hostility_override.mode === "custom"
+          ? ref.hostility_override.rules : null;
+        ref.hostility_override = { mode: "custom", rules: {
+          all_monsters: !!(previous && previous.all_monsters),
+          subtypes: previous && Array.isArray(previous.subtypes) ? previous.subtypes.slice() : [],
+          types: previous && Array.isArray(previous.types) ? previous.types.slice() : [],
+        } };
+      }
+      renderPanel();
+    };
+    const saveRules = () => {
+      if (!ref.hostility_override || ref.hostility_override.mode !== "custom") return;
+      ref.hostility_override.rules = {
+        all_monsters: !!document.getElementById("p-hostility-all").checked,
+        subtypes: [...panel.querySelectorAll("[data-hostility-subtype]:checked")].map(x => x.dataset.hostilitySubtype),
+        types: [...panel.querySelectorAll("[data-hostility-type]:checked")].map(x => x.dataset.hostilityType),
+      };
+    };
+    const all = document.getElementById("p-hostility-all");
+    if (all) all.onchange = saveRules;
+    panel.querySelectorAll("[data-hostility-subtype], [data-hostility-type]")
+      .forEach(input => input.onchange = saveRules);
+  }
+
   function renderPanel() {
     _renderPanelCorpo();
     if (!S.sel) return;
@@ -2362,6 +2441,7 @@
         <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> ${t("ui.editor.masmorra.painel.chefe_boss")}</label>
         <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> ${t("ui.editor.masmorra.painel.alvo_objetivo")}</label>
+        ${_monsterHostilityPanelHTML(ref)}
         ${isFlying ? `<div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🪽 ${t("ui.editor.masmorra.painel.voo_altitude")}</b>
           <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.altura_escala_hint")}</div>
@@ -2389,6 +2469,7 @@
       document.getElementById("p-room").onchange = e => { ref.room_id = e.target.value === "" ? null : Number(e.target.value); };
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
+      _bindMonsterHostilityPanel(ref);
       const applyMonsterScale = () => {
         const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsx").value) || 1));
         const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsy").value) || 1));
@@ -2457,6 +2538,7 @@
         ${trapCharacteristicsHTML(meta, false, ref)}
         <div class="trap-overrides">
           <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
+          ${ref.tipo !== "chao_illusorio" ? `<label style="display:block"><input type="checkbox" id="p-trap-permanent" ${ref.permanente ? "checked" : ""}> ${t("ui.editor.masmorra.painel.armadilha_permanente")}</label><small>${t("ui.editor.masmorra.painel.permanente_xp")}</small>` : ""}
           <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="p-trap-cd" type="number" min="1" max="40" value="${ref.dificuldade ?? defaultDifficulty}"></label>
           ${defaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
           <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
@@ -2478,6 +2560,9 @@
         </div>`;
       document.getElementById("p-tt").onchange = e => {
         ref.tipo = e.target.value;
+        if (ref.tipo === "chao_illusorio") ref.ponte_id = bridgeAt(ref.pos[0], ref.pos[1])?.id || null;
+        else delete ref.ponte_id;
+        if (ref.tipo === "chao_illusorio") delete ref.permanente;
         delete ref.dificuldade;
         delete ref.dano;
         const nextMeta = CAT.traps.find(tr => tr.tipo === ref.tipo) || {};
@@ -2487,6 +2572,12 @@
         renderPanel(); render();
       };
       const trapCdInput = document.getElementById("p-trap-cd");
+      const permanentTrapInput = document.getElementById("p-trap-permanent");
+      if (permanentTrapInput) permanentTrapInput.onchange = e => {
+        if (e.target.checked) ref.permanente = true;
+        else delete ref.permanente;
+        updateStatus();
+      };
       if (trapCdInput) trapCdInput.onchange = e => {
         const raw = e.target.value.trim();
         if (!raw) delete ref.dificuldade;
@@ -2740,12 +2831,13 @@
         ${m.special === "plaque" ? `<label style="display:block;margin-top:8px">${t("ui.editor.masmorra.painel.mensagem_placa")}<textarea id="d-texto" rows="5" maxlength="600" placeholder="${t("ui.editor.masmorra.painel.placa_placeholder")}">${placaTexto}</textarea></label><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.placa_hint")}</small>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> ${t("ui.editor.masmorra.painel.contem_loot")}</label>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> ${t("ui.editor.masmorra.painel.bau_armadilha")}</label>
-        ${ref.chest_trap_monster_type ? `<label>${t("ui.editor.masmorra.painel.monstro_que_surge")}</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:nomeCat("monstro", x.type, x.name)})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.bau_armadilha_hint")}</small>` : ""}
+        ${ref.chest_trap_monster_type ? `<label>${t("ui.editor.masmorra.painel.monstro_que_surge")}</label><select id="d-chest-monster">${opt(CAT.monsters.map(x => ({v:x.type,name:nomeCat("monstro", x.type, x.name)})), ref.chest_trap_monster_type, o => o.v + " — " + o.name)}</select><label style="display:block"><input type="checkbox" id="d-chest-trap-permanent" ${ref.chest_trap_permanente ? "checked" : ""}> ${t("ui.editor.masmorra.painel.armadilha_permanente_curta")}</label><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.bau_armadilha_hint")} ${t("ui.editor.masmorra.painel.bau_permanente_xp")}</small>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-trap" ${decorTrap ? "checked" : ""}> ${t("ui.editor.masmorra.painel.contem_armadilha")}</label>
         ${decorTrap ? `<label>${t("ui.editor.masmorra.painel.armadilha")}</label><select id="d-trap-type">${opt(trapOptions, decorTrap.tipo, o => o.name)}</select>
           ${trapCharacteristicsHTML(decorTrapMeta, true, decorTrap)}
           <div class="trap-overrides compact">
             <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
+            ${decorTrap.tipo !== "chao_illusorio" ? `<label style="display:block"><input type="checkbox" id="d-trap-permanent" ${decorTrap.permanente ? "checked" : ""}> ${t("ui.editor.masmorra.painel.armadilha_permanente_curta")}</label><small>${t("ui.editor.masmorra.painel.permanente_xp")}</small>` : ""}
             <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="d-trap-cd" type="number" min="1" max="40" value="${decorTrap.dificuldade ?? decorTrapDefaultDifficulty}"></label>
             ${decorTrapDefaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="d-trap-damage" value="${trapText(decorTrap.dano ?? decorTrapDefaultDamage)}" placeholder="ex.: 2d6"></label><small id="d-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
             <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
@@ -2805,8 +2897,14 @@
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
       if (m.special === "plaque") document.getElementById("d-texto").oninput = e => { ref.texto = e.target.value.slice(0, 600); updateStatus(); };
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
-      document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else delete ref.chest_trap_monster_type; renderPanel(); };
+      document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else { delete ref.chest_trap_monster_type; delete ref.chest_trap_permanente; } renderPanel(); };
       if (ref.chest_trap_monster_type) document.getElementById("d-chest-monster").onchange = e => { ref.chest_trap_monster_type = e.target.value; };
+      const chestPermanentInput = document.getElementById("d-chest-trap-permanent");
+      if (chestPermanentInput) chestPermanentInput.onchange = e => {
+        if (e.target.checked) ref.chest_trap_permanente = true;
+        else delete ref.chest_trap_permanente;
+        updateStatus();
+      };
       document.getElementById("d-disable-traps").onchange = e => {
         if (e.target.checked) ref.disable_trap_ids = [];
         else delete ref.disable_trap_ids;
@@ -2827,6 +2925,12 @@
           ref.trap = { tipo: e.target.value };
           prepareCurseTrap(ref.trap, true);
           renderPanel();
+        };
+        const decorPermanentInput = document.getElementById("d-trap-permanent");
+        if (decorPermanentInput) decorPermanentInput.onchange = e => {
+          if (e.target.checked) ref.trap.permanente = true;
+          else delete ref.trap.permanente;
+          updateStatus();
         };
         const decorTrapCdInput = document.getElementById("d-trap-cd");
         if (decorTrapCdInput) decorTrapCdInput.onchange = e => {
@@ -3146,6 +3250,8 @@
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
       monsters: S.monsters.map(m => {
         const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
+        if (m.hostility_override && typeof m.hostility_override === "object")
+          o.hostility_override = JSON.parse(JSON.stringify(m.hostility_override));
         if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
         if (monsterCanFly(m)) {
           const meta = monsterFlightMeta(m) || {};
@@ -3170,6 +3276,8 @@
       chests: S.chests.map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: c.items.map(exportLootItem), key_objective: !!c.key_objective })),
       traps: S.traps.map(trap => {
         const o = { id: trap.id, tipo: trap.tipo, pos: trap.pos.slice() };
+        if (trap.tipo === "chao_illusorio" && trap.ponte_id) o.ponte_id = trap.ponte_id;
+        if (trap.permanente && trap.tipo !== "chao_illusorio") o.permanente = true;
         if (trap.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, trap.dificuldade | 0));
         if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
         if (trap.veneno_id) o.veneno_id = trap.veneno_id;
@@ -3187,8 +3295,10 @@
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(exportLootItem) } : null;
         o.key_objective = !!d.key_objective;
         if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
+        if (d.chest_trap_monster_type && d.chest_trap_permanente) o.chest_trap_permanente = true;
         if (d.trap?.tipo) {
           o.trap = { tipo: d.trap.tipo };
+          if (d.trap.permanente && d.trap.tipo !== "chao_illusorio") o.trap.permanente = true;
           if (d.trap.dificuldade != null) o.trap.dificuldade = Math.max(1, Math.min(40, d.trap.dificuldade | 0));
           if (d.trap.dano != null && validTrapDamage(d.trap.dano)) o.trap.dano = String(d.trap.dano).replace(/\s/g, "");
           if (d.trap.veneno_id) o.trap.veneno_id = d.trap.veneno_id;
@@ -3323,8 +3433,17 @@
     for (const trap of S.traps) {
       const tp = { tipo: trap.tipo, pos: P(trap.pos) };
       if (!traps.has(trap.tipo)) e.push(V("armadilha_tipo_invalido", tp));
+      if (trap.permanente != null && typeof trap.permanente !== "boolean") e.push(V("armadilha_permanente_invalido", tp));
+      if (trap.tipo === "chao_illusorio" && trap.permanente) e.push(V("chao_permanente", { pos: P(trap.pos) }));
       if (CAT.traps.find(c => c.tipo === trap.tipo)?.apenas_objeto) e.push(V("armadilha_so_objeto", tp));
-      if (isWall(trap.pos)) e.push(V("armadilha_em_parede", { pos: P(trap.pos) }));
+      if (trap.tipo === "chao_illusorio") {
+        const ponte = bridgeAt(trap.pos?.[0], trap.pos?.[1]);
+        if (!ponte) e.push(V("chao_sem_ponte", { pos: P(trap.pos) }));
+        else if (ponte.id !== trap.ponte_id) e.push(V("chao_ponte_diferente", { pos: P(trap.pos) }));
+        if (S.tiles[trap.pos?.[1]]?.[trap.pos?.[0]] !== FLOOR) e.push(V("chao_sem_piso", { pos: P(trap.pos) }));
+        if (ponte && elevationAt(trap.pos[0], trap.pos[1]) >= bridgeAltura(ponte))
+          e.push(V("chao_sem_queda", { pos: P(trap.pos) }));
+      } else if (isWall(trap.pos)) e.push(V("armadilha_em_parede", { pos: P(trap.pos) }));
       if (trap.dificuldade != null && (!Number.isInteger(trap.dificuldade) || trap.dificuldade < 1 || trap.dificuldade > 40)) e.push(V("armadilha_cd", { ...tp, cd: trap.dificuldade }));
       if (trap.dano != null && !validTrapDamage(trap.dano)) e.push(V("armadilha_dano", { ...tp, dano: trap.dano }));
       if ((trap.tipo === "fosso_envenenado" || trap.tipo === "armadilha_dardos_envenenados") && !venoms.has(trap.veneno_id)) e.push(V("armadilha_veneno", tp));
@@ -3381,9 +3500,13 @@
         validateCarta(it, V("carta_decor", { pos: P(d.pos) }));
       }
       if (d.chest_trap_monster_type && !types.has(d.chest_trap_monster_type)) e.push(V("bau_armadilha_monstro", { pos: P(d.pos) }));
+      if (d.chest_trap_permanente != null && typeof d.chest_trap_permanente !== "boolean") e.push(V("bau_permanente_invalido", { pos: P(d.pos) }));
+      if (d.chest_trap_permanente && !d.chest_trap_monster_type) e.push(V("bau_permanente_sem_monstro", { pos: P(d.pos) }));
       if (d.trap) {
         const dp = { tipo: d.trap.tipo, pos: P(d.pos) };
         if (!traps.has(d.trap.tipo)) e.push(V("decor_trap_invalida", { pos: P(d.pos) }));
+        if (d.trap.permanente != null && typeof d.trap.permanente !== "boolean") e.push(V("decor_trap_permanente_invalido", dp));
+        if (d.trap.tipo === "chao_illusorio" && d.trap.permanente) e.push(V("decor_chao_permanente", { pos: P(d.pos) }));
         if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(V("decor_trap_cd", dp));
         if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(V("decor_trap_dano", dp));
         if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(V("decor_trap_veneno", dp));
@@ -3544,6 +3667,8 @@
     S.prisoner = obj.prisoner || null;
     S.monsters = (obj.monsters || []).map(m => ({
       type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target,
+      ...(m.hostility_override && typeof m.hostility_override === "object"
+        ? { hostility_override: JSON.parse(JSON.stringify(m.hostility_override)) } : {}),
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
       ...(m.altura !== undefined ? { altura: altitudeClamp(m.altura, 2) } : {}),
       ...(m.altura_max !== undefined ? { altura_max: altitudeClamp(m.altura_max, 10) } : {}),
@@ -3568,6 +3693,8 @@
     };
     S.traps = rawTraps.map((trap, i) => {
       const o = { id: uniqueLoadedTrapId(trap.id || ("trap_" + i)), tipo: trap.tipo, pos: trap.pos.slice() };
+      if (trap.tipo === "chao_illusorio" && trap.ponte_id) o.ponte_id = trap.ponte_id;
+      if (trap.permanente === true && trap.tipo !== "chao_illusorio") o.permanente = true;
       if (trap.dificuldade != null) o.dificuldade = Number(trap.dificuldade) | 0;
       if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
       if (trap.veneno_id) o.veneno_id = trap.veneno_id;
@@ -3608,9 +3735,11 @@
       key_objective: !!d.key_objective,
       ...(typeof d.texto === "string" ? { texto: d.texto.slice(0, 600) } : {}),
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
+      ...(d.chest_trap_permanente === true && d.chest_trap_monster_type ? { chest_trap_permanente: true } : {}),
       ...(Array.isArray(d.disable_trap_ids) ? { disable_trap_ids: d.disable_trap_ids.filter(id => typeof id === "string") } : {}),
       ...(d.trap?.tipo ? { trap: {
         tipo: d.trap.tipo,
+        ...(d.trap.permanente === true && d.trap.tipo !== "chao_illusorio" ? { permanente: true } : {}),
         ...(d.trap.dificuldade != null ? { dificuldade: Number(d.trap.dificuldade) | 0 } : {}),
         ...(d.trap.dano != null && validTrapDamage(d.trap.dano) ? { dano: String(d.trap.dano).replace(/\s/g, "") } : {}),
         ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}),

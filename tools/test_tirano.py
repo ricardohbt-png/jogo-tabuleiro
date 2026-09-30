@@ -64,7 +64,7 @@ async def main():
     rex = creature(r, "tiranossauro_rex", "rex", (2, 2))
     ancestral = creature(r, "tirano_ancestral", "ancestral", (8, 8))
     check("Mata tem PV/CA/movimento", (mata["max_hp"], mata["ac"], mata["movement"]) == (120, 22, 6))
-    check("T-Rex tem PV 156 e RD 4 só contra armas comuns", rex["max_hp"] == 156
+    check("T-Rex tem PV 189 e RD 4 só contra armas comuns", rex["max_hp"] == 189
           and rex["resistances"] == [{"type": "physical", "reduction": 4, "common_weapon_only": True}])
     check("T-Rex: arma comum sofre a RD", r._apply_damage_types(10, [S.DMG_PHYSICAL], rex, {"id": "espada"}) == 6)
     check("T-Rex: arma mágica atravessa a RD", r._apply_damage_types(10, [S.DMG_PHYSICAL], rex, {"id": "espada", "magical": True}) == 10)

@@ -74,6 +74,14 @@ window.LANG_CATALOGO = {
     "en": "Gas Chamber",
     "pt": "Câmara de Gás"
   },
+  "cat.armadilha.chao_illusorio.desc": {
+    "en": "Reflex DC 14 to cross safely. On failure, the board gives way, the creature falls to the floor below, and that bridge tile collapses.",
+    "pt": "Reflexos CD 14 para atravessar sem cair. Na falha, a tábua cede e a criatura cai no piso abaixo; o trecho da ponte desaba."
+  },
+  "cat.armadilha.chao_illusorio.nome": {
+    "en": "Illusory Floor",
+    "pt": "Chão Ilusório"
+  },
   "cat.armadilha.fosso.desc": {
     "en": "Reflex DC 15 avoids it. On failure, takes 1d6 damage, loses movement and the next round, and remains hidden and protected during that time.",
     "pt": "Reflexos CD 15 evita. Na falha, sofre 1d6 de dano, perde o movimento e a próxima rodada; fica oculto e protegido enquanto estiver no fosso."
@@ -506,6 +514,14 @@ window.LANG_CATALOGO = {
     "en": "Resurrection III",
     "pt": "Ressurreição III"
   },
+  "cat.guilda.guarda_maxima.desc": {
+    "en": "Passive. While equipped, doubles the armor bonus and damage reduction of all shields.",
+    "pt": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos."
+  },
+  "cat.guilda.guarda_maxima.nome": {
+    "en": "Maximum Guard",
+    "pt": "Guarda Máxima"
+  },
   "cat.guilda.guerreiro_combinar_2.desc": {
     "en": "Lets you arm TWO abilities in the same turn.",
     "pt": "Permite armar DUAS habilidades no mesmo turno."
@@ -545,14 +561,6 @@ window.LANG_CATALOGO = {
   "cat.guilda.guerreiro_mira_3.nome": {
     "en": "Sure Aim III",
     "pt": "Mira Certeira III"
-  },
-  "cat.guilda.guarda_maxima.desc": {
-    "en": "Passive. While equipped, doubles the armor bonus and damage reduction of all shields.",
-    "pt": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos."
-  },
-  "cat.guilda.guarda_maxima.nome": {
-    "en": "Maximum Guard",
-    "pt": "Guarda Máxima"
   },
   "cat.guilda.ladino_armadilha_incendiaria.desc": {
     "en": "Permanently unlocks crafting the Incendiary Trap.",
@@ -994,6 +1002,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Goblin Archer",
     "pt": "Lenda: Goblin Arqueiro"
   },
+  "cat.guilda.lenda_goblin_assassino.desc": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Assassin.",
+    "pt": "+1 de ataque e +1 nos saves contra Assassino Goblin."
+  },
+  "cat.guilda.lenda_goblin_assassino.nome": {
+    "en": "Lore: Goblin Assassin",
+    "pt": "Lenda: Assassino Goblin"
+  },
   "cat.guilda.lenda_goblin_combatente.desc": {
     "en": "+1 to attack and +1 to saving throws against Goblin Fighter.",
     "pt": "+1 de ataque e +1 nos saves contra Goblin Combatente."
@@ -1041,6 +1057,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_grotao.nome": {
     "en": "Lore: Grotão",
     "pt": "Lenda: Grotão"
+  },
+  "cat.guilda.lenda_jacare.desc": {
+    "en": "+1 to attack and +1 to saving throws against Alligator.",
+    "pt": "+1 de ataque e +1 nos saves contra Jacaré."
+  },
+  "cat.guilda.lenda_jacare.nome": {
+    "en": "Lore: Alligator",
+    "pt": "Lenda: Jacaré"
   },
   "cat.guilda.lenda_kobold_besteiro.desc": {
     "en": "+1 to attack and +1 to saving throws against Kobold Crossbowman.",
@@ -1764,7 +1788,7 @@ window.LANG_CATALOGO = {
   },
   "cat.habilidade.furia_berserker.desc": {
     "en": "Extra attack this turn with active abilities; Berserker Fury III lets you choose 2 or 3 attacks",
-    "pt": "Ataque extra neste turno com habilidades ativas; Fúria Berserker III permite escolher 2 ou 3 ataques"
+    "pt": "Ataque extra neste turno com habilidades ativas (Fúria Berserker III permite escolher 2 ou 3 ataques)"
   },
   "cat.habilidade.furia_berserker.nome": {
     "en": "Berserker Fury",
@@ -1780,7 +1804,7 @@ window.LANG_CATALOGO = {
   },
   "cat.habilidade.golpe_sagrado.desc": {
     "en": "+1d8 holy damage. Doubled against undead and demons",
-    "pt": "+1d8 dano sagrado. Dobrado contra mortos-vivos e demônios"
+    "pt": "Escolha nível 1/2/3: +1d8/+2d8 sagrado; no nível 3, +1d8 de fogo, gelo, eletricidade ou sagrado. Ativação 🍖-3/4/5 💧-3/3/4; manutenção 🍖-1/2/2 💧-1/1/2."
   },
   "cat.habilidade.golpe_sagrado.nome": {
     "en": "Holy Strike",
@@ -1876,7 +1900,7 @@ window.LANG_CATALOGO = {
   },
   "cat.instrumento.gaita.desc": {
     "en": "Roll 2d6: 2 Out of Tune (-1 to Bard attacks and instrument DC); 3 Miss (no effect); 4 Painful Echoes (retaliation aura); 5 Martial Duet (nearby ally hits trigger a counterattack); 6 Ghost Duet (successful basic hits echo); 7 Cutting Note (choose an orthogonal line); 8 Thunderous Chord (nearby area); 9 Requiem (choose a target); 10 Heroic Symphony (+1 to attributes boosted by an active Heroic Song); 11 General's Call (choose a cone direction). 12 = Encore: roll and apply two more results. The second 12 grants Minor Encore: allies within 5 squares pay 1 less Hunger/Thirst per cost this round, and Mages/Clerics get a free spell. With Runic Bagpipes, each further 12 chains; the third grants Great Encore, making allies under Heroic Song pay no costs for 1d4 rounds.",
-    "pt": "Role 2d6: 2 Desafinado (-1 em ataques e CD de instrumentos do Bardo); 3 Falha (sem efeito); 4 Ecos Dolorosos (aura de retaliação); 5 Dueto Marcial (aliado próximo que acerta permite contra-ataque); 6 Dueto Fantasma (ataques básicos acertados ecoam); 7 Nota Cortante (escolha uma linha ortogonal); 8 Acorde Trovejante (área próxima); 9 Réquiem (escolha um alvo); 10 Sinfonia Heroica (+1 aos atributos de uma Canção Heroica ativa); 11 Chamado do General (escolha a direção do cone). 12 = Encore: role e aplique mais dois resultados. O segundo 12 concede Encore Menor: aliados em até 5 casas pagam 1 a menos de Fome/Sede por custo nesta rodada, e Magos/Clérigos recebem uma magia grátis. Com a Gaita Rúnica, cada novo 12 encadeia outro Encore; o terceiro concede Grande Encore, e aliados sob a Canção Heroica não pagam custos por 1d4 rodadas."
+    "pt": "Improvisa um efeito conforme 2d6: 2 Desafinado (-1 em ataques e CD de instrumentos); 3 Falha (nada); 4 Ecos Dolorosos (aura que retalia ataques corpo a corpo); 5 Dueto Marcial (contra-ataque quando aliado próximo acerta inimigo adjacente); 6 Dueto Fantasma (ataques básicos ecoam no alvo); 7 Nota Cortante (linha ortogonal); 8 Acorde Trovejante (dano em área e empurrão/perda de movimento); 9 Réquiem (pulso de dano em alvo escolhido); 10 Sinfonia Heroica (+1 nos atributos da Canção ativa); 11 Chamado do General (cone de medo). 12 = Encore: aplica o efeito e gera duas rolagens extras. O segundo 12 concede Encore Menor: aliados vivos em até 5 casas pagam 1 a menos de Fome e Sede por custo nesta rodada; Magos e Clérigos também recebem uma magia grátis. Na Gaita Rúnica, cada 12 extra gera mais duas rolagens; o terceiro 12 concede Grande Encore: aliados sob a Canção Heroica não pagam custos por 1d4 rodadas."
   },
   "cat.instrumento.gaita.nome": {
     "en": "Bagpipes",
@@ -3246,6 +3270,10 @@ window.LANG_CATALOGO = {
     "en": "Goblin Archer",
     "pt": "Goblin Arqueiro"
   },
+  "cat.monstro.goblin_assassino.nome": {
+    "en": "Goblin Assassin",
+    "pt": "Assassino Goblin"
+  },
   "cat.monstro.goblin_combatente.nome": {
     "en": "Goblin Fighter",
     "pt": "Goblin Combatente"
@@ -3277,6 +3305,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.harpia.nome": {
     "en": "Harpy",
     "pt": "Harpia"
+  },
+  "cat.monstro.jacare.nome": {
+    "en": "Alligator",
+    "pt": "Jacaré"
   },
   "cat.monstro.kobold_besteiro.nome": {
     "en": "Kobold Crossbowman",

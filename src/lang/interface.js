@@ -1031,6 +1031,34 @@ window.LANG_INTERFACE = {
     "en": "☠️ Poisoned — duration: {n} round(s).",
     "pt": "☠️ Envenenado — duração: {n} rodada(s)."
   },
+  "ui.armadilha.teste_resistencia": {
+    "en": "Saving throw",
+    "pt": "Teste de resistência"
+  },
+  "ui.armadilha.veneno_resistido_parcialmente": {
+    "en": "Partial save — blindness avoided",
+    "pt": "Sucesso parcial — cegueira completa evitada"
+  },
+  "ui.armadilha.veneno_teste_falhou": {
+    "en": "Failed save — blinded",
+    "pt": "Teste falhou — cego"
+  },
+  "ui.veneno.cegueira.visao_parcial": {
+    "en": "Vision reduced by 2 squares; full blindness avoided.",
+    "pt": "Visão reduzida em 2 quadrados; a cegueira completa foi evitada."
+  },
+  "ui.veneno.cegueira.reteste": {
+    "en": "Repeat the Fortitude save at DC {dc} when this effect ends.",
+    "pt": "Ao fim do efeito, faça novo teste de Fortitude CD {dc}."
+  },
+  "ui.veneno.cegueira.visao_total": {
+    "en": "Vision limited to 1 square; the rest of the map is dark.",
+    "pt": "Visão limitada a 1 quadrado; o restante do mapa fica escuro."
+  },
+  "ui.veneno.cegueira.sem_distancia": {
+    "en": "Ranged attacks are disabled.",
+    "pt": "Ataques à distância bloqueados."
+  },
   "ui.arremesso.agora_nao": {
     "en": "You can't throw right now.",
     "pt": "Não é possível arremessar agora."
@@ -3195,6 +3223,106 @@ window.LANG_INTERFACE = {
     "en": "▶ YOUR TURN — {emoji} {nome}",
     "pt": "▶ SUA VEZ — {emoji} {nome}"
   },
+  "ui.hud.agora": {
+    "en": "NOW",
+    "pt": "AGORA"
+  },
+  "ui.hud.ordem_iniciativa": {
+    "en": "⚡ INITIATIVE",
+    "pt": "⚡ INICIATIVA"
+  },
+  "ui.hud.resumo_pre_turno": {
+    "en": "Your turn briefing",
+    "pt": "Resumo da sua vez"
+  },
+  "ui.hud.seu_turno_resumo": {
+    "en": "▶ YOUR TURN — PLAN YOUR ACTION",
+    "pt": "▶ SUA VEZ — PLANEJE SUA AÇÃO"
+  },
+  "ui.hud.prepare_seu_turno": {
+    "en": "⏳ GET READY — YOU ACT NEXT",
+    "pt": "⏳ PREPARE-SE — VOCÊ JOGA A SEGUIR"
+  },
+  "ui.hud.resumo_desde_ultima_vez": {
+    "en": "Since your last turn",
+    "pt": "Desde sua última vez"
+  },
+  "ui.hud.resumo_dano_recebido": {
+    "en": "damage taken",
+    "pt": "de dano recebido"
+  },
+  "ui.hud.resumo_cura_recebida": {
+    "en": "healing received",
+    "pt": "de cura recebida"
+  },
+  "ui.hud.resumo_sem_mudancas": {
+    "en": "No changes to your hero this round.",
+    "pt": "Nenhuma mudança no seu personagem nesta rodada."
+  },
+  "ui.hud.resumo_agora": {
+    "en": "Your status now",
+    "pt": "Seu estado atual"
+  },
+  "ui.hud.resumo_condicoes": {
+    "en": "Conditions",
+    "pt": "Condições"
+  },
+  "ui.condicao.ferida_aberta_titulo": {
+    "en": "Open wound",
+    "pt": "Ferida aberta"
+  },
+  "ui.hud.resumo_chamas": {
+    "en": "Burning",
+    "pt": "Em chamas"
+  },
+  "ui.hud.resumo_acido": {
+    "en": "Acid",
+    "pt": "Ácido"
+  },
+  "ui.hud.resumo_veneno": {
+    "en": "Poison",
+    "pt": "Veneno"
+  },
+  "ui.hud.resumo_sono": {
+    "en": "Asleep",
+    "pt": "Dormindo"
+  },
+  "ui.hud.resumo_paralisia": {
+    "en": "Paralysis",
+    "pt": "Paralisia"
+  },
+  "ui.hud.resumo_cegueira": {
+    "en": "Blindness",
+    "pt": "Cegueira"
+  },
+  "ui.hud.resumo_alvos_ao_alcance": {
+    "en": "Enemies in basic attack range",
+    "pt": "Inimigos ao alcance do ataque básico"
+  },
+  "ui.hud.resumo_inimigo": {
+    "en": "Enemy",
+    "pt": "Inimigo"
+  },
+  "ui.hud.resumo_magias_disponiveis": {
+    "en": "Available spell slots",
+    "pt": "Slots de magia disponíveis"
+  },
+  "ui.hud.resumo_livres": {
+    "en": "free",
+    "pt": "livres"
+  },
+  "ui.hud.resumo_circulo": {
+    "en": "Circle {n}",
+    "pt": "Círculo {n}"
+  },
+  "ui.hud.resumo_aliados_feridos": {
+    "en": "Wounded allies",
+    "pt": "Aliados feridos"
+  },
+  "ui.hud.resumo_sem_dados": {
+    "en": "Your briefing will appear when you are next in the initiative.",
+    "pt": "Seu resumo aparecerá quando você for o próximo na iniciativa."
+  },
   "ui.hud.badge_teste_livre": {
     "en": "🧪 FREE TEST — select any monster",
     "pt": "🧪 TESTE LIVRE — selecione qualquer monstro"
@@ -4503,6 +4631,46 @@ window.LANG_INTERFACE = {
     "en": "INVENTORY",
     "pt": "INVENTÁRIO"
   },
+  "ui.inv.auto_arrow.title": {
+    "en": "Automatic arrow equip",
+    "pt": "Equipar flechas automaticamente"
+  },
+  "ui.inv.auto_arrow.enabled": {
+    "en": "Enable",
+    "pt": "Ativar"
+  },
+  "ui.inv.auto_arrow.status_enabled": {
+    "en": "On",
+    "pt": "Ativado"
+  },
+  "ui.inv.auto_arrow.status_disabled": {
+    "en": "Off",
+    "pt": "Desativado"
+  },
+  "ui.inv.auto_arrow.hint": {
+    "en": "When the equipped quiver runs out, the next available type is equipped in this order.",
+    "pt": "Quando acabarem as flechas equipadas, o próximo tipo disponível será equipado nesta ordem."
+  },
+  "ui.inv.auto_arrow.normal": {
+    "en": "Normal arrows",
+    "pt": "Flechas comuns"
+  },
+  "ui.inv.auto_arrow.fire": {
+    "en": "Fire arrows",
+    "pt": "Flechas incendiárias"
+  },
+  "ui.inv.auto_arrow.silver": {
+    "en": "Silver arrows",
+    "pt": "Flechas de prata"
+  },
+  "ui.inv.auto_arrow.up": {
+    "en": "Move up",
+    "pt": "Mover para cima"
+  },
+  "ui.inv.auto_arrow.down": {
+    "en": "Move down",
+    "pt": "Mover para baixo"
+  },
   "ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno": {
     "en": "Bonus action. You stay hidden until the end of the turn; your next attack has advantage.",
     "pt": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem."
@@ -5088,8 +5256,8 @@ window.LANG_INTERFACE = {
     "pt": "LENDÁRIO. Untado na arma: 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, Fortitude CD 14 neutraliza o veneno."
   },
   "ui.item.veneno_aranha_sombria.desc": {
-    "en": "Reduces Strength by 1d4 for 1d6 rounds. Fortitude DC 8 negates.",
-    "pt": "Reduz 1d4 de Força por 1d6 rodadas. Fortitude dif. 8 anula."
+    "en": "Reduces Strength by 1d4 for 1d6 rounds. Fortitude DC 10 negates.",
+    "pt": "Reduz 1d4 de Força por 1d6 rodadas. Fortitude dif. 10 anula."
   },
   "ui.item.veneno_ardonia_negra.desc": {
     "en": "Fortitude DC 14 negates. On a failure, takes 1 point of damage per round for 2d4 rounds.",
@@ -5108,8 +5276,8 @@ window.LANG_INTERFACE = {
     "pt": "Fortitude CD 12 anula. Se falhar, sofre 1 ponto de dano por rodada durante 1d6 rodadas."
   },
   "ui.item.veneno_escorpiao_pedra.desc": {
-    "en": "-1 to attacks and -1 square of movement for 1d6 rounds. Fortitude DC 9 negates.",
-    "pt": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude dif. 9 anula."
+    "en": "-1 to attacks and -1 square of movement for 1d6 rounds. Fortitude DC 11 negates.",
+    "pt": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude dif. 11 anula."
   },
   "ui.item.veneno_fungo_acre.desc": {
     "en": "Fortitude DC 10 negates. On a failure, takes 1 point of damage per round for 1d4 rounds.",
@@ -5119,6 +5287,20 @@ window.LANG_INTERFACE = {
     "en": "Blinds for 1d4 rounds — -4 to attacks, no ranged (Fort. DC 11). Partial failure: -2 perception.",
     "pt": "Falha em Fortitude CD 11: cego por 1d4 rodadas, visão 1 quadrado, -5 percepção, -4 em ataques e sem ataques à distância. Sucesso: -2 percepção por 1d4 rodadas."
   },
+  "ui.veneno.melhoria_cd": {"en": "Resistance DC", "pt": "CD de resistência"},
+  "ui.veneno.melhoria_potencia": {"en": "Potency", "pt": "Potência"},
+  "ui.veneno.melhoria_duracao": {"en": "Duration", "pt": "Duração"},
+  "ui.veneno.aria_cd": {"en": "Resistance DC upgrade", "pt": "Melhoria da dificuldade de resistência"},
+  "ui.veneno.aria_potencia": {"en": "Potency upgrade", "pt": "Melhoria de potência"},
+  "ui.veneno.aria_duracao": {"en": "Duration upgrade", "pt": "Melhoria de duração"},
+  "ui.veneno.sem_melhoria": {"en": "No upgrade", "pt": "Sem melhoria"},
+  "ui.veneno.aprimorado": {"en": "Aprimorado (+2)", "pt": "Aprimorado (+2)"},
+  "ui.veneno.avancado": {"en": "Avançado (+4)", "pt": "Avançado (+4)"},
+  "ui.veneno.mortal": {"en": "Mortal (+6)", "pt": "Mortal (+6)"},
+  "ui.veneno.fortalecido": {"en": "Fortalecido (×1.5)", "pt": "Fortalecido (×1,5)"},
+  "ui.veneno.concentrado": {"en": "Concentrado (×2)", "pt": "Concentrado (×2)"},
+  "ui.veneno.destilado": {"en": "Destilado (+2)", "pt": "Destilado (+2)"},
+  "ui.veneno.prolongado": {"en": "Prolongado (+4)", "pt": "Prolongado (+4)"},
   "ui.item.vidro_acido_grande.desc": {
     "en": "Throw (4 sq., DEX attack). 2d6 acid + half on the next round. Corrodes the target's defence (−2 AC per hit).",
     "pt": "Arremesse (4 quad., ataque por DES). 2d6 de ácido + metade na rodada seguinte. Corrói a defesa do alvo (−2 CA por acerto)."
@@ -5359,6 +5541,10 @@ window.LANG_INTERFACE = {
     "en": "⚔ Weapons",
     "pt": "⚔ Armas"
   },
+  "ui.loja.aba.arremessaveis": {
+    "en": "🎯 Throwables",
+    "pt": "🎯 Arremessáveis"
+  },
   "ui.loja.aba.comprar": {
     "en": "🛒 Buy",
     "pt": "🛒 Comprar"
@@ -5382,6 +5568,22 @@ window.LANG_INTERFACE = {
   "ui.loja.aba.reparar": {
     "en": "🔧 Repair",
     "pt": "🔧 Reparar"
+  },
+  "ui.loja.aba.servicos": {
+    "en": "✨ Services",
+    "pt": "✨ Serviços"
+  },
+  "ui.templo.ressuscitar_nome": {
+    "en": "Resurrect {nome}",
+    "pt": "Ressuscitar {nome}"
+  },
+  "ui.templo.ressurreicao_templo_desc": {
+    "en": "Temple service: costs 30 coins. Returns with 1 HP.",
+    "pt": "Serviço do templo: custa 30 moedas. Retorna com 1 PV."
+  },
+  "ui.templo.ressuscitar": {
+    "en": "Resurrect",
+    "pt": "Ressuscitar"
   },
   "ui.loja.aba.vender": {
     "en": "💰 Sell",
@@ -9071,6 +9273,10 @@ window.LANG_INTERFACE = {
     "en": "BAB {bba} · {attr} {mod} · weapon {arma} · temporary {temp}",
     "pt": "BBA {bba} · {attr} {mod} · arma {arma} · temporários {temp}"
   },
+  "ui.status.detalhe_dano": {
+    "en": "{attr} {mod} · weapon bonus {arma} · other bonuses {temp}",
+    "pt": "{attr} {mod} · bônus da arma {arma} · outros bônus {temp}"
+  },
   "ui.status.doenca": {
     "en": "🦠 Disease",
     "pt": "🦠 Doença"
@@ -10022,6 +10228,14 @@ window.LANG_INTERFACE = {
   "ui.heroteste.confirmar": {
     "en": "Confirm and choose position",
     "pt": "Confirmar e escolher posição"
+  },
+  "ui.armadilha.chao_illusorio.queda": {
+    "en": "The illusory floor collapses beneath you. You fall {altura} levels and take {dano} damage.",
+    "pt": "O chão ilusório cede sob seus pés. Você cai {altura} níveis e sofre {dano} de dano."
+  },
+  "ui.armadilha.chao_illusorio.piso": {
+    "en": "You land on terrain level {nivel}.",
+    "pt": "Você cai no piso de nível {nivel}."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

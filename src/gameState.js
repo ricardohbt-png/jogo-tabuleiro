@@ -559,14 +559,14 @@ const GS = (() => {
     veneno_aranha_sombria: {
       id:'veneno_aranha_sombria', nome:'Veneno da Aranha Sombria', tipo:'veneno', loja:'mercado', preco:8, icone:'🕷️',
       permitidoPara:['todos'],
-      efeito:{ atributo:'forca', valor:'1d4', operacao:'reduzir', duracao:'1d6', save:'fortitude', dificuldade:8, anula:true },
-      descricao:'Reduz 1d4 de Força por 1d6 rodadas. Fortitude dif. 8 anula.'
+      efeito:{ atributo:'forca', valor:'1d4', operacao:'reduzir', duracao:'1d6', save:'fortitude', dificuldade:10, anula:true },
+      descricao:'Reduz 1d4 de Força por 1d6 rodadas. Fortitude dif. 10 anula.'
     },
     veneno_escorpiao_pedra: {
       id:'veneno_escorpiao_pedra', nome:'Veneno do Escorpião Pedra', tipo:'veneno', loja:'mercado', preco:12, icone:'🦂',
       permitidoPara:['todos'],
-      efeito:{ atributo:['ataque','movimento'], valor:[-1,-1], operacao:'penalidade', duracao:'1d6', save:'fortitude', dificuldade:9, anula:true },
-      descricao:'-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude dif. 9 anula.'
+      efeito:{ atributo:['ataque','movimento'], valor:[-1,-1], operacao:'penalidade', duracao:'1d6', save:'fortitude', dificuldade:11, anula:true },
+      descricao:'-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude dif. 11 anula.'
     },
     veneno_cobra_cuspidora: {
       id:'veneno_cobra_cuspidora', nome:'Veneno de Cobra Cuspidora', tipo:'veneno', loja:'mercado', preco:16, icone:'🐍',
@@ -793,6 +793,9 @@ const GS = (() => {
   }
 
   function _ponteTiles(state, ponte) {
+    if (Array.isArray(ponte?.tiles)) return ponte.tiles
+      .filter(p => Array.isArray(p) && p.length >= 2)
+      .map(p => [Number(p[0]), Number(p[1])]);
     const inicio = ponte?.inicio || ponte?.start;
     const fim = ponte?.fim || ponte?.end;
     const largura = Math.max(1, Math.min(3, Number(ponte?.largura ?? ponte?.width ?? 1) | 0));
@@ -807,7 +810,8 @@ const GS = (() => {
       const x0 = inicio[0] - Math.floor(largura / 2);
       for (let x = x0; x < x0 + largura; x++) for (let y = y0; y <= y1; y++) out.push([x, y]);
     }
-    return out;
+    const buracos = new Set((ponte?.buracos || []).map(p => `${p[0]},${p[1]}`));
+    return out.filter(([x, y]) => !buracos.has(`${x},${y}`));
   }
   function _ponteEm(x, y, state=gameState) {
     return (state?.pontes || []).some(p => _ponteTiles(state, p).some(([tx, ty]) => tx === x && ty === y));
@@ -898,18 +902,29 @@ const GS = (() => {
     return out;
   }
 
-  // Conjunto "x,y" de casas ocupadas por entidades vivas: monstros (footprint
-  // multi-tile via monsterTiles), outros jogadores e animados. A casa em (exX,exY)
-  // — a do próprio herói que vai se mover — é excluída para não bloquear a origem.
-  function _occupiedSet(exX, exY) {
+  const ALTURA_POR_QUADRADO_ALCANCE = 2;
+  const ALTURA_MINIMA_SOBREPOSICAO_VOO = 2 * ALTURA_POR_QUADRADO_ALCANCE;
+  function _podeCompartilharCasaVoando(a, b) {
+    const alturaA = alturaDe(a), alturaB = alturaDe(b);
+    return (!!a?.voo && alturaA > 0 && alturaA - alturaB >= ALTURA_MINIMA_SOBREPOSICAO_VOO)
+      || (!!b?.voo && alturaB > 0 && alturaB - alturaA >= ALTURA_MINIMA_SOBREPOSICAO_VOO);
+  }
+
+  // Casas de entidades vivas que realmente bloqueiam este ator. Um voo dois
+  // quadrados acima pode compartilhar o tile com heróis e monstros.
+  function _occupiedSet(exX, exY, actor=null) {
     const occ = new Set();
     for (const m of (gameState.monsters || [])) {
       if (!m || m.hp <= 0) continue;
+      if (_podeCompartilharCasaVoando(actor, m)) continue;
       for (const [tx, ty] of monsterTiles(m)) occ.add(`${tx},${ty}`);
     }
     for (const p of (gameState.players || [])) {
       if (!p || p.alive === false) continue;
-      if (!(p.pos[0] === exX && p.pos[1] === exY)) occ.add(`${p.pos[0]},${p.pos[1]}`);
+      const isActor = p === actor || (p.id && actor?.id && p.id === actor.id)
+        || (!actor?.id && p.pos[0] === exX && p.pos[1] === exY);
+      if (!isActor && !_podeCompartilharCasaVoando(actor, p))
+        occ.add(`${p.pos[0]},${p.pos[1]}`);
       for (const a of (p.animados || [])) {
         if (a && (a.vida_atual ?? 1) > 0) occ.add(`${a.pos[0]},${a.pos[1]}`);
       }
@@ -1232,7 +1247,7 @@ const GS = (() => {
       actor: (gameState.players || []).find(p => p.pos?.[0] === fx && p.pos?.[1] === fy) || {} };
     if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) return null;
     const openDoors = doorSets(gameState).open;
-    const occupied  = _occupiedSet(fx, fy);
+    const occupied  = _occupiedSet(fx, fy, moveCtx?.actor);
     if (!exploredSet.has(`${tx},${ty}`)) return null;
     // O destino pode estar dois ou mais níveis acima, mas ainda ser alcançável
     // por uma sequência de degraus de 1 nível; a restrição é avaliada em cada
@@ -2050,6 +2065,9 @@ const GS = (() => {
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
   function escaparBau()             { send({ type: 'escapar_bau' }); }
   function equipFromBag(i) { send({ type: 'equip_from_bag', slot_index: i }); }
+  function setAutoEquipArrows(enabled, order) {
+    send({ type: 'set_auto_equip_arrows', enabled: !!enabled, order: Array.isArray(order) ? order : [] });
+  }
   function quickEquipFromBag(i) { send({ type: 'quick_equip_from_bag', slot_index: i }); }
   function unequip(key)    { send({ type: 'unequip',        slot_key: key }); }
   function repairItem(slot, bagIndex = null) {
@@ -2661,7 +2679,8 @@ const GS = (() => {
   }
 
   function custoVerticalAlcance(alturaA, alturaB) {
-    return Math.ceil(Math.abs(alturaDe({ altura: alturaA }) - alturaDe({ altura: alturaB })) / 2);
+    return Math.ceil(Math.abs(alturaDe({ altura: alturaA }) - alturaDe({ altura: alturaB }))
+      / ALTURA_POR_QUADRADO_ALCANCE);
   }
 
   function custoVerticalTerreno(posA, alturaA, posB, alturaB, state=null) {
@@ -3182,7 +3201,8 @@ const GS = (() => {
       // Caminha somente até a melhor casa acessível antes da porta. A porta
       // permanece fechada e a decisão de abri-la continua sendo do jogador.
       const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
-      const path = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left, true);
+      const path = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty,
+        myP.moves_left, true, { state: gameState, materiais: gameState.materiais, actor: myP });
       if (path && path.length) {
         if (myP.petrificado) return { type: 'movement_blocked', reason: 'petrified' };
         return { type: 'move', path, stopAtDoor: true };
@@ -3214,7 +3234,8 @@ const GS = (() => {
     if (myP.moves_left <= 0) return null;
     if (tx === myP.pos[0] && ty === myP.pos[1]) return null;
     const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
-    const path   = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty, myP.moves_left, true);
+    const path   = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty,
+      myP.moves_left, true, { state: gameState, materiais: gameState.materiais, actor: myP });
     if (path && path.length) return { type: 'move', path };
     return null;
   }
@@ -3449,6 +3470,7 @@ const GS = (() => {
     escaparEstomago,
     escaparBau,
     equipFromBag,
+    setAutoEquipArrows,
     quickEquipFromBag,
     unequip,
     repairItem,

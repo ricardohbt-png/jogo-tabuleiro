@@ -19,6 +19,7 @@ const InventoryModal = (() => {
   let _readOnly = false;
   let _storageCtx = null;
   let _selected = null;   // item selecionado (tap-to-select): {kind:'bag',index} | {kind:'gear',slotKey}
+  let _arrowAutoExpanded = false;
   // Escolha exclusiva do controle para consumíveis: mantém o item selecionado
   // enquanto o jogador alterna entre Usar e Cancelar pelo analógico direito.
   let _gamepadAction = null; // {index, choice:'use'|'cancel'}
@@ -63,6 +64,11 @@ const InventoryModal = (() => {
     { key: 'ring1',    small: true,  magic: false, empty: '💍' },
     { key: 'boots',    small: false, magic: false, empty: '👢' },
     { key: 'ring2',    small: true,  magic: false, empty: '💍' },
+  ];
+  const AUTO_ARROW_TYPES = [
+    { id: 'flechas', key: 'ui.inv.auto_arrow.normal' },
+    { id: 'flechas_incendiarias', key: 'ui.inv.auto_arrow.fire' },
+    { id: 'flechas_prata', key: 'ui.inv.auto_arrow.silver' },
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
@@ -162,6 +168,26 @@ const InventoryModal = (() => {
 .inv-ammo-count{position:absolute;right:-5px;bottom:-5px;z-index:5;min-width:19px;height:19px;padding:0 4px;
   display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1px solid #ffe29a;border-radius:10px;
   background:#3b2410;color:#fff0bd;font:700 11px/1 Georgia,serif;box-shadow:0 1px 4px rgba(0,0,0,.9);pointer-events:none;}
+.inv-arrow-auto{margin:0 auto 14px;max-width:420px;padding:9px 11px;border:1px solid #9c783a;border-radius:6px;
+  background:linear-gradient(145deg,rgba(28,20,11,.95),rgba(10,9,8,.95));color:#ead8b0;font:12px/1.35 Georgia,serif;}
+.inv-arrow-auto-toggle{width:100%;display:flex;align-items:center;gap:8px;padding:2px 0;border:0;background:none;color:#f0d98a;
+  font:700 12px/1.35 Georgia,serif;text-align:left;cursor:pointer;}
+.inv-arrow-auto-toggle>span:first-child{flex:1;}
+.inv-arrow-auto-toggle:hover{color:#fff0b3;}
+.inv-arrow-auto-state{color:#c9b991;font:10px/1.2 Arial,sans-serif;}
+.inv-arrow-auto-chevron{color:#d7a94c;font:700 16px/1 Arial,sans-serif;transition:transform .15s ease;}
+.inv-arrow-auto.expanded .inv-arrow-auto-chevron{transform:rotate(90deg);}
+.inv-arrow-auto-options{padding-top:7px;}
+.inv-arrow-auto-head{display:flex;align-items:center;justify-content:flex-end;gap:8px;color:#f0d98a;font-weight:bold;}
+.inv-arrow-auto-head label{display:flex;align-items:center;gap:7px;cursor:pointer;}
+.inv-arrow-auto-head input{accent-color:#d7a94c;}
+.inv-arrow-auto-hint{display:block;margin:4px 0 7px;color:#bcae92;font-size:10px;}
+.inv-arrow-order{display:flex;flex-direction:column;gap:4px;}
+.inv-arrow-order-row{display:flex;align-items:center;gap:7px;min-height:24px;padding:2px 5px;border-radius:4px;background:#ffffff08;}
+.inv-arrow-order-row .inv-arrow-rank{color:#d8b967;font-weight:bold;min-width:14px;}
+.inv-arrow-order-row .inv-arrow-name{flex:1;}
+.inv-arrow-order-row button{width:23px;height:22px;padding:0;border:1px solid #70572e;border-radius:4px;background:#2b1e11;color:#ffe5a4;cursor:pointer;}
+.inv-arrow-order-row button:disabled{opacity:.35;cursor:default;}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -285,6 +311,7 @@ const InventoryModal = (() => {
     _selected = null;
     _gamepadAction = null;
     _lastBagPress = null;
+    _arrowAutoExpanded = false;
     _injectStyles();
     _ensureDom();
     _render();
@@ -300,6 +327,7 @@ const InventoryModal = (() => {
     _selected = null;
     _gamepadAction = null;
     _lastBagPress = null;
+    _arrowAutoExpanded = false;
     if(typeof window._ocultarAtalhosNoMenu === 'function') window._ocultarAtalhosNoMenu();
     const overlay = document.getElementById('inv-modal-overlay');
     if(overlay) overlay.classList.remove('open');
@@ -545,6 +573,76 @@ const InventoryModal = (() => {
     }
   }
 
+  function _renderArrowAutoEquip(overlay, player){
+    if(_readOnly) return;
+    const host = overlay.querySelector('.inv-arrow-auto-host');
+    if(!host) return;
+    const allowed = new Set(AUTO_ARROW_TYPES.map(entry => entry.id));
+    const rawOrder = Array.isArray(player.auto_equip_arrows_order) ? player.auto_equip_arrows_order : [];
+    const order = rawOrder.filter((id, i) => allowed.has(id) && rawOrder.indexOf(id) === i);
+    for(const entry of AUTO_ARROW_TYPES) if(!order.includes(entry.id)) order.push(entry.id);
+    const panel = document.createElement('section');
+    panel.className = 'inv-arrow-auto';
+    panel.innerHTML = `
+      <button type="button" class="inv-arrow-auto-toggle" aria-expanded="false">
+        <span>${t('ui.inv.auto_arrow.title')}</span>
+        <span class="inv-arrow-auto-state"></span>
+        <span class="inv-arrow-auto-chevron" aria-hidden="true">›</span>
+      </button>
+      <div class="inv-arrow-auto-options" hidden>
+        <div class="inv-arrow-auto-head">
+          <label><input type="checkbox" class="inv-arrow-auto-enabled" ${player.auto_equip_arrows_enabled ? 'checked' : ''}>${t('ui.inv.auto_arrow.enabled')}</label>
+        </div>
+        <small class="inv-arrow-auto-hint">${t('ui.inv.auto_arrow.hint')}</small>
+        <div class="inv-arrow-order"></div>
+      </div>`;
+    const toggle = panel.querySelector('.inv-arrow-auto-toggle');
+    const options = panel.querySelector('.inv-arrow-auto-options');
+    const status = panel.querySelector('.inv-arrow-auto-state');
+    const enabledInput = panel.querySelector('.inv-arrow-auto-enabled');
+    const updateStatus = enabled => {
+      status.textContent = t(enabled ? 'ui.inv.auto_arrow.status_enabled' : 'ui.inv.auto_arrow.status_disabled');
+    };
+    const setExpanded = expanded => {
+      _arrowAutoExpanded = !!expanded;
+      panel.classList.toggle('expanded', _arrowAutoExpanded);
+      toggle.setAttribute('aria-expanded', String(_arrowAutoExpanded));
+      options.hidden = !_arrowAutoExpanded;
+    };
+    updateStatus(!!player.auto_equip_arrows_enabled);
+    setExpanded(_arrowAutoExpanded);
+    toggle.onclick = () => setExpanded(!_arrowAutoExpanded);
+    enabledInput.onchange = event => {
+      updateStatus(event.target.checked);
+      GS.setAutoEquipArrows(event.target.checked, order);
+    };
+    const list = panel.querySelector('.inv-arrow-order');
+    order.forEach((id, index) => {
+      const entry = AUTO_ARROW_TYPES.find(item => item.id === id);
+      const row = document.createElement('div');
+      row.className = 'inv-arrow-order-row';
+      row.innerHTML = `<span class="inv-arrow-rank">${index + 1}.</span><span class="inv-arrow-name"></span>`;
+      row.querySelector('.inv-arrow-name').textContent = t(entry.key);
+      const up = document.createElement('button');
+      up.type = 'button'; up.textContent = '↑'; up.disabled = index === 0;
+      up.title = t('ui.inv.auto_arrow.up'); up.setAttribute('aria-label', up.title);
+      up.onclick = () => {
+        const next = order.slice(); [next[index - 1], next[index]] = [next[index], next[index - 1]];
+        GS.setAutoEquipArrows(!!panel.querySelector('.inv-arrow-auto-enabled').checked, next);
+      };
+      const down = document.createElement('button');
+      down.type = 'button'; down.textContent = '↓'; down.disabled = index === order.length - 1;
+      down.title = t('ui.inv.auto_arrow.down'); down.setAttribute('aria-label', down.title);
+      down.onclick = () => {
+        const next = order.slice(); [next[index], next[index + 1]] = [next[index + 1], next[index]];
+        GS.setAutoEquipArrows(!!panel.querySelector('.inv-arrow-auto-enabled').checked, next);
+      };
+      row.append(up, down);
+      list.appendChild(row);
+    });
+    host.appendChild(panel);
+  }
+
   function _renderBag(overlay, player){
     const bar = overlay.querySelector('.inv-bagbar');
     bar.innerHTML = '';
@@ -716,6 +814,7 @@ const InventoryModal = (() => {
               </div>
               ${typeof window._renderAcoesExplicacaoHTML === 'function' ? window._renderAcoesExplicacaoHTML() : ''}
               <div class="inv-grid"></div>
+              <div class="inv-arrow-auto-host"></div>
               <div class="inv-gold">🪙 <span></span></div>
               <div class="inv-bagbar"></div>
             </div>
@@ -727,6 +826,7 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-close').onclick = close;
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
+    _renderArrowAutoEquip(overlay, player);
     _renderBag(overlay, player);
     _renderGamepadAction(overlay);
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();

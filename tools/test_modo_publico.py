@@ -166,14 +166,14 @@ def secao_portao():
         "upload_story", "upload_scene_media", "save_scenes", "upload_tavern_art",
         "upload_city_art", "upload_refugio_art", "save_world_cities",
         "save_city_shops", "save_world_adventures", "upload_dungeon",
-        "upload_campaign", "upload_custom_monster", "upload_custom_item",
+        "upload_campaign", "upload_custom_monster", "save_monster_hostility", "upload_custom_item",
         "upload_item_art", "upload_monster_art", "upload_prisoner",
         "objeto_upload",
     ]
-    check("a lista tem os 17 handlers de escrita", len(ESCRITA) == 17,
+    check("a lista tem os 18 handlers de escrita", len(ESCRITA) == 18,
           f"tem {len(ESCRITA)}")
     faltando = [t for t in ESCRITA if not S._handler_bloqueado_no_publico(t)]
-    check("todos os 17 são recusados no modo público", not faltando,
+    check("todos os 18 são recusados no modo público", not faltando,
           f"passaram pelo portão: {faltando}")
     check("um handler de LEITURA não é bloqueado",
           not S._handler_bloqueado_no_publico("load_scenes"))

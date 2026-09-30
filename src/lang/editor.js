@@ -1995,6 +1995,134 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.painel.tamanho_casas": {
     "en": "{w}×{h} squares",
     "pt": "{w}×{h} casas"
+  },
+  "ui.editor.masmorra.armadilha.so_ponte": {
+    "en": "🌉 Bridge only, with a floor 1 level below",
+    "pt": "🌉 Só em ponte com piso inferior 1 nível abaixo"
+  },
+  "ui.editor.masmorra.painel.armadilha_permanente": {
+    "en": "permanent trap — can trigger again until disarmed",
+    "pt": "armadilha permanente — pode disparar novamente até ser desarmada"
+  },
+  "ui.editor.masmorra.painel.armadilha_permanente_curta": {
+    "en": "permanent trap — triggers again until disarmed",
+    "pt": "armadilha permanente — dispara novamente até ser desarmada"
+  },
+  "ui.editor.masmorra.painel.permanente_xp": {
+    "en": "Grants no XP when triggered; successfully disarming it grants double.",
+    "pt": "Não concede XP ao disparar; desarmá-la com sucesso concede o dobro."
+  },
+  "ui.editor.masmorra.painel.bau_permanente_xp": {
+    "en": "A permanent trap grants no XP when triggered; successfully disarming it grants double.",
+    "pt": "Armadilha permanente não concede XP ao disparar; desarmá-la com sucesso concede o dobro."
+  },
+  "ui.editor.masmorra.valid.armadilha_permanente_invalido": {
+    "en": "{tipo} at {pos} with invalid permanent flag",
+    "pt": "{tipo} em {pos} com permanente inválido"
+  },
+  "ui.editor.masmorra.valid.chao_permanente": {
+    "en": "chao_illusorio at {pos} cannot be permanent because the bridge collapses when triggered",
+    "pt": "chao_illusorio em {pos} não pode ser permanente porque a ponte colapsa no disparo"
+  },
+  "ui.editor.masmorra.valid.chao_sem_ponte": {
+    "en": "chao_illusorio at {pos} must be on a bridge",
+    "pt": "chao_illusorio em {pos} precisa estar sobre uma ponte"
+  },
+  "ui.editor.masmorra.valid.chao_ponte_diferente": {
+    "en": "chao_illusorio at {pos} is linked to a different bridge",
+    "pt": "chao_illusorio em {pos} está vinculado a uma ponte diferente"
+  },
+  "ui.editor.masmorra.valid.chao_sem_piso": {
+    "en": "chao_illusorio at {pos} needs FLOOR directly below",
+    "pt": "chao_illusorio em {pos} precisa ter FLOOR diretamente abaixo"
+  },
+  "ui.editor.masmorra.valid.chao_sem_queda": {
+    "en": "chao_illusorio at {pos} needs at least 1 level of drop",
+    "pt": "chao_illusorio em {pos} precisa ter pelo menos 1 nível de queda"
+  },
+  "ui.editor.masmorra.valid.bau_permanente_invalido": {
+    "en": "trapped chest at {pos} with invalid permanent flag",
+    "pt": "baú-armadilha em {pos} com permanente inválido"
+  },
+  "ui.editor.masmorra.valid.bau_permanente_sem_monstro": {
+    "en": "trapped chest at {pos} without a monster type",
+    "pt": "baú-armadilha em {pos} sem tipo de monstro"
+  },
+  "ui.editor.masmorra.valid.decor_trap_permanente_invalido": {
+    "en": "{tipo} in the decoration at {pos} with invalid permanent flag",
+    "pt": "{tipo} na decoração em {pos} com permanente inválido"
+  },
+  "ui.editor.masmorra.valid.decor_chao_permanente": {
+    "en": "chao_illusorio in the decoration at {pos} cannot be permanent",
+    "pt": "chao_illusorio na decoração em {pos} não pode ser permanente"
+  },
+  "ui.editor.masmorra.hostilidade.titulo": {
+    "en": "Hostility for this placement",
+    "pt": "Hostilidade desta colocação"
+  },
+  "ui.editor.masmorra.hostilidade.so_este": {
+    "en": "This choice applies only to this monster on the map.",
+    "pt": "Esta escolha vale só para este monstro no mapa."
+  },
+  "ui.editor.masmorra.hostilidade.bestiario": {
+    "en": "Use the Bestiary default",
+    "pt": "Usar padrão do Bestiário"
+  },
+  "ui.editor.masmorra.hostilidade.nenhuma": {
+    "en": "No hostility",
+    "pt": "Sem hostilidade"
+  },
+  "ui.editor.masmorra.hostilidade.escolher": {
+    "en": "Choose hostility for this monster",
+    "pt": "Escolher hostilidade para este monstro"
+  },
+  "ui.editor.masmorra.hostilidade.todos": {
+    "en": "Hostile to all monsters",
+    "pt": "Hostil a todos os monstros"
+  },
+  "ui.editor.masmorra.hostilidade.subtipos": {
+    "en": "Subtypes ({n})",
+    "pt": "Subtipos ({n})"
+  },
+  "ui.editor.masmorra.hostilidade.criaturas": {
+    "en": "Specific creatures ({n})",
+    "pt": "Criaturas específicas ({n})"
+  },
+  "ui.editor.masmorra.hostilidade.ou": {
+    "en": "Filters are combined with OR.",
+    "pt": "Os filtros são combinados por OU."
+  },
+  "ui.editor.subtipo.animal": {
+    "en": "Animal",
+    "pt": "Animal"
+  },
+  "ui.editor.subtipo.abissal": {
+    "en": "Abyssal",
+    "pt": "Abissal"
+  },
+  "ui.editor.subtipo.aberracao": {
+    "en": "Aberration",
+    "pt": "Aberração"
+  },
+  "ui.editor.subtipo.besta_magica": {
+    "en": "Magical Beast",
+    "pt": "Besta Mágica"
+  },
+  "ui.editor.subtipo.construto": {
+    "en": "Construct",
+    "pt": "Construto"
+  },
+  "ui.editor.subtipo.morto_vivo": {
+    "en": "Undead",
+    "pt": "Morto-Vivo"
+  },
+  "ui.editor.subtipo.vegetal": {
+    "en": "Plant",
+    "pt": "Vegetal"
+  },
+  "ui.editor.subtipo.raca_padrao": {
+    "en": "Standard Race",
+    "pt": "Raça Padrão"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);

@@ -52,6 +52,10 @@ window.LANG_NARRACAO = {
     "en": "🫥 **{alvo}**'s Invisibility ends.",
     "pt": "🫥 A Invisibilidade de **{alvo}** termina."
   },
+  "narracao.assassino_goblin_some_nas_sombras": {
+    "en": "🌑 **{monstro}** hides in the shadows! (d20={d20}+{bonus_dex}={total} vs {dificuldade}) — invisible until attacking.",
+    "pt": "🌑 **{monstro}** se esconde nas sombras! (d20={d20}+{bonus_dex}={total} vs {dificuldade}) — invisível até atacar."
+  },
   "narracao.a_invocacao_do_pergaminho_surge_hostil_p": {
     "en": "😈 The scroll's summon appears **HOSTILE** near **{heroi}**!",
     "pt": "😈 A invocação do pergaminho surge **HOSTIL** perto de **{heroi}**!"
@@ -2396,6 +2400,10 @@ window.LANG_NARRACAO = {
     "en": "💫 **RESURRECTION!** **{heroi}** brings **{alvo}** back to life with **{alvo_hp} HP**! (🍖-{custo_fome} 💧-{custo_sede})",
     "pt": "💫 **RESSURREIÇÃO!** **{heroi}** traz **{alvo}** de volta à vida com **{alvo_hp} HP**! (🍖-{custo_fome} 💧-{custo_sede})"
   },
+  "narracao.templo_ressuscita_aliado_com_1_pv": {
+    "en": "⛪ **{heroi}** pays {preco} coins at the temple and brings **{alvo}** back to life with **1 HP**.",
+    "pt": "⛪ **{heroi}** paga {preco} moedas no templo e traz **{alvo}** de volta à vida com **1 PV**."
+  },
   "narracao.retorna_a_forma_normal": {
     "en": "🌙 **{heroi}** returns to their normal form.",
     "pt": "🌙 **{heroi}** retorna à forma normal."
@@ -2932,6 +2940,10 @@ window.LANG_NARRACAO = {
     "en": "🏹 **{heroi}** used their last projectile!",
     "pt": "🏹 **{heroi}** usou o último projétil!"
   },
+  "narracao.auto_equipou_municao": {
+    "en": "🏹 **{heroi}** automatically equipped **{municao}**.",
+    "pt": "🏹 **{heroi}** equipou automaticamente **{municao}**."
+  },
   "narracao.varre_a_cauda_pela_retaguarda": {
     "en": "🦂 **{monstro}** sweeps its tail through the back ranks!",
     "pt": "🦂 **{monstro}** varre a cauda pela retaguarda!"
@@ -2963,6 +2975,14 @@ window.LANG_NARRACAO = {
   "narracao.cobertura_baixa": {
     "en": "🛡️ {alvo} is behind low cover: +{bonus} AC (half cover).",
     "pt": "🛡️ {alvo} está atrás de um obstáculo baixo: +{bonus} de CA (meia cobertura)."
+  },
+  "narracao.evito_chao_illusorio": {
+    "en": "✨ {alvo} catches the false floor in time and crosses the bridge safely.",
+    "pt": "✨ {alvo} percebe o chão falso a tempo e atravessa a ponte em segurança."
+  },
+  "narracao.cai_pela_ponte_chao_illusorio": {
+    "en": "💥 {alvo} falls through the illusory floor from height {altura} and takes {dano} damage.",
+    "pt": "💥 {alvo} cai pelo chão ilusório de uma altura de {altura} e sofre {dano} de dano."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

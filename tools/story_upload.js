@@ -158,6 +158,13 @@
   }
   function loadScenes() { return request("load_scenes", {}).then((m) => m.scenes); }
   function saveScenes(scenes) { return request("save_scenes", { scenes: scenes }).then((m) => m.scenes); }
+  function loadMonsterHostility() {
+    return request("load_monster_hostility", {}).then((m) => m.config || {});
+  }
+  function saveMonsterHostility(config) {
+    return request("save_monster_hostility", { config: config })
+      .then((m) => m.config || {});
+  }
 
   // Salva uma cópia personalizada sem tocar nas definições nativas do servidor.
   function saveCustomMonster(monster) {
@@ -248,7 +255,7 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, createTestDungeon: createTestDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, saveCustomItem: saveCustomItem, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, uploadRefugioArt: uploadRefugioArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, createTestDungeon: createTestDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, loadMonsterHostility: loadMonsterHostility, saveMonsterHostility: saveMonsterHostility, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, saveCustomItem: saveCustomItem, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, uploadRefugioArt: uploadRefugioArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
   window.EDITOR_CLIENTE = { url: clienteURL, emArquivoLocal: editorEmArquivoLocal };
 
   // Aviso fixo quando o editor foi aberto por duplo clique no arquivo. A prévia

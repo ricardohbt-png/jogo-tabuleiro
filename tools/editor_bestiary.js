@@ -4,9 +4,14 @@
   const root = document.getElementById("bestiary-view");
   let selected = null;
   let filter = "";
+  let hostility = {};
+  let hostilityLoaded = false;
+  let hostilityLoading = null;
+  let hostilityLoadError = "";
 
   const esc = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   const list = () => (((window.EDITOR_CATALOG && window.EDITOR_CATALOG.monsters) || []).concat(window.EDITOR_CUSTOM_MONSTERS || []));
+  const monstersByType = () => [...new Map(list().filter(m => m && m.type).map(m => [m.type, m])).values()];
   const spellLibrary = () => (window.EDITOR_CATALOG && window.EDITOR_CATALOG.spells) || [];
   const mod = (score) => Math.floor((Number(score || 10) - 10) / 2);
   const visionRadius = m => Math.max(1, Number(m.movement_exception ? (m.movement != null ? m.movement : 6) : 6)
@@ -504,6 +509,87 @@
     if (m.loot_table) rows.push("Tesouro variável (tabela de loot)");
     return rows.length ? rows.map(esc).join("<br>") : "Nenhum tesouro definido.";
   }
+  function ensureHostilityLoaded() {
+    if (hostilityLoaded || hostilityLoading) return hostilityLoading;
+    hostilityLoading = Promise.resolve().then(() => {
+      if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.loadMonsterHostility)
+        throw new Error("Inicie o servidor para carregar as configurações de hostilidade.");
+      return window.EDITOR_SAVE.loadMonsterHostility();
+    }).then(config => {
+      hostility = config && typeof config === "object" ? config : {};
+    }).catch(err => {
+      hostility = {};
+      hostilityLoadError = err && err.message ? err.message : "Não foi possível carregar as configurações.";
+    }).finally(() => {
+      hostilityLoaded = true;
+      hostilityLoading = null;
+      render();
+    });
+    return hostilityLoading;
+  }
+
+  function subtypeOptions() {
+    const labels = {construto:"Construto", morto_vivo:"Morto-Vivo", animal:"Animal",
+      abissal:"Abissal", vegetal:"Vegetal", raca_padrao:"Raça Padrão",
+      aberracao:"Aberração", besta_magica:"Besta Mágica"};
+    const values = new Set(monstersByType().map(m => m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")));
+    return [...values].sort().map(id => ({id, name:labels[id] || pretty(id)}));
+  }
+
+  function hostilityEditor(monster) {
+    const config = hostility[monster.type] || {all_monsters:false, subtypes:[], types:[]};
+    const subtypes = new Set(config.subtypes || []);
+    const types = new Set(config.types || []);
+    const options = monstersByType().sort((a,b) => String(a.name).localeCompare(String(b.name), "pt-BR"));
+    const loadNotice = hostilityLoadError
+      ? `<p class="best-hostility-status bad">${esc(hostilityLoadError)}</p>` : "";
+    return `<section class="best-hostility" data-hostility-type="${esc(monster.type)}">
+      <h2>Hostilidade entre monstros</h2>
+      <p>Os filtros abaixo são combinados por OU. Sem filtros, esta criatura não inicia combate contra outros monstros.</p>
+      ${loadNotice}
+      <label class="best-hostility-all"><input type="checkbox" data-hostility-all ${config.all_monsters ? "checked" : ""}> Todos os monstros</label>
+      <details><summary>Escolher subtipos (${subtypes.size})</summary><div class="best-hostility-options">${subtypeOptions().map(x => `<label><input type="checkbox" data-hostility-subtype="${esc(x.id)}" ${subtypes.has(x.id) ? "checked" : ""}> ${esc(x.name)}</label>`).join("")}</div></details>
+      <details><summary>Escolher criaturas específicas (${types.size})</summary><div class="best-hostility-options">${options.map(x => `<label><input type="checkbox" data-hostility-monster="${esc(x.type)}" ${types.has(x.type) ? "checked" : ""}> ${esc(x.name)}</label>`).join("")}</div></details>
+      <button type="button" class="best-hostility-save">Salvar hostilidade</button><span class="best-hostility-status" aria-live="polite"></span>
+    </section>`;
+  }
+
+  function bindHostilityEditor() {
+    const panel = root.querySelector(".best-hostility");
+    if (!panel) return;
+    const save = panel.querySelector(".best-hostility-save");
+    save.onclick = async () => {
+      const status = panel.querySelector(".best-hostility-status");
+      if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.saveMonsterHostility) {
+        status.textContent = "Inicie o servidor para salvar.";
+        status.classList.add("bad");
+        return;
+      }
+      const monsterType = panel.dataset.hostilityType;
+      const config = {
+        all_monsters: !!panel.querySelector("[data-hostility-all]").checked,
+        subtypes: [...panel.querySelectorAll("[data-hostility-subtype]:checked")].map(x => x.dataset.hostilitySubtype),
+        types: [...panel.querySelectorAll("[data-hostility-monster]:checked")].map(x => x.dataset.hostilityMonster),
+      };
+      const next = Object.assign({}, hostility);
+      if (config.all_monsters || config.subtypes.length || config.types.length) next[monsterType] = config;
+      else delete next[monsterType];
+      save.disabled = true;
+      status.textContent = "Salvando…";
+      status.classList.remove("bad");
+      try {
+        hostility = await window.EDITOR_SAVE.saveMonsterHostility(next);
+        render();
+        const freshStatus = root.querySelector(".best-hostility-status");
+        if (freshStatus) freshStatus.textContent = "✓ Configuração salva.";
+      } catch (err) {
+        save.disabled = false;
+        status.textContent = "Falha ao salvar: " + (err && err.message ? err.message : "erro desconhecido");
+        status.classList.add("bad");
+      }
+    };
+  }
+
   function details(m) {
     const rawMonster = m;
     m = equipmentPreview(m);
@@ -524,6 +610,7 @@
     return `<article class="best-card">
       <section class="best-media">${imageBox(`../assets/retratos/monstros/${m.portrait || m.type}.png`, "best-portrait", "Retrato\na adicionar", m.image && m.image !== (m.portrait || m.type) ? `../assets/retratos/monstros/${m.image}.png` : "")}${imageBox(`../assets/pawns/monstros/${m.image || m.type}/${m.image || m.type}.png`, "best-mini", "Miniatura\nindisponível")}</section>
       <section class="best-sheet"><header class="best-head"><div><h1>${esc(m.emoji || "") } ${esc(m.name)}</h1><p><strong>Subtipo: ${esc(({construto:"Construto",morto_vivo:"Morto-Vivo",animal:"Animal",abissal:"Abissal",vegetal:"Vegetal",raca_padrao:"Raça Padrão"})[m.subtipo || (m.undead ? "morto_vivo" : "raca_padrao")] || "Raça Padrão")}</strong></p><p>${esc(m.type)} · IA: <strong>${esc(pretty(m.ai_type))}</strong></p></div><div class="nd-pair"><span>ND definido <b>${esc(nd(m.cr != null ? m.cr : m.tier || "—"))}</b></span><span title="Estimativa contra grupos de 2, 4 e 6 heróis, considerando habilidades.">ND estimado (6 heróis) <b>${esc(nd(ndProfiles[0].groups[6].abilities))}</b><small>${esc(profileText)}</small><small title="Grupo sem habilidades próprias, mas contando as habilidades do monstro">Sem habilidades dos heróis: ${esc(baseProfileText)}</small></span></div></header>
+      ${hostilityEditor(rawMonster)}
       <div class="best-stats"><div><b>PV</b><span>${esc(m.hp || "—")}</span></div><div><b>CA total</b><span>${esc(m.ac || "—")}</span></div><div><b>Armadura natural</b><span>${esc(m.natural_armor != null ? m.natural_armor : Math.max(0, Number(m.ac || 10) - 10 - mod(m.dex)))}</span></div><div><b>Movimento</b><span>${esc(m.movement || "—")}</span></div><div><b>Raio de visão</b><span title="${m.visao_escuro || m.darkvision_range ? "Visão no escuro: objetos não bloqueiam, apenas paredes." : "Objetos altos e paredes bloqueiam a visão."}">${esc(visionRadius(m))}${m.visao_escuro || m.darkvision_range ? " 👁️" : ""}</span></div><div><b>Ataques</b><span>${attacks.reduce((n,a) => n + Number(a.num_attacks || 1), 0)}</span></div><div><b>Iniciativa</b><span>${esc(Number(m.dex || 10) + mod(m.int_))}</span></div><div><b>Percepção</b><span>${esc(perception)}</span></div></div>
       <p class="best-perception-note"><b>Percepção:</b> valor base da ficha; aliados vivos a até 3 casas podem conceder +1 durante furtividade.</p>
       <div class="best-attributes"><div><b>FOR</b>${esc(m.str_ != null ? m.str_ : "—")} <small>${m.str_ != null ? (mod(m.str_) >= 0 ? "+" : "") + mod(m.str_) : ""}</small></div><div><b>DES</b>${esc(m.dex != null ? m.dex : "—")} <small>${m.dex != null ? (mod(m.dex) >= 0 ? "+" : "") + mod(m.dex) : ""}</small></div><div><b>CON</b>${esc(m.con_ != null ? m.con_ : "—")} <small>${m.con_ != null ? (mod(m.con_) >= 0 ? "+" : "") + mod(m.con_) : ""}</small></div><div><b>INT</b>${esc(m.int_ != null ? m.int_ : "—")} <small>${m.int_ != null ? (mod(m.int_) >= 0 ? "+" : "") + mod(m.int_) : ""}</small></div></div>
@@ -537,6 +624,11 @@
       </section></article>`;
   }
   function render() {
+    if (!hostilityLoaded) {
+      root.innerHTML = `<p class="best-hostility-loading">Carregando configurações de hostilidade…</p>`;
+      ensureHostilityLoaded();
+      return;
+    }
     // A lista é recriada ao selecionar uma criatura. Preserve a posição antes
     // de substituir o HTML; sem isso, cada clique devolve o bestiário ao topo.
     const previousList = root.querySelector(".best-list");
@@ -553,6 +645,7 @@
     const search = document.getElementById("best-search");
     search.oninput = () => { filter = search.value; render(); };
     root.querySelectorAll(".best-row").forEach(btn => btn.onclick = () => { selected = btn.dataset.type; render(); });
+    bindHostilityEditor();
   }
   window.EDITOR_BESTIARY = {
     render,

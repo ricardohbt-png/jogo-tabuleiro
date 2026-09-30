@@ -283,7 +283,10 @@ console.log('\n[13] Explosão da Mina Terrestre (armadilha_disparo)');
 {
   const GSJS = fs.readFileSync(path.join(raiz, 'src', 'gameState.js'), 'utf8');
   check('gameState repassa armadilha_disparo', /case 'armadilha_disparo':\s*(\/\/[^\n]*)?\s*_emit\('armadilhaDisparo', msg\)/.test(GSJS));
-  check('game.js escuta armadilhaDisparo', /^GS\.on\('armadilhaDisparo', msg => \{ try\{ _somDisparoArmadilha\(msg\); \}catch\(e\)\{\} \}\);/m.test(GAME));
+  // O ouvinte também dispara as animações das armadilhas; o som tem de estar no
+  // corpo dele, dentro do próprio try (uma animação quebrada não o silencia).
+  const _ouvinteArm = (GAME.match(/^GS\.on\('armadilhaDisparo', msg => \{[\s\S]*?^\}\);/m) || [''])[0];
+  check('game.js escuta armadilhaDisparo', /try\{ _somDisparoArmadilha\(msg\); \}catch\(e\)\{\}/.test(_ouvinteArm));
   check('catálogo tem explosao com 3 versões', SB.SFX.explosao && SB.SFX.explosao.arquivos.length === 3);
   const tocados = [], timers = [];
   let agora = 1000;
