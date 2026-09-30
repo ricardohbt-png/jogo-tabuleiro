@@ -45227,11 +45227,11 @@ function renderMap3D(state){
         && String(p.id) === String(testeHeroiSelecionado.id));
     const isCur = p.id===state.current_turn;
     const formaVisual = _metamorfoseVisualName(p);
-    // Sem `isCur` e sem `facing` (exceto metamorfoseado, cuja direção mora no
-    // modelo de monstro): virar de lado e passar a vez não reconstroem o peão —
-    // _sincronizarPeaoHeroi3D gira a raiz e liga o anel sobre a figura existente.
+    // Sem `isCur` e sem `facing`: virar de lado e passar a vez não reconstroem o
+    // peão — _sincronizarPeaoHeroi3D gira a raiz e liga o anel sobre a figura
+    // existente (o metamorfoseado gira dentro do modelo de monstro, logo abaixo).
     const _figInvis = obterFig(`pl:${p.id}`,
-      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, !!pSel, formaVisual ? p.facing : null, _queimando(p), !!p.petrificado, _estaParalisado(p),
+      JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, !!pSel, _queimando(p), !!p.petrificado, _estaParalisado(p),
         p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
       () => {
         const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
@@ -45249,6 +45249,8 @@ function renderMap3D(state){
         return f;
       }, px, py, p.altura);
     _sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);
+    // Metamorfoseado: a direção mora no modelo de monstro, como num monstro.
+    if(formaVisual) _setMonsterMeshFacing3D(_figInvis, p.facing);
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);
     _figInvis.userData.whirlpoolTrapped = !!(p.rodamoinho_preso || p.rodamoinho_profundo_preso);
   }
@@ -45289,7 +45291,7 @@ function renderMap3D(state){
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
-      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), !!m.petrificado, _estaParalisado(m),
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, _eixoDirecaoSig(m.oriented, imageName, m.type, m.model3d, m.facing), _queimando(m), !!m.petrificado, _estaParalisado(m),
         m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.altura, GS.sorrateiroAtivo(), _arteGen]),
       () => {
         const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, _queimando(m),
@@ -45308,6 +45310,8 @@ function renderMap3D(state){
         return f;
       },
       mx, my, m.altura);
+    // Sem `facing` na assinatura: virar só gira o modelo (não refaz a peça).
+    _setMonsterMeshFacing3D(_monFig3D, m.facing);
     _monFig3D.userData.whirlpoolTrapped = !!(m.rodamoinho_preso || m.rodamoinho_profundo_preso);
     _syncProvocacaoMark3D(_monFig3D, m);
     _syncProcurandoMark3D(_monFig3D, m);
@@ -45355,13 +45359,14 @@ function renderMap3D(state){
       const [ax,ay] = a.pos;
       if(!visionSet.has(`${ax},${ay}`)) continue;
       const _aniFig3D = obterFig(`ani:${a.id}`,
-        JSON.stringify([a.tipo, a.image, a.porte, a.size, a.oriented, a.fill_footprint_3d, a.facing, _animadoSel===a.id]),
+        JSON.stringify([a.tipo, a.image, a.porte, a.size, a.oriented, a.fill_footprint_3d, _eixoDirecaoSig(a.oriented, a.image, a.tipo, null, a.facing), _animadoSel===a.id]),
         () => {
           const f = build3DFig('#9900cc', true, false, false, ax, ay, null, a.tipo, _animadoSel===a.id,
             a.image, a.porte, a.oriented, a.facing, false, false, false, 6, undefined, !!a.fill_footprint_3d, a.size);
           f.userData.animadoId = a.id;   // taggeado para getAnimadoMesh()
           return f;
         }, ax, ay);
+      _setMonsterMeshFacing3D(_aniFig3D, a.facing);
       _aniFig3D.userData.whirlpoolTrapped = !!(a.rodamoinho_preso || a.rodamoinho_profundo_preso);
     }
   }
@@ -45431,7 +45436,7 @@ function renderMap3D(state){
       const stepFacing = _serverStepFacing(id);
       // Herói gira pela raiz (como _makeCharacterPawn3D); monstro pelo corpo.
       if(stepFacing && mesh.userData.giraRaiz) _girarRaizPeao3D(mesh, _facingToRotY(stepFacing));
-      else if(stepFacing && mesh.userData.pid === undefined) _setMonsterMeshFacing3D(mesh, stepFacing);
+      else if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
       // Saltinho do peão (efeito de movimentação) — a entidade em deslize não
       // está sob o cursor, então não conflita com o hover-lift.
       const stepAnim = _serverStepAnim.get(id);
@@ -46238,7 +46243,10 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // peão, restaura e esquece a lista — o próximo frame com pose re-clona
     // incluindo a arte recém-chegada. `grp` é o bodyGrp; a lista mora na raiz.
     { const raiz = grp.parent || grp;
-      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; } }
+      if(raiz.userData && raiz.userData._sceneMats){ _restaurarMateriaisCena(raiz); delete raiz.userData._sceneMats; }
+      // O monstro pode ter virado entre a construção e a chegada do GLB; o
+      // `facing` capturado aqui estaria velho.
+      if(raiz.userData && raiz.userData._facingAtual) _setMonsterMeshFacing3D(raiz, raiz.userData._facingAtual); }
   };
   const cached = _monsterGLBCache[path];
   if (cached && cached !== 'erro') { montar(cached); return true; }
@@ -46374,13 +46382,41 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
 // Atualiza somente o corpo da miniatura durante um deslocamento. A base e a
 // placa de nome permanecem estáveis; isso evita que o peão pareça girar inteiro
 // ou fique de costas enquanto percorre caminhos com mais de uma casa.
+// Pedaço da direção que ainda exige peça nova. O monstro ORIENTADO com GLB
+// (2 casas, ex.: crocodilo) tem a base/sombra dimensionada por ela — largura e
+// comprimento trocam entre horizontal e vertical, e a base não fica no grupo que
+// gira. Então só o EIXO entra na assinatura: virar 180° no mesmo eixo apenas gira.
+// A criatura orientada em billboard e os de 1 casa giram por inteiro (null).
+function _eixoDirecaoSig(oriented, imageName, tipo, model3d, facing){
+  if(!oriented || !(model3d || _monsterGLBPath(imageName, tipo))) return null;
+  return Array.isArray(facing) && facing[0] !== 0 ? 'h' : 'v';
+}
+
+// Grupo que carrega a direção do monstro: filho direto (criatura orientada) ou
+// aninhado no corpo (GLB: raiz → corpo → wrap, que pode chegar depois, async).
+// A busca é cacheada assim que acha; enquanto o GLB não chega, não há o que girar.
+function _grupoDirecaoMonstro3D(mesh){
+  const u = mesh.userData || {};
+  if(u._monsterFacingGroup) return mesh;
+  if(u._facingGroupRef && u._facingGroupRef.parent) return u._facingGroupRef;
+  let achado = null;
+  mesh.traverse(o => { if(!achado && o !== mesh && o.userData && o.userData._monsterFacingGroup) achado = o; });
+  if(achado) u._facingGroupRef = achado;
+  return achado;
+}
+
 function _setMonsterMeshFacing3D(mesh, facing){
   if(!mesh || !Array.isArray(facing) || facing.length !== 2) return;
   const [fx, fy] = facing;
   if(![[1,0],[-1,0],[0,1],[0,-1]].some(([x,y])=>x===fx&&y===fy)) return;
-  const body = mesh.userData && mesh.userData._monsterFacingGroup
-    ? mesh.userData._monsterFacingGroup
-    : mesh.children.find(c => c.userData && c.userData._monsterFacingGroup);
+  // Guardada na raiz para o GLB que carregar depois nascer já nesta direção.
+  if(mesh.userData) mesh.userData._facingAtual = [fx, fy];
+  const body = _grupoDirecaoMonstro3D(mesh);
+  // Efeitos presos ao meio das 2 casas (fogo/gelo da criatura orientada).
+  for(const fxMeio of (mesh.userData && mesh.userData._fxMeio) || []){
+    fxMeio.position.x = -fx * 0.5;
+    fxMeio.position.z = -fy * 0.5;
+  }
   if(body){
     const img = body.userData._monsterImageName;
     const typ = body.userData._monsterType;
@@ -46783,7 +46819,9 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
       const ar = img.width / img.height;
       let w = H * ar, h = H;
       if (w > 2.0) { w = 2.0; h = w / ar; }   // largura ≤ ~2 casas (criatura larga e baixa)
-      sp.scale.set(w * flip, h, 1);
+      // O espelho ATUAL, não o da construção: a criatura pode ter virado
+      // (_setMonsterMeshFacing3D) antes de a textura chegar.
+      sp.scale.set(w * (sp.scale.x < 0 ? -1 : 1), h, 1);
     }
     // Mesma estátua dos demais billboards: a pedra vai na cópia da textura.
     if (petrificado) {
@@ -46821,15 +46859,20 @@ function _buildOrientedCreature3D(T, gx, gy, imageName, facing, isSelected, emCh
 
   // Indicador "em chamas": 🔥 no MESMO centro (midX,midZ) do billboard da criatura
   // (não no tile-âncora), senão flutuaria sobre a casa vizinha nas de 2 casas.
+  // Registrados em _fxMeio: ao virar sem reconstruir, _setMonsterMeshFacing3D os
+  // leva para o novo meio das 2 casas.
+  grp.userData._fxMeio = [];
   if(emChamas){
     const fx = _makeChamasFx3D(0.45);
     fx.position.set(midX, 0.29, midZ);
     grp.add(fx);
+    grp.userData._fxMeio.push(fx);
   }
   if(congelado){
     const fx = _makeCongelamentoFx3D(0.48);
     fx.position.set(midX, TH + 0.082, midZ);
     grp.add(fx);
+    grp.userData._fxMeio.push(fx);
   }
 
   grp.position.set(gx, 0, gy);

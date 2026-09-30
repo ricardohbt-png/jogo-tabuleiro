@@ -91,8 +91,9 @@ console.log('\n[4] Fiação no game.js');
   const trecho = GAME.slice(iniLaco, GAME.indexOf('\n', GAME.indexOf('JSON.stringify(', iniLaco) + 1) + 200);
   const sig = trecho.slice(trecho.indexOf('JSON.stringify(['), trecho.indexOf(']),'));
   check('assinatura do peão sem isCur', !/\bisCur\b/.test(sig), sig);
-  check('assinatura só leva facing quando metamorfoseado', sig.includes('formaVisual ? p.facing : null')
-    && !/,\s*p\.facing\s*,/.test(sig), sig);
+  check('assinatura do herói sem facing (nem metamorfoseado)', !/facing/.test(sig), sig);
+  check('metamorfoseado gira dentro do modelo de monstro',
+    GAME.includes('if(formaVisual) _setMonsterMeshFacing3D(_figInvis, p.facing);'));
   check('laço sincroniza anel e direção após obterFig',
     GAME.includes('_sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);'));
   check('build3DFig cria o anel para todo herói (classId), visível só na vez',
@@ -104,7 +105,88 @@ console.log('\n[4] Fiação no game.js');
     /const montar = tpl => \{[\s\S]{0,400}r\.userData\._facingRotY != null\) rotY = r\.userData\._facingRotY;/.test(montar));
   check('deslize (entity_step) gira só quem gira pela raiz',
     GAME.includes('if(stepFacing && mesh.userData.giraRaiz) _girarRaizPeao3D(mesh, _facingToRotY(stepFacing));')
-    && GAME.includes("else if(stepFacing && mesh.userData.pid === undefined) _setMonsterMeshFacing3D(mesh, stepFacing);"));
+    && GAME.includes("else if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);"));
+}
+
+// ── Monstros e servos ────────────────────────────────────────────────────────
+const nomesM = ['_eixoDirecaoSig', '_grupoDirecaoMonstro3D', '_setMonsterMeshFacing3D'];
+let glbs = new Set();
+const M = new Function('_monsterGLBPath', '_monsterFacingToRotY',
+  nomesM.map(extrair).join('\n') + '\nreturn {' + nomesM.join(',') + '};')(
+  (img, tipo) => glbs.has(tipo) ? `assets/${tipo}.glb` : null,
+  (f) => f[0] === 1 ? 11 : f[0] === -1 ? 22 : f[1] === 1 ? 33 : 44);
+
+function no(ud = {}, filhos = []) {
+  const n = { userData: ud, children: [], parent: null, position: { x: 0, z: 0 }, rotation: { y: 0 }, scale: { x: 1 } };
+  n.traverse = fn => { fn(n); n.children.forEach(c => c.traverse(fn)); };
+  n.add = c => { c.parent = n; n.children.push(c); };
+  filhos.forEach(c => n.add(c));
+  return n;
+}
+
+console.log('\n[5] Criatura orientada (billboard de 2 casas) vira sem peça nova');
+{
+  const body = no({ _monsterFacingGroup: true, _monsterGLBPath: null });
+  const sprite = no(); sprite.scale.x = 1.8;
+  const fogo = no();
+  const raiz = no({ _monsterFacingSprite: sprite, _fxMeio: [fogo] }, [body]);
+  M._setMonsterMeshFacing3D(raiz, [1, 0]);
+  check('corpo gira para Leste', body.rotation.y === Math.PI && body.position.x === -0.5);
+  check('sprite espelha e vai ao meio das 2 casas', sprite.scale.x < 0 && sprite.position.x === -0.5);
+  check('fogo acompanha o meio das 2 casas', fogo.position.x === -0.5 && fogo.position.z === 0);
+  M._setMonsterMeshFacing3D(raiz, [0, 1]);
+  check('vira para Sul: corpo, sprite e fogo', body.rotation.y === Math.PI / 2
+    && sprite.scale.x > 0 && fogo.position.z === -0.5 && fogo.position.x === 0);
+  check('direção atual guardada na raiz', JSON.stringify(raiz.userData._facingAtual) === '[0,1]');
+}
+
+console.log('\n[6] GLB de monstro: grupo aninhado e GLB que chega depois');
+{
+  const corpo = no();
+  const raiz = no({}, [corpo]);
+  M._setMonsterMeshFacing3D(raiz, [1, 0]);
+  check('sem GLB ainda: só guarda a direção', JSON.stringify(raiz.userData._facingAtual) === '[1,0]');
+  const wrap = no({ _monsterFacingGroup: true, _monsterGLBPath: 'assets/x.glb', _monsterCenteredLength: true });
+  corpo.add(wrap);
+  M._setMonsterMeshFacing3D(raiz, raiz.userData._facingAtual);   // o que o `montar` faz
+  check('GLB aninhado (raiz → corpo → wrap) é alcançado e girado', wrap.rotation.y === 11 && wrap.position.x === -0.5);
+  check('referência ao grupo fica em cache', raiz.userData._facingGroupRef === wrap);
+  M._setMonsterMeshFacing3D(raiz, [0, -1]);
+  check('vira de novo sem peça nova', wrap.rotation.y === 44 && wrap.position.z === 0.5);
+  M._setMonsterMeshFacing3D(raiz, null);
+  check('direção ausente não mexe em nada', wrap.rotation.y === 44);
+}
+
+console.log('\n[7] Só o EIXO do orientado com GLB entra na assinatura');
+{
+  glbs = new Set(['crocodilo']);
+  check('1 casa (não orientado): null', M._eixoDirecaoSig(false, 'goblin', 'goblin', null, [1, 0]) === null);
+  check('orientado em billboard: null (gira por inteiro)', M._eixoDirecaoSig(true, 'lagarto', 'lagarto', null, [1, 0]) === null);
+  check('orientado com GLB: Leste e Oeste = mesmo eixo',
+    M._eixoDirecaoSig(true, 'croc', 'crocodilo', null, [1, 0]) === M._eixoDirecaoSig(true, 'croc', 'crocodilo', null, [-1, 0]));
+  check('orientado com GLB: Norte difere de Leste',
+    M._eixoDirecaoSig(true, 'croc', 'crocodilo', null, [0, -1]) !== M._eixoDirecaoSig(true, 'croc', 'crocodilo', null, [1, 0]));
+  check('model3d do editor conta como GLB', M._eixoDirecaoSig(true, 'x', 'x', 'assets/y.glb', [0, 1]) === 'v');
+}
+
+console.log('\n[8] Fiação de monstros e servos no game.js');
+{
+  const iniM = GAME.indexOf('const _monFig3D = obterFig(`mon:${m.id}`');
+  const sigM = GAME.slice(GAME.indexOf('JSON.stringify([', iniM), GAME.indexOf(']),', iniM));
+  check('assinatura do monstro sem m.facing (só o eixo)', !/m\.facing\s*,/.test(sigM.replace('m.model3d, m.facing)', ''))
+    && sigM.includes('_eixoDirecaoSig(m.oriented, imageName, m.type, m.model3d, m.facing)'), sigM);
+  check('monstro aplica a direção após obterFig', GAME.includes('_setMonsterMeshFacing3D(_monFig3D, m.facing);'));
+  const iniA = GAME.indexOf('const _aniFig3D = obterFig(`ani:${a.id}`');
+  const sigA = GAME.slice(GAME.indexOf('JSON.stringify([', iniA), GAME.indexOf(']),', iniA));
+  check('assinatura do servo sem a.facing (só o eixo)', sigA.includes('_eixoDirecaoSig(')
+    && !/a\.fill_footprint_3d, a\.facing/.test(sigA), sigA);
+  check('servo aplica a direção após obterFig', GAME.includes('_setMonsterMeshFacing3D(_aniFig3D, a.facing);'));
+  check('GLB de monstro tardio reaplica a direção atual',
+    GAME.includes('if(raiz.userData && raiz.userData._facingAtual) _setMonsterMeshFacing3D(raiz, raiz.userData._facingAtual); }'));
+  check('sprite orientado que carrega depois usa o espelho atual',
+    GAME.includes('sp.scale.set(w * (sp.scale.x < 0 ? -1 : 1), h, 1);'));
+  check('fogo/gelo da criatura orientada registrados em _fxMeio',
+    (GAME.match(/grp\.userData\._fxMeio\.push\(fx\);/g) || []).length === 2);
 }
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);

@@ -821,9 +821,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > **só** com `formaVisual`). O GLB que carrega depois lê `userData._facingRotY` em vez do
 > `rotY` capturado. O deslize do `move_path` usa o mesmo `_girarRaizPeao3D`. Medido no
 > navegador, mesmo roteiro (4 turnos andando): **20 → 0** chamadas de `build3DFig`.
-> Monstros ficam de fora: a direção do GLB de monstro mora num grupo aninhado que
-> `_setMonsterMeshFacing3D` não alcança, e `m.facing` segue na assinatura. Teste:
-> `tools/test_peao_sem_reconstrucao.js`.
+> **Monstros, servos animados e herói metamorfoseado** seguem o mesmo princípio:
+> `m.facing`/`a.facing`/`p.facing` saíram das assinaturas e `_setMonsterMeshFacing3D` é
+> chamado após o `obterFig`. Para isso ele acha o grupo de direção **aninhado**
+> (`_grupoDirecaoMonstro3D`: o wrap do GLB mora em raiz → corpo → wrap, e antes só filho
+> direto era visto — por isso o deslize nunca girava GLB de monstro), guarda
+> `userData._facingAtual` na raiz (o `montar` do GLB que chega depois o reaplica) e move os
+> efeitos presos ao meio das 2 casas da criatura orientada (`userData._fxMeio`: fogo/gelo);
+> o sprite orientado que carrega depois respeita o espelho atual. **Exceção:** o monstro
+> ORIENTADO com GLB (2 casas, ex.: crocodilo) tem base/sombra dimensionadas pela direção
+> (largura×comprimento trocam) e fora do grupo que gira — `_eixoDirecaoSig` põe só o
+> **eixo** (h/v) na assinatura: virar 180° apenas gira, virar 90° reconstrói. Medido no
+> navegador com o servidor congelado e GLBs carregados (3 monstros × 6 viradas):
+> **18 → 0** reconstruções, e cada modelo girando para o ângulo certo. Teste:
+> `tools/test_peao_sem_reconstrucao.js` (43).
 
 > **Instrumentos do Bardo (Fase 1):** equipamento exclusivo do bardo (Henrique)
 > que concede uma habilidade de assinatura escalável por qualidade. **Modelo
