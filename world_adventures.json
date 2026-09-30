@@ -28,6 +28,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": {
       "slides": [
         {
@@ -97,6 +98,7 @@
     "oculto_ate_liberar": true,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": {
       "slides": [
         {
@@ -151,6 +153,7 @@
     "oculto_ate_liberar": true,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -184,6 +187,7 @@
     "oculto_ate_liberar": true,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -197,8 +201,8 @@
   "destino_5": {
     "id": "destino_5",
     "nome": "Caverna",
-    "x": 68.06,
-    "y": 63.41,
+    "x": 46.46,
+    "y": 35.7,
     "fome": 0,
     "sede": 0,
     "dungeons": [
@@ -217,6 +221,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -256,6 +261,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -289,6 +295,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": true,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -322,6 +329,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -355,6 +363,7 @@
     "oculto_ate_liberar": false,
     "ocultar_apos_concluir": false,
     "revisitavel": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -363,8 +372,7 @@
       "fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 0,
-    "so_na_cidade": true
+    "renome_recompensa": 0
   },
   "destino_9": {
     "id": "destino_9",
@@ -389,6 +397,7 @@
     "oculto_ate_liberar": true,
     "ocultar_apos_concluir": true,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -439,7 +448,9 @@
       "dados": ""
     },
     "oculto_ate_liberar": true,
+    "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -490,7 +501,9 @@
       "dados": ""
     },
     "oculto_ate_liberar": true,
+    "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -566,7 +579,9 @@
       "dados": ""
     },
     "oculto_ate_liberar": true,
+    "ocultar_apos_concluir": false,
     "revisitavel": false,
+    "so_na_cidade": false,
     "outro_rota": {
       "slides": [
         {
@@ -587,5 +602,55 @@
       "aventura_id": "sombras_minas"
     },
     "renome_recompensa": 2
+  },
+  "destino_10": {
+    "id": "destino_10",
+    "nome": "Calabouço da Morte",
+    "x": 97.13,
+    "y": 26.16,
+    "fome": 0,
+    "sede": 0,
+    "dungeons": [
+      {
+        "file": "calabouco_morte.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "Vocês avistam a montanha solitária a sua frente e após uma longa caminhada chegam ao local definido pelo mapa. Tudo ao redor parece calmo, nada diferente de paredão de rochas ingreme. "
+            },
+            {
+              "text": "Parece que nada sugere que a montanha a sua frente guarda a entrada da masmorra que ninguém jamais voltou. "
+            },
+            {
+              "text": "Após vasculharem por algumas horas vocês encontram o galho retorcido que esconde a marca do barão. É a hora de chegar perto e declamar as palavras \"A riqueza que procuro me leva às profundezas, a riqueza que encontro me eleva às alturas\" "
+            },
+            {
+              "text": "Mal terminada as palavras e a parede de rocha se abrem como se a própria montanha se abrisse. Vocês entram pelos portais de pedra, e após poucos passos as paredes se fecham deixando um sombrio e estreito caminho a sua frente."
+            }
+          ],
+          "audio": "assets/story/Ecos_de_Arveluzio_Harpa_Loop.mid"
+        },
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "ocultar_apos_concluir": true,
+    "revisitavel": false,
+    "so_na_cidade": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "segredo9",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }

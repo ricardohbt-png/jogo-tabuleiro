@@ -916,7 +916,6 @@
         2
       ],
       "gold": 0,
-      "key_objective": false,
       "items": [
         {
           "id": "racao_viagem"
@@ -933,7 +932,8 @@
         {
           "id": "garrafa_agua"
         }
-      ]
+      ],
+      "key_objective": false
     },
     {
       "pos": [
@@ -941,12 +941,12 @@
         5
       ],
       "gold": 0,
-      "key_objective": false,
       "items": [
         {
           "id": "maca_treino"
         }
-      ]
+      ],
+      "key_objective": false
     },
     {
       "pos": [
@@ -954,7 +954,6 @@
         2
       ],
       "gold": 0,
-      "key_objective": false,
       "items": [
         {
           "id": "frasco_oleo"
@@ -965,27 +964,62 @@
         {
           "id": "health_potion_small"
         }
-      ]
+      ],
+      "key_objective": false
     }
   ],
   "traps": [
     {
+      "id": "trap_0",
       "tipo": "buraco",
       "pos": [
         42,
         3
       ]
+    },
+    {
+      "id": "trap_1",
+      "tipo": "armadilha_raio_congelante",
+      "pos": [
+        7,
+        3
+      ],
+      "dificuldade": 20,
+      "dano": "1"
+    },
+    {
+      "id": "trap_2",
+      "tipo": "lamina_pendulo",
+      "pos": [
+        8,
+        3
+      ],
+      "dificuldade": 17,
+      "dano": "1"
+    },
+    {
+      "id": "trap_3",
+      "tipo": "mina_terrestre",
+      "pos": [
+        9,
+        3
+      ],
+      "dificuldade": 18,
+      "dano": "1"
+    },
+    {
+      "id": "trap_4",
+      "tipo": "armadilha_incendiaria",
+      "pos": [
+        10,
+        3
+      ],
+      "dificuldade": 20,
+      "dano": "1"
     }
   ],
   "decorations": [],
   "secret_passages": [],
-  "master_reinforcements": [],
-  "expected_party": {
-    "heroes": 1,
-    "level": 1
-  },
-  "prisoner": null,
-  "materiais": {},
   "falas": [
     {
       "id": "atrio_01",
@@ -1410,7 +1444,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 6,
       "efeito": {
         "fome": 0,
@@ -1432,7 +1465,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 7,
       "tarefa": {
         "tipo": "usar_item",
@@ -1456,7 +1488,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 8,
       "tarefa": {
         "tipo": "usar_item",
@@ -1480,7 +1511,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 9
     },
     {
@@ -1522,8 +1552,8 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 4,
       "classe": "warrior",
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "golpe_devastador",
@@ -1546,8 +1576,8 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 5,
       "classe": "warrior",
+      "ordem": 5,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "furia_berserker",
@@ -1803,7 +1833,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 15
     },
     {
@@ -1844,7 +1873,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 16,
       "tarefa": {
         "tipo": "atacar",
@@ -1868,7 +1896,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 17,
       "tarefa": {
         "tipo": "equipar",
@@ -1892,7 +1919,6 @@
         "tipo": "proximidade",
         "raio": 4
       },
-      "classe": null,
       "ordem": 18,
       "tarefa": {
         "tipo": "matar",
@@ -2045,6 +2071,16 @@
       }
     }
   ],
+  "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 1,
+    "level": 1
+  },
+  "prisoner": null,
+  "materiais": {},
+  "pontes": [],
+  "elevacoes": {},
+  "transicao_altura": "rampa",
   "objectives": {
     "primary": {
       "type": "all_heroes_at_exit",

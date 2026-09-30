@@ -357,7 +357,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "crocodilo_jovem",
           "pos": [
-            11,
+            12,
             6
           ],
           "room_id": 1,
@@ -528,7 +528,7 @@ window.EDITOR_DUNGEONS = [
           "type": "goblin_dual",
           "pos": [
             13,
-            6
+            5
           ],
           "room_id": 1,
           "boss": false,
@@ -567,8 +567,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "elemental_ar",
           "pos": [
-            14,
-            4
+            4,
+            6
           ],
           "room_id": 1,
           "boss": false,
@@ -579,6 +579,16 @@ window.EDITOR_DUNGEONS = [
           "pos": [
             14,
             1
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "jacare",
+          "pos": [
+            13,
+            2
           ],
           "room_id": 1,
           "boss": false,
@@ -928,6 +938,9 @@ window.EDITOR_DUNGEONS = [
         "7,5": "terra",
         "5,5": "terra"
       },
+      "pontes": [],
+      "elevacoes": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
           "type": "kill_all",
@@ -4286,8 +4299,8 @@ window.EDITOR_DUNGEONS = [
           0,
           1,
           1,
-          0,
-          0,
+          1,
+          1,
           1,
           1,
           1,
@@ -5768,97 +5781,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0,
@@ -5873,8 +5795,37 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          0,
+          0,
           1,
           1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           1,
           0,
           0,
@@ -5890,6 +5841,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -5899,6 +5859,59 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -5952,15 +5965,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -6014,15 +6027,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -6076,15 +6089,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -6701,16 +6714,114 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "ferrao_charcos_adulto",
           "pos": [
-            5,
-            15
+            4,
+            13
           ],
           "room_id": null,
           "boss": false,
           "target": false,
+          "hostility_override": {
+            "mode": "custom",
+            "rules": {
+              "all_monsters": true,
+              "subtypes": [],
+              "types": []
+            }
+          },
           "vscale": [
             1.3,
             1.3
           ]
+        },
+        {
+          "type": "crocodilo_jovem",
+          "pos": [
+            21,
+            21
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "crocodilo_jovem",
+          "pos": [
+            18,
+            21
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "crocodilo_jovem",
+          "pos": [
+            23,
+            22
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "crocodilo_jovem",
+          "pos": [
+            15,
+            21
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "jacare",
+          "pos": [
+            37,
+            22
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "jacare",
+          "pos": [
+            41,
+            25
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "crocodilo_jovem",
+          "pos": [
+            56,
+            23
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_assassino",
+          "pos": [
+            18,
+            5
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_assassino",
+          "pos": [
+            54,
+            4
+          ],
+          "room_id": 5,
+          "boss": false,
+          "target": false
         }
       ],
       "chests": [
@@ -6735,7 +6846,7 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "carta",
-              "texto": "Essa é a primeira carta a ser lida na aventura"
+              "texto": "Maldito o dia em que fui convencido de entrar nesse inferno. Vou esperar aqui, quem sabe um dia alguém abra essa entrada e eu possa fugir. Os goblins querem me pegar, ainda bem que eles tem medo da lamina do corredor."
             }
           ],
           "key_objective": false
@@ -6755,6 +6866,19 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "flechas"
+            },
+            {
+              "id": "flecha_incendiaria"
+            },
+            {
+              "id": "pao"
+            },
+            {
+              "id": "garrafa_vinho"
+            },
+            {
+              "id": "carta",
+              "texto": "Carta escrita em garranchos.\nJá fazem anos que Grik nos liderou até esse labirinto maldito. Aqui ou você come ou é devorado. E eu não vou deixar esse labirinto me devorar."
             }
           ],
           "key_objective": false
@@ -6992,6 +7116,164 @@ window.EDITOR_DUNGEONS = [
             }
           ],
           "key_objective": true
+        },
+        {
+          "pos": [
+            4,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            5,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            6,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            7,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            8,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            9,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            10,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            11,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            12,
+            50
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            5,
+            49
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            8,
+            48
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            11,
+            49
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            9,
+            49
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            7,
+            49
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            8,
+            49
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            29,
+            15
+          ],
+          "gold": 0,
+          "items": [
+            {
+              "id": "carta",
+              "texto": "Diário do Orc\n\nGrunt e Kogre caíram da ponte. O chão estava lá, mas não estava. Ele gritou, o barulho ao longe foi de agua. Grunt gritava, não de dor, ele não se machucou muito. Não foi pela queda que ele gritou.. foi o que tinha lá embaixo. Kogre foi o primeiro a descobrir, os repteis do fosso pegaram ele... os gritos.... Grunt sabia que seria o próximo, conseguiu pegar seu machado, embora as feras não se assustassem com ele. Eu tentei procurar uma corda, quando joguei achei que seria tarde demais. Porém Grunt surgiu vindo do poço pela corda que joguei, ele estava pálido, seu olhar era de puro terror. Pensei que fora de ver Kogre ser devorado vivo pelos crocodilos. Porém Grunt não falava. Depois de muito eu insistir, Grunt finalmente falou do horror que viu lá embaixo, não foram os crocodilos devoradores de gente... ele disse que havia algo lá, mais perigoso... mais faminto. Grunt disse que enquanto as feras o encurralavam, elas do nada pararam e fugiram, exceto uma, ocupada demais devorando o que sobrou de Kogre. Grunt disse que viu uma sombra na agua engolir o animal, a agua tingiu-se de vermelho enquanto o turbilhão se espalhava. O que quer que seja aquilo, Grunt disse para nunca chegarmos perto do fosso outra vez."
+            }
+          ],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            2,
+            13
+          ],
+          "gold": 0,
+          "items": [],
+          "key_objective": false
         }
       ],
       "traps": [
@@ -7064,8 +7346,8 @@ window.EDITOR_DUNGEONS = [
           "id": "trap_8",
           "tipo": "armadilha_teletransporte",
           "pos": [
-            29,
-            42
+            30,
+            43
           ],
           "saida": [
             7,
@@ -7174,6 +7456,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "dificuldade": 15,
           "veneno_id": "veneno_basilisco"
+        },
+        {
+          "id": "trap_22",
+          "tipo": "chao_illusorio",
+          "pos": [
+            20,
+            22
+          ],
+          "ponte_id": "ponte_8"
         }
       ],
       "decorations": [
@@ -7232,7 +7523,10 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "disable_trap_ids": [
+            "trap_11"
+          ]
         },
         {
           "id": "decor_calabouco_04",
@@ -7318,6 +7612,9 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "disable_trap_ids": [
+            "trap_12"
+          ],
           "size": [
             1,
             1
@@ -7358,7 +7655,14 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "chest_trap_monster_type": "elemental_pedra",
+          "chest_trap_monster_type": "zumbi_infectado",
+          "trap": {
+            "tipo": "jato_acido",
+            "dificuldade": 15
+          },
+          "disable_trap_ids": [
+            "trap_14"
+          ],
           "image": "tumba_lapide.png",
           "vscale": [
             1.5,
@@ -7457,8 +7761,13 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "trap": {
-            "tipo": "armadilha_urso"
-          }
+            "tipo": "armadilha_dardos_envenenados",
+            "permanente": true,
+            "veneno_id": "veneno_agonia_sufocante"
+          },
+          "disable_trap_ids": [
+            "trap_22"
+          ]
         },
         {
           "id": "decor_calabouco_16",
@@ -7508,7 +7817,10 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "disable_trap_ids": [
+            "trap_8"
+          ]
         },
         {
           "id": "decor_calabouco_19",
@@ -7632,11 +7944,12 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false,
+          "key_objective": true,
           "trap": {
             "tipo": "nuvem_gas"
           },
-          "image": "lapide.png"
+          "image": "lapide.png",
+          "visao": "livre"
         },
         {
           "id": "decor_calabouco_25",
@@ -7797,7 +8110,7 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "texto": "Seja bem vindo a sua destruição",
+          "texto": "Ladrões que aqui adentrarem; sejam bem vindo a sua destruição",
           "image": "placa_fincada.png"
         },
         {
@@ -7874,6 +8187,9 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "disable_trap_ids": [
+            "trap_13"
+          ],
           "image": "mesa_tortura.png"
         },
         {
@@ -7893,6 +8209,206 @@ window.EDITOR_DUNGEONS = [
             1.1,
             1.2
           ]
+        },
+        {
+          "id": "decor_7",
+          "type": "coluna",
+          "pos": [
+            4,
+            33
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "trap": {
+            "tipo": "buraco"
+          }
+        },
+        {
+          "id": "decor_8",
+          "type": "coluna",
+          "pos": [
+            6,
+            33
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": true
+        },
+        {
+          "id": "decor_9",
+          "type": "coluna",
+          "pos": [
+            3,
+            40
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": true
+        },
+        {
+          "id": "decor_10",
+          "type": "coluna",
+          "pos": [
+            6,
+            44
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_11",
+          "type": "coluna",
+          "pos": [
+            9,
+            44
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_12",
+          "type": "estante_armas",
+          "pos": [
+            10,
+            47
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_13",
+          "type": "estante_livros",
+          "pos": [
+            12,
+            47
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "vscale": [
+            2,
+            1.3
+          ],
+          "voffset": [
+            0.3,
+            0
+          ]
+        },
+        {
+          "id": "decor_14",
+          "type": "estante",
+          "pos": [
+            4,
+            48
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estante_armas_cranios.png",
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            2,
+            1.2
+          ],
+          "voffset": [
+            -0.3,
+            0
+          ]
+        },
+        {
+          "id": "decor_15",
+          "type": "armadura",
+          "pos": [
+            12,
+            46
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "armadura.png"
+        },
+        {
+          "id": "decor_16",
+          "type": "armadura",
+          "pos": [
+            4,
+            46
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "armadura.png"
+        },
+        {
+          "id": "decor_17",
+          "type": "coluna",
+          "pos": [
+            55,
+            24
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": true
+        },
+        {
+          "id": "decor_18",
+          "type": "placa",
+          "pos": [
+            15,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "Não avance. Nem mesmos os crocodilos vão para esse lugar, a frente existe apenas a morte certa.",
+          "image": "placa_fincada.png"
         }
       ],
       "secret_passages": [
@@ -7905,7 +8421,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7918,7 +8435,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7931,7 +8449,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7944,7 +8463,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7957,7 +8477,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7970,7 +8491,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7983,7 +8505,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -7996,7 +8519,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8009,7 +8533,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8022,7 +8547,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "madeira",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8035,7 +8561,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8048,7 +8575,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8061,7 +8589,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8074,7 +8603,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8087,7 +8617,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8100,7 +8631,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8113,7 +8645,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8126,7 +8659,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8139,7 +8673,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8152,7 +8687,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8165,7 +8701,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8178,7 +8715,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8191,7 +8729,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8204,7 +8743,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8217,7 +8757,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8230,7 +8771,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8243,7 +8785,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8256,7 +8799,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8269,7 +8813,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8282,7 +8827,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8295,7 +8841,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
           ],
           "keys_mode": "any"
         },
@@ -8308,7 +8855,415 @@ window.EDITOR_DUNGEONS = [
           ],
           "wall_material": "pedra_caverna",
           "key_decor_ids": [
-            "decor_1"
+            "decor_1",
+            "decor_17"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_32",
+          "type": "mechanism",
+          "pos": [
+            7,
+            45
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_8",
+            "decor_9"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_33",
+          "type": "mechanism",
+          "pos": [
+            8,
+            45
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_8",
+            "decor_9"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_34",
+          "type": "mechanism",
+          "pos": [
+            9,
+            45
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_8",
+            "decor_9"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_35",
+          "type": "mechanism",
+          "pos": [
+            6,
+            45
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_8",
+            "decor_9"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_36",
+          "type": "mechanism",
+          "pos": [
+            26,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_37",
+          "type": "mechanism",
+          "pos": [
+            25,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_38",
+          "type": "mechanism",
+          "pos": [
+            24,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_39",
+          "type": "mechanism",
+          "pos": [
+            23,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_40",
+          "type": "mechanism",
+          "pos": [
+            22,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_41",
+          "type": "mechanism",
+          "pos": [
+            22,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_42",
+          "type": "mechanism",
+          "pos": [
+            21,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_43",
+          "type": "mechanism",
+          "pos": [
+            20,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_44",
+          "type": "mechanism",
+          "pos": [
+            19,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_45",
+          "type": "mechanism",
+          "pos": [
+            18,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_46",
+          "type": "mechanism",
+          "pos": [
+            17,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_47",
+          "type": "mechanism",
+          "pos": [
+            16,
+            40
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_48",
+          "type": "mechanism",
+          "pos": [
+            16,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_49",
+          "type": "mechanism",
+          "pos": [
+            15,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_50",
+          "type": "mechanism",
+          "pos": [
+            14,
+            39
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_51",
+          "type": "mechanism",
+          "pos": [
+            14,
+            38
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_52",
+          "type": "mechanism",
+          "pos": [
+            13,
+            38
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_53",
+          "type": "mechanism",
+          "pos": [
+            12,
+            38
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_54",
+          "type": "mechanism",
+          "pos": [
+            11,
+            38
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_55",
+          "type": "mechanism",
+          "pos": [
+            10,
+            38
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_56",
+          "type": "mechanism",
+          "pos": [
+            10,
+            37
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_57",
+          "type": "mechanism",
+          "pos": [
+            10,
+            36
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_58",
+          "type": "mechanism",
+          "pos": [
+            9,
+            36
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_59",
+          "type": "mechanism",
+          "pos": [
+            9,
+            35
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_60",
+          "type": "mechanism",
+          "pos": [
+            9,
+            34
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_61",
+          "type": "mechanism",
+          "pos": [
+            8,
+            34
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "passage_62",
+          "type": "mechanism",
+          "pos": [
+            8,
+            35
+          ],
+          "wall_material": "pedra_caverna",
+          "key_decor_ids": [
+            "decor_calabouco_24"
           ],
           "keys_mode": "any"
         }
@@ -8564,7 +9519,6 @@ window.EDITOR_DUNGEONS = [
         "29,44": "terra",
         "30,44": "terra",
         "19,24": "terra",
-        "20,23": "terra",
         "22,20": "terra",
         "30,24": "pedra_caverna",
         "31,27": "terra",
@@ -9102,7 +10056,6 @@ window.EDITOR_DUNGEONS = [
         "19,30": "terra",
         "19,31": "terra",
         "19,32": "terra",
-        "20,22": "agua",
         "21,22": "agua",
         "21,21": "agua",
         "21,20": "terra",
@@ -9411,7 +10364,6 @@ window.EDITOR_DUNGEONS = [
         "24,0": "enegrecida",
         "23,0": "enegrecida",
         "22,0": "enegrecida",
-        "21,0": "enegrecida",
         "12,0": "enegrecida",
         "13,0": "enegrecida",
         "14,0": "enegrecida",
@@ -10236,8 +11188,6 @@ window.EDITOR_DUNGEONS = [
         "10,19": "agua_profunda",
         "11,19": "agua_profunda",
         "12,19": "enegrecida",
-        "20,21": "agua",
-        "20,20": "terra",
         "19,20": "enegrecida",
         "18,20": "enegrecida",
         "17,20": "enegrecida",
@@ -10320,8 +11270,8 @@ window.EDITOR_DUNGEONS = [
         "16,21": "agua",
         "15,21": "agua",
         "14,21": "agua",
-        "13,21": "enegrecida",
-        "12,21": "enegrecida",
+        "13,21": "agua_profunda",
+        "12,21": "agua_profunda",
         "11,21": "agua_profunda",
         "10,21": "agua_profunda",
         "9,21": "enegrecida",
@@ -10996,9 +11946,6 @@ window.EDITOR_DUNGEONS = [
         "1,49": "pedra_caverna",
         "2,49": "pedra_caverna",
         "3,49": "pedra_caverna",
-        "4,49": "pedra_caverna",
-        "5,49": "pedra_caverna",
-        "6,49": "pedra_caverna",
         "18,50": "pedra_caverna",
         "18,49": "pedra_caverna",
         "17,49": "pedra_caverna",
@@ -11006,16 +11953,7 @@ window.EDITOR_DUNGEONS = [
         "15,49": "pedra_caverna",
         "14,49": "pedra_caverna",
         "13,49": "pedra_caverna",
-        "12,49": "pedra_caverna",
-        "11,49": "pedra_caverna",
-        "10,49": "pedra_caverna",
-        "9,49": "pedra_caverna",
-        "8,49": "pedra_caverna",
-        "7,49": "pedra_caverna",
-        "7,48": "pedra_caverna",
-        "7,47": "pedra_caverna",
-        "7,46": "pedra_caverna",
-        "7,45": "terra",
+        "7,45": "pedra_caverna",
         "7,44": "terra",
         "7,43": "terra",
         "7,42": "lava",
@@ -11044,12 +11982,7 @@ window.EDITOR_DUNGEONS = [
         "1,48": "pedra_caverna",
         "2,48": "pedra_caverna",
         "3,48": "pedra_caverna",
-        "4,48": "pedra_caverna",
-        "5,48": "pedra_caverna",
-        "6,48": "pedra_caverna",
-        "6,47": "pedra_caverna",
-        "6,46": "pedra_caverna",
-        "6,45": "terra",
+        "6,45": "pedra_caverna",
         "6,44": "terra",
         "6,43": "pedra_caverna",
         "6,42": "pedra_caverna",
@@ -11072,9 +12005,6 @@ window.EDITOR_DUNGEONS = [
         "2,46": "pedra_caverna",
         "2,47": "pedra_caverna",
         "3,47": "pedra_caverna",
-        "4,47": "pedra_caverna",
-        "5,47": "pedra_caverna",
-        "5,46": "pedra_caverna",
         "5,45": "pedra_caverna",
         "6,39": "pedra_caverna",
         "6,38": "pedra_caverna",
@@ -11088,7 +12018,6 @@ window.EDITOR_DUNGEONS = [
         "3,42": "pedra_caverna",
         "3,43": "pedra_caverna",
         "3,46": "pedra_caverna",
-        "4,46": "pedra_caverna",
         "4,45": "pedra_caverna",
         "4,44": "pedra_caverna",
         "3,44": "pedra_caverna",
@@ -11111,14 +12040,7 @@ window.EDITOR_DUNGEONS = [
         "8,42": "lava",
         "8,43": "terra",
         "8,44": "terra",
-        "8,45": "terra",
-        "8,46": "pedra_caverna",
-        "8,47": "pedra_caverna",
-        "8,48": "pedra_caverna",
-        "9,48": "pedra_caverna",
-        "10,48": "pedra_caverna",
-        "11,48": "pedra_caverna",
-        "12,48": "pedra_caverna",
+        "8,45": "pedra_caverna",
         "13,48": "pedra_caverna",
         "14,48": "pedra_caverna",
         "15,48": "pedra_caverna",
@@ -11129,14 +12051,6 @@ window.EDITOR_DUNGEONS = [
         "15,47": "pedra_caverna",
         "14,47": "pedra_caverna",
         "13,47": "pedra_caverna",
-        "12,47": "pedra_caverna",
-        "12,46": "pedra_caverna",
-        "11,46": "pedra_caverna",
-        "10,46": "pedra_caverna",
-        "9,46": "pedra_caverna",
-        "9,47": "pedra_caverna",
-        "10,47": "pedra_caverna",
-        "11,47": "pedra_caverna",
         "13,46": "pedra_caverna",
         "14,46": "pedra_caverna",
         "15,46": "pedra_caverna",
@@ -11157,7 +12071,7 @@ window.EDITOR_DUNGEONS = [
         "9,42": "pedra_caverna",
         "9,43": "pedra_caverna",
         "9,44": "terra",
-        "9,45": "terra",
+        "9,45": "pedra_caverna",
         "10,45": "pedra_caverna",
         "11,45": "pedra_caverna",
         "12,45": "pedra_caverna",
@@ -11226,18 +12140,14 @@ window.EDITOR_DUNGEONS = [
         "15,50": "pedra_caverna",
         "14,50": "pedra_caverna",
         "13,50": "pedra_caverna",
-        "12,50": "pedra_caverna",
-        "11,50": "pedra_caverna",
-        "4,50": "pedra_caverna",
         "3,50": "pedra_caverna",
         "2,50": "pedra_caverna",
-        "5,50": "pedra_caverna",
-        "6,50": "pedra_caverna",
-        "7,50": "pedra_caverna",
-        "8,50": "pedra_caverna",
-        "9,50": "pedra_caverna",
-        "10,50": "pedra_caverna",
-        "49,22": "agua"
+        "49,22": "agua",
+        "20,21": "agua",
+        "20,22": "agua",
+        "20,20": "terra",
+        "20,23": "terra",
+        "21,0": "enegrecida"
       },
       "pontes": [
         {
@@ -11297,20 +12207,6 @@ window.EDITOR_DUNGEONS = [
           "material": "madeira"
         },
         {
-          "id": "ponte_5",
-          "inicio": [
-            20,
-            20
-          ],
-          "fim": [
-            20,
-            23
-          ],
-          "largura": 1,
-          "altura": 2,
-          "material": "madeira"
-        },
-        {
           "id": "ponte_6",
           "inicio": [
             29,
@@ -11336,6 +12232,20 @@ window.EDITOR_DUNGEONS = [
           ],
           "largura": 1,
           "altura": 2,
+          "material": "madeira"
+        },
+        {
+          "id": "ponte_8",
+          "inicio": [
+            20,
+            20
+          ],
+          "fim": [
+            20,
+            23
+          ],
+          "largura": 1,
+          "altura": 7,
           "material": "madeira"
         }
       ],
@@ -11678,14 +12588,20 @@ window.EDITOR_DUNGEONS = [
         "51,46": 1,
         "51,45": 1,
         "51,44": 1,
-        "23,20": 2,
-        "22,20": 2,
-        "21,20": 2,
-        "20,20": 2,
-        "20,23": 2,
-        "20,24": 1,
+        "23,20": 3,
+        "22,20": 5,
+        "21,20": 6,
+        "20,24": 6,
         "29,24": 2,
-        "29,25": 2
+        "29,25": 2,
+        "19,24": 5,
+        "18,24": 4,
+        "17,24": 3,
+        "17,25": 2,
+        "16,25": 2,
+        "16,24": 2,
+        "20,20": 7,
+        "20,23": 7
       },
       "transicao_altura": "rampa",
       "objectives": {
@@ -12672,7 +13588,6 @@ window.EDITOR_DUNGEONS = [
             2
           ],
           "gold": 0,
-          "key_objective": false,
           "items": [
             {
               "id": "racao_viagem"
@@ -12689,7 +13604,8 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "garrafa_agua"
             }
-          ]
+          ],
+          "key_objective": false
         },
         {
           "pos": [
@@ -12697,12 +13613,12 @@ window.EDITOR_DUNGEONS = [
             5
           ],
           "gold": 0,
-          "key_objective": false,
           "items": [
             {
               "id": "maca_treino"
             }
-          ]
+          ],
+          "key_objective": false
         },
         {
           "pos": [
@@ -12710,7 +13626,6 @@ window.EDITOR_DUNGEONS = [
             2
           ],
           "gold": 0,
-          "key_objective": false,
           "items": [
             {
               "id": "frasco_oleo"
@@ -12721,27 +13636,62 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "health_potion_small"
             }
-          ]
+          ],
+          "key_objective": false
         }
       ],
       "traps": [
         {
+          "id": "trap_0",
           "tipo": "buraco",
           "pos": [
             42,
             3
           ]
+        },
+        {
+          "id": "trap_1",
+          "tipo": "armadilha_raio_congelante",
+          "pos": [
+            7,
+            3
+          ],
+          "dificuldade": 20,
+          "dano": "1"
+        },
+        {
+          "id": "trap_2",
+          "tipo": "lamina_pendulo",
+          "pos": [
+            8,
+            3
+          ],
+          "dificuldade": 17,
+          "dano": "1"
+        },
+        {
+          "id": "trap_3",
+          "tipo": "mina_terrestre",
+          "pos": [
+            9,
+            3
+          ],
+          "dificuldade": 18,
+          "dano": "1"
+        },
+        {
+          "id": "trap_4",
+          "tipo": "armadilha_incendiaria",
+          "pos": [
+            10,
+            3
+          ],
+          "dificuldade": 20,
+          "dano": "1"
         }
       ],
       "decorations": [],
       "secret_passages": [],
-      "master_reinforcements": [],
-      "expected_party": {
-        "heroes": 1,
-        "level": 1
-      },
-      "prisoner": null,
-      "materiais": {},
       "falas": [
         {
           "id": "atrio_01",
@@ -13166,7 +14116,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 6,
           "efeito": {
             "fome": 0,
@@ -13188,7 +14137,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 7,
           "tarefa": {
             "tipo": "usar_item",
@@ -13212,7 +14160,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 8,
           "tarefa": {
             "tipo": "usar_item",
@@ -13236,7 +14183,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 9
         },
         {
@@ -13278,8 +14224,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 4,
           "classe": "warrior",
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "golpe_devastador",
@@ -13302,8 +14248,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 5,
           "classe": "warrior",
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "furia_berserker",
@@ -13559,7 +14505,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 15
         },
         {
@@ -13600,7 +14545,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 16,
           "tarefa": {
             "tipo": "atacar",
@@ -13624,7 +14568,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 17,
           "tarefa": {
             "tipo": "equipar",
@@ -13648,7 +14591,6 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "classe": null,
           "ordem": 18,
           "tarefa": {
             "tipo": "matar",
@@ -13801,6 +14743,16 @@ window.EDITOR_DUNGEONS = [
           }
         }
       ],
+      "master_reinforcements": [],
+      "expected_party": {
+        "heroes": 1,
+        "level": 1
+      },
+      "prisoner": null,
+      "materiais": {},
+      "pontes": [],
+      "elevacoes": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
           "type": "all_heroes_at_exit",
@@ -45971,7 +46923,7 @@ window.EDITOR_DUNGEONS = [
       "exit": null,
       "monsters": [
         {
-          "type": "goblin",
+          "type": "goblin_assassino",
           "pos": [
             6,
             3
@@ -45979,72 +46931,6 @@ window.EDITOR_DUNGEONS = [
           "room_id": 0,
           "boss": false,
           "target": false
-        },
-        {
-          "type": "goblin",
-          "pos": [
-            8,
-            3
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false,
-          "vscale": [
-            0.8,
-            0.8
-          ]
-        },
-        {
-          "type": "goblin",
-          "pos": [
-            10,
-            3
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false,
-          "vscale": [
-            0.6,
-            0.6
-          ]
-        },
-        {
-          "type": "kobold_lanceiro",
-          "pos": [
-            4,
-            1
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "kobold_lanceiro",
-          "pos": [
-            7,
-            1
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false,
-          "vscale": [
-            0.8,
-            0.8
-          ]
-        },
-        {
-          "type": "kobold_lanceiro",
-          "pos": [
-            10,
-            1
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false,
-          "vscale": [
-            0.6,
-            0.6
-          ]
         }
       ],
       "chests": [],
@@ -46175,7 +47061,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "texto": "Primeira mensagem"
+          "texto": "Primeira mensagem",
+          "image": "placa_fincada.png"
         }
       ],
       "secret_passages": [],
@@ -46370,7 +47257,6 @@ window.EDITOR_DUNGEONS = [
         "7,3": "pedra_negra",
         "8,3": "pedra_negra",
         "9,3": "pedra_negra",
-        "6,3": "pedra_negra",
         "10,3": "pedra_negra",
         "11,3": "pedra_negra",
         "11,4": "pedra_negra",
@@ -46378,7 +47264,8 @@ window.EDITOR_DUNGEONS = [
         "10,5": "pedra_negra",
         "10,4": "pedra_negra",
         "9,4": "pedra_negra",
-        "8,4": "pedra_negra"
+        "8,4": "pedra_negra",
+        "6,3": "pedra_negra"
       },
       "pontes": [],
       "elevacoes": {},
@@ -56218,4 +57105,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

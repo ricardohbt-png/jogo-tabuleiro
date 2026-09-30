@@ -1032,7 +1032,7 @@
           "conversations": [
             {
               "id": "inicial",
-              "texto": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+              "texto": "Vocês são aventureiros? Cheguem mais perto. \nVocês já ouviram falar do Calabouço da Morte?",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
@@ -1042,10 +1042,44 @@
               },
               "efeito": {
                 "renome": 0,
-                "fato": "",
+                "fato": "segredo1",
                 "item_id": ""
               },
               "uma_vez": false
+            },
+            {
+              "id": "fala_mulr73l3",
+              "texto": "Dizem que, muito antes de esta estalagem ter nome, o barão Ynholaff escondeu sua fortuna em salões cavados fundo sob a pedra. Ouro, joias, relíquias de família… tudo guardado atrás de portas de ferro e corredores feitos para confundir até os mais espertos.\n\nMas o barão não confiava só em fechaduras. Encheu a masmorra de armadilhas: placas que cediam sob os pés, lâminas nas paredes e fossos tão escuros que nem uma moeda lançada lá dentro fazia barulho ao cair. E, para proteger o tesouro, deixou guardiões de vigília — alguns de carne e osso, outros que, segundo contam, já deveriam estar mortos há séculos.\n\nMuita gente entrou atrás da fortuna de Ynholaff. Ninguém voltou.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo1",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo2",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulrbvne",
+              "texto": "Ouvi um viajante dizendo que encontrou a entrada do lugar. É aquele elfo meio esquisito lá no canto.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo2",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo3",
+                "item_id": ""
+              },
+              "uma_vez": true
             }
           ],
           "z": 1.0
@@ -1289,7 +1323,127 @@
           "h": 20.0,
           "z": 3.0,
           "dialog": "",
-          "conversations": []
+          "conversations": [
+            {
+              "id": "inicial",
+              "texto": "Me deixem beber em paz.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "fala_mulrezmy",
+              "texto": "O Calabouço da morte? Por que perguntam ?\nQuisera eu nunca ter ouvido falar desse lugar...\nVão embora. Me deixem em paz.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo3",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo4",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulrgts9",
+              "texto": "Sim, o lugar é real. Não. Eu nunca entrei.\nNão tive coragem. Porém todos os meus companheiros entraram, nunca mais os vi desde então.\nE isso já faz 2 anos.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo4",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo5",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulrjjiz",
+              "texto": "Como encontramos? Foi por meio de um mapa. \nUm maldito mapa. Depois que encontramos ninguém mais quis saber de outra coisa. Todos só pensavam no tesouro do barão. \nAgora eu tenho certeza que dariam o dobro de todas essas riquezas para poderem nunca ter entrado ali.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo5",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo6",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulrqb8y",
+              "texto": "O Mapa? \nEstá comigo sim.\nNão, não vou dar a vocês. Embora eu amaldiçoe esse papel, é a única coisa me me restou para lembrar do meu companheiros.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo6",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo7",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulrsauo",
+              "texto": "Se vocês o querem tanto assim, então façam valer a pena.\nSão 50 moedas por ele, é pegar ou largar.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo7",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo8",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "fala_mulru8zm",
+              "texto": "Feito!\nLevem embora essa coisa asquerosa, e não me aborreçam mais.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "segredo8",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "segredo9",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
         },
         {
           "id": "npc_ms2egify",

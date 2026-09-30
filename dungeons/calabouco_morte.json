@@ -1325,8 +1325,8 @@
       0,
       1,
       1,
-      0,
-      0,
+      1,
+      1,
       1,
       1,
       1,
@@ -2807,97 +2807,6 @@
       0,
       0,
       0,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
       0,
       0,
       0,
@@ -2912,8 +2821,37 @@
       1,
       1,
       1,
+      0,
+      0,
+      0,
       1,
       1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       1,
       0,
       0,
@@ -2929,6 +2867,15 @@
       0,
       0,
       0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -2938,6 +2885,59 @@
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -2991,15 +2991,15 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -3053,15 +3053,15 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -3115,15 +3115,15 @@
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -3740,16 +3740,114 @@
     {
       "type": "ferrao_charcos_adulto",
       "pos": [
-        5,
-        15
+        4,
+        13
       ],
       "room_id": null,
       "boss": false,
       "target": false,
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [],
+          "types": []
+        }
+      },
       "vscale": [
         1.3,
         1.3
       ]
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        21,
+        21
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        18,
+        21
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        23,
+        22
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        15,
+        21
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "jacare",
+      "pos": [
+        37,
+        22
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "jacare",
+      "pos": [
+        41,
+        25
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        56,
+        23
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_assassino",
+      "pos": [
+        18,
+        5
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "goblin_assassino",
+      "pos": [
+        54,
+        4
+      ],
+      "room_id": 5,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [
@@ -3774,7 +3872,7 @@
         },
         {
           "id": "carta",
-          "texto": "Essa é a primeira carta a ser lida na aventura"
+          "texto": "Maldito o dia em que fui convencido de entrar nesse inferno. Vou esperar aqui, quem sabe um dia alguém abra essa entrada e eu possa fugir. Os goblins querem me pegar, ainda bem que eles tem medo da lamina do corredor."
         }
       ],
       "key_objective": false
@@ -3794,6 +3892,19 @@
         },
         {
           "id": "flechas"
+        },
+        {
+          "id": "flecha_incendiaria"
+        },
+        {
+          "id": "pao"
+        },
+        {
+          "id": "garrafa_vinho"
+        },
+        {
+          "id": "carta",
+          "texto": "Carta escrita em garranchos.\nJá fazem anos que Grik nos liderou até esse labirinto maldito. Aqui ou você come ou é devorado. E eu não vou deixar esse labirinto me devorar."
         }
       ],
       "key_objective": false
@@ -4031,6 +4142,164 @@
         }
       ],
       "key_objective": true
+    },
+    {
+      "pos": [
+        4,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        5,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        6,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        7,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        8,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        9,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        10,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        11,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        12,
+        50
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        5,
+        49
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        8,
+        48
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        11,
+        49
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        9,
+        49
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        7,
+        49
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        8,
+        49
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        29,
+        15
+      ],
+      "gold": 0,
+      "items": [
+        {
+          "id": "carta",
+          "texto": "Diário do Orc\n\nGrunt e Kogre caíram da ponte. O chão estava lá, mas não estava. Ele gritou, o barulho ao longe foi de agua. Grunt gritava, não de dor, ele não se machucou muito. Não foi pela queda que ele gritou.. foi o que tinha lá embaixo. Kogre foi o primeiro a descobrir, os repteis do fosso pegaram ele... os gritos.... Grunt sabia que seria o próximo, conseguiu pegar seu machado, embora as feras não se assustassem com ele. Eu tentei procurar uma corda, quando joguei achei que seria tarde demais. Porém Grunt surgiu vindo do poço pela corda que joguei, ele estava pálido, seu olhar era de puro terror. Pensei que fora de ver Kogre ser devorado vivo pelos crocodilos. Porém Grunt não falava. Depois de muito eu insistir, Grunt finalmente falou do horror que viu lá embaixo, não foram os crocodilos devoradores de gente... ele disse que havia algo lá, mais perigoso... mais faminto. Grunt disse que enquanto as feras o encurralavam, elas do nada pararam e fugiram, exceto uma, ocupada demais devorando o que sobrou de Kogre. Grunt disse que viu uma sombra na agua engolir o animal, a agua tingiu-se de vermelho enquanto o turbilhão se espalhava. O que quer que seja aquilo, Grunt disse para nunca chegarmos perto do fosso outra vez."
+        }
+      ],
+      "key_objective": false
+    },
+    {
+      "pos": [
+        2,
+        13
+      ],
+      "gold": 0,
+      "items": [],
+      "key_objective": false
     }
   ],
   "traps": [
@@ -4103,8 +4372,8 @@
       "id": "trap_8",
       "tipo": "armadilha_teletransporte",
       "pos": [
-        29,
-        42
+        30,
+        43
       ],
       "saida": [
         7,
@@ -4213,6 +4482,15 @@
       ],
       "dificuldade": 15,
       "veneno_id": "veneno_basilisco"
+    },
+    {
+      "id": "trap_22",
+      "tipo": "chao_illusorio",
+      "pos": [
+        20,
+        22
+      ],
+      "ponte_id": "ponte_8"
     }
   ],
   "decorations": [
@@ -4271,7 +4549,10 @@
         1
       ],
       "loot": null,
-      "key_objective": false
+      "key_objective": false,
+      "disable_trap_ids": [
+        "trap_11"
+      ]
     },
     {
       "id": "decor_calabouco_04",
@@ -4357,6 +4638,9 @@
       ],
       "loot": null,
       "key_objective": false,
+      "disable_trap_ids": [
+        "trap_12"
+      ],
       "size": [
         1,
         1
@@ -4397,7 +4681,14 @@
       ],
       "loot": null,
       "key_objective": false,
-      "chest_trap_monster_type": "elemental_pedra",
+      "chest_trap_monster_type": "zumbi_infectado",
+      "trap": {
+        "tipo": "jato_acido",
+        "dificuldade": 15
+      },
+      "disable_trap_ids": [
+        "trap_14"
+      ],
       "image": "tumba_lapide.png",
       "vscale": [
         1.5,
@@ -4496,8 +4787,13 @@
       "loot": null,
       "key_objective": false,
       "trap": {
-        "tipo": "armadilha_urso"
-      }
+        "tipo": "armadilha_dardos_envenenados",
+        "permanente": true,
+        "veneno_id": "veneno_agonia_sufocante"
+      },
+      "disable_trap_ids": [
+        "trap_22"
+      ]
     },
     {
       "id": "decor_calabouco_16",
@@ -4547,7 +4843,10 @@
         1
       ],
       "loot": null,
-      "key_objective": false
+      "key_objective": false,
+      "disable_trap_ids": [
+        "trap_8"
+      ]
     },
     {
       "id": "decor_calabouco_19",
@@ -4671,11 +4970,12 @@
         1
       ],
       "loot": null,
-      "key_objective": false,
+      "key_objective": true,
       "trap": {
         "tipo": "nuvem_gas"
       },
-      "image": "lapide.png"
+      "image": "lapide.png",
+      "visao": "livre"
     },
     {
       "id": "decor_calabouco_25",
@@ -4836,7 +5136,7 @@
       ],
       "loot": null,
       "key_objective": false,
-      "texto": "Seja bem vindo a sua destruição",
+      "texto": "Ladrões que aqui adentrarem; sejam bem vindo a sua destruição",
       "image": "placa_fincada.png"
     },
     {
@@ -4913,6 +5213,9 @@
       ],
       "loot": null,
       "key_objective": false,
+      "disable_trap_ids": [
+        "trap_13"
+      ],
       "image": "mesa_tortura.png"
     },
     {
@@ -4932,6 +5235,206 @@
         1.1,
         1.2
       ]
+    },
+    {
+      "id": "decor_7",
+      "type": "coluna",
+      "pos": [
+        4,
+        33
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "trap": {
+        "tipo": "buraco"
+      }
+    },
+    {
+      "id": "decor_8",
+      "type": "coluna",
+      "pos": [
+        6,
+        33
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": true
+    },
+    {
+      "id": "decor_9",
+      "type": "coluna",
+      "pos": [
+        3,
+        40
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": true
+    },
+    {
+      "id": "decor_10",
+      "type": "coluna",
+      "pos": [
+        6,
+        44
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_11",
+      "type": "coluna",
+      "pos": [
+        9,
+        44
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_12",
+      "type": "estante_armas",
+      "pos": [
+        10,
+        47
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_13",
+      "type": "estante_livros",
+      "pos": [
+        12,
+        47
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "size": [
+        2,
+        1
+      ],
+      "vscale": [
+        2,
+        1.3
+      ],
+      "voffset": [
+        0.3,
+        0
+      ]
+    },
+    {
+      "id": "decor_14",
+      "type": "estante",
+      "pos": [
+        4,
+        48
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "estante_armas_cranios.png",
+      "size": [
+        1,
+        1
+      ],
+      "vscale": [
+        2,
+        1.2
+      ],
+      "voffset": [
+        -0.3,
+        0
+      ]
+    },
+    {
+      "id": "decor_15",
+      "type": "armadura",
+      "pos": [
+        12,
+        46
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "armadura.png"
+    },
+    {
+      "id": "decor_16",
+      "type": "armadura",
+      "pos": [
+        4,
+        46
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "armadura.png"
+    },
+    {
+      "id": "decor_17",
+      "type": "coluna",
+      "pos": [
+        55,
+        24
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": true
+    },
+    {
+      "id": "decor_18",
+      "type": "placa",
+      "pos": [
+        15,
+        20
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "texto": "Não avance. Nem mesmos os crocodilos vão para esse lugar, a frente existe apenas a morte certa.",
+      "image": "placa_fincada.png"
     }
   ],
   "secret_passages": [
@@ -4944,7 +5447,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -4957,7 +5461,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -4970,7 +5475,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -4983,7 +5489,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -4996,7 +5503,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5009,7 +5517,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5022,7 +5531,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5035,7 +5545,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5048,7 +5559,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5061,7 +5573,8 @@
       ],
       "wall_material": "madeira",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5074,7 +5587,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5087,7 +5601,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5100,7 +5615,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5113,7 +5629,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5126,7 +5643,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5139,7 +5657,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5152,7 +5671,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5165,7 +5685,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5178,7 +5699,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5191,7 +5713,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5204,7 +5727,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5217,7 +5741,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5230,7 +5755,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5243,7 +5769,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5256,7 +5783,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5269,7 +5797,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5282,7 +5811,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5295,7 +5825,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5308,7 +5839,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5321,7 +5853,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5334,7 +5867,8 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
       ],
       "keys_mode": "any"
     },
@@ -5347,7 +5881,415 @@
       ],
       "wall_material": "pedra_caverna",
       "key_decor_ids": [
-        "decor_1"
+        "decor_1",
+        "decor_17"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_32",
+      "type": "mechanism",
+      "pos": [
+        7,
+        45
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_8",
+        "decor_9"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_33",
+      "type": "mechanism",
+      "pos": [
+        8,
+        45
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_8",
+        "decor_9"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_34",
+      "type": "mechanism",
+      "pos": [
+        9,
+        45
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_8",
+        "decor_9"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_35",
+      "type": "mechanism",
+      "pos": [
+        6,
+        45
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_8",
+        "decor_9"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_36",
+      "type": "mechanism",
+      "pos": [
+        26,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_37",
+      "type": "mechanism",
+      "pos": [
+        25,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_38",
+      "type": "mechanism",
+      "pos": [
+        24,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_39",
+      "type": "mechanism",
+      "pos": [
+        23,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_40",
+      "type": "mechanism",
+      "pos": [
+        22,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_41",
+      "type": "mechanism",
+      "pos": [
+        22,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_42",
+      "type": "mechanism",
+      "pos": [
+        21,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_43",
+      "type": "mechanism",
+      "pos": [
+        20,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_44",
+      "type": "mechanism",
+      "pos": [
+        19,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_45",
+      "type": "mechanism",
+      "pos": [
+        18,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_46",
+      "type": "mechanism",
+      "pos": [
+        17,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_47",
+      "type": "mechanism",
+      "pos": [
+        16,
+        40
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_48",
+      "type": "mechanism",
+      "pos": [
+        16,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_49",
+      "type": "mechanism",
+      "pos": [
+        15,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_50",
+      "type": "mechanism",
+      "pos": [
+        14,
+        39
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_51",
+      "type": "mechanism",
+      "pos": [
+        14,
+        38
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_52",
+      "type": "mechanism",
+      "pos": [
+        13,
+        38
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_53",
+      "type": "mechanism",
+      "pos": [
+        12,
+        38
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_54",
+      "type": "mechanism",
+      "pos": [
+        11,
+        38
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_55",
+      "type": "mechanism",
+      "pos": [
+        10,
+        38
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_56",
+      "type": "mechanism",
+      "pos": [
+        10,
+        37
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_57",
+      "type": "mechanism",
+      "pos": [
+        10,
+        36
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_58",
+      "type": "mechanism",
+      "pos": [
+        9,
+        36
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_59",
+      "type": "mechanism",
+      "pos": [
+        9,
+        35
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_60",
+      "type": "mechanism",
+      "pos": [
+        9,
+        34
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_61",
+      "type": "mechanism",
+      "pos": [
+        8,
+        34
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
+      ],
+      "keys_mode": "any"
+    },
+    {
+      "id": "passage_62",
+      "type": "mechanism",
+      "pos": [
+        8,
+        35
+      ],
+      "wall_material": "pedra_caverna",
+      "key_decor_ids": [
+        "decor_calabouco_24"
       ],
       "keys_mode": "any"
     }
@@ -5603,7 +6545,6 @@
     "29,44": "terra",
     "30,44": "terra",
     "19,24": "terra",
-    "20,23": "terra",
     "22,20": "terra",
     "30,24": "pedra_caverna",
     "31,27": "terra",
@@ -6141,7 +7082,6 @@
     "19,30": "terra",
     "19,31": "terra",
     "19,32": "terra",
-    "20,22": "agua",
     "21,22": "agua",
     "21,21": "agua",
     "21,20": "terra",
@@ -6450,7 +7390,6 @@
     "24,0": "enegrecida",
     "23,0": "enegrecida",
     "22,0": "enegrecida",
-    "21,0": "enegrecida",
     "12,0": "enegrecida",
     "13,0": "enegrecida",
     "14,0": "enegrecida",
@@ -7275,8 +8214,6 @@
     "10,19": "agua_profunda",
     "11,19": "agua_profunda",
     "12,19": "enegrecida",
-    "20,21": "agua",
-    "20,20": "terra",
     "19,20": "enegrecida",
     "18,20": "enegrecida",
     "17,20": "enegrecida",
@@ -7359,8 +8296,8 @@
     "16,21": "agua",
     "15,21": "agua",
     "14,21": "agua",
-    "13,21": "enegrecida",
-    "12,21": "enegrecida",
+    "13,21": "agua_profunda",
+    "12,21": "agua_profunda",
     "11,21": "agua_profunda",
     "10,21": "agua_profunda",
     "9,21": "enegrecida",
@@ -8035,9 +8972,6 @@
     "1,49": "pedra_caverna",
     "2,49": "pedra_caverna",
     "3,49": "pedra_caverna",
-    "4,49": "pedra_caverna",
-    "5,49": "pedra_caverna",
-    "6,49": "pedra_caverna",
     "18,50": "pedra_caverna",
     "18,49": "pedra_caverna",
     "17,49": "pedra_caverna",
@@ -8045,16 +8979,7 @@
     "15,49": "pedra_caverna",
     "14,49": "pedra_caverna",
     "13,49": "pedra_caverna",
-    "12,49": "pedra_caverna",
-    "11,49": "pedra_caverna",
-    "10,49": "pedra_caverna",
-    "9,49": "pedra_caverna",
-    "8,49": "pedra_caverna",
-    "7,49": "pedra_caverna",
-    "7,48": "pedra_caverna",
-    "7,47": "pedra_caverna",
-    "7,46": "pedra_caverna",
-    "7,45": "terra",
+    "7,45": "pedra_caverna",
     "7,44": "terra",
     "7,43": "terra",
     "7,42": "lava",
@@ -8083,12 +9008,7 @@
     "1,48": "pedra_caverna",
     "2,48": "pedra_caverna",
     "3,48": "pedra_caverna",
-    "4,48": "pedra_caverna",
-    "5,48": "pedra_caverna",
-    "6,48": "pedra_caverna",
-    "6,47": "pedra_caverna",
-    "6,46": "pedra_caverna",
-    "6,45": "terra",
+    "6,45": "pedra_caverna",
     "6,44": "terra",
     "6,43": "pedra_caverna",
     "6,42": "pedra_caverna",
@@ -8111,9 +9031,6 @@
     "2,46": "pedra_caverna",
     "2,47": "pedra_caverna",
     "3,47": "pedra_caverna",
-    "4,47": "pedra_caverna",
-    "5,47": "pedra_caverna",
-    "5,46": "pedra_caverna",
     "5,45": "pedra_caverna",
     "6,39": "pedra_caverna",
     "6,38": "pedra_caverna",
@@ -8127,7 +9044,6 @@
     "3,42": "pedra_caverna",
     "3,43": "pedra_caverna",
     "3,46": "pedra_caverna",
-    "4,46": "pedra_caverna",
     "4,45": "pedra_caverna",
     "4,44": "pedra_caverna",
     "3,44": "pedra_caverna",
@@ -8150,14 +9066,7 @@
     "8,42": "lava",
     "8,43": "terra",
     "8,44": "terra",
-    "8,45": "terra",
-    "8,46": "pedra_caverna",
-    "8,47": "pedra_caverna",
-    "8,48": "pedra_caverna",
-    "9,48": "pedra_caverna",
-    "10,48": "pedra_caverna",
-    "11,48": "pedra_caverna",
-    "12,48": "pedra_caverna",
+    "8,45": "pedra_caverna",
     "13,48": "pedra_caverna",
     "14,48": "pedra_caverna",
     "15,48": "pedra_caverna",
@@ -8168,14 +9077,6 @@
     "15,47": "pedra_caverna",
     "14,47": "pedra_caverna",
     "13,47": "pedra_caverna",
-    "12,47": "pedra_caverna",
-    "12,46": "pedra_caverna",
-    "11,46": "pedra_caverna",
-    "10,46": "pedra_caverna",
-    "9,46": "pedra_caverna",
-    "9,47": "pedra_caverna",
-    "10,47": "pedra_caverna",
-    "11,47": "pedra_caverna",
     "13,46": "pedra_caverna",
     "14,46": "pedra_caverna",
     "15,46": "pedra_caverna",
@@ -8196,7 +9097,7 @@
     "9,42": "pedra_caverna",
     "9,43": "pedra_caverna",
     "9,44": "terra",
-    "9,45": "terra",
+    "9,45": "pedra_caverna",
     "10,45": "pedra_caverna",
     "11,45": "pedra_caverna",
     "12,45": "pedra_caverna",
@@ -8265,18 +9166,14 @@
     "15,50": "pedra_caverna",
     "14,50": "pedra_caverna",
     "13,50": "pedra_caverna",
-    "12,50": "pedra_caverna",
-    "11,50": "pedra_caverna",
-    "4,50": "pedra_caverna",
     "3,50": "pedra_caverna",
     "2,50": "pedra_caverna",
-    "5,50": "pedra_caverna",
-    "6,50": "pedra_caverna",
-    "7,50": "pedra_caverna",
-    "8,50": "pedra_caverna",
-    "9,50": "pedra_caverna",
-    "10,50": "pedra_caverna",
-    "49,22": "agua"
+    "49,22": "agua",
+    "20,21": "agua",
+    "20,22": "agua",
+    "20,20": "terra",
+    "20,23": "terra",
+    "21,0": "enegrecida"
   },
   "pontes": [
     {
@@ -8336,20 +9233,6 @@
       "material": "madeira"
     },
     {
-      "id": "ponte_5",
-      "inicio": [
-        20,
-        20
-      ],
-      "fim": [
-        20,
-        23
-      ],
-      "largura": 1,
-      "altura": 2,
-      "material": "madeira"
-    },
-    {
       "id": "ponte_6",
       "inicio": [
         29,
@@ -8375,6 +9258,20 @@
       ],
       "largura": 1,
       "altura": 2,
+      "material": "madeira"
+    },
+    {
+      "id": "ponte_8",
+      "inicio": [
+        20,
+        20
+      ],
+      "fim": [
+        20,
+        23
+      ],
+      "largura": 1,
+      "altura": 7,
       "material": "madeira"
     }
   ],
@@ -8717,14 +9614,20 @@
     "51,46": 1,
     "51,45": 1,
     "51,44": 1,
-    "23,20": 2,
-    "22,20": 2,
-    "21,20": 2,
-    "20,20": 2,
-    "20,23": 2,
-    "20,24": 1,
+    "23,20": 3,
+    "22,20": 5,
+    "21,20": 6,
+    "20,24": 6,
     "29,24": 2,
-    "29,25": 2
+    "29,25": 2,
+    "19,24": 5,
+    "18,24": 4,
+    "17,24": 3,
+    "17,25": 2,
+    "16,25": 2,
+    "16,24": 2,
+    "20,20": 7,
+    "20,23": 7
   },
   "transicao_altura": "rampa",
   "objectives": {
