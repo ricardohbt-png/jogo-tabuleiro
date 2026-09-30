@@ -1,4 +1,4 @@
-"""Paint a materialless crocodile GLB from a supplied thumbnail palette."""
+"""Paint the jacaré GLB with a color ramp sampled from a reference PNG or GLB."""
 from __future__ import annotations
 
 import argparse
@@ -10,7 +10,18 @@ from PIL import Image
 
 
 def reference_lut(path: Path) -> np.ndarray:
-    image = np.array(Image.open(path).convert("RGBA"), dtype=np.uint8)
+    if path.suffix.lower() in {".glb", ".gltf"}:
+        reference = trimesh.load(path, force="scene")
+        textures = [
+            getattr(getattr(mesh.visual, "material", None), "baseColorTexture", None)
+            for mesh in reference.geometry.values()
+        ]
+        image_source = next((texture for texture in textures if texture is not None), None)
+        if image_source is None:
+            raise RuntimeError(f"O GLB de referência não contém textura Base Color: {path}")
+    else:
+        image_source = Image.open(path)
+    image = np.array(image_source.convert("RGBA"), dtype=np.uint8)
     rgb = image[:, :, :3].astype(np.float32)
     mask = (image[:, :, 3] >= 8) & (rgb.max(axis=2) > 8)
     if not np.any(mask):
@@ -68,6 +79,17 @@ def paint_mesh(mesh: trimesh.Trimesh, lut: np.ndarray) -> None:
     terrain_colors *= np.array([0.88, 0.98, 0.78], dtype=np.float32)
     face_colors[terrain] = np.clip(terrain_colors[terrain], 0, 255).astype(np.uint8)
     face_colors[plinth] = np.array([42, 39, 35], dtype=np.uint8)
+
+    # glTF COLOR_0 values are linear RGB. The reference texture is sRGB, so
+    # decode its palette before writing vertex colors; otherwise the rendered
+    # miniature becomes much paler than the crocodile reference.
+    srgb = face_colors.astype(np.float32) / 255.0
+    linear = np.where(
+        srgb <= 0.04045,
+        srgb / 12.92,
+        ((srgb + 0.055) / 1.055) ** 2.4,
+    )
+    face_colors = np.rint(np.clip(linear, 0.0, 1.0) * 255.0).astype(np.uint8)
 
     vertex_colors = np.zeros((len(mesh.vertices), 4), dtype=np.uint8)
     vertex_colors[:, 3] = 255
