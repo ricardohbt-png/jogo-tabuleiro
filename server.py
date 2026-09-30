@@ -23760,6 +23760,16 @@ class GameRoom:
                 "special_abilities", "subtipo") if k in m})
         return out
 
+    async def handle_pedir_metamorfose_catalog(self, pid):
+        """Entrega o catálogo da Metamorfose só a quem abriu a janela de formas.
+
+        Antes ele ia dentro de TODO game_state (~96 KB de ~115 KB), a cada passo
+        e para todos os jogadores, embora só mude quando um monstro novo é
+        salvo no editor. Sob pedido, também cobre sozinho todos os caminhos de
+        entrada (início, reconexão, sala de teste, save) e segue sempre atual."""
+        await self.send_to(pid, {"type": "metamorfose_catalog",
+                                 "formas": self._metamorfose_catalog()})
+
     def _metamorfose_alvo_valido(self, alvo):
         if not alvo:
             return False
@@ -43001,7 +43011,6 @@ class GameRoom:
             "door_conditions": self._serializar_condicoes_portas(),
             "players": players_state,
             "monsters": monsters_state,
-            "metamorfose_catalog": self._metamorfose_catalog(),
             "corpses": list(self.corpses.values()),
             "hero_corpses": list(self.hero_corpses.values()),
             "traps": [t for t in self.traps if not t["triggered"] and tuple(t["pos"]) in self.explored],
@@ -43920,6 +43929,9 @@ async def handler(ws):
                 elif t == "prever_ataque":
                     if room: await room.handle_prever_ataque(
                         pid, {**msg, "target_id": _key(msg.get("target_id"))})
+
+                elif t == "pedir_metamorfose_catalog":
+                    if room: await room.handle_pedir_metamorfose_catalog(pid)
 
                 elif t == "throw":
                     if room: await room.handle_throw(pid, msg.get("target_id"), msg.get("slot"))

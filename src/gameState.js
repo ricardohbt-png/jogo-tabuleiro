@@ -1313,6 +1313,12 @@ const GS = (() => {
     }
   }
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
+
+  // Catálogo da Metamorfose: não viaja mais em todo game_state (era ~80% do
+  // pacote). A janela de formas pede ao abrir; o servidor responde só a quem
+  // pediu. Guardamos a última resposta para desenhar sem esperar a rede.
+  let metamorfoseCatalog = null;
+  function pedirMetamorfoseCatalog() { send({ type: 'pedir_metamorfose_catalog' }); }
   // Média de uma expressão "NdX" (ou de um número puro, no ataque desarmado).
   function _mediaDado(expr) {
     const m = /^(\d+)d(\d+)$/.exec(String(expr || '').trim());
@@ -1670,6 +1676,11 @@ const GS = (() => {
 
       case 'fala':
         _emit('fala', msg);   // {falante:{nome,emoji}, texto, pos}
+        break;
+
+      case 'metamorfose_catalog':
+        metamorfoseCatalog = Array.isArray(msg.formas) ? msg.formas : [];
+        _emit('metamorfoseCatalog', metamorfoseCatalog);
         break;
 
       case 'previsao_ataque':
@@ -3561,6 +3572,8 @@ const GS = (() => {
     toggleWarriorSkill,
     getWarriorSelected,
     previsaoAtaque,
+    pedirMetamorfoseCatalog,
+    get metamorfoseCatalog() { return metamorfoseCatalog; },
     pedirPrevisaoAtaque,
     danoMedioPrevisao,
     getWarriorFuriaAttacks,

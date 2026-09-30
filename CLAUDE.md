@@ -96,6 +96,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `move` | `dx`, `dy` |
 | `attack` | `target_id` |
 | `prever_ataque` | `target_id`, `target_pos`, `buffs`, `chave` — prévia do ataque básico para o tooltip do monstro (só leitura, não gasta nada). Resposta privada `previsao_ataque` (`chance` 0–100, `vantagem`, `desvantagem`, `dano_dado`, `dano_fixo`, `golpe_mult`, `furtivo_d4`, `chave`). Acerto/CA/vantagem vêm de `_modificadores_ataque_heroi`, o MESMO helper do `handle_attack` — modificador novo de ataque entra lá e vale para os dois. Cache no cliente (`GS.previsaoAtaque`/`pedirPrevisaoAtaque`), invalidado a cada `game_state`. Teste: `tools/test_previsao_ataque.py`. |
+| `pedir_metamorfose_catalog` | — pede o catálogo de formas da Metamorfose (enviado ao abrir a janela de formas). Resposta privada `metamorfose_catalog` (`formas:[…]`), guardada em `GS.metamorfoseCatalog`. O catálogo saiu do `game_state`, onde era ~80% de cada pacote (~96 KB a cada passo, para todos) — não devolva dado estático ao `game_state`. Teste: `tools/test_metamorfose_catalogo.py`. |
 | `animar_mortos` | `cadaver_id` (Pedro anima cadáver adjacente) |
 | `comandar_animados` | — (só no turno dos servos: todos os animados movem+atacam o monstro mais próximo automaticamente) |
 | `mover_animado` | `animado_id`, `dx`, `dy` (controle manual — 1 passo) |
@@ -150,7 +151,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`
+`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`, `metamorfose_catalog`
 
 > **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `tick?`) — broadcast público
 > de `_avisar_armadilha`, emitido em TODO disparo: `_disparar_armadilha` (alvo único),

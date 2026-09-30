@@ -6143,6 +6143,10 @@ window.LANG_INTERFACE = {
     "en": "No unlocked form available.",
     "pt": "Nenhuma forma desbloqueada disponível."
   },
+  "ui.magia.carregando_formas": {
+    "en": "Loading forms…",
+    "pt": "Carregando formas…"
+  },
   "ui.magia.nenhuma_magia_memorizada": {
     "en": "No spell memorized",
     "pt": "Nenhuma magia memorizada"

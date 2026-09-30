@@ -18143,6 +18143,9 @@ function _abrirPickerMetamorfose(){
   const state = GS.gameState, me = GS.me;
   if(!state || !me) return;
   _fecharPickerMetamorfose();
+  // O catálogo não vem mais no game_state: pede agora, enquanto o jogador
+  // escolhe o alvo. A resposta redesenha a lista de formas (ver GS.on abaixo).
+  GS.pedirMetamorfoseCatalog();
   const ov = document.createElement('div'); ov.id='metamorfose-picker';
   ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(8,5,12,.82);display:flex;align-items:center;justify-content:center;padding:20px;';
   const heroes = (state.players||[]).filter(p=>p.alive && !p.is_master);
@@ -18161,14 +18164,22 @@ function _metamorfoseEscolherAlvo(id){
   const state=GS.gameState, me=GS.me, alvo=(state.players||[]).find(p=>String(p.id)===String(id)) || (state.monsters||[]).find(m=>String(m.id)===String(id));
   if(!alvo) return;
   _metamorfoseAlvoEscolhido=id;
-  const catalog=state.metamorfose_catalog||[], unlocked=new Set(me.metamorfose_formas_desbloqueadas||['pombo','rato','gato','ovelha']);
+  const catalog=GS.metamorfoseCatalog||[], unlocked=new Set(me.metamorfose_formas_desbloqueadas||['pombo','rato','gato','ovelha']);
   const forms=catalog.filter(f=>unlocked.has(f.type) && Number(f.cr||0)<=Number(me.level||1));
   const box=document.querySelector('#metamorfose-picker section');
   if(!box) return;
-  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;" data-i18n="ui.magia.escolha_a_forma">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">${t('ui.magia.alvo_rotulo')} <b>${_esc(alvo.name||t('ui.magia.criatura'))}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||'<div data-i18n="ui.magia.nenhuma_forma_desbloqueada_disponivel">Nenhuma forma desbloqueada disponível.</div>'}</div>`;
+  box.innerHTML=`<header style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #c8a95155;padding-bottom:10px;margin-bottom:14px;"><h2 style="margin:0;color:#ff9c62;" data-i18n="ui.magia.escolha_a_forma">🦋 Escolha a forma</h2><button data-meta-close>✕</button></header><p style="color:#c8b89a;">${t('ui.magia.alvo_rotulo')} <b>${_esc(alvo.name||t('ui.magia.criatura'))}</b></p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;">${forms.map(f=>`<button class="meta-choice" data-meta-form="${_esc(f.type)}">${_esc(f.emoji||'👾')} ${_esc(f.name)} <small>ND ${f.cr??0} · PV ${f.hp??'?'}</small></button>`).join('')||(GS.metamorfoseCatalog
+    ? '<div data-i18n="ui.magia.nenhuma_forma_desbloqueada_disponivel">Nenhuma forma desbloqueada disponível.</div>'
+    : '<div data-i18n="ui.magia.carregando_formas">Carregando formas…</div>')}</div>`;
   box.querySelector('[data-meta-close]').onclick=_fecharPickerMetamorfose;
   box.querySelectorAll('[data-meta-form]').forEach(b=>b.onclick=()=>_metamorfoseEnviar(b.dataset.metaForm));
 }
+// Resposta do pedido feito ao abrir a janela: se o jogador já está na lista de
+// formas, redesenha com o catálogo recém-chegado.
+GS.on('metamorfoseCatalog', () => {
+  if(_metamorfoseAlvoEscolhido && document.getElementById('metamorfose-picker'))
+    _metamorfoseEscolherAlvo(_metamorfoseAlvoEscolhido);
+});
 function _metamorfoseEnviar(forma){
   if(!_metamorfoseAlvoEscolhido || !forma) return;
   send({type:'magia', magia_id:'metamorfose', target_id:_metamorfoseAlvoEscolhido, forma_id:forma});
