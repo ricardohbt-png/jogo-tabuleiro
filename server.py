@@ -10753,6 +10753,8 @@ class GameRoom:
         if self.savegame is not None:
             slots_salvos = (self.savegame.get("shortcut_slots", {}) or {}).get(p["class_id"])
             novo["shortcut_slots"] = _shortcut_slots(slots_salvos)
+        if p.get("controlador"):
+            novo["controlador"] = p["controlador"]   # Solo com grupo
         return novo
 
     # ── Solo com grupo: heróis por procuração ─────────────────────────────
@@ -10869,6 +10871,31 @@ class GameRoom:
                 nova = self._casca_extra(pid, cls)
                 self.players[nova["id"]] = nova
         await self.broadcast_lobby()
+
+    def _vincular_grupo_solo(self, conexao):
+        """1º início de um Solo montado pelo select_party: grava o grupo no
+        jogo salvo. A conta fica com `class_id` (o principal — campo lido em
+        todo lugar) e `class_ids` (o grupo, em ordem); cada classe ganha slot
+        e ficha. As magias escolhidas no lobby entram pelo _montar_heroi."""
+        conta = self.account_by_pid.get(conexao)
+        principal = self.players.get(conexao) or {}
+        if not conta or not principal.get("class_id"):
+            return
+        classes = [principal["class_id"]] + [q["class_id"] for q in self._herois_extras_de(conexao)]
+        ensure_campaign_schema(self.savegame)
+        self.savegame.setdefault("members", {})[conta] = {
+            "class_id": classes[0], "class_ids": classes, "status": "active",
+            "joined": _now_iso(), "hero_id": f"hero_{conta}_{classes[0]}"}
+        register_campaign_member_in_group(self.savegame, conta)
+        chars = self.savegame.setdefault("characters", {})
+        for q in [principal] + self._herois_extras_de(conexao):
+            cls = q["class_id"]
+            self.savegame["slots"][cls] = _campaign_slot(cls, conta, "active")
+            if cls not in chars:
+                chars[cls] = snapshot_character(make_player(q["id"], q["name"], cls, q.get("slot", 0)))
+        self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "member_joined",
+            "text": f"{conta} montou o grupo: " + ", ".join(HERO_IDENTITIES.get(c, c) for c in classes)})
+        write_savegame(self.savegame)
 
     # ── Continuar um jogo salvo ───────────────────────────────────────────
     def _classe_vinculada(self, conta):
@@ -11124,6 +11151,10 @@ class GameRoom:
             if pp["class_id"] in ("mage", "cleric") and len(pp.get("magias_conhecidas", [])) < 2:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.magos_e_clerigos_devem_escolher_2_magias")}); return
+
+        # Solo montado pelo select_party: o vínculo da conta é gravado agora.
+        if self._pode_montar_grupo_solo(pid):
+            self._vincular_grupo_solo(pid)
 
         # Build full player states â€” SOMENTE herÃ³is; o mestre nÃ£o vira peÃ£o.
         full_players = {}

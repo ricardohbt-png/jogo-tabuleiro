@@ -234,6 +234,67 @@ async def secao_lobby():
     limpar_salas()
 
 
+def esperar_fase(caixa, fase):
+    async def f():
+        await esperar(lambda: sala_do_jogo(caixa["sid"]).phase == fase)
+        await asyncio.sleep(0.05)
+    return f
+
+def montar_e_iniciar(classes, depois=lambda c: []):
+    """Passos: monta o grupo, escolhe magias de mago/clérigo e inicia."""
+    def passos(c):
+        p = [{"type": "select_party", "classes": classes}, pausa()]
+        for cls in classes:
+            if cls in ("mage", "cleric"):
+                p.append(lambda cls=cls: {"type": "set_known_spells", "ids": duas_magias(cls),
+                                          "heroi": casca(c["sid"], cls)})
+                p.append(pausa())
+        p += [{"type": "start_game"}, esperar_fase(c, "city")]
+        return p + depois(c)
+    return passos
+
+
+async def secao_inicio():
+    print("\n[2] início: vínculo, magias por herói, XP dividido")
+    obs = {}
+    def antes_das_magias(c):
+        return [{"type": "select_party", "classes": ["warrior", "mage", "rogue"]}, pausa(),
+                {"type": "start_game"}, pausa()]
+    _, ws0 = await criar_solo("solo3", "SemMagia", antes_das_magias)
+    check("iniciar sem as magias do mago é recusado",
+          txt("erro.magos_e_clerigos_devem_escolher_2_magias") in ws0.erros(), ws0.erros())
+    limpar_salas()
+
+    def olhar(c):
+        def f():
+            r = sala_do_jogo(c["sid"])
+            obs["players"] = {p["id"]: dict(p) for p in r.players.values()}
+            obs["xp"] = r._calc_monster_xp({"cr": 1})
+        return [f]
+    sid, ws = await criar_solo("solo4", "Trio", montar_e_iniciar(["warrior", "mage", "rogue"], olhar))
+    ps = obs["players"]
+    mago = next(p for p in ps.values() if p.get("class_id") == "mage")
+    principal = next(p for p in ps.values() if not p.get("controlador"))
+    check("3 heróis na cidade", len(ps) == 3, list(ps))
+    check("o mago (extra) tem as magias escolhidas para ele",
+          set(duas_magias("mage")) <= set(mago.get("magias_conhecidas") or []),
+          mago.get("magias_conhecidas"))
+    check("os extras guardam o controlador após o start_game",
+          sum(1 for p in ps.values() if p.get("controlador") == principal["id"]) == 2)
+    check("city_state leva os 3 heróis", len(ws.msgs("city_state")[-1]["players"]) == 3)
+    check("XP de monstro dividido por 3", obs["xp"][1] == 3, obs["xp"])
+    sg = S.load_savegame(sid)
+    m = sg["members"]["solo4"]
+    check("jogo salvo: class_id é o principal", m.get("class_id") == "warrior", m)
+    check("jogo salvo: class_ids guarda o grupo", m.get("class_ids") == ["warrior", "mage", "rogue"], m)
+    check("jogo salvo: uma ficha por classe",
+          all(c in sg.get("characters", {}) for c in ("warrior", "mage", "rogue")))
+    check("jogo salvo: a ficha do mago tem as magias",
+          set(duas_magias("mage")) <= set(sg["characters"]["mage"].get("magias_conhecidas") or []))
+    limpar_salas()
+    return sid
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
@@ -244,6 +305,7 @@ async def main():
             assert acc, e
         await secao_helpers()
         await secao_lobby()
+        sid_trio = await secao_inicio()
     finally:
         limpar_salas()
         S.LOJA = velha
