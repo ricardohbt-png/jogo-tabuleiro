@@ -952,14 +952,19 @@ function handleLobby(msg){
   if(csf){
     const meP = msg.players.find(p=>p.id===GS.myPid);
     const myClass = meP?.class_id;
-    csf.selectedId = myClass ?? csf.selectedId;
+    // Solo com grupo: o jogador marca várias classes; a seleção do carrossel
+    // é só "qual estou olhando", e não volta ao principal a cada lobby_state.
+    csf.partyMode = !!msg.grupo_solo;
+    csf.partyIds = new Set(csf.partyMode
+      ? msg.players.filter(p => GS.ehMeuHeroi(p.id) && p.class_id).map(p => p.class_id) : []);
+    if(!csf.partyMode) csf.selectedId = myClass ?? csf.selectedId;
     if(myClass) csf.gridSelectionMade = true;
     // Jogo salvo: se a minha conta já tem personagem fixo, a classe fica travada
     // (o servidor força; a UI só reflete). Jogo rápido: classLocked=false.
     csf.classLocked = !!(msg.savegame && meP && meP.bound);
     // Classes escolhidas por OUTROS jogadores ficam indisponíveis.
     csf.takenIds = new Set(
-      msg.players.filter(p => p.id !== GS.myPid && p.class_id).map(p => p.class_id));
+      msg.players.filter(p => !GS.ehMeuHeroi(p.id) && p.class_id).map(p => p.class_id));
     // Entrada com a partida em andamento: o servidor manda também as classes
     // de membros que não estão na sala hoje (o personagem é deles).
     for (const c of (msg.taken_classes || [])) csf.takenIds.add(c);
@@ -973,6 +978,11 @@ function handleLobby(msg){
     const hint = document.getElementById('cs-hint');
     if(hint) hint.textContent = t('ui.selecao.entrada_tardia');
   }
+  if(csf && csf.partyMode){
+    const hint = document.getElementById('cs-hint');
+    if(hint) hint.textContent = t('ui.selecao.grupo_dica');
+  }
+  _csHeroGridSync();
 }
 
 // Aplica o visual de "indisponível" (esmaecido) aos heróis já escolhidos por
@@ -49607,9 +49617,36 @@ function _csHeroGridSync(){
     const locked = csf.classLocked && id !== csf.selectedId;
     tile.classList.toggle('selected', id === csf.selectedId && !!csf.gridSelectionMade);
     tile.classList.toggle('taken', !!taken);
+    tile.classList.toggle('no-grupo', !!(csf.partyMode && csf.partyIds && csf.partyIds.has(id)));
     tile.disabled = !!taken || locked;
     tile.setAttribute('aria-pressed', String(id === csf.selectedId && !!csf.gridSelectionMade));
   });
+  _csAtualizarBotaoGrupo();
+}
+
+// Solo com grupo: o botão de confirmar vira "adicionar/remover do grupo".
+// A chave vai no data-i18n para a troca de idioma não desfazer o rótulo.
+function _csAtualizarBotaoGrupo(){
+  const btn = document.getElementById('cs-btn-confirm');
+  if(!btn || !csf) return;
+  const chave = !csf.partyMode ? 'ui.selecao.partir_aventura'
+    : (csf.partyIds && csf.partyIds.has(csf.selectedId)) ? 'ui.selecao.remover_do_grupo'
+    : 'ui.selecao.adicionar_ao_grupo';
+  btn.setAttribute('data-i18n', chave);
+  btn.textContent = t(chave);
+}
+
+function _csAlternarNoGrupo(cls){
+  const atual = [...(csf.partyIds || [])];
+  const tinha = atual.includes(cls);
+  const lista = tinha ? atual.filter(c => c !== cls) : atual.concat(cls);
+  if(!lista.length){ toast(t('ui.selecao.grupo_minimo'), 'var(--orange)'); return; }
+  if(lista.length > 6) return;
+  GS.selectParty(lista);
+  if(!tinha && (cls === 'mage' || cls === 'cleric')){
+    window._magiasCriacaoClasseGrupo = cls;
+    mostrarOverlaySelecaoMagiasCriacao(cls);
+  }
 }
 
 function initClassSelectFull(){
@@ -50362,6 +50399,7 @@ function csConfirmClass(){
     toast(t('ui.selecao.ja_escolhido'), 'var(--orange)');
     return;
   }
+  if(csf.partyMode){ _csAlternarNoGrupo(csf.selectedId); return; }
   send({type:'select_class', class_id: csf.selectedId});
   toast(`${_rotulo(csf.selectedId, 'ui.selecao.classe.cls', csf.selectedId)} selecionado!`, 'var(--gold)');
   // Mago/clérigo: escolher 2 magias de 1º círculo (obrigatório p/ iniciar — gate no servidor).
@@ -53753,7 +53791,10 @@ window._toggleMagiaCriacao = function(id){
 window._confirmarMagiasCriacao = function(){
   const sel = window._magiasCriacaoSel || [];
   if(sel.length !== 2){ toast(t('ui.selecao.escolha_2_magias'), 'var(--orange)'); return; }
-  GS.setKnownSpells(sel);
+  // Solo com grupo: as magias são do herói daquela classe, não do principal.
+  const clsGrupo = window._magiasCriacaoClasseGrupo;
+  window._magiasCriacaoClasseGrupo = null;
+  GS.setKnownSpells(sel, clsGrupo ? GS.cascaDaClasse(clsGrupo) : undefined);
   const el = document.getElementById('overlay-selecao-criacao');
   if (el) el.remove();
   toast(t('ui.magia.magias_escolhidas'), 'var(--gold)');

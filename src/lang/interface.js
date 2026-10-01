@@ -10324,6 +10324,30 @@ window.LANG_INTERFACE = {
   "ui.menu.atravessar_nota_outro": {
     "en": "Rule chosen by the host.",
     "pt": "Regra escolhida pelo anfitrião."
+  },
+  "ui.selecao.adicionar_ao_grupo": {
+    "en": "➕ Add to party",
+    "pt": "➕ Adicionar ao grupo"
+  },
+  "ui.selecao.remover_do_grupo": {
+    "en": "➖ Remove from party",
+    "pt": "➖ Remover do grupo"
+  },
+  "ui.selecao.grupo_minimo": {
+    "en": "The party needs at least 1 hero.",
+    "pt": "O grupo precisa de pelo menos 1 herói."
+  },
+  "ui.selecao.grupo_dica": {
+    "en": "Solo: pick from 1 to 6 heroes — you control them all.",
+    "pt": "Solo: marque de 1 a 6 heróis — você controla todos."
+  },
+  "ui.hud.na_vez": {
+    "en": "⚔️ their turn",
+    "pt": "⚔️ na vez"
+  },
+  "ui.hud.clique_para_focar": {
+    "en": "Click to control this hero",
+    "pt": "Clique para controlar este herói"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

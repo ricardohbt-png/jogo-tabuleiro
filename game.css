@@ -1835,3 +1835,13 @@ body.preview-mode #map-panel { width:100%; }
 .mm-slot-pip.staff{background:#4a2a0a;border-color:#ff9d2e;color:#ffb347;box-shadow:0 0 7px rgba(255,157,46,.38);}
 .mm-slot-pip.staff.ready{background:#5b3009;border-color:#ff9d2e;color:#ffd08a;}
 .mm-slot-pip.staff.cooldown{background:#24190d;border-color:#d4771c;color:#ffb347;box-shadow:inset 0 0 5px rgba(0,0,0,.7);}
+
+/* Solo com grupo: heróis marcados na grade de seleção */
+.cs-hero-tile.no-grupo { outline: 2px solid var(--gold, #c8a951); outline-offset: -2px; }
+.cs-hero-tile.no-grupo::after {
+  content: "✓"; position: absolute; top: 6px; right: 8px;
+  color: var(--gold, #c8a951); font-weight: 700; font-size: 18px;
+  text-shadow: 0 1px 3px #000;
+}
+/* Cartão do herói meu que está na vez (Solo com grupo) */
+.pcard-vez { font-size: 11px; color: #ffd36b; }
