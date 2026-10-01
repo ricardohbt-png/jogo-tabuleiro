@@ -2693,7 +2693,7 @@ FOTO_SALA_CATEGORIAS = {
     "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
     # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
     "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
-    "turn_index": "foto", "player_order": "foto",
+    "turn_index": "foto",
     # contadores de id (evitam id repetido depois de retomar)
     "_elemental_seq": "foto", "_attack_feedback_seq": "foto",
     "_cuspe_acido_anim_seq": "foto", "_elemental_raio_anim_seq": "foto",
@@ -2723,6 +2723,7 @@ FOTO_SALA_CATEGORIAS = {
     "_mat_oclui_tiles": "derivado", "_ponte_tiles": "derivado",
     "_ponte_alturas": "derivado", "phase": "derivado", "initiative_active": "derivado",
     "dungeon_def": "derivado",   # recarregado do arquivo em selected_dungeon
+    "player_order": "derivado",  # ordem das conexões desta sessão (start_game)
     # conexão / sala
     "code": "conexao", "connections": "conexao", "account_by_pid": "conexao",
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
@@ -2755,6 +2756,7 @@ FOTO_SALA_CATEGORIAS = {
     "_monster_ai_reserved_tiles": "efemero",
     "_grotao_ponto_vulneravel_claims": "efemero",
     "_ultima_foto": "efemero",   # cópia em memória da última foto gravada
+    "_foto_pendente": "janela",  # foto lida do jogo salvo, ainda não aplicada
     # constantes
     "TURN_LIMIT_S": "constante", "MASTER_MANUAL_MOVE": "constante",
     "MASTER_MANUAL_LIMIT_S": "constante",
@@ -2782,6 +2784,50 @@ def foto_empacotar(corpo, **resumo):
     texto = json.dumps(_foto_codificar(corpo), ensure_ascii=False, separators=(",", ":"))
     dados = base64.b64encode(gzip.compress(texto.encode("utf-8"), 6)).decode("ascii")
     return dict(resumo, versao=FOTO_VERSAO, gravado_em=_now_iso(), dados=dados)
+
+
+_FOTO_ID_RE = re.compile(r"(?<![A-Za-z0-9])id_(\d+)(?![0-9])")
+
+
+def foto_renomear_ids(corpo, mapa_fixo, gerar_id):
+    """Troca todo id `id_N` da foto por um id desta sessão.
+
+    O contador de `new_id()` recomeça a cada reinício do servidor e é
+    compartilhado por jogadores, monstros, baús e armadilhas; aplicar a foto
+    com os ids antigos faria um monstro salvo colidir com um jogador ou monstro
+    novo. Cada id antigo vira `mapa_fixo[id]` (o pid antigo de um herói → o pid
+    da conexão nova) ou um id novo de `gerar_id()`. Vale também para id dentro
+    de texto composto ("camara_gas_id_9"). Devolve (corpo_novo, mapa)."""
+    achados = set()
+
+    def coletar(v):
+        if isinstance(v, str):
+            achados.update(m.group(0) for m in _FOTO_ID_RE.finditer(v))
+        elif isinstance(v, dict):
+            for k, x in v.items():
+                coletar(k); coletar(x)
+        elif isinstance(v, (list, tuple, set, frozenset)):
+            for x in v:
+                coletar(x)
+    coletar(corpo)
+    mapa = {velho: (mapa_fixo.get(velho) or gerar_id())
+            for velho in sorted(achados, key=lambda s: int(s[3:]))}
+
+    def trocar(v):
+        if isinstance(v, str):
+            if v in mapa_fixo:          # pid que não segue o formato id_N
+                return mapa_fixo[v]
+            return _FOTO_ID_RE.sub(lambda m: mapa.get(m.group(0), m.group(0)), v)
+        if isinstance(v, dict):
+            return {trocar(k): trocar(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [trocar(x) for x in v]
+        if isinstance(v, tuple):
+            return tuple(trocar(x) for x in v)
+        if isinstance(v, (set, frozenset)):
+            return type(v)(trocar(x) for x in v)
+        return v
+    return trocar(corpo), mapa
 
 
 def foto_desempacotar(registro):
@@ -2865,6 +2911,9 @@ def try_open_savegame_room(account, sid, rooms):
         defn = carregar_campanha(sg["campaign_file"])
         if defn is not None:
             room.campaign = defn
+    # Foto da masmorra (Etapa 2): só é aplicada no start_game, quando já se
+    # sabe quem está jogando (o pid de cada herói muda a cada conexão).
+    room._foto_pendente = sg.get("dungeon_snapshot")
     SAVEGAMES_IN_USE[sid] = code
     return room, None
 
@@ -10018,6 +10067,7 @@ class GameRoom:
         # terminar nela (handle_move_path e irmãos).
         self.atravessar_aliados = False
         self._ultima_foto = None   # última foto da masmorra gravada (Etapa 2 do salvamento)
+        self._foto_pendente = None  # foto lida do jogo salvo, aplicada no start_game
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
         self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
@@ -10783,6 +10833,19 @@ class GameRoom:
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await self.send_city_state_to(pid)
             await self.gm_say(T("narracao.reconectou_se_a_aventura", name=name))
+        elif alvo.get("_pos_retomada"):
+            # Ausente na retomada de um jogo salvo: volta à casa da foto (ou à
+            # livre mais próxima, se alguém a ocupou nesse meio-tempo).
+            casa = list(alvo.pop("_pos_retomada"))
+            ocupada = any(list(q["pos"]) == casa for q in self.players.values()
+                          if q["id"] != pid and self._ativo(q)) or                       any(casa in self._monster_tiles(m) for m in self.monsters.values()
+                          if m.get("hp", 0) > 0)
+            alvo["pos"] = self._free_tile_near(casa) if ocupada else casa
+            await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+            await ws.send(json.dumps({"type": "enter_dungeon"}))
+            self._iniciar_timer_turno()
+            await self.push_state()
+            await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
         else:   # playing — o personagem REENTRA pela escada de entrada
             if self.start_mode == "hero_spawns":
                 start = self._start_point_for_player(alvo)
@@ -10930,6 +10993,11 @@ class GameRoom:
             self._story_encadeada = _story_beat("campaign-start:" + str(self.selected_campaign or self.campaign.get("id", "")),
                                                 [self.campaign.get("intro")])
         await self.broadcast({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
+        # Jogo salvo com foto da masmorra: o grupo volta para dentro dela, no
+        # início da rodada em que parou, em vez de ir para a cidade.
+        registro, self._foto_pendente = self._foto_pendente, None
+        if registro and await self._retomar_masmorra(registro):
+            return
         await self.broadcast_city_state()
         self._checkpoint_savegame()   # ponto seguro: fichas completas na 1ª cidade
         # Opcional: cinemática de abertura ocorre após montar o grupo e antes da cidade.
@@ -22385,6 +22453,7 @@ class GameRoom:
         """Transição masmorra→cidade reusável (saída pela escada e avanço de fase).
         `story` é o beat de encerramento a exibir na cidade — gravado DEPOIS da
         limpeza, já que o broadcast do city_state acontece aqui dentro."""
+        self._apagar_foto()
         self._cancelar_timer_turno()   # fora da masmorra nÃ£o hÃ¡ timer de turno
         self._cancelar_intro_masmorra()
         self.dungeon_intro_active = False
@@ -22534,6 +22603,146 @@ class GameRoom:
         self.savegame["dungeon_snapshot"] = foto
         write_savegame(self.savegame)
         _agendar_descarga()
+        return True
+
+    def _apagar_foto(self):
+        """A masmorra da foto deixou de valer (o grupo voltou à cidade, a
+        aventura acabou ou emendou na próxima etapa): sem isto, o próximo
+        Continuar jogaria o grupo de volta numa masmorra já encerrada."""
+        self._ultima_foto = None
+        for p in self.players.values():
+            p.pop("_pos_retomada", None)   # casa de uma masmorra que acabou
+        if self.savegame is not None and self.savegame.pop("dungeon_snapshot", None) is not None:
+            write_savegame(self.savegame)
+            _agendar_descarga()
+
+    def _arquivo_da_foto(self, sala):
+        """Arquivo da masmorra autorada da foto; None se ela é procedural."""
+        if sala.get("selected_dungeon"):
+            return sala["selected_dungeon"]
+        if sala.get("mode") == "campaign" and self.campaign:
+            fases = self.campaign.get("dungeons") or []
+            if 0 <= self.campaign_phase < len(fases):
+                return _fase_file(fases[self.campaign_phase])
+        return None
+
+    async def _descartar_foto(self, motivo):
+        """A foto não serve mais: tira do jogo salvo e avisa o grupo. A
+        aventura segue da cidade, como antes da Etapa 2."""
+        print(f"[foto] descartada ({self.savegame_id}): {motivo}")
+        if self.savegame is not None and self.savegame.pop("dungeon_snapshot", None) is not None:
+            write_savegame(self.savegame)
+            _agendar_descarga()
+        await self.broadcast({"type": "error", "msg": T("erro.foto_masmorra_descartada")})
+
+    async def _retomar_masmorra(self, registro):
+        """Recoloca o grupo dentro da masmorra salva, no início da rodada em que
+        parou. Devolve False (e o chamador segue para a cidade) quando a foto
+        não serve.
+
+        O grupo pode retomar sem todos: o herói da foto cuja conta não está
+        aqui volta como um jogador que caiu (fora do tabuleiro, fora da
+        iniciativa, conta vinculada) e o `religar_heroi` o põe na casa salva
+        quando a conta clicar em Continuar. Quem está aqui mas não estava na
+        foto chega como quem subiu a escada e desce na próxima rodada. Sem
+        nenhum herói da foto presente, a retomada espera (grupo na cidade)."""
+        corpo = foto_desempacotar(registro)
+        if corpo is None:
+            await self._descartar_foto("ilegível ou de versão desconhecida")
+            return False
+        sala = corpo.get("sala") or {}
+        herois_foto = corpo.get("herois") or {}
+        presentes = {p["class_id"]: pid for pid, p in self.players.items()
+                     if p.get("class_id") and not p.get("is_master")}
+        if not herois_foto or not (set(presentes) & set(herois_foto)):
+            return False   # ninguém da foto: a masmorra espera quem estava nela
+        arquivo = self._arquivo_da_foto(sala)
+        defn = None
+        if arquivo:
+            defn = carregar_dungeon(arquivo)
+            grid = (defn or {}).get("grid") or {}
+            if (not defn or grid.get("w") != sala.get("map_w")
+                    or grid.get("h") != sala.get("map_h")):
+                await self._descartar_foto(f"masmorra {arquivo} mudou ou sumiu")
+                return False
+
+        # Herói ausente ganha já um pid desta sessão: é por ele que monstros e
+        # efeitos o acham, e por ele que a conta é religada depois.
+        ausentes = {cid: new_id() for cid in herois_foto if cid not in presentes}
+        destino = dict(presentes, **ausentes)
+        mapa_fixo = {velho: destino[cid] for velho, cid in (corpo.get("pids") or {}).items()
+                     if cid in destino}
+        corpo, _ = foto_renomear_ids(corpo, mapa_fixo, new_id)
+        sala = corpo["sala"]
+        for campo in foto_campos_sala("foto") + foto_campos_sala("foto_pid"):
+            if campo in sala:
+                setattr(self, campo, sala[campo])
+        self.dungeon_def = defn
+        contas = {(m or {}).get("class_id"): conta
+                  for conta, m in ((self.savegame or {}).get("members") or {}).items()}
+        for cid, ficha in corpo["herois"].items():
+            if cid in presentes:
+                p = self.players[presentes[cid]]
+                manter = {k: p[k] for k in ("id", "name", "slot") if k in p}
+                p.clear()
+                p.update(ficha)
+                p.update(manter)
+                # A foto pode tê-lo guardado fora do tabuleiro: ausente numa
+                # retomada anterior (casa em _pos_retomada) ou caído na sessão
+                # passada. Presente agora, ele joga.
+                p["connected"] = True
+                casa = p.pop("_pos_retomada", None)
+                if casa and list(p.get("pos") or []) == [-1, -1]:
+                    p["pos"] = list(casa)
+                elif (list(p.get("pos") or []) == [-1, -1] and p.get("alive")
+                        and not p.get("fora_masmorra")):
+                    p["fora_masmorra"] = {"rodadas_restantes": 0}
+                continue
+            # Ausente: igual a quem caiu (handle_disconnect_em_jogo), lembrando
+            # a casa onde estava para voltar a ela.
+            p = dict(ficha, id=ausentes[cid], connected=False)
+            if (not p.get("fora_masmorra") and p.get("alive")
+                    and list(p.get("pos") or [-1, -1]) != [-1, -1]):
+                p["_pos_retomada"] = list(p["pos"])
+            p["pos"] = [-1, -1]
+            self.players[p["id"]] = p
+            self.player_order.append(p["id"])
+            if contas.get(cid):
+                self.account_by_pid[p["id"]] = contas[cid]
+        for cid, pid in presentes.items():
+            if cid not in herois_foto:
+                # Estava fora da masmorra na foto (ou é novo no grupo): chega
+                # como quem subiu a escada e desce na próxima rodada.
+                novo = self.players[pid]
+                novo["pos"] = [-1, -1]
+                novo["fora_masmorra"] = {"rodadas_restantes": 0}
+        self._rebuild_decor_index()
+        self._rebuild_pontes_index()
+        self._rebuild_materiais_index()
+
+        self.phase = "playing"
+        self.dungeon_generated = True
+        self.initiative_active = True
+        self._rebuild_initiative()
+        self._ultima_foto = registro
+        # O start_game arma a história de abertura da campanha; no meio de uma
+        # masmorra ela não pode tocar de novo.
+        self._story_encadeada = None
+        await self.gm_say(T("narracao.a_aventura_continua", rodada=self.round_num))
+        # Mesmo caminho da entrada normal: transição de 3 s, mapa entregue
+        # bloqueado e só então o primeiro turno.
+        self.dungeon_intro_active = True
+        self.dungeon_intro_until_ms = int(time.time() * 1000) + 3000
+        self._cancelar_intro_masmorra()
+        await self.broadcast({
+            "type": "enter_dungeon",
+            "intro": True,
+            "intro_duration_ms": 3000,
+            "intro_until_ms": self.dungeon_intro_until_ms,
+            "transition_images": _transition_images(),
+        })
+        await self.push_state()
+        self.dungeon_intro_task = asyncio.create_task(self._finalizar_intro_masmorra(False))
         return True
 
     async def handle_shortcut_set(self, pid, slot, entry):
@@ -44442,6 +44651,7 @@ class GameRoom:
         self.dungeon_generated = False
         self._objetivo_concluido = False
         self._emendando = True    # suprime os resets "por masmorra nova" (ver enter_dungeon)
+        self._apagar_foto()       # a etapa anterior acabou; a nova grava na 1ª virada
         await self.gm_say(T("narracao.sem_descanso_o_grupo_avanca_direto_para", indice_1=indice + 1, len_stages=len(stages), adventure_get_nome_avent=nome_criatura(adventure)))
         try:
             await self.enter_dungeon(self.host_pid, from_world_adventure=True)
@@ -44582,6 +44792,7 @@ class GameRoom:
                     break
 
     async def end_game(self, victory, story=None):
+        self._apagar_foto()
         self.phase = "ended"
         self._cancelar_timer_turno()
         self._cancelar_intro_masmorra()

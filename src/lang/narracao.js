@@ -2991,6 +2991,10 @@ window.LANG_NARRACAO = {
   "narracao.juntou_se_ao_grupo_na_cidade": {
     "en": "🏙️ **{heroi}** joined the group in town.",
     "pt": "🏙️ **{heroi}** juntou-se ao grupo na cidade."
+  },
+  "narracao.a_aventura_continua": {
+    "en": "📜 The adventure continues — round {rodada}.",
+    "pt": "📜 A aventura continua — rodada {rodada}."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

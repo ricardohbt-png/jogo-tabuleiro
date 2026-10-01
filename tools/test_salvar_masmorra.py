@@ -22,6 +22,10 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ)
 import server as S
 
+# As seções [4]/[5] trocam a gravação em disco por uma lista; a [6] usa o
+# armazenamento de verdade (numa pasta temporária) e precisa das originais.
+_ORIGINAIS = {n: getattr(S, n) for n in ("write_savegame", "_agendar_descarga", "load_savegame")}
+
 PASS = FAIL = 0
 def check(label, cond, extra=""):
     global PASS, FAIL
@@ -88,13 +92,15 @@ def atributos_da_classe():
     return attrs
 
 
-async def sala_na_masmorra(arquivo=None, classes=("warrior", "mage", "rogue")):
+async def sala_na_masmorra(arquivo=None, classes=("warrior", "mage", "rogue"), pids=None):
     r = S.GameRoom("FOTO")
     async def noop(*a, **k): pass
     r.broadcast = noop; r.send_to = noop; r.push_state = noop
+    pids = pids or [f"p{i}" for i in range(len(classes))]
     for i, c in enumerate(classes):
-        r.players[f"p{i}"] = S.make_player(f"p{i}", f"H{i}", c, i)
-    r.phase = "city"; r.host_pid = "p0"
+        r.players[pids[i]] = S.make_player(pids[i], f"H{i}", c, i)
+    r.player_order = list(r.players)
+    r.phase = "city"; r.host_pid = pids[0]
     if arquivo:
         defn = S.carregar_dungeon(arquivo)
         if not defn:
@@ -103,7 +109,7 @@ async def sala_na_masmorra(arquivo=None, classes=("warrior", "mage", "rogue")):
         if not ok:
             return None, motivo
         r.mode = "authored"; r.selected_dungeon = arquivo; r.dungeon_def = defn
-    await r.enter_dungeon("p0")
+    await r.enter_dungeon(pids[0])
     return r, None
 
 
@@ -238,11 +244,352 @@ async def secao_gravacao():
             t.cancel()
 
 
+def _assinatura_monstros(r):
+    return sorted((m["type"], tuple(m["pos"]), m["hp"]) for m in r.monsters.values())
+
+
+async def jogar_e_salvar(arquivo, classe="warrior", pid_real=False):
+    """Sala A: entra na masmorra, mexe no mundo e grava a foto. Devolve
+    (sala, jogo_salvo) — o jogo salvo é o que iria para o disco. Com
+    `pid_real`, o herói tem um pid no formato do jogo (id_N), como no servidor;
+    sem ele, "p0" — exercitando a troca por casamento exato."""
+    pid0 = S.new_id() if pid_real else "p0"
+    r, _ = await sala_na_masmorra(arquivo, classes=(classe,), pids=[pid0])
+    if pid_real:
+        # Uma referência ao pid guardada num monstro (como fazem a memória da
+        # IA e os alvos forçados) tem de acompanhar o pid novo na retomada.
+        for m in list(r.monsters.values())[:1]:
+            m["_ref_teste_pid"] = pid0
+    r.savegame = {"id": "sg_retomar", "owner": "conta", "status": "active",
+                  "members": {"conta": {"class_id": classe}}}
+    r.dungeon_intro_active = False
+    p = r.players[pid0]
+    # Mexe em coisas que um recomeço desfaria: posição, vida, bolsa, névoa,
+    # monstro ferido, baú esvaziado, item no chão, rodada.
+    livres = [(x, y) for y in range(r.map_h) for x in range(r.map_w)
+              if r.tiles[y][x] == S.FLOOR and not r._blocks_tile(x, y)
+              and [x, y] != p["pos"] and not any([x, y] in r._monster_tiles(m) for m in r.monsters.values())]
+    p["pos"] = list(livres[len(livres) // 2])
+    p["hp"] = max(1, p["hp"] - 3)
+    p["gold"] = 777
+    r.explored |= {livres[0], livres[-1]}
+    for m in list(r.monsters.values())[:1]:
+        m["hp"] = max(1, m["hp"] - 2)
+    for c in r.chests.values():
+        c["gold"] = 0
+        c["items"] = []
+    r.ground_items["g_teste"] = {"id": "g_teste", "item": {"id": "pocao", "name": "Poção"},
+                                 "pos": list(livres[1])}
+    r.round_num = 7
+    check(f"{arquivo or 'procedural'}: foto gravada na sala A", r._gravar_foto_rodada())
+    return r, r.savegame
+
+
+async def abrir_e_retomar(sg, classe="warrior", pid=None):
+    """Sala B: servidor 'novo' — sala vazia, pid novo — abre o jogo salvo e
+    inicia como o lobby faz."""
+    r = S.GameRoom("RETOMA")
+    enviados = []
+    async def broadcast(msg, skip=None): enviados.append(msg)
+    async def send_to(pid_, msg): enviados.append(msg)
+    async def push_state(): enviados.append({"type": "game_state"})
+    r.broadcast = broadcast; r.send_to = send_to; r.push_state = push_state
+    r.savegame = sg
+    r.savegame_id = sg.get("id")
+    r._foto_pendente = sg.get("dungeon_snapshot")
+    pid = pid or S.new_id()
+    r.players[pid] = {"id": pid, "name": "Ana", "class_id": classe, "magias_conhecidas": []}
+    r.host_pid = pid
+    r.phase = "lobby"
+    await r.start_game(pid)
+    t = r.dungeon_intro_task
+    if t and not t.done():
+        t.cancel()
+    return r, pid, enviados
+
+
+async def secao_retomada():
+    print("\n[5] Retomada da masmorra (solo)")
+    import copy
+    for arquivo, pid_real in (("amostra.json", False), ("campo_de_treinamento.json", True),
+                              (None, True)):
+        rotulo = (arquivo or "procedural") + (" (pid id_N)" if pid_real else " (pid p0)")
+        a, sg = await jogar_e_salvar(arquivo, pid_real=pid_real)
+        pa = next(iter(a.players.values()))
+        ids_antigos = set(a.monsters) | set(a.chests) | set(a.players)
+        b, pid, enviados = await abrir_e_retomar(copy.deepcopy(sg))
+        pb = b.players.get(pid, {})
+        check(f"{rotulo}: volta para DENTRO da masmorra", b.phase == "playing"
+              and any(m.get("type") == "enter_dungeon" for m in enviados),
+              f"fase {b.phase}")
+        check(f"{rotulo}: na rodada salva", b.round_num == 7)
+        check(f"{rotulo}: herói na casa, com a vida e o ouro salvos",
+              pb.get("pos") == pa["pos"] and pb.get("hp") == pa["hp"] and pb.get("gold") == 777)
+        check(f"{rotulo}: o herói usa o pid da conexão nova", pb.get("id") == pid)
+        check(f"{rotulo}: mesma bolsa e equipamento",
+              pb.get("bag") == pa.get("bag") and pb.get("gear") == pa.get("gear"))
+        check(f"{rotulo}: monstros iguais (tipo, casa, vida)",
+              _assinatura_monstros(b) == _assinatura_monstros(a))
+        check(f"{rotulo}: baús esvaziados continuam vazios",
+              all(c["gold"] == 0 and not c["items"] for c in b.chests.values())
+              and len(b.chests) == len(a.chests))
+        check(f"{rotulo}: item no chão continua lá",
+              any(g["pos"] == a.ground_items["g_teste"]["pos"] for g in b.ground_items.values()))
+        check(f"{rotulo}: névoa explorada igual", b.explored == a.explored)
+        check(f"{rotulo}: mapa igual", b.tiles == a.tiles and b.map_w == a.map_w)
+        novos = set(b.monsters) | set(b.chests) | set(b.ground_items)
+        check(f"{rotulo}: nenhum id antigo sobrevive (ids renomeados)",
+              not (novos & ids_antigos) and pid not in set(b.monsters) | set(b.chests))
+        check(f"{rotulo}: índices derivados refeitos",
+              b._decor_block_tiles == a._decor_block_tiles
+              and b._mat_solid_tiles == a._mat_solid_tiles)
+        check(f"{rotulo}: iniciativa montada com o herói novo",
+              b.initiative_active and any(e["kind"] == "player" and e["id"] == pid
+                                          for e in b.initiative_order))
+        check(f"{rotulo}: transição de entrada ligada", b.dungeon_intro_active is True)
+        refs = [m["_ref_teste_pid"] for m in b.monsters.values() if "_ref_teste_pid" in m]
+        if pid_real and refs:
+            check(f"{rotulo}: referência ao pid num monstro passa ao pid novo", refs == [pid])
+        await b._liberar_intro_masmorra(False)
+        check(f"{rotulo}: depois da transição alguém tem a vez", b.current_actor() is not None)
+        for t in (getattr(b, "turn_timer_task", None), getattr(b, "initiative_task", None)):
+            if t and not t.done():
+                t.cancel()
+
+    print("  — quando a foto não serve, segue da cidade —")
+    a, sg = await jogar_e_salvar("amostra.json")
+    ruim = copy.deepcopy(sg)
+    corpo = S.foto_desempacotar(ruim["dungeon_snapshot"])
+    corpo["sala"]["map_w"] += 1          # como se o autor tivesse redimensionado o mapa
+    ruim["dungeon_snapshot"] = S.foto_empacotar(corpo, onde="masmorra", rodada=7,
+                                                masmorra="amostra.json")
+    b, _, enviados = await abrir_e_retomar(ruim)
+    check("masmorra editada: grupo na cidade", b.phase == "city")
+    check("masmorra editada: foto descartada do jogo salvo", "dungeon_snapshot" not in ruim)
+    check("masmorra editada: o grupo é avisado",
+          any(m.get("type") == "error" and "foto_masmorra_descartada" in str(getattr(m.get("msg"), "key", ""))
+              for m in enviados))
+
+    estragado = copy.deepcopy(sg)
+    estragado["dungeon_snapshot"]["dados"] = "lixo"
+    b, _, _ = await abrir_e_retomar(estragado)
+    check("foto corrompida: grupo na cidade, foto descartada",
+          b.phase == "city" and "dungeon_snapshot" not in estragado)
+
+    outro = copy.deepcopy(sg)
+    b, _, _ = await abrir_e_retomar(outro, classe="rogue")
+    check("herói diferente do salvo: cidade, foto mantida para o passo 5",
+          b.phase == "city" and "dungeon_snapshot" in outro)
+
+    print("  — masmorra encerrada não volta no próximo Continuar —")
+    for rotulo, encerrar in (("voltar à cidade", lambda r: r._voltar_para_cidade()),
+                             ("vitória", lambda r: r.end_game(True)),
+                             ("derrota total", lambda r: r.end_game(False))):
+        a, sg_fim = await jogar_e_salvar("amostra.json")
+        a.broadcast_city_state = lambda: asyncio.sleep(0)
+        await encerrar(a)
+        check(f"{rotulo}: a foto sai do jogo salvo",
+              "dungeon_snapshot" not in sg_fim and a._ultima_foto is None)
+
+    print("  — abrir o jogo salvo pendura a foto para o start_game —")
+    sg_disco = copy.deepcopy(sg)
+    S.load_savegame = lambda sid: sg_disco
+    rooms = {}
+    sala, erro = S.try_open_savegame_room("conta", "sg_retomar", rooms)
+    check("try_open_savegame_room guarda a foto em _foto_pendente",
+          erro is None and sala._foto_pendente is sg_disco["dungeon_snapshot"], erro)
+    S.SAVEGAMES_IN_USE.pop("sg_retomar", None)
+
+
+class _WSFalso:
+    def __init__(self): self.sent = []
+    async def send(self, data): self.sent.append(json.loads(data))
+
+
+async def grupo_salvo(arquivo="amostra.json"):
+    """Sala A com guerreiro (conta 'ana') e ladino (conta 'bia') dentro da
+    masmorra, em casas distintas; grava a foto. Devolve (sala, jogo_salvo,
+    pids)."""
+    pids = [S.new_id(), S.new_id()]
+    r, _ = await sala_na_masmorra(arquivo, classes=("warrior", "rogue"), pids=pids)
+    r.savegame = {"id": "sg_grupo", "owner": "ana", "status": "active",
+                  "members": {"ana": {"class_id": "warrior"}, "bia": {"class_id": "rogue"}}}
+    r.dungeon_intro_active = False
+    livres = [[x, y] for y in range(r.map_h) for x in range(r.map_w)
+              if r.tiles[y][x] == S.FLOOR and not r._blocks_tile(x, y)
+              and not any([x, y] in r._monster_tiles(m) for m in r.monsters.values())]
+    r.players[pids[0]]["pos"] = livres[0]
+    r.players[pids[1]]["pos"] = livres[-1]
+    r.players[pids[1]]["gold"] = 444
+    for m in list(r.monsters.values())[:1]:
+        m["_ref_teste_pid"] = pids[1]       # um monstro "lembra" do ladino
+    r.round_num = 5
+    assert r._gravar_foto_rodada()
+    return r, r.savegame, pids
+
+
+async def abrir_com(sg, presentes):
+    """Sala B com os heróis `presentes` [(classe, nome)]; o 1º é o anfitrião."""
+    r = S.GameRoom("RETOMA_GRUPO")
+    async def broadcast(msg, skip=None): pass
+    async def send_to(pid_, msg): pass
+    async def push_state(): pass
+    r.broadcast = broadcast; r.send_to = send_to; r.push_state = push_state
+    r.savegame = sg; r.savegame_id = sg.get("id")
+    r._foto_pendente = sg.get("dungeon_snapshot")
+    pids = []
+    for classe, nome in presentes:
+        pid = S.new_id(); pids.append(pid)
+        r.players[pid] = {"id": pid, "name": nome, "class_id": classe, "magias_conhecidas": []}
+    r.host_pid = pids[0]; r.phase = "lobby"
+    await r.start_game(pids[0])
+    t = r.dungeon_intro_task
+    if t and not t.done():
+        t.cancel()
+    return r, pids
+
+
+def _cancelar_tarefas(r):
+    for t in (getattr(r, "turn_timer_task", None), getattr(r, "initiative_task", None),
+              getattr(r, "dungeon_intro_task", None)):
+        if t and not t.done():
+            t.cancel()
+
+
+async def secao_grupo():
+    print("\n[7] Grupo incompleto (passo 5)")
+    import copy
+    a, sg, pids_a = await grupo_salvo()
+    casa_bia = list(a.players[pids_a[1]]["pos"])
+
+    b, (pid_ana,) = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana")])
+    bia = next((p for p in b.players.values() if p.get("class_id") == "rogue"), None)
+    check("só a Ana: a masmorra é retomada mesmo assim", b.phase == "playing" and bia is not None)
+    if bia:
+        check("a Bia ausente fica fora do tabuleiro e desconectada",
+              bia["pos"] == [-1, -1] and bia.get("connected") is False and not b._ativo(bia))
+        check("…lembrando a casa onde estava", bia.get("_pos_retomada") == casa_bia)
+        check("…com a ficha salva (ouro 444)", bia.get("gold") == 444)
+        check("…e a conta dela vinculada (para religar)", b.account_by_pid.get(bia["id"]) == "bia")
+        check("a iniciativa só tem a Ana entre os heróis",
+              [e["id"] for e in b.initiative_order if e["kind"] == "player"] == [pid_ana])
+        refs = [m["_ref_teste_pid"] for m in b.monsters.values() if "_ref_teste_pid" in m]
+        check("a lembrança do monstro aponta para o pid novo da Bia", refs == [bia["id"]], refs)
+        ws = _WSFalso()
+        pid_bia = await b.religar_heroi(bia, ws, S.new_id(), "Bia")
+        check("a Bia chega e volta para a casa salva",
+              pid_bia == bia["id"] and bia["pos"] == casa_bia and bia.get("connected") is True
+              and "_pos_retomada" not in bia)
+        check("…recebendo a tela da masmorra", any(m.get("type") == "enter_dungeon" for m in ws.sent))
+        _cancelar_tarefas(b)
+
+        # Na próxima foto (só a Ana jogando) a Bia vai ausente; no dia em que
+        # as duas voltam, a Bia joga normalmente, na casa de antes.
+        b2, (pa2,) = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana")])
+        b2.savegame = sg2 = copy.deepcopy(sg)
+        b2.dungeon_intro_active = False   # a transição de 3 s terminou
+        assert b2._gravar_foto_rodada()
+        c, pids_c = await abrir_com(copy.deepcopy(sg2), [("warrior", "Ana"), ("rogue", "Bia")])
+        bia_c = c.players[pids_c[1]]
+        check("ausente numa foto, presente depois: joga, na casa salva",
+              bia_c.get("connected") is True and bia_c["pos"] == casa_bia
+              and c._ativo(bia_c) and "_pos_retomada" not in bia_c)
+        _cancelar_tarefas(b2); _cancelar_tarefas(c)
+
+    # Ocupada: alguém está na casa salva quando ela volta.
+    b, _ = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana")])
+    bia = next(p for p in b.players.values() if p.get("class_id") == "rogue")
+    ana = next(p for p in b.players.values() if p.get("class_id") == "warrior")
+    ana["pos"] = list(casa_bia)
+    await b.religar_heroi(bia, _WSFalso(), S.new_id(), "Bia")
+    check("casa salva ocupada: volta na casa livre ao lado",
+          bia["pos"] != casa_bia and max(abs(bia["pos"][0] - casa_bia[0]),
+                                         abs(bia["pos"][1] - casa_bia[1])) <= 1)
+    _cancelar_tarefas(b)
+
+    # Quem não estava na foto chega como quem subiu a escada.
+    b, pids_b = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana"), ("paladin", "Caio")])
+    caio = b.players[pids_b[1]]
+    check("herói novo (não estava na foto): fica na cidade e desce na próxima rodada",
+          b.phase == "playing" and caio["pos"] == [-1, -1]
+          and caio.get("fora_masmorra") == {"rodadas_restantes": 0})
+    _cancelar_tarefas(b)
+
+    # Ninguém da foto presente: a masmorra espera.
+    sg_so_caio = copy.deepcopy(sg)
+    b, _ = await abrir_com(sg_so_caio, [("paladin", "Caio")])
+    check("ninguém da foto presente: grupo na cidade e a foto fica guardada",
+          b.phase == "city" and "dungeon_snapshot" in sg_so_caio)
+
+    # Caído na sessão anterior (na foto: fora do tabuleiro, desconectado).
+    a.players[pids_a[1]]["connected"] = False
+    a.players[pids_a[1]]["pos"] = [-1, -1]
+    assert a._gravar_foto_rodada()
+    b, pids_b = await abrir_com(copy.deepcopy(a.savegame), [("warrior", "Ana"), ("rogue", "Bia")])
+    bia = b.players[pids_b[1]]
+    check("estava caído na foto e está presente: conectado, desce pela escada",
+          bia.get("connected") is True and bia.get("fora_masmorra") == {"rodadas_restantes": 0})
+    _cancelar_tarefas(b)
+
+
+async def secao_handler_real():
+    print("\n[6] Pelo laço de conexão real: entrar → Continuar → dentro da masmorra")
+    import shutil, tempfile
+    import test_continuar_jogo as C
+    for nome, fn in _ORIGINAIS.items():
+        setattr(S, nome, fn)
+    tmp = tempfile.mkdtemp()
+    velha = S.LOJA
+    S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
+    try:
+        acc, e = await S.create_account("foto_solo", C.SENHA)
+        assert acc, e
+        sid, _, _ = await C.criar_jogo("foto_solo", "Fotografia", "warrior")
+        C.limpar_salas()
+        # Uma sala procedural com o mesmo herói tira a foto (como se o grupo
+        # tivesse jogado até a rodada 7 e fechado o jogo).
+        a, _ = await sala_na_masmorra(None, classes=("warrior",), pids=[S.new_id()])
+        heroi = next(iter(a.players.values()))
+        heroi["gold"] = 555
+        a.round_num = 7
+        sg = S.load_savegame(sid)
+        a.savegame = sg
+        a.dungeon_intro_active = False
+        check("foto gravada no jogo salvo de verdade", a._gravar_foto_rodada())
+        a.savegame = None
+
+        async def esperar_masmorra():
+            await C.esperar(lambda: C.sala_do_jogo(sid) and C.sala_do_jogo(sid).phase == "playing")
+        ws = C.FakeWS([C.login("foto_solo"), {"type": "load_savegame", "id": sid}, esperar_masmorra])
+        await S.handler(ws)
+        r = C.sala_do_jogo(sid)
+        check("sem tela de herói (lobby só com auto_start)",
+              all(l.get("auto_start") for l in ws.msgs("lobby_state")))
+        check("recebeu enter_dungeon, não a cidade",
+              bool(ws.msgs("enter_dungeon")) and not ws.msgs("city_state"),
+              [m.get("type") for m in ws.msgs()][:12])
+        gs = ws.msgs("game_state")
+        eu = next((p for p in (gs[-1].get("players") if gs else []) if p.get("class_id") == "warrior"), {})
+        check("game_state na rodada salva, com a ficha da foto (ouro 555)",
+              gs and gs[-1].get("round") in (7, None) and eu.get("gold") == 555
+              and r is not None and r.round_num == 7, (eu.get("gold"), r and r.round_num))
+        check("o log diz que a aventura continua",
+              any("aventura continua" in str(x) for x in (gs[-1].get("gm_log") if gs else [])))
+        check("sem erro interno", C.sem_erro_interno(ws), ws.erros())
+    finally:
+        C.limpar_salas()
+        S.LOJA = velha
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
     await secao_json_real()
     await secao_gravacao()
+    await secao_retomada()
+    await secao_grupo()
+    await secao_handler_real()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL
 

@@ -2132,6 +2132,10 @@ window.LANG_ERROS = {
   "erro.seu_personagem_ja_esta_na_partida": {
     "en": "Your character is already in this match.",
     "pt": "Seu personagem já está nesta partida."
+  },
+  "erro.foto_masmorra_descartada": {
+    "en": "The saved dungeon could not be restored (it changed or the save is damaged). The adventure continues from town.",
+    "pt": "Não deu para retomar a masmorra salva (ela mudou ou o salvamento está danificado). A aventura continua da cidade."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

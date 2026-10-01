@@ -87,7 +87,54 @@ que monstros e efeitos guardam. Medido: `floresta_2` 22 KB e 21 ms por foto,
 Enquanto o passo 6 não existir, a foto de uma masmorra encerrada fica no jogo
 salvo sem uso (inofensiva: nada a lê antes do passo 4).
 
-Teste: `tools/test_salvar_masmorra.py` (75 checks).
+**Passo 4 feito (retomada solo, e grupo completo):** `try_open_savegame_room`
+pendura o registro em `room._foto_pendente`; o `start_game`, depois do
+`game_start`, chama `_retomar_masmorra` e, se ela der certo, não manda o grupo à
+cidade. A retomada exige que os heróis presentes sejam exatamente os da foto
+(herói ausente/novo fica para o passo 5 — até lá o grupo vai à cidade e a foto é
+mantida). Masmorra autorada com outro tamanho de grade, arquivo sumido, foto
+ilegível ou de versão desconhecida → `_descartar_foto` tira a foto do jogo salvo,
+avisa (`erro.foto_masmorra_descartada`) e o grupo segue da cidade.
+**Ids:** o contador de `new_id()` recomeça a cada reinício e é compartilhado por
+jogadores, monstros, baús e armadilhas, então a foto não pode ser aplicada com os
+ids antigos. `foto_renomear_ids` (módulo) troca todo `id_N` — inclusive dentro
+de texto composto — por um id desta sessão; o pid antigo de cada herói vira o pid
+da conexão nova (também por casamento exato, para pid fora do formato `id_N`).
+Isso leva junto toda referência a herói guardada em monstros e efeitos.
+`player_order` passou a "derivado" (o `start_game` já monta com quem está
+presente). A ficha do herói é sobreposta mantendo `id`/`name`/`slot` da conexão;
+índices derivados refeitos pelos três `_rebuild_*`; `_story_encadeada` zerado
+(senão a história de abertura da campanha tocaria de novo). A entrada usa o mesmo
+caminho da normal: `enter_dungeon` com transição de 3 s, `game_state` bloqueado e
+só então o primeiro turno; o log diz `narracao.a_aventura_continua`.
+**Limpeza antecipada do passo 6:** com a retomada, uma foto de masmorra já
+encerrada jogaria o grupo de volta nela no próximo Continuar. `_apagar_foto`
+roda em `_voltar_para_cidade`, `end_game` (vitória e derrota total) e
+`_emendar_proxima_etapa`. Voltar à cidade com a masmorra ainda aberta
+(`cidade_com_masmorra`) continua sendo o passo 6: por ora a foto sai, como antes
+da Etapa 2.
+
+**Passo 5 feito (grupo incompleto):** basta UM herói da foto presente para
+retomar; sem nenhum, o grupo vai à cidade e a foto fica guardada. **Herói da
+foto ausente** entra em `players` como quem caiu (`connected=False`, peão em
+`[-1,-1]`, fora da iniciativa e dos alvos pelo `_ativo`), já com um pid desta
+sessão (é por ele que monstros e efeitos o acham) e com a conta vinculada em
+`account_by_pid` (lida de `savegame.members`). Quando a conta clica em Continuar,
+o caminho existente `entrar_em_jogo_salvo_aberto` → `religar_heroi` o religa; o
+`religar_heroi` ganhou um ramo para `_pos_retomada`: volta à casa da foto, ou à
+livre mais próxima (`_free_tile_near`) se ocupada. **Herói presente que não
+estava na foto** (novo no grupo, ou estava na cidade) chega com
+`fora_masmorra={"rodadas_restantes":0}` e desce na próxima rodada. **Dois casos
+que a regravação por rodada cria:** o ausente vai à foto seguinte desconectado
+(com `_pos_retomada`), então todo herói PRESENTE na retomada volta
+`connected=True`, na casa de `_pos_retomada` se a tiver; e quem tinha caído na
+sessão anterior (foto com o peão em `[-1,-1]`, sem casa salva) chega pela escada.
+`_apagar_foto` também limpa `_pos_retomada`, senão uma queda numa masmorra
+seguinte religaria o herói na casa de uma masmorra que acabou.
+
+Teste: `tools/test_salvar_masmorra.py` (158 checks; a seção [6] passa pelo
+`server.handler` real — entrar → Continuar → dentro da masmorra; a [7] cobre o
+grupo incompleto).
 
 ## 1. Problema
 
