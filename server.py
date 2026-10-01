@@ -22942,7 +22942,8 @@ class GameRoom:
                         continue
                     nx, ny = casa[0] + dx, casa[1] + dy
                     if (0 <= nx < self.map_w and 0 <= ny < self.map_h
-                            and self.tiles[ny][nx] == FLOOR and (nx, ny) not in tomadas):
+                            and self.tiles[ny][nx] == FLOOR and (nx, ny) not in tomadas
+                            and not self._blocks_tile(nx, ny)):
                         return [nx, ny]
         return list(self._free_tile_near(casa))
 
