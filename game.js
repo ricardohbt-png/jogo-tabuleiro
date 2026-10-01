@@ -1543,7 +1543,12 @@ function _updateCityHeroBar(msg){
     </div>`;
   }).join('')+`<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`;
   bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
-    card.onclick = () => abrirFichaCidade(card.getAttribute('data-pid'));
+    card.onclick = () => {
+      const pid = card.getAttribute('data-pid');
+      // Solo com grupo: a ficha de um herói meu abre editável (o foco é ele).
+      if(GS.temGrupo && GS.ehMeuHeroi(pid)) GS.focarHeroi(pid);
+      abrirFichaCidade(pid);
+    };
   });
 }
 
@@ -7402,6 +7407,9 @@ function visaoCompartilhadaPermitida(state){
   return !!state && state.visao_compartilhada_permitida !== false;
 }
 function visaoCompartilhadaAtiva(state){
+  // Solo com grupo: todos os heróis são do mesmo jogador — esconder o que um
+  // vê do outro não faz sentido.
+  if(GS.temGrupo) return true;
   return _visaoCompPref && visaoCompartilhadaPermitida(state);
 }
 function _setVisaoCompPref(on){
@@ -15677,6 +15685,7 @@ function renderPlayers(state){
   const el=$('player-cards'); el.innerHTML='';
   for(const p of state.players){
     const isMe=p.id===GS.myPid, isCur=p.id===state.current_turn;
+    const meu = GS.temGrupo && GS.ehMeuHeroi(p.id);   // Solo com grupo
     const disc=p.connected===false;
     const fora=p.fora_masmorra||null;   // saiu pela escada: está na cidade
     const div=document.createElement('div');
@@ -15695,6 +15704,7 @@ function renderPlayers(state){
       </div>
       ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${t('ui.hud.na_cidade_volta_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
       ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
+      ${meu && isCur ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">HP</span>
@@ -15705,8 +15715,11 @@ function renderPlayers(state){
       </div>`;
     // Clique no mini-card abre a ficha do herói correspondente.
     div.style.cursor = 'pointer';
-    div.title        = t('ui.hud.clique_para_ver_a_ficha');
+    div.title        = t(meu && !isMe ? 'ui.hud.clique_para_focar' : 'ui.hud.clique_para_ver_a_ficha');
     div.onclick      = () => {
+      // Solo com grupo: 1º clique num herói meu passa o controle para ele;
+      // clicar no herói já em foco abre a ficha, como sempre.
+      if(meu && !isMe){ GS.focarHeroi(p.id); return; }
       const key = _classIdParaHeroiKey(p.cls || p.class_id || p.key);
       abrirFichaEmJogo(key);
     };
@@ -52131,6 +52144,20 @@ GS.on('gameState', msg => {
   if(_openDecorLootId){
     const decor = (msg.decorations||[]).find(d=>d.id===_openDecorLootId);
     if(!decor || !decor.tem_loot) closeChestWindow();
+  }
+});
+
+// Solo com grupo: o foco mudou de herói. Automático (chegou a vez dele): o
+// render do game_state já acontece; só a câmera vai até ele. Manual: redesenha
+// a tela com o herói novo (HUD, alcance, visão) e centraliza a câmera.
+GS.on('focoHeroi', ev => {
+  const st = GS.gameState;
+  if(st){
+    if(!ev.auto) handleGameState(st);
+    const h = (st.players || []).find(p => p.id === ev.pid);
+    if(h && Array.isArray(h.pos) && h.pos[0] >= 0) centralizarCamera3DNoPeao(h.pos);
+  } else if(GS.cityState){
+    _updateCityHeroBar(GS.cityState);
   }
 });
 
