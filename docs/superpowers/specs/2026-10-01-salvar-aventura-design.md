@@ -52,6 +52,27 @@ heróis). Quem desiste no meio sai da sala de espera.
 
 Teste: `tools/test_continuar_jogo.py` (66 checks, pelo `server.handler` real).
 
+**Etapa 2 retomada (2026-10-01), seguindo as propostas do §7:** gravar a cada
+virada de rodada; não salvar o `gm_log` ("📜 A aventura continua…"); o grupo
+pode retomar sem todos; "💾 Salvar e sair" entra junto. **Passos 1 e 2 feitos**
+(`server.py`, ao lado de `restore_character`):
+- `_foto_codificar`/`_foto_decodificar` — etiquetas `$set`/`$tup`/`$map` em vez
+  do `esquema` por campo previsto em 5.3: a foto se descreve sozinha, e campo
+  novo não exige mexer no decodificador. Tipo desconhecido levanta
+  `FotoNaoSerializavel` com o caminho do valor.
+- `FOTO_SALA_CATEGORIAS` classifica os 159 atributos de `GameRoom` em
+  foto / foto_pid / herois / jogo_salvo / derivado / conexao / janela / efemero
+  / constante / teste. `foto_pid` são os 4 dicts chaveados pelo pid da conexão
+  (`temp_def`, `blessed`, máscaras de fome/sede), que o passo 3 terá de regravar
+  por `class_id`. `dungeon_def` é derivado (recarregado do arquivo).
+- Medido nas 31 masmorras de `dungeons/`: todas passam por `json.dumps` sem
+  `default=` e voltam idênticas. **Tamanho real bem acima do estimado** em 5.3:
+  até 330 KB (`floresta_2`, sobretudo `decorations` e `materiais`), 17–32 KB com
+  gzip. O `LOJA` grava o jogo salvo sem compressão — decidir no passo 3 (gzip da
+  foto ou guardar só o que mudou em relação ao arquivo autoral).
+
+Teste: `tools/test_salvar_masmorra.py` (52 checks).
+
 ## 1. Problema
 
 O jogador relata que "sempre começa do início". O sistema de jogos salvos já

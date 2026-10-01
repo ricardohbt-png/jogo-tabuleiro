@@ -2575,6 +2575,201 @@ def restore_character(player, snap):
     if player.get("gear"):
         _recalculate_ac(player)
 
+# ── Foto da masmorra (Etapa 2 do salvamento) ─────────────────────────────────
+# Spec: docs/superpowers/specs/2026-10-01-salvar-aventura-design.md, seção 5.
+# A foto é JSON puro. Python guarda o estado da sala com tipos que o JSON não
+# tem (set, tupla, dict com chave tupla/int); o codificador os marca com uma
+# etiqueta e o decodificador os devolve iguais, sem precisar saber o formato de
+# cada campo. Tipo desconhecido (T, objeto asyncio, função…) é RECUSADO com o
+# caminho do valor: perder um campo em silêncio é o pior defeito possível aqui.
+FOTO_VERSAO = 1
+_FOTO_ETIQUETAS = ("$set", "$tup", "$map")
+
+
+class FotoNaoSerializavel(TypeError):
+    """Valor que não cabe numa foto de masmorra (nem como JSON, nem etiquetado)."""
+
+
+def _foto_ordem(valor_codificado):
+    """Chave de ordenação estável para elementos de conjunto já codificados."""
+    return json.dumps(valor_codificado, sort_keys=True, ensure_ascii=False)
+
+
+def _foto_codificar(valor, caminho="foto"):
+    """Converte `valor` em algo que `json.dumps` (sem `default=`) aceita.
+
+    set/frozenset → {"$set": [...]} (ordenado: duas fotos iguais dão o mesmo
+    JSON); tupla → {"$tup": [...]}; dict com alguma chave não-str (ou str que
+    comece com "$", que colidiria com as etiquetas) → {"$map": [[k, v], ...]}.
+    """
+    if valor is None or isinstance(valor, (bool, str)):
+        return valor
+    if isinstance(valor, int):
+        return valor
+    if isinstance(valor, float):
+        if not math.isfinite(valor):
+            raise FotoNaoSerializavel(f"{caminho}: número não finito ({valor!r})")
+        return valor
+    if isinstance(valor, list):
+        return [_foto_codificar(v, f"{caminho}[{i}]") for i, v in enumerate(valor)]
+    if isinstance(valor, tuple):
+        return {"$tup": [_foto_codificar(v, f"{caminho}[{i}]") for i, v in enumerate(valor)]}
+    if isinstance(valor, (set, frozenset)):
+        itens = [_foto_codificar(v, f"{caminho}{{}}") for v in valor]
+        return {"$set": sorted(itens, key=_foto_ordem)}
+    if isinstance(valor, dict):
+        simples = all(isinstance(k, str) and not k.startswith("$") for k in valor)
+        if simples:
+            return {k: _foto_codificar(v, f"{caminho}.{k}") for k, v in valor.items()}
+        pares = [[_foto_codificar(k, f"{caminho}<chave>"),
+                  _foto_codificar(v, f"{caminho}[{k!r}]")] for k, v in valor.items()]
+        return {"$map": sorted(pares, key=lambda par: _foto_ordem(par[0]))}
+    raise FotoNaoSerializavel(f"{caminho}: tipo {type(valor).__name__} não cabe na foto")
+
+
+def _foto_hashavel(valor):
+    """Elemento de set e chave de dict precisam ser hashable: lista vira tupla."""
+    if isinstance(valor, list):
+        return tuple(_foto_hashavel(v) for v in valor)
+    return valor
+
+
+def _foto_decodificar(valor):
+    """Inverso de `_foto_codificar`."""
+    if isinstance(valor, list):
+        return [_foto_decodificar(v) for v in valor]
+    if isinstance(valor, dict):
+        if len(valor) == 1:
+            (etiqueta, conteudo), = valor.items()
+            if etiqueta == "$set":
+                return {_foto_hashavel(_foto_decodificar(v)) for v in conteudo}
+            if etiqueta == "$tup":
+                return tuple(_foto_decodificar(v) for v in conteudo)
+            if etiqueta == "$map":
+                return {_foto_hashavel(_foto_decodificar(k)): _foto_decodificar(v)
+                        for k, v in conteudo}
+        return {k: _foto_decodificar(v) for k, v in valor.items()}
+    return valor
+
+
+# Cada atributo de GameRoom em UMA categoria. tools/test_salvar_masmorra.py
+# varre a classe e falha se surgir atributo novo sem classificação — assim um
+# campo esquecido vira teste vermelho, e não masmorra que volta pela metade.
+#   foto        → vai em dungeon_snapshot["sala"]
+#   foto_pid    → vai na foto, mas é dict chaveado pelo pid da conexão (que muda
+#                 ao reconectar): é regravado pelo class_id do herói
+#   herois      → vai em dungeon_snapshot["herois"], ficha inteira por class_id
+#   jogo_salvo  → já gravado por _checkpoint_savegame (vale fora da masmorra)
+#   derivado    → índice reconstruído a partir de campos da foto
+#   conexao     → identifica conexões/sala; recriado ao abrir o jogo salvo
+#   janela      → janela/timer/tarefa em aberto; a foto só é tirada sem nenhuma
+#   efemero     → fila de efeito visual ou rascunho de um único turno/ação
+#   constante   → configuração fixa, igual em toda sala
+#   teste       → só existe na sala de teste do editor, que nunca grava
+FOTO_SALA_CATEGORIAS = {
+    # mapa e identidade da masmorra
+    "mode": "foto", "selected_dungeon": "foto",
+    "dungeon_generated": "foto", "tiles": "foto", "map_w": "foto", "map_h": "foto",
+    "rooms": "foto", "door_rooms": "foto", "opened_doors": "foto",
+    "stairs_pos": "foto", "exit_pos": "foto", "materiais": "foto",
+    "elevacoes": "foto", "pontes": "foto", "secret_passages": "foto",
+    "door_conditions": "foto", "door_condition_activated": "foto",
+    "decorations": "foto", "ambiente": "foto", "transicao_altura": "foto",
+    "saida_permitida": "foto", "start_mode": "foto", "hero_spawns": "foto",
+    "expected_party": "foto",
+    # exploração
+    "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
+    # criaturas
+    "monsters": "foto", "corpses": "foto", "hero_corpses": "foto",
+    "prisoner": "foto", "rescue_failed": "foto",
+    # mundo
+    "chests": "foto", "ground_items": "foto", "traps": "foto", "armadilhas": "foto",
+    "_armadilha_seq": "foto", "zonas_especiais": "foto", "_terrenos_inverno": "foto",
+    "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
+    "master_reserve": "foto", "key_chest_opened": "foto",
+    "_licantropia_ultimo_fim_combate": "foto",
+    # objetivos
+    "objectives": "foto", "objective_status": "foto",
+    "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
+    # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
+    "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
+    "turn_index": "foto", "player_order": "foto",
+    # contadores de id (evitam id repetido depois de retomar)
+    "_elemental_seq": "foto", "_attack_feedback_seq": "foto",
+    "_cuspe_acido_anim_seq": "foto", "_elemental_raio_anim_seq": "foto",
+    "_sopro_dragao_anim_seq": "foto", "_spin_feedback_seq": "foto",
+    # dicts por pid
+    "temp_def": "foto_pid", "blessed": "foto_pid",
+    "_survival_penalty_masks": "foto_pid", "_survival_depletion_masks": "foto_pid",
+    # heróis
+    "players": "herois",
+    # já no jogo salvo
+    "campaign": "jogo_salvo", "campaign_phase": "jogo_salvo",
+    "selected_campaign": "jogo_salvo", "world_location": "jogo_salvo",
+    "world_adventure_id": "jogo_salvo", "world_adventure_index": "jogo_salvo",
+    "world_adventure_progress": "jogo_salvo", "world_adventure_revisit": "jogo_salvo",
+    "renome": "jogo_salvo", "fatos": "jogo_salvo", "story_beats_done": "jogo_salvo",
+    "scene_conversations_done": "jogo_salvo", "scene_triggers_done": "jogo_salvo",
+    "scene_variables": "jogo_salvo", "active_scene": "jogo_salvo",
+    "location_scene_trigger": "jogo_salvo", "refugio_state": "jogo_salvo",
+    "hero_rooms": "jogo_salvo", "turn_timer_enabled": "jogo_salvo",
+    "visao_compartilhada_permitida": "jogo_salvo", "atravessar_aliados": "jogo_salvo",
+    "savegame": "jogo_salvo", "savegame_id": "jogo_salvo", "master_name": "jogo_salvo",
+    "shop_scrolls": "jogo_salvo",
+    # derivados
+    "_decor_block_tiles": "derivado", "_decor_tall_tiles": "derivado",
+    "_decor_low_tiles": "derivado", "_campfire_tiles": "derivado",
+    "_fire_damage_tiles": "derivado", "_mat_solid_tiles": "derivado",
+    "_mat_oclui_tiles": "derivado", "_ponte_tiles": "derivado",
+    "_ponte_alturas": "derivado", "phase": "derivado", "initiative_active": "derivado",
+    "dungeon_def": "derivado",   # recarregado do arquivo em selected_dungeon
+    # conexão / sala
+    "code": "conexao", "connections": "conexao", "account_by_pid": "conexao",
+    "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
+    # janelas, timers e tarefas
+    "initiative_task": "janela", "turn_timer_task": "janela",
+    "turn_timer_started_ms": "janela", "turn_token": "janela",
+    "dungeon_intro_active": "janela", "dungeon_intro_task": "janela",
+    "dungeon_intro_until_ms": "janela",
+    "master_manual_mid": "janela", "master_manual_event": "janela",
+    "master_manual_timer": "janela", "master_manual_deadline": "janela",
+    "command_control_mid": "janela", "command_control_pid": "janela",
+    "command_control_event": "janela", "command_control_timer": "janela",
+    "command_control_deadline": "janela",
+    "mind_control_mid": "janela", "mind_control_pid": "janela",
+    "mind_control_event": "janela", "mind_control_timer": "janela",
+    "mind_control_deadline": "janela",
+    "last_stand_pid": "janela", "last_stand_event": "janela",
+    "last_stand_timer_task": "janela", "sorte_reacao": "janela",
+    "_fire_prompt": "janela", "_pending_teleporte": "janela",
+    "_pending_metamorfose": "janela", "_pending_dungeon_entry": "janela",
+    "animados_phase_pid": "janela", "animados_order": "janela",
+    "animados_done": "janela", "prisioneiro_done": "janela",
+    "_emendando": "janela",
+    # efêmeros
+    "gm_log": "efemero", "_combat_damage_events": "efemero",
+    "_positive_effect_events": "efemero", "_resistance_events": "efemero",
+    "_damage_visual_context": "efemero", "_condition_alerts": "efemero",
+    "_survival_alerts": "efemero", "_story_encadeada": "efemero",
+    "_campaign_outro": "efemero", "_monster_ai_focus_target_id": "efemero",
+    "_monster_ai_reserved_tiles": "efemero",
+    "_grotao_ponto_vulneravel_claims": "efemero",
+    # constantes
+    "TURN_LIMIT_S": "constante", "MASTER_MANUAL_MOVE": "constante",
+    "MASTER_MANUAL_LIMIT_S": "constante",
+    # sala de teste do editor
+    "test_combat": "teste", "test_mode": "teste", "_test_action_actor": "teste",
+}
+
+FOTO_CATEGORIAS_VALIDAS = frozenset({
+    "foto", "foto_pid", "herois", "jogo_salvo", "derivado", "conexao",
+    "janela", "efemero", "constante", "teste"})
+
+
+def foto_campos_sala(categoria="foto"):
+    """Atributos de GameRoom de uma categoria, em ordem estável."""
+    return sorted(k for k, c in FOTO_SALA_CATEGORIAS.items() if c == categoria)
+
 def _conta_participa(sg, conta):
     return bool(sg) and (sg.get("owner") == conta
                          or conta in (sg.get("members") or {})
