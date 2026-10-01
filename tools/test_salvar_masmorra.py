@@ -382,7 +382,10 @@ async def secao_retomada():
           b.phase == "city" and "dungeon_snapshot" in outro)
 
     print("  — masmorra encerrada não volta no próximo Continuar —")
-    for rotulo, encerrar in (("voltar à cidade", lambda r: r._voltar_para_cidade()),
+    def fim_de_missao(r):
+        r.dungeon_generated = False     # como handle_encerrar_missao faz antes
+        return r._voltar_para_cidade()
+    for rotulo, encerrar in (("fim de missão", fim_de_missao),
                              ("vitória", lambda r: r.end_game(True)),
                              ("derrota total", lambda r: r.end_game(False))):
         a, sg_fim = await jogar_e_salvar("amostra.json")
@@ -582,6 +585,72 @@ async def secao_handler_real():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+async def secao_cidade_com_masmorra():
+    print("\n[8] Cidade com a masmorra aberta (passo 6)")
+    import copy
+    for arquivo in ("amostra.json", None):
+        rotulo = arquivo or "procedural"
+        a, sg = await jogar_e_salvar(arquivo)
+        morto = next(iter(a.monsters))
+        del a.monsters[morto]                       # um monstro já morreu
+        sig = _assinatura_monstros(a)
+        chao = dict(a.ground_items)
+        a.broadcast_city_state = lambda: asyncio.sleep(0)
+        await a._voltar_para_cidade()               # todos subiram a escada
+        foto = sg.get("dungeon_snapshot") or {}
+        check(f"{rotulo}: volta à cidade grava a foto 'cidade_com_masmorra'",
+              foto.get("onde") == "cidade_com_masmorra" and a._ultima_foto is None,
+              foto.get("onde"))
+        corpo = S.foto_desempacotar(foto) or {}
+        check(f"{rotulo}: a foto da cidade não leva fichas (o checkpoint as grava)",
+              corpo.get("herois") == {} and corpo.get("pids"))
+
+        b, pid, enviados = await abrir_e_retomar(copy.deepcopy(sg))
+        tipos = [m.get("type") for m in enviados]
+        check(f"{rotulo}: Continuar abre na cidade, com a masmorra em memória",
+              b.phase == "city" and b.dungeon_generated and "enter_dungeon" not in tipos,
+              (b.phase, b.dungeon_generated, tipos))
+        check(f"{rotulo}: monstro morto continua morto, os outros iguais",
+              _assinatura_monstros(b) == sig and len(b.monsters) == len(sig))
+        check(f"{rotulo}: item no chão e baús esvaziados voltam",
+              sorted(i["pos"] for i in b.ground_items.values())
+              == sorted(i["pos"] for i in chao.values())
+              and all(not c.get("items") and not c.get("gold") for c in b.chests.values()))
+        check(f"{rotulo}: a foto fica no jogo salvo até o grupo entrar",
+              b.savegame.get("dungeon_snapshot", {}).get("onde") == "cidade_com_masmorra")
+
+        b.world_location = "alva_e_luz"
+        await b.enter_dungeon(pid)
+        _cancelar_tarefas(b)
+        check(f"{rotulo}: entrar retoma a MESMA masmorra (não gera outra)",
+              b.phase == "playing" and _assinatura_monstros(b) == sig,
+              (b.phase, len(b.monsters), len(sig)))
+
+    print("  — partir para outro destino abandona a masmorra aberta —")
+    a, sg = await jogar_e_salvar("amostra.json")
+    a.broadcast_city_state = lambda: asyncio.sleep(0)
+    await a._voltar_para_cidade()
+    fonte = open(os.path.join(RAIZ, "server.py"), encoding="utf-8").read()
+    ini = fonte.index("async def handle_world_adventure")
+    trecho = fonte[ini:fonte.index("async def ", ini + 10)]
+    check("handle_world_adventure apaga a foto ao zerar dungeon_generated",
+          "self.dungeon_generated = False" in trecho and "self._apagar_foto()" in trecho)
+
+    print("  — foto da cidade de masmorra alterada é descartada —")
+    a, sg = await jogar_e_salvar("amostra.json")
+    a.broadcast_city_state = lambda: asyncio.sleep(0)
+    await a._voltar_para_cidade()
+    corpo = S.foto_desempacotar(sg["dungeon_snapshot"])
+    corpo["sala"]["map_w"] = corpo["sala"]["map_w"] + 3
+    sg["dungeon_snapshot"] = S.foto_empacotar(corpo, onde="cidade_com_masmorra",
+                                              rodada=1, masmorra="amostra.json")
+    b, _, enviados = await abrir_e_retomar(sg)
+    check("grade mudou: cidade sem masmorra aberta e foto descartada com aviso",
+          b.phase == "city" and not b.dungeon_generated
+          and "dungeon_snapshot" not in sg
+          and any(m.get("type") == "error" for m in enviados))
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
@@ -589,6 +658,7 @@ async def main():
     await secao_gravacao()
     await secao_retomada()
     await secao_grupo()
+    await secao_cidade_com_masmorra()
     await secao_handler_real()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL

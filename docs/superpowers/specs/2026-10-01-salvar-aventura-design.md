@@ -110,9 +110,8 @@ só então o primeiro turno; o log diz `narracao.a_aventura_continua`.
 **Limpeza antecipada do passo 6:** com a retomada, uma foto de masmorra já
 encerrada jogaria o grupo de volta nela no próximo Continuar. `_apagar_foto`
 roda em `_voltar_para_cidade`, `end_game` (vitória e derrota total) e
-`_emendar_proxima_etapa`. Voltar à cidade com a masmorra ainda aberta
-(`cidade_com_masmorra`) continua sendo o passo 6: por ora a foto sai, como antes
-da Etapa 2.
+`_emendar_proxima_etapa`. Voltar à cidade com a masmorra ainda aberta ficou para
+o passo 6 (abaixo).
 
 **Passo 5 feito (grupo incompleto):** basta UM herói da foto presente para
 retomar; sem nenhum, o grupo vai à cidade e a foto fica guardada. **Herói da
@@ -132,9 +131,27 @@ sessão anterior (foto com o peão em `[-1,-1]`, sem casa salva) chega pela esca
 `_apagar_foto` também limpa `_pos_retomada`, senão uma queda numa masmorra
 seguinte religaria o herói na casa de uma masmorra que acabou.
 
-Teste: `tools/test_salvar_masmorra.py` (158 checks; a seção [6] passa pelo
+**Passo 6 feito (cidade com a masmorra aberta):** `_voltar_para_cidade` olha
+`dungeon_generated`: falso (fim de missão, fase de campanha, etapa quebrada) →
+`_apagar_foto` como antes; verdadeiro (todos subiram a escada,
+`_checar_masmorra_vazia`) → no fim da transição `_gravar_foto_cidade` grava a
+foto com `onde="cidade_com_masmorra"`, depois dos resets da cidade. Essa foto leva
+só a sala e o mapa `pids` (`herois` vazio): na cidade quem grava as fichas é o
+`_checkpoint_savegame`. No Continuar, o `start_game` despacha pelo `onde` (campo do
+resumo, fora do pacote comprimido): `_restaurar_masmorra_aberta` aplica a sala
+(mesmos helpers da retomada — `_foto_conferir_arquivo` e `_foto_aplicar_sala`,
+extraídos de `_retomar_masmorra`), deixa `phase="city"`, `dungeon_generated=True`,
+e o grupo segue para a cidade; a próxima entrada cai no `nova=False` de
+`enter_dungeon` e retoma a mesma masmorra. A foto fica no jogo salvo até a 1ª
+virada de rodada lá dentro a substituir. `_pos_retomada` sai sempre ao voltar à
+cidade (senão `religar_heroi` na cidade mandaria o herói para a masmorra).
+**Partir para outro destino** (`handle_world_adventure`, que zera
+`dungeon_generated`) chama `_apagar_foto`: a masmorra deixada aberta foi
+abandonada.
+
+Teste: `tools/test_salvar_masmorra.py` (178 checks; a seção [6] passa pelo
 `server.handler` real — entrar → Continuar → dentro da masmorra; a [7] cobre o
-grupo incompleto).
+grupo incompleto; a [8] a cidade com masmorra aberta).
 
 ## 1. Problema
 
