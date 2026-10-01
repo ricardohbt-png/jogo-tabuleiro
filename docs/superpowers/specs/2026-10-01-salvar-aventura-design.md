@@ -149,9 +149,37 @@ cidade (senão `religar_heroi` na cidade mandaria o herói para a masmorra).
 `dungeon_generated`) chama `_apagar_foto`: a masmorra deixada aberta foi
 abandonada.
 
-Teste: `tools/test_salvar_masmorra.py` (178 checks; a seção [6] passa pelo
+**Passo 7 feito (cliente):** o resumo de cada foto ganhou `masmorra_nome`
+(`_nome_masmorra_foto`: nome da masmorra autorada, senão o do destino do
+mapa-múndi; procedural fica sem nome) e `list_savegames` manda `foto`
+(`_resumo_foto`: `onde`/`rodada`/`masmorra`), lido sem abrir o pacote
+comprimido. O cartão de "Meus Jogos" (`_ondeParouHTML`) mostra "🗡️ Campo de
+Treinamento — rodada 4" ou "🏙️ Na cidade — Minas ficou aberta". **"💾 Salvar e
+sair"** no ⚙️ (só com `tem_jogo_salvo`, campo novo de `game_state`/`city_state`):
+mensagem `salvar_e_sair` → `handle_salvar_e_sair` (checkpoint; na masmorra vale a
+foto da última virada, e só grava uma se ainda não houver) → `salvo_para_sair` →
+o cliente fecha a sessão e refaz o login com a senha que a aba guarda em memória,
+caindo em "Meus Jogos". O servidor só libera a conta quando fecha a conexão velha,
+então o login ganhou o código `em_uso` (`ERRO_LOGIN_EM_USO`) e o cliente tenta de
+novo algumas vezes. Na masmorra a confirmação avisa que o jogo volta ao início da
+rodada atual. **Herói que caiu** aparece esmaecido com "⏳ aguardando {nome}…".
+**Dois buracos achados ao provar no navegador:** (1) quem sai (ou cai) da masmorra
+vai para `[-1,-1]`, e as rodadas seguintes gravariam o herói fora do tabuleiro —
+na retomada ele chegaria pela escada. Agora `handle_disconnect_em_jogo` guarda a
+casa em `_pos_ao_cair`, que a retomada usa (presente: volta a ela,
+`_casa_livre_retomada` se ocupada; ausente: vira `_pos_retomada`); o rejoin na
+mesma sessão a descarta e segue pela escada, como antes. E sem nenhum herói
+conectado `_gravar_foto_rodada` não grava: o "Salvar e sair" do solo congela a
+foto. (2) A transição da retomada narrava "Os aventureiros descem novamente as
+escadas" depois de "A aventura continua"; `_finalizar_intro_masmorra` ganhou
+`retomada=True`, que a omite. Provado no navegador num servidor do worktree
+(porta 8777): rodada 4, Salvar e sair → "Meus Jogos" com "🗡️ Campo de
+Treinamento — rodada 4" → Continuar → mesma casa, rodada 4.
+
+Teste: `tools/test_salvar_masmorra.py` (204 checks; a seção [6] passa pelo
 `server.handler` real — entrar → Continuar → dentro da masmorra; a [7] cobre o
-grupo incompleto; a [8] a cidade com masmorra aberta).
+grupo incompleto; a [8] a cidade com masmorra aberta; a [9] o cliente, o
+"Salvar e sair" e o herói que caiu).
 
 ## 1. Problema
 

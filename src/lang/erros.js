@@ -2136,6 +2136,10 @@ window.LANG_ERROS = {
   "erro.foto_masmorra_descartada": {
     "en": "The saved dungeon could not be restored (it changed or the save is damaged). The adventure continues from town.",
     "pt": "Não deu para retomar a masmorra salva (ela mudou ou o salvamento está danificado). A aventura continua da cidade."
+  },
+  "erro.esta_partida_nao_tem_jogo_salvo": {
+    "en": "This match has no saved game.",
+    "pt": "Esta partida não tem jogo salvo."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

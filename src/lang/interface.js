@@ -8585,6 +8585,38 @@ window.LANG_INTERFACE = {
     "en": "Vote of the active members",
     "pt": "Votação dos membros ativos"
   },
+  "ui.menu.salvar_sair": {
+    "en": "💾 Save and quit",
+    "pt": "💾 Salvar e sair"
+  },
+  "ui.save.salvar_sair_confirm_cidade": {
+    "en": "Save your progress and go back to My Games?",
+    "pt": "Salvar o progresso e voltar para Meus Jogos?"
+  },
+  "ui.save.salvar_sair_confirm_masmorra": {
+    "en": "The game is saved at the start of round {n}. When you continue, the group returns to that point and anything done after it this round is lost. Quit?",
+    "pt": "O jogo fica salvo no início da rodada {n}. Ao continuar, o grupo volta a esse ponto e o que foi feito depois dele nesta rodada se perde. Sair?"
+  },
+  "ui.save.salvo_saindo": {
+    "en": "💾 Progress saved.",
+    "pt": "💾 Progresso salvo."
+  },
+  "ui.save.foto_masmorra": {
+    "en": "🗡️ {masmorra} — round {n}",
+    "pt": "🗡️ {masmorra} — rodada {n}"
+  },
+  "ui.save.foto_cidade": {
+    "en": "🏙️ In town — {masmorra} is still open",
+    "pt": "🏙️ Na cidade — {masmorra} ficou aberta"
+  },
+  "ui.save.masmorra_generica": {
+    "en": "Dungeon",
+    "pt": "Masmorra"
+  },
+  "ui.hud.aguardando_jogador": {
+    "en": "⏳ waiting for {nome}…",
+    "pt": "⏳ aguardando {nome}…"
+  },
   "ui.save.fase_membros": {
     "en": " · phase {f} · {n} hero(es)",
     "pt": " · fase {f} · {n} herói(s)"

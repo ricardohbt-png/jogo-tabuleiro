@@ -15684,6 +15684,7 @@ function renderPlayers(state){
         <span class="pcard-lvl">Lv${p.level}</span>
       </div>
       ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${t('ui.hud.na_cidade_volta_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
+      ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">HP</span>
@@ -31416,6 +31417,8 @@ function _audioPanelEnsure(){
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.audio.velocidade">🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal" data-i18n="ui.audio.normal">Normal</option><option value="fast" data-i18n="ui.audio.rapida">Rápida</option><option value="instant" data-i18n="ui.audio.instantanea">Instantânea</option></select></label>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
+    +     '<button id="cfg-salvar-sair" data-i18n="ui.menu.salvar_sair" style="display:none;width:100%;padding:8px;margin-bottom:6px;background:rgba(20,48,30,.7);'
+    +       'border:1px solid #6dbd8a88;border-radius:6px;color:#d7f8e0;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.menu.salvar_sair')+'</button>'
     +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
     +       'border:1px solid #c8a95155;border-radius:6px;color:#e8d9a8;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.config.voltar_menu_inicial')+'</button>'
     +     '<button id="cfg-sair" data-i18n="ui.menu.sair" style="width:100%;padding:8px;background:rgba(60,20,20,.6);'
@@ -31432,10 +31435,23 @@ function _audioPanelEnsure(){
       .includes((document.querySelector('.screen.active')||{}).id);
     const saida = wrap.querySelector('#cfg-saida');
     if(saida) saida.style.display = emJogo ? 'block' : 'none';
+    // Só com jogo salvo: a partida avulsa não tem onde gravar.
+    const salvarSair = wrap.querySelector('#cfg-salvar-sair');
+    const estadoSala = GS.gameState || GS.cityState;
+    if(salvarSair) salvarSair.style.display = (emJogo && estadoSala && estadoSala.tem_jogo_salvo) ? 'block' : 'none';
     _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
+  wrap.querySelector('#cfg-salvar-sair').onclick = () => {
+    pop.style.display='none';
+    const gs = GS.gameState;
+    // Na masmorra o salvamento é a foto do INÍCIO da rodada: avisa o que se perde.
+    const aviso = gs
+      ? t('ui.save.salvar_sair_confirm_masmorra', {n: Number(gs.round ?? gs.round_num ?? 1) || 1})
+      : t('ui.save.salvar_sair_confirm_cidade');
+    if(confirm(aviso)) GS.salvarESair();
+  };
   wrap.querySelector('#cfg-sair').onclick = () => { pop.style.display='none'; exitGameWindow(); };
   wrap.querySelector('#cfg-turn-timer-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
@@ -51540,12 +51556,19 @@ GS.on('reconnectFailed', () => {
 // Jogos Salvos — Fase 3: login por conta (apelido+PIN) na tela inicial.
 GS.on('loginResult', (msg) => {
   if (msg.ok) {
+    window._reloginTentativas = 0;
     GS.listSavegames();
     showScreen('screen-savegames');
   // Decide pelo CODIGO do erro, nunca pelo texto: a mensagem e traduzida e uma
   // comparacao por frase deixaria de casar em silencio no idioma errado (era o
   // acoplamento que este ramo tinha, e ele quebrou de verdade quando a frase
   // foi migrada). `error_code` vem de ERRO_LOGIN_SEM_CONTA no server.py.
+  } else if (msg.error_code === 'em_uso' && window._reloginTentativas > 0) {
+    // Volta do "Salvar e sair": a conexão antiga ainda não foi fechada no servidor.
+    window._reloginTentativas -= 1;
+    const c = window._contaCtx || {};
+    GS.leaveSession();
+    setTimeout(() => GS.loginConta(c.url, c.name, c.password), 500);
   } else if (msg.error_code === 'sem_conta') {
     const c = window._contaCtx || {};
     if (confirm(t('ui.conta.criar_agora'))) {
@@ -51555,6 +51578,32 @@ GS.on('loginResult', (msg) => {
     alert(msg.error || t('ui.conta.falha_no_login'));
   }
 });
+
+// "💾 Salvar e sair": o servidor confirmou a gravação. Fecha a sessão da sala e,
+// com a senha desta aba ainda na memória, entra de novo na conta para cair em
+// "Meus Jogos". A conta só é liberada quando o servidor fecha a conexão velha,
+// então um login rápido demais pode ouvir "em uso": o loginResult tenta de novo.
+GS.on('salvoParaSair', () => {
+  const c = window._contaCtx;
+  returnToInitialMenu();
+  toast(t('ui.save.salvo_saindo'), 'var(--green)');
+  if (c && c.name && c.password) {
+    window._reloginTentativas = 6;
+    setTimeout(() => GS.loginConta(c.url, c.name, c.password), 300);
+  }
+});
+
+// Linha "onde parou" do cartão: a foto da masmorra (Etapa 2 do salvamento).
+// O nome vem do autor da masmorra e não se traduz; procedural cai no genérico.
+function _ondeParouHTML(foto) {
+  if (!foto || !foto.onde) return '';
+  const esc = (v) => String(v).replace(/[&<>"]/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  const masmorra = esc(foto.masmorra || t('ui.save.masmorra_generica'));
+  const texto = foto.onde === 'cidade_com_masmorra'
+    ? t('ui.save.foto_cidade', {masmorra})
+    : t('ui.save.foto_masmorra', {masmorra, n: foto.rodada || 1});
+  return '<br><span style="font-size:.7rem;color:#e8d9a8;">' + texto + '</span>';
+}
 
 GS.on('savegamesList', (list) => {
   const box = document.getElementById('savegames-list');
@@ -51573,7 +51622,8 @@ GS.on('savegamesList', (list) => {
     const el = document.createElement('div');
     el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #2a4a2a;border-radius:6px;padding:8px 10px;';
     el.innerHTML = '<div><b>' + sg.name + '</b><br><span style="font-size:.7rem;color:#8ab88a;">'
-      + (sg.mode === 'campaign' ? t('ui.save.campanha') : t('ui.save.avulso')) + t('ui.save.fase_membros',{f: (sg.campaign_phase||0)+1, n: membros}) + '</span></div>';
+      + (sg.mode === 'campaign' ? t('ui.save.campanha') : t('ui.save.avulso')) + t('ui.save.fase_membros',{f: (sg.campaign_phase||0)+1, n: membros}) + '</span>'
+      + _ondeParouHTML(sg.foto) + '</div>';
     const btns = document.createElement('div');
     const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent=t('ui.save.continuar');
     cont.onclick = () => GS.loadSavegame(sg.id);

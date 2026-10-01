@@ -2292,6 +2292,15 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
     write_savegame(sg)
     return sg
 
+def _resumo_foto(registro):
+    """Onde o grupo parou, para o cartão de "Meus Jogos": só os campos do resumo
+    da foto (fora da compressão). None quando não há foto."""
+    if not isinstance(registro, dict) or not registro.get("onde"):
+        return None
+    return {"onde": registro.get("onde"), "rodada": registro.get("rodada"),
+            "masmorra": registro.get("masmorra_nome") or None,
+            "gravado_em": registro.get("gravado_em")}
+
 def list_savegames(username):
     """Resumo dos jogos onde a conta é dona, membro ou mestre (mais recentes primeiro)."""
     u = _norm_username(username)
@@ -2317,6 +2326,7 @@ def list_savegames(username):
                 "group_id": sg.get("group_id"), "rules": sg.get("rules", {}),
                 "status": sg.get("status", "active"), "parent_campaign_id": sg.get("parent_campaign_id"),
                 "slots": sg.get("slots", {}),
+                "foto": _resumo_foto(sg.get("dungeon_snapshot")),
             })
     out.sort(key=lambda s: s.get("updated") or "", reverse=True)
     return out
@@ -2457,6 +2467,7 @@ def _ip_do_cliente(request, publico):
 # Codigo de erro do login. O cliente decide o ramo "oferecer criar conta" por
 # ESTE codigo, nunca pelo texto da mensagem — que e traduzido.
 ERRO_LOGIN_SEM_CONTA = "sem_conta"
+ERRO_LOGIN_EM_USO = "em_uso"
 
 
 async def try_login(pid, username, password):
@@ -2476,7 +2487,7 @@ async def try_login(pid, username, password):
         return False, T("erro.senha_incorreta"), None
     dono = ACCOUNTS_ONLINE.get(u)
     if dono and dono != pid:
-        return False, T("erro.esta_conta_ja_esta_em_uso_em_outra_conexao"), None
+        return False, T("erro.esta_conta_ja_esta_em_uso_em_outra_conexao"), ERRO_LOGIN_EM_USO
     # Se esta conexão já estava logada noutra conta, libera a anterior.
     for outra, opid in list(ACCOUNTS_ONLINE.items()):
         if opid == pid and outra != u:
@@ -10819,6 +10830,7 @@ class GameRoom:
         pid = alvo["id"]          # religa identidade antiga
         self.connections[pid] = ws
         alvo["connected"] = True   # volta a contar nos turnos
+        alvo.pop("_pos_ao_cair", None)   # só a retomada de jogo salvo a usa
         self._assumir_anfitriao_se_vago(pid)
         # Reenvia a sequência de mensagens que coloca o cliente na tela
         # correta da fase atual.
@@ -10836,11 +10848,7 @@ class GameRoom:
         elif alvo.get("_pos_retomada"):
             # Ausente na retomada de um jogo salvo: volta à casa da foto (ou à
             # livre mais próxima, se alguém a ocupou nesse meio-tempo).
-            casa = list(alvo.pop("_pos_retomada"))
-            ocupada = any(list(q["pos"]) == casa for q in self.players.values()
-                          if q["id"] != pid and self._ativo(q)) or                       any(casa in self._monster_tiles(m) for m in self.monsters.values()
-                          if m.get("hp", 0) > 0)
-            alvo["pos"] = self._free_tile_near(casa) if ocupada else casa
+            alvo["pos"] = self._casa_livre_retomada(list(alvo.pop("_pos_retomada")), pid)
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()
@@ -11033,6 +11041,7 @@ class GameRoom:
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "atravessar_aliados": self.atravessar_aliados,
+            "tem_jogo_salvo": self.savegame is not None,
             "players": players_city,
             "world": {
                 "location": self.world_location,
@@ -14955,15 +14964,15 @@ class GameRoom:
     def _intro_masmorra_bloqueada(self):
         return bool(self.dungeon_intro_active)
 
-    async def _finalizar_intro_masmorra(self, nova):
+    async def _finalizar_intro_masmorra(self, nova, retomada=False):
         """Libera o primeiro turno somente depois da transição autoritativa."""
         try:
             await asyncio.sleep(3.0)
         except asyncio.CancelledError:
             return
-        await self._liberar_intro_masmorra(nova)
+        await self._liberar_intro_masmorra(nova, retomada)
 
-    async def _liberar_intro_masmorra(self, nova):
+    async def _liberar_intro_masmorra(self, nova, retomada=False):
         """O que acontece quando a transição termina, sem a espera.
 
         Separado do `_finalizar_intro_masmorra` para que a liberação seja um
@@ -14991,7 +15000,7 @@ class GameRoom:
                      else self.monsters.get(actor["id"])) if actor else None)
             await self.gm_say(T("narracao.os_aventureiros_partem_da_cidade_e_adent",
                                 nome=nome_criatura(ator) if ator else "?"))
-        else:
+        elif not retomada:   # na retomada de jogo salvo o log já disse "A aventura continua"
             await self.gm_say(T("narracao.os_aventureiros_descem_novamente_as_esca"))
 
         # Tutorial: a primeira licao so pode aparecer depois que a transicao de
@@ -15496,6 +15505,11 @@ class GameRoom:
                 self.host_pid = nxt
         era_turno = (self.phase == "playing" and self.current_pid() == pid)
         if self.phase == "playing":
+            # A foto da rodada seguinte o grava fora do tabuleiro; esta casa é
+            # por onde a retomada de um jogo salvo o devolve ao mapa.
+            if (p.get("alive") and not p.get("fora_masmorra")
+                    and list(p.get("pos") or [-1, -1]) != [-1, -1]):
+                p["_pos_ao_cair"] = list(p["pos"])
             p["pos"] = [-1, -1]   # fora do tabuleiro: monstros ignoram, nÃ£o ocupa casa
             await self.gm_say(T("narracao.perdeu_a_conexao_e_deixou_a_masmorra_o_g", heroi=p['name']))
         else:
@@ -22463,6 +22477,7 @@ class GameRoom:
             self._ultima_foto = None
             for p in self.players.values():
                 p.pop("_pos_retomada", None)
+                p.pop("_pos_ao_cair", None)
         else:
             self._apagar_foto()
         self._cancelar_timer_turno()   # fora da masmorra nÃ£o hÃ¡ timer de turno
@@ -22609,14 +22624,54 @@ class GameRoom:
         if (self.savegame is None or getattr(self, "test_mode", False)
                 or self.phase != "playing" or self._foto_janela_pendente()):
             return False
+        # Todos saíram (ou caíram): a masmorra pode seguir girando rodadas sem
+        # ninguém, e a foto passaria a guardar o grupo fora do tabuleiro.
+        if not any(q.get("connected", True) for q in self.players.values()
+                   if q.get("class_id") and not q.get("is_master")):
+            return False
         foto = foto_empacotar(self._montar_foto(), onde="masmorra",
                               rodada=self.round_num,
-                              masmorra=self.selected_dungeon or "procedural")
+                              masmorra=self.selected_dungeon or "procedural",
+                              masmorra_nome=self._nome_masmorra_foto())
         self._ultima_foto = foto
         self.savegame["dungeon_snapshot"] = foto
         write_savegame(self.savegame)
         _agendar_descarga()
         return True
+
+    def _nome_masmorra_foto(self):
+        """Nome para o cartão de "Meus Jogos": o da masmorra autorada, senão o
+        do destino do mapa-múndi. Procedural → None (o cliente diz "masmorra")."""
+        nome = (self.dungeon_def or {}).get("name")
+        if not nome and self.world_adventure_id:
+            nome = (WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("nome")
+        return nome or None
+
+    async def handle_salvar_e_sair(self, pid):
+        """"💾 Salvar e sair": grava o que está pendente e confirma ao jogador,
+        que então fecha a conexão. Na cidade, um checkpoint; na masmorra o que
+        vale é a foto da última virada de rodada (nunca o meio de um turno), e
+        só se grava aqui quando ainda não há nenhuma."""
+        if self.savegame is None:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.esta_partida_nao_tem_jogo_salvo")}); return
+        if self.phase == "playing" and self._ultima_foto is None:
+            self._gravar_foto_rodada()
+        self._checkpoint_savegame()
+        _agendar_descarga()
+        foto = self.savegame.get("dungeon_snapshot") or {}
+        await self.send_to(pid, {"type": "salvo_para_sair",
+                                 "onde": foto.get("onde") if self.phase == "playing" else self.phase,
+                                 "rodada": foto.get("rodada")})
+
+    def _casa_livre_retomada(self, casa, pid):
+        """A casa guardada para o herói voltar, ou a livre mais próxima se um
+        monstro vivo ou outro herói no tabuleiro a ocupou nesse meio-tempo."""
+        casa = list(casa)
+        ocupada = (any(list(q.get("pos") or []) == casa for q in self.players.values()
+                       if q["id"] != pid and self._ativo(q))
+                   or any(casa in self._monster_tiles(m) for m in self.monsters.values()
+                          if m.get("hp", 0) > 0))
+        return list(self._free_tile_near(casa)) if ocupada else casa
 
     def _gravar_foto_cidade(self):
         """O grupo voltou à cidade com a masmorra ainda aberta: guarda o estado
@@ -22630,7 +22685,8 @@ class GameRoom:
         corpo["herois"] = {}
         foto = foto_empacotar(corpo, onde="cidade_com_masmorra",
                               rodada=self.round_num,
-                              masmorra=self.selected_dungeon or "procedural")
+                              masmorra=self.selected_dungeon or "procedural",
+                              masmorra_nome=self._nome_masmorra_foto())
         self.savegame["dungeon_snapshot"] = foto
         write_savegame(self.savegame)
         _agendar_descarga()
@@ -22643,6 +22699,7 @@ class GameRoom:
         self._ultima_foto = None
         for p in self.players.values():
             p.pop("_pos_retomada", None)   # casa de uma masmorra que acabou
+            p.pop("_pos_ao_cair", None)
         if self.savegame is not None and self.savegame.pop("dungeon_snapshot", None) is not None:
             write_savegame(self.savegame)
             _agendar_descarga()
@@ -22760,9 +22817,10 @@ class GameRoom:
                 # retomada anterior (casa em _pos_retomada) ou caído na sessão
                 # passada. Presente agora, ele joga.
                 p["connected"] = True
-                casa = p.pop("_pos_retomada", None)
+                casa = p.pop("_pos_retomada", None) or p.get("_pos_ao_cair")
+                p.pop("_pos_ao_cair", None)
                 if casa and list(p.get("pos") or []) == [-1, -1]:
-                    p["pos"] = list(casa)
+                    p["pos"] = self._casa_livre_retomada(casa, p["id"])
                 elif (list(p.get("pos") or []) == [-1, -1] and p.get("alive")
                         and not p.get("fora_masmorra")):
                     p["fora_masmorra"] = {"rodadas_restantes": 0}
@@ -22773,6 +22831,9 @@ class GameRoom:
             if (not p.get("fora_masmorra") and p.get("alive")
                     and list(p.get("pos") or [-1, -1]) != [-1, -1]):
                 p["_pos_retomada"] = list(p["pos"])
+            elif p.get("_pos_ao_cair") and p.get("alive") and not p.get("fora_masmorra"):
+                p["_pos_retomada"] = p["_pos_ao_cair"]
+            p.pop("_pos_ao_cair", None)
             p["pos"] = [-1, -1]
             self.players[p["id"]] = p
             self.player_order.append(p["id"])
@@ -22808,7 +22869,7 @@ class GameRoom:
             "transition_images": _transition_images(),
         })
         await self.push_state()
-        self.dungeon_intro_task = asyncio.create_task(self._finalizar_intro_masmorra(False))
+        self.dungeon_intro_task = asyncio.create_task(self._finalizar_intro_masmorra(False, retomada=True))
         return True
 
     async def handle_shortcut_set(self, pid, slot, entry):
@@ -45104,6 +45165,7 @@ class GameRoom:
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "atravessar_aliados": self.atravessar_aliados,
+            "tem_jogo_salvo": self.savegame is not None,
             "master_manual_mid": self.master_manual_mid or self.command_control_mid or self.mind_control_mid,
             "master_manual_reach": (
                 self._master_monster_reach(self.monsters[self.master_manual_mid or self.command_control_mid or self.mind_control_mid])
@@ -46382,6 +46444,9 @@ async def handler(ws):
 
                 elif t == "set_atravessar_aliados":
                     if room: await room.handle_set_atravessar_aliados(pid, msg.get("enabled") is True)
+
+                elif t == "salvar_e_sair":
+                    if room: await room.handle_salvar_e_sair(pid)
 
                 # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
                 # internamente iniciar_cena e não dependem deste protocolo.

@@ -350,8 +350,12 @@ async def secao_retomada():
         refs = [m["_ref_teste_pid"] for m in b.monsters.values() if "_ref_teste_pid" in m]
         if pid_real and refs:
             check(f"{rotulo}: referência ao pid num monstro passa ao pid novo", refs == [pid])
-        await b._liberar_intro_masmorra(False)
+        await b._liberar_intro_masmorra(False, retomada=True)
         check(f"{rotulo}: depois da transição alguém tem a vez", b.current_actor() is not None)
+        chaves_log = [getattr(x, "key", None) for x in b.gm_log]
+        check(f"{rotulo}: o log diz 'A aventura continua' e não 'descem novamente as escadas'",
+              "narracao.a_aventura_continua" in chaves_log
+              and "narracao.os_aventureiros_descem_novamente_as_esca" not in chaves_log, chaves_log[-3:])
         for t in (getattr(b, "turn_timer_task", None), getattr(b, "initiative_task", None)):
             if t and not t.done():
                 t.cancel()
@@ -651,6 +655,107 @@ async def secao_cidade_com_masmorra():
           and any(m.get("type") == "error" for m in enviados))
 
 
+async def secao_cliente_e_saida():
+    print("\n[9] Meus Jogos, Salvar e sair e herói que caiu (passo 7)")
+    import copy, re as _re
+    # — resumo da foto no cartão —
+    a, sg = await jogar_e_salvar("amostra.json")
+    nome = (S.carregar_dungeon("amostra.json") or {}).get("name")
+    res = S._resumo_foto(sg["dungeon_snapshot"])
+    check("resumo da foto: onde, rodada e nome legível da masmorra",
+          res and res["onde"] == "masmorra" and res["rodada"] == 7 and res["masmorra"] == nome, res)
+    check("sem foto, o cartão não ganha linha", S._resumo_foto(None) is None)
+    a.broadcast_city_state = lambda: asyncio.sleep(0)
+    await a._voltar_para_cidade()
+    res = S._resumo_foto(sg["dungeon_snapshot"])
+    check("resumo da cidade com masmorra aberta",
+          res and res["onde"] == "cidade_com_masmorra" and res["masmorra"] == nome, res)
+    fonte = open(os.path.join(RAIZ, "server.py"), encoding="utf-8").read()
+    ini = fonte.index("def list_savegames")
+    check("list_savegames manda o resumo da foto",
+          '"foto": _resumo_foto(sg.get("dungeon_snapshot"))' in fonte[ini:ini + 2500])
+
+    # — Salvar e sair —
+    a, sg = await jogar_e_salvar("amostra.json")
+    pid = next(iter(a.players))
+    enviados = []
+    async def send_to(p_, msg): enviados.append(msg)
+    a.send_to = send_to
+    check("game_state avisa que há jogo salvo", a._game_state_payload().get("tem_jogo_salvo") is True)
+    a._ultima_foto = None
+    sg.pop("dungeon_snapshot", None)
+    await a.handle_salvar_e_sair(pid)
+    resp = [m for m in enviados if m.get("type") == "salvo_para_sair"]
+    check("na masmorra sem foto ainda: grava a da rodada e confirma",
+          resp and resp[0]["onde"] == "masmorra" and resp[0]["rodada"] == 7
+          and sg.get("dungeon_snapshot", {}).get("onde") == "masmorra", resp)
+    sem = S.GameRoom("SEMSG")
+    msgs = []
+    async def st2(p_, msg): msgs.append(msg)
+    sem.send_to = st2
+    await sem.handle_salvar_e_sair("x")
+    check("partida sem jogo salvo: recusa", msgs and msgs[0].get("type") == "error"
+          and sem._city_state_payload().get("tem_jogo_salvo") is False)
+
+    # — herói que cai guarda a casa; sem ninguém conectado a foto congela —
+    a, sg = await jogar_e_salvar("amostra.json")
+    pid = next(iter(a.players)); p = a.players[pid]
+    casa = list(p["pos"])
+    foto_antes = sg["dungeon_snapshot"]
+    async def nada(*x, **k): pass
+    a._forcar_fim_turno = nada
+    await a.handle_disconnect_em_jogo(pid)
+    check("ao cair na masmorra, o herói guarda a casa (_pos_ao_cair)",
+          p["pos"] == [-1, -1] and p.get("_pos_ao_cair") == casa)
+    a.round_num = 8
+    check("solo saiu: a virada não regrava a foto",
+          a._gravar_foto_rodada() is False and sg["dungeon_snapshot"] is foto_antes)
+    b, _, _ = await abrir_e_retomar(copy.deepcopy(sg))
+    pb = next(iter(b.players.values()))
+    check("Continuar devolve o herói à casa onde estava", pb["pos"] == casa and "_pos_ao_cair" not in pb)
+
+    # — grupo: um cai, a foto seguinte o guarda fora do mapa, mas com a casa —
+    a, sg, pids = await grupo_salvo()
+    casa_b = list(a.players[pids[1]]["pos"])
+    a._forcar_fim_turno = nada
+    await a.handle_disconnect_em_jogo(pids[1])
+    a.round_num = 6
+    check("grupo: com alguém conectado a foto segue gravando", a._gravar_foto_rodada())
+    b, bp = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana"), ("rogue", "Bia")])
+    _cancelar_tarefas(b)
+    check("grupo: quem tinha caído volta na casa em que caiu (não pela escada)",
+          b.players[bp[1]]["pos"] == casa_b and not b.players[bp[1]].get("fora_masmorra"),
+          (b.players[bp[1]]["pos"], casa_b))
+    b, bp = await abrir_com(copy.deepcopy(sg), [("warrior", "Ana")])
+    _cancelar_tarefas(b)
+    ausente = next(q for q in b.players.values() if q.get("class_id") == "rogue")
+    check("grupo: ausente que tinha caído fica com a casa para religar",
+          ausente.get("_pos_retomada") == casa_b and "_pos_ao_cair" not in ausente)
+
+    # — rejoin na mesma sessão continua pela escada —
+    ini = fonte.index("async def religar_heroi")
+    check("religar_heroi descarta _pos_ao_cair (só a retomada a usa)",
+          'alvo.pop("_pos_ao_cair", None)' in fonte[ini:ini + 900])
+
+    # — cliente —
+    js = open(os.path.join(RAIZ, "game.js"), encoding="utf-8").read()
+    gs = open(os.path.join(RAIZ, "src", "gameState.js"), encoding="utf-8").read()
+    check("⚙️ tem o botão Salvar e sair, condicionado a tem_jogo_salvo",
+          'id="cfg-salvar-sair"' in js and "tem_jogo_salvo" in js)
+    check("um único ouvinte de salvoParaSair (GS.on substitui o anterior)",
+          len(_re.findall(r"GS\.on\('salvoParaSair'", js)) == 1)
+    check("gameState: salvarESair exportado e salvo_para_sair tratado",
+          "function salvarESair()" in gs and "case 'salvo_para_sair':" in gs and "    salvarESair," in gs)
+    check("cartão de Meus Jogos mostra onde parou", "_ondeParouHTML(sg.foto)" in js)
+    check("painel de jogadores marca o herói ausente", "ui.hud.aguardando_jogador" in js)
+    chaves = ("ui.menu.salvar_sair", "ui.save.salvar_sair_confirm_cidade",
+              "ui.save.salvar_sair_confirm_masmorra", "ui.save.salvo_saindo",
+              "ui.save.foto_masmorra", "ui.save.foto_cidade", "ui.save.masmorra_generica",
+              "ui.hud.aguardando_jogador", "erro.esta_partida_nao_tem_jogo_salvo")
+    faltam = [k for k in chaves if not (S.LANG_STRINGS.get(k, {}).get("pt") and S.LANG_STRINGS.get(k, {}).get("en"))]
+    check("chaves novas com pt e en", not faltam, faltam)
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
@@ -659,6 +764,7 @@ async def main():
     await secao_retomada()
     await secao_grupo()
     await secao_cidade_com_masmorra()
+    await secao_cliente_e_saida()
     await secao_handler_real()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL

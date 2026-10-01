@@ -1953,6 +1953,12 @@ const GS = (() => {
         _emit('savegamesList', savegames);
         break;
 
+      case 'salvo_para_sair':
+        // Resposta ao "💾 Salvar e sair": o progresso está gravado; o renderer
+        // fecha a sessão e volta para "Meus Jogos".
+        _emit('salvoParaSair', msg);
+        break;
+
       case 'savegame_created':
         _emit('savegameCreated', msg.savegame);
         break;
@@ -2082,6 +2088,7 @@ const GS = (() => {
   function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
   function setVisaoCompartilhada(enabled) { send({ type:'set_visao_compartilhada', enabled:!!enabled }); }
   function setAtravessarAliados(enabled) { send({ type:'set_atravessar_aliados', enabled:!!enabled }); }
+  function salvarESair() { send({ type:'salvar_e_sair' }); }
   // Visão compartilhada: heróis cuja visão SOMA à do jogador. `ativa` = escolha
   // local do jogador E permissão do anfitrião (decidida por quem chama). Fica de
   // fora: o próprio herói, quem morreu, quem saiu da masmorra e — se o próprio
@@ -3567,6 +3574,7 @@ const GS = (() => {
     moverAnimadoCaminho,
     moverPrisioneiroCaminho,
     setAtravessarAliados,
+    salvarESair,
     atacarAnimado,
     usarHabilidadeAnimado,
     moverPrisioneiro,
