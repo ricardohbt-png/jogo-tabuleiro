@@ -824,6 +824,17 @@ const GS = (() => {
       decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
   }
 
+  // Espelha `_voo_sobre_objeto` do servidor: voando alto o bastante, o ator
+  // fica por cima do objeto sólido (baixo conta como médio, alto como grande).
+  function _vooSobreObjeto(actor, x, y) {
+    if (!actor?.voo) return false;
+    const alt = alturaDe(actor);
+    if (alt <= 0) return false;
+    const alto = (gameState?.decorations || []).some(d => !d.pisavel && d.alto &&
+      decorTilesOf(d).some(([dx, dy]) => dx === x && dy === y));
+    return alt >= alturaParaSobrepor(alto ? 'grande' : 'medio');
+  }
+
   // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py.
   const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
 
@@ -877,7 +888,8 @@ const GS = (() => {
         && (_custoElevacao(moveCtx, fromX, fromY, x, y) > 1
             || _quedaNoPasso(moveCtx, fromX, fromY, x, y))) return false;
     if (!vooLivre && !_ponteEm(x, y) && _matSolido(x, y)) return false;   // entulho sob ponte não bloqueia a superfície
-    if (!vooLivre && _decorSolida(x, y)) return false; // objeto sólido: contorna pelo menor caminho
+    if (!vooLivre && _decorSolida(x, y) && !_vooSobreObjeto(moveCtx?.actor, x, y))
+      return false; // objeto sólido: contorna pelo menor caminho (ou voa por cima)
     // Casa ocupada por outra entidade viva é intransponível (espelha o servidor).
     return !(occupied && occupied.has(`${x},${y}`));
   }
@@ -903,15 +915,27 @@ const GS = (() => {
   }
 
   const ALTURA_POR_QUADRADO_ALCANCE = 2;
-  const ALTURA_MINIMA_SOBREPOSICAO_VOO = 2 * ALTURA_POR_QUADRADO_ALCANCE;
+  // Espelha ALTURA_SOBREPOR_POR_PORTE do servidor: altura (em pontos) acima de
+  // quem está embaixo para voar por cima dele. Herói/porte ausente = médio.
+  const ALTURA_SOBREPOR_POR_PORTE = {
+    minusculo: 1 * ALTURA_POR_QUADRADO_ALCANCE,
+    pequeno:   1 * ALTURA_POR_QUADRADO_ALCANCE,
+    medio:     1 * ALTURA_POR_QUADRADO_ALCANCE,
+    grande:    2 * ALTURA_POR_QUADRADO_ALCANCE,
+    enorme:    3 * ALTURA_POR_QUADRADO_ALCANCE,
+  };
+  function alturaParaSobrepor(porte) {
+    return ALTURA_SOBREPOR_POR_PORTE[porte] ?? ALTURA_SOBREPOR_POR_PORTE.medio;
+  }
   function _podeCompartilharCasaVoando(a, b) {
+    if (!a || !b) return false;
     const alturaA = alturaDe(a), alturaB = alturaDe(b);
-    return (!!a?.voo && alturaA > 0 && alturaA - alturaB >= ALTURA_MINIMA_SOBREPOSICAO_VOO)
-      || (!!b?.voo && alturaB > 0 && alturaB - alturaA >= ALTURA_MINIMA_SOBREPOSICAO_VOO);
+    return (!!a.voo && alturaA > 0 && alturaA - alturaB >= alturaParaSobrepor(b.porte))
+      || (!!b.voo && alturaB > 0 && alturaB - alturaA >= alturaParaSobrepor(a.porte));
   }
 
-  // Casas de entidades vivas que realmente bloqueiam este ator. Um voo dois
-  // quadrados acima pode compartilhar o tile com heróis e monstros.
+  // Casas de entidades vivas que realmente bloqueiam este ator. Voando alto o
+  // bastante sobre o porte de quem está embaixo, divide o tile com ele.
   function _occupiedSet(exX, exY, actor=null) {
     const occ = new Set();
     for (const m of (gameState.monsters || [])) {
@@ -926,7 +950,8 @@ const GS = (() => {
       if (!isActor && !_podeCompartilharCasaVoando(actor, p))
         occ.add(`${p.pos[0]},${p.pos[1]}`);
       for (const a of (p.animados || [])) {
-        if (a && (a.vida_atual ?? 1) > 0) occ.add(`${a.pos[0]},${a.pos[1]}`);
+        if (a && (a.vida_atual ?? 1) > 0 && !_podeCompartilharCasaVoando(actor, a))
+          occ.add(`${a.pos[0]},${a.pos[1]}`);
       }
     }
     return occ;
@@ -1186,7 +1211,7 @@ const GS = (() => {
       actor: (gameState.players || []).find(p => p.pos?.[0] === sx && p.pos?.[1] === sy) || {} };
     if (moveCtx?.actor?.rodamoinho_preso || moveCtx?.actor?.rodamoinho_profundo_preso) { result.add(`${sx},${sy}`); return; }
     const openDoors = doorSets(gameState).open;
-    const occupied  = _occupiedSet(sx, sy);
+    const occupied  = _occupiedSet(sx, sy, moveCtx?.actor);
     const ignoraPantano = _ignoraPenalidadePantano(moveCtx);
     const swampStart = !ignoraPantano && !_ponteEm(sx, sy, moveCtx?.state || gameState)
       && moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';

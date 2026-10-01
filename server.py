@@ -79,8 +79,23 @@ ALTURA_MIN = 0
 ALTURA_MAX = 10
 ALTURA_INICIAL_VOO = 2
 ALTURA_POR_QUADRADO_ALCANCE = 2
-ALTURA_MINIMA_SOBREPOSICAO_VOO = 2 * ALTURA_POR_QUADRADO_ALCANCE
 ALTURA_MAX_BOTA_ALADA = 3
+# Passar (e parar) por cima de algo exige voar a esta distância acima dele, em
+# pontos de altura (2 pontos = 1 quadrado). Depende do PORTE de quem está
+# embaixo: minúsculo/pequeno/médio 1 quadrado, grande 2, enorme 3. Herói e
+# porte ausente contam como médio. Objeto: baixo = médio, alto = grande.
+ALTURA_SOBREPOR_POR_PORTE = {
+    "minusculo": 1 * ALTURA_POR_QUADRADO_ALCANCE,
+    "pequeno":   1 * ALTURA_POR_QUADRADO_ALCANCE,
+    "medio":     1 * ALTURA_POR_QUADRADO_ALCANCE,
+    "grande":    2 * ALTURA_POR_QUADRADO_ALCANCE,
+    "enorme":    3 * ALTURA_POR_QUADRADO_ALCANCE,
+}
+
+
+def altura_para_sobrepor(porte):
+    """Pontos de altura acima de algo deste porte para voar por cima dele."""
+    return ALTURA_SOBREPOR_POR_PORTE.get(porte, ALTURA_SOBREPOR_POR_PORTE["medio"])
 
 # Elevação visual do terreno autorado. É uma camada independente de
 # `altura`, que continua reservada ao voo das criaturas. O movimento, a linha
@@ -15927,7 +15942,8 @@ class GameRoom:
                 "msg": T("erro.a_porta_esta_fechada_clique_nela_para_ab")})
             return
         _passo = self._passo_fantasma_ativo(p)
-        if not voo_livre and not _passo and (nx, ny) in self._decor_block_tiles:
+        if (not voo_livre and not _passo and (nx, ny) in self._decor_block_tiles
+                and not self._voo_sobre_objeto(p, nx, ny)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.ha_um_objeto_bloqueando_o_caminho")})
             return
         if not voo_livre and not _passo and (nx, ny) in self._mat_solid_tiles:
@@ -15949,7 +15965,7 @@ class GameRoom:
                     return
 
         # Block movement into a tile occupied by an animated servant
-        if self._animado_em([nx, ny]):
+        if self._animado_em([nx, ny], actor=p):
             await self.send_to(pid, {"type": "error", "msg": T("erro.um_servo_animado_ocupa_este_espaco")})
             return
 
@@ -16095,6 +16111,10 @@ class GameRoom:
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.movimento_insuficiente_alterar_altura", custo=custo)})
                 return
+            if delta < 0 and not self._pode_descer_ate(m, nova):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.algo_embaixo_impede_descer")})
+                return
 
             m["altura"] = nova
             m["master_moves_left"] = disponivel - custo
@@ -16140,6 +16160,10 @@ class GameRoom:
         if int(p.get("moves_left", 0) or 0) < custo:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.movimento_insuficiente_alterar_altura", custo=custo)})
+            return
+        if delta < 0 and not self._pode_descer_ate(p, nova):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.algo_embaixo_impede_descer")})
             return
         p["altura"] = nova
         p["moves_left"] = int(p.get("moves_left", 0) or 0) - custo
@@ -18538,9 +18562,12 @@ class GameRoom:
                             await self._execute_one_monster_attack(monster, attack, target_obj)
         return True
 
-    def _animado_em(self, pos, exclude_id=None):
+    def _animado_em(self, pos, exclude_id=None, actor=None):
+        """Servo animado vivo em `pos`. Com `actor`, quem voa alto o bastante
+        sobre o servo (porte dele) não é bloqueado."""
         for a in self._all_animados():
-            if a.get("id") != exclude_id and a.get("pos") == list(pos):
+            if (a.get("id") != exclude_id and a.get("pos") == list(pos)
+                    and not self._pode_compartilhar_casa_voando(actor, a)):
                 return True
         return False
 
@@ -36056,17 +36083,56 @@ class GameRoom:
     def _pode_compartilhar_casa_voando(self, a, b):
         """Permite sobreposicao vertical entre heroi/monstro em voo e outra criatura.
 
-        A separacao precisa ser de dois quadrados verticais. A altura usa pontos
-        de voo; dois pontos equivalem a um quadrado, conforme o alcance vertical.
+        Quem voa precisa estar acima de quem está embaixo por
+        ``altura_para_sobrepor(porte de baixo)`` pontos: 1 quadrado sobre
+        minúsculo/pequeno/médio, 2 sobre grande, 3 sobre enorme. Vale nos dois
+        sentidos (quem está embaixo também pode estar voando).
         """
         if not isinstance(a, dict) or not isinstance(b, dict):
             return False
         alt_a = normalizar_altura(a.get("altura", ALTURA_MIN))
         alt_b = normalizar_altura(b.get("altura", ALTURA_MIN))
-        return ((a.get("voo") and alt_a > ALTURA_MIN
-                 and alt_a - alt_b >= ALTURA_MINIMA_SOBREPOSICAO_VOO)
-                or (b.get("voo") and alt_b > ALTURA_MIN
-                    and alt_b - alt_a >= ALTURA_MINIMA_SOBREPOSICAO_VOO))
+        return bool((a.get("voo") and alt_a > ALTURA_MIN
+                     and alt_a - alt_b >= altura_para_sobrepor(b.get("porte")))
+                    or (b.get("voo") and alt_b > ALTURA_MIN
+                        and alt_b - alt_a >= altura_para_sobrepor(a.get("porte"))))
+
+    def _voo_sobre_objeto(self, criatura, x, y):
+        """True se a criatura voa alto o bastante para ficar sobre o objeto
+        sólido da casa (x,y): objeto baixo conta como médio, alto como grande."""
+        if not (criatura and criatura.get("voo")):
+            return False
+        alt = normalizar_altura(criatura.get("altura", ALTURA_MIN))
+        porte = "grande" if (x, y) in self._decor_tall_tiles else "medio"
+        return alt > ALTURA_MIN and alt >= altura_para_sobrepor(porte)
+
+    def _pode_descer_ate(self, criatura, nova):
+        """Descer até `nova` mantém a criatura acima de tudo o que está
+        embaixo dela? Avalia na altura nova e restaura a atual."""
+        atual = criatura.get("altura")
+        criatura["altura"] = nova
+        try:
+            pos = criatura.get("pos") or [0, 0]
+            return self._sobreposicao_valida(criatura, pos[0], pos[1])
+        finally:
+            criatura["altura"] = atual
+
+    def _sobreposicao_valida(self, criatura, x, y):
+        """Com a âncora em (x,y), a criatura passa por cima de TUDO o que
+        divide casa com ela (objetos sólidos e criaturas)? Usado para recusar
+        descer de altura quando algo embaixo ficaria dentro dela."""
+        exclude_mid = (criatura.get("id")
+                       if self.monsters.get(criatura.get("id")) is criatura else None)
+        exclude_pid = (criatura.get("id")
+                       if self.players.get(criatura.get("id")) is criatura else None)
+        for tx, ty in self._tiles_entidade_em(criatura, x, y):
+            if ((tx, ty) in self._decor_block_tiles
+                    and not self._voo_sobre_objeto(criatura, tx, ty)):
+                return False
+            if self._entity_blocks(tx, ty, exclude_mid=exclude_mid,
+                                   exclude_pid=exclude_pid, actor=criatura):
+                return False
+        return True
 
     def _entity_blocks(self, x, y, exclude_mid=None, exclude_pid=None,
                        exclude_aid=None, actor=None):
@@ -36084,7 +36150,7 @@ class GameRoom:
             if (p2["pos"] == [x, y]
                     and not self._pode_compartilhar_casa_voando(actor, p2)):
                 return True
-        return self._animado_em([x, y], exclude_id=exclude_aid)
+        return self._animado_em([x, y], exclude_id=exclude_aid, actor=actor)
 
     def _monster_can_occupy(self, m, ax, ay, facing=None, from_anchor=None):
         """True se o monstro m pode posicionar sua âncora em (ax,ay): footprint
@@ -36105,7 +36171,16 @@ class GameRoom:
                          and m.get("_runico_passo_ativo"))
                 low_obstacle = ((tx, ty) in self._decor_block_tiles
                                 or (tx, ty) in self._mat_solid_tiles)
-                if not (ghost and low_obstacle and self.tiles[ty][tx] not in {WALL, DOOR}):
+                # Voando acima do objeto (decoração; escombros não), passa.
+                sobre_objeto = ((tx, ty) in self._decor_block_tiles
+                                and (tx, ty) not in self._mat_solid_tiles
+                                and (self._ponte_em(tx, ty)
+                                     or (self.tiles[ty][tx] != WALL
+                                         and not self._is_closed_door(tx, ty)))
+                                and self._voo_sobre_objeto(m, tx, ty))
+                if sobre_objeto:
+                    pass
+                elif not (ghost and low_obstacle and self.tiles[ty][tx] not in {WALL, DOOR}):
                     return False
             if self._entity_blocks(tx, ty, exclude_mid=m["id"], actor=m):
                 return False

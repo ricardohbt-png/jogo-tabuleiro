@@ -229,6 +229,10 @@ window.LANG_ERROS = {
     "en": "This creature's altitude cannot be changed.",
     "pt": "A altura desta criatura não pode ser alterada."
   },
+  "erro.algo_embaixo_impede_descer": {
+    "en": "Something is below you: you can't descend that low here.",
+    "pt": "Há algo embaixo: não dá para descer até essa altura aqui."
+  },
   "erro.altura_fora_dos_limites": {
     "en": "Height out of bounds (0–{limite}).",
     "pt": "Altura fora dos limites (0–{limite})."

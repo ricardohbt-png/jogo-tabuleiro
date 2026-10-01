@@ -49,16 +49,24 @@ def test_voo_obstaculos():
     m = {"id": "m1", "hp": 10, "pos": [1, 1], "size": [1, 1],
          "voo": True, "altura": 2, "ignora_obstaculos_voo": False}
 
-    # Voo, por si só, não atravessa obstáculos: a configuração é opt-in.
+    # Parede só se atravessa com a configuração opt-in.
     assert not room._monster_can_occupy(m, 2, 1)
+    # Objeto baixo (médio): 1 quadrado de altura (2 pontos) já passa por cima;
+    # 1 ponto não basta.
+    assert room._monster_can_occupy(m, 3, 1)
+    m["altura"] = 1
     assert not room._monster_can_occupy(m, 3, 1)
+    m["altura"] = 2
 
     m["ignora_obstaculos_voo"] = True
     assert room._monster_can_occupy(m, 2, 1)
     assert room._monster_can_occupy(m, 3, 1)
-    # A borda do mapa e criaturas continuam bloqueando o pouso.
+    # A borda do mapa continua bloqueando; criatura média embaixo exige 1
+    # quadrado acima dela (e a regra por porte vale com ou sem opt-in).
     assert not room._monster_can_occupy(m, -1, 1)
     room.monsters["other"] = {"id": "other", "hp": 10, "pos": [3, 1], "size": [1, 1]}
+    assert room._monster_can_occupy(m, 3, 1)
+    m["altura"] = 1
     assert not room._monster_can_occupy(m, 3, 1)
 
 
