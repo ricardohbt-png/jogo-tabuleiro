@@ -960,12 +960,19 @@ function handleLobby(msg){
     // Classes escolhidas por OUTROS jogadores ficam indisponíveis.
     csf.takenIds = new Set(
       msg.players.filter(p => p.id !== GS.myPid && p.class_id).map(p => p.class_id));
+    // Entrada com a partida em andamento: o servidor manda também as classes
+    // de membros que não estão na sala hoje (o personagem é deles).
+    for (const c of (msg.taken_classes || [])) csf.takenIds.add(c);
     _csfApplyTaken();
   }
   // Reaplica por último — initClassSelectFull() (chamado acima, só na 1ª vez)
   // reseta o texto de #cs-hint para o padrão de herói; isto garante que o
   // aviso "Você é o Mestre" vença mesmo no 1º lobby_state do Mestre.
   _csApplyMasterMode();
+  if(msg.entrada_tardia){
+    const hint = document.getElementById('cs-hint');
+    if(hint) hint.textContent = t('ui.selecao.entrada_tardia');
+  }
 }
 
 // Aplica o visual de "indisponível" (esmaecido) aos heróis já escolhidos por
@@ -50288,6 +50295,12 @@ function csUpdateLobbyBar(msg){
 
   const btnS = document.getElementById('cs-btn-start');
   if(btnS) btnS.style.display = (msg.host===GS.myPid && msg.can_start) ? 'block' : 'none';
+  // Entrada com a partida em andamento: a masmorra já foi escolhida e o papel
+  // de Mestre não está em jogo — só a escolha do herói importa.
+  const tardia = !!msg.entrada_tardia;
+  const btnM = document.getElementById('cs-btn-master');
+  if(btnM) btnM.style.display = tardia ? 'none' : '';
+  if(picker) picker.style.display = tardia ? 'none' : '';
 }
 
 // Esconde a UI de escolha de herói (painel de atributos/habilidades, botão de

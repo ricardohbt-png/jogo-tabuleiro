@@ -143,6 +143,8 @@ window.LANG_STRINGS = {
                               "en": "First time? The nickname above becomes your account. Your games are saved in it: use the same nickname + password to pick up where you left off." },
   "ui.connect.btn_reconectar": { "pt": "🔌 Reconectar à última partida",
                                  "en": "🔌 Reconnect to last game" },
+  "ui.selecao.entrada_tardia": { "pt": "O grupo já está jogando. Escolha seu herói para entrar na aventura.",
+                                 "en": "The group is already playing. Choose your hero to join the adventure." },
   "ui.savegames.titulo":    { "pt": "Meus Jogos", "en": "My Games" },
   "ui.savegames.div_amigo": { "pt": "entrar no jogo de um amigo", "en": "join a friend's game" },
   "ui.savegames.codigo_label": { "pt": "Código da sala do amigo", "en": "Friend's room code" },

@@ -37,12 +37,20 @@ Etapa 2 adiada.
    conectado, quem chega assume (`_assumir_anfitriao_se_vago`); o Mestre nunca
    perde o posto por uma queda. Jogo com Mestre continua só abrindo pelo Mestre.
 
-**Limitação conhecida:** um jogador **novo** (sem personagem no jogo) só entra
-pelo código enquanto o grupo está no lobby. Num jogo solo, que começa sem lobby,
-um amigo novo não consegue entrar depois. Fica para uma próxima etapa (exigiria
-uma escolha de herói para quem chega com a partida em andamento).
+**Jogador novo com a partida em andamento (2026-10-01, depois):** quem não
+tem personagem no jogo entra pelo código ("Meus Jogos" → código do amigo) mesmo
+com o grupo na cidade ou na masmorra. Ele fica numa sala de espera
+(`GameRoom.aguardando`, fora de `players`/`connections`, então não recebe o
+estado da partida) e recebe um `lobby_state` só dele (`_enviar_escolha_tardia`:
+`entrada_tardia:true`, `host:null`, `taken_classes` com as classes dos heróis na
+sala e as de membros ausentes). Escolher o herói (e as 2 magias, para mago e
+clérigo) chama `_tentar_entrada_tardia`, que o leva para dentro pelo mesmo
+caminho do membro que chega atrasado. Com entrada por votação, o pedido abre a
+votação e ele espera; aprovado, entra; recusado, volta a escolher. A votação
+deixou de mandar `lobby_state` fora do lobby (antes jogaria o grupo na tela de
+heróis). Quem desiste no meio sai da sala de espera.
 
-Teste: `tools/test_continuar_jogo.py` (39 checks, pelo `server.handler` real).
+Teste: `tools/test_continuar_jogo.py` (66 checks, pelo `server.handler` real).
 
 ## 1. Problema
 

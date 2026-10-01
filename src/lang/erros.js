@@ -2129,10 +2129,6 @@ window.LANG_ERROS = {
     "en": "You are not part of this game.",
     "pt": "Você não faz parte deste jogo."
   },
-  "erro.o_grupo_ja_comecou_sem_personagem": {
-    "en": "The group has already started and you have no character in this game. Ask them to open it again so you can choose one in the lobby.",
-    "pt": "O grupo já começou e você não tem personagem neste jogo. Peça para abrirem o jogo de novo para escolher um no lobby."
-  },
   "erro.seu_personagem_ja_esta_na_partida": {
     "en": "Your character is already in this match.",
     "pt": "Seu personagem já está nesta partida."

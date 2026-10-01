@@ -15,6 +15,14 @@ O que cobre (decisões do autor em 2026-10-01):
   [5] Só o progresso da CIDADE é salvo: dentro da masmorra a ficha de quem está
       lá não é gravada; a de quem subiu pela escada é.
   [6] Uma sala velha do mesmo jogo, sem ninguém, para de gravar no jogo salvo.
+  [7] Jogador NOVO entra pelo código num jogo solo já na cidade: escolhe o
+      herói numa tela só dele e entra; o dono não é jogado de volta ao lobby.
+  [8] Mago novo com o grupo na masmorra: só entra depois das 2 magias, e
+      chega pela escada (fora_masmorra).
+  [9] Entrada por votação com a partida em andamento: o membro vota pela
+      caixa de confirmação e o candidato entra quando aprovado.
+  [10] Classe de membro ausente aparece ocupada e é recusada.
+  [11] Quem desiste no meio da escolha sai da sala de espera.
 """
 import asyncio, json, os, sys, tempfile, shutil
 try: sys.stdout.reconfigure(encoding="utf-8")
@@ -87,7 +95,7 @@ def limpar_salas():
     S.SAVEGAMES_IN_USE.clear()
 
 
-async def criar_jogo(conta, nome_jogo, classe, amigos=()):
+async def criar_jogo(conta, nome_jogo, classe, amigos=(), entrada="automatic"):
     """1º dia: cria o jogo, escolhe a classe no lobby e inicia. `amigos`:
     [(conta, classe)] que entram pelo código antes do início."""
     caixa = {}
@@ -106,7 +114,7 @@ async def criar_jogo(conta, nome_jogo, classe, amigos=()):
         await asyncio.sleep(0.05)
     dono = FakeWS([login(conta),
                    {"type": "create_savegame", "name": nome_jogo, "mode": "procedural",
-                    "rules": {"entry_mode": "automatic"}},
+                    "rules": {"entry_mode": entrada}},
                    lambda: asyncio.sleep(0.05), criado,
                    {"type": "select_class", "class_id": classe},
                    esperar_amigos, {"type": "start_game"}, esperar_cidade])
@@ -333,18 +341,182 @@ def cenario_sala_velha():
     S.SAVEGAMES_IN_USE.clear()
 
 
+async def jogo_aberto_por(conta, sid, extra=()):
+    """Roteiro do dono: abre o jogo salvo (solo → direto na cidade) e fica
+    conectado executando `extra` (passos que esperam o outro jogador)."""
+    return FakeWS([login(conta), {"type": "load_savegame", "id": sid},
+                   lambda: esperar(lambda: sala_do_jogo(sid) and sala_do_jogo(sid).phase in ("city", "lobby"))]
+                  + list(extra))
+
+
+async def cenario_novo_no_solo():
+    print("\n[7] Jogador novo entra num jogo solo já na cidade")
+    sid, _, _ = await criar_jogo("gil", "Solo do Gil", "warrior")
+    limpar_salas()
+    caixa = {}
+    async def esperar_hana_entrar():
+        await esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "hana") is not None, timeout=10)
+        caixa["hana"] = heroi_da_conta(sala_do_jogo(sid), "hana")
+        await esperar(lambda: not caixa["hana"].get("connected", True) or caixa.get("fim"), timeout=5)
+    ws_gil = await jogo_aberto_por("gil", sid, [esperar_hana_entrar])
+    def entrar_codigo():
+        return {"type": "join_room", "name": "hana", "code": sala_do_jogo(sid).code}
+    async def olhar_espera():
+        r = sala_do_jogo(sid)
+        caixa["esperando"] = list(r.aguardando)
+        caixa["em_players"] = heroi_da_conta(r, "hana") is not None
+        caixa["recebeu_city_antes"] = bool(ws_hana.msgs("city_state"))
+    async def fim(): caixa["fim"] = True; await asyncio.sleep(0.05)
+    ws_hana = FakeWS([login("hana"),
+                      lambda: esperar(lambda: sala_do_jogo(sid) and sala_do_jogo(sid).phase == "city"),
+                      entrar_codigo, lambda: asyncio.sleep(0.05), olhar_espera,
+                      {"type": "select_class", "class_id": "rogue"},
+                      lambda: esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "hana") is not None), fim])
+    await asyncio.gather(S.handler(ws_gil), S.handler(ws_hana))
+    lob = ws_hana.msgs("lobby_state")
+    check("hana recebeu a escolha de herói marcada como entrada tardia",
+          bool(lob) and lob[0].get("entrada_tardia") is True and lob[0].get("host") is None)
+    check("o herói do dono aparece ocupado", lob and "warrior" in (lob[0].get("taken_classes") or []))
+    check("enquanto escolhe, fica na sala de espera (fora de players)",
+          len(caixa.get("esperando") or []) == 1 and caixa.get("em_players") is False)
+    check("e não recebe o estado da cidade antes de escolher", caixa.get("recebeu_city_antes") is False)
+    h = caixa.get("hana") or {}
+    check("depois de escolher, entra como ladina", h.get("class_id") == "rogue")
+    check("recebeu game_start + city_state", bool(ws_hana.msgs("game_start")) and bool(ws_hana.msgs("city_state")))
+    sg = S.load_savegame(sid)
+    check("ficou vinculada ao jogo salvo", (sg["members"].get("hana") or {}).get("class_id") == "rogue")
+    check("o dono NÃO recebeu lobby_state depois de já estar na cidade",
+          all(l.get("auto_start") for l in ws_gil.msgs("lobby_state")), [l.get("auto_start") for l in ws_gil.msgs("lobby_state")])
+    narr = [str(d.get("text")) for d in ws_gil.msgs("gm_narration")]
+    check("o dono viu a narração da chegada", any("hana" in n for n in narr), narr[-3:])
+    check("sem erro interno", sem_erro_interno(ws_gil, ws_hana), ws_gil.erros() + ws_hana.erros())
+    limpar_salas()
+    return sid
+
+
+async def cenario_mago_novo_na_masmorra(sid):
+    print("\n[8] Mago novo com o grupo na masmorra")
+    caixa = {}
+    async def liberar_intro():
+        await esperar(lambda: sala_do_jogo(sid).phase == "playing")
+        await sala_do_jogo(sid)._liberar_intro_masmorra(True)
+    async def esperar_ivo():
+        await esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "ivo") is not None, timeout=10)
+        i = heroi_da_conta(sala_do_jogo(sid), "ivo") or {}
+        caixa["ivo"] = {"class_id": i.get("class_id"), "fora": i.get("fora_masmorra"),
+                        "magias": list(i.get("magias_conhecidas") or [])}
+        await asyncio.sleep(0.1)
+    # Abre o jogo (gil + hana são membros → lobby); gil inicia sozinho e entra.
+    ws_gil = FakeWS([login("gil"), {"type": "load_savegame", "id": sid},
+                     lambda: esperar(lambda: sala_do_jogo(sid) and heroi_da_conta(sala_do_jogo(sid), "gil")),
+                     {"type": "start_game"}, lambda: asyncio.sleep(0.05),
+                     {"type": "enter_dungeon"}, liberar_intro, esperar_ivo])
+    def entrar_codigo():
+        return {"type": "join_room", "name": "ivo", "code": sala_do_jogo(sid).code}
+    async def olhar_antes_magias():
+        caixa["antes"] = heroi_da_conta(sala_do_jogo(sid), "ivo") is None and len(sala_do_jogo(sid).aguardando) == 1
+    magias = [m for m, d in S.GRIMORIO.items() if "mage" in d.get("classe", []) and d.get("circulo") == "primeiro"][:2]
+    ws_ivo = FakeWS([login("ivo"),
+                     lambda: esperar(lambda: sala_do_jogo(sid) and sala_do_jogo(sid).phase == "playing"
+                                     and not sala_do_jogo(sid).dungeon_intro_active),
+                     entrar_codigo, {"type": "select_class", "class_id": "mage"},
+                     lambda: asyncio.sleep(0.05), olhar_antes_magias,
+                     {"type": "set_known_spells", "ids": magias},
+                     lambda: esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "ivo") is not None),
+                     lambda: asyncio.sleep(0.15)])
+    await asyncio.gather(S.handler(ws_gil), S.handler(ws_ivo))
+    check("escolher mago sem as magias ainda não entra", caixa.get("antes") is True)
+    iv = caixa.get("ivo") or {}
+    check("entrou como mago depois das magias", iv.get("class_id") == "mage")
+    check("com as 2 magias escolhidas", all(m in iv.get("magias", []) for m in magias), iv.get("magias"))
+    check("chegou pela escada (fora_masmorra, espera 0)", iv.get("fora") == {"rodadas_restantes": 0}, iv.get("fora"))
+    check("viu a cidade, não a masmorra", bool(ws_ivo.msgs("city_state")) and not ws_ivo.msgs("game_state"))
+    check("sem erro interno", sem_erro_interno(ws_gil, ws_ivo), ws_gil.erros() + ws_ivo.erros())
+    limpar_salas()
+
+
+async def cenario_votacao():
+    print("\n[9] Entrada por votação com a partida em andamento")
+    sid, _, _ = await criar_jogo("julia", "Mesa da Julia", "paladin", entrada="vote")
+    limpar_salas()
+    caixa = {}
+    async def votar_sim():
+        await esperar(lambda: ws_julia.msgs("campaign_vote_opened"), timeout=10)
+        await esperar(lambda: "pendente" in caixa, timeout=5)   # só vota depois da checagem
+        v = ws_julia.msgs("campaign_vote_opened")[-1]["vote"]
+        caixa["voto"] = v
+        return {"type": "campaign_vote", "vote_id": v["id"], "approve": True}
+    async def esperar_kai():
+        await esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "kai") is not None)
+        await asyncio.sleep(0.1)
+    ws_julia = await jogo_aberto_por("julia", sid, [votar_sim, esperar_kai])
+    def entrar_codigo():
+        return {"type": "join_room", "name": "kai", "code": sala_do_jogo(sid).code}
+    async def olhar_pendente():
+        caixa["pendente"] = (heroi_da_conta(sala_do_jogo(sid), "kai") is None
+                             and len(sala_do_jogo(sid).aguardando) == 1)
+    ws_kai = FakeWS([login("kai"),
+                     lambda: esperar(lambda: sala_do_jogo(sid) and sala_do_jogo(sid).phase == "city"),
+                     entrar_codigo, {"type": "select_class", "class_id": "ranger" if "ranger" in S.CLASSES else "bard"},
+                     lambda: asyncio.sleep(0.05), olhar_pendente,
+                     lambda: esperar(lambda: heroi_da_conta(sala_do_jogo(sid), "kai") is not None),
+                     lambda: asyncio.sleep(0.1)])
+    await asyncio.gather(S.handler(ws_julia), S.handler(ws_kai))
+    check("o pedido abriu votação para a dona", bool(caixa.get("voto")) and caixa["voto"].get("candidate") == "kai")
+    check("enquanto a votação está aberta, kai espera", caixa.get("pendente") is True)
+    check("aprovado, kai entrou na partida", bool(ws_kai.msgs("city_state")))
+    check("a dona NÃO foi jogada para a tela de heróis pela votação",
+          all(l.get("auto_start") for l in ws_julia.msgs("lobby_state")))
+    check("sem erro interno", sem_erro_interno(ws_julia, ws_kai), ws_julia.erros() + ws_kai.erros())
+    limpar_salas()
+
+
+async def cenario_classe_de_ausente(sid_grupo):
+    print("\n[10] Classe de membro ausente é recusada; [11] desistir limpa a espera")
+    caixa = {}
+    async def esperar_lu_sair():
+        await esperar(lambda: caixa.get("tentou"), timeout=10)
+        await esperar(lambda: not sala_do_jogo(sid_grupo).aguardando, timeout=5)
+        caixa["espera_vazia"] = not sala_do_jogo(sid_grupo).aguardando
+        caixa["conta_fora"] = "lu" not in sala_do_jogo(sid_grupo).account_by_pid.values()
+    # bia abre (ana ausente) e inicia sozinha
+    ws_bia = FakeWS([login("bia"), {"type": "load_savegame", "id": sid_grupo},
+                     lambda: esperar(lambda: sala_do_jogo(sid_grupo) and heroi_da_conta(sala_do_jogo(sid_grupo), "bia")),
+                     {"type": "start_game"}, esperar_lu_sair])
+    def entrar_codigo():
+        return {"type": "join_room", "name": "lu", "code": sala_do_jogo(sid_grupo).code}
+    async def marcar(): caixa["tentou"] = True
+    ws_lu = FakeWS([login("lu"),
+                    lambda: esperar(lambda: sala_do_jogo(sid_grupo) and sala_do_jogo(sid_grupo).phase == "city"),
+                    entrar_codigo, {"type": "select_class", "class_id": "warrior"},
+                    lambda: asyncio.sleep(0.05), marcar])
+    await asyncio.gather(S.handler(ws_bia), S.handler(ws_lu))
+    lob = ws_lu.msgs("lobby_state")
+    check("o guerreiro da ana (ausente) aparece ocupado", lob and "warrior" in (lob[0].get("taken_classes") or []))
+    check("escolher o personagem da ana é recusado", any(ws_lu.erros()) and not ws_lu.msgs("city_state"), ws_lu.erros())
+    check("ao desistir, a sala de espera fica vazia", caixa.get("espera_vazia") is True)
+    check("e a conta sai da sala", caixa.get("conta_fora") is True)
+    check("a conta foi liberada", "lu" not in S.ACCOUNTS_ONLINE)
+    check("sem erro interno", sem_erro_interno(ws_bia, ws_lu), ws_bia.erros() + ws_lu.erros())
+    limpar_salas()
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
     S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
     try:
-        for conta in ("solitario", "ana", "bia"):
+        for conta in ("solitario", "ana", "bia", "gil", "hana", "ivo", "julia", "kai", "lu"):
             acc, e = await S.create_account(conta, SENHA)
             assert acc, e
         await cenario_solo()
         sid = await cenario_grupo()
         await cenario_atrasado(sid)
         await cenario_religar(sid)
+        sid_gil = await cenario_novo_no_solo()
+        await cenario_mago_novo_na_masmorra(sid_gil)
+        await cenario_votacao()
+        await cenario_classe_de_ausente(sid)
         cenario_so_cidade()
         cenario_sala_velha()
     finally:

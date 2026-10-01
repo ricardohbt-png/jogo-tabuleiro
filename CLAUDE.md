@@ -404,9 +404,20 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > direto na cidade grava a sessão de reconexão por ele). **Só a cidade é salva:** com o grupo na
 > masmorra, `_checkpoint_savegame` não grava a ficha de quem está lá dentro (só de quem está
 > `fora_masmorra`), senão loot de masmorra inacabada ficava salvo e dava para repetir o saque.
-> Limitação: jogador NOVO só entra pelo código com o grupo no lobby. Spec em
+> **Jogador NOVO com a partida em andamento:** `join_room` num jogo salvo em `city`/`playing`
+> passa por `entrar_com_jogo_em_andamento`; sem personagem, vai para a sala de espera
+> `GameRoom.aguardando` (FORA de `players`/`connections`: não recebe `game_state`/`city_state`,
+> que o arrancariam da tela de heróis; `send_to` o alcança pelo `ws` guardado lá). Recebe um
+> `lobby_state` só dele (`_enviar_escolha_tardia`: `entrada_tardia`, `host:null`,
+> `taken_classes` = heróis na sala + membros ausentes). `select_class`/`handle_set_known_spells`
+> operam sobre a casca do lobby OU da espera; com a classe (e 2 magias p/ mago/clérigo)
+> `_tentar_entrada_tardia` o leva para dentro. Com votação, espera com `classe_pedida`; a
+> aprovação em `handle_campaign_vote` o faz entrar, e o voto só manda `lobby_state` com
+> `phase=="lobby"`. O `finally` da conexão limpa a espera. Cliente: `handleLobby` soma
+> `taken_classes` e mostra `ui.selecao.entrada_tardia`; `csUpdateLobbyBar` esconde seletor de
+> masmorra e botão de Mestre. Spec em
 > `docs/superpowers/specs/2026-10-01-salvar-aventura-design.md`. Teste:
-> `tools/test_continuar_jogo.py` (39, pelo `server.handler` real).
+> `tools/test_continuar_jogo.py` (66, pelo `server.handler` real).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
