@@ -2754,6 +2754,7 @@ FOTO_SALA_CATEGORIAS = {
     "_campaign_outro": "efemero", "_monster_ai_focus_target_id": "efemero",
     "_monster_ai_reserved_tiles": "efemero",
     "_grotao_ponto_vulneravel_claims": "efemero",
+    "_ultima_foto": "efemero",   # cópia em memória da última foto gravada
     # constantes
     "TURN_LIMIT_S": "constante", "MASTER_MANUAL_MOVE": "constante",
     "MASTER_MANUAL_LIMIT_S": "constante",
@@ -2769,6 +2770,31 @@ FOTO_CATEGORIAS_VALIDAS = frozenset({
 def foto_campos_sala(categoria="foto"):
     """Atributos de GameRoom de uma categoria, em ordem estável."""
     return sorted(k for k, c in FOTO_SALA_CATEGORIAS.items() if c == categoria)
+
+
+def foto_empacotar(corpo, **resumo):
+    """Corpo da foto → registro gravável no jogo salvo.
+
+    O corpo vai em JSON comprimido (gzip + base64): uma masmorra autorada grande
+    passa de 300 KB em texto e cai para ~30 KB, e a foto é regravada a cada
+    rodada. O `resumo` (rodada, masmorra…) fica fora da compressão, para a
+    lista de jogos salvos lê-lo sem abrir a foto."""
+    texto = json.dumps(_foto_codificar(corpo), ensure_ascii=False, separators=(",", ":"))
+    dados = base64.b64encode(gzip.compress(texto.encode("utf-8"), 6)).decode("ascii")
+    return dict(resumo, versao=FOTO_VERSAO, gravado_em=_now_iso(), dados=dados)
+
+
+def foto_desempacotar(registro):
+    """Registro do jogo salvo → corpo da foto, ou None se não der para usar
+    (ausente, versão desconhecida, dados corrompidos). Nunca levanta: foto
+    ruim significa só "continuar da cidade"."""
+    if not isinstance(registro, dict) or registro.get("versao") != FOTO_VERSAO:
+        return None
+    try:
+        texto = gzip.decompress(base64.b64decode(registro["dados"])).decode("utf-8")
+        return _foto_decodificar(json.loads(texto))
+    except Exception:
+        return None
 
 def _conta_participa(sg, conta):
     return bool(sg) and (sg.get("owner") == conta
@@ -9991,6 +10017,7 @@ class GameRoom:
         # pode passar pela casa de herói/servo/prisioneiro liberto, mas nunca
         # terminar nela (handle_move_path e irmãos).
         self.atravessar_aliados = False
+        self._ultima_foto = None   # última foto da masmorra gravada (Etapa 2 do salvamento)
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
         self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
@@ -15210,6 +15237,10 @@ class GameRoom:
         if terminou_fila_viva:
             await self._virada_de_rodada()
             self._isolar_sync(self._rebuild_initiative, "rebuild da iniciativa")
+            # Ponto seguro da masmorra: a rodada virou e ninguém recebeu o turno
+            # ainda. Fica fora de _virada_de_rodada porque a sala de teste do
+            # editor também passa por ela e nunca grava.
+            self._isolar_sync(self._gravar_foto_rodada, "foto da masmorra")
         # mortos/desconectados podem ter ficado na lista desta rodada.
         attempts = 0
         while self.initiative_order and attempts < len(self.initiative_order):
@@ -22452,6 +22483,58 @@ class GameRoom:
         # descarga nestes momentos -- e nao num relogio curto -- e o que mantem
         # o banco dormindo entre eles.
         _agendar_descarga()
+
+    # ── Foto da masmorra (Etapa 2 do salvamento) ──────────────────────────────
+    # Janelas que, abertas, deixam estado pela metade (um turno manual, uma
+    # reação esperando resposta…). Com qualquer uma aberta a foto espera a
+    # próxima virada de rodada.
+    _FOTO_JANELAS = (
+        "master_manual_mid", "command_control_mid", "mind_control_mid",
+        "last_stand_pid", "sorte_reacao", "_fire_prompt", "_pending_teleporte",
+        "_pending_metamorfose", "_pending_dungeon_entry", "animados_phase_pid",
+        "dungeon_intro_active", "active_scene")
+
+    def _foto_janela_pendente(self):
+        """Nome da janela aberta que impede a foto, ou None."""
+        for nome in self._FOTO_JANELAS:
+            if getattr(self, nome, None):
+                return nome
+        for p in self.players.values():
+            if p.get("improviso_pendente"):
+                return "improviso_pendente"
+        return None
+
+    def _montar_foto(self):
+        """Corpo da foto: os campos "foto"/"foto_pid" da sala e a ficha
+        INTEIRA de cada herói, chaveada pelo class_id (o pid muda a cada
+        conexão). `pids` liga o pid desta sessão à classe, para a retomada
+        trocar pelos pids novos as referências que monstros e efeitos guardam."""
+        campos = foto_campos_sala("foto") + foto_campos_sala("foto_pid")
+        herois, pids = {}, {}
+        for pid, p in self.players.items():
+            cid = p.get("class_id")
+            if not cid or p.get("is_master"):
+                continue
+            herois[cid] = p
+            pids[pid] = cid
+        return {"sala": {k: getattr(self, k) for k in campos if hasattr(self, k)},
+                "herois": herois, "pids": pids}
+
+    def _gravar_foto_rodada(self):
+        """Grava a foto da masmorra no jogo salvo, na virada de rodada.
+        Devolve True se gravou. Fora de jogo salvo, fora da masmorra, na sala de
+        teste do editor ou com janela pendente, não grava."""
+        if (self.savegame is None or getattr(self, "test_mode", False)
+                or self.phase != "playing" or self._foto_janela_pendente()):
+            return False
+        foto = foto_empacotar(self._montar_foto(), onde="masmorra",
+                              rodada=self.round_num,
+                              masmorra=self.selected_dungeon or "procedural")
+        self._ultima_foto = foto
+        self.savegame["dungeon_snapshot"] = foto
+        write_savegame(self.savegame)
+        _agendar_descarga()
+        return True
 
     async def handle_shortcut_set(self, pid, slot, entry):
         """Grava o atalho na sessão e, quando houver, também no savegame."""

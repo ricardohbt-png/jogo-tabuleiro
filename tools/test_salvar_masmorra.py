@@ -162,10 +162,87 @@ async def secao_json_real():
         print("  (masmorras que o validador recusa, puladas: " + "; ".join(pulados) + ")")
 
 
+async def secao_gravacao():
+    print("\n[4] Gravação da foto na virada de rodada")
+    gravados = []
+    S.write_savegame = lambda sg: gravados.append(sg.get("dungeon_snapshot"))
+    S._agendar_descarga = lambda: None
+
+    r, _ = await sala_na_masmorra("floresta_2.json")
+    r.dungeon_intro_active = False
+    check("sem jogo salvo, não grava", r._gravar_foto_rodada() is False and not gravados)
+
+    r.savegame = {"id": "sg_teste"}
+    check("com jogo salvo, grava", r._gravar_foto_rodada() is True and len(gravados) == 1)
+    reg = r.savegame.get("dungeon_snapshot") or {}
+    check("registro traz versão, rodada, masmorra e onde",
+          reg.get("versao") == S.FOTO_VERSAO and reg.get("rodada") == r.round_num
+          and reg.get("masmorra") == "floresta_2.json" and reg.get("onde") == "masmorra")
+    check("a mesma foto fica em memória", r._ultima_foto is reg)
+    check(f"comprimida cabe com folga ({len(reg.get('dados', ''))//1024} KB, era ~330 KB)",
+          len(reg.get("dados", "")) < 64 * 1024)
+    corpo = S.foto_desempacotar(reg)
+    check("desempacota", isinstance(corpo, dict))
+    if isinstance(corpo, dict):
+        campos = S.foto_campos_sala("foto") + S.foto_campos_sala("foto_pid")
+        check("campos da sala voltam idênticos",
+              all(corpo["sala"].get(k) == getattr(r, k) for k in campos if hasattr(r, k)))
+        check("ficha inteira de cada herói, chaveada pela classe",
+              set(corpo["herois"]) == {p["class_id"] for p in r.players.values()}
+              and all(corpo["herois"][p["class_id"]] == p for p in r.players.values()))
+        check("mapa pid → classe para a retomada",
+              corpo["pids"] == {pid: p["class_id"] for pid, p in r.players.items()})
+        check("conexões e timers ficam de fora",
+              not ({"connections", "initiative_task", "gm_log", "master_pid"} & set(corpo["sala"])))
+
+    print("  — janelas pendentes adiam a foto —")
+    for nome, valor in (("master_manual_mid", "m1"), ("last_stand_pid", "p0"),
+                        ("sorte_reacao", {"pid": "p0"}), ("animados_phase_pid", "p0"),
+                        ("dungeon_intro_active", True)):
+        antes = len(gravados)
+        setattr(r, nome, valor)
+        check(f"{nome} aberto: não grava", r._gravar_foto_rodada() is False and len(gravados) == antes)
+        setattr(r, nome, None if nome != "dungeon_intro_active" else False)
+    p0 = r.players["p0"]
+    p0["improviso_pendente"] = [{"passo": 7}]
+    check("Improviso esperando alvo: não grava", r._gravar_foto_rodada() is False)
+    p0["improviso_pendente"] = []
+    check("janelas fechadas: volta a gravar", r._gravar_foto_rodada() is True)
+    r.test_mode = True
+    check("sala de teste do editor nunca grava", r._gravar_foto_rodada() is False)
+    r.test_mode = False
+    r.phase = "city"
+    check("fora da masmorra, não grava", r._gravar_foto_rodada() is False)
+    r.phase = "playing"
+
+    print("  — foto ruim vira None, nunca erro —")
+    check("versão desconhecida", S.foto_desempacotar(dict(reg, versao=999)) is None)
+    check("dados corrompidos", S.foto_desempacotar(dict(reg, dados="não é base64!")) is None)
+    check("ausente", S.foto_desempacotar(None) is None)
+
+    print("  — integração: a virada real da rodada grava —")
+    r2, _ = await sala_na_masmorra()
+    r2.savegame = {"id": "sg_teste2"}
+    r2.dungeon_intro_active = False
+    r2._intro_masmorra_bloqueada = lambda: False
+    rodada = r2.round_num
+    gravados.clear()
+    r2.initiative_index = len(r2.initiative_order) - 1
+    await r2._advance_initiative()
+    reg2 = r2.savegame.get("dungeon_snapshot") or {}
+    check("rodada virou e a foto foi gravada com a rodada nova",
+          r2.round_num == rodada + 1 and reg2.get("rodada") == rodada + 1 and len(gravados) == 1,
+          f"rodada {rodada}->{r2.round_num}, foto {reg2.get('rodada')}, gravações {len(gravados)}")
+    for t in (getattr(r2, "turn_timer_task", None), getattr(r2, "initiative_task", None)):
+        if t and not t.done():
+            t.cancel()
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
     await secao_json_real()
+    await secao_gravacao()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL
 

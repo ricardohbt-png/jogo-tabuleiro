@@ -71,7 +71,23 @@ pode retomar sem todos; "💾 Salvar e sair" entra junto. **Passos 1 e 2 feitos*
   gzip. O `LOJA` grava o jogo salvo sem compressão — decidir no passo 3 (gzip da
   foto ou guardar só o que mudou em relação ao arquivo autoral).
 
-Teste: `tools/test_salvar_masmorra.py` (52 checks).
+**Passo 3 feito (gravação, sem retomada ainda):** o autor escolheu comprimir.
+`foto_empacotar`/`foto_desempacotar` (módulo) guardam o corpo em JSON + gzip +
+base64 em `savegame["dungeon_snapshot"]`, com o resumo fora da compressão
+(`versao`, `gravado_em`, `onde`, `rodada`, `masmorra`); foto ilegível ou de versão
+desconhecida desempacota em `None`, nunca em erro. `GameRoom._gravar_foto_rodada`
+roda em `_advance_initiative` logo após a virada e o `_rebuild_initiative` (não
+dentro de `_virada_de_rodada`, que o simulador do editor também usa) e não grava
+fora de jogo salvo, fora da masmorra, na sala de teste ou com janela pendente
+(`_FOTO_JANELAS` + `improviso_pendente` de qualquer herói). O corpo
+(`_montar_foto`) leva a ficha inteira de cada herói por `class_id` e um mapa
+`pids` (pid desta sessão → classe) para a retomada trocar as referências por pid
+que monstros e efeitos guardam. Medido: `floresta_2` 22 KB e 21 ms por foto,
+`calabouco_morte` 42 KB e 26 ms, procedural 7 KB e 2 ms — uma vez por rodada.
+Enquanto o passo 6 não existir, a foto de uma masmorra encerrada fica no jogo
+salvo sem uso (inofensiva: nada a lê antes do passo 4).
+
+Teste: `tools/test_salvar_masmorra.py` (75 checks).
 
 ## 1. Problema
 
