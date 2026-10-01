@@ -11002,6 +11002,29 @@ class GameRoom:
         await self.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
         return pid
 
+    def _entrada_para_religar(self, p):
+        """Casa por onde um herói religado reentra na masmorra (None = fica)."""
+        if self.start_mode == "hero_spawns":
+            start = self._start_point_for_player(p)
+            return list(start) if start else None
+        ent = next((r for r in self.rooms if r["role"] == "entrance"),
+                   (self.rooms[0] if self.rooms else None))
+        return [ent["cx"], ent["cy"]] if ent else None
+
+    def _religar_extras(self, conexao):
+        """Solo com grupo: os heróis extras voltam junto com o principal. Na
+        masmorra, cada um volta à casa da foto (retomada) ou à entrada, numa
+        casa livre."""
+        for h in self._herois_extras_de(conexao):
+            h["connected"] = True
+            casa = None
+            if self.phase == "playing" and h.get("alive") and not h.get("fora_masmorra"):
+                casa = h.pop("_pos_retomada", None) or self._entrada_para_religar(h)
+            h.pop("_pos_ao_cair", None)
+            if casa:
+                h["pos"] = self._casa_livre_retomada(list(casa), h["id"])
+                h.pop("facing", None)
+
     async def religar_heroi(self, alvo, ws, pid_conexao, name):
         """Religa um herói que caiu durante a partida. Devolve o pid antigo."""
         LANG_BY_PID[alvo["id"]] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)   # idem ao mestre
@@ -11009,6 +11032,7 @@ class GameRoom:
         self.connections[pid] = ws
         alvo["connected"] = True   # volta a contar nos turnos
         alvo.pop("_pos_ao_cair", None)   # só a retomada de jogo salvo a usa
+        self._religar_extras(pid)
         self._assumir_anfitriao_se_vago(pid)
         # Reenvia a sequência de mensagens que coloca o cliente na tela
         # correta da fase atual.
@@ -11033,15 +11057,9 @@ class GameRoom:
             await self.push_state()
             await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
         else:   # playing — o personagem REENTRA pela escada de entrada
-            if self.start_mode == "hero_spawns":
-                start = self._start_point_for_player(alvo)
-                if start:
-                    alvo["pos"] = list(start)
-            else:
-                ent = next((r for r in self.rooms if r["role"] == "entrance"),
-                           (self.rooms[0] if self.rooms else None))
-                if ent:
-                    alvo["pos"] = [ent["cx"], ent["cy"]]
+            casa = self._entrada_para_religar(alvo)
+            if casa:
+                alvo["pos"] = casa
             alvo.pop("facing", None)
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
@@ -46797,7 +46815,8 @@ async def handler(ws):
             elif pid in room.players:
                 # Caiu/saiu durante a partida: personagem deixa a masmorra,
                 # turno avanÃ§a se for o caso, os outros continuam jogando.
-                await room.handle_disconnect_em_jogo(pid)
+                for heroi in room._herois_da_conexao(pid):
+                    await room.handle_disconnect_em_jogo(heroi)
             # Sessão de teste do editor: sem `players`, nenhum ramo acima a
             # alcança. Saiu o último participante, a sala vai embora.
             _encerrar_sala_teste_se_vazia(room)

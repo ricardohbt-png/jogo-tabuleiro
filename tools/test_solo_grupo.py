@@ -387,6 +387,37 @@ async def secao_masmorra():
     limpar_salas()
 
 
+async def secao_queda():
+    print("\n[5] queda e volta religam todos os heróis")
+    obs = {}
+    def guardar(c):
+        def f():
+            r = sala_do_jogo(c["sid"])
+            obs["code"] = r.code
+        return [f]
+    sid, _ = await criar_solo("solo6", "Queda",
+        montar_e_iniciar(["warrior", "cleric", "bard"], lambda c: na_masmorra(c) + guardar(c)))
+    r = sala_do_jogo(sid)
+    check("ao cair, os 3 ficam desconectados",
+          all(p.get("connected") is False for p in r.players.values()),
+          [(p["name"], p.get("connected")) for p in r.players.values()])
+    check("…e fora do tabuleiro", all(list(p["pos"]) == [-1, -1] for p in r.players.values()))
+    principal = next(p["id"] for p in r.players.values() if not p.get("controlador"))
+    def olhar_religados():
+        # Lido DURANTE a 2ª conexão: ao fim do roteiro ela também cai.
+        obs["religados"] = [(p.get("connected"), list(p["pos"])) for p in r.players.values()]
+    ws2 = FakeWS([login("solo6"), {"type": "rejoin", "code": obs["code"], "name": "solo6"},
+                  pausa(), olhar_religados])
+    await S.handler(ws2)
+    check("ao religar, os 3 voltam conectados e no tabuleiro",
+          obs.get("religados") and all(c and pos != [-1, -1] for c, pos in obs["religados"]),
+          obs.get("religados"))
+    check("os extras continuam ligados à mesma identidade",
+          all(p.get("controlador") == principal for p in r.players.values() if p.get("controlador")))
+    check("o rejoin trouxe o estado da masmorra", bool(ws2.msgs("game_state")))
+    limpar_salas()
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
@@ -399,6 +430,7 @@ async def main():
         await secao_lobby()
         sid_trio = await secao_inicio()
         await secao_masmorra()
+        await secao_queda()
     finally:
         limpar_salas()
         S.LOJA = velha
