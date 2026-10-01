@@ -2112,6 +2112,18 @@ window.LANG_ERROS = {
   "erro.somente_o_anfitriao_pode_alterar_a_visao": {
     "en": "Only the host can change shared vision.",
     "pt": "Somente o anfitrião pode alterar a visão compartilhada."
+  },
+  "erro.o_destino_esta_ocupado": {
+    "en": "That square is occupied: you can pass through allies, but not stop on them.",
+    "pt": "Essa casa está ocupada: dá para atravessar aliados, mas não parar em cima deles."
+  },
+  "erro.o_prisioneiro_ocupa_este_espaco": {
+    "en": "The prisoner is in that square.",
+    "pt": "O prisioneiro ocupa este espaço."
+  },
+  "erro.somente_o_anfitriao_pode_alterar_atravessar": {
+    "en": "Only the host can change passing through allies.",
+    "pt": "Somente o anfitrião pode alterar a passagem por aliados."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

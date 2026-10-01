@@ -936,8 +936,14 @@ const GS = (() => {
 
   // Casas de entidades vivas que realmente bloqueiam este ator. Voando alto o
   // bastante sobre o porte de quem está embaixo, divide o tile com ele.
+  // Com "atravessar aliados" ligado pelo anfitrião, as casas de heróis, servos
+  // e do prisioneiro liberto saem do conjunto (o caminho passa por elas) e vão
+  // para `occ.aliados`: dá para cruzá-las, nunca terminar nelas.
   function _occupiedSet(exX, exY, actor=null) {
     const occ = new Set();
+    occ.aliados = new Set();
+    const atravessar = gameState?.atravessar_aliados === true;
+    const ocupaAliado = (x, y) => (atravessar ? occ.aliados : occ).add(`${x},${y}`);
     for (const m of (gameState.monsters || [])) {
       if (!m || m.hp <= 0) continue;
       if (_podeCompartilharCasaVoando(actor, m)) continue;
@@ -948,11 +954,17 @@ const GS = (() => {
       const isActor = p === actor || (p.id && actor?.id && p.id === actor.id)
         || (!actor?.id && p.pos[0] === exX && p.pos[1] === exY);
       if (!isActor && !_podeCompartilharCasaVoando(actor, p))
-        occ.add(`${p.pos[0]},${p.pos[1]}`);
+        ocupaAliado(p.pos[0], p.pos[1]);
       for (const a of (p.animados || [])) {
         if (a && (a.vida_atual ?? 1) > 0 && !_podeCompartilharCasaVoando(actor, a))
-          occ.add(`${a.pos[0]},${a.pos[1]}`);
+          ocupaAliado(a.pos[0], a.pos[1]);
       }
+    }
+    // O prisioneiro também ocupa a casa; só o liberto é aliado atravessável.
+    const pr = gameState.prisoner;
+    if (pr && pr.alive && Array.isArray(pr.pos) && pr !== actor) {
+      if (pr.freed) ocupaAliado(pr.pos[0], pr.pos[1]);
+      else occ.add(`${pr.pos[0]},${pr.pos[1]}`);
     }
     return occ;
   }
@@ -1225,7 +1237,7 @@ const GS = (() => {
     while (q.length) {
       q.sort((a,b) => a[2]-b[2]);
       const [x, y, s, swampUsed, snowUsed, cap] = q.shift();
-      result.add(`${x},${y}`);
+      if ((x === sx && y === sy) || !occupied.aliados?.has(`${x},${y}`)) result.add(`${x},${y}`);
       if (s >= cap) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
@@ -1277,7 +1289,8 @@ const GS = (() => {
     // O destino pode estar dois ou mais níveis acima, mas ainda ser alcançável
     // por uma sequência de degraus de 1 nível; a restrição é avaliada em cada
     // aresta do BFS, não em linha reta entre origem e destino.
-    const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied, moveCtx);
+    const targetWalkable = _walkable(tiles, tx, ty, openDoors, occupied, moveCtx)
+      && !occupied.aliados?.has(`${tx},${ty}`);
     if (!partial && !targetWalkable) return null;
     if (fx === tx && fy === ty) return [];
     const ignoraPantano = _ignoraPenalidadePantano(moveCtx);
@@ -1310,9 +1323,10 @@ const GS = (() => {
         if (!exploredSet.has(k) || nextCost > cap || !_walkable(tiles, nx, ny, openDoors, occupied, moveCtx, x, y)
             || (bestRest.get(bestKey) !== undefined && bestRest.get(bestKey) >= restante)) continue;
         const np = [...path, [dx, dy]];
-        if (nx === tx && ny === ty) return np;
+        const sobreAliado = occupied.aliados?.has(k);
+        if (nx === tx && ny === ty && !sobreAliado) return np;
         const dist = Math.abs(nx-tx) + Math.abs(ny-ty);
-        if (dist < best.dist) best = { path: np, dist };
+        if (dist < best.dist && !sobreAliado) best = { path: np, dist };
         bestRest.set(bestKey, restante);
         q.push([nx, ny, np, nextCost, nextSwampUsed, nextSnowUsed, nextCap]);
       }
@@ -2064,6 +2078,7 @@ const GS = (() => {
   function sceneVisit(sceneId, eventId) { send({ type:'scene_visit', scene_id:sceneId, event_id:eventId }); }
   function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
   function setVisaoCompartilhada(enabled) { send({ type:'set_visao_compartilhada', enabled:!!enabled }); }
+  function setAtravessarAliados(enabled) { send({ type:'set_atravessar_aliados', enabled:!!enabled }); }
   // Visão compartilhada: heróis cuja visão SOMA à do jogador. `ativa` = escolha
   // local do jogador E permissão do anfitrião (decidida por quem chama). Fica de
   // fora: o próprio herói, quem morreu, quem saiu da masmorra e — se o próprio
@@ -2164,6 +2179,10 @@ const GS = (() => {
   function comandarAnimados() { send({ type: 'comandar_animados' }); }
   // Controle manual de UM animado (no turno do Pedro).
   function moverAnimado(animadoId, dx, dy) { send({ type: 'mover_animado', animado_id: animadoId, dx, dy }); }
+  // Caminho inteiro do servo/prisioneiro numa mensagem (como o movePath do
+  // herói): é o que permite atravessar aliados sem parar em cima deles.
+  function moverAnimadoCaminho(animadoId, path) { send({ type: 'mover_animado_caminho', animado_id: animadoId, path }); }
+  function moverPrisioneiroCaminho(path) { send({ type: 'mover_prisioneiro_caminho', path }); }
   function atacarAnimado(animadoId, targetId, targetPos) {
     const msg = { type: 'atacar_animado', animado_id: animadoId, target_id: targetId };
     if (Array.isArray(targetPos)) msg.target_pos = targetPos.slice(0, 2);
@@ -3542,6 +3561,9 @@ const GS = (() => {
     animarMortos,
     comandarAnimados,
     moverAnimado,
+    moverAnimadoCaminho,
+    moverPrisioneiroCaminho,
+    setAtravessarAliados,
     atacarAnimado,
     usarHabilidadeAnimado,
     moverPrisioneiro,

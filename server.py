@@ -2608,6 +2608,7 @@ def try_open_savegame_room(account, sid, rooms):
     room.campaign_phase = sg.get("campaign_phase", 0)
     room.turn_timer_enabled = sg.get("turn_timer_enabled", True) is not False
     room.visao_compartilhada_permitida = sg.get("visao_compartilhada_permitida", True) is not False
+    room.atravessar_aliados = sg.get("atravessar_aliados", False) is True
     room.world_location = sg.get("world_location", "alva_e_luz") if sg.get("world_location") in WORLD_LOCATIONS else "alva_e_luz"
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
@@ -9778,6 +9779,10 @@ class GameRoom:
         # Visão compartilhada entre heróis: o anfitrião PERMITE; cada jogador
         # liga ou não no próprio painel ⚙️ (preferência local do cliente).
         self.visao_compartilhada_permitida = True
+        # Atravessar aliados: regra da sala, só o anfitrião liga. Um caminho
+        # pode passar pela casa de herói/servo/prisioneiro liberto, mas nunca
+        # terminar nela (handle_move_path e irmãos).
+        self.atravessar_aliados = False
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
         self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
@@ -10453,6 +10458,7 @@ class GameRoom:
             "host": self.host_pid,
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
+            "atravessar_aliados": self.atravessar_aliados,
             "players": players_city,
             "world": {
                 "location": self.world_location,
@@ -10844,6 +10850,15 @@ class GameRoom:
         if pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_a_visao")}); return
         self.visao_compartilhada_permitida = bool(enabled)
+        self._checkpoint_savegame()
+        if self.phase == "playing": await self.push_state()
+        elif self.phase == "city": await self.broadcast_city_state()
+
+    async def handle_set_atravessar_aliados(self, pid, enabled):
+        """Anfitrião liga/desliga a passagem pela casa de aliados (regra da sala)."""
+        if pid != self.host_pid:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_atravessar")}); return
+        self.atravessar_aliados = enabled is True
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
         elif self.phase == "city": await self.broadcast_city_state()
@@ -15866,29 +15881,89 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not isinstance(path, list):
             return
+        passos = self._passos_validos(path)
+        atravessar = self._atravessar_aliados_ativo()
+        if atravessar and not await self._destino_livre_ou_avisa(pid, p, passos):
+            return
+        ultima_livre = list(p.get("pos") or [])
         andou = False
-        for passo in path[:self.MAX_PASSOS_CAMINHO]:
-            if (not isinstance(passo, (list, tuple)) or len(passo) != 2):
-                break
-            dx, dy = passo
-            if abs(dx) + abs(dy) != 1:
-                break
+        for dx, dy in passos:
             antes = list(p.get("pos") or [])
-            await self.handle_move(pid, dx, dy, _push=False)
+            await self.handle_move(pid, dx, dy, _push=False, _atravessar=atravessar)
             depois = list(p.get("pos") or [])
             if depois == antes:
                 break
             andou = True
+            if not self._sobre_aliado(p):
+                ultima_livre = list(depois)
             # Vai para todos: no 2D quem andou também desliza por aqui; no 3D o
             # cliente ignora o próprio passo enquanto anima o peão localmente.
             await self.broadcast({"type": "entity_step", "id": pid, "from": antes,
                                   "to": depois, "kind": "player"})
             if not p.get("alive") or not self._is_turn(pid):
                 break
+        if andou and p.get("alive") and self._sobre_aliado(p):
+            await self._recuar_para(p, ultima_livre, pid, "player")
         if andou:
             await self.push_state()
 
-    async def handle_move(self, pid, dx, dy, _push=True):
+    # ── Atravessar aliados (regra da sala, só o anfitrião liga) ────────────
+    def _atravessar_aliados_ativo(self):
+        return getattr(self, "atravessar_aliados", False) is True
+
+    def _passos_validos(self, path):
+        """Prefixo bem-formado do caminho (passos ortogonais de 1 casa)."""
+        out = []
+        for passo in (path or [])[:self.MAX_PASSOS_CAMINHO]:
+            if not isinstance(passo, (list, tuple)) or len(passo) != 2:
+                break
+            dx, dy = passo
+            if abs(dx) + abs(dy) != 1:
+                break
+            out.append((dx, dy))
+        return out
+
+    def _ocupante_do_grupo_em(self, x, y, ator=None):
+        """Herói vivo, servo animado ou prisioneiro vivo na casa — fora o
+        próprio ator e quem ele sobrevoa. Monstros não contam aqui."""
+        for q in self.players.values():
+            if (q is not ator and q.get("alive") and q.get("pos") == [x, y]
+                    and not self._pode_compartilhar_casa_voando(ator, q)):
+                return True
+        for a in self._all_animados():
+            if (a is not ator and a.get("pos") == [x, y]
+                    and not self._pode_compartilhar_casa_voando(ator, a)):
+                return True
+        pr = self.prisoner
+        return bool(pr and pr is not ator and pr.get("alive") and pr.get("pos") == [x, y])
+
+    def _sobre_aliado(self, ent):
+        pos = ent.get("pos") or [-1, -1]
+        return self._ocupante_do_grupo_em(pos[0], pos[1], ent)
+
+    async def _destino_livre_ou_avisa(self, pid, ent, passos):
+        """Com a passagem ligada, o caminho só começa se a ÚLTIMA casa estiver
+        livre de aliados — ninguém termina em cima de ninguém."""
+        if not passos:
+            return True
+        x, y = (ent.get("pos") or [0, 0])[:2]
+        for dx, dy in passos:
+            x, y = x + dx, y + dy
+        if self._ocupante_do_grupo_em(x, y, ent):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_destino_esta_ocupado")})
+            return False
+        return True
+
+    async def _recuar_para(self, ent, casa, ent_id, kind):
+        """Caminho interrompido em cima de um aliado: volta à última casa livre
+        por onde passou (já pisada, então nada dispara de novo)."""
+        de = list(ent.get("pos") or [])
+        ent["pos"] = list(casa)
+        if kind:
+            await self.broadcast({"type": "entity_step", "id": ent_id, "from": de,
+                                  "to": list(casa), "kind": kind})
+
+    async def handle_move(self, pid, dx, dy, _push=True, _atravessar=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid):
@@ -15957,16 +16032,26 @@ class GameRoom:
                     await self.send_to(pid, {"type": "error", "msg": T("erro.um_inimigo_bloqueia_o_caminho")})
                     return
 
-        # Block movement into a tile occupied by another player
+        # Block movement into a tile occupied by another player. Dentro de um
+        # caminho com "atravessar aliados" ligado, passa (o destino final é
+        # conferido antes em handle_move_path).
         for other_pid, other_p in self.players.items():
             if other_pid != pid and other_p["alive"] and other_p["pos"] == [nx, ny]:
-                if not self._pode_compartilhar_casa_voando(p, other_p):
+                if not self._pode_compartilhar_casa_voando(p, other_p) and not _atravessar:
                     await self.send_to(pid, {"type": "error", "msg": T("erro.outro_aventureiro_esta_neste_espaco")})
                     return
 
         # Block movement into a tile occupied by an animated servant
-        if self._animado_em([nx, ny], actor=p):
+        if self._animado_em([nx, ny], actor=p) and not _atravessar:
             await self.send_to(pid, {"type": "error", "msg": T("erro.um_servo_animado_ocupa_este_espaco")})
+            return
+
+        # O prisioneiro também ocupa a casa (antes um herói podia parar em
+        # cima dele). Só o liberto é aliado atravessável.
+        pr = self.prisoner
+        if (pr and pr.get("alive") and pr.get("pos") == [nx, ny]
+                and not (_atravessar and pr.get("freed"))):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_prisioneiro_ocupa_este_espaco")})
             return
 
         if not voo_livre and not self._passo_seguro(p, p["pos"], [nx, ny]):
@@ -18577,7 +18662,7 @@ class GameRoom:
             if pp.get("animados"):
                 pp["animados"] = [a for a in pp["animados"] if a.get("id") != aid]
 
-    def _tile_livre_para_animado(self, nx, ny, self_id, origem=None):
+    def _tile_livre_para_animado(self, nx, ny, self_id, origem=None, atravessar=False):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny): return False
         if origem is not None:
@@ -18595,8 +18680,13 @@ class GameRoom:
         if self.prisoner and self.prisoner.get("id") == self_id and self.prisoner.get("rodamoinho_profundo_preso"):
             return False
         if any(m["hp"] > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
-        if any(p["alive"] and p["pos"] == [nx, ny] for p in self.players.values()): return False
-        if self._animado_em([nx, ny], exclude_id=self_id): return False
+        if not atravessar:
+            if any(p["alive"] and p["pos"] == [nx, ny] for p in self.players.values()): return False
+            if self._animado_em([nx, ny], exclude_id=self_id): return False
+        pr = self.prisoner
+        if (pr and pr.get("alive") and pr.get("pos") == [nx, ny]
+                and not (atravessar and pr.get("freed"))):
+            return False
         return True
 
     def _animado_attack_in_range(self, animado, target, atk_def=None):
@@ -18665,6 +18755,7 @@ class GameRoom:
             ) if eh_eletrico else self._cardinal_adjacent(a["pos"], target["pos"])
 
             # Move (cardinal greedy) atÃ© `moves_left` casas se ainda nÃ£o pode atacar
+            ultima_livre_cmd = list(a["pos"])
             if not pode_atacar_agora:
                 for _ in range(a.get("moves_left", a.get("movimento", 3))):
                     if eh_elemental and self._animado_attack_in_range(a, target, ataque):
@@ -18681,7 +18772,10 @@ class GameRoom:
                         if adx == 0 and ady == 0:
                             continue
                         nx, ny = a["pos"][0]+adx, a["pos"][1]+ady
-                        if self._tile_livre_para_animado(nx, ny, a["id"], a["pos"]):
+                        atravessar_cmd = (self._atravessar_aliados_ativo()
+                                          and a.get("moves_left", 0) > 1)
+                        if self._tile_livre_para_animado(nx, ny, a["id"], a["pos"],
+                                                         atravessar=atravessar_cmd):
                             frm = list(a["pos"])
                             a["pos"] = [nx, ny]
                             a["facing"] = [adx, ady]
@@ -18700,8 +18794,13 @@ class GameRoom:
                             break
                     if not moved:
                         break
+                    if not self._sobre_aliado(a):
+                        ultima_livre_cmd = list(a["pos"])
                     if a.get("moves_left", 0) <= 0:
                         break
+
+            if a.get("vida_atual", 0) > 0 and self._sobre_aliado(a):
+                await self._recuar_para(a, ultima_livre_cmd, a["id"], "animado")
 
             # Ataca se no alcance
             if a.get("vida_atual", 0) <= 0:
@@ -20103,7 +20202,37 @@ class GameRoom:
             if self.master_manual_event and not self.master_manual_event.is_set():
                 self.master_manual_event.set()
 
-    async def handle_mover_animado(self, pid, animado_id, dx, dy):
+    async def handle_mover_animado_caminho(self, pid, animado_id, path):
+        """Caminho inteiro do servo numa mensagem (como o move_path do herói):
+        cada passo passa por handle_mover_animado e sai um game_state no fim."""
+        p = self.players.get(pid)
+        a = next((x for x in (p or {}).get("animados", []) if x.get("id") == animado_id), None)
+        if not a:
+            await self.handle_mover_animado(pid, animado_id, 0, 1)   # mesmas recusas
+            return
+        passos = self._passos_validos(path)
+        atravessar = self._atravessar_aliados_ativo()
+        if atravessar and not await self._destino_livre_ou_avisa(pid, a, passos):
+            return
+        ultima_livre = list(a["pos"])
+        andou = False
+        for dx, dy in passos:
+            antes = list(a["pos"])
+            await self.handle_mover_animado(pid, animado_id, dx, dy, _push=False,
+                                            _atravessar=atravessar)
+            if list(a["pos"]) == antes:
+                break
+            andou = True
+            if not self._sobre_aliado(a):
+                ultima_livre = list(a["pos"])
+            if a.get("vida_atual", 0) <= 0:
+                break
+        if andou and a.get("vida_atual", 0) > 0 and self._sobre_aliado(a):
+            await self._recuar_para(a, ultima_livre, a["id"], "animado")
+        if andou:
+            await self.push_state()
+
+    async def handle_mover_animado(self, pid, animado_id, dx, dy, _push=True, _atravessar=False):
         """Controle manual: move UM animado uma casa (gasta 1 de movimento)."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
@@ -20136,13 +20265,13 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = a["pos"][0] + dx, a["pos"][1] + dy
-        if not self._tile_livre_para_animado(nx, ny, a["id"], a["pos"]):
+        if not self._tile_livre_para_animado(nx, ny, a["id"], a["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
         old_pos = list(a["pos"])
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
         if a.get("vida_atual", 0) <= 0:
-            await self.push_state()
+            if _push: await self.push_state()
             return
         self._apply_water_entry_penalty(a, nx, ny, old_pos)
         a["moves_left"] = max(0, a["moves_left"] - 1)
@@ -20156,7 +20285,7 @@ class GameRoom:
         if a.get("vida_atual", 0) > 0:
             await self._verificar_entrada_zona_molochus(a, nx, ny)
         await self._verificar_avistamento()
-        await self.push_state()
+        if _push: await self.push_state()
 
     async def handle_atacar_animado(self, pid, animado_id, target_id, target_pos=None):
         """Controle manual de ataque do servo; alguns ataques miram uma direção."""
@@ -21832,6 +21961,7 @@ class GameRoom:
         self.savegame["scene_variables"] = deepcopy(self.scene_variables)
         self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
         self.savegame["visao_compartilhada_permitida"] = self.visao_compartilhada_permitida
+        self.savegame["atravessar_aliados"] = self.atravessar_aliados
         self.savegame["refugio"] = deepcopy(self.refugio_state)
         self.savegame["hero_rooms"] = deepcopy(self.hero_rooms)
         write_savegame(self.savegame)
@@ -43770,7 +43900,34 @@ class GameRoom:
         await self.gm_say(T("narracao.libertou_o_prisioneiro", heroi=p['name']))
         await self.push_state()
 
-    async def handle_mover_prisioneiro(self, pid, dx, dy):
+    async def handle_mover_prisioneiro_caminho(self, pid, path):
+        """Caminho inteiro do prisioneiro liberto numa mensagem."""
+        pr = self.prisoner
+        if not pr:
+            await self.handle_mover_prisioneiro(pid, 0, 1)   # mesmas recusas
+            return
+        passos = self._passos_validos(path)
+        atravessar = self._atravessar_aliados_ativo()
+        if atravessar and not await self._destino_livre_ou_avisa(pid, pr, passos):
+            return
+        ultima_livre = list(pr.get("pos") or [])
+        andou = False
+        for dx, dy in passos:
+            antes = list(pr.get("pos") or [])
+            await self.handle_mover_prisioneiro(pid, dx, dy, _push=False, _atravessar=atravessar)
+            if list(pr.get("pos") or []) == antes:
+                break
+            andou = True
+            if not self._sobre_aliado(pr):
+                ultima_livre = list(pr["pos"])
+            if not pr.get("alive"):
+                break
+        if andou and pr.get("alive") and self._sobre_aliado(pr):
+            await self._recuar_para(pr, ultima_livre, None, None)
+        if andou:
+            await self.push_state()
+
+    async def handle_mover_prisioneiro(self, pid, dx, dy, _push=True, _atravessar=False):
         """Controle manual: o resgatador move o prisioneiro liberto 1 casa na
         janela pós-turno (gasta 1 de movimento). Não ataca."""
         if not self._is_turn(pid):
@@ -43788,12 +43945,12 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
-        if not self._tile_livre_para_animado(nx, ny, None, pr["pos"]):
+        if not self._tile_livre_para_animado(nx, ny, None, pr["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
         pr["pos"] = [nx, ny]
         if not pr.get("alive"):
-            await self.push_state()
+            if _push: await self.push_state()
             return
         self._apply_water_entry_penalty(pr, nx, ny, old_pos)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
@@ -43810,7 +43967,7 @@ class GameRoom:
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
             await self._disparar_armadilha(pr, arm)
-        await self.push_state()
+        if _push: await self.push_state()
 
     async def _prisioneiro_morre(self):
         """Morte do prisioneiro (por monstro, armadilha, etc.): falha o resgate
@@ -44103,6 +44260,7 @@ class GameRoom:
             "host": self.host_pid,
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
+            "atravessar_aliados": self.atravessar_aliados,
             "master_manual_mid": self.master_manual_mid or self.command_control_mid or self.mind_control_mid,
             "master_manual_reach": (
                 self._master_monster_reach(self.monsters[self.master_manual_mid or self.command_control_mid or self.mind_control_mid])
@@ -45211,6 +45369,16 @@ async def handler(ws):
                     if room and abs(dx) + abs(dy) == 1:
                         await room.handle_mover_prisioneiro(pid, dx, dy)
 
+                elif t in ("mover_animado_caminho", "mover_prisioneiro_caminho"):
+                    raw_path = msg.get("path")
+                    if room and isinstance(raw_path, list):
+                        path = [[_delta(st[0]), _delta(st[1])] for st in raw_path
+                                if isinstance(st, (list, tuple)) and len(st) == 2]
+                        if t == "mover_animado_caminho":
+                            await room.handle_mover_animado_caminho(pid, msg.get("animado_id"), path)
+                        else:
+                            await room.handle_mover_prisioneiro_caminho(pid, path)
+
                 elif t == "encerrar_animado":
                     if room: await room.handle_encerrar_animado(pid, msg.get("animado_id"))
 
@@ -45337,6 +45505,9 @@ async def handler(ws):
 
                 elif t == "set_visao_compartilhada":
                     if room: await room.handle_set_visao_compartilhada(pid, msg.get("enabled"))
+
+                elif t == "set_atravessar_aliados":
+                    if room: await room.handle_set_atravessar_aliados(pid, msg.get("enabled") is True)
 
                 # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
                 # internamente iniciar_cena e não dependem deste protocolo.
