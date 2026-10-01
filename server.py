@@ -10751,8 +10751,9 @@ class GameRoom:
         return pids
 
     def _eh_anfitriao(self, pid):
-        # Escrito sem "self._eh_anfitriao(pid)" de propósito: a Task 2 troca esse
-        # padrão em massa por chamadas a este método.
+        # Não reescreva como comparação direta com host_pid: as checagens de
+        # anfitrião da sala chamam este método, e a forma com `in` evita que
+        # uma troca em massa desse padrão o faça chamar a si mesmo.
         return self.host_pid in (pid, self._conexao_de(pid))
 
     def heroi_da_acao(self, conexao, msg):
