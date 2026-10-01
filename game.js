@@ -240,7 +240,7 @@ document.body.innerHTML = `
       ⚙️ <b style="color:#6fc96f;">Como jogar:</b> Clique duas vezes em <code style="background:#1a2a1a;padding:1px 5px;border-radius:3px;color:#a0e0a0;">iniciar.bat</code> para iniciar o servidor e abrir o jogo automaticamente.
     </div>
     <div class="field">
-      <label data-i18n="ui.connect.nome_label">Seu nome de herói</label>
+      <label data-i18n="ui.connect.nome_label">Seu apelido</label>
       <input id="input-name" type="text" maxlength="20" data-i18n-ph="ui.connect.nome_ph" placeholder="Ex: Thorin" value="">
     </div>
     <div class="field" id="field-server">
@@ -248,22 +248,12 @@ document.body.innerHTML = `
       <input id="input-server" type="text" placeholder="ws://localhost:8765" value="ws://localhost:8765">
     </div>
     <div class="field">
-      <label data-i18n="ui.connect.senha_label">Senha — para jogos salvos</label>
+      <label data-i18n="ui.connect.senha_label">Senha</label>
       <input id="input-senha" type="password" autocomplete="current-password" placeholder="••••••••">
     </div>
-    <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">🎲 Entrar com minha conta</button>
+    <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">🎲 Entrar</button>
     <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;" data-i18n="ui.connect.ajuda_conta">
-      Primeira vez? O apelido acima vira sua conta. Use o mesmo apelido + PIN para voltar aos seus jogos.
-    </div>
-    <div class="divider" data-i18n="ui.connect.div_rapido">ou jogo rápido (sem salvar)</div>
-    <button class="btn-primary" data-i18n="ui.connect.btn_criar" onclick="createRoom()">⚔ Criar Nova Sala</button>
-    <div class="divider" data-i18n="ui.connect.div_ou">ou</div>
-    <div class="field">
-      <label data-i18n="ui.connect.codigo_label">Código da sala</label>
-      <div class="join-row">
-        <input id="input-code" type="text" maxlength="4" placeholder="ABCD">
-        <button class="btn-secondary btn-sm" data-i18n="ui.connect.btn_entrar" onclick="joinRoom()">Entrar</button>
-      </div>
+      Primeira vez? O apelido acima vira sua conta. Seus jogos ficam salvos nela: use o mesmo apelido + senha para continuar de onde parou.
     </div>
     <!-- Reaparece (via JS) quando há uma sessão salva — volta à partida após F5/queda -->
     <!-- SEM data-i18n de propósito: o texto deste botão é montado por
@@ -291,8 +281,9 @@ document.body.innerHTML = `
       </div>
     </div>
     <div style="font-size:.7rem;color:#8ab88a;margin-top:2px;" data-i18n="ui.savegames.ajuda">
-      Peça o código que aparece no topo do lobby de quem criou o jogo. Você escolhe seu
-      personagem lá e ele fica vinculado à sua conta.
+      Primeira vez no jogo de um amigo? Peça o código que aparece no topo do lobby dele; você
+      escolhe seu personagem lá e ele fica vinculado à sua conta. Depois disso, o jogo aparece na
+      sua lista: é só clicar em Continuar, mesmo que um amigo já o tenha aberto.
     </div>
     <div class="divider" data-i18n="ui.savegames.div_criar">criar novo</div>
     <div class="field"><label data-i18n="ui.savegames.nome_label">Nome do jogo</label>
@@ -833,12 +824,6 @@ function formatGMText(text){
     .replace(/\*(.+?)\*/g,'<em>$1</em>');
 }
 
-function getName(){
-  const n=$('input-name').value.trim();
-  if(!n){ toast(t('ui.conexao.digite_nome')); return null; }
-  return n;
-}
-
 // Endereço do servidor inferido de ONDE a página foi aberta:
 //  • localhost / arquivo local → servidor local na porta 8765 (host jogando no PC)
 //  • domínio real (túnel https) → MESMO domínio via wss (amigos pelo link único).
@@ -856,12 +841,6 @@ function defaultServerUrl(){
 function serverIsAutoDetected(){
   const h = window.location.hostname;
   return !!h && h!=='localhost' && h!=='127.0.0.1' && window.location.protocol!=='file:';
-}
-
-function createRoom(){
-  const name=getName(); if(!name) return;
-  const url=$('input-server').value.trim()||defaultServerUrl();
-  GS.connect(url, name, 'create');
 }
 
 // Login por conta (apelido+PIN) — Fase 3 dos Jogos Salvos.
@@ -944,14 +923,6 @@ function _refreshBtnReconectar(){
   if(si && s.url) si.value = s.url;
 }
 
-function joinRoom(){
-  const name=getName(); if(!name) return;
-  const code=$('input-code').value.trim().toUpperCase();
-  if(code.length!==4){ toast(t('ui.conexao.codigo_4_letras')); return; }
-  const url=$('input-server').value.trim()||defaultServerUrl();
-  GS.connect(url, name, 'join', code);
-}
-
 // Sessão temporária aberta pelo Editor de Masmorras. Não usa lobby, conta nem
 // save: o token só serve para entregar o controle de Mestre desta aba ao teste.
 (function abrirTesteDoEditor(){
@@ -971,6 +942,9 @@ function copyCode(){
 
 function handleLobby(msg){
   // GS._handle já atualizou GS.lobbyState e GS.myPid antes deste callback.
+  // Jogo salvo solo continuando: o servidor inicia a partida logo em seguida e
+  // o próximo passo é a cidade; desenhar a escolha de herói só piscaria.
+  if(msg.auto_start) return;
   // Tudo é exibido na tela de seleção full-screen (csf); o lobby antigo foi removido.
   showScreen('screen-class-select');
   csUpdateLobbyBar(msg);
@@ -29310,9 +29284,8 @@ function toggleFichaDrawer(open){
 }
 
 // Press Enter to submit name
-$('input-name').addEventListener('keydown',e=>{ if(e.key==='Enter') createRoom(); });
-$('input-code').addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom(); });
-$('input-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase(); });
+$('input-name').addEventListener('keydown',e=>{ if(e.key==='Enter') $('input-senha').focus(); });
+$('input-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') entrarComConta(); });
 
 // ── Capa do jogo (splash) ────────────────────────────────────────────────
 // A capa cobre a tela inicial no boot; o 1º clique/tecla a recua para fundo

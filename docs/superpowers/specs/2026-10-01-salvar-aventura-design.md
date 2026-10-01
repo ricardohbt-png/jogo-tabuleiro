@@ -1,6 +1,48 @@
 # Salvar a aventura (solo e multiplayer) — design para revisão
 
-**Data:** 2026-10-01 · **Status:** rascunho para revisão do autor
+**Data:** 2026-10-01 · **Status:** decisões tomadas; Etapa 1 (ajustada) implementada,
+Etapa 2 adiada.
+
+## 0. Decisões do autor (2026-10-01) e o que foi feito
+
+1. **Só "entrar com conta".** O jogo rápido sem salvamento saiu da tela inicial
+   (botão "Criar Nova Sala" e entrada por código sem conta). A tela inicial tem
+   apelido, servidor, senha e "🎲 Entrar". Os jogos salvos ficam na conta. O
+   handler `create_room` continua no servidor: o editor ("Testar como Mestre")
+   e as suítes de teste o usam.
+2. **Escolher um jogo salvo pula a escolha de personagem.** Quem já tem
+   personagem vinculado entra com ele marcado (`_continuar_jogo_salvo`, chamado
+   em `add_player`). No jogo **solo** (1 membro, sem Mestre) a partida começa
+   direto na cidade: o servidor manda um `lobby_state` com `auto_start:true`
+   (o cliente aprende o pid e o código e não desenha a tela de herói) e chama
+   `start_game`. Em **grupo**, o lobby continua como sala de espera do
+   anfitrião, com os heróis já marcados. Criar jogos novos segue igual.
+3. **Salvar só o progresso da cidade.** Já era o comportamento dos pontos
+   seguros, com uma exceção corrigida: alguns salvamentos rodavam no meio da
+   masmorra (forma de Metamorfose desbloqueada em combate, opções do ⚙️, cenas
+   de campanha) e gravavam a ficha de quem estava lá dentro — o loot de uma
+   masmorra inacabada ficava salvo enquanto ela recomeçava, o que deixava
+   repetir o saque. Agora `_checkpoint_savegame` pula, com o grupo na masmorra,
+   quem está lá dentro; quem subiu pela escada (`fora_masmorra`) está na cidade
+   e é gravado. A Etapa 2 (foto da masmorra) fica para depois.
+4. **Retomar sem o anfitrião; quem entra primeiro assume.** Qualquer membro de
+   jogo sem Mestre já podia abrir o jogo. O que faltava: o segundo membro que
+   clicava em Continuar recebia "jogo já em uso". Agora
+   `sala_aberta_do_jogo_salvo` + `entrar_em_jogo_salvo_aberto` o levam à sala
+   aberta: no lobby entra normalmente; com a partida na cidade entra com a ficha
+   salva (`entrar_com_jogo_em_andamento`); com o grupo na masmorra chega como
+   quem subiu a escada (`fora_masmorra` com espera 0) e desce na rodada seguinte
+   ou pelo botão "Voltar à masmorra"; quem caiu é religado à mesma identidade
+   (`religar_heroi`/`religar_mestre`, extraídos do `rejoin`). Sem anfitrião
+   conectado, quem chega assume (`_assumir_anfitriao_se_vago`); o Mestre nunca
+   perde o posto por uma queda. Jogo com Mestre continua só abrindo pelo Mestre.
+
+**Limitação conhecida:** um jogador **novo** (sem personagem no jogo) só entra
+pelo código enquanto o grupo está no lobby. Num jogo solo, que começa sem lobby,
+um amigo novo não consegue entrar depois. Fica para uma próxima etapa (exigiria
+uma escolha de herói para quem chega com a partida em andamento).
+
+Teste: `tools/test_continuar_jogo.py` (39 checks, pelo `server.handler` real).
 
 ## 1. Problema
 

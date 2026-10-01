@@ -1618,6 +1618,9 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
+        // Quem entra num jogo salvo já em andamento cai direto na cidade, sem
+        // lobby_state: a sessão de reconexão (F5/queda) é gravada daqui.
+        if (msg.code && msg.code !== _sessCode) { _sessCode = msg.code; _saveSession(); }
         _emit('cityState', msg);
         break;
 

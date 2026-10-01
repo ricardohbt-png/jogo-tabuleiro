@@ -382,6 +382,32 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `city_state`), `_fcDropOnGear`/`_fcDropOnBag` (drag-and-drop). Teste do servidor:
 > `tools/test_ficha_cidade.py`.
 
+> **Jogos salvos — continuar de onde parou (2026-10-01):** não existe mais jogo rápido sem
+> salvamento no cliente: a tela inicial só tem apelido + servidor + senha + "🎲 Entrar", e os
+> jogos ficam na conta ("Meus Jogos"). O handler `create_room` segue no servidor (editor e
+> testes o usam). **Continuar pula a escolha de herói:** em `add_player`, conta com personagem
+> vinculado (`_classe_vinculada`) vai para `_continuar_jogo_salvo`, que copia as magias salvas
+> para a casca (senão o `start_game` recusaria mago/clérigo) e chama `select_class(...,
+> anunciar=False)`; no jogo **solo** (`_jogo_salvo_solo`: 1 membro ativo, sem Mestre) manda
+> `lobby_state` com `auto_start:true` (o cliente aprende pid e código e `handleLobby` retorna
+> sem desenhar) e inicia. Em grupo, o lobby é sala de espera com os heróis já marcados.
+> **Qualquer membro abre; os outros entram pelo Continuar:** `load_savegame` primeiro procura
+> `sala_aberta_do_jogo_salvo` (SAVEGAMES_IN_USE + alguém conectado) e, se houver,
+> `entrar_em_jogo_salvo_aberto`: lobby → `add_player`; quem caiu → `religar_heroi`/
+> `religar_mestre` (extraídos do `rejoin`, que os usa); partida na cidade →
+> `entrar_com_jogo_em_andamento` (ficha por `_montar_heroi`, extraído do `start_game`); grupo
+> na masmorra → chega com `fora_masmorra={"rodadas_restantes":0}` e desce na próxima rodada.
+> Ao religar, o pid da conexão vira o antigo e **`ACCOUNTS_ONLINE` acompanha** (senão o
+> `finally` não libera a conta). Sem anfitrião conectado, quem chega assume
+> (`_assumir_anfitriao_se_vago`), exceto quando o anfitrião é o Mestre. `try_open_savegame_room`
+> desliga e remove a sala velha sem ninguém do mesmo jogo. `city_state` traz `code` (quem cai
+> direto na cidade grava a sessão de reconexão por ele). **Só a cidade é salva:** com o grupo na
+> masmorra, `_checkpoint_savegame` não grava a ficha de quem está lá dentro (só de quem está
+> `fora_masmorra`), senão loot de masmorra inacabada ficava salvo e dava para repetir o saque.
+> Limitação: jogador NOVO só entra pelo código com o grupo no lobby. Spec em
+> `docs/superpowers/specs/2026-10-01-salvar-aventura-design.md`. Teste:
+> `tools/test_continuar_jogo.py` (39, pelo `server.handler` real).
+
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
 > `cityState`). Sem isso, leitores que preferem `gameState` — como o modal de
