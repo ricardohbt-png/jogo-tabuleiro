@@ -10194,6 +10194,8 @@ class GameRoom:
             # vai para quem o controla, no idioma dessa conexão.
             dono = (self.players.get(pid) or {}).get("controlador")
             if dono and dono in self.connections:
+                if isinstance(msg, dict) and "heroi" not in msg:
+                    msg = {**msg, "heroi": pid}   # o cliente sabe a qual herói o aviso se refere
                 ws, pid = self.connections[dono], dono
         if not ws and pid in self.aguardando:
             ws = self.aguardando[pid].get("ws")
@@ -11072,7 +11074,8 @@ class GameRoom:
         else:   # playing — o personagem REENTRA pela escada de entrada
             casa = self._entrada_para_religar(alvo)
             if casa:
-                alvo["pos"] = casa
+                # Os extras já ocuparam a entrada: o principal usa a livre mais próxima.
+                alvo["pos"] = self._casa_livre_retomada(list(casa), pid)
             alvo.pop("facing", None)
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
@@ -11184,7 +11187,11 @@ class GameRoom:
                     "msg": T("erro.magos_e_clerigos_devem_escolher_2_magias")}); return
 
         # Solo montado pelo select_party: o vínculo da conta é gravado agora.
-        if self._pode_montar_grupo_solo(pid):
+        conta_anf = self.account_by_pid.get(pid)
+        if (self.savegame is not None and not self.savegame.get("has_master")
+                and _savegame_play_mode(self.savegame) == "solo" and not self.master_pid
+                and conta_anf and not self._classe_vinculada(conta_anf)
+                and self.players.get(pid, {}).get("class_id")):
             self._vincular_grupo_solo(pid)
 
         # Build full player states â€” SOMENTE herÃ³is; o mestre nÃ£o vira peÃ£o.
@@ -15558,9 +15565,6 @@ class GameRoom:
         p = self.players.get(pid)
         return bool(p and p.get("fora_masmorra"))
 
-    def _pids_fora(self):
-        return {pid for pid, p in self.players.items() if p.get("fora_masmorra")}
-
     def _conexao_toda_fora(self, conexao):
         """Todos os heróis desta conexão estão na cidade (saíram pela escada).
         Sem grupo é o mesmo que o `fora_masmorra` do próprio herói."""
@@ -18961,7 +18965,7 @@ class GameRoom:
         Monstros e jogadores desconectados seguem direto para o dano normal.
         O timeout de segurança equivale a uma recusa para nunca travar a rodada.
         """
-        if not self._eh_jogador(p) or p.get("id") not in self.connections:
+        if not self._eh_jogador(p) or self._conexao_de(p.get("id")) not in self.connections:
             return "none"
         item_agua = self._item_agua_para_chamas(p)
         agua_disponivel = bool(item_agua and p.get("chamas_agua_apaga", True))
@@ -22923,7 +22927,24 @@ class GameRoom:
                        if q["id"] != pid and self._ativo(q))
                    or any(casa in self._monster_tiles(m) for m in self.monsters.values()
                           if m.get("hp", 0) > 0))
-        return list(self._free_tile_near(casa)) if ocupada else casa
+        if not ocupada:
+            return casa
+        # Procura em anéis crescentes uma casa de chão sem herói, monstro ou baú.
+        tomadas = {tuple(q.get("pos") or []) for q in self.players.values()
+                   if q["id"] != pid and self._ativo(q)}
+        tomadas |= {t for m in self.monsters.values() if m.get("hp", 0) > 0
+                    for t in map(tuple, self._monster_tiles(m))}
+        tomadas |= {tuple(c["pos"]) for c in self.chests.values()}
+        for raio in range(1, 6):
+            for dy in range(-raio, raio + 1):
+                for dx in range(-raio, raio + 1):
+                    if max(abs(dx), abs(dy)) != raio:
+                        continue
+                    nx, ny = casa[0] + dx, casa[1] + dy
+                    if (0 <= nx < self.map_w and 0 <= ny < self.map_h
+                            and self.tiles[ny][nx] == FLOOR and (nx, ny) not in tomadas):
+                        return [nx, ny]
+        return list(self._free_tile_near(casa))
 
     def _gravar_foto_cidade(self):
         """O grupo voltou à cidade com a masmorra ainda aberta: guarda o estado
@@ -46300,8 +46321,9 @@ async def handler(ws):
                         pid = await alvo_room.religar_mestre(ws, pid, name)
                         room = alvo_room
                         continue
+                    # Herói extra de Solo com grupo volta com o controlador: nunca por rejoin.
                     alvo = next((p for p in alvo_room.players.values()
-                                 if p["name"] == name), None)
+                                 if p["name"] == name and not p.get("controlador")), None)
                     if not alvo:
                         await err(T("erro.jogador_nao_encontrado_nesta_sala"))
                         continue

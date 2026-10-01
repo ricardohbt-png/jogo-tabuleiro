@@ -31,7 +31,8 @@ entre os heróis vivos (`_calc_monster_xp`, `_conceder_xp_armadilha`,
 Mago/clérigo marcados abrem cada um o seu seletor de 2 magias; o Iniciar exige as magias
 de todos os conjuradores marcados. Multiplayer: inalterado.
 
-**Mensagem nova `select_party {classes:[…], magias:{class_id:[…]}}`.** Aceita só em jogo
+**Mensagem nova `select_party {classes:[…]}`** (as magias de cada herói vêm à parte, por
+`set_known_spells {ids, heroi}`). Aceita só em jogo
 salvo Solo, no lobby, do anfitrião; **substitui** a seleção anterior inteira. O 1º herói
 ocupa a casca existente (pid da conexão); os demais nascem como cascas com pid virtual
 (`new_id()`) e `controlador = pid da conexão`. O `start_game` monta todos por

@@ -138,7 +138,30 @@ async def secao_helpers():
     check("…no idioma do controlador",
           ws_ana.sent and ws_ana.sent[0]["msg"] == txt("erro.nao_e_o_seu_turno", "en"),
           ws_ana.sent)
+    await r.send_to("x1", {"type": "spell_pick_prompt"})
+    check("send_to(extra) marca o herói (`heroi`) no pedido",
+          ws_ana.sent[-1].get("heroi") == "x1", ws_ana.sent[-1])
+    await r.send_to("c1", {"type": "spell_pick_prompt"})
+    check("send_to(principal) não acrescenta `heroi`", "heroi" not in ws_ana.sent[-1], ws_ana.sent[-1])
     S.LANG_BY_PID.pop("c1", None)
+
+    # Prompt de fogo: a conexão do controlador vale para o extra.
+    r.connections = {}
+    p_extra = r.players["x1"]
+    r.players["x1"]["alive"] = True
+    check("fogo: extra cujo controlador caiu não recebe o prompt",
+          await r._aguardar_decisao_chamas(p_extra) == "none")
+    r.connections = {"c1": ws_ana}
+    ws_ana.sent.clear()
+    r._item_agua_para_chamas = lambda p: None
+    r._acao_disponivel_sem_consumir = lambda p: False
+    tarefa = asyncio.ensure_future(r._aguardar_decisao_chamas(p_extra))
+    await asyncio.sleep(0.05)
+    avisos = [m for m in ws_ana.sent if m.get("type") == "fire_prompt"]
+    check("fogo: extra com controlador conectado recebe o prompt (com `heroi`)",
+          len(avisos) == 1 and avisos[0].get("heroi") == "x1", ws_ana.sent)
+    r._fire_prompt["event"].set()
+    check("…e a escolha devolve", await asyncio.wait_for(tarefa, 1) == "none")
 
 
 async def criar_solo(conta, nome_jogo, passos, play_mode="solo"):
@@ -330,6 +353,7 @@ async def secao_masmorra():
             r = sala_do_jogo(c["sid"])
             obs["pos_vez_depois"] = list(r.players[obs["vez"]]["pos"])
             obs["pos_outro_depois"] = list(r.players[obs["outro"]]["pos"])
+            obs["erros_move"] = list(c["ws"].erros())
         def largar():
             return {"type": "drop_item", "source": "gear", "slot_key": "weapon",
                     "heroi": obs["outro"]}
@@ -365,23 +389,37 @@ async def secao_masmorra():
             obs["conexao_fora_todos"] = conexao in r._conexoes_fora()
             for p in r.players.values():
                 p.pop("fora_masmorra", None)
+        async def reentrada():
+            r = sala_do_jogo(c["sid"])
+            extra = next(p for p in r.players.values() if p.get("controlador"))
+            extra["fora_masmorra"] = {"rodadas_restantes": 0}
+            extra["pos"] = [-1, -1]
+            antes = len(c["ws"].msgs("enter_dungeon"))
+            await r._reentrar_masmorra(extra["id"])
+            obs["enter_extra"] = len(c["ws"].msgs("enter_dungeon")) - antes
+            obs["extra_de_volta"] = (not extra.get("fora_masmorra")) and list(extra["pos"]) != [-1, -1]
         return (na_masmorra(c)
                 + [fora_da_vez, pausa(), conferir, largar, pausa(), conferir_largar]
                 + [proxima_vez, pausa()] * 8
-                + [escada])
+                + [escada, reentrada])
 
     await criar_solo("solo5", "Masmorra", montar_e_iniciar(["warrior", "mage", "rogue"], roteiro))
     check("herói fora da vez não anda", obs["pos_outro_depois"] == obs["pos_outro"])
+    check("…e o servidor não respondeu com erro (recusa silenciosa por desenho)",
+          txt("erro.nao_e_o_seu_turno") not in obs["erros_move"], obs["erros_move"])
     check("e o da vez também não (a mensagem era do outro)", obs["pos_vez_depois"] == obs["pos_vez"])
-    if obs.get("arma_outro"):
-        check("ação livre fora da vez vale (largar a arma)",
-              obs["chao_depois"] == obs["chao_antes"] + 1 and not obs["arma_outro_depois"])
+    check("o herói fora da vez tinha uma arma equipada", bool(obs["arma_outro"]), obs["arma_outro"])
+    check("ação livre fora da vez vale (largar a arma)",
+          obs["chao_depois"] == obs["chao_antes"] + 1 and not obs["arma_outro_depois"],
+          (obs["chao_antes"], obs["chao_depois"], obs["arma_outro_depois"]))
     check("a vez passou pelos 3 heróis (end_turn sem `heroi` encerra quem está na vez)",
           len(obs["vezes"]) == 3, obs["vezes"])
 
     print("\n[4] escada: herói fora só espera enquanto o grupo está dentro")
     check("1 extra fora, grupo dentro: sem lojas", obs["em_cidade_extra"] is False)
     check("…e a conexão segue recebendo game_state", obs["conexao_fora_um"] is False)
+    check("extra volta com o principal dentro: sem novo enter_dungeon", obs["enter_extra"] == 0, obs["enter_extra"])
+    check("…e reaparece no tabuleiro", obs["extra_de_volta"] is True)
     check("todos fora: lojas liberadas", obs["em_cidade_todos"] is True)
     check("…e a conexão passa a receber city_state", obs["conexao_fora_todos"] is True)
     limpar_salas()
@@ -406,15 +444,46 @@ async def secao_queda():
     def olhar_religados():
         # Lido DURANTE a 2ª conexão: ao fim do roteiro ela também cai.
         obs["religados"] = [(p.get("connected"), list(p["pos"])) for p in r.players.values()]
+        obs["posicoes"] = [tuple(pos) for _, pos in obs["religados"]]
     ws2 = FakeWS([login("solo6"), {"type": "rejoin", "code": obs["code"], "name": "solo6"},
                   pausa(), olhar_religados])
     await S.handler(ws2)
     check("ao religar, os 3 voltam conectados e no tabuleiro",
           obs.get("religados") and all(c and pos != [-1, -1] for c, pos in obs["religados"]),
           obs.get("religados"))
+    check("as 3 casas são distintas (sem sobreposição)",
+          len(set(obs.get("posicoes", []))) == 3, obs.get("posicoes"))
     check("os extras continuam ligados à mesma identidade",
           all(p.get("controlador") == principal for p in r.players.values() if p.get("controlador")))
     check("o rejoin trouxe o estado da masmorra", bool(ws2.msgs("game_state")))
+    limpar_salas()
+
+
+async def secao_rejoin_extra():
+    print("\n[8] rejoin não sequestra herói extra")
+    obs = {}
+    def guardar(c):
+        def f():
+            r = sala_do_jogo(c["sid"])
+            obs["code"] = r.code
+            obs["r"] = r
+        return [f]
+    caixa = {}
+    async def intruso():
+        await esperar(lambda: obs.get("code"))
+        return {"type": "rejoin", "code": obs["code"], "name": "Pedro"}
+    ws_i = FakeWS([login("intruso"), intruso, pausa()])
+    async def dono_espera():
+        await esperar(lambda: ws_i.msgs("error"), timeout=3)
+    sid, _ = await asyncio.gather(
+        criar_solo("solo7", "Sequestro", montar_e_iniciar(
+            ["warrior", "mage", "rogue"], lambda c: na_masmorra(c) + guardar(c) + [dono_espera])),
+        S.handler(ws_i))
+    r = obs["r"]
+    check("rejoin com o nome do extra é recusado",
+          txt("erro.jogador_nao_encontrado_nesta_sala") in ws_i.erros(), ws_i.erros())
+    extra = next(p for p in r.players.values() if p["name"] == "Pedro")
+    check("o extra não ganhou conexão própria", extra["id"] not in r.connections)
     limpar_salas()
 
 
@@ -474,7 +543,7 @@ async def main():
     velha = S.LOJA
     S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(tmp)); S.LOJA.carregar()
     try:
-        for conta in ("solo1", "solo2", "solo3", "solo4", "solo5", "solo6", "intruso", "multi"):
+        for conta in ("solo1", "solo2", "solo3", "solo4", "solo5", "solo6", "solo7", "intruso", "multi"):
             acc, e = await S.create_account(conta, SENHA)
             assert acc, e
         await secao_helpers()
@@ -482,6 +551,7 @@ async def main():
         sid_trio = await secao_inicio()
         await secao_masmorra()
         await secao_queda()
+        await secao_rejoin_extra()
         await secao_continuar(sid_trio)
     finally:
         limpar_salas()
