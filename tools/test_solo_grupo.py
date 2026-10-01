@@ -418,6 +418,57 @@ async def secao_queda():
     limpar_salas()
 
 
+async def continuar(conta, sid, fase):
+    obs = {}
+    async def esperar_fase_e_olhar():
+        await esperar(lambda: sala_do_jogo(sid) and sala_do_jogo(sid).phase == fase)
+        await asyncio.sleep(0.05)
+        r = sala_do_jogo(sid)
+        obs["players"] = {p["id"]: dict(p) for p in r.players.values()}
+    ws = FakeWS([login(conta), {"type": "load_savegame", "id": sid}, esperar_fase_e_olhar])
+    await S.handler(ws)
+    return obs.get("players") or {}, ws
+
+
+async def secao_continuar(sid_trio):
+    print("\n[6] Continuar na cidade recria o grupo")
+    ps, ws = await continuar("solo4", sid_trio, "city")
+    principal = next((p for p in ps.values() if not p.get("controlador")), {})
+    check("os 3 heróis voltam", sorted(p["class_id"] for p in ps.values()) == ["mage", "rogue", "warrior"],
+          [p.get("class_id") for p in ps.values()])
+    check("os extras apontam para a conexão nova",
+          sum(1 for p in ps.values() if p.get("controlador") == principal.get("id")) == 2)
+    mago = next((p for p in ps.values() if p.get("class_id") == "mage"), {})
+    check("o mago volta com as magias salvas",
+          set(duas_magias("mage")) <= set(mago.get("magias_conhecidas") or []))
+    check("pula a tela de herói (auto_start)",
+          ws.msgs("lobby_state") and all(l.get("auto_start") for l in ws.msgs("lobby_state")))
+    limpar_salas()
+
+    print("\n[7] Continuar com foto da masmorra")
+    antes = {}
+    def fotografar(c):
+        def f():
+            r = sala_do_jogo(c["sid"])
+            antes.update({p["class_id"]: list(p["pos"]) for p in r.players.values()})
+            antes["gravou"] = r._gravar_foto_rodada()
+        return [f]
+    sid, _ = await criar_solo("solo1", "Foto",
+        montar_e_iniciar(["warrior", "rogue", "paladin"], lambda c: na_masmorra(c) + fotografar(c)))
+    check("a foto foi gravada", antes.get("gravou") is True)
+    limpar_salas()
+    ps, _ = await continuar("solo1", sid, "playing")
+    principal = next((p for p in ps.values() if not p.get("controlador")), {})
+    check("retomou dentro da masmorra com os 3",
+          sorted(p["class_id"] for p in ps.values()) == ["paladin", "rogue", "warrior"])
+    check("extras religados à conexão nova",
+          sum(1 for p in ps.values() if p.get("controlador") == principal.get("id")) == 2)
+    check("cada herói na casa da foto",
+          all(list(p["pos"]) == antes[p["class_id"]] for p in ps.values()),
+          {p["class_id"]: p["pos"] for p in ps.values()})
+    limpar_salas()
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
@@ -431,6 +482,7 @@ async def main():
         sid_trio = await secao_inicio()
         await secao_masmorra()
         await secao_queda()
+        await secao_continuar(sid_trio)
     finally:
         limpar_salas()
         S.LOJA = velha

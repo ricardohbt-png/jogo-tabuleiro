@@ -10897,6 +10897,18 @@ class GameRoom:
             "text": f"{conta} montou o grupo: " + ", ".join(HERO_IDENTITIES.get(c, c) for c in classes)})
         write_savegame(self.savegame)
 
+    def _recriar_grupo_solo(self, conexao, conta):
+        """Continuar um Solo com grupo: as cascas dos heróis extras voltam ao
+        lobby, controladas por esta conexão, com as magias salvas."""
+        m = ((self.savegame or {}).get("members") or {}).get(conta) or {}
+        chars = (self.savegame or {}).get("characters") or {}
+        presentes = {q.get("class_id") for q in self.players.values()}
+        for cls in (m.get("class_ids") or [])[1:]:
+            if cls in CLASSES and cls not in presentes:
+                magias = (chars.get(cls) or {}).get("magias_conhecidas")
+                nova = self._casca_extra(conexao, cls, magias)
+                self.players[nova["id"]] = nova
+
     # ── Continuar um jogo salvo ───────────────────────────────────────────
     def _classe_vinculada(self, conta):
         """Classe do personagem desta conta no jogo salvo (membro ativo), ou None."""
@@ -10930,6 +10942,7 @@ class GameRoom:
         if snap.get("magias_conhecidas"):
             self.players[pid]["magias_conhecidas"] = list(snap["magias_conhecidas"])
         await self.select_class(pid, cls, anunciar=False)
+        self._recriar_grupo_solo(pid, conta)
         if (self._jogo_salvo_solo() and self._eh_anfitriao(pid)
                 and self.players.get(pid, {}).get("class_id") == cls):
             # O lobby_state com `auto_start` ainda é necessário: é por ele que o
@@ -23048,7 +23061,7 @@ class GameRoom:
         for cid, ficha in corpo["herois"].items():
             if cid in presentes:
                 p = self.players[presentes[cid]]
-                manter = {k: p[k] for k in ("id", "name", "slot") if k in p}
+                manter = {k: p[k] for k in ("id", "name", "slot", "controlador") if k in p}
                 p.clear()
                 p.update(ficha)
                 p.update(manter)
