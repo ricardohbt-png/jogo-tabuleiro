@@ -10722,7 +10722,6 @@ class GameRoom:
             novo["shortcut_slots"] = _shortcut_slots(slots_salvos)
         return novo
 
-    # ── Continuar um jogo salvo ───────────────────────────────────────────
     # ── Solo com grupo: heróis por procuração ─────────────────────────────
     # No Solo com grupo, UMA conexão controla vários heróis. O 1º herói tem o
     # pid da própria conexão; os demais têm pid próprio (new_id()) e
@@ -10779,6 +10778,7 @@ class GameRoom:
                 "slot": len(self.players), "controlador": conexao,
                 "magias_conhecidas": list(magias or [])}
 
+    # ── Continuar um jogo salvo ───────────────────────────────────────────
     def _classe_vinculada(self, conta):
         """Classe do personagem desta conta no jogo salvo (membro ativo), ou None."""
         if self.savegame is None or not conta:
