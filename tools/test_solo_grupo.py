@@ -141,6 +141,99 @@ async def secao_helpers():
     S.LANG_BY_PID.pop("c1", None)
 
 
+async def criar_solo(conta, nome_jogo, passos, play_mode="solo"):
+    """Cria um jogo salvo, abre o lobby e roda `passos(caixa)` (lista de
+    itens de roteiro) na MESMA conexão. Devolve (sid, ws)."""
+    caixa = {}
+    def criado():
+        sg = next((d["savegame"] for d in caixa["ws"].msgs("savegame_created")), None)
+        caixa["sid"] = sg and sg["id"]
+        return {"type": "load_savegame", "id": caixa["sid"]}
+    async def esperar_lobby():
+        await esperar(lambda: caixa.get("sid") and sala_do_jogo(caixa["sid"]))
+    roteiro = [login(conta),
+               {"type": "create_savegame", "name": nome_jogo, "mode": "procedural",
+                "play_mode": play_mode},
+               lambda: asyncio.sleep(0.05), criado, esperar_lobby]
+    caixa["ws"] = FakeWS(roteiro)
+    caixa["ws"].roteiro.extend(passos(caixa))
+    await S.handler(caixa["ws"])
+    return caixa["sid"], caixa["ws"]
+
+def pausa():
+    return lambda: asyncio.sleep(0.03)
+
+
+async def secao_lobby():
+    print("\n[1] select_party monta o grupo no lobby")
+    obs = {}
+    def foto(rotulo):
+        def f(caixa):
+            r = sala_do_jogo(caixa["sid"])
+            obs[rotulo] = {p["id"]: dict(p) for p in r.players.values()}
+            obs[rotulo + "_lobby"] = caixa["ws"].msgs("lobby_state")[-1]
+            obs["conexao"] = next(p["id"] for p in r.players.values() if not p.get("controlador"))
+        return f
+    sid, ws = await criar_solo("solo1", "Grupo", lambda c: [
+        lambda: foto("antes")(c),
+        {"type": "select_party", "classes": ["warrior", "mage", "rogue"]}, pausa(),
+        lambda: foto("tres")(c),
+        {"type": "select_party", "classes": ["warrior", "rogue"]}, pausa(),
+        lambda: foto("dois")(c),
+        {"type": "select_party", "classes": []}, pausa(),
+        {"type": "select_party", "classes": ["dragao"]}, pausa(),
+    ])
+    check("lobby_state avisa que dá para montar grupo (grupo_solo)",
+          obs["antes_lobby"].get("grupo_solo") is True, obs["antes_lobby"].get("grupo_solo"))
+    tres = obs["tres"]
+    extras = [p for p in tres.values() if p.get("controlador")]
+    check("3 heróis no lobby, 2 extras", len(tres) == 3 and len(extras) == 2, list(tres.values()))
+    check("extras controlados pela conexão",
+          all(p["controlador"] == obs["conexao"] for p in extras))
+    check("extras com nome do herói (Pedro, Luccas)",
+          sorted(p["name"] for p in extras) == ["Luccas", "Pedro"])
+    check("o lobby_state leva o `controlador`",
+          sum(1 for p in obs["tres_lobby"]["players"] if p.get("controlador")) == 2)
+    dois = obs["dois"]
+    check("tirar o mago remove a casca dele",
+          sorted(p.get("class_id") for p in dois.values()) == ["rogue", "warrior"])
+    rogue_antes = next(q for q, p in tres.items() if p.get("class_id") == "rogue")
+    check("o ladino continua com o mesmo pid", rogue_antes in dois)
+    check("lista vazia é recusada", txt("erro.grupo_de_1_a_6_herois") in ws.erros(), ws.erros())
+    check("classe inexistente sozinha também", ws.erros().count(txt("erro.grupo_de_1_a_6_herois")) == 2)
+    check("a conexão do lobby caiu: os extras saíram junto",
+          not sala_do_jogo(sid) or not any(p.get("controlador")
+                                           for p in sala_do_jogo(sid).players.values()))
+    limpar_salas()
+
+    print("\n[1b] Multiplayer não monta grupo")
+    _, ws_m = await criar_solo("multi", "Mesa", lambda c: [
+        {"type": "select_party", "classes": ["warrior", "mage"]}, pausa()],
+        play_mode="multiplayer")
+    check("select_party recusado no Multiplayer",
+          txt("erro.grupo_so_no_solo") in ws_m.erros(), ws_m.erros())
+    limpar_salas()
+
+    print("\n[1c] Solo com grupo é fechado para outra conta")
+    caixa_dono = {}
+    async def intruso_entra():
+        await esperar(lambda: caixa_dono.get("pronto"))
+        r = sala_do_jogo(caixa_dono["sid"])
+        return {"type": "join_room", "name": "intruso", "code": r.code}
+    async def dono_espera_intruso():
+        caixa_dono["pronto"] = True
+        await esperar(lambda: ws_intruso.msgs("error"), timeout=3)
+    ws_intruso = FakeWS([login("intruso"), intruso_entra, pausa()])
+    def passos_dono(c):
+        caixa_dono.update(c)
+        return [{"type": "select_party", "classes": ["warrior", "cleric"]}, pausa(),
+                lambda: caixa_dono.update(sid=c["sid"]), dono_espera_intruso]
+    await asyncio.gather(criar_solo("solo2", "Fechado", passos_dono), S.handler(ws_intruso))
+    check("outra conta é recusada",
+          txt("erro.jogo_solo_com_grupo_fechado") in ws_intruso.erros(), ws_intruso.erros())
+    limpar_salas()
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
@@ -150,6 +243,7 @@ async def main():
             acc, e = await S.create_account(conta, SENHA)
             assert acc, e
         await secao_helpers()
+        await secao_lobby()
     finally:
         limpar_salas()
         S.LOJA = velha

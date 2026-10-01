@@ -10363,6 +10363,12 @@ class GameRoom:
             self.host_pid = self.master_pid = pid; self.master_name = name
             await self.broadcast_lobby()
             return True
+        dono = self._dono_grupo_solo()
+        if dono and account != dono:
+            await ws.send(json.dumps(
+                {"type": "error", "msg": T("erro.jogo_solo_com_grupo_fechado")},
+                default=lambda o: _t_render(o, _lang_de(pid))))
+            return False
         heroes = sum(1 for p in self.players.values() if not p.get("is_master"))
         if heroes >= 6:
             # Sala cheia de heróis: o 7º entrante ainda cabe — como MESTRE —
@@ -10658,6 +10664,7 @@ class GameRoom:
             "type": "lobby_state",
             "code": self.code,
             "host": self.host_pid,
+            "grupo_solo": bool(self.host_pid and self._pode_montar_grupo_solo(self.host_pid)),
             "players": jogadores,
             "classes": {k: {"name": v["name"], "emoji": v["emoji"], "color": v["color"], "desc": v["desc"]} for k, v in CLASSES.items()},
             "can_start": self._can_start(),
@@ -10805,6 +10812,64 @@ class GameRoom:
                 "slot": len(self.players), "controlador": conexao,
                 "magias_conhecidas": list(magias or [])}
 
+    def _pode_montar_grupo_solo(self, pid):
+        """Lobby de jogo salvo Solo, sem Mestre, só com esta conta na sala e
+        ainda sem personagem vinculado: o anfitrião pode montar o grupo."""
+        sg = self.savegame
+        if (sg is None or self.phase != "lobby" or sg.get("has_master")
+                or _savegame_play_mode(sg) != "solo" or not self._eh_anfitriao(pid)):
+            return False
+        p = self.players.get(pid)
+        if not p or p.get("is_master") or p.get("controlador"):
+            return False
+        if any(q["id"] != pid and q.get("controlador") != pid for q in self.players.values()):
+            return False
+        conta = self.account_by_pid.get(pid)
+        return bool(conta) and not self._classe_vinculada(conta)
+
+    def _dono_grupo_solo(self):
+        """Conta dona de um Solo com grupo (montado no lobby ou já vinculado),
+        ou None. Num Solo com grupo outra conta não entra; um Solo de 1 herói
+        continua aceitando quem chega (comportamento antigo)."""
+        for q in self.players.values():
+            if q.get("controlador"):
+                return self.account_by_pid.get(q["controlador"])
+        for conta, m in ((self.savegame or {}).get("members") or {}).items():
+            if isinstance(m, dict) and len(m.get("class_ids") or []) > 1:
+                return conta
+        return None
+
+    async def handle_select_party(self, pid, classes):
+        """Solo com grupo: o anfitrião marca de 1 a 6 classes, e a escolha
+        SUBSTITUI a anterior. O 1º herói fica na casca da conexão; os outros
+        ganham casca própria (`_casca_extra`). Nada vai ao jogo salvo aqui — o
+        vínculo é gravado no start_game (_vincular_grupo_solo)."""
+        if not self._pode_montar_grupo_solo(pid):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.grupo_so_no_solo")})
+            return
+        lista = list(dict.fromkeys(c for c in (classes if isinstance(classes, list) else [])
+                                   if isinstance(c, str) and c in CLASSES))
+        if not 1 <= len(lista) <= 6:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.grupo_de_1_a_6_herois")})
+            return
+        principal = self.players[pid]
+        if principal.get("class_id") in lista:
+            lista.remove(principal["class_id"])
+            lista.insert(0, principal["class_id"])
+        else:
+            principal["class_id"] = lista[0]
+            principal["magias_conhecidas"] = []
+        principal["ready"] = True
+        extras = {q.get("class_id"): q["id"] for q in self._herois_extras_de(pid)}
+        for cls, q in extras.items():
+            if cls not in lista[1:]:
+                self.players.pop(q, None)
+        for cls in lista[1:]:
+            if cls not in extras:
+                nova = self._casca_extra(pid, cls)
+                self.players[nova["id"]] = nova
+        await self.broadcast_lobby()
+
     # ── Continuar um jogo salvo ───────────────────────────────────────────
     def _classe_vinculada(self, conta):
         """Classe do personagem desta conta no jogo salvo (membro ativo), ou None."""
@@ -10856,6 +10921,9 @@ class GameRoom:
         pela escada (`fora_masmorra`, espera zero) e desce na próxima rodada ou
         pelo botão 'Voltar à masmorra'. Sem personagem neste jogo, vai antes
         para a escolha de herói (`_aguardar_escolha_heroi`). Devolve (ok, erro)."""
+        dono = self._dono_grupo_solo()
+        if dono and conta != dono:
+            return False, T("erro.jogo_solo_com_grupo_fechado")
         cls = self._classe_vinculada(conta)
         if not cls:
             return await self._aguardar_escolha_heroi(ws, pid, name, conta)
@@ -46166,6 +46234,9 @@ async def handler(ws):
                 elif t == "select_class":
                     if room: await room.select_class(pid, _key(msg.get("class_id")))
 
+                elif t == "select_party":
+                    if room: await room.handle_select_party(pid, msg.get("classes"))
+
                 elif t == "campaign_vote":
                     if room: await room.handle_campaign_vote(pid, msg.get("vote_id"), bool(msg.get("approve")))
 
@@ -46667,6 +46738,8 @@ async def handler(ws):
                 if room.master_pid == pid:
                     room.master_pid = None
                     room.master_name = None
+                for extra in [q["id"] for q in room._herois_extras_de(pid)]:
+                    room.players.pop(extra, None)
                 room.release_character(pid)   # libera a trava do personagem
                 room.players.pop(pid, None)
                 if room.host_pid == pid and room.players:

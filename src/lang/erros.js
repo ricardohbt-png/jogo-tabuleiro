@@ -2144,6 +2144,18 @@ window.LANG_ERROS = {
   "erro.esse_heroi_nao_e_seu": {
     "en": "That hero isn't yours.",
     "pt": "Esse herói não é seu."
+  },
+  "erro.grupo_so_no_solo": {
+    "en": "A party of heroes can only be put together in a new Solo game.",
+    "pt": "Só dá para montar um grupo de heróis num jogo Solo novo."
+  },
+  "erro.grupo_de_1_a_6_herois": {
+    "en": "Pick from 1 to 6 different heroes.",
+    "pt": "Escolha de 1 a 6 heróis diferentes."
+  },
+  "erro.jogo_solo_com_grupo_fechado": {
+    "en": "This is a Solo game with a party: no one else can join.",
+    "pt": "Este é um jogo Solo com grupo: ninguém mais pode entrar."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
