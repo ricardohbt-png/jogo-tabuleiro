@@ -73,6 +73,22 @@ GS.selectParty(["warrior", "mage"]);
 check("selectParty manda a lista", enviados[2] && enviados[2].type === "select_party"
       && enviados[2].classes.length === 2);
 
+console.log("\n[4b] Avisos com resposta focam o herói a que se destinam");
+GS.focarHeroi("c");
+focos.length = 0;
+chega({ type: "trap_result", heroi: "m", nome: "x" });
+check("mensagem informativa NÃO troca o foco", GS.myPid === "c" && focos.length === 0);
+chega({ type: "spell_pick_prompt", heroi: "o", circulo: 1, count: 1, opcoes: [] });
+check("aviso para pid que não é meu: nada", GS.myPid === "c" && focos.length === 0);
+chega({ type: "spell_pick_prompt", heroi: "m", circulo: 1, count: 1, opcoes: [] });
+check("spell_pick_prompt do extra → foco nele", GS.myPid === "m");
+check("evento focoHeroi manual", focos.length === 1 && focos[0].pid === "m" && focos[0].auto === false);
+chega({ type: "sorte_reacao", heroi: "m" });
+check("já em foco: sem evento repetido", focos.length === 1);
+check("souAnfitriao pela conexão com extra em foco", GS.souAnfitriao("c") === true && GS.souAnfitriao("m") === false);
+check("souAnfitriao(null) falso", GS.souAnfitriao(null) === false);
+GS.focarHeroi("c");
+
 console.log("\n[5] Sem grupo, nada muda");
 GS.connect("ws://x", "Leo", "create");
 chega({ type: "lobby_state", code: "EFGH", host: "z", players: [{ id: "z", name: "Leo" }] });
@@ -80,6 +96,7 @@ enviados.length = 0;
 GS.endTurn();
 check("sem grupo: mensagem sem heroi", enviados[0] && enviados[0].heroi === undefined);
 check("sem grupo: temGrupo falso", GS.temGrupo === false);
+check("sem grupo: souAnfitriao usa myPid", GS.souAnfitriao("z") === true && GS.souAnfitriao("x") === false);
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);

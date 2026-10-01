@@ -2011,7 +2011,7 @@ function showWorldLocationPreview(world, loc){
   } else if(route){
     panel.innerHTML = `<b>${t('ui.mundo.rota_disponivel')}</b><small>${t('ui.mundo.rota_disponivel_desc', {fome:route.fome, sede:route.sede})}</small>`;
     const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = t('ui.mundo.viajar_para', {nome:loc.nome});
-    go.disabled = GS.myPid !== GS.cityState.host;
+    go.disabled = !GS.souAnfitriao(GS.cityState.host);
     go.title = go.disabled ? t('ui.mundo.so_anfitriao_viagem') : '';
     go.onclick = () => {
       go.disabled=true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id);
@@ -2059,7 +2059,7 @@ function _adventureGoButton(adventure, world){
   const go = document.createElement('button');
   go.className = 'worldmap-travel';
   go.textContent = t('ui.mundo.entrar_em', {nome: adventure.nome});
-  go.disabled = GS.myPid !== GS.cityState.host;
+  go.disabled = !GS.souAnfitriao(GS.cityState.host);
   go.title = go.disabled ? t('ui.mundo.so_anfitriao_expedicao') : '';
   go.onclick = () => {
     go.disabled = true; go.textContent = t('ui.mundo.iniciando_expedicao');
@@ -2109,7 +2109,7 @@ function showWorldMap(){
   frame.appendChild(img);
   const title = document.createElement('div'); title.className = 'worldmap-title'; title.textContent = t('ui.mundo.titulo'); frame.appendChild(title);
   const back = document.createElement('button'); back.className = 'worldmap-back'; back.textContent = t('ui.mundo.voltar_cidade'); back.onclick = hideWorldMap; frame.appendChild(back);
-  if(false && GS.myPid === GS.cityState.host){
+  if(false && GS.souAnfitriao(GS.cityState.host)){
     const edit = document.createElement('button'); edit.className = 'worldmap-edit';
     edit.textContent = editing ? t('ui.mundo.cancelar_ajuste') : t('ui.mundo.ajustar_pontos');
     edit.onclick = () => {
@@ -31478,7 +31478,7 @@ function _audioPanelEnsure(){
   wrap.querySelector('#cfg-sair').onclick = () => { pop.style.display='none'; exitGameWindow(); };
   wrap.querySelector('#cfg-turn-timer-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
-    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.timer_so_host'),'var(--red)'); return; }
+    if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.timer_so_host'),'var(--red)'); return; }
     GS.setTurnTimer(state.turn_timer_enabled===false);
   };
   wrap.querySelector('#cfg-visao-chk').onchange = (e) => {
@@ -31487,12 +31487,12 @@ function _audioPanelEnsure(){
   };
   wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
-    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
+    if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
     GS.setAtravessarAliados(state.atravessar_aliados!==true);
   };
   wrap.querySelector('#cfg-visao-host-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
-    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.visao_so_host'),'var(--red)'); return; }
+    if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.visao_so_host'),'var(--red)'); return; }
     GS.setVisaoCompartilhada(!visaoCompartilhadaPermitida(state));
   };
   const audioToggle = wrap.querySelector('#cfg-audio-toggle');
@@ -31594,7 +31594,7 @@ function _refreshTurnTimerOption(){
     note.textContent=t('ui.menu.timer_nota_partida');
     return;
   }
-  const host=state.host===GS.myPid, ativo=state.turn_timer_enabled!==false;
+  const host=GS.souAnfitriao(state.host), ativo=state.turn_timer_enabled!==false;
   btn.textContent=t(ativo?'ui.menu.timer_ativo':'ui.menu.timer_inativo');
   btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=t(host?'ui.menu.timer_nota_host':'ui.menu.timer_nota_outro');
 }
@@ -31613,7 +31613,7 @@ function _refreshVisaoCompartilhadaOption(){
     note.textContent = t('ui.menu.visao_nota_partida');
     return;
   }
-  const host = state.host===GS.myPid;
+  const host = GS.souAnfitriao(state.host);
   btn.style.display='block';
   btn.textContent = t(permitida ? 'ui.menu.visao_permitida' : 'ui.menu.visao_bloqueada');
   btn.disabled=!host; btn.style.opacity=host?'1':'.55';
@@ -31629,7 +31629,7 @@ function _refreshAtravessarOption(){
   const state=GS.gameState||GS.cityState;
   if(!state){ box.style.display='none'; return; }
   box.style.display='block';
-  const host = state.host===GS.myPid;
+  const host = GS.souAnfitriao(state.host);
   btn.textContent = t(state.atravessar_aliados===true ? 'ui.menu.atravessar_ligado' : 'ui.menu.atravessar_desligado');
   btn.disabled=!host; btn.style.opacity=host?'1':'.55';
   note.textContent = t(host ? 'ui.menu.atravessar_nota_host' : 'ui.menu.atravessar_nota_outro');
@@ -50328,7 +50328,7 @@ function csUpdateLobbyBar(msg){
   // Seletor de masmorra — controlado pelo host; o modo é exibido a todos.
   const picker = document.getElementById('cs-dungeon-picker');
   if(picker){
-    const isHost   = (msg.host === GS.myPid);
+    const isHost   = GS.souAnfitriao(msg.host);
     const dungeons  = GS.lobbyDungeons;            // getter (sem parênteses)
     const campaigns = GS.lobbyCampaigns;           // getter (sem parênteses)
     const sel      = GS.lobbySelectedDungeon;     // getter (sem parênteses)
@@ -50360,7 +50360,7 @@ function csUpdateLobbyBar(msg){
   }
 
   const btnS = document.getElementById('cs-btn-start');
-  if(btnS) btnS.style.display = (msg.host===GS.myPid && msg.can_start) ? 'block' : 'none';
+  if(btnS) btnS.style.display = (GS.souAnfitriao(msg.host) && msg.can_start) ? 'block' : 'none';
   // Entrada com a partida em andamento: a masmorra já foi escolhida e o papel
   // de Mestre não está em jogo — só a escolha do herói importa.
   const tardia = !!msg.entrada_tardia;

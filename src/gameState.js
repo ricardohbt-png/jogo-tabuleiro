@@ -1625,7 +1625,26 @@ const GS = (() => {
   }
   function selectParty(classes) { send({ type: 'select_party', classes }); }
 
+  // Avisos que ESPERAM RESPOSTA do jogador. Chegam com `heroi` quando o alvo é um
+  // herói extra do grupo; o foco vai para ele para o painel abrir e a resposta
+  // sair com o `heroi` certo. Mensagem informativa NÃO entra aqui (não rouba foco).
+  const _AVISOS_COM_RESPOSTA = new Set([
+    'spell_pick_prompt',            // escolha de magias ao subir de nível
+    'sorte_reacao',                 // oferta de re-rolagem (Sorte)
+    'fire_prompt',                  // escolha do fogo/direção
+    'teleporte_destino_prompt',     // escolher o destino do teletransporte
+    'teleporte_save_prompt',        // consentir/resistir ao teletransporte
+    'metamorfose_save_prompt',      // consentir/resistir à metamorfose
+    'tempestade_ciclones_prompt',   // posicionar ciclones
+    'ira_rocha_ardente_prompt',     // posicionar a Ira da Rocha Ardente
+  ]);
+  function souAnfitriao(host) {
+    return host != null && host === (connPid || myPid);
+  }
+
   function _handle(msg) {
+    if (msg.heroi && msg.heroi !== myPid && meusHerois.includes(msg.heroi)
+        && _AVISOS_COM_RESPOSTA.has(msg.type)) focarHeroi(msg.heroi);
     switch (msg.type) {
 
       case 'lobby_state':
@@ -2781,7 +2800,7 @@ const GS = (() => {
     _storyShown.add(key);
     const host = (gameState && gameState.host) || (cityState && cityState.host);
     if (/^(aventura|encadeada|intro):/.test(String(key))
-        && myPid && host && String(myPid) === String(host))
+        && host && souAnfitriao(host))
       send({ type:'story_complete', key:String(key) });
   }
 
@@ -3621,6 +3640,7 @@ const GS = (() => {
     isOffhandWeapon,
     setKnownSpells,
     focarHeroi,
+    souAnfitriao,
     ehMeuHeroi,
     cascaDaClasse,
     selectParty,
