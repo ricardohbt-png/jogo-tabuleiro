@@ -2245,7 +2245,20 @@ def write_savegame(sg):
     sg["updated"] = _now_iso()
     LOJA.gravar("savegames", sid, sg)
 
-def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None, rules=None, parent_campaign_id=None, inherited=None):
+def _savegame_play_mode(sg):
+    """Classifica saves antigos sem campo explícito pelo Mestre/membros vinculados."""
+    if not isinstance(sg, dict):
+        return "solo"
+    if sg.get("has_master"):
+        return "multiplayer"
+    mode = sg.get("play_mode")
+    if mode in ("solo", "multiplayer"):
+        return mode
+    members = sg.get("members")
+    return "multiplayer" if isinstance(members, dict) and len(members) > 1 else "solo"
+
+
+def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None, rules=None, parent_campaign_id=None, inherited=None, play_mode=None):
     sid = _new_savegame_id()
     is_campaign = (mode == "campaign")
     group = load_group(group_id) if group_id else None
@@ -2268,6 +2281,9 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
         "fatos": [],
         "scene_conversations_done": [],
         "has_master": bool(has_master),
+        "play_mode": ("multiplayer" if has_master else
+                      play_mode if play_mode in ("solo", "multiplayer") else
+                      _savegame_play_mode(inherited) if isinstance(inherited, dict) else None),
         "master_account": owner if has_master else None,
         "members": {}, "characters": {}, "shortcut_slots": {},
         "group_id": group["id"], "rules": _campaign_rules(rules), "slots": {},
@@ -2321,6 +2337,7 @@ def list_savegames(username):
                 "campaign_phase": sg.get("campaign_phase", 0),
                 "updated": sg.get("updated"), "owner": sg.get("owner"),
                 "has_master": sg.get("has_master", False),
+                "play_mode": _savegame_play_mode(sg),
                 "master_account": sg.get("master_account"),
                 "members": sg.get("members", {}),
                 "group_id": sg.get("group_id"), "rules": sg.get("rules", {}),
@@ -2496,7 +2513,7 @@ async def try_login(pid, username, password):
     return True, {"username": u, "profile": acc.get("profile", {}),
                   "heroes": acc.get("heroes", {})}, None
 
-def try_create_savegame(account, name, mode, campaign_file, has_master, group_id=None, rules=None, continue_from=None):
+def try_create_savegame(account, name, mode, campaign_file, has_master, group_id=None, rules=None, continue_from=None, play_mode=None):
     """Valida a criação de um savegame por uma conta logada.
     Retorna (savegame, None) ou (None, mensagem_de_erro)."""
     if not account:
@@ -2515,11 +2532,14 @@ def try_create_savegame(account, name, mode, campaign_file, has_master, group_id
             write_savegame(source)
         inherited = source; parent_campaign_id = source["id"]
         group_id = source.get("group_id")
+        if play_mode not in ("solo", "multiplayer"):
+            play_mode = _savegame_play_mode(source)
         # Uma continuação herda a definição de mundo, mas o criador pode trocar
         # a campanha-base caso queira iniciar uma nova história.
         if not campaign_file:
             campaign_file = source.get("campaign_file")
-    sg = create_savegame(name, account, mode, campaign_file, has_master, group_id, rules, parent_campaign_id, inherited)
+    sg = create_savegame(name, account, mode, campaign_file, has_master, group_id, rules,
+                         parent_campaign_id, inherited, play_mode)
     return sg, None
 
 # Campos duráveis da ficha (o resto é runtime e reseta por sessão). Na cidade,
@@ -46014,7 +46034,8 @@ async def handler(ws):
                     sg, e = try_create_savegame(account["name"], msg.get("name"),
                                                 msg.get("mode"), msg.get("campaign_file"),
                                                 bool(msg.get("has_master")), msg.get("group_id"),
-                                                msg.get("rules"), msg.get("continue_from"))
+                                                msg.get("rules"), msg.get("continue_from"),
+                                                msg.get("play_mode"))
                     if sg:
                         await ws.send(json.dumps({"type": "savegame_created", "savegame": sg}))
                     else:
