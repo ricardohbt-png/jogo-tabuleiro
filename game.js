@@ -51593,6 +51593,35 @@ GS.on('salvoParaSair', () => {
   }
 });
 
+// "💾 Progresso salvo": selo discreto no alto da tela, à parte do #toast para nunca
+// cobrir um erro. As compras gravam a cada item, então no máximo 1 a cada 30 s;
+// fora da cidade/masmorra (ex.: logo após "Salvar e sair") não aparece.
+const AVISO_SALVO_INTERVALO_MS = 30000;
+let _avisoSalvoEm = -Infinity;
+GS.on('saved', (msg) => {
+  const tela = document.querySelector('.screen.active');
+  if (!tela || !['screen-city', 'screen-game'].includes(tela.id)) return;
+  const agora = performance.now();
+  // A 1ª foto da masmorra sai 1× por visita e logo depois do checkpoint de
+  // quem entrou; o limite a engoliria. Só o da cidade (compras) é limitado.
+  if (msg?.where !== 'masmorra' && agora - _avisoSalvoEm < AVISO_SALVO_INTERVALO_MS) return;
+  _avisoSalvoEm = agora;
+  let el = document.getElementById('aviso-salvo');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'aviso-salvo';
+    el.style.cssText = 'position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9000;pointer-events:none;'
+      + 'padding:6px 12px;border-radius:8px;font-size:13px;color:#e8f5e9;'
+      + 'background:rgba(20,40,24,.82);border:1px solid rgba(120,200,130,.45);'
+      + 'opacity:0;transition:opacity .4s ease';
+    document.body.appendChild(el);
+  }
+  el.textContent = t('ui.save.progresso_salvo');
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2200);
+});
+
 // Linha "onde parou" do cartão: a foto da masmorra (Etapa 2 do salvamento).
 // O nome vem do autor da masmorra e não se traduz; procedural cai no genérico.
 function _ondeParouHTML(foto) {

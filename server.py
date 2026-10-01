@@ -22580,6 +22580,22 @@ class GameRoom:
         # descarga nestes momentos -- e nao num relogio curto -- e o que mantem
         # o banco dormindo entre eles.
         _agendar_descarga()
+        # Na masmorra este checkpoint não guarda o progresso de quem está lá
+        # dentro (só a foto da rodada guarda); avisar ali seria mentir.
+        if self.phase == "city":
+            self._avisar_salvo("cidade")
+
+    def _avisar_salvo(self, onde):
+        """"💾 Progresso salvo" para a sala. As gravações são síncronas e
+        espalhadas; o aviso sai numa tarefa à parte. Sem laço rodando (testes
+        diretos), não há a quem avisar. O cliente limita a 1 a cada 30 s."""
+        if self.savegame is None or getattr(self, "test_mode", False):
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        loop.create_task(self.broadcast({"type": "saved", "where": onde}))
 
     # ── Foto da masmorra (Etapa 2 do salvamento) ──────────────────────────────
     # Janelas que, abertas, deixam estado pela metade (um turno manual, uma
@@ -22633,10 +22649,15 @@ class GameRoom:
                               rodada=self.round_num,
                               masmorra=self.selected_dungeon or "procedural",
                               masmorra_nome=self._nome_masmorra_foto())
+        # Só a 1ª foto desta visita à masmorra avisa: avisar a cada rodada
+        # poluiria a tela. Na retomada `_ultima_foto` já vem preenchida.
+        primeira = self._ultima_foto is None
         self._ultima_foto = foto
         self.savegame["dungeon_snapshot"] = foto
         write_savegame(self.savegame)
         _agendar_descarga()
+        if primeira:
+            self._avisar_salvo("masmorra")
         return True
 
     def _nome_masmorra_foto(self):

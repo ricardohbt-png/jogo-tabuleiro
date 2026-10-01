@@ -812,6 +812,63 @@ async def secao_mestre():
     check("Mestre sem janela Manual pendurada da sessão velha", not b.master_manual_mid)
 
 
+async def secao_aviso_salvo():
+    print("\n[11] Aviso \"💾 Progresso salvo\"")
+    import re as _re
+    S.write_savegame = lambda sg: None
+    S._agendar_descarga = lambda: None
+    try:
+        hp = S.new_id()
+        r, _ = await sala_na_masmorra(None, classes=("warrior",), pids=[hp])
+        r.dungeon_intro_active = False
+        avisos = []
+        async def broadcast(msg, skip=None):
+            if msg.get("type") == "saved":
+                avisos.append(msg.get("where"))
+        r.broadcast = broadcast
+
+        async def colher(acao):
+            avisos.clear(); acao()
+            await asyncio.sleep(0); await asyncio.sleep(0)
+            return list(avisos)
+
+        check("sem jogo salvo, nenhum aviso", await colher(r._checkpoint_savegame) == [])
+        r.savegame = {"id": "sg_aviso", "members": {}}
+        check("checkpoint na masmorra não avisa (não guarda quem está lá dentro)",
+              await colher(r._checkpoint_savegame) == [])
+        check("1ª foto da visita avisa \"masmorra\"",
+              await colher(r._gravar_foto_rodada) == ["masmorra"])
+        check("fotos seguintes não avisam (seria a cada rodada)",
+              await colher(r._gravar_foto_rodada) == [])
+        r.phase = "city"
+        check("checkpoint na cidade avisa \"cidade\"",
+              await colher(r._checkpoint_savegame) == ["cidade"])
+        r.test_mode = True
+        check("sala de teste do editor não avisa", await colher(r._checkpoint_savegame) == [])
+        r.test_mode = False
+        import threading
+        erros = []
+        def sem_laco():
+            try: r._checkpoint_savegame()
+            except Exception as e: erros.append(repr(e))
+        th = threading.Thread(target=sem_laco); th.start(); th.join()
+        check("gravar sem laço async rodando não quebra", not erros, erros)
+        _cancelar_tarefas(r)
+    finally:
+        for n, f in _ORIGINAIS.items():
+            setattr(S, n, f)
+
+    js = open(os.path.join(RAIZ, "game.js"), encoding="utf-8").read()
+    gs = open(os.path.join(RAIZ, "src", "gameState.js"), encoding="utf-8").read()
+    check("gameState trata 'saved'", "case 'saved':" in gs and "_emit('saved', msg)" in gs)
+    check("um único ouvinte de saved", len(_re.findall(r"GS\.on\('saved'", js)) == 1)
+    check("aviso limitado a 1 a cada 30 s", "AVISO_SALVO_INTERVALO_MS = 30000" in js)
+    check("o da masmorra não é engolido pelo limite", "msg?.where !== 'masmorra'" in js)
+    check("aviso fora do #toast (não cobre erro)", "id = 'aviso-salvo'" in js)
+    k = S.LANG_STRINGS.get("ui.save.progresso_salvo", {})
+    check("chave ui.save.progresso_salvo com pt e en", bool(k.get("pt") and k.get("en")))
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
@@ -822,6 +879,7 @@ async def main():
     await secao_cidade_com_masmorra()
     await secao_cliente_e_saida()
     await secao_mestre()
+    await secao_aviso_salvo()
     await secao_handler_real()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL

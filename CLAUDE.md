@@ -458,9 +458,15 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > (`_ondeParouHTML`); "💾 Salvar e sair" no ⚙️ (só com `tem_jogo_salvo`) → `salvar_e_sair` →
 > `salvo_para_sair` → o cliente fecha a sessão e refaz o login com a senha da aba (código de
 > login `em_uso` para tentar de novo enquanto a conexão velha fecha); herói que caiu com
-> "⏳ aguardando {nome}…". Provado no navegador com o servidor REINICIADO entre salvar e
+> "⏳ aguardando {nome}…". **Aviso "💾 Progresso salvo":** `_avisar_salvo(onde)` faz broadcast
+> `{type:"saved", where}` (numa tarefa à parte, porque as gravações são síncronas) no fim do
+> `_checkpoint_savegame` **só com a sala na cidade** (na masmorra o checkpoint não guarda quem
+> está lá dentro) e na **1ª** foto de cada visita à masmorra (`_ultima_foto is None`; na
+> retomada ela já vem preenchida). O cliente mostra o selo `#aviso-salvo` no alto da tela, à
+> parte do `#toast`; o da cidade (compras) no máximo 1 a cada 30 s, o da masmorra sempre.
+> Provado no navegador com o servidor REINICIADO entre salvar e
 > continuar: rodada, casa, PV, ouro, bolsa, 14 monstros, item no chão, baús e névoa idênticos.
-> Teste: `tools/test_salvar_masmorra.py` (204; a seção [6] passa pelo `server.handler` real).
+> Teste: `tools/test_salvar_masmorra.py` (230; a seção [6] passa pelo `server.handler` real).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa

@@ -1959,6 +1959,12 @@ const GS = (() => {
         _emit('salvoParaSair', msg);
         break;
 
+      case 'saved':
+        // O jogo salvo foi gravado (checkpoint na cidade ou 1ª foto da
+        // masmorra); o renderer mostra o aviso discreto.
+        _emit('saved', msg);
+        break;
+
       case 'savegame_created':
         _emit('savegameCreated', msg.savegame);
         break;
