@@ -10272,6 +10272,30 @@ window.LANG_INTERFACE = {
   "ui.menu.visao_nota_outro": {
     "en": "The host allowed it; turn it on if you want.",
     "pt": "O anfitrião permitiu; ligue se quiser."
+  },
+  "ui.menu.atravessar_ligado": {
+    "en": "🚶 Pass through allies: on",
+    "pt": "🚶 Atravessar aliados: ligado"
+  },
+  "ui.menu.atravessar_desligado": {
+    "en": "🚶 Pass through allies: off",
+    "pt": "🚶 Atravessar aliados: desligado"
+  },
+  "ui.menu.atravessar_dica": {
+    "en": "Paths may cross the squares of heroes, servants and the freed prisoner, but never end on them.",
+    "pt": "Os caminhos podem cruzar as casas de heróis, servos e do prisioneiro liberto, mas nunca terminar nelas."
+  },
+  "ui.menu.atravessar_so_host": {
+    "en": "Only the host can change this.",
+    "pt": "Só o anfitrião pode alterar isto."
+  },
+  "ui.menu.atravessar_nota_host": {
+    "en": "As the host, you decide this rule for the whole party.",
+    "pt": "Como anfitrião, você decide esta regra para o grupo todo."
+  },
+  "ui.menu.atravessar_nota_outro": {
+    "en": "Rule chosen by the host.",
+    "pt": "Regra escolhida pelo anfitrião."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

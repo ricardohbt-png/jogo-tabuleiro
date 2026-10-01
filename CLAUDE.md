@@ -104,6 +104,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `atacar_animado` | `animado_id`, `target_id` opcional, `target_pos` opcional (controle manual — ataque; o Raio do Elemental Elétrico aceita uma casa vazia para escolher a direção e atinge todas as criaturas na linha) |
 | `libertar_prisioneiro` | — (herói adjacente liberta o prisioneiro; grava `rescuer_pid`). O prisioneiro (`prisoner`: CA10/mov6/7HP) é **controlado pelo resgatador**, não anda sozinho. |
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
+| `mover_animado_caminho` / `mover_prisioneiro_caminho` | `animado_id` (só o servo), `path:[[dx,dy],…]` — caminho inteiro do servo/prisioneiro numa mensagem (o clique do cliente usa estas); cada passo passa pelo handler de 1 casa com `_push=False` e sai um `game_state` no fim. É o que permite **atravessar aliados** sem parar em cima. |
+| `set_atravessar_aliados` | `enabled` — só o anfitrião; liga/desliga a regra da sala "🚶 Atravessar aliados" (ver abaixo). |
 | `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
 | `exit_dungeon` | — (saída **individual** pela escada de entrada: exige turno próprio, estar em cima de `stairs_pos` e `saida_permitida` da masmorra; cobra ida+volta de 🍖/💧 da aventura e marca `fora_masmorra`. A masmorra continua para os demais.) |
 | `voltar_masmorra` | — (o herói na cidade volta à masmorra assim que a espera zera; senão ele volta sozinho na rodada seguinte) |
@@ -3181,3 +3183,26 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > mostravam o caminho por cima de criaturas, embora o `findPath` aceitasse. Testes:
 > `tools/test_voo_por_cima.py` (43) e `tools/test_voo_por_cima_cliente.js` (44), com a mesma
 > tabela de casos; `test_voo_altura` atualizado para a regra nova.
+
+> **Atravessar aliados (2026-09-30):** opção da sala que **só o anfitrião** liga (painel ⚙️,
+> botão "🚶 Atravessar aliados", `_refreshAtravessarOption` chamada junto da visão
+> compartilhada; campo `atravessar_aliados`, padrão desligado, no `game_state`/`city_state` e no
+> jogo salvo; mensagem `set_atravessar_aliados`). Ligada, um **caminho** — `move_path` do herói e
+> as novas `mover_animado_caminho`/`mover_prisioneiro_caminho` — pode cruzar a casa de herói,
+> servo animado/elemental ou prisioneiro liberto, mas **nunca terminar** nela:
+> `_destino_livre_ou_avisa` confere a última casa antes de andar (`erro.o_destino_esta_ocupado`),
+> cada passo vai pelo handler de 1 casa com `_atravessar=True`, e um caminho interrompido em cima
+> de alguém (armadilha, movimento acabou, queda) volta à última casa livre (`_recuar_para`, com
+> `entity_step`). Passo isolado (setas) para dentro de aliado segue recusado. O "comandar" dos
+> servos (passo a passo, guloso) só entra em casa de aliado com mais de 1 de movimento e recua se
+> terminar em cima. Ocupante do grupo = `_ocupante_do_grupo_em` (respeita o sobrevoo por porte).
+> Monstros — inclusive sob Comando/Dominar — e o prisioneiro **ainda preso** bloqueiam sempre.
+> **Correção junto:** o prisioneiro passou a ocupar a casa também para os heróis (antes um herói
+> podia parar em cima dele) e para a colocação de servos (`_tile_livre_para_animado`). Cliente:
+> `_occupiedSet` põe as casas de aliado em `occ.aliados` com a opção ligada — `_walkable` as
+> cruza, `bfsReachable` não as pinta de azul e `findPath` nunca termina nelas (nem no parcial);
+> os cliques de servo/prisioneiro mandam o caminho inteiro (`GS.moverAnimadoCaminho`/
+> `moverPrisioneiroCaminho`). Provado no navegador com duas jogadoras: desligada, o caminho da Bia
+> contorna a Ana (4 passos); ligada, passa por ela (2 passos) e terminar em cima é recusado.
+> Testes: `tools/test_atravessar_aliados.py` (28) e `tools/test_atravessar_aliados_cliente.js`
+> (29). Spec em `docs/superpowers/specs/2026-09-30-atravessar-aliados-design.md`.

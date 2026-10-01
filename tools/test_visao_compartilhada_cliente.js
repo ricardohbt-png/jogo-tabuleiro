@@ -82,7 +82,7 @@ check("sombra dos objetos tira as casas vistas por um aliado",
       /compartilhada && mapa\.size[\s\S]{0,200}computeVisionSet\(state, me\)/.test(gj));
 check("painel tem a caixa e o botão do anfitrião",
       gj.includes('id="cfg-visao-chk"') && gj.includes('id="cfg-visao-host-btn"'));
-check("troca de idioma repinta a linha", /_refreshTurnTimerOption\(\); _refreshVisaoCompartilhadaOption\(\);\s*\/\/ rótulos/.test(gj));
+check("troca de idioma repinta a linha", /_refreshTurnTimerOption\(\); _refreshVisaoCompartilhadaOption\(\);[^\n]*\/\/ rótulos/.test(gj));
 check("preferência salva no navegador", gj.includes("'lfh_visao_compartilhada'"));
 
 console.log(`\n${"=".repeat(62)}\n  ${PASS} passaram, ${FAIL} falharam\n${"=".repeat(62)}`);

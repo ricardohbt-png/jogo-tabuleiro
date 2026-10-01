@@ -31340,7 +31340,7 @@ function _setLang(code){
   _i18nApply(document.body);
   _gamepadRenderPrefs();
   _syncMouseAltitudeControl(GS.gameState);
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();          // rótulos montados em JS, não por data-i18n
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();          // rótulos montados em JS, não por data-i18n
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
   _refreshCityHotspots();             // idem: a cidade é montada UMA vez (initCityImage)
   _refreshClassSelectLang();          // idem: o nome do herói é TEXTURA no peão 3D
@@ -31418,6 +31418,11 @@ function _audioPanelEnsure(){
     +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
+    +   '<div id="cfg-atravessar" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
+    +     '<button id="cfg-atravessar-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
+    +     '<small data-i18n="ui.menu.atravessar_dica" style="display:block;margin:5px 0 2px;opacity:.7;font-size:.7rem;">Os caminhos podem cruzar as casas de heróis, servos e do prisioneiro liberto, mas nunca terminar nelas.</small>'
+    +     '<small id="cfg-atravessar-note" style="display:block;margin-top:3px;opacity:.72;"></small>'
+    +   '</div>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.desempenho">🖥️ Desempenho</div>'
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.menu.qualidade">⚙ Qualidade</span><select id="perf-nivel" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="alta" data-i18n="ui.menu.qual_alta">Alta</option><option value="media" data-i18n="ui.menu.qual_media">Média</option><option value="baixa" data-i18n="ui.menu.qual_baixa">Baixa</option></select></label>'
     +   '<small data-i18n="ui.menu.qual_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.</small>'
@@ -31447,7 +31452,7 @@ function _audioPanelEnsure(){
       .includes((document.querySelector('.screen.active')||{}).id);
     const saida = wrap.querySelector('#cfg-saida');
     if(saida) saida.style.display = emJogo ? 'block' : 'none';
-    _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
+    _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
@@ -31459,7 +31464,12 @@ function _audioPanelEnsure(){
   };
   wrap.querySelector('#cfg-visao-chk').onchange = (e) => {
     _setVisaoCompPref(e.target.checked);
-    _refreshVisaoCompartilhadaOption();
+    _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+  };
+  wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
+    const state=GS.gameState||GS.cityState;
+    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
+    GS.setAtravessarAliados(state.atravessar_aliados!==true);
   };
   wrap.querySelector('#cfg-visao-host-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
@@ -31592,6 +31602,20 @@ function _refreshVisaoCompartilhadaOption(){
                        : (host ? 'ui.menu.visao_nota_host' : 'ui.menu.visao_nota_outro'));
 }
 
+// Linha "🚶 Atravessar aliados" do painel ⚙️: regra da sala, só o anfitrião
+// muda; os outros jogadores veem o estado. Fora de uma partida, some.
+function _refreshAtravessarOption(){
+  const box=document.getElementById('cfg-atravessar'), btn=document.getElementById('cfg-atravessar-btn'), note=document.getElementById('cfg-atravessar-note');
+  if(!box||!btn||!note) return;
+  const state=GS.gameState||GS.cityState;
+  if(!state){ box.style.display='none'; return; }
+  box.style.display='block';
+  const host = state.host===GS.myPid;
+  btn.textContent = t(state.atravessar_aliados===true ? 'ui.menu.atravessar_ligado' : 'ui.menu.atravessar_desligado');
+  btn.disabled=!host; btn.style.opacity=host?'1':'.55';
+  note.textContent = t(host ? 'ui.menu.atravessar_nota_host' : 'ui.menu.atravessar_nota_outro');
+}
+
 // Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
 // menu de pausa com as configurações). force=true abre, false fecha, undefined alterna.
 function _toggleConfigPop(force){
@@ -31603,7 +31627,7 @@ function _toggleConfigPop(force){
   const emJogo = ['screen-game','screen-city','screen-class-select']
     .includes((document.querySelector('.screen.active')||{}).id);
   if(saida) saida.style.display = emJogo ? 'block' : 'none';
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   pop.style.display = abrir ? 'block' : 'none';
 }
 window._toggleConfigPop = _toggleConfigPop;
@@ -44533,8 +44557,9 @@ function _animarEEnviarMoverCaminhoMinino(animado, passos){
   let cx = animado.pos[0], cy = animado.pos[1];
   for(const [dx,dy] of passos){ cx+=dx; cy+=dy; pts.push([cx,cy]); }
 
-  // Envia todos os passos ao servidor já (ele valida/decrementa cada um).
-  for(const [dx,dy] of passos) GS.moverAnimado(animado.id, dx, dy);
+  // Envia o caminho inteiro numa mensagem (o servidor valida cada passo e,
+  // com "atravessar aliados", confere que o destino final está livre).
+  GS.moverAnimadoCaminho(animado.id, passos);
 
   const onDone = () => {
     estadoMininoMov.emMovimento = false;
@@ -44576,7 +44601,7 @@ function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
   let cx = pris.pos[0], cy = pris.pos[1];
   for(const [dx,dy] of passos){ cx+=dx; cy+=dy; pts.push([cx,cy]); }
 
-  for(const [dx,dy] of passos) GS.moverPrisioneiro(dx, dy);
+  GS.moverPrisioneiroCaminho(passos);
 
   const onDone = () => {
     estadoMininoMov.emMovimento = false;
@@ -51673,7 +51698,7 @@ GS.on('cityState', msg => {
   _renderAtalhos();
   _renderEfeitosAtivos(null);
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
   const meSrv = (msg.players || []).find(p => p.id === GS.myPid);
@@ -51944,7 +51969,7 @@ GS.on('gameState', msg => {
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
   _garantirLoopJatoAr();     // mantém o cone visível até o impacto terminar
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.

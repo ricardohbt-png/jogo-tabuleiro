@@ -164,7 +164,7 @@ async def main():
           and "await room.handle_move_path(pid, path)" in srv)
     check("handle_move não faz push_state por passo dentro do caminho",
           "await self._push_se(_push)" in srv
-          and "await self.handle_move(pid, dx, dy, _push=False)" in srv)
+          and "await self.handle_move(pid, dx, dy, _push=False" in srv)
     gs = ler("src/gameState.js")
     check("GS.movePath exportado", "function movePath(path)" in gs and "    movePath," in gs)
     gj = ler("game.js")
