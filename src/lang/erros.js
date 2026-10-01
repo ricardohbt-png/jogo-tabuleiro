@@ -2104,6 +2104,10 @@ window.LANG_ERROS = {
   "erro.voz_quebrada_impede_cancoes_heroicas": {
     "en": "Broken Voice prevents Heroic Songs.",
     "pt": "Voz Quebrada impede Canções Heroicas."
+  },
+  "erro.somente_o_anfitriao_pode_alterar_a_visao": {
+    "en": "Only the host can change shared vision.",
+    "pt": "Somente o anfitrião pode alterar a visão compartilhada."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

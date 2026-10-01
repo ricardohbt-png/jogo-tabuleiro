@@ -2038,6 +2038,18 @@ const GS = (() => {
   function sceneEnd(force) { send({ type:'scene_end', force:!!force }); }
   function sceneVisit(sceneId, eventId) { send({ type:'scene_visit', scene_id:sceneId, event_id:eventId }); }
   function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
+  function setVisaoCompartilhada(enabled) { send({ type:'set_visao_compartilhada', enabled:!!enabled }); }
+  // Visão compartilhada: heróis cuja visão SOMA à do jogador. `ativa` = escolha
+  // local do jogador E permissão do anfitrião (decidida por quem chama). Fica de
+  // fora: o próprio herói, quem morreu, quem saiu da masmorra e — se o próprio
+  // herói está cego — todo mundo (cegueira suspende até a Clarividência).
+  function heroisVisaoCompartilhada(state, myPid, ativa) {
+    if (!ativa || !state || !Array.isArray(state.players)) return [];
+    const me = state.players.find(p => p && p.id === myPid);
+    if (!me || me.cego) return [];
+    return state.players.filter(p => p && p.id !== myPid && p.alive && !p.fora_masmorra
+      && Array.isArray(p.pos) && p.pos[0] >= 0 && p.pos[1] >= 0);
+  }
   function setShortcut(slot, entry) { send({ type:'shortcut_set', slot, entry:entry || null }); }
   function shortcutActivated(entry, slot = null) {
     if (!entry || entry.kind !== 'skill' || !entry.id) return;
@@ -3457,6 +3469,8 @@ const GS = (() => {
     sceneEnd,
     sceneVisit,
     setTurnTimer,
+    setVisaoCompartilhada,
+    heroisVisaoCompartilhada,
     setShortcut,
     shortcutActivated,
     useItem,
