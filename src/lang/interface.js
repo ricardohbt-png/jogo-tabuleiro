@@ -10236,6 +10236,42 @@ window.LANG_INTERFACE = {
   "ui.armadilha.chao_illusorio.piso": {
     "en": "You land on terrain level {nivel}.",
     "pt": "Você cai no piso de nível {nivel}."
+  },
+  "ui.menu.visao_compartilhada": {
+    "en": "👁️ Shared vision",
+    "pt": "👁️ Visão compartilhada"
+  },
+  "ui.menu.visao_compartilhada_dica": {
+    "en": "Also shows what the other heroes in the party are seeing.",
+    "pt": "Mostra também o que os outros heróis do grupo estão vendo."
+  },
+  "ui.menu.visao_so_host": {
+    "en": "Only the host can change this.",
+    "pt": "Só o anfitrião pode alterar isto."
+  },
+  "ui.menu.visao_permitida": {
+    "en": "Shared vision: allowed",
+    "pt": "Visão compartilhada: permitida"
+  },
+  "ui.menu.visao_bloqueada": {
+    "en": "Shared vision: blocked",
+    "pt": "Visão compartilhada: bloqueada"
+  },
+  "ui.menu.visao_nota_partida": {
+    "en": "Applies during a game.",
+    "pt": "Vale durante uma partida."
+  },
+  "ui.menu.visao_nota_desativada": {
+    "en": "The host turned off shared vision for this game.",
+    "pt": "O anfitrião desativou a visão compartilhada nesta partida."
+  },
+  "ui.menu.visao_nota_host": {
+    "en": "As the host, you decide whether players may use it.",
+    "pt": "Como anfitrião, você decide se os jogadores podem usá-la."
+  },
+  "ui.menu.visao_nota_outro": {
+    "en": "The host allowed it; turn it on if you want.",
+    "pt": "O anfitrião permitiu; ligue se quiser."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

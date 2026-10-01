@@ -3143,3 +3143,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `gerar_vocabulario.py`, não do editor. Conferido no navegador em inglês: 136 painéis de
 > entidade sem erro; trocar o idioma preserva a seleção e o texto digitado. Plano em
 > `docs/superpowers/plans/2026-09-28-editor-em-ingles-fase1-masmorra.md`.
+
+> **Visão compartilhada entre heróis (2026-09-30):** opção para cada jogador ver também o que os
+> outros heróis do grupo enxergam. **Duas chaves:** o anfitrião **permite** (campo da sala
+> `visao_compartilhada_permitida`, padrão `True`, mensagem `set_visao_compartilhada {enabled}` só
+> do anfitrião — molde do limite de tempo por turno; salvo no jogo salvo e enviado no `game_state`
+> e no `city_state`) e cada jogador **liga** a sua no painel ⚙️ (caixa "👁️ Visão compartilhada",
+> `localStorage["lfh_visao_compartilhada"]`, padrão desligada; botão do anfitrião logo abaixo,
+> `_refreshVisaoCompartilhadaOption`, chamada onde o limite de tempo já se atualiza). **Cálculo num
+> ponto só:** `computeVisionSet` (`game.js`) soma, com o raio e a linha de visão de cada um, os
+> heróis de `GS.heroisVisaoCompartilhada(state, myPid, ativa)` (puro): vivos, dentro da masmorra,
+> fora o próprio; nada se o **seu** herói estiver cego. `_sombraObjetos` tira da penumbra as casas
+> que um aliado vê. **Só a visão muda:** atacar/mirar seguem exigindo a linha de visão do seu
+> herói (servidor); monstro escondido segue escondido. Servos e elemental **já** compartilhavam
+> visão com todos (`_live_reveal_tiles`, raio 2, campo `revealed`) e seguem assim; o **prisioneiro
+> resgatado** passou a entrar nessa mesma soma. Provado no navegador com dois jogadores (54 → 109
+> casas visíveis para a Ana com a Bia a 29 casas). Testes: `tools/test_visao_compartilhada.py` (14)
+> e `tools/test_visao_compartilhada_cliente.js` (15, roda o `computeVisionSet` real). Spec em
+> `docs/superpowers/specs/2026-09-30-visao-compartilhada-design.md`.

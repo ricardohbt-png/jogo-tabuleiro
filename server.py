@@ -2592,6 +2592,7 @@ def try_open_savegame_room(account, sid, rooms):
     room.savegame = sg
     room.campaign_phase = sg.get("campaign_phase", 0)
     room.turn_timer_enabled = sg.get("turn_timer_enabled", True) is not False
+    room.visao_compartilhada_permitida = sg.get("visao_compartilhada_permitida", True) is not False
     room.world_location = sg.get("world_location", "alva_e_luz") if sg.get("world_location") in WORLD_LOCATIONS else "alva_e_luz"
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
@@ -9759,6 +9760,9 @@ class GameRoom:
         # Timer de turno (30s): tarefa asyncio + token p/ descartar timers velhos.
         self.TURN_LIMIT_S = 30
         self.turn_timer_enabled = True   # anfitrião pode desligar o limite por partida
+        # Visão compartilhada entre heróis: o anfitrião PERMITE; cada jogador
+        # liga ou não no próprio painel ⚙️ (preferência local do cliente).
+        self.visao_compartilhada_permitida = True
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
         self.MASTER_MANUAL_LIMIT_S = 60   # timeout anti-AFK do mestre por monstro manual
         self.turn_timer_task = None
@@ -10433,6 +10437,7 @@ class GameRoom:
             "master_pid": self.master_pid,
             "host": self.host_pid,
             "turn_timer_enabled": self.turn_timer_enabled,
+            "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "players": players_city,
             "world": {
                 "location": self.world_location,
@@ -10817,6 +10822,16 @@ class GameRoom:
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
         elif self.phase == "city": await self.broadcast_city_state()   # no lobby nao ha ficha p/ montar o city_state
+
+    async def handle_set_visao_compartilhada(self, pid, enabled):
+        """Anfitrião permite (ou não) que os jogadores somem a visão dos outros
+        heróis. Só a permissão é da sala; ligar é escolha local de cada um."""
+        if pid != self.host_pid:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_a_visao")}); return
+        self.visao_compartilhada_permitida = bool(enabled)
+        self._checkpoint_savegame()
+        if self.phase == "playing": await self.push_state()
+        elif self.phase == "city": await self.broadcast_city_state()
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -21789,6 +21804,7 @@ class GameRoom:
         self.savegame["active_scene"] = deepcopy(self.active_scene)
         self.savegame["scene_variables"] = deepcopy(self.scene_variables)
         self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
+        self.savegame["visao_compartilhada_permitida"] = self.visao_compartilhada_permitida
         self.savegame["refugio"] = deepcopy(self.refugio_state)
         self.savegame["hero_rooms"] = deepcopy(self.hero_rooms)
         write_savegame(self.savegame)
@@ -43806,10 +43822,13 @@ class GameRoom:
         + raio ao redor de cada minion vivo. Não persiste — some quando o minion sai."""
         tiles = set(self.magic_reveal.keys())
         r = self.MINION_VISAO_RAIO
-        for a in self._all_animados():
-            if a.get("vida_atual", 0) <= 0:
-                continue
-            ax, ay = a["pos"]
+        fontes = [a["pos"] for a in self._all_animados() if a.get("vida_atual", 0) > 0]
+        # O prisioneiro resgatado também é controlado pelo grupo: enxerga como um servo.
+        pr = self.prisoner
+        if pr and pr.get("freed") and pr.get("alive") and isinstance(pr.get("pos"), (list, tuple)):
+            fontes.append(pr["pos"])
+        for pos in fontes:
+            ax, ay = pos
             for dy in range(-r, r + 1):
                 for dx in range(-r, r + 1):
                     x, y = ax + dx, ay + dy
@@ -44008,6 +44027,7 @@ class GameRoom:
             "master_pid": self.master_pid,
             "host": self.host_pid,
             "turn_timer_enabled": self.turn_timer_enabled,
+            "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "master_manual_mid": self.master_manual_mid or self.command_control_mid or self.mind_control_mid,
             "master_manual_reach": (
                 self._master_monster_reach(self.monsters[self.master_manual_mid or self.command_control_mid or self.mind_control_mid])
@@ -45239,6 +45259,9 @@ async def handler(ws):
 
                 elif t == "set_turn_timer":
                     if room: await room.handle_set_turn_timer(pid, msg.get("enabled"))
+
+                elif t == "set_visao_compartilhada":
+                    if room: await room.handle_set_visao_compartilhada(pid, msg.get("enabled"))
 
                 # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
                 # internamente iniciar_cena e não dependem deste protocolo.

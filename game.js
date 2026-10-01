@@ -7387,7 +7387,37 @@ function computeVisionSet(state, me){
   // Revelações remotas não atravessam a cegueira completa.
   if(!cego && state && state.revealed)
     for(const [rx,ry] of state.revealed) set.add(`${rx},${ry}`);
+  // Visão compartilhada: soma o que cada outro herói vivo do grupo enxerga,
+  // com o raio e a linha de visão DELE. Só a visão muda — atacar e mirar
+  // continuam exigindo a linha de visão do seu herói (regra do servidor).
+  for(const aliado of GS.heroisVisaoCompartilhada(state, me.id, visaoCompartilhadaAtiva(state))){
+    const [ax,ay] = aliado.pos;
+    const raio = aliado.cego ? 1 : getSightRadius(aliado);
+    for(const [ex,ey] of state.explored){
+      if(Math.max(Math.abs(ex-ax), Math.abs(ey-ay)) <= raio
+          && GS.hasLineOfSight(state, ax, ay, ex, ey))
+        set.add(`${ex},${ey}`);
+    }
+  }
   return set;
+}
+
+// ── Visão compartilhada ──────────────────────────────────────────────────────
+// Duas chaves: o anfitrião PERMITE (state.visao_compartilhada_permitida, salvo no
+// jogo) e cada jogador LIGA a sua no painel ⚙️ (preferência deste navegador).
+const _VISAO_COMP_KEY = 'lfh_visao_compartilhada';
+let _visaoCompPref = (() => { try { return localStorage.getItem(_VISAO_COMP_KEY) === '1'; } catch(e){ return false; } })();
+function visaoCompartilhadaPermitida(state){
+  return !!state && state.visao_compartilhada_permitida !== false;
+}
+function visaoCompartilhadaAtiva(state){
+  return _visaoCompPref && visaoCompartilhadaPermitida(state);
+}
+function _setVisaoCompPref(on){
+  _visaoCompPref = !!on;
+  try { localStorage.setItem(_VISAO_COMP_KEY, on ? '1' : '0'); } catch(e){}
+  const st = GS.gameState;
+  if(st) renderMap(st);
 }
 
 // ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
@@ -7403,9 +7433,15 @@ function _sombraObjetos(state){
   const me = (state.players || []).find(p => p.id === GS.myPid && p.alive);
   if(!me || !Array.isArray(me.pos)) return SOMBRA_VAZIA;
   const raio = getSightRadius(me);
-  const chave = `${me.pos[0]},${me.pos[1]}|${raio}`;
+  const compartilhada = visaoCompartilhadaAtiva(state);
+  const chave = `${me.pos[0]},${me.pos[1]}|${raio}|${compartilhada ? 1 : 0}`;
   if(_sombraCache.state === state && _sombraCache.chave === chave) return _sombraCache.mapa;
   const mapa = GS.sombraDeObjetos(state, me, raio);
+  // Casa que um aliado enxerga não está "bloqueada" para quem compartilha a visão.
+  if(compartilhada && mapa.size){
+    const visto = computeVisionSet(state, me);
+    for(const k of [...mapa.keys()]) if(visto.has(k)) mapa.delete(k);
+  }
   _sombraCache = { state, chave, mapa };
   return mapa;
 }
@@ -31304,7 +31340,7 @@ function _setLang(code){
   _i18nApply(document.body);
   _gamepadRenderPrefs();
   _syncMouseAltitudeControl(GS.gameState);
-  _refreshTurnTimerOption();          // rótulos montados em JS, não por data-i18n
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();          // rótulos montados em JS, não por data-i18n
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
   _refreshCityHotspots();             // idem: a cidade é montada UMA vez (initCityImage)
   _refreshClassSelectLang();          // idem: o nome do herói é TEXTURA no peão 3D
@@ -31376,6 +31412,12 @@ function _audioPanelEnsure(){
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
+    +   '<div id="cfg-visao" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
+    +     '<label class="cfg-access-check"><input id="cfg-visao-chk" type="checkbox"> <span data-i18n="ui.menu.visao_compartilhada">👁️ Visão compartilhada</span></label>'
+    +     '<small data-i18n="ui.menu.visao_compartilhada_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra também o que os outros heróis do grupo estão vendo.</small>'
+    +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
+    +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
+    +   '</div>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.desempenho">🖥️ Desempenho</div>'
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.menu.qualidade">⚙ Qualidade</span><select id="perf-nivel" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="alta" data-i18n="ui.menu.qual_alta">Alta</option><option value="media" data-i18n="ui.menu.qual_media">Média</option><option value="baixa" data-i18n="ui.menu.qual_baixa">Baixa</option></select></label>'
     +   '<small data-i18n="ui.menu.qual_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.</small>'
@@ -31405,7 +31447,7 @@ function _audioPanelEnsure(){
       .includes((document.querySelector('.screen.active')||{}).id);
     const saida = wrap.querySelector('#cfg-saida');
     if(saida) saida.style.display = emJogo ? 'block' : 'none';
-    _refreshTurnTimerOption();
+    _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
@@ -31414,6 +31456,15 @@ function _audioPanelEnsure(){
     const state=GS.gameState||GS.cityState;
     if(!state || state.host!==GS.myPid){ toast(t('ui.menu.timer_so_host'),'var(--red)'); return; }
     GS.setTurnTimer(state.turn_timer_enabled===false);
+  };
+  wrap.querySelector('#cfg-visao-chk').onchange = (e) => {
+    _setVisaoCompPref(e.target.checked);
+    _refreshVisaoCompartilhadaOption();
+  };
+  wrap.querySelector('#cfg-visao-host-btn').onclick = () => {
+    const state=GS.gameState||GS.cityState;
+    if(!state || state.host!==GS.myPid){ toast(t('ui.menu.visao_so_host'),'var(--red)'); return; }
+    GS.setVisaoCompartilhada(!visaoCompartilhadaPermitida(state));
   };
   const audioToggle = wrap.querySelector('#cfg-audio-toggle');
   const audioControls = wrap.querySelector('#cfg-audio-controls');
@@ -31519,6 +31570,28 @@ function _refreshTurnTimerOption(){
   btn.disabled=!host; btn.style.opacity=host?'1':'.55'; note.textContent=t(host?'ui.menu.timer_nota_host':'ui.menu.timer_nota_outro');
 }
 
+// Linha "👁️ Visão compartilhada" do painel ⚙️: a caixa é a escolha deste
+// jogador; o botão é a permissão da sala, que só o anfitrião aciona.
+function _refreshVisaoCompartilhadaOption(){
+  const chk=document.getElementById('cfg-visao-chk'), btn=document.getElementById('cfg-visao-host-btn'), note=document.getElementById('cfg-visao-note');
+  if(!chk||!btn||!note) return;
+  const state=GS.gameState||GS.cityState;
+  const permitida = !state || visaoCompartilhadaPermitida(state);
+  chk.checked = _visaoCompPref;
+  chk.disabled = !permitida;
+  if(!state){
+    btn.style.display='none';
+    note.textContent = t('ui.menu.visao_nota_partida');
+    return;
+  }
+  const host = state.host===GS.myPid;
+  btn.style.display='block';
+  btn.textContent = t(permitida ? 'ui.menu.visao_permitida' : 'ui.menu.visao_bloqueada');
+  btn.disabled=!host; btn.style.opacity=host?'1':'.55';
+  note.textContent = t(!permitida ? 'ui.menu.visao_nota_desativada'
+                       : (host ? 'ui.menu.visao_nota_host' : 'ui.menu.visao_nota_outro'));
+}
+
 // Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
 // menu de pausa com as configurações). force=true abre, false fecha, undefined alterna.
 function _toggleConfigPop(force){
@@ -31530,7 +31603,7 @@ function _toggleConfigPop(force){
   const emJogo = ['screen-game','screen-city','screen-class-select']
     .includes((document.querySelector('.screen.active')||{}).id);
   if(saida) saida.style.display = emJogo ? 'block' : 'none';
-  _refreshTurnTimerOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
   pop.style.display = abrir ? 'block' : 'none';
 }
 window._toggleConfigPop = _toggleConfigPop;
@@ -51600,7 +51673,7 @@ GS.on('cityState', msg => {
   _renderAtalhos();
   _renderEfeitosAtivos(null);
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
   _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
   const meSrv = (msg.players || []).find(p => p.id === GS.myPid);
@@ -51871,7 +51944,7 @@ GS.on('gameState', msg => {
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
   _garantirLoopJatoAr();     // mantém o cone visível até o impacto terminar
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
