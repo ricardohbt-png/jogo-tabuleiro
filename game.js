@@ -52168,7 +52168,8 @@ GS.on('gameState', msg => {
 // a tela com o herói novo (HUD, alcance, visão) e centraliza a câmera.
 GS.on('focoHeroi', ev => {
   // O que estava aberto/armado era do herói anterior.
-  try { if(window.InventoryModal && InventoryModal.isOpen()) InventoryModal.close(); } catch(e){}
+  // InventoryModal é `const` de script: não fica em window.
+  try { if(typeof InventoryModal !== 'undefined' && InventoryModal.isOpen()) InventoryModal.close(); } catch(e){}
   if(typeof fecharQuadrosFlutuantes === 'function') fecharQuadrosFlutuantes();
   if(typeof _aimEnd === 'function') _aimEnd({ silent: true, reason: 'focus_changed' });
   const st = GS.gameState;
