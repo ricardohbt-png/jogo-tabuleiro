@@ -10723,6 +10723,62 @@ class GameRoom:
         return novo
 
     # ── Continuar um jogo salvo ───────────────────────────────────────────
+    # ── Solo com grupo: heróis por procuração ─────────────────────────────
+    # No Solo com grupo, UMA conexão controla vários heróis. O 1º herói tem o
+    # pid da própria conexão; os demais têm pid próprio (new_id()) e
+    # `controlador` = pid da conexão. Tudo que percorre self.players continua
+    # igual; só a fronteira muda: quem age (heroi_da_acao, no handler) e para
+    # onde vai a resposta (send_to).
+    def _conexao_de(self, pid):
+        """Pid da conexão que controla este herói (ele mesmo, se não é extra)."""
+        return (self.players.get(pid) or {}).get("controlador") or pid
+
+    def _herois_extras_de(self, conexao):
+        return [q for q in self.players.values() if q.get("controlador") == conexao]
+
+    def _herois_da_conexao(self, conexao):
+        """Pids dos heróis desta conexão: extras primeiro, principal por último.
+        A ordem importa na queda: o principal sai por último para o anfitrião
+        não ser passado a um extra que ainda consta como conectado."""
+        pids = [q["id"] for q in self._herois_extras_de(conexao)]
+        if conexao in self.players:
+            pids.append(conexao)
+        return pids
+
+    def _eh_anfitriao(self, pid):
+        # Escrito sem "pid == self.host_pid" de propósito: a Task 2 troca esse
+        # padrão em massa por chamadas a este método.
+        return self.host_pid in (pid, self._conexao_de(pid))
+
+    def heroi_da_acao(self, conexao, msg):
+        """Herói que executa a mensagem desta conexão. None = recusada.
+        1) `msg.heroi` de um herói desta conexão → ele;
+        2) sem `heroi`, um extra desta conexão na vez (turno, servos, Último
+           Esforço) → ele;
+        3) senão a própria conexão (comportamento de sempre)."""
+        pedido = msg.get("heroi") if isinstance(msg, dict) else None
+        if pedido is not None:
+            pedido = str(pedido)
+            if pedido == conexao:
+                return conexao
+            if pedido in self.players and self.players[pedido].get("controlador") == conexao:
+                return pedido
+            return None
+        vez_turno = self.current_pid() if self.phase == "playing" else None
+        for vez in (vez_turno, self.animados_phase_pid, self.last_stand_pid):
+            if (vez and vez != conexao and vez in self.players
+                    and self.players[vez].get("controlador") == conexao):
+                return vez
+        return conexao
+
+    def _casca_extra(self, conexao, cls, magias=None):
+        """Casca de lobby de um herói extra (mesmo formato da casca comum)."""
+        pid = new_id()
+        return {"id": pid, "name": HERO_IDENTITIES.get(cls, CLASSES[cls]["name"]),
+                "class_id": cls, "ready": True, "connected": True,
+                "slot": len(self.players), "controlador": conexao,
+                "magias_conhecidas": list(magias or [])}
+
     def _classe_vinculada(self, conta):
         """Classe do personagem desta conta no jogo salvo (membro ativo), ou None."""
         if self.savegame is None or not conta:
