@@ -2140,6 +2140,10 @@ window.LANG_ERROS = {
   "erro.esta_partida_nao_tem_jogo_salvo": {
     "en": "This match has no saved game.",
     "pt": "Esta partida não tem jogo salvo."
+  },
+  "erro.esse_heroi_nao_e_seu": {
+    "en": "That hero isn't yours.",
+    "pt": "Esse herói não é seu."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

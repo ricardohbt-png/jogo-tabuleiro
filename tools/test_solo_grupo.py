@@ -95,7 +95,7 @@ class WSFalso:
     async def send(self, data): self.sent.append(json.loads(data))
 
 
-def secao_helpers():
+async def secao_helpers():
     print("\n[0] helpers de procuração")
     r = S.GameRoom("TESTE0")
     r.players = {
@@ -130,6 +130,16 @@ def secao_helpers():
           casca_nova["controlador"] == "c1" and casca_nova["name"] == "Richard"
           and casca_nova["magias_conhecidas"] == ["x"] and casca_nova["class_id"] == "paladin")
 
+    ws_ana = WSFalso()
+    r.connections = {"c1": ws_ana}
+    S.LANG_BY_PID["c1"] = "en"
+    await r.send_to("x1", {"type": "error", "msg": S.T("erro.nao_e_o_seu_turno")})
+    check("send_to(extra) chega na conexão do controlador", len(ws_ana.sent) == 1)
+    check("…no idioma do controlador",
+          ws_ana.sent and ws_ana.sent[0]["msg"] == txt("erro.nao_e_o_seu_turno", "en"),
+          ws_ana.sent)
+    S.LANG_BY_PID.pop("c1", None)
+
 
 async def main():
     tmp = tempfile.mkdtemp()
@@ -139,7 +149,7 @@ async def main():
         for conta in ("solo1", "solo2", "solo3", "solo4", "solo5", "solo6", "intruso", "multi"):
             acc, e = await S.create_account(conta, SENHA)
             assert acc, e
-        secao_helpers()
+        await secao_helpers()
     finally:
         limpar_salas()
         S.LOJA = velha

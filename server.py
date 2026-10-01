@@ -10169,6 +10169,12 @@ class GameRoom:
 
     async def send_to(self, pid, msg):
         ws = self.connections.get(pid)
+        if not ws:
+            # Solo com grupo: herói extra não tem conexão própria; a mensagem
+            # vai para quem o controla, no idioma dessa conexão.
+            dono = (self.players.get(pid) or {}).get("controlador")
+            if dono and dono in self.connections:
+                ws, pid = self.connections[dono], dono
         if not ws and pid in self.aguardando:
             ws = self.aguardando[pid].get("ws")
         # Heróis de teste não possuem conexão própria. Durante uma ação
@@ -10649,7 +10655,7 @@ class GameRoom:
 
     async def handle_select_dungeon(self, pid, file):
         """Host escolhe a masmorra do lobby. file=None → procedural."""
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             return
         if self.phase != "lobby":
             return
@@ -10672,7 +10678,7 @@ class GameRoom:
 
     async def handle_select_campaign(self, pid, file):
         """Host escolhe uma campanha do lobby. file=None → procedural."""
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             return
         if self.phase != "lobby":
             return
@@ -10745,7 +10751,7 @@ class GameRoom:
         return pids
 
     def _eh_anfitriao(self, pid):
-        # Escrito sem "pid == self.host_pid" de propósito: a Task 2 troca esse
+        # Escrito sem "self._eh_anfitriao(pid)" de propósito: a Task 2 troca esse
         # padrão em massa por chamadas a este método.
         return self.host_pid in (pid, self._conexao_de(pid))
 
@@ -10811,7 +10817,7 @@ class GameRoom:
         if snap.get("magias_conhecidas"):
             self.players[pid]["magias_conhecidas"] = list(snap["magias_conhecidas"])
         await self.select_class(pid, cls, anunciar=False)
-        if (self._jogo_salvo_solo() and pid == self.host_pid
+        if (self._jogo_salvo_solo() and self._eh_anfitriao(pid)
                 and self.players.get(pid, {}).get("class_id") == cls):
             # O lobby_state com `auto_start` ainda é necessário: é por ele que o
             # cliente aprende o próprio pid e o código da sala (reconexão); com
@@ -11014,7 +11020,7 @@ class GameRoom:
                                                 magias=c.get("magias_conhecidas"))
 
     async def start_game(self, pid):
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar")})
             return
         heroes = {pid2: p for pid2, p in self.players.items() if not p.get("is_master")}
@@ -11324,7 +11330,7 @@ class GameRoom:
     async def handle_story_complete(self, pid, key):
         """O anfitrião concluiu os slides que bloqueiam uma entrada de masmorra."""
         pending = self._pending_dungeon_entry
-        if (pid != self.host_pid or not pending or not key
+        if (not self._eh_anfitriao(pid) or not pending or not key
                 or str(key) != str(pending.get("story_key"))):
             return
         pending["story_done"] = True
@@ -11433,7 +11439,7 @@ class GameRoom:
 
     async def handle_scene_end(self, pid, force=False):
         if not self.active_scene: return
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type":"error", "msg": T("erro.somente_o_anfitriao_pode_encerrar_a_cena")}); return
         active_scene = self.active_scene
         scene = self._scene_def(active_scene.get("scene_id")) or {}
@@ -11472,7 +11478,7 @@ class GameRoom:
             if event_id not in done: done.append(event_id); self._checkpoint_savegame()
 
     async def handle_set_turn_timer(self, pid, enabled):
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type":"error", "msg": T("erro.somente_o_anfitriao_pode_alterar_o_limit")}); return
         self.turn_timer_enabled = bool(enabled)
         self._cancelar_timer_turno(); self._cancelar_timer_ultimo_esforco()
@@ -11486,7 +11492,7 @@ class GameRoom:
     async def handle_set_visao_compartilhada(self, pid, enabled):
         """Anfitrião permite (ou não) que os jogadores somem a visão dos outros
         heróis. Só a permissão é da sala; ligar é escolha local de cada um."""
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_a_visao")}); return
         self.visao_compartilhada_permitida = bool(enabled)
         self._checkpoint_savegame()
@@ -11495,7 +11501,7 @@ class GameRoom:
 
     async def handle_set_atravessar_aliados(self, pid, enabled):
         """Anfitrião liga/desliga a passagem pela casa de aliados (regra da sala)."""
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_atravessar")}); return
         self.atravessar_aliados = enabled is True
         self._checkpoint_savegame()
@@ -14219,7 +14225,7 @@ class GameRoom:
         """Move o grupo entre locais do mapa-múndi, cobrando sobrevivência de todos."""
         if self.phase != "city":
             return
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_escolher_o_desti")})
             return
         destination = str(destination or "")
@@ -14248,7 +14254,7 @@ class GameRoom:
         await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_do_mapa_so_podem_ser_ajustados")})
         return
         """Salva as posições globais dos marcadores, exclusivamente pelo anfitrião."""
-        if self.phase != "city" or pid != self.host_pid:
+        if self.phase != "city" or not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_ajustar_os_ponto")})
             return
         if not isinstance(points, dict):
@@ -14625,7 +14631,7 @@ class GameRoom:
 
     async def handle_world_adventure(self, pid, adventure_id):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
-        if self.phase != "city" or pid != self.host_pid:
+        if self.phase != "city" or not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
         adventure = WORLD_ADVENTURES.get(str(adventure_id or ""))
@@ -14708,7 +14714,7 @@ class GameRoom:
         await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_da_cidade_so_podem_ser_ajustad")})
         return
         """Atualiza os marcadores da ilustração da cidade atual."""
-        if self.phase != "city" or pid != self.host_pid:
+        if self.phase != "city" or not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_ajustar_este_pon")})
             return
         if city_id != self.world_location or city_id not in CITY_MAP_POINTS or not isinstance(points, dict):
@@ -14776,7 +14782,7 @@ class GameRoom:
         if self.world_location != "alva_e_luz" and not from_world_adventure:
             await self.send_to(pid, {"type": "error", "msg": T("erro.nesta_primeira_etapa_a_aventura_parte_de")})
             return
-        if pid != self.host_pid:
+        if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_entrar_na_masmor")})
             return
         # Na emenda entre etapas encadeadas a sala já está em "playing" — é o único
@@ -45583,18 +45589,38 @@ _MENSAGENS_SEM_ALERTA_DE_DANO = frozenset(
     {"end_turn", "comandar_animados", "mover_animado", "atacar_animado"})
 
 
+# Mensagens que falam pela CONEXÃO, não por um herói: nunca são traduzidas
+# para um herói extra do Solo com grupo (ver GameRoom.heroi_da_acao).
+MENSAGENS_DA_CONEXAO = frozenset({
+    "set_lang", "login", "logout", "create_account", "create_savegame",
+    "load_savegame", "list_savegames", "create_room", "join_room", "rejoin",
+    "join_test_dungeon", "select_class", "select_party", "campaign_vote",
+    "claim_role", "start_game", "select_dungeon", "select_campaign",
+    "salvar_e_sair", "set_turn_timer", "set_visao_compartilhada",
+    "set_atravessar_aliados", "start_scene",
+})
+_PREFIXOS_DA_CONEXAO = ("mestre_", "teste_", "upload_", "save_", "load_")
+
+
 async def handler(ws):
     global SCENE_LIBRARY
     pid = new_id()
     room = None
     account = {"name": None}   # conta autenticada nesta conexão (via login)
 
+    # Solo com grupo: enquanto uma mensagem é despachada em nome de um herói
+    # extra, `pid` aponta para ele e `_traduzido` guarda o pid da conexão.
+    _traduzido = None
+
     async def err(msg):
+        dono = _traduzido if _traduzido is not None else pid
         await ws.send(json.dumps({"type": "error", "msg": msg},
-                                 default=lambda o: _t_render(o, _lang_de(pid))))
+                                 default=lambda o: _t_render(o, _lang_de(dono))))
 
     try:
         async for raw in ws:
+            if _traduzido is not None:
+                pid, _traduzido = _traduzido, None
             try:
                 msg = json.loads(raw)
             except Exception:
@@ -45606,6 +45632,15 @@ async def handler(ws):
                 continue
 
             t = msg.get("type")
+
+            if (room and t not in MENSAGENS_DA_CONEXAO
+                    and not str(t).startswith(_PREFIXOS_DA_CONEXAO)):
+                ator = room.heroi_da_acao(pid, msg)
+                if ator is None:
+                    await err(T("erro.esse_heroi_nao_e_seu"))
+                    continue
+                if ator != pid:
+                    _traduzido, pid = pid, ator
 
             # Habilidades dos heróis que devem produzir o feedback visual no
             # peão. O snapshot evita animar tentativas recusadas pelo handler.
@@ -46528,7 +46563,7 @@ async def handler(ws):
                 # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
                 # internamente iniciar_cena e não dependem deste protocolo.
                 elif t == "start_scene":
-                    if room and pid == room.host_pid:
+                    if room and room._eh_anfitriao(pid):
                         ok, why = await room.iniciar_cena(msg.get("scene_id"), "manual")
                         if not ok: await room.send_to(pid, {"type":"error", "msg":why})
 
@@ -46593,6 +46628,8 @@ async def handler(ws):
     except ConnectionResetError:
         pass
     finally:
+        if _traduzido is not None:
+            pid = _traduzido
         LANG_BY_PID.pop(pid, None)
         if account["name"] and ACCOUNTS_ONLINE.get(account["name"]) == pid:
             del ACCOUNTS_ONLINE[account["name"]]
