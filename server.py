@@ -10189,6 +10189,8 @@ class GameRoom:
 
     async def send_to(self, pid, msg):
         ws = self.connections.get(pid)
+        if ws and isinstance(msg, dict) and "heroi" not in msg and self._herois_extras_de(pid):
+            msg = {**msg, "heroi": pid}   # com grupo, toda mensagem privada nomeia o herói (o principal também)
         if not ws:
             # Solo com grupo: herói extra não tem conexão própria; a mensagem
             # vai para quem o controla, no idioma dessa conexão.
@@ -10862,7 +10864,10 @@ class GameRoom:
             lista.insert(0, principal["class_id"])
         else:
             principal["class_id"] = lista[0]
-            principal["magias_conhecidas"] = []
+            # promovido de um extra da mesma classe: leva as magias dele
+            herdadas = next((list(q.get("magias_conhecidas") or [])
+                             for q in self._herois_extras_de(pid) if q.get("class_id") == lista[0]), [])
+            principal["magias_conhecidas"] = herdadas
         principal["ready"] = True
         extras = {q.get("class_id"): q["id"] for q in self._herois_extras_de(pid)}
         for cls, q in extras.items():

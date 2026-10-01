@@ -89,6 +89,16 @@ check("souAnfitriao pela conexão com extra em foco", GS.souAnfitriao("c") === t
 check("souAnfitriao(null) falso", GS.souAnfitriao(null) === false);
 GS.focarHeroi("c");
 
+console.log("\n[4c] Prompt do PRINCIPAL (heroi = connPid) também foca; foco limpa o armado");
+GS.focarHeroi("m");
+chega({ type: "sorte_reacao", heroi: GS.connPid });
+check("prompt com heroi = principal → foco no principal", GS.myPid === "c");
+GS.toggleWarriorSkill("mira_certeira");
+check("habilidade armada no herói A", GS.getWarriorSelected().length === 1);
+GS.focarHeroi("m");
+check("trocar o foco limpa o que estava armado", GS.getWarriorSelected().length === 0);
+GS.focarHeroi("c");
+
 console.log("\n[5] Sem grupo, nada muda");
 GS.connect("ws://x", "Leo", "create");
 chega({ type: "lobby_state", code: "EFGH", host: "z", players: [{ id: "z", name: "Leo" }] });

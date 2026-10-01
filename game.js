@@ -981,6 +981,20 @@ function handleLobby(msg){
   if(csf && csf.partyMode){
     const hint = document.getElementById('cs-hint');
     if(hint) hint.textContent = t('ui.selecao.grupo_dica');
+    // magias escolhidas antes da casca existir
+    const pend = window._magiasPendentesGrupo;
+    if(pend){
+      const pid = GS.cascaDaClasse(pend.cls);
+      if(pid !== undefined){ window._magiasPendentesGrupo = null; GS.setKnownSpells(pend.ids, pid); }
+    } else if(!document.getElementById('overlay-selecao-criacao')){
+      // herói conjurador sem as 2 magias (ex.: principal promovido): abre a escolha uma vez por lobby_state
+      const sem = msg.players.find(p => GS.ehMeuHeroi(p.id) && (p.class_id === 'mage' || p.class_id === 'cleric')
+        && (p.magias_conhecidas || []).length < 2);
+      if(sem){
+        window._magiasCriacaoClasseGrupo = sem.class_id;
+        mostrarOverlaySelecaoMagiasCriacao(sem.class_id);
+      }
+    }
   }
   _csHeroGridSync();
 }
@@ -5267,7 +5281,7 @@ function updateTurnBadge(msg){
   const cur = msg.players.find(p=>p.id===msg.current_turn);
   // Deixa explícito de quem o grupo está esperando — antes só o nome aparecia
   // e novatos não sabiam se era a vez deles.
-  if(cur && cur.id === GS.myPid){
+  if(cur && GS.ehMeuHeroi(cur.id)){
     $('turn-badge').textContent = t('ui.hud.badge_sua_vez', {emoji: cur.emoji, nome: cur.name});
   } else {
     $('turn-badge').textContent = cur ? t('ui.hud.aguardando_heroi', {emoji: cur.emoji, nome: cur.name}) : '—';
@@ -15704,7 +15718,7 @@ function renderPlayers(state){
       </div>
       ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${t('ui.hud.na_cidade_volta_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
       ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
-      ${meu && isCur ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
+      ${meu && (isCur || p.id === state.animados_turn || p.id === state.last_stand_pid) ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
       <div class="bars">
         <div class="bar-row">
           <span class="bar-label">HP</span>
@@ -31328,9 +31342,11 @@ function _refreshClassSelectLang(){
   if(grid) grid.remove();               // remontada por _buildCsHeroGrid
   if(!csf || !tela || !tela.classList.contains('active')) return;
   const sel = csf.selectedId, taken = csf.takenIds, travado = csf.classLocked;
+  const modoGrupo = csf.partyMode, idsGrupo = csf.partyIds;
   destroyClassSelectFull();
   initClassSelectFull();
   if(csf){ csf.selectedId = sel; csf.takenIds = taken; csf.classLocked = travado;
+           csf.partyMode = modoGrupo; csf.partyIds = idsGrupo;
            _csfApplyTaken();
            // destroyClassSelectFull limpa o retrato; se havia herói selecionado,
            // repomos o painel para a troca de idioma não parecer um "reset".
@@ -49654,7 +49670,7 @@ function _csAlternarNoGrupo(cls){
   const tinha = atual.includes(cls);
   const lista = tinha ? atual.filter(c => c !== cls) : atual.concat(cls);
   if(!lista.length){ toast(t('ui.selecao.grupo_minimo'), 'var(--orange)'); return; }
-  if(lista.length > 6) return;
+  if(lista.length > 6){ toast(t('ui.selecao.grupo_maximo'), 'var(--orange)'); return; }
   GS.selectParty(lista);
   if(!tinha && (cls === 'mage' || cls === 'cleric')){
     window._magiasCriacaoClasseGrupo = cls;
@@ -52151,6 +52167,10 @@ GS.on('gameState', msg => {
 // render do game_state já acontece; só a câmera vai até ele. Manual: redesenha
 // a tela com o herói novo (HUD, alcance, visão) e centraliza a câmera.
 GS.on('focoHeroi', ev => {
+  // O que estava aberto/armado era do herói anterior.
+  try { if(window.InventoryModal && InventoryModal.isOpen()) InventoryModal.close(); } catch(e){}
+  if(typeof fecharQuadrosFlutuantes === 'function') fecharQuadrosFlutuantes();
+  if(typeof _aimEnd === 'function') _aimEnd({ silent: true, reason: 'focus_changed' });
   const st = GS.gameState;
   if(st){
     if(!ev.auto) handleGameState(st);
@@ -53821,7 +53841,12 @@ window._confirmarMagiasCriacao = function(){
   // Solo com grupo: as magias são do herói daquela classe, não do principal.
   const clsGrupo = window._magiasCriacaoClasseGrupo;
   window._magiasCriacaoClasseGrupo = null;
-  GS.setKnownSpells(sel, clsGrupo ? GS.cascaDaClasse(clsGrupo) : undefined);
+  if(clsGrupo && GS.cascaDaClasse(clsGrupo) === undefined){
+    // a casca do herói ainda não chegou no lobby_state: envia quando aparecer
+    window._magiasPendentesGrupo = { cls: clsGrupo, ids: sel.slice() };
+  } else {
+    GS.setKnownSpells(sel, clsGrupo ? GS.cascaDaClasse(clsGrupo) : undefined);
+  }
   const el = document.getElementById('overlay-selecao-criacao');
   if (el) el.remove();
   toast(t('ui.magia.magias_escolhidas'), 'var(--gold)');

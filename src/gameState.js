@@ -1598,10 +1598,19 @@ const GS = (() => {
   }
   // A vez de um herói meu puxa o foco para ele UMA vez por turno: depois disso
   // o jogador pode olhar outro herói sem ter o foco roubado a cada game_state.
+  // Trocar o foco descarta o que estava armado para o herói anterior.
+  function _limparPendentesDeFoco() {
+    pendingMove = null; pendingSkill = null; pendingAction = null;
+    pendingThrow = null; pendingInstrumento = null;
+    clearWarriorSelected();
+  }
   function _focarVez(msg) {
     const vez = [msg.current_turn, msg.last_stand_pid, msg.animados_turn]
       .find(id => id && meusHerois.includes(id)) || null;
-    if (vez && vez !== _focoTurno) { myPid = vez; _emit('focoHeroi', { pid: vez, auto: true }); }
+    if (vez && vez !== _focoTurno) {
+      if (vez !== myPid) _limparPendentesDeFoco();
+      myPid = vez; _emit('focoHeroi', { pid: vez, auto: true });
+    }
     _focoTurno = vez;
   }
   function _calcIsMyTurn(msg) {
@@ -1610,6 +1619,7 @@ const GS = (() => {
   }
   function focarHeroi(pid) {
     if (!meusHerois.includes(pid) || pid === myPid) return false;
+    _limparPendentesDeFoco();
     myPid = pid;
     if (gameState) isMyTurn = _calcIsMyTurn(gameState);
     _emit('focoHeroi', { pid, auto: false });

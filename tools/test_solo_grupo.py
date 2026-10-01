@@ -142,7 +142,11 @@ async def secao_helpers():
     check("send_to(extra) marca o herói (`heroi`) no pedido",
           ws_ana.sent[-1].get("heroi") == "x1", ws_ana.sent[-1])
     await r.send_to("c1", {"type": "spell_pick_prompt"})
-    check("send_to(principal) não acrescenta `heroi`", "heroi" not in ws_ana.sent[-1], ws_ana.sent[-1])
+    check("send_to(principal) COM grupo também marca `heroi`", ws_ana.sent[-1].get("heroi") == "c1", ws_ana.sent[-1])
+    ws_bia = WSFalso()
+    r.connections["c2"] = ws_bia
+    await r.send_to("c2", {"type": "spell_pick_prompt"})
+    check("send_to(jogador sem grupo) não acrescenta `heroi`", "heroi" not in ws_bia.sent[-1], ws_bia.sent[-1])
     S.LANG_BY_PID.pop("c1", None)
 
     # Prompt de fogo: a conexão do controlador vale para o extra.
@@ -203,6 +207,13 @@ async def secao_lobby():
         lambda: foto("tres")(c),
         {"type": "select_party", "classes": ["warrior", "rogue"]}, pausa(),
         lambda: foto("dois")(c),
+        {"type": "select_party", "classes": ["warrior", "mage"]}, pausa(),
+        lambda: obs.__setitem__("promo", dict(magias=duas_magias("mage"))),
+        lambda: next(p for p in sala_do_jogo(c["sid"]).players.values()
+                     if p.get("class_id") == "mage").__setitem__("magias_conhecidas", obs["promo"]["magias"]),
+        {"type": "select_party", "classes": ["mage"]}, pausa(),
+        lambda: obs["promo"].__setitem__("principal", dict(next(
+            p for p in sala_do_jogo(c["sid"]).players.values() if not p.get("controlador")))),
         {"type": "select_party", "classes": []}, pausa(),
         {"type": "select_party", "classes": ["dragao"]}, pausa(),
     ])
@@ -222,6 +233,10 @@ async def secao_lobby():
           sorted(p.get("class_id") for p in dois.values()) == ["rogue", "warrior"])
     rogue_antes = next(q for q, p in tres.items() if p.get("class_id") == "rogue")
     check("o ladino continua com o mesmo pid", rogue_antes in dois)
+    check("I2: principal promovido de um extra leva as magias dele",
+          obs["promo"]["principal"].get("class_id") == "mage"
+          and obs["promo"]["principal"].get("magias_conhecidas") == obs["promo"]["magias"],
+          obs["promo"])
     check("lista vazia é recusada", txt("erro.grupo_de_1_a_6_herois") in ws.erros(), ws.erros())
     check("classe inexistente sozinha também", ws.erros().count(txt("erro.grupo_de_1_a_6_herois")) == 2)
     check("a conexão do lobby caiu: os extras saíram junto",

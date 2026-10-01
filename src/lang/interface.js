@@ -10337,6 +10337,10 @@ window.LANG_INTERFACE = {
     "en": "The party needs at least 1 hero.",
     "pt": "O grupo precisa de pelo menos 1 herói."
   },
+  "ui.selecao.grupo_maximo": {
+    "en": "A party has at most 6 heroes.",
+    "pt": "O grupo tem no máximo 6 heróis."
+  },
   "ui.selecao.grupo_dica": {
     "en": "Solo: pick from 1 to 6 heroes — you control them all.",
     "pt": "Solo: marque de 1 a 6 heróis — você controla todos."

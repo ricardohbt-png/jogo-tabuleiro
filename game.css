@@ -910,7 +910,7 @@ input:focus { outline: none; border-color: var(--gold); }
 .cs-hero-tile:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; z-index:2; }
 .cs-hero-tile.taken{ cursor:not-allowed; }
 .cs-hero-tile.taken::before{ filter:brightness(.26) saturate(.3); }
-#cs-hero-grid.has-selection .cs-hero-tile:not(.selected)::before{
+#cs-hero-grid.has-selection .cs-hero-tile:not(.selected):not(.no-grupo)::before{
   filter:brightness(.24) saturate(.35);
 }
 #cs-hero-grid.has-selection .cs-hero-tile.selected{ z-index:1; }
