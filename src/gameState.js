@@ -28,6 +28,12 @@ const GS = (() => {
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
   let myPid           = null;
+  // Solo com grupo: `connPid` é a CONEXÃO; `myPid` passa a ser o herói EM FOCO
+  // (todo leitor de myPid quer dizer "o herói que estou vendo"). `meusHerois`
+  // são os pids que esta conexão controla. Com 1 herói, myPid === connPid.
+  let connPid         = null;
+  let meusHerois      = [];
+  let _focoTurno      = null;   // último herói meu que recebeu a vez
   let myName          = '';
   let account   = null;   // apelido logado (ou null)
   let savegames = [];     // último savegames_list recebido
@@ -1338,6 +1344,10 @@ const GS = (() => {
   function send(obj) {
     if (PREVIEW) return false;   // prévia é só leitura: nenhuma ação sai daqui
     if (!ws || ws.readyState !== 1) return false;
+    // Solo com grupo: a ação é do herói em foco. O servidor ignora `heroi` nas
+    // mensagens da conexão (lobby, conta, Mestre…).
+    if (meusHerois.length > 1 && myPid && obj && obj.heroi === undefined)
+      obj = Object.assign({}, obj, { heroi: myPid });
     ws.send(JSON.stringify(obj));
     return true;
   }
@@ -1450,7 +1460,7 @@ const GS = (() => {
       // city/dungeon (só master_pid identifica), então myPid nunca seria
       // reencontrado por nome após um F5/reconexão sem persistir o pid aqui.
       localStorage.setItem('lfh_session',
-        JSON.stringify({ url: _sessUrl, code: _sessCode, name: myName, pid: myPid }));
+        JSON.stringify({ url: _sessUrl, code: _sessCode, name: myName, pid: connPid || myPid }));
     } catch (e) {}
   }
   function savedSession() {
@@ -1474,6 +1484,7 @@ const GS = (() => {
     const socket = ws;
     ws = null;
     myPid = null;
+    connPid = null; meusHerois = []; _focoTurno = null;
     gameState = null;
     lobbyState = null;
     cityState = null;
@@ -1537,7 +1548,7 @@ const GS = (() => {
     // Restaura o pid salvo — essencial para o Mestre: como ele não está em
     // players[] durante city/dungeon, o lookup por nome em lobby_state/
     // city_state/game_state (`if (!myPid) ...`) nunca o encontraria sozinho.
-    if (s.pid) myPid = s.pid;
+    if (s.pid) { myPid = s.pid; connPid = s.pid; }
     ws = new WebSocket(s.url);
     ws.onopen = () => {
       send({ type: 'set_lang', lang: myLang });   // antes do rejoin: erros já chegam traduzidos
@@ -1554,6 +1565,7 @@ const GS = (() => {
     if (ws && ws.readyState < 2) { try { ws.close(); } catch (e) {} }
     myName          = name;
     myPid           = null;
+    connPid = null; meusHerois = []; _focoTurno = null;
     gameState       = null;
     lobbyState      = null;
     cityState       = null;
@@ -1577,6 +1589,42 @@ const GS = (() => {
   }
 
   // ── Message handler (updates state, then fires renderer callback) ──────────
+  // ── Solo com grupo: herói em foco ──────────────────────────────────────────
+  function _aprenderConexao(players) {
+    if (!connPid && myPid) connPid = myPid;
+    meusHerois = connPid ? (players || [])
+      .filter(p => p && (p.id === connPid || p.controlador === connPid)).map(p => p.id) : [];
+    if (myPid && connPid && meusHerois.length && !meusHerois.includes(myPid)) myPid = connPid;
+  }
+  // A vez de um herói meu puxa o foco para ele UMA vez por turno: depois disso
+  // o jogador pode olhar outro herói sem ter o foco roubado a cada game_state.
+  function _focarVez(msg) {
+    const vez = [msg.current_turn, msg.last_stand_pid, msg.animados_turn]
+      .find(id => id && meusHerois.includes(id)) || null;
+    if (vez && vez !== _focoTurno) { myPid = vez; _emit('focoHeroi', { pid: vez, auto: true }); }
+    _focoTurno = vez;
+  }
+  function _calcIsMyTurn(msg) {
+    return msg.test_mode ? msg.master_pid === myPid
+      : msg.current_turn === myPid || msg.last_stand_pid === myPid || msg.animados_turn === myPid;
+  }
+  function focarHeroi(pid) {
+    if (!meusHerois.includes(pid) || pid === myPid) return false;
+    myPid = pid;
+    if (gameState) isMyTurn = _calcIsMyTurn(gameState);
+    _emit('focoHeroi', { pid, auto: false });
+    return true;
+  }
+  function ehMeuHeroi(pid) {
+    return meusHerois.length ? meusHerois.includes(pid) : pid === myPid;
+  }
+  function cascaDaClasse(cls) {
+    const p = ((lobbyState && lobbyState.players) || [])
+      .find(q => q && q.class_id === cls && meusHerois.includes(q.id));
+    return p ? p.id : undefined;
+  }
+  function selectParty(classes) { send({ type: 'select_party', classes }); }
+
   function _handle(msg) {
     switch (msg.type) {
 
@@ -1586,6 +1634,7 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
+        _aprenderConexao(msg.players);
         // Sala confirmada → grava a sessão para reconexão (queda ou F5)
         if (msg.code) { _sessCode = msg.code; _saveSession(); }
         _emit('lobbyState', msg);
@@ -1618,6 +1667,7 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
+        _aprenderConexao(msg.players);
         // Quem entra num jogo salvo já em andamento cai direto na cidade, sem
         // lobby_state: a sessão de reconexão (F5/queda) é gravada daqui.
         if (msg.code && msg.code !== _sessCode) { _sessCode = msg.code; _saveSession(); }
@@ -1666,9 +1716,9 @@ const GS = (() => {
           const me = msg.players.find(p => p.name === myName);
           if (me) myPid = me.id;
         }
-        isMyTurn = msg.test_mode ? msg.master_pid === myPid
-          : msg.current_turn === myPid || msg.last_stand_pid === myPid
-            || msg.animados_turn === myPid;
+        _aprenderConexao(msg.players);
+        if (!msg.test_mode) _focarVez(msg);
+        isMyTurn = _calcIsMyTurn(msg);
         // A prévia só permanece válida enquanto o herói continua na mesma
         // casa, com o mesmo orçamento de movimento e ainda no turno. Isso
         // evita confirmar uma rota velha depois de uma atualização autoritativa.
@@ -2157,7 +2207,9 @@ const GS = (() => {
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
   function equipOffhand(i)                { send({ type: 'equip_offhand',   slot_index: i }); }
   // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
-  function setKnownSpells(ids)       { send({ type: 'set_known_spells', ids }); }
+  function setKnownSpells(ids, heroi) {
+    send(heroi ? { type: 'set_known_spells', ids, heroi } : { type: 'set_known_spells', ids });
+  }
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
   function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
   // Senhor das Águas: ação livre única para criar os redemoinhos da zona ativa.
@@ -3378,6 +3430,7 @@ const GS = (() => {
   // personagem à conta via account_by_pid). Só faz sentido após o login.
   function joinByCode(code) {
     if (!account) return false;
+    connPid = null; meusHerois = []; _focoTurno = null;
     myPid = null;   // sala nova → myPid é resolvido pelo próximo lobby_state
     send({ type: 'join_room', name: account, code: (code || '').toUpperCase() });
     return true;
@@ -3407,6 +3460,9 @@ const GS = (() => {
     // ── State getters (renderer reads these) ──
     get ws()              { return ws; },
     get myPid()           { return myPid; },
+    get connPid()         { return connPid; },
+    get meusHerois()      { return meusHerois.slice(); },
+    get temGrupo()        { return meusHerois.length > 1; },
     get myName()          { return myName; },
     get gameState()       { return gameState; },
     get decorations()     { return (gameState && gameState.decorations) || []; },
@@ -3564,6 +3620,10 @@ const GS = (() => {
     isDagger,
     isOffhandWeapon,
     setKnownSpells,
+    focarHeroi,
+    ehMeuHeroi,
+    cascaDaClasse,
+    selectParty,
     escolherMagiaNivel,
     senhorDasAguasCriar,
     iraRochaArdenteConfirmarChamas,
