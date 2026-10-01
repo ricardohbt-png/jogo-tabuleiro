@@ -15530,10 +15530,23 @@ class GameRoom:
     def _pids_fora(self):
         return {pid for pid, p in self.players.items() if p.get("fora_masmorra")}
 
+    def _conexao_toda_fora(self, conexao):
+        """Todos os heróis desta conexão estão na cidade (saíram pela escada).
+        Sem grupo é o mesmo que o `fora_masmorra` do próprio herói."""
+        herois = [self.players[q] for q in self._herois_da_conexao(conexao) if q in self.players]
+        return bool(herois) and all(h.get("fora_masmorra") for h in herois)
+
+    def _conexoes_fora(self):
+        """Conexões que estão na cidade com a sala em jogo: recebem city_state,
+        nunca game_state. No Solo com grupo, basta um herói dentro para a
+        conexão continuar na masmorra."""
+        return {c for c in self.connections if self._conexao_toda_fora(c)}
+
     def _em_cidade(self, pid):
         """Pode usar lojas/guilda/taverna: a sala inteira está na cidade OU este
         jogador saiu sozinho pela escada."""
-        return self.phase == "city" or self._fora_da_masmorra(pid)
+        return self.phase == "city" or (self._fora_da_masmorra(pid)
+                                        and self._conexao_toda_fora(self._conexao_de(pid)))
 
     # â”€â”€ TIMER DE TURNO (30s) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     def _cancelar_timer_turno(self):
@@ -22577,7 +22590,8 @@ class GameRoom:
             return
         if era_turno:
             await self._forcar_fim_turno(pid)   # avança o turno (já reinicia o timer)
-        await self.send_city_state_to(pid)
+        if self._conexao_toda_fora(self._conexao_de(pid)):
+            await self.send_city_state_to(pid)
         await self.push_state()
 
     async def _tick_retorno_masmorra(self):
@@ -22604,6 +22618,9 @@ class GameRoom:
         p = self.players.get(pid)
         if not p or not p.get("fora_masmorra"):
             return
+        # Solo com grupo: se outro herói da conexão está lá dentro, o cliente
+        # nunca saiu da masmorra — mandar enter_dungeon o faria recarregar.
+        avisar_cliente = self._conexao_toda_fora(self._conexao_de(pid))
         p.pop("fora_masmorra", None)
         if self.phase != "playing":
             return   # a sala já voltou à cidade — não há masmorra para reentrar
@@ -22617,7 +22634,8 @@ class GameRoom:
         p["moves_left"]        = self._water_turn_moves(p, p["spd"])
         p["action_done"]       = False
         p["bonus_action_used"] = False
-        await self.send_to(pid, {"type": "enter_dungeon"})
+        if avisar_cliente:
+            await self.send_to(pid, {"type": "enter_dungeon"})
         await self.gm_say(T("narracao.desce_as_escadas_e_retorna_a_masmorra", heroi=p['name']))
         await self.push_state()
 
@@ -23776,7 +23794,7 @@ class GameRoom:
         if self.phase == "city":
             await self.broadcast_city_state()
             return
-        for pid in self._pids_fora():
+        for pid in self._conexoes_fora():
             await self.send_city_state_to(pid)
         await self.push_state()
 
@@ -45478,7 +45496,7 @@ class GameRoom:
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
-        await self.broadcast(msg_state, skip=self._pids_fora())
+        await self.broadcast(msg_state, skip=self._conexoes_fora())
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.

@@ -295,6 +295,98 @@ async def secao_inicio():
     return sid
 
 
+def na_masmorra(c):
+    """Passos: entra na masmorra e libera a transição de 3 s."""
+    async def liberar():
+        r = sala_do_jogo(c["sid"])
+        await esperar(lambda: r.phase == "playing")
+        await r._liberar_intro_masmorra(True)
+    return [{"type": "enter_dungeon"}, liberar, pausa()]
+
+
+async def secao_masmorra():
+    print("\n[3] masmorra: a vez passa entre os heróis")
+    obs = {"vezes": [], "ultimo": None}
+
+    def meus(r):
+        return {p["id"] for p in r.players.values()}
+
+    def roteiro(c):
+        # Cada passo é uma função que ESPERA e DEVOLVE a próxima mensagem: o
+        # FakeWS só entrega uma mensagem quando o passo anterior termina, então
+        # não dá para mandar mensagens de dentro de um passo que ainda espera.
+        async def fora_da_vez():
+            r = sala_do_jogo(c["sid"])
+            await esperar(lambda: r.current_pid() in meus(r), timeout=6)
+            vez = r.current_pid()
+            outro = next(q for q in meus(r) if q != vez)
+            obs["vez"], obs["outro"] = vez, outro
+            obs["pos_vez"] = list(r.players[vez]["pos"])
+            obs["pos_outro"] = list(r.players[outro]["pos"])
+            obs["arma_outro"] = (r.players[outro].get("gear") or {}).get("weapon")
+            obs["chao_antes"] = len(r.ground_items)
+            return {"type": "move", "dx": 1, "dy": 0, "heroi": outro}
+        def conferir():
+            r = sala_do_jogo(c["sid"])
+            obs["pos_vez_depois"] = list(r.players[obs["vez"]]["pos"])
+            obs["pos_outro_depois"] = list(r.players[obs["outro"]]["pos"])
+        def largar():
+            return {"type": "drop_item", "source": "gear", "slot_key": "weapon",
+                    "heroi": obs["outro"]}
+        def conferir_largar():
+            r = sala_do_jogo(c["sid"])
+            obs["chao_depois"] = len(r.ground_items)
+            obs["arma_outro_depois"] = (r.players[obs["outro"]].get("gear") or {}).get("weapon")
+        async def proxima_vez():
+            # Espera a vez de um herói meu diferente do último, anota e o faz
+            # encerrar o turno SEM `heroi` (regra 2 do heroi_da_acao).
+            if len(obs["vezes"]) == 3:
+                return None
+            r = sala_do_jogo(c["sid"])
+            ok = await esperar(lambda: r.current_pid() in meus(r)
+                               and r.current_pid() != obs["ultimo"], timeout=6)
+            if not ok:
+                return None
+            vez = r.current_pid()
+            if vez not in obs["vezes"]:
+                obs["vezes"].append(vez)
+            obs["ultimo"] = vez
+            return {"type": "end_turn"}
+        def escada():
+            r = sala_do_jogo(c["sid"])
+            conexao = next(p["id"] for p in r.players.values() if not p.get("controlador"))
+            extra = next(p for p in r.players.values() if p.get("controlador"))
+            extra["fora_masmorra"] = {"rodadas_restantes": 2}
+            obs["em_cidade_extra"] = r._em_cidade(extra["id"])
+            obs["conexao_fora_um"] = conexao in r._conexoes_fora()
+            for p in r.players.values():
+                p["fora_masmorra"] = {"rodadas_restantes": 2}
+            obs["em_cidade_todos"] = r._em_cidade(extra["id"])
+            obs["conexao_fora_todos"] = conexao in r._conexoes_fora()
+            for p in r.players.values():
+                p.pop("fora_masmorra", None)
+        return (na_masmorra(c)
+                + [fora_da_vez, pausa(), conferir, largar, pausa(), conferir_largar]
+                + [proxima_vez, pausa()] * 8
+                + [escada])
+
+    await criar_solo("solo5", "Masmorra", montar_e_iniciar(["warrior", "mage", "rogue"], roteiro))
+    check("herói fora da vez não anda", obs["pos_outro_depois"] == obs["pos_outro"])
+    check("e o da vez também não (a mensagem era do outro)", obs["pos_vez_depois"] == obs["pos_vez"])
+    if obs.get("arma_outro"):
+        check("ação livre fora da vez vale (largar a arma)",
+              obs["chao_depois"] == obs["chao_antes"] + 1 and not obs["arma_outro_depois"])
+    check("a vez passou pelos 3 heróis (end_turn sem `heroi` encerra quem está na vez)",
+          len(obs["vezes"]) == 3, obs["vezes"])
+
+    print("\n[4] escada: herói fora só espera enquanto o grupo está dentro")
+    check("1 extra fora, grupo dentro: sem lojas", obs["em_cidade_extra"] is False)
+    check("…e a conexão segue recebendo game_state", obs["conexao_fora_um"] is False)
+    check("todos fora: lojas liberadas", obs["em_cidade_todos"] is True)
+    check("…e a conexão passa a receber city_state", obs["conexao_fora_todos"] is True)
+    limpar_salas()
+
+
 async def main():
     tmp = tempfile.mkdtemp()
     velha = S.LOJA
@@ -306,6 +398,7 @@ async def main():
         await secao_helpers()
         await secao_lobby()
         sid_trio = await secao_inicio()
+        await secao_masmorra()
     finally:
         limpar_salas()
         S.LOJA = velha
