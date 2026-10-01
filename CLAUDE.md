@@ -3161,3 +3161,23 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > casas visíveis para a Ana com a Bia a 29 casas). Testes: `tools/test_visao_compartilhada.py` (14)
 > e `tools/test_visao_compartilhada_cliente.js` (15, roda o `computeVisionSet` real). Spec em
 > `docs/superpowers/specs/2026-09-30-visao-compartilhada-design.md`.
+
+> **Voar por cima depende do porte (2026-09-30):** a altura mínima para passar (e parar) por
+> cima de algo deixou de ser fixa em 2 quadrados e passou a seguir o **porte de quem está
+> embaixo** — `ALTURA_SOBREPOR_POR_PORTE`/`altura_para_sobrepor(porte)` (server.py, ao lado das
+> constantes de altura; 2 pontos = 1 quadrado): minúsculo/pequeno/médio **1 quadrado**, grande
+> **2**, enorme **3**; herói e porte ausente contam como médio. O campo `porte` é o MESMO que já
+> escalava a miniatura (Editor de Criaturas). A diferença é medida contra a altura de quem está
+> embaixo (se também voa), nos dois sentidos, em `_pode_compartilhar_casa_voando`. **Servos
+> animados** deixaram de bloquear sempre (`_animado_em(..., actor=)`). **Objetos:** sem campo
+> novo — objeto **baixo** conta como médio e **alto** como grande (`_voo_sobre_objeto`, lendo
+> `_decor_tall_tiles`); vale em `handle_move` e `_monster_can_occupy` mesmo sem "ignora
+> obstáculos em voo", que continua sendo a única forma de atravessar parede, porta e escombros.
+> **Descer** sobre algo que deixaria de ser sobrevoado é recusado em `handle_alterar_altura`
+> (`_pode_descer_ate`/`_sobreposicao_valida`, erro `erro.algo_embaixo_impede_descer`) — antes era
+> possível pousar dentro de outra criatura. Cliente (`src/gameState.js`) espelha a tabela
+> (`alturaParaSobrepor`, `_vooSobreObjeto`) nas casas azuis e no caminho; de quebra o
+> `bfsReachable` passou a mandar o ator a `_occupiedSet` — sem isso as casas azuis nunca
+> mostravam o caminho por cima de criaturas, embora o `findPath` aceitasse. Testes:
+> `tools/test_voo_por_cima.py` (43) e `tools/test_voo_por_cima_cliente.js` (44), com a mesma
+> tabela de casos; `test_voo_altura` atualizado para a regra nova.
