@@ -756,6 +756,62 @@ async def secao_cliente_e_saida():
     check("chaves novas com pt e en", not faltam, faltam)
 
 
+async def secao_mestre():
+    print("\n[10] Retomada com Mestre humano")
+    hp, mp = S.new_id(), S.new_id()
+    a, _ = await sala_na_masmorra(None, classes=("warrior",), pids=[hp])
+    a.master_pid, a.master_name = mp, "Mestre"
+    a.connections[mp] = object()
+    a.savegame = {"id": "sg_mestre", "owner": "mestre", "status": "active", "has_master": True,
+                  "master_account": "mestre", "members": {"ana": {"class_id": "warrior"}}}
+    a.dungeon_intro_active = False
+    mons = list(a.monsters.values())
+    check("amostra tem 2+ monstros", len(mons) >= 2, len(mons))
+    mons[0].update(control_mode="manual", alertado=True)
+    mons[1].update(control_mode="semi", alertado=True, master_target_id=hp)
+    a.master_reserve = {"goblin": 2}
+    a.round_num = 3
+    check("grava com Mestre na sala", a._gravar_foto_rodada())
+    corpo = S.foto_desempacotar(a.savegame["dungeon_snapshot"])
+    check("Mestre não entra nas fichas da foto", set(corpo["herois"]) == {"warrior"},
+          sorted(corpo["herois"]))
+    check("pid do Mestre não vira herói no mapa de pids", mp not in corpo["pids"])
+    _cancelar_tarefas(a)
+
+    b = S.GameRoom("RETOMA_MESTRE")
+    async def noop(*x, **k): pass
+    b.broadcast = noop; b.send_to = noop; b.push_state = noop
+    b.savegame = a.savegame; b.savegame_id = "sg_mestre"
+    b._foto_pendente = a.savegame["dungeon_snapshot"]
+    mp2, hp2 = S.new_id(), S.new_id()
+    b.players[mp2] = {"id": mp2, "name": "Mestre", "class_id": None, "is_master": True,
+                      "ready": True, "connected": True, "slot": 0}
+    b.players[hp2] = {"id": hp2, "name": "Ana", "class_id": "warrior", "magias_conhecidas": []}
+    b.connections[mp2] = object(); b.connections[hp2] = object()
+    b.host_pid = mp2; b.phase = "lobby"
+    await b.start_game(mp2)
+    _cancelar_tarefas(b)
+    check("retomou dentro da masmorra", b.phase == "playing" and b.round_num == 3,
+          (b.phase, b.round_num))
+    check("Mestre religado pelo pid novo", b.master_pid == mp2 and b._mestre_ativo(), b.master_pid)
+    check("Mestre fora de players", mp2 not in b.players and list(b.players) == [hp2],
+          list(b.players))
+    ordem = [e.get("id") if isinstance(e, dict) else e for e in b.initiative_order]
+    check("Mestre fora da iniciativa", mp2 not in ordem)
+    novos = {m.get("type"): m for m in b.monsters.values()}
+    modos = sorted(m.get("control_mode", "auto") for m in b.monsters.values())
+    check("modos dos monstros preservados", modos.count("manual") >= 1 and modos.count("semi") >= 1,
+          modos)
+    semi = next(m for m in b.monsters.values() if m.get("control_mode") == "semi")
+    check("alvo do Semi aponta para o herói da sessão nova", semi.get("master_target_id") == hp2,
+          semi.get("master_target_id"))
+    check("monstros acordados continuam acordados",
+          all(m.get("alertado") for m in b.monsters.values() if m.get("control_mode") in ("manual", "semi")),
+          [(m.get("type"), m.get("control_mode"), m.get("alertado")) for m in b.monsters.values() if m.get("control_mode")])
+    check("reserva de reforços preservada", b.master_reserve == {"goblin": 2}, b.master_reserve)
+    check("Mestre sem janela Manual pendurada da sessão velha", not b.master_manual_mid)
+
+
 async def main():
     secao_codec()
     await secao_cobertura()
@@ -765,6 +821,7 @@ async def main():
     await secao_grupo()
     await secao_cidade_com_masmorra()
     await secao_cliente_e_saida()
+    await secao_mestre()
     await secao_handler_real()
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL
