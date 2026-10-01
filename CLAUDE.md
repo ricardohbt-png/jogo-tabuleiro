@@ -106,6 +106,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `mover_prisioneiro` | `dx`, `dy` — controle manual do prisioneiro liberto (1 passo, só movimento). Habilitado na **janela pós-turno** do controlador (mesma do turno dos servos, `animados_phase_pid`): encerrar o turno abre a janela e dá `moves_left=6`; encerrar de novo avança. Se o resgatador morre, o controle passa ao herói vivo mais próximo. Dano vs CA10 dos monstros adjacentes continua na fase inimiga (`_processar_prisioneiro_turno`). O prisioneiro também **sofre armadilhas colocáveis** ao pisar nelas, como os heróis (saves a +0 em reflexos/fortitude); morte por qualquer fonte → `_prisioneiro_morre`/`rescue_failed`. |
 | `mover_animado_caminho` / `mover_prisioneiro_caminho` | `animado_id` (só o servo), `path:[[dx,dy],…]` — caminho inteiro do servo/prisioneiro numa mensagem (o clique do cliente usa estas); cada passo passa pelo handler de 1 casa com `_push=False` e sai um `game_state` no fim. É o que permite **atravessar aliados** sem parar em cima. |
 | `set_atravessar_aliados` | `enabled` — só o anfitrião; liga/desliga a regra da sala "🚶 Atravessar aliados" (ver abaixo). |
+| `salvar_e_sair` | — "💾 Salvar e sair" do ⚙️ (só com jogo salvo): grava o pendente (checkpoint; na masmorra vale a foto da última virada) e responde `salvo_para_sair {onde, rodada}`; o cliente fecha a sessão e volta a "Meus Jogos". Ver "Foto da masmorra". |
 | `encerrar_missao` | — (herói encerra a fase **após** o objetivo principal cumprido; só habilitado quando `game_state.mission_complete_pending`). Concluir o principal **não** encerra mais automaticamente: o servidor concede a recompensa, larga um baú e liga `mission_complete_pending`; o cliente mostra o botão "🏁 Encerrar missão" (com confirmação) que dispara esta mensagem. Recusa `pid` fora de `self.players`. |
 | `exit_dungeon` | — (saída **individual** pela escada de entrada: exige turno próprio, estar em cima de `stairs_pos` e `saida_permitida` da masmorra; cobra ida+volta de 🍖/💧 da aventura e marca `fora_masmorra`. A masmorra continua para os demais.) |
 | `voltar_masmorra` | — (o herói na cidade volta à masmorra assim que a espera zera; senão ele volta sozinho na rodada seguinte) |
@@ -401,9 +402,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `finally` não libera a conta). Sem anfitrião conectado, quem chega assume
 > (`_assumir_anfitriao_se_vago`), exceto quando o anfitrião é o Mestre. `try_open_savegame_room`
 > desliga e remove a sala velha sem ninguém do mesmo jogo. `city_state` traz `code` (quem cai
-> direto na cidade grava a sessão de reconexão por ele). **Só a cidade é salva:** com o grupo na
-> masmorra, `_checkpoint_savegame` não grava a ficha de quem está lá dentro (só de quem está
-> `fora_masmorra`), senão loot de masmorra inacabada ficava salvo e dava para repetir o saque.
+> direto na cidade grava a sessão de reconexão por ele). **A ficha só é salva na cidade:** com o
+> grupo na masmorra, `_checkpoint_savegame` não grava a ficha de quem está lá dentro (só de quem
+> está `fora_masmorra`), senão loot de masmorra inacabada ficava salvo e dava para repetir o
+> saque. A masmorra em si é salva pela **foto** (ver abaixo), que guarda sala e fichas juntas.
 > **Jogador NOVO com a partida em andamento:** `join_room` num jogo salvo em `city`/`playing`
 > passa por `entrar_com_jogo_em_andamento`; sem personagem, vai para a sala de espera
 > `GameRoom.aguardando` (FORA de `players`/`connections`: não recebe `game_state`/`city_state`,
@@ -418,6 +420,47 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > masmorra e botão de Mestre. Spec em
 > `docs/superpowers/specs/2026-10-01-salvar-aventura-design.md`. Teste:
 > `tools/test_continuar_jogo.py` (66, pelo `server.handler` real).
+
+> **Foto da masmorra — continuar DENTRO da masmorra (Etapa 2, 2026-10-01):** a cada virada de
+> rodada (`_advance_initiative` → `_gravar_foto_rodada`, via `_isolar_sync`) o jogo salvo ganha
+> `dungeon_snapshot`: os campos de sala + a ficha inteira de cada herói por `class_id` + o mapa
+> `pids` (pid desta sessão → classe). **Não grava** fora de jogo salvo, na sala de teste, fora
+> de `playing`, com janela pendente (`_FOTO_JANELAS` + `improviso_pendente`) nem sem nenhum
+> herói conectado (senão a masmorra seguiria girando e gravaria o grupo fora do tabuleiro).
+> **Formato:** `foto_empacotar` = JSON etiquetado (`$set`/`$tup`/`$map`, `_foto_codificar`;
+> tipo desconhecido levanta `FotoNaoSerializavel`) → gzip → base64; o resumo (`onde`,
+> `rodada`, `masmorra`, `masmorra_nome`, `versao`, `gravado_em`) fica FORA da compressão para
+> "Meus Jogos" ler sem abrir (`_resumo_foto` em `list_savegames`). ~16–42 KB por foto.
+> **Campo novo em `GameRoom` precisa entrar em `FOTO_SALA_CATEGORIAS`** (foto / foto_pid /
+> herois / jogo_salvo / derivado / conexao / janela / efemero / constante / teste) — o
+> `test_salvar_masmorra` [2] varre a classe e fica vermelho com atributo sem categoria. Dict
+> chaveado por pid vai em `foto_pid`; índice reconstruível é `derivado` (os `_rebuild_*`).
+> **Ids:** `new_id()` recomeça a cada boot e é compartilhado por jogadores/monstros/baús, então
+> `foto_renomear_ids` troca todo `id_N` (inclusive dentro de texto composto e em chaves) — pid
+> antigo de herói vira o pid da conexão nova; o resto, id novo. **Retomar:**
+> `try_open_savegame_room` pendura a foto em `_foto_pendente`; `start_game` despacha pelo
+> `onde`. `"masmorra"` → `_retomar_masmorra`: confere a grade da masmorra autorada
+> (`_foto_conferir_arquivo`; mudou/sumiu → `_descartar_foto` + `erro.foto_masmorra_descartada`),
+> aplica a sala (`_foto_aplicar_sala`), sobrepõe a ficha mantendo `id`/`name`/`slot`, monta a
+> iniciativa e entra pelo MESMO caminho da entrada normal (`enter_dungeon` + 3 s de transição,
+> `_finalizar_intro_masmorra(..., retomada=True)`), narrando só `narracao.a_aventura_continua`
+> (o `gm_log` não é salvo). **Grupo incompleto:** basta 1 herói da foto presente; o ausente
+> entra como quem caiu (`connected=False`, `[-1,-1]`, conta em `account_by_pid`, casa em
+> `_pos_retomada`) e `religar_heroi` o devolve à casa (`_casa_livre_retomada` se ocupada); quem
+> não estava na foto chega com `fora_masmorra` 0. Nenhum da foto presente → grupo na cidade,
+> foto guardada. **Quem cai na masmorra** guarda a casa em `_pos_ao_cair` (usada só pela
+> retomada; o rejoin na mesma sessão a descarta e segue pela escada). **Cidade com masmorra
+> aberta:** `_voltar_para_cidade` com `dungeon_generated` grava `onde="cidade_com_masmorra"`
+> (`_gravar_foto_cidade`, só a sala); no Continuar, `_restaurar_masmorra_aberta` a devolve à
+> memória e a próxima entrada a retoma. **A foto sai** (`_apagar_foto`) ao voltar à cidade com
+> a masmorra encerrada, no `end_game`, ao emendar etapa e ao partir para outro destino.
+> **Cliente:** cartão de "Meus Jogos" com "🗡️ Campo de Treinamento — rodada 4"
+> (`_ondeParouHTML`); "💾 Salvar e sair" no ⚙️ (só com `tem_jogo_salvo`) → `salvar_e_sair` →
+> `salvo_para_sair` → o cliente fecha a sessão e refaz o login com a senha da aba (código de
+> login `em_uso` para tentar de novo enquanto a conexão velha fecha); herói que caiu com
+> "⏳ aguardando {nome}…". Provado no navegador com o servidor REINICIADO entre salvar e
+> continuar: rodada, casa, PV, ouro, bolsa, 14 monstros, item no chão, baús e névoa idênticos.
+> Teste: `tools/test_salvar_masmorra.py` (204; a seção [6] passa pelo `server.handler` real).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa

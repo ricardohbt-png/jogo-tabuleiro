@@ -1,7 +1,7 @@
 # Salvar a aventura (solo e multiplayer) — design para revisão
 
-**Data:** 2026-10-01 · **Status:** decisões tomadas; Etapa 1 (ajustada) implementada,
-Etapa 2 adiada.
+**Data:** 2026-10-01 · **Status:** Etapa 1 (ajustada) e Etapa 2 (foto da masmorra, passos
+1–8) implementadas; prova no navegador com o servidor reiniciado entre salvar e continuar.
 
 ## 0. Decisões do autor (2026-10-01) e o que foi feito
 
@@ -175,6 +175,14 @@ escadas" depois de "A aventura continua"; `_finalizar_intro_masmorra` ganhou
 `retomada=True`, que a omite. Provado no navegador num servidor do worktree
 (porta 8777): rodada 4, Salvar e sair → "Meus Jogos" com "🗡️ Campo de
 Treinamento — rodada 4" → Continuar → mesma casa, rodada 4.
+
+**Passo 8 feito (prova):** solo num servidor do worktree (porta 8777, dados próprios):
+ladino até a rodada 3, pega a espada de um baú e a larga no chão, passa à rodada 4,
+"💾 Salvar e sair" → "Meus Jogos" com "🗡️ Campo de Treinamento — rodada 4"; o
+processo do servidor é **parado e iniciado de novo**; login → Continuar → masmorra na
+rodada 4 com casa, PV, ouro, bolsa, os 14 monstros (tipo/casa/PV), o item no chão, os baús e
+as 71 casas exploradas idênticos; o log abre com "📜 A aventura continua — rodada 4.".
+Seção no `CLAUDE.md`: "Foto da masmorra".
 
 Teste: `tools/test_salvar_masmorra.py` (204 checks; a seção [6] passa pelo
 `server.handler` real — entrar → Continuar → dentro da masmorra; a [7] cobre o
