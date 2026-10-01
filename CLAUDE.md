@@ -92,6 +92,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `join_room` | `name`, `code` |
 | `rejoin` | `name`, `code` — religa um jogador desconectado em partida (recusa se ainda conectado). O cliente (`gameState.js`) salva a sessão em `localStorage` (`lfh_session`) e tenta sozinho 8× a cada 2,5 s; tela inicial tem botão "Reconectar". Move: o servidor sanitiza `dx`/`dy` para -1/0/+1 (1 casa ortogonal). |
 | `select_class` | `class_id` |
+| `select_party` | `classes:[…]` — **Solo com grupo**: o anfitrião de um jogo salvo Solo novo marca de 1 a 6 classes; substitui a seleção anterior. Os heróis além do 1º nascem com `controlador` (pid da conexão); as magias de cada um vão por `set_known_spells {ids, heroi}`. Ver "Solo com grupo". |
 | `start_game` | — |
 | `move` | `dx`, `dy` |
 | `move_path` | `path:[[dx,dy],…]` — caminho inteiro numa mensagem (clique numa casa distante; `GS.movePath`, 1 casa cai no `move`). O servidor (`handle_move_path`) roda cada passo pelo MESMO `handle_move` com `_push=False`, para no 1º passo recusado, emite um `entity_step` `kind:"player"` por casa para TODOS e manda UM `game_state` no fim — antes era um `game_state` completo por casa para todos, em rajada, e quem assistia via o peão saltar. Cliente: o deslize (`_serverStepAnim`) agora também move o peão de herói no 2D e no 3D (`getPeaoMesh`, giro pela raiz), no ritmo `DURACAO_PASSO_MS`; o próprio passo é ignorado enquanto o peão já anima localmente (3D); o som de passo de outro herói segue o trajeto do deslize. Teto `MAX_PASSOS_CAMINHO`=40. Teste: `tools/test_move_path.py`. |
@@ -467,6 +468,50 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Provado no navegador com o servidor REINICIADO entre salvar e
 > continuar: rodada, casa, PV, ouro, bolsa, 14 monstros, item no chão, baús e névoa idênticos.
 > Teste: `tools/test_salvar_masmorra.py` (230; a seção [6] passa pelo `server.handler` real).
+
+> **Solo com grupo (2026-10-01):** no jogo salvo **Solo**, a tela de seleção marca de 1 a 6
+> classes (`select_party`, só no lobby de um Solo novo, sem Mestre, só com a conta do dono;
+> `lobby_state.grupo_solo` liga o modo) e o jogador controla todos. **Heróis por procuração:** o
+> 1º herói tem o pid da conexão; os outros são entradas completas de `self.players` com pid
+> próprio e `controlador` = pid da conexão — iniciativa, XP (já dividido pelos vivos), derrota,
+> checkpoint e foto seguem sem mudança. **Quem age:** `GameRoom.heroi_da_acao(conexão, msg)`,
+> chamado no `handler` antes do despacho: `msg.heroi` de herói desta conexão → ele; senão um
+> extra desta conexão na vez → ele; senão a própria conexão. `heroi` de outro controlador →
+> `erro.esse_heroi_nao_e_seu`. `MENSAGENS_DA_CONEXAO` (+ prefixos `mestre_`/`teste_`/`upload_`/
+> `save_`/`load_`) nunca são traduzidas. Enquanto despacha, `pid` aponta para o herói e
+> `_traduzido` guarda a conexão (restaurada no topo do laço e no `finally`). Checagem de
+> anfitrião: `_eh_anfitriao(pid)` — **não a reescreva como `pid == self.host_pid`**: a forma com
+> `in` existe para uma troca em massa desse padrão não a fazer chamar a si mesma. **Resposta:**
+> `send_to(herói extra)` entrega na conexão do controlador, no idioma dela, e acrescenta
+> `heroi: <pid do extra>` à mensagem — é assim que o cliente sabe de quem é um aviso privado.
+> **Jogo salvo:** `members[conta]` mantém `class_id` (principal) e ganha `class_ids` (o grupo),
+> gravados no `start_game` (`_vincular_grupo_solo`, também num Solo de 1 classe montado pelo
+> `select_party`); `_continuar_jogo_salvo` recria as cascas (`_recriar_grupo_solo`, magias da
+> ficha) e a foto mantém o `controlador` novo (`manter` em `_retomar_masmorra`). **Solo com
+> grupo é fechado** (`_dono_grupo_solo`): outra conta não entra, e o `rejoin` ignora herói com
+> `controlador` (senão quem soubesse o código tomava o "Pedro" pelo nome); Solo de 1 herói
+> continua aceitando quem chega. **Queda/volta:** o `finally` derruba todos os heróis da conexão
+> (extras primeiro, para o anfitrião não passar a um extra); `religar_heroi` religa os extras
+> (`_religar_extras`) e põe cada um numa casa livre — `_casa_livre_retomada` procura em anéis
+> uma casa de chão sem herói, monstro, baú ou objeto sólido. **Escada:** o herói que sai só
+> espera — `_em_cidade` e o `skip` do `push_state` usam `_conexao_toda_fora` (todos os heróis da
+> conexão fora); `_reentrar_masmorra` só manda `enter_dungeon` se a conexão inteira estava fora.
+> **Cliente:** `connPid` = conexão; `myPid` = **herói em foco** (pula sozinho para o herói meu na
+> vez, uma vez por turno; `GS.focarHeroi(pid)` troca à mão e emite `focoHeroi {pid, auto}`);
+> `GS.meusHerois`/`temGrupo`/`ehMeuHeroi`/`cascaDaClasse`; com grupo, `send` acrescenta
+> `heroi: myPid`; a sessão grava o `connPid`. Aviso que pede resposta (`_AVISOS_COM_RESPOSTA`:
+> escolha de magia, Sorte, chamas, consentimentos de teleporte/metamorfose, posicionamento de
+> ciclones) chegando com `heroi` de outro herói meu foca esse herói antes. Botões de anfitrião
+> comparam `host` com a conexão (`GS.souAnfitriao(host)`), nunca com `myPid`. Cartões do HUD/
+> cidade de heróis meus focam o herói (2º clique abre a ficha); `focoHeroi` centraliza a câmera;
+> visão compartilhada sempre ligada no grupo. Seleção: `_csAlternarNoGrupo` (botão vira
+> "Adicionar/Remover do grupo"), magias por herói via `setKnownSpells(ids, GS.cascaDaClasse(cls))`.
+> Provado no navegador (servidor isolado na 8779): grupo de 3 montado pela interface, ficha do
+> extra na cidade, vez passando entre os 3 com o foco junto, ação livre de outro herói fora da vez,
+> Salvar e sair → Continuar de volta à masmorra com casas e PV idênticos. A escolha Solo/Multiplayer
+> (`play_mode`) foi trazida do trabalho em andamento do autor só no trecho do servidor. Spec/plano
+> em `docs/superpowers/{specs,plans}/2026-10-01-solo-com-grupo*`. Testes:
+> `tools/test_solo_grupo.py` (70) e `tools/test_solo_grupo_cliente.js` (29).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
