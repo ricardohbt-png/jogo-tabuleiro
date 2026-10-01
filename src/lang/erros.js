@@ -2124,6 +2124,14 @@ window.LANG_ERROS = {
   "erro.somente_o_anfitriao_pode_alterar_atravessar": {
     "en": "Only the host can change passing through allies.",
     "pt": "Somente o anfitrião pode alterar a passagem por aliados."
+  },
+  "erro.voce_nao_faz_parte_deste_jogo": {
+    "en": "You are not part of this game.",
+    "pt": "Você não faz parte deste jogo."
+  },
+  "erro.seu_personagem_ja_esta_na_partida": {
+    "en": "Your character is already in this match.",
+    "pt": "Seu personagem já está nesta partida."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

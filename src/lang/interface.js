@@ -2207,17 +2207,9 @@ window.LANG_INTERFACE = {
     "en": "Bleeding level {n}: {dano} HP of recurring damage per round.",
     "pt": "Sangramento nível {n}: {dano} PV de dano recorrente por rodada."
   },
-  "ui.conexao.codigo_4_letras": {
-    "en": "Code must have 4 letters.",
-    "pt": "Código deve ter 4 letras."
-  },
   "ui.conexao.codigo_copiado": {
     "en": "Code copied!",
     "pt": "Código copiado!"
-  },
-  "ui.conexao.digite_nome": {
-    "en": "Type a hero name.",
-    "pt": "Digite um nome de herói."
   },
   "ui.conexao.encerrada": {
     "en": "Connection closed.",

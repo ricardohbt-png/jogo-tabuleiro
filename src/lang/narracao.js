@@ -2983,6 +2983,14 @@ window.LANG_NARRACAO = {
   "narracao.cai_pela_ponte_chao_illusorio": {
     "en": "💥 {alvo} falls through the illusory floor from height {altura} and takes {dano} damage.",
     "pt": "💥 {alvo} cai pelo chão ilusório de uma altura de {altura} e sofre {dano} de dano."
+  },
+  "narracao.chegou_a_cidade_e_logo_descera": {
+    "en": "🏙️ **{heroi}** arrived in town and will join the group in the dungeon next round.",
+    "pt": "🏙️ **{heroi}** chegou à cidade e desce até o grupo na masmorra na próxima rodada."
+  },
+  "narracao.juntou_se_ao_grupo_na_cidade": {
+    "en": "🏙️ **{heroi}** joined the group in town.",
+    "pt": "🏙️ **{heroi}** juntou-se ao grupo na cidade."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

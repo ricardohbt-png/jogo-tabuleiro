@@ -2600,6 +2600,14 @@ def try_open_savegame_room(account, sid, rooms):
     if sid in SAVEGAMES_IN_USE:
         return None, "Este jogo já está em uso em outra sessão."
     _limpar_salas_vazias()
+    # Sala antiga deste jogo, já sem ninguém, que ainda não foi recolhida: a
+    # nova parte do último salvamento, e a antiga não pode mais gravar nele
+    # (senão um F5 tardio nela sobrescreveria o progresso da nova).
+    for velho_code, velha in list(rooms.items()):
+        if getattr(velha, "savegame_id", None) == sid and not velha.connections:
+            velha.savegame = None
+            velha.savegame_id = None
+            rooms.pop(velho_code, None)
     code = make_code()
     room = GameRoom(code)
     rooms[code] = room
@@ -9738,6 +9746,11 @@ class GameRoom:
         self.savegame_id = None      # id do savegame ligado a esta sala (ou None)
         self.savegame = None         # dict do savegame carregado (ou None)
         self.account_by_pid = {}     # pid -> apelido da conta logada
+        # Jogador NOVO escolhendo herói com a partida já em andamento (jogo
+        # salvo). Fica FORA de connections/players até entrar: assim não recebe
+        # o estado da partida, que o tiraria da tela de escolha. pid -> casca
+        # {ws, name, class_id, classe_pedida, magias_conhecidas}.
+        self.aguardando = {}
         self._campaign_outro = None   # beat de encerramento pendente (cidade), ou None
         # Cinemática ativa. O conteúdo fica na biblioteca global; esta pequena
         # sessão é autoritativa e entra no savegame para sobreviver a F5/queda.
@@ -9873,6 +9886,8 @@ class GameRoom:
 
     async def send_to(self, pid, msg):
         ws = self.connections.get(pid)
+        if not ws and pid in self.aguardando:
+            ws = self.aguardando[pid].get("ws")
         # Heróis de teste não possuem conexão própria. Durante uma ação
         # delegada, mensagens privadas (erros de validação, por exemplo) voltam
         # exclusivamente ao Mestre da mesma sala descartável.
@@ -10068,11 +10083,18 @@ class GameRoom:
         self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": False, "connected": True, "slot": len(self.players)}
         if not self.host_pid:
             self.host_pid = pid
+        if self._classe_vinculada(account):
+            # Jogo salvo com personagem já vinculado: sem tela de escolha.
+            await self._continuar_jogo_salvo(pid)
+            return True
         await self.broadcast_lobby()
         return True
 
-    async def select_class(self, pid, cls_id):
-        if self.players.get(pid, {}).get("is_master"):
+    async def select_class(self, pid, cls_id, anunciar=True):
+        casca = self.players.get(pid) or self.aguardando.get(pid)
+        if casca is None:
+            return
+        if casca.get("is_master"):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.o_mestre_nao_escolhe_classe_solte_o_pape")})
             return
@@ -10114,6 +10136,9 @@ class GameRoom:
                     write_savegame(self.savegame)
                     await self.broadcast({"type": "campaign_vote_opened", "vote": vote, "campaign_id": self.savegame["id"]})
                     await self.send_to(pid, {"type": "error", "msg": T("erro.pedido_enviado_para_votacao_dos_membros")})
+                    # Quem chega com a partida em andamento espera a votação na
+                    # sala de espera; mago/clérigo já escolhem as magias.
+                    casca["classe_pedida"] = cls_id
                     return
                 dono_conta = next((c for c, m in membros.items()
                                    if m.get("class_id") == cls_id and c != conta), None)
@@ -10128,13 +10153,14 @@ class GameRoom:
                 self.savegame["slots"][cls_id] = _campaign_slot(cls_id, conta, "active")
                 chars = self.savegame.setdefault("characters", {})
                 if cls_id not in chars:
-                    novo = make_player(pid, self.players[pid]["name"], cls_id, self.players[pid].get("slot", 0))
+                    novo = make_player(pid, casca["name"], cls_id, casca.get("slot", 0))
                     chars[cls_id] = snapshot_character(novo)
                 self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "member_joined",
                     "text": f"{conta} assumiu {HERO_IDENTITIES.get(cls_id, cls_id)}"})
                 write_savegame(self.savegame)
         # NÃ£o tomado na sala
-        taken = [p["class_id"] for p in self.players.values() if p["id"] != pid]
+        taken = [p.get("class_id") for q, p in list(self.players.items()) + list(self.aguardando.items())
+                 if q != pid]
         if cls_id in taken:
             await self.send_to(pid, {"type": "error", "msg": T("erro.classe_ja_escolhida_por_outro_jogador")})
             return
@@ -10149,13 +10175,16 @@ class GameRoom:
                     "msg": T("erro.classe_em_uso_em_outra_sala", classe=CLASSES[cls_id]["name"])})
                 return
             # Libera o personagem anterior deste jogador (se trocou de classe)
-            prev = self.players[pid].get("class_id")
+            prev = casca.get("class_id")
             if prev and prev != cls_id and CHARACTERS_IN_USE.get(prev) == self.code:
                 del CHARACTERS_IN_USE[prev]
             CHARACTERS_IN_USE[cls_id] = self.code
-        self.players[pid]["class_id"] = cls_id
-        self.players[pid]["ready"] = True
-        await self.broadcast_lobby()
+        casca["class_id"] = cls_id
+        casca["ready"] = True
+        if pid in self.aguardando:
+            await self._tentar_entrada_tardia(pid)
+        elif anunciar:
+            await self.broadcast_lobby()
 
     async def handle_campaign_vote(self, pid, vote_id, approve):
         """Registra voto de entrada; a maioria é calculada sobre a lista congelada."""
@@ -10199,7 +10228,17 @@ class GameRoom:
             self.savegame.setdefault("journal", []).append({"at": _now_iso(), "kind": "vote_closed", "text": text})
         write_savegame(self.savegame)
         await self.broadcast({"type": "campaign_vote_updated", "vote": vote, "needed": needed})
-        await self.broadcast_lobby()
+        for q, c in list(self.aguardando.items()):
+            if self.account_by_pid.get(q) == vote.get("candidate"):
+                if vote.get("status") == "approved":
+                    c["class_id"] = vote["class_id"]
+                    c.pop("classe_pedida", None)
+                    await self._tentar_entrada_tardia(q)
+                elif vote.get("status") == "rejected":
+                    c.pop("classe_pedida", None)
+                    await self._enviar_escolha_tardia(q)
+        if self.phase == "lobby":
+            await self.broadcast_lobby()
 
     async def claim_role(self, pid, role):
         """Lobby: um jogador assume ('master') ou solta ('hero') o papel de mestre."""
@@ -10249,19 +10288,25 @@ class GameRoom:
     async def handle_set_known_spells(self, pid, ids):
         """Lobby: mago/clérigo escolhe 2 magias de 1º círculo da própria classe."""
         p = self.players.get(pid)
-        if not p or self.phase != "lobby":
+        if p is None and pid in self.aguardando:
+            p = self.aguardando[pid]
+        elif not p or self.phase != "lobby":
             return
-        if p.get("class_id") not in ("mage", "cleric"):
+        cls = p.get("class_id") or p.get("classe_pedida")
+        if cls not in ("mage", "cleric"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_escolhe_magias")}); return
         ids = list(dict.fromkeys(ids or []))   # remove duplicatas, preserva ordem
         if len(ids) != 2:
             await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_exatamente_2_magias_de_1o_circul")}); return
         for mid in ids:
             m = GRIMORIO.get(mid)
-            if not m or p["class_id"] not in m.get("classe", []) or m.get("circulo") != "primeiro":
+            if not m or cls not in m.get("classe", []) or m.get("circulo") != "primeiro":
                 await self.send_to(pid, {"type": "error", "msg": T("erro.magia_invalida_para_sua_classe_circulo")}); return
         p["magias_conhecidas"] = ids
-        await self.broadcast_lobby()
+        if pid in self.aguardando:
+            await self._tentar_entrada_tardia(pid)
+        else:
+            await self.broadcast_lobby()
 
     async def handle_escolher_magia_nivel(self, pid, magia_id):
         """Resolve a escolha de nova magia pendente (1 item da fila por vez)."""
@@ -10290,7 +10335,7 @@ class GameRoom:
         heroes = [p for p in self.players.values() if not p.get("is_master")]
         return len(heroes) >= 1 and all(p["class_id"] for p in heroes)
 
-    async def broadcast_lobby(self):
+    async def broadcast_lobby(self, auto_start=False):
         membros = (self.savegame or {}).get("members", {}) if self.savegame else {}
         jogadores = []
         for p in self.players.values():
@@ -10314,6 +10359,9 @@ class GameRoom:
             "selected_dungeon": self.selected_dungeon,
             "selected_campaign": self.selected_campaign,
             "savegame": sg_ctx,
+            # Jogo salvo solo continuando: a partida começa logo em seguida e o
+            # cliente não deve desenhar a escolha de herói.
+            "auto_start": bool(auto_start),
         })
 
     async def handle_select_dungeon(self, pid, file):
@@ -10361,6 +10409,261 @@ class GameRoom:
 
     # â”€â”€ game start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    def _montar_heroi(self, pid2, p, slot):
+        """Ficha completa de um herói a partir da casca do lobby (`p`: name,
+        class_id, magias escolhidas). Usada no start_game e na entrada de um
+        membro que chega com o jogo salvo já em andamento."""
+        novo = make_player(pid2, p["name"], p["class_id"], slot)
+        novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
+        if self.savegame is not None:
+            snap = (self.savegame.get("characters", {}) or {}).get(p["class_id"])
+            if snap:
+                restore_character(novo, snap)   # sobrepõe a ficha salva
+                # 1º início: o snapshot do bind foi tirado ANTES da escolha
+                # de magias no lobby (magias []) — a escolha do lobby vale.
+                # Retomada: as magias salvas vencem (sem reroll no lobby).
+                if not novo.get("magias_conhecidas"):
+                    novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
+            # sem snap (não deveria ocorrer — o bind cria a ficha): fica
+            # a ficha FRESCA. NÃO cai no apply_guild_save global, que
+            # reintroduziria o vazamento entre jogos que a Fase 1 eliminou.
+        else:
+            apply_guild_save(novo)   # jogo sem savegame (fluxo antigo)
+        # Magias de teste de 4º círculo (ver MAGIAS_TESTE_AUTO): entram além
+        # das 2 do lobby, inclusive numa ficha antiga que não as tenha.
+        for mid_auto in MAGIAS_TESTE_AUTO.get(novo.get("class_id"), ()):
+            if mid_auto not in novo.setdefault("magias_conhecidas", []):
+                novo["magias_conhecidas"].append(mid_auto)
+        if self.savegame is not None:
+            slots_salvos = (self.savegame.get("shortcut_slots", {}) or {}).get(p["class_id"])
+            novo["shortcut_slots"] = _shortcut_slots(slots_salvos)
+        return novo
+
+    # ── Continuar um jogo salvo ───────────────────────────────────────────
+    def _classe_vinculada(self, conta):
+        """Classe do personagem desta conta no jogo salvo (membro ativo), ou None."""
+        if self.savegame is None or not conta:
+            return None
+        m = (self.savegame.get("members") or {}).get(conta) or {}
+        if m.get("status", "active") != "active":
+            return None
+        return m.get("class_id") or None
+
+    def _jogo_salvo_solo(self):
+        """Jogo salvo de UM jogador só (sem Mestre): ao continuar, o lobby é
+        pulado. Em grupo, o lobby fica como sala de espera do anfitrião."""
+        if self.savegame is None or self.savegame.get("has_master"):
+            return False
+        ativos = [c for c, m in (self.savegame.get("members") or {}).items()
+                  if isinstance(m, dict) and m.get("status", "active") == "active"
+                  and m.get("class_id")]
+        return len(ativos) == 1
+
+    async def _continuar_jogo_salvo(self, pid):
+        """Recém-entrado no lobby de um jogo salvo: quem já tem personagem não
+        passa pela escolha de herói. No jogo solo a partida começa direto."""
+        conta = self.account_by_pid.get(pid)
+        cls = self._classe_vinculada(conta)
+        if not cls or self.phase != "lobby" or pid not in self.players:
+            return
+        snap = (self.savegame.get("characters") or {}).get(cls) or {}
+        # As magias salvas entram na casca do lobby: sem isso o start_game
+        # recusaria um mago/clérigo por "escolha 2 magias".
+        if snap.get("magias_conhecidas"):
+            self.players[pid]["magias_conhecidas"] = list(snap["magias_conhecidas"])
+        await self.select_class(pid, cls, anunciar=False)
+        if (self._jogo_salvo_solo() and pid == self.host_pid
+                and self.players.get(pid, {}).get("class_id") == cls):
+            # O lobby_state com `auto_start` ainda é necessário: é por ele que o
+            # cliente aprende o próprio pid e o código da sala (reconexão); com
+            # a marca, ele não desenha a tela de escolha de herói.
+            await self.broadcast_lobby(auto_start=True)
+            await self.start_game(pid)
+            if self.phase == "lobby":   # algo recusou o início: mostra o lobby
+                await self.broadcast_lobby()
+        else:
+            await self.broadcast_lobby()
+
+    async def entrar_com_jogo_em_andamento(self, ws, pid, name, conta, magias=None):
+        """Membro que chega depois que o anfitrião já começou: entra na cidade
+        com a ficha salva. Se o grupo estiver na masmorra, chega como quem saiu
+        pela escada (`fora_masmorra`, espera zero) e desce na próxima rodada ou
+        pelo botão 'Voltar à masmorra'. Sem personagem neste jogo, vai antes
+        para a escolha de herói (`_aguardar_escolha_heroi`). Devolve (ok, erro)."""
+        cls = self._classe_vinculada(conta)
+        if not cls:
+            return await self._aguardar_escolha_heroi(ws, pid, name, conta)
+        if any(q.get("class_id") == cls for q in self.players.values()):
+            return False, T("erro.seu_personagem_ja_esta_na_partida")
+        self.connections[pid] = ws
+        self.account_by_pid[pid] = conta
+        casca = {"name": name, "class_id": cls, "magias_conhecidas": list(magias or [])}
+        novo = self._montar_heroi(pid, casca, len(self.players))
+        self._atualizar_voo_heroi(novo)
+        self.players[pid] = novo
+        self.player_order.append(pid)
+        self._assumir_anfitriao_se_vago(pid)
+        await self.send_to(pid, {"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
+        if self.phase == "playing":
+            novo["pos"] = [-1, -1]
+            novo["fora_masmorra"] = {"rodadas_restantes": 0}
+            await self.send_city_state_to(pid)
+            await self.gm_say(T("narracao.chegou_a_cidade_e_logo_descera", heroi=name))
+            await self.push_state()
+        else:
+            await self.broadcast_city_state()
+            await self.gm_say(T("narracao.juntou_se_ao_grupo_na_cidade", heroi=name))
+        return True, None
+
+    def _assumir_anfitriao_se_vago(self, pid):
+        """Sem anfitrião conectado, quem chega assume. Assim o grupo retoma o
+        jogo salvo mesmo sem quem o abriu da última vez. O Mestre nunca perde o
+        posto por uma queda: o lugar fica com ele até voltar."""
+        if self.master_pid and self.host_pid == self.master_pid:
+            return
+        if not self.host_pid or self.host_pid not in self.connections:
+            self.host_pid = pid
+
+    async def religar_mestre(self, ws, pid_conexao, name):
+        """Religa o Mestre que caiu. Devolve o pid antigo (a identidade)."""
+        # O idioma foi gravado sob o pid da CONEXÃO nova (o set_lang chega antes
+        # do rejoin); ao religar a identidade antiga ele precisa acompanhar,
+        # senão _lang_de(pid) cai no português e a narração volta sem tradução.
+        LANG_BY_PID[self.master_pid] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)
+        pid = self.master_pid
+        self.connections[pid] = ws
+        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+        if self.phase == "city":
+            await self.broadcast_city_state()
+        else:
+            await ws.send(json.dumps({"type": "enter_dungeon"}))
+            await self.push_state()
+        await self.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
+        return pid
+
+    async def religar_heroi(self, alvo, ws, pid_conexao, name):
+        """Religa um herói que caiu durante a partida. Devolve o pid antigo."""
+        LANG_BY_PID[alvo["id"]] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)   # idem ao mestre
+        pid = alvo["id"]          # religa identidade antiga
+        self.connections[pid] = ws
+        alvo["connected"] = True   # volta a contar nos turnos
+        self._assumir_anfitriao_se_vago(pid)
+        # Reenvia a sequência de mensagens que coloca o cliente na tela
+        # correta da fase atual.
+        if self.phase == "lobby":
+            await self.broadcast_lobby()
+        elif self.phase == "city":
+            await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+            await self.broadcast_city_state()
+            await self.gm_say(T("narracao.reconectou_se_a_aventura", name=name))
+        elif alvo.get("fora_masmorra"):
+            # Estava na cidade com o grupo na masmorra: continua na cidade.
+            await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+            await self.send_city_state_to(pid)
+            await self.gm_say(T("narracao.reconectou_se_a_aventura", name=name))
+        else:   # playing — o personagem REENTRA pela escada de entrada
+            if self.start_mode == "hero_spawns":
+                start = self._start_point_for_player(alvo)
+                if start:
+                    alvo["pos"] = list(start)
+            else:
+                ent = next((r for r in self.rooms if r["role"] == "entrance"),
+                           (self.rooms[0] if self.rooms else None))
+                if ent:
+                    alvo["pos"] = [ent["cx"], ent["cy"]]
+            alvo.pop("facing", None)
+            await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+            await ws.send(json.dumps({"type": "enter_dungeon"}))
+            self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
+            await self.push_state()
+            await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
+        return pid
+
+    # ── Jogador novo com a partida em andamento ───────────────────────────
+    def _herois_e_esperando(self):
+        return (sum(1 for q in self.players.values() if not q.get("is_master"))
+                + len(self.aguardando))
+
+    async def _aguardar_escolha_heroi(self, ws, pid, name, conta):
+        """Conta sem personagem neste jogo chega com a partida já rolando: vê a
+        escolha de herói só para ela. Escolher (e, para mago/clérigo, as 2
+        magias) a leva para dentro — ver _tentar_entrada_tardia."""
+        if not conta:
+            return False, T("erro.faca_login_para_escolher_um_personagem_n")
+        if not self.savegame.get("rules", {}).get("allow_new_players", True):
+            return False, T("erro.esta_campanha_nao_aceita_novos_jogadores")
+        if self._herois_e_esperando() >= 6:
+            return False, T("erro.sala_cheia_maximo_6_herois_1_mestre")
+        self.account_by_pid[pid] = conta
+        self.aguardando[pid] = {"id": pid, "ws": ws, "name": name, "class_id": None,
+                                "ready": False, "connected": True,
+                                "slot": self._herois_e_esperando()}
+        await self._enviar_escolha_tardia(pid)
+        return True, None
+
+    def _classes_ocupadas(self, pid):
+        """Classes que quem está escolhendo não pode pegar: as dos heróis na
+        sala e as vinculadas a OUTROS membros ativos (mesmo ausentes hoje)."""
+        conta = self.account_by_pid.get(pid)
+        ocupadas = {p.get("class_id") for q, p in self.players.items()
+                    if q != pid and p.get("class_id")}
+        ocupadas |= {c.get("class_id") for q, c in self.aguardando.items()
+                     if q != pid and c.get("class_id")}
+        for outra, m in ((self.savegame or {}).get("members") or {}).items():
+            if (outra != conta and isinstance(m, dict) and m.get("class_id")
+                    and m.get("status", "active") == "active"):
+                ocupadas.add(m["class_id"])
+        return sorted(ocupadas)
+
+    async def _enviar_escolha_tardia(self, pid):
+        """lobby_state SÓ para quem está escolhendo herói com a partida em
+        andamento. Os outros não recebem: estão na cidade ou na masmorra."""
+        c = self.aguardando.get(pid)
+        if not c:
+            return
+        herois = [{"id": q, "name": p.get("name"), "class_id": p.get("class_id"),
+                   "ready": True, "connected": q in self.connections}
+                  for q, p in self.players.items() if not p.get("is_master")]
+        eu = {k: c.get(k) for k in ("id", "name", "class_id", "ready", "connected", "slot")}
+        eu["account"] = self.account_by_pid.get(pid)
+        eu["bound"] = False
+        await self.send_to(pid, {
+            "type": "lobby_state", "code": self.code, "host": None,
+            "players": herois + [eu],
+            "classes": {k: {"name": v["name"], "emoji": v["emoji"], "color": v["color"], "desc": v["desc"]}
+                        for k, v in CLASSES.items()},
+            "can_start": False, "master_pid": self.master_pid,
+            "dungeons": [], "campaigns": [], "mode": self.mode,
+            "selected_dungeon": self.selected_dungeon,
+            "selected_campaign": self.selected_campaign,
+            "savegame": {"id": self.savegame["id"], "name": self.savegame.get("name")},
+            "auto_start": False,
+            # A tela mostra que o grupo já está jogando e esmaece estas classes.
+            "entrada_tardia": True,
+            "taken_classes": self._classes_ocupadas(pid),
+        })
+
+    async def _tentar_entrada_tardia(self, pid):
+        """Herói escolhido (e magias, se mago/clérigo): entra na partida."""
+        c = self.aguardando.get(pid)
+        if not c or not c.get("class_id"):
+            return
+        if c["class_id"] in ("mage", "cleric"):
+            snap = ((self.savegame or {}).get("characters") or {}).get(c["class_id"]) or {}
+            if not c.get("magias_conhecidas") and snap.get("magias_conhecidas"):
+                c["magias_conhecidas"] = list(snap["magias_conhecidas"])
+            if len(c.get("magias_conhecidas") or []) < 2:
+                await self._enviar_escolha_tardia(pid)   # o cliente pede as magias
+                return
+        if self.phase not in ("city", "playing"):
+            # A sala encerrou enquanto ele escolhia.
+            await self.send_to(pid, {"type": "error", "msg": T("erro.jogo_ja_iniciado")})
+            return
+        self.aguardando.pop(pid, None)
+        await self.entrar_com_jogo_em_andamento(c["ws"], pid, c["name"],
+                                                self.account_by_pid.get(pid),
+                                                magias=c.get("magias_conhecidas"))
+
     async def start_game(self, pid):
         if pid != self.host_pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar")})
@@ -10381,31 +10684,7 @@ class GameRoom:
         # Build full player states â€” SOMENTE herÃ³is; o mestre nÃ£o vira peÃ£o.
         full_players = {}
         for slot, (pid2, p) in enumerate(heroes.items()):
-            novo = make_player(pid2, p["name"], p["class_id"], slot)
-            novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
-            if self.savegame is not None:
-                snap = (self.savegame.get("characters", {}) or {}).get(p["class_id"])
-                if snap:
-                    restore_character(novo, snap)   # sobrepõe a ficha salva
-                    # 1º início: o snapshot do bind foi tirado ANTES da escolha
-                    # de magias no lobby (magias []) — a escolha do lobby vale.
-                    # Retomada: as magias salvas vencem (sem reroll no lobby).
-                    if not novo.get("magias_conhecidas"):
-                        novo["magias_conhecidas"] = list(p.get("magias_conhecidas", []))
-                # sem snap (não deveria ocorrer — o bind cria a ficha): fica
-                # a ficha FRESCA. NÃO cai no apply_guild_save global, que
-                # reintroduziria o vazamento entre jogos que a Fase 1 eliminou.
-            else:
-                apply_guild_save(novo)   # jogo sem savegame (fluxo antigo)
-            # Magias de teste de 4º círculo (ver MAGIAS_TESTE_AUTO): entram além
-            # das 2 do lobby, inclusive numa ficha antiga que não as tenha.
-            for mid_auto in MAGIAS_TESTE_AUTO.get(novo.get("class_id"), ()):
-                if mid_auto not in novo.setdefault("magias_conhecidas", []):
-                    novo["magias_conhecidas"].append(mid_auto)
-            if self.savegame is not None:
-                slots_salvos = (self.savegame.get("shortcut_slots", {}) or {}).get(p["class_id"])
-                novo["shortcut_slots"] = _shortcut_slots(slots_salvos)
-            full_players[pid2] = novo
+            full_players[pid2] = self._montar_heroi(pid2, p, slot)
         self.players = full_players
         self.player_order = list(full_players.keys())
         # Reconstitui efeitos derivados de equipamentos persistidos. A Bota
@@ -10453,6 +10732,9 @@ class GameRoom:
                         for p in self.players.values()]
         return {
             "type": "city_state",
+            # Quem entra direto na cidade (jogo salvo já em andamento) não passa
+            # pelo lobby; é por aqui que o cliente grava a sessão de reconexão.
+            "code": self.code,
             "phase": self.phase,
             "master_pid": self.master_pid,
             "host": self.host_pid,
@@ -21946,6 +22228,12 @@ class GameRoom:
         atalhos = self.savegame.setdefault("shortcut_slots", {})
         for p in self.players.values():
             if p.get("is_master") or not p.get("class_id"):
+                continue
+            # Só o progresso da CIDADE é salvo. Com o grupo na masmorra, a ficha
+            # de quem está lá dentro fica como estava na última cidade: a
+            # masmorra não é salva, e gravar o loot dela deixaria repetir o
+            # mesmo saque ao retomar. Quem subiu pela escada está na cidade.
+            if self.phase == "playing" and not p.get("fora_masmorra"):
                 continue
             chars[p["class_id"]] = snapshot_character(p)
             atalhos[p["class_id"]] = _shortcut_slots(p.get("shortcut_slots"))
@@ -44396,6 +44684,47 @@ TEST_DUNGEON_TTL_S = 15 * 60
 SALA_VAZIA_TTL_S = 15 * 60
 
 
+def sala_aberta_do_jogo_salvo(sid, salas):
+    """Sala ao vivo deste jogo salvo, com alguém conectado, ou None.
+
+    SAVEGAMES_IN_USE só aponta para a sala enquanto há conexão; uma sala vazia
+    que ainda não foi recolhida não conta (quem chegar abre uma nova a partir
+    do último salvamento)."""
+    code = SAVEGAMES_IN_USE.get(sid) if isinstance(sid, str) else None
+    sala = salas.get(code) if code else None
+    if sala is None or sala.savegame_id != sid or not sala.connections:
+        return None
+    return sala
+
+
+async def entrar_em_jogo_salvo_aberto(sala, ws, pid, nome, conta):
+    """Membro clicou em Continuar num jogo que outro membro já abriu.
+
+    Lobby: entra como em qualquer lobby (com o personagem já marcado). Em jogo:
+    religa o herói que caiu, ou entra com a ficha salva na cidade. Devolve
+    (pid_efetivo, erro)."""
+    sg = load_savegame(sala.savegame_id)
+    if not conta or not _conta_participa(sg, conta):
+        return None, T("erro.voce_nao_faz_parte_deste_jogo")
+    # Mestre que caiu e volta pelo Continuar.
+    if (sala.master_pid and conta == (sg or {}).get("master_account")
+            and sala.master_pid not in sala.connections):
+        return await sala.religar_mestre(ws, pid, sala.master_name or nome), None
+    if sala.phase == "lobby":
+        ok = await sala.add_player(ws, pid, nome, conta)
+        return (pid, None) if ok else (None, T("erro.sala_cheia_maximo_6_herois_1_mestre"))
+    meu = next((p for p in sala.players.values()
+                if sala.account_by_pid.get(p.get("id")) == conta), None)
+    if meu is not None:
+        if meu["id"] in sala.connections:
+            return None, T("erro.esse_jogador_ainda_esta_conectado")
+        return await sala.religar_heroi(meu, ws, pid, meu.get("name") or nome), None
+    if sala.phase not in ("city", "playing"):
+        return None, T("erro.jogo_ja_iniciado")
+    ok, e = await sala.entrar_com_jogo_em_andamento(ws, pid, nome, conta)
+    return (pid, None) if ok else (None, e)
+
+
 def _limpar_salas_vazias(agora=None):
     """Recolhe salas sem ninguem conectado ha mais que o prazo.
 
@@ -44983,10 +45312,29 @@ async def handler(ws):
                     continue
 
                 if t == "load_savegame":
+                    if room and pid in room.players:
+                        await err(T("erro.voce_ja_esta_em_uma_sala_saia_dela_antes"))
+                        continue
+                    nome = account["name"] or str(msg.get("name") or "Herói")[:20]
+                    # Outro membro já abriu este jogo: entra na sala dele.
+                    aberta = sala_aberta_do_jogo_salvo(msg.get("id"), rooms)
+                    if aberta:
+                        novo_pid, e = await entrar_em_jogo_salvo_aberto(
+                            aberta, ws, pid, nome, account["name"])
+                        if e:
+                            await err(e)
+                        else:
+                            # Religar troca o pid da conexão pela identidade
+                            # antiga; a reserva da conta acompanha, senão o
+                            # `finally` não a liberaria e a conta ficaria
+                            # "em uso" para sempre.
+                            if account["name"] and ACCOUNTS_ONLINE.get(account["name"]) == pid:
+                                ACCOUNTS_ONLINE[account["name"]] = novo_pid
+                            pid, room = novo_pid, aberta
+                        continue
                     novo, e = try_open_savegame_room(account["name"], msg.get("id"), rooms)
                     if novo:
                         room = novo
-                        nome = account["name"] or str(msg.get("name") or "Herói")[:20]
                         await room.add_player(ws, pid, nome, account["name"])
                     else:
                         await err(e)
@@ -45017,8 +45365,19 @@ async def handler(ws):
                     if not room:
                         await err(T("erro.sala_nao_encontrada"))
                         continue
+                    if (room.phase in ("city", "playing") and room.savegame is not None
+                            and account["name"]):
+                        # Jogo salvo já em andamento: quem tem personagem entra
+                        # com ele; quem não tem escolhe um herói antes.
+                        ok, e = await room.entrar_com_jogo_em_andamento(
+                            ws, pid, account["name"], account["name"])
+                        if not ok:
+                            await err(e)
+                            room = None
+                        continue
                     if room.phase != "lobby":
                         await err(T("erro.jogo_ja_iniciado"))
+                        room = None
                         continue
                     ok = await room.add_player(ws, pid, name, account["name"])
                     if not ok:
@@ -45039,21 +45398,8 @@ async def handler(ws):
                         if alvo_room.master_pid in alvo_room.connections:
                             await err(T("erro.o_mestre_ainda_esta_conectado"))
                             continue
-                        # O idioma foi gravado sob o pid da CONEXÃO nova (o
-                        # set_lang chega antes do rejoin); ao religar a identidade
-                        # antiga ele precisa acompanhar, senão _lang_de(pid) cai
-                        # no português e a narração volta sem tradução.
-                        LANG_BY_PID[alvo_room.master_pid] = LANG_BY_PID.pop(pid, LANG_DEFAULT)
-                        pid = alvo_room.master_pid
+                        pid = await alvo_room.religar_mestre(ws, pid, name)
                         room = alvo_room
-                        room.connections[pid] = ws
-                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
-                        if room.phase == "city":
-                            await room.broadcast_city_state()
-                        else:
-                            await ws.send(json.dumps({"type": "enter_dungeon"}))
-                            await room.push_state()
-                        await room.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
                         continue
                     alvo = next((p for p in alvo_room.players.values()
                                  if p["name"] == name), None)
@@ -45063,35 +45409,8 @@ async def handler(ws):
                     if alvo["id"] in alvo_room.connections:
                         await err(T("erro.esse_jogador_ainda_esta_conectado"))
                         continue
-                    LANG_BY_PID[alvo["id"]] = LANG_BY_PID.pop(pid, LANG_DEFAULT)   # idem ao ramo do mestre
-                    pid  = alvo["id"]          # religa identidade antiga
+                    pid  = await alvo_room.religar_heroi(alvo, ws, pid, name)
                     room = alvo_room
-                    room.connections[pid] = ws
-                    alvo["connected"] = True   # volta a contar nos turnos
-                    # Reenvia a sequÃªncia de mensagens que coloca o cliente na
-                    # tela correta da fase atual.
-                    if room.phase == "lobby":
-                        await room.broadcast_lobby()
-                    elif room.phase == "city":
-                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
-                        await room.broadcast_city_state()
-                        await room.gm_say(T("narracao.reconectou_se_a_aventura", name=name))
-                    else:   # playing â€” o personagem REENTRA pela escada de entrada
-                        if room.start_mode == "hero_spawns":
-                            start = room._start_point_for_player(alvo)
-                            if start:
-                                alvo["pos"] = list(start)
-                        else:
-                            ent = next((r for r in room.rooms if r["role"] == "entrance"),
-                                       (room.rooms[0] if room.rooms else None))
-                            if ent:
-                                alvo["pos"] = [ent["cx"], ent["cy"]]
-                        alvo.pop("facing", None)
-                        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
-                        await ws.send(json.dumps({"type": "enter_dungeon"}))
-                        room._iniciar_timer_turno()   # reativa o timer caso estivesse parado
-                        await room.push_state()
-                        await room.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
 
                 elif t == "select_class":
                     if room: await room.select_class(pid, _key(msg.get("class_id")))
@@ -45582,6 +45901,8 @@ async def handler(ws):
             del ACCOUNTS_ONLINE[account["name"]]
         if room:
             room.connections.pop(pid, None)
+            if room.aguardando.pop(pid, None) is not None:
+                room.account_by_pid.pop(pid, None)   # desistiu da escolha de herói
             if room.savegame_id and not room.connections:
                 SAVEGAMES_IN_USE.pop(room.savegame_id, None)
             if room.master_pid == pid and room.phase == "playing":
