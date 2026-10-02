@@ -99,6 +99,38 @@ GS.focarHeroi("m");
 check("trocar o foco limpa o que estava armado", GS.getWarriorSelected().length === 0);
 GS.focarHeroi("c");
 
+console.log("\n[4d] Respondido o aviso, o foco volta a quem estava");
+// Turno do principal ("c"); a magia ao subir de nível chega para o extra.
+chega(estado("c"));
+check("vez do principal, foco nele", GS.myPid === "c");
+chega({ type: "spell_pick_prompt", heroi: "m", circulo: 1, count: 2, opcoes: [] });
+check("aviso puxa o foco para o extra", GS.myPid === "m");
+chega(estado("c"));
+check("game_state antes da resposta NÃO devolve o foco", GS.myPid === "m");
+enviados.length = 0;
+GS.escolherMagiaNivel("x");
+check("resposta sai em nome do extra", enviados[0] && enviados[0].heroi === "m");
+chega({ type: "spell_pick_prompt", heroi: "m", circulo: 1, count: 1, opcoes: [] });
+chega(estado("c"));
+check("2º aviso da fila: o foco continua no extra", GS.myPid === "m");
+GS.escolherMagiaNivel("y");
+chega({ type: "error", msg: "magia inválida" });
+chega(estado("c"));
+check("resposta recusada: o foco continua no extra", GS.myPid === "m");
+GS.escolherMagiaNivel("z");
+focos.length = 0;
+chega(estado("c"));
+check("respondido o último: o foco volta ao principal", GS.myPid === "c");
+check("evento focoHeroi de volta", focos.length === 1 && focos[0].pid === "c" && focos[0].volta === true);
+check("e isMyTurn volta a valer", GS.isMyTurn === true);
+// Trocar à mão no meio cancela a volta.
+chega({ type: "sorte_reacao", heroi: "m" });
+GS.focarHeroi("c"); GS.focarHeroi("m");
+GS.responderSorteReacao(false);
+chega(estado("c"));
+check("troca manual no meio: o foco fica onde o jogador pôs", GS.myPid === "m");
+GS.focarHeroi("c");
+
 console.log("\n[5] Sem grupo, nada muda");
 GS.connect("ws://x", "Leo", "create");
 chega({ type: "lobby_state", code: "EFGH", host: "z", players: [{ id: "z", name: "Leo" }] });
@@ -107,6 +139,41 @@ GS.endTurn();
 check("sem grupo: mensagem sem heroi", enviados[0] && enviados[0].heroi === undefined);
 check("sem grupo: temGrupo falso", GS.temGrupo === false);
 check("sem grupo: souAnfitriao usa myPid", GS.souAnfitriao("z") === true && GS.souAnfitriao("x") === false);
+
+console.log("\n[6] game.js: XP de todos os meus heróis e destaque da vez");
+{
+  const GAME = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+  const extrair = nome => {
+    const ini = GAME.indexOf("\nfunction " + nome + "(");
+    if (ini < 0) throw new Error("função não encontrada: " + nome);
+    return GAME.slice(ini, GAME.indexOf("\n}", ini) + 2);
+  };
+  const xpConst = GAME.match(/const XP_POR_NIVEL_CLIENTE = (\d+);/);
+  const srv = fs.readFileSync(path.join(raiz, "server.py"), "utf8").match(/^XP_POR_NIVEL = (\d+)/m);
+  check("XP_POR_NIVEL_CLIENTE espelha o servidor", xpConst && srv && xpConst[1] === srv[1]);
+  const meus = ["c", "m"];
+  const G = { ehMeuHeroi: id => meus.includes(id) };
+  const f = new Function("GS", "t", "XP_POR_NIVEL_CLIENTE",
+    ["_xpAcumulado", "_ganhosXpMeusHerois", "_textoGanhosXp", "_heroiMeuNaVez"].map(extrair).join("\n")
+    + "\nreturn { _ganhosXpMeusHerois, _textoGanhosXp, _heroiMeuNaVez };")(
+    G, (k, p) => k + JSON.stringify(p || {}), Number(xpConst[1]));
+  const antes = new Map([["c", { xp: 290, level: 1 }], ["m", { xp: 10, level: 2 }], ["o", { xp: 0, level: 1 }]]);
+  const st = { players: [
+    { id: "c", name: "Ana", xp: 10, level: 2 },     // subiu: 290 → 300 (nível 2) + 10 = +20
+    { id: "m", name: "Pedro", xp: 30, level: 2 },   // +20
+    { id: "o", name: "Bia", xp: 20, level: 1 } ] }; // alheio
+  const g = f._ganhosXpMeusHerois(antes, st);
+  check("ganho conta a subida de nível (não some no xp zerado)", g.find(x => x.nome === "Ana")?.xp === 20);
+  check("herói extra também ganha", g.find(x => x.nome === "Pedro")?.xp === 20);
+  check("herói alheio fica de fora", !g.some(x => x.nome === "Bia"));
+  check("ganhos iguais: uma linha 'para cada'", f._textoGanhosXp(g).startsWith("ui.hud.xp_cada_heroi")
+        && f._textoGanhosXp(g).includes('"n":2'));
+  check("um herói só: o texto de sempre", f._textoGanhosXp([{ nome: "Ana", xp: 7 }]) === "✨ +7 XP");
+  check("ganhos diferentes: por herói", f._textoGanhosXp([{ nome: "Ana", xp: 7 }, { nome: "Pedro", xp: 3 }]) === "✨ Ana +7 · Pedro +3");
+  check("herói meu na vez", f._heroiMeuNaVez({ current_turn: "m" }) === "m");
+  check("Último Esforço também é vez", f._heroiMeuNaVez({ current_turn: "x", last_stand_pid: "c" }) === "c");
+  check("vez de outro: null", f._heroiMeuNaVez({ current_turn: "o" }) === null);
+}
 
 console.log(`\n=== ${PASS} passaram, ${FAIL} falharam ===`);
 process.exit(FAIL ? 1 : 0);

@@ -10352,6 +10352,26 @@ window.LANG_INTERFACE = {
   "ui.hud.clique_para_focar": {
     "en": "Click to control this hero",
     "pt": "Clique para controlar este herói"
+  },
+  "ui.hud.xp_cada_heroi": {
+    "en": "✨ +{xp} XP to each of your {n} heroes",
+    "pt": "✨ +{xp} XP para cada um dos {n} heróis"
+  },
+  "ui.hud.subiu_de_nivel": {
+    "en": "⬆️ {nome} reached level {n}!",
+    "pt": "⬆️ {nome} subiu para o nível {n}!"
+  },
+  "ui.hud.banner_vez": {
+    "en": "Turn of",
+    "pt": "Vez de"
+  },
+  "ui.hud.retrato_na_vez": {
+    "en": "⚔️ their turn",
+    "pt": "⚔️ na vez"
+  },
+  "ui.hud.retrato_fora_da_vez": {
+    "en": "⏳ waiting — free actions only",
+    "pt": "⏳ fora da vez — só ações livres"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

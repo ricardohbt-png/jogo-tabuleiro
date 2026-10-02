@@ -1845,3 +1845,38 @@ body.preview-mode #map-panel { width:100%; }
 }
 /* Cartão do herói meu que está na vez (Solo com grupo) */
 .pcard-vez { font-size: 11px; color: #ffd36b; }
+/* Herói na vez: moldura dourada pulsante e nome maior (todos os modos) */
+@keyframes pcard-vez-pulso {
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(255,200,60,.35); }
+  50%      { box-shadow: 0 0 12px 3px rgba(255,200,60,.85); }
+}
+.pcard.vez { border: 2px solid #ffc83c; padding: 9px 10px; background: linear-gradient(180deg, rgba(255,200,60,.14), var(--bg2) 70%);
+             animation: pcard-vez-pulso 1.6s ease-in-out infinite; }
+.pcard.vez .pcard-name { font-size: 1.05em; font-weight: 700; }
+.pcard.vez .pcard-vez { font-weight: 700; }
+/* Retrato do HUD com grupo: nome e situação do herói em foco */
+#my-hero-portrait { position: relative; }
+#my-hero-portrait-faixa { display: none; }
+#my-hero-portrait.grupo #my-hero-portrait-faixa {
+  display: flex; flex-direction: column; position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 18px 8px 6px; background: linear-gradient(180deg, transparent, rgba(0,0,0,.88) 55%);
+  color: #fff; font-size: 12px; line-height: 1.3; text-shadow: 0 1px 2px #000;
+}
+#my-hero-portrait-faixa b { font-size: 15px; }
+#my-hero-portrait-faixa span { color: #b9b3a4; }
+#my-hero-portrait.na-vez { border: 2px solid #ffc83c; animation: pcard-vez-pulso 1.6s ease-in-out infinite; }
+#my-hero-portrait.na-vez #my-hero-portrait-faixa span { color: #ffd36b; font-weight: 700; }
+/* Faixa central "Vez de Pedro" quando a vez passa a um herói meu */
+#banner-vez {
+  position: fixed; left: 50%; top: 22%; z-index: 9000; pointer-events: none;
+  display: flex; align-items: center; gap: 14px; padding: 10px 26px 10px 10px;
+  background: rgba(14,12,8,.92); border: 2px solid var(--cor-heroi, #f0c040); border-radius: 10px;
+  box-shadow: 0 6px 30px rgba(0,0,0,.7), 0 0 18px var(--cor-heroi, #f0c040);
+  color: #fff; opacity: 0; transform: translate(-50%, -12px) scale(.94);
+  transition: opacity .25s ease, transform .25s ease;
+}
+#banner-vez.aberto { opacity: 1; transform: translate(-50%, 0) scale(1); }
+#banner-vez img { width: 60px; height: 76px; object-fit: cover; object-position: 50% 18%; border-radius: 6px; }
+#banner-vez .banner-vez-emoji { font-size: 42px; }
+#banner-vez small { display: block; color: #d8cfb8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+#banner-vez b { display: block; font-size: 26px; color: #ffd36b; }

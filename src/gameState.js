@@ -34,6 +34,9 @@ const GS = (() => {
   let connPid         = null;
   let meusHerois      = [];
   let _focoTurno      = null;   // último herói meu que recebeu a vez
+  // Aviso que pediu resposta a outro herói meu roubou o foco: {de, para,
+  // respondido}. Respondido o aviso, o próximo game_state devolve o foco a `de`.
+  let _voltaFoco      = null;
   let myName          = '';
   let account   = null;   // apelido logado (ou null)
   let savegames = [];     // último savegames_list recebido
@@ -1348,6 +1351,8 @@ const GS = (() => {
     // mensagens da conexão (lobby, conta, Mestre…).
     if (meusHerois.length > 1 && myPid && obj && obj.heroi === undefined)
       obj = Object.assign({}, obj, { heroi: myPid });
+    if (_voltaFoco && obj && _voltaFoco.para === myPid && _RESPOSTAS_DE_AVISO.has(obj.type))
+      _voltaFoco.respondido = true;
     ws.send(JSON.stringify(obj));
     return true;
   }
@@ -1484,7 +1489,7 @@ const GS = (() => {
     const socket = ws;
     ws = null;
     myPid = null;
-    connPid = null; meusHerois = []; _focoTurno = null;
+    connPid = null; meusHerois = []; _focoTurno = null; _voltaFoco = null;
     gameState = null;
     lobbyState = null;
     cityState = null;
@@ -1565,7 +1570,7 @@ const GS = (() => {
     if (ws && ws.readyState < 2) { try { ws.close(); } catch (e) {} }
     myName          = name;
     myPid           = null;
-    connPid = null; meusHerois = []; _focoTurno = null;
+    connPid = null; meusHerois = []; _focoTurno = null; _voltaFoco = null;
     gameState       = null;
     lobbyState      = null;
     cityState       = null;
@@ -1609,6 +1614,7 @@ const GS = (() => {
       .find(id => id && meusHerois.includes(id)) || null;
     if (vez && vez !== _focoTurno) {
       if (vez !== myPid) _limparPendentesDeFoco();
+      _voltaFoco = null;   // a vez nova manda mais que a volta do aviso
       myPid = vez; _emit('focoHeroi', { pid: vez, auto: true });
     }
     _focoTurno = vez;
@@ -1617,7 +1623,22 @@ const GS = (() => {
     return msg.test_mode ? msg.master_pid === myPid
       : msg.current_turn === myPid || msg.last_stand_pid === myPid || msg.animados_turn === myPid;
   }
+  // Respondido o aviso, o foco volta ao herói em que o jogador estava — a menos
+  // que ele tenha trocado de herói à mão no meio (aí a escolha dele vale).
+  function _devolverFocoAposAviso() {
+    const v = _voltaFoco;
+    if (!v || !v.respondido) return;
+    _voltaFoco = null;
+    if (myPid !== v.para || v.de === myPid || !meusHerois.includes(v.de)) return;
+    _limparPendentesDeFoco();
+    myPid = v.de;
+    _emit('focoHeroi', { pid: v.de, auto: true, volta: true });
+  }
   function focarHeroi(pid) {
+    _voltaFoco = null;   // troca à mão: o jogador decidiu onde quer estar
+    return _trocarFoco(pid);
+  }
+  function _trocarFoco(pid) {
     if (!meusHerois.includes(pid) || pid === myPid) return false;
     _limparPendentesDeFoco();
     myPid = pid;
@@ -1648,13 +1669,27 @@ const GS = (() => {
     'tempestade_ciclones_prompt',   // posicionar ciclones
     'ira_rocha_ardente_prompt',     // posicionar a Ira da Rocha Ardente
   ]);
+  // As mensagens que RESPONDEM a esses avisos (enviá-las marca a volta do foco).
+  const _RESPOSTAS_DE_AVISO = new Set([
+    'escolher_magia_nivel', 'sorte_reacao', 'fire_choice', 'teleporte_destino',
+    'teleporte_consent', 'metamorfose_consent', 'tempestade_ciclones_posicoes',
+    'ira_rocha_ardente_chamas',
+  ]);
   function souAnfitriao(host) {
     return host != null && host === (connPid || myPid);
   }
 
   function _handle(msg) {
-    if (msg.heroi && msg.heroi !== myPid && meusHerois.includes(msg.heroi)
-        && _AVISOS_COM_RESPOSTA.has(msg.type)) focarHeroi(msg.heroi);
+    if (msg.heroi && meusHerois.includes(msg.heroi) && _AVISOS_COM_RESPOSTA.has(msg.type)) {
+      if (msg.heroi !== myPid) {
+        // Avisos em fila para o mesmo herói guardam o herói de ORIGEM.
+        const de = _voltaFoco && _voltaFoco.para === msg.heroi ? _voltaFoco.de : myPid;
+        _trocarFoco(msg.heroi);
+        _voltaFoco = { de, para: msg.heroi, respondido: false };
+      } else if (_voltaFoco && _voltaFoco.para === msg.heroi) {
+        _voltaFoco.respondido = false;   // próximo aviso da fila: espera de novo
+      }
+    }
     switch (msg.type) {
 
       case 'lobby_state':
@@ -1746,6 +1781,7 @@ const GS = (() => {
           if (me) myPid = me.id;
         }
         _aprenderConexao(msg.players);
+        _devolverFocoAposAviso();
         if (!msg.test_mode) _focarVez(msg);
         isMyTurn = _calcIsMyTurn(msg);
         // A prévia só permanece válida enquanto o herói continua na mesma
@@ -2054,6 +2090,8 @@ const GS = (() => {
         break;
 
       case 'error':
+        // Resposta recusada: o aviso continua aberto, o foco fica onde está.
+        if (_voltaFoco) _voltaFoco.respondido = false;
         _emit('serverError', msg.msg);
         break;
     }
@@ -3459,7 +3497,7 @@ const GS = (() => {
   // personagem à conta via account_by_pid). Só faz sentido após o login.
   function joinByCode(code) {
     if (!account) return false;
-    connPid = null; meusHerois = []; _focoTurno = null;
+    connPid = null; meusHerois = []; _focoTurno = null; _voltaFoco = null;
     myPid = null;   // sala nova → myPid é resolvido pelo próximo lobby_state
     send({ type: 'join_room', name: account, code: (code || '').toUpperCase() });
     return true;

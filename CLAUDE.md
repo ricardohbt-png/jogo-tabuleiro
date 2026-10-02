@@ -501,7 +501,10 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `GS.meusHerois`/`temGrupo`/`ehMeuHeroi`/`cascaDaClasse`; com grupo, `send` acrescenta
 > `heroi: myPid`; a sessão grava o `connPid`. Aviso que pede resposta (`_AVISOS_COM_RESPOSTA`:
 > escolha de magia, Sorte, chamas, consentimentos de teleporte/metamorfose, posicionamento de
-> ciclones) chegando com `heroi` de outro herói meu foca esse herói antes. Botões de anfitrião
+> ciclones) chegando com `heroi` de outro herói meu foca esse herói antes; enviada a resposta
+> (`_RESPOSTAS_DE_AVISO`), o próximo `game_state` devolve o foco a quem estava (`_voltaFoco`,
+> `focoHeroi {volta:true}`) — exceto se chegou outro aviso da fila, se o servidor recusou a
+> resposta (`error`), se a vez trocou ou se o jogador trocou de herói à mão. Botões de anfitrião
 > comparam `host` com a conexão (`GS.souAnfitriao(host)`), nunca com `myPid`. Cartões do HUD/
 > cidade de heróis meus focam o herói (2º clique abre a ficha); `focoHeroi` centraliza a câmera;
 > visão compartilhada sempre ligada no grupo. Seleção: `_csAlternarNoGrupo` (botão vira
@@ -511,7 +514,21 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Salvar e sair → Continuar de volta à masmorra com casas e PV idênticos. A escolha Solo/Multiplayer
 > (`play_mode`) foi trazida do trabalho em andamento do autor só no trecho do servidor. Spec/plano
 > em `docs/superpowers/{specs,plans}/2026-10-01-solo-com-grupo*`. Testes:
-> `tools/test_solo_grupo.py` (70) e `tools/test_solo_grupo_cliente.js` (29).
+> `tools/test_solo_grupo.py` (72) e `tools/test_solo_grupo_cliente.js` (52).
+>
+> **XP e sons do grupo (2026-10-02):** o aviso de XP ao matar um monstro soma TODOS os meus heróis
+> (`_ganhosXpMeusHerois`, "✨ +25 XP para cada um dos 3 heróis"), medindo em xp acumulado
+> (`_xpAcumulado`, com `XP_POR_NIVEL_CLIENTE` = espelho do servidor) — antes a subida de nível
+> zerava a diferença. Subir de nível de qualquer herói meu avisa (`_avisarNiveisDoGrupo`). O diff de
+> sons (`_capturarSonsDeEstado`) descarta o `me` anterior quando o foco troca de herói (senão trocar
+> o foco tocava equipar/moedas/nível) e toca "sua vez" quando a vez passa de um herói meu a outro.
+> **Destaque do herói da vez** (todos com grupo, exceto onde dito): faixa central "Vez de Pedro" com
+> o retrato quando a vez passa a um herói meu (`_destacarVezDeEstado`/`_mostrarBannerVez`,
+> `#banner-vez`); cartão `.pcard.vez` com moldura dourada pulsante e rolagem até ele (em todos os
+> modos); seta dourada sobre o peão da vez — no 3D um sprite PERMANENTE `g3.setaVez`, movido como a
+> `haloLight` (não nasce/morre por turno), no 2D `_desenharSetaVez2D` (todos os modos, fora a mesa de
+> teste); e o retrato do HUD ganha nome + "na vez"/"fora da vez — só ações livres"
+> (`#my-hero-portrait-faixa`, moldura dourada quando na vez).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa

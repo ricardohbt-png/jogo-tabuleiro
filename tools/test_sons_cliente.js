@@ -173,15 +173,17 @@ console.log('\n[7] _capturarSonsDeEstado');
   const tocados = [];
   const stubs = {
     SoundBank: SB,
-    GS: { myPid: 'h1', doorSets: st => ({ open: new Set(st.abertas || []) }) },
+    GS: { myPid: 'h1', meus: ['h1'], ehMeuHeroi(id){ return this.meus.includes(id); },
+          doorSets: st => ({ open: new Set(st.abertas || []) }) },
     sfx: (e, o) => { tocados.push([e, o && o.pos]); return true; },
     _sfxVisaoDe: () => new Set(['2,2', '4,4']),
     _sonsPassosDeEstado: () => {}, _sonsCorrosaoDeEstado: () => {},
   };
   // O snapshot `_sonsSnap` é estado de módulo do game.js: recriado aqui, com reset.
-  const src = extrair('_capturarSonsDeEstado');
+  const src = extrair('_heroiMeuNaVez') + '\n' + extrair('_capturarSonsDeEstado');
   const f = new Function(...Object.keys(stubs),
-    'let _sonsSnap = null; let _rugiram = new Set();\n' + src + '\nreturn { _capturarSonsDeEstado, reset(){ _sonsSnap = null; } };')(...Object.values(stubs));
+    'let _sonsSnap = null; let _sonsSnapPid = null, _sonsVezPid = null; let _rugiram = new Set();\n' + src
+    + '\nreturn { _capturarSonsDeEstado, reset(){ _sonsSnap = null; _sonsSnapPid = null; _sonsVezPid = null; } };')(...Object.values(stubs));
   const st = (extra) => Object.assign({ players: [{ id: 'h1', pos: [0, 0], gold: 5, bag: [], gear: {}, level: 1 }],
     monsters: [{ id: 'm1', type: 'goblin', hp: 5, pos: [2, 2] }], current_turn: 'x', abertas: [] }, extra);
   f.reset();
@@ -202,6 +204,25 @@ console.log('\n[7] _capturarSonsDeEstado');
   f._capturarSonsDeEstado(st({ current_turn: 'h1', abertas: ['4,4'],
     monsters: [{ id: 'm3', type: 'goblin', hp: 0, pos: [2, 2] }] }));
   check('monstro morto não ruge', tocados.length === 0);
+
+  // Solo com grupo: o "me" segue o herói em foco.
+  const G = stubs.GS;
+  G.meus = ['h1', 'h2'];
+  const grupo = (extra) => st(Object.assign({ players: [
+    { id: 'h1', pos: [0, 0], gold: 5, bag: [], gear: {}, level: 1 },
+    { id: 'h2', pos: [1, 0], gold: 90, bag: [{ id: 'x' }], gear: { main_hand: { id: 'espada' } }, level: 4 } ] }, extra));
+  f.reset(); tocados.length = 0;
+  f._capturarSonsDeEstado(grupo({ current_turn: 'h1' }));
+  G.myPid = 'h2';
+  f._capturarSonsDeEstado(grupo({ current_turn: 'h1' }));
+  check('trocar o foco não toca equipar/moedas/nível/bolsa', tocados.length === 0);
+  G.myPid = 'h1';
+  f._capturarSonsDeEstado(grupo({ current_turn: 'h1' }));
+  tocados.length = 0;
+  G.myPid = 'h2';   // o foco pula com a vez (gameState._focarVez)
+  f._capturarSonsDeEstado(grupo({ current_turn: 'h2' }));
+  check('a vez passando a OUTRO herói meu toca sua_vez', tocados.map(x => x[0]).join() === 'sua_vez');
+  G.myPid = 'h1'; G.meus = ['h1'];
 }
 
 console.log('\n[8] Fiação de estado, morte e ambiente');

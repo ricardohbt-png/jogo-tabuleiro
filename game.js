@@ -418,6 +418,7 @@ document.body.innerHTML = `
         <!-- Hero portrait — shown at top of character sheet when available -->
         <div id="my-hero-portrait">
           <img id="my-hero-portrait-img" src="" alt="" />
+          <div id="my-hero-portrait-faixa"></div>
         </div>
         <div class="section-title" data-i18n="ui.hud.meu_personagem">Meu Personagem</div>
         <div id="my-stats"></div>
@@ -6631,6 +6632,27 @@ function _filtroEstadoPeao2D(x){
   return x?.petrificado ? _petrificadoFiltro2D() : (_estaParalisado(x) ? _congeladoFiltro2D() : 'none');
 }
 
+// Seta dourada apontando para o herói da vez (ponta em `yPonta`). Estática no 2D:
+// o mapa 2D só redesenha quando algo muda, e a seta não precisa pulsar para
+// ser vista.
+function _desenharSetaVez2D(ctx, cx, yPonta){
+  const w = CELL * 0.34, h = CELL * 0.30;
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,200,60,.9)'; ctx.shadowBlur = 10;
+  ctx.fillStyle = '#ffd24a'; ctx.strokeStyle = '#5a3a00'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx, yPonta);
+  ctx.lineTo(cx - w / 2, yPonta - h);
+  ctx.lineTo(cx - w / 5, yPonta - h);
+  ctx.lineTo(cx - w / 5, yPonta - h * 1.55);
+  ctx.lineTo(cx + w / 5, yPonta - h * 1.55);
+  ctx.lineTo(cx + w / 5, yPonta - h);
+  ctx.lineTo(cx + w / 2, yPonta - h);
+  ctx.closePath();
+  ctx.fill(); ctx.shadowBlur = 0; ctx.stroke();
+  ctx.restore();
+}
+
 function drawHeroSprite(ctx, cx, cy, classId, color, isMe, isCur, petrificado=false, facing=null, extraRotation=0, congelado=false){
   ctx.save(); ctx.translate(cx,cy);
   const r=CELL/2-2;
@@ -10628,6 +10650,8 @@ function renderMap(state){
     if(_invisP) ctx.restore();
     _drawStatusIcons2D(ctx, X, Y, p);
     _drawEfeitosAtivos2D(ctx, state, p, cx, cy);
+    if((isCur || p.id === state.last_stand_pid) && !_invisP && !state.test_mode)
+      _desenharSetaVez2D(ctx, cx, Y - CELL * 0.62);
     if(isMe||isCur||isTesteSel){
       const label=p.name.slice(0,9);
       const tagFs=Math.round(CELL*0.14);
@@ -10955,8 +10979,8 @@ function _agendarFimMorteVisual(id){
       atual.confirmado = true;
       const titulo = atual.monster.boss ? `👑 ${atual.monster.name} derrotado` : `✅ ${atual.monster.name} derrotado`;
       toast(titulo, atual.monster.boss ? 'var(--gold)' : 'var(--green)');
-      if(atual.xpGain > 0 || atual.lootAvailable){
-        const recompensa = [atual.xpGain > 0 ? `✨ +${atual.xpGain} XP` : '', atual.lootAvailable ? t('ui.hud.bau_de_saque_disponivel') : '']
+      if(atual.xpGanhos.length || atual.lootAvailable){
+        const recompensa = [_textoGanhosXp(atual.xpGanhos), atual.lootAvailable ? t('ui.hud.bau_de_saque_disponivel') : '']
           .filter(Boolean).join('  •  ');
         toast(recompensa, 'var(--gold)');
       }
@@ -10968,6 +10992,34 @@ function _agendarFimMorteVisual(id){
   // 'end' de _executarComandoCena, que zera minAte/aguardarMagia antes de chamar.
   rec.concluir = verificar;
   rec.timer = setTimeout(verificar, MORTE_VISUAL_MIN_MS);
+}
+
+// O xp do servidor zera a cada nível (desconta XP_POR_NIVEL × nível), então a
+// diferença crua some na subida. Medido em "xp desde o nível 1", não some.
+const XP_POR_NIVEL_CLIENTE = 300;   // espelho de XP_POR_NIVEL (server.py)
+function _xpAcumulado(h){
+  const n = Math.max(1, Number(h?.level) || 1);
+  return Number(h?.xp || 0) + XP_POR_NIVEL_CLIENTE * n * (n - 1) / 2;
+}
+// Solo com grupo: o XP é dividido entre os heróis, e todos os meus ganham —
+// não só o herói em foco. Sem grupo, ehMeuHeroi é só o meu (como antes).
+function _ganhosXpMeusHerois(antes, state){
+  const ganhos = [];
+  for(const p of (state.players || [])){
+    if(!GS.ehMeuHeroi(p.id)) continue;
+    const a = antes.get(String(p.id));
+    if(!a) continue;
+    const g = Math.max(0, Math.round(_xpAcumulado(p) - _xpAcumulado(a)));
+    if(g > 0) ganhos.push({ nome: p.name, xp: g });
+  }
+  return ganhos;
+}
+function _textoGanhosXp(ganhos){
+  if(!ganhos.length) return '';
+  if(ganhos.length === 1) return `✨ +${ganhos[0].xp} XP`;
+  if(ganhos.every(g => g.xp === ganhos[0].xp))
+    return t('ui.hud.xp_cada_heroi', { xp: ganhos[0].xp, n: ganhos.length });
+  return '✨ ' + ganhos.map(g => `${g.nome} +${g.xp}`).join(' · ');
 }
 
 function _capturarMortesVisuais(state){
@@ -11001,9 +11053,7 @@ function _capturarMortesVisuais(state){
       _spawnDefeatVisual(anterior, kind);
       _somMorteMonstro(anterior, kind);
     }
-    const minhaAntes = xpAnterior.get(String(GS.myPid));
-    const minhaAgora = (state.players || []).find(p => String(p.id) === String(GS.myPid));
-    const xpGain = minhaAntes != null && minhaAgora ? Math.max(0, Number(minhaAgora.xp || 0) - Number(minhaAntes.xp || 0)) : 0;
+    const xpGanhos = _ganhosXpMeusHerois(xpAnterior, state);
     const lootAvailable = (state.chests || []).some(c => ! _ultimoEstadoVisualBaús.has(String(c.id))
       && Array.isArray(c.pos) && Math.max(Math.abs(c.pos[0] - anterior.pos[0]), Math.abs(c.pos[1] - anterior.pos[1])) <= 1);
     // Mantém a miniatura, mas deixa a barra no mínimo visual enquanto o
@@ -11016,7 +11066,7 @@ function _capturarMortesVisuais(state){
       maxAte: agora + (comCena ? (VC.feedback?.combat?.scene?.expireMs ?? 6000)
         : aguardarMagia ? MORTE_VISUAL_MAX_MS : MORTE_VISUAL_MIN_MS),
       magiaAte: agora + MORTE_VISUAL_MAGIA_RECENTE_MS,
-      aguardarMagia, xpGain, lootAvailable, confirmado: false,
+      aguardarMagia, xpGanhos, lootAvailable, confirmado: false,
       timer: null,
     });
     if(comCena){
@@ -11057,7 +11107,7 @@ function _capturarMortesVisuais(state){
     [...proximos.entries()].filter(([, m]) => m && m.hp > 0)
   );
   _ultimoEstadoVisualBaús = novosBaus;
-  _ultimoEstadoVisualHerois = new Map((state.players || []).map(p => [String(p.id), {xp:p.xp, alive:p.alive, pos:p.pos}]));
+  _ultimoEstadoVisualHerois = new Map((state.players || []).map(p => [String(p.id), {xp:p.xp, level:p.level, alive:p.alive, pos:p.pos}]));
 }
 
 function _capturarDerrotasERessurreicoes(state){
@@ -15703,7 +15753,8 @@ function renderPlayers(state){
     const disc=p.connected===false;
     const fora=p.fora_masmorra||null;   // saiu pela escada: está na cidade
     const div=document.createElement('div');
-    div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
+    const naVez = isCur || p.id === state.last_stand_pid;
+    div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(naVez?' vez':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
     if(disc||fora) div.style.opacity='0.45';
     const hpPct=Math.max(0,p.hp/p.max_hp*100);
     // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
@@ -15738,6 +15789,8 @@ function renderPlayers(state){
       abrirFichaEmJogo(key);
     };
     el.appendChild(div);
+    // A lista rola (até 6 heróis): o cartão da vez não pode ficar escondido.
+    if(naVez) requestAnimationFrame(() => div.scrollIntoView?.({ block: 'nearest' }));
   }
   // Vinheta de pressão reflete o herói local (fome/sede autoritativos do servidor, 0–100).
   const _localP = state.players.find(x => x.id === GS.myPid);
@@ -23738,6 +23791,17 @@ function renderMyPanel(state){
       pFrame.classList.remove('visible');
       pImg.src = '';
     }
+    // Solo com grupo: o retrato diz de quem é o painel e se ele está na vez —
+    // trocar o foco para outro herói nunca pode deixar dúvida de quem age.
+    const faixa = document.getElementById('my-hero-portrait-faixa');
+    const naVez = GS.temGrupo && GS.isMyTurn && me.alive;
+    pFrame.classList.toggle('grupo', GS.temGrupo);
+    pFrame.classList.toggle('na-vez', !!naVez);
+    if(faixa){
+      faixa.innerHTML = GS.temGrupo
+        ? `<b>${_esc(me.name || '')}</b><span>${t(naVez ? 'ui.hud.retrato_na_vez' : 'ui.hud.retrato_fora_da_vez')}</span>`
+        : '';
+    }
   }
   const canAct = GS.isMyTurn && me.alive && !me.action_done && !me.bau_engolido && !me.fosso_turno_perdido && state.phase === 'playing';
 
@@ -29853,7 +29917,57 @@ function _somMorteMonstro(m, kind){
 // Diferença entre estados → sons de exploração/interface/rugido. A regra mora
 // no SoundBank (puro); aqui só se monta a entrada a partir do game_state.
 let _sonsSnap = null;
-function _sonsReset(){ _sonsSnap = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); _sombraReset(); _corrosaoReset(); }
+let _sonsSnapPid = null, _sonsVezPid = null;
+let _niveisGrupo = null;   // id → nível dos meus heróis (Solo com grupo)
+// Herói MEU que está agindo agora (vez normal ou Último Esforço), ou null.
+function _heroiMeuNaVez(state){
+  return [state?.current_turn, state?.last_stand_pid]
+    .find(id => id && GS.ehMeuHeroi(id)) || null;
+}
+// Solo com grupo: subir de nível de QUALQUER herói meu avisa (o diff de sons só
+// enxerga o herói em foco, que já toca o som por lá).
+function _avisarNiveisDoGrupo(state){
+  if(!GS.temGrupo){ _niveisGrupo = null; return; }
+  const agora = new Map((state.players || []).filter(p => GS.ehMeuHeroi(p.id))
+    .map(p => [String(p.id), p]));
+  if(_niveisGrupo){
+    for(const [id, p] of agora){
+      const antes = _niveisGrupo.get(id);
+      if(antes == null || !(Number(p.level) > antes)) continue;
+      toast(t('ui.hud.subiu_de_nivel', { nome: p.name, n: p.level }), 'var(--gold)');
+      if(id !== String(GS.myPid)) sfx('nivel');
+    }
+  }
+  _niveisGrupo = new Map([...agora].map(([id, p]) => [id, Number(p.level) || 1]));
+}
+// Faixa central "Vez de Pedro" quando a vez passa a um herói meu (com grupo).
+let _bannerVezPid = null, _bannerVezTimer = null;
+function _destacarVezDeEstado(state){
+  const vez = (GS.temGrupo && !state.test_mode) ? _heroiMeuNaVez(state) : null;
+  if(vez === _bannerVezPid) return;
+  _bannerVezPid = vez;
+  if(!vez) return;
+  const h = (state.players || []).find(p => p.id === vez);
+  if(h) _mostrarBannerVez(h);
+}
+function _mostrarBannerVez(h){
+  let el = document.getElementById('banner-vez');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'banner-vez';
+    document.body.appendChild(el);
+  }
+  const foto = HERO_PORTRAIT_PATHS[h.class_id];
+  el.innerHTML = (foto ? `<img src="${foto}" alt="">` : `<span class="banner-vez-emoji">${_esc(h.emoji || '⚔️')}</span>`)
+    + `<div><small>${t('ui.hud.banner_vez')}</small><b>${_esc(h.name || '')}</b></div>`;
+  el.style.setProperty('--cor-heroi', h.color || '#f0c040');
+  el.classList.remove('aberto');
+  void el.offsetWidth;   // reinicia a animação
+  el.classList.add('aberto');
+  clearTimeout(_bannerVezTimer);
+  _bannerVezTimer = setTimeout(() => el.classList.remove('aberto'), 1700);
+}
+function _sonsReset(){ _sonsSnap = null; _sonsSnapPid = null; _sonsVezPid = null; _niveisGrupo = null; _passosReset(); _rugiram = new Set(); _fumacaReset(); _sombraReset(); _corrosaoReset(); }
 function _capturarSonsDeEstado(state){
   if(GS.isPreview) return;
   _sonsPassosDeEstado(state);
@@ -29864,6 +29978,16 @@ function _capturarSonsDeEstado(state){
   const monstros = (state.monsters || [])
     .filter(m => m && m.hp > 0 && Array.isArray(m.pos) && (!visao || visao.has(`${m.pos[0]},${m.pos[1]}`)))
     .map(m => ({ id: m.id, type: m.type, size: m.size, pos: m.pos }));
+  // Solo com grupo: o "me" muda de herói com o foco — comparar o herói novo com
+  // o anterior tocaria equipar/moedas/nível sem nada ter acontecido. E a vez
+  // passando de um herói meu para outro também é "sua vez".
+  const vezMinha = _heroiMeuNaVez(state);
+  if(_sonsSnap){
+    if(_sonsSnapPid !== GS.myPid) _sonsSnap = { ..._sonsSnap, me: null };
+    if(vezMinha && _sonsVezPid && vezMinha !== _sonsVezPid) _sonsSnap = { ..._sonsSnap, meuTurno: false };
+  }
+  _sonsSnapPid = GS.myPid;
+  _sonsVezPid = vezMinha;
   const r = SoundBank.diffSons(_sonsSnap, {
     portas: [...GS.doorSets(state).open],
     me: me ? { ouro: me.gold, bag: me.bag, gear: me.gear, nivel: me.level } : null,
@@ -31020,6 +31144,27 @@ function _limparEfeitosAtivos3D(){
     if(sprite.material) sprite.material.dispose();
     delete g3.activeEffectSprites[key];
   });
+}
+
+function _criarSetaVez3D(T){
+  const cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 80;
+  const c = cv.getContext('2d');
+  c.shadowColor = 'rgba(255,190,40,.95)'; c.shadowBlur = 10;
+  c.fillStyle = '#ffd24a'; c.strokeStyle = '#5a3a00'; c.lineWidth = 4;
+  c.beginPath();
+  c.moveTo(32, 74); c.lineTo(6, 40); c.lineTo(21, 40); c.lineTo(21, 8);
+  c.lineTo(43, 8); c.lineTo(43, 40); c.lineTo(58, 40); c.closePath();
+  c.fill(); c.shadowBlur = 0; c.stroke();
+  const tex = new T.CanvasTexture(cv);
+  const mat = new T.SpriteMaterial({ map: tex, transparent: true, depthTest: false,
+    depthWrite: false, toneMapped: false });
+  const sp = new T.Sprite(mat);
+  sp.scale.set(.5, .62, 1);
+  sp.renderOrder = 82;
+  sp.visible = false;
+  sp.raycast = () => {};   // não intercepta o clique na casa
+  return sp;
 }
 
 function _posicionarEfeitoAtivo3D(sprite, player, indice, total){
@@ -42417,6 +42562,10 @@ function init3D(state){
   const haloLight = new T.PointLight(0xf0a820, 0, 1.6);
   haloLight.castShadow = false;
   scene.add(haloLight);
+  // Seta da vez: um sprite só, criado uma vez e movido sobre o peão da vez
+  // (como a haloLight). Fica acima dos ícones de efeito ativo (+1,58).
+  const setaVez = _criarSetaVez3D(T);
+  scene.add(setaVez);
 
   // Ícones de habilidades/magias ativas, sempre acima dos peões dos heróis.
   // Ficam em um grupo separado para serem reconciliados sem reconstruir os
@@ -42444,7 +42593,7 @@ function init3D(state){
   g3 = {
     T, scene, renderer, camera, controls,
     ambient, torch, visionLamp, rimLight, fillLight, sconces, lightPool,
-    showcase, haloLight,
+    showcase, haloLight, setaVez,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
     sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
@@ -42782,6 +42931,10 @@ function dispose3D(){
   g3.renderer.dispose();
   const el = g3.renderer.domElement;
   if(el.parentNode) el.parentNode.removeChild(el);
+  if(g3.setaVez){
+    g3.setaVez.material.map?.dispose();
+    g3.setaVez.material.dispose();
+  }
   if(g3.activeEffectGroup){
     Object.values(g3.activeEffectSprites || {}).forEach(sprite => {
       if(sprite.material) sprite.material.dispose();
@@ -43451,6 +43604,15 @@ function startLoop3D(){
         g3.haloLight.intensity = 0.7 + 1.0 * pulse;
       } else {
         g3.haloLight.intensity = 0;
+      }
+    }
+    if(g3.setaVez){
+      const mostrar = !!(curFig && curFig.visible !== false && !GS.gameState?.test_mode);
+      g3.setaVez.visible = mostrar;
+      if(mostrar){
+        const alt = (Number(curFig.userData.altitude) || 0) * FLIGHT_ALTITUDE_STEP;
+        const bob = Math.sin(performance.now() / 260) * 0.08;
+        g3.setaVez.position.set(curFig.position.x, curFig.position.y + alt + 2.16 + bob, curFig.position.z);
       }
     }
 
@@ -52092,6 +52254,7 @@ GS.on('gameState', msg => {
   _capturarPositiveEffectChanges(msg);
   _detectHpChanges(msg);   // som e números de dano/cura por variação de HP entre estados
   try{ _capturarSonsDeEstado(msg); _ambienciaGarantir(msg); }catch(e){ console.warn('sons:', e); }
+  try{ _avisarNiveisDoGrupo(msg); _destacarVezDeEstado(msg); }catch(e){ console.warn('vez:', e); }
   _consumeResistanceEvents(msg);
   handleGameState(msg);
   _considerarPopupSenhorDasAguas(msg);
