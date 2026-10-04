@@ -122,6 +122,7 @@
     ponteDrag: null,
     materiais: {},                 // {"x,y": id}
     elevacoes: {},                 // {"x,y": nível visual (-1..2)}
+    alturasParede: {},             // {"x,y": nível manual da parede (0..10); ausente = automático}
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
     elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
@@ -144,6 +145,7 @@
     S.tiles = [];
     S.doorRotations = {};
     S.elevacoes = {};
+    S.alturasParede = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
   }
 
@@ -750,6 +752,23 @@
     ctx.restore();
   }
 
+  // Parede com altura manual: selo no canto com o nível fixado. Sem selo, a
+  // parede sobe sozinha com o chão mais alto ao redor (ver nivelParede3D).
+  function drawWallHeightEditor(x, y) {
+    const n = Number(S.alturasParede[x + "," + y]);
+    if (!Number.isInteger(n)) return;
+    const X = x * CELL, Y = y * CELL;
+    const texto = "▮" + n;
+    ctx.save();
+    ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const larg = Math.max(15, ctx.measureText(texto).width + 6);
+    ctx.fillStyle = "rgba(12, 10, 18, .86)";
+    ctx.fillRect(X + CELL - larg - 3, Y + CELL - 15, larg, 12);
+    ctx.fillStyle = "#c9b3ff";
+    ctx.fillText(texto, X + CELL - 3 - larg / 2, Y + CELL - 9);
+    ctx.restore();
+  }
+
   function drawElevationEditor(x, y) {
     const level = elevationAt(x, y);
     if (!level) return;
@@ -886,6 +905,7 @@
     for (let y = 0; y < S.grid.h; y++)
       for (let x = 0; x < S.grid.w; x++)
         if (S.tiles[y][x] === FLOOR || S.tiles[y][x] === DOOR) drawElevationEditor(x, y);
+        else if (S.tiles[y][x] === WALL) drawWallHeightEditor(x, y);
     for (const bridge of S.pontes) drawBridgeEditor(bridge);
     if (S.ponteDrag) drawBridgeEditor({ inicio: S.ponteDrag.start, fim: S.ponteDrag.end,
       largura: S.ponteDrag.width, material: S.ponteDrag.material }, true);
@@ -1294,6 +1314,10 @@
       }).join("");
       level.onchange = e => { S.elevacaoValor = Number(e.target.value); render(); };
       tb.appendChild(level);
+      const dicaParede = document.createElement("span");
+      dicaParede.style.cssText = "font-size:11px;opacity:.75;margin-left:6px;max-width:260px;line-height:1.2";
+      dicaParede.textContent = t("ui.editor.masmorra.barra.altura_parede_dica");
+      tb.appendChild(dicaParede);
       const transition = document.createElement("select");
       transition.id = "terrain-height-transition";
       transition.title = t("ui.editor.masmorra.barra.transicao_title");
@@ -1358,6 +1382,11 @@
   }
 
   function paintTile(x, y) {
+    _paintTile(x, y);
+    // Altura manual só existe em parede: virar chão/porta/entulho a descarta.
+    if (S.tiles[y][x] !== WALL) delete S.alturasParede[x + "," + y];
+  }
+  function _paintTile(x, y) {
     if (S.tool === "wall") {
       if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
       delete S.elevacoes[x + "," + y];
@@ -1462,9 +1491,16 @@
   }
 
   function paintElevation(x, y) {
-    if (!S.tiles[y] || ![FLOOR, DOOR].includes(S.tiles[y][x])) return;
+    if (!S.tiles[y]) return;
     const value = Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, Number(S.elevacaoValor) || 0));
     const key = x + "," + y;
+    if (S.tiles[y][x] === WALL) {
+      // Em parede, 0..10 fixa a altura; o nível negativo devolve ao automático.
+      if (value < 0) delete S.alturasParede[key];
+      else S.alturasParede[key] = value;
+      return;
+    }
+    if (![FLOOR, DOOR].includes(S.tiles[y][x])) return;
     if (value === 0) delete S.elevacoes[key];
     else S.elevacoes[key] = value;
   }
@@ -1620,6 +1656,7 @@
     S.falas = S.falas.filter(f => !(f.pos[0] === x && f.pos[1] === y));
     delete S.materiais[x + "," + y];
     delete S.elevacoes[x + "," + y];
+    delete S.alturasParede[x + "," + y];   // apagar devolve a parede ao automático
     S.tiles[y][x] = WALL;
   }
 
@@ -3355,6 +3392,9 @@
       elevacoes: Object.fromEntries(Object.entries(S.elevacoes)
         .filter(([key, value]) => value && Number.isInteger(value))
         .map(([key, value]) => [key, Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, value))])),
+      alturas_parede: Object.fromEntries(Object.entries(S.alturasParede)
+        .filter(([key, value]) => Number.isInteger(value))
+        .map(([key, value]) => [key, Math.max(0, Math.min(ELEVACAO_MAX, value))])),
       transicao_altura: S.transicaoAltura === "declive" ? "declive" : "rampa",
       objectives: {
         primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
@@ -3617,6 +3657,17 @@
       if (!Number.isInteger(value) || value < ELEVACAO_MIN || value > ELEVACAO_MAX)
         e.push(V("elevacao_invalida", { chave: key }));
     }
+    for (const [key, value] of Object.entries(S.alturasParede)) {
+      const p = key.split(",").map(Number);
+      if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
+          || p[0] < 0 || p[1] < 0 || p[0] >= S.grid.w || p[1] >= S.grid.h) {
+        e.push(V("altura_parede_fora", { chave: key })); continue;
+      }
+      if (S.tiles[p[1]]?.[p[0]] !== WALL)
+        e.push(V("altura_parede_nao_parede", { chave: key }));
+      if (!Number.isInteger(value) || value < 0 || value > ELEVACAO_MAX)
+        e.push(V("altura_parede_invalida", { chave: key }));
+    }
     if (!["rampa", "declive"].includes(S.transicaoAltura))
       e.push(V("transicao_invalida"));
     return { ok: e.length === 0, erros: e };
@@ -3807,6 +3858,14 @@
           && Number.isInteger(n) && n >= ELEVACAO_MIN && n <= ELEVACAO_MAX && n !== 0)
         S.elevacoes[key] = n;
     }
+    S.alturasParede = {};
+    for (const [key, value] of Object.entries((obj.alturas_parede && typeof obj.alturas_parede === "object") ? obj.alturas_parede : {})) {
+      const p = key.split(",").map(Number), n = Number(value);
+      if (p.length === 2 && p.every(Number.isInteger) && p[0] >= 0 && p[1] >= 0
+          && p[0] < S.grid.w && p[1] < S.grid.h && S.tiles[p[1]]?.[p[0]] === WALL
+          && Number.isInteger(n) && n >= 0 && n <= ELEVACAO_MAX)
+        S.alturasParede[key] = n;
+    }
     S.pontes = (Array.isArray(obj.pontes) ? obj.pontes : []).map((p, i) => {
       const inicio = Array.isArray(p.inicio || p.start) ? (p.inicio || p.start).slice(0, 2).map(Number) : [0, 0];
       const fim = Array.isArray(p.fim || p.end) ? (p.fim || p.end).slice(0, 2).map(Number) : inicio.slice();
@@ -3917,12 +3976,17 @@
     const h = Math.max(1, Math.min(60, Number(document.getElementById("g-h").value) | 0));
     const old = S.tiles, ow = S.grid.w, oh = S.grid.h;
     const oldElevacoes = { ...S.elevacoes };
+    const oldAlturasParede = { ...S.alturasParede };
     const oldPontes = S.pontes.slice();
     initGrid(w, h);
     for (let y = 0; y < Math.min(h, oh); y++) for (let x = 0; x < Math.min(w, ow); x++) S.tiles[y][x] = old[y][x];
     for (const [key, value] of Object.entries(oldElevacoes)) {
       const [x, y] = key.split(",").map(Number);
       if (x >= 0 && y >= 0 && x < w && y < h && [FLOOR, DOOR].includes(S.tiles[y][x])) S.elevacoes[key] = value;
+    }
+    for (const [key, value] of Object.entries(oldAlturasParede)) {
+      const [x, y] = key.split(",").map(Number);
+      if (x >= 0 && y >= 0 && x < w && y < h && S.tiles[y][x] === WALL) S.alturasParede[key] = value;
     }
     S.pontes = oldPontes.filter(p => bridgeTilesOf(p).every(([x, y]) => x >= 0 && y >= 0 && x < w && y < h));
     render();

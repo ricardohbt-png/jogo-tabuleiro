@@ -10822,6 +10822,11 @@ function _spawnDefeatVisual(entity, kind='common'){
     kind, color: cfg.color, start: performance.now(), duration: _animationProgressDuration(cfg.duration),
     seed: ((Number(entity.id) || 1) * 2654435761) ^ Date.now(),
     group: null, ring: null, particles: [],
+    // Anel e partículas nascem no topo do terreno onde a criatura caiu.
+    baseY: (() => {
+      try{ return topoSuperficie3D(GS.gameState, Number(entity.pos[0]), Number(entity.pos[1])) - 0.22; }
+      catch(e){ return 0; }
+    })(),
   };
   _defeatVisuals.push(v);
   if(mode3D && g3) _buildDefeatVisual3D(v);
@@ -10862,12 +10867,12 @@ function _updateDefeatVisual3D(now){
     const p = Math.max(0, Math.min(1, (now - v.start) / v.duration));
     const fade = p < .58 ? 1 : Math.max(0, 1 - (p - .58) / .42);
     const expand = v.kind === 'explosion' ? 1 + p * 3.0 : v.kind === 'boss' ? 1 + p * 2.4 : 1 + p * 1.8;
-    v.ring.position.set(v.pos[0], .32 + p * .18, v.pos[1]);
+    v.ring.position.set(v.pos[0], (v.baseY || 0) + .32 + p * .18, v.pos[1]);
     v.ring.scale.setScalar(expand); v.ring.material.opacity = .82 * fade;
     for(const particle of v.particles){
       const i = particle.userData.i, a = i * Math.PI * 2 / v.particles.length + v.seed * .00001;
       const radius = (.10 + p * (v.kind === 'explosion' ? .75 : .48)) * (1 + (i % 3) * .12);
-      particle.position.set(v.pos[0] + Math.cos(a) * radius, .35 + p * (.55 + (i%4)*.10), v.pos[1] + Math.sin(a) * radius);
+      particle.position.set(v.pos[0] + Math.cos(a) * radius, (v.baseY || 0) + .35 + p * (.55 + (i%4)*.10), v.pos[1] + Math.sin(a) * radius);
       particle.rotation.y = now / 280 + i; particle.material.opacity = (.64 + .24 * Math.sin(now/120+i)**2) * fade;
     }
   }
@@ -11611,6 +11616,34 @@ function elevacaoTerreno(state, x, y){
 }
 function topoTerreno3D(state, x, y, TH = 0.22){
   return TH + elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
+}
+
+// Quanto uma parede sobe acima da altura padrão, em níveis de elevação. O autor
+// pode fixar o valor no editor (`alturas_parede`, só visual — as regras usam
+// `elevacoes`); sem ele, a parede acompanha o chão mais alto das 8 casas ao
+// redor, para um platô não ficar acima do próprio muro. Chão afundado (-1) não
+// rebaixa a parede.
+function nivelParede3D(state, x, y){
+  const manual = Number(state?.alturas_parede?.[`${x},${y}`]);
+  if(Number.isInteger(manual))
+    return Math.max(0, Math.min(ELEVACAO_TERRENO_MAX, manual));
+  const tiles = state?.tiles;
+  let nivel = 0;
+  for(let dy = -1; dy <= 1; dy++){
+    for(let dx = -1; dx <= 1; dx++){
+      if(!dx && !dy) continue;
+      const t = tiles?.[y + dy]?.[x + dx];
+      if(t !== TILE_FLOOR && t !== TILE_DOOR) continue;
+      nivel = Math.max(nivel, elevacaoTerreno(state, x + dx, y + dy));
+    }
+  }
+  return nivel;
+}
+// Quanto um enfeite preso à parede (tocha, cortina, brasão) sobe: acompanha o
+// chão à frente dele, sem passar da altura extra da própria parede.
+function elevacaoEnfeiteParede3D(state, wx, wy, fx, fy){
+  const chao = Math.max(0, elevacaoTerreno(state, fx, fy));
+  return Math.min(chao, nivelParede3D(state, wx, wy)) * TERRENO_ELEVACAO_STEP_3D;
 }
 
 // A ponte é uma superfície acima do material/terreno que está embaixo dela.
@@ -41090,11 +41123,13 @@ function _assinaturaVisualTabuleiro3D(state){
     .map(key => `${key}:${materiais[key]}`).join('|');
   const elevacoes = Object.keys(state.elevacoes || {}).sort()
     .map(key => `${key}:${state.elevacoes[key]}`).join('|');
+  const alturasParede = Object.keys(state.alturas_parede || {}).sort()
+    .map(key => `${key}:${state.alturas_parede[key]}`).join('|');
   const pontes = (state.pontes || []).map(p =>
     `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}:${p.material || 'madeira'}`).sort().join('|');
   const segredos = (state.secret_passages || []).map(sp =>
     `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
-  return `${tiles}#${pintura}#${elevacoes}#${pontes}#${state.transicao_altura || 'rampa'}#${segredos}`;
+  return `${tiles}#${pintura}#${elevacoes}#${alturasParede}#${pontes}#${state.transicao_altura || 'rampa'}#${segredos}`;
 }
 
 // Each TILE_FLOOR cell → chunky physical floor piece (thickness 0.22, gap 0.07/side)
@@ -42104,7 +42139,11 @@ function init3D(state){
         const isRock3 = matId3 === 'rocha' || matId3 === 'rocha_marrom';
         mesh = new T.Mesh(isDune3 ? makeDuneWallGeo(x, y)
           : isRock3 ? makeRockWallGeo(x, y) : wallGeo, mat);
-        mesh.position.set(x, (isDune3 || isRock3) ? 0 : WH/2, y);
+        // Parede sobe junto com o terreno (ver nivelParede3D). A escala vale
+        // também para duna/rocha, cuja geometria já nasce com a base em 0.
+        const wallScale = (WH + nivelParede3D(state, x, y) * TERRENO_ELEVACAO_STEP_3D) / WH;
+        mesh.scale.y = wallScale;
+        mesh.position.set(x, (isDune3 || isRock3) ? 0 : WH * wallScale / 2, y);
         mesh.castShadow    = true;
         mesh.receiveShadow = true;
         mesh.userData.isWall = true;
@@ -43722,6 +43761,8 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
       const isF = (dx,dy) => gT(dx,dy) === TILE_FLOOR;
 
       if(tile === TILE_FLOOR){
+        // Arco, pilares e porta ficam sobre o chão desta casa, elevado ou não.
+        const fl = elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
         const wN=isW(0,-1), wS=isW(0,1), wE=isW(1,0), wW=isW(-1,0);
         const wCnt = (wN?1:0)+(wS?1:0)+(wE?1:0)+(wW?1:0);
 
@@ -43750,7 +43791,7 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
             const stoneH = 0.17;                         // radial depth
             const stoneDp= archT * 2.2;                  // depth through arch thickness
             const archGrp = new T.Group();
-            archGrp.position.set(x, archCY, y);
+            archGrp.position.set(x, archCY + fl, y);
             // NS door: arch must span Z (N-S) — rotate group 90° around Y
             // EW door: arch spans X by default, no rotation needed
             if(axis === 'NS') archGrp.rotation.y = Math.PI / 2;
@@ -43772,8 +43813,8 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
           }catch(e){}
 
           const pPos = axis === 'NS'
-            ? [[x, pilCY, y-archR], [x, pilCY, y+archR]]
-            : [[x-archR, pilCY, y], [x+archR, pilCY, y]];
+            ? [[x, pilCY + fl, y-archR], [x, pilCY + fl, y+archR]]
+            : [[x-archR, pilCY + fl, y], [x+archR, pilCY + fl, y]];
           for(const [px,py,pz] of pPos){
             try{
               const pm = new T.Mesh(pilGeo, mkSt(1.06));
@@ -43790,7 +43831,7 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
             const dm = new T.Mesh(dGeo, woodMat.clone());
             dm.position.set(
               x + (axis === 'EW' ? 0.05 : 0),
-              TH + pilH * 0.5,
+              TH + pilH * 0.5 + fl,
               y + (axis === 'NS' ? 0.05 : 0)
             );
             add(key, dm);
@@ -43800,7 +43841,7 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
           for(const hFrac of [0.26, 0.70]){
             try{
               const hm = new T.Mesh(hinGeo, hingeMat.clone());
-              const hY = TH + pilH * hFrac;
+              const hY = TH + pilH * hFrac + fl;
               if(axis === 'NS'){
                 hm.rotation.z = Math.PI / 2;  // cylinder axis → X (horizontal)
                 hm.position.set(x + doorW*0.5 + 0.025, hY, y - archR + 0.06);
@@ -43819,17 +43860,19 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
       // rodapé de pedra herdado das paredes da masmorra criava uma faixa
       // cinza artificial na face interna; não o use nesses tiles.
       else if(tile === TILE_WALL){
+        // O rodapé assenta no chão vizinho, elevado ou afundado.
+        const bsYEm = (dx, dy) => bsY + elevacaoTerreno(state, x+dx, y+dy) * TERRENO_ELEVACAO_STEP_3D;
         if(!isDuneWall(x, y) && isF(0, 1)){  // floor to south
-          try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsY, y+bsFO); add(key,bs); }catch(e){}
+          try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsYEm(0,1), y+bsFO); add(key,bs); }catch(e){}
         }
         if(!isDuneWall(x, y) && isF(0,-1)){  // floor to north
-          try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsY, y-bsFO); add(key,bs); }catch(e){}
+          try{ const bs=new T.Mesh(bsGX, mkSt(0.70)); bs.position.set(x, bsYEm(0,-1), y-bsFO); add(key,bs); }catch(e){}
         }
         if(!isDuneWall(x, y) && isF(1, 0)){  // floor to east
-          try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x+bsFO, bsY, y); add(key,bs); }catch(e){}
+          try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x+bsFO, bsYEm(1,0), y); add(key,bs); }catch(e){}
         }
         if(!isDuneWall(x, y) && isF(-1,0)){  // floor to west
-          try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x-bsFO, bsY, y); add(key,bs); }catch(e){}
+          try{ const bs=new T.Mesh(bsGZ, mkSt(0.70)); bs.position.set(x-bsFO, bsYEm(-1,0), y); add(key,bs); }catch(e){}
         }
       }
     }
@@ -43864,8 +43907,14 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
       if(!visKey) continue;
 
       try{
+        // A coluna cresce junto com a parede mais alta das três que a cercam.
+        let nivelCol = 0;
+        for(const [cx, cy] of [[gx,gy],[gx+1,gy],[gx,gy+1],[gx+1,gy+1]])
+          if(tiles[cy][cx] === TILE_WALL) nivelCol = Math.max(nivelCol, nivelParede3D(state, cx, cy));
+        const colScale = (WH + nivelCol * TERRENO_ELEVACAO_STEP_3D) / WH;
         const col = new T.Mesh(colGeo, mkSt(1.12));
-        col.position.set(gx + 0.5, WH * 0.5, gy + 0.5);
+        col.scale.y = colScale;
+        col.position.set(gx + 0.5, WH * colScale * 0.5, gy + 0.5);
         add(visKey, col);
       }catch(e){}
     }
@@ -43943,7 +43992,8 @@ function buildRoomTorches(T, scene, state, wallTorches, TW, TH, WH){
       // aqui ja em mundo (fora do Group) porque vao para InstancedMesh: eram
       // 70 dos 175 draw calls das tochas, com uma geometria E um material
       // clonados por tocha sem necessidade nenhuma -- nada neles e animado.
-      const bx = wx + fdx*0.38, by = WH*0.50, bz = wy + fdz*0.38;
+      const bx = wx + fdx*0.38, bz = wy + fdz*0.38;
+      const by = WH*0.50 + elevacaoEnfeiteParede3D(state, wx, wy, wx + fdx, wy + fdz);
       const grp = new T.Group();
       grp.position.set(bx, by, bz);
       const estaticos = [];
@@ -45396,7 +45446,7 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
 // Brasões e cortinas são decorações de parede: o GLB fica vertical, centrado na face da
 // parede e com a base apoiada no piso. O PNG segue como fallback para manter a
 // decoração visível enquanto o GLB carrega ou se o arquivo não estiver disponível.
-function _buildWallDecorGLB(d, path){
+function _buildWallDecorGLB(d, path, liftY = 0){
   const montar = template => {
     const slot = g3 && g3.decorMeshes[d.id];
     if (!slot || slot.userData.wallGlbPath !== path) return;
@@ -45439,7 +45489,7 @@ function _buildWallDecorGLB(d, path){
     const wallBaseY = d.type === 'brasao_leao' ? 0.58 : DECOR_GLB_FLOOR_Y;
     grp.position.set(
       d.pos[0] + face[0] * WALL_DECOR_GLB_SURFACE,
-      wallBaseY,
+      wallBaseY + liftY,
       d.pos[1] + face[1] * WALL_DECOR_GLB_SURFACE
     );
     grp.rotation.y = _wallDecorRotation(face);
@@ -45517,7 +45567,7 @@ function _wallDecorRotation(face){
   return face[1] === -1 ? Math.PI : 0;
 }
 
-function _buildWallDecor3D(d){
+function _buildWallDecor3D(d, liftY = 0){
   const slot = g3 && g3.decorMeshes[d.id];
   if(!slot) return;
   _wallDecorTexture(g3.T, d.image, tex => {
@@ -45538,7 +45588,7 @@ function _buildWallDecor3D(d){
     // brasões e cortinas desapareciam atrás da própria parede. Coloque a arte
     // alguns milímetros para o lado jogável da face, evitando z-fighting.
     const WALL_DECOR_SURFACE = 0.516;
-    mesh.position.set(d.pos[0] + face[0]*WALL_DECOR_SURFACE, isCurtain ? 0.84 : 1.05,
+    mesh.position.set(d.pos[0] + face[0]*WALL_DECOR_SURFACE, (isCurtain ? 0.84 : 1.05) + liftY,
       d.pos[1] + face[1]*WALL_DECOR_SURFACE);
     mesh.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
@@ -46357,17 +46407,22 @@ function renderMap3D(state){
         const scaleSig = (Array.isArray(d.vscale) ? d.vscale : [1,1]).join(',');
         const wallGlbPath = d.model3d || (d.image && DECOR_GLB_MODELS[d.image]) || DECOR_GLB_TYPES[d.type];
         const wallMode = wallGlbPath && _decorGLBCache[wallGlbPath] !== 'erro' ? wallGlbPath : 'png';
+        // O enfeite fica na casa da parede e olha para `facing`: sobe com o
+        // chão à frente dele.
+        const [wfx, wfy] = d.facing || [0,1];
+        const wallLift = elevacaoEnfeiteParede3D(state, d.pos[0], d.pos[1], d.pos[0] + wfx, d.pos[1] + wfy);
         if (!mesh || mesh.userData.wallImage !== d.image || mesh.userData.wallFace !== faceSig
-            || mesh.userData.wallScale !== scaleSig || mesh.userData.wallGlbPath !== wallMode) {
+            || mesh.userData.wallScale !== scaleSig || mesh.userData.wallGlbPath !== wallMode
+            || (mesh.userData.wallLift || 0) !== wallLift) {
           if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
           mesh = new T.Group();
           // A assinatura completa evita recriar o placeholder a cada render
           // enquanto o PNG ainda está carregando.
           mesh.userData = {isDecor:true, decorId:d.id, wallImage:d.image,
-            wallFace:faceSig, wallScale:scaleSig, wallGlbPath:wallMode, pending:true};
+            wallFace:faceSig, wallScale:scaleSig, wallGlbPath:wallMode, wallLift, pending:true};
           mesh.visible = visivel; g3.scene.add(mesh); g3.decorMeshes[d.id] = mesh;
-          if (wallMode === 'png') _buildWallDecor3D(d);
-          else _buildWallDecorGLB(d, wallGlbPath);
+          if (wallMode === 'png') _buildWallDecor3D(d, wallLift);
+          else _buildWallDecorGLB(d, wallGlbPath, wallLift);
         }
         mesh = g3.decorMeshes[d.id];
         if (mesh) mesh.visible = visivel;
@@ -46723,7 +46778,9 @@ function renderMap3D(state){
   for(const c of (state.corpses||[])){
     const [cx,cy] = c.pos;
     if(!visionSet.has(`${cx},${cy}`)) continue;
-    const corpFig = obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c));
+    // x,y fazem obterFig assentar a lápide no topo do terreno (platô), como
+    // já acontece com a do herói logo abaixo.
+    const corpFig = obterFig(`corp:${c.id}`, JSON.stringify(c), () => build3DCorpse(c), cx, cy);
     corpFig.visible = !(window.CombatScene && CombatScene.isDying(`m:${c.id}`));
   }
 

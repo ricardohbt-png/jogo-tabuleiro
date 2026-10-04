@@ -105,6 +105,19 @@ ELEVACAO_TERRENO_MIN = -1
 ELEVACAO_TERRENO_MAX = 10
 
 
+def _chave_xy(key):
+    """Chave 'x,y' de um mapa autorado -> (x, y) inteiros, ou None se malformada."""
+    if not isinstance(key, str):
+        return None
+    partes = key.split(",")
+    if len(partes) != 2:
+        return None
+    try:
+        return int(partes[0]), int(partes[1])
+    except ValueError:
+        return None
+
+
 def _pontes_tiles(ponte):
     """Expande a linha central e a largura de uma ponte em casas da grade.
 
@@ -2703,7 +2716,7 @@ FOTO_SALA_CATEGORIAS = {
     "dungeon_generated": "foto", "tiles": "foto", "map_w": "foto", "map_h": "foto",
     "rooms": "foto", "door_rooms": "foto", "opened_doors": "foto",
     "stairs_pos": "foto", "exit_pos": "foto", "materiais": "foto",
-    "elevacoes": "foto", "pontes": "foto", "secret_passages": "foto",
+    "elevacoes": "foto", "alturas_parede": "foto", "pontes": "foto", "secret_passages": "foto",
     "door_conditions": "foto", "door_condition_activated": "foto",
     "decorations": "foto", "ambiente": "foto", "transicao_altura": "foto",
     "saida_permitida": "foto", "start_mode": "foto", "hero_spawns": "foto",
@@ -7399,6 +7412,25 @@ def validar_dungeon(defn):
                     or not ELEVACAO_TERRENO_MIN <= valor <= ELEVACAO_TERRENO_MAX):
                 return False, f"elevação em {key!r} deve ser um inteiro entre {ELEVACAO_TERRENO_MIN} e {ELEVACAO_TERRENO_MAX}."
 
+    # Altura manual de parede (só visual): sem entrada, o cliente faz a parede
+    # acompanhar o chão mais alto ao redor; com entrada, vale o número do autor.
+    alturas_parede = defn.get("alturas_parede")
+    if alturas_parede is not None:
+        if not isinstance(alturas_parede, dict):
+            return False, "alturas_parede deve ser um objeto (mapa 'x,y' -> nível)."
+        for key, valor in alturas_parede.items():
+            pos = _chave_xy(key)
+            if pos is None:
+                return False, f"chave de altura de parede inválida: {key!r} (esperado 'x,y')."
+            ex, ey = pos
+            if not (0 <= ex < w and 0 <= ey < h):
+                return False, f"altura de parede fora do grid em {key!r}."
+            if tiles[ey][ex] != WALL:
+                return False, f"altura de parede deve estar numa parede em ({ex},{ey})."
+            if (isinstance(valor, bool) or not isinstance(valor, int)
+                    or not 0 <= valor <= ELEVACAO_TERRENO_MAX):
+                return False, f"altura de parede em {key!r} deve ser um inteiro entre 0 e {ELEVACAO_TERRENO_MAX}."
+
     pontes = defn.get("pontes")
     if pontes is not None:
         if not isinstance(pontes, list):
@@ -10158,6 +10190,7 @@ class GameRoom:
         self._terrenos_inverno = {}
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..2)
+        self.alturas_parede = {}       # {(x,y): nível manual da parede (só visual)}
         self.transicao_altura = "rampa"
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
         self._mat_oclui_tiles = set()  # casas de material opaco (entulho) â€” barra visÃ£o
@@ -14097,6 +14130,15 @@ class GameRoom:
                     and self.tiles[ey][ex] in (FLOOR, DOOR)):
                 self.elevacoes[(ex, ey)] = max(ELEVACAO_TERRENO_MIN,
                                                min(ELEVACAO_TERRENO_MAX, valor))
+        self.alturas_parede = {}
+        for key, valor in (defn.get("alturas_parede") or {}).items():
+            pos = _chave_xy(key)
+            if pos is None or not isinstance(valor, int) or isinstance(valor, bool):
+                continue
+            ex, ey = pos
+            if (0 <= ex < self.map_w and 0 <= ey < self.map_h
+                    and self.tiles[ey][ex] == WALL):
+                self.alturas_parede[(ex, ey)] = max(0, min(ELEVACAO_TERRENO_MAX, valor))
         self.pontes = []
         for i, ponte in enumerate(defn.get("pontes") or []):
             if not isinstance(ponte, dict):
@@ -15040,6 +15082,7 @@ class GameRoom:
             self._rebuild_decor_index()
             self.materiais = {}
             self.elevacoes = {}
+            self.alturas_parede = {}
             self.transicao_altura = "rampa"
             self._terrenos_inverno = {}
             self._rebuild_pontes_index()
@@ -37359,6 +37402,12 @@ class GameRoom:
                 for (x, y), nivel in getattr(self, "elevacoes", {}).items()
                 if nivel}
 
+    def _serializar_alturas_parede(self):
+        """Altura manual das paredes como {"x,y": nível}. O 0 vai junto: ele
+        trava a parede na altura padrão mesmo ao lado de um platô."""
+        return {f"{x},{y}": nivel
+                for (x, y), nivel in getattr(self, "alturas_parede", {}).items()}
+
     def _serializar_pontes(self):
         """Pontes autoradas: superfície independente do terreno inferior."""
         return [
@@ -45533,6 +45582,7 @@ class GameRoom:
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
             "elevacoes": self._serializar_elevacoes(),
+            "alturas_parede": self._serializar_alturas_parede(),
             "pontes": self._serializar_pontes(),
             "transicao_altura": getattr(self, "transicao_altura", "rampa"),
         }

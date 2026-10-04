@@ -305,6 +305,22 @@ da ponte em `pontes[].tiles`; cliente e pathfinding usam essa lista para mostrar
 e bloquear corretamente a parte colapsada. Editor e `validar_dungeon` verificam
 ponte vinculada, tipo de piso e altura inferior.
 
+**Parede acompanha a elevação do terreno (2026-10-04):** no 3D, cada parede sobe sozinha até o
+chão mais alto das 8 casas ao redor (`nivelParede3D` em `game.js`; chão/porta, chão afundado não
+rebaixa) — antes um platô de nível alto passava por cima do próprio muro. O autor fixa a altura de
+uma parede com a ferramenta **altura** do editor pintando sobre ela: 0 a +10 grava em
+`alturas_parede` (`"x,y"` → nível, só parede), −1 ou apagar volta ao automático; selo "▮n" no mapa
+do editor. O campo é **só visual** (as regras seguem lendo `elevacoes`): validado em
+`validar_dungeon`, carregado em `load_authored_dungeon`, enviado no `game_state` (o 0 vai junto —
+é ele que trava a parede ao lado de um platô) e na foto da masmorra. Escala e posição da malha são
+aplicadas antes de `_prepararTileProxy` (que congela a matriz). Acompanham: colunas de canto
+(crescem com a parede mais alta do bloco), rodapés, arcos/pilares/porta de passagem (sobre o chão
+da casa), tochas e enfeites de parede (`elevacaoEnfeiteParede3D`: chão à frente, sem passar da
+parede). Junto: a lápide do monstro passou `x,y` ao `obterFig` (ficava enterrada no platô, a do
+herói já assentava) e o anel/partículas da morte nascem no topo do terreno. Escadas e bandeira de
+saída ainda ignoram a elevação. Testes: `tools/test_altura_parede.py`,
+`tools/test_altura_parede_cliente.js`.
+
 ## Classes de Personagem
 
 `warrior`, `mage`, `rogue`, `cleric`, `ranger`, `paladin` — cada uma com 3 habilidades únicas.

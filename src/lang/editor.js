@@ -404,6 +404,10 @@ window.LANG_EDITOR = {
     "en": "level {n}",
     "pt": "nível {n}"
   },
+  "ui.editor.masmorra.barra.altura_parede_dica": {
+    "en": "On a wall: 0 to +10 sets its height; −1 returns it to automatic (follows the highest floor around it)",
+    "pt": "Em parede: 0 a +10 fixa a altura; −1 volta ao automático (acompanha o chão mais alto ao redor)"
+  },
   "ui.editor.masmorra.barra.transicao_title": {
     "en": "Chooses the appearance of transitions between different levels",
     "pt": "Escolhe a aparência das transições entre níveis diferentes"
@@ -1895,6 +1899,18 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.elevacao_invalida": {
     "en": "invalid elevation at {chave}",
     "pt": "elevação inválida em {chave}"
+  },
+  "ui.editor.masmorra.valid.altura_parede_fora": {
+    "en": "wall height outside the grid at {chave}",
+    "pt": "altura de parede fora do grid em {chave}"
+  },
+  "ui.editor.masmorra.valid.altura_parede_nao_parede": {
+    "en": "wall height on a tile that is not a wall: {chave}",
+    "pt": "altura de parede em casa que não é parede: {chave}"
+  },
+  "ui.editor.masmorra.valid.altura_parede_invalida": {
+    "en": "invalid wall height at {chave}",
+    "pt": "altura de parede inválida em {chave}"
   },
   "ui.editor.masmorra.valid.transicao_invalida": {
     "en": "invalid height transition",
