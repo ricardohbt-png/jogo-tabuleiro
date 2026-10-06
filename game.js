@@ -31634,6 +31634,8 @@ function _audioPanelEnsure(){
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.audio.velocidade">🎞 Velocidade</span><select id="acc-speed" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="normal" data-i18n="ui.audio.normal">Normal</option><option value="fast" data-i18n="ui.audio.rapida">Rápida</option><option value="instant" data-i18n="ui.audio.instantanea">Instantânea</option></select></label>'
     // Menu de saída unificado (antes era o menu de pausa separado, aberto por Esc).
     +   '<div id="cfg-saida" style="display:none;border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
+    +     '<button id="cfg-salvar-ponto" data-i18n="ui.menu.salvar_ponto" style="display:none;width:100%;padding:8px;margin-bottom:6px;background:rgba(20,48,30,.7);'
+    +       'border:1px solid #6dbd8a88;border-radius:6px;color:#d7f8e0;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.menu.salvar_ponto')+'</button>'
     +     '<button id="cfg-salvar-sair" data-i18n="ui.menu.salvar_sair" style="display:none;width:100%;padding:8px;margin-bottom:6px;background:rgba(20,48,30,.7);'
     +       'border:1px solid #6dbd8a88;border-radius:6px;color:#d7f8e0;font-family:inherit;font-size:.8rem;cursor:pointer;">'+t('ui.menu.salvar_sair')+'</button>'
     +     '<button id="cfg-voltar-inicio" data-i18n="ui.menu.voltar_inicio" style="width:100%;padding:8px;margin-bottom:6px;background:rgba(40,32,10,.6);'
@@ -31655,11 +31657,32 @@ function _audioPanelEnsure(){
     // Só com jogo salvo: a partida avulsa não tem onde gravar.
     const salvarSair = wrap.querySelector('#cfg-salvar-sair');
     const estadoSala = GS.gameState || GS.cityState;
-    if(salvarSair) salvarSair.style.display = (emJogo && estadoSala && estadoSala.tem_jogo_salvo) ? 'block' : 'none';
+    const podeSalvar = emJogo && estadoSala && estadoSala.tem_jogo_salvo;
+    if(salvarSair) salvarSair.style.display = podeSalvar ? 'block' : 'none';
+    const salvarPonto = wrap.querySelector('#cfg-salvar-ponto');
+    if(salvarPonto) salvarPonto.style.display = podeSalvar ? 'block' : 'none';
     _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
+  // "💾 Salvar agora": ponto de salvamento manual com nome sugerido. O game_state
+  // não traz o nome da masmorra, então a sugestão usa o genérico; na cidade, o
+  // nome do local vem da lista world.locations pelo id em world.location.
+  wrap.querySelector('#cfg-salvar-ponto').onclick = () => {
+    pop.style.display='none';
+    const gs = GS.gameState;
+    let sugestao;
+    if (gs) {
+      sugestao = t('ui.save.ponto.rodada', {local: t('ui.save.masmorra_generica'), n: Number(gs.round ?? gs.round_num ?? 1) || 1});
+    } else {
+      const mundo = (GS.cityState && GS.cityState.world) || {};
+      const lugar = (mundo.locations || []).find(l => l && l.id === mundo.location);
+      sugestao = t('ui.save.ponto.cidade', {local: (lugar && lugar.nome) || ''});
+    }
+    const nome = prompt(t('ui.save.nome_ponto_prompt'), sugestao);
+    if (nome === null) return;
+    GS.salvarPonto(nome);
+  };
   wrap.querySelector('#cfg-salvar-sair').onclick = () => {
     pop.style.display='none';
     const gs = GS.gameState;
@@ -51879,6 +51902,11 @@ GS.on('salvoParaSair', () => {
   }
 });
 
+// "💾 Salvar agora": o servidor gravou o ponto manual.
+GS.on('pontoSalvo', (p) => {
+  toast(t('ui.save.ponto_salvo', {nome: _rotuloPonto(p || {})}), 'var(--green)');
+});
+
 // "💾 Progresso salvo": selo discreto no alto da tela, à parte do #toast para nunca
 // cobrir um erro. As compras gravam a cada item, então no máximo 1 a cada 30 s;
 // fora da cidade/masmorra (ex.: logo após "Salvar e sair") não aparece.
@@ -51920,6 +51948,202 @@ function _ondeParouHTML(foto) {
   return '<br><span style="font-size:.7rem;color:#e8d9a8;">' + texto + '</span>';
 }
 
+// ── "Meus Jogos": abas Solo/Multiplayer, um cartão por jogo, pontos de salvamento
+// por capítulo e arquivar. A aba escolhida fica em localStorage (lfh_aba_jogos).
+let _abaJogos = (() => { try { return localStorage.getItem('lfh_aba_jogos') || 'solo'; } catch (e) { return 'solo'; } })();
+const _jogosAbertos = new Set();   // cartões com os pontos expandidos
+
+// Nome do ponto: o do jogador (manual) ou o código do automático traduzido.
+function _rotuloPonto(p) {
+  if (p.tipo === 'manual' && p.nome) return p.nome;
+  return t('ui.save.ponto.' + (p.rotulo || 'migrado'),
+           { local: p.local || t('ui.save.masmorra_generica'), n: p.rodada || 1 });
+}
+
+function _quandoJogo(iso) {
+  try { return iso ? new Date(iso).toLocaleString() : ''; } catch (e) { return ''; }
+}
+
+function _btnJogo(rotulo, onclick, titulo) {
+  const b = document.createElement('button');
+  b.className = 'btn-secondary btn-sm';
+  b.textContent = rotulo;
+  if (titulo) b.title = titulo;
+  b.onclick = onclick;
+  return b;
+}
+
+function _linhaPonto(sg, p, podeGerir) {
+  const li = document.createElement('div');
+  li.className = 'savegame-ponto';
+  li.style.cssText = 'display:flex;gap:6px;align-items:center;font-size:.72rem;padding:3px 0;';
+  const nome = document.createElement('span');
+  nome.style.flex = '1';
+  nome.textContent = (p.tipo === 'manual' ? '🔖 ' : '🕑 ') + _rotuloPonto(p);
+  const quando = document.createElement('span');
+  quando.style.color = '#8ab88a';
+  quando.textContent = _quandoJogo(p.criado);
+  li.append(nome, quando);
+  if (podeGerir) {
+    li.appendChild(_btnJogo(t('ui.save.carregar'), () => {
+      if (confirm(t('ui.save.carregar_confirm', {nome: _rotuloPonto(p)}))) GS.carregarPonto(sg.id, p.id);
+    }));
+    li.appendChild(_btnJogo('🗑', () => {
+      if (confirm(t('ui.save.apagar_ponto_confirm', {nome: _rotuloPonto(p)}))) GS.apagarPonto(sg.id, p.id);
+    }));
+  }
+  return li;
+}
+
+function _cartaoJogo(sg, redesenhar) {
+  const conta = GS.getAccount();
+  const anfitriao = sg.anfitriao === conta;
+  const el = document.createElement('div');
+  el.className = 'savegame-card';
+  // Mesmos valores da regra .savegame-card do game.css (que pode não estar carregada).
+  el.style.cssText = 'min-width:0;display:flex;flex-direction:column;gap:12px;padding:14px;background:#0d1a0d;'
+    + 'border:1px solid #2a4a2a;border-radius:6px;overflow-wrap:anywhere;';
+  el.dataset.savegameId = sg.id;
+  const resumo = document.createElement('div');
+  const nome = document.createElement('b');
+  nome.textContent = sg.name || t('ui.save.campanha');
+  resumo.appendChild(nome);
+  const meta = document.createElement('span');
+  meta.style.cssText = 'display:block;font-size:.7rem;color:#8ab88a;';
+  const membros = Object.keys(sg.members || {});
+  meta.textContent = [
+    t('ui.save.capitulo', {n: sg.capitulo_atual || 1}),
+    membros.join(', '),
+    (!anfitriao && sg.anfitriao) ? t('ui.save.anfitriao', {nome: sg.anfitriao}) : '',
+    _quandoJogo(sg.updated),
+  ].filter(Boolean).join(' · ');
+  resumo.appendChild(meta);
+  const local = document.createElement('span');
+  local.innerHTML = _ondeParouHTML(sg.foto);
+  resumo.appendChild(local);
+  const encerrado = sg.status && sg.status !== 'active';
+  if (encerrado) {
+    const aviso = document.createElement('span');
+    aviso.style.cssText = 'display:block;font-size:.7rem;color:#e8b66d;margin-top:3px;';
+    aviso.textContent = t('ui.save.campanha_encerrada');
+    resumo.appendChild(aviso);
+  }
+  const btns = document.createElement('div');
+  btns.className = 'savegame-actions';
+  btns.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;';
+  const cont = _btnJogo(anfitriao || sg.play_mode === 'solo' ? t('ui.save.continuar') : t('ui.save.entrar'),
+                        () => GS.loadSavegame(sg.id));
+  cont.disabled = !!encerrado && !anfitriao;
+  btns.appendChild(cont);
+  const aberto = _jogosAbertos.has(sg.id);
+  btns.appendChild(_btnJogo((aberto ? '▴ ' : '▾ ') + t('ui.save.pontos'), () => {
+    if (aberto) _jogosAbertos.delete(sg.id); else _jogosAbertos.add(sg.id);
+    redesenhar();
+  }));
+  if (anfitriao) {
+    btns.appendChild(_btnJogo(t('ui.save.novo_capitulo'), () => {
+      const n = (sg.capitulo_atual || 1) + 1;
+      const nomeCap = prompt(t('ui.save.nome_capitulo_prompt'), t('ui.save.capitulo', {n}));
+      if (nomeCap !== null) GS.novoCapitulo(sg.id, nomeCap, sg.campaign_file);
+    }, t('ui.save.sequel_title')));
+  }
+  btns.appendChild(_btnJogo(sg.arquivado ? t('ui.save.desarquivar') : t('ui.save.arquivar'),
+                            () => GS.arquivarJogo(sg.id, !sg.arquivado)));
+  if (sg.has_master && sg.master_account === conta) {
+    btns.appendChild(_btnJogo(t('ui.save.encerrar'), () => {
+      if (confirm(t('ui.save.encerrar_confirm'))) GS.abandonMasterCampaign(sg.id);
+    }, t('ui.save.encerrar_title')));
+  }
+  if (sg.owner === conta) {
+    btns.appendChild(_btnJogo('🗑', () => {
+      if (confirm(t('ui.save.apagar_confirm', {nome: sg.name}))) GS.deleteSavegame(sg.id);
+    }));
+  }
+  el.appendChild(resumo); el.appendChild(btns);
+  if (aberto) {
+    const lista = document.createElement('div');
+    lista.className = 'savegame-pontos';
+    lista.style.cssText = 'width:100%;border-top:1px solid #2a4a2a;margin-top:6px;padding-top:4px;';
+    const caps = (sg.capitulos || []).slice().sort((a, b) => b.n - a.n);
+    for (const cap of caps) {
+      const atual = cap.n === (sg.capitulo_atual || 1);
+      const alvo = atual ? lista : document.createElement('details');
+      if (!atual) {
+        const s = document.createElement('summary');
+        s.style.cssText = 'font-size:.72rem;color:#8ab88a;cursor:pointer;';
+        s.textContent = t('ui.save.capitulo_anterior', {n: cap.n, q: (cap.pontos || []).length});
+        alvo.appendChild(s);
+        lista.appendChild(alvo);
+      }
+      if (!(cap.pontos || []).length && atual) {
+        const v = document.createElement('div');
+        v.style.cssText = 'font-size:.72rem;color:#8ab88a;';
+        v.textContent = t('ui.save.sem_pontos');
+        alvo.appendChild(v);
+      }
+      for (const p of cap.pontos || []) alvo.appendChild(_linhaPonto(sg, p, anfitriao));
+    }
+    el.appendChild(lista);
+  }
+  return el;
+}
+
+function _renderMeusJogos(box, list) {
+  const g = GS.agruparJogos(list, GS.getAccount());
+  const redesenhar = () => _renderMeusJogos(box, list);
+  box.innerHTML = '';
+  if (!g[_abaJogos]) _abaJogos = 'solo';
+  const abas = document.createElement('div');
+  abas.className = 'savegames-tabs';
+  // gridColumn: #savegames-list pode ser uma grade de 2 colunas; abas e seção ocupam a linha toda.
+  abas.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;grid-column:1 / -1;';
+  for (const [id, chave] of [['solo', 'ui.savegames.secao_solo'], ['multiplayer', 'ui.savegames.secao_multiplayer']]) {
+    const b = _btnJogo(`${t(chave)} (${g[id].total})`, () => {
+      _abaJogos = id;
+      try { localStorage.setItem('lfh_aba_jogos', id); } catch (e) {}
+      redesenhar();
+    });
+    b.dataset.aba = id;
+    if (_abaJogos === id) { b.classList.add('ativa'); b.style.borderColor = '#e8d9a8'; b.style.color = '#e8d9a8'; }
+    abas.appendChild(b);
+  }
+  box.appendChild(abas);
+  const aba = g[_abaJogos];
+  const secao = document.createElement('section');
+  secao.className = 'savegames-category';
+  secao.style.cssText = 'min-width:0;display:flex;flex-direction:column;gap:10px;grid-column:1 / -1;';
+  secao.dataset.playMode = _abaJogos;
+  const grupos = _abaJogos === 'solo'
+    ? [[null, aba.ativos]]
+    : [['ui.savegames.grupo_hospedo', aba.hospedo], ['ui.savegames.grupo_participo', aba.participo]];
+  if (!aba.total) {
+    const vazio = document.createElement('div');
+    vazio.style.cssText = 'color:#8ab88a;font-size:.78rem;padding:0 4px 4px;';
+    vazio.textContent = t(_abaJogos === 'solo' ? 'ui.savegames.vazio_solo' : 'ui.savegames.vazio_multiplayer');
+    secao.appendChild(vazio);
+  }
+  for (const [titulo, jogos] of grupos) {
+    if (!jogos.length) continue;
+    if (titulo) {
+      const h = document.createElement('h3');
+      h.style.cssText = 'margin:6px 0 2px;color:#d8c995;font-size:.85rem;';
+      h.textContent = t(titulo);
+      secao.appendChild(h);
+    }
+    for (const sg of jogos) secao.appendChild(_cartaoJogo(sg, redesenhar));
+  }
+  if (aba.arquivados.length) {
+    const arq = document.createElement('details');
+    const s = document.createElement('summary');
+    s.style.cssText = 'font-size:.78rem;color:#8ab88a;cursor:pointer;margin-top:8px;';
+    s.textContent = t('ui.savegames.arquivados', {n: aba.arquivados.length});
+    arq.appendChild(s);
+    for (const sg of aba.arquivados) arq.appendChild(_cartaoJogo(sg, redesenhar));
+    secao.appendChild(arq);
+  }
+  box.appendChild(secao);
+}
+
 GS.on('savegamesList', (list) => {
   const box = document.getElementById('savegames-list');
   const master = document.getElementById('sg-master');
@@ -51931,41 +52155,7 @@ GS.on('savegamesList', (list) => {
     master.parentElement.insertAdjacentElement('afterend', options);
   }
   if (!box) return;
-  box.innerHTML = list.length ? '' : '<div style="color:#8ab88a;">'+t('ui.save.nenhum_jogo_salvo')+'</div>';
-  for (const sg of list) {
-    const membros = Object.keys(sg.members || {}).length;
-    const el = document.createElement('div');
-    el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;background:#0d1a0d;border:1px solid #2a4a2a;border-radius:6px;padding:8px 10px;';
-    el.innerHTML = '<div><b>' + sg.name + '</b><br><span style="font-size:.7rem;color:#8ab88a;">'
-      + (sg.mode === 'campaign' ? t('ui.save.campanha') : t('ui.save.avulso')) + t('ui.save.fase_membros',{f: (sg.campaign_phase||0)+1, n: membros}) + '</span>'
-      + _ondeParouHTML(sg.foto) + '</div>';
-    const btns = document.createElement('div');
-    const cont = document.createElement('button'); cont.className='btn-secondary btn-sm'; cont.textContent=t('ui.save.continuar');
-    cont.onclick = () => GS.loadSavegame(sg.id);
-    btns.appendChild(cont);
-    const sequel = document.createElement('button'); sequel.className='btn-secondary btn-sm'; sequel.textContent=t('ui.save.continuar_sequencia');
-    sequel.title=t('ui.save.sequel_title');
-    sequel.onclick = () => {
-      const name = prompt(t('ui.save.nome_nova_campanha'), (sg.name || t('ui.save.campanha')) + t('ui.save.sufixo_continuacao'));
-      if (!name) return;
-      GS.createSavegame({ name, mode: sg.mode || 'campaign', campaign_file: sg.campaign_file,
-        has_master: !!sg.has_master, continue_from: sg.id, rules: sg.rules || {} });
-    };
-    btns.appendChild(sequel);
-    if (sg.has_master && sg.master_account === GS.getAccount()) {
-      const leave = document.createElement('button'); leave.className='btn-secondary btn-sm'; leave.textContent=t('ui.save.encerrar');
-      leave.title=t('ui.save.encerrar_title');
-      leave.onclick = () => { if (confirm(t('ui.save.encerrar_confirm'))) GS.abandonMasterCampaign(sg.id); };
-      btns.appendChild(leave);
-    }
-    if (sg.owner === GS.getAccount()) {
-      const del = document.createElement('button'); del.className='btn-secondary btn-sm'; del.textContent='🗑';
-      del.style.marginLeft='6px';
-      del.onclick = () => { if (confirm(t('ui.save.apagar_confirm',{nome: sg.name}))) GS.deleteSavegame(sg.id); };
-      btns.appendChild(del);
-    }
-    el.appendChild(btns); box.appendChild(el);
-  }
+  _renderMeusJogos(box, list);
   const sel = document.getElementById('sg-campaign');
   if (sel) {
     sel.innerHTML = '';

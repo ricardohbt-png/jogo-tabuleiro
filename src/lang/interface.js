@@ -8545,10 +8545,6 @@ window.LANG_INTERFACE = {
     "en": "Continue",
     "pt": "Continuar"
   },
-  "ui.save.continuar_sequencia": {
-    "en": "↗ Continue",
-    "pt": "↗ Continuar"
-  },
   "ui.save.de_nome_ao_jogo": {
     "en": "Give the game a name.",
     "pt": "Dê um nome ao jogo."
@@ -8633,10 +8629,6 @@ window.LANG_INTERFACE = {
     "en": "No saved game yet.",
     "pt": "Nenhum jogo salvo ainda."
   },
-  "ui.save.nome_nova_campanha": {
-    "en": "Name of the new campaign:",
-    "pt": "Nome da nova campanha:"
-  },
   "ui.save.pediu_vaga": {
     "en": "{quem} asked for the {heroi} slot. Approve?",
     "pt": "{quem} pediu a vaga de {heroi}. Aprovar?"
@@ -8672,10 +8664,6 @@ window.LANG_INTERFACE = {
   "ui.save.substituicao": {
     "en": "Hero replacement",
     "pt": "Substituição de herói"
-  },
-  "ui.save.sufixo_continuacao": {
-    "en": " — continued",
-    "pt": " — continuação"
   },
   "ui.selecao.aria_grid": {
     "en": "Character selection",
@@ -10372,6 +10360,134 @@ window.LANG_INTERFACE = {
   "ui.hud.retrato_fora_da_vez": {
     "en": "⏳ waiting — free actions only",
     "pt": "⏳ fora da vez — só ações livres"
+  },
+  "ui.menu.salvar_ponto": {
+    "en": "💾 Save now",
+    "pt": "💾 Salvar agora"
+  },
+  "ui.save.nome_ponto_prompt": {
+    "en": "Name this save:",
+    "pt": "Nome deste salvamento:"
+  },
+  "ui.save.ponto_salvo": {
+    "en": "💾 Saved: {nome}",
+    "pt": "💾 Salvo: {nome}"
+  },
+  "ui.save.entrar": {
+    "en": "Join",
+    "pt": "Entrar"
+  },
+  "ui.save.pontos": {
+    "en": "Saves",
+    "pt": "Salvamentos"
+  },
+  "ui.save.sem_pontos": {
+    "en": "No saves yet in this chapter.",
+    "pt": "Ainda não há salvamentos neste capítulo."
+  },
+  "ui.save.carregar": {
+    "en": "Load",
+    "pt": "Carregar"
+  },
+  "ui.save.carregar_confirm": {
+    "en": "Load \"{nome}\"? The current state is kept as an automatic save.",
+    "pt": "Carregar \"{nome}\"? O estado atual fica guardado como um salvamento automático."
+  },
+  "ui.save.apagar_ponto_confirm": {
+    "en": "Delete the save \"{nome}\"?",
+    "pt": "Apagar o salvamento \"{nome}\"?"
+  },
+  "ui.save.capitulo": {
+    "en": "Chapter {n}",
+    "pt": "Capítulo {n}"
+  },
+  "ui.save.capitulo_anterior": {
+    "en": "Chapter {n} — {q} saves kept",
+    "pt": "Capítulo {n} — {q} salvamentos guardados"
+  },
+  "ui.save.novo_capitulo": {
+    "en": "New chapter",
+    "pt": "Novo capítulo"
+  },
+  "ui.save.nome_capitulo_prompt": {
+    "en": "Name of the new chapter:",
+    "pt": "Nome do novo capítulo:"
+  },
+  "ui.save.anfitriao": {
+    "en": "host: {nome}",
+    "pt": "anfitrião: {nome}"
+  },
+  "ui.save.arquivar": {
+    "en": "Archive",
+    "pt": "Arquivar"
+  },
+  "ui.save.desarquivar": {
+    "en": "Unarchive",
+    "pt": "Desarquivar"
+  },
+  "ui.savegames.grupo_hospedo": {
+    "en": "Games I host",
+    "pt": "Que eu hospedo"
+  },
+  "ui.savegames.grupo_participo": {
+    "en": "Games I'm in",
+    "pt": "Que eu participo"
+  },
+  "ui.savegames.arquivados": {
+    "en": "Archived ({n})",
+    "pt": "Arquivados ({n})"
+  },
+  "ui.savegames.secao_solo": {
+    "en": "🎮 Solo games",
+    "pt": "🎮 Jogos solo"
+  },
+  "ui.savegames.secao_multiplayer": {
+    "en": "👥 Multiplayer games",
+    "pt": "👥 Jogos multiplayer"
+  },
+  "ui.savegames.vazio_solo": {
+    "en": "No solo games saved.",
+    "pt": "Nenhum jogo solo salvo."
+  },
+  "ui.savegames.vazio_multiplayer": {
+    "en": "No multiplayer games saved.",
+    "pt": "Nenhum jogo multiplayer salvo."
+  },
+  "ui.save.campanha_encerrada": {
+    "en": "This campaign has ended. Create a continuation to play again.",
+    "pt": "Esta campanha foi encerrada. Crie uma continuação para jogar novamente."
+  },
+  "ui.save.ponto.cidade": {
+    "en": "Town · {local}",
+    "pt": "Cidade · {local}"
+  },
+  "ui.save.ponto.cidade_com_masmorra": {
+    "en": "Town · {local}",
+    "pt": "Cidade · {local}"
+  },
+  "ui.save.ponto.entrada_masmorra": {
+    "en": "Entering {local}",
+    "pt": "Entrada · {local}"
+  },
+  "ui.save.ponto.rodada": {
+    "en": "{local}, round {n}",
+    "pt": "{local}, rodada {n}"
+  },
+  "ui.save.ponto.sair": {
+    "en": "On leaving · {local}",
+    "pt": "Ao sair · {local}"
+  },
+  "ui.save.ponto.antes_de_carregar": {
+    "en": "Before loading",
+    "pt": "Antes de carregar"
+  },
+  "ui.save.ponto.fim_capitulo": {
+    "en": "End of chapter",
+    "pt": "Fim do capítulo"
+  },
+  "ui.save.ponto.migrado": {
+    "en": "Saved state",
+    "pt": "Estado salvo"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
