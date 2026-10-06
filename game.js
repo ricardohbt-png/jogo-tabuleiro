@@ -52030,6 +52030,8 @@ function _cartaoJogo(sg, redesenhar) {
   local.innerHTML = _ondeParouHTML(sg.foto);
   resumo.appendChild(local);
   const encerrado = sg.status && sg.status !== 'active';
+  // O Mestre que abandonou não reabre a mesa; os outros jogadores, sim.
+  const mestreQueSaiu = sg.status === 'ended_master_left' && sg.master_account === conta;
   if (encerrado) {
     const aviso = document.createElement('span');
     aviso.style.cssText = 'display:block;font-size:.7rem;color:#e8b66d;margin-top:3px;';
@@ -52041,7 +52043,7 @@ function _cartaoJogo(sg, redesenhar) {
   btns.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;';
   const cont = _btnJogo(anfitriao || sg.play_mode === 'solo' ? t('ui.save.continuar') : t('ui.save.entrar'),
                         () => GS.loadSavegame(sg.id));
-  cont.disabled = !!encerrado && !anfitriao;
+  cont.disabled = !!encerrado;   // o servidor recusa abrir jogo encerrado
   btns.appendChild(cont);
   const aberto = _jogosAbertos.has(sg.id);
   btns.appendChild(_btnJogo((aberto ? '▴ ' : '▾ ') + t('ui.save.pontos'), () => {
@@ -52050,7 +52052,7 @@ function _cartaoJogo(sg, redesenhar) {
   }));
   // Jogo encerrado (o Mestre saiu): qualquer participante abre o próximo
   // capítulo e assume a mesa; o servidor confere.
-  if (anfitriao || encerrado) {
+  if (encerrado ? !mestreQueSaiu : anfitriao) {
     btns.appendChild(_btnJogo(t('ui.save.novo_capitulo'), () => {
       const n = (sg.capitulo_atual || 1) + 1;
       const nomeCap = prompt(t('ui.save.nome_capitulo_prompt'), t('ui.save.capitulo', {n}));
@@ -52059,7 +52061,7 @@ function _cartaoJogo(sg, redesenhar) {
   }
   btns.appendChild(_btnJogo(sg.arquivado ? t('ui.save.desarquivar') : t('ui.save.arquivar'),
                             () => GS.arquivarJogo(sg.id, !sg.arquivado)));
-  if (sg.has_master && sg.master_account === conta) {
+  if (sg.has_master && sg.master_account === conta && !encerrado) {
     btns.appendChild(_btnJogo(t('ui.save.encerrar'), () => {
       if (confirm(t('ui.save.encerrar_confirm'))) GS.abandonMasterCampaign(sg.id);
     }, t('ui.save.encerrar_title')));
@@ -52091,7 +52093,7 @@ function _cartaoJogo(sg, redesenhar) {
         v.textContent = t('ui.save.sem_pontos');
         alvo.appendChild(v);
       }
-      for (const p of cap.pontos || []) alvo.appendChild(_linhaPonto(sg, p, anfitriao));
+      for (const p of cap.pontos || []) alvo.appendChild(_linhaPonto(sg, p, anfitriao && !encerrado));
     }
     el.appendChild(lista);
   }

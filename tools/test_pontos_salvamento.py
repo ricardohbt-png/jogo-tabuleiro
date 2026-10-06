@@ -155,6 +155,13 @@ def secao_conta():
     ok, e = S.abandon_master_campaign(mm["id"], "mestre")
     check("Mestre abandonou", ok and S.load_savegame(mm["id"])["status"] == "ended_master_left", e)
     check("estranho não retoma", not S.try_novo_capitulo("zé", mm["id"], "x", None)[0])
+    ok, e = S.try_novo_capitulo("mestre", mm["id"], "x", None)
+    check("o Mestre que saiu não reabre", not ok and getattr(e, "key", None) == "erro.o_mestre_que_saiu_nao_reabre", e)
+    ok, e = S.try_carregar_ponto("mestre", mm["id"], S.capitulo_atual(S.load_savegame(mm["id"]))["pontos"][0]["id"]
+                                 if S.capitulo_atual(S.load_savegame(mm["id"]))["pontos"] else "pt_x")
+    check("nem o reativa carregando um ponto",
+          not ok and getattr(e, "key", None) == "erro.jogo_encerrado_use_novo_capitulo"
+          and S.load_savegame(mm["id"])["status"] == "ended_master_left", e)
     S.SAVEGAMES_IN_USE[mm["id"]] = "ABCD"
     try:
         check("jogo aberto recusa retomar", not S.try_novo_capitulo("bia", mm["id"], "x", None)[0])
@@ -296,6 +303,12 @@ async def secao_sala():
     check("sem foto e com janela aberta: recusa salvar",
           any(getattr(m.get("msg"), "key", None) == "erro.aguarde_para_salvar" for m in enviados)
           and len(S.capitulo_atual(sg)["pontos"]) == antes)
+    enviados.clear()
+    await r.handle_salvar_e_sair("p0")
+    check("salvar e sair sem foto e com janela aberta: recusa, sem ponto 'sair'",
+          any(getattr(m.get("msg"), "key", None) == "erro.aguarde_para_salvar" for m in enviados)
+          and not any(m.get("type") == "salvo_para_sair" for m in enviados)
+          and "sair" not in rotulos())
     del r._foto_janela_pendente
     check("1ª foto da visita grava ponto de entrada", r._gravar_foto_rodada() and "entrada_masmorra" in rotulos())
     r.round_num = S.PONTO_AUTO_RODADAS

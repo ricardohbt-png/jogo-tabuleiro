@@ -2508,6 +2508,10 @@ def _jogo_gerenciavel(conta, sid):
         return None, T("erro.jogo_salvo_indisponivel")
     if conta != _anfitriao_do_jogo(sg):
         return None, T("erro.so_o_anfitriao_gerencia_pontos")
+    # Encerrado (o Mestre saiu): carregar um ponto o reativaria por quem saiu.
+    # Volta-se a jogar só pelo "Novo capítulo" de um jogador.
+    if sg.get("status") and sg.get("status") != "active":
+        return None, T("erro.jogo_encerrado_use_novo_capitulo")
     if sid in SAVEGAMES_IN_USE:
         return None, T("erro.feche_o_jogo_antes")
     e = _soltar_salas_paradas(sid)
@@ -2579,6 +2583,10 @@ def try_novo_capitulo(conta, sid, nome, campaign_file):
     assumir = bool(sg and sg.get("status") and sg.get("status") != "active"
                    and _conta_participa(sg, conta))
     if assumir:
+        # Quem abandonou como Mestre não retoma a mesa que deixou.
+        if (sg.get("status") == "ended_master_left"
+                and conta == _norm_username(sg.get("master_account") or "")):
+            return False, T("erro.o_mestre_que_saiu_nao_reabre")
         if sid in SAVEGAMES_IN_USE:
             return False, T("erro.feche_o_jogo_antes")
         e = _soltar_salas_paradas(sid)
@@ -23353,7 +23361,10 @@ class GameRoom:
         if self.savegame is None:
             await self.send_to(pid, {"type": "error", "msg": T("erro.esta_partida_nao_tem_jogo_salvo")}); return
         if self.phase == "playing" and self._ultima_foto is None:
-            self._gravar_foto_rodada()
+            # Sem foto desta visita (ação pela metade), sair agora perderia a
+            # masmorra e o ponto "sair" guardaria só a cidade de antes.
+            if not self._gravar_foto_rodada():
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aguarde_para_salvar")}); return
         self._checkpoint_savegame()
         self._ponto_automatico("sair")
         _agendar_descarga()
