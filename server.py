@@ -24170,7 +24170,8 @@ class GameRoom:
         if base.get("effect") == "throwable":
             return iid in ARREMESSAVEIS
         if base.get("effect") == "coat_poison":
-            return base.get("veneno_id") in VENENOS
+            poison_id = base.get("veneno_id")
+            return isinstance(poison_id, str) and poison_id in VENENOS
         return base.get("item_type") == "potion" or iid in {
             "health_potion", "health_potion_small", "health_potion_concentrated",
             "health_potion_improved", "regeneration_potion", "elixir", "antidote",

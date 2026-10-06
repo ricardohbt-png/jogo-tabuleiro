@@ -169,6 +169,28 @@ class BeltTests(unittest.IsolatedAsyncioTestCase):
         self.p['gear']['item1']['utility_belt_slots'] = 'bad'
         await self.rejected()
 
+    def test_malformed_poison_identifiers_normalize_to_empty(self):
+        for poison_id in ([], {}):
+            with self.subTest(poison_id=poison_id):
+                invalid = {'id': 'invalid_poison_vial', 'item_slot': 'bag',
+                           'effect': 'coat_poison', 'veneno_id': poison_id}
+                b = self.belt(entries=[{'item': invalid, 'quantity': 1}, stack(), None, None])
+                self.r._normalize_utility_belt(b)
+                self.assertEqual(b['utility_belt_slots'], [None, stack(), None, None])
+                self.assertFalse(self.r._is_utility_belt_eligible(invalid))
+
+    async def test_malformed_poison_identifiers_reject_movement_atomically(self):
+        for poison_id in ([], {}):
+            with self.subTest(poison_id=poison_id):
+                invalid = {'id': 'invalid_poison_vial', 'item_slot': 'bag',
+                           'effect': 'coat_poison', 'veneno_id': poison_id}
+                self.belt(entries=[None] * 4)
+                self.p['bag'] = [invalid]
+                await self.rejected()
+                self.belt(entries=[{'item': invalid, 'quantity': 1}, None, None, None])
+                self.p['bag'] = []
+                await self.rejected(direction='to_bag')
+
     async def test_malformed_belt_identifier_is_rejected(self):
         self.p['gear']['item1'] = {'id': [], 'utility_belt_slots': [None] * 4}
         self.p['bag'] = [item('health_potion')]
