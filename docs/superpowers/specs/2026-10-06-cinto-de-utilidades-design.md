@@ -1,7 +1,7 @@
 # Cinto de Utilidades — design
 
 **Data:** 2026-10-06
-**Status:** aguardando revisão da especificação atualizada; desenho conversacional aprovado.
+**Status:** aprovada pelo usuário; plano de implementação em preparação.
 **Escopo:** dois itens equipáveis com compartimentos próprios para consumíveis, armazenamento persistente e transferência do conteúdo junto com cada cinto.
 
 ## 1. Objetivo
