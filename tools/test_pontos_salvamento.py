@@ -150,6 +150,45 @@ def secao_conta():
     ok, _ = S.delete_savegame(sg["id"], "ana")
     check("apagou jogo e pontos", ok and docs_de(sg["id"]) == [])
 
+    print("\n[9b] Jogo abandonado pelo Mestre: um jogador abre o próximo capítulo")
+    mm = jogo(owner="mestre", membros=("bia", "caio"), play_mode="multiplayer", has_master=True)
+    ok, e = S.abandon_master_campaign(mm["id"], "mestre")
+    check("Mestre abandonou", ok and S.load_savegame(mm["id"])["status"] == "ended_master_left", e)
+    check("estranho não retoma", not S.try_novo_capitulo("zé", mm["id"], "x", None)[0])
+    S.SAVEGAMES_IN_USE[mm["id"]] = "ABCD"
+    try:
+        check("jogo aberto recusa retomar", not S.try_novo_capitulo("bia", mm["id"], "x", None)[0])
+    finally:
+        S.SAVEGAMES_IN_USE.pop(mm["id"], None)
+    ok, e = S.try_novo_capitulo("bia", mm["id"], "Sem Mestre", None)
+    mm = S.load_savegame(mm["id"])
+    check("jogadora criou o capítulo", ok, e)
+    check("jogo ativo de novo", mm["status"] == "active")
+    check("ela virou a dona/anfitriã", mm["owner"] == "bia" and S._anfitriao_do_jogo(mm) == "bia")
+    check("sem Mestre", mm["has_master"] is False and mm.get("master_account") is None)
+    check("multiplayer", mm["play_mode"] == "multiplayer")
+    check("capítulo 2 existe", mm["capitulo_atual"] == 2 and len(mm["capitulos"]) == 2)
+
+    print("\n[9c] Sala parada com o mesmo jogo")
+    sg = jogo()
+    p, _ = S.registrar_ponto(sg, "manual", nome="z"); S.write_savegame(sg)
+    sala = S.GameRoom("PARADA")
+    sala.savegame = sg; sala.savegame_id = sg["id"]
+    S.rooms["PARADA"] = sala
+    try:
+        sala.connections["x"] = object()
+        check("sala com alguém conectado recusa carregar",
+              not S.try_carregar_ponto("ana", sg["id"], p["id"])[0])
+        check("e recusa apagar o jogo", not S.delete_savegame(sg["id"], "ana")[0])
+        check("a sala segue ligada", "PARADA" in S.rooms and sala.savegame is sg)
+        sala.connections.clear()
+        ok, e = S.try_carregar_ponto("ana", sg["id"], p["id"])
+        check("sala vazia: carregar funciona", ok, e)
+        check("e a sala foi desligada e recolhida",
+              "PARADA" not in S.rooms and sala.savegame is None and sala.savegame_id is None)
+    finally:
+        S.rooms.pop("PARADA", None)
+
 
 def secao_migracao():
     print("\n[10] Jogo antigo ganha capítulo 1 com 1 ponto, uma vez só")
@@ -184,6 +223,10 @@ def secao_migracao():
     check("ponto do filho mudou de dono", doc is not None and doc["sid"] == pai["id"] and doc["capitulo"] == 2)
     check("nenhum documento do filho sobrou", docs_de(filho["id"]) == [])
     check("órfão ficou como jogo próprio", S.load_savegame(orfao["id"]) is not None)
+    antes = next((p for p in pai["capitulos"][0]["pontos"] if p.get("rotulo") == "antes_de_fundir"), None)
+    doc = antes and S.LOJA.ler("pontos", f"{pai['id']}_{antes['id']}")
+    check("pai guardou 'antes de fundir' no capítulo dele",
+          bool(doc) and doc["estado"]["characters"]["warrior"]["gold"] == 10)
     S.migrar_continuacoes_para_capitulos()
     check("rodar de novo não muda nada", len(S.load_savegame(pai["id"])["capitulos"]) == 2)
     print("\n[11b] Cadeia, filho malformado e queda no meio")
@@ -247,6 +290,13 @@ async def secao_sala():
     await r._liberar_intro_masmorra(True)
     r._ultima_foto = None
     rotulos = lambda: [p.get("rotulo") for p in S.capitulo_atual(sg)["pontos"]]
+    r._foto_janela_pendente = lambda: "sorte_reacao"
+    antes = len(S.capitulo_atual(sg)["pontos"]); enviados.clear()
+    await r.handle_salvar_ponto("p0", "cedo")
+    check("sem foto e com janela aberta: recusa salvar",
+          any(getattr(m.get("msg"), "key", None) == "erro.aguarde_para_salvar" for m in enviados)
+          and len(S.capitulo_atual(sg)["pontos"]) == antes)
+    del r._foto_janela_pendente
     check("1ª foto da visita grava ponto de entrada", r._gravar_foto_rodada() and "entrada_masmorra" in rotulos())
     r.round_num = S.PONTO_AUTO_RODADAS
     r._gravar_foto_rodada()

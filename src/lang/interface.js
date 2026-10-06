@@ -10488,6 +10488,14 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.migrado": {
     "en": "Saved state",
     "pt": "Estado salvo"
+  },
+  "ui.save.ponto.antes_de_fundir": {
+    "en": "Before merging the sequel",
+    "pt": "Antes de juntar a continuação"
+  },
+  "ui.save.ponto.manual": {
+    "en": "Save · {local}",
+    "pt": "Salvamento · {local}"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

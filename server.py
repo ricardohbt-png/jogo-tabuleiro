@@ -2482,6 +2482,22 @@ def _anfitriao_do_jogo(sg):
     return (sg.get("master_account") or sg.get("owner")) if sg.get("has_master") else sg.get("owner")
 
 
+def _soltar_salas_paradas(sid):
+    """Sala deste jogo que ainda está em `rooms` guarda o MESMO dict do jogo
+    salvo e, num `rejoin`, gravaria por cima do que for mudado aqui. Com alguém
+    conectado o jogo conta como em uso (devolve o erro); sem ninguém, a sala é
+    desligada do jogo e recolhida, como em try_open_savegame_room."""
+    paradas = [(code, sala) for code, sala in list(rooms.items())
+               if getattr(sala, "savegame_id", None) == sid]
+    if any(sala.connections for _, sala in paradas):
+        return T("erro.feche_o_jogo_antes")
+    for code, sala in paradas:
+        sala.savegame = None
+        sala.savegame_id = None
+        rooms.pop(code, None)
+    return None
+
+
 def _jogo_gerenciavel(conta, sid):
     """(sg, None) se `conta` pode gerenciar pontos/capítulos de `sid` agora;
     senão (None, erro). Exige o jogo FECHADO: uma sala aberta tem o mesmo dict
@@ -2494,6 +2510,9 @@ def _jogo_gerenciavel(conta, sid):
         return None, T("erro.so_o_anfitriao_gerencia_pontos")
     if sid in SAVEGAMES_IN_USE:
         return None, T("erro.feche_o_jogo_antes")
+    e = _soltar_salas_paradas(sid)
+    if e:
+        return None, e
     garantir_capitulos(sg)
     return sg, None
 
@@ -2550,12 +2569,34 @@ def try_apagar_ponto(conta, sid, ptid):
 
 def try_novo_capitulo(conta, sid, nome, campaign_file):
     """"Continuar em sequência" dentro do mesmo jogo: fecha o capítulo atual com
-    um ponto e abre o próximo com a fase zerada, mantendo heróis e mundo."""
-    sg, e = _jogo_gerenciavel(conta, sid)
-    if e:
-        return False, e
+    um ponto e abre o próximo com a fase zerada, mantendo heróis e mundo.
+
+    Jogo ENCERRADO (ex.: o Mestre o abandonou): qualquer participante pode abrir
+    o capítulo seguinte e passa a ser o anfitrião, sem Mestre -- senão a mesa
+    ficaria presa, já que o anfitrião era quem saiu."""
+    conta = _norm_username(conta)
+    sg = load_savegame(sid) if isinstance(sid, str) else None
+    assumir = bool(sg and sg.get("status") and sg.get("status") != "active"
+                   and _conta_participa(sg, conta))
+    if assumir:
+        if sid in SAVEGAMES_IN_USE:
+            return False, T("erro.feche_o_jogo_antes")
+        e = _soltar_salas_paradas(sid)
+        if e:
+            return False, e
+        garantir_capitulos(sg)
+    else:
+        sg, e = _jogo_gerenciavel(conta, sid)
+        if e:
+            return False, e
     if campaign_file and campaign_file not in {c["file"] for c in listar_campanhas()}:
         return False, T("erro.escolha_uma_campanha_valida")
+    if assumir:
+        sg["owner"] = conta
+        sg["has_master"] = False
+        sg["master_account"] = None
+        membros = sg.get("members") if isinstance(sg.get("members"), dict) else {}
+        sg["play_mode"] = "multiplayer" if len(membros) > 1 else _savegame_play_mode(sg)
     registrar_ponto(sg, "auto", rotulo="fim_capitulo")
     n = max(c["n"] for c in sg["capitulos"]) + 1
     arquivo = campaign_file or sg.get("campaign_file")
@@ -2621,6 +2662,8 @@ def _migrar_um_filho(sid, filho, pai_id):
     ids_filho = [p["id"] for cap in caps_filho for p in cap.get("pontos") or []]
     # --- gravações ---
     if not ja_fundido:
+        # O estado vivo do pai vai ser trocado pelo do filho: guarda-o antes.
+        registrar_ponto(pai, "auto", rotulo="antes_de_fundir")
         for pid_, doc in docs:
             LOJA.gravar("pontos", _ponto_chave(pai["id"], pid_), doc)
         pai["capitulos"].extend(novos)
@@ -2632,6 +2675,9 @@ def _migrar_um_filho(sid, filho, pai_id):
         pai["capitulo_atual"] = atual
         pai["status"] = "active"
         write_savegame(pai)
+    # O disco grava as sujas em ordem de chave: sem descarregar aqui, apagar o
+    # filho poderia chegar ao disco antes de o pai ser gravado.
+    LOJA.descarregar()
     for pid_ in ids_filho:
         LOJA.apagar("pontos", _ponto_chave(sid, pid_))
     LOJA.apagar("savegames", sid)
@@ -2670,6 +2716,11 @@ def delete_savegame(sid, requester):
         return False, "Jogo não encontrado."
     if sg.get("owner") != _norm_username(requester):
         return False, "Apenas o dono pode apagar este jogo."
+    if sid in SAVEGAMES_IN_USE:
+        return False, T("erro.feche_o_jogo_antes")
+    e = _soltar_salas_paradas(sid)
+    if e:
+        return False, e
     for cap in sg.get("capitulos") or []:
         for p in cap.get("pontos") or []:
             LOJA.apagar("pontos", _ponto_chave(sid, p.get("id")))
@@ -23206,7 +23257,9 @@ class GameRoom:
         if self.phase not in ("city", "playing"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.so_da_para_salvar_em_jogo")}); return
         if self.phase == "playing" and self._ultima_foto is None:
-            self._gravar_foto_rodada()
+            # Sem foto desta visita, o ponto ficaria sem a masmorra.
+            if not self._gravar_foto_rodada():
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aguarde_para_salvar")}); return
         self._checkpoint_savegame()
         meta, e = registrar_ponto(self.savegame, "manual",
                                   nome=str(nome or "").strip()[:40] or None,

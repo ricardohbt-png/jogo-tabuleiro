@@ -2184,6 +2184,10 @@ window.LANG_ERROS = {
   "erro.escolha_uma_campanha_valida": {
     "en": "Choose a valid campaign.",
     "pt": "Escolha uma campanha válida."
+  },
+  "erro.aguarde_para_salvar": {
+    "en": "Wait for this action to finish before saving.",
+    "pt": "Aguarde o fim desta ação para salvar."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

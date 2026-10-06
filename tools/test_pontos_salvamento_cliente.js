@@ -43,5 +43,14 @@ check('⚙️ tem Salvar agora', game.includes('cfg-salvar-ponto'));
 check('render novo de Meus Jogos', game.includes('function _renderMeusJogos('));
 check('continuação não cria jogo novo', !game.includes('continue_from: sg.id'));
 
+console.log('\n[3] Rótulo do ponto e jogo encerrado');
+const tStub = (k, p) => k + (p ? '|' + (p.local || '') : '');
+const rotuloPonto = new Function('t', extrair(game, '_rotuloPonto') + '; return _rotuloPonto;')(tStub);
+check('manual com nome usa o nome', rotuloPonto({ tipo: 'manual', nome: 'Antes do Troll' }) === 'Antes do Troll');
+check('manual sem nome não vira "Estado salvo"', rotuloPonto({ tipo: 'manual', nome: '', local: 'Alva' }) === 'ui.save.ponto.manual|Alva');
+check('automático sem rótulo cai em migrado', rotuloPonto({ tipo: 'auto' }).startsWith('ui.save.ponto.migrado|'));
+check('antes de fundir tem rótulo próprio', rotuloPonto({ tipo: 'auto', rotulo: 'antes_de_fundir' }).startsWith('ui.save.ponto.antes_de_fundir|'));
+check('Novo capítulo também aparece com o jogo encerrado', game.includes('if (anfitriao || encerrado) {'));
+
 console.log(`\n${ok} ok, ${falhas} falha(s)`);
 process.exit(falhas ? 1 : 0);

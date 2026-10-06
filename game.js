@@ -51955,9 +51955,9 @@ const _jogosAbertos = new Set();   // cartões com os pontos expandidos
 
 // Nome do ponto: o do jogador (manual) ou o código do automático traduzido.
 function _rotuloPonto(p) {
-  if (p.tipo === 'manual' && p.nome) return p.nome;
-  return t('ui.save.ponto.' + (p.rotulo || 'migrado'),
-           { local: p.local || t('ui.save.masmorra_generica'), n: p.rodada || 1 });
+  const params = { local: p.local || t('ui.save.masmorra_generica'), n: p.rodada || 1 };
+  if (p.tipo === 'manual') return p.nome || t('ui.save.ponto.manual', params);
+  return t('ui.save.ponto.' + (p.rotulo || 'migrado'), params);
 }
 
 function _quandoJogo(iso) {
@@ -52040,7 +52040,9 @@ function _cartaoJogo(sg, redesenhar) {
     if (aberto) _jogosAbertos.delete(sg.id); else _jogosAbertos.add(sg.id);
     redesenhar();
   }));
-  if (anfitriao) {
+  // Jogo encerrado (o Mestre saiu): qualquer participante abre o próximo
+  // capítulo e assume a mesa; o servidor confere.
+  if (anfitriao || encerrado) {
     btns.appendChild(_btnJogo(t('ui.save.novo_capitulo'), () => {
       const n = (sg.capitulo_atual || 1) + 1;
       const nomeCap = prompt(t('ui.save.nome_capitulo_prompt'), t('ui.save.capitulo', {n}));
