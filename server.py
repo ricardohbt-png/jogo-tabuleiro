@@ -2204,6 +2204,8 @@ def ensure_campaign_schema(sg):
         sg["status"] = "active"; changed = True
     if "parent_campaign_id" not in sg:
         sg["parent_campaign_id"] = None; changed = True
+    if garantir_capitulos(sg):
+        changed = True
     return changed
 
 def register_campaign_member_in_group(sg, account):
@@ -2443,7 +2445,8 @@ def garantir_capitulos(sg):
         return mudou
     sg["capitulos"] = [_novo_capitulo_dict(1, "", sg.get("campaign_file"))]
     sg["capitulo_atual"] = 1
-    registrar_ponto(sg, "auto", rotulo="migrado")
+    if _sid_valido(sg.get("id")):  # dict montado à mão, sem id: só o capítulo
+        registrar_ponto(sg, "auto", rotulo="migrado")
     return True
 
 
@@ -2476,7 +2479,7 @@ def registrar_ponto(sg, tipo, nome=None, rotulo=None, por=None, preservar=None):
 
 def _anfitriao_do_jogo(sg):
     """Quem gerencia pontos e capítulos: o Mestre num jogo com Mestre, senão o dono."""
-    return sg.get("master_account") if sg.get("has_master") else sg.get("owner")
+    return (sg.get("master_account") or sg.get("owner")) if sg.get("has_master") else sg.get("owner")
 
 
 def _jogo_gerenciavel(conta, sid):
@@ -2582,6 +2585,48 @@ def try_arquivar_jogo(conta, sid, arquivado):
         lista.remove(conta)
     write_savegame(sg)
     return True, None
+
+
+def migrar_continuacoes_para_capitulos():
+    """Jogos criados por "Continuar em sequência" (antes desta versão) viram o
+    capítulo seguinte do jogo de origem. O pai é gravado ANTES de o filho ser
+    apagado. Pai inexistente ou de outro dono: o filho fica como jogo próprio.
+    Roda no boot; idempotente (o filho some depois da 1ª vez)."""
+    todos = LOJA.listar("savegames")
+    for sid, filho in sorted(todos.items(), key=lambda kv: kv[1].get("created") or ""):
+        if not _savegame_valid_shape(filho):
+            continue
+        pai_id = filho.get("parent_campaign_id")
+        pai = load_savegame(pai_id) if pai_id else None
+        if not pai or pai.get("owner") != filho.get("owner") or pai_id == sid:
+            continue
+        garantir_capitulos(pai)
+        garantir_capitulos(filho)
+        base = max(c["n"] for c in pai["capitulos"])
+        renumero = {}
+        for i, cap in enumerate(filho["capitulos"], start=1):
+            renumero[cap["n"]] = base + i
+            novo = dict(cap, n=base + i)
+            novo["pontos"] = list(cap.get("pontos") or [])
+            pai["capitulos"].append(novo)
+        for cap in filho["capitulos"]:
+            for p in cap.get("pontos") or []:
+                doc = LOJA.ler("pontos", _ponto_chave(sid, p["id"]))
+                if doc:
+                    doc = dict(doc, sid=pai["id"], capitulo=renumero[cap["n"]])
+                    LOJA.gravar("pontos", _ponto_chave(pai["id"], p["id"]), doc)
+        for k in CAMPOS_DO_PONTO:
+            if k in filho:
+                pai[k] = deepcopy(filho[k])
+            else:
+                pai.pop(k, None)
+        pai["capitulo_atual"] = renumero.get(filho.get("capitulo_atual"), base + len(filho["capitulos"]))
+        pai["status"] = "active"
+        write_savegame(pai)
+        for cap in filho["capitulos"]:
+            for p in cap.get("pontos") or []:
+                LOJA.apagar("pontos", _ponto_chave(sid, p["id"]))
+        LOJA.apagar("savegames", sid)
 
 
 def delete_savegame(sid, requester):
@@ -50308,6 +50353,8 @@ async def main():
     # Carrega ANTES de aceitar conexao: um jogador que chegasse com o cache
     # vazio veria "conta nao encontrada" e tentaria criar a conta de novo.
     LOJA.carregar()
+    migrar_continuacoes_para_capitulos()
+    _agendar_descarga()
     print(f"  dados: {sum(len(LOJA.listar(c)) for c in COLECOES)} documentos carregados")
 
     app = web.Application()

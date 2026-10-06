@@ -112,6 +112,8 @@ def secao_conta():
     com_mestre = jogo(owner="ana", membros=("bia",), play_mode="multiplayer", has_master=True)
     q, _ = S.registrar_ponto(com_mestre, "manual", nome="y"); S.write_savegame(com_mestre)
     check("com Mestre, o anfitrião é o Mestre", S._anfitriao_do_jogo(com_mestre) == "ana")
+    com_mestre.pop("master_account", None)
+    check("Mestre legado sem master_account: anfitrião é o dono", S._anfitriao_do_jogo(com_mestre) == "ana")
 
     print("\n[7] Novo capítulo no mesmo jogo")
     sg = jogo()
@@ -149,11 +151,49 @@ def secao_conta():
     check("apagou jogo e pontos", ok and docs_de(sg["id"]) == [])
 
 
+def secao_migracao():
+    print("\n[10] Jogo antigo ganha capítulo 1 com 1 ponto, uma vez só")
+    sg = jogo()
+    for k in ("capitulos", "capitulo_atual", "arquivado_por"):
+        sg.pop(k, None)
+    S.write_savegame(sg)
+    check("ensure migra", S.ensure_campaign_schema(sg) is True)
+    pontos = sg["capitulos"][0]["pontos"]
+    check("1 ponto 'migrado'", len(pontos) == 1 and pontos[0]["rotulo"] == "migrado")
+    S.ensure_campaign_schema(sg)
+    check("idempotente", len(sg["capitulos"]) == 1 and len(sg["capitulos"][0]["pontos"]) == 1)
+    novo = jogo()
+    check("jogo novo não ganha ponto de migração", novo["capitulos"][0]["pontos"] == [])
+    check("dict sem id não quebra", S.garantir_capitulos({"members": {}, "characters": {}}) is True)
+
+    print("\n[11] Continuação antiga vira capítulo do jogo de origem")
+    pai = jogo(owner="ana")
+    filho = jogo(owner="ana")
+    filho["parent_campaign_id"] = pai["id"]
+    filho["characters"]["warrior"]["gold"] = 77
+    S.registrar_ponto(filho, "manual", nome="do filho"); S.write_savegame(filho)
+    orfao = jogo(owner="ana")
+    orfao["parent_campaign_id"] = "sg_zzzzzz"; S.write_savegame(orfao)
+    S.migrar_continuacoes_para_capitulos()
+    pai = S.load_savegame(pai["id"])
+    check("filho sumiu", S.load_savegame(filho["id"]) is None)
+    check("pai tem 2 capítulos, atual = 2", len(pai["capitulos"]) == 2 and pai["capitulo_atual"] == 2)
+    check("estado vivo do pai = o do filho", pai["characters"]["warrior"]["gold"] == 77)
+    manual = next(p for p in pai["capitulos"][1]["pontos"] if p["nome"] == "do filho")
+    doc = S.LOJA.ler("pontos", f"{pai['id']}_{manual['id']}")
+    check("ponto do filho mudou de dono", doc is not None and doc["sid"] == pai["id"] and doc["capitulo"] == 2)
+    check("nenhum documento do filho sobrou", docs_de(filho["id"]) == [])
+    check("órfão ficou como jogo próprio", S.load_savegame(orfao["id"]) is not None)
+    S.migrar_continuacoes_para_capitulos()
+    check("rodar de novo não muda nada", len(S.load_savegame(pai["id"])["capitulos"]) == 2)
+
+
 def main():
     loja_tmp()
     try:
         secao_nucleo()
         secao_conta()
+        secao_migracao()
     finally:
         loja_volta()
     print(f"\n{PASS} ok, {FAIL} falha(s)")
