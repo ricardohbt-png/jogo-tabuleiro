@@ -1,12 +1,12 @@
 # Cinto de Utilidades — design
 
 **Data:** 2026-10-06
-**Status:** aguardando revisão da especificação; desenho conversacional aprovado.
+**Status:** aguardando revisão da especificação atualizada; desenho conversacional aprovado.
 **Escopo:** item equipável com compartimentos próprios para consumíveis, armazenamento persistente e transferência do conteúdo junto com o cinto.
 
 ## 1. Objetivo
 
-Criar o item **Cinto de Utilidades**, associado à imagem `assets/itens/cinto_e_bolsos.png`. Equipado, ele disponibiliza compartimentos separados da bolsa normal para agrupar consumíveis iguais. O inventário atual apresenta e opera esses compartimentos junto da bolsa, sem abrir uma janela extra.
+Criar o item **Cinto de Utilidades**, associado à imagem `assets/itens/cinto_e_bolsos.png`, vendido no mercador por 50 moedas e disponível como saque de masmorra. Equipado, ele disponibiliza compartimentos separados da bolsa normal para agrupar consumíveis iguais. O inventário atual apresenta e opera esses compartimentos junto da bolsa, sem abrir uma janela extra.
 
 A descrição do item deve explicar a capacidade, o agrupamento e que o acesso aos itens guardados exige o cinto equipado.
 
@@ -21,10 +21,13 @@ A descrição do item deve explicar a capacidade, o agrupamento e que o acesso a
 7. Itens coletados vão automaticamente para um compartimento do cinto equipado quando houver espaço adequado. Se não houver, vão para a bolsa normal. Se a bolsa também estiver cheia, a coleta é recusada e o item continua na origem.
 8. Ao desequipar um cinto, seu conteúdo permanece guardado nele. O conteúdo fica inacessível até o cinto ser equipado novamente, e o jogador recebe uma mensagem explicando isso.
 9. O conteúdo é parte do próprio item Cinto de Utilidades. Encontrar, pegar, largar ou transferir o cinto move também tudo que estiver guardado nele.
+10. O mercador vende cada cinto por 50 moedas. O catálogo de saque permite encontrar cintos vazios ou pré-carregados.
 
 ## 3. Capacidade e identidade dos itens
 
 Cada cinto possui quatro posições estáveis, numeradas de 0 a 3. Cada posição contém zero ou uma pilha. Uma pilha representa um item elegível e uma quantidade inteira de 1 a 4. Os dois cintos são compartimentos independentes.
+
+O item guarda essas posições no campo serializável `utility_belt_slots`: uma lista de quatro entradas. Cada entrada é `null` ou `{ "item": <dicionário completo do item>, "quantity": <1..4> }`. Cada dicionário de cinto tem sua própria lista, sem lista global no personagem.
 
 Itens iguais são identificados pelo mesmo ID de item elegível. Dentro de cada cinto, um tipo ocupa no máximo uma pilha. O outro cinto pode ter uma pilha independente do mesmo tipo, também com até quatro unidades. Assim, dois cintos permitem até oito tipos diferentes no total (oito posições) e até oito unidades de um mesmo tipo, quatro em cada cinto.
 
@@ -84,6 +87,8 @@ Os compartimentos e suas quantidades fazem parte do dicionário do próprio item
 
 Os dados devem ser serializáveis em JSON. Itens antigos sem campo de compartimentos são tratados como cintos vazios.
 
+O editor de masmorra deve preservar o conteúdo pré-carregado de um cinto em itens de baú e loot de decoração. Um item de loot do tipo cinto permite configurar as quatro posições daquele cinto; cada posição recebe um consumível elegível e quantidade de 1 a 4. Cintos pré-carregados continuam sendo uma única peça de loot; ao pegá-la, o jogador recebe o cinto com seus compartimentos intactos.
+
 ## 9. Interface e texto
 
 Na janela de inventário:
@@ -104,11 +109,12 @@ O servidor continua sendo a autoridade sobre capacidade, elegibilidade, pilhas, 
 
 Áreas previstas para implementação:
 
-- `server.py`: item/equipamento, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
+- `server.py`: item/equipamento, venda por 50 moedas, catálogo de saque, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
 - `src/gameState.js`: ações e mensagens do cliente para transferir, usar e arremessar itens dos compartimentos;
 - `src/ui/inventoryModal.js`: seções dos cintos, contadores, ícones compactos e arrastar/soltar;
 - `game.js` e `src/lang/*`: integração visual, aviso e textos localizados, conforme o padrão existente;
-- catálogos e testes correspondentes: registrar o item, a imagem e cobrir regras autoritativas, interface e transferência.
+- `tools/editor.js` e catálogo/exportador do editor: configurar e preservar compartimentos pré-carregados em baús e loot de decoração;
+- catálogos e testes correspondentes: registrar o item, a imagem e cobrir regras autoritativas, interface, autoria de loot e transferência.
 
 ## 11. Verificação da implementação
 
@@ -120,6 +126,8 @@ O plano de implementação deverá incluir verificações para:
 - arrastar itens iguais, movimentação unitária, troca com pilha de uma unidade, recusa com pilha maior e recusa por falta de espaço;
 - uso e arremesso consumindo uma unidade exatamente nos casos em que o fluxo atual consome;
 - salvar/carregar e pegar/largar/saquear um cinto com conteúdo;
+- editar, exportar e reabrir baú ou decoração com cinto pré-carregado;
+- compra no mercador pelo preço de 50 moedas;
 - apresentação e interação no inventário em layouts suportados.
 
 ## 12. Fora do escopo
