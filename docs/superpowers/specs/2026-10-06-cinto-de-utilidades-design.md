@@ -8,7 +8,7 @@
 
 Criar duas versões do item associadas à imagem `assets/itens/cinto_e_bolsos.png` e disponíveis no mercador e como saque de masmorra:
 
-- **Cinto de Utilidades** — custa 50 moedas e oferece quatro espaços.
+- **Cinto de Utilidades** — custa 80 moedas e oferece quatro espaços.
 - **Cinto com Bolsos** — custa 30 moedas e oferece dois espaços.
 
 Equipado, cada versão disponibiliza compartimentos separados da bolsa normal para agrupar consumíveis iguais. O inventário atual apresenta e opera esses compartimentos junto da bolsa, sem abrir uma janela extra.
@@ -26,7 +26,7 @@ A descrição do item deve explicar a capacidade, o agrupamento e que o acesso a
 7. Itens coletados vão automaticamente para um compartimento do cinto equipado quando houver espaço adequado. Se não houver, vão para a bolsa normal. Se a bolsa também estiver cheia, a coleta é recusada e o item continua na origem.
 8. Ao desequipar um cinto, seu conteúdo permanece guardado nele. O conteúdo fica inacessível até o cinto ser equipado novamente, e o jogador recebe uma mensagem explicando isso.
 9. O conteúdo é parte do próprio item. Encontrar, pegar, largar ou transferir qualquer versão move também tudo que estiver guardado nela.
-10. O mercador vende o Cinto de Utilidades por 50 moedas e o Cinto com Bolsos por 30 moedas. O catálogo de saque permite encontrar ambas as versões vazias ou pré-carregadas.
+10. O mercador vende o Cinto de Utilidades por 80 moedas e o Cinto com Bolsos por 30 moedas. O catálogo de saque permite encontrar ambas as versões vazias ou pré-carregadas.
 
 ## 3. Capacidade e identidade dos itens
 
@@ -117,7 +117,7 @@ O servidor continua sendo a autoridade sobre capacidade, elegibilidade, pilhas, 
 
 Áreas previstas para implementação:
 
-- `server.py`: dois itens/equipamentos, vendas por 50 e 30 moedas, catálogo de saque, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
+- `server.py`: dois itens/equipamentos, vendas por 80 e 30 moedas, catálogo de saque, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
 - `src/gameState.js`: ações e mensagens do cliente para transferir, usar e arremessar itens dos compartimentos;
 - `src/ui/inventoryModal.js`: seções dos cintos, contadores, ícones compactos e arrastar/soltar;
 - `game.js` e `src/lang/*`: integração visual, aviso e textos localizados, conforme o padrão existente;
@@ -135,7 +135,7 @@ O plano de implementação deverá incluir verificações para:
 - uso e arremesso consumindo uma unidade exatamente nos casos em que o fluxo atual consome;
 - salvar/carregar e pegar/largar/saquear um cinto com conteúdo;
 - editar, exportar e reabrir baú ou decoração com cinto pré-carregado;
-- compra no mercador pelos preços de 50 e 30 moedas;
+- compra no mercador pelos preços de 80 e 30 moedas;
 - apresentação e interação no inventário em layouts suportados.
 
 ## 12. Fora do escopo
