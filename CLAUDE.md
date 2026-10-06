@@ -317,8 +317,9 @@ aplicadas antes de `_prepararTileProxy` (que congela a matriz). Acompanham: colu
 (crescem com a parede mais alta do bloco), rodapés, arcos/pilares/porta de passagem (sobre o chão
 da casa), tochas e enfeites de parede (`elevacaoEnfeiteParede3D`: chão à frente, sem passar da
 parede). Junto: a lápide do monstro passou `x,y` ao `obterFig` (ficava enterrada no platô, a do
-herói já assentava) e o anel/partículas da morte nascem no topo do terreno. Escadas e bandeira de
-saída ainda ignoram a elevação. Testes: `tools/test_altura_parede.py`,
+herói já assentava) e o anel/partículas da morte nascem no topo do terreno. A escada, a bandeira
+de saída e os anéis de início dos heróis assentam no topo da casa (`topoSuperficie3D`: platô ou
+ponte). Testes: `tools/test_altura_parede.py`,
 `tools/test_altura_parede_cliente.js`.
 
 ## Classes de Personagem

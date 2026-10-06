@@ -42476,6 +42476,8 @@ function init3D(state){
   let stairGroup = null;
   if(state.stairs_pos){
     const [sx, sy] = state.stairs_pos;
+    // Assenta no topo do terreno (platô/ponte), como as portas.
+    const sb = topoSuperficie3D(state, sx, sy, TH);
     stairGroup = new T.Group();
     const sMat  = new T.MeshStandardMaterial({color:0x4a3620, roughness:0.86, metalness:0.10});
     const sEdge = new T.MeshStandardMaterial({color:0x6a5030, roughness:0.72, metalness:0.15});
@@ -42486,22 +42488,22 @@ function init3D(state){
     const NSTEPS=4, SW=0.80, SD=0.14, SH=0.055;
     for(let i=0;i<NSTEPS;i++){
       const sm=new T.Mesh(new T.BoxGeometry(SW,SH,SD),i===NSTEPS-1?sEdge:sMat);
-      sm.position.set(sx, TH+(i+0.5)*SH, sy+(i-NSTEPS/2+0.5)*SD);
+      sm.position.set(sx, sb+(i+0.5)*SH, sy+(i-NSTEPS/2+0.5)*SD);
       sm.castShadow=sm.receiveShadow=true; stairGroup.add(sm);
     }
     // Gold inlay lines on each step edge
     for(let i=0;i<NSTEPS;i++){
       const gl=new T.Mesh(new T.BoxGeometry(SW+0.02,0.012,0.012),sGold);
-      gl.position.set(sx, TH+(i+1)*SH-0.004, sy+(i-NSTEPS/2+1)*SD-SD/2);
+      gl.position.set(sx, sb+(i+1)*SH-0.004, sy+(i-NSTEPS/2+1)*SD-SD/2);
       gl.userData.isStairGlow=true; stairGroup.add(gl);
     }
     // Glow ring at floor level
     const ring=new T.Mesh(new T.TorusGeometry(0.40,0.022,6,28),sGold);
-    ring.rotation.x=Math.PI/2; ring.position.set(sx,TH+0.005,sy);
+    ring.rotation.x=Math.PI/2; ring.position.set(sx,sb+0.005,sy);
     ring.userData.isStairGlow=true; stairGroup.add(ring);
     // Warm point light above stairs
     const stairLight=new T.PointLight(0xffd080,1.2,3.5);
-    stairLight.position.set(sx,TH+0.9,sy); stairGroup.add(stairLight);
+    stairLight.position.set(sx,sb+0.9,sy); stairGroup.add(stairLight);
     stairGroup.visible=false;
     scene.add(stairGroup);
   }
@@ -42519,7 +42521,7 @@ function init3D(state){
         emissive:colors[hs.class_id]||0x9b78ff, emissiveIntensity:0.45,
         transparent:true, opacity:0.9, roughness:0.35, metalness:0.2});
       const ring = new T.Mesh(new T.TorusGeometry(0.32,0.035,8,24), mat);
-      ring.rotation.x=Math.PI/2; ring.position.set(gx,TH+0.018,gy); group.add(ring);
+      ring.rotation.x=Math.PI/2; ring.position.set(gx,topoSuperficie3D(state,gx,gy,TH)+0.018,gy); group.add(ring);
       group.visible=false; group.userData.heroSpawnClass=hs.class_id;
       scene.add(group); heroSpawnGroups.push({group, pos:[gx,gy]});
     }
@@ -42532,20 +42534,21 @@ function init3D(state){
     const ex = (window.GS && GS.exitPos) || null;
     if(ex){
       const [exx, exy] = ex;
+      const eb = topoSuperficie3D(state, exx, exy, TH);
       exitGroup = new T.Group();
       const poleMat = new T.MeshStandardMaterial({color:0x8a8a96, roughness:0.5, metalness:0.6});
       const pole = new T.Mesh(new T.CylinderGeometry(0.025,0.025,0.95,8), poleMat);
-      pole.position.set(exx, TH+0.475, exy); pole.castShadow=true; exitGroup.add(pole);
+      pole.position.set(exx, eb+0.475, exy); pole.castShadow=true; exitGroup.add(pole);
       const flagMat = new T.MeshStandardMaterial({
         color:new T.Color(0x3cdcb4), emissive:new T.Color(0x1c8a70),
         emissiveIntensity:0.55, roughness:0.45, metalness:0.10, side:T.DoubleSide
       });
       const flag = new T.Mesh(new T.PlaneGeometry(0.34,0.20), flagMat);
-      flag.position.set(exx+0.18, TH+0.82, exy); exitGroup.add(flag);
+      flag.position.set(exx+0.18, eb+0.82, exy); exitGroup.add(flag);
       const ring = new T.Mesh(new T.TorusGeometry(0.40,0.020,6,28), flagMat);
-      ring.rotation.x=Math.PI/2; ring.position.set(exx,TH+0.006,exy); exitGroup.add(ring);
+      ring.rotation.x=Math.PI/2; ring.position.set(exx,eb+0.006,exy); exitGroup.add(ring);
       const exLight = new T.PointLight(0x60e0c0,0.9,3.0);
-      exLight.position.set(exx,TH+0.9,exy); exitGroup.add(exLight);
+      exLight.position.set(exx,eb+0.9,exy); exitGroup.add(exLight);
       exitGroup.visible=false;
       scene.add(exitGroup);
     }

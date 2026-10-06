@@ -83,5 +83,12 @@ check('lápide do monstro passa x,y ao obterFig (assenta no platô)',
 check('visual de derrota nasce no topo do terreno', src.includes('(v.baseY || 0) + .32'));
 check('colunas de canto crescem com a parede', src.includes('col.scale.y = colScale'));
 
+console.log('\n[5] Escada, bandeira de saída e início dos heróis no topo do terreno');
+check('escada assenta na superfície da casa', src.includes('const sb = topoSuperficie3D(state, sx, sy, TH);'));
+check('degraus, anel e luz da escada partem dela', !/\b(sm|gl|ring|stairLight)\.position\.set\(sx, ?TH/.test(src));
+check('bandeira assenta na superfície da casa', src.includes('const eb = topoSuperficie3D(state, exx, exy, TH);'));
+check('mastro, bandeira, anel e luz partem dela', !/\b(pole|flag|ring|exLight)\.position\.set\(exx(\+0\.18)?, ?TH/.test(src));
+check('anel de início do herói no topo do terreno', src.includes('ring.position.set(gx,topoSuperficie3D(state,gx,gy,TH)+0.018,gy)'));
+
 console.log(`\n${ok} ok, ${falhas} falha(s)`);
 process.exit(falhas ? 1 : 0);
