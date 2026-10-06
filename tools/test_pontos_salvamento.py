@@ -150,13 +150,11 @@ def secao_conta():
     ok, _ = S.delete_savegame(sg["id"], "ana")
     check("apagou jogo e pontos", ok and docs_de(sg["id"]) == [])
 
-    print("\n[9b] Jogo abandonado pelo Mestre: um jogador abre o próximo capítulo")
+    print("\n[9b] Jogo encerrado pelo Mestre: um jogador abre o próximo capítulo; o jogo segue do Mestre")
     mm = jogo(owner="mestre", membros=("bia", "caio"), play_mode="multiplayer", has_master=True)
     ok, e = S.abandon_master_campaign(mm["id"], "mestre")
     check("Mestre abandonou", ok and S.load_savegame(mm["id"])["status"] == "ended_master_left", e)
     check("estranho não retoma", not S.try_novo_capitulo("zé", mm["id"], "x", None)[0])
-    ok, e = S.try_novo_capitulo("mestre", mm["id"], "x", None)
-    check("o Mestre que saiu não reabre", not ok and getattr(e, "key", None) == "erro.o_mestre_que_saiu_nao_reabre", e)
     ok, e = S.try_carregar_ponto("mestre", mm["id"], S.capitulo_atual(S.load_savegame(mm["id"]))["pontos"][0]["id"]
                                  if S.capitulo_atual(S.load_savegame(mm["id"]))["pontos"] else "pt_x")
     check("nem o reativa carregando um ponto",
@@ -171,10 +169,15 @@ def secao_conta():
     mm = S.load_savegame(mm["id"])
     check("jogadora criou o capítulo", ok, e)
     check("jogo ativo de novo", mm["status"] == "active")
-    check("ela virou a dona/anfitriã", mm["owner"] == "bia" and S._anfitriao_do_jogo(mm) == "bia")
-    check("sem Mestre", mm["has_master"] is False and mm.get("master_account") is None)
+    check("o jogo continua do Mestre", mm["has_master"] is True and mm["master_account"] == "mestre"
+          and mm["owner"] == "mestre" and S._anfitriao_do_jogo(mm) == "mestre")
     check("multiplayer", mm["play_mode"] == "multiplayer")
     check("capítulo 2 existe", mm["capitulo_atual"] == 2 and len(mm["capitulos"]) == 2)
+    m2 = jogo(owner="mestre", membros=("bia",), play_mode="multiplayer", has_master=True)
+    S.abandon_master_campaign(m2["id"], "mestre")
+    ok, e = S.try_novo_capitulo("mestre", m2["id"], "Volto eu", None)
+    check("o próprio Mestre também reabre pelo Novo capítulo",
+          ok and S.load_savegame(m2["id"])["status"] == "active", e)
 
     print("\n[9c] Sala parada com o mesmo jogo")
     sg = jogo()

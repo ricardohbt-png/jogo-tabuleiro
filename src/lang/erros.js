@@ -2192,10 +2192,6 @@ window.LANG_ERROS = {
   "erro.jogo_encerrado_use_novo_capitulo": {
     "en": "This game has ended. Start a new chapter to play again.",
     "pt": "Este jogo foi encerrado. Abra um novo capítulo para voltar a jogar."
-  },
-  "erro.o_mestre_que_saiu_nao_reabre": {
-    "en": "You left this game as Game Master; another player can start the next chapter.",
-    "pt": "Você abandonou este jogo como Mestre; outro jogador pode abrir o próximo capítulo."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

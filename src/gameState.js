@@ -1705,6 +1705,9 @@ const GS = (() => {
         break;
 
       case 'game_start':
+        // O Mestre (re)chegado com a partida em andamento não está em players[]:
+        // o servidor diz o pid dele aqui, e a sessão de reconexão passa a tê-lo.
+        if (msg.pid) { myPid = msg.pid; connPid = msg.pid; _saveSession(); }
         cityState = null;
         pendingMove = null;
         if (msg.instrumentos_base) instrumentoBaseCache = msg.instrumentos_base;

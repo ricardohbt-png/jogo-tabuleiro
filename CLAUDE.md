@@ -503,7 +503,16 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Migração: `garantir_capitulos` (em `ensure_campaign_schema`) dá capítulo 1 + ponto "migrado" a
 > jogo antigo; no boot, `migrar_continuacoes_para_capitulos` funde continuações antigas no jogo de
 > origem — segue cadeias até a raiz, isola cada jogo num try/except (calcula tudo antes de gravar)
-> e é idempotente mesmo após queda no meio. Fora de escopo: a Guilda segue por classe, sem voltar
+> e é idempotente mesmo após queda no meio. **Mestre fora da mesa (2026-10-06):** qualquer
+participante abre um jogo com Mestre; sem ele, os monstros ficam na IA e um jogador é o anfitrião.
+O Mestre que cai na cidade/masmorra passa o anfitrião a um jogador conectado
+(`_mestre_saiu_passar_anfitriao`); ao voltar (`religar_mestre`) ou ao chegar a um jogo aberto sem
+ele (`entrar_mestre_em_andamento`, ou o `add_player` no lobby) reassume Mestre e anfitrião. O
+`game_start` enviado só a ele leva `pid` — fora do lobby o Mestre não está em `players[]` e o
+cliente não acharia o próprio pid pelo nome. "Encerrar" encerra o capítulo: qualquer participante
+(o Mestre inclusive) abre o próximo, e o jogo segue do Mestre; jogo encerrado não volta por ponto
+de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Mestre. Teste:
+`tools/test_mestre_substituto.py` (25). Fora de escopo: a Guilda segue por classe, sem voltar
 > no tempo. Spec/plano em `docs/superpowers/{specs,plans}/2026-10-05-saves-organizados*`. Testes:
 > `tools/test_pontos_salvamento.py` (79) e `tools/test_pontos_salvamento_cliente.js` (17).
 

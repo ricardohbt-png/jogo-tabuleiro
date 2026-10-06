@@ -1872,6 +1872,14 @@ window.LANG_NARRACAO = {
     "en": "🔌 The Game Master disconnected — monsters return to AI control.",
     "pt": "🔌 O mestre caiu — os monstros voltam ao controle da IA."
   },
+  "narracao.anfitriao_ate_o_mestre_voltar": {
+    "en": "🔌 The Game Master disconnected — **{heroi}** is the host until they return.",
+    "pt": "🔌 O mestre caiu — **{heroi}** é o anfitrião até ele voltar."
+  },
+  "narracao.o_mestre_chegou_e_assume_a_mesa": {
+    "en": "🎲 The Game Master **{name}** arrived and takes over the table.",
+    "pt": "🎲 O mestre **{name}** chegou e assume a mesa."
+  },
   "narracao.o_mestre_reconectou_se": {
     "en": "🔌 The Game Master **{name}** reconnected.",
     "pt": "🔌 O mestre **{name}** reconectou-se."

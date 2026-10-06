@@ -2575,18 +2575,14 @@ def try_novo_capitulo(conta, sid, nome, campaign_file):
     """"Continuar em sequência" dentro do mesmo jogo: fecha o capítulo atual com
     um ponto e abre o próximo com a fase zerada, mantendo heróis e mundo.
 
-    Jogo ENCERRADO (ex.: o Mestre o abandonou): qualquer participante pode abrir
-    o capítulo seguinte e passa a ser o anfitrião, sem Mestre -- senão a mesa
-    ficaria presa, já que o anfitrião era quem saiu."""
+    Jogo ENCERRADO (ex.: o Mestre o encerrou): qualquer participante, o Mestre
+    inclusive, pode abrir o capítulo seguinte. O jogo continua sendo do Mestre:
+    sem ele, um jogador é o anfitrião na partida; quando ele volta, reassume."""
     conta = _norm_username(conta)
     sg = load_savegame(sid) if isinstance(sid, str) else None
     assumir = bool(sg and sg.get("status") and sg.get("status") != "active"
                    and _conta_participa(sg, conta))
     if assumir:
-        # Quem abandonou como Mestre não retoma a mesa que deixou.
-        if (sg.get("status") == "ended_master_left"
-                and conta == _norm_username(sg.get("master_account") or "")):
-            return False, T("erro.o_mestre_que_saiu_nao_reabre")
         if sid in SAVEGAMES_IN_USE:
             return False, T("erro.feche_o_jogo_antes")
         e = _soltar_salas_paradas(sid)
@@ -2599,12 +2595,6 @@ def try_novo_capitulo(conta, sid, nome, campaign_file):
             return False, e
     if campaign_file and campaign_file not in {c["file"] for c in listar_campanhas()}:
         return False, T("erro.escolha_uma_campanha_valida")
-    if assumir:
-        sg["owner"] = conta
-        sg["has_master"] = False
-        sg["master_account"] = None
-        membros = sg.get("members") if isinstance(sg.get("members"), dict) else {}
-        sg["play_mode"] = "multiplayer" if len(membros) > 1 else _savegame_play_mode(sg)
     registrar_ponto(sg, "auto", rotulo="fim_capitulo")
     n = max(c["n"] for c in sg["capitulos"]) + 1
     arquivo = campaign_file or sg.get("campaign_file")
@@ -3269,8 +3259,8 @@ def try_open_savegame_room(account, sid, rooms):
         return None, "Campanha encerrada. Crie uma continuação para voltar a jogar."
     if sid in SAVEGAMES_IN_USE:
         return None, "Jogo salvo já está em uso em outra sessão."
-    if sg.get("has_master") and sg.get("master_account") != account:
-        return None, "Apenas o Mestre anfitrião pode abrir esta campanha."
+    # Jogo com Mestre: qualquer participante abre. Sem o Mestre, os monstros
+    # ficam na IA e um jogador é o anfitrião; o Mestre reassume ao chegar.
     if not _conta_participa(sg, account):
         return None, "Você não faz parte deste jogo."
     if sid in SAVEGAMES_IN_USE:
@@ -10755,13 +10745,14 @@ class GameRoom:
     # â”€â”€ lobby â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     async def add_player(self, ws, pid, name, account=None):
-        # Em campanha com Mestre humano, somente a conta do Mestre pode abrir a
-        # sala e ela entra automaticamente no papel de Mestre/anfitrião.
-        if (self.savegame and self.savegame.get("has_master") and not self.players
-                and account == self.savegame.get("master_account")):
+        # Em campanha com Mestre humano, a conta do Mestre entra sempre no papel
+        # de Mestre e anfitrião -- também quando os jogadores abriram a sala antes.
+        if (self.savegame and self.savegame.get("has_master")
+                and account == self.savegame.get("master_account")
+                and not any(p.get("is_master") for p in self.players.values())):
             self.connections[pid] = ws; self.account_by_pid[pid] = account
             self.players[pid] = {"id": pid, "name": name, "class_id": None, "ready": True,
-                                 "connected": True, "slot": 0, "is_master": True}
+                                 "connected": True, "slot": len(self.players), "is_master": True}
             self.host_pid = self.master_pid = pid; self.master_name = name
             await self.broadcast_lobby()
             return True
@@ -11396,9 +11387,9 @@ class GameRoom:
 
     def _assumir_anfitriao_se_vago(self, pid):
         """Sem anfitrião conectado, quem chega assume. Assim o grupo retoma o
-        jogo salvo mesmo sem quem o abriu da última vez. O Mestre nunca perde o
-        posto por uma queda: o lugar fica com ele até voltar."""
-        if self.master_pid and self.host_pid == self.master_pid:
+        jogo salvo mesmo sem quem o abriu da última vez. Com o Mestre fora, um
+        jogador segura o posto; o Mestre o retoma ao voltar (religar_mestre)."""
+        if self.master_pid and self.host_pid == self.master_pid and self.master_pid in self.connections:
             return
         if not self.host_pid or self.host_pid not in self.connections:
             self.host_pid = pid
@@ -11411,14 +11402,51 @@ class GameRoom:
         LANG_BY_PID[self.master_pid] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)
         pid = self.master_pid
         self.connections[pid] = ws
-        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
+        self.host_pid = pid   # o substituto devolve o posto
+        await self._mostrar_mesa_ao_mestre(ws, pid)
+        await self.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
+        return pid
+
+    async def _mostrar_mesa_ao_mestre(self, ws, pid):
+        """Põe o Mestre (re)chegado na tela atual. O `pid` vai no game_start:
+        fora do lobby o Mestre não está em players[], e o cliente não teria
+        como achar o próprio pid pelo nome."""
+        await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE,
+                                  "pid": pid}))
         if self.phase == "city":
             await self.broadcast_city_state()
         else:
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             await self.push_state()
-        await self.gm_say(T("narracao.o_mestre_reconectou_se", name=name))
+
+    async def entrar_mestre_em_andamento(self, ws, pid, nome, conta):
+        """O Mestre chega a um jogo que os jogadores abriram sem ele (cidade ou
+        masmorra): assume o papel de Mestre e o de anfitrião. Os monstros que já
+        estavam na IA seguem assim até ele trocar o modo."""
+        self.connections[pid] = ws
+        self.account_by_pid[pid] = conta
+        self.master_pid = pid
+        self.master_name = nome
+        self.host_pid = pid
+        await self._mostrar_mesa_ao_mestre(ws, pid)
+        await self.gm_say(T("narracao.o_mestre_chegou_e_assume_a_mesa", name=nome))
         return pid
+
+    async def _mestre_saiu_passar_anfitriao(self):
+        """O Mestre caiu na cidade ou na masmorra: o anfitrião passa a um jogador
+        conectado até ele voltar (antes o posto ficava preso com quem saiu)."""
+        if self.host_pid != self.master_pid:
+            return
+        nxt = next((q["id"] for q in self.players.values()
+                    if not q.get("is_master") and not q.get("controlador")
+                    and q["id"] in self.connections), None)
+        if not nxt:
+            return
+        self.host_pid = nxt
+        await self.gm_say(T("narracao.anfitriao_ate_o_mestre_voltar",
+                            heroi=self.players[nxt].get("name", "")))
+        if self.phase == "city":
+            await self.broadcast_city_state()
 
     def _entrada_para_religar(self, p):
         """Casa por onde um herói religado reentra na masmorra (None = fica)."""
@@ -46062,6 +46090,11 @@ async def entrar_em_jogo_salvo_aberto(sala, ws, pid, nome, conta):
     if (sala.master_pid and conta == (sg or {}).get("master_account")
             and sala.master_pid not in sala.connections):
         return await sala.religar_mestre(ws, pid, sala.master_name or nome), None
+    # Mestre que chega a um jogo que os jogadores abriram sem ele.
+    if (not sala.master_pid and (sg or {}).get("has_master")
+            and conta == (sg or {}).get("master_account")
+            and sala.phase in ("city", "playing")):
+        return await sala.entrar_mestre_em_andamento(ws, pid, nome, conta), None
     if sala.phase == "lobby":
         ok = await sala.add_player(ws, pid, nome, conta)
         return (pid, None) if ok else (None, T("erro.sala_cheia_maximo_6_herois_1_mestre"))
@@ -47320,6 +47353,8 @@ async def handler(ws):
                 room.account_by_pid.pop(pid, None)   # desistiu da escolha de herói
             if room.savegame_id and not room.connections:
                 SAVEGAMES_IN_USE.pop(room.savegame_id, None)
+            if room.master_pid == pid and room.phase in ("city", "playing"):
+                await room._mestre_saiu_passar_anfitriao()
             if room.master_pid == pid and room.phase == "playing":
                 await room._on_master_disconnect()
             if pid in room.players and room.phase == "lobby":

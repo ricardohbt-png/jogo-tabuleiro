@@ -50,8 +50,8 @@ check('manual com nome usa o nome', rotuloPonto({ tipo: 'manual', nome: 'Antes d
 check('manual sem nome não vira "Estado salvo"', rotuloPonto({ tipo: 'manual', nome: '', local: 'Alva' }) === 'ui.save.ponto.manual|Alva');
 check('automático sem rótulo cai em migrado', rotuloPonto({ tipo: 'auto' }).startsWith('ui.save.ponto.migrado|'));
 check('antes de fundir tem rótulo próprio', rotuloPonto({ tipo: 'auto', rotulo: 'antes_de_fundir' }).startsWith('ui.save.ponto.antes_de_fundir|'));
-check('Novo capítulo aparece com o jogo encerrado, menos para o Mestre que saiu',
-  game.includes('if (encerrado ? !mestreQueSaiu : anfitriao) {'));
+check('Novo capítulo aparece com o jogo encerrado, para todos', game.includes('if (anfitriao || encerrado) {'));
+check('game_start com pid ensina o pid ao Mestre', gs.includes("if (msg.pid) { myPid = msg.pid; connPid = msg.pid; _saveSession(); }"));
 check('Continuar desligado em jogo encerrado, até para o antigo anfitrião', game.includes('cont.disabled = !!encerrado;'));
 check('pontos de jogo encerrado não têm Carregar/apagar', game.includes('_linhaPonto(sg, p, anfitriao && !encerrado)'));
 check('Encerrar some depois de encerrado', game.includes("sg.master_account === conta && !encerrado)"));

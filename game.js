@@ -52030,8 +52030,6 @@ function _cartaoJogo(sg, redesenhar) {
   local.innerHTML = _ondeParouHTML(sg.foto);
   resumo.appendChild(local);
   const encerrado = sg.status && sg.status !== 'active';
-  // O Mestre que abandonou não reabre a mesa; os outros jogadores, sim.
-  const mestreQueSaiu = sg.status === 'ended_master_left' && sg.master_account === conta;
   if (encerrado) {
     const aviso = document.createElement('span');
     aviso.style.cssText = 'display:block;font-size:.7rem;color:#e8b66d;margin-top:3px;';
@@ -52050,9 +52048,9 @@ function _cartaoJogo(sg, redesenhar) {
     if (aberto) _jogosAbertos.delete(sg.id); else _jogosAbertos.add(sg.id);
     redesenhar();
   }));
-  // Jogo encerrado (o Mestre saiu): qualquer participante abre o próximo
-  // capítulo e assume a mesa; o servidor confere.
-  if (encerrado ? !mestreQueSaiu : anfitriao) {
+  // Jogo encerrado: qualquer participante (o Mestre inclusive) abre o próximo
+  // capítulo; o jogo segue sendo do Mestre. O servidor confere.
+  if (anfitriao || encerrado) {
     btns.appendChild(_btnJogo(t('ui.save.novo_capitulo'), () => {
       const n = (sg.capitulo_atual || 1) + 1;
       const nomeCap = prompt(t('ui.save.nome_capitulo_prompt'), t('ui.save.capitulo', {n}));
