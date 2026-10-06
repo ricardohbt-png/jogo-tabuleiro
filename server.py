@@ -46637,7 +46637,8 @@ async def handler(ws):
                         ok, e = try_apagar_ponto(account["name"], msg.get("id"), msg.get("ponto_id"))
                     elif t == "novo_capitulo":
                         ok, e = try_novo_capitulo(account["name"], msg.get("id"),
-                                                  str(msg.get("nome") or "")[:40], msg.get("campaign_file"))
+                                                  str(msg.get("nome") or "")[:40],
+                                                  msg.get("campaign_file") if isinstance(msg.get("campaign_file"), str) else None)
                     else:
                         ok, e = try_arquivar_jogo(account["name"], msg.get("id"), msg.get("arquivado") is True)
                     if ok:
