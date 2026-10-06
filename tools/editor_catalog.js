@@ -11304,6 +11304,24 @@ window.EDITOR_CATALOG = {
       "value": 3
     },
     {
+      "id": "cinto_utilidades",
+      "name": "Cinto de Utilidades",
+      "emoji": "🎒",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
+      "id": "cinto_com_bolsos",
+      "name": "Cinto com Bolsos",
+      "emoji": "🎒",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "descricao": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
       "id": "veneno_aranha_sombria",
       "name": "Veneno da Aranha Sombria",
       "emoji": "🕷️",
