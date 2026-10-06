@@ -2,17 +2,22 @@
 
 **Data:** 2026-10-06
 **Status:** aguardando revisão da especificação atualizada; desenho conversacional aprovado.
-**Escopo:** item equipável com compartimentos próprios para consumíveis, armazenamento persistente e transferência do conteúdo junto com o cinto.
+**Escopo:** dois itens equipáveis com compartimentos próprios para consumíveis, armazenamento persistente e transferência do conteúdo junto com cada cinto.
 
 ## 1. Objetivo
 
-Criar o item **Cinto de Utilidades**, associado à imagem `assets/itens/cinto_e_bolsos.png`, vendido no mercador por 50 moedas e disponível como saque de masmorra. Equipado, ele disponibiliza compartimentos separados da bolsa normal para agrupar consumíveis iguais. O inventário atual apresenta e opera esses compartimentos junto da bolsa, sem abrir uma janela extra.
+Criar duas versões do item associadas à imagem `assets/itens/cinto_e_bolsos.png` e disponíveis no mercador e como saque de masmorra:
+
+- **Cinto de Utilidades** — custa 50 moedas e oferece quatro espaços.
+- **Cinto com Bolsos** — custa 30 moedas e oferece dois espaços.
+
+Equipado, cada versão disponibiliza compartimentos separados da bolsa normal para agrupar consumíveis iguais. O inventário atual apresenta e opera esses compartimentos junto da bolsa, sem abrir uma janela extra.
 
 A descrição do item deve explicar a capacidade, o agrupamento e que o acesso aos itens guardados exige o cinto equipado.
 
 ## 2. Decisões aprovadas
 
-1. O cinto ocupa um espaço geral de equipamento. O personagem pode equipar um cinto em cada um dos dois espaços gerais; cada cinto equipado concede quatro espaços, até oito no total.
+1. Cada cinto ocupa um espaço geral de equipamento. O personagem pode equipar até dois cintos nos espaços gerais, inclusive uma combinação dos dois modelos. Cada Cinto de Utilidades concede quatro espaços e cada Cinto com Bolsos concede dois; a capacidade total é a soma dos cintos equipados, até oito.
 2. Os compartimentos aparecem numa seção da janela de inventário já existente.
 3. Cada compartimento guarda até quatro unidades do mesmo consumível. A quantidade aparece no espaço.
 4. Os espaços têm tom marrom. O ícone do item é menor que o ícone normal da bolsa, mas a área clicável permanece do tamanho normal.
@@ -20,16 +25,16 @@ A descrição do item deve explicar a capacidade, o agrupamento e que o acesso a
 6. O jogador pode arrastar itens entre a bolsa normal e os compartimentos. A movimentação manual transfere uma unidade por vez.
 7. Itens coletados vão automaticamente para um compartimento do cinto equipado quando houver espaço adequado. Se não houver, vão para a bolsa normal. Se a bolsa também estiver cheia, a coleta é recusada e o item continua na origem.
 8. Ao desequipar um cinto, seu conteúdo permanece guardado nele. O conteúdo fica inacessível até o cinto ser equipado novamente, e o jogador recebe uma mensagem explicando isso.
-9. O conteúdo é parte do próprio item Cinto de Utilidades. Encontrar, pegar, largar ou transferir o cinto move também tudo que estiver guardado nele.
-10. O mercador vende cada cinto por 50 moedas. O catálogo de saque permite encontrar cintos vazios ou pré-carregados.
+9. O conteúdo é parte do próprio item. Encontrar, pegar, largar ou transferir qualquer versão move também tudo que estiver guardado nela.
+10. O mercador vende o Cinto de Utilidades por 50 moedas e o Cinto com Bolsos por 30 moedas. O catálogo de saque permite encontrar ambas as versões vazias ou pré-carregadas.
 
 ## 3. Capacidade e identidade dos itens
 
-Cada cinto possui quatro posições estáveis, numeradas de 0 a 3. Cada posição contém zero ou uma pilha. Uma pilha representa um item elegível e uma quantidade inteira de 1 a 4. Os dois cintos são compartimentos independentes.
+Cada cinto possui uma lista estável de posições: quatro, numeradas de 0 a 3, no Cinto de Utilidades; duas, numeradas de 0 a 1, no Cinto com Bolsos. Cada posição contém zero ou uma pilha. Uma pilha representa um item elegível e uma quantidade inteira de 1 a 4. Os dois cintos são compartimentos independentes.
 
-O item guarda essas posições no campo serializável `utility_belt_slots`: uma lista de quatro entradas. Cada entrada é `null` ou `{ "item": <dicionário completo do item>, "quantity": <1..4> }`. Cada dicionário de cinto tem sua própria lista, sem lista global no personagem.
+Cada item guarda essas posições no campo serializável `utility_belt_slots`, cujo comprimento é determinado pelo ID do modelo equipado: quatro entradas para `cinto_utilidades`, duas para `cinto_com_bolsos`. Cada entrada é `null` ou `{ "item": <dicionário completo do item>, "quantity": <1..4> }`. Cada dicionário de cinto tem sua própria lista, sem lista global no personagem.
 
-Itens iguais são identificados pelo mesmo ID de item elegível. Dentro de cada cinto, um tipo ocupa no máximo uma pilha. O outro cinto pode ter uma pilha independente do mesmo tipo, também com até quatro unidades. Assim, dois cintos permitem até oito tipos diferentes no total (oito posições) e até oito unidades de um mesmo tipo, quatro em cada cinto.
+Itens iguais são identificados pelo mesmo ID de item elegível. Dentro de cada cinto, um tipo ocupa no máximo uma pilha. O outro cinto pode ter uma pilha independente do mesmo tipo, também com até quatro unidades. Dois Cintos de Utilidades permitem oito tipos e até oito unidades de um tipo; duas versões com bolsos permitem quatro tipos e até oito unidades de um tipo; uma unidade de cada modelo permite seis tipos e até oito unidades de um tipo.
 
 A elegibilidade é restrita aos consumíveis dos grupos aprovados: arremessáveis e frascos de efeito, poções e venenos. Armas, equipamento, munição, pergaminhos e outros itens não entram nos cintos.
 
@@ -38,7 +43,7 @@ A elegibilidade é restrita aos consumíveis dos grupos aprovados: arremessávei
 Com um ou mais cintos equipados, o servidor roteia uma aquisição nesta ordem:
 
 1. Procurar uma pilha incompleta do mesmo ID nos cintos equipados, na ordem do espaço geral 1 e depois 2. Acrescentar uma unidade à primeira encontrada.
-2. Se não houver pilha incompleta e algum cinto equipado ainda não tiver uma pilha daquele ID, criar uma pilha com uma unidade no primeiro espaço vazio desse cinto. A ordem de busca é o espaço geral 1 e depois 2, e posição 0 a 3 em cada cinto. Isso permite uma pilha igual independente no segundo cinto quando a do primeiro já chegou a quatro.
+2. Se não houver pilha incompleta e algum cinto equipado ainda não tiver uma pilha daquele ID, criar uma pilha com uma unidade no primeiro espaço vazio desse cinto. A ordem de busca é o espaço geral 1 e depois 2, e a ordem das posições dentro de cada modelo. Isso permite uma pilha igual independente no segundo cinto quando a do primeiro já chegou a quatro.
 3. Se todo cinto equipado já tiver uma pilha daquele ID cheia, ou se não houver espaço vazio para uma nova pilha, encaminhar o item para a bolsa normal.
 4. Se a bolsa normal também não tiver espaço, recusar a aquisição sem remover o item do chão, baú ou outra origem.
 
@@ -71,9 +76,9 @@ Quando o cinto não está equipado, seus itens não aparecem como itens utilizá
 
 ## 7. Equipar e desequipar
 
-O cinto pode ser equipado em qualquer espaço geral disponível da ficha. Dois cintos podem coexistir, cada qual com seu próprio conteúdo e quatro posições. Os efeitos de inventário pertencem ao cinto equipado; não são perdidos ao desequipar.
+Qualquer versão pode ser equipada em um espaço geral disponível da ficha. Dois cintos podem coexistir, inclusive uma combinação de versões, cada qual com seu próprio conteúdo e a quantidade de posições definida pelo modelo. Os efeitos de inventário pertencem ao cinto equipado; não são perdidos ao desequipar.
 
-Ao desequipar um cinto com conteúdo, o conteúdo continua vinculado a esse objeto e fica inacessível enquanto ele estiver desequipado. O jogo envia uma mensagem localizada, por exemplo: “Os itens continuam guardados no Cinto de Utilidades e ficarão inacessíveis até ele ser equipado novamente.”
+Ao desequipar um cinto com conteúdo, o conteúdo continua vinculado a esse objeto e fica inacessível enquanto ele estiver desequipado. O jogo envia uma mensagem localizada com o nome do modelo, por exemplo: “Os itens continuam guardados no {nome do cinto} e ficarão inacessíveis até ele ser equipado novamente.”
 
 ## 8. Transferência e persistência
 
@@ -87,21 +92,24 @@ Os compartimentos e suas quantidades fazem parte do dicionário do próprio item
 
 Os dados devem ser serializáveis em JSON. Itens antigos sem campo de compartimentos são tratados como cintos vazios.
 
-O editor de masmorra deve preservar o conteúdo pré-carregado de um cinto em itens de baú e loot de decoração. Um item de loot do tipo cinto permite configurar as quatro posições daquele cinto; cada posição recebe um consumível elegível e quantidade de 1 a 4. Cintos pré-carregados continuam sendo uma única peça de loot; ao pegá-la, o jogador recebe o cinto com seus compartimentos intactos.
+O editor de masmorra deve preservar o conteúdo pré-carregado de um cinto em itens de baú e loot de decoração. Um item de loot do tipo cinto permite configurar as posições daquela versão (quatro ou duas); cada posição recebe um consumível elegível e quantidade de 1 a 4. Cintos pré-carregados continuam sendo uma única peça de loot; ao pegá-la, o jogador recebe o cinto com seus compartimentos intactos.
 
 ## 9. Interface e texto
 
 Na janela de inventário:
 
 - cada cinto equipado tem uma seção identificada visualmente;
-- cada seção desenha quatro espaços em tom marrom;
+- cada seção desenha dois espaços para Cinto com Bolsos ou quatro para Cinto de Utilidades, em tom marrom;
 - o ícone fica visualmente menor, mantendo a área clicável padrão;
 - espaços ocupados mostram o número de unidades;
 - ferramentas de seleção, foco, teclado, toque, tooltip e ações continuam acessíveis.
 
-Nome: **Cinto de Utilidades**.
+Nomes: **Cinto de Utilidades** e **Cinto com Bolsos**.
 
-Descrição sugerida: “Equipado, oferece quatro bolsos para consumíveis. Cada bolso guarda até quatro unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.”
+Descrições sugeridas:
+
+- **Cinto de Utilidades:** “Equipado, oferece quatro bolsos para consumíveis. Cada bolso guarda até quatro unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.”
+- **Cinto com Bolsos:** “Equipado, oferece dois bolsos para consumíveis. Cada bolso guarda até quatro unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.”
 
 ## 10. Autoridade, protocolo e arquivos envolvidos
 
@@ -109,7 +117,7 @@ O servidor continua sendo a autoridade sobre capacidade, elegibilidade, pilhas, 
 
 Áreas previstas para implementação:
 
-- `server.py`: item/equipamento, venda por 50 moedas, catálogo de saque, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
+- `server.py`: dois itens/equipamentos, vendas por 50 e 30 moedas, catálogo de saque, dados dos compartimentos, roteamento de aquisição, validação de movimentação, consumo, aviso ao desequipar e persistência/loot;
 - `src/gameState.js`: ações e mensagens do cliente para transferir, usar e arremessar itens dos compartimentos;
 - `src/ui/inventoryModal.js`: seções dos cintos, contadores, ícones compactos e arrastar/soltar;
 - `game.js` e `src/lang/*`: integração visual, aviso e textos localizados, conforme o padrão existente;
@@ -120,14 +128,14 @@ O servidor continua sendo a autoridade sobre capacidade, elegibilidade, pilhas, 
 
 O plano de implementação deverá incluir verificações para:
 
-- equipamento de um e dois cintos, inclusive persistência ao desequipar;
-- limite de quatro por pilha, pilhas independentes do mesmo tipo em cada cinto e até oito unidades do mesmo tipo em dois cintos;
+- equipamento dos dois modelos em qualquer combinação, limites de capacidade e persistência ao desequipar;
+- limite de quatro por pilha, pilhas independentes do mesmo tipo em cada cinto e até oito unidades do mesmo tipo com dois cintos;
 - coleta em pilha existente, espaço vazio, cinto cheio, bolsa cheia e ausência de cinto equipado;
 - arrastar itens iguais, movimentação unitária, troca com pilha de uma unidade, recusa com pilha maior e recusa por falta de espaço;
 - uso e arremesso consumindo uma unidade exatamente nos casos em que o fluxo atual consome;
 - salvar/carregar e pegar/largar/saquear um cinto com conteúdo;
 - editar, exportar e reabrir baú ou decoração com cinto pré-carregado;
-- compra no mercador pelo preço de 50 moedas;
+- compra no mercador pelos preços de 50 e 30 moedas;
 - apresentação e interação no inventário em layouts suportados.
 
 ## 12. Fora do escopo
