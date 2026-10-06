@@ -90,10 +90,10 @@
 **Interfaces:**
 - Extend `handle_use_item(pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None)`; existing callers retain bag behavior.
 - `handle_throw_item(pid, data)` accepts optional `source`, `gear_slot`, and `pocket_index` fields while preserving the current bag request format.
-- `GS.useItem(id, sourceInfo)` and `GS.throwItem(id, targetId, targetPos, sourceInfo)` serialize belt coordinates only when `sourceInfo` specifies `{source: "utility_belt", gearSlot, pocketIndex}`.
+- `GS.useItem(id, sourceInfo)`, `GS.throwItem(id, targetId, targetPos, sourceInfo)`, and `GS.throwItemArea(id, tx, ty, sourceInfo)` serialize belt coordinates only when `sourceInfo` specifies `{source: "utility_belt", gearSlot, pocketIndex}`.
 - Belt consumption verifies the named equipped slot still contains a belt and the named pocket still contains the requested item ID; decrement exactly one only at the existing successful-consumption point.
 
-- [ ] **Step 1: Write failing tests** for use and throw from either equipped belt; one-unit decrement on success; zero consumption on existing rejection paths; empty pocket cleanup; rejection of unequipped/stale belt, invalid pocket, and mismatched item ID; and unchanged bag source semantics.
+- [ ] **Step 1: Write failing tests** for use and targeted/area throw from either equipped belt; one-unit decrement on success; zero consumption on existing rejection paths; empty pocket cleanup; rejection of unequipped/stale belt, invalid pocket, and mismatched item ID; exact source metadata on targeted and area throw requests; and unchanged bag source semantics.
 - [ ] **Step 2: Run `python -X utf8 tools/test_cinto_utilidades_uso.py` and confirm the new belt-source cases fail.**
 - [ ] **Step 3: Extend the authoritative handlers and dispatchers with optional source coordinates, keeping consumption adjacent to existing bag-removal points.**
 - [ ] **Step 4: Run `python -X utf8 tools/test_cinto_utilidades_uso.py` and `python -X utf8 tools/test_projeteis.py`; confirm throwing from bags still works.**
