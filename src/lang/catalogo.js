@@ -2142,6 +2142,22 @@ window.LANG_CATALOGO = {
     "en": "Silver Whip",
     "pt": "Chicote de Prata"
   },
+  "cat.item.cinto_com_bolsos.desc": {
+    "en": "While equipped, provides 2 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 4 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
+    "pt": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+  },
+  "cat.item.cinto_com_bolsos.nome": {
+    "en": "Pocket Belt",
+    "pt": "Cinto com Bolsos"
+  },
+  "cat.item.cinto_utilidades.desc": {
+    "en": "While equipped, provides 4 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 4 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
+    "pt": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+  },
+  "cat.item.cinto_utilidades.nome": {
+    "en": "Utility Belt",
+    "pt": "Cinto de Utilidades"
+  },
   "cat.item.circlet.nome": {
     "en": "Arcane Circlet",
     "pt": "Tiara Arcana"

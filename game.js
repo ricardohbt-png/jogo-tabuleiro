@@ -2632,7 +2632,8 @@ function _showCenaDialogo(slot, host){
   });
 }
 
-// Ícone de item: PNG em assets/itens/<id>.png se existir, senão cai no emoji.
+// Ícone de item: caminho explícito do item/catálogo ou assets/itens/<id>.png,
+// com emoji como fallback se a imagem não existir.
 // Pergaminhos têm id dinâmico por magia (pergaminho_<spellId>) — usam sempre
 // o mesmo ícone genérico. onerror troca a <img> pelo texto do emoji (sem
 // innerHTML, então o emoji nunca é interpretado como HTML).
@@ -2646,7 +2647,8 @@ function itemIconHTML(item, fallbackEmoji){
   const fileId = item.effect === 'scroll' ? 'pergaminho'
     : (item.tipo_item === 'instrumento' && item.base) ? item.base
     : item.id;
-  const src = _assetURL(`assets/itens/${fileId}.png`);
+  const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon;
+  const src = _assetURL(icon || `assets/itens/${fileId}.png`);
   return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
 

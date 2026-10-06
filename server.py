@@ -6766,6 +6766,12 @@ SHOP_MERCHANT = [
     {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10, "item_slot": "item",  "effect": "spd",       "value": 1},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
+    {"id": "cinto_utilidades", "name": "Cinto de Utilidades", "emoji": "🎒", "price": 80,
+     "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
+     "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
+    {"id": "cinto_com_bolsos", "name": "Cinto com Bolsos", "emoji": "🎒", "price": 30,
+     "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
+     "descricao": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
     # â”€â”€ Venenos (consumÃ­veis de bolsa â€” untam a arma; ver VENENOS) â”€â”€
     {"id": "veneno_aranha_sombria", "name": "Veneno da Aranha Sombria", "emoji": "🕷️", "price": 8,  "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_aranha_sombria"},
     {"id": "veneno_escorpiao_pedra","name": "Veneno do Escorpião Pedra","emoji": "🦂", "price": 12, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_escorpiao_pedra"},
