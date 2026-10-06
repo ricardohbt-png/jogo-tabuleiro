@@ -2084,6 +2084,11 @@ const GS = (() => {
         _emit('savegameCreated', msg.savegame);
         break;
 
+      case 'ponto_salvo':
+        // Resposta ao "💾 Salvar agora": o renderer confirma com um aviso.
+        _emit('pontoSalvo', msg.ponto);
+        break;
+
       case 'campaign_vote_opened':
       case 'campaign_vote_updated':
         _emit('campaignVote', msg);
@@ -3491,6 +3496,32 @@ const GS = (() => {
   function abandonMasterCampaign(id) { send({ type: 'abandon_master_campaign', id }); }
   function loadSavegame(id)     { send({ type: 'load_savegame', id }); }
   function deleteSavegame(id)   { send({ type: 'delete_savegame', id }); }
+  function salvarPonto(nome)              { send({ type: 'salvar_ponto', nome }); }
+  function carregarPonto(id, ponto_id)    { send({ type: 'carregar_ponto', id, ponto_id }); }
+  function apagarPonto(id, ponto_id)      { send({ type: 'apagar_ponto', id, ponto_id }); }
+  function novoCapitulo(id, nome, campaign_file) { send({ type: 'novo_capitulo', id, nome, campaign_file }); }
+  function arquivarJogo(id, arquivado)    { send({ type: 'arquivar_jogo', id, arquivado: !!arquivado }); }
+
+  // "Meus Jogos": aba (solo/multiplayer) e grupo de cada jogo. Puro — o
+  // renderer só desenha. Saves antigos sem play_mode: Mestre ou mais de um
+  // membro = multiplayer (mesma regra do servidor).
+  function agruparJogos(lista, conta) {
+    const out = { solo: { ativos: [], arquivados: [], total: 0 },
+                  multiplayer: { hospedo: [], participo: [], arquivados: [], total: 0 } };
+    for (const sg of (lista || [])) {
+      const membros = Object.keys(sg.members || {}).length;
+      const tipo = (sg.play_mode === 'solo' || sg.play_mode === 'multiplayer') && !sg.has_master
+        ? sg.play_mode
+        : (sg.has_master || membros > 1 ? 'multiplayer' : 'solo');
+      const g = out[tipo];
+      if (sg.arquivado) { g.arquivados.push(sg); continue; }
+      g.total++;
+      if (tipo === 'solo') g.ativos.push(sg);
+      else if (sg.anfitriao === conta) g.hospedo.push(sg);
+      else g.participo.push(sg);
+    }
+    return out;
+  }
   // Entra na sala de um amigo (jogo salvo dele) pela conexão JÁ LOGADA — sem
   // reconectar, para não perder a conta autenticada nesta conexão. O nome do
   // jogador é o próprio apelido (o servidor casa myPid por nome e vincula o
@@ -3628,7 +3659,7 @@ const GS = (() => {
     leaveSession,            // encerra a conexão sem programar reconexão
 
     // ── Contas / Jogos Salvos (Fase 3) ──
-    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, joinByCode, campaignVote, abandonMasterCampaign,
+    loginConta, criarConta, listSavegames, createSavegame, loadSavegame, deleteSavegame, salvarPonto, carregarPonto, apagarPonto, novoCapitulo, arquivarJogo, agruparJogos, joinByCode, campaignVote, abandonMasterCampaign,
     getAccount: () => account,
     getSavegames: () => savegames,
     getCampaigns: () => campaignsCache,
