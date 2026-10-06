@@ -46186,6 +46186,7 @@ MENSAGENS_DA_CONEXAO = frozenset({
     "claim_role", "start_game", "select_dungeon", "select_campaign",
     "salvar_e_sair", "salvar_ponto", "set_turn_timer", "set_visao_compartilhada",
     "set_atravessar_aliados", "start_scene",
+    "carregar_ponto", "apagar_ponto", "novo_capitulo", "arquivar_jogo",
 })
 _PREFIXOS_DA_CONEXAO = ("mestre_", "teste_", "upload_", "save_", "load_")
 
@@ -46622,6 +46623,25 @@ async def handler(ws):
                 if t == "abandon_master_campaign":
                     ok, e = abandon_master_campaign(msg.get("id"), account["name"])
                     if ok:
+                        await ws.send(json.dumps({"type": "savegames_list",
+                                                  "savegames": list_savegames(account["name"]),
+                                                  "campaigns": listar_campanhas()}))
+                    else:
+                        await err(e)
+                    continue
+
+                if t in ("carregar_ponto", "apagar_ponto", "novo_capitulo", "arquivar_jogo"):
+                    if t == "carregar_ponto":
+                        ok, e = try_carregar_ponto(account["name"], msg.get("id"), msg.get("ponto_id"))
+                    elif t == "apagar_ponto":
+                        ok, e = try_apagar_ponto(account["name"], msg.get("id"), msg.get("ponto_id"))
+                    elif t == "novo_capitulo":
+                        ok, e = try_novo_capitulo(account["name"], msg.get("id"),
+                                                  str(msg.get("nome") or "")[:40], msg.get("campaign_file"))
+                    else:
+                        ok, e = try_arquivar_jogo(account["name"], msg.get("id"), msg.get("arquivado") is True)
+                    if ok:
+                        _agendar_descarga()
                         await ws.send(json.dumps({"type": "savegames_list",
                                                   "savegames": list_savegames(account["name"]),
                                                   "campaigns": listar_campanhas()}))

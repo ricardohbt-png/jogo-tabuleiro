@@ -269,6 +269,17 @@ async def secao_sala():
     check("sala de teste não grava ponto", len(S.capitulo_atual(sg)["pontos"]) == antes)
 
 
+def secao_fiacao():
+    print("\n[13] Mensagens de conta despachadas no handler")
+    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "server.py"),
+               encoding="utf-8").read()
+    for t, fn in (("carregar_ponto", "try_carregar_ponto"), ("apagar_ponto", "try_apagar_ponto"),
+                  ("novo_capitulo", "try_novo_capitulo"), ("arquivar_jogo", "try_arquivar_jogo")):
+        check(f"{t} -> {fn}", f'"{t}"' in src and f'{fn}(account["name"]' in src)
+        check(f"{t} é mensagem da conexão", t in S.MENSAGENS_DA_CONEXAO)
+    check("salvar_ponto é mensagem da conexão", "salvar_ponto" in S.MENSAGENS_DA_CONEXAO)
+
+
 def main():
     loja_tmp()
     try:
@@ -276,6 +287,7 @@ def main():
         secao_conta()
         secao_migracao()
         asyncio.run(secao_sala())
+        secao_fiacao()
     finally:
         loja_volta()
     print(f"\n{PASS} ok, {FAIL} falha(s)")
