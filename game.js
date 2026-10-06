@@ -51967,6 +51967,10 @@ function _quandoJogo(iso) {
 function _btnJogo(rotulo, onclick, titulo) {
   const b = document.createElement('button');
   b.className = 'btn-secondary btn-sm';
+  // O estilo global de <button> é largura cheia; aqui o botão fica do tamanho
+  // do texto, senão a linha do ponto esmaga o nome numa coluna estreita.
+  b.style.width = 'auto';
+  b.style.flex = 'none';
   b.textContent = rotulo;
   if (titulo) b.title = titulo;
   b.onclick = onclick;
@@ -51979,6 +51983,7 @@ function _linhaPonto(sg, p, podeGerir) {
   li.style.cssText = 'display:flex;gap:6px;align-items:center;font-size:.72rem;padding:3px 0;';
   const nome = document.createElement('span');
   nome.style.flex = '1';
+  nome.style.minWidth = '0';
   nome.textContent = (p.tipo === 'manual' ? '🔖 ' : '🕑 ') + _rotuloPonto(p);
   const quando = document.createElement('span');
   quando.style.color = '#8ab88a';
