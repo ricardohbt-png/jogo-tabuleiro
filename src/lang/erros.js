@@ -2156,6 +2156,30 @@ window.LANG_ERROS = {
   "erro.jogo_solo_com_grupo_fechado": {
     "en": "This is a Solo game with a party: no one else can join.",
     "pt": "Este é um jogo Solo com grupo: ninguém mais pode entrar."
+  },
+  "erro.feche_o_jogo_antes": {
+    "en": "Close this game first (everyone must leave it).",
+    "pt": "Feche o jogo antes (todos precisam sair dele)."
+  },
+  "erro.jogo_salvo_indisponivel": {
+    "en": "This saved game isn't available.",
+    "pt": "Este jogo salvo não está disponível."
+  },
+  "erro.limite_de_pontos_manuais": {
+    "en": "This chapter already has {n} manual saves. Delete one first.",
+    "pt": "Este capítulo já tem {n} salvamentos manuais. Apague um antes."
+  },
+  "erro.ponto_nao_encontrado": {
+    "en": "Save point not found.",
+    "pt": "Ponto de salvamento não encontrado."
+  },
+  "erro.so_o_anfitriao_gerencia_pontos": {
+    "en": "Only the host can load or delete save points and start chapters.",
+    "pt": "Só o anfitrião carrega ou apaga pontos e cria capítulos."
+  },
+  "erro.escolha_uma_campanha_valida": {
+    "en": "Choose a valid campaign.",
+    "pt": "Escolha uma campanha válida."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

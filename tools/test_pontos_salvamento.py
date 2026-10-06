@@ -72,10 +72,88 @@ def secao_nucleo():
     check("ponto lembra o capítulo", doc["capitulo"] == 1)
     check("local da cidade vem do nome do mundo", meta["onde"] == "cidade" and meta["local"] == "Alva e Luz")
 
+def secao_conta():
+    print("\n[5] Carregar devolve o estado e guarda o de antes")
+    sg = jogo()
+    alvo, _ = S.registrar_ponto(sg, "auto", rotulo="cidade")      # gold 10
+    S.registrar_ponto(sg, "auto", rotulo="cidade")
+    S.registrar_ponto(sg, "auto", rotulo="cidade")                  # alvo é o mais antigo
+    sg["characters"]["warrior"]["gold"] = 99
+    sg["dungeon_snapshot"] = {"onde": "masmorra", "rodada": 3, "masmorra_nome": "Minas"}
+    S.write_savegame(sg)
+    ok, e = S.try_carregar_ponto("ana", sg["id"], alvo["id"])
+    sg = S.load_savegame(sg["id"])
+    check("carregou", ok, e)
+    check("ouro voltou a 10", sg["characters"]["warrior"]["gold"] == 10)
+    check("foto que não existia no ponto saiu", "dungeon_snapshot" not in sg)
+    antes = next((p for p in S.capitulo_atual(sg)["pontos"] if p.get("rotulo") == "antes_de_carregar"), None)
+    check("ponto 'antes de carregar' criado", antes is not None)
+    doc = S.LOJA.ler("pontos", f"{sg['id']}_{antes['id']}")
+    check("ele guarda o estado substituído (99)", doc["estado"]["characters"]["warrior"]["gold"] == 99)
+    check("o ponto carregado não foi apagado pela rotação",
+          S._achar_ponto(sg, alvo["id"])[1] is not None)
+
+    print("\n[6] Só o anfitrião carrega/apaga; jogo aberto recusa")
+    mp = jogo(owner="ana", membros=("ana", "bia"), play_mode="multiplayer")
+    p, _ = S.registrar_ponto(mp, "manual", nome="x", por="bia"); S.write_savegame(mp)
+    ok, e = S.try_carregar_ponto("bia", mp["id"], p["id"])
+    check("convidado não carrega", not ok)
+    ok, e = S.try_apagar_ponto("bia", mp["id"], p["id"])
+    check("convidado não apaga", not ok)
+    check("estranho não carrega", not S.try_carregar_ponto("zé", mp["id"], p["id"])[0])
+    S.SAVEGAMES_IN_USE[mp["id"]] = "ABCD"
+    try:
+        check("jogo aberto recusa carregar", not S.try_carregar_ponto("ana", mp["id"], p["id"])[0])
+    finally:
+        S.SAVEGAMES_IN_USE.pop(mp["id"], None)
+    ok, e = S.try_apagar_ponto("ana", mp["id"], p["id"])
+    check("anfitrião apaga", ok and S._achar_ponto(S.load_savegame(mp["id"]), p["id"])[1] is None)
+    check("documento do ponto apagado", S.LOJA.ler("pontos", f"{mp['id']}_{p['id']}") is None)
+    com_mestre = jogo(owner="ana", membros=("bia",), play_mode="multiplayer", has_master=True)
+    q, _ = S.registrar_ponto(com_mestre, "manual", nome="y"); S.write_savegame(com_mestre)
+    check("com Mestre, o anfitrião é o Mestre", S._anfitriao_do_jogo(com_mestre) == "ana")
+
+    print("\n[7] Novo capítulo no mesmo jogo")
+    sg = jogo()
+    sg["campaign_phase"] = 3
+    sg["dungeon_snapshot"] = {"onde": "masmorra", "rodada": 2}
+    S.write_savegame(sg)
+    ok, e = S.try_novo_capitulo("ana", sg["id"], "Parte dois", None)
+    sg = S.load_savegame(sg["id"])
+    check("criou", ok, e)
+    check("dois capítulos, atual = 2", len(sg["capitulos"]) == 2 and sg["capitulo_atual"] == 2)
+    check("fase zerada e foto limpa", sg["campaign_phase"] == 0 and "dungeon_snapshot" not in sg)
+    check("heróis mantidos", sg["characters"]["warrior"]["gold"] == 10)
+    check("capítulo 1 fechou com 'fim do capítulo'",
+          sg["capitulos"][0]["pontos"][0].get("rotulo") == "fim_capitulo")
+    check("convidado não cria capítulo", not S.try_novo_capitulo("zé", sg["id"], "x", None)[0])
+
+    print("\n[8] Arquivar é por conta")
+    mp = jogo(owner="ana", membros=("ana", "bia"), play_mode="multiplayer")
+    ok, e = S.try_arquivar_jogo("bia", mp["id"], True)
+    check("arquivou", ok, e)
+    da_bia = next(s for s in S.list_savegames("bia") if s["id"] == mp["id"])
+    da_ana = next(s for s in S.list_savegames("ana") if s["id"] == mp["id"])
+    check("para a bia está arquivado", da_bia["arquivado"] is True)
+    check("para a ana não", da_ana["arquivado"] is False)
+    check("lista leva anfitrião e capítulos",
+          da_ana["anfitriao"] == "ana" and da_ana["capitulos"][0]["n"] == 1 and da_ana["capitulo_atual"] == 1)
+    S.try_arquivar_jogo("bia", mp["id"], False)
+    check("desarquivar volta", next(s for s in S.list_savegames("bia") if s["id"] == mp["id"])["arquivado"] is False)
+
+    print("\n[9] Apagar o jogo apaga os pontos")
+    sg = jogo()
+    S.registrar_ponto(sg, "manual", nome="a"); S.write_savegame(sg)
+    check("tem ponto", len(docs_de(sg["id"])) == 1)
+    ok, _ = S.delete_savegame(sg["id"], "ana")
+    check("apagou jogo e pontos", ok and docs_de(sg["id"]) == [])
+
+
 def main():
     loja_tmp()
     try:
         secao_nucleo()
+        secao_conta()
     finally:
         loja_volta()
     print(f"\n{PASS} ok, {FAIL} falha(s)")

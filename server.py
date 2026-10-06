@@ -2360,6 +2360,12 @@ def list_savegames(username):
                 "status": sg.get("status", "active"), "parent_campaign_id": sg.get("parent_campaign_id"),
                 "slots": sg.get("slots", {}),
                 "foto": _resumo_foto(sg.get("dungeon_snapshot")),
+                "capitulos": [{"n": c.get("n"), "nome": c.get("nome", ""),
+                               "pontos": list(c.get("pontos") or [])}
+                              for c in sg.get("capitulos") or []],
+                "capitulo_atual": sg.get("capitulo_atual", 1),
+                "arquivado": u in (sg.get("arquivado_por") or []),
+                "anfitriao": _anfitriao_do_jogo(sg),
             })
     out.sort(key=lambda s: s.get("updated") or "", reverse=True)
     return out
@@ -2468,12 +2474,125 @@ def registrar_ponto(sg, tipo, nome=None, rotulo=None, por=None, preservar=None):
     return meta, None
 
 
+def _anfitriao_do_jogo(sg):
+    """Quem gerencia pontos e capítulos: o Mestre num jogo com Mestre, senão o dono."""
+    return sg.get("master_account") if sg.get("has_master") else sg.get("owner")
+
+
+def _jogo_gerenciavel(conta, sid):
+    """(sg, None) se `conta` pode gerenciar pontos/capítulos de `sid` agora;
+    senão (None, erro). Exige o jogo FECHADO: uma sala aberta tem o mesmo dict
+    em memória e sobrescreveria a mudança na próxima gravação."""
+    conta = _norm_username(conta)
+    sg = load_savegame(sid) if isinstance(sid, str) else None
+    if not sg or not _conta_participa(sg, conta):
+        return None, T("erro.jogo_salvo_indisponivel")
+    if conta != _anfitriao_do_jogo(sg):
+        return None, T("erro.so_o_anfitriao_gerencia_pontos")
+    if sid in SAVEGAMES_IN_USE:
+        return None, T("erro.feche_o_jogo_antes")
+    garantir_capitulos(sg)
+    return sg, None
+
+
+def carregar_ponto_no_jogo(sg, ptid):
+    """Copia o ponto para o estado vivo. O estado substituído vira o ponto
+    automático "antes de carregar" (desfazível). Devolve o erro ou None."""
+    cap, meta = _achar_ponto(sg, ptid)
+    doc = LOJA.ler("pontos", _ponto_chave(sg["id"], ptid)) if meta else None
+    if not doc:
+        return T("erro.ponto_nao_encontrado")
+    registrar_ponto(sg, "auto", rotulo="antes_de_carregar", preservar=ptid)
+    estado = doc.get("estado") or {}
+    for k in CAMPOS_DO_PONTO:
+        if k in estado:
+            sg[k] = deepcopy(estado[k])
+        else:
+            sg.pop(k, None)
+    sg["capitulo_atual"] = doc.get("capitulo") or cap["n"]
+    sg["status"] = "active"
+    return None
+
+
+def apagar_ponto_do_jogo(sg, ptid):
+    cap, meta = _achar_ponto(sg, ptid)
+    if not meta:
+        return T("erro.ponto_nao_encontrado")
+    cap["pontos"].remove(meta)
+    LOJA.apagar("pontos", _ponto_chave(sg["id"], ptid))
+    return None
+
+
+def try_carregar_ponto(conta, sid, ptid):
+    sg, e = _jogo_gerenciavel(conta, sid)
+    if e:
+        return False, e
+    e = carregar_ponto_no_jogo(sg, ptid)
+    if e:
+        return False, e
+    write_savegame(sg)
+    return True, None
+
+
+def try_apagar_ponto(conta, sid, ptid):
+    sg, e = _jogo_gerenciavel(conta, sid)
+    if e:
+        return False, e
+    e = apagar_ponto_do_jogo(sg, ptid)
+    if e:
+        return False, e
+    write_savegame(sg)
+    return True, None
+
+
+def try_novo_capitulo(conta, sid, nome, campaign_file):
+    """"Continuar em sequência" dentro do mesmo jogo: fecha o capítulo atual com
+    um ponto e abre o próximo com a fase zerada, mantendo heróis e mundo."""
+    sg, e = _jogo_gerenciavel(conta, sid)
+    if e:
+        return False, e
+    if campaign_file and campaign_file not in {c["file"] for c in listar_campanhas()}:
+        return False, T("erro.escolha_uma_campanha_valida")
+    registrar_ponto(sg, "auto", rotulo="fim_capitulo")
+    n = max(c["n"] for c in sg["capitulos"]) + 1
+    arquivo = campaign_file or sg.get("campaign_file")
+    sg["capitulos"].append(_novo_capitulo_dict(n, nome, arquivo))
+    sg["capitulo_atual"] = n
+    sg["campaign_file"] = arquivo
+    sg["campaign_phase"] = 0
+    sg.pop("dungeon_snapshot", None)
+    sg["status"] = "active"
+    sg.setdefault("journal", []).append({"at": _now_iso(), "kind": "chapter_created",
+                                         "text": f"Capítulo {n}"})
+    write_savegame(sg)
+    return True, None
+
+
+def try_arquivar_jogo(conta, sid, arquivado):
+    """Arquivar esconde o jogo só para QUEM arquivou."""
+    conta = _norm_username(conta)
+    sg = load_savegame(sid) if isinstance(sid, str) else None
+    if not sg or not _conta_participa(sg, conta):
+        return False, T("erro.jogo_salvo_indisponivel")
+    garantir_capitulos(sg)
+    lista = sg["arquivado_por"]
+    if arquivado and conta not in lista:
+        lista.append(conta)
+    elif not arquivado and conta in lista:
+        lista.remove(conta)
+    write_savegame(sg)
+    return True, None
+
+
 def delete_savegame(sid, requester):
     sg = load_savegame(sid)
     if not sg:
         return False, "Jogo não encontrado."
     if sg.get("owner") != _norm_username(requester):
         return False, "Apenas o dono pode apagar este jogo."
+    for cap in sg.get("capitulos") or []:
+        for p in cap.get("pontos") or []:
+            LOJA.apagar("pontos", _ponto_chave(sid, p.get("id")))
     LOJA.apagar("savegames", sid)
     return True, None
 
