@@ -1729,13 +1729,13 @@ def _atomic_write_json(path, data):
 #
 # RESTRICAO DO DESENHO: uma instancia so. Duas teriam caches separados, e a
 # ultima a descarregar venceria -- apagando o trabalho da outra em silencio.
-COLECOES = ("contas", "savegames", "grupos")
+COLECOES = ("contas", "savegames", "grupos", "pontos")
 
 # Colecao -> diretorio. Os nomes de pasta continuam os antigos de proposito: o
 # .gitignore aponta para accounts/, savegames/ e groups/, e renomear orfanaria
 # a regra sem ganho nenhum.
 _PASTA_DA_COLECAO = {"contas": "accounts", "savegames": "savegames",
-                     "grupos": "groups"}
+                     "grupos": "groups", "pontos": "savegame_points"}
 
 
 class AdaptadorArquivo:
@@ -2305,6 +2305,9 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
         "refugio": {"items": [], "gold": 0, "slot_limit": 10, "background": "assets/city/refugio_basico.svg", "background_external": "assets/city/refugio_basico.svg", "background_common": "assets/city/refugio_basico.svg", "background_room": "assets/city/refugio_basico.svg",
                     "backgrounds": ["assets/city/refugio_basico.svg"], "trophies": [], "unlocked": False},
         "hero_rooms": {},
+        "capitulos": [_novo_capitulo_dict(1, "", campaign_file if is_campaign else None)],
+        "capitulo_atual": 1,
+        "arquivado_por": [],
     }
     if isinstance(inherited, dict):
         # Continuação é uma cópia: jamais compartilha referências nem altera a
@@ -2360,6 +2363,110 @@ def list_savegames(username):
             })
     out.sort(key=lambda s: s.get("updated") or "", reverse=True)
     return out
+
+# ─── Capítulos e pontos de salvamento ─────────────────────────────────────────
+# O documento do jogo é o estado VIVO ("Continuar" parte dele). Cada capítulo
+# guarda só o ÍNDICE dos pontos; o conteúdo de cada ponto mora na coleção
+# "pontos" (chave <sid>_<ptid>), para o histórico não pesar na gravação que a
+# masmorra faz a cada rodada. Nada aqui grava T(...): o documento vai a disco;
+# o texto do ponto automático é um código (`rotulo`) traduzido no cliente.
+PONTOS_AUTO_MAX = 3
+PONTOS_MANUAIS_MAX = 10
+PONTO_AUTO_RODADAS = 5
+# Tudo o que muda durante o jogo e precisa voltar ao carregar um ponto. É a
+# mesma lista que a continuação copiava, mais o que o checkpoint grava.
+CAMPOS_DO_PONTO = (
+    "campaign_file", "campaign_phase", "world_location", "world_adventure_progress",
+    "renome", "fatos", "scene_conversations_done", "scene_triggers_done",
+    "story_beats_done", "active_scene", "scene_variables", "members",
+    "characters", "slots", "shortcut_slots", "refugio", "hero_rooms",
+    "dungeon_snapshot",
+)
+
+
+def _ponto_chave(sid, ptid):
+    return f"{sid}_{ptid}"
+
+
+def _new_ponto_id(sid):
+    while True:
+        ptid = "pt_" + "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
+        if LOJA.ler("pontos", _ponto_chave(sid, ptid)) is None:
+            return ptid
+
+
+def _novo_capitulo_dict(n, nome, campaign_file):
+    return {"n": n, "nome": str(nome or "")[:40], "campaign_file": campaign_file,
+            "criado": _now_iso(), "pontos": []}
+
+
+def capitulo_atual(sg):
+    caps = sg.get("capitulos") or []
+    if not caps:
+        return None
+    n = sg.get("capitulo_atual")
+    return next((c for c in caps if c.get("n") == n), caps[-1])
+
+
+def _local_do_estado(sg):
+    """(onde, local, rodada) do estado vivo, para o índice do ponto."""
+    foto = sg.get("dungeon_snapshot") or {}
+    if foto.get("onde") == "masmorra":
+        return "masmorra", foto.get("masmorra_nome") or "", foto.get("rodada")
+    loc = sg.get("world_location") or ""
+    nome = (WORLD_LOCATIONS.get(loc) or {}).get("nome") or loc
+    return ("cidade_com_masmorra" if foto.get("onde") else "cidade"), nome, None
+
+
+def _achar_ponto(sg, ptid):
+    for cap in sg.get("capitulos") or []:
+        for p in cap.get("pontos") or []:
+            if p.get("id") == ptid:
+                return cap, p
+    return None, None
+
+
+def garantir_capitulos(sg):
+    """Jogo sem capítulos (salvo antes desta versão) ganha o capítulo 1 com um
+    ponto automático do estado atual. Devolve True se mudou algo."""
+    mudou = False
+    if not isinstance(sg.get("arquivado_por"), list):
+        sg["arquivado_por"] = []
+        mudou = True
+    if isinstance(sg.get("capitulos"), list) and sg["capitulos"]:
+        return mudou
+    sg["capitulos"] = [_novo_capitulo_dict(1, "", sg.get("campaign_file"))]
+    sg["capitulo_atual"] = 1
+    registrar_ponto(sg, "auto", rotulo="migrado")
+    return True
+
+
+def registrar_ponto(sg, tipo, nome=None, rotulo=None, por=None, preservar=None):
+    """Copia o estado vivo do jogo num ponto novo do capítulo atual.
+    tipo: "auto" (roda, fica só PONTOS_AUTO_MAX) ou "manual" (teto
+    PONTOS_MANUAIS_MAX). `preservar` = id que a rotação não pode apagar.
+    Não grava o jogo: quem chama faz write_savegame. Devolve (meta, erro)."""
+    garantir_capitulos(sg)
+    cap = capitulo_atual(sg)
+    if tipo == "manual" and sum(1 for p in cap["pontos"]
+                                if p.get("tipo") == "manual") >= PONTOS_MANUAIS_MAX:
+        return None, T("erro.limite_de_pontos_manuais", n=PONTOS_MANUAIS_MAX)
+    ptid = _new_ponto_id(sg["id"])
+    onde, local, rodada = _local_do_estado(sg)
+    meta = {"id": ptid, "tipo": tipo, "nome": str(nome or "")[:40], "rotulo": rotulo,
+            "onde": onde, "local": local, "rodada": rodada,
+            "criado": _now_iso(), "por": por}
+    estado = {k: deepcopy(sg[k]) for k in CAMPOS_DO_PONTO if k in sg}
+    LOJA.gravar("pontos", _ponto_chave(sg["id"], ptid),
+                {"sid": sg["id"], "id": ptid, "capitulo": cap["n"], "estado": estado})
+    cap["pontos"].insert(0, meta)
+    if tipo == "auto":
+        autos = [p for p in cap["pontos"] if p.get("tipo") == "auto" and p["id"] != preservar]
+        for velho in autos[PONTOS_AUTO_MAX:]:
+            cap["pontos"].remove(velho)
+            LOJA.apagar("pontos", _ponto_chave(sg["id"], velho["id"]))
+    return meta, None
+
 
 def delete_savegame(sid, requester):
     sg = load_savegame(sid)

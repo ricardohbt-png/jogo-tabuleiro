@@ -23,6 +23,7 @@ saves/
 # Jogos salvos e contas (persistência por conta — Fase 1)
 accounts/
 savegames/
+savegame_points/
 
 # Grupos sociais (runtime, criados pelo servidor junto das campanhas)
 groups/
