@@ -35420,13 +35420,40 @@ class GameRoom:
             if not ok:
                 return  # jÃ¡ usou aÃ§Ã£o bÃ´nus neste turno â€” abortar sem consumir o item
 
+        # The poison branch can still refuse after the bonus action. Validate it
+        # before committing a belt bottle; bag callers retain the same ordering.
+        if effect == "coat_poison":
+            vid = item.get("veneno_id")
+            if vid not in VENENOS:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+
         remove_item = True
-        if effect == "heal":
-            self._curar_hp(p, val, "Poção de cura")
-            if max_uses > 1:
+        if source_location is not None:
+            # Bonus-action narration yields. Revalidate the exact original belt
+            # and pocket after that await, then commit the dose/bottle and apply
+            # its effect synchronously before any further narration can yield.
+            current_item, current_location = self._resolve_consumable_source(
+                p, item_id, source, gear_slot, pocket_index)
+            if (current_item is not item or current_location[1] is not source_location[1]
+                    or current_location[3] is not source_location[3]):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
+            if effect == "heal" and max_uses > 1:
+                uses_left = int(item.get("uses_left", max_uses) or 0)
+                if uses_left <= 0:
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.esta_pocao_ja_nao_possui_doses")}); return
                 uses_left -= 1
                 item["uses_left"] = uses_left
                 remove_item = uses_left <= 0
+            if remove_item:
+                if not self._consume_action_item(p, item, source_location):
+                    return
+        if effect == "heal":
+            self._curar_hp(p, val, "Poção de cura")
+            if max_uses > 1:
+                if source_location is None:
+                    uses_left -= 1
+                    item["uses_left"] = uses_left
+                    remove_item = uses_left <= 0
                 doses_msg = (" A garrafa se esvazia." if remove_item
                              else f" **{uses_left}/{max_uses}** doses restantes.")
             else:
@@ -35463,9 +35490,6 @@ class GameRoom:
             extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
             await self.gm_say(T("narracao.usa", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), txt=txt, extra=extra))
         elif effect == "coat_poison":
-            vid = item.get("veneno_id")
-            if vid not in VENENOS:
-                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
             _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
             desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
                     if _is_ranged else "1 golpe certeiro envenena o alvo")
@@ -35519,7 +35543,7 @@ class GameRoom:
                 T("narracao.acende_a_e_a_luz_em_volta_e_sugada_fica", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), extra=extra))
 
         await self._licao_evento(p, "usar_item", alvo=(item or {}).get("id"))
-        if remove_item:
+        if remove_item and source_location is None:
             if not self._consume_action_item(p, item, source_location):
                 return
         await self.push_state()

@@ -1,5 +1,6 @@
 """Use/throw from exact equipped belt pockets, with legacy bag compatibility."""
 import ast
+import asyncio
 from copy import deepcopy
 from pathlib import Path
 import subprocess
@@ -98,6 +99,76 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
             if remaining:
                 self.assertEqual((entry['quantity'], entry['item']['uses_left']), (1, remaining))
         self.assertIsNone(belt['utility_belt_slots'][0])
+
+    async def test_source_moved_during_bonus_action_never_applies_heal_or_changes_doses(self):
+        for iid in ('health_potion', 'health_potion_concentrated'):
+            for change in ('transfer', 'unequip', 'replace'):
+                with self.subTest(iid=iid, change=change):
+                    self.setUp()
+                    belt = self.belt(iid, 1)
+                    old_item = belt['utility_belt_slots'][0]['item']
+                    if iid == 'health_potion_concentrated': old_item['uses_left'] = 2
+                    original_bonus = self.r._executar_acao_bonus
+                    suspended, resume = asyncio.Event(), asyncio.Event()
+                    async def gated_bonus(player):
+                        result = await original_bonus(player)
+                        suspended.set()
+                        await resume.wait()
+                        return result
+                    self.r._executar_acao_bonus = gated_bonus
+                    pending = asyncio.create_task(self.use(iid))
+                    try:
+                        await asyncio.wait_for(suspended.wait(), 1)
+                        if change == 'transfer':
+                            self.assertTrue(await self.r.handle_move_utility_belt_item('p1', dict(
+                                direction='to_bag', gear_slot='item1', pocket_index=0, bag_index=0)))
+                        elif change == 'unequip':
+                            self.p['gear']['item1'] = None
+                            self.p['bag'].append(belt)
+                        else:
+                            self.belt(iid, 1)
+                        old_before = deepcopy(old_item)
+                        source_before = deepcopy(self.p['gear'])
+                        bag_before = deepcopy(self.p['bag'])
+                    finally:
+                        resume.set()
+                        await pending
+                    self.assertEqual(self.p['hp'], 1, 'stale belt source must not heal')
+                    self.assertEqual(old_item, old_before, 'stale source must not mutate old doses')
+                    self.assertEqual(self.p['gear'], source_before)
+                    self.assertEqual(self.p['bag'], bag_before)
+                    self.assertTrue(self.errors)
+
+    async def test_belt_use_commits_consumption_before_effect_narration(self):
+        for iid, doses in (('health_potion', None), ('health_potion_concentrated', 2),
+                           ('health_potion_concentrated', 1)):
+            with self.subTest(iid=iid, doses=doses):
+                self.setUp()
+                belt = self.belt(iid, 2)
+                entry = belt['utility_belt_slots'][0]
+                if doses is not None: entry['item']['uses_left'] = doses
+                # The real bonus action has its own narration; isolate the effect narration.
+                async def bonus(player): return True
+                self.r._executar_acao_bonus = bonus
+                observations = []
+                async def effect_narration(message):
+                    observations.append((self.p['hp'], deepcopy(entry)))
+                self.r.gm_say = effect_narration
+                await self.use(iid)
+                hp, snapshot = observations[0]
+                self.assertGreater(hp, 1)
+                self.assertEqual(snapshot['quantity'], 2 if doses == 2 else 1)
+                if doses is not None:
+                    self.assertEqual(snapshot['item']['uses_left'],
+                                     1 if doses == 2 else snapshot['item']['max_uses'])
+
+    async def test_unknown_poison_refusal_does_not_consume_belt_source(self):
+        belt = self.belt('veneno_aranha_sombria', 2)
+        belt['utility_belt_slots'][0]['item']['veneno_id'] = 'missing_poison'
+        before = deepcopy(belt)
+        await self.use('veneno_aranha_sombria')
+        self.assertEqual(belt, before)
+        self.assertTrue(self.errors)
 
     async def test_use_existing_rejections_do_not_consume(self):
         for reason in ('bonus', 'last_effort', 'transformed', 'empty_doses', 'throwable', 'invalid_ally', 'far_ally', 'not_turn'):
