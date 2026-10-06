@@ -485,6 +485,27 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > continuar: rodada, casa, PV, ouro, bolsa, 14 monstros, item no chão, baús e névoa idênticos.
 > Teste: `tools/test_salvar_masmorra.py` (230; a seção [6] passa pelo `server.handler` real).
 
+> **Capítulos e pontos de salvamento (2026-10-05):** cada jogo salvo é UM cartão em "Meus Jogos",
+> com abas Solo | Multiplayer (`GS.agruparJogos`, puro; aba em `localStorage["lfh_aba_jogos"]`) e,
+> em Multiplayer, "Que eu hospedo"/"Que eu participo". O documento do jogo segue sendo o estado vivo
+> e guarda só o ÍNDICE `capitulos[].pontos[]`; o conteúdo de cada ponto vai para a coleção `pontos`
+> da loja (`<sid>_<ptid>`, pasta `savegame_points/`) com a cópia de `CAMPOS_DO_PONTO`. Automáticos
+> (`registrar_ponto(..., "auto", rotulo=…)`) na 1ª foto de cada visita à masmorra, a cada
+> `PONTO_AUTO_RODADAS` (5) rodadas (no MESMO write da foto), ao voltar à cidade e no "Salvar e
+> sair"; ficam os 3 mais recentes por capítulo. Manuais: `salvar_ponto {nome}` ("💾 Salvar agora"
+> no ⚙️, resposta `ponto_salvo`), teto 10 por capítulo. Carregar/apagar ponto e "Novo capítulo" (o
+> antigo "Continuar em sequência", que criava outro cartão) só pelo cartão, com o jogo FECHADO
+> (`SAVEGAMES_IN_USE`) e só pelo anfitrião (`_anfitriao_do_jogo`: Mestre se houver, senão o dono);
+> carregar guarda o estado substituído como "Antes de carregar" (`preservar` impede a rotação de
+> apagar o ponto carregado). Arquivar é por conta (`arquivado_por`). Documento gravado nunca leva
+> `T(...)`: o automático guarda um `rotulo` traduzido no cliente (`ui.save.ponto.<rotulo>`).
+> Migração: `garantir_capitulos` (em `ensure_campaign_schema`) dá capítulo 1 + ponto "migrado" a
+> jogo antigo; no boot, `migrar_continuacoes_para_capitulos` funde continuações antigas no jogo de
+> origem — segue cadeias até a raiz, isola cada jogo num try/except (calcula tudo antes de gravar)
+> e é idempotente mesmo após queda no meio. Fora de escopo: a Guilda segue por classe, sem voltar
+> no tempo. Spec/plano em `docs/superpowers/{specs,plans}/2026-10-05-saves-organizados*`. Testes:
+> `tools/test_pontos_salvamento.py` (79) e `tools/test_pontos_salvamento_cliente.js` (17).
+
 > **Solo com grupo (2026-10-01):** no jogo salvo **Solo**, a tela de seleção marca de 1 a 6
 > classes (`select_party`, só no lobby de um Solo novo, sem Mestre, só com a conta do dono;
 > `lobby_state.grupo_solo` liga o modo) e o jogador controla todos. **Heróis por procuração:** o
