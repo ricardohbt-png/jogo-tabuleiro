@@ -230,12 +230,52 @@ def secao_migracao():
     check("queda: filho e documentos limpos", S.load_savegame(fil["id"]) is None and docs_de(fil["id"]) == [])
 
 
+async def secao_sala():
+    print("\n[12] Pontos gravados pela sala")
+    sg = jogo(owner="ana")
+    r = S.GameRoom("PONTO")
+    enviados = []
+    async def broadcast(msg, skip=None): enviados.append(msg)
+    async def send_to(pid, msg): enviados.append(msg)
+    async def push_state(): pass
+    r.broadcast = broadcast; r.send_to = send_to; r.push_state = push_state
+    r.savegame = sg; r.savegame_id = sg["id"]
+    r.players["p0"] = S.make_player("p0", "Ana", "warrior", 0)
+    r.player_order = ["p0"]; r.host_pid = "p0"; r.phase = "city"
+    r.account_by_pid["p0"] = "ana"
+    await r.enter_dungeon("p0")
+    await r._liberar_intro_masmorra(True)
+    r._ultima_foto = None
+    rotulos = lambda: [p.get("rotulo") for p in S.capitulo_atual(sg)["pontos"]]
+    check("1ª foto da visita grava ponto de entrada", r._gravar_foto_rodada() and "entrada_masmorra" in rotulos())
+    r.round_num = S.PONTO_AUTO_RODADAS
+    r._gravar_foto_rodada()
+    check("a cada 5 rodadas grava ponto 'rodada'", "rodada" in rotulos())
+    r.round_num = S.PONTO_AUTO_RODADAS + 1
+    antes = len(S.capitulo_atual(sg)["pontos"])
+    r._gravar_foto_rodada()
+    check("rodada que não é múltipla de 5 não grava ponto", len(S.capitulo_atual(sg)["pontos"]) == antes)
+    await r.handle_salvar_ponto("p0", "Antes do Troll")
+    manual = next((p for p in S.capitulo_atual(sg)["pontos"] if p["tipo"] == "manual"), None)
+    check("salvar agora grava ponto manual com nome e autor",
+          manual and manual["nome"] == "Antes do Troll" and manual["por"] == "ana")
+    check("e responde ponto_salvo", any(m.get("type") == "ponto_salvo" for m in enviados))
+    check("o ponto manual da masmorra guarda a rodada", manual["onde"] == "masmorra")
+    await r.handle_salvar_e_sair("p0")
+    check("salvar e sair grava ponto 'sair'", "sair" in rotulos())
+    r.test_mode = True
+    antes = len(S.capitulo_atual(sg)["pontos"])
+    r._ponto_automatico("cidade")
+    check("sala de teste não grava ponto", len(S.capitulo_atual(sg)["pontos"]) == antes)
+
+
 def main():
     loja_tmp()
     try:
         secao_nucleo()
         secao_conta()
         secao_migracao()
+        asyncio.run(secao_sala())
     finally:
         loja_volta()
     print(f"\n{PASS} ok, {FAIL} falha(s)")

@@ -23130,6 +23130,7 @@ class GameRoom:
         await self.broadcast_city_state()
         await self._trigger_campaign_scene("city_enter")
         self._checkpoint_savegame()
+        self._ponto_automatico("cidade")
 
     def _checkpoint_savegame(self):
         """Grava a ficha durável dos heróis PRESENTES + a fase atual no savegame.
@@ -23185,6 +23186,36 @@ class GameRoom:
         except RuntimeError:
             return
         loop.create_task(self.broadcast({"type": "saved", "where": onde}))
+
+    def _ponto_automatico(self, rotulo, gravar=True):
+        """Ponto automático do capítulo atual a partir do estado vivo JÁ gravado
+        (chame depois do checkpoint/foto). Mesmas guardas da foto."""
+        if self.savegame is None or getattr(self, "test_mode", False):
+            return None
+        meta, _ = registrar_ponto(self.savegame, "auto", rotulo=rotulo)
+        if gravar:   # a foto da rodada grava uma vez só, depois do ponto
+            write_savegame(self.savegame)
+            _agendar_descarga()
+        return meta
+
+    async def handle_salvar_ponto(self, pid, nome):
+        """"💾 Salvar agora": ponto manual sem sair. Na masmorra vale a foto do
+        início da rodada (como no Salvar e sair), nunca o meio de uma ação."""
+        if self.savegame is None:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.esta_partida_nao_tem_jogo_salvo")}); return
+        if self.phase not in ("city", "playing"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.so_da_para_salvar_em_jogo")}); return
+        if self.phase == "playing" and self._ultima_foto is None:
+            self._gravar_foto_rodada()
+        self._checkpoint_savegame()
+        meta, e = registrar_ponto(self.savegame, "manual",
+                                  nome=str(nome or "").strip()[:40] or None,
+                                  por=self.account_by_pid.get(pid))
+        if e:
+            await self.send_to(pid, {"type": "error", "msg": e}); return
+        write_savegame(self.savegame)
+        _agendar_descarga()
+        await self.send_to(pid, {"type": "ponto_salvo", "ponto": meta})
 
     # ── Foto da masmorra (Etapa 2 do salvamento) ──────────────────────────────
     # Janelas que, abertas, deixam estado pela metade (um turno manual, uma
@@ -23243,6 +23274,10 @@ class GameRoom:
         primeira = self._ultima_foto is None
         self._ultima_foto = foto
         self.savegame["dungeon_snapshot"] = foto
+        if primeira:
+            self._ponto_automatico("entrada_masmorra", gravar=False)
+        elif self.round_num % PONTO_AUTO_RODADAS == 0:
+            self._ponto_automatico("rodada", gravar=False)
         write_savegame(self.savegame)
         _agendar_descarga()
         if primeira:
@@ -23267,6 +23302,7 @@ class GameRoom:
         if self.phase == "playing" and self._ultima_foto is None:
             self._gravar_foto_rodada()
         self._checkpoint_savegame()
+        self._ponto_automatico("sair")
         _agendar_descarga()
         foto = self.savegame.get("dungeon_snapshot") or {}
         await self.send_to(pid, {"type": "salvo_para_sair",
@@ -46148,7 +46184,7 @@ MENSAGENS_DA_CONEXAO = frozenset({
     "load_savegame", "list_savegames", "create_room", "join_room", "rejoin",
     "join_test_dungeon", "select_class", "select_party", "campaign_vote",
     "claim_role", "start_game", "select_dungeon", "select_campaign",
-    "salvar_e_sair", "set_turn_timer", "set_visao_compartilhada",
+    "salvar_e_sair", "salvar_ponto", "set_turn_timer", "set_visao_compartilhada",
     "set_atravessar_aliados", "start_scene",
 })
 _PREFIXOS_DA_CONEXAO = ("mestre_", "teste_", "upload_", "save_", "load_")
@@ -47116,6 +47152,9 @@ async def handler(ws):
 
                 elif t == "salvar_e_sair":
                     if room: await room.handle_salvar_e_sair(pid)
+
+                elif t == "salvar_ponto":
+                    if room: await room.handle_salvar_ponto(pid, msg.get("nome"))
 
                 # Atalho de teste para o Mestre/autor. Gatilhos do editor usam
                 # internamente iniciar_cena e não dependem deste protocolo.

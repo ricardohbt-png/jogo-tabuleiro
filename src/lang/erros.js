@@ -2141,6 +2141,10 @@ window.LANG_ERROS = {
     "en": "This match has no saved game.",
     "pt": "Esta partida não tem jogo salvo."
   },
+  "erro.so_da_para_salvar_em_jogo": {
+    "en": "You can only save during a game (town or dungeon).",
+    "pt": "Só dá para salvar durante o jogo (cidade ou masmorra)."
+  },
   "erro.esse_heroi_nao_e_seu": {
     "en": "That hero isn't yours.",
     "pt": "Esse herói não é seu."
