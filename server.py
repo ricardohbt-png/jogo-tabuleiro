@@ -19137,7 +19137,8 @@ class GameRoom:
         if not p or not p["alive"]: return
         if not isinstance(data, dict): return
         item_id = data.get("item_id")
-        item = next((i for i in p["bag"] if i["id"] == item_id), None)
+        item, source_location = self._resolve_consumable_source(
+            p, item_id, data.get("source", "bag"), data.get("gear_slot"), data.get("pocket_index"))
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_na_bolsa")}); return
         defn = ARREMESSAVEIS.get(item_id)
@@ -19152,15 +19153,15 @@ class GameRoom:
         # o que separa o caminho de sucesso do de recusa para a licao.
         _agiu_antes = bool(p.get("action_done"))
         if alvo_tipo == "ataque_alvo":
-            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"))
+            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
         elif alvo_tipo == "area":
-            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
+            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"), source_location)
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if not _agiu_antes and p.get("action_done"):
             await self._licao_evento(p, "arremessar_item", alvo=item.get("id"))
 
-    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None):
+    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None, source_location=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
@@ -19204,7 +19205,8 @@ class GameRoom:
             natural_critical=bool(roll == 20), natural_fumble=bool(nat1))
 
         # Consome o item (espatifa) â€” em acerto ou erro.
-        p["bag"].remove(item)
+        if not self._consume_action_item(p, item, source_location):
+            return
         # Marca a aÃ§Ã£o e cobra sobrevivÃªncia (mesma cadÃªncia de um ataque).
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
@@ -19262,7 +19264,7 @@ class GameRoom:
 
         await self.push_state()
 
-    async def _throw_item_area(self, p, defn, item, tx, ty):
+    async def _throw_item_area(self, p, defn, item, tx, ty, source_location=None):
         """Arremesso de ÁREA: sem jogada de ataque. Atinge TODOS no raio (fogo
         amigo, como a Bola de Fogo) com save de Reflexos (metade no sucesso);
         opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
@@ -19279,7 +19281,8 @@ class GameRoom:
                 "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_arre")}); return
 
         # Consome o item + gasta a aÃ§Ã£o principal.
-        p["bag"].remove(item)
+        if not self._consume_action_item(p, item, source_location):
+            return
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         raio = defn.get("area_raio", 1)
@@ -35284,7 +35287,48 @@ class GameRoom:
         await self._aplicar_maldicao_carta(p, item)
         await self.push_state()
 
-    async def handle_use_item(self, pid, item_id, target_id=None):
+    def _resolve_consumable_source(self, p, item_id, source="bag", gear_slot=None, pocket_index=None):
+        """Resolve one exact item without repairing or changing rejected source data."""
+        if source == "bag":
+            return next((i for i in p["bag"] if i["id"] == item_id), None), None
+        if (source != "utility_belt" or gear_slot not in ("item1", "item2")
+                or type(pocket_index) is not int):
+            return None, None
+        belt = p.get("gear", {}).get(gear_slot)
+        capacity = self._utility_belt_capacity(belt)
+        if not capacity or not 0 <= pocket_index < capacity:
+            return None, None
+        slots = belt.get("utility_belt_slots")
+        normalized = self._normalize_utility_belt(deepcopy(belt))["utility_belt_slots"]
+        if not isinstance(slots, list) or slots != normalized:
+            return None, None
+        entry = slots[pocket_index]
+        if not entry or entry["item"].get("id") != item_id:
+            return None, None
+        return entry["item"], (gear_slot, belt, pocket_index, entry)
+
+    def _consume_action_item(self, p, item, source_location=None):
+        """Remove the current bottle at the same point as the legacy bag flow."""
+        if source_location is None:
+            p["bag"].remove(item)
+            return True
+        gear_slot, belt, pocket_index, entry = source_location
+        # Keep the exact equipped object and pocket resolved before any await.
+        slots = belt.get("utility_belt_slots")
+        if (p.get("gear", {}).get(gear_slot) is not belt or not isinstance(slots, list)
+                or pocket_index >= len(slots) or slots[pocket_index] is not entry
+                or entry.get("item") is not item or type(entry.get("quantity")) is not int
+                or not 1 <= entry["quantity"] <= 4):
+            return False
+        entry["quantity"] -= 1
+        if entry["quantity"] == 0:
+            slots[pocket_index] = None
+        elif item.get("effect") == "heal" and int(item.get("max_uses", 1) or 1) > 1:
+            # The exhausted bottle leaves; the next bottle starts with full doses.
+            item["uses_left"] = int(item["max_uses"])
+        return True
+
+    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -35292,7 +35336,7 @@ class GameRoom:
         if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
             return
-        item = next((i for i in p["bag"] if i["id"] == item_id), None)
+        item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
 
@@ -35476,7 +35520,8 @@ class GameRoom:
 
         await self._licao_evento(p, "usar_item", alvo=(item or {}).get("id"))
         if remove_item:
-            p["bag"].remove(item)
+            if not self._consume_action_item(p, item, source_location):
+                return
         await self.push_state()
 
     # â”€â”€ Pergaminhos mÃ¡gicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -47286,7 +47331,9 @@ async def handler(ws):
                     if room: await room.handle_veneno_rapido(pid, msg)
 
                 elif t == "use_item":
-                    if room: await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"))
+                    if room:
+                        await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
+                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"))
 
                 elif t == "read_item":
                     if room:

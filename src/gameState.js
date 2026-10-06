@@ -2237,7 +2237,12 @@ const GS = (() => {
     if (Number.isInteger(slot) && slot >= 0 && slot < 10) msg.slot = slot;
     send(msg);
   }
-  function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
+  function _itemSourceFields(sourceInfo) {
+    return sourceInfo?.source === 'utility_belt'
+      ? { source: 'utility_belt', gear_slot: sourceInfo.gearSlot, pocket_index: sourceInfo.pocketIndex }
+      : {};
+  }
+  function useItem(id, sourceInfo) { send({ type: 'use_item', item_id: id, ..._itemSourceFields(sourceInfo) }); }
   function readItem(id, bagIndex = null) {
     const msg = { type: 'read_item', item_id: id };
     if (Number.isInteger(bagIndex) && bagIndex >= 0) msg.bag_index = bagIndex;
@@ -2247,8 +2252,8 @@ const GS = (() => {
     const value = ['water', 'action', 'none'].includes(choice) ? choice : 'none';
     send({ type: 'fire_choice', choice: value });
   }
-  function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
-  function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
+  function throwItem(id, targetId, targetPos, sourceInfo) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos, ..._itemSourceFields(sourceInfo) }); }
+  function throwItemArea(id, tx, ty, sourceInfo) { send({ type: 'throw_item', item_id: id, tx, ty, ..._itemSourceFields(sourceInfo) }); }
   // Arremesso de arma equipada. O slot é parte da ação para que o servidor
   // não precise adivinhar entre uma arma principal e uma segunda arma.
   function throwWeapon(slot, targetId) { send({ type: 'throw', slot, target_id: targetId }); }
