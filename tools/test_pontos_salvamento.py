@@ -186,6 +186,48 @@ def secao_migracao():
     check("órfão ficou como jogo próprio", S.load_savegame(orfao["id"]) is not None)
     S.migrar_continuacoes_para_capitulos()
     check("rodar de novo não muda nada", len(S.load_savegame(pai["id"])["capitulos"]) == 2)
+    print("\n[11b] Cadeia, filho malformado e queda no meio")
+    a = jogo(owner="ana"); b_ = jogo(owner="ana"); c = jogo(owner="ana")
+    a["created"] = "2020-01-01"; b_["created"] = "2020-01-02"; c["created"] = "2020-01-03"
+    b_["parent_campaign_id"] = a["id"]; c["parent_campaign_id"] = b_["id"]
+    c["characters"]["warrior"]["gold"] = 555
+    S.registrar_ponto(c, "manual", nome="do c")
+    for x in (a, b_, c): S.write_savegame(x)
+    S.migrar_continuacoes_para_capitulos()
+    a2 = S.load_savegame(a["id"])
+    check("cadeia: 3 capítulos na raiz", len(a2["capitulos"]) == 3 and a2["capitulo_atual"] == 3)
+    check("cadeia: estado vivo = do C", a2["characters"]["warrior"]["gold"] == 555)
+    check("cadeia: B e C apagados", S.load_savegame(b_["id"]) is None and S.load_savegame(c["id"]) is None)
+    check("cadeia: ponto do C no capítulo 3",
+          any(p["nome"] == "do c" for p in a2["capitulos"][2]["pontos"]))
+
+    pai = jogo(owner="ana"); pai["created"] = "2021-01-01"; S.write_savegame(pai)
+    ruim = jogo(owner="ana"); ruim["created"] = "2021-01-02"
+    ruim["parent_campaign_id"] = pai["id"]
+    ruim["capitulos"] = [{"pontos": [{}]}]; S.write_savegame(ruim)
+    bom = jogo(owner="ana"); bom["created"] = "2021-01-03"
+    bom["parent_campaign_id"] = pai["id"]; S.write_savegame(bom)
+    try:
+        S.migrar_continuacoes_para_capitulos(); lancou = False
+    except Exception:
+        lancou = True
+    check("malformado não levanta", not lancou)
+    check("malformado continua intacto", S.load_savegame(ruim["id"]) is not None)
+    check("irmão válido fundiu", S.load_savegame(bom["id"]) is None
+          and len(S.load_savegame(pai["id"])["capitulos"]) == 2)
+
+    pai = jogo(owner="ana"); pai["created"] = "2022-01-01"; S.write_savegame(pai)
+    fil = jogo(owner="ana"); fil["created"] = "2022-01-02"; fil["parent_campaign_id"] = pai["id"]
+    S.registrar_ponto(fil, "manual", nome="f"); S.write_savegame(fil)
+    S.migrar_continuacoes_para_capitulos()
+    # simula queda: filho e seu documento de ponto reaparecem; pai já fundido
+    S.write_savegame(fil)
+    for cap in fil["capitulos"]:
+        for p in cap["pontos"]:
+            S.LOJA.gravar("pontos", S._ponto_chave(fil["id"], p["id"]), {"sid": fil["id"], "id": p["id"], "capitulo": 1, "estado": {}})
+    S.migrar_continuacoes_para_capitulos()
+    check("queda: não duplica capítulos", len(S.load_savegame(pai["id"])["capitulos"]) == 2)
+    check("queda: filho e documentos limpos", S.load_savegame(fil["id"]) is None and docs_de(fil["id"]) == [])
 
 
 def main():

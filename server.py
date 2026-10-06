@@ -2587,46 +2587,81 @@ def try_arquivar_jogo(conta, sid, arquivado):
     return True, None
 
 
+def _migrar_um_filho(sid, filho, pai_id):
+    """Funde `filho` como capítulo(s) do pai. Toda a conta vem ANTES de qualquer
+    gravação: se levantar, nada foi escrito e o filho continua intacto."""
+    pai = load_savegame(pai_id)
+    if not pai or pai.get("owner") != filho.get("owner") or pai_id == sid:
+        return
+    garantir_capitulos(pai)
+    garantir_capitulos(filho)
+    caps_filho = filho["capitulos"]
+    ja = {(c.get("criado"), tuple(p["id"] for p in c.get("pontos") or []))
+          for c in pai["capitulos"]}
+    # Queda entre gravar o pai e apagar o filho: capítulos já estão no pai.
+    ja_fundido = bool(caps_filho) and all(
+        c.get("pontos") and (c.get("criado"), tuple(p["id"] for p in c["pontos"])) in ja
+        for c in caps_filho)
+    docs = []
+    if not ja_fundido:
+        base = max(c["n"] for c in pai["capitulos"])
+        renumero, novos = {}, []
+        for i, cap in enumerate(caps_filho, start=1):
+            renumero[cap["n"]] = base + i
+            novo = dict(cap, n=base + i)
+            novo["pontos"] = list(cap.get("pontos") or [])
+            novos.append(novo)
+        for cap in caps_filho:
+            for p in cap.get("pontos") or []:
+                doc = LOJA.ler("pontos", _ponto_chave(sid, p["id"]))
+                if doc:
+                    docs.append((p["id"], dict(doc, sid=pai["id"], capitulo=renumero[cap["n"]])))
+        vivo = {k: deepcopy(filho[k]) for k in CAMPOS_DO_PONTO if k in filho}
+        atual = renumero.get(filho.get("capitulo_atual"), base + len(caps_filho))
+    ids_filho = [p["id"] for cap in caps_filho for p in cap.get("pontos") or []]
+    # --- gravações ---
+    if not ja_fundido:
+        for pid_, doc in docs:
+            LOJA.gravar("pontos", _ponto_chave(pai["id"], pid_), doc)
+        pai["capitulos"].extend(novos)
+        for k in CAMPOS_DO_PONTO:
+            if k in vivo:
+                pai[k] = vivo[k]
+            else:
+                pai.pop(k, None)
+        pai["capitulo_atual"] = atual
+        pai["status"] = "active"
+        write_savegame(pai)
+    for pid_ in ids_filho:
+        LOJA.apagar("pontos", _ponto_chave(sid, pid_))
+    LOJA.apagar("savegames", sid)
+
+
 def migrar_continuacoes_para_capitulos():
     """Jogos criados por "Continuar em sequência" (antes desta versão) viram o
     capítulo seguinte do jogo de origem. O pai é gravado ANTES de o filho ser
     apagado. Pai inexistente ou de outro dono: o filho fica como jogo próprio.
-    Roda no boot; idempotente (o filho some depois da 1ª vez)."""
+    Cadeias A<-B<-C acabam fundidas na raiz (mais antigo primeiro). Cada filho é
+    isolado: um malformado só gera log e fica intacto. Idempotente, inclusive
+    depois de queda entre gravar o pai e apagar o filho."""
     todos = LOJA.listar("savegames")
+    fundido_em = {}
     for sid, filho in sorted(todos.items(), key=lambda kv: kv[1].get("created") or ""):
-        if not _savegame_valid_shape(filho):
-            continue
-        pai_id = filho.get("parent_campaign_id")
-        pai = load_savegame(pai_id) if pai_id else None
-        if not pai or pai.get("owner") != filho.get("owner") or pai_id == sid:
-            continue
-        garantir_capitulos(pai)
-        garantir_capitulos(filho)
-        base = max(c["n"] for c in pai["capitulos"])
-        renumero = {}
-        for i, cap in enumerate(filho["capitulos"], start=1):
-            renumero[cap["n"]] = base + i
-            novo = dict(cap, n=base + i)
-            novo["pontos"] = list(cap.get("pontos") or [])
-            pai["capitulos"].append(novo)
-        for cap in filho["capitulos"]:
-            for p in cap.get("pontos") or []:
-                doc = LOJA.ler("pontos", _ponto_chave(sid, p["id"]))
-                if doc:
-                    doc = dict(doc, sid=pai["id"], capitulo=renumero[cap["n"]])
-                    LOJA.gravar("pontos", _ponto_chave(pai["id"], p["id"]), doc)
-        for k in CAMPOS_DO_PONTO:
-            if k in filho:
-                pai[k] = deepcopy(filho[k])
-            else:
-                pai.pop(k, None)
-        pai["capitulo_atual"] = renumero.get(filho.get("capitulo_atual"), base + len(filho["capitulos"]))
-        pai["status"] = "active"
-        write_savegame(pai)
-        for cap in filho["capitulos"]:
-            for p in cap.get("pontos") or []:
-                LOJA.apagar("pontos", _ponto_chave(sid, p["id"]))
-        LOJA.apagar("savegames", sid)
+        try:
+            if not _savegame_valid_shape(filho):
+                continue
+            pai_id = filho.get("parent_campaign_id")
+            while pai_id in fundido_em:
+                pai_id = fundido_em[pai_id]
+            if not pai_id:
+                continue
+            antes = LOJA.ler("savegames", sid) is not None
+            _migrar_um_filho(sid, filho, pai_id)
+            if antes and LOJA.ler("savegames", sid) is None:
+                fundido_em[sid] = pai_id
+        except Exception as e:
+            print(f"[saves] migração da continuação {sid} falhou, mantida como está: {e!r}",
+                  file=sys.stderr)
 
 
 def delete_savegame(sid, requester):
