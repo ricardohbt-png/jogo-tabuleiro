@@ -2242,6 +2242,9 @@ const GS = (() => {
       ? { source: 'utility_belt', gear_slot: sourceInfo.gearSlot, pocket_index: sourceInfo.pocketIndex }
       : {};
   }
+  function moveUtilityBeltItem(direction, gearSlot, pocketIndex, bagIndex) {
+    send({ type:'move_utility_belt_item', direction, gear_slot:gearSlot, pocket_index:pocketIndex, bag_index:bagIndex });
+  }
   function useItem(id, sourceInfo) { send({ type: 'use_item', item_id: id, ..._itemSourceFields(sourceInfo) }); }
   function readItem(id, bagIndex = null) {
     const msg = { type: 'read_item', item_id: id };
@@ -3695,6 +3698,8 @@ const GS = (() => {
     setShortcut,
     shortcutActivated,
     useItem,
+    moveUtilityBeltItem,
+    itemSourceFields: _itemSourceFields,
     readItem,
     respondFireChoice,
     throwItem,

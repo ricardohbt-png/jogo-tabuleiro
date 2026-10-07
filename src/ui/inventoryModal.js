@@ -195,6 +195,15 @@ const InventoryModal = (() => {
 .inv-bagslot{width:42px;height:42px;border-radius:6px;background:rgba(6,6,8,.55);
   border:1px solid rgba(244,220,140,.35);display:flex;align-items:center;justify-content:center;
   font-size:1.1rem;cursor:pointer;}
+.inv-belt-sections{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:12px 0;}
+.inv-belt-section{padding:8px;border:1px solid #8d633b;border-radius:6px;background:#302014;}
+.inv-belt-heading{font:12px Georgia,serif;color:#ead8b0;margin-bottom:7px;}
+.inv-belt-row{display:flex;gap:8px;}
+.inv-belt-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
+.inv-belt-pocket .inv-bagslot-emoji{font-size:.8rem;}
+.inv-belt-pocket .inv-bagslot-emoji img{width:65%;height:65%;}
+.inv-belt-count{position:absolute;bottom:1px;right:2px;background:#26170d;color:#ffe7b2;border-radius:3px;padding:1px 3px;font:700 11px Georgia,serif;pointer-events:none;}
+.inv-belt-pocket:focus-visible{outline:2px solid #ffe08a;outline-offset:2px;}
 .inv-bagslot.selected{outline:2px solid #ffe08a;outline-offset:2px;}
 .inv-bagslot.usable{border-color:#2ecc40;box-shadow:inset 0 0 4px rgba(46,204,64,.4),0 0 6px rgba(46,204,64,.35);}
 .inv-bagslot.drop-hover{outline:2px dashed #8fe08a;outline-offset:2px;}
@@ -248,7 +257,7 @@ const InventoryModal = (() => {
 .storage-gold button:hover{background:#543516;}
 @media(max-width:760px){.storage-columns{grid-template-columns:minmax(0,1fr);}}
 @media(max-width:900px){.inv-combined-body{grid-template-columns:minmax(190px,240px) minmax(270px,1fr) 82px;gap:9px;}.inv-combined-body.shortcuts-hidden{grid-template-columns:minmax(190px,240px) minmax(270px,1fr);}.inv-shortcuts{padding-left:4px;padding-right:4px;}}
-@media(max-width:680px){.inv-frame.inv-combined-frame{width:min(620px,94vw);}.inv-combined-body,.inv-combined-body.stats-hidden,.inv-combined-body.shortcuts-hidden,.inv-combined-body.stats-hidden.shortcuts-hidden{display:flex;flex-direction:column;align-items:stretch;}.inv-stats-panel{order:0;margin-top:40px;}.inv-main{order:1;}.inv-shortcuts{order:2;margin-top:0;max-height:none;}.inv-combined-body.stats-hidden .inv-main{order:0;}.inv-combined-body.shortcuts-hidden .inv-main{order:1;}}
+@media(max-width:680px){#inv-modal-overlay{align-items:flex-start;overflow-y:auto;padding:40px 0 20px;box-sizing:border-box;}.inv-frame{flex-shrink:0;}.inv-frame.inv-combined-frame{width:min(620px,94vw);}.inv-combined-body,.inv-combined-body.stats-hidden,.inv-combined-body.shortcuts-hidden,.inv-combined-body.stats-hidden.shortcuts-hidden{display:flex;flex-direction:column;align-items:stretch;}.inv-stats-panel{order:0;margin-top:40px;}.inv-main{order:1;}.inv-shortcuts{order:2;margin-top:0;max-height:none;}.inv-combined-body.stats-hidden .inv-main{order:0;}.inv-combined-body.shortcuts-hidden .inv-main{order:1;}}
 `;
   function _itemIconHTML(item, fallbackEmoji){
     return (typeof itemIconHTML === 'function') ? itemIconHTML(item, fallbackEmoji)
@@ -284,7 +293,7 @@ const InventoryModal = (() => {
       const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
       if(_readOnly || !gsNow || gsNow.phase !== 'playing'){ refresh(); return; }  // só na masmorra, não em só-leitura
       if(sel.kind === 'bag') GS.dropItem('bag', sel.index);
-      else                   GS.dropItem('gear', sel.slotKey);
+      else if(sel.kind === 'gear') GS.dropItem('gear', sel.slotKey);
       // O descarte é uma ação do inventário: mantenha o painel aberto para que
       // o jogador possa continuar organizando os itens sem reabri-lo.
       refresh();
@@ -295,7 +304,11 @@ const InventoryModal = (() => {
   // O inventário continua sendo uma interface contextual: Esc/voltar fecha o
   // modal antes que o atalho global de configuração possa abrir outro painel.
   document.addEventListener('keydown', (e) => {
-    if(e.key !== 'Escape' || !isOpen()) return;
+    if(!isOpen()) return;
+    if((e.key === 'Enter' || e.key === ' ') && document.activeElement?.dataset.inventorySlot === 'bag'){
+      e.preventDefault(); document.activeElement.click(); return;
+    }
+    if(e.key !== 'Escape') return;
     close();
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -365,6 +378,7 @@ const InventoryModal = (() => {
     requestAnimationFrame(() => {
       const selector = selected.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${selected.index}"]`
+        : selected.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${selected.gearSlot}"][data-pocket-index="${selected.pocketIndex}"]`
         : selected.kind === 'gear' ? `.inv-slot[data-slot-key="${selected.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
       if(slot) slot.focus({ preventScroll:true });
@@ -378,6 +392,7 @@ const InventoryModal = (() => {
       const index = Number(slot.dataset.bagIndex);
       return Number.isInteger(index) ? { kind:'bag', index } : null;
     }
+    if(slot.dataset.inventorySlot === 'belt') return {kind:'belt', gearSlot:slot.dataset.gearSlot, pocketIndex:Number(slot.dataset.pocketIndex)};
     if(slot.dataset.inventorySlot === 'gear' && slot.dataset.slotKey)
       return { kind:'gear', slotKey:slot.dataset.slotKey };
     return null;
@@ -388,6 +403,7 @@ const InventoryModal = (() => {
     requestAnimationFrame(() => {
       const selector = focus.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${focus.index}"]`
+        : focus.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${focus.gearSlot}"][data-pocket-index="${focus.pocketIndex}"]`
         : focus.kind === 'gear'
           ? `.inv-slot[data-slot-key="${focus.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
@@ -423,7 +439,7 @@ const InventoryModal = (() => {
     const bonusBloqueado = isBonusAction && !!player.bonus_action_used;
     const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
       ? GS.CATALOGO_ITENS[item && item.id] : null;
-    const isArremessavel = !!(catDef && catDef.arremessavel);
+    const isArremessavel = !!(catDef?.arremessavel || item?.arremessavel);
     return {
       isCarta, isScroll, isConsumable, isArremessavel,
       podeLer: isCarta,
@@ -482,10 +498,10 @@ const InventoryModal = (() => {
     return true;
   }
 
-  function _canOfferGamepadAction(index){
+  function _canOfferGamepadAction(index, sourceInfo){
     if(_readOnly || _storageCtx) return false;
     const player = _currentPlayer();
-    const item = player?.bag?.[index];
+    const item = sourceInfo ? _beltEntry(player, sourceInfo.gearSlot, sourceInfo.pocketIndex)?.item : player?.bag?.[index];
     if(!item) return false;
     const action = _bagActionState(item, player);
     return action.podeLer || action.podeUsar || action.podeConjurar || action.podeArremessar;
@@ -493,8 +509,11 @@ const InventoryModal = (() => {
 
   function _renderGamepadAction(overlay){
     const action = _gamepadAction;
-    if(!action || !_selected || _selected.kind !== 'bag' || _selected.index !== action.index
-      || !_canOfferGamepadAction(action.index)) return;
+    if(!action || !_selected || !_canOfferGamepadAction(action.index, action.sourceInfo)) return;
+    const matches = action.sourceInfo
+      ? _selected.kind === 'belt' && _selected.gearSlot === action.sourceInfo.gearSlot && _selected.pocketIndex === action.sourceInfo.pocketIndex
+      : _selected.kind === 'bag' && _selected.index === action.index;
+    if(!matches) return;
     const host = overlay.querySelector('.inv-main');
     if(!host) return;
     const panel = document.createElement('div');
@@ -641,6 +660,102 @@ const InventoryModal = (() => {
       list.appendChild(row);
     });
     host.appendChild(panel);
+  }
+
+  const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2 };
+
+  function _beltEntry(player, gearSlot, pocketIndex){
+    const belt = player?.gear?.[gearSlot];
+    if(!BELT_CAPACITIES[belt?.id] || pocketIndex < 0 || pocketIndex >= BELT_CAPACITIES[belt.id]) return null;
+    const entry = belt.utility_belt_slots?.[pocketIndex];
+    return entry?.item && Number.isInteger(entry.quantity) && entry.quantity >= 1 && entry.quantity <= 4 ? entry : null;
+  }
+
+  function _activateBeltItem(gearSlot, pocketIndex){
+    if(_readOnly) return false;
+    const player = _currentPlayer(), entry = _beltEntry(player, gearSlot, pocketIndex);
+    if(!entry) return false;
+    const item = entry.item, action = _bagActionState(item, player);
+    const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex};
+    if(action.podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
+      close(); window._iniciarMiraArremesso(item, player, sourceInfo); return true;
+    }
+    if(action.podeUsar){ useItem(item.id, undefined, sourceInfo); return true; }
+    return false;
+  }
+
+  function _onBeltSlotClick(gearSlot, pocketIndex){
+    if(_readOnly) return;
+    const sel = _selected;
+    _gamepadAction = null;
+    if(sel?.kind === 'bag'){
+      GS.moveUtilityBeltItem('to_belt', gearSlot, pocketIndex, sel.index);
+      _selected = null; return;
+    }
+    if(sel?.kind === 'belt' && sel.gearSlot === gearSlot && sel.pocketIndex === pocketIndex){
+      _selected = null;
+    } else if(_beltEntry(_currentPlayer(), gearSlot, pocketIndex)){
+      _selected = {kind:'belt', gearSlot, pocketIndex};
+    }
+    refresh(); _focusSelectedSlot();
+  }
+
+  function _renderBelts(overlay, player){
+    const host = overlay.querySelector('.inv-belt-sections');
+    if(!host) return;
+    host.innerHTML = '';
+    for(const gearSlot of ['item1', 'item2']){
+      const belt = player.gear?.[gearSlot];
+      const capacity = BELT_CAPACITIES[belt?.id];
+      if(!capacity) continue;
+      const section = document.createElement('section');
+      section.className = 'inv-belt-section';
+      const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
+      heading.textContent = `${belt.name || 'Cinto'} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
+      const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      for(let pocketIndex = 0; pocketIndex < capacity; pocketIndex++){
+        const entry = _beltEntry(player, gearSlot, pocketIndex), item = entry?.item;
+        const slot = document.createElement('div');
+        slot.className = 'inv-bagslot inv-belt-pocket' + (item ? ' filled' : ' empty');
+        slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(pocketIndex);
+        slot.title = item ? `${item.name} ×${entry.quantity}` : `Bolso ${pocketIndex + 1} vazio`;
+        slot.setAttribute('aria-label', slot.title);
+        if(item){
+          slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🧪')}</span><span class="inv-belt-count">${entry.quantity}</span>`;
+          _wireTooltip(slot, item.id, null, item);
+          const action = _bagActionState(item, player);
+          if(action.podeUsar || action.podeArremessar) slot.classList.add('usable');
+        }
+        if(_selected?.kind === 'belt' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex) slot.classList.add('selected');
+        if(!_readOnly){
+          slot.tabIndex = 0; slot.dataset.inventorySlot = 'belt'; slot.setAttribute('role', 'button');
+          slot.onclick = () => {
+            const key = `${gearSlot}:${pocketIndex}`, now = performance.now();
+            if(item && _lastBagPress?.beltKey === key && now - _lastBagPress.at <= QUICK_EQUIP_PRESS_MS){
+              _lastBagPress = null; _activateBeltItem(gearSlot, pocketIndex); return;
+            }
+            _lastBagPress = item ? {beltKey:key, at:now} : null;
+            _onBeltSlotClick(gearSlot, pocketIndex);
+          };
+          slot.addEventListener('keydown', e => {
+            if(e.key === 'Enter' || e.key === ' '){e.preventDefault(); slot.click();}
+          });
+          slot.addEventListener('contextmenu', e => {e.preventDefault(); _activateBeltItem(gearSlot, pocketIndex);});
+          if(item){
+            slot.draggable = true;
+            slot.addEventListener('dragstart', e => {
+              _selected = {kind:'belt', gearSlot, pocketIndex};
+              e.dataTransfer.setData('text/plain', JSON.stringify(_selected)); e.dataTransfer.effectAllowed = 'move';
+            });
+          }
+          slot.addEventListener('dragover', e => {if(_selected?.kind === 'bag'){e.preventDefault(); slot.classList.add('drop-hover');}});
+          slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+          slot.addEventListener('drop', e => {e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover'); _onBeltSlotClick(gearSlot, pocketIndex);});
+        }
+        row.appendChild(slot);
+      }
+      host.appendChild(section);
+    }
   }
 
   function _renderBag(overlay, player){
@@ -816,6 +931,7 @@ const InventoryModal = (() => {
               <div class="inv-grid"></div>
               <div class="inv-arrow-auto-host"></div>
               <div class="inv-gold">🪙 <span></span></div>
+              <div class="inv-belt-sections"></div>
               <div class="inv-bagbar"></div>
             </div>
             ${_shortcutPanelMarkup()}
@@ -827,6 +943,7 @@ const InventoryModal = (() => {
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
     _renderGear(overlay, player);
     _renderArrowAutoEquip(overlay, player);
+    _renderBelts(overlay, player);
     _renderBag(overlay, player);
     _renderGamepadAction(overlay);
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
@@ -870,7 +987,7 @@ const InventoryModal = (() => {
   function _attemptMoveToGear(slotKey){
     const sel = _selected;
     _gamepadAction = null;
-    if(!sel || sel.kind === 'gear'){ refresh(); return; }   // gear→gear: sem suporte, ignora
+    if(!sel || sel.kind === 'gear' || sel.kind === 'belt'){ refresh(); return; }   // gear→gear: sem suporte, ignora
     // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
     // o encaixe é o servidor, que já manda o item para o slot livre compatível.
     // (Cuidado: `sel.index` é índice DO BAÚ — tratá-lo como índice da bolsa
@@ -899,6 +1016,10 @@ const InventoryModal = (() => {
     const sel = _selected;
     if(!sel){ refresh(); return; }
     if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
+    if(sel.kind === 'belt'){
+      GS.moveUtilityBeltItem('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0));
+      _selected = null; _gamepadAction = null; return;
+    }
     if(sel.kind === 'bag'){
       if(sel.index !== toIndex) GS.reorderBag(sel.index, toIndex);
       else refresh();
@@ -946,8 +1067,8 @@ const InventoryModal = (() => {
       ? normalizarItemTooltip(bruto) : bruto;
     if(!item || typeof _initItemTooltip !== 'function' || typeof gerarConteudoTooltip !== 'function') return;
     _initItemTooltip();
-    const t = document.getElementById('item-tooltip');
-    if(!t) return;
+    const tooltipEl = document.getElementById('item-tooltip');
+    if(!tooltipEl) return;
     // O catálogo do cliente não guarda o número de doses da instância na
     // mochila. Para poções de cura, o quadro usa a cópia enviada pelo servidor.
     const atual = itemInstance || item;
@@ -993,18 +1114,18 @@ const InventoryModal = (() => {
         </div>`;
       }
     }
-    t.innerHTML = html;
-    t.style.borderColor = (typeof corBordaPorPreco === 'function') ? corBordaPorPreco(item.preco) : '#c8a951';
-    t.style.opacity = '1';
+    tooltipEl.innerHTML = html;
+    tooltipEl.style.borderColor = (typeof corBordaPorPreco === 'function') ? corBordaPorPreco(item.preco) : '#c8a951';
+    tooltipEl.style.opacity = '1';
     if(touchPos){
       const margin = 16;
-      const rect = t.getBoundingClientRect();
+      const rect = tooltipEl.getBoundingClientRect();
       let x = touchPos.x + margin;
       if(x + rect.width > window.innerWidth) x = touchPos.x - rect.width - margin;
       let y = touchPos.y - rect.height - margin;   // acima do dedo, não cobre o item tocado
       if(y < 0) y = touchPos.y + margin;
-      t.style.left = x + 'px';
-      t.style.top  = y + 'px';
+      tooltipEl.style.left = x + 'px';
+      tooltipEl.style.top  = y + 'px';
     }
   }
 
@@ -1056,7 +1177,7 @@ const InventoryModal = (() => {
   function _storageStore(sel){
     if(!sel || !_storageCtx) return;
     if(sel.kind === 'bag') GS.refugioStore(_storageCtx.scope, 'bag',  sel.index);
-    else                   GS.refugioStore(_storageCtx.scope, 'gear', sel.slotKey);
+    else if(sel.kind === 'gear') GS.refugioStore(_storageCtx.scope, 'gear', sel.slotKey);
   }
 
   function _renderStashGrid(overlay){
@@ -1153,6 +1274,7 @@ const InventoryModal = (() => {
                 <h3>${t('ui.inv.inventario')} — <span class="storage-hero-name"></span></h3>
                 <div class="inv-grid"></div>
                 <div class="inv-gold">🪙 <span></span></div>
+                <div class="inv-belt-sections"></div>
                 <div class="inv-bagbar"></div>
                 <p class="storage-hint">${t('ui.inv.dica_para_o_bau')}</p>
               </section>
@@ -1171,6 +1293,7 @@ const InventoryModal = (() => {
     const linkQuarto = overlay.querySelector('.storage-room-link');
     if(linkQuarto) linkQuarto.onclick = () => { close(); GS.openQuarto(); };
     _renderGear(overlay, player);
+    _renderBelts(overlay, player);
     _renderBag(overlay, player);
     _renderStashGrid(overlay);
     if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
@@ -1228,8 +1351,9 @@ const InventoryModal = (() => {
   // Chamado por game.js quando o botão secundário do controle é pressionado
   // sobre uma casa da bolsa. A seleção/equipamento continua no botão Confirmar.
   function gamepadUseFocused(){
-    const focused = document.activeElement?.closest?.('[data-inventory-slot="bag"]');
+    const focused = document.activeElement?.closest?.('[data-inventory-slot="bag"], [data-inventory-slot="belt"]');
     if(!focused) return false;
+    if(focused.dataset.inventorySlot === 'belt') return _activateBeltItem(focused.dataset.gearSlot, Number(focused.dataset.pocketIndex));
     return _activateBagItem(Number(focused.dataset.bagIndex));
   }
 
@@ -1306,6 +1430,19 @@ const InventoryModal = (() => {
     const focused = _gamepadFocusedSlot();
     if(!focused) return false;
     const kind = focused.dataset.inventorySlot;
+    if(kind === 'belt'){
+      const gearSlot = focused.dataset.gearSlot, pocketIndex = Number(focused.dataset.pocketIndex);
+      if(_selected?.kind === 'belt' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex){
+        if(_gamepadAction?.choice === 'cancel'){_gamepadAction = null; _gamepadRefreshSelected(); return true;}
+        if(_activateBeltItem(gearSlot, pocketIndex)){ _selected = null; _gamepadAction = null; if(isOpen()) refresh(); }
+        return true;
+      }
+      if(_selected?.kind === 'bag'){_onBeltSlotClick(gearSlot, pocketIndex); return true;}
+      _selected = _beltEntry(_currentPlayer(), gearSlot, pocketIndex) ? {kind:'belt', gearSlot, pocketIndex} : null;
+      const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex};
+      _gamepadAction = _selected && _canOfferGamepadAction(null, sourceInfo) ? {sourceInfo, choice:'use'} : null;
+      _gamepadRefreshSelected(); return true;
+    }
     if(kind === 'bag'){
       const index = Number(focused.dataset.bagIndex);
       const player = _currentPlayer();
