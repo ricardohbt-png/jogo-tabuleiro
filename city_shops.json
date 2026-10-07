@@ -40,7 +40,9 @@
       "alabarda_prata",
       "espada2m_prata",
       "dente_da_fera_copia",
-      "dente_da_fera"
+      "dente_da_fera",
+      "machado_duplo_copia",
+      "lamina_do_vento"
     ],
     "ferreiro_armor": [
       "escudo_p",
@@ -158,7 +160,10 @@
     ]
   },
   "vila_riacho": {
-    "ferreiro_weapon": [],
+    "ferreiro_weapon": [
+      "machado_duplo_copia",
+      "lamina_do_vento"
+    ],
     "ferreiro_armor": [],
     "ferreiro_ammo": [],
     "mercador": [],
@@ -166,7 +171,10 @@
     "taverna": []
   },
   "vila_corvin": {
-    "ferreiro_weapon": [],
+    "ferreiro_weapon": [
+      "machado_duplo_copia",
+      "lamina_do_vento"
+    ],
     "ferreiro_armor": [],
     "ferreiro_ammo": [],
     "mercador": [],
@@ -174,7 +182,10 @@
     "taverna": []
   },
   "graciero": {
-    "ferreiro_weapon": [],
+    "ferreiro_weapon": [
+      "machado_duplo_copia",
+      "lamina_do_vento"
+    ],
     "ferreiro_armor": [],
     "ferreiro_ammo": [],
     "mercador": [],
@@ -187,6 +198,10 @@
       "caneca_cerveja",
       "pao",
       "garrafa_agua"
+    ],
+    "ferreiro_weapon": [
+      "machado_duplo_copia",
+      "lamina_do_vento"
     ]
   }
 }

@@ -1,0 +1,1952 @@
+{
+  "schema_version": 1,
+  "id": "fazenda",
+  "name": "fazenda",
+  "ambiente": "masmorra",
+  "saida_permitida": true,
+  "start_mode": "entrance",
+  "grid": {
+    "w": 19,
+    "h": 17
+  },
+  "tiles": [
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  ],
+  "rooms": [
+    {
+      "id": 0,
+      "x": 1,
+      "y": 1,
+      "w": 8,
+      "h": 6,
+      "role": "entrance",
+      "locked": false,
+      "doors": []
+    }
+  ],
+  "door_conditions": {},
+  "entrance": {
+    "x": 2,
+    "y": 2
+  },
+  "hero_spawns": [],
+  "exit": null,
+  "monsters": [],
+  "chests": [],
+  "traps": [],
+  "decorations": [
+    {
+      "id": "decor_0",
+      "type": "cabana_rustica",
+      "pos": [
+        8,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cabana_rustica.png"
+    },
+    {
+      "id": "decor_2",
+      "type": "celeiro_medieval",
+      "pos": [
+        2,
+        6
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "celeiro_medieval.png"
+    },
+    {
+      "id": "decor_3",
+      "type": "lago_patos",
+      "pos": [
+        8,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "lago_patos.png",
+      "size": [
+        4,
+        4
+      ]
+    },
+    {
+      "id": "decor_4",
+      "type": "galinheiro",
+      "pos": [
+        13,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "galinheiro.png"
+    },
+    {
+      "id": "decor_9",
+      "type": "cerca_reta",
+      "pos": [
+        1,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_10",
+      "type": "cerca_reta",
+      "pos": [
+        2,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_11",
+      "type": "cerca_reta",
+      "pos": [
+        3,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_12",
+      "type": "cerca_reta",
+      "pos": [
+        4,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_13",
+      "type": "cerca_reta",
+      "pos": [
+        5,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_14",
+      "type": "cerca_reta",
+      "pos": [
+        6,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_16",
+      "type": "cerca_reta",
+      "pos": [
+        16,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_17",
+      "type": "cerca_reta",
+      "pos": [
+        15,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_18",
+      "type": "cerca_reta",
+      "pos": [
+        14,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_19",
+      "type": "cerca_reta",
+      "pos": [
+        13,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_20",
+      "type": "cerca_reta",
+      "pos": [
+        12,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_21",
+      "type": "cerca_reta",
+      "pos": [
+        11,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_22",
+      "type": "cerca_reta",
+      "pos": [
+        7,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_23",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        14
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_24",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        1
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_25",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        2
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_26",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        3
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_27",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        4
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_28",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        5
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_29",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        6
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_30",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        7
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_31",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        8
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_32",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        9
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_33",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        10
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_34",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        11
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_35",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        12
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_36",
+      "type": "cerca_reta",
+      "pos": [
+        17,
+        13
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_37",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        1
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_38",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        2
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_39",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        3
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_40",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        4
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_41",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        5
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_42",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        6
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_43",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        7
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_44",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        8
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_45",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        9
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_46",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        10
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_47",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        11
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_48",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        12
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_49",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        13
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_50",
+      "type": "cerca_reta",
+      "pos": [
+        0,
+        14
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_53",
+      "type": "cerca_reta",
+      "pos": [
+        1,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_54",
+      "type": "cerca_reta",
+      "pos": [
+        2,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_55",
+      "type": "cerca_reta",
+      "pos": [
+        3,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_56",
+      "type": "cerca_reta",
+      "pos": [
+        4,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_57",
+      "type": "cerca_reta",
+      "pos": [
+        5,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_58",
+      "type": "cerca_reta",
+      "pos": [
+        6,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_59",
+      "type": "cerca_reta",
+      "pos": [
+        7,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_60",
+      "type": "cerca_reta",
+      "pos": [
+        8,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_61",
+      "type": "cerca_reta",
+      "pos": [
+        9,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_62",
+      "type": "cerca_reta",
+      "pos": [
+        10,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_63",
+      "type": "cerca_reta",
+      "pos": [
+        11,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_64",
+      "type": "cerca_reta",
+      "pos": [
+        12,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_65",
+      "type": "cerca_reta",
+      "pos": [
+        13,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_66",
+      "type": "cerca_reta",
+      "pos": [
+        14,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_67",
+      "type": "cerca_reta",
+      "pos": [
+        15,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_68",
+      "type": "cerca_reta",
+      "pos": [
+        16,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_83",
+      "type": "monte_feno",
+      "pos": [
+        4,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_84",
+      "type": "monte_feno",
+      "pos": [
+        3,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_86",
+      "type": "cerca_curva",
+      "pos": [
+        17,
+        0
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_curva.png",
+      "voffset": [
+        -0.3,
+        0.45
+      ]
+    },
+    {
+      "id": "decor_87",
+      "type": "cerca_curva",
+      "pos": [
+        0,
+        0
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_curva.png",
+      "voffset": [
+        0.45,
+        0.3
+      ]
+    },
+    {
+      "id": "decor_88",
+      "type": "cerca_curva",
+      "pos": [
+        0,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_curva.png",
+      "voffset": [
+        0.3,
+        -0.45
+      ]
+    },
+    {
+      "id": "decor_89",
+      "type": "cerca_curva",
+      "pos": [
+        17,
+        15
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_curva.png",
+      "voffset": [
+        -0.4,
+        -0.4
+      ]
+    },
+    {
+      "id": "decor_90",
+      "type": "arvore",
+      "pos": [
+        4,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        2,
+        3
+      ]
+    },
+    {
+      "id": "decor_91",
+      "type": "barril",
+      "pos": [
+        11,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        0.6,
+        0.6
+      ]
+    },
+    {
+      "id": "decor_92",
+      "type": "carroca",
+      "pos": [
+        4,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "carroca.png"
+    },
+    {
+      "id": "decor_93",
+      "type": "capim_alto",
+      "pos": [
+        14,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_94",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_95",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_96",
+      "type": "capim_alto",
+      "pos": [
+        14,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_98",
+      "type": "tronco_musgo",
+      "pos": [
+        14,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "tronco_musgo.png"
+    },
+    {
+      "id": "decor_99",
+      "type": "porteira_aberta",
+      "pos": [
+        8,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "porteira_aberta.png"
+    },
+    {
+      "id": "decor_100",
+      "type": "porteira_aberta",
+      "pos": [
+        10,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "porteira_aberta.png"
+    },
+    {
+      "id": "decor_101",
+      "type": "porteira_fechada",
+      "pos": [
+        9,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "porteira_fechada.png"
+    },
+    {
+      "id": "decor_102",
+      "type": "cerca_quebrada",
+      "pos": [
+        2,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cerca_quebrada.png"
+    }
+  ],
+  "secret_passages": [],
+  "falas": [],
+  "master_reinforcements": [],
+  "expected_party": {
+    "heroes": 4,
+    "level": 1
+  },
+  "prisoner": null,
+  "materiais": {
+    "11,2": "grama",
+    "11,1": "grama",
+    "11,0": "grama",
+    "10,0": "grama",
+    "9,0": "grama",
+    "9,1": "grama",
+    "9,2": "grama",
+    "9,3": "grama",
+    "9,4": "grama",
+    "9,5": "grama",
+    "9,6": "grama",
+    "9,7": "grama",
+    "9,8": "grama",
+    "9,9": "grama",
+    "9,10": "grama",
+    "9,11": "grama",
+    "9,12": "grama",
+    "9,13": "grama",
+    "8,13": "grama",
+    "7,13": "grama",
+    "7,12": "grama",
+    "7,11": "grama",
+    "7,10": "grama",
+    "7,9": "grama",
+    "7,8": "grama",
+    "7,7": "grama",
+    "6,7": "terra",
+    "5,7": "terra",
+    "5,8": "terra",
+    "5,9": "grama",
+    "5,10": "grama",
+    "5,11": "grama",
+    "5,12": "grama",
+    "5,13": "grama",
+    "4,13": "grama",
+    "3,13": "grama",
+    "3,12": "grama",
+    "3,11": "grama",
+    "3,10": "grama",
+    "3,9": "grama",
+    "3,8": "grama",
+    "3,7": "grama",
+    "2,7": "grama",
+    "1,7": "grama",
+    "1,8": "grama",
+    "1,9": "grama",
+    "1,10": "grama",
+    "1,11": "grama",
+    "1,12": "grama",
+    "0,13": "grama",
+    "0,12": "grama",
+    "0,11": "grama",
+    "0,10": "grama",
+    "0,9": "grama",
+    "0,8": "grama",
+    "0,7": "grama",
+    "0,6": "grama",
+    "0,5": "grama",
+    "0,4": "grama",
+    "0,3": "grama",
+    "0,2": "grama",
+    "0,1": "grama",
+    "0,0": "grama",
+    "1,0": "grama",
+    "2,0": "grama",
+    "3,0": "grama",
+    "4,0": "grama",
+    "5,0": "grama",
+    "6,0": "grama",
+    "7,0": "grama",
+    "2,8": "grama",
+    "2,9": "grama",
+    "2,10": "grama",
+    "2,11": "grama",
+    "2,12": "grama",
+    "2,13": "grama",
+    "4,12": "grama",
+    "4,11": "grama",
+    "4,10": "grama",
+    "4,9": "grama",
+    "4,8": "grama",
+    "4,7": "grama",
+    "6,8": "terra",
+    "6,9": "grama",
+    "6,10": "grama",
+    "6,11": "grama",
+    "6,12": "grama",
+    "6,13": "grama",
+    "10,13": "grama",
+    "11,13": "grama",
+    "11,12": "grama",
+    "11,11": "grama",
+    "11,10": "grama",
+    "11,9": "grama",
+    "11,8": "grama",
+    "11,7": "grama",
+    "11,6": "grama",
+    "11,5": "grama",
+    "11,4": "grama",
+    "12,4": "grama",
+    "12,3": "grama",
+    "13,3": "grama",
+    "13,2": "grama",
+    "13,1": "grama",
+    "13,0": "grama",
+    "14,0": "grama",
+    "15,0": "grama",
+    "15,1": "grama",
+    "15,2": "grama",
+    "15,3": "grama",
+    "15,4": "grama",
+    "15,5": "grama",
+    "15,6": "grama",
+    "15,7": "grama",
+    "15,8": "grama",
+    "15,9": "grama",
+    "15,10": "grama",
+    "15,11": "grama",
+    "15,12": "grama",
+    "15,13": "grama",
+    "14,13": "grama",
+    "13,13": "grama",
+    "13,12": "grama",
+    "13,11": "grama",
+    "13,10": "grama",
+    "13,9": "grama",
+    "13,8": "grama",
+    "13,7": "grama",
+    "13,6": "grama",
+    "13,5": "grama",
+    "14,12": "grama",
+    "14,11": "grama",
+    "14,10": "grama",
+    "14,9": "grama",
+    "14,8": "grama",
+    "14,7": "grama",
+    "14,6": "grama",
+    "14,5": "grama",
+    "14,4": "grama",
+    "14,1": "grama",
+    "14,2": "grama",
+    "14,3": "grama",
+    "13,4": "grama",
+    "12,5": "grama",
+    "12,6": "grama",
+    "12,7": "grama",
+    "12,8": "grama",
+    "12,9": "grama",
+    "12,10": "grama",
+    "12,11": "grama",
+    "12,12": "grama",
+    "12,13": "grama",
+    "8,12": "grama",
+    "10,12": "grama",
+    "8,11": "grama",
+    "10,11": "grama",
+    "8,10": "grama",
+    "10,10": "grama",
+    "8,9": "grama",
+    "10,9": "grama",
+    "8,8": "grama",
+    "10,8": "grama",
+    "8,7": "grama",
+    "10,7": "grama",
+    "10,6": "grama",
+    "10,5": "grama",
+    "10,4": "grama",
+    "10,3": "grama",
+    "8,0": "grama",
+    "12,0": "grama",
+    "10,1": "grama",
+    "12,1": "grama",
+    "11,3": "grama",
+    "10,2": "grama",
+    "12,2": "grama",
+    "7,3": "grama",
+    "7,2": "grama",
+    "7,1": "grama",
+    "5,1": "grama",
+    "5,2": "grama",
+    "5,3": "grama",
+    "5,4": "grama",
+    "5,5": "grama",
+    "5,6": "grama",
+    "3,6": "grama",
+    "3,5": "grama",
+    "3,4": "grama",
+    "3,3": "grama",
+    "3,2": "grama",
+    "3,1": "grama",
+    "1,1": "grama",
+    "1,2": "grama",
+    "1,3": "grama",
+    "1,4": "grama",
+    "1,5": "grama",
+    "1,6": "grama",
+    "2,1": "grama",
+    "2,2": "grama",
+    "2,3": "grama",
+    "2,4": "grama",
+    "2,5": "grama",
+    "2,6": "grama",
+    "7,6": "grama",
+    "7,5": "grama",
+    "8,5": "grama",
+    "8,4": "grama",
+    "8,6": "grama",
+    "4,6": "grama",
+    "6,6": "grama",
+    "4,5": "grama",
+    "6,5": "grama",
+    "4,4": "grama",
+    "6,4": "grama",
+    "4,3": "grama",
+    "4,2": "grama",
+    "4,1": "grama",
+    "6,1": "grama",
+    "8,1": "grama",
+    "6,2": "grama",
+    "8,2": "grama",
+    "7,4": "grama",
+    "6,3": "grama",
+    "8,3": "grama",
+    "16,1": "grama",
+    "16,0": "grama",
+    "17,0": "grama",
+    "18,0": "grama",
+    "18,1": "grama",
+    "18,2": "grama",
+    "18,3": "grama",
+    "18,4": "grama",
+    "18,5": "grama",
+    "18,6": "grama",
+    "18,7": "grama",
+    "18,8": "grama",
+    "18,9": "grama",
+    "18,10": "grama",
+    "18,11": "grama",
+    "18,12": "grama",
+    "18,13": "grama",
+    "18,14": "grama",
+    "18,15": "grama",
+    "18,16": "grama",
+    "17,16": "grama",
+    "16,16": "grama",
+    "16,15": "grama",
+    "16,14": "grama",
+    "16,13": "grama",
+    "16,12": "grama",
+    "16,11": "grama",
+    "16,10": "grama",
+    "16,9": "grama",
+    "16,8": "grama",
+    "16,7": "grama",
+    "16,6": "grama",
+    "16,5": "grama",
+    "16,4": "grama",
+    "16,3": "grama",
+    "15,14": "grama",
+    "14,14": "grama",
+    "14,15": "grama",
+    "14,16": "grama",
+    "13,16": "grama",
+    "12,16": "grama",
+    "12,15": "grama",
+    "12,14": "grama",
+    "11,14": "grama",
+    "10,14": "grama",
+    "10,15": "grama",
+    "10,16": "grama",
+    "9,16": "grama",
+    "8,16": "grama",
+    "8,15": "grama",
+    "8,14": "grama",
+    "7,14": "grama",
+    "6,14": "grama",
+    "6,15": "grama",
+    "6,16": "grama",
+    "5,16": "grama",
+    "4,16": "grama",
+    "4,14": "grama",
+    "3,14": "grama",
+    "2,15": "grama",
+    "2,16": "grama",
+    "1,16": "grama",
+    "0,16": "grama",
+    "0,15": "grama",
+    "0,14": "grama",
+    "1,15": "grama",
+    "1,14": "grama",
+    "3,16": "grama",
+    "5,15": "grama",
+    "5,14": "grama",
+    "7,15": "grama",
+    "7,16": "grama",
+    "9,15": "grama",
+    "9,14": "grama",
+    "11,15": "grama",
+    "11,16": "grama",
+    "13,15": "grama",
+    "13,14": "grama",
+    "15,15": "grama",
+    "15,16": "grama",
+    "17,15": "grama",
+    "17,14": "grama",
+    "17,13": "grama",
+    "17,12": "grama",
+    "17,11": "grama",
+    "17,10": "grama",
+    "17,9": "grama",
+    "17,8": "grama",
+    "17,7": "grama",
+    "17,6": "grama",
+    "17,5": "grama",
+    "17,4": "grama",
+    "17,3": "grama",
+    "17,2": "grama",
+    "16,2": "grama",
+    "17,1": "grama",
+    "1,13": "grama",
+    "2,14": "grama",
+    "3,15": "grama",
+    "4,15": "grama"
+  },
+  "pontes": [],
+  "elevacoes": {},
+  "alturas_parede": {},
+  "transicao_altura": "rampa",
+  "objectives": {
+    "primary": {
+      "type": "kill_all",
+      "xp": 0,
+      "reward": {
+        "gold": 0,
+        "items": []
+      }
+    },
+    "secondary": []
+  }
+}

@@ -180,6 +180,74 @@ window.EDITOR_CUSTOM_ITEMS = [
       "baus": true,
       "loot_monstro": false
     }
+  },
+  {
+    "id": "machado_duplo_copia",
+    "name": "Machado Duplo (cópia)",
+    "emoji": "🪓",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d8",
+    "stat": "str_",
+    "categoria": "cortante",
+    "finesse": false,
+    "two_handed": false,
+    "atk_bonus": 1,
+    "damage_bonus": 1,
+    "corrosao_resistente": 2,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": "guild_tecnica_ataque_giratorio",
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [
+      "mage",
+      "rogue",
+      "cleric",
+      "bard"
+    ],
+    "price": 0,
+    "disponibilidade": {
+      "loja": true,
+      "baus": true,
+      "loot_monstro": true
+    },
+    "throw_range": 3
+  },
+  {
+    "id": "lamina_do_vento",
+    "name": "Lamina do Vento",
+    "emoji": "🪓",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d8",
+    "stat": "str_",
+    "categoria": "cortante",
+    "finesse": false,
+    "two_handed": false,
+    "atk_bonus": 1,
+    "damage_bonus": 1,
+    "corrosao_resistente": 2,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": "guild_tecnica_ataque_giratorio",
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [
+      "mage",
+      "rogue",
+      "cleric",
+      "bard"
+    ],
+    "price": 0,
+    "disponibilidade": {
+      "loja": true,
+      "baus": true,
+      "loot_monstro": true
+    },
+    "throw_range": 1
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de itens.
