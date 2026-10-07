@@ -1866,6 +1866,10 @@ const GS = (() => {
         _emit('fala', msg);   // {falante:{nome,emoji}, texto, pos}
         break;
 
+      case 'licao_passo':
+        _emit('licaoPasso', msg);   // {licao_id, passo:{i,n,texto,porque,ui,dica,informativo}}
+        break;
+
       case 'metamorfose_catalog':
         metamorfoseCatalog = Array.isArray(msg.formas) ? msg.formas : [];
         _emit('metamorfoseCatalog', metamorfoseCatalog);
@@ -2497,6 +2501,7 @@ const GS = (() => {
   // ── Tutorial ── Lição pendente do MEU herói, ou null. Leitura pura: o bloco
   // vem chaveado por classe porque game_state é um broadcast único.
   function repetirTutorial() { send({ type: 'repetir_tutorial' }); }
+  function avancarPasso() { send({ type: 'avancar_passo' }); }
   function podeRepetirTutorial() {
     const p = (gameState?.players || []).find(actor => actor.id === myPid);
     return !!(p && gameState?.tutorial?.training && (gameState.rooms || []).some(r =>
@@ -3831,7 +3836,7 @@ const GS = (() => {
     masterManualMovePaths,
     masterAttackCharges,
     masterPodeAtacar,
-    licaoAtual, repetirTutorial, podeRepetirTutorial,
+    licaoAtual, repetirTutorial, podeRepetirTutorial, avancarPasso,
 
     // ── Prévia do editor (index.html?preview=1) ──
     isPreview: PREVIEW,

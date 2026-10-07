@@ -53,5 +53,20 @@ check("nível 2 = segunda", G.textoDica(passo, 2) === "segunda");
 check("só uma dica: nível 2 repete a última", G.textoDica({ dica: ["única"] }, 2) === "única");
 check("sem dica: vazio", G.textoDica({}, 2) === "" && G.textoDica(null, 1) === "");
 
+console.log("\n[5] gameState: passo na lição, avanço e evento");
+global.localStorage = { getItem: () => null, setItem: () => {} };
+global.location = { search: "", protocol: "http:", host: "x" };
+const GS = eval(fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8") + "; GS");
+GS.injectPreviewState({
+  type: "game_state", master_pid: "p1",
+  players: [{ id: "p1", name: "G", class_id: "warrior", alive: true, pos: [1, 1] }],
+  monsters: [], tiles: [[0]], rooms: [], explored: [], round: 1,
+  tutorial: { por_classe: { warrior: { licao_id: "a", texto_curto: "Ataque", feito: 0, vezes: 1,
+    concluidas: 0, total: 2, passo: { i: 1, n: 3, texto: "Passo", ui: "botao:encerrar_turno" } } } },
+});
+const lic = GS.licaoAtual();
+check("licaoAtual traz o passo", lic && lic.passo && lic.passo.i === 1 && lic.passo.n === 3);
+check("GS.avancarPasso existe", typeof GS.avancarPasso === "function");
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);
