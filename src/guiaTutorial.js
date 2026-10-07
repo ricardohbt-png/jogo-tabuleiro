@@ -85,5 +85,23 @@
     return d[Math.min(nivel, d.length) - 1] || '';
   }
 
-  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, caminhoAbsoluto, nivelDica, textoDica };
+  // Quebra o texto em pedaços: {texto} ou {termo, primeira}. `[[termo]]` só vale com
+  // id minúsculo; `vistos` (Set) guarda o que já apareceu para sublinhar só a 1ª vez.
+  function segmentos(texto, vistos) {
+    if (typeof texto !== 'string' || !texto) return [];
+    const ve = vistos || new Set();
+    const out = [];
+    const re = /\[\[([a-z0-9_]+)\]\]/g;
+    let ultimo = 0, m;
+    while ((m = re.exec(texto))) {
+      if (m.index > ultimo) out.push({ texto: texto.slice(ultimo, m.index) });
+      out.push({ termo: m[1], primeira: !ve.has(m[1]) });
+      ve.add(m[1]);
+      ultimo = m.index + m[0].length;
+    }
+    if (ultimo < texto.length) out.push({ texto: texto.slice(ultimo) });
+    return out;
+  }
+
+  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, caminhoAbsoluto, nivelDica, textoDica, segmentos };
 })();

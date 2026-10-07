@@ -174,5 +174,23 @@ check("o laço 3D chama _guiaAtualizar3D", /startLoop3D[\s\S]{0,40000}_guiaAtual
 check("dispose3D libera a marca do guia", /function dispose3D[\s\S]{0,6000}guiaMarca/.test(gameSrc));
 check("a marca 3D usa topoSuperficie3D", /function _guiaAtualizar3D[\s\S]{0,2500}topoSuperficie3D\(/.test(gameSrc));
 
+console.log("\n[15] glossário: segmentos");
+{
+  const vistos = new Set();
+  const a = G.segmentos('Gaste [[movimento]] e depois [[movimento]] de novo, com [[ca]].', vistos);
+  check('pedaços na ordem', a.map(s => s.termo ? '#' + s.termo : s.texto).join('|')
+    === 'Gaste |#movimento| e depois |#movimento| de novo, com |#ca|.');
+  check('1ª ocorrência é "primeira"', a[1].primeira === true);
+  check('2ª ocorrência não é "primeira"', a[3].primeira === false);
+  check('vistos guarda os termos', vistos.has('movimento') && vistos.has('ca'));
+  const b = G.segmentos('Outro [[movimento]].', vistos);
+  check('vistos persiste entre chamadas', b[1].primeira === false);
+  const c = G.segmentos('sem marcas', new Set());
+  check('texto sem marca vira 1 pedaço', c.length === 1 && c[0].texto === 'sem marcas' && !c[0].termo);
+  const d = G.segmentos('[[Inválido]] e [[ok_1]]', new Set());
+  check('só id minúsculo vira termo', d.some(s => s.termo === 'ok_1') && !d.some(s => s.termo === 'Inválido'));
+  check('entrada não-string é segura', G.segmentos(null, new Set()).length === 0);
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);
