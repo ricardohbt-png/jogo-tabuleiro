@@ -215,5 +215,89 @@ class FotoTests(unittest.IsolatedAsyncioTestCase):
                          else S.FOTO_SALA_CATEGORIAS.get('licoes'), 'foto')
 
 
+class DicaErroTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        S._GUIA_DICA_ULTIMA.clear()
+
+    def dicas(self, r):
+        return [m for m in r.messages if m.get('type') == 'licao_dica']
+
+    async def test_nao_e_o_seu_turno_vira_fora_da_vez(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'treino_mira')
+        await r._guia_dica_por_erro('hero', S.T('erro.nao_e_o_seu_turno'))
+        d = self.dicas(r)
+        self.assertEqual(len(d), 1)
+        self.assertEqual((d[0]['motivo'], d[0]['licao_id']), ('fora_da_vez', 'treino_mira'))
+
+    async def test_acao_ja_usada_vira_sem_acao(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'treino_mira')
+        await r._guia_dica_por_erro('hero', S.T('erro.acao_principal_ja_usada_neste_turno'))
+        self.assertEqual(self.dicas(r)[0]['motivo'], 'sem_acao')
+
+    async def test_alvo_fora_de_alcance_vira_longe_do_alvo(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_5')                 # tarefa: atacar boneco_treino
+        await r._guia_dica_por_erro('hero', S.T('erro.alvo_fora_de_alcance'))
+        self.assertEqual(self.dicas(r)[0]['motivo'], 'longe_do_alvo')
+
+    async def test_alvo_invalido_vira_alvo_errado(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_5')
+        await r._guia_dica_por_erro('hero', S.T('erro.alvo_invalido'))
+        self.assertEqual(self.dicas(r)[0]['motivo'], 'alvo_errado')
+
+    async def test_erro_desconhecido_nao_gera_dica(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'treino_mira')
+        await r._guia_dica_por_erro('hero', S.T('erro.sala_nao_encontrada'))
+        await r._guia_dica_por_erro('hero', "texto cru")
+        await r._guia_dica_por_erro('hero', None)
+        self.assertEqual(self.dicas(r), [])
+
+    async def test_sem_licao_pendente_nao_gera_dica(self):
+        r, p = room('warrior')
+        await r._guia_dica_por_erro('hero', S.T('erro.nao_e_o_seu_turno'))
+        await r._guia_dica_por_erro('nao_existe', S.T('erro.nao_e_o_seu_turno'))
+        self.assertEqual(self.dicas(r), [])
+
+    async def test_alvo_errado_so_em_tarefa_com_alvo(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_0')                 # tarefa: mover_ate (sem alvo de combate)
+        await r._guia_dica_por_erro('hero', S.T('erro.alvo_invalido'))
+        self.assertEqual(self.dicas(r), [])
+
+    async def test_intervalo_minimo_entre_dicas(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'treino_mira')
+        await r._guia_dica_por_erro('hero', S.T('erro.nao_e_o_seu_turno'))
+        await r._guia_dica_por_erro('hero', S.T('erro.nao_e_o_seu_turno'))
+        self.assertEqual(len(self.dicas(r)), 1)
+        S._GUIA_DICA_ULTIMA['hero'] -= S.GUIA_DICA_INTERVALO_S + 1
+        await r._guia_dica_por_erro('hero', S.T('erro.nao_e_o_seu_turno'))
+        self.assertEqual(len(self.dicas(r)), 2)
+
+    async def test_send_to_real_chama_o_gancho_so_para_erros(self):
+        r, p = room('warrior')
+        vistos = []
+
+        async def espia(pid, texto): vistos.append((pid, getattr(texto, 'key', texto)))
+        r._guia_dica_por_erro = espia
+        r.connections = {}
+        await S.GameRoom.send_to(r, 'hero', {"type": "error", "msg": S.T('erro.nao_e_o_seu_turno')})
+        await S.GameRoom.send_to(r, 'hero', {"type": "gm_narration", "text": "oi"})
+        self.assertEqual(vistos, [('hero', 'erro.nao_e_o_seu_turno')])
+
+    async def test_alvo_errado_quando_acerta_outro_tipo(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_5')
+        await r._licao_evento(p, 'atacar', alvo='esqueleto_humano')
+        d = self.dicas(r)
+        self.assertEqual(len(d), 1)
+        self.assertEqual(d[0]['motivo'], 'alvo_errado')
+        self.assertEqual(p['licao_atual'], 'fala_5')       # não concluiu
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

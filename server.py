@@ -65,6 +65,22 @@ GUIA_UI_RE = re.compile(
     r"^(?:(?:botao|habilidade|bolsa|slot|monstro|hud):[a-z0-9_]+"
     r"|(?:casa|porta):\[\d+,\d+\])$")
 
+# Dica por erro: recusas que o servidor já emite viram um motivo curto que o cliente
+# traduz (ui.tutorial.dica_erro.<motivo>). Mapa por chave exata e por prefixo.
+GUIA_DICA_POR_ERRO = {
+    "erro.nao_e_o_seu_turno": "fora_da_vez",
+    "erro.acao_principal_ja_usada_neste_turno": "sem_acao",
+    "erro.alvo_invalido": "alvo_errado",
+}
+GUIA_DICA_POR_PREFIXO = (("erro.alvo_fora_", "longe_do_alvo"),)
+# Estes dois motivos só fazem sentido quando a tarefa pendente tem um alvo de combate.
+GUIA_DICA_EXIGE_ALVO = ("alvo_errado", "longe_do_alvo")
+GUIA_TAREFAS_COM_ALVO = ("atacar", "matar", "usar_habilidade", "usar_tecnica",
+                         "arremessar_item", "usar_instrumento", "proteger", "libertar_refem",
+                         "desarmar_armadilha")
+GUIA_DICA_INTERVALO_S = 5.0
+_GUIA_DICA_ULTIMA = {}      # pid -> time.monotonic() da última dica (fora da sala e da foto)
+
 
 def _guia_ui_padrao(tar):
     """Elemento a destacar quando a lição não declara `guia`: deduzido da tarefa."""
@@ -10900,6 +10916,8 @@ class GameRoom(TutorialTraining):
             self.connections.pop(pid, None)
 
     async def send_to(self, pid, msg):
+        if isinstance(msg, dict) and msg.get("type") == "error" and getattr(self, "licoes", None):
+            await self._guia_dica_por_erro(pid, msg.get("msg"))
         ws = self.connections.get(pid)
         if ws and isinstance(msg, dict) and "heroi" not in msg and self._herois_extras_de(pid):
             msg = {**msg, "heroi": pid}   # com grupo, toda mensagem privada nomeia o herói (o principal também)
@@ -18054,6 +18072,33 @@ class GameRoom(TutorialTraining):
             return
         await self._guia_avancar(p, lic)
 
+    async def _guia_dica(self, pid, motivo):
+        """Avisa o herói que errou o exercício. Uma dica a cada GUIA_DICA_INTERVALO_S."""
+        p = self.players.get(pid)
+        if not p or not getattr(self, "licoes", None):
+            return
+        lic = next((l for l in self.licoes if l["id"] == p.get("licao_atual")), None)
+        tar = (lic or {}).get("tarefa")
+        if not lic or not tar:
+            return
+        if motivo in GUIA_DICA_EXIGE_ALVO and tar.get("tipo") not in GUIA_TAREFAS_COM_ALVO:
+            return
+        agora = time.monotonic()
+        if agora - _GUIA_DICA_ULTIMA.get(pid, -1e9) < GUIA_DICA_INTERVALO_S:
+            return
+        _GUIA_DICA_ULTIMA[pid] = agora
+        await self.send_to(pid, {"type": "licao_dica", "licao_id": lic["id"], "motivo": motivo})
+
+    async def _guia_dica_por_erro(self, pid, texto):
+        """Converte uma recusa conhecida (T com chave) em dica; o resto passa em silêncio."""
+        chave = getattr(texto, "key", None)
+        if not isinstance(chave, str):
+            return
+        motivo = GUIA_DICA_POR_ERRO.get(chave) or next(
+            (m for pre, m in GUIA_DICA_POR_PREFIXO if chave.startswith(pre)), None)
+        if motivo:
+            await self._guia_dica(pid, motivo)
+
     async def _licao_evento(self, p, verbo, alvo=None, contexto=None):
         """Registra progresso na lição pendente do jogador.
 
@@ -18089,6 +18134,7 @@ class GameRoom(TutorialTraining):
         if tar.get("cura_efetiva") and (contexto or {}).get("cura", 0) <= 0:
             return
         if not self._licao_alvo_ok(tar.get("alvo"), alvo):
+            await self._guia_dica(p["id"], "alvo_errado")
             return
         prog = p.setdefault("licao_progresso", {})
         prog[lic_id] = prog.get(lic_id, 0) + 1
