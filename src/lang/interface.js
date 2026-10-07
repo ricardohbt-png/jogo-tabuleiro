@@ -10532,6 +10532,34 @@ window.LANG_INTERFACE = {
   "ui.save.tentar_novamente": {
     "en": "Try again",
     "pt": "Tentar novamente"
+  },
+  "ui.somteste.ev.teleporte": {
+    "en": "Trap teleport",
+    "pt": "Teleporte da armadilha"
+  },
+  "ui.somteste.ev.rede": {
+    "en": "Net trap launch",
+    "pt": "Disparo da armadilha de rede"
+  },
+  "ui.somteste.ev.teto_esmagador": {
+    "en": "Crushing ceiling (rock fall and heavy impact)",
+    "pt": "Teto esmagador (rochas e impacto pesado)"
+  },
+  "ui.somteste.ev.bau_engolir": {
+    "en": "Swallowing chest (hungry bite and gulp)",
+    "pt": "Baú engolidor (abocanhada e engolida)"
+  },
+  "ui.somteste.ev.fosso_estacas": {
+    "en": "Spike pit mechanism",
+    "pt": "Mecanismo do fosso de estacas"
+  },
+  "ui.somteste.ev.fosso_veneno": {
+    "en": "Poison hiss",
+    "pt": "Chiado do veneno"
+  },
+  "ui.somteste.ev.buraco_queda": {
+    "en": "Falling into a pit",
+    "pt": "Queda no buraco"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

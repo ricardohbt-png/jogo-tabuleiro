@@ -157,15 +157,22 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 ### Server → Client
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
-`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `item_impacto`, `metamorfose_catalog`
+`decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `armadilha_impacto`, `armadilha_veneno_impacto`, `item_impacto`, `metamorfose_catalog`
 
 > **`armadilha_disparo`** (`tipo_id`, `pos`, `alvos:[ids]`, `area?`, `area_sala?`, `tick?`) — broadcast público
 > de `_avisar_armadilha`, emitido em TODO disparo: `_disparar_armadilha` (alvo único),
 > `_aplicar_armadilha_area` (uma vez, com todos do raio), `_verificar_trap_procedural` (buraco) e
 > o dano progressivo de `_processar_efeitos_armadilha_turno` (`tick:true`, 1 por alvo por rodada).
 > Alimenta som e efeitos visuais no cliente: Dardos Envenenados, Armadilha Incendiária, Mina Terrestre,
-> Lâmina Escondida, Lâmina Pêndulo, Guilhotina, Jato de Ácido e Armadilha de Raio Congelante animam o disparo quando a casa está visível. Teto Esmagador envia `area_sala:true` e anima a queda nas casas visíveis da sala em 2D/3D. O `trap_result` é privado de quem foi atingido;
+> Lâmina Escondida, Guilhotina, Jato de Ácido e Armadilha de Raio Congelante animam o disparo quando a casa está visível. Lâmina Pêndulo calcula um corredor no mapa e anima uma alabarda que sai de uma parede, cruza até a oposta e recua; a extensão respeita a visão do cliente em 2D/3D. Teto Esmagador envia `area_sala:true` e anima a queda nas casas visíveis da sala em 2D/3D. O `trap_result` é privado de quem foi atingido;
 > `alvos` diz de quem é o gemido (prisioneiro = `"__prisioneiro__"`).
+>
+> **`armadilha_impacto`** (`tipo_id`, `alvo_id`, `alvo_tipo`, `pos`, `sucesso`, `aplicada?`) — broadcast
+> público com resultado do teste para animações condicionadas; o Buraco publica sucesso e falha,
+> e a falha sincroniza o som seco da queda com o início do tombo.
+> Fosso com Estacas e Fosso com Estacas Envenenadas tocam `fosso_estacas` no disparo;
+> se o veneno da variante envenenada for realmente aplicado, o servidor publica
+> `armadilha_veneno_impacto` e o cliente toca o chiado `fosso_veneno` na posição do alvo.
 >
 > **`item_impacto`** (`item_id`, `pos`, `area`) — broadcast público emitido no ramo de área de
 > `_monster_throw_item` (granada do Soldado), antes dos saves. O arremesso de monstro não tem
@@ -366,6 +373,45 @@ Tipos em `ARMADILHAS` (server.py): `buraco`, `armadilha_urso`, `fosso_estacas`,
 Save de Reflexos (gás = Fortitude); persistência/visibilidade por tipo; dano
 progressivo (incendiária) tica em `_processar_efeitos_armadilha_turno`; `fosso_envenenado`
 reusa `_aplicar_veneno`; `nuvem_gas` reduz CON via `_reduzir_con_temporario`.
+Na falha do save do `buraco`, o servidor continua aplicando `perder_movimento`; o
+cliente anima a queda não letal e o retorno do peão em 2D/3D via
+`CombatScene.startFall`/`fallPoseFor`, sem alterar HP nem morte. O servidor também
+publica `armadilha_impacto`; quando o save falha, o cliente toca `buraco_queda`
+sincronizado à descida, sem afetar o som de outras quedas.
+No `fosso`, a falha aplica o estado `fosso_oculto` e publica `armadilha_disparo`
+antes do `trap_result` privado. O cliente usa `CombatScene.startPitFall` por 900 ms:
+o peão tomba e some; depois os filtros existentes mantêm a peça oculta até o
+servidor limpar `fosso_oculto` no fim da rodada perdida. O cliente registra o
+início por herói para `armadilha_disparo` e `trap_result` não reiniciarem a queda
+quando o popup chega depois dos 900 ms; libera esse registro quando o estado do
+servidor remover `fosso_oculto`.
+Na queda do fosso, `CombatScene` conserva a pose terminal invisível até
+`endPitFall`, sem restaurar materiais ao expirar os 900 ms. A trava visual só
+é liberada por um `gameState` que remova `fosso_oculto` após sua confirmação;
+o resultado privado não consulta o estado antigo para liberar/reiniciar a
+queda. Em 3D a raiz inteira é ocultada a cada frame ao terminar a descida,
+incluindo base e acessórios, independentemente do cache de entidades. Em 2D
+a trava também cobre o intervalo entre o evento e o estado autoritativo.
+Nos `fosso_estacas` e `fosso_envenenado`, o cliente anima a abertura do piso e a
+subida das estacas em 2D/3D; o fosso envenenado acrescenta brilho verde nas
+pontas e névoa tóxica breve. Um aviso público de impacto inicia a queda curta do
+alvo apenas quando ele falha no save. Os efeitos mecânicos existentes não mudam.
+Na `armadilha_urso`, as mandíbulas fecham no alvo se ele falhar, ou ao lado dele
+se escapar; faíscas e a reação curta de queda comunicam o impacto sem prender
+visualmente o peão após o fim do disparo.
+Na `rede`, a malha sobe e se abre antes de cair sobre o alvo; na falha, fecha-se
+ao redor do peão, e no sucesso cai vazia para o lado. A perda da rodada continua
+sendo aplicada pelo fluxo existente da armadilha. O disparo público também toca
+`rede` no impacto da animação (240 ms): estalo da mola, sopro da malha e cordas
+tensionando; o som toca mesmo quando o alvo passa no teste, pois representa o
+mecanismo disparando.
+No `bau_engolidor`, a transição autoritativa de `bau_engolido:false` para `true`
+no `game_state` toca `bau_engolir` na posição do baú: abocanhada, sucção curta e
+gole grave. O som é deduplicado por herói, compartilhado pela sala via as regras
+de audibilidade do SoundBank, e não substitui a dor por perda de HP.
+No `teto_esmagador`, o cliente toca `teto_esmagador` no impacto da animação
+(240 ms): a queda de rocha do ataque do Elemental de Pedra seguida por uma
+batida seca grave, posicionada no instante em que o teto chega ao chão.
 
 ---
 
@@ -3278,6 +3324,12 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > em 13 níveis). Nota: no 2D, monstro dentro de zona de escuridão já não era desenhado (regra
 > antiga, vale também para o Manto); no 3D ele aparece meio encoberto pela nuvem. Testes:
 > `tools/test_sons_cliente.js` [19], `tools/test_som_armadilha.py` [6].
+> **Armadilhas de gás:** reutilizam a textura volumétrica da bomba em paleta verde-amarelada.
+> `nuvem_gas` nasce pelo aviso público `armadilha_disparo`, cobre apenas pisos visíveis no
+> raio afetado e se dissipa; `camara_gas` nasce/some sincronizada à zona autoritativa e
+> distribui os novelos pelas casas de piso/porta da sala (`room_id`). A fumaça é visual;
+> saves, dano e duração continuam autoritativos no servidor. A névoa verde plana antiga da
+> Câmara foi removida para não competir com a fumaça.
 > **Choque da aura (Dano de Retaliação):** `_dano_retaliacao` manda no `dice_roll` também
 > `retaliacao_tipo` (tipo da criatura que retaliou) e `retaliacao_pos` (casa de quem levou o
 > choque). No cliente, `_somRetaliacao` (no `GS.on('diceRoll')`) toca `ataque_elem_<x>` quando
@@ -3515,6 +3567,26 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > contorna a Ana (4 passos); ligada, passa por ela (2 passos) e terminar em cima é recusado.
 > Testes: `tools/test_atravessar_aliados.py` (28) e `tools/test_atravessar_aliados_cliente.js`
 > (29). Spec em `docs/superpowers/specs/2026-09-30-atravessar-aliados-design.md`.
+
+> **Animação da armadilha de teletransporte (2026-09-30):** `server.py` emite
+> `armadilha_teleporte` com origem, alvo e resultado efetivo (resistiu/saída bloqueada ou
+> teleportado e destino); `src/gameState.js` encaminha como `armadilhaTeleporte`. No cliente,
+> `_receberDisparoTeletransporte` inicia o glifo na origem a partir de `armadilhaDisparo` e
+> `_receberResultadoTeletransporteArmadilha` resolve o efeito: falha/resistência desfaz o glifo;
+> sucesso desenha recomposição arcana e partículas no destino. Em 2D e 3D, o caminho entre as
+> casas só aparece quando ambas são visíveis para aquele cliente; origem e destino são filtrados
+> separadamente pela visão atual. Regras de save, saída e movimento permanecem no servidor.
+> O sucesso agenda `sfx('teleporte')` para acompanhar a chegada; resistência e saída bloqueada
+> ficam sem efeito sonoro de teletransporte. A amostra original `assets/sfx/combate/teleporte.ogg`
+> foi criada por síntese procedural e está registrada em `assets/sfx/LICENCAS.md`.
+
+> **Animação da Armadilha de Maldição:** `armadilha_disparo` inicia uma runa violeta
+> na casa visível e elos que sobem em espiral ao redor do peão, em 2D e 3D. Após o
+> teste autoritativo, `armadilha_impacto` informa `sucesso` e se a maldição foi
+> aplicada: resistência (ou falha sem efeito aplicável) rompe os elos em partículas
+> claras; maldição aplicada fecha os elos e revela uma caveira breve. O resultado
+> visual é público, mas não contém o tipo de maldição. Mecânica, save e estado da
+> maldição continuam no servidor; o renderer respeita a visão de cada cliente.
 
 > **Botas Velozes no inventário:** `SHOP_MERCHANT` declara o item `boots` no
 > slot `boots`, e `_slot_category_for_item`/`_slotCategoryForItem` reconhecem

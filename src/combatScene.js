@@ -55,6 +55,7 @@
   let instantFn  = () => false;     // game.js injeta () => _animationSpeedMode === 'instant'
   const scenes = [];                // ordem de chegada
   const shakes = [];
+  const falls = new Map();          // quedas não letais (ex.: armadilha de buraco)
 
   const D = ms => durationFn(ms);
   const clamp01 = v => Math.max(0, Math.min(1, v));
@@ -70,7 +71,7 @@
     instantFn  = (typeof opts.instant  === 'function') ? opts.instant  : (() => false);
   }
   function reset() {
-    scenes.length = 0; shakes.length = 0;
+    scenes.length = 0; shakes.length = 0; falls.clear();
     if (root.CombatScene) root.CombatScene._ultimoLaunch = null;
   }
 
@@ -529,6 +530,57 @@
     return { dx: 0, dz: 0, tilt, tiltDir: s.dir, scaleY, opacity, darken, dying: true, base: s.tPos };
   }
 
+  // Queda não letal: o peão tomba para dentro do buraco, some parcialmente
+  // por um instante e se levanta. Não marca morte, não escurece e não emite som.
+  function startFall(key, now, duration = 1050, base = null) {
+    if (!key || !Number.isFinite(now)) return;
+    falls.set(key, { start: now, ms: Math.max(300, D(duration)), base: Array.isArray(base) ? base.slice(0, 2) : null, kind: 'return' });
+  }
+  function startPitFall(key, now, duration = 900, base = null) {
+    if (!key || !Number.isFinite(now)) return;
+    falls.set(key, { start: now, ms: Math.max(300, D(duration)), base: Array.isArray(base) ? base.slice(0, 2) : null, kind: 'pit' });
+  }
+  function poseQueda(key, now) {
+    const f = falls.get(key);
+    if (!f) return null;
+    const t = now - f.start;
+    // O fosso termina em ocultação, não em restauração do peão. Só o estado
+    // autoritativo de saída libera esta pose terminal via endPitFall.
+    if (t >= f.ms && f.kind !== 'pit') { falls.delete(key); return null; }
+    if(f.kind==='pit'){
+      const fallMs=f.ms*.82,p=clamp01(t/fallMs),drop=easeIn(p);
+      const opacity=1-easeOut(clamp01((p-.52)/.48));
+      return {dx:0,dz:0,tilt:(Math.PI/2)*drop,tiltDir:[0,1],scaleY:1-.30*drop,
+        opacity,base:f.base};
+    }
+    const fallMs = f.ms * 0.27, holdMs = f.ms * 0.34;
+    let tilt, scaleY = 1, opacity = 1;
+    if (t < fallMs) {
+      const p = easeIn(clamp01(t / fallMs));
+      tilt = (Math.PI * 0.48) * p;
+      scaleY = 1 - 0.28 * p;
+      opacity = 1 - 0.48 * p;
+    } else if (t < fallMs + holdMs) {
+      tilt = Math.PI * 0.48;
+      scaleY = 0.72;
+      opacity = 0.52;
+    } else {
+      const p = easeOut(clamp01((t - fallMs - holdMs) / (f.ms - fallMs - holdMs)));
+      tilt = (Math.PI * 0.48) * (1 - p);
+      scaleY = 0.72 + 0.28 * p;
+      opacity = 0.52 + 0.48 * p;
+    }
+    return { dx: 0, dz: 0, tilt, tiltDir: [0, 1], scaleY, opacity, base: f.base };
+  }
+  function pitFallActiveFor(key, now) {
+    const f=falls.get(key);
+    if(!f||f.kind!=='pit') return false;
+    return now-f.start<f.ms;
+  }
+  function endPitFall(key) {
+    if(falls.get(key)?.kind==='pit') falls.delete(key);
+  }
+
   function somar(a, b) {
     if (!a) return b; if (!b) return a;
     return {
@@ -559,14 +611,16 @@
       if (s.attackerKey === key) pose = somar(pose, poseAtacante(s, now));
       if (s.targetKey === key)   pose = somar(pose, poseAlvo(s, now));
     }
+    pose = somar(pose, poseQueda(key, now));
     return pose;
   }
+  function fallPoseFor(key, now) { return key ? poseQueda(key, now) : null; }
 
   function phaseOf(id) { const s = scenes.find(x => x.id === String(id) && !x.done); return s ? s.phase : null; }
 
   root.CombatScene = {
     configure, reset, start, result, dieSettled, tick, phaseOf, poseFor,
-    pendingFor, awaitingHit, handoff, shake, pulseShake, isDying, areaImpactAt,
+    pendingFor, awaitingHit, handoff, shake, pulseShake, isDying, areaImpactAt, startFall, startPitFall, endPitFall, fallPoseFor, pitFallActiveFor,
     cfg: () => cfg,
     _scenes: scenes,     // só para testes
     _ultimoLaunch: null, // só para testes: último comando `launch` emitido

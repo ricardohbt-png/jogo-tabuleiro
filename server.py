@@ -33983,6 +33983,7 @@ class GameRoom:
             save = arm.get("save", tipo["save"])
             cd = _trap_cd(arm, tipo)
             save_ok, d20, sb, stot = self._testar_save(alvo, save, cd)
+            aplicada = False
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                   "label": T("dado.nome_save", nome=alvo_nome, save=T("dado.save." + str(save)))})
             if not save_ok and self._eh_jogador(alvo):
@@ -33990,7 +33991,8 @@ class GameRoom:
                     mid = arm.get("curse_id", "maos_tremulas")
                 else:
                     mid = self._sortear_maldicao(arm.get("curse_category", "leve"))
-                await self._aplicar_maldicao(alvo, mid, nome, origem="armadilha")
+                aplicada = await self._aplicar_maldicao(alvo, mid, nome, origem="armadilha")
+            await self._avisar_impacto_armadilha(arm["tipo"], alvo, save_ok=save_ok, aplicada=aplicada)
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=save_ok, dano=0,
                                             metade=False, descricao=tipo["descricao"], efeitos_extra=[], tipo_id=arm["tipo"])
             self._consumir_armadilha_se_descartavel(arm)
@@ -34061,9 +34063,13 @@ class GameRoom:
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                   "label": T("dado.nome_save", nome=alvo_nome, save=T("dado.save." + str(tipo['save'])))})
             await self.gm_say(T("narracao.save_d20_vs_dif_2", tipo_save=tipo['save'], d20=d20, sb_str=sb_str, stot=stot, tipo_dificuldade=tipo['dificuldade'], evitou_if_save_ok_else_f='evitou' if save_ok else 'falhou'))
+            if arm.get("tipo") in ("armadilha_urso", "rede", "buraco"):
+                await self._avisar_impacto_armadilha(arm["tipo"], alvo, save_ok=save_ok)
             if not save_ok:
                 dano_total = 0
                 efeitos_extra = []
+                if arm.get("tipo") in ("fosso_estacas", "fosso_envenenado"):
+                    await self._avisar_impacto_armadilha(arm["tipo"], alvo, save_ok=False)
                 for ef in _trap_effects(arm, tipo):
                     dano, texto = await self._aplicar_efeito_armadilha(alvo, ef, arm)
                     dano_total += dano
@@ -34208,24 +34214,31 @@ class GameRoom:
     async def _disparar_teletransporte(self, alvo, arm, tipo):
         """Retorna True se teleportou (logo a armadilha foi consumida)."""
         nome = tipo["nome"]
+        origem = list(alvo.get("pos") or arm.get("pos") or [])
+        alvo_id = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
         save_ok, d20, sb, stot = self._testar_save(alvo, "vontade", _trap_cd(arm, tipo))
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": T("dado.nome_save", nome=nome_criatura(alvo), save=T("dado.save.vontade"))})
         if save_ok:
+            await self.broadcast({"type": "armadilha_teleporte", "alvo_id": alvo_id,
+                                  "origem": origem, "teleportado": False})
             await self.gm_say(T("narracao.resistiu_ao_teletransporte", alvo_get_name_alvo=nome_criatura(alvo)))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
                                             descricao=tipo["descricao"], efeitos_extra=[], tipo_id=arm["tipo"])
             return False  # sucesso mantÃ©m a armadilha ativa
         destino = self._saida_teletransporte_livre(alvo, arm.get("saida"))
         if destino is None:
+            await self.broadcast({"type": "armadilha_teleporte", "alvo_id": alvo_id,
+                                  "origem": origem, "teleportado": False})
             await self.gm_say(T("narracao.o_teletransporte_de_falha_saida_bloquead", alvo_get_name_alvo=nome_criatura(alvo)))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
                                             descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[], tipo_id=arm["tipo"])
             return False
-        origem = list(alvo["pos"])
         alvo["pos"] = destino
         if self._eh_jogador(alvo):
             self._reveal_around(destino[0], destino[1], radius=self._get_raio_visao(alvo))
+        await self.broadcast({"type": "armadilha_teleporte", "alvo_id": alvo_id,
+                              "origem": origem, "destino": list(destino), "teleportado": True})
         await self.gm_say(T("narracao.desaparece_de_e_surge_em", alvo_get_name_alvo=nome_criatura(alvo), origem=origem, destino=destino))
         await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
                                         descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"], tipo_id=arm["tipo"])
@@ -34510,6 +34523,9 @@ class GameRoom:
             alvo["fosso_pular_proximo_turno"] = True
             alvo["moves_left"] = 0
             alvo["movimento_perdido"] = True
+            # Aviso público para os clientes animarem a queda antes de ocultar
+            # o peão; o trap_result seguinte continua privado para seu popup.
+            await self._avisar_armadilha("fosso", alvo.get("pos"), [alvo])
             efeitos_extra.extend([
                 "⏸️ Perderá a próxima rodada",
                 "🕳️ O peão some do mapa e fica protegido contra ataques e efeitos adversos até o fim da rodada perdida",
@@ -34615,6 +34631,23 @@ class GameRoom:
             msg["tick"] = True
         await self.broadcast(msg)
 
+    async def _avisar_impacto_armadilha(self, tipo_id, alvo, save_ok, aplicada=None):
+        """Publica o resultado visual do impacto sem alterar a resolução da armadilha."""
+        if not alvo or not isinstance(alvo.get("pos"), (list, tuple)):
+            return
+        alvo_id = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
+        alvo_tipo = ("heroi" if self._eh_jogador(alvo) else
+                     "monstro" if any(alvo is m for m in self.monsters.values()) else
+                     "prisioneiro" if alvo is self.prisoner else "outro")
+        msg = {
+            "type": "armadilha_impacto", "tipo_id": tipo_id,
+            "alvo_id": alvo_id, "alvo_tipo": alvo_tipo,
+            "pos": list(alvo["pos"]), "sucesso": bool(save_ok),
+        }
+        if aplicada is not None:
+            msg["aplicada"] = bool(aplicada)
+        await self.broadcast(msg)
+
     async def _aplicar_armadilha_area(self, arm, tipo):
         """Armadilhas de área (mina/gás): cada alvo no raio testa o próprio save."""
         cx, cy = arm["pos"]
@@ -34702,7 +34735,16 @@ class GameRoom:
 
         elif tipo_ef == "veneno":
             if arm.get("veneno_id"):
+                venenos_antes = len(alvo.get("efeitos_veneno", []))
+                hp_antes = int(alvo.get("hp", 0) or 0)
                 await self._aplicar_veneno(alvo, arm["veneno_id"], fonte="armadilha")
+                veneno_aplicado = (len(alvo.get("efeitos_veneno", [])) > venenos_antes
+                                   or int(alvo.get("hp", 0) or 0) < hp_antes)
+                if arm.get("tipo") == "fosso_envenenado" and veneno_aplicado:
+                    await self.broadcast({
+                        "type": "armadilha_veneno_impacto", "tipo_id": "fosso_envenenado",
+                        "pos": list(alvo.get("pos") or arm.get("pos") or []),
+                    })
                 veneno_nome = (_veneno_com_melhorias(arm["veneno_id"]) or {}).get("nome", "Veneno")
                 return 0, f"☠️ Envenenado ({veneno_nome})"
             return 0, None

@@ -1925,6 +1925,18 @@ const GS = (() => {
         _emit('armadilhaDisparo', msg);
         break;
 
+      case 'armadilha_impacto':   // resultado público para animações condicionadas ao save
+        _emit('armadilhaImpacto', msg);
+        break;
+
+      case 'armadilha_veneno_impacto':
+        _emit('armadilhaVenenoImpacto', msg);
+        break;
+
+      case 'armadilha_teleporte':     // o servidor manda este nome (não o do tipo da armadilha)
+        _emit('armadilhaTeleporte', msg);
+        break;
+
       case 'item_impacto':        // público: item de área de monstro caiu (som)
         _emit('itemImpacto', msg);
         break;

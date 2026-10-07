@@ -1,6 +1,6 @@
 # Licenças dos efeitos sonoros (assets/sfx/)
 
-Todos os arquivos abaixo vêm de pacotes publicados sob **CC0 1.0 (domínio público)**
+Os arquivos importados abaixo vêm de pacotes publicados sob **CC0 1.0 (domínio público)**
 — https://creativecommons.org/publicdomain/zero/1.0/ . O CC0 não exige atribuição;
 o registro existe para rastrear a origem de cada som.
 
@@ -11,6 +11,13 @@ de um arquivo com vários sons.
 
 | arquivo | pacote | autor | licença | URL | arquivo original | observação |
 |---|---|---|---|---|---|---|
+| combate/teleporte.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Whoosh descendente, brilho tonal e pulso grave de chegada. |
+| combate/rede.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Estalo de mola, sopro de tecido e cordas tensionando na queda da rede. |
+| combate/teto_esmagador.ogg | 75 CC0 breaking / falling / hit sfx + síntese original do projeto | rubberduck + Legends for Hire | CC0 1.0 + original, sem material de terceiros | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_falling_01.ogg + impacto procedural | Derivado — amostra do Elemental de Pedra seguida por uma batida seca e grave sintetizada. |
+| combate/bau_engolir.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Abocanhada seca, sucção curta e gole grave; toca quando o peão é engolido. |
+| combate/fosso_estacas.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Piso cedendo, subida metálica e impacto das estacas. |
+| combate/fosso_veneno.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Chiado curto; só toca quando o veneno foi aplicado. |
+| combate/buraco_queda.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Queda curta, impacto seco em terra e pedrinhas. |
 | combate/golpe_cortante_1.ogg | Kenney RPG Audio | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/rpg-audio | knifeSlice.ogg |  |
 | combate/golpe_cortante_2.ogg | Kenney RPG Audio | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/rpg-audio | knifeSlice2.ogg |  |
 | combate/golpe_cortante_3.ogg | Kenney RPG Audio | Kenney (kenney.nl) | CC0 1.0 | https://kenney.nl/assets/rpg-audio | chop.ogg |  |

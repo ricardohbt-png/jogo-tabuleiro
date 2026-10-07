@@ -228,7 +228,7 @@ console.log('\n[7] _capturarSonsDeEstado');
 console.log('\n[8] Fiação de estado, morte e ambiente');
 check('morte sem cena usa _somMorteMonstro', /_spawnDefeatVisual\(anterior, kind\);\s*_somMorteMonstro\(anterior, kind\);/.test(GAME));
 check('morte com cena usa _somMorteMonstro', /onImpact: \[\(\) => \{ _spawnDefeatVisual\(anterior, kind\); _somMorteMonstro\(anterior, kind\); \}\]/.test(GAME));
-check('gameState envolve sons/ambiente em try/catch', /_detectHpChanges\(msg\);[^\n]*\n\s*try\{ _capturarSonsDeEstado\(msg\); _ambienciaGarantir\(msg\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
+check('gameState envolve sons/ambiente em try/catch', /_detectHpChanges\(msg\);[^\n]*\n\s*try\{ (?:_capturarSomBauEngolido\(msg\); )?_capturarSonsDeEstado\(msg\); _ambienciaGarantir\(msg\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
 check('enterDungeon zera sons e toca escada (em try/catch)', /GS\.on\('enterDungeon'[\s\S]{0,3000}try\{ _sfxPreCarregar\(\); _sonsReset\(\); sfx\('escada'\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
 check('cityState para o ambiente e pré-carrega (em try/catch)', /GS\.on\('cityState'[\s\S]{0,1500}try\{ _ambienciaParar\(\); _sonsReset\(\); _sfxPreCarregar\(\); \}catch\(e\)\{ console\.warn\('sons:', e\); \}/.test(GAME));
 check('handleGameOver para o ambiente', /function handleGameOver\(msg\)\{\s*_ambienciaParar\(\);/.test(GAME));
@@ -517,10 +517,10 @@ console.log('\n[19] Bomba de fumaça: nuvem guiada pela zona');
     _tickFumaca2D: () => {},
   };
   global.window.CombatScene = stubs.CombatScene;
-  const nomes = ['_ehZonaFumaca', '_fumacaReset', '_fumacaSync', '_fumacaAvancar', '_fumacaFase'];
+  const nomes = ['_ehZonaFumaca', '_fumacaReset', '_fumacaTilesSala', '_fumacaCriarNuvem', '_fumacaSync', '_fumacaAvancar', '_fumacaFase'];
   const corpo = "const FUMACA_NASCER_MS = 1100, FUMACA_SAIR_MS = 1600, FUMACA_ANEL_MS = 450;\n"
     + GAME.match(/const FUMACA_NOVELOS[^\n]*/)[0] + '\n'
-    + "const FUMACA_CORES = [1,2,3,4]; const _fumacaNuvens = new Map(); let _fumacaBaseline = true; let _fumaca2DRaf = null;\n"
+    + "const FUMACA_CORES = [1,2,3,4]; const GAS_FUMACA_CORES = [5,6,7,8]; let _gasFumacaSeq = 0; const _fumacaNuvens = new Map(); let _fumacaBaseline = true; let _fumaca2DRaf = null;\n"
     + "function _fumacaDispose3D(n){ n.group = null; }\n"
     + nomes.map(extrair).join('\n') + '\nreturn { ' + nomes.join(', ') + ', mapa: _fumacaNuvens };';
   const f = new Function(...Object.keys(stubs), 'window', corpo)(...Object.values(stubs), { CombatScene: stubs.CombatScene });
