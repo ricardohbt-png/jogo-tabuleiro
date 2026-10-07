@@ -161,5 +161,12 @@ check("halo usa a alternativa do seletor", /sel\.alternativa/.test(gameSrc));
 check("CSS do aviso existe", /\.licao-aviso\b/.test(cssSrc));
 check("'Me mostra' aparece para alvo de tabuleiro também", /botoes = \(passo && passo\.ui && GuiaTutorial\.parseUi\(passo\.ui\)\)/.test(gameSrc));
 
+console.log("\n[13] halo 2D no game.js");
+check("função _guiaDesenhar2D existe", /function _guiaDesenhar2D\(/.test(gameSrc));
+check("renderMap 2D chama _guiaDesenhar2D", /_guiaDesenhar2D\(ctx, state, visionSet\)/.test(gameSrc));
+check("o desenho usa alvoTabuleiro e caminhoAbsoluto",
+      /GuiaTutorial\.alvoTabuleiro\(/.test(gameSrc) && /GuiaTutorial\.caminhoAbsoluto\(/.test(gameSrc));
+check("o halo 2D mantém a animação por _agendarChamas2D", /function _guiaDesenhar2D[\s\S]{0,2200}_agendarChamas2D\(\)/.test(gameSrc));
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

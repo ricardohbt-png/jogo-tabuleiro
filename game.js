@@ -11717,6 +11717,7 @@ function renderMap(state){
   _drawConditionPulses2D(ctx, state, _agoraRelampago);
   _drawPositiveBursts2D(ctx, state, _agoraRelampago);
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
+  _guiaDesenhar2D(ctx, state, visionSet);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -53736,6 +53737,9 @@ function _guiaTick(){
   }
   _guiaAplicarHalo();
   _guiaAtualizarDica();
+  // 2D: o mapa só redesenha quando algo muda; com alvo de tabuleiro, redesenha para o halo pulsar.
+  if(!(mode3D && g3) && GS.gameState && _guiaPasso.ui && !GuiaTutorial.seletor(_guiaPasso.ui)
+     && GuiaTutorial.parseUi(_guiaPasso.ui)) _agendarChamas2D();
 }
 
 function _guiaIniciar(passo){
@@ -53763,6 +53767,65 @@ function _guiaAviso(texto){
   } else {
     toast(texto, '#f0c867');
   }
+}
+
+// ── Halo no tabuleiro ─────────────────────────────────────────────────────
+// Alvo (casa, porta ou monstro) do passo atual, ou null. `visivel(x,y)` impede o
+// halo de revelar o que a névoa esconde.
+function _guiaAlvoTabuleiro(state, visivel){
+  if(!_guiaPasso || !_guiaPasso.ui || !state) return null;
+  const me = (state.players || []).find(p => p.id === GS.myPid);
+  return GuiaTutorial.alvoTabuleiro(_guiaPasso.ui, state, me ? me.pos : null, visivel);
+}
+
+// Caminho até a porta, com cache por (minha casa, alvo, rodada): o BFS não pode
+// rodar a cada quadro.
+let _guiaCaminhoChave = '', _guiaCaminhoCache = [];
+function _guiaCaminhoAteAlvo(state, alvo){
+  if(!alvo || !alvo.caminho) return [];
+  const me = (state.players || []).find(p => p.id === GS.myPid);
+  if(!me || !me.pos) return [];
+  const chave = `${me.pos[0]},${me.pos[1]}>${alvo.pos[0]},${alvo.pos[1]}@${state.round}`;
+  if(chave === _guiaCaminhoChave) return _guiaCaminhoCache;
+  const exp = new Set((state.explored || []).map(([x, y]) => `${x},${y}`));
+  for(const [rx, ry] of (state.revealed || [])) exp.add(`${rx},${ry}`);
+  const passos = GS.findPath(state.tiles, exp, me.pos[0], me.pos[1], alvo.pos[0], alvo.pos[1], 60, true);
+  _guiaCaminhoChave = chave;
+  _guiaCaminhoCache = GuiaTutorial.caminhoAbsoluto(passos, me.pos[0], me.pos[1]);
+  return _guiaCaminhoCache;
+}
+
+function _guiaForte(){
+  return GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg()) >= 1;
+}
+
+// 2D: anel pulsante + seta dourada sobre a casa; porta ganha linha tracejada.
+function _guiaDesenhar2D(ctx, state, visionSet){
+  const alvo = _guiaAlvoTabuleiro(state, (x, y) => visionSet.has(`${x},${y}`));
+  if(!alvo) return;
+  const agora = performance.now();
+  const forte = _guiaForte();
+  const pulso = 0.5 + 0.5 * Math.sin(agora / (forte ? 260 : 420));
+  const cx = alvo.pos[0] * CELL + CELL / 2, cy = alvo.pos[1] * CELL + CELL / 2;
+  ctx.save();
+  const trilha = _guiaCaminhoAteAlvo(state, alvo);
+  if(trilha.length){
+    const me = (state.players || []).find(p => p.id === GS.myPid);
+    ctx.strokeStyle = 'rgba(240,200,103,.85)'; ctx.lineWidth = 3;
+    ctx.setLineDash([CELL * 0.14, CELL * 0.16]);
+    ctx.lineDashOffset = -(agora / 60) % 100;
+    ctx.beginPath();
+    ctx.moveTo(me.pos[0] * CELL + CELL / 2, me.pos[1] * CELL + CELL / 2);
+    for(const [x, y] of trilha) ctx.lineTo(x * CELL + CELL / 2, y * CELL + CELL / 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.shadowColor = 'rgba(255,200,60,.95)'; ctx.shadowBlur = 14 + 10 * pulso;
+  ctx.strokeStyle = '#f0c867'; ctx.lineWidth = (forte ? 5 : 3.5) + 2 * pulso;
+  ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.40 + 0.07 * pulso), 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  _desenharSetaVez2D(ctx, cx, alvo.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
+  _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
 }
 
 function _mostrarJanelaLicao(msg){
