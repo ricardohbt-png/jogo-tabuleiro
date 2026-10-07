@@ -11784,6 +11784,36 @@ window.EDITOR_CATALOG = {
       "granted_ability": "hero_rogue_esconder_sombras",
       "kind": "ring",
       "item_slot": "ring"
+    },
+    {
+      "id": "machado_duplo_copia",
+      "name": "Machado Duplo (cópia)",
+      "emoji": "🪓",
+      "die": "1d8",
+      "stat": "str_",
+      "finesse": false,
+      "throw_range": 3,
+      "categoria": "cortante",
+      "granted_ability": "guild_tecnica_ataque_giratorio",
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0,
+      "descricao": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
+    },
+    {
+      "id": "lamina_do_vento",
+      "name": "Lamina do Vento",
+      "emoji": "🪓",
+      "die": "1d8",
+      "stat": "str_",
+      "finesse": false,
+      "throw_range": 1,
+      "categoria": "cortante",
+      "granted_ability": "guild_tecnica_ataque_giratorio",
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0,
+      "descricao": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
     }
   ],
   "traps": [

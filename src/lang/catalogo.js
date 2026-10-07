@@ -222,6 +222,10 @@ window.LANG_CATALOGO = {
     "en": "Abandoned Camp",
     "pt": "Acampamento abandonado"
   },
+  "cat.decor.arco_pedra_deserto.nome": {
+    "en": "Desert Stone Arch",
+    "pt": "Arco de pedra do deserto"
+  },
   "cat.decor.altar.nome": {
     "en": "Ritual Altar",
     "pt": "Altar ritualístico"
@@ -233,10 +237,6 @@ window.LANG_CATALOGO = {
   "cat.decor.arca_tesouros.nome": {
     "en": "Treasure Chest",
     "pt": "Arca de tesouros"
-  },
-  "cat.decor.arco_pedra_deserto.nome": {
-    "en": "Desert Stone Arch",
-    "pt": "Arco de pedra do deserto"
   },
   "cat.decor.armadura.nome": {
     "en": "Armor Stand",
@@ -354,10 +354,6 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
-  "cat.decor.esqueleto_tiranossauro.nome": {
-    "en": "Tyrannosaurus Skeleton",
-    "pt": "Esqueleto de tiranossauro"
-  },
   "cat.decor.estalactites_estalagmites.nome": {
     "en": "Stalactites and Stalagmites",
     "pt": "Estalactites e estalagmites"
@@ -377,6 +373,10 @@ window.LANG_CATALOGO = {
   "cat.decor.estatua_divindade.nome": {
     "en": "Deity Statue",
     "pt": "Estátua de divindade"
+  },
+  "cat.decor.esqueleto_tiranossauro.nome": {
+    "en": "Tyrannosaurus Skeleton",
+    "pt": "Esqueleto de tiranossauro"
   },
   "cat.decor.estatua_soterrada.nome": {
     "en": "Buried Statue",
@@ -414,6 +414,10 @@ window.LANG_CATALOGO = {
     "en": "Stone Gargoyle",
     "pt": "Gárgula de pedra"
   },
+  "cat.decor.gruta_parede.nome": {
+    "en": "Cave Wall Relief",
+    "pt": "Gruta na parede"
+  },
   "cat.decor.geiser_lava.nome": {
     "en": "Lava Geyser",
     "pt": "Gêiser de lava"
@@ -425,10 +429,6 @@ window.LANG_CATALOGO = {
   "cat.decor.grilhoes_parede.nome": {
     "en": "Wall Shackles",
     "pt": "Grilhões de parede"
-  },
-  "cat.decor.gruta_parede.nome": {
-    "en": "Cave Wall Relief",
-    "pt": "Gruta na parede"
   },
   "cat.decor.juncos.nome": {
     "en": "Reeds",
@@ -482,13 +482,13 @@ window.LANG_CATALOGO = {
     "en": "Half-Buried Bones",
     "pt": "Ossos semienterrados"
   },
-  "cat.decor.pedra_sacrificio.nome": {
-    "en": "Sacrificial Stone",
-    "pt": "Pedra de sacrifício"
-  },
   "cat.decor.pira_chamas.nome": {
     "en": "Flame Pyre",
     "pt": "Pira de chamas"
+  },
+  "cat.decor.pedra_sacrificio.nome": {
+    "en": "Sacrificial Stone",
+    "pt": "Pedra de sacrifício"
   },
   "cat.decor.placa.nome": {
     "en": "Sign",

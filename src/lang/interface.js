@@ -15,6 +15,7 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.hud.repetir_sala_tutorial": {"en": "Repeat my training room", "pt": "Repetir minha sala de treinamento"},
   "dado.acerto": {
     "en": "To-hit",
     "pt": "Acerto"
@@ -194,6 +195,14 @@ window.LANG_INTERFACE = {
   "dado.lava": {
     "en": "🔥 Lava",
     "pt": "🔥 Lava"
+  },
+  "dado.geiser_lava": {
+    "en": "🌋 Lava geyser",
+    "pt": "🌋 Gêiser de lava"
+  },
+  "dado.fumarola": {
+    "en": "🌫️ Fumarole burst",
+    "pt": "🌫️ Rajada da fumarola"
   },
   "dado.licantropia": {
     "en": "Lycanthropy — {nome}",
@@ -1370,6 +1379,34 @@ window.LANG_INTERFACE = {
   "ui.somteste.ev.explosao": {
     "en": "Explosion (mine, grenade)",
     "pt": "Explosão (mina, granada)"
+  },
+  "ui.somteste.ev.teleporte": {
+    "en": "Trap teleport",
+    "pt": "Teleporte da armadilha"
+  },
+  "ui.somteste.ev.rede": {
+    "en": "Net trap launch",
+    "pt": "Disparo da armadilha de rede"
+  },
+  "ui.somteste.ev.teto_esmagador": {
+    "en": "Crushing ceiling (rock fall and heavy impact)",
+    "pt": "Teto esmagador (rochas e impacto pesado)"
+  },
+  "ui.somteste.ev.bau_engolir": {
+    "en": "Swallowing chest (hungry bite and gulp)",
+    "pt": "Baú engolidor (abocanhada e engolida)"
+  },
+  "ui.somteste.ev.fosso_estacas": {
+    "en": "Spike pit mechanism",
+    "pt": "Mecanismo do fosso de estacas"
+  },
+  "ui.somteste.ev.fosso_veneno": {
+    "en": "Poison hiss",
+    "pt": "Chiado do veneno"
+  },
+  "ui.somteste.ev.buraco_queda": {
+    "en": "Falling into a pit",
+    "pt": "Queda no buraco"
   },
   "ui.somteste.ev.relampago": {
     "en": "Lightning (elemental bolt)",
@@ -8541,6 +8578,50 @@ window.LANG_INTERFACE = {
     "en": "Campaign",
     "pt": "Campanha"
   },
+  "ui.savegames.tipo_label": {
+    "en": "Game type",
+    "pt": "Tipo de jogo"
+  },
+  "ui.savegames.tipo_solo": {
+    "en": "Solo",
+    "pt": "Solo"
+  },
+  "ui.savegames.tipo_multiplayer": {
+    "en": "Multiplayer",
+    "pt": "Multiplayer"
+  },
+  "ui.savegames.secao_solo": {
+    "en": "🎮 Solo games",
+    "pt": "🎮 Jogos solo"
+  },
+  "ui.savegames.secao_multiplayer": {
+    "en": "👥 Multiplayer games",
+    "pt": "👥 Jogos multiplayer"
+  },
+  "ui.savegames.vazio_solo": {
+    "en": "No solo games saved.",
+    "pt": "Nenhum jogo solo salvo."
+  },
+  "ui.savegames.vazio_multiplayer": {
+    "en": "No multiplayer games saved.",
+    "pt": "Nenhum jogo multiplayer salvo."
+  },
+  "ui.save.campanha_encerrada": {
+    "en": "This campaign has ended. Create a continuation to play again.",
+    "pt": "Esta campanha foi encerrada. Crie uma continuação para jogar novamente."
+  },
+  "ui.save.carregando_jogos": {
+    "en": "Loading your saved games…",
+    "pt": "Carregando seus jogos salvos…"
+  },
+  "ui.save.falha_lista": {
+    "en": "Couldn't load your saved games. Check your connection and try again.",
+    "pt": "Não foi possível carregar seus jogos salvos. Confira a conexão e tente novamente."
+  },
+  "ui.save.tentar_novamente": {
+    "en": "Try again",
+    "pt": "Tentar novamente"
+  },
   "ui.save.codigo_4_letras": {
     "en": "The code must have 4 letters.",
     "pt": "O código deve ter 4 letras."
@@ -10441,26 +10522,6 @@ window.LANG_INTERFACE = {
     "en": "Archived ({n})",
     "pt": "Arquivados ({n})"
   },
-  "ui.savegames.secao_solo": {
-    "en": "🎮 Solo games",
-    "pt": "🎮 Jogos solo"
-  },
-  "ui.savegames.secao_multiplayer": {
-    "en": "👥 Multiplayer games",
-    "pt": "👥 Jogos multiplayer"
-  },
-  "ui.savegames.vazio_solo": {
-    "en": "No solo games saved.",
-    "pt": "Nenhum jogo solo salvo."
-  },
-  "ui.savegames.vazio_multiplayer": {
-    "en": "No multiplayer games saved.",
-    "pt": "Nenhum jogo multiplayer salvo."
-  },
-  "ui.save.campanha_encerrada": {
-    "en": "This campaign has ended. Create a continuation to play again.",
-    "pt": "Esta campanha foi encerrada. Crie uma continuação para jogar novamente."
-  },
   "ui.save.ponto.cidade": {
     "en": "Town · {local}",
     "pt": "Cidade · {local}"
@@ -10500,66 +10561,6 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"
-  },
-  "dado.geiser_lava": {
-    "en": "🌋 Lava geyser",
-    "pt": "🌋 Gêiser de lava"
-  },
-  "dado.fumarola": {
-    "en": "🌫️ Fumarole burst",
-    "pt": "🌫️ Rajada da fumarola"
-  },
-  "ui.savegames.tipo_label": {
-    "en": "Game type",
-    "pt": "Tipo de jogo"
-  },
-  "ui.savegames.tipo_solo": {
-    "en": "Solo",
-    "pt": "Solo"
-  },
-  "ui.savegames.tipo_multiplayer": {
-    "en": "Multiplayer",
-    "pt": "Multiplayer"
-  },
-  "ui.save.carregando_jogos": {
-    "en": "Loading your saved games…",
-    "pt": "Carregando seus jogos salvos…"
-  },
-  "ui.save.falha_lista": {
-    "en": "Couldn't load your saved games. Check your connection and try again.",
-    "pt": "Não foi possível carregar seus jogos salvos. Confira a conexão e tente novamente."
-  },
-  "ui.save.tentar_novamente": {
-    "en": "Try again",
-    "pt": "Tentar novamente"
-  },
-  "ui.somteste.ev.teleporte": {
-    "en": "Trap teleport",
-    "pt": "Teleporte da armadilha"
-  },
-  "ui.somteste.ev.rede": {
-    "en": "Net trap launch",
-    "pt": "Disparo da armadilha de rede"
-  },
-  "ui.somteste.ev.teto_esmagador": {
-    "en": "Crushing ceiling (rock fall and heavy impact)",
-    "pt": "Teto esmagador (rochas e impacto pesado)"
-  },
-  "ui.somteste.ev.bau_engolir": {
-    "en": "Swallowing chest (hungry bite and gulp)",
-    "pt": "Baú engolidor (abocanhada e engolida)"
-  },
-  "ui.somteste.ev.fosso_estacas": {
-    "en": "Spike pit mechanism",
-    "pt": "Mecanismo do fosso de estacas"
-  },
-  "ui.somteste.ev.fosso_veneno": {
-    "en": "Poison hiss",
-    "pt": "Chiado do veneno"
-  },
-  "ui.somteste.ev.buraco_queda": {
-    "en": "Falling into a pit",
-    "pt": "Queda no buraco"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

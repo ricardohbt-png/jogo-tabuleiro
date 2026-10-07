@@ -16720,6 +16720,7 @@ function atualizarEfeitosVisuais(heroi){
 function renderPlayers(state){
   const el=$('player-cards'); el.innerHTML='';
   for(const p of state.players){
+    if (p.training_ally) continue;
     const isMe=p.id===GS.myPid, isCur=p.id===state.current_turn;
     const meu = GS.temGrupo && GS.ehMeuHeroi(p.id);   // Solo com grupo
     const disc=p.connected===false;
@@ -24875,7 +24876,8 @@ function renderMyPanel(state){
       // perdido depois que o balão de fala some. `texto_curto` é conteúdo
       // autoral (português), então não passa por t().
       const lic = GS.licaoAtual();
-      if (!lic) return '';
+      if (!lic) return GS.podeRepetirTutorial()
+        ? `<button onclick="GS.repetirTutorial()" style="margin-top:6px">${t('ui.hud.repetir_sala_tutorial')}</button>` : '';
       const prog = lic.vezes > 1 ? ` (${lic.feito}/${lic.vezes})` : '';
       // Clicável: quem fechou a janela da lição precisa de um caminho de volta.
       return `<div onclick="_reabrirJanelaLicao()" title="${t('ui.hud.banner_licao_reabrir')}" style="margin-top:4px; padding:5px 8px; background:rgba(240,200,103,0.12); border:1px solid #f0c86766; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif; cursor:pointer;">

@@ -95,6 +95,7 @@
     { v: "usar_instrumento" },
     { v: "arremessar_item" },
     { v: "desarmar_armadilha" },
+    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo"].map(v => ({v})),
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
@@ -2844,6 +2845,8 @@
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ ${t("ui.editor.masmorra.painel.sala_n", { n: ref.id })}</b>
         <label>${t("ui.editor.masmorra.painel.role")}</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>
+        <label>${t("ui.editor.masmorra.painel.heroi_permitido")}</label>
+        <select id="p-allowed-class"><option value="">${t("ui.editor.masmorra.painel.todas_classes")}</option>${HERO_SPAWN_META.map(h => `<option value="${h.id}"${ref.allowed_class === h.id ? " selected" : ""}>${h.emoji} ${nomeCat("classe", h.id, h.id)}</option>`).join("")}</select>
         <label><input type="checkbox" id="p-locked" ${ref.locked ? "checked" : ""}> ${t("ui.editor.masmorra.painel.trancada")}</label>
         <label style="display:block;margin-top:6px"><input type="checkbox" id="p-required" ${ref.required ? "checked" : ""}> ${t("ui.editor.masmorra.painel.sala_obrigatoria")}</label>
         ${ref.required ? `<label>${t("ui.editor.masmorra.painel.modo")}</label><select id="p-reqmode"><option value="clear"${(ref.required_mode||"clear")==="clear"?" selected":""}>${t("ui.editor.masmorra.painel.limpar_matar_monstros")}</option><option value="visit"${ref.required_mode==="visit"?" selected":""}>${t("ui.editor.masmorra.painel.visitar_entrar")}</option></select>` : ""}
@@ -2854,6 +2857,7 @@
           <button id="p-del-keep">${t("ui.editor.masmorra.painel.deletar_manter_chao")}</button>
           <button id="p-del-clear">${t("ui.editor.masmorra.painel.deletar_limpar_chao")}</button>
         </div>`;
+      document.getElementById("p-allowed-class").onchange = e => { if (e.target.value) ref.allowed_class = e.target.value; else delete ref.allowed_class; render(); updateStatus(); };
       document.getElementById("p-role").onchange = e => { ref.role = e.target.value; render(); };
       document.getElementById("p-locked").onchange = e => { ref.locked = e.target.checked; render(); };
       document.getElementById("p-required").onchange = e => { if (e.target.checked) { ref.required = true; if (!ref.required_mode) ref.required_mode = "clear"; } else { delete ref.required; delete ref.required_mode; } renderPanel(); };
@@ -3594,10 +3598,12 @@
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       saida_permitida: S.startMode !== "hero_spawns" && S.meta.saida_permitida !== false,
       start_mode: S.startMode,
+      ...(S.trainingMode ? { tutorial_training: true } : {}),
       grid: { w: S.grid.w, h: S.grid.h },
       tiles: S.tiles.map(row => row.slice()),
       rooms: S.rooms.map(r => {
         const out = Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: r.locked, doors: r.doors.map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode || "clear" } : {});
+        if (r.allowed_class) out.allowed_class = r.allowed_class;
         const orientations = {};
         for (const d of r.doors) {
           const rot = doorRotationAt(d[0], d[1]);
@@ -3702,12 +3708,17 @@
         if (trig.tipo === "proximidade") trig.raio = tg.raio || 2;
         const out = { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
+        for (const key of ["requisitos", "sala_exclusiva"]) if (f[key]) out[key] = JSON.parse(JSON.stringify(f[key]));
         if (f.ordem != null) out.ordem = f.ordem;
         if (f.tarefa && f.tarefa.tipo) out.tarefa = {
           tipo: f.tarefa.tipo,
           ...(f.tarefa.alvo != null && f.tarefa.alvo !== "" ? { alvo: f.tarefa.alvo } : {}),
           vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
           texto_curto: f.tarefa.texto_curto || "",
+          ...(f.tarefa.alvo_id ? { alvo_id: f.tarefa.alvo_id } : {}),
+          ...(f.tarefa.cura_efetiva ? { cura_efetiva: true } : {}),
+          ...(f.tarefa.requer_veneno ? { requer_veneno: true } : {}),
+          ...(f.tarefa.requer_sagrado ? { requer_sagrado: true } : {}),
         };
         const ef = {};
         for (const k of ["fome", "sede"])
@@ -4018,9 +4029,11 @@
                ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
                saida_permitida: obj.saida_permitida !== false };
+    S.trainingMode = obj.tutorial_training === true;
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
     S.rooms = (obj.rooms || []).map(r => Object.assign({ id: r.id, x: r.x, y: r.y, w: r.w, h: r.h, role: r.role, locked: !!r.locked, doors: (r.doors || []).map(d => d.slice()) }, r.required ? { required: true, required_mode: r.required_mode === "visit" ? "visit" : "clear" } : {}));
+    S.rooms.forEach((r, i) => { if (obj.rooms[i].allowed_class) r.allowed_class = obj.rooms[i].allowed_class; });
     S.doorConditions = {};
     for (const [key, c] of Object.entries(obj.door_conditions || {})) {
       if (!/^\d+,\d+$/.test(key) || !c || typeof c !== "object") continue;
@@ -4169,11 +4182,13 @@
       const tar = f.tarefa && f.tarefa.tipo ? {
         tipo: f.tarefa.tipo,
         alvo: f.tarefa.alvo ?? null,
+        ...Object.fromEntries(["alvo_id", "cura_efetiva", "requer_veneno", "requer_sagrado"].filter(k => f.tarefa[k]).map(k => [k, f.tarefa[k]])),
         vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
         texto_curto: f.tarefa.texto_curto || "",
       } : null;
       return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger,
                classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar,
+               requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
                efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null };
     });
     S.nextFalaId = S.falas.length;

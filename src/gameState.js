@@ -893,6 +893,12 @@ const GS = (() => {
     const onFloor = vooLivre ? t !== undefined
       : _ponteEm(x, y) || t === TILE_FLOOR || (t === TILE_DOOR && openDoors.has(`${x},${y}`)) || illusion;
     if (!onFloor) return false;
+    const state = moveCtx?.state || gameState;
+    let actor = moveCtx?.actor;
+    if (actor?.owner) actor = state?.players?.find(p => p.id === actor.owner);
+    if (actor && (state?.rooms || []).some(r => r.allowed_class && r.allowed_class !== actor.class_id
+        && ((x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
+            || (r.doors || []).some(d => d[0] === x && d[1] === y)))) return false;
     if (fromX != null && fromY != null
         && (_custoElevacao(moveCtx, fromX, fromY, x, y) > 1
             || _quedaNoPasso(moveCtx, fromX, fromY, x, y))) return false;
@@ -2480,6 +2486,13 @@ const GS = (() => {
 
   // ── Tutorial ── Lição pendente do MEU herói, ou null. Leitura pura: o bloco
   // vem chaveado por classe porque game_state é um broadcast único.
+  function repetirTutorial() { send({ type: 'repetir_tutorial' }); }
+  function podeRepetirTutorial() {
+    const p = (gameState?.players || []).find(actor => actor.id === myPid);
+    return !!(p && gameState?.tutorial?.training && (gameState.rooms || []).some(r =>
+      r.allowed_class === p.class_id && p.pos[0] >= r.x && p.pos[0] < r.x+r.w
+      && p.pos[1] >= r.y && p.pos[1] < r.y+r.h));
+  }
   function licaoAtual() {
     if (!gameState || !gameState.tutorial) return null;
     const me = (gameState.players || []).find(p => p.id === myPid);
@@ -3806,7 +3819,7 @@ const GS = (() => {
     masterManualMovePaths,
     masterAttackCharges,
     masterPodeAtacar,
-    licaoAtual,
+    licaoAtual, repetirTutorial, podeRepetirTutorial,
 
     // ── Prévia do editor (index.html?preview=1) ──
     isPreview: PREVIEW,

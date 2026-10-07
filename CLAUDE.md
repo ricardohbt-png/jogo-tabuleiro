@@ -2,6 +2,14 @@
 
 ## Visão Geral
 
+### Campo de Treinamento — salas por herói (2026-10-01)
+
+`tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.
+
+Lições aceitam `requisitos` (nível, Guilda, magia utilizável, tipo de magia, instrumento), `sala_exclusiva` e condições de resultado na tarefa. Eventos de cura contextualizam alvo e vida recuperada. A demonstração de Protetor usa o funil real de dano; o refém precisa ser protegido antes da cura. Eventos de manutenção, ataque extra, detecção, resgate, purificação e ressurreição avançam as trilhas.
+
+`tutorial_history` integra a ficha durável. `training_mode`, `training_allies` e `training_state` integram a foto da sala. `repetir_tutorial` reinicia somente os exercícios da classe na própria sala; mantém o histórico. NPCs não ocupam vagas, fila de turnos ou fichas de campanha. Itens emprestados e servos de treino são limpos na saída. Autoria: `tools/configurar_tutorial_salas.py`; roteiro e limites: `docs/tutorial-salas-por-heroi.md`; cobertura: `tools/test_tutorial_salas.py`.
+
 RPG de tabuleiro multiplayer online (estilo HeroQuest / D&D) para até 6 jogadores.
 Servidor WebSocket Python + cliente HTML/JS com renderização Three.js.
 

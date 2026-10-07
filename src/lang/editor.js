@@ -8,6 +8,35 @@
 // REGRAS: JSON estrito DENTRO do objeto (aspas duplas, sem vírgula sobrando,
 // sem comentário lá dentro). Parâmetros {nome}, iguais nos dois idiomas.
 window.LANG_EDITOR = {
+  "ui.editor.masmorra.licao.libertar_refem": {
+    "en": "Free the hostage",
+    "pt": "Libertar o refém"
+  },
+  "ui.editor.masmorra.licao.proteger": {
+    "en": "Share damage with an ally",
+    "pt": "Compartilhar dano com um aliado"
+  },
+  "ui.editor.masmorra.licao.regenerar": {
+    "en": "Recover HP by regeneration",
+    "pt": "Recuperar vida pela regeneração"
+  },
+  "ui.editor.masmorra.licao.ataque_extra": {
+    "en": "Use an extra attack",
+    "pt": "Usar o ataque extra"
+  },
+  "ui.editor.masmorra.licao.manter_cancao": {
+    "en": "Maintain the song",
+    "pt": "Manter a canção"
+  },
+  "ui.editor.masmorra.licao.encerrar_cancao": {
+    "en": "Stop the song",
+    "pt": "Encerrar a canção"
+  },
+  "ui.editor.masmorra.licao.comandar_servo": {
+    "en": "Command a servant",
+    "pt": "Comandar um servo"
+  },
+  "ui.editor.masmorra.painel.heroi_permitido": { "en": "Allowed hero", "pt": "Herói permitido" },
   "ui.editor.topo.titulo": {
     "en": "Dungeon Editor — Legends for Hire",
     "pt": "Editor de Masmorras — Legends for Hire"
@@ -1096,6 +1125,10 @@ window.LANG_EDITOR = {
     "en": "charges",
     "pt": "cargas"
   },
+  "ui.editor.masmorra.painel.intervalo_fumarola": {
+    "en": "burst every N rounds",
+    "pt": "rajada a cada N rodadas"
+  },
   "ui.editor.masmorra.painel.mensagem_placa": {
     "en": "plaque message",
     "pt": "mensagem da placa"
@@ -2171,10 +2204,6 @@ window.LANG_EDITOR = {
   "ui.editor.subtipo.raca_padrao": {
     "en": "Standard Race",
     "pt": "Raça Padrão"
-  },
-  "ui.editor.masmorra.painel.intervalo_fumarola": {
-    "en": "burst every N rounds",
-    "pt": "rajada a cada N rodadas"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);

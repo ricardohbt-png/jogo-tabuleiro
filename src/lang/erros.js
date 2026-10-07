@@ -5,6 +5,10 @@
 // o slug do texto original, o que garante que a mesma recusa use sempre a
 // mesma frase.
 window.LANG_ERROS = {
+  "erro.sala_exclusiva_heroi": {
+    "en": "This room is reserved for {heroi}. Find your hero’s training room.",
+    "pt": "Esta sala é destinada a {heroi}. Procure a sala do seu herói."
+  },
   "erro.alvo_oculto_nas_sombras": {
     "en": "That creature is hidden in the shadows and cannot be targeted.",
     "pt": "Essa criatura está escondida nas sombras e não pode ser alvo."

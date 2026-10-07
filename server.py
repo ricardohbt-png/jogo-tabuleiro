@@ -28,6 +28,7 @@ import traceback
 import unicodedata
 import urllib.parse
 from copy import deepcopy
+from tutorial_training import TutorialTraining
 import aiohttp
 from aiohttp import web
 
@@ -47,7 +48,8 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  "usar_tecnica", "usar_instrumento", "desarmar_armadilha",
                  # Arremesso tem handler proprio (handle_throw_item): usar_item
                  # sai cedo no ramo "throwable" e nunca chega ao gancho.
-                 "arremessar_item")
+                 "arremessar_item", "libertar_refem", "proteger", "regenerar",
+                 "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
@@ -2920,7 +2922,7 @@ _DURABLE_FIELDS = (
     "bag", "bag_size", "gear", "auto_equip_arrows_enabled", "auto_equip_arrows_order",
     "guild_owned", "guild_equip", "magias_conhecidas",
     "maldicoes",
-    "renome_individual", "metamorfose_formas_desbloqueadas",
+    "renome_individual", "metamorfose_formas_desbloqueadas", "tutorial_history",
 )
 
 SHORTCUT_SLOT_COUNT = 10
@@ -3098,6 +3100,7 @@ FOTO_SALA_CATEGORIAS = {
     "chests": "foto", "ground_items": "foto", "traps": "foto", "armadilhas": "foto",
     "_armadilha_seq": "foto", "zonas_especiais": "foto", "_terrenos_inverno": "foto",
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
+    "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
     # objetivos
@@ -7225,6 +7228,10 @@ def validar_dungeon(defn):
     for r in rooms:
         if not isinstance(r, dict):
             return False, "cada sala deve ser um objeto JSON."
+        if r.get("allowed_class") is not None and r["allowed_class"] not in LICAO_CLASSES:
+            return False, "allowed_class da sala deve ser uma das seis classes."
+    if "tutorial_training" in defn and not isinstance(defn["tutorial_training"], bool):
+        return False, "tutorial_training deve ser booleano."
     # Precisa de â‰¥1 sala e de uma sala de entrada â€” enter_dungeon usa a sala
     # role=="entrance" no modo tradicional; hero_spawns pode iniciar em salas comuns.
     if not rooms:
@@ -7618,6 +7625,18 @@ def validar_dungeon(defn):
         _cls = _f.get("classe")
         if _cls is not None and _cls not in LICAO_CLASSES:
             return False, f"lição com classe inválida: {_cls!r}."
+        _req = _f.get("requisitos")
+        if _req is not None:
+            if not isinstance(_req, dict) or set(_req) - {"nivel", "guild", "magia", "magia_tipo", "instrumento"}:
+                return False, "requisitos de lição inválidos."
+            if "nivel" in _req and (type(_req["nivel"]) is not int or _req["nivel"] < 1):
+                return False, "nível mínimo da lição inválido."
+            if "guild" in _req and _req["guild"] not in GUILD_CATALOG:
+                return False, "requisito de Guilda desconhecido."
+            if "magia" in _req and _req["magia"] not in GRIMORIO:
+                return False, "requisito de magia desconhecido."
+            if "magia_tipo" in _req and _req["magia_tipo"] not in ("qualquer", "dano", "save", "duracao"):
+                return False, "tipo de magia da lição inválido."
         _ord = _f.get("ordem")
         if _ord is not None and (not isinstance(_ord, int) or isinstance(_ord, bool)):
             return False, "ordem de lição deve ser um inteiro."
@@ -10562,7 +10581,10 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class GameRoom:
+class GameRoom(TutorialTraining):
+    def _tutorial_api(self):
+        return sys.modules[__name__]
+
     def __init__(self, code):
         self.code = code
         self.connections = {}   # pid -> websocket
@@ -10749,6 +10771,9 @@ class GameRoom:
         self.falas = []            # Falas de NPC (marcadores autorados)
         self.licoes = []           # Tutorial: falas que são lição (classe e/ou tarefa)
         self.licoes_feitas = set() # ids de lição cumpridos por qualquer herói
+        self.training_mode = False
+        self.training_allies = {}
+        self.training_state = {}
         self._decor_block_tiles = set()
         self._decor_tall_tiles = set()
         self._decor_low_tiles = set()
@@ -13158,7 +13183,7 @@ class GameRoom:
     def _protetor_target(self, alvo_id):
         if str(alvo_id) == PROTETOR_PRISIONEIRO_ID:
             return self.prisoner
-        return self.players.get(alvo_id)
+        return self.players.get(alvo_id) or self.training_allies.get(alvo_id)
 
     def _reduzir_dano_protetor(self, alvo, dano):
         """Redução pessoal de Richard enquanto mantém o Protetor ativo."""
@@ -14797,6 +14822,7 @@ class GameRoom:
             self.rooms.append({
                 "id": r["id"], "x": x, "y": y, "w": w, "h": h,
                 "cx": x + w // 2, "cy": y + h // 2, "role": role,
+                **({"allowed_class": r["allowed_class"]} if r.get("allowed_class") else {}),
                 "cleared": role in ("entrance", "empty"),
                 "looted": False,
                 "locked": bool(r.get("locked", role != "entrance")),
@@ -14993,6 +15019,8 @@ class GameRoom:
                           "nome": "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
                           "freed": False, "alive": True}
                          if pr else None)
+        self._training_init(defn)
+        self._training_add_unlocked_lessons()
         # Marca o baÃº-chave por posiÃ§Ã£o (o dict de baÃº vivo nÃ£o carrega a flag).
         keyposes = {tuple(c["pos"]) for c in defn.get("chests", []) if c.get("key_objective")}
         for ch in self.chests.values():
@@ -17511,6 +17539,10 @@ class GameRoom:
             return
 
         nx, ny = p["pos"][0] + dx, p["pos"][1] + dy
+        if not await self._training_check_entry(pid, p, nx, ny):
+            return
+        if any(a.get("alive") and a["pos"] == [nx, ny] for a in self.training_allies.values()):
+            return
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
         voo_livre = self._voo_ignora_obstaculos(p)
@@ -17822,6 +17854,8 @@ class GameRoom:
 
         owners = self._door_owner_rooms(tx, ty)
         locked_owners = [r for r in owners if r.get("locked")]
+        if not await self._training_check_entry(pid, p, tx, ty):
+            return
         if (tx, ty) in self.door_conditions and not self._door_condition_satisfied((tx, ty)):
             await self.send_to(pid, {"type": "error", "msg": self._door_condition_message((tx, ty))})
             return
@@ -17857,6 +17891,7 @@ class GameRoom:
 
         O progresso de lição pertence à execução da masmorra, não à carreira do
         personagem: quem rejoga o tutorial recebe as lições de novo."""
+        self.training_mode = defn.get("tutorial_training") is True
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
         self.licoes = [f for f in self.falas if _e_licao(f)]
         self.licoes_feitas = set()
@@ -17864,6 +17899,13 @@ class GameRoom:
             p["licao_atual"] = None
             p["licao_progresso"] = {}
             p["licoes_feitas"] = []
+            if self.training_mode:
+                done = p.get("tutorial_history") or []
+                for lesson in self.licoes:
+                    if lesson["id"] in done:
+                        p["licoes_feitas"].append(lesson["id"])
+                        p["licao_progresso"][lesson["id"]] = (lesson.get("tarefa") or {}).get("vezes", 1)
+                        self.licoes_feitas.add(lesson["id"])
 
     @staticmethod
     def _licao_alvo_ok(esperado, real):
@@ -17881,10 +17923,14 @@ class GameRoom:
         if lic["id"] not in feitas:
             feitas.append(lic["id"])
         self.licoes_feitas.add(lic["id"])
+        if self.training_mode:
+            history = p.setdefault("tutorial_history", [])
+            if lic["id"] not in history:
+                history.append(lic["id"])
         if p.get("licao_atual") == lic["id"]:
             p["licao_atual"] = None
 
-    async def _licao_evento(self, p, verbo, alvo=None):
+    async def _licao_evento(self, p, verbo, alvo=None, contexto=None):
         """Registra progresso na lição pendente do jogador.
 
         Chamado do caminho de SUCESSO dos handlers — ação recusada não conta.
@@ -17900,6 +17946,18 @@ class GameRoom:
         lic = next((l for l in self.licoes if l["id"] == lic_id), None)
         tar = (lic or {}).get("tarefa") or {}
         if not lic or tar.get("tipo") != verbo:
+            return
+        if not self._training_requirements(p, lic):
+            return
+        if lic.get("sala_exclusiva") and not self._licao_no_lugar(p, lic["pos"]):
+            return
+        if tar.get("requer_veneno") and not (contexto or {}).get("veneno"):
+            return
+        if tar.get("requer_sagrado") and not p.get("golpe_sagrado_ativo"):
+            return
+        if tar.get("alvo_id") and (contexto or {}).get("alvo_id") != tar["alvo_id"]:
+            return
+        if tar.get("cura_efetiva") and (contexto or {}).get("cura", 0) <= 0:
             return
         if not self._licao_alvo_ok(tar.get("alvo"), alvo):
             return
@@ -17935,6 +17993,7 @@ class GameRoom:
         if fala.get("tarefa"):
             p["licao_atual"] = fala["id"]
         await self._licao_efeito(p, fala)
+        await self._training_prepare(p, fala)
         # O cliente trata lição e fala comum de formas diferentes: a fala some
         # sozinha em segundos, a lição fica numa janela até o jogador fechar.
         payload["licao_id"] = fala["id"]
@@ -17968,12 +18027,15 @@ class GameRoom:
                    for outra in self.licoes
                    if outra.get("ordem") is not None
                    and outra["ordem"] < ordem
-                   and outra.get("classe") == fala.get("classe"))
+                   and outra.get("classe") == fala.get("classe")
+                   and self._training_requirements(p, outra))
 
     def _fala_elegivel(self, p, fala):
         """Se esta fala pode disparar agora para este jogador."""
         if not _e_licao(fala):
             return not fala.get("disparada")
+        if not self._training_requirements(p, fala):
+            return False
         if fala.get("classe") and fala["classe"] != p.get("class_id"):
             return False
         if fala["id"] in (p.get("licao_progresso") or {}):
@@ -18613,6 +18675,9 @@ class GameRoom:
             # Alvo de treino preso a uma habilidade (tutorial): recusado ANTES
             # do custo e do gasto de acao, para que errar a habilidade nao cobre
             # fome/sede nem queime o turno — o jogador arma a certa e repete.
+            if target.get("training_target") and target.get("training_class") != p.get("class_id"):
+                await self._training_check_entry(pid, p, *target["pos"])
+                return
             _so_hab = target.get("so_habilidade")
             if _so_hab and _so_hab not in set(buffs or []):
                 await self.send_to(pid, {"type": "error",
@@ -18813,6 +18878,8 @@ class GameRoom:
                 # da para saber que ele usou uma — e ja passou do teto e do custo,
                 # entao so conta o que realmente valeu.
                 for _sk in sel:
+                    if _sk["id"] == "furia_berserker":
+                        p["training_furia_round"] = self.round_num
                     await self._licao_evento(p, "usar_habilidade", alvo=_sk["id"])
                 nomes = []
                 for s in sel:
@@ -19121,7 +19188,8 @@ class GameRoom:
                 # que o _monster_dies logo abaixo cobra. Na ordem inversa, a
                 # lição de derrotar era avaliada enquanto a de acertar ainda
                 # estava pendente — e ficava para trás sem alvo.
-                await self._licao_evento(p, "atacar", alvo=target.get("type"))
+                await self._licao_evento(p, "atacar", alvo=target.get("type"),
+                                        contexto={"veneno": bool(_melee_poison_vid or _ranged_poison_vid)})
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -19241,6 +19309,8 @@ class GameRoom:
             await self.gm_say(
                 T("narracao.obtem_um_19_20_natural_com_o_machado_dup", heroi=p['name']))
 
+        if p.get("training_furia_round") == self.round_num and p.get("skill_ataques_extras", 0) == 0:
+            await self._licao_evento(p, "ataque_extra", alvo="furia_berserker")
         if p.get("skill_ataques_extras", 0) > 0:
             p["skill_ataques_extras"] -= 1
             await self.gm_say(T("narracao.furia_berserker_ataque_extra_disponivel", heroi=p['name']))
@@ -19925,6 +19995,8 @@ class GameRoom:
                 animado["max_hp"] = corpse.get("vida_max", ficha_original.get("max_hp", 10))
                 animado["hp"] = animado["max_hp"]
             animados.append(animado)
+            if corpse.get("training_target"):
+                animado["training_target"] = True
             self.corpses.pop(cadaver_id, None)
             self.monsters.pop(cadaver_id, None)   # remove o corpo morto subjacente
             await self.gm_say(
@@ -19955,7 +20027,8 @@ class GameRoom:
             "sede":        p["sede"],
             "animados":    animados,
         })
-        await self._licao_evento(p, "usar_habilidade", alvo="animar_mortos")
+        if resultado == "sucesso":
+            await self._licao_evento(p, "usar_habilidade", alvo="animar_mortos")
         await self.push_state()
 
     # â”€â”€ Animados em combate (sistema completo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -20170,6 +20243,9 @@ class GameRoom:
     def _tile_livre_para_animado(self, nx, ny, self_id, origem=None, atravessar=False):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny): return False
+        actor = next((a for a in self._all_animados() if a.get("id") == self_id), None)
+        if actor and self._training_room(actor, nx, ny): return False
+        if any(a.get("alive") and a["pos"] == [nx, ny] for a in self.training_allies.values()): return False
         if origem is not None:
             criatura = next((a for a in self._all_animados() if a.get("id") == self_id), None)
             if criatura is None and self.prisoner and self.prisoner.get("id") == self_id:
@@ -20316,6 +20392,7 @@ class GameRoom:
             ) if eh_eletrico else self._cardinal_adjacent(a["pos"], target["pos"])
 
             if pode_atacar:
+                await self._licao_evento(p, "comandar_servo")
                 self._face_toward(a, target["pos"])
                 self._monster_register_attack_alert(a, target)
                 if eh_elemental:
@@ -21770,6 +21847,8 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = a["pos"][0] + dx, a["pos"][1] + dy
+        if not await self._training_check_entry(pid, a, nx, ny):
+            return
         if not self._tile_livre_para_animado(nx, ny, a["id"], a["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
         old_pos = list(a["pos"])
@@ -22248,6 +22327,7 @@ class GameRoom:
         p["cancao_atributos"] = []
         p["cancao_custo"]     = {"fome": 0, "sede": 0}
         await self.gm_say(T("narracao.encerra_a_cancao_heroica", heroi=p['name']))
+        await self._licao_evento(p, "encerrar_cancao")
         await self.push_state()
 
     async def _aplicar_buffs_cancao(self, bardo):
@@ -22257,14 +22337,14 @@ class GameRoom:
             attr = next((a for a in CANCAO_ATRIBUTOS if a["id"] == attr_id), None)
             if attr:
                 buffs[attr["efeito"]] = self._cancao_nivel_atributo(bardo, attr_id)
-        for jogador in self.players.values():
+        for jogador in self._training_heal_targets(bardo):
             if not jogador.get("alive"): continue
             if not self._no_raio(bardo, jogador, CANCAO_RAIO): continue
             jogador["buffs_cancao"] = buffs.copy()
 
     async def _remover_buffs_cancao(self, bardo):
         """Remove os buffs da canção de todos os jogadores."""
-        for jogador in self.players.values():
+        for jogador in list(self.players.values()) + list(self.training_allies.values()):
             jogador.pop("buffs_cancao", None)
 
     def _custo_fome_sede_efetivo(self, p, fome, sede, contexto=None):
@@ -22336,6 +22416,7 @@ class GameRoom:
         self._pagar_fome_sede(p, custo["fome"], custo["sede"])
         await self._remover_buffs_cancao(p)
         await self._aplicar_buffs_cancao(p)
+        await self._licao_evento(p, "manter_cancao")
         labels = [T("ui.cancao.atributo." + x) for x in p.get("cancao_atributos", [])]
         await self.gm_say(T("narracao.cancao_heroica_de_manutencao", heroi=p['name'], labels=labels, custo_fome=custo['fome'], custo_sede=custo['sede']))
 
@@ -22524,7 +22605,8 @@ class GameRoom:
         if p["fome"] < _ef:
             await self.send_to(pid, {"type": "error", "msg": T("erro.fome_insuficiente_precisa", fome=custo_fome)}); return
 
-        alvo = self.players.get((data or {}).get("target_id"))
+        alvo = (self.players.get((data or {}).get("target_id"))
+                or self._training_ally(p, (data or {}).get("target_id")))
         if p.get("ultimo_esforco_ativo") and (data or {}).get("target_id") == pid:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.em_ultimo_esforco_voce_nao_pode_se_curar")}); return
@@ -22564,6 +22646,7 @@ class GameRoom:
         dados_str = "+".join(str(d) for d in dados)
         await self.gm_say(
             T("narracao.cura_d8_hp_alcance_q", heroi=p['name'], alvo=nome_criatura(alvo), num_dados=num_dados, dados_str=dados_str, if_bonus_int_0_else='+' if bonus_int >= 0 else '', bonus_int=bonus_int, cura_real=cura_real, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp'], alcance_tiles=alcance_tiles, custo_fome=custo_fome, custo_sede=custo_sede))
+        await self._training_event(p, "curar", alvo, cura_real)
         await self._licao_evento(p, "usar_habilidade", alvo="cura")
         await self.push_state()
 
@@ -22591,7 +22674,7 @@ class GameRoom:
                 "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
         targets_visual = []
-        for aliado in self.players.values():
+        for aliado in self._training_heal_targets(p):
             if not aliado.get("alive"): continue
             if aliado["id"] == pid and p.get("ultimo_esforco_ativo"): continue
             if not self._no_raio(p, aliado, raio): continue
@@ -22610,7 +22693,7 @@ class GameRoom:
         await self.broadcast({"type": "dice_roll", "die": "d8", "value": sum(dados), "label": T("dado.cura_em_area")})
 
         curados = []
-        for aliado in self.players.values():
+        for aliado in self._training_heal_targets(p):
             if not aliado.get("alive"): continue
             if aliado["id"] == pid and p.get("ultimo_esforco_ativo"): continue
             if not self._no_raio(p, aliado, raio): continue
@@ -22618,6 +22701,7 @@ class GameRoom:
             if not self._tem_linha_de_visao(p["pos"], aliado["pos"]): continue
             cura_real = self._curar_hp(aliado, cura, "Cura em Massa")
             if cura_real > 0:
+                await self._training_event(p, "curar", aliado, cura_real)
                 curados.append(f"{aliado['name']}(+{cura_real})")
 
         await self.broadcast({
@@ -22744,7 +22828,8 @@ class GameRoom:
                 "msg": T("erro.voce_ainda_nao_aprendeu_a_purificar_este")}); return
         custo = dict(self.PURIFICACAO_CUSTOS[tipo])
 
-        alvo = self.players.get((data or {}).get("target_id"))
+        alvo = (self.players.get((data or {}).get("target_id"))
+                or self._training_ally(p, (data or {}).get("target_id")))
         if not alvo or not alvo.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, 1):
@@ -22823,6 +22908,7 @@ class GameRoom:
             })
             await self.gm_say(
                 T("narracao.purifica_livre_de", heroi=p['name'], alvo=nome_criatura(alvo), nomes_tipo=nomes[tipo], custo_fome=custo['fome'], custo_sede=custo['sede']))
+            await self._licao_evento(p, "usar_habilidade", alvo="purificacao", contexto={"alvo_id": alvo["id"]})
             await self.push_state()
 
     async def handle_ressurreicao(self, pid, data):
@@ -22846,7 +22932,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.recursos_insuficientes_precisa_fome_sede", fome=custo_fome, sede=custo_sede)}); return
 
-        alvo = self.players.get((data or {}).get("target_id"))
+        alvo = (self.players.get((data or {}).get("target_id"))
+                or self._training_ally(p, (data or {}).get("target_id")))
         if not alvo:
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_nao_encontrado")}); return
         if alvo.get("alive"):
@@ -22881,6 +22968,7 @@ class GameRoom:
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
+        await self._licao_evento(p, "usar_habilidade", alvo="ressurreicao", contexto={"alvo_id": alvo["id"]})
 
         await self.gm_say(
             T("narracao.ressurreicao_traz_de_volta_a_vida_com_hp", heroi=p['name'], alvo=nome_criatura(alvo), alvo_hp=alvo['hp'], custo_fome=custo_fome, custo_sede=custo_sede))
@@ -22935,6 +23023,7 @@ class GameRoom:
 
         await self.gm_say(
             T("narracao.usa_imposicao_das_maos_em_cura_hp", heroi=p['name'], alvo=nome_criatura(alvo), cura_efetiva=cura_efetiva, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp'], fome_cost=fome_cost, sede_cost=sede_cost))
+        await self._training_event(p, "curar", alvo, cura_efetiva)
         await self._licao_evento(p, "usar_habilidade", alvo="imposicao_maos")
         await self.push_state()
 
@@ -23154,7 +23243,8 @@ class GameRoom:
                 p["regeneracao_ativa"] = False
                 await self.gm_say(T("narracao.regeneracao_divina_de_se_interrompe_recu", heroi=p['name']))
             else:
-                self._curar_hp(p, 1, "Regeneração Divina")
+                _cura_treino = self._curar_hp(p, 1, "Regeneração Divina")
+                await self._training_event(p, "regenerou", p, _cura_treino)
                 p["fome"] = max(0, p["fome"] - 1)
                 p["sede"] = max(0, p["sede"] - 1)
                 await self.gm_say(T("narracao.regeneracao_divina_1_hp_1_1", heroi=p['name'], p_hp=p['hp'], p_max_hp=p['max_hp']))
@@ -23389,6 +23479,7 @@ class GameRoom:
         limpeza, já que o broadcast do city_state acontece aqui dentro."""
         # Masmorra ainda aberta (todos subiram a escada): a foto passa a ser a
         # "cidade_com_masmorra", gravada no fim; senão a aventura acabou.
+        self._training_cleanup()
         masmorra_aberta = self.dungeon_generated
         if masmorra_aberta:
             self._ultima_foto = None
@@ -26678,6 +26769,8 @@ class GameRoom:
             return False
         if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
             return False
+        if self._training_room(alvo, tx, ty):
+            return False
         if self.tiles[ty][tx] == WALL or self._blocks_tile(tx, ty):
             return False
         alvo_id = alvo.get("id") if alvo else None
@@ -28315,6 +28408,9 @@ class GameRoom:
         armadilhas e outras fontes também passam pelo Protetor. O bypass é
         interno e evita dividir novamente a parcela já transferida.
         """
+        source = self.players.get(killer_pid)
+        if source and alvo.get("training_target") and source.get("class_id") != alvo.get("training_class"):
+            return
         if dano <= 0 or self._fosso_protegido(alvo):
             return
         if not _protetor_bypass:
@@ -34204,7 +34300,7 @@ class GameRoom:
         adj.sort(key=lambda p: (max(abs(p[0] - sx), abs(p[1] - sy)), abs(p[0] - sx) + abs(p[1] - sy), p[1], p[0]))
         candidatos.extend(adj)
         for x, y in candidatos:
-            if self._blocks_tile(x, y):
+            if self._blocks_tile(x, y) or self._training_room(alvo, x, y):
                 continue
             if self._entity_blocks(x, y, exclude_pid=alvo.get("id")):
                 continue
@@ -35114,7 +35210,7 @@ class GameRoom:
         elif total >= dif:
             custo_ouro_arm = tipo.get("custo_ouro", 0)
             recuperou = False
-            if tem_espec(p, "ladino_desarme_3") and custo_ouro_arm > 0:
+            if tem_espec(p, "ladino_desarme_3") and custo_ouro_arm > 0 and arm.get("id") != "trap_treino_luccas":
                 d20r = random.randint(1, 20)
                 totalr = d20r + bonus + self._desarme_bonus(p)
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20r,
@@ -35222,6 +35318,8 @@ class GameRoom:
         reveladas = self._revelar_armadilhas_luccas(p)
         await self.gm_say(
             T("narracao.ativa_a_deteccao_de_armadilhas_armadilha", heroi=p['name'], reveladas=reveladas))
+        if reveladas:
+            await self._licao_evento(p, "usar_habilidade", alvo="detectar_armadilhas")
         await self.push_state()
 
     async def _cobrar_manutencao_detectar(self, p):
@@ -35335,6 +35433,8 @@ class GameRoom:
             await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
 
         vid = frasco["veneno_id"]
+        if self.training_mode and frasco.get("tutorial_loan"):
+            self.training_state.setdefault(p["class_id"], {})["loan_poison"] = vid
         p["bag"].remove(frasco)
         p["sede"] = max(0, p["sede"] - custo_sede)
         _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
@@ -36066,6 +36166,7 @@ class GameRoom:
         p_dor = self.players.get(pid)
         if p_dor:
             await self._cobrar_dor_constante(p_dor)
+            await self._training_end_turn(p_dor)
             await self._licao_evento(p_dor, "encerrar_turno")
         # Ãšltimo EsforÃ§o Ã© checado ANTES da fase dos servos (animados_phase_pid,
         # mais abaixo). As duas janelas sÃ£o mutuamente exclusivas para o mesmo
@@ -37570,7 +37671,7 @@ class GameRoom:
         """XP de uma armadilha AUTORADA vencida (desarmada ou disparada-e-sobrevivida):
         concedido UMA vez (flag xp_concedido), dividido entre os heróis vivos. As
         armadilhas aliadas (do Luccas) não dão XP."""
-        if not arm or arm.get("aliada") or arm.get("xp_concedido"):
+        if not arm or arm.get("aliada") or arm.get("xp_concedido") or (getattr(self, "training_mode", False) and arm.get("id") == "trap_treino_luccas"):
             return
         # Armadilhas permanentes só recompensam o sucesso no desarme, em dobro.
         # Os caminhos de disparo chamam este helper normalmente, mas não concedem XP.
@@ -38273,11 +38374,16 @@ class GameRoom:
                 "texto_curto": tar.get("texto_curto", ""),
                 "feito": (p.get("licao_progresso") or {}).get(lic["id"], 0) if lic else 0,
                 "vezes": int(tar.get("vezes", 1) or 1) if lic else 0,
-                "concluidas": len(p.get("licoes_feitas") or []),
+                "concluidas": sum(1 for l in self.licoes if l["id"] in (p.get("licoes_feitas") or [])
+                                  and (not l.get("classe") or l["classe"] == cls)
+                                  and self._training_requirements(p, l)),
                 "total": sum(1 for l in self.licoes
-                             if not l.get("classe") or l["classe"] == cls),
+                             if (not l.get("classe") or l["classe"] == cls) and self._training_requirements(p, l)),
+                "novas": sum(1 for l in self.licoes if l.get("classe") == cls
+                              and self._training_requirements(p, l)
+                              and l["id"] not in (p.get("tutorial_history") or [])),
             }
-        return {"por_classe": por_classe}
+        return {"por_classe": por_classe, "training": self.training_mode}
 
     def _serializar_condicoes_portas(self):
         out = {}
@@ -45279,6 +45385,10 @@ class GameRoom:
         await self._monster_dies(m, None)
 
     async def _monster_dies(self, m, killer_pid):
+        if m.get("training_target"):
+            m["hp"] = m["max_hp"]
+            m.pop("paralisado", None)
+            return
         if m["hp"] > 0: return
 
         # A queda a 0 PV inicia um estado de regeneração. O Troll só morre
@@ -46062,6 +46172,7 @@ class GameRoom:
         self.prisoner["rescuer_pid"] = pid
         p["action_done"] = True
         await self.gm_say(T("narracao.libertou_o_prisioneiro", heroi=p['name']))
+        await self._licao_evento(p, "libertar_refem", alvo="__prisioneiro__")
         await self.push_state()
 
     async def handle_mover_prisioneiro_caminho(self, pid, path):
@@ -46109,6 +46220,10 @@ class GameRoom:
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
+        if pr.get("training_refem"):
+            return  # O refém do exercício permanece na sala.
+        if not await self._training_check_entry(pid, pr, nx, ny):
+            return
         if not self._tile_livre_para_animado(nx, ny, None, pr["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
@@ -46149,6 +46264,8 @@ class GameRoom:
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             return
+        if pr.get("training_refem"):
+            return  # A demonstração é controlada pela lição de Protetor.
         await self._processar_aura_escaldante_inicio(pr)
         await self._processar_zona_molochus_inicio_turno(pr)
         await self._aplicar_lava_se_pisar(pr)
@@ -46404,6 +46521,7 @@ class GameRoom:
             for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
             players_state.append(snapshot)
+        players_state.extend(dict(a, initiative=0) for a in self.training_allies.values())
         _alvos_hostis = self._alvos_hostis_para_monstros()
         monsters_state = [dict(m, initiative=self.initiative_value(m),
                                vision_radius=self._get_raio_visao_monstro(m),
@@ -47489,6 +47607,8 @@ async def handler(ws):
                 elif t == "libertar_prisioneiro":
                     if room: await room.handle_libertar_prisioneiro(pid)
 
+                elif t == "repetir_tutorial":
+                    if room: await room.handle_repetir_tutorial(pid)
                 elif t == "encerrar_missao":
                     if room: await room.handle_encerrar_missao(pid)
 

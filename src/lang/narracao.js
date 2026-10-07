@@ -2084,6 +2084,10 @@ window.LANG_NARRACAO = {
     "en": "🔥 **{nome}** stepped into the campfire and takes **{dano}** fire damage!",
     "pt": "🔥 **{nome}** pisou na fogueira e sofre **{dano}** de fogo!"
   },
+  "narracao.fumarola_expulsa_criatura": {
+    "en": "🌫️ A fumarole erupts beneath **{criatura}**, blasting them up to **{casas}** squares away!",
+    "pt": "🌫️ Uma fumarola irrompe sob **{criatura}** e a lança até **{casas}** casas!"
+  },
   "narracao.prepara_a_mira_certeira_para_o_proximo_a": {
     "en": "🎯 {monstro} lines up **Sure Aim** for the next attack.",
     "pt": "{monstro} prepara a Mira Certeira para o próximo ataque."
@@ -3003,10 +3007,6 @@ window.LANG_NARRACAO = {
   "narracao.a_aventura_continua": {
     "en": "📜 The adventure continues — round {rodada}.",
     "pt": "📜 A aventura continua — rodada {rodada}."
-  },
-  "narracao.fumarola_expulsa_criatura": {
-    "en": "🌫️ A fumarole erupts beneath **{criatura}**, blasting them up to **{casas}** squares away!",
-    "pt": "🌫️ Uma fumarola irrompe sob **{criatura}** e a lança até **{casas}** casas!"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

@@ -5,9 +5,10 @@
   "ambiente": "masmorra",
   "saida_permitida": false,
   "start_mode": "hero_spawns",
+  "tutorial_training": true,
   "grid": {
     "w": 48,
-    "h": 12
+    "h": 29
   },
   "tiles": [
     [
@@ -62,6 +63,606 @@
     ],
     [
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
       1,
       1,
       1,
@@ -381,62 +982,12 @@
       0,
       0,
       0,
+      1,
+      0,
+      1,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
       0,
       0,
       0,
@@ -479,6 +1030,18 @@
       0,
       0,
       0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -496,10 +1059,298 @@
       0,
       0,
       0,
+      0
+    ],
+    [
       0,
       0,
       0,
       0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -532,24 +1383,24 @@
       0,
       0,
       0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
       0,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0,
       0,
       0,
@@ -613,9 +1464,9 @@
   ],
   "rooms": [
     {
-      "id": 0,
+      "id": 18,
       "x": 1,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "entrance",
@@ -623,9 +1474,9 @@
       "doors": []
     },
     {
-      "id": 1,
+      "id": 19,
       "x": 13,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "monster",
@@ -633,14 +1484,14 @@
       "doors": [
         [
           12,
-          3
+          15
         ]
       ]
     },
     {
-      "id": 2,
+      "id": 20,
       "x": 20,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "monster",
@@ -648,14 +1499,14 @@
       "doors": [
         [
           19,
-          3
+          15
         ]
       ]
     },
     {
-      "id": 3,
+      "id": 21,
       "x": 27,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "empty",
@@ -663,14 +1514,14 @@
       "doors": [
         [
           26,
-          3
+          15
         ]
       ]
     },
     {
-      "id": 5,
+      "id": 22,
       "x": 34,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "chest",
@@ -678,14 +1529,14 @@
       "doors": [
         [
           33,
-          3
+          15
         ]
       ]
     },
     {
-      "id": 4,
+      "id": 23,
       "x": 41,
-      "y": 1,
+      "y": 13,
       "w": 6,
       "h": 6,
       "role": "boss",
@@ -693,9 +1544,105 @@
       "doors": [
         [
           40,
-          3
+          15
         ]
       ]
+    },
+    {
+      "id": 35,
+      "x": 31,
+      "y": 4,
+      "w": 7,
+      "h": 5,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          30,
+          6
+        ]
+      ],
+      "allowed_class": "cleric"
+    },
+    {
+      "id": 38,
+      "x": 32,
+      "y": 23,
+      "w": 7,
+      "h": 5,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          31,
+          25
+        ]
+      ],
+      "allowed_class": "paladin"
+    },
+    {
+      "id": 40,
+      "x": 19,
+      "y": 1,
+      "w": 6,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          22,
+          7
+        ]
+      ],
+      "allowed_class": "warrior"
+    },
+    {
+      "id": 41,
+      "x": 21,
+      "y": 22,
+      "w": 6,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          22,
+          21
+        ]
+      ],
+      "allowed_class": "mage"
+    },
+    {
+      "id": 42,
+      "x": 8,
+      "y": 5,
+      "w": 6,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          14,
+          7
+        ]
+      ],
+      "allowed_class": "rogue"
+    },
+    {
+      "id": 43,
+      "x": 9,
+      "y": 21,
+      "w": 6,
+      "h": 6,
+      "role": "monster",
+      "locked": true,
+      "doors": [
+        [
+          15,
+          23
+        ]
+      ],
+      "allowed_class": "bard"
     }
   ],
   "door_conditions": {},
@@ -705,63 +1652,63 @@
       "class_id": "warrior",
       "pos": [
         2,
-        2
+        14
       ],
-      "room_id": 0
+      "room_id": 18
     },
     {
       "class_id": "mage",
       "pos": [
         3,
-        2
+        14
       ],
-      "room_id": 0
+      "room_id": 18
     },
     {
       "class_id": "rogue",
       "pos": [
         4,
-        2
+        14
       ],
-      "room_id": 0
+      "room_id": 18
     },
     {
       "class_id": "cleric",
       "pos": [
         2,
-        5
+        17
       ],
-      "room_id": 0
+      "room_id": 18
     },
     {
       "class_id": "bard",
       "pos": [
         3,
-        5
+        17
       ],
-      "room_id": 0
+      "room_id": 18
     },
     {
       "class_id": "paladin",
       "pos": [
         4,
-        5
+        17
       ],
-      "room_id": 0
+      "room_id": 18
     }
   ],
   "exit": {
     "x": 46,
-    "y": 3
+    "y": 15
   },
   "monsters": [
     {
       "type": "boneco_treino",
       "pos": [
         16,
-        2
+        14
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
@@ -769,9 +1716,9 @@
       "type": "boneco_treino",
       "pos": [
         17,
-        2
+        14
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
@@ -779,9 +1726,9 @@
       "type": "boneco_treino",
       "pos": [
         18,
-        2
+        14
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
@@ -789,9 +1736,9 @@
       "type": "boneco_treino",
       "pos": [
         16,
-        4
+        16
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
@@ -799,9 +1746,9 @@
       "type": "boneco_treino",
       "pos": [
         17,
-        4
+        16
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
@@ -809,19 +1756,19 @@
       "type": "boneco_treino",
       "pos": [
         18,
-        4
+        16
       ],
-      "room_id": 1,
+      "room_id": 19,
       "boss": false,
       "target": false
     },
     {
       "type": "boneco_mira",
       "pos": [
-        21,
+        20,
         1
       ],
-      "room_id": 2,
+      "room_id": 40,
       "boss": false,
       "target": false
     },
@@ -831,17 +1778,17 @@
         22,
         1
       ],
-      "room_id": 2,
+      "room_id": 40,
       "boss": false,
       "target": false
     },
     {
       "type": "boneco_furia",
       "pos": [
-        23,
+        24,
         1
       ],
-      "room_id": 2,
+      "room_id": 40,
       "boss": false,
       "target": false
     },
@@ -849,9 +1796,9 @@
       "type": "boneco_treino",
       "pos": [
         22,
-        5
+        17
       ],
-      "room_id": 2,
+      "room_id": 20,
       "boss": false,
       "target": false
     },
@@ -859,9 +1806,9 @@
       "type": "boneco_treino",
       "pos": [
         37,
-        2
+        14
       ],
-      "room_id": 5,
+      "room_id": 22,
       "boss": false,
       "target": false
     },
@@ -869,9 +1816,9 @@
       "type": "boneco_treino",
       "pos": [
         37,
-        4
+        16
       ],
-      "room_id": 5,
+      "room_id": 22,
       "boss": false,
       "target": false
     },
@@ -879,9 +1826,9 @@
       "type": "esqueleto_humano",
       "pos": [
         44,
-        3
+        15
       ],
-      "room_id": 4,
+      "room_id": 23,
       "boss": false,
       "target": false
     },
@@ -889,9 +1836,79 @@
       "type": "boneco_treino",
       "pos": [
         24,
-        5
+        17
       ],
-      "room_id": 2,
+      "room_id": 20,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        24,
+        3
+      ],
+      "room_id": 40,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        24,
+        24
+      ],
+      "room_id": 41,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        24,
+        26
+      ],
+      "room_id": 41,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        11,
+        7
+      ],
+      "room_id": 42,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        12,
+        7
+      ],
+      "room_id": 42,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        12,
+        24
+      ],
+      "room_id": 43,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        36,
+        25
+      ],
+      "room_id": 38,
       "boss": false,
       "target": false
     }
@@ -900,12 +1917,27 @@
     {
       "pos": [
         5,
-        5
+        17
       ],
       "gold": 0,
       "items": [
         {
           "id": "sword"
+        },
+        {
+          "id": "cajado_madeira"
+        },
+        {
+          "id": "dagger"
+        },
+        {
+          "id": "machado_basico"
+        },
+        {
+          "id": "dagger"
+        },
+        {
+          "id": "cajado_madeira"
         }
       ],
       "key_objective": false
@@ -913,7 +1945,7 @@
     {
       "pos": [
         29,
-        2
+        14
       ],
       "gold": 0,
       "items": [
@@ -938,7 +1970,7 @@
     {
       "pos": [
         42,
-        5
+        17
       ],
       "gold": 0,
       "items": [
@@ -951,7 +1983,7 @@
     {
       "pos": [
         35,
-        2
+        14
       ],
       "gold": 0,
       "items": [
@@ -974,58 +2006,27 @@
       "tipo": "buraco",
       "pos": [
         42,
-        3
+        15
       ]
     },
     {
-      "id": "trap_1",
-      "tipo": "armadilha_raio_congelante",
-      "pos": [
-        7,
-        3
-      ],
-      "dificuldade": 20,
-      "dano": "1"
-    },
-    {
-      "id": "trap_2",
-      "tipo": "lamina_pendulo",
-      "pos": [
-        8,
-        3
-      ],
-      "dificuldade": 17,
-      "dano": "1"
-    },
-    {
-      "id": "trap_3",
-      "tipo": "mina_terrestre",
-      "pos": [
-        9,
-        3
-      ],
-      "dificuldade": 18,
-      "dano": "1"
-    },
-    {
-      "id": "trap_4",
-      "tipo": "armadilha_incendiaria",
+      "id": "trap_treino_luccas",
+      "tipo": "buraco",
       "pos": [
         10,
-        3
+        8
       ],
-      "dificuldade": 20,
-      "dano": "1"
+      "dificuldade": 5
     }
   ],
   "decorations": [],
   "secret_passages": [],
   "falas": [
     {
-      "id": "atrio_01",
+      "id": "fala_0",
       "pos": [
         3,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1041,23 +2042,23 @@
         "tipo": "mover_ate",
         "alvo": [
           5,
-          3
+          15
         ],
         "vezes": 1,
-        "texto_curto": "Ande até a marca à sua direita"
+        "texto_curto": "Ande até a casa 5,15"
       }
     },
     {
-      "id": "atrio_02",
+      "id": "fala_1",
       "pos": [
         5,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Naquele baú há uma espada. Fique ao lado dele e pegue o que tem dentro: todo item adquirido vai primeiro para a sua bolsa, não direto para a mão.",
+      "texto": "O baú contém armas para praticar. Pegue uma arma compatível com seu herói; ela vai para a bolsa.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -1065,22 +2066,21 @@
       "ordem": 2,
       "tarefa": {
         "tipo": "pegar_item",
-        "alvo": "sword",
         "vezes": 1,
-        "texto_curto": "Pegue a espada do baú"
+        "texto_curto": "Pegue uma arma do baú"
       }
     },
     {
-      "id": "atrio_03",
+      "id": "fala_2",
       "pos": [
         5,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Na bolsa a espada não serve de nada. Abra o inventário e equipe-a: equipar é ação livre, não custa o seu turno.",
+      "texto": "Abra a bolsa, selecione a arma que pegou e equipe-a. Equipar é uma ação livre.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -1088,16 +2088,15 @@
       "ordem": 3,
       "tarefa": {
         "tipo": "equipar",
-        "alvo": "sword",
         "vezes": 1,
-        "texto_curto": "Equipe a espada"
+        "texto_curto": "Equipe a arma que pegou"
       }
     },
     {
-      "id": "atrio_04",
+      "id": "fala_3",
       "pos": [
         6,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1116,10 +2115,10 @@
       }
     },
     {
-      "id": "atrio_05",
+      "id": "fala_4",
       "pos": [
         11,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1135,17 +2134,17 @@
         "tipo": "mover_ate",
         "alvo": [
           13,
-          3
+          15
         ],
         "vezes": 1,
-        "texto_curto": "Atravesse a porta ao fundo"
+        "texto_curto": "Atravesse a porta para a sala de combate"
       }
     },
     {
-      "id": "guerreiro_01",
+      "id": "fala_5",
       "pos": [
         14,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1166,16 +2165,16 @@
       }
     },
     {
-      "id": "guerreiro_02",
+      "id": "fala_6",
       "pos": [
         14,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -1190,10 +2189,10 @@
       }
     },
     {
-      "id": "mago_01",
+      "id": "fala_7",
       "pos": [
         13,
-        2
+        14
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1214,16 +2213,16 @@
       }
     },
     {
-      "id": "mago_02",
+      "id": "fala_8",
       "pos": [
         13,
-        2
+        14
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1238,10 +2237,10 @@
       }
     },
     {
-      "id": "ladino_01",
+      "id": "fala_9",
       "pos": [
         13,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1262,16 +2261,16 @@
       }
     },
     {
-      "id": "ladino_02",
+      "id": "fala_10",
       "pos": [
         13,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1286,10 +2285,10 @@
       }
     },
     {
-      "id": "clerigo_01",
+      "id": "fala_11",
       "pos": [
         15,
-        2
+        14
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1310,16 +2309,16 @@
       }
     },
     {
-      "id": "clerigo_02",
+      "id": "fala_12",
       "pos": [
         15,
-        2
+        14
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1334,10 +2333,10 @@
       }
     },
     {
-      "id": "bardo_01",
+      "id": "fala_13",
       "pos": [
         15,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1358,16 +2357,16 @@
       }
     },
     {
-      "id": "bardo_02",
+      "id": "fala_14",
       "pos": [
         15,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1382,10 +2381,10 @@
       }
     },
     {
-      "id": "paladino_01",
+      "id": "fala_15",
       "pos": [
         14,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1406,16 +2405,16 @@
       }
     },
     {
-      "id": "paladino_02",
+      "id": "fala_16",
       "pos": [
         14,
-        4
+        16
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão. Quando ele cair, abra a porta ao fundo: na sala seguinte você põe as suas habilidades para funcionar.",
+      "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -1430,10 +2429,10 @@
       }
     },
     {
-      "id": "prov_01",
+      "id": "fala_17",
       "pos": [
         28,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1451,10 +2450,10 @@
       }
     },
     {
-      "id": "prov_02",
+      "id": "fala_18",
       "pos": [
         28,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1474,10 +2473,10 @@
       }
     },
     {
-      "id": "prov_03",
+      "id": "fala_19",
       "pos": [
         28,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1497,10 +2496,10 @@
       }
     },
     {
-      "id": "prov_04",
+      "id": "fala_20",
       "pos": [
         31,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1514,201 +2513,10 @@
       "ordem": 9
     },
     {
-      "id": "guerreiro_03",
-      "pos": [
-        21,
-        2
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "As suas três habilidades não são magias: você as ARMA antes de bater, e elas valem naquele golpe. Mira Certeira ⚔️ dá +2 no dado de acerto. Cada alvo desta sala só cai para a habilidade do emoji dele — ataque o alvo ⚔️ com Mira Certeira armada. No começo só dá para armar uma por turno; a Guilda destrava mais.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "warrior",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "mira_certeira",
-        "vezes": 1,
-        "texto_curto": "Ataque o alvo ⚔️ com Mira Certeira"
-      }
-    },
-    {
-      "id": "guerreiro_04",
-      "pos": [
-        21,
-        2
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Golpe Devastador 💥 dobra cada dado de dano do golpe — é o que você arma quando o inimigo precisa cair AGORA, e não daqui a duas rodadas. Arme-o e derrube o alvo 💥.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "warrior",
-      "ordem": 4,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "golpe_devastador",
-        "vezes": 1,
-        "texto_curto": "Ataque o alvo 💥 com Golpe Devastador"
-      }
-    },
-    {
-      "id": "guerreiro_05",
-      "pos": [
-        21,
-        2
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Fúria Berserker 🔥 te dá um ataque extra no mesmo turno. Arme-a e derrube o alvo 🔥. Feito isso, abra a porta ao fundo e siga.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "warrior",
-      "ordem": 5,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "furia_berserker",
-        "vezes": 1,
-        "texto_curto": "Ataque o alvo 🔥 com Fúria Berserker"
-      }
-    },
-    {
-      "id": "mago_03",
-      "pos": [
-        21,
-        4
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Chegou a sua hora, Pedro. Lance num boneco uma das duas magias que você trouxe. Ela não gasta mana: consome um slot do círculo, que volta no próximo turno — mais um pouco de comida e água. Guarde os círculos altos para o aperto.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "mage",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_magia",
-        "vezes": 1,
-        "texto_curto": "Lance uma magia num boneco"
-      }
-    },
-    {
-      "id": "ladino_03",
-      "pos": [
-        23,
-        2
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Você não precisa vencer de frente, Luccas. Prepare uma armadilha no chão e deixe o inimigo escolher pisar nela. O buraco é de graça; as outras sete fórmulas se compram na Guilda dos Heróis.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "rogue",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "criar_armadilha",
-        "vezes": 1,
-        "texto_curto": "Prepare uma armadilha"
-      }
-    },
-    {
-      "id": "clerigo_03",
-      "pos": [
-        23,
-        4
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "A sua Cura vai de 1 a 3 dados, e cada dado custa um gole de água. Use um dado em você mesmo agora, só para ver como funciona — no combate você vai preferir gastar mais para levantar quem caiu.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "cleric",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "cura",
-        "vezes": 1,
-        "texto_curto": "Cure a si mesmo com 1 dado"
-      }
-    },
-    {
-      "id": "bardo_03",
-      "pos": [
-        21,
-        3
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Entoe a Canção Heroica e escolha os atributos que ela reforça. Enquanto toca, todo aliado num raio de cinco quadrados ganha o bônus — e você paga comida e água a cada rodada. Não a deixe tocando fora do combate.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "bard",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "cancao_heroica",
-        "vezes": 1,
-        "texto_curto": "Entoe a Canção Heroica"
-      }
-    },
-    {
-      "id": "paladino_03",
-      "pos": [
-        23,
-        3
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Ative o Golpe Sagrado: enquanto durar, cada ataque seu leva um dado sagrado a mais. É ação bônus — dá para ativar e atacar no mesmo turno, o que faz dele o seu abre-alas contra mortos-vivos.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "paladin",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "usar_habilidade",
-        "alvo": "golpe_sagrado",
-        "vezes": 1,
-        "texto_curto": "Ative o Golpe Sagrado"
-      }
-    },
-    {
-      "id": "cons_01",
+      "id": "fala_29",
       "pos": [
         35,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1727,10 +2535,10 @@
       }
     },
     {
-      "id": "cons_02",
+      "id": "fala_30",
       "pos": [
         35,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1750,10 +2558,10 @@
       }
     },
     {
-      "id": "cons_03",
+      "id": "fala_31",
       "pos": [
         35,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1773,10 +2581,10 @@
       }
     },
     {
-      "id": "cons_04",
+      "id": "fala_32",
       "pos": [
         35,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1796,10 +2604,10 @@
       }
     },
     {
-      "id": "cons_05",
+      "id": "fala_33",
       "pos": [
         35,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1819,10 +2627,10 @@
       }
     },
     {
-      "id": "perigo_01",
+      "id": "fala_34",
       "pos": [
         41,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1836,33 +2644,10 @@
       "ordem": 15
     },
     {
-      "id": "ladino_04",
-      "pos": [
-        41,
-        3
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "É a sua vez de brilhar, Luccas. Desarme a armadilha desta sala: um teste de Destreza contra a dificuldade dela. Um 1 natural dispara na sua cara — e no sucesso você ainda recupera o material.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "classe": "rogue",
-      "ordem": 6,
-      "tarefa": {
-        "tipo": "desarmar_armadilha",
-        "vezes": 1,
-        "texto_curto": "Desarme a armadilha"
-      }
-    },
-    {
-      "id": "perigo_02",
+      "id": "fala_36",
       "pos": [
         43,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1882,10 +2667,10 @@
       }
     },
     {
-      "id": "perigo_03",
+      "id": "fala_37",
       "pos": [
         43,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1905,10 +2690,10 @@
       }
     },
     {
-      "id": "perigo_04",
+      "id": "fala_38",
       "pos": [
         43,
-        3
+        15
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -1928,146 +2713,857 @@
       }
     },
     {
-      "id": "mago_04",
+      "id": "treino_mira",
       "pos": [
-        21,
+        20,
         4
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "Agora a sua arte, Pedro: a Metamagia. Antes de lançar, você pode armar Fortalecer (mais dano), Estender (a magia dura mais) ou Aprimorar (resistir a ela fica mais difícil). Cada uma cobra comida e água, e só vale se combinar com a magia: Fortalecer numa magia de dano, Estender numa que dure, Aprimorar numa que peça teste de resistência. No começo só cabe uma por lançamento. No próximo turno, arme a que combina com a sua magia e lance de novo num boneco. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "Selecione Mira Certeira e ataque o alvo ⚔️. A habilidade prepara seu golpe e melhora o teste de acerto. Observe o bônus nos dados.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
       },
-      "classe": "mage",
-      "ordem": 4,
+      "classe": "warrior",
+      "sala_exclusiva": true,
+      "ordem": 3,
       "tarefa": {
         "tipo": "usar_habilidade",
+        "alvo": "mira_certeira",
         "vezes": 1,
-        "texto_curto": "Lance uma magia com metamagia armada"
+        "texto_curto": "Ataque com Mira Certeira"
       }
     },
     {
-      "id": "ladino_esconder",
+      "id": "treino_golpe",
       "pos": [
-        23,
-        2
+        20,
+        4
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "A sua melhor arma é não ser visto, Luccas. Esconder nas Sombras é um teste de Destreza contra a percepção de quem está olhando: se passar, os inimigos não te escolhem como alvo até você atacar ou andar. Por isso, pare AO LADO de um boneco antes de se esconder. Se falhar, tente de novo no próximo turno.",
+      "texto": "Encerre o turno se já usou sua ação. Arme Golpe Devastador e ataque o alvo 💥. Observe como a habilidade modifica os dados de dano.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "sala_exclusiva": true,
+      "ordem": 4,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "golpe_devastador",
+        "vezes": 1,
+        "texto_curto": "Ataque com Golpe Devastador"
+      }
+    },
+    {
+      "id": "treino_furia",
+      "pos": [
+        20,
+        4
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Arme Fúria Berserker e ataque o alvo 🔥. Não encerre o turno depois desse golpe: a Fúria permite um ataque adicional.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "furia_berserker",
+        "vezes": 1,
+        "texto_curto": "Faça o primeiro ataque com Fúria"
+      }
+    },
+    {
+      "id": "treino_furia_extra",
+      "pos": [
+        20,
+        4
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Use o ataque extra agora, antes de encerrar o turno. O boneco comum próximo também serve de alvo. Se você já passou a vez, arme Fúria novamente e faça os dois ataques.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "sala_exclusiva": true,
+      "ordem": 6,
+      "tarefa": {
+        "tipo": "ataque_extra",
+        "alvo": "furia_berserker",
+        "vezes": 1,
+        "texto_curto": "Use o ataque extra da Fúria"
+      }
+    },
+    {
+      "id": "treino_guerreiro_fim",
+      "pos": [
+        20,
+        4
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Você praticou as três habilidades. Confira a comida e a água consumidas e encerre seu turno. Ao aprender especializações na Guilda, volte para novos exercícios.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "sala_exclusiva": true,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Encerre o turno para concluir"
+      }
+    },
+    {
+      "id": "treino_magia",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Abra o Grimório e lance uma magia conhecida. Escolha o boneco para dano ou você mesmo para um benefício. Confira o círculo e os slots utilizados.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "requisitos": {
+        "magia_tipo": "qualquer"
+      },
+      "sala_exclusiva": true,
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_magia",
+        "vezes": 1,
+        "texto_curto": "Lance uma magia conhecida"
+      }
+    },
+    {
+      "id": "treino_slots",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Encerre o turno e confira os slots disponíveis no próximo. A renovação obedece à regra do círculo; uma magia sem slot não pode ser lançada.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "sala_exclusiva": true,
+      "ordem": 4,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Encerre o turno e confira os slots"
+      }
+    },
+    {
+      "id": "treino_aprimorar_magia",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Arme Aprimorar Magia e lance uma magia compatível: esta metamagia melhora a dificuldade do teste de resistência. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "requisitos": {
+        "magia_tipo": "save"
+      },
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "aprimorar_magia",
+        "vezes": 1,
+        "texto_curto": "Lance uma magia com Aprimorar Magia"
+      }
+    },
+    {
+      "id": "treino_estender_magia",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Arme Estender Magia e lance uma magia compatível: esta metamagia acrescenta duração a um efeito que persiste. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "requisitos": {
+        "magia_tipo": "duracao"
+      },
+      "sala_exclusiva": true,
+      "ordem": 6,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "estender_magia",
+        "vezes": 1,
+        "texto_curto": "Lance uma magia com Estender Magia"
+      }
+    },
+    {
+      "id": "treino_fortalecer_magia",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Arme Fortalecer Magia e lance uma magia compatível: esta metamagia aumenta o dano de uma magia. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "requisitos": {
+        "magia_tipo": "dano"
+      },
+      "sala_exclusiva": true,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "fortalecer_magia",
+        "vezes": 1,
+        "texto_curto": "Lance uma magia com Fortalecer Magia"
+      }
+    },
+    {
+      "id": "treino_reviver",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "O cadáver de treinamento está no chão. Aproxime-se, use Reviver os Mortos e selecione o cadáver. Se a tentativa falhar, tente novamente em outro turno.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "sala_exclusiva": true,
+      "ordem": 8,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "animar_mortos",
+        "vezes": 1,
+        "texto_curto": "Anime o cadáver de treinamento"
+      }
+    },
+    {
+      "id": "treino_comando",
+      "pos": [
+        22,
+        24
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Encerre a vez de Pedro para abrir a fase dos servos. Use Comandar para que seu morto animado se mova e ataque um boneco.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "sala_exclusiva": true,
+      "ordem": 9,
+      "tarefa": {
+        "tipo": "comandar_servo",
+        "vezes": 1,
+        "texto_curto": "Comande o servo de treinamento"
+      }
+    },
+    {
+      "id": "treino_detectar",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ative Detectar Armadilhas e aproxime-se da casa 10,8. A detecção revela os mecanismos próximos. Confira a manutenção de água.",
+      "trigger": {
+        "tipo": "sala"
       },
       "classe": "rogue",
+      "sala_exclusiva": true,
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "detectar_armadilhas",
+        "vezes": 1,
+        "texto_curto": "Revele a armadilha de treinamento"
+      }
+    },
+    {
+      "id": "treino_desarmar",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Fique ao lado da armadilha revelada e use Desarmar Armadilha. Se o teste falhar, tente novamente. A sala pode restaurar o mecanismo para você continuar.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
       "ordem": 4,
+      "tarefa": {
+        "tipo": "desarmar_armadilha",
+        "vezes": 1,
+        "texto_curto": "Desarme a armadilha"
+      }
+    },
+    {
+      "id": "treino_esconder",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Perto do boneco, use Esconder nas Sombras. Essa é uma ação bônus: você pode atacar na mesma rodada após conseguir se esconder.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
+      "ordem": 5,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "esconder_sombras",
         "vezes": 1,
-        "texto_curto": "Esconda-se ao lado de um boneco"
+        "texto_curto": "Esconda-se nas sombras"
       }
     },
     {
-      "id": "ladino_furtivo",
+      "id": "treino_furtivo",
       "pos": [
-        23,
-        2
+        9,
+        7
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "Escondido, o seu próximo golpe pega o alvo desprevenido: o Ataque Furtivo soma dados de d4 ao dano. Ataque o boneco sem sair do lugar. Se errar, você é revelado e precisa se esconder de novo. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "Ataque um boneco enquanto estiver escondido. Ataque Furtivo é uma passiva: o dano extra aparece quando as condições são cumpridas. Se errar, esconda-se e tente de novo.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
       },
       "classe": "rogue",
-      "ordem": 5,
+      "sala_exclusiva": true,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "ataque_furtivo",
         "vezes": 1,
-        "texto_curto": "Acerte um boneco escondido (Ataque Furtivo)"
+        "texto_curto": "Acerte um Ataque Furtivo"
       }
     },
     {
-      "id": "clerigo_04",
+      "id": "treino_veneno",
       "pos": [
-        23,
-        4
+        9,
+        7
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "A Cura em Área alcança de uma vez todos os aliados perto de você, inclusive você. Custa bem mais comida e água por dado, então guarde-a para quando o grupo inteiro estiver ferido. No próximo turno, use-a com 1 dado. A Purificação e a Ressurreição você vai usar com o grupo: as duas pedem um aliado ao seu lado. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "Use Veneno Rápido e escolha o veneno de treinamento na bolsa para untar sua arma. Essa é uma ação livre. Confira as cargas preparadas.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "veneno_rapido",
+        "vezes": 1,
+        "texto_curto": "Unte a arma com Veneno Rápido"
+      }
+    },
+    {
+      "id": "treino_veneno_golpe",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ataque um boneco com a arma untada. Observe o consumo da carga e o teste de resistência do alvo; ele pode resistir ao veneno.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
+      "ordem": 8,
+      "tarefa": {
+        "tipo": "atacar",
+        "vezes": 1,
+        "texto_curto": "Acerte o boneco com a arma untada",
+        "requer_veneno": true
+      }
+    },
+    {
+      "id": "treino_criar",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Use Criar Armadilha numa casa vazia da sala. Buraco já está disponível; as demais fórmulas dependem da Guilda. Escolha apenas um mecanismo que você conhece.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
+      "ordem": 9,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "criar_armadilha",
+        "vezes": 1,
+        "texto_curto": "Crie uma armadilha conhecida"
+      }
+    },
+    {
+      "id": "treino_cura",
+      "pos": [
+        32,
+        6
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "O Aprendiz 1 está ferido. Fique ao lado dele, selecione Cura e use um dado. Confira a vida recuperada e o custo de água.",
+      "trigger": {
+        "tipo": "sala"
       },
       "classe": "cleric",
+      "sala_exclusiva": true,
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "cura",
+        "vezes": 1,
+        "texto_curto": "Cure o Aprendiz 1",
+        "alvo_id": "__treino_cleric_1",
+        "cura_efetiva": true
+      }
+    },
+    {
+      "id": "treino_cura_area",
+      "pos": [
+        32,
+        6
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Os dois aprendizes ficaram feridos para este exercício. Fique perto deles e use Cura em Área. No nível inicial o raio é de 2 casas; confira a área e o custo antes de confirmar.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "cleric",
+      "sala_exclusiva": true,
       "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "cura_area",
-        "vezes": 1,
-        "texto_curto": "Use a Cura em Área com 1 dado"
+        "vezes": 2,
+        "texto_curto": "Cure os dois aprendizes em área",
+        "cura_efetiva": true
       }
     },
     {
-      "id": "bardo_04",
+      "id": "treino_purificar",
       "pos": [
-        21,
-        3
+        32,
+        6
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "A Provocação é o seu escudo para os frágeis: com uma ação bônus, você obriga um inimigo próximo a vir atrás de você, e o próximo golpe dele sai com desvantagem. Provoque um boneco. Se a Canção já gastou a sua ação bônus neste turno, faça no próximo. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "O Aprendiz 1 está cego por um veneno simulado. Fique ao lado dele, use Purificação e escolha Veneno. Observe o efeito desaparecer.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
+      },
+      "classe": "cleric",
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "purificacao",
+        "vezes": 1,
+        "texto_curto": "Purifique o Aprendiz 1",
+        "alvo_id": "__treino_cleric_1"
+      }
+    },
+    {
+      "id": "treino_ressuscitar",
+      "pos": [
+        32,
+        6
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "O Aprendiz 1 simula um aliado caído. Fique ao lado dele e use Ressurreição. Ele retorna com a vida determinada pela sua habilidade.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "cleric",
+      "sala_exclusiva": true,
+      "ordem": 6,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "ressurreicao",
+        "vezes": 1,
+        "texto_curto": "Ressuscite o Aprendiz 1",
+        "alvo_id": "__treino_cleric_1"
+      }
+    },
+    {
+      "id": "treino_cancao",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ative Canção Heroica e escolha um benefício disponível. A canção beneficia você e aliados dentro do seu alcance. O aprendiz permite observar a aura.",
+      "trigger": {
+        "tipo": "sala"
       },
       "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "cancao_heroica",
+        "vezes": 1,
+        "texto_curto": "Ative a Canção Heroica"
+      }
+    },
+    {
+      "id": "treino_cancao_manter",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Confira o raio da canção e encerre o turno com ela ativa. Ela cobra manutenção enquanto você a sustenta.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
       "ordem": 4,
+      "tarefa": {
+        "tipo": "manter_cancao",
+        "vezes": 1,
+        "texto_curto": "Mantenha a canção por uma rodada"
+      }
+    },
+    {
+      "id": "treino_cancao_parar",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Desative a Canção Heroica para encerrar o efeito e seu consumo de recursos. Não a deixe ativa sem necessidade.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "encerrar_cancao",
+        "vezes": 1,
+        "texto_curto": "Encerre a Canção Heroica"
+      }
+    },
+    {
+      "id": "treino_provocar",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Selecione o boneco e use Provocação. Confira o teste de resistência e as consequências do efeito. Uma resistência do inimigo não torna seu uso inválido.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "provocacao",
         "vezes": 1,
-        "texto_curto": "Provoque um boneco"
+        "texto_curto": "Use Provocação no boneco"
       }
     },
     {
-      "id": "paladino_04",
+      "id": "treino_instrumento",
       "pos": [
-        23,
-        3
+        10,
+        23
       ],
       "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
       },
-      "texto": "Guerreiro da Luz é uma ação livre, Richard: reforça até dois atributos entre visão, ataque, dano e CA, e cobra comida e água a cada turno enquanto brilha. Ative-o agora com o bônus que quiser. A Imposição das Mãos e o Protetor você usa nos aliados; a Regeneração Divina, quando estiver ferido. Feito isso, abra a porta ao fundo e siga.",
+      "texto": "Abra as opções do instrumento equipado e use sua habilidade num alvo compatível. Observe como o instrumento complementa seu repertório.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "requisitos": {
+        "instrumento": true
+      },
+      "sala_exclusiva": true,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "usar_instrumento",
+        "vezes": 1,
+        "texto_curto": "Use seu instrumento"
+      }
+    },
+    {
+      "id": "treino_refem",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.",
+      "trigger": {
+        "tipo": "sala"
       },
       "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "libertar_refem",
+        "alvo": "__prisioneiro__",
+        "vezes": 1,
+        "texto_curto": "Liberte o refém"
+      }
+    },
+    {
+      "id": "treino_protetor",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para o golpe controlado de treinamento. Observe a divisão do dano e a redução pessoal de Richard.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
       "ordem": 4,
+      "tarefa": {
+        "tipo": "proteger",
+        "alvo": "__prisioneiro__",
+        "vezes": 1,
+        "texto_curto": "Proteja o refém durante um ataque"
+      }
+    },
+    {
+      "id": "treino_maos",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Sua proteção manteve o refém vivo. Agora, no seu turno, fique ao lado dele e use Imposição das Mãos. A lição pede a cura desse mesmo refém ferido.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "imposicao_maos",
+        "vezes": 1,
+        "texto_curto": "Cure o refém com Imposição das Mãos",
+        "alvo_id": "__prisioneiro__",
+        "cura_efetiva": true
+      }
+    },
+    {
+      "id": "treino_sagrado",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ative Golpe Sagrado no nível disponível. Depois ataque o boneco e observe o dano sagrado acrescentado. Há custos de ativação e de manutenção.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 6,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "alvo": "golpe_sagrado",
+        "vezes": 1,
+        "texto_curto": "Ative Golpe Sagrado"
+      }
+    },
+    {
+      "id": "treino_sagrado_golpe",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ataque o boneco com Golpe Sagrado ativo para ver seu efeito no dano.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 7,
+      "tarefa": {
+        "tipo": "atacar",
+        "vezes": 1,
+        "texto_curto": "Acerte com Golpe Sagrado ativo",
+        "requer_sagrado": true
+      }
+    },
+    {
+      "id": "treino_regen",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "O treino deixou dois pontos de vida para recuperar. Ative Regeneração Divina e encerre sua vez. A tarefa só termina quando a regeneração recuperar vida de verdade.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 8,
+      "tarefa": {
+        "tipo": "regenerar",
+        "alvo": "regeneracao_divina",
+        "vezes": 1,
+        "texto_curto": "Recupere vida com Regeneração Divina"
+      }
+    },
+    {
+      "id": "treino_luz",
+      "pos": [
+        33,
+        25
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Ative Guerreiro da Luz e compare sua visão, acerto, dano e defesa. O bônus é o da habilidade disponível na sua ficha.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "sala_exclusiva": true,
+      "ordem": 9,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "guerreiro_luz",
         "vezes": 1,
-        "texto_curto": "Ative o Guerreiro da Luz"
+        "texto_curto": "Ative Guerreiro da Luz"
       }
     }
   ],
@@ -2076,7 +3572,15 @@
     "heroes": 1,
     "level": 1
   },
-  "prisoner": null,
+  "prisoner": {
+    "pos": [
+      35,
+      25
+    ],
+    "room_id": 38,
+    "image": "soldado.png",
+    "model3d": "soldadoa.glb"
+  },
   "materiais": {},
   "pontes": [],
   "elevacoes": {},
