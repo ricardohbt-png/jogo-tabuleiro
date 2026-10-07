@@ -10508,6 +10508,30 @@ window.LANG_INTERFACE = {
   "dado.fumarola": {
     "en": "🌫️ Fumarole burst",
     "pt": "🌫️ Rajada da fumarola"
+  },
+  "ui.savegames.tipo_label": {
+    "en": "Game type",
+    "pt": "Tipo de jogo"
+  },
+  "ui.savegames.tipo_solo": {
+    "en": "Solo",
+    "pt": "Solo"
+  },
+  "ui.savegames.tipo_multiplayer": {
+    "en": "Multiplayer",
+    "pt": "Multiplayer"
+  },
+  "ui.save.carregando_jogos": {
+    "en": "Loading your saved games…",
+    "pt": "Carregando seus jogos salvos…"
+  },
+  "ui.save.falha_lista": {
+    "en": "Couldn't load your saved games. Check your connection and try again.",
+    "pt": "Não foi possível carregar seus jogos salvos. Confira a conexão e tente novamente."
+  },
+  "ui.save.tentar_novamente": {
+    "en": "Try again",
+    "pt": "Tentar novamente"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

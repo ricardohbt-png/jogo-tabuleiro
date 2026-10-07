@@ -477,7 +477,7 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > `tools/test_ficha_cidade.py`.
 
 > **Jogos salvos — continuar de onde parou (2026-10-01):** não existe mais jogo rápido sem
-> salvamento no cliente: a tela inicial só tem apelido + servidor + senha + "🎲 Entrar", e os
+> salvamento no cliente: a tela inicial pede apelido + servidor + senha pelo botão "Acessar minha conta", e os
 > jogos ficam na conta ("Meus Jogos"). O handler `create_room` segue no servidor (editor e
 > testes o usam). **Continuar pula a escolha de herói:** em `add_player`, conta com personagem
 > vinculado (`_classe_vinculada`) vai para `_continuar_jogo_salvo`, que copia as magias salvas
@@ -560,6 +560,18 @@ e imprime UM link `https://…/index.html` para compartilhar.
 > Provado no navegador com o servidor REINICIADO entre salvar e
 > continuar: rodada, casa, PV, ouro, bolsa, 14 monstros, item no chão, baús e névoa idênticos.
 > Teste: `tools/test_salvar_masmorra.py` (230; a seção [6] passa pelo `server.handler` real).
+> Na conta, "Meus Jogos" separa saves em Solo/Multiplayer. Jogos novos persistem `play_mode`
+> (seleção Solo/Multiplayer no formulário; Mestre força Multiplayer); saves antigos sem esse
+> campo inferem Multiplayer por Mestre ou mais de uma conta vinculada, senão Solo. O botão de
+> conta leva à lista privada após login; a lista mostra carregamento/erro com nova tentativa e
+> saves encerrados informam o motivo e desabilitam "Continuar", deixando criar continuação.
+> **Correção de visibilidade (2026-10-01):** a lista dentro de `.connect-panel` encolhia até
+> altura 0 quando o formulário excedia a tela. Agora `.savegames-library` ocupa a área livre,
+> separada de `.savegames-actions` (rolagem própria); listas em duas colunas no desktop e
+> acima do formulário em telas pequenas. `index.html` atualiza o cache-buster do CSS.
+> Reproduzido no navegador (0 px antes, 572 px após, viewport 1280×720); verificado também
+> em 390×844, Continuar solo até a cidade e duas contas retomando o mesmo multiplayer,
+> usando dados isolados na porta 8777, sem erros no console.
 
 > **Capítulos e pontos de salvamento (2026-10-05):** cada jogo salvo é UM cartão em "Meus Jogos",
 > com abas Solo | Multiplayer (`GS.agruparJogos`, puro; aba em `localStorage["lfh_aba_jogos"]`) e,

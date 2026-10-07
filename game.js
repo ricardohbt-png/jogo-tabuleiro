@@ -251,7 +251,7 @@ document.body.innerHTML = `
       <label data-i18n="ui.connect.senha_label">Senha</label>
       <input id="input-senha" type="password" autocomplete="current-password" placeholder="••••••••">
     </div>
-    <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">🎲 Entrar</button>
+    <button class="btn-primary" data-i18n="ui.connect.btn_conta" onclick="entrarComConta()">Acessar minha conta</button>
     <div style="font-size:.7rem;color:#8ab88a;margin-top:4px;" data-i18n="ui.connect.ajuda_conta">
       Primeira vez? O apelido acima vira sua conta. Seus jogos ficam salvos nela: use o mesmo apelido + senha para continuar de onde parou.
     </div>
@@ -270,9 +270,8 @@ document.body.innerHTML = `
 
 <!-- ══ MEUS JOGOS (Fase 3 — Jogos Salvos) ══ -->
 <div id="screen-savegames" class="screen">
-  <div class="connect-panel">
-    <h2 data-i18n="ui.savegames.titulo">Meus Jogos</h2>
-    <div id="savegames-list" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;"></div>
+  <div class="connect-panel savegames-actions">
+    <h2 data-i18n="ui.savegames.conta_titulo">Minha conta</h2>
     <div class="divider" data-i18n="ui.savegames.div_amigo">entrar no jogo de um amigo</div>
     <div class="field"><label data-i18n="ui.savegames.codigo_label">Código da sala do amigo</label>
       <div class="join-row">
@@ -290,11 +289,20 @@ document.body.innerHTML = `
       <input id="sg-name" type="text" maxlength="40" data-i18n-ph="ui.savegames.nome_ph" placeholder="Ex: A Sociedade do Anel"></div>
     <div class="field"><label data-i18n="ui.savegames.campanha_label">Campanha</label>
       <select id="sg-campaign"></select></div>
+    <div class="field"><label data-i18n="ui.savegames.tipo_label">Tipo de jogo</label>
+      <select id="sg-play-mode" onchange="atualizarTipoJogoNovo()">
+        <option value="solo" data-i18n="ui.savegames.tipo_solo">Solo</option>
+        <option value="multiplayer" data-i18n="ui.savegames.tipo_multiplayer">Multiplayer</option>
+      </select></div>
     <label style="display:flex;gap:6px;align-items:center;font-size:.8rem;">
-      <input id="sg-master" type="checkbox"> <span data-i18n="ui.savegames.mestre_label">Este jogo terá um Mestre humano</span></label>
+      <input id="sg-master" type="checkbox" onchange="if(this.checked){document.getElementById('sg-play-mode').value='multiplayer';atualizarTipoJogoNovo();}"> <span data-i18n="ui.savegames.mestre_label">Este jogo terá um Mestre humano</span></label>
     <button class="btn-primary" data-i18n="ui.savegames.btn_criar" onclick="criarJogoSalvo()">➕ Criar jogo</button>
     <button class="btn-secondary" data-i18n="ui.savegames.btn_voltar" onclick="showScreen('screen-connect')" style="margin-top:8px;">← Voltar</button>
   </div>
+  <main class="savegames-library">
+    <h2 data-i18n="ui.savegames.titulo">Meus Jogos</h2>
+    <div id="savegames-list" aria-live="polite"></div>
+  </main>
 </div>
 
 <!-- ══ CLASS SELECT ══ -->
@@ -962,11 +970,20 @@ function criarJogoSalvo() {
   const name = (document.getElementById('sg-name').value || '').trim();
   const campaign_file = document.getElementById('sg-campaign').value || null;
   const has_master = document.getElementById('sg-master').checked;
+  const play_mode = has_master ? 'multiplayer' : (document.getElementById('sg-play-mode')?.value === 'multiplayer' ? 'multiplayer' : 'solo');
   const entry_mode = document.getElementById('sg-entry-mode')?.value || 'vote';
   const replacement_rule = document.getElementById('sg-replacement-rule')?.value || 'experienced';
   if (!name) { alert(t('ui.save.de_nome_ao_jogo')); return; }
-  GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master,
+  GS.createSavegame({ name, mode: 'campaign', campaign_file, has_master, play_mode,
     rules: { allow_new_players: true, entry_mode, replacement_rule, vote_timeout_hours: 72 } });
+}
+
+function atualizarTipoJogoNovo() {
+  const tipo = document.getElementById('sg-play-mode');
+  const mestre = document.getElementById('sg-master');
+  if (!tipo || !mestre) return;
+  mestre.disabled = tipo.value === 'solo';
+  if (mestre.disabled) mestre.checked = false;
 }
 
 // Entrar (já logado) na sala do jogo salvo de um amigo pelo código — Fase 3.
@@ -51919,10 +51936,13 @@ function handleTileClick(tx, ty){
 //  window-level mouse listeners needed for camera movement.)
 
 // ── GS EVENT CALLBACKS — wire GS events to renderer functions ─────────────
-GS.on('wsError', () =>
-  toast(t('ui.conexao.servidor_nao_encontrado'), 'var(--red)'));
+GS.on('wsError', () => {
+  if (_savegamesListPending) _mostrarFalhaListaSavegames();
+  toast(t('ui.conexao.servidor_nao_encontrado'), 'var(--red)');
+});
 
 GS.on('wsClosed', (gs, cs) => {
+  if (_savegamesListPending) _mostrarFalhaListaSavegames();
   if(gs && gs.phase !== 'ended') toast(t('ui.conexao.encerrada'));
   else if(cs)                    toast(t('ui.conexao.encerrada_servidor'), 'var(--red)');
 });
@@ -51936,9 +51956,33 @@ GS.on('reconnectFailed', () => {
 });
 
 // Jogos Salvos — Fase 3: login por conta (apelido+PIN) na tela inicial.
+let _savegamesListPending = false;
+
+function _mostrarFalhaListaSavegames() {
+  const box = document.getElementById('savegames-list');
+  if (!box) return;
+  _savegamesListPending = false;
+  box.innerHTML = '';
+  const msg = document.createElement('div');
+  msg.style.color = '#e8b66d';
+  msg.textContent = t('ui.save.falha_lista');
+  const retry = document.createElement('button');
+  retry.className = 'btn-secondary btn-sm';
+  retry.textContent = t('ui.save.tentar_novamente');
+  retry.onclick = () => {
+    _savegamesListPending = true;
+    box.textContent = t('ui.save.carregando_jogos');
+    GS.listSavegames();
+  };
+  box.append(msg, retry);
+}
+
 GS.on('loginResult', (msg) => {
   if (msg.ok) {
     window._reloginTentativas = 0;
+    const list = document.getElementById('savegames-list');
+    if (list) list.textContent = t('ui.save.carregando_jogos');
+    _savegamesListPending = true;
     GS.listSavegames();
     showScreen('screen-savegames');
   // Decide pelo CODIGO do erro, nunca pelo texto: a mensagem e traduzida e uma
@@ -52225,6 +52269,7 @@ function _renderMeusJogos(box, list) {
 }
 
 GS.on('savegamesList', (list) => {
+  _savegamesListPending = false;
   const box = document.getElementById('savegames-list');
   const master = document.getElementById('sg-master');
   if (master && !document.getElementById('sg-entry-mode')) {
@@ -52234,6 +52279,7 @@ GS.on('savegamesList', (list) => {
       + `<label style="margin-top:7px;display:block">${t('ui.save.substituicao')}</label><select id="sg-replacement-rule"><option value="experienced">${t('ui.save.subst_experiente')}</option><option value="new">${t('ui.save.subst_nivel1')}</option><option value="inherit">${t('ui.save.subst_herda')}</option></select>`;
     master.parentElement.insertAdjacentElement('afterend', options);
   }
+  atualizarTipoJogoNovo();
   if (!box) return;
   _renderMeusJogos(box, list);
   const sel = document.getElementById('sg-campaign');
@@ -54097,6 +54143,7 @@ GS.on('animarResult', msg => {
 
 GS.on('serverError', msg  => {
   // ÚNICO ouvinte: GS.on substitui o anterior (um 2º registro apagava este).
+  if (_savegamesListPending) _mostrarFalhaListaSavegames();
   if(window._ataqueGiratorioPreview) _limparPreviewAtaqueGiratorio();
   sfx('recusa');
   if(window._modoInstrumento) _encerrarMiraInstrumento();

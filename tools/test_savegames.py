@@ -103,12 +103,27 @@ def main():
         check("campos iniciais", sg["campaign_phase"] == 0 and sg["members"] == {}
               and sg["characters"] == {} and sg["owner"] == "ricardo")
         check("master_account = dono quando has_master", sg["master_account"] == "ricardo")
+        check("Mestre classifica o save como multiplayer", sg["play_mode"] == "multiplayer")
         # SP3: vive na LOJA; so vai a disco na descarga.
         check("gravado na loja", S.LOJA.ler("savegames", sid) is not None)
         # procedural zera campaign_file
-        sgp = S.create_savegame("Avulso", "ricardo", "procedural", "x.json", False)
+        sgp = S.create_savegame("Avulso", "ricardo", "procedural", "x.json", False, play_mode="solo")
         check("procedural sem campaign_file", sgp["campaign_file"] is None and sgp["mode"] == "procedural")
         check("procedural sem master", sgp["master_account"] is None)
+        check("tipo solo escolhido fica salvo", sgp["play_mode"] == "solo")
+        sg_multi = S.create_savegame("Amigos", "ricardo", "campaign", "elara.json", False,
+                                     play_mode="multiplayer")
+        check("multiplayer sem Mestre fica salvo", sg_multi["play_mode"] == "multiplayer")
+        sg_seq, err_seq = S.try_create_savegame("ricardo", "Amigos II", "campaign", "elara.json",
+                                                  False, continue_from=sg_multi["id"])
+        check("continuação herda a categoria multiplayer",
+              err_seq is None and sg_seq.get("play_mode") == "multiplayer")
+        check("save legado com Mestre é multiplayer",
+              S._savegame_play_mode({"has_master": True, "members": {}}) == "multiplayer")
+        check("save legado com duas contas é multiplayer",
+              S._savegame_play_mode({"has_master": False, "members": {"ana": {}, "bia": {}}}) == "multiplayer")
+        check("save legado de uma conta é solo",
+              S._savegame_play_mode({"has_master": False, "members": {"ana": {}}}) == "solo")
         # write + reload
         sg["campaign_phase"] = 3
         S.write_savegame(sg)
@@ -120,7 +135,10 @@ def main():
               os.path.exists(os.path.join(tmp, "savegames", sid + ".json.bak")))
         # list filtra por participação
         lst_ric = [s["id"] for s in S.list_savegames("ricardo")]
+        resumos = {s["id"]: s for s in S.list_savegames("ricardo")}
         check("lista inclui jogos do dono", sid in lst_ric and sgp["id"] in lst_ric)
+        check("a lista devolve a categoria persistida", resumos.get(sgp["id"], {}).get("play_mode") == "solo"
+              and resumos.get(sg_multi["id"], {}).get("play_mode") == "multiplayer")
         check("lista de estranho é vazia", S.list_savegames("estranho") == [])
         # membro também vê
         sg["members"]["maria"] = {"class_id": "mage"}

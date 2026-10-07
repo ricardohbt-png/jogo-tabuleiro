@@ -124,6 +124,30 @@ input:focus { outline: none; border-color: var(--gold); }
                  border-radius: 10px; padding: 28px 36px; width: 360px; display: flex;
                  flex-direction: column; gap: 16px; }
 .connect-panel h2 { color: var(--gold); text-align: center; margin-bottom: 4px; }
+/* A biblioteca precisa de espaço próprio: dentro do formulário flex alto,
+   a lista era comprimida a zero pixels e os saves ficavam invisíveis. */
+#screen-savegames { gap:24px; padding:24px; min-height:0; align-items:stretch; }
+#screen-savegames .savegames-actions { flex:0 0 360px; min-height:0; overflow-y:auto; }
+#screen-savegames .savegames-actions > * { flex-shrink:0; }
+.savegames-library { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column;
+  gap:18px; padding:24px; background:var(--dark-panel); border:1px solid var(--border);
+  border-radius:10px; }
+.savegames-library > h2 { color:var(--gold); flex-shrink:0; }
+#savegames-list { flex:1; min-height:0; overflow-y:auto; display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; align-content:start; align-items:start; }
+.savegames-category { min-width:0; display:flex; flex-direction:column; gap:10px; }
+.savegame-card { min-width:0; display:flex; flex-direction:column; gap:12px;
+  padding:14px; background:#0d1a0d; border:1px solid #2a4a2a; border-radius:6px;
+  overflow-wrap:anywhere; }
+.savegame-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.savegame-actions > button { width:auto; }
+@media (max-width:1100px) { #savegames-list { grid-template-columns:1fr; } }
+@media (max-width:760px) {
+  #screen-savegames { flex-direction:column; overflow-y:auto; padding:12px; gap:12px; }
+  #screen-savegames .savegames-actions { flex:none; width:100%; max-width:none; overflow-y:visible; }
+  .savegames-library { order:-1; flex:none; min-height:240px; padding:16px; }
+  #savegames-list { flex:none; overflow-y:visible; }
+}
 .field { display: flex; flex-direction: column; gap: 6px; }
 .field label { color: var(--text2); font-size: .8rem; }
 .field input { width: 100%; }
