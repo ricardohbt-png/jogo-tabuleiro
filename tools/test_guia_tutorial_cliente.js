@@ -151,5 +151,15 @@ for (const k of ["dica_erro.fora_da_vez", "dica_erro.sem_acao", "dica_erro.longe
                  "dica_erro.alvo_errado", "resultado.acerto", "resultado.critico", "resultado.erro"])
   check("chave ui.tutorial." + k, langSrc.includes('"ui.tutorial.' + k + '"'));
 
+console.log("\n[12] fiação do aviso e da alternativa no game.js");
+check("um único GS.on('licaoDica')", (gameSrc.match(/GS\.on\('licaoDica'/g) || []).length === 1);
+check("um único GS.on('licaoResultado')", (gameSrc.match(/GS\.on\('licaoResultado'/g) || []).length === 1);
+check("aviso usa as chaves de dica de erro", /ui\.tutorial\.dica_erro\./.test(gameSrc));
+check("aviso usa as chaves de resultado", /ui\.tutorial\.resultado\./.test(gameSrc));
+check("janela tem o elemento licao-aviso", /id="licao-aviso"/.test(gameSrc));
+check("halo usa a alternativa do seletor", /sel\.alternativa/.test(gameSrc));
+check("CSS do aviso existe", /\.licao-aviso\b/.test(cssSrc));
+check("'Me mostra' aparece para alvo de tabuleiro também", /botoes = \(passo && passo\.ui && GuiaTutorial\.parseUi\(passo\.ui\)\)/.test(gameSrc));
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

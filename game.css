@@ -1826,6 +1826,8 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
 #licao-janela .licao-porque{ font-size:.78rem; opacity:.8; margin-top:6px; line-height:1.35; }
 #licao-janela .licao-dica{ margin-top:8px; padding:6px 8px; border-left:3px solid #f0c867;
   background:#f0c8671f; font-size:.82rem; line-height:1.35; }
+#licao-janela .licao-aviso{ margin-top:8px; padding:6px 8px; border-left:3px solid #e8d8a0;
+  background:#ffffff14; font-size:.82rem; line-height:1.35; }
 #licao-janela .licao-acoes{ display:flex; gap:8px; margin-top:8px; }
 #licao-janela .licao-botao{ cursor:pointer; padding:5px 10px; border-radius:4px; font-size:.8rem;
   border:1px solid #f0c86788; background:#f0c8671a; color:inherit; }

@@ -53705,6 +53705,7 @@ function _guiaAplicarHalo(){
   if(!sel) return;
   let el = document.querySelector(sel.css);
   if(el && sel.ancestral) el = el.closest(sel.ancestral);
+  if(!el && sel.alternativa) el = document.querySelector(sel.alternativa);
   if(!el) return;
   el.classList.add('guia-halo');
   if(GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg()) >= 1) el.classList.add('guia-halo-forte');
@@ -53748,6 +53749,22 @@ function _guiaIniciar(passo){
 
 function _guiaMostrar(){ _guiaDesde = performance.now(); _guiaTick(); }
 
+let _guiaAvisoTimer = null;
+// Aviso curto (dica de erro ou resultado do ataque): na janela da lição se ela está
+// aberta, senão no toast — quem fechou a janela também precisa saber.
+function _guiaAviso(texto){
+  if(!texto) return;
+  const host = $('licao-aviso');
+  if(host && $('licao-janela')?.classList.contains('open')){
+    host.textContent = texto;
+    host.style.display = 'block';
+    if(_guiaAvisoTimer) clearTimeout(_guiaAvisoTimer);
+    _guiaAvisoTimer = setTimeout(() => { host.style.display = 'none'; }, 7000);
+  } else {
+    toast(texto, '#f0c867');
+  }
+}
+
 function _mostrarJanelaLicao(msg){
   const host = $('licao-janela');
   if(!host) return;
@@ -53762,7 +53779,7 @@ function _mostrarJanelaLicao(msg){
       `<div class="licao-barra"><i style="width:${Math.round(((passo.i + 1) / passo.n) * 100)}%"></i></div></div>` : '';
   const porque = (explicito && passo.porque)
     ? `<div class="licao-porque">${_esc(_tutTexto(passo.porque))}</div>` : '';
-  const botoes = (passo && passo.ui && GuiaTutorial.seletor(passo.ui))
+  const botoes = (passo && passo.ui && GuiaTutorial.parseUi(passo.ui))
     ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
   const entendi = (passo && passo.informativo)
     ? `<button type="button" class="licao-botao licao-botao-ok" onclick="GS.avancarPasso()">${t('ui.tutorial.entendi')}</button>` : '';
@@ -53774,6 +53791,7 @@ function _mostrarJanelaLicao(msg){
     andamento +
     `<div class="licao-texto">${_esc(texto)}</div>` + porque +
     `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
+    `<div class="licao-aviso" id="licao-aviso" style="display:none"></div>` +
     ((botoes || entendi) ? `<div class="licao-acoes">${botoes}${entendi}</div>` : '');
   host.classList.add('open');
   _guiaIniciar(passo);
@@ -53787,6 +53805,20 @@ GS.on('licaoPasso', msg => {
   if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
   _licaoUltima = Object.assign({}, _licaoUltima, { passo: msg.passo });
   _mostrarJanelaLicao(_licaoUltima);
+});
+
+GS.on('licaoDica', msg => {
+  if(!msg || !/^[a-z_]+$/.test(msg.motivo || '')) return;
+  const chave = 'ui.tutorial.dica_erro.' + msg.motivo;
+  const texto = t(chave);
+  if(texto && texto !== chave) _guiaAviso(texto);
+});
+
+GS.on('licaoResultado', msg => {
+  if(!msg || !/^[a-z_]+$/.test(msg.chave || '')) return;
+  const chave = 'ui.tutorial.resultado.' + msg.chave;
+  const texto = t(chave, {roll: msg.roll, bonus: msg.bonus, total: msg.total, ca: msg.ca});
+  if(texto && texto !== chave) _guiaAviso(texto);
 });
 
 GS.on('fala', msg => {
