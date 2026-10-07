@@ -96,5 +96,51 @@ console.log("\n[7] gameState encaminha licao_dica e licao_resultado");
   check("case licao_resultado emite licaoResultado", /case 'licao_resultado':\s*\n\s*_emit\('licaoResultado'/.test(gsSrc));
 }
 
+console.log("\n[8] seletor: bolsa e slot (DOM do inventário)");
+s = G.seletor("bolsa:racao_viagem");
+check("bolsa acha o espaço pelo item", s && s.css === '.inv-bagslot[data-item-id="racao_viagem"]' && s.ancestral === null);
+check("bolsa cai no botão da mochila se o inventário está fechado",
+      s && s.alternativa === '[data-guia="botao:inventario"]');
+s = G.seletor("slot:main_hand");
+check("slot acha o espaço de equipamento", s && s.css === '.inv-slot[data-slot-key="main_hand"]');
+s = G.seletor("botao:inventario");
+check("botão da mochila usa data-guia", s && s.css === '[data-guia="botao:inventario"]');
+check("alternativa só existe na bolsa", !G.seletor("botao:encerrar_turno").alternativa);
+
+console.log("\n[9] alvoTabuleiro");
+const estado = { monsters: [
+  { id: "m1", type: "boneco_treino", pos: [5, 5], hp: 5 },
+  { id: "m2", type: "boneco_treino", pos: [9, 9], hp: 5 },
+  { id: "m3", type: "esqueleto_humano", pos: [1, 1], hp: 5 },
+  { id: "m4", type: "boneco_treino", pos: [4, 5], hp: 0 },
+] };
+const todos = () => true;
+let a = G.alvoTabuleiro("casa:[3,14]", estado, [0, 0], todos);
+check("casa devolve a posição", a && a.tipo === "casa" && a.pos[0] === 3 && a.pos[1] === 14);
+a = G.alvoTabuleiro("porta:[10,2]", estado, [0, 0], todos);
+check("porta devolve a posição e marca caminho", a && a.tipo === "porta" && a.pos[0] === 10 && a.caminho === true);
+a = G.alvoTabuleiro("casa:[3,14]", estado, [0, 0], () => false);
+check("casa fora da visão: null", a === null);
+a = G.alvoTabuleiro("monstro:boneco_treino", estado, [4, 4], todos);
+check("monstro: o mais próximo vivo", a && a.tipo === "monstro" && a.id === "m1");
+a = G.alvoTabuleiro("monstro:boneco_treino", estado, [4, 4], (x, y) => !(x === 5 && y === 5));
+check("monstro: ignora quem está fora da visão", a && a.id === "m2");
+a = G.alvoTabuleiro("monstro:boneco_treino", estado, [4, 4], () => false);
+check("monstro: nenhum visível = null", a === null);
+a = G.alvoTabuleiro("monstro:troll", estado, [4, 4], todos);
+check("monstro: tipo que não existe = null", a === null);
+a = G.alvoTabuleiro("monstro:boneco_treino", estado, null, todos);
+check("monstro sem posição minha: pega o primeiro vivo", a && a.id === "m1");
+check("botão não é alvo de tabuleiro", G.alvoTabuleiro("botao:encerrar_turno", estado, [0, 0], todos) === null);
+check("lixo devolve null", G.alvoTabuleiro("xyz", estado, [0, 0], todos) === null
+      && G.alvoTabuleiro(null, estado, [0, 0], todos) === null
+      && G.alvoTabuleiro("monstro:boneco_treino", null, [0, 0], todos) === null);
+
+console.log("\n[10] caminhoAbsoluto");
+let c = G.caminhoAbsoluto([[1, 0], [1, 0], [0, 1]], 2, 3);
+check("converte passos em casas", JSON.stringify(c) === "[[3,3],[4,3],[4,4]]");
+check("passos vazios: vazio", G.caminhoAbsoluto([], 1, 1).length === 0);
+check("não-lista: vazio", G.caminhoAbsoluto(null, 1, 1).length === 0);
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

@@ -20,17 +20,54 @@
     return null;
   }
 
-  // Seletor CSS do elemento de HUD correspondente. Devolve null para o que
-  // ainda não é HUD (casa, monstro, porta, bolsa, slot: fatia do tabuleiro).
-  // `ancestral`: o elemento achado é um filho; o halo vai no ancestral indicado.
+  // Seletor CSS do elemento de DOM correspondente. Devolve null para o que é
+  // desenhado no tabuleiro (casa, monstro, porta): para esses, alvoTabuleiro.
+  // `ancestral`: o achado é um filho; o halo vai no ancestral indicado.
+  // `alternativa`: seletor de reserva quando o primeiro não existe na tela
+  // (a bolsa só existe com o inventário aberto; o botão da mochila sempre).
   function seletor(ui) {
     const a = parseUi(ui);
     if (!a) return null;
     if (a.tipo === 'botao' || a.tipo === 'hud')
-      return { css: '[data-guia="' + a.tipo + ':' + a.id + '"]', ancestral: null };
+      return { css: '[data-guia="' + a.tipo + ':' + a.id + '"]', ancestral: null, alternativa: null };
     if (a.tipo === 'habilidade')
-      return { css: '[data-ability-id="' + a.id + '"]', ancestral: 'button' };
+      return { css: '[data-ability-id="' + a.id + '"]', ancestral: 'button', alternativa: null };
+    if (a.tipo === 'bolsa')
+      return { css: '.inv-bagslot[data-item-id="' + a.id + '"]', ancestral: null,
+               alternativa: '[data-guia="botao:inventario"]' };
+    if (a.tipo === 'slot')
+      return { css: '.inv-slot[data-slot-key="' + a.id + '"]', ancestral: null, alternativa: null };
     return null;
+  }
+
+  // Alvo desenhado NO TABULEIRO: {tipo:'casa'|'porta'|'monstro', pos, id?, caminho?}.
+  // `minhaPos` [x,y] escolhe o monstro mais próximo; `visivel(x,y)` filtra o que o
+  // jogador não enxerga (o halo nunca revela o que a névoa esconde).
+  function alvoTabuleiro(ui, estado, minhaPos, visivel) {
+    const a = parseUi(ui);
+    if (!a || !estado) return null;
+    const ve = typeof visivel === 'function' ? visivel : () => true;
+    if (a.tipo === 'casa' || a.tipo === 'porta') {
+      if (!ve(a.pos[0], a.pos[1])) return null;
+      return a.tipo === 'porta' ? { tipo: 'porta', pos: a.pos, caminho: true }
+                                : { tipo: 'casa', pos: a.pos };
+    }
+    if (a.tipo !== 'monstro') return null;
+    let melhor = null, melhorD = Infinity;
+    for (const m of (estado.monsters || [])) {
+      if (!m || m.type !== a.id || !(m.hp > 0) || !m.pos || !ve(m.pos[0], m.pos[1])) continue;
+      const d = minhaPos ? Math.max(Math.abs(m.pos[0] - minhaPos[0]), Math.abs(m.pos[1] - minhaPos[1])) : 0;
+      if (d < melhorD) { melhorD = d; melhor = m; }
+    }
+    return melhor ? { tipo: 'monstro', pos: [melhor.pos[0], melhor.pos[1]], id: melhor.id } : null;
+  }
+
+  // [[dx,dy],...] a partir de (fx,fy) -> [[x,y],...] com as casas pisadas.
+  function caminhoAbsoluto(passos, fx, fy) {
+    if (!Array.isArray(passos)) return [];
+    const out = []; let x = fx, y = fy;
+    for (const p of passos) { x += p[0]; y += p[1]; out.push([x, y]); }
+    return out;
   }
 
   // 0 = sem dica; 1 = primeira dica; 2 = segunda. `desde` e `agora` em ms.
@@ -48,5 +85,5 @@
     return d[Math.min(nivel, d.length) - 1] || '';
   }
 
-  window.GuiaTutorial = { parseUi, seletor, nivelDica, textoDica };
+  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, caminhoAbsoluto, nivelDica, textoDica };
 })();
