@@ -1,0 +1,162 @@
+"""Conteúdo do guia da trilha comum do Campo de Treinamento (pt + en).
+
+Cada texto é uma tupla (pt, en). `[[termo]]` chama o glossário.
+`conclui` só em passos que NÃO são o último (ver regras no plano da fatia 3).
+"""
+
+GLOSSARIO = {
+    "turno": {"nome": ("turno", "turn"),
+              "texto": ("Sua vez de agir. Quando você passa a vez, os outros agem e depois o turno volta.",
+                        "Your time to act. When you pass, the others act and then the turn comes back.")},
+    "movimento": {"nome": ("movimento", "movement"),
+                  "texto": ("Quantas casas você anda por turno. Acabou, só o próximo turno devolve.",
+                            "How many squares you walk per turn. When it runs out, only the next turn restores it.")},
+    "acao_livre": {"nome": ("ação livre", "free action"),
+                   "texto": ("Algo que não gasta nada do turno, como equipar uma arma.",
+                             "Something that costs nothing from your turn, like equipping a weapon.")},
+    "acao_bonus": {"nome": ("ação bônus", "bonus action"),
+                   "texto": ("Uma ação extra e curta por turno. Não gasta a ação principal: dá para beber e ainda atacar.",
+                             "A short extra action each turn. It does not use your main action: you can drink and still attack.")},
+    "ca": {"nome": ("CA", "AC"),
+           "texto": ("Classe de Armadura: quanto o alvo é difícil de acertar. Seu ataque precisa igualar ou passar.",
+                     "Armor Class: how hard the target is to hit. Your attack must match or beat it.")},
+    "fome_sede": {"nome": ("fome e sede", "hunger and thirst"),
+                  "texto": ("Barras que caem com o tempo e com habilidades. Vazias, trazem penalidades.",
+                            "Bars that drop over time and with abilities. When empty, they bring penalties.")},
+    "resistencia": {"nome": ("resistência", "resistance"),
+                    "texto": ("A criatura sofre menos dano de certo tipo de golpe, como corte ou impacto.",
+                              "The creature takes less damage from a type of hit, such as slashing or impact.")},
+}
+
+
+def P(id, texto, porque=None, ui=None, dica=(), conclui=None):
+    return {"id": id, "texto": texto, "porque": porque, "ui": ui, "dica": list(dica), "conclui": conclui}
+
+
+GUIA = {
+    "fala_0": [
+        P("ver", ("Veja seu [[movimento]]: são os passos que você tem neste [[turno]].",
+                  "Check your [[movimento]]: the steps you have this [[turno]]."),
+          porque=("Quando os passos acabam, só o próximo turno os devolve.",
+                  "When the steps run out, only the next turn gives them back.")),
+        P("andar", ("Clique na casa com o anel dourado para andar até lá.",
+                    "Click the square with the golden ring to walk there."),
+          ui="casa:[5,15]",
+          dica=[("O anel dourado está no chão do tabuleiro, à sua frente.",
+                 "The golden ring is on the board floor, ahead of you."),
+                ("Clique uma vez; o herói anda sozinho até a casa.",
+                 "Click once; the hero walks there by itself.")]),
+    ],
+    "fala_1": [
+        P("pegar", ("Abra o baú e pegue uma arma; ela vai para a bolsa.",
+                    "Open the chest and take a weapon; it goes to your bag."),
+          porque=("Cada herói só usa certas armas; o baú tem uma para cada classe.",
+                  "Each hero can only use certain weapons; the chest has one for every class."),
+          dica=[("Ande até ficar ao lado do baú e clique nele.", "Walk next to the chest and click it."),
+                ("Clique na arma para pegá-la.", "Click the weapon to take it.")]),
+    ],
+    "fala_2": [
+        P("abrir", ("Abra a bolsa no botão da mochila.", "Open the bag with the backpack button."),
+          ui="botao:inventario"),
+        P("equipar", ("Clique na arma e equipe-a.", "Click the weapon and equip it."),
+          porque=("Equipar é [[acao_livre]]: não gasta nada do seu [[turno]].",
+                  "Equipping is a [[acao_livre]]: it costs nothing from your [[turno]]."),
+          dica=[("A arma está na bolsa, entre os quadrados do inventário.",
+                 "The weapon is in the bag, among the inventory squares.")]),
+    ],
+    "fala_3": [
+        P("entender", ("Quando terminar o que quer fazer, você passa a vez.",
+                       "When you finish what you want to do, you pass your turn."),
+          porque=("No próximo [[turno]] seus passos e ações voltam.",
+                  "On the next [[turno]] your steps and actions come back.")),
+        P("encerrar", ("Clique em Encerrar Turno, no canto inferior direito.",
+                       "Click End Turn, in the bottom-right corner."),
+          ui="botao:encerrar_turno",
+          dica=[("O botão verde grande fica embaixo, à direita.", "The big green button is bottom-right.")]),
+    ],
+    "fala_4": [
+        P("porta", ("Atravesse a porta aberta ao fundo.", "Walk through the open door at the back."),
+          porque=("Porta aberta deixa passar; em outras masmorras, abrir porta é gratuito.",
+                  "An open door lets you through; in other dungeons, opening a door is free."),
+          ui="porta:[13,15]",
+          dica=[("Clique na casa da porta; o herói segue o caminho tracejado.",
+                 "Click the door square; the hero follows the dotted path.")]),
+    ],
+    "fala_18": [
+        P("pegar", ("O baú ao lado tem rações e água. Pegue uma ração.",
+                    "The chest nearby has rations and water. Take a ration."),
+          porque=("Comida e água mantêm [[fome_sede]] longe da zona de penalidade.",
+                  "Food and water keep [[fome_sede]] out of the penalty zone.")),
+        P("comer", ("Abra a bolsa e coma a ração de viagem.", "Open the bag and eat the travel ration."),
+          porque=("Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno.",
+                  "Eating is a [[acao_bonus]]: you can eat and still fight in the same turn."),
+          ui="bolsa:racao_viagem",
+          dica=[("Se a bolsa está fechada, use o botão da mochila.", "If the bag is closed, use the backpack button.")]),
+    ],
+    "fala_19": [
+        P("beber", ("Beba duas garrafas de água pela bolsa.", "Drink two bottles of water from the bag."),
+          porque=("Água rende menos que comida. Habilidades cobram goles: curas, magias e canções.",
+                  "Water restores less than food. Abilities cost sips: heals, spells and songs."),
+          ui="bolsa:garrafa_agua",
+          dica=[("Clique na garrafa na bolsa e use-a duas vezes.", "Click the bottle in the bag and use it twice.")]),
+    ],
+    "fala_29": [
+        P("pegar", ("Pegue os três itens do baú: óleo, veneno e poção.",
+                    "Take the chest's three items: oil, poison and potion."),
+          porque=("São itens que se gastam, e você vai precisar deles na última sala.",
+                  "These items get used up, and you will need them in the last room."),
+          dica=[("Clique em cada item do baú até a lista esvaziar.", "Click each chest item until the list is empty.")]),
+    ],
+    "fala_30": [
+        P("escolher", ("Escolha o Frasco de Óleo na bolsa.", "Pick the Oil Flask in the bag."),
+          ui="bolsa:frasco_oleo"),
+        P("arremessar", ("Clique num boneco para arremessar o óleo.", "Click a dummy to throw the oil."),
+          porque=("Você rola destreza contra a [[ca]] do alvo; se acertar, ele pega fogo.",
+                  "You roll dexterity against the target's [[ca]]; on a hit, it catches fire."),
+          ui="monstro:boneco_treino",
+          dica=[("O boneco de treino está na sala, parado.", "The training dummy is in the room, standing still.")]),
+    ],
+    "fala_31": [
+        P("untar", ("Use o Fungo Acre na bolsa para untar a arma.", "Use the Acrid Fungus in the bag to coat your weapon."),
+          porque=("Veneno não se bebe: unta-se na lâmina. Qualquer classe pode fazer isso.",
+                  "Poison is not drunk: it is coated on the blade. Any class can do it."),
+          ui="bolsa:veneno_fungo_acre",
+          dica=[("Clique no frasco de veneno na bolsa.", "Click the poison flask in the bag.")]),
+    ],
+    "fala_32": [
+        P("atacar", ("Ataque um boneco com a arma untada.", "Attack a dummy with the coated weapon."),
+          porque=("O veneno só age se o golpe acertar; errar gasta o turno, não a dose.",
+                  "Poison only works if the hit lands; a miss wastes the turn, not the dose."),
+          ui="monstro:boneco_treino",
+          dica=[("Ande até ficar ao lado do boneco e clique nele.", "Walk next to the dummy and click it.")]),
+    ],
+    "fala_33": [
+        P("beber", ("Beba a poção de cura pela bolsa.", "Drink the healing potion from the bag."),
+          porque=("Beber é [[acao_bonus]]: dá para se curar e atacar no mesmo turno.",
+                  "Drinking is a [[acao_bonus]]: you can heal and attack in the same turn."),
+          ui="bolsa:health_potion_small",
+          dica=[("Memorize onde ela fica: na hora do aperto não haverá tempo.", "Remember where it is: in a pinch there is no time.")]),
+    ],
+    "fala_36": [
+        P("atacar", ("Ataque o esqueleto com a arma que está na sua mão.", "Attack the skeleton with the weapon in your hand."),
+          porque=("Corte entra a menos: o esqueleto tem [[resistencia]] a lâminas.",
+                  "Slashing lands for less: the skeleton has [[resistencia]] to blades."),
+          ui="monstro:esqueleto_humano",
+          dica=[("Compare o número do dano com o de um golpe normal.", "Compare the damage number with a normal hit.")]),
+    ],
+    "fala_37": [
+        P("pegar", ("Pegue a maça do baú desta sala.", "Take the mace from this room's chest."),
+          porque=("Osso racha com impacto, e a maça causa impacto.",
+                  "Bone cracks under impact, and the mace deals impact.")),
+        P("equipar", ("Abra a bolsa e equipe a maça.", "Open the bag and equip the mace."),
+          ui="bolsa:maca_treino",
+          dica=[("Equipar é [[acao_livre]], não gasta o turno.", "Equipping is a [[acao_livre]], it does not use your turn.")]),
+    ],
+    "fala_38": [
+        P("matar", ("Derrube o esqueleto com a maça.", "Take down the skeleton with the mace."),
+          porque=("Compare com o golpe anterior: trocar de arma rende uns três pontos a mais por acerto.",
+                  "Compare with the earlier hit: switching weapons adds about three points per hit."),
+          ui="monstro:esqueleto_humano",
+          dica=[("Escolher a arma certa vale mais que rolar bem o dado.", "Choosing the right weapon beats rolling well.")]),
+    ],
+}
