@@ -80,6 +80,13 @@ check("botão Entendi chama GS.avancarPasso", /GS\.avancarPasso\(\)/.test(gameSr
 check("index.html carrega guiaTutorial.js e tutorial.js",
       /src\/guiaTutorial\.js/.test(indexSrc) && /src\/lang\/tutorial\.js/.test(indexSrc));
 check("CSS do halo existe", /\.guia-halo\b/.test(cssSrc) && /@keyframes guia-pulso/.test(cssSrc));
+check("_guiaEncerrar existe", /function _guiaEncerrar\(/.test(gameSrc));
+{
+  const ini = (gameSrc.match(/function _guiaIniciar\([\s\S]*?\n}\r?\n/) || [""])[0];
+  const tick = (gameSrc.match(/function _guiaTick\([\s\S]*?\n}\r?\n/) || [""])[0];
+  check("_guiaEstadoRef em _guiaIniciar e _guiaTick", /_guiaEstadoRef/.test(ini) && /_guiaEstadoRef/.test(tick));
+  check("_guiaTick chama _guiaEncerrar()", /_guiaEncerrar\(\)/.test(tick));
+}
 check("textos pelo tradutor, não literais", /ui\.tutorial\.passo_de/.test(gameSrc) && /ui\.tutorial\.entendi/.test(gameSrc));
 
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);

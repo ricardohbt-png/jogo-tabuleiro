@@ -53683,6 +53683,7 @@ let _licaoUltima = null;
 let _guiaPasso = null;          // passo atual recebido do servidor
 let _guiaDesde = 0;             // performance.now() do último progresso
 let _guiaTimer = null;
+let _guiaEstadoRef = null;      // game_state vigente quando o passo foi disparado
 const _guiaCfg = () => ({ dica1S: 12, dica2S: 30, ...(window.VC && VC.tutorial) });
 
 // Chave de idioma (ui.tutorial.*) ou texto autoral em português.
@@ -53718,14 +53719,27 @@ function _guiaAtualizarDica(){
   host.style.display = txt ? 'block' : 'none';
 }
 
+function _guiaEncerrar(){
+  _guiaPasso = null;
+  if(_guiaTimer){ clearInterval(_guiaTimer); _guiaTimer = null; }
+  _guiaLimparHalo();
+  _fecharJanelaLicao();
+}
+
 function _guiaTick(){
   if(!_guiaPasso){ _guiaLimparHalo(); return; }
+  // Chegou um game_state mais novo que a fala/passo: se a lição acabou, encerra.
+  if(GS.gameState !== _guiaEstadoRef){
+    const lic = GS.licaoAtual();
+    if(!lic || !_licaoUltima || lic.licao_id !== _licaoUltima.licao_id){ _guiaEncerrar(); return; }
+  }
   _guiaAplicarHalo();
   _guiaAtualizarDica();
 }
 
 function _guiaIniciar(passo){
   _guiaPasso = passo || null;
+  _guiaEstadoRef = GS.gameState;
   _guiaDesde = performance.now();
   if(_guiaTimer) clearInterval(_guiaTimer);
   _guiaTimer = _guiaPasso ? setInterval(_guiaTick, 400) : null;
