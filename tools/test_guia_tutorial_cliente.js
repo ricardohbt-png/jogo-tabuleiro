@@ -168,5 +168,11 @@ check("o desenho usa alvoTabuleiro e caminhoAbsoluto",
       /GuiaTutorial\.alvoTabuleiro\(/.test(gameSrc) && /GuiaTutorial\.caminhoAbsoluto\(/.test(gameSrc));
 check("o halo 2D mantém a animação por _agendarChamas2D", /function _guiaDesenhar2D[\s\S]{0,2200}_agendarChamas2D\(\)/.test(gameSrc));
 
+console.log("\n[14] halo 3D no game.js");
+check("função _guiaAtualizar3D existe", /function _guiaAtualizar3D\(/.test(gameSrc));
+check("o laço 3D chama _guiaAtualizar3D", /startLoop3D[\s\S]{0,40000}_guiaAtualizar3D\(\)/.test(gameSrc));
+check("dispose3D libera a marca do guia", /function dispose3D[\s\S]{0,6000}guiaMarca/.test(gameSrc));
+check("a marca 3D usa topoSuperficie3D", /function _guiaAtualizar3D[\s\S]{0,2500}topoSuperficie3D\(/.test(gameSrc));
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

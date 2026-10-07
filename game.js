@@ -44048,6 +44048,13 @@ function dispose3D(){
     g3.setaVez.material.map?.dispose();
     g3.setaVez.material.dispose();
   }
+  if(g3.guiaMarca){
+    const m = g3.guiaMarca;
+    g3.scene.remove(m.grupo);
+    m.seta.material.map?.dispose(); m.seta.material.dispose();
+    m.geoAnel.dispose(); m.geoPonto.dispose(); m.mat.dispose();
+    g3.guiaMarca = null;
+  }
   if(g3.activeEffectGroup){
     Object.values(g3.activeEffectSprites || {}).forEach(sprite => {
       if(sprite.material) sprite.material.dispose();
@@ -44742,6 +44749,7 @@ function startLoop3D(){
         g3.setaVez.position.set(curFig.position.x, curFig.position.y + alt + 2.16 + bob, curFig.position.z);
       }
     }
+    _guiaAtualizar3D();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -53826,6 +53834,78 @@ function _guiaDesenhar2D(ctx, state, visionSet){
   ctx.restore();
   _desenharSetaVez2D(ctx, cx, alvo.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
   _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
+}
+
+// 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),
+// criada na primeira vez e escondida quando não há alvo. Nunca cria nada por quadro.
+const GUIA_TRILHA_MAX = 48;
+function _guiaMarca3D(){
+  if(g3.guiaMarca) return g3.guiaMarca;
+  const T = g3.T;
+  const mat = new T.MeshBasicMaterial({ color: 0xf0c867, transparent: true, opacity: .95,
+    side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false });
+  const anel = new T.Mesh(new T.RingGeometry(0.33, 0.45, 40), mat);
+  anel.rotation.x = -Math.PI / 2; anel.renderOrder = 81; anel.raycast = () => {};
+  const seta = _criarSetaVez3D(T); seta.visible = true;
+  const grupoTrilha = new T.Group();
+  const geoPonto = new T.CircleGeometry(0.07, 10);
+  const pontos = [];
+  for(let i = 0; i < GUIA_TRILHA_MAX; i++){
+    const p = new T.Mesh(geoPonto, mat);
+    p.rotation.x = -Math.PI / 2; p.renderOrder = 80; p.visible = false; p.raycast = () => {};
+    grupoTrilha.add(p); pontos.push(p);
+  }
+  const grupo = new T.Group();
+  grupo.add(anel); grupo.add(seta); grupo.add(grupoTrilha);
+  grupo.visible = false;
+  g3.scene.add(grupo);
+  g3.guiaMarca = { grupo, anel, seta, pontos, mat, geoAnel: anel.geometry, geoPonto };
+  return g3.guiaMarca;
+}
+
+// Visão do jogador, recalculada só quando o estado muda.
+let _guiaVisaoRef = null, _guiaVisaoSet = null;
+function _guiaVisao3D(state){
+  if(_guiaVisaoRef !== state){
+    const me = (state.players || []).find(p => p.id === GS.myPid && p.alive);
+    _guiaVisaoSet = (GS.isMaster() || state.test_mode) ? null : computeVisionSet(state, me);
+    _guiaVisaoRef = state;
+  }
+  return _guiaVisaoSet;
+}
+
+function _guiaAtualizar3D(){
+  if(!g3) return;
+  const st = GS.gameState;
+  let alvo = null;
+  if(st && _guiaPasso && _guiaPasso.ui){
+    const vis = _guiaVisao3D(st);
+    alvo = _guiaAlvoTabuleiro(st, vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true));
+  }
+  if(!alvo){ if(g3.guiaMarca) g3.guiaMarca.grupo.visible = false; return; }
+  const m = _guiaMarca3D();
+  const agora = performance.now();
+  const forte = _guiaForte();
+  const pulso = 0.5 + 0.5 * Math.sin(agora / (forte ? 260 : 420));
+  let x = alvo.pos[0], z = alvo.pos[1];
+  if(alvo.tipo === 'monstro'){
+    const mesh = getMonsterMesh(alvo.id);
+    if(mesh){ x = mesh.position.x; z = mesh.position.z; }
+  }
+  const y = topoSuperficie3D(st, alvo.pos[0], alvo.pos[1]) + 0.04;
+  m.anel.position.set(x, y, z);
+  m.anel.scale.setScalar(1 + 0.18 * pulso);
+  m.mat.opacity = 0.65 + 0.35 * pulso;
+  m.seta.position.set(x, y + 1.0 + 0.1 * pulso, z);
+  const trilha = _guiaCaminhoAteAlvo(st, alvo);
+  for(let i = 0; i < m.pontos.length; i++){
+    const c = trilha[i];
+    const p = m.pontos[i];
+    if(!c || i === trilha.length - 1){ p.visible = false; continue; }   // a última casa é o próprio anel
+    p.visible = ((i + Math.floor(agora / 220)) % 2) === 0;              // pontos alternados "andam"
+    p.position.set(c[0], topoSuperficie3D(st, c[0], c[1]) + 0.05, c[1]);
+  }
+  m.grupo.visible = true;
 }
 
 function _mostrarJanelaLicao(msg){
