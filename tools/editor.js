@@ -1852,12 +1852,12 @@
   function utilityBeltFieldsHTML(item, index) {
     if (!utilityBeltCapacity(item)) return "";
     const slots = utilityBeltSlots(item), choices = utilityBeltConsumables();
-    return `<div style="margin-top:6px"><img src="assets/itens/cinto_e_bolsos.png" alt="" width="40" height="40">${slots.map((entry, pocket) =>
-      `<label style="display:block">Bolso ${pocket + 1}
-        <select data-belt-item data-i="${index}" data-pocket="${pocket}" aria-label="Item do bolso ${pocket + 1}">
-          <option value="">Vazio</option>${choices.map(choice => `<option value="${editorEscapeText(choice.id)}"${entry && entry.item.id === choice.id ? " selected" : ""}>${editorEscapeText(nomeCat("item", choice.id, choice.name || choice.id))}</option>`).join("")}
+    return `<div style="margin-top:6px"><img src="../assets/itens/cinto_e_bolsos.png" alt="" width="40" height="40">${slots.map((entry, pocket) =>
+      `<label style="display:block">${t('ui.editor.cinto.bolso', {n:pocket + 1})}
+        <select data-belt-item data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.item', {n:pocket + 1})}">
+          <option value="">${t('ui.editor.cinto.vazio')}</option>${choices.map(choice => `<option value="${editorEscapeText(choice.id)}"${entry && entry.item.id === choice.id ? " selected" : ""}>${editorEscapeText(nomeCat("item", choice.id, choice.name || choice.id))}</option>`).join("")}
         </select>
-        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="Quantidade do bolso ${pocket + 1}" type="number" min="1" max="4" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
+        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="4" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
       </label>`).join("")}</div>`;
   }
   function wireUtilityBeltFields(root, items, rerender) {

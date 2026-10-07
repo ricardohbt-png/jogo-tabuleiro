@@ -48,6 +48,8 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
     def belt(self, iid, quantity=2, slot='item1', model='cinto_utilidades'):
         belt = item(model)
         self.r._normalize_utility_belt(belt)
+        belt['utility_belt_token'] = 'test-' + str(getattr(self, '_belt_sequence', 0))
+        self._belt_sequence = getattr(self, '_belt_sequence', 0) + 1
         belt['utility_belt_slots'][0] = {'item': item(iid), 'quantity': quantity}
         self.p['gear'][slot] = belt
         return belt
@@ -55,11 +57,13 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
     async def use(self, iid, **source):
         options = dict(source='utility_belt', gear_slot='item1', pocket_index=0)
         options.update(source)
+        options.setdefault('belt_token', (self.p['gear'].get(options['gear_slot']) or {}).get('utility_belt_token') if isinstance(options['gear_slot'], str) else None)
         await self.r.handle_use_item('p1', iid, **options)
 
     async def throw(self, iid='frasco_oleo', **source):
         data = dict(item_id=iid, target_id='m1', source='utility_belt', gear_slot='item1', pocket_index=0)
         data.update(source)
+        data.setdefault('belt_token', (self.p['gear'].get(data['gear_slot']) or {}).get('utility_belt_token') if isinstance(data['gear_slot'], str) else None)
         await self.r.handle_throw_item('p1', data)
 
     async def test_use_from_either_model_and_slot_consumes_exact_source(self):
@@ -298,7 +302,7 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
         # Execute the real use_item dispatch branch without opening a network server.
         belt = self.belt('antidote')
         self.p['envenenado'] = True
-        await self.dispatch(self.r, 'p1', dict(item_id='antidote', target_id='p1', source='utility_belt', gear_slot='item1', pocket_index=0))
+        await self.dispatch(self.r, 'p1', dict(item_id='antidote', target_id='p1', source='utility_belt', gear_slot='item1', pocket_index=0, belt_token=belt['utility_belt_token']))
         self.assertEqual(belt['utility_belt_slots'][0]['quantity'], 1)
 
 
@@ -312,11 +316,11 @@ const ctx = vm.createContext({ WebSocket: Socket, console, setTimeout, clearTime
   localStorage: { getItem: () => null, setItem() {}, removeItem() {} } });
 vm.runInContext(fs.readFileSync('src/gameState.js', 'utf8'), ctx);
 const GS = vm.runInContext('GS', ctx); GS.connect('ws://test', 'Hero', 'login');
-const source = {source:'utility_belt', gearSlot:'item2', pocketIndex:0};
+const source = {source:'utility_belt', gearSlot:'item2', pocketIndex:0, beltToken:'belt-A'};
 GS.useItem('health_potion', source);
 GS.throwItem('frasco_oleo', 'm1', [4,1], source);
 GS.throwItemArea('bomba_incendiaria', 4, 1, source);
-const coords = {source:'utility_belt', gear_slot:'item2', pocket_index:0};
+const coords = {source:'utility_belt', gear_slot:'item2', pocket_index:0, belt_token:'belt-A'};
 assert.deepEqual(messages, [
   {type:'use_item', item_id:'health_potion', ...coords},
   {type:'throw_item', item_id:'frasco_oleo', target_id:'m1', target_pos:[4,1], ...coords},

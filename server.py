@@ -11664,6 +11664,7 @@ class GameRoom:
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _city_state_payload(self):
+        self._ensure_utility_belt_tokens()
         players_city = [dict(p,
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
@@ -19151,7 +19152,7 @@ class GameRoom:
         if not isinstance(data, dict): return
         item_id = data.get("item_id")
         item, source_location = self._resolve_consumable_source(
-            p, item_id, data.get("source", "bag"), data.get("gear_slot"), data.get("pocket_index"))
+            p, item_id, data.get("source", "bag"), data.get("gear_slot"), data.get("pocket_index"), data.get("belt_token"))
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_na_bolsa")}); return
         defn = ARREMESSAVEIS.get(item_id)
@@ -24058,6 +24059,8 @@ class GameRoom:
     def _apply_gear_effect(self, p, item, equipping):
         if equipping and self._is_utility_belt_item(item):
             self._normalize_utility_belt(item)
+            # An equipment activation is distinct even when the same belt returns.
+            item["utility_belt_token"] = os.urandom(16).hex()
         value = item.get("value", 0)
         # Armaduras iniciais de saves antigos tinham value=0 porque o bônus
         # estava embutido na CA. Use o catálogo para manter equipar/desequipar
@@ -24211,11 +24214,61 @@ class GameRoom:
                     and cls._is_utility_belt_eligible(entry.get("item"))
                     and entry["item"]["id"] not in seen):
                 seen.add(entry["item"]["id"])
-                slots.append({"item": deepcopy(entry["item"]), "quantity": entry["quantity"]})
+                clean = {"item": deepcopy(entry["item"]), "quantity": entry["quantity"]}
+                reserves = entry.get("remaining_items")
+                if "remaining_items" in entry:
+                    if (not isinstance(reserves, list) or len(reserves) != entry["quantity"] - 1
+                            or any(not cls._is_utility_belt_eligible(unit)
+                                   or unit["id"] != entry["item"]["id"] for unit in reserves)):
+                        slots.append(None)
+                        continue
+                    clean["remaining_items"] = deepcopy(reserves)
+                slots.append(clean)
             else:
                 slots.append(None)
         item["utility_belt_slots"] = slots
         return item
+
+    def _ensure_utility_belt_tokens(self):
+        """Publish an identity for already-equipped belts from older saves."""
+        for p in self.players.values():
+            for key in ("item1", "item2"):
+                belt = p.get("gear", {}).get(key)
+                if self._is_utility_belt_item(belt):
+                    if not isinstance(belt.get("utility_belt_token"), str) or not belt["utility_belt_token"]:
+                        belt["utility_belt_token"] = os.urandom(16).hex()
+                    if "utility_belt_slots" not in belt:
+                        self._normalize_utility_belt(belt)
+
+    @staticmethod
+    def _utility_belt_full_unit(item):
+        """Old stacks represent the current bottle followed by full bottles."""
+        unit = deepcopy(item)
+        if unit.get("effect") == "heal" and int(unit.get("max_uses", 1) or 1) > 1:
+            unit["uses_left"] = int(unit["max_uses"])
+        return unit
+
+    @classmethod
+    def _utility_belt_append_unit(cls, entry, unit):
+        full = cls._utility_belt_full_unit(entry["item"])
+        if "remaining_items" in entry or unit != full:
+            reserves = entry.setdefault("remaining_items", [deepcopy(full) for _ in range(entry["quantity"] - 1)])
+            reserves.append(deepcopy(unit))
+        entry["quantity"] += 1
+
+    @classmethod
+    def _utility_belt_take_unit(cls, entry):
+        unit = deepcopy(entry["item"])
+        entry["quantity"] -= 1
+        if entry["quantity"]:
+            reserves = entry.get("remaining_items")
+            next_unit = reserves.pop(0) if reserves is not None else cls._utility_belt_full_unit(unit)
+            # Keep the current item reference stable for the existing use flow.
+            entry["item"].clear()
+            entry["item"].update(next_unit)
+            if reserves == []:
+                entry.pop("remaining_items")
+        return unit
 
     async def handle_move_utility_belt_item(self, pid, data):
         """Move exactly one unit; validate everything before changing either source."""
@@ -24249,8 +24302,7 @@ class GameRoom:
             # The normal bag is compact: bag_index is an insertion position.
             if not entry or len(bag) >= p.get("bag_size", 6) or not 0 <= bag_index <= len(bag):
                 return False
-            unit = deepcopy(entry["item"])
-            entry["quantity"] -= 1
+            unit = self._utility_belt_take_unit(entry)
             if entry["quantity"] == 0:
                 slots[pocket_index] = None
             bag.insert(bag_index, unit)
@@ -24267,7 +24319,7 @@ class GameRoom:
             if entry and entry["item"]["id"] == iid:
                 if entry["quantity"] >= 4:
                     return False
-                entry["quantity"] += 1
+                self._utility_belt_append_unit(entry, unit)
                 bag.pop(bag_index)
             elif entry:
                 if entry["quantity"] != 1:
@@ -24306,7 +24358,7 @@ class GameRoom:
             for belt, slots in belts:
                 for entry in slots:
                     if entry and entry["item"]["id"] == item["id"] and entry["quantity"] < 4:
-                        entry["quantity"] += 1
+                        self._utility_belt_append_unit(entry, item)
                         belt["utility_belt_slots"] = slots
                         return "bag"  # historical successful-acquisition contract
             for belt, slots in belts:
@@ -24639,6 +24691,8 @@ class GameRoom:
                  "head": "⛑️", "boots": "👢", "ring": "💍", "item": "🎒"}.get(cat, "🎒")
         self._aplicar_corrosao_inicial(p, item, cat)
         await self.gm_say(T("narracao.equipou", log_emoji=emoji, heroi=p["name"], item=nome_item(item)))
+        for _, old in displaced:
+            await self._notify_utility_belt_contents(old)
         return True
 
     async def _executar_equip_from_bag(self, pid, slot_index):
@@ -24675,6 +24729,7 @@ class GameRoom:
         # Equipar por cima empurra o item antigo para a bolsa — se ele estiver
         # preso por maldição, isso seria a via mais fácil de burlar a trava.
         _destino = self._slot_destino_equip(p, cat)
+        displaced_belt = p.get("gear", {}).get(_destino) if _destino else None
         if _destino and self._slot_travado_por_maldicao(p, _destino):
             await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return False
         # Substituir a Bota Alada por outro item de botas também remove a
@@ -24717,6 +24772,7 @@ class GameRoom:
         if log:
             self._aplicar_corrosao_inicial(p, item, cat)
             await self.gm_say(log)
+            await self._notify_utility_belt_contents(displaced_belt)
         return True
 
     @staticmethod
@@ -24801,9 +24857,12 @@ class GameRoom:
             p["weapon"] = {**WEAPONS["unarmed"]}
         p["bag"].append(item)
         await self.gm_say(T("narracao.desequipou", heroi=p['name'], item=nome_item(item)))
+        await self._notify_utility_belt_contents(item)
+        await self.push_state_or_city()
+
+    async def _notify_utility_belt_contents(self, item):
         if self._is_utility_belt_item(item) and any(item.get("utility_belt_slots", [])):
             await self.gm_say(T("narracao.cinto_conteudo_guardado", item=nome_item(item)))
-        await self.push_state_or_city()
 
     # â”€â”€ validaÃ§Ã£o de slot secundÃ¡rio (scaffolding â€” ver SECUNDARIO_PERMITIDO) â”€â”€â”€â”€
     # NOTA: handle_equip ainda NÃƒO Ã© roteado (o caminho ativo Ã©
@@ -35300,7 +35359,7 @@ class GameRoom:
         await self._aplicar_maldicao_carta(p, item)
         await self.push_state()
 
-    def _resolve_consumable_source(self, p, item_id, source="bag", gear_slot=None, pocket_index=None):
+    def _resolve_consumable_source(self, p, item_id, source="bag", gear_slot=None, pocket_index=None, belt_token=None):
         """Resolve one exact item without repairing or changing rejected source data."""
         if source == "bag":
             return next((i for i in p["bag"] if i["id"] == item_id), None), None
@@ -35309,7 +35368,9 @@ class GameRoom:
             return None, None
         belt = p.get("gear", {}).get(gear_slot)
         capacity = self._utility_belt_capacity(belt)
-        if not capacity or not 0 <= pocket_index < capacity:
+        if (not capacity or not 0 <= pocket_index < capacity
+                or not isinstance(belt_token, str) or not belt_token
+                or belt.get("utility_belt_token") != belt_token):
             return None, None
         slots = belt.get("utility_belt_slots")
         normalized = self._normalize_utility_belt(deepcopy(belt))["utility_belt_slots"]
@@ -35333,15 +35394,12 @@ class GameRoom:
                 or entry.get("item") is not item or type(entry.get("quantity")) is not int
                 or not 1 <= entry["quantity"] <= 4):
             return False
-        entry["quantity"] -= 1
+        self._utility_belt_take_unit(entry)
         if entry["quantity"] == 0:
             slots[pocket_index] = None
-        elif item.get("effect") == "heal" and int(item.get("max_uses", 1) or 1) > 1:
-            # The exhausted bottle leaves; the next bottle starts with full doses.
-            item["uses_left"] = int(item["max_uses"])
         return True
 
-    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None):
+    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -35349,7 +35407,7 @@ class GameRoom:
         if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
             return
-        item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index)
+        item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index, belt_token)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
 
@@ -35446,7 +35504,7 @@ class GameRoom:
             # and pocket after that await, then commit the dose/bottle and apply
             # its effect synchronously before any further narration can yield.
             current_item, current_location = self._resolve_consumable_source(
-                p, item_id, source, gear_slot, pocket_index)
+                p, item_id, source, gear_slot, pocket_index, belt_token)
             if (current_item is not item or current_location[1] is not source_location[1]
                     or current_location[3] is not source_location[3]):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
@@ -35458,8 +35516,11 @@ class GameRoom:
                 item["uses_left"] = uses_left
                 remove_item = uses_left <= 0
             if remove_item:
+                used_item = deepcopy(item)
                 if not self._consume_action_item(p, item, source_location):
                     return
+                # Effects/narration use the bottle consumed, not its promoted reserve.
+                item = used_item
         if effect == "heal":
             self._curar_hp(p, val, "Poção de cura")
             if max_uses > 1:
@@ -46060,6 +46121,7 @@ class GameRoom:
         Espelha o par _city_state_payload/broadcast_city_state. A prévia do
         editor consome este payload sem passar por nenhum jogador."""
         self._atualizar_zonas_moveis()
+        self._ensure_utility_belt_tokens()
         # Slots cuja rodada de recarga já chegou não devem continuar ocupando
         # espaço no estado enviado ao cliente.
         for p in self.players.values():
@@ -47370,7 +47432,7 @@ async def handler(ws):
                 elif t == "use_item":
                     if room:
                         await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
-                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"))
+                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"))
 
                 elif t == "read_item":
                     if room:

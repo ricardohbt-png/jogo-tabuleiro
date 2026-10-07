@@ -31,7 +31,7 @@ class Element {
 }
 const potion={id:'potion',name:'Potion',item_slot:'bag',effect:'heal'};
 const oil={id:'oil',name:'Oil',item_slot:'bag',arremessavel:true};
-const player={id:'p',alive:true,bag:[potion,{id:'cinto_utilidades'}],gear:{item1:{id:'cinto_utilidades',utility_belt_slots:[{item:potion,quantity:4},{item:oil,quantity:2}]},item2:{id:'cinto_com_bolsos'}}};
+const player={id:'p',alive:true,bag:[potion,{id:'cinto_utilidades'}],gear:{item1:{id:'cinto_utilidades',utility_belt_token:'belt-A',utility_belt_slots:[{item:potion,quantity:4},{item:oil,quantity:2}]},item2:{id:'cinto_com_bolsos'}}};
 const sent=[],host=new Element(),doc={addEventListener(){},createElement:()=>new Element(),getElementById:()=>null,querySelector:()=>null,activeElement:null};
 const context={document:doc,localStorage:{getItem:()=>null},window:{_iniciarMiraArremesso:(...a)=>sent.push(['throw',...a])},GS:{gameState:{phase:'playing',players:[player]},myPid:'p',isMyTurn:true,CATALOGO_ITENS:{},moveUtilityBeltItem:(...a)=>sent.push(['move',...a])},t:x=>x,_rotulo:x=>x,itemIconHTML:()=>'',performance:{now:()=>1000},requestAnimationFrame:f=>f(),useItem:(...a)=>sent.push(['use',...a])};
 vm.createContext(context);
@@ -46,19 +46,19 @@ modal.testSelect({kind:'bag',index:0});slots[2].onclick();
 check('runtime bag to belt exact one unit request',JSON.stringify(sent.pop())===JSON.stringify(['move','to_belt','item1',2,0]));
 modal.testSelect({kind:'belt',gearSlot:'item1',pocketIndex:0});modal.testBag(5);
 check('runtime pocket to compact bag insertion',JSON.stringify(sent.pop())===JSON.stringify(['move','to_bag','item1',0,2]));
-modal.testActivate('item1',0);check('runtime use coordinates',JSON.stringify(sent.pop())===JSON.stringify(['use','potion',undefined,{source:'utility_belt',gearSlot:'item1',pocketIndex:0}]));
-modal.testActivate('item1',1);check('runtime custom throwable coordinates',sent.pop()?.[3]?.pocketIndex===1);
+modal.testActivate('item1',0);check('runtime use coordinates',JSON.stringify(sent.pop())===JSON.stringify(['use','potion',undefined,{source:'utility_belt',gearSlot:'item1',pocketIndex:0,beltToken:'belt-A'}]));
+modal.testActivate('item1',1);const throwRequest=sent.pop();check('runtime custom throwable coordinates',throwRequest?.[3]?.pocketIndex===1 && throwRequest?.[3]?.beltToken==='belt-A');
 check('runtime never changes synchronized inventory',JSON.stringify(player)===before);
 modal.testReadOnly(true);modal.testActivate('item1',0);check('runtime read-only cannot use',sent.length===0);
 const oldHost=new Element();modal.testRender({querySelector:()=>oldHost},{gear:{item1:{id:'cinto_utilidades'}}});check('runtime old empty belt renders four pockets',oldHost.children[0].children[1].children.length===4);
 console.log(`Total: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
 function extract(source,name){const start=source.indexOf('function '+name+'(');let depth=0;for(let i=source.indexOf('{',start);i<source.length;i++){if(source[i]==='{')depth++;if(source[i]==='}'&&!--depth)return source.slice(start,i+1);if(source[i]!=='}')continue;}throw Error(name);}
 // Renderer use must preserve origin across asynchronous ally selection.
-const requests=[],beltSource={source:'utility_belt',gearSlot:'item2',pocketIndex:0};
+const requests=[],beltSource={source:'utility_belt',gearSlot:'item2',pocketIndex:0,beltToken:'belt-A'};
 let choose;
-const useCtx={GS:{myPid:'p',gameState:{players:[{id:'p',alive:true,pos:[0,0],gear:{item2:{utility_belt_slots:[{item:{id:'cure',effect:'cure_poison'}}]}}},{id:'q',alive:true,pos:[1,0]}]},itemSourceFields:s=>({source:s.source,gear_slot:s.gearSlot,pocket_index:s.pocketIndex})},send:m=>requests.push(m),CURA_STATUS_EFFECTS:['cure_poison'],openTargetModal:(a,b,c,callback)=>choose=callback,t:x=>x};
-vm.runInNewContext(extract(game,'useItem')+';useItem("cure",undefined,sourceInfo)',{...useCtx,sourceInfo:beltSource});choose('q');
-check('real renderer ally-target payload',JSON.stringify(requests[0])===JSON.stringify({type:'use_item',item_id:'cure',target_id:'q',source:'utility_belt',gear_slot:'item2',pocket_index:0}));
+const useCtx={GS:{myPid:'p',gameState:{players:[{id:'p',alive:true,pos:[0,0],gear:{item2:{utility_belt_slots:[{item:{id:'cure',effect:'cure_poison'}}]}}},{id:'q',alive:true,pos:[1,0]}]},itemSourceFields:s=>({source:s.source,gear_slot:s.gearSlot,pocket_index:s.pocketIndex,belt_token:s.beltToken})},send:m=>requests.push(m),CURA_STATUS_EFFECTS:['cure_poison'],openTargetModal:(a,b,c,callback)=>choose=callback,t:x=>x};
+vm.runInNewContext(extract(game,'useItem')+';useItem("cure",undefined,sourceInfo)',{...useCtx,sourceInfo:beltSource});useCtx.GS.gameState.players[0].gear.item2={utility_belt_token:'belt-B',utility_belt_slots:[{item:{id:'cure',effect:'cure_poison'}}]};choose('q');
+check('real renderer ally-target payload',JSON.stringify(requests[0])===JSON.stringify({type:'use_item',item_id:'cure',target_id:'q',source:'utility_belt',gear_slot:'item2',pocket_index:0,belt_token:'belt-A'}));
 const routeCtx={window:{_modoThrowItem:{sourceInfo:beltSource}},GS:{resolveTileClick:()=>({type:'throw',itemId:'oil',targetId:'m',targetPos:[1,0]}),throwItem:(...a)=>requests.push(a),throwItemArea:(...a)=>requests.push(a)},_encerrarMiraArremesso:()=>{}};
 vm.runInNewContext(extract(game,'_clickTileThrow')+';_clickTileThrow(1,0)',routeCtx);check('real target throw keeps source',JSON.stringify(requests.pop())===JSON.stringify(['oil','m',[1,0],beltSource]));
 routeCtx.GS.resolveTileClick=()=>({type:'throw_area',itemId:'oil',tx:2,ty:3});vm.runInNewContext(extract(game,'_clickTileThrow')+';_clickTileThrow(2,3)',routeCtx);check('real area throw keeps source',JSON.stringify(requests.pop())===JSON.stringify(['oil',2,3,beltSource]));
@@ -67,3 +67,13 @@ modal.gamepadConfirmFocused();check('gamepad selects pocket and offers action',m
 modal.gamepadCycleAction();modal.gamepadConfirmFocused();check('gamepad cancel preserves pocket without using',!modal.gamepadActionOpen()&&sent.length===0);
 modal.gamepadConfirmFocused();check('gamepad confirms pocket use',sent.pop()?.[0]==='use');
 console.log(`Final: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
+
+for (const file of ['strings','interface']) vm.runInContext(fs.readFileSync(path.join(root,'src/lang/'+file+'.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'src/i18n.js'),'utf8'),context);
+context.t=(key,params)=>context.window.I18N.t(key,params);
+for(const [lang,beltLabel,emptyLabel] of [['pt','Cinto','Bolso 1 vazio'],['en','Belt','Empty pocket 1']]) {
+  context.window.I18N.setLang(lang);
+  const localized=new Element();modal.testRender({querySelector:()=>localized},{gear:{item1:{id:'cinto_com_bolsos'}}});
+  check('actual inventory belt section and empty pocket '+lang, localized.children[0].children[0].textContent.startsWith(beltLabel+' — ') && localized.children[0].children[1].children[0].attrs['aria-label']===emptyLabel);
+}
+console.log(`Review final: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;

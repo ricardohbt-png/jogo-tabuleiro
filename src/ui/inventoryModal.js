@@ -676,7 +676,7 @@ const InventoryModal = (() => {
     const player = _currentPlayer(), entry = _beltEntry(player, gearSlot, pocketIndex);
     if(!entry) return false;
     const item = entry.item, action = _bagActionState(item, player);
-    const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex};
+    const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex, beltToken:player.gear[gearSlot].utility_belt_token};
     if(action.podeArremessar && typeof window._iniciarMiraArremesso === 'function'){
       close(); window._iniciarMiraArremesso(item, player, sourceInfo); return true;
     }
@@ -711,14 +711,14 @@ const InventoryModal = (() => {
       const section = document.createElement('section');
       section.className = 'inv-belt-section';
       const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
-      heading.textContent = `${belt.name || 'Cinto'} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
+      heading.textContent = `${belt.name || t('ui.inv.cinto')} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
       const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
       for(let pocketIndex = 0; pocketIndex < capacity; pocketIndex++){
         const entry = _beltEntry(player, gearSlot, pocketIndex), item = entry?.item;
         const slot = document.createElement('div');
         slot.className = 'inv-bagslot inv-belt-pocket' + (item ? ' filled' : ' empty');
         slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(pocketIndex);
-        slot.title = item ? `${item.name} ×${entry.quantity}` : `Bolso ${pocketIndex + 1} vazio`;
+        slot.title = item ? `${item.name} ×${entry.quantity}` : t('ui.inv.cinto_bolso_vazio', {n:pocketIndex + 1});
         slot.setAttribute('aria-label', slot.title);
         if(item){
           slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🧪')}</span><span class="inv-belt-count">${entry.quantity}</span>`;

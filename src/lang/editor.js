@@ -8,6 +8,10 @@
 // REGRAS: JSON estrito DENTRO do objeto (aspas duplas, sem vírgula sobrando,
 // sem comentário lá dentro). Parâmetros {nome}, iguais nos dois idiomas.
 window.LANG_EDITOR = {
+  "ui.editor.cinto.bolso": {"pt": "Bolso {n}", "en": "Pocket {n}"},
+  "ui.editor.cinto.item": {"pt": "Item do bolso {n}", "en": "Pocket {n} item"},
+  "ui.editor.cinto.quantidade": {"pt": "Quantidade do bolso {n}", "en": "Pocket {n} quantity"},
+  "ui.editor.cinto.vazio": {"pt": "Vazio", "en": "Empty"},
   "ui.editor.topo.titulo": {
     "en": "Dungeon Editor — Legends for Hire",
     "pt": "Editor de Masmorras — Legends for Hire"

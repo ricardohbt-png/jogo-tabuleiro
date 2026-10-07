@@ -2239,7 +2239,7 @@ const GS = (() => {
   }
   function _itemSourceFields(sourceInfo) {
     return sourceInfo?.source === 'utility_belt'
-      ? { source: 'utility_belt', gear_slot: sourceInfo.gearSlot, pocket_index: sourceInfo.pocketIndex }
+      ? { source: 'utility_belt', gear_slot: sourceInfo.gearSlot, pocket_index: sourceInfo.pocketIndex, belt_token: sourceInfo.beltToken }
       : {};
   }
   function moveUtilityBeltItem(direction, gearSlot, pocketIndex, bagIndex) {

@@ -39,7 +39,8 @@ for (const [id, capacity] of [['cinto_utilidades', 4], ['cinto_com_bolsos', 2]])
     const html = context.lootItemRowHTML({id}, 0, 'remove');
     assert.strictEqual((html.match(/data-belt-item\b/g) || []).length, capacity);
     assert.strictEqual((html.match(/data-belt-quantity\b/g) || []).length, capacity);
-    assert(html.includes('assets/itens/cinto_e_bolsos.png'));
+    const image = html.match(/<img src="([^"]+)"/)[1];
+    assert.strictEqual(new URL(image, 'https://example.test/tools/editor.html').pathname, '/assets/itens/cinto_e_bolsos.png');
     assert(!html.includes('value="flechas"')); assert(!html.includes('value="carta"'));
   });
 }
@@ -154,5 +155,20 @@ print('server authored belt assertions passed')
   assert.strictEqual(result.status, 0, result.stdout + result.stderr);
   console.log(result.stdout.trim());
 });
+
+for (const file of ['strings','editor']) vm.runInContext(fs.readFileSync(path.join(root,'src/lang/'+file+'.js'),'utf8'),context);
+vm.runInContext(fs.readFileSync(path.join(root,'src/i18n.js'),'utf8'),context);
+context.t=(key,params)=>context.window.I18N.t(key,params);
+for(const [lang, pocket, empty, itemLabel, quantity] of [
+  ['pt','Bolso 1','Vazio','Item do bolso 1','Quantidade do bolso 1'],
+  ['en','Pocket 1','Empty','Pocket 1 item','Pocket 1 quantity']]) {
+  test('actual belt editor labels resolve '+lang,()=>{
+    context.window.I18N.setLang(lang);
+    const html=context.utilityBeltFieldsHTML({id:'cinto_com_bolsos'},0);
+    assert(html.includes(pocket));assert(html.includes('>'+empty+'</option>'));
+    assert(html.includes('aria-label="'+itemLabel+'"'));assert(html.includes('aria-label="'+quantity+'"'));
+  });
+}
+
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);
