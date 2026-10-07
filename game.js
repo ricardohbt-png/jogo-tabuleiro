@@ -32511,6 +32511,7 @@ function _setLang(code){
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
   _refreshCityHotspots();             // idem: a cidade é montada UMA vez (initCityImage)
   _refreshClassSelectLang();          // idem: o nome do herói é TEXTURA no peão 3D
+  try { if(_licaoUltima && $('licao-janela')?.classList.contains('open')) _mostrarJanelaLicao(_licaoUltima); } catch (e) {}   // idem: a janela da lição é montada por texto (try: no boot o `let` ainda não existe)
   // Avisar o servidor NÃO é feito aqui: o ouvinte de I18N acima cobre esta troca
   // e a do boot com um caminho só. O servidor responde ao set_lang reenviando o
   // estado, e esse reenvio cai no caminho normal de render (GS.on('gameState')),
