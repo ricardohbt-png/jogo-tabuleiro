@@ -139,6 +139,8 @@
   let decorBrushActive = false;
   let decorAreaPaint = null;
   let lastPointerCell = null;
+  let regionSelection = null, regionClipboard = null;
+  let regionDrag = null, regionMoveDrag = null;
 
   function initGrid(w, h) {
     S.grid = { w, h };
@@ -332,15 +334,26 @@
     }
     const modifier = ev.ctrlKey || ev.metaKey;
     if (modifier && ev.key.toLowerCase() === "c") {
-      if (copySelectedDecor()) ev.preventDefault();
+      if (regionSelection) { regionClipboard = captureRegion(regionSelection); if (regionClipboard) ev.preventDefault(); }
+      else if (copySelectedDecor()) ev.preventDefault();
+      return;
+    }
+    if (modifier && ev.key.toLowerCase() === "x") {
+      const clip = captureRegion(regionSelection);
+      if (clip) { regionClipboard = clip; removeRegion(clip); regionSelection = null; render(); ev.preventDefault(); }
       return;
     }
     if (modifier && ev.key.toLowerCase() === "v") {
-      if (lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
+      if (regionClipboard && lastPointerCell && pasteRegion(regionClipboard, lastPointerCell)) {
+        regionSelection = null; regionClipboard = null;
+        render(); ev.preventDefault();
+      } else if (!regionClipboard && lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
       return;
     }
-    if (ev.key === "Escape" && decorBrushActive) {
-      decorBrushActive = false; decorAreaPaint = null; buildToolbar(); render(); ev.preventDefault(); return;
+    if (ev.key === "Escape" && (regionDrag || regionMoveDrag || regionSelection || decorBrushActive)) {
+      regionDrag = null; regionMoveDrag = null; regionSelection = null;
+      if (decorBrushActive) { decorBrushActive = false; decorAreaPaint = null; buildToolbar(); }
+      render(); ev.preventDefault(); return;
     }
     if (ev.key === "r" || ev.key === "R") {
       if (S.sel && S.sel.kind === "door") rotateDoorSelected();
@@ -538,27 +551,47 @@
   const K_CM = "ui.editor.masmorra.menu_copia.";
   const copyMenu = document.createElement("div");
   copyMenu.id = "editor-copy-menu";
-  copyMenu.innerHTML = `<button type="button" data-action="copy"><span data-i18n="${K_CM}copiar">${t(K_CM + "copiar")}</span> <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush"><span data-i18n="${K_CM}pincel">${t(K_CM + "pincel")}</span></button><button type="button" data-action="paste"><span data-i18n="${K_CM}colar">${t(K_CM + "colar")}</span> <kbd>Ctrl+V</kbd></button>`;
+  copyMenu.innerHTML = `<button type="button" data-action="region-copy"><span data-i18n="${K_CM}regiao_copiar">${t(K_CM + "regiao_copiar")}</span> <kbd>Ctrl+C</kbd></button><button type="button" data-action="region-cut"><span data-i18n="${K_CM}regiao_recortar">${t(K_CM + "regiao_recortar")}</span> <kbd>Ctrl+X</kbd></button><button type="button" data-action="region-delete"><span data-i18n="${K_CM}regiao_apagar">${t(K_CM + "regiao_apagar")}</span></button><button type="button" data-action="region-paste"><span data-i18n="${K_CM}regiao_colar">${t(K_CM + "regiao_colar")}</span> <kbd>Ctrl+V</kbd></button><hr><button type="button" data-action="copy"><span data-i18n="${K_CM}copiar">${t(K_CM + "copiar")}</span> <kbd>Ctrl+C</kbd></button><button type="button" data-action="brush"><span data-i18n="${K_CM}pincel">${t(K_CM + "pincel")}</span></button><button type="button" data-action="paste"><span data-i18n="${K_CM}colar">${t(K_CM + "colar")}</span> <kbd>Ctrl+V</kbd></button>`;
   document.body.appendChild(copyMenu);
   function hideCopyMenu() { copyMenu.classList.remove("open"); }
   function showCopyMenu(ev, cell) {
-    const selected = entityAt(cell[0], cell[1]);
+    const inRegion = regionSelection && cell[0] >= regionSelection.x && cell[0] < regionSelection.x + regionSelection.w
+      && cell[1] >= regionSelection.y && cell[1] < regionSelection.y + regionSelection.h;
+    const selected = inRegion ? null : entityAt(cell[0], cell[1]);
     if (selected) { S.sel = selected; renderPanel(); render(); }
+    const regionButtons = [...copyMenu.querySelectorAll('[data-action^="region-"]')];
+    for (const b of regionButtons) b.hidden = false;
+    copyMenu.querySelector('[data-action="region-copy"]').disabled = !inRegion;
+    copyMenu.querySelector('[data-action="region-cut"]').disabled = !inRegion;
+    copyMenu.querySelector('[data-action="region-delete"]').disabled = !inRegion;
+    copyMenu.querySelector('[data-action="region-paste"]').disabled = !regionClipboard || !!inRegion;
     const copyButton = copyMenu.querySelector('[data-action="copy"]');
     const brushButton = copyMenu.querySelector('[data-action="brush"]');
     const pasteButton = copyMenu.querySelector('[data-action="paste"]');
-    copyButton.disabled = !(S.sel && S.sel.kind === "decor");
+    copyButton.disabled = !(S.sel && S.sel.kind === "decor") || inRegion;
     brushButton.disabled = !(S.sel && S.sel.kind === "decor") && !decorClipboard;
-    pasteButton.disabled = !decorClipboard;
+    pasteButton.disabled = !decorClipboard || inRegion;
     copyMenu.dataset.x = String(cell[0]); copyMenu.dataset.y = String(cell[1]);
     copyMenu.style.left = `${Math.min(ev.clientX, window.innerWidth - 190)}px`;
-    copyMenu.style.top = `${Math.min(ev.clientY, window.innerHeight - 76)}px`;
+    copyMenu.style.top = `${Math.max(4, Math.min(ev.clientY, window.innerHeight - 280))}px`;
     copyMenu.classList.add("open");
   }
   copyMenu.addEventListener("click", ev => {
     const button = ev.target.closest("button[data-action]"); if (!button || button.disabled) return;
     const x = Number(copyMenu.dataset.x), y = Number(copyMenu.dataset.y);
-    if (button.dataset.action === "copy") copySelectedDecor();
+    if (button.dataset.action === "region-copy") { regionClipboard = captureRegion(regionSelection); render(); }
+    else if (button.dataset.action === "region-cut") {
+      const clip = captureRegion(regionSelection);
+      if (clip) { regionClipboard = clip; removeRegion(clip); regionSelection = null; render(); }
+    }
+    else if (button.dataset.action === "region-delete") {
+      const clip = captureRegion(regionSelection);
+      if (clip) { removeRegion(clip); regionSelection = null; render(); }
+    }
+    else if (button.dataset.action === "region-paste") {
+      if (pasteRegion(regionClipboard, [x, y])) { regionSelection = null; regionClipboard = null; render(); }
+    }
+    else if (button.dataset.action === "copy") copySelectedDecor();
     else if (button.dataset.action === "brush") activateDecorBrush();
     else pasteDecorAt(x, y);
     hideCopyMenu();
@@ -1145,7 +1178,32 @@
       ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 2;
       ctx.strokeRect(S.sel.pos[0] * CELL + 1, S.sel.pos[1] * CELL + 1, CELL - 3, CELL - 3);
     }
-    if (decorClipboard && lastPointerCell && !_drag) drawClipboardPreview();
+    const drawRegionOutline = (area, color, fill) => {
+      if (!area) return;
+      ctx.save(); ctx.setLineDash([5, 3]); ctx.lineWidth = 2;
+      ctx.fillStyle = fill; ctx.strokeStyle = color;
+      ctx.fillRect(area.x * CELL + 1, area.y * CELL + 1, area.w * CELL - 2, area.h * CELL - 2);
+      ctx.strokeRect(area.x * CELL + 1, area.y * CELL + 1, area.w * CELL - 2, area.h * CELL - 2);
+      ctx.setLineDash([]); ctx.restore();
+    };
+    if (regionSelection) drawRegionOutline(regionSelection, "#ffd86a", "rgba(255,216,106,.10)");
+    if (regionDrag) {
+      const x = Math.min(regionDrag.x0, regionDrag.x1), y = Math.min(regionDrag.y0, regionDrag.y1);
+      drawRegionOutline({ x, y, w: Math.abs(regionDrag.x1 - regionDrag.x0) + 1, h: Math.abs(regionDrag.y1 - regionDrag.y0) + 1 }, "#79d6ff", "rgba(75,180,230,.12)");
+    }
+    if (regionMoveDrag?.target && regionMoveDrag.clip) {
+      drawRegionOutline({ x: regionMoveDrag.target[0], y: regionMoveDrag.target[1],
+        w: regionMoveDrag.selection.w, h: regionMoveDrag.selection.h },
+        regionMoveDrag.valid ? "#72e6a1" : "#ed7777",
+        regionMoveDrag.valid ? "rgba(67,180,111,.15)" : "rgba(210,75,75,.15)");
+    } else if (regionClipboard && lastPointerCell && (!regionSelection
+        || lastPointerCell[0] < regionSelection.x || lastPointerCell[0] >= regionSelection.x + regionSelection.w
+        || lastPointerCell[1] < regionSelection.y || lastPointerCell[1] >= regionSelection.y + regionSelection.h)) {
+      const valid = _regionCanPaste(regionClipboard, lastPointerCell);
+      drawRegionOutline({ x: lastPointerCell[0], y: lastPointerCell[1], w: regionClipboard.w, h: regionClipboard.h },
+        valid ? "#72e6a1" : "#ed7777", valid ? "rgba(67,180,111,.13)" : "rgba(210,75,75,.13)");
+    }
+    if (decorClipboard && lastPointerCell && !_drag && !regionClipboard) drawClipboardPreview();
     if (decorAreaPaint) drawDecorAreaPreview(decorAreaPaint);
     if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
@@ -1230,9 +1288,11 @@
       }
       const b = document.createElement("button");
       b.textContent = t("ui.editor.masmorra.ferramenta." + tool.id); b.dataset.tool = tool.id;
+      if (tool.id === "select") b.title = t("ui.editor.masmorra.ferramenta.select_hint");
       if (tool.id === S.tool) b.classList.add("active");
       b.onclick = () => {
         S.tool = tool.id;
+        if (tool.id !== "select") regionSelection = null;
         if (tool.id === "hero_spawn") { S.startMode = "hero_spawns"; S.entrance = null; }
         if (tool.id === "entrance") S.startMode = "entrance";
         buildToolbar(); renderPanel(); render(); updateStatus();
@@ -3161,14 +3221,29 @@
     else if (["entrance", "hero_spawn", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); updateStatus(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
+      const insideSelection = regionSelection && x >= regionSelection.x && x < regionSelection.x + regionSelection.w
+        && y >= regionSelection.y && y < regionSelection.y + regionSelection.h;
+      if (!ev.shiftKey && regionSelection && x >= regionSelection.x && x < regionSelection.x + regionSelection.w
+          && y >= regionSelection.y && y < regionSelection.y + regionSelection.h) {
+        const clip = captureRegion(regionSelection);
+        if (!clip) return;
+        regionMoveDrag = { start: c.slice(), offX: x - regionSelection.x, offY: y - regionSelection.y,
+          target: [regionSelection.x, regionSelection.y], valid: true, selection: { ...regionSelection }, clip };
+        return;
+      }
+      if (!insideSelection || ev.shiftKey) regionSelection = null;
       // Clique repetido na mesma casa alterna entre as entidades empilhadas.
-      S.sel = entityAt(x, y, true) || roomSel(x, y);
+      const picked = ev.shiftKey ? null : entityAt(x, y, true);
+      S.sel = picked || roomSel(x, y);
       // Entidades pontuais/decorações entram em modo arrasto (sala não).
-       if (S.sel && S.sel.kind !== "room" && S.sel.kind !== "door" && S.sel.kind !== "bridge" && S.sel.pos) {
+       if (picked && S.sel.kind !== "door" && S.sel.kind !== "bridge" && S.sel.pos) {
         const anchor = S.sel.pos;
         _drag = { sel: S.sel, offX: x - anchor[0], offY: y - anchor[1],
                   origin: anchor.slice(), candidate: null, valid: true, moved: false };
-      } else { _drag = null; }
+      } else {
+        _drag = null;
+        regionDrag = { x0: x, y0: y, x1: x, y1: y, room: !ev.shiftKey && S.sel?.kind === "room" ? S.sel : null };
+      }
       buildToolbar(); renderPanel(); render();
     }
   });
@@ -3176,6 +3251,207 @@
   function roomSel(x, y) {
     const r = S.rooms.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h);
     return r ? { kind: "room", ref: r } : null;
+  }
+
+  // Clipboard retangular do mapa. A captura guarda JSON independente e as
+  // referências vivas só para um recorte/movimento dentro desta sessão.
+  const _cloneRegionValue = value => value == null ? value : JSON.parse(JSON.stringify(value));
+  function _regionBounds(rect) {
+    if (!rect || !Number.isInteger(rect.x) || !Number.isInteger(rect.y)
+        || !Number.isInteger(rect.w) || !Number.isInteger(rect.h) || rect.w < 1 || rect.h < 1) return null;
+    return { x: rect.x, y: rect.y, w: rect.w, h: rect.h,
+      x2: rect.x + rect.w - 1, y2: rect.y + rect.h - 1 };
+  }
+  function _insideRegion(pos, b) {
+    return Array.isArray(pos) && pos[0] >= b.x && pos[0] <= b.x2 && pos[1] >= b.y && pos[1] <= b.y2;
+  }
+  function _regionContainsCells(cells, b) {
+    const overlaps = cells.some(([x, y]) => x >= b.x && x <= b.x2 && y >= b.y && y <= b.y2);
+    return !overlaps ? 0 : (cells.every(([x, y]) => x >= b.x && x <= b.x2 && y >= b.y && y <= b.y2) ? 1 : -1);
+  }
+  function captureRegion(rect) {
+    const b = _regionBounds(rect); if (!b) return null;
+    const data = { tiles: [], rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
+      secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null,
+      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {} };
+    const refs = { rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
+      secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null };
+    for (let y = b.y; y <= b.y2; y++) data.tiles.push(S.tiles[y].slice(b.x, b.x2 + 1));
+    for (const room of S.rooms) {
+      const cells = [];
+      for (let y = room.y; y < room.y + room.h; y++) for (let x = room.x; x < room.x + room.w; x++) cells.push([x, y]);
+      const relation = _regionContainsCells(cells, b);
+      if (relation < 0) { alert(t(K_CM + "regiao_sala_parcial")); return null; }
+      if (relation && !(room.doors || []).every(pos => _insideRegion(pos, b))) {
+        alert(t(K_CM + "regiao_objeto_parcial")); return null;
+      }
+      if (relation) { data.rooms.push(_cloneRegionValue(room)); refs.rooms.push(room); }
+    }
+    const addPoints = (source, target, refTarget) => {
+      for (const item of source) {
+        const pos = item.pos || [item.x, item.y];
+        const relation = _regionContainsCells([pos], b);
+        if (relation < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return false; }
+        if (relation) { target.push(_cloneRegionValue(item)); refTarget.push(item); }
+      }
+      return true;
+    };
+    if (!addPoints(S.heroSpawns, data.heroSpawns, refs.heroSpawns)
+        || !addPoints(S.monsters, data.monsters, refs.monsters)
+        || !addPoints(S.chests, data.chests, refs.chests)
+        || !addPoints(S.traps, data.traps, refs.traps)
+        || !addPoints(S.decorations, data.decorations, refs.decorations)
+        || !addPoints(S.secretPassages, data.secretPassages, refs.secretPassages)
+        || !addPoints(S.falas, data.falas, refs.falas)) return null;
+    // Monstros, decorações e pontes têm footprints que precisam caber inteiros.
+    for (const [source, key, cellsOf] of [
+      [S.monsters, "monsters", m => monsterTiles(m)],
+      [S.decorations, "decorations", d => decorTiles(d)],
+      [S.pontes, "pontes", p => bridgeTilesOf(p)],
+    ]) {
+      for (const item of source) {
+        const relation = _regionContainsCells(cellsOf(item), b);
+        if (relation < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return null; }
+        if (relation && !refs[key].includes(item)) { data[key].push(_cloneRegionValue(item)); refs[key].push(item); }
+      }
+    }
+    for (const key of ["entrance", "exit", "prisoner"]) {
+      const item = S[key]; if (!item) continue;
+      const pos = item.pos || [item.x, item.y];
+      if (_insideRegion(pos, b)) { data[key] = _cloneRegionValue(item); refs[key] = item; }
+    }
+    for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) {
+      const key = doorKey(x, y), local = doorKey(x - b.x, y - b.y);
+      if (S.doorRotations[key] != null) data.doorRotations[local] = S.doorRotations[key];
+      if (S.doorConditions[key]) data.doorConditions[local] = _cloneRegionValue(S.doorConditions[key]);
+      if (S.materiais[key] != null) data.materials[local] = S.materiais[key];
+      if (S.elevacoes[key] != null) data.elevations[local] = S.elevacoes[key];
+      if (S.alturasParede[key] != null) data.wallHeights[local] = S.alturasParede[key];
+    }
+    return { x: b.x, y: b.y, w: b.w, h: b.h, data, refs };
+  }
+  function _regionTouchingEntities(b, refs) {
+    const found = [];
+    const check = (items, cellsOf) => { for (const item of items) if (!refs.includes(item)
+      && cellsOf(item).some(([x, y]) => x >= b.x && x <= b.x2 && y >= b.y && y <= b.y2)) found.push(item); };
+    check(S.heroSpawns, o => [o.pos]); check(S.monsters, o => monsterTiles(o));
+    check(S.chests, o => [o.pos]); check(S.traps, o => [o.pos]); check(S.decorations, o => decorTiles(o));
+    check(S.secretPassages, o => [o.pos]); check(S.falas, o => [o.pos]); check(S.pontes, o => bridgeTilesOf(o));
+    for (const key of ["entrance", "exit", "prisoner"]) if (S[key] && !refs.includes(S[key])) {
+      const p = S[key].pos || [S[key].x, S[key].y];
+      if (p[0] >= b.x && p[0] <= b.x2 && p[1] >= b.y && p[1] <= b.y2) found.push(S[key]);
+    }
+    for (const room of S.rooms) if (!refs.includes(room)
+      && room.x <= b.x2 && room.x + room.w - 1 >= b.x && room.y <= b.y2 && room.y + room.h - 1 >= b.y) found.push(room);
+    return found;
+  }
+  function _regionCanPaste(clip, target, moving = false) {
+    const x = target[0] | 0, y = target[1] | 0, b = _regionBounds({ x, y, w: clip.w, h: clip.h });
+    if (!b || x < 0 || y < 0 || b.x2 >= S.grid.w || b.y2 >= S.grid.h) return false;
+    const allowed = moving ? Object.values(clip.refs).flatMap(v => Array.isArray(v) ? v : v ? [v] : []) : [];
+    if (_regionTouchingEntities(b, allowed).length) return false;
+    const includes = key => !!clip.data[key];
+    if (includes("entrance") && S.entrance && !allowed.includes(S.entrance)) return false;
+    if (includes("exit") && S.exit && !allowed.includes(S.exit)) return false;
+    if (includes("prisoner") && S.prisoner && !allowed.includes(S.prisoner)) return false;
+    return true;
+  }
+  function _shiftRegionPoint(pos, dx, dy, origin, clip) {
+    if (Array.isArray(pos) && pos[0] >= origin[0] && pos[0] < origin[0] + clip.w
+        && pos[1] >= origin[1] && pos[1] < origin[1] + clip.h) { pos[0] += dx; pos[1] += dy; }
+  }
+  function _prepareRegionPaste(clip, target, preserveIds) {
+    const d = _cloneRegionValue(clip.data), dx = target[0] - clip.x, dy = target[1] - clip.y;
+    const roomIds = new Map(), trapIds = new Map(), decorIds = new Map(), bridgeIds = new Map(), passageIds = new Map(), falaIds = new Map();
+    if (!preserveIds) {
+      const used = {
+        trap_: new Set(S.traps.map(o => o.id)), decor_: new Set(S.decorations.map(o => o.id)),
+        ponte_: new Set(S.pontes.map(o => o.id)), passage_: new Set(S.secretPassages.map(o => o.id)), fala_: new Set(S.falas.map(o => o.id)),
+      };
+      const alloc = prefix => { let n = 0; while (used[prefix].has(`${prefix}${n}`)) n++;
+        const id = `${prefix}${n}`; used[prefix].add(id); return id; };
+      d.rooms.forEach(r => roomIds.set(r.id, S.nextRoomId++));
+      d.traps.forEach(o => trapIds.set(o.id, alloc("trap_")));
+      d.decorations.forEach(o => decorIds.set(o.id, alloc("decor_")));
+      d.pontes.forEach(o => bridgeIds.set(o.id, alloc("ponte_")));
+      d.secretPassages.forEach(o => passageIds.set(o.id, alloc("passage_")));
+      d.falas.forEach(o => falaIds.set(o.id, alloc("fala_")));
+    }
+    const shift = p => _shiftRegionPoint(p, dx, dy, [clip.x, clip.y], clip);
+    d.rooms.forEach(r => { r.x += dx; r.y += dy; r.doors = (r.doors || []).map(p => { shift(p); return p; }); if (roomIds.has(r.id)) r.id = roomIds.get(r.id); });
+    for (const list of [d.heroSpawns, d.monsters, d.chests, d.traps, d.decorations, d.secretPassages, d.falas])
+      list.forEach(o => shift(o.pos));
+    d.traps.forEach(o => { if (trapIds.has(o.id)) o.id = trapIds.get(o.id); if (o.ponte_id && bridgeIds.has(o.ponte_id)) o.ponte_id = bridgeIds.get(o.ponte_id); shift(o.saida); });
+    d.decorations.forEach(o => {
+      if (decorIds.has(o.id)) o.id = decorIds.get(o.id);
+      if (o.disable_trap_ids) o.disable_trap_ids = o.disable_trap_ids.map(id => trapIds.get(id) || id);
+      if (o.trap) { if (o.trap.ponte_id && bridgeIds.has(o.trap.ponte_id)) o.trap.ponte_id = bridgeIds.get(o.trap.ponte_id); shift(o.trap.saida); }
+    });
+    d.secretPassages.forEach(o => { if (passageIds.has(o.id)) o.id = passageIds.get(o.id); o.key_decor_ids = (o.key_decor_ids || []).map(id => decorIds.get(id) || id); });
+    d.falas.forEach(o => { if (falaIds.has(o.id)) o.id = falaIds.get(o.id); });
+    d.pontes.forEach(o => { if (bridgeIds.has(o.id)) o.id = bridgeIds.get(o.id); shift(o.inicio); shift(o.fim); });
+    d.monsters.forEach(o => { if (roomIds.has(o.room_id)) o.room_id = roomIds.get(o.room_id); });
+    d.heroSpawns.forEach(o => { if (roomIds.has(o.room_id)) o.room_id = roomIds.get(o.room_id); });
+    if (d.prisoner) { shift(d.prisoner.pos); if (roomIds.has(d.prisoner.room_id)) d.prisoner.room_id = roomIds.get(d.prisoner.room_id); }
+    ["entrance", "exit"].forEach(k => { if (d[k]) { d[k].x += dx; d[k].y += dy; } });
+    // As chaves vieram relativas ao canto da cópia (captureRegion); o destino é absoluto.
+    const remapKeys = obj => Object.fromEntries(Object.entries(obj).map(([key, value]) => {
+      const [x, y] = key.split(",").map(Number); return [doorKey(x + target[0], y + target[1]), value];
+    }));
+    d.doorRotations = remapKeys(d.doorRotations); d.doorConditions = remapKeys(d.doorConditions);
+    d.materials = remapKeys(d.materials); d.elevations = remapKeys(d.elevations);
+    d.wallHeights = remapKeys(d.wallHeights || {});
+    d.doorConditions = Object.fromEntries(Object.entries(d.doorConditions).map(([key, c]) => [key,
+      c.type === "decor" ? { ...c, key_decor_ids: (c.key_decor_ids || []).map(id => decorIds.get(id) || id) } : c]));
+    d.tiles = d.tiles.map(row => row.slice());
+    return { d, dx, dy };
+  }
+  function pasteRegion(clip, target, preserveIds = false, moving = false) {
+    if (!clip || !_regionCanPaste(clip, target, moving)) { alert(t(K_CM + "regiao_destino_invalido")); return false; }
+    const { d, dx, dy } = _prepareRegionPaste(clip, target, preserveIds);
+    for (let y = 0; y < clip.h; y++) for (let x = 0; x < clip.w; x++) {
+      S.tiles[target[1] + y][target[0] + x] = d.tiles[y][x];
+      delete S.alturasParede[doorKey(target[0] + x, target[1] + y)];   // vale a altura que veio na cópia
+    }
+    S.rooms.push(...d.rooms); S.heroSpawns.push(...d.heroSpawns); S.monsters.push(...d.monsters);
+    S.chests.push(...d.chests); S.traps.push(...d.traps); S.decorations.push(...d.decorations);
+    S.secretPassages.push(...d.secretPassages); S.falas.push(...d.falas); S.pontes.push(...d.pontes);
+    if (d.entrance) S.entrance = d.entrance;
+    if (d.exit) S.exit = d.exit;
+    if (d.prisoner) S.prisoner = d.prisoner;
+    Object.assign(S.doorRotations, d.doorRotations); Object.assign(S.doorConditions, d.doorConditions);
+    Object.assign(S.materiais, d.materials); Object.assign(S.elevacoes, d.elevations);
+    Object.assign(S.alturasParede, d.wallHeights);
+    renderPanel(); render(); updateStatus();
+    return true;
+  }
+  function removeRegion(clip) {
+    const b = _regionBounds(clip); if (!b) return false;
+    for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) S.tiles[y][x] = WALL;
+    for (const key of ["materials", "elevations", "wallHeights", "doorRotations", "doorConditions"]) {
+      const target = key === "materials" ? S.materiais : key === "elevations" ? S.elevacoes
+        : key === "wallHeights" ? S.alturasParede : key === "doorRotations" ? S.doorRotations : S.doorConditions;
+      for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) delete target[doorKey(x, y)];
+    }
+    for (const key of ["rooms", "heroSpawns", "monsters", "chests", "traps", "decorations", "secretPassages", "falas", "pontes"])
+      S[key] = S[key].filter(item => !clip.refs[key].includes(item));
+    const removedRooms = new Set(clip.refs.rooms.map(r => r.id));
+    for (const m of S.monsters) if (removedRooms.has(m.room_id)) m.room_id = null;
+    for (const h of S.heroSpawns) if (removedRooms.has(h.room_id)) h.room_id = null;
+    for (const key of ["entrance", "exit", "prisoner"]) if (clip.refs[key] && S[key] === clip.refs[key]) S[key] = null;
+    const removedDecors = new Set(clip.refs.decorations.map(d => d.id));
+    const removedTraps = new Set(clip.refs.traps.map(tr => tr.id));
+    for (const d of S.decorations) d.disable_trap_ids = (d.disable_trap_ids || []).filter(id => !removedTraps.has(id));
+    for (const p of S.secretPassages) p.key_decor_ids = (p.key_decor_ids || []).filter(id => !removedDecors.has(id));
+    for (const c of Object.values(S.doorConditions)) if (c.type === "decor")
+      c.key_decor_ids = (c.key_decor_ids || []).filter(id => !removedDecors.has(id));
+    S.sel = null; renderPanel(); render(); updateStatus();
+    return true;
+  }
+  function moveRegion(clip, target) {
+    if (!clip || !_regionCanPaste(clip, target, true)) { alert(t(K_CM + "regiao_destino_invalido")); return false; }
+    removeRegion(clip);
+    return pasteRegion(clip, target, true, true);
   }
 
   function drawMaterialAreaPreview(area) {
@@ -3208,6 +3484,13 @@
       materialAreaPaint.x1 = c[0]; materialAreaPaint.y1 = c[1];
       render(); drawMaterialAreaPreview(materialAreaPaint); return;
     }
+    if (regionDrag) { regionDrag.x1 = c[0]; regionDrag.y1 = c[1]; render(); return; }
+    if (regionMoveDrag) {
+      const target = [c[0] - regionMoveDrag.offX, c[1] - regionMoveDrag.offY];
+      regionMoveDrag.target = target;
+      regionMoveDrag.valid = _regionCanPaste(regionMoveDrag.clip, target, true);
+      render(); return;
+    }
     if (_drag) {
       const ax = c[0] - _drag.offX, ay = c[1] - _drag.offY;
       _drag.candidate = [ax, ay];
@@ -3231,16 +3514,34 @@
       ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
       return;
     }
-    if (decorClipboard) render();
+    if (decorClipboard || regionClipboard) render();
   });
   board.addEventListener("contextmenu", ev => {
     ev.preventDefault();
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
+    render();
     showCopyMenu(ev, c);
   });
   window.addEventListener("mouseup", () => {
     painting = false;
+    if (regionDrag) {
+      const d = regionDrag; regionDrag = null;
+      const x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1);
+      if (d.room && d.x0 === d.x1 && d.y0 === d.y1) {
+        regionSelection = null; S.sel = d.room;
+      } else {
+        regionSelection = { x, y, w: Math.abs(d.x1 - d.x0) + 1, h: Math.abs(d.y1 - d.y0) + 1 };
+        S.sel = null;
+      }
+      renderPanel(); render();
+    }
+    if (regionMoveDrag) {
+      const d = regionMoveDrag; regionMoveDrag = null;
+      if (d.valid && d.clip && (d.target[0] !== d.selection.x || d.target[1] !== d.selection.y)
+          && moveRegion(d.clip, d.target)) regionSelection = { x: d.target[0], y: d.target[1], w: d.selection.w, h: d.selection.h };
+      render();
+    }
     if (materialAreaPaint) {
       const area = materialAreaPaint;
       materialAreaPaint = null;
@@ -4096,7 +4397,7 @@
   document.getElementById("tab-cenas").onclick = () => setTab("cenas");
 
   // Expor para verificação no console / tasks seguintes.
-  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, bridgeTilesOf, placeBridge, rotateFacing, rotateDecorPending, doorRotationAt, rotateDoorAt, rotateDoorSelected, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent };
+  window.EDITOR = { S, catalog: CAT, initGrid, render, renderPanel, buildToolbar, cellFromEvent, paintTile, placeEntity, eraseAt, deleteRoom, entityAt, doorLink, doorUnlink, validarEditor, buildJSON, loadJSON, save, updateStatus, WALL, FLOOR, DOOR, decorMeta, decorEffSize, decorTilesAt, decorTiles, bridgeTilesOf, placeBridge, rotateFacing, rotateDecorPending, doorRotationAt, rotateDoorAt, rotateDoorSelected, decorFits, placeDecor, decorBaseSize, decorEffSizeOf, decorWouldFit, tilesFor, dropValid, moveSelTo, copySelectedDecor, pasteDecorAt, duplicateDecorAdjacent, captureRegion, pasteRegion, removeRegion, moveRegion };
 
   initGrid(S.grid.w, S.grid.h);
   buildToolbar();

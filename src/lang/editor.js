@@ -1049,8 +1049,8 @@ window.LANG_EDITOR = {
     "pt": "pisável"
   },
   "ui.editor.masmorra.painel.decor_parede_hint": {
-    "en": "Wall decoration: click a wall; rotating swaps the face toward a playable area.",
-    "pt": "Decoração de parede: clique em uma parede; girar troca a face voltada para uma área jogável."
+    "en": "Mounted on the wall. Rotating switches to a free face; at corners, it can switch to the neighboring wall. With only one available face, orientation is automatic.",
+    "pt": "Presa à parede. Girar troca para uma face livre; em cantos, pode trocar para a parede vizinha. Com apenas uma face disponível, a orientação é automática."
   },
   "ui.editor.masmorra.painel.visao_label": {
     "en": "vision",
@@ -1359,6 +1359,38 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.menu_copia.colar": {
     "en": "Paste object here",
     "pt": "Colar objeto aqui"
+  },
+  "ui.editor.masmorra.menu_copia.regiao_copiar": {
+    "en": "Copy selected area",
+    "pt": "Copiar área selecionada"
+  },
+  "ui.editor.masmorra.menu_copia.regiao_recortar": {
+    "en": "Cut selected area",
+    "pt": "Recortar área selecionada"
+  },
+  "ui.editor.masmorra.menu_copia.regiao_apagar": {
+    "en": "Delete selected area",
+    "pt": "Apagar área selecionada"
+  },
+  "ui.editor.masmorra.menu_copia.regiao_colar": {
+    "en": "Paste area here",
+    "pt": "Colar área aqui"
+  },
+  "ui.editor.masmorra.menu_copia.regiao_sala_parcial": {
+    "en": "Select the whole room to copy or cut it.",
+    "pt": "Selecione a sala inteira para copiá-la ou recortá-la."
+  },
+  "ui.editor.masmorra.menu_copia.regiao_objeto_parcial": {
+    "en": "The selection cuts through an object. Expand it to include the whole object.",
+    "pt": "A seleção atravessa um objeto. Amplie a área para incluí-lo por inteiro."
+  },
+  "ui.editor.masmorra.menu_copia.regiao_destino_invalido": {
+    "en": "That destination overlaps existing objects or is outside the map.",
+    "pt": "Esse destino sobrepõe objetos existentes ou fica fora do mapa."
+  },
+  "ui.editor.masmorra.ferramenta.select_hint": {
+    "en": "Drag on an empty tile to select an area. Hold Shift to start over an object. Drag the selected area to move it; right-click for copy/cut/paste.",
+    "pt": "Arraste sobre uma casa vazia para selecionar uma área. Segure Shift para começar sobre um objeto. Arraste a área selecionada para movê-la; clique com o botão direito para copiar, recortar ou colar."
   },
   "ui.editor.masmorra.canvas.frente": {
     "en": "FRONT",

@@ -3522,3 +3522,13 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > migra Botas Velozes já equipadas em `item1`/`item2` para `gear.boots` se o
 > espaço estiver livre; assim o slot genérico volta a ficar disponível. O
 > bônus de velocidade continua sendo aplicado pelo efeito `spd` do equipamento.
+
+> **Seleção retangular no editor de masmorras:** `tools/editor.js` permite
+> arrastar uma moldura na ferramenta Selecionar; `Shift` inicia a moldura mesmo
+> sobre um objeto. Arrastar dentro da moldura move o bloco. O menu contextual e
+> Ctrl+C/X/V copiam, recortam e colam terreno, materiais, elevações, salas e
+> entidades inteiras, preservando offsets e remapeando IDs e vínculos internos.
+> Recortes parciais de salas/footprints e destinos fora do mapa ou ocupados são
+> recusados. O menu contextual oferece Apagar área selecionada quando o clique direito
+> ocorre dentro da seleção; a ação apaga terreno e entidades inteiras contidas nela. Após
+> colar por menu ou Ctrl+V, a seleção e a prancheta são limpas e a moldura some. A região copiada leva também as alturas manuais de parede (`alturas_parede`), no deslocamento certo.
