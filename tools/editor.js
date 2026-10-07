@@ -1713,7 +1713,7 @@
         S.traps.push(trap);
         break;
       }
-      case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null }); break;
+      case "fala": S.falas.push({ id: "fala_" + S.nextFalaId++, pos: [x, y], falante: { nome: "", emoji: "🧙" }, texto: "", trigger: { tipo: "proximidade", raio: 2 }, classe: null, ordem: null, tarefa: null, guia: [] }); break;
       case "decor": placeDecor(x, y); break;
       case "secret_mechanism":
         if (S.tiles[y][x] === WALL && !S.secretPassages.some(p => p.pos[0] === x && p.pos[1] === y))
@@ -3786,6 +3786,8 @@
           if (f.efeito && f.efeito[k] != null && f.efeito[k] !== "")
             ef[k] = Math.max(0, Math.min(100, parseInt(f.efeito[k], 10) || 0));
         if (Object.keys(ef).length) out.efeito = ef;
+        const guia = EDITOR_GUIA.serializar(f.guia);
+        if (guia) out.guia = guia;
         return out;
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
@@ -4250,7 +4252,8 @@
       return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger,
                classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar,
                requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
-               efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null };
+               efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null,
+               guia: EDITOR_GUIA.carregar(f.guia) };
     });
     S.nextFalaId = S.falas.length;
     S.masterReinforcements = (obj.master_reinforcements || [])

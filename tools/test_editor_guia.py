@@ -28,5 +28,25 @@ class SincroniaTests(unittest.TestCase):
         self.assertEqual(sorted(verbos_js), sorted(S.LICAO_VERBOS))
 
 
+EDITOR_JS = (RAIZ / "tools" / "editor.js").read_text(encoding="utf-8")
+EDITOR_HTML = (RAIZ / "tools" / "editor.html").read_text(encoding="utf-8")
+
+
+class FiacaoTests(unittest.TestCase):
+    def test_html_carrega_o_modulo_antes_do_editor(self):
+        i = EDITOR_HTML.find("editor_guia_logic.js")
+        j = EDITOR_HTML.find('"editor.js"')
+        self.assertTrue(0 <= i < j, "editor_guia_logic.js deve vir antes de editor.js em editor.html")
+
+    def test_load_e_build_conhecem_o_guia(self):
+        self.assertIn("EDITOR_GUIA.carregar(", EDITOR_JS)
+        self.assertIn("EDITOR_GUIA.serializar(", EDITOR_JS)
+
+    def test_build_escreve_guia_so_quando_ha_passos(self):
+        # o campo só entra no JSON se serializar() devolveu lista (null = sem guia)
+        self.assertRegex(EDITOR_JS, r"const\s+guia\s*=\s*EDITOR_GUIA\.serializar\(f\.guia\)")
+        self.assertRegex(EDITOR_JS, r"if\s*\(guia\)\s*out\.guia\s*=\s*guia")
+
+
 if __name__ == "__main__":
     unittest.main()
