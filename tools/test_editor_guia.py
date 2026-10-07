@@ -38,6 +38,12 @@ class FiacaoTests(unittest.TestCase):
         j = EDITOR_HTML.find('"editor.js"')
         self.assertTrue(0 <= i < j, "editor_guia_logic.js deve vir antes de editor.js em editor.html")
 
+    def test_editor_carrega_o_dicionario_do_guia(self):
+        # sem isso o painel mostraria a chave crua no lugar do texto do passo
+        i = EDITOR_HTML.find("../src/lang/tutorial_guia.js")
+        j = EDITOR_HTML.find("../src/i18n.js")
+        self.assertTrue(0 <= i < j)
+
     def test_load_e_build_conhecem_o_guia(self):
         self.assertIn("EDITOR_GUIA.carregar(", EDITOR_JS)
         self.assertIn("EDITOR_GUIA.serializar(", EDITOR_JS)
