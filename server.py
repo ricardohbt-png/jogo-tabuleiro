@@ -58,6 +58,13 @@ LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
 # não para o autor mexer em PV, ouro ou inventário por um marcador no mapa.
 LICAO_EFEITOS = ("fome", "sede")
 
+# Guia do tutorial: uma lição pode listar PASSOS (`guia`) e cada passo aponta um
+# elemento da tela (`ui`). O servidor só valida o formato; quem desenha é o cliente.
+GUIA_MAX_PASSOS = 8
+GUIA_UI_RE = re.compile(
+    r"^(?:(?:botao|habilidade|bolsa|slot|monstro|hud):[a-z0-9_]+"
+    r"|(?:casa|porta):\[\d+,\d+\])$")
+
 
 def _e_licao(fala):
     """True se esta fala autorada é uma lição de tutorial.
@@ -7640,6 +7647,23 @@ def validar_dungeon(defn):
         _ord = _f.get("ordem")
         if _ord is not None and (not isinstance(_ord, int) or isinstance(_ord, bool)):
             return False, "ordem de lição deve ser um inteiro."
+        _guia = _f.get("guia")
+        if _guia is not None:
+            if not isinstance(_guia, list) or not _guia or len(_guia) > GUIA_MAX_PASSOS:
+                return False, f"guia da lição deve ser uma lista de 1 a {GUIA_MAX_PASSOS} passos."
+            for _ps in _guia:
+                if not isinstance(_ps, dict) or not (_ps.get("texto") or "").strip():
+                    return False, "passo do guia sem texto."
+                _ui = _ps.get("ui")
+                if _ui is not None and not (isinstance(_ui, str) and GUIA_UI_RE.match(_ui)):
+                    return False, f"ui de passo inválida: {_ui!r}."
+                _dica = _ps.get("dica")
+                if _dica is not None and (not isinstance(_dica, list) or len(_dica) > 2
+                                          or not all(isinstance(d, str) and d.strip() for d in _dica)):
+                    return False, "dica de passo deve ser uma lista de até 2 textos."
+                _cc = _ps.get("conclui_com")
+                if _cc is not None and (not isinstance(_cc, dict) or _cc.get("tipo") not in LICAO_VERBOS):
+                    return False, "conclui_com de passo inválido."
         _tar = _f.get("tarefa")
         if _tar is None:
             continue
