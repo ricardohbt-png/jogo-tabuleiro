@@ -156,6 +156,38 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take down the dummy.",
     "pt": "Derrube o boneco."
   },
+  "ui.tutorial.guia.fala_11.atacar.porque": {
+    "en": "The [[d20]] plus your attack bonus must match or beat the [[ca]].",
+    "pt": "O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]]."
+  },
+  "ui.tutorial.guia.fala_11.atacar.texto": {
+    "en": "Attack the dummy with your mace.",
+    "pt": "Ataque o boneco com a sua maça."
+  },
+  "ui.tutorial.guia.fala_12.matar.porque": {
+    "en": "Your weight is elsewhere: every point healed beats damage dealt. Each healing die costs water.",
+    "pt": "Seu peso é outro: cada ponto devolvido vale mais que o dano. Cada dado de cura gasta água."
+  },
+  "ui.tutorial.guia.fala_12.matar.texto": {
+    "en": "Take down the dummy.",
+    "pt": "Derrube o boneco."
+  },
+  "ui.tutorial.guia.fala_13.atacar.porque": {
+    "en": "The [[d20]] plus your attack bonus must match or beat the [[ca]].",
+    "pt": "O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]]."
+  },
+  "ui.tutorial.guia.fala_13.atacar.texto": {
+    "en": "Hit the dummy: the first beat of the ballad.",
+    "pt": "Acerte o boneco: é o primeiro compasso da balada."
+  },
+  "ui.tutorial.guia.fala_14.matar.porque": {
+    "en": "Your weapon is the Heroic Song: allies within five squares fight better, and it costs [[manutencao]].",
+    "pt": "Sua arma é a Canção Heroica: aliados num raio de cinco casas lutam melhor, e ela cobra [[manutencao]]."
+  },
+  "ui.tutorial.guia.fala_14.matar.texto": {
+    "en": "Take down the dummy.",
+    "pt": "Derrube o boneco."
+  },
   "ui.tutorial.guia.fala_18.comer.dica.1": {
     "en": "If the bag is closed, use the backpack button.",
     "pt": "Se a bolsa está fechada, use o botão da mochila."
@@ -392,6 +424,30 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Arm Enhance Spell and cast a spell that allows a save.",
     "pt": "Arme Aprimorar Magia e lance uma magia com teste."
   },
+  "ui.tutorial.guia.treino_cancao.cancao.porque": {
+    "en": "The song benefits you and the allies within range.",
+    "pt": "A canção beneficia você e os aliados dentro do alcance."
+  },
+  "ui.tutorial.guia.treino_cancao.cancao.texto": {
+    "en": "Click Heroic Song and choose a benefit.",
+    "pt": "Clique em Canção Heroica e escolha um benefício."
+  },
+  "ui.tutorial.guia.treino_cancao_manter.manter.porque": {
+    "en": "It charges [[manutencao]] in food and water every round.",
+    "pt": "Ela cobra [[manutencao]] de comida e água a cada rodada."
+  },
+  "ui.tutorial.guia.treino_cancao_manter.manter.texto": {
+    "en": "Click End Turn with the song active.",
+    "pt": "Clique em Encerrar Turno com a canção ativa."
+  },
+  "ui.tutorial.guia.treino_cancao_parar.parar.porque": {
+    "en": "That ends the effect and the resource drain.",
+    "pt": "Assim o efeito e o gasto de recursos acabam."
+  },
+  "ui.tutorial.guia.treino_cancao_parar.parar.texto": {
+    "en": "Turn off the Heroic Song.",
+    "pt": "Desative a Canção Heroica."
+  },
   "ui.tutorial.guia.treino_comando.abrir_fase.texto": {
     "en": "End Pedro's turn to open the servants phase.",
     "pt": "Encerre a vez de Pedro para abrir a fase dos servos."
@@ -411,6 +467,26 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_criar.criar.texto": {
     "en": "Use Create Trap on an empty square in the room.",
     "pt": "Use Criar Armadilha numa casa vazia da sala."
+  },
+  "ui.tutorial.guia.treino_cura.aproximar.texto": {
+    "en": "Stand next to Apprentice 1, who is wounded.",
+    "pt": "Fique ao lado do Aprendiz 1, que está ferido."
+  },
+  "ui.tutorial.guia.treino_cura.curar.porque": {
+    "en": "Check the life recovered and the water cost.",
+    "pt": "Confira a vida recuperada e o custo de água."
+  },
+  "ui.tutorial.guia.treino_cura.curar.texto": {
+    "en": "Click Heal and use one die on Apprentice 1.",
+    "pt": "Clique em Cura e use um dado no Aprendiz 1."
+  },
+  "ui.tutorial.guia.treino_cura_area.curar.porque": {
+    "en": "At the starting level the radius is 2 squares: check the area before confirming.",
+    "pt": "No nível inicial o raio é de 2 casas: confira a área antes de confirmar."
+  },
+  "ui.tutorial.guia.treino_cura_area.curar.texto": {
+    "en": "Stay near both apprentices and use Area Heal.",
+    "pt": "Fique perto dos dois aprendizes e use Cura em Área."
   },
   "ui.tutorial.guia.treino_desarmar.desarmar.porque": {
     "en": "If the test fails, try again: the room restores the mechanism.",
@@ -508,6 +584,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click End Turn to finish.",
     "pt": "Clique em Encerrar Turno para concluir."
   },
+  "ui.tutorial.guia.treino_instrumento.instrumento.porque": {
+    "en": "The instrument rounds out your bard repertoire.",
+    "pt": "O instrumento complementa seu repertório de bardo."
+  },
+  "ui.tutorial.guia.treino_instrumento.instrumento.texto": {
+    "en": "Open the instrument options and use its ability on a target.",
+    "pt": "Abra as opções do instrumento e use a habilidade num alvo."
+  },
   "ui.tutorial.guia.treino_magia.grimorio.texto": {
     "en": "Open the Grimoire with the spells button.",
     "pt": "Abra o Grimório no botão das magias."
@@ -531,6 +615,30 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_mira.mira.texto": {
     "en": "Click Precise Aim and then the dummy.",
     "pt": "Clique em Mira Certeira e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_provocar.provocar.porque": {
+    "en": "The target makes a [[teste_resistencia]]; resisting does not invalidate the use.",
+    "pt": "O alvo faz um [[teste_resistencia]]; resistir não invalida o uso."
+  },
+  "ui.tutorial.guia.treino_provocar.provocar.texto": {
+    "en": "Click Taunt and then the dummy.",
+    "pt": "Clique em Provocação e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_purificar.purificar.porque": {
+    "en": "He is blinded by a simulated poison; the effect disappears.",
+    "pt": "Ele está cego por um veneno simulado; o efeito desaparece."
+  },
+  "ui.tutorial.guia.treino_purificar.purificar.texto": {
+    "en": "Next to Apprentice 1, use Purify and choose Poison.",
+    "pt": "Ao lado do Aprendiz 1, use Purificação e escolha Veneno."
+  },
+  "ui.tutorial.guia.treino_ressuscitar.ressuscitar.porque": {
+    "en": "He simulates a fallen ally and returns with the life your ability allows.",
+    "pt": "Ele simula um aliado caído e volta com a vida que sua habilidade permite."
+  },
+  "ui.tutorial.guia.treino_ressuscitar.ressuscitar.texto": {
+    "en": "Next to Apprentice 1, use Resurrection.",
+    "pt": "Ao lado do Aprendiz 1, use Ressurreição."
   },
   "ui.tutorial.guia.treino_reviver.aproximar.texto": {
     "en": "Walk next to the training corpse.",

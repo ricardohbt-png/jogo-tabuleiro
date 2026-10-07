@@ -2425,7 +2425,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_11.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_11.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_12",
@@ -2449,7 +2457,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_12.matar.texto",
+          "porque": "ui.tutorial.guia.fala_12.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_13",
@@ -2473,7 +2489,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_13.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_13.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_14",
@@ -2497,7 +2521,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_14.matar.texto",
+          "porque": "ui.tutorial.guia.fala_14.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_15",
@@ -3623,7 +3655,19 @@
         "texto_curto": "Cure o Aprendiz 1",
         "alvo_id": "__treino_cleric_1",
         "cura_efetiva": true
-      }
+      },
+      "guia": [
+        {
+          "id": "aproximar",
+          "texto": "ui.tutorial.guia.treino_cura.aproximar.texto"
+        },
+        {
+          "id": "curar",
+          "texto": "ui.tutorial.guia.treino_cura.curar.texto",
+          "porque": "ui.tutorial.guia.treino_cura.curar.porque",
+          "ui": "habilidade:cura"
+        }
+      ]
     },
     {
       "id": "treino_cura_area",
@@ -3648,7 +3692,15 @@
         "vezes": 2,
         "texto_curto": "Cure os dois aprendizes em área",
         "cura_efetiva": true
-      }
+      },
+      "guia": [
+        {
+          "id": "curar",
+          "texto": "ui.tutorial.guia.treino_cura_area.curar.texto",
+          "porque": "ui.tutorial.guia.treino_cura_area.curar.porque",
+          "ui": "habilidade:cura_area"
+        }
+      ]
     },
     {
       "id": "treino_purificar",
@@ -3673,7 +3725,15 @@
         "vezes": 1,
         "texto_curto": "Purifique o Aprendiz 1",
         "alvo_id": "__treino_cleric_1"
-      }
+      },
+      "guia": [
+        {
+          "id": "purificar",
+          "texto": "ui.tutorial.guia.treino_purificar.purificar.texto",
+          "porque": "ui.tutorial.guia.treino_purificar.purificar.porque",
+          "ui": "habilidade:purificacao"
+        }
+      ]
     },
     {
       "id": "treino_ressuscitar",
@@ -3698,7 +3758,15 @@
         "vezes": 1,
         "texto_curto": "Ressuscite o Aprendiz 1",
         "alvo_id": "__treino_cleric_1"
-      }
+      },
+      "guia": [
+        {
+          "id": "ressuscitar",
+          "texto": "ui.tutorial.guia.treino_ressuscitar.ressuscitar.texto",
+          "porque": "ui.tutorial.guia.treino_ressuscitar.ressuscitar.porque",
+          "ui": "habilidade:ressurreicao"
+        }
+      ]
     },
     {
       "id": "treino_cancao",
@@ -3722,7 +3790,15 @@
         "alvo": "cancao_heroica",
         "vezes": 1,
         "texto_curto": "Ative a Canção Heroica"
-      }
+      },
+      "guia": [
+        {
+          "id": "cancao",
+          "texto": "ui.tutorial.guia.treino_cancao.cancao.texto",
+          "porque": "ui.tutorial.guia.treino_cancao.cancao.porque",
+          "ui": "habilidade:cancao_heroica"
+        }
+      ]
     },
     {
       "id": "treino_cancao_manter",
@@ -3745,7 +3821,15 @@
         "tipo": "manter_cancao",
         "vezes": 1,
         "texto_curto": "Mantenha a canção por uma rodada"
-      }
+      },
+      "guia": [
+        {
+          "id": "manter",
+          "texto": "ui.tutorial.guia.treino_cancao_manter.manter.texto",
+          "porque": "ui.tutorial.guia.treino_cancao_manter.manter.porque",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
     },
     {
       "id": "treino_cancao_parar",
@@ -3768,7 +3852,15 @@
         "tipo": "encerrar_cancao",
         "vezes": 1,
         "texto_curto": "Encerre a Canção Heroica"
-      }
+      },
+      "guia": [
+        {
+          "id": "parar",
+          "texto": "ui.tutorial.guia.treino_cancao_parar.parar.texto",
+          "porque": "ui.tutorial.guia.treino_cancao_parar.parar.porque",
+          "ui": "habilidade:cancao_heroica"
+        }
+      ]
     },
     {
       "id": "treino_provocar",
@@ -3792,7 +3884,15 @@
         "alvo": "provocacao",
         "vezes": 1,
         "texto_curto": "Use Provocação no boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "provocar",
+          "texto": "ui.tutorial.guia.treino_provocar.provocar.texto",
+          "porque": "ui.tutorial.guia.treino_provocar.provocar.porque",
+          "ui": "habilidade:provocacao"
+        }
+      ]
     },
     {
       "id": "treino_instrumento",
@@ -3818,7 +3918,14 @@
         "tipo": "usar_instrumento",
         "vezes": 1,
         "texto_curto": "Use seu instrumento"
-      }
+      },
+      "guia": [
+        {
+          "id": "instrumento",
+          "texto": "ui.tutorial.guia.treino_instrumento.instrumento.texto",
+          "porque": "ui.tutorial.guia.treino_instrumento.instrumento.porque"
+        }
+      ]
     },
     {
       "id": "treino_refem",
