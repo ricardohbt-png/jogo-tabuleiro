@@ -42,6 +42,19 @@ class BeltCatalogTests(unittest.TestCase):
                 self.assertTrue(item_id in exported, f"exportação: falta {item_id}")
                 self.assertEqual(exported[item_id]["item_slot"], "item")
 
+    def test_starting_city_payload_offers_both_belts_at_catalog_prices(self):
+        room = server.GameRoom('BELT_SHOP')
+        room.phase = 'city'
+        room.world_location = 'alva_e_luz'
+        merchant = {entry['id']: entry for entry in room._city_state_payload()['shops']['mercador']}
+        for iid, price, name in [('cinto_utilidades', 80, 'Cinto de Utilidades'),
+                                 ('cinto_com_bolsos', 30, 'Cinto com Bolsos')]:
+            with self.subTest(iid=iid):
+                self.assertIn(iid, merchant)
+                self.assertEqual(merchant[iid]['price'], price)
+                self.assertEqual(merchant[iid]['name'], name)
+                self.assertEqual(merchant[iid]['icon'], ICON)
+
     def test_client_catalog_and_localization(self):
         script = r"""
 const fs = require('fs'), vm = require('vm');

@@ -4,7 +4,9 @@ from copy import deepcopy
 import json
 import os
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
 
@@ -254,6 +256,174 @@ class BeltTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(hydrated.get('utility_belt_slots'), source['utility_belt_slots'])
         source['utility_belt_slots'][0]['quantity'] = 1
         self.assertEqual(hydrated['utility_belt_slots'][0]['quantity'], 3)
+
+    async def test_merchant_purchase_charges_exact_belt_prices(self):
+        self.r.phase = 'city'
+        self.p['gold'] = 200
+        await self.r.handle_shop_buy('p', 'mercador', 'cinto_utilidades')
+        self.assertEqual(self.p['gold'], 120)
+        await self.r.handle_shop_buy('p', 'mercador', 'cinto_com_bolsos')
+        self.assertEqual(self.p['gold'], 90)
+        self.assertEqual([b['id'] for b in self.p['bag']], ['cinto_utilidades', 'cinto_com_bolsos'])
+        self.assertEqual([b['buy_price'] for b in self.p['bag']], [80, 30])
+        self.assertIsNone(self.p['gear']['item1'])
+        self.assertIsNone(self.p['gear']['item2'])
+
+    async def test_full_bag_purchase_rescues_belts_into_independent_slots(self):
+        self.r.phase = 'city'
+        self.p['gold'] = 200
+        self.p['bag'] = [item('elixir') for _ in range(6)]
+        original_bag = deepcopy(self.p['bag'])
+        await self.r.handle_shop_buy('p', 'mercador', 'cinto_utilidades')
+        await self.r.handle_shop_buy('p', 'mercador', 'cinto_com_bolsos')
+        self.assertEqual(self.p['gold'], 90)
+        self.assertEqual(self.p['bag'], original_bag)
+        self.assertEqual(self.p['gear']['item1']['id'], 'cinto_utilidades')
+        self.assertEqual(self.p['gear']['item1']['utility_belt_slots'], [None] * 4)
+        self.assertEqual(self.p['gear']['item2']['id'], 'cinto_com_bolsos')
+        self.assertEqual(self.p['gear']['item2']['utility_belt_slots'], [None] * 2)
+
+    async def test_full_inventory_belt_purchase_rolls_back_gold_and_inventory(self):
+        self.r.phase = 'city'
+        self.p['gold'] = 200
+        self.p['bag'] = [item('elixir') for _ in range(6)]
+        self.belt(entries=[stack(quantity=3), None, None, None])
+        self.belt('cinto_com_bolsos', [stack('fogo_grego', 2), None], 'item2')
+        errors = []
+        async def capture(pid, msg):
+            errors.append(msg)
+        self.r.send_to = capture
+        for iid in ('cinto_utilidades', 'cinto_com_bolsos'):
+            with self.subTest(iid=iid):
+                before = deepcopy(self.p)
+                await self.r.handle_shop_buy('p', 'mercador', iid)
+                self.assertEqual(self.p, before)
+                self.assertEqual(errors[-1]['type'], 'error')
+                self.assertIn('cheio', str(errors[-1]['msg']))
+
+    async def test_insufficient_gold_belt_purchase_is_atomic(self):
+        self.r.phase = 'city'
+        errors = []
+        async def capture(pid, msg):
+            errors.append(msg)
+        self.r.send_to = capture
+        for iid, gold in [('cinto_utilidades', 79), ('cinto_com_bolsos', 29)]:
+            with self.subTest(iid=iid):
+                self.p['gold'] = gold
+                before = deepcopy(self.p)
+                await self.r.handle_shop_buy('p', 'mercador', iid)
+                self.assertEqual(self.p, before)
+                self.assertEqual(errors[-1]['type'], 'error')
+                self.assertIn('Ouro insuficiente', str(errors[-1]['msg']))
+
+    async def test_loaded_belt_unequip_notice_is_localized_for_each_model(self):
+        class Connection:
+            def __init__(self): self.sent = []
+            async def send(self, raw): self.sent.append(json.loads(raw))
+        self.r.gm_say = S.GameRoom.gm_say.__get__(self.r)
+        self.r.broadcast = S.GameRoom.broadcast.__get__(self.r)
+        for iid, pt_name, en_name, count in [
+                ('cinto_utilidades', 'Cinto de Utilidades', 'Utility Belt', 4),
+                ('cinto_com_bolsos', 'Cinto com Bolsos', 'Pocket Belt', 2)]:
+            with self.subTest(iid=iid):
+                pt, en = Connection(), Connection()
+                self.r.connections = {'p': pt, 'observer': en}
+                self.p['bag'] = []
+                self.belt(iid, [stack(quantity=3)] + [None] * (count - 1))
+                with patch.dict(S.LANG_BY_PID, {'p': 'pt', 'observer': 'en'}):
+                    await self.r.handle_unequip('p', 'item1')
+                pt_notice = pt.sent[-1]['text']
+                en_notice = en.sent[-1]['text']
+                self.assertIn(pt_name, pt_notice)
+                self.assertIn('permanecem', pt_notice)
+                self.assertIn('inacessíveis', pt_notice)
+                self.assertIn(en_name, en_notice)
+                self.assertIn('remain', en_notice)
+                self.assertIn('inaccessible', en_notice)
+                self.assertNotIn('{item}', pt_notice + en_notice)
+                self.assertEqual(self.p['bag'][0]['utility_belt_slots'],
+                                 [stack(quantity=3)] + [None] * (count - 1))
+
+    async def test_belt_save_load_keeps_each_equipped_and_stored_instance(self):
+        first = self.belt(entries=[stack(quantity=3), stack('elixir', 2), None, None])
+        second = self.belt('cinto_com_bolsos', [stack('fogo_grego', 4), None], 'item2')
+        stored = item('cinto_com_bolsos')
+        stored['utility_belt_slots'] = [stack('frasco_acido', 2), None]
+        self.p['bag'] = [stored]
+        expected_gear, expected_bag = deepcopy(self.p['gear']), deepcopy(self.p['bag'])
+        self.r.phase = 'city'
+        with (tempfile.TemporaryDirectory() as root,
+              patch.object(S, 'LOJA', S.LojaDocumentos(S.AdaptadorArquivo(root))),
+              patch.object(S, '_agendar_descarga', lambda: None)):
+            S.LOJA.carregar()
+            self.r.savegame = S.create_savegame('Belts', 'belt_tester', 'procedural', None, False)
+            sid = self.r.savegame['id']
+            self.r._checkpoint_savegame()
+            S.LOJA.descarregar()
+            first['utility_belt_slots'][0]['quantity'] = 1
+            second['utility_belt_slots'][0]['quantity'] = 1
+            stored['utility_belt_slots'][0]['quantity'] = 1
+            # A fresh cache reads actual JSON from disk; restoration uses the real durable whitelist.
+            S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(root))
+            S.LOJA.carregar()
+            snap = S.load_savegame(sid)['characters']['warrior']
+            restored = S.make_player('new_pid', 'Restored', 'warrior', 0)
+            S.restore_character(restored, snap)
+            self.assertEqual(restored['gear'], expected_gear)
+            self.assertEqual(restored['bag'], expected_bag)
+            restored['gear']['item1']['utility_belt_slots'][0]['quantity'] = 2
+            self.assertEqual(snap['gear']['item1']['utility_belt_slots'][0]['quantity'], 3)
+
+    async def test_dungeon_snapshot_keeps_loaded_belts_on_all_item_sources(self):
+        first = self.belt(entries=[stack(quantity=4), None, None, None])
+        second = self.belt('cinto_com_bolsos', [stack('elixir', 2), None], 'item2')
+        self.r.ground_items = {'g': {'id': 'g', 'pos': [1, 1], 'item': deepcopy(first)}}
+        self.r.chests = {'c': {'id': 'c', 'pos': [2, 2], 'gold': 0, 'items': [deepcopy(second)]}}
+        self.r.decorations = [{'id': 'd', 'type': 'bau', 'loot': {'gold': 0, 'items': [deepcopy(first)]}}]
+        expected = deepcopy(self.r._montar_foto())
+        with (tempfile.TemporaryDirectory() as root,
+              patch.object(S, 'LOJA', S.LojaDocumentos(S.AdaptadorArquivo(root))),
+              patch.object(S, '_agendar_descarga', lambda: None)):
+            S.LOJA.carregar()
+            self.r.savegame = S.create_savegame('Dungeon belts', 'belt_tester', 'procedural', None, False)
+            self.assertTrue(self.r._gravar_foto_rodada())
+            sid = self.r.savegame['id']
+            S.LOJA.descarregar()
+            S.LOJA = S.LojaDocumentos(S.AdaptadorArquivo(root))
+            S.LOJA.carregar()
+            loaded = S.foto_desempacotar(S.load_savegame(sid)['dungeon_snapshot'])
+            for key in ('ground_items', 'chests', 'decorations'):
+                self.assertEqual(loaded['sala'][key], expected['sala'][key])
+            self.assertEqual(loaded['herois']['warrior']['gear'], expected['herois']['warrior']['gear'])
+
+    async def test_each_preloaded_belt_survives_drop_pickup_chest_and_decor(self):
+        self.r._free_drop_tile_near = lambda pos: list(pos)
+        for iid, count in [('cinto_utilidades', 4), ('cinto_com_bolsos', 2)]:
+            with self.subTest(iid=iid):
+                self.p['bag'] = []
+                b = self.belt(iid, [stack(quantity=4), stack('fogo_grego', 2)] + [None] * (count - 2))
+                b['utility_belt_slots'][0]['item']['uses_left'] = 2
+                b['instance_tag'] = iid + '-preloaded'
+                expected = deepcopy(b)
+                await self.r.handle_drop_item('p', 'gear', slot_key='item1')
+                gid = next(iter(self.r.ground_items))
+                self.assertEqual(self.r.ground_items[gid]['item'], expected)
+                await self.r.handle_pickup_item('p', gid)
+                self.assertEqual(self.p['bag'], [expected])
+                self.assertNotIn(gid, self.r.ground_items)
+                self.r.chests['c'] = {'id': 'c', 'pos': list(self.p['pos']), 'gold': 0, 'items': [deepcopy(expected)]}
+                await self.r.handle_take_from_chest('p', 'c', 'item', 0)
+                self.assertEqual(self.p['bag'], [expected, expected])
+                self.assertNotIn('c', self.r.chests)
+                decor = {'id': 'd', 'loot': {'gold': 0, 'items': [deepcopy(expected)]}}
+                self.r._decor_by_id = lambda ident: decor if ident == 'd' else None
+                self.r._adjacente_a_decor = lambda pos, obj: True
+                await self.r.handle_take_from_decor('p', 'd', 'item', 0)
+                self.assertEqual(self.p['bag'], [expected, expected, expected])
+                self.assertEqual(decor['loot']['items'], [])
+                self.p['bag'][0]['utility_belt_slots'][0]['quantity'] = 1
+                self.assertEqual(self.p['bag'][1]['utility_belt_slots'][0]['quantity'], 4)
+                self.assertEqual(self.p['bag'][2]['utility_belt_slots'][0]['quantity'], 4)
 
 
 if __name__ == '__main__':
