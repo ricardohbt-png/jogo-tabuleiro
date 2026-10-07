@@ -60,8 +60,9 @@ class ConteudoTests(unittest.TestCase):
                     self.assertEqual(TERMO.findall(pt), TERMO.findall(en), f"{lid}/{p['id']}")
 
     def test_glossario_completo(self):
-        self.assertEqual(sorted(C.GLOSSARIO),
-                         sorted(["turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia"]))
+        esperados = {"turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia",
+                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico"}
+        self.assertEqual(set(C.GLOSSARIO), esperados)
         for k, v in C.GLOSSARIO.items():
             for campo in ("nome", "texto"):
                 self.assertTrue(v[campo][0].strip() and v[campo][1].strip(), f"{k}.{campo}")
@@ -80,6 +81,16 @@ class ConteudoTests(unittest.TestCase):
 class GeradorTests(unittest.TestCase):
     def setUp(self):
         self.d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+
+    def test_guia_todos_junta_os_modulos_existentes(self):
+        todos = G.guia_todos()
+        for lid in C.GUIA:
+            self.assertIn(lid, todos)
+        self.assertEqual(len(todos), len(set(todos)))
+
+    def test_botao_do_grimorio_tem_marcador(self):
+        gjs = (RAIZ / "game.js").read_text(encoding="utf-8")
+        self.assertRegex(gjs, r'id="fab-magias"[^>]*data-guia="botao:magias"')
 
     def test_aplicar_guia_injeta_so_chaves_e_valida(self):
         import server

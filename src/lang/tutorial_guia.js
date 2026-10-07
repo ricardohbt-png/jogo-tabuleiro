@@ -16,6 +16,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Something that costs nothing from your turn, like equipping a weapon.",
     "pt": "Algo que não gasta nada do turno, como equipar uma arma."
   },
+  "ui.tutorial.glossario.acao_principal.nome": {
+    "en": "main action",
+    "pt": "ação principal"
+  },
+  "ui.tutorial.glossario.acao_principal.texto": {
+    "en": "The strongest action of a turn: attack, cast a spell or use an ability. You get one per turn.",
+    "pt": "A ação mais forte do turno: atacar, lançar magia ou usar uma habilidade. É uma por turno."
+  },
   "ui.tutorial.glossario.ca.nome": {
     "en": "AC",
     "pt": "CA"
@@ -24,6 +32,22 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Armor Class: how hard the target is to hit. Your attack must match or beat it.",
     "pt": "Classe de Armadura: quanto o alvo é difícil de acertar. Seu ataque precisa igualar ou passar."
   },
+  "ui.tutorial.glossario.critico.nome": {
+    "en": "critical hit",
+    "pt": "acerto crítico"
+  },
+  "ui.tutorial.glossario.critico.texto": {
+    "en": "A natural 20 on the d20: the hit lands and the damage is doubled.",
+    "pt": "Um 20 natural no d20: o golpe acerta e o dano é dobrado."
+  },
+  "ui.tutorial.glossario.d20.nome": {
+    "en": "d20",
+    "pt": "d20"
+  },
+  "ui.tutorial.glossario.d20.texto": {
+    "en": "The 20-sided die. Every attack adds your attack bonus to the d20 and compares it with the target's AC.",
+    "pt": "O dado de 20 lados. Todo ataque soma seu acerto ao d20 e compara com a CA do alvo."
+  },
   "ui.tutorial.glossario.fome_sede.nome": {
     "en": "hunger and thirst",
     "pt": "fome e sede"
@@ -31,6 +55,22 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.glossario.fome_sede.texto": {
     "en": "Bars that drop over time and with abilities. When empty, they bring penalties.",
     "pt": "Barras que caem com o tempo e com habilidades. Vazias, trazem penalidades."
+  },
+  "ui.tutorial.glossario.furtivo.nome": {
+    "en": "sneak attack",
+    "pt": "ataque furtivo"
+  },
+  "ui.tutorial.glossario.furtivo.texto": {
+    "en": "Extra damage from attacking while hidden in the shadows. It triggers by itself when the conditions hold.",
+    "pt": "Dano extra de quem ataca escondido, vindo das sombras. Dispara sozinho quando as condições valem."
+  },
+  "ui.tutorial.glossario.manutencao.nome": {
+    "en": "upkeep",
+    "pt": "manutenção"
+  },
+  "ui.tutorial.glossario.manutencao.texto": {
+    "en": "A food and water cost charged every round while a sustained effect stays on.",
+    "pt": "Custo em comida e água cobrado a cada rodada enquanto um efeito sustentado continua ligado."
   },
   "ui.tutorial.glossario.movimento.nome": {
     "en": "movement",
@@ -47,6 +87,22 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.glossario.resistencia.texto": {
     "en": "The creature takes less damage from a type of hit, such as slashing or impact.",
     "pt": "A criatura sofre menos dano de certo tipo de golpe, como corte ou impacto."
+  },
+  "ui.tutorial.glossario.slot.nome": {
+    "en": "slot",
+    "pt": "slot"
+  },
+  "ui.tutorial.glossario.slot.texto": {
+    "en": "A spell space of one circle. Each spell spends a slot; they return according to the circle's rule.",
+    "pt": "Espaço de magia de um círculo. Cada magia gasta um slot; eles voltam conforme a regra do círculo."
+  },
+  "ui.tutorial.glossario.teste_resistencia.nome": {
+    "en": "saving throw",
+    "pt": "teste de resistência"
+  },
+  "ui.tutorial.glossario.teste_resistencia.texto": {
+    "en": "A die the target rolls to avoid or reduce an effect. Passing usually reduces the harm.",
+    "pt": "Dado que o alvo rola para evitar ou diminuir um efeito. Passar costuma reduzir o estrago."
   },
   "ui.tutorial.glossario.turno.nome": {
     "en": "turn",

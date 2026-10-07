@@ -449,7 +449,7 @@ document.body.innerHTML = `
     <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
     <button id="fab-inventario" data-guia="botao:inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
     <button id="fab-habilidades" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
-    <button id="fab-magias" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
+    <button id="fab-magias" data-guia="botao:magias" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
   </div>
   <!-- Atalho exclusivo do mestre para o Mapa de CR; heróis usam o menu de personagem. -->
   <button id="ficha-fab" data-i18n-title="ui.hud.mapa_cr_title" title="Mapa de CR (mestre)">🗺️</button>

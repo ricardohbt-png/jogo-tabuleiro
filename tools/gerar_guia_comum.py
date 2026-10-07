@@ -2,6 +2,7 @@
 
 Uso (da raiz): python tools/gerar_guia_comum.py
 """
+import importlib
 import json
 import sys
 from pathlib import Path
@@ -13,6 +14,27 @@ import tutorial_guia_comum as C
 JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 LANG_JS = RAIZ / "src" / "lang" / "tutorial_guia.js"
 
+# Módulos de conteúdo por classe. Um módulo ausente é ignorado (permite entregar por partes).
+MODULOS_CLASSES = ("tutorial_guia_guerreiro", "tutorial_guia_mago", "tutorial_guia_ladino",
+                   "tutorial_guia_clerigo", "tutorial_guia_bardo", "tutorial_guia_paladino")
+
+
+def guia_todos():
+    """{lição_id: [passos]} de TODOS os módulos (trilha comum + classes)."""
+    out = dict(C.GUIA)
+    for nome in MODULOS_CLASSES:
+        try:
+            mod = importlib.import_module(nome)
+        except ModuleNotFoundError as e:
+            if e.name != nome:
+                raise
+            continue
+        for lid, passos in mod.GUIA.items():
+            if lid in out:
+                raise ValueError(f"lição repetida entre módulos: {lid}")
+            out[lid] = passos
+    return out
+
 
 def _chave(lic, passo_id, campo, n=None):
     base = f"ui.tutorial.guia.{lic}.{passo_id}.{campo}"
@@ -22,7 +44,7 @@ def _chave(lic, passo_id, campo, n=None):
 def gerar_lang():
     """{chave: {pt, en}} de todo o guia e do glossário."""
     out = {}
-    for lic, passos in C.GUIA.items():
+    for lic, passos in guia_todos().items():
         for p in passos:
             out[_chave(lic, p["id"], "texto")] = dict(zip(("pt", "en"), p["texto"]))
             if p.get("porque"):
@@ -44,8 +66,9 @@ def render_lang():
 
 def aplicar_guia(d):
     """Grava `guia` (só chaves de idioma) nas falas da trilha comum de `d` (dict da masmorra)."""
+    _TODOS = guia_todos()
     for f in d["falas"]:
-        passos = C.GUIA.get(f["id"])
+        passos = _TODOS.get(f["id"])
         if not passos:
             continue
         guia = []
@@ -69,7 +92,7 @@ def main():
     d = json.loads(JSON_CAMPO.read_text(encoding="utf-8"))
     aplicar_guia(d)
     JSON_CAMPO.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n")  # arquivo versionado não tem \n final
-    print(f"ok: {len(gerar_lang())} chaves; {len(C.GUIA)} lições com guia")
+    print(f"ok: {len(gerar_lang())} chaves; {len(guia_todos())} lições com guia")
 
 
 if __name__ == "__main__":
