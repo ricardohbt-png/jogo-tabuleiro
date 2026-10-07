@@ -31735,7 +31735,10 @@ function _audioPanelEnsure(){
     +   '<button id="cfg-gamepad-toggle" class="cfg-section-button" type="button" aria-expanded="false"><span data-i18n="ui.menu.joystick_bind">Remapear botões</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
     +   '<section id="cfg-gamepad-controls" class="cfg-gamepad-controls" hidden>' + gamepadBindRows + '</section>'
     +   '<button id="gp-reset" class="cfg-gamepad-reset" type="button" data-i18n="ui.menu.joystick_reset">Restaurar padrão</button>'
-    +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
+    +   '<button id="cfg-game-toggle" class="cfg-section-button" type="button" aria-expanded="false" aria-controls="cfg-game-controls">'
+    +     '<span data-i18n="ui.menu.config_jogo">🎲 Configurações de jogo</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
+    +   '<section id="cfg-game-controls" class="cfg-game-controls" hidden>'
+    +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:4px;padding-top:8px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
@@ -31750,6 +31753,7 @@ function _audioPanelEnsure(){
     +     '<small data-i18n="ui.menu.atravessar_dica" style="display:block;margin:5px 0 2px;opacity:.7;font-size:.7rem;">Os caminhos podem cruzar as casas de heróis, servos e do prisioneiro liberto, mas nunca terminar nelas.</small>'
     +     '<small id="cfg-atravessar-note" style="display:block;margin-top:3px;opacity:.72;"></small>'
     +   '</div>'
+    +   '</section>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.desempenho">🖥️ Desempenho</div>'
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.menu.qualidade">⚙ Qualidade</span><select id="perf-nivel" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="alta" data-i18n="ui.menu.qual_alta">Alta</option><option value="media" data-i18n="ui.menu.qual_media">Média</option><option value="baixa" data-i18n="ui.menu.qual_baixa">Baixa</option></select></label>'
     +   '<small data-i18n="ui.menu.qual_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Baixa desliga sombras e reduz luzes e resolução — use se a masmorra 3D estiver travando.</small>'
@@ -31865,6 +31869,14 @@ function _audioPanelEnsure(){
     gamepadMapToggle.classList.toggle('open', aberto);
     gamepadMapToggle.setAttribute('aria-expanded', String(aberto));
     if(aberto) _gamepadRenderControlMap();
+  };
+  const gameToggle=wrap.querySelector('#cfg-game-toggle');
+  const gameControls=wrap.querySelector('#cfg-game-controls');
+  gameToggle.onclick=()=>{
+    const aberto=gameControls.hidden;
+    gameControls.hidden=!aberto;
+    gameToggle.classList.toggle('open',aberto);
+    gameToggle.setAttribute('aria-expanded',String(aberto));
   };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');

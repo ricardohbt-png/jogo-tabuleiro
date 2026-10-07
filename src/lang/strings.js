@@ -71,6 +71,7 @@ window.LANG_STRINGS = {
   },
   "ui.menu.audio_title": { "pt": "Áudio, idioma e opções", "en": "Audio, language and options" },
   "ui.menu.audio":       { "pt": "🔊 Áudio", "en": "🔊 Audio" },
+  "ui.menu.config_jogo": { "pt": "🎲 Configurações de jogo", "en": "🎲 Game settings" },
   "ui.menu.musica":      { "pt": "🎵 Música", "en": "🎵 Music" },
   "ui.menu.sons":        { "pt": "🔊 Sons", "en": "🔊 Sounds" },
   "ui.menu.idioma":      { "pt": "🌐 Idioma", "en": "🌐 Language" },

@@ -3457,7 +3457,8 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > outros heróis do grupo enxergam. **Duas chaves:** o anfitrião **permite** (campo da sala
 > `visao_compartilhada_permitida`, padrão `True`, mensagem `set_visao_compartilhada {enabled}` só
 > do anfitrião — molde do limite de tempo por turno; salvo no jogo salvo e enviado no `game_state`
-> e no `city_state`) e cada jogador **liga** a sua no painel ⚙️ (caixa "👁️ Visão compartilhada",
+> e no `city_state`) e cada jogador **liga** a sua no painel ⚙️ → **Configurações de jogo** (caixa "👁️ Visão compartilhada",
+> seção expansível que também contém o limite de tempo por turno e `Atravessar aliados` (opção da sala, só o anfitrião altera); preferência pessoal em
 > `localStorage["lfh_visao_compartilhada"]`, padrão desligada; botão do anfitrião logo abaixo,
 > `_refreshVisaoCompartilhadaOption`, chamada onde o limite de tempo já se atualiza). **Cálculo num
 > ponto só:** `computeVisionSet` (`game.js`) soma, com o raio e a linha de visão de cada um, os

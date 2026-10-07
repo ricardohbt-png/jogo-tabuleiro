@@ -1705,6 +1705,7 @@ input:focus { outline: none; border-color: var(--gold); }
 .cfg-section-chevron { font-size:1.15rem; line-height:1; transition:transform .16s ease; }
 .cfg-section-button.open .cfg-section-chevron { transform:rotate(90deg); }
 .cfg-audio-controls { margin:-2px 4px 12px; padding:2px 7px 8px; border-left:2px solid #4b8050; }
+.cfg-game-controls { margin:-2px 4px 12px; padding:2px 7px 8px; border-left:2px solid #6da7bd; }
 .cfg-audio-line { display:flex; justify-content:space-between; margin:10px 0 5px; }
 .cfg-som-teste-btn { width:100%; margin-top:12px; padding:6px 8px; background:rgba(13,26,13,.9); color:#cfe9cf; border:1px solid #2a4a2a; border-radius:5px; font-family:inherit; font-size:.82rem; cursor:pointer; }
 .cfg-som-teste-btn:hover { border-color:#4b8050; }
