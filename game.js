@@ -54070,9 +54070,10 @@ function mostrarOverlayEscolhaMagia(msg){
   if (existente) existente.remove();
   const el = document.createElement('div');
   el.id = 'overlay-escolha-magia';
+  el.dataset.heroi = msg.heroi || '';
   el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
   el.innerHTML = `
-    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">${t('ui.magia.subiu_de_nivel')}<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">${escolhas > 1 ? t('ui.magia.escolha_n_do_circulo', {n:escolhas, circulo:rotulo}) : t('ui.magia.escolha_1_do_circulo', {circulo:rotulo})}</span></div>
+    <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">${msg.heroi_nome ? t('ui.magia.subiu_de_nivel_heroi', {nome: _esc(msg.heroi_nome)}) : t('ui.magia.subiu_de_nivel')}<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">${escolhas > 1 ? t('ui.magia.escolha_n_do_circulo', {n:escolhas, circulo:rotulo}) : t('ui.magia.escolha_1_do_circulo', {circulo:rotulo})}</span></div>
     <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || `<div style="color:#8a7a5a;">${t('ui.magia.nenhuma_disponivel')}</div>`}</div>`;
   document.body.appendChild(el);
 }
@@ -54081,8 +54082,8 @@ window._escolherMagiaNivel = function(id){
   // O clique remove a carta que está em hover; mouseleave não ocorrerá.
   ocultarTooltipMagia();
   esconderTooltip();
-  GS.escolherMagiaNivel(id);
   const el = document.getElementById('overlay-escolha-magia');
+  GS.escolherMagiaNivel(id, (el && el.dataset.heroi) || undefined);
   if (el) el.remove();
 };
 

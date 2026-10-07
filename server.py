@@ -11035,9 +11035,10 @@ class GameRoom:
         p.setdefault("magias_conhecidas", []).append(magia_id)
         fila.pop(0)
         await self.gm_say(T("narracao.aprendeu", heroi=p['name'], m_nome=nome_criatura(m)))
-        if fila:
-            await self._enviar_spell_pick_prompt(p)   # prÃ³xima da fila
-        await self.push_state()
+        # A próxima da fila deste herói ou, terminada, a do próximo herói da
+        # mesma conexão (Solo com grupo: um painel por vez, na ordem do grupo).
+        await self._enviar_spell_pick_prompt(p)
+        await self.push_state_or_city()
 
     def _can_start(self):
         heroes = [p for p in self.players.values() if not p.get("is_master")]
@@ -15737,6 +15738,9 @@ class GameRoom:
 
     async def _start_initiative_player_turn(self, p):
         """Preparação comum de um turno de herói iniciado pela fila individual."""
+        if p.get("pending_spell_pick") and p.get("alive"):
+            # O aviso pode ter se perdido; o turno não encerra sem a escolha.
+            await self._enviar_spell_pick_prompt(p)
         await self._cobrar_manutencao_metamorfose(p)
         if not p.get("alive"):
             return
@@ -35705,6 +35709,15 @@ class GameRoom:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.tempestade_ciclones_posicionamento_pendente")})
             return
+        # Escolha de magia pendente: recusa antes de qualquer efeito de fim de
+        # turno (senão cada tentativa cobrava a Dor Constante) e reenvia o aviso,
+        # que pode ter se perdido (página recarregada, conexão que caiu).
+        p_pend = self.players.get(pid)
+        if p_pend and p_pend.get("pending_spell_pick"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.escolha_sua_nova_magia_antes_de_encerrar")})
+            await self._enviar_spell_pick_prompt(p_pend)
+            return
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por
         # esse caminho o dano não cobra.
@@ -35725,9 +35738,6 @@ class GameRoom:
             await self._fechar_mini_turno_ultimo_esforco(pid)
             return
         p = self.players[pid]
-        if p.get("pending_spell_pick"):
-            await self.send_to(pid, {"type": "error",
-                "msg": T("erro.escolha_sua_nova_magia_antes_de_encerrar")}); return
         fosso_encerrando = bool(p.get("fosso_turno_perdido"))
         # Limpa imobilizaÃ§Ã£o (teia/rede) â€” o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
@@ -45234,11 +45244,24 @@ class GameRoom:
             # segue vivo na cidade: a expedição é interrompida, não é derrota.
             await self._checar_masmorra_vazia()
 
+    def _proximo_spell_pick(self, conexao):
+        """1º herói da conexão (na ordem do grupo) com escolha de magia pendente."""
+        return next((q for q in self.players.values()
+                     if (q.get("controlador") or q["id"]) == conexao
+                     and q.get("pending_spell_pick")), None)
+
     async def _enviar_spell_pick_prompt(self, p):
-        """Envia ao jogador o prompt da próxima escolha de magia pendente (fila)."""
-        fila = p.get("pending_spell_pick") or []
-        if not fila:
+        """Envia o aviso da escolha de magia pendente da conexão de `p`.
+
+        Uma conexão tem UM painel de escolha: no Solo com grupo, mago e clérigo
+        sobem juntos (o XP é dividido num laço só) e dois avisos seguidos faziam
+        o 2º apagar o 1º no cliente -- o herói do aviso perdido ficava preso sem
+        painel. Por isso vai só o do 1º herói pendente da conexão; os outros
+        seguem quando ele termina (handle_escolher_magia_nivel)."""
+        p = self._proximo_spell_pick(self._conexao_de(p["id"]))
+        if not p:
             return
+        fila = p["pending_spell_pick"]
         circ = fila[0]
         opcoes = [mid for mid, m in GRIMORIO.items()
                   if p["class_id"] in m.get("classe", [])
@@ -45251,7 +45274,8 @@ class GameRoom:
                 break
             count += 1
         await self.send_to(p["id"], {
-            "type": "spell_pick_prompt", "circulo": circ, "count": count, "opcoes": opcoes})
+            "type": "spell_pick_prompt", "circulo": circ, "count": count, "opcoes": opcoes,
+            "heroi": p["id"], "heroi_nome": p.get("name", "")})
 
     async def _check_level_up(self, p):
         threshold = p["level"] * XP_POR_NIVEL
@@ -45294,14 +45318,16 @@ class GameRoom:
                         and magia.get("circulo") == circ
                         and mid not in p.get("magias_conhecidas", []))
                     p.setdefault("pending_spell_pick", []).extend([circ] * min(quantidade, disponiveis))
-                if p.get("pending_spell_pick"):
+                if self._proximo_spell_pick(self._conexao_de(p["id"])) is p:
                     await self._enviar_spell_pick_prompt(p)
             elif p.get("class_id") in ("mage", "cleric"):
                 # Slot novo do nÃ­vel jÃ¡ entra cheio (slots_max_para usa o novo level).
                 circ = NIVEL_NOVA_MAGIA.get(p["level"])
                 if circ:
                     p.setdefault("pending_spell_pick", []).append(circ)
-                    await self._enviar_spell_pick_prompt(p)
+                    # Outro herói da conexão já tem painel aberto: este vem depois.
+                    if self._proximo_spell_pick(self._conexao_de(p["id"])) is p:
+                        await self._enviar_spell_pick_prompt(p)
 
     # â”€â”€ Fase 3: avaliaÃ§Ã£o de objetivos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 

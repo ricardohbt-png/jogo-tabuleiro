@@ -6613,6 +6613,10 @@ window.LANG_INTERFACE = {
     "en": "LEVEL UP",
     "pt": "SUBIU DE NÍVEL"
   },
+  "ui.magia.subiu_de_nivel_heroi": {
+    "en": "{nome} — LEVEL UP",
+    "pt": "{nome} — SUBIU DE NÍVEL"
+  },
   "ui.magia.tecla_m": {
     "en": "M key",
     "pt": "tecla M"

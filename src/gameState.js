@@ -1682,8 +1682,10 @@ const GS = (() => {
   function _handle(msg) {
     if (msg.heroi && meusHerois.includes(msg.heroi) && _AVISOS_COM_RESPOSTA.has(msg.type)) {
       if (msg.heroi !== myPid) {
-        // Avisos em fila para o mesmo herói guardam o herói de ORIGEM.
-        const de = _voltaFoco && _voltaFoco.para === msg.heroi ? _voltaFoco.de : myPid;
+        // Avisos em fila (do mesmo herói, ou o do próximo herói chegando antes
+        // de o foco voltar) guardam o herói de ORIGEM.
+        const de = _voltaFoco && (_voltaFoco.para === msg.heroi || _voltaFoco.respondido)
+          ? _voltaFoco.de : myPid;
         _trocarFoco(msg.heroi);
         _voltaFoco = { de, para: msg.heroi, respondido: false };
       } else if (_voltaFoco && _voltaFoco.para === msg.heroi) {
@@ -1735,6 +1737,9 @@ const GS = (() => {
           if (me) myPid = me.id;
         }
         _aprenderConexao(msg.players);
+        // Aviso respondido na cidade (ex.: escolha de magia): o foco volta à
+        // origem, como no game_state da masmorra.
+        _devolverFocoAposAviso();
         // Quem entra num jogo salvo já em andamento cai direto na cidade, sem
         // lobby_state: a sessão de reconexão (F5/queda) é gravada daqui.
         if (msg.code && msg.code !== _sessCode) { _sessCode = msg.code; _saveSession(); }
@@ -2286,7 +2291,13 @@ const GS = (() => {
     send(heroi ? { type: 'set_known_spells', ids, heroi } : { type: 'set_known_spells', ids });
   }
   // Escolha da nova magia ao subir de nível (responde ao spell_pick_prompt).
-  function escolherMagiaNivel(id)    { send({ type: 'escolher_magia_nivel', magia_id: id }); }
+  // `heroi` = o herói do AVISO, não o do foco: a vez pode trocar o foco com o
+  // painel aberto, e a escolha iria para outro herói do grupo.
+  function escolherMagiaNivel(id, heroi) {
+    send(heroi && meusHerois.includes(heroi)
+      ? { type: 'escolher_magia_nivel', magia_id: id, heroi }
+      : { type: 'escolher_magia_nivel', magia_id: id });
+  }
   // Senhor das Águas: ação livre única para criar os redemoinhos da zona ativa.
   function senhorDasAguasCriar(tiles) { send({ type: 'senhor_das_aguas_rodamoinhos', tiles }); }
   function iraRochaArdenteConfirmarChamas(zoneId, tiles) {

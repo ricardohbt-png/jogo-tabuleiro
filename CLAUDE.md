@@ -576,6 +576,20 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `haloLight` (não nasce/morre por turno), no 2D `_desenharSetaVez2D` (todos os modos, fora a mesa de
 > teste); e o retrato do HUD ganha nome + "na vez"/"fora da vez — só ações livres"
 > (`#my-hero-portrait-faixa`, moldura dourada quando na vez).
+>
+> **Escolha de magia na subida de nível com grupo (2026-10-06):** o XP é dividido num laço só,
+> então mago e clérigo da mesma conexão sobem juntos — e o cliente tem UM painel de escolha
+> (`#overlay-escolha-magia`): o 2º `spell_pick_prompt` apagava o 1º e o herói do aviso perdido
+> ficava preso ("escolha sua nova magia antes de encerrar o turno", sem painel). Agora
+> `_enviar_spell_pick_prompt` manda só o aviso do **1º herói pendente da conexão**
+> (`_proximo_spell_pick`, na ordem do grupo) e `handle_escolher_magia_nivel` manda o do próximo
+> quando a fila dele termina; a subida de nível só avisa se o herói que subiu é o próximo. O aviso
+> leva `heroi` e `heroi_nome` (título "Lewis — SUBIU DE NÍVEL") e a resposta vai com o herói do
+> **aviso**, não o do foco (`GS.escolherMagiaNivel(id, heroi)`). O aviso é reenviado no início do
+> turno de quem tem escolha pendente e quando o `end_turn` é recusado por ela — recusa que agora
+> vem ANTES da Dor Constante e dos eventos de fim de turno (antes cada tentativa cobrava). A volta
+> do foco também roda no `city_state`. Testes: `tools/test_escolha_magia_grupo.py` (13) e
+> `tools/test_escolha_magia_grupo_cliente.js` (13).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
