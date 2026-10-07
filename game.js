@@ -43732,33 +43732,17 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
     _stCache.set(v, m);
     return m;
   };
-  const woodTex  = generateTexture('wood');
-  const woodMat  = new T.MeshStandardMaterial({
-    map: woodTex, color: new T.Color(0x2a1208), roughness: 0.95, metalness: 0
-  });
-  const hingeMat = new T.MeshStandardMaterial({
-    color: new T.Color(0x7a5a1a), roughness: 0.50, metalness: 0.84
-  });
-
   const add = (key, mesh) => {
     mesh.receiveShadow = true;
     mesh.visible = false;
     // Fora da cena: quem desenha e a InstancedMesh de _rebuildDetailInstances.
     // Eram 439 draw calls (arcos, pilares, rodapes) num mapa 44x40, e todos
     // usam so 3 geometrias -- instanciar leva isso a meia duzia de draw calls.
-    // A matriz de MUNDO precisa ser calculada aqui: as pedras do arco vivem
-    // dentro de um Group rotacionado, e fora da cena ninguem mais a atualiza.
+    // A matriz de MUNDO precisa ser calculada aqui: fora da cena ninguem
+    // mais a atualiza.
     mesh.updateMatrixWorld(true);
     (det[key] = det[key] || []).push(mesh);
   };
-
-  // Arch peak = WH exactly: pilH + 2*archR = WH - TH
-  const archR  = 0.36;                     // arch major radius
-  const archT  = 0.09;                     // arch tube radius
-  const pilH   = WH - TH - 2 * archR;     // pillar height = 0.81
-  const archCY = TH + pilH + archR;        // arch center Y = 1.39
-  const pilCY  = TH + pilH * 0.5;         // pillar center Y = 0.625
-  const doorW  = archR * 1.85;             // door panel width = 0.666
 
   const bsH  = 0.055;                      // baseboard height
   const bsDp = 0.10;                       // baseboard depth (from wall face)
@@ -43766,18 +43750,9 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
   const bsFO = TW * 0.5 - bsDp * 0.30;   // wall-face offset (slight protrusion)
 
   // ── Shared geometries (one instance, many meshes via clone/direct reuse) ──
-  const pilGeo = new T.BoxGeometry(0.22, pilH, 0.22);
   const colGeo = new T.CylinderGeometry(0.11, 0.14, WH, 8);
-  const hinGeo = new T.CylinderGeometry(0.030, 0.030, 0.14, 6);
   const bsGX   = new T.BoxGeometry(TW + 0.04, bsH, bsDp);  // baseboard N/S faces
   const bsGZ   = new T.BoxGeometry(bsDp, bsH, TW + 0.04);  // baseboard E/W faces
-
-  // ── Helper: count floor-tile orthogonal neighbors of tile (fx,fy) ─────────
-  const floorNeighbors = (fx, fy) =>
-    [[0,-1],[0,1],[1,0],[-1,0]].reduce((acc,[dx,dy]) => {
-      const nx=fx+dx, ny=fy+dy;
-      return acc + (nx>=0&&ny>=0&&nx<W&&ny<H&&tiles[ny][nx]===TILE_FLOOR ? 1 : 0);
-    }, 0);
 
   for(let y = 0; y < H; y++){
     for(let x = 0; x < W; x++){
@@ -43785,109 +43760,17 @@ function buildWallDetails(T, scene, state, wallTex, TW, TH, WH){
       const key  = `${x},${y}`;
 
       const gT  = (dx,dy) => { const nx=x+dx,ny=y+dy; return (nx>=0&&ny>=0&&nx<W&&ny<H)?tiles[ny][nx]:TILE_WALL; };
-      const isW = (dx,dy) => gT(dx,dy) === TILE_WALL;
       const isF = (dx,dy) => gT(dx,dy) === TILE_FLOOR;
 
-      if(tile === TILE_FLOOR){
-        // Arco, pilares e porta ficam sobre o chão desta casa, elevado ou não.
-        const fl = elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D;
-        const wN=isW(0,-1), wS=isW(0,1), wE=isW(1,0), wW=isW(-1,0);
-        const wCnt = (wN?1:0)+(wS?1:0)+(wE?1:0)+(wW?1:0);
-
-        // Door = floor tile with walls on exactly 2 opposite sides,
-        // and at least one open side leads to a wider area (≥3 floor neighbours = room tile)
-        let axis = null;
-        if(wCnt===2 && wN && wS){
-          // Passage runs E-W; check if E or W side opens into a room
-          const eRoom = isF(1,0)  && floorNeighbors(x+1, y) >= 3;
-          const wRoom = isF(-1,0) && floorNeighbors(x-1, y) >= 3;
-          if(eRoom || wRoom) axis = 'NS';
-        } else if(wCnt===2 && wE && wW){
-          const nRoom = isF(0,-1) && floorNeighbors(x, y-1) >= 3;
-          const sRoom = isF(0, 1) && floorNeighbors(x, y+1) >= 3;
-          if(nRoom || sRoom) axis = 'EW';
-        }
-
-        if(axis){
-          // ── Stone arch: 7 individual voussoir BoxGeometry blocks in a fan ──
-          // Each stone is tangentially rotated to follow the arc curvature.
-          // Keystone (centre, i=3) is slightly brighter; blocks alternate tone.
-          try{
-            const N      = 7;
-            const arcStp = archR * Math.PI / (N - 1);   // arc length per stone
-            const stoneW = arcStp * 0.78;                // tangential width (gap for mortar)
-            const stoneH = 0.17;                         // radial depth
-            const stoneDp= archT * 2.2;                  // depth through arch thickness
-            const archGrp = new T.Group();
-            archGrp.position.set(x, archCY + fl, y);
-            // NS door: arch must span Z (N-S) — rotate group 90° around Y
-            // EW door: arch spans X by default, no rotation needed
-            if(axis === 'NS') archGrp.rotation.y = Math.PI / 2;
-            for(let i = 0; i < N; i++){
-              const θ  = i * Math.PI / (N - 1);    // 0 = right foot → π = left foot
-              const cx = archR * Math.cos(θ);       // local X in arch plane
-              const cy = archR * Math.sin(θ);       // local Y (up)
-              const isKey = (i === Math.floor(N / 2));
-              const stone = new T.Mesh(
-                new T.BoxGeometry(stoneW, stoneH, stoneDp),
-                mkSt(isKey ? 1.18 : (i % 2 === 0 ? 0.94 : 1.06))
-              );
-              stone.position.set(cx, cy, 0);
-              stone.rotation.z = Math.PI / 2 + θ;  // tangential alignment
-              stone.receiveShadow = true;
-              archGrp.add(stone);
-            }
-            add(key, archGrp);
-          }catch(e){}
-
-          const pPos = axis === 'NS'
-            ? [[x, pilCY + fl, y-archR], [x, pilCY + fl, y+archR]]
-            : [[x-archR, pilCY + fl, y], [x+archR, pilCY + fl, y]];
-          for(const [px,py,pz] of pPos){
-            try{
-              const pm = new T.Mesh(pilGeo, mkSt(1.06));
-              pm.position.set(px, py, pz);
-              add(key, pm);
-            }catch(e){}
-          }
-
-          // ── Wood door panel (recessed 0.05 into passage) ─────────────────
-          try{
-            const dGeo = axis === 'NS'
-              ? new T.BoxGeometry(doorW, pilH, 0.065)   // door face visible from E/W
-              : new T.BoxGeometry(0.065, pilH, doorW);  // door face visible from N/S
-            const dm = new T.Mesh(dGeo, woodMat.clone());
-            dm.position.set(
-              x + (axis === 'EW' ? 0.05 : 0),
-              TH + pilH * 0.5 + fl,
-              y + (axis === 'NS' ? 0.05 : 0)
-            );
-            add(key, dm);
-          }catch(e){}
-
-          // ── Hinges (2 aged-gold cylinders on the hinge-side pillar face) ──
-          for(const hFrac of [0.26, 0.70]){
-            try{
-              const hm = new T.Mesh(hinGeo, hingeMat.clone());
-              const hY = TH + pilH * hFrac + fl;
-              if(axis === 'NS'){
-                hm.rotation.z = Math.PI / 2;  // cylinder axis → X (horizontal)
-                hm.position.set(x + doorW*0.5 + 0.025, hY, y - archR + 0.06);
-              } else {
-                hm.rotation.x = Math.PI / 2;  // cylinder axis → Z (horizontal)
-                hm.position.set(x - archR + 0.06, hY, y + doorW*0.5 + 0.025);
-              }
-              add(key, hm);
-            }catch(e){}
-          }
-        }
-      }
+      // Casa de chão não ganha enfeite: arco, pilares e folha de porta saíam em
+      // todo corredor de 1 casa ao lado de uma sala, inclusive onde o autor não
+      // pôs porta. Porta só existe na casa DOOR, com desenho próprio (doorMeshes).
 
       // ── WALL TILE: baseboards on every floor-adjacent face ───────────────
       // Dunas já têm uma base orgânica própria na geometria do monte. O
       // rodapé de pedra herdado das paredes da masmorra criava uma faixa
       // cinza artificial na face interna; não o use nesses tiles.
-      else if(tile === TILE_WALL){
+      if(tile === TILE_WALL){
         // O rodapé assenta no chão vizinho, elevado ou afundado.
         const bsYEm = (dx, dy) => bsY + elevacaoTerreno(state, x+dx, y+dy) * TERRENO_ELEVACAO_STEP_3D;
         if(!isDuneWall(x, y) && isF(0, 1)){  // floor to south

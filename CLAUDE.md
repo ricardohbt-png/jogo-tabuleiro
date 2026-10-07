@@ -314,13 +314,14 @@ do editor. O campo é **só visual** (as regras seguem lendo `elevacoes`): valid
 `validar_dungeon`, carregado em `load_authored_dungeon`, enviado no `game_state` (o 0 vai junto —
 é ele que trava a parede ao lado de um platô) e na foto da masmorra. Escala e posição da malha são
 aplicadas antes de `_prepararTileProxy` (que congela a matriz). Acompanham: colunas de canto
-(crescem com a parede mais alta do bloco), rodapés, arcos/pilares/porta de passagem (sobre o chão
-da casa), tochas e enfeites de parede (`elevacaoEnfeiteParede3D`: chão à frente, sem passar da
+(crescem com a parede mais alta do bloco), rodapés, tochas e enfeites de parede (`elevacaoEnfeiteParede3D`: chão à frente, sem passar da
 parede). Junto: a lápide do monstro passou `x,y` ao `obterFig` (ficava enterrada no platô, a do
 herói já assentava) e o anel/partículas da morte nascem no topo do terreno. A escada, a bandeira
 de saída e os anéis de início dos heróis assentam no topo da casa (`topoSuperficie3D`: platô ou
 ponte). Testes: `tools/test_altura_parede.py`,
 `tools/test_altura_parede_cliente.js`.
+
+**Porta só onde o autor criou (2026-10-07):** o `buildWallDetails` punha arco de pedras, pilares, folha de porta de madeira e dobradiças em toda casa de chão com parede dos dois lados ao lado de uma sala (resto da era procedural), sem olhar as portas do mapa — 53 no Calabouço da Morte. Removido: porta é só a casa `DOOR` (`doorMeshes`). Teste: `tools/test_porta_so_onde_autor.js`.
 
 ## Classes de Personagem
 
