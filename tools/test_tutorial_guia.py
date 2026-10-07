@@ -299,5 +299,35 @@ class DicaErroTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p['licao_atual'], 'fala_5')       # não concluiu
 
 
+class ResultadoTests(unittest.IsolatedAsyncioTestCase):
+    def resultados(self, r):
+        return [m for m in r.messages if m.get('type') == 'licao_resultado']
+
+    async def test_acerto(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_5')
+        await r._guia_resultado_ataque(p, roll=14, total=17, ca=12, hit=True, crit=False)
+        m = self.resultados(r)[0]
+        self.assertEqual((m['chave'], m['roll'], m['bonus'], m['total'], m['ca']),
+                         ('acerto', 14, 3, 17, 12))
+        self.assertEqual(m['licao_id'], 'fala_5')
+
+    async def test_critico_e_erro(self):
+        r, p = room('warrior')
+        await abrir_licao(r, p, 'fala_5')
+        await r._guia_resultado_ataque(p, roll=20, total=23, ca=12, hit=True, crit=True)
+        await r._guia_resultado_ataque(p, roll=3, total=6, ca=12, hit=False, crit=False)
+        self.assertEqual([m['chave'] for m in self.resultados(r)], ['critico', 'erro'])
+
+    async def test_sem_licao_pendente_nao_envia(self):
+        r, p = room('warrior')
+        await r._guia_resultado_ataque(p, roll=14, total=17, ca=12, hit=True, crit=False)
+        self.assertEqual(self.resultados(r), [])
+
+    def test_handle_attack_chama_o_resultado(self):
+        import inspect
+        self.assertIn('_guia_resultado_ataque(', inspect.getsource(S.GameRoom.handle_attack))
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

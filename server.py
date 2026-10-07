@@ -18089,6 +18089,17 @@ class GameRoom(TutorialTraining):
         _GUIA_DICA_ULTIMA[pid] = agora
         await self.send_to(pid, {"type": "licao_dica", "licao_id": lic["id"], "motivo": motivo})
 
+    async def _guia_resultado_ataque(self, p, roll, total, ca, hit, crit):
+        """Uma frase com os números do ataque, só para quem está numa lição."""
+        lic_id = p.get("licao_atual") if p else None
+        if not lic_id or not getattr(self, "licoes", None):
+            return
+        chave = "critico" if (hit and crit) else ("acerto" if hit else "erro")
+        await self.send_to(p["id"], {
+            "type": "licao_resultado", "licao_id": lic_id, "chave": chave,
+            "roll": int(roll), "bonus": int(total) - int(roll),
+            "total": int(total), "ca": int(ca)})
+
     async def _guia_dica_por_erro(self, pid, texto):
         """Converte uma recusa conhecida (T com chave) em dica; o resto passa em silêncio."""
         chave = getattr(texto, "key", None)
@@ -19217,6 +19228,7 @@ class GameRoom(TutorialTraining):
                 hit=bool(hit), crit=bool(crit), natural=int(roll),
                 natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1),
                 sneak_attack=bool(hit and furtivo_planejado))
+            await self._guia_resultado_ataque(p, roll, total, eff_target_ac, hit, crit)
             # Label distingue claramente da MÃ£o SecundÃ¡ria â€” evita confusÃ£o visual
             # com "rolagem de desvantagem" quando o jogador Ã© dual-wielder (Henrique).
             # A UI recebe os dois d20 quando há vantagem/desvantagem para poder
