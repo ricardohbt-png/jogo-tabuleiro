@@ -200,5 +200,20 @@ class AvancoTests(unittest.IsolatedAsyncioTestCase):
 
 
 
+class FotoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_licao_passo_faz_o_ciclo_da_foto(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        p['licao_passo'] = 2
+        volta = S._foto_decodificar(S._foto_codificar(p))
+        self.assertEqual(volta['licao_passo'], 2)
+        self.assertEqual(volta['licao_atual'], 'treino_mira')
+
+    def test_licao_guia_vai_na_foto_da_sala(self):
+        # `licoes` e `falas` são categoria "foto": o guia autorado viaja junto.
+        self.assertEqual(S.GameRoom.FOTO_SALA_CATEGORIAS.get('licoes') if hasattr(S.GameRoom, 'FOTO_SALA_CATEGORIAS')
+                         else S.FOTO_SALA_CATEGORIAS.get('licoes'), 'foto')
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

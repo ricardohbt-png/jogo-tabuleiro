@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>Belt modal fixture</title>
+<style>body{background:#181a1e;margin:0;color:#fff} #inv-item-tooltip{position:fixed;z-index:9999;background:#19120a;border:1px solid gold;padding:10px} </style>
+<body><script>
+const potion={id:'healing_potion',name:'Poção de Cura',effect:'heal',item_slot:'bag',emoji:'🧪'};
+const oil={id:'frasco_oleo',name:'Frasco de Óleo',effect:'throw',item_slot:'bag',emoji:'🫙'};
+const player={id:'p',name:'Prévia',alive:true,class_id:'warrior',gold:200,bag:[potion,oil,{id:'cinto_utilidades',name:'Cinto na bolsa'}],bag_size:6,gear:{item1:{id:'cinto_utilidades',name:'Cinto de Utilidades',utility_belt_slots:[{item:potion,quantity:4},{item:oil,quantity:2}]},item2:{id:'cinto_com_bolsos',name:'Cinto com Bolsos',utility_belt_slots:[{item:potion,quantity:1}]}}};
+window.fixtureMessages=[]; function record(...args){fixtureMessages.push(args); document.getElementById('messages').textContent=JSON.stringify(fixtureMessages)}
+const GS={gameState:{phase:'playing',players:[player]},cityState:null,myPid:'p',isMyTurn:true,CATALOGO_ITENS:{frasco_oleo:{arremessavel:true}},offHandBlockedByTwoHanded:()=>false,canPlaceItem:()=>false,on:()=>{},slotCategoryForItem:()=> 'bag',moveUtilityBeltItem:(...args)=>record('move',...args)};
+function t(x){return x.split('.').pop()} function _rotulo(x){return x} function itemIconHTML(item){return item.emoji||'📦'}
+function corBordaPorPreco(){return '#aa9966'} function gerarConteudoTooltip(){return 'Poção de Cura — teste de tooltip'} function esconderTooltip(){document.getElementById('inv-item-tooltip')?.remove()}
+function _initItemTooltip(){if(!document.getElementById('item-tooltip')){const el=document.createElement('div');el.id='item-tooltip';el.style='position:fixed;z-index:9999;background:#15110a;color:white;left:10px;top:10px;border:1px solid gold';document.body.appendChild(el)}} function renderLinhaTooltip(...a){return a.join(' ')} function useItem(...args){record('use',...args)} window._iniciarMiraArremesso=(...args)=>record('throw',...args);
+</script><script src="../src/ui/inventoryModal.js"></script><body><pre id="messages" style="position:fixed;z-index:9999;top:0;left:0;background:black;color:white;font-size:10px"></pre><script>InventoryModal.open('p');</script>

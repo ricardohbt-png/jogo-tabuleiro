@@ -121,8 +121,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `voltar_masmorra` | — (o herói na cidade volta à masmorra assim que a espera zera; senão ele volta sozinho na rodada seguinte) |
 | `open_chest` | — |
 | `open_door` | `tx`, `ty` — herói abre uma porta adjacente (Chebyshev ≤1). Ação **gratuita** (não gasta movimento/ação). Destranca a(s) sala(s) ligada(s) à porta, revela seu interior e **desperta** os monstros (que passam a perseguir). Salas começam trancadas (exceto a entrada); monstros em sala trancada ficam dormentes e o interior fica oculto pela névoa. **Com mestre**, além de abrir porta, os monstros também acordam por **avistamento** (o herói ganha linha de visão a um deles — `_verificar_avistamento`): o herói que avista acorda a **sala inteira** do monstro (flag `alertado`), narra "⚔️ Combate!" e coloca esses monstros em **Manual** por padrão (o mestre passa a dirigi-los); sem mestre a dormência é só por sala-trancada (byte-idêntica). **Clarividência** (`magia`, `alvoLivre`): alcance = mapa inteiro (mira em qualquer casa, mesmo na névoa — no 3D via `get3DTilePlane`); revela a área, os monstros ali (visibilidade ao vivo por 2 rodadas via `magic_reveal`) e as armadilhas do local, sem abrir a porta nem despertar os monstros. |
-| `use_item` | `item_id` |
-| `throw_item` | `item_id`, `target_id` — arremessa um consumível de bolsa (id em `ARREMESSAVEIS`) num monstro-alvo. Ação principal; teste de ataque por DES vs CA; consome o item em acerto E erro; dano de fogo + status `em_chamas_rodadas` (tica 1/rodada). |
+| `use_item` | `item_id`, `target_id` opcional; origem da bolsa por padrão. Do cinto: `source:"utility_belt"`, `gear_slot`, `pocket_index`, `belt_token` capturado ao iniciar a ação. |
+| `throw_item` | `item_id`, `target_id` (ou `tx`/`ty` para área) — arremessa um consumível (id em `ARREMESSAVEIS`). Origem da bolsa por padrão; do cinto usa os mesmos campos de origem de `use_item`. Ação principal; teste de ataque por DES vs CA; consome o item em acerto E erro; dano de fogo + status `em_chamas_rodadas` (tica 1/rodada). |
 | `apagar_chamas` | — (herói em chamas gasta a ação principal para se apagar; única via contra o Fogo Grego, que ignora água). |
 | `end_turn` | — |
 | `enter_dungeon` | — |
@@ -163,6 +163,9 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 | `set_lang` | `lang` (`"pt"`\|`"en"`) — idioma desta conexão. Enviada no `onopen` e a cada troca no painel ⚙️. Guardada em `LANG_BY_PID` (módulo, chaveada pelo `pid` do `new_id()`), não na sala — vale antes de entrar em qualquer sala e cobre o Mestre, que sai de `self.players` no `start_game`. O servidor reenvia o estado ao recebê-la, para o log de narração reaparecer traduzido. Valor fora da lista cai em `pt`. |
 
 ### Server → Client
+
+**Cintos de consumíveis:** `gear.item1`/`item2` guardam `utility_belt_slots` (4 posições para `cinto_utilidades`, 2 para `cinto_com_bolsos`). Cada pilha é `{item, quantity}` e pode carregar `remaining_items`: lista dos dicionários completos dos demais frascos, de comprimento `quantity - 1`. Sem a lista, os frascos após o atual são completos (compatibilidade com pilhas antigas). Movimentar ou consumir retira só o frasco atual e promove o próximo com suas doses preservadas. `utility_belt_token` identifica a ativação do equipamento; é renovado ao equipar e publicado nos estados da cidade/masmorra. Ações de cinto sem token ou com token antigo são recusadas sem consumir. `move_utility_belt_item {direction, gear_slot, pocket_index, bag_index}` move uma unidade entre bolsa e cinto; `direction` vale `to_belt` ou `to_bag`. Desequipar ou substituir cinto carregado preserva seu conteúdo e emite o aviso localizado de acesso indisponível. Testes: `tools/test_cinto_utilidades*.py`, `tools/test_cinto_utilidades*.js`, `tools/test_cinto_revisao_final.py`.
+
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,
 `decor_loot`, `trap_result`, `fala`, `armadilha_disparo`, `armadilha_impacto`, `armadilha_veneno_impacto`, `item_impacto`, `metamorfose_catalog`

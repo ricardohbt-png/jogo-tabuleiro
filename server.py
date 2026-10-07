@@ -6823,6 +6823,12 @@ SHOP_MERCHANT = [
      "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
+    {"id": "cinto_utilidades", "name": "Cinto de Utilidades", "emoji": "🎒", "price": 80,
+     "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
+     "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
+    {"id": "cinto_com_bolsos", "name": "Cinto com Bolsos", "emoji": "🎒", "price": 30,
+     "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
+     "descricao": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
     # â”€â”€ Venenos (consumÃ­veis de bolsa â€” untam a arma; ver VENENOS) â”€â”€
     {"id": "veneno_aranha_sombria", "name": "Veneno da Aranha Sombria", "emoji": "🕷️", "price": 8,  "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_aranha_sombria"},
     {"id": "veneno_escorpiao_pedra","name": "Veneno do Escorpião Pedra","emoji": "🦂", "price": 12, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_escorpiao_pedra"},
@@ -7360,7 +7366,7 @@ def validar_dungeon(defn):
         for it in (ch.get("items") or []):
             if not isinstance(it, dict):
                 return False, f"item de baú inválido: {it!r}."
-            if it.get("id") not in _DUNGEON_ITEM_CATALOG:
+            if not isinstance(it.get("id"), str) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
                 return False, f"item de baú desconhecido: {it.get('id')!r}."
             if it.get("id") == "carta" and "texto" in it:
                 if not isinstance(it["texto"], str) or len(it["texto"].strip()) > 2000:
@@ -7532,7 +7538,7 @@ def validar_dungeon(defn):
             if isinstance(gold, bool) or not isinstance(gold, (int, float)) or gold < 0:
                 return False, "decoração com gold inválido."
             for it in (loot.get("items") or []):
-                if not isinstance(it, dict) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
+                if not isinstance(it, dict) or not isinstance(it.get("id"), str) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
                     return False, f"item de loot inválido: {it!r}."
                 if it.get("id") == "carta" and "texto" in it:
                     if not isinstance(it["texto"], str) or len(it["texto"].strip()) > 2000:
@@ -7956,9 +7962,25 @@ def hidratar_itens_bau(items):
         inst = _resolver_loot_instrumento(it)   # token de instrumento procedural (Fase 4a)
         if inst:
             out.append(inst); continue
-        base = _DUNGEON_ITEM_CATALOG.get(it.get("id"))
+        iid = it.get("id")
+        base = _DUNGEON_ITEM_CATALOG.get(iid) if isinstance(iid, str) else None
         if base:
             inst = deepcopy(base)
+            if GameRoom._is_utility_belt_item(inst):
+                # Authored loot selects IDs, never supplies runtime effects or belt stats.
+                if isinstance(it.get("instance_tag"), str):
+                    inst["instance_tag"] = it["instance_tag"]
+                raw = it.get("utility_belt_slots")
+                raw = raw if isinstance(raw, list) else []
+                slots = []
+                for entry in raw[:GameRoom._utility_belt_capacity(inst)]:
+                    pocket = entry.get("item") if isinstance(entry, dict) else None
+                    pocket_id = pocket.get("id") if isinstance(pocket, dict) else None
+                    definition = _DUNGEON_ITEM_CATALOG.get(pocket_id) if isinstance(pocket_id, str) else None
+                    slots.append({"item": deepcopy(definition), "quantity": entry.get("quantity")}
+                                 if definition else None)
+                inst["utility_belt_slots"] = slots
+                GameRoom._normalize_utility_belt(inst)
             if inst.get("id") == "carta" and isinstance(it.get("texto"), str):
                 texto = it["texto"].strip()
                 if texto:
@@ -11989,6 +12011,7 @@ class GameRoom(TutorialTraining):
     # â”€â”€ city phase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _city_state_payload(self):
+        self._ensure_utility_belt_tokens()
         players_city = [dict(p,
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
@@ -19575,7 +19598,8 @@ class GameRoom(TutorialTraining):
         if not p or not p["alive"]: return
         if not isinstance(data, dict): return
         item_id = data.get("item_id")
-        item = next((i for i in p["bag"] if i["id"] == item_id), None)
+        item, source_location = self._resolve_consumable_source(
+            p, item_id, data.get("source", "bag"), data.get("gear_slot"), data.get("pocket_index"), data.get("belt_token"))
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_na_bolsa")}); return
         defn = ARREMESSAVEIS.get(item_id)
@@ -19590,15 +19614,15 @@ class GameRoom(TutorialTraining):
         # o que separa o caminho de sucesso do de recusa para a licao.
         _agiu_antes = bool(p.get("action_done"))
         if alvo_tipo == "ataque_alvo":
-            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"))
+            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
         elif alvo_tipo == "area":
-            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"))
+            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"), source_location)
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if not _agiu_antes and p.get("action_done"):
             await self._licao_evento(p, "arremessar_item", alvo=item.get("id"))
 
-    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None):
+    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None, source_location=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
@@ -19642,7 +19666,8 @@ class GameRoom(TutorialTraining):
             natural_critical=bool(roll == 20), natural_fumble=bool(nat1))
 
         # Consome o item (espatifa) â€” em acerto ou erro.
-        p["bag"].remove(item)
+        if not self._consume_action_item(p, item, source_location):
+            return
         # Marca a aÃ§Ã£o e cobra sobrevivÃªncia (mesma cadÃªncia de um ataque).
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
@@ -19700,7 +19725,7 @@ class GameRoom(TutorialTraining):
 
         await self.push_state()
 
-    async def _throw_item_area(self, p, defn, item, tx, ty):
+    async def _throw_item_area(self, p, defn, item, tx, ty, source_location=None):
         """Arremesso de ÁREA: sem jogada de ataque. Atinge TODOS no raio (fogo
         amigo, como a Bola de Fogo) com save de Reflexos (metade no sucesso);
         opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
@@ -19717,7 +19742,8 @@ class GameRoom(TutorialTraining):
                 "msg": T("erro.uma_parede_bloqueia_a_trajetoria_do_arre")}); return
 
         # Consome o item + gasta a aÃ§Ã£o principal.
-        p["bag"].remove(item)
+        if not self._consume_action_item(p, item, source_location):
+            return
         p["action_done"] = True
         self._consumir_recursos(p, 'apenas_acao')
         raio = defn.get("area_raio", 1)
@@ -24517,6 +24543,10 @@ class GameRoom(TutorialTraining):
         p["altura"] = min(limite, altura)
 
     def _apply_gear_effect(self, p, item, equipping):
+        if equipping and self._is_utility_belt_item(item):
+            self._normalize_utility_belt(item)
+            # An equipment activation is distinct even when the same belt returns.
+            item["utility_belt_token"] = os.urandom(16).hex()
         value = item.get("value", 0)
         # Armaduras iniciais de saves antigos tinham value=0 porque o bônus
         # estava embutido na CA. Use o catálogo para manter equipar/desequipar
@@ -24623,9 +24653,175 @@ class GameRoom(TutorialTraining):
             return "bag"
         return "full"
 
+    @staticmethod
+    def _utility_belt_capacity(item):
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            return 0
+        return {"cinto_utilidades": 4, "cinto_com_bolsos": 2}.get(item.get("id"), 0)
+
+    @classmethod
+    def _is_utility_belt_item(cls, item):
+        return cls._utility_belt_capacity(item) > 0
+
+    @staticmethod
+    def _is_utility_belt_eligible(item):
+        """Only portable throwables, registered poison vials and bottled potions."""
+        if not isinstance(item, dict) or not isinstance(item.get("id"), str):
+            return False
+        iid = item["id"]
+        base = _DUNGEON_ITEM_CATALOG.get(iid, item)
+        if base.get("item_slot") != "bag":
+            return False
+        if base.get("effect") == "throwable":
+            return iid in ARREMESSAVEIS
+        if base.get("effect") == "coat_poison":
+            poison_id = base.get("veneno_id")
+            return isinstance(poison_id, str) and poison_id in VENENOS
+        return base.get("item_type") == "potion" or iid in {
+            "health_potion", "health_potion_small", "health_potion_concentrated",
+            "health_potion_improved", "regeneration_potion", "elixir", "antidote",
+            "oleo_dissolvente", "elixir_depurativo",
+        }
+
+    @classmethod
+    def _normalize_utility_belt(cls, item):
+        """Legacy belts are empty; invalid or repeated stacks become empty slots."""
+        capacity = cls._utility_belt_capacity(item)
+        if not capacity:
+            return item
+        raw = item.get("utility_belt_slots")
+        raw = raw if isinstance(raw, list) else []
+        slots, seen = [], set()
+        for index in range(capacity):
+            entry = raw[index] if index < len(raw) else None
+            if (isinstance(entry, dict)
+                    and type(entry.get("quantity")) is int
+                    and 1 <= entry["quantity"] <= 4
+                    and cls._is_utility_belt_eligible(entry.get("item"))
+                    and entry["item"]["id"] not in seen):
+                seen.add(entry["item"]["id"])
+                clean = {"item": deepcopy(entry["item"]), "quantity": entry["quantity"]}
+                reserves = entry.get("remaining_items")
+                if "remaining_items" in entry:
+                    if (not isinstance(reserves, list) or len(reserves) != entry["quantity"] - 1
+                            or any(not cls._is_utility_belt_eligible(unit)
+                                   or unit["id"] != entry["item"]["id"] for unit in reserves)):
+                        slots.append(None)
+                        continue
+                    clean["remaining_items"] = deepcopy(reserves)
+                slots.append(clean)
+            else:
+                slots.append(None)
+        item["utility_belt_slots"] = slots
+        return item
+
+    def _ensure_utility_belt_tokens(self):
+        """Publish an identity for already-equipped belts from older saves."""
+        for p in self.players.values():
+            for key in ("item1", "item2"):
+                belt = p.get("gear", {}).get(key)
+                if self._is_utility_belt_item(belt):
+                    if not isinstance(belt.get("utility_belt_token"), str) or not belt["utility_belt_token"]:
+                        belt["utility_belt_token"] = os.urandom(16).hex()
+                    if "utility_belt_slots" not in belt:
+                        self._normalize_utility_belt(belt)
+
+    @staticmethod
+    def _utility_belt_full_unit(item):
+        """Old stacks represent the current bottle followed by full bottles."""
+        unit = deepcopy(item)
+        if unit.get("effect") == "heal" and int(unit.get("max_uses", 1) or 1) > 1:
+            unit["uses_left"] = int(unit["max_uses"])
+        return unit
+
+    @classmethod
+    def _utility_belt_append_unit(cls, entry, unit):
+        full = cls._utility_belt_full_unit(entry["item"])
+        if "remaining_items" in entry or unit != full:
+            reserves = entry.setdefault("remaining_items", [deepcopy(full) for _ in range(entry["quantity"] - 1)])
+            reserves.append(deepcopy(unit))
+        entry["quantity"] += 1
+
+    @classmethod
+    def _utility_belt_take_unit(cls, entry):
+        unit = deepcopy(entry["item"])
+        entry["quantity"] -= 1
+        if entry["quantity"]:
+            reserves = entry.get("remaining_items")
+            next_unit = reserves.pop(0) if reserves is not None else cls._utility_belt_full_unit(unit)
+            # Keep the current item reference stable for the existing use flow.
+            entry["item"].clear()
+            entry["item"].update(next_unit)
+            if reserves == []:
+                entry.pop("remaining_items")
+        return unit
+
+    async def handle_move_utility_belt_item(self, pid, data):
+        """Move exactly one unit; validate everything before changing either source."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self.phase not in ("city", "playing") or not isinstance(data, dict):
+            return False
+        direction = data.get("direction")
+        gear_slot = data.get("gear_slot")
+        pocket_index, bag_index = data.get("pocket_index"), data.get("bag_index")
+        if (direction not in ("to_belt", "to_bag") or gear_slot not in ("item1", "item2")
+                or type(pocket_index) is not int or type(bag_index) is not int
+                or ("quantity" in data and (type(data["quantity"]) is not int or data["quantity"] != 1))):
+            return False
+        belt = p.get("gear", {}).get(gear_slot)
+        capacity = self._utility_belt_capacity(belt)
+        bag = p.get("bag")
+        if not capacity or not 0 <= pocket_index < capacity or not isinstance(bag, list):
+            return False
+        # Missing slots are valid legacy state; malformed existing data must not
+        # be repaired during a rejected request (the transaction remains atomic).
+        if "utility_belt_slots" not in belt:
+            slots = [None] * capacity
+        else:
+            raw = belt["utility_belt_slots"]
+            normalized = self._normalize_utility_belt(deepcopy(belt))["utility_belt_slots"]
+            if not isinstance(raw, list) or raw != normalized:
+                return False
+            slots = deepcopy(raw)
+        entry = slots[pocket_index]
+        if direction == "to_bag":
+            # The normal bag is compact: bag_index is an insertion position.
+            if not entry or len(bag) >= p.get("bag_size", 6) or not 0 <= bag_index <= len(bag):
+                return False
+            unit = self._utility_belt_take_unit(entry)
+            if entry["quantity"] == 0:
+                slots[pocket_index] = None
+            bag.insert(bag_index, unit)
+        else:
+            if not 0 <= bag_index < len(bag):
+                return False
+            unit = bag[bag_index]
+            if not self._is_utility_belt_eligible(unit):
+                return False
+            iid = unit["id"]
+            if any(i != pocket_index and st and st["item"]["id"] == iid
+                   for i, st in enumerate(slots)):
+                return False
+            if entry and entry["item"]["id"] == iid:
+                if entry["quantity"] >= 4:
+                    return False
+                self._utility_belt_append_unit(entry, unit)
+                bag.pop(bag_index)
+            elif entry:
+                if entry["quantity"] != 1:
+                    return False
+                bag[bag_index] = deepcopy(entry["item"])
+                slots[pocket_index] = {"item": deepcopy(unit), "quantity": 1}
+            else:
+                slots[pocket_index] = {"item": deepcopy(unit), "quantity": 1}
+                bag.pop(bag_index)
+        belt["utility_belt_slots"] = slots
+        await self.push_state_or_city()
+        return True
+
     def _route_acquired_item(self, p, item):
-        """Roteia um item recém-adquirido (compra/loot) — modelo BOLSA-PRIMEIRO com
-        resgate-equipar. Retorna 'bag' | 'equipped' | 'full':
+        """Consumíveis elegíveis priorizam cintos equipados; demais itens seguem
+        bolsa-primeiro com resgate-equipar. Retorna 'bag' | 'equipped' | 'full':
           1) bolsa tem espaço            → bolsa (NÃO auto-equipa, mesmo com slot livre);
           2) bolsa cheia + slot correspondente livre e equipável → auto-equipa (resgate);
           3) bolsa cheia + slots ocupados/inequipável → 'full' (o chamador recusa).
@@ -24637,6 +24833,28 @@ class GameRoom(TutorialTraining):
         # (`kind`/`ac_bonus`). Normalize a cópia antes de colocá-la na bolsa ou
         # equipá-la, sem tocar no catálogo compartilhado pelos monstros.
         item = _normalizar_item_defesa_equipavel(item)
+        if self._is_utility_belt_eligible(item):
+            # Search all existing stacks before considering empty pockets.
+            belts = []
+            for key in ("item1", "item2"):
+                belt = p.get("gear", {}).get(key)
+                if self._is_utility_belt_item(belt):
+                    candidate = self._normalize_utility_belt(deepcopy(belt))
+                    belts.append((belt, candidate["utility_belt_slots"]))
+            for belt, slots in belts:
+                for entry in slots:
+                    if entry and entry["item"]["id"] == item["id"] and entry["quantity"] < 4:
+                        self._utility_belt_append_unit(entry, item)
+                        belt["utility_belt_slots"] = slots
+                        return "bag"  # historical successful-acquisition contract
+            for belt, slots in belts:
+                if any(entry and entry["item"]["id"] == item["id"] for entry in slots):
+                    continue
+                for index, entry in enumerate(slots):
+                    if entry is None:
+                        slots[index] = {"item": deepcopy(item), "quantity": 1}
+                        belt["utility_belt_slots"] = slots
+                        return "bag"
         if item.get("tipo_item") == "instrumento":
             if len(p["bag"]) < p.get("bag_size", 6):
                 p["bag"].append(item)
@@ -24961,6 +25179,8 @@ class GameRoom(TutorialTraining):
                  "head": "⛑️", "boots": "👢", "ring": "💍", "item": "🎒"}.get(cat, "🎒")
         self._aplicar_corrosao_inicial(p, item, cat)
         await self.gm_say(T("narracao.equipou", log_emoji=emoji, heroi=p["name"], item=nome_item(item)))
+        for _, old in displaced:
+            await self._notify_utility_belt_contents(old)
         return True
 
     async def _executar_equip_from_bag(self, pid, slot_index):
@@ -24997,6 +25217,7 @@ class GameRoom(TutorialTraining):
         # Equipar por cima empurra o item antigo para a bolsa — se ele estiver
         # preso por maldição, isso seria a via mais fácil de burlar a trava.
         _destino = self._slot_destino_equip(p, cat)
+        displaced_belt = p.get("gear", {}).get(_destino) if _destino else None
         if _destino and self._slot_travado_por_maldicao(p, _destino):
             await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return False
         # Substituir a Bota Alada por outro item de botas também remove a
@@ -25039,6 +25260,7 @@ class GameRoom(TutorialTraining):
         if log:
             self._aplicar_corrosao_inicial(p, item, cat)
             await self.gm_say(log)
+            await self._notify_utility_belt_contents(displaced_belt)
         return True
 
     @staticmethod
@@ -25123,7 +25345,12 @@ class GameRoom(TutorialTraining):
             p["weapon"] = {**WEAPONS["unarmed"]}
         p["bag"].append(item)
         await self.gm_say(T("narracao.desequipou", heroi=p['name'], item=nome_item(item)))
+        await self._notify_utility_belt_contents(item)
         await self.push_state_or_city()
+
+    async def _notify_utility_belt_contents(self, item):
+        if self._is_utility_belt_item(item) and any(item.get("utility_belt_slots", [])):
+            await self.gm_say(T("narracao.cinto_conteudo_guardado", item=nome_item(item)))
 
     # â”€â”€ validaÃ§Ã£o de slot secundÃ¡rio (scaffolding â€” ver SECUNDARIO_PERMITIDO) â”€â”€â”€â”€
     # NOTA: handle_equip ainda NÃƒO Ã© roteado (o caminho ativo Ã©
@@ -35714,7 +35941,47 @@ class GameRoom(TutorialTraining):
         await self._aplicar_maldicao_carta(p, item)
         await self.push_state()
 
-    async def handle_use_item(self, pid, item_id, target_id=None):
+    def _resolve_consumable_source(self, p, item_id, source="bag", gear_slot=None, pocket_index=None, belt_token=None):
+        """Resolve one exact item without repairing or changing rejected source data."""
+        if source == "bag":
+            return next((i for i in p["bag"] if i["id"] == item_id), None), None
+        if (source != "utility_belt" or gear_slot not in ("item1", "item2")
+                or type(pocket_index) is not int):
+            return None, None
+        belt = p.get("gear", {}).get(gear_slot)
+        capacity = self._utility_belt_capacity(belt)
+        if (not capacity or not 0 <= pocket_index < capacity
+                or not isinstance(belt_token, str) or not belt_token
+                or belt.get("utility_belt_token") != belt_token):
+            return None, None
+        slots = belt.get("utility_belt_slots")
+        normalized = self._normalize_utility_belt(deepcopy(belt))["utility_belt_slots"]
+        if not isinstance(slots, list) or slots != normalized:
+            return None, None
+        entry = slots[pocket_index]
+        if not entry or entry["item"].get("id") != item_id:
+            return None, None
+        return entry["item"], (gear_slot, belt, pocket_index, entry)
+
+    def _consume_action_item(self, p, item, source_location=None):
+        """Remove the current bottle at the same point as the legacy bag flow."""
+        if source_location is None:
+            p["bag"].remove(item)
+            return True
+        gear_slot, belt, pocket_index, entry = source_location
+        # Keep the exact equipped object and pocket resolved before any await.
+        slots = belt.get("utility_belt_slots")
+        if (p.get("gear", {}).get(gear_slot) is not belt or not isinstance(slots, list)
+                or pocket_index >= len(slots) or slots[pocket_index] is not entry
+                or entry.get("item") is not item or type(entry.get("quantity")) is not int
+                or not 1 <= entry["quantity"] <= 4):
+            return False
+        self._utility_belt_take_unit(entry)
+        if entry["quantity"] == 0:
+            slots[pocket_index] = None
+        return True
+
+    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -35722,7 +35989,7 @@ class GameRoom(TutorialTraining):
         if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
             return
-        item = next((i for i in p["bag"] if i["id"] == item_id), None)
+        item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index, belt_token)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
 
@@ -35806,13 +36073,43 @@ class GameRoom(TutorialTraining):
             if not ok:
                 return  # jÃ¡ usou aÃ§Ã£o bÃ´nus neste turno â€” abortar sem consumir o item
 
+        # The poison branch can still refuse after the bonus action. Validate it
+        # before committing a belt bottle; bag callers retain the same ordering.
+        if effect == "coat_poison":
+            vid = item.get("veneno_id")
+            if vid not in VENENOS:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+
         remove_item = True
-        if effect == "heal":
-            self._curar_hp(p, val, "Poção de cura")
-            if max_uses > 1:
+        if source_location is not None:
+            # Bonus-action narration yields. Revalidate the exact original belt
+            # and pocket after that await, then commit the dose/bottle and apply
+            # its effect synchronously before any further narration can yield.
+            current_item, current_location = self._resolve_consumable_source(
+                p, item_id, source, gear_slot, pocket_index, belt_token)
+            if (current_item is not item or current_location[1] is not source_location[1]
+                    or current_location[3] is not source_location[3]):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
+            if effect == "heal" and max_uses > 1:
+                uses_left = int(item.get("uses_left", max_uses) or 0)
+                if uses_left <= 0:
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.esta_pocao_ja_nao_possui_doses")}); return
                 uses_left -= 1
                 item["uses_left"] = uses_left
                 remove_item = uses_left <= 0
+            if remove_item:
+                used_item = deepcopy(item)
+                if not self._consume_action_item(p, item, source_location):
+                    return
+                # Effects/narration use the bottle consumed, not its promoted reserve.
+                item = used_item
+        if effect == "heal":
+            self._curar_hp(p, val, "Poção de cura")
+            if max_uses > 1:
+                if source_location is None:
+                    uses_left -= 1
+                    item["uses_left"] = uses_left
+                    remove_item = uses_left <= 0
                 doses_msg = (" A garrafa se esvazia." if remove_item
                              else f" **{uses_left}/{max_uses}** doses restantes.")
             else:
@@ -35849,9 +36146,6 @@ class GameRoom(TutorialTraining):
             extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
             await self.gm_say(T("narracao.usa", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), txt=txt, extra=extra))
         elif effect == "coat_poison":
-            vid = item.get("veneno_id")
-            if vid not in VENENOS:
-                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
             _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
             desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
                     if _is_ranged else "1 golpe certeiro envenena o alvo")
@@ -35905,8 +36199,9 @@ class GameRoom(TutorialTraining):
                 T("narracao.acende_a_e_a_luz_em_volta_e_sugada_fica", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), extra=extra))
 
         await self._licao_evento(p, "usar_item", alvo=(item or {}).get("id"))
-        if remove_item:
-            p["bag"].remove(item)
+        if remove_item and source_location is None:
+            if not self._consume_action_item(p, item, source_location):
+                return
         await self.push_state()
 
     # â”€â”€ Pergaminhos mÃ¡gicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -45726,7 +46021,8 @@ class GameRoom(TutorialTraining):
                     # templo, então loot de vinho/ração/poção de templo caía silencioso.
                     item_def = _DUNGEON_ITEM_CATALOG.get(loot["id"])
                     if item_def:
-                        loot_items.append(deepcopy(item_def))
+                        loot_items.extend(hidratar_itens_bau([loot]) if self._is_utility_belt_item(item_def)
+                                          else [deepcopy(item_def)])
                 elif loot.get("tipo") == "instrumento_aleatorio":
                     loot_items.append(gerar_instrumento_aleatorio())   # Fase 4a
                 elif loot.get("tipo") == "scroll":
@@ -46582,6 +46878,7 @@ class GameRoom(TutorialTraining):
         Espelha o par _city_state_payload/broadcast_city_state. A prévia do
         editor consome este payload sem passar por nenhum jogador."""
         self._atualizar_zonas_moveis()
+        self._ensure_utility_belt_tokens()
         # Slots cuja rodada de recarga já chegou não devem continuar ocupando
         # espaço no estado enviado ao cliente.
         for p in self.players.values():
@@ -47903,7 +48200,9 @@ async def handler(ws):
                     if room: await room.handle_veneno_rapido(pid, msg)
 
                 elif t == "use_item":
-                    if room: await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"))
+                    if room:
+                        await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
+                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"))
 
                 elif t == "read_item":
                     if room:
@@ -47942,6 +48241,9 @@ async def handler(ws):
                 elif t == "set_auto_equip_arrows":
                     if room: await room.handle_set_auto_equip_arrows(
                         pid, msg.get("enabled"), msg.get("order"))
+
+                elif t == "move_utility_belt_item":
+                    if room: await room.handle_move_utility_belt_item(pid, msg)
 
                 elif t == "unequip":
                     if room: await room.handle_unequip(pid, msg.get("slot_key"))
@@ -50127,7 +50429,7 @@ def _custom_potion_inventory_dict(item):
     """Poção custom — dict plano p/ loja (SHOP_MERCHANT) E bolsa/baú. Consumível
     de bolsa despachado por effect em handle_use_item."""
     inv = {"id": item["id"], "name": item["name"], "emoji": item["emoji"],
-           "item_slot": "bag", "effect": item["effect"], "value": item["value"],
+           "item_type": "potion", "item_slot": "bag", "effect": item["effect"], "value": item["value"],
            "custom": True, "price": item["price"]}
     if "max_uses" in item:
         inv["max_uses"] = item["max_uses"]

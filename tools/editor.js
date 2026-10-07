@@ -1901,6 +1901,63 @@
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;");
   }
+  function utilityBeltCapacity(item) {
+    if (!item || typeof item.id !== "string") return 0;
+    return item.id === "cinto_utilidades" ? 4 : item.id === "cinto_com_bolsos" ? 2 : 0;
+  }
+  function utilityBeltConsumables() {
+    // Keep full custom definitions: the regular loot selector has reduced metadata.
+    const catalog = new Map(CAT.items.map(item => [item.id, item]));
+    const custom = (window.EDITOR_CUSTOM_ITEMS || []).filter(item => item && item.disponibilidade
+      && (item.disponibilidade.baus || item.disponibilidade.loot_monstro));
+    custom.forEach(item => catalog.set(item.id, item.item_type === "poison"
+      ? Object.assign({}, item, {veneno_id: item.id}) : item));
+    const poisonIds = new Set((CAT.venoms || []).map(venom => venom.id));
+    custom.filter(item => item.item_type === "poison").forEach(item => poisonIds.add(item.id));
+    const potionIds = new Set(["health_potion", "health_potion_small", "health_potion_concentrated",
+      "health_potion_improved", "regeneration_potion", "elixir", "antidote", "oleo_dissolvente", "elixir_depurativo"]);
+    return Array.from(catalog.values()).filter(item => typeof item.id === "string" && item.item_slot === "bag"
+      && (item.effect === "throwable" || (item.effect === "coat_poison" && typeof item.veneno_id === "string"
+        && poisonIds.has(item.veneno_id))
+        || item.item_type === "potion" || potionIds.has(item.id)));
+  }
+  function utilityBeltSlots(item) {
+    const raw = Array.isArray(item.utility_belt_slots) ? item.utility_belt_slots : [];
+    const eligible = new Set(utilityBeltConsumables().map(item => item.id));
+    const seen = new Set();
+    return Array.from({length: utilityBeltCapacity(item)}, (_, index) => {
+      const entry = raw[index], id = entry && entry.item && entry.item.id;
+      if (!entry || typeof id !== "string" || !eligible.has(id) || seen.has(id)
+        || !Number.isInteger(entry.quantity) || entry.quantity < 1 || entry.quantity > 4) return null;
+      seen.add(id);
+      return {item: {id}, quantity: entry.quantity};
+    });
+  }
+  function utilityBeltFieldsHTML(item, index) {
+    if (!utilityBeltCapacity(item)) return "";
+    const slots = utilityBeltSlots(item), choices = utilityBeltConsumables();
+    return `<div style="margin-top:6px"><img src="../assets/itens/cinto_e_bolsos.png" alt="" width="40" height="40">${slots.map((entry, pocket) =>
+      `<label style="display:block">${t('ui.editor.cinto.bolso', {n:pocket + 1})}
+        <select data-belt-item data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.item', {n:pocket + 1})}">
+          <option value="">${t('ui.editor.cinto.vazio')}</option>${choices.map(choice => `<option value="${editorEscapeText(choice.id)}"${entry && entry.item.id === choice.id ? " selected" : ""}>${editorEscapeText(nomeCat("item", choice.id, choice.name || choice.id))}</option>`).join("")}
+        </select>
+        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="4" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
+      </label>`).join("")}</div>`;
+  }
+  function wireUtilityBeltFields(root, items, rerender) {
+    root.querySelectorAll("[data-belt-item], [data-belt-quantity]").forEach(field => {
+      field.onchange = e => {
+        const item = items[Number(e.target.dataset.i)], pocket = Number(e.target.dataset.pocket);
+        if (!utilityBeltCapacity(item) || !Number.isInteger(pocket) || pocket < 0 || pocket >= utilityBeltCapacity(item)) return;
+        const slots = utilityBeltSlots(item);
+        if (e.target.hasAttribute("data-belt-item")) {
+          slots[pocket] = e.target.value ? {item: {id: e.target.value}, quantity: slots[pocket] ? slots[pocket].quantity : 1} : null;
+        } else if (slots[pocket]) slots[pocket].quantity = Number(e.target.value);
+        item.utility_belt_slots = utilityBeltSlots({id: item.id, utility_belt_slots: slots});
+        if (rerender) rerender();
+      };
+    });
+  }
   const K_CURSE = "ui.editor.masmorra.maldicao.";
   function lootItemRowHTML(item, index, removeClass) {
     const def = CAT.items.find(x => x.id === item.id) || {};
@@ -1911,6 +1968,7 @@
     const curseId = item.curse_id || (curses[0] && curses[0].id) || "";
     return `<div style="margin:4px 0;padding:4px;border:1px solid ${carta ? "#9c783a" : "transparent"};border-radius:4px;">
       <span>${editorEscapeText(label)}</span> <button data-i="${index}" class="${removeClass}">×</button>
+      ${utilityBeltFieldsHTML(item, index)}
       ${carta ? `<textarea data-carta-text data-i="${index}" rows="3" maxlength="2000" placeholder="${t(K_CURSE + "texto_carta")}">${editorEscapeText(item.texto || "")}</textarea>
         <label style="display:block;margin-top:5px">${t(K_CURSE + "ao_ler")}
           <select data-carta-curse-mode data-i="${index}">
@@ -1964,6 +2022,7 @@
   }
   function exportLootItem(item) {
     const out = { id: item.id };
+    if (utilityBeltCapacity(item)) out.utility_belt_slots = utilityBeltSlots(item);
     if (item.id === "carta") {
       if (String(item.texto || "").trim()) out.texto = item.texto.trim().slice(0, 2000);
       if (item.curse_mode === "especifica" && item.curse_id) {
@@ -2649,6 +2708,7 @@
       document.getElementById("p-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("p-additem").onclick = () => { const id = document.getElementById("p-add").value; if (id) ref.items.push({ id }); renderPanel(); };
       wireCartaTextFields(panel, ref.items, renderPanel);
+      wireUtilityBeltFields(panel, ref.items, renderPanel);
       panel.querySelectorAll(".rm-item").forEach(b => b.onclick = () => { ref.items.splice(Number(b.dataset.i), 1); renderPanel(); });
     } else if (k === "trap") {
       const meta = CAT.traps.find(tr => tr.tipo === ref.tipo) || {};
@@ -3095,6 +3155,7 @@
         document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
         document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
         wireCartaTextFields(panel, ref.loot.items, renderPanel);
+        wireUtilityBeltFields(panel, ref.loot.items, renderPanel);
         panel.querySelectorAll(".d-rm").forEach(b => b.onclick = () => { ref.loot.items.splice(Number(b.dataset.i), 1); renderPanel(); });
       }
       // Footprint (casas): aplica com bloqueio — reverte se não couber.

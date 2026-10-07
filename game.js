@@ -2749,7 +2749,8 @@ function _showCenaDialogo(slot, host){
   });
 }
 
-// Ícone de item: PNG em assets/itens/<id>.png se existir, senão cai no emoji.
+// Ícone de item: caminho explícito do item/catálogo ou assets/itens/<id>.png,
+// com emoji como fallback se a imagem não existir.
 // Pergaminhos têm id dinâmico por magia (pergaminho_<spellId>) — usam sempre
 // o mesmo ícone genérico. onerror troca a <img> pelo texto do emoji (sem
 // innerHTML, então o emoji nunca é interpretado como HTML).
@@ -2763,7 +2764,8 @@ function itemIconHTML(item, fallbackEmoji){
   const fileId = item.effect === 'scroll' ? 'pergaminho'
     : (item.tipo_item === 'instrumento' && item.base) ? item.base
     : item.id;
-  const src = _assetURL(`assets/itens/${fileId}.png`);
+  const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon;
+  const src = _assetURL(icon || `assets/itens/${fileId}.png`);
   return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
 
@@ -21170,7 +21172,7 @@ window.castarMagia = castarMagia;
 // GS.resolveTileClick (gameState.js, ramo pendingThrow); aqui só desenhamos e
 // roteamos o clique. Captura em handleTileClick (2D) e on3DClick (3D).
 // ═══════════════════════════════════════════════════════════════════════════
-function _iniciarMiraArremesso(item, player){
+function _iniciarMiraArremesso(item, player, sourceInfo){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ toast(t('ui.arremesso.agora_nao'), 'var(--gold)'); return; }
   if(!GS.isMyTurn || me.action_done){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'), 'var(--gold)'); return; }
@@ -21189,7 +21191,7 @@ function _iniciarMiraArremesso(item, player){
   const alcance = catDef.alcance || item.alcance || 4;
   const isArea  = alvoTipo === 'area';
   const areaRaio = isArea ? (catDef.areaRaio || item.area_raio || 1) : 0;
-  window._modoThrowItem = { id: item.id, alcance, area: areaRaio };
+  window._modoThrowItem = { id: item.id, alcance, area: areaRaio, sourceInfo };
   GS.pendingThrow = { id: item.id, alcance, alvo: alvoTipo };   // habilita o ramo de throw em resolveTileClick
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
@@ -21221,10 +21223,10 @@ function _clickTileThrow(tx, ty){
   if(!window._modoThrowItem) return;
   const r = GS.resolveTileClick(tx, ty);
   if(r && r.type === 'throw'){
-    GS.throwItem(r.itemId, r.targetId, r.targetPos);
+    GS.throwItem(r.itemId, r.targetId, r.targetPos, window._modoThrowItem.sourceInfo);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_area'){
-    GS.throwItemArea(r.itemId, r.tx, r.ty);
+    GS.throwItemArea(r.itemId, r.tx, r.ty, window._modoThrowItem.sourceInfo);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_blocked'){
     const msg = t('ui.arremesso.fora_do_alcance_ou_parede_no_caminho');
@@ -26582,22 +26584,24 @@ const BONUS_ACTION_EFFECTS = new Set([
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
 // ADJACENTE — se o alvo não veio, abre o modal de alvo (o servidor revalida).
 const CURA_STATUS_EFFECTS = ['cure_poison', 'cure_petrification', 'cure_disease'];
-function useItem(itemId, targetId){
+function useItem(itemId, targetId, sourceInfo){
   if(targetId === undefined){
     const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
-    const it = me && (me.bag || []).find(b => b.id === itemId);
+    const it = sourceInfo?.source === 'utility_belt'
+      ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
+      : me && (me.bag || []).find(b => b.id === itemId);
     if(it && CURA_STATUS_EFFECTS.includes(it.effect)){
       const alvos = (GS.gameState.players || []).filter(q =>
         q.alive && (q.id === me.id ||
           Math.max(Math.abs(q.pos[0] - me.pos[0]), Math.abs(q.pos[1] - me.pos[1])) <= 1));
       if(alvos.length > 1){
         openTargetModal(t('ui.item.escolha_o_alvo_consumivel', {icone: it.emoji || '🧪', nome: it.name}), alvos, 'ally',
-          id => useItem(itemId, id));
+          id => useItem(itemId, id, sourceInfo));
         return;
       }
     }
   }
-  send({type:'use_item', item_id:itemId, target_id: targetId});
+  send({type:'use_item', item_id:itemId, target_id: targetId, ...GS.itemSourceFields(sourceInfo)});
 }
 
 // ── Ficha do personagem na CIDADE (v2): painel lateral autoritativo ──────────

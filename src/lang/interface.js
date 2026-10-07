@@ -16,6 +16,8 @@
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
   "ui.hud.repetir_sala_tutorial": {"en": "Repeat my training room", "pt": "Repetir minha sala de treinamento"},
+  "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
+  "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
   "dado.acerto": {
     "en": "To-hit",
     "pt": "Acerto"

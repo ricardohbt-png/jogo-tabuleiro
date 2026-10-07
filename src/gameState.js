@@ -560,6 +560,8 @@ const GS = (() => {
     mochila_encantada: { id:'mochila_encantada', nome:'Mochila de Couro Encantada', tipo:'itemMagico', loja:'mercado', preco:30,  slotsExtras:2, descricao:'+2 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     mochila_viajante:  { id:'mochila_viajante',  nome:'Mochila do Viajante',        tipo:'itemMagico', loja:'mercado', preco:80,  slotsExtras:4, descricao:'+4 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     bolsa_dimensao:    { id:'bolsa_dimensao',    nome:'Bolsa de Dimensão',          tipo:'itemMagico', loja:'mercado', preco:150, slotsExtras:6, descricao:'+6 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
+    cinto_utilidades:  { id:'cinto_utilidades', nome:'Cinto de Utilidades', tipo:'itemMagico', loja:'mercado', preco:80, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
+    cinto_com_bolsos:  { id:'cinto_com_bolsos', nome:'Cinto com Bolsos', tipo:'itemMagico', loja:'mercado', preco:30, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
     bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10.', permitidoPara:['todos'] },
 
     // ── MERCADO — Venenos (consumíveis aplicados na arma) ──
@@ -2261,7 +2263,15 @@ const GS = (() => {
     if (Number.isInteger(slot) && slot >= 0 && slot < 10) msg.slot = slot;
     send(msg);
   }
-  function useItem(id)     { send({ type: 'use_item',       item_id: id }); }
+  function _itemSourceFields(sourceInfo) {
+    return sourceInfo?.source === 'utility_belt'
+      ? { source: 'utility_belt', gear_slot: sourceInfo.gearSlot, pocket_index: sourceInfo.pocketIndex, belt_token: sourceInfo.beltToken }
+      : {};
+  }
+  function moveUtilityBeltItem(direction, gearSlot, pocketIndex, bagIndex) {
+    send({ type:'move_utility_belt_item', direction, gear_slot:gearSlot, pocket_index:pocketIndex, bag_index:bagIndex });
+  }
+  function useItem(id, sourceInfo) { send({ type: 'use_item', item_id: id, ..._itemSourceFields(sourceInfo) }); }
   function readItem(id, bagIndex = null) {
     const msg = { type: 'read_item', item_id: id };
     if (Number.isInteger(bagIndex) && bagIndex >= 0) msg.bag_index = bagIndex;
@@ -2271,8 +2281,8 @@ const GS = (() => {
     const value = ['water', 'action', 'none'].includes(choice) ? choice : 'none';
     send({ type: 'fire_choice', choice: value });
   }
-  function throwItem(id, targetId, targetPos) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos }); }
-  function throwItemArea(id, tx, ty) { send({ type: 'throw_item', item_id: id, tx, ty }); }
+  function throwItem(id, targetId, targetPos, sourceInfo) { send({ type: 'throw_item', item_id: id, target_id: targetId, target_pos: targetPos, ..._itemSourceFields(sourceInfo) }); }
+  function throwItemArea(id, tx, ty, sourceInfo) { send({ type: 'throw_item', item_id: id, tx, ty, ..._itemSourceFields(sourceInfo) }); }
   // Arremesso de arma equipada. O slot é parte da ação para que o servidor
   // não precise adivinhar entre uma arma principal e uma segunda arma.
   function throwWeapon(slot, targetId) { send({ type: 'throw', slot, target_id: targetId }); }
@@ -3733,6 +3743,8 @@ const GS = (() => {
     setShortcut,
     shortcutActivated,
     useItem,
+    moveUtilityBeltItem,
+    itemSourceFields: _itemSourceFields,
     readItem,
     respondFireChoice,
     throwItem,
