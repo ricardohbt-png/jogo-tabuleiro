@@ -2553,7 +2553,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_15.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_15.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_16",
@@ -2577,7 +2585,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_16.matar.texto",
+          "porque": "ui.tutorial.guia.fala_16.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_17",
@@ -3857,8 +3873,7 @@
         {
           "id": "parar",
           "texto": "ui.tutorial.guia.treino_cancao_parar.parar.texto",
-          "porque": "ui.tutorial.guia.treino_cancao_parar.parar.porque",
-          "ui": "habilidade:cancao_heroica"
+          "porque": "ui.tutorial.guia.treino_cancao_parar.parar.porque"
         }
       ]
     },
@@ -3949,7 +3964,14 @@
         "alvo": "__prisioneiro__",
         "vezes": 1,
         "texto_curto": "Liberte o refém"
-      }
+      },
+      "guia": [
+        {
+          "id": "libertar",
+          "texto": "ui.tutorial.guia.treino_refem.libertar.texto",
+          "porque": "ui.tutorial.guia.treino_refem.libertar.porque"
+        }
+      ]
     },
     {
       "id": "treino_protetor",
@@ -3973,7 +3995,15 @@
         "alvo": "__prisioneiro__",
         "vezes": 1,
         "texto_curto": "Proteja o refém durante um ataque"
-      }
+      },
+      "guia": [
+        {
+          "id": "proteger",
+          "texto": "ui.tutorial.guia.treino_protetor.proteger.texto",
+          "porque": "ui.tutorial.guia.treino_protetor.proteger.porque",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
     },
     {
       "id": "treino_maos",
@@ -3999,7 +4029,15 @@
         "texto_curto": "Cure o refém com Imposição das Mãos",
         "alvo_id": "__prisioneiro__",
         "cura_efetiva": true
-      }
+      },
+      "guia": [
+        {
+          "id": "curar",
+          "texto": "ui.tutorial.guia.treino_maos.curar.texto",
+          "porque": "ui.tutorial.guia.treino_maos.curar.porque",
+          "ui": "habilidade:imposicao_maos"
+        }
+      ]
     },
     {
       "id": "treino_sagrado",
@@ -4023,7 +4061,15 @@
         "alvo": "golpe_sagrado",
         "vezes": 1,
         "texto_curto": "Ative Golpe Sagrado"
-      }
+      },
+      "guia": [
+        {
+          "id": "ativar",
+          "texto": "ui.tutorial.guia.treino_sagrado.ativar.texto",
+          "porque": "ui.tutorial.guia.treino_sagrado.ativar.porque",
+          "ui": "habilidade:golpe_sagrado"
+        }
+      ]
     },
     {
       "id": "treino_sagrado_golpe",
@@ -4047,7 +4093,15 @@
         "vezes": 1,
         "texto_curto": "Acerte com Golpe Sagrado ativo",
         "requer_sagrado": true
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.treino_sagrado_golpe.atacar.texto",
+          "porque": "ui.tutorial.guia.treino_sagrado_golpe.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "treino_regen",
@@ -4071,7 +4125,15 @@
         "alvo": "regeneracao_divina",
         "vezes": 1,
         "texto_curto": "Recupere vida com Regeneração Divina"
-      }
+      },
+      "guia": [
+        {
+          "id": "regenerar",
+          "texto": "ui.tutorial.guia.treino_regen.regenerar.texto",
+          "porque": "ui.tutorial.guia.treino_regen.regenerar.porque",
+          "ui": "habilidade:regeneracao_divina"
+        }
+      ]
     },
     {
       "id": "treino_luz",
@@ -4095,7 +4157,15 @@
         "alvo": "guerreiro_luz",
         "vezes": 1,
         "texto_curto": "Ative Guerreiro da Luz"
-      }
+      },
+      "guia": [
+        {
+          "id": "luz",
+          "texto": "ui.tutorial.guia.treino_luz.luz.texto",
+          "porque": "ui.tutorial.guia.treino_luz.luz.porque",
+          "ui": "habilidade:guerreiro_luz"
+        }
+      ]
     }
   ],
   "master_reinforcements": [],

@@ -28,6 +28,8 @@ def dungeon_com_guia(guia):
     f = next(x for x in d['falas'] if x['id'] == 'treino_mira')
     if guia is not None:
         f['guia'] = guia
+    else:
+        f.pop('guia', None)  # None = lição sem guia (a trilha real já tem)
     return d
 
 

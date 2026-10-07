@@ -188,6 +188,22 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take down the dummy.",
     "pt": "Derrube o boneco."
   },
+  "ui.tutorial.guia.fala_15.atacar.porque": {
+    "en": "The [[d20]] plus your attack bonus must match or beat the [[ca]].",
+    "pt": "O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]]."
+  },
+  "ui.tutorial.guia.fala_15.atacar.texto": {
+    "en": "To work: attack the dummy.",
+    "pt": "Ao trabalho: ataque o boneco."
+  },
+  "ui.tutorial.guia.fala_16.matar.porque": {
+    "en": "Holy Strike adds a die to every attack: you are the line between the group and the floor.",
+    "pt": "Golpe Sagrado soma um dado a cada ataque: você é a linha entre o grupo e o chão."
+  },
+  "ui.tutorial.guia.fala_16.matar.texto": {
+    "en": "Take down the dummy.",
+    "pt": "Derrube o boneco."
+  },
   "ui.tutorial.guia.fala_18.comer.dica.1": {
     "en": "If the bag is closed, use the backpack button.",
     "pt": "Se a bolsa está fechada, use o botão da mochila."
@@ -592,6 +608,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Open the instrument options and use its ability on a target.",
     "pt": "Abra as opções do instrumento e use a habilidade num alvo."
   },
+  "ui.tutorial.guia.treino_luz.luz.porque": {
+    "en": "See your vision, attack, damage and defense change.",
+    "pt": "Veja visão, acerto, dano e defesa mudarem."
+  },
+  "ui.tutorial.guia.treino_luz.luz.texto": {
+    "en": "Activate Warrior of Light and compare your bonuses.",
+    "pt": "Ative Guerreiro da Luz e compare seus bônus."
+  },
   "ui.tutorial.guia.treino_magia.grimorio.texto": {
     "en": "Open the Grimoire with the spells button.",
     "pt": "Abra o Grimório no botão das magias."
@@ -604,6 +628,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Pick a spell and cast it on the dummy or yourself.",
     "pt": "Escolha uma magia e lance-a no boneco ou em você."
   },
+  "ui.tutorial.guia.treino_maos.curar.porque": {
+    "en": "The lesson asks you to heal that same hostage.",
+    "pt": "A lição pede a cura desse mesmo refém."
+  },
+  "ui.tutorial.guia.treino_maos.curar.texto": {
+    "en": "Next to the wounded hostage, use Lay on Hands.",
+    "pt": "Ao lado do refém ferido, use Imposição das Mãos."
+  },
   "ui.tutorial.guia.treino_mira.mira.dica.1": {
     "en": "The ability button is in the actions panel, on the right.",
     "pt": "O botão da habilidade fica no painel de ações, à direita."
@@ -615,6 +647,14 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_mira.mira.texto": {
     "en": "Click Precise Aim and then the dummy.",
     "pt": "Clique em Mira Certeira e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_protetor.proteger.porque": {
+    "en": "The damage is split between you and your share is reduced.",
+    "pt": "O dano se divide entre vocês e a sua parte é reduzida."
+  },
+  "ui.tutorial.guia.treino_protetor.proteger.texto": {
+    "en": "Next to the hostage, use Protector on him and end your turn.",
+    "pt": "Ao lado do refém, use Protetor nele e encerre o turno."
   },
   "ui.tutorial.guia.treino_provocar.provocar.porque": {
     "en": "The target makes a [[teste_resistencia]]; resisting does not invalidate the use.",
@@ -631,6 +671,22 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_purificar.purificar.texto": {
     "en": "Next to Apprentice 1, use Purify and choose Poison.",
     "pt": "Ao lado do Aprendiz 1, use Purificação e escolha Veneno."
+  },
+  "ui.tutorial.guia.treino_refem.libertar.porque": {
+    "en": "After the rescue you can protect and heal him.",
+    "pt": "Depois do resgate você poderá protegê-lo e curá-lo."
+  },
+  "ui.tutorial.guia.treino_refem.libertar.texto": {
+    "en": "Walk to the hostage at square 35,25 and click Free prisoner.",
+    "pt": "Ande até o refém na casa 35,25 e clique em Libertar prisioneiro."
+  },
+  "ui.tutorial.guia.treino_regen.regenerar.porque": {
+    "en": "The task only ends when regeneration actually restores life.",
+    "pt": "A tarefa só termina quando a regeneração recuperar vida de verdade."
+  },
+  "ui.tutorial.guia.treino_regen.regenerar.texto": {
+    "en": "Activate Divine Regeneration and end your turn.",
+    "pt": "Ative Regeneração Divina e encerre a sua vez."
   },
   "ui.tutorial.guia.treino_ressuscitar.ressuscitar.porque": {
     "en": "He simulates a fallen ally and returns with the life your ability allows.",
@@ -651,6 +707,22 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_reviver.reviver.texto": {
     "en": "Use Raise the Dead and click the corpse.",
     "pt": "Use Reviver os Mortos e clique no cadáver."
+  },
+  "ui.tutorial.guia.treino_sagrado.ativar.porque": {
+    "en": "There is an activation cost and [[manutencao]] every round.",
+    "pt": "Há custo de ativação e de [[manutencao]] a cada rodada."
+  },
+  "ui.tutorial.guia.treino_sagrado.ativar.texto": {
+    "en": "Activate Holy Strike at the available level.",
+    "pt": "Ative Golpe Sagrado no nível disponível."
+  },
+  "ui.tutorial.guia.treino_sagrado_golpe.atacar.porque": {
+    "en": "Watch the holy die added to the damage.",
+    "pt": "Observe o dado sagrado somado ao dano."
+  },
+  "ui.tutorial.guia.treino_sagrado_golpe.atacar.texto": {
+    "en": "Attack the dummy with Holy Strike active.",
+    "pt": "Ataque o boneco com Golpe Sagrado ativo."
   },
   "ui.tutorial.guia.treino_slots.encerrar.porque": {
     "en": "They return by the circle's rule; a spell without a slot cannot be cast.",

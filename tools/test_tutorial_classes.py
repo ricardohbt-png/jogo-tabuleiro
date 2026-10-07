@@ -45,9 +45,7 @@ class ClassesTests(unittest.TestCase):
 
     def test_regras_de_redacao(self):
         for lid in TODAS:
-            passos = self.todos.get(lid)
-            if passos is None:
-                continue  # TEMP: removido na Task 7
+            passos = self.todos[lid]
             self.assertTrue(1 <= len(passos) <= 3, lid)
             for i, p in enumerate(passos):
                 pt, en = p["texto"]
@@ -61,14 +59,14 @@ class ClassesTests(unittest.TestCase):
     def test_habilidade_na_ui_e_o_alvo_da_tarefa(self):
         for lid in TODAS:
             alvo = self.falas[lid]["tarefa"].get("alvo")
-            for p in self.todos.get(lid, []):  # TEMP
+            for p in self.todos[lid]:
                 ui = p.get("ui") or ""
                 if ui.startswith("habilidade:"):
                     self.assertEqual(ui.split(":", 1)[1], alvo, f"{lid}/{p['id']}")
 
     def test_termos_existem_e_batem_entre_idiomas(self):
         for lid in TODAS:
-            for p in self.todos.get(lid, []):  # TEMP
+            for p in self.todos[lid]:
                 pares = [p["texto"]] + ([p["porque"]] if p.get("porque") else []) + list(p.get("dica", []))
                 for pt, en in pares:
                     self.assertEqual(TERMO.findall(pt), TERMO.findall(en), f"{lid}/{p['id']}")
@@ -78,7 +76,7 @@ class ClassesTests(unittest.TestCase):
     def test_ultimo_passo_nunca_e_informativo_sem_acao(self):
         # o último passo precisa dizer o que FAZER (a tarefa o encerra); ids dos passos únicos por lição
         for lid in TODAS:
-            ids = [p["id"] for p in self.todos.get(lid, [])]  # TEMP
+            ids = [p["id"] for p in self.todos[lid]]
             self.assertEqual(len(ids), len(set(ids)), lid)
 
 

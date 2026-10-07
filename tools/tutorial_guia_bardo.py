@@ -28,8 +28,7 @@ GUIA = {
     ],
     "treino_cancao_parar": [
         P("parar", ("Desative a Canção Heroica.", "Turn off the Heroic Song."),
-          porque=("Assim o efeito e o gasto de recursos acabam.", "That ends the effect and the resource drain."),
-          ui="habilidade:cancao_heroica"),
+          porque=("Assim o efeito e o gasto de recursos acabam.", "That ends the effect and the resource drain.")),
     ],
     "treino_provocar": [
         P("provocar", ("Clique em Provocação e depois no boneco.", "Click Taunt and then the dummy."),
