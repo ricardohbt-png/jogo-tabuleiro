@@ -53703,13 +53703,24 @@ function _tutTexto(s){
 
 // Termos já sublinhados nesta sessão do navegador (só a 1ª vez de cada um).
 const _guiaTermosVistos = new Set();
+// Termos desenhados no passo atual: só viram "vistos" quando o passo muda, para o
+// sublinhado sobreviver aos redesenhos da janela e da dica.
+let _guiaTermosPasso = new Set();
+let _guiaPassoChave = null;
+function _guiaFecharPasso(chave){
+  if(chave === _guiaPassoChave) return;
+  _guiaTermosPasso.forEach(x => _guiaTermosVistos.add(x));
+  _guiaTermosPasso = new Set();
+  _guiaPassoChave = chave;
+}
 
 // Texto do tutorial -> HTML seguro. `[[termo]]` vira botão sublinhado na 1ª vez e texto
 // simples nas seguintes; o nome e a definição vêm de ui.tutorial.glossario.<termo>.
 function _tutHTML(s){
   const bruto = _tutTexto(s);
-  return GuiaTutorial.segmentos(bruto, _guiaTermosVistos).map(seg => {
+  return GuiaTutorial.segmentos(bruto, new Set(_guiaTermosVistos)).map(seg => {
     if(!seg.termo) return _esc(seg.texto);
+    if(seg.primeira) _guiaTermosPasso.add(seg.termo);
     const nome = t('ui.tutorial.glossario.' + seg.termo + '.nome');
     return seg.primeira
       ? `<button type="button" class="guia-termo" data-termo="${_esc(seg.termo)}">${_esc(nome)}</button>`
@@ -53947,6 +53958,7 @@ function _mostrarJanelaLicao(msg){
   const host = $('licao-janela');
   if(!host) return;
   _licaoUltima = msg;
+  _guiaFecharPasso(msg.licao_id + ':' + (msg.passo ? msg.passo.i : 0));
   const emoji = (msg.falante && msg.falante.emoji) || '💬';
   const nome  = (msg.falante && msg.falante.nome)  || '';
   const passo = msg.passo || null;
