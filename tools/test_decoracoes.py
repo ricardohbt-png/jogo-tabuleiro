@@ -18,14 +18,14 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("38 tipos", len(d) == 38)
+    check("39 tipos", len(d) == 39)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
         "chao", "brasao_leao", "cortina_vermelha", "cortina_branca", "lapide", "cripta",
-        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva", "placa")))
+        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva", "placa", "moita_espinhosa")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
@@ -101,8 +101,13 @@ def test_catalog():
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
-    check("pisáveis: chão, fogueira, brasa, chama viva e placa", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira", "placa"])
+    check("pisáveis: chão, fogueira, brasa, chama viva, placa e moita", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira",
+        "moita_espinhosa", "placa"])
+    check("moita espinhosa: 1x1, pisável, gira e usa PNG/GLB",
+          d["moita_espinhosa"]["size"] == [1, 1] and d["moita_espinhosa"]["pisavel"]
+          and d["moita_espinhosa"]["gira"] and d["moita_espinhosa"]["image"] == "moita_espinhosa.png"
+          and server.DECOR_MODEL3D["moita_espinhosa"].endswith("moita_espinhosa.glb"))
 
 async def _noop(*a, **k): pass
 
@@ -210,6 +215,37 @@ def test_fogueira():
         p["pos"] = [0, 0]; hp0 = p["hp"]
         await r._aplicar_fogueira_se_pisar(p)
         check("sem dano fora da fogueira", p["hp"] == hp0)
+    asyncio.run(run())
+
+def test_moita_espinhosa():
+    print("\n[A5e] moita espinhosa: 1 de dano por entrada, -1 de movimento 1x por turno")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "d0", "type": "moita_espinhosa", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False},
+                         {"id": "d1", "type": "moita_espinhosa", "pos": [5, 4], "facing": [0, 1], "loot": None, "tem_loot": False}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 20; p["max_hp"] = 20; p["alive"] = True; p["moves_left"] = 6
+        await r._aplicar_fogueira_se_pisar(p)
+        check("entrar na moita tira 1 de vida", p["hp"] == 19)
+        check("e 1 de movimento", p["moves_left"] == 5)
+        p["pos"] = [5, 4]
+        await r._aplicar_fogueira_se_pisar(p)
+        check("2ª moita no mesmo turno: dano de novo", p["hp"] == 18)
+        check("2ª moita no mesmo turno: sem perder movimento de novo", p["moves_left"] == 5)
+        check("começar o turno na moita desconta 1", r._water_turn_moves(p, 6) == 5)
+        p["pos"] = [0, 0]
+        check("fora da moita o turno é inteiro", r._water_turn_moves(p, 6) == 6)
+        hp0 = p["hp"]
+        await r._aplicar_fogueira_se_pisar(p)
+        check("sem dano fora da moita", p["hp"] == hp0)
+        p["pos"] = [4, 4]
+        await r._aplicar_fogueira_se_pisar(p, aplicar_espinhos=False)
+        check("sem espinhos quando não houve entrada (ex.: empurrão)", p["hp"] == hp0)
+        p["voo"] = True; p["altura"] = 2; p["moves_left"] = 6
+        r._water_turn_moves(p, 6)
+        await r._aplicar_fogueira_se_pisar(p)
+        check("voando, ignora os espinhos", p["hp"] == hp0 and p["moves_left"] == 6)
     asyncio.run(run())
 
 def test_chama_viva():
@@ -511,6 +547,7 @@ def main():
     test_objeto_chave()
     test_fogueira()
     test_chama_viva()
+    test_moita_espinhosa()
     test_brasa_chao()
     test_fogo_imunidade_resistencia()
     test_fonte()

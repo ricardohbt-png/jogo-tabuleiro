@@ -3120,7 +3120,7 @@ FOTO_SALA_CATEGORIAS = {
     "shop_scrolls": "jogo_salvo",
     # derivados
     "_decor_block_tiles": "derivado", "_decor_tall_tiles": "derivado",
-    "_decor_low_tiles": "derivado", "_campfire_tiles": "derivado",
+    "_decor_low_tiles": "derivado", "_campfire_tiles": "derivado", "_thorn_bush_tiles": "derivado",
     "_fire_damage_tiles": "derivado", "_mat_solid_tiles": "derivado",
     "_mat_oclui_tiles": "derivado", "_ponte_tiles": "derivado",
     "_ponte_alturas": "derivado", "phase": "derivado", "initiative_active": "derivado",
@@ -8539,6 +8539,7 @@ DECOR_MODEL3D = {
     "cortina_branca": "assets/objetos/cortina_branca.glb",
     "brasao_leao": "assets/objetos/brasao_leao.glb",
     "placa": "assets/objetos/placa_fincada.glb",
+    "moita_espinhosa": "assets/objetos/moita_espinhosa.glb",
     # Chama 3D viva: a animação é reproduzida pelo cliente; o servidor mantém
     # apenas a regra autoritativa de dano ao entrar na casa.
     "chama_viva": "assets/objetos/chama_viva.glb",
@@ -8604,6 +8605,9 @@ DECOR_TYPES = {
                                 loot_capaz=False, special="wall", image="cortina_vermelha.png"),
     "cortina_branca": _decor("Cortina branca", "⚪", [1, 1], gira=True, pisavel=True,
                               loot_capaz=False, special="wall", image="cortina_branca.png"),
+    "moita_espinhosa": _decor("Moita espinhosa", "🌵", [1, 1], gira=True,
+                                pisavel=True, loot_capaz=False,
+                                image="moita_espinhosa.png"),
 }
 
 # â”€â”€â”€ MATERIAIS DE CHÃƒO E PAREDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -27676,7 +27680,7 @@ class GameRoom:
         await self._aplicar_prisao_chamas_se_pisar(m)
         if moveu:
             await self._aplicar_piso_congelado_se_pisar(m)
-        await self._aplicar_fogueira_se_pisar(m)
+        await self._aplicar_fogueira_se_pisar(m, aplicar_espinhos=moveu)
         await self.gm_say(T("narracao.esta_apavorado_e_foge" if moveu
                           else "narracao.esta_apavorado_e_foge_encurralado",
                           monstro=nome_criatura(m)))
@@ -27713,7 +27717,7 @@ class GameRoom:
             await self._aplicar_prisao_chamas_se_pisar(m)
             if moveu:
                 await self._aplicar_piso_congelado_se_pisar(m)
-            await self._aplicar_fogueira_se_pisar(m)
+            await self._aplicar_fogueira_se_pisar(m, aplicar_espinhos=moveu)
             await self.gm_say(T("narracao.dominado_avanca_contra", monstro=nome_criatura(m), alvo=nome_criatura(alvo)))
 
     async def _aplicar_congelamento_progressivo(self, alvo):
@@ -29524,7 +29528,7 @@ class GameRoom:
         })
         # Uma chama escolhida sob uma criatura causa dano imediatamente.
         for alvo in self._alvos_no_inverno(escolhidos):
-            await self._aplicar_fogueira_se_pisar(alvo)
+            await self._aplicar_fogueira_se_pisar(alvo, aplicar_espinhos=False)
         # Rodadas RESTANTES da lava (não a duração total): as chamas morrem
         # junto com a zona, em `expira_em`.
         restantes = max(0, int(zona.get("expira_em", self.round_num) or 0) - self.round_num)
@@ -32317,6 +32321,23 @@ class GameRoom:
     def _swamp_under(self, criatura):
         return bool(self._swamp_tiles_of(criatura))
 
+    def _thorn_bush_tiles_of(self, criatura):
+        """Casas de moita espinhosa sob a criatura, incluindo footprints grandes."""
+        pos = criatura.get("pos") if criatura else None
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return []
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        thorn_tiles = getattr(self, "_thorn_bush_tiles", set())
+        return [(int(x), int(y)) for x, y in tiles
+                if (int(x), int(y)) in thorn_tiles]
+
+    def _thorn_bush_under(self, criatura):
+        return bool(self._thorn_bush_tiles_of(criatura))
+
     def _ignora_penalidade_pantano(self, criatura):
         """Voo e habilidades com exceção explícita ignoram o custo do pântano."""
         if self._voo_imune_terreno(criatura):
@@ -32817,6 +32838,7 @@ class GameRoom:
         criatura.pop("_deep_water_penalty_applied", None)
         criatura.pop("_water_min_step_used", None)
         criatura.pop("_swamp_penalty_applied", None)
+        criatura.pop("_thorn_bush_penalty_applied", None)
         criatura.pop("_snow_movement_reduced", None)
         base = max(0, int(base_moves or 0))
         # A Canção Heroica do Xamã entra no orçamento antes dos descontos de
@@ -32832,6 +32854,9 @@ class GameRoom:
         if (self._swamp_under(criatura)
                 and not self._ignora_penalidade_pantano(criatura)):
             criatura["_swamp_penalty_applied"] = True
+            base = max(0, base - 1)
+        if self._thorn_bush_under(criatura):
+            criatura["_thorn_bush_penalty_applied"] = True
             base = max(0, base - 1)
         if self._snow_under(criatura):
             criatura["_snow_movement_reduced"] = True
@@ -32866,6 +32891,7 @@ class GameRoom:
 
     def _apply_swamp_entry_penalty(self, criatura, nx=None, ny=None):
         """Consome -1 do movimento total ao primeiro contato com pântano no turno."""
+        self._apply_thorn_bush_entry_penalty(criatura, nx, ny)
         if self._ignora_penalidade_pantano(criatura):
             return
         if criatura.get("_swamp_penalty_applied"):
@@ -32884,6 +32910,27 @@ class GameRoom:
         for key in ("moves_left", "_water_moves_left"):
             if key in criatura:
                 criatura[key] = max(0, int(criatura.get(key, 0)) - 1)
+                break
+
+    def _apply_thorn_bush_entry_penalty(self, criatura, nx=None, ny=None):
+        """Consome 1 do movimento total no primeiro contato com espinhos do turno."""
+        if (not criatura or self._voo_imune_terreno(criatura)
+                or criatura.get("_thorn_bush_penalty_applied")):
+            return
+        if nx is not None and ny is not None:
+            old = criatura.get("pos")
+            criatura["pos"] = [nx, ny]
+            on_thorns = self._thorn_bush_under(criatura)
+            if old is not None:
+                criatura["pos"] = old
+        else:
+            on_thorns = self._thorn_bush_under(criatura)
+        if not on_thorns:
+            return
+        criatura["_thorn_bush_penalty_applied"] = True
+        for key in ("moves_left", "_water_moves_left", "master_moves_left"):
+            if key in criatura:
+                criatura[key] = max(0, int(criatura.get(key, 0) or 0) - 1)
                 break
 
     def _apply_water_entry_penalty(self, criatura, nx, ny, origem=None):
@@ -37364,12 +37411,15 @@ class GameRoom:
         self._decor_low_tiles = set()    # nível "baixo": dá meia cobertura
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
+        self._thorn_bush_tiles = set()
         for d in getattr(self, "decorations", []):
             meta = DECOR_TYPES[d["type"]]
             if meta["special"] == "wall":
                 continue
             visao = decor_visao(d, meta)
             for tx, ty in self._decor_tiles(d):
+                if d["type"] == "moita_espinhosa":
+                    self._thorn_bush_tiles.add((tx, ty))
                 if not meta["pisavel"]:
                     self._decor_block_tiles.add((tx, ty))
                 if visao == "alto":
@@ -37397,12 +37447,13 @@ class GameRoom:
             if meta["oclui"]:
                 self._mat_oclui_tiles.add((x, y))
 
-    async def _aplicar_fogueira_se_pisar(self, criatura):
-        """Aplica o dano autoritativo de fogo de uma decoração pisável (sem save).
+    async def _aplicar_fogueira_se_pisar(self, criatura, aplicar_espinhos=True):
+        """Aplica os efeitos autoritativos das decorações danosas ao pisar.
 
         A fogueira mantém a imunidade de terreno das criaturas voadoras. A chama
         viva é uma exceção deliberada: qualquer personagem ou monstro que passe
-        sobre sua casa sofre o dano, inclusive ao sobrevoá-la.
+        sobre sua casa sofre o dano, inclusive ao sobrevoá-la. A moita espinhosa
+        causa 1 de dano físico por entrada e reduz o movimento uma vez no turno.
         """
         pos = criatura.get("pos")
         if not isinstance(pos, (list, tuple)) or len(pos) < 2:
@@ -37415,6 +37466,13 @@ class GameRoom:
             tiles = self._monster_tiles(criatura)
         else:
             tiles = [pos]
+        if (aplicar_espinhos and not self._voo_imune_terreno(criatura)
+                and any((int(x), int(y)) in getattr(self, "_thorn_bush_tiles", set())
+                        for x, y in tiles)):
+            self._apply_thorn_bush_entry_penalty(criatura)
+            dano_espinhos = (1 if "vida_atual" in criatura
+                             else self._apply_damage_types(1, [DMG_PHYSICAL], criatura))
+            await self._dano_em_alvo(criatura, dano_espinhos, DMG_PHYSICAL)
         fogos = getattr(self, "_fire_damage_tiles", {})
         ordem = {"1": 0, "1d4": 1, "2d4": 2}
         dados = [fogos[(int(x), int(y))] for x, y in tiles if (int(x), int(y)) in fogos]
@@ -42305,7 +42363,7 @@ class GameRoom:
                     if moveu:
                         self._apply_snow_entry_penalty(m, antes, m["pos"])
                         await self._aplicar_piso_congelado_se_pisar(m)
-                    await self._aplicar_fogueira_se_pisar(m)
+                    await self._aplicar_fogueira_se_pisar(m, aplicar_espinhos=moveu)
                     await self.gm_say(T("narracao.recua_das_chamas", monstro=nome_criatura(m)))
                     break
                 if self._is_adjacent_to_monster(target["pos"], m):
@@ -42576,7 +42634,7 @@ class GameRoom:
                 if moveu:
                     self._apply_snow_entry_penalty(m, antes, m["pos"])
                     await self._aplicar_piso_congelado_se_pisar(m)
-                await self._aplicar_fogueira_se_pisar(m)
+                await self._aplicar_fogueira_se_pisar(m, aplicar_espinhos=moveu)
             return
         target_obj = self._get_monster_primary_target(m, targets)
         if not target_obj:

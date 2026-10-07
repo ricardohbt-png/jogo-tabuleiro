@@ -229,7 +229,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
 > pisável): 1d4 de fogo a quem entra (heróis e monstros — `_aplicar_fogueira_se_pisar`
 > após cada commit de passo). **Fonte** (`special:fountain`): `interagir_decor` dá
-> `garrafa_agua` e gasta 1 `charges`. **Containers** (`loot:{gold,items}`, qualquer
+> `garrafa_agua` e gasta 1 `charges`. **Moita espinhosa** (`moita_espinhosa`, 1×1, pisável): quem entra sofre 1 de dano físico e, na 1ª moita do turno, perde 1 do movimento (`_apply_thorn_bush_entry_penalty`; começar o turno sobre ela também desconta 1); voo ignora. Empurrão/arrasto não espeta (`aplicar_espinhos=False`). **Containers** (`loot:{gold,items}`, qualquer
 > tipo exceto fogueira): `interagir_decor`→`decor_loot`→`take_from_decor` (reusa o
 > painel de baú via `abrirPainelLoot`; servidor re-envia `decor_loot` após cada take
 > p/ atualizar o painel). Footprint resolvido por `_decor_tiles`/`_decor_tiles_at`

@@ -350,6 +350,10 @@ window.LANG_CATALOGO = {
     "en": "Torture Table",
     "pt": "Mesa de tortura"
   },
+  "cat.decor.moita_espinhosa.nome": {
+    "en": "Thorny Bush",
+    "pt": "Moita espinhosa"
+  },
   "cat.decor.placa.nome": {
     "en": "Sign",
     "pt": "Placa"

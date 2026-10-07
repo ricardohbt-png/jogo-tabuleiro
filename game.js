@@ -633,6 +633,7 @@ const DECOR_GLB_MODELS = {
   'brasao_leao.png': 'assets/objetos/brasao_leao.glb',
   // Placa fincada: PNG para editor/2D e GLB no tabuleiro 3D.
   'placa_fincada.png': 'assets/objetos/placa_fincada.glb',
+  'moita_espinhosa.png': 'assets/objetos/moita_espinhosa.glb',
 };
 const DECOR_GLB_TYPES = {
   // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
@@ -678,6 +679,7 @@ const DECOR_GLB_TYPES = {
   cortina_branca: 'assets/objetos/cortina_branca.glb',
   brasao_leao: 'assets/objetos/brasao_leao.glb',
   placa: 'assets/objetos/placa_fincada.glb',
+  moita_espinhosa: 'assets/objetos/moita_espinhosa.glb',
 };
 // A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
 // base dos modelos atravesse o piso por arredondamento de geometria.

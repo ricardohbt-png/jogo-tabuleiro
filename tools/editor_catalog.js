@@ -12963,6 +12963,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": "wall",
       "image": "cortina_branca.png"
+    },
+    {
+      "type": "moita_espinhosa",
+      "nome": "Moita espinhosa",
+      "emoji": "🌵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "moita_espinhosa.png"
     }
   ],
   "materiais": [
