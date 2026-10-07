@@ -2820,6 +2820,55 @@
       const fal = ref.falante || (ref.falante = { nome: "", emoji: "🧙" });
       const tar = ref.tarefa || null;
       const ehCasa = tar && LICAO_VERBOS_CASA.has(tar.tipo);
+      // Passos guiados (`guia`): lógica pura em editor_guia_logic.js. Passo com chave
+      // de dicionário (ui.tutorial.*) é somente leitura até "Converter em texto livre".
+      const escGuia = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      const renderGuiaPassos = () => {
+        const passos = ref.guia || (ref.guia = []);
+        const cartoes = passos.map((p, i) => {
+          const ui = EDITOR_GUIA.lerUi(p.ui);
+          if (!ui.tipo && p._uiTipo) ui.tipo = p._uiTipo;     // tipo escolhido, valor ainda vazio
+          const cc = p.conclui_com || { tipo: "" };
+          const dicas = p.dica || [];
+          const dica = [dicas[0] || "", dicas[1] || ""];
+          const doDicionario = EDITOR_GUIA.ehChave(p.texto);
+          const topo = `<div style="display:flex;gap:4px;align-items:center"><b style="flex:1">${t("ui.editor.masmorra.guia.passo_n", { n: i + 1 })}</b>
+              <button data-g="sobe" data-i="${i}" title="${t("ui.editor.masmorra.guia.subir")}"${i === 0 ? " disabled" : ""}>↑</button>
+              <button data-g="desce" data-i="${i}" title="${t("ui.editor.masmorra.guia.descer")}"${i === passos.length - 1 ? " disabled" : ""}>↓</button>
+              <button data-g="remove" data-i="${i}" title="${t("ui.editor.masmorra.guia.remover")}">✕</button></div>`;
+          if (doDicionario) {
+            return `<div class="guia-passo" style="border:1px solid #4a3a2a;padding:6px;margin:6px 0">${topo}
+              <small style="color:#8a7a5a">${t("ui.editor.masmorra.guia.do_dicionario")}</small>
+              <div style="margin:4px 0;color:#d8d0b8">${escGuia(t(p.texto))}</div>
+              <button data-g="converte" data-i="${i}">${t("ui.editor.masmorra.guia.converter")}</button></div>`;
+          }
+          const opcoesUi = ["", ...EDITOR_GUIA.TIPOS_UI].map(tp =>
+            `<option value="${tp}"${ui.tipo === tp ? " selected" : ""}>${tp === "" ? t("ui.editor.masmorra.guia.destacar_nenhum") : tp}</option>`).join("");
+          const opcoesCc = [""].concat(EDITOR_GUIA.VERBOS).map(v =>
+            `<option value="${v}"${cc.tipo === v ? " selected" : ""}>${v === "" ? t("ui.editor.masmorra.guia.conclui_nenhum") : t("ui.editor.masmorra.licao." + v)}</option>`).join("");
+          const ehCasaUi = EDITOR_GUIA.TIPOS_CASA.includes(ui.tipo);
+          const alvoCc = cc.alvo == null ? "" : (Array.isArray(cc.alvo) ? cc.alvo.join(",") : cc.alvo);
+          return `<div class="guia-passo" style="border:1px solid #4a3a2a;padding:6px;margin:6px 0">${topo}
+            <label>${t("ui.editor.masmorra.guia.texto")}</label><textarea data-g="texto" data-i="${i}" rows="2" style="width:100%">${escGuia(p.texto)}</textarea>
+            <label>${t("ui.editor.masmorra.guia.porque")}</label><input data-g="porque" data-i="${i}" value="${escGuia(p.porque)}" style="width:100%">
+            <label>${t("ui.editor.masmorra.guia.destacar")}</label>
+            <select data-g="ui_tipo" data-i="${i}">${opcoesUi}</select>
+            ${ui.tipo ? `<input data-g="ui_valor" data-i="${i}" value="${escGuia(ui.valor)}" placeholder="${ehCasaUi ? t("ui.editor.masmorra.guia.valor_casa") : t("ui.editor.masmorra.guia.valor_id")}" style="width:55%">` : ""}
+            <label>${t("ui.editor.masmorra.guia.dica_n", { n: 1 })}</label><input data-g="dica0" data-i="${i}" value="${escGuia(dica[0])}" style="width:100%">
+            <label>${t("ui.editor.masmorra.guia.dica_n", { n: 2 })}</label><input data-g="dica1" data-i="${i}" value="${escGuia(dica[1])}" style="width:100%">
+            <label>${t("ui.editor.masmorra.guia.conclui_com")}</label>
+            <select data-g="cc_tipo" data-i="${i}">${opcoesCc}</select>
+            ${cc.tipo ? `<input data-g="cc_alvo" data-i="${i}" value="${escGuia(alvoCc)}" placeholder="${t("ui.editor.masmorra.guia.alvo_opcional")}" style="width:55%">` : ""}
+          </div>`;
+        }).join("");
+        const podeMais = passos.length < EDITOR_GUIA.MAX_PASSOS;
+        return `<div id="guia-secao" style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
+          <b>🧭 ${t("ui.editor.masmorra.guia.titulo")}</b>
+          <small style="display:block;color:#8a7a5a">${t("ui.editor.masmorra.guia.dica_secao")}</small>
+          ${cartoes}
+          ${podeMais ? `<button data-g="novo">${t("ui.editor.masmorra.guia.adicionar")}</button>` : `<small style="color:#d8a0a0">${t("ui.editor.masmorra.guia.limite", { max: EDITOR_GUIA.MAX_PASSOS })}</small>`}
+        </div>`;
+      };
       panel.innerHTML = `<b>💬 ${t("ui.editor.masmorra.painel.fala_licao_titulo")}</b>
         <label>${t("ui.editor.masmorra.painel.emoji_falante")}</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
         <label>${t("ui.editor.masmorra.painel.nome_falante")}</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.opcional")}">
@@ -2858,6 +2907,7 @@
             <input id="f-ef-sede" type="number" min="0" max="100" value="${ref.efeito.sede ?? ""}" style="width:80px">
           ` : ""}
         </div>
+        ${renderGuiaPassos()}
         <div style="margin-top:8px;color:#8a7a5a;font-size:11px">${t("ui.editor.masmorra.painel.dispara_uma_vez_hint")}</div>`;
       document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
       document.getElementById("f-nome").onchange = e => { fal.nome = e.target.value; };
@@ -2902,6 +2952,49 @@
       }
       const tc = document.getElementById("f-tarefa-curto");
       if (tc) tc.onchange = e => { ref.tarefa.texto_curto = e.target.value; };
+      // Um manipulador delegado: só redesenha quando a estrutura muda (nunca a cada
+      // tecla, senão o campo perde o foco).
+      const secaoGuia = document.getElementById("guia-secao");
+      if (secaoGuia) {
+        const passoDe = (el) => ref.guia[Number(el.dataset.i)];
+        secaoGuia.onchange = (ev) => {
+          const el = ev.target, g = el.dataset.g;
+          if (!g || g === "novo") return;
+          const p = passoDe(el); if (!p) return;
+          if (g === "texto") p.texto = el.value;
+          else if (g === "porque") p.porque = el.value;
+          else if (g === "dica0" || g === "dica1") {
+            const d = [(p.dica || [])[0] || "", (p.dica || [])[1] || ""]; d[g === "dica0" ? 0 : 1] = el.value;
+            p.dica = d.filter(x => x.trim() !== "");
+          } else if (g === "ui_tipo") { p._uiTipo = el.value; p.ui = EDITOR_GUIA.montarUi(el.value, EDITOR_GUIA.lerUi(p.ui).valor); renderPanel(); }
+          else if (g === "ui_valor") { p.ui = EDITOR_GUIA.montarUi(p._uiTipo || EDITOR_GUIA.lerUi(p.ui).tipo, el.value); }
+          else if (g === "cc_tipo") { p.conclui_com = el.value ? { tipo: el.value } : null; renderPanel(); }
+          else if (g === "cc_alvo") {
+            if (p.conclui_com) {
+              const v = el.value.trim();
+              if (!v) delete p.conclui_com.alvo;
+              else p.conclui_com.alvo = /^\d+\s*,\s*\d+$/.test(v) ? v.split(",").map(n => parseInt(n, 10)) : v;
+            }
+          }
+        };
+        secaoGuia.onclick = (ev) => {
+          const el = ev.target.closest("button[data-g]"); if (!el) return;
+          const g = el.dataset.g, i = Number(el.dataset.i);
+          const l = ref.guia;
+          if (g === "novo" && l.length < EDITOR_GUIA.MAX_PASSOS) l.push({ texto: "", porque: "", ui: null, dica: [], conclui_com: null });
+          else if (g === "remove") l.splice(i, 1);
+          else if (g === "sobe" && i > 0) [l[i - 1], l[i]] = [l[i], l[i - 1]];
+          else if (g === "desce" && i < l.length - 1) [l[i + 1], l[i]] = [l[i], l[i + 1]];
+          else if (g === "converte") {
+            const p = l[i];
+            p.texto = t(p.texto);
+            if (p.porque && EDITOR_GUIA.ehChave(p.porque)) p.porque = t(p.porque);
+            p.dica = (p.dica || []).map(d => EDITOR_GUIA.ehChave(d) ? t(d) : d);
+          }
+          else return;
+          renderPanel();
+        };
+      }
     } else if (k === "room") {
       panel.innerHTML = `<b>▦ ${t("ui.editor.masmorra.painel.sala_n", { n: ref.id })}</b>
         <label>${t("ui.editor.masmorra.painel.role")}</label><select id="p-role">${opt(["entrance", "monster", "chest", "trap", "boss", "empty"].map(r => ({ v: r })), ref.role, o => o.v)}</select>

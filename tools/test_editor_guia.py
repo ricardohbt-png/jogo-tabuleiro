@@ -56,6 +56,26 @@ class FiacaoTests(unittest.TestCase):
                     "guia_conclui_invalido", "guia_ultimo_conclui"):
             self.assertIn(f'"ui.editor.masmorra.valid.{cod}"', lang, cod)
 
+    def test_painel_tem_a_secao_de_passos(self):
+        self.assertIn("ui.editor.masmorra.guia.titulo", EDITOR_JS)
+        self.assertIn("renderGuiaPassos(", EDITOR_JS)
+
+    def test_chaves_do_painel_em_pt_e_en(self):
+        lang = (RAIZ / "src" / "lang" / "editor.js").read_text(encoding="utf-8")
+        for k in ("titulo", "dica_secao", "passo_n", "texto", "porque", "destacar", "destacar_nenhum",
+                  "valor_id", "valor_casa", "dica_n", "conclui_com", "conclui_nenhum", "alvo_opcional",
+                  "adicionar", "subir", "descer", "remover", "do_dicionario", "converter", "limite"):
+            self.assertIn(f'"ui.editor.masmorra.guia.{k}"', lang, k)
+
+    def test_painel_nunca_escreve_chave_de_dicionario(self):
+        # passo vindo do dicionário é somente leitura: o painel não monta <textarea> para ele
+        self.assertIn("EDITOR_GUIA.ehChave(", EDITOR_JS)
+
+    def test_todo_verbo_de_conclusao_tem_rotulo_no_editor(self):
+        lang = (RAIZ / "src" / "lang" / "editor.js").read_text(encoding="utf-8")
+        for v in S.LICAO_VERBOS:
+            self.assertIn(f'"ui.editor.masmorra.licao.{v}"', lang, v)
+
 
 if __name__ == "__main__":
     unittest.main()
