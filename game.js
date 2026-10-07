@@ -53701,6 +53701,41 @@ function _tutTexto(s){
   return s.indexOf('ui.tutorial.') === 0 ? t(s) : s;
 }
 
+// Termos já sublinhados nesta sessão do navegador (só a 1ª vez de cada um).
+const _guiaTermosVistos = new Set();
+
+// Texto do tutorial -> HTML seguro. `[[termo]]` vira botão sublinhado na 1ª vez e texto
+// simples nas seguintes; o nome e a definição vêm de ui.tutorial.glossario.<termo>.
+function _tutHTML(s){
+  const bruto = _tutTexto(s);
+  return GuiaTutorial.segmentos(bruto, _guiaTermosVistos).map(seg => {
+    if(!seg.termo) return _esc(seg.texto);
+    const nome = t('ui.tutorial.glossario.' + seg.termo + '.nome');
+    return seg.primeira
+      ? `<button type="button" class="guia-termo" data-termo="${_esc(seg.termo)}">${_esc(nome)}</button>`
+      : _esc(nome);
+  }).join('');
+}
+
+function _guiaBalao(botao){
+  let b = document.getElementById('guia-balao');
+  if(!b){ b = document.createElement('div'); b.id = 'guia-balao'; document.body.appendChild(b); }
+  const termo = botao.dataset.termo;
+  b.innerHTML = `<b>${_esc(t('ui.tutorial.glossario.' + termo + '.nome'))}</b><br>` +
+                _esc(t('ui.tutorial.glossario.' + termo + '.texto'));
+  b.classList.add('open');
+  const r = botao.getBoundingClientRect();
+  b.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 268)) + 'px';
+  b.style.top = Math.max(8, r.top - b.offsetHeight - 8) + 'px';
+  clearTimeout(_guiaBalao._t);
+  _guiaBalao._t = setTimeout(() => b.classList.remove('open'), 7000);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest && ev.target.closest('.guia-termo');
+  if(b) { _guiaBalao(b); return; }
+  document.getElementById('guia-balao')?.classList.remove('open');
+});
+
 function _guiaLimparHalo(){
   document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte'));
 }
@@ -53725,7 +53760,7 @@ function _guiaAtualizarDica(){
   if(!host) return;
   const nivel = GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg());
   const txt = GuiaTutorial.textoDica(_guiaPasso, nivel);
-  host.textContent = txt ? `${t('ui.tutorial.dica')}: ${_tutTexto(txt)}` : '';
+  host.innerHTML = txt ? `${_esc(t('ui.tutorial.dica'))}: ${_tutHTML(txt)}` : '';
   host.style.display = txt ? 'block' : 'none';
 }
 
@@ -53916,12 +53951,11 @@ function _mostrarJanelaLicao(msg){
   const nome  = (msg.falante && msg.falante.nome)  || '';
   const passo = msg.passo || null;
   const explicito = !!(passo && !passo.auto);
-  const texto = explicito ? _tutTexto(passo.texto) : (msg.texto || '');
   const andamento = (explicito && passo.n > 1)
     ? `<div class="licao-passo">${_esc(t('ui.tutorial.passo_de', {i: passo.i + 1, n: passo.n}))}` +
       `<div class="licao-barra"><i style="width:${Math.round(((passo.i + 1) / passo.n) * 100)}%"></i></div></div>` : '';
   const porque = (explicito && passo.porque)
-    ? `<div class="licao-porque">${_esc(_tutTexto(passo.porque))}</div>` : '';
+    ? `<div class="licao-porque">${_tutHTML(passo.porque)}</div>` : '';
   const botoes = (passo && passo.ui && GuiaTutorial.parseUi(passo.ui))
     ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
   const entendi = (passo && passo.informativo)
@@ -53932,7 +53966,7 @@ function _mostrarJanelaLicao(msg){
     `<button type="button" class="licao-fechar" onclick="_fecharJanelaLicao()"` +
     ` title="${t('ui.geral.fechar')}" aria-label="${t('ui.geral.fechar')}">✕</button></div>` +
     andamento +
-    `<div class="licao-texto">${_esc(texto)}</div>` + porque +
+    `<div class="licao-texto">${explicito ? _tutHTML(passo.texto) : _esc(msg.texto || '')}</div>` + porque +
     `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
     `<div class="licao-aviso" id="licao-aviso" style="display:none"></div>` +
     ((botoes || entendi) ? `<div class="licao-acoes">${botoes}${entendi}</div>` : '');

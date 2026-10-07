@@ -192,5 +192,17 @@ console.log("\n[15] glossário: segmentos");
   check('entrada não-string é segura', G.segmentos(null, new Set()).length === 0);
 }
 
+console.log("\n[16] fiação do glossário no game.js e no css");
+{
+  const gjs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+  const css = fs.readFileSync(path.join(raiz, "game.css"), "utf8");
+  check("game.js usa GuiaTutorial.segmentos", /GuiaTutorial\.segmentos\(/.test(gjs));
+  check("game.js define _tutHTML", /function _tutHTML\(/.test(gjs));
+  check("texto da lição passa por _tutHTML", /class="licao-texto">\$\{[^}]*_tutHTML\(/.test(gjs));
+  check("balão do glossário existe", /guia-balao/.test(gjs) && /#guia-balao/.test(css));
+  check("termo sublinhado no css", /\.guia-termo/.test(css));
+  check("chave de definição usa ui.tutorial.glossario", /ui\.tutorial\.glossario\./.test(gjs));
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

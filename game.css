@@ -1927,3 +1927,9 @@ body.preview-mode #map-panel { width:100%; }
 #banner-vez .banner-vez-emoji { font-size: 42px; }
 #banner-vez small { display: block; color: #d8cfb8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
 #banner-vez b { display: block; font-size: 26px; color: #ffd36b; }
+.guia-termo{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:help;
+  border-bottom:1px dotted var(--gold,#d9b45a)}
+#guia-balao{position:fixed;z-index:10050;max-width:260px;padding:8px 10px;border-radius:8px;
+  background:#1c1a26;border:1px solid var(--gold,#d9b45a);color:#eee;font-size:12.5px;line-height:1.35;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);display:none}
+#guia-balao.open{display:block}
