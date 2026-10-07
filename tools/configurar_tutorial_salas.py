@@ -134,4 +134,8 @@ lesson('paladin','treino_luz',9,'guerreiro_luz',
 for f in d['falas']:
     if f['id'] == 'treino_veneno_golpe':f['tarefa']['requer_veneno'] = True
     if f['id'] == 'treino_sagrado_golpe':f['tarefa']['requer_sagrado'] = True
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).resolve().parent))
+from gerar_guia_comum import aplicar_guia
+aplicar_guia(d)
 path.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

@@ -2046,7 +2046,23 @@
         ],
         "vezes": 1,
         "texto_curto": "Ande até a casa 5,15"
-      }
+      },
+      "guia": [
+        {
+          "id": "ver",
+          "texto": "ui.tutorial.guia.fala_0.ver.texto",
+          "porque": "ui.tutorial.guia.fala_0.ver.porque"
+        },
+        {
+          "id": "andar",
+          "texto": "ui.tutorial.guia.fala_0.andar.texto",
+          "ui": "casa:[5,15]",
+          "dica": [
+            "ui.tutorial.guia.fala_0.andar.dica.1",
+            "ui.tutorial.guia.fala_0.andar.dica.2"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_1",
@@ -2068,7 +2084,18 @@
         "tipo": "pegar_item",
         "vezes": 1,
         "texto_curto": "Pegue uma arma do baú"
-      }
+      },
+      "guia": [
+        {
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_1.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_1.pegar.porque",
+          "dica": [
+            "ui.tutorial.guia.fala_1.pegar.dica.1",
+            "ui.tutorial.guia.fala_1.pegar.dica.2"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_2",
@@ -2090,7 +2117,22 @@
         "tipo": "equipar",
         "vezes": 1,
         "texto_curto": "Equipe a arma que pegou"
-      }
+      },
+      "guia": [
+        {
+          "id": "abrir",
+          "texto": "ui.tutorial.guia.fala_2.abrir.texto",
+          "ui": "botao:inventario"
+        },
+        {
+          "id": "equipar",
+          "texto": "ui.tutorial.guia.fala_2.equipar.texto",
+          "porque": "ui.tutorial.guia.fala_2.equipar.porque",
+          "dica": [
+            "ui.tutorial.guia.fala_2.equipar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_3",
@@ -2112,7 +2154,22 @@
         "tipo": "encerrar_turno",
         "vezes": 1,
         "texto_curto": "Clique em Encerrar Turno"
-      }
+      },
+      "guia": [
+        {
+          "id": "entender",
+          "texto": "ui.tutorial.guia.fala_3.entender.texto",
+          "porque": "ui.tutorial.guia.fala_3.entender.porque"
+        },
+        {
+          "id": "encerrar",
+          "texto": "ui.tutorial.guia.fala_3.encerrar.texto",
+          "ui": "botao:encerrar_turno",
+          "dica": [
+            "ui.tutorial.guia.fala_3.encerrar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_4",
@@ -2138,7 +2195,18 @@
         ],
         "vezes": 1,
         "texto_curto": "Atravesse a porta para a sala de combate"
-      }
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.fala_4.porta.texto",
+          "porque": "ui.tutorial.guia.fala_4.porta.porque",
+          "ui": "porta:[13,15]",
+          "dica": [
+            "ui.tutorial.guia.fala_4.porta.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_5",
@@ -2470,7 +2538,23 @@
         "alvo": "racao_viagem",
         "vezes": 1,
         "texto_curto": "Coma uma ração de viagem"
-      }
+      },
+      "guia": [
+        {
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_18.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_18.pegar.porque"
+        },
+        {
+          "id": "comer",
+          "texto": "ui.tutorial.guia.fala_18.comer.texto",
+          "porque": "ui.tutorial.guia.fala_18.comer.porque",
+          "ui": "bolsa:racao_viagem",
+          "dica": [
+            "ui.tutorial.guia.fala_18.comer.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_19",
@@ -2493,7 +2577,18 @@
         "alvo": "garrafa_agua",
         "vezes": 2,
         "texto_curto": "Beba duas garrafas de água"
-      }
+      },
+      "guia": [
+        {
+          "id": "beber",
+          "texto": "ui.tutorial.guia.fala_19.beber.texto",
+          "porque": "ui.tutorial.guia.fala_19.beber.porque",
+          "ui": "bolsa:garrafa_agua",
+          "dica": [
+            "ui.tutorial.guia.fala_19.beber.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_20",
@@ -2532,7 +2627,17 @@
         "tipo": "pegar_item",
         "vezes": 1,
         "texto_curto": "Pegue os itens do baú"
-      }
+      },
+      "guia": [
+        {
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_29.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_29.pegar.porque",
+          "dica": [
+            "ui.tutorial.guia.fala_29.pegar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_30",
@@ -2555,7 +2660,23 @@
         "alvo": "frasco_oleo",
         "vezes": 1,
         "texto_curto": "Arremesse o óleo num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "escolher",
+          "texto": "ui.tutorial.guia.fala_30.escolher.texto",
+          "ui": "bolsa:frasco_oleo"
+        },
+        {
+          "id": "arremessar",
+          "texto": "ui.tutorial.guia.fala_30.arremessar.texto",
+          "porque": "ui.tutorial.guia.fala_30.arremessar.porque",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_30.arremessar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_31",
@@ -2578,7 +2699,18 @@
         "alvo": "veneno_fungo_acre",
         "vezes": 1,
         "texto_curto": "Unte a arma com o veneno"
-      }
+      },
+      "guia": [
+        {
+          "id": "untar",
+          "texto": "ui.tutorial.guia.fala_31.untar.texto",
+          "porque": "ui.tutorial.guia.fala_31.untar.porque",
+          "ui": "bolsa:veneno_fungo_acre",
+          "dica": [
+            "ui.tutorial.guia.fala_31.untar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_32",
@@ -2601,7 +2733,18 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um boneco com a arma untada"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_32.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_32.atacar.porque",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_32.atacar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_33",
@@ -2624,7 +2767,18 @@
         "alvo": "health_potion_small",
         "vezes": 1,
         "texto_curto": "Beba a poção de cura"
-      }
+      },
+      "guia": [
+        {
+          "id": "beber",
+          "texto": "ui.tutorial.guia.fala_33.beber.texto",
+          "porque": "ui.tutorial.guia.fala_33.beber.porque",
+          "ui": "bolsa:health_potion_small",
+          "dica": [
+            "ui.tutorial.guia.fala_33.beber.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_34",
@@ -2664,7 +2818,18 @@
         "alvo": "esqueleto_humano",
         "vezes": 1,
         "texto_curto": "Acerte um golpe no esqueleto"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_36.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_36.atacar.porque",
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_36.atacar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_37",
@@ -2687,7 +2852,22 @@
         "alvo": "maca_treino",
         "vezes": 1,
         "texto_curto": "Equipe a maça do baú"
-      }
+      },
+      "guia": [
+        {
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_37.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_37.pegar.porque"
+        },
+        {
+          "id": "equipar",
+          "texto": "ui.tutorial.guia.fala_37.equipar.texto",
+          "ui": "bolsa:maca_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_37.equipar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_38",
@@ -2710,7 +2890,18 @@
         "alvo": "esqueleto_humano",
         "vezes": 1,
         "texto_curto": "Derrube o esqueleto com a maça"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_38.matar.texto",
+          "porque": "ui.tutorial.guia.fala_38.matar.porque",
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_38.matar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_mira",

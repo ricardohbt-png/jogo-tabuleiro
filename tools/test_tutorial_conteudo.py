@@ -6,6 +6,7 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ)); sys.path.insert(0, str(RAIZ / "tools"))
 
 import tutorial_guia_comum as C
+import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38"]
@@ -74,6 +75,47 @@ class ConteudoTests(unittest.TestCase):
                 ui = p.get("ui") or ""
                 if ui.startswith("casa:") or ui.startswith("porta:"):
                     self.assertEqual(ui.split(":", 1)[1], json.dumps(tar.get("alvo")).replace(" ", ""), lid)
+
+
+class GeradorTests(unittest.TestCase):
+    def setUp(self):
+        self.d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+
+    def test_aplicar_guia_injeta_so_chaves_e_valida(self):
+        import server
+        G.aplicar_guia(self.d)
+        for f in self.d["falas"]:
+            if f["id"] in C.GUIA:
+                self.assertEqual(len(f["guia"]), len(C.GUIA[f["id"]]))
+                for s in f["guia"]:
+                    self.assertTrue(s["texto"].startswith("ui.tutorial.guia."), s)
+        ok, msg = server.validar_dungeon(self.d)
+        self.assertTrue(ok, msg)
+
+    def test_aplicar_guia_e_idempotente(self):
+        G.aplicar_guia(self.d); a = json.dumps(self.d, sort_keys=True)
+        G.aplicar_guia(self.d); self.assertEqual(a, json.dumps(self.d, sort_keys=True))
+
+    def test_lang_tem_pt_e_en_para_toda_chave_usada(self):
+        lang = G.gerar_lang()
+        G.aplicar_guia(self.d)
+        usadas = set()
+        for f in self.d["falas"]:
+            for s in f.get("guia", []):
+                for campo in ("texto", "porque"):
+                    if s.get(campo): usadas.add(s[campo])
+                usadas.update(s.get("dica", []))
+        self.assertTrue(usadas)
+        for k in usadas:
+            self.assertIn(k, lang, k)
+            self.assertTrue(lang[k]["pt"] and lang[k]["en"], k)
+        for termo in C.GLOSSARIO:
+            self.assertIn(f"ui.tutorial.glossario.{termo}.nome", lang)
+            self.assertIn(f"ui.tutorial.glossario.{termo}.texto", lang)
+
+    def test_arquivo_gerado_esta_em_dia(self):
+        arq = (RAIZ / "src/lang/tutorial_guia.js").read_text(encoding="utf-8").replace("\r\n", "\n")
+        self.assertEqual(arq, G.render_lang(), "rode: python tools/gerar_guia_comum.py")
 
 
 if __name__ == "__main__":
