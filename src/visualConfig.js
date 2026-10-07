@@ -110,6 +110,9 @@ window.VC = {
     rocha_marrom:   { color: [0.38, 0.23, 0.13] },
   },
 
+  // Tutorial guiado: segundos sem progresso até cada nível de dica.
+  tutorial: { dica1S: 12, dica2S: 30 },
+
   // ── Dice ───────────────────────────────────────────────────────────────────
   // Material: MeshLambertMaterial — emissive ensures colors bypass scene lighting
   dice: {

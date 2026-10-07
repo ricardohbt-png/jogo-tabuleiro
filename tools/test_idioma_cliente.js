@@ -12,7 +12,7 @@ const check = (name, cond) => { if (cond) { PASS++; console.log("  ✅ " + name)
 // arquivos de src/lang/, e cada um faz Object.assign no LANG_STRINGS. Com um só,
 // a checagem [5] acusava como órfã toda chave data-i18n que morasse nos outros —
 // falso positivo medido no Lote 3, quando a interface passou a ter chaves lá.
-const LANG_FILES = ["strings", "catalogo", "composto", "interface", "erros", "narracao"];
+const LANG_FILES = ["strings", "catalogo", "composto", "interface", "erros", "narracao", "tutorial"];
 global.window = {};
 for (const f of LANG_FILES)
   eval(fs.readFileSync(path.join(raiz, "src", "lang", f + ".js"), "utf8"));
