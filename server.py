@@ -2969,6 +2969,19 @@ def restore_character(player, snap):
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
+    # Botas Velozes já foram persistidas no slot genérico de itens. Migra a
+    # peça para o slot dedicado quando disponível para liberar o espaço antigo.
+    gear = player.get("gear") or {}
+    if isinstance(gear.get("boots"), dict) and gear["boots"].get("id") == "boots":
+        gear["boots"].update({"item_slot": "boots", "kind": "boots", "item_type": "boots"})
+    elif gear.get("boots") is None:
+        for slot in ("item1", "item2"):
+            item = gear.get(slot)
+            if isinstance(item, dict) and item.get("id") == "boots":
+                item.update({"item_slot": "boots", "kind": "boots", "item_type": "boots"})
+                gear["boots"] = item
+                gear[slot] = None
+                break
     # Migra fichas antigas e garante que a CA seja derivada do equipamento
     # atual, em vez de reutilizar um valor previamente embutido na classe.
     if player.get("gear"):
@@ -6756,7 +6769,8 @@ SHOP_MERCHANT = [
      "magico": True,
      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."},
     # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
-    {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10, "item_slot": "item",  "effect": "spd",       "value": 1},
+    {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10,
+     "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
     # â”€â”€ Venenos (consumÃ­veis de bolsa â€” untam a arma; ver VENENOS) â”€â”€
@@ -24527,7 +24541,9 @@ class GameRoom:
             return "off_hand"
         if s == "head" or k == "head" or any(w in nm for w in ("elmo", "capuz", "tiara", "capacete")):
             return "head"
-        if s == "boots" or k == "boots" or (not s and any(w in nm for w in ("bota", "botas", "sapato"))):
+        # `boots` é o id histórico de Botas Velozes; alguns saves antigos
+        # ainda carregam item_slot="item", mas o item sempre ocupa gear.boots.
+        if iid == "boots" or s == "boots" or k == "boots" or (not s and any(w in nm for w in ("bota", "botas", "sapato"))):
             return "boots"
         if s == "ring" or k == "ring" or "anel" in nm:
             return "ring"

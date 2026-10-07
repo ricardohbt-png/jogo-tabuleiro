@@ -83,18 +83,17 @@ async def main():
     check("bloqueou (weapon não mudou)", (w["gear"].get("weapon") or {}).get("id") != "espada2m")
     check("erro de 2 mãos enviado", any("2 mãos" in e for e in r._errs))
 
-    print("\n[7] Não-regressão: 'Botas Velozes' com item_slot explícito não vira boots")
-    # CHEST_ITEMS: item_slot="accessory" (cai no branch "item"); SHOP_MERCHANT:
-    # item_slot="item" (idem) — ambos têm "bota" no nome; item_slot explícito
-    # deve vencer o fallback de nome (name-sniffing só vale quando s é vazio).
-    check("CHEST_ITEMS 'Botas Velozes' → item (não boots)",
+    print("\n[7] Botas Velozes ocupa o slot dedicado de botas")
+    # O id é estável; reconhece também cópias de saves antigos que ainda
+    # carregam item_slot="item" ou "accessory".
+    check("Botas Velozes de baú → boots",
           S.GameRoom._slot_category_for_item(
               {"id": "boots", "name": "Botas Velozes", "item_slot": "accessory",
-               "effect": "spd", "value": 1}) == "item")
-    check("SHOP_MERCHANT 'Botas Velozes' → item (não boots)",
+               "effect": "spd", "value": 1}) == "boots")
+    check("Botas Velozes da loja → boots",
           S.GameRoom._slot_category_for_item(
               {"id": "boots", "name": "Botas Velozes", "item_slot": "item",
-               "effect": "spd", "value": 1}) == "item")
+               "effect": "spd", "value": 1}) == "boots")
     check("item sem item_slot com 'bota' no nome ainda cai no fallback → boots",
           S.GameRoom._slot_category_for_item(
               {"id": "loot_bota_solta", "name": "Bota Surrada"}) == "boots")
@@ -105,9 +104,17 @@ async def main():
                       "item_slot": "item", "effect": "spd", "value": 1}
     w["bag"] = [botas_velozes]
     await r.handle_equip_from_bag("p1", 0)
-    check("Botas Velozes foi p/ item1/item2 (não gear.boots)", w["gear"].get("boots") is None)
-    check("Botas Velozes equipou em item1 ou item2",
-          (w["gear"].get("item1") or {}).get("id") == "boots" or (w["gear"].get("item2") or {}).get("id") == "boots")
+    check("Botas Velozes foi para gear.boots", (w["gear"].get("boots") or {}).get("id") == "boots")
+    check("Botas Velozes não ocupou item1/item2",
+          w["gear"].get("item1") is None and w["gear"].get("item2") is None)
+
+    print("\n[8] Migração de save antigo libera o slot genérico")
+    antigo = make_player("p2", "Richard", "paladin", 0)
+    antigo["gear"]["item1"] = {"id": "boots", "name": "Botas Velozes", "item_slot": "item", "effect": "spd", "value": 1}
+    S.restore_character(antigo, {"gear": antigo["gear"]})
+    check("save antigo moveu Botas Velozes para gear.boots",
+          (antigo["gear"].get("boots") or {}).get("id") == "boots")
+    check("save antigo liberou item1", antigo["gear"].get("item1") is None)
 
     print("\n[8] Outras enumerações de slot (achadas na revisão de código) também incluem boots")
     check("boots está em GEAR_BONUS_SLOTS (recalculo de CA)", "boots" in GEAR_BONUS_SLOTS)

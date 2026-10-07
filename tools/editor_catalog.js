@@ -11283,7 +11283,8 @@ window.EDITOR_CATALOG = {
       "id": "boots",
       "name": "Botas Velozes",
       "emoji": "👢",
-      "item_slot": "item",
+      "kind": "boots",
+      "item_slot": "boots",
       "effect": "spd",
       "value": 1
     },

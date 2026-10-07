@@ -3501,3 +3501,10 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > contorna a Ana (4 passos); ligada, passa por ela (2 passos) e terminar em cima é recusado.
 > Testes: `tools/test_atravessar_aliados.py` (28) e `tools/test_atravessar_aliados_cliente.js`
 > (29). Spec em `docs/superpowers/specs/2026-09-30-atravessar-aliados-design.md`.
+
+> **Botas Velozes no inventário:** `SHOP_MERCHANT` declara o item `boots` no
+> slot `boots`, e `_slot_category_for_item`/`_slotCategoryForItem` reconhecem
+> seu ID mesmo em cópias legadas com `item_slot="item"`. `restore_character`
+> migra Botas Velozes já equipadas em `item1`/`item2` para `gear.boots` se o
+> espaço estiver livre; assim o slot genérico volta a ficar disponível. O
+> bônus de velocidade continua sendo aplicado pelo efeito `spd` do equipamento.

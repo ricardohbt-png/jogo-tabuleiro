@@ -2685,10 +2685,9 @@ const GS = (() => {
     if(s === 'shield' || s === 'off_hand' || k === 'shield' || iid.includes('shield') || nm.includes('escudo')) return 'off_hand';
     if(s === 'ammo' || item.effect === 'ammo') return 'off_hand';
     if(s === 'head' || k === 'head' || ['elmo','capuz','tiara','capacete'].some(w => nm.includes(w))) return 'head';
-    // !s: item_slot explícito vence name-sniffing — evita reclassificar itens
-    // legados tipo "Botas Velozes" (item_slot="item"/"accessory") como boots
-    // (mesma regressão corrigida no server em 93a4486).
-    if(s === 'boots' || k === 'boots' || (!s && ['bota','botas','sapato'].some(w => nm.includes(w)))) return 'boots';
+    // `boots` é o id histórico de Botas Velozes; saves antigos ainda podem
+    // trazer item_slot="item", mas o destino correto é sempre o slot boots.
+    if(iid === 'boots' || s === 'boots' || k === 'boots' || (!s && ['bota','botas','sapato'].some(w => nm.includes(w)))) return 'boots';
     if(s === 'ring' || k === 'ring' || nm.includes('anel')) return 'ring';
     if(['accessory','belt','gloves','backpack','item'].includes(s) ||
        ['accessory','belt','gloves','backpack'].includes(k) ||
