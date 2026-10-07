@@ -222,10 +222,6 @@ window.LANG_CATALOGO = {
     "en": "Abandoned Camp",
     "pt": "Acampamento abandonado"
   },
-  "cat.decor.arco_pedra_deserto.nome": {
-    "en": "Desert Stone Arch",
-    "pt": "Arco de pedra do deserto"
-  },
   "cat.decor.altar.nome": {
     "en": "Ritual Altar",
     "pt": "Altar ritualístico"
@@ -237,6 +233,10 @@ window.LANG_CATALOGO = {
   "cat.decor.arca_tesouros.nome": {
     "en": "Treasure Chest",
     "pt": "Arca de tesouros"
+  },
+  "cat.decor.arco_pedra_deserto.nome": {
+    "en": "Desert Stone Arch",
+    "pt": "Arco de pedra do deserto"
   },
   "cat.decor.armadura.nome": {
     "en": "Armor Stand",
@@ -354,6 +354,10 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
+  "cat.decor.esqueleto_tiranossauro.nome": {
+    "en": "Tyrannosaurus Skeleton",
+    "pt": "Esqueleto de tiranossauro"
+  },
   "cat.decor.estalactites_estalagmites.nome": {
     "en": "Stalactites and Stalagmites",
     "pt": "Estalactites e estalagmites"
@@ -373,10 +377,6 @@ window.LANG_CATALOGO = {
   "cat.decor.estatua_divindade.nome": {
     "en": "Deity Statue",
     "pt": "Estátua de divindade"
-  },
-  "cat.decor.esqueleto_tiranossauro.nome": {
-    "en": "Tyrannosaurus Skeleton",
-    "pt": "Esqueleto de tiranossauro"
   },
   "cat.decor.estatua_soterrada.nome": {
     "en": "Buried Statue",
@@ -414,10 +414,6 @@ window.LANG_CATALOGO = {
     "en": "Stone Gargoyle",
     "pt": "Gárgula de pedra"
   },
-  "cat.decor.gruta_parede.nome": {
-    "en": "Cave Wall Relief",
-    "pt": "Gruta na parede"
-  },
   "cat.decor.geiser_lava.nome": {
     "en": "Lava Geyser",
     "pt": "Gêiser de lava"
@@ -429,6 +425,10 @@ window.LANG_CATALOGO = {
   "cat.decor.grilhoes_parede.nome": {
     "en": "Wall Shackles",
     "pt": "Grilhões de parede"
+  },
+  "cat.decor.gruta_parede.nome": {
+    "en": "Cave Wall Relief",
+    "pt": "Gruta na parede"
   },
   "cat.decor.juncos.nome": {
     "en": "Reeds",
@@ -482,13 +482,13 @@ window.LANG_CATALOGO = {
     "en": "Half-Buried Bones",
     "pt": "Ossos semienterrados"
   },
-  "cat.decor.pira_chamas.nome": {
-    "en": "Flame Pyre",
-    "pt": "Pira de chamas"
-  },
   "cat.decor.pedra_sacrificio.nome": {
     "en": "Sacrificial Stone",
     "pt": "Pedra de sacrifício"
+  },
+  "cat.decor.pira_chamas.nome": {
+    "en": "Flame Pyre",
+    "pt": "Pira de chamas"
   },
   "cat.decor.placa.nome": {
     "en": "Sign",
@@ -2670,6 +2670,14 @@ window.LANG_CATALOGO = {
     "en": "Jewel",
     "pt": "Joia"
   },
+  "cat.item.lamina_do_vento.desc": {
+    "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
+    "pt": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
+  },
+  "cat.item.lamina_do_vento.nome": {
+    "en": "Wind Blade",
+    "pt": "Lamina do Vento"
+  },
   "cat.item.lanca.desc": {
     "en": "Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares.",
     "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
@@ -2789,6 +2797,14 @@ window.LANG_CATALOGO = {
   "cat.item.machado_duplo.nome": {
     "en": "Double Axe",
     "pt": "Machado Duplo"
+  },
+  "cat.item.machado_duplo_copia.desc": {
+    "en": "Double Axe (copy): 1d8 slashing damage, using Strength. Can also be thrown up to 3 squares.",
+    "pt": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
+  },
+  "cat.item.machado_duplo_copia.nome": {
+    "en": "Double Axe (copy)",
+    "pt": "Machado Duplo (cópia)"
   },
   "cat.item.machado_duplo_prata.desc": {
     "en": "Silver Double Axe: 1d8 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
