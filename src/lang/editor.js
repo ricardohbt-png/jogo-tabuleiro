@@ -1917,6 +1917,30 @@ window.LANG_EDITOR = {
     "en": "lesson {id}: target should be an x,y tile",
     "pt": "lição {id}: alvo deveria ser uma casa x,y"
   },
+  "ui.editor.masmorra.valid.guia_muitos": {
+    "en": "lesson {id}: the guide accepts at most {max} steps",
+    "pt": "lição {id}: o guia aceita no máximo {max} passos"
+  },
+  "ui.editor.masmorra.valid.guia_sem_texto": {
+    "en": "lesson {id}: guide step {n} has no text",
+    "pt": "lição {id}: o passo {n} do guia está sem texto"
+  },
+  "ui.editor.masmorra.valid.guia_ui_invalida": {
+    "en": "lesson {id}: step {n} points to an invalid element ({ui})",
+    "pt": "lição {id}: o passo {n} aponta para um elemento inválido ({ui})"
+  },
+  "ui.editor.masmorra.valid.guia_dicas": {
+    "en": "lesson {id}: step {n} has more than {max} hints",
+    "pt": "lição {id}: o passo {n} tem mais de {max} dicas"
+  },
+  "ui.editor.masmorra.valid.guia_conclui_invalido": {
+    "en": "lesson {id}: step {n} completes on an unknown action ({tipo})",
+    "pt": "lição {id}: o passo {n} conclui com uma ação desconhecida ({tipo})"
+  },
+  "ui.editor.masmorra.valid.guia_ultimo_conclui": {
+    "en": "lesson {id}: the last step ({n}) should not complete on an action — the task ends the lesson",
+    "pt": "lição {id}: o último passo ({n}) não deve concluir por ação — quem encerra a lição é a tarefa"
+  },
   "ui.editor.masmorra.valid.material_invalido": {
     "en": "invalid material: {id}",
     "pt": "material inválido: {id}"

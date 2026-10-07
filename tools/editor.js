@@ -4016,6 +4016,7 @@
         if (!(f.tarefa.texto_curto || "").trim()) e.push(V("licao_sem_texto_curto", { id: f.id, pos: P(f.pos) }));
         if (LICAO_VERBOS_CASA.has(f.tarefa.tipo) && f.tarefa.alvo && !Array.isArray(f.tarefa.alvo)) e.push(V("licao_alvo", { id: f.id }));
       }
+      for (const er of EDITOR_GUIA.validar(f.guia)) e.push(V(er.codigo, { id: f.id, ...er.params }));
     }
     const matIds = new Set(MAT.map(m => m.id));
     for (const [key, mid] of Object.entries(S.materiais)) {

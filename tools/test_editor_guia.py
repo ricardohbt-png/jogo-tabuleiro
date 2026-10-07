@@ -47,6 +47,15 @@ class FiacaoTests(unittest.TestCase):
         self.assertRegex(EDITOR_JS, r"const\s+guia\s*=\s*EDITOR_GUIA\.serializar\(f\.guia\)")
         self.assertRegex(EDITOR_JS, r"if\s*\(guia\)\s*out\.guia\s*=\s*guia")
 
+    def test_validacao_usa_o_modulo(self):
+        self.assertRegex(EDITOR_JS, r"EDITOR_GUIA\.validar\(f\.guia\)")
+
+    def test_chaves_de_validacao_existem_em_pt_e_en(self):
+        lang = (RAIZ / "src" / "lang" / "editor.js").read_text(encoding="utf-8")
+        for cod in ("guia_muitos", "guia_sem_texto", "guia_ui_invalida", "guia_dicas",
+                    "guia_conclui_invalido", "guia_ultimo_conclui"):
+            self.assertIn(f'"ui.editor.masmorra.valid.{cod}"', lang, cod)
+
 
 if __name__ == "__main__":
     unittest.main()
