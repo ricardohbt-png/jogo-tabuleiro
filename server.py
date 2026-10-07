@@ -7305,7 +7305,7 @@ def validar_dungeon(defn):
         for it in (ch.get("items") or []):
             if not isinstance(it, dict):
                 return False, f"item de baú inválido: {it!r}."
-            if it.get("id") not in _DUNGEON_ITEM_CATALOG:
+            if not isinstance(it.get("id"), str) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
                 return False, f"item de baú desconhecido: {it.get('id')!r}."
             if it.get("id") == "carta" and "texto" in it:
                 if not isinstance(it["texto"], str) or len(it["texto"].strip()) > 2000:
@@ -7477,7 +7477,7 @@ def validar_dungeon(defn):
             if isinstance(gold, bool) or not isinstance(gold, (int, float)) or gold < 0:
                 return False, "decoração com gold inválido."
             for it in (loot.get("items") or []):
-                if not isinstance(it, dict) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
+                if not isinstance(it, dict) or not isinstance(it.get("id"), str) or it.get("id") not in _DUNGEON_ITEM_CATALOG:
                     return False, f"item de loot inválido: {it!r}."
                 if it.get("id") == "carta" and "texto" in it:
                     if not isinstance(it["texto"], str) or len(it["texto"].strip()) > 2000:
@@ -7867,11 +7867,24 @@ def hidratar_itens_bau(items):
         inst = _resolver_loot_instrumento(it)   # token de instrumento procedural (Fase 4a)
         if inst:
             out.append(inst); continue
-        base = _DUNGEON_ITEM_CATALOG.get(it.get("id"))
+        iid = it.get("id")
+        base = _DUNGEON_ITEM_CATALOG.get(iid) if isinstance(iid, str) else None
         if base:
             inst = deepcopy(base)
             if GameRoom._is_utility_belt_item(inst):
-                inst.update(deepcopy(it))
+                # Authored loot selects IDs, never supplies runtime effects or belt stats.
+                if isinstance(it.get("instance_tag"), str):
+                    inst["instance_tag"] = it["instance_tag"]
+                raw = it.get("utility_belt_slots")
+                raw = raw if isinstance(raw, list) else []
+                slots = []
+                for entry in raw[:GameRoom._utility_belt_capacity(inst)]:
+                    pocket = entry.get("item") if isinstance(entry, dict) else None
+                    pocket_id = pocket.get("id") if isinstance(pocket, dict) else None
+                    definition = _DUNGEON_ITEM_CATALOG.get(pocket_id) if isinstance(pocket_id, str) else None
+                    slots.append({"item": deepcopy(definition), "quantity": entry.get("quantity")}
+                                 if definition else None)
+                inst["utility_belt_slots"] = slots
                 GameRoom._normalize_utility_belt(inst)
             if inst.get("id") == "carta" and isinstance(it.get("texto"), str):
                 texto = it["texto"].strip()
