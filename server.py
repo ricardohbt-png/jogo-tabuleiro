@@ -66,6 +66,46 @@ GUIA_UI_RE = re.compile(
     r"|(?:casa|porta):\[\d+,\d+\])$")
 
 
+def _guia_ui_padrao(tar):
+    """Elemento a destacar quando a lição não declara `guia`: deduzido da tarefa."""
+    tipo, alvo = tar.get("tipo"), tar.get("alvo")
+    if tipo == "encerrar_turno":
+        return "botao:encerrar_turno"
+    if tipo in ("mover_ate", "abrir_porta"):
+        if isinstance(alvo, (list, tuple)) and len(alvo) == 2:
+            return f"{'casa' if tipo == 'mover_ate' else 'porta'}:[{int(alvo[0])},{int(alvo[1])}]"
+        return None
+    if not isinstance(alvo, str) or not re.fullmatch(r"[a-z0-9_]+", alvo):
+        return None
+    if tipo in ("usar_habilidade", "usar_tecnica"):
+        return f"habilidade:{alvo}"
+    if tipo in ("atacar", "matar"):
+        return f"monstro:{alvo}"
+    if tipo in ("usar_item", "arremessar_item", "equipar"):
+        return f"bolsa:{alvo}"
+    return None
+
+
+def _guia_passos(lic):
+    """Passos da lição: o `guia` autorado, ou um passo único gerado da tarefa."""
+    guia = lic.get("guia")
+    if guia:
+        return guia
+    return [{"id": "auto", "texto": lic.get("texto", ""), "auto": True,
+             "ui": _guia_ui_padrao(lic.get("tarefa") or {})}]
+
+
+def _guia_payload(lic, i):
+    """Passo `i` no formato que o cliente recebe (índice preso ao intervalo)."""
+    passos = _guia_passos(lic)
+    i = max(0, min(int(i or 0), len(passos) - 1))
+    s = passos[i]
+    return {"id": s.get("id"), "texto": s.get("texto", ""), "porque": s.get("porque", ""),
+            "ui": s.get("ui"), "dica": list(s.get("dica") or []),
+            "auto": bool(s.get("auto")), "i": i, "n": len(passos),
+            "informativo": i < len(passos) - 1 and not s.get("conclui_com")}
+
+
 def _e_licao(fala):
     """True se esta fala autorada é uma lição de tutorial.
 
@@ -10034,6 +10074,7 @@ def make_player(pid, name, cls_id, slot):
         "licao_atual": None,        # id da lição pendente (o painel do HUD lê daqui)
         "licao_progresso": {},      # {licao_id: vezes já feitas}
         "licoes_feitas": [],        # ids que ESTE jogador cumpriu (lista: vai no JSON)
+        "licao_passo": 0,           # índice do passo atual da lição pendente (guia)
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma atÃ© fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: prÃ³ximo ataque Ã  distÃ¢ncia
         "investida_armada": False,          # Investida Heroica: charge armada
@@ -17923,6 +17964,7 @@ class GameRoom(TutorialTraining):
             p["licao_atual"] = None
             p["licao_progresso"] = {}
             p["licoes_feitas"] = []
+            p["licao_passo"] = 0
             if self.training_mode:
                 done = p.get("tutorial_history") or []
                 for lesson in self.licoes:
@@ -17953,6 +17995,41 @@ class GameRoom(TutorialTraining):
                 history.append(lic["id"])
         if p.get("licao_atual") == lic["id"]:
             p["licao_atual"] = None
+            p["licao_passo"] = 0
+
+    async def _guia_avancar(self, p, lic):
+        passos = _guia_passos(lic)
+        p["licao_passo"] = min(int(p.get("licao_passo", 0) or 0) + 1, len(passos) - 1)
+        await self.send_to(p["id"], {"type": "licao_passo", "licao_id": lic["id"],
+                                     "passo": _guia_payload(lic, p["licao_passo"])})
+
+    async def _guia_evento(self, p, lic, verbo, alvo):
+        """Avança o passo atual se o evento é o que ele declarou em `conclui_com`.
+        O último passo nunca avança aqui: quem encerra a lição é a tarefa."""
+        passos = _guia_passos(lic)
+        i = int(p.get("licao_passo", 0) or 0)
+        if i >= len(passos) - 1:
+            return
+        cond = passos[i].get("conclui_com")
+        if not cond or cond.get("tipo") != verbo:
+            return
+        if not self._licao_alvo_ok(cond.get("alvo"), alvo):
+            return
+        await self._guia_avancar(p, lic)
+
+    async def handle_avancar_passo(self, pid):
+        """"Entendi": só avança passo informativo (sem `conclui_com`, não-último)."""
+        p = self.players.get(pid)
+        if not p:
+            return
+        lic = next((l for l in getattr(self, "licoes", []) if l["id"] == p.get("licao_atual")), None)
+        if not lic:
+            return
+        passos = _guia_passos(lic)
+        i = int(p.get("licao_passo", 0) or 0)
+        if i >= len(passos) - 1 or passos[i].get("conclui_com"):
+            return
+        await self._guia_avancar(p, lic)
 
     async def _licao_evento(self, p, verbo, alvo=None, contexto=None):
         """Registra progresso na lição pendente do jogador.
@@ -17969,7 +18046,12 @@ class GameRoom(TutorialTraining):
             return
         lic = next((l for l in self.licoes if l["id"] == lic_id), None)
         tar = (lic or {}).get("tarefa") or {}
-        if not lic or tar.get("tipo") != verbo:
+        if not lic:
+            return
+        # O passo avança por qualquer evento que ele declarar, mesmo que a tarefa
+        # da lição seja outra (ex.: "atacar" no passo 2 de uma lição de habilidade).
+        await self._guia_evento(p, lic, verbo, alvo)
+        if tar.get("tipo") != verbo:
             return
         if not self._training_requirements(p, lic):
             return
@@ -18016,11 +18098,13 @@ class GameRoom(TutorialTraining):
         p.setdefault("licao_progresso", {})[fala["id"]] = 0
         if fala.get("tarefa"):
             p["licao_atual"] = fala["id"]
+            p["licao_passo"] = 0
         await self._licao_efeito(p, fala)
         await self._training_prepare(p, fala)
         # O cliente trata lição e fala comum de formas diferentes: a fala some
         # sozinha em segundos, a lição fica numa janela até o jogador fechar.
         payload["licao_id"] = fala["id"]
+        payload["passo"] = _guia_payload(fala, 0)
         await self.send_to(p["id"], payload)
         if not fala.get("tarefa"):
             await self._licao_concluir(p, fala)   # lição que só explica
@@ -38398,6 +38482,7 @@ class GameRoom(TutorialTraining):
                 "texto_curto": tar.get("texto_curto", ""),
                 "feito": (p.get("licao_progresso") or {}).get(lic["id"], 0) if lic else 0,
                 "vezes": int(tar.get("vezes", 1) or 1) if lic else 0,
+                "passo": _guia_payload(lic, p.get("licao_passo", 0)) if lic else None,
                 "concluidas": sum(1 for l in self.licoes if l["id"] in (p.get("licoes_feitas") or [])
                                   and (not l.get("classe") or l["classe"] == cls)
                                   and self._training_requirements(p, l)),
@@ -47633,6 +47718,8 @@ async def handler(ws):
 
                 elif t == "repetir_tutorial":
                     if room: await room.handle_repetir_tutorial(pid)
+                elif t == "avancar_passo":
+                    if room: await room.handle_avancar_passo(pid)
                 elif t == "encerrar_missao":
                     if room: await room.handle_encerrar_missao(pid)
 

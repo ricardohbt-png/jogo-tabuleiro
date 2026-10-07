@@ -95,6 +95,110 @@ class ValidacaoTests(unittest.TestCase):
         ok, _ = S.validar_dungeon(dungeon_com_guia([{"texto": "a", "conclui_com": "atacar"}]))
         self.assertFalse(ok)
 
+class DerivacaoTests(unittest.TestCase):
+    def test_ui_padrao_por_tarefa(self):
+        f = S._guia_ui_padrao
+        self.assertEqual(f({"tipo": "encerrar_turno"}), "botao:encerrar_turno")
+        self.assertEqual(f({"tipo": "usar_habilidade", "alvo": "mira_certeira"}), "habilidade:mira_certeira")
+        self.assertEqual(f({"tipo": "usar_tecnica", "alvo": "brutalidade"}), "habilidade:brutalidade")
+        self.assertEqual(f({"tipo": "mover_ate", "alvo": [5, 15]}), "casa:[5,15]")
+        self.assertEqual(f({"tipo": "abrir_porta", "alvo": [13, 15]}), "porta:[13,15]")
+        self.assertEqual(f({"tipo": "atacar", "alvo": "boneco_treino"}), "monstro:boneco_treino")
+        self.assertEqual(f({"tipo": "usar_item", "alvo": "racao_viagem"}), "bolsa:racao_viagem")
+        self.assertIsNone(f({"tipo": "pegar_item"}))
+        self.assertIsNone(f({"tipo": "atacar", "alvo": "Boneco Treino"}))
+
+    def test_passos_sem_guia_gera_um_passo_auto(self):
+        lic = {"id": "x", "texto": "Longo.", "tarefa": {"tipo": "encerrar_turno"}}
+        passos = S._guia_passos(lic)
+        self.assertEqual(len(passos), 1)
+        self.assertTrue(passos[0]["auto"])
+        self.assertEqual(passos[0]["ui"], "botao:encerrar_turno")
+
+    def test_payload_marca_informativo_e_limita_indice(self):
+        lic = {"id": "x", "guia": deepcopy(GUIA_MIRA), "tarefa": {"tipo": "usar_habilidade"}}
+        p0 = S._guia_payload(lic, 0)
+        self.assertEqual((p0["i"], p0["n"], p0["informativo"]), (0, 3, True))
+        p1 = S._guia_payload(lic, 1)
+        self.assertFalse(p1["informativo"])
+        self.assertEqual(p1["dica"], ["O boneco está logo à frente.", "Clique nele."])
+        p9 = S._guia_payload(lic, 9)
+        self.assertEqual(p9["i"], 2)
+        self.assertFalse(p9["informativo"])
+
+
+class AvancoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fala_leva_o_passo_0(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        self.assertEqual(p['licao_passo'], 0)
+        fala = next(m for m in r.messages if m.get('licao_id') == 'treino_mira')
+        self.assertEqual(fala['passo']['i'], 0)
+        self.assertEqual(fala['passo']['n'], 3)
+        self.assertTrue(fala['passo']['informativo'])
+
+    async def test_sem_guia_a_fala_leva_passo_auto(self):
+        r, p = room('warrior', None)
+        await abrir_licao(r, p, 'treino_mira')
+        fala = next(m for m in r.messages if m.get('licao_id') == 'treino_mira')
+        self.assertTrue(fala['passo']['auto'])
+        self.assertEqual(fala['passo']['ui'], 'habilidade:mira_certeira')
+
+    async def test_entendi_avanca_so_passo_informativo(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        await r.handle_avancar_passo('hero')
+        self.assertEqual(p['licao_passo'], 1)
+        msg = [m for m in r.messages if m.get('type') == 'licao_passo'][-1]
+        self.assertEqual(msg['passo']['i'], 1)
+        self.assertEqual(msg['licao_id'], 'treino_mira')
+        await r.handle_avancar_passo('hero')          # passo 1 tem conclui_com: não pula
+        self.assertEqual(p['licao_passo'], 1)
+
+    async def test_evento_certo_avanca_e_errado_nao(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        await r.handle_avancar_passo('hero')
+        await r._licao_evento(p, 'atacar', alvo='esqueleto_humano')
+        self.assertEqual(p['licao_passo'], 1)
+        await r._licao_evento(p, 'atacar', alvo='boneco_treino')
+        self.assertEqual(p['licao_passo'], 2)
+
+    async def test_ultimo_passo_nao_avanca_sozinho_e_a_tarefa_conclui(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        p['licao_passo'] = 2
+        await r.handle_avancar_passo('hero')
+        await r._licao_evento(p, 'atacar', alvo='boneco_treino')
+        self.assertEqual(p['licao_passo'], 2)
+        await r._licao_evento(p, 'usar_habilidade', alvo='mira_certeira')
+        self.assertIn('treino_mira', p['licoes_feitas'])
+        self.assertNotEqual(p.get('licao_atual'), 'treino_mira')
+        self.assertEqual(p['licao_passo'], 0)
+
+    async def test_sem_licao_pendente_nada_acontece(self):
+        r, p = room('warrior', None)
+        await r.handle_avancar_passo('hero')
+        self.assertEqual(p['licao_passo'], 0)
+        await r.handle_avancar_passo('nao_existe')
+
+    async def test_tutorial_payload_leva_o_passo(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        bloco = r._tutorial_payload()['por_classe']['warrior']
+        self.assertEqual(bloco['passo']['i'], 0)
+        p['licao_atual'] = None
+        self.assertIsNone(r._tutorial_payload()['por_classe']['warrior']['passo'])
+
+    async def test_passos_sao_por_heroi(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        outro = S.make_player('hero2', 'Outro', 'mage', 1)
+        r.players['hero2'] = outro
+        await abrir_licao(r, p, 'treino_mira')
+        await r.handle_avancar_passo('hero')
+        self.assertEqual((p['licao_passo'], outro['licao_passo']), (1, 0))
+
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
