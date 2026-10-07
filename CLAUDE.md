@@ -2062,6 +2062,12 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > um overlay de tela cheia, então o jogador lê antes de ver a cidade. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-29-fim-da-rota*`. Teste:
 > `tools/test_masmorra_sequenciada.py` seções [19]/[19b].
+> **Aventura na foto (2026-10-06):** `world_adventure_id`/`_index`/`_revisit` só existiam na sala
+> (categoria `jogo_salvo`, mas nunca gravados); depois de "Salvar e sair" → Continuar dentro de uma
+> etapa voltavam `None`, e "Encerrar missão" na última etapa caía no `end_game(victory=True)` em vez
+> do fim da rota + cidade. Agora são categoria `foto`; foto antiga sem eles deduz o destino pelo
+> arquivo da masmorra (`_deduzir_aventura_da_foto`, em `_foto_aplicar_sala`). Teste:
+> `tools/test_aventura_retomada.py`.
 
 > **Campanha "Sombras sob Alva e Luz" (2026-09-25):** primeira campanha de conteúdo, gerada por
 > `tools/gerar_campanha_sombras.py` (reexecutável; só toca nas entradas `sombras_*`/

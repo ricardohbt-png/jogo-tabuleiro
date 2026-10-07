@@ -585,11 +585,15 @@
     "outro_rota": {
       "slides": [
         {
+          "text": "Parabéns, heróis! A Garra Negra caiu, e as estradas de Alva e Luz estão seguras outra vez. Missão cumprida.",
+          "fit": "contain"
+        },
+        {
           "text": "Semanas depois, as caravanas voltam a cruzar o Vau. Em Alva e Luz, o nome do grupo corre de mesa em mesa na taverna.",
           "fit": "contain"
         },
         {
-          "text": "E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez ninguém tenha encontrado.",
+          "text": "E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez ninguém tenha encontrado. Outras estradas esperam por vocês no mapa.",
           "fit": "contain"
         }
       ]

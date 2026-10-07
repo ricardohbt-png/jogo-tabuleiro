@@ -3105,8 +3105,11 @@ FOTO_SALA_CATEGORIAS = {
     # já no jogo salvo
     "campaign": "jogo_salvo", "campaign_phase": "jogo_salvo",
     "selected_campaign": "jogo_salvo", "world_location": "jogo_salvo",
-    "world_adventure_id": "jogo_salvo", "world_adventure_index": "jogo_salvo",
-    "world_adventure_progress": "jogo_salvo", "world_adventure_revisit": "jogo_salvo",
+    # A aventura em curso vive só na sala: sem ela na foto, a retomada esquecia
+    # que a masmorra era etapa do mapa-múndi e "Encerrar missão" virava fim de jogo.
+    "world_adventure_id": "foto", "world_adventure_index": "foto",
+    "world_adventure_revisit": "foto",
+    "world_adventure_progress": "jogo_salvo",
     "renome": "jogo_salvo", "fatos": "jogo_salvo", "story_beats_done": "jogo_salvo",
     "scene_conversations_done": "jogo_salvo", "scene_triggers_done": "jogo_salvo",
     "scene_variables": "jogo_salvo", "active_scene": "jogo_salvo",
@@ -23524,11 +23527,29 @@ class GameRoom:
         for campo in foto_campos_sala("foto") + foto_campos_sala("foto_pid"):
             if campo in sala:
                 setattr(self, campo, sala[campo])
+        if "world_adventure_id" not in sala:
+            self._deduzir_aventura_da_foto()
         self.dungeon_def = defn
         self._rebuild_decor_index()
         self._rebuild_pontes_index()
         self._rebuild_materiais_index()
         return corpo
+
+    def _deduzir_aventura_da_foto(self):
+        """Foto gravada antes de a aventura ir junto: acha o destino do
+        mapa-múndi pela masmorra autorada. Sem isso, o grupo que salvou dentro
+        de uma etapa terminava a rota com "fim de jogo" em vez de voltar à cidade."""
+        arquivo = self.selected_dungeon if self.mode == "authored" else None
+        if not arquivo:
+            return
+        for aid, aventura in WORLD_ADVENTURES.items():
+            for i, etapa in enumerate(aventura.get("dungeons") or []):
+                if _etapa_file(etapa) == arquivo:
+                    self.world_adventure_id = aid
+                    self.world_adventure_index = i
+                    self.world_adventure_revisit = int(
+                        self.world_adventure_progress.get(aid, 0) or 0) > i
+                    return
 
     async def _restaurar_masmorra_aberta(self, registro):
         """Foto "cidade_com_masmorra": o grupo continua na cidade, mas a

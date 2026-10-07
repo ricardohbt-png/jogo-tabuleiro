@@ -334,10 +334,12 @@ def destinos():
          "troll caído entre braseiros apagados"),
     ])
     fim_rota = historia("covil.fim", [
+        ("Parabéns, heróis! A Garra Negra caiu, e as estradas de Alva e Luz estão seguras "
+         "outra vez. Missão cumprida.", "heróis erguendo as armas ao amanhecer, fortaleza em ruínas ao fundo"),
         ("Semanas depois, as caravanas voltam a cruzar o Vau. Em Alva e Luz, o nome do "
          "grupo corre de mesa em mesa na taverna.", "praça de Alva e Luz em festa, caravana chegando"),
         ("E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez "
-         "ninguém tenha encontrado.", "estante de livros na penumbra, uma fresta de escuridão atrás"),
+         "ninguém tenha encontrado. Outras estradas esperam por vocês no mapa.","estante de livros na penumbra, uma fresta de escuridão atrás"),
     ])
 
     def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
