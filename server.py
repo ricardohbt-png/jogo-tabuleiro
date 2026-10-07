@@ -102,13 +102,54 @@ def _guia_ui_padrao(tar):
     return None
 
 
+def _guia_cat(familia, ident, campo):
+    """Texto de catálogo tardio (T) ou None quando a chave não existe — sem isto a
+    própria chave (`cat.magia.x.desc`) apareceria na tela."""
+    chave = f"cat.{familia}.{ident}.{campo}"
+    return T(chave) if isinstance(LANG_STRINGS.get(chave), dict) else None
+
+
+def _guia_passos_modelo(m):
+    """Passos das lições geradas em jogo. `m` é um dict simples (vai na foto da
+    masmorra, que é JSON); os textos são T() resolvidos por jogador na hora do envio."""
+    tipo, ident = m.get("tipo"), m.get("id")
+    if not isinstance(ident, str) or not re.fullmatch(r"[a-z0-9_]+", ident):
+        return []
+    if tipo == "guild":
+        skill = m.get("skill")
+        ok = isinstance(skill, str) and re.fullmatch(r"[a-z0-9_]+", skill)
+        p1 = {"id": "aprendeu", "ui": None,
+              "texto": T("ui.tutorial.modelo.guild.aprendeu",
+                         nome=_guia_cat("guilda", ident, "nome") or ident)}
+        porque = _guia_cat("guilda", ident, "desc")
+        if porque:
+            p1["porque"] = porque
+        return [p1, {"id": "repita", "texto": T("ui.tutorial.modelo.guild.repita"),
+                     "ui": f"habilidade:{skill}" if ok else None}]
+    if tipo == "magia":
+        p2 = {"id": "lancar", "ui": None,
+              "texto": T("ui.tutorial.modelo.magia.lancar",
+                         nome=_guia_cat("magia", ident, "nome") or ident)}
+        porque = _guia_cat("magia", ident, "desc")
+        if porque:
+            p2["porque"] = porque
+        return [{"id": "abrir", "texto": T("ui.tutorial.modelo.magia.abrir"),
+                 "ui": "botao:magias"}, p2]
+    return []
+
+
 def _guia_passos(lic):
-    """Passos da lição: o `guia` autorado, ou um passo único gerado da tarefa."""
+    """Passos da lição: o `guia` autorado, os do `guia_modelo` (lições geradas em
+    jogo) ou um passo único gerado da tarefa."""
     guia = lic.get("guia")
     if guia:
         return guia
-    return [{"id": "auto", "texto": lic.get("texto", ""), "auto": True,
+    auto = [{"id": "auto", "texto": lic.get("texto", ""), "auto": True,
              "ui": _guia_ui_padrao(lic.get("tarefa") or {})}]
+    modelo = lic.get("guia_modelo")
+    if isinstance(modelo, dict):
+        return _guia_passos_modelo(modelo) or auto
+    return auto
 
 
 def _guia_payload(lic, i):

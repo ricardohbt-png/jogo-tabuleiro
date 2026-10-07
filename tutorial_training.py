@@ -134,8 +134,13 @@ class TutorialTraining:
                 if not base:
                     continue
                 lesson = deepcopy(base)
+                lesson.pop("guia", None)    # o guia da lição-base fala do exercício original
+                # `habilidade:` só quando a skill é o alvo da tarefa (é o que o botão traz).
+                alvo_base = (base.get("tarefa") or {}).get("alvo")
                 lesson.update(id=f"treino_guild_{ident}", ordem=order,
                               requisitos={"guild": ident},
+                              guia_modelo={"tipo": "guild", "id": ident,
+                                           "skill": skill if alvo_base == skill else None},
                               texto=f"Você aprendeu {item.get('nome', ident)}. {item.get('desc', '')} "
                                     "Repita o exercício e observe os valores da sua nova habilidade.")
                 order += 1
@@ -158,6 +163,7 @@ class TutorialTraining:
                           "texto": f"Pratique {magic.get('nome', mid)}. {magic.get('descricao', '')} "
                                    "Abra o Grimório e use a magia nos alvos de treino ou em você, conforme o tipo.",
                           "requisitos": {"magia": mid},
+                          "guia_modelo": {"tipo": "magia", "id": mid},
                           "sala_exclusiva": True,
                           "tarefa": {"tipo": "usar_magia", "alvo": mid, "vezes": 1,
                                      "texto_curto": f"Pratique {magic.get('nome', mid)}"}}

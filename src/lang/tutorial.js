@@ -43,6 +43,22 @@ window.LANG_TUTORIAL = {
   "ui.tutorial.resultado.erro": {
     "en": "You rolled {roll} + {bonus} = {total} against AC {ca}: miss. Try again.",
     "pt": "Você rolou {roll} + {bonus} = {total} contra CA {ca}: errou. Tente de novo."
+  },
+  "ui.tutorial.modelo.guild.aprendeu": {
+    "en": "You learned {nome}. Repeat the exercise to see your new numbers.",
+    "pt": "Você aprendeu {nome}. Repita o exercício para ver seus novos valores."
+  },
+  "ui.tutorial.modelo.guild.repita": {
+    "en": "Use the ability again and watch the values change.",
+    "pt": "Use a habilidade de novo e observe os valores mudarem."
+  },
+  "ui.tutorial.modelo.magia.abrir": {
+    "en": "Open the Grimoire with the spells button.",
+    "pt": "Abra o Grimório no botão das magias."
+  },
+  "ui.tutorial.modelo.magia.lancar": {
+    "en": "Cast {nome} on a training target or on yourself.",
+    "pt": "Lance {nome} num alvo de treino ou em você."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL);
