@@ -37737,7 +37737,7 @@ class GameRoom:
         else:
             tiles = [pos]
         geiser_tiles = set()
-        for decor in self.decorations:
+        for decor in getattr(self, "decorations", None) or []:
             if decor.get("type") == "geiser_lava":
                 geiser_tiles.update((int(x), int(y)) for x, y in self._decor_tiles(decor))
         if not any((int(tx), int(ty)) in geiser_tiles for tx, ty in tiles):
@@ -37773,7 +37773,7 @@ class GameRoom:
                       for dy in (-1, 0, 1) if dx or dy]
         eh_monstro = (criatura.get("id") in self.monsters
                       and self.monsters.get(criatura.get("id")) is criatura)
-        for decor in self.decorations:
+        for decor in getattr(self, "decorations", None) or []:
             if decor.get("type") != "fumarola":
                 continue
             intervalo = max(1, min(12, int(
