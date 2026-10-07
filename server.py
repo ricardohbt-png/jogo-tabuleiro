@@ -7476,6 +7476,11 @@ def validar_dungeon(defn):
             ch = de.get("charges", 0)
             if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
                 return False, "fonte com charges inválido."
+        if dtype == "fumarola" and "intervalo_rodadas" in de:
+            intervalo = de.get("intervalo_rodadas")
+            if (isinstance(intervalo, bool) or not isinstance(intervalo, int)
+                    or not 1 <= intervalo <= 12):
+                return False, "intervalo_rodadas da fumarola deve ser um inteiro entre 1 e 12."
         if meta["special"] == "plaque":
             texto = de.get("texto")
             if not isinstance(texto, str) or not texto.strip():
@@ -8489,15 +8494,16 @@ GUILD_CATALOG.update(_gerar_catalogo_lendas())
 # â”€â”€â”€ DECORAÃ‡Ã•ES DE MASMORRA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Objetos colocÃ¡veis no editor. size=[w,h] no facing canÃ´nico (vertical).
 # gira: rotaÃ§Ã£o 90Â°. alto: oclui a revelaÃ§Ã£o de nÃ©voa (raycast). pisavel: nÃ£o
-# bloqueia movimento (sÃ³ a fogueira). loot_capaz: pode conter ouro/itens (abre
-# como baÃº). special: None|"fountain"|"campfire".
+# bloqueia movimento. loot_capaz: pode conter ouro/itens (abre como baÃº).
+# special: None|"fountain"|"campfire"|"living_flame"|"plaque"|"floor"|"wall".
 def _decor(nome, emoji, size, gira=False, alto=False, pisavel=False,
-           loot_capaz=True, special=None, image=None, model3d=None, charges=None):
+           loot_capaz=True, special=None, image=None, model3d=None, charges=None,
+           intervalo_rodadas=None):
     return {"nome": nome, "emoji": emoji, "size": size, "gira": gira,
             "alto": alto, "pisavel": pisavel, "loot_capaz": loot_capaz,
             "special": special, "image": image, "model3d": model3d,
             # Carga inicial sugerida ao editor para fontes; None = padrão dele.
-            "charges": charges}
+            "charges": charges, "intervalo_rodadas": intervalo_rodadas}
 
 # Arte 3D autoritativa das decorações. O editor pode continuar salvando apenas
 # `type`/`image` por compatibilidade; o servidor hidrata o caminho do GLB aqui,
@@ -8506,7 +8512,19 @@ DECOR_MODEL3D = {
     "cama": "assets/objetos/cama.glb",
     "lareira": "assets/objetos/lareira.glb",
     "fonte": "assets/objetos/fonte.glb",
+    "poco_balde": "assets/objetos/poco_balde.glb",
+    "cerca_reta": "assets/objetos/cerca_reta.glb",
+    "cerca_curva": "assets/objetos/cerca_curva.glb",
+    "cerca_quebrada": "assets/objetos/cerca_quebrada.glb",
+    "porteira_aberta": "assets/objetos/porteira_aberta.glb",
+    "porteira_fechada": "assets/objetos/porteira_fechada.glb",
+    "celeiro_medieval": "assets/objetos/celeiro_medieval.glb",
+    "galinheiro": "assets/objetos/galinheiro.glb",
+    "cabana_rustica": "assets/objetos/cabana_rustica.glb",
+    "lago_patos": "assets/objetos/lago_patos.glb",
+    "grades_prisao": "assets/objetos/grades_prisao.glb",
     "fogueira": "assets/objetos/fogueira_animada.glb",
+    "pira_chamas": "assets/objetos/pira_chamas.glb",
     "tumba": "assets/objetos/sarcofago.glb",
     "tumba_lapide": "assets/objetos/tumba_lapide.glb",
     "carroca": "assets/objetos/carroca.glb",
@@ -8535,25 +8553,86 @@ DECOR_MODEL3D = {
     "caverna": "assets/objetos/caverna.glb",
     "casa": "assets/objetos/casa.glb",
     "brasa_chao": "assets/objetos/brasa_chao_animada.glb",
+    "caldeirao": "assets/objetos/caldeirao_pocao.glb",
     "cortina_vermelha": "assets/objetos/cortina_vermelha.glb",
     "cortina_branca": "assets/objetos/cortina_branca.glb",
     "brasao_leao": "assets/objetos/brasao_leao.glb",
     "placa": "assets/objetos/placa_fincada.glb",
+    # Suporte, cesto e chama animada em uma miniatura completa de parede.
+    "tocha_parede": "assets/objetos/tocha_parede.glb",
+    "gruta_parede": "assets/objetos/gruta_parede.glb",
+    # Tigela de ferro suspensa com chama animada, fixada à parede.
+    "braseiro_parede": "assets/objetos/braseiro_parede.glb",
+    "vitral_templo": "assets/objetos/vitral_templo.glb",
+    "sino_ritualistico": "assets/objetos/sino_ritualistico.glb",
+    "gargula_pedra": "assets/objetos/gargula_pedra.glb",
+    "estatua_divindade": "assets/objetos/estatua_divindade.glb",
+    "monte_feno": "assets/objetos/monte_feno.glb",
+    "bola_corrente": "assets/objetos/bola_corrente.glb",
+    "grilhoes_parede": "assets/objetos/grilhoes_parede.glb",
+    "tronco_musgo": "assets/objetos/tronco_musgo.glb",
     "moita_espinhosa": "assets/objetos/moita_espinhosa.glb",
+    "capim_alto": "assets/objetos/capim_alto.glb",
+    "tronco_podre_fungos": "assets/objetos/tronco_podre_fungos.glb",
+    "tocos_alagados": "assets/objetos/tocos_alagados.glb",
+    "juncos": "assets/objetos/juncos.glb",
+    "raizes_torcidas": "assets/objetos/raizes_torcidas.glb",
+    "estalactites_estalagmites": "assets/objetos/estalactites_estalagmites.glb",
+    "fenda_fumegante": "assets/objetos/fenda_fumegante.glb",
+    "geiser_lava": "assets/objetos/geiser_lava.glb",
+    "fumarola": "assets/objetos/fumarola.glb",
+    "cacto_deserto": "assets/objetos/cacto_deserto.glb",
+    "ossos_semi_enterrados": "assets/objetos/ossos_semi_enterrados.glb",
+    "arbusto_seco": "assets/objetos/arbusto_seco.glb",
+    "capim_amarelado": "assets/objetos/capim_amarelado.glb",
+    "estatua_soterrada": "assets/objetos/estatua_soterrada.glb",
+    "rochas_rachadas": "assets/objetos/rochas_rachadas.glb",
+    "ninho_abutres": "assets/objetos/ninho_abutres.glb",
+    "arco_pedra_deserto": "assets/objetos/arco_pedra_deserto.glb",
+    "pedra_sacrificio": "assets/objetos/pedra_sacrificio.glb",
+    "oasis_pequeno": "assets/objetos/oasis_pequeno.glb",
+    "acampamento_abandonado": "assets/objetos/acampamento_abandonado.glb",
+    "ruinas_pedra": "assets/objetos/ruinas_pedra.glb",
+    "esqueleto_tiranossauro": "assets/objetos/esqueleto_tiranossauro.glb",
     # Chama 3D viva: a animação é reproduzida pelo cliente; o servidor mantém
     # apenas a regra autoritativa de dano ao entrar na casa.
     "chama_viva": "assets/objetos/chama_viva.glb",
+    "monte_ossos": "assets/objetos/monte_ossos.glb",
 }
 
 DECOR_TYPES = {
     "cama":           _decor("Cama", "🛏️", [1, 2], gira=True),
     "lareira":        _decor("Lareira", "🪵", [1, 2], gira=True, alto=True),
     "fonte":          _decor("Fonte", "⛲", [2, 2], special="fountain"),
+    "poco_balde":     _decor("Poço com balde", "🪣", [2, 2], alto=True,
+                               loot_capaz=False, special="fountain", charges=10,
+                               image="poco_balde.png"),
+    "cerca_reta":     _decor("Cerca de madeira reta", "🪵", [1, 1], gira=True, alto=True,
+                               loot_capaz=False, image="cerca_reta.png"),
+    "cerca_curva":    _decor("Cerca de madeira curva", "🪵", [1, 1], gira=True, alto=True,
+                               loot_capaz=False, image="cerca_curva.png"),
+    "cerca_quebrada": _decor("Cerca de madeira quebrada", "🪵", [1, 1], gira=True, pisavel=True,
+                               loot_capaz=False, image="cerca_quebrada.png"),
+    "porteira_aberta": _decor("Porteira aberta", "🚪", [1, 1], gira=True, pisavel=True,
+                               loot_capaz=False, image="porteira_aberta.png"),
+    "porteira_fechada": _decor("Porteira fechada", "🚪", [1, 1], gira=True, alto=True,
+                                loot_capaz=False, image="porteira_fechada.png"),
+    "celeiro_medieval": _decor("Celeiro medieval", "🏚️", [4, 4], gira=True, alto=True,
+                                loot_capaz=False, image="celeiro_medieval.png"),
+    "galinheiro":     _decor("Galinheiro com ninhos e ovos", "🐔", [2, 2], gira=True, alto=True,
+                               loot_capaz=False, image="galinheiro.png"),
+    "cabana_rustica": _decor("Cabana rústica de fazenda", "🛖", [3, 3], gira=True, alto=True,
+                               loot_capaz=False, image="cabana_rustica.png"),
+    "lago_patos":     _decor("Lago com patos", "🦆", [3, 3], pisavel=False,
+                               loot_capaz=False, image="lago_patos.png"),
     # Placa informativa: ocupa visualmente uma casa, mas permite passagem.
     "placa":          _decor("Placa", "🪧", [1, 1], pisavel=True,
                              loot_capaz=False, special="plaque",
                              image="placa_fincada.png"),
     "fogueira":       _decor("Fogueira", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="campfire"),
+    "pira_chamas":    _decor("Pira de chamas", "🔥", [1, 1], gira=True,
+                               alto=True, pisavel=False, loot_capaz=False,
+                               image="pira_chamas.png"),
     "chama_viva":     _decor("Chama viva", "🔥", [1, 1], pisavel=True, loot_capaz=False, special="living_flame"),
     "tumba":          _decor("Tumba", "⚰️", [1, 2], gira=True),
     "tumba_lapide":   _decor("Tumba com lápide", "⚰️", [1, 2], gira=True, alto=True,
@@ -8582,7 +8661,8 @@ DECOR_TYPES = {
     # com a entrada da cela. O facing padrão [0,1] preserva a orientação do GLB.
     "prisao":         _decor("Prisão", "⛓️", [2, 2], gira=True, alto=True,
                                loot_capaz=False),
-    "grades_prisao":  _decor("Grades de prisão", "🚧", [1, 1], gira=True),
+    "grades_prisao":  _decor("Grades de prisão", "🚧", [1, 1], gira=True,
+                               image="grades_prisao.png"),
     "estante_armas":  _decor("Estante de armas", "⚔️", [1, 2], gira=True, alto=True),
     "mesa_tortura":   _decor("Mesa de tortura", "🔪", [1, 2], gira=True,
                                loot_capaz=False, image="mesa_tortura.png"),
@@ -8596,6 +8676,9 @@ DECOR_TYPES = {
                                loot_capaz=False, image="casa.png"),
     "brasa_chao":     _decor("Brasa no chão", "🔥", [1, 1], pisavel=True,
                                loot_capaz=False, special="floor_ember", image="brasa_chao.png"),
+    # Caldeirão de ferro aquecido por brasas, com poção animada no GLB.
+    "caldeirao":      _decor("Caldeirão", "⚗️", [1, 1], gira=True,
+                              loot_capaz=False),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
     # DecoraÃ§Ãµes de parede: ficam presas a uma face de WALL, sem ocupar nem
     # bloquear o chÃ£o. A arte Ã© um decal vertical no modo 3D.
@@ -8605,9 +8688,117 @@ DECOR_TYPES = {
                                 loot_capaz=False, special="wall", image="cortina_vermelha.png"),
     "cortina_branca": _decor("Cortina branca", "⚪", [1, 1], gira=True, pisavel=True,
                               loot_capaz=False, special="wall", image="cortina_branca.png"),
+    "tocha_parede": _decor("Tocha de parede", "🔥", [1, 1], gira=True, pisavel=True,
+                             loot_capaz=False, special="wall", image="tocha_parede.png"),
+    "gruta_parede": _decor("Gruta na parede", "🪨", [1, 1], gira=True, pisavel=True,
+                             loot_capaz=False, special="wall", image="gruta_parede.png"),
+    "braseiro_parede": _decor("Braseiro de parede", "🔥", [1, 1], gira=True, pisavel=True,
+                                loot_capaz=False, special="wall", image="braseiro_parede.png"),
+    "vitral_templo": _decor("Vitral de templo", "🪟", [1, 1], gira=True, pisavel=True,
+                             loot_capaz=False, special="wall", image="vitral_templo.png"),
+    "sino_ritualistico": _decor("Sino ritualístico", "🔔", [1, 1], gira=True,
+                                  alto=False, pisavel=False, loot_capaz=False,
+                                  image="sino_ritualistico.png"),
+    "estatua_divindade": _decor("Estátua de divindade", "🛐", [1, 1], gira=True,
+                                  alto=True, pisavel=False, loot_capaz=False,
+                                  image="estatua_divindade.png"),
+    "gargula_pedra": _decor("Gárgula de pedra", "👹", [1, 1], gira=True,
+                              alto=False, pisavel=True, loot_capaz=False,
+                              special="wall", image="gargula_pedra.png"),
+    "monte_ossos": _decor("Monte de ossos", "🦴", [1, 1], gira=True, pisavel=True,
+                           loot_capaz=False, image="monte_ossos.png"),
+    # Monte de feno de altura média: ocupa uma casa e bloqueia a passagem;
+    # por não ser alto, fornece oclusão visual média no sistema de decorações.
+    "monte_feno": _decor("Monte de feno", "🌾", [1, 1], gira=True,
+                          loot_capaz=False),
+    "bola_corrente": _decor("Bola de ferro com corrente", "⛓️", [1, 1],
+                             gira=True, loot_capaz=False,
+                             image="bola_corrente.png"),
+    "grilhoes_parede": _decor("Grilhões de parede", "⛓️", [1, 1],
+                               gira=True, pisavel=True, loot_capaz=False,
+                               special="wall", image="grilhoes_parede.png"),
+    # Tronco caído de floresta: bloqueia passagem e pode ser girado no editor.
+    "tronco_musgo": _decor("Tronco caído com musgo", "🪵", [2, 1], gira=True,
+                             loot_capaz=False, image="tronco_musgo.png"),
     "moita_espinhosa": _decor("Moita espinhosa", "🌵", [1, 1], gira=True,
                                 pisavel=True, loot_capaz=False,
                                 image="moita_espinhosa.png"),
+    # Capim ornamental alto visualmente, mas atravessável e sem oclusão da névoa.
+    "capim_alto": _decor("Capim alto", "🌾", [1, 1], gira=True, pisavel=True,
+                           loot_capaz=False, image="capim_alto.png"),
+    "tronco_podre_fungos": _decor("Tronco podre com fungos", "🍄", [2, 1],
+                                    gira=True, loot_capaz=False,
+                                    image="tronco_podre_fungos.png"),
+    "tocos_alagados": _decor("Tocos alagados", "🌳", [1, 1], gira=True,
+                              loot_capaz=False, image="tocos_alagados.png"),
+    # Juncos baixos e atravessáveis; raízes expostas formam um obstáculo 2×1.
+    "juncos": _decor("Juncos", "🌾", [1, 1], gira=True, pisavel=True,
+                     loot_capaz=False, image="juncos.png"),
+    "raizes_torcidas": _decor("Raízes retorcidas", "🌱", [2, 1], gira=True,
+                              loot_capaz=False, image="raizes_torcidas.png"),
+    # Formação natural alta e sólida, com pontas subindo do chão e descendo do teto.
+    "estalactites_estalagmites": _decor("Estalactites e estalagmites", "🪨", [1, 1],
+                                         gira=True, alto=True, loot_capaz=False,
+                                         image="estalactites_estalagmites.png"),
+    # Fenda incandescente decorativa: vapor em loop no GLB, sem dano ou bloqueio.
+    "fenda_fumegante": _decor("Fenda fumegante", "♨️", [1, 1], gira=True,
+                              pisavel=True, loot_capaz=False,
+                              image="fenda_fumegante.png"),
+    # Gêiser atravessável; quem inicia o turno sobre ele recebe 1d8 de fogo.
+    "geiser_lava": _decor("Gêiser de lava", "🌋", [1, 1], gira=True,
+                           pisavel=True, loot_capaz=False,
+                           image="geiser_lava.png"),
+    # Fumarola atravessável: a cada N rodadas, expele o ocupante por 1 ou 2 casas.
+    "fumarola": _decor("Fumarola", "♨️", [1, 1], gira=True,
+                        pisavel=True, loot_capaz=False,
+                        image="fumarola.png", intervalo_rodadas=2),
+    # Cacto alto e espinhoso bloqueia; ossos fossilizados baixos permitem passagem.
+    "cacto_deserto": _decor("Cacto do deserto", "🌵", [1, 1], gira=True,
+                            alto=True, loot_capaz=False,
+                            image="cacto_deserto.png"),
+    "ossos_semi_enterrados": _decor("Ossos semienterrados", "🦴", [1, 1],
+                                    gira=True, pisavel=True, loot_capaz=False,
+                                    image="ossos_semi_enterrados.png"),
+    # Arbusto ressecado denso bloqueia; capim seco baixo permite passagem.
+    "arbusto_seco": _decor("Arbusto seco", "🌿", [1, 1], gira=True,
+                           loot_capaz=False, image="arbusto_seco.png"),
+    "capim_amarelado": _decor("Capim amarelado", "🌾", [1, 1], gira=True,
+                              pisavel=True, loot_capaz=False,
+                              image="capim_amarelado.png"),
+    "estatua_soterrada": _decor("Estátua soterrada", "🗿", [1, 1], gira=True,
+                                loot_capaz=False,
+                                image="estatua_soterrada.png"),
+    "rochas_rachadas": _decor("Rochas rachadas", "🪨", [1, 1], gira=True,
+                                pisavel=True, loot_capaz=False,
+                                image="rochas_rachadas.png"),
+    "ninho_abutres": _decor("Ninho de abutres", "🪶", [1, 1], gira=True,
+                              pisavel=True, loot_capaz=False,
+                              image="ninho_abutres.png"),
+    # Marco rochoso monumental: o vão central permite atravessar o arco.
+    "arco_pedra_deserto": _decor("Arco de pedra do deserto", "⛰️", [3, 3],
+                                    gira=True, alto=True, pisavel=True,
+                                    loot_capaz=False,
+                                    image="arco_pedra_deserto.png"),
+    "pedra_sacrificio": _decor("Pedra de sacrifício", "🪨", [2, 2],
+                                 gira=True, alto=True, pisavel=False,
+                                 loot_capaz=False,
+                                 image="pedra_sacrificio.png"),
+    "oasis_pequeno": _decor("Oásis pequeno", "🏝️", [4, 4], gira=True,
+                            alto=True, loot_capaz=False,
+                            image="oasis_pequeno.png"),
+    "acampamento_abandonado": _decor("Acampamento abandonado", "⛺", [2, 2],
+                                      gira=True, alto=True,
+                                      loot_capaz=False,
+                                      image="acampamento_abandonado.png"),
+    # Ruínas altas de pedra, com colunas e trechos de muralha; bloqueiam passagem.
+    "ruinas_pedra": _decor("Ruínas de pedra", "🏛️", [2, 2],
+                            gira=True, alto=True, loot_capaz=False,
+                            image="ruinas_pedra.png"),
+    # Grande fóssil tombado, baixo e sólido; não aplica efeitos de jogo.
+    "esqueleto_tiranossauro": _decor("Esqueleto de tiranossauro", "🦴", [4, 2],
+                                      gira=True, alto=False, pisavel=False,
+                                      loot_capaz=False,
+                                      image="esqueleto_tiranossauro.png"),
 }
 
 # â”€â”€â”€ MATERIAIS DE CHÃƒO E PAREDE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -14724,7 +14915,10 @@ class GameRoom:
                                "items": hidratar_itens_bau(loot.get("items", []))}
                 dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
             if meta["special"] == "fountain":
-                dec["charges"] = int(d.get("charges", 0))
+                dec["charges"] = int(d.get("charges", meta.get("charges", 0)))
+            if d.get("type") == "fumarola":
+                dec["intervalo_rodadas"] = int(
+                    d.get("intervalo_rodadas", meta.get("intervalo_rodadas", 2)))
             # Override de tamanho por-objeto (gravado pelo editor).
             sz = d.get("size")
             if isinstance(sz, list) and len(sz) == 2 \
@@ -15770,6 +15964,10 @@ class GameRoom:
         await self._processar_aura_escaldante_inicio(p)
         await self._processar_zona_molochus_inicio_turno(p)
         await self._aplicar_lava_se_pisar(p)
+        await self._aplicar_geiser_lava_inicio_turno(p)
+        await self._processar_fumarola_inicio_turno(p)
+        if not p.get("alive"):
+            return
         await self._processar_prisao_chamas_inicio_turno(p)
         if not p.get("alive"):
             return
@@ -15779,6 +15977,8 @@ class GameRoom:
         for animado in list(p.get("animados", [])):
             if animado.get("vida_atual", 0) > 0:
                 await self._aplicar_lava_se_pisar(animado)
+                await self._aplicar_geiser_lava_inicio_turno(animado)
+                await self._processar_fumarola_inicio_turno(animado)
                 await self._processar_prisao_chamas_inicio_turno(animado)
                 if animado.get("vida_atual", 0) <= 0:
                     continue
@@ -37499,6 +37699,111 @@ class GameRoom:
             await self.gm_say(T("narracao.passa_sobre_a_brasa_e_sofre_de_dano_de_f", nome_criatura_criatura=nome_criatura(criatura), dano=dano))
         await self._dano_em_alvo(criatura, dano, "fogo")
 
+    async def _aplicar_geiser_lava_inicio_turno(self, criatura):
+        """Aplica 1d8 de fogo se a criatura começa o turno sobre o gêiser.
+
+        Monstros grandes contam uma vez mesmo que o footprint cubra a casa,
+        e criaturas voadoras ignoram este perigo de chão.
+        """
+        if not criatura or self._voo_imune_terreno(criatura):
+            return
+        if "vida_atual" in criatura:
+            if criatura.get("vida_atual", 0) <= 0:
+                return
+        elif criatura.get("hp", 0) <= 0 or not criatura.get("alive", True):
+            return
+        pos = criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        geiser_tiles = set()
+        for decor in self.decorations:
+            if decor.get("type") == "geiser_lava":
+                geiser_tiles.update((int(x), int(y)) for x, y in self._decor_tiles(decor))
+        if not any((int(tx), int(ty)) in geiser_tiles for tx, ty in tiles):
+            return
+        bruto = roll_dice("1d8")
+        dano = (bruto if "vida_atual" in criatura
+                else self._apply_damage_types(bruto, [DMG_FIRE], criatura))
+        await self.broadcast({"type": "dice_roll", "die": "d8", "value": bruto,
+                              "label": T("dado.geiser_lava"),
+                              "damage_type": DMG_FIRE})
+        await self._dano_em_alvo(criatura, dano, DMG_FIRE)
+
+    async def _processar_fumarola_inicio_turno(self, criatura):
+        """A cada intervalo configurado, expulsa quem inicia a vez sobre vapor."""
+        if not criatura or self._voo_imune_terreno(criatura):
+            return
+        if "vida_atual" in criatura:
+            if criatura.get("vida_atual", 0) <= 0:
+                return
+        elif criatura.get("hp", 0) <= 0 or not criatura.get("alive", True):
+            return
+        pos = criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return
+        if (criatura.get("id") in self.monsters
+                and self.monsters.get(criatura.get("id")) is criatura):
+            tiles = self._monster_tiles(criatura)
+        else:
+            tiles = [pos]
+        occupied = {(int(x), int(y)) for x, y in tiles}
+        rodada = max(1, int(self.round_num or 1))
+        directions = [(dx, dy) for dx in (-1, 0, 1)
+                      for dy in (-1, 0, 1) if dx or dy]
+        eh_monstro = (criatura.get("id") in self.monsters
+                      and self.monsters.get(criatura.get("id")) is criatura)
+        for decor in self.decorations:
+            if decor.get("type") != "fumarola":
+                continue
+            intervalo = max(1, min(12, int(
+                decor.get("intervalo_rodadas", DECOR_TYPES["fumarola"]["intervalo_rodadas"]))))
+            if rodada % intervalo != 0:
+                continue
+            if not occupied.intersection((int(x), int(y))
+                                         for x, y in self._decor_tiles(decor)):
+                continue
+            px, py = criatura["pos"]
+            if eh_monstro and len(tiles) > 1:
+                saidas = [(dx, dy) for dx, dy in directions
+                          if self._monster_can_occupy(criatura, px + dx, py + dy)]
+            else:
+                exclude_pid = (criatura.get("id")
+                               if self.players.get(criatura.get("id")) is criatura else None)
+                exclude_mid = criatura.get("id") if eh_monstro else None
+                exclude_aid = (criatura.get("id")
+                               if exclude_pid is None and exclude_mid is None else None)
+                saidas = [(dx, dy) for dx, dy in directions
+                          if not self._blocks_tile(px + dx, py + dy)
+                          and not self._entity_blocks(
+                              px + dx, py + dy, exclude_mid=exclude_mid,
+                              exclude_pid=exclude_pid, exclude_aid=exclude_aid,
+                              actor=criatura)]
+            dx, dy = random.choice(saidas or directions)
+            distancia = random.randint(1, 2)
+            await self.broadcast({"type": "dice_roll", "die": "d2",
+                                  "value": distancia,
+                                  "label": T("dado.fumarola")})
+            await self.gm_say(T("narracao.fumarola_expulsa_criatura",
+                                criatura=nome_criatura(criatura), casas=distancia))
+            if eh_monstro and len(tiles) > 1:
+                for _ in range(distancia):
+                    origem = list(criatura["pos"])
+                    destino = [origem[0] + dx, origem[1] + dy]
+                    if not self._monster_can_occupy(criatura, *destino):
+                        break
+                    criatura["pos"] = destino
+                    await self._aplicar_queda_terreno(criatura, origem, destino)
+                    if criatura.get("hp", 0) <= 0:
+                        break
+            else:
+                await self._empurrar(criatura, dx, dy, distancia)
+            return
+
     async def _commit_monster_step(self, m, nx, ny):
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
         if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
@@ -37869,6 +38174,8 @@ class GameRoom:
                 "trap_revealed": bool(d.get("trap_revealed")),
                 "key_objective": bool(d.get("key_objective")),
                 "charges": d.get("charges"),
+                **({"intervalo_rodadas": d.get("intervalo_rodadas", 2)}
+                   if d.get("type") == "fumarola" else {}),
                 "alto": decor_visao(d, meta) == "alto", "visao": decor_visao(d, meta),
                 "pisavel": meta["pisavel"],
                 "special": meta["special"], "emoji": meta["emoji"],
@@ -44422,6 +44729,10 @@ class GameRoom:
         await self._processar_aura_escaldante_inicio(m)
         await self._processar_zona_molochus_inicio_turno(m)
         await self._aplicar_lava_se_pisar(m)
+        await self._aplicar_geiser_lava_inicio_turno(m)
+        await self._processar_fumarola_inicio_turno(m)
+        if m.get("hp", 0) <= 0:
+            return False
         await self._processar_prisao_chamas_inicio_turno(m)
         if m.get("hp", 0) <= 0:
             return False
@@ -45783,6 +46094,10 @@ class GameRoom:
         await self._processar_aura_escaldante_inicio(pr)
         await self._processar_zona_molochus_inicio_turno(pr)
         await self._aplicar_lava_se_pisar(pr)
+        await self._aplicar_geiser_lava_inicio_turno(pr)
+        await self._processar_fumarola_inicio_turno(pr)
+        if not pr.get("alive"):
+            return
         await self._processar_prisao_chamas_inicio_turno(pr)
         if not pr.get("alive"):
             return

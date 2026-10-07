@@ -2139,6 +2139,10 @@ window.LANG_EDITOR = {
   "ui.editor.subtipo.raca_padrao": {
     "en": "Standard Race",
     "pt": "Raça Padrão"
+  },
+  "ui.editor.masmorra.painel.intervalo_fumarola": {
+    "en": "burst every N rounds",
+    "pt": "rajada a cada N rodadas"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);

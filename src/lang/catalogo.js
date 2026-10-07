@@ -218,13 +218,25 @@ window.LANG_CATALOGO = {
     "en": "Dwarf Warrior",
     "pt": "Guerreiro Anão"
   },
+  "cat.decor.acampamento_abandonado.nome": {
+    "en": "Abandoned Camp",
+    "pt": "Acampamento abandonado"
+  },
   "cat.decor.altar.nome": {
     "en": "Ritual Altar",
     "pt": "Altar ritualístico"
   },
+  "cat.decor.arbusto_seco.nome": {
+    "en": "Dry Shrub",
+    "pt": "Arbusto seco"
+  },
   "cat.decor.arca_tesouros.nome": {
     "en": "Treasure Chest",
     "pt": "Arca de tesouros"
+  },
+  "cat.decor.arco_pedra_deserto.nome": {
+    "en": "Desert Stone Arch",
+    "pt": "Arco de pedra do deserto"
   },
   "cat.decor.armadura.nome": {
     "en": "Armor Stand",
@@ -246,6 +258,10 @@ window.LANG_CATALOGO = {
     "en": "Barrel",
     "pt": "Barril"
   },
+  "cat.decor.bola_corrente.nome": {
+    "en": "Ball and Chain",
+    "pt": "Bola de ferro com corrente"
+  },
   "cat.decor.brasa_chao.nome": {
     "en": "Embers",
     "pt": "Brasa no chão"
@@ -254,6 +270,22 @@ window.LANG_CATALOGO = {
     "en": "Lion Crest",
     "pt": "Brasão do Leão"
   },
+  "cat.decor.braseiro_parede.nome": {
+    "en": "Wall Brazier",
+    "pt": "Braseiro de parede"
+  },
+  "cat.decor.cabana_rustica.nome": {
+    "en": "Rustic Farm Cabin",
+    "pt": "Cabana rústica de fazenda"
+  },
+  "cat.decor.cacto_deserto.nome": {
+    "en": "Desert Cactus",
+    "pt": "Cacto do deserto"
+  },
+  "cat.decor.caldeirao.nome": {
+    "en": "Cauldron",
+    "pt": "Caldeirão"
+  },
   "cat.decor.cama.nome": {
     "en": "Bed",
     "pt": "Cama"
@@ -261,6 +293,14 @@ window.LANG_CATALOGO = {
   "cat.decor.cama_casal.nome": {
     "en": "Double Bed",
     "pt": "Cama de casal"
+  },
+  "cat.decor.capim_alto.nome": {
+    "en": "Tall Grass",
+    "pt": "Capim alto"
+  },
+  "cat.decor.capim_amarelado.nome": {
+    "en": "Yellowed Grass",
+    "pt": "Capim amarelado"
   },
   "cat.decor.carroca.nome": {
     "en": "Cart",
@@ -273,6 +313,22 @@ window.LANG_CATALOGO = {
   "cat.decor.caverna.nome": {
     "en": "Cave",
     "pt": "Caverna"
+  },
+  "cat.decor.celeiro_medieval.nome": {
+    "en": "Medieval Barn",
+    "pt": "Celeiro medieval"
+  },
+  "cat.decor.cerca_curva.nome": {
+    "en": "Curved Wooden Fence",
+    "pt": "Cerca de madeira curva"
+  },
+  "cat.decor.cerca_quebrada.nome": {
+    "en": "Broken Wooden Fence",
+    "pt": "Cerca de madeira quebrada"
+  },
+  "cat.decor.cerca_reta.nome": {
+    "en": "Straight Wooden Fence",
+    "pt": "Cerca de madeira reta"
   },
   "cat.decor.chama_viva.nome": {
     "en": "Living Flame",
@@ -298,6 +354,14 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
+  "cat.decor.esqueleto_tiranossauro.nome": {
+    "en": "Tyrannosaurus Skeleton",
+    "pt": "Esqueleto de tiranossauro"
+  },
+  "cat.decor.estalactites_estalagmites.nome": {
+    "en": "Stalactites and Stalagmites",
+    "pt": "Estalactites e estalagmites"
+  },
   "cat.decor.estante.nome": {
     "en": "Shelf",
     "pt": "Estante"
@@ -309,6 +373,18 @@ window.LANG_CATALOGO = {
   "cat.decor.estante_livros.nome": {
     "en": "Bookshelf",
     "pt": "Estante de livros"
+  },
+  "cat.decor.estatua_divindade.nome": {
+    "en": "Deity Statue",
+    "pt": "Estátua de divindade"
+  },
+  "cat.decor.estatua_soterrada.nome": {
+    "en": "Buried Statue",
+    "pt": "Estátua soterrada"
+  },
+  "cat.decor.fenda_fumegante.nome": {
+    "en": "Steaming Fissure",
+    "pt": "Fenda fumegante"
   },
   "cat.decor.fogueira.nome": {
     "en": "Campfire",
@@ -322,13 +398,45 @@ window.LANG_CATALOGO = {
     "en": "Wall Fountain",
     "pt": "Fonte de parede"
   },
+  "cat.decor.fumarola.nome": {
+    "en": "Fumarole",
+    "pt": "Fumarola"
+  },
   "cat.decor.gaiola.nome": {
     "en": "Cage with Skeleton",
     "pt": "Gaiola com esqueleto"
   },
+  "cat.decor.galinheiro.nome": {
+    "en": "Chicken Coop with Nests and Eggs",
+    "pt": "Galinheiro com ninhos e ovos"
+  },
+  "cat.decor.gargula_pedra.nome": {
+    "en": "Stone Gargoyle",
+    "pt": "Gárgula de pedra"
+  },
+  "cat.decor.geiser_lava.nome": {
+    "en": "Lava Geyser",
+    "pt": "Gêiser de lava"
+  },
   "cat.decor.grades_prisao.nome": {
     "en": "Prison Bars",
     "pt": "Grades de prisão"
+  },
+  "cat.decor.grilhoes_parede.nome": {
+    "en": "Wall Shackles",
+    "pt": "Grilhões de parede"
+  },
+  "cat.decor.gruta_parede.nome": {
+    "en": "Cave Wall Relief",
+    "pt": "Gruta na parede"
+  },
+  "cat.decor.juncos.nome": {
+    "en": "Reeds",
+    "pt": "Juncos"
+  },
+  "cat.decor.lago_patos.nome": {
+    "en": "Pond with Ducks",
+    "pt": "Lago com patos"
   },
   "cat.decor.lapide.nome": {
     "en": "Gravestone",
@@ -354,13 +462,85 @@ window.LANG_CATALOGO = {
     "en": "Thorny Bush",
     "pt": "Moita espinhosa"
   },
+  "cat.decor.monte_feno.nome": {
+    "en": "Haystack",
+    "pt": "Monte de feno"
+  },
+  "cat.decor.monte_ossos.nome": {
+    "en": "Bone Pile",
+    "pt": "Monte de ossos"
+  },
+  "cat.decor.ninho_abutres.nome": {
+    "en": "Vulture Nest",
+    "pt": "Ninho de abutres"
+  },
+  "cat.decor.oasis_pequeno.nome": {
+    "en": "Small Oasis",
+    "pt": "Oásis pequeno"
+  },
+  "cat.decor.ossos_semi_enterrados.nome": {
+    "en": "Half-Buried Bones",
+    "pt": "Ossos semienterrados"
+  },
+  "cat.decor.pedra_sacrificio.nome": {
+    "en": "Sacrificial Stone",
+    "pt": "Pedra de sacrifício"
+  },
+  "cat.decor.pira_chamas.nome": {
+    "en": "Flame Pyre",
+    "pt": "Pira de chamas"
+  },
   "cat.decor.placa.nome": {
     "en": "Sign",
     "pt": "Placa"
   },
+  "cat.decor.poco_balde.nome": {
+    "en": "Well with Bucket",
+    "pt": "Poço com balde"
+  },
+  "cat.decor.porteira_aberta.nome": {
+    "en": "Open Gate",
+    "pt": "Porteira aberta"
+  },
+  "cat.decor.porteira_fechada.nome": {
+    "en": "Closed Gate",
+    "pt": "Porteira fechada"
+  },
   "cat.decor.prisao.nome": {
     "en": "Prison",
     "pt": "Prisão"
+  },
+  "cat.decor.raizes_torcidas.nome": {
+    "en": "Twisted Roots",
+    "pt": "Raízes retorcidas"
+  },
+  "cat.decor.rochas_rachadas.nome": {
+    "en": "Cracked Rocks",
+    "pt": "Rochas rachadas"
+  },
+  "cat.decor.ruinas_pedra.nome": {
+    "en": "Stone Ruins",
+    "pt": "Ruínas de pedra"
+  },
+  "cat.decor.sino_ritualistico.nome": {
+    "en": "Ritual Bell",
+    "pt": "Sino ritualístico"
+  },
+  "cat.decor.tocha_parede.nome": {
+    "en": "Wall Torch",
+    "pt": "Tocha de parede"
+  },
+  "cat.decor.tocos_alagados.nome": {
+    "en": "Flooded Stumps",
+    "pt": "Tocos alagados"
+  },
+  "cat.decor.tronco_musgo.nome": {
+    "en": "Mossy Fallen Log",
+    "pt": "Tronco caído com musgo"
+  },
+  "cat.decor.tronco_podre_fungos.nome": {
+    "en": "Rotting Log with Fungi",
+    "pt": "Tronco podre com fungos"
   },
   "cat.decor.trono.nome": {
     "en": "King's Throne",
@@ -373,6 +553,10 @@ window.LANG_CATALOGO = {
   "cat.decor.tumba_lapide.nome": {
     "en": "Tomb with Gravestone",
     "pt": "Tumba com lápide"
+  },
+  "cat.decor.vitral_templo.nome": {
+    "en": "Temple Stained Glass",
+    "pt": "Vitral de templo"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
     "en": "The Heroic Song's Accuracy bonus rises from +1 to +2.",

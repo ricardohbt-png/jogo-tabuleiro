@@ -18,14 +18,21 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("39 tipos", len(d) == 39)
+    check("85 tipos", len(d) == 85)
     check("ids esperados presentes", all(k in d for k in (
-        "cama", "lareira", "fonte", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras",
+        "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
+        "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
         "chao", "brasao_leao", "cortina_vermelha", "cortina_branca", "lapide", "cripta",
-        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva", "placa", "moita_espinhosa")))
+        "fonte_de_parede", "armadura", "brasa_chao", "chama_viva", "placa",
+        "bola_corrente", "grilhoes_parede", "tronco_musgo", "moita_espinhosa", "capim_alto",
+        "tronco_podre_fungos", "tocos_alagados", "juncos", "raizes_torcidas",
+        "estalactites_estalagmites", "fenda_fumegante", "cacto_deserto",
+        "ossos_semi_enterrados", "arbusto_seco", "capim_amarelado", "estatua_soterrada",
+        "oasis_pequeno", "acampamento_abandonado", "ruinas_pedra",
+        "pira_chamas", "caldeirao", "gruta_parede", "sino_ritualistico", "estatua_divindade", "gargula_pedra", "monte_feno", "geiser_lava", "fumarola", "rochas_rachadas", "ninho_abutres", "arco_pedra_deserto", "pedra_sacrificio", "esqueleto_tiranossauro")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")
@@ -35,6 +42,14 @@ def test_catalog():
           and not d["placa"]["loot_capaz"])
     check("placa usa PNG/GLB", d["placa"]["image"] == "placa_fincada.png"
           and server.DECOR_MODEL3D["placa"].endswith("placa_fincada.glb"))
+    check("bola de ferro com corrente é 1x1, sólida e usa GLB",
+          d["bola_corrente"]["size"] == [1, 1] and not d["bola_corrente"]["pisavel"]
+          and d["bola_corrente"]["image"] == "bola_corrente.png"
+          and server.DECOR_MODEL3D["bola_corrente"].endswith("bola_corrente.glb"))
+    check("grilhões de parede não ocupam o chão e usam GLB",
+          d["grilhoes_parede"]["special"] == "wall" and d["grilhoes_parede"]["pisavel"]
+          and d["grilhoes_parede"]["image"] == "grilhoes_parede.png"
+          and server.DECOR_MODEL3D["grilhoes_parede"].endswith("grilhoes_parede.glb"))
     check("chama viva usa GLB, é pisável e causa 2d4", d["chama_viva"]["special"] == "living_flame"
           and d["chama_viva"]["pisavel"] and not d["chama_viva"]["loot_capaz"]
           and d["chama_viva"]["size"] == [1, 1]
@@ -98,16 +113,81 @@ def test_catalog():
           and server.DECOR_MODEL3D["cortina_vermelha"].endswith("cortina_vermelha.glb"))
     check("brasão usa PNG/GLB", d["brasao_leao"]["image"] == "brasao_leao.png"
           and server.DECOR_MODEL3D["brasao_leao"].endswith("brasao_leao.glb"))
-    check("todo tipo tem emoji/nome/gira/loot_capaz", all(
-        set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
-        for v in d.values()))
-    check("pisáveis: chão, fogueira, brasa, chama viva, placa e moita", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "brasa_chao", "brasao_leao", "chama_viva", "chao", "cortina_branca", "cortina_vermelha", "fogueira",
-        "moita_espinhosa", "placa"])
     check("moita espinhosa: 1x1, pisável, gira e usa PNG/GLB",
           d["moita_espinhosa"]["size"] == [1, 1] and d["moita_espinhosa"]["pisavel"]
           and d["moita_espinhosa"]["gira"] and d["moita_espinhosa"]["image"] == "moita_espinhosa.png"
           and server.DECOR_MODEL3D["moita_espinhosa"].endswith("moita_espinhosa.glb"))
+    check("juncos ocupam 1x1, permitem passagem e usam PNG/GLB",
+          d["juncos"]["size"] == [1, 1] and d["juncos"]["pisavel"]
+          and d["juncos"]["image"] == "juncos.png"
+          and server.DECOR_MODEL3D["juncos"].endswith("juncos.glb"))
+    check("raízes retorcidas ocupam 2x1, bloqueiam passagem e usam PNG/GLB",
+          d["raizes_torcidas"]["size"] == [2, 1] and not d["raizes_torcidas"]["pisavel"]
+          and d["raizes_torcidas"]["image"] == "raizes_torcidas.png"
+          and server.DECOR_MODEL3D["raizes_torcidas"].endswith("raizes_torcidas.glb"))
+    check("estalactites e estalagmites são altas, sólidas e usam PNG/GLB",
+          d["estalactites_estalagmites"]["size"] == [1, 1]
+          and d["estalactites_estalagmites"]["alto"]
+          and not d["estalactites_estalagmites"]["pisavel"]
+          and d["estalactites_estalagmites"]["image"] == "estalactites_estalagmites.png"
+          and server.DECOR_MODEL3D["estalactites_estalagmites"].endswith("estalactites_estalagmites.glb"))
+    check("fenda fumegante é 1x1, visual, atravessável e usa PNG/GLB",
+          d["fenda_fumegante"]["size"] == [1, 1]
+          and d["fenda_fumegante"]["pisavel"]
+          and d["fenda_fumegante"]["special"] is None
+          and d["fenda_fumegante"]["image"] == "fenda_fumegante.png"
+          and server.DECOR_MODEL3D["fenda_fumegante"].endswith("fenda_fumegante.glb"))
+    check("cacto do deserto ocupa 1x1, bloqueia passagem e usa PNG/GLB",
+          d["cacto_deserto"]["size"] == [1, 1]
+          and d["cacto_deserto"]["alto"] and not d["cacto_deserto"]["pisavel"]
+          and d["cacto_deserto"]["image"] == "cacto_deserto.png"
+          and server.DECOR_MODEL3D["cacto_deserto"].endswith("cacto_deserto.glb"))
+    check("ossos semienterrados ocupam 1x1, permitem passagem e usam PNG/GLB",
+          d["ossos_semi_enterrados"]["size"] == [1, 1]
+          and d["ossos_semi_enterrados"]["pisavel"]
+          and d["ossos_semi_enterrados"]["image"] == "ossos_semi_enterrados.png"
+          and server.DECOR_MODEL3D["ossos_semi_enterrados"].endswith("ossos_semi_enterrados.glb"))
+    check("arbusto seco ocupa 1x1, bloqueia passagem e usa PNG/GLB",
+          d["arbusto_seco"]["size"] == [1, 1]
+          and not d["arbusto_seco"]["pisavel"]
+          and d["arbusto_seco"]["image"] == "arbusto_seco.png"
+          and server.DECOR_MODEL3D["arbusto_seco"].endswith("arbusto_seco.glb"))
+    check("capim amarelado ocupa 1x1, permite passagem e usa PNG/GLB",
+          d["capim_amarelado"]["size"] == [1, 1]
+          and d["capim_amarelado"]["pisavel"]
+          and d["capim_amarelado"]["image"] == "capim_amarelado.png"
+          and server.DECOR_MODEL3D["capim_amarelado"].endswith("capim_amarelado.glb"))
+    check("estátua soterrada ocupa 1x1, é baixa, bloqueia passagem e usa PNG/GLB",
+          d["estatua_soterrada"]["size"] == [1, 1]
+          and not d["estatua_soterrada"]["alto"]
+          and not d["estatua_soterrada"]["pisavel"]
+          and not d["estatua_soterrada"]["loot_capaz"]
+          and d["estatua_soterrada"]["image"] == "estatua_soterrada.png"
+          and server.DECOR_MODEL3D["estatua_soterrada"].endswith("estatua_soterrada.glb"))
+    check("oásis pequeno ocupa 4x4, é alto, bloqueia passagem e usa PNG/GLB",
+          d["oasis_pequeno"]["size"] == [4, 4]
+          and d["oasis_pequeno"]["alto"]
+          and not d["oasis_pequeno"]["pisavel"]
+          and not d["oasis_pequeno"]["loot_capaz"]
+          and d["oasis_pequeno"]["image"] == "oasis_pequeno.png"
+          and server.DECOR_MODEL3D["oasis_pequeno"].endswith("oasis_pequeno.glb"))
+    check("acampamento abandonado ocupa 2x2, é alto, bloqueia passagem e usa PNG/GLB",
+          d["acampamento_abandonado"]["size"] == [2, 2]
+          and d["acampamento_abandonado"]["alto"]
+          and not d["acampamento_abandonado"]["pisavel"]
+          and not d["acampamento_abandonado"]["loot_capaz"]
+          and d["acampamento_abandonado"]["image"] == "acampamento_abandonado.png"
+          and server.DECOR_MODEL3D["acampamento_abandonado"].endswith("acampamento_abandonado.glb"))
+    check("todo tipo tem emoji/nome/gira/loot_capaz", all(
+        set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
+        for v in d.values()))
+    check("pisáveis: não bloqueiam movimento", sorted(k for k, v in d.items() if v["pisavel"]) == [
+        "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "capim_alto",
+        "capim_amarelado", "cerca_quebrada", "chama_viva", "chao", "cortina_branca",
+        "cortina_vermelha", "fenda_fumegante", "fogueira", "fumarola", "gargula_pedra",
+        "geiser_lava", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
+        "monte_ossos", "ninho_abutres", "ossos_semi_enterrados", "placa", "porteira_aberta",
+        "rochas_rachadas", "tocha_parede", "vitral_templo"])
 
 async def _noop(*a, **k): pass
 
@@ -246,6 +326,34 @@ def test_moita_espinhosa():
         r._water_turn_moves(p, 6)
         await r._aplicar_fogueira_se_pisar(p)
         check("voando, ignora os espinhos", p["hp"] == hp0 and p["moves_left"] == 6)
+    asyncio.run(run())
+
+def test_geiser_fumarola():
+    print("\n[A5f] gêiser de lava (1d8 no início do turno) e fumarola (rajada a cada N rodadas)")
+    async def run():
+        r = _room()
+        r.decorations = [{"id": "g0", "type": "geiser_lava", "pos": [4, 4], "facing": [0, 1], "loot": None, "tem_loot": False},
+                         {"id": "f0", "type": "fumarola", "pos": [8, 8], "facing": [0, 1], "loot": None, "tem_loot": False,
+                          "intervalo_rodadas": 3}]
+        r._rebuild_decor_index()
+        p = make_player("p1", "Herói", "warrior", 0)
+        p["pos"] = [4, 4]; p["hp"] = 30; p["max_hp"] = 30; p["alive"] = True
+        await r._aplicar_geiser_lava_inicio_turno(p)
+        check("sobre o gêiser: perde de 1 a 8 de vida", 22 <= p["hp"] <= 29)
+        p["pos"] = [0, 0]; hp0 = p["hp"]
+        await r._aplicar_geiser_lava_inicio_turno(p)
+        check("fora do gêiser: sem dano", p["hp"] == hp0)
+        p["pos"] = [4, 4]; p["voo"] = True; p["altura"] = 2
+        await r._aplicar_geiser_lava_inicio_turno(p)
+        check("voando sobre o gêiser: sem dano", p["hp"] == hp0)
+        p["voo"] = False; p["altura"] = 0
+        p["pos"] = [8, 8]; r.round_num = 2
+        await r._processar_fumarola_inicio_turno(p)
+        check("fumarola fora do intervalo (rodada 2 de 3): não empurra", p["pos"] == [8, 8])
+        r.round_num = 3
+        await r._processar_fumarola_inicio_turno(p)
+        dist = max(abs(p["pos"][0] - 8), abs(p["pos"][1] - 8))
+        check("fumarola no intervalo (rodada 3): lança a 1-2 casas", 1 <= dist <= 2)
     asyncio.run(run())
 
 def test_chama_viva():
@@ -548,6 +656,7 @@ def main():
     test_fogueira()
     test_chama_viva()
     test_moita_espinhosa()
+    test_geiser_fumarola()
     test_brasa_chao()
     test_fogo_imunidade_resistencia()
     test_fonte()

@@ -296,8 +296,23 @@
       const m = decorMeta(S.sel.ref.type);
       if (m && m.gira) {
         if (m.special === "wall") {
-          const faces = wallFacesAt(S.sel.ref.pos[0], S.sel.ref.pos[1]);
-          if (faces.length) S.sel.ref.facing = nextWallFaceClockwise(S.sel.ref.facing, faces);
+          const ref = S.sel.ref, current = ref.facing || [0, 1];
+          const [wx, wy] = ref.pos;
+          const faces = wallFacesAt(wx, wy).filter(face => decorFits(ref.type, wx, wy, face, ref));
+          const next = nextWallFaceClockwise(current, faces);
+          if (!sameFace(next, current)) ref.facing = next.slice();
+          else {
+            // Em um canto, trocar de direção pode exigir a parede vizinha
+            // da mesma casa de chão, em vez de outra face da parede atual.
+            const floorX = wx + current[0], floorY = wy + current[1];
+            for (let turns = 1, face = rotateFacing(current); turns < 4; turns++, face = rotateFacing(face)) {
+              const nx = floorX - face[0], ny = floorY - face[1];
+              if (!decorFits(ref.type, nx, ny, face, ref)) continue;
+              ref.pos = [nx, ny];
+              ref.facing = face.slice();
+              break;
+            }
+          }
         } else S.sel.ref.facing = rotateFacing(S.sel.ref.facing);
         render();
       }
@@ -419,6 +434,8 @@
                 loot: (m && m.loot_capaz && S.decorType === "arca_tesouros") ? { gold: 0, items: [] } : null,
                 key_objective: false };
     if (m && m.special === "fountain") d.charges = (m.charges ?? 3);
+    if (m && m.intervalo_rodadas != null)
+      d.intervalo_rodadas = m.intervalo_rodadas;
     if (m && m.special === "plaque") d.texto = "";
     if (m && m.special === "floor") d.image = "chaograma1.png";   // grama por padrão (trocável no picker)
     if (m && m.image) d.image = m.image;
@@ -968,6 +985,12 @@
         ctx.translate(px + ox + pw / 2, py + oy + ph / 2);
         ctx.rotate(ang);
         ctx.drawImage(im, -dw / 2, -dh / 2, dw, dh);
+        ctx.restore();
+      }
+      if (d.type === "tocha_parede" || d.type === "braseiro_parede") {
+        ctx.save(); ctx.font = `${Math.floor(CELL * .34)}px serif`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("🔥", (d.pos[0] + .5) * CELL, (d.pos[1] + .20) * CELL);
         ctx.restore();
       }
     }
@@ -2865,6 +2888,7 @@
         <small style="display:block;color:#8a7a5a;margin-top:3px">${t("ui.editor.masmorra.painel.depois_arraste_hint")}</small>
         <div id="d-duplicate-msg" style="font-size:11px;min-height:14px;color:#d8a0a0"></div>
         ${m.special === "fountain" ? `<label>${t("ui.editor.masmorra.painel.cargas")} <input id="d-charges" type="number" min="0" value="${ref.charges ?? 0}"></label>` : ""}
+        ${m.intervalo_rodadas != null ? `<label>${t("ui.editor.masmorra.painel.intervalo_fumarola")} <input id="d-fumarola-intervalo" type="number" min="1" max="12" value="${ref.intervalo_rodadas ?? m.intervalo_rodadas}"></label>` : ""}
         ${m.special === "plaque" ? `<label style="display:block;margin-top:8px">${t("ui.editor.masmorra.painel.mensagem_placa")}<textarea id="d-texto" rows="5" maxlength="600" placeholder="${t("ui.editor.masmorra.painel.placa_placeholder")}">${placaTexto}</textarea></label><small style="color:#8a7a5a">${t("ui.editor.masmorra.painel.placa_hint")}</small>` : ""}
         ${m.loot_capaz ? `<label style="display:block;margin-top:8px"><input type="checkbox" id="d-haslook" ${hasLoot ? "checked" : ""}> ${t("ui.editor.masmorra.painel.contem_loot")}</label>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-chest-trap" ${ref.chest_trap_monster_type ? "checked" : ""}> ${t("ui.editor.masmorra.painel.bau_armadilha")}</label>
@@ -2932,6 +2956,10 @@
       };
       document.getElementById("d-brush").onclick = () => { copySelectedDecor(); activateDecorBrush(); };
       if (m.special === "fountain") document.getElementById("d-charges").onchange = e => { ref.charges = Math.max(0, Number(e.target.value) | 0); };
+      if (m.intervalo_rodadas != null) document.getElementById("d-fumarola-intervalo").onchange = e => {
+        ref.intervalo_rodadas = Math.max(1, Math.min(12, Number(e.target.value) | 0));
+        e.target.value = ref.intervalo_rodadas;
+      };
       if (m.special === "plaque") document.getElementById("d-texto").oninput = e => { ref.texto = e.target.value.slice(0, 600); updateStatus(); };
       document.getElementById("d-key").onchange = e => { ref.key_objective = e.target.checked; };
       document.getElementById("d-chest-trap").onchange = e => { if (e.target.checked) ref.chest_trap_monster_type = (CAT.monsters[0] || {}).type; else { delete ref.chest_trap_monster_type; delete ref.chest_trap_permanente; } renderPanel(); };
@@ -3351,6 +3379,9 @@
         const m = decorMeta(d.type);
         if (m && m.special === "plaque" && d.texto?.trim()) o.texto = d.texto.trim();
         if (m && m.special === "fountain") o.charges = d.charges | 0;
+        if (m && m.intervalo_rodadas != null)
+          o.intervalo_rodadas = Math.max(1, Math.min(12,
+            Number(d.intervalo_rodadas ?? m.intervalo_rodadas) | 0));
         if (d.image) o.image = d.image;
         // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
@@ -3802,6 +3833,10 @@
         } : {}),
       } } : {}),
       ...(d.charges !== undefined ? { charges: d.charges | 0 } : {}),
+      ...(decorMeta(d.type)?.intervalo_rodadas != null
+        ? { intervalo_rodadas: Math.max(1, Math.min(12,
+            Number(d.intervalo_rodadas ?? decorMeta(d.type).intervalo_rodadas) | 0)) }
+        : {}),
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
       ...((d.image || decorMeta(d.type)?.image) ? { image: d.image || decorMeta(d.type).image } : {}),

@@ -12439,6 +12439,157 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "poco_balde",
+      "nome": "Poço com balde",
+      "emoji": "🪣",
+      "size": [
+        2,
+        2
+      ],
+      "gira": false,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": "fountain",
+      "image": "poco_balde.png",
+      "charges": 10
+    },
+    {
+      "type": "cerca_reta",
+      "nome": "Cerca de madeira reta",
+      "emoji": "🪵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cerca_reta.png"
+    },
+    {
+      "type": "cerca_curva",
+      "nome": "Cerca de madeira curva",
+      "emoji": "🪵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cerca_curva.png"
+    },
+    {
+      "type": "cerca_quebrada",
+      "nome": "Cerca de madeira quebrada",
+      "emoji": "🪵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cerca_quebrada.png"
+    },
+    {
+      "type": "porteira_aberta",
+      "nome": "Porteira aberta",
+      "emoji": "🚪",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "porteira_aberta.png"
+    },
+    {
+      "type": "porteira_fechada",
+      "nome": "Porteira fechada",
+      "emoji": "🚪",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "porteira_fechada.png"
+    },
+    {
+      "type": "celeiro_medieval",
+      "nome": "Celeiro medieval",
+      "emoji": "🏚️",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "celeiro_medieval.png"
+    },
+    {
+      "type": "galinheiro",
+      "nome": "Galinheiro com ninhos e ovos",
+      "emoji": "🐔",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "galinheiro.png"
+    },
+    {
+      "type": "cabana_rustica",
+      "nome": "Cabana rústica de fazenda",
+      "emoji": "🛖",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cabana_rustica.png"
+    },
+    {
+      "type": "lago_patos",
+      "nome": "Lago com patos",
+      "emoji": "🦆",
+      "size": [
+        3,
+        3
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "lago_patos.png"
+    },
+    {
       "type": "placa",
       "nome": "Placa",
       "emoji": "🪧",
@@ -12467,6 +12618,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": "campfire",
       "image": null
+    },
+    {
+      "type": "pira_chamas",
+      "nome": "Pira de chamas",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "pira_chamas.png"
     },
     {
       "type": "chama_viva",
@@ -12767,7 +12933,7 @@ window.EDITOR_CATALOG = {
       "pisavel": false,
       "loot_capaz": true,
       "special": null,
-      "image": null
+      "image": "grades_prisao.png"
     },
     {
       "type": "estante_armas",
@@ -12905,6 +13071,21 @@ window.EDITOR_CATALOG = {
       "image": "brasa_chao.png"
     },
     {
+      "type": "caldeirao",
+      "nome": "Caldeirão",
+      "emoji": "⚗️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": null
+    },
+    {
       "type": "chao",
       "nome": "Chão (grama)",
       "emoji": "🌿",
@@ -12965,6 +13146,186 @@ window.EDITOR_CATALOG = {
       "image": "cortina_branca.png"
     },
     {
+      "type": "tocha_parede",
+      "nome": "Tocha de parede",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "tocha_parede.png"
+    },
+    {
+      "type": "gruta_parede",
+      "nome": "Gruta na parede",
+      "emoji": "🪨",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "gruta_parede.png"
+    },
+    {
+      "type": "braseiro_parede",
+      "nome": "Braseiro de parede",
+      "emoji": "🔥",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "braseiro_parede.png"
+    },
+    {
+      "type": "vitral_templo",
+      "nome": "Vitral de templo",
+      "emoji": "🪟",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "vitral_templo.png"
+    },
+    {
+      "type": "sino_ritualistico",
+      "nome": "Sino ritualístico",
+      "emoji": "🔔",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "sino_ritualistico.png"
+    },
+    {
+      "type": "estatua_divindade",
+      "nome": "Estátua de divindade",
+      "emoji": "🛐",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "estatua_divindade.png"
+    },
+    {
+      "type": "gargula_pedra",
+      "nome": "Gárgula de pedra",
+      "emoji": "👹",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "gargula_pedra.png"
+    },
+    {
+      "type": "monte_ossos",
+      "nome": "Monte de ossos",
+      "emoji": "🦴",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "monte_ossos.png"
+    },
+    {
+      "type": "monte_feno",
+      "nome": "Monte de feno",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": null
+    },
+    {
+      "type": "bola_corrente",
+      "nome": "Bola de ferro com corrente",
+      "emoji": "⛓️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "bola_corrente.png"
+    },
+    {
+      "type": "grilhoes_parede",
+      "nome": "Grilhões de parede",
+      "emoji": "⛓️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "grilhoes_parede.png"
+    },
+    {
+      "type": "tronco_musgo",
+      "nome": "Tronco caído com musgo",
+      "emoji": "🪵",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "tronco_musgo.png"
+    },
+    {
       "type": "moita_espinhosa",
       "nome": "Moita espinhosa",
       "emoji": "🌵",
@@ -12978,6 +13339,337 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "moita_espinhosa.png"
+    },
+    {
+      "type": "capim_alto",
+      "nome": "Capim alto",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "capim_alto.png"
+    },
+    {
+      "type": "tronco_podre_fungos",
+      "nome": "Tronco podre com fungos",
+      "emoji": "🍄",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "tronco_podre_fungos.png"
+    },
+    {
+      "type": "tocos_alagados",
+      "nome": "Tocos alagados",
+      "emoji": "🌳",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "tocos_alagados.png"
+    },
+    {
+      "type": "juncos",
+      "nome": "Juncos",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "juncos.png"
+    },
+    {
+      "type": "raizes_torcidas",
+      "nome": "Raízes retorcidas",
+      "emoji": "🌱",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "raizes_torcidas.png"
+    },
+    {
+      "type": "estalactites_estalagmites",
+      "nome": "Estalactites e estalagmites",
+      "emoji": "🪨",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "estalactites_estalagmites.png"
+    },
+    {
+      "type": "fenda_fumegante",
+      "nome": "Fenda fumegante",
+      "emoji": "♨️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "fenda_fumegante.png"
+    },
+    {
+      "type": "geiser_lava",
+      "nome": "Gêiser de lava",
+      "emoji": "🌋",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "geiser_lava.png"
+    },
+    {
+      "type": "fumarola",
+      "nome": "Fumarola",
+      "emoji": "♨️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "fumarola.png",
+      "intervalo_rodadas": 2
+    },
+    {
+      "type": "cacto_deserto",
+      "nome": "Cacto do deserto",
+      "emoji": "🌵",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cacto_deserto.png"
+    },
+    {
+      "type": "ossos_semi_enterrados",
+      "nome": "Ossos semienterrados",
+      "emoji": "🦴",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "ossos_semi_enterrados.png"
+    },
+    {
+      "type": "arbusto_seco",
+      "nome": "Arbusto seco",
+      "emoji": "🌿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "type": "capim_amarelado",
+      "nome": "Capim amarelado",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "capim_amarelado.png"
+    },
+    {
+      "type": "estatua_soterrada",
+      "nome": "Estátua soterrada",
+      "emoji": "🗿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "estatua_soterrada.png"
+    },
+    {
+      "type": "rochas_rachadas",
+      "nome": "Rochas rachadas",
+      "emoji": "🪨",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "rochas_rachadas.png"
+    },
+    {
+      "type": "ninho_abutres",
+      "nome": "Ninho de abutres",
+      "emoji": "🪶",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "ninho_abutres.png"
+    },
+    {
+      "type": "arco_pedra_deserto",
+      "nome": "Arco de pedra do deserto",
+      "emoji": "⛰️",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": null,
+      "image": "arco_pedra_deserto.png"
+    },
+    {
+      "type": "pedra_sacrificio",
+      "nome": "Pedra de sacrifício",
+      "emoji": "🪨",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "pedra_sacrificio.png"
+    },
+    {
+      "type": "oasis_pequeno",
+      "nome": "Oásis pequeno",
+      "emoji": "🏝️",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "oasis_pequeno.png"
+    },
+    {
+      "type": "acampamento_abandonado",
+      "nome": "Acampamento abandonado",
+      "emoji": "⛺",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "acampamento_abandonado.png"
+    },
+    {
+      "type": "ruinas_pedra",
+      "nome": "Ruínas de pedra",
+      "emoji": "🏛️",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "ruinas_pedra.png"
+    },
+    {
+      "type": "esqueleto_tiranossauro",
+      "nome": "Esqueleto de tiranossauro",
+      "emoji": "🦴",
+      "size": [
+        4,
+        2
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "esqueleto_tiranossauro.png"
     }
   ],
   "materiais": [

@@ -633,12 +633,59 @@ const DECOR_GLB_MODELS = {
   'brasao_leao.png': 'assets/objetos/brasao_leao.glb',
   // Placa fincada: PNG para editor/2D e GLB no tabuleiro 3D.
   'placa_fincada.png': 'assets/objetos/placa_fincada.glb',
+  // A imagem segue no editor 2D; no mapa 3D entra a tocha completa com chama animada.
+  'tocha_parede.png': 'assets/objetos/tocha_parede.glb',
+  'gruta_parede.png': 'assets/objetos/gruta_parede.glb',
+  'braseiro_parede.png': 'assets/objetos/braseiro_parede.glb',
+  'vitral_templo.png': 'assets/objetos/vitral_templo.glb',
+  'gargula_pedra.png': 'assets/objetos/gargula_pedra.glb',
+  'sino_ritualistico.png': 'assets/objetos/sino_ritualistico.glb',
+  'estatua_divindade.png': 'assets/objetos/estatua_divindade.glb',
+  'pira_chamas.png': 'assets/objetos/pira_chamas.glb',
+  'bola_corrente.png': 'assets/objetos/bola_corrente.glb',
+  'grilhoes_parede.png': 'assets/objetos/grilhoes_parede.glb',
+  'tronco_musgo.png': 'assets/objetos/tronco_musgo.glb',
   'moita_espinhosa.png': 'assets/objetos/moita_espinhosa.glb',
+  'capim_alto.png': 'assets/objetos/capim_alto.glb',
+  'tronco_podre_fungos.png': 'assets/objetos/tronco_podre_fungos.glb',
+  'tocos_alagados.png': 'assets/objetos/tocos_alagados.glb',
+  'juncos.png': 'assets/objetos/juncos.glb',
+  'raizes_torcidas.png': 'assets/objetos/raizes_torcidas.glb',
+  'estalactites_estalagmites.png': 'assets/objetos/estalactites_estalagmites.glb',
+  'fenda_fumegante.png': 'assets/objetos/fenda_fumegante.glb',
+  'cacto_deserto.png': 'assets/objetos/cacto_deserto.glb',
+  'rochas_rachadas.png': 'assets/objetos/rochas_rachadas.glb',
+  'ninho_abutres.png': 'assets/objetos/ninho_abutres.glb',
+  'arco_pedra_deserto.png': 'assets/objetos/arco_pedra_deserto.glb',
+  'pedra_sacrificio.png': 'assets/objetos/pedra_sacrificio.glb',
+  'ossos_semi_enterrados.png': 'assets/objetos/ossos_semi_enterrados.glb',
+  'arbusto_seco.png': 'assets/objetos/arbusto_seco.glb',
+  'capim_amarelado.png': 'assets/objetos/capim_amarelado.glb',
+  'estatua_soterrada.png': 'assets/objetos/estatua_soterrada.glb',
+  'oasis_pequeno.png': 'assets/objetos/oasis_pequeno.glb',
+  'acampamento_abandonado.png': 'assets/objetos/acampamento_abandonado.glb',
+  'ruinas_pedra.png': 'assets/objetos/ruinas_pedra.glb',
+  'esqueleto_tiranossauro.png': 'assets/objetos/esqueleto_tiranossauro.glb',
+  'galinheiro.png': 'assets/objetos/galinheiro.glb',
+  'cabana_rustica.png': 'assets/objetos/cabana_rustica.glb',
+  'lago_patos.png': 'assets/objetos/lago_patos.glb',
+  'grades_prisao.png': 'assets/objetos/grades_prisao.glb',
 };
 const DECOR_GLB_TYPES = {
   // A fonte usa o modelo GLB próprio; o PNG permanece somente como fallback
   // caso o arquivo não possa ser carregado.
   fonte: 'assets/objetos/fonte.glb',
+  poco_balde: 'assets/objetos/poco_balde.glb',
+  cerca_reta: 'assets/objetos/cerca_reta.glb',
+  cerca_curva: 'assets/objetos/cerca_curva.glb',
+  cerca_quebrada: 'assets/objetos/cerca_quebrada.glb',
+  porteira_aberta: 'assets/objetos/porteira_aberta.glb',
+  porteira_fechada: 'assets/objetos/porteira_fechada.glb',
+  celeiro_medieval: 'assets/objetos/celeiro_medieval.glb',
+  galinheiro: 'assets/objetos/galinheiro.glb',
+  cabana_rustica: 'assets/objetos/cabana_rustica.glb',
+  lago_patos: 'assets/objetos/lago_patos.glb',
+  grades_prisao: 'assets/objetos/grades_prisao.glb',
   // Altar criado pelo editor pode não trazer `image`; usa o modelo pelo tipo.
   altar: 'assets/objetos/altar.glb',
   cama: 'assets/objetos/cama.glb',
@@ -646,6 +693,7 @@ const DECOR_GLB_TYPES = {
   estante: 'assets/objetos/estante_armas_cranios.glb',
   lareira: 'assets/objetos/lareira.glb',
   fogueira: 'assets/objetos/fogueira_animada.glb',
+  pira_chamas: 'assets/objetos/pira_chamas.glb',
   tumba: 'assets/objetos/sarcofago.glb',
   tumba_lapide: 'assets/objetos/tumba_lapide.glb',
   carroca: 'assets/objetos/carroca.glb',
@@ -674,16 +722,66 @@ const DECOR_GLB_TYPES = {
   // Casa: PNG no editor/2D e modelo 3D real no tabuleiro.
   casa: 'assets/objetos/casa.glb',
   brasa_chao: 'assets/objetos/brasa_chao_animada.glb',
+  caldeirao: 'assets/objetos/caldeirao_pocao.glb',
   chama_viva: 'assets/objetos/chama_viva.glb',
+  tocha_parede: 'assets/objetos/tocha_parede.glb',
+  gruta_parede: 'assets/objetos/gruta_parede.glb',
+  braseiro_parede: 'assets/objetos/braseiro_parede.glb',
+  vitral_templo: 'assets/objetos/vitral_templo.glb',
+  gargula_pedra: 'assets/objetos/gargula_pedra.glb',
+  sino_ritualistico: 'assets/objetos/sino_ritualistico.glb',
+  estatua_divindade: 'assets/objetos/estatua_divindade.glb',
+  bola_corrente: 'assets/objetos/bola_corrente.glb',
+  grilhoes_parede: 'assets/objetos/grilhoes_parede.glb',
   cortina_vermelha: 'assets/objetos/cortina_vermelha.glb',
   cortina_branca: 'assets/objetos/cortina_branca.glb',
   brasao_leao: 'assets/objetos/brasao_leao.glb',
   placa: 'assets/objetos/placa_fincada.glb',
+  monte_ossos: 'assets/objetos/monte_ossos.glb',
+  monte_feno: 'assets/objetos/monte_feno.glb',
+  tronco_musgo: 'assets/objetos/tronco_musgo.glb',
   moita_espinhosa: 'assets/objetos/moita_espinhosa.glb',
+  capim_alto: 'assets/objetos/capim_alto.glb',
+  tronco_podre_fungos: 'assets/objetos/tronco_podre_fungos.glb',
+  tocos_alagados: 'assets/objetos/tocos_alagados.glb',
+  juncos: 'assets/objetos/juncos.glb',
+  raizes_torcidas: 'assets/objetos/raizes_torcidas.glb',
+  estalactites_estalagmites: 'assets/objetos/estalactites_estalagmites.glb',
+  fenda_fumegante: 'assets/objetos/fenda_fumegante.glb',
+  geiser_lava: 'assets/objetos/geiser_lava.glb',
+  fumarola: 'assets/objetos/fumarola.glb',
+  cacto_deserto: 'assets/objetos/cacto_deserto.glb',
+  rochas_rachadas: 'assets/objetos/rochas_rachadas.glb',
+  ninho_abutres: 'assets/objetos/ninho_abutres.glb',
+  arco_pedra_deserto: 'assets/objetos/arco_pedra_deserto.glb',
+  pedra_sacrificio: 'assets/objetos/pedra_sacrificio.glb',
+  ossos_semi_enterrados: 'assets/objetos/ossos_semi_enterrados.glb',
+  arbusto_seco: 'assets/objetos/arbusto_seco.glb',
+  capim_amarelado: 'assets/objetos/capim_amarelado.glb',
+  estatua_soterrada: 'assets/objetos/estatua_soterrada.glb',
+  oasis_pequeno: 'assets/objetos/oasis_pequeno.glb',
+  acampamento_abandonado: 'assets/objetos/acampamento_abandonado.glb',
+  ruinas_pedra: 'assets/objetos/ruinas_pedra.glb',
+  esqueleto_tiranossauro: 'assets/objetos/esqueleto_tiranossauro.glb',
 };
 // A superfície dos tiles 3D fica em y=0.22; um pequeno acréscimo evita que a
 // base dos modelos atravesse o piso por arredondamento de geometria.
 const DECOR_GLB_FLOOR_Y = 0.225;
+// Altura do chão dentro de GLBs que incluem terra/areia modelada (eixo Y
+// depois da exportação do Blender). A parte abaixo deste plano fica soterrada.
+// Objetos sem terreno próprio continuam apoiados pelo limite inferior da malha.
+const DECOR_GLB_GROUND_Y = Object.freeze({
+  // A lâmina d'água e a margem rasa entram alguns centímetros no piso do tile.
+  'lago_patos.glb': 0.005,
+  'oasis_pequeno.glb': 0.185,
+  'estatua_soterrada.glb': 0.205,
+  'acampamento_abandonado.glb': 0.045,
+  'ruinas_pedra.glb': 0.018,
+  'cacto_deserto.glb': 0.095,
+  'ossos_semi_enterrados.glb': 0.10,
+  'arbusto_seco.glb': 0.065,
+  'capim_amarelado.glb': 0.065,
+});
 
 // ── Decoration 3D spec — shape/height/color per type (procedural render) ──────
 const DECOR_3D = {
@@ -10261,7 +10359,12 @@ function renderMap(state){
         const pw = (maxX - minX + 1) * CELL, ph = (maxY - minY + 1) * CELL;
         const ar = _oImg.naturalWidth / _oImg.naturalHeight;
         const _ang = _facingAngle2D(d.facing, d.type, d.image);
-        if (_ang === 0) {
+        const _sinoAnim = d.type === 'sino_ritualistico'
+          && window._sinoAnim2D?.id === d.id
+          ? Math.sin((performance.now() - window._sinoAnim2D.startedAt) * .024)
+            * .18 * Math.exp(-(performance.now() - window._sinoAnim2D.startedAt) / 650)
+          : 0;
+        if (_ang === 0 && !_sinoAnim) {
           // ajusta mantendo proporção, ancorado embaixo (caminho original)
           let dw = pw, dh = pw / ar;
           if (dh > ph) { dh = ph; dw = ph * ar; }
@@ -10277,7 +10380,7 @@ function renderMap(state){
           dw *= _sx; dh *= _sy;
           ctx.save();
           ctx.translate(px + pw / 2, py + ph / 2);
-          ctx.rotate(_ang);
+          ctx.rotate(_ang + _sinoAnim);
           ctx.drawImage(_oImg, -dw / 2, -dh / 2, dw, dh);
           ctx.restore();
         }
@@ -10296,6 +10399,11 @@ function renderMap(state){
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(d.emoji || '🪑', ecx, baseY - 2);
         ctx.textBaseline = 'middle';
+      }
+      if(d.type === 'tocha_parede' || d.type === 'braseiro_parede'){
+        ctx.save(); ctx.globalAlpha = .94; ctx.font = `${Math.floor(CELL * .34)}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🔥', ecx, ecy - CELL * .30); ctx.restore();
       }
       // Encontrar Armadilhas revelou o mecanismo escondido no objeto.
       if ((d.trap || d.chest_trap) && d.trap_revealed) {
@@ -28640,7 +28748,8 @@ function _gamepadNearbyInteraction(state, player){
 
   const decor = (GS.decorations || []).filter(d => {
     const interactive = d.tem_loot || d.chest_trap || d.trap || d.key_objective
-      || d.special === 'fountain' || d.special === 'plaque' || d.interactive;
+      || d.special === 'fountain' || d.special === 'plaque' || d.interactive
+      || d.type === 'sino_ritualistico';
     return interactive && GS.decorTilesOf(d).some(adjacent);
   }).sort((a,b) => String(a.id).localeCompare(String(b.id)))[0];
   if(decor) return { kind:'decor', key:`decor:${decor.id}`, decor, icon:decor.emoji || '✋' };
@@ -28664,7 +28773,8 @@ function _gamepadActivateNearbyInteraction(state, player){
   } else if(interaction.kind === 'chest') {
     openChestWindow(interaction.chest);
   } else if(interaction.kind === 'decor') {
-    GS.interagirDecor(interaction.decor.id);
+    if(interaction.decor.type === 'sino_ritualistico') tocarSinoRitualistico(interaction.decor);
+    else GS.interagirDecor(interaction.decor.id);
   } else if(interaction.kind === 'ground') {
     const attack = GS.resolveTileClick(interaction.ground.pos[0], interaction.ground.pos[1]);
     if(attack?.type === 'attack'){
@@ -45133,7 +45243,7 @@ function _disposeDecorMesh(obj){
   if(obj && obj.userData && obj.userData.animationMixer){
     const mixer = obj.userData.animationMixer;
     mixer.stopAllAction();
-    if(mixer.uncacheRoot) mixer.uncacheRoot(obj);
+    if(mixer.uncacheRoot) mixer.uncacheRoot(obj.userData.animationRoot || obj);
   }
   obj.traverse(o => {
     // Instâncias GLB compartilham os recursos com o template em cache.
@@ -45318,7 +45428,8 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     const inst = template.clone();
     const animations = (template.userData && template.userData._gltfAnimations) || [];
     const animationMixer = animations.length ? new g3.T.AnimationMixer(inst) : null;
-    if(animationMixer){
+    const sinoRitualistico = imageName === 'sino_ritualistico.png';
+    if(animationMixer && !sinoRitualistico){
       for(const clip of animations) animationMixer.clipAction(clip).play();
     }
     const box = new g3.T.Box3().setFromObject(inst);
@@ -45327,10 +45438,13 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
       (wCells * 0.92) / Math.max(size.x, 1e-3),
       (hCells * 0.92) / Math.max(size.z, 1e-3)
     );
-    // Centraliza o modelo e assenta sua base no piso da masmorra.
+    // Alinha o chão modelado ao piso; areia e terra inferiores ficam enterradas.
+    const groundName = String(path).split(/[\\/]/).pop();
+    const authoredGroundY = DECOR_GLB_GROUND_Y[groundName];
+    const groundY = Number.isFinite(authoredGroundY) ? authoredGroundY : box.min.y;
     inst.position.set(
       -(box.min.x + box.max.x) / 2,
-      -box.min.y,
+      -groundY,
       -(box.min.z + box.max.z) / 2
     );
     inst.traverse(o => {
@@ -45341,10 +45455,11 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     wrap.add(inst);
     wrap.scale.setScalar(scale);
     const grp = new g3.T.Group();
-    grp.userData = { isDecor: true, decorId, glbPath: path, animationMixer };
+    grp.userData = { isDecor: true, decorId, glbPath: path, animationMixer,
+      animationClips: sinoRitualistico ? animations : undefined };
     grp.add(wrap);
+    // O placeholder já acompanha a elevação da casa, inclusive durante a carga.
     grp.position.copy(slot.position);
-    grp.position.y = DECOR_GLB_FLOOR_Y;
     grp.rotation.y = _facingAngleY3D(facing, undefined, imageName, path);
     grp.visible = slot.visible;
     g3.scene.remove(slot); _disposeDecorMesh(slot);
@@ -45352,6 +45467,39 @@ function _buildObjetoGLB(decorId, imageName, path, wCells, hCells, facing){
     g3.decorMeshes[decorId] = grp;
   };
   _loadDecorGLB(g3.T, path, montar);
+}
+
+function tocarSinoRitualistico(decor){
+  if(!decor) return;
+  sfx('sino_igreja');
+  const mesh = g3?.decorMeshes?.[decor.id];
+  const mixer = mesh?.userData?.animationMixer;
+  const clip = mesh?.userData?.animationClips?.[0];
+  if(mixer && clip && g3?.T){
+    const action = mixer.clipAction(clip);
+    action.stop();
+    action.reset();
+    action.setLoop(g3.T.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.play();
+  }
+  // No mapa 2D, o mesmo clique dá um balanço curto à miniatura.
+  if(!mode3D){
+    const startedAt = performance.now();
+    window._sinoAnim2D = { id: decor.id, startedAt };
+    const tick = () => {
+      const anim = window._sinoAnim2D;
+      if(!anim || anim.id !== decor.id || anim.startedAt !== startedAt) return;
+      if(performance.now() - startedAt >= 1050){
+        window._sinoAnim2D = null;
+        if(GS.gameState) renderMap(GS.gameState);
+        return;
+      }
+      if(GS.gameState) renderMap(GS.gameState);
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
 }
 
 // Brasões e cortinas são decorações de parede: o GLB fica vertical, centrado na face da
@@ -45371,19 +45519,36 @@ function _buildWallDecorGLB(d, path, liftY = 0){
     const T = g3.T, face = d.facing || [0,1];
     const vs = Array.isArray(d.vscale) ? d.vscale : [1,1];
     const inst = template.clone();
+    const backingMounted = d.type === 'tocha_parede' || d.type === 'braseiro_parede'
+      || d.type === 'vitral_templo' || d.type === 'grilhoes_parede'
+      || d.type === 'gargula_pedra' || d.type === 'gruta_parede';
+    // O Blender exporta a frente desta tocha para -Z. O facing da parede
+    // aponta para o chão da sala: alinhe a frente a +Z antes de medir e girar.
+    if(d.type === 'tocha_parede' || d.type === 'braseiro_parede'
+        || d.type === 'vitral_templo' || d.type === 'gargula_pedra'
+        || d.type === 'gruta_parede')
+      inst.rotation.y += Math.PI;
+    const animations = (template.userData && template.userData._gltfAnimations) || [];
+    const animationMixer = animations.length ? new T.AnimationMixer(inst) : null;
+    if(animationMixer){
+      for(const clip of animations) animationMixer.clipAction(clip).play();
+    }
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
     const isCurtain = d.type === 'cortina_vermelha' || d.type === 'cortina_branca';
-    const targetW = (isCurtain ? 0.96 : 0.74) * (vs[0] || 1);
-    const targetH = (isCurtain ? 1.24 : 0.92) * (vs[1] || 1);
+    const isNaturalCave = d.type === 'gruta_parede';
+    const targetW = (isCurtain ? 0.96 : isNaturalCave ? 0.86 : 0.74) * (vs[0] || 1);
+    const targetH = (isCurtain ? 1.24 : isNaturalCave ? 0.86 : 0.92) * (vs[1] || 1);
     const scaleX = targetW / Math.max(size.x, 1e-3);
     const scaleY = targetH / Math.max(size.y, 1e-3);
     const scaleZ = scaleX;
     // Centraliza horizontalmente e remove a folga inferior do modelo original.
+    // Com a frente já alinhada, a placa ocupa -Z e o objeto avança para +Z:
+    // sua face de fixação encontra a parede e o relevo fica voltado à sala.
     inst.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,
-      -(box.min.z + box.max.z) / 2
+      backingMounted ? -box.min.z : -(box.min.z + box.max.z) / 2
     );
     inst.traverse(o => { if (o.isMesh) o.userData.isGLB = true; });
     const wrap = new T.Group();
@@ -45392,12 +45557,19 @@ function _buildWallDecorGLB(d, path, liftY = 0){
 
     const grp = new T.Group();
     grp.userData = { isDecor:true, decorId:d.id, wallImage:d.image,
-      wallGlbPath:path, wallFace:face.join(','), wallScale:vs.join(',') };
-    const WALL_DECOR_GLB_SURFACE = 0.575;
+      wallGlbPath:path, wallFace:face.join(','), wallScale:vs.join(','),
+      wallLift:liftY, animationMixer, animationRoot:inst };
+    const WALL_DECOR_GLB_SURFACE =
+      (d.type === 'tocha_parede' || d.type === 'braseiro_parede'
+        || d.type === 'vitral_templo' || d.type === 'grilhoes_parede'
+        || d.type === 'gargula_pedra' || d.type === 'gruta_parede') ? 0.516 : 0.575;
     // O brasão é uma placa suspensa: sua base acompanha a altura do decal PNG
     // (em vez de começar no piso), deixando o topo dentro do terço superior da
     // parede de 1,75 unidades.
-    const wallBaseY = d.type === 'brasao_leao' ? 0.58 : DECOR_GLB_FLOOR_Y;
+    const wallBaseY = (d.type === 'tocha_parede' || d.type === 'braseiro_parede'
+      || d.type === 'vitral_templo' || d.type === 'gargula_pedra'
+      || d.type === 'gruta_parede') ? 0.595
+      : (d.type === 'brasao_leao' ? 0.58 : DECOR_GLB_FLOOR_Y);
     grp.position.set(
       d.pos[0] + face[0] * WALL_DECOR_GLB_SURFACE,
       wallBaseY + liftY,
@@ -45453,6 +45625,15 @@ function _wallDecorTexture(T, imageName, done){
   if (_wallDecorTextures[imageName]) { done(_wallDecorTextures[imageName]); return; }
   const loader = new T.TextureLoader();
   loader.load(_assetURL(`assets/objetos/${imageName}`), tex => {
+    // Esta arte já tem canal alfa real; não aplique o chroma-key preto legado,
+    // que apagaria os detalhes escuros do ferro.
+    if(imageName === 'tocha_parede.png' || imageName === 'braseiro_parede.png'
+        || imageName === 'vitral_templo.png' || imageName === 'gargula_pedra.png'
+        || imageName === 'gruta_parede.png'){
+      if(T.SRGBColorSpace) tex.colorSpace=T.SRGBColorSpace;
+      else if(T.sRGBEncoding) tex.encoding=T.sRGBEncoding;
+      tex._shared = true; _wallDecorTextures[imageName] = tex; done(tex); return;
+    }
     // Os três assets iniciais vieram com fundo preto opaco. Convertemos somente
     // preto absoluto/quase absoluto em alfa, preservando sombras e detalhes.
     const img = tex.image, cv = document.createElement('canvas');
@@ -46360,7 +46541,7 @@ function renderMap3D(state){
           if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
           const placeholder = new T.Group();
           placeholder.userData = { isDecor: true, decorId: d.id, glbPath, pending: true };
-          placeholder.position.set(worldX, 0, worldZ);
+          placeholder.position.set(worldX, DECOR_GLB_FLOOR_Y + dFloorY, worldZ);
           placeholder.visible = visivel;
           g3.scene.add(placeholder);
           g3.decorMeshes[d.id] = placeholder;
@@ -51192,6 +51373,8 @@ function on3DClick(e){
     if(decsHere3D.length){
       const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
+      const sino = decsHere3D.find(d => d.type === 'sino_ritualistico');
+      if(sino){ tocarSinoRitualistico(sino); return; }
       if(decsHere3D.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
     }
@@ -51575,6 +51758,8 @@ function handleTileClick(tx, ty){
     if(decsHere.length){
       const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
       if(inter){ GS.interagirDecor(inter.id); return; }
+      const sino = decsHere.find(d => d.type === 'sino_ritualistico');
+      if(sino){ tocarSinoRitualistico(sino); return; }
       if(decsHere.some(d => !d.pisavel)) return;   // objeto sólido bloqueia o caminho
       // só decoração(ões) pisável(is) → segue para o movimento
     }

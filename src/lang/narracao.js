@@ -3003,6 +3003,10 @@ window.LANG_NARRACAO = {
   "narracao.a_aventura_continua": {
     "en": "📜 The adventure continues — round {rodada}.",
     "pt": "📜 A aventura continua — rodada {rodada}."
+  },
+  "narracao.fumarola_expulsa_criatura": {
+    "en": "🌫️ A fumarole erupts beneath **{criatura}**, blasting them up to **{casas}** squares away!",
+    "pt": "🌫️ Uma fumarola irrompe sob **{criatura}** e a lança até **{casas}** casas!"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

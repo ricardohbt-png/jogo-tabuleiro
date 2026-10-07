@@ -10500,6 +10500,14 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"
+  },
+  "dado.geiser_lava": {
+    "en": "🌋 Lava geyser",
+    "pt": "🌋 Gêiser de lava"
+  },
+  "dado.fumarola": {
+    "en": "🌫️ Fumarole burst",
+    "pt": "🌫️ Rajada da fumarola"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

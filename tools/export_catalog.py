@@ -147,6 +147,8 @@ def build_catalog():
             "pisavel": meta["pisavel"], "loot_capaz": meta["loot_capaz"],
             "special": meta["special"], "image": meta.get("image"),
             **({"charges": meta["charges"]} if meta.get("charges") is not None else {}),
+            **({"intervalo_rodadas": meta["intervalo_rodadas"]}
+               if meta.get("intervalo_rodadas") is not None else {}),
         })
     materiais = []
     for mid, meta in server.MATERIAIS.items():

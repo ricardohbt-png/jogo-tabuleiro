@@ -223,18 +223,90 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 22 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 85 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
 > pisável): 1d4 de fogo a quem entra (heróis e monstros — `_aplicar_fogueira_se_pisar`
 > após cada commit de passo). **Fonte** (`special:fountain`): `interagir_decor` dá
-> `garrafa_agua` e gasta 1 `charges`. **Moita espinhosa** (`moita_espinhosa`, 1×1, pisável): quem entra sofre 1 de dano físico e, na 1ª moita do turno, perde 1 do movimento (`_apply_thorn_bush_entry_penalty`; começar o turno sobre ela também desconta 1); voo ignora. Empurrão/arrasto não espeta (`aplicar_espinhos=False`). **Containers** (`loot:{gold,items}`, qualquer
-> tipo exceto fogueira): `interagir_decor`→`decor_loot`→`take_from_decor` (reusa o
+> `garrafa_agua` e gasta 1 `charges`. **Moita espinhosa** (`moita_espinhosa`, 1×1, pisável): quem entra sofre 1 de dano físico e, na 1ª moita do turno, perde 1 do movimento (`_apply_thorn_bush_entry_penalty`; começar o turno sobre ela também desconta 1); voo ignora. Empurrão/arrasto não espeta (`aplicar_espinhos=False`). `poco_balde` ocupa 2×2, é alto e sólido;
+> fornece água até consumir suas 10 cargas iniciais e usa `poco_balde.png`/`.glb`.
+> Cercas da fazenda são módulos 1×1 giráveis com PNG/GLB próprios: `cerca_reta` e
+> `cerca_curva` bloqueiam; `cerca_quebrada` permite passagem. `porteira_fechada`
+> bloqueia e `porteira_aberta` permite passagem; ambas têm placa PASTO e dobradiças.
+> `celeiro_medieval` ocupa 4×4, é alto e bloqueia passagem; tem miniaturas PNG/GLB próprias.
+> `galinheiro` ocupa 2×2, é alto e bloqueia passagem; inclui três ninhos frontais
+> com ovos e usa miniaturas PNG/GLB próprias.
+> `cabana_rustica` ocupa 3×3, é alta e bloqueia passagem; tem troncos, varanda
+> coberta e chaminé, com miniaturas PNG/GLB próprias.
+> `lago_patos` ocupa 3×3 e bloqueia passagem sem ocluir visão; tem margem rasa
+> alinhada ao piso, água, pedras, juncos e patos-reais com formas mais naturais.
+> Usa miniaturas PNG/GLB próprias; `DECOR_GLB_GROUND_Y` enterra levemente a borda
+> para a superfície da água ficar junto ao plano do tabuleiro.
+> **Containers** (`loot:{gold,items}`, qualquer tipo exceto fogueira):
+> `interagir_decor`→`decor_loot`→`take_from_decor` (reusa o
 > painel de baú via `abrirPainelLoot`; servidor re-envia `decor_loot` após cada take
 > p/ atualizar o painel). Footprint resolvido por `_decor_tiles`/`_decor_tiles_at`
 > (espelhado no cliente `GS.decorTilesOf` e no editor `decorTilesAt`). Render: 2D
 > emoji + 3D geometria procedural (`DECOR_3D`/`decorMeshes`, preparado p/ GLB).
+> Decorações `special:wall` ficam na face da parede e não ocupam o chão; `tocha_parede`
+> combina `assets/objetos/tocha_parede.png` com o loop GLB de `chama_viva.glb` no 3D.
+> `gruta_parede` é um relevo mural 1×1 com imagem de gruta entre rochas; não é portal
+> nem entrada jogável e usa PNG/GLB próprios com transparência.
+> `braseiro_parede` também usa o loop GLB de `chama_viva.glb`, com tigela suspensa de ferro.
+> `pira_chamas` ocupa 1×1, bloqueia passagem e usa GLB com três línguas de fogo animadas sobre lenha carbonizada; é decorativa, sem dano.
+> `vitral_templo` é uma decoração de parede com PNG/GLB próprios, arco de pedra e painéis de vidro colorido.
+> `gargula_pedra` é uma decoração de parede 1×1, encaixável em qualquer face de parede, com PNG/GLB próprios e sem efeito mecânico.
+> `sino_ritualistico` ocupa 1×1, bloqueia passagem e usa miniaturas PNG/GLB próprias, com campânula de bronze e suporte entalhado.
+> `estatua_divindade` ocupa 1×1, é alta e sólida, sem efeito mecânico; usa miniaturas PNG/GLB próprias com figura serena em túnica, halo e pedestal de pedra.
+> `monte_ossos` é decoração 1×1 baixa e atravessável, sem loot por padrão; usa
+> `assets/objetos/monte_ossos.png` no editor/2D e `assets/objetos/monte_ossos.glb` no 3D.
+> `bola_corrente` ocupa 1×1 e bloqueia movimento; `grilhoes_parede` é parede e
+> não ocupa o chão. Ambas têm miniaturas PNG/GLB próprias.
+> `tronco_musgo` ocupa 2×1, pode ser girado, bloqueia movimento e usa miniaturas
+> PNG/GLB próprias para o editor/2D e o tabuleiro 3D.
+> `moita_espinhosa` ocupa 1×1 e permite passagem; ao entrar, causa 1 de dano
+> físico e consome 1 ponto do movimento total na primeira moita do turno
+> (criaturas voadoras ignoram os espinhos). `capim_alto` ocupa 1×1 e é
+> atravessável. Ambos têm miniaturas PNG/GLB próprias.
+> `tronco_podre_fungos` ocupa 2×1, e `tocos_alagados` ocupa 1×1; ambos bloqueiam
+> movimento e têm miniaturas PNG/GLB próprias.
+> `juncos` ocupa 1×1 e permite passagem; `raizes_torcidas` ocupa 2×1,
+> bloqueia passagem e pode ser girada. Ambos têm miniaturas PNG/GLB próprias.
+> `estalactites_estalagmites` ocupa 1×1, é alta e bloqueia passagem; `fenda_fumegante`
+> ocupa 1×1, é atravessável, puramente visual e tem vapor animado em loop.
+> `geiser_lava` ocupa 1×1, permite passagem e aplica 1d8 de fogo no início do turno
+> de quem ainda estiver sobre a casa (heróis, monstros, servos e refém; voo ignora).
+> No GLB, a cratera fica em repouso por cerca de quatro segundos entre erupções
+> curtas de lava; tem miniaturas PNG/GLB próprias.
+> `fumarola` ocupa 1×1, permite passagem e, no começo da vez, empurra quem estiver
+> sobre ela 1 ou 2 casas a cada intervalo configurável de 1 a 12 rodadas (padrão: 2;
+> criaturas voadoras ignoram). O vapor irrompe em rajadas no GLB.
+> `cacto_deserto` ocupa 1×1 e bloqueia passagem; `ossos_semi_enterrados` ocupa
+> 1×1 e permite passagem. Ambos têm miniaturas PNG/GLB próprias.
+> `arbusto_seco` ocupa 1×1 e bloqueia passagem; `capim_amarelado` ocupa 1×1
+> e permite passagem. Ambos têm miniaturas PNG/GLB próprias.
+> `estatua_soterrada` ocupa 1×1, é baixa, bloqueia passagem e exibe a cabeça
+> de uma estátua antiga emergindo da areia; tem miniaturas PNG/GLB próprias.
+> `rochas_rachadas` ocupa 1×1, é baixa e permite passagem; reúne placas de
+> pedra partidas com fissuras escuras em miniaturas PNG/GLB próprias.
+> `ninho_abutres` ocupa 1×1, é baixo e permite passagem; mostra galhos secos,
+> ovos e um abutre pousado em miniaturas PNG/GLB próprias.
+> `arco_pedra_deserto` ocupa 3×3, é alto e permite passagem; forma um marco de
+> arenito erodido com abertura central, cascalho e miniaturas PNG/GLB próprias.
+> `pedra_sacrificio` ocupa 2×2, é alta e bloqueia passagem; traz um altar de
+> granito gasto, marcas rituais, velas apagadas e uma clareira de musgo e folhas.
+> `oasis_pequeno` ocupa 4×4, é alto e bloqueia passagem; reúne água, pedras e
+> três palmeiras em uma única miniatura PNG/GLB.
+> `acampamento_abandonado` ocupa 2×2, é alto e bloqueia passagem; mostra lona
+> rasgada sobre estacas partidas e uma fogueira fria de cinzas, pedra e carvão.
+> `ruinas_pedra` ocupa 2×2, é alta e bloqueia passagem; reúne colunas partidas,
+> trechos de muralha e escombros em miniaturas PNG/GLB próprias.
+> `esqueleto_tiranossauro` ocupa 4×2, é baixo e sólido; mostra um grande fóssil
+> tombado com crânio aberto, costelas, membros e cauda em miniaturas PNG/GLB próprias.
+> GLBs com terra/areia própria usam `DECOR_GLB_GROUND_Y` no cliente para alinhar
+> o plano do terreno ao piso, soterrando a base inferior. O carregamento mantém
+> a elevação local do placeholder; o alinhamento acompanha a escala vertical.
 > Validação em `validar_dungeon`; catálogo exportado p/ o editor via
 > `export_catalog.py`. Testes: `tools/test_decoracoes.py`, `tools/test_decor_roundtrip.py`.
 
@@ -258,7 +330,9 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 >
 > **Três níveis de visão por objeto (sem campo novo — derivado de `pisavel`/`alto`):**
 > **livre** (pisável: fogueira, placa, brasa, chão) não bloqueia nada; **baixo** (sólido e
-> não alto: barril, mesa, cama, baú, altar, trono, grades, gaiola, lápide, mesa de tortura)
+> não alto: barril, mesa, cama, baú, altar, trono, grades, gaiola, lápide, mesa de tortura).
+> `grades_prisao` usa `assets/objetos/grades_prisao.png` com fundo transparente no editor/2D
+> e `assets/objetos/grades_prisao.glb` no tabuleiro 3D.
 > barra o **passo** mas NÃO a visão nem o tiro — antes `_tem_linha_de_visao` bloqueava com
 > todo `_decor_block_tiles`, contra o que a doc sempre disse, e o barril fazia sombra de
 > coluna; **alto** (coluna, estante, árvore, cripta, casa, lareira, carroça) bloqueia visão e
