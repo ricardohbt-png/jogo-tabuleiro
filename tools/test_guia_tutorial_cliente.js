@@ -204,5 +204,15 @@ console.log("\n[16] fiação do glossário no game.js e no css");
   check("chave de definição usa ui.tutorial.glossario", /ui\.tutorial\.glossario\./.test(gjs));
 }
 
+console.log("\n[17] halo de habilidade escolhe o elemento visível, não o 1º do DOM");
+{
+  const gjs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+  const i = gjs.indexOf("function _guiaAplicarHalo()");
+  check("_guiaAplicarHalo existe", i >= 0);
+  const corpo = i >= 0 ? gjs.slice(i, i + 1200) : "";
+  check("varre todos os candidatos (querySelectorAll)", corpo.includes("querySelectorAll(sel.css)"));
+  check("exige elemento visível (getClientRects)", corpo.includes("getClientRects().length"));
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

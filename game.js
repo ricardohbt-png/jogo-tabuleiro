@@ -53759,8 +53759,13 @@ function _guiaAplicarHalo(){
   if(!_guiaPasso || !_guiaPasso.ui) return;
   const sel = GuiaTutorial.seletor(_guiaPasso.ui);
   if(!sel) return;
-  let el = document.querySelector(sel.css);
-  if(el && sel.ancestral) el = el.closest(sel.ancestral);
+  // O mesmo data-ability-id também existe em telas escondidas (seleção de classe):
+  // vale só o primeiro candidato que tem o ancestral pedido E está visível.
+  let el = null;
+  for(const cand of document.querySelectorAll(sel.css)){
+    const alvo = sel.ancestral ? cand.closest(sel.ancestral) : cand;
+    if(alvo && alvo.getClientRects().length){ el = alvo; break; }
+  }
   if(!el && sel.alternativa) el = document.querySelector(sel.alternativa);
   if(!el) return;
   el.classList.add('guia-halo');
