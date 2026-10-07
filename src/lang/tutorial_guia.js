@@ -148,6 +148,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Open the chest and take a weapon; it goes to your bag.",
     "pt": "Abra o baú e pegue uma arma; ela vai para a bolsa."
   },
+  "ui.tutorial.guia.fala_10.matar.porque": {
+    "en": "Your trade is the [[furtivo]]: hidden, the same strike hurts far more.",
+    "pt": "O seu ofício é o [[furtivo]]: escondido, o mesmo golpe dói muito mais."
+  },
+  "ui.tutorial.guia.fala_10.matar.texto": {
+    "en": "Take down the dummy.",
+    "pt": "Derrube o boneco."
+  },
   "ui.tutorial.guia.fala_18.comer.dica.1": {
     "en": "If the bag is closed, use the backpack button.",
     "pt": "Se a bolsa está fechada, use o botão da mochila."
@@ -364,6 +372,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take down the dummy.",
     "pt": "Derrube o boneco."
   },
+  "ui.tutorial.guia.fala_9.atacar.porque": {
+    "en": "This is your weakest strike: see the raw damage against [[ca]].",
+    "pt": "Esse é o seu pior golpe: veja o dano cru contra a [[ca]]."
+  },
+  "ui.tutorial.guia.fala_9.atacar.texto": {
+    "en": "Attack the dummy head-on.",
+    "pt": "Ataque o boneco de frente."
+  },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",
     "pt": "O exercício só conta quando a metamagia entra no lançamento."
@@ -387,6 +403,38 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_comando.comandar.texto": {
     "en": "Click Command: the servant moves and attacks a dummy.",
     "pt": "Clique em Comandar: o servo anda e ataca um boneco."
+  },
+  "ui.tutorial.guia.treino_criar.criar.porque": {
+    "en": "Pit is already unlocked; the other formulas come from the Guild.",
+    "pt": "Buraco já está liberado; as outras fórmulas vêm da Guilda."
+  },
+  "ui.tutorial.guia.treino_criar.criar.texto": {
+    "en": "Use Create Trap on an empty square in the room.",
+    "pt": "Use Criar Armadilha numa casa vazia da sala."
+  },
+  "ui.tutorial.guia.treino_desarmar.desarmar.porque": {
+    "en": "If the test fails, try again: the room restores the mechanism.",
+    "pt": "Se o teste falhar, tente de novo: a sala restaura o mecanismo."
+  },
+  "ui.tutorial.guia.treino_desarmar.desarmar.texto": {
+    "en": "Stand next to the revealed trap and use Disarm Trap.",
+    "pt": "Fique ao lado da armadilha revelada e use Desarmar Armadilha."
+  },
+  "ui.tutorial.guia.treino_detectar.detectar.porque": {
+    "en": "It reveals nearby mechanisms and costs water as [[manutencao]].",
+    "pt": "Ela revela os mecanismos próximos e cobra água de [[manutencao]]."
+  },
+  "ui.tutorial.guia.treino_detectar.detectar.texto": {
+    "en": "Arm Detect Traps and get close to square 10,8.",
+    "pt": "Arme Detectar Armadilhas e chegue perto da casa 10,8."
+  },
+  "ui.tutorial.guia.treino_esconder.esconder.porque": {
+    "en": "It is a bonus action: you can attack in the same round after hiding.",
+    "pt": "É ação bônus: dá para atacar na mesma rodada depois de se esconder."
+  },
+  "ui.tutorial.guia.treino_esconder.esconder.texto": {
+    "en": "Near the dummy, use Hide in the Shadows.",
+    "pt": "Perto do boneco, use Esconder nas Sombras."
   },
   "ui.tutorial.guia.treino_estender_magia.estender.porque": {
     "en": "It adds duration to an effect that persists.",
@@ -423,6 +471,18 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_furia_extra.extra.texto": {
     "en": "Attack again now, before ending your turn.",
     "pt": "Ataque outra vez agora, antes de encerrar o turno."
+  },
+  "ui.tutorial.guia.treino_furtivo.furtivo.dica.1": {
+    "en": "If you miss, hide again and retry.",
+    "pt": "Se errar, esconda-se de novo e tente outra vez."
+  },
+  "ui.tutorial.guia.treino_furtivo.furtivo.porque": {
+    "en": "The [[furtivo]] is passive: the extra damage shows up when conditions hold.",
+    "pt": "O [[furtivo]] é passivo: o dano extra aparece quando as condições valem."
+  },
+  "ui.tutorial.guia.treino_furtivo.furtivo.texto": {
+    "en": "Attack the dummy while hidden.",
+    "pt": "Ataque o boneco enquanto estiver escondido."
   },
   "ui.tutorial.guia.treino_golpe.golpe.dica.1": {
     "en": "If you already used your action, click End Turn first.",
@@ -491,6 +551,22 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_slots.encerrar.texto": {
     "en": "Click End Turn and check your [[slot]]s.",
     "pt": "Clique em Encerrar Turno e confira seus [[slot]]."
+  },
+  "ui.tutorial.guia.treino_veneno.veneno.porque": {
+    "en": "It is a free action; check how many charges the weapon holds.",
+    "pt": "É ação livre; confira quantas cargas ficaram na arma."
+  },
+  "ui.tutorial.guia.treino_veneno.veneno.texto": {
+    "en": "Use Quick Poison and pick the training poison in the bag.",
+    "pt": "Use Veneno Rápido e escolha o veneno de treino na bolsa."
+  },
+  "ui.tutorial.guia.treino_veneno_golpe.golpe.porque": {
+    "en": "Watch the charge being spent and the target's [[teste_resistencia]] against the poison.",
+    "pt": "Observe a carga gasta e o [[teste_resistencia]] do alvo contra o veneno."
+  },
+  "ui.tutorial.guia.treino_veneno_golpe.golpe.texto": {
+    "en": "Attack the dummy with the coated weapon.",
+    "pt": "Ataque o boneco com a arma untada."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL_GUIA);

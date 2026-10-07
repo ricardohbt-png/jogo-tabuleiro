@@ -2361,7 +2361,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_9.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_9.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_10",
@@ -2385,7 +2393,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_10.matar.texto",
+          "porque": "ui.tutorial.guia.fala_10.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_11",
@@ -3380,7 +3396,15 @@
         "alvo": "detectar_armadilhas",
         "vezes": 1,
         "texto_curto": "Revele a armadilha de treinamento"
-      }
+      },
+      "guia": [
+        {
+          "id": "detectar",
+          "texto": "ui.tutorial.guia.treino_detectar.detectar.texto",
+          "porque": "ui.tutorial.guia.treino_detectar.detectar.porque",
+          "ui": "habilidade:detectar_armadilhas"
+        }
+      ]
     },
     {
       "id": "treino_desarmar",
@@ -3403,7 +3427,14 @@
         "tipo": "desarmar_armadilha",
         "vezes": 1,
         "texto_curto": "Desarme a armadilha"
-      }
+      },
+      "guia": [
+        {
+          "id": "desarmar",
+          "texto": "ui.tutorial.guia.treino_desarmar.desarmar.texto",
+          "porque": "ui.tutorial.guia.treino_desarmar.desarmar.porque"
+        }
+      ]
     },
     {
       "id": "treino_esconder",
@@ -3427,7 +3458,15 @@
         "alvo": "esconder_sombras",
         "vezes": 1,
         "texto_curto": "Esconda-se nas sombras"
-      }
+      },
+      "guia": [
+        {
+          "id": "esconder",
+          "texto": "ui.tutorial.guia.treino_esconder.esconder.texto",
+          "porque": "ui.tutorial.guia.treino_esconder.esconder.porque",
+          "ui": "habilidade:esconder_sombras"
+        }
+      ]
     },
     {
       "id": "treino_furtivo",
@@ -3451,7 +3490,18 @@
         "alvo": "ataque_furtivo",
         "vezes": 1,
         "texto_curto": "Acerte um Ataque Furtivo"
-      }
+      },
+      "guia": [
+        {
+          "id": "furtivo",
+          "texto": "ui.tutorial.guia.treino_furtivo.furtivo.texto",
+          "porque": "ui.tutorial.guia.treino_furtivo.furtivo.porque",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.treino_furtivo.furtivo.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_veneno",
@@ -3475,7 +3525,15 @@
         "alvo": "veneno_rapido",
         "vezes": 1,
         "texto_curto": "Unte a arma com Veneno Rápido"
-      }
+      },
+      "guia": [
+        {
+          "id": "veneno",
+          "texto": "ui.tutorial.guia.treino_veneno.veneno.texto",
+          "porque": "ui.tutorial.guia.treino_veneno.veneno.porque",
+          "ui": "habilidade:veneno_rapido"
+        }
+      ]
     },
     {
       "id": "treino_veneno_golpe",
@@ -3499,7 +3557,15 @@
         "vezes": 1,
         "texto_curto": "Acerte o boneco com a arma untada",
         "requer_veneno": true
-      }
+      },
+      "guia": [
+        {
+          "id": "golpe",
+          "texto": "ui.tutorial.guia.treino_veneno_golpe.golpe.texto",
+          "porque": "ui.tutorial.guia.treino_veneno_golpe.golpe.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "treino_criar",
@@ -3523,7 +3589,15 @@
         "alvo": "criar_armadilha",
         "vezes": 1,
         "texto_curto": "Crie uma armadilha conhecida"
-      }
+      },
+      "guia": [
+        {
+          "id": "criar",
+          "texto": "ui.tutorial.guia.treino_criar.criar.texto",
+          "porque": "ui.tutorial.guia.treino_criar.criar.porque",
+          "ui": "habilidade:criar_armadilha"
+        }
+      ]
     },
     {
       "id": "treino_cura",
