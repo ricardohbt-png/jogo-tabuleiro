@@ -3202,8 +3202,9 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > **Morte Explosiva do Elemental de Fogo invocado:** `_executar_conjurar_elemental` copia a
 > ficha do Bestiário para o servo. Em `_animado_morre`, a passiva `morte_explosiva` usa
 > `_morte_explosiva` (4d6, raio 1, Reflexos CD 13 e chamas persistentes conforme a ficha),
-> igual à morte do monstro. O servidor emite `explosion_area`; o cliente destaca a área e toca
-> `sfx('explosao')` no centro. O legado `especial: explosao_6d6` continua no caminho antigo.
+> igual à morte do monstro. O servidor emite `explosion_area`; o cliente destaca a área, toca
+> `sfx('explosao')` no centro e inicia a animação 2D/3D da Mina Terrestre. O legado
+> `especial: explosao_6d6` continua no caminho antigo.
 > **Voz dos elementais:** os 6 elementais (`elemental_fogo|ar|agua|pedra|eletrico|gelo`) têm
 > família própria `elem_<elemento>` (`FAMILIAS_ELEMENTO` em `src/soundBank.js`; `familiaDe`
 > casa `^elemental_<x>$` ANTES das regras — os demais `elemental_*`, como o Descontrolado,

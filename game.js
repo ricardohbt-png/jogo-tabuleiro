@@ -52811,6 +52811,10 @@ GS.on('explosionArea', msg => {
   if(_explosionTimer) clearTimeout(_explosionTimer);
   _explosionTiles = new Set((msg.tiles||[]).map(([x,y])=>`${x},${y}`));
   sfx('explosao', {pos:[msg.cx, msg.cy]});
+  const raio=Math.max(1,...(msg.tiles||[]).map(([x,y])=>Math.max(Math.abs(x-msg.cx),Math.abs(y-msg.cy))));
+  // Reaproveita a animação completa da Mina Terrestre; o áudio permanece no
+  // disparo original, para não tocar duas vezes a explosão de morte.
+  _receberDisparoMina({tipo_id:'mina_terrestre',pos:[msg.cx,msg.cy],area:raio});
   if(GS.gameState) renderMap(GS.gameState);
   _explosionTimer = setTimeout(() => {
     _explosionTiles = null;
