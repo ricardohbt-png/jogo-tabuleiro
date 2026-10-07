@@ -68,5 +68,19 @@ const lic = GS.licaoAtual();
 check("licaoAtual traz o passo", lic && lic.passo && lic.passo.i === 1 && lic.passo.n === 3);
 check("GS.avancarPasso existe", typeof GS.avancarPasso === "function");
 
+console.log("\n[6] fiação estática no game.js, index.html e CSS");
+const gameSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+const indexSrc = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
+const cssSrc = fs.readFileSync(path.join(raiz, "game.css"), "utf8");
+check("botão encerrar turno tem data-guia", /id="btn-end-turn"[^>]*data-guia="botao:encerrar_turno"|data-guia="botao:encerrar_turno"[^>]*id="btn-end-turn"/.test(gameSrc));
+check("um único GS.on('licaoPasso')", (gameSrc.match(/GS\.on\('licaoPasso'/g) || []).length === 1);
+check("janela usa GuiaTutorial.seletor", /GuiaTutorial\.seletor\(/.test(gameSrc));
+check("janela usa nivelDica com VC.tutorial", /GuiaTutorial\.nivelDica\(/.test(gameSrc) && /VC\.tutorial/.test(gameSrc));
+check("botão Entendi chama GS.avancarPasso", /GS\.avancarPasso\(\)/.test(gameSrc));
+check("index.html carrega guiaTutorial.js e tutorial.js",
+      /src\/guiaTutorial\.js/.test(indexSrc) && /src\/lang\/tutorial\.js/.test(indexSrc));
+check("CSS do halo existe", /\.guia-halo\b/.test(cssSrc) && /@keyframes guia-pulso/.test(cssSrc));
+check("textos pelo tradutor, não literais", /ui\.tutorial\.passo_de/.test(gameSrc) && /ui\.tutorial\.entendi/.test(gameSrc));
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

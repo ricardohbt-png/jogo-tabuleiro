@@ -1820,6 +1820,26 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
 #licao-janela .licao-fechar:hover{ color:#f3e6cf; background:#ffffff14; }
 #licao-janela .licao-texto{ font-size:.92rem; line-height:1.4; }
 @media (max-width:900px){ #licao-janela{ width:min(300px, 62vw); top:56px; } }
+#licao-janela .licao-passo{ font-size:.68rem; letter-spacing:.5px; opacity:.85; margin-bottom:4px; }
+#licao-janela .licao-barra{ height:4px; background:#ffffff1f; border-radius:2px; margin-top:3px; overflow:hidden; }
+#licao-janela .licao-barra i{ display:block; height:100%; background:#f0c867; transition:width .3s; }
+#licao-janela .licao-porque{ font-size:.78rem; opacity:.8; margin-top:6px; line-height:1.35; }
+#licao-janela .licao-dica{ margin-top:8px; padding:6px 8px; border-left:3px solid #f0c867;
+  background:#f0c8671f; font-size:.82rem; line-height:1.35; }
+#licao-janela .licao-acoes{ display:flex; gap:8px; margin-top:8px; }
+#licao-janela .licao-botao{ cursor:pointer; padding:5px 10px; border-radius:4px; font-size:.8rem;
+  border:1px solid #f0c86788; background:#f0c8671a; color:inherit; }
+#licao-janela .licao-botao:hover{ background:#f0c86733; }
+#licao-janela .licao-botao-ok{ background:#f0c867; color:#241c0a; font-weight:700; }
+
+.guia-halo{ position:relative; outline:3px solid #f0c867; outline-offset:2px; border-radius:6px;
+  animation:guia-pulso 1.6s ease-in-out infinite; z-index:5; }
+.guia-halo.guia-halo-forte{ outline-width:4px; animation-duration:.9s; }
+@keyframes guia-pulso{
+  0%,100%{ box-shadow:0 0 0 0 #f0c86799; }
+  50%{ box-shadow:0 0 0 10px #f0c86700, 0 0 18px 4px #f0c867cc; }
+}
+@media (prefers-reduced-motion:reduce){ .guia-halo{ animation:none; box-shadow:0 0 14px 3px #f0c867cc; } }
 
 /* ── Prévia do editor (index.html?preview=1): só o tabuleiro ──────────────── */
 body.preview-mode #side-panel,

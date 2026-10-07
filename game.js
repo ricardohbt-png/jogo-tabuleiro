@@ -436,7 +436,7 @@ document.body.innerHTML = `
         <div class="skills-list" id="skills-list"></div>
       </div>
       <div style="padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;">
-        <button type="button" class="btn-end-turn" id="btn-end-turn" disabled>
+        <button type="button" class="btn-end-turn" id="btn-end-turn" data-guia="botao:encerrar_turno" disabled>
           <span data-i18n="ui.hud.encerrar_turno">⏭ Encerrar Turno</span>
         </button>
       </div>
@@ -53680,23 +53680,100 @@ function _avancarFala(){ if(_falaTimer) clearTimeout(_falaTimer); _mostrarProxim
 // A lição vai para uma janela fixa no canto, que só sai quando o jogador
 // fecha — ou quando a lição seguinte chega e toma o lugar.
 let _licaoUltima = null;
+let _guiaPasso = null;          // passo atual recebido do servidor
+let _guiaDesde = 0;             // performance.now() do último progresso
+let _guiaTimer = null;
+const _guiaCfg = () => ({ dica1S: 12, dica2S: 30, ...(window.VC && VC.tutorial) });
+
+// Chave de idioma (ui.tutorial.*) ou texto autoral em português.
+function _tutTexto(s){
+  s = s || '';
+  return s.indexOf('ui.tutorial.') === 0 ? t(s) : s;
+}
+
+function _guiaLimparHalo(){
+  document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte'));
+}
+
+// O HUD é redesenhado por innerHTML a cada game_state e apaga a classe; por isso o
+// halo é reaplicado num laço curto enquanto houver passo com alvo de HUD.
+function _guiaAplicarHalo(){
+  _guiaLimparHalo();
+  if(!_guiaPasso || !_guiaPasso.ui) return;
+  const sel = GuiaTutorial.seletor(_guiaPasso.ui);
+  if(!sel) return;
+  let el = document.querySelector(sel.css);
+  if(el && sel.ancestral) el = el.closest(sel.ancestral);
+  if(!el) return;
+  el.classList.add('guia-halo');
+  if(GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg()) >= 1) el.classList.add('guia-halo-forte');
+}
+
+function _guiaAtualizarDica(){
+  const host = $('licao-dica');
+  if(!host) return;
+  const nivel = GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg());
+  const txt = GuiaTutorial.textoDica(_guiaPasso, nivel);
+  host.textContent = txt ? `${t('ui.tutorial.dica')}: ${_tutTexto(txt)}` : '';
+  host.style.display = txt ? 'block' : 'none';
+}
+
+function _guiaTick(){
+  if(!_guiaPasso){ _guiaLimparHalo(); return; }
+  _guiaAplicarHalo();
+  _guiaAtualizarDica();
+}
+
+function _guiaIniciar(passo){
+  _guiaPasso = passo || null;
+  _guiaDesde = performance.now();
+  if(_guiaTimer) clearInterval(_guiaTimer);
+  _guiaTimer = _guiaPasso ? setInterval(_guiaTick, 400) : null;
+  _guiaTick();
+}
+
+function _guiaMostrar(){ _guiaDesde = performance.now(); _guiaTick(); }
+
 function _mostrarJanelaLicao(msg){
   const host = $('licao-janela');
   if(!host) return;
   _licaoUltima = msg;
   const emoji = (msg.falante && msg.falante.emoji) || '💬';
   const nome  = (msg.falante && msg.falante.nome)  || '';
+  const passo = msg.passo || null;
+  const explicito = !!(passo && !passo.auto);
+  const texto = explicito ? _tutTexto(passo.texto) : (msg.texto || '');
+  const andamento = (explicito && passo.n > 1)
+    ? `<div class="licao-passo">${_esc(t('ui.tutorial.passo_de', {i: passo.i + 1, n: passo.n}))}` +
+      `<div class="licao-barra"><i style="width:${Math.round(((passo.i + 1) / passo.n) * 100)}%"></i></div></div>` : '';
+  const porque = (explicito && passo.porque)
+    ? `<div class="licao-porque">${_esc(_tutTexto(passo.porque))}</div>` : '';
+  const botoes = (passo && passo.ui && GuiaTutorial.seletor(passo.ui))
+    ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
+  const entendi = (passo && passo.informativo)
+    ? `<button type="button" class="licao-botao licao-botao-ok" onclick="GS.avancarPasso()">${t('ui.tutorial.entendi')}</button>` : '';
   host.innerHTML =
     `<div class="licao-topo"><span class="licao-emoji">${_esc(emoji)}</span>` +
     `<span class="licao-nome">${_esc(nome)}</span>` +
     `<button type="button" class="licao-fechar" onclick="_fecharJanelaLicao()"` +
     ` title="${t('ui.geral.fechar')}" aria-label="${t('ui.geral.fechar')}">✕</button></div>` +
-    `<div class="licao-texto">${_esc(msg.texto || '')}</div>`;
+    andamento +
+    `<div class="licao-texto">${_esc(texto)}</div>` + porque +
+    `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
+    ((botoes || entendi) ? `<div class="licao-acoes">${botoes}${entendi}</div>` : '');
   host.classList.add('open');
+  _guiaIniciar(passo);
 }
+// Fechar a janela não apaga o destaque: o halo vive até o passo mudar.
 function _fecharJanelaLicao(){ $('licao-janela')?.classList.remove('open'); }
 // O quadro ⚑ do HUD reabre a última lição — fechar não pode ser irreversível.
 function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima); }
+
+GS.on('licaoPasso', msg => {
+  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
+  _licaoUltima = Object.assign({}, _licaoUltima, { passo: msg.passo });
+  _mostrarJanelaLicao(_licaoUltima);
+});
 
 GS.on('fala', msg => {
   if(msg && msg.licao_id){ _mostrarJanelaLicao(msg); return; }
