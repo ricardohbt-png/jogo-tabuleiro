@@ -768,6 +768,7 @@ const InventoryModal = (() => {
       const slot = document.createElement('div');
       slot.className = 'inv-bagslot' + (item ? ' filled' : ' empty');
       slot.dataset.bagIndex = String(i);
+      if(item && item.id) slot.dataset.itemId = String(item.id);
       if(!_readOnly){
         slot.tabIndex = 0;
         slot.dataset.inventorySlot = 'bag';

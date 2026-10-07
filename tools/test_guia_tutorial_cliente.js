@@ -142,5 +142,14 @@ check("converte passos em casas", JSON.stringify(c) === "[[3,3],[4,3],[4,4]]");
 check("passos vazios: vazio", G.caminhoAbsoluto([], 1, 1).length === 0);
 check("não-lista: vazio", G.caminhoAbsoluto(null, 1, 1).length === 0);
 
+console.log("\n[11] marcas no DOM e textos");
+const invSrc = fs.readFileSync(path.join(raiz, "src", "ui", "inventoryModal.js"), "utf8");
+check("espaço da bolsa leva o id do item", /dataset\.itemId\s*=/.test(invSrc));
+check("botão da mochila tem data-guia", /id="fab-inventario"[^>]*data-guia="botao:inventario"|data-guia="botao:inventario"[^>]*id="fab-inventario"/.test(gameSrc));
+const langSrc = fs.readFileSync(path.join(raiz, "src", "lang", "tutorial.js"), "utf8");
+for (const k of ["dica_erro.fora_da_vez", "dica_erro.sem_acao", "dica_erro.longe_do_alvo",
+                 "dica_erro.alvo_errado", "resultado.acerto", "resultado.critico", "resultado.erro"])
+  check("chave ui.tutorial." + k, langSrc.includes('"ui.tutorial.' + k + '"'));
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

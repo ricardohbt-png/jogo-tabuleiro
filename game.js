@@ -447,7 +447,7 @@ document.body.innerHTML = `
   <!-- Celular: fileira de menus do jogador (Personagem, Inventário, Habilidades, Magias) -->
   <div id="player-fabs">
     <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
-    <button id="fab-inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
+    <button id="fab-inventario" data-guia="botao:inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
     <button id="fab-habilidades" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
     <button id="fab-magias" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
   </div>
