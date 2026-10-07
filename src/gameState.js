@@ -1870,6 +1870,14 @@ const GS = (() => {
         _emit('licaoPasso', msg);   // {licao_id, passo:{i,n,texto,porque,ui,dica,informativo}}
         break;
 
+      case 'licao_dica':
+        _emit('licaoDica', msg);        // {licao_id, motivo}
+        break;
+
+      case 'licao_resultado':
+        _emit('licaoResultado', msg);   // {licao_id, chave, roll, bonus, total, ca}
+        break;
+
       case 'metamorfose_catalog':
         metamorfoseCatalog = Array.isArray(msg.formas) ? msg.formas : [];
         _emit('metamorfoseCatalog', metamorfoseCatalog);

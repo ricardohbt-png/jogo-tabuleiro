@@ -89,5 +89,12 @@ check("_guiaEncerrar existe", /function _guiaEncerrar\(/.test(gameSrc));
 }
 check("textos pelo tradutor, não literais", /ui\.tutorial\.passo_de/.test(gameSrc) && /ui\.tutorial\.entendi/.test(gameSrc));
 
+console.log("\n[7] gameState encaminha licao_dica e licao_resultado");
+{
+  const gsSrc = fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8");
+  check("case licao_dica emite licaoDica", /case 'licao_dica':\s*\n\s*_emit\('licaoDica'/.test(gsSrc));
+  check("case licao_resultado emite licaoResultado", /case 'licao_resultado':\s*\n\s*_emit\('licaoResultado'/.test(gsSrc));
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);
