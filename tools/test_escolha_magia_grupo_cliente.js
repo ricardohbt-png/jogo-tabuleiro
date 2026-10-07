@@ -77,6 +77,22 @@ GS.escolherMagiaNivel("sono", "m");
 chega(cidade());
 check("respondido, volta a Ana", GS.myPid === "c");
 
+console.log("\n[2c] Mesa de teste: o Mestre escolhe pelo herói-teste");
+chega({ type: "game_state", test_mode: true, master_pid: "c", current_turn: null, players: [
+  { id: "c", name: "Ana", pos: [1, 1], alive: true },
+  { id: "test_hero_mage", name: "Pedro", pos: [2, 1], alive: true, test_hero: true } ],
+  monsters: [], tiles: [[1]], explored: [], rooms: [] });
+enviados.length = 0;
+GS.escolherMagiaNivel("sono", "test_hero_mage");
+check("vai por teste_escolher_magia_nivel com o herói-teste",
+      enviados[0] && enviados[0].type === "teste_escolher_magia_nivel"
+      && enviados[0].hero_id === "test_hero_mage" && enviados[0].magia_id === "sono");
+chega(estado("c"));
+enviados.length = 0;
+GS.escolherMagiaNivel("sono", "x");
+check("fora da mesa de teste, herói alheio segue pelo caminho comum",
+      enviados[0] && enviados[0].type === "escolher_magia_nivel");
+
 console.log("\n[3] Painel diz de quem é a escolha");
 const game = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 check("o painel guarda o herói do aviso", game.includes("el.dataset.heroi = msg.heroi || '';"));

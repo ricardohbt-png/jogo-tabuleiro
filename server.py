@@ -11040,6 +11040,22 @@ class GameRoom:
         await self._enviar_spell_pick_prompt(p)
         await self.push_state_or_city()
 
+    async def handle_teste_escolher_magia_nivel(self, pid, hero_id, magia_id):
+        """Mesa de teste do editor: o Mestre escolhe a magia nova de um
+        herói-teste (que não tem conexão para responder ao aviso). Só o Mestre
+        da sala descartável; erros voltam a ele pelo `_test_action_actor`."""
+        if not (getattr(self, "test_mode", False) and pid == self.master_pid
+                and pid in self.connections):
+            return
+        hero = self.players.get(hero_id)
+        if not hero or not hero.get("test_hero"):
+            return
+        self._test_action_actor = hero_id
+        try:
+            await self.handle_escolher_magia_nivel(hero_id, magia_id)
+        finally:
+            self._test_action_actor = None
+
     def _can_start(self):
         heroes = [p for p in self.players.values() if not p.get("is_master")]
         return len(heroes) >= 1 and all(p["class_id"] for p in heroes)
@@ -45244,10 +45260,19 @@ class GameRoom:
             # segue vivo na cidade: a expedição é interrompida, não é derrota.
             await self._checar_masmorra_vazia()
 
-    def _proximo_spell_pick(self, conexao):
-        """1º herói da conexão (na ordem do grupo) com escolha de magia pendente."""
+    def _dono_do_painel(self, q):
+        """Quem responde à escolha de magia deste herói: a conexão dele (ou a
+        do controlador, no Solo com grupo) e, na mesa de teste do editor, o
+        Mestre -- os heróis-teste não têm conexão própria."""
+        if getattr(self, "test_mode", False) and q.get("test_hero"):
+            return self.master_pid
+        return q.get("controlador") or q["id"]
+
+    def _proximo_spell_pick(self, dono):
+        """1º herói (na ordem do grupo) com escolha de magia pendente cujo painel
+        é respondido por `dono` (ver _dono_do_painel)."""
         return next((q for q in self.players.values()
-                     if (q.get("controlador") or q["id"]) == conexao
+                     if self._dono_do_painel(q) == dono
                      and q.get("pending_spell_pick")), None)
 
     async def _enviar_spell_pick_prompt(self, p):
@@ -45258,7 +45283,7 @@ class GameRoom:
         o 2º apagar o 1º no cliente -- o herói do aviso perdido ficava preso sem
         painel. Por isso vai só o do 1º herói pendente da conexão; os outros
         seguem quando ele termina (handle_escolher_magia_nivel)."""
-        p = self._proximo_spell_pick(self._conexao_de(p["id"]))
+        p = self._proximo_spell_pick(self._dono_do_painel(p))
         if not p:
             return
         fila = p["pending_spell_pick"]
@@ -45318,7 +45343,7 @@ class GameRoom:
                         and magia.get("circulo") == circ
                         and mid not in p.get("magias_conhecidas", []))
                     p.setdefault("pending_spell_pick", []).extend([circ] * min(quantidade, disponiveis))
-                if self._proximo_spell_pick(self._conexao_de(p["id"])) is p:
+                if self._proximo_spell_pick(self._dono_do_painel(p)) is p:
                     await self._enviar_spell_pick_prompt(p)
             elif p.get("class_id") in ("mage", "cleric"):
                 # Slot novo do nÃ­vel jÃ¡ entra cheio (slots_max_para usa o novo level).
@@ -45326,7 +45351,7 @@ class GameRoom:
                 if circ:
                     p.setdefault("pending_spell_pick", []).append(circ)
                     # Outro herói da conexão já tem painel aberto: este vem depois.
-                    if self._proximo_spell_pick(self._conexao_de(p["id"])) is p:
+                    if self._proximo_spell_pick(self._dono_do_painel(p)) is p:
                         await self._enviar_spell_pick_prompt(p)
 
     # â”€â”€ Fase 3: avaliaÃ§Ã£o de objetivos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -46936,6 +46961,9 @@ async def handler(ws):
                     if room: await room.handle_teste_encerrar_vez(pid)
                 elif t == "teste_encerrar_combate":
                     if room: await room.handle_teste_encerrar_combate(pid)
+                elif t == "teste_escolher_magia_nivel":
+                    if room: await room.handle_teste_escolher_magia_nivel(
+                        pid, _key(msg.get("hero_id")), msg.get("magia_id"))
                 elif t == "teste_acao_heroi":
                     if room: await room.handle_teste_acao_heroi(
                         pid, _key(msg.get("hero_id")), msg.get("action"), msg.get("data"))

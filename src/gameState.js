@@ -2294,6 +2294,13 @@ const GS = (() => {
   // `heroi` = o herói do AVISO, não o do foco: a vez pode trocar o foco com o
   // painel aberto, e a escolha iria para outro herói do grupo.
   function escolherMagiaNivel(id, heroi) {
+    // Mesa de teste do editor: o herói-teste não tem conexão; o Mestre escolhe
+    // por ele numa mensagem própria (o `heroi` comum recusaria herói alheio).
+    if (heroi && !meusHerois.includes(heroi) && gameState && gameState.test_mode
+        && gameState.master_pid === myPid) {
+      send({ type: 'teste_escolher_magia_nivel', hero_id: heroi, magia_id: id });
+      return;
+    }
     send(heroi && meusHerois.includes(heroi)
       ? { type: 'escolher_magia_nivel', magia_id: id, heroi }
       : { type: 'escolher_magia_nivel', magia_id: id });

@@ -133,7 +133,82 @@ async def secao_multiplayer():
     check("Bia recebe o dela ao mesmo tempo", len(wb.prompts()) == 1)
 
 
+def sala_teste():
+    """Mesa de teste do editor: Mestre "mx" e dois heróis-teste sem conexão."""
+    r = S.GameRoom("ESCTST")
+    ws = FakeWS()
+    r.connections["mx"] = ws
+    r.master_pid = "mx"
+    r.test_mode = True
+    cle = S.make_player("test_hero_cleric", "Lewis", "cleric", 0)
+    mag = S.make_player("test_hero_mage", "Pedro", "mage", 1)
+    for h in (cle, mag):
+        h["test_hero"] = True
+    r.players = {cle["id"]: cle, mag["id"]: mag}
+    r.phase = "playing"
+    async def nada(*a, **k): pass
+    r.push_state = nada
+    r.gm_say = nada
+    return r, ws, cle, mag
+
+
+def magia_impl(p, circ):
+    return next(mid for mid, m in S.GRIMORIO.items()
+                if p["class_id"] in m.get("classe", []) and m.get("circulo") == circ
+                and mid in S.GRIMORIO_IMPLEMENTADAS
+                and mid not in p.get("magias_conhecidas", []))
+
+
+async def secao_mesa_teste():
+    print("\n[6] Mesa de teste do editor: o Mestre escolhe pelos heróis-teste")
+    r, ws, cle, mag = sala_teste()
+    # A progressão do herói-teste só pede escolha quando surge slot novo.
+    for _ in range(6):
+        if cle.get("pending_spell_pick") and mag.get("pending_spell_pick"):
+            break
+        await subir_todos(r)
+    check("os dois heróis-teste ficaram com escolha pendente",
+          cle.get("pending_spell_pick") and mag.get("pending_spell_pick"))
+    pr = ws.prompts()
+    check("o Mestre só recebe avisos do 1º herói-teste (o do mago espera)",
+          pr and all(p.get("heroi") == cle["id"] for p in pr), [p.get("heroi") for p in pr])
+    check("com o nome", pr and pr[-1].get("heroi_nome") == "Lewis", pr)
+    escolhidas = []
+    while cle.get("pending_spell_pick"):
+        ws.sent.clear()
+        escolha = magia_impl(cle, cle["pending_spell_pick"][0])
+        await r.handle_teste_escolher_magia_nivel("mx", cle["id"], escolha)
+        escolhidas.append(escolha)
+        if escolha not in cle.get("magias_conhecidas", []):
+            break
+        if cle.get("pending_spell_pick"):
+            pr = ws.prompts()
+            check(f"fila do clérigo ainda tem escolha: o aviso seguinte é dele ({len(escolhidas)})",
+                  len(pr) == 1 and pr[0].get("heroi") == cle["id"], pr)
+    check("as escolhas do Mestre chegam ao herói-teste",
+          escolhidas and all(e in cle.get("magias_conhecidas", []) for e in escolhidas), escolhidas)
+    pr = ws.prompts()
+    check("terminada a fila do clérigo, vem o aviso do mago-teste",
+          len(pr) == 1 and pr[0].get("heroi") == mag["id"], pr)
+    ws.sent.clear()
+    await r.handle_teste_escolher_magia_nivel("mx", mag["id"], "magia_que_nao_existe")
+    check("escolha inválida: erro vai ao Mestre e nada muda",
+          ws.erros() and mag.get("pending_spell_pick"), ws.sent)
+    ws.sent.clear()
+    await r.handle_teste_escolher_magia_nivel("intruso", mag["id"], magia_impl(mag, mag["pending_spell_pick"][0]))
+    check("quem não é o Mestre da mesa não escolhe", mag.get("pending_spell_pick"))
+    r2, ws2, cle2, _ = sala_grupo()
+    await subir_todos(r2)
+    await r2.handle_teste_escolher_magia_nivel("c1", "c1", magia_de(cle2, "primeiro"))
+    check("numa sala normal a mensagem de teste não faz nada", cle2.get("pending_spell_pick"))
+    src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "server.py"),
+               encoding="utf-8").read()
+    check("o handler despacha teste_escolher_magia_nivel",
+          't == "teste_escolher_magia_nivel"' in src and "handle_teste_escolher_magia_nivel(" in src)
+
+
 async def main():
+    await secao_mesa_teste()
     await secao_ordem()
     await secao_encerrar()
     await secao_inicio_turno()

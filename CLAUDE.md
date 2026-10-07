@@ -588,8 +588,13 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > **aviso**, não o do foco (`GS.escolherMagiaNivel(id, heroi)`). O aviso é reenviado no início do
 > turno de quem tem escolha pendente e quando o `end_turn` é recusado por ela — recusa que agora
 > vem ANTES da Dor Constante e dos eventos de fim de turno (antes cada tentativa cobrava). A volta
-> do foco também roda no `city_state`. Testes: `tools/test_escolha_magia_grupo.py` (13) e
-> `tools/test_escolha_magia_grupo_cliente.js` (13).
+> do foco também roda no `city_state`. **Mesa de teste do editor:** os heróis-teste não têm conexão
+> e o painel deles chega ao Mestre; `_dono_do_painel` (Mestre para `test_hero`, senão a conexão)
+> põe todos na mesma fila, e a resposta vai por `teste_escolher_magia_nivel {hero_id, magia_id}`
+> (`handle_teste_escolher_magia_nivel`, só o Mestre da sala descartável) — antes a escolha se
+> perdia em silêncio, porque a mensagem comum caía na conexão do Mestre. O cliente escolhe o
+> caminho em `GS.escolherMagiaNivel` (herói alheio + `test_mode` + sou o Mestre). Testes:
+> `tools/test_escolha_magia_grupo.py` (23) e `tools/test_escolha_magia_grupo_cliente.js` (15).
 
 > **Cidade × masmorra são exclusivos no cliente:** o handler de `city_state`
 > (`gameState.js`) limpa `gameState = null` (espelhando o `enter_dungeon`, que limpa
