@@ -2230,7 +2230,18 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_5.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_5.atacar.porque",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_5.atacar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "fala_6",
@@ -2254,7 +2265,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_6.matar.texto",
+          "porque": "ui.tutorial.guia.fala_6.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_7",
@@ -2925,7 +2944,18 @@
         "alvo": "mira_certeira",
         "vezes": 1,
         "texto_curto": "Ataque com Mira Certeira"
-      }
+      },
+      "guia": [
+        {
+          "id": "mira",
+          "texto": "ui.tutorial.guia.treino_mira.mira.texto",
+          "porque": "ui.tutorial.guia.treino_mira.mira.porque",
+          "ui": "habilidade:mira_certeira",
+          "dica": [
+            "ui.tutorial.guia.treino_mira.mira.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_golpe",
@@ -2949,7 +2979,18 @@
         "alvo": "golpe_devastador",
         "vezes": 1,
         "texto_curto": "Ataque com Golpe Devastador"
-      }
+      },
+      "guia": [
+        {
+          "id": "golpe",
+          "texto": "ui.tutorial.guia.treino_golpe.golpe.texto",
+          "porque": "ui.tutorial.guia.treino_golpe.golpe.porque",
+          "ui": "habilidade:golpe_devastador",
+          "dica": [
+            "ui.tutorial.guia.treino_golpe.golpe.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_furia",
@@ -2973,7 +3014,15 @@
         "alvo": "furia_berserker",
         "vezes": 1,
         "texto_curto": "Faça o primeiro ataque com Fúria"
-      }
+      },
+      "guia": [
+        {
+          "id": "furia",
+          "texto": "ui.tutorial.guia.treino_furia.furia.texto",
+          "porque": "ui.tutorial.guia.treino_furia.furia.porque",
+          "ui": "habilidade:furia_berserker"
+        }
+      ]
     },
     {
       "id": "treino_furia_extra",
@@ -2997,7 +3046,18 @@
         "alvo": "furia_berserker",
         "vezes": 1,
         "texto_curto": "Use o ataque extra da Fúria"
-      }
+      },
+      "guia": [
+        {
+          "id": "extra",
+          "texto": "ui.tutorial.guia.treino_furia_extra.extra.texto",
+          "porque": "ui.tutorial.guia.treino_furia_extra.extra.porque",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.treino_furia_extra.extra.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_guerreiro_fim",
@@ -3020,7 +3080,19 @@
         "tipo": "encerrar_turno",
         "vezes": 1,
         "texto_curto": "Encerre o turno para concluir"
-      }
+      },
+      "guia": [
+        {
+          "id": "conferir",
+          "texto": "ui.tutorial.guia.treino_guerreiro_fim.conferir.texto",
+          "porque": "ui.tutorial.guia.treino_guerreiro_fim.conferir.porque"
+        },
+        {
+          "id": "encerrar",
+          "texto": "ui.tutorial.guia.treino_guerreiro_fim.encerrar.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
     },
     {
       "id": "treino_magia",

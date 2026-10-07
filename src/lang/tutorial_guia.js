@@ -327,6 +327,82 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_4.porta.texto": {
     "en": "Walk through the open door at the back.",
     "pt": "Atravesse a porta aberta ao fundo."
+  },
+  "ui.tutorial.guia.fala_5.atacar.dica.1": {
+    "en": "Walk next to the dummy and click it.",
+    "pt": "Ande até ficar ao lado do boneco e clique nele."
+  },
+  "ui.tutorial.guia.fala_5.atacar.porque": {
+    "en": "The [[d20]] plus your attack bonus must match or beat the target's [[ca]].",
+    "pt": "O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]] do alvo."
+  },
+  "ui.tutorial.guia.fala_5.atacar.texto": {
+    "en": "Click the training dummy to attack.",
+    "pt": "Clique no boneco de treino para atacar."
+  },
+  "ui.tutorial.guia.fala_6.matar.porque": {
+    "en": "A natural 20 is a [[critico]]. You are the group's wall: you take hits and give them back.",
+    "pt": "Um 20 natural é [[critico]]. Você é o muro do grupo: aguenta e devolve."
+  },
+  "ui.tutorial.guia.fala_6.matar.texto": {
+    "en": "Keep attacking until the dummy falls.",
+    "pt": "Continue atacando até derrubar o boneco."
+  },
+  "ui.tutorial.guia.treino_furia.furia.porque": {
+    "en": "Fury grants an extra attack: do not end your turn after this hit.",
+    "pt": "A Fúria dá um ataque extra: não encerre o turno depois deste golpe."
+  },
+  "ui.tutorial.guia.treino_furia.furia.texto": {
+    "en": "Click Berserker Fury and attack the dummy.",
+    "pt": "Clique em Fúria Berserker e ataque o boneco."
+  },
+  "ui.tutorial.guia.treino_furia_extra.extra.dica.1": {
+    "en": "If you already passed, arm Fury again and attack twice.",
+    "pt": "Se já passou a vez, arme a Fúria de novo e ataque duas vezes."
+  },
+  "ui.tutorial.guia.treino_furia_extra.extra.porque": {
+    "en": "The extra attack only works this turn; any dummy is a valid target.",
+    "pt": "O ataque extra só vale neste turno; qualquer boneco serve de alvo."
+  },
+  "ui.tutorial.guia.treino_furia_extra.extra.texto": {
+    "en": "Attack again now, before ending your turn.",
+    "pt": "Ataque outra vez agora, antes de encerrar o turno."
+  },
+  "ui.tutorial.guia.treino_golpe.golpe.dica.1": {
+    "en": "If you already used your action, click End Turn first.",
+    "pt": "Se já usou sua ação, clique em Encerrar Turno antes."
+  },
+  "ui.tutorial.guia.treino_golpe.golpe.porque": {
+    "en": "Each armed ability spends your [[acao_principal]]; watch the damage dice.",
+    "pt": "Cada habilidade armada gasta sua [[acao_principal]]; observe os dados de dano."
+  },
+  "ui.tutorial.guia.treino_golpe.golpe.texto": {
+    "en": "Click Devastating Strike and then the dummy.",
+    "pt": "Clique em Golpe Devastador e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_guerreiro_fim.conferir.porque": {
+    "en": "Abilities cost [[fome_sede]]; a starving warrior fights poorly.",
+    "pt": "Habilidades cobram [[fome_sede]]; guerreiro esfomeado luta mal."
+  },
+  "ui.tutorial.guia.treino_guerreiro_fim.conferir.texto": {
+    "en": "Check the food and water you spent.",
+    "pt": "Confira a comida e a água que você gastou."
+  },
+  "ui.tutorial.guia.treino_guerreiro_fim.encerrar.texto": {
+    "en": "Click End Turn to finish.",
+    "pt": "Clique em Encerrar Turno para concluir."
+  },
+  "ui.tutorial.guia.treino_mira.mira.dica.1": {
+    "en": "The ability button is in the actions panel, on the right.",
+    "pt": "O botão da habilidade fica no painel de ações, à direita."
+  },
+  "ui.tutorial.guia.treino_mira.mira.porque": {
+    "en": "It adds attack bonus to your [[d20]]; watch the bonus in the dice.",
+    "pt": "Ela soma acerto ao seu [[d20]]; veja o bônus nos dados."
+  },
+  "ui.tutorial.guia.treino_mira.mira.texto": {
+    "en": "Click Precise Aim and then the dummy.",
+    "pt": "Clique em Mira Certeira e depois no boneco."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL_GUIA);
