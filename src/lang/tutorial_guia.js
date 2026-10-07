@@ -348,6 +348,62 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Keep attacking until the dummy falls.",
     "pt": "Continue atacando até derrubar o boneco."
   },
+  "ui.tutorial.guia.fala_7.atacar.porque": {
+    "en": "The staff hits like any weapon, but the Grimoire wins battles.",
+    "pt": "O cajado acerta como qualquer arma, mas é o Grimório que vence batalhas."
+  },
+  "ui.tutorial.guia.fala_7.atacar.texto": {
+    "en": "Attack the dummy with your staff.",
+    "pt": "Ataque o boneco com seu cajado."
+  },
+  "ui.tutorial.guia.fala_8.matar.porque": {
+    "en": "Spells do not cost mana: they spend a circle [[slot]], which returns each turn.",
+    "pt": "Magias não gastam mana: gastam um [[slot]] do círculo, que volta por turno."
+  },
+  "ui.tutorial.guia.fala_8.matar.texto": {
+    "en": "Take down the dummy.",
+    "pt": "Derrube o boneco."
+  },
+  "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
+    "en": "The exercise only counts when the metamagic goes into the cast.",
+    "pt": "O exercício só conta quando a metamagia entra no lançamento."
+  },
+  "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.porque": {
+    "en": "It raises the difficulty of the target's [[teste_resistencia]].",
+    "pt": "Ela aumenta a dificuldade do [[teste_resistencia]] do alvo."
+  },
+  "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.texto": {
+    "en": "Arm Enhance Spell and cast a spell that allows a save.",
+    "pt": "Arme Aprimorar Magia e lance uma magia com teste."
+  },
+  "ui.tutorial.guia.treino_comando.abrir_fase.texto": {
+    "en": "End Pedro's turn to open the servants phase.",
+    "pt": "Encerre a vez de Pedro para abrir a fase dos servos."
+  },
+  "ui.tutorial.guia.treino_comando.comandar.porque": {
+    "en": "Animated servants act after your turn.",
+    "pt": "Servos animados agem depois do seu turno."
+  },
+  "ui.tutorial.guia.treino_comando.comandar.texto": {
+    "en": "Click Command: the servant moves and attacks a dummy.",
+    "pt": "Clique em Comandar: o servo anda e ataca um boneco."
+  },
+  "ui.tutorial.guia.treino_estender_magia.estender.porque": {
+    "en": "It adds duration to an effect that persists.",
+    "pt": "Ela acrescenta duração a um efeito que persiste."
+  },
+  "ui.tutorial.guia.treino_estender_magia.estender.texto": {
+    "en": "Arm Extend Spell and cast a spell that lasts rounds.",
+    "pt": "Arme Estender Magia e lance uma magia que dura rodadas."
+  },
+  "ui.tutorial.guia.treino_fortalecer_magia.fortalecer.porque": {
+    "en": "It increases the spell's damage; check the value on your sheet.",
+    "pt": "Ela aumenta o dano da magia; confira o valor na sua ficha."
+  },
+  "ui.tutorial.guia.treino_fortalecer_magia.fortalecer.texto": {
+    "en": "Arm Empower Spell and cast a damage spell.",
+    "pt": "Arme Fortalecer Magia e lance uma magia de dano."
+  },
   "ui.tutorial.guia.treino_furia.furia.porque": {
     "en": "Fury grants an extra attack: do not end your turn after this hit.",
     "pt": "A Fúria dá um ataque extra: não encerre o turno depois deste golpe."
@@ -392,6 +448,18 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click End Turn to finish.",
     "pt": "Clique em Encerrar Turno para concluir."
   },
+  "ui.tutorial.guia.treino_magia.grimorio.texto": {
+    "en": "Open the Grimoire with the spells button.",
+    "pt": "Abra o Grimório no botão das magias."
+  },
+  "ui.tutorial.guia.treino_magia.lancar.porque": {
+    "en": "Check the circle and the [[slot]]s used: no slot, no spell.",
+    "pt": "Confira o círculo e os [[slot]] usados: sem slot, sem magia."
+  },
+  "ui.tutorial.guia.treino_magia.lancar.texto": {
+    "en": "Pick a spell and cast it on the dummy or yourself.",
+    "pt": "Escolha uma magia e lance-a no boneco ou em você."
+  },
   "ui.tutorial.guia.treino_mira.mira.dica.1": {
     "en": "The ability button is in the actions panel, on the right.",
     "pt": "O botão da habilidade fica no painel de ações, à direita."
@@ -403,6 +471,26 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_mira.mira.texto": {
     "en": "Click Precise Aim and then the dummy.",
     "pt": "Clique em Mira Certeira e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_reviver.aproximar.texto": {
+    "en": "Walk next to the training corpse.",
+    "pt": "Ande até ficar ao lado do cadáver de treino."
+  },
+  "ui.tutorial.guia.treino_reviver.reviver.porque": {
+    "en": "If the attempt fails, try again on another turn.",
+    "pt": "Se a tentativa falhar, tente de novo em outro turno."
+  },
+  "ui.tutorial.guia.treino_reviver.reviver.texto": {
+    "en": "Use Raise the Dead and click the corpse.",
+    "pt": "Use Reviver os Mortos e clique no cadáver."
+  },
+  "ui.tutorial.guia.treino_slots.encerrar.porque": {
+    "en": "They return by the circle's rule; a spell without a slot cannot be cast.",
+    "pt": "Eles voltam conforme a regra do círculo; magia sem slot não sai."
+  },
+  "ui.tutorial.guia.treino_slots.encerrar.texto": {
+    "en": "Click End Turn and check your [[slot]]s.",
+    "pt": "Clique em Encerrar Turno e confira seus [[slot]]."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL_GUIA);

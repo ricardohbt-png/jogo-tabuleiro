@@ -2297,7 +2297,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Acerte um ataque num boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_7.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_7.atacar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_8",
@@ -2321,7 +2329,15 @@
         "alvo": "boneco_treino",
         "vezes": 1,
         "texto_curto": "Derrube um boneco"
-      }
+      },
+      "guia": [
+        {
+          "id": "matar",
+          "texto": "ui.tutorial.guia.fala_8.matar.texto",
+          "porque": "ui.tutorial.guia.fala_8.matar.porque",
+          "ui": "monstro:boneco_treino"
+        }
+      ]
     },
     {
       "id": "fala_9",
@@ -3118,7 +3134,19 @@
         "tipo": "usar_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia conhecida"
-      }
+      },
+      "guia": [
+        {
+          "id": "grimorio",
+          "texto": "ui.tutorial.guia.treino_magia.grimorio.texto",
+          "ui": "botao:magias"
+        },
+        {
+          "id": "lancar",
+          "texto": "ui.tutorial.guia.treino_magia.lancar.texto",
+          "porque": "ui.tutorial.guia.treino_magia.lancar.porque"
+        }
+      ]
     },
     {
       "id": "treino_slots",
@@ -3141,7 +3169,15 @@
         "tipo": "encerrar_turno",
         "vezes": 1,
         "texto_curto": "Encerre o turno e confira os slots"
-      }
+      },
+      "guia": [
+        {
+          "id": "encerrar",
+          "texto": "ui.tutorial.guia.treino_slots.encerrar.texto",
+          "porque": "ui.tutorial.guia.treino_slots.encerrar.porque",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
     },
     {
       "id": "treino_aprimorar_magia",
@@ -3168,7 +3204,18 @@
         "alvo": "aprimorar_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia com Aprimorar Magia"
-      }
+      },
+      "guia": [
+        {
+          "id": "aprimorar",
+          "texto": "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.texto",
+          "porque": "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.porque",
+          "ui": "habilidade:aprimorar_magia",
+          "dica": [
+            "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_estender_magia",
@@ -3195,7 +3242,15 @@
         "alvo": "estender_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia com Estender Magia"
-      }
+      },
+      "guia": [
+        {
+          "id": "estender",
+          "texto": "ui.tutorial.guia.treino_estender_magia.estender.texto",
+          "porque": "ui.tutorial.guia.treino_estender_magia.estender.porque",
+          "ui": "habilidade:estender_magia"
+        }
+      ]
     },
     {
       "id": "treino_fortalecer_magia",
@@ -3222,7 +3277,15 @@
         "alvo": "fortalecer_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia com Fortalecer Magia"
-      }
+      },
+      "guia": [
+        {
+          "id": "fortalecer",
+          "texto": "ui.tutorial.guia.treino_fortalecer_magia.fortalecer.texto",
+          "porque": "ui.tutorial.guia.treino_fortalecer_magia.fortalecer.porque",
+          "ui": "habilidade:fortalecer_magia"
+        }
+      ]
     },
     {
       "id": "treino_reviver",
@@ -3246,7 +3309,19 @@
         "alvo": "animar_mortos",
         "vezes": 1,
         "texto_curto": "Anime o cadáver de treinamento"
-      }
+      },
+      "guia": [
+        {
+          "id": "aproximar",
+          "texto": "ui.tutorial.guia.treino_reviver.aproximar.texto"
+        },
+        {
+          "id": "reviver",
+          "texto": "ui.tutorial.guia.treino_reviver.reviver.texto",
+          "porque": "ui.tutorial.guia.treino_reviver.reviver.porque",
+          "ui": "habilidade:animar_mortos"
+        }
+      ]
     },
     {
       "id": "treino_comando",
@@ -3269,7 +3344,19 @@
         "tipo": "comandar_servo",
         "vezes": 1,
         "texto_curto": "Comande o servo de treinamento"
-      }
+      },
+      "guia": [
+        {
+          "id": "abrir_fase",
+          "texto": "ui.tutorial.guia.treino_comando.abrir_fase.texto",
+          "ui": "botao:encerrar_turno"
+        },
+        {
+          "id": "comandar",
+          "texto": "ui.tutorial.guia.treino_comando.comandar.texto",
+          "porque": "ui.tutorial.guia.treino_comando.comandar.porque"
+        }
+      ]
     },
     {
       "id": "treino_detectar",

@@ -1,0 +1,62 @@
+"""Guia das lições do Mago no Campo de Treinamento (pt + en)."""
+from tutorial_guia_comum import P
+
+GUIA = {
+    "fala_7": [
+        P("atacar", ("Ataque o boneco com seu cajado.", "Attack the dummy with your staff."),
+          porque=("O cajado acerta como qualquer arma, mas é o Grimório que vence batalhas.",
+                  "The staff hits like any weapon, but the Grimoire wins battles."),
+          ui="monstro:boneco_treino"),
+    ],
+    "fala_8": [
+        P("matar", ("Derrube o boneco.", "Take down the dummy."),
+          porque=("Magias não gastam mana: gastam um [[slot]] do círculo, que volta por turno.",
+                  "Spells do not cost mana: they spend a circle [[slot]], which returns each turn."),
+          ui="monstro:boneco_treino"),
+    ],
+    "treino_magia": [
+        P("grimorio", ("Abra o Grimório no botão das magias.", "Open the Grimoire with the spells button."),
+          ui="botao:magias"),
+        P("lancar", ("Escolha uma magia e lance-a no boneco ou em você.", "Pick a spell and cast it on the dummy or yourself."),
+          porque=("Confira o círculo e os [[slot]] usados: sem slot, sem magia.",
+                  "Check the circle and the [[slot]]s used: no slot, no spell.")),
+    ],
+    "treino_slots": [
+        P("encerrar", ("Clique em Encerrar Turno e confira seus [[slot]].", "Click End Turn and check your [[slot]]s."),
+          porque=("Eles voltam conforme a regra do círculo; magia sem slot não sai.",
+                  "They return by the circle's rule; a spell without a slot cannot be cast."),
+          ui="botao:encerrar_turno"),
+    ],
+    "treino_aprimorar_magia": [
+        P("aprimorar", ("Arme Aprimorar Magia e lance uma magia com teste.", "Arm Enhance Spell and cast a spell that allows a save."),
+          porque=("Ela aumenta a dificuldade do [[teste_resistencia]] do alvo.",
+                  "It raises the difficulty of the target's [[teste_resistencia]]."),
+          ui="habilidade:aprimorar_magia",
+          dica=[("O exercício só conta quando a metamagia entra no lançamento.", "The exercise only counts when the metamagic goes into the cast.")]),
+    ],
+    "treino_estender_magia": [
+        P("estender", ("Arme Estender Magia e lance uma magia que dura rodadas.", "Arm Extend Spell and cast a spell that lasts rounds."),
+          porque=("Ela acrescenta duração a um efeito que persiste.",
+                  "It adds duration to an effect that persists."),
+          ui="habilidade:estender_magia"),
+    ],
+    "treino_fortalecer_magia": [
+        P("fortalecer", ("Arme Fortalecer Magia e lance uma magia de dano.", "Arm Empower Spell and cast a damage spell."),
+          porque=("Ela aumenta o dano da magia; confira o valor na sua ficha.",
+                  "It increases the spell's damage; check the value on your sheet."),
+          ui="habilidade:fortalecer_magia"),
+    ],
+    "treino_reviver": [
+        P("aproximar", ("Ande até ficar ao lado do cadáver de treino.", "Walk next to the training corpse.")),
+        P("reviver", ("Use Reviver os Mortos e clique no cadáver.", "Use Raise the Dead and click the corpse."),
+          porque=("Se a tentativa falhar, tente de novo em outro turno.",
+                  "If the attempt fails, try again on another turn."),
+          ui="habilidade:animar_mortos"),
+    ],
+    "treino_comando": [
+        P("abrir_fase", ("Encerre a vez de Pedro para abrir a fase dos servos.", "End Pedro's turn to open the servants phase."),
+          ui="botao:encerrar_turno"),
+        P("comandar", ("Clique em Comandar: o servo anda e ataca um boneco.", "Click Command: the servant moves and attacks a dummy."),
+          porque=("Servos animados agem depois do seu turno.", "Animated servants act after your turn.")),
+    ],
+}
