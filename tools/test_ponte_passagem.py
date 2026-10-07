@@ -162,9 +162,13 @@ print("\n[9] Nenhum caminho VOLUNTÁRIO aplica queda")
 fonte = inspect.getsource(S)
 chamadas = [m.start() for m in re.finditer(r"await self\._aplicar_queda_terreno", fonte)]
 corpo_empurrar = inspect.getsource(S.GameRoom._empurrar)
-check("sobraram exatamente 2 chamadas de queda", len(chamadas) == 2)
-check("as 2 estão dentro de _empurrar",
+# A rajada da fumarola também é involuntária: lança quem começa a vez sobre ela.
+corpo_fumarola = inspect.getsource(S.GameRoom._processar_fumarola_inicio_turno)
+check("sobraram exatamente 3 chamadas de queda", len(chamadas) == 3)
+check("2 estão dentro de _empurrar",
       corpo_empurrar.count("await self._aplicar_queda_terreno") == 2)
+check("1 está na rajada da fumarola (involuntária)",
+      corpo_fumarola.count("await self._aplicar_queda_terreno") == 1)
 
 print("\n" + "=" * 62)
 print(f"  {PASS} passaram, {FAIL} falharam")

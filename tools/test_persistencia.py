@@ -54,8 +54,8 @@ def secao_loja():
         check("ler coleção inexistente não estoura",
               loja.ler("inventada", "x") is None)
 
-        check("as três coleções existem", set(S.COLECOES) ==
-              {"contas", "savegames", "grupos"})
+        check("as quatro coleções existem", set(S.COLECOES) ==
+              {"contas", "savegames", "grupos", "pontos"})
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
