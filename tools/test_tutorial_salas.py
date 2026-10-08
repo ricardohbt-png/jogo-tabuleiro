@@ -203,7 +203,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(S.random,'randint',return_value=20):
             await r.handle_desarmar_armadilha(p['id'],{'tx':10,'ty':8})
         self.assertEqual(p['licao_atual'],'treino_esconder')
-        self.assertEqual((p['xp'],p['gold']),(xp,gold))
+        self.assertEqual((p['xp'],p['gold']),(xp+S.TUTORIAL_RECOMPENSA_XP,gold+S.TUTORIAL_RECOMPENSA_OURO))  # so a recompensa da licao, sem XP/ouro de armadilha
         await r.handle_repetir_tutorial(p['id'])
         self.assertEqual(p['licao_atual'],'treino_detectar')
         self.assertFalse(p['detectar_ativo'])

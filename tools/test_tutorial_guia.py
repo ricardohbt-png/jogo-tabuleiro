@@ -331,5 +331,65 @@ class ResultadoTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('_guia_resultado_ataque(', inspect.getsource(S.GameRoom.handle_attack))
 
 
+class RecompensaTests(unittest.TestCase):
+    def _concluir(self, r, p, ident):
+        lic = next(f for f in r.licoes if f['id'] == ident)
+        asyncio.run(r._licao_concluir(p, lic))
+        return lic
+
+    def test_primeira_conclusao_paga_e_avisa(self):
+        r, p = room()
+        ouro = p['gold']
+        self._concluir(r, p, 'treino_mira')
+        self.assertEqual(p['gold'], ouro + S.TUTORIAL_RECOMPENSA_OURO)
+        msg = next(m for m in r.messages if m['type'] == 'licao_concluida')
+        self.assertEqual(msg['licao_id'], 'treino_mira')
+        self.assertEqual(msg['recompensa']['ouro'], S.TUTORIAL_RECOMPENSA_OURO)
+        self.assertEqual(msg['recompensa']['xp'], S.TUTORIAL_RECOMPENSA_XP)
+
+    def test_repetir_nao_paga_de_novo(self):
+        r, p = room()
+        self._concluir(r, p, 'treino_mira')
+        ouro = p['gold']
+        r.messages.clear()
+        self._concluir(r, p, 'treino_mira')
+        self.assertEqual(p['gold'], ouro)
+        msg = next(m for m in r.messages if m['type'] == 'licao_concluida')
+        self.assertEqual(msg['recompensa'], {'ouro': 0, 'xp': 0, 'trilha': False})
+
+    def test_fora_do_modo_treino_nao_paga(self):
+        r, p = room()
+        r.training_mode = False
+        ouro = p['gold']
+        self._concluir(r, p, 'treino_mira')
+        self.assertEqual(p['gold'], ouro)
+        self.assertFalse([m for m in r.messages if m['type'] == 'licao_concluida'])
+
+    def test_bonus_de_trilha_quando_fecha_a_ultima_licao_da_classe(self):
+        r, p = room()
+        lics = [f for f in r.licoes if f.get('classe') == 'warrior']
+        for f in lics[:-1]:
+            self._concluir(r, p, f['id'])
+        ouro = p['gold']
+        r.messages.clear()
+        self._concluir(r, p, lics[-1]['id'])
+        msg = next(m for m in r.messages if m['type'] == 'licao_concluida')
+        self.assertTrue(msg['recompensa']['trilha'])
+        self.assertEqual(p['gold'], ouro + S.TUTORIAL_RECOMPENSA_OURO + S.TUTORIAL_BONUS_TRILHA_OURO)
+
+
+class PassoOkTests(unittest.TestCase):
+    def test_avancar_avisa_o_passo_concluido(self):
+        r, p = room(guia=GUIA_MIRA)
+        asyncio.run(abrir_licao(r, p, 'treino_mira'))
+        r.messages.clear()
+        lic = next(f for f in r.licoes if f['id'] == 'treino_mira')
+        asyncio.run(r._guia_avancar(p, lic))
+        tipos = [m['type'] for m in r.messages]
+        self.assertEqual(tipos, ['licao_passo_ok', 'licao_passo'])
+        ok = r.messages[0]
+        self.assertEqual((ok['licao_id'], ok['passo'], ok['total']), ('treino_mira', 0, 3))
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

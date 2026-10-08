@@ -53,6 +53,12 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
+# Recompensa por lição do Campo de Treinamento: paga uma vez por personagem
+# (a guarda é o `tutorial_history`, que sobrevive ao `repetir_tutorial`).
+TUTORIAL_RECOMPENSA_OURO = 5
+TUTORIAL_RECOMPENSA_XP = 10
+TUTORIAL_BONUS_TRILHA_OURO = 25
+TUTORIAL_BONUS_TRILHA_XP = 50
 # O que uma lição pode alterar no herói ao disparar. Fechado de propósito:
 # serve para o jogador SENTIR uma regra (chegar esfomeado à sala de provisões),
 # não para o autor mexer em PV, ouro ou inventário por um marcador no mapa.
@@ -18138,17 +18144,36 @@ class GameRoom(TutorialTraining):
         if lic["id"] not in feitas:
             feitas.append(lic["id"])
         self.licoes_feitas.add(lic["id"])
+        premio = {"ouro": 0, "xp": 0, "trilha": False}
         if self.training_mode:
             history = p.setdefault("tutorial_history", [])
             if lic["id"] not in history:
                 history.append(lic["id"])
+                premio["ouro"] = TUTORIAL_RECOMPENSA_OURO
+                premio["xp"] = TUTORIAL_RECOMPENSA_XP
+                cls = lic.get("classe")
+                if cls and cls == p.get("class_id"):
+                    da_classe = [l["id"] for l in self.licoes if l.get("classe") == cls]
+                    if all(i in feitas for i in da_classe):
+                        premio["trilha"] = True
+                        premio["ouro"] += TUTORIAL_BONUS_TRILHA_OURO
+                        premio["xp"] += TUTORIAL_BONUS_TRILHA_XP
+                p["gold"] = int(p.get("gold", 0) or 0) + premio["ouro"]
+                p["xp"] = int(p.get("xp", 0) or 0) + premio["xp"]
+                await self._check_level_up(p)
         if p.get("licao_atual") == lic["id"]:
             p["licao_atual"] = None
             p["licao_passo"] = 0
+        if self.training_mode and lic.get("tarefa"):
+            await self.send_to(p["id"], {"type": "licao_concluida",
+                                         "licao_id": lic["id"], "recompensa": premio})
 
     async def _guia_avancar(self, p, lic):
         passos = _guia_passos(lic)
-        p["licao_passo"] = min(int(p.get("licao_passo", 0) or 0) + 1, len(passos) - 1)
+        antes = int(p.get("licao_passo", 0) or 0)
+        p["licao_passo"] = min(antes + 1, len(passos) - 1)
+        await self.send_to(p["id"], {"type": "licao_passo_ok", "licao_id": lic["id"],
+                                     "passo": antes, "total": len(passos)})
         await self.send_to(p["id"], {"type": "licao_passo", "licao_id": lic["id"],
                                      "passo": _guia_payload(lic, p["licao_passo"])})
 
