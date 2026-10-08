@@ -21,7 +21,7 @@ JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 JSON_MONSTROS = RAIZ / "monstros_personalizados.json"
 JS_MONSTROS = RAIZ / "tools" / "editor_monsters_custom.js"
 
-SALA_ITENS = 22
+SALA_ITENS = 47      # a sala dos consumíveis (era a 22 antes da sala de hostilidade 46)
 TIPO_VENENO = "boneco_treino_veneno"
 PALHA_PV = 24
 

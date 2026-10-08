@@ -9,9 +9,14 @@ sys.path.insert(0, str(RAIZ)); sys.path.insert(0, str(RAIZ / "tools"))
 import server as S
 import gerar_guia_comum as G
 from test_tutorial_salas import room, D
-from test_tutorial_fatia7 import marcar_comuns_ate, def_monstro
+from test_tutorial_fatia7 import marcar_comuns_ate, def_monstro, POS_CONSUMIVEIS, ORDEM_APOS_PEGAR, SALA_CONSUMIVEIS
 
-SALA_ITENS = 22
+# A sala dos consumíveis (baú, palha, bonecos) e as posições vêm do JSON: hoje é a 47, antes da sala de hostilidade era a 22.
+SALA_ITENS = SALA_CONSUMIVEIS
+_F = {f["id"]: f for f in D["falas"]}
+ORDEM_F29 = _F["fala_29"]["ordem"]               # a 1ª lição da sala dos consumíveis
+POS_F29 = list(_F["fala_29"]["pos"])
+POS_F34 = list(_F["fala_34"]["pos"])             # a etapa seguinte (esqueletos)
 
 
 def com_estado_real(r):
@@ -35,8 +40,8 @@ class OleoMostraACorTests(unittest.IsolatedAsyncioTestCase):
     async def test_game_state_leva_o_evento_vulneravel_com_o_boneco_vivo(self):
         r, p = room("warrior")
         com_estado_real(r)
-        marcar_comuns_ate(p, 11)
-        p["pos"] = [35, 15]; p["action_done"] = False
+        marcar_comuns_ate(p, ORDEM_APOS_PEGAR)
+        p["pos"] = list(POS_CONSUMIVEIS); p["action_done"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         p["dex"] = 16
         p["bag"] = [{"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥",
@@ -56,8 +61,8 @@ class OleoMostraACorTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_oleo_conclui_a_licao_mesmo_no_pior_dano(self):
         r, p = room("warrior")
-        marcar_comuns_ate(p, 11)
-        p["pos"] = [35, 15]; p["action_done"] = False
+        marcar_comuns_ate(p, ORDEM_APOS_PEGAR)
+        p["pos"] = list(POS_CONSUMIVEIS); p["action_done"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         p["bag"] = [{"id": "frasco_oleo", "name": "F", "emoji": "🔥", "item_slot": "bag", "effect": "throwable"}]
         palha = next(m for m in r.monsters.values() if m["type"] == "boneco_palha")
@@ -84,7 +89,7 @@ class VenenoSuscetivelTests(unittest.IsolatedAsyncioTestCase):
         # o boneco de treino comum segue como era (construto, usado nas outras salas)
         self.assertEqual(def_monstro("boneco_treino")["subtipo"], "construto")
 
-    def test_sala_22_usa_o_boneco_novo_e_o_resto_fica_igual(self):
+    def test_sala_dos_consumiveis_usa_o_boneco_novo_e_o_resto_fica_igual(self):
         sala = next(r for r in D["rooms"] if r["id"] == SALA_ITENS)
         dentro = lambda pos: sala["x"] <= pos[0] < sala["x"] + sala["w"] and sala["y"] <= pos[1] < sala["y"] + sala["h"]
         venenos = [m for m in D["monsters"] if m["type"] == "boneco_treino_veneno"]
@@ -124,8 +129,8 @@ class VenenoSuscetivelTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_licao_32_conclui_no_boneco_novo(self):
         r, p = room("warrior")
-        marcar_comuns_ate(p, 13)
-        p["pos"] = [35, 15]; p["action_done"] = False
+        marcar_comuns_ate(p, _F["fala_32"]["ordem"])
+        p["pos"] = list(POS_CONSUMIVEIS); p["action_done"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         self.assertEqual(p["licao_atual"], "fala_32")
         await r._licao_evento(p, "atacar", alvo="boneco_treino", contexto={"veneno": True})
@@ -141,12 +146,12 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_sair_da_zona_pula_as_etapas_abandonadas(self):
         r, p = room("warrior")
-        marcar_comuns_ate(p, 10)
+        marcar_comuns_ate(p, ORDEM_F29)
         ouro = p.get("gold", 0)
-        await self.chegar_em(r, p, [35, 15])
+        await self.chegar_em(r, p, POS_F29)
         self.assertEqual(p["licao_atual"], "fala_29")
         r.messages.clear()
-        await self.chegar_em(r, p, [41, 15])             # foi para a etapa seguinte sem pegar os itens
+        await self.chegar_em(r, p, POS_F34)             # foi para a etapa seguinte sem pegar os itens
         pulou = [m["licao_id"] for m in msgs(r, "licao_pulada")]
         self.assertEqual(pulou[0], "fala_29")
         self.assertEqual(set(pulou), {"fala_29", "fala_30", "fala_31", "fala_32", "fala_33"})
@@ -164,11 +169,11 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_na_mesma_zona_nada_e_pulado(self):
         r, p = room("warrior")
-        marcar_comuns_ate(p, 10)
-        await self.chegar_em(r, p, [35, 15])
+        marcar_comuns_ate(p, ORDEM_F29)
+        await self.chegar_em(r, p, POS_F29)
         self.assertEqual(p["licao_atual"], "fala_29")
         r.messages.clear()
-        for pos in ([37, 15], [33, 15], [35, 17], [35, 15]):
+        for pos in ([POS_F29[0] + 2, 15], [POS_F29[0] - 2, 15], [POS_F29[0], 17], POS_F29):
             await self.chegar_em(r, p, pos)
         self.assertEqual(p["licao_atual"], "fala_29")
         self.assertEqual(p.get("licoes_puladas", []), [])
