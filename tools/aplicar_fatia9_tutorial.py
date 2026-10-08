@@ -15,11 +15,12 @@ JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 
 ID = "treino_guiar_refem"
 DEPOIS_DE = "treino_maos"
-# Chão da sala 38 (x32..38, y23..27) encostado na porta [31,25] e fora da casa do refém [35,25]
-# e do herói [33,25]: fica a 3 casas do refém e perto da saída da sala, sem decoração nem baú.
-ALVO = [32, 24]
-TEXTO = ("Agora guie o refém até a casa marcada. Encerre seu turno para abrir a vez dele, "
-         "depois clique na casa. Ao chegar, ele se retira e você não precisa mais controlá-lo.")
+# Fatia 13: a casa de chão logo à FRENTE da porta [31,25] da sala 38 (ortogonal a ela, dentro da
+# sala). Não é a casa do refém [35,25] nem a de lição do herói [33,25]; com o herói ao lado do
+# refém (34,25) o caminho tem 5 passos (movimento do refém: 6). Na fatia 9 era [32,24] (diagonal).
+ALVO = [32, 25]
+TEXTO = ("Agora guie o refém até a casa marcada, na frente da porta. Clique em Encerrar Turno para "
+         "abrir a vez dele e depois na casa. Ele anda até 6 casas e, ao chegar, se retira.")
 CURTO = "Guie o refém até a casa marcada"
 
 

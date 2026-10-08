@@ -753,28 +753,28 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique em Encerrar Turno para concluir."
   },
   "ui.tutorial.guia.treino_guiar_refem.encerrar.porque": {
-    "en": "The hostage only moves in the window that opens after your turn.",
-    "pt": "O refém só anda na janela que abre depois do seu turno."
+    "en": "He only moves in the window after your turn, already selected.",
+    "pt": "Ele só anda na janela depois do seu turno, já selecionado."
   },
   "ui.tutorial.guia.treino_guiar_refem.encerrar.texto": {
-    "en": "End your turn to open the hostage's move.",
-    "pt": "Encerre o turno para abrir a vez do refém."
+    "en": "Click End Turn to open the hostage's move.",
+    "pt": "Clique em Encerrar Turno para abrir a vez do refém."
   },
   "ui.tutorial.guia.treino_guiar_refem.guiar.dica.1": {
-    "en": "If the hostage is not selected, click him first.",
-    "pt": "Se o refém não estiver selecionado, clique nele antes."
+    "en": "Click the hostage to select him; step off the marked square if you are on it.",
+    "pt": "Clique no refém para selecioná-lo; saia da casa marcada se estiver nela."
   },
   "ui.tutorial.guia.treino_guiar_refem.guiar.dica.2": {
     "en": "If his move has passed, end your turn again to reopen it.",
     "pt": "Se a vez dele passou, encerre o turno de novo para reabri-la."
   },
   "ui.tutorial.guia.treino_guiar_refem.guiar.porque": {
-    "en": "Once there, he leaves and you stop controlling him.",
-    "pt": "Ao chegar, ele se retira e você deixa de controlá-lo."
+    "en": "He walks up to 6 squares; on arrival he leaves and the step ends.",
+    "pt": "Ele anda até 6 casas; ao chegar, se retira e a etapa termina."
   },
   "ui.tutorial.guia.treino_guiar_refem.guiar.texto": {
-    "en": "Click the marked square to guide the hostage there.",
-    "pt": "Clique na casa marcada para guiar o refém até lá."
+    "en": "Click the marked square in front of the door to guide the hostage.",
+    "pt": "Clique na casa marcada, na frente da porta, para guiar o refém."
   },
   "ui.tutorial.guia.treino_harpa.bau.dica.1": {
     "en": "With the chest open, click Take next to the harp.",
@@ -815,6 +815,10 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_magia.lancar.texto": {
     "en": "Pick a spell and cast it on the dummy or yourself.",
     "pt": "Escolha uma magia e lance-a no boneco ou em você."
+  },
+  "ui.tutorial.guia.treino_maos.curar.dica.1": {
+    "en": "If the hostage's move is open, end your turn again.",
+    "pt": "Se a vez do refém estiver aberta, encerre o turno de novo."
   },
   "ui.tutorial.guia.treino_maos.curar.porque": {
     "en": "The lesson asks you to heal that same hostage.",

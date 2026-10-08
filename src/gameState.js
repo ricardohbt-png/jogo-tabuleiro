@@ -905,7 +905,10 @@ const GS = (() => {
     if (actor?.owner) actor = state?.players?.find(p => p.id === actor.owner);
     const vooNoAr = !!(actor?.voo && alturaDe(actor) > 0);
     if (!vooNoAr && _casaAbismo(x, y, moveCtx)) return false;
-    if (actor && (state?.rooms || []).some(r => r.allowed_class && r.allowed_class !== actor.class_id
+    // Só herói tem classe: o refém do exercício (ator `{}`, sem class_id) vive na
+    // sala exclusiva e antes era barrado em toda casa dela (o clique não achava
+    // caminho e nada ia ao servidor). A trava dele é do servidor (room_id).
+    if (actor?.class_id && (state?.rooms || []).some(r => r.allowed_class && r.allowed_class !== actor.class_id
         && ((x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
             || (r.doors || []).some(d => d[0] === x && d[1] === y)))) return false;
     if (fromX != null && fromY != null
