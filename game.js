@@ -14101,10 +14101,14 @@ function _combatPrimaryDamageType(types){
   return priority.find(t => list.includes(t)) || list[0];
 }
 
-function _combatFeedbackColor(kind, damageType){
+function _combatFeedbackColor(kind, damageType, reaction){
   const c = VC.feedback?.combat || {};
   if(kind === 'heal') return c.healColor || '#69f59a';
   if(kind === 'death') return c.deathColor || '#f4d27a';
+  if(reaction === 'vulnerable')
+    return _highContrast ? '#ff3155' : (c.vulnerableColor || '#ff4f64');
+  if(reaction === 'resisted')
+    return _highContrast ? '#00e5ff' : (c.resistedColor || '#62c8ff');
   if(damageType){
     const info = _combatDamageTypeInfo(damageType);
     if(_highContrast){
@@ -14129,7 +14133,11 @@ function _combatFeedbackDisplayText(f){
   }
   const icon = _combatDamageTypeInfo(f.damageType).icon;
   const base = icon ? `${icon} ${f.text}` : f.text;
-  return f.status ? `${base} ${f.status}` : base;
+  const status = f.status && /IMUNE/i.test(f.status) ? f.status
+    : f.reaction === 'vulnerable' ? t('ui.menu.damage.status.vulnerable')
+    : f.reaction === 'resisted' ? t('ui.menu.damage.status.resisted')
+    : f.status;
+  return status ? `${base} ${status}` : base;
 }
 
 function _combatFeedbackVisible(f, state){
@@ -14143,7 +14151,7 @@ function _buildCombatFeedback3D(f){
   const T = g3.T, cv = document.createElement('canvas');
   cv.width = 384; cv.height = 112;
   const c = cv.getContext('2d');
-  const color = _combatFeedbackColor(f.kind, f.damageType);
+  const color = _combatFeedbackColor(f.kind, f.damageType, f.reaction);
   const displayText = _combatFeedbackDisplayText(f);
   c.clearRect(0,0,cv.width,cv.height);
   const fontBase = (f.kind === 'death' ? 54
@@ -15025,11 +15033,11 @@ function _drawCombatFeedback2D(ctx, state, now){
       ? Math.max(halfH, Math.min(ctx.canvas.height - halfH, y))
       : ctx.canvas.height / 2;
     if(f.critical){
-      ctx.shadowColor = _combatFeedbackColor(f.kind, f.damageType);
+      ctx.shadowColor = _combatFeedbackColor(f.kind, f.damageType, f.reaction);
       ctx.shadowBlur = Math.max(8, fs * 0.22);
     }
     ctx.strokeStyle = 'rgba(8,4,12,0.92)'; ctx.strokeText(displayText, drawX, drawY);
-    ctx.fillStyle = _combatFeedbackColor(f.kind, f.damageType); ctx.fillText(displayText, drawX, drawY);
+    ctx.fillStyle = _combatFeedbackColor(f.kind, f.damageType, f.reaction); ctx.fillText(displayText, drawX, drawY);
     ctx.restore();
   }
 }
@@ -15113,6 +15121,8 @@ function _spawnCombatFeedback(entry, text, kind, startAt, damageType, options={}
     text: String(text), kind: kind || 'damage',
     damageType: damageType ? _combatPrimaryDamageType(damageType) : null,
     status: options.status ? String(options.status) : '',
+    reaction: options.reaction === 'vulnerable' || options.reaction === 'resisted'
+      ? options.reaction : null,
     critical: !!options.critical,
     start: visualStart,
     duration: _animationProgressDuration(kind === 'death' ? COMBAT_FEEDBACK_DEATH_MS : COMBAT_FEEDBACK_DAMAGE_MS),
@@ -15331,6 +15341,8 @@ function _detectHpChanges(st){
           volume: isMine ? .95 : .72,
         };
         const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
+        const damageReaction = damageEvents.some(e => e.damage_reaction === 'vulnerable') ? 'vulnerable'
+          : damageEvents.some(e => e.damage_reaction === 'resisted') ? 'resisted' : null;
         const impact = damageEvents.find(e => Array.isArray(e.pos))?.pos;
         // Hand-off: se há uma cena de ataque pendente para este alvo, ela é a
         // dona do instante do impacto — número, cue e reação saem no golpe,
@@ -15342,7 +15354,7 @@ function _detectHpChanges(st){
               entry,
               text: `${amount}`, kind: isMine ? 'hero_damage' : 'damage',
               damageType: damageTypesByKey.get(key) || 'physical',
-              options: {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical)},
+              options: {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical), reaction: damageReaction},
               cue,
             },
             death: false, onImpact: [],
@@ -15368,7 +15380,7 @@ function _detectHpChanges(st){
           entry, `${amount}`, isMine ? 'hero_damage' : 'damage',
           startAt,
           damageTypesByKey.get(key) || 'physical',
-          {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical)}
+          {status: statuses.join(' • '), critical: damageEvents.some(e => e.critical), reaction: damageReaction}
         );
       } else if(hp > prev){
         healed = true;
@@ -15387,10 +15399,12 @@ function _detectHpChanges(st){
         const statuses = [...new Set(damageEvents.map(e => String(e.status || '').trim()).filter(Boolean))];
         const zeroDamage = damageEvents.some(e => Number(e.amount || 0) <= 0);
         if(statuses.length && zeroDamage){
+          const damageReaction = damageEvents.some(e => e.damage_reaction === 'vulnerable') ? 'vulnerable'
+            : damageEvents.some(e => e.damage_reaction === 'resisted') ? 'resisted' : null;
           _spawnCombatFeedback(
             entry, statuses.join(' • '), 'damage',
             performance.now(), damageTypesByKey.get(key) || 'physical',
-            {critical: damageEvents.some(e => e.critical)}
+            {critical: damageEvents.some(e => e.critical), reaction: damageReaction}
           );
         }
       }
@@ -32717,6 +32731,7 @@ function _audioPanelEnsure(){
     +   '<button id="cfg-game-toggle" class="cfg-section-button" type="button" aria-expanded="false" aria-controls="cfg-game-controls">'
     +     '<span data-i18n="ui.menu.config_jogo">🎲 Configurações de jogo</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
     +   '<section id="cfg-game-controls" class="cfg-game-controls" hidden>'
+    +   '<details class="cfg-damage-legend"><summary data-i18n="ui.menu.dano_cores_titulo">🎨 Cores do dano</summary><div data-i18n-html="ui.menu.dano_cores"></div></details>'
     +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:4px;padding-top:8px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'

@@ -1706,6 +1706,12 @@ input:focus { outline: none; border-color: var(--gold); }
 .cfg-section-button.open .cfg-section-chevron { transform:rotate(90deg); }
 .cfg-audio-controls { margin:-2px 4px 12px; padding:2px 7px 8px; border-left:2px solid #4b8050; }
 .cfg-game-controls { margin:-2px 4px 12px; padding:2px 7px 8px; border-left:2px solid #6da7bd; }
+.cfg-damage-legend { margin:8px 0 12px; padding:8px 9px; border:1px solid #62c8ff55; border-radius:7px; background:rgba(19,45,61,.45); }
+.cfg-damage-legend summary { cursor:pointer; color:#9ceeff; font-weight:700; }
+.cfg-damage-legend table { width:100%; margin-top:8px; border-collapse:collapse; font-size:.68rem; line-height:1.35; }
+.cfg-damage-legend th, .cfg-damage-legend td { padding:3px 4px; border-bottom:1px solid #ffffff18; text-align:left; vertical-align:top; }
+.cfg-damage-legend th { color:#cfe9cf; }
+.cfg-damage-legend td:first-child { white-space:nowrap; }
 .cfg-audio-line { display:flex; justify-content:space-between; margin:10px 0 5px; }
 .cfg-som-teste-btn { width:100%; margin-top:12px; padding:6px 8px; background:rgba(13,26,13,.9); color:#cfe9cf; border:1px solid #2a4a2a; border-radius:5px; font-family:inherit; font-size:.82rem; cursor:pointer; }
 .cfg-som-teste-btn:hover { border-color:#4b8050; }

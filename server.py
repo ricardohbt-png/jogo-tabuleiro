@@ -28814,7 +28814,7 @@ class GameRoom(TutorialTraining):
                 pass
         return reduzido
 
-    def _marcar_contexto_dano_visual(self, alvo, bruto, final, damage_types):
+    def _marcar_contexto_dano_visual(self, alvo, bruto, final, damage_types, reaction=None):
         """Guarda como o funil de dano transformou o valor bruto."""
         if not alvo:
             return
@@ -28835,7 +28835,14 @@ class GameRoom(TutorialTraining):
             status = ""
         self._damage_visual_context[id(alvo)] = {
             "raw_amount": bruto,
+            "final_amount": final,
             "status": status,
+            "reaction": reaction,
+            "damage_types": [
+                _NORM_ELEMENTO.get(str(value or "").strip().lower(), str(value or "").strip().lower())
+                for value in (damage_types if isinstance(damage_types, (list, tuple, set)) else [damage_types])
+                if value
+            ],
         }
 
     def _registrar_dano_combate(self, alvo, dano, damage_types, *,
@@ -28867,6 +28874,11 @@ class GameRoom(TutorialTraining):
                 types.append(key)
         if not types:
             types = [DMG_PHYSICAL]
+        context_types = set(context.get("damage_types") or [])
+        visual_reaction = context.get("reaction")
+        if visual_reaction and (
+                context.get("final_amount") != amount or context_types != set(types)):
+            visual_reaction = None
         if alvo.get("type") == "troll" and amount > 0:
             alvo["troll_ultimo_dano_tipos"] = list(types)
             if DMG_ACID in types:
@@ -28898,6 +28910,7 @@ class GameRoom(TutorialTraining):
             "amount": amount,
             "raw_amount": context.get("raw_amount", amount),
             "status": status or None,
+            "damage_reaction": visual_reaction,
             "critical": bool(critical),
             "damage_type": types[0],
             "damage_types": types,
@@ -38203,22 +38216,27 @@ class GameRoom(TutorialTraining):
             "veneno": DMG_POISON,
         }
         if any(imunes_subtipo.get(nome) in damage_types for nome in regras["imunidades"] if nome in imunes_subtipo):
-            self._marcar_contexto_dano_visual(target, raw_dmg, 0, damage_types)
+            self._marcar_contexto_dano_visual(target, raw_dmg, 0, damage_types, reaction="resisted")
             return 0
         ignora_resistencia_fisica = bool((weapon or {}).get("ignora_resistencia_fisica")) and DMG_PHYSICAL in damage_types
         for dtype in damage_types:
             if dtype in target.get("immunities", []) and not (ignora_resistencia_fisica and dtype == DMG_PHYSICAL):
-                self._marcar_contexto_dano_visual(target, raw_dmg, 0, damage_types)
+                self._marcar_contexto_dano_visual(target, raw_dmg, 0, damage_types, reaction="resisted")
                 return 0
+        resistance_applied = False
+        vulnerability_applied = False
         total = raw_dmg
         if target.get("type") == "lobisomem" and DMG_PHYSICAL in damage_types:
             prata = bool((weapon or {}).get("silver"))
             magica = bool((weapon or {}).get("magical")) or "magic" in str((weapon or {}).get("id", ""))
             if prata:
                 total *= 2
+                vulnerability_applied = vulnerability_applied or total > raw_dmg
                 target["regeneracao_bloqueada"] = True
             elif not magica and not ignora_resistencia_fisica:
+                antes = total
                 total = (total + 1) // 2
+                resistance_applied = resistance_applied or total < antes
         if target.get("type") == "lobisomem" and DMG_MAGIC in damage_types:
             target["regeneracao_bloqueada"] = True
         # Licantropia em heróis: prata dobra o dano físico; magia e prata passam
@@ -38228,9 +38246,13 @@ class GameRoom(TutorialTraining):
                      or (weapon or {}).get("material") in {"prata", "silver"})
             magica = bool((weapon or {}).get("magical")) or "magic" in str((weapon or {}).get("id", ""))
             if prata:
+                antes = total
                 total *= 2
+                vulnerability_applied = vulnerability_applied or total > antes
             elif not magica and not ignora_resistencia_fisica:
+                antes = total
                 total -= self._licantropia_config(target)["reducao"]
+                resistance_applied = resistance_applied or total < antes
         # Carne Frágil: +2 no dano que o herói recebe. Espelho da redução da
         # Licantropia acima — mesmo funil, sinal oposto.
         if self._eh_jogador(target):
@@ -38245,7 +38267,9 @@ class GameRoom(TutorialTraining):
                 target["solido_ate_rodada"] = self.round_num + 2
             target["frio_ultima_rodada"] = self.round_num
         if subtipo == "abissal" and any(dtype in damage_types for dtype in (DMG_FIRE, DMG_COLD, DMG_LIGHTNING)):
+            antes = total
             total = (total + 1) // 2
+            resistance_applied = resistance_applied or total < antes
         # ResistÃªncias: reduÃ§Ã£o fixa escalonÃ¡vel OU metade do dano. A reduÃ§Ã£o
         # acontece antes da vulnerabilidade, preservando a ordem previsÃ­vel.
         for resistance in target.get("resistances", []):
@@ -38261,7 +38285,9 @@ class GameRoom(TutorialTraining):
             if rtype == "all_except":
                 excluded = set(resistance.get("exclude", []))
                 if any(dtype not in excluded for dtype in damage_types):
+                    antes = total
                     total -= max(0, int(resistance.get("reduction", 1)))
+                    resistance_applied = resistance_applied or total < antes
                 continue
             if rtype not in damage_types:
                 continue
@@ -38284,24 +38310,32 @@ class GameRoom(TutorialTraining):
             req_cat = resistance.get("categoria")
             if req_cat and (weapon or {}).get("categoria") != req_cat:
                 continue
+            antes = total
             if resistance.get("mode") == "half":
                 total = (total + 1) // 2
             else:
                 total -= max(0, int(resistance.get("reduction", 1)))
+            resistance_applied = resistance_applied or total < antes
         for weakness in target.get("weaknesses", []):
             if weakness.get("type") not in damage_types:
                 continue
             req_cat = weakness.get("categoria")
             if req_cat and (weapon or {}).get("categoria") != req_cat:
                 continue
+            antes = total
             if "multiplier" in weakness:
                 total = int(total * weakness["multiplier"])
             elif "bonus_flat" in weakness:
                 total += weakness["bonus_flat"]
+            vulnerability_applied = vulnerability_applied or total > antes
         if subtipo in ("morto_vivo", "abissal") and DMG_HOLY in damage_types:
+            antes = total
             total *= 2
+            vulnerability_applied = vulnerability_applied or total > antes
         if subtipo == "vegetal" and DMG_FIRE in damage_types:
+            antes = total
             total = (total * 3 + 1) // 2
+            vulnerability_applied = vulnerability_applied or total > antes
         # Marca se o ÃšLTIMO dano recebido por um monstro foi sagrado/luz â€” usado pela
         # ResistÃªncia Morta do Zumbi (morte sagrada = destruiÃ§Ã£o total, sem retorno).
         if not self._eh_jogador(target):
@@ -38317,7 +38351,13 @@ class GameRoom(TutorialTraining):
         if (adjusted > 0 and not self._eh_jogador(target)
                 and target.get("dominio_mente_rodadas", 0) > 0):
             target["dominio_mente_save_bonus"] = int(target.get("dominio_mente_save_bonus", 0) or 0) + 2
-        self._marcar_contexto_dano_visual(target, raw_dmg, adjusted, damage_types)
+        reaction = None
+        if vulnerability_applied and adjusted > raw_dmg:
+            reaction = "vulnerable"
+        elif resistance_applied and adjusted < raw_dmg:
+            reaction = "resisted"
+        self._marcar_contexto_dano_visual(target, raw_dmg, adjusted, damage_types,
+                                          reaction=reaction)
         return adjusted
 
     def _tem_imunidade(self, alvo, efeito):

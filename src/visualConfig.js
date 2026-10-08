@@ -208,6 +208,8 @@ window.VC = {
     combat: {
       damageColor:     '#ff6262',
       heroDamageColor: '#ff8d8d',
+      resistedColor:   '#62c8ff',
+      vulnerableColor: '#ff4f64',
       healColor:       '#69f59a',
       deathColor:      '#f4d27a',
       // Identidade visual do dano. O servidor envia a chave autoritativa;
