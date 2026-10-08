@@ -10465,6 +10465,8 @@ def make_monster(mdef, room):
         m["combatant_weapon_id"] = random.choice((
             "lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico"))
         m["combatant_shield_id"] = "escudo_p" if random.random() < 0.10 else None
+        shield_variant = "com_escudo" if m["combatant_shield_id"] else "sem_escudo"
+        m["image"] = f"goblinCombatente_{m['combatant_weapon_id']}_{shield_variant}"
         combatant_potion = random.random() < 0.05
         m["equipped_items"] = [m["combatant_weapon_id"]]
         if m["combatant_shield_id"]:
