@@ -48482,6 +48482,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   // Fallback por `type`: importante para monstros antigos/autorados que não
   // possuem `image` (por exemplo, os Goblins comuns da dungeon Floresta).
   boneco_treino:       'assets/objetos/boneco_palha_treino.glb',
+  boneco_palha:        'assets/objetos/boneco_palha_treino.glb',
   goblin:             'assets/models3d/monstros/goblin_combatente.glb',
   goblin_arqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblin_combatente:  'assets/models3d/monstros/goblin_combatente.glb',

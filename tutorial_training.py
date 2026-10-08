@@ -1,6 +1,15 @@
 """Cenários do Campo de Treinamento. Não cria conexões nem membros de campanha."""
 from copy import deepcopy
 
+# Lições-ponte que levam o herói de volta ao corredor DEPOIS da trilha da classe
+# (`volta_<classe>`): pertencem à classe, mas não contam para o bônus da trilha
+# (que sai na última lição de verdade) e são refeitas junto com a sala.
+LICAO_FORA_DA_TRILHA_PREFIXOS = ("volta_",)
+
+
+def _licao_fora_da_trilha(lic):
+    return str((lic or {}).get("id", "")).startswith(LICAO_FORA_DA_TRILHA_PREFIXOS)
+
 
 class TutorialTraining:
     def _training_room(self, actor, x, y):
@@ -284,7 +293,8 @@ class TutorialTraining:
         room = self._room_containing_point(p["pos"])
         if not room or room.get("allowed_class") != p.get("class_id"):
             return
-        ids = {l["id"] for l in self.licoes if l.get("classe") == p["class_id"] and l.get("sala_exclusiva")}
+        ids = {l["id"] for l in self.licoes if l.get("classe") == p["class_id"]
+               and (l.get("sala_exclusiva") or _licao_fora_da_trilha(l))}
         p["licao_atual"] = None
         p["licoes_feitas"] = [i for i in p.get("licoes_feitas", []) if i not in ids]
         p["licao_progresso"] = {k:v for k,v in p.get("licao_progresso", {}).items() if k not in ids}

@@ -367,7 +367,8 @@ class RecompensaTests(unittest.TestCase):
 
     def test_bonus_de_trilha_quando_fecha_a_ultima_licao_da_classe(self):
         r, p = room()
-        lics = [f for f in r.licoes if f.get('classe') == 'warrior']
+        # a lição-ponte `volta_<classe>` fica fora da trilha: o bônus sai na última de verdade
+        lics = [f for f in r.licoes if f.get('classe') == 'warrior' and not f['id'].startswith('volta_')]
         for f in lics[:-1]:
             self._concluir(r, p, f['id'])
         ouro = p['gold']
@@ -376,6 +377,13 @@ class RecompensaTests(unittest.TestCase):
         msg = next(m for m in r.messages if m['type'] == 'licao_concluida')
         self.assertTrue(msg['recompensa']['trilha'])
         self.assertEqual(p['gold'], ouro + S.TUTORIAL_RECOMPENSA_OURO + S.TUTORIAL_BONUS_TRILHA_OURO)
+        # e a volta ao corredor paga só o prêmio comum, nunca o bônus de novo
+        ouro = p['gold']
+        r.messages.clear()
+        self._concluir(r, p, 'volta_warrior')
+        msg = next(m for m in r.messages if m['type'] == 'licao_concluida')
+        self.assertFalse(msg['recompensa']['trilha'])
+        self.assertEqual(p['gold'], ouro + S.TUTORIAL_RECOMPENSA_OURO)
 
 
 class PassoOkTests(unittest.TestCase):

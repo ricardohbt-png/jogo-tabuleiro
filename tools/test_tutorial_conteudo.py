@@ -200,12 +200,43 @@ VERBOS_PT = ("clique", "ande", "ataque", "equipe", "abra", "use", "beba", "coma"
              "arraste", "selecione", "escolha", "encerre", "aperte", "pressione", "lance",
              "arremesse", "unte", "ative", "desative", "fique", "aproxime", "toque", "arme",
              "cure", "derrube", "acerte", "esconda", "desarme", "crie", "comande", "liberte",
-             "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque")
+             "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque",
+             "saia", "siga", "volte")
 VAGOS_PT = ("mostre-me", "me mostra", "mostre", "demonstre", "veja como", "observe")
 
 
 def _primeira_palavra(pt):
     return re.sub(r"\[\[[a-z0-9_]+\]\]", "x", pt).strip().lower().split()[0].strip(".,:;!?")
+
+
+class UsarItemTests(unittest.TestCase):
+    """Fatia 7: o guia ensina a USAR o item como o jogo faz (clique direito), não só destaca."""
+    def test_oleo_ensina_bolsa_clique_direito_e_mira(self):
+        g = C.GUIA["fala_30"]
+        self.assertEqual([p["id"] for p in g], ["abrir", "usar", "mirar"])
+        self.assertEqual([p.get("ui") for p in g], ["botao:inventario", "bolsa:frasco_oleo", "monstro:boneco_palha"])
+        self.assertIn("botão direito", g[1]["texto"][0].lower())
+        self.assertIn("right", g[1]["texto"][1].lower())
+        self.assertIn("inimigo", " ".join(x[0] for x in g[2].get("dica", [])).lower())
+        for p in g[:2]:
+            self.assertFalse(p.get("conclui"), p["id"])        # abrir a bolsa pode ter ocorrido antes
+        # vulnerável a fogo + as cores do dano (ui.menu.damage.status.* já está no master)
+        txt = " ".join(x[0] for x in [g[2]["texto"], g[2]["porque"]]).lower()
+        self.assertIn("fogo", txt); self.assertIn("vulnerabilidade", g[2]["porque"][0])
+        self.assertIn("VULNERÁVEL", g[2]["porque"][0]); self.assertIn("VULNERABLE", g[2]["porque"][1])
+        self.assertIn("vermelho", g[2]["porque"][0]); self.assertIn("red", g[2]["porque"][1])
+        # as palavras do guia são as do jogo (strings.js): se o rótulo mudar, o guia acompanha
+        strings = (RAIZ / "src/lang/strings.js").read_text(encoding="utf-8")
+        self.assertIn('"ui.menu.damage.status.vulnerable": { "pt": "VULNERÁVEL"', strings)
+        self.assertIn('"ui.menu.damage.status.resisted": { "pt": "RESISTIDO"', strings)
+        self.assertIn("RESISTIDO", C.GUIA["fala_res"][1]["porque"][0])
+        self.assertIn("VULNERÁVEL", C.GUIA["fala_vuln"][2]["porque"][0])
+
+    def test_veneno_e_pocao_tambem_dizem_botao_direito(self):
+        for lid in ("fala_31", "fala_33"):
+            p = C.GUIA[lid][0]
+            self.assertIn("botão direito", p["texto"][0].lower(), lid)
+            self.assertIn("right", p["texto"][1].lower(), lid)
 
 
 class RedacaoAcionavelTests(unittest.TestCase):

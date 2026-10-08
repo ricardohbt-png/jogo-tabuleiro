@@ -28,7 +28,7 @@ import traceback
 import unicodedata
 import urllib.parse
 from copy import deepcopy
-from tutorial_training import TutorialTraining
+from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
 import aiohttp
 from aiohttp import web
 
@@ -18152,8 +18152,9 @@ class GameRoom(TutorialTraining):
                 premio["ouro"] = TUTORIAL_RECOMPENSA_OURO
                 premio["xp"] = TUTORIAL_RECOMPENSA_XP
                 cls = lic.get("classe")
-                if cls and cls == p.get("class_id"):
-                    da_classe = [l["id"] for l in self.licoes if l.get("classe") == cls]
+                if cls and cls == p.get("class_id") and not _licao_fora_da_trilha(lic):
+                    da_classe = [l["id"] for l in self.licoes
+                                 if l.get("classe") == cls and not _licao_fora_da_trilha(l)]
                     if all(i in feitas for i in da_classe):
                         premio["trilha"] = True
                         premio["ouro"] += TUTORIAL_BONUS_TRILHA_OURO

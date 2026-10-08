@@ -178,6 +178,8 @@ for _fid, _ordem, _texto, _curto in [
                            'tarefa': {'tipo': 'atacar', 'alvo': 'esqueleto_humano', 'vezes': 1, 'texto_curto': _curto}})
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parent))
+from aplicar_fatia7_tutorial import aplicar as _aplicar_fatia7   # bonecos de palha/treino da sala 22, fala_30 e lições volta_<classe>
+_aplicar_fatia7(d)
 from gerar_guia_comum import aplicar_guia
 aplicar_guia(d)
 path.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

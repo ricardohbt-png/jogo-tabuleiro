@@ -296,33 +296,49 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "When you finish what you want to do, you pass your turn.",
     "pt": "Quando terminar o que quer fazer, você passa a vez."
   },
-  "ui.tutorial.guia.fala_30.arremessar.dica.1": {
-    "en": "The training dummy is in the room, standing still.",
-    "pt": "O boneco de treino está na sala, parado."
+  "ui.tutorial.guia.fala_30.abrir.porque": {
+    "en": "Everything that gets used up comes out of the bag: oil, poison and potion.",
+    "pt": "É da bolsa que sai tudo o que se gasta: óleo, veneno e poção."
   },
-  "ui.tutorial.guia.fala_30.arremessar.porque": {
-    "en": "You roll dexterity against the target's [[ca]]; on a hit, it catches fire.",
-    "pt": "Você rola destreza contra a [[ca]] do alvo; se acertar, ele pega fogo."
+  "ui.tutorial.guia.fala_30.abrir.texto": {
+    "en": "Open the bag with the backpack button.",
+    "pt": "Abra a bolsa no botão da mochila."
   },
-  "ui.tutorial.guia.fala_30.arremessar.texto": {
-    "en": "Click a dummy to throw the oil.",
-    "pt": "Clique num boneco para arremessar o óleo."
+  "ui.tutorial.guia.fala_30.mirar.dica.1": {
+    "en": "Only living enemies can be targeted; Esc cancels the aim.",
+    "pt": "Só vale arremessar em inimigo vivo; Esc cancela a mira."
   },
-  "ui.tutorial.guia.fala_30.escolher.texto": {
-    "en": "Pick the Oil Flask in the bag.",
-    "pt": "Escolha o Frasco de Óleo na bolsa."
+  "ui.tutorial.guia.fala_30.mirar.porque": {
+    "en": "The straw dummy has [[vulnerabilidade]] to fire: the oil damage comes out higher, in red with VULNERABLE.",
+    "pt": "O boneco de palha tem [[vulnerabilidade]] a fogo: o dano do óleo sai maior, em vermelho com VULNERÁVEL."
+  },
+  "ui.tutorial.guia.fala_30.mirar.texto": {
+    "en": "Click the straw dummy, inside the red range, to throw.",
+    "pt": "Clique no boneco de palha, dentro do alcance vermelho, para arremessar."
+  },
+  "ui.tutorial.guia.fala_30.usar.dica.1": {
+    "en": "Two quick clicks also use it; on a gamepad, pick USE and confirm.",
+    "pt": "Dois cliques rápidos também usam; no controle, escolha USAR e confirme."
+  },
+  "ui.tutorial.guia.fala_30.usar.porque": {
+    "en": "A right-click uses the item: the oil closes the bag and opens the aim.",
+    "pt": "O clique direito usa o item: o óleo fecha a bolsa e abre a mira."
+  },
+  "ui.tutorial.guia.fala_30.usar.texto": {
+    "en": "Right-click the Oil Flask.",
+    "pt": "Clique com o botão direito no Frasco de Óleo."
   },
   "ui.tutorial.guia.fala_31.untar.dica.1": {
-    "en": "Click the poison flask in the bag.",
-    "pt": "Clique no frasco de veneno na bolsa."
+    "en": "The bag opens with the backpack button if it is closed.",
+    "pt": "A bolsa abre pelo botão da mochila, se estiver fechada."
   },
   "ui.tutorial.guia.fala_31.untar.porque": {
     "en": "Poison is not drunk: it is coated on the blade. Any class can do it.",
     "pt": "Veneno não se bebe: unta-se na lâmina. Qualquer classe pode fazer isso."
   },
   "ui.tutorial.guia.fala_31.untar.texto": {
-    "en": "Use the Acrid Fungus in the bag to coat your weapon.",
-    "pt": "Use o Fungo Acre na bolsa para untar a arma."
+    "en": "Right-click the Acrid Fungus to coat your weapon.",
+    "pt": "Clique com o botão direito no Fungo Acre para untar a arma."
   },
   "ui.tutorial.guia.fala_32.atacar.dica.1": {
     "en": "Walk next to the dummy and click it.",
@@ -333,8 +349,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O veneno só age se o golpe acertar; errar gasta o turno, não a dose."
   },
   "ui.tutorial.guia.fala_32.atacar.texto": {
-    "en": "Attack a dummy with the coated weapon.",
-    "pt": "Ataque um boneco com a arma untada."
+    "en": "Attack the training dummy with the coated weapon.",
+    "pt": "Ataque o boneco de treino com a arma untada."
   },
   "ui.tutorial.guia.fala_33.beber.dica.1": {
     "en": "Remember where it is: in a pinch there is no time.",
@@ -345,8 +361,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Beber é [[acao_bonus]]: dá para se curar e atacar no mesmo turno."
   },
   "ui.tutorial.guia.fala_33.beber.texto": {
-    "en": "Drink the healing potion from the bag.",
-    "pt": "Beba a poção de cura pela bolsa."
+    "en": "Right-click the healing potion to drink it.",
+    "pt": "Clique com o botão direito na poção de cura para bebê-la."
   },
   "ui.tutorial.guia.fala_4.porta.dica.1": {
     "en": "Click the door square; the hero follows the dotted path.",
@@ -428,6 +444,10 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Staffs and maces deal impact, which the skeleton does not resist.",
     "pt": "Cajado e maça causam impacto, que o esqueleto não resiste."
   },
+  "ui.tutorial.guia.fala_res.atacar.porque": {
+    "en": "When the resistance applies, the damage number shows in blue with RESISTED.",
+    "pt": "Quando a resistência age, o número do dano aparece em azul, com RESISTIDO."
+  },
   "ui.tutorial.guia.fala_res.atacar.texto": {
     "en": "Attack the skeleton with a sword or dagger and compare the damage.",
     "pt": "Ataque o esqueleto com espada ou adaga e compare o dano."
@@ -443,6 +463,10 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_vuln.atacar.dica.1": {
     "en": "Choosing the right weapon beats rolling well.",
     "pt": "Escolher a arma certa vale mais que rolar bem o dado."
+  },
+  "ui.tutorial.guia.fala_vuln.atacar.porque": {
+    "en": "When the weakness applies, the damage number shows in red with VULNERABLE.",
+    "pt": "Quando a fraqueza age, o número do dano aparece em vermelho, com VULNERÁVEL."
   },
   "ui.tutorial.guia.fala_vuln.atacar.texto": {
     "en": "Attack the skeleton with the mace: the hit does 2 extra points.",
@@ -855,6 +879,126 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_veneno_golpe.golpe.texto": {
     "en": "Attack the dummy with the coated weapon.",
     "pt": "Ataque o boneco com a arma untada."
+  },
+  "ui.tutorial.guia.volta_bard.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_bard.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_bard.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_bard.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_bard.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
+  },
+  "ui.tutorial.guia.volta_cleric.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_cleric.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_cleric.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_cleric.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_cleric.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
+  },
+  "ui.tutorial.guia.volta_mage.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_mage.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_mage.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_mage.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_mage.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
+  },
+  "ui.tutorial.guia.volta_paladin.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_paladin.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_paladin.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_paladin.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_paladin.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
+  },
+  "ui.tutorial.guia.volta_rogue.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_rogue.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_rogue.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_rogue.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_rogue.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
+  },
+  "ui.tutorial.guia.volta_warrior.sair.porque": {
+    "en": "Your class training is over; the other lessons continue in the next rooms.",
+    "pt": "O treino da sua classe acabou; as outras lições continuam nas salas seguintes."
+  },
+  "ui.tutorial.guia.volta_warrior.sair.texto": {
+    "en": "Leave the room through the marked door and return to the corridor.",
+    "pt": "Saia da sala pela porta marcada e volte ao corredor."
+  },
+  "ui.tutorial.guia.volta_warrior.seguir.dica.1": {
+    "en": "Opening a door is free: click it and keep going.",
+    "pt": "Abrir porta é grátis: clique nela e siga em frente."
+  },
+  "ui.tutorial.guia.volta_warrior.seguir.porque": {
+    "en": "There the Weapon Master teaches food, water, items and the rest of the arsenal.",
+    "pt": "Lá o Mestre de Armas ensina comida, água, itens e o resto do arsenal."
+  },
+  "ui.tutorial.guia.volta_warrior.seguir.texto": {
+    "en": "Head to the next room and walk to the marked square.",
+    "pt": "Siga para a próxima sala e ande até a casa marcada."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL_GUIA);
