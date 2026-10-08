@@ -15562,7 +15562,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
           "trigger": {
             "tipo": "sala"
           },
@@ -16486,7 +16486,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Instrutor de Treinamento",
             "emoji": "🎓"
           },
-          "texto": "Abra o Grimório e lance uma magia conhecida. Escolha o boneco para dano ou você mesmo para um benefício. Confira o círculo e os slots utilizados.",
+          "texto": "Abra o Grimório e lance uma magia conhecida. Nesta sala suas magias não gastam slots: teste todas as que você conhece, no boneco para dano ou em você para um benefício. É uma magia por turno; encerre o turno para lançar a próxima.",
           "trigger": {
             "tipo": "sala"
           },
@@ -16524,7 +16524,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Instrutor de Treinamento",
             "emoji": "🎓"
           },
-          "texto": "Encerre o turno e confira os slots disponíveis no próximo. A renovação obedece à regra do círculo; uma magia sem slot não pode ser lançada.",
+          "texto": "Encerre o turno para continuar. Aqui na sala suas magias não gastam slots e você pode testar todas as que conhece. Fora dela, cada magia gasta um slot do círculo, que volta com o tempo.",
           "trigger": {
             "tipo": "sala"
           },
@@ -16534,7 +16534,7 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno e confira os slots"
+            "texto_curto": "Encerre o turno para continuar"
           },
           "guia": [
             {
