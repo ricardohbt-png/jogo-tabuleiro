@@ -6602,7 +6602,9 @@ function _monsterImageName(monster){
 function _metamorfoseVisualName(entity){
   if(!entity) return null;
   return (entity.metamorfose_ativa && entity.metamorfose_forma_type)
-    || entity.pawn_override || null;
+    || entity.pawn_override
+    // Aprendiz do Campo de Treinamento: nunca fica sem peão (miniatura do Soldado).
+    || (entity.training_ally ? 'soldado' : null) || null;
 }
 function _getMonster2DImg(imageName){
   if(!imageName) return null;
@@ -11547,12 +11549,13 @@ function renderMap(state){
   _desenharEcosDolorososAura2D(ctx, state, performance.now(), exploredSet);
 
   // ── Players: base disc then hero sprite
+  // 2D-PLAYERS
   ctx.textAlign='center'; ctx.textBaseline='middle';
   for(const p of state.players){
     if(!p.alive) continue;
     const _buraco2D=_buracoQuedaPose2D(`p:${p.id}`)||_buracoQuedaPose2D(p.id);
     if(p.engolido || p.bau_engolido || ((p.fosso_oculto || _fossoQuedaDisparos.has(String(p.id))) && !_buraco2D)) continue;
-    if(p.connected === false) continue;   // desconectado: deixou a masmorra, não desenha
+    if(p.connected === false && !p.training_ally) continue;   // desconectado: deixou a masmorra, não desenha (aprendiz de treino é NPC: sempre aparece)
     const [ptx,pty]=p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${ptx},${pty}`)) continue;
     // Deslize fiel (entity_step de move_path): herói de outro jogador anda casa
@@ -11633,6 +11636,19 @@ function renderMap(state){
       ctx.fillRect(cx-tw/2-4,Y+CELL-tagFs-4,tw+8,tagFs+2);
       ctx.fillStyle=isMe?'#f0c040':isTesteSel?'#ffd04a':'#ffffff';
       ctx.textBaseline='top'; ctx.fillText(label,cx,Y+CELL-tagFs-3);
+      ctx.textBaseline='middle';
+    }
+    if(p.training_ally){
+      // Alvo das curas do Campo de Treinamento: nome e vida sempre à vista.
+      const pct=Math.max(0,Math.min(1,(p.hp||0)/(p.max_hp||1)));
+      const barH=Math.max(4,Math.round(CELL*0.08));
+      ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(X+3,Y+2,CELL-6,barH);
+      ctx.fillStyle=pct>.5?'#44cc88':pct>.25?'#e0b030':'#d04040'; ctx.fillRect(X+3,Y+2,(CELL-6)*pct,barH);
+      const tagFs=Math.round(CELL*0.14);
+      ctx.font=`bold ${tagFs}px monospace`; ctx.textAlign='center'; ctx.textBaseline='top';
+      const lbl=`${p.name} ${p.hp}/${p.max_hp}`, tw=ctx.measureText(lbl).width;
+      ctx.fillStyle='rgba(0,0,0,0.88)'; ctx.fillRect(cx-tw/2-3,Y+CELL-tagFs-4,tw+6,tagFs+2);
+      ctx.fillStyle='#9fe8c0'; ctx.fillText(lbl,cx,Y+CELL-tagFs-3);
       ctx.textBaseline='middle';
     }
   }
@@ -47945,12 +47961,13 @@ function renderMap3D(state){
   };
 
   // Players
+  // 3D-PLAYERS
   for(const p of state.players){
     if(!p.alive) continue;
     const _fossoCaindo=!!(p.fosso_oculto&&window.CombatScene
       &&CombatScene.pitFallActiveFor(`p:${p.id}`,performance.now()));
     if(p.engolido || p.bau_engolido || (p.fosso_oculto&&!_fossoCaindo)) continue;
-    if(p.connected === false) continue;   // desconectado: fora da masmorra, não desenha
+    if(p.connected === false && !p.training_ally) continue;   // desconectado: fora da masmorra, não desenha (aprendiz de treino sempre aparece)
     const [px,py] = p.pos;
     if(p.id !== GS.myPid && !visionSet.has(`${px},${py}`)) continue;
     const pSel = (g3.selectedPos && g3.selectedPos[0]===px && g3.selectedPos[1]===py)
@@ -47963,7 +47980,8 @@ function renderMap3D(state){
     // existente (o metamorfoseado gira dentro do modelo de monstro, logo abaixo).
     const _figInvis = obterFig(`pl:${p.id}`,
       JSON.stringify([p.color, p.class_id, formaVisual, p.metamorfose_ativa, p.metamorfose_forma_type, p.id===GS.myPid, !!pSel, _queimando(p), !!p.petrificado, _estaParalisado(p),
-        p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0]),
+        p.acido_residual > 0, (p.efeitos_veneno||[]).length > 0,
+        p.training_ally ? [p.name, p.hp, p.max_hp] : 0]),
       () => {
         const f = build3DFig(p.color, !!formaVisual, p.id===GS.myPid, isCur, px, py, p.class_id,
           formaVisual ? (p.metamorfose_forma_type || formaVisual) : null, pSel, formaVisual,
@@ -47977,6 +47995,7 @@ function renderMap3D(state){
         // Só o GLB de herói encara o passo pela raiz; billboard não tem frente e
         // o metamorfoseado gira dentro do próprio modelo de monstro.
         f.userData.giraRaiz = _GLB_ENABLED_CLASSES.has(p.class_id) && !formaVisual;
+        if(p.training_ally) f.add(_makeAprendizTag3D(p));
         return f;
       }, px, py, p.altura);
     _sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);
@@ -50070,6 +50089,25 @@ function _atualizarProvocacaoMarks3D(now){
 }
 
 // "!" vermelho sobre o monstro à procura de um herói (campo `procurando`).
+// Placa do aprendiz do Campo de Treinamento: nome + barra de vida sobre a cabeça.
+function _makeAprendizTag3D(p){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
+  const c = cv.getContext('2d');
+  const pct = Math.max(0, Math.min(1, (p.hp || 0) / (p.max_hp || 1)));
+  c.fillStyle = 'rgba(0,0,0,0.78)'; c.fillRect(0, 0, 256, 64);
+  c.fillStyle = pct > .5 ? '#44cc88' : pct > .25 ? '#e0b030' : '#d04040';
+  c.fillRect(6, 6, 244 * pct, 12);
+  c.strokeStyle = '#ffffff55'; c.strokeRect(6, 6, 244, 12);
+  c.font = 'bold 26px "Segoe UI", Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.fillStyle = '#9fe8c0'; c.fillText(`${p.name} ${p.hp}/${p.max_hp}`, 128, 41);
+  const tex = new T.CanvasTexture(cv); tex._owned = true;
+  const sp = new T.Sprite(new T.SpriteMaterial({ map:tex, transparent:true, depthWrite:false, depthTest:false }));
+  sp.scale.set(1.0, .25, 1); sp.position.set(0, 1.35, 0); sp.renderOrder = 92;
+  sp.userData.isAprendizTag = true;
+  return sp;
+}
+
 function _makeProcurandoSprite3D(){
   const T = g3.T;
   const cv = document.createElement('canvas'); cv.width = cv.height = 128;

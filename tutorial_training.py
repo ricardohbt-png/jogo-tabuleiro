@@ -66,10 +66,11 @@ class TutorialTraining:
                 continue
             for n in range(2 if cls == "cleric" else 1):
                 ident = f"__treino_{cls}_{n + 1}"
-                a = api.make_player(ident, f"Aprendiz de treinamento {n + 1}", "warrior", 0)
+                a = api.make_player(ident, f"Aprendiz {n + 1}", "warrior", 0)
                 a.update(training_ally=True, allowed_class=cls, room_id=room["id"],
                          pos=[room["x"] + 3 + n, room["y"] + 2],
-                         hp=5, max_hp=20, alive=True, gold=0, xp=0, connected=False)
+                         hp=5, max_hp=20, alive=True, gold=0, xp=0, connected=False,
+                         pawn_override="soldado")   # miniatura do Soldado (2D png / 3D glb)
                 self.training_allies[ident] = a
         for m in self.monsters.values():
             room = self._room_by_id(m.get("room_id"))
