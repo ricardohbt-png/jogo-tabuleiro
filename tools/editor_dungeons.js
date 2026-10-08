@@ -18471,7 +18471,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_hostilidade",
           "pos": [
-            35,
+            32,
             15
           ],
           "falante": {
