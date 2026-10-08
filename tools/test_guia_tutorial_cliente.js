@@ -228,5 +228,32 @@ console.log("\n[18] conclusão visível (fiação)");
           new RegExp('"ui\\.tutorial\\.' + k + '":[^\\n]*"pt"[^\\n]*"en"').test(langT));
 }
 
+console.log("\n[19] atalho dinâmico: [[atalho:inventario]]");
+{
+  const v = new Set();
+  const a = G.segmentos('Abra com [[atalho:inventario]] e [[ca]].', v);
+  check("token vira segmento atalho", a.length === 5 && a[1].atalho === 'inventario' && !a[1].termo);
+  check("termo comum segue igual", a[3].termo === 'ca' && a[3].primeira === true);
+  check("atalho não entra em vistos", !v.has('atalho:inventario') && !v.has('inventario'));
+  const b = G.segmentos('x [[atalho:inventario]] y [[atalho:inventario]]', new Set());
+  check("atalho repete sempre (não é termo)", b.filter(s => s.atalho).length === 2);
+  const c = G.segmentos('[[foo:bar]] [[atalho:Inv]]', new Set());
+  check("prefixo desconhecido ou id inválido fica texto cru",
+        c.every(s => s.texto !== undefined) && c.map(s => s.texto).join('') === '[[foo:bar]] [[atalho:Inv]]');
+  check("chaveAtalho teclado", G.chaveAtalho('inventario', false) === 'ui.tutorial.atalho.inventario.teclado');
+  check("chaveAtalho controle", G.chaveAtalho('inventario', true) === 'ui.tutorial.atalho.inventario.controle');
+  check("id de atalho desconhecido devolve null", G.chaveAtalho('xyz', false) === null);
+  check("ATALHOS lista o inventário", G.ATALHOS.indexOf('inventario') >= 0);
+  const gjs = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+  check("game.js resolve o atalho com o botão real do controle",
+        /seg\.atalho/.test(gjs) && /_gamepadButtonLabel\(_gamepadBinding\('characterMenu'\)\)/.test(gjs));
+  check("game.js redesenha a janela quando o controle conecta/desconecta", /function _guiaAtualizarDispositivo/.test(gjs)
+        && (gjs.match(/_guiaAtualizarDispositivo\(\)/g) || []).length >= 3);
+  const lang = fs.readFileSync(path.join(raiz, "src", "lang", "tutorial.js"), "utf8");
+  for (const d of ["teclado", "controle"])
+    check("chave atalho.inventario." + d + " em pt e en",
+          new RegExp('"ui\\.tutorial\\.atalho\\.inventario\\.' + d + '":\\s*\\{.*?"en".*?"pt"').test(lang.replace(/\r?\n/g, " ")));
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

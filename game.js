@@ -30127,6 +30127,7 @@ function _pollGamepad(now){
     if(_gamepadBindingCapture){ _gamepadBindingCapture = null; _gamepadRenderPrefs(); }
     _gamepadSetUiFocus(null);
     if(wasActive){
+      _guiaAtualizarDispositivo();
       _gamepadRenderCursor();
       _renderGamepadHud(GS.gameState);
     }
@@ -30135,7 +30136,7 @@ function _pollGamepad(now){
   const wasActive = _gamepadInput.active;
   _gamepadInput.index = pad.index;
   _gamepadInput.active = true;
-  if(!wasActive) _gamepadRecoverSenhorAguasFocus();
+  if(!wasActive){ _gamepadRecoverSenhorAguasFocus(); _guiaAtualizarDispositivo(); }
   if(_gamepadBindingCapture){
     const pressed = Array.from(pad.buttons).findIndex((button, index) => !!button.pressed && !_gamepadInput.buttons[index]);
     if(pressed >= 0){
@@ -53959,11 +53960,35 @@ function _guiaFecharPasso(chave){
   _guiaPassoChave = chave;
 }
 
+// `[[atalho:<id>]]`: o atalho do dispositivo em uso. Controle conectado -> o botão real do
+// controle (o mesmo rótulo do HUD de atalhos); senão a tecla do teclado (I = inventário).
+// "Em uso" = controle conectado (_gamepadInput.active); o jogo não rastreia o último
+// dispositivo usado.
+function _guiaAtalhoControle(id){
+  if(id === 'inventario') return _gamepadButtonLabel(_gamepadBinding('characterMenu'));
+  return '';
+}
+function _guiaAtalhoTexto(id){
+  const ativo = !!(typeof _gamepadInput !== 'undefined' && _gamepadInput.active);
+  const chave = GuiaTutorial.chaveAtalho(id, ativo);
+  if(!chave) return '';
+  return t(chave, { botao: ativo ? _guiaAtalhoControle(id) : '' });
+}
+let _guiaDispositivoSig = null;
+// Chamada quando o controle conecta ou desconecta: redesenha a janela da lição aberta.
+function _guiaAtualizarDispositivo(){
+  const sig = !!(typeof _gamepadInput !== 'undefined' && _gamepadInput.active);
+  if(sig === _guiaDispositivoSig) return;
+  _guiaDispositivoSig = sig;
+  try { if(_licaoUltima && $('licao-janela')?.classList.contains('open')) _mostrarJanelaLicao(_licaoUltima); } catch (e) {}
+}
+
 // Texto do tutorial -> HTML seguro. `[[termo]]` vira botão sublinhado na 1ª vez e texto
 // simples nas seguintes; o nome e a definição vêm de ui.tutorial.glossario.<termo>.
 function _tutHTML(s){
   const bruto = _tutTexto(s);
   return GuiaTutorial.segmentos(bruto, new Set(_guiaTermosVistos)).map(seg => {
+    if(seg.atalho) return _esc(_guiaAtalhoTexto(seg.atalho));
     if(!seg.termo) return _esc(seg.texto);
     if(seg.primeira) _guiaTermosPasso.add(seg.termo);
     const nome = t('ui.tutorial.glossario.' + seg.termo + '.nome');

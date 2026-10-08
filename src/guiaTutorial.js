@@ -106,17 +106,28 @@
     if (typeof texto !== 'string' || !texto) return [];
     const ve = vistos || new Set();
     const out = [];
-    const re = /\[\[([a-z0-9_]+)\]\]/g;
+    // `[[atalho:<id>]]` não é glossário: é o atalho do dispositivo em uso (resolvido pelo game.js).
+    const re = /\[\[(?:atalho:([a-z0-9_]+)|([a-z0-9_]+))\]\]/g;
     let ultimo = 0, m;
     while ((m = re.exec(texto))) {
       if (m.index > ultimo) out.push({ texto: texto.slice(ultimo, m.index) });
-      out.push({ termo: m[1], primeira: !ve.has(m[1]) });
-      ve.add(m[1]);
+      if (m[1]) out.push({ atalho: m[1] });
+      else {
+        out.push({ termo: m[2], primeira: !ve.has(m[2]) });
+        ve.add(m[2]);
+      }
       ultimo = m.index + m[0].length;
     }
     if (ultimo < texto.length) out.push({ texto: texto.slice(ultimo) });
     return out;
   }
 
-  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos };
+  // Atalhos que o texto do guia pode citar; a chave de idioma depende do dispositivo.
+  const ATALHOS = ['inventario'];
+  function chaveAtalho(id, controleAtivo) {
+    if (ATALHOS.indexOf(id) < 0) return null;
+    return 'ui.tutorial.atalho.' + id + '.' + (controleAtivo ? 'controle' : 'teclado');
+  }
+
+  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho };
 })();

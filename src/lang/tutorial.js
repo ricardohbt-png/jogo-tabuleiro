@@ -1,5 +1,13 @@
 // Textos do tutorial guiado (janela da lição com passos). Mantido à mão.
 window.LANG_TUTORIAL = {
+  "ui.tutorial.atalho.inventario.teclado": {
+    "en": "the I key",
+    "pt": "a tecla I"
+  },
+  "ui.tutorial.atalho.inventario.controle": {
+    "en": "the {botao} button",
+    "pt": "o botão {botao}"
+  },
   "ui.tutorial.passo_de": {
     "en": "Step {i} of {n}",
     "pt": "Passo {i} de {n}"

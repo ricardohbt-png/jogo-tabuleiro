@@ -237,8 +237,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno."
   },
   "ui.tutorial.guia.fala_18.comer.texto": {
-    "en": "Open the bag and eat the travel ration.",
-    "pt": "Abra a bolsa e coma a ração de viagem."
+    "en": "Open the bag with [[atalho:inventario]] and eat the travel ration.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e coma a ração de viagem."
   },
   "ui.tutorial.guia.fala_18.pegar.porque": {
     "en": "Food and water keep [[fome_sede]] out of the penalty zone.",
@@ -261,8 +261,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Beba duas garrafas de água pela bolsa."
   },
   "ui.tutorial.guia.fala_2.abrir.texto": {
-    "en": "Open the bag with the backpack button.",
-    "pt": "Abra a bolsa no botão da mochila."
+    "en": "Open the bag with the backpack button or with [[atalho:inventario]].",
+    "pt": "Abra a bolsa no botão da mochila ou com [[atalho:inventario]]."
   },
   "ui.tutorial.guia.fala_2.equipar.dica.1": {
     "en": "The weapon is in the bag, among the inventory squares.",
@@ -309,8 +309,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "É da bolsa que sai tudo o que se gasta: óleo, veneno e poção."
   },
   "ui.tutorial.guia.fala_30.abrir.texto": {
-    "en": "Open the bag with the backpack button.",
-    "pt": "Abra a bolsa no botão da mochila."
+    "en": "Open the bag with the backpack button or with [[atalho:inventario]].",
+    "pt": "Abra a bolsa no botão da mochila ou com [[atalho:inventario]]."
   },
   "ui.tutorial.guia.fala_30.mirar.dica.1": {
     "en": "Only living enemies can be targeted; Esc cancels the aim.",
@@ -485,8 +485,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Equipar é [[acao_livre]], não gasta o turno."
   },
   "ui.tutorial.guia.fala_vuln.equipar.texto": {
-    "en": "Open the bag and equip the training mace.",
-    "pt": "Abra a bolsa e equipe a maça de treino."
+    "en": "Open the bag with [[atalho:inventario]] and equip the training mace.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe a maça de treino."
   },
   "ui.tutorial.guia.fala_vuln.pegar.porque": {
     "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
@@ -573,8 +573,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O Alaúde é passivo: não tem botão, mas reforça a Canção Heroica."
   },
   "ui.tutorial.guia.treino_alaude.alaude.texto": {
-    "en": "Open your bag and equip the Old Lute again.",
-    "pt": "Abra a bolsa e equipe o Alaúde Velho de volta."
+    "en": "Open your bag with [[atalho:inventario]] and equip the Old Lute again.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe o Alaúde Velho de volta."
   },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",
@@ -793,8 +793,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Equipar é [[acao_livre]]; o Alaúde sai da mão do escudo e vai para a bolsa."
   },
   "ui.tutorial.guia.treino_harpa.equipar.texto": {
-    "en": "Open your bag and equip the Old Harp in the shield hand.",
-    "pt": "Abra a bolsa e equipe a Harpa Velha na mão do escudo."
+    "en": "Open your bag with [[atalho:inventario]] and equip the Old Harp in the shield hand.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe a Harpa Velha na mão do escudo."
   },
   "ui.tutorial.guia.treino_luz.luz.porque": {
     "en": "See your vision, attack, damage and defense change.",

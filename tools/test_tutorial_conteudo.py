@@ -209,6 +209,50 @@ def _primeira_palavra(pt):
     return re.sub(r"\[\[[a-z0-9_]+\]\]", "x", pt).strip().lower().split()[0].strip(".,:;!?")
 
 
+class AtalhoInventarioTests(unittest.TestCase):
+    """Fatia 12: todo passo que manda abrir a bolsa mostra o atalho (teclado ou controle)."""
+    ATALHO = re.compile(r"\[\[atalho:([a-z0-9_]+)\]\]")
+
+    def _todos(self):
+        for modulo in G.modulos_de_guia():
+            for lid, passos in modulo.items():
+                for p in passos:
+                    yield lid, p
+
+    def test_passo_que_manda_abrir_a_bolsa_traz_o_token(self):
+        ruins = [f"{lid}/{p['id']}: {p['texto'][0]!r}" for lid, p in self._todos()
+                 if re.match(r"abra a bolsa", p["texto"][0].lower()) and not self.ATALHO.search(p["texto"][0])]
+        self.assertEqual(ruins, [], "\n".join(ruins))
+
+    def test_pelo_menos_os_passos_conhecidos(self):
+        for lid, pid in (("fala_2", "abrir"), ("fala_30", "abrir")):
+            p = [x for x in C.GUIA[lid] if x["id"] == pid][0]
+            self.assertTrue(self.ATALHO.search(p["texto"][0]), lid)
+
+    def test_token_igual_em_pt_e_en_e_com_id_conhecido(self):
+        n = 0
+        for lid, p in self._todos():
+            for pt, en in textos(p):
+                self.assertEqual(self.ATALHO.findall(pt), self.ATALHO.findall(en), f"{lid}/{p['id']}")
+                for aid in self.ATALHO.findall(pt):
+                    n += 1
+                    self.assertIn(aid, ("inventario",), f"{lid}/{p['id']}")
+        self.assertGreaterEqual(n, 4)
+
+    def test_chaves_de_atalho_existem_em_pt_e_en(self):
+        js = (RAIZ / "src/lang/tutorial.js").read_text(encoding="utf-8").replace("\r\n", "\n")
+        for disp in ("teclado", "controle"):
+            m = re.search(r'"ui\.tutorial\.atalho\.inventario\.%s":\s*\{([\s\S]*?)\n  \}' % disp, js)
+            self.assertTrue(m, disp)
+            self.assertIn('"en"', m.group(1)); self.assertIn('"pt"', m.group(1))
+        self.assertIn("{botao}", re.search(r'inventario\.controle":\s*\{([\s\S]*?)\n  \}', js).group(1))
+
+    def test_regra_das_15_palavras_continua_valendo_com_o_token(self):
+        for lid, p in self._todos():
+            limpo = TERMO.sub("x", p["texto"][0])
+            self.assertLessEqual(len(limpo.split()), 15, f"{lid}/{p['id']}")
+
+
 class UsarItemTests(unittest.TestCase):
     """Fatia 7: o guia ensina a USAR o item como o jogo faz (clique direito), não só destaca."""
     def test_oleo_ensina_bolsa_clique_direito_e_mira(self):
