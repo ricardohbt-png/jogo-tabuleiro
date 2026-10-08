@@ -46,7 +46,7 @@ if not any(t['pos'] == [10,8] for t in d['traps']):
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
 def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
     f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Instrutor de Treinamento','emoji':'🎓'},
-       'texto':text, 'trigger':{'tipo':'sala'}, 'classe':cls, 'ordem':order, 'sala_exclusiva':True,
+       'texto':text, 'trigger':{'tipo':'sala'}, 'classe':cls, 'ordem':order + 1, 'sala_exclusiva':True,   # +1: a ordem 3 é a lição-ponte `porta_<classe>`
        'tarefa':{'tipo':verb, 'vezes':count, 'texto_curto':short}}
     if skill is not None:f['tarefa']['alvo']=skill
     if target_id:f['tarefa']['alvo_id']=target_id
@@ -130,6 +130,27 @@ lesson('paladin','treino_regen',8,'regeneracao_divina',
        'O treino deixou dois pontos de vida para recuperar. Ative Regeneração Divina e encerre sua vez. A tarefa só termina quando a regeneração recuperar vida de verdade.', 'Recupere vida com Regeneração Divina',verb='regenerar')
 lesson('paladin','treino_luz',9,'guerreiro_luz',
        'Ative Guerreiro da Luz e compare sua visão, acerto, dano e defesa. O bônus é o da habilidade disponível na sua ficha.', 'Ative Guerreiro da Luz')
+
+# Placas na frente de cada sala exclusiva e lição-ponte até a porta (ordem 3 de cada classe).
+# Casas conferidas no mapa: chão livre, do lado de fora da sala, a 1 casa da porta.
+PORTAS = {'warrior': ([22,7], [22,8], '🛡️', 'Guerreiro', 'fala_6', 'Mestre de Armas'),
+          'mage': ([22,21], [22,20], '🔮', 'Mago', 'fala_8', 'Mestre de Armas'),
+          'rogue': ([14,7], [15,7], '🗡️', 'Ladino', 'fala_10', 'Mestre de Armas'),
+          'cleric': ([30,6], [29,6], '✝️', 'Clérigo', 'fala_12', 'Mestre de Armas'),
+          'bard': ([15,23], [16,23], '🎵', 'Bardo', 'fala_14', 'Mestre de Armas'),
+          'paladin': ([31,25], [30,25], '⚔️', 'Paladino', 'fala_16', 'Mestre de Armas')}
+for cls, (porta, casa_placa, emoji, nome, ultima, _) in PORTAS.items():
+    if not any(x['type'] == 'placa' and x['pos'] == casa_placa for x in d['decorations']):
+        d['decorations'].append({'id': 'placa_' + cls, 'type': 'placa', 'pos': casa_placa, 'facing': [0, 1],
+                                 'loot': None, 'key_objective': False, 'image': 'placa_fincada.png',
+                                 'texto': f'{emoji} Sala do {nome} — só ele entra aqui.'})
+    if not any(f['id'] == 'porta_' + cls for f in d['falas']):
+        base = next(f for f in d['falas'] if f['id'] == ultima)
+        d['falas'].append({'id': 'porta_' + cls, 'pos': base['pos'], 'falante': base['falante'],
+                           'texto': 'Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.',
+                           'trigger': {'tipo': 'sala'}, 'classe': cls, 'ordem': 3,
+                           'tarefa': {'tipo': 'mover_ate', 'alvo': porta, 'vezes': 1,
+                                      'texto_curto': 'Entre na sala do seu herói'}})
 
 for f in d['falas']:
     if f['id'] == 'treino_veneno_golpe':f['tarefa']['requer_veneno'] = True

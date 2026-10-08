@@ -40,4 +40,13 @@ GUIA = {
         P("instrumento", ("Abra as opções do instrumento e use a habilidade num alvo.", "Open the instrument options and use its ability on a target."),
           porque=("O instrumento complementa seu repertório de bardo.", "The instrument rounds out your bard repertoire.")),
     ],
+    "porta_bard": [
+        P("porta", ("Abra a porta marcada e entre: é a sala exclusiva do seu herói.",
+                    "Open the marked door and walk in: it is your hero's exclusive room."),
+          porque=("Só a sua classe entra ali; lá você treina cada habilidade do seu herói.",
+                  "Only your class can enter; there you practice each of your hero's abilities."),
+          ui="porta:[15,23]",
+          dica=[("Clique na porta para abri-la e depois ande até ela.",
+                 "Click the door to open it, then walk onto it.")]),
+    ],
 }

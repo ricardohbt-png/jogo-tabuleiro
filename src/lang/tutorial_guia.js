@@ -464,6 +464,78 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take the mace from this room's chest.",
     "pt": "Pegue a maça do baú desta sala."
   },
+  "ui.tutorial.guia.porta_bard.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_bard.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_bard.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
+  "ui.tutorial.guia.porta_cleric.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_cleric.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_cleric.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
+  "ui.tutorial.guia.porta_mage.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_mage.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_mage.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
+  "ui.tutorial.guia.porta_paladin.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_paladin.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_paladin.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
+  "ui.tutorial.guia.porta_rogue.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_rogue.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_rogue.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
+  "ui.tutorial.guia.porta_warrior.porta.dica.1": {
+    "en": "Click the door to open it, then walk onto it.",
+    "pt": "Clique na porta para abri-la e depois ande até ela."
+  },
+  "ui.tutorial.guia.porta_warrior.porta.porque": {
+    "en": "Only your class can enter; there you practice each of your hero's abilities.",
+    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+  },
+  "ui.tutorial.guia.porta_warrior.porta.texto": {
+    "en": "Open the marked door and walk in: it is your hero's exclusive room.",
+    "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
+  },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",
     "pt": "O exercício só conta quando a metamagia entra no lançamento."

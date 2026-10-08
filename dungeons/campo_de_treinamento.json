@@ -2029,7 +2029,104 @@
       "dificuldade": 5
     }
   ],
-  "decorations": [],
+  "decorations": [
+    {
+      "id": "placa_warrior",
+      "type": "placa",
+      "pos": [
+        22,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🛡️ Sala do Guerreiro — só ele entra aqui."
+    },
+    {
+      "id": "placa_mage",
+      "type": "placa",
+      "pos": [
+        22,
+        20
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🔮 Sala do Mago — só ele entra aqui."
+    },
+    {
+      "id": "placa_rogue",
+      "type": "placa",
+      "pos": [
+        15,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🗡️ Sala do Ladino — só ele entra aqui."
+    },
+    {
+      "id": "placa_cleric",
+      "type": "placa",
+      "pos": [
+        29,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "✝️ Sala do Clérigo — só ele entra aqui."
+    },
+    {
+      "id": "placa_bard",
+      "type": "placa",
+      "pos": [
+        16,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🎵 Sala do Bardo — só ele entra aqui."
+    },
+    {
+      "id": "placa_paladin",
+      "type": "placa",
+      "pos": [
+        30,
+        25
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "⚔️ Sala do Paladino — só ele entra aqui."
+    }
+  ],
   "secret_passages": [],
   "falas": [
     {
@@ -2286,6 +2383,43 @@
       ]
     },
     {
+      "id": "porta_warrior",
+      "pos": [
+        14,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          22,
+          7
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
+          "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
+          "ui": "porta:[22,7]",
+          "dica": [
+            "ui.tutorial.guia.porta_warrior.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
       "id": "fala_7",
       "pos": [
         13,
@@ -2346,6 +2480,43 @@
           "texto": "ui.tutorial.guia.fala_8.matar.texto",
           "porque": "ui.tutorial.guia.fala_8.matar.porque",
           "ui": "monstro:boneco_treino"
+        }
+      ]
+    },
+    {
+      "id": "porta_mage",
+      "pos": [
+        13,
+        14
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          22,
+          21
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_mage.porta.texto",
+          "porque": "ui.tutorial.guia.porta_mage.porta.porque",
+          "ui": "porta:[22,21]",
+          "dica": [
+            "ui.tutorial.guia.porta_mage.porta.dica.1"
+          ]
         }
       ]
     },
@@ -2414,6 +2585,43 @@
       ]
     },
     {
+      "id": "porta_rogue",
+      "pos": [
+        13,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          14,
+          7
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
+          "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
+          "ui": "porta:[14,7]",
+          "dica": [
+            "ui.tutorial.guia.porta_rogue.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
       "id": "fala_11",
       "pos": [
         15,
@@ -2474,6 +2682,43 @@
           "texto": "ui.tutorial.guia.fala_12.matar.texto",
           "porque": "ui.tutorial.guia.fala_12.matar.porque",
           "ui": "monstro:boneco_treino"
+        }
+      ]
+    },
+    {
+      "id": "porta_cleric",
+      "pos": [
+        15,
+        14
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "cleric",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          30,
+          6
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
+          "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
+          "ui": "porta:[30,6]",
+          "dica": [
+            "ui.tutorial.guia.porta_cleric.porta.dica.1"
+          ]
         }
       ]
     },
@@ -2542,6 +2787,43 @@
       ]
     },
     {
+      "id": "porta_bard",
+      "pos": [
+        15,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          15,
+          23
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_bard.porta.texto",
+          "porque": "ui.tutorial.guia.porta_bard.porta.porque",
+          "ui": "porta:[15,23]",
+          "dica": [
+            "ui.tutorial.guia.porta_bard.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
       "id": "fala_15",
       "pos": [
         14,
@@ -2602,6 +2884,43 @@
           "texto": "ui.tutorial.guia.fala_16.matar.texto",
           "porque": "ui.tutorial.guia.fala_16.matar.porque",
           "ui": "monstro:boneco_treino"
+        }
+      ]
+    },
+    {
+      "id": "porta_paladin",
+      "pos": [
+        14,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          31,
+          25
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
+          "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
+          "ui": "porta:[31,25]",
+          "dica": [
+            "ui.tutorial.guia.porta_paladin.porta.dica.1"
+          ]
         }
       ]
     },
@@ -2922,7 +3241,7 @@
       },
       "classe": "warrior",
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "mira_certeira",
@@ -2957,7 +3276,7 @@
       },
       "classe": "warrior",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "golpe_devastador",
@@ -2992,7 +3311,7 @@
       },
       "classe": "warrior",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "furia_berserker",
@@ -3024,7 +3343,7 @@
       },
       "classe": "warrior",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "ataque_extra",
         "alvo": "furia_berserker",
@@ -3059,7 +3378,7 @@
       },
       "classe": "warrior",
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 8,
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
@@ -3097,7 +3416,7 @@
         "magia_tipo": "qualquer"
       },
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_magia",
         "vezes": 1,
@@ -3132,7 +3451,7 @@
       },
       "classe": "mage",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
@@ -3166,7 +3485,7 @@
         "magia_tipo": "save"
       },
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "aprimorar_magia",
@@ -3204,7 +3523,7 @@
         "magia_tipo": "duracao"
       },
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "estender_magia",
@@ -3239,7 +3558,7 @@
         "magia_tipo": "dano"
       },
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 8,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "fortalecer_magia",
@@ -3271,7 +3590,7 @@
       },
       "classe": "mage",
       "sala_exclusiva": true,
-      "ordem": 8,
+      "ordem": 9,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "animar_mortos",
@@ -3307,7 +3626,7 @@
       },
       "classe": "mage",
       "sala_exclusiva": true,
-      "ordem": 9,
+      "ordem": 10,
       "tarefa": {
         "tipo": "comandar_servo",
         "vezes": 1,
@@ -3342,7 +3661,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "detectar_armadilhas",
@@ -3374,7 +3693,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "desarmar_armadilha",
         "vezes": 1,
@@ -3404,7 +3723,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "esconder_sombras",
@@ -3436,7 +3755,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "ataque_furtivo",
@@ -3471,7 +3790,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 8,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "veneno_rapido",
@@ -3503,7 +3822,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 8,
+      "ordem": 9,
       "tarefa": {
         "tipo": "atacar",
         "vezes": 1,
@@ -3535,7 +3854,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 9,
+      "ordem": 10,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "criar_armadilha",
@@ -3567,7 +3886,7 @@
       },
       "classe": "cleric",
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "cura",
@@ -3605,7 +3924,7 @@
       },
       "classe": "cleric",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "cura_area",
@@ -3638,7 +3957,7 @@
       },
       "classe": "cleric",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "purificacao",
@@ -3671,7 +3990,7 @@
       },
       "classe": "cleric",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "ressurreicao",
@@ -3704,7 +4023,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "cancao_heroica",
@@ -3736,7 +4055,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "manter_cancao",
         "vezes": 1,
@@ -3767,7 +4086,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "encerrar_cancao",
         "vezes": 1,
@@ -3797,7 +4116,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "provocacao",
@@ -3832,7 +4151,7 @@
         "instrumento": true
       },
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 8,
       "tarefa": {
         "tipo": "usar_instrumento",
         "vezes": 1,
@@ -3862,7 +4181,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 3,
+      "ordem": 4,
       "tarefa": {
         "tipo": "libertar_refem",
         "alvo": "__prisioneiro__",
@@ -3893,7 +4212,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 5,
       "tarefa": {
         "tipo": "proteger",
         "alvo": "__prisioneiro__",
@@ -3925,7 +4244,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 6,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "imposicao_maos",
@@ -3959,7 +4278,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "golpe_sagrado",
@@ -3991,7 +4310,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 8,
       "tarefa": {
         "tipo": "atacar",
         "vezes": 1,
@@ -4023,7 +4342,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 8,
+      "ordem": 9,
       "tarefa": {
         "tipo": "regenerar",
         "alvo": "regeneracao_divina",
@@ -4055,7 +4374,7 @@
       },
       "classe": "paladin",
       "sala_exclusiva": true,
-      "ordem": 9,
+      "ordem": 10,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "guerreiro_luz",

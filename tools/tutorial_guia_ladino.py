@@ -56,4 +56,13 @@ GUIA = {
                   "Pit is already unlocked; the other formulas come from the Guild."),
           ui="habilidade:criar_armadilha"),
     ],
+    "porta_rogue": [
+        P("porta", ("Abra a porta marcada e entre: é a sala exclusiva do seu herói.",
+                    "Open the marked door and walk in: it is your hero's exclusive room."),
+          porque=("Só a sua classe entra ali; lá você treina cada habilidade do seu herói.",
+                  "Only your class can enter; there you practice each of your hero's abilities."),
+          ui="porta:[14,7]",
+          dica=[("Clique na porta para abri-la e depois ande até ela.",
+                 "Click the door to open it, then walk onto it.")]),
+    ],
 }
