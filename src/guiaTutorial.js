@@ -62,6 +62,21 @@
     return melhor ? { tipo: 'monstro', pos: [melhor.pos[0], melhor.pos[1]], id: melhor.id } : null;
   }
 
+  // Placa da sala do herói em evidência (fatia 10): só na vez do herói em foco e só se a
+  // casa está visível. Devolve {tipo:'casa', id, pos} ou null.
+  function placaEmEvidencia(estado, myPid, visivel) {
+    if (!estado || !estado.tutorial || estado.current_turn !== myPid) return null;
+    const me = (estado.players || []).find(p => p && p.id === myPid);
+    if (!me || me.alive === false || !me.class_id) return null;
+    const pc = (estado.tutorial.por_classe || {})[me.class_id];
+    const pl = pc && pc.placa;
+    if (!pl || !Array.isArray(pl.pos) || pl.pos.length < 2
+        || !Number.isFinite(pl.pos[0]) || !Number.isFinite(pl.pos[1])) return null;
+    const ve = typeof visivel === 'function' ? visivel : () => true;
+    if (!ve(pl.pos[0], pl.pos[1])) return null;
+    return { tipo: 'casa', id: pl.id, pos: [pl.pos[0], pl.pos[1]] };
+  }
+
   // [[dx,dy],...] a partir de (fx,fy) -> [[x,y],...] com as casas pisadas.
   function caminhoAbsoluto(passos, fx, fy) {
     if (!Array.isArray(passos)) return [];
@@ -103,5 +118,5 @@
     return out;
   }
 
-  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, caminhoAbsoluto, nivelDica, textoDica, segmentos };
+  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos };
 })();

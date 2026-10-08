@@ -39192,7 +39192,9 @@ class GameRoom(TutorialTraining):
                 continue
             lic = next((l for l in self.licoes if l["id"] == p.get("licao_atual")), None)
             tar = (lic or {}).get("tarefa") or {}
+            placa = self._placa_em_evidencia(p)
             por_classe[cls] = {
+                **({"placa": placa} if placa else {}),
                 "licao_id": lic["id"] if lic else None,
                 "texto_curto": tar.get("texto_curto", ""),
                 "feito": (p.get("licao_progresso") or {}).get(lic["id"], 0) if lic else 0,

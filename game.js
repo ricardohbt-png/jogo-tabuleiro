@@ -44273,12 +44273,13 @@ function dispose3D(){
     g3.setaVez.material.map?.dispose();
     g3.setaVez.material.dispose();
   }
-  if(g3.guiaMarca){
-    const m = g3.guiaMarca;
+  for(const chaveMarca of ['guiaMarca', 'guiaPlaca']){
+    const m = g3[chaveMarca];
+    if(!m) continue;
     g3.scene.remove(m.grupo);
     m.seta.material.map?.dispose(); m.seta.material.dispose();
     m.geoAnel.dispose(); m.geoPonto.dispose(); m.mat.dispose();
-    g3.guiaMarca = null;
+    g3[chaveMarca] = null;
   }
   if(g3.activeEffectGroup){
     Object.values(g3.activeEffectSprites || {}).forEach(sprite => {
@@ -54101,9 +54102,34 @@ function _guiaForte(){
   return GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg()) >= 1;
 }
 
+// Placa da sala do herói em evidência (fatia 10): vale na vez do herói em foco, enquanto o
+// servidor mandar `tutorial.por_classe[cls].placa`. Mesmo filtro de névoa do halo do passo;
+// se o passo atual já marca a mesma casa, fica um halo só.
+function _guiaPlacaAlvo(state, visivel, alvoPasso){
+  if(!state || state.test_mode) return null;
+  const pl = GuiaTutorial.placaEmEvidencia(state, GS.myPid, visivel);
+  if(pl && alvoPasso && alvoPasso.pos[0] === pl.pos[0] && alvoPasso.pos[1] === pl.pos[1]) return null;
+  return pl;
+}
+
+function _guiaPlacaDesenhar2D(ctx, state, visionSet, alvoPasso){
+  const pl = _guiaPlacaAlvo(state, (x, y) => visionSet.has(`${x},${y}`), alvoPasso);
+  if(!pl) return;
+  const pulso = 0.5 + 0.5 * Math.sin(performance.now() / 420);
+  const cx = pl.pos[0] * CELL + CELL / 2, cy = pl.pos[1] * CELL + CELL / 2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,200,60,.95)'; ctx.shadowBlur = 14 + 10 * pulso;
+  ctx.strokeStyle = '#f0c867'; ctx.lineWidth = 3.5 + 2 * pulso;
+  ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.40 + 0.07 * pulso), 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  _desenharSetaVez2D(ctx, cx, pl.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
+  _agendarChamas2D();
+}
+
 // 2D: anel pulsante + seta dourada sobre a casa; porta ganha linha tracejada.
 function _guiaDesenhar2D(ctx, state, visionSet){
   const alvo = _guiaAlvoTabuleiro(state, (x, y) => visionSet.has(`${x},${y}`));
+  _guiaPlacaDesenhar2D(ctx, state, visionSet, alvo);
   if(!alvo) return;
   const agora = performance.now();
   const forte = _guiaForte();
@@ -54133,8 +54159,8 @@ function _guiaDesenhar2D(ctx, state, visionSet){
 // 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),
 // criada na primeira vez e escondida quando não há alvo. Nunca cria nada por quadro.
 const GUIA_TRILHA_MAX = 48;
-function _guiaMarca3D(){
-  if(g3.guiaMarca) return g3.guiaMarca;
+function _guiaMarca3D(chave = 'guiaMarca'){
+  if(g3[chave]) return g3[chave];
   const T = g3.T;
   const mat = new T.MeshBasicMaterial({ color: 0xf0c867, transparent: true, opacity: .95,
     side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false });
@@ -54153,8 +54179,8 @@ function _guiaMarca3D(){
   grupo.add(anel); grupo.add(seta); grupo.add(grupoTrilha);
   grupo.visible = false;
   g3.scene.add(grupo);
-  g3.guiaMarca = { grupo, anel, seta, pontos, mat, geoAnel: anel.geometry, geoPonto };
-  return g3.guiaMarca;
+  g3[chave] = { grupo, anel, seta, pontos, mat, geoAnel: anel.geometry, geoPonto };
+  return g3[chave];
 }
 
 // Visão do jogador, recalculada só quando o estado muda.
@@ -54168,6 +54194,25 @@ function _guiaVisao3D(state){
   return _guiaVisaoSet;
 }
 
+// 3D: marca própria (anel + seta, sem trilha) para a placa em evidência.
+function _guiaPlacaAtualizar3D(st, alvoPasso){
+  let pl = null;
+  if(st){
+    const vis = _guiaVisao3D(st);
+    pl = _guiaPlacaAlvo(st, vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true), alvoPasso);
+  }
+  if(!pl){ if(g3.guiaPlaca) g3.guiaPlaca.grupo.visible = false; return; }
+  const m = _guiaMarca3D('guiaPlaca');
+  const pulso = 0.5 + 0.5 * Math.sin(performance.now() / 420);
+  const y = topoSuperficie3D(st, pl.pos[0], pl.pos[1]) + 0.04;
+  m.anel.position.set(pl.pos[0], y, pl.pos[1]);
+  m.anel.scale.setScalar(1 + 0.18 * pulso);
+  m.mat.opacity = 0.65 + 0.35 * pulso;
+  m.seta.position.set(pl.pos[0], y + 1.3 + 0.1 * pulso, pl.pos[1]);
+  m.pontos.forEach(p => { p.visible = false; });
+  m.grupo.visible = true;
+}
+
 function _guiaAtualizar3D(){
   if(!g3) return;
   const st = GS.gameState;
@@ -54176,6 +54221,7 @@ function _guiaAtualizar3D(){
     const vis = _guiaVisao3D(st);
     alvo = _guiaAlvoTabuleiro(st, vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true));
   }
+  _guiaPlacaAtualizar3D(st, alvo);
   if(!alvo){ if(g3.guiaMarca) g3.guiaMarca.grupo.visible = false; return; }
   const m = _guiaMarca3D();
   const agora = performance.now();

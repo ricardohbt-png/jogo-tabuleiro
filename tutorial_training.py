@@ -316,6 +316,30 @@ class TutorialTraining:
                                       f"Richard recebeu {before[1] - p['hp']} após sua redução. Agora cure o refém.")
                     await self._licao_evento(p, "proteger", alvo="__prisioneiro__")
 
+    def _placa_em_evidencia(self, p):
+        """{id, pos} da placa da sala do herói enquanto faltam lições de habilidade da classe.
+
+        Lições de habilidade = as autoradas `treino_*` da classe (fora as geradas em jogo
+        (`treino_guild_*`/`treino_magia_*`, geradas por compra/magia), as comuns `fala_*` e as pontes `porta_/volta_`),
+        com requisitos cumpridos. Lição pulada já está em `licoes_feitas`, então conta como
+        cumprida: a placa não fica acesa para sempre em quem abandonou a etapa."""
+        if not getattr(self, "training_mode", False):
+            return None
+        cls = p.get("class_id")
+        if not cls:
+            return None
+        feitas = p.get("licoes_feitas") or []
+        faltam = any(l.get("classe") == cls and str(l["id"]).startswith("treino_")
+                     and not str(l["id"]).startswith(("treino_guild_", "treino_magia_")) and l["id"] not in feitas
+                     and self._training_requirements(p, l)
+                     for l in self.licoes)
+        if not faltam:
+            return None
+        placa = next((d for d in self.decorations if d.get("id") == "placa_" + cls), None)
+        if not placa or not placa.get("pos"):
+            return None
+        return {"id": placa["id"], "pos": list(placa["pos"])}
+
     async def handle_repetir_tutorial(self, pid):
         p = self.players.get(pid)
         if not self.training_mode or not p or not self._is_turn(pid):
