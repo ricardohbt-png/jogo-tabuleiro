@@ -82,7 +82,37 @@ class TutorialTraining:
             if room and room.get("allowed_class") == "paladin":
                 self.prisoner["training_refem"] = True
                 self.prisoner["nome"] = "Refém de treinamento"
+                # Molde para devolver o refém depois de dispensado (repetir_tutorial).
+                self.training_state["refem_modelo"] = deepcopy(self.prisoner)
 
+    def _training_refem_pode_ir(self, pr, x, y):
+        """O refém do exercício anda, mas só dentro da própria sala."""
+        sala = self._room_containing_point([x, y])
+        return bool(sala and sala.get("id") == pr.get("room_id"))
+
+    async def _training_refem_chegou(self, pid, pr):
+        """O refém terminou um passo: se era a missão de guiá-lo, cumpre e dispensa."""
+        p = self.players.get(pid)
+        lesson = next((l for l in self.licoes if l["id"] == (p or {}).get("licao_atual")), None)
+        if not lesson or (lesson.get("tarefa") or {}).get("tipo") != "guiar_refem":
+            return
+        await self._licao_evento(p, "guiar_refem", alvo=list(pr["pos"]))
+        if lesson["id"] in (p.get("licoes_feitas") or []):
+            await self._dispensar_prisioneiro(p)
+
+    async def _dispensar_prisioneiro(self, p=None):
+        """Tira o refém do jogo sem derrota: some do tabuleiro e do estado, e o
+        jogador deixa de controlá-lo. O molde fica em training_state para o
+        `repetir_tutorial` devolvê-lo."""
+        pr = self.prisoner
+        if not pr or not pr.get("training_refem"):
+            return
+        self.prisoner = None
+        self.prisioneiro_done = True
+        for h in self.players.values():
+            if h.get("protetor_alvo") == "__prisioneiro__":
+                h["protetor_ativo"] = False; h["protetor_alvo"] = None
+        await self.gm_say(self._tutorial_api().T("narracao.refem_agradece_e_se_retira"))
     def _training_spell_available(self, p, mid):
         api = self._tutorial_api()
         magic = api.GRIMORIO.get(mid) or {}
@@ -300,8 +330,10 @@ class TutorialTraining:
         p["licoes_feitas"] = [i for i in p.get("licoes_feitas", []) if i not in ids]
         p["licao_progresso"] = {k:v for k,v in p.get("licao_progresso", {}).items() if k not in ids}
         self.licoes_feitas.difference_update(ids)
-        if p["class_id"] == "paladin" and self.prisoner and self.prisoner.get("training_refem"):
-            self.prisoner.update(hp=self.prisoner["max_hp"], alive=True, freed=False, rescuer_pid=None)
+        modelo = self.training_state.get("refem_modelo")
+        if p["class_id"] == "paladin" and modelo and (self.prisoner is None or self.prisoner.get("training_refem")):
+            self.prisoner = deepcopy(modelo)   # volta à casa de origem, inteiro
+            self.prisioneiro_done = False
             p["protetor_ativo"] = False; p["protetor_alvo"] = None
             self.training_state.pop("paladin", None)
         await self._verificar_falas(p, room)

@@ -354,9 +354,9 @@
     { v: "usar_instrumento" },
     { v: "arremessar_item" },
     { v: "desarmar_armadilha" },
-    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo"].map(v => ({v})),
+    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo", "guiar_refem"].map(v => ({v})),
   ];
-  const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta"]);
+  const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta", "guiar_refem"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
 
   const S = {

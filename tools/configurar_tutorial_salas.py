@@ -43,6 +43,8 @@ for cls, pos in [('warrior',[24,3]), ('mage',[24,24]), ('mage',[24,26]), ('rogue
 if not any(t['pos'] == [10,8] for t in d['traps']):
     d['traps'].append({'id':'trap_treino_luccas', 'tipo':'buraco', 'pos':[10,8], 'dificuldade':5})
 
+import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parent))
+import aplicar_fatia9_tutorial as _F9   # lição de guiar o refém (constantes)
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
 def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
     f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Instrutor de Treinamento','emoji':'🎓'},
@@ -122,13 +124,14 @@ lesson('paladin','treino_protetor',4,'__prisioneiro__',
        'Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para o golpe controlado de treinamento. Observe a divisão do dano e a redução pessoal de Richard.', 'Proteja o refém durante um ataque',verb='proteger')
 lesson('paladin','treino_maos',5,'imposicao_maos',
        'Sua proteção manteve o refém vivo. Agora, no seu turno, fique ao lado dele e use Imposição das Mãos. A lição pede a cura desse mesmo refém ferido.', 'Cure o refém com Imposição das Mãos',target_id='__prisioneiro__',effective=True)
-lesson('paladin','treino_sagrado',6,'golpe_sagrado',
+lesson('paladin','treino_guiar_refem',6,_F9.ALVO,_F9.TEXTO,_F9.CURTO,verb='guiar_refem')
+lesson('paladin','treino_sagrado',7,'golpe_sagrado',
        'Ative Golpe Sagrado no nível disponível. Depois ataque o boneco e observe o dano sagrado acrescentado. Há custos de ativação e de manutenção.', 'Ative Golpe Sagrado')
-lesson('paladin','treino_sagrado_golpe',7,None,
+lesson('paladin','treino_sagrado_golpe',8,None,
        'Ataque o boneco com Golpe Sagrado ativo para ver seu efeito no dano.', 'Acerte com Golpe Sagrado ativo',verb='atacar')
-lesson('paladin','treino_regen',8,'regeneracao_divina',
+lesson('paladin','treino_regen',9,'regeneracao_divina',
        'O treino deixou dois pontos de vida para recuperar. Ative Regeneração Divina e encerre sua vez. A tarefa só termina quando a regeneração recuperar vida de verdade.', 'Recupere vida com Regeneração Divina',verb='regenerar')
-lesson('paladin','treino_luz',9,'guerreiro_luz',
+lesson('paladin','treino_luz',10,'guerreiro_luz',
        'Ative Guerreiro da Luz e compare sua visão, acerto, dano e defesa. O bônus é o da habilidade disponível na sua ficha.', 'Ative Guerreiro da Luz')
 
 # Placas na frente de cada sala exclusiva e lição-ponte até a porta (ordem 3 de cada classe).

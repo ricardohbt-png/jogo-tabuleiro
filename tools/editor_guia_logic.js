@@ -13,7 +13,7 @@
   const VERBOS = ["mover_ate", "abrir_porta", "atacar", "matar", "pegar_item", "equipar", "encerrar_turno",
     "usar_item", "usar_magia", "usar_habilidade", "usar_tecnica", "usar_instrumento", "desarmar_armadilha",
     "arremessar_item", "libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao",
-    "encerrar_cancao", "comandar_servo"];
+    "encerrar_cancao", "comandar_servo", "guiar_refem"];
 
   const ehChave = (s) => typeof s === "string" && /^ui\.tutorial\.[a-z0-9_.]+$/.test(s);
 

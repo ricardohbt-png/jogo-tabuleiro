@@ -36,6 +36,10 @@ window.LANG_EDITOR = {
     "en": "Stop the song",
     "pt": "Encerrar a canção"
   },
+  "ui.editor.masmorra.licao.guiar_refem": {
+    "en": "Guide the hostage to a square",
+    "pt": "Guiar o refém até uma casa"
+  },
   "ui.editor.masmorra.licao.comandar_servo": {
     "en": "Command a servant",
     "pt": "Comandar um servo"

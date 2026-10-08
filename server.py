@@ -49,10 +49,11 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  # Arremesso tem handler proprio (handle_throw_item): usar_item
                  # sai cedo no ramo "throwable" e nunca chega ao gancho.
                  "arremessar_item", "libertar_refem", "proteger", "regenerar",
-                 "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo")
+                 "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo",
+                 "guiar_refem")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
-LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta")
+LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta", "guiar_refem")
 # Recompensa por lição do Campo de Treinamento: paga uma vez por personagem
 # (a guarda é o `tutorial_history`, que sobrevive ao `repetir_tutorial`).
 TUTORIAL_RECOMPENSA_OURO = 5
@@ -93,9 +94,9 @@ def _guia_ui_padrao(tar):
     tipo, alvo = tar.get("tipo"), tar.get("alvo")
     if tipo == "encerrar_turno":
         return "botao:encerrar_turno"
-    if tipo in ("mover_ate", "abrir_porta"):
+    if tipo in ("mover_ate", "abrir_porta", "guiar_refem"):
         if isinstance(alvo, (list, tuple)) and len(alvo) == 2:
-            return f"{'casa' if tipo == 'mover_ate' else 'porta'}:[{int(alvo[0])},{int(alvo[1])}]"
+            return f"{'porta' if tipo == 'abrir_porta' else 'casa'}:[{int(alvo[0])},{int(alvo[1])}]"
         return None
     if not isinstance(alvo, str) or not re.fullmatch(r"[a-z0-9_]+", alvo):
         return None
@@ -47026,8 +47027,11 @@ class GameRoom(TutorialTraining):
             andou = True
             if not self._sobre_aliado(pr):
                 ultima_livre = list(pr["pos"])
-            if not pr.get("alive"):
+            if not pr.get("alive") or self.prisoner is not pr:
                 break
+        if self.prisoner is not pr:
+            await self._fechar_janela_sem_prisioneiro(pid)
+            return
         if andou and pr.get("alive") and self._sobre_aliado(pr):
             await self._recuar_para(pr, ultima_livre, None, None)
         if andou:
@@ -47051,7 +47055,8 @@ class GameRoom(TutorialTraining):
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
             return
         nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
-        if pr.get("training_refem"):
+        if pr.get("training_refem") and not self._training_refem_pode_ir(pr, nx, ny):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")})
             return  # O refém do exercício permanece na sala.
         if not await self._training_check_entry(pid, pr, nx, ny):
             return
@@ -47080,7 +47085,20 @@ class GameRoom(TutorialTraining):
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
             await self._disparar_armadilha(pr, arm)
+        if pr.get("alive") and pr.get("training_refem"):
+            await self._training_refem_chegou(pid, pr)
+        if self.prisoner is not pr:
+            # Dispensado ao cumprir a missão: sem peça para controlar, a janela fecha.
+            if _push:
+                await self._fechar_janela_sem_prisioneiro(pid)
+            return
         if _push: await self.push_state()
+
+    async def _fechar_janela_sem_prisioneiro(self, pid):
+        if self.animados_phase_pid == pid and self._animados_atual(pid) is None:
+            await self.handle_end_turn(pid)
+        else:
+            await self.push_state()
 
     async def _prisioneiro_morre(self):
         """Morte do prisioneiro (por monstro, armadilha, etc.): falha o resgate

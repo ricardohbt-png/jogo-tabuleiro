@@ -1908,6 +1908,10 @@ window.LANG_NARRACAO = {
     "en": "🛡️ The prisoner dodges a monster!",
     "pt": "🛡️ O prisioneiro esquiva de um monstro!"
   },
+  "narracao.refem_agradece_e_se_retira": {
+    "en": "🙏 The hostage thanks you and slips away to safety. You no longer need to control him.",
+    "pt": "🙏 O refém agradece e se retira em segurança. Você não precisa mais controlá-lo."
+  },
   "narracao.o_prisioneiro_foi_morto_o_resgate_falhou": {
     "en": "☠️ The prisoner was killed! The rescue failed.",
     "pt": "☠️ O prisioneiro foi morto! O resgate falhou."

@@ -96,7 +96,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p['licao_atual'],'treino_maos')
         await r.handle_imposicao_maos(p['id'],{'target_id':'__prisioneiro__'})
         self.assertGreater(r.prisoner['hp'],3)
-        self.assertEqual(p['licao_atual'],'treino_sagrado')
+        self.assertEqual(p['licao_atual'],'treino_guiar_refem')
         self.assertFalse(r.mission_complete_pending)
 
     async def test_heal_before_protection_does_not_complete(self):
@@ -165,7 +165,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         q=fresh.players['new_connection'];q['id']='new_connection'
         q['action_done']=False
         await fresh.handle_imposicao_maos(q['id'],{'target_id':'__prisioneiro__'})
-        self.assertEqual(q['licao_atual'],'treino_sagrado')
+        self.assertEqual(q['licao_atual'],'treino_guiar_refem')
         self.assertEqual(set(fresh.training_allies),{'__treino_cleric_1','__treino_cleric_2','__treino_bard_1'})
 
     async def test_repeat_room_keeps_history_and_other_classes(self):

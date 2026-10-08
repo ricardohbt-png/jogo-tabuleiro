@@ -732,6 +732,30 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click End Turn to finish.",
     "pt": "Clique em Encerrar Turno para concluir."
   },
+  "ui.tutorial.guia.treino_guiar_refem.encerrar.porque": {
+    "en": "The hostage only moves in the window that opens after your turn.",
+    "pt": "O refém só anda na janela que abre depois do seu turno."
+  },
+  "ui.tutorial.guia.treino_guiar_refem.encerrar.texto": {
+    "en": "End your turn to open the hostage's move.",
+    "pt": "Encerre o turno para abrir a vez do refém."
+  },
+  "ui.tutorial.guia.treino_guiar_refem.guiar.dica.1": {
+    "en": "If the hostage is not selected, click him first.",
+    "pt": "Se o refém não estiver selecionado, clique nele antes."
+  },
+  "ui.tutorial.guia.treino_guiar_refem.guiar.dica.2": {
+    "en": "If his move has passed, end your turn again to reopen it.",
+    "pt": "Se a vez dele passou, encerre o turno de novo para reabri-la."
+  },
+  "ui.tutorial.guia.treino_guiar_refem.guiar.porque": {
+    "en": "Once there, he leaves and you stop controlling him.",
+    "pt": "Ao chegar, ele se retira e você deixa de controlá-lo."
+  },
+  "ui.tutorial.guia.treino_guiar_refem.guiar.texto": {
+    "en": "Click the marked square to guide the hostage there.",
+    "pt": "Clique na casa marcada para guiar o refém até lá."
+  },
   "ui.tutorial.guia.treino_instrumento.instrumento.porque": {
     "en": "The instrument rounds out your bard repertoire.",
     "pt": "O instrumento complementa seu repertório de bardo."
