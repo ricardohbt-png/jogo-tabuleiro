@@ -31,7 +31,7 @@ class BonecoPalhaTests(unittest.TestCase):
     def test_bestiario_tem_o_boneco_inflamavel(self):
         m = def_monstro("boneco_palha")
         self.assertTrue(any(w.get("type") == "fire" and w.get("multiplier", 0) >= 2 for w in m["weaknesses"]))
-        self.assertLessEqual(m["hp"], 2)                      # dano mínimo do óleo x2 o mata
+        self.assertGreaterEqual(m["hp"], 20)                  # fatia 8: sobrevive ao 1º frasco, para o número aparecer
         self.assertEqual(m["movement"], 0)
         self.assertEqual(S.validar_dungeon(D), (True, "ok"))
 
@@ -39,7 +39,7 @@ class BonecoPalhaTests(unittest.TestCase):
         sala = next(r for r in D["rooms"] if r["id"] == 22)
         dentro = lambda pos: sala["x"] <= pos[0] < sala["x"] + sala["w"] and sala["y"] <= pos[1] < sala["y"] + sala["h"]
         palha = [m for m in D["monsters"] if m["type"] == "boneco_palha"]
-        treino = [m for m in D["monsters"] if m["type"] == "boneco_treino" and dentro(m["pos"])]
+        treino = [m for m in D["monsters"] if m["type"] == "boneco_treino_veneno" and dentro(m["pos"])]
         self.assertGreaterEqual(len(palha), 2)                # folga se um morrer a golpe de espada
         self.assertGreaterEqual(len(treino), 3)               # folga para o veneno
         ocupadas = [tuple(m["pos"]) for m in D["monsters"]]
@@ -59,7 +59,7 @@ class BonecoPalhaTests(unittest.TestCase):
 
 
 class OleoNoServidorTests(unittest.IsolatedAsyncioTestCase):
-    async def test_oleo_mata_a_palha_de_uma_vez_e_o_veneno_ainda_tem_alvo(self):
+    async def test_oleo_fere_a_palha_e_o_veneno_ainda_tem_alvo(self):
         r, p = room("warrior")
         marcar_comuns_ate(p, 11)
         p["pos"] = [35, 15]; p["action_done"] = False; p["bonus_action_used"] = False
@@ -71,16 +71,16 @@ class OleoNoServidorTests(unittest.IsolatedAsyncioTestCase):
         # pior caso do jogador: acerta sem crítico e rola o mínimo de dano
         with patch.object(S.random, "randint", return_value=10), patch.object(S, "roll_dice", return_value=1):
             await r.handle_throw_item(p["id"], {"item_id": "frasco_oleo", "target_id": palha["id"]})
-        self.assertLessEqual(palha["hp"], 0, "a palha morre de uma vez com o óleo")
+        self.assertLess(palha["hp"], palha["max_hp"], "o óleo machucou a palha")
         self.assertIn("fala_30", p["licoes_feitas"])
         self.assertEqual(p["licao_atual"], "fala_31")
-        treino = [m for m in r.monsters.values() if m["type"] == "boneco_treino" and m["room_id"] == 22 and m["hp"] > 0]
+        treino = [m for m in r.monsters.values() if m["type"] == "boneco_treino_veneno" and m["room_id"] == 22 and m["hp"] > 0]
         self.assertGreaterEqual(len(treino), 3)
         self.assertTrue(all(m["hp"] == m["max_hp"] for m in treino), "o óleo não encostou nos bonecos do veneno")
         # veneno: unta e acerta um boneco de treino sem travar
         await r._licao_evento(p, "usar_item", alvo="veneno_fungo_acre")
         self.assertEqual(p["licao_atual"], "fala_32")
-        await r._licao_evento(p, "atacar", alvo="boneco_treino", contexto={"veneno": True})
+        await r._licao_evento(p, "atacar", alvo="boneco_treino_veneno", contexto={"veneno": True})
         self.assertIn("fala_32", p["licoes_feitas"])
         self.assertEqual(p["licao_atual"], "fala_33")
 

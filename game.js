@@ -15289,6 +15289,23 @@ function _projetilFeedbackStartAt(entry){
   return liberarEm;
 }
 
+// Eventos de dano com reação (vulnerável/resistido) cujo alvo SUMIU do estado:
+// foi o golpe que o matou. `vivos` = chaves presentes agora; `anteriores` =
+// Map chave -> entrada do estado anterior (precisa ter a posição para o número).
+function _golpesLetaisComReacao(eventos, vivos, anteriores){
+  const porChave = new Map();
+  for(const e of (eventos || [])){
+    const key = e?.entity_key;
+    if(!key || vivos.has(key) || !anteriores.has(key)) continue;
+    if(!(Number(e.amount) > 0)) continue;
+    if(e.damage_reaction !== 'vulnerable' && e.damage_reaction !== 'resisted') continue;
+    const lista = porChave.get(key) || [];
+    lista.push(e);
+    porChave.set(key, lista);
+  }
+  return [...porChave].map(([key, events]) => ({key, entry: anteriores.get(key), events}));
+}
+
 function _detectHpChanges(st){
   const entries = _gatherHpEntries(st);
   const now = performance.now();
@@ -15409,6 +15426,36 @@ function _detectHpChanges(st){
         }
       }
     }
+  }
+  // Golpe que MATA: o monstro morto já não vem no game_state, então o laço
+  // acima não o vê e o número com a cor (VULNERÁVEL/RESISTIDO) se perdia.
+  for(const letal of _golpesLetaisComReacao(
+      st?.combat_damage_events, new Set(entries.map(e => e.key)), _hpEntitySnapshot)){
+    const evs = letal.events;
+    const tipos = [];
+    for(const ev of evs)
+      for(const tp of (Array.isArray(ev.damage_types) ? ev.damage_types : [ev.damage_type || 'physical'])){
+        const k = _combatDamageTypeInfo(tp).key;
+        if(k && !tipos.includes(k)) tipos.push(k);
+      }
+    const prim = _combatPrimaryDamageType(tipos.length ? tipos : ['physical']);
+    const reacao = evs.some(e => e.damage_reaction === 'vulnerable') ? 'vulnerable' : 'resisted';
+    const opcoes = {status: [...new Set(evs.map(e => String(e.status || '').trim()).filter(Boolean))].join(' • '),
+      critical: evs.some(e => e.critical), reaction: reacao};
+    const texto = `${evs.reduce((s, e) => s + Math.max(0, Math.round(Number(e.amount) || 0)), 0)}`;
+    if(_cenaAtiva() && CombatScene.pendingFor(letal.key, now)){
+      const cmd = CombatScene.handoff(letal.key, {
+        feedback: {entry: letal.entry, text: texto, kind: 'damage', damageType: tipos.length ? tipos : 'physical',
+          options: opcoes, cue: {damageType: prim, repeatKey: `damage:${prim}`, volume: .72}},
+        death: false, onImpact: [],
+      }, now);
+      if(cmd) _executarComandoCena(cmd);
+      continue;
+    }
+    const inicios = [_bolaFogoFeedbackStartAt(letal.entry), _projetilFeedbackStartAt(letal.entry),
+      _iraRochaFeedbackStartAt(letal.entry), _prisaoChamasFeedbackStartAt(letal.entry)].filter(v => v != null);
+    _spawnCombatFeedback(letal.entry, texto, 'damage', inicios.length ? Math.max(...inicios) : null,
+      tipos.length ? tipos : 'physical', opcoes);
   }
   // Reconstrói o snapshot só com as criaturas vistas neste estado.
   _hpSnapshot = new Map(entries.filter(e => e.hp != null).map(e => [e.key, e.hp]));
@@ -54235,6 +54282,14 @@ GS.on('licaoConcluida', msg => {
   _guiaLimparHalo();
   sfx(r.trilha ? 'nivel' : 'objetivo');
   setTimeout(() => selo.remove(), 4500);
+});
+
+// O jogador seguiu para a etapa seguinte sem terminar esta lição: fecha a janela e
+// o destaque dela (a lição nova, se houver, chega logo depois, numa `fala`).
+GS.on('licaoPulada', msg => {
+  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
+  _licaoUltima = null;
+  _guiaEncerrar();
 });
 
 GS.on('licaoDica', msg => {

@@ -3438,6 +3438,10 @@ window.LANG_CATALOGO = {
     "en": "Straw Dummy",
     "pt": "Boneco de Palha"
   },
+  "cat.monstro.boneco_treino_veneno.nome": {
+    "en": "Poison-Sensitive Dummy",
+    "pt": "Boneco Sensível a Veneno"
+  },
   "cat.monstro.bugbear_sombras.nome": {
     "en": "Bugbear — Shadow Boogeyman",
     "pt": "Bugbear — Bicho-Papão das Sombras"

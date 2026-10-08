@@ -80,6 +80,8 @@ class PonteTests(unittest.IsolatedAsyncioTestCase):
             r, p = room(cls)
             ant = next(f for f in r.licoes if f["id"] == ULTIMA_COMUM[cls])
             feitas = [f["id"] for f in r.licoes if f.get("classe") == cls and f["ordem"] < ant["ordem"]]
+            # a trilha comum até a porta do corredor também já foi cumprida (senão o tutorial a pularia)
+            feitas += [f["id"] for f in r.licoes if not f.get("classe") and (f.get("ordem") or 99) <= 5]
             p["licoes_feitas"] = list(feitas)
             p["licao_progresso"] = {i: 1 for i in feitas}
             p["licao_atual"] = None

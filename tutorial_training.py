@@ -296,6 +296,7 @@ class TutorialTraining:
         ids = {l["id"] for l in self.licoes if l.get("classe") == p["class_id"]
                and (l.get("sala_exclusiva") or _licao_fora_da_trilha(l))}
         p["licao_atual"] = None
+        p["licoes_puladas"] = [i for i in p.get("licoes_puladas", []) if i not in ids]
         p["licoes_feitas"] = [i for i in p.get("licoes_feitas", []) if i not in ids]
         p["licao_progresso"] = {k:v for k,v in p.get("licao_progresso", {}).items() if k not in ids}
         self.licoes_feitas.difference_update(ids)

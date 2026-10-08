@@ -309,8 +309,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Só vale arremessar em inimigo vivo; Esc cancela a mira."
   },
   "ui.tutorial.guia.fala_30.mirar.porque": {
-    "en": "The straw dummy has [[vulnerabilidade]] to fire: the oil damage comes out higher, in red with VULNERABLE.",
-    "pt": "O boneco de palha tem [[vulnerabilidade]] a fogo: o dano do óleo sai maior, em vermelho com VULNERÁVEL."
+    "en": "The straw dummy has [[vulnerabilidade]] to fire: the oil damage comes out higher. Look for the red number with VULNERABLE when the flask hits.",
+    "pt": "O boneco de palha tem [[vulnerabilidade]] a fogo: o dano do óleo sai maior. Repare no número vermelho com VULNERÁVEL quando o frasco acertar."
   },
   "ui.tutorial.guia.fala_30.mirar.texto": {
     "en": "Click the straw dummy, inside the red range, to throw.",
@@ -341,16 +341,16 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique com o botão direito no Fungo Acre para untar a arma."
   },
   "ui.tutorial.guia.fala_32.atacar.dica.1": {
-    "en": "Walk next to the dummy and click it.",
-    "pt": "Ande até ficar ao lado do boneco e clique nele."
+    "en": "Walk next to the dummy and click it; the poison damage shows up when the round turns.",
+    "pt": "Ande até ficar ao lado do boneco e clique nele; o dano do veneno aparece quando a rodada vira."
   },
   "ui.tutorial.guia.fala_32.atacar.porque": {
-    "en": "Poison only works if the hit lands; a miss wastes the turn, not the dose.",
-    "pt": "O veneno só age se o golpe acertar; errar gasta o turno, não a dose."
+    "en": "Poison only works if the hit lands; a miss wastes the turn, not the dose. This dummy has [[vulnerabilidade]] to poison: each round the damage comes out doubled, in red with VULNERABLE.",
+    "pt": "O veneno só age se o golpe acertar; errar gasta o turno, não a dose. Esse boneco tem [[vulnerabilidade]] a veneno: a cada rodada o dano sai dobrado, em vermelho com VULNERÁVEL."
   },
   "ui.tutorial.guia.fala_32.atacar.texto": {
-    "en": "Attack the training dummy with the coated weapon.",
-    "pt": "Ataque o boneco de treino com a arma untada."
+    "en": "Attack a poison-sensitive dummy with the coated weapon.",
+    "pt": "Ataque um boneco sensível a veneno com a arma untada."
   },
   "ui.tutorial.guia.fala_33.beber.dica.1": {
     "en": "Remember where it is: in a pinch there is no time.",

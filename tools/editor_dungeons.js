@@ -4777,7 +4777,7 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "boneco_treino",
+          "type": "boneco_treino_veneno",
           "pos": [
             37,
             14
@@ -4787,7 +4787,7 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "boneco_treino",
+          "type": "boneco_treino_veneno",
           "pos": [
             37,
             16
@@ -4893,6 +4893,36 @@ window.EDITOR_DUNGEONS = [
             17
           ],
           "room_id": 23,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_palha",
+          "pos": [
+            38,
+            17
+          ],
+          "room_id": 22,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_palha",
+          "pos": [
+            38,
+            18
+          ],
+          "room_id": 22,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino_veneno",
+          "pos": [
+            36,
+            18
+          ],
+          "room_id": 22,
           "boss": false,
           "target": false
         }
@@ -6051,7 +6081,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "O Frasco de Óleo Incendiário 🔥 é arremessado: você rola destreza contra a Armadura do alvo, e ele pega fogo, queimando por algumas rodadas. Serve para quem você não quer deixar chegar perto. Arremesse um num boneco.",
+          "texto": "O Frasco de Óleo Incendiário 🔥 se arremessa: abra a bolsa, clique com o botão direito no frasco e depois clique no boneco de palha. Ele é vulnerável a fogo, então o dano sai maior: repare no número vermelho com VULNERÁVEL. Você rola destreza contra a Armadura do alvo; se acertar, ele pega fogo.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -6061,21 +6091,31 @@ window.EDITOR_DUNGEONS = [
             "tipo": "arremessar_item",
             "alvo": "frasco_oleo",
             "vezes": 1,
-            "texto_curto": "Arremesse o óleo num boneco"
+            "texto_curto": "Arremesse o óleo no boneco de palha"
           },
           "guia": [
             {
-              "id": "escolher",
-              "texto": "ui.tutorial.guia.fala_30.escolher.texto",
-              "ui": "bolsa:frasco_oleo"
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.fala_30.abrir.texto",
+              "porque": "ui.tutorial.guia.fala_30.abrir.porque",
+              "ui": "botao:inventario"
             },
             {
-              "id": "arremessar",
-              "texto": "ui.tutorial.guia.fala_30.arremessar.texto",
-              "porque": "ui.tutorial.guia.fala_30.arremessar.porque",
-              "ui": "monstro:boneco_treino",
+              "id": "usar",
+              "texto": "ui.tutorial.guia.fala_30.usar.texto",
+              "porque": "ui.tutorial.guia.fala_30.usar.porque",
+              "ui": "bolsa:frasco_oleo",
               "dica": [
-                "ui.tutorial.guia.fala_30.arremessar.dica.1"
+                "ui.tutorial.guia.fala_30.usar.dica.1"
+              ]
+            },
+            {
+              "id": "mirar",
+              "texto": "ui.tutorial.guia.fala_30.mirar.texto",
+              "porque": "ui.tutorial.guia.fala_30.mirar.porque",
+              "ui": "monstro:boneco_palha",
+              "dica": [
+                "ui.tutorial.guia.fala_30.mirar.dica.1"
               ]
             }
           ]
@@ -6124,7 +6164,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco agora e veja a peçonha entrar.",
+          "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco sensível a veneno agora e veja a peçonha entrar: a cada rodada ela tira vida, e como o boneco é vulnerável a veneno o número sai dobrado, em vermelho com VULNERÁVEL.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -6132,16 +6172,16 @@ window.EDITOR_DUNGEONS = [
           "ordem": 13,
           "tarefa": {
             "tipo": "atacar",
-            "alvo": "boneco_treino",
+            "alvo": "boneco_treino_veneno",
             "vezes": 1,
-            "texto_curto": "Acerte um boneco com a arma untada"
+            "texto_curto": "Acerte um boneco sensível a veneno com a arma untada"
           },
           "guia": [
             {
               "id": "atacar",
               "texto": "ui.tutorial.guia.fala_32.atacar.texto",
               "porque": "ui.tutorial.guia.fala_32.atacar.porque",
-              "ui": "monstro:boneco_treino",
+              "ui": "monstro:boneco_treino_veneno",
               "dica": [
                 "ui.tutorial.guia.fala_32.atacar.dica.1"
               ]
@@ -7437,6 +7477,7 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "atacar",
               "texto": "ui.tutorial.guia.fala_res.atacar.texto",
+              "porque": "ui.tutorial.guia.fala_res.atacar.porque",
               "ui": "monstro:esqueleto_humano",
               "dica": [
                 "ui.tutorial.guia.fala_res.atacar.dica.1"
@@ -7484,9 +7525,310 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "atacar",
               "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
+              "porque": "ui.tutorial.guia.fala_vuln.atacar.porque",
               "ui": "monstro:esqueleto_humano",
               "dica": [
                 "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_warrior",
+          "pos": [
+            20,
+            4
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "warrior",
+          "ordem": 9,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_warrior.sair.texto",
+              "porque": "ui.tutorial.guia.volta_warrior.sair.porque",
+              "ui": "porta:[22,7]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  22,
+                  7
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_warrior.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_warrior.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_warrior.seguir.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_mage",
+          "pos": [
+            22,
+            24
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "mage",
+          "ordem": 11,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_mage.sair.texto",
+              "porque": "ui.tutorial.guia.volta_mage.sair.porque",
+              "ui": "porta:[22,21]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  22,
+                  21
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_mage.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_mage.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_mage.seguir.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_rogue",
+          "pos": [
+            9,
+            7
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "rogue",
+          "ordem": 11,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_rogue.sair.texto",
+              "porque": "ui.tutorial.guia.volta_rogue.sair.porque",
+              "ui": "porta:[14,7]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  14,
+                  7
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_rogue.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_rogue.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_rogue.seguir.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_cleric",
+          "pos": [
+            32,
+            6
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "ordem": 8,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_cleric.sair.texto",
+              "porque": "ui.tutorial.guia.volta_cleric.sair.porque",
+              "ui": "porta:[30,6]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  30,
+                  6
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_cleric.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_cleric.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_cleric.seguir.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_bard",
+          "pos": [
+            10,
+            23
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "bard",
+          "ordem": 9,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_bard.sair.texto",
+              "porque": "ui.tutorial.guia.volta_bard.sair.porque",
+              "ui": "porta:[15,23]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  15,
+                  23
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_bard.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_bard.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_bard.seguir.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volta_paladin",
+          "pos": [
+            33,
+            25
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "paladin",
+          "ordem": 11,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              28,
+              15
+            ],
+            "vezes": 1,
+            "texto_curto": "Volte ao corredor e siga para a próxima sala"
+          },
+          "guia": [
+            {
+              "id": "sair",
+              "texto": "ui.tutorial.guia.volta_paladin.sair.texto",
+              "porque": "ui.tutorial.guia.volta_paladin.sair.porque",
+              "ui": "porta:[31,25]",
+              "conclui_com": {
+                "tipo": "mover_ate",
+                "alvo": [
+                  31,
+                  25
+                ]
+              }
+            },
+            {
+              "id": "seguir",
+              "texto": "ui.tutorial.guia.volta_paladin.seguir.texto",
+              "porque": "ui.tutorial.guia.volta_paladin.seguir.porque",
+              "ui": "casa:[28,15]",
+              "dica": [
+                "ui.tutorial.guia.volta_paladin.seguir.dica.1"
               ]
             }
           ]
@@ -42068,4 +42410,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

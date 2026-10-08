@@ -1885,6 +1885,10 @@ const GS = (() => {
         _emit('licaoConcluida', msg);   // {licao_id, recompensa:{ouro,xp,trilha}}
         break;
 
+      case 'licao_pulada':
+        _emit('licaoPulada', msg);      // {licao_id} — o jogador seguiu adiante sem terminar a lição
+        break;
+
       case 'licao_dica':
         _emit('licaoDica', msg);        // {licao_id, motivo}
         break;

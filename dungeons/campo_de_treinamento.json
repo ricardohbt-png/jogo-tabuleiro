@@ -1803,7 +1803,7 @@
       "target": false
     },
     {
-      "type": "boneco_treino",
+      "type": "boneco_treino_veneno",
       "pos": [
         37,
         14
@@ -1813,7 +1813,7 @@
       "target": false
     },
     {
-      "type": "boneco_treino",
+      "type": "boneco_treino_veneno",
       "pos": [
         37,
         16
@@ -1943,7 +1943,7 @@
       "target": false
     },
     {
-      "type": "boneco_treino",
+      "type": "boneco_treino_veneno",
       "pos": [
         36,
         18
@@ -3107,7 +3107,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "O Frasco de Óleo Incendiário 🔥 se arremessa: abra a bolsa, clique com o botão direito no frasco e depois clique no boneco de palha. Ele é vulnerável a fogo, então o dano sai maior. Você rola destreza contra a Armadura do alvo; se acertar, ele pega fogo.",
+      "texto": "O Frasco de Óleo Incendiário 🔥 se arremessa: abra a bolsa, clique com o botão direito no frasco e depois clique no boneco de palha. Ele é vulnerável a fogo, então o dano sai maior: repare no número vermelho com VULNERÁVEL. Você rola destreza contra a Armadura do alvo; se acertar, ele pega fogo.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -3190,7 +3190,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco agora e veja a peçonha entrar.",
+      "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco sensível a veneno agora e veja a peçonha entrar: a cada rodada ela tira vida, e como o boneco é vulnerável a veneno o número sai dobrado, em vermelho com VULNERÁVEL.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -3198,16 +3198,16 @@
       "ordem": 13,
       "tarefa": {
         "tipo": "atacar",
-        "alvo": "boneco_treino",
+        "alvo": "boneco_treino_veneno",
         "vezes": 1,
-        "texto_curto": "Acerte um boneco com a arma untada"
+        "texto_curto": "Acerte um boneco sensível a veneno com a arma untada"
       },
       "guia": [
         {
           "id": "atacar",
           "texto": "ui.tutorial.guia.fala_32.atacar.texto",
           "porque": "ui.tutorial.guia.fala_32.atacar.porque",
-          "ui": "monstro:boneco_treino",
+          "ui": "monstro:boneco_treino_veneno",
           "dica": [
             "ui.tutorial.guia.fala_32.atacar.dica.1"
           ]

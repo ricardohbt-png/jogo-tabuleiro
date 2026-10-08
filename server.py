@@ -10204,6 +10204,7 @@ def make_player(pid, name, cls_id, slot):
         "licao_progresso": {},      # {licao_id: vezes já feitas}
         "licoes_feitas": [],        # ids que ESTE jogador cumpriu (lista: vai no JSON)
         "licao_passo": 0,           # índice do passo atual da lição pendente (guia)
+        "licoes_puladas": [],       # lições deixadas para trás ao seguir adiante (contam como feitas, sem prêmio)
         "tecnica_buff_dano_arma": 0,        # Brutalidade: +N dano de arma atÃ© fim do turno
         "tecnica_mira_perfeita": False,     # Mira Perfeita: prÃ³ximo ataque Ã  distÃ¢ncia
         "investida_armada": False,          # Investida Heroica: charge armada
@@ -18120,6 +18121,7 @@ class GameRoom(TutorialTraining):
             p["licao_progresso"] = {}
             p["licoes_feitas"] = []
             p["licao_passo"] = 0
+            p["licoes_puladas"] = []
             if self.training_mode:
                 done = p.get("tutorial_history") or []
                 for lesson in self.licoes:
@@ -18155,7 +18157,10 @@ class GameRoom(TutorialTraining):
                 if cls and cls == p.get("class_id") and not _licao_fora_da_trilha(lic):
                     da_classe = [l["id"] for l in self.licoes
                                  if l.get("classe") == cls and not _licao_fora_da_trilha(l)]
-                    if all(i in feitas for i in da_classe):
+                    # lição pulada conta como feita para liberar a próxima, mas o
+                    # bônus premia a trilha cumprida de verdade
+                    if all(i in feitas for i in da_classe) and not any(
+                            i in (p.get("licoes_puladas") or []) for i in da_classe):
                         premio["trilha"] = True
                         premio["ouro"] += TUTORIAL_BONUS_TRILHA_OURO
                         premio["xp"] += TUTORIAL_BONUS_TRILHA_XP
@@ -18356,15 +18361,88 @@ class GameRoom(TutorialTraining):
         """Se esta fala pode disparar agora para este jogador."""
         if not _e_licao(fala):
             return not fala.get("disparada")
+        if not self._licao_candidata(p, fala):
+            return False
+        if fala.get("tarefa") and p.get("licao_atual"):
+            return False    # uma tarefa pendente por vez: não sobrescreve o painel
+        return self._licao_liberada(p, fala)
+
+    def _licao_candidata(self, p, fala):
+        """Requisitos, classe e "ainda não disparou": o que NÃO depende de ordem nem de pendência."""
         if not self._training_requirements(p, fala):
             return False
         if fala.get("classe") and fala["classe"] != p.get("class_id"):
             return False
-        if fala["id"] in (p.get("licao_progresso") or {}):
-            return False                     # já disparou para ele
-        if fala.get("tarefa") and p.get("licao_atual"):
-            return False    # uma tarefa pendente por vez: não sobrescreve o painel
-        return self._licao_liberada(p, fala)
+        return fala["id"] not in (p.get("licao_progresso") or {})
+
+    def _licao_zona_contem(self, p, lic):
+        """Se o herói ainda está na área onde a lição vale: o raio do gatilho (dentro da
+        sala dela, se tiver), a sala inteira no gatilho `sala` e, numa tarefa de ir até
+        um ponto, também a vizinhança desse ponto — quem caminha para lá ainda está
+        fazendo a lição, mesmo fora do raio de onde ela nasceu."""
+        pos = lic.get("pos")
+        if not pos:
+            return False
+        trig = lic.get("trigger") or {}
+        raio = int(trig.get("raio", 2) or 2)
+        px, py = p["pos"]
+        perto = lambda c, r: max(abs(px - c[0]), abs(py - c[1])) <= r
+        tar = lic.get("tarefa") or {}
+        if tar.get("tipo") == "mover_ate" and isinstance(tar.get("alvo"), (list, tuple)) \
+                and perto(tar["alvo"], max(raio, 2)):
+            return True
+        if trig.get("tipo") == "sala" and player_room(self.rooms, pos[0], pos[1]):
+            return self._licao_no_lugar(p, pos)
+        return perto(pos, raio) and self._licao_no_lugar(p, pos)
+
+    def _licoes_que_seguram(self, p, fala):
+        """Lições ainda não cumpridas que impedem `fala` de abrir: a tarefa pendente (se
+        `fala` também tem tarefa) e as anteriores da mesma trilha, como em `_licao_liberada`."""
+        feitas = p.get("licoes_feitas") or []
+        seguram = []
+        atual = p.get("licao_atual")
+        if fala.get("tarefa") and atual:
+            lic = next((l for l in self.licoes if l["id"] == atual), None)
+            if lic:
+                seguram.append(lic)
+        ordem = fala.get("ordem")
+        if ordem is not None:
+            for outra in self.licoes:
+                if (outra.get("ordem") is not None and outra["ordem"] < ordem
+                        and outra.get("classe") == fala.get("classe")
+                        and outra["id"] not in feitas and outra not in seguram
+                        and self._training_requirements(p, outra)):
+                    seguram.append(outra)
+        return seguram
+
+    async def _pular_etapas_abandonadas(self, p, fala):
+        """O jogador foi para a etapa seguinte sem terminar a anterior: o tutorial segue.
+
+        Só age quando TODAS as lições que seguram `fala` já ficaram para trás (o herói
+        saiu da zona delas); basta uma ainda ao alcance para nada ser pulado — lições
+        em sequência na mesma zona esperam o jogador terminar. A pulada conta como feita
+        (libera a próxima) em `licoes_feitas`/`licao_progresso`, mas fica em
+        `licoes_puladas`, fora do `tutorial_history` e da sala: sem prêmio, sem bônus de
+        trilha e sem abrir portão de lição. Devolve True se pulou algo."""
+        if not getattr(self, "training_mode", False):
+            return False
+        seguram = self._licoes_que_seguram(p, fala)
+        if not seguram or any(self._licao_zona_contem(p, l) for l in seguram):
+            return False
+        seguram.sort(key=lambda l: (l["id"] != p.get("licao_atual"), l.get("ordem") or 0))
+        feitas = p.setdefault("licoes_feitas", [])
+        puladas = p.setdefault("licoes_puladas", [])
+        for lic in seguram:
+            if lic["id"] not in feitas:
+                feitas.append(lic["id"])
+            if lic["id"] not in puladas:
+                puladas.append(lic["id"])
+            p.setdefault("licao_progresso", {})[lic["id"]] = int((lic.get("tarefa") or {}).get("vezes", 1) or 1)
+            if p.get("licao_atual") == lic["id"]:
+                p["licao_atual"] = None
+                p["licao_passo"] = 0
+            await self.send_to(p["id"], {"type": "licao_pulada", "licao_id": lic["id"]})
+        return True
 
     def _licao_no_lugar(self, p, pos):
         """Se o herói está onde a lição foi plantada.
@@ -18384,21 +18462,31 @@ class GameRoom(TutorialTraining):
     async def _verificar_falas(self, p, entered):
         """Gatilhos automáticos de fala (proximidade + entrar na sala) após um passo."""
         for fala in list(getattr(self, "falas", [])):
-            if not self._fala_elegivel(p, fala):
+            licao = _e_licao(fala)
+            if licao:
+                if not self._licao_candidata(p, fala):
+                    continue
+            elif not self._fala_elegivel(p, fala):
                 continue
             trig = fala.get("trigger") or {}
             tipo = trig.get("tipo")
             pos = fala.get("pos")
-            if _e_licao(fala) and pos and not self._licao_no_lugar(p, pos):
+            if licao and pos and not self._licao_no_lugar(p, pos):
                 continue
+            gatilho = False
             if tipo == "proximidade" and pos:
                 raio = int(trig.get("raio", 2) or 2)
-                if max(abs(p["pos"][0] - pos[0]), abs(p["pos"][1] - pos[1])) <= raio:
-                    await self._disparar_fala(fala, p)
+                gatilho = max(abs(p["pos"][0] - pos[0]), abs(p["pos"][1] - pos[1])) <= raio
             elif tipo == "sala" and entered and pos:
                 sala = player_room(self.rooms, pos[0], pos[1])
-                if sala and sala["id"] == entered["id"]:
-                    await self._disparar_fala(fala, p)
+                gatilho = bool(sala and sala["id"] == entered["id"])
+            if not gatilho:
+                continue
+            if licao and not self._fala_elegivel(p, fala):
+                # há lição anterior em aberto: se o herói já saiu da zona dela, segue adiante
+                if not await self._pular_etapas_abandonadas(p, fala) or not self._fala_elegivel(p, fala):
+                    continue
+            await self._disparar_fala(fala, p)
 
     async def handle_disparar_fala(self, pid, fala_id):
         """Mestre humano dispara uma fala 'manual' pelo HUD."""
@@ -34363,6 +34451,11 @@ class GameRoom(TutorialTraining):
                         continue   # remove o efeito (nÃ£o entra em `restantes`)
                 dano = self._rolar_dado(efeito.get("dano", "1d4"))
                 dano = math.ceil(dano * float(efeito.get("potencia", 1) or 1))
+                if not self._eh_jogador(alvo):
+                    # Monstro: o tique também é dano de veneno e passa pelo funil
+                    # (fraqueza/resistência), como o das chamas — senão a
+                    # vulnerabilidade a veneno só valia no papel e a cor nunca saía.
+                    dano = self._apply_damage_types(dano, [DMG_POISON], alvo)
                 # _dano_em_alvo jÃ¡ narra o dano (evita narraÃ§Ã£o dupla, como no tick
                 # de em_chamas/Ã¡cido); a flavor do veneno aparece sÃ³ no neutralizar.
                 await self._dano_em_alvo(alvo, dano, "veneno", None)
