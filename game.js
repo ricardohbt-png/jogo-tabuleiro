@@ -11990,7 +11990,7 @@ function _agendarFimMorteVisual(id){
 
 // O xp do servidor zera a cada nível (desconta XP_POR_NIVEL × nível), então a
 // diferença crua some na subida. Medido em "xp desde o nível 1", não some.
-const XP_POR_NIVEL_CLIENTE = 300;   // espelho de XP_POR_NIVEL (server.py)
+const XP_POR_NIVEL_CLIENTE = 1040;  // espelho de XP_POR_NIVEL (server.py)
 function _xpAcumulado(h){
   const n = Math.max(1, Number(h?.level) || 1);
   return Number(h?.xp || 0) + XP_POR_NIVEL_CLIENTE * n * (n - 1) / 2;

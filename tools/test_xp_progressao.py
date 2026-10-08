@@ -1,4 +1,4 @@
-"""Progressão de XP por ND: 15 encontros equivalentes em grupo de quatro.
+"""Progressão de XP por ND: 13 inimigos equivalentes por herói.
 
 Roda da raiz: python -X utf8 tools/test_xp_progressao.py
 """
@@ -35,11 +35,11 @@ def award(level, cr, heroes=4):
     return room(level, heroes)._calc_monster_xp({"cr": cr})[0]
 
 
-print("\n[1] Meta: 15 encontros de ND igual ao nível do grupo")
+print("\n[1] Meta: 13 inimigos de ND igual ao nível por herói")
 for level in (1, 2, 3, 5, 10):
     ganho = award(level, level)
     necessario = level * S.XP_POR_NIVEL
-    check(f"nível {level}: {necessario // ganho} encontros", ganho * 15 == necessario)
+    check(f"nível {level}: 52 inimigos para 4 heróis", ganho * 52 == necessario)
 
 print("\n[2] Ajuste por diferença de ND")
 check("ND 1 contra grupo nível 2: -10% (18 XP por herói)", award(2, 1) == 18)
