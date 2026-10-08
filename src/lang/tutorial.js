@@ -59,6 +59,10 @@ window.LANG_TUTORIAL = {
   "ui.tutorial.modelo.magia.lancar": {
     "en": "Cast {nome} on a training target or on yourself.",
     "pt": "Lance {nome} num alvo de treino ou em você."
-  }
+  },
+  "ui.tutorial.passo_ok": { "pt": "Passo concluído!", "en": "Step complete!" },
+  "ui.tutorial.licao_concluida": { "pt": "Lição concluída!", "en": "Lesson complete!" },
+  "ui.tutorial.recompensa": { "pt": "+{ouro} ouro · +{xp} XP", "en": "+{ouro} gold · +{xp} XP" },
+  "ui.tutorial.recompensa_trilha": { "pt": "Trilha completa! Bônus incluído.", "en": "Track complete! Bonus included." }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_TUTORIAL);

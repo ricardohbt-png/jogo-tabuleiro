@@ -1877,6 +1877,14 @@ const GS = (() => {
         _emit('licaoPasso', msg);   // {licao_id, passo:{i,n,texto,porque,ui,dica,informativo}}
         break;
 
+      case 'licao_passo_ok':
+        _emit('licaoPassoOk', msg);     // {licao_id, passo, total}
+        break;
+
+      case 'licao_concluida':
+        _emit('licaoConcluida', msg);   // {licao_id, recompensa:{ouro,xp,trilha}}
+        break;
+
       case 'licao_dica':
         _emit('licaoDica', msg);        // {licao_id, motivo}
         break;

@@ -214,5 +214,19 @@ console.log("\n[17] halo de habilidade escolhe o elemento visível, não o 1º d
   check("exige elemento visível (getClientRects)", corpo.includes("getClientRects().length"));
 }
 
+console.log("\n[18] conclusão visível (fiação)");
+{
+  const gsSrc = fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8");
+  const gjSrc = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+  const langT = fs.readFileSync(path.join(raiz, "src", "lang", "tutorial.js"), "utf8");
+  check("gameState repassa licao_passo_ok", /case 'licao_passo_ok':[\s\S]{0,80}_emit\('licaoPassoOk'/.test(gsSrc));
+  check("gameState repassa licao_concluida", /case 'licao_concluida':[\s\S]{0,80}_emit\('licaoConcluida'/.test(gsSrc));
+  check("game.js trata licaoPassoOk", /GS\.on\('licaoPassoOk'/.test(gjSrc));
+  check("game.js trata licaoConcluida", /GS\.on\('licaoConcluida'/.test(gjSrc));
+  for (const k of ["passo_ok", "licao_concluida", "recompensa", "recompensa_trilha"])
+    check("chave ui.tutorial." + k + " em pt e en",
+          new RegExp('"ui\\.tutorial\\.' + k + '":\\s*\\{[^}]*"pt"[^}]*"en"|"ui\\.tutorial\\.' + k + '":\\s*\\{[^}]*"en"[^}]*"pt"').test(langT));
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);

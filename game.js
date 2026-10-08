@@ -54181,6 +54181,46 @@ GS.on('licaoPasso', msg => {
   _mostrarJanelaLicao(_licaoUltima);
 });
 
+// ✓ no passo que acabou de fechar. Dura ~1,2 s por cima da janela da lição.
+function _guiaPassoOk(){
+  const host = $('licao-janela');
+  if(!host || !host.classList.contains('open')) return;
+  host.querySelector('.licao-ok')?.remove();
+  const el = document.createElement('div');
+  el.className = 'licao-ok';
+  el.textContent = '✓ ' + t('ui.tutorial.passo_ok');
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+  sfx('moedas');
+}
+GS.on('licaoPassoOk', msg => {
+  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
+  _guiaPassoOk();
+});
+
+// Selo ao fim da lição, com o ganho (só na 1ª vez do personagem).
+GS.on('licaoConcluida', msg => {
+  if(!msg) return;
+  const r = msg.recompensa || {};
+  const host = $('licao-janela');
+  if(!host) return;
+  host.classList.add('open');
+  const premio = (r.ouro || r.xp)
+    ? `<div class="licao-selo-premio">${_esc(t('ui.tutorial.recompensa', {ouro: r.ouro || 0, xp: r.xp || 0}))}</div>` : '';
+  const trilha = r.trilha ? `<div class="licao-selo-trilha">${_esc(t('ui.tutorial.recompensa_trilha'))}</div>` : '';
+  host.querySelector('.licao-selo')?.remove();
+  const selo = document.createElement('div');
+  selo.className = 'licao-selo';
+  selo.innerHTML = `<div class="licao-selo-titulo">🏅 ${_esc(t('ui.tutorial.licao_concluida'))}</div>${premio}${trilha}`;
+  host.appendChild(selo);
+  // Só some o halo: _guiaEncerrar fecharia a janela e o selo precisa dela aberta.
+  _guiaPasso = null;
+  if(_guiaTimer){ clearInterval(_guiaTimer); _guiaTimer = null; }
+  _guiaLimparHalo();
+  sfx(r.trilha ? 'nivel' : 'objetivo');
+  setTimeout(() => selo.remove(), 4500);
+});
+
 GS.on('licaoDica', msg => {
   if(!msg || !/^[a-z_]+$/.test(msg.motivo || '')) return;
   const chave = 'ui.tutorial.dica_erro.' + msg.motivo;
