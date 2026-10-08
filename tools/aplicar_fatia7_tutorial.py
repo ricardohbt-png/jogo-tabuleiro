@@ -18,9 +18,10 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[1]
 JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 
-SALA_ITENS = 22
-PALHA = ([38, 17], [38, 18])
-TREINO_EXTRA = ([36, 18],)
+# Layout atual (sala de hostilidade 46 antes dela): a sala dos consumíveis é a 47 (era a 22, 7 casas à esquerda).
+SALA_ITENS = 47
+PALHA = ([45, 17], [45, 18])
+TREINO_EXTRA = ([43, 18],)
 PROXIMA_SALA = [28, 15]            # onde a trilha comum (fala_18) recomeça
 CLASSES = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
 

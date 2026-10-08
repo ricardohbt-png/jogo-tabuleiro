@@ -14,6 +14,13 @@ from test_tutorial_salas import room, D
 CLASSES = ("warrior", "mage", "rogue", "cleric", "bard", "paladin")
 PROXIMA_SALA = [28, 15]          # onde a trilha comum (fala_18) recomeça
 COMUNS = [f for f in D["falas"] if f.get("ordem") is not None and not f.get("classe")]
+_FALA = {f["id"]: f for f in D["falas"]}
+# Sala dos consumíveis (baú, palha, bonecos do veneno): a que contém a fala_30. Antes da sala de hostilidade era a 22;
+# hoje é a 47. Os testes leem do JSON, para não cravar posição de sala.
+POS_CONSUMIVEIS = list(_FALA["fala_30"]["pos"])
+ORDEM_APOS_PEGAR = _FALA["fala_30"]["ordem"]      # marcar_comuns_ate(p, isto) deixa a fala_30 como próxima
+SALA_CONSUMIVEIS = next(r["id"] for r in D["rooms"]
+                        if r["x"] <= POS_CONSUMIVEIS[0] < r["x"] + r["w"] and r["y"] <= POS_CONSUMIVEIS[1] < r["y"] + r["h"])
 
 
 def def_monstro(tipo):
@@ -35,8 +42,8 @@ class BonecoPalhaTests(unittest.TestCase):
         self.assertEqual(m["movement"], 0)
         self.assertEqual(S.validar_dungeon(D), (True, "ok"))
 
-    def test_sala_22_tem_palha_para_o_oleo_e_bonecos_para_o_veneno(self):
-        sala = next(r for r in D["rooms"] if r["id"] == 22)
+    def test_sala_dos_consumiveis_tem_palha_para_o_oleo_e_bonecos_para_o_veneno(self):
+        sala = next(r for r in D["rooms"] if r["id"] == SALA_CONSUMIVEIS)
         dentro = lambda pos: sala["x"] <= pos[0] < sala["x"] + sala["w"] and sala["y"] <= pos[1] < sala["y"] + sala["h"]
         palha = [m for m in D["monsters"] if m["type"] == "boneco_palha"]
         treino = [m for m in D["monsters"] if m["type"] == "boneco_treino_veneno" and dentro(m["pos"])]
@@ -47,7 +54,7 @@ class BonecoPalhaTests(unittest.TestCase):
         for m in palha:
             self.assertTrue(dentro(m["pos"]), m)
             self.assertEqual(D["tiles"][m["pos"][1]][m["pos"][0]], 1)
-            self.assertEqual(m["room_id"], 22)
+            self.assertEqual(m["room_id"], SALA_CONSUMIVEIS)
 
     def test_guia_do_oleo_aponta_o_boneco_de_palha(self):
         uis = [p.get("ui") for p in G.guia_todos()["fala_30"]]
@@ -61,8 +68,8 @@ class BonecoPalhaTests(unittest.TestCase):
 class OleoNoServidorTests(unittest.IsolatedAsyncioTestCase):
     async def test_oleo_fere_a_palha_e_o_veneno_ainda_tem_alvo(self):
         r, p = room("warrior")
-        marcar_comuns_ate(p, 11)
-        p["pos"] = [35, 15]; p["action_done"] = False; p["bonus_action_used"] = False
+        marcar_comuns_ate(p, ORDEM_APOS_PEGAR)
+        p["pos"] = list(POS_CONSUMIVEIS); p["action_done"] = False; p["bonus_action_used"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         self.assertEqual(p["licao_atual"], "fala_30")
         p["bag"] = [{"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥",
@@ -74,7 +81,7 @@ class OleoNoServidorTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(palha["hp"], palha["max_hp"], "o óleo machucou a palha")
         self.assertIn("fala_30", p["licoes_feitas"])
         self.assertEqual(p["licao_atual"], "fala_31")
-        treino = [m for m in r.monsters.values() if m["type"] == "boneco_treino_veneno" and m["room_id"] == 22 and m["hp"] > 0]
+        treino = [m for m in r.monsters.values() if m["type"] == "boneco_treino_veneno" and m["room_id"] == SALA_CONSUMIVEIS and m["hp"] > 0]
         self.assertGreaterEqual(len(treino), 3)
         self.assertTrue(all(m["hp"] == m["max_hp"] for m in treino), "o óleo não encostou nos bonecos do veneno")
         # veneno: unta e acerta um boneco de treino sem travar
@@ -87,8 +94,8 @@ class OleoNoServidorTests(unittest.IsolatedAsyncioTestCase):
     async def test_oleo_no_boneco_de_treino_ainda_conclui_a_licao(self):
         # lançar no boneco errado gasta o único frasco: a lição não pode travar por isso
         r, p = room("warrior")
-        marcar_comuns_ate(p, 11)
-        p["pos"] = [35, 15]; p["action_done"] = False
+        marcar_comuns_ate(p, ORDEM_APOS_PEGAR)
+        p["pos"] = list(POS_CONSUMIVEIS); p["action_done"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         await r._licao_evento(p, "arremessar_item", alvo="frasco_oleo")
         self.assertIn("fala_30", p["licoes_feitas"])

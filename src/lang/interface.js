@@ -2558,6 +2558,10 @@ window.LANG_INTERFACE = {
     "en": "CLASS ABILITY",
     "pt": "HABILIDADE DE CLASSE"
   },
+  "ui.ficha.hostil_a_monstros": {
+    "en": "Hostile to all monsters",
+    "pt": "Hostil a todos os monstros"
+  },
   "ui.ficha.habilidades_botao": {
     "en": "Abilities (H)",
     "pt": "Habilidades (H)"

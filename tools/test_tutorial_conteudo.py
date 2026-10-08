@@ -9,7 +9,8 @@ import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
-                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_res", "fala_vuln"]
+                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos",
+                 "fala_hostilidade", "fala_res", "fala_vuln"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -141,8 +142,17 @@ class ConteudoTests(unittest.TestCase):
                 if ui.startswith("casa:") or ui.startswith("porta:"):
                     alvo = ui.split(":", 1)[1]
                     baus = {json.dumps(c["pos"]).replace(" ", "") for c in d["chests"]}
-                    # casa pode ser o alvo da tarefa ou o baú da sala (passo de pegar item)
-                    self.assertIn(alvo, {json.dumps(tar.get("alvo")).replace(" ", "")} | baus, lid)
+                    portas = {json.dumps(pos).replace(" ", "")
+                              for r in d["rooms"] for pos in r.get("doors", [])}
+                    portas.update(json.dumps([x, y]).replace(" ", "")
+                                  for y, row in enumerate(d["tiles"])
+                                  for x, tile in enumerate(row) if tile == 2)
+                    if ui.startswith("porta:"):
+                        alvo_tarefa = json.dumps(tar.get("alvo")).replace(" ", "")
+                        self.assertIn(alvo, portas | {alvo_tarefa}, lid)
+                    else:
+                        # casa pode ser o alvo da tarefa ou o baú da sala.
+                        self.assertIn(alvo, {json.dumps(tar.get("alvo")).replace(" ", "")} | baus, lid)
 
 
 class GeradorTests(unittest.TestCase):

@@ -1722,6 +1722,19 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > salvo em `monsters[].hostility_override`, validado ao carregar a masmorra e tem
 > precedência apenas para aquela colocação.
 
+> **Campo de Treinamento — hostilidade (2026-10-08):** a ala 46–48 incorpora
+> o layout de `Downloads/campo_de_treinamento (1).json`: a sala 46 ensina a
+> abrir a porta, observar os monstros hostis entre si e usar a Granada Superior;
+> as práticas de consumíveis ficam na 47 e as de resistência/vulnerabilidade na
+> 48. `fala_hostilidade` e seus textos bilíngues vêm de
+> `tools/tutorial_guia_comum.py`/`tools/gerar_guia_comum.py`. O campo opcional
+> `monsters[].autonomous_hostility` preserva a luta automática ao despertar no
+> Modo Mestre apenas para os monstros marcados; outras salas continuam em Manual
+> quando despertadas por avistamento. O editor de masmorras mantém esse campo no
+> roundtrip. Conhecimento das Lendas mostra “Hostil a todos os monstros” no
+> tooltip completo do Bardo quando `hostility_override.rules.all_monsters` vale.
+> **Integração da ala 46–48 (2026-10-08):** o layout novo desloca a trilha comum: a antiga sala 22 (consumíveis) virou a **47** (x 41) e a antiga 23 (esqueletos/maça) a **48** (x 48), com a **46** (hostilidade) no lugar da 22 e a saída em [53,15]; as salas 18–21 e todas as exclusivas (35, 38, 40–43) não se moveram. Tudo da antiga 22/23 andou +7 em x (baú dos consumíveis [42,14], maça [49,17], palha [45,17]/[45,18], bonecos de veneno, `fala_29`–`fala_33` em [42,15], `fala_34` [48,15], `fala_atalhos` [49,16], `fala_res`/`fala_vuln` [50,17]; ordens 10 = `fala_hostilidade`, 11–15 consumíveis, 16 `fala_34`) e as `ordem` 17–18 seguem vagas. **Regra que o autor pegou sem querer:** lição plantada DENTRO de uma sala só dispara com o herói nela (`_licao_no_lugar`), então a `fala_hostilidade` em [35,15] (sala 46) só aparecia depois da porta aberta e o passo 1 (`conclui_com abrir_porta` [33,15]) nunca recebia o evento; o marcador agora fica em [32,15], na sala 21, a uma casa da porta (`tools/aplicar_fatia18_tutorial.py`, idempotente). Os scripts `aplicar_fatia7/8_tutorial.py` e `configurar_tutorial_salas.py` usam as coordenadas novas e os testes `test_tutorial_fatia7/8/refem` derivam sala, posição e ordem do JSON (a fila de iniciativa real PULA monstro dormente; o harness do refém começa a vez no herói). Teste: `tools/test_tutorial_hostilidade.py` (layout das salas originais, ordens, fluxo antes da porta, granada, pulo, lutadores se ferindo).
+
 > **Assassino Goblin:** ficha nativa `goblin_assassino`, com estatísticas e arte 2D
 > `goblinDual` do Goblin Dual, GLB próprio `assassino_goblin.glb`, IA `goblin_assassin` e habilidades de esconder-se e
 > ataque furtivo. Ao ser percebido, tenta Furtividade contra a maior Percepção dos

@@ -178,6 +178,9 @@ async def _sala_real(heroi_em=(34, 25)):
     r.send_to = send; r.broadcast = bc; r.gm_say = noop
     r._intro_masmorra_bloqueada = lambda: False
     r._rebuild_initiative(); r.initiative_active = True
+    # a fila real PULA monstro dormente (sala trancada); aqui ninguém a roda, então a vez começa no herói,
+    # senão um monstro de sala vizinha com iniciativa maior (ex.: a sala de hostilidade) tomaria a vez dele
+    r.initiative_index = next(i for i, a in enumerate(r.initiative_order) if a['id'] == p['id'])
     done = [f['id'] for f in r.licoes if f.get('classe') == 'paladin'
             and f['ordem'] < next(x for x in r.licoes if x['id'] == 'treino_refem')['ordem']]
     p['licoes_feitas'] = done; p['licao_progresso'] = {i: 1 for i in done}

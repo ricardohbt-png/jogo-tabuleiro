@@ -4064,6 +4064,7 @@
         const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
         if (m.hostility_override && typeof m.hostility_override === "object")
           o.hostility_override = JSON.parse(JSON.stringify(m.hostility_override));
+        if (m.autonomous_hostility === true) o.autonomous_hostility = true;
         if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
         if (monsterCanFly(m)) {
           const meta = monsterFlightMeta(m) || {};
@@ -4517,6 +4518,7 @@
       type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target,
       ...(m.hostility_override && typeof m.hostility_override === "object"
         ? { hostility_override: JSON.parse(JSON.stringify(m.hostility_override)) } : {}),
+      ...(m.autonomous_hostility === true ? { autonomous_hostility: true } : {}),
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
       ...(m.altura !== undefined ? { altura: altitudeClamp(m.altura, 2) } : {}),
       ...(m.altura_max !== undefined ? { altura_max: altitudeClamp(m.altura_max, 10) } : {}),

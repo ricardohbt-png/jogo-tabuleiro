@@ -168,21 +168,21 @@ for f in d['falas']:
 # o filtro do topo preserva falas sem classe, mas o `if not any` mantém a execução idempotente.
 if not any(f['id'] == 'fala_atalhos' for f in d['falas']):
     d['falas'].append({
-        'id': 'fala_atalhos', 'pos': [42, 16], 'falante': {'nome': 'Instrutor de Treinamento', 'emoji': '🎓'},
+        'id': 'fala_atalhos', 'pos': [49, 16], 'falante': {'nome': 'Instrutor de Treinamento', 'emoji': '🎓'},
         'texto': 'Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.',
         'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': 19,
         'tarefa': {'tipo': 'encerrar_turno', 'vezes': 1, 'texto_curto': 'Encerre o turno para concluir'}})
-# Lições de dano (resistência e vulnerabilidade): um esqueleto por lição na sala 23 ([44,15] original + [44,17]; a folga evita beco sem saída).
-for _pos in ([44, 17],):
+# Lições de dano (resistência e vulnerabilidade): um esqueleto por lição na sala 48 ([51,15] original + [51,17]; a folga evita beco sem saída).
+for _pos in ([51, 17],):
     if not any(m['pos'] == _pos for m in d['monsters']):
-        d['monsters'].append({'type': 'esqueleto_humano', 'pos': _pos, 'room_id': 23, 'boss': False, 'target': False})
+        d['monsters'].append({'type': 'esqueleto_humano', 'pos': _pos, 'room_id': 48, 'boss': False, 'target': False})
 for _fid, _ordem, _texto, _curto in [
     ('fala_res', 20, 'Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.',
      'Ataque um esqueleto com espada ou adaga'),
     ('fala_vuln', 21, 'Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.',
      'Pegue a maça, equipe e ataque o esqueleto')]:
     if not any(f['id'] == _fid for f in d['falas']):
-        d['falas'].append({'id': _fid, 'pos': [43, 17], 'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
+        d['falas'].append({'id': _fid, 'pos': [50, 17], 'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
                            'texto': _texto, 'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': _ordem,
                            'tarefa': {'tipo': 'atacar', 'alvo': 'esqueleto_humano', 'vezes': 1, 'texto_curto': _curto}})
 import sys as _sys
