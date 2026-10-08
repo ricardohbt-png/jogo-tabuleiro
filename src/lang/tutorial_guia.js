@@ -485,8 +485,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ataque o esqueleto com a maça: o golpe causa 2 pontos a mais."
   },
   "ui.tutorial.guia.fala_vuln.maca.dica.1": {
-    "en": "No mace? Take it from the previous room's chest.",
-    "pt": "Sem a maça? Pegue-a no baú da sala anterior."
+    "en": "No mace? Take it from this room's chest.",
+    "pt": "Sem a maça? Pegue-a no baú desta sala."
   },
   "ui.tutorial.guia.fala_vuln.maca.porque": {
     "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
