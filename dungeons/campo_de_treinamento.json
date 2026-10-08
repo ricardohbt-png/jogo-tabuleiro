@@ -1796,7 +1796,7 @@
       "type": "boneco_treino",
       "pos": [
         22,
-        17
+        16
       ],
       "room_id": 20,
       "boss": false,
@@ -1836,7 +1836,7 @@
       "type": "boneco_treino",
       "pos": [
         24,
-        17
+        16
       ],
       "room_id": 20,
       "boss": false,
@@ -2065,7 +2065,7 @@
       "type": "placa",
       "pos": [
         22,
-        8
+        13
       ],
       "facing": [
         0,
@@ -2073,15 +2073,15 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🛡️ Sala do Guerreiro — só ele entra aqui."
+      "texto": "🛡️ Sala do Guerreiro — só ele entra aqui.",
+      "image": "placa_fincada.png"
     },
     {
       "id": "placa_mage",
       "type": "placa",
       "pos": [
         22,
-        20
+        18
       ],
       "facing": [
         0,
@@ -2089,15 +2089,15 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🔮 Sala do Mago — só ele entra aqui."
+      "texto": "🔮 Sala do Mago — só ele entra aqui.",
+      "image": "placa_fincada.png"
     },
     {
       "id": "placa_rogue",
       "type": "placa",
       "pos": [
-        15,
-        7
+        20,
+        13
       ],
       "facing": [
         0,
@@ -2105,15 +2105,15 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🗡️ Sala do Ladino — só ele entra aqui."
+      "texto": "🗡️ Sala do Ladino — só ele entra aqui.",
+      "image": "placa_fincada.png"
     },
     {
       "id": "placa_cleric",
       "type": "placa",
       "pos": [
-        29,
-        6
+        25,
+        13
       ],
       "facing": [
         0,
@@ -2121,15 +2121,15 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "✝️ Sala do Clérigo — só ele entra aqui."
+      "texto": "✝️ Sala do Clérigo — só ele entra aqui.",
+      "image": "placa_fincada.png"
     },
     {
       "id": "placa_bard",
       "type": "placa",
       "pos": [
-        16,
-        23
+        20,
+        18
       ],
       "facing": [
         0,
@@ -2137,15 +2137,15 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🎵 Sala do Bardo — só ele entra aqui."
+      "texto": "🎵 Sala do Bardo — só ele entra aqui.",
+      "image": "placa_fincada.png"
     },
     {
       "id": "placa_paladin",
       "type": "placa",
       "pos": [
-        30,
-        25
+        25,
+        18
       ],
       "facing": [
         0,
@@ -2153,8 +2153,8 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "⚔️ Sala do Paladino — só ele entra aqui."
+      "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
+      "image": "placa_fincada.png"
     }
   ],
   "secret_passages": [],
@@ -4877,6 +4877,7 @@
   "materiais": {},
   "pontes": [],
   "elevacoes": {},
+  "alturas_parede": {},
   "transicao_altura": "rampa",
   "objectives": {
     "primary": {

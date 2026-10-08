@@ -4770,7 +4770,7 @@ window.EDITOR_DUNGEONS = [
           "type": "boneco_treino",
           "pos": [
             22,
-            17
+            16
           ],
           "room_id": 20,
           "boss": false,
@@ -4810,7 +4810,7 @@ window.EDITOR_DUNGEONS = [
           "type": "boneco_treino",
           "pos": [
             24,
-            17
+            16
           ],
           "room_id": 20,
           "boss": false,
@@ -4883,6 +4883,16 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "room_id": 38,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "esqueleto_humano",
+          "pos": [
+            44,
+            17
+          ],
+          "room_id": 23,
           "boss": false,
           "target": false
         }
@@ -4993,7 +5003,104 @@ window.EDITOR_DUNGEONS = [
           "dificuldade": 5
         }
       ],
-      "decorations": [],
+      "decorations": [
+        {
+          "id": "placa_warrior",
+          "type": "placa",
+          "pos": [
+            22,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "🛡️ Sala do Guerreiro — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        },
+        {
+          "id": "placa_mage",
+          "type": "placa",
+          "pos": [
+            22,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "🔮 Sala do Mago — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        },
+        {
+          "id": "placa_rogue",
+          "type": "placa",
+          "pos": [
+            20,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "🗡️ Sala do Ladino — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        },
+        {
+          "id": "placa_cleric",
+          "type": "placa",
+          "pos": [
+            25,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "✝️ Sala do Clérigo — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        },
+        {
+          "id": "placa_bard",
+          "type": "placa",
+          "pos": [
+            20,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "🎵 Sala do Bardo — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        },
+        {
+          "id": "placa_paladin",
+          "type": "placa",
+          "pos": [
+            25,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
+          "image": "placa_fincada.png"
+        }
+      ],
       "secret_passages": [],
       "falas": [
         {
@@ -5250,6 +5357,43 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "porta_warrior",
+          "pos": [
+            14,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "warrior",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              22,
+              7
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
+              "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
+              "ui": "porta:[22,7]",
+              "dica": [
+                "ui.tutorial.guia.porta_warrior.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
           "id": "fala_7",
           "pos": [
             13,
@@ -5310,6 +5454,43 @@ window.EDITOR_DUNGEONS = [
               "texto": "ui.tutorial.guia.fala_8.matar.texto",
               "porque": "ui.tutorial.guia.fala_8.matar.porque",
               "ui": "monstro:boneco_treino"
+            }
+          ]
+        },
+        {
+          "id": "porta_mage",
+          "pos": [
+            13,
+            14
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "mage",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              22,
+              21
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_mage.porta.texto",
+              "porque": "ui.tutorial.guia.porta_mage.porta.porque",
+              "ui": "porta:[22,21]",
+              "dica": [
+                "ui.tutorial.guia.porta_mage.porta.dica.1"
+              ]
             }
           ]
         },
@@ -5378,6 +5559,43 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "porta_rogue",
+          "pos": [
+            13,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "rogue",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              14,
+              7
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
+              "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
+              "ui": "porta:[14,7]",
+              "dica": [
+                "ui.tutorial.guia.porta_rogue.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
           "id": "fala_11",
           "pos": [
             15,
@@ -5438,6 +5656,43 @@ window.EDITOR_DUNGEONS = [
               "texto": "ui.tutorial.guia.fala_12.matar.texto",
               "porque": "ui.tutorial.guia.fala_12.matar.porque",
               "ui": "monstro:boneco_treino"
+            }
+          ]
+        },
+        {
+          "id": "porta_cleric",
+          "pos": [
+            15,
+            14
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              30,
+              6
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
+              "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
+              "ui": "porta:[30,6]",
+              "dica": [
+                "ui.tutorial.guia.porta_cleric.porta.dica.1"
+              ]
             }
           ]
         },
@@ -5506,6 +5761,43 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "porta_bard",
+          "pos": [
+            15,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "bard",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              15,
+              23
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_bard.porta.texto",
+              "porque": "ui.tutorial.guia.porta_bard.porta.porque",
+              "ui": "porta:[15,23]",
+              "dica": [
+                "ui.tutorial.guia.porta_bard.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
           "id": "fala_15",
           "pos": [
             14,
@@ -5566,6 +5858,43 @@ window.EDITOR_DUNGEONS = [
               "texto": "ui.tutorial.guia.fala_16.matar.texto",
               "porque": "ui.tutorial.guia.fala_16.matar.porque",
               "ui": "monstro:boneco_treino"
+            }
+          ]
+        },
+        {
+          "id": "porta_paladin",
+          "pos": [
+            14,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "paladin",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              31,
+              25
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
+              "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
+              "ui": "porta:[31,25]",
+              "dica": [
+                "ui.tutorial.guia.porta_paladin.porta.dica.1"
+              ]
             }
           ]
         },
@@ -5871,112 +6200,6 @@ window.EDITOR_DUNGEONS = [
           "ordem": 15
         },
         {
-          "id": "fala_36",
-          "pos": [
-            43,
-            15
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Aquele esqueleto reage à sua espada de um jeito e à sua maça de outro. Acerte um golpe nele com o que está na sua mão e olhe o número: corte contra osso entra a MENOS — ele resiste a lâmina.",
-          "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
-          },
-          "ordem": 16,
-          "tarefa": {
-            "tipo": "atacar",
-            "alvo": "esqueleto_humano",
-            "vezes": 1,
-            "texto_curto": "Acerte um golpe no esqueleto"
-          },
-          "guia": [
-            {
-              "id": "atacar",
-              "texto": "ui.tutorial.guia.fala_36.atacar.texto",
-              "porque": "ui.tutorial.guia.fala_36.atacar.porque",
-              "ui": "monstro:esqueleto_humano",
-              "dica": [
-                "ui.tutorial.guia.fala_36.atacar.dica.1"
-              ]
-            }
-          ]
-        },
-        {
-          "id": "fala_37",
-          "pos": [
-            43,
-            15
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "No baú desta sala há uma maça. Pegue-a e equipe: osso não resiste a impacto, ele racha. Toda criatura tem essas duas listas — resistências e fraquezas — e a ficha dela mostra as que você já descobriu.",
-          "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
-          },
-          "ordem": 17,
-          "tarefa": {
-            "tipo": "equipar",
-            "alvo": "maca_treino",
-            "vezes": 1,
-            "texto_curto": "Equipe a maça do baú"
-          },
-          "guia": [
-            {
-              "id": "pegar",
-              "texto": "ui.tutorial.guia.fala_37.pegar.texto",
-              "porque": "ui.tutorial.guia.fala_37.pegar.porque"
-            },
-            {
-              "id": "equipar",
-              "texto": "ui.tutorial.guia.fala_37.equipar.texto",
-              "ui": "bolsa:maca_treino",
-              "dica": [
-                "ui.tutorial.guia.fala_37.equipar.dica.1"
-              ]
-            }
-          ]
-        },
-        {
-          "id": "fala_38",
-          "pos": [
-            43,
-            15
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Agora o mesmo braço, outra arma. Derrube-o e compare os números com o golpe de antes: cerca de três pontos a mais por acerto, só por trocar de arma. Escolher a arma certa vale mais que rolar bem o dado.",
-          "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
-          },
-          "ordem": 18,
-          "tarefa": {
-            "tipo": "matar",
-            "alvo": "esqueleto_humano",
-            "vezes": 1,
-            "texto_curto": "Derrube o esqueleto com a maça"
-          },
-          "guia": [
-            {
-              "id": "matar",
-              "texto": "ui.tutorial.guia.fala_38.matar.texto",
-              "porque": "ui.tutorial.guia.fala_38.matar.porque",
-              "ui": "monstro:esqueleto_humano",
-              "dica": [
-                "ui.tutorial.guia.fala_38.matar.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "treino_mira",
           "pos": [
             20,
@@ -5992,7 +6215,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "mira_certeira",
@@ -6027,7 +6250,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "golpe_devastador",
@@ -6062,7 +6285,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "furia_berserker",
@@ -6094,7 +6317,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "ataque_extra",
             "alvo": "furia_berserker",
@@ -6129,7 +6352,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
@@ -6167,7 +6390,7 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "qualquer"
           },
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_magia",
             "vezes": 1,
@@ -6202,7 +6425,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
@@ -6236,7 +6459,7 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "save"
           },
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "aprimorar_magia",
@@ -6274,7 +6497,7 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "duracao"
           },
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "estender_magia",
@@ -6309,7 +6532,7 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "dano"
           },
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "fortalecer_magia",
@@ -6341,7 +6564,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "animar_mortos",
@@ -6377,7 +6600,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "comandar_servo",
             "vezes": 1,
@@ -6412,7 +6635,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "detectar_armadilhas",
@@ -6444,7 +6667,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "desarmar_armadilha",
             "vezes": 1,
@@ -6474,7 +6697,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "esconder_sombras",
@@ -6506,7 +6729,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "ataque_furtivo",
@@ -6541,7 +6764,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "veneno_rapido",
@@ -6573,7 +6796,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
@@ -6605,7 +6828,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "criar_armadilha",
@@ -6637,7 +6860,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "cura",
@@ -6675,7 +6898,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "cura_area",
@@ -6708,7 +6931,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "purificacao",
@@ -6741,7 +6964,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "ressurreicao",
@@ -6774,7 +6997,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "cancao_heroica",
@@ -6806,7 +7029,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "manter_cancao",
             "vezes": 1,
@@ -6837,7 +7060,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "encerrar_cancao",
             "vezes": 1,
@@ -6867,7 +7090,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "provocacao",
@@ -6902,7 +7125,7 @@ window.EDITOR_DUNGEONS = [
             "instrumento": true
           },
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_instrumento",
             "vezes": 1,
@@ -6932,7 +7155,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 3,
+          "ordem": 4,
           "tarefa": {
             "tipo": "libertar_refem",
             "alvo": "__prisioneiro__",
@@ -6963,7 +7186,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "proteger",
             "alvo": "__prisioneiro__",
@@ -6995,7 +7218,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "imposicao_maos",
@@ -7029,7 +7252,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "golpe_sagrado",
@@ -7061,7 +7284,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
@@ -7093,7 +7316,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "regenerar",
             "alvo": "regeneracao_divina",
@@ -7125,7 +7348,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "guerreiro_luz",
@@ -7138,6 +7361,133 @@ window.EDITOR_DUNGEONS = [
               "texto": "ui.tutorial.guia.treino_luz.luz.texto",
               "porque": "ui.tutorial.guia.treino_luz.luz.porque",
               "ui": "habilidade:guerreiro_luz"
+            }
+          ]
+        },
+        {
+          "id": "fala_atalhos",
+          "pos": [
+            42,
+            16
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 19,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Encerre o turno para concluir"
+          },
+          "guia": [
+            {
+              "id": "barra",
+              "texto": "ui.tutorial.guia.fala_atalhos.barra.texto",
+              "porque": "ui.tutorial.guia.fala_atalhos.barra.porque"
+            },
+            {
+              "id": "camera",
+              "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
+            },
+            {
+              "id": "cancelar",
+              "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
+            },
+            {
+              "id": "andar",
+              "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
+          "id": "fala_res",
+          "pos": [
+            43,
+            17
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 20,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "esqueleto_humano",
+            "vezes": 1,
+            "texto_curto": "Ataque um esqueleto com espada ou adaga"
+          },
+          "guia": [
+            {
+              "id": "ler",
+              "texto": "ui.tutorial.guia.fala_res.ler.texto",
+              "porque": "ui.tutorial.guia.fala_res.ler.porque"
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_res.atacar.texto",
+              "ui": "monstro:esqueleto_humano",
+              "dica": [
+                "ui.tutorial.guia.fala_res.atacar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fala_vuln",
+          "pos": [
+            43,
+            17
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️"
+          },
+          "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 21,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "esqueleto_humano",
+            "vezes": 1,
+            "texto_curto": "Pegue a maça, equipe e ataque o esqueleto"
+          },
+          "guia": [
+            {
+              "id": "pegar",
+              "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
+              "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
+              "ui": "casa:[42,17]"
+            },
+            {
+              "id": "equipar",
+              "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
+              "ui": "bolsa:maca_treino",
+              "dica": [
+                "ui.tutorial.guia.fala_vuln.equipar.dica.1"
+              ]
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
+              "ui": "monstro:esqueleto_humano",
+              "dica": [
+                "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+              ]
             }
           ]
         }
@@ -7159,6 +7509,7 @@ window.EDITOR_DUNGEONS = [
       "materiais": {},
       "pontes": [],
       "elevacoes": {},
+      "alturas_parede": {},
       "transicao_altura": "rampa",
       "objectives": {
         "primary": {
