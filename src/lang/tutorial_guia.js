@@ -513,8 +513,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique na porta para abri-la e depois ande até ela."
   },
   "ui.tutorial.guia.porta_cleric.porta.porque": {
-    "en": "Only your class can enter; there you practice each of your hero's abilities.",
-    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+    "en": "Only your class can enter; there your spells do not spend [[slot]]s and you practice each ability.",
+    "pt": "Só a sua classe entra ali; lá suas magias não gastam [[slot]] e você treina cada habilidade."
   },
   "ui.tutorial.guia.porta_cleric.porta.texto": {
     "en": "Open the marked door and walk in: it is your hero's exclusive room.",
@@ -739,6 +739,34 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_golpe.golpe.texto": {
     "en": "Click Devastating Strike and then the dummy.",
     "pt": "Clique em Golpe Devastador e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_grimorio.grimorio.porque": {
+    "en": "Your known spells are listed there.",
+    "pt": "É nele que ficam as magias que você conhece."
+  },
+  "ui.tutorial.guia.treino_grimorio.grimorio.texto": {
+    "en": "Open the Grimoire with the ✨ Spells button.",
+    "pt": "Abra o Grimório no botão ✨ Magias."
+  },
+  "ui.tutorial.guia.treino_grimorio.lancar.dica.1": {
+    "en": "Enemy spells need a target: only apprentices are here, so use an area or buff spell.",
+    "pt": "Magia de inimigo precisa de alvo: aqui só há aprendizes, então use uma de área ou de benefício."
+  },
+  "ui.tutorial.guia.treino_grimorio.lancar.porque": {
+    "en": "In this room spells do not spend [[slot]]s. Outside it, each one spends a slot, which returns over time.",
+    "pt": "Nesta sala as magias não gastam [[slot]]. Fora dela, cada uma gasta um, que volta com o tempo."
+  },
+  "ui.tutorial.guia.treino_grimorio.lancar.texto": {
+    "en": "Pick a spell and cast it on yourself or on a free square.",
+    "pt": "Escolha uma magia e lance-a em você ou numa casa livre."
+  },
+  "ui.tutorial.guia.treino_grimorio_turno.encerrar.porque": {
+    "en": "Casting used your main action; the next abilities need it back.",
+    "pt": "Lançar usou sua ação principal; as habilidades seguintes precisam dela de volta."
+  },
+  "ui.tutorial.guia.treino_grimorio_turno.encerrar.texto": {
+    "en": "Click End Turn to pass your turn.",
+    "pt": "Clique em Encerrar Turno para passar a vez."
   },
   "ui.tutorial.guia.treino_guerreiro_fim.conferir.porque": {
     "en": "Abilities cost [[fome_sede]]; a starving warrior fights poorly.",

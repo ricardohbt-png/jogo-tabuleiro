@@ -80,7 +80,7 @@ class MagoSlotsTreino(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(r2._slots_livres_treino(p2))               # masmorra normal nunca
         r3, p3 = sala('cleric')
         p3['pos'] = list(DENTRO)
-        self.assertFalse(r3._slots_livres_treino(p3))               # só o Mago
+        self.assertFalse(r3._slots_livres_treino(p3))               # Clérigo na sala do Mago: não (a regra é por sala da própria classe)
         r4, p4 = sala()
         p4['test_hero'] = True
         self.assertFalse(r4._slots_livres_treino(p4))               # mesa de teste do editor

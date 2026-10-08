@@ -49,19 +49,21 @@ class TutorialTraining:
                                                if self._training_ally(p, a["id"]) is not None]
 
     def _slots_livres_treino(self, p, pos=None):
-        """Fatia 15: dentro da sala exclusiva do Mago as magias não gastam slots.
+        """Fatias 15 e 16: dentro da sala exclusiva do Mago/Clérigo as magias não gastam slots.
 
         Derivado da posição (sem estado novo, nada para a foto nem para o
-        `repetir_tutorial`): vale só no modo treinamento, para o Mago, numa
-        casa de piso da sala com `allowed_class == "mage"`. A porta e o corredor
-        ficam fora. O Clérigo e a mesa de teste do editor não entram."""
+        `repetir_tutorial`): vale só no modo treinamento, para o Mago ou o
+        Clérigo, numa casa de piso da sala com `allowed_class` igual à classe
+        dele. A porta e o corredor ficam fora. A mesa de teste do editor não
+        entra. As habilidades de classe (Cura etc.) não usam slots e não mudam."""
         if not getattr(self, "training_mode", False) or not p:
             return False
-        if p.get("class_id") != "mage" or p.get("test_hero") or not p.get("alive", True):
+        cls = p.get("class_id")
+        if cls not in ("mage", "cleric") or p.get("test_hero") or not p.get("alive", True):
             return False
         x, y = pos if pos is not None else p.get("pos", [-1, -1])
         for room in self.rooms:
-            if (room.get("allowed_class") == "mage"
+            if (room.get("allowed_class") == cls
                     and room["x"] <= x < room["x"] + room["w"]
                     and room["y"] <= y < room["y"] + room["h"]):
                 return True

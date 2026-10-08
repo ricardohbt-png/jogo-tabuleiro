@@ -45,6 +45,7 @@ if not any(t['pos'] == [10,8] for t in d['traps']):
 
 import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parent))
 import aplicar_fatia9_tutorial as _F9   # lição de guiar o refém (constantes)
+import aplicar_fatia16_tutorial as _F16   # Clérigo: lançar magias (sala sem custo de slots)
 import aplicar_fatia15_tutorial as _F15   # textos do Mago: na sala dele as magias não gastam slots
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
 def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
@@ -99,13 +100,17 @@ lesson('rogue','treino_veneno_golpe',8,None,
 lesson('rogue','treino_criar',9,'criar_armadilha',
        'Use Criar Armadilha numa casa vazia da sala. Buraco já está disponível; as demais fórmulas dependem da Guilda. Escolha apenas um mecanismo que você conhece.', 'Crie uma armadilha conhecida')
 
-lesson('cleric','treino_cura',3,'cura',
+lesson('cleric','treino_grimorio',3,None,
+       _F16.GRIMORIO, _F16.GRIMORIO_CURTO,verb='usar_magia',requirements={'magia_tipo':'qualquer'})
+lesson('cleric','treino_grimorio_turno',4,None,
+       _F16.TURNO, _F16.TURNO_CURTO,verb='encerrar_turno')
+lesson('cleric','treino_cura',5,'cura',
        'O Aprendiz 1 está ferido. Fique ao lado dele, selecione Cura e use um dado. Confira a vida recuperada e o custo de água.', 'Cure o Aprendiz 1',target_id='__treino_cleric_1',effective=True)
-lesson('cleric','treino_cura_area',4,'cura_area',
+lesson('cleric','treino_cura_area',6,'cura_area',
        'Os dois aprendizes ficaram feridos para este exercício. Fique perto deles e use Cura em Área. No nível inicial o raio é de 2 casas; confira a área e o custo antes de confirmar.', 'Cure os dois aprendizes em área',count=2,effective=True)
-lesson('cleric','treino_purificar',5,'purificacao',
+lesson('cleric','treino_purificar',7,'purificacao',
        'O Aprendiz 1 está cego por um veneno simulado. Fique ao lado dele, use Purificação e escolha Veneno. Observe o efeito desaparecer.', 'Purifique o Aprendiz 1',target_id='__treino_cleric_1')
-lesson('cleric','treino_ressuscitar',6,'ressurreicao',
+lesson('cleric','treino_ressuscitar',8,'ressurreicao',
        'O Aprendiz 1 simula um aliado caído. Fique ao lado dele e use Ressurreição. Ele retorna com a vida determinada pela sua habilidade.', 'Ressuscite o Aprendiz 1',target_id='__treino_cleric_1')
 
 lesson('bard','treino_cancao',3,'cancao_heroica',
@@ -151,7 +156,7 @@ for cls, (porta, casa_placa, emoji, nome, ultima, _) in PORTAS.items():
     if not any(f['id'] == 'porta_' + cls for f in d['falas']):
         base = next(f for f in d['falas'] if f['id'] == ultima)
         d['falas'].append({'id': 'porta_' + cls, 'pos': base['pos'], 'falante': base['falante'],
-                           'texto': _F15.PORTA_MAGE if cls == 'mage' else 'Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.',
+                           'texto': _F15.PORTA_MAGE if cls == 'mage' else _F16.PORTA_CLERIC if cls == 'cleric' else 'Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.',
                            'trigger': {'tipo': 'sala'}, 'classe': cls, 'ordem': 3,
                            'tarefa': {'tipo': 'mover_ate', 'alvo': porta, 'vezes': 1,
                                       'texto_curto': 'Entre na sala do seu herói'}})

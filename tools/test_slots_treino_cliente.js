@@ -29,5 +29,13 @@ const treino = { ...base, slots_livres_treino: true, slots_remaining: { primeiro
 s = ctx.menu(treino);
 check('na sala: todos os círculos acionáveis (inclui o que o nível ainda não libera)', ['primeiro', 'segundo', 'terceiro', 'quarto'].every(c => s[c].livres >= 1 && s[c].treinoLivre));
 check('na sala: o painel diz "ilimitados"', ctx.render(treino).includes('ui.magia.slots_treino_livre'));
+// Fatia 16: o Clérigo (Lewis) usa o mesmo caminho do menu de magias.
+const lewis = { class_id: 'cleric', level: 5, slots_livres_treino: true, slots_remaining: { primeiro: [], segundo: [], terceiro: [], quarto: [] } };
+const lewisFora = { ...lewis, slots_livres_treino: false, slots_remaining: { primeiro: [5, 5, 5], segundo: [5, 5], terceiro: [5], quarto: [5, 5] } };
+check('Clérigo fora da sala: slots esgotados sem livres', ctx.menu(lewisFora).primeiro.livres === 0);
+s2 = ctx.menu(lewis);
+check('Clérigo na sala: todos os círculos acionáveis', ['primeiro', 'segundo', 'terceiro', 'quarto'].every(c => s2[c].livres >= 1 && s2[c].treinoLivre));
+check('Clérigo na sala: o painel diz "ilimitados"', ctx.render(lewis).includes('ui.magia.slots_treino_livre'));
+var s2;
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
 process.exit(FAIL ? 1 : 0);
