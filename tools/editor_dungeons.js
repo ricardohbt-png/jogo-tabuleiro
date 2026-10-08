@@ -13033,7 +13033,7 @@ window.EDITOR_DUNGEONS = [
       "start_mode": "hero_spawns",
       "tutorial_training": true,
       "grid": {
-        "w": 48,
+        "w": 57,
         "h": 29
       },
       "tiles": [
@@ -13085,47 +13085,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0,
@@ -13185,6 +13144,74 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -13235,47 +13262,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
           0,
           0,
@@ -13296,6 +13282,65 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           1,
           1,
           1,
@@ -13326,6 +13371,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -13385,6 +13439,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -13435,47 +13498,6 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
           0,
           0,
@@ -13505,10 +13527,10 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           1,
-          1,
-          1,
-          1,
-          1,
+          0,
+          0,
+          0,
+          0,
           0,
           1,
           0,
@@ -13517,6 +13539,15 @@ window.EDITOR_DUNGEONS = [
           0,
           1,
           0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -13554,18 +13585,27 @@ window.EDITOR_DUNGEONS = [
           1,
           0,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
           0,
           0,
           0,
           0,
           1,
           0,
-          1,
           0,
           0,
-          1,
-          1,
-          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -13596,12 +13636,12 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -13614,6 +13654,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -13685,6 +13734,74 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -13735,6 +13852,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -13785,6 +13911,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -13835,6 +13970,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -13885,6 +14029,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -13935,6 +14088,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -13985,6 +14147,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
           0
         ],
         [
@@ -14035,6 +14206,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -14068,6 +14248,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -14135,6 +14324,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -14168,6 +14366,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -14235,6 +14442,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -14277,6 +14493,15 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -14335,6 +14560,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -14385,6 +14619,15 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -14435,9 +14678,27 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -14545,36 +14806,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": 22,
-          "x": 34,
-          "y": 13,
-          "w": 6,
-          "h": 6,
-          "role": "chest",
-          "locked": true,
-          "doors": [
-            [
-              33,
-              15
-            ]
-          ]
-        },
-        {
-          "id": 23,
-          "x": 41,
-          "y": 13,
-          "w": 6,
-          "h": 6,
-          "role": "boss",
-          "locked": true,
-          "doors": [
-            [
-              40,
-              15
-            ]
-          ]
-        },
-        {
           "id": 35,
           "x": 31,
           "y": 4,
@@ -14669,6 +14900,51 @@ window.EDITOR_DUNGEONS = [
             ]
           ],
           "allowed_class": "bard"
+        },
+        {
+          "id": 46,
+          "x": 34,
+          "y": 13,
+          "w": 6,
+          "h": 6,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              33,
+              15
+            ]
+          ]
+        },
+        {
+          "id": 47,
+          "x": 41,
+          "y": 13,
+          "w": 6,
+          "h": 6,
+          "role": "chest",
+          "locked": true,
+          "doors": [
+            [
+              40,
+              15
+            ]
+          ]
+        },
+        {
+          "id": 48,
+          "x": 48,
+          "y": 13,
+          "w": 6,
+          "h": 6,
+          "role": "boss",
+          "locked": true,
+          "doors": [
+            [
+              47,
+              15
+            ]
+          ]
         }
       ],
       "door_conditions": {},
@@ -14724,7 +15000,7 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "exit": {
-        "x": 46,
+        "x": 53,
         "y": 15
       },
       "monsters": [
@@ -14829,36 +15105,6 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "boneco_treino_veneno",
-          "pos": [
-            37,
-            14
-          ],
-          "room_id": 22,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_treino_veneno",
-          "pos": [
-            37,
-            16
-          ],
-          "room_id": 22,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "esqueleto_humano",
-          "pos": [
-            44,
-            15
-          ],
-          "room_id": 23,
-          "boss": false,
-          "target": false
-        },
-        {
           "type": "boneco_treino",
           "pos": [
             24,
@@ -14939,44 +15185,131 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "esqueleto_humano",
+          "type": "boneco_treino_veneno",
           "pos": [
             44,
-            17
+            14
           ],
-          "room_id": 23,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_palha",
-          "pos": [
-            38,
-            17
-          ],
-          "room_id": 22,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "boneco_palha",
-          "pos": [
-            38,
-            18
-          ],
-          "room_id": 22,
+          "room_id": 47,
           "boss": false,
           "target": false
         },
         {
           "type": "boneco_treino_veneno",
           "pos": [
-            36,
-            18
+            44,
+            16
           ],
-          "room_id": 22,
+          "room_id": 47,
           "boss": false,
           "target": false
+        },
+        {
+          "type": "esqueleto_humano",
+          "pos": [
+            51,
+            15
+          ],
+          "room_id": 48,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "esqueleto_humano",
+          "pos": [
+            51,
+            17
+          ],
+          "room_id": 48,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_palha",
+          "pos": [
+            45,
+            17
+          ],
+          "room_id": 47,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_palha",
+          "pos": [
+            45,
+            18
+          ],
+          "room_id": 47,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "boneco_treino_veneno",
+          "pos": [
+            43,
+            18
+          ],
+          "room_id": 47,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            38,
+            15
+          ],
+          "room_id": 46,
+          "boss": false,
+          "target": false,
+          "hostility_override": {
+            "mode": "custom",
+            "rules": {
+              "all_monsters": true,
+              "subtypes": [],
+              "types": []
+            }
+          },
+          "autonomous_hostility": true
+        },
+        {
+          "type": "esqueleto_animal",
+          "pos": [
+            38,
+            16
+          ],
+          "room_id": 46,
+          "boss": false,
+          "target": false,
+          "hostility_override": {
+            "mode": "custom",
+            "rules": {
+              "all_monsters": true,
+              "subtypes": [],
+              "types": []
+            }
+          },
+          "autonomous_hostility": true
+        },
+        {
+          "type": "escorpiao_pedra",
+          "pos": [
+            39,
+            16
+          ],
+          "room_id": 46,
+          "boss": false,
+          "target": false,
+          "hostility_override": {
+            "mode": "custom",
+            "rules": {
+              "all_monsters": true,
+              "subtypes": [],
+              "types": []
+            }
+          },
+          "autonomous_hostility": true
         }
       ],
       "chests": [
@@ -15035,7 +15368,20 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            42,
+            10,
+            22
+          ],
+          "gold": 0,
+          "items": [
+            {
+              "id": "instrumento_harpa_velho"
+            }
+          ],
+          "key_objective": false
+        },
+        {
+          "pos": [
+            49,
             17
           ],
           "gold": 0,
@@ -15048,7 +15394,7 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            35,
+            42,
             14
           ],
           "gold": 0,
@@ -15067,13 +15413,13 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "pos": [
-            10,
-            22
+            35,
+            16
           ],
           "gold": 0,
           "items": [
             {
-              "id": "instrumento_harpa_velho"
+              "id": "granada_superior"
             }
           ],
           "key_objective": false
@@ -15096,6 +15442,14 @@ window.EDITOR_DUNGEONS = [
             8
           ],
           "dificuldade": 5
+        },
+        {
+          "id": "trap_0",
+          "tipo": "buraco",
+          "pos": [
+            49,
+            15
+          ]
         }
       ],
       "decorations": [
@@ -16107,7 +16461,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_29",
           "pos": [
-            35,
+            42,
             15
           ],
           "falante": {
@@ -16119,7 +16473,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 10,
+          "ordem": 11,
           "tarefa": {
             "tipo": "pegar_item",
             "vezes": 1,
@@ -16139,7 +16493,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_30",
           "pos": [
-            35,
+            42,
             15
           ],
           "falante": {
@@ -16151,7 +16505,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 11,
+          "ordem": 12,
           "tarefa": {
             "tipo": "arremessar_item",
             "alvo": "frasco_oleo",
@@ -16188,7 +16542,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_31",
           "pos": [
-            35,
+            42,
             15
           ],
           "falante": {
@@ -16200,7 +16554,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 12,
+          "ordem": 13,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "veneno_fungo_acre",
@@ -16222,7 +16576,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_32",
           "pos": [
-            35,
+            42,
             15
           ],
           "falante": {
@@ -16234,7 +16588,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 13,
+          "ordem": 14,
           "tarefa": {
             "tipo": "atacar",
             "alvo": "boneco_treino_veneno",
@@ -16256,7 +16610,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_33",
           "pos": [
-            35,
+            42,
             15
           ],
           "falante": {
@@ -16268,7 +16622,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 14,
+          "ordem": 15,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "health_potion_small",
@@ -16290,7 +16644,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_34",
           "pos": [
-            41,
+            48,
             15
           ],
           "falante": {
@@ -16302,7 +16656,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 15
+          "ordem": 16
         },
         {
           "id": "treino_mira",
@@ -17688,7 +18042,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_atalhos",
           "pos": [
-            42,
+            49,
             16
           ],
           "falante": {
@@ -17730,7 +18084,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_res",
           "pos": [
-            43,
+            50,
             17
           ],
           "falante": {
@@ -17769,7 +18123,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_vuln",
           "pos": [
-            43,
+            50,
             17
           ],
           "falante": {
@@ -17793,7 +18147,7 @@ window.EDITOR_DUNGEONS = [
               "id": "pegar",
               "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
               "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
-              "ui": "casa:[42,17]"
+              "ui": "casa:[49,17]"
             },
             {
               "id": "equipar",
@@ -18111,6 +18465,61 @@ window.EDITOR_DUNGEONS = [
               "dica": [
                 "ui.tutorial.guia.volta_paladin.seguir.dica.1"
               ]
+            }
+          ]
+        },
+        {
+          "id": "fala_hostilidade",
+          "pos": [
+            35,
+            15
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Há três monstros nesta sala, e cada um é hostil a todos os monstros. Abra a porta, observe-os lutarem entre si e use a Granada Superior contra quem sobreviver.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 10,
+          "tarefa": {
+            "tipo": "arremessar_item",
+            "alvo": "granada_superior",
+            "vezes": 1,
+            "texto_curto": "Arremesse a Granada Superior nos monstros sobreviventes"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.fala_hostilidade.abrir.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.abrir.porque",
+              "ui": "porta:[33,15]",
+              "conclui_com": {
+                "tipo": "abrir_porta",
+                "alvo": [
+                  33,
+                  15
+                ]
+              }
+            },
+            {
+              "id": "bardo",
+              "texto": "ui.tutorial.guia.fala_hostilidade.bardo.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.bardo.porque",
+              "ui": "monstro:rato_gigante"
+            },
+            {
+              "id": "observar",
+              "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque"
+            },
+            {
+              "id": "granada",
+              "texto": "ui.tutorial.guia.fala_hostilidade.granada.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.granada.porque",
+              "ui": "casa:[35,16]"
             }
           ]
         }
@@ -66312,4 +66721,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.
