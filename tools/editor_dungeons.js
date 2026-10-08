@@ -17117,7 +17117,11 @@ window.EDITOR_DUNGEONS = [
               "ui": "casa:[10,22]",
               "dica": [
                 "ui.tutorial.guia.treino_harpa.bau.dica.1"
-              ]
+              ],
+              "conclui_com": {
+                "tipo": "pegar_item",
+                "alvo": "instrumento_harpa_velho"
+              }
             },
             {
               "id": "equipar",
@@ -17155,7 +17159,7 @@ window.EDITOR_DUNGEONS = [
               "id": "linha",
               "texto": "ui.tutorial.guia.treino_nota_cortante.linha.texto",
               "porque": "ui.tutorial.guia.treino_nota_cortante.linha.porque",
-              "ui": "monstro:boneco_treino"
+              "ui": "casa:[10,24]"
             },
             {
               "id": "tocar",
@@ -17422,7 +17426,10 @@ window.EDITOR_DUNGEONS = [
               "id": "curar",
               "texto": "ui.tutorial.guia.treino_maos.curar.texto",
               "porque": "ui.tutorial.guia.treino_maos.curar.porque",
-              "ui": "habilidade:imposicao_maos"
+              "ui": "habilidade:imposicao_maos",
+              "dica": [
+                "ui.tutorial.guia.treino_maos.curar.dica.1"
+              ]
             }
           ]
         },
@@ -17436,7 +17443,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Instrutor de Treinamento",
             "emoji": "🎓"
           },
-          "texto": "Agora guie o refém até a casa marcada. Encerre seu turno para abrir a vez dele, depois clique na casa. Ao chegar, ele se retira e você não precisa mais controlá-lo.",
+          "texto": "Agora guie o refém até a casa marcada, na frente da porta. Clique em Encerrar Turno para abrir a vez dele e depois na casa. Ele anda até 6 casas e, ao chegar, se retira.",
           "trigger": {
             "tipo": "sala"
           },
@@ -17449,7 +17456,7 @@ window.EDITOR_DUNGEONS = [
             "texto_curto": "Guie o refém até a casa marcada",
             "alvo": [
               32,
-              24
+              25
             ]
           },
           "guia": [
@@ -17466,7 +17473,7 @@ window.EDITOR_DUNGEONS = [
               "id": "guiar",
               "texto": "ui.tutorial.guia.treino_guiar_refem.guiar.texto",
               "porque": "ui.tutorial.guia.treino_guiar_refem.guiar.porque",
-              "ui": "casa:[32,24]",
+              "ui": "casa:[32,25]",
               "dica": [
                 "ui.tutorial.guia.treino_guiar_refem.guiar.dica.1",
                 "ui.tutorial.guia.treino_guiar_refem.guiar.dica.2"
