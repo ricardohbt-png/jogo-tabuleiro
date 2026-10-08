@@ -284,11 +284,18 @@ def texto_de_interface(src):
     """[(linha, texto)] dos literais que parecem texto para o jogador."""
     out = []
     vocab = _vocabulario_pt()
+    linhas = src.split("\n")
     for linha, _aspa, t in literais(src):
         limpo = t.strip()
         if len(limpo) < 3: continue
         if IGNORAR.search(limpo): continue
         if not parece_portugues(limpo, vocab): continue
+        # 3º argumento de nomeCat/descCat: nome do autor usado só como reserva;
+        # o texto traduzido vem do dicionário pelo id.
+        if 0 < linha <= len(linhas) and re.search(
+                r"(?:nomeCat|descCat)\([^()]*,\s*[\"'`]" + re.escape(limpo) + r"[\"'`]\s*\)",
+                linhas[linha - 1]):
+            continue
         out.append((linha, limpo))
     return out
 
@@ -320,6 +327,12 @@ const d = 'depois';
     check("comentário de linha não vira texto", not any("comentário" in t for t in txt))
     check("comentário de bloco não vira texto", not any("bloco com" in t for t in txt))
     check("continua lendo depois do bloco", "depois" in txt)
+
+    # Reserva do nomeCat/descCat não é dívida: o dicionário traduz pelo id.
+    check("nomeCat com nome do autor como reserva não conta",
+          not texto_de_interface('x = nomeCat("decor", "poco_balde", "Poço com balde");'))
+    check("literal solto continua contando",
+          bool(texto_de_interface('x = f("Poço com balde");')))
 
     # Comentário HTML não é texto de interface — o jogador nunca o vê.
     so_comentario = "const e = `<!-- SEÇÃO -->\n  <div>ok</div>`;"

@@ -43,6 +43,7 @@ def _room_bardo():
     room.turn_index = 0
     room.monsters = {}
     room.players = {}
+    room.training_allies = {}   # o __init__ cria; aqui o room nasce de __new__
     p = {
         "id": "p1", "name": "Henrique", "class_id": "bard", "alive": True,
         "pos": [5, 5], "dex": 16, "int_": 12, "spd": 6,

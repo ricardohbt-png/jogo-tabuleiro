@@ -134,7 +134,10 @@ async def main():
     await defesa.handle_magia("c", {"magia_id": "tempestade_ciclones", "tx": 5, "ty": 5})
     zd = next(z for z in defesa.zonas_especiais if z.get("tipo") == "tempestade_ciclones")
     qd = int(zd.get("ciclones_pendentes", 0) or 0)
-    await defesa.handle_tempestade_ciclones_posicoes("c", zd["id"], [list(pos) for pos in zd["tiles"][:qd]])
+    # a ordem de zd["tiles"] vem de um set (depende do PYTHONHASHSEED): se a casa do alvo
+    # estivesse entre as primeiras, um 2º ciclone cairia no alvo e o dano dobraria.
+    livres = [list(pos) for pos in zd["tiles"] if list(pos) != list(alvo_defesa["pos"])]
+    await defesa.handle_tempestade_ciclones_posicoes("c", zd["id"], livres[:qd])
     zd["ciclones"][0]["pos"] = list(alvo_defesa["pos"])
     rolagem_defesa = []
     save_passou = {"value": False}

@@ -7941,19 +7941,21 @@ def validar_dungeon(defn):
         altura = mo.get("altura", base.get("altura_inicial", ALTURA_MIN))
         if voo and isinstance(altura, int) and altura > ALTURA_MIN:
             continue
-        w, h = base.get("size") or [1, 1]
+        # mon_w/mon_h: `w`/`h` são as dimensões do grid e a checagem de elevação
+        # mais abaixo as usa; reaproveitar os nomes aqui as sobrescrevia.
+        mon_w, mon_h = base.get("size") or [1, 1]
         oriented = bool(base.get("oriented"))
         facing = mo.get("facing") or [-1, 0]
         if oriented:
             fx, fy = facing if facing in ([1, 0], [-1, 0], [0, 1], [0, -1]) else [-1, 0]
-            width, length = (1, w) if h == 1 else (w, h)
+            width, length = (1, mon_w) if mon_h == 1 else (mon_w, mon_h)
             px, py = -fy, fx
             footprint = [(mo["pos"][0] - fx * depth + px * lane,
                           mo["pos"][1] - fy * depth + py * lane)
                          for depth in range(length) for lane in range(width)]
         else:
             footprint = [(mo["pos"][0] + dx, mo["pos"][1] + dy)
-                         for dx in range(w) for dy in range(h)]
+                         for dx in range(mon_w) for dy in range(mon_h)]
         if any(_posicao_em_abismo(tile) for tile in footprint):
             return False, f"monstro não voador {mo.get('type')!r} não pode começar sobre o Céu/Abismo sem uma ponte."
 

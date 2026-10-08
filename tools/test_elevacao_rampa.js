@@ -106,7 +106,9 @@ const faixas = {
 for (const [arq, faixa] of Object.entries(faixas))
   check(`${arq} declara o intervalo`, Array.isArray(faixa));
 const ref = faixas["server.py"];
-check("o servidor é a referência e chega a 10", ref && ref[0] === -1 && ref[1] === 10);
+// O teto não é cravado aqui: o autor o amplia (hoje 40); o que importa é que
+// os demais arquivos espelhem a referência do servidor (verificado abaixo).
+check("o servidor é a referência e o piso é -1", ref && ref[0] === -1 && ref[1] >= 10);
 const fora = Object.entries(faixas)
   .filter(([, f]) => !f || f[0] !== ref[0] || f[1] !== ref[1])
   .map(([a]) => a);

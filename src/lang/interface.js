@@ -1458,6 +1458,10 @@ window.LANG_INTERFACE = {
     "en": "Stairs (enter/leave)",
     "pt": "Escada (entrar/sair)"
   },
+  "ui.somteste.ev.sino_igreja": {
+    "en": "Church bell (ritual bell)",
+    "pt": "Sino de igreja (sino ritualístico)"
+  },
   "ui.somteste.ev.sua_vez": {
     "en": "Your turn",
     "pt": "Sua vez"
