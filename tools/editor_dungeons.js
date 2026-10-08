@@ -17329,6 +17329,54 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "treino_guiar_refem",
+          "pos": [
+            33,
+            25
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "texto": "Agora guie o refém até a casa marcada. Encerre seu turno para abrir a vez dele, depois clique na casa. Ao chegar, ele se retira e você não precisa mais controlá-lo.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "paladin",
+          "ordem": 7,
+          "sala_exclusiva": true,
+          "tarefa": {
+            "tipo": "guiar_refem",
+            "vezes": 1,
+            "texto_curto": "Guie o refém até a casa marcada",
+            "alvo": [
+              32,
+              24
+            ]
+          },
+          "guia": [
+            {
+              "id": "encerrar",
+              "texto": "ui.tutorial.guia.treino_guiar_refem.encerrar.texto",
+              "porque": "ui.tutorial.guia.treino_guiar_refem.encerrar.porque",
+              "ui": "botao:encerrar_turno",
+              "conclui_com": {
+                "tipo": "encerrar_turno"
+              }
+            },
+            {
+              "id": "guiar",
+              "texto": "ui.tutorial.guia.treino_guiar_refem.guiar.texto",
+              "porque": "ui.tutorial.guia.treino_guiar_refem.guiar.porque",
+              "ui": "casa:[32,24]",
+              "dica": [
+                "ui.tutorial.guia.treino_guiar_refem.guiar.dica.1",
+                "ui.tutorial.guia.treino_guiar_refem.guiar.dica.2"
+              ]
+            }
+          ]
+        },
+        {
           "id": "treino_sagrado",
           "pos": [
             33,
@@ -17344,7 +17392,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "golpe_sagrado",
@@ -17376,7 +17424,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
@@ -17408,7 +17456,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "regenerar",
             "alvo": "regeneracao_divina",
@@ -17440,7 +17488,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 10,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "guerreiro_luz",
@@ -17850,7 +17898,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 11,
+          "ordem": 12,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -66083,4 +66131,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).
