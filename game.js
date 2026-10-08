@@ -20226,7 +20226,9 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
     const limite = limites[circulo] || 0;
-    const possuiTesteLivre = cls === 'cleric' && circulo === 'quinto' && magiasCirculo.includes('tempestade_ciclones');
+    // Sala de treino do Mago: o servidor manda `slots_livres_treino` e as magias não gastam slots.
+    const treinoLivre = !!heroi?.slots_livres_treino && magiasCirculo.length > 0;
+    const possuiTesteLivre = treinoLivre || (cls === 'cleric' && circulo === 'quinto' && magiasCirculo.includes('tempestade_ciclones'));
     if (limite === 0 && !possuiTesteLivre) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — ${t('ui.magia.slot_nivel_maior')}</div>
@@ -20262,7 +20264,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${livres === 0 ? '#ff4136' : '#44cc88'}; font-size:10px;">${livres}/${totalSlots} slots</span>
+          <span style="color:${livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -25162,6 +25164,7 @@ function renderMyPanel(state){
     heroiPedro.magias_conhecidas = me.magias_conhecidas || [];
     heroiPedro.slots_cooldown    = me.slots_cooldown || {primeiro:[], segundo:[], terceiro:[]};
     heroiPedro.slots_remaining   = me.slots_remaining || {primeiro:[], segundo:[], terceiro:[]};
+    heroiPedro.slots_livres_treino = !!me.slots_livres_treino;
     heroiPedro.level             = me.level;
     const corpo = (aba === 'magias') ? renderAbaMagiasPedro(heroiPedro) : statsHTML;
     $('my-stats').innerHTML = abasHTML + corpo;
@@ -27309,6 +27312,11 @@ function _slotsMenuMagias(heroi){
       regularTotal: total, regularLivres: livresNormais,
       extra: isPrimeiro && extra.ativo ? extra : null
     };
+    // Sala de treino do Mago: sem recargas e sem limite (o servidor não cobra slots).
+    if(heroi?.slots_livres_treino){
+      status[circulo].livres = Math.max(status[circulo].livres, 1);
+      status[circulo].treinoLivre = true;
+    }
   });
   return status;
 }
@@ -27329,7 +27337,7 @@ function renderSlotsMenuMagias(heroi){
       : `<span class="mm-slot-pip cooldown staff" title="${t('ui.magia.slot_cajado_volta_em', {n: s.extra.espera[0] || 0})}">${s.extra.espera[0] || 0}</span>`)
       : '';
     const pips = pipsNormais + pipsCajado;
-    return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
+    return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.treinoLivre ? t('ui.magia.slots_treino_livre') : t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
   }).join('');
   return `<aside class="menu-magias-slots" aria-label="${t('ui.magia.slots_aria')}"><div class="mm-slots-header">${t('ui.magia.slots_titulo')}<small>${t('ui.magia.slots_recarga')}</small></div>${grupos}</aside>`;
 }

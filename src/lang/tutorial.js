@@ -48,6 +48,14 @@ window.LANG_TUTORIAL = {
     "en": "No dummy on that line. Stand in the same row or column as the dummy, up to 3 squares away.",
     "pt": "Nenhum boneco nessa linha. Fique na mesma linha ou coluna do boneco, a até 3 casas."
   },
+  "ui.tutorial.dica_erro.slots_treino_liga": {
+    "en": "In this training room your spells do not spend slots.",
+    "pt": "Nesta sala de treino suas magias não gastam slots."
+  },
+  "ui.tutorial.dica_erro.slots_treino_desliga": {
+    "en": "Outside the training room, slots are spent again.",
+    "pt": "Fora da sala de treino, os slots voltam a ser gastos."
+  },
   "ui.tutorial.resultado.acerto": {
     "en": "You rolled {roll} + {bonus} = {total} against AC {ca}: hit!",
     "pt": "Você rolou {roll} + {bonus} = {total} contra CA {ca}: acertou!"

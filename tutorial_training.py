@@ -48,6 +48,32 @@ class TutorialTraining:
         return list(self.players.values()) + [a for a in self.training_allies.values()
                                                if self._training_ally(p, a["id"]) is not None]
 
+    def _slots_livres_treino(self, p, pos=None):
+        """Fatia 15: dentro da sala exclusiva do Mago as magias não gastam slots.
+
+        Derivado da posição (sem estado novo, nada para a foto nem para o
+        `repetir_tutorial`): vale só no modo treinamento, para o Mago, numa
+        casa de piso da sala com `allowed_class == "mage"`. A porta e o corredor
+        ficam fora. O Clérigo e a mesa de teste do editor não entram."""
+        if not getattr(self, "training_mode", False) or not p:
+            return False
+        if p.get("class_id") != "mage" or p.get("test_hero") or not p.get("alive", True):
+            return False
+        x, y = pos if pos is not None else p.get("pos", [-1, -1])
+        for room in self.rooms:
+            if (room.get("allowed_class") == "mage"
+                    and room["x"] <= x < room["x"] + room["w"]
+                    and room["y"] <= y < room["y"] + room["h"]):
+                return True
+        return False
+
+    async def _avisar_slots_treino(self, p, antes, depois):
+        """Aviso curto só quando a regra liga/desliga (não a cada passo)."""
+        if antes == depois or not p:
+            return
+        motivo = "slots_treino_liga" if depois else "slots_treino_desliga"
+        await self.send_to(p["id"], {"type": "licao_dica", "motivo": motivo})
+
     def _training_init(self, defn):
         self.training_mode = defn.get("tutorial_training") is True
         self.training_allies = {}

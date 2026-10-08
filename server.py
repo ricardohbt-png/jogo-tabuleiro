@@ -17856,6 +17856,8 @@ class GameRoom(TutorialTraining):
         await self._aplicar_piso_congelado_se_pisar(p)
         # Check room entry
         entered = player_room(self.rooms, nx, ny)
+        await self._avisar_slots_treino(p, self._slots_livres_treino(p, old_pos),
+                                        self._slots_livres_treino(p))   # Fatia 15: só nas transições
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
@@ -26823,12 +26825,16 @@ class GameRoom(TutorialTraining):
 
     def _slots_disponiveis(self, p, circulo):
         """Slots livres no círculo = máximo do nível − gastos ainda em cooldown."""
+        if self._slots_livres_treino(p):
+            return 99      # sala de treino do Mago: as magias não gastam slots
         self._slot_prune(p, circulo)
         usados = len(p["slots_cooldown"].get(circulo, []))
         return slots_max_para(p).get(circulo, 0) - usados
 
     def _gastar_slot(self, p, circulo):
         """Marca 1 slot gasto com o tempo de recarga aplicável ao personagem."""
+        if self._slots_livres_treino(p):
+            return         # sala de treino do Mago: nada é gasto (e nada a devolver depois)
         p.setdefault("slots_cooldown", {"primeiro": [], "segundo": [], "terceiro": [], "quarto": []})
         p["slots_cooldown"].setdefault(circulo, []).append(
             self.round_num + _slot_recarga_para(p, circulo))
@@ -26851,8 +26857,12 @@ class GameRoom(TutorialTraining):
         contagem já convertida para o cliente não depender de estado local.
         """
         out = {}
+        livres = self._slots_livres_treino(p)   # sala de treino do Mago: HUD sem recargas
         for circulo in _slot_circulos_para(p):
             self._slot_prune(p, circulo)
+            if livres:
+                out[circulo] = []
+                continue
             out[circulo] = sorted(
                 max(0, int(ready_at) - self.round_num)
                 for ready_at in p.get("slots_cooldown", {}).get(circulo, [])
@@ -47377,6 +47387,7 @@ class GameRoom(TutorialTraining):
                                                  + self._weapon_throw_skills(p)),
                             slots_max=slots_max_para(p),
                             slots_remaining=self._slots_restantes_payload(p),
+                            slots_livres_treino=self._slots_livres_treino(p),
                             # Metadado visual: a aplicação mecânica continua
                             # exclusivamente em temp_def na resolução da CA.
                             temp_ca_bonus=int(self.temp_def.get(p["id"], 0) or 0),

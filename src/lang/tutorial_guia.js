@@ -525,8 +525,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique na porta para abri-la e depois ande até ela."
   },
   "ui.tutorial.guia.porta_mage.porta.porque": {
-    "en": "Only your class can enter; there you practice each of your hero's abilities.",
-    "pt": "Só a sua classe entra ali; lá você treina cada habilidade do seu herói."
+    "en": "Only your class can enter; there your spells do not spend [[slot]]s and you can test them all.",
+    "pt": "Só a sua classe entra ali; lá suas magias não gastam [[slot]] e você testa todas."
   },
   "ui.tutorial.guia.porta_mage.porta.texto": {
     "en": "Open the marked door and walk in: it is your hero's exclusive room.",
@@ -809,8 +809,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Abra o Grimório no botão das magias."
   },
   "ui.tutorial.guia.treino_magia.lancar.porque": {
-    "en": "Check the circle and the [[slot]]s used: no slot, no spell.",
-    "pt": "Confira o círculo e os [[slot]] usados: sem slot, sem magia."
+    "en": "In this room spells do not spend [[slot]]s: test every spell you know.",
+    "pt": "Nesta sala as magias não gastam [[slot]]: teste todas as que você conhece."
   },
   "ui.tutorial.guia.treino_magia.lancar.texto": {
     "en": "Pick a spell and cast it on the dummy or yourself.",
@@ -937,12 +937,12 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ataque o boneco com Golpe Sagrado ativo."
   },
   "ui.tutorial.guia.treino_slots.encerrar.porque": {
-    "en": "They return by the circle's rule; a spell without a slot cannot be cast.",
-    "pt": "Eles voltam conforme a regra do círculo; magia sem slot não sai."
+    "en": "Here [[slot]]s are not spent; outside the room each spell spends one, which returns over time.",
+    "pt": "Aqui os [[slot]] não se gastam; fora da sala cada magia gasta um, que volta com o tempo."
   },
   "ui.tutorial.guia.treino_slots.encerrar.texto": {
-    "en": "Click End Turn and check your [[slot]]s.",
-    "pt": "Clique em Encerrar Turno e confira seus [[slot]]."
+    "en": "Click End Turn to pass your turn.",
+    "pt": "Clique em Encerrar Turno para passar a vez."
   },
   "ui.tutorial.guia.treino_veneno.veneno.porque": {
     "en": "It is a free action; check how many charges the weapon holds.",

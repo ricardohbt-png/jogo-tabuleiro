@@ -45,6 +45,7 @@ if not any(t['pos'] == [10,8] for t in d['traps']):
 
 import sys as _sys; _sys.path.insert(0, str(Path(__file__).resolve().parent))
 import aplicar_fatia9_tutorial as _F9   # lição de guiar o refém (constantes)
+import aplicar_fatia15_tutorial as _F15   # textos do Mago: na sala dele as magias não gastam slots
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
 def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
     f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Instrutor de Treinamento','emoji':'🎓'},
@@ -68,9 +69,9 @@ lesson('warrior','treino_guerreiro_fim',7,None,
        'Você praticou as três habilidades. Confira a comida e a água consumidas e encerre seu turno. Ao aprender especializações na Guilda, volte para novos exercícios.', 'Encerre o turno para concluir',verb='encerrar_turno')
 
 lesson('mage','treino_magia',3,None,
-       'Abra o Grimório e lance uma magia conhecida. Escolha o boneco para dano ou você mesmo para um benefício. Confira o círculo e os slots utilizados.', 'Lance uma magia conhecida',verb='usar_magia',requirements={'magia_tipo':'qualquer'})
+       _F15.MAGIA, 'Lance uma magia conhecida',verb='usar_magia',requirements={'magia_tipo':'qualquer'})
 lesson('mage','treino_slots',4,None,
-       'Encerre o turno e confira os slots disponíveis no próximo. A renovação obedece à regra do círculo; uma magia sem slot não pode ser lançada.', 'Encerre o turno e confira os slots',verb='encerrar_turno')
+       _F15.SLOTS, _F15.SLOTS_CURTO,verb='encerrar_turno')
 for order, ident, label, kind, explanation in [
  (5,'aprimorar_magia','Aprimorar Magia','save','melhora a dificuldade do teste de resistência'),
  (6,'estender_magia','Estender Magia','duracao','acrescenta duração a um efeito que persiste'),
@@ -150,7 +151,7 @@ for cls, (porta, casa_placa, emoji, nome, ultima, _) in PORTAS.items():
     if not any(f['id'] == 'porta_' + cls for f in d['falas']):
         base = next(f for f in d['falas'] if f['id'] == ultima)
         d['falas'].append({'id': 'porta_' + cls, 'pos': base['pos'], 'falante': base['falante'],
-                           'texto': 'Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.',
+                           'texto': _F15.PORTA_MAGE if cls == 'mage' else 'Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.',
                            'trigger': {'tipo': 'sala'}, 'classe': cls, 'ordem': 3,
                            'tarefa': {'tipo': 'mover_ate', 'alvo': porta, 'vezes': 1,
                                       'texto_curto': 'Entre na sala do seu herói'}})

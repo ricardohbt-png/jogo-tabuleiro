@@ -6636,6 +6636,10 @@ window.LANG_INTERFACE = {
     "en": "{livres}/{total} available",
     "pt": "{livres}/{total} disponíveis"
   },
+  "ui.magia.slots_treino_livre": {
+    "en": "unlimited (training room)",
+    "pt": "ilimitados (sala de treino)"
+  },
   "ui.magia.slots_recarga": {
     "en": "Recharge per circle",
     "pt": "Recarga por círculo"
