@@ -9,7 +9,7 @@ import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
-                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38", "fala_atalhos"]
+                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38", "fala_atalhos", "fala_res", "fala_vuln"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -58,6 +58,39 @@ class ConteudoTests(unittest.TestCase):
                         for termo in TERMO.findall(lang):
                             self.assertIn(termo, C.GLOSSARIO, f"{lid}/{p['id']}: [[{termo}]]")
 
+    def test_licoes_de_dano_usam_o_esqueleto_e_o_glossario(self):
+        for lid in ("fala_res", "fala_vuln"):
+            self.assertTrue(any(p.get("ui") == "monstro:esqueleto_humano" for p in C.GUIA[lid]), lid)
+            self.assertLessEqual(len(C.GUIA[lid]), 4, lid)
+            for p in C.GUIA[lid]:
+                self.assertLessEqual(len(p["texto"][0].split()), 15, f"{lid}/{p['id']}")
+        self.assertIn("vulnerabilidade", C.GLOSSARIO)
+        self.assertIn("resistencia", C.GLOSSARIO)
+        # regra de ouro: equipar nunca conclui passo (pode ter ocorrido antes da lição)
+        for p in C.GUIA["fala_vuln"]:
+            self.assertNotEqual((p.get("conclui") or ""), "equipar")
+
+    def test_licoes_de_dano_ficam_depois_dos_atalhos_e_em_ordem_estrita(self):
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        comuns = [f for f in d["falas"] if f.get("ordem") is not None and not f.get("classe")]
+        o = {f["id"]: f["ordem"] for f in comuns}
+        self.assertLess(o["fala_atalhos"], o["fala_res"])
+        self.assertLess(o["fala_res"], o["fala_vuln"])
+        self.assertEqual(len(o.values()), len(set(o.values())))
+        # a ordem estrita libera as duas em sequência, e só depois de toda a trilha anterior
+        import server, types
+        sala = types.SimpleNamespace(licoes=comuns, _training_requirements=lambda p, f: True)
+        lib = lambda p, f: server.GameRoom._licao_liberada(sala, p, f)
+        fala = {f["id"]: f for f in comuns}
+        feitas = [f["id"] for f in comuns if f["ordem"] <= o["fala_atalhos"]]
+        p = {"licoes_feitas": feitas[:-1]}
+        self.assertFalse(lib(p, fala["fala_res"]))
+        p = {"licoes_feitas": feitas}
+        self.assertTrue(lib(p, fala["fala_res"]))
+        self.assertFalse(lib(p, fala["fala_vuln"]))
+        p["licoes_feitas"] = feitas + ["fala_res"]
+        self.assertTrue(lib(p, fala["fala_vuln"]))
+
     def test_termos_iguais_em_pt_e_en(self):
         for lid, passos in C.GUIA.items():
             for p in passos:
@@ -66,7 +99,7 @@ class ConteudoTests(unittest.TestCase):
 
     def test_glossario_completo(self):
         esperados = {"turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia",
-                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho"}
+                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho", "vulnerabilidade"}
         self.assertEqual(set(C.GLOSSARIO), esperados)
         for k, v in C.GLOSSARIO.items():
             for campo in ("nome", "texto"):

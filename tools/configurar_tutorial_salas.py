@@ -142,6 +142,19 @@ if not any(f['id'] == 'fala_atalhos' for f in d['falas']):
         'texto': 'Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.',
         'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': 19,
         'tarefa': {'tipo': 'encerrar_turno', 'vezes': 1, 'texto_curto': 'Encerre o turno para concluir'}})
+# Lições de dano (resistência e vulnerabilidade): esqueletos extras na sala 23 (o de [44,15] é da fala_38).
+for _pos in ([44, 17], [45, 17]):
+    if not any(m['pos'] == _pos for m in d['monsters']):
+        d['monsters'].append({'type': 'esqueleto_humano', 'pos': _pos, 'room_id': 23, 'boss': False, 'target': False})
+for _fid, _ordem, _texto, _curto in [
+    ('fala_res', 20, 'Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.',
+     'Ataque um esqueleto com espada ou adaga'),
+    ('fala_vuln', 21, 'Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Equipe a maça e ataque o esqueleto.',
+     'Ataque um esqueleto com a maça')]:
+    if not any(f['id'] == _fid for f in d['falas']):
+        d['falas'].append({'id': _fid, 'pos': [43, 17], 'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
+                           'texto': _texto, 'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': _ordem,
+                           'tarefa': {'tipo': 'atacar', 'alvo': 'esqueleto_humano', 'vezes': 1, 'texto_curto': _curto}})
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gerar_guia_comum import aplicar_guia

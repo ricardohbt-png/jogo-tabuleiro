@@ -1911,6 +1911,26 @@
       "room_id": 38,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "esqueleto_humano",
+      "pos": [
+        44,
+        17
+      ],
+      "room_id": 23,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "esqueleto_humano",
+      "pos": [
+        45,
+        17
+      ],
+      "room_id": 23,
+      "boss": false,
+      "target": false
     }
   ],
   "chests": [
@@ -4206,6 +4226,83 @@
           "id": "andar",
           "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
           "ui": "botao:encerrar_turno"
+        }
+      ]
+    },
+    {
+      "id": "fala_res",
+      "pos": [
+        43,
+        17
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 20,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Ataque um esqueleto com espada ou adaga"
+      },
+      "guia": [
+        {
+          "id": "ler",
+          "texto": "ui.tutorial.guia.fala_res.ler.texto",
+          "porque": "ui.tutorial.guia.fala_res.ler.porque"
+        },
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_res.atacar.texto",
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_res.atacar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fala_vuln",
+      "pos": [
+        43,
+        17
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Equipe a maça e ataque o esqueleto.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 21,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Ataque um esqueleto com a maça"
+      },
+      "guia": [
+        {
+          "id": "maca",
+          "texto": "ui.tutorial.guia.fala_vuln.maca.texto",
+          "porque": "ui.tutorial.guia.fala_vuln.maca.porque",
+          "ui": "botao:inventario",
+          "dica": [
+            "ui.tutorial.guia.fala_vuln.maca.dica.1"
+          ]
+        },
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
+          "ui": "monstro:esqueleto_humano"
         }
       ]
     }

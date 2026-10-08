@@ -93,8 +93,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "resistência"
   },
   "ui.tutorial.glossario.resistencia.texto": {
-    "en": "The creature takes less damage from a type of hit, such as slashing or impact.",
-    "pt": "A criatura sofre menos dano de certo tipo de golpe, como corte ou impacto."
+    "en": "The creature takes less damage from a type of hit, such as slashing or piercing, so the number comes out lower.",
+    "pt": "A criatura sofre menos dano de certo tipo de golpe, como corte ou perfuração, e o número sai menor."
   },
   "ui.tutorial.glossario.slot.nome": {
     "en": "slot",
@@ -119,6 +119,14 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.glossario.turno.texto": {
     "en": "Your time to act. When you pass, the others act and then the turn comes back.",
     "pt": "Sua vez de agir. Quando você passa a vez, os outros agem e depois o turno volta."
+  },
+  "ui.tutorial.glossario.vulnerabilidade.nome": {
+    "en": "vulnerability",
+    "pt": "vulnerabilidade"
+  },
+  "ui.tutorial.glossario.vulnerabilidade.texto": {
+    "en": "The creature takes extra damage from a type of hit, such as impact or holy.",
+    "pt": "A criatura sofre dano extra de certo tipo de golpe, como impacto ou sagrado."
   },
   "ui.tutorial.guia.fala_0.andar.dica.1": {
     "en": "The golden ring is on the board floor, ahead of you.",
@@ -455,6 +463,38 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_atalhos.cancelar.texto": {
     "en": "Press Esc to cancel an aim or close a panel.",
     "pt": "Aperte Esc para cancelar uma mira ou fechar um painel."
+  },
+  "ui.tutorial.guia.fala_res.atacar.dica.1": {
+    "en": "Staffs and maces deal impact, which the skeleton does not resist.",
+    "pt": "Cajado e maça causam impacto, que o esqueleto não resiste."
+  },
+  "ui.tutorial.guia.fala_res.atacar.texto": {
+    "en": "Attack the skeleton with a sword or dagger and compare the damage.",
+    "pt": "Ataque o esqueleto com espada ou adaga e compare o dano."
+  },
+  "ui.tutorial.guia.fala_res.ler.porque": {
+    "en": "Each type of hit does different damage against each creature.",
+    "pt": "Cada tipo de golpe rende um dano diferente contra cada criatura."
+  },
+  "ui.tutorial.guia.fala_res.ler.texto": {
+    "en": "Check the [[resistencia]]: the skeleton absorbs 1 point of slashing and 2 of piercing.",
+    "pt": "Confira a [[resistencia]]: o esqueleto absorve 1 ponto de corte e 2 de perfuração."
+  },
+  "ui.tutorial.guia.fala_vuln.atacar.texto": {
+    "en": "Attack the skeleton with the mace: the hit does 2 extra points.",
+    "pt": "Ataque o esqueleto com a maça: o golpe causa 2 pontos a mais."
+  },
+  "ui.tutorial.guia.fala_vuln.maca.dica.1": {
+    "en": "No mace? Take it from the previous room's chest.",
+    "pt": "Sem a maça? Pegue-a no baú da sala anterior."
+  },
+  "ui.tutorial.guia.fala_vuln.maca.porque": {
+    "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
+    "pt": "Impacto é o ponto fraco do esqueleto: a [[vulnerabilidade]] soma dano."
+  },
+  "ui.tutorial.guia.fala_vuln.maca.texto": {
+    "en": "Open the bag and equip the training mace.",
+    "pt": "Abra a bolsa e equipe a maça de treino."
   },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",
