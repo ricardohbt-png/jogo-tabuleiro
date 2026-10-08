@@ -46496,6 +46496,7 @@ class GameRoom(TutorialTraining):
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
             for gid in dict.fromkeys([*m.get("guaranteed_loot", []), *equipped_drop]):
                 gdef = (
+                    (_DUNGEON_ITEM_CATALOG.get(gid) if m.get("type") == "goblin_combatente" else None) or
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
                     next((i for i in SHOP_AMMO     if i["id"] == gid), None) or
@@ -46503,6 +46504,9 @@ class GameRoom(TutorialTraining):
                 )
                 if gdef:
                     loot_items.append(deepcopy(gdef))
+            if m.get("type") == "goblin_combatente":
+                # A bolsa é a instância restante: não recriar poções consumidas.
+                loot_items.extend(deepcopy(m.get("equipment_consumables", [])))
             delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
             chest_msg = " Um **baú de saque** apareceu!" if delivery == "chest" else ""
             await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=chest_msg))

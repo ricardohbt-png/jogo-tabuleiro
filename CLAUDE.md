@@ -16,7 +16,13 @@ O subtipo nativo é explicitamente `raca_padrao`: a inferência por `ente` no no
 classificava esta ficha como vegetal e impedia aplicar equipamento.
 O Combatente não tem adaga garantida nem Arremesso (`pode_arremessar=False`);
 o Goblin Dual conserva ambos. A tabela de ouro permanece a original.
-Teste desta fatia: `python -X utf8 tools/test_goblin_combatente_equipamento.py`.
+Na morte, os IDs equipados do Combatente resolvem pelo catálogo mesclado
+`_DUNGEON_ITEM_CATALOG` (inclui o escudo da loja de armaduras), e o loot recebe
+uma cópia dos consumíveis ainda em `equipment_consumables`, com seus metadados.
+A IA genérica já cura 5 PV com a poção pequena a 50% dos PV ou menos,
+remove a dose usada e continua o ataque normal; não foi alterada.
+Testes: `python -X utf8 tools/test_goblin_combatente_equipamento.py` e
+`python -X utf8 tools/test_goblin_combatente_loot.py`.
 Spec: `docs/superpowers/specs/2026-10-08-variedade-goblin-combatente-design.md`.
 
 ### Campo de Treinamento — salas por herói (2026-10-01)
