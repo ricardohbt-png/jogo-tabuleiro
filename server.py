@@ -38329,6 +38329,8 @@ class GameRoom(TutorialTraining):
             elif "bonus_flat" in weakness:
                 total += weakness["bonus_flat"]
             vulnerability_applied = vulnerability_applied or total > antes
+            # bonus_flat negativo é resistência por categoria de arma (esqueleto vs lâmina).
+            resistance_applied = resistance_applied or total < antes
         if subtipo in ("morto_vivo", "abissal") and DMG_HOLY in damage_types:
             antes = total
             total *= 2
