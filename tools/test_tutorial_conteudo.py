@@ -125,7 +125,7 @@ class ConteudoTests(unittest.TestCase):
 
     def test_glossario_completo(self):
         esperados = {"turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia",
-                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho", "vulnerabilidade"}
+                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho", "vulnerabilidade", "sinfonia"}
         self.assertEqual(set(C.GLOSSARIO), esperados)
         for k, v in C.GLOSSARIO.items():
             for campo in ("nome", "texto"):

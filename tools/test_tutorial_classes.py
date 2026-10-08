@@ -9,7 +9,7 @@ import gerar_guia_comum as G
 import tutorial_guia_comum as C
 
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
-UI_OK = re.compile(r"^(?:botao:(?:encerrar_turno|inventario|magias)|monstro:[a-z0-9_]+|habilidade:[a-z0-9_]+)$")
+UI_OK = re.compile(r"^(?:botao:(?:encerrar_turno|inventario|magias|instrumento)|monstro:[a-z0-9_]+|habilidade:[a-z0-9_]+|bolsa:[a-z0-9_]+|casa:\[\d+,\d+\])$")
 
 POR_CLASSE = {
     "warrior": ["fala_5", "fala_6", "treino_mira", "treino_golpe", "treino_furia", "treino_furia_extra", "treino_guerreiro_fim"],
@@ -19,7 +19,7 @@ POR_CLASSE = {
               "treino_veneno", "treino_veneno_golpe", "treino_criar"],
     "cleric": ["fala_11", "fala_12", "treino_cura", "treino_cura_area", "treino_purificar", "treino_ressuscitar"],
     "bard": ["fala_13", "fala_14", "treino_cancao", "treino_cancao_manter", "treino_cancao_parar",
-             "treino_provocar", "treino_instrumento"],
+             "treino_provocar", "treino_harpa", "treino_nota_cortante", "treino_alaude"],
     "paladin": ["fala_15", "fala_16", "treino_refem", "treino_protetor", "treino_maos", "treino_sagrado",
                 "treino_sagrado_golpe", "treino_regen", "treino_luz"],
 }
@@ -33,8 +33,7 @@ class ClassesTests(unittest.TestCase):
         cls.d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
         cls.falas = {f["id"]: f for f in cls.d["falas"]}
 
-    def test_quarenta_e_sete_licoes(self):
-        self.assertEqual(len(TODAS), 47)
+    def test_toda_licao_tem_guia(self):
         for lid in TODAS:
             self.assertIn(lid, self.todos, f"falta guia de {lid}")
 

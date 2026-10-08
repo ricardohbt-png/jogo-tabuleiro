@@ -77,6 +77,16 @@ class TutorialTraining:
                 m["training_target"] = True
                 m["training_class"] = room["allowed_class"]
                 m["xp"] = 0
+        # Baú dentro de uma sala exclusiva: o que ele guarda é emprestado (some na saída)
+        # e o molde permite recolocá-lo cheio no `repetir_tutorial`.
+        self.training_state["baus_modelo"] = {}
+        for ch in self.chests.values():
+            room = self._room_containing_point(ch["pos"])
+            if room and room.get("allowed_class"):
+                for it in ch["items"]:
+                    it["tutorial_loan"] = True
+                self.training_state["baus_modelo"][room["allowed_class"]] = {
+                    "pos": list(ch["pos"]), "gold": ch["gold"], "items": deepcopy(ch["items"])}
         if self.prisoner:
             room = self._room_by_id(self.prisoner.get("room_id"))
             if room and room.get("allowed_class") == "paladin":
@@ -84,6 +94,33 @@ class TutorialTraining:
                 self.prisoner["nome"] = "Refém de treinamento"
                 # Molde para devolver o refém depois de dispensado (repetir_tutorial).
                 self.training_state["refem_modelo"] = deepcopy(self.prisoner)
+
+    def _training_devolver_emprestimos(self, p):
+        """Tira da bolsa e das mãos o que o baú da sala emprestou; o Alaúde do Bardo volta à mão do escudo."""
+        p["bag"] = [i for i in p.get("bag", []) if not i.get("tutorial_loan")]
+        gear = p.get("gear") or {}
+        off = gear.get("off_hand")
+        if off and off.get("tutorial_loan"):
+            api = self._tutorial_api()
+            alaude = next((i for i in p["bag"] if i.get("tipo_item") == "instrumento"
+                           and i.get("base") == "alaude"), None)
+            if alaude:
+                p["bag"].remove(alaude)
+            gear["off_hand"] = alaude or api.criar_instrumento("alaude", "velho")
+
+    def _training_recolocar_bau(self, cls):
+        """Devolve o baú da sala (cheio) se ele sumiu ou perdeu o que emprestava."""
+        modelo = self.training_state.get("baus_modelo", {}).get(cls)
+        if not modelo:
+            return
+        bau = next((c for c in self.chests.values() if list(c["pos"]) == modelo["pos"]), None)
+        if bau is None:
+            self._spawn_chest(modelo["pos"], modelo["gold"], modelo["items"])
+            return
+        ids = {i.get("id") for i in bau["items"]}
+        for it in modelo["items"]:
+            if it.get("id") not in ids:
+                bau["items"].append(deepcopy(it))
 
     def _training_refem_pode_ir(self, pr, x, y):
         """O refém do exercício anda, mas só dentro da própria sala."""
@@ -354,6 +391,8 @@ class TutorialTraining:
         p["licoes_feitas"] = [i for i in p.get("licoes_feitas", []) if i not in ids]
         p["licao_progresso"] = {k:v for k,v in p.get("licao_progresso", {}).items() if k not in ids}
         self.licoes_feitas.difference_update(ids)
+        self._training_devolver_emprestimos(p)
+        self._training_recolocar_bau(p["class_id"])
         modelo = self.training_state.get("refem_modelo")
         if p["class_id"] == "paladin" and modelo and (self.prisoner is None or self.prisoner.get("training_refem")):
             self.prisoner = deepcopy(modelo)   # volta à casa de origem, inteiro
@@ -367,7 +406,7 @@ class TutorialTraining:
         if not self.training_mode:
             return
         for p in self.players.values():
-            p["bag"] = [i for i in p.get("bag", []) if not i.get("tutorial_loan")]
+            self._training_devolver_emprestimos(p)
             vid = self.training_state.get(p.get("class_id"), {}).get("loan_poison")
             if vid:
                 self._set_weapon_poison_slots(p, [v for v in self._weapon_poison_slots(p) if v != vid])

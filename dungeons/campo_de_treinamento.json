@@ -2038,6 +2038,19 @@
         }
       ],
       "key_objective": false
+    },
+    {
+      "pos": [
+        10,
+        22
+      ],
+      "gold": 0,
+      "items": [
+        {
+          "id": "instrumento_harpa_velho"
+        }
+      ],
+      "key_objective": false
     }
   ],
   "traps": [
@@ -4048,6 +4061,120 @@
       ]
     },
     {
+      "id": "treino_harpa",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Abra o baú e pegue a Harpa Velha; depois equipe-a na mão do escudo. O Alaúde vai para a bolsa.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 4,
+      "tarefa": {
+        "tipo": "equipar",
+        "vezes": 1,
+        "texto_curto": "Pegue a Harpa Velha e equipe-a",
+        "alvo": "instrumento_harpa_velho"
+      },
+      "guia": [
+        {
+          "id": "bau",
+          "texto": "ui.tutorial.guia.treino_harpa.bau.texto",
+          "porque": "ui.tutorial.guia.treino_harpa.bau.porque",
+          "ui": "casa:[10,22]",
+          "dica": [
+            "ui.tutorial.guia.treino_harpa.bau.dica.1"
+          ]
+        },
+        {
+          "id": "equipar",
+          "texto": "ui.tutorial.guia.treino_harpa.equipar.texto",
+          "porque": "ui.tutorial.guia.treino_harpa.equipar.porque",
+          "ui": "bolsa:instrumento_harpa_velho"
+        }
+      ]
+    },
+    {
+      "id": "treino_nota_cortante",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Fique na mesma linha ou coluna do boneco, a até 3 casas. Toque a Harpa e escolha a direção: a Nota Cortante atinge a linha toda.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 5,
+      "tarefa": {
+        "tipo": "usar_instrumento",
+        "vezes": 1,
+        "texto_curto": "Use a Nota Cortante no boneco",
+        "alvo": "harpa"
+      },
+      "guia": [
+        {
+          "id": "linha",
+          "texto": "ui.tutorial.guia.treino_nota_cortante.linha.texto",
+          "porque": "ui.tutorial.guia.treino_nota_cortante.linha.porque",
+          "ui": "monstro:boneco_treino"
+        },
+        {
+          "id": "tocar",
+          "texto": "ui.tutorial.guia.treino_nota_cortante.tocar.texto",
+          "porque": "ui.tutorial.guia.treino_nota_cortante.tocar.porque",
+          "ui": "botao:instrumento",
+          "dica": [
+            "ui.tutorial.guia.treino_nota_cortante.tocar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "treino_alaude",
+      "pos": [
+        10,
+        23
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Equipe o Alaúde Velho de volta na mão do escudo. Ele é passivo: não tem botão, mas reforça a Canção Heroica.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "sala_exclusiva": true,
+      "ordem": 6,
+      "tarefa": {
+        "tipo": "equipar",
+        "vezes": 1,
+        "texto_curto": "Equipe o Alaúde de volta",
+        "alvo": "instrumento"
+      },
+      "guia": [
+        {
+          "id": "alaude",
+          "texto": "ui.tutorial.guia.treino_alaude.alaude.texto",
+          "porque": "ui.tutorial.guia.treino_alaude.alaude.porque",
+          "ui": "bolsa:instrumento"
+        }
+      ]
+    },
+    {
       "id": "treino_cancao",
       "pos": [
         10,
@@ -4057,25 +4184,29 @@
         "nome": "Instrutor de Treinamento",
         "emoji": "🎓"
       },
-      "texto": "Ative Canção Heroica e escolha um benefício disponível. A canção beneficia você e aliados dentro do seu alcance. O aprendiz permite observar a aura.",
+      "texto": "Ative a Canção Heroica marcando Acerto. A Sinfonia Heroica do Alaúde soma +1 extra: o acerto sobe de +1 para +2. Confira no registro.",
       "trigger": {
         "tipo": "sala"
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 4,
+      "ordem": 7,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "cancao_heroica",
         "vezes": 1,
-        "texto_curto": "Ative a Canção Heroica"
+        "texto_curto": "Ative a Canção com Acerto e o Alaúde",
+        "requer_sinfonia": true
       },
       "guia": [
         {
           "id": "cancao",
           "texto": "ui.tutorial.guia.treino_cancao.cancao.texto",
           "porque": "ui.tutorial.guia.treino_cancao.cancao.porque",
-          "ui": "habilidade:cancao_heroica"
+          "ui": "habilidade:cancao_heroica",
+          "dica": [
+            "ui.tutorial.guia.treino_cancao.cancao.dica.1"
+          ]
         }
       ]
     },
@@ -4095,7 +4226,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 5,
+      "ordem": 8,
       "tarefa": {
         "tipo": "manter_cancao",
         "vezes": 1,
@@ -4126,7 +4257,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 6,
+      "ordem": 9,
       "tarefa": {
         "tipo": "encerrar_cancao",
         "vezes": 1,
@@ -4156,7 +4287,7 @@
       },
       "classe": "bard",
       "sala_exclusiva": true,
-      "ordem": 7,
+      "ordem": 10,
       "tarefa": {
         "tipo": "usar_habilidade",
         "alvo": "provocacao",
@@ -4169,39 +4300,6 @@
           "texto": "ui.tutorial.guia.treino_provocar.provocar.texto",
           "porque": "ui.tutorial.guia.treino_provocar.provocar.porque",
           "ui": "habilidade:provocacao"
-        }
-      ]
-    },
-    {
-      "id": "treino_instrumento",
-      "pos": [
-        10,
-        23
-      ],
-      "falante": {
-        "nome": "Instrutor de Treinamento",
-        "emoji": "🎓"
-      },
-      "texto": "Abra as opções do instrumento equipado e use sua habilidade num alvo compatível. Observe como o instrumento complementa seu repertório.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "bard",
-      "requisitos": {
-        "instrumento": true
-      },
-      "sala_exclusiva": true,
-      "ordem": 8,
-      "tarefa": {
-        "tipo": "usar_instrumento",
-        "vezes": 1,
-        "texto_curto": "Use seu instrumento"
-      },
-      "guia": [
-        {
-          "id": "instrumento",
-          "texto": "ui.tutorial.guia.treino_instrumento.instrumento.texto",
-          "porque": "ui.tutorial.guia.treino_instrumento.instrumento.porque"
         }
       ]
     },
@@ -4822,7 +4920,7 @@
         "tipo": "sala"
       },
       "classe": "bard",
-      "ordem": 9,
+      "ordem": 11,
       "tarefa": {
         "tipo": "mover_ate",
         "alvo": [

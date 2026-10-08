@@ -115,8 +115,8 @@ lesson('bard','treino_cancao_parar',5,None,
        'Desative a Canção Heroica para encerrar o efeito e seu consumo de recursos. Não a deixe ativa sem necessidade.', 'Encerre a Canção Heroica',verb='encerrar_cancao')
 lesson('bard','treino_provocar',6,'provocacao',
        'Selecione o boneco e use Provocação. Confira o teste de resistência e as consequências do efeito. Uma resistência do inimigo não torna seu uso inválido.', 'Use Provocação no boneco')
-lesson('bard','treino_instrumento',7,None,
-       'Abra as opções do instrumento equipado e use sua habilidade num alvo compatível. Observe como o instrumento complementa seu repertório.', 'Use seu instrumento',verb='usar_instrumento',requirements={'instrumento':True})
+import aplicar_fatia11_tutorial as _F11   # baú da Harpa Velha, Nota Cortante e Sinfonia do Alaúde (renumera o Bardo)
+_F11.aplicar(d)
 
 lesson('paladin','treino_refem',3,'__prisioneiro__',
        'O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.', 'Liberte o refém',verb='libertar_refem')

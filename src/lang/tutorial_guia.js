@@ -96,6 +96,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "The creature takes less damage from a type of hit, such as slashing or piercing, so the number comes out lower.",
     "pt": "A criatura sofre menos dano de certo tipo de golpe, como corte ou perfuração, e o número sai menor."
   },
+  "ui.tutorial.glossario.sinfonia.nome": {
+    "en": "Heroic Symphony",
+    "pt": "Sinfonia Heroica"
+  },
+  "ui.tutorial.glossario.sinfonia.texto": {
+    "en": "Lute passive: adds +1 to the stats it covers in the Heroic Song. The Old Lute covers only attack.",
+    "pt": "Passiva do Alaúde: soma +1 aos atributos que ele cobre na Canção Heroica. O Alaúde Velho cobre só o acerto."
+  },
   "ui.tutorial.glossario.slot.nome": {
     "en": "slot",
     "pt": "slot"
@@ -560,6 +568,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Open the marked door and walk in: it is your hero's exclusive room.",
     "pt": "Abra a porta marcada e entre: é a sala exclusiva do seu herói."
   },
+  "ui.tutorial.guia.treino_alaude.alaude.porque": {
+    "en": "The Lute is passive: it has no button, but it reinforces the Heroic Song.",
+    "pt": "O Alaúde é passivo: não tem botão, mas reforça a Canção Heroica."
+  },
+  "ui.tutorial.guia.treino_alaude.alaude.texto": {
+    "en": "Open your bag and equip the Old Lute again.",
+    "pt": "Abra a bolsa e equipe o Alaúde Velho de volta."
+  },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",
     "pt": "O exercício só conta quando a metamagia entra no lançamento."
@@ -572,13 +588,17 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Arm Enhance Spell and cast a spell that allows a save.",
     "pt": "Arme Aprimorar Magia e lance uma magia com teste."
   },
+  "ui.tutorial.guia.treino_cancao.cancao.dica.1": {
+    "en": "Without Attack ticked the Symphony reinforces nothing: turn the song off and retry.",
+    "pt": "Sem Acerto marcado, a Sinfonia não reforça nada: desative a canção e tente de novo."
+  },
   "ui.tutorial.guia.treino_cancao.cancao.porque": {
-    "en": "The song benefits you and the allies within range.",
-    "pt": "A canção beneficia você e os aliados dentro do alcance."
+    "en": "The Old Lute's [[sinfonia]] adds +1 to attack: the song goes from +1 to +2.",
+    "pt": "A [[sinfonia]] do Alaúde Velho soma +1 ao acerto: a canção sobe de +1 para +2."
   },
   "ui.tutorial.guia.treino_cancao.cancao.texto": {
-    "en": "Click Heroic Song and choose a benefit.",
-    "pt": "Clique em Canção Heroica e escolha um benefício."
+    "en": "Click Heroic Song and tick Attack.",
+    "pt": "Clique em Canção Heroica e marque Acerto."
   },
   "ui.tutorial.guia.treino_cancao_manter.manter.porque": {
     "en": "It charges [[manutencao]] in food and water every round.",
@@ -756,13 +776,25 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click the marked square to guide the hostage there.",
     "pt": "Clique na casa marcada para guiar o refém até lá."
   },
-  "ui.tutorial.guia.treino_instrumento.instrumento.porque": {
-    "en": "The instrument rounds out your bard repertoire.",
-    "pt": "O instrumento complementa seu repertório de bardo."
+  "ui.tutorial.guia.treino_harpa.bau.dica.1": {
+    "en": "Click the chest, then the harp, to put it in your bag.",
+    "pt": "Clique no baú e depois na harpa para guardá-la na bolsa."
   },
-  "ui.tutorial.guia.treino_instrumento.instrumento.texto": {
-    "en": "Open the instrument options and use its ability on a target.",
-    "pt": "Abra as opções do instrumento e use a habilidade num alvo."
+  "ui.tutorial.guia.treino_harpa.bau.porque": {
+    "en": "Each instrument grants an ability; the harp throws a blade of sound.",
+    "pt": "Cada instrumento dá uma habilidade; a harpa lança uma lâmina de som."
+  },
+  "ui.tutorial.guia.treino_harpa.bau.texto": {
+    "en": "Stand next to the chest and take the Old Harp.",
+    "pt": "Fique ao lado do baú e pegue a Harpa Velha."
+  },
+  "ui.tutorial.guia.treino_harpa.equipar.porque": {
+    "en": "Equipping is a [[acao_livre]]; the Lute leaves the shield hand and goes to your bag.",
+    "pt": "Equipar é [[acao_livre]]; o Alaúde sai da mão do escudo e vai para a bolsa."
+  },
+  "ui.tutorial.guia.treino_harpa.equipar.texto": {
+    "en": "Open your bag and equip the Old Harp in the shield hand.",
+    "pt": "Abra a bolsa e equipe a Harpa Velha na mão do escudo."
   },
   "ui.tutorial.guia.treino_luz.luz.porque": {
     "en": "See your vision, attack, damage and defense change.",
@@ -803,6 +835,26 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.treino_mira.mira.texto": {
     "en": "Click Precise Aim and then the dummy.",
     "pt": "Clique em Mira Certeira e depois no boneco."
+  },
+  "ui.tutorial.guia.treino_nota_cortante.linha.porque": {
+    "en": "The blade of sound flies straight and cannot turn.",
+    "pt": "A lâmina de som segue em linha reta e não faz curva."
+  },
+  "ui.tutorial.guia.treino_nota_cortante.linha.texto": {
+    "en": "Stand in the dummy's row or column, up to 3 squares away.",
+    "pt": "Fique na mesma linha ou coluna do boneco, a até 3 casas."
+  },
+  "ui.tutorial.guia.treino_nota_cortante.tocar.dica.1": {
+    "en": "A two-handed instrument needs your main action free this turn.",
+    "pt": "Instrumento de duas mãos exige a ação principal livre neste turno."
+  },
+  "ui.tutorial.guia.treino_nota_cortante.tocar.porque": {
+    "en": "The target makes a Reflex [[teste_resistencia]]: resisting halves the damage.",
+    "pt": "O alvo faz um [[teste_resistencia]] de Reflexos: resistir corta o dano pela metade."
+  },
+  "ui.tutorial.guia.treino_nota_cortante.tocar.texto": {
+    "en": "Click Slicing Note and pick the dummy's direction.",
+    "pt": "Clique em Nota Cortante e escolha a direção do boneco."
   },
   "ui.tutorial.guia.treino_protetor.proteger.porque": {
     "en": "The damage is split between you and your share is reduced.",

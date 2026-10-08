@@ -78,10 +78,11 @@ GUIA_DICA_POR_ERRO = {
     "erro.nao_e_o_seu_turno": "fora_da_vez",
     "erro.acao_principal_ja_usada_neste_turno": "sem_acao",
     "erro.alvo_invalido": "alvo_errado",
+    "erro.nenhum_inimigo_na_linha": "sem_alvo_na_linha",
 }
 GUIA_DICA_POR_PREFIXO = (("erro.alvo_fora_", "longe_do_alvo"),)
 # Estes dois motivos só fazem sentido quando a tarefa pendente tem um alvo de combate.
-GUIA_DICA_EXIGE_ALVO = ("alvo_errado", "longe_do_alvo")
+GUIA_DICA_EXIGE_ALVO = ("alvo_errado", "longe_do_alvo", "sem_alvo_na_linha")
 GUIA_TAREFAS_COM_ALVO = ("atacar", "matar", "usar_habilidade", "usar_tecnica",
                          "arremessar_item", "usar_instrumento", "proteger", "libertar_refem",
                          "desarmar_armadilha")
@@ -18282,6 +18283,9 @@ class GameRoom(TutorialTraining):
             return
         if tar.get("requer_sagrado") and not p.get("golpe_sagrado_ativo"):
             return
+        if tar.get("requer_sinfonia") and not (contexto or {}).get("sinfonia"):
+            await self._guia_dica(p["id"], "sem_sinfonia")
+            return
         if tar.get("alvo_id") and (contexto or {}).get("alvo_id") != tar["alvo_id"]:
             return
         if tar.get("cura_efetiva") and (contexto or {}).get("cura", 0) <= 0:
@@ -22736,7 +22740,13 @@ class GameRoom(TutorialTraining):
         labels = [T("ui.cancao.atributo." + x) for x in atrib_validos]
         await self.gm_say(
             T("narracao.entoa_a_cancao_heroica_aliados_em_quadra", heroi=p['name'], labels=labels, CANCAO_RAIO=CANCAO_RAIO, custo_fome=custo['fome'], custo_sede=custo['sede']))
-        await self._licao_evento(p, "usar_habilidade", alvo="cancao_heroica")
+        # Sinfonia Heroica (Alaúde): atributos escolhidos que ganharam +1 do instrumento.
+        sinfonia = [x for x in atrib_validos if self._sinfonia_bonus(p, x) > 0]
+        if sinfonia:
+            await self.gm_say(T("narracao.sinfonia_reforca_a_cancao", heroi=p['name'],
+                                labels=[T("ui.cancao.atributo." + x) for x in sinfonia]))
+        await self._licao_evento(p, "usar_habilidade", alvo="cancao_heroica",
+                                 contexto={"sinfonia": bool(sinfonia)})
         await self.push_state()
 
     async def handle_desativar_cancao(self, pid, data=None):

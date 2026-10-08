@@ -17728,6 +17728,7 @@ function _bardInstrumentoBtn(me){
   if(st.duracao != null) detalhes.push(`${st.duracao} rodadas`);
   const btn = document.createElement('button');
   btn.className = 'skill-btn';
+  btn.dataset.guia = 'botao:instrumento';   // halo do tutorial guiado (lição da Nota Cortante)
   btn.disabled = !disponivel;
   btn.title = `${b.habilidade_nome} — 🍖${st.custo_fome ?? 0} 💧${st.custo_sede ?? 0}`
     + (detalhes.length ? ` — ${detalhes.join(' · ')}` : '');

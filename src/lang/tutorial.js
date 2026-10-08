@@ -32,6 +32,14 @@ window.LANG_TUTORIAL = {
     "en": "That is not the exercise target. Look for the highlighted one.",
     "pt": "Esse não é o alvo do exercício. Procure o que está destacado na tela."
   },
+  "ui.tutorial.dica_erro.sem_sinfonia": {
+    "en": "The Symphony only reinforces the stats your Lute covers. Turn the song off and sing it again choosing Attack.",
+    "pt": "A Sinfonia só reforça os atributos que o Alaúde cobre. Desative a canção e entoe de novo escolhendo Acerto."
+  },
+  "ui.tutorial.dica_erro.sem_alvo_na_linha": {
+    "en": "No dummy on that line. Stand in the same row or column as the dummy, up to 3 squares away.",
+    "pt": "Nenhum boneco nessa linha. Fique na mesma linha ou coluna do boneco, a até 3 casas."
+  },
   "ui.tutorial.resultado.acerto": {
     "en": "You rolled {roll} + {bonus} = {total} against AC {ca}: hit!",
     "pt": "Você rolou {roll} + {bonus} = {total} contra CA {ca}: acertou!"

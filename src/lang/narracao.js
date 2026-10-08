@@ -1076,6 +1076,10 @@ window.LANG_NARRACAO = {
     "en": "🎵 **{heroi}** strikes up the **Heroic Song** [{labels}]! Allies within {CANCAO_RAIO} squares are inspired (🍖-{custo_fome} 💧-{custo_sede}).",
     "pt": "🎵 **{heroi}** entoa a **Canção Heroica** [{labels}]! Aliados em {CANCAO_RAIO} quadrados são inspirados (🍖-{custo_fome} 💧-{custo_sede})."
   },
+  "narracao.sinfonia_reforca_a_cancao": {
+    "en": "🪕 The **Heroic Symphony** of the Lute reinforces **{heroi}**'s song: +1 extra on [{labels}].",
+    "pt": "🪕 A **Sinfonia Heroica** do Alaúde reforça a canção de **{heroi}**: +1 extra em [{labels}]."
+  },
   "narracao.entoa_o_dueto_marcial_por_rodada_s": {
     "en": "🎼 **{heroi}** sings the **Martial Duet** for {st_duracao} round(s)!",
     "pt": "🎼 **{heroi}** entoa o **Dueto Marcial** por {st_duracao} rodada(s)!"
