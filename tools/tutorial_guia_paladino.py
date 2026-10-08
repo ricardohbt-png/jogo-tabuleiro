@@ -3,7 +3,7 @@ from tutorial_guia_comum import P
 
 GUIA = {
     "fala_15": [
-        P("atacar", ("Ao trabalho: ataque o boneco.", "To work: attack the dummy."),
+        P("atacar", ("Ataque o boneco de treino.", "Attack the training dummy."),
           porque=("O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]].",
                   "The [[d20]] plus your attack bonus must match or beat the [[ca]]."),
           ui="monstro:boneco_treino"),
@@ -19,13 +19,13 @@ GUIA = {
           porque=("Depois do resgate você poderá protegê-lo e curá-lo.", "After the rescue you can protect and heal him.")),
     ],
     "treino_protetor": [
-        P("proteger", ("Ao lado do refém, use Protetor nele e encerre o turno.", "Next to the hostage, use Protector on him and end your turn."),
+        P("proteger", ("Fique ao lado do refém, use Protetor nele e encerre o turno.", "Stand next to the hostage, use Protector on him and end your turn."),
           porque=("O dano se divide entre vocês e a sua parte é reduzida.",
                   "The damage is split between you and your share is reduced."),
           ui="botao:encerrar_turno"),
     ],
     "treino_maos": [
-        P("curar", ("Ao lado do refém ferido, use Imposição das Mãos.", "Next to the wounded hostage, use Lay on Hands."),
+        P("curar", ("Fique ao lado do refém ferido e use Imposição das Mãos.", "Stand next to the wounded hostage and use Lay on Hands."),
           porque=("A lição pede a cura desse mesmo refém.", "The lesson asks you to heal that same hostage."),
           ui="habilidade:imposicao_maos"),
     ],

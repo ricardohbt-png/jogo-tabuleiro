@@ -96,7 +96,7 @@ GUIA = {
           dica=[("O botão verde grande fica embaixo, à direita.", "The big green button is bottom-right.")]),
     ],
     "fala_4": [
-        P("porta", ("Atravesse a porta aberta ao fundo.", "Walk through the open door at the back."),
+        P("porta", ("Ande até a porta aberta ao fundo.", "Walk to the open door at the back."),
           porque=("Porta aberta deixa passar; em outras masmorras, abrir porta é gratuito.",
                   "An open door lets you through; in other dungeons, opening a door is free."),
           ui="porta:[13,15]",

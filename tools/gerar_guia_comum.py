@@ -19,9 +19,9 @@ MODULOS_CLASSES = ("tutorial_guia_guerreiro", "tutorial_guia_mago", "tutorial_gu
                    "tutorial_guia_clerigo", "tutorial_guia_bardo", "tutorial_guia_paladino")
 
 
-def guia_todos():
-    """{lição_id: [passos]} de TODOS os módulos (trilha comum + classes)."""
-    out = dict(C.GUIA)
+def modulos_de_guia():
+    """Lista de dicts {lição_id: [passos]}: trilha comum + um por classe presente."""
+    mods = [C.GUIA]
     for nome in MODULOS_CLASSES:
         try:
             mod = importlib.import_module(nome)
@@ -29,7 +29,15 @@ def guia_todos():
             if e.name != nome:
                 raise
             continue
-        for lid, passos in mod.GUIA.items():
+        mods.append(mod.GUIA)
+    return mods
+
+
+def guia_todos():
+    """{lição_id: [passos]} de TODOS os módulos (trilha comum + classes)."""
+    out = {}
+    for guia in modulos_de_guia():
+        for lid, passos in guia.items():
             if lid in out:
                 raise ValueError(f"lição repetida entre módulos: {lid}")
             out[lid] = passos

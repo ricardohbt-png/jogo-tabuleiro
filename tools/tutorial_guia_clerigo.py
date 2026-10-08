@@ -27,13 +27,13 @@ GUIA = {
           ui="habilidade:cura_area"),
     ],
     "treino_purificar": [
-        P("purificar", ("Ao lado do Aprendiz 1, use Purificação e escolha Veneno.", "Next to Apprentice 1, use Purify and choose Poison."),
+        P("purificar", ("Fique ao lado do Aprendiz 1, use Purificação e escolha Veneno.", "Stand next to Apprentice 1, use Purify and choose Poison."),
           porque=("Ele está cego por um veneno simulado; o efeito desaparece.",
                   "He is blinded by a simulated poison; the effect disappears."),
           ui="habilidade:purificacao"),
     ],
     "treino_ressuscitar": [
-        P("ressuscitar", ("Ao lado do Aprendiz 1, use Ressurreição.", "Next to Apprentice 1, use Resurrection."),
+        P("ressuscitar", ("Fique ao lado do Aprendiz 1 e use Ressurreição.", "Stand next to Apprentice 1 and use Resurrection."),
           porque=("Ele simula um aliado caído e volta com a vida que sua habilidade permite.",
                   "He simulates a fallen ally and returns with the life your ability allows."),
           ui="habilidade:ressurreicao"),

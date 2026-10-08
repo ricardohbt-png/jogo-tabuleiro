@@ -10,7 +10,7 @@ GUIA = {
           dica=[("Ande até ficar ao lado do boneco e clique nele.", "Walk next to the dummy and click it.")]),
     ],
     "fala_6": [
-        P("matar", ("Continue atacando até derrubar o boneco.", "Keep attacking until the dummy falls."),
+        P("matar", ("Ataque o boneco repetidamente até derrubá-lo.", "Attack the dummy repeatedly until it falls."),
           porque=("Um 20 natural é [[critico]]. Você é o muro do grupo: aguenta e devolve.",
                   "A natural 20 is a [[critico]]. You are the group's wall: you take hits and give them back."),
           ui="monstro:boneco_treino"),

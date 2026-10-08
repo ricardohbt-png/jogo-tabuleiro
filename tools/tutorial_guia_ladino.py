@@ -26,7 +26,7 @@ GUIA = {
                   "If the test fails, try again: the room restores the mechanism.")),
     ],
     "treino_esconder": [
-        P("esconder", ("Perto do boneco, use Esconder nas Sombras.", "Near the dummy, use Hide in the Shadows."),
+        P("esconder", ("Fique perto do boneco e use Esconder nas Sombras.", "Stay near the dummy and use Hide in the Shadows."),
           porque=("É ação bônus: dá para atacar na mesma rodada depois de se esconder.",
                   "It is a bonus action: you can attack in the same round after hiding."),
           ui="habilidade:esconder_sombras"),

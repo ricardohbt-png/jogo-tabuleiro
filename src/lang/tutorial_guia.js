@@ -193,8 +193,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]]."
   },
   "ui.tutorial.guia.fala_15.atacar.texto": {
-    "en": "To work: attack the dummy.",
-    "pt": "Ao trabalho: ataque o boneco."
+    "en": "Attack the training dummy.",
+    "pt": "Ataque o boneco de treino."
   },
   "ui.tutorial.guia.fala_16.matar.porque": {
     "en": "Holy Strike adds a die to every attack: you are the line between the group and the floor.",
@@ -381,8 +381,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Porta aberta deixa passar; em outras masmorras, abrir porta é gratuito."
   },
   "ui.tutorial.guia.fala_4.porta.texto": {
-    "en": "Walk through the open door at the back.",
-    "pt": "Atravesse a porta aberta ao fundo."
+    "en": "Walk to the open door at the back.",
+    "pt": "Ande até a porta aberta ao fundo."
   },
   "ui.tutorial.guia.fala_5.atacar.dica.1": {
     "en": "Walk next to the dummy and click it.",
@@ -401,8 +401,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Um 20 natural é [[critico]]. Você é o muro do grupo: aguenta e devolve."
   },
   "ui.tutorial.guia.fala_6.matar.texto": {
-    "en": "Keep attacking until the dummy falls.",
-    "pt": "Continue atacando até derrubar o boneco."
+    "en": "Attack the dummy repeatedly until it falls.",
+    "pt": "Ataque o boneco repetidamente até derrubá-lo."
   },
   "ui.tutorial.guia.fala_7.atacar.porque": {
     "en": "The staff hits like any weapon, but the Grimoire wins battles.",
@@ -525,8 +525,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "É ação bônus: dá para atacar na mesma rodada depois de se esconder."
   },
   "ui.tutorial.guia.treino_esconder.esconder.texto": {
-    "en": "Near the dummy, use Hide in the Shadows.",
-    "pt": "Perto do boneco, use Esconder nas Sombras."
+    "en": "Stay near the dummy and use Hide in the Shadows.",
+    "pt": "Fique perto do boneco e use Esconder nas Sombras."
   },
   "ui.tutorial.guia.treino_estender_magia.estender.porque": {
     "en": "It adds duration to an effect that persists.",
@@ -633,8 +633,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "A lição pede a cura desse mesmo refém."
   },
   "ui.tutorial.guia.treino_maos.curar.texto": {
-    "en": "Next to the wounded hostage, use Lay on Hands.",
-    "pt": "Ao lado do refém ferido, use Imposição das Mãos."
+    "en": "Stand next to the wounded hostage and use Lay on Hands.",
+    "pt": "Fique ao lado do refém ferido e use Imposição das Mãos."
   },
   "ui.tutorial.guia.treino_mira.mira.dica.1": {
     "en": "The ability button is in the actions panel, on the right.",
@@ -653,8 +653,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O dano se divide entre vocês e a sua parte é reduzida."
   },
   "ui.tutorial.guia.treino_protetor.proteger.texto": {
-    "en": "Next to the hostage, use Protector on him and end your turn.",
-    "pt": "Ao lado do refém, use Protetor nele e encerre o turno."
+    "en": "Stand next to the hostage, use Protector on him and end your turn.",
+    "pt": "Fique ao lado do refém, use Protetor nele e encerre o turno."
   },
   "ui.tutorial.guia.treino_provocar.provocar.porque": {
     "en": "The target makes a [[teste_resistencia]]; resisting does not invalidate the use.",
@@ -669,8 +669,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ele está cego por um veneno simulado; o efeito desaparece."
   },
   "ui.tutorial.guia.treino_purificar.purificar.texto": {
-    "en": "Next to Apprentice 1, use Purify and choose Poison.",
-    "pt": "Ao lado do Aprendiz 1, use Purificação e escolha Veneno."
+    "en": "Stand next to Apprentice 1, use Purify and choose Poison.",
+    "pt": "Fique ao lado do Aprendiz 1, use Purificação e escolha Veneno."
   },
   "ui.tutorial.guia.treino_refem.libertar.porque": {
     "en": "After the rescue you can protect and heal him.",
@@ -693,8 +693,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ele simula um aliado caído e volta com a vida que sua habilidade permite."
   },
   "ui.tutorial.guia.treino_ressuscitar.ressuscitar.texto": {
-    "en": "Next to Apprentice 1, use Resurrection.",
-    "pt": "Ao lado do Aprendiz 1, use Ressurreição."
+    "en": "Stand next to Apprentice 1 and use Resurrection.",
+    "pt": "Fique ao lado do Aprendiz 1 e use Ressurreição."
   },
   "ui.tutorial.guia.treino_reviver.aproximar.texto": {
     "en": "Walk next to the training corpse.",

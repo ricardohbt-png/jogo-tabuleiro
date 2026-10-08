@@ -129,5 +129,35 @@ class GeradorTests(unittest.TestCase):
         self.assertEqual(arq, G.render_lang(), "rode: python tools/gerar_guia_comum.py")
 
 
+VERBOS_PT = ("clique", "ande", "ataque", "equipe", "abra", "use", "beba", "coma", "pegue",
+             "arraste", "selecione", "escolha", "encerre", "aperte", "pressione", "lance",
+             "arremesse", "unte", "ative", "desative", "fique", "aproxime", "toque", "arme",
+             "cure", "derrube", "acerte", "esconda", "desarme", "crie", "comande", "liberte",
+             "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque")
+VAGOS_PT = ("mostre-me", "me mostra", "mostre", "demonstre", "veja como", "observe")
+
+
+def _primeira_palavra(pt):
+    return re.sub(r"\[\[[a-z0-9_]+\]\]", "x", pt).strip().lower().split()[0].strip(".,:;!?")
+
+
+class RedacaoAcionavelTests(unittest.TestCase):
+    def _todos(self):
+        for modulo in G.modulos_de_guia():
+            for lid, passos in modulo.items():
+                for p in passos:
+                    yield lid, p
+
+    def test_todo_passo_com_ui_comeca_por_verbo_de_acao(self):
+        ruins = [f"{lid}/{p['id']}: {p['texto'][0]!r}" for lid, p in self._todos()
+                 if p.get("ui") and _primeira_palavra(p["texto"][0]) not in VERBOS_PT]
+        self.assertEqual(ruins, [], "\n".join(ruins))
+
+    def test_nenhum_texto_pede_para_so_mostrar(self):
+        ruins = [f"{lid}/{p['id']}: {p['texto'][0]!r}" for lid, p in self._todos()
+                 if any(p["texto"][0].lower().startswith(v) for v in VAGOS_PT)]
+        self.assertEqual(ruins, [], "\n".join(ruins))
+
+
 if __name__ == "__main__":
     unittest.main()

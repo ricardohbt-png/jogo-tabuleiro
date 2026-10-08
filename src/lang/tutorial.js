@@ -45,12 +45,12 @@ window.LANG_TUTORIAL = {
     "pt": "Você rolou {roll} + {bonus} = {total} contra CA {ca}: errou. Tente de novo."
   },
   "ui.tutorial.modelo.guild.aprendeu": {
-    "en": "You learned {nome}. Repeat the exercise to see your new numbers.",
-    "pt": "Você aprendeu {nome}. Repita o exercício para ver seus novos valores."
+    "en": "Repeat the exercise to try {nome} and see your new numbers.",
+    "pt": "Repita o exercício com {nome} e veja seus novos valores."
   },
   "ui.tutorial.modelo.guild.repita": {
-    "en": "Use the ability again and watch the values change.",
-    "pt": "Use a habilidade de novo e observe os valores mudarem."
+    "en": "Use the ability again and compare the new values.",
+    "pt": "Use a habilidade de novo e compare os novos valores."
   },
   "ui.tutorial.modelo.magia.abrir": {
     "en": "Open the Grimoire with the spells button.",
