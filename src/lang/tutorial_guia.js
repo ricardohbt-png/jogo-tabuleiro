@@ -448,6 +448,38 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Press Esc to cancel an aim or close a panel.",
     "pt": "Aperte Esc para cancelar uma mira ou fechar um painel."
   },
+  "ui.tutorial.guia.fala_hostilidade.abrir.porque": {
+    "en": "The door keeps the monsters dormant until the room is opened.",
+    "pt": "A porta mantém os monstros adormecidos até a sala ser aberta."
+  },
+  "ui.tutorial.guia.fala_hostilidade.abrir.texto": {
+    "en": "Open the room door to reveal what is inside.",
+    "pt": "Abra a porta da sala para revelar o que há dentro."
+  },
+  "ui.tutorial.guia.fala_hostilidade.bardo.porque": {
+    "en": "The Bard's passive reveals useful information before you choose how to act.",
+    "pt": "A passiva do Bardo revela informações úteis antes de escolher como agir."
+  },
+  "ui.tutorial.guia.fala_hostilidade.bardo.texto": {
+    "en": "Check the Bard's Knowledge of Legends: “hostile to all monsters.”",
+    "pt": "Confira no Conhecimento das Lendas do Bardo: “hostil a todos os monstros”."
+  },
+  "ui.tutorial.guia.fala_hostilidade.granada.porque": {
+    "en": "The blast hits an area; wait for enemies to group together to get more from the item.",
+    "pt": "A explosão atinge uma área; espere os inimigos se agruparem para aproveitar melhor o item."
+  },
+  "ui.tutorial.guia.fala_hostilidade.granada.texto": {
+    "en": "Take the Superior Grenade from the chest and throw it at the survivors.",
+    "pt": "Pegue a Granada Superior no baú e arremesse-a nos sobreviventes."
+  },
+  "ui.tutorial.guia.fala_hostilidade.observar.porque": {
+    "en": "Enemies can keep one another busy while the party saves its resources.",
+    "pt": "Inimigos podem se ocupar uns com os outros enquanto o grupo guarda recursos."
+  },
+  "ui.tutorial.guia.fala_hostilidade.observar.texto": {
+    "en": "Keep your distance and end your turn; press Got it when the fight ends.",
+    "pt": "Afaste-se e encerre o turno; depois aperte Entendi ao fim da luta."
+  },
   "ui.tutorial.guia.fala_res.atacar.dica.1": {
     "en": "Staffs and maces deal impact, which the skeleton does not resist.",
     "pt": "Cajado e maça causam impacto, que o esqueleto não resiste."

@@ -1722,6 +1722,18 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > salvo em `monsters[].hostility_override`, validado ao carregar a masmorra e tem
 > precedência apenas para aquela colocação.
 
+> **Campo de Treinamento — hostilidade (2026-10-08):** a ala 46–48 incorpora
+> o layout de `Downloads/campo_de_treinamento (1).json`: a sala 46 ensina a
+> abrir a porta, observar os monstros hostis entre si e usar a Granada Superior;
+> as práticas de consumíveis ficam na 47 e as de resistência/vulnerabilidade na
+> 48. `fala_hostilidade` e seus textos bilíngues vêm de
+> `tools/tutorial_guia_comum.py`/`tools/gerar_guia_comum.py`. O campo opcional
+> `monsters[].autonomous_hostility` preserva a luta automática ao despertar no
+> Modo Mestre apenas para os monstros marcados; outras salas continuam em Manual
+> quando despertadas por avistamento. O editor de masmorras mantém esse campo no
+> roundtrip. Conhecimento das Lendas mostra “Hostil a todos os monstros” no
+> tooltip completo do Bardo quando `hostility_override.rules.all_monsters` vale.
+
 > **Assassino Goblin:** ficha nativa `goblin_assassino`, com estatísticas e arte 2D
 > `goblinDual` do Goblin Dual, GLB próprio `assassino_goblin.glb`, IA `goblin_assassin` e habilidades de esconder-se e
 > ataque furtivo. Ao ser percebido, tenta Furtividade contra a maior Percepção dos

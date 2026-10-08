@@ -17465,6 +17465,11 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
   const tags = [];
   if(m.undead) tags.push(t('ui.ficha.morto_vivo'));
   if(m.boss)   tags.push(t('ui.ficha.chefe_2'));
+  const hostilityRules = m.hostility_override?.mode === 'custom'
+    ? m.hostility_override.rules : null;
+  const hostilityHTML = hostilityRules?.all_monsters
+    ? `<div style="margin-top:4px;color:#f0b36b;font-size:9px;">${t('ui.ficha.hostil_a_monstros')}</div>`
+    : '';
 
   const crVal = m.cr != null ? (m.cr < 1 ? `1/${Math.round(1/m.cr)}` : String(m.cr)) : null;
 
@@ -17562,6 +17567,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       ${attacksHTML}
       ${abilitiesHTML}
       ${resistHTML}
+      ${hostilityHTML}
       ${tags.length ? `<div style="margin-top:3px;color:#ff851b;">${tags.join(' · ')}</div>` : ''}
       ${(m.provocado && (m.provocado_turnos||0)>0) ? `<div style="margin-top:3px;color:#ff66cc;">${t('ui.ficha.provocado_turnos', {n: m.provocado_turnos})}</div>` : ''}
     </div>`;
