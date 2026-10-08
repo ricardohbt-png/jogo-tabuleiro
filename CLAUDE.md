@@ -2,6 +2,23 @@
 
 ## Visão Geral
 
+### Goblin Combatente — equipamento por instância (2026-10-08)
+
+`make_monster` sorteia uniformemente uma arma entre `lanca_curta`, `bordao`,
+`cajado_madeira`, `shortsword`, `maca` e `machado_basico`, antes de chamar
+`_aplicar_equipamentos_monstro`. Rolagens independentes dão 10% de chance de
+`escudo_p` (+1 CA) e 5% de `health_potion_small` na `equipment_consumables`.
+`combatant_weapon_id` e `combatant_shield_id` (ID ou `None`) guardam a seleção;
+`equipped_items` contém somente arma e escudo. Cada consumível é cópia do catálogo.
+O ataque usa nome, dado, categoria e alcance do catálogo, com bônus +2; mantém o
+crítico padrão dos monstros, sem importar propriedades de crítico dos heróis.
+O subtipo nativo é explicitamente `raca_padrao`: a inferência por `ente` no nome
+classificava esta ficha como vegetal e impedia aplicar equipamento.
+O Combatente não tem adaga garantida nem Arremesso (`pode_arremessar=False`);
+o Goblin Dual conserva ambos. A tabela de ouro permanece a original.
+Teste desta fatia: `python -X utf8 tools/test_goblin_combatente_equipamento.py`.
+Spec: `docs/superpowers/specs/2026-10-08-variedade-goblin-combatente-design.md`.
+
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
 `tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.
