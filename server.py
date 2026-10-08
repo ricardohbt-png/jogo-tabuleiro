@@ -27112,7 +27112,27 @@ class GameRoom(TutorialTraining):
         # Aprimorar: +1 na CD do save Ã© lido por _dif_magia via flag temporÃ¡ria no caster.
         p["_mm_dc_bonus"] = dc_bonus
         p["_cajado_arcano_dano_bonus"] = 2 if self._magia_tem_dano(magia) and self._cajado_arcano_equipado(p) else 0
-        await self._executar_magia_grimorio(p, magia, data or {}, dmg_mult, dur_bonus, alcance_bonus)
+        acao_antes_magia = p.get("action_done")
+        # Qualquer recusa que o executor mande ao conjurador (mira inválida, fora do
+        # alcance...) significa que a magia não saiu. O espião embrulha `send_to` só
+        # durante a execução e devolve o original (instância ou método da classe).
+        recusas_magia = []
+        send_original = self.__dict__.get("send_to")
+        send_da_classe = self.send_to
+
+        async def _espiar_send(destino, msg, *a, **k):
+            if destino == p["id"] and isinstance(msg, dict) and msg.get("type") == "error":
+                recusas_magia.append(msg)
+            return await send_da_classe(destino, msg, *a, **k)
+        self.send_to = _espiar_send
+        try:
+            await self._executar_magia_grimorio(p, magia, data or {}, dmg_mult, dur_bonus, alcance_bonus)
+        finally:
+            if send_original is not None:
+                self.send_to = send_original
+            else:
+                del self.send_to
+        magia_recusada = bool(recusas_magia)
 
         # Magia Geminada (Fase 3): reexecuta o mesmo efeito no 2Âº alvo, se elegÃ­vel.
         # (_mm_dc_bonus/_tec_save_desvantagem seguem ativos â€” o 2Âº alvo recebe os
@@ -27173,7 +27193,13 @@ class GameRoom(TutorialTraining):
         # Magia Acelerada (Fase 3): nÃ£o gasta a aÃ§Ã£o principal deste turno.
         if not usou_acelerada:
             p["action_done"] = True
-        await self._licao_evento(p, "usar_magia", alvo=magia_id)
+        if magia_recusada:
+            # Mira recusada pelo executor: a magia não saiu. No treinamento a ação volta
+            # (o aluno mira de novo) e a lição não conta como cumprida.
+            if getattr(self, "training_mode", False):
+                p["action_done"] = acao_antes_magia
+        else:
+            await self._licao_evento(p, "usar_magia", alvo=magia_id)
         # Metamagia aplicada neste lançamento (as partes vêm de _resolver_metamagia,
         # que só lista o que era aplicável E coube no teto).
         for _parte in partes:
@@ -27821,7 +27847,7 @@ class GameRoom(TutorialTraining):
 
         # â”€â”€ VisÃ£o no Escuro: concede a um aliado (ou ao caster) visÃ£o noturna â”€â”€â”€
         elif mid == "visao_escuro":
-            alvo = self._alvo_entidade(data.get("target_id")) or caster
+            alvo = self._alvo_aliado_magia(caster, data.get("target_id"), com_monstro=True) or caster
             if not self._entidade_viva(alvo):
                 await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
             alvo["visao_escuro"] = True
@@ -27837,7 +27863,7 @@ class GameRoom(TutorialTraining):
         O alcance horizontal é 3 + 1 a cada 3 níveis de conjurador. A diferença
         de altura também consome alcance conforme a regra tridimensional comum.
         """
-        alvo = self.players.get((data or {}).get("target_id"))
+        alvo = self._alvo_aliado_magia(caster, (data or {}).get("target_id"))
         if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")})
             return
@@ -27945,7 +27971,7 @@ class GameRoom(TutorialTraining):
     # â”€â”€ Batch 1: utilidades e dano direto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_saciar(self, caster, magia, data):
         """Toque: +fome/+sede num aliado adjacente."""
-        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        alvo = self._alvo_aliado_magia(caster, (data or {}).get("target_id"), com_monstro=True)
         if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
@@ -28524,7 +28550,7 @@ class GameRoom(TutorialTraining):
 
     async def _executar_abencoar_arma(self, caster, magia, data, dur_bonus):
         """Aliado à distância: +1 ataque e dano na arma por algumas rodadas."""
-        alvo = self._alvo_entidade((data or {}).get("target_id"))
+        alvo = self._alvo_aliado_magia(caster, (data or {}).get("target_id"), com_monstro=True)
         if not self._entidade_viva(alvo):
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))
@@ -29154,6 +29180,13 @@ class GameRoom(TutorialTraining):
         """Localiza herói ou monstro; usado pelas magias que podem ser conjuradas
         pelos dois lados do combate."""
         return self.players.get(alvo_id) or self._alvo_monstro(alvo_id)
+
+    def _alvo_aliado_magia(self, caster, alvo_id, com_monstro=False):
+        """Alvo de uma magia de benefício: herói da sala e, no Campo de Treinamento, o
+        aprendiz da sala do próprio conjurador (fora de `players`). `com_monstro` mantém
+        o comportamento de `_alvo_entidade` para as magias que também aceitam criatura."""
+        base = self._alvo_entidade(alvo_id) if com_monstro else self.players.get(alvo_id)
+        return base or self._training_ally(caster, alvo_id)
 
     @staticmethod
     def _entidade_viva(alvo):
@@ -31810,7 +31843,7 @@ class GameRoom(TutorialTraining):
         await self.gm_say(T("narracao.fica_invisivel_por_rodada_s_inimigos_nao", caster=caster['name'], dur=dur))
 
     async def _executar_regeneracao(self, caster, magia, data):
-        alvo = self.players.get((data or {}).get("target_id"))
+        alvo = self._alvo_aliado_magia(caster, (data or {}).get("target_id"))
         if not alvo or not alvo["alive"]:
             await self.send_to(caster["id"], {"type": "error", "msg": T("erro.aliado_invalido")}); return
         dist = max(abs(caster["pos"][0]-alvo["pos"][0]), abs(caster["pos"][1]-alvo["pos"][1]))

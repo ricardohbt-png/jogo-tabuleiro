@@ -25153,7 +25153,7 @@ function renderMyPanel(state){
     const abasHTML = `
       <div style="display:flex; border-bottom:1px solid #c8a95133; margin-bottom:8px;">
         <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
-        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.magias">💀 MAGIAS</button>
+        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-guia="botao:magias" data-i18n="ui.ficha.magias">💀 MAGIAS</button>
       </div>`;
     // Sincroniza animados autoritativos (me.animados) no registro do Pedro p/ a aba Magias.
     const heroiPedro = HERO_DATA.pedro;
@@ -25175,7 +25175,7 @@ function renderMyPanel(state){
     const abasHTML = `
       <div style="display:flex; border-bottom:1px solid #44cc8833; margin-bottom:8px;">
         <button onclick="trocarAbaPainel('atributos')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='atributos'?ATV:'transparent'};color:${aba==='atributos'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.ficha.atributos">📊 ATRIBUTOS</button>
-        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-i18n="ui.hud.magias">✨ MAGIAS</button>
+        <button onclick="trocarAbaPainel('magias')" style="flex:1;padding:6px;background:transparent;border:none;border-bottom:2px solid ${aba==='magias'?ATV:'transparent'};color:${aba==='magias'?ATV:INA};font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;" data-guia="botao:magias" data-i18n="ui.hud.magias">✨ MAGIAS</button>
       </div>`;
     const corpo = (aba === 'magias')
       ? (renderElementaisLewis(me) + renderMagiasFichaEmJogo(me, 'cleric'))

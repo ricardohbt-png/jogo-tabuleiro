@@ -740,25 +740,29 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click Devastating Strike and then the dummy.",
     "pt": "Clique em Golpe Devastador e depois no boneco."
   },
+  "ui.tutorial.guia.treino_grimorio.grimorio.dica.1": {
+    "en": "On a phone, it is the ✨ button in the screen corner.",
+    "pt": "No celular, é o botão ✨ no canto da tela."
+  },
   "ui.tutorial.guia.treino_grimorio.grimorio.porque": {
     "en": "Your known spells are listed there.",
-    "pt": "É nele que ficam as magias que você conhece."
+    "pt": "É nela que ficam as magias que você conhece."
   },
   "ui.tutorial.guia.treino_grimorio.grimorio.texto": {
-    "en": "Open the Grimoire with the ✨ Spells button.",
-    "pt": "Abra o Grimório no botão ✨ Magias."
+    "en": "Open the ✨ Spells tab of your panel.",
+    "pt": "Abra a aba ✨ Magias do seu painel."
   },
   "ui.tutorial.guia.treino_grimorio.lancar.dica.1": {
-    "en": "Enemy spells need a target: only apprentices are here, so use an area or buff spell.",
-    "pt": "Magia de inimigo precisa de alvo: aqui só há aprendizes, então use uma de área ou de benefício."
+    "en": "Command and Heavy Body Curse need an enemy or another hero: there are none here.",
+    "pt": "Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói: aqui não há."
   },
   "ui.tutorial.guia.treino_grimorio.lancar.porque": {
-    "en": "In this room spells do not spend [[slot]]s. Outside it, each one spends a slot, which returns over time.",
-    "pt": "Nesta sala as magias não gastam [[slot]]. Fora dela, cada uma gasta um, que volta com o tempo."
+    "en": "An ally spell needs an ally; an area spell needs a square. Outside this room, each one spends a [[slot]].",
+    "pt": "Magia de aliado pede um aliado; a de área pede uma casa. Fora desta sala, cada uma gasta um [[slot]]."
   },
   "ui.tutorial.guia.treino_grimorio.lancar.texto": {
-    "en": "Pick a spell and cast it on yourself or on a free square.",
-    "pt": "Escolha uma magia e lance-a em você ou numa casa livre."
+    "en": "Pick a spell and aim at yourself, an apprentice or a free square.",
+    "pt": "Escolha uma magia e mire em você, num aprendiz ou numa casa livre."
   },
   "ui.tutorial.guia.treino_grimorio_turno.encerrar.porque": {
     "en": "Casting used your main action; the next abilities need it back.",

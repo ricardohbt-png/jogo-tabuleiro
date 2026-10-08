@@ -16,8 +16,9 @@ JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 
 PORTA_CLERIC = ("Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. "
                 "Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.")
-GRIMORIO = ("Clique em ✨ Magias para abrir o Grimório, escolha uma magia que você conhece e lance-a. "
-            "Magias conhecidas são as que você escolheu ao criar o herói e ao subir de nível. Se ela pedir alvo, mire em você ou numa casa livre: aqui só há aprendizes. "
+GRIMORIO = ("Abra a aba ✨ Magias do seu painel (no celular, o botão ✨), escolha uma magia que você conhece e lance-a. "
+            "Magia de aliado: clique em você ou num aprendiz. Magia de área: clique numa casa livre. "
+            "Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói, e aqui não há. "
             "Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. "
             "Lançar usa sua ação principal.")
 GRIMORIO_CURTO = "Lance uma magia conhecida"

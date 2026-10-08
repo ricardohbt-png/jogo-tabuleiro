@@ -257,5 +257,79 @@ class LicaoConcluiPorMagia(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(r._training_requirements(p, lic))
 
 
+# --- Fatia 17: o aprendiz é alvo de magia de aliado; erro de mira não conclui a lição -----------------
+ALIADO = [('abencoar_arma', 'abencoar_arma'), ('saciar', 'saciar'), ('visao_escuro', 'visao_escuro'),
+          ('voo', 'voo'), ('regeneracao_magica', 'regeneracao_magica')]
+
+
+class AprendizComoAlvoDeMagia(unittest.IsolatedAsyncioTestCase):
+    async def lancar(self, r, p, mid, **msg):
+        p['action_done'] = False
+        p['bonus_action_used'] = False
+        p['moves_left'] = 6
+        p['magias_conhecidas'] = [mid]
+        antes = len(r.erros)
+        await r.handle_magia(p['id'], {'magia_id': mid, **msg})
+        return r.erros[antes:]
+
+    async def test_magia_de_aliado_aceita_o_aprendiz_da_propria_sala(self):
+        for mid, _ in ALIADO:
+            r, p = sala()
+            p['pos'] = [33, 6]
+            ap = r.training_allies['__treino_cleric_1']
+            self.assertEqual(ap['pos'], [34, 6])
+            erros = await self.lancar(r, p, mid, target_id=ap['id'], tx=34, ty=6)
+            self.assertEqual(erros, [], (mid, erros))
+
+    async def test_aprendiz_de_outra_classe_ou_fora_da_sala_continua_invalido(self):
+        r, p = sala()
+        p['pos'] = [33, 6]
+        erros = await self.lancar(r, p, 'abencoar_arma', target_id='__treino_bard_1')
+        self.assertEqual(len(erros), 1)
+        r, p = sala()
+        p['pos'] = list(CORREDOR)                          # fora da sala do Clérigo
+        erros = await self.lancar(r, p, 'abencoar_arma', target_id='__treino_cleric_1')
+        self.assertEqual(len(erros), 1)
+
+    async def test_erro_de_mira_nao_conclui_a_licao_nem_gasta_a_acao(self):
+        r, p = sala()
+        r._training_add_unlocked_lessons()
+        lic = next(l for l in r.licoes if l['id'] == 'treino_grimorio')
+        p['licao_atual'] = lic['id']
+        erros = await self.lancar(r, p, 'abencoar_arma', target_id='nao_existe')
+        self.assertEqual(len(erros), 1)
+        self.assertNotIn('treino_grimorio', p['licoes_feitas'])
+        self.assertFalse(p['action_done'])                  # a ação volta: dá para mirar de novo
+
+        erros = await self.lancar(r, p, 'abencoar_arma', target_id=p['id'])
+        self.assertEqual(erros, [])
+        self.assertIn('treino_grimorio', p['licoes_feitas'])
+        self.assertTrue(p['action_done'])
+
+
+class GuiaDoGrimorioDizOQueFazer(unittest.TestCase):
+    def passos(self):
+        return next(x for x in D['falas'] if x['id'] == 'treino_grimorio')['guia']
+
+    def test_aponta_para_a_aba_que_existe_no_desktop(self):
+        game = (Path(__file__).resolve().parents[1] / 'game.js').read_text(encoding='utf-8')
+        # o ✨ flutuante só existe em tela estreita: no desktop o halo precisa de uma aba visível
+        import re
+        abas = re.findall(r'<button[^>]*trocarAbaPainel\(.magias.\)[^>]*>', game)
+        self.assertEqual(len(abas), 2)                      # Mago e Clérigo
+        for a in abas:
+            self.assertIn('data-guia="botao:magias"', a)
+
+    def test_textos_falam_da_aba_e_do_alvo(self):
+        passos = self.passos()
+        g = S.GUIA_LANG if hasattr(S, 'GUIA_LANG') else None
+        lang = (Path(__file__).resolve().parents[1] / 'src/lang/tutorial_guia.js').read_text(encoding='utf-8')
+        self.assertIn('aba', lang.split('treino_grimorio.grimorio.texto')[1][:120].lower())
+        pt = lang.split('treino_grimorio.lancar.texto')[1][:260]
+        self.assertIn('aprendiz', pt)
+        self.assertIn('casa livre', pt)
+        self.assertEqual(len(passos), 2)
+
+
 if __name__ == '__main__':
     unittest.main()
