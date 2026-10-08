@@ -9,7 +9,7 @@ import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
-                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38", "fala_atalhos", "fala_res", "fala_vuln"]
+                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_res", "fala_vuln"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -91,6 +91,32 @@ class ConteudoTests(unittest.TestCase):
         p["licoes_feitas"] = feitas + ["fala_res"]
         self.assertTrue(lib(p, fala["fala_vuln"]))
 
+    def test_esqueleto_tem_so_as_duas_licoes_de_dano(self):
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        ids = {f["id"] for f in d["falas"]}
+        for velho in ("fala_36", "fala_37", "fala_38"):
+            self.assertNotIn(velho, ids)
+            self.assertNotIn(velho, C.GUIA)
+        falas = {f["id"]: f for f in d["falas"]}
+        for lid in ("fala_res", "fala_vuln"):
+            self.assertEqual(falas[lid]["tarefa"]["tipo"], "atacar")
+            self.assertEqual(falas[lid]["tarefa"]["alvo"], "esqueleto_humano")
+        # um esqueleto por lição, com um de folga contra beco sem saída
+        esq = [m for m in d["monsters"] if m["type"] == "esqueleto_humano"]
+        self.assertEqual(len(esq), 2)
+
+    def test_vuln_ensina_pegar_equipar_e_atacar(self):
+        g = C.GUIA["fala_vuln"]
+        self.assertEqual([p["id"] for p in g], ["pegar", "equipar", "atacar"])
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        bau = [c for c in d["chests"] if any(i["id"] == "maca_treino" for i in c["items"])][0]
+        if g[0].get("ui"):
+            self.assertEqual(g[0]["ui"], "casa:" + json.dumps(bau["pos"]).replace(" ", ""))
+        for p in g[:2]:
+            self.assertFalse(p.get("conclui"), p["id"])
+        dicas = " ".join(x[0] for p in g for x in p.get("dica", [])).lower()
+        self.assertIn("arma certa", dicas)
+
     def test_termos_iguais_em_pt_e_en(self):
         for lid, passos in C.GUIA.items():
             for p in passos:
@@ -113,7 +139,10 @@ class ConteudoTests(unittest.TestCase):
             for p in passos:
                 ui = p.get("ui") or ""
                 if ui.startswith("casa:") or ui.startswith("porta:"):
-                    self.assertEqual(ui.split(":", 1)[1], json.dumps(tar.get("alvo")).replace(" ", ""), lid)
+                    alvo = ui.split(":", 1)[1]
+                    baus = {json.dumps(c["pos"]).replace(" ", "") for c in d["chests"]}
+                    # casa pode ser o alvo da tarefa ou o baú da sala (passo de pegar item)
+                    self.assertIn(alvo, {json.dumps(tar.get("alvo")).replace(" ", "")} | baus, lid)
 
 
 class GeradorTests(unittest.TestCase):

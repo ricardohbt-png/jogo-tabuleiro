@@ -348,46 +348,6 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Drink the healing potion from the bag.",
     "pt": "Beba a poção de cura pela bolsa."
   },
-  "ui.tutorial.guia.fala_36.atacar.dica.1": {
-    "en": "Compare the damage number with a normal hit.",
-    "pt": "Compare o número do dano com o de um golpe normal."
-  },
-  "ui.tutorial.guia.fala_36.atacar.porque": {
-    "en": "Slashing lands for less: the skeleton has [[resistencia]] to blades.",
-    "pt": "Corte entra a menos: o esqueleto tem [[resistencia]] a lâminas."
-  },
-  "ui.tutorial.guia.fala_36.atacar.texto": {
-    "en": "Attack the skeleton with the weapon in your hand.",
-    "pt": "Ataque o esqueleto com a arma que está na sua mão."
-  },
-  "ui.tutorial.guia.fala_37.equipar.dica.1": {
-    "en": "Equipping is a [[acao_livre]], it does not use your turn.",
-    "pt": "Equipar é [[acao_livre]], não gasta o turno."
-  },
-  "ui.tutorial.guia.fala_37.equipar.texto": {
-    "en": "Open the bag and equip the mace.",
-    "pt": "Abra a bolsa e equipe a maça."
-  },
-  "ui.tutorial.guia.fala_37.pegar.porque": {
-    "en": "Bone cracks under impact, and the mace deals impact.",
-    "pt": "Osso racha com impacto, e a maça causa impacto."
-  },
-  "ui.tutorial.guia.fala_37.pegar.texto": {
-    "en": "Take the mace from this room's chest.",
-    "pt": "Pegue a maça do baú desta sala."
-  },
-  "ui.tutorial.guia.fala_38.matar.dica.1": {
-    "en": "Choosing the right weapon beats rolling well.",
-    "pt": "Escolher a arma certa vale mais que rolar bem o dado."
-  },
-  "ui.tutorial.guia.fala_38.matar.porque": {
-    "en": "Compare with the earlier hit: switching weapons adds about three points per hit.",
-    "pt": "Compare com o golpe anterior: trocar de arma rende uns três pontos a mais por acerto."
-  },
-  "ui.tutorial.guia.fala_38.matar.texto": {
-    "en": "Take down the skeleton with the mace.",
-    "pt": "Derrube o esqueleto com a maça."
-  },
   "ui.tutorial.guia.fala_4.porta.dica.1": {
     "en": "Click the door square; the hero follows the dotted path.",
     "pt": "Clique na casa da porta; o herói segue o caminho tracejado."
@@ -480,21 +440,29 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Check the [[resistencia]]: the skeleton absorbs 1 point of slashing and 2 of piercing.",
     "pt": "Confira a [[resistencia]]: o esqueleto absorve 1 ponto de corte e 2 de perfuração."
   },
+  "ui.tutorial.guia.fala_vuln.atacar.dica.1": {
+    "en": "Choosing the right weapon beats rolling well.",
+    "pt": "Escolher a arma certa vale mais que rolar bem o dado."
+  },
   "ui.tutorial.guia.fala_vuln.atacar.texto": {
     "en": "Attack the skeleton with the mace: the hit does 2 extra points.",
     "pt": "Ataque o esqueleto com a maça: o golpe causa 2 pontos a mais."
   },
-  "ui.tutorial.guia.fala_vuln.maca.dica.1": {
-    "en": "No mace? Take it from this room's chest.",
-    "pt": "Sem a maça? Pegue-a no baú desta sala."
+  "ui.tutorial.guia.fala_vuln.equipar.dica.1": {
+    "en": "Equipping is a [[acao_livre]], it does not use your turn.",
+    "pt": "Equipar é [[acao_livre]], não gasta o turno."
   },
-  "ui.tutorial.guia.fala_vuln.maca.porque": {
+  "ui.tutorial.guia.fala_vuln.equipar.texto": {
+    "en": "Open the bag and equip the training mace.",
+    "pt": "Abra a bolsa e equipe a maça de treino."
+  },
+  "ui.tutorial.guia.fala_vuln.pegar.porque": {
     "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
     "pt": "Impacto é o ponto fraco do esqueleto: a [[vulnerabilidade]] soma dano."
   },
-  "ui.tutorial.guia.fala_vuln.maca.texto": {
-    "en": "Open the bag and equip the training mace.",
-    "pt": "Abra a bolsa e equipe a maça de treino."
+  "ui.tutorial.guia.fala_vuln.pegar.texto": {
+    "en": "Take the mace from this room's chest.",
+    "pt": "Pegue a maça do baú desta sala."
   },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",

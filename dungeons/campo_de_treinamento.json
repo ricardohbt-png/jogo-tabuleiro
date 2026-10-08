@@ -1921,16 +1921,6 @@
       "room_id": 23,
       "boss": false,
       "target": false
-    },
-    {
-      "type": "esqueleto_humano",
-      "pos": [
-        45,
-        17
-      ],
-      "room_id": 23,
-      "boss": false,
-      "target": false
     }
   ],
   "chests": [
@@ -2915,112 +2905,6 @@
         "raio": 4
       },
       "ordem": 15
-    },
-    {
-      "id": "fala_36",
-      "pos": [
-        43,
-        15
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Aquele esqueleto reage à sua espada de um jeito e à sua maça de outro. Acerte um golpe nele com o que está na sua mão e olhe o número: corte contra osso entra a MENOS — ele resiste a lâmina.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "ordem": 16,
-      "tarefa": {
-        "tipo": "atacar",
-        "alvo": "esqueleto_humano",
-        "vezes": 1,
-        "texto_curto": "Acerte um golpe no esqueleto"
-      },
-      "guia": [
-        {
-          "id": "atacar",
-          "texto": "ui.tutorial.guia.fala_36.atacar.texto",
-          "porque": "ui.tutorial.guia.fala_36.atacar.porque",
-          "ui": "monstro:esqueleto_humano",
-          "dica": [
-            "ui.tutorial.guia.fala_36.atacar.dica.1"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fala_37",
-      "pos": [
-        43,
-        15
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "No baú desta sala há uma maça. Pegue-a e equipe: osso não resiste a impacto, ele racha. Toda criatura tem essas duas listas — resistências e fraquezas — e a ficha dela mostra as que você já descobriu.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "ordem": 17,
-      "tarefa": {
-        "tipo": "equipar",
-        "alvo": "maca_treino",
-        "vezes": 1,
-        "texto_curto": "Equipe a maça do baú"
-      },
-      "guia": [
-        {
-          "id": "pegar",
-          "texto": "ui.tutorial.guia.fala_37.pegar.texto",
-          "porque": "ui.tutorial.guia.fala_37.pegar.porque"
-        },
-        {
-          "id": "equipar",
-          "texto": "ui.tutorial.guia.fala_37.equipar.texto",
-          "ui": "bolsa:maca_treino",
-          "dica": [
-            "ui.tutorial.guia.fala_37.equipar.dica.1"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fala_38",
-      "pos": [
-        43,
-        15
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Agora o mesmo braço, outra arma. Derrube-o e compare os números com o golpe de antes: cerca de três pontos a mais por acerto, só por trocar de arma. Escolher a arma certa vale mais que rolar bem o dado.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "ordem": 18,
-      "tarefa": {
-        "tipo": "matar",
-        "alvo": "esqueleto_humano",
-        "vezes": 1,
-        "texto_curto": "Derrube o esqueleto com a maça"
-      },
-      "guia": [
-        {
-          "id": "matar",
-          "texto": "ui.tutorial.guia.fala_38.matar.texto",
-          "porque": "ui.tutorial.guia.fala_38.matar.porque",
-          "ui": "monstro:esqueleto_humano",
-          "dica": [
-            "ui.tutorial.guia.fala_38.matar.dica.1"
-          ]
-        }
-      ]
     },
     {
       "id": "treino_mira",
@@ -4277,7 +4161,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Equipe a maça e ataque o esqueleto.",
+      "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
@@ -4287,22 +4171,30 @@
         "tipo": "atacar",
         "alvo": "esqueleto_humano",
         "vezes": 1,
-        "texto_curto": "Ataque um esqueleto com a maça"
+        "texto_curto": "Pegue a maça, equipe e ataque o esqueleto"
       },
       "guia": [
         {
-          "id": "maca",
-          "texto": "ui.tutorial.guia.fala_vuln.maca.texto",
-          "porque": "ui.tutorial.guia.fala_vuln.maca.porque",
-          "ui": "botao:inventario",
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
+          "ui": "casa:[42,17]"
+        },
+        {
+          "id": "equipar",
+          "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
+          "ui": "bolsa:maca_treino",
           "dica": [
-            "ui.tutorial.guia.fala_vuln.maca.dica.1"
+            "ui.tutorial.guia.fala_vuln.equipar.dica.1"
           ]
         },
         {
           "id": "atacar",
           "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
-          "ui": "monstro:esqueleto_humano"
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+          ]
         }
       ]
     }
