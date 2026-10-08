@@ -5190,15 +5190,14 @@ MONSTER_DEFS = [
         "hp": 9, "ac": 13, "size": [1, 1], "movement": 6,
         "str_": 10, "dex": 14, "con_": 10, "int_": 10,
         "fort": 2, "ref_": 4, "will": 1,
-        # attacks (adaga OU espada curta) e guaranteed_loot definidos em make_monster.
+        # A arma sorteada em make_monster usa o aplicador do catálogo (+2 de ataque).
+        "equipment_enabled": True, "base_attack_bonus": 2, "subtipo": "raca_padrao",
         "attacks": [
-            {"name": "Adaga", "atk_bonus": 4, "damage": "1d4+2",
+            {"name": "Espada Curta", "atk_bonus": 2, "damage": "1d6",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
-             "categoria": "perfurante"},
+             "categoria": "cortante"},
         ],
         "special_abilities": [
-            {"id": "arremesso",   "name": "Arremesso",   "action_type": "acao_bonus",
-             "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"},
             {"id": "vulnerabilidade", "name": "Vulnerabilidade", "action_type": "passiva",
              "saves": ["vontade"], "penalty": 2,
              "descricao": "-2 em testes de Vontade"},
@@ -5212,7 +5211,7 @@ MONSTER_DEFS = [
             "1-40": None, "41-70": {"tipo": "gold", "valor": 2},
             "71-90": {"tipo": "gold", "valor": 2}, "91-100": {"tipo": "gold", "valor": 3},
         },
-        "guaranteed_loot": ["dagger"],
+        "guaranteed_loot": [],  # A arma e o escudo vêm de equipped_items.
         "spawn_min": 1, "spawn_max": 3,
         "ai_type": "goblin_melee",
         "porte": "pequeno",
@@ -10463,7 +10462,22 @@ def make_monster(mdef, room):
         m["troll_ultimo_dano_tipos"] = []
     m["pos"] = [room["cx"], room["cy"]]
     m["room_id"] = room["id"]
+    combatant_potion = False
+    if m.get("type") == "goblin_combatente":
+        m["combatant_weapon_id"] = random.choice((
+            "lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico"))
+        m["combatant_shield_id"] = "escudo_p" if random.random() < 0.10 else None
+        shield_variant = "com_escudo" if m["combatant_shield_id"] else "sem_escudo"
+        m["image"] = f"goblinCombatente_{m['combatant_weapon_id']}_{shield_variant}"
+        combatant_potion = random.random() < 0.05
+        m["equipped_items"] = [m["combatant_weapon_id"]]
+        if m["combatant_shield_id"]:
+            m["equipped_items"].append(m["combatant_shield_id"])
+        m["pode_arremessar"] = False
     _aplicar_equipamentos_monstro(m)
+    if combatant_potion:
+        m.setdefault("equipment_consumables", []).append(
+            deepcopy(_DUNGEON_ITEM_CATALOG["health_potion_small"]))
     # Inicializa contadores de habilidades especiais (formato novo)
     if "special_abilities" in m:
         m["ability_uses"] = {
@@ -10494,22 +10508,10 @@ def make_monster(mdef, room):
     m["spell_uses"] = {s["id"]: max(1, int(s.get("uses_per_combat", 1))) for s in spell_defs
                        if s.get("id") in GRIMORIO and s.get("limit_mode", "encounter") != "cooldown"}
     m["spell_cooldowns"] = {}
-    # â”€â”€ Goblins: muniÃ§Ã£o do arqueiro, escolha de arma do combatente, arremesso â”€â”€
+    # â”€â”€ Goblins: muniÃ§Ã£o do arqueiro e arremesso do Dual/Assassino â”€â”€
     if m.get("type") == "goblin_arqueiro":
         m["flechas"] = 10
         m["pode_arremessar"] = False
-    if m.get("type") == "goblin_combatente":
-        if random.random() < 0.5:
-            m["attacks"] = [{"name": "Adaga", "atk_bonus": 4, "damage": "1d4+2",
-                             "damage_types": ["physical"], "num_attacks": 1,
-                             "on_hit": None, "categoria": "perfurante"}]
-            m["guaranteed_loot"] = ["dagger"]
-        else:
-            m["attacks"] = [{"name": "Espada Curta", "atk_bonus": 2, "damage": "1d6",
-                             "damage_types": ["physical"], "num_attacks": 1,
-                             "on_hit": None, "categoria": "cortante"}]
-            m["guaranteed_loot"] = ["shortsword", "dagger"]
-        m["pode_arremessar"] = True
     if m.get("type") in {"goblin_dual", "goblin_assassino"}:
         m["pode_arremessar"] = True
     if m.get("type") == "goblin_assassino":
@@ -46509,6 +46511,7 @@ class GameRoom(TutorialTraining):
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
             for gid in dict.fromkeys([*m.get("guaranteed_loot", []), *equipped_drop]):
                 gdef = (
+                    (_DUNGEON_ITEM_CATALOG.get(gid) if m.get("type") == "goblin_combatente" else None) or
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
                     next((i for i in SHOP_AMMO     if i["id"] == gid), None) or
@@ -46516,6 +46519,9 @@ class GameRoom(TutorialTraining):
                 )
                 if gdef:
                     loot_items.append(deepcopy(gdef))
+            if m.get("type") == "goblin_combatente":
+                # A bolsa é a instância restante: não recriar poções consumidas.
+                loot_items.extend(deepcopy(m.get("equipment_consumables", [])))
             delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
             chest_msg = " Um **baú de saque** apareceu!" if delivery == "chest" else ""
             await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=chest_msg))

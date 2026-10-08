@@ -2,6 +2,38 @@
 
 ## Visão Geral
 
+### Goblin Combatente — equipamento por instância (2026-10-08)
+
+`make_monster` sorteia uniformemente uma arma entre `lanca_curta`, `bordao`,
+`cajado_madeira`, `shortsword`, `maca` e `machado_basico`, antes de chamar
+`_aplicar_equipamentos_monstro`. Rolagens independentes dão 10% de chance de
+`escudo_p` (+1 CA) e 5% de `health_potion_small` na `equipment_consumables`.
+`combatant_weapon_id` e `combatant_shield_id` (ID ou `None`) guardam a seleção;
+`equipped_items` contém somente arma e escudo. Cada consumível é cópia do catálogo.
+O ataque usa nome, dado, categoria e alcance do catálogo, com bônus +2; mantém o
+crítico padrão dos monstros, sem importar propriedades de crítico dos heróis.
+O subtipo nativo é explicitamente `raca_padrao`: a inferência por `ente` no nome
+classificava esta ficha como vegetal e impedia aplicar equipamento.
+O Combatente não tem adaga garantida nem Arremesso (`pode_arremessar=False`);
+o Goblin Dual conserva ambos. A tabela de ouro permanece a original.
+Na morte, os IDs equipados do Combatente resolvem pelo catálogo mesclado
+`_DUNGEON_ITEM_CATALOG` (inclui o escudo da loja de armaduras), e o loot recebe
+uma cópia dos consumíveis ainda em `equipment_consumables`, com seus metadados.
+A IA genérica já cura 5 PV com a poção pequena a 50% dos PV ou menos,
+remove a dose usada e continua o ataque normal; não foi alterada.
+`image` publica `goblinCombatente_<arma>_<sem_escudo|com_escudo>` com base no
+equipamento real. O cliente usa essa chave tanto para o PNG em
+`assets/pawns/monstros/<chave>/<chave>.png` quanto para o GLB em
+`assets/models3d/monstros/<chave>.glb`; ambas as famílias cobrem as mesmas 12
+combinações de arma e escudo. O Goblin Dual e estados antigos sem chave
+continuam usando os assets legados. Para reconstruir e validar a família 3D,
+use `blender --background --python
+tools/build_goblin_combatente_3d_variants.py`.
+Testes: `python -X utf8 tools/test_goblin_combatente_equipamento.py`,
+`python -X utf8 tools/test_goblin_combatente_loot.py` e
+`python -X utf8 tools/test_goblin_combatente_variants.py`.
+Spec: `docs/superpowers/specs/2026-10-08-variedade-goblin-combatente-design.md`.
+
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
 `tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.
