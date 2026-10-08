@@ -4166,6 +4166,48 @@
           "ui": "habilidade:guerreiro_luz"
         }
       ]
+    },
+    {
+      "id": "fala_atalhos",
+      "pos": [
+        42,
+        16
+      ],
+      "falante": {
+        "nome": "Instrutor de Treinamento",
+        "emoji": "🎓"
+      },
+      "texto": "Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 19,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Encerre o turno para concluir"
+      },
+      "guia": [
+        {
+          "id": "barra",
+          "texto": "ui.tutorial.guia.fala_atalhos.barra.texto",
+          "porque": "ui.tutorial.guia.fala_atalhos.barra.porque"
+        },
+        {
+          "id": "camera",
+          "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
+        },
+        {
+          "id": "cancelar",
+          "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
+        },
+        {
+          "id": "andar",
+          "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
     }
   ],
   "master_reinforcements": [],

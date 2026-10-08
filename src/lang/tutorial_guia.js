@@ -24,6 +24,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "The strongest action of a turn: attack, cast a spell or use an ability. You get one per turn.",
     "pt": "A ação mais forte do turno: atacar, lançar magia ou usar uma habilidade. É uma por turno."
   },
+  "ui.tutorial.glossario.atalho.nome": {
+    "en": "shortcut",
+    "pt": "atalho"
+  },
+  "ui.tutorial.glossario.atalho.texto": {
+    "en": "A key bound to an ability or spell. You choose what each key does in the SHORTCUTS panel.",
+    "pt": "Uma tecla ligada a uma habilidade ou magia. Você escolhe o que cada tecla faz no painel ATALHOS."
+  },
   "ui.tutorial.glossario.ca.nome": {
     "en": "AC",
     "pt": "CA"
@@ -427,6 +435,26 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_9.atacar.texto": {
     "en": "Attack the dummy head-on.",
     "pt": "Ataque o boneco de frente."
+  },
+  "ui.tutorial.guia.fala_atalhos.andar.texto": {
+    "en": "Click a map square to walk there; then click End Turn.",
+    "pt": "Clique numa casa do mapa para andar até ela; depois clique em Encerrar Turno."
+  },
+  "ui.tutorial.guia.fala_atalhos.barra.porque": {
+    "en": "Each key from 1 to 0 fires whatever you bound to it.",
+    "pt": "Cada tecla de 1 a 0 dispara o que você ligou a ela."
+  },
+  "ui.tutorial.guia.fala_atalhos.barra.texto": {
+    "en": "Press H to open the abilities menu and look at the [[atalho]] panel.",
+    "pt": "Aperte H para abrir o menu de habilidades e veja o painel [[atalho]]."
+  },
+  "ui.tutorial.guia.fala_atalhos.camera.texto": {
+    "en": "Press R on the 3D board to re-center the camera.",
+    "pt": "Aperte R no tabuleiro 3D para recentralizar a câmera."
+  },
+  "ui.tutorial.guia.fala_atalhos.cancelar.texto": {
+    "en": "Press Esc to cancel an aim or close a panel.",
+    "pt": "Aperte Esc para cancelar uma mira ou fechar um painel."
   },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.dica.1": {
     "en": "The exercise only counts when the metamagic goes into the cast.",

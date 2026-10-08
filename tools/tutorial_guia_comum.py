@@ -47,6 +47,9 @@ GLOSSARIO = {
     "critico": {"nome": ("acerto crítico", "critical hit"),
                 "texto": ("Um 20 natural no d20: o golpe acerta e o dano é dobrado.",
                           "A natural 20 on the d20: the hit lands and the damage is doubled.")},
+    "atalho": {"nome": ("atalho", "shortcut"),
+               "texto": ("Uma tecla ligada a uma habilidade ou magia. Você escolhe o que cada tecla faz no painel ATALHOS.",
+                         "A key bound to an ability or spell. You choose what each key does in the SHORTCUTS panel.")},
 }
 
 
@@ -179,5 +182,18 @@ GUIA = {
                   "Compare with the earlier hit: switching weapons adds about three points per hit."),
           ui="monstro:esqueleto_humano",
           dica=[("Escolher a arma certa vale mais que rolar bem o dado.", "Choosing the right weapon beats rolling well.")]),
+    ],
+    "fala_atalhos": [
+        P("barra", ("Aperte H para abrir o menu de habilidades e veja o painel [[atalho]].",
+                    "Press H to open the abilities menu and look at the [[atalho]] panel."),
+          porque=("Cada tecla de 1 a 0 dispara o que você ligou a ela.",
+                  "Each key from 1 to 0 fires whatever you bound to it.")),
+        P("camera", ("Aperte R no tabuleiro 3D para recentralizar a câmera.",
+                     "Press R on the 3D board to re-center the camera.")),
+        P("cancelar", ("Aperte Esc para cancelar uma mira ou fechar um painel.",
+                       "Press Esc to cancel an aim or close a panel.")),
+        P("andar", ("Clique numa casa do mapa para andar até ela; depois clique em Encerrar Turno.",
+                    "Click a map square to walk there; then click End Turn."),
+          ui="botao:encerrar_turno"),
     ],
 }

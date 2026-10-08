@@ -9,7 +9,7 @@ import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
-                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38"]
+                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_36", "fala_37", "fala_38", "fala_atalhos"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -24,9 +24,14 @@ class ConteudoTests(unittest.TestCase):
     def test_cobre_as_quinze_licoes(self):
         self.assertEqual(sorted(C.GUIA), sorted(IDS_ESPERADOS))
 
+    def test_licao_de_atalhos_cobre_os_quatro_temas(self):
+        txt = " ".join(p["texto"][0].lower() for p in C.GUIA["fala_atalhos"])
+        for tema in ("atalho", " r ", "esc", "clique"):
+            self.assertIn(tema, " " + txt.replace(".", " ") + " ", tema)
+
     def test_regras_de_redacao(self):
         for lid, passos in C.GUIA.items():
-            self.assertTrue(1 <= len(passos) <= 3, lid)
+            self.assertTrue(1 <= len(passos) <= 4, lid)
             for i, p in enumerate(passos):
                 pt, en = p["texto"]
                 limpo = TERMO.sub("x", pt)
@@ -61,7 +66,7 @@ class ConteudoTests(unittest.TestCase):
 
     def test_glossario_completo(self):
         esperados = {"turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia",
-                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico"}
+                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho"}
         self.assertEqual(set(C.GLOSSARIO), esperados)
         for k, v in C.GLOSSARIO.items():
             for campo in ("nome", "texto"):

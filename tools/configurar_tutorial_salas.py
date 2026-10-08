@@ -30,7 +30,7 @@ for f in d['falas']:
         f['tarefa']['alvo'] = [13, 15]
         f['tarefa']['texto_curto'] = 'Atravesse a porta para a sala de combate'
     if f['id'] in ['fala_6', 'fala_8', 'fala_10', 'fala_12', 'fala_14', 'fala_16']:
-        f['texto'] = f['texto'].split('Quando ele cair')[0] + ' Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.'
+        f['texto'] = f['texto'].split('Quando ele cair')[0].split(' Depois procure a porta')[0] + ' Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.'
 
 # O baú do átrio oferece uma arma básica apropriada para cada classe.
 d['chests'][0]['items'] = [{'id': i} for i in ['sword', 'cajado_madeira', 'dagger', 'machado_basico', 'dagger', 'cajado_madeira']]
@@ -134,6 +134,14 @@ lesson('paladin','treino_luz',9,'guerreiro_luz',
 for f in d['falas']:
     if f['id'] == 'treino_veneno_golpe':f['tarefa']['requer_veneno'] = True
     if f['id'] == 'treino_sagrado_golpe':f['tarefa']['requer_sagrado'] = True
+# Lição comum: atalhos. Última da trilha comum (ordem 19, depois de fala_38);
+# o filtro do topo preserva falas sem classe, mas o `if not any` mantém a execução idempotente.
+if not any(f['id'] == 'fala_atalhos' for f in d['falas']):
+    d['falas'].append({
+        'id': 'fala_atalhos', 'pos': [42, 16], 'falante': {'nome': 'Instrutor de Treinamento', 'emoji': '🎓'},
+        'texto': 'Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.',
+        'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': 19,
+        'tarefa': {'tipo': 'encerrar_turno', 'vezes': 1, 'texto_curto': 'Encerre o turno para concluir'}})
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gerar_guia_comum import aplicar_guia
