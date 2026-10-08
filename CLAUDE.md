@@ -21,8 +21,17 @@ Na morte, os IDs equipados do Combatente resolvem pelo catálogo mesclado
 uma cópia dos consumíveis ainda em `equipment_consumables`, com seus metadados.
 A IA genérica já cura 5 PV com a poção pequena a 50% dos PV ou menos,
 remove a dose usada e continua o ataque normal; não foi alterada.
-Testes: `python -X utf8 tools/test_goblin_combatente_equipamento.py` e
-`python -X utf8 tools/test_goblin_combatente_loot.py`.
+`image` publica `goblinCombatente_<arma>_<sem_escudo|com_escudo>` com base no
+equipamento real. O cliente usa essa chave tanto para o PNG em
+`assets/pawns/monstros/<chave>/<chave>.png` quanto para o GLB em
+`assets/models3d/monstros/<chave>.glb`; ambas as famílias cobrem as mesmas 12
+combinações de arma e escudo. O Goblin Dual e estados antigos sem chave
+continuam usando os assets legados. Para reconstruir e validar a família 3D,
+use `blender --background --python
+tools/build_goblin_combatente_3d_variants.py`.
+Testes: `python -X utf8 tools/test_goblin_combatente_equipamento.py`,
+`python -X utf8 tools/test_goblin_combatente_loot.py` e
+`python -X utf8 tools/test_goblin_combatente_variants.py`.
 Spec: `docs/superpowers/specs/2026-10-08-variedade-goblin-combatente-design.md`.
 
 ### Campo de Treinamento — salas por herói (2026-10-01)
