@@ -25,7 +25,7 @@ Fora de escopo: o sistema de cores de dano (RESISTIDO/VULNERÁVEL/METADE/DOBRADO
 
 - Constantes `TUTORIAL_RECOMPENSA_OURO = 5`, `TUTORIAL_RECOMPENSA_XP = 10` por lição; bônus de trilha (`TUTORIAL_BONUS_TRILHA_*`) ao concluir todas as lições da classe.
 - Concedida em `_licao_concluir` somente se o id ainda não está em `tutorial_history` (a mesma guarda já existente) — repetir o tutorial não repete o prêmio. XP via o caminho normal de ganho (com `_check_level_up`); ouro em `p["gold"]`.
-- Campo opcional `recompensa` na lição sobrescreve o padrão; o editor preserva o campo (round-trip), sem UI nova.
+- Sem campo `recompensa` por lição (YAGNI; evita mexer em `tools/editor.js`): só as constantes globais.
 
 ## 4. Lição de atalhos (comum)
 
