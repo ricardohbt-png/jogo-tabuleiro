@@ -15764,7 +15764,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Mestre de Armas",
             "emoji": "🛡️"
           },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
           "trigger": {
             "tipo": "sala"
           },
@@ -16950,6 +16950,79 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "treino_grimorio",
+          "pos": [
+            32,
+            6
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "sala_exclusiva": true,
+          "texto": "Clique em ✨ Magias para abrir o Grimório, escolha uma magia que você conhece e lance-a. Magias conhecidas são as que você escolheu ao criar o herói e ao subir de nível. Se ela pedir alvo, mire em você ou numa casa livre: aqui só há aprendizes. Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. Lançar usa sua ação principal.",
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
+          "tarefa": {
+            "tipo": "usar_magia",
+            "vezes": 1,
+            "texto_curto": "Lance uma magia conhecida"
+          },
+          "ordem": 4,
+          "guia": [
+            {
+              "id": "grimorio",
+              "texto": "ui.tutorial.guia.treino_grimorio.grimorio.texto",
+              "porque": "ui.tutorial.guia.treino_grimorio.grimorio.porque",
+              "ui": "botao:magias"
+            },
+            {
+              "id": "lancar",
+              "texto": "ui.tutorial.guia.treino_grimorio.lancar.texto",
+              "porque": "ui.tutorial.guia.treino_grimorio.lancar.porque",
+              "dica": [
+                "ui.tutorial.guia.treino_grimorio.lancar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "treino_grimorio_turno",
+          "pos": [
+            32,
+            6
+          ],
+          "falante": {
+            "nome": "Instrutor de Treinamento",
+            "emoji": "🎓"
+          },
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "sala_exclusiva": true,
+          "texto": "Encerre o turno para continuar: lançar a magia usou sua ação principal, e as habilidades de Clérigo a seguir também precisam dela. Aqui na sala suas magias não gastam slots; fora dela cada magia gasta um, que volta com o tempo.",
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Encerre o turno para continuar"
+          },
+          "ordem": 5,
+          "guia": [
+            {
+              "id": "encerrar",
+              "texto": "ui.tutorial.guia.treino_grimorio_turno.encerrar.texto",
+              "porque": "ui.tutorial.guia.treino_grimorio_turno.encerrar.porque",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
           "id": "treino_cura",
           "pos": [
             32,
@@ -16965,7 +17038,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "cura",
@@ -17003,7 +17076,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "cura_area",
@@ -17036,7 +17109,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "purificacao",
@@ -17069,7 +17142,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "alvo": "ressurreicao",
@@ -17903,7 +17976,7 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 8,
+          "ordem": 10,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
