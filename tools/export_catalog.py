@@ -89,7 +89,7 @@ def build_catalog():
             "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base", "save_bonuses", "save_penalties",
             "crit_vulnerability_min_nat_roll",
-            "weapon_options", "shield_option",
+            "weapon_options", "shield_option", "random_equipment",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
             "resistances",
             "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",

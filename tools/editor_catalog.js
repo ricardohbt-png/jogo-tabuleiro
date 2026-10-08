@@ -1590,6 +1590,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "pequeno",
       "image": "goblinCombatente",
+      "base_attack_bonus": 2,
       "str_": 10,
       "dex": 14,
       "con_": 10,
@@ -1597,26 +1598,43 @@ window.EDITOR_CATALOG = {
       "fort": 2,
       "ref_": 4,
       "will": 1,
+      "random_equipment": {
+        "weapons": [
+          "lanca_curta",
+          "bordao",
+          "cajado_madeira",
+          "shortsword",
+          "maca",
+          "machado_basico"
+        ],
+        "shield": {
+          "id": "escudo_p",
+          "chance": 10,
+          "equipped": true
+        },
+        "consumables": [
+          {
+            "id": "health_potion_small",
+            "chance": 5,
+            "use_at_or_below_hp_ratio": 0.5,
+            "loot_if_unused": true
+          }
+        ]
+      },
       "attacks": [
         {
-          "name": "Adaga",
-          "atk_bonus": 4,
-          "damage": "1d4+2",
+          "name": "Espada Curta",
+          "atk_bonus": 2,
+          "damage": "1d6",
           "damage_types": [
             "physical"
           ],
           "num_attacks": 1,
           "on_hit": null,
-          "categoria": "perfurante"
+          "categoria": "cortante"
         }
       ],
       "special_abilities": [
-        {
-          "id": "arremesso",
-          "name": "Arremesso",
-          "action_type": "acao_bonus",
-          "descricao": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
-        },
         {
           "id": "vulnerabilidade",
           "name": "Vulnerabilidade",
@@ -1655,12 +1673,11 @@ window.EDITOR_CATALOG = {
           "valor": 3
         }
       },
-      "guaranteed_loot": [
-        "dagger"
-      ],
+      "guaranteed_loot": [],
+      "equipment_enabled": true,
       "ai_type": "goblin_melee",
       "undead": false,
-      "subtipo": "vegetal",
+      "subtipo": "raca_padrao",
       "percepcao": 13
     },
     {

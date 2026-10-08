@@ -44,6 +44,16 @@ armadura em 70%; as armaduras nunca se acumulam. `equipment_enabled` aplica a
 arma e os bônus defensivos; o loot usa os IDs realmente equipados. A imagem e os
 assets de miniatura permanecem os mesmos.
 
+### Kobold Lanceiro — armas sorteadas (2026-10-08)
+
+`make_monster` escolhe uma de quatro combinações com chances iguais: lança curta,
+adaga, espada curta com Escudo Pequeno ou bordão. A escolha fica em
+`kobold_weapon_id`; o aplicador de equipamento ajusta ataque e CA, e a IA
+especial de arremesso/recolhimento só é ativada para a lança. A arma e o escudo
+escolhidos entram no loot; se a lança já estiver no chão, não é duplicada. A
+chave visual continua `koboldlanceiro`: não há variantes nem alterações em PNG
+ou modelo 3D.
+
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
 `tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.

@@ -495,6 +495,29 @@
   }
   function loot(m) {
     const rows = [];
+    const randomEquipment = m.random_equipment;
+    const itemCatalog = new Map((((window.EDITOR_CATALOG || {}).items) || []).map(item => [item.id, item]));
+    const itemName = id => (itemCatalog.get(id) || {}).name || pretty(id);
+    if (randomEquipment && Array.isArray(randomEquipment.weapons) && randomEquipment.weapons.length) {
+      const weapons = randomEquipment.weapons.map(id => {
+        const item = itemCatalog.get(id) || {};
+        return `${itemName(id)} (${item.die || "dano não definido"})`;
+      }).join(", ");
+      const odds = randomEquipment.weapons.length === 6 ? "1 em 6 (≈16,7% cada)" : "chances iguais";
+      rows.push(`Arma principal sorteada a cada criação (${odds}): ${weapons}.`);
+      rows.push("A linha de ataque ‘Espada Curta’ e a miniatura acima são referências da ficha. Em jogo, a aparência acompanha a arma sorteada; cada arma mantém suas propriedades próprias.");
+    }
+    if (randomEquipment && randomEquipment.shield) {
+      const shield = randomEquipment.shield;
+      const item = itemCatalog.get(shield.id) || {};
+      rows.push(`${itemName(shield.id)}: ${Number(shield.chance || 0)}% de chance de surgir equipado (+${Number(item.ac_bonus || 0)} CA${item.damage_reduction ? ` e reduz ${Number(item.damage_reduction)} de dano recebido` : ""}).`);
+    }
+    if (randomEquipment && Array.isArray(randomEquipment.consumables)) {
+      for (const consumable of randomEquipment.consumables) {
+        const threshold = Math.round(Number(consumable.use_at_or_below_hp_ratio || 0) * 100);
+        rows.push(`${itemName(consumable.id)}: ${Number(consumable.chance || 0)}% de chance. A IA usa quando está com ${threshold}% dos PV ou menos${consumable.loot_if_unused ? "; se não usar, pode deixá-la como loot" : ""}.`);
+      }
+    }
     if (Array.isArray(m.weapon_options) && m.weapon_options.length) {
       rows.push(`Armas disponíveis: ${m.weapon_options.map(w => `${w.name || w.id} (${w.damage || "dano não definido"})`).join(", ")}`);
     }

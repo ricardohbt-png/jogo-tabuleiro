@@ -5194,6 +5194,12 @@ MONSTER_DEFS = [
         "fort": 2, "ref_": 4, "will": 1,
         # A arma sorteada em make_monster usa o aplicador do catálogo (+2 de ataque).
         "equipment_enabled": True, "base_attack_bonus": 2, "subtipo": "raca_padrao",
+        "random_equipment": {
+            "weapons": ["lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico"],
+            "shield": {"id": "escudo_p", "chance": 10, "equipped": True},
+            "consumables": [{"id": "health_potion_small", "chance": 5,
+                             "use_at_or_below_hp_ratio": 0.5, "loot_if_unused": True}],
+        },
         "attacks": [
             {"name": "Espada Curta", "atk_bonus": 2, "damage": "1d6",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
@@ -10466,12 +10472,19 @@ def make_monster(mdef, room):
     m["room_id"] = room["id"]
     combatant_potion = False
     if m.get("type") == "goblin_combatente":
-        m["combatant_weapon_id"] = random.choice((
-            "lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico"))
-        m["combatant_shield_id"] = "escudo_p" if random.random() < 0.10 else None
+        random_equipment = m.get("random_equipment") or {}
+        weapon_options = random_equipment.get("weapons") or (
+            "lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico")
+        m["combatant_weapon_id"] = random.choice(tuple(weapon_options))
+        shield_option = random_equipment.get("shield") or {"id": "escudo_p", "chance": 10}
+        m["combatant_shield_id"] = (shield_option["id"]
+                                    if random.random() < float(shield_option.get("chance", 0)) / 100
+                                    else None)
         shield_variant = "com_escudo" if m["combatant_shield_id"] else "sem_escudo"
         m["image"] = f"goblinCombatente_{m['combatant_weapon_id']}_{shield_variant}"
-        combatant_potion = random.random() < 0.05
+        potion_option = next(iter(random_equipment.get("consumables") or ()),
+                             {"id": "health_potion_small", "chance": 5})
+        combatant_potion = random.random() < float(potion_option.get("chance", 0)) / 100
         m["equipped_items"] = [m["combatant_weapon_id"]]
         if m["combatant_shield_id"]:
             m["equipped_items"].append(m["combatant_shield_id"])
@@ -10491,10 +10504,25 @@ def make_monster(mdef, room):
             m["equipped_items"].append(m["orc_shield_id"])
         if m["orc_armor_id"]:
             m["equipped_items"].append(m["orc_armor_id"])
+    if m.get("type") == "kobold_lanceiro":
+        # Quatro combinações com a mesma chance. A lança mantém a IA de
+        # arremesso/recuperação; espada curta sempre vem junto do escudo.
+        m["kobold_weapon_id"] = random.choice((
+            "lanca_curta", "dagger", "shortsword", "bordao"))
+        m["kobold_weapon_mode"] = (
+            "lance" if m["kobold_weapon_id"] == "lanca_curta" else "melee")
+        m["kobold_lance_in_hand"] = m["kobold_weapon_mode"] == "lance"
+        m["kobold_lance_item"] = None
+        m["equipment_enabled"] = True
+        m["base_attack_bonus"] = 2  # mantém o +1 do Kobold com FOR 8
+        m["equipped_items"] = [m["kobold_weapon_id"]]
+        m["kobold_shield_id"] = "escudo_p" if m["kobold_weapon_id"] == "shortsword" else None
+        if m["kobold_shield_id"]:
+            m["equipped_items"].append(m["kobold_shield_id"])
     _aplicar_equipamentos_monstro(m)
     if combatant_potion:
         m.setdefault("equipment_consumables", []).append(
-            deepcopy(_DUNGEON_ITEM_CATALOG["health_potion_small"]))
+            deepcopy(_DUNGEON_ITEM_CATALOG[potion_option["id"]]))
     # Inicializa contadores de habilidades especiais (formato novo)
     if "special_abilities" in m:
         m["ability_uses"] = {
@@ -10569,13 +10597,12 @@ def make_monster(mdef, room):
         m["equipment_poison"] = "veneno_fungo_acre"
     # â”€â”€ Kobold Lanceiro: lanÃ§a envenenada + doses extras â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if m.get("type") == "kobold_lanceiro":
-        m["kobold_lance_in_hand"] = True
-        m["kobold_lance_item"] = deepcopy(next(
-            (i for i in SHOP_WEAPONS if i.get("id") == "lanca_curta"),
-            {"id": "lanca_curta", "name": "Lança Curta", "emoji": "🔱",
-             "die": "1d6", "stat": "str_", "throw_range": 4,
-             "categoria": "perfurante"}))
-        m["kobold_weapon_mode"] = "lance"
+        if m.get("kobold_weapon_id", "lanca_curta") == "lanca_curta":
+            m["kobold_lance_item"] = deepcopy(next(
+                (i for i in SHOP_WEAPONS if i.get("id") == "lanca_curta"),
+                {"id": "lanca_curta", "name": "Lança Curta", "emoji": "🔱",
+                 "die": "1d6", "stat": "str_", "throw_range": 4,
+                 "categoria": "perfurante"}))
         m["veneno_arma_ativo"]  = True               # 1 dose jÃ¡ aplicada na lanÃ§a
         m["veneno_arma_id"]     = "veneno_aranha_sombria"
         m["veneno_doses_extras"] = random.randint(1, 3)   # 1â€“3 frascos extras
@@ -40497,6 +40524,8 @@ class GameRoom(TutorialTraining):
         """
         if m.get("type") not in {"kobold_lanceiro", "kobold_besteiro"}:
             return False
+        if m.get("type") == "kobold_lanceiro" and m.get("kobold_weapon_mode") == "melee":
+            return False
         if m.get("kobold_lance_in_hand"):
             return False
         found = next((gi for gi in self.ground_items.values()
@@ -42691,12 +42720,16 @@ class GameRoom(TutorialTraining):
         gold_total = 0
 
         if m.get("type") == "kobold_lanceiro":
-            # Arma sempre
-            lanca = next((i for i in SHOP_WEAPONS if i["id"] == "lanca_curta"), None)
-            # Se a lança já foi arremessada, ela continua sendo o item no
-            # chão; não duplica o saque ao morrer o kobold.
-            if lanca and m.get("kobold_lance_in_hand", True):
-                items_sempre.append(deepcopy(lanca))
+            # A arma sorteada sempre vai ao loot, exceto a lança que já foi
+            # arremessada (ela permanece como item no chão).
+            weapon_id = m.get("kobold_weapon_id", "lanca_curta")
+            weapon = next((i for i in SHOP_WEAPONS if i["id"] == weapon_id), None)
+            if weapon and (weapon_id != "lanca_curta" or m.get("kobold_lance_in_hand", True)):
+                items_sempre.append(deepcopy(weapon))
+            shield_id = m.get("kobold_shield_id")
+            shield = next((i for i in SHOP_ARMORS if i["id"] == shield_id), None)
+            if shield:
+                items_sempre.append(deepcopy(shield))
 
             # Doses de veneno restantes (dose na arma + doses extras)
             doses = m.get("veneno_doses_extras", 0)
@@ -44293,7 +44326,8 @@ class GameRoom(TutorialTraining):
         # A lança recuperada é a melhor opção para manter o kobold perigoso.
         # O recolhimento em si acontece automaticamente no passo que entra na
         # casa do item; aqui a IA decide procurá-la quando ficou desarmada.
-        if not m.get("kobold_lance_in_hand"):
+        if (m.get("kobold_weapon_mode") != "melee"
+                and not m.get("kobold_lance_in_hand")):
             lances = [gi for gi in self.ground_items.values()
                       if (gi.get("item") or {}).get("id") == "lanca_curta"]
             if lances:
