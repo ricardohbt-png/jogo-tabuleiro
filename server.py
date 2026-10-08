@@ -15102,6 +15102,8 @@ class GameRoom(TutorialTraining):
                     mo.get("type"), mo.get("hostility_override"))
                 if ok and override is not None:
                     m["hostility_override"] = override
+            if mo.get("autonomous_hostility") is True:
+                m["autonomous_hostility"] = True
             if m.get("voo"):
                 if "altura_max" in mo:
                     m["altura_max"] = normalizar_altura(mo["altura_max"])
@@ -17577,7 +17579,7 @@ class GameRoom(TutorialTraining):
 
     async def _verificar_avistamento(self):
         """Só-mestre: se um herói vivo avista um monstro dormente, acorda a SALA
-        inteira dele (alertado=True) e o coloca em Manual. Idempotente."""
+        inteira dele (alertado=True) e a coloca em Manual, salvo exceção autorada."""
         if not self._mestre_ativo():
             return
         observadores = [
@@ -17611,7 +17613,10 @@ class GameRoom(TutorialTraining):
             for mm in grupo:
                 if not mm.get("alertado"):
                     mm["alertado"] = True
-                    mm["control_mode"] = "manual"   # mestre dirige por padrÃ£o
+                    room = self._room_by_id(mm.get("room_id"))
+                    auto_hostility = (mm.get("autonomous_hostility") is True
+                                      and room is not None and not room.get("locked"))
+                    mm["control_mode"] = "auto" if auto_hostility else "manual"
             chave = rid if rid is not None else id(m)
             if chave not in salas_narradas:
                 salas_narradas.add(chave)
@@ -18121,6 +18126,12 @@ class GameRoom(TutorialTraining):
         for r in locked_owners:
             r["locked"] = False
             self._reveal_room(r)
+            for monster in self.monsters.values():
+                if (monster.get("room_id") == r.get("id")
+                        and monster.get("autonomous_hostility") is True
+                        and monster.get("hp", 0) > 0):
+                    monster["alertado"] = True
+                    monster["control_mode"] = "auto"
             key = "room_" + r["role"]
             if key in GM:
                 await self.gm_say(gm(key))

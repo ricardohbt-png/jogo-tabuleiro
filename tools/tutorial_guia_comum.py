@@ -64,6 +64,28 @@ def P(id, texto, porque=None, ui=None, dica=(), conclui=None):
 
 
 GUIA = {
+    "fala_hostilidade": [
+        P("abrir", ("Abra a porta da sala para revelar o que há dentro.",
+                    "Open the room door to reveal what is inside."),
+          porque=("A porta mantém os monstros adormecidos até a sala ser aberta.",
+                  "The door keeps the monsters dormant until the room is opened."),
+          ui="porta:[33,15]",
+          conclui={"tipo": "abrir_porta", "alvo": [33, 15]}),
+        P("bardo", ("Confira no Conhecimento das Lendas do Bardo: “hostil a todos os monstros”.",
+                    "Check the Bard's Knowledge of Legends: “hostile to all monsters.”"),
+          porque=("A passiva do Bardo revela informações úteis antes de escolher como agir.",
+                  "The Bard's passive reveals useful information before you choose how to act."),
+          ui="monstro:rato_gigante"),
+        P("observar", ("Afaste-se e encerre o turno; depois aperte Entendi ao fim da luta.",
+                        "Keep your distance and end your turn; press Got it when the fight ends."),
+          porque=("Inimigos podem se ocupar uns com os outros enquanto o grupo guarda recursos.",
+                  "Enemies can keep one another busy while the party saves its resources.")),
+        P("granada", ("Pegue a Granada Superior no baú e arremesse-a nos sobreviventes.",
+                      "Take the Superior Grenade from the chest and throw it at the survivors."),
+          porque=("A explosão atinge uma área; espere os inimigos se agruparem para aproveitar melhor o item.",
+                  "The blast hits an area; wait for enemies to group together to get more from the item."),
+          ui="casa:[35,16]"),
+    ],
     "fala_0": [
         P("ver", ("Veja seu [[movimento]]: são os passos que você tem neste [[turno]].",
                   "Check your [[movimento]]: the steps you have this [[turno]]."),
@@ -212,7 +234,7 @@ GUIA = {
         P("pegar", ("Pegue a maça do baú desta sala.", "Take the mace from this room's chest."),
           porque=("Impacto é o ponto fraco do esqueleto: a [[vulnerabilidade]] soma dano.",
                   "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage."),
-          ui="casa:[42,17]"),
+          ui="casa:[49,17]"),
         P("equipar", ("Abra a bolsa com [[atalho:inventario]] e equipe a maça de treino.",
                       "Open the bag with [[atalho:inventario]] and equip the training mace."),
           ui="bolsa:maca_treino",
