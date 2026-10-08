@@ -3257,6 +3257,8 @@ FOTO_SALA_CATEGORIAS = {
     # conexão / sala
     "code": "conexao", "connections": "conexao", "account_by_pid": "conexao",
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
+    # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
+    "send_to": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
     "turn_timer_started_ms": "janela", "turn_token": "janela",
