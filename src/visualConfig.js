@@ -104,6 +104,7 @@ window.VC = {
     desmoronada:   { color: [0.33, 0.30, 0.25] },
     madeira:        { color: [0.29, 0.13, 0.045] },
     duna_deserto:  { color: [0.67, 0.43, 0.20] },
+    parede_terra:  { color: [0.46, 0.27, 0.12] },
     caverna_congelada: { color: [0.29, 0.56, 0.66] },
     duna_neve:         { color: [0.79, 0.90, 0.94] },
     rocha:          { color: [0.23, 0.22, 0.22] },

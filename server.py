@@ -208,7 +208,7 @@ def altura_para_sobrepor(porte):
 # de visão e o alcance vertical combinam as duas camadas; quedas reutilizam as
 # faixas de dano do voo.
 ELEVACAO_TERRENO_MIN = -1
-ELEVACAO_TERRENO_MAX = 10
+ELEVACAO_TERRENO_MAX = 40
 
 
 def _chave_xy(key):
@@ -7880,6 +7880,7 @@ def validar_dungeon(defn):
                 return False, f"porta {key} referencia decoracao que nao esta marcada como objeto-chave."
 
     mats = defn.get("materiais")
+    abismo_tiles = set()
     if mats is not None:
         if not isinstance(mats, dict):
             return False, "materiais deve ser um objeto (mapa 'x,y' -> id)."
@@ -7906,12 +7907,49 @@ def validar_dungeon(defn):
                 return False, f"material de parede {mid!r} em casa não-parede ({mx},{my})."
             if mid == "rodamoinho_profundo":
                 whirlpool_deep_tiles.add((mx, my))
+            if mid == "ceu_abismo":
+                abismo_tiles.add((mx, my))
         if whirlpool_deep_tiles and not any(
                 (x + 1, y) in whirlpool_deep_tiles
                 and (x, y + 1) in whirlpool_deep_tiles
                 and (x + 1, y + 1) in whirlpool_deep_tiles
                 for x, y in whirlpool_deep_tiles):
             return False, "Rodamoinho profundo precisa ocupar no mínimo uma área contínua de 2x2 casas."
+
+    def _posicao_em_abismo(pos):
+        try:
+            tile = (int(pos[0]), int(pos[1]))
+        except (TypeError, ValueError, IndexError):
+            return False
+        return tile in abismo_tiles and tile not in ponte_reach
+
+    if start_mode == "entrance" and _posicao_em_abismo([ent["x"], ent["y"]]):
+        return False, "entrada não pode ficar sobre o Céu/Abismo sem uma ponte."
+    for spawn in defn.get("hero_spawns") or []:
+        if _posicao_em_abismo(spawn["pos"]):
+            return False, f"hero_spawn de {spawn['class_id']!r} não pode ficar sobre o Céu/Abismo sem uma ponte."
+    monster_defs_by_type = {m["type"]: m for m in MONSTER_DEFS}
+    for mo in defn.get("monsters") or []:
+        base = monster_defs_by_type.get(mo.get("type"), {})
+        voo = bool(base.get("voo"))
+        altura = mo.get("altura", base.get("altura_inicial", ALTURA_MIN))
+        if voo and isinstance(altura, int) and altura > ALTURA_MIN:
+            continue
+        w, h = base.get("size") or [1, 1]
+        oriented = bool(base.get("oriented"))
+        facing = mo.get("facing") or [-1, 0]
+        if oriented:
+            fx, fy = facing if facing in ([1, 0], [-1, 0], [0, 1], [0, -1]) else [-1, 0]
+            width, length = (1, w) if h == 1 else (w, h)
+            px, py = -fy, fx
+            footprint = [(mo["pos"][0] - fx * depth + px * lane,
+                          mo["pos"][1] - fy * depth + py * lane)
+                         for depth in range(length) for lane in range(width)]
+        else:
+            footprint = [(mo["pos"][0] + dx, mo["pos"][1] + dy)
+                         for dx in range(w) for dy in range(h)]
+        if any(_posicao_em_abismo(tile) for tile in footprint):
+            return False, f"monstro não voador {mo.get('type')!r} não pode começar sobre o Céu/Abismo sem uma ponte."
 
     elevacoes = defn.get("elevacoes")
     if elevacoes is not None:
@@ -8763,6 +8801,7 @@ DECOR_MODEL3D = {
     "capim_amarelado": "assets/objetos/capim_amarelado.glb",
     "estatua_soterrada": "assets/objetos/estatua_soterrada.glb",
     "rochas_rachadas": "assets/objetos/rochas_rachadas.glb",
+    "rocha_grande": "assets/objetos/rocha_grande.glb",
     "ninho_abutres": "assets/objetos/ninho_abutres.glb",
     "arco_pedra_deserto": "assets/objetos/arco_pedra_deserto.glb",
     "pedra_sacrificio": "assets/objetos/pedra_sacrificio.glb",
@@ -8947,6 +8986,9 @@ DECOR_TYPES = {
     "rochas_rachadas": _decor("Rochas rachadas", "🪨", [1, 1], gira=True,
                                 pisavel=True, loot_capaz=False,
                                 image="rochas_rachadas.png"),
+    "rocha_grande": _decor("Rocha grande", "🪨", [2, 2], gira=True,
+                             alto=True, loot_capaz=False,
+                             image="rocha_grande.png"),
     "ninho_abutres": _decor("Ninho de abutres", "🪶", [1, 1], gira=True,
                               pisavel=True, loot_capaz=False,
                               image="ninho_abutres.png"),
@@ -8998,6 +9040,7 @@ MATERIAIS = {
     "grama":         _mat("Grama", "piso", "#287322"),
     "agua":          _mat("Água", "piso", "#126da1", terreno="agua"),
     "agua_profunda": _mat("Água profunda", "piso", "#06173f", terreno="agua_profunda"),
+    "ceu_abismo":    _mat("Céu/Abismo", "piso", "#78bce8", terreno="abismo"),
     "rodamoinho":    _mat("Rodamoinho", "piso", "#126da1", terreno="rodamoinho"),
     "rodamoinho_profundo": _mat("Rodamoinho profundo", "piso", "#06173f", terreno="rodamoinho_profundo"),
     "piso_congelado": _mat("Piso congelado", "piso", "#78c8e2", terreno="piso_congelado"),
@@ -9006,6 +9049,7 @@ MATERIAIS = {
     "pantano":       _mat("Pântano", "piso", "#354e31", terreno="pantano", custo_mov=1),
     "areia_deserto": _mat("Areia do deserto", "piso", "#c49a58", custo_mov=2),
     "duna_deserto":  _mat("Duna do deserto", "parede", "#b9823f"),
+    "parede_terra":  _mat("Parede de terra", "parede", "#75451f"),
     "caverna_congelada": _mat("Parede de caverna congelada", "parede", "#4b8fa8"),
     "duna_neve":      _mat("Duna de neve", "parede", "#c9e5ef"),
     "rocha":         _mat("Rocha", "parede", "#4a4746"),
@@ -10925,7 +10969,7 @@ class GameRoom(TutorialTraining):
         self._fire_damage_tiles = {}
         self._terrenos_inverno = {}
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
-        self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..2)
+        self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..40)
         self.alturas_parede = {}       # {(x,y): nível manual da parede (só visual)}
         self.transicao_altura = "rampa"
         self._mat_solid_tiles = set()  # casas de material sÃ³lido (entulho) â€” bloqueia
@@ -15180,7 +15224,7 @@ class GameRoom(TutorialTraining):
         out = []; visto = {(sx, sy)}; fila = [(sx, sy)]
         while fila and len(out) < n:
             x, y = fila.pop(0)
-            if self.tiles[y][x] != WALL:
+            if self.tiles[y][x] != WALL and not self._casa_abismo(x, y):
                 out.append([x, y])
             for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 nx, ny = x + dx, y + dy
@@ -16796,6 +16840,15 @@ class GameRoom(TutorialTraining):
     def _ponte_em(self, x, y):
         return (int(x), int(y)) in getattr(self, "_ponte_tiles", set())
 
+    def _casa_abismo(self, x, y):
+        """True quando a casa expõe o material de abismo, sem deck de ponte."""
+        try:
+            tile = (int(x), int(y))
+        except (TypeError, ValueError):
+            return False
+        return (tile not in getattr(self, "_ponte_tiles", set())
+                and getattr(self, "materiais", {}).get(tile) == "ceu_abismo")
+
     def _blocks_tile(self, x, y):
         """Tile intransponível: parede, porta fechada ou decoração sólida.
 
@@ -17692,6 +17745,9 @@ class GameRoom(TutorialTraining):
             return
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h):
             return
+        if self._casa_abismo(nx, ny) and not self._voo_imune_terreno(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
+            return
         voo_livre = self._voo_ignora_obstaculos(p)
         if not voo_livre and self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny) and not self._ponte_em(nx, ny):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado")})
@@ -17886,6 +17942,12 @@ class GameRoom(TutorialTraining):
                 return
 
             m["altura"] = nova
+            if nova <= ALTURA_MIN:
+                await self._matar_no_abismo(m, pid)
+                if not self._vivo(m):
+                    self._reiniciar_timer_manual()
+                    await self.push_state()
+                    return
             m["master_moves_left"] = disponivel - custo
             if "_water_moves_left" in m:
                 m["_water_moves_left"] = max(0, int(m.get("_water_moves_left", 0) or 0) - custo)
@@ -17935,6 +17997,11 @@ class GameRoom(TutorialTraining):
                 "msg": T("erro.algo_embaixo_impede_descer")})
             return
         p["altura"] = nova
+        if nova <= ALTURA_MIN:
+            await self._matar_no_abismo(p, pid)
+            if not p.get("alive"):
+                await self.push_state()
+                return
         p["moves_left"] = int(p.get("moves_left", 0) or 0) - custo
         if nova > ALTURA_MIN:
             await self._tempestade_verificar_entrada(p, None, p.get("pos"))
@@ -18534,7 +18601,7 @@ class GameRoom(TutorialTraining):
         para uma casa ESCOLHIDA."""
         if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
             return False
-        if self._blocks_tile(tx, ty):
+        if self._blocks_tile(tx, ty) or self._casa_abismo(tx, ty):
             return False
         occupied = {tuple(m["pos"]) for m in self.monsters.values() if m.get("hp", 0) > 0}
         occupied |= {tuple(c["pos"]) for c in self.chests.values()}
@@ -20477,6 +20544,9 @@ class GameRoom(TutorialTraining):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny): return False
         actor = next((a for a in self._all_animados() if a.get("id") == self_id), None)
+        if actor is None and self.prisoner and self.prisoner.get("id") == self_id:
+            actor = self.prisoner
+        if self._casa_abismo(nx, ny) and not self._voo_imune_terreno(actor): return False
         if actor and self._training_room(actor, nx, ny): return False
         if any(a.get("alive") and a["pos"] == [nx, ny] for a in self.training_allies.values()): return False
         if origem is not None:
@@ -23174,15 +23244,26 @@ class GameRoom(TutorialTraining):
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error", "msg": T("erro.ressurreicao_requer_contato_adjacente_co")}); return
 
+        pos_retorno = None
+        pos_cadaver = list(alvo.get("pos", [0, 0]))
+        if len(pos_cadaver) >= 2 and self._casa_abismo(*pos_cadaver):
+            pos_retorno = self._posicao_segura_ressurreicao(alvo, pos_cadaver)
+            if pos_retorno is None:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.ressurreicao_sem_local_seguro")})
+                return
+
         animation_id = f"ressurreicao_{pid}_{alvo['id']}_{self.round_num}_{new_id()}"
         await self.broadcast({
             "type": "spell_animation", "spell_id": "ressurreicao", "phase": "start",
             "animation_id": animation_id, "caster_id": pid, "target_id": alvo["id"],
-            "origin": list(p["pos"]), "target": list(alvo["pos"]),
+            "origin": list(p["pos"]), "target": list(pos_retorno or alvo["pos"]),
             "travel_ms": 620, "impact_ms": 1180,
         })
         alvo["alive"] = True
         alvo["hp"] = {1: 1, 2: max(1, alvo["max_hp"] // 2), 3: alvo["max_hp"]}[nivel]
+        if pos_retorno is not None:
+            alvo["pos"] = list(pos_retorno)
         self.hero_corpses.pop(alvo["id"], None)
         alvo["action_done"] = True          # ressuscitado nÃ£o age neste turno
         alvo["bonus_action_used"] = True
@@ -23196,7 +23277,7 @@ class GameRoom(TutorialTraining):
         await self.broadcast({
             "type": "spell_animation", "spell_id": "ressurreicao", "phase": "resolve",
             "animation_id": animation_id, "caster_id": pid, "target_id": alvo["id"],
-            "hp": alvo["hp"], "success": True,
+            "target": list(alvo["pos"]), "hp": alvo["hp"], "success": True,
         })
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
@@ -27338,6 +27419,7 @@ class GameRoom(TutorialTraining):
         self._pending_teleporte = None
         origem = list(alvo.get("pos", [0, 0]))
         alvo["pos"] = [tx, ty]
+        await self._matar_no_abismo(alvo, caster["id"])
         await self.broadcast({"type": "teleporte_result", "success": True,
                               "caster_id": caster["id"], "target_id": alvo["id"],
                               "target_name": alvo.get("name") or alvo.get("nome"),
@@ -28317,6 +28399,7 @@ class GameRoom(TutorialTraining):
     def _passo_livre_licantropo(self, p, nx, ny):
         if p.get("rodamoinho_preso") or p.get("rodamoinho_profundo_preso"): return False
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
+        if self._casa_abismo(nx, ny) and not self._voo_imune_terreno(p): return False
         if self.tiles[ny][nx] == WALL and not self._is_illusion_wall(nx, ny) and not self._ponte_em(nx, ny): return False
         if (self._is_closed_door(nx, ny) and not self._ponte_em(nx, ny)) or self._blocks_tile(nx, ny): return False
         if any(m.get("hp", 0) > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
@@ -34688,11 +34771,6 @@ class GameRoom(TutorialTraining):
                 await self._conceder_xp_armadilha(arm, alvo)
             return
 
-        quantidade, faces = dados
-        mult = multiplicador_queda(alvo)
-        dano_bruto = await self._rolar_dano_mostrado(
-            quantidade, faces, T("dado.dano_queda"), DMG_PHYSICAL) * mult
-        dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._avisar_armadilha(arm["tipo"], [x, y], [alvo])
 
         # O tabuleiro é bidimensional: remover a tábua faz a entidade ocupar o
@@ -34700,6 +34778,18 @@ class GameRoom(TutorialTraining):
         ponte.setdefault("buracos", []).append([x, y])
         self._rebuild_pontes_index()
         self.armadilhas = [a for a in self.armadilhas if a.get("id") != arm.get("id")]
+        if await self._matar_no_abismo(alvo, arm.get("criador")):
+            await self._enviar_trap_result(
+                alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
+                descricao=tipo["descricao"],
+                efeitos_extra=["☠️ Caiu no abismo e morreu."], tipo_id=arm["tipo"])
+            return
+
+        quantidade, faces = dados
+        mult = multiplicador_queda(alvo)
+        dano_bruto = await self._rolar_dano_mostrado(
+            quantidade, faces, T("dado.dano_queda"), DMG_PHYSICAL) * mult
+        dano = self._apply_damage_types(dano_bruto, [DMG_PHYSICAL], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_PHYSICAL, arm.get("criador"))
         faixa = faixa_altura_queda(queda)
         await self.gm_say(T("narracao.cai_pela_ponte_chao_illusorio",
@@ -34765,6 +34855,7 @@ class GameRoom(TutorialTraining):
                                             descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[], tipo_id=arm["tipo"])
             return False
         alvo["pos"] = destino
+        await self._matar_no_abismo(alvo, arm.get("criador"))
         if self._eh_jogador(alvo):
             self._reveal_around(destino[0], destino[1], radius=self._get_raio_visao(alvo))
         await self.broadcast({"type": "armadilha_teleporte", "alvo_id": alvo_id,
@@ -34835,6 +34926,7 @@ class GameRoom(TutorialTraining):
             destino = self._saida_teletransporte_livre(p, origem)
             if destino is not None:
                 p["pos"] = list(destino)
+                await self._matar_no_abismo(p)
             for key in ("bau_engolido", "bau_engolido_por", "bau_engolido_pos"):
                 p.pop(key, None)
             await self.gm_say(T(
@@ -35334,6 +35426,8 @@ class GameRoom(TutorialTraining):
                             or (self.tiles[ty][tx] == DOOR and not self._is_closed_door(tx, ty))
                             or self._is_illusion_wall(tx, ty))
                 if (not tem_piso or self._blocks_tile(tx, ty)
+                        or (self._casa_abismo(tx, ty)
+                            and not self._voo_imune_terreno(entidade))
                         or self._entity_blocks(tx, ty, exclude_mid=exclude_mid,
                                                exclude_pid=exclude_pid, actor=entidade)):
                     valido = False
@@ -35341,6 +35435,62 @@ class GameRoom(TutorialTraining):
             if valido:
                 return [ax, ay]
         return None
+
+    def _casa_segura_ressurreicao(self, alvo, x, y):
+        """Casa sólida livre para devolver um herói cujo cadáver caiu no abismo."""
+        exclude_mid = alvo.get("id") if self.monsters.get(alvo.get("id")) is alvo else None
+        exclude_pid = alvo.get("id") if self.players.get(alvo.get("id")) is alvo else None
+        for tx, ty in self._tiles_entidade_em(alvo, x, y):
+            if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
+                return False
+            tem_piso = (self._ponte_em(tx, ty) or self.tiles[ty][tx] == FLOOR
+                        or (self.tiles[ty][tx] == DOOR and not self._is_closed_door(tx, ty))
+                        or self._is_illusion_wall(tx, ty))
+            if (not tem_piso or self._casa_abismo(tx, ty)
+                    or self._blocks_tile(tx, ty)
+                    or self._entity_blocks(tx, ty, exclude_mid=exclude_mid,
+                                           exclude_pid=exclude_pid, actor=alvo)):
+                return False
+        return True
+
+    def _posicao_segura_ressurreicao(self, alvo, origem):
+        """Busca uma casa segura por distância Manhattan, com desempate estável."""
+        if (not isinstance(origem, (list, tuple)) or len(origem) < 2
+                or self.map_w <= 0 or self.map_h <= 0):
+            return None
+        ox, oy = int(origem[0]), int(origem[1])
+        candidates = sorted(
+            ((x, y) for y in range(self.map_h) for x in range(self.map_w)),
+            key=lambda pos: (abs(pos[0] - ox) + abs(pos[1] - oy), pos[1], pos[0]))
+        for x, y in candidates:
+            if self._casa_segura_ressurreicao(alvo, x, y):
+                return [x, y]
+        return None
+
+    async def _matar_no_abismo(self, alvo, killer_pid=None):
+        """Resolve a morte automática ao ocupar abismo sem voo ativo."""
+        if (not alvo or self._voo_imune_terreno(alvo)
+                or not self._vivo(alvo)):
+            return False
+        pos = alvo.get("pos") or []
+        tiles = self._tiles_entidade_em(alvo, pos[0], pos[1]) if len(pos) >= 2 else []
+        if not any(self._casa_abismo(x, y) for x, y in tiles):
+            return False
+
+        if "vida_atual" in alvo:
+            alvo["vida_atual"] = 0
+            await self._animado_morre(alvo, killer_pid)
+        elif self.players.get(alvo.get("id")) is alvo:
+            alvo["hp"] = 0
+            await self._player_dies(alvo["id"], force=True)
+        elif self.monsters.get(alvo.get("id")) is alvo:
+            alvo["hp"] = 0
+            await self._monster_dies(alvo, killer_pid, force=True)
+        elif self.prisoner is alvo:
+            await self._prisioneiro_morre()
+        else:
+            return False
+        return True
 
     async def _aplicar_queda(self, alvo, motivo="perda_de_controle", killer_pid=None):
         """Faz uma criatura voadora cair e aplica o dano da faixa de altura.
@@ -35373,9 +35523,13 @@ class GameRoom(TutorialTraining):
         faixa = faixa_altura_queda(altura)
         quantidade, faces = dados
         alvo["altura"] = ALTURA_MIN
+        if await self._matar_no_abismo(alvo, killer_pid):
+            return {"morte": "abismo", "pos": list(alvo.get("pos", pos_queda))}
         pouso = self._quadrado_livre_mais_proximo(alvo, pos_queda)
         if pouso is not None:
             alvo["pos"] = pouso
+        if await self._matar_no_abismo(alvo, killer_pid):
+            return {"morte": "abismo", "pos": list(alvo.get("pos", pos_queda))}
         mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
             quantidade, faces, T("dado.dano_queda"), DMG_PHYSICAL) * mult
@@ -35429,6 +35583,8 @@ class GameRoom(TutorialTraining):
         qualquer descida causa a queda. Criaturas voando acima do chão não
         interagem com o desnível do piso.
         """
+        if await self._matar_no_abismo(alvo, killer_pid):
+            return {"morte": "abismo", "pos": list(alvo.get("pos", destino))}
         if not self._queda_no_passo(alvo, origem, destino):
             return None
         nivel_origem = self._elevacao_terreno(*origem[:2])
@@ -38455,7 +38611,8 @@ class GameRoom(TutorialTraining):
                 for _ in range(distancia):
                     origem = list(criatura["pos"])
                     destino = [origem[0] + dx, origem[1] + dy]
-                    if not self._monster_can_occupy(criatura, *destino):
+                    if not self._monster_can_occupy(criatura, *destino,
+                                                   allow_abismo=True):
                         break
                     criatura["pos"] = destino
                     await self._aplicar_queda_terreno(criatura, origem, destino)
@@ -39025,7 +39182,8 @@ class GameRoom(TutorialTraining):
                 return True
         return self._animado_em([x, y], exclude_id=exclude_aid, actor=actor)
 
-    def _monster_can_occupy(self, m, ax, ay, facing=None, from_anchor=None):
+    def _monster_can_occupy(self, m, ax, ay, facing=None, from_anchor=None,
+                            allow_abismo=False):
         """True se o monstro m pode posicionar sua âncora em (ax,ay): footprint
         inteiro dentro do mapa, sem parede/porta fechada e sem outra entidade
         viva (a própria m é ignorada via exclude_mid). Voo configurado para
@@ -39038,6 +39196,9 @@ class GameRoom(TutorialTraining):
             return False
         for tx, ty in self._monster_tiles_at(m, ax, ay, facing):
             if not (0 <= tx < self.map_w and 0 <= ty < self.map_h):
+                return False
+            if (self._casa_abismo(tx, ty) and not self._voo_imune_terreno(m)
+                    and not allow_abismo):
                 return False
             if not voo_livre and self._blocks_tile(tx, ty):  # parede, porta ou obstáculo sólido
                 ghost = (m.get("type") == "gigante_runico"
@@ -42861,6 +43022,7 @@ class GameRoom(TutorialTraining):
                 await self.gm_say(T("narracao.escapa_ao_ser_arrastado_por", c=nome_criatura(c), monstro=nome_criatura(m)))
                 continue
             c["pos"] = list(destino)
+            await self._matar_no_abismo(c, m.get("id"))
             await self.gm_say(T("narracao.arrasta", monstro=nome_criatura(m), c=nome_criatura(c)))
 
     async def _processar_escape_agarrar(self, p):
@@ -43103,6 +43265,7 @@ class GameRoom(TutorialTraining):
             alvo["pos"] = list(destino)
         else:
             alvo["pos"] = list(m.get("pos", alvo.get("pos", [0, 0])))
+        await self._matar_no_abismo(alvo, m.get("id"))
         await self.gm_say(T("narracao.cospe", monstro=nome_criatura(m), alvo_get_name_or_alvo_ge=nome_criatura(alvo), motivo=motivo))
 
     async def _tirano_passo_devastador(self, m):
@@ -45887,8 +46050,8 @@ class GameRoom(TutorialTraining):
         m["hp"] = 0
         await self._monster_dies(m, None)
 
-    async def _monster_dies(self, m, killer_pid):
-        if m.get("training_target"):
+    async def _monster_dies(self, m, killer_pid, force=False):
+        if m.get("training_target") and not force:
             m["hp"] = m["max_hp"]
             m.pop("paralisado", None)
             return
@@ -45898,7 +46061,7 @@ class GameRoom(TutorialTraining):
         # definitivamente se o último dano foi fogo, ou se ácido já bloqueou
         # sua regeneração. O monstro permanece na fila de iniciativa para
         # poder se erguer no início do próximo turno.
-        if m.get("type") == "troll":
+        if m.get("type") == "troll" and not force:
             ultimo_tipo = set(m.get("troll_ultimo_dano_tipos", []))
             morte_final = bool(m.get("troll_morte_definitiva")) \
                 or bool(m.get("troll_regeneracao_bloqueada")) \
@@ -45917,7 +46080,7 @@ class GameRoom(TutorialTraining):
             await self._reverter_metamorfose(m, T("narracao.motivo_meta.forma_zerou"), morreu=True)
 
         # Defesa automática das duas versões do Minotauro.
-        if not m.get("_ultimo_esforco_monstro_turnos"):
+        if not force and not m.get("_ultimo_esforco_monstro_turnos"):
             cds = m.setdefault("monster_ability_cooldowns", {})
             instinto = next((ab for ab in m.get("special_abilities", [])
                              if ab.get("monster_effect") == "instinto_sobrevivencia_minotauro"), None)
@@ -45943,7 +46106,7 @@ class GameRoom(TutorialTraining):
         # sagrado/luz IGNORA e o destrÃ³i de vez (sem retorno).
         rm = next((ab for ab in m.get("special_abilities", [])
                    if ab["id"] == "resistencia_morta"), None)
-        if rm:
+        if rm and not force:
             if m.get("_dano_sagrado_recente"):
                 await self.gm_say(T("narracao.e_destruido_pela_luz_sagrada_nao_ha_reto", monstro=nome_criatura(m)))
             else:
@@ -46004,6 +46167,7 @@ class GameRoom(TutorialTraining):
                 c.pop("engolido_dano", None)
                 c.pop("engolido_limite", None)
                 c["pos"] = list(m.get("pos", c.get("pos", [0, 0])))
+                await self._matar_no_abismo(c, m.get("id"))
                 await self.gm_say(T("narracao.o_corpo_do_deixa_escapar", monstro=nome_criatura(m), c_get_name_or_c_get_nome=nome_criatura(c)))
 
         # NÃ­vel para Animar Mortos: CR fracionÃ¡rio â‰¤ 0.5 â†’ 1 slot; CR inteiro = round(CR)
@@ -46208,11 +46372,11 @@ class GameRoom(TutorialTraining):
         if m.get("boss"):
             await self.end_game(victory=True)
 
-    async def _player_dies(self, pid):
+    async def _player_dies(self, pid, force=False):
         p = self.players[pid]
         if not p["alive"]: return
         # RegeneraÃ§Ã£o: se ainda hÃ¡ reserva, reergue com 1 HP em vez de cair (-3 fome/sede).
-        if p.get("regen_ressurge") and p.get("regen_pool", 0) > 0:
+        if not force and p.get("regen_ressurge") and p.get("regen_pool", 0) > 0:
             visual_id = p.get("regen_visual_id")
             p["hp"] = 1
             p["fome"] = max(0, p.get("fome", 0) - 3)
@@ -46227,7 +46391,7 @@ class GameRoom(TutorialTraining):
             await self.gm_say(T("narracao.seria_derrotado_mas_a_regeneracao_o_reer", heroi=p['name']))
             return
         # Instinto de SobrevivÃªncia: tÃ©cnica genÃ©rica de recarga longa â€” sobrevive com 1 HP.
-        if (tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
+        if (not force and tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
                 and self.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 0):
             p["hp"] = 1
             p["technique_cooldowns"]["tecnica_instinto_sobrevivencia"] = self.round_num + 10
@@ -46239,7 +46403,7 @@ class GameRoom(TutorialTraining):
         # last_stand_pid is None: evita sobrepor a janela de OUTRO herÃ³i (caso raro
         # de 2 mortes na mesma fase de monstros) â€” nesse caso a tÃ©cnica simplesmente
         # nÃ£o dispara desta vez (o herÃ³i morre normalmente, sem gastar a recarga).
-        if (tem_tecnica_equipada(p, "tecnica_ultimo_esforco")
+        if (not force and tem_tecnica_equipada(p, "tecnica_ultimo_esforco")
                 and self.tecnica_restante(p, "tecnica_ultimo_esforco") == 0
                 and self.last_stand_pid is None):
             p["hp"] = 1
@@ -46727,6 +46891,9 @@ class GameRoom(TutorialTraining):
         if pr.get("training_refem"):
             return  # O refém do exercício permanece na sala.
         if not await self._training_check_entry(pid, pr, nx, ny):
+            return
+        if self._casa_abismo(nx, ny):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")})
             return
         if not self._tile_livre_para_animado(nx, ny, None, pr["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return

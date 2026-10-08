@@ -24,7 +24,7 @@ function extrair(nome){
 const codigo = `
   const TILE_WALL = 0, TILE_FLOOR = 1, TILE_DOOR = 2;
   const TERRENO_ELEVACAO_STEP_3D = 0.24;
-  const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
+  const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 40;
   ${extrair('elevacaoTerreno')}
   ${extrair('nivelParede3D')}
   ${extrair('elevacaoEnfeiteParede3D')}
@@ -59,7 +59,7 @@ console.log('\n[2] Manual vence o automático');
 check('manual 7 sem platô', nivelParede3D(estado({}, { '0,2': 7 }), 0, 2) === 7);
 check('manual 0 trava a parede ao lado de um platô 5',
   nivelParede3D(estado({ '1,2': 5 }, { '0,2': 0 }), 0, 2) === 0);
-check('manual acima de 10 é limitado a 10', nivelParede3D(estado({}, { '0,2': 40 }), 0, 2) === 10);
+check('manual acima de 40 é limitado a 40', nivelParede3D(estado({}, { '0,2': 60 }), 0, 2) === 40);
 check('valor não inteiro cai no automático',
   nivelParede3D(estado({ '1,2': 2 }, { '0,2': 'x' }), 0, 2) === 2);
 

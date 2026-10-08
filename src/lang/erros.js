@@ -1585,6 +1585,10 @@ window.LANG_ERROS = {
     "en": "Resurrection requires adjacent contact with the ally.",
     "pt": "Ressurreição requer contato adjacente com o aliado."
   },
+  "erro.ressurreicao_sem_local_seguro": {
+    "en": "There is no free solid tile where the ally can return.",
+    "pt": "Não há uma casa sólida livre para o aliado retornar."
+  },
   "erro.richard_nao_pode_se_proteger_com_esta_ha": {
     "en": "Richard can't protect himself with this ability.",
     "pt": "Richard não pode se proteger com esta habilidade."

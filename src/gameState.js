@@ -802,6 +802,11 @@ const GS = (() => {
     const m = gameState && gameState.materiais;
     return !!(m && MATERIAIS_OPACOS.has(m[`${x},${y}`]));
   }
+  function _casaAbismo(x, y, moveCtx=null) {
+    const state = moveCtx?.state || gameState;
+    const materiais = moveCtx?.materiais || state?.materiais || {};
+    return !_ponteEm(x, y, state) && materiais[`${x},${y}`] === 'ceu_abismo';
+  }
 
   function _ponteTiles(state, ponte) {
     if (Array.isArray(ponte?.tiles)) return ponte.tiles
@@ -847,7 +852,7 @@ const GS = (() => {
   }
 
   // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py.
-  const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
+  const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 40;
 
   function _elevacaoTerreno(x, y, moveCtx=null) {
     const mapa = moveCtx?.elevacoes || gameState?.elevacoes || {};
@@ -898,6 +903,8 @@ const GS = (() => {
     const state = moveCtx?.state || gameState;
     let actor = moveCtx?.actor;
     if (actor?.owner) actor = state?.players?.find(p => p.id === actor.owner);
+    const vooNoAr = !!(actor?.voo && alturaDe(actor) > 0);
+    if (!vooNoAr && _casaAbismo(x, y, moveCtx)) return false;
     if (actor && (state?.rooms || []).some(r => r.allowed_class && r.allowed_class !== actor.class_id
         && ((x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
             || (r.doors || []).some(d => d[0] === x && d[1] === y)))) return false;

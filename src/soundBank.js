@@ -52,6 +52,8 @@
     // exploração e loot
     porta_abre:        E(n('exploracao/porta_abre', 3), 0.70, 150),
     bau_abre:          E(n('exploracao/bau_abre', 3), 0.75, 300),
+    sino_igreja:       E(['exploracao/sino_igreja.ogg'], 0.78, 250,
+                         { pitchJitter: 0, volJitter: 0.02 }),
     // Passo em água/pântano: toca pelo canal dos passos (slider "Movimento dos
     // peões"), não pelo sfx() — ver tocarSomPasso no game.js.
     passo_agua:        E(n('exploracao/passo_agua', 3), 0.55, 0, { canal: 'passos', pitchJitter: 0.08 }),

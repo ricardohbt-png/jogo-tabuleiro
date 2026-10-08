@@ -18,7 +18,7 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("85 tipos", len(d) == 85)
+    check("86 tipos", len(d) == 86)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
         "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
@@ -32,7 +32,7 @@ def test_catalog():
         "estalactites_estalagmites", "fenda_fumegante", "cacto_deserto",
         "ossos_semi_enterrados", "arbusto_seco", "capim_amarelado", "estatua_soterrada",
         "oasis_pequeno", "acampamento_abandonado", "ruinas_pedra",
-        "pira_chamas", "caldeirao", "gruta_parede", "sino_ritualistico", "estatua_divindade", "gargula_pedra", "monte_feno", "geiser_lava", "fumarola", "rochas_rachadas", "ninho_abutres", "arco_pedra_deserto", "pedra_sacrificio", "esqueleto_tiranossauro")))
+        "pira_chamas", "caldeirao", "gruta_parede", "sino_ritualistico", "estatua_divindade", "gargula_pedra", "monte_feno", "geiser_lava", "fumarola", "rochas_rachadas", "rocha_grande", "ninho_abutres", "arco_pedra_deserto", "pedra_sacrificio", "esqueleto_tiranossauro")))
     check("chão é floor, pisável, 1x1", d["chao"]["special"] == "floor"
           and d["chao"]["pisavel"] and d["chao"]["size"] == [1, 1])
     check("fonte é fountain", d["fonte"]["special"] == "fountain")

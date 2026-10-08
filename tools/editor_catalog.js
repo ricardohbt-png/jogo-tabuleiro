@@ -13616,6 +13616,21 @@ window.EDITOR_CATALOG = {
       "image": "rochas_rachadas.png"
     },
     {
+      "type": "rocha_grande",
+      "nome": "Rocha grande",
+      "emoji": "🪨",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "rocha_grande.png"
+    },
+    {
       "type": "ninho_abutres",
       "nome": "Ninho de abutres",
       "emoji": "🪶",
@@ -13763,6 +13778,14 @@ window.EDITOR_CATALOG = {
       "oclui": false
     },
     {
+      "id": "ceu_abismo",
+      "nome": "Céu/Abismo",
+      "categoria": "piso",
+      "cor": "#78bce8",
+      "solido": false,
+      "oclui": false
+    },
+    {
       "id": "rodamoinho",
       "nome": "Rodamoinho",
       "categoria": "piso",
@@ -13826,6 +13849,14 @@ window.EDITOR_CATALOG = {
       "nome": "Duna do deserto",
       "categoria": "parede",
       "cor": "#b9823f",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "parede_terra",
+      "nome": "Parede de terra",
+      "categoria": "parede",
+      "cor": "#75451f",
       "solido": false,
       "oclui": false
     },

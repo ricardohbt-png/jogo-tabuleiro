@@ -518,6 +518,10 @@ window.LANG_CATALOGO = {
     "en": "Cracked Rocks",
     "pt": "Rochas rachadas"
   },
+  "cat.decor.rocha_grande.nome": {
+    "en": "Large Boulder",
+    "pt": "Rocha grande"
+  },
   "cat.decor.ruinas_pedra.nome": {
     "en": "Stone Ruins",
     "pt": "Ruínas de pedra"

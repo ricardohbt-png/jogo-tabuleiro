@@ -244,7 +244,7 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 85 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 86 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -311,6 +311,8 @@ O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 > de uma estátua antiga emergindo da areia; tem miniaturas PNG/GLB próprias.
 > `rochas_rachadas` ocupa 1×1, é baixa e permite passagem; reúne placas de
 > pedra partidas com fissuras escuras em miniaturas PNG/GLB próprias.
+> `rocha_grande` ocupa 2×2, é alta e bloqueia passagem; uma massa única de pedra
+> marrom com miniaturas PNG e modelo GLB próprios.
 > `ninho_abutres` ocupa 1×1, é baixo e permite passagem; mostra galhos secos,
 > ovos e um abutre pousado em miniaturas PNG/GLB próprias.
 > `arco_pedra_deserto` ocupa 3×3, é alto e permite passagem; forma um marco de
@@ -441,8 +443,10 @@ ponte vinculada, tipo de piso e altura inferior.
 
 **Parede acompanha a elevação do terreno (2026-10-04):** no 3D, cada parede sobe sozinha até o
 chão mais alto das 8 casas ao redor (`nivelParede3D` em `game.js`; chão/porta, chão afundado não
-rebaixa) — antes um platô de nível alto passava por cima do próprio muro. O autor fixa a altura de
-uma parede com a ferramenta **altura** do editor pintando sobre ela: 0 a +10 grava em
+rebaixa) — antes um platô de nível alto passava por cima do próprio muro. A faixa de terreno é
+−1 a +40; cada nível continua usando o passo visual existente de 0,24 no 3D. O limite de voo (10)
+é independente. O autor fixa a altura de uma parede com a ferramenta **altura** do editor pintando
+sobre ela: 0 a +40 grava em
 `alturas_parede` (`"x,y"` → nível, só parede), −1 ou apagar volta ao automático; selo "▮n" no mapa
 do editor. O campo é **só visual** (as regras seguem lendo `elevacoes`): validado em
 `validar_dungeon`, carregado em `load_authored_dungeon`, enviado no `game_state` (o 0 vai junto —

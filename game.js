@@ -663,6 +663,7 @@ const DECOR_GLB_MODELS = {
   'fenda_fumegante.png': 'assets/objetos/fenda_fumegante.glb',
   'cacto_deserto.png': 'assets/objetos/cacto_deserto.glb',
   'rochas_rachadas.png': 'assets/objetos/rochas_rachadas.glb',
+  'rocha_grande.png': 'assets/objetos/rocha_grande.glb',
   'ninho_abutres.png': 'assets/objetos/ninho_abutres.glb',
   'arco_pedra_deserto.png': 'assets/objetos/arco_pedra_deserto.glb',
   'pedra_sacrificio.png': 'assets/objetos/pedra_sacrificio.glb',
@@ -760,6 +761,7 @@ const DECOR_GLB_TYPES = {
   fumarola: 'assets/objetos/fumarola.glb',
   cacto_deserto: 'assets/objetos/cacto_deserto.glb',
   rochas_rachadas: 'assets/objetos/rochas_rachadas.glb',
+  rocha_grande: 'assets/objetos/rocha_grande.glb',
   ninho_abutres: 'assets/objetos/ninho_abutres.glb',
   arco_pedra_deserto: 'assets/objetos/arco_pedra_deserto.glb',
   pedra_sacrificio: 'assets/objetos/pedra_sacrificio.glb',
@@ -7899,7 +7901,7 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H, blindVisibilityKe
   const animatedTiles = [];
   for(const [key, mid] of Object.entries(state.materiais || {})){
     if(mid !== 'lava' && mid !== 'pantano' && mid !== 'agua' && mid !== 'agua_profunda'
-        && mid !== 'rodamoinho' && mid !== 'rodamoinho_profundo'
+        && mid !== 'rodamoinho' && mid !== 'rodamoinho_profundo' && mid !== 'ceu_abismo'
         || !terrainSet.has(key)) continue;
     const [x, y] = key.split(',').map(Number);
     if(Number.isInteger(x) && Number.isInteger(y)) animatedTiles.push({x, y, mid});
@@ -7961,8 +7963,31 @@ function _staticDungeon2D(state, terrainSet, doorClosed, W, H, blindVisibilityKe
   return canvas;
 }
 
-// Só os traços móveis de lava/água, os vortexes e as ondulações do pântano são recalculados.
-// A pintura base permanece na camada estática acima.
+let _ceuAbismo2DTimer = null;
+let _ceuAbismo2DFrame = null;
+function _pararAnimacaoCeuAbismo2D(){
+  if(_ceuAbismo2DTimer){ clearTimeout(_ceuAbismo2DTimer); _ceuAbismo2DTimer = null; }
+  if(_ceuAbismo2DFrame){ _cancelVisualFrame(_ceuAbismo2DFrame); _ceuAbismo2DFrame = null; }
+}
+function _tickCeuAbismo2D(now){
+  _ceuAbismo2DFrame = null;
+  if(mode3D && g3) return;
+  const state = GS.gameState;
+  if(!state) return;
+  renderMap(state);
+  // _drawAnimatedTerrain2D agenda o próximo passo somente enquanto há céu visível.
+}
+function _agendarAnimacaoCeuAbismo2D(){
+  if(mode3D && g3) return _pararAnimacaoCeuAbismo2D();
+  if(_ceuAbismo2DTimer || _ceuAbismo2DFrame) return;
+  // Aproximadamente 8 quadros/s bastam para o deslocamento lento das nuvens.
+  _ceuAbismo2DTimer = setTimeout(() => {
+    _ceuAbismo2DTimer = null;
+    _ceuAbismo2DFrame = _scheduleVisualFrame(_tickCeuAbismo2D);
+  }, 120);
+}
+
+// Só os detalhes móveis do terreno são recalculados; a base permanece na camada estática.
 function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const flowLava = now / 520;
   const flowWater = now / 680;
@@ -7974,12 +7999,16 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
   const tiles = _dungeonStatic2D.materiais === state.materiais
     ? _dungeonStatic2D.animatedTiles : [];
   const whirlpoolDrawn = new Set();
+  let temCeuVisivel = false;
   for(const {x, y, mid} of tiles){
     // A ponte é a superfície superior; os efeitos animados do piso inferior
     // não devem ser desenhados por cima dela.
     if(bridgeKeys.has(`${x},${y}`)) continue;
     const X = x * CELL, Y = y * CELL;
-    if(mid === 'lava'){
+    if(mid === 'ceu_abismo'){
+      temCeuVisivel = true;
+      _drawSkyClouds2D(ctx, x, y, now);
+    } else if(mid === 'lava'){
       for(let row=0; row<4; row++){
         const yy = Y + CELL * (.16 + row * .22)
           + Math.sin(flowLava + row * 1.7 + x * .35) * CELL * .035;
@@ -8058,6 +8087,8 @@ function _drawAnimatedTerrain2D(ctx, state, terrainSet, now){
       }
     }
   }
+  if(temCeuVisivel) _agendarAnimacaoCeuAbismo2D();
+  else _pararAnimacaoCeuAbismo2D();
 }
 
 function _drawGamepadCursor2D(ctx, state, terrainSet, now){
@@ -12512,6 +12543,7 @@ const MAT_PALETTE_2D = {
   grama:       { base: [46, 78, 40],  accent: 'grass' },
   agua:        { base: [0, 120, 202], accent: 'water' },
   agua_profunda: { base: [6, 23, 63], accent: 'deepWater' },
+  ceu_abismo:  { base: [89, 161, 219], accent: 'sky' },
   rodamoinho:  { base: [0, 120, 202], accent: 'whirlpool' },
   rodamoinho_profundo: { base: [6, 23, 63], accent: 'deepWhirlpool' },
   piso_congelado: { base: [48, 169, 221], accent: 'ice' },
@@ -12529,6 +12561,7 @@ const MAT_PALETTE_2D = {
   desmoronada:   { base: [96, 88, 76],   accent: 'wallRubble' },
   madeira:        { base: [74, 39, 15], accent: 'woodWall' },
   duna_deserto: { base: [190, 139, 67], accent: 'duneWall' },
+  parede_terra: { base: [107, 74, 46], accent: 'earthWall' },
   rocha:        { base: [72, 70, 70], accent: 'rockWall' },
   rocha_marrom: { base: [117, 75, 50], accent: 'brownRockWall' },
   duna_neve: { base: [201, 229, 239], accent: 'snowDune' },
@@ -12550,7 +12583,7 @@ const TERRENO_ELEVACAO_STEP_3D = 0.24;
 // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py: o servidor já recusa fora
 // disto, mas o cliente também desenha estado antigo (masmorra salva com outro
 // teto) e não pode esticar a geometria por causa de um número solto.
-const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 10;
+const ELEVACAO_TERRENO_MIN = -1, ELEVACAO_TERRENO_MAX = 40;
 function elevacaoTerreno(state, x, y){
   const n = Number(state?.elevacoes?.[`${x},${y}`]);
   return Number.isInteger(n)
@@ -12640,6 +12673,91 @@ function basePonteInterpolada3D(state, pontos, fracao, fallback, TH = 0.22){
   return inicio + (fim - inicio) * easeInOut(t);
 }
 
+// Hash periódico em blocos: o atlas tem 10×10 casas e a distribuição usa cinco
+// blocos de duas casas, então as bordas do atlas continuam encaixando ao repetir.
+function _ceuAbismoHash(x, y, salt=0){
+  const periodic = n => ((n % 5) + 5) % 5;
+  x = periodic(x); y = periodic(y);
+  let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263)
+    + Math.imul(salt | 0, 1442695041)) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+}
+function _ceuAbismoPuff(ctx, x, y, rx, ry, alpha, cor='255,255,255'){
+  if(alpha <= 0 || rx <= 0 || ry <= 0) return;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, ry / rx);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  g.addColorStop(0, `rgba(${cor},${Math.min(.92, alpha).toFixed(3)})`);
+  g.addColorStop(.48, `rgba(${cor},${(alpha * .62).toFixed(3)})`);
+  g.addColorStop(1, `rgba(${cor},0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function _pintarMassaNuvem(ctx, cx, cy, unidade, opacidade=1){
+  // Sombra fria muito leve embaixo dá volume sem escurecer as nuvens brancas.
+  _ceuAbismoPuff(ctx, cx, cy + unidade * .12, unidade * .68, unidade * .22,
+    .18 * opacidade, '146,190,222');
+  _ceuAbismoPuff(ctx, cx, cy, unidade * .72, unidade * .24, .78 * opacidade);
+  _ceuAbismoPuff(ctx, cx - unidade * .34, cy - unidade * .12,
+    unidade * .34, unidade * .31, .72 * opacidade);
+  _ceuAbismoPuff(ctx, cx + unidade * .02, cy - unidade * .22,
+    unidade * .39, unidade * .37, .82 * opacidade);
+  _ceuAbismoPuff(ctx, cx + unidade * .38, cy - unidade * .10,
+    unidade * .32, unidade * .29, .68 * opacidade);
+  _ceuAbismoPuff(ctx, cx - unidade * .12, cy - unidade * .27,
+    unidade * .22, unidade * .22, .38 * opacidade);
+}
+function _drawSkyClouds2D(ctx, tileX, tileY, now){
+  const spacing = 2;
+  const deslocX = (now / 22000) % 10;
+  const deslocY = Math.sin(now / 17000) * .10;
+  const bx = Math.floor((tileX - deslocX) / spacing);
+  const by = Math.floor(tileY / spacing);
+  const X = tileX * CELL, Y = tileY * CELL;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(X, Y, CELL, CELL); ctx.clip();
+  for(let cy = by - 1; cy <= by + 1; cy++){
+    for(let cx = bx - 1; cx <= bx + 1; cx++){
+      const cloudX = cx * spacing + .55 + _ceuAbismoHash(cx, cy, 1) * .90 + deslocX;
+      const cloudY = cy * spacing + .55 + _ceuAbismoHash(cx, cy, 2) * .90 + deslocY;
+      const px = X + (cloudX - tileX) * CELL;
+      const py = Y + (cloudY - tileY) * CELL;
+      const op = .43 + _ceuAbismoHash(cx, cy, 5) * .20;
+      _pintarMassaNuvem(ctx, px, py, CELL * (.55 + _ceuAbismoHash(cx, cy, 3) * .28), op);
+    }
+  }
+  ctx.restore();
+}
+function paintSkyFloor(ctx, X, Y, size, tileX, tileY){
+  // Fundo uniforme evita uma faixa quando a textura 3D repete o atlas.
+  ctx.fillStyle = '#73bbea';
+  ctx.fillRect(X, Y, size, size);
+
+  const spacing = 2;
+  const chunkX = Math.floor(tileX / spacing), chunkY = Math.floor(tileY / spacing);
+  ctx.save();
+  for(let cy = chunkY - 1; cy <= chunkY + 1; cy++){
+    for(let cx = chunkX - 1; cx <= chunkX + 1; cx++){
+      const cloudX = cx * spacing + .55 + _ceuAbismoHash(cx, cy, 1) * .90;
+      const cloudY = cy * spacing + .55 + _ceuAbismoHash(cx, cy, 2) * .90;
+      const px = X + (cloudX - tileX) * size;
+      const py = Y + (cloudY - tileY) * size;
+      const op = .80 + _ceuAbismoHash(cx, cy, 5) * .16;
+      _pintarMassaNuvem(ctx, px, py, size * (.92 + _ceuAbismoHash(cx, cy, 3) * .28), op);
+    }
+  }
+  ctx.restore();
+}
+function paintSkyAtlas(ctx, size){
+  const cells = 10, tileSize = size / cells;
+  for(let y = 0; y < cells; y++)
+    for(let x = 0; x < cells; x++)
+      paintSkyFloor(ctx, x * tileSize, y * tileSize, tileSize, x, y);
+}
+
 function drawElevacao2D(ctx, state, x, y){
   const level = elevacaoTerreno(state, x, y);
   if(!level) return;
@@ -12701,6 +12819,9 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
       ctx.quadraticCurveTo(X+CELL*.75,yy+2.5-(phase%3),X+CELL,yy);
       ctx.stroke();
     }
+  }
+  else if(pal.accent==='sky'){
+    paintSkyFloor(ctx, X, Y, CELL, x, y);
   }
   else if(pal.accent==='grass'){ paintGrass(ctx, X, Y, CELL, _rng((x*53^y*97^7)>>>0)); }
   else if(pal.accent==='dirt'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); }
@@ -12953,6 +13074,22 @@ function drawWallSouthFace(ctx, x, y, matId){
     return;
   }
 
+  if(pal.accent==='earthWall'){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(X+1, faceY, CELL-2, faceH); ctx.clip();
+    ctx.translate(X+1, faceY);
+    ctx.scale(1, faceH / Math.max(1, CELL-2));
+    paintDirt(ctx, 0, 0, CELL-2, _rng((x*29^y*71^3)>>>0));
+    ctx.restore();
+    const shade=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
+    shade.addColorStop(0,'rgba(50,29,16,.06)');
+    shade.addColorStop(.68,'rgba(39,22,12,.20)');
+    shade.addColorStop(1,'rgba(18,11,7,.55)');
+    ctx.fillStyle=shade; ctx.fillRect(X+1,faceY,CELL-2,faceH);
+    ctx.fillStyle='rgba(194,151,102,.42)'; ctx.fillRect(X+1,faceY,CELL-2,2);
+    return;
+  }
+
   if(pal.accent==='frozenCave'){
     const grad=ctx.createLinearGradient(0,faceY,0,faceY+faceH);
     grad.addColorStop(0,'#82d3e1'); grad.addColorStop(.30,'#3b829d');
@@ -13065,6 +13202,7 @@ function drawWallTop3D(ctx, x, y, matId){
   const [BR, BG, BB] = pal.base;
   // Estilos próprios: caverna (pedra irregular) e enegrecida (tijolo preto).
   if(pal.accent==='duneWall'){ paintDuneWallTop(ctx, X, Y, CELL, _rng((x*47^y*31^17)>>>0)); return; }
+  if(pal.accent==='earthWall'){ paintDirt(ctx, X, Y, CELL, _rng((x*29^y*71^3)>>>0)); return; }
   if(pal.accent==='frozenCave'){ paintFrozenCaveWall(ctx, X, Y, CELL, _rng((x*53^y*37^19)>>>0)); return; }
   if(pal.accent==='snowDune'){ paintSnowDuneWall(ctx, X, Y, CELL, _rng((x*67^y*41^23)>>>0)); return; }
   if(pal.accent==='rockWall'){ paintRock(ctx, X, Y, CELL, _rng((x*59^y*43^29)>>>0)); return; }
@@ -42360,12 +42498,14 @@ function init3D(state){
   const _matTexCache = {};
   function makeMaterialTex(matId){
     if(matId in _matTexCache) return _matTexCache[matId];
-    const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S;
+    const S=matId === 'ceu_abismo' ? 1024 : 256, cv=document.createElement('canvas'); cv.width=cv.height=S;
     const c=cv.getContext('2d'); const r=_rng((matId.length*2654435761)>>>0);
     let tex=null;
     switch(matId){
+      case 'ceu_abismo': paintSkyAtlas(c,S); break;
       case 'grama':         paintGrass(c,0,0,S,r); break;
       case 'terra':         paintDirt(c,0,0,S,r); break;
+      case 'parede_terra':  paintDirt(c,0,0,S,r); break;
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
@@ -42434,7 +42574,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='grama'||matId==='terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='ceu_abismo'||matId==='grama'||matId==='terra'||matId==='parede_terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -42449,11 +42589,13 @@ function init3D(state){
   // lado, encosta exatamente na célula vizinha para parecer uma superfície
   // contínua, mesmo quando é construída com várias casas do mapa.
   const waterFloorGeo = new T.BoxGeometry(1, TH, 1);
+  const skyFloorGeo = new T.BoxGeometry(1, TH, 1);
   const lavaFloorGeo = new T.BoxGeometry(1, TH, 1);
   const swampFloorGeo = new T.BoxGeometry(1, TH, 1);
   const waterMats = [];
   const deepWaterMats = [];
   const whirlpoolMats = [];
+  const skyMats = [];
   const lavaBubbleMeshes = [];
   const lavaBubbleGeo = new T.SphereGeometry(0.032, 8, 6);
   const lavaBubbleMat = new T.MeshStandardMaterial({
@@ -43035,11 +43177,20 @@ function init3D(state){
         const isDeepWhirlpool3 = mid3==='rodamoinho_profundo';
         const isLava3 = mid3==='lava';
         const isSwamp3 = mid3==='pantano';
-        const ftex = makeMaterialTex(mid3);
+        const isSky3 = mid3==='ceu_abismo';
+        const baseFtex = makeMaterialTex(mid3);
+        const ftex = isSky3 && baseFtex ? baseFtex.clone() : baseFtex;
+        if(isSky3 && ftex){
+          const period = 10;
+          ftex.repeat.set(1 / period, 1 / period);
+          ftex.offset.set((((x % period) + period) % period) / period,
+            (((y % period) + period) % period) / period);
+          ftex.needsUpdate = true;
+        }
         // Com textura própria ou água a cor final não depende do jitter (é fixada
         // abaixo), então essas casas colapsam num material único por tipo.
         const jitQ = (isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3 || ftex) ? 0 : _quantJit(vf);
-        const fKey = `f|${mid3}|${jitQ}`;
+        const fKey = isSky3 ? `f|${mid3}|${x},${y}` : `f|${mid3}|${jitQ}`;
         let mat = _tileMatCache[fKey];
         if(!mat){
           mat = floorBaseMat.clone();
@@ -43145,8 +43296,13 @@ function init3D(state){
         if(isDeepWhirlpool3 && !whirlpoolMats.includes(mat)) whirlpoolMats.push(mat);
         if(isLava3 && !lavaMats.includes(mat)) lavaMats.push(mat);
         if(isSwamp3 && !swampMats.includes(mat)) swampMats.push(mat);
-        mesh = new T.Mesh((isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3)
-          ? (isLava3 ? lavaFloorGeo : isSwamp3 ? swampFloorGeo : waterFloorGeo) : floorGeo, mat);
+        if(isSky3 && !skyMats.includes(mat)){
+          mat.userData.skyTileX = x;
+          mat.userData.skyTileY = y;
+          skyMats.push(mat);
+        }
+        mesh = new T.Mesh((isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3 || isSky3)
+          ? (isSky3 ? skyFloorGeo : isLava3 ? lavaFloorGeo : isSwamp3 ? swampFloorGeo : waterFloorGeo) : floorGeo, mat);
         const terrainTop = TH + elev3 * TERRENO_ELEVACAO_STEP_3D;
         const terrainHeight = elev3 >= 0 ? Math.max(TH * 0.5, terrainTop) : TH;
         mesh.scale.y = terrainHeight / TH;
@@ -43192,11 +43348,17 @@ function init3D(state){
           if(wtex){
             mat.map = wtex; mat.color.setRGB(1,1,1); mat.bumpMap = wtex;
             mat.bumpScale = (matId3 === 'duna_deserto' || matId3 === 'duna_neve') ? 0.018
+              : matId3 === 'parede_terra' ? 0.075
               : (matId3 === 'rocha' || matId3 === 'rocha_marrom') ? 0.065 : (VC.wall.bumpScale ?? 0.045);
             // wallBaseMat nasce com o roughnessMap da textura de pedra. Para
             // dunas, substituí-lo pela textura arenosa evita a borda cinza
             // herdada do material de alvenaria.
             if(matId3 === 'duna_deserto' || matId3 === 'duna_neve') mat.roughnessMap = wtex;
+            if(matId3 === 'parede_terra'){
+              mat.roughnessMap = wtex;
+              mat.roughness = 0.94;
+              mat.metalness = 0;
+            }
             if(matId3 === 'rocha' || matId3 === 'rocha_marrom'){
               mat.roughnessMap = wtex;
               mat.roughness = 0.78;
@@ -43710,7 +43872,7 @@ function init3D(state){
     showcase, haloLight, setaVez,
     tileMeshes, doorMeshes, wallDetailMeshes, entityGroup, raycaster,
     wallTorches, torchStaticMeshes, roomOverlayMeshes,
-    sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats,
+    sceneryMeshes, groutMeshes, groutMats, waterMats, deepWaterMats, lavaMats, swampMats, skyMats,
     lavaBubbleMeshes, waterRippleMeshes, deepWaterRippleMeshes, whirlpoolMeshes,
     terrainTransitionMeshes, bridgeMeshes,
     whirlpoolMats,
@@ -44164,9 +44326,9 @@ function _atribuirLightPool(){
   }
 }
 
-// Lava, água e pântano têm animação visual própria, mas não precisam acompanhar a
-// taxa máxima do renderizador. Atualizar em ~30 Hz preserva a fluidez percebida
-// e evita percorrer os materiais do tabuleiro em todos os frames.
+// Lava, água, pântano e céu têm animação visual própria, mas não precisam
+// acompanhar a taxa máxima do renderizador. Atualizar em ~30 Hz preserva a
+// fluidez percebida e evita percorrer os materiais do tabuleiro em todos os frames.
 function _atualizarTerrenoAnimado3D(t){
   if(!g3) return;
   const temTerreno = (g3.lavaMats && g3.lavaMats.length)
@@ -44174,6 +44336,7 @@ function _atualizarTerrenoAnimado3D(t){
     || (g3.deepWaterMats && g3.deepWaterMats.length)
     || (g3.whirlpoolMats && g3.whirlpoolMats.length)
     || (g3.swampMats && g3.swampMats.length)
+    || (g3.skyMats && g3.skyMats.length)
     || (g3.lavaBubbleMeshes && g3.lavaBubbleMeshes.length)
     || (g3.waterRippleMeshes && g3.waterRippleMeshes.length)
     || (g3.deepWaterRippleMeshes && g3.deepWaterRippleMeshes.length);
@@ -44232,6 +44395,22 @@ function _atualizarTerrenoAnimado3D(t){
       // Pulso forte e irregular: a superfície parece acelerar e perder
       // estabilidade, em vez de apenas brilhar de forma uniforme.
       mat.emissiveIntensity = 0.78 + wvp * 0.46;
+    }
+  }
+  if(g3.skyMats){
+    // Nuvens avançam devagar, em coordenadas globais, para a textura continuar
+    // contínua entre casas vizinhas durante a animação.
+    const period = 10;
+    // Uma casa em 6 s na horizontal e 14 s na vertical: nuvens ficam visivelmente
+    // móveis durante a observação normal, sem parecerem ondas rápidas.
+    const driftX = (t / 6000) % period;
+    const driftY = (t / 14000) % period;
+    for(const mat of g3.skyMats){
+      if(!mat.map) continue;
+      mat.map.offset.set(
+        ((((mat.userData.skyTileX || 0) + driftX) % period) + period) % period / period,
+        ((((mat.userData.skyTileY || 0) + driftY) % period) + period) % period / period
+      );
     }
   }
   if(g3.lavaBubbleMeshes){

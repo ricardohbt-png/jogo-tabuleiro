@@ -3,7 +3,7 @@
   const WALL = 0, FLOOR = 1, DOOR = 2, CELL = 28;
   // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py — validar_dungeon recusa fora
   // deste intervalo, então subir o teto aqui sem subir lá derruba o salvamento.
-  const ELEVACAO_MIN = -1, ELEVACAO_MAX = 10;
+  const ELEVACAO_MIN = -1, ELEVACAO_MAX = 40;
   const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], curses: [], decorations: [], materiais: [] };
   // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
   // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
@@ -46,6 +46,265 @@
       type: "placa", nome: nomeCat("decor", "placa", "placa"), emoji: "🪧",
       size: [1, 1], gira: false, alto: false, pisavel: true,
       loot_capaz: false, special: "plaque", image: null,
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "poco_balde")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "poco_balde", nome: nomeCat("decor", "poco_balde", "Poço com balde"), emoji: "🪣",
+      size: [2, 2], gira: false, alto: true, pisavel: false,
+      loot_capaz: false, special: "fountain", charges: 10, image: "poco_balde.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "tocha_parede")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "tocha_parede", nome: nomeCat("decor", "tocha_parede", "Tocha de parede"), emoji: "🔥",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "tocha_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "braseiro_parede")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "braseiro_parede", nome: nomeCat("decor", "braseiro_parede", "Braseiro de parede"), emoji: "🔥",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "braseiro_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "pira_chamas")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "pira_chamas", nome: nomeCat("decor", "pira_chamas", "Pira de chamas"), emoji: "🔥",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "pira_chamas.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "vitral_templo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "vitral_templo", nome: nomeCat("decor", "vitral_templo", "Vitral de templo"), emoji: "🪟",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "vitral_templo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "gruta_parede")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "gruta_parede", nome: nomeCat("decor", "gruta_parede", "Gruta na parede"), emoji: "🪨",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "gruta_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "gargula_pedra")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "gargula_pedra", nome: nomeCat("decor", "gargula_pedra", "Gárgula de pedra"), emoji: "👹",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "gargula_pedra.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "sino_ritualistico")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "sino_ritualistico", nome: nomeCat("decor", "sino_ritualistico", "Sino ritualístico"), emoji: "🔔",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "sino_ritualistico.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "estatua_divindade")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "estatua_divindade", nome: nomeCat("decor", "estatua_divindade", "Estátua de divindade"), emoji: "🛐",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "estatua_divindade.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "monte_ossos")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "monte_ossos", nome: nomeCat("decor", "monte_ossos", "Monte de ossos"), emoji: "🦴",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "monte_ossos.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "monte_feno")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "monte_feno", nome: nomeCat("decor", "monte_feno", "Monte de feno"), emoji: "🌾",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: null,
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "caldeirao")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "caldeirao", nome: nomeCat("decor", "caldeirao", "Caldeirão"), emoji: "⚗️",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: null,
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "bola_corrente")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "bola_corrente", nome: nomeCat("decor", "bola_corrente", "Bola de ferro com corrente"), emoji: "⛓️",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "bola_corrente.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "grilhoes_parede")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "grilhoes_parede", nome: nomeCat("decor", "grilhoes_parede", "Grilhões de parede"), emoji: "⛓️",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "grilhoes_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "tronco_musgo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "tronco_musgo", nome: nomeCat("decor", "tronco_musgo", "Tronco caído com musgo"), emoji: "🪵",
+      size: [2, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "tronco_musgo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "moita_espinhosa")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "moita_espinhosa", nome: nomeCat("decor", "moita_espinhosa", "Moita espinhosa"), emoji: "🌵",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "moita_espinhosa.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "capim_alto")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "capim_alto", nome: nomeCat("decor", "capim_alto", "Capim alto"), emoji: "🌾",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "capim_alto.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "tronco_podre_fungos")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "tronco_podre_fungos", nome: nomeCat("decor", "tronco_podre_fungos", "Tronco podre com fungos"), emoji: "🍄",
+      size: [2, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "tronco_podre_fungos.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "tocos_alagados")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "tocos_alagados", nome: nomeCat("decor", "tocos_alagados", "Tocos alagados"), emoji: "🌳",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "tocos_alagados.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "juncos")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "juncos", nome: nomeCat("decor", "juncos", "Juncos"), emoji: "🌾",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "juncos.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "raizes_torcidas")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "raizes_torcidas", nome: nomeCat("decor", "raizes_torcidas", "Raízes retorcidas"), emoji: "🌱",
+      size: [2, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "raizes_torcidas.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "estalactites_estalagmites")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "estalactites_estalagmites", nome: nomeCat("decor", "estalactites_estalagmites", "Estalactites e estalagmites"), emoji: "🪨",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "estalactites_estalagmites.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "fenda_fumegante")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "fenda_fumegante", nome: nomeCat("decor", "fenda_fumegante", "Fenda fumegante"), emoji: "♨️",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "fenda_fumegante.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "cacto_deserto")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "cacto_deserto", nome: nomeCat("decor", "cacto_deserto", "Cacto do deserto"), emoji: "🌵",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "cacto_deserto.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "ossos_semi_enterrados")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "ossos_semi_enterrados", nome: nomeCat("decor", "ossos_semi_enterrados", "Ossos semienterrados"), emoji: "🦴",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "ossos_semi_enterrados.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "arbusto_seco")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "arbusto_seco", nome: nomeCat("decor", "arbusto_seco", "Arbusto seco"), emoji: "🌿",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "arbusto_seco.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "capim_amarelado")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "capim_amarelado", nome: nomeCat("decor", "capim_amarelado", "Capim amarelado"), emoji: "🌾",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "capim_amarelado.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "estatua_soterrada")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "estatua_soterrada", nome: nomeCat("decor", "estatua_soterrada", "Estátua soterrada"), emoji: "🗿",
+      size: [1, 1], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "estatua_soterrada.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "rochas_rachadas")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "rochas_rachadas", nome: nomeCat("decor", "rochas_rachadas", "Rochas rachadas"), emoji: "🪨",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "rochas_rachadas.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "rocha_grande")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "rocha_grande", nome: nomeCat("decor", "rocha_grande", "Rocha grande"), emoji: "🪨",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "rocha_grande.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "ninho_abutres")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "ninho_abutres", nome: nomeCat("decor", "ninho_abutres", "Ninho de abutres"), emoji: "🪶",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: null, image: "ninho_abutres.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "arco_pedra_deserto")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "arco_pedra_deserto", nome: nomeCat("decor", "arco_pedra_deserto", "Arco de pedra do deserto"), emoji: "⛰️",
+      size: [3, 3], gira: true, alto: true, pisavel: true,
+      loot_capaz: false, special: null, image: "arco_pedra_deserto.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "pedra_sacrificio")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "pedra_sacrificio", nome: nomeCat("decor", "pedra_sacrificio", "Pedra de sacrifício"), emoji: "🪨",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "pedra_sacrificio.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "oasis_pequeno")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "oasis_pequeno", nome: nomeCat("decor", "oasis_pequeno", "Oásis pequeno"), emoji: "🏝️",
+      size: [4, 4], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "oasis_pequeno.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "acampamento_abandonado")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "acampamento_abandonado", nome: nomeCat("decor", "acampamento_abandonado", "Acampamento abandonado"), emoji: "⛺",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "acampamento_abandonado.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "ruinas_pedra")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "ruinas_pedra", nome: nomeCat("decor", "ruinas_pedra", "Ruínas de pedra"), emoji: "🏛️",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "ruinas_pedra.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "esqueleto_tiranossauro")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "esqueleto_tiranossauro", nome: nomeCat("decor", "esqueleto_tiranossauro", "Esqueleto de tiranossauro"), emoji: "🦴",
+      size: [4, 2], gira: true, alto: false, pisavel: false,
+      loot_capaz: false, special: null, image: "esqueleto_tiranossauro.png",
     });
   }
   const MAT = (CAT.materiais || []);
@@ -122,8 +381,8 @@
     ponteMaterial: "madeira",
     ponteDrag: null,
     materiais: {},                 // {"x,y": id}
-    elevacoes: {},                 // {"x,y": nível visual (-1..2)}
-    alturasParede: {},             // {"x,y": nível manual da parede (0..10); ausente = automático}
+    elevacoes: {},                 // {"x,y": nível visual (-1..40)}
+    alturasParede: {},             // {"x,y": nível manual da parede (0..40); ausente = automático}
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
     elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
@@ -803,6 +1062,32 @@
     ctx.restore();
   }
 
+  function drawEarthWallPreview(x, y) {
+    const px = x * CELL, py = y * CELL, s = CELL - 1;
+    let seed = ((x * 29) ^ (y * 71) ^ 3) >>> 0;
+    const rand = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+    ctx.fillStyle = "#6b4a2e";
+    ctx.fillRect(px, py, s, s);
+    for (let i = 0; i < Math.max(7, Math.round(s * .47)); i++) {
+      const rx = s * (.06 + rand() * .18), ry = rx * .8;
+      ctx.fillStyle = rand() < .5 ? "rgba(60,40,24,.50)" : "rgba(120,88,54,.45)";
+      ctx.beginPath();
+      ctx.ellipse(px + rand() * s, py + rand() * s, rx, ry, rand() * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    for (let i = 0; i < Math.max(4, Math.round(s * .2)); i++) {
+      const cx = px + rand() * s, cy = py + rand() * s, r = s * (.012 + rand() * .025);
+      const tone = 80 + rand() * 60;
+      ctx.fillStyle = `rgb(${tone | 0},${tone * .85 | 0},${tone * .7 | 0})`;
+      ctx.beginPath(); ctx.ellipse(cx, cy, r, r * .8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.3)";
+      ctx.beginPath(); ctx.ellipse(cx + r * .4, cy + r * .4, r, r * .7, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(37,23,13,.88)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px + .5, py + .5, s - 1, s - 1);
+  }
+
   // Parede com altura manual: selo no canto com o nível fixado. Sem selo, a
   // parede sobe sozinha com o chão mais alto ao redor (ver nivelParede3D).
   function drawWallHeightEditor(x, y) {
@@ -925,6 +1210,7 @@
         const mid = wallMaterialAt(x, y);
         const mm = mid ? matMeta(mid) : null;
         if (mm && mm.id === "duna_deserto") drawDunePreview(x, y);
+        else if (mm && mm.id === "parede_terra") drawEarthWallPreview(x, y);
         else {
           ctx.fillStyle = mm ? mm.cor : (tile === WALL ? "#1d1812" : (tile === DOOR ? "#c8841f" : "#5a4a32"));
           ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
@@ -3932,6 +4218,8 @@
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
+    const isAbyss = (p) => Array.isArray(p) && S.materiais[`${p[0]},${p[1]}`] === "ceu_abismo"
+      && !bridgeAt(p[0], p[1]);
     const validateCarta = (it, rotulo) => {
       if (it?.id !== "carta" || !it.curse_mode) return;
       if (!["especifica", "aleatoria"].includes(it.curse_mode)) {
@@ -3945,6 +4233,7 @@
     if (S.startMode === "entrance") {
       if (!S.entrance) e.push(V("falta_entrada"));
       else if (S.tiles[S.entrance.y][S.entrance.x] !== FLOOR) e.push(V("entrada_em_chao"));
+      else if (isAbyss([S.entrance.x, S.entrance.y])) e.push(V("entrada_abismo", { pos: P([S.entrance.x, S.entrance.y]) }));
     } else {
       if (!S.heroSpawns.length) e.push(V("falta_spawn"));
       const classes = new Set();
@@ -3953,6 +4242,7 @@
         if (classes.has(s.class_id)) e.push(V("spawn_classe_duplicada", { classe: s.class_id }));
         classes.add(s.class_id);
         if (isWall(s.pos)) e.push(V("spawn_em_parede", { pos: P(s.pos) }));
+        if (isAbyss(s.pos)) e.push(V("spawn_abismo", { classe: s.class_id, pos: P(s.pos) }));
       }
     }
     if (S.rooms.length === 0) e.push(V("sem_sala"));
@@ -3960,6 +4250,11 @@
     for (const m of S.monsters) {
       if (!types.has(m.type)) e.push(V("monstro_tipo_invalido", { tipo: m.type, pos: P(m.pos) }));
       if (isWall(m.pos)) e.push(V("monstro_em_parede", { pos: P(m.pos) }));
+      const def = CAT.monsters.find(entry => entry.type === m.type);
+      const alturaInicial = Number(m.altura ?? def?.altura_inicial ?? 0);
+      const voaNoInicio = !!def?.voo && alturaInicial > 0;
+      if (!voaNoInicio && monsterTiles(m).some(isAbyss))
+        e.push(V("monstro_abismo", { tipo: m.type, pos: P(m.pos) }));
       if (m.room_id != null && !roomIds.has(m.room_id)) e.push(V("monstro_room_id", { pos: P(m.pos), room: m.room_id }));
     }
     for (const c of S.chests) {

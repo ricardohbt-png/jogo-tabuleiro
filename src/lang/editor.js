@@ -1305,6 +1305,10 @@ window.LANG_EDITOR = {
     "en": "Deep water",
     "pt": "Água profunda"
   },
+  "ui.editor.material.ceu_abismo": {
+    "en": "Sky/Abyss",
+    "pt": "Céu/Abismo"
+  },
   "ui.editor.material.rodamoinho": {
     "en": "Whirlpool",
     "pt": "Rodamoinho"
@@ -1336,6 +1340,10 @@ window.LANG_EDITOR = {
   "ui.editor.material.duna_deserto": {
     "en": "Desert dune",
     "pt": "Duna do deserto"
+  },
+  "ui.editor.material.parede_terra": {
+    "en": "Earth wall",
+    "pt": "Parede de terra"
   },
   "ui.editor.material.caverna_congelada": {
     "en": "Frozen cave wall",
@@ -1649,6 +1657,10 @@ window.LANG_EDITOR = {
     "en": "the entrance must be on floor",
     "pt": "entrada precisa estar em chão"
   },
+  "ui.editor.masmorra.valid.entrada_abismo": {
+    "en": "the entrance cannot be over an uncovered abyss: {pos}",
+    "pt": "a entrada não pode ficar sobre um abismo sem ponte: {pos}"
+  },
   "ui.editor.masmorra.valid.falta_spawn": {
     "en": "at least one hero starting position is missing",
     "pt": "falta ao menos uma posição inicial de herói"
@@ -1665,6 +1677,10 @@ window.LANG_EDITOR = {
     "en": "starting position inside a wall: {pos}",
     "pt": "posição inicial em parede: {pos}"
   },
+  "ui.editor.masmorra.valid.spawn_abismo": {
+    "en": "starting position for {classe} is over an uncovered abyss: {pos}",
+    "pt": "posição inicial de {classe} está sobre um abismo sem ponte: {pos}"
+  },
   "ui.editor.masmorra.valid.sem_sala": {
     "en": "needs at least one room",
     "pt": "precisa de ao menos uma sala"
@@ -1680,6 +1696,10 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.monstro_em_parede": {
     "en": "monster inside a wall: {pos}",
     "pt": "monstro em parede: {pos}"
+  },
+  "ui.editor.masmorra.valid.monstro_abismo": {
+    "en": "non-flying monster {tipo} starts over an uncovered abyss: {pos}",
+    "pt": "monstro não voador {tipo} começa sobre um abismo sem ponte: {pos}"
   },
   "ui.editor.masmorra.valid.monstro_room_id": {
     "en": "monster at {pos} with nonexistent room_id: {room}",
