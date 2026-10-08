@@ -34,6 +34,16 @@ Testes: `python -X utf8 tools/test_goblin_combatente_equipamento.py`,
 `python -X utf8 tools/test_goblin_combatente_variants.py`.
 Spec: `docs/superpowers/specs/2026-10-08-variedade-goblin-combatente-design.md`.
 
+### Orc simples — equipamento sorteado ao spawn (2026-10-08)
+
+Só o tipo `orc` (não `orc_guerreiro`) recebe equipamento aleatório em
+`make_monster`: espada de duas mãos, martelo de guerra com Escudo Grande ou
+mangual com Escudo Grande, cada combinação com 1/3 de chance. Uma rolagem
+independente seleciona Cota de Malha em 10%, Armadura de Couro em 20% e nenhuma
+armadura em 70%; as armaduras nunca se acumulam. `equipment_enabled` aplica a
+arma e os bônus defensivos; o loot usa os IDs realmente equipados. A imagem e os
+assets de miniatura permanecem os mesmos.
+
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
 `tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.

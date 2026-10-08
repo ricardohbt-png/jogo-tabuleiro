@@ -10474,6 +10474,21 @@ def make_monster(mdef, room):
         if m["combatant_shield_id"]:
             m["equipped_items"].append(m["combatant_shield_id"])
         m["pode_arremessar"] = False
+    if m.get("type") == "orc":
+        # Três combinações de arma equiprováveis; o sorteio de armadura é
+        # independente e mutuamente exclusivo (10% malha, 20% couro).
+        m["orc_weapon_id"] = random.choice(("espada2m", "warhammer", "mangual"))
+        m["orc_shield_id"] = "escudo_g" if m["orc_weapon_id"] in {"warhammer", "mangual"} else None
+        armor_roll = random.random()
+        m["orc_armor_id"] = "chainmail" if armor_roll < 0.10 else (
+            "leather" if armor_roll < 0.30 else None)
+        m["equipment_enabled"] = True
+        m["base_attack_bonus"] = int(m.get("atk_bonus", 0))
+        m["equipped_items"] = [m["orc_weapon_id"]]
+        if m["orc_shield_id"]:
+            m["equipped_items"].append(m["orc_shield_id"])
+        if m["orc_armor_id"]:
+            m["equipped_items"].append(m["orc_armor_id"])
     _aplicar_equipamentos_monstro(m)
     if combatant_potion:
         m.setdefault("equipment_consumables", []).append(
@@ -46521,7 +46536,8 @@ class GameRoom(TutorialTraining):
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
             for gid in dict.fromkeys([*m.get("guaranteed_loot", []), *equipped_drop]):
                 gdef = (
-                    (_DUNGEON_ITEM_CATALOG.get(gid) if m.get("type") == "goblin_combatente" else None) or
+                    (_DUNGEON_ITEM_CATALOG.get(gid)
+                     if m.get("type") in {"goblin_combatente", "orc"} else None) or
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
                     next((i for i in SHOP_AMMO     if i["id"] == gid), None) or
