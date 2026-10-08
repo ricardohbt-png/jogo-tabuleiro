@@ -4091,7 +4091,11 @@
           "ui": "casa:[10,22]",
           "dica": [
             "ui.tutorial.guia.treino_harpa.bau.dica.1"
-          ]
+          ],
+          "conclui_com": {
+            "tipo": "pegar_item",
+            "alvo": "instrumento_harpa_velho"
+          }
         },
         {
           "id": "equipar",
@@ -4129,7 +4133,7 @@
           "id": "linha",
           "texto": "ui.tutorial.guia.treino_nota_cortante.linha.texto",
           "porque": "ui.tutorial.guia.treino_nota_cortante.linha.porque",
-          "ui": "monstro:boneco_treino"
+          "ui": "casa:[10,24]"
         },
         {
           "id": "tocar",

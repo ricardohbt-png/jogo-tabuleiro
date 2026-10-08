@@ -50,7 +50,10 @@ class ClassesTests(unittest.TestCase):
                 pt, en = p["texto"]
                 self.assertTrue(pt.strip() and en.strip(), f"{lid}/{p['id']}")
                 self.assertLessEqual(len(TERMO.sub("x", pt).split()), 15, f"{lid}/{p['id']}: >15 palavras")
-                self.assertFalse(p.get("conclui"), f"{lid}/{p['id']}: nenhum passo desta fatia usa conclui")
+                # Única exceção: o baú da Harpa só nasce com a lição (fatia 13), então pegar a harpa
+                # não pode ter acontecido antes — a regra de ouro do `conclui_com` se mantém.
+                if (lid, p["id"]) != ("treino_harpa", "bau"):
+                    self.assertFalse(p.get("conclui"), f"{lid}/{p['id']}: nenhum passo desta fatia usa conclui")
                 self.assertLessEqual(len(p.get("dica", [])), 2, lid)
                 if p.get("ui"):
                     self.assertRegex(p["ui"], UI_OK, f"{lid}/{p['id']}")

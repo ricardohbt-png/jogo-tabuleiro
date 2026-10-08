@@ -54292,6 +54292,10 @@ function _mostrarJanelaLicao(msg){
     ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
   const entendi = (passo && passo.informativo)
     ? `<button type="button" class="licao-botao licao-botao-ok" onclick="GS.avancarPasso()">${t('ui.tutorial.entendi')}</button>` : '';
+  // A lição seguinte chega na mesma rajada que o selo/✓ da anterior (concluir uma
+  // libera a próxima): o innerHTML abaixo os apagaria no mesmo instante.
+  const mantidos = Array.from(host.children || []).filter(el => el.classList &&
+    (el.classList.contains('licao-selo') || el.classList.contains('licao-ok')));
   host.innerHTML =
     `<div class="licao-topo"><span class="licao-emoji">${_esc(emoji)}</span>` +
     `<span class="licao-nome">${_esc(nome)}</span>` +
@@ -54302,6 +54306,7 @@ function _mostrarJanelaLicao(msg){
     `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
     `<div class="licao-aviso" id="licao-aviso" style="display:none"></div>` +
     ((botoes || entendi) ? `<div class="licao-acoes">${botoes}${entendi}</div>` : '');
+  mantidos.forEach(el => host.appendChild(el));
   host.classList.add('open');
   _guiaIniciar(passo);
 }

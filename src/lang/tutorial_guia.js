@@ -777,24 +777,24 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique na casa marcada para guiar o refém até lá."
   },
   "ui.tutorial.guia.treino_harpa.bau.dica.1": {
-    "en": "Click the chest, then the harp, to put it in your bag.",
-    "pt": "Clique no baú e depois na harpa para guardá-la na bolsa."
+    "en": "With the chest open, click Take next to the harp.",
+    "pt": "Com o baú aberto, clique em Pegar ao lado da harpa."
   },
   "ui.tutorial.guia.treino_harpa.bau.porque": {
     "en": "Each instrument grants an ability; the harp throws a blade of sound.",
     "pt": "Cada instrumento dá uma habilidade; a harpa lança uma lâmina de som."
   },
   "ui.tutorial.guia.treino_harpa.bau.texto": {
-    "en": "Stand next to the chest and take the Old Harp.",
-    "pt": "Fique ao lado do baú e pegue a Harpa Velha."
+    "en": "Stand next to the chest, click it and take the Old Harp.",
+    "pt": "Fique ao lado do baú, clique nele e pegue a Harpa Velha."
   },
   "ui.tutorial.guia.treino_harpa.equipar.porque": {
-    "en": "Equipping is a [[acao_livre]]; the Lute leaves the shield hand and goes to your bag.",
-    "pt": "Equipar é [[acao_livre]]; o Alaúde sai da mão do escudo e vai para a bolsa."
+    "en": "Equipping is a [[acao_livre]]; the harp takes the shield hand and the Lute returns to the bag.",
+    "pt": "Equipar é [[acao_livre]]; a harpa ocupa a mão do escudo e o Alaúde volta à bolsa."
   },
   "ui.tutorial.guia.treino_harpa.equipar.texto": {
-    "en": "Open your bag with [[atalho:inventario]] and equip the Old Harp in the shield hand.",
-    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe a Harpa Velha na mão do escudo."
+    "en": "Open your bag with [[atalho:inventario]] and double-click the Old Harp.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e dê dois cliques na Harpa Velha."
   },
   "ui.tutorial.guia.treino_luz.luz.porque": {
     "en": "See your vision, attack, damage and defense change.",
@@ -837,12 +837,12 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique em Mira Certeira e depois no boneco."
   },
   "ui.tutorial.guia.treino_nota_cortante.linha.porque": {
-    "en": "The blade of sound flies straight and cannot turn.",
-    "pt": "A lâmina de som segue em linha reta e não faz curva."
+    "en": "The blade of sound flies straight, up to 3 squares, and cannot turn.",
+    "pt": "A lâmina de som segue em linha reta, até 3 casas, e não faz curva."
   },
   "ui.tutorial.guia.treino_nota_cortante.linha.texto": {
-    "en": "Stand in the dummy's row or column, up to 3 squares away.",
-    "pt": "Fique na mesma linha ou coluna do boneco, a até 3 casas."
+    "en": "Walk to the marked square, in the dummy's row, then click Got it.",
+    "pt": "Ande até a casa marcada, na mesma linha do boneco, e clique em Entendi."
   },
   "ui.tutorial.guia.treino_nota_cortante.tocar.dica.1": {
     "en": "A two-handed instrument needs your main action free this turn.",
@@ -853,8 +853,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O alvo faz um [[teste_resistencia]] de Reflexos: resistir corta o dano pela metade."
   },
   "ui.tutorial.guia.treino_nota_cortante.tocar.texto": {
-    "en": "Click Slicing Note and pick the dummy's direction.",
-    "pt": "Clique em Nota Cortante e escolha a direção do boneco."
+    "en": "Click Cutting Note, then the adjacent square that points at the dummy.",
+    "pt": "Clique em Nota Cortante e depois na casa vizinha que aponta para o boneco."
   },
   "ui.tutorial.guia.treino_protetor.proteger.porque": {
     "en": "The damage is split between you and your share is reduced.",

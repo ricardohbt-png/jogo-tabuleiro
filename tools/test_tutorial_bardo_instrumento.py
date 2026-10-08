@@ -143,6 +143,50 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(any(c["pos"] == BAU for c in est["chests"]))
 
 
+class GuiaDaHarpaTests(unittest.IsolatedAsyncioTestCase):
+    """Relato do autor: as mensagens da sala do Bardo não explicavam o que fazer."""
+
+    def _passos(self, lid):
+        return next(f for f in D["falas"] if f["id"] == lid)["guia"]
+
+    async def test_pegar_a_harpa_avanca_o_passo_sem_clicar_entendi(self):
+        r, p = await ate_pegar()
+        self.assertEqual(p["licao_passo"], 0)
+        r.messages.clear()
+        await r.handle_take_from_chest(p["id"], bau_da_sala(r)["id"], "item", 0)
+        self.assertEqual(p["licao_passo"], 1)
+        self.assertEqual(p["licao_atual"], "treino_harpa")
+        self.assertTrue(any(m.get("type") == "licao_passo_ok" for m in r.messages))
+        novo = [m for m in r.messages if m.get("type") == "licao_passo"][-1]
+        self.assertEqual(novo["passo"]["id"], "equipar")
+        self.assertFalse(novo["passo"].get("informativo"))
+
+    async def test_passo_de_pegar_nao_e_informativo(self):
+        r, p = await ate_pegar()
+        passo = S._guia_payload(next(f for f in r.licoes if f["id"] == "treino_harpa"), 0)
+        self.assertFalse(passo.get("informativo"))
+
+    def test_equipar_diz_como_equipar(self):
+        import gerar_guia_comum as G
+        txt = G.guia_todos()["treino_harpa"][1]["texto"][0]
+        self.assertIn("dois cliques", txt)
+
+    def test_passo_da_linha_aponta_a_casa_e_o_toque_explica_a_direcao(self):
+        import gerar_guia_comum as G
+        g = G.guia_todos()["treino_nota_cortante"]
+        self.assertEqual(g[0]["ui"], "casa:[10,24]")
+        self.assertIn("casa marcada", g[0]["texto"][0])
+        self.assertIn("vizinha", g[1]["texto"][0])
+        sala = next(r for r in D["rooms"] if r["id"] == 43)
+        self.assertTrue(sala["x"] <= 10 < sala["x"] + sala["w"] and sala["y"] <= 24 < sala["y"] + sala["h"])
+        self.assertNotIn([10, 24], [m["pos"] for m in D["monsters"]])
+        self.assertEqual(D["tiles"][24][10], S.FLOOR)
+
+    def test_dica_do_bau_cita_o_botao_pegar(self):
+        import gerar_guia_comum as G
+        self.assertIn("Pegar", G.guia_todos()["treino_harpa"][0]["dica"][0][0])
+
+
 class LimpezaERepeticaoTests(unittest.IsolatedAsyncioTestCase):
     async def test_saida_devolve_o_alaude_e_remove_a_harpa(self):
         r, p = await ate_nota()
