@@ -225,7 +225,7 @@ console.log("\n[18] conclusão visível (fiação)");
   check("game.js trata licaoConcluida", /GS\.on\('licaoConcluida'/.test(gjSrc));
   for (const k of ["passo_ok", "licao_concluida", "recompensa", "recompensa_trilha"])
     check("chave ui.tutorial." + k + " em pt e en",
-          new RegExp('"ui\\.tutorial\\.' + k + '":\\s*\\{[^}]*"pt"[^}]*"en"|"ui\\.tutorial\\.' + k + '":\\s*\\{[^}]*"en"[^}]*"pt"').test(langT));
+          new RegExp('"ui\\.tutorial\\.' + k + '":[^\\n]*"pt"[^\\n]*"en"').test(langT));
 }
 
 console.log(`\n${PASS} ok, ${FAIL} falha(s)`);
