@@ -7189,6 +7189,10 @@ def _veneno_com_melhorias(veneno_id):
                 veneno[key] = int(veneno[key] * 2)
     return veneno
 
+def _veneno_id_valido(veneno_id):
+    """Aceita ids de venenos base e variantes validadas pelo formato de melhoria."""
+    return _veneno_com_melhorias(veneno_id) is not None
+
 def _preparar_item_veneno(item, upgrades):
     """Valida melhorias e monta preço, nome, descrição e id persistente do frasco."""
     upgrades = upgrades if isinstance(upgrades, dict) else {}
@@ -7199,7 +7203,8 @@ def _preparar_item_veneno(item, upgrades):
             or potencia not in ("nenhum", *_VENENO_MELHORIAS_POTENCIA)
             or duracao not in ("nenhum", *_VENENO_MELHORIAS_DURACAO)):
         return None
-    variant_id = item.get("veneno_id", item.get("id", ""))
+    base_item_id = str(item.get("veneno_id", item.get("id", ""))).split("__upgrade__", 1)[0]
+    variant_id = base_item_id
     if (cd, potencia, duracao) != ("nenhum", "nenhum", "nenhum"):
         variant_id += f"__upgrade__{cd}_{potencia}_{duracao}"
     defn = _veneno_com_melhorias(variant_id)
@@ -7211,6 +7216,9 @@ def _preparar_item_veneno(item, upgrades):
     result = deepcopy(item)
     result["id"] = variant_id
     result["veneno_id"] = variant_id
+    # A variante mantém seu id para preservar os aprimoramentos, mas reutiliza
+    # o PNG associado ao veneno base.
+    result["icon"] = item.get("icon") or f"assets/itens/{base_item_id}.png"
     result["name"] = defn["nome"]
     result["price"] = math.ceil(int(item.get("price", 0)) * mult)
     result["dificuldade"] = defn.get("dificuldade", 10)
@@ -7485,9 +7493,9 @@ def validar_dungeon(defn):
             return False, f"armadilha em casa inválida: {tr.get('pos')}."
         meta_trap = ARMADILHAS[tr["tipo"]]
         if (meta_trap.get("precisa_veneno") or meta_trap.get("custo_veneno")) \
-                and tr.get("veneno_id") not in VENENOS:
+                and not _veneno_id_valido(tr.get("veneno_id")):
             return False, f"{tr['tipo']} exige veneno_id válido: {tr.get('veneno_id')!r}."
-        if tr.get("veneno_id") is not None and tr.get("veneno_id") not in VENENOS:
+        if tr.get("veneno_id") is not None and not _veneno_id_valido(tr.get("veneno_id")):
             return False, f"{tr['tipo']} recebeu veneno_id inválido: {tr.get('veneno_id')!r}."
         if "dificuldade" in tr and (isinstance(tr["dificuldade"], bool)
                                      or not isinstance(tr["dificuldade"], int)
@@ -7661,9 +7669,9 @@ def validar_dungeon(defn):
                 return False, f"{trap_tipo} na decoração recebeu dano inválido."
             if (ARMADILHAS[trap_tipo].get("precisa_veneno")
                     or ARMADILHAS[trap_tipo].get("custo_veneno")) \
-                    and decor_trap.get("veneno_id") not in VENENOS:
+                    and not _veneno_id_valido(decor_trap.get("veneno_id")):
                 return False, f"{trap_tipo} na decoração exige veneno_id válido."
-            if decor_trap.get("veneno_id") is not None and decor_trap.get("veneno_id") not in VENENOS:
+            if decor_trap.get("veneno_id") is not None and not _veneno_id_valido(decor_trap.get("veneno_id")):
                 return False, f"{trap_tipo} na decoração recebeu veneno_id inválido."
             if trap_tipo == "armadilha_teletransporte":
                 destino = decor_trap.get("saida")
@@ -7742,14 +7750,6 @@ def validar_dungeon(defn):
             return False, f"fala com gatilho inválido: {_tg!r} (proximidade|sala|manual)."
         if not in_grid(_f.get("pos")):
             return False, f"fala em casa inválida: {_f.get('pos')}."
-        if not _e_licao(_f):
-            continue
-        # ── Lição de tutorial ──
-        if _tg == "manual":
-            return False, "lição de tutorial não aceita gatilho manual."
-        _cls = _f.get("classe")
-        if _cls is not None and _cls not in LICAO_CLASSES:
-            return False, f"lição com classe inválida: {_cls!r}."
         _speaker = _f.get("falante")
         if isinstance(_speaker, dict):
             for _key, _prefix in (("retrato", "assets/portraits/"),
@@ -7761,6 +7761,14 @@ def validar_dungeon(defn):
                 if (not _nome_asset or "/" in _nome_asset or "\\" in _nome_asset
                         or ".." in _nome_asset or not re.fullmatch(r"[A-Za-z0-9_. -]+\.png", _nome_asset, re.IGNORECASE)):
                     return False, f"{_key} do falante deve ser PNG local em {_prefix}."
+        if not _e_licao(_f):
+            continue
+        # ── Lição de tutorial ──
+        if _tg == "manual":
+            return False, "lição de tutorial não aceita gatilho manual."
+        _cls = _f.get("classe")
+        if _cls is not None and _cls not in LICAO_CLASSES:
+            return False, f"lição com classe inválida: {_cls!r}."
         _req = _f.get("requisitos")
         if _req is not None:
             if not isinstance(_req, dict) or set(_req) - {"nivel", "guild", "magia", "magia_tipo", "instrumento"}:
@@ -10430,7 +10438,7 @@ def _vincular_envenenar_ataque(monstro):
         except (TypeError, ValueError):
             indice = 0
         ataques = monstro.get("attacks", [])
-        if veneno_id in VENENOS and 0 <= indice < len(ataques):
+        if _veneno_id_valido(veneno_id) and 0 <= indice < len(ataques):
             ataques[indice]["on_hit"] = veneno_id
             ataques[indice]["poison_dc"] = max(1, min(40, int(habilidade.get("poison_dc", 10))))
 
@@ -18847,7 +18855,7 @@ class GameRoom(TutorialTraining):
         if not isinstance(slots, list):
             legacy_id = p.get("weapon_poison")
             legacy_hits = max(0, int(p.get("weapon_poison_hits", 0) or 0))
-            slots = [legacy_id] * legacy_hits if legacy_id in VENENOS else []
+            slots = [legacy_id] * legacy_hits if _veneno_id_valido(legacy_id) else []
             # O modelo antigo permitia dois venenos somente ao ladino. Agora a
             # miniatura fÃ­sica da arma aceita no mÃ¡ximo um marcador corpo a corpo.
             p.pop("weapon_poison", None)
@@ -18857,7 +18865,7 @@ class GameRoom(TutorialTraining):
             self._set_weapon_poison_slots(p, slots)
         active_weapon_id = (gear_weapon or weapon).get("id", "")
         capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
-        valid_slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
+        valid_slots = [veneno_id for veneno_id in slots if _veneno_id_valido(veneno_id)][:capacity]
         if valid_slots != slots:
             self._set_weapon_poison_slots(p, valid_slots)
         return valid_slots
@@ -18868,7 +18876,7 @@ class GameRoom(TutorialTraining):
         gear_weapon = (p.get("gear") or {}).get("weapon")
         active_weapon_id = (gear_weapon or weapon or {}).get("id", "")
         capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
-        slots = [veneno_id for veneno_id in slots if veneno_id in VENENOS][:capacity]
+        slots = [veneno_id for veneno_id in slots if _veneno_id_valido(veneno_id)][:capacity]
         if isinstance(gear_weapon, dict):
             gear_weapon["poison_slots"] = list(slots)
         # SÃ³ espelha na cÃ³pia de combate se ela representa a mesma arma. Isso
@@ -25053,7 +25061,7 @@ class GameRoom(TutorialTraining):
             return iid in ARREMESSAVEIS
         if base.get("effect") == "coat_poison":
             poison_id = base.get("veneno_id")
-            return isinstance(poison_id, str) and poison_id in VENENOS
+            return isinstance(poison_id, str) and _veneno_id_valido(poison_id)
         return base.get("item_type") == "potion" or iid in {
             "health_potion", "health_potion_small", "health_potion_concentrated",
             "health_potion_improved", "regeneration_potion", "elixir", "antidote",
@@ -34741,10 +34749,10 @@ class GameRoom(TutorialTraining):
         veneno_id = None
         if tipo.get("custo_veneno") or tipo.get("permite_veneno"):
             veneno_id = msg.get("veneno_id")
-            if tipo.get("custo_veneno") and (not veneno_id or veneno_id not in VENENOS):
+            if tipo.get("custo_veneno") and (not veneno_id or not _veneno_id_valido(veneno_id)):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.escolha_um_veneno_para_a_armadilha")}); return
             if veneno_id:
-                if veneno_id not in VENENOS:
+                if not _veneno_id_valido(veneno_id):
                     await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_invalido")}); return
                 frasco = next((i for i in p["bag"] if i.get("id") == veneno_id), None)
                 if not frasco:
@@ -35126,7 +35134,7 @@ class GameRoom(TutorialTraining):
         await self._dano_em_alvo(alvo, dano, "fisico", arm.get("criador"))
         veneno_id = arm.get("veneno_id")
         veneno_nome = (_veneno_com_melhorias(veneno_id) or {}).get("nome", "Veneno")
-        if (alvo.get("alive") or alvo.get("hp", 0) > 0) and veneno_id in VENENOS:
+        if (alvo.get("alive") or alvo.get("hp", 0) > 0) and _veneno_id_valido(veneno_id):
             await self._aplicar_veneno(alvo, veneno_id, fonte="armadilha de dardos")
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
@@ -36274,7 +36282,7 @@ class GameRoom(TutorialTraining):
         veneno_id = msg.get("veneno_id")
         frasco = next((i for i in p["bag"]
                        if (i.get("veneno_id") == veneno_id or i.get("id") == veneno_id)
-                       and i.get("veneno_id") in VENENOS), None)
+                       and _veneno_id_valido(i.get("veneno_id"))), None)
         if not frasco:
             await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
 
@@ -36288,7 +36296,7 @@ class GameRoom(TutorialTraining):
                        if _is_ranged
                        else "o próximo golpe certeiro envenena o alvo")
         await self.gm_say(
-            T("narracao.aplica_na_arma_acao_livre", heroi=p['name'], venenos_vid_nome=VENENOS[vid]['nome'], desc_veneno=desc_veneno, custo_sede=custo_sede))
+            T("narracao.aplica_na_arma_acao_livre", heroi=p['name'], venenos_vid_nome=_veneno_com_melhorias(vid)['nome'], desc_veneno=desc_veneno, custo_sede=custo_sede))
         await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
         await self.push_state()
 
@@ -36588,7 +36596,7 @@ class GameRoom(TutorialTraining):
         # before committing a belt bottle; bag callers retain the same ordering.
         if effect == "coat_poison":
             vid = item.get("veneno_id")
-            if vid not in VENENOS:
+            if not _veneno_id_valido(vid):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
 
         remove_item = True
@@ -49409,7 +49417,7 @@ def _validate_custom_monster(raw):
             config = dict(config)
             legacy_attacks = raw.get("attacks") if isinstance(raw.get("attacks"), list) else []
             legacy_index = next((i for i, atk in enumerate(legacy_attacks)
-                                 if isinstance(atk, dict) and atk.get("on_hit") in VENENOS), 0)
+                                 if isinstance(atk, dict) and _veneno_id_valido(atk.get("on_hit"))), 0)
             legacy_attack = legacy_attacks[legacy_index] if legacy_attacks else {}
             config.setdefault("attack_index", legacy_index)
             config.setdefault("veneno_id", legacy_attack.get("on_hit", "veneno_escorpiao_pedra"))
@@ -50032,7 +50040,7 @@ def _validate_custom_monster(raw):
             "base_attack_bonus": base,
             "atk_bonus": base + ((stat - 10) // 2),
             "range": _monster_int(attack.get("range", 0), 0, 0, 20) or None,
-            "on_hit": poison_id if poison_id in VENENOS else None,
+            "on_hit": poison_id if _veneno_id_valido(poison_id) else None,
             "on_hit_effect": on_hit_effect if on_hit_effect in {"congelamento_progressivo", "golpe_vento"} else None,
             "poison_dc": _monster_int(attack.get("poison_dc", 10), 10, 1, 40),
             "disease_severity": disease_severity,
@@ -50046,7 +50054,7 @@ def _validate_custom_monster(raw):
     for ability in abilities:
         if ability.get("id") == "envenenar":
             index, venom = ability.get("attack_index", 0), ability.get("veneno_id")
-            if venom not in VENENOS or not 0 <= index < len(attacks):
+            if not _veneno_id_valido(venom) or not 0 <= index < len(attacks):
                 return False, "Envenenar exige um ataque e veneno válidos"
             attacks[index]["on_hit"] = venom
             attacks[index]["poison_dc"] = ability.get("poison_dc", 10)
