@@ -205,5 +205,9 @@ _aplicar_fatia7(d)
 from aplicar_fatia8_tutorial import aplicar as _aplicar_fatia8   # boneco de palha com 24 PV, bonecos sensíveis a veneno e fala_30/32
 _aplicar_fatia8(d)
 from gerar_guia_comum import aplicar_guia
+import aplicar_fatia18_tutorial as _F18   # hostilidade antes da porta da ala
+_F18.aplicar(d)
+import aplicar_fatia19_tutorial as _F19   # apresentação inicial do tutorial
+_F19.aplicar(d)
 aplicar_guia(d)
 path.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

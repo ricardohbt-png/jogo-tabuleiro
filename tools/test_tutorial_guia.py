@@ -130,6 +130,17 @@ class DerivacaoTests(unittest.TestCase):
 
 
 class AvancoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_abertura_e_a_primeira_licao_ao_entrar_no_campo(self):
+        r, p = room('warrior', None)
+        p['pos'] = [3, 15]
+
+        await r._verificar_falas(p, None)
+
+        self.assertEqual(p['licao_atual'], 'fala_intro')
+        fala = next(m for m in r.messages if m.get('licao_id') == 'fala_intro')
+        self.assertEqual(fala['passo']['ui'], None)
+        self.assertEqual(fala['passo']['texto'], 'ui.tutorial.guia.fala_intro.briefing.texto')
+
     async def test_fim_de_turno_forcado_nao_conclui_licao_de_controles(self):
         r, p = room('warrior', deepcopy(GUIA_MIRA))
         await abrir_licao(r, p, 'treino_mira')

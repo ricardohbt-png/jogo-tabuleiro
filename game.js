@@ -390,7 +390,7 @@ document.body.innerHTML = `
     <div id="map-wrap" data-guia="hud:tabuleiro">
       <canvas id="dungeon-canvas"></canvas>
       <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
-      <div id="objectives-hud" style="display:none"></div>
+      <div id="objectives-hud" data-guia="hud:objetivos" style="display:none"></div>
       <button id="btn-libertar" style="display:none" onclick="GS.libertarPrisioneiro()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
     </div>
     <canvas id="dice-canvas"></canvas>
@@ -548,6 +548,7 @@ document.body.innerHTML = `
 
 <!-- Janela da lição do tutorial: fica até o jogador fechar, ao contrário do
      balão acima, que some sozinho. Reabre pelo quadro ⚑ do HUD. -->
+<div id="licao-prologo-backdrop" aria-hidden="true"></div>
 <div id="licao-janela"></div>
 
 <!-- Menu de pausa — aberto por Esc durante a aventura. -->
@@ -16946,6 +16947,15 @@ function renderPlayers(state){
     const div=document.createElement('div');
     const naVez = isCur || p.id === state.last_stand_pid;
     div.className='pcard'+(isMe?' me':'')+(isCur?' current':'')+(naVez?' vez':'')+(p.alive?'':' dead')+(disc?' disconnected':'');
+    if(isMe){
+      div.dataset.guia='botao:ficha';
+      div.dataset.gamepadAction='activate';
+      div.tabIndex=0;
+      div.setAttribute('role','button');
+      div.onkeydown = e => {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); div.click(); }
+      };
+    }
     if(disc||fora) div.style.opacity='0.45';
     const hpPct=Math.max(0,p.hp/p.max_hp*100);
     // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
@@ -16962,7 +16972,7 @@ function renderPlayers(state){
       ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
       ${meu && (isCur || p.id === state.animados_turn || p.id === state.last_stand_pid) ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
       <div class="bars">
-        <div class="bar-row">
+          <div class="bar-row"${isMe ? ' data-guia="hud:vida"' : ''}>
           <span class="bar-label">HP</span>
           <div class="bar-bg"><div class="bar-fill hp" style="width:${hpPct}%"></div></div>
           <span class="bar-val">${p.hp}/${p.max_hp}</span>
@@ -54403,6 +54413,9 @@ function _mostrarJanelaLicao(msg){
   const emoji = (msg.falante && msg.falante.emoji) || '💬';
   const nome  = (msg.falante && msg.falante.nome)  || '';
   const passo = msg.passo || null;
+  const abertura = msg.licao_id === 'fala_intro' && passo?.id === 'briefing';
+  $('licao-prologo-backdrop')?.classList.toggle('open', abertura);
+  host.classList.toggle('prologo-abertura', abertura);
   const explicito = !!(passo && !passo.auto);
   const andamento = (explicito && passo.n > 1)
     ? `<div class="licao-passo">${_esc(t('ui.tutorial.passo_de', {i: passo.i + 1, n: passo.n}))}` +
@@ -54432,7 +54445,10 @@ function _mostrarJanelaLicao(msg){
   _guiaIniciar(passo);
 }
 // Fechar a janela não apaga o destaque: o halo vive até o passo mudar.
-function _fecharJanelaLicao(){ $('licao-janela')?.classList.remove('open'); }
+function _fecharJanelaLicao(){
+  $('licao-janela')?.classList.remove('open', 'prologo-abertura');
+  $('licao-prologo-backdrop')?.classList.remove('open');
+}
 // O quadro ⚑ do HUD reabre a última lição — fechar não pode ser irreversível.
 function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima); }
 

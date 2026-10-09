@@ -8,7 +8,7 @@ sys.path.insert(0, str(RAIZ)); sys.path.insert(0, str(RAIZ / "tools"))
 import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
-IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
+IDS_ESPERADOS = ["fala_intro", "fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
                  "fala_hostilidade", "fala_res", "fala_vuln"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
@@ -25,6 +25,31 @@ class ConteudoTests(unittest.TestCase):
     def test_cobre_as_quinze_licoes(self):
         self.assertEqual(sorted(C.GUIA), sorted(IDS_ESPERADOS))
 
+    def test_abertura_apresenta_heroi_vida_objetivo_antes_da_camera(self):
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        falas = {f["id"]: f for f in d["falas"]}
+        intro = falas["fala_intro"]
+        self.assertLess(intro["ordem"], falas["fala_camera"]["ordem"])
+        self.assertEqual(intro["tarefa"]["tipo"], "encerrar_turno")
+        passos = C.GUIA["fala_intro"]
+        self.assertEqual([p["id"] for p in passos], ["briefing", "objetivo", "vida", "ficha", "continuar"])
+        self.assertEqual([p.get("ui") for p in passos],
+                         [None, "hud:objetivos", "hud:vida", "botao:ficha", "botao:encerrar_turno"])
+        briefing = " ".join(p["texto"][0] for p in passos).lower()
+        for tema in ("grupo", "missão", "pontos de vida", "ficha", "saída"):
+            self.assertIn(tema, briefing)
+
+    def test_aplicador_da_abertura_e_idempotente(self):
+        import aplicar_fatia19_tutorial as F19
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        F19.aplicar(d)
+        uma_vez = json.loads(json.dumps(d, ensure_ascii=False))
+        F19.aplicar(d)
+        self.assertEqual(d, uma_vez)
+        ids = [f["id"] for f in d["falas"]]
+        self.assertEqual(ids.count("fala_intro"), 1)
+        self.assertLess(ids.index("fala_intro"), ids.index("fala_camera"))
+
     def test_licao_de_atalhos_cobre_os_quatro_temas(self):
         txt = " ".join(p["texto"][0].lower() for p in C.GUIA["fala_atalhos"])
         for tema in ("atalho", " r ", "esc", "clique"):
@@ -32,7 +57,7 @@ class ConteudoTests(unittest.TestCase):
 
     def test_regras_de_redacao(self):
         for lid, passos in C.GUIA.items():
-            self.assertTrue(1 <= len(passos) <= (8 if lid == "fala_camera" else 4), lid)
+            self.assertTrue(1 <= len(passos) <= (8 if lid == "fala_camera" else 5 if lid == "fala_intro" else 4), lid)
             for i, p in enumerate(passos):
                 pt, en = p["texto"]
                 limpo = TERMO.sub("x", pt)
@@ -164,6 +189,12 @@ class GeradorTests(unittest.TestCase):
         for lid in C.GUIA:
             self.assertIn(lid, todos)
         self.assertEqual(len(todos), len(set(todos)))
+
+    def test_gerador_emite_pt_e_en_para_a_abertura(self):
+        lang = G.gerar_lang()
+        self.assertEqual(lang["ui.tutorial.guia.fala_intro.briefing.texto"], {
+            "pt": "Você controla este herói e ajuda o grupo a cumprir a missão.",
+            "en": "You control this hero and help the party complete the mission."})
 
     def test_botao_do_grimorio_tem_marcador(self):
         gjs = (RAIZ / "game.js").read_text(encoding="utf-8")

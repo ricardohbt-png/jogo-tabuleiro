@@ -496,6 +496,26 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Keep your distance and end your turn; press Got it when the fight ends.",
     "pt": "Afaste-se e encerre o turno; depois aperte Entendi ao fim da luta."
   },
+  "ui.tutorial.guia.fala_intro.briefing.texto": {
+    "en": "You control this hero and help the party complete the mission.",
+    "pt": "Você controla este herói e ajuda o grupo a cumprir a missão."
+  },
+  "ui.tutorial.guia.fala_intro.continuar.texto": {
+    "en": "End your turn with [[atalho:encerrar_turno]]; next, we will practice the camera.",
+    "pt": "Encerre o turno com [[atalho:encerrar_turno]]; depois praticaremos a câmera."
+  },
+  "ui.tutorial.guia.fala_intro.ficha.texto": {
+    "en": "Open the hero sheet from this card to see class, attributes, weapons, and skills.",
+    "pt": "Abra a ficha pelo cartão do herói; ali veja classe, atributos, armas e habilidades."
+  },
+  "ui.tutorial.guia.fala_intro.objetivo.texto": {
+    "en": "Read the mission here; in this field, gather the whole party at the exit.",
+    "pt": "Leia o pedido aqui; neste campo, reúna todo o grupo na saída."
+  },
+  "ui.tutorial.guia.fala_intro.vida.texto": {
+    "en": "Check hit points: damage lowers them; healing restores them. At zero, the hero dies.",
+    "pt": "Confira os pontos de vida: dano reduz, cura recupera; ao zerar, o herói morre."
+  },
   "ui.tutorial.guia.fala_res.atacar.dica.1": {
     "en": "Staffs and maces deal impact, which the skeleton does not resist.",
     "pt": "Cajado e maça causam impacto, que o esqueleto não resiste."

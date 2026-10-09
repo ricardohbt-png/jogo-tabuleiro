@@ -64,6 +64,22 @@ def P(id, texto, porque=None, ui=None, dica=(), conclui=None):
 
 
 GUIA = {
+    "fala_intro": [
+        P("briefing", ("Você controla este herói e ajuda o grupo a cumprir a missão.",
+                       "You control this hero and help the party complete the mission.")),
+        P("objetivo", ("Leia o pedido aqui; neste campo, reúna todo o grupo na saída.",
+                       "Read the mission here; in this field, gather the whole party at the exit."),
+          ui="hud:objetivos"),
+        P("vida", ("Confira os pontos de vida: dano reduz, cura recupera; ao zerar, o herói morre.",
+                   "Check hit points: damage lowers them; healing restores them. At zero, the hero dies."),
+          ui="hud:vida"),
+        P("ficha", ("Abra a ficha pelo cartão do herói; ali veja classe, atributos, armas e habilidades.",
+                    "Open the hero sheet from this card to see class, attributes, weapons, and skills."),
+          ui="botao:ficha"),
+        P("continuar", ("Encerre o turno com [[atalho:encerrar_turno]]; depois praticaremos a câmera.",
+                        "End your turn with [[atalho:encerrar_turno]]; next, we will practice the camera."),
+          ui="botao:encerrar_turno"),
+    ],
     "fala_camera": [
         P("modo_3d", ("Ative a visão 3D no botão destacado. Se preferir, selecione Entendi.",
                           "Turn on 3D view with the highlighted button. Or select Got it."),

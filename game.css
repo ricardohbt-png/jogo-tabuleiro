@@ -1817,6 +1817,12 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
   opacity:0; transform:translateY(-8px);
   transition:opacity .18s ease, transform .18s ease; }
 #licao-janela.open{ display:block; opacity:1; transform:translateY(0); }
+#licao-prologo-backdrop{ position:fixed; inset:0; display:none; z-index:117;
+  background:rgba(4,8,15,.82); backdrop-filter:blur(2px); }
+#licao-prologo-backdrop.open{ display:block; }
+#licao-janela.prologo-abertura{ left:50%; top:50%; width:min(560px, calc(100vw - 32px));
+  padding:22px 26px; transform:translate(-50%,-46%); box-shadow:0 18px 60px #000e; }
+#licao-janela.prologo-abertura.open{ transform:translate(-50%,-50%); }
 #licao-janela .licao-topo{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 #licao-janela .licao-emoji{ font-size:1.3rem; line-height:1; }
 #licao-janela .licao-nome{ flex:1 1 auto; font-weight:700; font-size:.8rem;

@@ -88,6 +88,10 @@ check("_guiaEncerrar existe", /function _guiaEncerrar\(/.test(gameSrc));
   check("_guiaTick chama _guiaEncerrar()", /_guiaEncerrar\(\)/.test(tick));
 }
 check("textos pelo tradutor, não literais", /ui\.tutorial\.passo_de/.test(gameSrc) && /ui\.tutorial\.entendi/.test(gameSrc));
+check("abertura tem uma camada antes de mostrar o tabuleiro", /id="licao-prologo-backdrop"/.test(gameSrc)
+      && /prologo-abertura/.test(gameSrc) && /fala_intro/i.test(gameSrc));
+check("HUD de objetivos pode ser destacado", /id="objectives-hud"[^>]*data-guia="hud:objetivos"/.test(gameSrc));
+check("cartão do herói destaca vida e ficha", /hud:vida/.test(gameSrc) && /botao:ficha/.test(gameSrc));
 
 console.log("\n[7] gameState encaminha licao_dica e licao_resultado");
 {
