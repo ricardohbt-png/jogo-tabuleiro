@@ -2432,7 +2432,7 @@
       "type": "placa",
       "pos": [
         22,
-        13
+        8
       ],
       "facing": [
         0,
@@ -2448,7 +2448,7 @@
       "type": "placa",
       "pos": [
         22,
-        18
+        20
       ],
       "facing": [
         0,
@@ -2463,8 +2463,8 @@
       "id": "placa_rogue",
       "type": "placa",
       "pos": [
-        20,
-        13
+        15,
+        7
       ],
       "facing": [
         0,
@@ -2479,8 +2479,8 @@
       "id": "placa_cleric",
       "type": "placa",
       "pos": [
-        25,
-        13
+        29,
+        6
       ],
       "facing": [
         0,
@@ -2495,8 +2495,8 @@
       "id": "placa_bard",
       "type": "placa",
       "pos": [
-        20,
-        18
+        16,
+        23
       ],
       "facing": [
         0,
@@ -2511,102 +2511,6 @@
       "id": "placa_paladin",
       "type": "placa",
       "pos": [
-        25,
-        18
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
-      "image": "placa_fincada.png"
-    },
-    {
-      "id": "placa_warrior",
-      "type": "placa",
-      "pos": [
-        22,
-        8
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🛡️ Sala do Guerreiro — só ele entra aqui."
-    },
-    {
-      "id": "placa_mage",
-      "type": "placa",
-      "pos": [
-        22,
-        20
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🔮 Sala do Mago — só ele entra aqui."
-    },
-    {
-      "id": "placa_rogue",
-      "type": "placa",
-      "pos": [
-        15,
-        7
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🗡️ Sala do Ladino — só ele entra aqui."
-    },
-    {
-      "id": "placa_cleric",
-      "type": "placa",
-      "pos": [
-        29,
-        6
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "✝️ Sala do Clérigo — só ele entra aqui."
-    },
-    {
-      "id": "placa_bard",
-      "type": "placa",
-      "pos": [
-        16,
-        23
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "🎵 Sala do Bardo — só ele entra aqui."
-    },
-    {
-      "id": "placa_paladin",
-      "type": "placa",
-      "pos": [
         30,
         25
       ],
@@ -2616,8 +2520,8 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "placa_fincada.png",
-      "texto": "⚔️ Sala do Paladino — só ele entra aqui."
+      "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
+      "image": "placa_fincada.png"
     }
   ],
   "secret_passages": [],

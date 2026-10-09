@@ -162,10 +162,19 @@ PORTAS = {'warrior': ([22,7], [22,8], '🛡️', 'Guerreiro', 'fala_6', 'Mestre 
           'bard': ([15,23], [16,23], '🎵', 'Bardo', 'fala_14', 'Mestre de Armas'),
           'paladin': ([31,25], [30,25], '⚔️', 'Paladino', 'fala_16', 'Mestre de Armas')}
 for cls, (porta, casa_placa, emoji, nome, ultima, _) in PORTAS.items():
-    if not any(x['type'] == 'placa' and x['pos'] == casa_placa for x in d['decorations']):
-        d['decorations'].append({'id': 'placa_' + cls, 'type': 'placa', 'pos': casa_placa, 'facing': [0, 1],
-                                 'loot': None, 'key_objective': False, 'image': 'placa_fincada.png',
-                                 'texto': f'{emoji} Sala do {nome} — só ele entra aqui.'})
+    # A posição da placa pode mudar quando a sala é reorganizada; o ID estável
+    # permite atualizar a placa existente sem duplicá-la no JSON.
+    placa_id = 'placa_' + cls
+    placa = next((x for x in d['decorations'] if x.get('id') == placa_id), None)
+    if placa is None:
+        placa = {'id': placa_id}
+        d['decorations'].append(placa)
+    placa.update({'type': 'placa', 'pos': casa_placa, 'facing': [0, 1],
+                  'loot': None, 'key_objective': False, 'image': 'placa_fincada.png',
+                  'texto': f'{emoji} Sala do {nome} — só ele entra aqui.'})
+    placa_idxs = [i for i, x in enumerate(d['decorations']) if x.get('id') == placa_id]
+    for i in reversed(placa_idxs[1:]):
+        del d['decorations'][i]
     if not any(f['id'] == 'porta_' + cls for f in d['falas']):
         base = next(f for f in d['falas'] if f['id'] == ultima)
         d['falas'].append({'id': 'porta_' + cls, 'pos': base['pos'], 'falante': base['falante'],
