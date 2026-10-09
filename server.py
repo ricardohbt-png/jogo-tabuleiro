@@ -16661,7 +16661,7 @@ class GameRoom(TutorialTraining):
         for _ in range(4):
             if self.current_pid() != pid:
                 break
-            await self.handle_end_turn(pid)
+            await self.handle_end_turn(pid, _forcado=True)
 
     def release_character(self, pid):
         """Libera a trava do personagem deste jogador, se pertencer a esta sala."""
@@ -37037,7 +37037,7 @@ class GameRoom(TutorialTraining):
             self.players[pid]["atk_bonus"] = self.players[pid]["base_atk_bonus"]
             self.blessed.pop(pid)
 
-    async def handle_end_turn(self, pid):
+    async def handle_end_turn(self, pid, _forcado=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid):
@@ -37070,7 +37070,10 @@ class GameRoom(TutorialTraining):
         if p_dor:
             await self._cobrar_dor_constante(p_dor)
             await self._training_end_turn(p_dor)
-            await self._licao_evento(p_dor, "encerrar_turno")
+            # Só uma ação explícita do jogador deve concluir a lição de fim
+            # de turno; timeout ou desconexão não contam como prática.
+            if not _forcado:
+                await self._licao_evento(p_dor, "encerrar_turno")
         # Ãšltimo EsforÃ§o Ã© checado ANTES da fase dos servos (animados_phase_pid,
         # mais abaixo). As duas janelas sÃ£o mutuamente exclusivas para o mesmo
         # jogador: nada no controle da fase dos servos (mover/atacar animados,

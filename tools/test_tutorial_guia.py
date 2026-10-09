@@ -130,6 +130,44 @@ class DerivacaoTests(unittest.TestCase):
 
 
 class AvancoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_fim_de_turno_forcado_nao_conclui_licao_de_controles(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        p['licao_atual'] = 'fala_camera'
+        eventos = []
+
+        async def registrar(*args, **kwargs): eventos.append((args, kwargs))
+        async def noop(*args, **kwargs): pass
+        r._cobrar_dor_constante = noop
+        r._training_end_turn = noop
+        r._licao_evento = registrar
+        r.last_stand_pid = p['id']
+        r._fechar_mini_turno_ultimo_esforco = noop
+
+        await r.handle_end_turn(p['id'], _forcado=True)
+
+        self.assertEqual(eventos, [])
+        self.assertEqual(p['licao_atual'], 'fala_camera')
+
+    async def test_fim_de_turno_manual_continua_registrando_evento(self):
+        r, p = room('warrior', deepcopy(GUIA_MIRA))
+        await abrir_licao(r, p, 'treino_mira')
+        p['licao_atual'] = 'fala_camera'
+        eventos = []
+
+        async def registrar(*args, **kwargs): eventos.append((args, kwargs))
+        async def noop(*args, **kwargs): pass
+        r._cobrar_dor_constante = noop
+        r._training_end_turn = noop
+        r._licao_evento = registrar
+        r.last_stand_pid = p['id']
+        r._fechar_mini_turno_ultimo_esforco = noop
+
+        await r.handle_end_turn(p['id'])
+
+        self.assertEqual(len(eventos), 1)
+        self.assertEqual(eventos[0][0][1], 'encerrar_turno')
+
     async def test_fala_leva_o_passo_0(self):
         r, p = room('warrior', deepcopy(GUIA_MIRA))
         await abrir_licao(r, p, 'treino_mira')
