@@ -2527,6 +2527,60 @@
   "secret_passages": [],
   "falas": [
     {
+      "id": "fala_camera",
+      "pos": [
+        3,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Vamos ajustar a visão do tabuleiro antes de mover seu herói.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 9
+      },
+      "ordem": 0,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Pratique a câmera e encerre o turno"
+      },
+      "guia": [
+        {
+          "id": "modo_3d",
+          "texto": "ui.tutorial.guia.fala_camera.modo_3d.texto",
+          "ui": "botao:camera_3d"
+        },
+        {
+          "id": "aproximar",
+          "texto": "ui.tutorial.guia.fala_camera.aproximar.texto",
+          "ui": "hud:tabuleiro"
+        },
+        {
+          "id": "afastar",
+          "texto": "ui.tutorial.guia.fala_camera.afastar.texto",
+          "ui": "hud:tabuleiro"
+        },
+        {
+          "id": "girar",
+          "texto": "ui.tutorial.guia.fala_camera.girar.texto",
+          "ui": "hud:tabuleiro"
+        },
+        {
+          "id": "deslocar",
+          "texto": "ui.tutorial.guia.fala_camera.deslocar.texto",
+          "ui": "hud:tabuleiro"
+        },
+        {
+          "id": "encerrar",
+          "texto": "ui.tutorial.guia.fala_camera.encerrar.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
+    },
+    {
       "id": "fala_0",
       "pos": [
         3,
@@ -2536,7 +2590,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Bem-vindo ao Campo de Treinamento. Comece andando: clique numa casa iluminada. Seu herói tem um número de passos por turno — quando eles acabam, só o próximo turno devolve.",
+      "texto": "Bem-vindo. Vamos ajustar a visão e depois mover seu herói.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 9
@@ -2554,8 +2608,7 @@
       "guia": [
         {
           "id": "ver",
-          "texto": "ui.tutorial.guia.fala_0.ver.texto",
-          "porque": "ui.tutorial.guia.fala_0.ver.porque"
+          "texto": "ui.tutorial.guia.fala_0.ver.texto"
         },
         {
           "id": "andar",
@@ -2648,7 +2701,7 @@
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. A porta ao fundo já está aberta para você avançar quando quiser.",
+      "texto": "Terminou? Encerre seu turno para os monstros agirem. A porta está aberta.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 2
@@ -2662,8 +2715,7 @@
       "guia": [
         {
           "id": "entender",
-          "texto": "ui.tutorial.guia.fala_3.entender.texto",
-          "porque": "ui.tutorial.guia.fala_3.entender.porque"
+          "texto": "ui.tutorial.guia.fala_3.entender.texto"
         },
         {
           "id": "encerrar",

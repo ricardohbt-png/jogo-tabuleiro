@@ -17,8 +17,21 @@ for m in d['monsters']:
 # Preservar as falas comuns e o combate introdutório. Corrigir destinos que
 # ficaram na posição do mapa antigo após a reorganização feita no editor.
 d['falas'] = [f for f in d['falas'] if not f.get('classe') or f.get('ordem', 0) <= 2]
+
+# A primeira lição apresenta os controles antes de pedir que o herói caminhe.
+d['falas'] = [f for f in d['falas'] if f['id'] != 'fala_camera']
+d['falas'].insert(0, {
+    'id': 'fala_camera', 'pos': [3, 15],
+    'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
+    'texto': 'Vamos ajustar a visão do tabuleiro antes de mover seu herói.',
+    'trigger': {'tipo': 'proximidade', 'raio': 9}, 'ordem': 0,
+    'tarefa': {'tipo': 'encerrar_turno', 'vezes': 1,
+               'texto_curto': 'Pratique a câmera e encerre o turno'},
+})
+
 for f in d['falas']:
     if f['id'] == 'fala_0':
+        f['texto'] = 'Bem-vindo. Vamos ajustar a visão e depois mover seu herói.'
         f['tarefa']['alvo'] = [5, 15]
         f['tarefa']['texto_curto'] = 'Ande até a casa 5,15'
     if f['id'] in ['fala_1', 'fala_2']:

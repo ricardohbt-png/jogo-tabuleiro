@@ -379,7 +379,7 @@ document.body.innerHTML = `
         <button id="btn-altura" onclick="toggleMouseAltitudeMode()" data-i18n-title="ui.hud.altura_ativar_title" title="Mantenha o botão direito pressionado e use o scroll para alterar a altura" aria-pressed="false" style="display:none">↕ Altura</button>
         <button id="btn-cam-reset" onclick="resetCamera3D()" data-i18n-title="ui.hud.cam_reset_title" title="Visão isométrica padrão (R)">⌂ Reset</button>
         <button id="btn-tile-spacing-reset" onclick="restoreTileSpacing3D()" data-i18n-title="ui.hud.espaco_reset_title" title="Voltar ao espaçamento anterior de 0,94" data-i18n="ui.hud.espaco_voltar">↶ Espaço 0,94</button>
-        <button id="btn-3d-toggle" onclick="toggle3D()" data-i18n-title="ui.hud.toggle3d_title" title="Alternar visão 3D / 2D">🎲 3D</button>
+        <button id="btn-3d-toggle" onclick="toggle3D()" data-guia="botao:camera_3d" data-gamepad-action="activate" data-i18n-title="ui.hud.toggle3d_title" title="Alternar visão 3D / 2D">🎲 3D</button>
         <button id="btn-ajuda" onclick="toggleAjuda()" data-i18n-title="ui.hud.ajuda_title" title="Como jogar">❓</button>
       </div>
     </div>
@@ -387,7 +387,7 @@ document.body.innerHTML = `
     <div id="gamepad-context-hud" aria-live="polite" hidden></div>
     <div id="gamepad-shortcuts-tray" aria-label="Atalhos do controle" hidden></div>
     <div id="gamepad-shortcuts-hud" aria-label="Atalhos do controle" hidden></div>
-    <div id="map-wrap">
+    <div id="map-wrap" data-guia="hud:tabuleiro">
       <canvas id="dungeon-canvas"></canvas>
       <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
       <div id="objectives-hud" style="display:none"></div>
@@ -29579,6 +29579,9 @@ function _gamepadCameraInput(pad, now, rotate, allowZoom = true){
   const ry = rotate ? _gamepadAxis(pad, 3) : 0;
   const zoom = allowZoom ? _gamepadTrigger(pad, 7) - _gamepadTrigger(pad, _gamepadBinding('shortcutThird')) : 0; // RT aproxima, terceiro modificador afasta
   if(!rx && !ry && !zoom) return;
+  if(rx || ry) _guiaCameraInteracao('girar');
+  if(zoom > 0.08) _guiaCameraInteracao('aproximar');
+  else if(zoom < -0.08) _guiaCameraInteracao('afastar');
 
   // Tomar a câmera manualmente encerra o seguimento automático do peão, que
   // caso contrário reposicionaria a câmera no quadro seguinte.
@@ -36804,6 +36807,10 @@ let _masterMonsterHoverId = null;
 // Set true while any mouse button is held and moved; on3DClick checks this flag
 // to avoid firing a tile-click immediately after a camera drag/pan ends.
 let _orbitDragMoved = false;
+let _guiaCameraDrag = null;
+document.addEventListener('mouseup', e => {
+  if(_guiaCameraDrag && e.button === _guiaCameraDrag.button) _guiaCameraDrag = null;
+});
 // Experimento visual atual: quase sem fresta. O botão do HUD permite voltar
 // imediatamente à opção anterior (0,94), sem mudar o arquivo da masmorra.
 let _tileFootprint3D = 0.97;
@@ -42412,6 +42419,7 @@ function toggle3D(){
     _syncMouseAltitudeControl(GS.gameState);
     if(GS.gameState) renderMap(GS.gameState);
   }
+  _guiaCameraInteracao('modo_3d');
 }
 
 // A malha 3D do tabuleiro é criada uma vez e reutilizada durante o turno. Esta
@@ -44027,8 +44035,15 @@ function init3D(state){
   // Com o botão direito pressionado, o scroll vira um passo vertical. Fora
   // desse gesto, o OrbitControls continua controlando o zoom normalmente.
   domEl.addEventListener('wheel', _handleAltitudeWheel, { passive:false, capture:true });
+  domEl.addEventListener('wheel', e => {
+    if(_mouseRightHeld) return;
+    if(Number(e.deltaY) < 0) _guiaCameraInteracao('aproximar');
+    else if(Number(e.deltaY) > 0) _guiaCameraInteracao('afastar');
+  }, { passive:true, capture:true });
   domEl.addEventListener('mousedown',  e  => {
     _orbitDragMoved = false;
+    if(e.button === 0 || e.button === 2)
+      _guiaCameraDrag = {button:e.button, x:e.clientX, y:e.clientY, avancou:false};
     if(e.button === 2) _mouseRightHeld = true;
   });
   domEl.addEventListener('mouseup',    e  => {
@@ -44037,7 +44052,15 @@ function init3D(state){
   domEl.addEventListener('contextmenu', e  => {
     if(e.button === 2 || _mouseRightHeld) e.preventDefault();
   });
-  domEl.addEventListener('mousemove',  e  => { if(e.buttons) _orbitDragMoved = true; });
+  domEl.addEventListener('mousemove',  e  => {
+    if(e.buttons) _orbitDragMoved = true;
+    if(!_guiaCameraDrag || _guiaCameraDrag.avancou) return;
+    const bit = _guiaCameraDrag.button === 2 ? 2 : 1;
+    if(!(Number(e.buttons) & bit)) return;
+    if(Math.hypot(e.clientX - _guiaCameraDrag.x, e.clientY - _guiaCameraDrag.y) < 6) return;
+    _guiaCameraDrag.avancou = true;
+    _guiaCameraInteracao(_guiaCameraDrag.button === 0 ? 'girar' : 'deslocar');
+  });
 
   domEl.addEventListener('click',      on3DClick);
   domEl.addEventListener('mousemove',  on3DMouseMove);
@@ -54023,6 +54046,7 @@ function _guiaFecharPasso(chave){
   _guiaTermosPasso.forEach(x => _guiaTermosVistos.add(x));
   _guiaTermosPasso = new Set();
   _guiaPassoChave = chave;
+  _guiaCameraPendente = '';
 }
 
 // `[[atalho:<id>]]`: o atalho do dispositivo em uso. Controle conectado -> o botão real do
@@ -54031,13 +54055,34 @@ function _guiaFecharPasso(chave){
 // dispositivo usado.
 function _guiaAtalhoControle(id){
   if(id === 'inventario') return _gamepadButtonLabel(_gamepadBinding('characterMenu'));
+  if(id === 'encerrar_turno') return _gamepadButtonLabel(_gamepadBinding('endTurn'));
+  if(id === 'mover') return _gamepadButtonLabel(_gamepadBinding('confirm'));
   return '';
 }
 function _guiaAtalhoTexto(id){
   const ativo = !!(typeof _gamepadInput !== 'undefined' && _gamepadInput.active);
-  const chave = GuiaTutorial.chaveAtalho(id, ativo);
+  let chave = GuiaTutorial.chaveAtalho(id, ativo);
+  if(id === 'mover' && ativo && _gamepadDirectMove) chave = 'ui.tutorial.atalho.mover.controle_direto';
   if(!chave) return '';
   return t(chave, { botao: ativo ? _guiaAtalhoControle(id) : '' });
+}
+function _guiaCameraTexto(id){
+  if(!mode3D) return t('ui.tutorial.camera.ativar3d');
+  const controle = !!(typeof _gamepadInput !== 'undefined' && _gamepadInput.active);
+  let botao = '';
+  if(controle && id === 'zoom_in') botao = _gamepadButtonLabel(7);
+  else if(controle && id === 'zoom_out') botao = _gamepadButtonLabel(_gamepadBinding('shortcutThird'));
+  else if(controle && id === 'rotate') botao = _gamepadButtonLabel(_gamepadBinding('camera'));
+  return t(`ui.tutorial.camera.${id}.${controle ? 'controle' : 'mouse'}`, {botao});
+}
+let _guiaCameraPendente = '';
+function _guiaCameraInteracao(id){
+  if(!_licaoUltima || _licaoUltima.licao_id !== 'fala_camera' || !_guiaPasso || _guiaPasso.id !== id) return false;
+  const chave = `${_licaoUltima.licao_id}:${_guiaPasso.i}:${id}`;
+  if(_guiaCameraPendente === chave) return false;
+  _guiaCameraPendente = chave;
+  GS.avancarPasso();
+  return true;
 }
 let _guiaDispositivoSig = null;
 // Chamada quando o controle conecta ou desconecta: redesenha a janela da lição aberta.
@@ -54054,6 +54099,7 @@ function _tutHTML(s){
   const bruto = _tutTexto(s);
   return GuiaTutorial.segmentos(bruto, new Set(_guiaTermosVistos)).map(seg => {
     if(seg.atalho) return _esc(_guiaAtalhoTexto(seg.atalho));
+    if(seg.camera) return _esc(_guiaCameraTexto(seg.camera));
     if(!seg.termo) return _esc(seg.texto);
     if(seg.primeira) _guiaTermosPasso.add(seg.termo);
     const nome = t('ui.tutorial.glossario.' + seg.termo + '.nome');
@@ -54084,6 +54130,7 @@ document.addEventListener('click', ev => {
 
 function _guiaLimparHalo(){
   document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte'));
+  document.getElementById('map-wrap')?.classList.remove('guia-camera-alvo');
 }
 
 // O HUD é redesenhado por innerHTML a cada game_state e apaga a classe; por isso o
@@ -54091,6 +54138,8 @@ function _guiaLimparHalo(){
 function _guiaAplicarHalo(){
   _guiaLimparHalo();
   if(!_guiaPasso || !_guiaPasso.ui) return;
+  if(['aproximar', 'afastar', 'girar', 'deslocar'].includes(_guiaPasso.id))
+    document.getElementById('map-wrap')?.classList.add('guia-camera-alvo');
   const sel = GuiaTutorial.seletor(_guiaPasso.ui);
   if(!sel) return;
   // O mesmo data-ability-id também existe em telas escondidas (seleção de classe):
@@ -54143,6 +54192,13 @@ function _guiaIniciar(passo){
   if(_guiaTimer) clearInterval(_guiaTimer);
   _guiaTimer = _guiaPasso ? setInterval(_guiaTick, 400) : null;
   _guiaTick();
+  const id = _guiaPasso?.id;
+  const autoPular = id === 'modo_3d' && mode3D
+    ? 'modo_3d'
+    : (!mode3D && ['aproximar', 'afastar', 'girar', 'deslocar'].includes(id) ? id : null);
+  if(autoPular) requestAnimationFrame(() => {
+    if(_guiaPasso?.id === autoPular) _guiaCameraInteracao(autoPular);
+  });
 }
 
 function _guiaMostrar(){ _guiaDesde = performance.now(); _guiaTick(); }

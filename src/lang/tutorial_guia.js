@@ -137,24 +137,20 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "A criatura sofre dano extra de certo tipo de golpe, como impacto ou sagrado."
   },
   "ui.tutorial.guia.fala_0.andar.dica.1": {
-    "en": "The golden ring is on the board floor, ahead of you.",
-    "pt": "O anel dourado está no chão do tabuleiro, à sua frente."
+    "en": "The marked square has a golden ring.",
+    "pt": "A casa marcada tem um anel dourado."
   },
   "ui.tutorial.guia.fala_0.andar.dica.2": {
-    "en": "Click once; the hero walks there by itself.",
-    "pt": "Clique uma vez; o herói anda sozinho até a casa."
+    "en": "Confirm the destination to send the hero along the path.",
+    "pt": "Confirme o destino para o herói seguir o caminho."
   },
   "ui.tutorial.guia.fala_0.andar.texto": {
-    "en": "Click the square with the golden ring to walk there.",
-    "pt": "Clique na casa com o anel dourado para andar até lá."
-  },
-  "ui.tutorial.guia.fala_0.ver.porque": {
-    "en": "When the steps run out, only the next turn gives them back.",
-    "pt": "Quando os passos acabam, só o próximo turno os devolve."
+    "en": "Click a marked blue square to move.",
+    "pt": "Clique numa casa azul marcada para andar."
   },
   "ui.tutorial.guia.fala_0.ver.texto": {
-    "en": "Check your [[movimento]]: the steps you have this [[turno]].",
-    "pt": "Veja seu [[movimento]]: são os passos que você tem neste [[turno]]."
+    "en": "Blue squares show where you can walk this [[turno]].",
+    "pt": "Casas azuis mostram onde você pode andar neste [[turno]]."
   },
   "ui.tutorial.guia.fala_1.pegar.dica.1": {
     "en": "Walk next to the chest and click it.",
@@ -289,20 +285,16 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Pegue os três itens do baú: óleo, veneno e poção."
   },
   "ui.tutorial.guia.fala_3.encerrar.dica.1": {
-    "en": "The big green button is bottom-right.",
-    "pt": "O botão verde grande fica embaixo, à direita."
+    "en": "The highlighted button is in the bottom-right corner.",
+    "pt": "O botão destacado fica no canto inferior direito."
   },
   "ui.tutorial.guia.fala_3.encerrar.texto": {
-    "en": "Click End Turn, in the bottom-right corner.",
-    "pt": "Clique em Encerrar Turno, no canto inferior direito."
-  },
-  "ui.tutorial.guia.fala_3.entender.porque": {
-    "en": "On the next [[turno]] your steps and actions come back.",
-    "pt": "No próximo [[turno]] seus passos e ações voltam."
+    "en": "Click End Turn or press [[atalho:encerrar_turno]].",
+    "pt": "Clique em Encerrar Turno ou pressione [[atalho:encerrar_turno]]."
   },
   "ui.tutorial.guia.fala_3.entender.texto": {
-    "en": "When you finish what you want to do, you pass your turn.",
-    "pt": "Quando terminar o que quer fazer, você passa a vez."
+    "en": "When you finish your actions, pass your turn.",
+    "pt": "Quando terminar suas ações, passe a vez."
   },
   "ui.tutorial.guia.fala_30.abrir.porque": {
     "en": "Everything that gets used up comes out of the bag: oil, poison and potion.",
@@ -447,6 +439,30 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_atalhos.cancelar.texto": {
     "en": "Press Esc to cancel an aim or close a panel.",
     "pt": "Aperte Esc para cancelar uma mira ou fechar um painel."
+  },
+  "ui.tutorial.guia.fala_camera.afastar.texto": {
+    "en": "Zoom out: [[camera:zoom_out]].",
+    "pt": "Afaste a visão: [[camera:zoom_out]]."
+  },
+  "ui.tutorial.guia.fala_camera.aproximar.texto": {
+    "en": "Zoom in: [[camera:zoom_in]].",
+    "pt": "Aproxime a visão: [[camera:zoom_in]]."
+  },
+  "ui.tutorial.guia.fala_camera.deslocar.texto": {
+    "en": "Pan the camera: [[camera:pan]]. The hero stays where they are.",
+    "pt": "Desloque a câmera: [[camera:pan]]. O herói continua no lugar."
+  },
+  "ui.tutorial.guia.fala_camera.encerrar.texto": {
+    "en": "Click End Turn or press [[atalho:encerrar_turno]].",
+    "pt": "Clique em Encerrar Turno ou pressione [[atalho:encerrar_turno]]."
+  },
+  "ui.tutorial.guia.fala_camera.girar.texto": {
+    "en": "Rotate the camera: [[camera:rotate]]. The view changes; the hero stays put.",
+    "pt": "Gire a câmera: [[camera:rotate]]. A visão muda; o herói fica no lugar."
+  },
+  "ui.tutorial.guia.fala_camera.modo_3d.texto": {
+    "en": "Turn on 3D view with the highlighted button. Or select Got it.",
+    "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
   },
   "ui.tutorial.guia.fala_hostilidade.abrir.porque": {
     "en": "The door keeps the monsters dormant until the room is opened.",

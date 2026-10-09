@@ -107,14 +107,15 @@
     const ve = vistos || new Set();
     const out = [];
     // `[[atalho:<id>]]` não é glossário: é o atalho do dispositivo em uso (resolvido pelo game.js).
-    const re = /\[\[(?:atalho:([a-z0-9_]+)|([a-z0-9_]+))\]\]/g;
+    const re = /\[\[(?:atalho:([a-z0-9_]+)|camera:([a-z0-9_]+)|([a-z0-9_]+))\]\]/g;
     let ultimo = 0, m;
     while ((m = re.exec(texto))) {
       if (m.index > ultimo) out.push({ texto: texto.slice(ultimo, m.index) });
       if (m[1]) out.push({ atalho: m[1] });
-      else {
-        out.push({ termo: m[2], primeira: !ve.has(m[2]) });
-        ve.add(m[2]);
+      else if (m[2] && CAMERA.indexOf(m[2]) >= 0) out.push({ camera: m[2] });
+      else if (!m[2]) {
+        out.push({ termo: m[3], primeira: !ve.has(m[3]) });
+        ve.add(m[3]);
       }
       ultimo = m.index + m[0].length;
     }
@@ -123,11 +124,12 @@
   }
 
   // Atalhos que o texto do guia pode citar; a chave de idioma depende do dispositivo.
-  const ATALHOS = ['inventario'];
+  const ATALHOS = ['inventario', 'encerrar_turno', 'mover'];
+  const CAMERA = ['zoom_in', 'zoom_out', 'rotate', 'pan'];
   function chaveAtalho(id, controleAtivo) {
     if (ATALHOS.indexOf(id) < 0) return null;
     return 'ui.tutorial.atalho.' + id + '.' + (controleAtivo ? 'controle' : 'teclado');
   }
 
-  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho };
+  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho, CAMERA };
 })();

@@ -51,7 +51,7 @@ def room(cls='warrior', guia=None):
 
 async def abrir_licao(r, p, ident):
     target = next(f for f in r.licoes if f['id'] == ident)
-    done = [f['id'] for f in r.licoes if f.get('classe') == p['class_id']
+    done = [f['id'] for f in r.licoes if f.get('classe') in (None, p['class_id'])
             and f.get('ordem', 0) < target['ordem']]
     p['licoes_feitas'] = done
     p['licao_progresso'] = {i: 1 for i in done}

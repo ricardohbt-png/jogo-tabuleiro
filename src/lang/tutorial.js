@@ -8,6 +8,62 @@ window.LANG_TUTORIAL = {
     "en": "the {botao} button",
     "pt": "o botão {botao}"
   },
+  "ui.tutorial.atalho.encerrar_turno.teclado": {
+    "en": "Enter",
+    "pt": "Enter"
+  },
+  "ui.tutorial.atalho.encerrar_turno.controle": {
+    "en": "the {botao} button",
+    "pt": "o botão {botao}"
+  },
+  "ui.tutorial.atalho.mover.teclado": {
+    "en": "click it to move your hero",
+    "pt": "clique nela para mover seu herói"
+  },
+  "ui.tutorial.atalho.mover.controle": {
+    "en": "use the left stick or D-pad to select it, then press {botao}",
+    "pt": "use o direcional esquerdo para escolhê-la e pressione {botao}"
+  },
+  "ui.tutorial.atalho.mover.controle_direto": {
+    "en": "use the left stick or D-pad to move your hero toward it",
+    "pt": "use o direcional esquerdo para mover o herói até ela"
+  },
+  "ui.tutorial.camera.zoom_in.mouse": {
+    "en": "scroll the mouse wheel up",
+    "pt": "role a roda do mouse para cima"
+  },
+  "ui.tutorial.camera.zoom_out.mouse": {
+    "en": "scroll the mouse wheel down",
+    "pt": "role a roda do mouse para baixo"
+  },
+  "ui.tutorial.camera.rotate.mouse": {
+    "en": "hold the left mouse button and drag",
+    "pt": "segure o botão esquerdo do mouse e arraste"
+  },
+  "ui.tutorial.camera.pan.mouse": {
+    "en": "hold the right mouse button and drag",
+    "pt": "segure o botão direito do mouse e arraste"
+  },
+  "ui.tutorial.camera.zoom_in.controle": {
+    "en": "press the right trigger ({botao})",
+    "pt": "pressione o gatilho direito ({botao})"
+  },
+  "ui.tutorial.camera.zoom_out.controle": {
+    "en": "press the left trigger ({botao})",
+    "pt": "pressione o gatilho esquerdo ({botao})"
+  },
+  "ui.tutorial.camera.rotate.controle": {
+    "en": "press {botao} to switch the right stick to camera, then move the stick",
+    "pt": "pressione {botao} para usar o analógico direito como câmera e mova o analógico"
+  },
+  "ui.tutorial.camera.pan.controle": {
+    "en": "camera panning is unavailable on the gamepad; press Got it to continue",
+    "pt": "o gamepad não desloca a câmera; selecione Entendi para continuar"
+  },
+  "ui.tutorial.camera.ativar3d": {
+    "en": "3D camera controls are unavailable in 2D. Use the highlighted 3D button or select Got it to continue.",
+    "pt": "Os controles de câmera não funcionam em 2D. Use o botão 3D destacado ou selecione Entendi para seguir."
+  },
   "ui.tutorial.passo_de": {
     "en": "Step {i} of {n}",
     "pt": "Passo {i} de {n}"

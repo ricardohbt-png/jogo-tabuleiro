@@ -9,9 +9,9 @@ import tutorial_guia_comum as C
 import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
-                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos",
+                 "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
                  "fala_hostilidade", "fala_res", "fala_vuln"]
-UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
+UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
 
@@ -32,7 +32,7 @@ class ConteudoTests(unittest.TestCase):
 
     def test_regras_de_redacao(self):
         for lid, passos in C.GUIA.items():
-            self.assertTrue(1 <= len(passos) <= 4, lid)
+            self.assertTrue(1 <= len(passos) <= (8 if lid == "fala_camera" else 4), lid)
             for i, p in enumerate(passos):
                 pt, en = p["texto"]
                 limpo = TERMO.sub("x", pt)
@@ -211,7 +211,7 @@ VERBOS_PT = ("clique", "ande", "ataque", "equipe", "abra", "use", "beba", "coma"
              "arremesse", "unte", "ative", "desative", "fique", "aproxime", "toque", "arme",
              "cure", "derrube", "acerte", "esconda", "desarme", "crie", "comande", "liberte",
              "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque",
-             "saia", "siga", "volte")
+             "saia", "siga", "volte", "afaste", "desloque")
 VAGOS_PT = ("mostre-me", "me mostra", "mostre", "demonstre", "veja como", "observe")
 
 
@@ -246,7 +246,7 @@ class AtalhoInventarioTests(unittest.TestCase):
                 self.assertEqual(self.ATALHO.findall(pt), self.ATALHO.findall(en), f"{lid}/{p['id']}")
                 for aid in self.ATALHO.findall(pt):
                     n += 1
-                    self.assertIn(aid, ("inventario",), f"{lid}/{p['id']}")
+                    self.assertIn(aid, ("inventario", "encerrar_turno", "mover"), f"{lid}/{p['id']}")
         self.assertGreaterEqual(n, 4)
 
     def test_chaves_de_atalho_existem_em_pt_e_en(self):

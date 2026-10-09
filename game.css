@@ -1850,11 +1850,13 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
 .guia-halo{ position:relative; outline:3px solid #f0c867; outline-offset:2px; border-radius:6px;
   animation:guia-pulso 1.6s ease-in-out infinite; z-index:5; }
 .guia-halo.guia-halo-forte{ outline-width:4px; animation-duration:.9s; }
+.guia-camera-alvo{ outline:4px solid #8deaff; outline-offset:-5px; box-shadow:inset 0 0 28px #36c9ef66; animation:guia-camera-pulso 1.2s ease-in-out infinite alternate; }
+@keyframes guia-camera-pulso{ from{outline-color:#6bdcf4;box-shadow:inset 0 0 12px #36c9ef44} to{outline-color:#fff3a8;box-shadow:inset 0 0 34px #36c9ef88} }
 @keyframes guia-pulso{
   0%,100%{ box-shadow:0 0 0 0 #f0c86799; }
   50%{ box-shadow:0 0 0 10px #f0c86700, 0 0 18px 4px #f0c867cc; }
 }
-@media (prefers-reduced-motion:reduce){ .guia-halo{ animation:none; box-shadow:0 0 14px 3px #f0c867cc; } }
+@media (prefers-reduced-motion:reduce){ .guia-halo{ animation:none; box-shadow:0 0 14px 3px #f0c867cc; } .guia-camera-alvo{animation:none;box-shadow:inset 0 0 24px #36c9ef88;} }
 
 /* ── Prévia do editor (index.html?preview=1): só o tabuleiro ──────────────── */
 body.preview-mode #side-panel,
