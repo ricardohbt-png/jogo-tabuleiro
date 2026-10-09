@@ -448,8 +448,8 @@ document.body.innerHTML = `
   <div id="player-fabs">
     <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
     <button id="fab-inventario" data-guia="botao:inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
-    <button id="fab-habilidades" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
-    <button id="fab-magias" data-guia="botao:magias" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
+    <button id="fab-habilidades" data-guia="botao:habilidades" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
+    <button id="fab-magias" data-guia="botao:magias" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
   </div>
   <!-- Atalho exclusivo do mestre para o Mapa de CR; heróis usam o menu de personagem. -->
   <button id="ficha-fab" data-i18n-title="ui.hud.mapa_cr_title" title="Mapa de CR (mestre)">🗺️</button>
@@ -26956,6 +26956,9 @@ function renderFichaCidadeBody(panel, player, editable){
   abilityBtn.className = 'section-title';
   abilityBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
   abilityBtn.innerHTML = `<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> ${t('ui.ficha.habilidades_botao')}`;
+  abilityBtn.dataset.guia = 'botao:habilidades';
+  abilityBtn.dataset.guiaAcao = 'abrir-menu';
+  abilityBtn.dataset.gamepadAction = 'activate';
   abilityBtn.onclick = () => abrirMenuHabilidades(player.id);
   body.appendChild(abilityBtn);
 
@@ -26965,6 +26968,9 @@ function renderFichaCidadeBody(panel, player, editable){
     magicBtn.className = 'section-title';
     magicBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
     magicBtn.innerHTML = `<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_magias')}`;
+    magicBtn.dataset.guia = 'botao:magias';
+    magicBtn.dataset.guiaAcao = 'abrir-menu';
+    magicBtn.dataset.gamepadAction = 'activate';
     magicBtn.onclick = () => abrirMenuMagias(player.id);
     body.appendChild(magicBtn);
   }
@@ -27637,7 +27643,10 @@ function abrirMenuMagias(pid){
   _atalhosAbertos = true;
   _atalhosMenuAtual = 'magias';
   _renderAtalhos();
-  requestAnimationFrame(() => overlay.classList.add('open'));
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
+    _guiaMenuTutorialAberto('magias');
+  });
 }
 
 window.abrirMenuMagias = abrirMenuMagias;
@@ -28261,7 +28270,10 @@ function abrirMenuHabilidades(pid){
   _atalhosAbertos = true;
   _atalhosMenuAtual = 'habilidades';
   _renderAtalhos();
-  requestAnimationFrame(() => overlay.classList.add('open'));
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
+    _guiaMenuTutorialAberto('habilidades');
+  });
 }
 
 window.abrirMenuHabilidades = abrirMenuHabilidades;
@@ -54018,7 +54030,10 @@ function _mostrarProximaFala(){
   const f = _falaFila.shift();
   const emoji = (f.falante && f.falante.emoji) || '💬';
   const nome  = (f.falante && f.falante.nome)  || '';
-  host.innerHTML = `<div class="fala-emoji">${_esc(emoji)}</div>` +
+  const retrato = f.falante && f.falante.retrato;
+  const cena = f.falante && f.falante.cena;
+  host.innerHTML = (cena ? `<img class="fala-cena" src="${_esc(_assetURL(cena))}" alt="">` : '') +
+    (retrato ? `<img class="fala-retrato" src="${_esc(_assetURL(retrato))}" alt="">` : `<div class="fala-emoji">${_esc(emoji)}</div>`) +
     `<div class="fala-corpo">${nome ? `<div class="fala-nome">${_esc(nome)}</div>` : ''}` +
     `<div class="fala-texto">${_esc(f.texto || '')}</div></div>`;
   host.classList.add('open');
@@ -54038,6 +54053,17 @@ let _guiaDesde = 0;             // performance.now() do último progresso
 let _guiaTimer = null;
 let _guiaEstadoRef = null;      // game_state vigente quando o passo foi disparado
 const _guiaCfg = () => ({ dica1S: 12, dica2S: 30, ...(window.VC && VC.tutorial) });
+
+// Só a abertura do menu pedido no passo informativo avança a lição. Os menus
+// chamam este ponto depois de ficarem visíveis, igualando teclado, mouse e controle.
+function _guiaMenuTutorialAberto(menu){
+  const ui = menu === 'habilidades' ? 'botao:habilidades' : 'botao:magias';
+  if(!_licaoUltima || !_guiaPasso || !_guiaPasso.informativo || _guiaPasso.ui !== ui) return false;
+  const esperado = menu === 'habilidades' ? 'fala_menu_habilidades' : 'fala_menu_magias';
+  if(_licaoUltima.licao_id !== esperado) return false;
+  GS.avancarPasso();
+  return true;
+}
 
 // Chave de idioma (ui.tutorial.*) ou texto autoral em português.
 function _tutTexto(s){
@@ -54412,18 +54438,25 @@ function _mostrarJanelaLicao(msg){
   _guiaFecharPasso(msg.licao_id + ':' + (msg.passo ? msg.passo.i : 0));
   const emoji = (msg.falante && msg.falante.emoji) || '💬';
   const nome  = (msg.falante && msg.falante.nome)  || '';
+  const retrato = msg.falante && msg.falante.retrato;
+  const cena = msg.falante && msg.falante.cena;
   const passo = msg.passo || null;
   const abertura = msg.licao_id === 'fala_intro' && passo?.id === 'briefing';
   $('licao-prologo-backdrop')?.classList.toggle('open', abertura);
   host.classList.toggle('prologo-abertura', abertura);
+  host.classList.toggle('tem-retrato', !!retrato);
+  host.classList.toggle('tem-cena', !!cena);
   const explicito = !!(passo && !passo.auto);
   const andamento = (explicito && passo.n > 1)
     ? `<div class="licao-passo">${_esc(t('ui.tutorial.passo_de', {i: passo.i + 1, n: passo.n}))}` +
       `<div class="licao-barra"><i style="width:${Math.round(((passo.i + 1) / passo.n) * 100)}%"></i></div></div>` : '';
   const porque = (explicito && passo.porque)
     ? `<div class="licao-porque">${_tutHTML(passo.porque)}</div>` : '';
-  const botoes = (passo && passo.ui && GuiaTutorial.parseUi(passo.ui))
-    ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
+  const abrirMenu = passo?.ui === 'botao:habilidades' || passo?.ui === 'botao:magias';
+  const botoes = abrirMenu
+    ? `<button type="button" class="licao-botao" data-guia="${_esc(passo.ui)}" data-guia-acao="abrir-menu" data-gamepad-action="activate" onclick="${passo.ui === 'botao:habilidades' ? 'abrirMenuHabilidades(GS.myPid)' : 'abrirMenuMagias(GS.myPid)'}">${passo.ui === 'botao:habilidades' ? '📖 ' + t('ui.hud.habilidades') : '✨ ' + t('ui.hud.magias')}</button>`
+    : (passo && passo.ui && GuiaTutorial.parseUi(passo.ui))
+      ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
   const entendi = (passo && passo.informativo)
     ? `<button type="button" class="licao-botao licao-botao-ok" onclick="GS.avancarPasso()">${t('ui.tutorial.entendi')}</button>` : '';
   // A lição seguinte chega na mesma rajada que o selo/✓ da anterior (concluir uma
@@ -54431,7 +54464,8 @@ function _mostrarJanelaLicao(msg){
   const mantidos = Array.from(host.children || []).filter(el => el.classList &&
     (el.classList.contains('licao-selo') || el.classList.contains('licao-ok')));
   host.innerHTML =
-    `<div class="licao-topo"><span class="licao-emoji">${_esc(emoji)}</span>` +
+    (cena ? `<div class="licao-cena"><img src="${_esc(_assetURL(cena))}" alt=""></div>` : '') +
+    `<div class="licao-topo">${retrato ? `<img class="licao-retrato" src="${_esc(_assetURL(retrato))}" alt="">` : `<span class="licao-emoji">${_esc(emoji)}</span>`}` +
     `<span class="licao-nome">${_esc(nome)}</span>` +
     `<button type="button" class="licao-fechar" onclick="_fecharJanelaLicao()"` +
     ` title="${t('ui.geral.fechar')}" aria-label="${t('ui.geral.fechar')}">✕</button></div>` +

@@ -7750,6 +7750,17 @@ def validar_dungeon(defn):
         _cls = _f.get("classe")
         if _cls is not None and _cls not in LICAO_CLASSES:
             return False, f"lição com classe inválida: {_cls!r}."
+        _speaker = _f.get("falante")
+        if isinstance(_speaker, dict):
+            for _key, _prefix in (("retrato", "assets/portraits/"),
+                                  ("cena", "assets/tela de transição/tutorial/")):
+                _asset = _speaker.get(_key)
+                if _asset is None:
+                    continue
+                _nome_asset = _asset[len(_prefix):] if isinstance(_asset, str) and _asset.startswith(_prefix) else ""
+                if (not _nome_asset or "/" in _nome_asset or "\\" in _nome_asset
+                        or ".." in _nome_asset or not re.fullmatch(r"[A-Za-z0-9_. -]+\.png", _nome_asset, re.IGNORECASE)):
+                    return False, f"{_key} do falante deve ser PNG local em {_prefix}."
         _req = _f.get("requisitos")
         if _req is not None:
             if not isinstance(_req, dict) or set(_req) - {"nivel", "guild", "magia", "magia_tipo", "instrumento"}:

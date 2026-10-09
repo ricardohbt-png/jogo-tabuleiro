@@ -873,6 +873,14 @@ window.LANG_EDITOR = {
     "en": "speaker name",
     "pt": "nome do falante"
   },
+  "ui.editor.masmorra.painel.retrato_falante": {
+    "en": "speaker portrait asset path",
+    "pt": "caminho da imagem do falante"
+  },
+  "ui.editor.masmorra.painel.cena_fala": {
+    "en": "dialogue scene asset path",
+    "pt": "caminho da cena do diálogo"
+  },
   "ui.editor.masmorra.painel.texto": {
     "en": "text",
     "pt": "texto"

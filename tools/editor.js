@@ -3158,6 +3158,8 @@
       panel.innerHTML = `<b>💬 ${t("ui.editor.masmorra.painel.fala_licao_titulo")}</b>
         <label>${t("ui.editor.masmorra.painel.emoji_falante")}</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
         <label>${t("ui.editor.masmorra.painel.nome_falante")}</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.opcional")}">
+        <label>${t("ui.editor.masmorra.painel.retrato_falante")}</label><input id="f-retrato" value="${escGuia(fal.retrato)}" placeholder="assets/portraits/nome.png" style="width:100%">
+        <label>${t("ui.editor.masmorra.painel.cena_fala")}</label><input id="f-cena" value="${escGuia(fal.cena)}" placeholder="assets/tela de transição/tutorial/nome.png" style="width:100%">
         <label>${t("ui.editor.masmorra.painel.texto")}</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
         <label>${t("ui.editor.masmorra.painel.gatilho")}</label><select id="f-tipo">
           <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_proximidade")}</option>
@@ -3197,6 +3199,8 @@
         <div style="margin-top:8px;color:#8a7a5a;font-size:11px">${t("ui.editor.masmorra.painel.dispara_uma_vez_hint")}</div>`;
       document.getElementById("f-emoji").onchange = e => { fal.emoji = e.target.value; render(); };
       document.getElementById("f-nome").onchange = e => { fal.nome = e.target.value; };
+      document.getElementById("f-retrato").onchange = e => { fal.retrato = e.target.value.trim(); };
+      document.getElementById("f-cena").onchange = e => { fal.cena = e.target.value.trim(); };
       document.getElementById("f-texto").onchange = e => { ref.texto = e.target.value; };
       document.getElementById("f-tipo").onchange = e => { tg.tipo = e.target.value; if (tg.tipo === "proximidade" && !tg.raio) tg.raio = 2; renderPanel(); };
       const fr = document.getElementById("f-raio");
@@ -4147,7 +4151,10 @@
         const tg = f.trigger || {};
         const trig = { tipo: tg.tipo || "proximidade" };
         if (trig.tipo === "proximidade") trig.raio = tg.raio || 2;
-        const out = { id: f.id, pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "" }, texto: f.texto || "", trigger: trig };
+        const speaker = f.falante || {};
+        const falante = { nome: speaker.nome || "", emoji: speaker.emoji || "" };
+        for (const key of ["retrato", "cena"]) if (typeof speaker[key] === "string" && speaker[key].trim()) falante[key] = speaker[key].trim();
+        const out = { id: f.id, pos: f.pos.slice(), falante, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
         for (const key of ["requisitos", "sala_exclusiva"]) if (f[key]) out[key] = JSON.parse(JSON.stringify(f[key]));
         if (f.ordem != null) out.ordem = f.ordem;
@@ -4640,7 +4647,10 @@
         vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
         texto_curto: f.tarefa.texto_curto || "",
       } : null;
-      return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante: { nome: (f.falante || {}).nome || "", emoji: (f.falante || {}).emoji || "🧙" }, texto: f.texto || "", trigger,
+      const speaker = f.falante || {};
+      const falante = { nome: speaker.nome || "", emoji: speaker.emoji || "🧙" };
+      for (const key of ["retrato", "cena"]) if (typeof speaker[key] === "string") falante[key] = speaker[key];
+      return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante, texto: f.texto || "", trigger,
                classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar,
                requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
                efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null,

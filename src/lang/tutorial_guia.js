@@ -293,8 +293,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique em Encerrar Turno ou pressione [[atalho:encerrar_turno]]."
   },
   "ui.tutorial.guia.fala_3.entender.texto": {
-    "en": "When you finish your actions, pass your turn.",
-    "pt": "Quando terminar suas ações, passe a vez."
+    "en": "The training dummies wait in the next room. End your turn when you are ready.",
+    "pt": "Os bonecos de treino esperam na próxima sala. Encerre o turno quando estiver pronto."
   },
   "ui.tutorial.guia.fala_30.abrir.porque": {
     "en": "Everything that gets used up comes out of the bag: oil, poison and potion.",
@@ -369,12 +369,12 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Clique na casa da porta; o herói segue o caminho tracejado."
   },
   "ui.tutorial.guia.fala_4.porta.porque": {
-    "en": "An open door lets you through; in other dungeons, opening a door is free.",
-    "pt": "Porta aberta deixa passar; em outras masmorras, abrir porta é gratuito."
+    "en": "The Guild has lost contact with this area.",
+    "pt": "A Guilda perdeu contato com esta área."
   },
   "ui.tutorial.guia.fala_4.porta.texto": {
-    "en": "Walk to the open door at the back.",
-    "pt": "Ande até a porta aberta ao fundo."
+    "en": "Go through the door into the training wing.",
+    "pt": "Atravesse a porta para a ala de treino."
   },
   "ui.tutorial.guia.fala_5.atacar.dica.1": {
     "en": "Walk next to the dummy and click it.",
@@ -429,8 +429,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Cada tecla de 1 a 0 dispara o que você ligou a ela."
   },
   "ui.tutorial.guia.fala_atalhos.barra.texto": {
-    "en": "Press H to open the abilities menu and look at the [[atalho]] panel.",
-    "pt": "Aperte H para abrir o menu de habilidades e veja o painel [[atalho]]."
+    "en": "A tip for later: in the H menu, the [[atalho]] panel lets you configure keys.",
+    "pt": "Dica para consultar depois: no menu H, o painel [[atalho]] permite configurar teclas."
   },
   "ui.tutorial.guia.fala_atalhos.camera.texto": {
     "en": "Press R on the 3D board to re-center the camera.",
@@ -497,24 +497,52 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Afaste-se e encerre o turno; depois aperte Entendi ao fim da luta."
   },
   "ui.tutorial.guia.fala_intro.briefing.texto": {
-    "en": "You control this hero and help the party complete the mission.",
-    "pt": "Você controla este herói e ajuda o grupo a cumprir a missão."
+    "en": "The Guild has lost contact with the training wing. Find out what happened and return with the party.",
+    "pt": "A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo."
   },
   "ui.tutorial.guia.fala_intro.continuar.texto": {
-    "en": "End your turn with [[atalho:encerrar_turno]]; next, we will practice the camera.",
-    "pt": "Encerre o turno com [[atalho:encerrar_turno]]; depois praticaremos a câmera."
+    "en": "When you are ready, end your turn. The Master-at-Arms will guide the party.",
+    "pt": "Quando estiver pronto, encerre o turno. O Mestre de Armas vai orientar a equipe."
   },
   "ui.tutorial.guia.fala_intro.ficha.texto": {
-    "en": "Open the hero sheet from this card to see class, attributes, weapons, and skills.",
-    "pt": "Abra a ficha pelo cartão do herói; ali veja classe, atributos, armas e habilidades."
+    "en": "Open the hero sheet to check class, attributes, weapons, and skills before setting out.",
+    "pt": "Abra a ficha para conferir classe, atributos, armas e habilidades antes de partir."
   },
   "ui.tutorial.guia.fala_intro.objetivo.texto": {
-    "en": "Read the mission here; in this field, gather the whole party at the exit.",
-    "pt": "Leia o pedido aqui; neste campo, reúna todo o grupo na saída."
+    "en": "The mission ends when the whole party reaches the exit. Check the objective here.",
+    "pt": "A missão termina quando todo o grupo estiver perto da saída. Confira o objetivo aqui."
   },
   "ui.tutorial.guia.fala_intro.vida.texto": {
-    "en": "Check hit points: damage lowers them; healing restores them. At zero, the hero dies.",
-    "pt": "Confira os pontos de vida: dano reduz, cura recupera; ao zerar, o herói morre."
+    "en": "Check your hero's health. If it reaches zero, they fall and need help.",
+    "pt": "Confira a vida do herói. Se ela chegar a zero, ele cai e precisa de ajuda."
+  },
+  "ui.tutorial.guia.fala_menu_habilidades.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.fala_menu_habilidades.conferir.texto": {
+    "en": "Look at one of your hero's skills. Close the menu with H or Esc, then end your turn.",
+    "pt": "Veja uma habilidade do seu herói. Feche o menu com H ou Esc e encerre o turno."
+  },
+  "ui.tutorial.guia.fala_menu_magias.abrir.texto": {
+    "en": "Your hero knows a spell. Open the spellbook with the highlighted button or press M.",
+    "pt": "Seu herói conhece uma magia. Abra o grimório pelo botão destacado ou pressione M."
+  },
+  "ui.tutorial.guia.fala_menu_magias.conferir.texto": {
+    "en": "Look at one spell and close the spellbook with M or Esc. Then end your turn.",
+    "pt": "Confira uma magia e feche o grimório com M ou Esc. Depois encerre o turno."
+  },
+  "ui.tutorial.guia.fala_primeiro_combate.alvo.texto": {
+    "en": "A training dummy lets you try an attack without spending resources.",
+    "pt": "Um boneco de treino serve para experimentar seu ataque sem gastar recursos."
+  },
+  "ui.tutorial.guia.fala_primeiro_combate.atacar.dica.1": {
+    "en": "If the attack misses, try another dummy.",
+    "pt": "Se o golpe errar, tente outro boneco."
+  },
+  "ui.tutorial.guia.fala_primeiro_combate.atacar.texto": {
+    "en": "Attack a dummy with your equipped weapon and watch the hit and damage.",
+    "pt": "Ataque um boneco com a arma equipada e observe o acerto e o dano."
   },
   "ui.tutorial.guia.fala_res.atacar.dica.1": {
     "en": "Staffs and maces deal impact, which the skeleton does not resist.",
@@ -536,6 +564,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Check the [[resistencia]]: the skeleton absorbs 1 point of slashing and 2 of piercing.",
     "pt": "Confira a [[resistencia]]: o esqueleto absorve 1 ponto de corte e 2 de perfuração."
   },
+  "ui.tutorial.guia.fala_retirada.retirar.dica.1": {
+    "en": "The mission ends when the whole party is beside the exit.",
+    "pt": "A missão termina quando o grupo todo estiver ao lado da saída."
+  },
+  "ui.tutorial.guia.fala_retirada.retirar.texto": {
+    "en": "The report can wait. Bring every hero to the marked exit.",
+    "pt": "O relatório pode esperar. Leve todos os heróis até a saída marcada."
+  },
   "ui.tutorial.guia.fala_vuln.atacar.dica.1": {
     "en": "Choosing the right weapon beats rolling well.",
     "pt": "Escolher a arma certa vale mais que rolar bem o dado."
@@ -545,24 +581,24 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Quando a fraqueza age, o número do dano aparece em vermelho, com VULNERÁVEL."
   },
   "ui.tutorial.guia.fala_vuln.atacar.texto": {
-    "en": "Attack the skeleton with the mace: the hit does 2 extra points.",
-    "pt": "Ataque o esqueleto com a maça: o golpe causa 2 pontos a mais."
+    "en": "Attack the skeleton with the mace and compare the damage: impact exploits its vulnerability.",
+    "pt": "Ataque o esqueleto com a maça e compare o dano: impacto explora a vulnerabilidade dele."
   },
   "ui.tutorial.guia.fala_vuln.equipar.dica.1": {
     "en": "Equipping is a [[acao_livre]], it does not use your turn.",
     "pt": "Equipar é [[acao_livre]], não gasta o turno."
   },
   "ui.tutorial.guia.fala_vuln.equipar.texto": {
-    "en": "Open the bag with [[atalho:inventario]] and equip the training mace.",
-    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe a maça de treino."
+    "en": "Open your bag and equip the mace before attacking.",
+    "pt": "Abra a bolsa e equipe a maça antes de atacar."
   },
   "ui.tutorial.guia.fala_vuln.pegar.porque": {
     "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
     "pt": "Impacto é o ponto fraco do esqueleto: a [[vulnerabilidade]] soma dano."
   },
   "ui.tutorial.guia.fala_vuln.pegar.texto": {
-    "en": "Take the mace from this room's chest.",
-    "pt": "Pegue a maça do baú desta sala."
+    "en": "Open the marked chest and take the training mace.",
+    "pt": "Abra o baú marcado e pegue a maça de treino."
   },
   "ui.tutorial.guia.porta_bard.porta.dica.1": {
     "en": "Click the door to open it, then walk onto it.",

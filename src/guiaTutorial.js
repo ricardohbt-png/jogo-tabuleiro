@@ -28,8 +28,13 @@
   function seletor(ui) {
     const a = parseUi(ui);
     if (!a) return null;
-    if (a.tipo === 'botao' || a.tipo === 'hud')
-      return { css: '[data-guia="' + a.tipo + ':' + a.id + '"]', ancestral: null, alternativa: null };
+    if (a.tipo === 'botao' || a.tipo === 'hud') {
+      const menu = a.tipo === 'botao' && ['habilidades', 'magias'].indexOf(a.id) >= 0;
+      const css = menu
+        ? '[data-guia="' + a.tipo + ':' + a.id + '"][data-guia-acao="abrir-menu"]'
+        : '[data-guia="' + a.tipo + ':' + a.id + '"]';
+      return { css, ancestral: null, alternativa: null };
+    }
     if (a.tipo === 'habilidade')
       return { css: '[data-ability-id="' + a.id + '"]', ancestral: 'button', alternativa: null };
     if (a.tipo === 'bolsa')

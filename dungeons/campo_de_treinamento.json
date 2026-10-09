@@ -2522,6 +2522,102 @@
       "key_objective": false,
       "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
       "image": "placa_fincada.png"
+    },
+    {
+      "id": "placa_warrior",
+      "type": "placa",
+      "pos": [
+        22,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🛡️ Sala do Guerreiro — só ele entra aqui."
+    },
+    {
+      "id": "placa_mage",
+      "type": "placa",
+      "pos": [
+        22,
+        20
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🔮 Sala do Mago — só ele entra aqui."
+    },
+    {
+      "id": "placa_rogue",
+      "type": "placa",
+      "pos": [
+        15,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🗡️ Sala do Ladino — só ele entra aqui."
+    },
+    {
+      "id": "placa_cleric",
+      "type": "placa",
+      "pos": [
+        29,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "✝️ Sala do Clérigo — só ele entra aqui."
+    },
+    {
+      "id": "placa_bard",
+      "type": "placa",
+      "pos": [
+        16,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "🎵 Sala do Bardo — só ele entra aqui."
+    },
+    {
+      "id": "placa_paladin",
+      "type": "placa",
+      "pos": [
+        30,
+        25
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "placa_fincada.png",
+      "texto": "⚔️ Sala do Paladino — só ele entra aqui."
     }
   ],
   "secret_passages": [],
@@ -2534,9 +2630,11 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas_briefing.png",
+        "cena": "assets/tela de transição/tutorial/briefing_guilda.png"
       },
-      "texto": "Antes de partir, conheça seu herói e o pedido desta missão.",
+      "texto": "A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 9
@@ -2582,9 +2680,10 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "Vamos ajustar a visão do tabuleiro antes de mover seu herói.",
+      "texto": "Antes de partir, ajuste a visão do tabuleiro e pratique a câmera.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 9
@@ -2636,9 +2735,10 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "Bem-vindo. Vamos ajustar a visão e depois mover seu herói.",
+      "texto": "Vamos nos aproximar do baú de armas. Ande até a casa marcada.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 9
@@ -2651,7 +2751,7 @@
           15
         ],
         "vezes": 1,
-        "texto_curto": "Ande até a casa 5,15"
+        "texto_curto": "Aproxime-se do baú de armas"
       },
       "guia": [
         {
@@ -2677,9 +2777,10 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "O baú contém armas para praticar. Pegue uma arma compatível com seu herói; ela vai para a bolsa.",
+      "texto": "O baú contém armas para praticar. Pegue uma compatível com seu herói.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -2710,9 +2811,10 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "Abra a bolsa, selecione a arma que pegou e equipe-a. Equipar é uma ação livre.",
+      "texto": "Abra a bolsa e equipe a arma que pegou. Equipar é uma ação livre.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 3
@@ -2747,14 +2849,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "Terminou? Encerre seu turno para os monstros agirem. A porta está aberta.",
+      "texto": "Os bonecos de treino esperam na próxima sala. Encerre o turno quando estiver pronto.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 2
       },
-      "ordem": 4,
+      "ordem": 6,
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
@@ -2783,14 +2886,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
-      "texto": "A porta ao fundo já está aberta. Atravesse-a quando quiser: portas abertas deixam você passar, e abrir uma porta em outras masmorras é uma ação gratuita.",
+      "texto": "Atravesse a porta para a ala de treino. A Guilda perdeu contato com esta área.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 7
       },
-      "ordem": 5,
+      "ordem": 7,
       "tarefa": {
         "tipo": "mover_ate",
         "alvo": [
@@ -2798,7 +2902,7 @@
           15
         ],
         "vezes": 1,
-        "texto_curto": "Atravesse a porta para a sala de combate"
+        "texto_curto": "Entre na ala de treino"
       },
       "guia": [
         {
@@ -2880,43 +2984,6 @@
       ]
     },
     {
-      "id": "porta_warrior",
-      "pos": [
-        14,
-        15
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "warrior",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          22,
-          7
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
-          "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
-          "ui": "porta:[22,7]",
-          "dica": [
-            "ui.tutorial.guia.porta_warrior.porta.dica.1"
-          ]
-        }
-      ]
-    },
-    {
       "id": "fala_7",
       "pos": [
         13,
@@ -2977,43 +3044,6 @@
           "texto": "ui.tutorial.guia.fala_8.matar.texto",
           "porque": "ui.tutorial.guia.fala_8.matar.porque",
           "ui": "monstro:boneco_treino"
-        }
-      ]
-    },
-    {
-      "id": "porta_mage",
-      "pos": [
-        13,
-        14
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "mage",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          22,
-          21
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_mage.porta.texto",
-          "porque": "ui.tutorial.guia.porta_mage.porta.porque",
-          "ui": "porta:[22,21]",
-          "dica": [
-            "ui.tutorial.guia.porta_mage.porta.dica.1"
-          ]
         }
       ]
     },
@@ -3082,43 +3112,6 @@
       ]
     },
     {
-      "id": "porta_rogue",
-      "pos": [
-        13,
-        16
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "rogue",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          14,
-          7
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
-          "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
-          "ui": "porta:[14,7]",
-          "dica": [
-            "ui.tutorial.guia.porta_rogue.porta.dica.1"
-          ]
-        }
-      ]
-    },
-    {
       "id": "fala_11",
       "pos": [
         15,
@@ -3179,43 +3172,6 @@
           "texto": "ui.tutorial.guia.fala_12.matar.texto",
           "porque": "ui.tutorial.guia.fala_12.matar.porque",
           "ui": "monstro:boneco_treino"
-        }
-      ]
-    },
-    {
-      "id": "porta_cleric",
-      "pos": [
-        15,
-        14
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "cleric",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          30,
-          6
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
-          "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
-          "ui": "porta:[30,6]",
-          "dica": [
-            "ui.tutorial.guia.porta_cleric.porta.dica.1"
-          ]
         }
       ]
     },
@@ -3284,43 +3240,6 @@
       ]
     },
     {
-      "id": "porta_bard",
-      "pos": [
-        15,
-        16
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "bard",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          15,
-          23
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_bard.porta.texto",
-          "porque": "ui.tutorial.guia.porta_bard.porta.porque",
-          "ui": "porta:[15,23]",
-          "dica": [
-            "ui.tutorial.guia.porta_bard.porta.dica.1"
-          ]
-        }
-      ]
-    },
-    {
       "id": "fala_15",
       "pos": [
         14,
@@ -3385,43 +3304,6 @@
       ]
     },
     {
-      "id": "porta_paladin",
-      "pos": [
-        14,
-        16
-      ],
-      "falante": {
-        "nome": "Mestre de Armas",
-        "emoji": "🛡️"
-      },
-      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-      "trigger": {
-        "tipo": "sala"
-      },
-      "classe": "paladin",
-      "ordem": 3,
-      "tarefa": {
-        "tipo": "mover_ate",
-        "alvo": [
-          31,
-          25
-        ],
-        "vezes": 1,
-        "texto_curto": "Entre na sala do seu herói"
-      },
-      "guia": [
-        {
-          "id": "porta",
-          "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
-          "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
-          "ui": "porta:[31,25]",
-          "dica": [
-            "ui.tutorial.guia.porta_paladin.porta.dica.1"
-          ]
-        }
-      ]
-    },
-    {
       "id": "fala_17",
       "pos": [
         28,
@@ -3429,14 +3311,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Toda expedição se mede em dois medidores: 🍖 fome e 💧 sede. Eles caem a cada ação, e você acabou de chegar aqui com os dois no chão — olhe o seu dado no próximo ataque. Abaixo de 20 você perde 1 em acerto, dano e resistências; em zero, perde 1 de vida por rodada até comer.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 6,
+      "ordem": 20,
       "efeito": {
         "fome": 0,
         "sede": 0
@@ -3450,14 +3333,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Não morra de barriga vazia num depósito cheio. O baú ao lado tem rações e água: pegue uma ração e coma. Comer é ação bônus — não custa a sua ação principal, dá para comer e ainda lutar no mesmo turno.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 7,
+      "ordem": 21,
       "tarefa": {
         "tipo": "usar_item",
         "alvo": "racao_viagem",
@@ -3489,14 +3373,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Agora a água — e repare que ela rende menos que a comida: uma garrafa não tira você da zona de penalidade. Beba duas. Quase toda habilidade que vale a pena cobra goles: cada dado de cura do clérigo, cada magia, cada canção sustentada.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 8,
+      "ordem": 22,
       "tarefa": {
         "tipo": "usar_item",
         "alvo": "garrafa_agua",
@@ -3523,14 +3408,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. Ainda falta uma sala: abra a porta ao fundo, com cuidado.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 9
+      "ordem": 23
     },
     {
       "id": "fala_29",
@@ -3540,14 +3426,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Nem tudo se resolve no braço. Naquele baú há três coisas que se gastam: um óleo que se arremessa, um veneno que se unta na arma e uma poção que devolve vida. Pegue tudo — vai precisar na última sala.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 11,
+      "ordem": 25,
       "tarefa": {
         "tipo": "pegar_item",
         "vezes": 1,
@@ -3572,14 +3459,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "O Frasco de Óleo Incendiário 🔥 se arremessa: abra a bolsa, clique com o botão direito no frasco e depois clique no boneco de palha. Ele é vulnerável a fogo, então o dano sai maior: repare no número vermelho com VULNERÁVEL. Você rola destreza contra a Armadura do alvo; se acertar, ele pega fogo.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 12,
+      "ordem": 26,
       "tarefa": {
         "tipo": "arremessar_item",
         "alvo": "frasco_oleo",
@@ -3621,14 +3509,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Veneno não se bebe: unta-se na arma. Use o Fungo Acre e ele fica esperando no fio da lâmina — qualquer classe pode fazer isso, não só o ladino.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 13,
+      "ordem": 27,
       "tarefa": {
         "tipo": "usar_item",
         "alvo": "veneno_fungo_acre",
@@ -3655,14 +3544,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco sensível a veneno agora e veja a peçonha entrar: a cada rodada ela tira vida, e como o boneco é vulnerável a veneno o número sai dobrado, em vermelho com VULNERÁVEL.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 14,
+      "ordem": 28,
       "tarefa": {
         "tipo": "atacar",
         "alvo": "boneco_treino_veneno",
@@ -3689,14 +3579,15 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Por fim, a poção: beber é ação bônus, então dá para curar-se E atacar no mesmo turno. Beba a sua agora para saber onde ela fica na bolsa — na hora do aperto você não vai ter tempo de procurar. Depois, abra a porta ao fundo: a última sala morde de verdade.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 15,
+      "ordem": 29,
       "tarefa": {
         "tipo": "usar_item",
         "alvo": "health_potion_small",
@@ -3723,14 +3614,355 @@
       ],
       "falante": {
         "nome": "Mestre de Armas",
-        "emoji": "🛡️"
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
       },
       "texto": "Última sala. Há uma armadilha no chão daqui — armadilhas ficam ocultas até alguém revelá-las, e pisar numa cobra caro. Luccas sabe detectá-las e desarmá-las; os outros contornam, ou aguentam.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4
       },
-      "ordem": 16
+      "ordem": 30
+    },
+    {
+      "id": "fala_atalhos",
+      "pos": [
+        49,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🎓",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 31,
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Encerre o turno para concluir"
+      },
+      "guia": [
+        {
+          "id": "barra",
+          "texto": "ui.tutorial.guia.fala_atalhos.barra.texto",
+          "porque": "ui.tutorial.guia.fala_atalhos.barra.porque"
+        },
+        {
+          "id": "camera",
+          "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
+        },
+        {
+          "id": "cancelar",
+          "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
+        },
+        {
+          "id": "andar",
+          "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
+    },
+    {
+      "id": "fala_res",
+      "pos": [
+        50,
+        17
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas_alerta.png",
+        "cena": "assets/tela de transição/tutorial/ameaca_esqueletos.png"
+      },
+      "texto": "A ameaça é real: os esqueletos resistem a lâminas. Ataque um com espada ou adaga e compare o dano.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 9,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Confirme a resistência dos esqueletos"
+      },
+      "guia": [
+        {
+          "id": "ler",
+          "texto": "ui.tutorial.guia.fala_res.ler.texto",
+          "porque": "ui.tutorial.guia.fala_res.ler.porque"
+        },
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_res.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_res.atacar.porque",
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_res.atacar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fala_vuln",
+      "pos": [
+        50,
+        17
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas_alerta.png",
+        "cena": "assets/tela de transição/tutorial/ameaca_esqueletos.png"
+      },
+      "texto": "A maça causa dano de impacto, ao qual o esqueleto é vulnerável. Pegue-a no baú, equipe e ataque.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 10,
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "esqueleto_humano",
+        "vezes": 1,
+        "texto_curto": "Explore a vulnerabilidade do esqueleto"
+      },
+      "guia": [
+        {
+          "id": "pegar",
+          "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
+          "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
+          "ui": "casa:[49,17]"
+        },
+        {
+          "id": "equipar",
+          "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
+          "ui": "bolsa:maca_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_vuln.equipar.dica.1"
+          ]
+        },
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
+          "porque": "ui.tutorial.guia.fala_vuln.atacar.porque",
+          "ui": "monstro:esqueleto_humano",
+          "dica": [
+            "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fala_hostilidade",
+      "pos": [
+        32,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🎓",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Há três monstros nesta sala, e cada um é hostil a todos os monstros. Abra a porta, observe-os lutarem entre si e use a Granada Superior contra quem sobreviver.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "ordem": 24,
+      "tarefa": {
+        "tipo": "arremessar_item",
+        "alvo": "granada_superior",
+        "vezes": 1,
+        "texto_curto": "Arremesse a Granada Superior nos monstros sobreviventes"
+      },
+      "guia": [
+        {
+          "id": "abrir",
+          "texto": "ui.tutorial.guia.fala_hostilidade.abrir.texto",
+          "porque": "ui.tutorial.guia.fala_hostilidade.abrir.porque",
+          "ui": "porta:[33,15]",
+          "conclui_com": {
+            "tipo": "abrir_porta",
+            "alvo": [
+              33,
+              15
+            ]
+          }
+        },
+        {
+          "id": "bardo",
+          "texto": "ui.tutorial.guia.fala_hostilidade.bardo.texto",
+          "porque": "ui.tutorial.guia.fala_hostilidade.bardo.porque",
+          "ui": "monstro:rato_gigante"
+        },
+        {
+          "id": "observar",
+          "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
+          "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque"
+        },
+        {
+          "id": "granada",
+          "texto": "ui.tutorial.guia.fala_hostilidade.granada.texto",
+          "porque": "ui.tutorial.guia.fala_hostilidade.granada.porque",
+          "ui": "casa:[35,16]"
+        }
+      ]
+    },
+    {
+      "id": "fala_menu_habilidades",
+      "ordem": 4,
+      "pos": [
+        6,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Antes do combate, conheça as habilidades do seu herói.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Conheça o menu de habilidades"
+      },
+      "guia": [
+        {
+          "id": "abrir",
+          "texto": "ui.tutorial.guia.fala_menu_habilidades.abrir.texto",
+          "ui": "botao:habilidades"
+        },
+        {
+          "id": "conferir",
+          "texto": "ui.tutorial.guia.fala_menu_habilidades.conferir.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
+    },
+    {
+      "id": "fala_menu_magias",
+      "ordem": 5,
+      "pos": [
+        6,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Confira também as magias que seu herói conhece.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "requisitos": {
+        "magia_tipo": "qualquer"
+      },
+      "tarefa": {
+        "tipo": "encerrar_turno",
+        "vezes": 1,
+        "texto_curto": "Conheça o grimório"
+      },
+      "guia": [
+        {
+          "id": "abrir",
+          "texto": "ui.tutorial.guia.fala_menu_magias.abrir.texto",
+          "ui": "botao:magias"
+        },
+        {
+          "id": "conferir",
+          "texto": "ui.tutorial.guia.fala_menu_magias.conferir.texto",
+          "ui": "botao:encerrar_turno"
+        }
+      ]
+    },
+    {
+      "id": "fala_primeiro_combate",
+      "ordem": 8,
+      "pos": [
+        16,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Os bonecos não reagem. Faça um ataque para conferir seu equipamento.",
+      "trigger": {
+        "tipo": "sala",
+        "raio": 2
+      },
+      "tarefa": {
+        "tipo": "atacar",
+        "alvo": "boneco_treino",
+        "vezes": 1,
+        "texto_curto": "Ataque um boneco de treino"
+      },
+      "guia": [
+        {
+          "id": "alvo",
+          "texto": "ui.tutorial.guia.fala_primeiro_combate.alvo.texto",
+          "ui": "monstro:boneco_treino"
+        },
+        {
+          "id": "atacar",
+          "texto": "ui.tutorial.guia.fala_primeiro_combate.atacar.texto",
+          "ui": "monstro:boneco_treino",
+          "dica": [
+            "ui.tutorial.guia.fala_primeiro_combate.atacar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fala_retirada",
+      "ordem": 11,
+      "pos": [
+        50,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas_conclusao.png",
+        "cena": "assets/tela de transição/tutorial/retorno_guilda.png"
+      },
+      "texto": "A ameaça está confirmada. Retire-se com o grupo e reúna todos na saída.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 4
+      },
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          53,
+          15
+        ],
+        "vezes": 1,
+        "texto_curto": "Reúna o grupo na saída"
+      },
+      "guia": [
+        {
+          "id": "retirar",
+          "texto": "ui.tutorial.guia.fala_retirada.retirar.texto",
+          "ui": "casa:[53,15]",
+          "dica": [
+            "ui.tutorial.guia.fala_retirada.retirar.dica.1"
+          ]
+        }
+      ]
     },
     {
       "id": "treino_mira",
@@ -3747,13 +3979,13 @@
         "tipo": "sala"
       },
       "classe": "warrior",
-      "sala_exclusiva": true,
       "ordem": 4,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "mira_certeira",
         "vezes": 1,
-        "texto_curto": "Ataque com Mira Certeira"
+        "texto_curto": "Ataque com Mira Certeira",
+        "alvo": "mira_certeira"
       },
       "guia": [
         {
@@ -3782,13 +4014,13 @@
         "tipo": "sala"
       },
       "classe": "warrior",
-      "sala_exclusiva": true,
       "ordem": 5,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "golpe_devastador",
         "vezes": 1,
-        "texto_curto": "Ataque com Golpe Devastador"
+        "texto_curto": "Ataque com Golpe Devastador",
+        "alvo": "golpe_devastador"
       },
       "guia": [
         {
@@ -3817,13 +4049,13 @@
         "tipo": "sala"
       },
       "classe": "warrior",
-      "sala_exclusiva": true,
       "ordem": 6,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "furia_berserker",
         "vezes": 1,
-        "texto_curto": "Faça o primeiro ataque com Fúria"
+        "texto_curto": "Faça o primeiro ataque com Fúria",
+        "alvo": "furia_berserker"
       },
       "guia": [
         {
@@ -3849,13 +4081,13 @@
         "tipo": "sala"
       },
       "classe": "warrior",
-      "sala_exclusiva": true,
       "ordem": 7,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "ataque_extra",
-        "alvo": "furia_berserker",
         "vezes": 1,
-        "texto_curto": "Use o ataque extra da Fúria"
+        "texto_curto": "Use o ataque extra da Fúria",
+        "alvo": "furia_berserker"
       },
       "guia": [
         {
@@ -3884,8 +4116,8 @@
         "tipo": "sala"
       },
       "classe": "warrior",
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
@@ -3919,15 +4151,15 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "requisitos": {
-        "magia_tipo": "qualquer"
-      },
-      "sala_exclusiva": true,
       "ordem": 4,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia conhecida"
+      },
+      "requisitos": {
+        "magia_tipo": "qualquer"
       },
       "guia": [
         {
@@ -3957,8 +4189,8 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "sala_exclusiva": true,
       "ordem": 5,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
@@ -3988,16 +4220,16 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "requisitos": {
-        "magia_tipo": "save"
-      },
-      "sala_exclusiva": true,
       "ordem": 6,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "aprimorar_magia",
         "vezes": 1,
-        "texto_curto": "Lance uma magia com Aprimorar Magia"
+        "texto_curto": "Lance uma magia com Aprimorar Magia",
+        "alvo": "aprimorar_magia"
+      },
+      "requisitos": {
+        "magia_tipo": "save"
       },
       "guia": [
         {
@@ -4026,16 +4258,16 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "requisitos": {
-        "magia_tipo": "duracao"
-      },
-      "sala_exclusiva": true,
       "ordem": 7,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "estender_magia",
         "vezes": 1,
-        "texto_curto": "Lance uma magia com Estender Magia"
+        "texto_curto": "Lance uma magia com Estender Magia",
+        "alvo": "estender_magia"
+      },
+      "requisitos": {
+        "magia_tipo": "duracao"
       },
       "guia": [
         {
@@ -4061,16 +4293,16 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "requisitos": {
-        "magia_tipo": "dano"
-      },
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "fortalecer_magia",
         "vezes": 1,
-        "texto_curto": "Lance uma magia com Fortalecer Magia"
+        "texto_curto": "Lance uma magia com Fortalecer Magia",
+        "alvo": "fortalecer_magia"
+      },
+      "requisitos": {
+        "magia_tipo": "dano"
       },
       "guia": [
         {
@@ -4096,13 +4328,13 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "sala_exclusiva": true,
       "ordem": 9,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "animar_mortos",
         "vezes": 1,
-        "texto_curto": "Anime o cadáver de treinamento"
+        "texto_curto": "Anime o cadáver de treinamento",
+        "alvo": "animar_mortos"
       },
       "guia": [
         {
@@ -4132,8 +4364,8 @@
         "tipo": "sala"
       },
       "classe": "mage",
-      "sala_exclusiva": true,
       "ordem": 10,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "comandar_servo",
         "vezes": 1,
@@ -4167,13 +4399,13 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 4,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "detectar_armadilhas",
         "vezes": 1,
-        "texto_curto": "Revele a armadilha de treinamento"
+        "texto_curto": "Revele a armadilha de treinamento",
+        "alvo": "detectar_armadilhas"
       },
       "guia": [
         {
@@ -4199,8 +4431,8 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 5,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "desarmar_armadilha",
         "vezes": 1,
@@ -4229,13 +4461,13 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 6,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "esconder_sombras",
         "vezes": 1,
-        "texto_curto": "Esconda-se nas sombras"
+        "texto_curto": "Esconda-se nas sombras",
+        "alvo": "esconder_sombras"
       },
       "guia": [
         {
@@ -4261,13 +4493,13 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 7,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "ataque_furtivo",
         "vezes": 1,
-        "texto_curto": "Acerte um Ataque Furtivo"
+        "texto_curto": "Acerte um Ataque Furtivo",
+        "alvo": "ataque_furtivo"
       },
       "guia": [
         {
@@ -4296,13 +4528,13 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "veneno_rapido",
         "vezes": 1,
-        "texto_curto": "Unte a arma com Veneno Rápido"
+        "texto_curto": "Unte a arma com Veneno Rápido",
+        "alvo": "veneno_rapido"
       },
       "guia": [
         {
@@ -4328,8 +4560,8 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 9,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "atacar",
         "vezes": 1,
@@ -4360,13 +4592,13 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "sala_exclusiva": true,
       "ordem": 10,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "criar_armadilha",
         "vezes": 1,
-        "texto_curto": "Crie uma armadilha conhecida"
+        "texto_curto": "Crie uma armadilha conhecida",
+        "alvo": "criar_armadilha"
       },
       "guia": [
         {
@@ -4387,21 +4619,21 @@
         "nome": "Instrutor de Treinamento",
         "emoji": "🎓"
       },
+      "texto": "Abra a aba ✨ Magias do seu painel (no celular, o botão ✨), escolha uma magia que você conhece e lance-a. Magia de aliado: clique em você ou num aprendiz. Magia de área: clique numa casa livre. Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói, e aqui não há. Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. Lançar usa sua ação principal.",
       "trigger": {
         "tipo": "sala"
       },
       "classe": "cleric",
+      "ordem": 4,
       "sala_exclusiva": true,
-      "texto": "Abra a aba ✨ Magias do seu painel (no celular, o botão ✨), escolha uma magia que você conhece e lance-a. Magia de aliado: clique em você ou num aprendiz. Magia de área: clique numa casa livre. Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói, e aqui não há. Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. Lançar usa sua ação principal.",
-      "requisitos": {
-        "magia_tipo": "qualquer"
-      },
       "tarefa": {
         "tipo": "usar_magia",
         "vezes": 1,
         "texto_curto": "Lance uma magia conhecida"
       },
-      "ordem": 4,
+      "requisitos": {
+        "magia_tipo": "qualquer"
+      },
       "guia": [
         {
           "id": "grimorio",
@@ -4432,18 +4664,18 @@
         "nome": "Instrutor de Treinamento",
         "emoji": "🎓"
       },
+      "texto": "Encerre o turno para continuar: lançar a magia usou sua ação principal, e as habilidades de Clérigo a seguir também precisam dela. Aqui na sala suas magias não gastam slots; fora dela cada magia gasta um, que volta com o tempo.",
       "trigger": {
         "tipo": "sala"
       },
       "classe": "cleric",
+      "ordem": 5,
       "sala_exclusiva": true,
-      "texto": "Encerre o turno para continuar: lançar a magia usou sua ação principal, e as habilidades de Clérigo a seguir também precisam dela. Aqui na sala suas magias não gastam slots; fora dela cada magia gasta um, que volta com o tempo.",
       "tarefa": {
         "tipo": "encerrar_turno",
         "vezes": 1,
         "texto_curto": "Encerre o turno para continuar"
       },
-      "ordem": 5,
       "guia": [
         {
           "id": "encerrar",
@@ -4468,13 +4700,13 @@
         "tipo": "sala"
       },
       "classe": "cleric",
-      "sala_exclusiva": true,
       "ordem": 6,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "cura",
         "vezes": 1,
         "texto_curto": "Cure o Aprendiz 1",
+        "alvo": "cura",
         "alvo_id": "__treino_cleric_1",
         "cura_efetiva": true
       },
@@ -4506,13 +4738,13 @@
         "tipo": "sala"
       },
       "classe": "cleric",
-      "sala_exclusiva": true,
       "ordem": 7,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "cura_area",
         "vezes": 2,
         "texto_curto": "Cure os dois aprendizes em área",
+        "alvo": "cura_area",
         "cura_efetiva": true
       },
       "guia": [
@@ -4539,13 +4771,13 @@
         "tipo": "sala"
       },
       "classe": "cleric",
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "purificacao",
         "vezes": 1,
         "texto_curto": "Purifique o Aprendiz 1",
+        "alvo": "purificacao",
         "alvo_id": "__treino_cleric_1"
       },
       "guia": [
@@ -4572,13 +4804,13 @@
         "tipo": "sala"
       },
       "classe": "cleric",
-      "sala_exclusiva": true,
       "ordem": 9,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "ressurreicao",
         "vezes": 1,
         "texto_curto": "Ressuscite o Aprendiz 1",
+        "alvo": "ressurreicao",
         "alvo_id": "__treino_cleric_1"
       },
       "guia": [
@@ -4723,13 +4955,13 @@
         "tipo": "sala"
       },
       "classe": "bard",
-      "sala_exclusiva": true,
       "ordem": 7,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "cancao_heroica",
         "vezes": 1,
         "texto_curto": "Ative a Canção com Acerto e o Alaúde",
+        "alvo": "cancao_heroica",
         "requer_sinfonia": true
       },
       "guia": [
@@ -4759,8 +4991,8 @@
         "tipo": "sala"
       },
       "classe": "bard",
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "manter_cancao",
         "vezes": 1,
@@ -4790,8 +5022,8 @@
         "tipo": "sala"
       },
       "classe": "bard",
-      "sala_exclusiva": true,
       "ordem": 9,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "encerrar_cancao",
         "vezes": 1,
@@ -4820,13 +5052,13 @@
         "tipo": "sala"
       },
       "classe": "bard",
-      "sala_exclusiva": true,
       "ordem": 10,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "provocacao",
         "vezes": 1,
-        "texto_curto": "Use Provocação no boneco"
+        "texto_curto": "Use Provocação no boneco",
+        "alvo": "provocacao"
       },
       "guia": [
         {
@@ -4852,13 +5084,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 4,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "libertar_refem",
-        "alvo": "__prisioneiro__",
         "vezes": 1,
-        "texto_curto": "Liberte o refém"
+        "texto_curto": "Liberte o refém",
+        "alvo": "__prisioneiro__"
       },
       "guia": [
         {
@@ -4883,13 +5115,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 5,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "proteger",
-        "alvo": "__prisioneiro__",
         "vezes": 1,
-        "texto_curto": "Proteja o refém durante um ataque"
+        "texto_curto": "Proteja o refém durante um ataque",
+        "alvo": "__prisioneiro__"
       },
       "guia": [
         {
@@ -4915,13 +5147,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 6,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "imposicao_maos",
         "vezes": 1,
         "texto_curto": "Cure o refém com Imposição das Mãos",
+        "alvo": "imposicao_maos",
         "alvo_id": "__prisioneiro__",
         "cura_efetiva": true
       },
@@ -5000,13 +5232,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 8,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "golpe_sagrado",
         "vezes": 1,
-        "texto_curto": "Ative Golpe Sagrado"
+        "texto_curto": "Ative Golpe Sagrado",
+        "alvo": "golpe_sagrado"
       },
       "guia": [
         {
@@ -5032,8 +5264,8 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 9,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "atacar",
         "vezes": 1,
@@ -5064,13 +5296,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 10,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "regenerar",
-        "alvo": "regeneracao_divina",
         "vezes": 1,
-        "texto_curto": "Recupere vida com Regeneração Divina"
+        "texto_curto": "Recupere vida com Regeneração Divina",
+        "alvo": "regeneracao_divina"
       },
       "guia": [
         {
@@ -5096,13 +5328,13 @@
         "tipo": "sala"
       },
       "classe": "paladin",
-      "sala_exclusiva": true,
       "ordem": 11,
+      "sala_exclusiva": true,
       "tarefa": {
         "tipo": "usar_habilidade",
-        "alvo": "guerreiro_luz",
         "vezes": 1,
-        "texto_curto": "Ative Guerreiro da Luz"
+        "texto_curto": "Ative Guerreiro da Luz",
+        "alvo": "guerreiro_luz"
       },
       "guia": [
         {
@@ -5114,130 +5346,223 @@
       ]
     },
     {
-      "id": "fala_atalhos",
+      "id": "porta_warrior",
       "pos": [
-        49,
+        14,
+        15
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "warrior",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          22,
+          7
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
+          "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
+          "ui": "porta:[22,7]",
+          "dica": [
+            "ui.tutorial.guia.porta_warrior.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "porta_mage",
+      "pos": [
+        13,
+        14
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "mage",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          22,
+          21
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_mage.porta.texto",
+          "porque": "ui.tutorial.guia.porta_mage.porta.porque",
+          "ui": "porta:[22,21]",
+          "dica": [
+            "ui.tutorial.guia.porta_mage.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "porta_rogue",
+      "pos": [
+        13,
         16
       ],
       "falante": {
-        "nome": "Instrutor de Treinamento",
-        "emoji": "🎓"
-      },
-      "texto": "Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "ordem": 19,
-      "tarefa": {
-        "tipo": "encerrar_turno",
-        "vezes": 1,
-        "texto_curto": "Encerre o turno para concluir"
-      },
-      "guia": [
-        {
-          "id": "barra",
-          "texto": "ui.tutorial.guia.fala_atalhos.barra.texto",
-          "porque": "ui.tutorial.guia.fala_atalhos.barra.porque"
-        },
-        {
-          "id": "camera",
-          "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
-        },
-        {
-          "id": "cancelar",
-          "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
-        },
-        {
-          "id": "andar",
-          "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
-          "ui": "botao:encerrar_turno"
-        }
-      ]
-    },
-    {
-      "id": "fala_res",
-      "pos": [
-        50,
-        17
-      ],
-      "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.",
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
       },
-      "ordem": 20,
+      "classe": "rogue",
+      "ordem": 3,
       "tarefa": {
-        "tipo": "atacar",
-        "alvo": "esqueleto_humano",
+        "tipo": "mover_ate",
+        "alvo": [
+          14,
+          7
+        ],
         "vezes": 1,
-        "texto_curto": "Ataque um esqueleto com espada ou adaga"
+        "texto_curto": "Entre na sala do seu herói"
       },
       "guia": [
         {
-          "id": "ler",
-          "texto": "ui.tutorial.guia.fala_res.ler.texto",
-          "porque": "ui.tutorial.guia.fala_res.ler.porque"
-        },
-        {
-          "id": "atacar",
-          "texto": "ui.tutorial.guia.fala_res.atacar.texto",
-          "porque": "ui.tutorial.guia.fala_res.atacar.porque",
-          "ui": "monstro:esqueleto_humano",
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
+          "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
+          "ui": "porta:[14,7]",
           "dica": [
-            "ui.tutorial.guia.fala_res.atacar.dica.1"
+            "ui.tutorial.guia.porta_rogue.porta.dica.1"
           ]
         }
       ]
     },
     {
-      "id": "fala_vuln",
+      "id": "porta_cleric",
       "pos": [
-        50,
-        17
+        15,
+        14
       ],
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🛡️"
       },
-      "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.",
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
       "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
+        "tipo": "sala"
       },
-      "ordem": 21,
+      "classe": "cleric",
+      "ordem": 3,
       "tarefa": {
-        "tipo": "atacar",
-        "alvo": "esqueleto_humano",
+        "tipo": "mover_ate",
+        "alvo": [
+          30,
+          6
+        ],
         "vezes": 1,
-        "texto_curto": "Pegue a maça, equipe e ataque o esqueleto"
+        "texto_curto": "Entre na sala do seu herói"
       },
       "guia": [
         {
-          "id": "pegar",
-          "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
-          "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
-          "ui": "casa:[49,17]"
-        },
-        {
-          "id": "equipar",
-          "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
-          "ui": "bolsa:maca_treino",
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
+          "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
+          "ui": "porta:[30,6]",
           "dica": [
-            "ui.tutorial.guia.fala_vuln.equipar.dica.1"
+            "ui.tutorial.guia.porta_cleric.porta.dica.1"
           ]
-        },
+        }
+      ]
+    },
+    {
+      "id": "porta_bard",
+      "pos": [
+        15,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "bard",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          15,
+          23
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
         {
-          "id": "atacar",
-          "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
-          "porque": "ui.tutorial.guia.fala_vuln.atacar.porque",
-          "ui": "monstro:esqueleto_humano",
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_bard.porta.texto",
+          "porque": "ui.tutorial.guia.porta_bard.porta.porque",
+          "ui": "porta:[15,23]",
           "dica": [
-            "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+            "ui.tutorial.guia.porta_bard.porta.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "porta_paladin",
+      "pos": [
+        14,
+        16
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️"
+      },
+      "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "paladin",
+      "ordem": 3,
+      "tarefa": {
+        "tipo": "mover_ate",
+        "alvo": [
+          31,
+          25
+        ],
+        "vezes": 1,
+        "texto_curto": "Entre na sala do seu herói"
+      },
+      "guia": [
+        {
+          "id": "porta",
+          "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
+          "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
+          "ui": "porta:[31,25]",
+          "dica": [
+            "ui.tutorial.guia.porta_paladin.porta.dica.1"
           ]
         }
       ]
@@ -5541,61 +5866,6 @@
           ]
         }
       ]
-    },
-    {
-      "id": "fala_hostilidade",
-      "pos": [
-        32,
-        15
-      ],
-      "falante": {
-        "nome": "Instrutor de Treinamento",
-        "emoji": "🎓"
-      },
-      "texto": "Há três monstros nesta sala, e cada um é hostil a todos os monstros. Abra a porta, observe-os lutarem entre si e use a Granada Superior contra quem sobreviver.",
-      "trigger": {
-        "tipo": "proximidade",
-        "raio": 4
-      },
-      "ordem": 10,
-      "tarefa": {
-        "tipo": "arremessar_item",
-        "alvo": "granada_superior",
-        "vezes": 1,
-        "texto_curto": "Arremesse a Granada Superior nos monstros sobreviventes"
-      },
-      "guia": [
-        {
-          "id": "abrir",
-          "texto": "ui.tutorial.guia.fala_hostilidade.abrir.texto",
-          "porque": "ui.tutorial.guia.fala_hostilidade.abrir.porque",
-          "ui": "porta:[33,15]",
-          "conclui_com": {
-            "tipo": "abrir_porta",
-            "alvo": [
-              33,
-              15
-            ]
-          }
-        },
-        {
-          "id": "bardo",
-          "texto": "ui.tutorial.guia.fala_hostilidade.bardo.texto",
-          "porque": "ui.tutorial.guia.fala_hostilidade.bardo.porque",
-          "ui": "monstro:rato_gigante"
-        },
-        {
-          "id": "observar",
-          "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
-          "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque"
-        },
-        {
-          "id": "granada",
-          "texto": "ui.tutorial.guia.fala_hostilidade.granada.texto",
-          "porque": "ui.tutorial.guia.fala_hostilidade.granada.porque",
-          "ui": "casa:[35,16]"
-        }
-      ]
     }
   ],
   "master_reinforcements": [],
@@ -5608,9 +5878,7 @@
       35,
       25
     ],
-    "room_id": 38,
-    "image": "soldado.png",
-    "model3d": "soldadoa.glb"
+    "room_id": 38
   },
   "materiais": {},
   "pontes": [],

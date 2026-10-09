@@ -209,5 +209,7 @@ import aplicar_fatia18_tutorial as _F18   # hostilidade antes da porta da ala
 _F18.aplicar(d)
 import aplicar_fatia19_tutorial as _F19   # apresentação inicial do tutorial
 _F19.aplicar(d)
+import aplicar_tutorial_missao as _Missao
+_Missao.aplicar(d)
 aplicar_guia(d)
 path.write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
