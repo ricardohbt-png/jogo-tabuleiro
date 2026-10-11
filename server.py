@@ -2319,6 +2319,8 @@ def ensure_campaign_schema(sg):
         sg["world_adventure_progress"] = {}; changed = True
     if not isinstance(sg.get("world_adventure_route_progress"), dict):
         sg["world_adventure_route_progress"] = {}; changed = True
+    if _normalizar_diario_aventureiros(sg):
+        changed = True
     if not isinstance(sg.get("dungeon_snapshots"), dict):
         sg["dungeon_snapshots"] = {}; changed = True
     # Refúgio dos Heróis: um estoque compartilhado e quartos privados por conta.
@@ -2377,6 +2379,141 @@ def _sid_valido(sid):
     """Id de savegame só pode ser 'sg_' + 6 alfanuméricos minúsculos (o que
     _new_savegame_id gera). Barra path traversal em ids vindos do cliente."""
     return bool(isinstance(sid, str) and re.fullmatch(r"sg_[a-z0-9]{6}", sid))
+
+def _diario_merge_missao(diario, adventure_id, stage_index, exit_ids=(), complete=False,
+                         completed_at=None):
+    """Mescla uma etapa no diário sem duplicar saídas ou fabricar datas."""
+    if not isinstance(diario, dict) or not isinstance(adventure_id, str):
+        return False
+    if not re.fullmatch(r"[a-z0-9_-]{1,48}", adventure_id):
+        return False
+    if isinstance(stage_index, bool) or not isinstance(stage_index, int) or stage_index < 0:
+        return False
+    rows = diario.setdefault("missions", [])
+    if not isinstance(rows, list):
+        rows = diario["missions"] = []
+    exits = []
+    for exit_id in exit_ids if isinstance(exit_ids, (list, tuple, set)) else []:
+        exit_id = str(exit_id or "")
+        if re.fullmatch(r"[a-z0-9_-]{1,48}", exit_id) and exit_id not in exits:
+            exits.append(exit_id)
+    row = next((entry for entry in rows if isinstance(entry, dict)
+                and entry.get("adventure_id") == adventure_id
+                and entry.get("stage_index") == stage_index), None)
+    if row is None:
+        row = {"adventure_id": adventure_id, "stage_index": stage_index,
+               "exit_ids": [], "complete": False}
+        rows.append(row)
+    changed = False
+    existing = row.get("exit_ids") if isinstance(row.get("exit_ids"), list) else []
+    normalized = []
+    for value in existing:
+        value = str(value or "")
+        if re.fullmatch(r"[a-z0-9_-]{1,48}", value) and value not in normalized:
+            normalized.append(value)
+    merged = normalized + [value for value in exits if value not in normalized]
+    if merged != existing:
+        row["exit_ids"] = merged
+        changed = True
+    if bool(complete) and not row.get("complete"):
+        row["complete"] = True
+        changed = True
+    elif not isinstance(row.get("complete"), bool):
+        row["complete"] = False
+        changed = True
+    if row.get("complete") and isinstance(completed_at, str) and completed_at and not row.get("completed_at"):
+        row["completed_at"] = completed_at
+        changed = True
+    return changed
+
+def _normalizar_diario_aventureiros(sg):
+    """Inicializa o diário e reconstrói apenas progresso de missão comprovável."""
+    if not isinstance(sg, dict):
+        return False
+    raw = sg.get("adventurer_journal")
+    changed = False
+    if not isinstance(raw, dict):
+        raw = {"missions": [], "items": []}
+        sg["adventurer_journal"] = raw
+        changed = True
+    missions = raw.get("missions")
+    if not isinstance(missions, list):
+        missions = raw["missions"] = []
+        changed = True
+    items = raw.get("items")
+    if not isinstance(items, list):
+        items = raw["items"] = []
+        changed = True
+
+    # Normaliza e deduplica dados já gravados antes de fazer qualquer backfill.
+    normalized = {"missions": [], "items": []}
+    for entry in missions:
+        if not isinstance(entry, dict):
+            changed = True
+            continue
+        aid, index = entry.get("adventure_id"), entry.get("stage_index")
+        before = len(normalized["missions"])
+        _diario_merge_missao(normalized, aid, index, entry.get("exit_ids"),
+                             entry.get("complete", False), entry.get("completed_at"))
+        if len(normalized["missions"]) == before:
+            target = next((row for row in normalized["missions"]
+                           if row["adventure_id"] == aid and row["stage_index"] == index), None)
+            if target:
+                _diario_merge_missao(normalized, aid, index, entry.get("exit_ids"),
+                                     entry.get("complete", False), entry.get("completed_at"))
+        if len(normalized["missions"]) != before or entry.get("adventure_id") != aid:
+            changed = True
+    seen_items = set()
+    for entry in items:
+        if not isinstance(entry, dict):
+            changed = True
+            continue
+        item_id = entry.get("item_id")
+        if not isinstance(item_id, str) or not re.fullmatch(r"[a-z0-9_-]{1,80}", item_id):
+            changed = True
+            continue
+        if item_id in seen_items:
+            changed = True
+            continue
+        seen_items.add(item_id)
+        item_row = {"item_id": item_id}
+        if isinstance(entry.get("acquired_at"), str) and entry["acquired_at"]:
+            item_row["acquired_at"] = entry["acquired_at"]
+        normalized["items"].append(item_row)
+
+    progress = sg.get("world_adventure_progress") or {}
+    route_progress = sg.get("world_adventure_route_progress") or {}
+    if isinstance(progress, dict):
+        for aid, raw_count in progress.items():
+            adventure = WORLD_ADVENTURES.get(aid) if isinstance(aid, str) else None
+            stages = (adventure or {}).get("dungeons") or []
+            if not adventure or not isinstance(stages, list):
+                continue
+            try:
+                count = max(0, min(len(stages), int(raw_count)))
+            except (TypeError, ValueError):
+                continue
+            for index in range(count):
+                key = f"{aid}:{index}"
+                route = route_progress.get(key, {}) if isinstance(route_progress, dict) else {}
+                found = route.get("found_exit_ids", []) if isinstance(route, dict) else []
+                if _diario_merge_missao(normalized, aid, index, found, True):
+                    changed = True
+    if isinstance(route_progress, dict):
+        for key, route in route_progress.items():
+            match = re.fullmatch(r"([a-z0-9_-]{1,48}):(\d+)", str(key))
+            if not match or not isinstance(route, dict):
+                continue
+            aid, index = match.group(1), int(match.group(2))
+            adventure = WORLD_ADVENTURES.get(aid)
+            if not adventure or index >= len(adventure.get("dungeons") or []):
+                continue
+            if _diario_merge_missao(normalized, aid, index, route.get("found_exit_ids"), False):
+                changed = True
+    if normalized != raw:
+        sg["adventurer_journal"] = normalized
+        changed = True
+    return changed
 
 def _new_savegame_id():
     while True:
@@ -2540,7 +2677,7 @@ CAMPOS_DO_PONTO = (
     "campaign_file", "campaign_phase", "world_location", "world_adventure_progress",
     "world_adventure_route_progress", "dungeon_snapshots",
     "renome", "fatos", "scene_conversations_done", "scene_triggers_done",
-    "story_beats_done", "active_scene", "scene_variables", "members",
+    "story_beats_done", "active_scene", "scene_variables", "adventurer_journal", "members",
     "characters", "slots", "shortcut_slots", "refugio", "hero_rooms",
     "dungeon_snapshot",
 )
