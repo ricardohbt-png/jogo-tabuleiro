@@ -1776,6 +1776,10 @@ const GS = (() => {
         _emit('adventurerDiaryState', msg);
         break;
 
+      case 'monster_knowledge_state':
+        _emit('monsterKnowledgeState', msg);
+        break;
+
       case 'quarto_state':
         _emit('quartoState', msg);
         break;
@@ -2579,6 +2583,7 @@ const GS = (() => {
   function saveCityMapPoints(cityId, points) { send({ type: 'city_map_points', city_id: cityId, points: points }); }
   function openRefugio() { send({ type: 'open_refugio' }); }
   function openAdventurerDiary() { send({ type: 'open_adventurer_diary' }); }
+  function inspectMonster(monsterId) { send({ type: 'inspect_monster', monster_id: String(monsterId) }); }
   function openQuarto(owner) { send({ type: 'open_quarto', owner: owner || null }); }
   function refugioStore(scope, source, ref) {
     const msg = { type:'refugio_store', scope, source };
@@ -3899,6 +3904,7 @@ const GS = (() => {
     saveCityMapPoints,
     openRefugio,
     openAdventurerDiary,
+    inspectMonster,
     openQuarto,
     refugioStore,
     refugioTake,

@@ -1,6 +1,7 @@
 /* Guardas de interação do inspetor de monstro em canvas 2D e 3D. */
 const fs = require('fs');
 const src = fs.readFileSync('game.js', 'utf8');
+const stateSrc = fs.readFileSync('src/gameState.js', 'utf8');
 const check = (name, condition) => {
   console.log(`${condition ? '✅' : '❌'} ${name}`);
   if (!condition) process.exitCode = 1;
@@ -24,6 +25,10 @@ console.log('[2] botão direito abre inspeção nas duas vistas');
 check('2D bloqueia menu do navegador e inspeciona a casa', context2d.includes('preventDefault') && context2d.includes('_abrirInspecaoMonstro'));
 check('3D distingue clique direito de arrasto', context3d.includes('_rightClickPointer') && context3d.includes('_abrirInspecaoMonstro'));
 check('ficha detalhada usa o nível atual de conhecimento', /fichaInimigoTooltipHTML\(monster, bard, null, level\)/.test(src));
+check('conhecimento não depende mais de bestiário no game_state', !/gameState\?\.bestiary/.test(src));
+check('clique direito solicita conhecimento privado ao servidor', /GS\.inspectMonster\?\.\(monster\.id\)/.test(src));
+check('resposta privada atualiza apenas o monstro inspecionado', /GS\.on\('monsterKnowledgeState',[\s\S]*?String\(msg\.monster_id\)!==String\(_inspectedMonsterId\)/.test(src));
+check('cliente encaminha pedido/resposta de conhecimento', /type: 'inspect_monster'/.test(stateSrc) && /case 'monster_knowledge_state'/.test(stateSrc));
 check('modo Mestre/teste pode abrir o inspetor', !/GS\.isMaster\(\)|state\?\.test_mode/.test(openInspect));
 check('modo Mestre/teste mantém áreas após abrir', !/GS\.isMaster\(\)|state\.test_mode/.test(currentInspect));
 

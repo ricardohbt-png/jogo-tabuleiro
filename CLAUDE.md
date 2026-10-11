@@ -3768,3 +3768,34 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > A janela mantém a largura normal de 330 px e a área de cena padrão de 126 px; a classe
 > `aula-dano` só ajusta o enquadramento vertical da imagem. Não reutilizar a antiga classe
 > `cena-esqueletos`, que ampliava essas lições para 620 px sem necessidade.
+
+> **Diário dos Aventureiros (2026-10-11):** cada save de campanha tem
+> `adventurer_journal = {missions:[], items:[]}`. A chave de missão é o par
+> `(adventure_id, stage_index)`; saídas descobertas entram em `exit_ids` sem duplicar,
+> e `complete` só muda depois de `handle_encerrar_missao` passar pelas guardas
+> autoritativas. `_discover_route_exits` registra rotas parciais. Itens só entram no
+> diário quando uma campanha autoriza explicitamente o evento
+> `_trigger_campaign_scene("key_item_obtained", item_id)`. Não reconstruir datas ou
+> aquisições que o save antigo não comprova. A migração `ensure_campaign_schema`
+> reconstrói progresso confirmado de missão/rota e inclui o diário nos checkpoints;
+> não confundir com o `journal` técnico da campanha.
+>
+> O painel de Refúgio (`_renderRefugioPainel`) oferece o botão nativo do livro. O
+> payload `refugio_state` contém o histórico compartilhado em `adventurer_journal`,
+> sem dados de bestiário. `open_adventurer_diary` exige jogador membro, na cidade e
+> Refúgio desbloqueado, e responde apenas ao PID solicitante com missões, itens e o
+> bestiário individual. O perfil de conta guarda os abates por tipo; cada morte
+> confirmada é creditada uma vez por participante, excluindo treino/teste. Nenhum
+> contador ou nível do bestiário entra em `game_state` ou em broadcasts. O clique
+> direito pede explicitamente o nível de conhecimento do monstro; o
+> servidor valida a visibilidade e responde só ao PID solicitante.
+>
+> Política de conhecimento canônica: `_bestiary_reveal_entry` retorna só dados
+> permitidos. Com 15 abates, resistências/imunidades/vulnerabilidades/redução; com
+> 30, ataques, tipos/alcances, atributos e testes; com 50, habilidades especiais e
+> CDs. Conhecimento das Lendas de um Bardo vivo completa a ficha da criatura já
+> conhecida. A inspeção por clique direito (`_abrirInspecaoMonstro`) segue o mesmo
+> nível da conta, em 2D e 3D; hover continua compacto. Áreas efetivamente atacáveis
+> ficam vermelhas e as que exigem movimento ficam verdes, filtradas pela visão.
+> Ficha do diário e inspetor não devem reimplementar os marcos nem mostrar campos
+> ocultos antes da autorização.

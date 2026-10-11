@@ -16057,6 +16057,44 @@ class GameRoom(TutorialTraining):
             "bestiary": self._bestiary_diary_payload_for_pid(pid, bard=bard),
         })
 
+    async def handle_inspect_monster(self, pid, monster_id):
+        """Entrega o nível de conhecimento do bestiário só após inspeção explícita."""
+        player = self.players.get(pid)
+        if (self.phase != "playing" or not player
+                or player.get("alive") is False or player.get("hp", 1) <= 0
+                or self._em_cidade(pid)):
+            return
+        monster = next((m for m in self.monsters.values()
+                       if str(m.get("id")) == str(monster_id) and m.get("hp", 0) > 0), None)
+        if not monster or not player.get("pos"):
+            return
+        sources = [player]
+        # No Solo com grupo, a interface soma a visão dos heróis na mesma
+        # conexão; quando o anfitrião permite visão compartilhada, qualquer
+        # aliado vivo pode tornar a criatura visível para inspeção.
+        connection = self._conexao_de(pid)
+        sources.extend(p for p in self.players.values()
+                       if p is not player and p.get("alive", True) and not p.get("fora_masmorra")
+                       and (p.get("controlador") == connection
+                            or self.visao_compartilhada_permitida))
+        if not any(source.get("pos") and any(
+                max(abs(tile[0] - source["pos"][0]), abs(tile[1] - source["pos"][1]))
+                <= (1 if source.get("cego") else self._get_raio_visao(source))
+                and self._tem_linha_de_visao(source["pos"], tile)
+                for tile in self._monster_tiles(monster)) for source in sources):
+            return
+        bard = any(p.get("class_id") == "bard" and p.get("alive", True) and p.get("hp", 0) > 0
+                   for p in self.players.values() if not p.get("is_master"))
+        if player.get("is_master") or getattr(self, "test_mode", False):
+            level, source = 3, "master"
+        elif bard:
+            level, source = 3, "bard"
+        else:
+            kills = self._bestiary_payload_for_pid(pid).get(monster.get("type"), 0)
+            level, source = _bestiary_level(kills), "bestiary"
+        await self.send_to(pid, {"type": "monster_knowledge_state", "monster_id": str(monster["id"]),
+                                 "level": level, "knowledge_source": source})
+
     async def handle_open_quarto(self, pid, owner=None):
         p = self.players.get(pid)
         if not p or not self._em_cidade(pid) or not self._refugio_unlocked(): return
@@ -48501,14 +48539,7 @@ class GameRoom(TutorialTraining):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
-        await self.broadcast(
-            msg_state, skip=self._conexoes_fora(),
-            personalize=lambda pid, msg: {
-                **msg,
-                "bestiary": self._bestiary_payload_for_pid(pid),
-                "bestiary_levels": {kind: _bestiary_level(kills)
-                                    for kind, kills in self._bestiary_payload_for_pid(pid).items()},
-            })
+        await self.broadcast(msg_state, skip=self._conexoes_fora())
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.
@@ -49769,6 +49800,8 @@ async def handler(ws):
                     if room: await room.handle_open_refugio(pid)
                 elif t == "open_adventurer_diary":
                     if room: await room.handle_open_adventurer_diary(pid)
+                elif t == "inspect_monster":
+                    if room: await room.handle_inspect_monster(pid, msg.get("monster_id"))
                 elif t == "open_quarto":
                     if room: await room.handle_open_quarto(pid, msg.get("owner"))
                 elif t == "refugio_store":

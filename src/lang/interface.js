@@ -51,6 +51,8 @@ window.LANG_INTERFACE = {
   "ui.diario.aventura.sombras_minas": {"en": "Deepstone Mines", "pt": "Minas de Pedra-Funda"},
   "ui.diario.aventura.sombras_covil": {"en": "Blackclaw Lair", "pt": "Covil da Garra Negra"},
   "ui.diario.erro": {"en": "Could not open the journal. Try again from the Refuge.", "pt": "Não foi possível abrir o diário. Tente novamente pelo Refúgio."},
+  "ui.diario.carregando": {"en": "Opening the journal…", "pt": "Abrindo o diário…"},
+  "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
   "dado.acerto": {

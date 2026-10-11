@@ -1893,7 +1893,7 @@ function _renderRefugioPainel(msg){
   const journalButton=document.createElement('button');
   journalButton.type='button'; journalButton.className='ref-chest-open diary-open';
   journalButton.dataset.gamepadAction='activate'; journalButton.textContent=t('ui.diario.abrir');
-  journalButton.onclick=()=>{_adventurerDiaryReturnFocus=journalButton;GS.openAdventurerDiary();};
+  journalButton.onclick=()=>_solicitarDiarioAventureiros(journalButton);
   ov.querySelector('.refugio-box')?.insertBefore(journalButton,ov.querySelector('.refugio-grid'));
   // Os dois baús entram como botão no topo: o pessoal só pela lista de quartos era
   // fácil demais de ler como "visitar o quarto de alguém" em vez de "abrir meu baú".
@@ -1954,7 +1954,35 @@ function _renderAdventurerDiaryPage(page,msg){
   const entries=(msg.bestiary||[]).filter(entry=>entry&&Number(entry.level)>0);
   return entries.length?entries.map(entry=>`<article class="diario-entry diario-creature"><div class="diario-entry-head"><strong>${_esc(entry.emoji||'👾')} ${_esc(entry.name||entry.type)}</strong><small>${t('ui.diario.abates',{n:Number(entry.kills)||0})}</small></div><div class="monster-inspector-sheet">${fichaInimigoTooltipHTML(entry,entry.knowledge_source==='bard',null,entry.level)}</div></article>`).join(''):`<p class="diario-empty">${t('ui.diario.sem_bestiario')}</p>`;
 }
+let _adventurerDiaryPendingTimer=null;
+function _solicitarDiarioAventureiros(returnFocus=_adventurerDiaryReturnFocus){
+  if(returnFocus)_adventurerDiaryReturnFocus=returnFocus;
+  _renderAdventurerDiaryLoading(false);
+  GS.openAdventurerDiary();
+  clearTimeout(_adventurerDiaryPendingTimer);
+  _adventurerDiaryPendingTimer=setTimeout(()=>_renderAdventurerDiaryLoading(true),9000);
+}
+function _renderAdventurerDiaryLoading(canRetry){
+  document.getElementById('diario-aventureiros-overlay')?.remove();
+  const overlay=document.createElement('div'); overlay.id='diario-aventureiros-overlay'; overlay.className='diario-aventureiros-overlay';
+  const message=canRetry?t('ui.diario.erro'):t('ui.diario.carregando');
+  overlay.innerHTML=`<section class="diario-book diario-loading" role="dialog" aria-modal="true" aria-labelledby="diario-title"><header><h2 id="diario-title">${t('ui.diario.titulo')}</h2><button type="button" data-diary-close data-gamepad-action="activate" aria-label="${t('ui.diario.fechar')}">✕</button></header><main aria-live="polite"><span class="diario-spinner" aria-hidden="true">📖</span><p>${message}</p>${canRetry?`<button type="button" data-diary-retry data-gamepad-action="activate">${t('ui.diario.tentar_novamente')}</button>`:''}</main></section>`;
+  document.body.appendChild(overlay);
+  const close=()=>{clearTimeout(_adventurerDiaryPendingTimer);_adventurerDiaryPendingTimer=null;overlay.remove();_adventurerDiaryReturnFocus?.focus?.();_adventurerDiaryReturnFocus=null;};
+  overlay.querySelector('[data-diary-close]').onclick=close;
+  overlay.querySelector('[data-diary-retry]')?.addEventListener('click',()=>_solicitarDiarioAventureiros());
+  overlay.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();return;}
+    if(e.key!=='Tab')return;
+    const focusable=[...overlay.querySelectorAll('button:not(:disabled)')];
+    if(focusable.length<2)return;
+    if(e.shiftKey&&document.activeElement===focusable[0]){e.preventDefault();focusable.at(-1).focus();}
+    else if(!e.shiftKey&&document.activeElement===focusable.at(-1)){e.preventDefault();focusable[0].focus();}
+  });
+  overlay.querySelector('[data-diary-close]')?.focus();
+}
 function _renderAdventurerDiary(msg){
+  clearTimeout(_adventurerDiaryPendingTimer); _adventurerDiaryPendingTimer=null;
   document.getElementById('diario-aventureiros-overlay')?.remove();
   const overlay=document.createElement('div'); overlay.id='diario-aventureiros-overlay'; overlay.className='diario-aventureiros-overlay';
   overlay.innerHTML=`<section class="diario-book" role="dialog" aria-modal="true" aria-labelledby="diario-title"><header><div><h2 id="diario-title">${t('ui.diario.titulo')}</h2><p>${t('ui.diario.subtitulo')}</p></div><button type="button" data-diary-close data-gamepad-action="activate" aria-label="${t('ui.diario.fechar')}">✕</button></header><nav class="diario-tabs" role="tablist" aria-label="${t('ui.diario.titulo')}"><button type="button" role="tab" aria-selected="true" data-diary-page="missions" data-gamepad-action="activate">${t('ui.diario.pagina_missoes')}</button><button type="button" role="tab" aria-selected="false" data-diary-page="items" data-gamepad-action="activate">${t('ui.diario.pagina_itens')}</button><button type="button" role="tab" aria-selected="false" data-diary-page="bestiary" data-gamepad-action="activate">${t('ui.diario.pagina_bestiario')}</button></nav><main class="diario-content" data-diary-content tabindex="0"></main><footer><button type="button" data-diary-close>${t('ui.diario.fechar')}</button></footer></section>`;
@@ -17701,12 +17729,6 @@ function calcularCustoCancao(ativos){
   return { fome, sede };
 }
 
-// Conhecimento das Lendas é coletivo: basta um Henrique vivo no grupo.
-function _partyTemBardoVivo(){
-  const st = GS.gameState;
-  return !!(st && st.players && st.players.some(p => p.class_id === 'bard' && p.alive));
-}
-
 // Tooltip do inimigo. `full=false` → só o nome + HP/CA (visão comum).
 // `full=true` (com Henrique no grupo) → ficha completa do monstro.
 // ── Prévia de acerto no tooltip do monstro ────────────────────────────────────
@@ -17751,10 +17773,17 @@ GS.on('previsaoAtaque', msg => {
   if(prev) el.innerHTML = _htmlPrevisaoAtaque(prev);
 });
 
+const _monsterKnowledgeLevels = new Map();
+GS.on('enterDungeon',()=>_monsterKnowledgeLevels.clear());
 function _bestiarioNivel(monster){
-  const kills = Number(GS.gameState?.bestiary?.[monster?.type] || 0);
-  return kills >= 50 ? 3 : kills >= 30 ? 2 : kills >= 15 ? 1 : 0;
+  return Number(_monsterKnowledgeLevels.get(String(monster?.id))?.level || 0);
 }
+GS.on('monsterKnowledgeState', msg=>{
+  if(String(msg.monster_id)!==String(_inspectedMonsterId))return;
+  _monsterKnowledgeLevels.set(String(msg.monster_id),{level:Number(msg.level)||0,source:msg.knowledge_source||'bestiary'});
+  const monster=(GS.gameState?.monsters||[]).find(m=>String(m.id)===String(msg.monster_id)&&m.hp>0);
+  if(monster){_renderMonsterInspector(monster);if(mode3D&&g3)renderMap3D(GS.gameState);else if(!mode3D)renderMap(GS.gameState);}
+});
 GS.on('bestiaryMilestone', msg => {
   toast(t('ui.bestiario.marco', {n:msg.kills}), 'var(--gold,#c8a951)');
 });
@@ -24428,7 +24457,8 @@ function _renderMonsterInspector(monster){
     panel.setAttribute('role','dialog'); panel.setAttribute('aria-modal','false'); document.body.appendChild(panel);
   }
   const level=(GS.isMaster()||GS.gameState?.test_mode)?3:_bestiarioNivel(monster);
-  const bard=_partyTemBardoVivo();
+  const knowledge=_monsterKnowledgeLevels.get(String(monster.id));
+  const bard=knowledge?.source==='bard';
   const signature=[monster.id,monster.hp,monster.max_hp,monster.ac,level,bard,JSON.stringify(monster.ability_uses||{}),GS.gameState?.round].join('|');
   panel.style.display='block'; if(panel.dataset.signature===signature)return; panel.dataset.signature=signature;
   panel.innerHTML=`<div class="monster-inspector-head"><strong>${monster.emoji||'👾'} ${_esc(monster.name)}</strong>`
@@ -24451,6 +24481,7 @@ function _abrirInspecaoMonstro(tx,ty){
   const vision=me?computeVisionSet(state,me):new Set();
   if(!GS.monsterTiles(monster).some(([x,y])=>vision.has(`${x},${y}`)))return false;
   _inspectedMonsterId=String(monster.id); $('tooltip').style.display='none'; _renderMonsterInspector(monster);
+  GS.inspectMonster?.(monster.id);
   if(mode3D&&g3)renderMap3D(state);else if(!mode3D)renderMap(state);
   return true;
 }

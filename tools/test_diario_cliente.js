@@ -8,6 +8,7 @@ const check = (label, ok) => { console.log(`${ok ? '✅' : '❌'} ${label}`); if
 
 console.log('[1] protocolo e acesso pelo refúgio');
 check('cliente envia solicitação nativa do diário', /function openAdventurerDiary\(\)\s*\{\s*send\(\{ type: 'open_adventurer_diary' \}\)/.test(state));
+check('abertura informa espera e permite tentar novamente', /setTimeout\(\(\)=>_renderAdventurerDiaryLoading\(true\),9000\)/.test(game) && /data-diary-retry/.test(game));
 check('resposta privada atualiza evento de estado', /case 'adventurer_diary_state':[\s\S]{0,100}adventurerDiaryState/.test(state));
 check('livro abre a partir do painel do refúgio', game.includes("className='ref-chest-open diary-open'") && game.includes('GS.openAdventurerDiary()'));
 

@@ -1,7 +1,10 @@
 """Cobertura do bestiário persistente por conta (sem gravar dados reais)."""
 import copy
+import asyncio
+import inspect
 import os
 import sys
+from unittest.mock import AsyncMock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server
@@ -50,7 +53,36 @@ def main():
         check("alpha recebe somente o próprio perfil", payload_alpha.get("orc") == 15 and "skeleton" in payload_alpha)
         check("beta não recebe conhecimento de alpha", payload_beta == {})
 
-        print("[3] migração sanitiza contadores inválidos")
+        push_state_source = inspect.getsource(server.GameRoom.push_state)
+        check("broadcast não inclui bestiário nem níveis", "bestiary_levels" not in push_state_source
+              and '"bestiary"' not in push_state_source)
+        check("inspeção privada de monstro tem handler dedicado",
+              hasattr(server.GameRoom, "handle_inspect_monster"))
+
+        print("[3] inspeção só retorna conhecimento ao solicitante visível")
+        room = server.GameRoom("INSPECT")
+        room.phase = "playing"
+        room.players = {"p1": {"id": "p1", "pos": [1, 1], "spd": 5, "hp": 10,
+                                "alive": True, "class_id": "fighter"}}
+        room.monsters = {"orc1": {"id": "orc1", "type": "orc", "name": "Orc", "pos": [2, 1],
+                                   "hp": 8, "size": [1, 1]}}
+        room.account_by_pid = {"p1": "alpha"}
+        room.savegame = {"members": {"alpha": {}}}
+        room._em_cidade = lambda _pid: False
+        room._get_raio_visao = lambda _player: 5
+        room._tem_linha_de_visao = lambda _a, _b: True
+        room.send_to = AsyncMock()
+        asyncio.run(room.handle_inspect_monster("p1", "orc1"))
+        private_result = room.send_to.await_args.args[1]
+        check("resposta privada retorna só nível/autorização", private_result == {
+            "type": "monster_knowledge_state", "monster_id": "orc1", "level": 1,
+            "knowledge_source": "bestiary"})
+        room.send_to.reset_mock()
+        room._tem_linha_de_visao = lambda _a, _b: False
+        asyncio.run(room.handle_inspect_monster("p1", "orc1"))
+        check("monstro sem linha de visão não gera resposta", room.send_to.await_count == 0)
+
+        print("[4] migração sanitiza contadores inválidos")
         legacy = {"username": "legacy", "password_hash": "x", "profile": {
             "bestiary": {"orc": {"kills": 4}, "bad id": {"kills": 7}, "rat": -1}}}
         server.ensure_account_profile(legacy)
