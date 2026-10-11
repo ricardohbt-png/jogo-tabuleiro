@@ -3802,6 +3802,46 @@ window.LANG_INTERFACE = {
     "en": "uses your main action",
     "pt": "gasta a ação principal"
   },
+  "ui.hud.gm_log_abrir": {
+    "en": "Open the Game Master panel",
+    "pt": "Abrir painel Mestre do Jogo"
+  },
+  "ui.hud.gm_log_abrir_curto": {
+    "en": "↑ GAME MASTER",
+    "pt": "↑ MESTRE DO JOGO"
+  },
+  "ui.hud.gm_log_auto_curto": {
+    "en": "Auto-hide",
+    "pt": "Recolher"
+  },
+  "ui.hud.gm_log_fixo_curto": {
+    "en": "Fixed",
+    "pt": "Fixo"
+  },
+  "ui.hud.gm_log_fixar_curto": {
+    "en": "Pin",
+    "pt": "Fixar"
+  },
+  "ui.hud.gm_log_fixar_redimensionar": {
+    "en": "Pin the panel and resize the board",
+    "pt": "Fixar painel e redimensionar o tabuleiro"
+  },
+  "ui.hud.gm_log_liberar_curto": {
+    "en": "Unpin",
+    "pt": "Liberar"
+  },
+  "ui.hud.gm_log_liberar_espaco": {
+    "en": "Unpin the panel and reclaim board space",
+    "pt": "Desafixar painel e liberar espaço no tabuleiro"
+  },
+  "ui.hud.gm_log_manter_fixo": {
+    "en": "Keep the panel fixed",
+    "pt": "Manter painel sempre fixo"
+  },
+  "ui.hud.gm_log_recolher_auto": {
+    "en": "Enable auto-hide and expand the board",
+    "pt": "Recolher automaticamente e ampliar o tabuleiro"
+  },
   "ui.hud.golpe_decisivo": {
     "en": "Decisive Strike",
     "pt": "Golpe Decisivo"
@@ -4049,6 +4089,46 @@ window.LANG_INTERFACE = {
   "ui.hud.orbit_hint_altura": {
     "en": "🖱 left: orbit &nbsp;·&nbsp; right: pan &nbsp;·&nbsp; right + scroll: altitude ±1",
     "pt": "🖱 esq: orbitar &nbsp;·&nbsp; dir: pan &nbsp;·&nbsp; dir + scroll: altura ±1"
+  },
+  "ui.hud.painel_abrir": {
+    "en": "Open the side panel",
+    "pt": "Abrir painel lateral"
+  },
+  "ui.hud.painel_auto_curto": {
+    "en": "Auto-hide",
+    "pt": "Recolher"
+  },
+  "ui.hud.painel_fixo_curto": {
+    "en": "Fixed",
+    "pt": "Fixo"
+  },
+  "ui.hud.painel_fixar_curto": {
+    "en": "Pin",
+    "pt": "Fixar"
+  },
+  "ui.hud.painel_fixar_redimensionar": {
+    "en": "Pin panel and resize the board",
+    "pt": "Fixar painel e redimensionar o tabuleiro"
+  },
+  "ui.hud.painel_lateral": {
+    "en": "Side panel",
+    "pt": "Painel lateral"
+  },
+  "ui.hud.painel_liberar_espaco": {
+    "en": "Unpin panel and reclaim board space",
+    "pt": "Desafixar painel e liberar espaço no tabuleiro"
+  },
+  "ui.hud.painel_liberar_curto": {
+    "en": "Unpin",
+    "pt": "Liberar"
+  },
+  "ui.hud.painel_manter_fixo": {
+    "en": "Keep the panel fixed",
+    "pt": "Manter painel sempre fixo"
+  },
+  "ui.hud.painel_recolher_auto": {
+    "en": "Enable auto-hide and expand the board",
+    "pt": "Recolher automaticamente e ampliar o tabuleiro"
   },
   "ui.hud.parar": {
     "en": "stop",

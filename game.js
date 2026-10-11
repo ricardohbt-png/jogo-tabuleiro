@@ -380,7 +380,7 @@ document.body.innerHTML = `
         <button id="btn-cam-reset" onclick="resetCamera3D()" data-i18n-title="ui.hud.cam_reset_title" title="Visão isométrica padrão (R)">⌂ Reset</button>
         <button id="btn-tile-spacing-reset" onclick="restoreTileSpacing3D()" data-i18n-title="ui.hud.espaco_reset_title" title="Voltar ao espaçamento anterior de 0,94" data-i18n="ui.hud.espaco_voltar">↶ Espaço 0,94</button>
         <button id="btn-3d-toggle" onclick="toggle3D()" data-guia="botao:camera_3d" data-gamepad-action="activate" data-i18n-title="ui.hud.toggle3d_title" title="Alternar visão 3D / 2D">🎲 3D</button>
-        <button id="btn-ajuda" onclick="toggleAjuda()" data-i18n-title="ui.hud.ajuda_title" title="Como jogar">❓</button>
+        <button id="btn-ajuda" onclick="toggleAjuda(event)" data-i18n-title="ui.hud.ajuda_title" title="Como jogar">❓</button>
       </div>
     </div>
     <div id="active-effects-hud" aria-label="Efeitos ativos" hidden></div>
@@ -407,6 +407,10 @@ document.body.innerHTML = `
     <div id="gm-log">
       <div id="gm-log-header">
         <span data-i18n="ui.hud.mestre_do_jogo">📖 MESTRE DO JOGO</span>
+        <div id="gm-log-layout-controls">
+          <button type="button" id="gm-log-pin" data-gamepad-action="activate" tabindex="0" aria-pressed="false">↔</button>
+          <button type="button" id="gm-log-mode" data-gamepad-action="activate" tabindex="0">⤢</button>
+        </div>
         <button id="gm-log-toggle" type="button" aria-expanded="true"
                 aria-label="Minimizar Mestre do Jogo" title="Minimizar Mestre do Jogo"
                 onclick="toggleGMLog()">−</button>
@@ -415,9 +419,18 @@ document.body.innerHTML = `
       <div id="dice-history"></div>
       <div id="gm-log-body"></div>
     </div>
+    <button type="button" id="gm-log-edge" data-gamepad-action="activate" tabindex="0"
+            aria-controls="gm-log" aria-expanded="false" hidden>↑</button>
   </div>
 
   <div id="side-panel">
+    <div id="side-panel-tools">
+      <span data-i18n="ui.hud.painel_lateral">Painel lateral</span>
+      <div>
+        <button type="button" id="side-panel-pin" data-gamepad-action="activate" tabindex="0" aria-pressed="false">↔</button>
+        <button type="button" id="side-panel-mode" data-gamepad-action="activate" tabindex="0">⤢</button>
+      </div>
+    </div>
     <button id="ficha-close-btn" onclick="toggleFichaDrawer(false)" data-i18n="ui.hud.fechar_ficha">✕ Fechar ficha</button>
     <div id="players-panel">
       <div class="ph" data-i18n="ui.hud.aventureiros">Aventureiros</div>
@@ -446,6 +459,7 @@ document.body.innerHTML = `
       </div>
     </div>
   </div>
+  <button type="button" id="side-panel-edge" data-gamepad-action="activate" tabindex="0" aria-controls="side-panel" aria-expanded="false" hidden>‹</button>
   <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
   <!-- Celular: fileira de menus do jogador (Personagem, Inventário, Habilidades, Magias) -->
@@ -909,7 +923,6 @@ function togglePauseMenu(open){
 function returnToInitialMenu(){
   togglePauseMenu(false);
   document.getElementById('loja-overlay')?.remove();
-  document.getElementById('painel-ajuda')?.remove();
   document.getElementById('ficha-overlay-jogo')?.remove();
   if(typeof closeTargetModal === 'function') closeTargetModal();
   if(typeof closeChestWindow === 'function') closeChestWindow();
@@ -15172,7 +15185,8 @@ function _receiveAttackFeedback(msg){
   const id=String(msg.attack_id), now=performance.now();
   if(_cenaAtiva()){
     const base = {attack_id:id, attacker_key:_entityKeyById(msg.attacker_id), target_key:_entityKeyById(msg.target_id),
-      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos, projectile: msg.projectile || null, impacto: msg.impacto || null};
+      attacker_pos:msg.attacker_pos, target_pos:msg.target_pos, projectile: msg.projectile || null,
+      impacto: msg.impacto || null, weapon_id: msg.impact_weapon_id || null};
     if(msg.phase==='start') CombatScene.start(base, now);
     else if(msg.phase==='result') CombatScene.result({...base, hit:!!msg.hit, crit:!!msg.crit,
       natural_critical:!!msg.natural_critical, natural_fumble:!!msg.natural_fumble}, now);
@@ -15186,6 +15200,7 @@ function _receiveAttackFeedback(msg){
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
       holyStrike:!!msg.holy_strike, holyLevel:Math.max(1,Math.min(3,Number(msg.holy_level)||1)), holyType:msg.holy_type||'holy', holyStrikeAt:msg.holy_strike&&!_cenaAtiva()?now+_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS):null,
       area:!!(msg.projectile && msg.projectile.area), impacto: msg.impacto || null,
+      weaponId: msg.impact_weapon_id || null,
       itemId: (msg.projectile && msg.projectile.item_id) || null,
       result:false, startedAt:now, resultAt:now,
       prepDuration:_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS),
@@ -15199,7 +15214,7 @@ function _receiveAttackFeedback(msg){
       sneakAttack:!!msg.sneak_attack&&!!msg.hit,
       sneakAttackAt:!!msg.sneak_attack&&!!msg.hit&&(!_cenaAtiva()||!CombatScene.phaseOf(id))?now+f.prepDuration:null});
     const cue = (msg.natural_critical || msg.crit)
-      ? {kind:'critical', opts:{repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1}}
+      ? {kind:'critical', opts:{repeatKey:'critical', power:msg.natural_critical ? 1.3 : 1.1, volume:1.3}}
       : (!msg.hit || msg.natural_fumble) ? {kind:'error', opts:{repeatKey:'error', volume:.82}} : null;
     if(_cenaAtiva() && CombatScene.phaseOf(id)){
       // Há cena para este ataque: o banner e o cue de crítico/erro esperam o
@@ -15210,7 +15225,7 @@ function _receiveAttackFeedback(msg){
     } else {
       // Sem cena (2D ou cena desligada): o golpe soa no resultado.
       const tocou = _somGolpe({ hit: !!msg.hit, crit: !!(msg.crit || msg.natural_critical),
-        fumble: !!msg.natural_fumble, impacto: f.impacto, area: f.area,
+        fumble: !!msg.natural_fumble, impacto: f.impacto, weaponId: f.weaponId, area: f.area,
         targetPos: msg.target_pos, targetKey: _entityKeyById(msg.target_id) });
       try{ _somAtaqueElemental({ attackerKey: _entityKeyById(msg.attacker_id), targetPos: msg.target_pos }); }catch(e){}
       try{ _somExplosaoItem(f.itemId, msg.target_pos, f.area || !!msg.hit); }catch(e){}   // 2D: granada/incendiário
@@ -26818,25 +26833,21 @@ function updateDiceHistory(msg){
   ).join('');
 }
 
-// ── Painel "Como jogar" — criado sob demanda (botão ❓ do cabeçalho) ─────────
-function toggleAjuda(){
-  let p = $('painel-ajuda');
-  if(p){ p.remove(); return; }
-  p = document.createElement('div');
-  p.id = 'painel-ajuda';
-  p.innerHTML = `
-    <div class="ajuda-box">
-      <h3>${t('ui.ajuda.titulo')}</h3>
-      <p>${t('ui.ajuda.turno')}</p>
-      <p>${t('ui.ajuda.objetivo')}</p>
-      <p>${t('ui.ajuda.dados')}</p>
-      <p>${t('ui.ajuda.fome_sede')}</p>
-      <p>${t('ui.ajuda.camera')}</p>
-      <section class="ajuda-joystick"><h4>${t('ui.ajuda.joystick_titulo')}</h4><p>${t('ui.ajuda.joystick_turno')}</p><p>${t('ui.ajuda.joystick_camera')}</p><p>${t('ui.ajuda.joystick_menu')}</p></section>
-      <button class="btn-secondary" onclick="toggleAjuda()">${t('ui.geral.fechar')}</button>
-    </div>`;
-  document.body.appendChild(p);
-  _gamepadFocusMapPoint('#painel-ajuda button');
+// ── Atalho do botão ❓ para a seção "Como jogar" do menu de configurações ──
+function toggleAjuda(event){
+  event?.stopPropagation();
+  _toggleConfigPop(true);
+  const pop = document.getElementById('audio-pop');
+  const toggle = document.getElementById('cfg-help-toggle');
+  const controls = document.getElementById('cfg-help-controls');
+  if(!toggle || !controls) return;
+  if(controls.hidden){
+    controls.hidden = false;
+    toggle.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+  }
+  if(pop) pop.style.width = 'min(390px, calc(100vw - 28px))';
+  requestAnimationFrame(() => _gamepadSetUiFocus(toggle));
 }
 
 // ── Som do disparo de armadilha de área (mensagem pública armadilha_disparo) ─
@@ -27054,6 +27065,134 @@ function toggleGMLog(){
 }
 
 try{ _setGMLogMinimized(localStorage.getItem('lfh_gm_log_minimized')==='1', false); }catch(e){}
+
+// Recolhimento completo do Mestre do Jogo, independente do minimizador interno.
+// A prévia flutua sobre o tabuleiro; fixar devolve o painel ao fluxo vertical.
+const _gmLogPanelState = {
+  mode: (() => { try { return localStorage.getItem('lfh_gm_log_mode') === 'auto' ? 'auto' : 'fixed'; } catch(_) { return 'fixed'; } })(),
+  preview: false,
+  docked: false,
+  openTimer: null,
+  closeTimer: null
+};
+function _gmLogPanelIsDesktop(){ return window.matchMedia('(min-width: 821px)').matches; }
+function _gmLogPanelSetMode(mode){
+  clearTimeout(_gmLogPanelState.openTimer);
+  clearTimeout(_gmLogPanelState.closeTimer);
+  _gmLogPanelState.mode = mode === 'auto' ? 'auto' : 'fixed';
+  _gmLogPanelState.preview = false;
+  _gmLogPanelState.docked = false;
+  try { localStorage.setItem('lfh_gm_log_mode', _gmLogPanelState.mode); } catch(_) {}
+  if(_gmLogPanelState.mode === 'auto') document.activeElement?.blur?.();
+  _gmLogPanelApply();
+}
+function _gmLogPanelApply(){
+  const screen = $('screen-game'), log = $('gm-log');
+  const edge = $('gm-log-edge'), modeButton = $('gm-log-mode'), pinButton = $('gm-log-pin');
+  if(!screen || !log) return;
+  const automatic = _gmLogPanelIsDesktop() && _gmLogPanelState.mode === 'auto';
+  screen.classList.toggle('gm-log-auto-hide', automatic);
+  screen.classList.toggle('gm-log-preview', automatic && _gmLogPanelState.preview && !_gmLogPanelState.docked);
+  screen.classList.toggle('gm-log-docked', automatic && _gmLogPanelState.docked);
+  if(edge){
+    edge.hidden = !automatic || _gmLogPanelState.preview || _gmLogPanelState.docked;
+    edge.setAttribute('aria-expanded', String(_gmLogPanelState.preview || _gmLogPanelState.docked));
+    edge.textContent = t('ui.hud.gm_log_abrir_curto');
+    edge.setAttribute('aria-label', t('ui.hud.gm_log_abrir'));
+    edge.title = t('ui.hud.gm_log_abrir');
+  }
+  if(modeButton){
+    const fixed = _gmLogPanelState.mode !== 'auto';
+    modeButton.textContent = t(fixed ? 'ui.hud.gm_log_auto_curto' : 'ui.hud.gm_log_fixo_curto');
+    modeButton.title = t(fixed ? 'ui.hud.gm_log_recolher_auto' : 'ui.hud.gm_log_manter_fixo');
+    modeButton.setAttribute('aria-label', modeButton.title);
+    modeButton.setAttribute('aria-pressed', String(!fixed));
+  }
+  if(pinButton){
+    pinButton.hidden = !automatic;
+    pinButton.textContent = t(_gmLogPanelState.docked ? 'ui.hud.gm_log_liberar_curto' : 'ui.hud.gm_log_fixar_curto');
+    pinButton.title = t(_gmLogPanelState.docked ? 'ui.hud.gm_log_liberar_espaco' : 'ui.hud.gm_log_fixar_redimensionar');
+    pinButton.setAttribute('aria-label', pinButton.title);
+    pinButton.setAttribute('aria-pressed', String(_gmLogPanelState.docked));
+  }
+}
+function _gmLogPanelPreview(open){
+  if(_gmLogPanelState.mode !== 'auto' || !_gmLogPanelIsDesktop()) return;
+  clearTimeout(_gmLogPanelState.openTimer);
+  clearTimeout(_gmLogPanelState.closeTimer);
+  if(open){
+    _gmLogPanelState.openTimer = setTimeout(() => {
+      _gmLogPanelState.preview = true;
+      _gmLogPanelApply();
+    }, 140);
+  } else {
+    _gmLogPanelState.closeTimer = setTimeout(() => {
+      const focused = document.activeElement, log = $('gm-log'), edge = $('gm-log-edge');
+      if(_gmLogPanelState.docked || log?.contains(focused) || focused === edge
+        || (_gamepadUi?.focusEl && log?.contains(_gamepadUi.focusEl))) return;
+      _gmLogPanelState.preview = false;
+      _gmLogPanelApply();
+    }, 550);
+  }
+}
+function _gmLogPanelToggleMode(){
+  _gmLogPanelSetMode(_gmLogPanelState.mode === 'fixed' ? 'auto' : 'fixed');
+}
+function _gmLogPanelTogglePin(){
+  if(_gmLogPanelState.mode !== 'auto') return;
+  if(_gmLogPanelState.docked){
+    _gmLogPanelState.docked = false;
+    _gmLogPanelState.preview = true;
+  } else {
+    _gmLogPanelState.preview = false;
+    _gmLogPanelState.docked = true;
+  }
+  _gmLogPanelApply();
+}
+function _gmLogPanelClose(){
+  if(_gmLogPanelState.mode !== 'auto' || (!_gmLogPanelState.preview && !_gmLogPanelState.docked)) return false;
+  clearTimeout(_gmLogPanelState.openTimer);
+  clearTimeout(_gmLogPanelState.closeTimer);
+  _gmLogPanelState.preview = false;
+  _gmLogPanelState.docked = false;
+  const log = $('gm-log');
+  if(log?.contains(document.activeElement)) document.activeElement.blur?.();
+  if(_gamepadUi?.focusEl && log?.contains(_gamepadUi.focusEl)) _gamepadSetUiFocus(null);
+  _gmLogPanelApply();
+  return true;
+}
+const _gmLogEdge = $('gm-log-edge'), _gmLogPanel = $('gm-log');
+_gmLogEdge?.addEventListener('pointerenter', () => _gmLogPanelPreview(true));
+_gmLogEdge?.addEventListener('pointerleave', () => _gmLogPanelPreview(false));
+_gmLogEdge?.addEventListener('focus', () => _gmLogPanelPreview(true));
+_gmLogEdge?.addEventListener('focusout', e => {
+  if(!_gmLogPanel?.contains(e.relatedTarget)) _gmLogPanelPreview(false);
+});
+_gmLogEdge?.addEventListener('click', () => {
+  clearTimeout(_gmLogPanelState.openTimer);
+  _gmLogPanelState.preview = true;
+  _gmLogPanelApply();
+  if(document.activeElement === _gmLogEdge){
+    requestAnimationFrame(() => {
+      const pin = $('gm-log-pin');
+      if(pin && !pin.hidden){
+        if(_gamepadInput?.active) _gamepadSetUiFocus(pin);
+        else pin.focus({preventScroll:true});
+      }
+    });
+  }
+});
+_gmLogPanel?.addEventListener('pointerenter', () => clearTimeout(_gmLogPanelState.closeTimer));
+_gmLogPanel?.addEventListener('pointerleave', () => _gmLogPanelPreview(false));
+_gmLogPanel?.addEventListener('focusin', () => clearTimeout(_gmLogPanelState.closeTimer));
+_gmLogPanel?.addEventListener('focusout', e => {
+  if(!_gmLogPanel.contains(e.relatedTarget)) _gmLogPanelPreview(false);
+});
+$('gm-log-mode')?.addEventListener('click', _gmLogPanelToggleMode);
+$('gm-log-pin')?.addEventListener('click', _gmLogPanelTogglePin);
+window.matchMedia('(min-width: 821px)').addEventListener?.('change', _gmLogPanelApply);
+_gmLogPanelApply();
+I18N.on(() => _gmLogPanelApply());
 
 function appendGM(text){
   const el=$('gm-log-body');
@@ -28998,6 +29137,14 @@ function handleGameOver(msg){
 }
 
 document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && _sidePanelClose()){
+    e.preventDefault();
+    return;
+  }
+  if(e.key === 'Escape' && _gmLogPanelClose()){
+    e.preventDefault();
+    return;
+  }
   if(e.key === 'Escape' && _cancelarHabilidadeDoAtalho()){
     e.preventDefault(); return;
   }
@@ -29383,9 +29530,9 @@ function _gamepadUiScope(){
   const open = [...document.querySelectorAll(
     '#pause-menu.open, [id$="-modal"].open, [id$="-overlay"].open, .ficha-cidade-panel.open,' +
     '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay, #city-tour-card,' +
-    '#campaign-scene-overlay, #ficha-overlay-jogo, #encerrar-missao-overlay, #city-dungeon-entry,' +
+    '#campaign-scene-overlay, #ficha-overlay-jogo, #encerrar-missao-overlay, #city-dungeon-entry, #audio-pop,' +
     '#instrumento-dir-overlay, #improviso-overlay, #ficha-monstro-overlay,' +
-    '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-ajuda, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
+    '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
   )].filter(_gamepadLayerVisible);
   return open.at(-1) || document.querySelector('.screen.active');
 }
@@ -30118,6 +30265,8 @@ function _gamepadToggleMainMenu(){
 function _gamepadCancel(){
   _clearGamepadEndTurnConfirm();
   _gamepadRumble('cancel');
+  if(_sidePanelClose()) return;
+  if(_gmLogPanelClose()) return;
   if(_cancelarPreviaMovimento()) return;
   _gamepadResetCursorToPlayer(GS.gameState);
   if(_aimSessionIs()){
@@ -30202,7 +30351,6 @@ function _gamepadCancel(){
   if(_gamepadCharacterMenuKind() === 'magias'){ fecharMenuMagias(); return; }
   if(_gamepadCharacterMenuKind() === 'status'){ fecharMenuStatus(); return; }
   if(_gamepadBackFromShop()) return;
-  if($('painel-ajuda')){ toggleAjuda(); return; }
   // Voltar pelos mapas segue a hierarquia visual: detalhe → mapa-múndi → cidade.
   if(_worldMapEl && _gamepadLayerVisible(_worldMapEl)){
     if(_worldMapEl.querySelector('#worldmap-location-frame')) showWorldMap();
@@ -31045,6 +31193,133 @@ function toggleFichaDrawer(open){
   document.body.classList.toggle('drawer-open', willOpen);
 }
 
+// Preferência do painel lateral: no modo recolhível, a alça abre uma prévia
+// sobre o mapa; o botão de alfinete reserva a coluna e redimensiona o tabuleiro.
+const _sidePanelState = {
+  mode: (() => { try { return localStorage.getItem('lfh_side_panel_mode') === 'auto' ? 'auto' : 'fixed'; } catch(_) { return 'fixed'; } })(),
+  preview: false,
+  docked: false,
+  openTimer: null,
+  closeTimer: null
+};
+function _sidePanelIsDesktop(){ return window.matchMedia('(min-width: 821px)').matches; }
+function _sidePanelSetMode(mode){
+  clearTimeout(_sidePanelState.openTimer);
+  clearTimeout(_sidePanelState.closeTimer);
+  _sidePanelState.mode = mode === 'auto' ? 'auto' : 'fixed';
+  _sidePanelState.preview = false;
+  _sidePanelState.docked = false;
+  try { localStorage.setItem('lfh_side_panel_mode', _sidePanelState.mode); } catch(_) {}
+  if(_sidePanelState.mode === 'auto') document.activeElement?.blur?.();
+  _sidePanelApply();
+}
+function _sidePanelApply(){
+  const screen = $('screen-game'), panel = $('side-panel');
+  const edge = $('side-panel-edge'), modeButton = $('side-panel-mode'), pinButton = $('side-panel-pin');
+  if(!screen || !panel) return;
+  const desktop = _sidePanelIsDesktop(), automatic = desktop && _sidePanelState.mode === 'auto';
+  screen.classList.toggle('sidebar-auto-hide', automatic);
+  screen.classList.toggle('sidebar-preview', automatic && _sidePanelState.preview && !_sidePanelState.docked);
+  screen.classList.toggle('sidebar-docked', automatic && _sidePanelState.docked);
+  if(edge){
+    edge.hidden = !automatic || _sidePanelState.preview || _sidePanelState.docked;
+    edge.setAttribute('aria-label', t('ui.hud.painel_abrir'));
+    edge.setAttribute('aria-expanded', String(_sidePanelState.preview || _sidePanelState.docked));
+    edge.title = t('ui.hud.painel_abrir');
+  }
+  if(modeButton){
+    const fixed = _sidePanelState.mode !== 'auto';
+    modeButton.textContent = fixed ? t('ui.hud.painel_auto_curto') : t('ui.hud.painel_fixo_curto');
+    modeButton.title = t(fixed ? 'ui.hud.painel_recolher_auto' : 'ui.hud.painel_manter_fixo');
+    modeButton.setAttribute('aria-label', modeButton.title);
+    modeButton.setAttribute('aria-pressed', String(!fixed));
+  }
+  if(pinButton){
+    pinButton.hidden = !automatic;
+    pinButton.textContent = t(_sidePanelState.docked ? 'ui.hud.painel_liberar_curto' : 'ui.hud.painel_fixar_curto');
+    pinButton.title = t(_sidePanelState.docked ? 'ui.hud.painel_liberar_espaco' : 'ui.hud.painel_fixar_redimensionar');
+    pinButton.setAttribute('aria-label', pinButton.title);
+    pinButton.setAttribute('aria-pressed', String(_sidePanelState.docked));
+  }
+}
+function _sidePanelPreview(open){
+  if(_sidePanelState.mode !== 'auto' || !_sidePanelIsDesktop()) return;
+  clearTimeout(_sidePanelState.openTimer);
+  clearTimeout(_sidePanelState.closeTimer);
+  if(open){
+    _sidePanelState.openTimer = setTimeout(() => {
+      _sidePanelState.preview = true;
+      _sidePanelApply();
+    }, 140);
+  } else {
+    _sidePanelState.closeTimer = setTimeout(() => {
+      const focused = document.activeElement;
+      if(_sidePanelState.docked || _sidePanelElement?.contains(focused)
+        || focused === _sidePanelEdge || (_gamepadUi?.focusEl && _sidePanelElement?.contains(_gamepadUi.focusEl))) return;
+      _sidePanelState.preview = false;
+      _sidePanelApply();
+    }, 550);
+  }
+}
+function _sidePanelToggleMode(){
+  if(_sidePanelState.mode === 'fixed') _sidePanelSetMode('auto');
+  else _sidePanelSetMode('fixed');
+}
+function _sidePanelTogglePin(){
+  if(_sidePanelState.mode !== 'auto') return;
+  if(_sidePanelState.docked){
+    _sidePanelState.docked = false;
+    _sidePanelState.preview = true;
+  } else {
+    _sidePanelState.preview = false;
+    _sidePanelState.docked = true;
+  }
+  _sidePanelApply();
+}
+function _sidePanelClose(){
+  if(_sidePanelState.mode !== 'auto' || (!_sidePanelState.preview && !_sidePanelState.docked)) return false;
+  clearTimeout(_sidePanelState.openTimer);
+  clearTimeout(_sidePanelState.closeTimer);
+  _sidePanelState.preview = false;
+  _sidePanelState.docked = false;
+  if(_sidePanelElement?.contains(document.activeElement)) document.activeElement.blur?.();
+  if(_gamepadUi?.focusEl && _sidePanelElement?.contains(_gamepadUi.focusEl)) _gamepadSetUiFocus(null);
+  _sidePanelApply();
+  return true;
+}
+const _sidePanelEdge = $('side-panel-edge'), _sidePanelElement = $('side-panel');
+_sidePanelEdge?.addEventListener('pointerenter', () => _sidePanelPreview(true));
+_sidePanelEdge?.addEventListener('pointerleave', () => _sidePanelPreview(false));
+_sidePanelEdge?.addEventListener('focus', () => _sidePanelPreview(true));
+_sidePanelEdge?.addEventListener('focusout', e => {
+  if(!_sidePanelElement?.contains(e.relatedTarget)) _sidePanelPreview(false);
+});
+_sidePanelEdge?.addEventListener('click', () => {
+  clearTimeout(_sidePanelState.openTimer);
+  _sidePanelState.preview = true;
+  _sidePanelApply();
+  if(document.activeElement === _sidePanelEdge){
+    requestAnimationFrame(() => {
+      const pin = $('side-panel-pin');
+      if(pin && !pin.hidden){
+        if(_gamepadInput?.active) _gamepadSetUiFocus(pin);
+        else pin.focus({preventScroll:true});
+      }
+    });
+  }
+});
+_sidePanelElement?.addEventListener('pointerenter', () => { clearTimeout(_sidePanelState.closeTimer); });
+_sidePanelElement?.addEventListener('pointerleave', () => _sidePanelPreview(false));
+_sidePanelElement?.addEventListener('focusin', () => { clearTimeout(_sidePanelState.closeTimer); });
+_sidePanelElement?.addEventListener('focusout', e => {
+  if(!_sidePanelElement.contains(e.relatedTarget)) _sidePanelPreview(false);
+});
+$('side-panel-mode')?.addEventListener('click', _sidePanelToggleMode);
+$('side-panel-pin')?.addEventListener('click', _sidePanelTogglePin);
+window.matchMedia('(min-width: 821px)').addEventListener?.('change', _sidePanelApply);
+_sidePanelApply();
+I18N.on(() => _sidePanelApply());
+
 // Press Enter to submit name
 $('input-name').addEventListener('keydown',e=>{ if(e.key==='Enter') $('input-senha').focus(); });
 $('input-senha').addEventListener('keydown',e=>{ if(e.key==='Enter') entrarComConta(); });
@@ -31377,7 +31652,9 @@ function sfx(evento, opts = {}){
   const aud = SB.audibilidade({ pos: opts.pos, visao: _sfxVisaoDe(GS.gameState, me),
     mePos: me && Array.isArray(me.pos) ? me.pos : null, mestre: GS.isMaster() });
   const jit = a => 1 + (Math.random() * 2 - 1) * (a || 0);
-  const ganho = Math.max(0, def.volume * aud.ganho * jit(def.volJitter));
+  const multiplicadorVolume = Number.isFinite(opts.volumeMultiplier)
+    ? Math.max(0, Math.min(2, opts.volumeMultiplier)) : 1;
+  const ganho = Math.max(0, def.volume * aud.ganho * jit(def.volJitter) * multiplicadorVolume);
   const agora = performance.now();
   if(!_sfxLimitador.pode(evento, agora)) return true;
   try{
@@ -31425,8 +31702,10 @@ function _somGolpe(c){
     const bloqueio = !c.fumble && _temEscudo(_jogadorDaChave(c.targetKey));
     return sfx(bloqueio ? 'escudo_bloqueio' : 'golpe_erro', {pos});
   }
-  const tocou = sfx('golpe_' + imp, {pos});
-  const tocouCrit = c.crit ? sfx('golpe_critico', {pos}) : true;
+  const marreta = ['marreta', 'marreta_prata'].includes(c.weaponId);
+  const volumeMultiplier = c.crit ? 1.3 : (marreta ? 1.15 : 1);
+  const tocou = sfx('golpe_' + imp, {pos, volumeMultiplier});
+  const tocouCrit = c.crit ? sfx('golpe_critico', {pos, volumeMultiplier: 1.3}) : true;
   return tocou && tocouCrit;
 }
 function _somDor(c, fb){
@@ -33228,10 +33507,24 @@ function _audioPanelEnsure(){
     +   '<button id="cfg-gamepad-toggle" class="cfg-section-button" type="button" aria-expanded="false"><span data-i18n="ui.menu.joystick_bind">Remapear botões</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
     +   '<section id="cfg-gamepad-controls" class="cfg-gamepad-controls" hidden>' + gamepadBindRows + '</section>'
     +   '<button id="gp-reset" class="cfg-gamepad-reset" type="button" data-i18n="ui.menu.joystick_reset">Restaurar padrão</button>'
+    +   '<button id="cfg-help-toggle" class="cfg-section-button" type="button" aria-expanded="false" aria-controls="cfg-help-controls">'
+    +     '<span data-i18n="ui.menu.como_jogar">📖 Como jogar</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
+    +   '<section id="cfg-help-controls" class="cfg-help-controls" hidden>'
+    +     '<div class="cfg-help-copy">'
+    +       '<p data-i18n-html="ui.ajuda.turno"></p>'
+    +       '<p data-i18n-html="ui.ajuda.objetivo"></p>'
+    +       '<p data-i18n-html="ui.ajuda.dados"></p>'
+    +       '<p data-i18n-html="ui.ajuda.fome_sede"></p>'
+    +       '<p data-i18n-html="ui.ajuda.camera"></p>'
+    +     '</div>'
+    +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
+    +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'
+    +     '</section>'
+    +     '<section class="cfg-damage-legend"><h4 data-i18n="ui.menu.dano_cores_titulo">🎨 Cores do dano</h4><div data-i18n-html="ui.menu.dano_cores"></div></section>'
+    +   '</section>'
     +   '<button id="cfg-game-toggle" class="cfg-section-button" type="button" aria-expanded="false" aria-controls="cfg-game-controls">'
     +     '<span data-i18n="ui.menu.config_jogo">🎲 Configurações de jogo</span><span class="cfg-section-chevron" aria-hidden="true">›</span></button>'
     +   '<section id="cfg-game-controls" class="cfg-game-controls" hidden>'
-    +   '<details class="cfg-damage-legend"><summary data-i18n="ui.menu.dano_cores_titulo">🎨 Cores do dano</summary><div data-i18n-html="ui.menu.dano_cores"></div></details>'
     +   '<div id="cfg-turn-timer" style="border-top:1px solid #2a4a2a;margin-top:4px;padding-top:8px;display:none;">'
     +     '<button id="cfg-turn-timer-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-turn-timer-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
@@ -33371,6 +33664,16 @@ function _audioPanelEnsure(){
     gameControls.hidden=!aberto;
     gameToggle.classList.toggle('open',aberto);
     gameToggle.setAttribute('aria-expanded',String(aberto));
+  };
+  const helpToggle=wrap.querySelector('#cfg-help-toggle');
+  const helpControls=wrap.querySelector('#cfg-help-controls');
+  helpToggle.onclick=()=>{
+    const aberto=helpControls.hidden;
+    helpControls.hidden=!aberto;
+    helpToggle.classList.toggle('open',aberto);
+    helpToggle.setAttribute('aria-expanded',String(aberto));
+    pop.style.width=aberto?'min(390px, calc(100vw - 28px))':'238px';
+    if(aberto) helpControls.scrollIntoView({block:'nearest'});
   };
   document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) pop.style.display = 'none'; });
   const mSl = wrap.querySelector('#aud-music'), mVal = wrap.querySelector('#aud-music-val');

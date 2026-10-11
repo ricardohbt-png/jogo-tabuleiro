@@ -149,6 +149,24 @@ botão compacto 🎯; o atalho só atua na masmorra, quando há objetivos, e nã
 intercepta digitação em campos. O botão de encerrar missão continua dentro do
 painel. Esse estado é apenas visual/local e não exige mensagem WebSocket.
 
+### Painel lateral recolhível
+
+O painel de informações (`#side-panel`) começa fixo como antes. O botão “Recolher”
+ativa a preferência local `lfh_side_panel_mode=auto`: em telas acima de 820 px, a
+alça na borda direita abre uma prévia sobre o tabuleiro após 140 ms e fecha 550 ms
+depois que o cursor/foco sai. “Fixar” reserva novamente a coluna de 280 px e o
+`ResizeObserver` do mapa atualiza o enquadramento 3D. O botão “Fixo” retorna ao
+layout permanente. `Esc` e Voltar/B no controle fecham uma prévia ou liberam a
+coluna; no celular, permanece a gaveta existente. A preferência e a prévia são
+locais ao navegador, sem alteração de estado ou protocolo do servidor.
+
+O painel inferior `#gm-log` mantém o minimizador interno `#gm-log-toggle` e tem
+uma preferência independente `lfh_gm_log_mode`. No desktop, “Recolher” retira o
+painel inteiro do fluxo vertical; a alça inferior abre uma prévia sobre o mapa,
+e “Fixar” devolve sua altura ao layout. A faixa de iniciativa e o resumo de turno
+continuam independentes. `Esc` e Voltar/B fecham a prévia; no celular, o painel
+permanece no layout responsivo atual.
+
 ### Encerramento automático de turno na exploração
 
 `#btn-auto-end-turn`, logo abaixo do botão fixo de encerrar turno no painel do
@@ -3342,11 +3360,14 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > em botões, recusa no `serverError`. Ambiente: `_ambienciaGarantir(state)` (idempotente, a
 > cada `game_state`, só com `#screen-game` ativo) toca o loop do preset `ambiente`;
 > `_ambienciaParar` em `cityState`, `showScreen` fora da masmorra, `handleGameOver` e
-> `reconnectFailed`. Servidor: só o campo opcional **`impacto`** (`cortante|perfurante|
-> contundente|natural`) no `attack_feedback start`, por `_impacto_de` ao lado de
+> `reconnectFailed`. Servidor: campos opcionais **`impacto`** (`cortante|perfurante|
+> contundente|natural`) e **`impact_weapon_id`** no `attack_feedback start`, por `_impacto_de` ao lado de
 > `_projetil_de` (herói pela `categoria` da arma, desarmado/sem categoria → `contundente`;
 > monstro: nome natural > categoria > nome da arma > `contundente`), inclusive no Ataque
-> Giratório. **Ausência do campo = "não é golpe físico"** (só ataque elemental de monstro e
+> Giratório. O ID permite ajustes de áudio específicos sem alterar outras armas da categoria;
+> a Marreta (`marreta` e `marreta_prata`) usa ganho ×1,15 no impacto normal. Todos os acertos
+> críticos usam ganho ×1,30 no impacto da categoria e no cue crítico, inclusive no recuo
+> sintetizado. **Ausência do campo `impacto` = "não é golpe físico"** (só ataque elemental de monstro e
 > item arremessado): o cliente então não toca golpe nem *whoosh* e deixa a síntese do
 > elemento. Golpe que mata não toca dor (a morte toca no lugar); falha de rede no carregar
 > tem 1 nova tentativa (404 não). **`GS.on`
@@ -3359,6 +3380,11 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > arquivos decodificam sem erro. Testes: `tools/test_sound_bank.js`,
 > `tools/test_sons_cliente.js`, `tools/test_sons_impacto.py`, `tools/test_sfx_arquivos.js`.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-09-23-sons-efeitos-sonoros*`.
+> **Ajuda de jogo no menu (2026-10-11):** a seção “📖 Como jogar” do painel ⚙️ reúne os textos
+> `ui.ajuda.*` de turno, objetivo, dados, fome/sede, câmera e controle, mais a legenda de cores,
+> resistências e vulnerabilidades (`ui.menu.dano_cores`). O botão ❓ abre o painel e expande a
+> seção; ela também é navegável pelo gamepad. “Configurações de jogo” fica só com opções da
+> partida. A antiga janela modal de ajuda foi removida.
 > **Passos dos peões:** o som sintetizado `tocarSomPasso` ganhou canal próprio (`_stepsBus`,
 > slider "👣 Movimento dos peões" no painel ⚙️, salvo como `steps` em `lfh_audio`) e ganho de
 > saída ×6 **depois** do compressor (medido: o pico era 0,05, abaixo do clique, e sumia sob o

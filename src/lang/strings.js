@@ -72,6 +72,7 @@ window.LANG_STRINGS = {
   "ui.menu.audio_title": { "pt": "Áudio, idioma e opções", "en": "Audio, language and options" },
   "ui.menu.audio":       { "pt": "🔊 Áudio", "en": "🔊 Audio" },
   "ui.menu.config_jogo": { "pt": "🎲 Configurações de jogo", "en": "🎲 Game settings" },
+  "ui.menu.como_jogar": { "pt": "📖 Como jogar", "en": "📖 How to play" },
   "ui.menu.dano_cores_titulo": { "pt": "🎨 Cores do dano", "en": "🎨 Damage colors" },
   "ui.menu.damage.status.resisted": { "pt": "RESISTIDO", "en": "RESISTED" },
   "ui.menu.damage.status.vulnerable": { "pt": "VULNERÁVEL", "en": "VULNERABLE" },

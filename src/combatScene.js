@@ -126,6 +126,7 @@
       melee,
       projectile: pj, distCasas,
       impacto: IMPACTOS.indexOf(msg.impacto) >= 0 ? msg.impacto : null,
+      weaponId: msg.weapon_id || null,
       travelMs: pj ? travelMsDe(pj.kind, distCasas) : 0,
       launchAt: null,
       soImpacto: !!soImpacto,
@@ -216,6 +217,7 @@
       projectile: s.projectile ? s.projectile.kind : null,
       item_id: s.projectile ? (s.projectile.item_id || null) : null,
       impacto: s.impacto,
+      weaponId: s.weaponId,
       area: !!(s.projectile && s.projectile.area),
       area_raio: s.projectile ? s.projectile.area_raio : 0,
       feedbacks: s.impact.feedbacks.splice(0),   // emitido UMA vez

@@ -13033,7 +13033,7 @@ class GameRoom(TutorialTraining):
                 "start", p, alvo, weapon.get("name") or "Ataque Giratório",
                 ataque_mode, spin_id=_spin_id, spin_index=_spin_index,
                 spin_count=_spin_count, ability_id=tecnica_id,
-                impacto=_impacto_de(weapon))
+                impacto=_impacto_de(weapon), impact_weapon_id=weapon.get("id"))
 
         resultados = []
         roll = total = None
@@ -19706,6 +19706,7 @@ class GameRoom(TutorialTraining):
                 "start", p, target, attack_name, attack_mode,
                 projectile=_projetil_de(weapon_here),
                 impacto=_impacto_de(weapon_here),
+                impact_weapon_id=(weapon_here or {}).get("id"),
                 holy_strike=bool(p.get("golpe_sagrado_ativo") and w_range is None),
                 holy_level=int(p.get("golpe_sagrado_nivel") or 1)
                     if p.get("golpe_sagrado_ativo") and w_range is None else 0,
