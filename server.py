@@ -2400,11 +2400,12 @@ def _diario_merge_missao(diario, adventure_id, stage_index, exit_ids=(), complet
     row = next((entry for entry in rows if isinstance(entry, dict)
                 and entry.get("adventure_id") == adventure_id
                 and entry.get("stage_index") == stage_index), None)
+    created = row is None
     if row is None:
         row = {"adventure_id": adventure_id, "stage_index": stage_index,
                "exit_ids": [], "complete": False}
         rows.append(row)
-    changed = False
+    changed = created
     existing = row.get("exit_ids") if isinstance(row.get("exit_ids"), list) else []
     normalized = []
     for value in existing:
@@ -12602,6 +12603,15 @@ class GameRoom(TutorialTraining):
         return True
 
     async def _trigger_campaign_scene(self, when, trigger_value=None):
+        if when == "key_item_obtained" and self.campaign and isinstance(trigger_value, str):
+            explicitly_important = any(
+                isinstance(trigger, dict)
+                and trigger.get("when") == "key_item_obtained"
+                and str(trigger.get("trigger_value") or "").strip() == trigger_value.strip()
+                for trigger in (self.campaign.get("scene_triggers") or [])
+            )
+            if explicitly_important and self._diario_registrar_item(trigger_value, _now_iso()):
+                self._checkpoint_savegame()
         if self.active_scene or not self.campaign:
             return False
         for index, trigger in enumerate(self.campaign.get("scene_triggers") or []):
@@ -47537,6 +47547,35 @@ class GameRoom(TutorialTraining):
             if not isinstance(state.get(field), list): state[field] = []
         return state
 
+    def _diario_registrar_missao(self, adventure_id, stage_index, exit_ids=(), complete=False,
+                                  completed_at=None):
+        if self.savegame is None:
+            return False
+        diario = self.savegame.setdefault("adventurer_journal", {"missions": [], "items": []})
+        changed = _diario_merge_missao(diario, adventure_id, stage_index, exit_ids,
+                                       complete, completed_at)
+        if changed:
+            self.savegame["adventurer_journal"] = diario
+        return changed
+
+    def _diario_registrar_item(self, item_id, acquired_at=None):
+        if self.savegame is None or not isinstance(item_id, str):
+            return False
+        item_id = item_id.strip()
+        if not re.fullmatch(r"[a-z0-9_-]{1,80}", item_id):
+            return False
+        diario = self.savegame.setdefault("adventurer_journal", {"missions": [], "items": []})
+        entries = diario.setdefault("items", [])
+        if not isinstance(entries, list):
+            entries = diario["items"] = []
+        if any(isinstance(entry, dict) and entry.get("item_id") == item_id for entry in entries):
+            return False
+        row = {"item_id": item_id}
+        if isinstance(acquired_at, str) and acquired_at:
+            row["acquired_at"] = acquired_at
+        entries.append(row)
+        return True
+
     def _required_route_exit_ids(self):
         if not self._etapa_com_saidas():
             return []
@@ -47559,6 +47598,8 @@ class GameRoom(TutorialTraining):
             pos = exit_def.get("pos") or []
             if exit_id and len(pos) == 2 and tuple(pos) in occupied and exit_id not in found:
                 found.add(exit_id); progress["found_exit_ids"].append(exit_id); changed = True
+                self._diario_registrar_missao(self.world_adventure_id, self.world_adventure_index,
+                                              [exit_id], False)
                 route_id = str(exit_def.get("route_id") or "")
                 if route_id and route_id not in progress["visited_route_ids"]:
                     progress["visited_route_ids"].append(route_id)
@@ -47671,6 +47712,13 @@ class GameRoom(TutorialTraining):
         self.mission_complete_pending = False
         # A aventura só conta depois da confirmação explícita de missão concluída.
         # Fugir pela escada, morrer ou voltar à cidade por outro caminho não passa aqui.
+        if self.world_adventure_id and isinstance(self.world_adventure_index, int):
+            route_key = f"{self.world_adventure_id}:{self.world_adventure_index}"
+            route_state = self.world_adventure_route_progress.get(route_key, {})
+            exit_ids = route_state.get("found_exit_ids", []) if isinstance(route_state, dict) else []
+            if self._diario_registrar_missao(self.world_adventure_id, self.world_adventure_index,
+                                             exit_ids, True, _now_iso()):
+                self._checkpoint_savegame()
         tutorial_cidade = self._tutorial_tem_tour_cidade()
         if tutorial_cidade:
             self.tutorial_city_tour_id = str(time.time_ns())
