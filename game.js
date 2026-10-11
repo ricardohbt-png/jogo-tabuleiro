@@ -1890,6 +1890,11 @@ function _renderRefugioPainel(msg){
   const rooms=(msg.rooms||[]).map(r=>`<button class="ref-room" data-ref-room="${_esc(r.owner)}"${r.can_edit?' data-ref-mine="1"':''}>🛏️ ${_esc(r.class_id||r.owner)}${r.can_edit?' '+t('ui.refugio.seu_quarto'):''}</button>`).join('')||`<small>${t('ui.refugio.sem_quartos')}</small>`;
   ov.innerHTML=`<section class="refugio-box"><header><div><h2>${t('ui.refugio.titulo')}</h2><small>${t('ui.refugio.subtitulo', {n:sh.items?.length||0, max:sh.slot_limit||10, ouro:sh.gold||0})}</small></div><button data-ref-close>✕</button></header><div class="refugio-grid"><div><h3>${t('ui.refugio.bau_compartilhado')}</h3><div class="ref-list">${(sh.items||[]).map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-take="${i}">${t('ui.refugio.retirar')}</button></div>`).join('')||`<small>${t('ui.refugio.vazio')}</small>`}</div><div class="ref-gold"><input id="ref-shared-gold" type="number" min="0" value="0"><button data-ref-gold="deposit">${t('ui.refugio.depositar_ouro')}</button><button data-ref-gold="withdraw">${t('ui.refugio.retirar_ouro')}</button></div></div><div><h3>${t('ui.refugio.guardar_itens')}</h3><div class="ref-list">${bag.map((it,i)=>`<div class="ref-item"><span>${_esc(_itemLabel(it))}</span><button data-ref-store="${i}">${t('ui.refugio.guardar')}</button></div>`).join('')||`<small>${t('ui.refugio.bolsa_vazia')}</small>`}</div><h3>${t('ui.refugio.quartos_privados')}</h3><div class="ref-rooms">${rooms}</div></div></div><footer><button data-ref-close>${t('ui.refugio.voltar_cidade')}</button></footer></section>`;
   document.body.appendChild(ov);
+  const journalButton=document.createElement('button');
+  journalButton.type='button'; journalButton.className='ref-chest-open diary-open';
+  journalButton.dataset.gamepadAction='activate'; journalButton.textContent=t('ui.diario.abrir');
+  journalButton.onclick=()=>{_adventurerDiaryReturnFocus=journalButton;GS.openAdventurerDiary();};
+  ov.querySelector('.refugio-box')?.insertBefore(journalButton,ov.querySelector('.refugio-grid'));
   // Os dois baús entram como botão no topo: o pessoal só pela lista de quartos era
   // fácil demais de ler como "visitar o quarto de alguém" em vez de "abrir meu baú".
   if(typeof InventoryModal!=='undefined'){
@@ -1910,6 +1915,70 @@ function _renderRefugioPainel(msg){
   ov.querySelectorAll('[data-ref-room]').forEach(b=>b.onclick=()=>b.dataset.refMine?_abrirBauDireto('room'):GS.openQuarto(b.dataset.refRoom));
   ov.querySelectorAll('[data-ref-gold]').forEach(b=>b.onclick=()=>{const n=Number(ov.querySelector('#ref-shared-gold')?.value||0);GS.refugioGold('shared',b.dataset.refGold,n);});
 }
+let _adventurerDiaryReturnFocus=null;
+function _diaryDate(value){
+  if(!value)return '';
+  const date=new Date(value); if(Number.isNaN(date.getTime()))return '';
+  return new Intl.DateTimeFormat(window.I18N?.lang==='en'?'en-US':'pt-BR',{dateStyle:'medium'}).format(date);
+}
+function _diarioLocalizedName(record,field,fallback){
+  const lang=window.I18N?.lang==='en'?'en':'pt';
+  const value=record?.[field];
+  if(value&&typeof value==='object')return value[lang]||value.pt||value.en||fallback;
+  return record?.[field+'_'+lang]||value||fallback;
+}
+function _diarioItemName(itemId){
+  const key='cat.item.'+itemId+'.nome';
+  return I18N.tem(key)?t(key):itemId;
+}
+function _renderAdventurerDiaryPage(page,msg){
+  if(page==='missions'){
+    const rows=(msg.missions||[]).map(row=>{
+      const adventure=(GS.cityState?.world?.adventures||[]).find(a=>a.id===row.adventure_id);
+      const stage=adventure?.dungeons?.[row.stage_index];
+      const adventureKey='ui.diario.aventura.'+row.adventure_id;
+      const title=I18N.tem(adventureKey)?t(adventureKey):_diarioLocalizedName(adventure,'nome',row.adventure_id);
+      const stageName=_diarioLocalizedName(stage,'nome',t('ui.diario.etapa',{n:Number(row.stage_index)+1}));
+      const exits=(row.exit_ids||[]).map(id=>{const key='ui.diario.saida.'+id;return _esc(I18N.tem(key)?t(key):id);}).join(', ');
+      return `<article class="diario-entry"><div class="diario-entry-head"><strong>${_esc(title)}</strong><span class="diario-status ${row.complete?'done':'partial'}">${t(row.complete?'ui.diario.concluida':'ui.diario.em_andamento')}</span></div><div>${_esc(stageName)}</div>${row.exit_ids?.length?`<small>${t('ui.diario.saidas_descobertas',{n:row.exit_ids.length})}: ${exits}</small>`:''}${row.completed_at?`<time>${_esc(_diaryDate(row.completed_at))}</time>`:''}</article>`;
+    }).join('');
+    return rows||`<p class="diario-empty">${t('ui.diario.sem_missoes')}</p>`;
+  }
+  if(page==='items'){
+    const rows=(msg.items||[]).map(row=>{
+      const itemName=_diarioItemName(row.item_id);
+      return `<article class="diario-entry"><strong>✨ ${_esc(itemName)}</strong>${row.acquired_at?`<time>${_esc(_diaryDate(row.acquired_at))}</time>`:''}</article>`;
+    }).join('');
+    return rows||`<p class="diario-empty">${t('ui.diario.sem_itens')}</p>`;
+  }
+  const entries=(msg.bestiary||[]).filter(entry=>entry&&Number(entry.level)>0);
+  return entries.length?entries.map(entry=>`<article class="diario-entry diario-creature"><div class="diario-entry-head"><strong>${_esc(entry.emoji||'👾')} ${_esc(entry.name||entry.type)}</strong><small>${t('ui.diario.abates',{n:Number(entry.kills)||0})}</small></div><div class="monster-inspector-sheet">${fichaInimigoTooltipHTML(entry,entry.knowledge_source==='bard',null,entry.level)}</div></article>`).join(''):`<p class="diario-empty">${t('ui.diario.sem_bestiario')}</p>`;
+}
+function _renderAdventurerDiary(msg){
+  document.getElementById('diario-aventureiros-overlay')?.remove();
+  const overlay=document.createElement('div'); overlay.id='diario-aventureiros-overlay'; overlay.className='diario-aventureiros-overlay';
+  overlay.innerHTML=`<section class="diario-book" role="dialog" aria-modal="true" aria-labelledby="diario-title"><header><div><h2 id="diario-title">${t('ui.diario.titulo')}</h2><p>${t('ui.diario.subtitulo')}</p></div><button type="button" data-diary-close data-gamepad-action="activate" aria-label="${t('ui.diario.fechar')}">✕</button></header><nav class="diario-tabs" role="tablist" aria-label="${t('ui.diario.titulo')}"><button type="button" role="tab" aria-selected="true" data-diary-page="missions" data-gamepad-action="activate">${t('ui.diario.pagina_missoes')}</button><button type="button" role="tab" aria-selected="false" data-diary-page="items" data-gamepad-action="activate">${t('ui.diario.pagina_itens')}</button><button type="button" role="tab" aria-selected="false" data-diary-page="bestiary" data-gamepad-action="activate">${t('ui.diario.pagina_bestiario')}</button></nav><main class="diario-content" data-diary-content tabindex="0"></main><footer><button type="button" data-diary-close>${t('ui.diario.fechar')}</button></footer></section>`;
+  document.body.appendChild(overlay);
+  const tabs=[...overlay.querySelectorAll('[data-diary-page]')]; let active='missions';
+  const renderPage=page=>{active=page;tabs.forEach(tab=>{const selected=tab.dataset.diaryPage===page;tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;});overlay.querySelector('[data-diary-content]').innerHTML=_renderAdventurerDiaryPage(page,msg);};
+  tabs.forEach((tab,index)=>{
+    tab.onclick=()=>renderPage(tab.dataset.diaryPage);
+    tab.onkeydown=e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const next=(index+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length;tabs[next].focus();tabs[next].click();};
+  });
+  const close=()=>{overlay.remove();_adventurerDiaryReturnFocus?.focus?.();_adventurerDiaryReturnFocus=null;};
+  overlay.querySelectorAll('[data-diary-close]').forEach(button=>button.onclick=close);
+  overlay.addEventListener('keydown',e=>{
+    if(e.key === 'Escape'){e.preventDefault();e.stopPropagation();close();return;}
+    if(e.key!=='Tab')return;
+    const focusable=[...overlay.querySelectorAll('button:not(:disabled),[tabindex="0"]')];
+    if(!focusable.length)return;
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+  renderPage(active); overlay.querySelector('[data-diary-page="missions"]')?.focus();
+}
+GS.on('adventurerDiaryState',_renderAdventurerDiary);
 function _renderQuartoPainel(msg){
   _quartoState=msg; document.getElementById('quarto-overlay')?.remove();
   const ov=document.createElement('div'); ov.id='quarto-overlay'; ov.className='refugio-overlay';
