@@ -228,5 +228,45 @@ class BestiaryRevealPolicyTests(unittest.TestCase):
         self.assertNotIn("secret_internal_state", entry)
 
 
+class AdventurerDiaryProtocolTests(unittest.TestCase):
+    def setUp(self):
+        self.room = server.GameRoom("DIARY")
+        self.room.savegame = {"members": {"alpha": {"class_id": "fighter"}, "beta": {"class_id": "mage"}},
+                              "adventurer_journal": {"missions": [{"adventure_id": "a", "stage_index": 1}],
+                                                     "items": [{"item_id": "relic"}]}}
+        self.room.players = {"p1": {"id": "p1", "class_id": "fighter", "alive": True},
+                             "p2": {"id": "p2", "class_id": "mage", "alive": True}}
+        self.room.account_by_pid = {"p1": "alpha", "p2": "beta"}
+        self.room._em_cidade = lambda pid: True
+        self.room._refugio_unlocked = lambda *args: True
+        self.sent = []
+        async def capture(pid, msg): self.sent.append((pid, msg))
+        self.room.send_to = capture
+        self.room._bestiary_diary_payload_for_pid = lambda pid, bard=False: [{"type": "orc", "level": 1 if pid == "p1" else 2}]
+
+    def test_shared_refuge_payload_has_journal_but_no_bestiary(self):
+        payload = self.room._refugio_payload(self.room.players["p1"])
+        self.assertEqual(payload["adventurer_journal"], self.room.savegame["adventurer_journal"])
+        self.assertNotIn("bestiary", payload)
+
+    def test_diary_response_is_private_and_uses_requesters_knowledge(self):
+        asyncio.run(self.room.handle_open_adventurer_diary("p1"))
+        self.assertEqual(len(self.sent), 1)
+        pid, payload = self.sent[0]
+        self.assertEqual(pid, "p1")
+        self.assertEqual(payload["type"], "adventurer_diary_state")
+        self.assertEqual(payload["missions"], [{"adventure_id": "a", "stage_index": 1}])
+        self.assertEqual(payload["bestiary"], [{"type": "orc", "level": 1}])
+
+    def test_outside_locked_or_nonmember_request_gets_no_diary_payload(self):
+        self.room._em_cidade = lambda pid: False
+        asyncio.run(self.room.handle_open_adventurer_diary("p1"))
+        self.room._em_cidade = lambda pid: True
+        self.room._refugio_unlocked = lambda *args: False
+        asyncio.run(self.room.handle_open_adventurer_diary("p1"))
+        self.room._refugio_unlocked = lambda *args: True
+        asyncio.run(self.room.handle_open_adventurer_diary("p-unknown"))
+        self.assertEqual(self.sent, [])
+
 if __name__ == "__main__":
     unittest.main()

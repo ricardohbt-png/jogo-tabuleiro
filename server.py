@@ -16017,6 +16017,7 @@ class GameRoom(TutorialTraining):
     def _refugio_payload(self, p=None):
         state = deepcopy(self.refugio_state)
         state["items"] = deepcopy(state.get("items", [])); state["gold"] = int(state.get("gold", 0) or 0)
+        journal = deepcopy((self.savegame or {}).get("adventurer_journal") or {"missions": [], "items": []})
         for hero in self.players.values():
             if not hero.get("is_master") and hero.get("class_id"):
                 self._quarto_do_jogador(hero)
@@ -16028,7 +16029,8 @@ class GameRoom(TutorialTraining):
             rooms.append({"owner": account, "class_id": cls, "background": room.get("background", ""),
                           "trophies": deepcopy(room.get("trophies", [])),
                           "can_edit": bool(p and self._conta_do_jogador(p) == account)})
-        return {"shared": state, "rooms": rooms, "unlocked": self._refugio_unlocked()}
+        return {"shared": state, "rooms": rooms, "unlocked": self._refugio_unlocked(),
+                "adventurer_journal": journal}
 
     async def handle_open_refugio(self, pid):
         p = self.players.get(pid)
@@ -16036,6 +16038,24 @@ class GameRoom(TutorialTraining):
         if not self._refugio_unlocked():
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_refugio_dos_herois_ainda_esta_bloquead")}); return
         await self.send_to(pid, {"type": "refugio_state", **self._refugio_payload(p)})
+
+    async def handle_open_adventurer_diary(self, pid):
+        """Envia ao jogador autorizado o histórico compartilhado e seu bestiário privado."""
+        player = self.players.get(pid)
+        account = self.account_by_pid.get(pid)
+        members = (self.savegame or {}).get("members") or {}
+        if (not player or not account or account not in members
+                or not self._em_cidade(pid) or not self._refugio_unlocked()):
+            return
+        journal = deepcopy((self.savegame or {}).get("adventurer_journal") or {"missions": [], "items": []})
+        bard = any(p.get("class_id") == "bard" and p.get("alive", True)
+                   for p in self.players.values() if not p.get("is_master"))
+        await self.send_to(pid, {
+            "type": "adventurer_diary_state",
+            "missions": journal.get("missions", []),
+            "items": journal.get("items", []),
+            "bestiary": self._bestiary_diary_payload_for_pid(pid, bard=bard),
+        })
 
     async def handle_open_quarto(self, pid, owner=None):
         p = self.players.get(pid)
@@ -49747,6 +49767,8 @@ async def handler(ws):
                     if room: await room.handle_city_map_points(pid, msg.get("city_id"), msg.get("points"))
                 elif t == "open_refugio":
                     if room: await room.handle_open_refugio(pid)
+                elif t == "open_adventurer_diary":
+                    if room: await room.handle_open_adventurer_diary(pid)
                 elif t == "open_quarto":
                     if room: await room.handle_open_quarto(pid, msg.get("owner"))
                 elif t == "refugio_store":
