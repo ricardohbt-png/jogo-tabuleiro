@@ -182,5 +182,51 @@ class CampaignJournalEventTests(unittest.TestCase):
         ])
 
 
+class BestiaryRevealPolicyTests(unittest.TestCase):
+    def setUp(self):
+        self.monster = {
+            "type": "teste", "name": "Criatura de teste", "emoji": "👾", "hp": 12, "ac": 14,
+            "immunities": ["poison"], "resistances": [{"type": "physical", "reduction": 2}],
+            "weaknesses": [{"type": "holy", "bonus_flat": 2}], "reducao_dano": 3,
+            "attacks": [{"damage": "1d8", "damage_types": ["physical"]}],
+            "str_": 16, "dex": 10, "con_": 14, "int_": 8, "fort": 5, "ref_": 2, "will": 1,
+            "special_abilities": [{"id": "sopro", "dc": 14}], "xp": 25,
+            "secret_internal_state": "must not leak",
+        }
+
+    def test_level_zero_has_no_diary_entry_and_never_reveals_secret_fields(self):
+        self.assertIsNone(server._bestiary_reveal_entry(self.monster, 0))
+
+    def test_milestone_15_reveals_defenses_but_not_combat_profile(self):
+        entry = server._bestiary_reveal_entry(self.monster, 15)
+        self.assertEqual(entry["level"], 1)
+        self.assertIn("resistances", entry)
+        self.assertIn("immunities", entry)
+        self.assertIn("weaknesses", entry)
+        self.assertIn("reducao_dano", entry)
+        self.assertNotIn("attacks", entry)
+        self.assertNotIn("str_", entry)
+        self.assertNotIn("special_abilities", entry)
+        self.assertNotIn("secret_internal_state", entry)
+
+    def test_milestone_30_adds_profile_and_50_adds_special_abilities(self):
+        studied = server._bestiary_reveal_entry(self.monster, 30)
+        catalogued = server._bestiary_reveal_entry(self.monster, 50)
+        self.assertIn("attacks", studied)
+        self.assertIn("fort", studied)
+        self.assertNotIn("special_abilities", studied)
+        self.assertIn("special_abilities", catalogued)
+        self.assertEqual(catalogued["special_abilities"][0]["dc"], 14)
+
+    def test_living_bard_source_reveals_complete_ficha_without_changing_count(self):
+        entry = server._bestiary_reveal_entry(self.monster, 1, bard=True)
+        self.assertEqual(entry["level"], 3)
+        self.assertEqual(entry["knowledge_source"], "bard")
+        self.assertIn("special_abilities", entry)
+        self.assertIn("xp", entry)
+        self.assertEqual(entry["kills"], 1)
+        self.assertNotIn("secret_internal_state", entry)
+
+
 if __name__ == "__main__":
     unittest.main()

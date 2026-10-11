@@ -2156,6 +2156,10 @@ const GS = (() => {
         _emit('campaignVote', msg);
         break;
 
+      case 'bestiary_milestone':
+        _emit('bestiaryMilestone', msg);
+        break;
+
       case 'error':
         // Resposta recusada: o aviso continua aberto, o foco fica onde está.
         if (_voltaFoco) _voltaFoco.respondido = false;

@@ -2138,6 +2138,20 @@ def ensure_account_profile(account):
         account["version"] = 2; changed = True
     if not isinstance(account.get("profile"), dict):
         account["profile"] = {"avatar": None, "friends": [], "settings": {}, "stats": {}, "achievements": []}; changed = True
+    bestiary = account["profile"].get("bestiary")
+    if not isinstance(bestiary, dict):
+        account["profile"]["bestiary"] = {}; changed = True
+    else:
+        clean_bestiary = {}
+        for monster_type, entry in bestiary.items():
+            if not isinstance(monster_type, str) or not re.fullmatch(r"[a-z0-9_]{1,80}", monster_type):
+                changed = True; continue
+            kills = entry.get("kills") if isinstance(entry, dict) else entry
+            if not isinstance(kills, int) or isinstance(kills, bool) or kills < 0:
+                changed = True; continue
+            clean_bestiary[monster_type] = {"kills": kills}
+        if clean_bestiary != bestiary:
+            account["profile"]["bestiary"] = clean_bestiary; changed = True
     heroes = account.get("heroes")
     if not isinstance(heroes, dict):
         heroes = {}; account["heroes"] = heroes; changed = True
@@ -2150,6 +2164,66 @@ def ensure_account_profile(account):
             }
             changed = True
     return changed
+
+
+def _bestiary_level(kills):
+    kills = max(0, int(kills or 0))
+    return 3 if kills >= 50 else 2 if kills >= 30 else 1 if kills >= 15 else 0
+
+
+_BESTIARY_BASIC_FIELDS = ("type", "name", "emoji", "hp", "ac")
+_BESTIARY_LEVEL_FIELDS = {
+    1: ("immunities", "resistances", "weaknesses", "reducao_dano"),
+    2: ("attacks", "str_", "dex", "con_", "int_", "fort", "ref_", "will"),
+    3: ("special_abilities", "tier", "cr", "xp", "gold", "undead", "boss",
+        "hostility_override", "size", "movement", "vision_base", "visao_escuro",
+        "darkvision_range", "subtipo", "porte", "natural_armor"),
+}
+
+
+def _bestiary_reveal_entry(monster, kills, bard=False):
+    """Retorna somente os campos de bestiário autorizados para esta conta."""
+    if not isinstance(monster, dict) or not isinstance(monster.get("type"), str):
+        return None
+    try:
+        kills = max(0, int(kills or 0))
+    except (TypeError, ValueError):
+        kills = 0
+    level = 3 if bard else _bestiary_level(kills)
+    if level == 0:
+        return None
+    fields = list(_BESTIARY_BASIC_FIELDS)
+    for milestone in range(1, level + 1):
+        fields.extend(_BESTIARY_LEVEL_FIELDS[milestone])
+    entry = {key: deepcopy(monster[key]) for key in dict.fromkeys(fields) if key in monster}
+    entry["kills"] = kills
+    entry["level"] = level
+    entry["knowledge_source"] = "bard" if bard else "bestiary"
+    entry["name"] = nome_criatura(monster)
+    return entry
+
+
+
+
+def _bestiary_increment(account_name, monster_type):
+    """Credita um abate confirmado ao bestiário persistente da conta."""
+    if not isinstance(monster_type, str) or not re.fullmatch(r"[a-z0-9_]{1,80}", monster_type):
+        return None
+    account = load_account(account_name)
+    if not account:
+        return None
+    ensure_account_profile(account)
+    profile = account["profile"]
+    bestiary = profile.setdefault("bestiary", {})
+    entry = bestiary.get(monster_type)
+    old_kills = entry.get("kills", 0) if isinstance(entry, dict) else 0
+    if not isinstance(old_kills, int) or isinstance(old_kills, bool) or old_kills < 0:
+        old_kills = 0
+    kills = old_kills + 1
+    bestiary[monster_type] = {"kills": kills}
+    write_account(account)
+    return {"kills": kills, "level": _bestiary_level(kills),
+            "milestone": kills if kills in (15, 30, 50) else None}
 
 def load_account(username):
     """Lê a conta; ausente/corrompida/forma inesperada → None (sem crash)."""
@@ -11332,7 +11406,7 @@ class GameRoom(TutorialTraining):
 
     # â”€â”€ broadcast helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    async def broadcast(self, msg, skip=None):
+    async def broadcast(self, msg, skip=None, personalize=None):
         """Envia a todos os conectados. `skip` (set de pids) exclui destinatários —
         usado para não mandar game_state a quem está na cidade (fora_masmorra)."""
         dead = []
@@ -11342,16 +11416,54 @@ class GameRoom(TutorialTraining):
             if pid in skip:
                 continue
             lang = _lang_de(pid)
-            data = por_idioma.get(lang)
-            if data is None:
-                data = por_idioma[lang] = json.dumps(
-                    msg, default=lambda o, _l=lang: _t_render(o, _l))
+            if personalize:
+                recipient_msg = personalize(pid, msg)
+                data = json.dumps(recipient_msg, default=lambda o, _l=lang: _t_render(o, _l))
+            else:
+                data = por_idioma.get(lang)
+                if data is None:
+                    data = por_idioma[lang] = json.dumps(
+                        msg, default=lambda o, _l=lang: _t_render(o, _l))
             try:
                 await ws.send(data)
             except Exception:
                 dead.append(pid)
         for pid in dead:
             self.connections.pop(pid, None)
+
+    def _bestiary_payload_for_pid(self, pid):
+        account_name = getattr(self, "account_by_pid", {}).get(pid)
+        if not account_name:
+            return {}
+        cache = getattr(self, "_bestiary_cache", None)
+        if cache is None:
+            cache = self._bestiary_cache = {}
+        if account_name not in cache:
+            account = load_account(account_name)
+            profile = (account or {}).get("profile") or {}
+            entries = profile.get("bestiary") or {}
+            cache[account_name] = {
+                monster_type: entry.get("kills", 0)
+                for monster_type, entry in entries.items()
+                if isinstance(monster_type, str) and isinstance(entry, dict)
+                and isinstance(entry.get("kills"), int) and not isinstance(entry.get("kills"), bool)
+                and entry["kills"] >= 0
+            }
+        return dict(cache[account_name])
+
+    def _bestiary_diary_payload_for_pid(self, pid, bard=False):
+        counts = self._bestiary_payload_for_pid(pid)
+        monsters = {entry.get("type"): entry for entry in MONSTER_DEFS
+                    if isinstance(entry, dict) and entry.get("type")}
+        out = []
+        for monster_type, kills in counts.items():
+            monster = monsters.get(monster_type)
+            if not monster:
+                continue
+            entry = _bestiary_reveal_entry(monster, kills, bard=bard)
+            if entry:
+                out.append(entry)
+        return out
 
     async def send_to(self, pid, msg):
         if isinstance(msg, dict) and msg.get("type") == "error" and getattr(self, "licoes", None):
@@ -46926,6 +47038,30 @@ class GameRoom(TutorialTraining):
                 await self.gm_say(T("narracao.finalmente_tomba_fortitude_vs_cd", monstro=nome_criatura(m), tot=tot, cd=cd))
 
         m.pop("_ultimo_esforco_monstro_turnos", None)
+        # Conta apenas depois de todas as defesas que podem impedir a morte final.
+        if (not m.get("_bestiary_counted") and not getattr(self, "test_mode", False)
+                and not m.get("test_hero") and not m.get("training_target")
+                and isinstance(m.get("type"), str)):
+            m["_bestiary_counted"] = True
+            credited = set()
+            for participant in self.players.values():
+                pid = participant.get("id")
+                account = self.account_by_pid.get(pid)
+                if (not pid or not account or participant.get("is_master")
+                        or participant.get("test_hero") or participant.get("training_ally")
+                        or account in credited):
+                    continue
+                credited.add(account)
+                result = _bestiary_increment(account, m["type"])
+                if not result:
+                    continue
+                cache = getattr(self, "_bestiary_cache", None)
+                if cache is not None:
+                    cache.setdefault(account, {})[m["type"]] = result["kills"]
+                if result["milestone"]:
+                    await self.send_to(pid, {"type": "bestiary_milestone",
+                                             "kills": result["milestone"],
+                                             "monster_type": m["type"]})
         await self._processar_fim_de_combate()
         await self._licao_verificar_sala_limpa(m.get("room_id"))
 
@@ -48345,7 +48481,14 @@ class GameRoom(TutorialTraining):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
-        await self.broadcast(msg_state, skip=self._conexoes_fora())
+        await self.broadcast(
+            msg_state, skip=self._conexoes_fora(),
+            personalize=lambda pid, msg: {
+                **msg,
+                "bestiary": self._bestiary_payload_for_pid(pid),
+                "bestiary_levels": {kind: _bestiary_level(kills)
+                                    for kind, kills in self._bestiary_payload_for_pid(pid).items()},
+            })
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.

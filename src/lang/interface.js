@@ -16,6 +16,11 @@
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
   "ui.hud.repetir_sala_tutorial": {"en": "Repeat my training room", "pt": "Repetir minha sala de treinamento"},
+  "ui.monster.inspect.hint": {"en": "Right-click to inspect", "pt": "Clique com o botão direito para examinar"},
+  "ui.monster.inspect.close": {"en": "Close creature sheet", "pt": "Fechar ficha"},
+  "ui.monster.inspect.attack_now": {"en": "Can attack from here", "pt": "Pode atacar daqui"},
+  "ui.monster.inspect.move_attack": {"en": "Can reach and attack", "pt": "Pode alcançar e atacar"},
+  "ui.bestiario.marco": {"en": "📖 Bestiary updated: {n} confirmed kills. New creature knowledge unlocked.", "pt": "📖 Bestiário atualizado: {n} abates confirmados. Novos conhecimentos sobre a criatura foram liberados."},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
   "dado.acerto": {

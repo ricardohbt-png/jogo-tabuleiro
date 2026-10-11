@@ -11525,6 +11525,7 @@ function renderMap(state){
   // que o Mestre veja a região vermelha sem perder a leitura da criatura.
   _drawMasterMonsterSelection2D(ctx, state, terrainSet);
   _drawMasterMonsterAttackPreview2D(ctx, state, terrainSet);
+  _drawMonsterInspectorAreas2D(ctx, state, visionSet);
   _drawMasterHistoryFocus2D(ctx, state, terrainSet);
   _drawMovePreview2D(ctx, state, terrainSet);
   _drawMasterMonsterMovePreview2D(ctx, state, terrainSet);
@@ -17681,7 +17682,16 @@ GS.on('previsaoAtaque', msg => {
   if(prev) el.innerHTML = _htmlPrevisaoAtaque(prev);
 });
 
-function fichaInimigoTooltipHTML(m, full, attacker=null){
+function _bestiarioNivel(monster){
+  const kills = Number(GS.gameState?.bestiary?.[monster?.type] || 0);
+  return kills >= 50 ? 3 : kills >= 30 ? 2 : kills >= 15 ? 1 : 0;
+}
+GS.on('bestiaryMilestone', msg => {
+  toast(t('ui.bestiario.marco', {n:msg.kills}), 'var(--gold,#c8a951)');
+});
+
+function fichaInimigoTooltipHTML(m, full, attacker=null, knowledgeLevel=0){
+  const knowledge = full ? 3 : Math.max(0, Math.min(3, Number(knowledgeLevel) || 0));
   const nome = `<b>${m.emoji||'👾'} ${m.name}</b>`;
   let verticalHTML = '';
   if(attacker?.pos && (attacker.weapon?.range != null || Number(m.altura) > 0 || Number(attacker.altura) > 0)){
@@ -17696,7 +17706,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       verticalHTML = `<div style="margin-top:4px;padding-top:3px;border-top:1px solid #c8a95133;color:${info.inRange && linhaLivre ? '#9ee7b3' : '#ff9b9b'};font-size:9px;">${t('ui.ficha.altura_linha', {de: info.attackerAltitude, para: info.targetAltitude, delta, custo: info.verticalCost, alcance, situacao})}</div>`;
     }
   }
-  if(!full) return `${nome}<br>HP ${m.hp}/${m.max_hp} | CA ${m.ac}${verticalHTML}`;
+  if(knowledge === 0) return `${nome}<br>HP ${m.hp}/${m.max_hp} | CA ${m.ac}${verticalHTML}`;
   const pct = Math.max(0, Math.min(100, (m.hp / Math.max(1,m.max_hp)) * 100));
   const cor = pct>60 ? '#2ecc40' : pct>30 ? '#ff851b' : '#ff4136';
   const TIER = {1:t('ui.ficha.comum'), 2:'Veterano', 3:'Elite', 4:t('ui.ficha.chefe')};
@@ -17715,11 +17725,11 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
     ? `<div style="margin-top:4px;color:#f0b36b;font-size:9px;">${t('ui.ficha.hostil_a_monstros')}</div>`
     : '';
 
-  const crVal = m.cr != null ? (m.cr < 1 ? `1/${Math.round(1/m.cr)}` : String(m.cr)) : null;
+  const crVal = knowledge >= 3 && m.cr != null ? (m.cr < 1 ? `1/${Math.round(1/m.cr)}` : String(m.cr)) : null;
 
   // Atributos (FOR/DES/CON/INT) — apenas monstros no novo formato
   let atribHTML = '';
-  if (m.str_ != null) {
+  if (knowledge >= 2 && m.str_ != null) {
     atribHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:5px;">
       ${[{k:'str_',l:t('ui.atributo.sigla.str_')},{k:'dex',l:t('ui.atributo.sigla.dex')},{k:'con_',l:t('ui.atributo.sigla.con_')},{k:'int_',l:t('ui.atributo.sigla.int_')}].map(({k,l})=>`
         <div style="background:rgba(255,255,255,0.04);padding:2px 0;text-align:center;">
@@ -17731,7 +17741,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
 
   // Testes de resistência
   let savesHTML = '';
-  if (m.fort != null) {
+  if (knowledge >= 2 && m.fort != null) {
     savesHTML = `<div style="display:flex;gap:10px;margin-top:3px;font-size:9px;">
       <span style="color:#8a7a5a;">${t('ui.save.abrev.fort')} <b style="color:#c8b89a;">${fmt(m.fort)}</b></span>
       <span style="color:#8a7a5a;">${t('ui.save.abrev.ref')} <b style="color:#c8b89a;">${fmt(m.ref_)}</b></span>
@@ -17741,7 +17751,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
 
   // Lista de ataques (novo formato)
   let attacksHTML = '';
-  if (m.attacks && m.attacks.length) {
+  if (knowledge >= 2 && m.attacks && m.attacks.length) {
     const rows = m.attacks.map(atk => {
       const types = (atk.damage_types||[]).map(t=>DMG_ICON[t]||t).join('');
       const mult  = atk.num_attacks > 1 ? ` ×${atk.num_attacks}` : '';
@@ -17756,7 +17766,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
 
   // Habilidades especiais
   let abilitiesHTML = '';
-  if (m.special_abilities && m.special_abilities.length) {
+  if (knowledge >= 3 && m.special_abilities && m.special_abilities.length) {
     const rows = m.special_abilities.map(ab => {
       const max  = ab.uses_per_combat;
       const rem  = m.ability_uses ? (m.ability_uses[ab.id] ?? max) : max;
@@ -17772,19 +17782,27 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
   // Imunidades e fraquezas
   let resistHTML = '';
   const imm  = m.immunities || [];
+  const resist = m.resistances || [];
   const weak = m.weaknesses || [];
-  if (imm.length || weak.length) {
+  if (knowledge >= 1 && (imm.length || resist.length || weak.length || Number(m.reducao_dano) > 0)) {
     const immStr  = imm.map(i => DMG_ICON[i]||i).join(' ');
-    const weakStr = weak.map(w => `${DMG_ICON[w.type]||w.type}${w.categoria?'/'+w.categoria:''} +${w.bonus_flat??'?'}`).join(' · ');
+    const resistStr = resist.map(r => `${DMG_ICON[r.type]||r.type} ${r.mode === 'half' ? '×½' : `−${Number(r.reduction)||0}`}`).join(' · ');
+    const weakStr = weak.map(w => `${DMG_ICON[w.type]||w.type}${w.categoria?'/'+w.categoria:''} ${w.multiplier ? `×${w.multiplier}` : `+${w.bonus_flat??'?'}`}`).join(' · ');
     resistHTML = `<div style="margin-top:4px;font-size:9px;">
       ${imm.length  ? `<div style="color:#4ec9b0;">${t('ui.ficha.imune_a_lista', {lista: immStr})}</div>` : ''}
-      ${weak.length ? `<div style="color:#ff6b6b;">Fraq: ${weakStr}</div>` : ''}
+      ${resist.length ? `<div style="color:#78c8bb;">${t('ui.bestiario.resistencias', {lista: resistStr})}</div>` : ''}
+      ${Number(m.reducao_dano) > 0 ? `<div style="color:#78c8bb;">${t('ui.bestiario.reducao', {n: Number(m.reducao_dano)})}</div>` : ''}
+      ${weak.length ? `<div style="color:#ff6b6b;">${t('ui.bestiario.vulnerabilidades', {lista: weakStr})}</div>` : ''}
     </div>`;
   }
 
   // Legado: acerto/dano como linha simples (monstros antigos sem m.attacks)
-  const legacyAtkHTML = !m.attacks
+  const legacyAtkHTML = knowledge >= 2 && !m.attacks
     ? `<div>${t('ui.ficha.acerto_dano', {acerto: m.atk_bonus, dano: m.damage||'?'})}</div>` : '';
+
+  const tierHTML = knowledge >= 3
+    ? `<div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ ${t('ui.hud.sigla_xp')} <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>` : '';
+  const headerLabel = knowledge === 1 ? t('ui.bestiario.nivel_1') : knowledge === 2 ? t('ui.bestiario.nivel_2') : t('ui.bestiario.nivel_3');
 
   return `
     <div style="min-width:220px;">
@@ -17792,7 +17810,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
         <span style="font-size:18px;">${m.emoji||'👾'}</span>
         <div>
           <div style="color:#c8a951;font-weight:bold;">${m.name}</div>
-          <div style="color:#8a7a5a;font-size:.6rem;letter-spacing:2px;" data-i18n="ui.ficha.conhecimento_das_lendas">📖 CONHECIMENTO DAS LENDAS</div>
+          <div style="color:#8a7a5a;font-size:.6rem;letter-spacing:2px;">${full ? t('ui.ficha.conhecimento_das_lendas') : `📖 ${headerLabel}`}</div>
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;">
@@ -17803,7 +17821,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
         <div style="width:${pct}%;height:100%;background:${cor};"></div>
       </div>
       <div>🛡️ ${t('ui.hud.sigla_ca')} <b>${m.ac}</b>${crVal ? ` &nbsp;·&nbsp; ${t('ui.hud.sigla_nd')} <b>${crVal}</b>` : ''}</div>
-      <div>🏅 <b>${TIER[m.tier]||m.tier||'?'}</b> &nbsp;·&nbsp; ✨ ${t('ui.hud.sigla_xp')} <b>${m.xp ?? '?'}</b>${!m.attacks && m.gold != null ? ` &nbsp;·&nbsp; 🪙 <b>${m.gold}</b>` : ''}</div>
+      ${tierHTML}
       ${verticalHTML}
       ${legacyAtkHTML}
       ${atribHTML}
@@ -17811,9 +17829,9 @@ function fichaInimigoTooltipHTML(m, full, attacker=null){
       ${attacksHTML}
       ${abilitiesHTML}
       ${resistHTML}
-      ${hostilityHTML}
-      ${tags.length ? `<div style="margin-top:3px;color:#ff851b;">${tags.join(' · ')}</div>` : ''}
-      ${(m.provocado && (m.provocado_turnos||0)>0) ? `<div style="margin-top:3px;color:#ff66cc;">${t('ui.ficha.provocado_turnos', {n: m.provocado_turnos})}</div>` : ''}
+      ${knowledge >= 3 ? hostilityHTML : ''}
+      ${knowledge >= 3 && tags.length ? `<div style="margin-top:3px;color:#ff851b;">${tags.join(' · ')}</div>` : ''}
+      ${knowledge >= 3 && m.provocado && (m.provocado_turnos||0)>0 ? `<div style="margin-top:3px;color:#ff66cc;">${t('ui.ficha.provocado_turnos', {n: m.provocado_turnos})}</div>` : ''}
     </div>`;
 }
 
@@ -24266,6 +24284,120 @@ function _masterMonsterAttackPreviewClient(state, monster){
     }
   }
   return empty;
+}
+
+function _monsterThreatAreasClient(state, monster){
+  const attack = new Set(), afterMove = new Set();
+  if(!state?.tiles || !monster || monster.hp <= 0) return {attack, move:afterMove};
+  const H = state.tiles.length, W = state.tiles[0]?.length || 0;
+  const movement = Math.max(0, Math.min(12, Number(monster.movement ?? 6) || 0));
+  const occupied = new Set();
+  for(const entity of [...(state.players||[]), ...(state.monsters||[])]){
+    if(!entity || entity.hp <= 0 || String(entity.id) === String(monster.id)) continue;
+    const tiles = entity.class_id ? [entity.pos] : GS.monsterTiles(entity);
+    for(const [x,y] of tiles||[]) occupied.add(`${x},${y}`);
+  }
+  const openedDoors = new Set((state.opened_doors||[]).map(pos => Array.isArray(pos) ? pos.join(',') : String(pos)));
+  const walkable = (x,y) => x >= 0 && y >= 0 && x < W && y < H
+    && (state.tiles[y]?.[x] === GS.TILE_FLOOR
+      || (state.tiles[y]?.[x] === GS.TILE_DOOR && openedDoors.has(`${x},${y}`)));
+  const starts = GS.monsterTiles(monster);
+  const startKeys = new Set(starts.map(([x,y])=>`${x},${y}`));
+  const canPlace = pos => GS.monsterTiles({...monster, pos}).every(([x,y]) =>
+    walkable(x,y) && (!occupied.has(`${x},${y}`) || startKeys.has(`${x},${y}`)));
+  const queue = [{pos:monster.pos.slice(), steps:0}], seen = new Set([monster.pos.join(',')]);
+  for(let q=0; q<queue.length; q++){
+    const node = queue[q];
+    if(node.steps >= movement) continue;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const pos = [node.pos[0]+dx,node.pos[1]+dy], key = pos.join(',');
+      if(seen.has(key) || !canPlace(pos)) continue;
+      seen.add(key); queue.push({pos,steps:node.steps+1});
+    }
+  }
+  const addAttacks = (target, shifted) => {
+    const attacks = Array.isArray(shifted.attacks) && shifted.attacks.length ? shifted.attacks : [{range:null,reach:1}];
+    for(const profile of attacks){
+      const preview = _masterMonsterAttackPreviewClient(state,{...shifted,attacks:[profile]});
+      for(const key of preview.zone){
+        if(profile?.range != null){
+          const [x,y] = key.split(',').map(Number);
+          if(!GS.monsterTiles(shifted).some(([sx,sy])=>GS.hasLineOfSight(state,sx,sy,x,y))) continue;
+        }
+        target.add(key);
+      }
+    }
+  };
+  addAttacks(attack,monster);
+  for(const node of queue){
+    if(node.steps === 0) continue;
+    addAttacks(afterMove,{...monster,pos:node.pos});
+  }
+  for(const key of attack) afterMove.delete(key);
+  return {attack,move:afterMove};
+}
+
+let _inspectedMonsterId = null;
+function _inspectedMonster(state){
+  if(_inspectedMonsterId == null || !state) return null;
+  const monster = (state.monsters||[]).find(m=>String(m.id)===String(_inspectedMonsterId)&&m.hp>0);
+  if(!monster){_fecharInspecaoMonstro(false);return null;}
+  const me=(state.players||[]).find(p=>p.id===GS.myPid&&p.alive);
+  const vision=me?computeVisionSet(state,me):new Set();
+  if(!GS.monsterTiles(monster).some(([x,y])=>vision.has(`${x},${y}`))){_fecharInspecaoMonstro(false);return null;}
+  _renderMonsterInspector(monster);
+  return monster;
+}
+function _monsterTooltipCompactHTML(monster){
+  return `<b>${monster.emoji||'👾'} ${monster.name}</b><br>❤️ ${monster.hp}/${monster.max_hp} &nbsp;·&nbsp; 🛡️ ${t('ui.hud.sigla_ca')} ${monster.ac}`
+    + `<br><span style="color:#c8a951;font-size:9px">${t('ui.monster.inspect.hint')}</span>`;
+}
+function _renderMonsterInspector(monster){
+  let panel=document.getElementById('monster-inspector');
+  if(!panel){
+    panel=document.createElement('aside'); panel.id='monster-inspector'; panel.className='monster-inspector';
+    panel.setAttribute('role','dialog'); panel.setAttribute('aria-modal','false'); document.body.appendChild(panel);
+  }
+  const level=(GS.isMaster()||GS.gameState?.test_mode)?3:_bestiarioNivel(monster);
+  const bard=_partyTemBardoVivo();
+  const signature=[monster.id,monster.hp,monster.max_hp,monster.ac,level,bard,JSON.stringify(monster.ability_uses||{}),GS.gameState?.round].join('|');
+  panel.style.display='block'; if(panel.dataset.signature===signature)return; panel.dataset.signature=signature;
+  panel.innerHTML=`<div class="monster-inspector-head"><strong>${monster.emoji||'👾'} ${_esc(monster.name)}</strong>`
+    + `<button type="button" id="monster-inspector-close" data-gamepad-action="activate" tabindex="0" aria-label="${_esc(t('ui.monster.inspect.close'))}" title="${_esc(t('ui.monster.inspect.close'))}">×</button></div>`
+    + `<div class="monster-inspector-legend"><span><i class="monster-inspector-swatch attack"></i>${_esc(t('ui.monster.inspect.attack_now'))}</span>`
+    + `<span><i class="monster-inspector-swatch move"></i>${_esc(t('ui.monster.inspect.move_attack'))}</span></div>`
+    + `<div class="monster-inspector-sheet">${fichaInimigoTooltipHTML(monster, bard, null, level)}</div>`;
+  panel.querySelector('#monster-inspector-close')?.addEventListener('click',()=>_fecharInspecaoMonstro());
+}
+function _fecharInspecaoMonstro(redraw=true){
+  _inspectedMonsterId=null;
+  const panel=document.getElementById('monster-inspector');
+  if(panel){panel.style.display='none';panel.dataset.signature='';}
+  if(redraw&&GS.gameState){if(mode3D&&g3)renderMap3D(GS.gameState);else if(!mode3D)renderMap(GS.gameState);}
+}
+function _abrirInspecaoMonstro(tx,ty){
+  const state=GS.gameState, monster=_masterMonsterAtTileClient(state,tx,ty);
+  if(!monster)return false;
+  const me=(state.players||[]).find(p=>p.id===GS.myPid&&p.alive);
+  const vision=me?computeVisionSet(state,me):new Set();
+  if(!GS.monsterTiles(monster).some(([x,y])=>vision.has(`${x},${y}`)))return false;
+  _inspectedMonsterId=String(monster.id); $('tooltip').style.display='none'; _renderMonsterInspector(monster);
+  if(mode3D&&g3)renderMap3D(state);else if(!mode3D)renderMap(state);
+  return true;
+}
+document.addEventListener('keydown',e=>{
+  if(e.key === 'Escape'&&_inspectedMonsterId!=null){e.preventDefault();e.stopPropagation();_fecharInspecaoMonstro();}
+});
+function _drawMonsterInspectorAreas2D(ctx,state,visionSet){
+  const monster=_inspectedMonster(state); if(!monster)return;
+  const areas=_monsterThreatAreasClient(state,monster); ctx.save();
+  for(const [kind,cells] of [['move',areas.move],['attack',areas.attack]]){
+    ctx.fillStyle=kind==='attack'?'rgba(210,18,24,0.30)':'rgba(54,164,91,0.24)';
+    ctx.strokeStyle=kind==='attack'?'rgba(255,52,52,0.96)':'rgba(106,230,145,0.86)';
+    ctx.lineWidth=kind==='attack'?2.5:1.8;
+    for(const key of cells){if(!visionSet.has(key))continue;const [x,y]=key.split(',').map(Number);ctx.fillRect(x*CELL+2,y*CELL+2,CELL-4,CELL-4);ctx.strokeRect(x*CELL+2,y*CELL+2,CELL-4,CELL-4);}
+  }
+  ctx.restore();
 }
 
 function _masterMonsterAtTileClient(state, tx, ty){
@@ -31133,14 +31265,12 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
 
   const monster=_masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
-    const _ddx=myP?Math.abs(myP.pos[0]-tx):99, _ddy=myP?Math.abs(myP.pos[1]-ty):99;
     const _wRng=myP&&myP.weapon&&myP.weapon.range!=null?myP.weapon.range:null;
     const inRange=myP ? _alvoNoAlcanceArmaClient(myP, tx, ty, monster.altura) : false;
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&lineClear&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} ${t('ui.tabuleiro.clique_atacar')}</span>`:'';
-    // Conhecimento das Lendas (passiva do Henrique): ficha completa se há bardo vivo.
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP)
+    tip.innerHTML=_monsterTooltipCompactHTML(monster)
                   +_linhaPrevisaoAtaque(monster, tx, ty, myP)+atkLabel+_coberturaTooltipHTML(myP, monster, tx, ty);
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
@@ -31181,6 +31311,11 @@ $('dungeon-canvas').addEventListener('mouseleave',()=>{
 
 // Click: unified handler (attack / skill / pathfind) — see handleTileClick below
 $('dungeon-canvas').addEventListener('click', e=>{ handleTileClick(...canvasTile(e)); });
+$('dungeon-canvas').addEventListener('contextmenu', e=>{
+  e.preventDefault();
+  const [tx,ty]=canvasTile(e);
+  _abrirInspecaoMonstro(tx,ty);
+});
 _setup2DTouch();   // habilita toque (mover/rolar/zoom) no tabuleiro 2D
 
 // ── Gaveta da ficha (celular): abre/fecha o painel lateral ───────────────────
@@ -33868,6 +34003,7 @@ let g3     = null;    // Three.js renderer state (null when 2D active)
 let _movePulse       = 0.5;   // 0→1 sine value used by 2D and 3D highlight animations
 let _2dHighlightFrame = null; // requestAnimationFrame handle for 2D pulse loop
 let _mouseRightHeld = false;
+let _rightClickPointer = null;
 let _mouseAltitudeWheelAt = 0;
 
 document.addEventListener('mouseup', event => {
@@ -43742,6 +43878,10 @@ function init3D(state){
     _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xff3838, opacity: 0.16, transparent: true, depthWrite: false }), 0.013, _ehPisavel));
   const masterAttackZoneMeshes = _mkOverlayPool(
     _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xd21218, opacity: 0.38, transparent: true, depthWrite: false }), 0.015, _ehPisavel));
+  const inspectorAttackMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xd21218, opacity: 0.36, transparent: true, depthWrite: false }), 0.018, _ehPisavel));
+  const inspectorMoveMeshes = _mkOverlayPool(
+    _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0x38a865, opacity: 0.30, transparent: true, depthWrite: false }), 0.017, _ehPisavel));
   const masterFootprintMeshes = _mkOverlayPool(
     _mkPlano(_geoMestre, new T.MeshBasicMaterial({ color: 0xffc22e, opacity: 0.22, transparent: true, depthWrite: false }), 0.017, _ehPisavel));
   const masterHistoryAttackerMeshes = _mkOverlayPool(
@@ -44703,7 +44843,7 @@ function init3D(state){
     moveHighlightMeshes, atkHighlightMeshes, moveHighlightMat, gamepadCursorMesh,
     softShadowMat,
     weaponRangeMeshes,
-    masterAttackRangeMeshes, masterAttackZoneMeshes, masterFootprintMeshes,
+    masterAttackRangeMeshes, masterAttackZoneMeshes, inspectorAttackMeshes, inspectorMoveMeshes, masterFootprintMeshes,
     masterHistoryAttackerMeshes, masterHistoryTargetMeshes,
     spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
@@ -44757,6 +44897,22 @@ function init3D(state){
   // OrbitControls handles the actual camera movement; we only need to know
   // "did the pointer travel while a button was held?" to suppress tile clicks.
   const domEl = renderer.domElement;
+  domEl.addEventListener('mousedown', e=>{
+    if(e.button!==2)return;
+    _rightClickPointer={x:e.clientX,y:e.clientY,moved:false};
+    const gesture=_rightClickPointer;
+    setTimeout(()=>{if(_rightClickPointer===gesture)_rightClickPointer=null;},800);
+  });
+  domEl.addEventListener('mousemove', e=>{
+    if(_rightClickPointer&&(Number(e.buttons)&2)&&Math.hypot(e.clientX-_rightClickPointer.x,e.clientY-_rightClickPointer.y)>=6)
+      _rightClickPointer.moved=true;
+  });
+  domEl.addEventListener('contextmenu', e=>{
+    e.preventDefault();
+    const gesture=_rightClickPointer; _rightClickPointer=null;
+    if(e.button!==2||!gesture||gesture.moved)return;
+    const tile=get3DTilePlane(e); if(tile)_abrirInspecaoMonstro(tile[0],tile[1]);
+  });
   // Com o botão direito pressionado, o scroll vira um passo vertical. Fora
   // desse gesto, o OrbitControls continua controlando o zoom normalmente.
   domEl.addEventListener('wheel', _handleAltitudeWheel, { passive:false, capture:true });
@@ -48280,6 +48436,12 @@ function renderMap3D(state){
     masterHoverMonster ? _soExploradas(masterHoverPreview.range) : null);
   _overlayShowOnly(g3.masterAttackZoneMeshes,
     masterHoverMonster ? _soExploradas(masterHoverPreview.zone) : null);
+  const inspectedMonster = _inspectedMonster(state);
+  const inspectorAreas = inspectedMonster ? _monsterThreatAreasClient(state, inspectedMonster) : null;
+  _overlayShowOnly(g3.inspectorMoveMeshes,
+    inspectorAreas ? _soExploradas(new Set([...inspectorAreas.move].filter(key=>visionSet.has(key)))) : null);
+  _overlayShowOnly(g3.inspectorAttackMeshes,
+    inspectorAreas ? _soExploradas(new Set([...inspectorAreas.attack].filter(key=>visionSet.has(key)))) : null);
   {
     const footprint = new Set();
     for(const id of _masterSelectedMonsterIds(state)){
@@ -53505,7 +53667,7 @@ function on3DMouseMove(e){
     const inR  = myP ? _alvoNoAlcanceArmaClient(myP, tx, ty, monster.altura) : false;
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';
-    tip.innerHTML=fichaInimigoTooltipHTML(monster, _partyTemBardoVivo(), myP) +
+    tip.innerHTML=_monsterTooltipCompactHTML(monster) +
                   _linhaPrevisaoAtaque(monster, tx, ty, myP) +
                   (canA ?`<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '') +
                   _coberturaTooltipHTML(myP, monster, tx, ty);
