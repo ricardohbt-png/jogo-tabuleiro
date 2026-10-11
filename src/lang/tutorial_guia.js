@@ -373,8 +373,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "A Guilda perdeu contato com esta área."
   },
   "ui.tutorial.guia.fala_4.porta.texto": {
-    "en": "Go through the door into the training wing.",
-    "pt": "Atravesse a porta para a ala de treino."
+    "en": "Use the marked door to enter the training wing.",
+    "pt": "Use a porta marcada para entrar na ala de treino."
   },
   "ui.tutorial.guia.fala_5.atacar.dica.1": {
     "en": "Walk next to the dummy and click it.",
@@ -420,17 +420,25 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Attack the dummy head-on.",
     "pt": "Ataque o boneco de frente."
   },
+  "ui.tutorial.guia.fala_armadilhas.alerta.texto": {
+    "en": "This passage looks strange. Check the floor before moving on.",
+    "pt": "Esta passagem parece estranha. Observe o piso antes de avançar."
+  },
+  "ui.tutorial.guia.fala_armadilhas.atravessar.texto": {
+    "en": "Cross the corridor carefully. Then continue to the marked exit.",
+    "pt": "Atravesse o corredor com cuidado. Depois, siga até a saída marcada."
+  },
+  "ui.tutorial.guia.fala_armadilhas.efeitos.texto": {
+    "en": "Holes knock you down; pits damage. Nets and bear traps restrain; darts poison.",
+    "pt": "Buracos derrubam; fossos causam dano. Redes e armadilhas de urso prendem; dardos envenenam."
+  },
+  "ui.tutorial.guia.fala_armadilhas.teleporte.texto": {
+    "en": "The teleport trap tests Will. Fail its save and return to the dungeon entrance.",
+    "pt": "A armadilha de teletransporte testa Vontade. Falhar na resistência devolve você ao início da masmorra."
+  },
   "ui.tutorial.guia.fala_atalhos.andar.texto": {
     "en": "Click a map square to walk there; then click End Turn.",
     "pt": "Clique numa casa do mapa para andar até ela; depois clique em Encerrar Turno."
-  },
-  "ui.tutorial.guia.fala_atalhos.barra.porque": {
-    "en": "Each key from 1 to 0 fires whatever you bound to it.",
-    "pt": "Cada tecla de 1 a 0 dispara o que você ligou a ela."
-  },
-  "ui.tutorial.guia.fala_atalhos.barra.texto": {
-    "en": "A tip for later: in the H menu, the [[atalho]] panel lets you configure keys.",
-    "pt": "Dica para consultar depois: no menu H, o painel [[atalho]] permite configurar teclas."
   },
   "ui.tutorial.guia.fala_atalhos.camera.texto": {
     "en": "Press R on the 3D board to re-center the camera.",
@@ -465,76 +473,88 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
   },
   "ui.tutorial.guia.fala_hostilidade.abrir.porque": {
-    "en": "The door keeps the monsters dormant until the room is opened.",
-    "pt": "A porta mantém os monstros adormecidos até a sala ser aberta."
+    "en": "Something is fighting in there. Open the door to see the situation before deciding what to do.",
+    "pt": "Algo está se enfrentando lá dentro. Abra a porta para ver a situação antes de decidir como agir."
   },
   "ui.tutorial.guia.fala_hostilidade.abrir.texto": {
-    "en": "Open the room door to reveal what is inside.",
-    "pt": "Abra a porta da sala para revelar o que há dentro."
+    "en": "Open the door after hearing a conflict inside.",
+    "pt": "Abra a porta ao ouvir barulho de conflito lá dentro."
   },
-  "ui.tutorial.guia.fala_hostilidade.bardo.porque": {
-    "en": "The Bard's passive reveals useful information before you choose how to act.",
-    "pt": "A passiva do Bardo revela informações úteis antes de escolher como agir."
+  "ui.tutorial.guia.fala_hostilidade.enfraquecer.porque": {
+    "en": "The health bars show which survivors are wounded and help you choose when to use the grenade.",
+    "pt": "As barras de vida mostram quais sobreviventes estão feridos e ajudam a escolher a hora da granada."
   },
-  "ui.tutorial.guia.fala_hostilidade.bardo.texto": {
-    "en": "Check the Bard's Knowledge of Legends: “hostile to all monsters.”",
-    "pt": "Confira no Conhecimento das Lendas do Bardo: “hostil a todos os monstros”."
+  "ui.tutorial.guia.fala_hostilidade.enfraquecer.texto": {
+    "en": "Watch their hit points. Let the enemies weaken one another and end one more turn.",
+    "pt": "Acompanhe os pontos de vida. Deixe os inimigos se enfraquecerem e encerre mais um turno."
   },
   "ui.tutorial.guia.fala_hostilidade.granada.porque": {
-    "en": "The blast hits an area; wait for enemies to group together to get more from the item.",
-    "pt": "A explosão atinge uma área; espere os inimigos se agruparem para aproveitar melhor o item."
+    "en": "Watch their remaining health and wait for the wounded enemies to move close together to hit as many as possible.",
+    "pt": "Observe a vida restante e espere os inimigos feridos ficarem próximos para atingir o maior número possível."
   },
   "ui.tutorial.guia.fala_hostilidade.granada.texto": {
     "en": "Take the Superior Grenade from the chest and throw it at the survivors.",
     "pt": "Pegue a Granada Superior no baú e arremesse-a nos sobreviventes."
   },
   "ui.tutorial.guia.fala_hostilidade.observar.porque": {
-    "en": "Enemies can keep one another busy while the party saves its resources.",
-    "pt": "Inimigos podem se ocupar uns com os outros enquanto o grupo guarda recursos."
+    "en": "The fight can weaken the enemies before the party needs to spend resources.",
+    "pt": "A luta pode enfraquecer os inimigos antes que o grupo precise gastar recursos."
   },
   "ui.tutorial.guia.fala_hostilidade.observar.texto": {
-    "en": "Keep your distance and end your turn; press Got it when the fight ends.",
-    "pt": "Afaste-se e encerre o turno; depois aperte Entendi ao fim da luta."
+    "en": "Watch the fight carefully: the monsters are battling each other. Do not rush in yet.",
+    "pt": "Confira a luta com cuidado: os monstros estão se enfrentando. Não avance ainda."
+  },
+  "ui.tutorial.guia.fala_hostilidade.observar.titulo": {
+    "en": "The enemy of my enemy...",
+    "pt": "O inimigo do meu inimigo..."
+  },
+  "ui.tutorial.guia.fala_hostilidade.parabens.texto": {
+    "en": "Congratulations! You watched, let the enemies weaken one another, and used the grenade at the right time.",
+    "pt": "Parabéns! Você observou, deixou os inimigos se enfraquecerem e usou a Granada na hora certa."
+  },
+  "ui.tutorial.guia.fala_hostilidade.parabens.titulo": {
+    "en": "Excellent strategy!",
+    "pt": "Estratégia perfeita!"
+  },
+  "ui.tutorial.guia.fala_hostilidade.sobreviventes.porque": {
+    "en": "The grenade weakens the survivors; the party completes the strategy by defeating whoever remains.",
+    "pt": "A granada enfraquece os sobreviventes; o grupo conclui a estratégia derrotando quem restou."
+  },
+  "ui.tutorial.guia.fala_hostilidade.sobreviventes.texto": {
+    "en": "If any monster survives, finish the fight with the party. The room must be safe.",
+    "pt": "Se algum monstro resistir, termine o combate com o grupo. A sala precisa ficar segura."
+  },
+  "ui.tutorial.guia.fala_hostilidade.usar.porque": {
+    "en": "This lets the party save resources and stay out of the fight.",
+    "pt": "Enquanto isso, o grupo evita gastar recursos e não se expõe ao combate."
+  },
+  "ui.tutorial.guia.fala_hostilidade.usar.texto": {
+    "en": "Use the monsters against each other. Keep your distance and end your turn to let them fight.",
+    "pt": "Use os monstros contra eles mesmos. Mantenha distância e encerre seu turno para deixá-los lutar."
   },
   "ui.tutorial.guia.fala_intro.briefing.texto": {
-    "en": "The Guild has lost contact with the training wing. Find out what happened and return with the party.",
-    "pt": "A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo."
+    "en": "Welcome! This is your first mission in the training grounds. The Guild has lost contact with the training wing. Find out what happened and return with the party.",
+    "pt": "Bem-vindo! Esta é sua primeira missão no Campo de Treinamento. A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo."
   },
   "ui.tutorial.guia.fala_intro.continuar.texto": {
-    "en": "When you are ready, end your turn. The Master-at-Arms will guide the party.",
-    "pt": "Quando estiver pronto, encerre o turno. O Mestre de Armas vai orientar a equipe."
+    "en": "End your turn when you are ready. The Master-at-Arms will guide the party.",
+    "pt": "Encerre o turno quando estiver pronto. O Mestre de Armas vai orientar a equipe."
   },
   "ui.tutorial.guia.fala_intro.ficha.texto": {
     "en": "Open the hero sheet to check class, attributes, weapons, and skills before setting out.",
     "pt": "Abra a ficha para conferir classe, atributos, armas e habilidades antes de partir."
   },
   "ui.tutorial.guia.fala_intro.objetivo.texto": {
-    "en": "The mission ends when the whole party reaches the exit. Check the objective here.",
-    "pt": "A missão termina quando todo o grupo estiver perto da saída. Confira o objetivo aqui."
+    "en": "Check the objective: the mission ends when the whole party reaches the exit.",
+    "pt": "Confira o objetivo: a missão termina quando todo o grupo estiver perto da saída."
   },
   "ui.tutorial.guia.fala_intro.vida.texto": {
     "en": "Check your hero's health. If it reaches zero, they fall and need help.",
     "pt": "Confira a vida do herói. Se ela chegar a zero, ele cai e precisa de ajuda."
   },
-  "ui.tutorial.guia.fala_menu_habilidades.abrir.texto": {
-    "en": "Open the skills menu with the highlighted button or press H.",
-    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
-  },
-  "ui.tutorial.guia.fala_menu_habilidades.conferir.texto": {
-    "en": "Look at one of your hero's skills. Close the menu with H or Esc, then end your turn.",
-    "pt": "Veja uma habilidade do seu herói. Feche o menu com H ou Esc e encerre o turno."
-  },
-  "ui.tutorial.guia.fala_menu_magias.abrir.texto": {
-    "en": "Your hero knows a spell. Open the spellbook with the highlighted button or press M.",
-    "pt": "Seu herói conhece uma magia. Abra o grimório pelo botão destacado ou pressione M."
-  },
-  "ui.tutorial.guia.fala_menu_magias.conferir.texto": {
-    "en": "Look at one spell and close the spellbook with M or Esc. Then end your turn.",
-    "pt": "Confira uma magia e feche o grimório com M ou Esc. Depois encerre o turno."
-  },
   "ui.tutorial.guia.fala_primeiro_combate.alvo.texto": {
-    "en": "A training dummy lets you try an attack without spending resources.",
-    "pt": "Um boneco de treino serve para experimentar seu ataque sem gastar recursos."
+    "en": "Use a training dummy to try your attack without spending resources.",
+    "pt": "Use um boneco de treino para experimentar seu ataque sem gastar recursos."
   },
   "ui.tutorial.guia.fala_primeiro_combate.atacar.dica.1": {
     "en": "If the attack misses, try another dummy.",
@@ -545,60 +565,56 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ataque um boneco com a arma equipada e observe o acerto e o dano."
   },
   "ui.tutorial.guia.fala_res.atacar.dica.1": {
-    "en": "Staffs and maces deal impact, which the skeleton does not resist.",
-    "pt": "Cajado e maça causam impacto, que o esqueleto não resiste."
+    "en": "If you used another weapon, equip a sword and try again.",
+    "pt": "Se usou outra arma, equipe uma espada e tente de novo."
   },
   "ui.tutorial.guia.fala_res.atacar.porque": {
-    "en": "When the resistance applies, the damage number shows in blue with RESISTED.",
-    "pt": "Quando a resistência age, o número do dano aparece em azul, com RESISTIDO."
+    "en": "Resistance appears in blue with RESISTED. Only a slashing hit completes this step.",
+    "pt": "A resistência aparece em azul, com RESISTIDO. Só um golpe cortante conclui esta etapa."
   },
   "ui.tutorial.guia.fala_res.atacar.texto": {
-    "en": "Attack the skeleton with a sword or dagger and compare the damage.",
-    "pt": "Ataque o esqueleto com espada ou adaga e compare o dano."
-  },
-  "ui.tutorial.guia.fala_res.ler.porque": {
-    "en": "Each type of hit does different damage against each creature.",
-    "pt": "Cada tipo de golpe rende um dano diferente contra cada criatura."
+    "en": "Hit the dummy with a sword and compare the damage.",
+    "pt": "Acerte o boneco com uma espada e compare o dano."
   },
   "ui.tutorial.guia.fala_res.ler.texto": {
-    "en": "Check the [[resistencia]]: the skeleton absorbs 1 point of slashing and 2 of piercing.",
-    "pt": "Confira a [[resistencia]]: o esqueleto absorve 1 ponto de corte e 2 de perfuração."
+    "en": "This dummy reduces slashing weapon damage by 5.",
+    "pt": "Este boneco reduz em 5 o dano de armas cortantes."
   },
   "ui.tutorial.guia.fala_retirada.retirar.dica.1": {
     "en": "The mission ends when the whole party is beside the exit.",
     "pt": "A missão termina quando o grupo todo estiver ao lado da saída."
   },
   "ui.tutorial.guia.fala_retirada.retirar.texto": {
-    "en": "The report can wait. Bring every hero to the marked exit.",
-    "pt": "O relatório pode esperar. Leve todos os heróis até a saída marcada."
+    "en": "Move every hero to the marked exit. The report can wait.",
+    "pt": "Mova todos os heróis até a saída marcada. O relatório pode esperar."
   },
   "ui.tutorial.guia.fala_vuln.atacar.dica.1": {
-    "en": "Choosing the right weapon beats rolling well.",
-    "pt": "Escolher a arma certa vale mais que rolar bem o dado."
+    "en": "Only a bludgeoning hit completes this step.",
+    "pt": "Só um golpe contundente conclui esta etapa."
   },
   "ui.tutorial.guia.fala_vuln.atacar.porque": {
-    "en": "When the weakness applies, the damage number shows in red with VULNERABLE.",
-    "pt": "Quando a fraqueza age, o número do dano aparece em vermelho, com VULNERÁVEL."
+    "en": "The vulnerability adds 2 damage and appears in red with VULNERABLE.",
+    "pt": "A vulnerabilidade soma 2 de dano e aparece em vermelho, com VULNERÁVEL."
   },
   "ui.tutorial.guia.fala_vuln.atacar.texto": {
-    "en": "Attack the skeleton with the mace and compare the damage: impact exploits its vulnerability.",
-    "pt": "Ataque o esqueleto com a maça e compare o dano: impacto explora a vulnerabilidade dele."
+    "en": "Attack the same dummy with the staff and compare it with the previous hit.",
+    "pt": "Ataque o mesmo boneco com o cajado e compare com o golpe anterior."
   },
   "ui.tutorial.guia.fala_vuln.equipar.dica.1": {
     "en": "Equipping is a [[acao_livre]], it does not use your turn.",
     "pt": "Equipar é [[acao_livre]], não gasta o turno."
   },
   "ui.tutorial.guia.fala_vuln.equipar.texto": {
-    "en": "Open your bag and equip the mace before attacking.",
-    "pt": "Abra a bolsa e equipe a maça antes de atacar."
+    "en": "Open your bag with [[atalho:inventario]] and equip the Wooden Staff.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e equipe o Cajado de Madeira."
   },
   "ui.tutorial.guia.fala_vuln.pegar.porque": {
-    "en": "Impact is the skeleton's weak point: [[vulnerabilidade]] adds damage.",
-    "pt": "Impacto é o ponto fraco do esqueleto: a [[vulnerabilidade]] soma dano."
+    "en": "The staff deals bludgeoning damage, exploiting the dummy's [[vulnerabilidade]].",
+    "pt": "O cajado causa dano contundente, que explora a [[vulnerabilidade]] do boneco."
   },
   "ui.tutorial.guia.fala_vuln.pegar.texto": {
-    "en": "Open the marked chest and take the training mace.",
-    "pt": "Abra o baú marcado e pegue a maça de treino."
+    "en": "Open the marked chest and take the Wooden Staff.",
+    "pt": "Abra o baú marcado e pegue o Cajado de Madeira."
   },
   "ui.tutorial.guia.porta_bard.porta.dica.1": {
     "en": "Click the door to open it, then walk onto it.",
@@ -689,8 +705,104 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ela aumenta a dificuldade do [[teste_resistencia]] do alvo."
   },
   "ui.tutorial.guia.treino_aprimorar_magia.aprimorar.texto": {
-    "en": "Arm Enhance Spell and cast a spell that allows a save.",
-    "pt": "Arme Aprimorar Magia e lance uma magia com teste."
+    "en": "Close the H menu, press 1: arm Enhance Spell and cast a spell that allows a save.",
+    "pt": "Feche o menu H, pressione 1: arme Aprimorar Magia e lance magia com teste."
+  },
+  "ui.tutorial.guia.treino_atalhos_bard.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_bard.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_bard.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_bard.atribuir.texto": {
+    "en": "Drag Heroic Song to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Canção Heroica ao espaço 1. No controle, selecione-a e use a combinação do atalho."
+  },
+  "ui.tutorial.guia.treino_atalhos_cleric.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_cleric.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_cleric.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_cleric.atribuir.texto": {
+    "en": "Drag Heal to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Cura ao espaço 1. No controle, selecione-a e use a combinação do atalho."
+  },
+  "ui.tutorial.guia.treino_atalhos_mage.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_mage.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_mage.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_mage.atribuir.texto": {
+    "en": "Drag Enhance Spell to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Aprimorar Magia ao espaço 1. No controle, selecione-a e use a combinação do atalho."
+  },
+  "ui.tutorial.guia.treino_atalhos_paladin.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_paladin.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_paladin.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_paladin.atribuir.texto": {
+    "en": "Drag Protector to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Protetor ao espaço 1. No controle, selecione-a e use a combinação do atalho."
+  },
+  "ui.tutorial.guia.treino_atalhos_rogue.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_rogue.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_rogue.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_rogue.atribuir.texto": {
+    "en": "Drag Detect Traps to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Detectar Armadilhas ao espaço 1. No controle, selecione-a e use a combinação do atalho."
+  },
+  "ui.tutorial.guia.treino_atalhos_warrior.abrir.texto": {
+    "en": "Open the skills menu with the highlighted button or press H.",
+    "pt": "Abra o menu de habilidades pelo botão destacado ou pressione H."
+  },
+  "ui.tutorial.guia.treino_atalhos_warrior.atribuir.dica.1": {
+    "en": "After assigning it, close the H menu. The next lessons will ask you to use this skill.",
+    "pt": "Depois de gravá-la, encerre o menu H. As próximas lições vão pedir essa habilidade."
+  },
+  "ui.tutorial.guia.treino_atalhos_warrior.atribuir.porque": {
+    "en": "On keyboard, 1 activates the skill. Esc cancels an aim that is still open. If the skill is a toggle or is maintained, press 1 again to turn it off; fixed-duration effects end on their own.",
+    "pt": "No teclado, 1 ativa a habilidade. Esc cancela uma mira ainda aberta. Se ela for alternável ou mantida, use 1 de novo para desligá-la; efeitos de duração fixa acabam sozinhos."
+  },
+  "ui.tutorial.guia.treino_atalhos_warrior.atribuir.texto": {
+    "en": "Drag Precise Aim to slot 1. With a controller, select it and use the shortcut combination.",
+    "pt": "Arraste Mira Certeira ao espaço 1. No controle, selecione-a e use a combinação do atalho."
   },
   "ui.tutorial.guia.treino_cancao.cancao.dica.1": {
     "en": "Without Attack ticked the Symphony reinforces nothing: turn the song off and retry.",
@@ -701,8 +813,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "A [[sinfonia]] do Alaúde Velho soma +1 ao acerto: a canção sobe de +1 para +2."
   },
   "ui.tutorial.guia.treino_cancao.cancao.texto": {
-    "en": "Click Heroic Song and tick Attack.",
-    "pt": "Clique em Canção Heroica e marque Acerto."
+    "en": "Close the H menu, press 1: open Heroic Song, then tick Attack.",
+    "pt": "Feche o menu H, pressione 1: abra Canção Heroica e marque Acerto."
   },
   "ui.tutorial.guia.treino_cancao_manter.manter.porque": {
     "en": "It charges [[manutencao]] in food and water every round.",
@@ -717,8 +829,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Assim o efeito e o gasto de recursos acabam."
   },
   "ui.tutorial.guia.treino_cancao_parar.parar.texto": {
-    "en": "Turn off the Heroic Song.",
-    "pt": "Desative a Canção Heroica."
+    "en": "Press 1 again to turn off Heroic Song.",
+    "pt": "Pressione 1 novamente para desativar a Canção Heroica."
   },
   "ui.tutorial.guia.treino_comando.abrir_fase.texto": {
     "en": "End Pedro's turn to open the servants phase.",
@@ -749,8 +861,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Confira a vida recuperada e o custo de água."
   },
   "ui.tutorial.guia.treino_cura.curar.texto": {
-    "en": "Click Heal and use one die on Apprentice 1.",
-    "pt": "Clique em Cura e use um dado no Aprendiz 1."
+    "en": "Close the H menu, press 1: use Heal and apply one die to Apprentice 1.",
+    "pt": "Feche o menu H, pressione 1: use Cura e aplique um dado no Aprendiz 1."
   },
   "ui.tutorial.guia.treino_cura_area.curar.porque": {
     "en": "At the starting level the radius is 2 squares: check the area before confirming.",
@@ -773,8 +885,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ela revela os mecanismos próximos e cobra água de [[manutencao]]."
   },
   "ui.tutorial.guia.treino_detectar.detectar.texto": {
-    "en": "Arm Detect Traps and get close to square 10,8.",
-    "pt": "Arme Detectar Armadilhas e chegue perto da casa 10,8."
+    "en": "Close the H menu, press 1: activate Detect Traps and approach square 10,8.",
+    "pt": "Feche o menu H, pressione 1: ative Detectar Armadilhas e aproxime-se da casa 10,8."
   },
   "ui.tutorial.guia.treino_esconder.esconder.porque": {
     "en": "It is a bonus action: you can attack in the same round after hiding.",
@@ -844,18 +956,6 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Click Devastating Strike and then the dummy.",
     "pt": "Clique em Golpe Devastador e depois no boneco."
   },
-  "ui.tutorial.guia.treino_grimorio.grimorio.dica.1": {
-    "en": "On a phone, it is the ✨ button in the screen corner.",
-    "pt": "No celular, é o botão ✨ no canto da tela."
-  },
-  "ui.tutorial.guia.treino_grimorio.grimorio.porque": {
-    "en": "Your known spells are listed there.",
-    "pt": "É nela que ficam as magias que você conhece."
-  },
-  "ui.tutorial.guia.treino_grimorio.grimorio.texto": {
-    "en": "Open the ✨ Spells tab of your panel.",
-    "pt": "Abra a aba ✨ Magias do seu painel."
-  },
   "ui.tutorial.guia.treino_grimorio.lancar.dica.1": {
     "en": "Command and Heavy Body Curse need an enemy or another hero: there are none here.",
     "pt": "Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói: aqui não há."
@@ -865,8 +965,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Magia de aliado pede um aliado; a de área pede uma casa. Fora desta sala, cada uma gasta um [[slot]]."
   },
   "ui.tutorial.guia.treino_grimorio.lancar.texto": {
-    "en": "Pick a spell and aim at yourself, an apprentice or a free square.",
-    "pt": "Escolha uma magia e mire em você, num aprendiz ou numa casa livre."
+    "en": "Open the Grimoire, pick a spell and aim at yourself, an apprentice or a free square.",
+    "pt": "Abra o Grimório, escolha uma magia e mire em você, aprendiz ou casa livre."
   },
   "ui.tutorial.guia.treino_grimorio_turno.encerrar.porque": {
     "en": "Casting used your main action; the next abilities need it back.",
@@ -940,17 +1040,13 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Activate Warrior of Light and compare your bonuses.",
     "pt": "Ative Guerreiro da Luz e compare seus bônus."
   },
-  "ui.tutorial.guia.treino_magia.grimorio.texto": {
-    "en": "Open the Grimoire with the spells button.",
-    "pt": "Abra o Grimório no botão das magias."
-  },
   "ui.tutorial.guia.treino_magia.lancar.porque": {
     "en": "In this room spells do not spend [[slot]]s: test every spell you know.",
     "pt": "Nesta sala as magias não gastam [[slot]]: teste todas as que você conhece."
   },
   "ui.tutorial.guia.treino_magia.lancar.texto": {
-    "en": "Pick a spell and cast it on the dummy or yourself.",
-    "pt": "Escolha uma magia e lance-a no boneco ou em você."
+    "en": "Open the Grimoire, pick a spell and cast it on the dummy or yourself.",
+    "pt": "Abra o Grimório, escolha uma magia e lance-a no boneco ou em você."
   },
   "ui.tutorial.guia.treino_maos.curar.dica.1": {
     "en": "If the hostage's move is open, end your turn again.",
@@ -964,6 +1060,22 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Stand next to the wounded hostage and use Lay on Hands.",
     "pt": "Fique ao lado do refém ferido e use Imposição das Mãos."
   },
+  "ui.tutorial.guia.treino_menu_magias_cleric.abrir.texto": {
+    "en": "Open the Grimoire tab with the highlighted button or press M.",
+    "pt": "Abra a aba do Grimório pelo botão destacado ou pressione M."
+  },
+  "ui.tutorial.guia.treino_menu_magias_cleric.conferir.texto": {
+    "en": "Review your spells. Close the spellbook with M or Esc, then end your turn.",
+    "pt": "Confira suas magias. Feche o grimório com M ou Esc e encerre o turno."
+  },
+  "ui.tutorial.guia.treino_menu_magias_mage.abrir.texto": {
+    "en": "Open the Grimoire tab with the highlighted button or press M.",
+    "pt": "Abra a aba do Grimório pelo botão destacado ou pressione M."
+  },
+  "ui.tutorial.guia.treino_menu_magias_mage.conferir.texto": {
+    "en": "Review your spells. Close the spellbook with M or Esc, then end your turn.",
+    "pt": "Confira suas magias. Feche o grimório com M ou Esc e encerre o turno."
+  },
   "ui.tutorial.guia.treino_mira.mira.dica.1": {
     "en": "The ability button is in the actions panel, on the right.",
     "pt": "O botão da habilidade fica no painel de ações, à direita."
@@ -973,8 +1085,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Ela soma acerto ao seu [[d20]]; veja o bônus nos dados."
   },
   "ui.tutorial.guia.treino_mira.mira.texto": {
-    "en": "Click Precise Aim and then the dummy.",
-    "pt": "Clique em Mira Certeira e depois no boneco."
+    "en": "Close the H menu, press 1: arm Precise Aim, then attack the dummy.",
+    "pt": "Feche o menu H, pressione 1: arme Mira Certeira e ataque o boneco."
   },
   "ui.tutorial.guia.treino_nota_cortante.linha.porque": {
     "en": "The blade of sound flies straight, up to 3 squares, and cannot turn.",
@@ -1001,8 +1113,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O dano se divide entre vocês e a sua parte é reduzida."
   },
   "ui.tutorial.guia.treino_protetor.proteger.texto": {
-    "en": "Stand next to the hostage, use Protector on him and end your turn.",
-    "pt": "Fique ao lado do refém, use Protetor nele e encerre o turno."
+    "en": "Close the H menu, press 1: use Protector on the hostage, then end your turn.",
+    "pt": "Feche o menu H, pressione 1: use Protetor no refém e encerre o turno."
   },
   "ui.tutorial.guia.treino_provocar.provocar.porque": {
     "en": "The target makes a [[teste_resistencia]]; resisting does not invalidate the use.",

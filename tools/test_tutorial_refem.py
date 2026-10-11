@@ -139,7 +139,7 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r.prisoner['pos'], D['prisoner']['pos'])
         self.assertFalse(r.prisoner['freed'])
         self.assertTrue(r.prisoner['training_refem'])
-        self.assertEqual(p['licao_atual'], 'treino_refem')
+        self.assertEqual(p['licao_atual'], 'treino_atalhos_paladin')
         self.assertIn(LICAO, p['tutorial_history'])
 
     async def test_repetir_com_refem_vivo_recoloca_na_origem(self):
@@ -275,7 +275,7 @@ class FluxoRealTests(unittest.IsolatedAsyncioTestCase):
         p['pos'] = [33, 25]
         await r.handle_repetir_tutorial(p['id'])
         self.assertIsNotNone(r.prisoner)
-        self.assertEqual(p['licao_atual'], 'treino_refem')
+        self.assertEqual(p['licao_atual'], 'treino_atalhos_paladin')
 
 
 if __name__ == '__main__':

@@ -391,6 +391,8 @@ document.body.innerHTML = `
       <canvas id="dungeon-canvas"></canvas>
       <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
       <div id="objectives-hud" data-guia="hud:objetivos" style="display:none"></div>
+      <button id="objectives-toggle" type="button" data-gamepad-action="activate" tabindex="0"
+              aria-controls="objectives-hud" aria-keyshortcuts="O" aria-expanded="false" style="display:none"></button>
       <button id="btn-libertar" style="display:none" onclick="GS.libertarPrisioneiro()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
     </div>
     <canvas id="dice-canvas"></canvas>
@@ -439,6 +441,8 @@ document.body.innerHTML = `
         <button type="button" class="btn-end-turn" id="btn-end-turn" data-guia="botao:encerrar_turno" disabled>
           <span data-i18n="ui.hud.encerrar_turno">⏭ Encerrar Turno</span>
         </button>
+        <button type="button" id="btn-auto-end-turn" aria-pressed="false"
+                data-gamepad-action="activate" onclick="toggleAutoEndTurn()"></button>
       </div>
     </div>
   </div>
@@ -1815,6 +1819,7 @@ function initCityImage(){
 function _cityHotspotClick(pointId, type){
   // NÃO chamar esta variável de `t`: o tradutor global tem esse nome.
   const tipo = type || pointId;
+  if(_cidadeTourInterceptarPonto(pointId, tipo)) return;
   // Destinos com tela própria despacham pelo tipo, antes da resolução de
   // cena/loja. O editor não oferece esses pontos no vínculo de cena.
   if(tipo === 'dungeon'){
@@ -2389,6 +2394,7 @@ function _storyComplete(msg){
   if(!ov || ov.dataset.key !== msg?.key) return;
   ov.style.display='none';
   _storyAudioStop();
+  _cidadeTourTentarMostrar();
 }
 
 function renderStory() {
@@ -2427,6 +2433,7 @@ function renderStory() {
         _defeatMusicActive = false;
         _defeatAudioStop();
         ov.style.display = 'none';
+        _cidadeTourTentarMostrar();
       }
     };
     ov.querySelector('#story-mute').onclick = () => {
@@ -2757,6 +2764,11 @@ function _showCenaDialogo(slot, host){
 // Pergaminhos têm id dinâmico por magia (pergaminho_<spellId>) — usam sempre
 // o mesmo ícone genérico. onerror troca a <img> pelo texto do emoji (sem
 // innerHTML, então o emoji nunca é interpretado como HTML).
+const ITEM_ICON_OVERRIDES = Object.freeze({
+  marreta: 'assets/itens/marreta.png',
+  marreta_prata: 'assets/itens/marreta_prata.png',
+});
+
 function itemIconHTML(item, fallbackEmoji){
   const emoji = (item && item.emoji) || fallbackEmoji || '📦';
   if(!item || !item.id) return emoji;
@@ -2767,7 +2779,7 @@ function itemIconHTML(item, fallbackEmoji){
   const fileId = item.effect === 'scroll' ? 'pergaminho'
     : (item.tipo_item === 'instrumento' && item.base) ? item.base
     : item.id;
-  const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon;
+  const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon || ITEM_ICON_OVERRIDES[item.id];
   const src = _assetURL(icon || `assets/itens/${fileId}.png`);
   return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
@@ -5270,6 +5282,190 @@ function _objRow(o){
   if(o && o.progresso) label += ` (${o.progresso.feitas}/${o.progresso.total} salas)`;
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
+let _cidadeTourPendenteDoTutorial = false;
+let _cidadeTourMemoriaKey = null;
+let _cidadeTourMemoriaDados = null;
+let _objetivosHUDAberto = true;
+
+const _CIDADE_TOUR_PARADAS = ['ferreiro', 'mercador', 'templo', 'taverna'];
+const _CIDADE_TOUR_RETRATO = 'assets/portraits/mestre_de_armas_conclusao.png';
+
+function _cidadeTourChave(){
+  const conta = (GS.getAccount && GS.getAccount()) || GS.myPid || 'jogador';
+  return 'lfh.tutorial.cityTour.' + String(conta).replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+
+function _cidadeTourLer(){
+  const chave = _cidadeTourChave();
+  if(_cidadeTourMemoriaKey === chave) return _cidadeTourMemoriaDados;
+  try {
+    const salvo = localStorage.getItem(chave);
+    if(salvo) return JSON.parse(salvo);
+  } catch (_) {}
+  return _cidadeTourMemoriaKey === chave ? _cidadeTourMemoriaDados : null;
+}
+
+function _cidadeTourSalvar(dados){
+  const chave = _cidadeTourChave();
+  _cidadeTourMemoriaKey = chave;
+  _cidadeTourMemoriaDados = dados;
+  try { localStorage.setItem(chave, JSON.stringify(dados)); } catch (_) {}
+}
+
+function _cidadeTourPonto(tipo){
+  const state = GS.cityState || {};
+  const local = state.world && state.world.location;
+  const pontos = (state.city_map_points || {})[local] || {};
+  if(!_cityImg?.hotWrap) return null;
+  for(const marker of _cityImg.hotWrap.querySelectorAll('[data-city-point]')){
+    if(marker.style.display === 'none') continue;
+    const id = marker.dataset.cityPoint;
+    const ponto = pontos[id] || {};
+    const tipoPonto = ponto.type || marker.dataset.cityBuilding || id;
+    if(tipoPonto === tipo) return id;
+  }
+  return null;
+}
+
+function _cidadeTourLimparDestaques(){
+  _cityImg?.hotWrap?.querySelectorAll('.tutorial-tour-target').forEach(el =>
+    el.classList.remove('tutorial-tour-target'));
+}
+
+function _cidadeTourConcluir(pular=false){
+  const dados = _cidadeTourLer();
+  if(dados?.status !== 'active') return;
+  if(GS.activeShop) closeShop();
+  _cidadeTourSalvar({...dados, status: pular ? 'skipped' : 'done', etapa: _CIDADE_TOUR_PARADAS.length});
+  _cidadeTourLimparDestaques();
+  document.getElementById('city-tour-card')?.remove();
+}
+
+function _cidadeTourAvancar(){
+  const dados = _cidadeTourLer();
+  if(dados?.status !== 'active') return;
+  if(GS.activeShop) closeShop();
+  const etapa = Math.max(0, Number(dados.etapa) || 0) + 1;
+  _cidadeTourSalvar({...dados, etapa, visitou:false});
+  _cidadeTourRender();
+}
+
+function _cidadeTourRender(){
+  let dados = _cidadeTourLer();
+  if(dados?.status !== 'active') return;
+  if(!dados.iniciou){
+    _cidadeTourLimparDestaques();
+    _cidadeTourPainel(dados, null);
+    return;
+  }
+  let etapa = Math.max(0, Number(dados.etapa) || 0);
+  let alvo = etapa < _CIDADE_TOUR_PARADAS.length
+    ? _cidadeTourPonto(_CIDADE_TOUR_PARADAS[etapa]) : null;
+  // Uma cidade personalizada pode não ter algum estabelecimento. Pular os
+  // pontos inexistentes evita prender o passeio em uma parada impossível.
+  while(etapa < _CIDADE_TOUR_PARADAS.length && !alvo){
+    etapa++;
+    alvo = etapa < _CIDADE_TOUR_PARADAS.length
+      ? _cidadeTourPonto(_CIDADE_TOUR_PARADAS[etapa]) : null;
+  }
+  if(etapa !== dados.etapa){
+    dados = {...dados, etapa, visitou:false};
+    _cidadeTourSalvar(dados);
+  }
+  _cidadeTourLimparDestaques();
+  if(alvo){
+    const marker = [...(_cityImg?.hotWrap?.querySelectorAll('[data-city-point]') || [])]
+      .find(el => el.dataset.cityPoint === alvo);
+    marker?.classList.add('tutorial-tour-target');
+  }
+  _cidadeTourPainel(dados, alvo);
+}
+
+function _cidadeTourPainel(dados, alvo){
+  let card = document.getElementById('city-tour-card');
+  const manterFoco = !!card && card.contains(document.activeElement);
+  if(!card){
+    card = document.createElement('section');
+    card.id = 'city-tour-card';
+    card.className = 'city-tour-card';
+    document.body.appendChild(card);
+  }
+  const etapa = Math.max(0, Number(dados.etapa) || 0);
+  const parada = _CIDADE_TOUR_PARADAS[etapa];
+  let titulo = t('ui.tutorial.tour.titulo');
+  let texto = '';
+  let botoes = '';
+  if(!dados.iniciou){
+    texto = t('ui.tutorial.tour.abertura');
+    botoes = `<button type="button" data-tour-start>${t('ui.tutorial.tour.comecar')}</button>`;
+  } else if(parada){
+    titulo = t('ui.tutorial.tour.' + parada + '.titulo');
+    texto = t('ui.tutorial.tour.' + parada + (dados.visitou ? '.explicacao' : '.convite'));
+    botoes = dados.visitou
+      ? `<button type="button" data-tour-next>${t('ui.tutorial.tour.proxima')}</button>`
+      : `<button type="button" data-tour-open>${t('ui.tutorial.tour.abrir')}</button>`;
+  } else {
+    titulo = t('ui.tutorial.tour.final.titulo');
+    texto = t('ui.tutorial.tour.final.texto');
+    botoes = `<button type="button" data-tour-finish>${t('ui.tutorial.tour.concluir')}</button>`;
+  }
+  card.innerHTML = `<img class="city-tour-portrait" src="${_esc(_assetURL(_CIDADE_TOUR_RETRATO))}" alt="${_esc(t('ui.tutorial.tour.retrato_alt'))}">` +
+    `<div class="city-tour-copy"><div class="city-tour-name">${_esc(t('ui.tutorial.tour.mestre'))}</div>` +
+    `<h2>${_esc(titulo)}</h2><p>${_esc(texto)}</p><div class="city-tour-actions">${botoes}` +
+    `<button type="button" class="city-tour-skip" data-tour-skip>${t('ui.tutorial.tour.pular')}</button></div></div>`;
+  const start = card.querySelector('[data-tour-start]');
+  if(start) start.onclick = () => {
+    _cidadeTourSalvar({...dados, iniciou:true, etapa:0, visitou:false});
+    _cidadeTourRender();
+  };
+  card.querySelector('[data-tour-open]')?.addEventListener('click', () => {
+    const destino = _cidadeTourPonto(parada);
+    if(destino) _cityHotspotClick(destino, parada);
+  });
+  card.querySelector('[data-tour-next]')?.addEventListener('click', _cidadeTourAvancar);
+  card.querySelector('[data-tour-finish]')?.addEventListener('click', () => _cidadeTourConcluir(false));
+  card.querySelector('[data-tour-skip]')?.addEventListener('click', () => _cidadeTourConcluir(true));
+  const primeiroBotao = card.querySelector('button');
+  if(typeof _gamepadInput !== 'undefined' && _gamepadInput.active)
+    _gamepadSetUiFocus(primeiroBotao);
+  else if(manterFoco) requestAnimationFrame(() => primeiroBotao?.focus());
+}
+
+function _cidadeTourInterceptarPonto(pointId, tipo){
+  const dados = _cidadeTourLer();
+  if(dados?.status !== 'active') return false;
+  if(!dados.iniciou) return true;
+  const etapa = Math.max(0, Number(dados.etapa) || 0);
+  const parada = _CIDADE_TOUR_PARADAS[etapa];
+  if(!parada) return true;
+  const alvo = _cidadeTourPonto(parada);
+  if(tipo !== parada || pointId !== alvo) return true;
+  _cidadeTourSalvar({...dados, visitou:true});
+  _cidadeTourRender();
+  return false;
+}
+
+function _cidadeTourStoryAberta(){
+  const overlay = document.getElementById('story-overlay');
+  return !!overlay && getComputedStyle(overlay).display !== 'none';
+}
+
+function _cidadeTourTentarMostrar(){
+  const dados = _cidadeTourLer();
+  if(dados?.status !== 'active' || _cidadeTourStoryAberta()) return;
+  _cidadeTourRender();
+}
+
+function _cidadeTourIniciarOuRetomar(iniciar=false, execucao=null){
+  let dados = _cidadeTourLer();
+  if(iniciar && (execucao ? dados?.execucao !== execucao
+      : (!dados || !['active','done','skipped'].includes(dados.status)))){
+    dados = {status:'active', iniciou:false, etapa:0, visitou:false, execucao};
+    _cidadeTourSalvar(dados);
+  }
+  if(dados?.status === 'active') _cidadeTourTentarMostrar();
+}
+
 // Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
 // Usa um overlay próprio em vez de window.confirm(): o confirm nativo pode ser
 // silenciosamente suprimido pelo navegador ("não permitir mais diálogos"),
@@ -5333,11 +5529,13 @@ function confirmarSaidaMasmorra(custo, espera){
 
 function renderObjectivesHUD(msg){
   const hud = $('objectives-hud');
+  const toggle = $('objectives-toggle');
   const btn = $('btn-libertar');
   if(!hud) return;
   const obj = GS.objectives;   // null no procedural
   if(!obj){
     hud.style.display = 'none';
+    if(toggle) toggle.style.display = 'none';
     if(btn) btn.style.display = 'none';
     return;
   }
@@ -5346,20 +5544,47 @@ function renderObjectivesHUD(msg){
   if(camp){
     html += `<div class="obj-campaign">${t('ui.objetivo.fase_de', {atual: camp.phase, total: camp.total, nome: camp.name})}</div>`;
   }
-  html += '<div class="obj-title">'+t('ui.objetivo.titulo')+'</div>';
+  html += `<div class="obj-header"><div class="obj-title">${_esc(t('ui.objetivo.titulo'))}</div>`
+    + `<button type="button" class="obj-close" data-gamepad-action="activate" tabindex="0" aria-keyshortcuts="O"`
+    + ` aria-label="${_esc(t('ui.objetivo.ocultar'))}" title="${_esc(t('ui.objetivo.ocultar'))}">×</button></div>`;
   if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
   const secs = obj.secondary || [];
   if(secs.length){
     html += `<div class="obj-sec-label">${t('ui.objetivo.secundarios')}</div>`;
     for(const s of secs) html += _objRow(s);
   }
+  const routeProgress = GS.routeExitProgress;
+  if(routeProgress){
+    html += `<div class="obj-sec-label">${t('ui.objetivo.saidas_rota')} (${routeProgress.found}/${routeProgress.required})</div>`;
+    for(const exit of (routeProgress.exits||[]))
+      html += `<div class="obj-row"><span class="obj-ic">${exit.found?'✅':'⬜'}</span><span class="obj-lbl">${_esc(exit.name)}</span></div>`;
+  }
+  if (GS.missionCompletePending && msg.tutorial?.tour_cidade) {
+    html += `<div class="tutorial-conclusao"><img src="${_esc(_assetURL(_CIDADE_TOUR_RETRATO))}" alt="${_esc(t('ui.tutorial.parabens.retrato_alt'))}">` +
+      `<div><strong>${_esc(t('ui.tutorial.parabens.titulo'))}</strong><p>${_esc(t('ui.tutorial.parabens.texto'))}</p></div></div>`;
+  }
   if (GS.missionCompletePending) {
     html += `<button class="btn-encerrar-missao" onclick="encerrarMissaoConfirm()">${t('ui.missao.encerrar_botao')}</button>`;
   }
   hud.innerHTML = html;
-  hud.style.display = '';
+  const aberto = _objetivosHUDAberto;
+  hud.style.display = aberto ? '' : 'none';
+  hud.setAttribute('aria-hidden', String(!aberto));
+  if(toggle){
+    toggle.textContent = t('ui.objetivo.abrir');
+    toggle.setAttribute('aria-label', t('ui.objetivo.abrir'));
+    toggle.setAttribute('aria-expanded', String(aberto));
+    toggle.style.display = aberto ? 'none' : '';
+    toggle.onclick = () => _definirObjetivosHUDAberto(true);
+  }
+  hud.querySelector('.obj-close')?.addEventListener('click', () => _definirObjetivosHUDAberto(false));
   // Botão "Libertar": só quando há prisioneiro cativo adjacente no meu turno.
   if(btn) btn.style.display = GS.prisioneiroLibertavel ? '' : 'none';
+}
+
+function _definirObjetivosHUDAberto(aberto){
+  _objetivosHUDAberto = !!aberto;
+  if(GS.gameState) renderObjectivesHUD(GS.gameState);
 }
 
 function _start2DHighlightLoop(){
@@ -8271,7 +8496,6 @@ const _armadilhaAnims = [];
 let _armadilha2DRaf = null;
 const _buracoQuedas = new Map();
 const _fossoQuedaDisparos = new Set();
-const _fossoOcultoConfirmado = new Set();
 let _buracoQueda2DRaf = null;
 
 function _sincronizarFossoQuedas(state){
@@ -8279,12 +8503,11 @@ function _sincronizarFossoQuedas(state){
   if(!Array.isArray(players)) return;
   for(const pid of _fossoQuedaDisparos){
     const p=players.find(x=>String(x.id)===pid);
-    if(p?.fosso_oculto) _fossoOcultoConfirmado.add(pid);
-    // Um estado ainda anterior à queda não confirma saída. Aguarda primeiro
-    // a confirmação de entrada, depois a remoção do estado pelo servidor.
-    else if(!p || _fossoOcultoConfirmado.has(pid)){
+    // O disparo público já confirma a entrada no fosso no servidor. O próximo
+    // game_state pode já trazer a saída se a iniciativa perdida foi consumida;
+    // não depende de ter recebido um estado intermediário com ocultação.
+    if(!p?.fosso_oculto){
       _fossoQuedaDisparos.delete(pid);
-      _fossoOcultoConfirmado.delete(pid);
       _buracoQuedas.delete(pid);
       if(window.CombatScene) CombatScene.endPitFall(`p:${pid}`);
     }
@@ -8318,6 +8541,8 @@ function _armadilhaStyle(msg){
   const id = _armadilhaId(msg);
   if(id === 'armadilha_maldicao')
     return {kind:'curse', color:'#bd8cff', hot:'#f0c4ff', dark:'#32124f', icon:'☠'};
+  if(id === 'fosso')
+    return {kind:'spike_pit', variant:'empty', color:'#9b8d7a', hot:'#d4c4a4', dark:'#29231f', icon:'🕳️'};
   if(id === 'fosso_estacas' || id === 'fosso_envenenado')
     return {kind:'spike_pit', variant:id === 'fosso_envenenado' ? 'poisoned' : 'plain',
       color:id === 'fosso_envenenado' ? '#b9d34b' : '#9b8d7a',
@@ -8498,7 +8723,7 @@ function _armadilhaDraw2D(ctx, state, anim, now){
   }
 
   // Marca no chão: todo disparo nasce de uma pulsação curta antes do impacto.
-  if(style.kind !== 'bear_trap' && style.kind !== 'net'){
+  if(style.kind !== 'bear_trap' && style.kind !== 'net' && style.variant !== 'empty'){
     ctx.strokeStyle = rgba(style.hot, .72 + .18 * pulse);
     ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.stroke();
@@ -8631,7 +8856,7 @@ function _armadilhaDraw2D(ctx, state, anim, now){
     ctx.strokeStyle=`rgba(104,86,66,${(.72+.22*pulse)*fade})`;
     ctx.lineWidth=Math.max(2,CELL*.055);
     ctx.beginPath(); ctx.ellipse(0,CELL*.07,CELL*(.12+.42*opening),CELL*(.08+.23*opening),0,0,Math.PI*2); ctx.stroke();
-    for(let i=0;i<6;i++){
+    for(let i=0;i<(style.variant==='empty'?0:6);i++){
       const a=i*Math.PI/3+Math.PI/6, r=CELL*(.14+rise*.19), h=CELL*(.12+rise*.25)*retract;
       const x=Math.cos(a)*r, y=CELL*.12+Math.sin(a)*r*.48;
       ctx.save(); ctx.translate(x,y); ctx.rotate(a+Math.PI/2);
@@ -9127,7 +9352,7 @@ function _buildArmadilha3D(anim){
     floor.rotation.x=-Math.PI/2; floor.position.y=.045; floor.userData.trapPitFloor=1; group.add(floor);
     const rim=new T.Mesh(new T.TorusGeometry(.43,.07,7,28),new T.MeshBasicMaterial({color:poisoned?0x8b9d3c:0x766b5a,transparent:true,opacity:.95,depthWrite:false}));
     rim.rotation.x=Math.PI/2; rim.position.y=.085; rim.userData.trapPitRim=1; group.add(rim);
-    for(let i=0;i<6;i++){
+    for(let i=0;i<(s.variant==='empty'?0:6);i++){
       const a=i*Math.PI/3+Math.PI/6;
       const spike=new T.Mesh(new T.ConeGeometry(.105,.48,5),new T.MeshBasicMaterial({color:poisoned?0xb4d64d:0xbcb3a1,transparent:true,opacity:.98,depthWrite:false}));
       spike.position.set(Math.cos(a)*.22,-.12,Math.sin(a)*.22); spike.userData.trapPitSpike=i; group.add(spike);
@@ -9394,11 +9619,15 @@ function _updateArmadilhas3D(now){
       }
       if(u.trapPitFloor){
         const open=Math.max(0,Math.min(1,(p-.04)/.30)), fade=p>.70?Math.max(0,1-(p-.70)/.30):1;
-        obj.scale.set(.12+open,1,.12+open); obj.material.opacity=.96*fade;
+        if(anim.style.variant==='empty') obj.scale.set(.12+open,.12+open,1);
+        else obj.scale.set(.12+open,1,.12+open);
+        obj.material.opacity=.96*fade;
       }
       if(u.trapPitRim){
         const open=Math.max(0,Math.min(1,(p-.04)/.30)), fade=p>.72?Math.max(0,1-(p-.72)/.28):1;
-        obj.scale.set(.55+open*.55,1,.55+open*.55); obj.material.opacity=.95*fade;
+        if(anim.style.variant==='empty') obj.scale.set(.55+open*.55,.55+open*.55,1);
+        else obj.scale.set(.55+open*.55,1,.55+open*.55);
+        obj.material.opacity=.95*fade;
       }
       if(u.trapPitSpike != null){
         const i=u.trapPitSpike, rise=Math.max(0,Math.min(1,(p-.18)/.34)), retract=p>.68?Math.max(0,1-(p-.68)/.32):1;
@@ -9734,8 +9963,12 @@ function _receberDisparoFosso(msg){
   const pid=String(alvo.id);
   if(_fossoQuedaDisparos.has(pid)) return;
   _fossoQuedaDisparos.add(pid);
-  if(alvo.fosso_oculto) _fossoOcultoConfirmado.add(pid);
   const now=performance.now(),duration=900,pos=[msg.pos[0],msg.pos[1]];
+  const anim={msg,pos,style:_armadilhaStyle(msg),startedAt:now,duration:1120,
+    seed:Math.random()*Math.PI*2,group:null,result:null};
+  _armadilhaAnims.push(anim);
+  if(mode3D&&g3) _buildArmadilha3D(anim);
+  else if(!_armadilha2DRaf) _armadilha2DRaf=_scheduleVisualFrame(_tickArmadilhas2D);
   if(window.CombatScene) CombatScene.startPitFall(`p:${pid}`,now,duration,pos);
   if(!(mode3D&&g3)){
     _buracoQuedas.set(pid,{pos,startedAt:now,duration,tipo:'fosso'});
@@ -10296,27 +10529,13 @@ function _receberAnimacaoArmadilha(msg){
   const id=_armadilhaId(msg);
   if(id.includes('teletrans')) return; // a animação dedicada recebe o resultado público
   if(id==='armadilha_maldicao') return; // animação pública; o resultado privado não deve duplicá-la
+  if(id==='fosso') return; // só o disparo público na falha inicia a queda; sucesso não anima
   if(id === 'buraco' && msg.sucesso === false){
     const pid=String(msg.target_id ?? msg.alvo_id ?? GS.myPid ?? '');
     const now=performance.now(), duration=1050;
     if(window.CombatScene) CombatScene.startFall(`p:${pid}`,now,duration,pos);
     if(!(mode3D && g3)){
       _buracoQuedas.set(pid,{pos,startedAt:now,duration});
-      if(!_buracoQueda2DRaf) _buracoQueda2DRaf=_scheduleVisualFrame(_tickBuracoQueda2D);
-    }
-    return;
-  }
-  if(id === 'fosso' && msg.sucesso === false){
-    const pid=String(msg.target_id ?? msg.alvo_id ?? GS.myPid ?? '');
-    if(_fossoQuedaDisparos.has(pid)) return;
-    const now=performance.now(),duration=900;
-    if(window.CombatScene&&CombatScene.pitFallActiveFor(`p:${pid}`,now)) return;
-    _fossoQuedaDisparos.add(pid);
-    if((GS.gameState?.players||[]).some(p=>String(p.id)===pid&&p.fosso_oculto))
-      _fossoOcultoConfirmado.add(pid);
-    if(window.CombatScene) CombatScene.startPitFall(`p:${pid}`,now,duration,pos);
-    if(!(mode3D&&g3)){
-      _buracoQuedas.set(pid,{pos,startedAt:now,duration,tipo:'fosso'});
       if(!_buracoQueda2DRaf) _buracoQueda2DRaf=_scheduleVisualFrame(_tickBuracoQueda2D);
     }
     return;
@@ -11581,7 +11800,7 @@ function renderMap(state){
     if(_playerVortexPreso){
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
     }
-    if(_buraco2D && _buraco2D.queda.tipo!=='estacas' && _buraco2D.queda.tipo!=='urso'){
+    if(_buraco2D && _buraco2D.queda.tipo!=='estacas' && _buraco2D.queda.tipo!=='urso' && _buraco2D.queda.tipo!=='fosso'){
       const abrir=Math.sin(Math.PI*Math.min(1,_buraco2D.progresso*1.8));
       ctx.save();
       ctx.fillStyle=`rgba(8,6,5,${0.55+0.35*abrir})`;
@@ -11596,7 +11815,7 @@ function renderMap(state){
     if(_poseQueda2D){
       ctx.save();
       ctx.globalAlpha *= (_poseQueda2D.opacity == null ? 1 : _poseQueda2D.opacity);
-      ctx.translate(cx,cy);
+      ctx.translate(cx,cy-(_poseQueda2D.dy||0)*CELL*.35);
       ctx.rotate((_poseQueda2D.tilt||0) * ((_poseQueda2D.tiltDir?.[0]||1) < 0 ? -1 : 1));
       ctx.scale(1,_poseQueda2D.scaleY == null ? 1 : _poseQueda2D.scaleY);
       ctx.translate(-cx,-cy);
@@ -19087,11 +19306,22 @@ function abrirPainelCura(){
 // ── Cura em área — painel de configuração (dados) → envia (sem alvo) ──
 function abrirPainelCuraArea(){
   const ex = document.getElementById('painel-cura-area');
-  if(ex){ ex.remove(); return; }
+  if(ex){ window._curaAreaCancelar?.(); return; }
   const me = GS.me;
   if(!_clericPodeAgir(me)) return;
 
   let numDados = 1;
+  const _mNivel = GS.clericMassaNivel(), _mRaio = 2 * _mNivel;
+  const preview = {
+    casterId: String(me.id), radius: _mRaio,
+    previousArea: new Set(window._spellHL?.area || []),
+  };
+  window._curaAreaPreview = preview;
+  const area = new Set();
+  _addCheb(me.pos[0], me.pos[1], _mRaio, area);
+  window._spellHL.area = area;
+  _aplicarSpellHL();
+
   const painel = document.createElement('div');
   painel.id = 'painel-cura-area';
   painel.style.cssText = `position:fixed;bottom:180px;left:50%;transform:translateX(-50%);
@@ -19101,10 +19331,10 @@ function abrirPainelCuraArea(){
   function render(){
     const bonusInt = getBonusAtributo(me.int_ ?? 10);
     const custo = numDados * 4;
-    const _mNivel = GS.clericMassaNivel(), _mRaio = 2 * _mNivel;
     painel.innerHTML = `
       <div style="font-family:'Cinzel Decorative',serif;color:#44cc88;font-size:13px;margin-bottom:12px;text-align:center;">${t('ui.clerigo.cura_area_titulo')}</div>
       <div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;margin-bottom:8px;text-align:center;">${t('ui.clerigo.cura_area_sub', {raio:_mRaio})}</div>
+      <div style="color:#9fc8ad;font-size:10px;line-height:1.45;margin:0 4px 10px;text-align:center;">${t('ui.clerigo.cura_area_previa')}</div>
       <div style="display:flex;gap:6px;margin-bottom:14px;">
         ${[1,2,3].filter(n => n <= _mNivel).map(n => `<button onclick="window._curaAreaSetDados(${n})" style="flex:1;padding:10px;
           background:${numDados===n?'rgba(68,204,136,0.20)':'transparent'};
@@ -19117,17 +19347,40 @@ function abrirPainelCuraArea(){
         <div style="display:flex;justify-content:space-between;"><span style="color:#8a7a5a;font-size:10px;">${t('ui.instrumento.custo')}</span><span style="color:#ff851b;font-size:11px;">🍖-${custo} 💧-${custo}</span></div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button onclick="document.getElementById('painel-cura-area').remove()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
+        <button onclick="window._curaAreaCancelar()" style="flex:1;padding:8px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:'Cinzel',serif;font-size:10px;cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
         <button onclick="window._curaAreaConfirmar()" style="flex:2;padding:8px;background:rgba(68,204,136,0.15);border:1px solid #44cc88;color:#44cc88;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;cursor:pointer;">${t('ui.clerigo.curar_area_botao')}</button>
       </div>`;
   }
 
+  function limparPreview(){
+    if(window._curaAreaPreview !== preview) return;
+    window._curaAreaPreview = null;
+    window._spellHL.area = preview.previousArea;
+    _aplicarSpellHL();
+  }
+  function cancelar(){
+    document.removeEventListener('keydown', onEscape, true);
+    if(window._curaAreaCancelar === cancelar){
+      window._curaAreaCancelar = null;
+      window._curaAreaSetDados = null;
+      window._curaAreaConfirmar = null;
+    }
+    limparPreview();
+    painel.remove();
+  }
+  function onEscape(e){
+    if(e.key !== 'Escape' || !document.getElementById('painel-cura-area')) return;
+    e.preventDefault(); e.stopImmediatePropagation(); cancelar();
+  }
+
+  window._curaAreaCancelar = cancelar;
+  document.addEventListener('keydown', onEscape, true);
   window._curaAreaSetDados  = (n) => { numDados = n; render(); };
   window._curaAreaConfirmar = () => {
     const meNow = GS.me, custo = numDados * 4;
     if((meNow.fome||0) < custo || (meNow.sede||0) < custo){ toast(t('ui.clerigo.recursos_insuficientes', {n: custo}), 'var(--orange)'); return; }
     send({ type:'cura_area', num_dados:numDados });
-    document.getElementById('painel-cura-area')?.remove();
+    cancelar();
   };
 
   render();
@@ -26015,6 +26268,28 @@ function _mpHistoricoAcoes(state){
 
 function _spellPreviewTargetSets(state, area){
   const out = {self:new Set(), ally:new Set(), enemy:new Set()};
+  if(window._curaAreaPreview){
+    const preview = window._curaAreaPreview;
+    const caster = (state?.players || []).find(p => String(p.id) === preview.casterId);
+    if(!caster?.pos) return out;
+    const roomAt = (x,y) => (state.rooms || []).find(r =>
+      (x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
+      || (r.doors || []).some(([dx,dy]) => dx === x && dy === y));
+    for(const ally of (state.players || [])){
+      if(!ally.alive || Number(ally.hp) >= Number(ally.max_hp)) continue;
+      if(String(ally.id) === String(caster.id) && caster.ultimo_esforco_ativo) continue;
+      if(ally.training_ally){
+        const room = roomAt(caster.pos[0], caster.pos[1]);
+        if(ally.allowed_class !== caster.class_id || !room || room.id !== ally.room_id) continue;
+      }
+      const distance = Math.max(Math.abs(ally.pos[0] - caster.pos[0]), Math.abs(ally.pos[1] - caster.pos[1]));
+      if(distance > _alcanceComAlturaCli(caster, preview.radius, ally)) continue;
+      if(!GS.hasLineOfSight(state, caster.pos[0], caster.pos[1], ally.pos[0], ally.pos[1])) continue;
+      const key = `${ally.pos[0]},${ally.pos[1]}`;
+      (String(ally.id) === String(caster.id) ? out.self : out.ally).add(key);
+    }
+    return out;
+  }
   if(!state || !area?.size) return out;
   const mode = window._modoMagia || window._modoMestreMira || window._modoThrowItem;
   const caster = mode?.caster || (state.players || []).find(p => String(p.id) === String(GS.myPid));
@@ -26791,6 +27066,126 @@ function appendGM(text){
 }
 
 function move(dx,dy){ GS.move(dx,dy); }
+
+// Encerramento automático é uma preferência local por jogador. Só funciona
+// fora de combate e depois que o movimento acabar; a janela curta permite que
+// o jogador use uma ação ou bônus antes de passar a vez.
+let _autoEndTurnTimer = null;
+let _autoEndTurnInterval = null;
+let _autoEndTurnDueAt = 0;
+let _autoEndTurnSignature = '';
+const AUTO_END_TURN_GRACE_MS = 3000;
+
+function _autoEndTurnStorageKey(pid=GS.myPid){
+  return `lfh_auto_end_turn_${String(pid ?? '')}`;
+}
+
+function _autoEndTurnEnabled(pid=GS.myPid){
+  if(pid == null) return false;
+  try{ return localStorage.getItem(_autoEndTurnStorageKey(pid)) === '1'; }
+  catch(e){ return false; }
+}
+
+function _autoTurnCombatActive(state){
+  if(state?.test_combat?.active) return true;
+  return (state?.monsters || []).some(m => Number(m?.hp) > 0
+    && (m.alertado === true || m.procurando === true));
+}
+
+function _autoTurnManualTutorialLesson(state){
+  if(!state?.tutorial?.training) return false;
+  const me = (state.players || []).find(p => String(p.id) === String(GS.myPid));
+  return !!state.tutorial?.por_classe?.[me?.class_id]?.requer_encerrar_turno_manual;
+}
+
+function _autoTurnClearTimer(){
+  if(_autoEndTurnTimer){ clearTimeout(_autoEndTurnTimer); _autoEndTurnTimer = null; }
+  if(_autoEndTurnInterval){ clearInterval(_autoEndTurnInterval); _autoEndTurnInterval = null; }
+  _autoEndTurnDueAt = 0;
+  _autoEndTurnSignature = '';
+}
+
+function _autoTurnRefreshButton(state=GS.gameState){
+  const btn = $('btn-auto-end-turn');
+  if(!btn) return;
+  const enabled = _autoEndTurnEnabled();
+  const combat = _autoTurnCombatActive(state);
+  const seconds = _autoEndTurnDueAt
+    ? Math.max(1, Math.ceil((_autoEndTurnDueAt - Date.now()) / 1000)) : 0;
+  btn.style.display = document.getElementById('screen-game')?.classList.contains('active')
+    && state?.phase === 'playing' ? 'block' : 'none';
+  btn.setAttribute('aria-pressed', String(enabled));
+  btn.textContent = seconds
+    ? t('ui.hud.auto_turno_contagem', {n: seconds})
+    : _autoTurnManualTutorialLesson(state) && enabled ? t('ui.hud.auto_turno_pausado_tutorial')
+      : combat && enabled ? t('ui.hud.auto_turno_pausado')
+      : enabled ? t('ui.hud.auto_turno_ligado') : t('ui.hud.auto_turno_desligado');
+  btn.title = _autoTurnManualTutorialLesson(state) && enabled ? t('ui.hud.auto_turno_pausado_tutorial_title')
+    : combat && enabled ? t('ui.hud.auto_turno_pausado_title')
+    : enabled ? t('ui.hud.auto_turno_ligado_title') : t('ui.hud.auto_turno_desligado_title');
+  btn.setAttribute('aria-label', btn.title);
+}
+
+function _autoTurnEligible(state=GS.gameState){
+  if(!_autoEndTurnEnabled() || !state || state.phase !== 'playing'
+      || String(state.current_turn) !== String(GS.myPid)
+      || state.animados_turn === GS.myPid || state.last_stand_pid === GS.myPid
+      || state.active_scene || state.dungeon_intro || state.mission_complete_pending
+      || _autoTurnManualTutorialLesson(state) || state.master_manual_mid
+      || _autoTurnCombatActive(state)) return false;
+  const me = (state.players || []).find(p => String(p.id) === String(GS.myPid));
+  return !!(me && me.alive !== false && Number(me.moves_left) <= 0);
+}
+
+function _autoTurnSchedule(state=GS.gameState, reset=false){
+  if(!_autoTurnEligible(state)){
+    _autoTurnClearTimer();
+    _autoTurnRefreshButton(state);
+    return;
+  }
+  const me = (state.players || []).find(p => String(p.id) === String(GS.myPid));
+  const signature = [state.current_turn, state.round, state.turn_timer_started,
+    me?.moves_left, !!me?.action_done].join('|');
+  if(!reset && _autoEndTurnTimer && signature === _autoEndTurnSignature){
+    _autoTurnRefreshButton(state);
+    return;
+  }
+  _autoTurnClearTimer();
+  _autoEndTurnSignature = signature;
+  _autoEndTurnDueAt = Date.now() + AUTO_END_TURN_GRACE_MS;
+  _autoEndTurnTimer = setTimeout(() => {
+    _autoEndTurnTimer = null;
+    const latest = GS.gameState;
+    if(!_autoTurnEligible(latest)){
+      _autoTurnClearTimer();
+      _autoTurnRefreshButton(latest);
+      return;
+    }
+    _autoTurnClearTimer();
+    _autoTurnRefreshButton(latest);
+    endTurn();
+  }, AUTO_END_TURN_GRACE_MS);
+  _autoEndTurnInterval = setInterval(() => _autoTurnRefreshButton(GS.gameState), 250);
+  _autoTurnRefreshButton(state);
+}
+
+function toggleAutoEndTurn(){
+  if(GS.myPid == null) return;
+  const enabled = !_autoEndTurnEnabled();
+  try{ localStorage.setItem(_autoEndTurnStorageKey(), enabled ? '1' : '0'); }catch(e){}
+  _autoTurnSchedule(GS.gameState, true);
+}
+
+// Qualquer interação do jogador reinicia a janela, evitando encerrar enquanto
+// ele está escolhendo uma ação ou usando a interface.
+document.addEventListener('click', e => {
+  if(_autoEndTurnTimer && document.getElementById('screen-game')?.contains(e.target))
+    _autoTurnSchedule(GS.gameState, true);
+}, true);
+document.addEventListener('keydown', e => {
+  if(!e.repeat && document.getElementById('screen-game')?.classList.contains('active')
+      && _autoEndTurnTimer) _autoTurnSchedule(GS.gameState, true);
+}, true);
 
 function endTurn(){
   const btn = $('btn-end-turn');
@@ -28236,7 +28631,7 @@ function abrirMenuHabilidades(pid){
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
     const gamepadAction = onclick ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(nome)}"` : '';
     const shortcutSource = guilda && h.categoria === 'tecnica' ? 'technique' : 'skill';
-    const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}"`;
+    const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}" data-guia="hud:atalho_habilidade_${_esc(h.id)}"`;
     return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction}${dragShortcut}
       onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
@@ -28987,7 +29382,7 @@ function _gamepadLayerVisible(el){
 function _gamepadUiScope(){
   const open = [...document.querySelectorAll(
     '#pause-menu.open, [id$="-modal"].open, [id$="-overlay"].open, .ficha-cidade-panel.open,' +
-    '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay,' +
+    '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay, #city-tour-card,' +
     '#campaign-scene-overlay, #ficha-overlay-jogo, #encerrar-missao-overlay, #city-dungeon-entry,' +
     '#instrumento-dir-overlay, #improviso-overlay, #ficha-monstro-overlay,' +
     '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-ajuda, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
@@ -31683,6 +32078,7 @@ function _renderAtalhos(){
     slot.type = 'button';
     slot.className = 'shortcut-slot' + (entry ? '' : ' empty');
     slot.dataset.shortcutSlot = String(index);
+    if(index === 0 && _atalhosMenuAtual === 'habilidades') slot.dataset.guia = 'hud:atalho_1';
     slot.title = entry && meta ? `${meta.nome} · ${t('ui.atalhos.clique_ativar')}` : t('ui.atalhos.vazio');
     slot.innerHTML = `<span class="shortcut-key">${key}</span><span class="shortcut-icon">${meta ? meta.icon : '+'}</span>${meta ? `<span class="shortcut-name">${_esc(meta.nome)}</span>` : ''}`;
     slot.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if(entry) _ativarAtalho(entry, index); });
@@ -43908,7 +44304,7 @@ function init3D(state){
   };
   // Zoom limits (OrthographicCamera: camera.zoom is modified by controls)
   controls.minZoom = 0.28;
-  controls.maxZoom = 8.0;
+  controls.maxZoom = 12.0;
   // Polar angle clamp — prevents camera from dipping below the board
   controls.minPolarAngle = 8  * Math.PI / 180;   //  8° above horizon  (wide low shot)
   controls.maxPolarAngle = 82 * Math.PI / 180;   // 82° = nearly straight down
@@ -44026,9 +44422,13 @@ function init3D(state){
 
   // ── Initial camera position + first OrbitControls sync ───────────────────
   resetCamera3D();
+  // A entrada mantém o enquadramento inicial em 8x; o limite manual é 12x.
+  // O reset manual mantém seu enquadramento padrão em 1.0 e a reconstrução restaura a visão atual.
+  g3.camera.zoom = Math.min(8.0, g3.controls.maxZoom);
+  g3.camera.updateProjectionMatrix();
   // Ao entrar na masmorra, o jogador deve começar vendo o próprio herói.
-  // `resetCamera3D()` fornece o ângulo/zoom padrão; o reenquadramento abaixo
-  // apenas desloca o alvo para o peão local, sem esperar o primeiro movimento.
+  // `resetCamera3D()` fornece o ângulo padrão; o enquadramento abaixo desloca
+  // o alvo para o peão local, sem esperar o primeiro movimento.
   const peaoInicial = (state.players || []).find(p =>
     p && String(p.id) === String(GS.myPid) && p.alive && Array.isArray(p.pos));
   if(peaoInicial) centralizarCamera3DNoPeao(peaoInicial.pos);
@@ -44694,6 +45094,7 @@ function _aplicarPoseCena(fig, now){
       fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0);
       fig.rotation.set(0, u._sceneBaseRotY || 0, u._hitBaseRotationZ || 0);
       if(u._sceneBaseScale) fig.scale.copy(u._sceneBaseScale);
+      if(u._sceneVerticalPose){ fig.position.y=u.baseY||0; delete u._sceneVerticalPose; }
       _restaurarMateriaisCena(fig);
     }
     return;
@@ -44713,6 +45114,10 @@ function _aplicarPoseCena(fig, now){
   }
   fig.position.x = u.gridX + (Number(u.footprintOffsetX) || 0) + pose.dx;
   fig.position.z = u.gridY + (Number(u.footprintOffsetZ) || 0) + pose.dz;
+  if(pose.dy !== undefined){
+    u._sceneVerticalPose = true;
+    fig.position.y = (u.baseY || 0) + pose.dy;
+  }
   fig.rotation.set(0, u._sceneBaseRotY, 0);
   if(pose.tilt){
     const d = pose.tiltDir;
@@ -53607,6 +54012,9 @@ GS.on('campaignVote', (msg) => {
 GS.on('lobbyState',  msg => handleLobby(msg));
 
 GS.on('gameStart', () => {
+  _cidadeTourPendenteDoTutorial = false;
+  _cidadeTourLimparDestaques();
+  document.getElementById('city-tour-card')?.remove();
   destroyClassSelectFull();
   showScreen('screen-city');
   // Proactively request city_state — handles cases where the first one was lost
@@ -53681,6 +54089,10 @@ GS.on('cityState', msg => {
   // Painel da Guilda aberto → re-renderiza (compra recém-concluída atualiza saldo/estado).
   const _gm = $('guild-modal');
   if(_gm && _gm.classList.contains('open')) _renderGuild();
+  const execucaoTour = msg.tutorial?.tour_cidade_id || null;
+  const iniciarTourTutorial = !!execucaoTour || (vindoDaMasmorra && _cidadeTourPendenteDoTutorial);
+  if(iniciarTourTutorial) _cidadeTourPendenteDoTutorial = false;
+  _cidadeTourIniciarOuRetomar(iniciarTourTutorial, execucaoTour);
 });
 // `isOpen()` também é verdadeiro com o inventário NORMAL aberto — usar ele aqui
 // engolia o estado do Refúgio (o `updateStorage` não faz nada fora do modo baú)
@@ -53752,6 +54164,17 @@ document.addEventListener('keydown', (e) => {
   if(!document.getElementById('screen-city')?.classList.contains('active') &&
      !document.getElementById('screen-game')?.classList.contains('active') && !emRefugio) return;
   InventoryModal.toggle(GS.myPid);
+});
+
+// Atalho O — abre/fecha a lista de objetivos da masmorra.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'o' && e.key !== 'O') return;
+  const ativo = document.activeElement;
+  const tag = ativo?.tagName || '';
+  if(ativo?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag)) return;
+  if(!GS.myPid || !document.getElementById('screen-game')?.classList.contains('active') || !GS.objectives) return;
+  _definirObjetivosHUDAberto(!_objetivosHUDAberto);
+  e.preventDefault();
 });
 
 // Atalho C: abre/fecha a ficha do próprio herói na cidade ou na masmorra.
@@ -53907,6 +54330,9 @@ function _atualizarFichaFab(){
 if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
+  _autoTurnSchedule(msg);
+  if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
+    _cidadeTourPendenteDoTutorial = true;
   _sincronizarFossoQuedas(msg);
   updateInitiativeTrack(msg);
   updateTurnBrief(msg);
@@ -54059,8 +54485,10 @@ const _guiaCfg = () => ({ dica1S: 12, dica2S: 30, ...(window.VC && VC.tutorial) 
 function _guiaMenuTutorialAberto(menu){
   const ui = menu === 'habilidades' ? 'botao:habilidades' : 'botao:magias';
   if(!_licaoUltima || !_guiaPasso || !_guiaPasso.informativo || _guiaPasso.ui !== ui) return false;
-  const esperado = menu === 'habilidades' ? 'fala_menu_habilidades' : 'fala_menu_magias';
-  if(_licaoUltima.licao_id !== esperado) return false;
+  const esperado = menu === 'habilidades'
+    ? (_licaoUltima.licao_id === 'fala_menu_habilidades' || _licaoUltima.licao_id.startsWith('treino_atalhos_'))
+    : (_licaoUltima.licao_id === 'fala_menu_magias' || _licaoUltima.licao_id.startsWith('treino_menu_magias_'));
+  if(!esperado) return false;
   GS.avancarPasso();
   return true;
 }
@@ -54165,8 +54593,35 @@ document.addEventListener('click', ev => {
 });
 
 function _guiaLimparHalo(){
-  document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte'));
+  document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte', 'guia-ficha-zoom'));
   document.getElementById('map-wrap')?.classList.remove('guia-camera-alvo');
+}
+
+function _guiaAtalhoCursorAtualizar(){
+  const overlay = document.getElementById('menu-habilidades-overlay');
+  const ui = _guiaPasso?.ui;
+  const ensinarAtalho = !!(_licaoUltima?.licao_id?.startsWith('treino_atalhos_')
+    && _guiaPasso?.id === 'atribuir' && ui && overlay?.classList.contains('open')
+    && !_gamepadInput.active);
+  let cursor = document.getElementById('guia-atalho-cursor');
+  if(!ensinarAtalho){ cursor?.remove(); return; }
+  const origem = [...overlay.querySelectorAll('[data-guia]')].find(el => el.dataset.guia === ui);
+  const destino = overlay.querySelector('[data-guia="hud:atalho_1"]');
+  if(!origem || !destino || !origem.getClientRects().length || !destino.getClientRects().length){ cursor?.remove(); return; }
+  if(!cursor){
+    cursor = document.createElement('div');
+    cursor.id = 'guia-atalho-cursor';
+    cursor.setAttribute('aria-hidden', 'true');
+    cursor.textContent = '➤';
+    document.body.appendChild(cursor);
+  }
+  const a = origem.getBoundingClientRect(), b = destino.getBoundingClientRect();
+  const x1 = a.left + a.width * .72, y1 = a.top + a.height * .58;
+  const x2 = b.left + b.width * .54, y2 = b.top + b.height * .50;
+  cursor.style.left = `${x1}px`; cursor.style.top = `${y1}px`;
+  cursor.style.setProperty('--guia-atalho-dx', `${x2 - x1}px`);
+  cursor.style.setProperty('--guia-atalho-dy', `${y2 - y1}px`);
+  cursor.style.setProperty('--guia-atalho-angulo', `${Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI}deg`);
 }
 
 // O HUD é redesenhado por innerHTML a cada game_state e apaga a classe; por isso o
@@ -54188,6 +54643,10 @@ function _guiaAplicarHalo(){
   if(!el && sel.alternativa) el = document.querySelector(sel.alternativa);
   if(!el) return;
   el.classList.add('guia-halo');
+  if(_licaoUltima?.licao_id?.startsWith('treino_atalhos_') && _guiaPasso.id === 'atribuir')
+    document.querySelector('#menu-habilidades-overlay [data-guia="hud:atalho_1"]')?.classList.add('guia-halo');
+  if(_guiaPasso.ui === 'botao:ficha' || _guiaPasso.ui === 'hud:vida')
+    el.classList.add('guia-ficha-zoom');
   if(GuiaTutorial.nivelDica(_guiaDesde, performance.now(), _guiaCfg()) >= 1) el.classList.add('guia-halo-forte');
 }
 
@@ -54203,18 +54662,20 @@ function _guiaAtualizarDica(){
 function _guiaEncerrar(){
   _guiaPasso = null;
   if(_guiaTimer){ clearInterval(_guiaTimer); _guiaTimer = null; }
+  document.getElementById('guia-atalho-cursor')?.remove();
   _guiaLimparHalo();
   _fecharJanelaLicao();
 }
 
 function _guiaTick(){
-  if(!_guiaPasso){ _guiaLimparHalo(); return; }
+  if(!_guiaPasso){ document.getElementById('guia-atalho-cursor')?.remove(); _guiaLimparHalo(); return; }
   // Chegou um game_state mais novo que a fala/passo: se a lição acabou, encerra.
   if(GS.gameState !== _guiaEstadoRef){
     const lic = GS.licaoAtual();
     if(!lic || !_licaoUltima || lic.licao_id !== _licaoUltima.licao_id){ _guiaEncerrar(); return; }
   }
   _guiaAplicarHalo();
+  _guiaAtalhoCursorAtualizar();
   _guiaAtualizarDica();
   // 2D: o mapa só redesenha quando algo muda; com alvo de tabuleiro, redesenha para o halo pulsar.
   if(!(mode3D && g3) && GS.gameState && _guiaPasso.ui && !GuiaTutorial.seletor(_guiaPasso.ui)
@@ -54441,11 +54902,16 @@ function _mostrarJanelaLicao(msg){
   const retrato = msg.falante && msg.falante.retrato;
   const cena = msg.falante && msg.falante.cena;
   const passo = msg.passo || null;
+  const mostrarCena = !!cena && !(msg.licao_id === 'fala_hostilidade' && passo?.id === 'abrir');
+  const titulo = passo && passo.titulo;
   const abertura = msg.licao_id === 'fala_intro' && passo?.id === 'briefing';
+  const aulaDano = msg.licao_id === 'fala_res' || msg.licao_id === 'fala_vuln';
   $('licao-prologo-backdrop')?.classList.toggle('open', abertura);
   host.classList.toggle('prologo-abertura', abertura);
+  host.classList.toggle('aula-dano', aulaDano);
   host.classList.toggle('tem-retrato', !!retrato);
-  host.classList.toggle('tem-cena', !!cena);
+  host.classList.toggle('tem-cena', mostrarCena);
+  host.classList.toggle('cena-hostilidade', mostrarCena && msg.licao_id === 'fala_hostilidade' && passo?.id === 'observar');
   const explicito = !!(passo && !passo.auto);
   const andamento = (explicito && passo.n > 1)
     ? `<div class="licao-passo">${_esc(t('ui.tutorial.passo_de', {i: passo.i + 1, n: passo.n}))}` +
@@ -54464,12 +54930,13 @@ function _mostrarJanelaLicao(msg){
   const mantidos = Array.from(host.children || []).filter(el => el.classList &&
     (el.classList.contains('licao-selo') || el.classList.contains('licao-ok')));
   host.innerHTML =
-    (cena ? `<div class="licao-cena"><img src="${_esc(_assetURL(cena))}" alt=""></div>` : '') +
+    (mostrarCena ? `<div class="licao-cena"><img src="${_esc(_assetURL(cena))}" alt=""></div>` : '') +
     `<div class="licao-topo">${retrato ? `<img class="licao-retrato" src="${_esc(_assetURL(retrato))}" alt="">` : `<span class="licao-emoji">${_esc(emoji)}</span>`}` +
     `<span class="licao-nome">${_esc(nome)}</span>` +
     `<button type="button" class="licao-fechar" onclick="_fecharJanelaLicao()"` +
     ` title="${t('ui.geral.fechar')}" aria-label="${t('ui.geral.fechar')}">✕</button></div>` +
     andamento +
+    (titulo ? `<div class="licao-titulo">${_tutHTML(titulo)}</div>` : '') +
     `<div class="licao-texto">${explicito ? _tutHTML(passo.texto) : _esc(msg.texto || '')}</div>` + porque +
     `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
     `<div class="licao-aviso" id="licao-aviso" style="display:none"></div>` +
@@ -54524,6 +54991,21 @@ GS.on('licaoConcluida', msg => {
   selo.className = 'licao-selo';
   selo.innerHTML = `<div class="licao-selo-titulo">🏅 ${_esc(t('ui.tutorial.licao_concluida'))}</div>${premio}${trilha}`;
   host.appendChild(selo);
+  // A conclusão deixa de exigir o alvo do último passo (que pode ainda ter
+  // um botão "Me mostra"). Troque-o por uma confirmação que fecha a lição.
+  const confirmar = host.querySelector('.licao-botao:not(.licao-botao-ok)');
+  if(confirmar){
+    confirmar.textContent = t('ui.tutorial.entendi');
+    confirmar.classList.add('licao-botao-ok');
+    confirmar.onclick = () => {
+      if(_licaoUltima?.licao_id === msg.licao_id){
+        _licaoUltima = null;
+        _guiaEncerrar();
+      } else {
+        _fecharJanelaLicao();
+      }
+    };
+  }
   // Só some o halo: _guiaEncerrar fecharia a janela e o selo precisa dela aberta.
   _guiaPasso = null;
   if(_guiaTimer){ clearInterval(_guiaTimer); _guiaTimer = null; }

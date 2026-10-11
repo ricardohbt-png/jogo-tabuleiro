@@ -62,8 +62,8 @@ import aplicar_fatia16_tutorial as _F16   # Clérigo: lançar magias (sala sem c
 import aplicar_fatia15_tutorial as _F15   # textos do Mago: na sala dele as magias não gastam slots
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
 def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
-    f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Instrutor de Treinamento','emoji':'🎓'},
-       'texto':text, 'trigger':{'tipo':'sala'}, 'classe':cls, 'ordem':order + 1, 'sala_exclusiva':True,   # +1: a ordem 3 é a lição-ponte `porta_<classe>`
+    f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Mestre de Armas','emoji':'🎓', 'retrato':'assets/portraits/mestre_de_armas.png'},
+       'texto':text, 'trigger':{'tipo':'sala'}, 'classe':cls, 'ordem':order + 2, 'sala_exclusiva':True,   # ordens 1–2 são o combate comum; 3 é a porta; 4 abre o treino da classe
        'tarefa':{'tipo':verb, 'vezes':count, 'texto_curto':short}}
     if skill is not None:f['tarefa']['alvo']=skill
     if target_id:f['tarefa']['alvo_id']=target_id
@@ -71,6 +71,8 @@ def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', req
     if requirements:f['requisitos']=requirements
     d['falas'].append(f)
 
+lesson('warrior','treino_atalhos_warrior',2,'mira_certeira',
+       'Abra H e vincule Mira Certeira ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Mira Certeira ao atalho 1',verb='configurar_atalho')
 lesson('warrior','treino_mira',3,'mira_certeira',
        'Selecione Mira Certeira e ataque o alvo ⚔️. A habilidade prepara seu golpe e melhora o teste de acerto. Observe o bônus nos dados.', 'Ataque com Mira Certeira')
 lesson('warrior','treino_golpe',4,'golpe_devastador',
@@ -82,22 +84,28 @@ lesson('warrior','treino_furia_extra',6,'furia_berserker',
 lesson('warrior','treino_guerreiro_fim',7,None,
        'Você praticou as três habilidades. Confira a comida e a água consumidas e encerre seu turno. Ao aprender especializações na Guilda, volte para novos exercícios.', 'Encerre o turno para concluir',verb='encerrar_turno')
 
-lesson('mage','treino_magia',3,None,
+lesson('mage','treino_atalhos_mage',2,'aprimorar_magia',
+       'Abra H e vincule Aprimorar Magia ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Aprimorar Magia ao atalho 1',verb='configurar_atalho')
+lesson('mage','treino_menu_magias_mage',3,None,
+       'Abra o grimório com M, confira as magias conhecidas, feche com M ou Esc e encerre o turno.', 'Conheça o grimório',verb='encerrar_turno',requirements={'magia_tipo':'qualquer'})
+lesson('mage','treino_magia',4,None,
        _F15.MAGIA, 'Lance uma magia conhecida',verb='usar_magia',requirements={'magia_tipo':'qualquer'})
-lesson('mage','treino_slots',4,None,
+lesson('mage','treino_slots',5,None,
        _F15.SLOTS, _F15.SLOTS_CURTO,verb='encerrar_turno')
 for order, ident, label, kind, explanation in [
- (5,'aprimorar_magia','Aprimorar Magia','save','melhora a dificuldade do teste de resistência'),
- (6,'estender_magia','Estender Magia','duracao','acrescenta duração a um efeito que persiste'),
- (7,'fortalecer_magia','Fortalecer Magia','dano','aumenta o dano de uma magia')]:
+ (6,'aprimorar_magia','Aprimorar Magia','save','melhora a dificuldade do teste de resistência'),
+ (7,'estender_magia','Estender Magia','duracao','acrescenta duração a um efeito que persiste'),
+ (8,'fortalecer_magia','Fortalecer Magia','dano','aumenta o dano de uma magia')]:
     lesson('mage','treino_'+ident,order,ident,
            f'Arme {label} e lance uma magia compatível: esta metamagia {explanation}. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.',
            f'Lance uma magia com {label}',requirements={'magia_tipo':kind})
-lesson('mage','treino_reviver',8,'animar_mortos',
+lesson('mage','treino_reviver',9,'animar_mortos',
        'O cadáver de treinamento está no chão. Aproxime-se, use Reviver os Mortos e selecione o cadáver. Se a tentativa falhar, tente novamente em outro turno.', 'Anime o cadáver de treinamento')
-lesson('mage','treino_comando',9,None,
+lesson('mage','treino_comando',10,None,
        'Encerre a vez de Pedro para abrir a fase dos servos. Use Comandar para que seu morto animado se mova e ataque um boneco.', 'Comande o servo de treinamento',verb='comandar_servo')
 
+lesson('rogue','treino_atalhos_rogue',2,'detectar_armadilhas',
+       'Abra H e vincule Detectar Armadilhas ao espaço 1. Use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Detectar Armadilhas ao atalho 1',verb='configurar_atalho')
 lesson('rogue','treino_detectar',3,'detectar_armadilhas',
        'Ative Detectar Armadilhas e aproxime-se da casa 10,8. A detecção revela os mecanismos próximos. Confira a manutenção de água.', 'Revele a armadilha de treinamento')
 lesson('rogue','treino_desarmar',4,None,
@@ -113,19 +121,25 @@ lesson('rogue','treino_veneno_golpe',8,None,
 lesson('rogue','treino_criar',9,'criar_armadilha',
        'Use Criar Armadilha numa casa vazia da sala. Buraco já está disponível; as demais fórmulas dependem da Guilda. Escolha apenas um mecanismo que você conhece.', 'Crie uma armadilha conhecida')
 
-lesson('cleric','treino_grimorio',3,None,
+lesson('cleric','treino_atalhos_cleric',2,'cura',
+       'Abra H e vincule Cura ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Cura ao atalho 1',verb='configurar_atalho')
+lesson('cleric','treino_menu_magias_cleric',3,None,
+       'Abra o grimório com M, confira as magias conhecidas, feche com M ou Esc e encerre o turno.', 'Conheça o grimório',verb='encerrar_turno',requirements={'magia_tipo':'qualquer'})
+lesson('cleric','treino_grimorio',4,None,
        _F16.GRIMORIO, _F16.GRIMORIO_CURTO,verb='usar_magia',requirements={'magia_tipo':'qualquer'})
-lesson('cleric','treino_grimorio_turno',4,None,
+lesson('cleric','treino_grimorio_turno',5,None,
        _F16.TURNO, _F16.TURNO_CURTO,verb='encerrar_turno')
-lesson('cleric','treino_cura',5,'cura',
+lesson('cleric','treino_cura',6,'cura',
        'O Aprendiz 1 está ferido. Fique ao lado dele, selecione Cura e use um dado. Confira a vida recuperada e o custo de água.', 'Cure o Aprendiz 1',target_id='__treino_cleric_1',effective=True)
-lesson('cleric','treino_cura_area',6,'cura_area',
+lesson('cleric','treino_cura_area',7,'cura_area',
        'Os dois aprendizes ficaram feridos para este exercício. Fique perto deles e use Cura em Área. No nível inicial o raio é de 2 casas; confira a área e o custo antes de confirmar.', 'Cure os dois aprendizes em área',count=2,effective=True)
-lesson('cleric','treino_purificar',7,'purificacao',
+lesson('cleric','treino_purificar',8,'purificacao',
        'O Aprendiz 1 está cego por um veneno simulado. Fique ao lado dele, use Purificação e escolha Veneno. Observe o efeito desaparecer.', 'Purifique o Aprendiz 1',target_id='__treino_cleric_1')
-lesson('cleric','treino_ressuscitar',8,'ressurreicao',
+lesson('cleric','treino_ressuscitar',9,'ressurreicao',
        'O Aprendiz 1 simula um aliado caído. Fique ao lado dele e use Ressurreição. Ele retorna com a vida determinada pela sua habilidade.', 'Ressuscite o Aprendiz 1',target_id='__treino_cleric_1')
 
+lesson('bard','treino_atalhos_bard',2,'cancao_heroica',
+       'Abra H e vincule Canção Heroica ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Canção Heroica ao atalho 1',verb='configurar_atalho')
 lesson('bard','treino_cancao',3,'cancao_heroica',
        'Ative Canção Heroica e escolha um benefício disponível. A canção beneficia você e aliados dentro do seu alcance. O aprendiz permite observar a aura.', 'Ative a Canção Heroica')
 lesson('bard','treino_cancao_manter',4,None,
@@ -137,6 +151,8 @@ lesson('bard','treino_provocar',6,'provocacao',
 import aplicar_fatia11_tutorial as _F11   # baú da Harpa Velha, Nota Cortante e Sinfonia do Alaúde (renumera o Bardo)
 _F11.aplicar(d)
 
+lesson('paladin','treino_atalhos_paladin',2,'protetor',
+       'Abra H e vincule Protetor ao espaço 1. Depois use 1 para ativá-lo; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.', 'Vincule Protetor ao atalho 1',verb='configurar_atalho')
 lesson('paladin','treino_refem',3,'__prisioneiro__',
        'O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.', 'Liberte o refém',verb='libertar_refem')
 lesson('paladin','treino_protetor',4,'__prisioneiro__',
@@ -191,22 +207,33 @@ for f in d['falas']:
 if not any(f['id'] == 'fala_atalhos' for f in d['falas']):
     d['falas'].append({
         'id': 'fala_atalhos', 'pos': [49, 16], 'falante': {'nome': 'Instrutor de Treinamento', 'emoji': '🎓'},
-        'texto': 'Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.',
+        'texto': 'R recentraliza a câmera 3D; Esc cancela uma mira pendente; clicar numa casa faz o herói andar até ela.',
         'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': 19,
         'tarefa': {'tipo': 'encerrar_turno', 'vezes': 1, 'texto_curto': 'Encerre o turno para concluir'}})
-# Lições de dano (resistência e vulnerabilidade): um esqueleto por lição na sala 48 ([51,15] original + [51,17]; a folga evita beco sem saída).
-for _pos in ([51, 17],):
-    if not any(m['pos'] == _pos for m in d['monsters']):
-        d['monsters'].append({'type': 'esqueleto_humano', 'pos': _pos, 'room_id': 48, 'boss': False, 'target': False})
+else:
+    next(f for f in d['falas'] if f['id'] == 'fala_atalhos')['texto'] = 'R recentraliza a câmera 3D; Esc cancela uma mira pendente; clicar numa casa faz o herói andar até ela.'
+# As lições de dano usam um único boneco imóvel. A lógica do treinamento aplica
+# resistência/vulnerabilidade apenas a esta instância, sem alterar os outros bonecos.
+d['monsters'] = [m for m in d['monsters']
+                 if m.get('room_id') != 48 and 'esqueleto' not in str(m.get('type', '')).lower()]
+d['monsters'].append({'type': 'boneco_treino', 'pos': [51, 15], 'room_id': 48,
+                      'boss': False, 'target': False})
+next(c for c in d['chests'] if c['pos'] == [49, 17])['items'] = [{'id': 'cajado_madeira'}]
 for _fid, _ordem, _texto, _curto in [
-    ('fala_res', 20, 'Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.',
-     'Ataque um esqueleto com espada ou adaga'),
-    ('fala_vuln', 21, 'Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.',
-     'Pegue a maça, equipe e ataque o esqueleto')]:
+    ('fala_res', 20, 'O boneco de treino reduz em 5 o dano cortante. Acerte-o com uma espada e observe o número azul com RESISTIDO.',
+     'Acerte o boneco com uma arma cortante'),
+    ('fala_vuln', 21, 'Agora pegue e equipe o Cajado de Madeira no baú. Ele causa dano contundente: o boneco é vulnerável e recebe +2. Acerte-o e observe o número vermelho com VULNERÁVEL.',
+     'Acerte o boneco com o cajado')]:
     if not any(f['id'] == _fid for f in d['falas']):
-        d['falas'].append({'id': _fid, 'pos': [50, 17], 'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
-                           'texto': _texto, 'trigger': {'tipo': 'proximidade', 'raio': 4}, 'ordem': _ordem,
-                           'tarefa': {'tipo': 'atacar', 'alvo': 'esqueleto_humano', 'vezes': 1, 'texto_curto': _curto}})
+        d['falas'].append({'id': _fid, 'pos': [51, 15] if _fid == 'fala_vuln' else [50, 17],
+                           'falante': {'nome': 'Mestre de Armas', 'emoji': '🛡️'},
+                           'texto': _texto,
+                           'trigger': {'tipo': 'sala'} if _fid == 'fala_res' else {'tipo': 'proximidade', 'raio': 1},
+                           'ordem': _ordem,
+                           'tarefa': {'tipo': 'atacar', 'alvo': 'boneco_treino', 'vezes': 1,
+                                      'texto_curto': _curto,
+                                      'requer_categoria_arma': 'cortante' if _fid == 'fala_res' else 'contundente',
+                                      'requer_sala_alvo': 48}})
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).resolve().parent))
 from aplicar_fatia7_tutorial import aplicar as _aplicar_fatia7   # bonecos de palha/treino da sala 22, fala_30 e lições volta_<classe>

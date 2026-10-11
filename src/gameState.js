@@ -1877,7 +1877,7 @@ const GS = (() => {
         break;
 
       case 'licao_passo':
-        _emit('licaoPasso', msg);   // {licao_id, passo:{i,n,texto,porque,ui,dica,informativo}}
+        _emit('licaoPasso', msg);   // {licao_id, passo:{i,n,titulo,texto,porque,ui,dica,informativo}}
         break;
 
       case 'licao_passo_ok':
@@ -2882,6 +2882,7 @@ const GS = (() => {
   // Getters dos campos servidos no game_state (null no procedural).
   function getObjectives() { return (gameState && gameState.objectives) || null; }
   function getExitPos()    { return (gameState && gameState.exit_pos) || null; }
+  function getRouteExitProgress() { return (gameState && gameState.route_exit_progress) || null; }
   function getStartMode()  { return (gameState && gameState.start_mode) || 'entrance'; }
   function getHeroSpawns() { return (gameState && gameState.hero_spawns) || []; }
   function getPrisoner()   { return (gameState && gameState.prisoner) || null; }
@@ -3671,6 +3672,7 @@ const GS = (() => {
     // Fase 3: objetivos / saída / prisioneiro (property getters — acessados sem parênteses).
     get objectives()            { return getObjectives(); },
     get exitPos()               { return getExitPos(); },
+    get routeExitProgress()     { return getRouteExitProgress(); },
     get startMode()             { return getStartMode(); },
     get heroSpawns()            { return getHeroSpawns(); },
     get prisoner()              { return getPrisoner(); },

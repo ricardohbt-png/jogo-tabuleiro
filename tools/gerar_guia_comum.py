@@ -55,6 +55,8 @@ def gerar_lang():
     for lic, passos in guia_todos().items():
         for p in passos:
             out[_chave(lic, p["id"], "texto")] = dict(zip(("pt", "en"), p["texto"]))
+            if p.get("titulo"):
+                out[_chave(lic, p["id"], "titulo")] = dict(zip(("pt", "en"), p["titulo"]))
             if p.get("porque"):
                 out[_chave(lic, p["id"], "porque")] = dict(zip(("pt", "en"), p["porque"]))
             for n, d in enumerate(p.get("dica", []), 1):
@@ -82,6 +84,8 @@ def aplicar_guia(d):
         guia = []
         for p in passos:
             s = {"id": p["id"], "texto": _chave(f["id"], p["id"], "texto")}
+            if p.get("titulo"):
+                s["titulo"] = _chave(f["id"], p["id"], "titulo")
             if p.get("porque"):
                 s["porque"] = _chave(f["id"], p["id"], "porque")
             if p.get("ui"):

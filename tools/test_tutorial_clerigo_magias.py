@@ -226,7 +226,11 @@ class LicoesDoClerigo(unittest.TestCase):
         self.assertEqual(g['tarefa']['tipo'], 'usar_magia')
         self.assertEqual(g['requisitos'], {'magia_tipo': 'qualquer'})
         self.assertIn('não gastam', g['texto'])
-        self.assertEqual(g['ordem'], self.fala('porta_cleric')['ordem'] + 1)
+        h = self.fala('treino_atalhos_cleric')
+        menu = self.fala('treino_menu_magias_cleric')
+        self.assertEqual(h['ordem'], self.fala('porta_cleric')['ordem'] + 1)
+        self.assertEqual(menu['ordem'], h['ordem'] + 1)
+        self.assertEqual(g['ordem'], menu['ordem'] + 1)
         self.assertLess(g['ordem'], self.fala('treino_cura')['ordem'])
         t = self.fala('treino_grimorio_turno')
         self.assertEqual(t['tarefa']['tipo'], 'encerrar_turno')
@@ -324,11 +328,12 @@ class GuiaDoGrimorioDizOQueFazer(unittest.TestCase):
         passos = self.passos()
         g = S.GUIA_LANG if hasattr(S, 'GUIA_LANG') else None
         lang = (Path(__file__).resolve().parents[1] / 'src/lang/tutorial_guia.js').read_text(encoding='utf-8')
-        self.assertIn('aba', lang.split('treino_grimorio.grimorio.texto')[1][:120].lower())
+        self.assertIn('aba', lang.split('treino_menu_magias_cleric.abrir.texto')[1][:160].lower())
         pt = lang.split('treino_grimorio.lancar.texto')[1][:260]
         self.assertIn('aprendiz', pt)
         self.assertIn('casa livre', pt)
-        self.assertEqual(len(passos), 2)
+        # O passo que abre o Grimório fica na lição introdutória do menu M.
+        self.assertEqual(len(passos), 1)
 
 
 if __name__ == '__main__':

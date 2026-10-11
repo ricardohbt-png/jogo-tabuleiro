@@ -1,7 +1,9 @@
 """Guia das lições do Clérigo no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO, GUIA_MENU_MAGIAS
 
 GUIA = {
+    "treino_atalhos_cleric": GUIA_H_ATALHO("cura", "Cura", "Heal"),
+    "treino_menu_magias_cleric": GUIA_MENU_MAGIAS(),
     "fala_11": [
         P("atacar", ("Ataque o boneco com a sua maça.", "Attack the dummy with your mace."),
           porque=("O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]].",
@@ -15,14 +17,11 @@ GUIA = {
           ui="monstro:boneco_treino"),
     ],
     "treino_grimorio": [
-        P("grimorio", ("Abra a aba ✨ Magias do seu painel.", "Open the ✨ Spells tab of your panel."),
-          porque=("É nela que ficam as magias que você conhece.", "Your known spells are listed there."),
-          ui="botao:magias",
-          dica=[("No celular, é o botão ✨ no canto da tela.", "On a phone, it is the ✨ button in the screen corner.")]),
-        P("lancar", ("Escolha uma magia e mire em você, num aprendiz ou numa casa livre.",
-                     "Pick a spell and aim at yourself, an apprentice or a free square."),
+        P("lancar", ("Abra o Grimório, escolha uma magia e mire em você, aprendiz ou casa livre.",
+                     "Open the Grimoire, pick a spell and aim at yourself, an apprentice or a free square."),
           porque=("Magia de aliado pede um aliado; a de área pede uma casa. Fora desta sala, cada uma gasta um [[slot]].",
                   "An ally spell needs an ally; an area spell needs a square. Outside this room, each one spends a [[slot]]."),
+          ui="botao:magias",
           dica=[("Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói: aqui não há.",
                  "Command and Heavy Body Curse need an enemy or another hero: there are none here.")]),
     ],
@@ -34,7 +33,7 @@ GUIA = {
     ],
     "treino_cura": [
         P("aproximar", ("Fique ao lado do Aprendiz 1, que está ferido.", "Stand next to Apprentice 1, who is wounded.")),
-        P("curar", ("Clique em Cura e use um dado no Aprendiz 1.", "Click Heal and use one die on Apprentice 1."),
+        P("curar", ("Feche o menu H, pressione 1: use Cura e aplique um dado no Aprendiz 1.", "Close the H menu, press 1: use Heal and apply one die to Apprentice 1."),
           porque=("Confira a vida recuperada e o custo de água.", "Check the life recovered and the water cost."),
           ui="habilidade:cura"),
     ],

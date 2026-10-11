@@ -1420,7 +1420,7 @@ window.EDITOR_CATALOG = {
         {
           "name": "Machado",
           "atk_bonus": 5,
-          "damage": "1d10+3",
+          "damage": "1d12+3",
           "damage_types": [
             "physical"
           ],
@@ -10825,11 +10825,11 @@ window.EDITOR_CATALOG = {
       "id": "machado_duplo",
       "name": "Machado Duplo",
       "emoji": "🪓",
-      "die": "1d8",
+      "die": "1d10",
       "stat": "str_",
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
-      "descricao": "Machado Duplo: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+      "descricao": "Machado Duplo: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
     },
     {
       "id": "bastsword",
@@ -10845,11 +10845,11 @@ window.EDITOR_CATALOG = {
       "id": "machado_orc",
       "name": "Machado de Guerra Órquico",
       "emoji": "🪓",
-      "die": "1d10",
+      "die": "1d12",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
-      "descricao": "Machado de Guerra Órquico: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
+      "descricao": "Machado de Guerra Órquico: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
     },
     {
       "id": "alabarda",
@@ -10870,6 +10870,15 @@ window.EDITOR_CATALOG = {
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
+    },
+    {
+      "id": "marreta",
+      "name": "Marreta",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "categoria": "contundente",
+      "descricao": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
     },
     {
       "id": "dagger_prata",
@@ -10991,11 +11000,11 @@ window.EDITOR_CATALOG = {
       "id": "machado_duplo_prata",
       "name": "Machado Duplo de Prata",
       "emoji": "🪓",
-      "die": "1d8",
+      "die": "1d10",
       "stat": "str_",
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
-      "descricao": "Machado Duplo de Prata: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "bastsword_prata",
@@ -11011,11 +11020,11 @@ window.EDITOR_CATALOG = {
       "id": "machado_orc_prata",
       "name": "Machado de Guerra Órquico de Prata",
       "emoji": "🪓",
-      "die": "1d10",
+      "die": "1d12",
       "stat": "str_",
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
-      "descricao": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "alabarda_prata",
@@ -11036,6 +11045,15 @@ window.EDITOR_CATALOG = {
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "marreta_prata",
+      "name": "Marreta de Prata",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "categoria": "contundente",
+      "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "escudo_p",

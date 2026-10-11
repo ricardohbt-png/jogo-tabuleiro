@@ -13,7 +13,7 @@
   const VERBOS = ["mover_ate", "abrir_porta", "atacar", "matar", "pegar_item", "equipar", "encerrar_turno",
     "usar_item", "usar_magia", "usar_habilidade", "usar_tecnica", "usar_instrumento", "desarmar_armadilha",
     "arremessar_item", "libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao",
-    "encerrar_cancao", "comandar_servo", "guiar_refem"];
+    "encerrar_cancao", "comandar_servo", "guiar_refem", "configurar_atalho"];
 
   const ehChave = (s) => typeof s === "string" && /^ui\.tutorial\.[a-z0-9_.]+$/.test(s);
 
@@ -42,6 +42,7 @@
     if (!Array.isArray(guia)) return [];
     return guia.filter(p => p && typeof p === "object").map(p => ({
       ...(p.id != null ? { id: String(p.id) } : {}),
+      titulo: typeof p.titulo === "string" ? p.titulo : "",
       texto: typeof p.texto === "string" ? p.texto : "",
       porque: typeof p.porque === "string" ? p.porque : "",
       ui: typeof p.ui === "string" && p.ui ? p.ui : null,
@@ -51,12 +52,13 @@
     }));
   }
 
-  // Ordem das chaves = a do gerador (id, texto, porque, ui, dica, conclui_com).
+  // Ordem das chaves = a do gerador (id, titulo, texto, porque, ui, dica, conclui_com).
   function serializar(passos) {
     if (!Array.isArray(passos)) return null;
     const out = passos.map(p => {
       const o = {};
       if (p.id != null && p.id !== "") o.id = p.id;
+      if (p.titulo) o.titulo = p.titulo;
       o.texto = p.texto || "";
       if (p.porque) o.porque = p.porque;
       if (p.ui) o.ui = p.ui;
@@ -81,7 +83,8 @@
       const cc = p.conclui_com;
       if (cc) {
         if (!VERBOS.includes(cc.tipo)) e.push({ codigo: "guia_conclui_invalido", params: { n, tipo: cc.tipo } });
-        else if (i === passos.length - 1) e.push({ codigo: "guia_ultimo_conclui", params: { n } });
+        // No último índice, o guia não avança por esta condição; a tarefa
+        // encerra a lição. A condição é redundante, porém válida no servidor.
       }
     });
     return e;

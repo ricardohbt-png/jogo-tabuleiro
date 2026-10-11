@@ -2090,6 +2090,10 @@ window.LANG_INTERFACE = {
     "en": "Radius {raio} squares | 🍖-4 💧-4 per die",
     "pt": "Raio {raio} quadrados | 🍖-4 💧-4 por dado"
   },
+  "ui.clerigo.cura_area_previa": {
+    "en": "Green squares show the area; highlighted allies can receive healing.",
+    "pt": "Casas verdes mostram a área; aliados destacados podem receber cura."
+  },
   "ui.clerigo.cura_area_titulo": {
     "en": "🌟 AREA HEAL",
     "pt": "🌟 CURA EM ÁREA"
@@ -8040,6 +8044,10 @@ window.LANG_INTERFACE = {
     "en": "All heroes at the exit",
     "pt": "Todos os heróis na saída"
   },
+  "ui.objetivo.abrir": {
+    "en": "🎯 Objectives (O)",
+    "pt": "🎯 Objetivos (O)"
+  },
   "ui.objetivo.encerrar_btn": {
     "en": "🏁 Finish",
     "pt": "🏁 Encerrar"
@@ -8076,9 +8084,53 @@ window.LANG_INTERFACE = {
     "en": "Secondary",
     "pt": "Secundários"
   },
+  "ui.objetivo.saidas_rota": {
+    "en": "Route exits discovered",
+    "pt": "Saídas de rota descobertas"
+  },
   "ui.objetivo.titulo": {
     "en": "🎯 Objectives",
     "pt": "🎯 Objetivos"
+  },
+  "ui.objetivo.ocultar": {
+    "en": "Hide objectives (O)",
+    "pt": "Ocultar objetivos (O)"
+  },
+  "ui.hud.auto_turno_desligado": {
+    "en": "⏭ Auto-turn: off",
+    "pt": "⏭ Auto-turno: desligado"
+  },
+  "ui.hud.auto_turno_ligado": {
+    "en": "⏭ Auto-turn: on",
+    "pt": "⏭ Auto-turno: ligado"
+  },
+  "ui.hud.auto_turno_pausado": {
+    "en": "⏭ Auto-turn: paused (combat)",
+    "pt": "⏭ Auto-turno: pausado (combate)"
+  },
+  "ui.hud.auto_turno_contagem": {
+    "en": "⏭ Turn ends in {n}s",
+    "pt": "⏭ Turno encerra em {n}s"
+  },
+  "ui.hud.auto_turno_desligado_title": {
+    "en": "Enable automatic turn ending while exploring",
+    "pt": "Ativar encerramento automático do turno durante exploração"
+  },
+  "ui.hud.auto_turno_ligado_title": {
+    "en": "Disable automatic turn ending while exploring",
+    "pt": "Desativar encerramento automático do turno durante exploração"
+  },
+  "ui.hud.auto_turno_pausado_title": {
+    "en": "Automatic turn ending is paused during combat",
+    "pt": "O encerramento automático fica pausado durante o combate"
+  },
+  "ui.hud.auto_turno_pausado_tutorial": {
+    "en": "⏭ Auto-turn: paused (lesson)",
+    "pt": "⏭ Auto-turno: pausado (lição)"
+  },
+  "ui.hud.auto_turno_pausado_tutorial_title": {
+    "en": "End this turn manually to complete the current lesson",
+    "pt": "Encerre este turno manualmente para concluir a lição atual"
   },
   "ui.paladino.1_hp_por_turno": {
     "en": "+1 HP per turn",

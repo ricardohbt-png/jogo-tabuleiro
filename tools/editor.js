@@ -354,7 +354,7 @@
     { v: "usar_instrumento" },
     { v: "arremessar_item" },
     { v: "desarmar_armadilha" },
-    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo", "guiar_refem"].map(v => ({v})),
+    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo", "guiar_refem", "configurar_atalho"].map(v => ({v})),
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta", "guiar_refem"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
@@ -366,7 +366,9 @@
     rooms: [], nextRoomId: 0,
     startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoner: null,
     heroSpawnClass: "warrior",
-    monsters: [], chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
+    monsters: [], routes: [], routeExits: [], nextRouteExitId: 0, nextRouteId: 0,
+    chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
+    routeExitRouteId: "",
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [] },
@@ -962,6 +964,7 @@
       add(hs.pos[0], hs.pos[1], meta.mark, "#7c65c9");
     }
     if (S.exit) add(S.exit.x, S.exit.y, "↓", "#c99a3c");
+    for (const routeExit of S.routeExits) add(routeExit.pos[0], routeExit.pos[1], "↗", "#42b6a4");
     for (const m of S.monsters) add(m.pos[0], m.pos[1], "M", "#bc4a5a");
     for (const c of S.chests) add(c.pos[0], c.pos[1], "$", "#bd9130");
     for (const trap of S.traps) add(trap.pos[0], trap.pos[1], "!", "#cf6c3b");
@@ -1549,6 +1552,7 @@
     { id: "entrance", group: "entidades" },
     { id: "hero_spawn", group: "entidades" },
     { id: "exit", group: "entidades" },
+    { id: "route_exit", group: "entidades" },
     { id: "monster", group: "entidades" },
     { id: "chest", group: "entidades" },
     { id: "trap", group: "entidades" },
@@ -1598,6 +1602,30 @@
       hint.style.color = "#b9a87f";
       hint.style.marginLeft = "6px";
       tb.appendChild(hint);
+    }
+    if (S.tool === "route_exit") {
+      if (!S.routeExitRouteId && S.routes.length) S.routeExitRouteId = S.routes[0].id;
+      const routeSelect = document.createElement("select");
+      routeSelect.id = "route-exit-route";
+      routeSelect.innerHTML = S.routes.map(r => `<option value="${r.id}"${r.id === S.routeExitRouteId ? " selected" : ""}>${r.name}</option>`).join("");
+      routeSelect.onchange = e => { S.routeExitRouteId = e.target.value; buildToolbar(); };
+      tb.appendChild(routeSelect);
+      const addRoute = document.createElement("button");
+      addRoute.type = "button"; addRoute.textContent = t("ui.editor.masmorra.rotas.adicionar");
+      addRoute.onclick = () => {
+        const name = window.prompt(t("ui.editor.masmorra.rotas.nome_prompt"));
+        if (!name || !name.trim()) return;
+        const id = "rota_" + S.nextRouteId++;
+        S.routes.push({ id, name: name.trim().slice(0, 80), monster_policy: "persistir_derrotas" });
+        S.routeExitRouteId = id; buildToolbar(); renderPanel(); updateStatus();
+      };
+      tb.appendChild(addRoute);
+      const policy = document.createElement("select"); policy.id = "route-exit-policy";
+      policy.innerHTML = `<option value="persistir_derrotas">${t("ui.editor.masmorra.rotas.persistir")}</option><option value="reaparecer">${t("ui.editor.masmorra.rotas.reaparecer")}</option>`;
+      const activeRoute = S.routes.find(r => r.id === S.routeExitRouteId);
+      if (activeRoute) policy.value = activeRoute.monster_policy;
+      policy.onchange = e => { const r = S.routes.find(x => x.id === S.routeExitRouteId); if (r) r.monster_policy = e.target.value; };
+      policy.disabled = !activeRoute; tb.appendChild(policy);
     }
     if (S.tool === "trap") {
       const trapSelect = document.createElement("select");
@@ -1891,6 +1919,8 @@
     if (sel.kind === "monster")
       return monsterTiles(sel.ref, [ax, ay]).every(([tx, ty]) =>
         tx >= 0 && ty >= 0 && tx < S.grid.w && ty < S.grid.h && S.tiles[ty][tx] !== WALL);
+    if (sel.kind === "route_exit")
+      return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] === FLOOR;
     return ax >= 0 && ay >= 0 && ax < S.grid.w && ay < S.grid.h && S.tiles[ay][ax] !== WALL;
   }
   // Move a entidade selecionada para (nx,ny), conforme o tipo.
@@ -1916,6 +1946,8 @@
     const hs = S.heroSpawns.find(e => e.pos[0] === x && e.pos[1] === y);
     if (hs) return { kind: "hero_spawn", ref: hs, pos: hs.pos.slice() };
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
+    const routeExit = S.routeExits.find(e => e.pos[0] === x && e.pos[1] === y);
+    if (routeExit) return { kind: "route_exit", ref: routeExit, pos: routeExit.pos.slice() };
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
     const secret = S.secretPassages.find(p => p.pos[0] === x && p.pos[1] === y);
     if (secret) return { kind: "secret_passage", ref: secret, pos: [x, y] };
@@ -1938,6 +1970,8 @@
     for (const hs of S.heroSpawns) if (hs.pos[0] === x && hs.pos[1] === y)
       found.push({ kind: "hero_spawn", ref: hs, pos: hs.pos.slice() });
     if (S.exit && S.exit.x === x && S.exit.y === y) found.push({ kind: "exit", pos: [x, y] });
+    for (const routeExit of S.routeExits) if (routeExit.pos[0] === x && routeExit.pos[1] === y)
+      found.push({ kind: "route_exit", ref: routeExit, pos: routeExit.pos.slice() });
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) found.push({ kind: "prisoner", ref: S.prisoner, pos: S.prisoner.pos.slice() });
     for (const p of S.secretPassages) if (p.pos[0] === x && p.pos[1] === y)
       found.push({ kind: "secret_passage", ref: p, pos: p.pos.slice() });
@@ -1984,10 +2018,21 @@
         break;
       }
       case "exit": S.exit = { x, y }; break;
+      case "route_exit": {
+        const route = S.routes.find(r => r.id === S.routeExitRouteId);
+        if (!route || S.tiles[y]?.[x] !== FLOOR) break;
+        const existing = S.routeExits.find(e => e.route_id === route.id);
+        const exit = existing || { id: "route_exit_" + S.nextRouteExitId++, name: route.name, route_id: route.id, pos: [x, y] };
+        exit.pos = [x, y];
+        if (!existing) S.routeExits.push(exit);
+        break;
+      }
       case "prisoner": S.prisoner = { pos: [x, y], room_id: rid }; break;
       case "monster": {
         const type = (CAT.monsters[0] || {}).type || "goblin";
-        const monster = { type, pos: [x, y], room_id: rid, boss: false, target: false };
+        let sourceSeq = 0;
+        while (S.monsters.some(m => m.source_id === "mob_" + sourceSeq)) sourceSeq++;
+        const monster = { type, pos: [x, y], room_id: rid, boss: false, target: false, source_id: "mob_" + sourceSeq };
         if (dropValid({ kind: "monster", ref: monster }, x, y)) S.monsters.push(monster);
         break;
       }
@@ -2017,6 +2062,7 @@
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) S.entrance = null;
     S.heroSpawns = S.heroSpawns.filter(s => !(s.pos[0] === x && s.pos[1] === y));
     if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
+    S.routeExits = S.routeExits.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) S.prisoner = null;
     S.monsters = S.monsters.filter(e => !monsterTiles(e).some(c => c[0] === x && c[1] === y));
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
@@ -2039,6 +2085,10 @@
       const before = S.monsters.length;
       S.monsters = S.monsters.filter(m => m !== ref);
       if (S.monsters.length === before) return false;
+    } else if (kind === "route_exit") {
+      const before = S.routeExits.length;
+      S.routeExits = S.routeExits.filter(e => e !== ref);
+      if (S.routeExits.length === before) return false;
     } else if (kind === "decor") {
       const before = S.decorations.length;
       S.decorations = S.decorations.filter(d => d !== ref);
@@ -2853,6 +2903,7 @@
             <option value="item"${condition?.type === "item" ? " selected" : ""}>${t("ui.editor.masmorra.painel.item_chave")}</option>
             <option value="decor"${condition?.type === "decor" ? " selected" : ""}>${t("ui.editor.masmorra.painel.objeto_chave_ativado")}</option>
             <option value="licao"${condition?.type === "licao" ? " selected" : ""}>${t("ui.editor.masmorra.painel.licao_cumprida")}</option>
+            <option value="requirement"${condition?.type === "requirement" ? " selected" : ""}>${t("ui.editor.masmorra.rotas.trava_externa")}</option>
           </select>
           ${condition?.type === "licao" ? (() => {
             const licoes = S.falas.filter(f => f.tarefa && f.tarefa.tipo);
@@ -2860,6 +2911,12 @@
             return `<label>${t("ui.editor.masmorra.painel.licao_necessaria")}</label><select id="door-condition-licao">${licoes.map(l => `<option value="${l.id}"${condition.licao_id === l.id ? " selected" : ""}>${l.id} ${_xy(l.pos)} — ${(l.tarefa.texto_curto || "").slice(0, 30)}</option>`).join("")}</select>`;
           })() : ""}
           ${condition?.type === "item" ? `<label>${t("ui.editor.masmorra.painel.item_necessario")}</label><select id="door-condition-item">${opt(keyItems, condition.item_id || "", o => o.v + " — " + o.name)}</select>` : ""}
+          ${condition?.type === "requirement" ? `<small>${t("ui.editor.masmorra.rotas.trava_hint")}</small>
+            <label>${t("ui.editor.masmorra.rotas.requisito_renome")} <input id="door-req-renome" type="number" min="0" value="${Number(condition.requirement?.renome_min || 0)}"></label>
+            <label>${t("ui.editor.masmorra.rotas.requisito_nivel")} <input id="door-req-level" type="number" min="0" value="${Number(condition.requirement?.nivel_grupo_min || 0)}"></label>
+            <label>${t("ui.editor.masmorra.rotas.requisito_item")} <select id="door-req-item"><option value="">—</option>${opt(keyItems, condition.requirement?.item_id || "", o => o.v + " — " + o.name)}</select></label>
+            <label>${t("ui.editor.masmorra.rotas.requisito_fato")} <input id="door-req-fact" value="${String(condition.requirement?.fato || "").replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}"></label>
+            <label>${t("ui.editor.masmorra.rotas.requisito_aventura")} <input id="door-req-adventure" value="${String(condition.requirement?.aventura_id || "").replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}"></label>` : ""}
           ${condition?.type === "decor" ? `<label>${t("ui.editor.masmorra.painel.modo_ativacoes")}</label><select id="door-condition-mode">
               <option value="any"${condition.keys_mode !== "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.qualquer_objeto")}</option>
               <option value="all"${condition.keys_mode === "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.todos_objetos")}</option>
@@ -2872,6 +2929,7 @@
         if (e.target.value === "none") delete S.doorConditions[conditionKey];
         else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
         else if (e.target.value === "licao") S.doorConditions[conditionKey] = { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" };
+        else if (e.target.value === "requirement") S.doorConditions[conditionKey] = { type: "requirement", requirement: { renome_min: 0, nivel_grupo_min: 0, item_id: "", fato: "", aventura_id: "" } };
         else S.doorConditions[conditionKey] = { type: "decor", key_decor_ids: [], keys_mode: "any" };
         renderPanel(); render();
       };
@@ -2879,6 +2937,19 @@
       if (conditionLicao) conditionLicao.onchange = e => { S.doorConditions[conditionKey].licao_id = e.target.value; };
       const conditionItem = document.getElementById("door-condition-item");
       if (conditionItem) conditionItem.onchange = e => { S.doorConditions[conditionKey].item_id = e.target.value; };
+      const syncDoorRequirement = () => {
+        const req = S.doorConditions[conditionKey]?.requirement;
+        if (!req) return;
+        req.renome_min = Math.max(0, Number(document.getElementById("door-req-renome")?.value) || 0);
+        req.nivel_grupo_min = Math.max(0, Number(document.getElementById("door-req-level")?.value) || 0);
+        req.item_id = document.getElementById("door-req-item")?.value || "";
+        req.fato = document.getElementById("door-req-fact")?.value || "";
+        req.aventura_id = document.getElementById("door-req-adventure")?.value || "";
+        updateStatus();
+      };
+      ["door-req-renome", "door-req-level", "door-req-item", "door-req-fact", "door-req-adventure"].forEach(id => {
+        const input = document.getElementById(id); if (input) input.onchange = syncDoorRequirement;
+      });
       const conditionMode = document.getElementById("door-condition-mode");
       if (conditionMode) conditionMode.onchange = e => { S.doorConditions[conditionKey].keys_mode = e.target.value === "all" ? "all" : "any"; };
       panel.querySelectorAll(".door-condition-key").forEach(box => box.onchange = e => {
@@ -2890,6 +2961,14 @@
       const h = heroSpawnMeta(ref.class_id);
       panel.innerHTML = `<b>${h.emoji} ${t("ui.editor.masmorra.painel.inicio_classe", { classe: nomeCat("classe", h.id, h.id) })}</b>
         <small>${t("ui.editor.masmorra.painel.trocar_heroi_hint")}</small>`;
+    } else if (k === "route_exit") {
+      const route = S.routes.find(r => r.id === ref.route_id);
+      panel.innerHTML = `<b>↗ ${t("ui.editor.masmorra.rotas.saida_titulo")}</b>
+        <label>${t("ui.editor.masmorra.rotas.nome_saida")} <input id="route-exit-name" maxlength="80" value="${String(ref.name || "").replace(/[&<>\"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}"></label>
+        <small>${t("ui.editor.masmorra.rotas.rota")}: ${route ? route.name : ref.route_id}</small>
+        <button id="route-exit-delete" type="button">× ${t("ui.editor.masmorra.painel.remover")}</button>`;
+      document.getElementById("route-exit-name").onchange = e => { ref.name = e.target.value.trim().slice(0, 80); updateStatus(); };
+      document.getElementById("route-exit-delete").onclick = () => deleteSelectedEntity();
     } else if (k === "monster") {
       const vs = Array.isArray(ref.vscale) ? ref.vscale : [1, 1];
       const flightMeta = monsterFlightMeta(ref);
@@ -2905,6 +2984,7 @@
       panel.innerHTML = `<b>👹 ${t("ui.editor.masmorra.painel.monstro_titulo")}</b>
         <label>${t("ui.editor.masmorra.painel.tipo")}</label><select id="p-type">${opt(CAT.monsters.map(m => ({ v: m.type, name: nomeCat("monstro", m.type, m.name) })), ref.type, o => o.v + " — " + o.name)}</select>
         <label>room_id <input id="p-room" value="${ref.room_id ?? ""}"></label>
+        ${S.routes.length ? `<label>${t("ui.editor.masmorra.rotas.pertence_rota")} <select id="p-route"><option value="">${t("ui.editor.masmorra.rotas.sem_rota")}</option>${S.routes.map(r => `<option value="${r.id}"${ref.route_id === r.id ? " selected" : ""}>${r.name}</option>`).join("")}</select></label>` : ""}
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> ${t("ui.editor.masmorra.painel.chefe_boss")}</label>
         <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> ${t("ui.editor.masmorra.painel.alvo_objetivo")}</label>
         ${_monsterHostilityPanelHTML(ref)}
@@ -2933,6 +3013,8 @@
         renderPanel(); render();
       };
       document.getElementById("p-room").onchange = e => { ref.room_id = e.target.value === "" ? null : Number(e.target.value); };
+      const routeInput = document.getElementById("p-route");
+      if (routeInput) routeInput.onchange = e => { if (e.target.value) ref.route_id = e.target.value; else delete ref.route_id; updateStatus(); };
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
       _bindMonsterHostilityPanel(ref);
@@ -3125,6 +3207,7 @@
           if (doDicionario) {
             return `<div class="guia-passo" style="border:1px solid #4a3a2a;padding:6px;margin:6px 0">${topo}
               <small style="color:#8a7a5a">${t("ui.editor.masmorra.guia.do_dicionario")}</small>
+              ${p.titulo ? `<div style="margin:4px 0;color:#eac978;font-weight:bold">${escGuia(t(p.titulo))}</div>` : ""}
               <div style="margin:4px 0;color:#d8d0b8">${escGuia(t(p.texto))}</div>
               <button data-g="converte" data-i="${i}">${t("ui.editor.masmorra.guia.converter")}</button></div>`;
           }
@@ -3135,6 +3218,7 @@
           const ehCasaUi = EDITOR_GUIA.TIPOS_CASA.includes(ui.tipo);
           const alvoCc = cc.alvo == null ? "" : (Array.isArray(cc.alvo) ? cc.alvo.join(",") : cc.alvo);
           return `<div class="guia-passo" style="border:1px solid #4a3a2a;padding:6px;margin:6px 0">${topo}
+            <label>${t("ui.editor.masmorra.guia.titulo_passo")}</label><input data-g="titulo" data-i="${i}" value="${escGuia(p.titulo)}" style="width:100%">
             <label>${t("ui.editor.masmorra.guia.texto")}</label><textarea data-g="texto" data-i="${i}" rows="2" style="width:100%">${escGuia(p.texto)}</textarea>
             <label>${t("ui.editor.masmorra.guia.porque")}</label><input data-g="porque" data-i="${i}" value="${escGuia(p.porque)}" style="width:100%">
             <label>${t("ui.editor.masmorra.guia.destacar")}</label>
@@ -3252,6 +3336,7 @@
           if (!g || g === "novo") return;
           const p = passoDe(el); if (!p) return;
           if (g === "texto") p.texto = el.value;
+          else if (g === "titulo") p.titulo = el.value;
           else if (g === "porque") p.porque = el.value;
           else if (g === "dica0" || g === "dica1") {
             const d = [(p.dica || [])[0] || "", (p.dica || [])[1] || ""]; d[g === "dica0" ? 0 : 1] = el.value;
@@ -3666,7 +3751,7 @@
       }
     }
     else if (S.tool === "room") { roomDrag = { x0: x, y0: y, x1: x, y1: y }; }
-    else if (["entrance", "hero_spawn", "exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); updateStatus(); }
+    else if (["entrance", "hero_spawn", "exit", "route_exit", "prisoner", "monster", "chest", "trap", "decor", "secret_mechanism", "illusion_wall", "fala"].includes(S.tool)) { placeEntity(x, y); if (S.tool !== "decor") S.sel = entityAt(x, y); renderPanel(); render(); updateStatus(); }
     else if (S.tool === "erase") { eraseAt(x, y); S.sel = null; renderPanel(); render(); }
     else if (S.tool === "select") {
       const insideSelection = regionSelection && x >= regionSelection.x && x < regionSelection.x + regionSelection.w
@@ -4060,12 +4145,16 @@
       door_conditions: Object.fromEntries(Object.entries(S.doorConditions).map(([key, c]) => [key,
         c.type === "item" ? { type: "item", item_id: c.item_id || "" }
         : c.type === "licao" ? { type: "licao", licao_id: c.licao_id || "" }
+        : c.type === "requirement" ? { type: "requirement", requirement: Object.assign({}, c.requirement || {}) }
         : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
+      routes: S.routes.map(r => ({ id: r.id, name: r.name, monster_policy: r.monster_policy === "reaparecer" ? "reaparecer" : "persistir_derrotas" })),
+      route_exits: S.routeExits.map(e => ({ id: e.id, name: e.name, pos: e.pos.slice(), route_id: e.route_id })),
       monsters: S.monsters.map(m => {
-        const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target };
+        const o = { type: m.type, pos: m.pos.slice(), room_id: m.room_id, boss: !!m.boss, target: !!m.target,
+          source_id: m.source_id, ...(m.route_id ? { route_id: m.route_id } : {}) };
         if (m.hostility_override && typeof m.hostility_override === "object")
           o.hostility_override = JSON.parse(JSON.stringify(m.hostility_override));
         if (m.autonomous_hostility === true) o.autonomous_hostility = true;
@@ -4157,8 +4246,13 @@
         const out = { id: f.id, pos: f.pos.slice(), falante, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
         for (const key of ["requisitos", "sala_exclusiva"]) if (f[key]) out[key] = JSON.parse(JSON.stringify(f[key]));
+        if (Array.isArray(f.continua_sem) && f.continua_sem.length)
+          out.continua_sem = f.continua_sem.filter(id => typeof id === "string" && id.trim());
+        if (Array.isArray(f.continua_sem_ativas) && f.continua_sem_ativas.length)
+          out.continua_sem_ativas = f.continua_sem_ativas.filter(id => typeof id === "string" && id.trim());
         if (f.ordem != null) out.ordem = f.ordem;
         if (f.tarefa && f.tarefa.tipo) out.tarefa = {
+          ...JSON.parse(JSON.stringify(f.tarefa)),
           tipo: f.tarefa.tipo,
           ...(f.tarefa.alvo != null && f.tarefa.alvo !== "" ? { alvo: f.tarefa.alvo } : {}),
           vezes: Math.max(1, parseInt(f.tarefa.vezes, 10) || 1),
@@ -4225,6 +4319,28 @@
     const curses = new Set((CAT.curses || []).map(c => c.id));
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
+    const routeIds = new Set();
+    for (const route of S.routes) {
+      if (!/^[a-z0-9_-]{1,48}$/.test(route.id) || routeIds.has(route.id)) e.push(V("rota_id_invalido", { id: route.id }));
+      routeIds.add(route.id);
+      if (!String(route.name || "").trim() || route.name.length > 80) e.push(V("rota_nome_invalido", { id: route.id }));
+      if (!["reaparecer", "persistir_derrotas"].includes(route.monster_policy)) e.push(V("rota_politica_invalida", { id: route.id }));
+    }
+    const routeExitIds = new Set(), routeExitCoords = new Set();
+    for (const routeExit of S.routeExits) {
+      const key = Array.isArray(routeExit.pos) ? routeExit.pos.join(",") : "";
+      if (!/^[a-z0-9_-]{1,48}$/.test(routeExit.id) || routeExitIds.has(routeExit.id)) e.push(V("saida_rota_id_invalido", { id: routeExit.id }));
+      routeExitIds.add(routeExit.id);
+      if (!routeIds.has(routeExit.route_id)) e.push(V("saida_rota_referencia_invalida", { id: routeExit.id }));
+      if (!String(routeExit.name || "").trim() || routeExit.name.length > 80) e.push(V("saida_rota_nome_invalido", { id: routeExit.id }));
+      if (isWall(routeExit.pos) || S.tiles[routeExit.pos?.[1]]?.[routeExit.pos?.[0]] !== FLOOR) e.push(V("saida_rota_em_chao", { pos: P(routeExit.pos) }));
+      if (routeExitCoords.has(key) || (S.exit && S.exit.x === routeExit.pos[0] && S.exit.y === routeExit.pos[1])
+          || (S.entrance && S.entrance.x === routeExit.pos[0] && S.entrance.y === routeExit.pos[1])
+          || S.heroSpawns.some(s => s.pos[0] === routeExit.pos[0] && s.pos[1] === routeExit.pos[1]))
+        e.push(V("saida_rota_colisao", { pos: P(routeExit.pos) }));
+      routeExitCoords.add(key);
+    }
+    const monsterSourceIds = new Set();
     const isWall = (p) => !p || S.tiles[p[1]]?.[p[0]] === WALL || S.tiles[p[1]]?.[p[0]] === undefined;
     const isAbyss = (p) => Array.isArray(p) && S.materiais[`${p[0]},${p[1]}`] === "ceu_abismo"
       && !bridgeAt(p[0], p[1]);
@@ -4256,6 +4372,9 @@
     if (S.rooms.length === 0) e.push(V("sem_sala"));
     if (S.startMode === "entrance" && !S.rooms.some(r => r.role === "entrance")) e.push(V("sem_sala_entrada"));
     for (const m of S.monsters) {
+      if (!/^[a-z0-9_-]{1,48}$/.test(m.source_id || "") || monsterSourceIds.has(m.source_id)) e.push(V("monstro_source_id_invalido", { pos: P(m.pos) }));
+      monsterSourceIds.add(m.source_id);
+      if (m.route_id && !routeIds.has(m.route_id)) e.push(V("monstro_rota_invalida", { pos: P(m.pos), rota: m.route_id }));
       if (!types.has(m.type)) e.push(V("monstro_tipo_invalido", { tipo: m.type, pos: P(m.pos) }));
       if (isWall(m.pos)) e.push(V("monstro_em_parede", { pos: P(m.pos) }));
       const def = CAT.monsters.find(entry => entry.type === m.type);
@@ -4499,6 +4618,7 @@
       if (!/^\d+,\d+$/.test(key) || !c || typeof c !== "object") continue;
       if (c.type === "item" && typeof c.item_id === "string") S.doorConditions[key] = { type: "item", item_id: c.item_id };
       else if (c.type === "licao" && typeof c.licao_id === "string") S.doorConditions[key] = { type: "licao", licao_id: c.licao_id };
+      else if (c.type === "requirement" && c.requirement && typeof c.requirement === "object") S.doorConditions[key] = { type: "requirement", requirement: Object.assign({}, c.requirement) };
       else if (c.type === "decor") S.doorConditions[key] = { type: "decor", key_decor_ids: Array.isArray(c.key_decor_ids) ? c.key_decor_ids.slice() : [], keys_mode: c.keys_mode === "all" ? "all" : "any" };
     }
     S.doorRotations = {};
@@ -4520,8 +4640,29 @@
     }));
     if (S.startMode === "hero_spawns") S.entrance = null;
     S.exit = obj.exit || null;
+    S.routes = (obj.routes || []).map((r, i) => ({
+      id: typeof r.id === "string" ? r.id : "rota_" + i,
+      name: String(r.name || ("Rota " + (i + 1))).slice(0, 80),
+      monster_policy: r.monster_policy === "reaparecer" ? "reaparecer" : "persistir_derrotas",
+    }));
+    S.nextRouteId = S.routes.reduce((n, r) => { const m = /^rota_(\d+)$/.exec(r.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, 0);
+    const usedRouteExitIds = new Set(); let routeExitSeq = 0;
+    S.routeExits = (obj.route_exits || []).map((e, i) => {
+      let id = typeof e.id === "string" && e.id && !usedRouteExitIds.has(e.id) ? e.id : "route_exit_" + routeExitSeq++;
+      while (usedRouteExitIds.has(id)) id = "route_exit_" + routeExitSeq++;
+      usedRouteExitIds.add(id);
+      return { id, name: String(e.name || ("Saída " + (i + 1))).slice(0, 80), route_id: String(e.route_id || ""), pos: Array.isArray(e.pos) ? e.pos.slice() : [0, 0] };
+    });
+    S.nextRouteExitId = S.routeExits.reduce((n, e) => { const m = /^route_exit_(\d+)$/.exec(e.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, routeExitSeq);
+    S.routeExitRouteId = S.routes[0]?.id || "";
     S.prisoner = obj.prisoner || null;
-    S.monsters = (obj.monsters || []).map(m => ({
+    const loadedSourceIds = new Set(); let sourceSeq = 0;
+    S.monsters = (obj.monsters || []).map(m => {
+      let sourceId = typeof m.source_id === "string" && m.source_id && !loadedSourceIds.has(m.source_id) ? m.source_id : "mob_" + sourceSeq++;
+      while (loadedSourceIds.has(sourceId)) sourceId = "mob_" + sourceSeq++;
+      loadedSourceIds.add(sourceId);
+      return ({
+      source_id: sourceId, ...(typeof m.route_id === "string" && m.route_id ? { route_id: m.route_id } : {}),
       type: m.type, pos: m.pos.slice(), room_id: m.room_id ?? null, boss: !!m.boss, target: !!m.target,
       ...(m.hostility_override && typeof m.hostility_override === "object"
         ? { hostility_override: JSON.parse(JSON.stringify(m.hostility_override)) } : {}),
@@ -4532,7 +4673,8 @@
       ...(m.pode_alterar_altura !== undefined ? { pode_alterar_altura: !!m.pode_alterar_altura } : {}),
       ...(m.custo_mov_altura !== undefined ? { custo_mov_altura: Math.max(1, Math.min(10, Number(m.custo_mov_altura) | 0)) } : {}),
       ...(m.ignora_obstaculos_voo !== undefined ? { ignora_obstaculos_voo: !!m.ignora_obstaculos_voo } : {}),
-    }));
+      });
+    });
     S.chests = (obj.chests || []).map(c => ({ pos: c.pos.slice(), gold: c.gold | 0, items: (c.items || []).map(exportLootItem), key_objective: !!c.key_objective }));
     const rawTraps = obj.traps || [];
     const usedTrapIds = new Set();
@@ -4641,6 +4783,7 @@
       const trigger = { tipo };
       if (tipo === "proximidade") trigger.raio = Math.max(1, parseInt(tg.raio, 10) || 2);
       const tar = f.tarefa && f.tarefa.tipo ? {
+        ...JSON.parse(JSON.stringify(f.tarefa)),
         tipo: f.tarefa.tipo,
         alvo: f.tarefa.alvo ?? null,
         ...Object.fromEntries(["alvo_id", "cura_efetiva", "requer_veneno", "requer_sagrado"].filter(k => f.tarefa[k]).map(k => [k, f.tarefa[k]])),
@@ -4652,6 +4795,8 @@
       for (const key of ["retrato", "cena"]) if (typeof speaker[key] === "string") falante[key] = speaker[key];
       return { id: f.id || ("fala_" + i), pos: f.pos.slice(), falante, texto: f.texto || "", trigger,
                classe: f.classe || null, ordem: f.ordem ?? null, tarefa: tar,
+               continua_sem: Array.isArray(f.continua_sem) ? f.continua_sem.filter(id => typeof id === "string") : [],
+               continua_sem_ativas: Array.isArray(f.continua_sem_ativas) ? f.continua_sem_ativas.filter(id => typeof id === "string") : [],
                requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
                efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null,
                guia: EDITOR_GUIA.carregar(f.guia) };

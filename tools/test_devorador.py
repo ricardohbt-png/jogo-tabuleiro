@@ -205,11 +205,11 @@ async def main():
     check("save Vontade aplica -1 (bônus 0)", bonus_v == 0)
     _, _, bonus_f, _ = await r._save_mostrado(orc, "fortitude", 99)
     check("save Fortitude intacto (bônus 5)", bonus_f == 5)
-    # Loot garantido — o machado é uma arma 1d10 e o lookup de loot o encontra
+    # Loot garantido — o machado é uma arma 1d12 e o lookup de loot o encontra
     todos_itens = CHEST_ITEMS + SHOP_WEAPONS + SHOP_MERCHANT
     machado = next((i for i in todos_itens if i["id"] == "machado_orc"), None)
-    check("machado_orc é arma 1d10 cortante",
-          machado is not None and machado.get("die") == "1d10" and machado.get("categoria") == "cortante")
+    check("machado_orc é arma 1d12 cortante",
+          machado is not None and machado.get("die") == "1d12" and machado.get("categoria") == "cortante")
     check("orc tem guaranteed_loot=machado_orc", orc_def.get("guaranteed_loot") == ["machado_orc"])
     check("lookup de loot resolve machado_orc (SHOP_WEAPONS)",
           any(i["id"] == "machado_orc" for i in SHOP_WEAPONS))

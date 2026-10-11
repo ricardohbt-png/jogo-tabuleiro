@@ -1984,6 +1984,10 @@ window.LANG_NARRACAO = {
     "en": "🏁 Main objective complete! Collect your reward and click **End Mission** when you're ready.",
     "pt": "🏁 Objetivo principal cumprido! Recolham a recompensa e cliquem em **Encerrar missão** quando estiverem prontos."
   },
+  "narracao.saida_rota_descoberta": {
+    "en": "🧭 Route discovered: **{nome}**. The discovery is shared with the party.",
+    "pt": "🧭 Rota descoberta: **{nome}**. A descoberta foi compartilhada com o grupo."
+  },
   "narracao.obtem_um_19_20_natural_com_o_machado_dup": {
     "en": "🪓 **{heroi}** rolls a natural 19/20 with the Double Axe — a second attack is available this turn.",
     "pt": "🪓 **{heroi}** obtém um 19/20 natural com o Machado Duplo — um segundo ataque está disponível neste turno."

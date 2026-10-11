@@ -1,7 +1,9 @@
 """Guia das lições do Mago no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO, GUIA_MENU_MAGIAS
 
 GUIA = {
+    "treino_atalhos_mage": GUIA_H_ATALHO("aprimorar_magia", "Aprimorar Magia", "Enhance Spell"),
+    "treino_menu_magias_mage": GUIA_MENU_MAGIAS(),
     "fala_7": [
         P("atacar", ("Ataque o boneco com seu cajado.", "Attack the dummy with your staff."),
           porque=("O cajado acerta como qualquer arma, mas é o Grimório que vence batalhas.",
@@ -15,11 +17,11 @@ GUIA = {
           ui="monstro:boneco_treino"),
     ],
     "treino_magia": [
-        P("grimorio", ("Abra o Grimório no botão das magias.", "Open the Grimoire with the spells button."),
-          ui="botao:magias"),
-        P("lancar", ("Escolha uma magia e lance-a no boneco ou em você.", "Pick a spell and cast it on the dummy or yourself."),
+        P("lancar", ("Abra o Grimório, escolha uma magia e lance-a no boneco ou em você.",
+                     "Open the Grimoire, pick a spell and cast it on the dummy or yourself."),
           porque=("Nesta sala as magias não gastam [[slot]]: teste todas as que você conhece.",
-                  "In this room spells do not spend [[slot]]s: test every spell you know.")),
+                  "In this room spells do not spend [[slot]]s: test every spell you know."),
+          ui="botao:magias"),
     ],
     "treino_slots": [
         P("encerrar", ("Clique em Encerrar Turno para passar a vez.", "Click End Turn to pass your turn."),
@@ -28,7 +30,7 @@ GUIA = {
           ui="botao:encerrar_turno"),
     ],
     "treino_aprimorar_magia": [
-        P("aprimorar", ("Arme Aprimorar Magia e lance uma magia com teste.", "Arm Enhance Spell and cast a spell that allows a save."),
+        P("aprimorar", ("Feche o menu H, pressione 1: arme Aprimorar Magia e lance magia com teste.", "Close the H menu, press 1: arm Enhance Spell and cast a spell that allows a save."),
           porque=("Ela aumenta a dificuldade do [[teste_resistencia]] do alvo.",
                   "It raises the difficulty of the target's [[teste_resistencia]]."),
           ui="habilidade:aprimorar_magia",

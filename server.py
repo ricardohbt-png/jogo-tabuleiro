@@ -50,7 +50,7 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  # sai cedo no ramo "throwable" e nunca chega ao gancho.
                  "arremessar_item", "libertar_refem", "proteger", "regenerar",
                  "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo",
-                 "guiar_refem")
+                 "guiar_refem", "configurar_atalho")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta", "guiar_refem")
@@ -165,7 +165,7 @@ def _guia_payload(lic, i):
     passos = _guia_passos(lic)
     i = max(0, min(int(i or 0), len(passos) - 1))
     s = passos[i]
-    return {"id": s.get("id"), "texto": s.get("texto", ""), "porque": s.get("porque", ""),
+    return {"id": s.get("id"), "titulo": s.get("titulo"), "texto": s.get("texto", ""), "porque": s.get("porque", ""),
             "ui": s.get("ui"), "dica": list(s.get("dica") or []),
             "auto": bool(s.get("auto")), "i": i, "n": len(passos),
             "informativo": i < len(passos) - 1 and not s.get("conclui_com")}
@@ -588,6 +588,26 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
     global WORLD_ADVENTURES
     if not isinstance(raw_locations, list) or not isinstance(raw_adventures, list):
         return False, "Dados do mapa inválidos."
+    dungeon_by_file = {entry.get("file"): carregar_dungeon(entry.get("file")) for entry in listar_dungeons() if entry.get("file")}
+    # IDs escolhidos no editor são referências autorais. Se a saída tiver sido
+    # removida do arquivo da masmorra, rejeitamos o save inteiro em vez de
+    # apagar silenciosamente a condição de conclusão.
+    for row in raw_adventures:
+        if not isinstance(row, dict) or not isinstance(row.get("dungeons", []), list):
+            continue
+        seen_stage_files = set()
+        for raw_stage in row.get("dungeons", [])[:20]:
+            et = _etapa_obj(raw_stage)
+            if et.get("file") in seen_stage_files:
+                return False, f"A masmorra {et.get('file')} aparece mais de uma vez no mesmo destino."
+            seen_stage_files.add(et.get("file"))
+            if et.get("completion_mode") != "route_exits":
+                continue
+            defn = dungeon_by_file.get(et.get("file")) or {}
+            valid_exit_ids = {str(x.get("id")) for x in defn.get("route_exits", []) if isinstance(x, dict)}
+            required = et.get("required_exit_ids", [])
+            if not isinstance(required, list) or not required or any(str(x) not in valid_exit_ids for x in required):
+                return False, f"A etapa {et.get('file') or '(sem masmorra)'} exige saídas inválidas ou removidas. Revise as saídas obrigatórias."
     for loc in raw_locations:
         if not isinstance(loc, dict) or loc.get("id") not in WORLD_LOCATIONS:
             continue
@@ -624,6 +644,12 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                 etapa = {"file": et["file"], "encadear": et["encadear"],
                          "intro": _clean_story_field(et["intro"]),
                          "outro": _clean_story_field(et["outro"])}
+                if et.get("completion_mode") == "route_exits":
+                    etapa["completion_mode"] = "route_exits"
+                    etapa["required_exit_ids"] = list(dict.fromkeys(str(x) for x in et.get("required_exit_ids", [])))
+                req_etapa = _clean_requirement(et.get("requisito"))
+                if any((req_etapa["renome_min"], req_etapa["nivel_grupo_min"], req_etapa["item_id"], req_etapa["fato"], req_etapa["aventura_id"])):
+                    etapa["requisito"] = req_etapa
                 trigger = _clean_location_scene_trigger(et.get("scene_trigger"))
                 if trigger:
                     etapa["scene_trigger"] = trigger
@@ -1507,11 +1533,12 @@ WEAPONS = {
     "shortsword":    {"id": "shortsword",    "name": "Espada Curta",         "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
     "longsword":     {"id": "longsword",     "name": "Espada Longa",         "die": "1d8",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
     "warhammer":     {"id": "warhammer",     "name": "Martelo de Guerra",    "die": "1d8",  "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente"},
+    "marreta":       {"id": "marreta",       "name": "Marreta",              "die": "2d8",  "stat": "str_", "categoria": "contundente", "two_handed": True, "ignora_reducao_dano": 1},
     "mangual":       {"id": "mangual",       "name": "Mangual",              "die": "1d8",  "stat": "str_", "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente"},
-    "machado_duplo": {"id": "machado_duplo", "name": "Machado Duplo",        "die": "1d8",  "stat": "str_", "extra_attack_on_crit_min_nat": 19, "categoria": "cortante"},
+    "machado_duplo": {"id": "machado_duplo", "name": "Machado Duplo",        "die": "1d10", "stat": "str_", "extra_attack_on_crit_min_nat": 19, "categoria": "cortante"},
     "bastsword":     {"id": "bastsword",     "name": "Espada Bastarda",      "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
     # two_handed=True â†’ nÃ£o pode ser empunhada junto com escudo (ver _conflito_duas_maos).
-    "machado_orc":   {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "die": "1d10", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True},
+    "machado_orc":   {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "die": "1d12", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True},
     "alabarda":      {"id": "alabarda",      "name": "Alabarda",             "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True},
     "espada2m":      {"id": "espada2m",      "name": "Espada de 2 Mãos",    "die": "2d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "two_handed": True},
     # â”€â”€ Ã€ DistÃ¢ncia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -2288,6 +2315,12 @@ def ensure_campaign_schema(sg):
     # duráveis de combate e para migrar saves antigos sem perda de dados.
     if not isinstance(sg.get("shortcut_slots"), dict):
         sg["shortcut_slots"] = {}; changed = True
+    if not isinstance(sg.get("world_adventure_progress"), dict):
+        sg["world_adventure_progress"] = {}; changed = True
+    if not isinstance(sg.get("world_adventure_route_progress"), dict):
+        sg["world_adventure_route_progress"] = {}; changed = True
+    if not isinstance(sg.get("dungeon_snapshots"), dict):
+        sg["dungeon_snapshots"] = {}; changed = True
     # Refúgio dos Heróis: um estoque compartilhado e quartos privados por conta.
     refugio = sg.get("refugio")
     if not isinstance(refugio, dict):
@@ -2406,6 +2439,9 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
         "world_location": "alva_e_luz",
         # Próxima etapa liberada em cada destino do mapa-múndi.
         "world_adventure_progress": {},
+        # Descobertas e snapshots não alteram o cursor linear acima.
+        "world_adventure_route_progress": {},
+        "dungeon_snapshots": {},
         "renome": 0,
         "fatos": [],
         "scene_conversations_done": [],
@@ -2428,7 +2464,10 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
     if isinstance(inherited, dict):
         # Continuação é uma cópia: jamais compartilha referências nem altera a
         # campanha de origem.
-        for key in ("campaign_phase", "world_location", "world_adventure_progress", "renome", "fatos", "scene_conversations_done", "members", "characters", "slots", "shortcut_slots", "refugio", "hero_rooms"):
+        for key in ("campaign_phase", "world_location", "world_adventure_progress",
+                    "world_adventure_route_progress", "dungeon_snapshots", "renome", "fatos",
+                    "scene_conversations_done", "members", "characters", "slots",
+                    "shortcut_slots", "refugio", "hero_rooms"):
             if key in inherited:
                 sg[key] = deepcopy(inherited[key])
     ensure_campaign_schema(sg)
@@ -2499,6 +2538,7 @@ PONTO_AUTO_RODADAS = 5
 # mesma lista que a continuação copiava, mais o que o checkpoint grava.
 CAMPOS_DO_PONTO = (
     "campaign_file", "campaign_phase", "world_location", "world_adventure_progress",
+    "world_adventure_route_progress", "dungeon_snapshots",
     "renome", "fatos", "scene_conversations_done", "scene_triggers_done",
     "story_beats_done", "active_scene", "scene_variables", "members",
     "characters", "slots", "shortcut_slots", "refugio", "hero_rooms",
@@ -3197,6 +3237,7 @@ FOTO_SALA_CATEGORIAS = {
     "mode": "foto", "selected_dungeon": "foto",
     "dungeon_generated": "foto", "tiles": "foto", "map_w": "foto", "map_h": "foto",
     "rooms": "foto", "door_rooms": "foto", "opened_doors": "foto",
+    "route_exits": "derivado", "dungeon_routes": "derivado",
     "stairs_pos": "foto", "exit_pos": "foto", "materiais": "foto",
     "elevacoes": "foto", "alturas_parede": "foto", "pontes": "foto", "secret_passages": "foto",
     "door_conditions": "foto", "door_condition_activated": "foto",
@@ -3213,6 +3254,7 @@ FOTO_SALA_CATEGORIAS = {
     "_armadilha_seq": "foto", "zonas_especiais": "foto", "_terrenos_inverno": "foto",
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
     "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
+    "tutorial_city_tour_id": "conexao",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
     # objetivos
@@ -3238,6 +3280,7 @@ FOTO_SALA_CATEGORIAS = {
     "world_adventure_id": "foto", "world_adventure_index": "foto",
     "world_adventure_revisit": "foto",
     "world_adventure_progress": "jogo_salvo",
+    "world_adventure_route_progress": "jogo_salvo",
     "renome": "jogo_salvo", "fatos": "jogo_salvo", "story_beats_done": "jogo_salvo",
     "scene_conversations_done": "jogo_salvo", "scene_triggers_done": "jogo_salvo",
     "scene_variables": "jogo_salvo", "active_scene": "jogo_salvo",
@@ -3286,6 +3329,7 @@ FOTO_SALA_CATEGORIAS = {
     "_survival_alerts": "efemero", "_story_encadeada": "efemero",
     "_campaign_outro": "efemero", "_monster_ai_focus_target_id": "efemero",
     "_monster_ai_reserved_tiles": "efemero",
+    "_route_completion_announced": "efemero",
     "_grotao_ponto_vulneravel_claims": "efemero",
     "_ultima_foto": "efemero",   # cópia em memória da última foto gravada
     "_foto_pendente": "janela",  # foto lida do jogo salvo, ainda não aplicada
@@ -3437,6 +3481,9 @@ def try_open_savegame_room(account, sid, rooms):
                 room.world_adventure_progress[str(adventure_id)] = max(0, int(stage))
             except (TypeError, ValueError):
                 continue
+    raw_route_progress = sg.get("world_adventure_route_progress", {})
+    if isinstance(raw_route_progress, dict):
+        room.world_adventure_route_progress = deepcopy(raw_route_progress)
     if sg.get("mode") == "campaign" and sg.get("campaign_file"):
         room.mode = "campaign"
         room.selected_campaign = sg["campaign_file"]
@@ -5121,7 +5168,7 @@ MONSTER_DEFS = [
         "str_": 16, "dex": 12, "con_": 14, "int_": 8,
         "fort": 5, "ref_": 3, "will": 1,
         "attacks": [
-            {"name": "Machado", "atk_bonus": 5, "damage": "1d10+3",
+            {"name": "Machado", "atk_bonus": 5, "damage": "1d12+3",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
              "categoria": "cortante"},
         ],
@@ -6731,21 +6778,23 @@ SHOP_WEAPONS = [
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "crit_nat20_multiplier": 3, "categoria": "contundente",
-     "allowed_classes": ["paladin", "warrior"]},
+     "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
      "allowed_classes": ["cleric", "rogue", "paladin", "warrior"]},
     {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
-    {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d8",  "stat": "str_", "price": 22, "extra_attack_on_crit_min_nat": 19, "categoria": "cortante",
+    {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d10", "stat": "str_", "price": 22, "extra_attack_on_crit_min_nat": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
     # â”€â”€â”€ Muito Pesadas (1d10 / 2d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "bastsword",     "name": "Espada Bastarda",    "emoji": "⚔️",  "die": "1d10", "stat": "str_", "price": 25, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
-    {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "emoji": "🪓", "die": "1d10", "stat": "str_", "price": 26, "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True,
+    {"id": "machado_orc",   "name": "Machado de Guerra Órquico", "emoji": "🪓", "die": "1d12", "stat": "str_", "price": 26, "crit_nat20_multiplier": 3, "categoria": "cortante", "two_handed": True,
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "alabarda",      "name": "Alabarda",           "emoji": "🪓",  "die": "1d10", "stat": "str_", "price": 28, "range": 2, "categoria": "perfurante", "two_handed": True,
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "espada2m",      "name": "Espada de 2 Mãos",  "emoji": "⚔️",  "die": "2d6",  "stat": "str_", "price": 35, "crit_min_nat_roll": 19, "categoria": "cortante", "two_handed": True,
+     "allowed_classes": ["paladin", "warrior"]},
+    {"id": "marreta",       "name": "Marreta",            "emoji": "🔨",  "die": "2d8",  "stat": "str_", "price": 45, "categoria": "contundente", "two_handed": True, "ignora_reducao_dano": 1,
      "allowed_classes": ["paladin", "warrior"]},
 ]
 
@@ -6777,6 +6826,8 @@ def _descricao_arma_catalogo(arma):
         partes.append("Pode ser usada na mão secundária para um ataque extra, substituindo o escudo.")
     if arma.get("two_handed"):
         partes.append("Requer as duas mãos.")
+    if arma.get("ignora_reducao_dano"):
+        partes.append(f"Ignora {int(arma['ignora_reducao_dano'])} ponto total de redução de dano por golpe.")
 
     if arma.get("crit_min_nat_roll"):
         partes.append(f"Crítico natural com {arma['crit_min_nat_roll']}–20.")
@@ -7391,15 +7442,86 @@ def validar_dungeon(defn):
             if not isinstance(value, int) or isinstance(value, bool) or value not in (0, 1, 2, 3):
                 return False, f"orientação de porta inválida em {key}: {value!r}."
 
+    # Rotas são opcionais para manter toda masmorra autorada anterior válida.
+    # IDs estáveis são a chave do progresso entre incursões; não aceitar
+    # referências ambíguas aqui evita derrotas/saídas atribuídas ao caminho errado.
+    routes = _as_list("routes")
+    route_exits = _as_list("route_exits")
+    if not isinstance(routes, list) or not isinstance(route_exits, list):
+        return False, "routes e route_exits devem ser listas."
+    route_by_id = {}
+    for route in routes:
+        if not isinstance(route, dict):
+            return False, "cada rota deve ser um objeto JSON."
+        rid = route.get("id")
+        name = route.get("name")
+        policy = route.get("monster_policy", "persistir_derrotas")
+        if not isinstance(rid, str) or not re.fullmatch(r"[a-z0-9_-]{1,48}", rid):
+            return False, f"id de rota inválido: {rid!r}."
+        if rid in route_by_id:
+            return False, f"id de rota duplicado: {rid!r}."
+        if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
+            return False, f"rota {rid} precisa de nome de até 80 caracteres."
+        if policy not in ("reaparecer", "persistir_derrotas"):
+            return False, f"política de monstros inválida na rota {rid}."
+        route_by_id[rid] = route
+
+    route_exit_ids = set()
+    route_exit_tiles = set()
+    reserved_tiles = {(ent["x"], ent["y"])} if start_mode == "entrance" else set()
+    if defn.get("exit"):
+        try:
+            reserved_tiles.add((defn["exit"]["x"], defn["exit"]["y"]))
+        except (KeyError, TypeError):
+            pass  # a validação existente do exit informa o formato inválido
+    reserved_tiles.update(tuple(sp["pos"]) for sp in (defn.get("hero_spawns") or [])
+                          if isinstance(sp, dict) and isinstance(sp.get("pos"), list))
+    for route_exit in route_exits:
+        if not isinstance(route_exit, dict):
+            return False, "cada saída de rota deve ser um objeto JSON."
+        eid = route_exit.get("id")
+        name = route_exit.get("name")
+        pos = route_exit.get("pos")
+        rid = route_exit.get("route_id")
+        if not isinstance(eid, str) or not re.fullmatch(r"[a-z0-9_-]{1,48}", eid):
+            return False, f"id de saída de rota inválido: {eid!r}."
+        if eid in route_exit_ids:
+            return False, f"id de saída de rota duplicado: {eid!r}."
+        route_exit_ids.add(eid)
+        if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80:
+            return False, f"saída {eid} precisa de nome de até 80 caracteres."
+        if not in_grid(pos) or tile_at(pos) != FLOOR:
+            return False, f"saída {eid} precisa estar em uma casa de chão dentro do grid."
+        tile = tuple(pos)
+        if tile in reserved_tiles or tile in route_exit_tiles:
+            return False, f"saída de rota sobrepõe outra saída ou ponto inicial em {pos}."
+        route_exit_tiles.add(tile)
+        if not isinstance(rid, str) or rid not in route_by_id:
+            return False, f"saída {eid} referencia rota inexistente: {rid!r}."
+
     monsters = _as_list("monsters")
     if not isinstance(monsters, list):
         return False, "monsters deve ser uma lista."
     tipos_monstro = {m["type"] for m in MONSTER_DEFS}
+    monster_source_ids = set()
     for mo in monsters:
         if not isinstance(mo, dict):
             return False, "cada monstro deve ser um objeto JSON."
         if mo.get("type") not in tipos_monstro:
             return False, f"monstro tipo desconhecido: {mo.get('type')!r}."
+        route_id = mo.get("route_id")
+        if route_id is not None and route_id not in route_by_id:
+            return False, f"monstro referencia rota inexistente: {route_id!r}."
+        source_id = mo.get("source_id")
+        if route_id is not None and (not isinstance(source_id, str)
+                                     or not re.fullmatch(r"[a-z0-9_-]{1,64}", source_id)):
+            return False, "monstro associado a rota precisa de source_id estável."
+        if source_id is not None:
+            if not isinstance(source_id, str) or not re.fullmatch(r"[a-z0-9_-]{1,64}", source_id):
+                return False, f"source_id de monstro inválido: {source_id!r}."
+            if source_id in monster_source_ids:
+                return False, f"source_id de monstro duplicado: {source_id!r}."
+            monster_source_ids.add(source_id)
         if "hostility_override" in mo:
             ok, override = _validate_monster_hostility_override(
                 mo.get("type"), mo.get("hostility_override"))
@@ -7892,9 +8014,15 @@ def validar_dungeon(defn):
         dx, dy = (int(v) for v in key.split(","))
         if not in_grid([dx, dy]) or tile_at([dx, dy]) != DOOR:
             return False, f"condicao de abertura referencia uma casa que nao e porta: {key}."
-        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor", "licao"):
-            return False, f"condicao de porta invalida em {key}: use item, decor ou licao."
-        if cond["type"] == "licao":
+        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor", "licao", "requirement"):
+            return False, f"condicao de porta invalida em {key}: use item, decor, licao ou requirement."
+        if cond["type"] == "requirement":
+            req = _clean_requirement(cond.get("requirement"))
+            if not any((req["renome_min"], req["nivel_grupo_min"], req["item_id"], req["fato"], req["aventura_id"])):
+                return False, f"porta {key} exige ao menos um requisito preenchido."
+            if req["item_id"] and req["item_id"] not in _DUNGEON_ITEM_CATALOG:
+                return False, f"item-chave inválido na porta {key}: {req['item_id']!r}."
+        elif cond["type"] == "licao":
             if cond.get("licao_id") not in _licao_ids:
                 return False, (f"porta {key} aponta para uma licao que nao existe ou "
                                f"nao tem tarefa: {cond.get('licao_id')!r}.")
@@ -8222,7 +8350,9 @@ def listar_dungeons():
             continue
         ok, _ = validar_dungeon(defn)
         if ok:
-            out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file})
+            out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file,
+                        "route_exits": [{"id": x.get("id"), "name": x.get("name", x.get("id"))}
+                                        for x in defn.get("route_exits", []) if isinstance(x, dict)]})
     return out
 
 CAMPAIGNS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "campaigns")
@@ -8301,12 +8431,17 @@ def _etapa_obj(item):
     """Normaliza uma etapa de aventura para {file, encadear, intro, outro}.
     `encadear` faz a próxima etapa começar imediatamente, sem passar pela cidade."""
     if isinstance(item, str):
+        # Mantenha a forma legada enxuta; os consumidores usam .get() com
+        # defaults para os campos adicionados ao editor de aventuras.
         return {"file": item, "encadear": False, "intro": "", "outro": ""}
     if isinstance(item, dict):
         return {"file": item.get("file"), "encadear": bool(item.get("encadear")),
                 "intro": item.get("intro", ""), "outro": item.get("outro", ""),
-                "scene_trigger": item.get("scene_trigger")}
-    return {"file": None, "encadear": False, "intro": "", "outro": "", "scene_trigger": None}
+                "scene_trigger": item.get("scene_trigger"),
+                "completion_mode": "route_exits" if item.get("completion_mode") == "route_exits" else "primary",
+                "required_exit_ids": list(item.get("required_exit_ids") or []) if isinstance(item.get("required_exit_ids"), list) else [],
+                "requisito": _clean_requirement(item.get("requisito"))}
+    return {"file": None, "encadear": False, "intro": "", "outro": "", "scene_trigger": None, "completion_mode": "primary", "required_exit_ids": [], "requisito": _clean_requirement({})}
 
 def _clean_espera(raw):
     """Normaliza a espera de retorno de uma aventura para
@@ -10900,6 +11035,9 @@ class GameRoom(TutorialTraining):
         self.world_adventure_id = None
         self.world_adventure_index = None
         self.world_adventure_progress = {}
+        self.world_adventure_route_progress = {}
+        self.route_exits = []
+        self.dungeon_routes = {}
         self.world_adventure_revisit = False
         self.renome = 0
         self.refugio_state = {"items": [], "gold": 0, "slot_limit": 10,
@@ -11036,6 +11174,7 @@ class GameRoom(TutorialTraining):
         self.licoes = []           # Tutorial: falas que são lição (classe e/ou tarefa)
         self.licoes_feitas = set() # ids de lição cumpridos por qualquer herói
         self.training_mode = False
+        self.tutorial_city_tour_id = None
         self.training_allies = {}
         self.training_state = {}
         self._decor_block_tiles = set()
@@ -12204,6 +12343,7 @@ class GameRoom(TutorialTraining):
                         for p in self.players.values()]
         return {
             "type": "city_state",
+            "tutorial": {"tour_cidade_id": self.tutorial_city_tour_id},
             # Quem entra direto na cidade (jogo salvo já em andamento) não passa
             # pelo lobby; é por aqui que o cliente grava a sessão de reconexão.
             "code": self.code,
@@ -13054,7 +13194,9 @@ class GameRoom(TutorialTraining):
                 poison_id = poison_slots.pop(0)
                 await self._aplicar_veneno(alvo, poison_id, fonte="ataque")
 
-            await self._licao_evento(p, "atacar", alvo=alvo.get("type"))
+            await self._licao_evento(p, "atacar", alvo=alvo.get("type"),
+                                    contexto={"categoria_arma": weapon.get("categoria"),
+                                              "sala_alvo_id": alvo.get("room_id")})
 
         if weapon.get("die"):
             self._set_weapon_poison_slots(p, poison_slots)
@@ -15005,6 +15147,8 @@ class GameRoom(TutorialTraining):
         Instancia só o que o motor entende; exit/prisoner/objectives ficam em
         self.dungeon_def (inertes até a Fase 3)."""
         self.dungeon_def = defn
+        self.dungeon_routes = {str(r.get("id")): deepcopy(r) for r in defn.get("routes", []) if isinstance(r, dict) and r.get("id")}
+        self.route_exits = [deepcopy(x) for x in defn.get("route_exits", []) if isinstance(x, dict)]
         self.opened_doors = set()
         self.map_w = defn["grid"]["w"]
         self.map_h = defn["grid"]["h"]
@@ -15118,6 +15262,9 @@ class GameRoom(TutorialTraining):
             dx, dy = (int(v) for v in key.split(","))
             if cond.get("type") == "item":
                 self.door_conditions[(dx, dy)] = {"type": "item", "item_id": cond["item_id"]}
+            elif cond.get("type") == "requirement":
+                self.door_conditions[(dx, dy)] = {"type": "requirement",
+                                                  "requirement": _clean_requirement(cond.get("requirement"))}
             elif cond.get("type") == "licao":
                 self.door_conditions[(dx, dy)] = {"type": "licao",
                                                   "licao_id": cond.get("licao_id", "")}
@@ -15167,6 +15314,10 @@ class GameRoom(TutorialTraining):
             m["boss"] = False                       # Fase 1: end_game-on-boss Ã© da Fase 3
             m["authored_boss"] = bool(mo.get("boss"))
             m["authored_target"] = bool(mo.get("target"))
+            if mo.get("source_id"):
+                m["authored_source_id"] = str(mo["source_id"])
+            if mo.get("route_id"):
+                m["route_id"] = str(mo["route_id"])
             if isinstance(mo.get("image"), str) and mo.get("image"):
                 m["image"] = mo["image"]
             if isinstance(mo.get("model3d"), str) and mo.get("model3d"):
@@ -15793,6 +15944,18 @@ class GameRoom(TutorialTraining):
         if not ok:
             await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo=reason)})
             return
+        stage_cfg = _etapa_obj(stages[stage_index])
+        stage_allowed, stage_reasons = self._avaliar_requisito(stage_cfg.get("requisito"))
+        if not stage_allowed:
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.destino_bloqueado_requer", motivos=stage_reasons)})
+            return
+        if stage_cfg.get("completion_mode") == "route_exits":
+            known_exits = {str(e.get("id")) for e in defn.get("route_exits", []) if isinstance(e, dict)}
+            required_exits = stage_cfg.get("required_exit_ids") or []
+            if not required_exits or any(str(e) not in known_exits for e in required_exits):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Saídas obrigatórias ausentes ou inválidas; revise esta etapa no editor.")})
+                return
         fome, sede = int(adventure.get("fome", 0)), int(adventure.get("sede", 0))
         sem_recursos = [p["name"] for p in self.players.values() if p.get("fome", 0) < fome or p.get("sede", 0) < sede]
         if sem_recursos:
@@ -15806,6 +15969,7 @@ class GameRoom(TutorialTraining):
         self.world_adventure_id = adventure["id"]
         self.world_adventure_index = stage_index
         self.world_adventure_revisit = revisit
+        self._route_completion_announced = False
         self.location_scene_trigger = _etapa_obj(stages[stage_index]).get("scene_trigger")
         # Abertura da etapa (slides autorados no editor de mapa-múndi). Vale para
         # toda etapa iniciada pelo mapa, não só a primeira.
@@ -15816,6 +15980,15 @@ class GameRoom(TutorialTraining):
             self._story_encadeada = None
         self.dungeon_generated = False
         self._apagar_foto()   # a masmorra deixada aberta, se havia, foi abandonada
+        route_snapshot = None
+        if self._etapa_com_saidas() and isinstance(self.savegame, dict):
+            route_snapshot = (self.savegame.get("dungeon_snapshots") or {}).get(
+                self._chave_etapa_rota())
+        if route_snapshot:
+            # Reabre a incursão parcial exata desta etapa; snapshots de outros
+            # destinos/etapas continuam guardados na coleção.
+            await self._restaurar_masmorra_aberta(route_snapshot)
+            self._respawn_returned_route_monsters()
         await self.gm_say(T("narracao.o_grupo_parte_para_etapa_fome_sede_por_h", adventure_nome=nome_criatura(adventure), stage_index_1=stage_index + 1, len_stages=len(stages), fome=fome, sede=sede))
         # A cena narrativa da etapa acontece ainda na cidade, antes de mudar
         # para a tela da masmorra. Se não houver cena válida, a entrada segue
@@ -16353,7 +16526,7 @@ class GameRoom(TutorialTraining):
         if p.get("perde_turno"):
             p["action_done"] = p["bonus_action_used"] = True; p["moves_left"] = 0
         # Fosso: o marcador vira a rodada perdida aqui (na iniciativa que o herói
-        # recebe); handle_end_turn limpa fosso_oculto/turno_perdido ao encerrá-la.
+        # recebe); _activate_initiative_actor consome essa vez e limpa o estado.
         if p.pop("fosso_pular_proximo_turno", False):
             p["fosso_turno_perdido"] = True
             p["action_done"] = p["bonus_action_used"] = True; p["moves_left"] = 0
@@ -16373,6 +16546,16 @@ class GameRoom(TutorialTraining):
             p = self.players.get(actor["id"])
             if p and self._ativo(p):
                 await self._start_initiative_player_turn(p)
+                if p.get("fosso_turno_perdido"):
+                    # A iniciativa do herói oculto é consumida automaticamente:
+                    # não há ações para o jogador encerrar manualmente. Ele
+                    # reaparece ao fim da vez perdida, antes do próximo ator.
+                    self._cancelar_timer_turno()
+                    for key in ("fosso_oculto", "fosso_turno_perdido",
+                                "fosso_pular_proximo_turno"):
+                        p.pop(key, None)
+                    await self._advance_initiative()
+                    return
                 await self.gm_say(T("narracao.turno_de_iniciativa", heroi=p['name'], actor_initiative=actor['initiative']))
                 await self.push_state()
                 # A fera toma integralmente o turno do herói.  Executamos a IA
@@ -16835,6 +17018,8 @@ class GameRoom(TutorialTraining):
             return self._grupo_tem_item(cond.get("item_id"))
         if cond["type"] == "licao":
             return cond.get("licao_id") in getattr(self, "licoes_feitas", set())
+        if cond["type"] == "requirement":
+            return self._avaliar_requisito(cond.get("requirement"))[0]
         keys = cond.get("key_decor_ids") or []
         activated = self.door_condition_activated.get(tuple(pos), set())
         return (any(k in activated for k in keys)
@@ -16848,6 +17033,8 @@ class GameRoom(TutorialTraining):
             return T("erro.porta_exige_item_chave", item=item.get("name", cond.get("item_id", "item-chave")))
         if cond.get("type") == "licao":
             return T("erro.porta_exige_licao")
+        if cond.get("type") == "requirement":
+            return T("erro.destino_bloqueado_requer", motivos=self._avaliar_requisito(cond.get("requirement"))[1])
         return T("erro.porta_exige_ativacao_objeto_chave")
 
     def _is_closed_door(self, x, y):
@@ -18153,7 +18340,14 @@ class GameRoom(TutorialTraining):
         locked_owners = [r for r in owners if r.get("locked")]
         if not await self._training_check_entry(pid, p, tx, ty):
             return
-        if (tx, ty) in self.door_conditions and not self._door_condition_satisfied((tx, ty)):
+        door_condition = self.door_conditions.get((tx, ty))
+        if door_condition and door_condition.get("type") == "requirement" and self._door_condition_satisfied((tx, ty)):
+            # Requisito narrativo/externo concluído: destranca a sala para que
+            # o grupo possa abrir a porta normalmente nesta tentativa.
+            for owner in owners:
+                owner["locked"] = False
+            locked_owners = []
+        if door_condition and not self._door_condition_satisfied((tx, ty)):
             await self.send_to(pid, {"type": "error", "msg": self._door_condition_message((tx, ty))})
             return
         if not locked_owners:
@@ -18192,8 +18386,9 @@ class GameRoom(TutorialTraining):
         Uma lição é uma fala com `classe` e/ou `tarefa` — as demais seguem
         sendo falas de NPC comuns e não entram aqui.
 
-        O progresso de lição pertence à execução da masmorra, não à carreira do
-        personagem: quem rejoga o tutorial recebe as lições de novo."""
+        A trilha comum recomeça a cada execução. Nas salas de classe, o histórico
+        preserva os exercícios concluídos, que podem ser reiniciados pelo botão
+        de repetir. O histórico também impede repetir recompensas."""
         self.training_mode = defn.get("tutorial_training") is True
         self.falas = [dict(f, disparada=False) for f in (defn.get("falas") or [])]
         self.licoes = [f for f in self.falas if _e_licao(f)]
@@ -18207,7 +18402,7 @@ class GameRoom(TutorialTraining):
             if self.training_mode:
                 done = p.get("tutorial_history") or []
                 for lesson in self.licoes:
-                    if lesson["id"] in done:
+                    if lesson.get("classe") and lesson["id"] in done:
                         p["licoes_feitas"].append(lesson["id"])
                         p["licao_progresso"][lesson["id"]] = (lesson.get("tarefa") or {}).get("vezes", 1)
                         self.licoes_feitas.add(lesson["id"])
@@ -18366,7 +18561,15 @@ class GameRoom(TutorialTraining):
             return
         if tar.get("alvo_id") and (contexto or {}).get("alvo_id") != tar["alvo_id"]:
             return
+        sala_alvo = tar.get("requer_sala_alvo")
+        if sala_alvo is not None and (contexto or {}).get("sala_alvo_id") != sala_alvo:
+            await self._guia_dica(p["id"], "alvo_errado")
+            return
         if tar.get("cura_efetiva") and (contexto or {}).get("cura", 0) <= 0:
+            return
+        categoria_arma = tar.get("requer_categoria_arma")
+        if categoria_arma and (contexto or {}).get("categoria_arma") != categoria_arma:
+            await self._guia_dica(p["id"], "categoria_arma_errada")
             return
         if not self._licao_alvo_ok(tar.get("alvo"), alvo):
             await self._guia_dica(p["id"], "alvo_errado")
@@ -18374,11 +18577,51 @@ class GameRoom(TutorialTraining):
         prog = p.setdefault("licao_progresso", {})
         prog[lic_id] = prog.get(lic_id, 0) + 1
         if prog[lic_id] >= int(tar.get("vezes", 1) or 1):
+            sala_limpa = tar.get("requer_sala_limpa")
+            if sala_limpa is not None and self._licao_sala_tem_inimigos(sala_limpa):
+                # A granada já foi usada; mantenha a lição ativa até o grupo
+                # derrotar os sobreviventes. A mensagem de parabéns só vem
+                # quando a sala indicada estiver realmente segura.
+                return
+            if sala_limpa is not None:
+                await self._licao_mostrar_parabens(p, lic)
             await self._licao_concluir(p, lic)
             # Cumprir libera a próxima da trilha AQUI, e não só no próximo passo:
             # a varredura de falas roda a partir do movimento, então sem isto
             # uma lição concluída por pegar item, equipar ou encerrar o turno
             # deixaria o herói sem instrução até ele andar de novo.
+            await self._verificar_falas(
+                p, player_room(self.rooms, p["pos"][0], p["pos"][1]))
+
+    def _licao_sala_tem_inimigos(self, sala_id):
+        return any(m.get("room_id") == sala_id and m.get("hp", 0) > 0
+                   for m in getattr(self, "monsters", {}).values())
+
+    async def _licao_mostrar_parabens(self, p, lic):
+        passos = _guia_passos(lic)
+        if not passos:
+            return
+        indice = next((i for i, passo in enumerate(passos) if passo.get("id") == "parabens"),
+                      len(passos) - 1)
+        p["licao_passo"] = indice
+        await self.send_to(p["id"], {"type": "licao_passo", "licao_id": lic["id"],
+                                      "passo": _guia_payload(lic, indice)})
+
+    async def _licao_verificar_sala_limpa(self, sala_id):
+        """Conclui lições que exigem limpar uma sala após cumprir a tarefa."""
+        if sala_id is None or self._licao_sala_tem_inimigos(sala_id):
+            return
+        for p in list(self.players.values()):
+            lic_id = p.get("licao_atual")
+            lic = next((l for l in getattr(self, "licoes", []) if l.get("id") == lic_id), None)
+            tar = (lic or {}).get("tarefa") or {}
+            if not lic or tar.get("requer_sala_limpa") != sala_id:
+                continue
+            progresso = (p.get("licao_progresso") or {}).get(lic_id, 0)
+            if progresso < int(tar.get("vezes", 1) or 1):
+                continue
+            await self._licao_mostrar_parabens(p, lic)
+            await self._licao_concluir(p, lic)
             await self._verificar_falas(
                 p, player_room(self.rooms, p["pos"][0], p["pos"][1]))
 
@@ -18430,16 +18673,19 @@ class GameRoom(TutorialTraining):
 
     def _licao_liberada(self, p, fala):
         """True se as lições da mesma classe com ordem menor já foram
-        cumpridas POR ESTE jogador. Sem ordem, nada segura."""
+        cumpridas POR ESTE jogador. `continua_sem` declara exceções explícitas
+        de dependência; sem ordem, nada segura."""
         ordem = fala.get("ordem")
         if ordem is None:
             return True
         feitas = p.get("licoes_feitas") or []
+        independentes = set(fala.get("continua_sem") or [])
         return all(outra["id"] in feitas
                    for outra in self.licoes
                    if outra.get("ordem") is not None
                    and outra["ordem"] < ordem
                    and outra.get("classe") == fala.get("classe")
+                   and outra["id"] not in independentes
                    and self._training_requirements(p, outra))
 
     def _fala_elegivel(self, p, fala):
@@ -18482,11 +18728,17 @@ class GameRoom(TutorialTraining):
 
     def _licoes_que_seguram(self, p, fala):
         """Lições ainda não cumpridas que impedem `fala` de abrir: a tarefa pendente (se
-        `fala` também tem tarefa) e as anteriores da mesma trilha, como em `_licao_liberada`."""
+        `fala` também tem tarefa) e as anteriores da mesma trilha, como em `_licao_liberada`.
+        `continua_sem` torna predecessoras opcionais. Uma tarefa já aberta ainda
+        segura a trilha enquanto o herói está na zona dela, salvo quando seu ID
+        também aparece em `continua_sem_ativas`."""
         feitas = p.get("licoes_feitas") or []
+        independentes = set(fala.get("continua_sem") or [])
+        pode_pular_ativa = set(fala.get("continua_sem_ativas") or [])
         seguram = []
         atual = p.get("licao_atual")
-        if fala.get("tarefa") and atual:
+        if fala.get("tarefa") and atual and (
+                atual not in independentes or atual not in pode_pular_ativa):
             lic = next((l for l in self.licoes if l["id"] == atual), None)
             if lic:
                 seguram.append(lic)
@@ -18495,6 +18747,7 @@ class GameRoom(TutorialTraining):
             for outra in self.licoes:
                 if (outra.get("ordem") is not None and outra["ordem"] < ordem
                         and outra.get("classe") == fala.get("classe")
+                        and outra["id"] not in independentes
                         and outra["id"] not in feitas and outra not in seguram
                         and self._training_requirements(p, outra)):
                     seguram.append(outra)
@@ -18503,17 +18756,29 @@ class GameRoom(TutorialTraining):
     async def _pular_etapas_abandonadas(self, p, fala):
         """O jogador foi para a etapa seguinte sem terminar a anterior: o tutorial segue.
 
-        Só age quando TODAS as lições que seguram `fala` já ficaram para trás (o herói
-        saiu da zona delas); basta uma ainda ao alcance para nada ser pulado — lições
-        em sequência na mesma zona esperam o jogador terminar. A pulada conta como feita
+        Bloqueios normais só são pulados quando o herói saiu da zona de todos eles;
+        lições na mesma área esperam o jogador terminar. IDs em `continua_sem` são
+        predecessoras opcionais; uma lição ativa ainda espera o fim da própria zona,
+        exceto quando seu ID também está em `continua_sem_ativas`. A pulada conta como feita
         (libera a próxima) em `licoes_feitas`/`licao_progresso`, mas fica em
         `licoes_puladas`, fora do `tutorial_history` e da sala: sem prêmio, sem bônus de
         trilha e sem abrir portão de lição. Devolve True se pulou algo."""
         if not getattr(self, "training_mode", False):
             return False
         seguram = self._licoes_que_seguram(p, fala)
-        if not seguram or any(self._licao_zona_contem(p, l) for l in seguram):
+        if any(self._licao_zona_contem(p, l) for l in seguram):
             return False
+        independentes = set(fala.get("continua_sem") or [])
+        feitas = p.get("licoes_feitas") or []
+        anteriores = [l for l in self.licoes
+                      if l["id"] in independentes and l["id"] not in feitas
+                      and l.get("classe") == fala.get("classe")
+                      and self._training_requirements(p, l)]
+        if not seguram and not anteriores:
+            return False
+        # Quando o herói alcança uma lição que declara não depender destas etapas,
+        # conclui as pendentes como puladas mesmo que os gatilhos compartilhem sala.
+        seguram.extend(l for l in anteriores if l not in seguram)
         seguram.sort(key=lambda l: (l["id"] != p.get("licao_atual"), l.get("ordem") or 0))
         feitas = p.setdefault("licoes_feitas", [])
         puladas = p.setdefault("licoes_puladas", [])
@@ -18567,6 +18832,10 @@ class GameRoom(TutorialTraining):
                 gatilho = bool(sala and sala["id"] == entered["id"])
             if not gatilho:
                 continue
+            if licao and self._fala_elegivel(p, fala) and fala.get("continua_sem"):
+                # Mesmo que as exceções já liberem a etapa, registre as lições não
+                # feitas como puladas para que não reapareçam numa volta pelo mapa.
+                await self._pular_etapas_abandonadas(p, fala)
             if licao and not self._fala_elegivel(p, fala):
                 # há lição anterior em aberto: se o herói já saiu da zona dela, segue adiante
                 if not await self._pular_etapas_abandonadas(p, fala) or not self._fala_elegivel(p, fala):
@@ -19170,7 +19439,8 @@ class GameRoom(TutorialTraining):
             # Alvo de treino preso a uma habilidade (tutorial): recusado ANTES
             # do custo e do gasto de acao, para que errar a habilidade nao cobre
             # fome/sede nem queime o turno — o jogador arma a certa e repete.
-            if target.get("training_target") and target.get("training_class") != p.get("class_id"):
+            if (target.get("training_target") and not target.get("training_shared_target")
+                    and target.get("training_class") != p.get("class_id")):
                 await self._training_check_entry(pid, p, *target["pos"])
                 return
             _so_hab = target.get("so_habilidade")
@@ -19685,7 +19955,9 @@ class GameRoom(TutorialTraining):
                 # lição de derrotar era avaliada enquanto a de acertar ainda
                 # estava pendente — e ficava para trás sem alvo.
                 await self._licao_evento(p, "atacar", alvo=target.get("type"),
-                                        contexto={"veneno": bool(_melee_poison_vid or _ranged_poison_vid)})
+                                        contexto={"veneno": bool(_melee_poison_vid or _ranged_poison_vid),
+                                                  "categoria_arma": (p.get("weapon") or {}).get("categoria"),
+                                                  "sala_alvo_id": target.get("room_id")})
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -24091,6 +24363,7 @@ class GameRoom(TutorialTraining):
         self.savegame["campaign_phase"] = self.campaign_phase
         self.savegame["world_location"] = self.world_location
         self.savegame["world_adventure_progress"] = dict(self.world_adventure_progress)
+        self.savegame["world_adventure_route_progress"] = deepcopy(self.world_adventure_route_progress)
         self.savegame["renome"] = self.renome
         self.savegame["fatos"] = sorted(self.fatos)
         self.savegame["scene_conversations_done"] = sorted(self.scene_conversations_done)
@@ -24214,6 +24487,7 @@ class GameRoom(TutorialTraining):
         primeira = self._ultima_foto is None
         self._ultima_foto = foto
         self.savegame["dungeon_snapshot"] = foto
+        self._guardar_foto_rota(foto)
         if primeira:
             self._ponto_automatico("entrada_masmorra", gravar=False)
         elif self.round_num % PONTO_AUTO_RODADAS == 0:
@@ -24231,6 +24505,26 @@ class GameRoom(TutorialTraining):
         if not nome and self.world_adventure_id:
             nome = (WORLD_ADVENTURES.get(self.world_adventure_id) or {}).get("nome")
         return nome or None
+
+    def _chave_etapa_rota(self):
+        if not self.world_adventure_id or not isinstance(self.world_adventure_index, int):
+            return None
+        return f"{self.world_adventure_id}:{self.world_adventure_index}"
+
+    def _etapa_com_saidas(self):
+        key = self._chave_etapa_rota()
+        adventure = WORLD_ADVENTURES.get(self.world_adventure_id) or {}
+        stages = adventure.get("dungeons") or []
+        if key is None or not (0 <= self.world_adventure_index < len(stages)):
+            return False
+        return _etapa_obj(stages[self.world_adventure_index]).get("completion_mode") == "route_exits"
+
+    def _guardar_foto_rota(self, foto):
+        if self.savegame is None or not self._etapa_com_saidas():
+            return
+        snapshots = self.savegame.setdefault("dungeon_snapshots", {})
+        if isinstance(snapshots, dict):
+            snapshots[self._chave_etapa_rota()] = foto
 
     async def handle_salvar_e_sair(self, pid):
         """"💾 Salvar e sair": grava o que está pendente e confirma ao jogador,
@@ -24295,6 +24589,7 @@ class GameRoom(TutorialTraining):
                               masmorra=self.selected_dungeon or "procedural",
                               masmorra_nome=self._nome_masmorra_foto())
         self.savegame["dungeon_snapshot"] = foto
+        self._guardar_foto_rota(foto)
         write_savegame(self.savegame)
         _agendar_descarga()
         return True
@@ -24361,7 +24656,28 @@ class GameRoom(TutorialTraining):
         self._rebuild_decor_index()
         self._rebuild_pontes_index()
         self._rebuild_materiais_index()
+        self._tutorial_reparar_ordem_salva(corpo)
         return corpo
+
+    def _tutorial_reparar_ordem_salva(self, corpo):
+        """Recupera aulas puladas antes da sala final por ordens antigas incorretas.
+        Preserva tarefas realmente concluídas, mapa, baús e combate da foto."""
+        if not self.training_mode or self.selected_dungeon != "campo_de_treinamento.json":
+            return
+        ordens = {"fala_res": (9, 32), "fala_vuln": (10, 33), "fala_retirada": (11, 34)}
+        antigas = {l["id"] for l in self.licoes
+                   if l.get("id") in ordens and l.get("ordem") == ordens[l["id"]][0]}
+        if not antigas:
+            return
+        for l in self.falas + self.licoes:
+            if l.get("id") in antigas:
+                l["ordem"] = ordens[l["id"]][1]
+        for p in (corpo.get("herois") or {}).values():
+            recuperar = antigas.intersection(p.get("licoes_puladas") or [])
+            p["licoes_feitas"] = [i for i in p.get("licoes_feitas", []) if i not in recuperar]
+            p["licoes_puladas"] = [i for i in p.get("licoes_puladas", []) if i not in recuperar]
+            for ident in recuperar:
+                p.setdefault("licao_progresso", {}).pop(ident, None)
 
     def _deduzir_aventura_da_foto(self):
         """Foto gravada antes de a aventura ir junto: acha o destino do
@@ -24552,6 +24868,8 @@ class GameRoom(TutorialTraining):
         if self.savegame is not None and self.mode == "campaign":
             self.savegame.setdefault("shortcut_slots", {})[p["class_id"]] = deepcopy(slots)
             write_savegame(self.savegame)
+        if clean and clean.get("kind") == "skill" and slot == 0:
+            await self._licao_evento(p, "configurar_atalho", alvo=clean.get("id"))
         await self.push_state_or_city()
 
     @staticmethod
@@ -25300,6 +25618,7 @@ class GameRoom(TutorialTraining):
         lacuna pelo id; arma com campos próprios (loja/loot/editor) segue por eles."""
         combat_fields = ("id", "name", "die", "stat", "range", "reach",
                          "finesse", "off_hand_weapon", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
+                         "ignora_reducao_dano",
                          "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
                          "silver", "corrosion_max", "corrosion_free_levels",
                          "staff_spell_damage_bonus", "staff_area_dimension_bonus",
@@ -29178,7 +29497,8 @@ class GameRoom(TutorialTraining):
         interno e evita dividir novamente a parcela já transferida.
         """
         source = self.players.get(killer_pid)
-        if source and alvo.get("training_target") and source.get("class_id") != alvo.get("training_class"):
+        if (source and alvo.get("training_target") and not alvo.get("training_shared_target")
+                and source.get("class_id") != alvo.get("training_class")):
             return
         if dano <= 0 or self._fosso_protegido(alvo):
             return
@@ -35135,7 +35455,8 @@ class GameRoom(TutorialTraining):
         veneno_id = arm.get("veneno_id")
         veneno_nome = (_veneno_com_melhorias(veneno_id) or {}).get("nome", "Veneno")
         if (alvo.get("alive") or alvo.get("hp", 0) > 0) and _veneno_id_valido(veneno_id):
-            await self._aplicar_veneno(alvo, veneno_id, fonte="armadilha de dardos")
+            await self._aplicar_veneno(alvo, veneno_id, fonte="armadilha de dardos",
+                                       dificuldade=arm.get("dificuldade"))
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
             descricao=tipo["descricao"], efeitos_extra=[f"💥 Sofreu {dano} de dano perfurante", f"☠️ Veneno: {veneno_nome}"], tipo_id=arm["tipo"])
@@ -38455,6 +38776,18 @@ class GameRoom(TutorialTraining):
         resistance_applied = False
         vulnerability_applied = False
         total = raw_dmg
+        reducao_ignorada_restante = (
+            max(0, int((weapon or {}).get("ignora_reducao_dano", 0) or 0))
+            if DMG_PHYSICAL in damage_types else 0
+        )
+
+        def aplicar_penetracao_reducao(antes, depois):
+            nonlocal reducao_ignorada_restante
+            reducao_aplicada = max(0, antes - depois)
+            ignorado = min(reducao_ignorada_restante, reducao_aplicada)
+            reducao_ignorada_restante -= ignorado
+            return depois + ignorado
+
         if target.get("type") == "lobisomem" and DMG_PHYSICAL in damage_types:
             prata = bool((weapon or {}).get("silver"))
             magica = bool((weapon or {}).get("magical")) or "magic" in str((weapon or {}).get("id", ""))
@@ -38465,6 +38798,7 @@ class GameRoom(TutorialTraining):
             elif not magica and not ignora_resistencia_fisica:
                 antes = total
                 total = (total + 1) // 2
+                total = aplicar_penetracao_reducao(antes, total)
                 resistance_applied = resistance_applied or total < antes
         if target.get("type") == "lobisomem" and DMG_MAGIC in damage_types:
             target["regeneracao_bloqueada"] = True
@@ -38481,6 +38815,7 @@ class GameRoom(TutorialTraining):
             elif not magica and not ignora_resistencia_fisica:
                 antes = total
                 total -= self._licantropia_config(target)["reducao"]
+                total = aplicar_penetracao_reducao(antes, total)
                 resistance_applied = resistance_applied or total < antes
         # Carne Frágil: +2 no dano que o herói recebe. Espelho da redução da
         # Licantropia acima — mesmo funil, sinal oposto.
@@ -38516,6 +38851,8 @@ class GameRoom(TutorialTraining):
                 if any(dtype not in excluded for dtype in damage_types):
                     antes = total
                     total -= max(0, int(resistance.get("reduction", 1)))
+                    if DMG_PHYSICAL not in excluded:
+                        total = aplicar_penetracao_reducao(antes, total)
                     resistance_applied = resistance_applied or total < antes
                 continue
             if rtype not in damage_types:
@@ -38544,6 +38881,8 @@ class GameRoom(TutorialTraining):
                 total = (total + 1) // 2
             else:
                 total -= max(0, int(resistance.get("reduction", 1)))
+            if rtype == DMG_PHYSICAL:
+                total = aplicar_penetracao_reducao(antes, total)
             resistance_applied = resistance_applied or total < antes
         for weakness in target.get("weaknesses", []):
             if weakness.get("type") not in damage_types:
@@ -39329,6 +39668,7 @@ class GameRoom(TutorialTraining):
                 **({"placa": placa} if placa else {}),
                 "licao_id": lic["id"] if lic else None,
                 "texto_curto": tar.get("texto_curto", ""),
+                "requer_encerrar_turno_manual": bool(lic and tar.get("tipo") == "encerrar_turno"),
                 "feito": (p.get("licao_progresso") or {}).get(lic["id"], 0) if lic else 0,
                 "vezes": int(tar.get("vezes", 1) or 1) if lic else 0,
                 "passo": _guia_payload(lic, p.get("licao_passo", 0)) if lic else None,
@@ -39341,7 +39681,15 @@ class GameRoom(TutorialTraining):
                               and self._training_requirements(p, l)
                               and l["id"] not in (p.get("tutorial_history") or [])),
             }
-        return {"por_classe": por_classe, "training": self.training_mode}
+        return {"por_classe": por_classe, "training": self.training_mode,
+                # Identifica a missão introdutória específica para o cliente:
+                # outros mapas/salas de treinamento não devem disparar o tour.
+                "tour_cidade": self._tutorial_tem_tour_cidade()}
+
+    def _tutorial_tem_tour_cidade(self):
+        return bool(self.training_mode and (
+            self.world_adventure_id == "treinamento"
+            or self.selected_dungeon == "campo_de_treinamento.json"))
 
     def _serializar_condicoes_portas(self):
         out = {}
@@ -39353,6 +39701,8 @@ class GameRoom(TutorialTraining):
                 row["item_id"] = cond.get("item_id")
             elif cond["type"] == "licao":
                 row["licao_id"] = cond.get("licao_id")
+            elif cond["type"] == "requirement":
+                row["requirement"] = deepcopy(cond.get("requirement") or {})
             else:
                 row["key_decor_ids"] = list(cond.get("key_decor_ids") or [])
                 row["keys_mode"] = cond.get("keys_mode", "any")
@@ -46429,6 +46779,7 @@ class GameRoom(TutorialTraining):
 
         m.pop("_ultimo_esforco_monstro_turnos", None)
         await self._processar_fim_de_combate()
+        await self._licao_verificar_sala_limpa(m.get("room_id"))
 
         # Uma Provocação Rúnica não pode deixar o herói preso a um alvo morto.
         for p in self.players.values():
@@ -46513,12 +46864,36 @@ class GameRoom(TutorialTraining):
                 "weaknesses": deepcopy(m.get("weaknesses", [])),
             }
 
+        # IDs de origem sobrevivem às reentradas. Uma rota reaparecida mantém
+        # combate, mas não volta a conceder XP ou saque ao mesmo monstro.
+        route_source = m.get("authored_source_id")
+        route_reward_already = False
+        if route_source and m.get("route_id") and self._etapa_com_saidas():
+            progress = self._route_progress_state()
+            rewarded = progress["rewarded_source_ids"] if progress else []
+            route_reward_already = route_source in rewarded
+            if not route_reward_already:
+                rewarded.append(route_source)
+                route_id = str(m.get("route_id"))
+                if route_id not in progress["visited_route_ids"]:
+                    progress["visited_route_ids"].append(route_id)
+                self._checkpoint_savegame()
+
         # XP: monstros novos usam fÃ³rmula por CR+nÃ­vel mÃ©dio; legados usam valor fixo
         share_xp, alive_count = self._calc_monster_xp(m)
-        for p in self.players.values():
-            if p["alive"]:
-                p["xp"] += share_xp
-                await self._check_level_up(p)
+        if not route_reward_already:
+            for p in self.players.values():
+                if p["alive"]:
+                    p["xp"] += share_xp
+                    await self._check_level_up(p)
+        else:
+            mroom = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
+            if mroom and not any(mm.get("room_id") == mroom["id"] and mm.get("hp", 0) > 0
+                                 for mm in self.monsters.values()):
+                mroom["cleared"] = True
+            if m.get("boss"):
+                await self.end_game(victory=True)
+            return
 
         # Loot: monstros novos tÃªm tabela prÃ³pria por monstro; legados usam sala+65%
         mroom = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
@@ -47007,6 +47382,106 @@ class GameRoom(TutorialTraining):
             d["progresso"] = {"feitas": f, "total": t}
         return d
 
+    def _route_progress_key(self):
+        if not self.world_adventure_id or not isinstance(self.world_adventure_index, int):
+            return None
+        return f"{self.world_adventure_id}:{self.world_adventure_index}"
+
+    def _route_progress_state(self):
+        key = self._route_progress_key()
+        if key is None:
+            return None
+        state = self.world_adventure_route_progress.setdefault(key, {
+            "found_exit_ids": [], "visited_route_ids": [],
+            "objective_completed": False, "rewarded_source_ids": [],
+        })
+        for field in ("found_exit_ids", "visited_route_ids", "rewarded_source_ids"):
+            if not isinstance(state.get(field), list): state[field] = []
+        return state
+
+    def _required_route_exit_ids(self):
+        if not self._etapa_com_saidas():
+            return []
+        adventure = WORLD_ADVENTURES.get(self.world_adventure_id) or {}
+        stage = (adventure.get("dungeons") or [])[self.world_adventure_index]
+        return list(dict.fromkeys(_etapa_obj(stage).get("required_exit_ids") or []))
+
+    async def _discover_route_exits(self):
+        if not self._etapa_com_saidas() or not self.route_exits:
+            return
+        progress = self._route_progress_state()
+        if not progress:
+            return
+        found = set(progress["found_exit_ids"])
+        occupied = {tuple(p.get("pos") or []) for p in self.players.values()
+                    if p.get("alive") and not p.get("is_master") and not p.get("fora_masmorra")}
+        changed = False
+        for exit_def in self.route_exits:
+            exit_id = str(exit_def.get("id") or "")
+            pos = exit_def.get("pos") or []
+            if exit_id and len(pos) == 2 and tuple(pos) in occupied and exit_id not in found:
+                found.add(exit_id); progress["found_exit_ids"].append(exit_id); changed = True
+                route_id = str(exit_def.get("route_id") or "")
+                if route_id and route_id not in progress["visited_route_ids"]:
+                    progress["visited_route_ids"].append(route_id)
+                await self.gm_say(T("narracao.saida_rota_descoberta", nome=exit_def.get("name") or exit_id))
+        if changed:
+            self._checkpoint_savegame()
+
+    def _route_exits_complete(self):
+        required = self._required_route_exit_ids()
+        if not required:
+            return not self._etapa_com_saidas()
+        progress = self._route_progress_state() or {}
+        return set(required).issubset(set(progress.get("found_exit_ids") or []))
+
+    def _route_exit_payload(self):
+        if not self._etapa_com_saidas():
+            return None
+        progress = self._route_progress_state() or {}
+        required = set(self._required_route_exit_ids())
+        found = set(progress.get("found_exit_ids") or [])
+        return {
+            "required": len(required), "found": len(required.intersection(found)),
+            "objective_completed": bool(self._objetivo_concluido),
+            "exits": [{"id": str(e.get("id")), "name": str(e.get("name") or e.get("id")),
+                       "required": str(e.get("id")) in required,
+                       "found": str(e.get("id")) in found}
+                      for e in self.route_exits if str(e.get("id")) in required],
+        }
+
+    def _respawn_returned_route_monsters(self):
+        """Reaparece somente o grupo de uma rota já visitada, após o retorno à cidade."""
+        if not self._etapa_com_saidas():
+            return
+        progress = self._route_progress_state() or {}
+        visited = set(progress.get("visited_route_ids") or [])
+        if not visited:
+            return
+        templates = {str(m.get("source_id")): m for m in (self.dungeon_def or {}).get("monsters", [])
+                     if isinstance(m, dict) and m.get("source_id") and m.get("route_id")}
+        for source_id, template in templates.items():
+            route_id = str(template.get("route_id") or "")
+            policy = (self.dungeon_routes.get(route_id) or {}).get("monster_policy")
+            if route_id not in visited or policy != "reaparecer":
+                continue
+            existing = next((m for m in self.monsters.values()
+                             if m.get("authored_source_id") == source_id), None)
+            if not existing or existing.get("hp", 0) > 0:
+                continue
+            mdef = next((d for d in MONSTER_DEFS if d.get("type") == template.get("type")), None)
+            if not mdef:
+                continue
+            room = self._room_by_id(template.get("room_id")) or self.rooms[0]
+            fresh = make_monster(mdef, room)
+            mid = existing["id"]
+            fresh.update({"id": mid, "pos": list(template.get("pos") or existing.get("pos") or [0, 0]),
+                          "room_id": template.get("room_id"), "authored_source_id": source_id,
+                          "route_id": route_id, "authored_boss": bool(template.get("boss")),
+                          "authored_target": bool(template.get("target"))})
+            self.monsters[mid] = fresh
+            self.corpses.pop(mid, None)
+
     async def _check_objectives(self):
         """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
         principal está cumprido, concede as recompensas (XP/ouro divididos + baú de
@@ -47015,6 +47490,7 @@ class GameRoom(TutorialTraining):
             return
         prim = self.objectives.get("primary")
         secs = self.objectives.get("secondary") or []
+        await self._discover_route_exits()
         self.objective_status = {
             "primary": self._objetivo_payload(prim),
             "secondary": [self._objetivo_payload(s) for s in secs],
@@ -47022,6 +47498,9 @@ class GameRoom(TutorialTraining):
         if (self.phase == "playing" and not self._objetivo_concluido
                 and prim and self._objetivo_cumprido(prim)):
             self._objetivo_concluido = True
+            route_progress = self._route_progress_state()
+            if route_progress is not None:
+                route_progress["objective_completed"] = True
             loot = []
             await self._conceder_objetivo_reward(prim, is_primary=True, loot_acc=loot)
             for s in secs:
@@ -47033,7 +47512,14 @@ class GameRoom(TutorialTraining):
                 # Casa livre adjacente (nÃ£o em cima do herÃ³i/baÃºs) para o baÃº abrir bem.
                 pos = self._free_tile_near(base)
                 self._spawn_chest(pos, 0, loot)
-            self.mission_complete_pending = True
+            self._checkpoint_savegame()
+        # Objetivo e saídas são condições independentes. O botão só aparece
+        # quando ambas estiverem prontas; descobrir a última saída depois do
+        # objetivo também libera o encerramento nesta atualização.
+        self.mission_complete_pending = bool(
+            self.phase == "playing" and self._objetivo_concluido and self._route_exits_complete())
+        if self.mission_complete_pending and not getattr(self, "_route_completion_announced", False):
+            self._route_completion_announced = True
             await self.gm_say(T("narracao.objetivo_principal_cumprido_recolham_a_r"))
 
     async def handle_encerrar_missao(self, pid):
@@ -47041,11 +47527,15 @@ class GameRoom(TutorialTraining):
         Faz a transicao que antes era automatica em _check_objectives."""
         if pid not in self.players:
             return
-        if self.phase != "playing" or not self.mission_complete_pending:
+        if (self.phase != "playing" or not self.mission_complete_pending
+                or not self._objetivo_concluido or not self._route_exits_complete()):
             return
         self.mission_complete_pending = False
         # A aventura só conta depois da confirmação explícita de missão concluída.
         # Fugir pela escada, morrer ou voltar à cidade por outro caminho não passa aqui.
+        tutorial_cidade = self._tutorial_tem_tour_cidade()
+        if tutorial_cidade:
+            self.tutorial_city_tour_id = str(time.time_ns())
         await self._progredir_maldicoes_missao()
         await self._trigger_campaign_scene("dungeon_complete")
         if self.world_adventure_id:
@@ -47055,6 +47545,11 @@ class GameRoom(TutorialTraining):
             stages = list(adventure.get("dungeons") or [])
             completed_index = self.world_adventure_index if isinstance(self.world_adventure_index, int) else 0
             was_revisit = self.world_adventure_revisit
+            completed_route_key = f"{adventure_id}:{completed_index}"
+            if self.savegame is not None:
+                self.savegame.get("dungeon_snapshots", {}).pop(completed_route_key, None)
+                self.savegame.pop("dungeon_snapshot", None)
+                write_savegame(self.savegame)
             if not was_revisit:
                 self.world_adventure_progress[adventure_id] = max(
                     int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
@@ -47083,7 +47578,11 @@ class GameRoom(TutorialTraining):
               renome=T("narracao.aventura_renome", bonus=f"{reward:+d}") if reward else ""))
             await self._voltar_para_cidade(story=fim)
             return
-        if (self.mode == "campaign" and self.campaign
+        if tutorial_cidade:
+            self.dungeon_generated = False
+            self._objetivo_concluido = False
+            await self._voltar_para_cidade()
+        elif (self.mode == "campaign" and self.campaign
                 and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
             fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
             self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
@@ -47603,6 +48102,7 @@ class GameRoom(TutorialTraining):
             "objectives": self.objective_status,
             "mission_complete_pending": self.mission_complete_pending,
             "exit_pos": self.exit_pos,
+            "route_exit_progress": self._route_exit_payload(),
             "prisoner": self.prisoner,
             "current_turn": self.current_pid(),
             "current_actor": actor,

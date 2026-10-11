@@ -186,11 +186,14 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
         classe = [l["id"] for l in r.licoes if l.get("classe") == "warrior" and l["ordem"] < 5]
         p["licoes_feitas"] += classe
         p["licao_progresso"].update({i: 1 for i in classe})
+        proxima = min((l for l in r.licoes if l.get("classe") == "warrior"
+                       and l.get("ordem") is not None and l["id"] not in p["licoes_feitas"]),
+                      key=lambda l: l["ordem"])["id"]
         p["pos"] = [20, 4]; p["action_done"] = False
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
-        self.assertEqual(p["licao_atual"], "treino_golpe")
+        self.assertEqual(p["licao_atual"], proxima)
         await self.chegar_em(r, p, [28, 15])        # saiu da sala exclusiva e chegou na trilha comum
-        self.assertIn("treino_golpe", p["licoes_puladas"])
+        self.assertIn(proxima, p["licoes_puladas"])
         self.assertEqual(p["licao_atual"], "fala_18")
 
     async def test_ponte_de_volta_nao_e_pulada_a_caminho_do_destino(self):
@@ -203,6 +206,48 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
         await self.chegar_em(r, p, [26, 15])
         self.assertEqual(p["licao_atual"], "volta_warrior")
         self.assertEqual(p.get("licoes_puladas", []), [])
+
+    async def test_etapa_do_cajado_pode_seguir_sem_aula_de_resistencia(self):
+        res = _F["fala_res"]
+        vuln = _F["fala_vuln"]
+        self.assertEqual(vuln.get("continua_sem"), ["fala_res"])
+        self.assertEqual(vuln["pos"], [51, 15])
+        self.assertEqual(vuln["trigger"], {"tipo": "proximidade", "raio": 1})
+
+        r, p = room("warrior")
+        marcar_comuns_ate(p, res["ordem"])
+        p["licao_atual"] = "fala_res"
+        p["licao_progresso"]["fala_res"] = 0
+        await self.chegar_em(r, p, vuln["pos"])
+
+        self.assertIn("fala_res", p["licoes_puladas"])
+        self.assertEqual(p["licao_atual"], "fala_vuln")
+
+    async def test_retirada_pode_seguir_sem_aulas_opcionais_de_dano(self):
+        retirada = _F["fala_retirada"]
+        self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos"])
+        self.assertEqual(retirada["pos"], [53, 15])
+        self.assertEqual(retirada["trigger"], {"tipo": "proximidade", "raio": 1})
+
+        r, p = room("warrior")
+        marcar_comuns_ate(p, _F["fala_res"]["ordem"])
+        p["licao_atual"] = "fala_res"
+        p["licao_progresso"]["fala_res"] = 0
+        await self.chegar_em(r, p, retirada["pos"])
+
+        self.assertIn("fala_res", p["licoes_puladas"])
+        self.assertIn("fala_vuln", p["licoes_puladas"])
+        self.assertEqual(p["licao_atual"], "fala_retirada")
+
+    async def test_etapas_nao_feitas_nao_reaparecem_depois_da_retirada(self):
+        retirada = _F["fala_retirada"]
+        r, p = room("warrior")
+        marcar_comuns_ate(p, _F["fala_res"]["ordem"])
+        await self.chegar_em(r, p, retirada["pos"])
+
+        puladas = [m["licao_id"] for m in msgs(r, "licao_pulada")]
+        self.assertEqual(puladas, ["fala_atalhos", "fala_res", "fala_vuln"])
+        self.assertEqual(p["licao_atual"], "fala_retirada")
 
     async def test_trilha_pulada_nao_paga_o_bonus_de_trilha(self):
         r, p = room("warrior")

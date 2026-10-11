@@ -1,7 +1,8 @@
 """Guia das lições do Bardo no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO
 
 GUIA = {
+    "treino_atalhos_bard": GUIA_H_ATALHO("cancao_heroica", "Canção Heroica", "Heroic Song"),
     "fala_13": [
         P("atacar", ("Acerte o boneco: é o primeiro compasso da balada.", "Hit the dummy: the first beat of the ballad."),
           porque=("O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]].",
@@ -51,7 +52,7 @@ GUIA = {
           ui="bolsa:instrumento"),
     ],
     "treino_cancao": [
-        P("cancao", ("Clique em Canção Heroica e marque Acerto.", "Click Heroic Song and tick Attack."),
+        P("cancao", ("Feche o menu H, pressione 1: abra Canção Heroica e marque Acerto.", "Close the H menu, press 1: open Heroic Song, then tick Attack."),
           porque=("A [[sinfonia]] do Alaúde Velho soma +1 ao acerto: a canção sobe de +1 para +2.",
                   "The Old Lute's [[sinfonia]] adds +1 to attack: the song goes from +1 to +2."),
           ui="habilidade:cancao_heroica",
@@ -65,7 +66,7 @@ GUIA = {
           ui="botao:encerrar_turno"),
     ],
     "treino_cancao_parar": [
-        P("parar", ("Desative a Canção Heroica.", "Turn off the Heroic Song."),
+        P("parar", ("Pressione 1 novamente para desativar a Canção Heroica.", "Press 1 again to turn off Heroic Song."),
           porque=("Assim o efeito e o gasto de recursos acabam.", "That ends the effect and the resource drain.")),
     ],
     "treino_provocar": [

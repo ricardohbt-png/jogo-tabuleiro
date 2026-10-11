@@ -1,7 +1,8 @@
 """Guia das lições do Guerreiro no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO
 
 GUIA = {
+    "treino_atalhos_warrior": GUIA_H_ATALHO("mira_certeira", "Mira Certeira", "Precise Aim"),
     "fala_5": [
         P("atacar", ("Clique no boneco de treino para atacar.", "Click the training dummy to attack."),
           porque=("O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]] do alvo.",
@@ -16,7 +17,7 @@ GUIA = {
           ui="monstro:boneco_treino"),
     ],
     "treino_mira": [
-        P("mira", ("Clique em Mira Certeira e depois no boneco.", "Click Precise Aim and then the dummy."),
+        P("mira", ("Feche o menu H, pressione 1: arme Mira Certeira e ataque o boneco.", "Close the H menu, press 1: arm Precise Aim, then attack the dummy."),
           porque=("Ela soma acerto ao seu [[d20]]; veja o bônus nos dados.",
                   "It adds attack bonus to your [[d20]]; watch the bonus in the dice."),
           ui="habilidade:mira_certeira",

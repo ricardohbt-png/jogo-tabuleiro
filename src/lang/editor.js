@@ -44,6 +44,10 @@ window.LANG_EDITOR = {
     "en": "Command a servant",
     "pt": "Comandar um servo"
   },
+  "ui.editor.masmorra.licao.configurar_atalho": {
+    "en": "Assign an ability shortcut",
+    "pt": "Configurar um atalho de habilidade"
+  },
   "ui.editor.masmorra.painel.heroi_permitido": { "en": "Allowed hero", "pt": "Herói permitido" },
   "ui.editor.topo.titulo": {
     "en": "Dungeon Editor — Legends for Hire",
@@ -201,6 +205,33 @@ window.LANG_EDITOR = {
     "en": "exit",
     "pt": "saída"
   },
+  "ui.editor.masmorra.ferramenta.route_exit": { "en": "route exit", "pt": "saída de rota" },
+  "ui.editor.masmorra.rotas.adicionar": { "en": "+ Add route", "pt": "+ Nova rota" },
+  "ui.editor.masmorra.rotas.nome_prompt": { "en": "Route name", "pt": "Nome da rota" },
+  "ui.editor.masmorra.rotas.persistir": { "en": "Keep defeats", "pt": "Manter derrotas" },
+  "ui.editor.masmorra.rotas.reaparecer": { "en": "Respawn on return", "pt": "Monstros reaparecem" },
+  "ui.editor.masmorra.rotas.saida_titulo": { "en": "Route discovery exit", "pt": "Saída de descoberta" },
+  "ui.editor.masmorra.rotas.nome_saida": { "en": "Exit name", "pt": "Nome da saída" },
+  "ui.editor.masmorra.rotas.rota": { "en": "Route", "pt": "Rota" },
+  "ui.editor.masmorra.rotas.pertence_rota": { "en": "Route group", "pt": "Grupo de rota" },
+  "ui.editor.masmorra.rotas.sem_rota": { "en": "Not assigned", "pt": "Sem rota" },
+  "ui.editor.masmorra.rotas.trava_externa": { "en": "External progress requirement", "pt": "Requisito externo de progresso" },
+  "ui.editor.masmorra.rotas.trava_hint": { "en": "Every filled field must be satisfied before this door opens.", "pt": "Todos os campos preenchidos precisam ser cumpridos para abrir esta porta." },
+  "ui.editor.masmorra.rotas.requisito_renome": { "en": "Minimum renown", "pt": "Renome mínimo" },
+  "ui.editor.masmorra.rotas.requisito_nivel": { "en": "Minimum party level", "pt": "Nível mínimo do grupo" },
+  "ui.editor.masmorra.rotas.requisito_item": { "en": "Key item", "pt": "Item-chave" },
+  "ui.editor.masmorra.rotas.requisito_fato": { "en": "Known fact or conversation ID", "pt": "Fato ou ID de conversa conhecido" },
+  "ui.editor.masmorra.rotas.requisito_aventura": { "en": "Completed adventure ID", "pt": "ID de aventura concluída" },
+  "ui.editor.masmorra.valid.rota_id_invalido": { "en": "Invalid or duplicate route ID: {id}", "pt": "ID de rota inválido ou repetido: {id}" },
+  "ui.editor.masmorra.valid.rota_nome_invalido": { "en": "Route name is empty or too long: {id}", "pt": "Nome vazio ou longo demais na rota: {id}" },
+  "ui.editor.masmorra.valid.rota_politica_invalida": { "en": "Invalid return policy for route {id}", "pt": "Política de retorno inválida na rota {id}" },
+  "ui.editor.masmorra.valid.saida_rota_id_invalido": { "en": "Invalid or duplicate route exit ID: {id}", "pt": "ID de saída de rota inválido ou repetido: {id}" },
+  "ui.editor.masmorra.valid.saida_rota_referencia_invalida": { "en": "Route exit references a missing route: {id}", "pt": "Saída aponta para rota inexistente: {id}" },
+  "ui.editor.masmorra.valid.saida_rota_nome_invalido": { "en": "Route exit name is empty or too long: {id}", "pt": "Nome vazio ou longo demais na saída: {id}" },
+  "ui.editor.masmorra.valid.saida_rota_em_chao": { "en": "Route exit must be on floor at {pos}", "pt": "Saída de rota precisa estar no chão em {pos}" },
+  "ui.editor.masmorra.valid.saida_rota_colisao": { "en": "Route exit overlaps another start/exit at {pos}", "pt": "Saída de rota sobrepõe outra entrada/saída em {pos}" },
+  "ui.editor.masmorra.valid.monstro_source_id_invalido": { "en": "Monster source ID is missing or duplicated at {pos}", "pt": "ID de origem de monstro ausente ou repetido em {pos}" },
+  "ui.editor.masmorra.valid.monstro_rota_invalida": { "en": "Monster references a missing route at {pos}", "pt": "Monstro aponta para rota inexistente em {pos}" },
   "ui.editor.masmorra.ferramenta.monster": {
     "en": "monster",
     "pt": "monstro"
@@ -1974,6 +2005,7 @@ window.LANG_EDITOR = {
     "pt": "lição {id}: o último passo ({n}) não deve concluir por ação — quem encerra a lição é a tarefa"
   },
   "ui.editor.masmorra.guia.titulo": { "en": "Guided steps", "pt": "Passos guiados" },
+  "ui.editor.masmorra.guia.titulo_passo": { "en": "Step title (optional)", "pt": "Título do passo (opcional)" },
   "ui.editor.masmorra.guia.dica_secao": { "en": "Each step shows in the lesson window with a highlight on screen. The task ends the last step.", "pt": "Cada passo aparece na janela da lição, com um destaque na tela. O último passo é encerrado pela tarefa." },
   "ui.editor.masmorra.guia.passo_n": { "en": "Step {n}", "pt": "Passo {n}" },
   "ui.editor.masmorra.guia.texto": { "en": "Instruction (up to 15 words)", "pt": "Instrução (até 15 palavras)" },

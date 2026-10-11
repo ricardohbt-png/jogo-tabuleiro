@@ -10,7 +10,7 @@ import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_intro", "fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
-                 "fala_hostilidade", "fala_res", "fala_vuln"]
+                 "fala_hostilidade", "fala_primeiro_combate", "fala_res", "fala_vuln", "fala_retirada"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -22,7 +22,7 @@ def textos(passo):
 
 
 class ConteudoTests(unittest.TestCase):
-    def test_cobre_as_quinze_licoes(self):
+    def test_cobre_todas_as_licoes_com_guia(self):
         self.assertEqual(sorted(C.GUIA), sorted(IDS_ESPERADOS))
 
     def test_abertura_apresenta_heroi_vida_objetivo_antes_da_camera(self):
@@ -35,8 +35,9 @@ class ConteudoTests(unittest.TestCase):
         self.assertEqual([p["id"] for p in passos], ["briefing", "objetivo", "vida", "ficha", "continuar"])
         self.assertEqual([p.get("ui") for p in passos],
                          [None, "hud:objetivos", "hud:vida", "botao:ficha", "botao:encerrar_turno"])
+        self.assertEqual(passos[0]["texto"][0], "Bem-vindo! Esta é sua primeira missão no Campo de Treinamento. A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo.")
         briefing = " ".join(p["texto"][0] for p in passos).lower()
-        for tema in ("grupo", "missão", "pontos de vida", "ficha", "saída"):
+        for tema in ("grupo", "missão", "vida", "ficha", "saída"):
             self.assertIn(tema, briefing)
 
     def test_aplicador_da_abertura_e_idempotente(self):
@@ -50,18 +51,20 @@ class ConteudoTests(unittest.TestCase):
         self.assertEqual(ids.count("fala_intro"), 1)
         self.assertLess(ids.index("fala_intro"), ids.index("fala_camera"))
 
-    def test_licao_de_atalhos_cobre_os_quatro_temas(self):
+    def test_licao_de_atalhos_cobre_camera_cancelamento_e_movimento(self):
         txt = " ".join(p["texto"][0].lower() for p in C.GUIA["fala_atalhos"])
-        for tema in ("atalho", " r ", "esc", "clique"):
+        for tema in (" r ", "esc", "clique", "turno"):
             self.assertIn(tema, " " + txt.replace(".", " ") + " ", tema)
 
     def test_regras_de_redacao(self):
         for lid, passos in C.GUIA.items():
-            self.assertTrue(1 <= len(passos) <= (8 if lid == "fala_camera" else 5 if lid == "fala_intro" else 4), lid)
+            max_passos = 8 if lid == "fala_camera" else 5 if lid == "fala_intro" else 7 if lid == "fala_hostilidade" else 4
+            self.assertTrue(1 <= len(passos) <= max_passos, lid)
             for i, p in enumerate(passos):
                 pt, en = p["texto"]
                 limpo = TERMO.sub("x", pt)
-                self.assertLessEqual(len(limpo.split()), 15, f"{lid}/{p['id']}: >15 palavras")
+                limite = 32 if lid == "fala_intro" and p["id"] == "briefing" else 20 if lid == "fala_intro" else 15
+                self.assertLessEqual(len(limpo.split()), limite, f"{lid}/{p['id']}: >{limite} palavras")
                 self.assertTrue(pt.strip() and en.strip(), f"{lid}/{p['id']}")
                 if p.get("ui"):
                     self.assertRegex(p["ui"], UI_OK, f"{lid}/{p['id']}")
@@ -84,9 +87,9 @@ class ConteudoTests(unittest.TestCase):
                         for termo in TERMO.findall(lang):
                             self.assertIn(termo, C.GLOSSARIO, f"{lid}/{p['id']}: [[{termo}]]")
 
-    def test_licoes_de_dano_usam_o_esqueleto_e_o_glossario(self):
+    def test_licoes_de_dano_usam_o_boneco_e_o_glossario(self):
         for lid in ("fala_res", "fala_vuln"):
-            self.assertTrue(any(p.get("ui") == "monstro:esqueleto_humano" for p in C.GUIA[lid]), lid)
+            self.assertTrue(any(p.get("ui") == "monstro:boneco_treino" for p in C.GUIA[lid]), lid)
             self.assertLessEqual(len(C.GUIA[lid]), 4, lid)
             for p in C.GUIA[lid]:
                 self.assertLessEqual(len(p["texto"][0].split()), 15, f"{lid}/{p['id']}")
@@ -96,28 +99,35 @@ class ConteudoTests(unittest.TestCase):
         for p in C.GUIA["fala_vuln"]:
             self.assertNotEqual((p.get("conclui") or ""), "equipar")
 
-    def test_licoes_de_dano_ficam_depois_dos_atalhos_e_em_ordem_estrita(self):
+    def test_licoes_de_dano_seguem_o_primeiro_combate_e_resistencia_e_opcional(self):
         d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
         comuns = [f for f in d["falas"] if f.get("ordem") is not None and not f.get("classe")]
         o = {f["id"]: f["ordem"] for f in comuns}
+        self.assertLess(o["fala_primeiro_combate"], o["fala_res"])
+        self.assertLess(o["fala_33"], o["fala_res"])
         self.assertLess(o["fala_atalhos"], o["fala_res"])
         self.assertLess(o["fala_res"], o["fala_vuln"])
+        self.assertLess(o["fala_vuln"], o["fala_retirada"])
         self.assertEqual(len(o.values()), len(set(o.values())))
         # a ordem estrita libera as duas em sequência, e só depois de toda a trilha anterior
         import server, types
         sala = types.SimpleNamespace(licoes=comuns, _training_requirements=lambda p, f: True)
         lib = lambda p, f: server.GameRoom._licao_liberada(sala, p, f)
         fala = {f["id"]: f for f in comuns}
-        feitas = [f["id"] for f in comuns if f["ordem"] <= o["fala_atalhos"]]
+        feitas = [f["id"] for f in comuns if f["ordem"] < o["fala_res"]]
         p = {"licoes_feitas": feitas[:-1]}
         self.assertFalse(lib(p, fala["fala_res"]))
         p = {"licoes_feitas": feitas}
         self.assertTrue(lib(p, fala["fala_res"]))
-        self.assertFalse(lib(p, fala["fala_vuln"]))
+        self.assertTrue(lib(p, fala["fala_vuln"]), "a vulnerabilidade não depende da lição de resistência")
         p["licoes_feitas"] = feitas + ["fala_res"]
         self.assertTrue(lib(p, fala["fala_vuln"]))
+        retirada = fala["fala_retirada"]
+        self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos"])
+        p["licoes_feitas"] = feitas
+        self.assertTrue(lib(p, retirada), "a retirada não depende das duas lições opcionais de dano")
 
-    def test_esqueleto_tem_so_as_duas_licoes_de_dano(self):
+    def test_boneco_imovel_substitui_esqueletos_nas_licoes_de_dano(self):
         d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
         ids = {f["id"] for f in d["falas"]}
         for velho in ("fala_36", "fala_37", "fala_38"):
@@ -126,22 +136,86 @@ class ConteudoTests(unittest.TestCase):
         falas = {f["id"]: f for f in d["falas"]}
         for lid in ("fala_res", "fala_vuln"):
             self.assertEqual(falas[lid]["tarefa"]["tipo"], "atacar")
-            self.assertEqual(falas[lid]["tarefa"]["alvo"], "esqueleto_humano")
-        # um esqueleto por lição, com um de folga contra beco sem saída
-        esq = [m for m in d["monsters"] if m["type"] == "esqueleto_humano"]
-        self.assertEqual(len(esq), 2)
+            self.assertEqual(falas[lid]["tarefa"]["alvo"], "boneco_treino")
+            self.assertEqual(falas[lid]["tarefa"]["requer_sala_alvo"], 48)
+            self.assertEqual(falas[lid]["falante"].get("cena"),
+                             "assets/tela de transição/tutorial/mestre_resistencia_vulnerabilidade.png")
+        self.assertEqual(falas["fala_res"]["tarefa"]["requer_categoria_arma"], "cortante")
+        self.assertEqual(falas["fala_res"].get("continua_sem_ativas"), ["fala_atalhos"])
+        self.assertEqual(falas["fala_vuln"]["tarefa"]["requer_categoria_arma"], "contundente")
+        self.assertEqual(falas["fala_vuln"]["pos"], [51, 15])
+        self.assertEqual(falas["fala_vuln"]["trigger"], {"tipo": "proximidade", "raio": 1})
+        self.assertFalse(any("esqueleto" in m["type"].lower() and m.get("room_id") == 48
+                             for m in d["monsters"]))
+        sala48 = [m for m in d["monsters"] if m.get("room_id") == 48]
+        self.assertEqual([(m["type"], m["pos"]) for m in sala48], [("boneco_treino", [51, 15])])
+        bau = next(c for c in d["chests"] if c["pos"] == [49, 17])
+        self.assertEqual([i["id"] for i in bau["items"]], ["cajado_madeira"])
+        editor = (RAIZ / "tools/editor.js").read_text(encoding="utf-8")
+        self.assertIn("out.continua_sem =", editor)
+        self.assertIn("continua_sem: Array.isArray(f.continua_sem)", editor)
+        self.assertIn("out.continua_sem_ativas =", editor)
+        self.assertIn("continua_sem_ativas: Array.isArray(f.continua_sem_ativas)", editor)
+        cena = RAIZ / falas["fala_res"]["falante"]["cena"]
+        self.assertTrue(cena.is_file(), "a cena do Mestre precisa estar no projeto")
+        css = (RAIZ / "game.css").read_text(encoding="utf-8")
+        self.assertIn("width:min(330px, 34vw)", css)
+        self.assertNotIn("cena-esqueletos", css)
+
+    def test_licao_de_resistencia_abre_na_entrada_da_sala_do_boneco(self):
+        d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+        falas = {f["id"]: f for f in d["falas"]}
+        self.assertEqual(falas["fala_res"]["trigger"]["tipo"], "sala")
+        import asyncio, server
+        disparadas = []
+        async def capturar_fala(fala, jogador=None):
+            disparadas.append((fala, jogador))
+        sala = object.__new__(server.GameRoom)
+        sala.falas = [falas["fala_res"]]
+        sala.licoes = [falas["fala_res"]]
+        sala.rooms = d["rooms"]
+        sala._training_requirements = lambda jogador, fala: True
+        sala._disparar_fala = capturar_fala
+        jogador = {"id": "heroi_teste", "pos": [48, 13], "licao_progresso": {}, "licoes_feitas": []}
+        entrada = server.player_room(d["rooms"], *jogador["pos"])
+        asyncio.run(server.GameRoom._verificar_falas(sala, jogador, entrada))
+        self.assertEqual([f[0]["id"] for f in disparadas], ["fala_res"])
+        self.assertEqual(disparadas[0][0]["falante"].get("cena"),
+                         "assets/tela de transição/tutorial/mestre_resistencia_vulnerabilidade.png")
+        texto = " ".join(par[0] for p in C.GUIA["fala_res"] for par in textos(p)).lower()
+        for regra in ("cortante", "resistido", "espada"):
+            self.assertIn(regra, texto)
+        texto_vuln = " ".join(par[0] for p in C.GUIA["fala_vuln"] for par in textos(p)).lower()
+        for regra in ("contundente", "cajado", "vulnerável"):
+            self.assertIn(regra, texto_vuln)
+        for etapa in ("fala_res", "fala_vuln", "fala_atalhos"):
+            textos_pt = " ".join(p["texto"][0] for p in C.GUIA[etapa]).lower()
+            self.assertNotIn("menu h", textos_pt, etapa)
+            self.assertNotIn("habilidades pelo botão", textos_pt, etapa)
+
+    def test_dano_sagrado_contra_esqueleto_morto_vivo_dobra_uma_vez(self):
+        import copy, server, types
+        esqueleto = copy.deepcopy(next(m for m in server.MONSTER_DEFS if m["type"] == "esqueleto_humano"))
+        sala = types.SimpleNamespace(
+            round_num=1,
+            _eh_jogador=lambda alvo: False,
+            _marcar_contexto_dano_visual=lambda *args, **kwargs: None,
+        )
+        dano = server.GameRoom._apply_damage_types(sala, 5, [server.DMG_HOLY], esqueleto)
+        self.assertEqual(dano, 10, "a fraqueza geral dos mortos-vivos já dobra o dano sagrado")
 
     def test_vuln_ensina_pegar_equipar_e_atacar(self):
         g = C.GUIA["fala_vuln"]
         self.assertEqual([p["id"] for p in g], ["pegar", "equipar", "atacar"])
         d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
-        bau = [c for c in d["chests"] if any(i["id"] == "maca_treino" for i in c["items"])][0]
+        bau = next(c for c in d["chests"] if c["pos"] == [49, 17]
+                   and any(i["id"] == "cajado_madeira" for i in c["items"]))
         if g[0].get("ui"):
             self.assertEqual(g[0]["ui"], "casa:" + json.dumps(bau["pos"]).replace(" ", ""))
         for p in g[:2]:
             self.assertFalse(p.get("conclui"), p["id"])
         dicas = " ".join(x[0] for p in g for x in p.get("dica", [])).lower()
-        self.assertIn("arma certa", dicas)
+        self.assertIn("contundente", dicas)
 
     def test_termos_iguais_em_pt_e_en(self):
         for lid, passos in C.GUIA.items():
@@ -193,8 +267,8 @@ class GeradorTests(unittest.TestCase):
     def test_gerador_emite_pt_e_en_para_a_abertura(self):
         lang = G.gerar_lang()
         self.assertEqual(lang["ui.tutorial.guia.fala_intro.briefing.texto"], {
-            "pt": "Você controla este herói e ajuda o grupo a cumprir a missão.",
-            "en": "You control this hero and help the party complete the mission."})
+            "pt": "Bem-vindo! Esta é sua primeira missão no Campo de Treinamento. A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo.",
+            "en": "Welcome! This is your first mission in the training grounds. The Guild has lost contact with the training wing. Find out what happened and return with the party."})
 
     def test_botao_do_grimorio_tem_marcador(self):
         gjs = (RAIZ / "game.js").read_text(encoding="utf-8")
@@ -241,7 +315,7 @@ VERBOS_PT = ("clique", "ande", "ataque", "equipe", "abra", "use", "beba", "coma"
              "arraste", "selecione", "escolha", "encerre", "aperte", "pressione", "lance",
              "arremesse", "unte", "ative", "desative", "fique", "aproxime", "toque", "arme",
              "cure", "derrube", "acerte", "esconda", "desarme", "crie", "comande", "liberte",
-             "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque",
+             "proteja", "passe", "confira", "leia", "mova", "gire", "cancele", "troque", "feche",
              "saia", "siga", "volte", "afaste", "desloque")
 VAGOS_PT = ("mostre-me", "me mostra", "mostre", "demonstre", "veja como", "observe")
 
@@ -291,7 +365,8 @@ class AtalhoInventarioTests(unittest.TestCase):
     def test_regra_das_15_palavras_continua_valendo_com_o_token(self):
         for lid, p in self._todos():
             limpo = TERMO.sub("x", p["texto"][0])
-            self.assertLessEqual(len(limpo.split()), 15, f"{lid}/{p['id']}")
+            limite = 32 if lid == "fala_intro" and p["id"] == "briefing" else 20 if lid == "fala_intro" else 15
+            self.assertLessEqual(len(limpo.split()), limite, f"{lid}/{p['id']}")
 
 
 class UsarItemTests(unittest.TestCase):

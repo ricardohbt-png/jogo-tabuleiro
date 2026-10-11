@@ -2429,6 +2429,157 @@ window.EDITOR_DUNGEONS = [
     }
   },
   {
+    "file": "_test_fluxo_tmp.json",
+    "id": "amostra",
+    "name": "Amostra",
+    "defn": {
+      "schema_version": 1,
+      "id": "amostra",
+      "name": "Amostra",
+      "grid": {
+        "w": 8,
+        "h": 6
+      },
+      "tiles": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "rooms": [
+        {
+          "id": 0,
+          "x": 1,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "role": "entrance",
+          "locked": false,
+          "doors": [
+            [
+              5,
+              2
+            ]
+          ]
+        }
+      ],
+      "entrance": {
+        "x": 2,
+        "y": 2
+      },
+      "exit": {
+        "x": 6,
+        "y": 2
+      },
+      "monsters": [
+        {
+          "type": "goblin",
+          "pos": [
+            3,
+            3
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        }
+      ],
+      "chests": [
+        {
+          "pos": [
+            2,
+            3
+          ],
+          "gold": 20,
+          "items": [
+            {
+              "id": "health_potion"
+            }
+          ],
+          "key_objective": false
+        }
+      ],
+      "traps": [
+        {
+          "tipo": "fosso_estacas",
+          "pos": [
+            4,
+            1
+          ]
+        }
+      ],
+      "prisoner": {
+        "pos": [
+          4,
+          4
+        ],
+        "room_id": 0,
+        "model3d": "refem.glb"
+      },
+      "objectives": {
+        "primary": {
+          "type": "kill_all"
+        },
+        "secondary": []
+      }
+    }
+  },
+  {
     "file": "_teste_materiais.json",
     "id": "_teste_materiais",
     "name": "Teste Materiais",
@@ -13034,7 +13185,7 @@ window.EDITOR_DUNGEONS = [
       "tutorial_training": true,
       "grid": {
         "w": 57,
-        "h": 29
+        "h": 33
       },
       "tiles": [
         [
@@ -13707,71 +13858,12 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          1,
+          2,
           0,
-          1,
-          0,
-          0,
-          1,
+          2,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          1,
-          0,
-          0,
-          1,
+          2,
           0,
           0,
           0,
@@ -13806,52 +13898,24 @@ window.EDITOR_DUNGEONS = [
         ],
         [
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
           0,
           0,
           0,
           0,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           1,
           1,
@@ -13861,6 +13925,34 @@ window.EDITOR_DUNGEONS = [
           1,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -13918,8 +14010,67 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -13977,8 +14128,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
-          0,
+          1,
+          1,
           0
         ],
         [
@@ -14036,8 +14187,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
-          0,
+          1,
+          1,
           0
         ],
         [
@@ -14095,8 +14246,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
-          0,
+          1,
+          1,
           0
         ],
         [
@@ -14154,8 +14305,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
-          0,
+          1,
+          1,
           0
         ],
         [
@@ -14180,11 +14331,13 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           1,
-          0,
+          1,
+          1,
+          1,
+          1,
           1,
           0,
           0,
-          1,
           0,
           0,
           0,
@@ -14208,9 +14361,7 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
+          2,
           0,
           0,
           0,
@@ -14237,19 +14388,17 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           1,
-          1,
-          1,
-          0,
+          2,
           1,
           0,
-          0,
-          1,
-          1,
-          1,
-          1,
           1,
           0,
           0,
+          1,
+          2,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -14270,6 +14419,8 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          2,
           0,
           0,
           0,
@@ -14327,9 +14478,9 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -14386,9 +14537,9 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -14445,9 +14596,9 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -14504,9 +14655,9 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -14564,66 +14715,7 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          2,
           0,
           0,
           0,
@@ -14640,6 +14732,65 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
@@ -14679,12 +14830,248 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
           0,
           0,
           0,
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0
@@ -14934,15 +15321,53 @@ window.EDITOR_DUNGEONS = [
         {
           "id": 48,
           "x": 48,
-          "y": 13,
-          "w": 6,
-          "h": 6,
+          "y": 12,
+          "w": 8,
+          "h": 7,
           "role": "boss",
           "locked": true,
           "doors": [
             [
               47,
               15
+            ],
+            [
+              51,
+              19
+            ]
+          ]
+        },
+        {
+          "id": 49,
+          "x": 48,
+          "y": 26,
+          "w": 6,
+          "h": 6,
+          "role": "empty",
+          "locked": true,
+          "doors": [
+            [
+              51,
+              25
+            ]
+          ]
+        },
+        {
+          "id": 50,
+          "x": 50,
+          "y": 21,
+          "w": 3,
+          "h": 4,
+          "role": "empty",
+          "locked": true,
+          "doors": [
+            [
+              51,
+              20
+            ],
+            [
+              51,
+              25
             ]
           ]
         }
@@ -15000,9 +15425,11 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "exit": {
-        "x": 53,
-        "y": 15
+        "x": 51,
+        "y": 29
       },
+      "routes": [],
+      "route_exits": [],
       "monsters": [
         {
           "type": "boneco_treino",
@@ -15012,7 +15439,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_0"
         },
         {
           "type": "boneco_treino",
@@ -15022,7 +15450,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_1"
         },
         {
           "type": "boneco_treino",
@@ -15032,7 +15461,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_2"
         },
         {
           "type": "boneco_treino",
@@ -15042,7 +15472,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_3"
         },
         {
           "type": "boneco_treino",
@@ -15052,7 +15483,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_4"
         },
         {
           "type": "boneco_treino",
@@ -15062,7 +15494,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 19,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_5"
         },
         {
           "type": "boneco_mira",
@@ -15072,7 +15505,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 40,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_6"
         },
         {
           "type": "boneco_golpe",
@@ -15082,7 +15516,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 40,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_7"
         },
         {
           "type": "boneco_furia",
@@ -15092,7 +15527,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 40,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_8"
         },
         {
           "type": "boneco_treino",
@@ -15102,7 +15538,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 20,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_9"
         },
         {
           "type": "boneco_treino",
@@ -15112,7 +15549,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 20,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_10"
         },
         {
           "type": "boneco_treino",
@@ -15122,7 +15560,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 40,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_11"
         },
         {
           "type": "boneco_treino",
@@ -15132,7 +15571,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 41,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_12"
         },
         {
           "type": "boneco_treino",
@@ -15142,7 +15582,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 41,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_13"
         },
         {
           "type": "boneco_treino",
@@ -15152,7 +15593,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 42,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_14"
         },
         {
           "type": "boneco_treino",
@@ -15162,7 +15604,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 42,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_15"
         },
         {
           "type": "boneco_treino",
@@ -15172,7 +15615,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 43,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_16"
         },
         {
           "type": "boneco_treino",
@@ -15182,7 +15626,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 38,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_17"
         },
         {
           "type": "boneco_treino_veneno",
@@ -15192,7 +15637,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 47,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_18"
         },
         {
           "type": "boneco_treino_veneno",
@@ -15202,27 +15648,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 47,
           "boss": false,
-          "target": false
-        },
-        {
-          "type": "esqueleto_humano",
-          "pos": [
-            51,
-            15
-          ],
-          "room_id": 48,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "esqueleto_humano",
-          "pos": [
-            51,
-            17
-          ],
-          "room_id": 48,
-          "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_19"
         },
         {
           "type": "boneco_palha",
@@ -15232,7 +15659,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 47,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_20"
         },
         {
           "type": "boneco_palha",
@@ -15242,7 +15670,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 47,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_21"
         },
         {
           "type": "boneco_treino_veneno",
@@ -15252,7 +15681,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 47,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_22"
         },
         {
           "type": "rato_gigante",
@@ -15263,25 +15693,7 @@ window.EDITOR_DUNGEONS = [
           "room_id": 46,
           "boss": false,
           "target": false,
-          "hostility_override": {
-            "mode": "custom",
-            "rules": {
-              "all_monsters": true,
-              "subtypes": [],
-              "types": []
-            }
-          },
-          "autonomous_hostility": true
-        },
-        {
-          "type": "esqueleto_animal",
-          "pos": [
-            38,
-            16
-          ],
-          "room_id": 46,
-          "boss": false,
-          "target": false,
+          "source_id": "mob_23",
           "hostility_override": {
             "mode": "custom",
             "rules": {
@@ -15301,6 +15713,7 @@ window.EDITOR_DUNGEONS = [
           "room_id": 46,
           "boss": false,
           "target": false,
+          "source_id": "mob_24",
           "hostility_override": {
             "mode": "custom",
             "rules": {
@@ -15310,6 +15723,36 @@ window.EDITOR_DUNGEONS = [
             }
           },
           "autonomous_hostility": true
+        },
+        {
+          "type": "boneco_treino",
+          "pos": [
+            51,
+            15
+          ],
+          "room_id": 48,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_25"
+        },
+        {
+          "type": "esqueleto_animal",
+          "pos": [
+            39,
+            15
+          ],
+          "room_id": 46,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_26",
+          "hostility_override": {
+            "mode": "custom",
+            "rules": {
+              "all_monsters": true,
+              "subtypes": [],
+              "types": []
+            }
+          }
         }
       ],
       "chests": [
@@ -15387,7 +15830,7 @@ window.EDITOR_DUNGEONS = [
           "gold": 0,
           "items": [
             {
-              "id": "maca_treino"
+              "id": "cajado_madeira"
             }
           ],
           "key_objective": false
@@ -15427,14 +15870,6 @@ window.EDITOR_DUNGEONS = [
       ],
       "traps": [
         {
-          "id": "trap_0",
-          "tipo": "buraco",
-          "pos": [
-            42,
-            15
-          ]
-        },
-        {
           "id": "trap_treino_luccas",
           "tipo": "buraco",
           "pos": [
@@ -15444,10 +15879,100 @@ window.EDITOR_DUNGEONS = [
           "dificuldade": 5
         },
         {
-          "id": "trap_0",
+          "id": "trap_tutorial_dardos_1",
+          "tipo": "armadilha_dardos_envenenados",
+          "pos": [
+            50,
+            21
+          ],
+          "dificuldade": 14,
+          "dano": "1",
+          "veneno_id": "veneno_escorpiao_pedra"
+        },
+        {
+          "id": "trap_tutorial_dardos_2",
+          "tipo": "armadilha_dardos_envenenados",
+          "pos": [
+            52,
+            21
+          ],
+          "dificuldade": 14,
+          "dano": "1",
+          "veneno_id": "veneno_escorpiao_pedra"
+        },
+        {
+          "id": "trap_tutorial_buraco_1",
           "tipo": "buraco",
           "pos": [
-            49,
+            50,
+            22
+          ]
+        },
+        {
+          "id": "trap_tutorial_buraco_2",
+          "tipo": "buraco",
+          "pos": [
+            52,
+            22
+          ]
+        },
+        {
+          "id": "trap_tutorial_fosso_1",
+          "tipo": "fosso",
+          "pos": [
+            50,
+            23
+          ]
+        },
+        {
+          "id": "trap_tutorial_fosso_2",
+          "tipo": "fosso",
+          "pos": [
+            52,
+            23
+          ]
+        },
+        {
+          "id": "trap_tutorial_urso_1",
+          "tipo": "armadilha_urso",
+          "pos": [
+            50,
+            24
+          ]
+        },
+        {
+          "id": "trap_tutorial_urso_2",
+          "tipo": "armadilha_urso",
+          "pos": [
+            52,
+            24
+          ]
+        },
+        {
+          "id": "trap_tutorial_rede_1",
+          "tipo": "rede",
+          "pos": [
+            51,
+            21
+          ]
+        },
+        {
+          "id": "trap_tutorial_rede_2",
+          "tipo": "rede",
+          "pos": [
+            51,
+            22
+          ]
+        },
+        {
+          "id": "trap_tutorial_teleporte",
+          "tipo": "armadilha_teletransporte",
+          "pos": [
+            51,
+            23
+          ],
+          "saida": [
+            3,
             15
           ]
         }
@@ -15548,10 +16073,1922 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "texto": "⚔️ Sala do Paladino — só ele entra aqui.",
           "image": "placa_fincada.png"
+        },
+        {
+          "id": "decor_2",
+          "type": "estante_livros",
+          "pos": [
+            32,
+            4
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "voffset": [
+            0,
+            -0.15
+          ]
+        },
+        {
+          "id": "decor_3",
+          "type": "barril",
+          "pos": [
+            8,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_4",
+          "type": "barril",
+          "pos": [
+            9,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_5",
+          "type": "barril",
+          "pos": [
+            8,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_6",
+          "type": "barril",
+          "pos": [
+            37,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_7",
+          "type": "estante_armas",
+          "pos": [
+            24,
+            4
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "vscale": [
+            1.7,
+            1.9
+          ],
+          "voffset": [
+            0.15,
+            0
+          ]
+        },
+        {
+          "id": "decor_9",
+          "type": "estante_livros",
+          "pos": [
+            21,
+            27
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "voffset": [
+            0,
+            0.15
+          ]
+        },
+        {
+          "id": "decor_10",
+          "type": "mesa_quimica",
+          "pos": [
+            26,
+            25
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            2,
+            2
+          ],
+          "voffset": [
+            0,
+            -0.45
+          ]
+        },
+        {
+          "id": "decor_11",
+          "type": "pira_chamas",
+          "pos": [
+            22,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "pira_chamas.png"
+        },
+        {
+          "id": "decor_12",
+          "type": "armadura",
+          "pos": [
+            38,
+            23
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "armadura.png"
+        },
+        {
+          "id": "decor_13",
+          "type": "armadura",
+          "pos": [
+            32,
+            27
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "armadura.png"
+        },
+        {
+          "id": "decor_14",
+          "type": "barril",
+          "pos": [
+            39,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_15",
+          "type": "barril",
+          "pos": [
+            39,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_16",
+          "type": "barril",
+          "pos": [
+            38,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_17",
+          "type": "barril",
+          "pos": [
+            39,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_18",
+          "type": "barril",
+          "pos": [
+            39,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_19",
+          "type": "barril",
+          "pos": [
+            38,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_20",
+          "type": "barril",
+          "pos": [
+            38,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_21",
+          "type": "barril",
+          "pos": [
+            37,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_22",
+          "type": "barril",
+          "pos": [
+            34,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_23",
+          "type": "barril",
+          "pos": [
+            34,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_24",
+          "type": "barril",
+          "pos": [
+            35,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_25",
+          "type": "barril",
+          "pos": [
+            35,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_26",
+          "type": "barril",
+          "pos": [
+            34,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_27",
+          "type": "barril",
+          "pos": [
+            34,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_28",
+          "type": "barril",
+          "pos": [
+            35,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_29",
+          "type": "barril",
+          "pos": [
+            36,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_30",
+          "type": "barril",
+          "pos": [
+            37,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_31",
+          "type": "barril",
+          "pos": [
+            36,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_32",
+          "type": "mesa_cadeiras",
+          "pos": [
+            29,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_33",
+          "type": "estatua_divindade",
+          "pos": [
+            38,
+            25
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estatua_divindade.png"
+        },
+        {
+          "id": "decor_34",
+          "type": "estatua_divindade",
+          "pos": [
+            37,
+            6
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estatua_divindade.png"
+        },
+        {
+          "id": "decor_36",
+          "type": "bola_corrente",
+          "pos": [
+            8,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "bola_corrente.png",
+          "vscale": [
+            0.7,
+            0.7
+          ]
+        },
+        {
+          "id": "decor_37",
+          "type": "mesa_tortura",
+          "pos": [
+            8,
+            9
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "mesa_tortura.png",
+          "vscale": [
+            1.3,
+            1.4
+          ]
+        },
+        {
+          "id": "decor_38",
+          "type": "estante_livros",
+          "pos": [
+            9,
+            25
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            1,
+            2
+          ],
+          "voffset": [
+            -0.15,
+            0
+          ]
+        },
+        {
+          "id": "decor_39",
+          "type": "estante_livros",
+          "pos": [
+            13,
+            21
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "voffset": [
+            0,
+            -0.15
+          ]
+        },
+        {
+          "id": "decor_40",
+          "type": "sino_ritualistico",
+          "pos": [
+            9,
+            23
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "sino_ritualistico.png"
+        },
+        {
+          "id": "decor_41",
+          "type": "vitral_templo",
+          "pos": [
+            36,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "vitral_templo.png"
+        },
+        {
+          "id": "decor_42",
+          "type": "vitral_templo",
+          "pos": [
+            36,
+            9
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "vitral_templo.png"
+        },
+        {
+          "id": "decor_43",
+          "type": "estante_armas",
+          "pos": [
+            36,
+            27
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            1
+          ],
+          "vscale": [
+            1.1,
+            1.4
+          ],
+          "voffset": [
+            0.15,
+            0
+          ]
+        },
+        {
+          "id": "decor_44",
+          "type": "vitral_templo",
+          "pos": [
+            39,
+            24
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "vitral_templo.png"
+        },
+        {
+          "id": "decor_45",
+          "type": "vitral_templo",
+          "pos": [
+            39,
+            26
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "vitral_templo.png"
+        },
+        {
+          "id": "decor_46",
+          "type": "gargula_pedra",
+          "pos": [
+            27,
+            23
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "gargula_pedra.png"
+        },
+        {
+          "id": "decor_47",
+          "type": "gargula_pedra",
+          "pos": [
+            27,
+            26
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "gargula_pedra.png"
+        },
+        {
+          "id": "decor_48",
+          "type": "grilhoes_parede",
+          "pos": [
+            11,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grilhoes_parede.png"
+        },
+        {
+          "id": "decor_49",
+          "type": "grilhoes_parede",
+          "pos": [
+            12,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grilhoes_parede.png"
+        },
+        {
+          "id": "decor_50",
+          "type": "brasao_leao",
+          "pos": [
+            21,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "brasao_leao.png"
+        },
+        {
+          "id": "decor_51",
+          "type": "brasao_leao",
+          "pos": [
+            23,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "brasao_leao.png"
+        },
+        {
+          "id": "decor_52",
+          "type": "estante",
+          "pos": [
+            1,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estante_armas_cranios.png",
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            1.7,
+            1.8
+          ],
+          "voffset": [
+            0.45,
+            0
+          ]
+        },
+        {
+          "id": "decor_53",
+          "type": "estante",
+          "pos": [
+            4,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estante_armas_cranios.png",
+          "size": [
+            1,
+            1
+          ],
+          "vscale": [
+            1.7,
+            1.8
+          ],
+          "voffset": [
+            0.45,
+            0
+          ]
+        },
+        {
+          "id": "decor_54",
+          "type": "tocha_parede",
+          "pos": [
+            7,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_55",
+          "type": "tocha_parede",
+          "pos": [
+            7,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_56",
+          "type": "tocha_parede",
+          "pos": [
+            19,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_57",
+          "type": "tocha_parede",
+          "pos": [
+            19,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_58",
+          "type": "tocha_parede",
+          "pos": [
+            14,
+            6
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_59",
+          "type": "tocha_parede",
+          "pos": [
+            14,
+            9
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_60",
+          "type": "tocha_parede",
+          "pos": [
+            20,
+            7
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_61",
+          "type": "tocha_parede",
+          "pos": [
+            23,
+            7
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_62",
+          "type": "tocha_parede",
+          "pos": [
+            15,
+            22
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_63",
+          "type": "tocha_parede",
+          "pos": [
+            15,
+            25
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_64",
+          "type": "tocha_parede",
+          "pos": [
+            31,
+            24
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_65",
+          "type": "tocha_parede",
+          "pos": [
+            31,
+            26
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_66",
+          "type": "tocha_parede",
+          "pos": [
+            21,
+            21
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_67",
+          "type": "tocha_parede",
+          "pos": [
+            24,
+            21
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_68",
+          "type": "tocha_parede",
+          "pos": [
+            26,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_69",
+          "type": "tocha_parede",
+          "pos": [
+            26,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_70",
+          "type": "tocha_parede",
+          "pos": [
+            33,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_71",
+          "type": "tocha_parede",
+          "pos": [
+            33,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_72",
+          "type": "tocha_parede",
+          "pos": [
+            40,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_73",
+          "type": "tocha_parede",
+          "pos": [
+            40,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_74",
+          "type": "tocha_parede",
+          "pos": [
+            47,
+            14
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_75",
+          "type": "tocha_parede",
+          "pos": [
+            47,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_76",
+          "type": "tocha_parede",
+          "pos": [
+            49,
+            19
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_77",
+          "type": "tocha_parede",
+          "pos": [
+            53,
+            19
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_78",
+          "type": "tocha_parede",
+          "pos": [
+            30,
+            5
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_79",
+          "type": "tocha_parede",
+          "pos": [
+            30,
+            7
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_80",
+          "type": "tocha_parede",
+          "pos": [
+            50,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_81",
+          "type": "tocha_parede",
+          "pos": [
+            52,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_82",
+          "type": "tocha_parede",
+          "pos": [
+            50,
+            25
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_83",
+          "type": "tocha_parede",
+          "pos": [
+            52,
+            25
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_84",
+          "type": "tocha_parede",
+          "pos": [
+            50,
+            25
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_85",
+          "type": "tocha_parede",
+          "pos": [
+            52,
+            25
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_86",
+          "type": "tocha_parede",
+          "pos": [
+            50,
+            32
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_87",
+          "type": "tocha_parede",
+          "pos": [
+            53,
+            32
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_88",
+          "type": "tocha_parede",
+          "pos": [
+            47,
+            28
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_91",
+          "type": "tocha_parede",
+          "pos": [
+            54,
+            28
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_95",
+          "type": "cortina_branca",
+          "pos": [
+            38,
+            6
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_branca.png",
+          "vscale": [
+            3.4,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_98",
+          "type": "grades_prisao",
+          "pos": [
+            53,
+            14
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grades_prisao.png",
+          "vscale": [
+            1.5,
+            1.6
+          ],
+          "voffset": [
+            0,
+            0.2
+          ]
+        },
+        {
+          "id": "decor_99",
+          "type": "grades_prisao",
+          "pos": [
+            53,
+            13
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grades_prisao.png",
+          "vscale": [
+            1.5,
+            1.6
+          ],
+          "voffset": [
+            0,
+            0.2
+          ]
+        },
+        {
+          "id": "decor_100",
+          "type": "grades_prisao",
+          "pos": [
+            53,
+            12
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "grades_prisao.png",
+          "vscale": [
+            1.5,
+            1.6
+          ],
+          "voffset": [
+            0,
+            0.25
+          ]
+        },
+        {
+          "id": "decor_101",
+          "type": "barril",
+          "pos": [
+            54,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_102",
+          "type": "barril",
+          "pos": [
+            55,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_103",
+          "type": "barril",
+          "pos": [
+            54,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_104",
+          "type": "monte_feno",
+          "pos": [
+            54,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_105",
+          "type": "monte_feno",
+          "pos": [
+            55,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_106",
+          "type": "monte_feno",
+          "pos": [
+            55,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_107",
+          "type": "chao",
+          "pos": [
+            48,
+            26
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "chaotapete1.png",
+          "size": [
+            6,
+            6
+          ]
+        },
+        {
+          "id": "decor_109",
+          "type": "cortina_vermelha",
+          "pos": [
+            49,
+            32
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_116",
+          "type": "cortina_vermelha",
+          "pos": [
+            47,
+            27
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_117",
+          "type": "cortina_vermelha",
+          "pos": [
+            54,
+            27
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_118",
+          "type": "cortina_vermelha",
+          "pos": [
+            54,
+            30
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_119",
+          "type": "cortina_vermelha",
+          "pos": [
+            52,
+            32
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_120",
+          "type": "cortina_vermelha",
+          "pos": [
+            47,
+            30
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            3,
+            1.5
+          ]
+        },
+        {
+          "id": "decor_121",
+          "type": "barril",
+          "pos": [
+            46,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_122",
+          "type": "barril",
+          "pos": [
+            46,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_123",
+          "type": "barril",
+          "pos": [
+            46,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_124",
+          "type": "barril",
+          "pos": [
+            42,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_125",
+          "type": "monte_feno",
+          "pos": [
+            41,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_126",
+          "type": "monte_feno",
+          "pos": [
+            41,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_127",
+          "type": "monte_feno",
+          "pos": [
+            51,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_128",
+          "type": "monte_ossos",
+          "pos": [
+            31,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "monte_ossos.png"
+        },
+        {
+          "id": "decor_129",
+          "type": "brasa_chao",
+          "pos": [
+            32,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "brasa_chao.png"
         }
       ],
       "secret_passages": [],
       "falas": [
+        {
+          "id": "fala_intro",
+          "pos": [
+            3,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas_briefing.png",
+            "cena": "assets/tela de transição/tutorial/briefing_guilda.png"
+          },
+          "texto": "Bem-vindo! Esta é sua primeira missão no Campo de Treinamento. A Guilda perdeu contato com a ala de treino. Confirme o que aconteceu e volte com o grupo.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 9
+          },
+          "ordem": -1,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Conheça seu herói e a missão",
+            "alvo": null
+          },
+          "guia": [
+            {
+              "id": "briefing",
+              "texto": "ui.tutorial.guia.fala_intro.briefing.texto"
+            },
+            {
+              "id": "objetivo",
+              "texto": "ui.tutorial.guia.fala_intro.objetivo.texto",
+              "ui": "hud:objetivos"
+            },
+            {
+              "id": "vida",
+              "texto": "ui.tutorial.guia.fala_intro.vida.texto",
+              "ui": "hud:vida"
+            },
+            {
+              "id": "ficha",
+              "texto": "ui.tutorial.guia.fala_intro.ficha.texto",
+              "ui": "botao:ficha"
+            },
+            {
+              "id": "continuar",
+              "texto": "ui.tutorial.guia.fala_intro.continuar.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
+          "id": "fala_camera",
+          "pos": [
+            3,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Antes de partir, ajuste a visão do tabuleiro e pratique a câmera.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 9
+          },
+          "ordem": 0,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Pratique a câmera e encerre o turno",
+            "alvo": null
+          },
+          "guia": [
+            {
+              "id": "modo_3d",
+              "texto": "ui.tutorial.guia.fala_camera.modo_3d.texto",
+              "ui": "botao:camera_3d"
+            },
+            {
+              "id": "aproximar",
+              "texto": "ui.tutorial.guia.fala_camera.aproximar.texto",
+              "ui": "hud:tabuleiro"
+            },
+            {
+              "id": "afastar",
+              "texto": "ui.tutorial.guia.fala_camera.afastar.texto",
+              "ui": "hud:tabuleiro"
+            },
+            {
+              "id": "girar",
+              "texto": "ui.tutorial.guia.fala_camera.girar.texto",
+              "ui": "hud:tabuleiro"
+            },
+            {
+              "id": "deslocar",
+              "texto": "ui.tutorial.guia.fala_camera.deslocar.texto",
+              "ui": "hud:tabuleiro"
+            },
+            {
+              "id": "encerrar",
+              "texto": "ui.tutorial.guia.fala_camera.encerrar.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
         {
           "id": "fala_0",
           "pos": [
@@ -15560,14 +17997,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Bem-vindo ao Campo de Treinamento. Comece andando: clique numa casa iluminada. Seu herói tem um número de passos por turno — quando eles acabam, só o próximo turno devolve.",
+          "texto": "Vamos nos aproximar do baú de armas. Ande até a casa marcada.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 9
           },
-          "ordem": 1,
+          "ordem": 3,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -15575,13 +18013,12 @@ window.EDITOR_DUNGEONS = [
               15
             ],
             "vezes": 1,
-            "texto_curto": "Ande até a casa 5,15"
+            "texto_curto": "Aproxime-se do baú de armas"
           },
           "guia": [
             {
               "id": "ver",
-              "texto": "ui.tutorial.guia.fala_0.ver.texto",
-              "porque": "ui.tutorial.guia.fala_0.ver.porque"
+              "texto": "ui.tutorial.guia.fala_0.ver.texto"
             },
             {
               "id": "andar",
@@ -15602,18 +18039,20 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "O baú contém armas para praticar. Pegue uma arma compatível com seu herói; ela vai para a bolsa.",
+          "texto": "O baú contém armas para praticar. Pegue uma compatível com seu herói.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 3
           },
-          "ordem": 2,
+          "ordem": 4,
           "tarefa": {
             "tipo": "pegar_item",
             "vezes": 1,
-            "texto_curto": "Pegue uma arma do baú"
+            "texto_curto": "Pegue uma arma do baú",
+            "alvo": null
           },
           "guia": [
             {
@@ -15635,18 +18074,20 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Abra a bolsa, selecione a arma que pegou e equipe-a. Equipar é uma ação livre.",
+          "texto": "Abra a bolsa e equipe a arma que pegou. Equipar é uma ação livre.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 3
           },
-          "ordem": 3,
+          "ordem": 5,
           "tarefa": {
             "tipo": "equipar",
             "vezes": 1,
-            "texto_curto": "Equipe a arma que pegou"
+            "texto_curto": "Equipe a arma que pegou",
+            "alvo": null
           },
           "guia": [
             {
@@ -15672,24 +18113,25 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "O combate é por turnos: quando terminar o que quer fazer, você passa a vez. Clique em ENCERRAR TURNO, no canto inferior direito. A porta ao fundo já está aberta para você avançar quando quiser.",
+          "texto": "Os bonecos de treino esperam na próxima sala. Encerre o turno quando estiver pronto.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 2
           },
-          "ordem": 4,
+          "ordem": 6,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Clique em Encerrar Turno"
+            "texto_curto": "Clique em Encerrar Turno",
+            "alvo": null
           },
           "guia": [
             {
               "id": "entender",
-              "texto": "ui.tutorial.guia.fala_3.entender.texto",
-              "porque": "ui.tutorial.guia.fala_3.entender.porque"
+              "texto": "ui.tutorial.guia.fala_3.entender.texto"
             },
             {
               "id": "encerrar",
@@ -15709,14 +18151,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "A porta ao fundo já está aberta. Atravesse-a quando quiser: portas abertas deixam você passar, e abrir uma porta em outras masmorras é uma ação gratuita.",
+          "texto": "Atravesse a porta para a ala de treino. A Guilda perdeu contato com esta área.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 7
           },
-          "ordem": 5,
+          "ordem": 7,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -15724,7 +18167,7 @@ window.EDITOR_DUNGEONS = [
               15
             ],
             "vezes": 1,
-            "texto_curto": "Atravesse a porta para a sala de combate"
+            "texto_curto": "Entre na ala de treino"
           },
           "guia": [
             {
@@ -15746,7 +18189,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Todo ataque rola 1d20 e soma o seu acerto contra a Classe de Armadura do alvo. Empatar ou passar acerta; abaixo disso, erra. Ataque um boneco e observe o dado.",
           "trigger": {
@@ -15781,7 +18225,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Um acerto raramente basta. Continue até derrubá-lo — e repare que um 20 natural dobra o dano. Você é o muro do grupo: quem mais aguenta apanhar e quem mais devolve.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -15806,43 +18251,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_warrior",
-          "pos": [
-            14,
-            15
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "warrior",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              22,
-              7
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
-              "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
-              "ui": "porta:[22,7]",
-              "dica": [
-                "ui.tutorial.guia.porta_warrior.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_7",
           "pos": [
             13,
@@ -15850,7 +18258,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Você não é homem de espada, Pedro. Seu cajado acerta como qualquer arma — 1d20 mais o seu acerto contra a Classe de Armadura do alvo — mas é o Grimório que vence as suas batalhas. Acerte um boneco para sentir a diferença.",
           "trigger": {
@@ -15882,7 +18291,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Agora derrube-o. E lembre-se: as suas magias não gastam mana, e sim um slot do círculo, que volta a cada turno. Guarde os círculos altos para quando o corredor estiver cheio.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -15907,43 +18317,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_mage",
-          "pos": [
-            13,
-            14
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "mage",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              22,
-              21
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_mage.porta.texto",
-              "porque": "ui.tutorial.guia.porta_mage.porta.porque",
-              "ui": "porta:[22,21]",
-              "dica": [
-                "ui.tutorial.guia.porta_mage.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_9",
           "pos": [
             13,
@@ -15951,7 +18324,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Atacar de frente é o seu pior golpe, Luccas. Acerte um boneco para ver o dano cru: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
           "trigger": {
@@ -15983,7 +18357,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Derrube-o. Mas o seu ofício de verdade é o Ataque Furtivo: saindo das sombras, escondido, este mesmo golpe dói muito mais. E onde você passa podem ficar armadilhas — o inimigo é quem escolhe pisar nelas.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -16008,43 +18383,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_rogue",
-          "pos": [
-            13,
-            16
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "rogue",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              14,
-              7
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
-              "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
-              "ui": "porta:[14,7]",
-              "dica": [
-                "ui.tutorial.guia.porta_rogue.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_11",
           "pos": [
             15,
@@ -16052,7 +18390,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "A sua maça também resolve, Frade. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
           "trigger": {
@@ -16084,7 +18423,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Derrube-o. Mas o seu peso na batalha é outro: cada ponto de vida que você devolve ao grupo vale mais que o dano que você causa. Fique de olho na água — cada dado de cura custa um gole.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -16109,43 +18449,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_cleric",
-          "pos": [
-            15,
-            14
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "cleric",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              30,
-              6
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
-              "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
-              "ui": "porta:[30,6]",
-              "dica": [
-                "ui.tutorial.guia.porta_cleric.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_13",
           "pos": [
             15,
@@ -16153,7 +18456,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Toda balada precisa de um primeiro compasso. Acerte um boneco: 1d20 mais o seu acerto contra a Classe de Armadura do alvo.",
           "trigger": {
@@ -16185,7 +18489,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Derrube-o. Mas a sua arma é a Canção Heroica: enquanto ela toca, todo aliado num raio de cinco quadrados luta melhor. Ela custa comida e água a cada rodada — não a deixe tocando à toa.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -16210,43 +18515,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_bard",
-          "pos": [
-            15,
-            16
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "bard",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              15,
-              23
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_bard.porta.texto",
-              "porque": "ui.tutorial.guia.porta_bard.porta.porque",
-              "ui": "porta:[15,23]",
-              "dica": [
-                "ui.tutorial.guia.porta_bard.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_15",
           "pos": [
             14,
@@ -16254,7 +18522,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ao trabalho, Richard. 1d20 mais o seu acerto contra a Classe de Armadura do alvo. Acerte um boneco.",
           "trigger": {
@@ -16286,7 +18555,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Derrube-o. O seu Golpe Sagrado acrescenta um dado a cada ataque, e a Imposição das Mãos levanta um companheiro caído. Você é a linha entre o grupo e o chão.  Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.",
           "trigger": {
@@ -16311,43 +18581,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "porta_paladin",
-          "pos": [
-            14,
-            16
-          ],
-          "falante": {
-            "nome": "Mestre de Armas",
-            "emoji": "🛡️"
-          },
-          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
-          "trigger": {
-            "tipo": "sala"
-          },
-          "classe": "paladin",
-          "ordem": 3,
-          "tarefa": {
-            "tipo": "mover_ate",
-            "alvo": [
-              31,
-              25
-            ],
-            "vezes": 1,
-            "texto_curto": "Entre na sala do seu herói"
-          },
-          "guia": [
-            {
-              "id": "porta",
-              "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
-              "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
-              "ui": "porta:[31,25]",
-              "dica": [
-                "ui.tutorial.guia.porta_paladin.porta.dica.1"
-              ]
-            }
-          ]
-        },
-        {
           "id": "fala_17",
           "pos": [
             28,
@@ -16355,14 +18588,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Toda expedição se mede em dois medidores: 🍖 fome e 💧 sede. Eles caem a cada ação, e você acabou de chegar aqui com os dois no chão — olhe o seu dado no próximo ataque. Abaixo de 20 você perde 1 em acerto, dano e resistências; em zero, perde 1 de vida por rodada até comer.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 6,
+          "ordem": 20,
           "efeito": {
             "fome": 0,
             "sede": 0
@@ -16376,14 +18610,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Não morra de barriga vazia num depósito cheio. O baú ao lado tem rações e água: pegue uma ração e coma. Comer é ação bônus — não custa a sua ação principal, dá para comer e ainda lutar no mesmo turno.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 7,
+          "ordem": 21,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "racao_viagem",
@@ -16415,14 +18650,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Agora a água — e repare que ela rende menos que a comida: uma garrafa não tira você da zona de penalidade. Beba duas. Quase toda habilidade que vale a pena cobra goles: cada dado de cura do clérigo, cada magia, cada canção sustentada.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 8,
+          "ordem": 22,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "garrafa_agua",
@@ -16449,14 +18685,15 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Fora da zona de perigo. E há o outro extremo: com fome E sede acima de 80 você fica SACIADO e ganha +1 em acerto, dano e resistências. Vale carregar provisão sobrando — o grupo que come bem luta melhor. Ainda falta uma sala: abra a porta ao fundo, com cuidado.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 9
+          "ordem": 23
         },
         {
           "id": "fala_29",
@@ -16466,18 +18703,21 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_consumiveis.png"
           },
           "texto": "Nem tudo se resolve no braço. Naquele baú há três coisas que se gastam: um óleo que se arremessa, um veneno que se unta na arma e uma poção que devolve vida. Pegue tudo — vai precisar na última sala.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 11,
+          "ordem": 25,
           "tarefa": {
             "tipo": "pegar_item",
             "vezes": 1,
-            "texto_curto": "Pegue os itens do baú"
+            "texto_curto": "Pegue os itens do baú",
+            "alvo": null
           },
           "guia": [
             {
@@ -16498,14 +18738,16 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_consumiveis.png"
           },
           "texto": "O Frasco de Óleo Incendiário 🔥 se arremessa: abra a bolsa, clique com o botão direito no frasco e depois clique no boneco de palha. Ele é vulnerável a fogo, então o dano sai maior: repare no número vermelho com VULNERÁVEL. Você rola destreza contra a Armadura do alvo; se acertar, ele pega fogo.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 12,
+          "ordem": 26,
           "tarefa": {
             "tipo": "arremessar_item",
             "alvo": "frasco_oleo",
@@ -16547,14 +18789,16 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_consumiveis.png"
           },
           "texto": "Veneno não se bebe: unta-se na arma. Use o Fungo Acre e ele fica esperando no fio da lâmina — qualquer classe pode fazer isso, não só o ladino.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 13,
+          "ordem": 27,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "veneno_fungo_acre",
@@ -16581,14 +18825,16 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_consumiveis.png"
           },
           "texto": "O veneno só age quando o golpe ACERTA: errar desperdiça o turno, não a dose. Acerte um boneco sensível a veneno agora e veja a peçonha entrar: a cada rodada ela tira vida, e como o boneco é vulnerável a veneno o número sai dobrado, em vermelho com VULNERÁVEL.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 14,
+          "ordem": 28,
           "tarefa": {
             "tipo": "atacar",
             "alvo": "boneco_treino_veneno",
@@ -16615,14 +18861,16 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_consumiveis.png"
           },
           "texto": "Por fim, a poção: beber é ação bônus, então dá para curar-se E atacar no mesmo turno. Beba a sua agora para saber onde ela fica na bolsa — na hora do aperto você não vai ter tempo de procurar. Depois, abra a porta ao fundo: a última sala morde de verdade.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 15,
+          "ordem": 29,
           "tarefa": {
             "tipo": "usar_item",
             "alvo": "health_potion_small",
@@ -16649,14 +18897,366 @@ window.EDITOR_DUNGEONS = [
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Última sala. Há uma armadilha no chão daqui — armadilhas ficam ocultas até alguém revelá-las, e pisar numa cobra caro. Luccas sabe detectá-las e desarmá-las; os outros contornam, ou aguentam.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
           },
-          "ordem": 16
+          "ordem": 30
+        },
+        {
+          "id": "fala_atalhos",
+          "pos": [
+            49,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "R recentraliza a câmera 3D; Esc cancela uma mira pendente; clicar numa casa faz o herói andar até ela.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 31,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Encerre o turno para concluir",
+            "alvo": null
+          },
+          "guia": [
+            {
+              "id": "camera",
+              "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
+            },
+            {
+              "id": "cancelar",
+              "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
+            },
+            {
+              "id": "andar",
+              "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
+          "id": "fala_res",
+          "pos": [
+            50,
+            17
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_resistencia_vulnerabilidade.png"
+          },
+          "texto": "O boneco de treino reduz em 5 o dano cortante. Acerte-o com uma espada e observe o número azul com RESISTIDO.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "continua_sem": [
+            "fala_atalhos"
+          ],
+          "continua_sem_ativas": [
+            "fala_atalhos"
+          ],
+          "ordem": 32,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "requer_categoria_arma": "cortante",
+            "requer_sala_alvo": 48,
+            "texto_curto": "Acerte o boneco com uma arma cortante"
+          },
+          "guia": [
+            {
+              "id": "ler",
+              "texto": "ui.tutorial.guia.fala_res.ler.texto"
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_res.atacar.texto",
+              "porque": "ui.tutorial.guia.fala_res.atacar.porque",
+              "ui": "monstro:boneco_treino",
+              "dica": [
+                "ui.tutorial.guia.fala_res.atacar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fala_vuln",
+          "pos": [
+            51,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_resistencia_vulnerabilidade.png"
+          },
+          "texto": "Agora pegue e equipe o Cajado de Madeira no baú. Ele causa dano contundente: o boneco é vulnerável e recebe +2. Acerte-o e observe o número vermelho com VULNERÁVEL.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 1
+          },
+          "continua_sem": [
+            "fala_res"
+          ],
+          "ordem": 33,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "requer_categoria_arma": "contundente",
+            "requer_sala_alvo": 48,
+            "texto_curto": "Acerte o boneco com o cajado"
+          },
+          "guia": [
+            {
+              "id": "pegar",
+              "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
+              "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
+              "ui": "casa:[49,17]"
+            },
+            {
+              "id": "equipar",
+              "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
+              "ui": "bolsa:cajado_madeira",
+              "dica": [
+                "ui.tutorial.guia.fala_vuln.equipar.dica.1"
+              ]
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
+              "porque": "ui.tutorial.guia.fala_vuln.atacar.porque",
+              "ui": "monstro:boneco_treino",
+              "dica": [
+                "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fala_hostilidade",
+          "pos": [
+            32,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_inimigo_do_meu_inimigo.png"
+          },
+          "texto": "Há barulho de conflito dentro da sala. Prepare-se e abra a porta.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
+          },
+          "ordem": 24,
+          "tarefa": {
+            "tipo": "arremessar_item",
+            "alvo": "granada_superior",
+            "vezes": 1,
+            "requer_sala_limpa": 46,
+            "texto_curto": "Arremesse a Granada Superior nos monstros sobreviventes"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.fala_hostilidade.abrir.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.abrir.porque",
+              "ui": "porta:[33,15]",
+              "conclui_com": {
+                "tipo": "abrir_porta",
+                "alvo": [
+                  33,
+                  15
+                ]
+              }
+            },
+            {
+              "id": "observar",
+              "titulo": "ui.tutorial.guia.fala_hostilidade.observar.titulo",
+              "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque",
+              "ui": "monstro:rato_gigante"
+            },
+            {
+              "id": "usar",
+              "texto": "ui.tutorial.guia.fala_hostilidade.usar.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.usar.porque",
+              "conclui_com": {
+                "tipo": "encerrar_turno"
+              }
+            },
+            {
+              "id": "enfraquecer",
+              "texto": "ui.tutorial.guia.fala_hostilidade.enfraquecer.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.enfraquecer.porque",
+              "conclui_com": {
+                "tipo": "encerrar_turno"
+              }
+            },
+            {
+              "id": "granada",
+              "texto": "ui.tutorial.guia.fala_hostilidade.granada.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.granada.porque",
+              "ui": "casa:[35,16]",
+              "conclui_com": {
+                "tipo": "arremessar_item",
+                "alvo": "granada_superior"
+              }
+            },
+            {
+              "id": "sobreviventes",
+              "texto": "ui.tutorial.guia.fala_hostilidade.sobreviventes.texto",
+              "porque": "ui.tutorial.guia.fala_hostilidade.sobreviventes.porque"
+            },
+            {
+              "id": "parabens",
+              "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo",
+              "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto"
+            }
+          ]
+        },
+        {
+          "id": "fala_primeiro_combate",
+          "pos": [
+            16,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Os bonecos não reagem. Faça um ataque para conferir seu equipamento.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "ordem": 8,
+          "tarefa": {
+            "tipo": "atacar",
+            "alvo": "boneco_treino",
+            "vezes": 1,
+            "texto_curto": "Ataque um boneco de treino"
+          },
+          "guia": [
+            {
+              "id": "alvo",
+              "texto": "ui.tutorial.guia.fala_primeiro_combate.alvo.texto",
+              "ui": "monstro:boneco_treino"
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_primeiro_combate.atacar.texto",
+              "ui": "monstro:boneco_treino",
+              "dica": [
+                "ui.tutorial.guia.fala_primeiro_combate.atacar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fala_retirada",
+          "pos": [
+            51,
+            29
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas_conclusao.png",
+            "cena": "assets/tela de transição/tutorial/retorno_guilda.png"
+          },
+          "texto": "A ameaça está confirmada. Retire-se com o grupo e reúna todos na saída.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 1
+          },
+          "continua_sem": [
+            "fala_res",
+            "fala_vuln",
+            "fala_atalhos"
+          ],
+          "ordem": 36,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              51,
+              29
+            ],
+            "vezes": 1,
+            "texto_curto": "Reúna o grupo na saída"
+          },
+          "guia": [
+            {
+              "id": "retirar",
+              "texto": "ui.tutorial.guia.fala_retirada.retirar.texto",
+              "ui": "casa:[51,29]",
+              "dica": [
+                "ui.tutorial.guia.fala_retirada.retirar.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "treino_atalhos_warrior",
+          "pos": [
+            20,
+            4
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra H e vincule Mira Certeira ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "warrior",
+          "sala_exclusiva": true,
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "configurar_atalho",
+            "vezes": 1,
+            "texto_curto": "Vincule Mira Certeira ao atalho 1",
+            "alvo": "mira_certeira"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_warrior.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_warrior.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_warrior.atribuir.porque",
+              "ui": "hud:atalho_habilidade_mira_certeira",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_warrior.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "mira_certeira"
+              }
+            }
+          ]
         },
         {
           "id": "treino_mira",
@@ -16665,8 +19265,9 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Selecione Mira Certeira e ataque o alvo ⚔️. A habilidade prepara seu golpe e melhora o teste de acerto. Observe o bônus nos dados.",
           "trigger": {
@@ -16674,12 +19275,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "mira_certeira",
             "vezes": 1,
-            "texto_curto": "Ataque com Mira Certeira"
+            "texto_curto": "Ataque com Mira Certeira",
+            "alvo": "mira_certeira"
           },
           "guia": [
             {
@@ -16700,8 +19301,9 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Encerre o turno se já usou sua ação. Arme Golpe Devastador e ataque o alvo 💥. Observe como a habilidade modifica os dados de dano.",
           "trigger": {
@@ -16709,12 +19311,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "golpe_devastador",
             "vezes": 1,
-            "texto_curto": "Ataque com Golpe Devastador"
+            "texto_curto": "Ataque com Golpe Devastador",
+            "alvo": "golpe_devastador"
           },
           "guia": [
             {
@@ -16735,8 +19337,9 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Arme Fúria Berserker e ataque o alvo 🔥. Não encerre o turno depois desse golpe: a Fúria permite um ataque adicional.",
           "trigger": {
@@ -16744,12 +19347,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "furia_berserker",
             "vezes": 1,
-            "texto_curto": "Faça o primeiro ataque com Fúria"
+            "texto_curto": "Faça o primeiro ataque com Fúria",
+            "alvo": "furia_berserker"
           },
           "guia": [
             {
@@ -16767,8 +19370,9 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Use o ataque extra agora, antes de encerrar o turno. O boneco comum próximo também serve de alvo. Se você já passou a vez, arme Fúria novamente e faça os dois ataques.",
           "trigger": {
@@ -16776,12 +19380,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "ataque_extra",
-            "alvo": "furia_berserker",
             "vezes": 1,
-            "texto_curto": "Use o ataque extra da Fúria"
+            "texto_curto": "Use o ataque extra da Fúria",
+            "alvo": "furia_berserker"
           },
           "guia": [
             {
@@ -16802,8 +19406,9 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Você praticou as três habilidades. Confira a comida e a água consumidas e encerre seu turno. Ao aprender especializações na Guilda, volte para novos exercícios.",
           "trigger": {
@@ -16811,11 +19416,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "warrior",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para concluir"
+            "texto_curto": "Encerre o turno para concluir",
+            "alvo": null
           },
           "guia": [
             {
@@ -16831,14 +19437,100 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "treino_atalhos_mage",
+          "pos": [
+            22,
+            24
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra H e vincule Aprimorar Magia ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "mage",
+          "sala_exclusiva": true,
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "configurar_atalho",
+            "vezes": 1,
+            "texto_curto": "Vincule Aprimorar Magia ao atalho 1",
+            "alvo": "aprimorar_magia"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_mage.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_mage.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_mage.atribuir.porque",
+              "ui": "hud:atalho_habilidade_aprimorar_magia",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_mage.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "aprimorar_magia"
+              }
+            }
+          ]
+        },
+        {
+          "id": "treino_menu_magias_mage",
+          "pos": [
+            22,
+            24
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra o grimório com M, confira as magias conhecidas, feche com M ou Esc e encerre o turno.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "mage",
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
+          "sala_exclusiva": true,
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Conheça o grimório",
+            "alvo": null
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_menu_magias_mage.abrir.texto",
+              "ui": "botao:magias"
+            },
+            {
+              "id": "conferir",
+              "texto": "ui.tutorial.guia.treino_menu_magias_mage.conferir.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
           "id": "treino_magia",
           "pos": [
             22,
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Abra o Grimório e lance uma magia conhecida. Nesta sala suas magias não gastam slots: teste todas as que você conhece, no boneco para dano ou em você para um benefício. É uma magia por turno; encerre o turno para lançar a próxima.",
           "trigger": {
@@ -16849,22 +19541,19 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "qualquer"
           },
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia conhecida"
+            "texto_curto": "Lance uma magia conhecida",
+            "alvo": null
           },
           "guia": [
             {
-              "id": "grimorio",
-              "texto": "ui.tutorial.guia.treino_magia.grimorio.texto",
-              "ui": "botao:magias"
-            },
-            {
               "id": "lancar",
               "texto": "ui.tutorial.guia.treino_magia.lancar.texto",
-              "porque": "ui.tutorial.guia.treino_magia.lancar.porque"
+              "porque": "ui.tutorial.guia.treino_magia.lancar.porque",
+              "ui": "botao:magias"
             }
           ]
         },
@@ -16875,8 +19564,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Encerre o turno para continuar. Aqui na sala suas magias não gastam slots e você pode testar todas as que conhece. Fora dela, cada magia gasta um slot do círculo, que volta com o tempo.",
           "trigger": {
@@ -16884,11 +19574,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 7,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para continuar"
+            "texto_curto": "Encerre o turno para continuar",
+            "alvo": null
           },
           "guia": [
             {
@@ -16906,8 +19597,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Arme Aprimorar Magia e lance uma magia compatível: esta metamagia melhora a dificuldade do teste de resistência. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
           "trigger": {
@@ -16918,12 +19610,12 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "save"
           },
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "aprimorar_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia com Aprimorar Magia"
+            "texto_curto": "Lance uma magia com Aprimorar Magia",
+            "alvo": "aprimorar_magia"
           },
           "guia": [
             {
@@ -16944,8 +19636,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Arme Estender Magia e lance uma magia compatível: esta metamagia acrescenta duração a um efeito que persiste. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
           "trigger": {
@@ -16956,12 +19649,12 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "duracao"
           },
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "estender_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia com Estender Magia"
+            "texto_curto": "Lance uma magia com Estender Magia",
+            "alvo": "estender_magia"
           },
           "guia": [
             {
@@ -16979,8 +19672,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Arme Fortalecer Magia e lance uma magia compatível: esta metamagia aumenta o dano de uma magia. O exercício só conta quando ela for aplicada ao lançamento. Confira os valores da sua ficha.",
           "trigger": {
@@ -16991,12 +19685,12 @@ window.EDITOR_DUNGEONS = [
             "magia_tipo": "dano"
           },
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "fortalecer_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia com Fortalecer Magia"
+            "texto_curto": "Lance uma magia com Fortalecer Magia",
+            "alvo": "fortalecer_magia"
           },
           "guia": [
             {
@@ -17014,8 +19708,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "O cadáver de treinamento está no chão. Aproxime-se, use Reviver os Mortos e selecione o cadáver. Se a tentativa falhar, tente novamente em outro turno.",
           "trigger": {
@@ -17023,12 +19718,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "animar_mortos",
             "vezes": 1,
-            "texto_curto": "Anime o cadáver de treinamento"
+            "texto_curto": "Anime o cadáver de treinamento",
+            "alvo": "animar_mortos"
           },
           "guia": [
             {
@@ -17050,8 +19745,9 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Encerre a vez de Pedro para abrir a fase dos servos. Use Comandar para que seu morto animado se mova e ataque um boneco.",
           "trigger": {
@@ -17059,11 +19755,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "mage",
           "sala_exclusiva": true,
-          "ordem": 10,
+          "ordem": 12,
           "tarefa": {
             "tipo": "comandar_servo",
             "vezes": 1,
-            "texto_curto": "Comande o servo de treinamento"
+            "texto_curto": "Comande o servo de treinamento",
+            "alvo": null
           },
           "guia": [
             {
@@ -17079,16 +19776,17 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "treino_detectar",
+          "id": "treino_atalhos_rogue",
           "pos": [
             9,
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Ative Detectar Armadilhas e aproxime-se da casa 10,8. A detecção revela os mecanismos próximos. Confira a manutenção de água.",
+          "texto": "Abra H e vincule Detectar Armadilhas ao espaço 1. Use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
           "trigger": {
             "tipo": "sala"
           },
@@ -17096,10 +19794,55 @@ window.EDITOR_DUNGEONS = [
           "sala_exclusiva": true,
           "ordem": 4,
           "tarefa": {
-            "tipo": "usar_habilidade",
-            "alvo": "detectar_armadilhas",
+            "tipo": "configurar_atalho",
             "vezes": 1,
-            "texto_curto": "Revele a armadilha de treinamento"
+            "texto_curto": "Vincule Detectar Armadilhas ao atalho 1",
+            "alvo": "detectar_armadilhas"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_rogue.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_rogue.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_rogue.atribuir.porque",
+              "ui": "hud:atalho_habilidade_detectar_armadilhas",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_rogue.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "detectar_armadilhas"
+              }
+            }
+          ]
+        },
+        {
+          "id": "treino_detectar",
+          "pos": [
+            9,
+            7
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Ative Detectar Armadilhas e aproxime-se da casa 10,8. A detecção revela os mecanismos próximos. Confira a manutenção de água.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "rogue",
+          "sala_exclusiva": true,
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "usar_habilidade",
+            "vezes": 1,
+            "texto_curto": "Revele a armadilha de treinamento",
+            "alvo": "detectar_armadilhas"
           },
           "guia": [
             {
@@ -17117,8 +19860,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Fique ao lado da armadilha revelada e use Desarmar Armadilha. Se o teste falhar, tente novamente. A sala pode restaurar o mecanismo para você continuar.",
           "trigger": {
@@ -17126,11 +19870,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "desarmar_armadilha",
             "vezes": 1,
-            "texto_curto": "Desarme a armadilha"
+            "texto_curto": "Desarme a armadilha",
+            "alvo": null
           },
           "guia": [
             {
@@ -17147,8 +19892,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Perto do boneco, use Esconder nas Sombras. Essa é uma ação bônus: você pode atacar na mesma rodada após conseguir se esconder.",
           "trigger": {
@@ -17156,12 +19902,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "esconder_sombras",
             "vezes": 1,
-            "texto_curto": "Esconda-se nas sombras"
+            "texto_curto": "Esconda-se nas sombras",
+            "alvo": "esconder_sombras"
           },
           "guia": [
             {
@@ -17179,8 +19925,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ataque um boneco enquanto estiver escondido. Ataque Furtivo é uma passiva: o dano extra aparece quando as condições são cumpridas. Se errar, esconda-se e tente de novo.",
           "trigger": {
@@ -17188,12 +19935,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "ataque_furtivo",
             "vezes": 1,
-            "texto_curto": "Acerte um Ataque Furtivo"
+            "texto_curto": "Acerte um Ataque Furtivo",
+            "alvo": "ataque_furtivo"
           },
           "guia": [
             {
@@ -17214,8 +19961,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Use Veneno Rápido e escolha o veneno de treinamento na bolsa para untar sua arma. Essa é uma ação livre. Confira as cargas preparadas.",
           "trigger": {
@@ -17223,12 +19971,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "veneno_rapido",
             "vezes": 1,
-            "texto_curto": "Unte a arma com Veneno Rápido"
+            "texto_curto": "Unte a arma com Veneno Rápido",
+            "alvo": "veneno_rapido"
           },
           "guia": [
             {
@@ -17246,8 +19994,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ataque um boneco com a arma untada. Observe o consumo da carga e o teste de resistência do alvo; ele pode resistir ao veneno.",
           "trigger": {
@@ -17255,12 +20004,13 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
             "texto_curto": "Acerte o boneco com a arma untada",
-            "requer_veneno": true
+            "requer_veneno": true,
+            "alvo": null
           },
           "guia": [
             {
@@ -17278,8 +20028,9 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Use Criar Armadilha numa casa vazia da sala. Buraco já está disponível; as demais fórmulas dependem da Guilda. Escolha apenas um mecanismo que você conhece.",
           "trigger": {
@@ -17287,12 +20038,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "rogue",
           "sala_exclusiva": true,
-          "ordem": 10,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "criar_armadilha",
             "vezes": 1,
-            "texto_curto": "Crie uma armadilha conhecida"
+            "texto_curto": "Crie uma armadilha conhecida",
+            "alvo": "criar_armadilha"
           },
           "guia": [
             {
@@ -17304,44 +20055,123 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "treino_atalhos_cleric",
+          "pos": [
+            32,
+            6
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra H e vincule Cura ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "sala_exclusiva": true,
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "configurar_atalho",
+            "vezes": 1,
+            "texto_curto": "Vincule Cura ao atalho 1",
+            "alvo": "cura"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_cleric.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_cleric.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_cleric.atribuir.porque",
+              "ui": "hud:atalho_habilidade_cura",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_cleric.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "cura"
+              }
+            }
+          ]
+        },
+        {
+          "id": "treino_menu_magias_cleric",
+          "pos": [
+            32,
+            6
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra o grimório com M, confira as magias conhecidas, feche com M ou Esc e encerre o turno.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "cleric",
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
+          "sala_exclusiva": true,
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "encerrar_turno",
+            "vezes": 1,
+            "texto_curto": "Conheça o grimório",
+            "alvo": null
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_menu_magias_cleric.abrir.texto",
+              "ui": "botao:magias"
+            },
+            {
+              "id": "conferir",
+              "texto": "ui.tutorial.guia.treino_menu_magias_cleric.conferir.texto",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
           "id": "treino_grimorio",
           "pos": [
             32,
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
+          "texto": "Abra a aba ✨ Magias do seu painel (no celular, o botão ✨), escolha uma magia que você conhece e lance-a. Magia de aliado: clique em você ou num aprendiz. Magia de área: clique numa casa livre. Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói, e aqui não há. Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. Lançar usa sua ação principal.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "cleric",
-          "sala_exclusiva": true,
-          "texto": "Abra a aba ✨ Magias do seu painel (no celular, o botão ✨), escolha uma magia que você conhece e lance-a. Magia de aliado: clique em você ou num aprendiz. Magia de área: clique numa casa livre. Comando e Maldição do Corpo Pesado pedem inimigo ou outro herói, e aqui não há. Nesta sala suas magias não gastam slots; fora dela cada magia gasta um slot do círculo. Lançar usa sua ação principal.",
           "requisitos": {
             "magia_tipo": "qualquer"
           },
+          "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia conhecida"
+            "texto_curto": "Lance uma magia conhecida",
+            "alvo": null
           },
-          "ordem": 4,
           "guia": [
-            {
-              "id": "grimorio",
-              "texto": "ui.tutorial.guia.treino_grimorio.grimorio.texto",
-              "porque": "ui.tutorial.guia.treino_grimorio.grimorio.porque",
-              "ui": "botao:magias",
-              "dica": [
-                "ui.tutorial.guia.treino_grimorio.grimorio.dica.1"
-              ]
-            },
             {
               "id": "lancar",
               "texto": "ui.tutorial.guia.treino_grimorio.lancar.texto",
               "porque": "ui.tutorial.guia.treino_grimorio.lancar.porque",
+              "ui": "botao:magias",
               "dica": [
                 "ui.tutorial.guia.treino_grimorio.lancar.dica.1"
               ]
@@ -17355,21 +20185,23 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
+          "texto": "Encerre o turno para continuar: lançar a magia usou sua ação principal, e as habilidades de Clérigo a seguir também precisam dela. Aqui na sala suas magias não gastam slots; fora dela cada magia gasta um, que volta com o tempo.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "texto": "Encerre o turno para continuar: lançar a magia usou sua ação principal, e as habilidades de Clérigo a seguir também precisam dela. Aqui na sala suas magias não gastam slots; fora dela cada magia gasta um, que volta com o tempo.",
+          "ordem": 7,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para continuar"
+            "texto_curto": "Encerre o turno para continuar",
+            "alvo": null
           },
-          "ordem": 5,
           "guia": [
             {
               "id": "encerrar",
@@ -17386,8 +20218,9 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "O Aprendiz 1 está ferido. Fique ao lado dele, selecione Cura e use um dado. Confira a vida recuperada e o custo de água.",
           "trigger": {
@@ -17395,12 +20228,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "cura",
             "vezes": 1,
             "texto_curto": "Cure o Aprendiz 1",
+            "alvo": "cura",
             "alvo_id": "__treino_cleric_1",
             "cura_efetiva": true
           },
@@ -17424,8 +20257,9 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Os dois aprendizes ficaram feridos para este exercício. Fique perto deles e use Cura em Área. No nível inicial o raio é de 2 casas; confira a área e o custo antes de confirmar.",
           "trigger": {
@@ -17433,12 +20267,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "cura_area",
             "vezes": 2,
             "texto_curto": "Cure os dois aprendizes em área",
+            "alvo": "cura_area",
             "cura_efetiva": true
           },
           "guia": [
@@ -17457,8 +20291,9 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "O Aprendiz 1 está cego por um veneno simulado. Fique ao lado dele, use Purificação e escolha Veneno. Observe o efeito desaparecer.",
           "trigger": {
@@ -17466,12 +20301,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "purificacao",
             "vezes": 1,
             "texto_curto": "Purifique o Aprendiz 1",
+            "alvo": "purificacao",
             "alvo_id": "__treino_cleric_1"
           },
           "guia": [
@@ -17490,8 +20325,9 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "O Aprendiz 1 simula um aliado caído. Fique ao lado dele e use Ressurreição. Ele retorna com a vida determinada pela sua habilidade.",
           "trigger": {
@@ -17499,12 +20335,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "cleric",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "ressurreicao",
             "vezes": 1,
             "texto_curto": "Ressuscite o Aprendiz 1",
+            "alvo": "ressurreicao",
             "alvo_id": "__treino_cleric_1"
           },
           "guia": [
@@ -17517,14 +20353,60 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "treino_atalhos_bard",
+          "pos": [
+            10,
+            23
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Abra H e vincule Canção Heroica ao espaço 1. Depois use 1 para ativá-la; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "bard",
+          "sala_exclusiva": true,
+          "ordem": 4,
+          "tarefa": {
+            "tipo": "configurar_atalho",
+            "vezes": 1,
+            "texto_curto": "Vincule Canção Heroica ao atalho 1",
+            "alvo": "cancao_heroica"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_bard.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_bard.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_bard.atribuir.porque",
+              "ui": "hud:atalho_habilidade_cancao_heroica",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_bard.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "cancao_heroica"
+              }
+            }
+          ]
+        },
+        {
           "id": "treino_harpa",
           "pos": [
             10,
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Abra o baú e pegue a Harpa Velha; depois equipe-a na mão do escudo. O Alaúde vai para a bolsa.",
           "trigger": {
@@ -17532,7 +20414,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 4,
+          "ordem": 5,
           "tarefa": {
             "tipo": "equipar",
             "vezes": 1,
@@ -17568,8 +20450,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Fique na mesma linha ou coluna do boneco, a até 3 casas. Toque a Harpa e escolha a direção: a Nota Cortante atinge a linha toda.",
           "trigger": {
@@ -17577,7 +20460,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_instrumento",
             "vezes": 1,
@@ -17609,8 +20492,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Equipe o Alaúde Velho de volta na mão do escudo. Ele é passivo: não tem botão, mas reforça a Canção Heroica.",
           "trigger": {
@@ -17618,7 +20502,7 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "equipar",
             "vezes": 1,
@@ -17641,8 +20525,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ative a Canção Heroica marcando Acerto. A Sinfonia Heroica do Alaúde soma +1 extra: o acerto sobe de +1 para +2. Confira no registro.",
           "trigger": {
@@ -17650,12 +20535,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 7,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "cancao_heroica",
             "vezes": 1,
             "texto_curto": "Ative a Canção com Acerto e o Alaúde",
+            "alvo": "cancao_heroica",
             "requer_sinfonia": true
           },
           "guia": [
@@ -17677,8 +20562,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Confira o raio da canção e encerre o turno com ela ativa. Ela cobra manutenção enquanto você a sustenta.",
           "trigger": {
@@ -17686,11 +20572,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "manter_cancao",
             "vezes": 1,
-            "texto_curto": "Mantenha a canção por uma rodada"
+            "texto_curto": "Mantenha a canção por uma rodada",
+            "alvo": null
           },
           "guia": [
             {
@@ -17708,8 +20595,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Desative a Canção Heroica para encerrar o efeito e seu consumo de recursos. Não a deixe ativa sem necessidade.",
           "trigger": {
@@ -17717,11 +20605,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "encerrar_cancao",
             "vezes": 1,
-            "texto_curto": "Encerre a Canção Heroica"
+            "texto_curto": "Encerre a Canção Heroica",
+            "alvo": null
           },
           "guia": [
             {
@@ -17738,8 +20627,9 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Selecione o boneco e use Provocação. Confira o teste de resistência e as consequências do efeito. Uma resistência do inimigo não torna seu uso inválido.",
           "trigger": {
@@ -17747,12 +20637,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "bard",
           "sala_exclusiva": true,
-          "ordem": 10,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "provocacao",
             "vezes": 1,
-            "texto_curto": "Use Provocação no boneco"
+            "texto_curto": "Use Provocação no boneco",
+            "alvo": "provocacao"
           },
           "guia": [
             {
@@ -17764,16 +20654,17 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "treino_refem",
+          "id": "treino_atalhos_paladin",
           "pos": [
             33,
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.",
+          "texto": "Abra H e vincule Protetor ao espaço 1. Depois use 1 para ativá-lo; Esc cancela uma mira pendente. Habilidades alternáveis podem ser desligadas com o mesmo atalho; efeitos com duração fixa acabam sozinhos.",
           "trigger": {
             "tipo": "sala"
           },
@@ -17781,10 +20672,55 @@ window.EDITOR_DUNGEONS = [
           "sala_exclusiva": true,
           "ordem": 4,
           "tarefa": {
-            "tipo": "libertar_refem",
-            "alvo": "__prisioneiro__",
+            "tipo": "configurar_atalho",
             "vezes": 1,
-            "texto_curto": "Liberte o refém"
+            "texto_curto": "Vincule Protetor ao atalho 1",
+            "alvo": "protetor"
+          },
+          "guia": [
+            {
+              "id": "abrir",
+              "texto": "ui.tutorial.guia.treino_atalhos_paladin.abrir.texto",
+              "ui": "botao:habilidades"
+            },
+            {
+              "id": "atribuir",
+              "texto": "ui.tutorial.guia.treino_atalhos_paladin.atribuir.texto",
+              "porque": "ui.tutorial.guia.treino_atalhos_paladin.atribuir.porque",
+              "ui": "hud:atalho_habilidade_protetor",
+              "dica": [
+                "ui.tutorial.guia.treino_atalhos_paladin.atribuir.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "configurar_atalho",
+                "alvo": "protetor"
+              }
+            }
+          ]
+        },
+        {
+          "id": "treino_refem",
+          "pos": [
+            33,
+            25
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "paladin",
+          "sala_exclusiva": true,
+          "ordem": 5,
+          "tarefa": {
+            "tipo": "libertar_refem",
+            "vezes": 1,
+            "texto_curto": "Liberte o refém",
+            "alvo": "__prisioneiro__"
           },
           "guia": [
             {
@@ -17801,8 +20737,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para o golpe controlado de treinamento. Observe a divisão do dano e a redução pessoal de Richard.",
           "trigger": {
@@ -17810,12 +20747,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 5,
+          "ordem": 6,
           "tarefa": {
             "tipo": "proteger",
-            "alvo": "__prisioneiro__",
             "vezes": 1,
-            "texto_curto": "Proteja o refém durante um ataque"
+            "texto_curto": "Proteja o refém durante um ataque",
+            "alvo": "__prisioneiro__"
           },
           "guia": [
             {
@@ -17833,8 +20770,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Sua proteção manteve o refém vivo. Agora, no seu turno, fique ao lado dele e use Imposição das Mãos. A lição pede a cura desse mesmo refém ferido.",
           "trigger": {
@@ -17842,12 +20780,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 6,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "imposicao_maos",
             "vezes": 1,
             "texto_curto": "Cure o refém com Imposição das Mãos",
+            "alvo": "imposicao_maos",
             "alvo_id": "__prisioneiro__",
             "cura_efetiva": true
           },
@@ -17870,16 +20808,17 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Agora guie o refém até a casa marcada, na frente da porta. Clique em Encerrar Turno para abrir a vez dele e depois na casa. Ele anda até 6 casas e, ao chegar, se retira.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "guiar_refem",
             "vezes": 1,
@@ -17918,8 +20857,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ative Golpe Sagrado no nível disponível. Depois ataque o boneco e observe o dano sagrado acrescentado. Há custos de ativação e de manutenção.",
           "trigger": {
@@ -17927,12 +20867,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 8,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "golpe_sagrado",
             "vezes": 1,
-            "texto_curto": "Ative Golpe Sagrado"
+            "texto_curto": "Ative Golpe Sagrado",
+            "alvo": "golpe_sagrado"
           },
           "guia": [
             {
@@ -17950,8 +20890,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ataque o boneco com Golpe Sagrado ativo para ver seu efeito no dano.",
           "trigger": {
@@ -17959,12 +20900,13 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
             "texto_curto": "Acerte com Golpe Sagrado ativo",
-            "requer_sagrado": true
+            "requer_sagrado": true,
+            "alvo": null
           },
           "guia": [
             {
@@ -17982,8 +20924,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "O treino deixou dois pontos de vida para recuperar. Ative Regeneração Divina e encerre sua vez. A tarefa só termina quando a regeneração recuperar vida de verdade.",
           "trigger": {
@@ -17991,12 +20934,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 10,
+          "ordem": 11,
           "tarefa": {
             "tipo": "regenerar",
-            "alvo": "regeneracao_divina",
             "vezes": 1,
-            "texto_curto": "Recupere vida com Regeneração Divina"
+            "texto_curto": "Recupere vida com Regeneração Divina",
+            "alvo": "regeneracao_divina"
           },
           "guia": [
             {
@@ -18014,8 +20957,9 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Ative Guerreiro da Luz e compare sua visão, acerto, dano e defesa. O bônus é o da habilidade disponível na sua ficha.",
           "trigger": {
@@ -18023,12 +20967,12 @@ window.EDITOR_DUNGEONS = [
           },
           "classe": "paladin",
           "sala_exclusiva": true,
-          "ordem": 11,
+          "ordem": 12,
           "tarefa": {
             "tipo": "usar_habilidade",
-            "alvo": "guerreiro_luz",
             "vezes": 1,
-            "texto_curto": "Ative Guerreiro da Luz"
+            "texto_curto": "Ative Guerreiro da Luz",
+            "alvo": "guerreiro_luz"
           },
           "guia": [
             {
@@ -18040,130 +20984,229 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "fala_atalhos",
+          "id": "porta_warrior",
           "pos": [
-            49,
+            14,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "warrior",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              22,
+              7
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_warrior.porta.texto",
+              "porque": "ui.tutorial.guia.porta_warrior.porta.porque",
+              "ui": "porta:[22,7]",
+              "dica": [
+                "ui.tutorial.guia.porta_warrior.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "porta_mage",
+          "pos": [
+            13,
+            14
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "mage",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              22,
+              21
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_mage.porta.texto",
+              "porque": "ui.tutorial.guia.porta_mage.porta.porque",
+              "ui": "porta:[22,21]",
+              "dica": [
+                "ui.tutorial.guia.porta_mage.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "porta_rogue",
+          "pos": [
+            13,
             16
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
-          },
-          "texto": "Atalhos: H abre o menu de habilidades com o painel ATALHOS; R recentraliza a câmera 3D; Esc cancela uma mira; clicar numa casa anda até ela.",
-          "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
-          },
-          "ordem": 19,
-          "tarefa": {
-            "tipo": "encerrar_turno",
-            "vezes": 1,
-            "texto_curto": "Encerre o turno para concluir"
-          },
-          "guia": [
-            {
-              "id": "barra",
-              "texto": "ui.tutorial.guia.fala_atalhos.barra.texto",
-              "porque": "ui.tutorial.guia.fala_atalhos.barra.porque"
-            },
-            {
-              "id": "camera",
-              "texto": "ui.tutorial.guia.fala_atalhos.camera.texto"
-            },
-            {
-              "id": "cancelar",
-              "texto": "ui.tutorial.guia.fala_atalhos.cancelar.texto"
-            },
-            {
-              "id": "andar",
-              "texto": "ui.tutorial.guia.fala_atalhos.andar.texto",
-              "ui": "botao:encerrar_turno"
-            }
-          ]
-        },
-        {
-          "id": "fala_res",
-          "pos": [
-            50,
-            17
-          ],
-          "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Esqueletos resistem a lâminas: espada e adaga causam 1 ou 2 pontos a menos. Ataque um esqueleto e compare o dano.",
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
           "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
+            "tipo": "sala"
           },
-          "ordem": 20,
+          "classe": "rogue",
+          "ordem": 3,
           "tarefa": {
-            "tipo": "atacar",
-            "alvo": "esqueleto_humano",
+            "tipo": "mover_ate",
+            "alvo": [
+              14,
+              7
+            ],
             "vezes": 1,
-            "texto_curto": "Ataque um esqueleto com espada ou adaga"
+            "texto_curto": "Entre na sala do seu herói"
           },
           "guia": [
             {
-              "id": "ler",
-              "texto": "ui.tutorial.guia.fala_res.ler.texto",
-              "porque": "ui.tutorial.guia.fala_res.ler.porque"
-            },
-            {
-              "id": "atacar",
-              "texto": "ui.tutorial.guia.fala_res.atacar.texto",
-              "porque": "ui.tutorial.guia.fala_res.atacar.porque",
-              "ui": "monstro:esqueleto_humano",
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_rogue.porta.texto",
+              "porque": "ui.tutorial.guia.porta_rogue.porta.porque",
+              "ui": "porta:[14,7]",
               "dica": [
-                "ui.tutorial.guia.fala_res.atacar.dica.1"
+                "ui.tutorial.guia.porta_rogue.porta.dica.1"
               ]
             }
           ]
         },
         {
-          "id": "fala_vuln",
+          "id": "porta_cleric",
           "pos": [
-            50,
-            17
+            15,
+            14
           ],
           "falante": {
             "nome": "Mestre de Armas",
-            "emoji": "🛡️"
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Esqueletos são vulneráveis a impacto: a maça causa 2 pontos a mais. Pegue a maça no baú desta sala, equipe e ataque o esqueleto.",
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Lá dentro suas magias não gastam slots, para você testar tudo. Abra-a e entre.",
           "trigger": {
-            "tipo": "proximidade",
-            "raio": 4
+            "tipo": "sala"
           },
-          "ordem": 21,
+          "classe": "cleric",
+          "ordem": 3,
           "tarefa": {
-            "tipo": "atacar",
-            "alvo": "esqueleto_humano",
+            "tipo": "mover_ate",
+            "alvo": [
+              30,
+              6
+            ],
             "vezes": 1,
-            "texto_curto": "Pegue a maça, equipe e ataque o esqueleto"
+            "texto_curto": "Entre na sala do seu herói"
           },
           "guia": [
             {
-              "id": "pegar",
-              "texto": "ui.tutorial.guia.fala_vuln.pegar.texto",
-              "porque": "ui.tutorial.guia.fala_vuln.pegar.porque",
-              "ui": "casa:[49,17]"
-            },
-            {
-              "id": "equipar",
-              "texto": "ui.tutorial.guia.fala_vuln.equipar.texto",
-              "ui": "bolsa:maca_treino",
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_cleric.porta.texto",
+              "porque": "ui.tutorial.guia.porta_cleric.porta.porque",
+              "ui": "porta:[30,6]",
               "dica": [
-                "ui.tutorial.guia.fala_vuln.equipar.dica.1"
+                "ui.tutorial.guia.porta_cleric.porta.dica.1"
               ]
-            },
+            }
+          ]
+        },
+        {
+          "id": "porta_bard",
+          "pos": [
+            15,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "bard",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              15,
+              23
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
             {
-              "id": "atacar",
-              "texto": "ui.tutorial.guia.fala_vuln.atacar.texto",
-              "porque": "ui.tutorial.guia.fala_vuln.atacar.porque",
-              "ui": "monstro:esqueleto_humano",
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_bard.porta.texto",
+              "porque": "ui.tutorial.guia.porta_bard.porta.porque",
+              "ui": "porta:[15,23]",
               "dica": [
-                "ui.tutorial.guia.fala_vuln.atacar.dica.1"
+                "ui.tutorial.guia.porta_bard.porta.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "porta_paladin",
+          "pos": [
+            14,
+            16
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Muito bem! Agora vá até a porta marcada: ela leva à sala exclusiva do seu herói. Abra-a e entre.",
+          "trigger": {
+            "tipo": "sala"
+          },
+          "classe": "paladin",
+          "ordem": 3,
+          "tarefa": {
+            "tipo": "mover_ate",
+            "alvo": [
+              31,
+              25
+            ],
+            "vezes": 1,
+            "texto_curto": "Entre na sala do seu herói"
+          },
+          "guia": [
+            {
+              "id": "porta",
+              "texto": "ui.tutorial.guia.porta_paladin.porta.texto",
+              "porque": "ui.tutorial.guia.porta_paladin.porta.porque",
+              "ui": "porta:[31,25]",
+              "dica": [
+                "ui.tutorial.guia.porta_paladin.porta.dica.1"
               ]
             }
           ]
@@ -18175,15 +21218,16 @@ window.EDITOR_DUNGEONS = [
             4
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 9,
+          "ordem": 10,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18225,15 +21269,16 @@ window.EDITOR_DUNGEONS = [
             24
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 11,
+          "ordem": 13,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18275,15 +21320,16 @@ window.EDITOR_DUNGEONS = [
             7
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 11,
+          "ordem": 12,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18325,15 +21371,16 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 10,
+          "ordem": 12,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18375,15 +21422,16 @@ window.EDITOR_DUNGEONS = [
             23
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 11,
+          "ordem": 12,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18425,15 +21473,16 @@ window.EDITOR_DUNGEONS = [
             25
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🎓",
+            "retrato": "assets/portraits/mestre_de_armas.png"
           },
           "texto": "Treino da classe concluído! Agora volte ao corredor e siga para a próxima sala: saia pela porta e ande até a casa marcada, onde o Mestre de Armas espera.",
           "trigger": {
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 12,
+          "ordem": 13,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
@@ -18469,57 +21518,60 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "fala_hostilidade",
+          "id": "fala_armadilhas",
           "pos": [
-            32,
-            15
+            51,
+            19
           ],
           "falante": {
-            "nome": "Instrutor de Treinamento",
-            "emoji": "🎓"
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png",
+            "cena": "assets/tela de transição/tutorial/mestre_aula_armadilhas.png"
           },
-          "texto": "Há três monstros nesta sala, e cada um é hostil a todos os monstros. Abra a porta, observe-os lutarem entre si e use a Granada Superior contra quem sobreviver.",
+          "texto": "Esta passagem parece estranha. Avance com cuidado e observe cada armadilha.",
           "trigger": {
             "tipo": "proximidade",
-            "raio": 4
+            "raio": 1
           },
-          "ordem": 10,
+          "continua_sem": [
+            "fala_res",
+            "fala_vuln",
+            "fala_atalhos"
+          ],
+          "ordem": 35,
           "tarefa": {
-            "tipo": "arremessar_item",
-            "alvo": "granada_superior",
+            "tipo": "mover_ate",
+            "alvo": [
+              51,
+              24
+            ],
             "vezes": 1,
-            "texto_curto": "Arremesse a Granada Superior nos monstros sobreviventes"
+            "texto_curto": "Atravesse o corredor de armadilhas"
           },
           "guia": [
             {
-              "id": "abrir",
-              "texto": "ui.tutorial.guia.fala_hostilidade.abrir.texto",
-              "porque": "ui.tutorial.guia.fala_hostilidade.abrir.porque",
-              "ui": "porta:[33,15]",
+              "id": "alerta",
+              "texto": "ui.tutorial.guia.fala_armadilhas.alerta.texto",
               "conclui_com": {
                 "tipo": "abrir_porta",
                 "alvo": [
-                  33,
-                  15
+                  51,
+                  20
                 ]
               }
             },
             {
-              "id": "bardo",
-              "texto": "ui.tutorial.guia.fala_hostilidade.bardo.texto",
-              "porque": "ui.tutorial.guia.fala_hostilidade.bardo.porque",
-              "ui": "monstro:rato_gigante"
+              "id": "efeitos",
+              "texto": "ui.tutorial.guia.fala_armadilhas.efeitos.texto"
             },
             {
-              "id": "observar",
-              "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
-              "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque"
+              "id": "teleporte",
+              "texto": "ui.tutorial.guia.fala_armadilhas.teleporte.texto"
             },
             {
-              "id": "granada",
-              "texto": "ui.tutorial.guia.fala_hostilidade.granada.texto",
-              "porque": "ui.tutorial.guia.fala_hostilidade.granada.porque",
-              "ui": "casa:[35,16]"
+              "id": "atravessar",
+              "texto": "ui.tutorial.guia.fala_armadilhas.atravessar.texto"
             }
           ]
         }
@@ -18534,11 +21586,82 @@ window.EDITOR_DUNGEONS = [
           35,
           25
         ],
-        "room_id": 38,
-        "image": "soldado.png",
-        "model3d": "soldadoa.glb"
+        "room_id": 38
       },
-      "materiais": {},
+      "materiais": {
+        "34,13": "pedra_negra",
+        "34,14": "pedra_negra",
+        "34,15": "pedra_negra",
+        "34,16": "pedra_negra",
+        "34,17": "pedra_negra",
+        "34,18": "pedra_negra",
+        "35,18": "pedra_negra",
+        "36,18": "pedra_negra",
+        "37,18": "pedra_negra",
+        "38,18": "pedra_negra",
+        "39,18": "pedra_negra",
+        "39,17": "pedra_negra",
+        "39,16": "pedra_negra",
+        "39,15": "pedra_negra",
+        "39,14": "pedra_negra",
+        "39,13": "pedra_negra",
+        "38,13": "pedra_negra",
+        "37,13": "pedra_negra",
+        "36,13": "pedra_negra",
+        "35,13": "pedra_negra",
+        "35,14": "pedra_negra",
+        "35,15": "pedra_negra",
+        "35,16": "pedra_negra",
+        "35,17": "pedra_negra",
+        "36,17": "pedra_negra",
+        "37,17": "pedra_negra",
+        "38,17": "pedra_negra",
+        "38,16": "pedra_negra",
+        "38,15": "pedra_negra",
+        "38,14": "pedra_negra",
+        "37,14": "pedra_negra",
+        "36,14": "pedra_negra",
+        "36,15": "pedra_negra",
+        "36,16": "pedra_negra",
+        "37,16": "pedra_negra",
+        "37,15": "pedra_negra",
+        "27,13": "pedra_negra",
+        "28,13": "pedra_negra",
+        "29,13": "pedra_negra",
+        "30,13": "pedra_negra",
+        "31,13": "pedra_negra",
+        "32,13": "pedra_negra",
+        "32,14": "pedra_negra",
+        "31,14": "pedra_negra",
+        "30,14": "pedra_negra",
+        "29,14": "pedra_negra",
+        "28,14": "pedra_negra",
+        "27,14": "pedra_negra",
+        "27,15": "pedra_negra",
+        "28,15": "pedra_negra",
+        "28,16": "pedra_negra",
+        "28,17": "pedra_negra",
+        "28,18": "pedra_negra",
+        "27,16": "pedra_negra",
+        "27,17": "pedra_negra",
+        "27,18": "pedra_negra",
+        "29,18": "pedra_negra",
+        "31,18": "pedra_negra",
+        "32,18": "pedra_negra",
+        "30,18": "pedra_negra",
+        "32,17": "pedra_negra",
+        "32,16": "pedra_negra",
+        "32,15": "pedra_negra",
+        "31,15": "pedra_negra",
+        "30,15": "pedra_negra",
+        "29,15": "pedra_negra",
+        "29,16": "pedra_negra",
+        "29,17": "pedra_negra",
+        "30,17": "pedra_negra",
+        "31,17": "pedra_negra",
+        "31,16": "pedra_negra",
+        "30,16": "pedra_negra"
+      },
       "pontes": [],
       "elevacoes": {},
       "alturas_parede": {},
@@ -66721,4 +69844,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

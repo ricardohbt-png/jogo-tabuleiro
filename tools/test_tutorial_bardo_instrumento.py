@@ -47,7 +47,7 @@ class OrdemETrilhaTests(unittest.TestCase):
         ordens = [f["ordem"] for f in bard]
         self.assertEqual(len(ordens), len(set(ordens)))
         por = {f["id"]: f["ordem"] for f in bard}
-        sequencia = ["fala_13", "fala_14", "porta_bard", "treino_harpa", "treino_nota_cortante", "treino_alaude",
+        sequencia = ["fala_13", "fala_14", "porta_bard", "treino_atalhos_bard", "treino_harpa", "treino_nota_cortante", "treino_alaude",
                      "treino_cancao", "treino_cancao_manter", "treino_cancao_parar", "treino_provocar", "volta_bard"]
         self.assertEqual(sorted(por, key=por.get), sequencia)
         self.assertNotIn("treino_instrumento", por)

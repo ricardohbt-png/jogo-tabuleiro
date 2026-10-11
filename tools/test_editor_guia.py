@@ -82,6 +82,13 @@ class FiacaoTests(unittest.TestCase):
         for v in S.LICAO_VERBOS:
             self.assertIn(f'"ui.editor.masmorra.licao.{v}"', lang, v)
 
+    def test_tarefa_de_atalho_e_oferecida_e_preservada(self):
+        self.assertIn('"configurar_atalho"', EDITOR_JS)
+        self.assertGreaterEqual(EDITOR_JS.count('...JSON.parse(JSON.stringify(f.tarefa))'), 2)
+
+    def test_ultimo_passo_com_evento_de_tarefa_nao_e_rejeitado(self):
+        self.assertNotIn('i === passos.length - 1', JS)
+
 
 if __name__ == "__main__":
     unittest.main()

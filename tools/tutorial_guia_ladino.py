@@ -1,7 +1,8 @@
 """Guia das lições do Ladino no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO
 
 GUIA = {
+    "treino_atalhos_rogue": GUIA_H_ATALHO("detectar_armadilhas", "Detectar Armadilhas", "Detect Traps"),
     "fala_9": [
         P("atacar", ("Ataque o boneco de frente.", "Attack the dummy head-on."),
           porque=("Esse é o seu pior golpe: veja o dano cru contra a [[ca]].",
@@ -15,7 +16,7 @@ GUIA = {
           ui="monstro:boneco_treino"),
     ],
     "treino_detectar": [
-        P("detectar", ("Arme Detectar Armadilhas e chegue perto da casa 10,8.", "Arm Detect Traps and get close to square 10,8."),
+        P("detectar", ("Feche o menu H, pressione 1: ative Detectar Armadilhas e aproxime-se da casa 10,8.", "Close the H menu, press 1: activate Detect Traps and approach square 10,8."),
           porque=("Ela revela os mecanismos próximos e cobra água de [[manutencao]].",
                   "It reveals nearby mechanisms and costs water as [[manutencao]]."),
           ui="habilidade:detectar_armadilhas"),

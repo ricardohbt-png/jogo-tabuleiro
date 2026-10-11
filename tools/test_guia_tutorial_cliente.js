@@ -163,7 +163,7 @@ check("aviso usa as chaves de resultado", /ui\.tutorial\.resultado\./.test(gameS
 check("janela tem o elemento licao-aviso", /id="licao-aviso"/.test(gameSrc));
 check("halo usa a alternativa do seletor", /sel\.alternativa/.test(gameSrc));
 check("CSS do aviso existe", /\.licao-aviso\b/.test(cssSrc));
-check("'Me mostra' aparece para alvo de tabuleiro também", /botoes = \(passo && passo\.ui && GuiaTutorial\.parseUi\(passo\.ui\)\)/.test(gameSrc));
+check("'Me mostra' aparece para alvo de tabuleiro também", /const botoes = abrirMenu[\s\S]{0,700}: \(passo && passo\.ui && GuiaTutorial\.parseUi\(passo\.ui\)\)/.test(gameSrc));
 
 console.log("\n[13] halo 2D no game.js");
 check("função _guiaDesenhar2D existe", /function _guiaDesenhar2D\(/.test(gameSrc));

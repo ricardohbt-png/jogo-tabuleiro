@@ -174,7 +174,8 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('treino_refem',p['tutorial_history'])
         r.licoes_feitas.add('treino_cura')
         await r.handle_repetir_tutorial(p['id'])
-        self.assertEqual(p['licao_atual'],'treino_refem')
+        # Repetir a sala recomeça pela lição H de atalhos, anterior ao exercício do refém.
+        self.assertEqual(p['licao_atual'],'treino_atalhos_paladin')
         self.assertFalse(r.prisoner['freed'])
         self.assertIn('treino_cura',r.licoes_feitas)
         self.assertIn('treino_refem',p['tutorial_history'])
@@ -205,9 +206,14 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p['licao_atual'],'treino_esconder')
         self.assertEqual((p['xp'],p['gold']),(xp+S.TUTORIAL_RECOMPENSA_XP,gold+S.TUTORIAL_RECOMPENSA_OURO))  # so a recompensa da licao, sem XP/ouro de armadilha
         await r.handle_repetir_tutorial(p['id'])
-        self.assertEqual(p['licao_atual'],'treino_detectar')
+        self.assertEqual(p['licao_atual'],'treino_atalhos_rogue')
         self.assertFalse(p['detectar_ativo'])
         self.assertTrue(any(a['id']=='trap_treino_luccas' for a in r.armadilhas))
+        await r._licao_evento(p,'configurar_atalho',alvo='detectar_armadilhas')
+        self.assertEqual(p['licao_atual'],'treino_detectar')
+        p['bonus_action_used']=False  # a detecção ocorre no turno seguinte ao exercício original
+        await r.handle_detectar_armadilhas(p['id'],{})
+        self.assertEqual(p['licao_atual'],'treino_desarmar')
 
     async def test_rogue_last_poison_charge_counts(self):
         r,p=room('rogue');await lesson(r,p,'treino_veneno',[10,7])

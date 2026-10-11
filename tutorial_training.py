@@ -106,6 +106,17 @@ class TutorialTraining:
                 m["training_target"] = True
                 m["training_class"] = room["allowed_class"]
                 m["xp"] = 0
+            elif room and room.get("id") == 48 and m.get("type") == "boneco_treino":
+                # Alvo compartilhado das lições de resistência/vulnerabilidade.
+                # Só esta instância recebe regras próprias; os outros bonecos
+                # continuam com os 4 PV do treino introdutório.
+                m.update(
+                    hp=12, max_hp=12, base_hp=12, ac=8, movement=0,
+                    attacks=[], ai_type="sentinela", ai_profile="sentinela",
+                    training_target=True, training_shared_target=True, xp=0,
+                    resistances=[{"type": "physical", "categoria": "cortante", "reduction": 5}],
+                    weaknesses=[{"type": "physical", "categoria": "contundente", "bonus_flat": 2}],
+                )
         # Baú dentro de uma sala exclusiva: o que ele guarda é emprestado (some na saída)
         # e o molde permite recolocá-lo cheio no `repetir_tutorial`.
         self.training_state["baus_modelo"] = {}

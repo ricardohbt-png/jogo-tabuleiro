@@ -115,23 +115,23 @@ async def main():
     room = setup()
     p1 = make_player("p1", "A", "warrior", 0)
     p2 = make_player("p2", "B", "mage", 1)
-    room.players = {"p1": p1, "p2": p2}
-    room.player_order = ["p1", "p2"]
+    p3 = make_player("p3", "C", "cleric", 2)
+    room.players = {"p1": p1, "p2": p2, "p3": p3}
+    room.player_order = ["p1", "p2", "p3"]
     # Caminho REAL do jogo: fila de iniciativa (o fallback sem iniciativa
     # de handle_end_turn foi removido). Ordem fixa p1 → p2.
     room.initiative_active = True
     room.initiative_order = [{"kind": "player", "id": "p1", "seq": 0, "initiative": 10},
-                             {"kind": "player", "id": "p2", "seq": 1, "initiative": 9}]
+                             {"kind": "player", "id": "p2", "seq": 1, "initiative": 9},
+                             {"kind": "player", "id": "p3", "seq": 2, "initiative": 8}]
     room.initiative_index = 0
     p2["fosso_oculto"] = True
     p2["fosso_pular_proximo_turno"] = True
     await room.handle_end_turn("p1")
-    check("próximo turno inteiro fica perdido", room.current_pid() == "p2"
-          and p2.get("fosso_turno_perdido") and p2.get("fosso_oculto")
-          and p2.get("moves_left") == 0 and p2.get("action_done"))
-    await room.handle_end_turn("p2")
-    check("reaparece após encerrar a rodada perdida", not p2.get("fosso_oculto")
-          and not p2.get("fosso_turno_perdido"))
+    check("turno perdido é pulado e peão reaparece antes do próximo herói",
+          room.current_pid() == "p3" and not p2.get("fosso_oculto")
+          and not p2.get("fosso_turno_perdido")
+          and not p2.get("fosso_pular_proximo_turno"))
 
     print(f"\n===== RESULTADO: {PASS} passaram, {FAIL} falharam =====")
     raise SystemExit(1 if FAIL else 0)

@@ -16,8 +16,9 @@ JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 
 BAU_POS = [10, 22]                 # chão da sala 43 (x9..14, y21..26), livre de boneco/aprendiz/marcador
 BAU_ITENS = [{"id": "instrumento_harpa_velho"}]
-ORDEM = {"treino_harpa": 4, "treino_nota_cortante": 5, "treino_alaude": 6, "treino_cancao": 7,
-         "treino_cancao_manter": 8, "treino_cancao_parar": 9, "treino_provocar": 10, "volta_bard": 11}
+ORDEM = {"treino_atalhos_bard": 4, "treino_harpa": 5, "treino_nota_cortante": 6,
+         "treino_alaude": 7, "treino_cancao": 8, "treino_cancao_manter": 9,
+         "treino_cancao_parar": 10, "treino_provocar": 11, "volta_bard": 12}
 LICOES = [  # (id, texto, texto_curto, verbo, alvo)
     ("treino_harpa",
      "Abra o baú e pegue a Harpa Velha; depois equipe-a na mão do escudo. O Alaúde vai para a bolsa.",

@@ -1,7 +1,8 @@
 """Guia das lições do Paladino no Campo de Treinamento (pt + en)."""
-from tutorial_guia_comum import P
+from tutorial_guia_comum import P, GUIA_H_ATALHO
 
 GUIA = {
+    "treino_atalhos_paladin": GUIA_H_ATALHO("protetor", "Protetor", "Protector"),
     "fala_15": [
         P("atacar", ("Ataque o boneco de treino.", "Attack the training dummy."),
           porque=("O [[d20]] mais seu acerto precisa igualar ou passar a [[ca]].",
@@ -19,7 +20,7 @@ GUIA = {
           porque=("Depois do resgate você poderá protegê-lo e curá-lo.", "After the rescue you can protect and heal him.")),
     ],
     "treino_protetor": [
-        P("proteger", ("Fique ao lado do refém, use Protetor nele e encerre o turno.", "Stand next to the hostage, use Protector on him and end your turn."),
+        P("proteger", ("Feche o menu H, pressione 1: use Protetor no refém e encerre o turno.", "Close the H menu, press 1: use Protector on the hostage, then end your turn."),
           porque=("O dano se divide entre vocês e a sua parte é reduzida.",
                   "The damage is split between you and your share is reduced."),
           ui="botao:encerrar_turno"),

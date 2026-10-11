@@ -550,7 +550,7 @@
     if(f.kind==='pit'){
       const fallMs=f.ms*.82,p=clamp01(t/fallMs),drop=easeIn(p);
       const opacity=1-easeOut(clamp01((p-.52)/.48));
-      return {dx:0,dz:0,tilt:(Math.PI/2)*drop,tiltDir:[0,1],scaleY:1-.30*drop,
+      return {dx:0,dy:-1.4*drop,dz:0,tilt:.18*drop,tiltDir:[0,1],scaleY:1-.30*drop,
         opacity,base:f.base};
     }
     const fallMs = f.ms * 0.27, holdMs = f.ms * 0.34;
@@ -585,6 +585,7 @@
     if (!a) return b; if (!b) return a;
     return {
       dx: a.dx + b.dx, dz: a.dz + b.dz,
+      ...((a.dy !== undefined || b.dy !== undefined) ? {dy: (a.dy || 0) + (b.dy || 0)} : {}),
       tilt: Math.abs(a.tilt) >= Math.abs(b.tilt) ? a.tilt : b.tilt,
       tiltDir: Math.abs(a.tilt) >= Math.abs(b.tilt) ? a.tiltDir : b.tiltDir,
       scaleY: Math.min(a.scaleY == null ? 1 : a.scaleY, b.scaleY == null ? 1 : b.scaleY),

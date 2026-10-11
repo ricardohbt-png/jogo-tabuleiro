@@ -2811,8 +2811,8 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Ferro de Prata"
   },
   "cat.item.machado_duplo.desc": {
-    "en": "Double Axe: 1d8 slashing damage, using Strength. Natural 19: makes an additional attack.",
-    "pt": "Machado Duplo: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+    "en": "Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack.",
+    "pt": "Machado Duplo: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.machado_duplo.nome": {
     "en": "Double Axe",
@@ -2827,16 +2827,16 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo (cópia)"
   },
   "cat.item.machado_duplo_prata.desc": {
-    "en": "Silver Double Axe: 1d8 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado Duplo de Prata: 1d8 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
+    "pt": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_duplo_prata.nome": {
     "en": "Silver Double Axe",
     "pt": "Machado Duplo de Prata"
   },
   "cat.item.machado_orc.desc": {
-    "en": "Orcish War Axe: 1d10 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3.",
-    "pt": "Machado de Guerra Órquico: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
+    "en": "Orcish War Axe: 1d12 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3.",
+    "pt": "Machado de Guerra Órquico: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
   },
   "cat.item.machado_orc.nome": {
     "en": "Orcish War Axe",
@@ -2851,8 +2851,8 @@ window.LANG_CATALOGO = {
     "pt": "Machado Orc Colossal"
   },
   "cat.item.machado_orc_prata.desc": {
-    "en": "Silver Orcish War Axe: 1d10 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado de Guerra Órquico de Prata: 1d10 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Orcish War Axe: 1d12 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
+    "pt": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_orc_prata.nome": {
     "en": "Silver Orcish War Axe",
@@ -2881,6 +2881,22 @@ window.LANG_CATALOGO = {
   "cat.item.mangual_prata.nome": {
     "en": "Silver Flail",
     "pt": "Mangual de Prata"
+  },
+  "cat.item.marreta.desc": {
+    "en": "Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit.",
+    "pt": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
+  },
+  "cat.item.marreta.nome": {
+    "en": "Sledgehammer",
+    "pt": "Marreta"
+  },
+  "cat.item.marreta_prata.desc": {
+    "en": "Silver Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
+    "pt": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
+  "cat.item.marreta_prata.nome": {
+    "en": "Silver Sledgehammer",
+    "pt": "Marreta de Prata"
   },
   "cat.item.martelo_runico_colossal.desc": {
     "en": "Colossal hammer engraved with runes: 2d8+5 damage and 2-square reach.",
