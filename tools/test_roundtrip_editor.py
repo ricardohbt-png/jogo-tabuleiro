@@ -25,6 +25,20 @@ def main():
     for k in ("schema_version", "grid", "tiles", "rooms", "entrance",
               "monsters", "chests", "traps", "objectives"):
         check(f"campo '{k}' presente", k in d)
+    d["objectives"] = {
+        "primary": {"type": "kill_all"}, "secondary": [],
+        "steps": [
+            {"id": "avancar", "condition": {"type": "reach_exit"},
+             "text": {"pt": "Alcance a saída", "en": "Reach the exit"}},
+            {"id": "concluir", "condition": {"type": "kill_all"},
+             "text": {"pt": "Derrote todos", "en": "Defeat them all"}},
+        ],
+    }
+    ok_steps, msg_steps = server.validar_dungeon(d)
+    check(f"etapas completas com condição final igual ao principal ({msg_steps})", ok_steps is True)
+    d["objectives"]["steps"][1]["id"] = "avancar"
+    ok_duplicate, _ = server.validar_dungeon(d)
+    check("IDs de etapa repetidos são rejeitados", ok_duplicate is False)
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 

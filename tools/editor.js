@@ -371,7 +371,7 @@
     routeExitRouteId: "",
     masterReinforcements: [],
     expectedParty: { heroes: 4, level: 1 },
-    objectives: { primary: { type: "kill_all" }, secondary: [] },
+    objectives: { primary: { type: "kill_all" }, secondary: [], steps: [] },
     tool: "wall", sel: null,
     trapType: ((CAT.traps.find(tr => !tr.apenas_objeto) || CAT.traps[0]) || {}).tipo || "fosso_estacas",
     teleportExitPick: null,      // referência da armadilha aguardando clique no mapa
@@ -2775,6 +2775,8 @@
     if (!S.sel) {
       const OBJ = ["kill_target", "kill_all", "reach_exit", "all_heroes_at_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"];
       const o = S.objectives;
+      if (!Array.isArray(o.steps)) o.steps = [];
+      const escStep = value => String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
       normalizeObjective(o.primary, true);
       o.secondary.forEach(s => normalizeObjective(s, false));
       const spawnList = S.heroSpawns.map((s, i) => {
@@ -2803,6 +2805,19 @@
           ${rewardFieldsHTML(s, "o-sec" + i + "-rw")}
         </div>`).join("")}</div>
         <button id="o-add">+ ${t("ui.editor.masmorra.painel.secundario")}</button>
+        <hr style="border-color:#3a3022;margin:10px 0">
+        <label>🧭 ${t("ui.editor.masmorra.etapas.titulo")}</label>
+        <div id="mission-steps">${o.steps.map((step, i) => `<div class="mission-step" data-i="${i}" style="border-top:1px solid #3a3022;padding:7px 0;margin-top:5px">
+          <div style="display:flex;gap:4px;align-items:center"><b style="flex:1">${t("ui.editor.masmorra.etapas.etapa", { n: i + 1 })}</b>
+            <button type="button" data-step-up="${i}" ${i === 0 ? "disabled" : ""}>↑</button>
+            <button type="button" data-step-down="${i}" ${i === o.steps.length - 1 ? "disabled" : ""}>↓</button>
+            <button type="button" data-step-remove="${i}">×</button></div>
+          <input data-step-id="${i}" value="${escStep(step.id)}" aria-label="ID" placeholder="id_etapa" style="width:100%;margin-top:4px">
+          <select data-step-condition="${i}" style="width:100%;margin-top:4px">${OBJ.map(type => `<option value="${type}"${step.condition?.type === type ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + type)}</option>`).join("")}</select>
+          <input data-step-text="pt" data-i="${i}" value="${escStep(step.text?.pt)}" placeholder="${t("ui.editor.masmorra.etapas.pt")}" style="width:100%;margin-top:4px">
+          <input data-step-text="en" data-i="${i}" value="${escStep(step.text?.en)}" placeholder="${t("ui.editor.masmorra.etapas.en")}" style="width:100%;margin-top:4px">
+        </div>`).join("")}</div>
+        <button type="button" id="o-step-add">+ ${t("ui.editor.masmorra.etapas.adicionar")}</button>
         <hr style="border-color:#3a3022;margin:10px 0">
         <label>⚠️ ${t("ui.editor.masmorra.painel.reforcos_mestre")}</label>
         <div id="reinforce-list">${S.masterReinforcements.map((r, i) => {
@@ -2839,11 +2854,36 @@
       panel.querySelectorAll(".hero-spawn-rm").forEach(b => b.onclick = () => {
         S.heroSpawns.splice(Number(b.dataset.i), 1); renderPanel(); render(); updateStatus();
       });
-      document.getElementById("o-prim").onchange = e => { o.primary.type = e.target.value; };
+      document.getElementById("o-prim").onchange = e => {
+        o.primary.type = e.target.value;
+        if (o.steps.length) o.steps[o.steps.length - 1].condition = { type: o.primary.type };
+        renderPanel();
+      };
       wireRewardFields(o.primary, "o-prim-rw");
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
       panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
       panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
+      document.getElementById("o-step-add").onclick = () => {
+        const n = Date.now().toString(36);
+        o.steps.push({ id: "etapa_" + n, condition: { type: o.primary.type }, text: { pt: "", en: "" } });
+        renderPanel();
+      };
+      panel.querySelectorAll("[data-step-id]").forEach(input => input.onchange = e => { o.steps[Number(e.target.dataset.stepId)].id = e.target.value.trim(); updateStatus(); });
+      panel.querySelectorAll("[data-step-condition]").forEach(select => select.onchange = e => { o.steps[Number(e.target.dataset.stepCondition)].condition = { type: e.target.value }; renderPanel(); });
+      panel.querySelectorAll("[data-step-text]").forEach(input => input.onchange = e => { o.steps[Number(e.target.dataset.i)].text[e.target.dataset.stepText] = e.target.value; updateStatus(); });
+      panel.querySelectorAll("[data-step-remove]").forEach(button => button.onclick = e => {
+        o.steps.splice(Number(e.currentTarget.dataset.stepRemove), 1);
+        if (o.steps.length) o.steps[o.steps.length - 1].condition = { type: o.primary.type };
+        renderPanel();
+      });
+      panel.querySelectorAll("[data-step-up], [data-step-down]").forEach(button => button.onclick = e => {
+        const from = Number(e.currentTarget.dataset.stepUp ?? e.currentTarget.dataset.stepDown);
+        const to = from + (e.currentTarget.hasAttribute("data-step-up") ? -1 : 1);
+        if (to < 0 || to >= o.steps.length) return;
+        [o.steps[from], o.steps[to]] = [o.steps[to], o.steps[from]];
+        o.steps[o.steps.length - 1].condition = { type: o.primary.type };
+        renderPanel();
+      });
       o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
       document.getElementById("reinforce-add-btn").onclick = () => {
         const type = document.getElementById("reinforce-type").value;
@@ -4288,6 +4328,10 @@
                    reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
         secondary: S.objectives.secondary.map(s => ({ type: s.type, xp: s.xp | 0,
                    reward: { gold: (s.reward.gold | 0), items: s.reward.items.map(i => ({ id: i.id })) } })),
+        ...(S.objectives.steps?.length ? { steps: S.objectives.steps.map(step => ({
+          id: String(step.id || ""), condition: { type: step.condition?.type || "" },
+          text: { pt: String(step.text?.pt || "").trim(), en: String(step.text?.en || "").trim() },
+        })) } : {}),
       },
     };
   }
@@ -4319,6 +4363,18 @@
     const curses = new Set((CAT.curses || []).map(c => c.id));
     const venoms = new Set(CAT.venoms.map(v => v.id));
     const roomIds = new Set(S.rooms.map(r => r.id));
+    const objectiveTypes = new Set(["kill_target", "kill_all", "reach_exit", "all_heroes_at_exit", "open_key_chest", "rescue_prisoner", "salas_obrigatorias"]);
+    const stepIds = new Set();
+    const steps = Array.isArray(S.objectives.steps) ? S.objectives.steps : [];
+    for (const [i, step] of steps.entries()) {
+      const sid = String(step?.id || "");
+      if (!/^[a-z0-9_-]{1,48}$/.test(sid) || stepIds.has(sid)) e.push(V("etapa_id", { id: sid || i + 1 }));
+      stepIds.add(sid);
+      if (!objectiveTypes.has(step?.condition?.type)) e.push(V("etapa_condicao", { n: i + 1 }));
+      if (!String(step?.text?.pt || "").trim() || !String(step?.text?.en || "").trim()) e.push(V("etapa_texto", { n: i + 1 }));
+    }
+    if (steps.length && steps[steps.length - 1]?.condition?.type !== S.objectives.primary.type)
+      e.push(V("etapa_final", { tipo: S.objectives.primary.type }));
     const routeIds = new Set();
     for (const route of S.routes) {
       if (!/^[a-z0-9_-]{1,48}$/.test(route.id) || routeIds.has(route.id)) e.push(V("rota_id_invalido", { id: route.id }));
@@ -4843,6 +4899,12 @@
     S.objectives = obj.objectives || { primary: { type: "kill_all" }, secondary: [] };
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
+    S.objectives.steps = Array.isArray(S.objectives.steps) ? S.objectives.steps.map((step, i) => ({
+      id: typeof step?.id === "string" ? step.id : `etapa_${i + 1}`,
+      condition: { type: step?.condition?.type || "" },
+      text: { pt: typeof step?.text?.pt === "string" ? step.text.pt : "",
+              en: typeof step?.text?.en === "string" ? step.text.en : "" },
+    })) : [];
     normalizeObjective(S.objectives.primary, true);
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
     S.sel = null;

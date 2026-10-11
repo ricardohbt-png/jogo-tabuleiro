@@ -868,6 +868,11 @@ let _atalhosMenuAtual = null;
 
 function showScreen(id){
   if(id !== 'screen-game') _clearGamepadEndTurnConfirm();
+  if(id !== 'screen-game'){
+    _inspectedMonsterId = null;
+    const inspector = document.getElementById('monster-inspector');
+    if(inspector) inspector.style.display = 'none';
+  }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
   // A barra de configuração dos atalhos também é usada na cidade, onde o
@@ -5658,6 +5663,16 @@ function renderObjectivesHUD(msg){
     + `<button type="button" class="obj-close" data-gamepad-action="activate" tabindex="0" aria-keyshortcuts="O"`
     + ` aria-label="${_esc(t('ui.objetivo.ocultar'))}" title="${_esc(t('ui.objetivo.ocultar'))}">×</button></div>`;
   if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
+  const missionSteps = Array.isArray(obj.steps) ? obj.steps : [];
+  if(missionSteps.length){
+    html += `<div class="obj-sec-label">${t('ui.objetivo.etapas')}</div>`;
+    for(const step of missionSteps){
+      const icon = step.status === 'done' ? '✅' : step.status === 'active' ? '▶️' : '🔒';
+      const copy = step.text && (step.text[window.I18N?.lang] || step.text.pt || step.text.en) || '';
+      const style = step.status === 'active' ? 'color:#f2d27c;font-weight:700;' : step.status === 'locked' ? 'color:#81755f;opacity:.72;' : '';
+      html += `<div class="obj-row"><span class="obj-ic">${icon}</span><span class="obj-lbl" style="${style}">${_esc(copy)}</span></div>`;
+    }
+  }
   const secs = obj.secondary || [];
   if(secs.length){
     html += `<div class="obj-sec-label">${t('ui.objetivo.secundarios')}</div>`;
@@ -17884,7 +17899,7 @@ function fichaInimigoTooltipHTML(m, full, attacker=null, knowledgeLevel=0){
   const weak = m.weaknesses || [];
   if (knowledge >= 1 && (imm.length || resist.length || weak.length || Number(m.reducao_dano) > 0)) {
     const immStr  = imm.map(i => DMG_ICON[i]||i).join(' ');
-    const resistStr = resist.map(r => `${DMG_ICON[r.type]||r.type} ${r.mode === 'half' ? '×½' : `−${Number(r.reduction)||0}`}`).join(' · ');
+    const resistStr = resist.map(r => `${DMG_ICON[r.type]||r.type} ${r.mode === 'half' ? '×½' : `−${Number(r.reduction)||0}`}${r.common_weapon_only ? ` (${t('ui.bestiario.armas_comuns')})` : ''}`).join(' · ');
     const weakStr = weak.map(w => `${DMG_ICON[w.type]||w.type}${w.categoria?'/'+w.categoria:''} ${w.multiplier ? `×${w.multiplier}` : `+${w.bonus_flat??'?'}`}`).join(' · ');
     resistHTML = `<div style="margin-top:4px;font-size:9px;">
       ${imm.length  ? `<div style="color:#4ec9b0;">${t('ui.ficha.imune_a_lista', {lista: immStr})}</div>` : ''}
@@ -45025,16 +45040,29 @@ function init3D(state){
     _orbitDragMoved = false;
     if(e.button === 0 || e.button === 2)
       _guiaCameraDrag = {button:e.button, x:e.clientX, y:e.clientY, avancou:false};
-    if(e.button === 2) _mouseRightHeld = true;
+    if(e.button === 2) {
+      _mouseRightHeld = true;
+      _rightClickPointer = {x:e.clientX, y:e.clientY, moved:false};
+      const gesture = _rightClickPointer;
+      setTimeout(() => { if(_rightClickPointer === gesture) _rightClickPointer = null; }, 800);
+    }
   });
   domEl.addEventListener('mouseup',    e  => {
     if(e.button === 2) _mouseRightHeld = false;
   });
   domEl.addEventListener('contextmenu', e  => {
-    if(e.button === 2 || _mouseRightHeld) e.preventDefault();
+    e.preventDefault();
+    const gesture = _rightClickPointer;
+    _rightClickPointer = null;
+    if(e.button !== 2 || !gesture || gesture.moved) return;
+    const tile = get3DTilePlane(e);
+    if(tile) _abrirInspecaoMonstro(tile[0], tile[1]);
   });
   domEl.addEventListener('mousemove',  e  => {
     if(e.buttons) _orbitDragMoved = true;
+    if(_rightClickPointer && (Number(e.buttons) & 2) &&
+       Math.hypot(e.clientX-_rightClickPointer.x,e.clientY-_rightClickPointer.y)>=6)
+      _rightClickPointer.moved = true;
     if(!_guiaCameraDrag || _guiaCameraDrag.avancou) return;
     const bit = _guiaCameraDrag.button === 2 ? 2 : 1;
     if(!(Number(e.buttons) & bit)) return;
@@ -53762,8 +53790,6 @@ function on3DMouseMove(e){
 
   const monster = _masterMonsterAtTileClient(GS.gameState, tx, ty);
   if(monster){
-    const dx=myP?Math.abs(myP.pos[0]-tx):99, dy=myP?Math.abs(myP.pos[1]-ty):99;
-    const wRng = myP?.weapon?.range ?? null;
     const inR  = myP ? _alvoNoAlcanceArmaClient(myP, tx, ty, monster.altura) : false;
     const lineClear = !myP?.weapon?.range || GS.hasLineOfSight(GS.gameState, myP.pos[0], myP.pos[1], tx, ty);
     const canA = GS.isMyTurn && myP && !myP.action_done && inR && lineClear && GS.gameState.phase==='playing';

@@ -196,7 +196,7 @@ async def test_serializacao():
     print("\n[5] push_state expõe objectives/exit_pos/prisoner")
     r = setup_authored()
     capturado = {}
-    async def cap(msg, skip=None):
+    async def cap(msg, skip=None, personalize=None):
         if msg.get("type") == "game_state": capturado.update(msg)
     r.broadcast = cap
     await entrar_na_masmorra(r, "p1")
@@ -204,6 +204,34 @@ async def test_serializacao():
     check("game_state traz exit_pos", capturado.get("exit_pos") == [14, 4])
     check("game_state traz prisoner", capturado.get("prisoner") is not None)
     check("game_state traz objectives", capturado.get("objectives") is not None)
+
+async def test_etapas_missao():
+    print("\n[8] etapas da missão avançam em ordem e vão ao HUD")
+    r = setup_authored()
+    r.dungeon_def["objectives"] = {
+        "primary": {"type": "kill_all"}, "secondary": [],
+        "steps": [
+            {"id": "abrir_bau", "condition": {"type": "open_key_chest"},
+             "text": {"pt": "Abra o baú-chave", "en": "Open the key chest"}},
+            {"id": "limpar_sala", "condition": {"type": "kill_all"},
+             "text": {"pt": "Derrote os monstros", "en": "Defeat the monsters"}},
+        ],
+    }
+    await entrar_na_masmorra(r, "p1")
+    await r._check_objectives()
+    check("etapa inicial ativa; restante bloqueada", r.mission_step_index == 0
+          and r.objective_status["steps"][0]["status"] == "active"
+          and r.objective_status["steps"][1]["status"] == "locked")
+    r.key_chest_opened = True
+    await r._check_objectives()
+    check("cumprir primeira ativa a segunda", r.mission_step_index == 1
+          and r.objective_status["steps"][0]["status"] == "done"
+          and r.objective_status["steps"][1]["status"] == "active")
+    for m in r.monsters.values(): m["hp"] = 0
+    await r._check_objectives()
+    check("cumprir última conclui sequência e objetivo", r.mission_step_index == 2
+          and all(s["status"] == "done" for s in r.objective_status["steps"])
+          and r.mission_complete_pending is True)
 
 async def test_upload_prisioneiro():
     print("\n[7] upload de imagem do prisioneiro grava em assets/pawns/prisioneiros/")
@@ -403,6 +431,7 @@ async def main():
     await test_prisioneiro()
     await test_bonus_secundario()
     await test_serializacao()
+    await test_etapas_missao()
     await test_prisioneiro_controle()
     await test_upload_prisioneiro()
     await test_prisioneiro_armadilha()

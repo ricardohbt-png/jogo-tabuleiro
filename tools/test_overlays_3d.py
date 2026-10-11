@@ -31,7 +31,7 @@ GAME = os.path.join(RAIZ, "game.js")
 # Familias que cobrem uma casa por vez e passam quase todo o tempo invisiveis.
 FAMILIAS = [
     "moveHighlightMeshes", "atkHighlightMeshes", "weaponRangeMeshes",
-    "masterAttackRangeMeshes", "masterAttackZoneMeshes", "masterFootprintMeshes",
+    "masterAttackRangeMeshes", "masterAttackZoneMeshes", "inspectorAttackMeshes", "inspectorMoveMeshes", "masterFootprintMeshes",
     "masterHistoryAttackerMeshes", "masterHistoryTargetMeshes",
     "spellRangeMeshes", "spellZonaMeshes", "spellDoubleMeshes", "spellAreaMeshes",
     "spellEscuridaoMeshes", "spellSilencioMeshes", "spellFireFx",

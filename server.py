@@ -2121,8 +2121,8 @@ def write_account(account):
         return
     LOJA.gravar("contas", username, account)
     # Conta e identidade: perder uma significa o jogador nao conseguir entrar.
-    # write_account e raro (criacao e migracao de perfil), entao agendar aqui
-    # nao acorda o banco a toa.
+    # O perfil pode mudar durante a campanha (por exemplo, o bestiário), então
+    # persistimos pelo mesmo caminho e deixamos o adaptador agrupar a descarga.
     _agendar_descarga()
 
 def ensure_account_profile(account):
@@ -3467,10 +3467,11 @@ FOTO_SALA_CATEGORIAS = {
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
     "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
     "tutorial_city_tour_id": "conexao",
+    "_bestiary_cache": "conexao",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
     # objetivos
-    "objectives": "foto", "objective_status": "foto",
+    "objectives": "foto", "objective_status": "foto", "mission_step_index": "foto",
     "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
     # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
     "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
@@ -8062,6 +8063,31 @@ def validar_dungeon(defn):
     _o = defn.get("objectives") or {}
     if _o.get("primary"): _objs.append(_o["primary"])
     _objs.extend(_o.get("secondary") or [])
+    _steps = _o.get("steps") or []
+    if not isinstance(_steps, list):
+        return False, "objectives.steps deve ser uma lista."
+    if _steps:
+        _primary_type = (_o.get("primary") or {}).get("type")
+        _step_ids = set()
+        _valid_objective_types = {"kill_target", "kill_all", "reach_exit", "all_heroes_at_exit",
+                                  "open_key_chest", "rescue_prisoner", "salas_obrigatorias"}
+        for _step in _steps:
+            if not isinstance(_step, dict):
+                return False, "cada etapa da missão deve ser um objeto."
+            _sid = _step.get("id")
+            if not isinstance(_sid, str) or not re.fullmatch(r"[a-z0-9_-]{1,48}", _sid) or _sid in _step_ids:
+                return False, f"ID de etapa inválido ou repetido: {_sid!r}."
+            _step_ids.add(_sid)
+            _text = _step.get("text")
+            if not isinstance(_text, dict) or any(not isinstance(_text.get(lang), str) or not _text[lang].strip()
+                                                   for lang in ("pt", "en")):
+                return False, f"etapa {_sid!r} precisa de textos pt/en."
+            _condition = _step.get("condition")
+            if not isinstance(_condition, dict) or _condition.get("type") not in _valid_objective_types:
+                return False, f"condição inválida na etapa {_sid!r}."
+            _objs.append(_condition)
+        if (_steps[-1].get("condition") or {}).get("type") != _primary_type:
+            return False, "a última etapa deve usar a mesma condição do objetivo principal."
     ex = defn.get("exit")
     if ex is not None:
         if not (isinstance(ex, dict) and in_grid([ex.get("x"), ex.get("y")])):
@@ -11269,6 +11295,7 @@ class GameRoom(TutorialTraining):
         self.exit_pos = None
         self.objectives = None
         self.objective_status = None
+        self.mission_step_index = 0
         self.prisoner = None
         self.rescue_failed = False
         self._objetivo_concluido = False
@@ -11502,6 +11529,32 @@ class GameRoom(TutorialTraining):
                 await ws.send(json.dumps(msg, default=lambda o: _t_render(o, lang)))
             except Exception:
                 pass
+
+    def _bestiary_cache_put(self, account_name, monster_type, kills):
+        cache = getattr(self, "_bestiary_cache", None)
+        if cache is None:
+            cache = self._bestiary_cache = {}
+        entry = cache.setdefault(account_name, {})
+        entry[monster_type] = int(kills)
+
+    def _bestiary_payload_for_pid(self, pid):
+        account_name = self.account_by_pid.get(pid)
+        if not account_name:
+            return {}
+        cache = getattr(self, "_bestiary_cache", None)
+        if cache is None:
+            cache = self._bestiary_cache = {}
+        if account_name not in cache:
+            account = load_account(account_name)
+            profile = (account or {}).get("profile") or {}
+            entries = profile.get("bestiary") or {}
+            cache[account_name] = {
+                monster_type: entry.get("kills", 0)
+                for monster_type, entry in entries.items()
+                if isinstance(monster_type, str) and isinstance(entry, dict)
+                and isinstance(entry.get("kills"), int) and entry["kills"] >= 0
+            }
+        return dict(cache[account_name])
 
     def _registrar_aviso_condicao(self, alvo, condition_id):
         """Agenda um aviso privado para o herói que acabou de receber uma
@@ -15686,6 +15739,7 @@ class GameRoom(TutorialTraining):
         self.exit_pos = [ex["x"], ex["y"]] if ex else None
         self.objectives = deepcopy(defn.get("objectives") or {"primary": {"type": "kill_all"}, "secondary": []})
         self.objective_status = None
+        self.mission_step_index = 0
         self.rescue_failed = False
         self._objetivo_concluido = False
         self.mission_complete_pending = False
@@ -16505,7 +16559,7 @@ class GameRoom(TutorialTraining):
             self.opened_doors = set()
             self.door_conditions = {}
             self.door_condition_activated = {}
-            self.exit_pos = None; self.objectives = None; self.objective_status = None
+            self.exit_pos = None; self.objectives = None; self.objective_status = None; self.mission_step_index = 0
             self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self.key_chest_opened = False
             if autorada:
@@ -47113,13 +47167,12 @@ class GameRoom(TutorialTraining):
                 result = _bestiary_increment(account, m["type"])
                 if not result:
                     continue
-                cache = getattr(self, "_bestiary_cache", None)
-                if cache is not None:
-                    cache.setdefault(account, {})[m["type"]] = result["kills"]
+                self._bestiary_cache_put(account, m["type"], result["kills"])
                 if result["milestone"]:
                     await self.send_to(pid, {"type": "bestiary_milestone",
                                              "kills": result["milestone"],
-                                             "monster_type": m["type"]})
+                                             "monster_type": m["type"],
+                                             "level": result["level"]})
         await self._processar_fim_de_combate()
         await self._licao_verificar_sala_limpa(m.get("room_id"))
 
@@ -47864,10 +47917,27 @@ class GameRoom(TutorialTraining):
         prim = self.objectives.get("primary")
         secs = self.objectives.get("secondary") or []
         await self._discover_route_exits()
+        steps = self.objectives.get("steps") or []
+        if steps:
+            previous_index = max(0, min(len(steps), int(getattr(self, "mission_step_index", 0) or 0)))
+            index = previous_index
+            while index < len(steps) and self._objetivo_cumprido(steps[index].get("condition")):
+                index += 1
+            self.mission_step_index = index
+            if index > previous_index:
+                self._checkpoint_savegame()
+            step_status = [{
+                "id": step.get("id"), "text": step.get("text") or {},
+                "status": "done" if i < index else "active" if i == index else "locked",
+            } for i, step in enumerate(steps)]
+        else:
+            step_status = []
         self.objective_status = {
             "primary": self._objetivo_payload(prim),
             "secondary": [self._objetivo_payload(s) for s in secs],
         }
+        if steps:
+            self.objective_status["steps"] = step_status
         if (self.phase == "playing" and not self._objetivo_concluido
                 and prim and self._objetivo_cumprido(prim)):
             self._objetivo_concluido = True

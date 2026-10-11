@@ -2539,6 +2539,38 @@ window.LANG_INTERFACE = {
     "en": "📊 ATTRIBUTES",
     "pt": "📊 ATRIBUTOS"
   },
+  "ui.bestiario.marco": {
+    "en": "📖 Bestiary updated: {n} confirmed kills. New creature knowledge unlocked.",
+    "pt": "📖 Bestiário atualizado: {n} abates confirmados. Novos conhecimentos sobre a criatura foram liberados."
+  },
+  "ui.bestiario.nivel_1": {
+    "en": "Observed",
+    "pt": "Observado"
+  },
+  "ui.bestiario.nivel_2": {
+    "en": "Studied",
+    "pt": "Estudado"
+  },
+  "ui.bestiario.nivel_3": {
+    "en": "Cataloged",
+    "pt": "Catalogado"
+  },
+  "ui.bestiario.resistencias": {
+    "en": "Resistances: {lista}",
+    "pt": "Resistências: {lista}"
+  },
+  "ui.bestiario.reducao": {
+    "en": "Damage reduction: {n}",
+    "pt": "Redução de dano: {n}"
+  },
+  "ui.bestiario.armas_comuns": {
+    "en": "common weapons",
+    "pt": "armas comuns"
+  },
+  "ui.bestiario.vulnerabilidades": {
+    "en": "Vulnerabilities: {lista}",
+    "pt": "Vulnerabilidades: {lista}"
+  },
   "ui.ficha.c_ficha_h_habilidades_m_magias": {
     "en": "C sheet · H abilities · M spells",
     "pt": "C ficha · H habilidades · M magias"
@@ -8168,6 +8200,14 @@ window.LANG_INTERFACE = {
   "ui.objetivo.encerrar_btn": {
     "en": "🏁 Finish",
     "pt": "🏁 Encerrar"
+  },
+  "ui.objetivo.etapas": {
+    "en": "Mission steps",
+    "pt": "Etapas da missão"
+  },
+  "ui.perigo.possivel": {
+    "en": "Possible basic attack area; special abilities may differ. This is not the enemy's next action.",
+    "pt": "Área possível de ataques básicos; habilidades especiais podem variar. Não é a próxima ação do inimigo."
   },
   "ui.objetivo.fase_de": {
     "en": "🗺️ Stage {atual} of {total} — {nome}",

@@ -222,7 +222,10 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.rotas.requisito_item": { "en": "Key item", "pt": "Item-chave" },
   "ui.editor.masmorra.rotas.requisito_fato": { "en": "Known fact or conversation ID", "pt": "Fato ou ID de conversa conhecido" },
   "ui.editor.masmorra.rotas.requisito_aventura": { "en": "Completed adventure ID", "pt": "ID de aventura concluída" },
-  "ui.editor.masmorra.valid.rota_id_invalido": { "en": "Invalid or duplicate route ID: {id}", "pt": "ID de rota inválido ou repetido: {id}" },
+  "ui.editor.masmorra.valid.etapa_id": { "en": "Invalid or duplicate mission step ID: {id}", "pt": "ID de etapa inválido ou repetido: {id}" },
+  "ui.editor.masmorra.valid.etapa_condicao": { "en": "Invalid condition in mission step {n}", "pt": "Condição inválida na etapa {n}" },
+  "ui.editor.masmorra.valid.etapa_texto": { "en": "Mission step {n} needs Portuguese and English instructions", "pt": "A etapa {n} precisa de instruções em português e inglês" },
+  "ui.editor.masmorra.valid.etapa_final": { "en": "The final mission step must match the primary objective ({tipo})", "pt": "A etapa final precisa corresponder ao objetivo principal ({tipo})" },
   "ui.editor.masmorra.valid.rota_nome_invalido": { "en": "Route name is empty or too long: {id}", "pt": "Nome vazio ou longo demais na rota: {id}" },
   "ui.editor.masmorra.valid.rota_politica_invalida": { "en": "Invalid return policy for route {id}", "pt": "Política de retorno inválida na rota {id}" },
   "ui.editor.masmorra.valid.saida_rota_id_invalido": { "en": "Invalid or duplicate route exit ID: {id}", "pt": "ID de saída de rota inválido ou repetido: {id}" },
@@ -544,6 +547,11 @@ window.LANG_EDITOR = {
     "en": "secondary objectives",
     "pt": "objetivos secundários"
   },
+  "ui.editor.masmorra.etapas.titulo": { "en": "Mission steps", "pt": "Etapas da missão" },
+  "ui.editor.masmorra.etapas.etapa": { "en": "Step {n}", "pt": "Etapa {n}" },
+  "ui.editor.masmorra.etapas.pt": { "en": "Portuguese instruction", "pt": "Instrução em português" },
+  "ui.editor.masmorra.etapas.en": { "en": "English instruction", "pt": "Instrução em inglês" },
+  "ui.editor.masmorra.etapas.adicionar": { "en": "Add mission step", "pt": "Adicionar etapa da missão" },
   "ui.editor.masmorra.painel.remover": {
     "en": "remove",
     "pt": "remover"
