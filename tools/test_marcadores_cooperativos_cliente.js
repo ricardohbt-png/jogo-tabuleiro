@@ -38,5 +38,32 @@ check('controle de categorias oferece foco de teclado e gamepad', /data-cooperat
 check('preferência é reportada ao entrar no estado de masmorra', /function handleGameState\(msg\)\{[\s\S]{0,1200}setCooperativeVisionPreference/.test(game));
 const lang = fs.readFileSync(path.join(root, 'src/lang/interface.js'), 'utf8');
 check('rótulos localizados em português e inglês', lang.includes('ui.marker.attack') && lang.includes('ui.marker.danger') && lang.includes('ui.marker.investigate') && lang.includes('ui.marker.move'));
+
+console.log('\n[3] Dados do marcador para renderização');
+const viewSource = game.match(/function _cooperativeMarkerView\(state, visionSet\)\{[\s\S]*?\n\}/)?.[0];
+const styleSource = game.match(/function _cooperativeMarkerStyle\(category\)\{[\s\S]*?\n\}/)?.[0];
+check('helper de renderização filtra marcadores inválidos', !!viewSource);
+check('mapeia categorias para ícones distintos', !!styleSource);
+if (viewSource && styleSource) {
+  const markerView = new Function('TILE_WALL', `${viewSource}\n${styleSource}\nreturn { _cooperativeMarkerView, _cooperativeMarkerStyle };`)(0);
+  const state = {tiles:[[1,1,1],[1,1,1],[1,1,1]], monsters:[{id:'orc',hp:4,pos:[1,1]}], cooperative_markers:[
+    {owner_id:'a',category:'attack',target_type:'enemy',target_id:'orc',pos:[1,1]},
+    {owner_id:'b',category:'danger',target_type:'tile',pos:[0,0]},
+    {owner_id:'c',category:'move',target_type:'tile',pos:[2,2]},
+    {owner_id:'d',category:'investigate',target_type:'enemy',target_id:'gone',pos:[1,1]},
+  ]};
+  let visible = markerView._cooperativeMarkerView(state, new Set(['1,1','0,0']));
+  check('aplica visão do destinatário antes de desenhar', visible.length === 2 && visible.every(m => m.x === 1 || (m.x === 0 && m.y === 0)));
+  check('remove alvo morto ou ausente', !visible.some(m => m.target_id === 'gone'));
+  check('posição de inimigo segue a posição autorizada pelo servidor', visible.find(m => m.target_id === 'orc')?.x === 1 && visible.find(m => m.target_id === 'orc')?.y === 1);
+  state.cooperative_markers[0].pos = [2,2];
+  visible = markerView._cooperativeMarkerView(state, new Set(['2,2','0,0']));
+  check('posição atualizada do alvo acompanha o próximo estado', visible.find(m => m.target_id === 'orc')?.x === 2 && visible.find(m => m.target_id === 'orc')?.y === 2);
+  const icons = ['attack','danger','investigate','move'].map(c => markerView._cooperativeMarkerStyle(c)?.icon);
+  check('cada categoria possui glyph próprio e alto contraste', icons.every(Boolean) && new Set(icons).size === 4);
+}
+check('camada 2D desenha os marcadores por cima do mapa', /_drawCooperativeMarkers2D\(ctx, state, visionSet\)/.test(game));
+check('camada 3D sincroniza sprites filtrados no fim do render', /_syncCooperativeMarkers3D\(state, visionSet\)/.test(game));
+check('sprites 3D são descartados quando removidos e ao encerrar a cena', game.includes('_clearCooperativeMarkerSprites3D(g3.cooperativeMarkerGroup)'));
 console.log(`\n${'='.repeat(56)}\n  ${PASS} passaram, ${FAIL} falharam\n${'='.repeat(56)}`);
 process.exit(FAIL ? 1 : 0);

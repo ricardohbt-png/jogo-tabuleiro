@@ -5405,6 +5405,90 @@ function handleGameState(msg){
 }
 
 let _cooperativeMarkerMode = null;
+function _cooperativeMarkerStyle(category){
+  const styles = {
+    attack: {icon:'⚔', color:'#ffd166'},
+    danger: {icon:'!', color:'#ff8c42'},
+    investigate: {icon:'?', color:'#65d6e8'},
+    move: {icon:'➤', color:'#b49aff'},
+  };
+  return styles[category] || null;
+}
+function _cooperativeMarkerView(state, visionSet){
+  if(!state || !visionSet || !Array.isArray(state.cooperative_markers)) return [];
+  const monsters = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  const result = [];
+  for(const marker of state.cooperative_markers){
+    const style = _cooperativeMarkerStyle(marker?.category);
+    if(!style || !Array.isArray(marker.pos) || marker.pos.length < 2) continue;
+    const [x,y] = marker.pos;
+    if(!Number.isInteger(x) || !Number.isInteger(y) || !state.tiles?.[y] || state.tiles[y][x] == null
+        || state.tiles[y][x] === TILE_WALL || !visionSet.has(`${x},${y}`)) continue;
+    if(marker.target_type === 'enemy'){
+      const target = monsters.get(String(marker.target_id));
+      if(!target || target.hp <= 0 || target.invisivel_sombras) continue;
+    } else if(marker.target_type !== 'tile') continue;
+    result.push({...marker, x, y, icon:style.icon, color:style.color});
+  }
+  return result;
+}
+function _drawCooperativeMarkers2D(ctx, state, visionSet){
+  for(const marker of _cooperativeMarkerView(state, visionSet)){
+    const x = marker.x * CELL + CELL * .76, y = marker.y * CELL + CELL * .24;
+    const r = Math.max(8, CELL * .22);
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.9)'; ctx.shadowBlur = Math.max(3, CELL * .08);
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle='rgba(12,14,24,.96)'; ctx.fill();
+    ctx.shadowBlur = 0; ctx.lineWidth = Math.max(2, CELL * .055);
+    ctx.strokeStyle = '#fff3d2'; ctx.stroke();
+    ctx.lineWidth = Math.max(1, CELL * .025); ctx.strokeStyle = marker.color; ctx.stroke();
+    ctx.fillStyle = marker.color; ctx.font = `900 ${Math.max(11,CELL*.25)}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(marker.icon,x,y+1);
+    ctx.restore();
+  }
+}
+function _syncCooperativeMarkers3D(state, visionSet){
+  if(!g3?.scene || !g3?.T) return;
+  const T = g3.T;
+  let group = g3.cooperativeMarkerGroup;
+  if(!group || group.parent !== g3.scene){
+    group = new T.Group(); group.name = 'cooperative-markers'; group.userData.noRay = true;
+    g3.scene.add(group); g3.cooperativeMarkerGroup = group; g3.cooperativeMarkerSignature = null;
+  }
+  const markers = _cooperativeMarkerView(state, visionSet);
+  const signature = markers.map(m => `${m.owner_id}:${m.category}:${m.target_type}:${m.target_id||''}:${m.x},${m.y}`).join('|');
+  if(signature === g3.cooperativeMarkerSignature) return;
+  _clearCooperativeMarkerSprites3D(group);
+  g3.cooperativeMarkerSignature = signature;
+  for(const marker of markers){
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+    const c = cv.getContext('2d');
+    c.clearRect(0,0,128,128); c.beginPath(); c.arc(64,64,51,0,Math.PI*2);
+    c.fillStyle='rgba(10,12,21,.96)'; c.fill();
+    c.lineWidth=10; c.strokeStyle='#fff2cf'; c.stroke();
+    c.lineWidth=5; c.strokeStyle=marker.color; c.stroke();
+    c.font='900 66px sans-serif'; c.textAlign='center'; c.textBaseline='middle'; c.fillStyle=marker.color;
+    c.fillText(marker.icon,64,67);
+    const tex = new T.CanvasTexture(cv); tex._owned = true;
+    const sprite = new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthWrite:false,depthTest:false}));
+    sprite.scale.set(.42,.42,1);
+    const top = topoSuperficie3D(state, marker.x, marker.y, .22);
+    sprite.position.set(marker.x + .28, top + .83, marker.y - .28);
+    sprite.renderOrder = 112; sprite.userData.noRay = true; sprite.userData.cooperativeMarker = true;
+    group.add(sprite);
+  }
+}
+function _clearCooperativeMarkerSprites3D(group){
+  if(!group) return;
+  while(group.children.length){
+    const child = group.children[group.children.length - 1]; group.remove(child);
+    child.traverse?.(o => {
+      if(o.material?.map?._owned) o.material.map.dispose();
+      if(o.material) o.material.dispose();
+      if(o.geometry) o.geometry.dispose();
+    });
+  }
+}
 function _toggleCooperativeMarkerMenu(force){
   const opts = $('cooperative-marker-options'), btn = $('cooperative-marker-toggle');
   if(!opts || !btn) return false;
@@ -12179,6 +12263,7 @@ function renderMap(state){
   _drawConditionPulses2D(ctx, state, _agoraRelampago);
   _drawPositiveBursts2D(ctx, state, _agoraRelampago);
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
+  _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
 }
 
@@ -45425,6 +45510,11 @@ function dispose3D(){
       if(fx.group && fx.group.parent === g3.protetorEffectGroup) _disposeProtetor3D(fx);
     g3.protetorEffectGroup.clear?.();
   }
+  if(g3.cooperativeMarkerGroup){
+    _clearCooperativeMarkerSprites3D(g3.cooperativeMarkerGroup);
+    g3.scene.remove(g3.cooperativeMarkerGroup);
+    g3.cooperativeMarkerGroup = null;
+  }
   _clearMovePreviewVisual();
   for(const f of _combatFeedbacks) _disposeCombatFeedback3D(f);
   // Restore map-wrap positioning so the 2D canvas flows normally
@@ -49341,6 +49431,7 @@ function renderMap3D(state){
   try { _sync3DEcosDolorososAura(state); } catch(e) { console.warn('ecosAura:', e); }
   try { _syncDuetoFantasmaSombras3D(state); } catch(e) { console.warn('duetoFantasmaShadow:', e); }
   try { _atualizarProtetor3D(performance.now()); } catch(e) { console.warn('protetorFx:', e); }
+  try { _syncCooperativeMarkers3D(state, visionSet); } catch(e) { console.warn('cooperativeMarkers:', e); }
 
   // Portraits are exclusive to the class selection screen (HTML). Not on the board.
 }
