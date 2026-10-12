@@ -393,6 +393,17 @@ document.body.innerHTML = `
       <div id="objectives-hud" data-guia="hud:objetivos" style="display:none"></div>
       <button id="objectives-toggle" type="button" data-gamepad-action="activate" tabindex="0"
               aria-controls="objectives-hud" aria-keyshortcuts="O" aria-expanded="false" style="display:none"></button>
+      <div id="cooperative-marker-control" hidden>
+        <button id="cooperative-marker-toggle" type="button" data-gamepad-action="activate" tabindex="0"
+                aria-expanded="false" aria-controls="cooperative-marker-options" onclick="_toggleCooperativeMarkerMenu()">📍 <span data-i18n="ui.marker.title">Marcar</span></button>
+        <div id="cooperative-marker-options" role="group" aria-label="Marcadores táticos" hidden>
+          <button type="button" data-cooperative-marker-category="attack" data-gamepad-action="activate" tabindex="0" onclick="_armCooperativeMarker('attack')" data-i18n="ui.marker.attack">⚔ Atacar</button>
+          <button type="button" data-cooperative-marker-category="danger" data-gamepad-action="activate" tabindex="0" onclick="_armCooperativeMarker('danger')" data-i18n="ui.marker.danger">⚠ Perigo</button>
+          <button type="button" data-cooperative-marker-category="investigate" data-gamepad-action="activate" tabindex="0" onclick="_armCooperativeMarker('investigate')" data-i18n="ui.marker.investigate">🔎 Investigar</button>
+          <button type="button" data-cooperative-marker-category="move" data-gamepad-action="activate" tabindex="0" onclick="_armCooperativeMarker('move')" data-i18n="ui.marker.move">➤ Mover</button>
+        </div>
+        <span id="cooperative-marker-prompt" role="status" aria-live="polite" hidden></span>
+      </div>
       <button id="btn-libertar" style="display:none" onclick="GS.libertarPrisioneiro()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
     </div>
     <canvas id="dice-canvas"></canvas>
@@ -5370,6 +5381,11 @@ function handleGameState(msg){
   // Mesmo se o estado recebido chegar no meio de uma animação de passo, o loop
   // 3D deve reconciliar os ícones no frame seguinte.
   if(g3) g3._activeEffectsDirty = true;
+  const markerControl = $('cooperative-marker-control');
+  if(markerControl) markerControl.hidden = !msg || !Array.isArray(msg.tiles) || msg.phase !== 'playing' || GS.isMaster() || !!msg.test_mode;
+  if(markerControl?.hidden) _cancelCooperativeMarkerTarget();
+  if(Array.isArray(msg?.tiles) && typeof GS.setCooperativeVisionPreference === 'function')
+    GS.setCooperativeVisionPreference(!!(GS.temGrupo || (_visaoCompPref && visaoCompartilhadaPermitida(msg))));
   _atualizarBotaoEncerrarTurno(msg);
   syncDiceCanvas();
   renderMap(msg);
@@ -5387,6 +5403,56 @@ function handleGameState(msg){
   renderStory();   // Fase 4b: abertura da fase (sobre o tabuleiro; não bloqueia)
   if(typeof InventoryModal !== 'undefined') InventoryModal.refresh();
 }
+
+let _cooperativeMarkerMode = null;
+function _toggleCooperativeMarkerMenu(force){
+  const opts = $('cooperative-marker-options'), btn = $('cooperative-marker-toggle');
+  if(!opts || !btn) return false;
+  const open = force === undefined ? opts.hidden : !!force;
+  opts.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+  if(open) opts.querySelector('button')?.focus();
+  return open;
+}
+function _armCooperativeMarker(category){
+  if(!['attack','danger','investigate','move'].includes(category) || !GS.gameState || GS.isMaster()) return false;
+  _cooperativeMarkerMode = category;
+  _toggleCooperativeMarkerMenu(false);
+  const prompt = $('cooperative-marker-prompt');
+  if(prompt){ prompt.textContent = t('ui.marker.target_prompt', {category: t(`ui.marker.${category}`)}); prompt.hidden = false; }
+  const cv = $('dungeon-canvas'); if(cv) cv.style.cursor = 'crosshair';
+  return true;
+}
+function _cancelCooperativeMarkerTarget(){
+  if(!_cooperativeMarkerMode) return false;
+  _cooperativeMarkerMode = null;
+  const prompt = $('cooperative-marker-prompt'); if(prompt) prompt.hidden = true;
+  const cv = $('dungeon-canvas'); if(cv) cv.style.cursor = 'crosshair';
+  return true;
+}
+function _handleCooperativeMarkerTarget(tx, ty){
+  if(!_cooperativeMarkerMode) return false;
+  const st = GS.gameState, me = st?.players?.find(p => p.id === GS.myPid && p.alive);
+  const visible = me && computeVisionSet(st, me).has(`${tx},${ty}`);
+  const tile = st?.tiles?.[ty]?.[tx];
+  if(!visible || tile == null || tile === TILE_WALL){
+    toast(t('ui.marker.invalid_target'), 'var(--orange)');
+    return true;
+  }
+  const monster = _masterMonsterAtTileClient(st, tx, ty);
+  const target = monster && monster.hp > 0 && !monster.invisivel_sombras
+    ? {type:'enemy', value:monster.id} : {type:'tile', value:[tx,ty]};
+  const sent = GS.createCooperativeMarker(_cooperativeMarkerMode, target.type, target.value);
+  if(sent){
+    toast(t('ui.marker.sent'), 'var(--gold)');
+    _cancelCooperativeMarkerTarget();
+  } else toast(t('ui.marker.send_failed'), 'var(--orange)');
+  return true;
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && _cancelCooperativeMarkerTarget()){
+    e.preventDefault(); e.stopImmediatePropagation();
+  }
+}, true);
 
 // ── Fase 3: HUD de objetivos + botão "Libertar" (só em masmorra autorada) ─────
 // Lê GS.objectives / GS.prisioneiroLibertavel (decisores em gameState.js).
@@ -7927,6 +7993,8 @@ function _setVisaoCompPref(on){
   _visaoCompPref = !!on;
   try { localStorage.setItem(_VISAO_COMP_KEY, on ? '1' : '0'); } catch(e){}
   const st = GS.gameState;
+  if(st && typeof GS.setCooperativeVisionPreference === 'function')
+    GS.setCooperativeVisionPreference(!!(GS.temGrupo || (_visaoCompPref && visaoCompartilhadaPermitida(st))));
   if(st) renderMap(st);
 }
 
@@ -53524,6 +53592,11 @@ function get3DTilePlane(e){
 
 function on3DClick(e){
   if(_orbitDragMoved){ _orbitDragMoved = false; return; }
+  if(_cooperativeMarkerMode){
+    const markerTile = get3DTile(e);
+    if(markerTile) _handleCooperativeMarkerTarget(markerTile[0], markerTile[1]);
+    return;
+  }
   if(window._modoDirecaoInstrumento){
     const tDirection = get3DTilePlane(e);
     if(tDirection) _clickTileDirecaoInstrumento(tDirection[0], tDirection[1]);
@@ -53899,6 +53972,7 @@ function handleTileClick(tx, ty){
   if(window._modoMestreMira){ _clickMiraMestre(tx,ty); return; }
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
+  if(_cooperativeMarkerMode){ _handleCooperativeMarkerTarget(tx, ty); return; }
   if(window._modoPlacementArmadilha){ onClickTileParaArmadilha(tx, ty); return; }
   // Durante a mira de uma magia do herói-teste, o clique pertence à magia
   // mesmo que caia sobre um monstro/peão; o painel do Mestre só pode capturar

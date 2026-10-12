@@ -368,6 +368,26 @@ input:focus { outline: none; border-color: var(--gold); }
 #objectives-hud .obj-close:hover, #objectives-hud .obj-close:focus-visible {
   outline: 2px solid var(--gold, #ffcc44); outline-offset: 2px;
 }
+#cooperative-marker-control {
+  position:absolute; left:14px; bottom:14px; z-index:42; color:var(--text,#eee);
+  font:600 .76rem 'Cinzel',serif; filter:drop-shadow(0 3px 8px rgba(0,0,0,.6));
+}
+#cooperative-marker-control button {
+  border:1px solid rgba(215,177,92,.7); border-radius:7px; padding:7px 10px;
+  background:rgba(12,14,24,.94); color:var(--gold,#ffcc44); cursor:pointer;
+  font:inherit; white-space:nowrap;
+}
+#cooperative-marker-control button:hover,#cooperative-marker-control button:focus-visible {
+  outline:2px solid var(--gold,#ffcc44); outline-offset:2px;
+}
+#cooperative-marker-options { display:flex; flex-direction:column; gap:5px; margin-bottom:7px; }
+#cooperative-marker-options button { text-align:left; color:var(--text,#eee); min-width:140px; }
+#cooperative-marker-prompt {
+  display:block; max-width:300px; margin-top:7px; padding:7px 9px; border-radius:6px;
+  background:rgba(12,14,24,.94); border:1px solid rgba(215,177,92,.7); color:#fff1c4;
+  font:500 .72rem/1.35 system-ui,sans-serif;
+}
+#cooperative-marker-control[hidden],#cooperative-marker-options[hidden],#cooperative-marker-prompt[hidden] { display:none; }
 #objectives-hud .obj-header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 #objectives-hud .obj-campaign { font-weight: 700; color: var(--gold, #ffcc44);
   margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,204,68,.25);

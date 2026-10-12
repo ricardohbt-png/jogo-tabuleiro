@@ -1574,6 +1574,7 @@ const GS = (() => {
     if (s.pid) { myPid = s.pid; connPid = s.pid; }
     ws = new WebSocket(s.url);
     ws.onopen = () => {
+      _coopVisionPreferenceSent = null;
       send({ type: 'set_lang', lang: myLang });   // antes do rejoin: erros já chegam traduzidos
       send({ type: 'rejoin', code: s.code, name: s.name });
     };
@@ -1601,6 +1602,7 @@ const GS = (() => {
     ws = new WebSocket(url);
 
     ws.onopen = () => {
+      _coopVisionPreferenceSent = null;
       send({ type: 'set_lang', lang: myLang });   // antes de entrar: erros já chegam traduzidos
       if      (mode === 'create') send({ type: 'create_room', name });
       else if (mode === 'join')   send({ type: 'join_room',   name, code });
@@ -2289,6 +2291,26 @@ const GS = (() => {
   function sceneVisit(sceneId, eventId) { send({ type:'scene_visit', scene_id:sceneId, event_id:eventId }); }
   function setTurnTimer(enabled) { send({ type:'set_turn_timer', enabled:!!enabled }); }
   function setVisaoCompartilhada(enabled) { send({ type:'set_visao_compartilhada', enabled:!!enabled }); }
+  // Marcadores são temporários; esta preferência só espelha ao servidor a
+  // visão compartilhada local para filtrar a entrega dos marcadores.
+  let _coopVisionPreferenceSent = null;
+  function setCooperativeVisionPreference(enabled) {
+    const value = !!enabled;
+    if (_coopVisionPreferenceSent === value) return false;
+    _coopVisionPreferenceSent = value;
+    return send({ type: 'cooperative_vision_preference', enabled: value });
+  }
+  function createCooperativeMarker(category, targetType, target) {
+    const categories = new Set(['attack', 'danger', 'investigate', 'move']);
+    if (!categories.has(category)) return false;
+    if (targetType === 'tile') {
+      if (!Array.isArray(target) || target.length !== 2 || !target.every(Number.isInteger)) return false;
+      return send({ type: 'cooperative_marker', category, target_type: 'tile', pos: target.slice() });
+    }
+    if (targetType === 'enemy' && typeof target === 'string' && target.length > 0)
+      return send({ type: 'cooperative_marker', category, target_type: 'enemy', target_id: target });
+    return false;
+  }
   function setAtravessarAliados(enabled) { send({ type:'set_atravessar_aliados', enabled:!!enabled }); }
   function salvarESair() { send({ type:'salvar_e_sair' }); }
   // Visão compartilhada: heróis cuja visão SOMA à do jogador. `ativa` = escolha
@@ -3790,6 +3812,8 @@ const GS = (() => {
     sceneVisit,
     setTurnTimer,
     setVisaoCompartilhada,
+    createCooperativeMarker,
+    setCooperativeVisionPreference,
     heroisVisaoCompartilhada,
     setShortcut,
     shortcutActivated,

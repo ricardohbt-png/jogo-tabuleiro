@@ -16,6 +16,15 @@
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
   "ui.hud.repetir_sala_tutorial": {"en": "Repeat my training room", "pt": "Repetir minha sala de treinamento"},
+  "ui.marker.title": {"en": "Mark", "pt": "Marcar"},
+  "ui.marker.attack": {"en": "⚔ Attack", "pt": "⚔ Atacar"},
+  "ui.marker.danger": {"en": "⚠ Danger", "pt": "⚠ Perigo"},
+  "ui.marker.investigate": {"en": "🔎 Investigate", "pt": "🔎 Investigar"},
+  "ui.marker.move": {"en": "➤ Move", "pt": "➤ Mover"},
+  "ui.marker.target_prompt": {"en": "Click a visible tile or enemy to mark: {category}. Esc cancels.", "pt": "Clique numa casa ou inimigo visível para marcar: {category}. Esc cancela."},
+  "ui.marker.invalid_target": {"en": "Choose a visible, valid tile.", "pt": "Escolha uma casa válida e visível."},
+  "ui.marker.sent": {"en": "Tactical marker sent to the party.", "pt": "Marcador tático enviado ao grupo."},
+  "ui.marker.send_failed": {"en": "The marker could not be sent.", "pt": "Não foi possível enviar o marcador."},
   "ui.monster.inspect.hint": {"en": "Right-click to inspect", "pt": "Clique com o botão direito para examinar"},
   "ui.monster.inspect.close": {"en": "Close creature sheet", "pt": "Fechar ficha"},
   "ui.monster.inspect.attack_now": {"en": "Can attack from here", "pt": "Pode atacar daqui"},
