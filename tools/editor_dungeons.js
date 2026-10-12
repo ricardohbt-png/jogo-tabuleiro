@@ -21586,7 +21586,9 @@ window.EDITOR_DUNGEONS = [
           35,
           25
         ],
-        "room_id": 38
+        "room_id": 38,
+        "image": "soldado.png",
+        "model3d": "soldado.glb"
       },
       "materiais": {
         "34,13": "pedra_negra",
@@ -69946,4 +69948,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

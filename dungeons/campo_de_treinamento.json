@@ -8409,7 +8409,9 @@
       35,
       25
     ],
-    "room_id": 38
+    "room_id": 38,
+    "image": "soldado.png",
+    "model3d": "soldado.glb"
   },
   "materiais": {
     "34,13": "pedra_negra",

@@ -47,7 +47,8 @@ for f in d['falas']:
 
 # O baú do átrio oferece uma arma básica apropriada para cada classe.
 d['chests'][0]['items'] = [{'id': i} for i in ['sword', 'cajado_madeira', 'dagger', 'machado_basico', 'dagger', 'cajado_madeira']]
-d['prisoner'] = {'pos': [35, 25], 'room_id': 38}
+d['prisoner'] = {'pos': [35, 25], 'room_id': 38,
+                 'image': 'soldado.png', 'model3d': 'soldado.glb'}
 
 for cls, pos in [('warrior',[24,3]), ('mage',[24,24]), ('mage',[24,26]), ('rogue',[11,7]),
                  ('rogue',[12,7]), ('bard',[12,24]), ('paladin',[36,25])]:
