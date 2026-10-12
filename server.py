@@ -19201,6 +19201,8 @@ class GameRoom(TutorialTraining):
         payload["licao_id"] = fala["id"]
         payload["passo"] = _guia_payload(fala, 0)
         await self.send_to(p["id"], payload)
+        if fala.get("id") == "treino_refem":
+            await self._training_prisoner_dialogue(p, "narracao.refem_treino_pede_ajuda")
         if not fala.get("tarefa"):
             await self._licao_concluir(p, fala)   # lição que só explica
 

@@ -7563,9 +7563,10 @@
       "falante": {
         "nome": "Mestre de Armas",
         "emoji": "🎓",
-        "retrato": "assets/portraits/mestre_de_armas.png"
+        "retrato": "assets/portraits/mestre_de_armas.png",
+        "cena": "assets/tela de transição/tutorial/mestre_aula_protetor_refem.png"
       },
-      "texto": "Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para o golpe controlado de treinamento. Observe a divisão do dano e a redução pessoal de Richard.",
+      "texto": "O teto está desabando! Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para protegê-lo das rochas. Observe a divisão do dano e a redução pessoal de Richard.",
       "trigger": {
         "tipo": "sala"
       },
@@ -7979,7 +7980,7 @@
       "tarefa": {
         "tipo": "mover_ate",
         "alvo": [
-          15,
+          14,
           23
         ],
         "vezes": 1,

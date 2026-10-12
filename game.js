@@ -8846,6 +8846,8 @@ function _armadilhaId(msg){
 
 function _armadilhaStyle(msg){
   const id = _armadilhaId(msg);
+  if(id === 'training_rockfall')
+    return {kind:'rockfall', color:'#d8c1a2', hot:'#fff0c9', dark:'#57483c', icon:'⬇'};
   if(id === 'armadilha_maldicao')
     return {kind:'curse', color:'#bd8cff', hot:'#f0c4ff', dark:'#32124f', icon:'☠'};
   if(id === 'fosso')
@@ -9512,6 +9514,25 @@ function _armadilhaDraw2D(ctx, state, anim, now){
       }
     }
     ctx.restore();
+  } else if(style.kind === 'rockfall'){
+    const fade=p>.78?Math.max(0,1-(p-.78)/.22):1;
+    for(let i=0;i<6;i++){
+      const fall=Math.max(0,Math.min(1,(p-i*.035)/.58));
+      const x=CELL*((i%3)-1)*.24, y=-CELL*(.82+Math.floor(i/3)*.16)+fall*CELL*.88;
+      const size=CELL*(.105+(i%3)*.018);
+      ctx.save(); ctx.translate(x,y); ctx.rotate(anim.seed+i*1.31+fall*2.2);
+      ctx.globalAlpha=fade; ctx.fillStyle=i%2?'#8f7965':'#b39a7d';
+      ctx.strokeStyle='rgba(48,38,31,.9)'; ctx.lineWidth=Math.max(1,CELL*.018);
+      ctx.beginPath(); ctx.moveTo(-size*.8,-size*.45); ctx.lineTo(-size*.18,-size);
+      ctx.lineTo(size*.72,-size*.62); ctx.lineTo(size,size*.18);
+      ctx.lineTo(size*.25,size*.82); ctx.lineTo(-size*.72,size*.55); ctx.closePath();
+      ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    if(impact>.52){
+      ctx.save(); ctx.globalAlpha=fade*(impact-.52)*1.7; ctx.strokeStyle='rgba(255,226,181,.88)';
+      ctx.lineWidth=Math.max(1,CELL*.025); ctx.beginPath();
+      ctx.ellipse(0,CELL*.24,CELL*(.10+impact*.28),CELL*.10,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
+    }
   } else if(style.kind === 'crush'){
     const down = Math.min(1, impact * 1.35);
     ctx.fillStyle = rgba(style.dark, .70); ctx.fillRect(-CELL*.57, -CELL*.92 + down*CELL*.70, CELL*1.14, CELL*.30);
@@ -9582,7 +9603,7 @@ function _buildArmadilha3D(anim){
     color, transparent:true, opacity, depthWrite:false,
     blending:T.AdditiveBlending
   });
-  if(s.kind !== 'spike_pit' && s.kind !== 'bear_trap' && s.kind !== 'net' && s.kind !== 'curse'){
+  if(s.kind !== 'spike_pit' && s.kind !== 'bear_trap' && s.kind !== 'net' && s.kind !== 'curse' && s.kind !== 'rockfall'){
     const ringMat = mat(s.hot, .80);
     const ring = new T.Mesh(new T.TorusGeometry(.38, .026, 8, 36), ringMat);
     ring.rotation.x = Math.PI/2; ring.userData.trapRing = 1; group.add(ring);
@@ -9597,7 +9618,7 @@ function _buildArmadilha3D(anim){
     const line = new T.Line(geo, new T.LineBasicMaterial({color:s.color, transparent:true, opacity, depthWrite:false, blending:T.AdditiveBlending}));
     line.userData.trapLine = 1; group.add(line); return line;
   };
-  if(s.kind !== 'incendiary' && s.kind !== 'blast' && s.kind !== 'acid_jet' && s.kind !== 'ice_beam' && s.kind !== 'spike_pit' && s.kind !== 'bear_trap' && s.kind !== 'net' && s.kind !== 'curse'
+  if(s.kind !== 'incendiary' && s.kind !== 'blast' && s.kind !== 'acid_jet' && s.kind !== 'ice_beam' && s.kind !== 'spike_pit' && s.kind !== 'bear_trap' && s.kind !== 'net' && s.kind !== 'curse' && s.kind !== 'rockfall'
     && !(s.kind === 'blade' && (s.variant === 'pendulum' || s.variant === 'guillotine'))) for(let i=0;i<8;i++){
     const a = i*Math.PI/4;
     addLine([new T.Vector3(Math.cos(a)*.12,.07,Math.sin(a)*.12), new T.Vector3(Math.cos(a)*.82,.07,Math.sin(a)*.82)], .62);
@@ -9777,6 +9798,13 @@ function _buildArmadilha3D(anim){
       const shard=new T.Mesh(new T.TetrahedronGeometry(.085,0),mat(i%3===0?0xfff0b0:(i%2?0xff9a38:0xd94c23),.96));
       shard.userData.trapBlastShard=i; group.add(shard);
     }
+  } else if(s.kind === 'rockfall'){
+    for(let i=0;i<6;i++){
+      const rock=new T.Mesh(new T.DodecahedronGeometry(.095+(i%3)*.018,0),
+        new T.MeshStandardMaterial({color:i%2?0x8f7965:0xb39a7d,roughness:1,transparent:true,opacity:.94,depthWrite:false}));
+      rock.position.set(((i%3)-1)*.22,1.65+Math.floor(i/3)*.20,((i%2)-.5)*.20);
+      rock.rotation.set(i*.7,i*1.2,i*.43); rock.userData.trainingRock=i; group.add(rock);
+    }
   } else if(s.kind === 'crush' && anim.roomTiles?.length){
     for(let i=0;i<anim.roomTiles.length;i++){
       const [x,y]=anim.roomTiles[i], dx=x-anim.pos[0], dz=y-anim.pos[1];
@@ -9857,6 +9885,14 @@ function _updateArmadilhas3D(now){
     const pulse = .5 + .5*Math.sin(now/65 + anim.seed);
     group.children.forEach(obj => {
       const u=obj.userData||{};
+      if(u.trainingRock != null){
+        const i=u.trainingRock, fall=Math.max(0,Math.min(1,(p-i*.035)/.58));
+        const fade=p>.78?Math.max(0,1-(p-.78)/.22):1;
+        obj.position.y=1.65+Math.floor(i/3)*.20-fall*1.48;
+        obj.position.x=((i%3)-1)*.22+Math.sin(p*8+i)*.025;
+        obj.rotation.x+=.04; obj.rotation.y+=.055; obj.rotation.z+=.035;
+        obj.material.opacity=.94*fade; obj.visible=p>=i*.035;
+      }
       if(u.trapCurseRune || u.trapCurseOuter){
         const resisted=anim.result?.sucesso===true || (anim.result?.sucesso===false&&anim.result?.aplicada!==true);
         const burst=resisted?Math.max(0,Math.min(1,(p-.42)/.35)):0;
@@ -10907,6 +10943,11 @@ function _receberAnimacaoArmadilha(msg){
   _armadilhaAnims.push(anim);
   if(mode3D && g3) _buildArmadilha3D(anim);
   else if(!_armadilha2DRaf) _armadilha2DRaf = _scheduleVisualFrame(_tickArmadilhas2D);
+}
+
+function _receberQuedaDeRochasTreino(msg){
+  if(!msg || !Array.isArray(msg.pos) || msg.pos.length<2) return;
+  _receberAnimacaoArmadilha({...msg, tipo_id:'training_rockfall'});
 }
 
 function _receberDisparoTetoEsmagador(msg){
@@ -57110,6 +57151,7 @@ GS.on('sorteReacao', msg => {
 });
 
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
+GS.on('trainingRockfall', msg => _receberQuedaDeRochasTreino(msg));
 GS.on('armadilhaDisparo', msg => {
   try{ _fumacaDisparoGas(msg); }catch(e){ console.warn('Fumaça da nuvem de gás:', e); }
   try{ _receberDisparoTeletransporte(msg); }catch(e){ console.warn('Animação do teletransporte:', e); }

@@ -1920,6 +1920,22 @@ window.LANG_NARRACAO = {
     "en": "🙏 The hostage thanks you and slips away to safety. You no longer need to control him.",
     "pt": "🙏 O refém agradece e se retira em segurança. Você não precisa mais controlá-lo."
   },
+  "narracao.refem_treino_nome": {
+    "en": "Prisoner",
+    "pt": "Prisioneiro"
+  },
+  "narracao.refem_treino_pede_ajuda": {
+    "en": "I'm trapped here! Please, help me get free!",
+    "pt": "Estou preso aqui! Por favor, me ajude a sair!"
+  },
+  "narracao.refem_treino_ferido": {
+    "en": "The rocks hit me... I'm hurt! Can you help me?",
+    "pt": "As pedras me atingiram... estou ferido! Pode me ajudar?"
+  },
+  "narracao.refem_treino_agradece": {
+    "en": "Thank you, paladin! The healing eased my pain.",
+    "pt": "Obrigado, paladino! A cura aliviou minha dor."
+  },
   "narracao.o_prisioneiro_foi_morto_o_resgate_falhou": {
     "en": "☠️ The prisoner was killed! The rescue failed.",
     "pt": "☠️ O prisioneiro foi morto! O resgate falhou."

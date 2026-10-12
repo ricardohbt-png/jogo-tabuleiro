@@ -21156,7 +21156,7 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
-              15,
+              14,
               23
             ],
             "vezes": 1,
@@ -69949,4 +69949,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

@@ -62,10 +62,11 @@ import aplicar_fatia9_tutorial as _F9   # lição de guiar o refém (constantes)
 import aplicar_fatia16_tutorial as _F16   # Clérigo: lançar magias (sala sem custo de slots)
 import aplicar_fatia15_tutorial as _F15   # textos do Mago: na sala dele as magias não gastam slots
 points={'warrior':[20,4],'mage':[22,24],'rogue':[9,7],'cleric':[32,6],'bard':[10,23],'paladin':[33,25]}
-def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1):
+def lesson(cls, ident, order, skill, text, short, *, verb='usar_habilidade', requirements=None, target_id=None, effective=False, count=1, scene=None):
     f={'id':ident, 'pos':points[cls], 'falante':{'nome':'Mestre de Armas','emoji':'🎓', 'retrato':'assets/portraits/mestre_de_armas.png'},
        'texto':text, 'trigger':{'tipo':'sala'}, 'classe':cls, 'ordem':order + 2, 'sala_exclusiva':True,   # ordens 1–2 são o combate comum; 3 é a porta; 4 abre o treino da classe
        'tarefa':{'tipo':verb, 'vezes':count, 'texto_curto':short}}
+    if scene:f['falante']['cena']=scene
     if skill is not None:f['tarefa']['alvo']=skill
     if target_id:f['tarefa']['alvo_id']=target_id
     if effective:f['tarefa']['cura_efetiva']=True
@@ -157,7 +158,7 @@ lesson('paladin','treino_atalhos_paladin',2,'protetor',
 lesson('paladin','treino_refem',3,'__prisioneiro__',
        'O refém está em 35,25. Aproxime-se e clique em Libertar prisioneiro. Depois do resgate você poderá protegê-lo e curá-lo.', 'Liberte o refém',verb='libertar_refem')
 lesson('paladin','treino_protetor',4,'__prisioneiro__',
-       'Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para o golpe controlado de treinamento. Observe a divisão do dano e a redução pessoal de Richard.', 'Proteja o refém durante um ataque',verb='proteger')
+       'O teto está desabando! Fique ao lado do refém, use Protetor e selecione-o. Encerre seu turno para protegê-lo das rochas. Observe a divisão do dano e a redução pessoal de Richard.', 'Proteja o refém durante um ataque',verb='proteger',scene='assets/tela de transição/tutorial/mestre_aula_protetor_refem.png')
 lesson('paladin','treino_maos',5,'imposicao_maos',
        'Sua proteção manteve o refém vivo. Agora, no seu turno, fique ao lado dele e use Imposição das Mãos. A lição pede a cura desse mesmo refém ferido.', 'Cure o refém com Imposição das Mãos',target_id='__prisioneiro__',effective=True)
 lesson('paladin','treino_guiar_refem',6,_F9.ALVO,_F9.TEXTO,_F9.CURTO,verb='guiar_refem')
@@ -170,13 +171,17 @@ lesson('paladin','treino_regen',9,'regeneracao_divina',
 lesson('paladin','treino_luz',10,'guerreiro_luz',
        'Ative Guerreiro da Luz e compare sua visão, acerto, dano e defesa. O bônus é o da habilidade disponível na sua ficha.', 'Ative Guerreiro da Luz')
 
-# Placas na frente de cada sala exclusiva e lição-ponte até a porta (ordem 3 de cada classe).
-# Casas conferidas no mapa: chão livre, do lado de fora da sala, a 1 casa da porta.
+# Placas na frente de cada sala exclusiva e lição-ponte até a sala (ordem 3 de cada classe).
+# `porta` é o alvo de conclusão: em geral a casa da porta; para o Bardo, a primeira casa
+# interna, pois o movimento diagonal pode entrar nela sem passar pela casa externa.
+# `casa_placa` fica em chão livre, do lado de fora da sala, a 1 casa da porta.
 PORTAS = {'warrior': ([22,7], [22,8], '🛡️', 'Guerreiro', 'fala_6', 'Mestre de Armas'),
           'mage': ([22,21], [22,20], '🔮', 'Mago', 'fala_8', 'Mestre de Armas'),
           'rogue': ([14,7], [15,7], '🗡️', 'Ladino', 'fala_10', 'Mestre de Armas'),
           'cleric': ([30,6], [29,6], '✝️', 'Clérigo', 'fala_12', 'Mestre de Armas'),
-          'bard': ([15,23], [16,23], '🎵', 'Bardo', 'fala_14', 'Mestre de Armas'),
+          # A tarefa aponta para a primeira casa interna: entrar diagonalmente
+          # pela porta não pode deixar a lição-ponte pendente até o aprendiz.
+          'bard': ([14,23], [16,23], '🎵', 'Bardo', 'fala_14', 'Mestre de Armas'),
           'paladin': ([31,25], [30,25], '⚔️', 'Paladino', 'fala_16', 'Mestre de Armas')}
 for cls, (porta, casa_placa, emoji, nome, ultima, _) in PORTAS.items():
     # A posição da placa pode mudar quando a sala é reorganizada; o ID estável

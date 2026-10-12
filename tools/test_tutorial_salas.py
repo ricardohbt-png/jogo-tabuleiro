@@ -103,6 +103,60 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p['licao_atual'],'treino_guiar_refem')
         self.assertFalse(r.mission_complete_pending)
 
+    async def test_paladin_refugee_story_follows_rescue_protector_and_heal(self):
+        r,p=room('paladin')
+        private=[]
+        send=r.send_to
+        async def capture_private(pid,msg):
+            private.append((pid,msg))
+            await send(pid,msg)
+        r.send_to=capture_private
+        await lesson(r,p,'treino_refem',[34,25])
+        pedido=next(m for m in r.messages if m.get('type')=='fala'
+                    and isinstance(m.get('texto'),S.T)
+                    and m['texto'].key=='narracao.refem_treino_pede_ajuda')
+        self.assertEqual(pedido['falante']['emoji'],'⛓️')
+        self.assertEqual(pedido['texto'].params, {})
+        self.assertIn((p['id'],pedido),private)
+        for key in ('narracao.refem_treino_nome','narracao.refem_treino_pede_ajuda',
+                    'narracao.refem_treino_ferido','narracao.refem_treino_agradece'):
+            self.assertTrue({'pt','en'} <= set(S.LANG_STRINGS[key]))
+
+        await r.handle_libertar_prisioneiro(p['id'])
+        self.assertEqual(p['licao_atual'],'treino_protetor')
+        protetor=next(f for f in r.licoes if f['id']=='treino_protetor')
+        self.assertEqual(protetor['falante']['cena'],
+                         'assets/tela de transição/tutorial/mestre_aula_protetor_refem.png')
+        self.assertTrue((Path(__file__).resolve().parents[1] /
+                         protetor['falante']['cena']).is_file())
+        await r.handle_protetor(p['id'],{'target_id':'__prisioneiro__'})
+        pv_antes=r.prisoner['hp']
+        await r._training_end_turn(p)
+
+        self.assertEqual(r.prisoner['hp'],3)
+        impactos=[m for m in r.messages if m.get('type')=='training_rockfall']
+        self.assertEqual(len(impactos),1)
+        self.assertEqual(impactos[0]['pos'],r.prisoner['pos'])
+        self.assertEqual([(pid,m) for pid,m in private if m.get('type')=='training_rockfall'],
+                         [(p['id'],impactos[0])])
+        self.assertEqual(p['licao_atual'],'treino_maos')
+        fala_ferido=next(i for i,m in enumerate(r.messages)
+                         if m.get('type')=='fala' and isinstance(m.get('texto'),S.T)
+                         and m['texto'].key=='narracao.refem_treino_ferido')
+        proxima_licao=next(i for i,m in enumerate(r.messages)
+                           if m.get('licao_id')=='treino_maos')
+        self.assertLess(fala_ferido,proxima_licao)
+        self.assertEqual(pv_antes-r.prisoner['hp'],4)
+
+        self.assertNotIn('narracao.refem_treino_agradece',fala_keys(r))
+        await r._training_event(p,'curar',r.prisoner,amount=0)
+        self.assertNotIn('narracao.refem_treino_agradece',fala_keys(r))
+        p['action_done']=False
+        await r.handle_imposicao_maos(p['id'],{'target_id':'__prisioneiro__'})
+        self.assertGreater(r.prisoner['hp'],3)
+        self.assertIn('narracao.refem_treino_agradece',fala_keys(r))
+        self.assertEqual(p['licao_atual'],'treino_guiar_refem')
+
     async def test_heal_before_protection_does_not_complete(self):
         r,p=room('paladin');await lesson(r,p,'treino_maos',[34,25])
         r.prisoner.update(freed=True,hp=3)

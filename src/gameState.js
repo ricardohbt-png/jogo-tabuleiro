@@ -1973,6 +1973,10 @@ const GS = (() => {
         _emit('trapResult', msg);
         break;
 
+      case 'training_rockfall':
+        _emit('trainingRockfall', msg);
+        break;
+
       case 'armadilha_disparo':   // público: armadilha de área disparou (som)
         _emit('armadilhaDisparo', msg);
         break;

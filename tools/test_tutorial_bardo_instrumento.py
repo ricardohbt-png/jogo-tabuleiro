@@ -71,6 +71,29 @@ class OrdemETrilhaTests(unittest.TestCase):
         self.assertEqual(S.validar_dungeon(D), (True, "ok"))
 
 
+class EntradaSalaTests(unittest.IsolatedAsyncioTestCase):
+    async def test_primeira_licao_do_bardo_abre_ao_entrar_na_sala(self):
+        r, p = room("bard")
+        anteriores = [f for f in r.licoes
+                      if not (f.get("classe") == "bard" and (f.get("ordem") or 0) >= 3)]
+        p["licoes_feitas"] = [f["id"] for f in anteriores]
+        p["licao_progresso"] = {f["id"]: 1 for f in anteriores}
+        p["licao_atual"] = None
+        p["pos"] = [15, 16]
+        await r._verificar_falas(p, S.player_room(r.rooms, *p["pos"]))
+        self.assertEqual(p["licao_atual"], "porta_bard")
+
+        # O jogador abre a porta e pode entrar diagonalmente pela primeira casa interna.
+        r._room_by_id(43)["locked"] = False
+        p["pos"] = [15, 24]
+        p["moves_left"] = 5
+        p["action_done"] = False
+        await r.handle_move(p["id"], -1, -1)
+
+        self.assertEqual(p["pos"], [14, 23])
+        self.assertEqual(p["licao_atual"], "treino_atalhos_bard")
+
+
 class FluxoTests(unittest.IsolatedAsyncioTestCase):
     async def test_bau_entrega_a_harpa_velha_na_bolsa(self):
         r, p = await ate_pegar()

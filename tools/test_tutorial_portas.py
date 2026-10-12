@@ -24,6 +24,12 @@ def porta_de(cls):
     return tuple(sala_de(cls)["doors"][0])
 
 
+def alvo_entrada_de(cls):
+    # O bardo pode atravessar diagonalmente da frente da porta para o primeiro
+    # piso interno, sem pisar na casa da porta.
+    return (14, 23) if cls == "bard" else porta_de(cls)
+
+
 def cheb(a, b):
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
 
@@ -68,7 +74,7 @@ class PonteTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(f["classe"], cls)
             self.assertEqual(f["ordem"], ant["ordem"] + 1)
             self.assertEqual(f["tarefa"]["tipo"], "mover_ate")
-            self.assertEqual(tuple(f["tarefa"]["alvo"]), porta_de(cls))
+            self.assertEqual(tuple(f["tarefa"]["alvo"]), alvo_entrada_de(cls))
             # a primeira lição exclusiva vem depois da ponte
             excl = [x for x in D["falas"] if x.get("classe") == cls and x.get("sala_exclusiva")]
             self.assertTrue(all(x["ordem"] > f["ordem"] for x in excl), cls)
@@ -91,10 +97,10 @@ class PonteTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(p["licao_atual"], ant["id"])
             await r._licao_evento(p, "matar", alvo="boneco_treino")
             self.assertEqual(p["licao_atual"], f"porta_{cls}", cls)
-            # andar numa casa qualquer não conclui; a porta conclui
+            # andar numa casa qualquer não conclui; a casa de entrada conclui
             await r._licao_evento(p, "mover_ate", alvo=[1, 1])
             self.assertEqual(p["licao_atual"], f"porta_{cls}")
-            await r._licao_evento(p, "mover_ate", alvo=list(porta_de(cls)))
+            await r._licao_evento(p, "mover_ate", alvo=list(alvo_entrada_de(cls)))
             self.assertIn(f"porta_{cls}", p["licoes_feitas"])
             self.assertIsNone(p["licao_atual"])
             # entrar na sala própria dispara a primeira lição exclusiva

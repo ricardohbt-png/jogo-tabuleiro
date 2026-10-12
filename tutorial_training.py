@@ -62,6 +62,20 @@ class TutorialTraining:
             "texto": api.T(text_key),
         })
 
+    async def _training_prisoner_dialogue(self, p, text_key):
+        """Envia uma fala privada do refém nas etapas do Paladino."""
+        pr = getattr(self, "prisoner", None)
+        if (not getattr(self, "training_mode", False) or not p
+                or p.get("class_id") != "paladin"
+                or not pr or not pr.get("training_refem")):
+            return
+        api = self._tutorial_api()
+        await self.send_to(p["id"], {
+            "type": "fala",
+            "falante": {"nome": api.T("narracao.refem_treino_nome"), "emoji": "⛓️"},
+            "texto": api.T(text_key),
+        })
+
     def _training_heal_targets(self, p):
         return list(self.players.values()) + [a for a in self.training_allies.values()
                                                if self._training_ally(p, a["id"]) is not None]
@@ -388,6 +402,7 @@ class TutorialTraining:
         if kind == "curar" and aid == "imposicao_maos":
             if target is not self.prisoner or amount <= 0 or not self.training_state.get("paladin", {}).get("protegido"):
                 return
+            await self._training_prisoner_dialogue(p, "narracao.refem_treino_agradece")
             await self._licao_evento(p, "usar_habilidade", alvo=aid, contexto={"alvo_id": "__prisioneiro__", "cura": amount})
         elif kind == "curar" and aid in ("cura", "cura_area"):
             if target and target.get("training_ally") and amount > 0:
@@ -424,6 +439,8 @@ class TutorialTraining:
                 await self._aplicar_dano_alvo(pr, 8, self._tutorial_api().DMG_PHYSICAL, None, is_attack=True)
                 if pr.get("alive") and p.get("alive") and pr["hp"] < before[0]:
                     self.training_state.setdefault("paladin", {})["protegido"] = True
+                    await self.send_to(p["id"], {"type": "training_rockfall", "pos": list(pr["pos"])})
+                    await self._training_prisoner_dialogue(p, "narracao.refem_treino_ferido")
                     await self.gm_say(f"Treinamento: o refém recebeu {before[0] - pr['hp']} de dano; "
                                       f"Richard recebeu {before[1] - p['hp']} após sua redução. Agora cure o refém.")
                     await self._licao_evento(p, "proteger", alvo="__prisioneiro__")
