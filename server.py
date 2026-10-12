@@ -13119,8 +13119,13 @@ class GameRoom(TutorialTraining):
             if not target or target.get("hp", 0) <= 0 or target.get("invisivel_sombras"):
                 return False
             target_pos = target.get("pos")
-            if (not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2
-                    or (int(target_pos[0]), int(target_pos[1])) not in visiveis):
+            if not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2:
+                return False
+            try:
+                footprint = self._monster_tiles(target)
+            except (KeyError, TypeError, ValueError):
+                footprint = [target_pos]
+            if not any(tuple(tile) in visiveis for tile in footprint):
                 return False
             marker["target_id"] = target_id
         else:
@@ -17099,6 +17104,10 @@ class GameRoom(TutorialTraining):
         fila descartável do simulador do editor (`_teste_combate_avancar`) —
         sem isto o simulador virava a rodada só no contador, e nada ticava."""
         self.round_num += 1
+        for owner_id, marker in list(self.cooperative_markers.items()):
+            if int(marker.get("expires_round", 0) or 0) < self.round_num:
+                self.cooperative_markers.pop(owner_id, None)
+                self._cooperative_marker_last_at.pop(owner_id, None)
         self._processar_recarga_slots_rodada()
         self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
         # Cada passo da virada e isolado: um defeito num deles nao pode
@@ -17784,7 +17793,13 @@ class GameRoom(TutorialTraining):
                 if not target or target.get("hp", 0) <= 0:
                     removidos.append(owner_id)
                     continue
-                target_pos = target.get("pos")
+                try:
+                    footprint = self._monster_tiles(target)
+                except (KeyError, TypeError, ValueError):
+                    footprint = [target.get("pos", [])]
+                target_pos = next((tile for tile in footprint if tuple(tile) in visiveis), None)
+                if target_pos is None:
+                    continue
             if not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2:
                 removidos.append(owner_id)
                 continue
@@ -48757,7 +48772,14 @@ class GameRoom(TutorialTraining):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
-        await self.broadcast(msg_state, skip=self._conexoes_fora())
+        await self.broadcast(
+            msg_state,
+            skip=self._conexoes_fora(),
+            personalize=lambda pid, state: {
+                **state,
+                "cooperative_markers": self._cooperative_markers_for_pid(pid),
+            },
+        )
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.

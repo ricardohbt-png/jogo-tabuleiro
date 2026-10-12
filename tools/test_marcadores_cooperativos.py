@@ -112,6 +112,79 @@ class MarcadoresCooperativosTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sala.cooperative_markers, {})
         self.assertNotIn("p1", sala.cooperative_vision_preferences)
 
+    async def test_broadcast_personaliza_marcadores_sem_enviar_alvo_oculto(self):
+        sala = self.nova_sala()
+        self.assertTrue(await self.create_marker(sala, "p1", "attack", "enemy", target_id="m1"))
+        enviados = {}
+
+        async def broadcast(msg, skip=None, personalize=None):
+            for pid in ("p1", "p2"):
+                enviados[pid] = personalize(pid, msg) if personalize else msg
+
+        async def noop(*args, **kwargs):
+            return None
+
+        sala.broadcast = broadcast
+        sala._notificar_maldicoes_pendentes = noop
+        sala._check_objectives = noop
+        sala._atualizar_alertas_sobrevivencia = lambda: None
+        sala._enviar_alertas_sobrevivencia = noop
+        sala._condition_alerts = []
+        await S.GameRoom.push_state(sala)
+        self.assertEqual(enviados["p1"].get("cooperative_markers"), [
+            {"owner_id": "p1", "category": "attack", "target_type": "enemy",
+             "target_id": "m1", "pos": [5, 2], "expires_round": 2}])
+        self.assertEqual(enviados["p2"].get("cooperative_markers"), [])
+
+    async def test_marca_monstro_grande_visivel_por_uma_casa_do_footprint(self):
+        sala = self.nova_sala()
+        sala.players["p1"]["pos"] = [7, 2]
+        sala.players["p2"]["pos"] = [17, 2]
+        sala.monsters["big"] = {"id": "big", "type": "ogre", "name": "Ogro",
+                                 "pos": [10, 2], "size": [2, 1], "hp": 8, "max_hp": 8}
+        self.assertTrue(await self.create_marker(sala, "p1", "attack", "enemy", target_id="big"))
+        recipient_markers = sala._cooperative_markers_for_pid("p2")
+        self.assertEqual(len(recipient_markers), 1)
+        self.assertEqual(recipient_markers[0]["pos"], [10, 2])
+
+    async def test_cegueira_ignora_visao_compartilhada_de_aliado(self):
+        sala = self.nova_sala()
+        sala.players["p2"]["cego"] = True
+        await self.set_shared_vision(sala, "p2", True)
+        self.assertTrue(await self.create_marker(sala, "p1", "attack", "enemy", target_id="m1"))
+        self.assertEqual(sala._cooperative_markers_for_pid("p2"), [])
+
+    async def test_marcador_de_casa_respeita_oclusao(self):
+        sala = self.nova_sala()
+        sala._tem_linha_de_visao = lambda a, b, ignorar_objetos=False: b == [2, 2]
+        self.assertFalse(await self.create_marker(sala, "p1", "danger", "tile", pos=[4, 2]))
+
+    async def test_revelacao_remota_permite_ver_marcador_sem_dar_visao_compartilhada(self):
+        sala = self.nova_sala()
+        self.assertTrue(await self.create_marker(sala, "p1", "danger", "tile", pos=[4, 2]))
+        sala.magic_reveal = {(4, 2): sala.round_num + 1}
+        self.assertEqual(len(sala._cooperative_markers_for_pid("p2")), 1)
+
+    async def test_marcador_dura_uma_rodada_completa_e_expira_na_virada_seguinte(self):
+        sala = self.nova_sala()
+        self.assertTrue(await self.create_marker(sala, "p1", "danger", "tile", pos=[4, 2]))
+        async def noop(*args, **kwargs):
+            return None
+        sala._processar_recarga_slots_rodada = lambda: None
+        sala._expirar_armadilhas_duracao = lambda: None
+        sala._processar_efeitos_armadilha_turno = noop
+        sala._processar_em_chamas_turno = noop
+        sala._processar_acido_residual_turno = noop
+        sala._processar_zonas_turno = noop
+        sala._aplicar_exaustao_rodada = noop
+        sala._tick_retorno_masmorra = noop
+        await sala._virada_de_rodada()
+        self.assertEqual(sala.round_num, 2)
+        self.assertIn("p1", sala.cooperative_markers)
+        await sala._virada_de_rodada()
+        self.assertEqual(sala.round_num, 3)
+        self.assertNotIn("p1", sala.cooperative_markers)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
