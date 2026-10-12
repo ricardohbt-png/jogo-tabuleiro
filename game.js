@@ -5577,6 +5577,90 @@ function _objRow(o){
   if(o && o.progresso) label += ` (${o.progresso.feitas}/${o.progresso.total} salas)`;
   return `<div class="obj-row"><span class="obj-ic">${_objIcon(o && o.status)}</span><span class="obj-lbl">${label}</span></div>`;
 }
+let _btnLibertarRaf = 0;
+function _posicionarBotaoLibertar(){
+  _btnLibertarRaf = 0;
+  const btn = $('btn-libertar');
+  const wrap = $('map-wrap');
+  const state = GS.gameState;
+  const prisoner = state?.prisoner;
+  if(!btn || !GS.prisioneiroLibertavel || !wrap || !prisoner?.pos){ return; }
+
+  let x, topoMiniatura, baseMiniatura;
+  const [px, py] = prisoner.pos;
+  if(mode3D && g3?.camera && g3?.renderer && g3?.T){
+    const canvasRect = g3.renderer.domElement.getBoundingClientRect();
+    const mesh = typeof getPrisonerMesh === 'function' ? getPrisonerMesh() : null;
+    const worldBase = mesh
+      ? mesh.getWorldPosition(new g3.T.Vector3())
+      : new g3.T.Vector3(px + .5, 0, py + .5);
+    // O billboard do refém parte do piso e tem altura-alvo de 2,05 unidades.
+    const topo = worldBase.clone(); topo.y += 2.34;
+    const base = worldBase.clone(); base.y += .16;
+    const pointTopo = topo.project(g3.camera);
+    const pointBase = base.project(g3.camera);
+    if(pointTopo.z >= -1 && pointTopo.z <= 1
+        && pointBase.z >= -1 && pointBase.z <= 1){
+      x = canvasRect.left + (pointTopo.x + 1) * canvasRect.width / 2;
+      topoMiniatura = canvasRect.top + (1 - pointTopo.y) * canvasRect.height / 2;
+      baseMiniatura = canvasRect.top + (1 - pointBase.y) * canvasRect.height / 2;
+    }
+  } else {
+    const canvas = $('dungeon-canvas');
+    const rect = canvas?.getBoundingClientRect();
+    const cols = state.tiles?.[0]?.length || 0;
+    const rows = state.tiles?.length || 0;
+    if(rect && cols && rows){
+      const tileH = rect.height / rows;
+      x = rect.left + (px + .5) * rect.width / cols;
+      // A miniatura 2D ocupa 78% da casa, centralizada no peão.
+      const centerY = rect.top + (py + .5) * tileH;
+      topoMiniatura = centerY - tileH * .39 - 3;
+      baseMiniatura = centerY + tileH * .39 + 3;
+    }
+  }
+
+  const viewport = wrap.getBoundingClientRect();
+  if(!Number.isFinite(x) || !Number.isFinite(topoMiniatura) || !Number.isFinite(baseMiniatura)
+      || !viewport.width || !viewport.height){
+    // A câmera pode deixar o refém momentaneamente fora do frustum. Mantemos
+    // o ciclo ativo para que o botão reapareça se o jogador girar a câmera.
+    btn.style.visibility = 'hidden';
+    _btnLibertarRaf = requestAnimationFrame(_posicionarBotaoLibertar);
+    return;
+  }
+  const halfWidth = (btn.offsetWidth || 190) / 2;
+  const buttonHeight = btn.offsetHeight || 38;
+  const minX = viewport.left + halfWidth + 6;
+  const maxX = viewport.right - halfWidth - 6;
+  x = minX <= maxX ? Math.max(minX, Math.min(maxX, x)) : viewport.left + viewport.width / 2;
+  // No topo do tabuleiro não há espaço acima do peão; nesse caso o botão fica
+  // logo abaixo da miniatura para continuar visível e acessível.
+  const abaixo = topoMiniatura - buttonHeight - 8 < viewport.top + 4;
+  const y = abaixo ? baseMiniatura + 8 : topoMiniatura - 8;
+  btn.classList.toggle('abaixo-miniatura', abaixo);
+  // O botão é absoluto dentro do mapa; convertemos da tela para a área rolável.
+  btn.style.left = `${x - viewport.left + wrap.scrollLeft}px`;
+  btn.style.top = `${y - viewport.top + wrap.scrollTop}px`;
+  btn.style.visibility = '';
+  _btnLibertarRaf = requestAnimationFrame(_posicionarBotaoLibertar);
+}
+
+function _sincronizarPosicaoBotaoLibertar(){
+  const btn = $('btn-libertar');
+  const mostrar = !!(btn && btn.style.display !== 'none' && GS.prisioneiroLibertavel);
+  if(mostrar){
+    if(!_btnLibertarRaf) _btnLibertarRaf = requestAnimationFrame(_posicionarBotaoLibertar);
+  } else if(_btnLibertarRaf){
+    cancelAnimationFrame(_btnLibertarRaf);
+    _btnLibertarRaf = 0;
+  }
+  if(!mostrar && btn){
+    btn.style.visibility = '';
+    btn.classList.remove('abaixo-miniatura');
+  }
+}
+
 let _cidadeTourPendenteDoTutorial = false;
 let _cidadeTourMemoriaKey = null;
 let _cidadeTourMemoriaDados = null;
@@ -5832,6 +5916,7 @@ function renderObjectivesHUD(msg){
     hud.style.display = 'none';
     if(toggle) toggle.style.display = 'none';
     if(btn) btn.style.display = 'none';
+    _sincronizarPosicaoBotaoLibertar();
     return;
   }
   let html = '';
@@ -5885,6 +5970,7 @@ function renderObjectivesHUD(msg){
   hud.querySelector('.obj-close')?.addEventListener('click', () => _definirObjetivosHUDAberto(false));
   // Botão "Libertar": só quando há prisioneiro cativo adjacente no meu turno.
   if(btn) btn.style.display = GS.prisioneiroLibertavel ? '' : 'none';
+  _sincronizarPosicaoBotaoLibertar();
 }
 
 function _definirObjetivosHUDAberto(aberto){

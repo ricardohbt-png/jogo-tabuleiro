@@ -1928,9 +1928,13 @@ window.LANG_NARRACAO = {
     "en": "I'm trapped here! Please, help me get free!",
     "pt": "Estou preso aqui! Por favor, me ajude a sair!"
   },
+  "narracao.refem_treino_teto": {
+    "en": "The ceiling is collapsing! Please, help me!",
+    "pt": "O teto está desabando! Por favor, me ajude!"
+  },
   "narracao.refem_treino_ferido": {
-    "en": "The rocks hit me... I'm hurt! Can you help me?",
-    "pt": "As pedras me atingiram... estou ferido! Pode me ajudar?"
+    "en": "The rocks hit me... I'm too hurt to go on! Please heal me!",
+    "pt": "As pedras me atingiram... estou ferido demais para continuar! Por favor, me cure!"
   },
   "narracao.refem_treino_agradece": {
     "en": "Thank you, paladin! The healing eased my pain.",

@@ -19200,6 +19200,9 @@ class GameRoom(TutorialTraining):
         # sozinha em segundos, a lição fica numa janela até o jogador fechar.
         payload["licao_id"] = fala["id"]
         payload["passo"] = _guia_payload(fala, 0)
+        if fala.get("id") == "treino_protetor":
+            # A fala do refém antecede a instrução fixa do Mestre de Armas.
+            await self._training_prisoner_dialogue(p, "narracao.refem_treino_teto")
         await self.send_to(p["id"], payload)
         if fala.get("id") == "treino_refem":
             await self._training_prisoner_dialogue(p, "narracao.refem_treino_pede_ajuda")

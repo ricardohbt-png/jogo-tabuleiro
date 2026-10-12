@@ -72,7 +72,10 @@ class TutorialTraining:
         api = self._tutorial_api()
         await self.send_to(p["id"], {
             "type": "fala",
-            "falante": {"nome": api.T("narracao.refem_treino_nome"), "emoji": "⛓️"},
+            "falante": {
+                "nome": api.T("narracao.refem_treino_nome"),
+                "retrato": "assets/portraits/refem_soldado.png",
+            },
             "texto": api.T(text_key),
         })
 
