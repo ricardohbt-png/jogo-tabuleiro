@@ -37,6 +37,10 @@ async def lesson(r, p, ident, pos=None):
     if p['licao_atual'] != ident:
         raise AssertionError((ident, p['licao_atual']))
 
+def fala_keys(r):
+    return {m['texto'].key for m in r.messages
+            if m.get('type') == 'fala' and isinstance(m.get('texto'), S.T)}
+
 class TrainingTests(unittest.IsolatedAsyncioTestCase):
     def test_authored_map(self):
         self.assertEqual(S.validar_dungeon(D), (True, 'ok'))
@@ -108,19 +112,26 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
     async def test_lewis_four_real_skills_in_solo(self):
         r,p=room('cleric')
         await lesson(r,p,'treino_cura',[34,6])
+        self.assertIn('narracao.aprendiz_treino_cura_ferido', fala_keys(r))
         await r.handle_cura(p['id'],{'target_id':'__treino_cleric_1','num_dados':1})
+        self.assertIn('narracao.aprendiz_treino_cura_agradece', fala_keys(r))
         self.assertEqual(p['licao_atual'],'treino_cura_area')
         self.assertEqual(len(r.players),1)
         p['action_done']=False
         await r.handle_cura_area(p['id'],{'num_dados':1})
+        self.assertTrue({'narracao.aprendiz_treino_area_agradece_1',
+                         'narracao.aprendiz_treino_area_agradece_2'} <= fala_keys(r))
         self.assertEqual(p['licao_atual'],'treino_purificar')
         self.assertTrue(r.training_allies['__treino_cleric_1']['cego'])
         p['action_done']=False
         await r.handle_purificacao(p['id'],{'target_id':'__treino_cleric_1','tipo':'veneno'})
+        self.assertIn('narracao.aprendiz_treino_purificacao_agradece', fala_keys(r))
         self.assertEqual(p['licao_atual'],'treino_ressuscitar')
         self.assertFalse(r.training_allies['__treino_cleric_1']['alive'])
+        self.assertIn('narracao.aprendiz_treino_ressurreicao_panico', fala_keys(r))
         p['action_done']=False
         await r.handle_ressurreicao(p['id'],{'target_id':'__treino_cleric_1'})
+        self.assertIn('narracao.aprendiz_treino_ressurreicao_agradece', fala_keys(r))
         self.assertTrue(r.training_allies['__treino_cleric_1']['alive'])
         self.assertIn('treino_ressuscitar',p['licoes_feitas'])
         self.assertFalse(r.training_allies['__treino_cleric_1']['cego'])
@@ -229,7 +240,14 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_bard_maintenance_requires_upkeep(self):
         r,p=room('bard');await lesson(r,p,'treino_cancao',[11,23])
+        r.messages.clear()
         await r.handle_ativar_cancao(p['id'],{'atributos':[S.CANCAO_ATRIBUTOS[0]['id']]})
+        reacoes = [m for m in r.messages if m.get('type') == 'fala' and not m.get('licao_id')]
+        self.assertEqual(len(reacoes), 1)
+        self.assertEqual(reacoes[0]['falante']['retrato'], 'assets/portraits/aprendiz_1.png')
+        self.assertEqual(reacoes[0]['falante']['nome'].key, 'narracao.aprendiz_treino_1_nome')
+        self.assertEqual(reacoes[0]['texto'].key, 'narracao.aprendiz_agradece_cancao_heroica')
+        self.assertTrue(r.training_allies['__treino_bard_1'].get('buffs_cancao'))
         self.assertEqual(p['licao_atual'],'treino_cancao_manter')
         await r._licao_evento(p,'encerrar_turno')
         self.assertEqual(p['licao_atual'],'treino_cancao_manter')

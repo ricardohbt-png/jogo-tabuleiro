@@ -23647,8 +23647,9 @@ class GameRoom(TutorialTraining):
         await self.gm_say(
             T("narracao.entoa_a_cancao_heroica_aliados_em_quadra", heroi=p['name'], labels=labels, CANCAO_RAIO=CANCAO_RAIO, custo_fome=custo['fome'], custo_sede=custo['sede']))
         aprendiz = self._training_ally(p, "__treino_bard_1")
-        if aprendiz and aprendiz.get("alive") and "buffs_cancao" in aprendiz:
-            await self.gm_say(T("narracao.aprendiz_agradece_cancao_heroica"))
+        if aprendiz and aprendiz.get("alive") and aprendiz.get("buffs_cancao"):
+            await self._training_dialogue(
+                p, 1, "narracao.aprendiz_agradece_cancao_heroica", class_id="bard")
         # Sinfonia Heroica (Alaúde): atributos escolhidos que ganharam +1 do instrumento.
         sinfonia = [x for x in atrib_validos if self._sinfonia_bonus(p, x) > 0]
         if sinfonia:
@@ -24247,6 +24248,9 @@ class GameRoom(TutorialTraining):
             })
             await self.gm_say(
                 T("narracao.purifica_livre_de", heroi=p['name'], alvo=nome_criatura(alvo), nomes_tipo=nomes[tipo], custo_fome=custo['fome'], custo_sede=custo['sede']))
+            if (tipo == "veneno" and alvo.get("id") == "__treino_cleric_1"
+                    and p.get("licao_atual") == "treino_purificar"):
+                await self._training_dialogue(p, 1, "narracao.aprendiz_treino_purificacao_agradece")
             await self._licao_evento(p, "usar_habilidade", alvo="purificacao", contexto={"alvo_id": alvo["id"]})
             await self.push_state()
 
@@ -24318,10 +24322,16 @@ class GameRoom(TutorialTraining):
 
         self._pagar_fome_sede(p, custo_fome, custo_sede)
         p["action_done"] = True
+        agradecer_aprendiz = (
+            alvo.get("id") == "__treino_cleric_1"
+            and p.get("licao_atual") == "treino_ressuscitar"
+        )
         await self._licao_evento(p, "usar_habilidade", alvo="ressurreicao", contexto={"alvo_id": alvo["id"]})
 
         await self.gm_say(
             T("narracao.ressurreicao_traz_de_volta_a_vida_com_hp", heroi=p['name'], alvo=nome_criatura(alvo), alvo_hp=alvo['hp'], custo_fome=custo_fome, custo_sede=custo_sede))
+        if agradecer_aprendiz:
+            await self._training_dialogue(p, 1, "narracao.aprendiz_treino_ressurreicao_agradece")
         await self.push_state()
 
     # â”€â”€ Paladino (Richard): aÃ§o e honra â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

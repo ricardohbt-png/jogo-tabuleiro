@@ -513,8 +513,8 @@ window.LANG_NARRACAO = {
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
   },
   "narracao.aprendiz_agradece_cancao_heroica": {
-    "en": "💬 Apprentice: Thank you! I feel ready for battle!",
-    "pt": "💬 Aprendiz: Obrigado! Me sinto pronto para a batalha!"
+    "en": "Thank you! I feel ready for battle!",
+    "pt": "Obrigado! Me sinto pronto para a batalha!"
   },
   "narracao.cancao_monstro.entoa": {
     "en": "{nome} sings the Heroic Song and strengthens the allied monsters.",
@@ -3039,6 +3039,54 @@ window.LANG_NARRACAO = {
   "narracao.a_aventura_continua": {
     "en": "📜 The adventure continues — round {rodada}.",
     "pt": "📜 A aventura continua — rodada {rodada}."
+  },
+  "narracao.aprendiz_treino_1_nome": {
+    "en": "Apprentice 1",
+    "pt": "Aprendiz 1"
+  },
+  "narracao.aprendiz_treino_2_nome": {
+    "en": "Apprentice 2",
+    "pt": "Aprendiz 2"
+  },
+  "narracao.aprendiz_treino_cura_ferido": {
+    "en": "I'm hurt. Could you help me, Cleric?",
+    "pt": "Ai, estou ferido. Você pode me ajudar, clérigo?"
+  },
+  "narracao.aprendiz_treino_cura_agradece": {
+    "en": "Thank you! I'm already feeling better.",
+    "pt": "Obrigado! Já estou me sentindo melhor."
+  },
+  "narracao.aprendiz_treino_area_ferido_1": {
+    "en": "We're both hurt. We need your help, Cleric!",
+    "pt": "Nós dois estamos feridos. Precisamos da sua ajuda, clérigo!"
+  },
+  "narracao.aprendiz_treino_area_ferido_2": {
+    "en": "Please help us. We're in bad shape!",
+    "pt": "Por favor, ajude a gente. Estamos bem machucados!"
+  },
+  "narracao.aprendiz_treino_area_agradece_1": {
+    "en": "Thank you for taking care of us!",
+    "pt": "Obrigado por cuidar da gente!"
+  },
+  "narracao.aprendiz_treino_area_agradece_2": {
+    "en": "I feel much better. Thank you, Cleric!",
+    "pt": "Já estou bem melhor. Obrigado, clérigo!"
+  },
+  "narracao.aprendiz_treino_purificacao_veneno": {
+    "en": "This poison is making my vision blurry!",
+    "pt": "Esse veneno está deixando minha visão turva!"
+  },
+  "narracao.aprendiz_treino_purificacao_agradece": {
+    "en": "My vision is clear again! Thank you, Cleric!",
+    "pt": "Minha visão voltou ao normal! Obrigado, clérigo!"
+  },
+  "narracao.aprendiz_treino_ressurreicao_panico": {
+    "en": "No! Apprentice 1 has fallen! Please help him!",
+    "pt": "Não! O Aprendiz 1 caiu! Por favor, ajude-o!"
+  },
+  "narracao.aprendiz_treino_ressurreicao_agradece": {
+    "en": "Thank you for bringing me back to life!",
+    "pt": "Obrigado por me trazer de volta à vida!"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

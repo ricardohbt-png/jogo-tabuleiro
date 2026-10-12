@@ -44,6 +44,24 @@ class TutorialTraining:
         room = self._room_containing_point(p.get("pos", [-1, -1]))
         return ally if room and room["id"] == ally["room_id"] else None
 
+    async def _training_dialogue(self, p, apprentice_no, text_key, class_id="cleric"):
+        """Envia uma fala localizada com o retrato do aprendiz da sala atual."""
+        if (not getattr(self, "training_mode", False) or not p
+                or p.get("class_id") != class_id):
+            return
+        ident = f"__treino_{class_id}_{apprentice_no}"
+        if not self._training_ally(p, ident):
+            return
+        api = self._tutorial_api()
+        await self.send_to(p["id"], {
+            "type": "fala",
+            "falante": {
+                "nome": api.T(f"narracao.aprendiz_treino_{apprentice_no}_nome"),
+                "retrato": f"assets/portraits/aprendiz_{apprentice_no}.png",
+            },
+            "texto": api.T(text_key),
+        })
+
     def _training_heal_targets(self, p):
         return list(self.players.values()) + [a for a in self.training_allies.values()
                                                if self._training_ally(p, a["id"]) is not None]
@@ -322,14 +340,23 @@ class TutorialTraining:
         if aid in ("cura", "cura_area"):
             for a in allies:
                 a["hp"] = 5; a["alive"] = True
+            if lesson.get("id") == "treino_cura":
+                await self._training_dialogue(p, 1, "narracao.aprendiz_treino_cura_ferido")
+            elif lesson.get("id") == "treino_cura_area":
+                await self._training_dialogue(p, 1, "narracao.aprendiz_treino_area_ferido_1")
+                await self._training_dialogue(p, 2, "narracao.aprendiz_treino_area_ferido_2")
         if aid == "purificacao" and allies:
             a = allies[0]
             a["cego"] = True; a["cego_pen_ataque"] = 0
             a["bloqueia_distancia"] = True
+            if lesson.get("id") == "treino_purificar":
+                await self._training_dialogue(p, 1, "narracao.aprendiz_treino_purificacao_veneno")
         if aid == "ressurreicao" and allies:
             a = allies[0]; a["alive"] = False; a["hp"] = 0
             self.hero_corpses[a["id"]] = {"id": a["id"], "pos": list(a["pos"]),
                                             "class_id": a["class_id"], "name": a["name"]}
+            if lesson.get("id") == "treino_ressuscitar":
+                await self._training_dialogue(p, 2, "narracao.aprendiz_treino_ressurreicao_panico")
         if aid == "regeneracao_divina":
             p["hp"] = max(2, p["max_hp"] - 2)
         if tar.get("tipo") == "proteger":
@@ -364,6 +391,14 @@ class TutorialTraining:
             await self._licao_evento(p, "usar_habilidade", alvo=aid, contexto={"alvo_id": "__prisioneiro__", "cura": amount})
         elif kind == "curar" and aid in ("cura", "cura_area"):
             if target and target.get("training_ally") and amount > 0:
+                if (aid == "cura" and lesson["id"] == "treino_cura"
+                        and target.get("id") == "__treino_cleric_1"):
+                    await self._training_dialogue(p, 1, "narracao.aprendiz_treino_cura_agradece")
+                elif aid == "cura_area" and lesson["id"] == "treino_cura_area":
+                    apprentice_no = {"__treino_cleric_1": 1, "__treino_cleric_2": 2}.get(target.get("id"))
+                    if apprentice_no:
+                        await self._training_dialogue(
+                            p, apprentice_no, f"narracao.aprendiz_treino_area_agradece_{apprentice_no}")
                 await self._licao_evento(p, "usar_habilidade", alvo=aid, contexto={"alvo_id": target["id"], "cura": amount})
         elif kind == "regenerou" and amount > 0:
             await self._licao_evento(p, "regenerar", alvo="regeneracao_divina")

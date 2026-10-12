@@ -23,7 +23,7 @@ def com_estado_real(r):
     """O helper `room` troca push_state/broadcast por stubs; aqui queremos o game_state de verdade."""
     del r.push_state
 
-    async def broadcast(msg, skip=None):
+    async def broadcast(msg, skip=None, **kwargs):
         r.messages.append(msg)
     r.broadcast = broadcast
 
