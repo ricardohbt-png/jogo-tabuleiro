@@ -3062,7 +3062,8 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "pira_chamas.png"
+      "image": "pira_chamas.png",
+      "visao": "baixo"
     },
     {
       "id": "decor_12",
