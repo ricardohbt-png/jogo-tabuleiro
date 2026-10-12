@@ -2824,10 +2824,11 @@ function _renderCenaConversas(){
          ...(cenaDe('scene_comum') ? [[t('ui.cena.voltar_area_comum'), ()=>irPara('scene_comum',GS.openRefugio)]] : [])]
       : isCommon
         ? [[t('ui.cena.bau_compartilhado'), ()=>_abrirBauDireto('shared')],
-           [t('ui.cena.entrar_quarto'), ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))]]
+           [t('ui.cena.entrar_quarto'), ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))],
+           [t('ui.diario.abrir'), button=>_solicitarDiarioAventureiros(button)]]
         : [[t('ui.cena.entrar_refugio'), ()=>irPara('scene_comum',GS.openRefugio)]];
     const baus=document.createElement('div'); baus.className='refugio-scene-baus';
-    acoes.forEach(([txt,fn])=>{const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.onclick=fn; baus.appendChild(b);});
+    acoes.forEach(([txt,fn])=>{const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.onclick=()=>fn(b); baus.appendChild(b);});
     scene.appendChild(baus);
   }
   const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent=t('ui.cena.dica_clique'); scene.appendChild(hint);

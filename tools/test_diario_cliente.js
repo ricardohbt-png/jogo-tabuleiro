@@ -11,6 +11,10 @@ check('cliente envia solicitação nativa do diário', /function openAdventurerD
 check('abertura informa espera e permite tentar novamente', /setTimeout\(\(\)=>_renderAdventurerDiaryLoading\(true\),9000\)/.test(game) && /data-diary-retry/.test(game));
 check('resposta privada atualiza evento de estado', /case 'adventurer_diary_state':[\s\S]{0,100}adventurerDiaryState/.test(state));
 check('livro abre a partir do painel do refúgio', game.includes("className='ref-chest-open diary-open'") && game.includes('GS.openAdventurerDiary()'));
+const sceneStart=game.indexOf('const acoes=isRoom');
+const sceneEnd=game.indexOf('const baus=',sceneStart);
+const refugeSceneActions=sceneStart>=0&&sceneEnd>sceneStart?game.slice(sceneStart,sceneEnd):'';
+check('sala ilustrada do refúgio oferece o diário junto às opções do baú e quarto',/isCommon[\s\S]*ui\.diario\.abrir[\s\S]*_solicitarDiarioAventureiros/.test(refugeSceneActions));
 
 console.log('[2] páginas e privacidade visual');
 check('livro tem páginas de missões, itens e bestiário', ['missions','items','bestiary'].every(k=>game.includes(`data-diary-page="${k}"`)));
