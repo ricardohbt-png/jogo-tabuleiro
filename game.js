@@ -46859,11 +46859,26 @@ function buildChest3D(T, chest){
 // é resolvido por casa em handleTileClick (o raycast pega o chão sob o sprite).
 const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   gold_coins: {path: 'assets/itens/moedas_ouro.glb', footprint: 0.68},
+  backpack: {path: 'assets/itens/mochila.glb', footprint: 0.78},
+  boots: {path: 'assets/itens/botas.glb', footprint: 0.78},
+  ring: {path: 'assets/itens/anel.glb', footprint: 0.42},
+  ring_str: {path: 'assets/itens/anel.glb', footprint: 0.42},
+  ring_vita: {path: 'assets/itens/anel.glb', footprint: 0.42},
+  fullplate: {path: 'assets/itens/armadura_completa.glb', footprint: 0.82},
+  chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
+  cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
+  dagger: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
+  adaga: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
+  adaga_secundaria: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
   // Variantes de machado compartilham o mesmo modelo 3D do Machado Duplo.
   // A família é resolvida abaixo para também cobrir prata e futuros machados.
   machado: {path: 'assets/itens/machado.glb', layFlat: true, footprint: 0.78},
   // Bordões e cajados compartilham a miniatura do bastão no chão.
   bastao: {path: 'assets/itens/bastao.glb', layFlat: true, footprint: 0.78},
+  // Marreta e variante de prata usam a mesma miniatura no chão.
+  marreta: {path: 'assets/itens/marreta.glb', layFlat: true, footprint: 0.78},
+  marreta_prata: {path: 'assets/itens/marreta.glb', layFlat: true, footprint: 0.78},
+  maca: {path: 'assets/itens/maca.glb', layFlat: true, footprint: 0.78},
   // O mesmo modelo representa as variantes de espada no chão; nomes em
   // português e IDs do catálogo do servidor precisam apontar para o GLB.
   espada_curta: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
@@ -46900,7 +46915,11 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
 
 function _groundItemGlbConfig(gi){
   const itemId = String(gi?.item?.id || '').trim().toLowerCase();
+  const instrumentBase = gi?.item?.tipo_item === 'instrumento'
+    ? String(gi.item.base || '').trim().toLowerCase() : '';
   return _GROUND_ITEM_GLB_MODELS[itemId]
+    || (instrumentBase === 'alaude'
+      ? {path: 'assets/itens/alaude.glb', footprint: 0.78} : null)
     || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null)
     || ((itemId === 'staff' || itemId.startsWith('staff_')
       || itemId === 'bordao' || itemId.startsWith('bordao_')
@@ -49772,6 +49791,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   grotao:            'assets/models3d/monstros/grotao.glb',
   lagartoCarniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
+  lobo_alfa:         'assets/models3d/monstros/lobo_alfa.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
   // O Zumbi Infectado mantém o mesmo GLB no fallback por tipo.
   zumbi:             'assets/models3d/monstros/zumbi.glb',
@@ -49792,6 +49812,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   // identificador visual.
   vela_fogo:         'assets/models3d/monstros/vela_fogo.glb',
   lobisomem:         'assets/models3d/monstros/lobisomem.glb',
+  lobisomem_alfa:    'assets/models3d/monstros/lobisomem_alfa.glb',
   cria_vampirica:    'assets/models3d/monstros/cria_vampirica.glb',
   rato_gicante:      'assets/models3d/monstros/rato_gicante.glb',
   escorpiaodepedra_original: 'assets/models3d/monstros/escorpiao.glb',
@@ -49857,6 +49878,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   kobold_besteiro:    'assets/models3d/monstros/kobold_besteiro.glb',
   lagarto_carniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   lobo_cinzento:      'assets/models3d/monstros/lobo.glb',
+  lobo_cinzento_customizado: 'assets/models3d/monstros/lobo_alfa.glb',
   urso_negro:         'assets/models3d/monstros/urso.glb',
   urso_negro_customizado: 'assets/models3d/monstros/urso.glb',
   zumbi_infectado:    'assets/models3d/monstros/zumbi.glb',
@@ -50339,7 +50361,7 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'escorpiaodepedra', 'escorpiao_pedra', 'escorpiaodepedra_original',
   ]);
   const extraQuarterTurn = new Set([
-    'lobisomem',
+    'lobisomem', 'lobisomem_alfa',
     'goblin', 'goblinCombatente', 'goblin_combatente',
     'zumbi', 'zumbi_infectado',
   ]);
@@ -50402,8 +50424,10 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   if (monsterType === 'dark_mage' || /mago_das_trevas\.glb$/i.test(glbPath || '')) {
     return _facingToRotY(facing) + Math.PI / 2;
   }
+  // Os alvos de Mira, Golpe e Fúria usam a armadura como miniatura; ela
+  // precisa do mesmo quarto de volta para apontar na direção do movimento.
   if (movementFront.has(imageName) || movementFront.has(monsterType)
-      || /(?:ciclope|minotauro|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux)\.glb$/i.test(glbPath || '')) {
+      || /(?:ciclope|minotauro|gigante_guerreiro|gigante_runas|molochos|ferrao_dos_charcos|vampiro|cria_vampirica|mestre_vampiro|lorde_vampiro|garalux|armadura)\.glb$/i.test(glbPath || '')) {
     // Estes modelos foram exportados 90° de lado em relação ao eixo padrão.
     // Usar a orientação-base faz a frente acompanhar o sentido do movimento.
     return _facingToRotY(facing);

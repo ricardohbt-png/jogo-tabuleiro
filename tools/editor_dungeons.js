@@ -51085,6 +51085,8 @@ window.EDITOR_DUNGEONS = [
       },
       "hero_spawns": [],
       "exit": null,
+      "routes": [],
+      "route_exits": [],
       "monsters": [
         {
           "type": "pombo",
@@ -51094,7 +51096,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_0"
         },
         {
           "type": "rato",
@@ -51104,7 +51107,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_1"
         },
         {
           "type": "gato",
@@ -51114,7 +51118,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_2"
         },
         {
           "type": "ovelha",
@@ -51124,7 +51129,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_3"
         },
         {
           "type": "skeleton",
@@ -51134,7 +51140,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_4"
         },
         {
           "type": "orc",
@@ -51144,7 +51151,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_5"
         },
         {
           "type": "dark_mage",
@@ -51154,7 +51162,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_6"
         },
         {
           "type": "vela_de_fogo",
@@ -51164,7 +51173,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_7"
         },
         {
           "type": "troll",
@@ -51174,7 +51184,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_8"
         },
         {
           "type": "dragon",
@@ -51184,7 +51195,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_9"
         },
         {
           "type": "aranha_sombria",
@@ -51194,7 +51206,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_10"
         },
         {
           "type": "escorpiao_pedra",
@@ -51204,7 +51217,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_11"
         },
         {
           "type": "lacralion_filhote",
@@ -51214,7 +51228,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_12"
         },
         {
           "type": "lacralion_adulto",
@@ -51224,7 +51239,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_13"
         },
         {
           "type": "lacralion_anciao",
@@ -51234,7 +51250,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_14"
         },
         {
           "type": "esqueleto_humano",
@@ -51244,7 +51261,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_15"
         },
         {
           "type": "esqueleto_animal",
@@ -51254,7 +51272,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_16"
         },
         {
           "type": "cobra_constritora",
@@ -51264,7 +51283,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_17"
         },
         {
           "type": "cobra_venenosa",
@@ -51274,7 +51294,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_18"
         },
         {
           "type": "devorador_organico",
@@ -51284,7 +51305,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_19"
         },
         {
           "type": "urso_negro",
@@ -51294,7 +51316,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_20"
         },
         {
           "type": "orc_guerreiro",
@@ -51304,7 +51327,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_21"
         },
         {
           "type": "goblin_arqueiro",
@@ -51314,7 +51338,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_22"
         },
         {
           "type": "goblin_combatente",
@@ -51324,7 +51349,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_23"
         },
         {
           "type": "goblin_dual",
@@ -51334,7 +51360,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_24"
         },
         {
           "type": "kobold_lanceiro",
@@ -51344,7 +51371,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_25"
         },
         {
           "type": "kobold_besteiro",
@@ -51354,7 +51382,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_26"
         },
         {
           "type": "necromante",
@@ -51364,7 +51393,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_27"
         },
         {
           "type": "zumbi_infectado",
@@ -51374,7 +51404,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_28"
         },
         {
           "type": "devorador_metal",
@@ -51384,7 +51415,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_29"
         },
         {
           "type": "bugbear_sombras",
@@ -51394,7 +51426,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_30"
         },
         {
           "type": "ogro_clava",
@@ -51404,7 +51437,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_31"
         },
         {
           "type": "ogro_lanca",
@@ -51414,7 +51448,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_32"
         },
         {
           "type": "elemental_fogo",
@@ -51424,7 +51459,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_33"
         },
         {
           "type": "elemental_gelo",
@@ -51434,7 +51470,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_34"
         },
         {
           "type": "elemental_pedra",
@@ -51444,7 +51481,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_35"
         },
         {
           "type": "elemental_eletrico",
@@ -51454,7 +51492,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_36"
         },
         {
           "type": "elemental_ar",
@@ -51464,7 +51503,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_37"
         },
         {
           "type": "elemental_agua",
@@ -51474,7 +51514,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_38"
         },
         {
           "type": "lobisomem",
@@ -51484,7 +51525,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_39"
         },
         {
           "type": "escravo_vampirico",
@@ -51494,7 +51536,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_40"
         },
         {
           "type": "vampiro_jovem",
@@ -51504,7 +51547,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_41"
         },
         {
           "type": "vampiro_anciao",
@@ -51514,7 +51558,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_42"
         },
         {
           "type": "lorde_vampiro",
@@ -51524,7 +51569,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_43"
         },
         {
           "type": "ferrao_charcos_jovem",
@@ -51534,7 +51580,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_44"
         },
         {
           "type": "ferrao_charcos_adulto",
@@ -51544,7 +51591,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_45"
         },
         {
           "type": "ferrao_charcos_anciao",
@@ -51554,7 +51602,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_46"
         },
         {
           "type": "tirano_da_mata",
@@ -51564,7 +51613,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_47"
         },
         {
           "type": "tirano_ancestral",
@@ -51574,7 +51624,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_48"
         },
         {
           "type": "ciclope",
@@ -51584,7 +51635,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_49"
         },
         {
           "type": "gigante_guerra",
@@ -51594,7 +51646,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_50"
         },
         {
           "type": "gigante_runico",
@@ -51604,7 +51657,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_51"
         },
         {
           "type": "garaloux_jovem",
@@ -51614,7 +51668,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_52"
         },
         {
           "type": "garaloux_adulto",
@@ -51624,7 +51679,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_53"
         },
         {
           "type": "garaloux_alfa",
@@ -51634,7 +51690,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_54"
         },
         {
           "type": "molochus_jovem",
@@ -51644,7 +51701,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_55"
         },
         {
           "type": "molochus_adulto",
@@ -51654,7 +51712,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_56"
         },
         {
           "type": "molochus_anciao",
@@ -51664,7 +51723,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_57"
         },
         {
           "type": "medusa",
@@ -51674,7 +51734,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_58"
         },
         {
           "type": "grande_medusa",
@@ -51684,7 +51745,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_59"
         },
         {
           "type": "grande_gorgona",
@@ -51694,7 +51756,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_60"
         },
         {
           "type": "soldado",
@@ -51704,7 +51767,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_61"
         },
         {
           "type": "tiranossauro_rex",
@@ -51714,7 +51778,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_62"
         },
         {
           "type": "rato_gigante",
@@ -51724,7 +51789,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_63"
         },
         {
           "type": "escorpiao_de_pedra_customizado",
@@ -51734,7 +51800,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_64"
         },
         {
           "type": "urso_negro_customizado",
@@ -51744,7 +51811,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_65"
         },
         {
           "type": "esqueleto_animal_customizado",
@@ -51754,7 +51822,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_66"
         },
         {
           "type": "esqueleto_humano_customizado",
@@ -51764,7 +51833,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_67"
         },
         {
           "type": "grotao",
@@ -51774,7 +51844,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_68"
         },
         {
           "type": "crocodilo_jovem",
@@ -51784,7 +51855,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_69"
         },
         {
           "type": "lobo_cinzento_customizado",
@@ -51794,7 +51866,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_70"
         },
         {
           "type": "lobo_cinzento",
@@ -51804,7 +51877,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_71"
         },
         {
           "type": "escorpiao_pequeno",
@@ -51814,7 +51888,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_72"
         },
         {
           "type": "goblin",
@@ -51824,7 +51899,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_73"
         },
         {
           "type": "lagarto_carniceiro",
@@ -51834,7 +51910,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_74"
         },
         {
           "type": "grotao_customizado",
@@ -51844,7 +51921,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_75"
         },
         {
           "type": "xama_goblin_customizado",
@@ -51854,7 +51932,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_76"
         },
         {
           "type": "goblin_xama",
@@ -51864,7 +51943,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_77"
         },
         {
           "type": "estrangulador",
@@ -51874,7 +51954,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_78"
         },
         {
           "type": "minotauro",
@@ -51884,7 +51965,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_79"
         },
         {
           "type": "minotauro_elite",
@@ -51894,7 +51976,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_80"
         },
         {
           "type": "harpia",
@@ -51904,7 +51987,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_81"
         },
         {
           "type": "boneco_treino",
@@ -51914,7 +51998,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_82"
         },
         {
           "type": "boneco_treino",
@@ -51924,7 +52009,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_83"
         },
         {
           "type": "boneco_golpe",
@@ -51934,7 +52020,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_84"
         },
         {
           "type": "boneco_furia",
@@ -51944,7 +52031,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_85"
         },
         {
           "type": "pombo",
@@ -51954,7 +52042,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_86"
         },
         {
           "type": "pombo",
@@ -51964,7 +52053,19 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_87"
+        },
+        {
+          "type": "lobisomem_alfa",
+          "pos": [
+            14,
+            4
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_88"
         }
       ],
       "chests": [],
@@ -52918,6 +53019,7 @@ window.EDITOR_DUNGEONS = [
       },
       "pontes": [],
       "elevacoes": {},
+      "alturas_parede": {},
       "transicao_altura": "rampa",
       "objectives": {
         "primary": {

@@ -1018,6 +1018,8 @@
   },
   "hero_spawns": [],
   "exit": null,
+  "routes": [],
+  "route_exits": [],
   "monsters": [
     {
       "type": "pombo",
@@ -1027,7 +1029,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_0"
     },
     {
       "type": "rato",
@@ -1037,7 +1040,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_1"
     },
     {
       "type": "gato",
@@ -1047,7 +1051,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_2"
     },
     {
       "type": "ovelha",
@@ -1057,7 +1062,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_3"
     },
     {
       "type": "skeleton",
@@ -1067,7 +1073,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_4"
     },
     {
       "type": "orc",
@@ -1077,7 +1084,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_5"
     },
     {
       "type": "dark_mage",
@@ -1087,7 +1095,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_6"
     },
     {
       "type": "vela_de_fogo",
@@ -1097,7 +1106,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_7"
     },
     {
       "type": "troll",
@@ -1107,7 +1117,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_8"
     },
     {
       "type": "dragon",
@@ -1117,7 +1128,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_9"
     },
     {
       "type": "aranha_sombria",
@@ -1127,7 +1139,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_10"
     },
     {
       "type": "escorpiao_pedra",
@@ -1137,7 +1150,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_11"
     },
     {
       "type": "lacralion_filhote",
@@ -1147,7 +1161,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_12"
     },
     {
       "type": "lacralion_adulto",
@@ -1157,7 +1172,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_13"
     },
     {
       "type": "lacralion_anciao",
@@ -1167,7 +1183,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_14"
     },
     {
       "type": "esqueleto_humano",
@@ -1177,7 +1194,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_15"
     },
     {
       "type": "esqueleto_animal",
@@ -1187,7 +1205,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_16"
     },
     {
       "type": "cobra_constritora",
@@ -1197,7 +1216,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_17"
     },
     {
       "type": "cobra_venenosa",
@@ -1207,7 +1227,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_18"
     },
     {
       "type": "devorador_organico",
@@ -1217,7 +1238,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_19"
     },
     {
       "type": "urso_negro",
@@ -1227,7 +1249,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_20"
     },
     {
       "type": "orc_guerreiro",
@@ -1237,7 +1260,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_21"
     },
     {
       "type": "goblin_arqueiro",
@@ -1247,7 +1271,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_22"
     },
     {
       "type": "goblin_combatente",
@@ -1257,7 +1282,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_23"
     },
     {
       "type": "goblin_dual",
@@ -1267,7 +1293,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_24"
     },
     {
       "type": "kobold_lanceiro",
@@ -1277,7 +1304,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_25"
     },
     {
       "type": "kobold_besteiro",
@@ -1287,7 +1315,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_26"
     },
     {
       "type": "necromante",
@@ -1297,7 +1326,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_27"
     },
     {
       "type": "zumbi_infectado",
@@ -1307,7 +1337,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_28"
     },
     {
       "type": "devorador_metal",
@@ -1317,7 +1348,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_29"
     },
     {
       "type": "bugbear_sombras",
@@ -1327,7 +1359,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_30"
     },
     {
       "type": "ogro_clava",
@@ -1337,7 +1370,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_31"
     },
     {
       "type": "ogro_lanca",
@@ -1347,7 +1381,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_32"
     },
     {
       "type": "elemental_fogo",
@@ -1357,7 +1392,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_33"
     },
     {
       "type": "elemental_gelo",
@@ -1367,7 +1403,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_34"
     },
     {
       "type": "elemental_pedra",
@@ -1377,7 +1414,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_35"
     },
     {
       "type": "elemental_eletrico",
@@ -1387,7 +1425,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_36"
     },
     {
       "type": "elemental_ar",
@@ -1397,7 +1436,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_37"
     },
     {
       "type": "elemental_agua",
@@ -1407,7 +1447,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_38"
     },
     {
       "type": "lobisomem",
@@ -1417,7 +1458,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_39"
     },
     {
       "type": "escravo_vampirico",
@@ -1427,7 +1469,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_40"
     },
     {
       "type": "vampiro_jovem",
@@ -1437,7 +1480,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_41"
     },
     {
       "type": "vampiro_anciao",
@@ -1447,7 +1491,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_42"
     },
     {
       "type": "lorde_vampiro",
@@ -1457,7 +1502,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_43"
     },
     {
       "type": "ferrao_charcos_jovem",
@@ -1467,7 +1513,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_44"
     },
     {
       "type": "ferrao_charcos_adulto",
@@ -1477,7 +1524,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_45"
     },
     {
       "type": "ferrao_charcos_anciao",
@@ -1487,7 +1535,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_46"
     },
     {
       "type": "tirano_da_mata",
@@ -1497,7 +1546,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_47"
     },
     {
       "type": "tirano_ancestral",
@@ -1507,7 +1557,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_48"
     },
     {
       "type": "ciclope",
@@ -1517,7 +1568,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_49"
     },
     {
       "type": "gigante_guerra",
@@ -1527,7 +1579,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_50"
     },
     {
       "type": "gigante_runico",
@@ -1537,7 +1590,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_51"
     },
     {
       "type": "garaloux_jovem",
@@ -1547,7 +1601,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_52"
     },
     {
       "type": "garaloux_adulto",
@@ -1557,7 +1612,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_53"
     },
     {
       "type": "garaloux_alfa",
@@ -1567,7 +1623,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_54"
     },
     {
       "type": "molochus_jovem",
@@ -1577,7 +1634,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_55"
     },
     {
       "type": "molochus_adulto",
@@ -1587,7 +1645,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_56"
     },
     {
       "type": "molochus_anciao",
@@ -1597,7 +1656,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_57"
     },
     {
       "type": "medusa",
@@ -1607,7 +1667,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_58"
     },
     {
       "type": "grande_medusa",
@@ -1617,7 +1678,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_59"
     },
     {
       "type": "grande_gorgona",
@@ -1627,7 +1689,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_60"
     },
     {
       "type": "soldado",
@@ -1637,7 +1700,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_61"
     },
     {
       "type": "tiranossauro_rex",
@@ -1647,7 +1711,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_62"
     },
     {
       "type": "rato_gigante",
@@ -1657,7 +1722,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_63"
     },
     {
       "type": "escorpiao_de_pedra_customizado",
@@ -1667,7 +1733,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_64"
     },
     {
       "type": "urso_negro_customizado",
@@ -1677,7 +1744,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_65"
     },
     {
       "type": "esqueleto_animal_customizado",
@@ -1687,7 +1755,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_66"
     },
     {
       "type": "esqueleto_humano_customizado",
@@ -1697,7 +1766,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_67"
     },
     {
       "type": "grotao",
@@ -1707,7 +1777,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_68"
     },
     {
       "type": "crocodilo_jovem",
@@ -1717,7 +1788,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_69"
     },
     {
       "type": "lobo_cinzento_customizado",
@@ -1727,7 +1799,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_70"
     },
     {
       "type": "lobo_cinzento",
@@ -1737,7 +1810,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_71"
     },
     {
       "type": "escorpiao_pequeno",
@@ -1747,7 +1821,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_72"
     },
     {
       "type": "goblin",
@@ -1757,7 +1832,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_73"
     },
     {
       "type": "lagarto_carniceiro",
@@ -1767,7 +1843,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_74"
     },
     {
       "type": "grotao_customizado",
@@ -1777,7 +1854,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_75"
     },
     {
       "type": "xama_goblin_customizado",
@@ -1787,7 +1865,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_76"
     },
     {
       "type": "goblin_xama",
@@ -1797,7 +1876,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_77"
     },
     {
       "type": "estrangulador",
@@ -1807,7 +1887,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_78"
     },
     {
       "type": "minotauro",
@@ -1817,7 +1898,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_79"
     },
     {
       "type": "minotauro_elite",
@@ -1827,7 +1909,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_80"
     },
     {
       "type": "harpia",
@@ -1837,7 +1920,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_81"
     },
     {
       "type": "boneco_treino",
@@ -1847,7 +1931,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_82"
     },
     {
       "type": "boneco_treino",
@@ -1857,7 +1942,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_83"
     },
     {
       "type": "boneco_golpe",
@@ -1867,7 +1953,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_84"
     },
     {
       "type": "boneco_furia",
@@ -1877,7 +1964,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_85"
     },
     {
       "type": "pombo",
@@ -1887,7 +1975,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_86"
     },
     {
       "type": "pombo",
@@ -1897,7 +1986,19 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_87"
+    },
+    {
+      "type": "lobisomem_alfa",
+      "pos": [
+        14,
+        4
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_88"
     }
   ],
   "chests": [],
@@ -2851,6 +2952,7 @@
   },
   "pontes": [],
   "elevacoes": {},
+  "alturas_parede": {},
   "transicao_altura": "rampa",
   "objectives": {
     "primary": {

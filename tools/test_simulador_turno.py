@@ -8,7 +8,7 @@ encontrado em 2026-09-15: o simulador pulava `_upkeep_inicio_turno_monstro`,
 `_start_initiative_player_turn`, o reset do `handle_end_turn` e a virada de
 rodada — então recargas, ticks, regeneração e controle de multidão congelavam.
 """
-import asyncio, copy, json, os, sys
+import asyncio, copy, json, os, random, sys
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -123,6 +123,24 @@ async def main():
     chegou = await ir_para(r, "monster", m["id"])
     check("o troll recebe o turno com 0 HP", chegou)
     check("e volta com HP positivo", m["hp"] > 0)
+
+    print("\n[3b] Lobisomem Alfa a 0 PV continua na fila e retorna no simulador")
+    _rng_state = random.getstate()
+    r = sala([{"type": "lobisomem_alfa", "pos": [6, 6]}])
+    h = await heroi(r, "warrior", 5, 6); h["hp"] = h["max_hp"] = 500
+    await iniciar(r); m = monstro(r, "lobisomem_alfa")
+    await ir_para(r, "hero", h["id"]); acerta_sempre(r); m["hp"] = 1
+    ataques_antes = getattr(r, "_combat_damage_events", [])
+    await r.handle_teste_acao_heroi(MASTER, h["id"], "attack", {
+        "target_id": m["id"], "target_pos": m["pos"], "buffs": []})
+    check("o Alfa cai e fica marcado para regenerar",
+          m["hp"] <= 0 and m.get("lobisomem_alfa_regenerando"))
+    check("a fila mantém o Alfa vivo para o retorno",
+          r._teste_combate_monstro_vivo(m) and r.test_combat.get("active") is True)
+    chegou = await ir_para(r, "monster", m["id"])
+    check("o Alfa recebe o turno de retorno", chegou)
+    check("o Alfa se ergue com 1 PV", m["hp"] >= 1 and not m.get("lobisomem_alfa_regenerando"))
+    random.setstate(_rng_state)
 
     print("\n[4] Estado que consome o turno pula o monstro na fila")
     r = sala([{"type": "goblin", "pos": [6, 6]}, {"type": "goblin", "pos": [8, 8]}])

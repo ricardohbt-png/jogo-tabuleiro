@@ -6213,6 +6213,13 @@ MONSTER_DEFS = [
      "special_abilities":[{"id":"olfato_agucado","name":"Olfato Aguçado","action_type":"passiva","descricao":"Detecta invisíveis e impede ocultação."},{"id":"pele_amaldicoada","name":"Pele Amaldiçoada","action_type":"passiva","descricao":"Armas não mágicas e sem prata causam metade do dano."},{"id":"regeneracao_lobisomem","name":"Regeneração","action_type":"passiva","descricao":"Recupera 2 HP no início do turno, exceto após dano mágico ou de prata."},{"id":"furia_bestial_lobisomem","name":"Fúria Bestial","action_type":"passiva","descricao":"Com 12 HP ou menos: +2 ataque e dano."}],
      "immunities":[],"resistances":[],"weaknesses":[{"type":"silver","multiplier":2,"descricao":"Prata causa dano dobrado e bloqueia regeneração."}],
      "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem","subtipo":"raca_padrao","undead":False,"boss":False},
+    {"type":"lobisomem_alfa","name":"Lobisomem Alfa","emoji":"🐺","tier":6,"cr":6,
+     "hp":85,"ac":19,"natural_armor":6,"size":[1,1],"movement":6,
+     "str_":20,"dex":16,"con_":18,"int_":10,"fort":8,"ref_":6,"will":4,
+     "attacks":[{"name":"Garras","atk_bonus":8,"damage":"2d6+5","damage_types":["physical"],"num_attacks":2,"categoria":"cortante"},{"name":"Mordida","atk_bonus":8,"damage":"2d8+5","damage_types":["physical"],"num_attacks":1,"categoria":"perfurante"}],
+     "special_abilities":[{"id":"olfato_agucado","name":"Olfato Aguçado","action_type":"passiva","descricao":"Detecta heróis invisíveis e ocultos."},{"id":"pele_amaldicoada","name":"Pele Amaldiçoada","action_type":"passiva","descricao":"Armas não mágicas e sem prata causam metade do dano; prata causa dano dobrado."},{"id":"regeneracao_lobisomem_alfa","name":"Regeneração Alfa","action_type":"passiva","amount":5,"descricao":"Recupera 5 PV por turno e pode voltar com 1 PV ao cair, salvo morte definitiva por prata ou fogo."}],
+     "immunities":[],"resistances":[],"weaknesses":[{"type":"silver","multiplier":2,"descricao":"Prata causa dano dobrado; um golpe letal de prata impede o retorno."}],
+     "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem_alfa","subtipo":"raca_padrao","undead":False,"boss":False},
     {"type":"escravo_vampirico","name":"Escravo Vampírico","emoji":"🧛","tier":3,"cr":3,"hp":18,"ac":15,"size":[1,1],"movement":6,"str_":14,"dex":14,"con_":10,"int_":6,"fort":2,"ref_":4,"will":4,"attacks":[{"name":"Espada Curta","atk_bonus":4,"damage":"1d6+2","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":3,"damage":"1d4+2","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva","descricao":"Armas comuns sofrem –5; prata, magia e magias ignoram."},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva","descricao":"Recupera 5 HP; sagrado/luz e fogo bloqueiam."},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva","descricao":"A mordida cura o dano causado."},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva","descricao":"Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente."}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"loot_drops":[{"kind":"item","item_id":"pocao_cura","chance":25}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"cria_vampirica","subtipo":"morto_vivo","undead":True,"boss":False},
     {"type":"vampiro_jovem","name":"Vampiro Jovem","emoji":"🧛","tier":5,"cr":5,"hp":28,"ac":17,"size":[1,1],"movement":6,"str_":16,"dex":18,"con_":10,"int_":12,"fort":4,"ref_":6,"will":5,"attacks":[{"name":"Espada Longa","atk_bonus":6,"damage":"1d8+3","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":5,"damage":"1d6+3","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_vampirico","name":"Encantar","action_type":"acao","dc":12,"cooldown_turns":3},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
     {"type":"vampiro_anciao","name":"Vampiro Ancião","emoji":"🧛","tier":7,"cr":7,"hp":42,"ac":19,"size":[1,1],"movement":6,"str_":18,"dex":20,"con_":10,"int_":16,"fort":6,"ref_":8,"will":8,"attacks":[{"name":"Espada Bastarda","atk_bonus":9,"damage":"1d10+5","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":8,"damage":"1d8+5","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_area_vampirico","name":"Encantar em Área","action_type":"acao","dc":13,"range":4,"cooldown_turns":2},{"id":"comandar_escravos","name":"Comandar Escravos","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"mestre_vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
@@ -10860,6 +10867,8 @@ def make_monster(mdef, room):
         m["troll_dano_fogo"] = 0
         m["troll_regeneracao_bloqueada"] = False
         m["troll_ultimo_dano_tipos"] = []
+    elif m.get("type") == "lobisomem_alfa":
+        m["lobisomem_alfa_dano_fogo"] = 0
     m["pos"] = [room["cx"], room["cy"]]
     m["room_id"] = room["id"]
     combatant_potion = False
@@ -16862,7 +16871,7 @@ class GameRoom(TutorialTraining):
         offset = len(entries)
         for seq, monster in enumerate(self.monsters.values()):
             if (monster.get("hp", 0) > 0
-                    or (monster.get("type") == "troll" and monster.get("troll_regenerando"))):
+                    or self._monster_regenerando_a_zero(monster)):
                 entries.append({"kind":"monster", "id":monster["id"], "seq":offset+seq, "initiative":self.initiative_value(monster),
                                 "dex":self._initiative_attribute(monster,"dex"), "int":self._initiative_attribute(monster,"int_")})
         hero_first = (self.round_num % 2 == 1)
@@ -17032,7 +17041,7 @@ class GameRoom(TutorialTraining):
         async def monster_corpo(mid):
             monster = self.monsters.get(mid)
             if (monster and (monster.get("hp", 0) > 0
-                             or (monster.get("type") == "troll" and monster.get("troll_regenerando")))):
+                             or self._monster_regenerando_a_zero(monster))):
                 await self._testar_rodamoinho_profundo_inicio_turno(monster)
                 if monster.get("_rodamoinho_profundo_bloqueado_turno"):
                     return
@@ -17149,7 +17158,7 @@ class GameRoom(TutorialTraining):
                  and self._ativo(self.players.get(entry["id"])))
                 or (entry["kind"] == "monster"
                     and (self.monsters.get(entry["id"], {}).get("hp", 0) > 0
-                         or self.monsters.get(entry["id"], {}).get("troll_regenerando")))
+                         or self._monster_regenerando_a_zero(self.monsters.get(entry["id"]))))
                 for entry in self.initiative_order[self.initiative_index:])
         if terminou_fila_viva:
             await self._virada_de_rodada()
@@ -17165,7 +17174,7 @@ class GameRoom(TutorialTraining):
             if a["kind"] == "player":
                 if self._ativo(self.players.get(a["id"])): break
             elif (self.monsters.get(a["id"], {}).get("hp", 0) > 0
-                  or self.monsters.get(a["id"], {}).get("troll_regenerando")):
+                  or self._monster_regenerando_a_zero(self.monsters.get(a["id"]))):
                 break
             self.initiative_index = (self.initiative_index + 1) % len(self.initiative_order); attempts += 1
         await self._activate_initiative_actor()
@@ -18061,15 +18070,20 @@ class GameRoom(TutorialTraining):
         # esses objetos e materiais opacos, mas nunca atravessa paredes/portas.
         return escuro or not self._tall_oclui_caminho(m["pos"][0], m["pos"][1], alvo["pos"][0], alvo["pos"][1])
 
+    def _monstro_ignora_ocultacao(self, m):
+        """Faro Implacável e Olfato Aguçado detectam alvos invisíveis/ocultos."""
+        return (self._tem_habilidade(m, "faro_implacavel_minotauro")
+                or self._tem_habilidade(m, "olfato_agucado"))
+
     def _alvos_visiveis_para_monstro(self, m, targets):
-        faro = self._tem_habilidade(m, "faro_implacavel_minotauro")
+        percebe_ocultacao = self._monstro_ignora_ocultacao(m)
         candidatos = []
         for target in targets:
             obj = target.get("obj", {})
             if (target.get("kind") in {"player", "monster"}
                     and (obj.get("invisivel_sombras") or obj.get("invisivel_magico")
                          or obj.get("oculto_vela"))
-                    and not faro):
+                    and not percebe_ocultacao):
                 continue
             candidatos.append(target)
         return [target for target in candidatos if self._monstro_enxerga_alvo(m, target)]
@@ -18258,7 +18272,7 @@ class GameRoom(TutorialTraining):
         if not self._ativo(p) or not p.get("pos"):
             return None
         if ((p.get("invisivel_sombras") or p.get("invisivel_magico") or p.get("oculto_vela"))
-                and not self._tem_habilidade(m, "faro_implacavel_minotauro")):
+                and not self._monstro_ignora_ocultacao(m)):
             return None
         return p
 
@@ -22200,12 +22214,19 @@ class GameRoom(TutorialTraining):
             return None
         return queue[index]
 
+    def _monster_regenerando_a_zero(self, m):
+        """Vivos para iniciativa: Troll e Alfa que aguardam voltar de 0 PV."""
+        if not m or int(m.get("hp", 0) or 0) > 0:
+            return False
+        return bool(
+            (m.get("type") == "troll" and m.get("troll_regenerando"))
+            or (m.get("type") == "lobisomem_alfa"
+                and m.get("lobisomem_alfa_regenerando"))
+        )
+
     def _teste_combate_monstro_vivo(self, m):
-        """Monstro que ainda recebe turno na fila do simulador: HP > 0 OU um
-        troll caído regenerando — o mesmo critério de `_advance_initiative`.
-        Sem isto o troll a 0 HP saía da fila e a simulação encerrava como
-        "monstros eliminados" em vez de vê-lo voltar."""
-        return bool(m and (m.get("hp", 0) > 0 or m.get("troll_regenerando")))
+        """Monstro vivo para fila do simulador, incluindo quem retorna de 0 PV."""
+        return bool(m and (m.get("hp", 0) > 0 or self._monster_regenerando_a_zero(m)))
 
     def _teste_combate_ator_vivo(self, actor):
         if not actor:
@@ -22589,10 +22610,10 @@ class GameRoom(TutorialTraining):
         # Efeitos de espécie que só viviam dentro da IA e não chegavam ao
         # ataque manual (Mestre/simulador): Caça em Bando e Derrubar do lobo,
         # Mordida Corrosiva do Devorador de Metal.
-        if m.get("type") == "lobo_cinzento" and idx == 0:
+        if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"} and idx == 0:
             atk_def = await self._lobo_bando_atk(m, alvo, dict(atk_def))
         hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo})
-        if m.get("type") == "lobo_cinzento":
+        if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"}:
             await self._lobo_derrubar(m, {"kind": alvo_kind, "obj": alvo}, hit)
         if (hit and m.get("type") == "devorador_metal" and idx == 0
                 and alvo_kind == "player" and alvo.get("hp", 1) > 0):
@@ -29918,7 +29939,7 @@ class GameRoom(TutorialTraining):
 
     def _registrar_dano_combate(self, alvo, dano, damage_types, *,
                                 critical=False, impact_pos=None, status=None,
-                                source=None):
+                                source=None, fire_damage_amount=None):
         """Registra metadado visual do dano já resolvido pelo servidor.
 
         Não altera HP nem regras de combate. O payload é consumido no próximo
@@ -29945,6 +29966,24 @@ class GameRoom(TutorialTraining):
                 types.append(key)
         if not types:
             types = [DMG_PHYSICAL]
+        if alvo.get("type") == "lobisomem_alfa":
+            alvo["lobisomem_alfa_ultimo_dano_prata"] = bool(
+                alvo.pop("_lobisomem_alfa_prata_pendente", False))
+        if alvo.get("type") == "lobisomem_alfa" and amount > 0:
+            # Ataques podem somar um componente de fogo ao dano físico. Só
+            # acumule a parte de fogo já resolvida; sem componentes explícitos,
+            # aceite o total apenas quando ele for exclusivamente fogo.
+            fogo = fire_damage_amount
+            if fogo is None and types == [DMG_FIRE]:
+                fogo = amount
+            try:
+                fogo = max(0, int(round(float(fogo or 0))))
+            except (TypeError, ValueError):
+                fogo = 0
+            if fogo:
+                alvo["lobisomem_alfa_dano_fogo"] = (
+                    max(0, int(alvo.get("lobisomem_alfa_dano_fogo", 0) or 0)) + fogo
+                )
         context_types = set(context.get("damage_types") or [])
         visual_reaction = context.get("reaction")
         if visual_reaction and (
@@ -39326,9 +39365,11 @@ class GameRoom(TutorialTraining):
             reducao_ignorada_restante -= ignorado
             return depois + ignorado
 
-        if target.get("type") == "lobisomem" and DMG_PHYSICAL in damage_types:
+        if target.get("type") in {"lobisomem", "lobisomem_alfa"} and DMG_PHYSICAL in damage_types:
             prata = bool((weapon or {}).get("silver"))
             magica = bool((weapon or {}).get("magical")) or "magic" in str((weapon or {}).get("id", ""))
+            if target.get("type") == "lobisomem_alfa":
+                target["_lobisomem_alfa_prata_pendente"] = prata
             if prata:
                 total *= 2
                 vulnerability_applied = vulnerability_applied or total > raw_dmg
@@ -39338,7 +39379,7 @@ class GameRoom(TutorialTraining):
                 total = (total + 1) // 2
                 total = aplicar_penetracao_reducao(antes, total)
                 resistance_applied = resistance_applied or total < antes
-        if target.get("type") == "lobisomem" and DMG_MAGIC in damage_types:
+        if target.get("type") in {"lobisomem", "lobisomem_alfa"} and DMG_MAGIC in damage_types:
             target["regeneracao_bloqueada"] = True
         # Licantropia em heróis: prata dobra o dano físico; magia e prata passam
         # pela redução. A redução é fixa (não "metade") e cresce por estágio.
@@ -41047,6 +41088,20 @@ class GameRoom(TutorialTraining):
 
     async def _monster_try_retreat(self, m, target_obj, threshold=0.25):
         """Retira uma criatura muito ferida para cobertura/apoio."""
+        if m.get("type") in {"lobisomem", "lobisomem_alfa"}:
+            max_hp = max(1, int(m.get("max_hp", m.get("hp", 1)) or 1))
+            hp = max(0, int(m.get("hp", 0) or 0))
+            # O lobisomem só inicia o recuo em estado crítico (5 PV ou menos),
+            # mas permanece fugindo até recuperar metade dos PV máximos.
+            if m.get("ai_retreating"):
+                if hp * 2 >= max_hp:
+                    m.pop("ai_retreating", None)
+                    return False
+            elif hp <= 5:
+                m["ai_retreating"] = True
+            else:
+                return False
+            threshold = 0.5
         goal = self._monster_retreat_goal(m, target_obj, threshold=threshold)
         if not goal:
             return False
@@ -41814,10 +41869,12 @@ class GameRoom(TutorialTraining):
             if self._tem_habilidade(m, "intensidade"):
                 damage_context = dict(atk_def, ignora_resistencia_leve_fogo=True)
             dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target, damage_context)
+            fire_component_resolved = None
             if atk_def.get("fire_damage"):
                 fire_expr = str(atk_def["fire_damage"])
                 fire_roll = roll_dice(fire_expr)
                 fire_damage = self._apply_damage_types(fire_roll, [DMG_FIRE], target)
+                fire_component_resolved = fire_damage
                 dmg += fire_damage
                 await self.broadcast({"type": "dice_roll", "die": "d6", "value": fire_roll,
                                       "label": T("dado.fogo_da_arma_de", nome=nome_criatura(m)),
@@ -41928,7 +41985,8 @@ class GameRoom(TutorialTraining):
             elif is_monster:
                 self._registrar_dano_combate(
                     target, dmg, atk_def.get("damage_types", [DMG_PHYSICAL]),
-                    critical=crit, impact_pos=target.get("pos"))
+                    critical=crit, impact_pos=target.get("pos"),
+                    fire_damage_amount=fire_component_resolved)
                 target["hp"] = max(0, target["hp"] - dmg)
                 await self._registrar_dano_desbloqueio_metamorfose(m, target, dmg)
                 dano_sofrido = dmg
@@ -43866,9 +43924,10 @@ class GameRoom(TutorialTraining):
         """Caça em Bando: +2 ataque se outro lobo adjacente ao alvo. Devolve o
         ataque (possivelmente bonificado). Compartilhado pela IA e pelo ataque
         manual do Mestre — antes vivia só dentro de `_ai_lobo_cinzento`."""
+        tipos_lobo = {"lobo_cinzento", "lobo_cinzento_customizado"}
         outros_lobos = [m2 for m2 in self.monsters.values()
                         if m2["id"] != m["id"]
-                        and m2.get("type") == "lobo_cinzento"
+                        and m2.get("type") in tipos_lobo
                         and m2["hp"] > 0]
         bando_bonus = 2 if any(self._is_adjacent_to_monster(target["pos"], m2)
                                 for m2 in outros_lobos) else 0
@@ -43878,13 +43937,24 @@ class GameRoom(TutorialTraining):
         return atk
 
     async def _lobo_derrubar(self, m, target_obj, hit):
-        """Derrubar: Ref CD 11 ao acertar um herói. IA e Manual."""
+        """Derrubar após acerto. IA e Manual; o Alfa concede +2 CD aos aliados."""
         target = target_obj["obj"]
         if hit and target_obj["kind"] == "player" and target.get("hp", 1) > 0:
             derrubar = next((ab for ab in m.get("special_abilities", [])
                              if ab["id"] == "derrubar"), None)
             if derrubar:
                 dc = derrubar.get("dc", 11)
+                # A presença de um Lobo Alfa eleva a CD do Derrubar dos demais
+                # lobos da sala em +2. O bônus não se acumula e não melhora a
+                # CD própria do Alfa, que já é 15.
+                if m.get("type") != "lobo_cinzento_customizado":
+                    alfa_presente = any(
+                        aliado.get("id") != m.get("id")
+                        and aliado.get("type") == "lobo_cinzento_customizado"
+                        and aliado.get("hp", 0) > 0
+                        for aliado in self.monsters.values())
+                    if alfa_presente:
+                        dc += 2
                 save_ok, d20, sb, stot = self._testar_save(target, "reflexos", dc, fonte=m)
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 if not save_ok:
@@ -46713,6 +46783,35 @@ class GameRoom(TutorialTraining):
             m["hp"] = min(teto, int(m.get("hp", 0)) + cura)
             await self.gm_say(T("narracao.troll_regenera_4_pv", monstro=nome_criatura(m), cura=cura))
 
+    async def _processar_regeneracao_lobisomem_alfa_inicio(self, m):
+        """Aplica a regeneração do Alfa e resolve seu retorno após cair a 0 PV."""
+        if m.get("type") != "lobisomem_alfa":
+            return
+        max_hp = max(0, int(m.get("max_hp", m.get("hp", 0)) or 0))
+        dano_fogo = max(0, int(m.get("lobisomem_alfa_dano_fogo", 0) or 0))
+        teto = max(0, max_hp - dano_fogo)
+        if m.get("lobisomem_alfa_regenerando"):
+            morte_final = bool(m.get("lobisomem_alfa_morte_definitiva")) \
+                or bool(m.get("lobisomem_alfa_ultimo_dano_prata")) or teto <= 0
+            if morte_final:
+                m["lobisomem_alfa_morte_definitiva"] = True
+                m.pop("lobisomem_alfa_regenerando", None)
+                await self._monster_dies(m, None)
+                return
+            m["hp"] = 1
+            m.pop("lobisomem_alfa_regenerando", None)
+            m.pop("regeneracao_bloqueada", None)
+            await self.gm_say(T("narracao.lobisomem_alfa_se_ergue_com_1_pv", monstro=nome_criatura(m)))
+            return
+        if m.get("hp", 0) <= 0:
+            return
+        if m.pop("regeneracao_bloqueada", False):
+            return
+        cura = min(5, max(0, teto - int(m.get("hp", 0) or 0)))
+        if cura:
+            m["hp"] = int(m.get("hp", 0) or 0) + cura
+            await self.gm_say(T("narracao.lobisomem_alfa_regenera_5_pv", monstro=nome_criatura(m), cura=cura))
+
     def _limpar_provocacao_runica_expirada(self):
         for p in self.players.values():
             if p.get("runico_provocado_por") and p.get("runico_provocacao_ate", 0) < self.round_num:
@@ -46749,6 +46848,7 @@ class GameRoom(TutorialTraining):
         self._limpar_provocacao_runica_expirada()
         await self._processar_regeneracao_runica_inicio(m)
         await self._processar_regeneracao_troll_inicio(m)
+        await self._processar_regeneracao_lobisomem_alfa_inicio(m)
         await self._processar_aura_escaldante_inicio(m)
         await self._processar_zona_molochus_inicio_turno(m)
         await self._aplicar_lava_se_pisar(m)
@@ -46787,11 +46887,16 @@ class GameRoom(TutorialTraining):
         if m.get("hp", 0) <= 0:
             return False
         await self._processar_mods_magia_turno(m)   # Amaldiçoar expira por rodada
-        if m.get("type") == "lobisomem":
-            if not m.pop("regeneracao_bloqueada", False):
-                m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + 2)
-            if m.get("hp", 0) <= 12:
-                m["furia_lobisomem"] = True
+        if m.get("type") in {"lobisomem", "lobisomem_alfa"}:
+            # Arma o recuo usando os PV antes da cura deste turno: chegar a
+            # 5 PV deve iniciar a fuga mesmo se a regeneração subir para 6–7.
+            if int(m.get("hp", 0) or 0) <= 5:
+                m["ai_retreating"] = True
+            if m.get("type") == "lobisomem":
+                if not m.pop("regeneracao_bloqueada", False):
+                    m["hp"] = min(m.get("max_hp", m["hp"]), m["hp"] + 2)
+                if m.get("hp", 0) <= 12:
+                    m["furia_lobisomem"] = True
         if m["hp"] <= 0:
             return False
         # Snapshots de HP entre turnos que viviam dentro de `_ai_orc_guerreiro` /
@@ -46878,7 +46983,8 @@ class GameRoom(TutorialTraining):
 
     async def gm_phase(self, only_monster=None):
         """Executa todos os monstros (modo legado) ou somente um, para iniciativa."""
-        all_alive_monsters = [m for m in self.monsters.values() if m["hp"] > 0]
+        all_alive_monsters = [m for m in self.monsters.values()
+                              if m["hp"] > 0 or self._monster_regenerando_a_zero(m)]
         alive_monsters = ([only_monster] if only_monster is not None else
                           all_alive_monsters)
         alive_players = [p for p in self.players.values() if self._ativo(p)]
@@ -46907,7 +47013,7 @@ class GameRoom(TutorialTraining):
 
         for m in alive_monsters:
             if (m["hp"] <= 0
-                    and not (m.get("type") == "troll" and m.get("troll_regenerando"))):
+                    and not self._monster_regenerando_a_zero(m)):
                 continue
             await self._testar_rodamoinho_profundo_inicio_turno(m)
             if m.get("_rodamoinho_profundo_bloqueado_turno"):
@@ -47265,6 +47371,21 @@ class GameRoom(TutorialTraining):
                 return
             m.pop("troll_regenerando", None)
             m.pop("troll_morte_definitiva", None)
+
+        if m.get("type") == "lobisomem_alfa" and not force:
+            max_hp = max(0, int(m.get("max_hp", m.get("hp", 0)) or 0))
+            dano_fogo = max(0, int(m.get("lobisomem_alfa_dano_fogo", 0) or 0))
+            teto = max(0, max_hp - dano_fogo)
+            morte_final = bool(m.get("lobisomem_alfa_morte_definitiva")) \
+                or bool(m.get("lobisomem_alfa_ultimo_dano_prata")) or teto <= 0
+            if morte_final:
+                m["lobisomem_alfa_morte_definitiva"] = True
+                m.pop("lobisomem_alfa_regenerando", None)
+            else:
+                if not m.get("lobisomem_alfa_regenerando"):
+                    m["lobisomem_alfa_regenerando"] = True
+                    await self.gm_say(T("narracao.lobisomem_alfa_cai_mas_regenera", monstro=nome_criatura(m)))
+                return
 
         # A forma temporária não substitui a morte do alvo: ao chegar a 0 PV,
         # primeiro recupera-se a ficha original e então o fluxo normal de morte
@@ -51373,7 +51494,7 @@ def _validate_custom_monster(raw):
         "natural_armor": natural_armor,
         "ac_bonus": ac_bonus,
         "ac": max(1, min(99, 10 + dex_mod + natural_armor + ac_bonus)),
-        "movement": _monster_int(raw.get("movement", 6), 6, 1, 20) if raw.get("movement_exception") else 6,
+        "movement": _monster_int(raw.get("movement", 6), 6, 0, 20) if raw.get("movement_exception") else 6,
         "movement_exception": bool(raw.get("movement_exception")),
         "vision_base": vision_base,
         "visao_escuro": bool(raw.get("visao_escuro")),

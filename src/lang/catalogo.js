@@ -3671,8 +3671,8 @@ window.LANG_CATALOGO = {
     "pt": "Lobo Cinzento"
   },
   "cat.monstro.lobo_cinzento_customizado.nome": {
-    "en": "Grey Wolf",
-    "pt": "Lobo Cinzento"
+    "en": "Alpha Wolf",
+    "pt": "Lobo Alfa"
   },
   "cat.monstro.lorde_vampiro.nome": {
     "en": "Vampire Lord",

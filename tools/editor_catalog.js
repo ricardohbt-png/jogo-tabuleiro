@@ -3414,6 +3414,116 @@ window.EDITOR_CATALOG = {
       "percepcao": 13
     },
     {
+      "type": "lobisomem_alfa",
+      "name": "Lobisomem Alfa",
+      "emoji": "🐺",
+      "boss": false,
+      "tier": 6,
+      "cr": 6,
+      "hp": 85,
+      "ac": 19,
+      "natural_armor": 6,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "lobisomem_alfa",
+      "str_": 20,
+      "dex": 16,
+      "con_": 18,
+      "int_": 10,
+      "fort": 8,
+      "ref_": 6,
+      "will": 4,
+      "attacks": [
+        {
+          "name": "Garras",
+          "atk_bonus": 8,
+          "damage": "2d6+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2,
+          "categoria": "cortante"
+        },
+        {
+          "name": "Mordida",
+          "atk_bonus": 8,
+          "damage": "2d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "olfato_agucado",
+          "name": "Olfato Aguçado",
+          "action_type": "passiva",
+          "descricao": "Detecta heróis invisíveis e ocultos."
+        },
+        {
+          "id": "pele_amaldicoada",
+          "name": "Pele Amaldiçoada",
+          "action_type": "passiva",
+          "descricao": "Armas não mágicas e sem prata causam metade do dano; prata causa dano dobrado."
+        },
+        {
+          "id": "regeneracao_lobisomem_alfa",
+          "name": "Regeneração Alfa",
+          "action_type": "passiva",
+          "amount": 5,
+          "descricao": "Recupera 5 PV por turno e pode voltar com 1 PV ao cair, salvo morte definitiva por prata ou fogo."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "silver",
+          "multiplier": 2,
+          "descricao": "Prata causa dano dobrado; um golpe letal de prata impede o retorno."
+        }
+      ],
+      "resistances": [],
+      "loot_table": {},
+      "loot_drops": [
+        {
+          "kind": "gold",
+          "amount": 10,
+          "chance": 30
+        },
+        {
+          "kind": "gold",
+          "amount": 15,
+          "chance": 30
+        },
+        {
+          "kind": "gold",
+          "amount": 20,
+          "chance": 25
+        },
+        {
+          "kind": "gold",
+          "amount": 35,
+          "chance": 15
+        },
+        {
+          "kind": "gold",
+          "amount": 50,
+          "chance": 5
+        }
+      ],
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 13
+    },
+    {
       "type": "escravo_vampirico",
       "name": "Escravo Vampírico",
       "emoji": "🧛",
@@ -6985,6 +7095,14 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "regeneracao_lobisomem_alfa",
+      "name": "Regeneração Alfa",
+      "action_type": "passiva",
+      "amount": 5,
+      "descricao": "Recupera 5 PV por turno e pode voltar com 1 PV ao cair, salvo morte definitiva por prata ou fogo.",
+      "source": "monstro"
+    },
+    {
       "id": "reducao_vampirica",
       "name": "Redução de Dano 5",
       "action_type": "passiva",
@@ -9709,6 +9827,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Lobisomem",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lobisomem.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_lobisomem_alfa",
+      "source": "guilda",
+      "source_id": "lenda_lobisomem_alfa",
+      "name": "Lenda: Lobisomem Alfa",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Lobisomem Alfa.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"

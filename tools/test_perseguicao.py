@@ -161,6 +161,94 @@ async def secao_invisivel():
     check("herói na cidade não deixa rastro", len(testes) == 0)
 
 
+def secao_olfato_lobisomem():
+    print("\n[3b] Olfato Aguçado percebe e rastreia heróis ocultos sem atravessar paredes")
+    r, h, _, _ = cena()
+    definicao = next(d for d in S.MONSTER_DEFS if d["type"] == "lobisomem")
+    m = S.make_monster(definicao, {"id": "lobo", "cx": ORC_POS[0], "cy": ORC_POS[1]})
+    m["pos"] = list(ORC_POS)
+    r.monsters = {m["id"]: m}
+    h["pos"] = [8, 5]  # alcance e linha de visão livres
+    alvo = {"kind": "player", "obj": h}
+
+    for estado in ("invisivel_sombras", "invisivel_magico", "oculto_vela"):
+        h[estado] = True
+        check(f"lobisomem percebe herói com {estado}",
+              alvo in r._alvos_visiveis_para_monstro(m, [alvo]))
+        check(f"lobisomem mantém o rastro com {estado}",
+              r._heroi_rastreavel(m, "h") is h)
+        h.pop(estado)
+
+    h["invisivel_magico"] = True
+    h["pos"] = list(HEROI_LONGE)  # parede em x=10 bloqueia a linha de visão
+    check("olfato não permite perceber através de paredes",
+          alvo not in r._alvos_visiveis_para_monstro(m, [alvo]))
+    h["fora_masmorra"] = {"rodadas_restantes": 2}
+    check("olfato não rastreia herói fora da masmorra",
+          r._heroi_rastreavel(m, "h") is None)
+
+
+async def secao_recuo_lobisomem():
+    print("\n[3c] O lobisomem só começa a recuar com 5 PV e volta à caça aos 50%")
+    r, h, _, _ = cena()
+    definicao = next(d for d in S.MONSTER_DEFS if d["type"] == "lobisomem")
+    m = S.make_monster(definicao, {"id": "lobo", "cx": 7, "cy": 5})
+    m["pos"] = [7, 5]
+    h["pos"] = [9, 5]
+    r.monsters = {m["id"]: m}
+    alvo = {"kind": "player", "obj": h}
+
+    async def tentar(hp, recuando=False):
+        m["hp"] = hp
+        m["pos"] = [7, 5]
+        m["_water_moves_left"] = 6
+        if recuando:
+            m["ai_retreating"] = True
+        else:
+            m.pop("ai_retreating", None)
+        return await r._monster_try_retreat(m, alvo)
+
+    moveu = await tentar(6)
+    check("com 6 PV não inicia o recuo", not moveu and "ai_retreating" not in m)
+
+    m["hp"] = 5
+    m["pos"] = [7, 5]
+    m["_water_moves_left"] = 6
+    m.pop("ai_retreating", None)
+    await r._upkeep_inicio_turno_monstro(m, [m])
+    check("5 PV acionam o recuo antes da regeneração", m["hp"] == 7
+          and m.get("ai_retreating"))
+    moveu = await r._monster_try_retreat(m, alvo)
+    check("com o recuo armado, mesmo 7 PV não o interrompem", moveu and m.get("ai_retreating"))
+
+    moveu = await tentar(15, recuando=True)
+    check("com menos de 50% continua recuando", moveu and m.get("ai_retreating"))
+
+    m["hp"] = 14
+    m["pos"] = [7, 5]
+    m["_water_moves_left"] = 6
+    m["ai_retreating"] = True
+    await r._upkeep_inicio_turno_monstro(m, [m])
+    moveu = await r._monster_try_retreat(m, alvo)
+    check("ao regenerar até 50%, encerra o recuo",
+          m["hp"] == 16 and not moveu and "ai_retreating" not in m)
+    antes = list(m["pos"])
+    await r._ai_agressivo(m, [alvo])
+    check("após encerrar o recuo volta a perseguir o herói",
+          max(abs(m["pos"][0] - h["pos"][0]), abs(m["pos"][1] - h["pos"][1]))
+          < max(abs(antes[0] - h["pos"][0]), abs(antes[1] - h["pos"][1])))
+
+    r, h, m, _ = cena()
+    h["pos"] = [9, 5]
+    m["max_hp"] = 20
+    m["hp"] = 5
+    m["_water_moves_left"] = 6
+    alvo = {"kind": "player", "obj": h}
+    moveu = await r._monster_try_retreat(m, alvo)
+    check("outros monstros mantêm o recuo genérico aos 25%",
+          moveu and not m.get("ai_retreating"))
+
+
 # ─── [4] prazo de 3 rodadas e reencontro ─────────────────────────────────────
 async def secao_prazo():
     print("\n[4] Prazo de 3 rodadas sem ver o herói, mesmo rastreando; ver de novo zera")
@@ -271,6 +359,8 @@ async def main():
     await secao_sucesso()
     await secao_falha()
     await secao_invisivel()
+    secao_olfato_lobisomem()
+    await secao_recuo_lobisomem()
     await secao_prazo()
     await secao_alerta()
     secao_gancho()

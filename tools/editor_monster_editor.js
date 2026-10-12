@@ -713,7 +713,7 @@
      });
      const movementReadout = [...root.querySelectorAll(".me-calculated")].find(el => /Movimento/.test(el.textContent));
      if (movementReadout) movementReadout.insertAdjacentHTML("afterend", `<label>Percepção<input id="me-percepcao" type="number" min="1" value="${esc(draft.percepcao)}"><small>base da ficha; aliados próximos dão +1 durante furtividade</small></label>`);
-    if (movementReadout?.querySelector("span")) movementReadout.querySelector("span").textContent = String(draft.movement || 6);
+    if (movementReadout?.querySelector("span")) movementReadout.querySelector("span").textContent = String(draft.movement ?? 6);
     const sidebar = root.querySelector(".me-sidebar");
     const templateSelect = document.getElementById("me-template");
     if (sidebar && templateSelect) {

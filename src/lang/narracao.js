@@ -2832,6 +2832,18 @@ window.LANG_NARRACAO = {
     "en": "🩸 **{monstro}** knits itself back together and rises with 1 HP!",
     "pt": "🩸 **{monstro}** recompõe o corpo e se ergue com 1 PV!"
   },
+  "narracao.lobisomem_alfa_cai_mas_regenera": {
+    "en": "🐺 **{monstro}** falls, but its black fur twitches as its wounds begin to close!",
+    "pt": "🐺 **{monstro}** cai, mas seu pelo negro se move enquanto os ferimentos começam a fechar!"
+  },
+  "narracao.lobisomem_alfa_se_ergue_com_1_pv": {
+    "en": "🐺 **{monstro}** rises again with 1 HP, its red eyes burning with fury!",
+    "pt": "🐺 **{monstro}** se ergue com 1 PV, os olhos vermelhos ardendo de fúria!"
+  },
+  "narracao.lobisomem_alfa_regenera_5_pv": {
+    "en": "🐺 **{monstro}** regenerates {cura} HP at the start of its turn.",
+    "pt": "🐺 **{monstro}** regenera {cura} PV no início do turno."
+  },
   "narracao.turno_controle_recursos": {
     "en": " 🍖 {fome}/10 💧 {sede}/10",
     "pt": " 🍖 {fome}/10 💧 {sede}/10"
