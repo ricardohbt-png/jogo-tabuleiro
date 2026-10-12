@@ -47406,7 +47406,10 @@ function _animarCaminhoPeao3D(peao, tilesAbs, onDone, startPos){
     if(i >= tilesAbs.length){ if(onDone) onDone(); return; }
     const [tx,ty] = tilesAbs[i++];
     const facing = [Math.sign(tx - previous[0]), Math.sign(ty - previous[1])];
-    if(facing[0] || facing[1]) _setMonsterMeshFacing3D(peao, facing);
+    if(facing[0] || facing[1]){
+      if(peao.userData.prisoner) _setPrisonerMeshFacing3D(peao, facing);
+      else _setMonsterMeshFacing3D(peao, facing);
+    }
     previous = [tx, ty];
     _animarPasso(peao, {x: tx, z: ty}, passo);
   };
@@ -49306,13 +49309,14 @@ function renderMap3D(state){
       const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
         && _pris3D.rescuer_pid === GS.myPid);
       const _prisFig3D = obterFig('prisoner',
-        JSON.stringify([_pris3D.freed, _pris3D.image, _pris3D.model3d, prisSelNow]),
+        JSON.stringify([_pris3D.freed, _pris3D.image, _pris3D.model3d, _pris3D.facing, prisSelNow]),
         () => {
           const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
           f.userData.prisoner = true;   // permite getPrisonerMesh() p/ animação
           return f;
         },
         prx, pry);
+      _setPrisonerMeshFacing3D(_prisFig3D, _pris3D.facing);
       _prisFig3D.userData.whirlpoolTrapped = !!(_pris3D.rodamoinho_preso || _pris3D.rodamoinho_profundo_preso);
     }
   }
@@ -50516,6 +50520,25 @@ function _setMonsterMeshFacing3D(mesh, facing){
   }
 }
 
+// O prisioneiro usa o mesmo contrato de orientação do GLB de monstro, mas pode
+// caminhar também na diagonal. A direção fica na raiz até o GLB assíncrono
+// carregar; depois é aplicada somente ao grupo do corpo.
+function _setPrisonerMeshFacing3D(mesh, facing){
+  if(!mesh || !Array.isArray(facing) || facing.length !== 2) return;
+  const fx = Number(facing[0]), fy = Number(facing[1]);
+  if(!Number.isFinite(fx) || !Number.isFinite(fy)
+      || Math.abs(fx) > 1 || Math.abs(fy) > 1 || (!fx && !fy)) return;
+  const dir = [Math.sign(fx), Math.sign(fy)];
+  mesh.userData._prisonerFacing = dir;
+  const body = _grupoDirecaoMonstro3D(mesh);
+  if(!body) return;
+  const imageName = body.userData._monsterImageName;
+  const monsterType = body.userData._monsterType;
+  const glbPath = body.userData._monsterGLBPath;
+  const orientationOffset = _monsterFacingToRotY([0, 1], imageName, monsterType, glbPath);
+  body.rotation.y = Math.atan2(dir[0], dir[1]) + orientationOffset;
+}
+
 function _makeCharacterPawn(T, grp, classId, clr, Y0, rotY, petrificado=false, congelado=false) {
   const cacheKey = classId || 'generic';
   const billboard = () => _makeBillboardSprite(T, grp,
@@ -50549,8 +50572,15 @@ function _makePrisonerModel3D(T, grp, modelName, Y0, onMissing){
     wrap.add(inst);
     wrap.scale.setScalar(scale);
     wrap.position.y = Y0;
+    const facingName = String(modelName || '').replace(/\.glb$/i, '');
+    wrap.userData._monsterFacingGroup = true;
+    wrap.userData._monsterImageName = facingName;
+    wrap.userData._monsterType = facingName;
+    wrap.userData._monsterGLBPath = path;
     inst.traverse(o => { if(o.isMesh){ o.userData.isGroundDecal = true; o.userData.noOL = true; o.userData.isGLB = true; } });
     grp.add(wrap);
+    if(Array.isArray(grp.userData._prisonerFacing))
+      _setPrisonerMeshFacing3D(grp, grp.userData._prisonerFacing);
   };
   _loadMonsterGLB(T, path, montar);
 }
@@ -50586,6 +50616,7 @@ function build3DPrisoner(T, pris, sel){
   } else {
     billboard();
   }
+  if(Array.isArray(pris.facing)) _setPrisonerMeshFacing3D(grp, pris.facing);
   return grp;
 }
 

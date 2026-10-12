@@ -23629,7 +23629,7 @@ class GameRoom(TutorialTraining):
         animation_id = f"cancao_heroica_{pid}_{self.round_num}_{new_id()}"
         origin = list(p.get("pos", [0, 0]))
         affected = [{"id": jogador["id"], "pos": list(jogador.get("pos", origin))}
-                    for jogador in self.players.values()
+                    for jogador in self._training_heal_targets(p)
                     if jogador.get("alive") and self._no_raio(p, jogador, CANCAO_RAIO)]
         await self.broadcast({
             "type": "spell_animation", "spell_id": "cancao_heroica", "phase": "start",
@@ -23646,6 +23646,9 @@ class GameRoom(TutorialTraining):
         labels = [T("ui.cancao.atributo." + x) for x in atrib_validos]
         await self.gm_say(
             T("narracao.entoa_a_cancao_heroica_aliados_em_quadra", heroi=p['name'], labels=labels, CANCAO_RAIO=CANCAO_RAIO, custo_fome=custo['fome'], custo_sede=custo['sede']))
+        aprendiz = self._training_ally(p, "__treino_bard_1")
+        if aprendiz and aprendiz.get("alive") and "buffs_cancao" in aprendiz:
+            await self.gm_say(T("narracao.aprendiz_agradece_cancao_heroica"))
         # Sinfonia Heroica (Alaúde): atributos escolhidos que ganharam +1 do instrumento.
         sinfonia = [x for x in atrib_validos if self._sinfonia_bonus(p, x) > 0]
         if sinfonia:
@@ -48449,6 +48452,7 @@ class GameRoom(TutorialTraining):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
         pr["pos"] = [nx, ny]
+        pr["facing"] = [int(dx), int(dy)]
         if not pr.get("alive"):
             if _push: await self.push_state()
             return

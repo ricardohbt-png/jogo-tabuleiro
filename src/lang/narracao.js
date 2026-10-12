@@ -512,6 +512,10 @@ window.LANG_NARRACAO = {
     "en": "🎵 **{heroi}**'s Heroic Song [{labels}] — upkeep 🍖-{custo_fome} 💧-{custo_sede}.",
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
   },
+  "narracao.aprendiz_agradece_cancao_heroica": {
+    "en": "💬 Apprentice: Thank you! I feel ready for battle!",
+    "pt": "💬 Aprendiz: Obrigado! Me sinto pronto para a batalha!"
+  },
   "narracao.cancao_monstro.entoa": {
     "en": "{nome} sings the Heroic Song and strengthens the allied monsters.",
     "pt": "{nome} entoa a Canção Heroica e fortalece os monstros aliados."
