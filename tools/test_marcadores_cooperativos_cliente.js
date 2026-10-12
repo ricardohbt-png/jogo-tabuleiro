@@ -65,5 +65,11 @@ if (viewSource && styleSource) {
 check('camada 2D desenha os marcadores por cima do mapa', /_drawCooperativeMarkers2D\(ctx, state, visionSet\)/.test(game));
 check('camada 3D sincroniza sprites filtrados no fim do render', /_syncCooperativeMarkers3D\(state, visionSet\)/.test(game));
 check('sprites 3D são descartados quando removidos e ao encerrar a cena', game.includes('_clearCooperativeMarkerSprites3D(g3.cooperativeMarkerGroup)'));
+check('botão B cancela seleção antes dos outros modos', /function _gamepadCancel\(\)\{[\s\S]{0,260}_cancelCooperativeMarkerTarget\(\)/.test(game));
+check('armar marcador limpa prévia de movimento pendente', /function _armCooperativeMarker\(category\)\{[\s\S]{0,320}_cancelarPreviaMovimento\(\{silent:true\}\)/.test(game));
+check('teclado navega e confirma alvo durante a marcação', /const move = \{ArrowUp:[\s\S]{0,1200}_handleCooperativeMarkerTarget/.test(game));
+check('cursor de alvo é desenhado sem depender de controle conectado', /function _drawCooperativeMarkers2D\([\s\S]{0,1800}_cooperativeMarkerCursor[\s\S]{0,500}strokeRect/.test(game));
+check('movimentar cursor em modo marcador não recria prévia de movimento', /function _gamepadAtualizarPreviaMovimento\(state\)\{[\s\S]{0,100}_cooperativeMarkerMode/.test(game));
+check('confirmação do controle prioriza alvo do marcador', /function _gamepadAccept\(state\)\{[\s\S]{0,300}_handleCooperativeMarkerTarget[\s\S]{0,300}if\(GS\.pendingMove\)/.test(game));
 console.log(`\n${'='.repeat(56)}\n  ${PASS} passaram, ${FAIL} falharam\n${'='.repeat(56)}`);
 process.exit(FAIL ? 1 : 0);

@@ -119,11 +119,11 @@
 - Consumes: server marker protocol and client selector/renderer from Tasks 1–4.
 - Produces: regression coverage for the full behavior across two connected players and both render modes.
 
-- [ ] **Step 1: Run server regression:** `python -X utf8 tools/test_marcadores_cooperativos.py`.
-- [ ] **Step 2: Run client regression:** `node tools/test_marcadores_cooperativos_cliente.js`.
-- [ ] **Step 3: Run existing regression tests** with `python -X utf8 tools/test_visao_compartilhada.py`, `python -X utf8 tools/test_nevoa_visao.py`, `node tools/test_monster_inspector.js` and `node tools/test_visao_compartilhada_cliente.js`; confirm marker work did not change fog, shared visibility or right-click inspection.
-- [ ] **Step 4: Perform a two-player manual smoke test**: create each category, replace a marker, verify recipient visibility and hidden-target behavior, wait through the expiry round, kill a marked enemy, and repeat in 2D and 3D.
-- [ ] **Step 5: Commit the implementation** in focused commits after all checks pass; do not include unrelated workspace files.
+- [x] **Step 1: Run server regression:** `python -X utf8 tools/test_marcadores_cooperativos.py` (16 passed).
+- [x] **Step 2: Run client regression:** `node tools/test_marcadores_cooperativos_cliente.js` (29 passed).
+- [x] **Step 3: Run existing regression tests** with `python -X utf8 tools/test_visao_compartilhada.py`, `python -X utf8 tools/test_nevoa_visao.py`, `node tools/test_monster_inspector.js` and `node tools/test_visao_compartilhada_cliente.js`; all passed (14, 5, inspector checks, 15).
+- [ ] **Step 4: Perform a two-player manual smoke test**: not completed; the local browser session stopped at the test account's password validation. Server recipient-filtering and client integration regressions passed, but live 2D/3D multiplayer behavior still needs visual confirmation.
+- [x] **Step 5: Commit the implementation** in focused commits after all checks pass; do not include unrelated workspace files.
 
 ---
 

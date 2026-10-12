@@ -11395,7 +11395,7 @@ class GameRoom(TutorialTraining):
         self.explored = set()   # (x,y) tuples visible to all
         self.cooperative_markers = {}  # pid -> marcador tático efêmero desta masmorra
         self.cooperative_vision_preferences = {}  # conexão -> preferência local de visão compartilhada
-        self._cooperative_marker_last_at = {}  # pid -> monotonic time do último marcador aceito
+        self._cooperative_marker_last_at = {}  # conexão/jogador -> monotonic time
         self.door_rooms = {}    # (x,y) -> [room_id,...] â€” salas que cada porta destranca
         self.opened_doors = set()  # portas avulsas abertas nesta expedição
         self.magic_reveal = {}  # (x,y) -> rodada de expiraÃ§Ã£o (ClarividÃªncia revela interior)
@@ -13078,7 +13078,7 @@ class GameRoom(TutorialTraining):
         for owner_id in list(self.cooperative_markers):
             if self._conexao_de(owner_id) == connection_pid:
                 self.cooperative_markers.pop(owner_id, None)
-                self._cooperative_marker_last_at.pop(owner_id, None)
+        self._cooperative_marker_last_at.pop(connection_pid, None)
 
     async def handle_cooperative_marker(self, connection_pid, category, target_type,
                                        target_id=None, pos=None, hero_id=None):
@@ -13094,7 +13094,7 @@ class GameRoom(TutorialTraining):
                 or owner.get("is_master")):
             return False
         now = time.monotonic()
-        if now - self._cooperative_marker_last_at.get(owner_id, 0) < 0.25:
+        if now - self._cooperative_marker_last_at.get(connection_pid, 0) < 0.25:
             return False
 
         marker = {"owner_id": owner_id, "category": category,
@@ -13131,8 +13131,13 @@ class GameRoom(TutorialTraining):
         else:
             return False
 
+        # A identidade visual é o herói escolhido, mas o limite é por jogador
+        # conectado: uma conexão com vários heróis continua tendo uma marca.
+        for existing_owner_id in list(self.cooperative_markers):
+            if self._conexao_de(existing_owner_id) == connection_pid:
+                self.cooperative_markers.pop(existing_owner_id, None)
         self.cooperative_markers[owner_id] = marker
-        self._cooperative_marker_last_at[owner_id] = now
+        self._cooperative_marker_last_at[connection_pid] = now
         await self.push_state()
         return True
 
@@ -17107,7 +17112,7 @@ class GameRoom(TutorialTraining):
         for owner_id, marker in list(self.cooperative_markers.items()):
             if int(marker.get("expires_round", 0) or 0) < self.round_num:
                 self.cooperative_markers.pop(owner_id, None)
-                self._cooperative_marker_last_at.pop(owner_id, None)
+                self._cooperative_marker_last_at.pop(self._conexao_de(owner_id), None)
         self._processar_recarga_slots_rodada()
         self.magic_reveal = {k:v for k,v in self.magic_reveal.items() if v > self.round_num}
         # Cada passo da virada e isolado: um defeito num deles nao pode
@@ -17790,7 +17795,8 @@ class GameRoom(TutorialTraining):
             target_pos = marker.get("pos")
             if marker.get("target_type") == "enemy":
                 target = self.monsters.get(str(marker.get("target_id")))
-                if not target or target.get("hp", 0) <= 0:
+                if (not target or target.get("hp", 0) <= 0
+                        or target.get("invisivel_sombras")):
                     removidos.append(owner_id)
                     continue
                 try:
@@ -17811,7 +17817,7 @@ class GameRoom(TutorialTraining):
                             else list(marker.get("pos") or [])})
         for owner_id in removidos:
             self.cooperative_markers.pop(owner_id, None)
-            self._cooperative_marker_last_at.pop(owner_id, None)
+            self._cooperative_marker_last_at.pop(self._conexao_de(owner_id), None)
         return payload
 
     def _get_raio_visao_monstro(self, m):

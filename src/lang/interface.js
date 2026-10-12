@@ -21,7 +21,7 @@ window.LANG_INTERFACE = {
   "ui.marker.danger": {"en": "⚠ Danger", "pt": "⚠ Perigo"},
   "ui.marker.investigate": {"en": "🔎 Investigate", "pt": "🔎 Investigar"},
   "ui.marker.move": {"en": "➤ Move", "pt": "➤ Mover"},
-  "ui.marker.target_prompt": {"en": "Click a visible tile or enemy to mark: {category}. Esc cancels.", "pt": "Clique numa casa ou inimigo visível para marcar: {category}. Esc cancela."},
+  "ui.marker.target_prompt": {"en": "Click a visible tile or enemy, or use arrows + Enter. Esc/B cancels. Marking: {category}.", "pt": "Clique numa casa ou inimigo visível, ou use as setas + Enter. Esc/B cancela. Marcador: {category}."},
   "ui.marker.invalid_target": {"en": "Choose a visible, valid tile.", "pt": "Escolha uma casa válida e visível."},
   "ui.marker.sent": {"en": "Tactical marker sent to the party.", "pt": "Marcador tático enviado ao grupo."},
   "ui.marker.send_failed": {"en": "The marker could not be sent.", "pt": "Não foi possível enviar o marcador."},

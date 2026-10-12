@@ -59,6 +59,21 @@ class MarcadoresCooperativosTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(markers[0]["category"], "move")
         self.assertEqual(markers[0]["pos"], [3, 3])
 
+    async def test_herois_da_mesma_conexao_compartilham_limite_de_uma_marca(self):
+        sala = self.nova_sala()
+        sala.players["p3"] = S.make_player("p3", "Caio", "warrior", 2)
+        sala.players["p3"]["controlador"] = "p1"
+        self.assertTrue(await self.create_marker(
+            sala, "p1", "danger", "tile", pos=[4, 2], hero_id="p1"))
+        await asyncio.sleep(0.26)
+        self.assertTrue(await self.create_marker(
+            sala, "p1", "move", "tile", pos=[3, 3], hero_id="p3"))
+        markers = sala._cooperative_markers_for_pid("p1")
+        self.assertEqual(len(markers), 1)
+        self.assertEqual(markers[0]["owner_id"], "p3")
+        self.assertEqual(markers[0]["category"], "move")
+        self.assertEqual(sala._cooperative_marker_last_at.keys(), {"p1"})
+
     async def test_rejeita_categoria_e_posicao_invalidas_sem_alterar_estado(self):
         sala = self.nova_sala()
         for category, pos in (("teleport", [4, 2]), ("danger", [-1, 2]),
@@ -75,6 +90,13 @@ class MarcadoresCooperativosTests(unittest.IsolatedAsyncioTestCase):
         sala.monsters["m1"]["hp"] = 0
         self.assertFalse(await self.create_marker(sala, "p1", "attack", "enemy", target_id="m1"))
         self.assertFalse(await self.create_marker(sala, "p1", "attack", "enemy", target_id="m2"))
+
+    async def test_marcador_de_inimigo_some_do_payload_quando_ele_fica_invisivel(self):
+        sala = self.nova_sala()
+        self.assertTrue(await self.create_marker(sala, "p1", "attack", "enemy", target_id="m1"))
+        sala.monsters["m1"]["invisivel_sombras"] = True
+        self.assertEqual(sala._cooperative_markers_for_pid("p1"), [])
+        self.assertEqual(sala._cooperative_markers_for_pid("p2"), [])
 
     async def test_destinatario_sem_visao_nao_recebe_id_ou_posicao_oculta(self):
         sala = self.nova_sala()

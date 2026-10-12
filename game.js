@@ -5405,6 +5405,7 @@ function handleGameState(msg){
 }
 
 let _cooperativeMarkerMode = null;
+let _cooperativeMarkerCursor = null;
 function _cooperativeMarkerStyle(category){
   const styles = {
     attack: {icon:'⚔', color:'#ffd166'},
@@ -5446,6 +5447,14 @@ function _drawCooperativeMarkers2D(ctx, state, visionSet){
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(marker.icon,x,y+1);
     ctx.restore();
   }
+  const cursor = _cooperativeMarkerCursor;
+  if(_cooperativeMarkerMode && cursor && visionSet.has(`${cursor[0]},${cursor[1]}`)){
+    const x = cursor[0] * CELL, y = cursor[1] * CELL;
+    ctx.save(); ctx.strokeStyle='#fff3c4'; ctx.lineWidth=Math.max(2,CELL*.055);
+    ctx.shadowColor='#ffca5c'; ctx.shadowBlur=Math.max(4,CELL*.12);
+    ctx.setLineDash([Math.max(4,CELL*.16),Math.max(2,CELL*.09)]);
+    ctx.strokeRect(x+3,y+3,CELL-6,CELL-6); ctx.restore();
+  }
 }
 function _syncCooperativeMarkers3D(state, visionSet){
   if(!g3?.scene || !g3?.T) return;
@@ -5456,7 +5465,10 @@ function _syncCooperativeMarkers3D(state, visionSet){
     g3.scene.add(group); g3.cooperativeMarkerGroup = group; g3.cooperativeMarkerSignature = null;
   }
   const markers = _cooperativeMarkerView(state, visionSet);
-  const signature = markers.map(m => `${m.owner_id}:${m.category}:${m.target_type}:${m.target_id||''}:${m.x},${m.y}`).join('|');
+  const cursor = _cooperativeMarkerMode && _cooperativeMarkerCursor
+    && visionSet.has(`${_cooperativeMarkerCursor[0]},${_cooperativeMarkerCursor[1]}`)
+    ? _cooperativeMarkerCursor : null;
+  const signature = `${markers.map(m => `${m.owner_id}:${m.category}:${m.target_type}:${m.target_id||''}:${m.x},${m.y}`).join('|')}#${cursor ? cursor.join(',') : ''}`;
   if(signature === g3.cooperativeMarkerSignature) return;
   _clearCooperativeMarkerSprites3D(group);
   g3.cooperativeMarkerSignature = signature;
@@ -5476,6 +5488,14 @@ function _syncCooperativeMarkers3D(state, visionSet){
     sprite.position.set(marker.x + .28, top + .83, marker.y - .28);
     sprite.renderOrder = 112; sprite.userData.noRay = true; sprite.userData.cooperativeMarker = true;
     group.add(sprite);
+  }
+  if(cursor){
+    const ring = new T.Mesh(new T.RingGeometry(.28,.38,32), new T.MeshBasicMaterial({
+      color:0xffd27a,transparent:true,opacity:.95,depthWrite:false,depthTest:false,side:T.DoubleSide
+    }));
+    ring.rotation.x=-Math.PI/2;
+    ring.position.set(cursor[0],topoSuperficie3D(state,cursor[0],cursor[1],.22)+.045,cursor[1]);
+    ring.renderOrder=111; ring.userData.noRay=true; group.add(ring);
   }
 }
 function _clearCooperativeMarkerSprites3D(group){
@@ -5499,18 +5519,27 @@ function _toggleCooperativeMarkerMenu(force){
 }
 function _armCooperativeMarker(category){
   if(!['attack','danger','investigate','move'].includes(category) || !GS.gameState || GS.isMaster()) return false;
+  _cancelarPreviaMovimento({silent:true});
   _cooperativeMarkerMode = category;
+  const cursor = _gamepadEnsureCursor(GS.gameState) || GS.gameState.players?.find(p => p.id === GS.myPid && p.alive)?.pos;
+  _cooperativeMarkerCursor = cursor ? [...cursor] : null;
   _toggleCooperativeMarkerMenu(false);
+  _gamepadInput.uiPointer = false;
+  _gamepadSetUiFocus(null);
   const prompt = $('cooperative-marker-prompt');
   if(prompt){ prompt.textContent = t('ui.marker.target_prompt', {category: t(`ui.marker.${category}`)}); prompt.hidden = false; }
   const cv = $('dungeon-canvas'); if(cv) cv.style.cursor = 'crosshair';
+  _gamepadRenderCursor();
   return true;
 }
 function _cancelCooperativeMarkerTarget(){
   if(!_cooperativeMarkerMode) return false;
   _cooperativeMarkerMode = null;
+  _cooperativeMarkerCursor = null;
   const prompt = $('cooperative-marker-prompt'); if(prompt) prompt.hidden = true;
   const cv = $('dungeon-canvas'); if(cv) cv.style.cursor = 'crosshair';
+  _gamepadInput.uiPointer = false;
+  if(GS.gameState) _gamepadRenderCursor();
   return true;
 }
 function _handleCooperativeMarkerTarget(tx, ty){
@@ -29538,6 +29567,24 @@ function handleGameOver(msg){
 }
 
 document.addEventListener('keydown', e=>{
+  if(_cooperativeMarkerMode){
+    const move = {ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],
+      ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]}[e.key];
+    if(move){
+      const st=GS.gameState, W=st?.tiles?.[0]?.length||0, H=st?.tiles?.length||0;
+      if(W&&H){
+        const cur=_cooperativeMarkerCursor || [0,0];
+        _cooperativeMarkerCursor=[Math.max(0,Math.min(W-1,cur[0]+move[0])),Math.max(0,Math.min(H-1,cur[1]+move[1]))];
+        _gamepadInput.cursor=[..._cooperativeMarkerCursor];
+        _gamepadRenderCursor();
+      }
+      e.preventDefault(); return;
+    }
+    if(e.key==='Enter' || e.key===' '){
+      if(_cooperativeMarkerCursor) _handleCooperativeMarkerTarget(..._cooperativeMarkerCursor);
+      e.preventDefault(); return;
+    }
+  }
   if(e.key === 'Escape' && _sidePanelClose()){
     e.preventDefault();
     return;
@@ -30265,6 +30312,7 @@ function _gamepadMoveCursor(state, dx, dy){
   const W = state.tiles[0].length, H = state.tiles.length;
   cursor[0] = Math.max(0, Math.min(W - 1, cursor[0] + dx));
   cursor[1] = Math.max(0, Math.min(H - 1, cursor[1] + dy));
+  if(_cooperativeMarkerMode) _cooperativeMarkerCursor = [...cursor];
   _gamepadAtualizarPreviaMovimento(state);
   _gamepadRenderCursor();
   _renderGamepadHud(state);
@@ -30273,7 +30321,7 @@ function _gamepadMoveCursor(state, dx, dy){
 // No modo normal do controle, a mira de movimento já fica ativa. Cada passo
 // do cursor atualiza a rota imediatamente; A fica reservado só para confirmar.
 function _gamepadAtualizarPreviaMovimento(state){
-  if(!GS.isMyTurn || _gamepadInput.attackMode || _aimAlgumModoAtivo()
+  if(_cooperativeMarkerMode || !GS.isMyTurn || _gamepadInput.attackMode || _aimAlgumModoAtivo()
     || window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
     || window._modoThrowItem || window._modoPlacementArmadilha
     || GS.pendingSkill || GS.pendingInstrumento || GS.pendingThrow) return;
@@ -30666,6 +30714,7 @@ function _gamepadToggleMainMenu(){
 function _gamepadCancel(){
   _clearGamepadEndTurnConfirm();
   _gamepadRumble('cancel');
+  if(_cancelCooperativeMarkerTarget()){ _gamepadSetUiFocus($('cooperative-marker-toggle')); return; }
   if(_sidePanelClose()) return;
   if(_gmLogPanelClose()) return;
   if(_cancelarPreviaMovimento()) return;
@@ -30909,6 +30958,11 @@ function _gamepadInteractAtCursor(state){
 }
 
 function _gamepadAccept(state){
+  if(_cooperativeMarkerMode){
+    const cursor = _cooperativeMarkerCursor || _gamepadEnsureCursor(state);
+    if(cursor){ _cooperativeMarkerCursor=[...cursor]; _handleCooperativeMarkerTarget(cursor[0],cursor[1]); _gamepadRumble('confirm'); }
+    return;
+  }
   if($('target-modal')?.classList.contains('open')){
     _gamepadAcceptUi();
     _gamepadRumble('confirm');
@@ -54037,7 +54091,7 @@ function _executarMovimentoConfirmado(action){
   }
 }
 
-function _cancelarPreviaMovimento(){
+function _cancelarPreviaMovimento({silent=false}={}){
   const tinhaHeroi = !!GS.pendingMove;
   const tinhaMonstro = !!_masterMonsterMovePreview;
   if(!tinhaHeroi && !tinhaMonstro) return false;
@@ -54045,7 +54099,7 @@ function _cancelarPreviaMovimento(){
   if(tinhaMonstro) _clearMasterMonsterMovePreview();
   _clearMovePreviewVisual();
   if(GS.gameState) renderMap(GS.gameState);
-  toast(t('ui.hud.movimento_cancelado'), 'var(--text2)');
+  if(!silent) toast(t('ui.hud.movimento_cancelado'), 'var(--text2)');
   return true;
 }
 
@@ -54061,9 +54115,9 @@ document.addEventListener('keydown', (e) => {
 // the DOM-side effects (toast, renderMyPanel, send).
 function handleTileClick(tx, ty){
   if(window._modoMestreMira){ _clickMiraMestre(tx,ty); return; }
+  if(_cooperativeMarkerMode){ _handleCooperativeMarkerTarget(tx, ty); return; }
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
-  if(_cooperativeMarkerMode){ _handleCooperativeMarkerTarget(tx, ty); return; }
   if(window._modoPlacementArmadilha){ onClickTileParaArmadilha(tx, ty); return; }
   // Durante a mira de uma magia do herói-teste, o clique pertence à magia
   // mesmo que caia sobre um monstro/peão; o painel do Mestre só pode capturar
