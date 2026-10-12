@@ -115,7 +115,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         pedido=next(m for m in r.messages if m.get('type')=='fala'
                     and isinstance(m.get('texto'),S.T)
                     and m['texto'].key=='narracao.refem_treino_pede_ajuda')
-        self.assertEqual(pedido['falante']['emoji'],'⛓️')
+        self.assertEqual(pedido['falante']['retrato'],'assets/portraits/refem_soldado.png')
         self.assertEqual(pedido['texto'].params, {})
         self.assertIn((p['id'],pedido),private)
         for key in ('narracao.refem_treino_nome','narracao.refem_treino_pede_ajuda',
