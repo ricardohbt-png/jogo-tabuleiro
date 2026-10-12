@@ -11393,6 +11393,9 @@ class GameRoom(TutorialTraining):
         self._spin_feedback_seq = 0
         self._pending_teleporte = None
         self.explored = set()   # (x,y) tuples visible to all
+        self.cooperative_markers = {}  # pid -> marcador tático efêmero desta masmorra
+        self.cooperative_vision_preferences = {}  # conexão -> preferência local de visão compartilhada
+        self._cooperative_marker_last_at = {}  # pid -> monotonic time do último marcador aceito
         self.door_rooms = {}    # (x,y) -> [room_id,...] â€” salas que cada porta destranca
         self.opened_doors = set()  # portas avulsas abertas nesta expedição
         self.magic_reveal = {}  # (x,y) -> rodada de expiraÃ§Ã£o (ClarividÃªncia revela interior)
@@ -13060,6 +13063,73 @@ class GameRoom(TutorialTraining):
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
         elif self.phase == "city": await self.broadcast_city_state()
+
+    async def handle_cooperative_vision_preference(self, connection_pid, enabled):
+        """Espelha a preferência local sem gravá-la no estado da campanha."""
+        if connection_pid not in self.connections and connection_pid not in self.players:
+            return False
+        self.cooperative_vision_preferences[connection_pid] = enabled is True
+        if self.phase == "playing":
+            await self.push_state()
+        return True
+
+    def _clear_cooperative_markers_for_connection(self, connection_pid):
+        self.cooperative_vision_preferences.pop(connection_pid, None)
+        for owner_id in list(self.cooperative_markers):
+            if self._conexao_de(owner_id) == connection_pid:
+                self.cooperative_markers.pop(owner_id, None)
+                self._cooperative_marker_last_at.pop(owner_id, None)
+
+    async def handle_cooperative_marker(self, connection_pid, category, target_type,
+                                       target_id=None, pos=None, hero_id=None):
+        """Cria uma marca efêmera após validar posse, visão e alvo no servidor."""
+        if self.phase != "playing":
+            return False
+        if category not in {"attack", "danger", "investigate", "move"}:
+            return False
+        action = {"heroi": str(hero_id)} if hero_id is not None else {}
+        owner_id = self.heroi_da_acao(connection_pid, action)
+        owner = self.players.get(owner_id) if owner_id is not None else None
+        if (not owner or not owner.get("alive") or owner.get("fora_masmorra")
+                or owner.get("is_master")):
+            return False
+        now = time.monotonic()
+        if now - self._cooperative_marker_last_at.get(owner_id, 0) < 0.25:
+            return False
+
+        marker = {"owner_id": owner_id, "category": category,
+                  "target_type": target_type, "target_id": None,
+                  "pos": None, "expires_round": self.round_num + 1}
+        visiveis = self._cooperative_vision_tiles_for_pid(owner_id)
+        if target_type == "tile":
+            if (not isinstance(pos, (list, tuple)) or len(pos) != 2
+                    or any(isinstance(v, bool) or not isinstance(v, int) for v in pos)):
+                return False
+            x, y = pos
+            if not (0 <= x < self.map_w and 0 <= y < self.map_h):
+                return False
+            if self.tiles and self.tiles[y][x] == WALL:
+                return False
+            if (x, y) not in visiveis:
+                return False
+            marker["pos"] = [x, y]
+        elif target_type == "enemy":
+            target_id = str(target_id) if target_id is not None else ""
+            target = self.monsters.get(target_id)
+            if not target or target.get("hp", 0) <= 0 or target.get("invisivel_sombras"):
+                return False
+            target_pos = target.get("pos")
+            if (not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2
+                    or (int(target_pos[0]), int(target_pos[1])) not in visiveis):
+                return False
+            marker["target_id"] = target_id
+        else:
+            return False
+
+        self.cooperative_markers[owner_id] = marker
+        self._cooperative_marker_last_at[owner_id] = now
+        await self.push_state()
+        return True
 
     async def handle_set_atravessar_aliados(self, pid, enabled):
         """Anfitrião liga/desliga a passagem pela casa de aliados (regra da sala)."""
@@ -17257,6 +17327,7 @@ class GameRoom(TutorialTraining):
         p = self.players.get(pid)
         if not p or not p.get("connected", True):
             return
+        self._clear_cooperative_markers_for_connection(self._conexao_de(pid))
         p["connected"] = False
         if self.last_stand_pid == pid:
             await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
@@ -17656,6 +17727,77 @@ class GameRoom(TutorialTraining):
             except (TypeError, ValueError):
                 pass
         return raio
+
+    def _visao_compartilhada_cooperativa_ativa(self, pid):
+        conexao = self._conexao_de(pid)
+        # Solo com grupo já mostra a visão dos próprios heróis sem opção local.
+        if self._herois_extras_de(conexao):
+            return True
+        return (self.visao_compartilhada_permitida
+                and self.cooperative_vision_preferences.get(conexao, False))
+
+    def _tiles_visiveis_cooperativos_do_heroi(self, heroi):
+        if (not heroi or not heroi.get("alive") or heroi.get("fora_masmorra")
+                or not isinstance(heroi.get("pos"), (list, tuple))
+                or len(heroi["pos"]) < 2 or heroi["pos"] == [-1, -1]):
+            return set()
+        px, py = int(heroi["pos"][0]), int(heroi["pos"][1])
+        cego = bool(heroi.get("cego"))
+        raio = 1 if cego else self._get_raio_visao(heroi)
+        visiveis = set()
+        for x, y in self.explored:
+            if max(abs(x - px), abs(y - py)) > raio:
+                continue
+            if not self._tem_linha_de_visao([px, py], [x, y]):
+                continue
+            if self._tall_oclui_caminho(px, py, x, y):
+                continue
+            visiveis.add((x, y))
+        if not cego:
+            visiveis.update(self._live_reveal_tiles())
+        return visiveis
+
+    def _cooperative_vision_tiles_for_pid(self, pid):
+        heroi = self.players.get(pid)
+        visiveis = self._tiles_visiveis_cooperativos_do_heroi(heroi)
+        if not heroi or heroi.get("cego") or not self._visao_compartilhada_cooperativa_ativa(pid):
+            return visiveis
+        for aliado in self.players.values():
+            if aliado.get("id") == pid:
+                continue
+            visiveis.update(self._tiles_visiveis_cooperativos_do_heroi(aliado))
+        return visiveis
+
+    def _cooperative_markers_for_pid(self, pid):
+        if self.phase != "playing" or self._fora_da_masmorra(pid):
+            return []
+        visiveis = self._cooperative_vision_tiles_for_pid(pid)
+        payload = []
+        removidos = []
+        for owner_id, marker in list(self.cooperative_markers.items()):
+            if owner_id not in self.players:
+                removidos.append(owner_id)
+                continue
+            target_pos = marker.get("pos")
+            if marker.get("target_type") == "enemy":
+                target = self.monsters.get(str(marker.get("target_id")))
+                if not target or target.get("hp", 0) <= 0:
+                    removidos.append(owner_id)
+                    continue
+                target_pos = target.get("pos")
+            if not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2:
+                removidos.append(owner_id)
+                continue
+            x, y = int(target_pos[0]), int(target_pos[1])
+            if (x, y) not in visiveis:
+                continue
+            payload.append({**marker, "owner_id": owner_id,
+                            "pos": [x, y] if marker.get("target_type") == "enemy"
+                            else list(marker.get("pos") or [])})
+        for owner_id in removidos:
+            self.cooperative_markers.pop(owner_id, None)
+            self._cooperative_marker_last_at.pop(owner_id, None)
+        return payload
 
     def _get_raio_visao_monstro(self, m):
         """Raio de visão: movimento base + bônus de visão + INT/DES."""
@@ -24643,6 +24785,9 @@ class GameRoom(TutorialTraining):
         # Masmorra ainda aberta (todos subiram a escada): a foto passa a ser a
         # "cidade_com_masmorra", gravada no fim; senão a aventura acabou.
         self._training_cleanup()
+        self.cooperative_markers.clear()
+        self._cooperative_marker_last_at.clear()
+        self.cooperative_vision_preferences.clear()
         masmorra_aberta = self.dungeon_generated
         if masmorra_aberta:
             self._ultima_foto = None
@@ -48249,6 +48394,9 @@ class GameRoom(TutorialTraining):
 
     async def end_game(self, victory, story=None):
         self._apagar_foto()
+        self.cooperative_markers.clear()
+        self._cooperative_marker_last_at.clear()
+        self.cooperative_vision_preferences.clear()
         self.phase = "ended"
         self._cancelar_timer_turno()
         self._cancelar_intro_masmorra()
@@ -48853,6 +49001,7 @@ MENSAGENS_DA_CONEXAO = frozenset({
     "join_test_dungeon", "select_class", "select_party", "campaign_vote",
     "claim_role", "start_game", "select_dungeon", "select_campaign",
     "salvar_e_sair", "salvar_ponto", "set_turn_timer", "set_visao_compartilhada",
+    "cooperative_vision_preference",
     "set_atravessar_aliados", "start_scene",
     "carregar_ponto", "apagar_ponto", "novo_capitulo", "arquivar_jogo",
 })
@@ -49847,6 +49996,14 @@ async def handler(ws):
 
                 elif t == "set_visao_compartilhada":
                     if room: await room.handle_set_visao_compartilhada(pid, msg.get("enabled"))
+
+                elif t == "cooperative_vision_preference":
+                    if room: await room.handle_cooperative_vision_preference(pid, msg.get("enabled"))
+
+                elif t == "cooperative_marker":
+                    if room: await room.handle_cooperative_marker(
+                        pid, msg.get("category"), msg.get("target_type"),
+                        msg.get("target_id"), msg.get("pos"), msg.get("heroi"))
 
                 elif t == "set_atravessar_aliados":
                     if room: await room.handle_set_atravessar_aliados(pid, msg.get("enabled") is True)
