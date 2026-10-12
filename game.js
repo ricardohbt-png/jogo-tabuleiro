@@ -47045,6 +47045,8 @@ function _groundItemGlbConfig(gi){
   const instrumentBase = gi?.item?.tipo_item === 'instrumento'
     ? String(gi.item.base || '').trim().toLowerCase() : '';
   return _GROUND_ITEM_GLB_MODELS[itemId]
+    || (instrumentBase === 'harpa'
+      ? {path: 'assets/itens/harpa.glb', footprint: 0.78} : null)
     || (instrumentBase === 'alaude'
       ? {path: 'assets/itens/alaude.glb', footprint: 0.78} : null)
     || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null)
