@@ -29,6 +29,7 @@ import unicodedata
 import urllib.parse
 from copy import deepcopy
 from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
+from monster_intent import MonsterIntent
 import aiohttp
 from aiohttp import web
 
@@ -3515,6 +3516,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
+    "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
     "turn_timer_started_ms": "janela", "turn_token": "janela",
@@ -11227,7 +11229,7 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class GameRoom(TutorialTraining):
+class GameRoom(TutorialTraining, MonsterIntent):
     def _tutorial_api(self):
         return sys.modules[__name__]
 
@@ -11349,6 +11351,8 @@ class GameRoom(TutorialTraining):
         # Ordem individual de iniciativa: [{kind:"player"|"monster", id, ...}].
         # Ã‰ recalculada no inÃ­cio de cada rodada, pois DES/INT podem mudar.
         self.initiative_order = []
+        self._intent_cache = {}     # pid -> (assinatura, itens); ver MonsterIntent
+        self._intent_ultimo = {}    # pid -> time.monotonic() do último pedido
         self.initiative_index = 0
         self.initiative_active = False
         self.initiative_task = None
