@@ -35,9 +35,16 @@ Mixin novo `monster_intent.py` (mesmo padrão de `tutorial_training.py`), só le
 Decisão, reusando a IA real:
 
 1. Alvos por `_alvos_visiveis_para_monstro`; escolha por `_get_monster_primary_target`.
-2. Monstros processados na **ordem da iniciativa** para reproduzir o foco coletivo.
+2. Monstros processados na **ordem da iniciativa**.
    Antes de começar guarda `_monster_ai_focus_target_id` e as casas reservadas;
    **restaura ambos em `finally`**. A previsão não altera a IA real.
+   *Nota de implementação (revisão final):* na masmorra a iniciativa roda um
+   `gm_phase(m)` por monstro e cada chamada zera o foco — não existe foco coletivo
+   entre monstros. A previsão zera o foco antes de cada monstro; as casas reservadas
+   continuam acumuladas (aproximam onde os monstros anteriores pararão). O
+   orçamento de movimento é o do próximo turno (`_water_turn_moves` numa cópia),
+   posto em `_water_moves_left` só durante o cálculo; ficha sem `ai_type` (caminho
+   legado) só alcança se já estiver ao alcance.
 3. `alcanca` = BFS de movimento (`_master_reach_bfs`) + `_monster_attack_in_range`.
 4. Sem movimento simulado: tudo parte das posições atuais. "Firme" só quando o
    alvo está em alcance direto e nada pode mudar a escolha (sem provocação ativa
@@ -48,6 +55,8 @@ Exclusões: monstro dormente (`_monstro_ativo_em_combate` falso); Manual do Mest
 ou cooldown vira `acao: "ameaca"` com certeza "provável".
 
 Cache por `(rodada, assinatura das posições de heróis e monstros)`.
+*Nota:* a assinatura também cobre a vez e os campos que mudam a previsão sem
+mover ninguém (invisibilidade, controle, altura, estados que tiram o turno, zonas).
 
 ## 2. Protocolo e visibilidade
 
@@ -62,6 +71,8 @@ Cache por `(rodada, assinatura das posições de heróis e monstros)`.
 - Só em `phase == "playing"`, jogador vivo e na masmorra; fora disso, ignora.
   Limite de 1 resposta a cada 150 ms por jogador.
 - O cliente descarta resposta cuja rodada/vez não bate com o estado atual.
+  *Nota:* a resposta traz `vez` (= `current_turn` do `game_state` no pedido);
+  `GS.intencoes()` só devolve itens enquanto rodada e vez baterem.
 - `GS.pedirIntencoes()` e `GS.intencoes` em `src/gameState.js` (sem DOM), com
   cache invalidado a cada `game_state`, como `previsaoAtaque`.
 
@@ -92,6 +103,9 @@ PT/EN e linha em "Como jogar".
 
 - Provocação, Réquiem, Comando/Dominar: já entram em `_get_monster_primary_target`;
   viram "firme".
+  *Nota:* Comando/Dominar NÃO entram ali (são tratados no despacho da iniciativa);
+  monstro sob Comando/Dominar, dormindo, com medo, paralisado etc. não ganha seta
+  (`_intent_perde_turno`, espelho de `_status_monstro_turno` e do prólogo).
 - Sem alcance nem visão do alvo: `acao: "ameaca"`, `alcanca: false`; só no modo "todas".
 - Monstro buscando a última posição (o "!"): sem seta de alvo.
 - Hostilidade entre monstros: seta monstro→monstro só no modo "todas".

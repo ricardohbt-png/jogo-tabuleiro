@@ -8214,16 +8214,31 @@ function _setIntencaoModo(modo){
   if(GS.gameState) { if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
 }
 let _intencaoUltimoPedido = 0;
+let _intencaoPedidoAtrasado = null;   // pedido "de cauda" do agrupamento de 250 ms
 function _intencoesPodePedir(){
   const st = GS.gameState;
   if(!st || st.phase !== 'playing' || GS.isMaster() || st.test_mode) return false;
   if(_intencaoModo === 'off') return false;
-  return !!GS.isMyTurn;
+  return !!GS.isMyTurn;   // propriedade booleana, não função
 }
 function _intencoesPedirAgora(forcar){
-  if(!_intencoesPodePedir()) return;
+  if(!_intencoesPodePedir()){
+    if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
+    return;
+  }
   const agora = performance.now();
-  if(!forcar && agora - _intencaoUltimoPedido < 250) return;
+  const espera = 250 - (agora - _intencaoUltimoPedido);
+  if(!forcar && espera > 0){
+    // Agrupa em vez de descartar: o último estado da rajada ganha um pedido.
+    if(!_intencaoPedidoAtrasado){
+      _intencaoPedidoAtrasado = setTimeout(() => {
+        _intencaoPedidoAtrasado = null;
+        _intencoesPedirAgora(true);
+      }, espera);
+    }
+    return;
+  }
+  if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
   _intencaoUltimoPedido = agora;
   GS.pedirIntencoes();
 }
@@ -8235,6 +8250,8 @@ function _intencoesDestaqueId(){
 }
 function _intencoesVisiveis(state, visionSet){
   if(!state || _intencaoModo === 'off' && _intencoesDestaqueId() == null) return [];
+  // 2ª barreira (a 1ª é a `vez` em GS.intencoes()): fora da minha vez, nada.
+  if(!GS.isMyTurn) return [];
   const bruto = GS.intencoes ? GS.intencoes() : [];
   const sel = IntencaoMonstros.selecionar(bruto, { modo: _intencaoModo, destaqueId: _intencoesDestaqueId() });
   const pode = (x, y) => !visionSet || visionSet.has(`${x},${y}`);
@@ -8290,17 +8307,18 @@ function _intencoesDesenhar2D(ctx, state, visionSet){
   _agendarChamas2D();   // mantém o redesenho leve (~12 quadros/s) enquanto houver setas
 }
 function _intencaoLinhaTooltip(monster){
+  if(_intencaoModo === 'off' || !GS.isMyTurn) return '';
   const it = (GS.intencoes ? GS.intencoes() : []).find(i => String(i.monstro_id) === String(monster?.id));
   if(!it) return '';
   const alvo = (GS.gameState?.players || []).find(p => p.id === it.alvo_id);
-  const nome = alvo ? alvo.name : t('ui.intencao.um_aliado');
+  const nome = alvo ? _esc(alvo.name) : t('ui.intencao.um_aliado');
   const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
               : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
   const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
   return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
 }
 GS.on('intencoesMonstros', msg => {
-  if(IntencaoMonstros.descartar({rodada: msg && msg.rodada}, GS.gameState)) return;   // resposta velha
+  if(IntencaoMonstros.descartar(msg, GS.gameState)) return;   // outra rodada ou outra vez
   const st = GS.gameState;
   if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
 });

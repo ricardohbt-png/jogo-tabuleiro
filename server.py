@@ -29,7 +29,7 @@ import unicodedata
 import urllib.parse
 from copy import deepcopy
 from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
-from monster_intent import MonsterIntent
+from monster_intent import MonsterIntent, INTENT_CAMPOS_ALVO, INTENT_CAMPOS_MONSTRO
 import aiohttp
 from aiohttp import web
 
@@ -14186,25 +14186,27 @@ class GameRoom(TutorialTraining, MonsterIntent):
     INTENT_INTERVALO_MIN = 0.15   # s entre respostas ao mesmo jogador
 
     def _intent_assinatura(self):
-        """Muda quando algo que altera a previsão muda (posições, vida, vez)."""
+        """Muda quando algo que altera a previsão muda: posições, vida, vez e
+        os campos de `INTENT_CAMPOS_*` (monster_intent.py) — invisibilidade,
+        controle, altura, estados que tiram o turno — mais as zonas especiais.
+        `repr` torna listas/dicts comparáveis sem exigir que sejam hashable."""
+        def campos(ent, nomes):
+            return tuple(repr(ent.get(k)) for k in nomes)
         return (
-            self.round_num, self.initiative_index,
-            tuple(sorted((str(pid), tuple(p.get("pos") or ()), bool(p.get("alive")),
-                          p.get("hp", 0))
+            self.round_num, self.initiative_index, self.current_pid(),
+            tuple(sorted((str(pid), tuple(p.get("pos") or ()),
+                          campos(p, INTENT_CAMPOS_ALVO))
                          for pid, p in self.players.items())),
-            tuple(sorted((str(mid), tuple(m.get("pos") or ()), m.get("hp", 0),
-                          bool(m.get("provocado")), m.get("provocado_turnos"),
-                          bool(m.get("alertado")), str(m.get("control_mode")),
-                          str(m.get("master_target_id")),
-                          bool(m.get("invisivel_sombras")),
-                          bool(m.get("invisivel_magico")),
-                          bool(m.get("oculto_vela")))
+            tuple(sorted((str(mid), tuple(m.get("pos") or ()),
+                          campos(m, INTENT_CAMPOS_MONSTRO))
                          for mid, m in self.monsters.items())),
             tuple((str(rm.get("id")), bool(rm.get("locked"))) for rm in self.rooms),
             bool(self.master_pid) and self.master_pid in self.connections,
             tuple(sorted((str(a.get("id")), tuple(a.get("pos") or ()),
-                          a.get("vida_atual", 0))
+                          campos(a, INTENT_CAMPOS_ALVO))
                          for a in self._all_animados())),
+            repr([(z.get("id"), z.get("tipo"), z.get("pos"), z.get("duracao"),
+                   z.get("ativa")) for z in (self.zonas_especiais or [])]),
         )
 
     async def handle_prever_intencoes(self, pid, data=None):
@@ -14224,8 +14226,11 @@ class GameRoom(TutorialTraining, MonsterIntent):
         else:
             itens = self._prever_intencoes(pid)
             self._intent_cache[pid] = (assinatura, itens)
+        # `vez` = current_turn do game_state: o cliente só desenha enquanto a
+        # rodada E a vez da resposta baterem com o estado atual.
         await self.send_to(pid, {"type": "intencoes_monstros",
-                                 "rodada": self.round_num, "itens": itens})
+                                 "rodada": self.round_num,
+                                 "vez": self.current_pid(), "itens": itens})
 
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
                                        surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,

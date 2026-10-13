@@ -70,16 +70,16 @@ def monta(r):
 print("[1] herói à vista é o alvo; sem efeito colateral")
 r = sala()
 a = heroi(r, "a", "Ana", "warrior", [5, 5])
-m = monstro(r, "orc", [8, 5])
+m = monstro(r, "urso_negro", [8, 5])   # IA modular: anda E ataca no mesmo turno
 monta(r)
-antes = (copy.deepcopy(r.monsters), copy.deepcopy(r.players),
+antes =(copy.deepcopy(r.monsters), copy.deepcopy(r.players),
          r.__dict__.get("_monster_ai_focus_target_id", "AUSENTE"),
          r.__dict__.get("_monster_ai_reserved_tiles", "AUSENTE"))
 itens = r._prever_intencoes("a")
-check("um item para o orc", len(itens) == 1 and itens[0]["monstro_id"] == m["id"])
+check("um item para o urso", len(itens) == 1 and itens[0]["monstro_id"] == m["id"])
 check("alvo é a Ana", itens and itens[0]["alvo_id"] == "a" and itens[0]["alvo_tipo"] == "heroi")
 check("alvo_pos é a casa da Ana", itens and itens[0]["alvo_pos"] == [5, 5])
-check("orc a 3 casas alcança (movimento 4+)", itens and itens[0]["alcanca"] is True)
+check("urso a 3 casas alcança (movimento 6)",itens and itens[0]["alcanca"] is True)
 check("casa_ataque é adjacente ao herói",
       itens and itens[0]["casa_ataque"] is not None
       and max(abs(itens[0]["casa_ataque"][0] - 5), abs(itens[0]["casa_ataque"][1] - 5)) == 1)
@@ -253,6 +253,189 @@ a["alive"] = False
 ant = r._intent_ultimo["a"]
 asyncio.run(r.handle_prever_intencoes("a"))
 check("herói morto não toca _intent_ultimo", r._intent_ultimo["a"] == ant)
+
+print("[6c] paridade com a IA REAL (gm_phase por monstro, na ordem da iniciativa)")
+import random as _random
+
+
+def roda_ia_real(r):
+    """Roda a IA real como a iniciativa a roda (um gm_phase(m) por monstro).
+    Devolve (escolha, ataque): o último alvo que a IA escolheu por monstro e o
+    alvo contra o qual ele de fato rolou ataque. Dados: semente fixa e todo
+    ataque erra (só o ALVO importa; nada de dano/morte no meio)."""
+    _random.seed(7)
+    escolha, ataque = {}, {}
+    cur = {"mid": None}
+    og = r._get_monster_primary_target
+    def wrap(m_, targets):
+        res = og(m_, targets)
+        if res:
+            escolha[m_["id"]] = res["obj"].get("id")
+        return res
+    r._get_monster_primary_target = wrap
+    oe = r._execute_one_monster_attack
+    async def ex(m_, atk_def, target_obj):
+        ataque.setdefault(m_["id"], (target_obj.get("obj") or {}).get("id"))
+        return await oe(m_, atk_def, target_obj)
+    r._execute_one_monster_attack = ex
+    od = S.d20_attack
+    def d20(*a_, **k_):
+        if cur["mid"] and cur["mid"] not in ataque:
+            ataque[cur["mid"]] = escolha.get(cur["mid"])
+        return (False, 1, 1, False)
+    S.d20_attack = d20
+    r._rolar_ataque = lambda *a_, **k_: d20() + (None,)
+    try:
+        for e in list(r.initiative_order):
+            if e["kind"] != "monster" or e["id"] not in r.monsters:
+                continue
+            cur["mid"] = e["id"]
+            asyncio.run(r.gm_phase(r.monsters[e["id"]]))
+    finally:
+        S.d20_attack = od
+        del r._get_monster_primary_target, r._execute_one_monster_attack, r._rolar_ataque
+    return escolha, ataque
+
+
+def paridade(nome, r, pid="a"):
+    prev = r._prever_intencoes(pid)          # previsão ANTES da IA rodar
+    pmap = {i["monstro_id"]: i for i in prev}
+    escolha, ataque = roda_ia_real(r)
+    ok = True
+    for mid, it in pmap.items():
+        if escolha.get(mid) != it["alvo_id"]:
+            ok = False
+        if (ataque.get(mid) == it["alvo_id"]) != bool(it["alcanca"]):
+            ok = False
+    for mid in ataque:
+        if mid not in pmap:
+            ok = False
+    check(f"{nome}: previsão {[(i['monstro_id'], i['alvo_id'], i['alcanca']) for i in prev]}"
+          f" = IA real escolha={escolha} ataque={ataque}", ok)
+    return prev, escolha, ataque
+
+
+# (a) foco é por monstro: cada orc ataca o herói ao lado dele
+r = sala()
+heroi(r, "a", "Ana", "warrior", [3, 5]); heroi(r, "b", "Bia", "warrior", [8, 5])
+monstro(r, "orc", [4, 5]); monstro(r, "orc", [7, 5]); monta(r)
+prev, _, _ = paridade("(a) dois orcs, um herói ao lado de cada", r)
+check("(a) os dois orcs alcançam (seta no modo grupo)", len(prev) == 2 and all(i["alcanca"] for i in prev))
+
+# (a2) orc sem ai_type (caminho legado) longe: anda 1 casa e NÃO ataca no mesmo turno
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+monstro(r, "orc", [8, 5]); monta(r)
+paridade("(a2) orc legado a 3 casas", r)
+
+# (b) prefere o ferido (IA modular: urso)
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5]); heroi(r, "b", "Bia", "warrior", [5, 8], hp=3)
+monstro(r, "urso_negro", [9, 6]); monta(r)
+prev, _, _ = paridade("(b) urso escolhe a Bia ferida", r)
+check("(b) alvo previsto é a Bia", prev and prev[0]["alvo_id"] == "b")
+
+# (c) provocação vence a presa ferida
+r = sala()
+heroi(r, "a", "Ana", "warrior", [6, 3]); heroi(r, "b", "Bia", "warrior", [8, 7], hp=3)
+lb = monstro(r, "urso_negro", [9, 5]); monta(r)
+lb["provocado"] = True; lb["provocado_turnos"] = 2; lb["provocado_por"] = "a"
+prev, _, _ = paridade("(c) urso provocado pela Ana", r)
+check("(c) alvo previsto é a Ana, firme", prev and prev[0]["alvo_id"] == "a" and prev[0]["certeza"] == "firme")
+
+# (d) atirador com orçamento de movimento velho (o do turno passado)
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+kb = monstro(r, "kobold_besteiro", [10, 5]); monta(r)
+kb["_water_moves_left"] = 0
+prev, _, _ = paridade("(d) kobold besteiro a 5 casas, _water_moves_left velho=0", r)
+check("(d) previsão alcança com casa de tiro", prev and prev[0]["alcanca"] and prev[0]["casa_ataque"])
+
+# (f) dois ursos longe do mesmo herói: as casas reservadas acumuladas (o 1º
+# fica com o flanco) batem com a IA real, que ocupa o flanco de verdade
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+monstro(r, "urso_negro", [9, 5]); monstro(r, "urso_negro", [9, 6]); monta(r)
+prev, _, _ = paridade("(f) dois ursos convergindo na Ana", r)
+check("(f) casas de ataque distintas",
+      len(prev) == 2 and prev[0]["casa_ataque"] != prev[1]["casa_ataque"])
+
+# (e) dormindo / comandado / com medo: não age, sem previsão
+for flag, extra in (("dormindo", {"dormindo_rodadas": 2}), ("comandado", {}),
+                    ("com_medo", {"medo_rodadas": 2}), ("perde_turno", {}),
+                    # petrificado: o despacho da iniciativa pula o monstro antes
+                    # da gm_phase; aqui rodamos a gm_phase direto, então a
+                    # petrificação precisa durar (permanente) para os dois
+                    # caminhos concordarem.
+                    ("petrificado", {"petrificado_permanente": True})):
+    r = sala()
+    heroi(r, "a", "Ana", "warrior", [5, 5])
+    mm = monstro(r, "urso_negro", [6, 5]); monta(r)
+    mm[flag] = True; mm.update(extra)
+    prev, _, ataque = paridade(f"(e) urso {flag}", r)
+    check(f"(e) {flag}: sem previsão e sem ataque real", prev == [] and ataque == {})
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+mm = monstro(r, "urso_negro", [6, 5]); monta(r)
+mm["dormindo"] = True; mm["dormindo_rodadas"] = 0
+check("(e) sono que expira neste turno: ainda há previsão (ele acorda e age)",
+      len(r._prever_intencoes("a")) == 1)
+mm.pop("dormindo"); mm["comando_pendente_pid"] = "a"
+check("(e) Comando pendente: sem previsão", r._prever_intencoes("a") == [])
+
+print("[6d] orçamento de movimento da previsão")
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+kb = monstro(r, "kobold_besteiro", [10, 5]); monta(r)
+kb["_water_moves_left"] = 0
+r._prever_intencoes("a")
+check("_water_moves_left restaurado (0)", kb["_water_moves_left"] == 0)
+kb.pop("_water_moves_left")
+itn = r._prever_intencoes("a")
+check("_water_moves_left ausente continua ausente", "_water_moves_left" not in kb)
+check("ausente também alcança", itn and itn[0]["alcanca"])
+lb = None
+r = sala()
+heroi(r, "a", "Ana", "warrior", [5, 5])
+lb = monstro(r, "urso_negro", [8, 5]); monta(r)
+lb["turbilhao_perde_movimento"] = True
+itn = r._prever_intencoes("a")
+check("perdeu o movimento (Tempestade): não alcança movendo", itn and itn[0]["alcanca"] is False)
+check("flag de perda de movimento preservada", lb.get("turbilhao_perde_movimento") is True)
+
+print("[6e] cache: invisibilidade do herói e sono do monstro invalidam")
+r = sala()
+a = heroi(r, "a", "Ana", "rogue", [5, 5])
+m = monstro(r, "urso_negro", [8, 5]); monta(r)
+r.send_to = captura
+chamadas = []
+orig = r._prever_intencoes
+def conta3(pid):
+    chamadas.append(pid)
+    return orig(pid)
+r._prever_intencoes = conta3
+def pede3():
+    r._intent_ultimo["a"] = _time.monotonic() - 1.0
+    n = len(chamadas)
+    asyncio.run(r.handle_prever_intencoes("a"))
+    return len(chamadas) > n
+pede3()
+check("base: cache", pede3() is False)
+a["invisivel_sombras"] = True
+check("herói se escondeu (sem andar) invalida", pede3())
+m["dormindo"] = True; m["dormindo_rodadas"] = 2
+check("monstro dormiu invalida", pede3())
+a["derrubado"] = True
+check("herói derrubado invalida", pede3())
+a["altura"] = 4
+check("altura do herói invalida", pede3())
+r.zonas_especiais.append({"tipo": "escuridao", "pos": [6, 5], "duracao": 2})
+check("zona especial nova invalida", pede3())
+enviados.clear()
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+r.initiative_active = True
+asyncio.run(r.handle_prever_intencoes("a"))
+check("resposta traz `vez` (pid da vez atual)", enviados and enviados[-1][1].get("vez") == r.current_pid())
 
 print("[7] caminho real: server.handler despacha prever_intencoes")
 import json as _json

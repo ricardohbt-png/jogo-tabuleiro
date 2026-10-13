@@ -1402,11 +1402,17 @@ const GS = (() => {
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
 
   // Intenção dos monstros: o servidor responde a prever_intencoes só a quem
-  // pediu. A resposta vale para a rodada em que foi pedida; chegando velha, é
-  // descartada (ver IntencaoMonstros.descartar, aplicado no game.js).
-  let _intencoes = { rodada: null, itens: [] };
+  // pediu. A resposta vale para a RODADA e a VEZ (`vez` = current_turn) em
+  // que foi pedida: na fase dos monstros (current_turn nulo) ou na vez de
+  // outro herói, intencoes() devolve vazio. Mesma regra de
+  // IntencaoMonstros.valida (módulo puro do renderer; aqui não há window).
+  let _intencoes = { rodada: null, vez: null, itens: [] };
+  function _intencoesValem(r, st) {
+    return !!(r && st && Number.isFinite(r.rodada) && r.rodada === st.round
+              && r.vez != null && r.vez === st.current_turn && Array.isArray(r.itens));
+  }
   function intencoes() {
-    return (gameState && _intencoes.rodada === gameState.round) ? _intencoes.itens : [];
+    return _intencoesValem(_intencoes, gameState) ? _intencoes.itens : [];
   }
   function pedirIntencoes() { return send({ type: 'prever_intencoes' }); }
 
@@ -1805,7 +1811,7 @@ const GS = (() => {
         gameState = null;
         pendingMove = null;
         _resetTurnActivity();
-        _intencoes = { rodada: null, itens: [] };
+        _intencoes = { rodada: null, vez: null, itens: [] };
         _emit('enterDungeon');
         break;
 
@@ -1934,10 +1940,13 @@ const GS = (() => {
         break;
 
       case 'intencoes_monstros':
-        if (gameState && msg.rodada === gameState.round) {
-          _intencoes = { rodada: msg.rodada, itens: Array.isArray(msg.itens) ? msg.itens : [] };
+        {
+          const r = { rodada: msg.rodada, vez: msg.vez == null ? null : msg.vez,
+                      itens: Array.isArray(msg.itens) ? msg.itens : [] };
+          // Resposta velha (outra rodada/vez) não substitui nada.
+          if (_intencoesValem(r, gameState)) _intencoes = r;
+          _emit('intencoesMonstros', r);
         }
-        _emit('intencoesMonstros', _intencoes);
         break;
 
       case 'game_over':

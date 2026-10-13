@@ -18,11 +18,19 @@ check("lerModo válido", IM.lerModo("todas") === "todas" && IM.lerModo("off") ==
 check("lerModo inválido/ausente cai em grupo", IM.lerModo("x") === "grupo" && IM.lerModo(null) === "grupo" && IM.lerModo(undefined) === "grupo");
 check("proximoModo cicla", IM.proximoModo("off") === "grupo" && IM.proximoModo("grupo") === "todas" && IM.proximoModo("todas") === "off");
 
-console.log("[2] descartar resposta velha");
-check("rodada igual: mantém", IM.descartar({ rodada: 3 }, { round: 3 }) === false);
-check("rodada diferente: descarta", IM.descartar({ rodada: 2 }, { round: 3 }) === true);
-check("sem estado: descarta", IM.descartar({ rodada: 2 }, null) === true);
-check("mensagem lixo: descarta", IM.descartar(null, { round: 1 }) === true);
+console.log("[2] valida / descartar: rodada E vez");
+const st3 = { round: 3, current_turn: "a" };
+const ok3 = { rodada: 3, vez: "a", itens: [] };
+check("rodada e vez iguais: vale", IM.valida(ok3, st3) === true && IM.descartar(ok3, st3) === false);
+check("rodada diferente: descarta", IM.descartar({ rodada: 2, vez: "a", itens: [] }, st3) === true);
+check("mesma rodada, outra vez (outro herói): descarta", IM.descartar(ok3, { round: 3, current_turn: "b" }) === true);
+check("mesma rodada, fase dos monstros (current_turn nulo): descarta", IM.descartar(ok3, { round: 3, current_turn: null }) === true);
+check("rodada ausente nos dois lados não vale (undefined===undefined)",
+      IM.valida({ vez: "a", itens: [] }, { current_turn: "a" }) === false);
+check("vez ausente nos dois lados não vale", IM.valida({ rodada: 3, itens: [] }, { round: 3 }) === false);
+check("itens não-lista: descarta", IM.descartar({ rodada: 3, vez: "a", itens: "x" }, st3) === true);
+check("sem estado: descarta", IM.descartar(ok3, null) === true);
+check("mensagem lixo: descarta", IM.descartar(null, st3) === true);
 
 console.log("[3] selecionar");
 const itens = [item(), item({ monstro_id: "m2", alcanca: false, casa_ataque: null }),
@@ -99,6 +107,68 @@ for (const k of ["ui.menu.intencao", "ui.menu.intencao.off", "ui.menu.intencao.g
   const m = lang.match(new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{([\\s\\S]*?)\\n  \\}'));
   check("chave " + k + " com pt e en", !!m && /"pt"/.test(m[1]) && /"en"/.test(m[1]));
 }
+
+console.log("[10] GS de verdade: guarda por rodada E vez, reset ao entrar na masmorra");
+{
+  let sock = null;
+  const W = global.WebSocket;
+  global.WebSocket = class {
+    constructor() { this.readyState = 1; sock = this; }
+    send() {}
+    close() {}
+  };
+  global.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  global.location = { search: "", protocol: "http:", host: "x" };
+  const sT = global.setTimeout, cT = global.clearTimeout;
+  global.setTimeout = () => 0; global.clearTimeout = () => {};
+  const GS = eval(fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8") + "; GS");
+  GS.connect("ws://x", "Ana", "create");
+  const chegar = msg => sock.onmessage({ data: JSON.stringify(msg) });
+  const estado = (round, current_turn) => chegar({ type: "game_state", players: [], monsters: [],
+    tiles: [[1]], rooms: [], explored: [], round, current_turn, phase: "playing" });
+  const resp = (over) => Object.assign({ type: "intencoes_monstros", rodada: 2, vez: "a", itens: [item()] }, over || {});
+  const ev = [];
+  GS.on("intencoesMonstros", m => ev.push(m));
+
+  estado(2, "a");
+  chegar(resp());
+  check("resposta da rodada e vez atuais: GS.intencoes() traz o item", GS.intencoes().length === 1);
+  check("evento emitido com rodada e vez", ev.length === 1 && ev[0].vez === "a" && ev[0].rodada === 2);
+  estado(2, null);
+  check("fase dos monstros na MESMA rodada: some", GS.intencoes().length === 0);
+  estado(2, "b");
+  check("vez de outro herói na mesma rodada: some", GS.intencoes().length === 0);
+  estado(2, "a");
+  check("de volta à mesma vez (sem nova resposta): reaparece", GS.intencoes().length === 1);
+  estado(3, "a");
+  check("rodada seguinte: some", GS.intencoes().length === 0);
+  chegar(resp({ rodada: 2 }));
+  check("resposta da rodada anterior não substitui", GS.intencoes().length === 0);
+  chegar(resp({ rodada: 3, vez: "b" }));
+  check("resposta de outra vez não substitui", GS.intencoes().length === 0);
+  chegar(resp({ rodada: 3, vez: undefined }));
+  check("resposta sem vez não vale", GS.intencoes().length === 0);
+  chegar(resp({ rodada: 3, itens: "lixo" }));
+  check("itens não-lista vira lista vazia", Array.isArray(GS.intencoes()) && GS.intencoes().length === 0);
+  chegar(resp({ rodada: 3 }));
+  check("resposta válida da nova rodada entra", GS.intencoes().length === 1);
+  chegar({ type: "enter_dungeon" });
+  estado(3, "a");
+  check("enter_dungeon zera as intenções", GS.intencoes().length === 0);
+  global.WebSocket = W; global.setTimeout = sT; global.clearTimeout = cT;
+}
+
+console.log("[11] game.js: cauda do agrupamento, nome escapado, tooltip desligado, vez");
+const fnPedir = jogo.slice(jogo.indexOf("function _intencoesPedirAgora"), jogo.indexOf("// Monstro cujo tooltip"));
+check("agrupa com pedido de cauda (setTimeout), não descarta", /setTimeout\(/.test(fnPedir) && /_intencaoPedidoAtrasado/.test(fnPedir));
+check("cauda é cancelada quando não pode pedir (modo off / fora da vez)",
+      /if\(!_intencoesPodePedir\(\)\)\{[\s\S]{0,140}clearTimeout\(_intencaoPedidoAtrasado\)/.test(fnPedir));
+const fnTip = jogo.slice(jogo.indexOf("function _intencaoLinhaTooltip"), jogo.indexOf("GS.on('intencoesMonstros'"));
+check("tooltip: vazio no modo off", /_intencaoModo === 'off'/.test(fnTip));
+check("tooltip: nome do jogador escapado", /_esc\(alvo\.name\)/.test(fnTip));
+check("desenho exige GS.isMyTurn (propriedade, sem parênteses)",
+      /function _intencoesVisiveis[\s\S]{0,300}if\(!GS\.isMyTurn\) return \[\];/.test(jogo) && !/GS\.isMyTurn\(\)/.test(jogo));
+check("listener descarta pela mensagem inteira (rodada e vez)", jogo.includes("IntencaoMonstros.descartar(msg, GS.gameState)"));
 
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);

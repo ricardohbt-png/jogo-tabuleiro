@@ -8,11 +8,17 @@
   function lerModo(raw) { return MODOS.includes(raw) ? raw : 'grupo'; }
   function proximoModo(modo) { return MODOS[(MODOS.indexOf(modo) + 1) % MODOS.length]; }
 
-  // Resposta velha: a rodada da mensagem não bate com a do estado atual.
-  function descartar(msg, state) {
-    if (!msg || !state) return true;
-    return msg.rodada !== state.round;
+  // A resposta só vale para a rodada E a vez em que foi pedida: `vez` é o
+  // current_turn do servidor no pedido. Na fase dos monstros (current_turn
+  // nulo) ou na vez de outro herói ela deixa de valer. Mesma regra de
+  // GS.intencoes() (src/gameState.js).
+  function valida(msg, state) {
+    if (!msg || !state || typeof msg !== 'object') return false;
+    if (!Number.isFinite(msg.rodada) || msg.rodada !== state.round) return false;
+    if (msg.vez == null || msg.vez !== state.current_turn) return false;
+    return Array.isArray(msg.itens);
   }
+  function descartar(msg, state) { return !valida(msg, state); }
 
   // modo: off | grupo (só quem alcança alguém) | todas. O monstro em destaque
   // (mouse/tooltip) entra sempre e é "forte".
@@ -44,5 +50,5 @@
     };
   }
 
-  window.IntencaoMonstros = { MODOS, lerModo, proximoModo, descartar, selecionar, contar, estilo };
+  window.IntencaoMonstros = { MODOS, lerModo, proximoModo, valida, descartar, selecionar, contar, estilo };
 })();

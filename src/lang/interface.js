@@ -10599,8 +10599,8 @@ window.LANG_INTERFACE = {
     "pt": "Mostra setas de quem cada monstro atacaria agora. Tecla T alterna."
   },
   "ui.ajuda.intencao": {
-    "en": "<b>Monster intent:</b> red arrows show who a monster would attack right now (dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
-    "pt": "<b>Intenção dos monstros:</b> setas vermelhas mostram quem um monstro atacaria agora (tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
+    "en": "<b>Monster intent:</b> on your turn, colored arrows show who each monster would attack on its next turn (red = melee, orange = ranged, purple = special ability; dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
+    "pt": "<b>Intenção dos monstros:</b> na sua vez, setas coloridas mostram quem cada monstro atacaria no próximo turno dele (vermelha = corpo a corpo, laranja = à distância, roxa = habilidade especial; tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
   },
   "ui.intencao.tooltip.corpo": {
     "en": "⚔️ Will attack {alvo}",
