@@ -29,6 +29,7 @@ import unicodedata
 import urllib.parse
 from copy import deepcopy
 from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
+from terrain_reactions import TerrainReactions
 from monster_intent import MonsterIntent, INTENT_CAMPOS_ALVO, INTENT_CAMPOS_MONSTRO
 import aiohttp
 from aiohttp import web
@@ -3516,6 +3517,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
+    "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
@@ -11231,7 +11233,7 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class GameRoom(TutorialTraining, MonsterIntent):
+class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _tutorial_api(self):
         return sys.modules[__name__]
 
@@ -11440,6 +11442,9 @@ class GameRoom(TutorialTraining, MonsterIntent):
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
         self._terrenos_inverno = {}
+        self._rx_escopo = None     # escopo da ação em curso (TerrainReactions)
+        self._rx_em_reacao = False # True enquanto uma reação aplica dano: não reentra
+        self._rx_seq = 0           # ids únicos de camadas de reação
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..40)
         self.alturas_parede = {}       # {(x,y): nível manual da parede (só visual)}
@@ -15619,6 +15624,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
         self.materiais = {}
         self.elevacoes = {}
         self._terrenos_inverno = {}
+        self._rx_escopo = None
+        self._rx_em_reacao = False
         for key, mid in (defn.get("materiais") or {}).items():
             if mid not in MATERIAIS or not isinstance(key, str):
                 continue
@@ -16695,6 +16702,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
             self.alturas_parede = {}
             self.transicao_altura = "rampa"
             self._terrenos_inverno = {}
+            self._rx_escopo = None
+            self._rx_em_reacao = False
             self._rebuild_pontes_index()
             self._rebuild_materiais_index()
             self.zonas_especiais = []
@@ -31027,6 +31036,13 @@ class GameRoom(TutorialTraining, MonsterIntent):
         if alterado:
             self._rebuild_materiais_index()
             self._liberar_presos_sem_rodamoinho()
+
+    def _rx_T(self, chave, **kw):
+        return T(chave, **kw)
+
+    def _rx_altura(self, alvo):
+        """1 se a criatura está acima do piso (voando), senão 0."""
+        return 1 if normalizar_altura(alvo.get("altura", ALTURA_MIN)) > ALTURA_MIN else 0
 
     def _alvos_no_inverno(self, tiles):
         """Retorna vivos dentro da área, incluindo aliados, inimigos e servos."""
