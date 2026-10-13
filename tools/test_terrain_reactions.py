@@ -383,7 +383,10 @@ def corpo(nome):
 
 for nome, elem in TR.FONTES_COM_REGISTRO.items():
     seg = corpo(nome)
-    check(f"{nome} existe e registra {elem}", seg is not None and "_rx_registrar(" in seg)
+    no = next((n for n in ast.walk(_arvore) if isinstance(n, (ast.AsyncFunctionDef, ast.FunctionDef)) and n.name == nome), None)
+    chamadas = [c for c in ast.walk(no) if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
+                and c.func.attr == "_rx_registrar"] if no is not None else []
+    check(f"{nome} existe e chama _rx_registrar (AST)", bool(chamadas))
 check("funil _aplicar_dano_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_aplicar_dano_alvo") or ""))
 check("funil _dano_em_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_dano_em_alvo") or ""))
 check("magias rodam dentro de um escopo elemental",
@@ -490,6 +493,24 @@ check("dois feridos pelo choque pelo funil: um choque só", len(choques) == 1)
 check("nenhum registro novo durante a reação (guarda _rx_em_reacao)",
       sum(1 for e, em in reg if em) == 0 and len(reg) == 1)
 check("as duas vítimas foram feridas", v1["hp"] < v1["max_hp"] and v2["hp"] < v2["max_hp"])
+
+# Protetor ativo: a transferência recursiva não repete a reação (cena IMPLÍCITA, sem evento_elemental)
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 10)])
+ana = heroi(r, "a", "Ana", "warrior", [6, 5])
+ric = heroi(r, "r", "Richard", "paladin", [6, 6])
+ric["protetor_ativo"] = True; ric["protetor_alvo"] = "a"
+outro = heroi(r, "o", "Otto", "warrior", [8, 5])
+roda(r._dano_em_alvo(ana, 30, "eletricidade", "x"))
+check("Protetor ativo: um dano elétrico na poça gera UM choque",
+      sum(1 for m in r.msgs if m.get("type") == "reacao_elemental" and m.get("tipo") == "choque") == 1)
+check("o Protetor realmente dividiu o dano", ric["hp"] < ric["max_hp"])
+
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 10)])
+ana = heroi(r, "a", "Ana", "warrior", [6, 5])
+roda(r._dano_em_alvo(ana, 0, "eletricidade", "x"))
+check("dano 0 elétrico na poça não reage", not any(m.get("tipo") == "choque" for m in r.msgs))
 
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

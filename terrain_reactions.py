@@ -27,6 +27,9 @@ RX_CD_PADRAO = 12
 RX_DURACAO_CHAMAS = 3
 RX_DADO_CHAMAS = "1d6"
 
+# Limitações conhecidas: relâmpago da Tempestade de Ciclones sobre poça VAZIA não conduz
+# (só criaturas atingidas pelo funil reagem); a Magia Geminada faz uma 2ª chamada de
+# `_executar_magia_grimorio`, que resolve suas reações num escopo próprio (aceitável).
 # Fontes do servidor que chamam `_rx_registrar` no próprio corpo (nome da função -> elemento).
 # O teste confere por AST. `_executar_tempestade_ciclones` fica de fora: o dano elétrico
 # dela passa por `_tempestade_dano` -> `_dano_em_alvo`, coberto pelo funil.

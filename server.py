@@ -30197,8 +30197,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if dano <= 0 or self._fosso_protegido(alvo):
             return
-        await self._rx_registrar_alvo(
-            alvo, _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento), dano, killer_pid)
+        if not _protetor_bypass:   # a chamada original registra; as recursivas do Protetor não repetem
+            await self._rx_registrar_alvo(
+                alvo, _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento), dano, killer_pid)
         if not _protetor_bypass:
             dano_alvo, transferencia = await self._processar_dano_protetor(
                 alvo, dano, is_attack=is_attack)
@@ -36945,7 +36946,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if self._fosso_protegido(alvo):
             return
         elemento = _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento)
-        await self._rx_registrar_alvo(alvo, elemento, dano, killer_pid)
+        if dano > 0 and not _protetor_bypass:
+            await self._rx_registrar_alvo(alvo, elemento, dano, killer_pid)
         # Alguns efeitos antigos chegam aqui depois de rolar o dano, sem
         # passar por `_apply_damage_types`. Cobre esse caminho sem duplicar a
         # vulnerabilidade nos efeitos que já passaram pelo funil.
