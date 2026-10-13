@@ -745,7 +745,7 @@ check("usa o módulo puro para selecionar", jogo.includes("IntencaoMonstros.sele
 check("descarta resposta velha", jogo.includes("IntencaoMonstros.descartar("));
 check("pede no início da vez e depois de mover (com intervalo)", jogo.includes("_intencoesPedirAgora") && /250/.test(jogo));
 check("tooltip do monstro ganha a linha de intenção", jogo.includes("_intencaoLinhaTooltip("));
-check("Mestre e mesa de teste não pedem", /GS\.isMaster\(\)\s*\|\|[^;]*test_mode/.test(jogo.slice(jogo.indexOf("function _intencoesPedirAgora"))));
+check("Mestre e mesa de teste não pedem", /GS\.isMaster\(\)\s*\|\|[^;]*test_mode/.test(jogo.slice(jogo.indexOf("function _intencoesPodePedir"))));
 ```
 
 - [ ] **Step 2: Rodar e ver falhar** — as checagens `[7]` falham.
@@ -777,7 +777,7 @@ function _intencoesPodePedir(){
   return !!GS.isMyTurn;
 }
 function _intencoesPedirAgora(forcar){
-  if(!_intencoesPodePedir() && !(forcar && GS.gameState && !GS.isMaster() && !GS.gameState.test_mode && GS.isMyTurn)) return;
+  if(!_intencoesPodePedir()) return;
   const agora = performance.now();
   if(!forcar && agora - _intencaoUltimoPedido < 250) return;
   _intencaoUltimoPedido = agora;
@@ -852,7 +852,8 @@ function _intencaoLinhaTooltip(monster){
   const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
   return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
 }
-GS.on('intencoesMonstros', () => {
+GS.on('intencoesMonstros', msg => {
+  if(IntencaoMonstros.descartar({rodada: msg && msg.rodada}, GS.gameState)) return;   // resposta velha
   const st = GS.gameState;
   if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
 });
@@ -873,7 +874,7 @@ Observação: `_intencoesVisiveis` mantém o destaque do tooltip mesmo em `off` 
   return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>` + _intencaoLinhaTooltip(monster);
 ```
 
-(d) Em qualquer ponto de `game.js` que já descarte resposta velha, use: ao receber `intencoesMonstros` o `GS` já compara a rodada (Task 3). Para a checagem textual do teste `[7]`, acrescente no handler `GS.on('intencoesMonstros', …)` uma primeira linha: `if(IntencaoMonstros.descartar({rodada: GS.gameState?.round}, GS.gameState)) return;` — evita redesenhar quando não há estado.
+(d) O `GS` só guarda a resposta cuja rodada bate com o estado; o handler acima repete a checagem (`descartar`) para não redesenhar com dado velho.
 
 - [ ] **Step 4: Rodar e ver passar** — `node tools/test_intencoes_cliente.js`; `node --check game.js`; abra uma partida local (ver Task 7) para a primeira conferência visual.
 
