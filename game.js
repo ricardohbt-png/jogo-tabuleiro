@@ -8228,7 +8228,8 @@ function _intencoesPedirAgora(forcar){
 // Monstro cujo tooltip está aberto (o #tip-previsao existe enquanto ele estiver).
 function _intencoesDestaqueId(){
   const el = document.getElementById('tip-previsao');
-  return (el && el.isConnected && _tipPrevisaoAlvo) ? _tipPrevisaoAlvo.id : null;
+  // O tooltip é só escondido (display:none), não esvaziado: exige estar visível.
+  return (el && el.isConnected && el.getClientRects().length > 0 && _tipPrevisaoAlvo) ? _tipPrevisaoAlvo.id : null;
 }
 function _intencoesVisiveis(state, visionSet){
   if(!state || _intencaoModo === 'off' && _intencoesDestaqueId() == null) return [];
@@ -8247,10 +8248,12 @@ function _intencoesDesenhar2D(ctx, state, visionSet){
   const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
   const contagem = IntencaoMonstros.contar(itens);
   const vistoAlvo = {};
+  const par = p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
   ctx.save();
+  try {
   for(const it of itens){
     const m = mons.get(String(it.monstro_id));
-    if(!m) continue;
+    if(!m || !par(m.pos) || !par(it.alvo_pos)) continue;
     const est = IntencaoMonstros.estilo(it);
     const x0 = m.pos[0] * CELL + CELL / 2, y0 = m.pos[1] * CELL + CELL / 2;
     const x1 = it.alvo_pos[0] * CELL + CELL / 2, y1 = it.alvo_pos[1] * CELL + CELL / 2;
@@ -8281,7 +8284,7 @@ function _intencoesDesenhar2D(ctx, state, visionSet){
     const it = itens.find(i => String(i.alvo_id) === id);
     ctx.fillText('×' + contagem[id], it.alvo_pos[0] * CELL + CELL * 0.85, it.alvo_pos[1] * CELL + CELL * 0.25);
   }
-  ctx.restore();
+  } finally { ctx.restore(); }
   _agendarChamas2D();   // mantém o redesenho leve (~12 quadros/s) enquanto houver setas
 }
 function _intencaoLinhaTooltip(monster){
@@ -8299,9 +8302,8 @@ GS.on('intencoesMonstros', msg => {
   const st = GS.gameState;
   if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
 });
-// Pede no início da vez e depois de cada mudança de estado na minha vez
-// (movimento, ataque), agrupando em 250 ms.
-GS.on('gameState', st => { if(st && st.phase === 'playing') _intencoesPedirAgora(); });
+// O pedido automático (início da vez / depois de mover) mora no único
+// GS.on('gameState') do arquivo; um 2º registro substituiria o 1º.
 
 // ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
 // Casas que o seu herói veria se um objeto (estante, pilar, entulho…) não
@@ -55433,6 +55435,7 @@ if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
   _autoTurnSchedule(msg);
+  if(msg && msg.phase === 'playing') _intencoesPedirAgora();   // agrupado em 250 ms
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
     _cidadeTourPendenteDoTutorial = true;
   _sincronizarFossoQuedas(msg);

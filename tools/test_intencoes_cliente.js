@@ -64,6 +64,15 @@ check("descarta resposta velha", jogo.includes("IntencaoMonstros.descartar("));
 check("pede no início da vez e depois de mover (com intervalo)", jogo.includes("_intencoesPedirAgora") && /250/.test(jogo));
 check("tooltip do monstro ganha a linha de intenção", jogo.includes("_intencaoLinhaTooltip("));
 check("Mestre e mesa de teste não pedem", /GS\.isMaster\(\)\s*\|\|[^;]*test_mode/.test(jogo.slice(jogo.indexOf("function _intencoesPodePedir"))));
+const nOn = ev => (jogo.match(new RegExp("^GS\\.on\\('" + ev + "'", "gm")) || []).length;
+check("GS.on('gameState' aparece uma única vez", nOn("gameState") === 1);
+check("GS.on('intencoesMonstros' aparece uma única vez", nOn("intencoesMonstros") === 1);
+const iH = jogo.search(/^GS\.on\('gameState'/m);
+check("o pedido automático está no corpo do handler gameState sobrevivente",
+      iH >= 0 && jogo.slice(iH, iH + 3000).includes("_intencoesPedirAgora()"));
+check("desenho 2D protege save/restore e ignora posição inválida",
+      /try \{\s*for\(const it of itens\)/.test(jogo) && jogo.includes("finally { ctx.restore(); }") && jogo.includes("!par(it.alvo_pos)"));
+check("destaque do tooltip exige elemento visível", jogo.includes("el.getClientRects().length > 0"));
 
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);
