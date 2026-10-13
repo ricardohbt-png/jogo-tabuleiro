@@ -574,5 +574,24 @@ r._aplicar_camadas_terreno_inverno([(8, 5)], "lava_solidificada", "rx_1", perman
 pl = r._game_state_payload()
 check("terrenos_temp expõe a expiração da camada", pl.get("terrenos_temp", {}).get("8,5") == 7)
 
+print("[11] foto da masmorra")
+r = sala()
+pinta(r, "terra", [(5, 5)])
+r._aplicar_camadas_terreno_inverno([(5, 5)], "piche", "frasco_9", permanente=False, expira_em=9)
+r.zonas_especiais.append({"id": "z1", "tipo": "chamas_piche", "tiles": [[5, 5]], "expira_em": 6, "ativa": True, "caster": None})
+pacote = S.foto_empacotar({"_terrenos_inverno": r._terrenos_inverno, "zonas_especiais": r.zonas_especiais, "materiais": r.materiais})
+volta = S.foto_desempacotar(pacote)
+check("a camada temporária de piche sobrevive à foto", volta["_terrenos_inverno"][(5, 5)]["camadas"][0]["material"] == "piche")
+check("a zona de chamas sobrevive à foto", volta["zonas_especiais"][0]["tipo"] == "chamas_piche")
+check("o material sobrevive à foto", volta["materiais"][(5, 5)] == "piche")
+check("categorias da foto", all(S.FOTO_SALA_CATEGORIAS.get(k) == "foto" for k in ("_terrenos_inverno", "zonas_especiais", "materiais")))
+r2 = sala()
+r2.materiais = volta["materiais"]; r2._terrenos_inverno = volta["_terrenos_inverno"]
+r2._rebuild_materiais_index()
+r2.round_num = 9
+r2._expirar_terrenos_inverno()
+check("após a foto, a camada ainda expira e restaura o material base",
+      r2.materiais.get((5, 5)) == "terra" and (5, 5) not in r2._terrenos_inverno)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

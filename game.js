@@ -56172,6 +56172,8 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
 }
 function _reacoes3DDispose(){
   for(const a of _reacoesAnims) _reacoesDisposeAnim3D(a);
+  _reacoesAnims.length = 0;
+  _reacoesCrostasRef = null; _reacoesCrostasVal = [];
   const pool = g3 && g3.reacoesCrostas;
   if(pool){
     for(const m of pool.malhas.values()) g3.scene.remove(m);
@@ -56206,6 +56208,15 @@ function _reacoes3DCriar(a, st, vis){
   g3.scene.add(grupo);
   a.grupo = grupo;
 }
+// Crostas acabando, recalculadas só quando o objeto de estado muda.
+let _reacoesCrostasRef = null, _reacoesCrostasVal = [];
+function _reacoesCrostas3D(st){
+  if(_reacoesCrostasRef !== st){
+    _reacoesCrostasVal = ReacoesElementais.crostasAcabando(st);
+    _reacoesCrostasRef = st;
+  }
+  return _reacoesCrostasVal;
+}
 function _reacoes3DAtualizar(){
   if(!g3) return;
   const st = GS.gameState;
@@ -56224,7 +56235,7 @@ function _reacoes3DAtualizar(){
     }
   }
   // Pulso das crostas que acabam: pool de anéis reutilizáveis por casa.
-  const crostas = st ? ReacoesElementais.crostasAcabando(st).filter(c => _reacoesVisivel(vis, c)) : [];
+  const crostas = st ? _reacoesCrostas3D(st).filter(c => _reacoesVisivel(vis, c)) : [];
   let pool = g3.reacoesCrostas;
   if(!pool && !crostas.length) return;
   if(!pool){
@@ -56253,7 +56264,11 @@ function _reacoes3DAtualizar(){
 }
 // Tooltip de casa por material (piche, água, crosta); a sombra tem prioridade.
 function _reacaoCasaTooltipHTML(tx, ty){
-  const d = ReacoesElementais.descreverCasa(GS.gameState, tx, ty);
+  const st = GS.gameState;
+  if(!st) return null;
+  // Só descreve casa que o herói enxerga agora (nada de vazar névoa/inexplorado).
+  if(!_reacoesVisivel(_guiaVisao3D(st), [tx, ty])) return null;
+  const d = ReacoesElementais.descreverCasa(st, tx, ty);
   return d ? `<div>${t(d.chave, d.params)}</div>` : null;
 }
 

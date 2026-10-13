@@ -81,6 +81,14 @@ check("GS trata reacao_elemental", fs.readFileSync(path.join(raiz, "src", "gameS
 check("game.js ouve reacaoElemental uma vez", (jogo2.match(/GS\.on\('reacaoElemental'/g) || []).length === 1);
 check("game.js não duplica GS.on('gameState')", (jogo2.match(/^GS\.on\('gameState'/gm) || []).length === 1);
 check("index.html carrega o módulo", fs.readFileSync(path.join(raiz, "index.html"), "utf8").includes("src/reacoesElementais.js"));
+const jogoSrc = jogo2.split("\r\n").join("\n");
+check("renderMap chama _reacoesDesenhar2D(ctx, state, visionSet)", /_reacoesDesenhar2D\(ctx, state, visionSet\);/.test(jogoSrc));
+check("loop 3D chama _reacoes3DAtualizar ao lado de _intencoesAtualizar3D", /_intencoesAtualizar3D\(\);\s*_reacoes3DAtualizar\(\);/.test(jogoSrc));
+check("dispose3D chama _reacoes3DDispose", /function dispose3D[^]*?_reacoes3DDispose\(\);/.test(jogoSrc));
+check("tooltip da reação só descreve casa visível", /function _reacaoCasaTooltipHTML[^]*?_reacoesVisivel\(_guiaVisao3D\(st\), \[tx, ty\]\)[^]*?descreverCasa/.test(jogoSrc));
+const corpo3D = jogoSrc.split("function _reacoes3DAtualizar")[1].split("function _reacaoCasaTooltipHTML")[0];
+check("crostas 3D em cache por estado", /function _reacoesCrostas3D[^]*?_reacoesCrostasRef !== st/.test(jogoSrc) && !corpo3D.includes("ReacoesElementais.crostasAcabando"));
+check("_reacoes3DDispose zera _reacoesAnims", /function _reacoes3DDispose[^]*?_reacoesAnims\.length = 0/.test(jogoSrc));
 const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8").replace(/\r?\n/g, " ");
 for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.agua", "ui.reacao.casa.crosta"])
   check("chave " + k + " pt+en", new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"pt"[^]{0,200}?"en"|"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"en"[^]{0,200}?"pt"').test(lang));
