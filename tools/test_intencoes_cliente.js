@@ -55,5 +55,15 @@ check("GS: exporta pedirIntencoes e intencoes", /pedirIntencoes,/.test(gs) && /\
 const html = fs.readFileSync(path.join(raiz, "index.html"), "utf8");
 check("index.html carrega o módulo", html.includes("src/intencaoMonstros.js"));
 
+console.log("[7] fiação do game.js (2D)");
+const jogo = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+check("lê o modo salvo com try/catch", /lfh_intencoes/.test(jogo) && /IntencaoMonstros\.lerModo\(/.test(jogo));
+check("desenho 2D chamado no fim do renderMap", /_intencoesDesenhar2D\(ctx, state, visionSet\);/.test(jogo));
+check("usa o módulo puro para selecionar", jogo.includes("IntencaoMonstros.selecionar("));
+check("descarta resposta velha", jogo.includes("IntencaoMonstros.descartar("));
+check("pede no início da vez e depois de mover (com intervalo)", jogo.includes("_intencoesPedirAgora") && /250/.test(jogo));
+check("tooltip do monstro ganha a linha de intenção", jogo.includes("_intencaoLinhaTooltip("));
+check("Mestre e mesa de teste não pedem", /GS\.isMaster\(\)\s*\|\|[^;]*test_mode/.test(jogo.slice(jogo.indexOf("function _intencoesPodePedir"))));
+
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);

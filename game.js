@@ -8197,6 +8197,112 @@ function _setVisaoCompPref(on){
   if(st) renderMap(st);
 }
 
+// ── Intenção dos monstros ────────────────────────────────────────────────────
+// O servidor prevê (prever_intencoes); aqui só se desenha. Modos: off | grupo
+// (padrão: só quem alcança alguém) | todas. Preferência por navegador.
+const _INTENCAO_KEY = 'lfh_intencoes';
+let _intencaoModo = (() => {
+  try { return IntencaoMonstros.lerModo(localStorage.getItem(_INTENCAO_KEY)); }
+  catch(e){ return 'grupo'; }
+})();
+function _setIntencaoModo(modo){
+  _intencaoModo = IntencaoMonstros.lerModo(modo);
+  try { localStorage.setItem(_INTENCAO_KEY, _intencaoModo); } catch(e){}
+  _intencoesPedirAgora(true);
+  if(GS.gameState) { if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
+}
+let _intencaoUltimoPedido = 0;
+function _intencoesPodePedir(){
+  const st = GS.gameState;
+  if(!st || st.phase !== 'playing' || GS.isMaster() || st.test_mode) return false;
+  if(_intencaoModo === 'off') return false;
+  return !!GS.isMyTurn;
+}
+function _intencoesPedirAgora(forcar){
+  if(!_intencoesPodePedir()) return;
+  const agora = performance.now();
+  if(!forcar && agora - _intencaoUltimoPedido < 250) return;
+  _intencaoUltimoPedido = agora;
+  GS.pedirIntencoes();
+}
+// Monstro cujo tooltip está aberto (o #tip-previsao existe enquanto ele estiver).
+function _intencoesDestaqueId(){
+  const el = document.getElementById('tip-previsao');
+  return (el && el.isConnected && _tipPrevisaoAlvo) ? _tipPrevisaoAlvo.id : null;
+}
+function _intencoesVisiveis(state, visionSet){
+  if(!state || _intencaoModo === 'off' && _intencoesDestaqueId() == null) return [];
+  const bruto = GS.intencoes ? GS.intencoes() : [];
+  const sel = IntencaoMonstros.selecionar(bruto, { modo: _intencaoModo, destaqueId: _intencoesDestaqueId() });
+  const pode = (x, y) => !visionSet || visionSet.has(`${x},${y}`);
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  return sel.filter(it => {
+    const m = mons.get(String(it.monstro_id));
+    return m && m.hp > 0 && pode(m.pos[0], m.pos[1]);
+  });
+}
+function _intencoesDesenhar2D(ctx, state, visionSet){
+  const itens = _intencoesVisiveis(state, visionSet);
+  if(!itens.length) return;
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  const contagem = IntencaoMonstros.contar(itens);
+  const vistoAlvo = {};
+  ctx.save();
+  for(const it of itens){
+    const m = mons.get(String(it.monstro_id));
+    if(!m) continue;
+    const est = IntencaoMonstros.estilo(it);
+    const x0 = m.pos[0] * CELL + CELL / 2, y0 = m.pos[1] * CELL + CELL / 2;
+    const x1 = it.alvo_pos[0] * CELL + CELL / 2, y1 = it.alvo_pos[1] * CELL + CELL / 2;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(CELL * 0.6, Math.hypot(x1 - x0, y1 - y0) * 0.18);
+    ctx.globalAlpha = it.forte ? 1 : est.opacidade;
+    ctx.strokeStyle = est.cor; ctx.fillStyle = est.cor;
+    ctx.lineWidth = it.forte ? 4 : 2;
+    ctx.setLineDash(est.tracejado ? [CELL * 0.14, CELL * 0.12] : []);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(y1 - my, x1 - mx), ponta = CELL * (it.forte ? 0.3 : 0.22);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - ponta * Math.cos(ang - 0.45), y1 - ponta * Math.sin(ang - 0.45));
+    ctx.lineTo(x1 - ponta * Math.cos(ang + 0.45), y1 - ponta * Math.sin(ang + 0.45));
+    ctx.closePath(); ctx.fill();
+    if(it.alcanca && it.casa_ataque){
+      const cx = it.casa_ataque[0] * CELL + CELL / 2, cy = it.casa_ataque[1] * CELL + CELL / 2;
+      ctx.globalAlpha = 0.55 * (it.forte ? 1 : est.opacidade);
+      ctx.strokeRect(cx - CELL * 0.3, cy - CELL * 0.3, CELL * 0.6, CELL * 0.6);
+    }
+    vistoAlvo[it.alvo_id] = true;
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(CELL * 0.34)}px sans-serif`; ctx.textAlign = 'center';
+  for(const id of Object.keys(vistoAlvo)){
+    if(contagem[id] < 2) continue;
+    const it = itens.find(i => String(i.alvo_id) === id);
+    ctx.fillText('×' + contagem[id], it.alvo_pos[0] * CELL + CELL * 0.85, it.alvo_pos[1] * CELL + CELL * 0.25);
+  }
+  ctx.restore();
+  _agendarChamas2D();   // mantém o redesenho leve (~12 quadros/s) enquanto houver setas
+}
+function _intencaoLinhaTooltip(monster){
+  const it = (GS.intencoes ? GS.intencoes() : []).find(i => String(i.monstro_id) === String(monster?.id));
+  if(!it) return '';
+  const alvo = (GS.gameState?.players || []).find(p => p.id === it.alvo_id);
+  const nome = alvo ? alvo.name : t('ui.intencao.um_aliado');
+  const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
+              : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
+  const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
+  return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
+}
+GS.on('intencoesMonstros', msg => {
+  if(IntencaoMonstros.descartar({rodada: msg && msg.rodada}, GS.gameState)) return;   // resposta velha
+  const st = GS.gameState;
+  if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
+});
+// Pede no início da vez e depois de cada mudança de estado na minha vez
+// (movimento, ataque), agrupando em 250 ms.
+GS.on('gameState', st => { if(st && st.phase === 'playing') _intencoesPedirAgora(); });
+
 // ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
 // Casas que o seu herói veria se um objeto (estante, pilar, entulho…) não
 // tapasse a linha de visão. Sem ela, "atrás da estante" era o mesmo preto da
@@ -12421,6 +12527,7 @@ function renderMap(state){
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
+  _intencoesDesenhar2D(ctx, state, visionSet);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -18088,7 +18195,7 @@ function _linhaPrevisaoAtaque(monster, tx, ty, myP){
   _tipPrevisaoAlvo = {id: monster.id, pos: [tx, ty]};
   const prev = GS.previsaoAtaque(monster.id, [tx, ty]);
   if(!prev) GS.pedirPrevisaoAtaque(monster.id, [tx, ty]);
-  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>`;
+  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>` + _intencaoLinhaTooltip(monster);
 }
 GS.on('previsaoAtaque', msg => {
   const alvo = _tipPrevisaoAlvo;
