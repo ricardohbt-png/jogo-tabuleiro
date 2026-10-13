@@ -84,9 +84,13 @@ console.log("[9] preferência e atalho");
 check("seletor no painel ⚙️", jogo.includes('id="cfg-intencao-sel"'));
 check("seletor grava via _setIntencaoModo", /cfg-intencao-sel['"]\)\.onchange[\s\S]{0,120}_setIntencaoModo\(/.test(jogo));
 const iT = jogo.indexOf("e.key === 't' || e.key === 'T'");
-check("atalho T alterna e ignora campos de texto",
-      iT > 0 && /proximoModo/.test(jogo.slice(iT, iT + 600))
-      && /INPUT|TEXTAREA|isContentEditable/.test(jogo.slice(iT - 400, iT + 600)));
+const iTfim = jogo.indexOf("return;", jogo.indexOf("proximoModo(_intencaoModo)", iT));
+const blocoT = iT > 0 ? jogo.slice(iT, iTfim + 7) : "";
+check("atalho T alterna", /proximoModo/.test(blocoT));
+check("atalho T ignora auto-repeat", /e\.repeat/.test(blocoT));
+check("atalho T ignora SELECT/INPUT/TEXTAREA/contentEditable",
+      /'SELECT'/.test(blocoT) && /'INPUT'/.test(blocoT) && /'TEXTAREA'/.test(blocoT) && /isContentEditable/.test(blocoT));
+check("atalho T ignora a mesa de teste", /test_mode/.test(blocoT));
 const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8");
 for (const k of ["ui.menu.intencao", "ui.menu.intencao.off", "ui.menu.intencao.grupo", "ui.menu.intencao.todas",
                  "ui.menu.intencao_dica", "ui.ajuda.intencao",

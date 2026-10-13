@@ -254,5 +254,79 @@ ant = r._intent_ultimo["a"]
 asyncio.run(r.handle_prever_intencoes("a"))
 check("herói morto não toca _intent_ultimo", r._intent_ultimo["a"] == ant)
 
+print("[7] caminho real: server.handler despacha prever_intencoes")
+import json as _json
+src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
+check("ramo de despacho existe no handler", 'elif t == "prever_intencoes"' in src)
+
+
+class _FakeWS:
+    def __init__(self, roteiro):
+        self.roteiro = list(roteiro); self.sent = []
+    def __aiter__(self): return self
+    async def __anext__(self):
+        while self.roteiro:
+            item = self.roteiro.pop(0)
+            if callable(item):
+                r_ = item()
+                if asyncio.iscoroutine(r_): r_ = await r_
+                if isinstance(r_, dict): return _json.dumps(r_)
+                continue
+            return _json.dumps(item)
+        raise StopAsyncIteration
+    async def send(self, data): self.sent.append(data)
+    async def close(self, *a, **k): pass
+
+
+def _sala_h():
+    for rr in S.rooms.values():
+        for pid_, pp in rr.players.items():
+            if pp.get("name") == "Intento": return rr, pid_
+    return None, None
+
+
+async def _cenario_real():
+    cx = {}
+    async def prepara():
+        rr, pid_ = _sala_h()
+        await rr._liberar_intro_masmorra(True)
+        h = rr.players[pid_]; x, y = h["pos"]
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if rr._blocks_tile(nx, ny): continue
+            if any(list(mm["pos"]) == [nx, ny] for mm in rr.monsters.values()): continue
+            d = next(d for d in S.MONSTER_DEFS if d["type"] == "orc")
+            mm = S.make_monster(d, {"id": 0, "cx": nx, "cy": ny})
+            mm["pos"] = [nx, ny]; mm["alertado"] = True
+            rr.monsters[mm["id"]] = mm
+            cx["mid"] = mm["id"]
+            break
+    ws = _FakeWS([
+        {"type": "create_room", "name": "Intento"},
+        {"type": "select_class", "class_id": "warrior"},
+        {"type": "start_game"},
+        {"type": "enter_dungeon"},
+        prepara,
+        {"type": "prever_intencoes"},
+        lambda: asyncio.sleep(0.2),
+    ])
+    await S.handler(ws)
+    return ws, cx
+
+
+ws_real, cx_real = asyncio.run(_cenario_real())
+recebidas = [_json.loads(x) for x in ws_real.sent if '"intencoes_monstros"' in x]
+check("monstro injetado ao lado do herói", "mid" in cx_real)
+check("uma resposta intencoes_monstros chegou ao socket do herói", len(recebidas) == 1)
+rm = recebidas[0] if recebidas else {}
+check("resposta traz rodada", isinstance(rm.get("rodada"), int))
+its = rm.get("itens") or []
+check("itens não vazio", len(its) >= 1)
+chaves = {"monstro_id", "alvo_id", "alvo_tipo", "alvo_pos", "acao", "alcanca", "casa_ataque", "certeza"}
+check("primeiro item tem as chaves documentadas", bool(its) and chaves <= set(its[0]))
+check("sem Internal error", not any("Internal error" in x for x in ws_real.sent))
+for k_ in [k_ for k_, v_ in S.rooms.items() if any(pp.get("name") == "Intento" for pp in v_.players.values())]:
+    S.rooms.pop(k_, None)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

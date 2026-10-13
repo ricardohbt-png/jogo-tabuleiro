@@ -29871,9 +29871,11 @@ document.addEventListener('keydown', e=>{
   }
   // T alterna a intenção dos monstros (desligada → grupo → todas)
   if((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey
-     && GS.gameState && GS.gameState.phase === 'playing' && !GS.isMaster()){
+     && GS.gameState && GS.gameState.phase === 'playing' && !GS.isMaster()
+     && !GS.gameState.test_mode){
+    if(e.repeat) return;
     const alvo = e.target;
-    if(alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+    if(alvo && (alvo.tagName === 'SELECT' || alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
     _setIntencaoModo(IntencaoMonstros.proximoModo(_intencaoModo));
     toast(t('ui.intencao.modo_toast', {modo: t('ui.menu.intencao.' + _intencaoModo)}), 'var(--text2)');
     e.preventDefault(); return;

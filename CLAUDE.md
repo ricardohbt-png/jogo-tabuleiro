@@ -3592,6 +3592,27 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
 
+> **Intenção dos monstros (2026-10-12):** setas que mostram qual alvo cada monstro visível
+> atacaria agora. Cliente pede `prever_intencoes` (sem campos) e recebe, **só ele**,
+> `intencoes_monstros {rodada, itens}`; cada item: `monstro_id, alvo_id, alvo_tipo
+> (heroi|animado), alvo_pos, acao, alcanca, casa_ataque, certeza`. Limite de 150 ms por herói
+> (`_intent_ultimo`) e cache por assinatura de tudo que muda a decisão (`_intent_cache`).
+> **Servidor:** mixin `monster_intent.py`, SÓ LEITURA — reaproveita a escolha de alvo da IA e
+> restaura `_monster_ai_focus_target_id`/`_monster_ai_reserved_tiles` num `finally`; exceção
+> interna vira lista vazia. **Cliente:** módulo puro `src/intencaoMonstros.js`
+> (modo/seleção/estilo) e desenho em `game.js` (`_intencoesDesenhar2D`, `_intencoesAtualizar3D`
+> com pool fixo de 16 slots). Modos `off | grupo` (padrão: só monstros que alcançam alguém)
+> `| todas`; ao passar o mouse no monstro a seta engrossa e o tooltip ganha "⚔️ Vai atacar X"
+> mesmo sem alcance. Preferência em `localStorage["lfh_intencoes"]` (select do ⚙️), tecla **T**
+> alterna (ignora repeat, campos de texto/select e a mesa de teste). **Limites da v1:** sem
+> simular movimento, então `certeza` só é `firme` se o monstro é compelido ou há um único
+> alvo ao alcance; monstros Manual do Mestre são pulados; hostilidade monstro×monstro e
+> prisioneiro não são previstos. **Evolução B:** a IA gravaria o mesmo item em
+> `m["intencao"]`. **Armadilha:** o pedido mora dentro do ÚNICO `GS.on('gameState')`
+> (um segundo ouvinte apagaria o primeiro). Testes: `tools/test_monster_intent.py` (inclui
+> o `server.handler` real) e `tools/test_intencoes_cliente.js`. Spec/plano em
+> `docs/superpowers/{specs,plans}/2026-10-12-intencao-dos-monstros*`.
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
