@@ -200,6 +200,8 @@ class TerrainReactions:
             return
         cd = int(origem.get("cd") or RX_CD_PADRAO)
         for alvo in self._alvos_no_inverno(regiao):
+            if not self._vivo(alvo):      # morreu em cascata nesta mesma reação
+                continue
             if alvo.get("id") in pend["atingidos"] or self._voo_imune_terreno(alvo):
                 continue
             ok, *_ = await self._save_mostrado(alvo, "reflexos", cd, mitigacao="half_damage")
@@ -220,12 +222,15 @@ class TerrainReactions:
         await self.gm_say(self._rx_T("narracao.reacao.congelar"))
         cd = int(origem.get("cd") or RX_CD_PADRAO)
         for alvo in self._alvos_no_inverno(tiles):
-            if self._voo_imune_terreno(alvo):
+            if not self._vivo(alvo) or self._voo_imune_terreno(alvo):
                 continue
             ok, *_ = await self._save_mostrado(alvo, "reflexos", cd)
             if not ok:
                 alvo["moves_left"] = 0
                 alvo["movimento_perdido"] = True
+                # os prólogos de turno (herói, monstro, servo, prisioneiro) consomem
+                # esta flag com pop: sem ela o alvo congelado fora da vez andaria
+                alvo["turbilhao_perde_movimento"] = True
 
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")
@@ -258,15 +263,30 @@ class TerrainReactions:
                 "expira_em": self.round_num + RX_DURACAO_CHAMAS, "ativa": True,
                 "caster": origem.get("caster_id")}
         self.zonas_especiais.append(zona)
+        # a mancha temporária (frasco) não pode acabar antes das chamas: senão o
+        # material volta ao original com a zona ainda ativa
+        for t in regiao:
+            for c in (self._terrenos_inverno.get(tuple(t)) or {}).get("camadas", []):
+                if c.get("material") == "piche" and c.get("expira_em") is not None                         and int(c["expira_em"]) < zona["expira_em"]:
+                    c["expira_em"] = zona["expira_em"]
         await self._rx_anunciar("incendio", regiao, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.piche_pegou_fogo"))
+        zona["ignicao"] = {}
         for alvo in self._alvos_no_inverno(regiao):
             await self._rx_fogo_piche(alvo, zona, "ignição")
+            # quem foi atingido aqui não leva o dano de "entrada" no mesmo passo
+            pos = alvo.get("pos") or [0, 0]
+            zona["ignicao"][str(alvo.get("id"))] = [self.round_num, int(pos[0]), int(pos[1])]
 
     async def _rx_fogo_piche(self, alvo, zona, motivo):
         """1d6 de fogo + em chamas, só no piso. Não reentra no motor."""
         if not self._vivo(alvo) or self._voo_imune_terreno(alvo):
             return
+        if motivo == "entrada":
+            marca = (zona.get("ignicao") or {}).get(str(alvo.get("id")))
+            pos = alvo.get("pos") or [0, 0]
+            if marca and marca == [self.round_num, int(pos[0]), int(pos[1])]:
+                return
         if self._rx_altura(alvo) > 0:
             return
         antes = self._rx_em_reacao

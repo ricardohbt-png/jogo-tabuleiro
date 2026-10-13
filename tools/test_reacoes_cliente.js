@@ -73,6 +73,10 @@ check("casa comum -> null", RE.descreverCasa(st, 9, 9) === null);
 const st2 = { round: 5, materiais: { "1,1": "piche", "2,1": "agua", "3,1": "lava_solidificada" }, terrenos_temp: { "3,1": 8 } };
 check("piche -> chave", RE.descreverCasa(st2, 1, 1).chave === "ui.reacao.casa.piche");
 check("água -> chave", RE.descreverCasa(st2, 2, 1).chave === "ui.reacao.casa.agua");
+const st3 = { ...st2, zonas_especiais: [{ ativa: true, tipo: "chamas_piche", tiles: [[1, 1]] }] };
+check("piche em chamas -> chave própria", RE.descreverCasa(st3, 1, 1).chave === "ui.reacao.casa.piche_chamas");
+check("zona inativa não conta", RE.descreverCasa({ ...st2, zonas_especiais: [{ ativa: false, tipo: "chamas_piche", tiles: [[1, 1]] }] }, 1, 1).chave === "ui.reacao.casa.piche");
+check("game.js lista chamas_piche nas zonas de fogo persistente", /_atualizarZonasMagia[^]*?z\.tipo === 'chamas_piche'/.test(fs.readFileSync(path.join(raiz, "game.js"), "utf8")));
 const c = RE.descreverCasa(st2, 3, 1);
 check("crosta -> rodadas restantes", c.chave === "ui.reacao.casa.crosta" && c.params.n === 3);
 console.log("[7] fiação");
@@ -90,7 +94,7 @@ const corpo3D = jogoSrc.split("function _reacoes3DAtualizar")[1].split("function
 check("crostas 3D em cache por estado", /function _reacoesCrostas3D[^]*?_reacoesCrostasRef !== st/.test(jogoSrc) && !corpo3D.includes("ReacoesElementais.crostasAcabando"));
 check("_reacoes3DDispose zera _reacoesAnims", /function _reacoes3DDispose[^]*?_reacoesAnims\.length = 0/.test(jogoSrc));
 const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8").replace(/\r?\n/g, " ");
-for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.agua", "ui.reacao.casa.crosta"])
+for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.piche_chamas", "ui.reacao.casa.agua", "ui.reacao.casa.crosta"])
   check("chave " + k + " pt+en", new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"pt"[^]{0,200}?"en"|"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"en"[^]{0,200}?"pt"').test(lang));
 const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
 check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));

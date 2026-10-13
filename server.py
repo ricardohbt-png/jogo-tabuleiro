@@ -18276,6 +18276,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             elif tipo == "molochus_chamas":
                 if max(abs(x - zona["cx"]), abs(y - zona["cy"])) <= int(zona.get("raio", 1) or 1):
                     return True
+            elif tipo == "chamas_piche" and no_chao:
+                if self._rx_alvo_na_zona(ent, zona):
+                    return True
         return False
 
     def _monstro_procurando(self, m, alvos=None):
@@ -31207,7 +31210,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         self._cancelar_magias_terreno_exclusivas()
         material_bases = {
-            f"{int(pos[0])},{int(pos[1])}": self.materiais.get((int(pos[0]), int(pos[1])))
+            f"{int(pos[0])},{int(pos[1])}": self._terrenos_inverno.get(
+                (int(pos[0]), int(pos[1])), {}).get("base", self.materiais.get((int(pos[0]), int(pos[1]))))
             for pos in tiles
         } if permanente else None
 
@@ -31978,6 +31982,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._tempestade_aplicar_ciclone(alvo, zona)
 
     async def _tempestade_descarga(self, zona):
+        # um escopo para a descarga inteira: um choque por poça, não um por golpe
+        async with self.evento_elemental({"tipo": "zona", "id": zona.get("id"), "caster_id": zona.get("caster"),
+                                          "cd": zona.get("save_dif")}):
+            await self._tempestade_descarga_impl(zona)
+
+    async def _tempestade_descarga_impl(self, zona):
         zona["quedas_tempestade_rodada"] = {}
         for alvo in list(self._tempestade_entidades()):
             if not self._vivo(alvo) or not any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
@@ -32832,7 +32842,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _elemental_raio_atacar(self, a, linha, alvos, pid=None):
         async with self.evento_elemental({"tipo": "monstro", "id": a.get("id"), "caster_id": None}):
             await self._rx_registrar(DMG_LIGHTNING, [tuple(c) for c in linha])
-            return await self._elemental_raio_atacar_impl(a, linha, alvos, pid)
+            resultado = await self._elemental_raio_atacar_impl(a, linha, alvos, pid)
+            pend = ((self._rx_escopo or {}).get("pend") or {}).get(DMG_LIGHTNING)
+            if pend is not None and not pend.get("dano"):
+                # ninguém foi ferido (todos erraram / sem alvo): o choque usa o dado do raio
+                dado = str(((a.get("attacks") or [{}])[0]).get("damage") or "1d8")
+                self._rx_origem_atual(dano=self._rolar_dado(dado))
+            return resultado
 
     async def _elemental_raio_atacar_impl(self, a, linha, alvos, pid=None):
         origem = list(a.get("pos", [0, 0]))
@@ -33408,7 +33424,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         logs, feriu_caster, impactos = [], False, {}
         self._rx_origem_atual(cd=save_dif)
-        await self._rx_registrar(DMG_LIGHTNING, sequencia)   # poça vazia no caminho também conduz
         for (x, y) in sequencia:
             # Qualquer criatura na casa: monstro, jogador (aliado/caster) OU animado/minion.
             alvo = next((m for m in self.monsters.values() if m["hp"] > 0 and m["pos"] == [x, y]), None)
@@ -33443,6 +33458,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 )
             await self._aplicar_dano_alvo(alvo, d, "eletricidade", caster["id"])
 
+        # Poça vazia no caminho também conduz. Sem nenhum acerto não houve dano para
+        # propagar: rola-se UM dano base da fonte para o choque.
+        _rx_base = None if impactos else int(self._rolar_dado(f"{nivel}d6") * dmg_mult + 0.5)
+        await self._rx_registrar(DMG_LIGHTNING, sequencia, dano=_rx_base)
         multi = sum(1 for v in impactos.values() if v > 1)
         await self.gm_say(
             T("narracao.lanca_relampago", caster=caster["name"], nivel=nivel, alcance=alcance,
@@ -34172,6 +34191,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _processar_zonas_turno(self):
         """Decrementa a duração das zonas a cada rodada; remove e anuncia expiradas."""
+        async with self.evento_elemental({"tipo": "zona", "caster_id": None}):
+            await self._processar_zonas_turno_impl()
+
+    async def _processar_zonas_turno_impl(self):
         self._expirar_terrenos_inverno()
         if self._rx_avisou_crosta != self.round_num and any(
                 c.get("material") == "lava_solidificada"
@@ -38423,7 +38446,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # também serve às chamas de piche (reações elementais)
         for zona in list(self.zonas_especiais):
             if (zona.get("tipo") == "chamas_piche" and zona.get("ativa")
-                    and any((int(a), int(b)) == (nx, ny) for a, b in zona.get("tiles", []))):
+                    and (any((int(a), int(b)) == (nx, ny) for a, b in zona.get("tiles", []))
+                         or self._rx_alvo_na_zona(alvo, zona))):
                 await self._rx_fogo_piche(alvo, zona, "entrada")
                 if not self._vivo(alvo):
                     return
@@ -40491,9 +40515,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """{"x,y": expira_em} das casas com camada temporária de terreno ativa."""
         out = {}
         for (x, y), reg in (getattr(self, "_terrenos_inverno", None) or {}).items():
-            exp = [int(c["expira_em"]) for c in reg.get("camadas", []) if c.get("expira_em") is not None]
-            if exp:
-                out[f"{x},{y}"] = max(exp)
+            camadas = reg.get("camadas", [])
+            if camadas and camadas[-1].get("expira_em") is not None:
+                out[f"{x},{y}"] = int(camadas[-1]["expira_em"])      # a do topo é a visível
         return out
 
     def _serializar_elevacoes(self):

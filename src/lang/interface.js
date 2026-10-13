@@ -10614,6 +10614,10 @@ window.LANG_INTERFACE = {
     "en": "Pitch: flammable, +1 movement",
     "pt": "Piche: inflamável, +1 de movimento"
   },
+  "ui.reacao.casa.piche_chamas": {
+    "en": "Burning pitch: fire damage to whoever stands or enters here",
+    "pt": "Piche em chamas: causa dano de fogo a quem estiver ou entrar aqui"
+  },
   "ui.reacao.casa.agua": {
     "en": "Water: conducts electricity",
     "pt": "Água: conduz eletricidade"

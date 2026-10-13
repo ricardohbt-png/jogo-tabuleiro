@@ -593,5 +593,147 @@ r2._expirar_terrenos_inverno()
 check("após a foto, a camada ainda expira e restaura o material base",
       r2.materiais.get((5, 5)) == "terra" and (5, 5) not in r2._terrenos_inverno)
 
+print("[12] onda de correções da revisão final")
+# I1: relâmpago sobre água sem criatura na linha fere quem está na poça
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 8)] + [(5, 6)])
+mago = heroi(r, "m", "Pedro", "mage", [2, 5])
+fora_linha = heroi(r, "f", "Fora", "warrior", [5, 6])
+async def i1():
+    async with r.evento_elemental({"tipo": "magia", "id": "relampago", "caster_id": "m"}):
+        await r._executar_relampago(mago, S.GRIMORIO["relampago"], {"dir": [1, 0]}, 1.0)
+roda(i1())
+check("I1 relâmpago sem acerto: quem está na poça fora da linha toma o choque",
+      fora_linha["hp"] < fora_linha["max_hp"])
+
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(4, 12)])
+ele = monstro(r, "elemental_eletrico", [3, 5])
+vitima = heroi(r, "b", "Bia", "warrior", [11, 5])
+roda(r._elemental_raio_atacar(ele, [(4, 5), (5, 5), (6, 5)], []))
+check("I1 raio sem acerto: a poça fere", vitima["hp"] < vitima["max_hp"])
+
+# I2: congelar água grava a flag que os prólogos consomem
+r = sala()
+pinta(r, "agua", [(5, 5), (6, 5)])
+mon = monstro(r, "goblin", [5, 5])
+bia = heroi(r, "b", "Bia", "warrior", [6, 5])
+async def i2():
+    async with r.evento_elemental({"tipo": "magia", "id": "raio_congelante", "caster_id": "x", "cd": 99}):
+        await r._rx_registrar(S.DMG_COLD, [(5, 5), (6, 5)])
+roda(i2())
+check("I2 monstro congelado leva turbilhao_perde_movimento", mon.get("turbilhao_perde_movimento") is True)
+check("I2 herói congelado leva turbilhao_perde_movimento", bia.get("turbilhao_perde_movimento") is True)
+
+# I3: criatura em chamas que entra em piche leva o dano UMA vez
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5)])
+g = heroi(r, "g", "Gus", "warrior", [5, 5]); g["em_chamas_rodadas"] = 2
+roda(r._aplicar_lava_se_pisar(g))
+hp_ign = g["hp"]
+roda(r._verificar_entrada_zona_molochus(g, 5, 5))
+check("I3 ignição fere", hp_ign < g["max_hp"])
+check("I3 entrada no mesmo passo não fere de novo", g["hp"] == hp_ign)
+
+# I4: descarga da tempestade num escopo só: um choque para a poça toda
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 10)])
+a = heroi(r, "a", "Ana", "warrior", [4, 5]); b = heroi(r, "b", "Bia", "warrior", [5, 5])
+c = heroi(r, "c", "Cris", "warrior", [8, 5])
+zt = {"id": "t1", "tipo": "tempestade_ciclones", "ativa": True, "cx": 4, "cy": 5, "lado": 2,
+      "tiles": [[4, 5], [5, 5]], "ciclones": [], "dano_raio": "1d8", "save_dif": 12, "dmg_mult": 1,
+      "caster": "x"}
+r.zonas_especiais.append(zt)
+roda(r._tempestade_descarga(zt))
+check("I4 descarga: um choque só para a poça",
+      sum(1 for m in r.msgs if m.get("tipo") == "choque") == 1)
+check("I4 descarga: o não atingido na poça foi ferido", c["hp"] < c["max_hp"])
+
+# I5: _queimando reconhece a mancha de piche em chamas
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5)])
+q = heroi(r, "q", "Quê", "warrior", [5, 5])
+r.zonas_especiais.append({"id": "z9", "tipo": "chamas_piche", "tiles": [[5, 5], [6, 5]], "ativa": True,
+                          "expira_em": 9, "caster": None})
+check("I5 _queimando: em cima de piche em chamas", r._queimando(q) is True)
+q["pos"] = [9, 9]
+check("I5 _queimando: fora da mancha não", r._queimando(q) is False)
+voa = heroi(r, "vv", "Vo", "warrior", [5, 5]); voa["voo"] = True; voa["altura"] = 3
+check("I5 _queimando: voador sobre a mancha não", r._queimando(voa) is False)
+
+# T3(b): a camada de piche vive até o fim da zona de chamas
+r = sala()
+pinta(r, "terra", [(5, 5), (6, 5)])
+r._aplicar_camadas_terreno_inverno([(5, 5), (6, 5)], "piche", "frasco_1", permanente=False, expira_em=5)
+r.round_num = 4
+async def t3():
+    async with r.evento_elemental({"tipo": "item", "id": "bomba_incendiaria", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_FIRE, [(5, 5)])
+roda(t3())
+zona = next(z for z in r.zonas_especiais if z.get("tipo") == "chamas_piche")
+check("T3b a camada de piche é estendida até o fim da zona",
+      all(c["expira_em"] >= zona["expira_em"] for t in ((5, 5), (6, 5))
+          for c in r._terrenos_inverno[t]["camadas"] if c["material"] == "piche"))
+r.round_num = 6
+r._expirar_terrenos_inverno()
+check("T3b rodada 6: o piche ainda está lá (zona ativa)", r.materiais[(5, 5)] == "piche")
+r.round_num = zona["expira_em"]
+roda(r._processar_zonas_turno())
+check("T3b fim da zona: volta a terra", r.materiais[(5, 5)] == "terra")
+
+# M1: Chamado do Inverno permanente guarda o material BASE, não a camada temporária
+r = sala()
+pinta(r, "terra", [(5, 5)])
+r._aplicar_camadas_terreno_inverno([(5, 5)], "piche", "frasco_2", permanente=False, expira_em=9)
+cler = heroi(r, "cl", "Lewis", "cleric", [2, 2])
+pre = {"terreno": "piso_congelado", "permanente": True, "nivel": 1, "dist": 3,
+       "cx": 5, "cy": 5, "lado": 1, "tiles": [(5, 5)]}
+roda(r._executar_chamado_inverno(cler, S.GRIMORIO["chamado_inverno"], {"_chamado_inverno_preflight": pre}, 0))
+zi = next(z for z in r.zonas_especiais if z.get("tipo") == "chamado_inverno")
+check("M1 material_bases usa o material base da casa", zi["material_bases"]["5,5"] == "terra")
+
+# M2: terrenos_temp usa a camada do topo
+r = sala()
+pinta(r, "agua", [(5, 5)])
+r._aplicar_camadas_terreno_inverno([(5, 5)], "lava", "ira", permanente=False, expira_em=9)
+r._aplicar_camadas_terreno_inverno([(5, 5)], "lava_solidificada", "rx", permanente=False, expira_em=5)
+check("M2 terrenos_temp = expiração da camada do topo", r._serializar_terrenos_temp().get("5,5") == 5)
+
+# M3: alvo morto em cascata não leva dano nem congelamento
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 10)])
+vivo_h = heroi(r, "v", "Vivo", "warrior", [6, 5])
+morto = monstro(r, "goblin", [7, 5]); morto["hp"] = 0
+r._alvos_no_inverno = lambda tiles: [morto, vivo_h]
+chamados = []
+_od, _os = r._dano_em_alvo, r._save_mostrado
+async def _dano_esp(alvo, *a, **k):
+    chamados.append(("dano", alvo.get("id")))
+    return await _od(alvo, *a, **k)
+async def _save_esp(alvo, *a, **k):
+    chamados.append(("save", alvo.get("id")))
+    return await _os(alvo, *a, **k)
+r._dano_em_alvo = _dano_esp; r._save_mostrado = _save_esp
+async def m3():
+    async with r.evento_elemental({"tipo": "magia", "id": "relampago", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_LIGHTNING, [(3, 5)], dano=10)
+roda(m3())
+async def m3b():
+    async with r.evento_elemental({"tipo": "magia", "id": "raio_congelante", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_COLD, [(3, 5)])
+roda(m3b())
+check("M3 alvo morto não é salvo nem ferido", not any(i == morto["id"] for _, i in chamados))
+check("M3 alvo vivo continua sendo tratado", any(i == "v" for _, i in chamados))
+
+# M4: entrada em chamas de piche considera o footprint inteiro
+r = sala()
+pinta(r, "piche", [(5, 6)])
+grande = monstro(r, "goblin", [4, 5]); grande["size"] = [2, 2]
+r.zonas_especiais.append({"id": "z8", "tipo": "chamas_piche", "tiles": [[5, 6]], "ativa": True,
+                          "expira_em": 9, "caster": None})
+hp0 = grande["hp"]
+roda(r._verificar_entrada_zona_molochus(grande, 4, 5))
+check("M4 criatura grande com a casa de trás na mancha sofre na entrada", grande["hp"] < hp0)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

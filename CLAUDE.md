@@ -3653,7 +3653,11 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > Inverno. **Cliente:** `reacao_elemental {tipo, casas, origem}` (público, anima só casas visíveis;
 > `src/reacoesElementais.js` puro: `estilo`, `crostasAcabando`, `descreverCasa`), `terrenos_temp` no
 > `game_state` (camadas temporárias + crostas) e tooltip por material. Estado `_rx_*` é "efemero"
-> na foto; `_terrenos_inverno`/`zonas_especiais`/`materiais` já persistem. **Nova fonte:** registrar
+> na foto; `_terrenos_inverno`/`zonas_especiais`/`materiais` já persistem. **Revisão final:** choque sem acerto
+> rola um dano base da fonte; congelar grava `turbilhao_perde_movimento`; a ignição marca quem já levou o fogo
+> (`zona.ignicao`) para a entrada do mesmo passo não repetir; `_tempestade_descarga` e `_processar_zonas_turno`
+> rodam em escopo próprio; a ignição estende a camada de piche até o fim da zona; `chamas_piche` aparece no
+> fogo persistente do cliente, em `_queimando` e no tooltip. **Nova fonte:** registrar
 > as casas dentro do escopo e entrar em `FONTES_COM_REGISTRO` (teste por AST). **Nova reação:** linha
 > em `REACOES` + método `_rx_*`. **Fora de escopo:** água profunda/redemoinho, fogo+gelo, fogo+gás,
 > destaque de mira, tutorial; o frasco de óleo não muda. Testes: `tools/test_terrain_reactions.py`

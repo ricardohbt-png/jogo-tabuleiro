@@ -28,7 +28,11 @@
   function descreverCasa(state, x, y) {
     const key = `${x},${y}`;
     const mat = state && state.materiais && state.materiais[key];
-    if (mat === 'piche') return { chave: 'ui.reacao.casa.piche', params: {} };
+    if (mat === 'piche') {
+      const emChamas = ((state && state.zonas_especiais) || []).some(z => z && z.ativa && z.tipo === 'chamas_piche'
+        && (z.tiles || []).some(t => `${t[0]},${t[1]}` === key));
+      return { chave: emChamas ? 'ui.reacao.casa.piche_chamas' : 'ui.reacao.casa.piche', params: {} };
+    }
     if (mat === 'agua') return { chave: 'ui.reacao.casa.agua', params: {} };
     if (mat === 'lava_solidificada')
       return { chave: 'ui.reacao.casa.crosta', params: { n: Math.max(1, _restantes(state, key) || 1) } };

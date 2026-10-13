@@ -23121,7 +23121,7 @@ function _recomputarAreaThrow(hx, hy) {
 // Apenas dados (sem redraw) — chamado de dentro de renderMap/renderMap3D.
 function _atualizarZonasMagia(state) {
   const zz = ((state && state.zonas_especiais) || []);
-  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas' || z.tipo === 'prisao_chamas'))
+  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas' || z.tipo === 'prisao_chamas' || z.tipo === 'chamas_piche'))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2, lado: z.area_lado || 0,
                                   tiles: z.flame_tiles || z.tiles || [], tipo: z.tipo,
                                   visualId: z.animation_id || z.visual_id || z.id || null }));
