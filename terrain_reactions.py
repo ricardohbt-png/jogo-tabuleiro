@@ -27,6 +27,18 @@ RX_CD_PADRAO = 12
 RX_DURACAO_CHAMAS = 3
 RX_DADO_CHAMAS = "1d6"
 
+# Fontes do servidor que chamam `_rx_registrar` no próprio corpo (nome da função -> elemento).
+# O teste confere por AST. `_executar_tempestade_ciclones` fica de fora: o dano elétrico
+# dela passa por `_tempestade_dano` -> `_dano_em_alvo`, coberto pelo funil.
+FONTES_COM_REGISTRO = {
+    "_executar_bola_fogo": RX_FIRE,
+    "_processar_zona_bola_fogo": RX_FIRE,
+    "_executar_relampago": RX_LIGHTNING,
+    "_executar_raio_congelante": RX_COLD,
+    "_executar_prisao_chamas": RX_FIRE,
+    "_throw_item_area": RX_FIRE,
+}
+
 # Tabela de dados: elemento × estado da casa → efeito (nome do método).
 # `efeito: None` + `ativa: False` = linha reservada (fogo + gelo, fora da v1).
 REACOES = [

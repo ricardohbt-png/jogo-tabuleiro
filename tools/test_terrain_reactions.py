@@ -368,5 +368,128 @@ check("efeito que lança não propaga a exceção", erro is None)
 check("as linhas seguintes ainda rodam", ordem == ["explode", "depois"])
 check("a flag de reação foi restaurada", r._rx_em_reacao is False)
 
+print("[9] fontes de magia e item")
+import ast
+_fonte = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "server.py"), encoding="utf-8").read()
+_arvore = ast.parse(_fonte)
+
+
+def corpo(nome):
+    for n in ast.walk(_arvore):
+        if isinstance(n, (ast.AsyncFunctionDef, ast.FunctionDef)) and n.name == nome:
+            return ast.get_source_segment(_fonte, n)
+    return None
+
+
+for nome, elem in TR.FONTES_COM_REGISTRO.items():
+    seg = corpo(nome)
+    check(f"{nome} existe e registra {elem}", seg is not None and "_rx_registrar(" in seg)
+check("funil _aplicar_dano_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_aplicar_dano_alvo") or ""))
+check("funil _dano_em_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_dano_em_alvo") or ""))
+check("magias rodam dentro de um escopo elemental",
+      "evento_elemental" in (corpo("_executar_magia_grimorio") or "")
+      or "evento_elemental" in (corpo("handle_magia") or ""))
+check("arremesso roda dentro de um escopo elemental", "evento_elemental" in (corpo("handle_throw_item") or ""))
+
+r = sala()
+pinta(r, "piche", [(8, 5), (9, 5)])
+mago = heroi(r, "m", "Pedro", "mage", [3, 5])
+mago["known_spells"] = ["bola_fogo"]
+roda(r._executar_magia_grimorio(mago, S.GRIMORIO["bola_fogo"], {"tx": 8, "ty": 5}))
+check("Bola de Fogo em piche vazio incendeia a mancha",
+      any(z.get("tipo") == "chamas_piche" and z.get("ativa") for z in r.zonas_especiais))
+
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(4, 9)])
+mago = heroi(r, "m", "Pedro", "mage", [3, 5])
+alvo_na_poca = heroi(r, "b", "Bia", "warrior", [8, 5])
+roda(r._executar_magia_grimorio(mago, S.GRIMORIO["relampago"], {"dir": [1, 0]}))
+check("Relâmpago sobre a poça dispara o choque",
+      any(m.get("tipo") == "choque" for m in r.msgs))
+
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(4, 9)])
+mago = heroi(r, "m", "Pedro", "mage", [3, 5])
+roda(r._executar_magia_grimorio(mago, S.GRIMORIO["relampago"], {"dir": [1, 0]}))
+check("Relâmpago sobre poça VAZIA (sem criatura) também dispara o choque",
+      any(m.get("tipo") == "choque" for m in r.msgs))
+
+r = sala()
+pinta(r, "agua", [(8, 5)])
+mago = heroi(r, "m", "Pedro", "mage", [5, 5])
+gob = monstro(r, "goblin", [8, 5])
+roda(r._executar_magia_grimorio(mago, S.GRIMORIO["raio_congelante"], {"target_id": gob["id"]}))
+check("Raio Congelante sobre a água a congela", r.materiais.get((8, 5)) == "piso_congelado")
+
+r = sala()
+pinta(r, "piche", [(8, 5)])
+a = heroi(r, "a", "Ana", "warrior", [5, 5])
+item = {"id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣"}
+a["bag"] = [item]; a["action_done"] = False
+roda(r._throw_item_area(a, S.ARREMESSAVEIS["bomba_incendiaria"], item, 8, 5, None))
+check("Bomba Incendiária em piche incendeia (via _throw_item_area)",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+r = sala()
+pinta(r, "piche", [(8, 5)])
+a = heroi(r, "a", "Ana", "warrior", [5, 5])
+a["bag"] = [dict(item)]; a["action_done"] = False
+r.current_turn = "a"; r.initiative_active = False
+roda(r.handle_throw_item("a", {"item_id": "bomba_incendiaria", "tx": 8, "ty": 5}))
+check("Bomba Incendiária via handle_throw_item incendeia",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+r = sala()
+pinta(r, "piche", [(8, 5), (9, 5)])
+mago = heroi(r, "m", "Pedro", "mage", [5, 5])
+roda(r._executar_prisao_chamas(mago, S.GRIMORIO["prisao_chamas"], {"tx": 8, "ty": 5, "lado": 3}))
+check("Prisão de Chamas sobre piche vazio incendeia",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+r = sala()
+pinta(r, "piche", [(8, 5)])
+zona = {"id": "z1", "tipo": "bola_fogo", "cx": 8, "cy": 5, "raio": 1, "area_lado": None,
+        "dano_r2": 4, "rodada_atual": 2, "rodadas_max": 3, "criado_em": 1, "expira_em": 9,
+        "save_dif": 12, "ativa": True, "caster": "x"}
+roda(r._processar_zona_bola_fogo(zona))
+check("fogo residual da Bola de Fogo acende o piche que surge",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+r = sala()
+pinta(r, "piche", [(8, 5)])
+gob = monstro(r, "goblin", [8, 5])
+roda(r._aplicar_dano_alvo(gob, 3, "fogo", "x"))
+check("_aplicar_dano_alvo com fogo sobre piche incendeia", any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+r = sala()
+pinta(r, "piche", [(8, 5)])
+gob = monstro(r, "goblin", [8, 5])
+roda(r._dano_em_alvo(gob, 3, "fogo", "x"))
+check("_dano_em_alvo com fogo sobre piche incendeia", any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+# re-entrada: o choque fere vários pelo funil e mesmo assim é UM choque, sem segunda onda
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(3, 10)])
+v1 = heroi(r, "v1", "Vi", "warrior", [6, 5]); v2 = heroi(r, "v2", "Vo", "warrior", [7, 5])
+reg = []; choques = []
+_orig_reg = S.GameRoom._rx_registrar; _orig_ch = S.GameRoom._rx_choque
+async def _reg(self, elemento, casas, **kw):
+    reg.append((elemento, self._rx_em_reacao))
+    return await _orig_reg(self, elemento, casas, **kw)
+async def _ch(self, *a):
+    choques.append(1)
+    return await _orig_ch(self, *a)
+S.GameRoom._rx_registrar = _reg; S.GameRoom._rx_choque = _ch
+try:
+    async def choque_funil():
+        async with r.evento_elemental({"tipo": "magia", "id": "relampago", "caster_id": "x"}):
+            await r._rx_registrar(S.DMG_LIGHTNING, [(3, 5)], dano=10)
+    roda(choque_funil())
+finally:
+    S.GameRoom._rx_registrar = _orig_reg; S.GameRoom._rx_choque = _orig_ch
+check("dois feridos pelo choque pelo funil: um choque só", len(choques) == 1)
+check("nenhum registro novo durante a reação (guarda _rx_em_reacao)",
+      sum(1 for e, em in reg if em) == 0 and len(reg) == 1)
+check("as duas vítimas foram feridas", v1["hp"] < v1["max_hp"] and v2["hp"] < v2["max_hp"])
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)
