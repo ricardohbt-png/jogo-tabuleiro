@@ -29,6 +29,7 @@ import unicodedata
 import urllib.parse
 from copy import deepcopy
 from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
+from terrain_reactions import TerrainReactions
 from monster_intent import MonsterIntent, INTENT_CAMPOS_ALVO, INTENT_CAMPOS_MONSTRO
 import aiohttp
 from aiohttp import web
@@ -3516,6 +3517,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
+    "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero", "_rx_avisou_crosta": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
@@ -7184,6 +7186,7 @@ SHOP_MERCHANT = [
     {"id": "veneno_agonia_sufocante", "name": "Agonia Sufocante", "emoji": "💀", "price": 40, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_agonia_sufocante"},
     # â”€â”€ ArremessÃ¡veis de fogo (consumÃ­veis de bolsa; ver ARREMESSAVEIS) â”€â”€
     {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️", "price": 12, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣", "price": 45, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
@@ -7296,6 +7299,11 @@ ARREMESSAVEIS = {
         "id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨",
         "alcance": 4, "alvo": "area", "area_raio": 1,
         "zona": {"tipo": "escuridao", "duracao": 2},
+    },
+    "frasco_piche": {
+        "id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️",
+        "alcance": 4, "alvo": "area", "area_raio": 1,
+        "terreno": {"material": "piche", "duracao": 4},
     },
     "frasco_acido": {
         "id": "frasco_acido", "name": "Frasco de Ácido", "emoji": "🧪",
@@ -9465,6 +9473,8 @@ MATERIAIS = {
     "planicie_nevada": _mat("Planície nevada", "piso", "#d8edf2", terreno="planicie_nevada"),
     "lava":          _mat("Lava", "piso", "#d63b13", terreno="lava", custo_mov=2),
     "pantano":       _mat("Pântano", "piso", "#354e31", terreno="pantano", custo_mov=1),
+    "piche":         _mat("Piche", "piso", "#1b1410", terreno="piche"),
+    "lava_solidificada": _mat("Lava solidificada", "piso", "#3a2a26", terreno="crosta_lava"),
     "areia_deserto": _mat("Areia do deserto", "piso", "#c49a58", custo_mov=2),
     "duna_deserto":  _mat("Duna do deserto", "parede", "#b9823f"),
     "parede_terra":  _mat("Parede de terra", "parede", "#75451f"),
@@ -11229,7 +11239,7 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class GameRoom(TutorialTraining, MonsterIntent):
+class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _tutorial_api(self):
         return sys.modules[__name__]
 
@@ -11438,6 +11448,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
         self._terrenos_inverno = {}
+        self._rx_escopo = None     # escopo da ação em curso (TerrainReactions)
+        self._rx_em_reacao = False # True enquanto uma reação aplica dano: não reentra
+        self._rx_seq = 0           # ids únicos de camadas de reação
+        self._rx_avisou_crosta = None  # rodada do último aviso de crosta se desfazendo
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..40)
         self.alturas_parede = {}       # {(x,y): nível manual da parede (só visual)}
@@ -15617,6 +15631,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
         self.materiais = {}
         self.elevacoes = {}
         self._terrenos_inverno = {}
+        self._rx_escopo = None
+        self._rx_em_reacao = False
         for key, mid in (defn.get("materiais") or {}).items():
             if mid not in MATERIAIS or not isinstance(key, str):
                 continue
@@ -16693,6 +16709,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
             self.alturas_parede = {}
             self.transicao_altura = "rampa"
             self._terrenos_inverno = {}
+            self._rx_escopo = None
+            self._rx_em_reacao = False
             self._rebuild_pontes_index()
             self._rebuild_materiais_index()
             self.zonas_especiais = []
@@ -18257,6 +18275,9 @@ class GameRoom(TutorialTraining, MonsterIntent):
                     return True
             elif tipo == "molochus_chamas":
                 if max(abs(x - zona["cx"]), abs(y - zona["cy"])) <= int(zona.get("raio", 1) or 1):
+                    return True
+            elif tipo == "chamas_piche" and no_chao:
+                if self._rx_alvo_na_zona(ent, zona):
                     return True
         return False
 
@@ -19993,6 +20014,11 @@ class GameRoom(TutorialTraining, MonsterIntent):
 
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
                             furia_attacks=None):
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            return await self.handle_attack_impl(pid, target_id, buffs, target_pos, furia_attacks)
+
+    async def handle_attack_impl(self, pid, target_id, buffs=None, target_pos=None,
+                                 furia_attacks=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -20528,6 +20554,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
                     await self._registrar_dano_desbloqueio_metamorfose(p, target, xdmg)
                     await self._harpia_reagir_dano(target, xdmg, pid)
                     await self.gm_say(T("narracao.projetil_incendiario_de_dano_de_fogo", xdmg=xdmg))
+                    for _xt in (_ammo_extra_types or []):
+                        await self._rx_registrar(_NORM_ELEMENTO.get(str(_xt).lower(), _xt), self._rx_tiles_da(target), dano=xdmg, atingidos={target.get("id")})
                 # ── Dano elemental adicional da arma (Editor de Itens) ──
                 for _xd in (p.get("weapon") or {}).get("extra_damages", []) or []:
                     if not isinstance(_xd, dict) or target.get("hp", 1) <= 0:
@@ -20543,6 +20571,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
                     _elem_pt = {DMG_FIRE: "fogo", DMG_COLD: "frio", DMG_LIGHTNING: "relâmpago",
                                 DMG_ACID: "ácido", DMG_HOLY: "sagrado"}.get(_xd.get("type"), _xd.get("type"))
                     await self.gm_say(T("narracao.dano_elemental_de", _xr=_xr, _elem_pt=_elem_pt))
+                    await self._rx_registrar(_NORM_ELEMENTO.get(str(_xd.get("type")).lower(), _xd.get("type")), self._rx_tiles_da(target), dano=_xr, atingidos={target.get("id")})
                 # Corpo a corpo: gastar o Ãºnico marcador em qualquer acerto,
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
@@ -20857,10 +20886,13 @@ class GameRoom(TutorialTraining, MonsterIntent):
         # acao principal e o unico sinal confiavel de que o arremesso saiu, e e
         # o que separa o caminho de sucesso do de recusa para a licao.
         _agiu_antes = bool(p.get("action_done"))
+        _rx_origem = {"tipo": "item", "id": item_id, "caster_id": pid}
         if alvo_tipo == "ataque_alvo":
-            await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
+            async with self.evento_elemental(_rx_origem):
+                await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
         elif alvo_tipo == "area":
-            await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"), source_location)
+            async with self.evento_elemental(_rx_origem):
+                await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"), source_location)
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if not _agiu_antes and p.get("action_done"):
@@ -21008,8 +21040,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
         await self.gm_say(T("narracao.arremessa_em", defn_emoji=defn['emoji'], heroi=p['name'], defn=nome_item(defn), cx=cx, cy=cy))
 
         # Dano de Ã¡rea com save de Reflexos (metade no sucesso).
+        _rx_dano = None
         if defn.get("dano"):
             raw = roll_dice(defn["dano"])
+            _rx_dano = raw
             die_type = "d" + defn["dano"].split("d")[1]
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                   "value": raw, "label": T("dado.dano_de_item", item=defn['name']),
@@ -21044,6 +21078,24 @@ class GameRoom(TutorialTraining, MonsterIntent):
             # névoa roxa do Manto de Escuridão) para esta zona.
             await self._aplicar_escuridao(p, raio=raio, duracao=zona.get("duracao", 2), pos=[cx, cy],
                                           visual_id=f"fumaca_{p['id']}_{self.round_num}_{cx}_{cy}")
+
+        # Reações elementais: a explosão atinge as casas da área mesmo sem criatura.
+        _rx_elem = _NORM_ELEMENTO.get(str(defn.get("elemento") or "").lower())
+        if _rx_elem in (DMG_FIRE, DMG_COLD, DMG_LIGHTNING):
+            self._rx_origem_atual(cd=(defn.get("save") or {}).get("cd"))
+            await self._rx_registrar(_rx_elem, self._rx_tiles_area(cx, cy, raio=raio), dano=_rx_dano)
+
+        terreno = defn.get("terreno")
+        if terreno:
+            casas = [t for t in self._inverno_area_tiles(cx, cy, 3)
+                     if not self._water_tile_kind(t[0], t[1]) and not self._is_lava_tile(t[0], t[1])
+                     and self.materiais.get((t[0], t[1])) not in {"ceu_abismo"}
+                     and not self._ponte_em(t[0], t[1])]
+            if casas:
+                self._aplicar_camadas_terreno_inverno(
+                    casas, terreno["material"], self._rx_id("frasco"), permanente=False,
+                    expira_em=self.round_num + int(terreno.get("duracao", 4)))
+                await self.gm_say(T("narracao.reacao.piche_espalhado"))
 
         await self.push_state()
 
@@ -28720,7 +28772,14 @@ class GameRoom(TutorialTraining, MonsterIntent):
             return
         self._pagar_fome_sede(caster, 1, 1, contexto="manutenção de Metamorfose")
 
-    async def _executar_magia_grimorio(self, caster, magia, data, dmg_mult=1, dur_bonus=0, alcance_bonus=0):
+    async def _executar_magia_grimorio(self, caster, magia, data, *args, **kwargs):
+        """Escopo elemental por conjuração: as reações de terreno resolvem uma
+        vez ao fim da magia (ver terrain_reactions.py)."""
+        async with self.evento_elemental({"tipo": "magia", "id": magia.get("id"),
+                                          "caster_id": caster.get("id")}):
+            return await self._executar_magia_grimorio_impl(caster, magia, data, *args, **kwargs)
+
+    async def _executar_magia_grimorio_impl(self, caster, magia, data, dmg_mult=1, dur_bonus=0, alcance_bonus=0):
         """Despacha a execução de uma magia já paga. FUNDAÇÃO: implementa o sistema
         de escuridão/visão; as demais recaem em _magia_nao_implementada."""
         mid       = magia["id"]
@@ -30150,6 +30209,9 @@ class GameRoom(TutorialTraining, MonsterIntent):
             return
         if dano <= 0 or self._fosso_protegido(alvo):
             return
+        if not _protetor_bypass:   # a chamada original registra; as recursivas do Protetor não repetem
+            await self._rx_registrar_alvo(
+                alvo, _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento), dano, killer_pid)
         if not _protetor_bypass:
             dano_alvo, transferencia = await self._processar_dano_protetor(
                 alvo, dano, is_attack=is_attack)
@@ -31026,6 +31088,13 @@ class GameRoom(TutorialTraining, MonsterIntent):
             self._rebuild_materiais_index()
             self._liberar_presos_sem_rodamoinho()
 
+    def _rx_T(self, chave, **kw):
+        return T(chave, **kw)
+
+    def _rx_altura(self, alvo):
+        """1 se a criatura está acima do piso (voando), senão 0."""
+        return 1 if normalizar_altura(alvo.get("altura", ALTURA_MIN)) > ALTURA_MIN else 0
+
     def _alvos_no_inverno(self, tiles):
         """Retorna vivos dentro da área, incluindo aliados, inimigos e servos."""
         area = {(int(x), int(y)) for x, y in tiles}
@@ -31141,7 +31210,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
 
         self._cancelar_magias_terreno_exclusivas()
         material_bases = {
-            f"{int(pos[0])},{int(pos[1])}": self.materiais.get((int(pos[0]), int(pos[1])))
+            f"{int(pos[0])},{int(pos[1])}": self._terrenos_inverno.get(
+                (int(pos[0]), int(pos[1])), {}).get("base", self.materiais.get((int(pos[0]), int(pos[1]))))
             for pos in tiles
         } if permanente else None
 
@@ -31912,6 +31982,12 @@ class GameRoom(TutorialTraining, MonsterIntent):
                 await self._tempestade_aplicar_ciclone(alvo, zona)
 
     async def _tempestade_descarga(self, zona):
+        # um escopo para a descarga inteira: um choque por poça, não um por golpe
+        async with self.evento_elemental({"tipo": "zona", "id": zona.get("id"), "caster_id": zona.get("caster"),
+                                          "cd": zona.get("save_dif")}):
+            await self._tempestade_descarga_impl(zona)
+
+    async def _tempestade_descarga_impl(self, zona):
         zona["quedas_tempestade_rodada"] = {}
         for alvo in list(self._tempestade_entidades()):
             if not self._vivo(alvo) or not any(self._tempestade_em_tiles([p], zona) for p in self._tempestade_posicoes(alvo)):
@@ -32325,6 +32401,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
             "travel_ms": travel_ms, "duration_rounds": dur,
         })
         self.zonas_especiais.append(zona)
+        await self._rx_registrar(DMG_FIRE, flame_tiles)
         await self.broadcast({
             "type": "spell_animation", "spell_id": "prisao_chamas", "phase": "resolve",
             "animation_id": animation_id, "caster_id": caster["id"],
@@ -32763,6 +32840,17 @@ class GameRoom(TutorialTraining, MonsterIntent):
         return alvos
 
     async def _elemental_raio_atacar(self, a, linha, alvos, pid=None):
+        async with self.evento_elemental({"tipo": "monstro", "id": a.get("id"), "caster_id": None}):
+            await self._rx_registrar(DMG_LIGHTNING, [tuple(c) for c in linha])
+            resultado = await self._elemental_raio_atacar_impl(a, linha, alvos, pid)
+            pend = ((self._rx_escopo or {}).get("pend") or {}).get(DMG_LIGHTNING)
+            if pend is not None and not pend.get("dano"):
+                # ninguém foi ferido (todos erraram / sem alvo): o choque usa o dado do raio
+                dado = str(((a.get("attacks") or [{}])[0]).get("damage") or "1d8")
+                self._rx_origem_atual(dano=self._rolar_dado(dado))
+            return resultado
+
+    async def _elemental_raio_atacar_impl(self, a, linha, alvos, pid=None):
         origem = list(a.get("pos", [0, 0]))
         self._face_toward(a, linha[-1])
         self._elemental_raio_anim_seq = getattr(self, "_elemental_raio_anim_seq", 0) + 1
@@ -32797,6 +32885,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
                                       "label": T("dado.linha"), "damage_type": DMG_LIGHTNING})
                 extra["hp"] = max(0, extra["hp"] - d2)
                 await self.gm_say(T("narracao.a_linha_eletrica_do_atinge_de_dano", a_nome=nome_criatura(a), extra=nome_criatura(extra), d2=d2))
+                await self._rx_registrar(DMG_LIGHTNING, self._rx_tiles_da(extra), dano=d2, atingidos={extra.get("id")})
                 if extra["hp"] <= 0:
                     await self._monster_dies(extra, pid)
 
@@ -33135,6 +33224,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
         for rodada in range(2, rodadas_max + 1):
             danos_por_rodada[rodada] = danos_por_rodada[rodada - 1] // 2
 
+        self._rx_origem_atual(cd=save_dif)
+        await self._rx_registrar(DMG_FIRE, self._rx_tiles_area(cx, cy, raio=raio, lado=area_lado), dano=dano_r1)
         atingidos = await self._aplicar_dano_area_fogo(caster["id"], cx, cy, raio, dano_r1, save_dif, "R1", area_lado=area_lado)
 
         # Zona persistente que aplica as rodadas residuais no início das próximas rodadas.
@@ -33207,6 +33298,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
         # Compatibilidade com zonas criadas antes do marcador expira_em.
         if dano <= 0 or (expira_em is None and rodada > zona.get("rodadas_max", 3)):
             zona["ativa"] = False; return
+        await self._rx_registrar(
+            DMG_FIRE, self._rx_tiles_area(zona["cx"], zona["cy"], raio=zona.get("raio", 2),
+                                          lado=zona.get("area_lado")),
+            origem={"tipo": "zona", "caster_id": zona.get("caster")})
         await self._aplicar_dano_area_fogo(
             zona.get("caster", ""), zona["cx"], zona["cy"],
             zona.get("raio", 2), dano, zona.get("save_dif", 12), f"Zona de fogo R{rodada}",
@@ -33328,6 +33423,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
         })
 
         logs, feriu_caster, impactos = [], False, {}
+        self._rx_origem_atual(cd=save_dif)
         for (x, y) in sequencia:
             # Qualquer criatura na casa: monstro, jogador (aliado/caster) OU animado/minion.
             alvo = next((m for m in self.monsters.values() if m["hp"] > 0 and m["pos"] == [x, y]), None)
@@ -33362,6 +33458,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
                 )
             await self._aplicar_dano_alvo(alvo, d, "eletricidade", caster["id"])
 
+        # Poça vazia no caminho também conduz. Sem nenhum acerto não houve dano para
+        # propagar: rola-se UM dano base da fonte para o choque.
+        _rx_base = None if impactos else int(self._rolar_dado(f"{nivel}d6") * dmg_mult + 0.5)
+        await self._rx_registrar(DMG_LIGHTNING, sequencia, dano=_rx_base)
         multi = sum(1 for v in impactos.values() if v > 1)
         await self.gm_say(
             T("narracao.lanca_relampago", caster=caster["name"], nivel=nivel, alcance=alcance,
@@ -33409,6 +33509,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
         # imunidades, resistências e fraquezas (ex.: Vela de Fogo recebe
         # o multiplicador de gelo da ficha personalizada).
         dano = self._apply_damage_types(dano, [DMG_COLD], alvo)
+        await self._rx_registrar(DMG_COLD, self._rx_tiles_da(alvo), dano=dano)
         if self._eh_jogador(alvo):
             await self._aplicar_dano_alvo(alvo, dano, DMG_COLD, caster["id"])
         else:
@@ -34090,7 +34191,19 @@ class GameRoom(TutorialTraining, MonsterIntent):
 
     async def _processar_zonas_turno(self):
         """Decrementa a duração das zonas a cada rodada; remove e anuncia expiradas."""
+        async with self.evento_elemental({"tipo": "zona", "caster_id": None}):
+            await self._processar_zonas_turno_impl()
+
+    async def _processar_zonas_turno_impl(self):
         self._expirar_terrenos_inverno()
+        if self._rx_avisou_crosta != self.round_num and any(
+                c.get("material") == "lava_solidificada"
+                and c.get("expira_em") is not None
+                and int(c["expira_em"]) - self.round_num == 1
+                for reg in self._terrenos_inverno.values()
+                for c in reg.get("camadas", [])):
+            self._rx_avisou_crosta = self.round_num
+            await self.gm_say(T("narracao.reacao.crosta_acabando"))
         if not self.zonas_especiais:
             return
         for z in self.zonas_especiais:
@@ -34114,6 +34227,11 @@ class GameRoom(TutorialTraining, MonsterIntent):
                 if z["duracao"] <= 0:
                     z["ativa"] = False
                     await self.gm_say(T("narracao.as_chamas_deixadas_pelo_molochus_se_apag"))
+            elif z.get("tipo") == "chamas_piche":
+                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    self._consumir_piche(z.get("tiles", []))
+                    await self.gm_say(T("narracao.reacao.piche_consumido"))
             elif z.get("tipo") == "chamado_inverno":
                 if not z.get("permanente") and self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
@@ -34578,7 +34696,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
         if self._ponte_em(x, y):
             return max(1 + custo_elevacao, custo_vento)
         material = getattr(self, "materiais", {}).get((x, y))
-        if material in {"areia_deserto", "lava"}:
+        if material in {"areia_deserto", "lava", "piche"}:
             return max(2 + custo_elevacao, custo_vento)
         kind = self._water_tile_kind(x, y)
         if (not kind or self._ignora_penalidade_agua(criatura, kind)
@@ -34630,6 +34748,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
         """
         if not criatura or self._voo_imune_terreno(criatura):
             return
+        if criatura.get("em_chamas_rodadas", 0) > 0:      # gancho: criatura em chamas inflama o piche
+            await self._rx_registrar(
+                DMG_FIRE, self._rx_tiles_da(criatura),
+                origem={"tipo": "criatura_em_chamas", "id": criatura.get("id")})
         lava = self._lava_tiles_of(criatura)
         if not lava:
             return
@@ -35788,12 +35910,20 @@ class GameRoom(TutorialTraining, MonsterIntent):
         await self.send_to(pid, payload)
 
     async def _disparar_armadilha(self, alvo, arm):
+        async with self.evento_elemental({"tipo": "armadilha", "id": arm.get("tipo"), "caster_id": None}):
+            return await self._disparar_armadilha_impl(alvo, arm)
+
+    async def _disparar_armadilha_impl(self, alvo, arm):
         """Dispara a armadilha sobre `alvo` (jogador OU monstro)."""
         if self._voo_imune_terreno(alvo):
             return
         tipo = ARMADILHAS.get(arm["tipo"])
         if not tipo or arm.get("desativada") or arm.get("esgotada"):
             return
+        if arm["tipo"] == "armadilha_incendiaria":
+            await self._rx_registrar(DMG_FIRE, [tuple(arm.get("pos") or alvo.get("pos"))])
+        elif tipo.get("special") == "raio_congelante":
+            await self._rx_registrar(DMG_COLD, [tuple(arm.get("pos") or alvo.get("pos"))])
         nome = tipo["nome"]
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
         await self.gm_say(T("narracao.ativou", alvo_nome=nome_criatura(alvo), nome=nome_cat("armadilha", arm["tipo"], nome)))
@@ -36870,6 +37000,8 @@ class GameRoom(TutorialTraining, MonsterIntent):
         if self._fosso_protegido(alvo):
             return
         elemento = _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento)
+        if dano > 0 and not _protetor_bypass:
+            await self._rx_registrar_alvo(alvo, elemento, dano, killer_pid)
         # Alguns efeitos antigos chegam aqui depois de rolar o dano, sem
         # passar por `_apply_damage_types`. Cobre esse caminho sem duplicar a
         # vulnerabilidade nos efeitos que já passaram pelo funil.
@@ -38298,6 +38430,12 @@ class GameRoom(TutorialTraining, MonsterIntent):
             await self.gm_say(T("narracao.sofre_das_chamas_persistentes", alvo_get_name_or_alvo_ge=nome_criatura(alvo), dano=dano))
 
     async def _processar_zona_molochus_inicio_turno(self, alvo):
+        # também serve às chamas de piche (reações elementais)
+        for zona in list(self.zonas_especiais):
+            if zona.get("tipo") == "chamas_piche" and zona.get("ativa") and self._rx_alvo_na_zona(alvo, zona):
+                await self._rx_fogo_piche(alvo, zona, "início do turno")
+                if not self._vivo(alvo):
+                    return
         for zona in self.zonas_especiais:
             if zona.get("tipo") == "molochus_chamas" and zona.get("ativa"):
                 await self._molochus_zona_fogo_aplicar(alvo, zona, "Chamas do Molochus")
@@ -38305,6 +38443,15 @@ class GameRoom(TutorialTraining, MonsterIntent):
                     break
 
     async def _verificar_entrada_zona_molochus(self, alvo, nx, ny):
+        # também serve às chamas de piche (reações elementais)
+        for zona in list(self.zonas_especiais):
+            if (zona.get("tipo") == "chamas_piche" and zona.get("ativa")
+                    and (any((int(a), int(b)) == (nx, ny) for a, b in zona.get("tiles", []))
+                         or self._rx_alvo_na_zona(alvo, zona))):
+                await self._rx_fogo_piche(alvo, zona, "entrada")
+                if not self._vivo(alvo):
+                    return
+                break
         for zona in self.zonas_especiais:
             if zona.get("tipo") != "molochus_chamas" or not zona.get("ativa"):
                 continue
@@ -40364,6 +40511,15 @@ class GameRoom(TutorialTraining, MonsterIntent):
         """Camada de materiais como {"x,y": id} para o cliente."""
         return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
 
+    def _serializar_terrenos_temp(self):
+        """{"x,y": expira_em} das casas com camada temporária de terreno ativa."""
+        out = {}
+        for (x, y), reg in (getattr(self, "_terrenos_inverno", None) or {}).items():
+            camadas = reg.get("camadas", [])
+            if camadas and camadas[-1].get("expira_em") is not None:
+                out[f"{x},{y}"] = int(camadas[-1]["expira_em"])      # a do topo é a visível
+        return out
+
     def _serializar_elevacoes(self):
         """Camada visual de elevação como {"x,y": nível} para o cliente."""
         return {f"{x},{y}": nivel
@@ -41696,6 +41852,10 @@ class GameRoom(TutorialTraining, MonsterIntent):
         await self._kobold_pickup_lance(m)
 
     async def _execute_one_monster_attack(self, m, atk_def, target_obj):
+        async with self.evento_elemental({"tipo": "monstro", "id": m.get("id"), "caster_id": None}):
+            return await self._execute_one_monster_attack_impl(m, atk_def, target_obj)
+
+    async def _execute_one_monster_attack_impl(self, m, atk_def, target_obj):
         """Executa um único ataque de um monstro com formato novo."""
         if m.get("rodamoinho_profundo_preso"):
             return False
@@ -42099,6 +42259,11 @@ class GameRoom(TutorialTraining, MonsterIntent):
                 elif atk_def.get("on_hit"):
                     await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque",
                                                 dificuldade=atk_def.get("poison_dc"))
+            _rx_tipos = [t for t in (atk_def.get("damage_types") or []) if t in (DMG_FIRE, DMG_COLD, DMG_LIGHTNING)]
+            if fire_component_resolved is not None and DMG_FIRE not in _rx_tipos:
+                _rx_tipos.append(DMG_FIRE)
+            for _rx_t in _rx_tipos:
+                await self._rx_registrar(_rx_t, self._rx_tiles_da(target), dano=dano_sofrido, atingidos={target.get("id")})
             if not atk_def.get("range"):
                 await self._dano_retaliacao(target, m, True, dano_sofrido)
             if not self._alvo_vivo(target_obj) and not m.get("_predador_supremo_reacao"):
@@ -48948,6 +49113,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
             "decorations": self._serializar_decoracoes(),
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
+            "terrenos_temp": self._serializar_terrenos_temp(),
             "elevacoes": self._serializar_elevacoes(),
             "alturas_parede": self._serializar_alturas_parede(),
             "pontes": self._serializar_pontes(),

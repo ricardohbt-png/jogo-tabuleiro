@@ -94,6 +94,8 @@ window.VC = {
     piso_congelado:{ color: [0.20, 0.66, 0.88] },
     planicie_nevada:{ color: [0.90, 0.93, 0.93] },
     lava:          { color: [0.84, 0.12, 0.025] },
+    piche:         { color: [0.106, 0.078, 0.063] },
+    lava_solidificada:{ color: [0.227, 0.165, 0.149] },
     pantano:       { color: [0.12, 0.23, 0.12] },
     pedra_negra:   { color: [0.14, 0.14, 0.16] },
     madeira_escura:{ color: [0.23, 0.11, 0.045] },

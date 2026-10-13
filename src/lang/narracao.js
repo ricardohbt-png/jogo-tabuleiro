@@ -3036,6 +3036,34 @@ window.LANG_NARRACAO = {
     "en": "👁️ **{heroi}**'s vision expanded to radius {raio}.",
     "pt": "👁️ Visão de **{heroi}** expandida para raio {raio}."
   },
+  "narracao.reacao.choque": {
+    "en": "⚡ The lightning surges through the pool!",
+    "pt": "⚡ O raio corre pela poça!"
+  },
+  "narracao.reacao.congelar": {
+    "en": "❄️ The water freezes over!",
+    "pt": "❄️ A água congela!"
+  },
+  "narracao.reacao.crosta_acabando": {
+    "en": "⚠️ The lava crust is breaking apart!",
+    "pt": "⚠️ A crosta de lava está se desfazendo!"
+  },
+  "narracao.reacao.piche_pegou_fogo": {
+    "en": "🔥 The pitch catches fire!",
+    "pt": "🔥 O piche pega fogo!"
+  },
+  "narracao.reacao.piche_consumido": {
+    "en": "The flames burn away the pitch.",
+    "pt": "As chamas consomem o piche."
+  },
+  "narracao.reacao.piche_espalhado": {
+    "en": "🛢️ Pitch spreads across the ground.",
+    "pt": "🛢️ O piche se espalha pelo chão."
+  },
+  "narracao.reacao.crosta": {
+    "en": "❄️ The lava hardens into a dark crust.",
+    "pt": "❄️ A lava endurece numa crosta escura."
+  },
   "narracao.cobertura_baixa": {
     "en": "🛡️ {alvo} is behind low cover: +{bonus} AC (half cover).",
     "pt": "🛡️ {alvo} está atrás de um obstáculo baixo: +{bonus} de CA (meia cobertura)."

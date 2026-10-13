@@ -677,6 +677,13 @@ const GS = (() => {
       descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
                  'a visão e cobre o recuo. Sem dano.',
     },
+    frasco_piche: {
+      id: 'frasco_piche', nome: 'Frasco de Piche', emoji: '🛢️',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, duracao: 4, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento ' +
+                 'e INFLAMÁVEL. Sem dano.',
+    },
     // ── MERCADO — Arremessáveis de ÁCIDO (Sub-projeto C; ver ARREMESSAVEIS no server) ──
     frasco_acido: {
       id: 'frasco_acido', nome: 'Frasco de Ácido', emoji: '🧪',
@@ -1204,7 +1211,7 @@ const GS = (() => {
     if (_ponteEm(x, y, moveCtx?.state || gameState)) return Math.max(1 + custoElevacao, vento);
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'piso_congelado') return Math.max(1 + custoElevacao, vento);
-    if (kind === 'areia_deserto' || kind === 'lava') return Math.max(2 + custoElevacao, vento);
+    if (kind === 'areia_deserto' || kind === 'lava' || kind === 'piche') return Math.max(2 + custoElevacao, vento);
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
         && kind !== 'rodamoinho_profundo') return Math.max(1 + custoElevacao, vento);
     const tipoCriatura = String(actor.type || '').toLowerCase();
@@ -1937,6 +1944,10 @@ const GS = (() => {
           delete _previsoesPedidas[msg.chave];
         }
         _emit('previsaoAtaque', msg);
+        break;
+
+      case 'reacao_elemental':
+        _emit('reacaoElemental', msg);
         break;
 
       case 'intencoes_monstros':

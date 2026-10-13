@@ -128,6 +128,10 @@ window.LANG_INTERFACE = {
     "en": "Live flame",
     "pt": "Chama viva"
   },
+  "dado.chamas_de_piche": {
+    "en": "Pitch fire",
+    "pt": "Chamas de piche"
+  },
   "dado.chamas_vivas_ira_rocha": {
     "en": "🌋 Living Flames — Wrath of the Burning Rock",
     "pt": "🌋 Chamas Vivas — Ira da Rocha Ardente"
@@ -4955,6 +4959,10 @@ window.LANG_INTERFACE = {
   "ui.item.bomba_fumaca.desc": {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
+  },
+  "ui.item.frasco_piche.desc": {
+    "en": "Area (radius 1, range 4). Spreads pitch for 4 rounds — the ground is slowed and FLAMMABLE. No damage.",
+    "pt": "Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento e INFLAMÁVEL. Sem dano."
   },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
@@ -10601,6 +10609,22 @@ window.LANG_INTERFACE = {
   "ui.ajuda.intencao": {
     "en": "<b>Monster intent:</b> on your turn, colored arrows show who each monster would attack on its next turn (red = melee, orange = ranged, purple = special ability; dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
     "pt": "<b>Intenção dos monstros:</b> na sua vez, setas coloridas mostram quem cada monstro atacaria no próximo turno dele (vermelha = corpo a corpo, laranja = à distância, roxa = habilidade especial; tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
+  },
+  "ui.reacao.casa.piche": {
+    "en": "Pitch: flammable, +1 movement",
+    "pt": "Piche: inflamável, +1 de movimento"
+  },
+  "ui.reacao.casa.piche_chamas": {
+    "en": "Burning pitch: fire damage to whoever stands or enters here",
+    "pt": "Piche em chamas: causa dano de fogo a quem estiver ou entrar aqui"
+  },
+  "ui.reacao.casa.agua": {
+    "en": "Water: conducts electricity",
+    "pt": "Água: conduz eletricidade"
+  },
+  "ui.reacao.casa.crosta": {
+    "en": "Solidified lava: reverts in {n} round(s)",
+    "pt": "Lava solidificada: volta em {n} rodada(s)"
   },
   "ui.intencao.tooltip.corpo": {
     "en": "⚔️ Will attack {alvo}",
