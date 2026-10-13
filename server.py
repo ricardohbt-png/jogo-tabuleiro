@@ -9465,6 +9465,8 @@ MATERIAIS = {
     "planicie_nevada": _mat("Planície nevada", "piso", "#d8edf2", terreno="planicie_nevada"),
     "lava":          _mat("Lava", "piso", "#d63b13", terreno="lava", custo_mov=2),
     "pantano":       _mat("Pântano", "piso", "#354e31", terreno="pantano", custo_mov=1),
+    "piche":         _mat("Piche", "piso", "#1b1410", terreno="piche"),
+    "lava_solidificada": _mat("Lava solidificada", "piso", "#3a2a26", terreno="crosta_lava"),
     "areia_deserto": _mat("Areia do deserto", "piso", "#c49a58", custo_mov=2),
     "duna_deserto":  _mat("Duna do deserto", "parede", "#b9823f"),
     "parede_terra":  _mat("Parede de terra", "parede", "#75451f"),
@@ -34578,7 +34580,7 @@ class GameRoom(TutorialTraining, MonsterIntent):
         if self._ponte_em(x, y):
             return max(1 + custo_elevacao, custo_vento)
         material = getattr(self, "materiais", {}).get((x, y))
-        if material in {"areia_deserto", "lava"}:
+        if material in {"areia_deserto", "lava", "piche"}:
             return max(2 + custo_elevacao, custo_vento)
         kind = self._water_tile_kind(x, y)
         if (not kind or self._ignora_penalidade_agua(criatura, kind)

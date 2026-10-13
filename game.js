@@ -13046,6 +13046,39 @@ function paintSwamp(ctx, ox, oy, size, r){
   }
 }
 
+function paintPitch(ctx, ox, oy, size, r){
+  ctx.fillStyle='#1b1410'; ctx.fillRect(ox,oy,size,size);
+  // Manchas brilhantes de betume e poucas bolhas pequenas.
+  for(let n=0;n<Math.round(size*.1);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.04+r()*.12), rh=size*(.02+r()*.06);
+    ctx.fillStyle='rgba(255,255,255,.10)';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  for(let n=0;n<6;n++){
+    const px=ox+r()*size, py=oy+r()*size, rr=size*(.012+r()*.02);
+    ctx.fillStyle='rgba(60,46,36,.7)'; ctx.beginPath(); ctx.arc(px,py,rr,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=Math.max(1,size/90);
+    ctx.beginPath(); ctx.arc(px,py,rr,0,Math.PI*2); ctx.stroke();
+  }
+}
+
+function paintCrust(ctx, ox, oy, size, r){
+  ctx.fillStyle='#3a2a26'; ctx.fillRect(ox,oy,size,size);
+  // Placas irregulares de rocha escura com fissuras de magma.
+  for(let n=0;n<Math.round(size*.1);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.05+r()*.14), rh=size*(.03+r()*.09);
+    ctx.fillStyle='#2a1f1c';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle='rgba(214,59,19,.55)'; ctx.lineWidth=Math.max(1,size/70);
+  for(let n=0;n<5;n++){
+    let px=ox+r()*size, py=oy+r()*size;
+    ctx.beginPath(); ctx.moveTo(px,py);
+    for(let k=0;k<3;k++){ px+=(r()-.5)*size*.3; py+=(r()-.5)*size*.3; ctx.lineTo(px,py); }
+    ctx.stroke();
+  }
+}
+
 function paintWhirlpool(ctx, ox, oy, size, r, deep=false){
   // Base azul contínua igual à água, com espirais concêntricas turbulentas.
   // A textura é estática no tile, mas a rotação/ondulação é atualizada no
@@ -13351,6 +13384,8 @@ const MAT_PALETTE_2D = {
   planicie_nevada: { base: [232, 239, 239], accent: 'snowPlain' },
   lava:        { base: [214, 59, 19], accent: 'lava' },
   pantano:     { base: [53, 78, 49], accent: 'swamp' },
+  piche:       { base: [27, 20, 16], accent: 'pitch' },
+  lava_solidificada: { base: [58, 42, 38], accent: 'crust' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   madeira_escura: { base: [59, 32, 15], accent: 'woodFloor' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
@@ -13632,6 +13667,12 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
   else if(pal.accent==='swamp'){
     paintSwamp(ctx, X, Y, CELL, _rng((x*67^y*131^23)>>>0));
+  }
+  else if(pal.accent==='pitch'){
+    paintPitch(ctx, X, Y, CELL, _rng((x*71^y*137^29)>>>0));
+  }
+  else if(pal.accent==='crust'){
+    paintCrust(ctx, X, Y, CELL, _rng((x*73^y*139^31)>>>0));
   }
   else if(pal.accent==='whirlpool' || pal.accent==='deepWhirlpool'){
     // O vortex completo é desenhado uma única vez por área contínua em
@@ -44066,6 +44107,8 @@ function init3D(state){
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'piche':         paintPitch(c,0,0,S,r); break;
+      case 'lava_solidificada': paintCrust(c,0,0,S,r); break;
       case 'rodamoinho':    paintWhirlpool(c,0,0,S,r); break;
       case 'rodamoinho_profundo': paintWhirlpool(c,0,0,S,r,true); break;
       case 'piso_congelado': paintIce(c,0,0,S,r); break;
@@ -44131,7 +44174,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='ceu_abismo'||matId==='grama'||matId==='terra'||matId==='parede_terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='ceu_abismo'||matId==='grama'||matId==='terra'||matId==='parede_terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piche'||matId==='lava_solidificada'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.

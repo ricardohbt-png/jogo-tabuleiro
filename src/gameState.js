@@ -1204,7 +1204,7 @@ const GS = (() => {
     if (_ponteEm(x, y, moveCtx?.state || gameState)) return Math.max(1 + custoElevacao, vento);
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'piso_congelado') return Math.max(1 + custoElevacao, vento);
-    if (kind === 'areia_deserto' || kind === 'lava') return Math.max(2 + custoElevacao, vento);
+    if (kind === 'areia_deserto' || kind === 'lava' || kind === 'piche') return Math.max(2 + custoElevacao, vento);
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
         && kind !== 'rodamoinho_profundo') return Math.max(1 + custoElevacao, vento);
     const tipoCriatura = String(actor.type || '').toLowerCase();

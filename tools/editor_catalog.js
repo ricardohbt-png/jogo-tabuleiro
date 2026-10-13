@@ -14000,6 +14000,22 @@ window.EDITOR_CATALOG = {
       "custo_mov": 1
     },
     {
+      "id": "piche",
+      "nome": "Piche",
+      "categoria": "piso",
+      "cor": "#1b1410",
+      "solido": false,
+      "oclui": false
+    },
+    {
+      "id": "lava_solidificada",
+      "nome": "Lava solidificada",
+      "categoria": "piso",
+      "cor": "#3a2a26",
+      "solido": false,
+      "oclui": false
+    },
+    {
       "id": "areia_deserto",
       "nome": "Areia do deserto",
       "categoria": "piso",
