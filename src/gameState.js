@@ -1401,6 +1401,21 @@ const GS = (() => {
   }
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
 
+  // Intenção dos monstros: o servidor responde a prever_intencoes só a quem
+  // pediu. A resposta vale para a RODADA e a VEZ (`vez` = current_turn) em
+  // que foi pedida: na fase dos monstros (current_turn nulo) ou na vez de
+  // outro herói, intencoes() devolve vazio. Mesma regra de
+  // IntencaoMonstros.valida (módulo puro do renderer; aqui não há window).
+  let _intencoes = { rodada: null, vez: null, itens: [] };
+  function _intencoesValem(r, st) {
+    return !!(r && st && Number.isFinite(r.rodada) && r.rodada === st.round
+              && r.vez != null && r.vez === st.current_turn && Array.isArray(r.itens));
+  }
+  function intencoes() {
+    return _intencoesValem(_intencoes, gameState) ? _intencoes.itens : [];
+  }
+  function pedirIntencoes() { return send({ type: 'prever_intencoes' }); }
+
   // Catálogo da Metamorfose: não viaja mais em todo game_state (era ~80% do
   // pacote). A janela de formas pede ao abrir; o servidor responde só a quem
   // pediu. Guardamos a última resposta para desenhar sem esperar a rede.
@@ -1796,6 +1811,7 @@ const GS = (() => {
         gameState = null;
         pendingMove = null;
         _resetTurnActivity();
+        _intencoes = { rodada: null, vez: null, itens: [] };
         _emit('enterDungeon');
         break;
 
@@ -1921,6 +1937,16 @@ const GS = (() => {
           delete _previsoesPedidas[msg.chave];
         }
         _emit('previsaoAtaque', msg);
+        break;
+
+      case 'intencoes_monstros':
+        {
+          const r = { rodada: msg.rodada, vez: msg.vez == null ? null : msg.vez,
+                      itens: Array.isArray(msg.itens) ? msg.itens : [] };
+          // Resposta velha (outra rodada/vez) não substitui nada.
+          if (_intencoesValem(r, gameState)) _intencoes = r;
+          _emit('intencoesMonstros', r);
+        }
         break;
 
       case 'game_over':
@@ -3982,6 +4008,8 @@ const GS = (() => {
     pedirMetamorfoseCatalog,
     get metamorfoseCatalog() { return metamorfoseCatalog; },
     pedirPrevisaoAtaque,
+    pedirIntencoes,
+    intencoes,
     danoMedioPrevisao,
     getWarriorFuriaAttacks,
     setWarriorFuriaAttacks,

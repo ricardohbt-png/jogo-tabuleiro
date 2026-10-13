@@ -10578,6 +10578,54 @@ window.LANG_INTERFACE = {
     "en": "Also shows what the other heroes in the party are seeing.",
     "pt": "Mostra também o que os outros heróis do grupo estão vendo."
   },
+  "ui.menu.intencao": {
+    "en": "Monster intent",
+    "pt": "Intenção dos monstros"
+  },
+  "ui.menu.intencao.off": {
+    "en": "Off",
+    "pt": "Desligada"
+  },
+  "ui.menu.intencao.grupo": {
+    "en": "Threats to my party",
+    "pt": "Ameaças ao meu grupo"
+  },
+  "ui.menu.intencao.todas": {
+    "en": "All",
+    "pt": "Todas"
+  },
+  "ui.menu.intencao_dica": {
+    "en": "Shows arrows for who each monster would attack right now. Press T to cycle.",
+    "pt": "Mostra setas de quem cada monstro atacaria agora. Tecla T alterna."
+  },
+  "ui.ajuda.intencao": {
+    "en": "<b>Monster intent:</b> on your turn, colored arrows show who each monster would attack on its next turn (red = melee, orange = ranged, purple = special ability; dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
+    "pt": "<b>Intenção dos monstros:</b> na sua vez, setas coloridas mostram quem cada monstro atacaria no próximo turno dele (vermelha = corpo a corpo, laranja = à distância, roxa = habilidade especial; tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
+  },
+  "ui.intencao.tooltip.corpo": {
+    "en": "⚔️ Will attack {alvo}",
+    "pt": "⚔️ Vai atacar {alvo}"
+  },
+  "ui.intencao.tooltip.distancia": {
+    "en": "🏹 Will shoot {alvo}",
+    "pt": "🏹 Vai atirar em {alvo}"
+  },
+  "ui.intencao.tooltip.ameaca": {
+    "en": "✨ Threatens {alvo}",
+    "pt": "✨ Ameaça {alvo}"
+  },
+  "ui.intencao.provavel": {
+    "en": "likely",
+    "pt": "provável"
+  },
+  "ui.intencao.um_aliado": {
+    "en": "an ally",
+    "pt": "um aliado"
+  },
+  "ui.intencao.modo_toast": {
+    "en": "Monster intent: {modo}",
+    "pt": "Intenção dos monstros: {modo}"
+  },
   "ui.menu.visao_so_host": {
     "en": "Only the host can change this.",
     "pt": "Só o anfitrião pode alterar isto."

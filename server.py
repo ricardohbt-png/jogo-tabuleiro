@@ -29,6 +29,7 @@ import unicodedata
 import urllib.parse
 from copy import deepcopy
 from tutorial_training import TutorialTraining, _licao_fora_da_trilha, LICAO_FORA_DA_TRILHA_PREFIXOS
+from monster_intent import MonsterIntent, INTENT_CAMPOS_ALVO, INTENT_CAMPOS_MONSTRO
 import aiohttp
 from aiohttp import web
 
@@ -3515,6 +3516,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
+    "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
     "turn_timer_started_ms": "janela", "turn_token": "janela",
@@ -11227,7 +11229,7 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-class GameRoom(TutorialTraining):
+class GameRoom(TutorialTraining, MonsterIntent):
     def _tutorial_api(self):
         return sys.modules[__name__]
 
@@ -11349,6 +11351,8 @@ class GameRoom(TutorialTraining):
         # Ordem individual de iniciativa: [{kind:"player"|"monster", id, ...}].
         # Ã‰ recalculada no inÃ­cio de cada rodada, pois DES/INT podem mudar.
         self.initiative_order = []
+        self._intent_cache = {}     # pid -> (assinatura, itens); ver MonsterIntent
+        self._intent_ultimo = {}    # pid -> time.monotonic() do último pedido
         self.initiative_index = 0
         self.initiative_active = False
         self.initiative_task = None
@@ -14178,6 +14182,55 @@ class GameRoom(TutorialTraining):
             "furtivo_d4": furtivo,
             "chave": str(data.get("chave") or "")[:120],
         })
+
+    INTENT_INTERVALO_MIN = 0.15   # s entre respostas ao mesmo jogador
+
+    def _intent_assinatura(self):
+        """Muda quando algo que altera a previsão muda: posições, vida, vez e
+        os campos de `INTENT_CAMPOS_*` (monster_intent.py) — invisibilidade,
+        controle, altura, estados que tiram o turno — mais as zonas especiais.
+        `repr` torna listas/dicts comparáveis sem exigir que sejam hashable."""
+        def campos(ent, nomes):
+            return tuple(repr(ent.get(k)) for k in nomes)
+        return (
+            self.round_num, self.initiative_index, self.current_pid(),
+            tuple(sorted((str(pid), tuple(p.get("pos") or ()),
+                          campos(p, INTENT_CAMPOS_ALVO))
+                         for pid, p in self.players.items())),
+            tuple(sorted((str(mid), tuple(m.get("pos") or ()),
+                          campos(m, INTENT_CAMPOS_MONSTRO))
+                         for mid, m in self.monsters.items())),
+            tuple((str(rm.get("id")), bool(rm.get("locked"))) for rm in self.rooms),
+            bool(self.master_pid) and self.master_pid in self.connections,
+            tuple(sorted((str(a.get("id")), tuple(a.get("pos") or ()),
+                          campos(a, INTENT_CAMPOS_ALVO))
+                         for a in self._all_animados())),
+            repr([(z.get("id"), z.get("tipo"), z.get("pos"), z.get("duracao"),
+                   z.get("ativa")) for z in (self.zonas_especiais or [])]),
+        )
+
+    async def handle_prever_intencoes(self, pid, data=None):
+        """Previsão de intenção dos monstros (só leitura). Responde só a quem
+        pediu (`intencoes_monstros`). Ver monster_intent.py."""
+        p = self.players.get(pid)
+        if self.phase != "playing" or not p or not self._ativo(p):
+            return
+        agora = time.monotonic()
+        if agora - self._intent_ultimo.get(pid, 0.0) < self.INTENT_INTERVALO_MIN:
+            return
+        self._intent_ultimo[pid] = agora
+        assinatura = self._intent_assinatura()
+        guardado = self._intent_cache.get(pid)
+        if guardado and guardado[0] == assinatura:
+            itens = guardado[1]
+        else:
+            itens = self._prever_intencoes(pid)
+            self._intent_cache[pid] = (assinatura, itens)
+        # `vez` = current_turn do game_state: o cliente só desenha enquanto a
+        # rodada E a vez da resposta baterem com o estado atual.
+        await self.send_to(pid, {"type": "intencoes_monstros",
+                                 "rodada": self.round_num,
+                                 "vez": self.current_pid(), "itens": itens})
 
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
                                        surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,
@@ -49884,6 +49937,9 @@ async def handler(ws):
                 elif t == "attack":
                     if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
                                                        msg.get("target_pos"), msg.get("furia_attacks"))
+
+                elif t == "prever_intencoes":
+                    if room: await room.handle_prever_intencoes(pid)
 
                 elif t == "prever_ataque":
                     if room: await room.handle_prever_ataque(

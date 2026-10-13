@@ -8197,6 +8197,134 @@ function _setVisaoCompPref(on){
   if(st) renderMap(st);
 }
 
+// ── Intenção dos monstros ────────────────────────────────────────────────────
+// O servidor prevê (prever_intencoes); aqui só se desenha. Modos: off | grupo
+// (padrão: só quem alcança alguém) | todas. Preferência por navegador.
+const _INTENCAO_KEY = 'lfh_intencoes';
+let _intencaoModo = (() => {
+  try { return IntencaoMonstros.lerModo(localStorage.getItem(_INTENCAO_KEY)); }
+  catch(e){ return 'grupo'; }
+})();
+function _setIntencaoModo(modo){
+  _intencaoModo = IntencaoMonstros.lerModo(modo);
+  try { localStorage.setItem(_INTENCAO_KEY, _intencaoModo); } catch(e){}
+  const _selInt = document.getElementById('cfg-intencao-sel');
+  if(_selInt) _selInt.value = _intencaoModo;
+  _intencoesPedirAgora(true);
+  if(GS.gameState) { if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
+}
+let _intencaoUltimoPedido = 0;
+let _intencaoPedidoAtrasado = null;   // pedido "de cauda" do agrupamento de 250 ms
+function _intencoesPodePedir(){
+  const st = GS.gameState;
+  if(!st || st.phase !== 'playing' || GS.isMaster() || st.test_mode) return false;
+  if(_intencaoModo === 'off') return false;
+  return !!GS.isMyTurn;   // propriedade booleana, não função
+}
+function _intencoesPedirAgora(forcar){
+  if(!_intencoesPodePedir()){
+    if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
+    return;
+  }
+  const agora = performance.now();
+  const espera = 250 - (agora - _intencaoUltimoPedido);
+  if(!forcar && espera > 0){
+    // Agrupa em vez de descartar: o último estado da rajada ganha um pedido.
+    if(!_intencaoPedidoAtrasado){
+      _intencaoPedidoAtrasado = setTimeout(() => {
+        _intencaoPedidoAtrasado = null;
+        _intencoesPedirAgora(true);
+      }, espera);
+    }
+    return;
+  }
+  if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
+  _intencaoUltimoPedido = agora;
+  GS.pedirIntencoes();
+}
+// Monstro cujo tooltip está aberto (o #tip-previsao existe enquanto ele estiver).
+function _intencoesDestaqueId(){
+  const el = document.getElementById('tip-previsao');
+  // O tooltip é só escondido (display:none), não esvaziado: exige estar visível.
+  return (el && el.isConnected && el.getClientRects().length > 0 && _tipPrevisaoAlvo) ? _tipPrevisaoAlvo.id : null;
+}
+function _intencoesVisiveis(state, visionSet){
+  if(!state || _intencaoModo === 'off' && _intencoesDestaqueId() == null) return [];
+  // 2ª barreira (a 1ª é a `vez` em GS.intencoes()): fora da minha vez, nada.
+  if(!GS.isMyTurn) return [];
+  const bruto = GS.intencoes ? GS.intencoes() : [];
+  const sel = IntencaoMonstros.selecionar(bruto, { modo: _intencaoModo, destaqueId: _intencoesDestaqueId() });
+  const pode = (x, y) => !visionSet || visionSet.has(`${x},${y}`);
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  return sel.filter(it => {
+    const m = mons.get(String(it.monstro_id));
+    return m && m.hp > 0 && pode(m.pos[0], m.pos[1]);
+  });
+}
+function _intencoesDesenhar2D(ctx, state, visionSet){
+  const itens = _intencoesVisiveis(state, visionSet);
+  if(!itens.length) return;
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  const contagem = IntencaoMonstros.contar(itens);
+  const vistoAlvo = {};
+  const par = p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+  ctx.save();
+  try {
+  for(const it of itens){
+    const m = mons.get(String(it.monstro_id));
+    if(!m || !par(m.pos) || !par(it.alvo_pos)) continue;
+    const est = IntencaoMonstros.estilo(it);
+    const x0 = m.pos[0] * CELL + CELL / 2, y0 = m.pos[1] * CELL + CELL / 2;
+    const x1 = it.alvo_pos[0] * CELL + CELL / 2, y1 = it.alvo_pos[1] * CELL + CELL / 2;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(CELL * 0.6, Math.hypot(x1 - x0, y1 - y0) * 0.18);
+    ctx.globalAlpha = it.forte ? 1 : est.opacidade;
+    ctx.strokeStyle = est.cor; ctx.fillStyle = est.cor;
+    ctx.lineWidth = it.forte ? 4 : 2;
+    ctx.setLineDash(est.tracejado ? [CELL * 0.14, CELL * 0.12] : []);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(y1 - my, x1 - mx), ponta = CELL * (it.forte ? 0.3 : 0.22);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - ponta * Math.cos(ang - 0.45), y1 - ponta * Math.sin(ang - 0.45));
+    ctx.lineTo(x1 - ponta * Math.cos(ang + 0.45), y1 - ponta * Math.sin(ang + 0.45));
+    ctx.closePath(); ctx.fill();
+    if(it.alcanca && it.casa_ataque){
+      const cx = it.casa_ataque[0] * CELL + CELL / 2, cy = it.casa_ataque[1] * CELL + CELL / 2;
+      ctx.globalAlpha = 0.55 * (it.forte ? 1 : est.opacidade);
+      ctx.strokeRect(cx - CELL * 0.3, cy - CELL * 0.3, CELL * 0.6, CELL * 0.6);
+    }
+    vistoAlvo[it.alvo_id] = true;
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(CELL * 0.34)}px sans-serif`; ctx.textAlign = 'center';
+  for(const id of Object.keys(vistoAlvo)){
+    if(contagem[id] < 2) continue;
+    const it = itens.find(i => String(i.alvo_id) === id);
+    ctx.fillText('×' + contagem[id], it.alvo_pos[0] * CELL + CELL * 0.85, it.alvo_pos[1] * CELL + CELL * 0.25);
+  }
+  } finally { ctx.restore(); }
+  _agendarChamas2D();   // mantém o redesenho leve (~12 quadros/s) enquanto houver setas
+}
+function _intencaoLinhaTooltip(monster){
+  if(_intencaoModo === 'off' || !GS.isMyTurn) return '';
+  const it = (GS.intencoes ? GS.intencoes() : []).find(i => String(i.monstro_id) === String(monster?.id));
+  if(!it) return '';
+  const alvo = (GS.gameState?.players || []).find(p => p.id === it.alvo_id);
+  const nome = alvo ? _esc(alvo.name) : t('ui.intencao.um_aliado');
+  const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
+              : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
+  const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
+  return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
+}
+GS.on('intencoesMonstros', msg => {
+  if(IntencaoMonstros.descartar(msg, GS.gameState)) return;   // outra rodada ou outra vez
+  const st = GS.gameState;
+  if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
+});
+// O pedido automático (início da vez / depois de mover) mora no único
+// GS.on('gameState') do arquivo; um 2º registro substituiria o 1º.
+
 // ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
 // Casas que o seu herói veria se um objeto (estante, pilar, entulho…) não
 // tapasse a linha de visão. Sem ela, "atrás da estante" era o mesmo preto da
@@ -12421,6 +12549,7 @@ function renderMap(state){
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
+  _intencoesDesenhar2D(ctx, state, visionSet);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -18088,7 +18217,7 @@ function _linhaPrevisaoAtaque(monster, tx, ty, myP){
   _tipPrevisaoAlvo = {id: monster.id, pos: [tx, ty]};
   const prev = GS.previsaoAtaque(monster.id, [tx, ty]);
   if(!prev) GS.pedirPrevisaoAtaque(monster.id, [tx, ty]);
-  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>`;
+  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>` + _intencaoLinhaTooltip(monster);
 }
 GS.on('previsaoAtaque', msg => {
   const alvo = _tipPrevisaoAlvo;
@@ -29758,6 +29887,17 @@ document.addEventListener('keydown', e=>{
     resetCamera3D();
     e.preventDefault(); return;
   }
+  // T alterna a intenção dos monstros (desligada → grupo → todas)
+  if((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey
+     && GS.gameState && GS.gameState.phase === 'playing' && !GS.isMaster()
+     && !GS.gameState.test_mode){
+    if(e.repeat) return;
+    const alvo = e.target;
+    if(alvo && (alvo.tagName === 'SELECT' || alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+    _setIntencaoModo(IntencaoMonstros.proximoModo(_intencaoModo));
+    toast(t('ui.intencao.modo_toast', {modo: t('ui.menu.intencao.' + _intencaoModo)}), 'var(--text2)');
+    e.preventDefault(); return;
+  }
 
   if(!GS.isMyTurn || !GS.gameState || GS.gameState.phase!=='playing') return;
   const me=GS.gameState.players.find(p=>p.id===GS.myPid);
@@ -34101,6 +34241,7 @@ function _audioPanelEnsure(){
     +       '<p data-i18n-html="ui.ajuda.dados"></p>'
     +       '<p data-i18n-html="ui.ajuda.fome_sede"></p>'
     +       '<p data-i18n-html="ui.ajuda.camera"></p>'
+    +       '<p data-i18n-html="ui.ajuda.intencao"></p>'
     +     '</div>'
     +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
     +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'
@@ -34117,6 +34258,11 @@ function _audioPanelEnsure(){
     +   '<div id="cfg-visao" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<label class="cfg-access-check"><input id="cfg-visao-chk" type="checkbox"> <span data-i18n="ui.menu.visao_compartilhada">👁️ Visão compartilhada</span></label>'
     +     '<small data-i18n="ui.menu.visao_compartilhada_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra também o que os outros heróis do grupo estão vendo.</small>'
+    +     '<label class="cfg-access-check"><span data-i18n="ui.menu.intencao">Intenção dos monstros</span> <select id="cfg-intencao-sel">'
+    +       '<option value="off" data-i18n="ui.menu.intencao.off">Desligada</option>'
+    +       '<option value="grupo" data-i18n="ui.menu.intencao.grupo">Ameaças ao meu grupo</option>'
+    +       '<option value="todas" data-i18n="ui.menu.intencao.todas">Todas</option></select></label>'
+    +     '<small data-i18n="ui.menu.intencao_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra setas de quem cada monstro atacaria agora. Tecla T alterna.</small>'
     +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
@@ -34207,6 +34353,8 @@ function _audioPanelEnsure(){
     _setVisaoCompPref(e.target.checked);
     _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   };
+  wrap.querySelector('#cfg-intencao-sel').value = _intencaoModo;
+  wrap.querySelector('#cfg-intencao-sel').onchange = (e) => { _setIntencaoModo(e.target.value); };
   wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
     if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
@@ -45640,6 +45788,7 @@ function dispose3D(){
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
+  _intencoesDispose3D();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
     _disposeDuetoFantasmaShadow3D(fx.group);
@@ -46402,6 +46551,7 @@ function startLoop3D(){
       }
     }
     _guiaAtualizar3D();
+    _intencoesAtualizar3D();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -55326,6 +55476,7 @@ if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
   _autoTurnSchedule(msg);
+  if(msg && msg.phase === 'playing') _intencoesPedirAgora();   // agrupado em 250 ms
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
     _cidadeTourPendenteDoTutorial = true;
   _sincronizarFossoQuedas(msg);
@@ -55793,6 +55944,98 @@ function _guiaDesenhar2D(ctx, state, visionSet){
   ctx.restore();
   _desenharSetaVez2D(ctx, cx, alvo.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
   _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
+}
+
+// ── Intenção dos monstros no 3D ──────────────────────────────────────────────
+// Pool fixo de setas (linha curva + cone). Nunca cria nem destrói malhas por
+// quadro: só reposiciona e mostra/esconde. Mesmo orçamento do halo do tutorial.
+const INTENCOES_POOL_MAX = 16;
+const _intFim = { v: null }, _intAnt = { v: null }, _intEixoY = { v: null }, _intDir = { v: null };
+function _intencoesPool3D(){
+  if(g3.intencoesPool) return g3.intencoesPool;
+  const T = g3.T;
+  const slots = [];
+  const grupo = new T.Group();
+  for(let i = 0; i < INTENCOES_POOL_MAX; i++){
+    const mat = new T.LineBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .9, depthTest: false, depthWrite: false, toneMapped: false });
+    const geo = new T.BufferGeometry().setFromPoints(Array.from({length: 14}, () => new T.Vector3()));
+    const linha = new T.Line(geo, mat); linha.renderOrder = 82; linha.raycast = () => {}; linha.frustumCulled = false;
+    const cone = new T.Mesh(new T.ConeGeometry(0.14, 0.34, 10),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .95, depthTest: false, depthWrite: false, toneMapped: false }));
+    cone.renderOrder = 83; cone.raycast = () => {};
+    const casa = new T.Mesh(new T.RingGeometry(0.2, 0.28, 4),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .6, side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false }));
+    casa.rotation.x = -Math.PI / 2; casa.renderOrder = 81; casa.raycast = () => {};
+    linha.visible = cone.visible = casa.visible = false;
+    grupo.add(linha); grupo.add(cone); grupo.add(casa);
+    slots.push({ linha, cone, casa });
+  }
+  _intFim.v = new T.Vector3(); _intAnt.v = new T.Vector3(); _intEixoY.v = new T.Vector3(0, 1, 0); _intDir.v = new T.Vector3();
+  g3.scene.add(grupo);
+  g3.intencoesPool = { grupo, slots };
+  return g3.intencoesPool;
+}
+function _intencoesEsconder3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  for(const s of g3.intencoesPool.slots) s.linha.visible = s.cone.visible = s.casa.visible = false;
+}
+function _intencoesDispose3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  const { grupo, slots } = g3.intencoesPool;
+  for(const s of slots){
+    s.linha.geometry.dispose(); s.linha.material.dispose();
+    s.cone.geometry.dispose(); s.cone.material.dispose();
+    s.casa.geometry.dispose(); s.casa.material.dispose();
+  }
+  g3.scene.remove(grupo);
+  g3.intencoesPool = null;
+}
+function _intencoesAtualizar3D(){
+  if(!g3) return;
+  const st = GS.gameState;
+  const vis = st && _guiaVisao3D(st);
+  const itens = st ? _intencoesVisiveis(st, vis).slice(0, INTENCOES_POOL_MAX) : [];
+  if(!itens.length){ _intencoesEsconder3D(); return; }
+  const pool = _intencoesPool3D();
+  const T = g3.T;
+  const mons = new Map((st.monsters || []).map(m => [String(m.id), m]));
+  itens.forEach((it, i) => {
+    const s = pool.slots[i];
+    const m = mons.get(String(it.monstro_id));
+    if(!m || !m.pos || !it.alvo_pos) { s.linha.visible = s.cone.visible = s.casa.visible = false; return; }
+    const est = IntencaoMonstros.estilo(it);
+    const mesh = getMonsterMesh(m.id);
+    const x0 = mesh ? mesh.position.x : m.pos[0], z0 = mesh ? mesh.position.z : m.pos[1];
+    const y0 = topoSuperficie3D(st, m.pos[0], m.pos[1]) + 0.9;
+    const x1 = it.alvo_pos[0], z1 = it.alvo_pos[1];
+    const y1 = topoSuperficie3D(st, x1, z1) + 0.9;
+    const alt = 0.5 + Math.hypot(x1 - x0, z1 - z0) * 0.12;
+    const pos = s.linha.geometry.attributes.position;
+    for(let k = 0; k < 14; k++){
+      const u = k / 13;
+      pos.setXYZ(k, x0 + (x1 - x0) * u, y0 + (y1 - y0) * u + Math.sin(Math.PI * u) * alt, z0 + (z1 - z0) * u);
+    }
+    pos.needsUpdate = true;
+    s.linha.material.color.set(est.cor);
+    s.linha.material.opacity = it.forte ? 1 : est.opacidade;
+    s.linha.visible = true;
+    _intFim.v.set(pos.getX(13), pos.getY(13), pos.getZ(13));
+    _intAnt.v.set(pos.getX(12), pos.getY(12), pos.getZ(12));
+    s.cone.position.copy(_intFim.v);
+    _intDir.v.copy(_intFim.v).sub(_intAnt.v).normalize();
+    s.cone.quaternion.setFromUnitVectors(_intEixoY.v, _intDir.v);
+    s.cone.scale.setScalar(it.forte ? 1.35 : 1);
+    s.cone.material.color.set(est.cor);
+    s.cone.visible = true;
+    if(it.alcanca && it.casa_ataque){
+      s.casa.position.set(it.casa_ataque[0], topoSuperficie3D(st, it.casa_ataque[0], it.casa_ataque[1]) + 0.06, it.casa_ataque[1]);
+      s.casa.material.color.set(est.cor);
+      s.casa.visible = true;
+    } else s.casa.visible = false;
+  });
+  for(let i = itens.length; i < pool.slots.length; i++){
+    const s = pool.slots[i]; s.linha.visible = s.cone.visible = s.casa.visible = false;
+  }
 }
 
 // 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),

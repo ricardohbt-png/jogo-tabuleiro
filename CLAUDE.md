@@ -3592,6 +3592,45 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
 
+> **Intenção dos monstros (2026-10-12):** na vez do herói, setas que mostram qual alvo cada
+> monstro visível atacaria **no próximo turno dele**. Cliente pede `prever_intencoes` (sem
+> campos) e recebe, **só ele**, `intencoes_monstros {rodada, vez, itens}` (`vez` =
+> `current_pid()`, o mesmo `current_turn` do `game_state`); cada item: `monstro_id, alvo_id,
+> alvo_tipo (heroi|animado), alvo_pos, acao, alcanca, casa_ataque, certeza`. Limite de 150 ms
+> por herói (`_intent_ultimo`) e cache por assinatura (`_intent_cache`, `_intent_assinatura`):
+> rodada, vez, posições e os campos de `INTENT_CAMPOS_ALVO`/`INTENT_CAMPOS_MONSTRO`
+> (monster_intent.py: vida, invisibilidade, controle, altura/voo, engolido, estados que tiram
+> o turno, compulsões, movimento, adaptação) + zonas especiais. **Campo novo que muda a
+> previsão entra nessas tuplas.** **Servidor:** mixin `monster_intent.py`, SÓ LEITURA —
+> reaproveita a escolha de alvo da IA como a iniciativa a roda (um `gm_phase(m)` por monstro):
+> o **foco é zerado antes de cada monstro** (não há foco coletivo na masmorra — cada gm_phase
+> o zera), as casas reservadas acumulam entre monstros (aproxima onde os anteriores pararão);
+> o **orçamento de movimento** é o do próximo turno (`_water_turn_moves` numa cópia do
+> monstro; 0 com perda de movimento da Tempestade ou agarrado), posto em `_water_moves_left`
+> só durante o cálculo (o valor guardado é o do turno passado); ficha **sem `ai_type`**
+> (caminho legado da gm_phase) só "alcança" se já estiver ao alcance — anda 1 casa e não
+> ataca. Monstro que perde o turno não ganha seta (`_intent_perde_turno`: Comando/Dominar
+> pendentes, petrificado, perda de ação, atordoado, rede, paralisado, enredado, sono/medo com
+> rodadas, comandado, dominado, lentidão no turno perdido). Tudo restaurado num `finally`;
+> exceção interna vira lista vazia. **Cliente:** módulo puro `src/intencaoMonstros.js`
+> (`valida`/`descartar` por rodada **e** vez, modo/seleção/estilo); `GS.intencoes()` aplica a
+> mesma regra (fora da minha vez ou na fase dos monstros devolve `[]`) e o desenho ainda
+> exige `GS.isMyTurn` (propriedade, não função). Desenho em `game.js`
+> (`_intencoesDesenhar2D`, `_intencoesAtualizar3D` com pool fixo de 16 slots). Pedido
+> agrupado em 250 ms com pedido de cauda (`setTimeout`), não descartado. Modos `off | grupo`
+> (padrão: só monstros que alcançam alguém) `| todas`; ao passar o mouse no monstro a seta
+> engrossa e o tooltip ganha "⚔️ Vai atacar X" mesmo sem alcance (nada no modo off).
+> Preferência em `localStorage["lfh_intencoes"]` (select do ⚙️), tecla **T** alterna (ignora
+> repeat, campos de texto/select e a mesa de teste). **Limites da v1:** `certeza` só é
+> `firme` se o monstro é compelido ou há um único alvo ao alcance; habilidade especial é
+> aproximada pelo papel; monstros Manual do Mestre são pulados; hostilidade monstro×monstro e
+> prisioneiro não são previstos. **Evolução B:** a IA gravaria o mesmo item em
+> `m["intencao"]`. **Armadilha:** o pedido mora dentro do ÚNICO `GS.on('gameState')`
+> (um segundo ouvinte apagaria o primeiro). Testes: `tools/test_monster_intent.py` ([6c]
+> roda a IA real — `gm_phase` por monstro — e compara com a previsão tirada antes; inclui o
+> `server.handler` real) e `tools/test_intencoes_cliente.js` ([10] carrega o `gameState.js`
+> de verdade). Spec/plano em `docs/superpowers/{specs,plans}/2026-10-12-intencao-dos-monstros*`.
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
