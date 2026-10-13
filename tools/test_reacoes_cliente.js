@@ -56,6 +56,37 @@ console.log('\n[3] Paleta 2D do game.js');
 check('piche em MAT_PALETTE_2D', /MAT_PALETTE_2D\s*=\s*\{[\s\S]*?\bpiche:\s*\{/.test(GAME));
 check('lava_solidificada em MAT_PALETTE_2D', /MAT_PALETTE_2D\s*=\s*\{[\s\S]*?\blava_solidificada:\s*\{/.test(GAME));
 
+const raiz = path.join(__dirname, '..');
+global.window = global.window || {};
+const RE = eval(fs.readFileSync(path.join(raiz, "src", "reacoesElementais.js"), "utf8") + "; window.ReacoesElementais");
+console.log("[4] estilo");
+check("choque azul 700ms", RE.estilo("choque").cor === "#7fd4ff" && RE.estilo("choque").duracaoMs === 700);
+check("incendio laranja", RE.estilo("incendio").cor === "#ff8a2a");
+check("tipo desconhecido -> null", RE.estilo("xxx") === null);
+console.log("[5] crosta acabando");
+const st = { round: 5, materiais: { "3,3": "lava_solidificada", "4,3": "lava_solidificada", "5,3": "lava" },
+             terrenos_temp: { "3,3": 6, "4,3": 8 } };
+check("só a crosta com ≤1 rodada restante", JSON.stringify(RE.crostasAcabando(st)) === JSON.stringify([[3, 3]]));
+check("estado vazio não quebra", RE.crostasAcabando({}).length === 0 && RE.crostasAcabando(null).length === 0);
+console.log("[6] tooltip por material");
+check("casa comum -> null", RE.descreverCasa(st, 9, 9) === null);
+const st2 = { round: 5, materiais: { "1,1": "piche", "2,1": "agua", "3,1": "lava_solidificada" }, terrenos_temp: { "3,1": 8 } };
+check("piche -> chave", RE.descreverCasa(st2, 1, 1).chave === "ui.reacao.casa.piche");
+check("água -> chave", RE.descreverCasa(st2, 2, 1).chave === "ui.reacao.casa.agua");
+const c = RE.descreverCasa(st2, 3, 1);
+check("crosta -> rodadas restantes", c.chave === "ui.reacao.casa.crosta" && c.params.n === 3);
+console.log("[7] fiação");
+const jogo2 = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+check("GS trata reacao_elemental", fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8").includes("case 'reacao_elemental'"));
+check("game.js ouve reacaoElemental uma vez", (jogo2.match(/GS\.on\('reacaoElemental'/g) || []).length === 1);
+check("game.js não duplica GS.on('gameState')", (jogo2.match(/^GS\.on\('gameState'/gm) || []).length === 1);
+check("index.html carrega o módulo", fs.readFileSync(path.join(raiz, "index.html"), "utf8").includes("src/reacoesElementais.js"));
+const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8").replace(/\r?\n/g, " ");
+for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.agua", "ui.reacao.casa.crosta"])
+  check("chave " + k + " pt+en", new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"pt"[^]{0,200}?"en"|"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"en"[^]{0,200}?"pt"').test(lang));
+const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
+check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));
+
 console.log('\n' + '='.repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);
 console.log('='.repeat(62));

@@ -567,5 +567,12 @@ check("arma com dano extra de fogo sobre piche incendeia",
       any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
 
 
+print("[10] payload terrenos_temp")
+r = sala()
+pinta(r, "lava", [(8, 5)])
+r._aplicar_camadas_terreno_inverno([(8, 5)], "lava_solidificada", "rx_1", permanente=False, expira_em=7)
+pl = r._game_state_payload()
+check("terrenos_temp expõe a expiração da camada", pl.get("terrenos_temp", {}).get("8,5") == 7)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

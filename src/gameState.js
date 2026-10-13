@@ -1946,6 +1946,10 @@ const GS = (() => {
         _emit('previsaoAtaque', msg);
         break;
 
+      case 'reacao_elemental':
+        _emit('reacaoElemental', msg);
+        break;
+
       case 'intencoes_monstros':
         {
           const r = { rodada: msg.rodada, vez: msg.vez == null ? null : msg.vez,

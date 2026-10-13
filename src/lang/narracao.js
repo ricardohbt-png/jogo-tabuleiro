@@ -3044,6 +3044,10 @@ window.LANG_NARRACAO = {
     "en": "❄️ The water freezes over!",
     "pt": "❄️ A água congela!"
   },
+  "narracao.reacao.crosta_acabando": {
+    "en": "⚠️ The lava crust is breaking apart!",
+    "pt": "⚠️ A crosta de lava está se desfazendo!"
+  },
   "narracao.reacao.piche_pegou_fogo": {
     "en": "🔥 The pitch catches fire!",
     "pt": "🔥 O piche pega fogo!"

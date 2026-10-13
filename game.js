@@ -8359,6 +8359,9 @@ function _coberturaTooltipHTML(me, alvo, tx, ty){
 }
 
 function _sombraTooltipHTML(tx, ty){
+  return _sombraTooltipBase(tx, ty) || _reacaoCasaTooltipHTML(tx, ty);
+}
+function _sombraTooltipBase(tx, ty){
   const st = GS.gameState;
   const s = _sombraObjetos(st).get(`${tx},${ty}`);
   if(!s) return null;
@@ -12550,6 +12553,7 @@ function renderMap(state){
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
   _intencoesDesenhar2D(ctx, state, visionSet);
+  _reacoesDesenhar2D(ctx, state, visionSet);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -45832,6 +45836,7 @@ function dispose3D(){
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
   _intencoesDispose3D();
+  _reacoes3DDispose();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
     _disposeDuetoFantasmaShadow3D(fx.group);
@@ -46595,6 +46600,7 @@ function startLoop3D(){
     }
     _guiaAtualizar3D();
     _intencoesAtualizar3D();
+    _reacoes3DAtualizar();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -56079,6 +56085,176 @@ function _intencoesAtualizar3D(){
   for(let i = itens.length; i < pool.slots.length; i++){
     const s = pool.slots[i]; s.linha.visible = s.cone.visible = s.casa.visible = false;
   }
+}
+
+// ── Reações elementais (animações e aviso da crosta) ───────────────────────
+// O servidor manda `reacao_elemental {tipo, casas, origem}`; aqui só se desenha.
+// Casas fora da visão do herói não animam. 2D: tela; 3D: um grupo temporário por
+// evento (raro), removido e liberado ao vencer e em dispose3D.
+const _reacoesAnims = [];
+function _tocarSomReacao(tipo, pos){
+  // Não há evento de gelo/crosta no SoundBank: congelar e crosta ficam sem som.
+  if(tipo === 'choque') sfx('relampago', { pos });
+  else if(tipo === 'incendio') sfx('incendio', { pos });
+}
+GS.on('reacaoElemental', msg => {
+  const est = ReacoesElementais.estilo(msg && msg.tipo);
+  if(!est || !Array.isArray(msg.casas)) return;
+  _reacoesAnims.push({ tipo: msg.tipo, casas: msg.casas, origem: msg.origem, t0: performance.now(), est, grupo: null });
+  _tocarSomReacao(msg.tipo, msg.origem);
+  if(GS.gameState && !(mode3D && g3)) renderMap(GS.gameState);
+});
+function _reacoesVisivel(vis, c){ return Array.isArray(c) && (!vis || vis.has(`${c[0]},${c[1]}`)); }
+function _reacoesPurgar(now){
+  for(let i = _reacoesAnims.length - 1; i >= 0; i--){
+    const a = _reacoesAnims[i];
+    if(now - a.t0 < a.est.duracaoMs) continue;
+    _reacoesDisposeAnim3D(a);
+    _reacoesAnims.splice(i, 1);
+  }
+}
+function _reacoesDisposeAnim3D(a){
+  if(!a.grupo) return;
+  if(g3 && g3.scene) g3.scene.remove(a.grupo);
+  a.grupo.traverse(o => {
+    if(o.geometry) o.geometry.dispose();
+    if(o.material) o.material.dispose();
+  });
+  a.grupo = null;
+}
+function _reacoesDesenhar2D(ctx, state, visionSet){
+  const now = performance.now();
+  _reacoesPurgar(now);
+  const crostas = ReacoesElementais.crostasAcabando(state).filter(c => _reacoesVisivel(visionSet, c));
+  if(!_reacoesAnims.length && !crostas.length) return;
+  ctx.save();
+  try {
+    for(const a of _reacoesAnims){
+      const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
+      ctx.strokeStyle = ctx.fillStyle = a.est.cor;
+      let ant = Array.isArray(a.origem) ? a.origem : null;
+      a.casas.forEach((c, k) => {
+        if(!_reacoesVisivel(visionSet, c)){ ant = c; return; }
+        const cx = c[0] * CELL + CELL / 2, cy = c[1] * CELL + CELL / 2;
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        if(a.tipo === 'choque'){
+          const x0 = (ant ? ant[0] : c[0]) * CELL + CELL / 2, y0 = (ant ? ant[1] : c[1]) * CELL + CELL / 2;
+          const off = (((k + Math.floor(now / 60)) % 2) ? 1 : -1) * CELL * 0.14;
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x0, y0);
+          ctx.lineTo((x0 + cx) / 2 + off, (y0 + cy) / 2 - off);
+          ctx.lineTo(cx, cy); ctx.stroke();
+          ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.15 + 0.3 * p), 0, Math.PI * 2); ctx.stroke();
+        } else if(a.tipo === 'incendio'){
+          _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.35, CELL * 0.8, now, k + 1);
+        } else if(a.tipo === 'congelar'){
+          const r = CELL * 0.36 * (0.3 + 0.7 * p);
+          ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.6, cy);
+          ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r * 0.6, cy); ctx.closePath(); ctx.fill();
+        } else {
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, CELL * 0.5);
+          g.addColorStop(0, 'rgba(255,150,60,0.9)'); g.addColorStop(1, 'rgba(255,100,20,0)');
+          ctx.fillStyle = g; ctx.fillRect(cx - CELL / 2, cy - CELL / 2, CELL, CELL);
+        }
+        ant = c;
+      });
+    }
+    // Crosta de lava que se desfaz na próxima virada: anel laranja pulsante.
+    const pulso = 0.5 + 0.5 * Math.sin(now / 180);
+    ctx.strokeStyle = '#ff8a2a'; ctx.lineWidth = 3; ctx.globalAlpha = 0.45 + 0.5 * pulso;
+    for(const c of crostas){
+      ctx.beginPath();
+      ctx.arc(c[0] * CELL + CELL / 2, c[1] * CELL + CELL / 2, CELL * (0.34 + 0.08 * pulso), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } finally { ctx.restore(); }
+  _agendarChamas2D();
+}
+function _reacoes3DDispose(){
+  for(const a of _reacoesAnims) _reacoesDisposeAnim3D(a);
+  const pool = g3 && g3.reacoesCrostas;
+  if(pool){
+    for(const m of pool.malhas.values()) g3.scene.remove(m);
+    pool.geo.dispose(); pool.mat.dispose();
+    g3.reacoesCrostas = null;
+  }
+}
+function _reacoes3DCriar(a, st, vis){
+  const T = g3.T;
+  const grupo = new T.Group();
+  const cor = new T.Color(a.est.cor);
+  let ant = Array.isArray(a.origem) ? a.origem : null;
+  a.casas.forEach((c, k) => {
+    if(!_reacoesVisivel(vis, c)){ ant = c; return; }
+    const y = topoSuperficie3D(st, c[0], c[1]) + 0.07;
+    const m = new T.Mesh(new T.PlaneGeometry(0.9, 0.9),
+      new T.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.position.set(c[0], y, c[1]); m.renderOrder = 90; m.raycast = () => {};
+    grupo.add(m);
+    if(a.tipo === 'choque'){
+      const x0 = ant ? ant[0] : c[0], z0 = ant ? ant[1] : c[1];
+      const off = (k % 2 ? 1 : -1) * 0.14;
+      const geo = new T.BufferGeometry().setFromPoints([
+        new T.Vector3(x0, y + 0.3, z0), new T.Vector3((x0 + c[0]) / 2 + off, y + 0.45, (z0 + c[1]) / 2 - off),
+        new T.Vector3(c[0], y + 0.3, c[1])]);
+      const ln = new T.Line(geo, new T.LineBasicMaterial({ color: cor, transparent: true, opacity: 1, depthTest: false, toneMapped: false }));
+      ln.renderOrder = 91; ln.raycast = () => {};
+      grupo.add(ln);
+    }
+    ant = c;
+  });
+  g3.scene.add(grupo);
+  a.grupo = grupo;
+}
+function _reacoes3DAtualizar(){
+  if(!g3) return;
+  const st = GS.gameState;
+  const now = performance.now();
+  _reacoesPurgar(now);
+  const vis = st ? _guiaVisao3D(st) : null;
+  if(st){
+    for(const a of _reacoesAnims){
+      if(!a.grupo) _reacoes3DCriar(a, st, vis);
+      const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
+      const esc = a.tipo === 'congelar' ? 0.3 + 0.7 * p : 0.8 + 0.4 * Math.sin(p * Math.PI);
+      a.grupo.traverse(o => {
+        if(o.material) o.material.opacity = Math.max(0, 1 - p) * (o.isLine ? 1 : 0.8);
+        if(o.isMesh) o.scale.set(esc, esc, 1);
+      });
+    }
+  }
+  // Pulso das crostas que acabam: pool de anéis reutilizáveis por casa.
+  const crostas = st ? ReacoesElementais.crostasAcabando(st).filter(c => _reacoesVisivel(vis, c)) : [];
+  let pool = g3.reacoesCrostas;
+  if(!pool && !crostas.length) return;
+  if(!pool){
+    const T = g3.T;
+    pool = g3.reacoesCrostas = {
+      malhas: new Map(),
+      geo: new T.RingGeometry(0.34, 0.44, 32),
+      mat: new T.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.8, side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false }),
+    };
+  }
+  const pulso = 0.5 + 0.5 * Math.sin(now / 180);
+  pool.mat.opacity = 0.45 + 0.5 * pulso;
+  const usadas = new Set();
+  for(const c of crostas){
+    const k = `${c[0]},${c[1]}`; usadas.add(k);
+    let m = pool.malhas.get(k);
+    if(!m){
+      m = new g3.T.Mesh(pool.geo, pool.mat);
+      m.rotation.x = -Math.PI / 2; m.renderOrder = 90; m.raycast = () => {};
+      g3.scene.add(m); pool.malhas.set(k, m);
+    }
+    m.position.set(c[0], topoSuperficie3D(st, c[0], c[1]) + 0.08, c[1]);
+    m.scale.setScalar(1 + 0.2 * pulso);
+  }
+  for(const [k, m] of pool.malhas) if(!usadas.has(k)){ g3.scene.remove(m); pool.malhas.delete(k); }
+}
+// Tooltip de casa por material (piche, água, crosta); a sombra tem prioridade.
+function _reacaoCasaTooltipHTML(tx, ty){
+  const d = ReacoesElementais.descreverCasa(GS.gameState, tx, ty);
+  return d ? `<div>${t(d.chave, d.params)}</div>` : null;
 }
 
 // 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),

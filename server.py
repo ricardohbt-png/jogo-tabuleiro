@@ -3517,7 +3517,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
-    "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero",
+    "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero", "_rx_avisou_crosta": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
@@ -11451,6 +11451,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._rx_escopo = None     # escopo da ação em curso (TerrainReactions)
         self._rx_em_reacao = False # True enquanto uma reação aplica dano: não reentra
         self._rx_seq = 0           # ids únicos de camadas de reação
+        self._rx_avisou_crosta = None  # rodada do último aviso de crosta se desfazendo
         self.materiais = {}            # {(x,y): material_id} â€” camada de piso/parede
         self.elevacoes = {}            # {(x,y): nivel visual do terreno (-1..40)
         self.alturas_parede = {}       # {(x,y): nível manual da parede (só visual)}
@@ -34172,6 +34173,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _processar_zonas_turno(self):
         """Decrementa a duração das zonas a cada rodada; remove e anuncia expiradas."""
         self._expirar_terrenos_inverno()
+        if self._rx_avisou_crosta != self.round_num and any(
+                c.get("material") == "lava_solidificada"
+                and c.get("expira_em") is not None
+                and int(c["expira_em"]) - self.round_num == 1
+                for reg in self._terrenos_inverno.values()
+                for c in reg.get("camadas", [])):
+            self._rx_avisou_crosta = self.round_num
+            await self.gm_say(T("narracao.reacao.crosta_acabando"))
         if not self.zonas_especiais:
             return
         for z in self.zonas_especiais:
@@ -40477,6 +40486,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _serializar_materiais(self):
         """Camada de materiais como {"x,y": id} para o cliente."""
         return {f"{x},{y}": mid for (x, y), mid in getattr(self, "materiais", {}).items()}
+
+    def _serializar_terrenos_temp(self):
+        """{"x,y": expira_em} das casas com camada temporária de terreno ativa."""
+        out = {}
+        for (x, y), reg in (getattr(self, "_terrenos_inverno", None) or {}).items():
+            exp = [int(c["expira_em"]) for c in reg.get("camadas", []) if c.get("expira_em") is not None]
+            if exp:
+                out[f"{x},{y}"] = max(exp)
+        return out
 
     def _serializar_elevacoes(self):
         """Camada visual de elevação como {"x,y": nível} para o cliente."""
@@ -49071,6 +49089,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "decorations": self._serializar_decoracoes(),
             "secret_passages": self._serializar_passagens_secretas(),
             "materiais": self._serializar_materiais(),
+            "terrenos_temp": self._serializar_terrenos_temp(),
             "elevacoes": self._serializar_elevacoes(),
             "alturas_parede": self._serializar_alturas_parede(),
             "pontes": self._serializar_pontes(),

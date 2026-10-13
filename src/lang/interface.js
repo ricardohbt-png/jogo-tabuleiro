@@ -10610,6 +10610,18 @@ window.LANG_INTERFACE = {
     "en": "<b>Monster intent:</b> on your turn, colored arrows show who each monster would attack on its next turn (red = melee, orange = ranged, purple = special ability; dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
     "pt": "<b>Intenção dos monstros:</b> na sua vez, setas coloridas mostram quem cada monstro atacaria no próximo turno dele (vermelha = corpo a corpo, laranja = à distância, roxa = habilidade especial; tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
   },
+  "ui.reacao.casa.piche": {
+    "en": "Pitch: flammable, +1 movement",
+    "pt": "Piche: inflamável, +1 de movimento"
+  },
+  "ui.reacao.casa.agua": {
+    "en": "Water: conducts electricity",
+    "pt": "Água: conduz eletricidade"
+  },
+  "ui.reacao.casa.crosta": {
+    "en": "Solidified lava: reverts in {n} round(s)",
+    "pt": "Lava solidificada: volta em {n} rodada(s)"
+  },
   "ui.intencao.tooltip.corpo": {
     "en": "⚔️ Will attack {alvo}",
     "pt": "⚔️ Vai atacar {alvo}"
