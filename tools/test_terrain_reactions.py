@@ -225,17 +225,148 @@ async def _rx_teste_cadeia(self, tiles, origem, pend, prof):
     conta.append(prof)
     await self._rx_encadear(TR.RX_FIRE, tiles, {"origem": origem, "pend": {}}, prof)
 S.GameRoom._rx_teste_cadeia = _rx_teste_cadeia
-TR.REACOES.append({"id": "teste", "elemento": TR.RX_FIRE, "estado": "piche", "efeito": "_rx_teste_cadeia", "ativa": True})
-# desliga a linha real de incendiar para isolar o teste de cadeia
 real = next(l for l in TR.REACOES if l["id"] == "incendiar_piche")
-real["ativa"] = False
-async def cadeia():
-    async with r.evento_elemental({"tipo": "teste", "caster_id": "x"}):
-        await r._rx_registrar(TR.RX_FIRE, [(5, 5)])
-roda(cadeia())
-TR.REACOES[:] = [l for l in TR.REACOES if l["id"] != "teste"]
-real["ativa"] = True
+try:
+    TR.REACOES.append({"id": "teste", "elemento": TR.RX_FIRE, "estado": "piche", "efeito": "_rx_teste_cadeia", "ativa": True})
+    # desliga a linha real de incendiar para isolar o teste de cadeia
+    real["ativa"] = False
+    async def cadeia():
+        async with r.evento_elemental({"tipo": "teste", "caster_id": "x"}):
+            await r._rx_registrar(TR.RX_FIRE, [(5, 5)])
+    roda(cadeia())
+finally:
+    TR.REACOES[:] = [l for l in TR.REACOES if l["id"] != "teste"]
+    real["ativa"] = True
+    del S.GameRoom._rx_teste_cadeia
 check("cadeia respeita a profundidade máxima 2 (prof 0,1,2)", conta == [0, 1, 2])
+
+
+print("[6] piche em chamas")
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5), (7, 5), (12, 9)])      # (12,9) é outra mancha, não conectada
+no_piche = heroi(r, "a", "Ana", "warrior", [6, 5])
+fora = heroi(r, "b", "Bia", "warrior", [10, 10])
+async def fogo():
+    async with r.evento_elemental({"tipo": "magia", "id": "bola_fogo", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_FIRE, [(5, 5)])           # casa sem ninguém
+roda(fogo())
+zonas = [z for z in r.zonas_especiais if z.get("tipo") == "chamas_piche" and z.get("ativa")]
+check("cria UMA zona de chamas de piche", len(zonas) == 1)
+check("a zona cobre a mancha conectada e não a outra",
+      sorted(map(tuple, zonas[0]["tiles"])) == [(5, 5), (6, 5), (7, 5)])
+check("a casa atingida (5,5) estava vazia: a fonte sem criatura incendiou mesmo assim",
+      (5, 5) in {tuple(t) for t in zonas[0]["tiles"]} and no_piche["pos"] != [5, 5])
+check("quem estava na mancha sofre na ignição", no_piche["hp"] < no_piche["max_hp"])
+check("quem estava fora não sofre", fora["hp"] == fora["max_hp"])
+check("quem estava na mancha fica em chamas", no_piche.get("em_chamas_rodadas", 0) > 0)
+async def fogo2():
+    async with r.evento_elemental({"tipo": "magia", "id": "bola_fogo", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_FIRE, [(6, 5)])
+roda(fogo2())
+check("fogo de novo na mancha já em chamas: não cria outra zona",
+      len([z for z in r.zonas_especiais if z.get("tipo") == "chamas_piche" and z.get("ativa")]) == 1)
+
+# início do turno e entrada
+hp0 = no_piche["hp"]
+roda(r._processar_zona_molochus_inicio_turno(no_piche))
+check("início do turno na mancha em chamas causa dano", no_piche["hp"] < hp0)
+entra = heroi(r, "c", "Cris", "warrior", [3, 5])
+hp0 = entra["hp"]
+roda(r._verificar_entrada_zona_molochus(entra, 5, 5))
+check("entrar na mancha em chamas causa dano", entra["hp"] < hp0)
+
+# voador não é atingido
+r2 = sala()
+pinta(r2, "piche", [(5, 5), (6, 5)])
+voa = heroi(r2, "v", "Vera", "warrior", [5, 5]); voa["voo"] = True; voa["altura"] = 3
+async def fogo3():
+    async with r2.evento_elemental({"tipo": "magia", "id": "bola_fogo", "caster_id": "x"}):
+        await r2._rx_registrar(S.DMG_FIRE, [(5, 5)])
+roda(fogo3())
+check("voador sobre a mancha não é atingido", voa["hp"] == voa["max_hp"])
+
+# fim das chamas: piche autoral vira pedra_negra; mancha temporária volta ao material original
+r.round_num = 4
+roda(r._processar_zonas_turno())
+check("a zona acaba na rodada 4", not any(z.get("ativa") for z in r.zonas_especiais if z.get("tipo") == "chamas_piche"))
+check("piche autoral consumido vira pedra_negra", r.materiais[(5, 5)] == "pedra_negra")
+check("a outra mancha segue intacta", r.materiais[(12, 9)] == "piche")
+
+r = sala()
+pinta(r, "terra", [(5, 5), (6, 5)])
+r._aplicar_camadas_terreno_inverno([(5, 5), (6, 5)], "piche", "frasco_1", permanente=False, expira_em=5)
+async def fogo4():
+    async with r.evento_elemental({"tipo": "item", "id": "bomba_incendiaria", "caster_id": "x"}):
+        await r._rx_registrar(S.DMG_FIRE, [(5, 5)])
+roda(fogo4())
+r.round_num = 4
+roda(r._processar_zonas_turno())
+check("mancha temporária consumida volta ao material original", r.materiais[(5, 5)] == "terra" and r.materiais[(6, 5)] == "terra")
+
+# gancho: criatura em chamas entra no piche
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5)])
+g = heroi(r, "g", "Gus", "warrior", [5, 5]); g["em_chamas_rodadas"] = 2
+roda(r._aplicar_lava_se_pisar(g))
+check("criatura em chamas sobre piche incendeia a mancha",
+      any(z.get("tipo") == "chamas_piche" and z.get("ativa") for z in r.zonas_especiais))
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5)])
+g = heroi(r, "g", "Gus", "warrior", [5, 5])
+roda(r._aplicar_lava_se_pisar(g))
+check("criatura que NÃO está em chamas não incendeia", not r.zonas_especiais)
+
+print("[7] frasco de piche")
+d = S.ARREMESSAVEIS["frasco_piche"]
+check("frasco de piche: área, sem dano, terreno piche por 4 rodadas",
+      d["alvo"] == "area" and not d.get("dano") and d["terreno"] == {"material": "piche", "duracao": 4})
+r = sala()
+pinta(r, "lava", [(9, 9)])
+pinta(r, "agua", [(9, 8)])
+h = heroi(r, "a", "Ana", "warrior", [8, 7]); h["bag"] = [{"id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️"}]
+h["action_done"] = False
+roda(r._throw_item_area(h, d, h["bag"][0], 8, 9, None))
+pintadas = [t for t, m in r.materiais.items() if m == "piche"]
+check("pinta o 3x3 em volta (9 casas), menos a lava e a água (7 casas)",
+      (7, 8) in pintadas and (8, 9) in pintadas
+      and (9, 9) not in pintadas and (9, 8) not in pintadas and len(pintadas) == 7)
+r.round_num = 5
+r._expirar_terrenos_inverno()
+check("o piche do frasco some depois de 4 rodadas", not any(m == "piche" for m in r.materiais.values()))
+
+print("[8] reação que falha não aborta a ação")
+r = sala()
+pinta(r, "piche", [(5, 5)])
+ordem = []
+async def _rx_teste_explode(self, tiles, origem, pend, prof):
+    ordem.append("explode")
+    raise RuntimeError("falha de teste")
+async def _rx_teste_depois(self, tiles, origem, pend, prof):
+    ordem.append("depois")
+S.GameRoom._rx_teste_explode = _rx_teste_explode
+S.GameRoom._rx_teste_depois = _rx_teste_depois
+real = next(l for l in TR.REACOES if l["id"] == "incendiar_piche")
+_saved = list(TR.REACOES)
+try:
+    real["ativa"] = False
+    TR.REACOES.append({"id": "t1", "elemento": TR.RX_FIRE, "estado": "piche", "efeito": "_rx_teste_explode", "ativa": True})
+    TR.REACOES.append({"id": "t2", "elemento": TR.RX_FIRE, "estado": "piche", "efeito": "_rx_teste_depois", "ativa": True})
+    erro = None
+    async def falha():
+        async with r.evento_elemental({"tipo": "teste", "caster_id": "x"}):
+            await r._rx_registrar(TR.RX_FIRE, [(5, 5)])
+    try:
+        roda(falha())
+    except Exception as e:  # noqa: BLE001
+        erro = e
+finally:
+    TR.REACOES[:] = _saved
+    real["ativa"] = True
+    del S.GameRoom._rx_teste_explode
+    del S.GameRoom._rx_teste_depois
+check("efeito que lança não propaga a exceção", erro is None)
+check("as linhas seguintes ainda rodam", ordem == ["explode", "depois"])
+check("a flag de reação foi restaurada", r._rx_em_reacao is False)
 
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

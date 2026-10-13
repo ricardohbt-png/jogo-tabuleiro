@@ -9,6 +9,7 @@ temporárias do Chamado do Inverno (`_aplicar_camadas_terreno_inverno`).
 Spec: docs/superpowers/specs/2026-10-13-reacoes-elementais-design.md
 """
 import contextlib
+import traceback
 
 # Mesmos valores de server.DMG_FIRE / DMG_COLD / DMG_LIGHTNING (um teste confere).
 RX_FIRE = "fire"
@@ -23,6 +24,8 @@ RX_PICHE_TETO = 40
 RX_DURACAO_GELO = 3
 RX_DURACAO_CROSTA = 3
 RX_CD_PADRAO = 12
+RX_DURACAO_CHAMAS = 3
+RX_DADO_CHAMAS = "1d6"
 
 # Tabela de dados: elemento × estado da casa → efeito (nome do método).
 # `efeito: None` + `ativa: False` = linha reservada (fogo + gelo, fora da v1).
@@ -49,6 +52,7 @@ class TerrainReactions:
             yield esc
         finally:
             self._rx_escopo = None
+        # Se o corpo lançar, esta linha não roda: ação abortada não reage (pendências descartadas).
         await self._rx_resolver(esc, 0)
 
     def _rx_origem_atual(self, **kw):
@@ -144,7 +148,10 @@ class TerrainReactions:
                     alvo_casas = [t for t in casas if self._rx_estado(linha["estado"], t)]
                     if not alvo_casas:
                         continue
-                    await getattr(self, linha["efeito"])(alvo_casas, esc["origem"], pend, profundidade)
+                    try:
+                        await getattr(self, linha["efeito"])(alvo_casas, esc["origem"], pend, profundidade)
+                    except Exception:  # uma reação com defeito não aborta a ação já aplicada
+                        traceback.print_exc()
         finally:
             self._rx_em_reacao = antes
 
@@ -200,10 +207,6 @@ class TerrainReactions:
                 alvo["moves_left"] = 0
                 alvo["movimento_perdido"] = True
 
-    async def _rx_incendiar_piche(self, tiles, origem, pend, prof):
-        # Placeholder: a Task 3 implementa o incêndio do piche.
-        return
-
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")
         self._aplicar_camadas_terreno_inverno(
@@ -211,3 +214,72 @@ class TerrainReactions:
             expira_em=self.round_num + RX_DURACAO_CROSTA)
         await self._rx_anunciar("crosta", tiles, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.crosta"))
+
+    # ── piche em chamas ─────────────────────────────────────────────────────
+    def _rx_em_zona_chamas(self, tile):
+        for z in self.zonas_especiais:
+            if z.get("tipo") == "chamas_piche" and z.get("ativa") \
+                    and any((int(a), int(b)) == tile for a, b in z.get("tiles", [])):
+                return True
+        return False
+
+    def _rx_alvo_na_zona(self, alvo, zona):
+        area = {(int(a), int(b)) for a, b in zona.get("tiles", [])}
+        return any(t in area for t in self._rx_tiles_da(alvo))
+
+    async def _rx_incendiar_piche(self, tiles, origem, pend, prof):
+        regiao = self._rx_regiao(
+            tiles, lambda t: self._rx_estado("piche", t) and not self._rx_em_zona_chamas(t),
+            raio=None, teto=RX_PICHE_TETO)
+        if not regiao:
+            return
+        zona = {"id": self._rx_id("chamas_piche"), "tipo": "chamas_piche",
+                "tiles": [list(t) for t in regiao], "criado_em": self.round_num,
+                "expira_em": self.round_num + RX_DURACAO_CHAMAS, "ativa": True,
+                "caster": origem.get("caster_id")}
+        self.zonas_especiais.append(zona)
+        await self._rx_anunciar("incendio", regiao, tiles[0])
+        await self.gm_say(self._rx_T("narracao.reacao.piche_pegou_fogo"))
+        for alvo in self._alvos_no_inverno(regiao):
+            await self._rx_fogo_piche(alvo, zona, "ignição")
+
+    async def _rx_fogo_piche(self, alvo, zona, motivo):
+        """1d6 de fogo + em chamas, só no piso. Não reentra no motor."""
+        if not self._vivo(alvo) or self._voo_imune_terreno(alvo):
+            return
+        if self._rx_altura(alvo) > 0:
+            return
+        antes = self._rx_em_reacao
+        self._rx_em_reacao = True
+        try:
+            raw = self._rolar_dado(RX_DADO_CHAMAS)
+            await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw,
+                                  "label": self._rx_T("dado.chamas_de_piche"),
+                                  "damage_type": RX_FIRE})
+            dano = raw if "vida_atual" in alvo else self._apply_damage_types(raw, [RX_FIRE], alvo)
+            await self._dano_em_alvo(alvo, dano, "fogo", zona.get("caster"))
+            if self._vivo(alvo):
+                self._aplicar_em_chamas(alvo, self._rolar_dado("1d4"), True)
+        finally:
+            self._rx_em_reacao = antes
+
+    def _consumir_piche(self, tiles):
+        """O fogo consumiu o piche: mancha temporária volta ao material original;
+        piche pintado no editor (base == piche) vira pedra_negra."""
+        for t in (tuple(x) for x in tiles):
+            reg = self._terrenos_inverno.get(t)
+            if reg:
+                reg["camadas"] = [c for c in reg.get("camadas", []) if c.get("material") != "piche"]
+                if reg["camadas"]:
+                    self.materiais[t] = reg["camadas"][-1]["material"]
+                else:
+                    base = reg.get("base")
+                    novo = "pedra_negra" if base == "piche" else base
+                    if novo is None:
+                        self.materiais.pop(t, None)
+                    else:
+                        self.materiais[t] = novo
+                    self._terrenos_inverno.pop(t, None)
+            elif self.materiais.get(t) == "piche":
+                self.materiais[t] = "pedra_negra"
+        self._rebuild_materiais_index()

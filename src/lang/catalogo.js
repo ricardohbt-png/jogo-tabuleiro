@@ -2482,6 +2482,10 @@ window.LANG_CATALOGO = {
     "en": "Vial of Incendiary Oil",
     "pt": "Frasco de Óleo Incendiário"
   },
+  "cat.item.frasco_piche.nome": {
+    "en": "Pitch Flask",
+    "pt": "Frasco de Piche"
+  },
   "cat.item.full_heal.nome": {
     "en": "Full Heal",
     "pt": "Cura Completa"

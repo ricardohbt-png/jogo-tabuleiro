@@ -7186,6 +7186,7 @@ SHOP_MERCHANT = [
     {"id": "veneno_agonia_sufocante", "name": "Agonia Sufocante", "emoji": "💀", "price": 40, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_agonia_sufocante"},
     # â”€â”€ ArremessÃ¡veis de fogo (consumÃ­veis de bolsa; ver ARREMESSAVEIS) â”€â”€
     {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️", "price": 12, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣", "price": 45, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
@@ -7298,6 +7299,11 @@ ARREMESSAVEIS = {
         "id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨",
         "alcance": 4, "alvo": "area", "area_raio": 1,
         "zona": {"tipo": "escuridao", "duracao": 2},
+    },
+    "frasco_piche": {
+        "id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️",
+        "alcance": 4, "alvo": "area", "area_raio": 1,
+        "terreno": {"material": "piche", "duracao": 4},
     },
     "frasco_acido": {
         "id": "frasco_acido", "name": "Frasco de Ácido", "emoji": "🧪",
@@ -21056,6 +21062,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._aplicar_escuridao(p, raio=raio, duracao=zona.get("duracao", 2), pos=[cx, cy],
                                           visual_id=f"fumaca_{p['id']}_{self.round_num}_{cx}_{cy}")
 
+        terreno = defn.get("terreno")
+        if terreno:
+            casas = [t for t in self._inverno_area_tiles(cx, cy, 3)
+                     if not self._water_tile_kind(t[0], t[1]) and not self._is_lava_tile(t[0], t[1])
+                     and self.materiais.get((t[0], t[1])) not in {"ceu_abismo"}
+                     and not self._ponte_em(t[0], t[1])]
+            if casas:
+                self._aplicar_camadas_terreno_inverno(
+                    casas, terreno["material"], self._rx_id("frasco"), permanente=False,
+                    expira_em=self.round_num + int(terreno.get("duracao", 4)))
+                await self.gm_say(T("narracao.reacao.piche_espalhado"))
+
         await self.push_state()
 
     async def handle_apagar_chamas(self, pid):
@@ -34132,6 +34150,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if z["duracao"] <= 0:
                     z["ativa"] = False
                     await self.gm_say(T("narracao.as_chamas_deixadas_pelo_molochus_se_apag"))
+            elif z.get("tipo") == "chamas_piche":
+                if self.round_num >= int(z.get("expira_em", 0) or 0):
+                    z["ativa"] = False
+                    self._consumir_piche(z.get("tiles", []))
+                    await self.gm_say(T("narracao.reacao.piche_consumido"))
             elif z.get("tipo") == "chamado_inverno":
                 if not z.get("permanente") and self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
@@ -34648,6 +34671,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """
         if not criatura or self._voo_imune_terreno(criatura):
             return
+        if criatura.get("em_chamas_rodadas", 0) > 0:      # gancho: criatura em chamas inflama o piche
+            await self._rx_registrar(
+                DMG_FIRE, self._rx_tiles_da(criatura),
+                origem={"tipo": "criatura_em_chamas", "id": criatura.get("id")})
         lava = self._lava_tiles_of(criatura)
         if not lava:
             return
@@ -38316,6 +38343,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.sofre_das_chamas_persistentes", alvo_get_name_or_alvo_ge=nome_criatura(alvo), dano=dano))
 
     async def _processar_zona_molochus_inicio_turno(self, alvo):
+        # também serve às chamas de piche (reações elementais)
+        for zona in list(self.zonas_especiais):
+            if zona.get("tipo") == "chamas_piche" and zona.get("ativa") and self._rx_alvo_na_zona(alvo, zona):
+                await self._rx_fogo_piche(alvo, zona, "início do turno")
+                if not self._vivo(alvo):
+                    return
         for zona in self.zonas_especiais:
             if zona.get("tipo") == "molochus_chamas" and zona.get("ativa"):
                 await self._molochus_zona_fogo_aplicar(alvo, zona, "Chamas do Molochus")
@@ -38323,6 +38356,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     break
 
     async def _verificar_entrada_zona_molochus(self, alvo, nx, ny):
+        # também serve às chamas de piche (reações elementais)
+        for zona in list(self.zonas_especiais):
+            if zona.get("tipo") == "chamas_piche" and zona.get("ativa")                     and any((int(a), int(b)) == (nx, ny) for a, b in zona.get("tiles", [])):
+                await self._rx_fogo_piche(alvo, zona, "entrada")
+                if not self._vivo(alvo):
+                    return
+                break
         for zona in self.zonas_especiais:
             if zona.get("tipo") != "molochus_chamas" or not zona.get("ativa"):
                 continue

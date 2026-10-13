@@ -3044,6 +3044,18 @@ window.LANG_NARRACAO = {
     "en": "❄️ The water freezes over!",
     "pt": "❄️ A água congela!"
   },
+  "narracao.reacao.piche_pegou_fogo": {
+    "en": "🔥 The pitch catches fire!",
+    "pt": "🔥 O piche pega fogo!"
+  },
+  "narracao.reacao.piche_consumido": {
+    "en": "The flames burn away the pitch.",
+    "pt": "As chamas consomem o piche."
+  },
+  "narracao.reacao.piche_espalhado": {
+    "en": "🛢️ Pitch spreads across the ground.",
+    "pt": "🛢️ O piche se espalha pelo chão."
+  },
   "narracao.reacao.crosta": {
     "en": "❄️ The lava hardens into a dark crust.",
     "pt": "❄️ A lava endurece numa crosta escura."

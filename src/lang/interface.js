@@ -128,6 +128,10 @@ window.LANG_INTERFACE = {
     "en": "Live flame",
     "pt": "Chama viva"
   },
+  "dado.chamas_de_piche": {
+    "en": "Pitch fire",
+    "pt": "Chamas de piche"
+  },
   "dado.chamas_vivas_ira_rocha": {
     "en": "🌋 Living Flames — Wrath of the Burning Rock",
     "pt": "🌋 Chamas Vivas — Ira da Rocha Ardente"
@@ -4955,6 +4959,10 @@ window.LANG_INTERFACE = {
   "ui.item.bomba_fumaca.desc": {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
+  },
+  "ui.item.frasco_piche.desc": {
+    "en": "Area (radius 1, range 4). Spreads pitch for 4 rounds — the ground is slowed and FLAMMABLE. No damage.",
+    "pt": "Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento e INFLAMÁVEL. Sem dano."
   },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
