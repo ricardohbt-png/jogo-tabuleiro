@@ -14193,9 +14193,15 @@ class GameRoom(TutorialTraining, MonsterIntent):
                           p.get("hp", 0))
                          for pid, p in self.players.items())),
             tuple(sorted((str(mid), tuple(m.get("pos") or ()), m.get("hp", 0),
-                          bool(m.get("provocado")), bool(m.get("alertado")),
-                          str(m.get("control_mode")))
+                          bool(m.get("provocado")), m.get("provocado_turnos"),
+                          bool(m.get("alertado")), str(m.get("control_mode")),
+                          str(m.get("master_target_id")),
+                          bool(m.get("invisivel_sombras")),
+                          bool(m.get("invisivel_magico")),
+                          bool(m.get("oculto_vela")))
                          for mid, m in self.monsters.items())),
+            tuple((str(rm.get("id")), bool(rm.get("locked"))) for rm in self.rooms),
+            bool(self.master_pid) and self.master_pid in self.connections,
             tuple(sorted((str(a.get("id")), tuple(a.get("pos") or ()),
                           a.get("vida_atual", 0))
                          for a in self._all_animados())),

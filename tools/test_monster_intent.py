@@ -208,5 +208,51 @@ r._intent_ultimo["a"] = _time.monotonic() - 1.0
 asyncio.run(r.handle_prever_intencoes("a"))
 check("fora de 'playing': sem resposta", enviados == [])
 
+print("[6b] assinatura do cache cobre todas as entradas")
+r = sala()
+a = heroi(r, "a", "Ana", "warrior", [5, 5])
+b = heroi(r, "b", "Bia", "warrior", [5, 7])
+m = monstro(r, "orc", [8, 6])
+monta(r)
+r.master_pid = "mestre"
+r.connections = {"mestre": object(), "a": object(), "b": object()}
+m["alertado"] = True
+r.send_to = captura
+chamadas = []
+orig = r._prever_intencoes
+def conta2(pid):
+    chamadas.append(pid)
+    return orig(pid)
+r._prever_intencoes = conta2
+def pede():
+    r._intent_ultimo["a"] = _time.monotonic() - 1.0
+    n = len(chamadas)
+    asyncio.run(r.handle_prever_intencoes("a"))
+    return len(chamadas) > n
+pede()
+check("base: segundo pedido usa cache", pede() is False)
+a["pos"] = [5, 6]
+check("herói andou invalida", pede())
+a["hp"] = a["hp"] - 1
+check("hp do herói invalida", pede())
+m["control_mode"] = "semi"; m["master_target_id"] = "b"
+pede()
+m["master_target_id"] = "a"
+check("master_target_id invalida", pede())
+m["provocado"] = True; m["provocado_turnos"] = 2
+pede()
+m["provocado_turnos"] = 1
+check("provocado_turnos invalida", pede())
+pede()
+r.rooms[0]["locked"] = True
+check("sala trancada/destrancada invalida", pede())
+pede()
+r.connections.pop("mestre")
+check("mestre desconectado invalida", pede())
+a["alive"] = False
+ant = r._intent_ultimo["a"]
+asyncio.run(r.handle_prever_intencoes("a"))
+check("herói morto não toca _intent_ultimo", r._intent_ultimo["a"] == ant)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)
