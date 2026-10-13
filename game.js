@@ -8208,6 +8208,8 @@ let _intencaoModo = (() => {
 function _setIntencaoModo(modo){
   _intencaoModo = IntencaoMonstros.lerModo(modo);
   try { localStorage.setItem(_INTENCAO_KEY, _intencaoModo); } catch(e){}
+  const _selInt = document.getElementById('cfg-intencao-sel');
+  if(_selInt) _selInt.value = _intencaoModo;
   _intencoesPedirAgora(true);
   if(GS.gameState) { if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
 }
@@ -29867,6 +29869,15 @@ document.addEventListener('keydown', e=>{
     resetCamera3D();
     e.preventDefault(); return;
   }
+  // T alterna a intenção dos monstros (desligada → grupo → todas)
+  if((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey
+     && GS.gameState && GS.gameState.phase === 'playing' && !GS.isMaster()){
+    const alvo = e.target;
+    if(alvo && (alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+    _setIntencaoModo(IntencaoMonstros.proximoModo(_intencaoModo));
+    toast(t('ui.intencao.modo_toast', {modo: t('ui.menu.intencao.' + _intencaoModo)}), 'var(--text2)');
+    e.preventDefault(); return;
+  }
 
   if(!GS.isMyTurn || !GS.gameState || GS.gameState.phase!=='playing') return;
   const me=GS.gameState.players.find(p=>p.id===GS.myPid);
@@ -34210,6 +34221,7 @@ function _audioPanelEnsure(){
     +       '<p data-i18n-html="ui.ajuda.dados"></p>'
     +       '<p data-i18n-html="ui.ajuda.fome_sede"></p>'
     +       '<p data-i18n-html="ui.ajuda.camera"></p>'
+    +       '<p data-i18n-html="ui.ajuda.intencao"></p>'
     +     '</div>'
     +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
     +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'
@@ -34226,6 +34238,11 @@ function _audioPanelEnsure(){
     +   '<div id="cfg-visao" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<label class="cfg-access-check"><input id="cfg-visao-chk" type="checkbox"> <span data-i18n="ui.menu.visao_compartilhada">👁️ Visão compartilhada</span></label>'
     +     '<small data-i18n="ui.menu.visao_compartilhada_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra também o que os outros heróis do grupo estão vendo.</small>'
+    +     '<label class="cfg-access-check"><span data-i18n="ui.menu.intencao">Intenção dos monstros</span> <select id="cfg-intencao-sel">'
+    +       '<option value="off" data-i18n="ui.menu.intencao.off">Desligada</option>'
+    +       '<option value="grupo" data-i18n="ui.menu.intencao.grupo">Ameaças ao meu grupo</option>'
+    +       '<option value="todas" data-i18n="ui.menu.intencao.todas">Todas</option></select></label>'
+    +     '<small data-i18n="ui.menu.intencao_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra setas de quem cada monstro atacaria agora. Tecla T alterna.</small>'
     +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
@@ -34316,6 +34333,8 @@ function _audioPanelEnsure(){
     _setVisaoCompPref(e.target.checked);
     _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   };
+  wrap.querySelector('#cfg-intencao-sel').value = _intencaoModo;
+  wrap.querySelector('#cfg-intencao-sel').onchange = (e) => { _setIntencaoModo(e.target.value); };
   wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
     if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
@@ -55907,9 +55926,9 @@ function _guiaDesenhar2D(ctx, state, visionSet){
   _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
 }
 
-// â”€â”€ IntenÃ§Ã£o dos monstros no 3D â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Pool fixo de setas (linha curva + cone). Nunca cria nem destrÃ³i malhas por
-// quadro: sÃ³ reposiciona e mostra/esconde. Mesmo orÃ§amento do halo do tutorial.
+// ── Intenção dos monstros no 3D ──────────────────────────────────────────────
+// Pool fixo de setas (linha curva + cone). Nunca cria nem destrói malhas por
+// quadro: só reposiciona e mostra/esconde. Mesmo orçamento do halo do tutorial.
 const INTENCOES_POOL_MAX = 16;
 const _intFim = { v: null }, _intAnt = { v: null }, _intEixoY = { v: null }, _intDir = { v: null };
 function _intencoesPool3D(){

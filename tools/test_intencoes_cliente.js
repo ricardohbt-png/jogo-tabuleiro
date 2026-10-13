@@ -77,7 +77,24 @@ check("destaque do tooltip exige elemento visível", jogo.includes("el.getClient
 console.log("[8] fiação do game.js (3D)");
 check("3D: função de atualização chamada junto do guia", /_guiaAtualizar3D\(\);[\s\S]{0,200}_intencoesAtualizar3D\(\)|_intencoesAtualizar3D\(\);[\s\S]{0,200}_guiaAtualizar3D\(\)/.test(jogo));
 check("3D: pool reutilizável (sem criar malha por quadro)", jogo.includes("g3.intencoesPool"));
-check("3D: dispose limpa o pool", /intencoesPool[\s\S]{0,400}dispose/.test(jogo));
+check("3D: dispose3D chama _intencoesDispose3D", /function dispose3D[\s\S]*?_intencoesDispose3D\(\)/.test(jogo));
+check("3D: _intencoesDispose3D zera o pool", /function _intencoesDispose3D[\s\S]*?g3\.intencoesPool = null/.test(jogo));
+
+console.log("[9] preferência e atalho");
+check("seletor no painel ⚙️", jogo.includes('id="cfg-intencao-sel"'));
+check("seletor grava via _setIntencaoModo", /cfg-intencao-sel['"]\)\.onchange[\s\S]{0,120}_setIntencaoModo\(/.test(jogo));
+const iT = jogo.indexOf("e.key === 't' || e.key === 'T'");
+check("atalho T alterna e ignora campos de texto",
+      iT > 0 && /proximoModo/.test(jogo.slice(iT, iT + 600))
+      && /INPUT|TEXTAREA|isContentEditable/.test(jogo.slice(iT - 400, iT + 600)));
+const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8");
+for (const k of ["ui.menu.intencao", "ui.menu.intencao.off", "ui.menu.intencao.grupo", "ui.menu.intencao.todas",
+                 "ui.menu.intencao_dica", "ui.ajuda.intencao",
+                 "ui.intencao.tooltip.corpo", "ui.intencao.tooltip.distancia", "ui.intencao.tooltip.ameaca",
+                 "ui.intencao.provavel", "ui.intencao.um_aliado", "ui.intencao.modo_toast"]) {
+  const m = lang.match(new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{([\\s\\S]*?)\\n  \\}'));
+  check("chave " + k + " com pt e en", !!m && /"pt"/.test(m[1]) && /"en"/.test(m[1]));
+}
 
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);
