@@ -3631,6 +3631,34 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `server.handler` real) e `tools/test_intencoes_cliente.js` ([10] carrega o `gameState.js`
 > de verdade). Spec/plano em `docs/superpowers/{specs,plans}/2026-10-12-intencao-dos-monstros*`.
 
+> **Reações elementais (2026-10-13):** terreno × elemento. Fogo, frio e eletricidade, de **qualquer
+> fonte** (herói, monstro, armadilha), reagem ao material da casa. Mixin `terrain_reactions.py`
+> (`TerrainReactions`, base de `GameRoom`): tabela de dados `REACOES` (elemento × estado × método
+> `_rx_*`; fogo+gelo existe desligada) e `evento_elemental(origem)`, escopo POR AÇÃO (aninhado
+> reaproveita o aberto). A fonte só diz "este elemento atingiu estas casas" via `_rx_registrar`
+> (ou `_rx_registrar_alvo`, nos funis `_aplicar_dano_alvo`/`_dano_em_alvo`); ao fim da ação o escopo
+> resolve cada linha UMA vez sobre a união das casas (dedupe), com `profundidade` máx. 2 e
+> `_rx_em_reacao` impedindo reentrada. Funil só vale na chamada original (`not _protetor_bypass`, e
+> dano > 0 em `_dano_em_alvo`): a repartição do Protetor não repete o choque. Fonte sem escopo aberto
+> resolve na hora (ignição imediata). **Reações:** ⚡ água rasa: choque na poça (região conectada,
+> teto 24 casas, raio 6; metade do dano da fonte, mín. 1; Reflexos metade, CD da fonte ou 12; quem
+> levou o golpe não repete); 🔥 piche: `_rx_incendiar_piche` inflama a mancha (teto 40) em zona
+> `chamas_piche` com lista de casas, 3 rodadas, 1d6 de fogo ao entrar/início do turno + em chamas
+> (só piso), ao fim `_consumir_piche`; criatura em chamas que termina passo no piche inflama (gancho
+> em `_aplicar_lava_se_pisar`); ❄️ água rasa: `piso_congelado` por 3 rodadas, Reflexos, falha =
+> imobilizado 1 rodada; ❄️ lava (inclusive a da Ira, que é material): `lava_solidificada` (crosta)
+> por 3 rodadas, sem dano, aviso 1 rodada antes (`_rx_avisou_crosta`) e dano de lava normal ao
+> voltar. **Piche:** material (custo de movimento 2, como areia/lava; `custo_mov` é só metadado);
+> `frasco_piche` arremessável 3×3, 4 rodadas, sem dano, pelas camadas temporárias do Chamado do
+> Inverno. **Cliente:** `reacao_elemental {tipo, casas, origem}` (público, anima só casas visíveis;
+> `src/reacoesElementais.js` puro: `estilo`, `crostasAcabando`, `descreverCasa`), `terrenos_temp` no
+> `game_state` (camadas temporárias + crostas) e tooltip por material. Estado `_rx_*` é "efemero"
+> na foto; `_terrenos_inverno`/`zonas_especiais`/`materiais` já persistem. **Nova fonte:** registrar
+> as casas dentro do escopo e entrar em `FONTES_COM_REGISTRO` (teste por AST). **Nova reação:** linha
+> em `REACOES` + método `_rx_*`. **Fora de escopo:** água profunda/redemoinho, fogo+gelo, fogo+gás,
+> destaque de mira, tutorial; o frasco de óleo não muda. Testes: `tools/test_terrain_reactions.py`
+> e `tools/test_reacoes_cliente.js`. Spec: `docs/superpowers/specs/2026-10-13-reacoes-elementais-design.md`.
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota

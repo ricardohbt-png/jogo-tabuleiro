@@ -46,7 +46,7 @@ Resolução: casas testadas em ordem fixa (determinística); reações que se es
 
 ## 2. Piche
 
-- Material `piche` em `MATERIAIS`: piso escuro, `terreno="piche"`, `custo_mov=1` (mesmo mecanismo do pântano). Aparece no editor pelo catálogo exportado (`export_catalog.py`); nome PT/EN via `gerar_vocabulario.py`.
+- Material `piche` em `MATERIAIS`: piso escuro, `terreno="piche"`, `custo_mov=1` como metadado; o custo real de movimento é **2**, como areia e lava (mesmo mecanismo delas). Aparece no editor pelo catálogo exportado (`export_catalog.py`); nome PT/EN via `gerar_vocabulario.py`.
 - **Frasco de piche:** arremessável, mira em casa, área 3×3, sem dano e sem teste; pinta piche temporário por **4 rodadas** pelo registro de camadas do Chamado do Inverno (`_aplicar_camadas_terreno_inverno` / `_expirar_terrenos_inverno`), que restaura o material original. Vai ao mercador e ao catálogo de arremessáveis. O frasco de óleo não muda.
 - **Fogo no piche:** qualquer fonte de fogo numa casa de piche inflama toda a mancha conectada (teto **40 casas**) e cria uma zona nova `chamas_piche` com a **lista de casas** (a zona da Bola de Fogo é só quadrada), duração 3 rodadas; só no piso (voadores não são atingidos). Ao acabar, o piche é consumido: mancha temporária volta ao material original; piche autoral vira `pedra_negra`.
 - **Gancho:** criatura com `em_chamas_rodadas > 0` que termina um passo em casa de piche inflama a mancha (ponto onde o movimento já aplica lava/fogueira).
@@ -62,7 +62,7 @@ Resolução: casas testadas em ordem fixa (determinística); reações que se es
 
 Regras comuns: poça = região de água rasa conectada, teto **24 casas**, raio 6 do impacto; quando a crosta acaba, quem estiver sobre ela sofre o dano normal de lava no início do próximo turno; fontes sem dano rolado (armadilha, monstro) usam o dano efetivamente aplicado ao alvo principal como base do choque.
 
-**Risco a conferir antes do plano:** como a Ira da Rocha Ardente representa sua lava (zona vs material). Se não for material, a v1 apaga só a lava pintada no editor.
+**Resolvido:** a lava da Ira da Rocha Ardente é material, então a crosta vale para ela e para a lava pintada no editor.
 
 ## 4. Pontos de ligação das fontes
 
@@ -71,7 +71,7 @@ Três camadas:
 2. **Fontes de casa**, sem criatura: Bola de Fogo, Prisão de Chamas, Ira da Rocha, Tempestade, Relâmpago, Raio Congelante, `_throw_item_area`, armadilha incendiária — chamada explícita com as casas da área.
 3. **Ataques fora dos funis:** armas com dano elemental (`extra_damages`, flecha incendiária) e ataques de monstros com tipo elemental (raio do Elemental Elétrico).
 
-Travas: **um evento, uma reação** (id de evento = `animation_id`/`attack_id`, senão contador; o motor ignora a mesma reação na mesma região para o mesmo evento); dano de reação passa pelo funil com `origem.tipo = "reacao"` e **não reentra** no motor (cadeias só pelas regras explícitas, até profundidade 2).
+Travas: **uma ação, uma reação** — o escopo é por ação (`evento_elemental`, aninhado reaproveita o aberto) e não por id de evento; as fontes registram casas e o escopo resolve cada linha da tabela uma vez sobre a união delas. Os funis de dano só registram na chamada original (`not _protetor_bypass`; `_dano_em_alvo` exige dano > 0), então a repartição do Protetor não repete o choque. Fonte sem escopo aberto resolve na hora (**ignição imediata**); dano de reação passa pelo funil com `origem.tipo = "reacao"` e **não reentra** no motor (cadeias só pelas regras explícitas, até profundidade 2).
 
 ## 5. Feedback ao jogador (cliente)
 
@@ -91,3 +91,12 @@ Editor: `piche` na paleta de materiais, salva e relê sem perda; `test_editor_id
 Prova no navegador em servidor isolado, **depois da última correção**: raio em poça, fogo em piche com e sem criatura, frio em água e em lava; medir FPS.
 
 Critério de pronto: testes novos verdes, `dividas.py`/`test_interface` sem piora, `test_protocolo_robustez` verde, prova sem erros no console e tabela de fontes completa.
+
+## Notas de implementação (2026-10-13)
+
+- Piche custa **2** de movimento (areia/lava); `custo_mov` é só metadado do material.
+- A lava da Ira é material: a crosta a cobre.
+- Escopo por ação (`evento_elemental`), dedupe pela união das casas; funil só na chamada original; ignição imediata quando não há escopo aberto.
+- Payload `terrenos_temp` no `game_state` (camadas temporárias de terreno e crostas, com rodada de expiração) alimenta o aviso da crosta e o tooltip; a mensagem pública `reacao_elemental` anima só casas visíveis.
+- Regra do Protetor: a repartição de dano do Protetor passa por `_protetor_bypass` e não registra nova reação.
+- Fontes com registro explícito conferidas por AST em `terrain_reactions.FONTES_COM_REGISTRO`; a Tempestade de Ciclones depende do funil (poça vazia não conduz).
