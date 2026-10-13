@@ -20010,6 +20010,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
                             furia_attacks=None):
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            return await self.handle_attack_impl(pid, target_id, buffs, target_pos, furia_attacks)
+
+    async def handle_attack_impl(self, pid, target_id, buffs=None, target_pos=None,
+                                 furia_attacks=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -20545,6 +20550,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self._registrar_dano_desbloqueio_metamorfose(p, target, xdmg)
                     await self._harpia_reagir_dano(target, xdmg, pid)
                     await self.gm_say(T("narracao.projetil_incendiario_de_dano_de_fogo", xdmg=xdmg))
+                    for _xt in (_ammo_extra_types or []):
+                        await self._rx_registrar(_NORM_ELEMENTO.get(str(_xt).lower(), _xt), self._rx_tiles_da(target), dano=xdmg, atingidos={target.get("id")})
                 # ── Dano elemental adicional da arma (Editor de Itens) ──
                 for _xd in (p.get("weapon") or {}).get("extra_damages", []) or []:
                     if not isinstance(_xd, dict) or target.get("hp", 1) <= 0:
@@ -20560,6 +20567,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     _elem_pt = {DMG_FIRE: "fogo", DMG_COLD: "frio", DMG_LIGHTNING: "relâmpago",
                                 DMG_ACID: "ácido", DMG_HOLY: "sagrado"}.get(_xd.get("type"), _xd.get("type"))
                     await self.gm_say(T("narracao.dano_elemental_de", _xr=_xr, _elem_pt=_elem_pt))
+                    await self._rx_registrar(_NORM_ELEMENTO.get(str(_xd.get("type")).lower(), _xd.get("type")), self._rx_tiles_da(target), dano=_xr, atingidos={target.get("id")})
                 # Corpo a corpo: gastar o Ãºnico marcador em qualquer acerto,
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
@@ -32821,6 +32829,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return alvos
 
     async def _elemental_raio_atacar(self, a, linha, alvos, pid=None):
+        async with self.evento_elemental({"tipo": "monstro", "id": a.get("id"), "caster_id": None}):
+            await self._rx_registrar(DMG_LIGHTNING, [tuple(c) for c in linha])
+            return await self._elemental_raio_atacar_impl(a, linha, alvos, pid)
+
+    async def _elemental_raio_atacar_impl(self, a, linha, alvos, pid=None):
         origem = list(a.get("pos", [0, 0]))
         self._face_toward(a, linha[-1])
         self._elemental_raio_anim_seq = getattr(self, "_elemental_raio_anim_seq", 0) + 1
@@ -32855,6 +32868,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                       "label": T("dado.linha"), "damage_type": DMG_LIGHTNING})
                 extra["hp"] = max(0, extra["hp"] - d2)
                 await self.gm_say(T("narracao.a_linha_eletrica_do_atinge_de_dano", a_nome=nome_criatura(a), extra=nome_criatura(extra), d2=d2))
+                await self._rx_registrar(DMG_LIGHTNING, self._rx_tiles_da(extra), dano=d2, atingidos={extra.get("id")})
                 if extra["hp"] <= 0:
                     await self._monster_dies(extra, pid)
 
@@ -35864,12 +35878,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.send_to(pid, payload)
 
     async def _disparar_armadilha(self, alvo, arm):
+        async with self.evento_elemental({"tipo": "armadilha", "id": arm.get("tipo"), "caster_id": None}):
+            return await self._disparar_armadilha_impl(alvo, arm)
+
+    async def _disparar_armadilha_impl(self, alvo, arm):
         """Dispara a armadilha sobre `alvo` (jogador OU monstro)."""
         if self._voo_imune_terreno(alvo):
             return
         tipo = ARMADILHAS.get(arm["tipo"])
         if not tipo or arm.get("desativada") or arm.get("esgotada"):
             return
+        if arm["tipo"] == "armadilha_incendiaria":
+            await self._rx_registrar(DMG_FIRE, [tuple(arm.get("pos") or alvo.get("pos"))])
+        elif tipo.get("special") == "raio_congelante":
+            await self._rx_registrar(DMG_COLD, [tuple(arm.get("pos") or alvo.get("pos"))])
         nome = tipo["nome"]
         alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
         await self.gm_say(T("narracao.ativou", alvo_nome=nome_criatura(alvo), nome=nome_cat("armadilha", arm["tipo"], nome)))
@@ -41788,6 +41810,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._kobold_pickup_lance(m)
 
     async def _execute_one_monster_attack(self, m, atk_def, target_obj):
+        async with self.evento_elemental({"tipo": "monstro", "id": m.get("id"), "caster_id": None}):
+            return await self._execute_one_monster_attack_impl(m, atk_def, target_obj)
+
+    async def _execute_one_monster_attack_impl(self, m, atk_def, target_obj):
         """Executa um único ataque de um monstro com formato novo."""
         if m.get("rodamoinho_profundo_preso"):
             return False
@@ -42191,6 +42217,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 elif atk_def.get("on_hit"):
                     await self._aplicar_veneno(target, atk_def["on_hit"], fonte="ataque",
                                                 dificuldade=atk_def.get("poison_dc"))
+            _rx_tipos = [t for t in (atk_def.get("damage_types") or []) if t in (DMG_FIRE, DMG_COLD, DMG_LIGHTNING)]
+            if fire_component_resolved is not None and DMG_FIRE not in _rx_tipos:
+                _rx_tipos.append(DMG_FIRE)
+            for _rx_t in _rx_tipos:
+                await self._rx_registrar(_rx_t, self._rx_tiles_da(target), dano=dano_sofrido, atingidos={target.get("id")})
             if not atk_def.get("range"):
                 await self._dano_retaliacao(target, m, True, dano_sofrido)
             if not self._alvo_vivo(target_obj) and not m.get("_predador_supremo_reacao"):

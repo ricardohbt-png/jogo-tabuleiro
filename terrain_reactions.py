@@ -40,6 +40,11 @@ FONTES_COM_REGISTRO = {
     "_executar_raio_congelante": RX_COLD,
     "_executar_prisao_chamas": RX_FIRE,
     "_throw_item_area": RX_FIRE,
+    "_disparar_armadilha_impl": RX_FIRE,
+    "handle_attack_impl": RX_FIRE,
+    "_execute_one_monster_attack_impl": RX_FIRE,
+    "_elemental_raio_atacar": RX_LIGHTNING,
+    "_linha_eletrica": RX_LIGHTNING,
 }
 
 # Tabela de dados: elemento × estado da casa → efeito (nome do método).

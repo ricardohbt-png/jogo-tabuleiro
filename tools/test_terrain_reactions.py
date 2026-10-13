@@ -512,5 +512,60 @@ ana = heroi(r, "a", "Ana", "warrior", [6, 5])
 roda(r._dano_em_alvo(ana, 0, "eletricidade", "x"))
 check("dano 0 elétrico na poça não reage", not any(m.get("tipo") == "choque" for m in r.msgs))
 
+print("[9] armadilhas, armas e monstros")
+for nome in ("_disparar_armadilha", "handle_attack", "_execute_one_monster_attack", "_elemental_raio_atacar"):
+    check(f"{nome} roda dentro de um escopo elemental",
+          "evento_elemental" in (corpo(nome) or ""))
+check("armadilha incendiária registra fogo", "_rx_registrar" in (corpo("_disparar_armadilha_impl") or ""))
+
+r = sala()
+pinta(r, "piche", [(5, 5)])
+r.armadilhas = [{"id": "t1", "tipo": "armadilha_incendiaria", "pos": [5, 5], "ativada": False,
+                 "visivel": True, "aliada": False, "criador": None}]
+pisa = heroi(r, "a", "Ana", "warrior", [5, 5])
+roda(r._disparar_armadilha(pisa, r.armadilhas[0]))
+check("armadilha incendiária sobre piche incendeia",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+_rd = S.random.randint
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(4, 10)])
+ele = monstro(r, "elemental_eletrico", [4, 5])
+alvo = heroi(r, "a", "Ana", "warrior", [5, 5])
+vitima = heroi(r, "b", "Bia", "warrior", [9, 5])
+S.random.randint = lambda a, b: b          # acerto garantido
+try:
+    roda(r._execute_one_monster_attack(ele, ele["attacks"][0], {"kind": "player", "obj": alvo}))
+finally:
+    S.random.randint = _rd
+check("ataque elétrico de monstro dentro d'água choca quem está na poça",
+      vitima["hp"] < vitima["max_hp"] or any(m.get("tipo") == "choque" for m in r.msgs))
+
+r = sala()
+pinta(r, "agua", [(x, 5) for x in range(4, 12)])
+ele = monstro(r, "elemental_eletrico", [3, 5])
+vitima = heroi(r, "b", "Bia", "warrior", [11, 5])
+roda(r._elemental_raio_atacar(ele, [(4, 5), (5, 5), (6, 5)], []))
+check("raio do Elemental Elétrico anuncia choque na poça da linha",
+      any(m.get("tipo") == "choque" for m in r.msgs))
+
+r = sala()
+pinta(r, "piche", [(5, 5)])
+ana = heroi(r, "a", "Ana", "warrior", [4, 5])
+alvo_m = monstro(r, "goblin", [5, 5])
+alvo_m["hp"] = alvo_m["max_hp"] = 500
+alvo_m["ac"] = 1
+ana["weapon"] = dict(ana.get("weapon") or {}, extra_damages=[{"die": "1d4", "type": "fire"}])
+r._intro_masmorra_bloqueada = lambda: False
+r._is_turn = lambda pid: True
+S.random.randint = lambda a, b: b
+try:
+    roda(r.handle_attack("a", alvo_m["id"]))
+finally:
+    S.random.randint = _rd
+check("arma com dano extra de fogo sobre piche incendeia",
+      any(z.get("tipo") == "chamas_piche" for z in r.zonas_especiais))
+
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)
