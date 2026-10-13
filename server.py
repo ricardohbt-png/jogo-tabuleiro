@@ -14183,6 +14183,44 @@ class GameRoom(TutorialTraining, MonsterIntent):
             "chave": str(data.get("chave") or "")[:120],
         })
 
+    INTENT_INTERVALO_MIN = 0.15   # s entre respostas ao mesmo jogador
+
+    def _intent_assinatura(self):
+        """Muda quando algo que altera a previsão muda (posições, vida, vez)."""
+        return (
+            self.round_num, self.initiative_index,
+            tuple(sorted((str(pid), tuple(p.get("pos") or ()), bool(p.get("alive")),
+                          p.get("hp", 0))
+                         for pid, p in self.players.items())),
+            tuple(sorted((str(mid), tuple(m.get("pos") or ()), m.get("hp", 0),
+                          bool(m.get("provocado")), bool(m.get("alertado")),
+                          str(m.get("control_mode")))
+                         for mid, m in self.monsters.items())),
+            tuple(sorted((str(a.get("id")), tuple(a.get("pos") or ()),
+                          a.get("vida_atual", 0))
+                         for a in self._all_animados())),
+        )
+
+    async def handle_prever_intencoes(self, pid, data=None):
+        """Previsão de intenção dos monstros (só leitura). Responde só a quem
+        pediu (`intencoes_monstros`). Ver monster_intent.py."""
+        p = self.players.get(pid)
+        if self.phase != "playing" or not p or not self._ativo(p):
+            return
+        agora = time.monotonic()
+        if agora - self._intent_ultimo.get(pid, 0.0) < self.INTENT_INTERVALO_MIN:
+            return
+        self._intent_ultimo[pid] = agora
+        assinatura = self._intent_assinatura()
+        guardado = self._intent_cache.get(pid)
+        if guardado and guardado[0] == assinatura:
+            itens = guardado[1]
+        else:
+            itens = self._prever_intencoes(pid)
+            self._intent_cache[pid] = (assinatura, itens)
+        await self.send_to(pid, {"type": "intencoes_monstros",
+                                 "rodada": self.round_num, "itens": itens})
+
     def _resolver_dano_ataque_basico(self, p, target, crit, roll, forca_critico=False,
                                        surv_mod=0, cancao_dano=0, gl_dano=0, bonus_extra=0,
                                        target_pos=None, weapon_override=None, attacker_id=None):
@@ -49888,6 +49926,9 @@ async def handler(ws):
                 elif t == "attack":
                     if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
                                                        msg.get("target_pos"), msg.get("furia_attacks"))
+
+                elif t == "prever_intencoes":
+                    if room: await room.handle_prever_intencoes(pid)
 
                 elif t == "prever_ataque":
                     if room: await room.handle_prever_ataque(

@@ -162,5 +162,51 @@ check("exceção -> []", r._prever_intencoes("a") == [])
 r._get_monster_primary_target = orig
 check("foco restaurado mesmo após exceção", r._monster_ai_focus_target_id == "marca")
 
+print("[6] handler: resposta privada, taxa e cache")
+import time as _time
+r = sala()
+a = heroi(r, "a", "Ana", "warrior", [5, 5])
+m = monstro(r, "orc", [8, 5])
+monta(r)
+enviados = []
+async def captura(pid, msg, *a_, **k_):
+    enviados.append((pid, msg))
+r.send_to = captura
+asyncio.run(r.handle_prever_intencoes("a"))
+check("uma resposta ao solicitante", len(enviados) == 1 and enviados[0][0] == "a")
+msg = enviados[0][1] if enviados else {}
+check("tipo e rodada", msg.get("type") == "intencoes_monstros" and msg.get("rodada") == 1)
+check("itens com o orc", len(msg.get("itens", [])) == 1)
+enviados.clear()
+asyncio.run(r.handle_prever_intencoes("a"))
+check("segundo pedido imediato: limitado pela taxa", enviados == [])
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+asyncio.run(r.handle_prever_intencoes("a"))
+check("depois do intervalo responde de novo", len(enviados) == 1)
+chamadas = []
+orig = r._prever_intencoes
+def conta(pid):
+    chamadas.append(pid)
+    return orig(pid)
+r._prever_intencoes = conta
+enviados.clear()
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+asyncio.run(r.handle_prever_intencoes("a"))
+check("mesma configuração: usa o cache (não recalcula)", chamadas == [] and len(enviados) == 1)
+m["pos"] = [9, 5]
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+asyncio.run(r.handle_prever_intencoes("a"))
+check("monstro andou: cache invalidado e recalcula", chamadas == ["a"])
+enviados.clear()
+a["alive"] = False
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+asyncio.run(r.handle_prever_intencoes("a"))
+check("herói morto: sem resposta", enviados == [])
+a["alive"] = True
+r.phase = "city"
+r._intent_ultimo["a"] = _time.monotonic() - 1.0
+asyncio.run(r.handle_prever_intencoes("a"))
+check("fora de 'playing': sem resposta", enviados == [])
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)
