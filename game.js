@@ -45749,6 +45749,7 @@ function dispose3D(){
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
+  _intencoesDispose3D();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
     _disposeDuetoFantasmaShadow3D(fx.group);
@@ -46511,6 +46512,7 @@ function startLoop3D(){
       }
     }
     _guiaAtualizar3D();
+    _intencoesAtualizar3D();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -55903,6 +55905,98 @@ function _guiaDesenhar2D(ctx, state, visionSet){
   ctx.restore();
   _desenharSetaVez2D(ctx, cx, alvo.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
   _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
+}
+
+// â”€â”€ IntenÃ§Ã£o dos monstros no 3D â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Pool fixo de setas (linha curva + cone). Nunca cria nem destrÃ³i malhas por
+// quadro: sÃ³ reposiciona e mostra/esconde. Mesmo orÃ§amento do halo do tutorial.
+const INTENCOES_POOL_MAX = 16;
+const _intFim = { v: null }, _intAnt = { v: null }, _intEixoY = { v: null }, _intDir = { v: null };
+function _intencoesPool3D(){
+  if(g3.intencoesPool) return g3.intencoesPool;
+  const T = g3.T;
+  const slots = [];
+  const grupo = new T.Group();
+  for(let i = 0; i < INTENCOES_POOL_MAX; i++){
+    const mat = new T.LineBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .9, depthTest: false, depthWrite: false, toneMapped: false });
+    const geo = new T.BufferGeometry().setFromPoints(Array.from({length: 14}, () => new T.Vector3()));
+    const linha = new T.Line(geo, mat); linha.renderOrder = 82; linha.raycast = () => {}; linha.frustumCulled = false;
+    const cone = new T.Mesh(new T.ConeGeometry(0.14, 0.34, 10),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .95, depthTest: false, depthWrite: false, toneMapped: false }));
+    cone.renderOrder = 83; cone.raycast = () => {};
+    const casa = new T.Mesh(new T.RingGeometry(0.2, 0.28, 4),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .6, side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false }));
+    casa.rotation.x = -Math.PI / 2; casa.renderOrder = 81; casa.raycast = () => {};
+    linha.visible = cone.visible = casa.visible = false;
+    grupo.add(linha); grupo.add(cone); grupo.add(casa);
+    slots.push({ linha, cone, casa });
+  }
+  _intFim.v = new T.Vector3(); _intAnt.v = new T.Vector3(); _intEixoY.v = new T.Vector3(0, 1, 0); _intDir.v = new T.Vector3();
+  g3.scene.add(grupo);
+  g3.intencoesPool = { grupo, slots };
+  return g3.intencoesPool;
+}
+function _intencoesEsconder3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  for(const s of g3.intencoesPool.slots) s.linha.visible = s.cone.visible = s.casa.visible = false;
+}
+function _intencoesDispose3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  const { grupo, slots } = g3.intencoesPool;
+  for(const s of slots){
+    s.linha.geometry.dispose(); s.linha.material.dispose();
+    s.cone.geometry.dispose(); s.cone.material.dispose();
+    s.casa.geometry.dispose(); s.casa.material.dispose();
+  }
+  g3.scene.remove(grupo);
+  g3.intencoesPool = null;
+}
+function _intencoesAtualizar3D(){
+  if(!g3) return;
+  const st = GS.gameState;
+  const vis = st && _guiaVisao3D(st);
+  const itens = st ? _intencoesVisiveis(st, vis).slice(0, INTENCOES_POOL_MAX) : [];
+  if(!itens.length){ _intencoesEsconder3D(); return; }
+  const pool = _intencoesPool3D();
+  const T = g3.T;
+  const mons = new Map((st.monsters || []).map(m => [String(m.id), m]));
+  itens.forEach((it, i) => {
+    const s = pool.slots[i];
+    const m = mons.get(String(it.monstro_id));
+    if(!m || !m.pos || !it.alvo_pos) { s.linha.visible = s.cone.visible = s.casa.visible = false; return; }
+    const est = IntencaoMonstros.estilo(it);
+    const mesh = getMonsterMesh(m.id);
+    const x0 = mesh ? mesh.position.x : m.pos[0], z0 = mesh ? mesh.position.z : m.pos[1];
+    const y0 = topoSuperficie3D(st, m.pos[0], m.pos[1]) + 0.9;
+    const x1 = it.alvo_pos[0], z1 = it.alvo_pos[1];
+    const y1 = topoSuperficie3D(st, x1, z1) + 0.9;
+    const alt = 0.5 + Math.hypot(x1 - x0, z1 - z0) * 0.12;
+    const pos = s.linha.geometry.attributes.position;
+    for(let k = 0; k < 14; k++){
+      const u = k / 13;
+      pos.setXYZ(k, x0 + (x1 - x0) * u, y0 + (y1 - y0) * u + Math.sin(Math.PI * u) * alt, z0 + (z1 - z0) * u);
+    }
+    pos.needsUpdate = true;
+    s.linha.material.color.set(est.cor);
+    s.linha.material.opacity = it.forte ? 1 : est.opacidade;
+    s.linha.visible = true;
+    _intFim.v.set(pos.getX(13), pos.getY(13), pos.getZ(13));
+    _intAnt.v.set(pos.getX(12), pos.getY(12), pos.getZ(12));
+    s.cone.position.copy(_intFim.v);
+    _intDir.v.copy(_intFim.v).sub(_intAnt.v).normalize();
+    s.cone.quaternion.setFromUnitVectors(_intEixoY.v, _intDir.v);
+    s.cone.scale.setScalar(it.forte ? 1.35 : 1);
+    s.cone.material.color.set(est.cor);
+    s.cone.visible = true;
+    if(it.alcanca && it.casa_ataque){
+      s.casa.position.set(it.casa_ataque[0], topoSuperficie3D(st, it.casa_ataque[0], it.casa_ataque[1]) + 0.06, it.casa_ataque[1]);
+      s.casa.material.color.set(est.cor);
+      s.casa.visible = true;
+    } else s.casa.visible = false;
+  });
+  for(let i = itens.length; i < pool.slots.length; i++){
+    const s = pool.slots[i]; s.linha.visible = s.cone.visible = s.casa.visible = false;
+  }
 }
 
 // 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),

@@ -74,5 +74,10 @@ check("desenho 2D protege save/restore e ignora posição inválida",
       /try \{\s*for\(const it of itens\)/.test(jogo) && jogo.includes("finally { ctx.restore(); }") && jogo.includes("!par(it.alvo_pos)"));
 check("destaque do tooltip exige elemento visível", jogo.includes("el.getClientRects().length > 0"));
 
+console.log("[8] fiação do game.js (3D)");
+check("3D: função de atualização chamada junto do guia", /_guiaAtualizar3D\(\);[\s\S]{0,200}_intencoesAtualizar3D\(\)|_intencoesAtualizar3D\(\);[\s\S]{0,200}_guiaAtualizar3D\(\)/.test(jogo));
+check("3D: pool reutilizável (sem criar malha por quadro)", jogo.includes("g3.intencoesPool"));
+check("3D: dispose limpa o pool", /intencoesPool[\s\S]{0,400}dispose/.test(jogo));
+
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);
