@@ -1401,6 +1401,15 @@ const GS = (() => {
   }
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
 
+  // Intenção dos monstros: o servidor responde a prever_intencoes só a quem
+  // pediu. A resposta vale para a rodada em que foi pedida; chegando velha, é
+  // descartada (ver IntencaoMonstros.descartar, aplicado no game.js).
+  let _intencoes = { rodada: null, itens: [] };
+  function intencoes() {
+    return (gameState && _intencoes.rodada === gameState.round) ? _intencoes.itens : [];
+  }
+  function pedirIntencoes() { return send({ type: 'prever_intencoes' }); }
+
   // Catálogo da Metamorfose: não viaja mais em todo game_state (era ~80% do
   // pacote). A janela de formas pede ao abrir; o servidor responde só a quem
   // pediu. Guardamos a última resposta para desenhar sem esperar a rede.
@@ -1796,6 +1805,7 @@ const GS = (() => {
         gameState = null;
         pendingMove = null;
         _resetTurnActivity();
+        _intencoes = { rodada: null, itens: [] };
         _emit('enterDungeon');
         break;
 
@@ -1921,6 +1931,13 @@ const GS = (() => {
           delete _previsoesPedidas[msg.chave];
         }
         _emit('previsaoAtaque', msg);
+        break;
+
+      case 'intencoes_monstros':
+        if (gameState && msg.rodada === gameState.round) {
+          _intencoes = { rodada: msg.rodada, itens: Array.isArray(msg.itens) ? msg.itens : [] };
+        }
+        _emit('intencoesMonstros', _intencoes);
         break;
 
       case 'game_over':
@@ -3982,6 +3999,8 @@ const GS = (() => {
     pedirMetamorfoseCatalog,
     get metamorfoseCatalog() { return metamorfoseCatalog; },
     pedirPrevisaoAtaque,
+    pedirIntencoes,
+    intencoes,
     danoMedioPrevisao,
     getWarriorFuriaAttacks,
     setWarriorFuriaAttacks,
