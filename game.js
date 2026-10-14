@@ -5018,7 +5018,8 @@ function gerarConteudoTooltip(item){
     linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),t('ui.item.desc.alcance_lanca')));
   if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯',t('ui.tooltip.arremesso'),t('ui.tooltip.quad_diagonais',{n:item.alcanceArremesso})));
   if(item.arremessavel && item.alvo === 'area' && item.areaRaio != null)
-    linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.area'),`raio ${item.areaRaio}`));
+    linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.area'), item.areaRaio === 0
+      ? t('ui.tooltip.area_uma_casa') : `raio ${item.areaRaio}`));
   if(item.saveTipo && item.saveCD != null)
     linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),`${String(item.saveTipo).replace(/^./, c => c.toUpperCase())} CD ${item.saveCD}`));
   if(item.arremesso || item.arremessavel) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
@@ -8197,6 +8198,134 @@ function _setVisaoCompPref(on){
   if(st) renderMap(st);
 }
 
+// ── Intenção dos monstros ────────────────────────────────────────────────────
+// O servidor prevê (prever_intencoes); aqui só se desenha. Modos: off | grupo
+// (padrão: só quem alcança alguém) | todas. Preferência por navegador.
+const _INTENCAO_KEY = 'lfh_intencoes';
+let _intencaoModo = (() => {
+  try { return IntencaoMonstros.lerModo(localStorage.getItem(_INTENCAO_KEY)); }
+  catch(e){ return 'grupo'; }
+})();
+function _setIntencaoModo(modo){
+  _intencaoModo = IntencaoMonstros.lerModo(modo);
+  try { localStorage.setItem(_INTENCAO_KEY, _intencaoModo); } catch(e){}
+  const _selInt = document.getElementById('cfg-intencao-sel');
+  if(_selInt) _selInt.value = _intencaoModo;
+  _intencoesPedirAgora(true);
+  if(GS.gameState) { if(mode3D && g3) renderMap3D(GS.gameState); else renderMap(GS.gameState); }
+}
+let _intencaoUltimoPedido = 0;
+let _intencaoPedidoAtrasado = null;   // pedido "de cauda" do agrupamento de 250 ms
+function _intencoesPodePedir(){
+  const st = GS.gameState;
+  if(!st || st.phase !== 'playing' || GS.isMaster() || st.test_mode) return false;
+  if(_intencaoModo === 'off') return false;
+  return !!GS.isMyTurn;   // propriedade booleana, não função
+}
+function _intencoesPedirAgora(forcar){
+  if(!_intencoesPodePedir()){
+    if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
+    return;
+  }
+  const agora = performance.now();
+  const espera = 250 - (agora - _intencaoUltimoPedido);
+  if(!forcar && espera > 0){
+    // Agrupa em vez de descartar: o último estado da rajada ganha um pedido.
+    if(!_intencaoPedidoAtrasado){
+      _intencaoPedidoAtrasado = setTimeout(() => {
+        _intencaoPedidoAtrasado = null;
+        _intencoesPedirAgora(true);
+      }, espera);
+    }
+    return;
+  }
+  if(_intencaoPedidoAtrasado){ clearTimeout(_intencaoPedidoAtrasado); _intencaoPedidoAtrasado = null; }
+  _intencaoUltimoPedido = agora;
+  GS.pedirIntencoes();
+}
+// Monstro cujo tooltip está aberto (o #tip-previsao existe enquanto ele estiver).
+function _intencoesDestaqueId(){
+  const el = document.getElementById('tip-previsao');
+  // O tooltip é só escondido (display:none), não esvaziado: exige estar visível.
+  return (el && el.isConnected && el.getClientRects().length > 0 && _tipPrevisaoAlvo) ? _tipPrevisaoAlvo.id : null;
+}
+function _intencoesVisiveis(state, visionSet){
+  if(!state || _intencaoModo === 'off' && _intencoesDestaqueId() == null) return [];
+  // 2ª barreira (a 1ª é a `vez` em GS.intencoes()): fora da minha vez, nada.
+  if(!GS.isMyTurn) return [];
+  const bruto = GS.intencoes ? GS.intencoes() : [];
+  const sel = IntencaoMonstros.selecionar(bruto, { modo: _intencaoModo, destaqueId: _intencoesDestaqueId() });
+  const pode = (x, y) => !visionSet || visionSet.has(`${x},${y}`);
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  return sel.filter(it => {
+    const m = mons.get(String(it.monstro_id));
+    return m && m.hp > 0 && pode(m.pos[0], m.pos[1]);
+  });
+}
+function _intencoesDesenhar2D(ctx, state, visionSet){
+  const itens = _intencoesVisiveis(state, visionSet);
+  if(!itens.length) return;
+  const mons = new Map((state.monsters || []).map(m => [String(m.id), m]));
+  const contagem = IntencaoMonstros.contar(itens);
+  const vistoAlvo = {};
+  const par = p => Array.isArray(p) && p.length === 2 && p.every(Number.isFinite);
+  ctx.save();
+  try {
+  for(const it of itens){
+    const m = mons.get(String(it.monstro_id));
+    if(!m || !par(m.pos) || !par(it.alvo_pos)) continue;
+    const est = IntencaoMonstros.estilo(it);
+    const x0 = m.pos[0] * CELL + CELL / 2, y0 = m.pos[1] * CELL + CELL / 2;
+    const x1 = it.alvo_pos[0] * CELL + CELL / 2, y1 = it.alvo_pos[1] * CELL + CELL / 2;
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 - Math.min(CELL * 0.6, Math.hypot(x1 - x0, y1 - y0) * 0.18);
+    ctx.globalAlpha = it.forte ? 1 : est.opacidade;
+    ctx.strokeStyle = est.cor; ctx.fillStyle = est.cor;
+    ctx.lineWidth = it.forte ? 4 : 2;
+    ctx.setLineDash(est.tracejado ? [CELL * 0.14, CELL * 0.12] : []);
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo(mx, my, x1, y1); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang = Math.atan2(y1 - my, x1 - mx), ponta = CELL * (it.forte ? 0.3 : 0.22);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x1 - ponta * Math.cos(ang - 0.45), y1 - ponta * Math.sin(ang - 0.45));
+    ctx.lineTo(x1 - ponta * Math.cos(ang + 0.45), y1 - ponta * Math.sin(ang + 0.45));
+    ctx.closePath(); ctx.fill();
+    if(it.alcanca && it.casa_ataque){
+      const cx = it.casa_ataque[0] * CELL + CELL / 2, cy = it.casa_ataque[1] * CELL + CELL / 2;
+      ctx.globalAlpha = 0.55 * (it.forte ? 1 : est.opacidade);
+      ctx.strokeRect(cx - CELL * 0.3, cy - CELL * 0.3, CELL * 0.6, CELL * 0.6);
+    }
+    vistoAlvo[it.alvo_id] = true;
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(CELL * 0.34)}px sans-serif`; ctx.textAlign = 'center';
+  for(const id of Object.keys(vistoAlvo)){
+    if(contagem[id] < 2) continue;
+    const it = itens.find(i => String(i.alvo_id) === id);
+    ctx.fillText('×' + contagem[id], it.alvo_pos[0] * CELL + CELL * 0.85, it.alvo_pos[1] * CELL + CELL * 0.25);
+  }
+  } finally { ctx.restore(); }
+  _agendarChamas2D();   // mantém o redesenho leve (~12 quadros/s) enquanto houver setas
+}
+function _intencaoLinhaTooltip(monster){
+  if(_intencaoModo === 'off' || !GS.isMyTurn) return '';
+  const it = (GS.intencoes ? GS.intencoes() : []).find(i => String(i.monstro_id) === String(monster?.id));
+  if(!it) return '';
+  const alvo = (GS.gameState?.players || []).find(p => p.id === it.alvo_id);
+  const nome = alvo ? _esc(alvo.name) : t('ui.intencao.um_aliado');
+  const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
+              : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
+  const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
+  return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
+}
+GS.on('intencoesMonstros', msg => {
+  if(IntencaoMonstros.descartar(msg, GS.gameState)) return;   // outra rodada ou outra vez
+  const st = GS.gameState;
+  if(st) { if(mode3D && g3) renderMap3D(st); else renderMap(st); }
+});
+// O pedido automático (início da vez / depois de mover) mora no único
+// GS.on('gameState') do arquivo; um 2º registro substituiria o 1º.
+
 // ── Sombra dos objetos (penumbra) ────────────────────────────────────────────
 // Casas que o seu herói veria se um objeto (estante, pilar, entulho…) não
 // tapasse a linha de visão. Sem ela, "atrás da estante" era o mesmo preto da
@@ -8231,6 +8360,9 @@ function _coberturaTooltipHTML(me, alvo, tx, ty){
 }
 
 function _sombraTooltipHTML(tx, ty){
+  return _sombraTooltipBase(tx, ty) || _reacaoCasaTooltipHTML(tx, ty);
+}
+function _sombraTooltipBase(tx, ty){
   const st = GS.gameState;
   const s = _sombraObjetos(st).get(`${tx},${ty}`);
   if(!s) return null;
@@ -12421,6 +12553,8 @@ function renderMap(state){
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
+  _intencoesDesenhar2D(ctx, state, visionSet);
+  _reacoesDesenhar2D(ctx, state, visionSet);
 }
 
 // ── Mortes visuais adiadas ──────────────────────────────────────────────────
@@ -12917,6 +13051,39 @@ function paintSwamp(ctx, ox, oy, size, r){
   }
 }
 
+function paintPitch(ctx, ox, oy, size, r){
+  ctx.fillStyle='#1b1410'; ctx.fillRect(ox,oy,size,size);
+  // Manchas brilhantes de betume e poucas bolhas pequenas.
+  for(let n=0;n<Math.round(size*.1);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.04+r()*.12), rh=size*(.02+r()*.06);
+    ctx.fillStyle='rgba(255,255,255,.10)';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  for(let n=0;n<6;n++){
+    const px=ox+r()*size, py=oy+r()*size, rr=size*(.012+r()*.02);
+    ctx.fillStyle='rgba(60,46,36,.7)'; ctx.beginPath(); ctx.arc(px,py,rr,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=Math.max(1,size/90);
+    ctx.beginPath(); ctx.arc(px,py,rr,0,Math.PI*2); ctx.stroke();
+  }
+}
+
+function paintCrust(ctx, ox, oy, size, r){
+  ctx.fillStyle='#3a2a26'; ctx.fillRect(ox,oy,size,size);
+  // Placas irregulares de rocha escura com fissuras de magma.
+  for(let n=0;n<Math.round(size*.1);n++){
+    const px=ox+r()*size, py=oy+r()*size, rw=size*(.05+r()*.14), rh=size*(.03+r()*.09);
+    ctx.fillStyle='#2a1f1c';
+    ctx.beginPath(); ctx.ellipse(px,py,rw,rh,r()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle='rgba(214,59,19,.55)'; ctx.lineWidth=Math.max(1,size/70);
+  for(let n=0;n<5;n++){
+    let px=ox+r()*size, py=oy+r()*size;
+    ctx.beginPath(); ctx.moveTo(px,py);
+    for(let k=0;k<3;k++){ px+=(r()-.5)*size*.3; py+=(r()-.5)*size*.3; ctx.lineTo(px,py); }
+    ctx.stroke();
+  }
+}
+
 function paintWhirlpool(ctx, ox, oy, size, r, deep=false){
   // Base azul contínua igual à água, com espirais concêntricas turbulentas.
   // A textura é estática no tile, mas a rotação/ondulação é atualizada no
@@ -13222,6 +13389,8 @@ const MAT_PALETTE_2D = {
   planicie_nevada: { base: [232, 239, 239], accent: 'snowPlain' },
   lava:        { base: [214, 59, 19], accent: 'lava' },
   pantano:     { base: [53, 78, 49], accent: 'swamp' },
+  piche:       { base: [27, 20, 16], accent: 'pitch' },
+  lava_solidificada: { base: [58, 42, 38], accent: 'crust' },
   pedra_negra: { base: [20, 19, 24],  accent: 'stone' },
   madeira_escura: { base: [59, 32, 15], accent: 'woodFloor' },
   entulho:     { base: [70, 66, 58],  accent: 'rubble' },
@@ -13503,6 +13672,12 @@ function drawFloor3D(ctx, x, y, isReachable, isAttackable, isWeaponPreview, matI
   }
   else if(pal.accent==='swamp'){
     paintSwamp(ctx, X, Y, CELL, _rng((x*67^y*131^23)>>>0));
+  }
+  else if(pal.accent==='pitch'){
+    paintPitch(ctx, X, Y, CELL, _rng((x*71^y*137^29)>>>0));
+  }
+  else if(pal.accent==='crust'){
+    paintCrust(ctx, X, Y, CELL, _rng((x*73^y*139^31)>>>0));
   }
   else if(pal.accent==='whirlpool' || pal.accent==='deepWhirlpool'){
     // O vortex completo é desenhado uma única vez por área contínua em
@@ -18088,7 +18263,7 @@ function _linhaPrevisaoAtaque(monster, tx, ty, myP){
   _tipPrevisaoAlvo = {id: monster.id, pos: [tx, ty]};
   const prev = GS.previsaoAtaque(monster.id, [tx, ty]);
   if(!prev) GS.pedirPrevisaoAtaque(monster.id, [tx, ty]);
-  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>`;
+  return `<div id="tip-previsao" style="margin-top:5px;padding-top:4px;border-top:1px solid #c8a95155;font-size:11px;">${_htmlPrevisaoAtaque(prev)}</div>` + _intencaoLinhaTooltip(monster);
 }
 GS.on('previsaoAtaque', msg => {
   const alvo = _tipPrevisaoAlvo;
@@ -22134,14 +22309,16 @@ function _iniciarMiraArremesso(item, player, sourceInfo){
   const alvoTipo = catDef.alvo || item.alvo || 'ataque_alvo';
   const alcance = catDef.alcance || item.alcance || 4;
   const isArea  = alvoTipo === 'area';
-  const areaRaio = isArea ? (catDef.areaRaio || item.area_raio || 1) : 0;
+  const areaRaio = isArea ? (catDef.areaRaio ?? item.area_raio ?? 1) : null;
   window._modoThrowItem = { id: item.id, alcance, area: areaRaio, sourceInfo };
   GS.pendingThrow = { id: item.id, alcance, alvo: alvoTipo };   // habilita o ramo de throw em resolveTileClick
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
   _addCheb(me.pos[0], me.pos[1], alcance, range);
   const _alvoTxt = isArea
-    ? t('ui.arremesso.mira_area', {raio:areaRaio, alcance})
+    ? (areaRaio === 0
+      ? t('ui.arremesso.mira_area_uma_casa', {alcance})
+      : t('ui.arremesso.mira_area', {raio:areaRaio, alcance}))
     : t('ui.arremesso.mira_alvo', {alcance});
   const validTargets = new Set();
   if (!isArea) for (const monster of GS.gameState?.monsters || []) {
@@ -22177,7 +22354,7 @@ function _clickTileThrow(tx, ty){
     _aimSetStatus(msg, '#ffb168');
     toast(msg, 'var(--gold)');
   } else {
-    _aimSetStatus(window._modoThrowItem?.area
+    _aimSetStatus(window._modoThrowItem?.area != null
       ? t('ui.arremesso.escolha_uma_casa_dentro_do_alcance_e_sem_p')
       : t('ui.arremesso.selecione_um_inimigo_vivo_dentro_do_alcanc'), '#ffb168');
   }
@@ -22461,7 +22638,7 @@ function _aimAlgumModoAtivo() {
 // O cursor saiu do tabuleiro: apaga a prévia que seguia o cursor e o marcador.
 function _aimPreviewNone() {
   if (window._modoMagia) _recomputarAreaMagia(null, null);
-  else if (window._modoThrowItem?.area) _recomputarAreaThrow(null, null);
+  else if (window._modoThrowItem?.area != null) _recomputarAreaThrow(null, null);
   else if (window._modoDirecaoInstrumento?.previewNota)
     _aimSetHighlights({range:window._modoDirecaoInstrumento.possibleArea,area:new Set()});
   if (window._modoInstrumento) { const tip = document.getElementById('tooltip'); if (tip) tip.style.display = 'none'; }
@@ -22546,7 +22723,7 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
   if (window._modoHabilidadeTeste) { _aimHoverHabilidadeTeste(tx, ty); return true; }
   if (window._modoThrowItem) {
-    if (window._modoThrowItem.area) _recomputarAreaThrow(tx, ty);
+    if (window._modoThrowItem.area != null) _recomputarAreaThrow(tx, ty);
     _aimHoverThrow(tx, ty);
     return true;
   }
@@ -22936,7 +23113,7 @@ function _semearTrajetoMagia() {
 // _recomputarAreaMagia): um quadrado Chebyshev de raio `mode.area` que segue o
 // cursor. O alcance vermelho (_spellHL.range) já foi pintado em _iniciarMiraArremesso.
 function _recomputarAreaThrow(hx, hy) {
-  const mode = window._modoThrowItem; if (!mode || !mode.area) return;
+  const mode = window._modoThrowItem; if (!mode || mode.area == null) return;
   const area = new Set();
   if (hx != null && hy != null) _addCheb(hx, hy, mode.area, area);
   window._spellHL.area   = area;
@@ -22947,7 +23124,7 @@ function _recomputarAreaThrow(hx, hy) {
 // Apenas dados (sem redraw) — chamado de dentro de renderMap/renderMap3D.
 function _atualizarZonasMagia(state) {
   const zz = ((state && state.zonas_especiais) || []);
-  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas' || z.tipo === 'prisao_chamas'))
+  window._spellHL.zonas     = zz.filter(z => z.ativa && (z.tipo === 'bola_fogo' || z.tipo === 'molochus_chamas' || z.tipo === 'prisao_chamas' || z.tipo === 'chamas_piche'))
                                 .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 2, lado: z.area_lado || 0,
                                   tiles: z.flame_tiles || z.tiles || [], tipo: z.tipo,
                                   visualId: z.animation_id || z.visual_id || z.id || null }));
@@ -29758,6 +29935,17 @@ document.addEventListener('keydown', e=>{
     resetCamera3D();
     e.preventDefault(); return;
   }
+  // T alterna a intenção dos monstros (desligada → grupo → todas)
+  if((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey && !e.altKey
+     && GS.gameState && GS.gameState.phase === 'playing' && !GS.isMaster()
+     && !GS.gameState.test_mode){
+    if(e.repeat) return;
+    const alvo = e.target;
+    if(alvo && (alvo.tagName === 'SELECT' || alvo.tagName === 'INPUT' || alvo.tagName === 'TEXTAREA' || alvo.isContentEditable)) return;
+    _setIntencaoModo(IntencaoMonstros.proximoModo(_intencaoModo));
+    toast(t('ui.intencao.modo_toast', {modo: t('ui.menu.intencao.' + _intencaoModo)}), 'var(--text2)');
+    e.preventDefault(); return;
+  }
 
   if(!GS.isMyTurn || !GS.gameState || GS.gameState.phase!=='playing') return;
   const me=GS.gameState.players.find(p=>p.id===GS.myPid);
@@ -34101,6 +34289,7 @@ function _audioPanelEnsure(){
     +       '<p data-i18n-html="ui.ajuda.dados"></p>'
     +       '<p data-i18n-html="ui.ajuda.fome_sede"></p>'
     +       '<p data-i18n-html="ui.ajuda.camera"></p>'
+    +       '<p data-i18n-html="ui.ajuda.intencao"></p>'
     +     '</div>'
     +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
     +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'
@@ -34117,6 +34306,11 @@ function _audioPanelEnsure(){
     +   '<div id="cfg-visao" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;">'
     +     '<label class="cfg-access-check"><input id="cfg-visao-chk" type="checkbox"> <span data-i18n="ui.menu.visao_compartilhada">👁️ Visão compartilhada</span></label>'
     +     '<small data-i18n="ui.menu.visao_compartilhada_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra também o que os outros heróis do grupo estão vendo.</small>'
+    +     '<label class="cfg-access-check"><span data-i18n="ui.menu.intencao">Intenção dos monstros</span> <select id="cfg-intencao-sel">'
+    +       '<option value="off" data-i18n="ui.menu.intencao.off">Desligada</option>'
+    +       '<option value="grupo" data-i18n="ui.menu.intencao.grupo">Ameaças ao meu grupo</option>'
+    +       '<option value="todas" data-i18n="ui.menu.intencao.todas">Todas</option></select></label>'
+    +     '<small data-i18n="ui.menu.intencao_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra setas de quem cada monstro atacaria agora. Tecla T alterna.</small>'
     +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
     +   '</div>'
@@ -34207,6 +34401,8 @@ function _audioPanelEnsure(){
     _setVisaoCompPref(e.target.checked);
     _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
   };
+  wrap.querySelector('#cfg-intencao-sel').value = _intencaoModo;
+  wrap.querySelector('#cfg-intencao-sel').onchange = (e) => { _setIntencaoModo(e.target.value); };
   wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
     if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
@@ -43918,6 +44114,8 @@ function init3D(state){
       case 'areia_deserto': paintSand(c,0,0,S,r); break;
       case 'lava':          paintLava(c,0,0,S,r); break;
       case 'pantano':       paintSwamp(c,0,0,S,r); break;
+      case 'piche':         paintPitch(c,0,0,S,r); break;
+      case 'lava_solidificada': paintCrust(c,0,0,S,r); break;
       case 'rodamoinho':    paintWhirlpool(c,0,0,S,r); break;
       case 'rodamoinho_profundo': paintWhirlpool(c,0,0,S,r,true); break;
       case 'piso_congelado': paintIce(c,0,0,S,r); break;
@@ -43983,7 +44181,7 @@ function init3D(state){
         break;
       }
     }
-    if(matId==='ceu_abismo'||matId==='grama'||matId==='terra'||matId==='parede_terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
+    if(matId==='ceu_abismo'||matId==='grama'||matId==='terra'||matId==='parede_terra'||matId==='areia_deserto'||matId==='agua'||matId==='agua_profunda'||matId==='rodamoinho'||matId==='rodamoinho_profundo'||matId==='lava'||matId==='pantano'||matId==='piche'||matId==='lava_solidificada'||matId==='piso_congelado'||matId==='planicie_nevada'||matId==='duna_deserto'||matId==='caverna_congelada'||matId==='duna_neve'||matId==='rocha'||matId==='rocha_marrom'||matId==='pedra_negra'||matId==='enegrecida'||matId==='pedra_caverna'||matId==='desmoronada'||matId==='entulho'||matId==='madeira'||matId==='madeira_escura'){
       tex=new T.CanvasTexture(cv); tex.wrapS=tex.wrapT=T.RepeatWrapping;
       // Canvas é desenhado em sRGB. Declarar isso impede o Three.js de tratar
       // os verdes/marrons como cores lineares lavadas no renderizador 3D.
@@ -45640,6 +45838,8 @@ function dispose3D(){
   // aceita: um número ainda não emitido de um ataque em curso se perde na troca.
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
+  _intencoesDispose3D();
+  _reacoes3DDispose();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
     _disposeDuetoFantasmaShadow3D(fx.group);
@@ -46402,6 +46602,8 @@ function startLoop3D(){
       }
     }
     _guiaAtualizar3D();
+    _intencoesAtualizar3D();
+    _reacoes3DAtualizar();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -55326,6 +55528,7 @@ if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
   _autoTurnSchedule(msg);
+  if(msg && msg.phase === 'playing') _intencoesPedirAgora();   // agrupado em 250 ms
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
     _cidadeTourPendenteDoTutorial = true;
   _sincronizarFossoQuedas(msg);
@@ -55793,6 +55996,284 @@ function _guiaDesenhar2D(ctx, state, visionSet){
   ctx.restore();
   _desenharSetaVez2D(ctx, cx, alvo.pos[1] * CELL - CELL * 0.02 - CELL * 0.08 * pulso);
   _agendarChamas2D();   // o 2D só redesenha quando algo muda; isto mantém o pulso (~12 quadros/s)
+}
+
+// ── Intenção dos monstros no 3D ──────────────────────────────────────────────
+// Pool fixo de setas (linha curva + cone). Nunca cria nem destrói malhas por
+// quadro: só reposiciona e mostra/esconde. Mesmo orçamento do halo do tutorial.
+const INTENCOES_POOL_MAX = 16;
+const _intFim = { v: null }, _intAnt = { v: null }, _intEixoY = { v: null }, _intDir = { v: null };
+function _intencoesPool3D(){
+  if(g3.intencoesPool) return g3.intencoesPool;
+  const T = g3.T;
+  const slots = [];
+  const grupo = new T.Group();
+  for(let i = 0; i < INTENCOES_POOL_MAX; i++){
+    const mat = new T.LineBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .9, depthTest: false, depthWrite: false, toneMapped: false });
+    const geo = new T.BufferGeometry().setFromPoints(Array.from({length: 14}, () => new T.Vector3()));
+    const linha = new T.Line(geo, mat); linha.renderOrder = 82; linha.raycast = () => {}; linha.frustumCulled = false;
+    const cone = new T.Mesh(new T.ConeGeometry(0.14, 0.34, 10),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .95, depthTest: false, depthWrite: false, toneMapped: false }));
+    cone.renderOrder = 83; cone.raycast = () => {};
+    const casa = new T.Mesh(new T.RingGeometry(0.2, 0.28, 4),
+      new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .6, side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false }));
+    casa.rotation.x = -Math.PI / 2; casa.renderOrder = 81; casa.raycast = () => {};
+    linha.visible = cone.visible = casa.visible = false;
+    grupo.add(linha); grupo.add(cone); grupo.add(casa);
+    slots.push({ linha, cone, casa });
+  }
+  _intFim.v = new T.Vector3(); _intAnt.v = new T.Vector3(); _intEixoY.v = new T.Vector3(0, 1, 0); _intDir.v = new T.Vector3();
+  g3.scene.add(grupo);
+  g3.intencoesPool = { grupo, slots };
+  return g3.intencoesPool;
+}
+function _intencoesEsconder3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  for(const s of g3.intencoesPool.slots) s.linha.visible = s.cone.visible = s.casa.visible = false;
+}
+function _intencoesDispose3D(){
+  if(!g3 || !g3.intencoesPool) return;
+  const { grupo, slots } = g3.intencoesPool;
+  for(const s of slots){
+    s.linha.geometry.dispose(); s.linha.material.dispose();
+    s.cone.geometry.dispose(); s.cone.material.dispose();
+    s.casa.geometry.dispose(); s.casa.material.dispose();
+  }
+  g3.scene.remove(grupo);
+  g3.intencoesPool = null;
+}
+function _intencoesAtualizar3D(){
+  if(!g3) return;
+  const st = GS.gameState;
+  const vis = st && _guiaVisao3D(st);
+  const itens = st ? _intencoesVisiveis(st, vis).slice(0, INTENCOES_POOL_MAX) : [];
+  if(!itens.length){ _intencoesEsconder3D(); return; }
+  const pool = _intencoesPool3D();
+  const T = g3.T;
+  const mons = new Map((st.monsters || []).map(m => [String(m.id), m]));
+  itens.forEach((it, i) => {
+    const s = pool.slots[i];
+    const m = mons.get(String(it.monstro_id));
+    if(!m || !m.pos || !it.alvo_pos) { s.linha.visible = s.cone.visible = s.casa.visible = false; return; }
+    const est = IntencaoMonstros.estilo(it);
+    const mesh = getMonsterMesh(m.id);
+    const x0 = mesh ? mesh.position.x : m.pos[0], z0 = mesh ? mesh.position.z : m.pos[1];
+    const y0 = topoSuperficie3D(st, m.pos[0], m.pos[1]) + 0.9;
+    const x1 = it.alvo_pos[0], z1 = it.alvo_pos[1];
+    const y1 = topoSuperficie3D(st, x1, z1) + 0.9;
+    const alt = 0.5 + Math.hypot(x1 - x0, z1 - z0) * 0.12;
+    const pos = s.linha.geometry.attributes.position;
+    for(let k = 0; k < 14; k++){
+      const u = k / 13;
+      pos.setXYZ(k, x0 + (x1 - x0) * u, y0 + (y1 - y0) * u + Math.sin(Math.PI * u) * alt, z0 + (z1 - z0) * u);
+    }
+    pos.needsUpdate = true;
+    s.linha.material.color.set(est.cor);
+    s.linha.material.opacity = it.forte ? 1 : est.opacidade;
+    s.linha.visible = true;
+    _intFim.v.set(pos.getX(13), pos.getY(13), pos.getZ(13));
+    _intAnt.v.set(pos.getX(12), pos.getY(12), pos.getZ(12));
+    s.cone.position.copy(_intFim.v);
+    _intDir.v.copy(_intFim.v).sub(_intAnt.v).normalize();
+    s.cone.quaternion.setFromUnitVectors(_intEixoY.v, _intDir.v);
+    s.cone.scale.setScalar(it.forte ? 1.35 : 1);
+    s.cone.material.color.set(est.cor);
+    s.cone.visible = true;
+    if(it.alcanca && it.casa_ataque){
+      s.casa.position.set(it.casa_ataque[0], topoSuperficie3D(st, it.casa_ataque[0], it.casa_ataque[1]) + 0.06, it.casa_ataque[1]);
+      s.casa.material.color.set(est.cor);
+      s.casa.visible = true;
+    } else s.casa.visible = false;
+  });
+  for(let i = itens.length; i < pool.slots.length; i++){
+    const s = pool.slots[i]; s.linha.visible = s.cone.visible = s.casa.visible = false;
+  }
+}
+
+// ── Reações elementais (animações e aviso da crosta) ───────────────────────
+// O servidor manda `reacao_elemental {tipo, casas, origem}`; aqui só se desenha.
+// Casas fora da visão do herói não animam. 2D: tela; 3D: um grupo temporário por
+// evento (raro), removido e liberado ao vencer e em dispose3D.
+const _reacoesAnims = [];
+function _tocarSomReacao(tipo, pos){
+  if(tipo === 'choque') sfx('relampago', { pos });
+  else if(tipo === 'incendio') sfx('incendio', { pos });
+  else if(tipo === 'congelar') sfx('congelar', { pos });
+  else if(tipo === 'crosta') sfx('crosta', { pos });
+}
+GS.on('reacaoElemental', msg => {
+  const est = ReacoesElementais.estilo(msg && msg.tipo);
+  if(!est || !Array.isArray(msg.casas)) return;
+  _reacoesAnims.push({ tipo: msg.tipo, casas: msg.casas, origem: msg.origem, t0: performance.now(), est, grupo: null });
+  _tocarSomReacao(msg.tipo, msg.origem);
+  if(GS.gameState && !(mode3D && g3)) renderMap(GS.gameState);
+});
+function _reacoesVisivel(vis, c){ return Array.isArray(c) && (!vis || vis.has(`${c[0]},${c[1]}`)); }
+function _reacoesPurgar(now){
+  for(let i = _reacoesAnims.length - 1; i >= 0; i--){
+    const a = _reacoesAnims[i];
+    if(now - a.t0 < a.est.duracaoMs) continue;
+    _reacoesDisposeAnim3D(a);
+    _reacoesAnims.splice(i, 1);
+  }
+}
+function _reacoesDisposeAnim3D(a){
+  if(!a.grupo) return;
+  if(g3 && g3.scene) g3.scene.remove(a.grupo);
+  a.grupo.traverse(o => {
+    if(o.geometry) o.geometry.dispose();
+    if(o.material) o.material.dispose();
+  });
+  a.grupo = null;
+}
+function _reacoesDesenhar2D(ctx, state, visionSet){
+  const now = performance.now();
+  _reacoesPurgar(now);
+  const crostas = ReacoesElementais.crostasAcabando(state).filter(c => _reacoesVisivel(visionSet, c));
+  if(!_reacoesAnims.length && !crostas.length) return;
+  ctx.save();
+  try {
+    for(const a of _reacoesAnims){
+      const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
+      ctx.strokeStyle = ctx.fillStyle = a.est.cor;
+      let ant = Array.isArray(a.origem) ? a.origem : null;
+      a.casas.forEach((c, k) => {
+        if(!_reacoesVisivel(visionSet, c)){ ant = c; return; }
+        const cx = c[0] * CELL + CELL / 2, cy = c[1] * CELL + CELL / 2;
+        ctx.globalAlpha = Math.max(0, 1 - p);
+        if(a.tipo === 'choque'){
+          const x0 = (ant ? ant[0] : c[0]) * CELL + CELL / 2, y0 = (ant ? ant[1] : c[1]) * CELL + CELL / 2;
+          const off = (((k + Math.floor(now / 60)) % 2) ? 1 : -1) * CELL * 0.14;
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(x0, y0);
+          ctx.lineTo((x0 + cx) / 2 + off, (y0 + cy) / 2 - off);
+          ctx.lineTo(cx, cy); ctx.stroke();
+          ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.15 + 0.3 * p), 0, Math.PI * 2); ctx.stroke();
+        } else if(a.tipo === 'incendio'){
+          _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.35, CELL * 0.8, now, k + 1);
+        } else if(a.tipo === 'congelar'){
+          const r = CELL * 0.36 * (0.3 + 0.7 * p);
+          ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.6, cy);
+          ctx.lineTo(cx, cy + r); ctx.lineTo(cx - r * 0.6, cy); ctx.closePath(); ctx.fill();
+        } else {
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, CELL * 0.5);
+          g.addColorStop(0, 'rgba(255,150,60,0.9)'); g.addColorStop(1, 'rgba(255,100,20,0)');
+          ctx.fillStyle = g; ctx.fillRect(cx - CELL / 2, cy - CELL / 2, CELL, CELL);
+        }
+        ant = c;
+      });
+    }
+    // Crosta de lava que se desfaz na próxima virada: anel laranja pulsante.
+    const pulso = 0.5 + 0.5 * Math.sin(now / 180);
+    ctx.strokeStyle = '#ff8a2a'; ctx.lineWidth = 3; ctx.globalAlpha = 0.45 + 0.5 * pulso;
+    for(const c of crostas){
+      ctx.beginPath();
+      ctx.arc(c[0] * CELL + CELL / 2, c[1] * CELL + CELL / 2, CELL * (0.34 + 0.08 * pulso), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } finally { ctx.restore(); }
+  _agendarChamas2D();
+}
+function _reacoes3DDispose(){
+  for(const a of _reacoesAnims) _reacoesDisposeAnim3D(a);
+  _reacoesAnims.length = 0;
+  _reacoesCrostasRef = null; _reacoesCrostasVal = [];
+  const pool = g3 && g3.reacoesCrostas;
+  if(pool){
+    for(const m of pool.malhas.values()) g3.scene.remove(m);
+    pool.geo.dispose(); pool.mat.dispose();
+    g3.reacoesCrostas = null;
+  }
+}
+function _reacoes3DCriar(a, st, vis){
+  const T = g3.T;
+  const grupo = new T.Group();
+  const cor = new T.Color(a.est.cor);
+  let ant = Array.isArray(a.origem) ? a.origem : null;
+  a.casas.forEach((c, k) => {
+    if(!_reacoesVisivel(vis, c)){ ant = c; return; }
+    const y = topoSuperficie3D(st, c[0], c[1]) + 0.07;
+    const m = new T.Mesh(new T.PlaneGeometry(0.9, 0.9),
+      new T.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+    m.rotation.x = -Math.PI / 2; m.position.set(c[0], y, c[1]); m.renderOrder = 90; m.raycast = () => {};
+    grupo.add(m);
+    if(a.tipo === 'choque'){
+      const x0 = ant ? ant[0] : c[0], z0 = ant ? ant[1] : c[1];
+      const off = (k % 2 ? 1 : -1) * 0.14;
+      const geo = new T.BufferGeometry().setFromPoints([
+        new T.Vector3(x0, y + 0.3, z0), new T.Vector3((x0 + c[0]) / 2 + off, y + 0.45, (z0 + c[1]) / 2 - off),
+        new T.Vector3(c[0], y + 0.3, c[1])]);
+      const ln = new T.Line(geo, new T.LineBasicMaterial({ color: cor, transparent: true, opacity: 1, depthTest: false, toneMapped: false }));
+      ln.renderOrder = 91; ln.raycast = () => {};
+      grupo.add(ln);
+    }
+    ant = c;
+  });
+  g3.scene.add(grupo);
+  a.grupo = grupo;
+}
+// Crostas acabando, recalculadas só quando o objeto de estado muda.
+let _reacoesCrostasRef = null, _reacoesCrostasVal = [];
+function _reacoesCrostas3D(st){
+  if(_reacoesCrostasRef !== st){
+    _reacoesCrostasVal = ReacoesElementais.crostasAcabando(st);
+    _reacoesCrostasRef = st;
+  }
+  return _reacoesCrostasVal;
+}
+function _reacoes3DAtualizar(){
+  if(!g3) return;
+  const st = GS.gameState;
+  const now = performance.now();
+  _reacoesPurgar(now);
+  const vis = st ? _guiaVisao3D(st) : null;
+  if(st){
+    for(const a of _reacoesAnims){
+      if(!a.grupo) _reacoes3DCriar(a, st, vis);
+      const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
+      const esc = a.tipo === 'congelar' ? 0.3 + 0.7 * p : 0.8 + 0.4 * Math.sin(p * Math.PI);
+      a.grupo.traverse(o => {
+        if(o.material) o.material.opacity = Math.max(0, 1 - p) * (o.isLine ? 1 : 0.8);
+        if(o.isMesh) o.scale.set(esc, esc, 1);
+      });
+    }
+  }
+  // Pulso das crostas que acabam: pool de anéis reutilizáveis por casa.
+  const crostas = st ? _reacoesCrostas3D(st).filter(c => _reacoesVisivel(vis, c)) : [];
+  let pool = g3.reacoesCrostas;
+  if(!pool && !crostas.length) return;
+  if(!pool){
+    const T = g3.T;
+    pool = g3.reacoesCrostas = {
+      malhas: new Map(),
+      geo: new T.RingGeometry(0.34, 0.44, 32),
+      mat: new T.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.8, side: T.DoubleSide, depthTest: false, depthWrite: false, toneMapped: false }),
+    };
+  }
+  const pulso = 0.5 + 0.5 * Math.sin(now / 180);
+  pool.mat.opacity = 0.45 + 0.5 * pulso;
+  const usadas = new Set();
+  for(const c of crostas){
+    const k = `${c[0]},${c[1]}`; usadas.add(k);
+    let m = pool.malhas.get(k);
+    if(!m){
+      m = new g3.T.Mesh(pool.geo, pool.mat);
+      m.rotation.x = -Math.PI / 2; m.renderOrder = 90; m.raycast = () => {};
+      g3.scene.add(m); pool.malhas.set(k, m);
+    }
+    m.position.set(c[0], topoSuperficie3D(st, c[0], c[1]) + 0.08, c[1]);
+    m.scale.setScalar(1 + 0.2 * pulso);
+  }
+  for(const [k, m] of pool.malhas) if(!usadas.has(k)){ g3.scene.remove(m); pool.malhas.delete(k); }
+}
+// Tooltip de casa por material (piche, água, crosta); a sombra tem prioridade.
+function _reacaoCasaTooltipHTML(tx, ty){
+  const st = GS.gameState;
+  if(!st) return null;
+  // Só descreve casa que o herói enxerga agora (nada de vazar névoa/inexplorado).
+  if(!_reacoesVisivel(_guiaVisao3D(st), [tx, ty])) return null;
+  const d = ReacoesElementais.descreverCasa(st, tx, ty);
+  return d ? `<div>${t(d.chave, d.params)}</div>` : null;
 }
 
 // 3D: uma única marca reutilizável (anel no chão + seta + até 48 pontos de trilha),

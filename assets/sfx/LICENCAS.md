@@ -12,6 +12,8 @@ de um arquivo com vários sons.
 | arquivo | pacote | autor | licença | URL | arquivo original | observação |
 |---|---|---|---|---|---|---|
 | combate/teleporte.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Whoosh descendente, brilho tonal e pulso grave de chegada. |
+| combate/congelar.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente (`tools/gerar_sfx_gelo.py`) | Estalo de gelo, sopro gelado subindo e faíscas cristalinas; toca na reação água + frio. |
+| combate/crosta.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente (`tools/gerar_sfx_gelo.py`) | Chiado de vapor, batida grave de pedra e estalos secos; toca na reação lava + frio (crosta). |
 | combate/rede.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Estalo de mola, sopro de tecido e cordas tensionando na queda da rede. |
 | combate/teto_esmagador.ogg | 75 CC0 breaking / falling / hit sfx + síntese original do projeto | rubberduck + Legends for Hire | CC0 1.0 + original, sem material de terceiros | https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx | bfh1_rock_falling_01.ogg + impacto procedural | Derivado — amostra do Elemental de Pedra seguida por uma batida seca e grave sintetizada. |
 | combate/bau_engolir.ogg | síntese original do projeto | Legends for Hire | original, sem material de terceiros | — | gerado proceduralmente | Abocanhada seca, sucção curta e gole grave; toca quando o peão é engolido. |

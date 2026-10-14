@@ -632,10 +632,12 @@ const GS = (() => {
     },
     frasco_oleo: {
       id: 'frasco_oleo', nome: 'Frasco de Óleo Incendiário', emoji: '🔥',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'1d6', tipoDano:'fogo',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 0, dano:'1d6', tipoDano:'fogo',
       duracao: '1d4', permitidoPara:['todos'],
-      descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega ' +
-                 'fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação.',
+      descricao: 'Atinge somente a casa escolhida (alcance 4). Causa 1d6 de fogo e ' +
+                 'incendeia o piche a partir dessa casa. Quem for atingido pega fogo por ' +
+                 '1d4 rodadas; apaga com Água ou ação.',
     },
     fogo_grego: {
       id: 'fogo_grego', nome: 'Fogo Grego', emoji: '🟢',
@@ -676,6 +678,13 @@ const GS = (() => {
       alcance: 4, areaRaio: 1, duracao: 2, permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
                  'a visão e cobre o recuo. Sem dano.',
+    },
+    frasco_piche: {
+      id: 'frasco_piche', nome: 'Frasco de Piche', emoji: '🛢️',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 1, duracao: 4, permitidoPara:['todos'],
+      descricao: 'Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento ' +
+                 'e INFLAMÁVEL. Sem dano.',
     },
     // ── MERCADO — Arremessáveis de ÁCIDO (Sub-projeto C; ver ARREMESSAVEIS no server) ──
     frasco_acido: {
@@ -1204,7 +1213,7 @@ const GS = (() => {
     if (_ponteEm(x, y, moveCtx?.state || gameState)) return Math.max(1 + custoElevacao, vento);
     const kind = moveCtx?.materiais?.[`${x},${y}`];
     if (kind === 'piso_congelado') return Math.max(1 + custoElevacao, vento);
-    if (kind === 'areia_deserto' || kind === 'lava') return Math.max(2 + custoElevacao, vento);
+    if (kind === 'areia_deserto' || kind === 'lava' || kind === 'piche') return Math.max(2 + custoElevacao, vento);
     if (kind !== 'agua' && kind !== 'agua_profunda' && kind !== 'rodamoinho'
         && kind !== 'rodamoinho_profundo') return Math.max(1 + custoElevacao, vento);
     const tipoCriatura = String(actor.type || '').toLowerCase();
@@ -1400,6 +1409,21 @@ const GS = (() => {
     }
   }
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
+
+  // Intenção dos monstros: o servidor responde a prever_intencoes só a quem
+  // pediu. A resposta vale para a RODADA e a VEZ (`vez` = current_turn) em
+  // que foi pedida: na fase dos monstros (current_turn nulo) ou na vez de
+  // outro herói, intencoes() devolve vazio. Mesma regra de
+  // IntencaoMonstros.valida (módulo puro do renderer; aqui não há window).
+  let _intencoes = { rodada: null, vez: null, itens: [] };
+  function _intencoesValem(r, st) {
+    return !!(r && st && Number.isFinite(r.rodada) && r.rodada === st.round
+              && r.vez != null && r.vez === st.current_turn && Array.isArray(r.itens));
+  }
+  function intencoes() {
+    return _intencoesValem(_intencoes, gameState) ? _intencoes.itens : [];
+  }
+  function pedirIntencoes() { return send({ type: 'prever_intencoes' }); }
 
   // Catálogo da Metamorfose: não viaja mais em todo game_state (era ~80% do
   // pacote). A janela de formas pede ao abrir; o servidor responde só a quem
@@ -1796,6 +1820,7 @@ const GS = (() => {
         gameState = null;
         pendingMove = null;
         _resetTurnActivity();
+        _intencoes = { rodada: null, vez: null, itens: [] };
         _emit('enterDungeon');
         break;
 
@@ -1921,6 +1946,20 @@ const GS = (() => {
           delete _previsoesPedidas[msg.chave];
         }
         _emit('previsaoAtaque', msg);
+        break;
+
+      case 'reacao_elemental':
+        _emit('reacaoElemental', msg);
+        break;
+
+      case 'intencoes_monstros':
+        {
+          const r = { rodada: msg.rodada, vez: msg.vez == null ? null : msg.vez,
+                      itens: Array.isArray(msg.itens) ? msg.itens : [] };
+          // Resposta velha (outra rodada/vez) não substitui nada.
+          if (_intencoesValem(r, gameState)) _intencoes = r;
+          _emit('intencoesMonstros', r);
+        }
         break;
 
       case 'game_over':
@@ -3982,6 +4021,8 @@ const GS = (() => {
     pedirMetamorfoseCatalog,
     get metamorfoseCatalog() { return metamorfoseCatalog; },
     pedirPrevisaoAtaque,
+    pedirIntencoes,
+    intencoes,
     danoMedioPrevisao,
     getWarriorFuriaAttacks,
     setWarriorFuriaAttacks,

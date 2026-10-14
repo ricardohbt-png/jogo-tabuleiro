@@ -128,6 +128,10 @@ window.LANG_INTERFACE = {
     "en": "Live flame",
     "pt": "Chama viva"
   },
+  "dado.chamas_de_piche": {
+    "en": "Pitch fire",
+    "pt": "Chamas de piche"
+  },
   "dado.chamas_vivas_ira_rocha": {
     "en": "🌋 Living Flames — Wrath of the Burning Rock",
     "pt": "🌋 Chamas Vivas — Ira da Rocha Ardente"
@@ -1216,6 +1220,10 @@ window.LANG_INTERFACE = {
     "en": "Click a SQUARE (radius {raio} area, range {alcance})",
     "pt": "Clique numa CASA (área raio {raio}, alcance {alcance})"
   },
+  "ui.arremesso.mira_area_uma_casa": {
+    "en": "Click the impact square (range {alcance})",
+    "pt": "Clique na casa de impacto (alcance {alcance})"
+  },
   "ui.arremesso.mira_valida_confirme_para_arremessar": {
     "en": "Valid aim — confirm to throw.",
     "pt": "Mira válida — confirme para arremessar."
@@ -1427,6 +1435,14 @@ window.LANG_INTERFACE = {
   "ui.somteste.ev.explosao": {
     "en": "Explosion (mine, grenade)",
     "pt": "Explosão (mina, granada)"
+  },
+  "ui.somteste.ev.congelar": {
+    "en": "Freezing water (reaction)",
+    "pt": "Água congelando (reação)"
+  },
+  "ui.somteste.ev.crosta": {
+    "en": "Lava hardening into a crust (reaction)",
+    "pt": "Lava endurecendo em crosta (reação)"
   },
   "ui.somteste.ev.teleporte": {
     "en": "Trap teleport",
@@ -4956,6 +4972,10 @@ window.LANG_INTERFACE = {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
   },
+  "ui.item.frasco_piche.desc": {
+    "en": "Area (radius 1, range 4). Spreads pitch for 4 rounds — the ground is slowed and FLAMMABLE. No damage.",
+    "pt": "Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento e INFLAMÁVEL. Sem dano."
+  },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
     "pt": "Área (raio 1, alcance 4). 2d6 de fogo, Reflexos CD 12 (metade)."
@@ -5273,8 +5293,8 @@ window.LANG_INTERFACE = {
     "pt": "Arremesse (4 quad., ataque por DES). 1d6 de ácido + metade na rodada seguinte. Corrói a defesa do alvo (−1 CA por acerto)."
   },
   "ui.item.frasco_oleo.desc": {
-    "en": "Throw (4 sq., DEX attack). 1d6 fire and the target catches fire (1/round for 1d4 rounds). Put out with Water or by spending the action.",
-    "pt": "Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação."
+    "en": "Hits only the chosen square (range 4). Deals 1d6 fire damage and ignites connected pitch from that square; anyone hit catches fire (1/round for 1d4 rounds). Extinguish with Water or by spending an action.",
+    "pt": "Atinge somente a casa escolhida (alcance 4). Causa 1d6 de fogo e incendeia o piche conectado a partir dela; quem for atingido pega fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação."
   },
   "ui.item.granada.desc": {
     "en": "Area (radius 1, range 4). 2d6 blast, Reflex DC 12 (half).",
@@ -10577,6 +10597,78 @@ window.LANG_INTERFACE = {
   "ui.menu.visao_compartilhada_dica": {
     "en": "Also shows what the other heroes in the party are seeing.",
     "pt": "Mostra também o que os outros heróis do grupo estão vendo."
+  },
+  "ui.menu.intencao": {
+    "en": "Monster intent",
+    "pt": "Intenção dos monstros"
+  },
+  "ui.menu.intencao.off": {
+    "en": "Off",
+    "pt": "Desligada"
+  },
+  "ui.menu.intencao.grupo": {
+    "en": "Threats to my party",
+    "pt": "Ameaças ao meu grupo"
+  },
+  "ui.menu.intencao.todas": {
+    "en": "All",
+    "pt": "Todas"
+  },
+  "ui.menu.intencao_dica": {
+    "en": "Shows arrows for who each monster would attack right now. Press T to cycle.",
+    "pt": "Mostra setas de quem cada monstro atacaria agora. Tecla T alterna."
+  },
+  "ui.ajuda.intencao": {
+    "en": "<b>Monster intent:</b> on your turn, colored arrows show who each monster would attack on its next turn (red = melee, orange = ranged, purple = special ability; dashed = likely). Press <b>T</b> to cycle: off, threats to my party, all.",
+    "pt": "<b>Intenção dos monstros:</b> na sua vez, setas coloridas mostram quem cada monstro atacaria no próximo turno dele (vermelha = corpo a corpo, laranja = à distância, roxa = habilidade especial; tracejada = provável). Tecla <b>T</b> alterna: desligada, ameaças ao grupo, todas."
+  },
+  "ui.reacao.casa.piche": {
+    "en": "Pitch: flammable, +1 movement",
+    "pt": "Piche: inflamável, +1 de movimento"
+  },
+  "ui.reacao.casa.piche_chamas": {
+    "en": "Burning pitch: fire damage to whoever stands or enters here",
+    "pt": "Piche em chamas: causa dano de fogo a quem estiver ou entrar aqui"
+  },
+  "ui.reacao.casa.agua": {
+    "en": "Water: conducts electricity; halves fire damage and prevents burning",
+    "pt": "Água: conduz eletricidade; metade do dano de fogo e não pega fogo"
+  },
+  "ui.reacao.casa.agua_fogo": {
+    "en": "Water: halves fire damage and prevents burning",
+    "pt": "Água: metade do dano de fogo e não pega fogo"
+  },
+  "ui.reacao.casa.pantano": {
+    "en": "Swamp: prevents burning",
+    "pt": "Pântano: não pega fogo"
+  },
+  "ui.reacao.casa.crosta": {
+    "en": "Solidified lava: reverts in {n} round(s)",
+    "pt": "Lava solidificada: volta em {n} rodada(s)"
+  },
+  "ui.intencao.tooltip.corpo": {
+    "en": "⚔️ Will attack {alvo}",
+    "pt": "⚔️ Vai atacar {alvo}"
+  },
+  "ui.intencao.tooltip.distancia": {
+    "en": "🏹 Will shoot {alvo}",
+    "pt": "🏹 Vai atirar em {alvo}"
+  },
+  "ui.intencao.tooltip.ameaca": {
+    "en": "✨ Threatens {alvo}",
+    "pt": "✨ Ameaça {alvo}"
+  },
+  "ui.intencao.provavel": {
+    "en": "likely",
+    "pt": "provável"
+  },
+  "ui.intencao.um_aliado": {
+    "en": "an ally",
+    "pt": "um aliado"
+  },
+  "ui.intencao.modo_toast": {
+    "en": "Monster intent: {modo}",
+    "pt": "Intenção dos monstros: {modo}"
   },
   "ui.menu.visao_so_host": {
     "en": "Only the host can change this.",

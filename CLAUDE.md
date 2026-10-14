@@ -2046,6 +2046,12 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `handle_throw_item`) + `tools/test_editor_items_logic.js`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-g-arremessaveis*`.
 
+> **Frasco de Óleo — impacto pontual:** o arremessável nativo usa o fluxo `area` com
+> `area_raio: 0`, atingindo apenas a casa escolhida e iniciando a ignição do piche nela.
+> A mira trata raio zero como válido e mantém a prévia de uma casa; também aceita o payload
+> legado `{target_id,target_pos}` de clientes que já estavam abertos. Regressões:
+> `tools/test_frasco_oleo_area.py` e `tools/test_frasco_oleo_area_cliente.js`.
+>
 > **Editor de Itens — Fase H (Venenos):** destrava a sub-aba **Venenos** e **fecha as 8
 > sub-abas** do editor. Cobre as **5 operações** de `VENENOS`: `dano` (com os 2 modelos de
 > resistência — `save_aplicacao`, testa 1× ao aplicar, ou `save_neutraliza_por_rodada`, testa a
@@ -3591,6 +3597,97 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > marca 😠 da Provocação; com os dois ativos o "!" vai para o lado. O campo entra na assinatura
 > de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
+
+> **Intenção dos monstros (2026-10-12):** na vez do herói, setas que mostram qual alvo cada
+> monstro visível atacaria **no próximo turno dele**. Cliente pede `prever_intencoes` (sem
+> campos) e recebe, **só ele**, `intencoes_monstros {rodada, vez, itens}` (`vez` =
+> `current_pid()`, o mesmo `current_turn` do `game_state`); cada item: `monstro_id, alvo_id,
+> alvo_tipo (heroi|animado), alvo_pos, acao, alcanca, casa_ataque, certeza`. Limite de 150 ms
+> por herói (`_intent_ultimo`) e cache por assinatura (`_intent_cache`, `_intent_assinatura`):
+> rodada, vez, posições e os campos de `INTENT_CAMPOS_ALVO`/`INTENT_CAMPOS_MONSTRO`
+> (monster_intent.py: vida, invisibilidade, controle, altura/voo, engolido, estados que tiram
+> o turno, compulsões, movimento, adaptação) + zonas especiais. **Campo novo que muda a
+> previsão entra nessas tuplas.** **Servidor:** mixin `monster_intent.py`, SÓ LEITURA —
+> reaproveita a escolha de alvo da IA como a iniciativa a roda (um `gm_phase(m)` por monstro):
+> o **foco é zerado antes de cada monstro** (não há foco coletivo na masmorra — cada gm_phase
+> o zera), as casas reservadas acumulam entre monstros (aproxima onde os anteriores pararão);
+> o **orçamento de movimento** é o do próximo turno (`_water_turn_moves` numa cópia do
+> monstro; 0 com perda de movimento da Tempestade ou agarrado), posto em `_water_moves_left`
+> só durante o cálculo (o valor guardado é o do turno passado); ficha **sem `ai_type`**
+> (caminho legado da gm_phase) só "alcança" se já estiver ao alcance — anda 1 casa e não
+> ataca. Monstro que perde o turno não ganha seta (`_intent_perde_turno`: Comando/Dominar
+> pendentes, petrificado, perda de ação, atordoado, rede, paralisado, enredado, sono/medo com
+> rodadas, comandado, dominado, lentidão no turno perdido). Tudo restaurado num `finally`;
+> exceção interna vira lista vazia. **Cliente:** módulo puro `src/intencaoMonstros.js`
+> (`valida`/`descartar` por rodada **e** vez, modo/seleção/estilo); `GS.intencoes()` aplica a
+> mesma regra (fora da minha vez ou na fase dos monstros devolve `[]`) e o desenho ainda
+> exige `GS.isMyTurn` (propriedade, não função). Desenho em `game.js`
+> (`_intencoesDesenhar2D`, `_intencoesAtualizar3D` com pool fixo de 16 slots). Pedido
+> agrupado em 250 ms com pedido de cauda (`setTimeout`), não descartado. Modos `off | grupo`
+> (padrão: só monstros que alcançam alguém) `| todas`; ao passar o mouse no monstro a seta
+> engrossa e o tooltip ganha "⚔️ Vai atacar X" mesmo sem alcance (nada no modo off).
+> Preferência em `localStorage["lfh_intencoes"]` (select do ⚙️), tecla **T** alterna (ignora
+> repeat, campos de texto/select e a mesa de teste). **Limites da v1:** `certeza` só é
+> `firme` se o monstro é compelido ou há um único alvo ao alcance; habilidade especial é
+> aproximada pelo papel; monstros Manual do Mestre são pulados; hostilidade monstro×monstro e
+> prisioneiro não são previstos. **Evolução B:** a IA gravaria o mesmo item em
+> `m["intencao"]`. **Armadilha:** o pedido mora dentro do ÚNICO `GS.on('gameState')`
+> (um segundo ouvinte apagaria o primeiro). Testes: `tools/test_monster_intent.py` ([6c]
+> roda a IA real — `gm_phase` por monstro — e compara com a previsão tirada antes; inclui o
+> `server.handler` real) e `tools/test_intencoes_cliente.js` ([10] carrega o `gameState.js`
+> de verdade). Spec/plano em `docs/superpowers/{specs,plans}/2026-10-12-intencao-dos-monstros*`.
+
+> **Reações elementais (2026-10-13):** terreno × elemento. Fogo, frio e eletricidade, de **qualquer
+> fonte** (herói, monstro, armadilha), reagem ao material da casa. Mixin `terrain_reactions.py`
+> (`TerrainReactions`, base de `GameRoom`): tabela de dados `REACOES` (elemento × estado × método
+> `_rx_*`; fogo+gelo existe desligada) e `evento_elemental(origem)`, escopo POR AÇÃO (aninhado
+> reaproveita o aberto). A fonte só diz "este elemento atingiu estas casas" via `_rx_registrar`
+> (ou `_rx_registrar_alvo`, nos funis `_aplicar_dano_alvo`/`_dano_em_alvo`); ao fim da ação o escopo
+> resolve cada linha UMA vez sobre a união das casas (dedupe), com `profundidade` máx. 2 e
+> `_rx_em_reacao` impedindo reentrada. Funil só vale na chamada original (`not _protetor_bypass`, e
+> dano > 0 em `_dano_em_alvo`): a repartição do Protetor não repete o choque. Fonte sem escopo aberto
+> resolve na hora (ignição imediata). **Reações:** ⚡ água rasa: choque na poça (região conectada,
+> teto 24 casas, raio 6; metade do dano da fonte, mín. 1; Reflexos metade, CD da fonte ou 12; quem
+> levou o golpe não repete); 🔥 piche: `_rx_incendiar_piche` inflama a mancha (teto 40) em zona
+> `chamas_piche` com lista de casas, 3 rodadas, 1d6 de fogo ao entrar/início do turno + em chamas
+> (só piso), ao fim `_consumir_piche`; criatura em chamas que termina passo no piche inflama (gancho
+> em `_aplicar_lava_se_pisar`); ❄️ água rasa: `piso_congelado` por 3 rodadas, Reflexos, falha =
+> imobilizado 1 rodada; ❄️ lava (inclusive a da Ira, que é material): `lava_solidificada` (crosta)
+> por 3 rodadas, sem dano, aviso 1 rodada antes (`_rx_avisou_crosta`) e dano de lava normal ao
+> voltar. **Piche:** material (custo de movimento 2, como areia/lava; `custo_mov` é só metadado);
+> `frasco_piche` arremessável 3×3, 4 rodadas, sem dano, pelas camadas temporárias do Chamado do
+> Inverno. **Cliente:** `reacao_elemental {tipo, casas, origem}` (público, anima só casas visíveis;
+> `src/reacoesElementais.js` puro: `estilo`, `crostasAcabando`, `descreverCasa`), `terrenos_temp` no
+> `game_state` (camadas temporárias + crostas) e tooltip por material. Estado `_rx_*` é "efemero"
+> na foto; `_terrenos_inverno`/`zonas_especiais`/`materiais` já persistem. **Revisão final:** choque sem acerto
+> rola um dano base da fonte; congelar grava `turbilhao_perde_movimento`; a ignição marca quem já levou o fogo
+> (`zona.ignicao`) para a entrada do mesmo passo não repetir; `_tempestade_descarga` e `_processar_zonas_turno`
+> rodam em escopo próprio; a ignição estende a camada de piche até o fim da zona; `chamas_piche` aparece no
+> fogo persistente do cliente, em `_queimando` e no tooltip. **Nova fonte:** registrar
+> as casas dentro do escopo e entrar em `FONTES_COM_REGISTRO` (teste por AST). **Nova reação:** linha
+> em `REACOES` + método `_rx_*`. **Fora de escopo:** água profunda/redemoinho, fogo+gelo, fogo+gás,
+> destaque de mira, tutorial; o frasco de óleo não muda. Testes: `tools/test_terrain_reactions.py`
+> e `tools/test_reacoes_cliente.js`. Spec: `docs/superpowers/specs/2026-10-13-reacoes-elementais-design.md`.
+
+> **Água protege do fogo (2026-10-13):** `_agua_protege(criatura, pantano=False)` (em `terrain_reactions.py`) é
+> verdadeiro quando TODAS as casas do footprint são água/redemoinho (sem ponte) e a criatura não voa acima
+> do chão; com `pantano=True` o pântano também conta, só para o status. Três pontos: `_apply_damage_types`
+> injeta uma resistência de metade a fogo (soma com as existentes); `_aplicar_em_chamas` devolve bool e
+> recusa o status na água/pântano quando as chamas são apagáveis; `_apagar_chamas_na_agua` roda no gancho
+> `_aplicar_lava_se_pisar` e como rede de segurança em `_processar_em_chamas_turno`. **Fogo Grego**
+> (`chamas_agua_apaga` falso): `_escopo_fogo_grego` nos wrappers `_throw_item_*`/`_monster_throw_item`
+> liga `_fogo_ignora_agua` durante o dano, e o tick lê a flag do alvo. **Limites conhecidos:** enquanto
+> o alvo queima com Fogo Grego a água não protege de NENHUM dano de fogo (inclui Bola de Fogo); armas com
+> `ignora_resistencia_fisica` pulam resistências, a da água inclusive; o servo animado (`vida_atual`) toma
+> fogo por `_ajustar_dano_elemental` e recebe a metade só em ALGUNS caminhos (os que chamam `_apply_damage_types`, p.ex. zona
+> de fogo e arremessos de monstro; nos demais não); o Protetor corta ANTES de repartir (a parte do Richard já vem reduzida;
+> comportamento aceito); as cascatas de morte (`_monster_dies`, `_player_dies`, `_animado_morre`) rodam sob
+> `_sem_fogo_grego()`, então a explosão/Último Esforço de dentro de um Fogo Grego não herdam a flag; as fontes que chegam
+> ao ramo de herói/prisioneiro de `_aplicar_dano_alvo`/`_dano_em_alvo` sem `_apply_damage_types` (Bola de
+> Fogo e zona residual, explosão do Elemental de Fogo, arremesso de área em aliado, armadilhas de fogo)
+> chamam `_dano_fogo_na_agua` (monstro só com `incluir_monstro`; regra única `_agua_reduz_fogo`, uma só metade; nunca chame depois de
+> `_apply_damage_types`). Fora de escopo: IA preferir água. Testes:
+> `tools/test_agua_protege_fogo.py` e `tools/test_reacoes_cliente.js`.
 
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva

@@ -1384,6 +1384,14 @@ window.LANG_EDITOR = {
     "en": "Swamp",
     "pt": "Pântano"
   },
+  "ui.editor.material.piche": {
+    "en": "Pitch",
+    "pt": "Piche"
+  },
+  "ui.editor.material.lava_solidificada": {
+    "en": "Solidified lava",
+    "pt": "Lava solidificada"
+  },
   "ui.editor.material.areia_deserto": {
     "en": "Desert sand",
     "pt": "Areia do deserto"

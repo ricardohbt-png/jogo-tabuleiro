@@ -131,6 +131,7 @@ window.LANG_STRINGS = {
   "ui.tooltip.tipo_dano": { "pt": "Tipo de dano", "en": "Damage type" },
   "ui.tooltip.categoria": { "pt": "Categoria", "en": "Category" },
   "ui.tooltip.area": { "pt": "Área", "en": "Area" },
+  "ui.tooltip.area_uma_casa": { "pt": "1 quadrado", "en": "1 square" },
   "ui.tooltip.materiais": { "pt": "Materiais", "en": "Materials" },
   "ui.tooltip.cone": { "pt": "Cone", "en": "Cone" },
   "ui.tooltip.medo": { "pt": "Medo", "en": "Fear" },
