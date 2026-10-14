@@ -42,9 +42,8 @@
     // Água sob ponte não protege (o servidor ignora a água sob a ponte): sem promessa.
     const ehAgua = mat === 'agua' || mat === 'agua_profunda' || mat === 'rodamoinho' || mat === 'rodamoinho_profundo';
     if (ehAgua && _sobPonte(state, x, y)) return null;
-    if (mat === 'agua') return { chave: 'ui.reacao.casa.agua', params: {} };
-    if (mat === 'agua_profunda' || mat === 'rodamoinho' || mat === 'rodamoinho_profundo')
-      return { chave: 'ui.reacao.casa.agua_fogo', params: {} };
+    // toda água (rasa, profunda, redemoinho) conduz choque, congela e protege do fogo
+    if (ehAgua) return { chave: 'ui.reacao.casa.agua', params: {} };
     if (mat === 'pantano') return { chave: 'ui.reacao.casa.pantano', params: {} };
     // gelo e neve (fora de ponte): o fogo derrete em água
     if ((mat === 'piso_congelado' || mat === 'planicie_nevada') && !_sobPonte(state, x, y))

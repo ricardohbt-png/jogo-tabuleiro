@@ -158,7 +158,7 @@ async def raio5():
     async with r.evento_elemental({"tipo": "magia", "id": "relampago", "caster_id": "x"}):
         await r._rx_registrar(S.DMG_LIGHTNING, [(3, 5)], dano=10)
 roda(raio5())
-check("água profunda não conduz (v1)", b["hp"] == b["max_hp"])
+check("água profunda conduz (v2, 2026-10-14; ver test_agua_profunda_reacoes.py)", b["hp"] < b["max_hp"])
 
 print("[4] frio: congelar água e crosta de lava")
 r = sala()
