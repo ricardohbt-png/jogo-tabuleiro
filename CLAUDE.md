@@ -3673,10 +3673,13 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > liga `_fogo_ignora_agua` durante o dano, e o tick lê a flag do alvo. **Limites conhecidos:** enquanto
 > o alvo queima com Fogo Grego a água não protege de NENHUM dano de fogo (inclui Bola de Fogo); armas com
 > `ignora_resistencia_fisica` pulam resistências, a da água inclusive; o servo animado (`vida_atual`) toma
-> fogo por `_ajustar_dano_elemental`, fora de `_apply_damage_types`, e não recebe a metade; as fontes que chegam
+> fogo por `_ajustar_dano_elemental` e recebe a metade só em ALGUNS caminhos (os que chamam `_apply_damage_types`, p.ex. zona
+> de fogo e arremessos de monstro; nos demais não); o Protetor corta ANTES de repartir (a parte do Richard já vem reduzida;
+> comportamento aceito); as cascatas de morte (`_monster_dies`, `_player_dies`, `_animado_morre`) rodam sob
+> `_sem_fogo_grego()`, então a explosão/Último Esforço de dentro de um Fogo Grego não herdam a flag; as fontes que chegam
 > ao ramo de herói/prisioneiro de `_aplicar_dano_alvo`/`_dano_em_alvo` sem `_apply_damage_types` (Bola de
 > Fogo e zona residual, explosão do Elemental de Fogo, arremesso de área em aliado, armadilhas de fogo)
-> chamam `_dano_fogo_na_agua` (regra única `_agua_reduz_fogo`, uma só metade; nunca chame depois de
+> chamam `_dano_fogo_na_agua` (monstro só com `incluir_monstro`; regra única `_agua_reduz_fogo`, uma só metade; nunca chame depois de
 > `_apply_damage_types`). Fora de escopo: IA preferir água. Testes:
 > `tools/test_agua_protege_fogo.py` e `tools/test_reacoes_cliente.js`.
 

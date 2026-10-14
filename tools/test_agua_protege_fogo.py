@@ -82,7 +82,7 @@ h = heroi(r, "h1", "Ana", "mage", (5, 5))
 check("fora da água: dano cheio", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
 pinta(r, "agua", [(5, 5)])
 check("na água rasa: metade", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
-check("na água: dano 1 não fica negativo", r._apply_damage_types(1, [S.DMG_FIRE], h) >= 0)
+check("na água: dano 1 fica exatamente 1", r._apply_damage_types(1, [S.DMG_FIRE], h) == 1)
 check("na água: dano 0 não estoura", r._apply_damage_types(0, [S.DMG_FIRE], h) == 0)
 check("na água: outro elemento intacto", r._apply_damage_types(8, [S.DMG_COLD], h) == 8)
 for mat in ("agua_profunda", "rodamoinho", "rodamoinho_profundo"):
@@ -152,7 +152,8 @@ hp0 = h["hp"]
 roda(r._processar_em_chamas_turno())
 check("rede de segurança no tick apaga sem dano", h["em_chamas_rodadas"] == 0 and h["hp"] == hp0)
 h["pos"] = [5, 5]
-check("sair da água não reacende", h["em_chamas_rodadas"] == 0)
+roda(r._processar_em_chamas_turno())
+check("sair da água não reacende (nem tica dano de chama)", h["em_chamas_rodadas"] == 0 and h["hp"] == hp0)
 h["pos"] = [6, 5]; h["em_chamas_rodadas"] = 3; h["chamas_agua_apaga"] = False
 roda(r._aplicar_lava_se_pisar(h))
 check("Fogo Grego não é apagado pela água", h["em_chamas_rodadas"] == 3)
@@ -423,6 +424,148 @@ check("resistente a fogo na água: um quarto (não um oitavo)",
 check("helper não reduz elemento não-fogo", r._dano_fogo_na_agua(h, 10, "gelo") == 10)
 r2 = sala()
 check("helper não reduz fora da água", r2._dano_fogo_na_agua(heroi_alvo(r2, False), 10, "fogo") == 10)
+
+
+print("[11] óleo de ÁREA, mortes dentro do escopo do Fogo Grego, explosão contra monstro, narração")
+
+# Óleo pelo caminho de área (defn construído à mão: não depende do raio do catálogo).
+defn_area = dict(S.ARREMESSAVEIS["frasco_oleo"])
+defn_area.update({"alvo": "area", "area_raio": 1, "dano": "1d1+9", "save": {}, "alcance": 12})
+
+
+def oleo_area(na_agua):
+    r = sala()
+    p = heroi(r, "h0", "Rex", "rogue", (3, 5))
+    h = heroi_alvo(r, na_agua, (8, 5), "h2")
+    m = monstro(r, "goblin", (9, 5)); m["hp"] = m["max_hp"] = 200
+    m["immunities"] = []; m["resistances"] = []; m["weaknesses"] = []
+    if na_agua:
+        pinta(r, "agua", r._monster_tiles(m))
+    item = {"id": "frasco_oleo", "name": "frasco_oleo"}
+    p.setdefault("bag", []).append(item)
+    roda(r._throw_item_area(p, defn_area, item, 8, 5))
+    return r, h, m
+
+
+r_s, h_s, m_s = oleo_area(False)
+r_w, h_w, m_w = oleo_area(True)
+check(f"óleo de área seco: herói cheio ({hp_perdido(h_s)}) e pega fogo",
+      hp_perdido(h_s) == 10 and h_s.get("em_chamas_rodadas", 0) > 0)
+check(f"óleo de área na água: herói metade ({hp_perdido(h_w)}), não pega fogo",
+      hp_perdido(h_w) == 5 and h_w.get("em_chamas_rodadas", 0) == 0)
+check(f"óleo de área na água: monstro metade ({200 - m_w['hp']} vs {200 - m_s['hp']}), não pega fogo",
+      200 - m_w["hp"] == 5 and 200 - m_s["hp"] == 10 and m_w.get("em_chamas_rodadas", 0) == 0)
+check("narração da área mostra o dano aplicado ao monstro na água",
+      any(" 5 " in n for n in r_w.narr) and not any(" 10 " in n for n in r_w.narr))
+
+
+# (A) Fogo Grego mata monstro com morte_explosiva: a explosão dele NÃO ignora a água.
+def morte_com_fogo_grego(no_escopo):
+    r = sala()
+    h = heroi_alvo(r, True, (8, 5))
+    m = monstro(r, "goblin", (9, 5)); m["hp"] = 0
+    m.setdefault("special_abilities", []).append(
+        {"id": "morte_explosiva", "name": "Morte Explosiva", "action_type": "passiva",
+         "damage": "4d1+20", "damage_types": ["fire"], "radius": 1, "dc": 99, "duration": 0})
+    orig = S.random.randint
+    S.random.randint = lambda a, b: a
+    try:
+        if no_escopo:
+            async def go():
+                with r._escopo_fogo_grego({"chamas_agua_apaga": False}):
+                    await r._monster_dies(m, "h1")
+            roda(go())
+        else:
+            roda(r._monster_dies(m, "h1"))
+    finally:
+        S.random.randint = orig
+    return hp_perdido(h), r
+
+
+d_normal, _ = morte_com_fogo_grego(False)
+d_escopo, r_esc = morte_com_fogo_grego(True)
+check(f"(A) explosão de morte dentro do escopo recebe a metade ({d_escopo} vs {d_normal})",
+      d_normal > 0 and d_escopo == d_normal)
+check("(A) a explosão da morte na água é a metade da seca",
+      d_normal == 12)
+check("(A) flag restaurada depois", r_esc._fogo_ignora_agua is False)
+
+
+# (B) servo elemental de fogo e (C) Último Esforço: flag desligada lá dentro.
+async def flag_em_animado_morre():
+    r = sala()
+    visto = {}
+
+    async def esp(elem, killer=None):
+        visto["flag"] = r._fogo_ignora_agua
+    r._explosao_elemental = esp
+    with r._escopo_fogo_grego({"chamas_agua_apaga": False}):
+        await r._animado_morre({"id": "a1", "pos": [5, 5], "vida_atual": 0, "tipo": "elemental_fogo",
+                                "especial": "explosao_6d6"}, "h1")
+        depois = r._fogo_ignora_agua
+    return visto.get("flag"), depois, r._fogo_ignora_agua
+
+
+f_b, depois_b, final_b = roda(flag_em_animado_morre())
+check("(B) _animado_morre: flag False dentro, True restaurada no escopo, False no fim",
+      f_b is False and depois_b is True and final_b is False)
+
+
+async def flag_em_ultimo_esforco():
+    r = sala()
+    h = heroi(r, "h1", "Ana", "warrior", (5, 5))
+    visto = {}
+
+    async def abre(p):
+        visto["flag"] = r._fogo_ignora_agua
+    r._abrir_ultimo_esforco = abre
+    r.tecnica_restante = lambda p, t: 0
+    orig = S.tem_tecnica_equipada
+    S.tem_tecnica_equipada = lambda p, t: t == "tecnica_ultimo_esforco"
+    try:
+        h.setdefault("technique_cooldowns", {})
+        with r._escopo_fogo_grego({"chamas_agua_apaga": False}):
+            await r._player_dies("h1")
+            depois = r._fogo_ignora_agua
+    finally:
+        S.tem_tecnica_equipada = orig
+    return visto.get("flag"), depois
+
+
+f_c, depois_c = roda(flag_em_ultimo_esforco())
+check("(C) Último Esforço aberto de dentro do escopo: flag False lá, True restaurada depois",
+      f_c is False and depois_c is True)
+
+
+# M2/M3: explosão do elemental (6d6) contra monstro e herói na água.
+def explosao_alvos(na_agua):
+    r = sala()
+    h = heroi_alvo(r, na_agua, (6, 5))
+    m = monstro(r, "goblin", (4, 5)); m["hp"] = m["max_hp"] = 200
+    m["immunities"] = []; m["resistances"] = []; m["weaknesses"] = []
+    if na_agua:
+        pinta(r, "agua", r._monster_tiles(m))
+    elem = {"id": "e1", "pos": [5, 5], "vida_atual": 5, "tipo": "elemental_fogo", "owner": "h1"}
+
+    async def sem_save(*a, **k):
+        return False, 1, 0, 1
+    r._save_mostrado = sem_save
+    orig = S.random.randint
+    S.random.randint = lambda a, b: b
+    try:
+        roda(r._explosao_elemental(elem, "h1"))
+    finally:
+        S.random.randint = orig
+    return r, hp_perdido(h), 200 - m["hp"]
+
+
+r_es, h_es, m_es = explosao_alvos(False)
+r_ew, h_ew, m_ew = explosao_alvos(True)
+check(f"explosão do elemental: monstro seco/água {m_es}/{m_ew}", m_es == 36 and m_ew == 18)
+check(f"explosão do elemental: herói seco/água {h_es}/{h_ew}", h_es == 36 and h_ew == 18)
+check("narracao do heroi na agua cita o dano ja cortado (18 de dano), nao o cheio",
+      any("Ana" in n and "18 de dano" in n for n in r_ew.narr)
+      and not any("Ana" in n and "36 de dano" in n for n in r_ew.narr))
 
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

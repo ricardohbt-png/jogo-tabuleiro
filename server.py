@@ -21076,7 +21076,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if d <= 0:
                     continue
                 nome = alvo.get("name") or alvo.get("nome", "Alvo")
-                await self.gm_say(T("narracao.sofre_de", defn_emoji=defn['emoji'], nome=nome_criatura(alvo), d=d, defn_elemento=defn['elemento']))
+                # Monstro: a metade é aplicada pelo funil; a narração já mostra o valor cortado.
+                d_narr = self._dano_fogo_na_agua(alvo, d, defn["elemento"], incluir_monstro=True)
+                await self.gm_say(T("narracao.sofre_de", defn_emoji=defn['emoji'], nome=nome_criatura(alvo), d=d_narr, defn_elemento=defn['elemento']))
                 await self._aplicar_dano_alvo(alvo, d, defn["elemento"], pid)   # aplica fraquezas elementais
                 if defn.get("em_chamas") and self._vivo(alvo):
                     dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
@@ -32711,6 +32713,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return False
 
     async def _animado_morre(self, animado, killer_pid=None):
+        with self._sem_fogo_grego():
+            return await self._animado_morre_impl(animado, killer_pid)
+
+    async def _animado_morre_impl(self, animado, killer_pid=None):
         """Morte de um animado/elemental: dispara a explosão (fogo) e o remove."""
         if animado.get("especial") == "explosao_6d6" and not animado.get("_explodiu"):
             animado["_explodiu"] = True
@@ -32754,6 +32760,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if m["hp"] > 0 and max(abs(m["pos"][0]-cx), abs(m["pos"][1]-cy)) <= raio:
                 salvou, d20, bonus, total = await self._save_mostrado(m, "reflexos", 12)
                 d = dano_total // 2 if salvou else dano_total
+                d = self._dano_fogo_na_agua(m, d, DMG_FIRE, incluir_monstro=True)
                 if salvou:
                     await self.gm_say(
                         T("narracao.esquiva_parcial_d20_12_de_dano", monstro=nome_criatura(m), d20=d20, bonus=bonus, total=total, d=d))
@@ -32766,13 +32773,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if pl["alive"] and max(abs(pl["pos"][0]-cx), abs(pl["pos"][1]-cy)) <= raio:
                 salvou, d20, bonus, total = await self._save_mostrado(pl, "reflexos", 12)
                 dano_final = dano_total // 2 if salvou else dano_total
+                dano_final = self._dano_fogo_na_agua(pl, dano_final, DMG_FIRE)
                 if salvou:
                     await self.gm_say(
                         T("narracao.esquiva_da_explosao_d20_12_de_dano", pl=nome_criatura(pl), d20=d20, bonus=bonus, total=total, dano_final=dano_final))
                 else:
                     await self.gm_say(
                         T("narracao.e_atingido_em_cheio_d20_12_de_dano", pl=nome_criatura(pl), d20=d20, bonus=bonus, total=total, dano_final=dano_final))
-                dano_final = self._dano_fogo_na_agua(pl, dano_final, DMG_FIRE)
                 await self._aplicar_dano_alvo(pl, dano_final, DMG_FIRE, kp)
 
         # O prisioneiro liberto também ocupa a área e pode estar sob Protetor.
@@ -33289,7 +33296,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 d = await self._absorver_energia(alvo, d, "fogo")   # ProteÃ§Ã£o contra Energia
             d = self._dano_fogo_na_agua(alvo, d, "fogo")
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
-            await self.gm_say(T("narracao.sofre_2", rotulo=rotulo, nome=nome_criatura(alvo), d=d, extra=extra))
+            # Monstro: a metade é aplicada pelo funil; a narração já mostra o valor cortado.
+            d_narr = self._dano_fogo_na_agua(alvo, d, "fogo", incluir_monstro=True)
+            await self.gm_say(T("narracao.sofre_2", rotulo=rotulo, nome=nome_criatura(alvo), d=d_narr, extra=extra))
             if ehjog and com_save and not save_ok:
                 await self._enviar_resultado_falha_magia_dano(
                     alvo, "Bola de Fogo", d,
@@ -37093,6 +37102,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         antes = self._fogo_ignora_agua
         if ligar:
             self._fogo_ignora_agua = True
+        try:
+            yield
+        finally:
+            self._fogo_ignora_agua = antes
+
+    @contextmanager
+    def _sem_fogo_grego(self):
+        """Desliga `_fogo_ignora_agua` durante cascatas de morte (explosões,
+        Último Esforço): a regra do Fogo Grego vale só para o dano direto do item."""
+        antes = self._fogo_ignora_agua
+        self._fogo_ignora_agua = False
         try:
             yield
         finally:
@@ -47663,6 +47683,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._monster_dies(m, None)
 
     async def _monster_dies(self, m, killer_pid, force=False):
+        with self._sem_fogo_grego():
+            return await self._monster_dies_impl(m, killer_pid, force)
+
+    async def _monster_dies_impl(self, m, killer_pid, force=False):
         if m.get("training_target") and not force:
             m["hp"] = m["max_hp"]
             m.pop("paralisado", None)
@@ -48053,6 +48077,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.end_game(victory=True)
 
     async def _player_dies(self, pid, force=False):
+        with self._sem_fogo_grego():
+            return await self._player_dies_impl(pid, force)
+
+    async def _player_dies_impl(self, pid, force=False):
         p = self.players[pid]
         if not p["alive"]: return
         # RegeneraÃ§Ã£o: se ainda hÃ¡ reserva, reergue com 1 HP em vez de cair (-3 fome/sede).

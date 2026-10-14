@@ -83,6 +83,9 @@ check("água profunda -> agua_fogo", RE.descreverCasa(stW, 1, 1).chave === "ui.r
 check("redemoinho -> agua_fogo", RE.descreverCasa(stW, 2, 1).chave === "ui.reacao.casa.agua_fogo");
 check("redemoinho profundo -> agua_fogo", RE.descreverCasa(stW, 3, 1).chave === "ui.reacao.casa.agua_fogo");
 check("pântano -> pantano", RE.descreverCasa(stW, 4, 1).chave === "ui.reacao.casa.pantano");
+const stP = { ...stW, pontes: [{ tiles: [[1, 1], [2, 1]] }] };
+check("água sob ponte: sem promessa de proteção", RE.descreverCasa(stP, 1, 1) === null && RE.descreverCasa(stP, 2, 1) === null);
+check("água fora da ponte segue protegendo", RE.descreverCasa(stP, 3, 1).chave === "ui.reacao.casa.agua_fogo");
 const c = RE.descreverCasa(st2, 3, 1);
 check("crosta -> rodadas restantes", c.chave === "ui.reacao.casa.crosta" && c.params.n === 3);
 console.log("[7] fiação");
