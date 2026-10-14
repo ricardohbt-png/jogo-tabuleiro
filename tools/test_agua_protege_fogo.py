@@ -230,9 +230,6 @@ def dano_bola(na_agua):
     return r, m, 200 - m["hp"]
 
 
-# LIMITE CONHECIDO (fora de escopo): o ramo de HERÓI de `_aplicar_dano_alvo` não chama
-# `_apply_damage_types` (os chamadores é que chamam), então a Bola de Fogo direta contra
-# um herói na água não recebe a metade. Monstro e arremessos de item recebem.
 try:
     _, _, d_seco = dano_bola(False)
     r_b, m_b, d_agua = dano_bola(True)
@@ -305,6 +302,127 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     check(f"arremesso de monstro executou ({e})", False)
+
+
+print("[10] fontes de fogo contra HERÓI e prisioneiro (exatamente uma metade)")
+
+
+def hp_perdido(h):
+    return h["max_hp"] - h["hp"]
+
+
+def heroi_alvo(r, na_agua, pos=(8, 5), pid="h1"):
+    h = heroi(r, pid, "Ana", "warrior", pos)
+    h["hp"] = h["max_hp"] = 500
+    h["resistances"] = []; h["immunities"] = []
+    if na_agua:
+        pinta(r, "agua", [pos])
+    return h
+
+
+def bola_heroi(na_agua):
+    r = sala()
+    h = heroi_alvo(r, na_agua)
+    roda(r._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+    return hp_perdido(h)
+
+
+b_seco, b_agua = bola_heroi(False), bola_heroi(True)
+check(f"Bola de Fogo contra herói seco: cheio ({b_seco})", b_seco == 12)
+check(f"Bola de Fogo contra herói na água: metade exata ({b_agua})", b_agua == 6)
+r = sala(); h = heroi_alvo(r, True)
+m = monstro(r, "goblin", (9, 5)); m["hp"] = m["max_hp"] = 200
+m["immunities"] = []; m["resistances"] = []; m["weaknesses"] = []
+pinta(r, "agua", r._monster_tiles(m))
+roda(r._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+check(f"mesma Bola de Fogo: herói e monstro na água perdem o mesmo ({hp_perdido(h)} vs {200 - m['hp']})",
+      hp_perdido(h) == 200 - m["hp"] == 6)
+
+
+def zona_heroi(na_agua):
+    r = sala()
+    h = heroi_alvo(r, na_agua)
+    r.zonas_especiais.append({"tipo": "bola_fogo", "ativa": True, "cx": 8, "cy": 5, "raio": 1,
+                              "rodada_atual": 2, "dano_r2": 10, "dano_r3": 10, "caster": "x"})
+    roda(r._verificar_entrada_zona_fogo(h, 8, 5))
+    return hp_perdido(h)
+
+
+z_seco, z_agua = zona_heroi(False), zona_heroi(True)
+check(f"zona residual (pisar) seca/água: {z_seco}/{z_agua}", z_seco == 10 and z_agua == 5)
+r = sala(); h = heroi_alvo(r, True)
+roda(r._aplicar_dano_area_fogo("x", 8, 5, 1, 10, 99, "R2", com_save=False, apenas_no_chao=True))
+check("zona residual (início de turno) na água: metade", hp_perdido(h) == 5)
+
+r = sala()
+r.prisoner = {"pos": [8, 5], "alive": True, "freed": True, "rescuer_pid": "p1",
+              "hp": 100, "max_hp": 100, "ac": 10, "moves_left": 6}
+pinta(r, "agua", [(8, 5)])
+roda(r._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+check(f"Bola de Fogo contra prisioneiro na água: metade ({100 - r.prisoner['hp']})",
+      100 - r.prisoner["hp"] == 6)
+
+
+def explosao(na_agua):
+    r = sala()
+    h = heroi_alvo(r, na_agua, (6, 5))
+    r.prisoner = {"pos": [6, 6], "alive": True, "freed": True, "rescuer_pid": "h1",
+                  "hp": 100, "max_hp": 100, "ac": 10}
+    if na_agua:
+        pinta(r, "agua", [(6, 6)])
+    elem = {"id": "e1", "pos": [5, 5], "vida_atual": 5, "tipo": "elemental_fogo", "owner": "h1"}
+    orig_r = S.random.randint
+
+    async def sem_save(*a, **k):
+        return False, 1, 0, 1
+    S.random.randint = lambda a, b: b
+    r._save_mostrado = sem_save
+    try:
+        roda(r._explosao_elemental(elem, "h1"))
+    finally:
+        S.random.randint = orig_r
+    return hp_perdido(h), 100 - r.prisoner["hp"]
+
+
+e_seco, e_agua = explosao(False), explosao(True)
+check(f"explosão do elemental seca: cheio {e_seco}", e_seco == (36, 36))
+check(f"explosão do elemental na água (herói e prisioneiro): metade {e_agua}", e_agua == (18, 18))
+
+
+def armadilha(na_agua):
+    r = sala()
+    h = heroi_alvo(r, na_agua)
+    arm = {"id": "t1", "tipo": "armadilha_incendiaria", "pos": [8, 5], "criador": "x"}
+    r.armadilhas.append(arm)
+    roda(r._aplicar_efeito_armadilha(h, {"tipo": "dano", "valor": "10", "elemento": "fogo", "rodada": 1}, arm))
+    impacto = hp_perdido(h)
+    arm["efeitos_ativos"] = [{"alvo_id": h["id"], "valor": "10", "elemento": "fogo", "rodadas_restantes": 1}]
+    roda(r._processar_efeitos_armadilha_turno())
+    return impacto, hp_perdido(h) - impacto
+
+
+a_seco, a_agua = armadilha(False), armadilha(True)
+check(f"armadilha incendiária (impacto, tick) seca: {a_seco}", a_seco == (10, 10))
+check(f"armadilha incendiária (impacto, tick) na água: {a_agua}", a_agua == (5, 5))
+
+r = sala()
+p = heroi(r, "h0", "Rex", "rogue", (3, 5))
+aliado = heroi_alvo(r, True, (8, 5), "h2")
+item = {"id": "granada", "name": "granada"}
+defn = dict(S.ARREMESSAVEIS["granada"])
+defn["elemento"] = "fogo"; defn["dano"] = "1d1+9"; defn["save"] = {}
+defn["alcance"] = 12
+p.setdefault("bag", []).append(item)
+roda(r._throw_item_area(p, defn, item, 8, 5))
+check(f"arremesso de área de fogo em aliado na água: metade ({hp_perdido(aliado)})", hp_perdido(aliado) == 5)
+
+r = sala(); h = heroi_alvo(r, True)
+h["resistances"] = [{"type": S.DMG_FIRE, "mode": "half"}]
+check("resistente a fogo na água: um quarto (não um oitavo)",
+      r._apply_damage_types(16, [S.DMG_FIRE], h) == 4)
+check("helper não reduz elemento não-fogo", r._dano_fogo_na_agua(h, 10, "gelo") == 10)
+r2 = sala()
+check("helper não reduz fora da água", r2._dano_fogo_na_agua(heroi_alvo(r2, False), 10, "fogo") == 10)
 
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

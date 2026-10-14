@@ -21072,6 +21072,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         d = raw // 2
                 if self._eh_jogador(alvo):
                     d = await self._absorver_energia(alvo, d, defn["elemento"])   # ProteÃ§Ã£o contra Energia
+                d = self._dano_fogo_na_agua(alvo, d, defn["elemento"])
                 if d <= 0:
                     continue
                 nome = alvo.get("name") or alvo.get("nome", "Alvo")
@@ -32771,6 +32772,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 else:
                     await self.gm_say(
                         T("narracao.e_atingido_em_cheio_d20_12_de_dano", pl=nome_criatura(pl), d20=d20, bonus=bonus, total=total, dano_final=dano_final))
+                dano_final = self._dano_fogo_na_agua(pl, dano_final, DMG_FIRE)
                 await self._aplicar_dano_alvo(pl, dano_final, DMG_FIRE, kp)
 
         # O prisioneiro liberto também ocupa a área e pode estar sob Protetor.
@@ -32779,6 +32781,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 and max(abs(pr["pos"][0] - cx), abs(pr["pos"][1] - cy)) <= raio):
             salvou, d20, bonus, total = await self._save_mostrado(pr, "reflexos", 12)
             dano_final = dano_total // 2 if salvou else dano_total
+            dano_final = self._dano_fogo_na_agua(pr, dano_final, DMG_FIRE)
             await self._aplicar_dano_alvo(pr, dano_final, DMG_FIRE, kp)
             await self.gm_say(
                 T("narracao.esquiva_da_explosao_d20_12_de_dano", pl=nome_criatura(pr), d20=d20, bonus=bonus, total=total, dano_final=dano_final)
@@ -33284,6 +33287,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 d = dano; extra = ''
             if ehjog:
                 d = await self._absorver_energia(alvo, d, "fogo")   # ProteÃ§Ã£o contra Energia
+            d = self._dano_fogo_na_agua(alvo, d, "fogo")
             nome = alvo.get("name") or alvo.get("nome", "Alvo")
             await self.gm_say(T("narracao.sofre_2", rotulo=rotulo, nome=nome_criatura(alvo), d=d, extra=extra))
             if ehjog and com_save and not save_ok:
@@ -33341,6 +33345,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             d = dano
             if self._eh_jogador(ator) or ator is self.prisoner:
                 hp_antes = ator.get("hp", 0)
+                d = self._dano_fogo_na_agua(ator, d, DMG_FIRE)
                 await self._aplicar_dano_alvo(ator, d, DMG_FIRE,
                                               zona.get("caster", ""))
                 d = max(0, hp_antes - ator.get("hp", 0))
@@ -36711,6 +36716,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             dano = self._rolar_dado(ef["valor"])
             if ef.get("metade"):
                 dano = max(1, dano // 2)
+            dano = self._dano_fogo_na_agua(alvo, dano, ef.get("elemento", "fisico"), incluir_monstro=True)
             await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fisico"), arm.get("criador"))
             return dano, None
 
@@ -37477,6 +37483,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if (arm["id"], aid) not in avisados:
                         avisados.add((arm["id"], aid))
                         await self._avisar_armadilha(arm["tipo"], alvo.get("pos"), [alvo], tick=True)
+                    dano = self._dano_fogo_na_agua(alvo, dano, ef.get("elemento", "fogo"), incluir_monstro=True)
                     await self._dano_em_alvo(alvo, dano, ef.get("elemento", "fogo"), arm.get("criador"))
                     await self._concentracao_requiem(alvo, dano)   # RÃ©quiem Final (Fase 3)
                     await self._enviar_trap_result(
@@ -39593,6 +39600,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return candidate
         return list(target["pos"])
 
+    def _agua_reduz_fogo(self, alvo):
+        """True se o dano de fogo contra `alvo` deve ser reduzido à metade pela
+        água (regra única: usada por `_apply_damage_types` e `_dano_fogo_na_agua`)."""
+        return (not getattr(self, "_fogo_ignora_agua", False)
+                and not (alvo.get("em_chamas_rodadas", 0) > 0
+                         and not alvo.get("chamas_agua_apaga", True))
+                and self._agua_protege(alvo))
+
+    def _dano_fogo_na_agua(self, alvo, dano, elemento, incluir_monstro=False):
+        """Metade do dano de fogo para quem está na água, nas fontes que chegam a
+        `_aplicar_dano_alvo`/`_dano_em_alvo` SEM passar por `_apply_damage_types`
+        (herói e prisioneiro; monstro só com `incluir_monstro`, pois o ramo de
+        monstro de `_aplicar_dano_alvo` já passa pelo funil). Animados ficam de fora.
+        Nunca chame depois de `_apply_damage_types` (duplicaria a metade)."""
+        if dano <= 0 or "vida_atual" in alvo:
+            return dano
+        if _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento) != DMG_FIRE:
+            return dano
+        if not (self._eh_jogador(alvo) or alvo is self.prisoner or incluir_monstro):
+            return dano
+        return (dano + 1) // 2 if self._agua_reduz_fogo(alvo) else dano
+
     def _apply_damage_types(self, raw_dmg, damage_types, target, weapon=None, attacker_pos=None, target_pos=None, attacker_id=None):
         """Aplica imunidades e fraquezas do alvo ao dano. Retorna dano ajustado."""
         subtipo = target.get("subtipo", _subtipo_padrao_monstro(target))
@@ -39675,10 +39704,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # ResistÃªncias: reduÃ§Ã£o fixa escalonÃ¡vel OU metade do dano. A reduÃ§Ã£o
         # acontece antes da vulnerabilidade, preservando a ordem previsÃ­vel.
         resistencias = list(target.get("resistances", []))
-        if (DMG_FIRE in damage_types and not getattr(self, "_fogo_ignora_agua", False)
-                and not (target.get("em_chamas_rodadas", 0) > 0
-                         and not target.get("chamas_agua_apaga", True))
-                and self._agua_protege(target)):
+        if DMG_FIRE in damage_types and self._agua_reduz_fogo(target):
             resistencias.append({"type": DMG_FIRE, "mode": "half"})
         for resistance in resistencias:
             if ignora_resistencia_fisica:

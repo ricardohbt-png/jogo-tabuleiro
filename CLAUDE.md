@@ -3673,9 +3673,11 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > liga `_fogo_ignora_agua` durante o dano, e o tick lê a flag do alvo. **Limites conhecidos:** enquanto
 > o alvo queima com Fogo Grego a água não protege de NENHUM dano de fogo (inclui Bola de Fogo); armas com
 > `ignora_resistencia_fisica` pulam resistências, a da água inclusive; o servo animado (`vida_atual`) toma
-> fogo por `_ajustar_dano_elemental`, fora de `_apply_damage_types`, e não recebe a metade; o ramo de herói
-> de `_aplicar_dano_alvo` não chama `_apply_damage_types`, então a Bola de Fogo direta em herói na água
-> não recebe a metade (monstros e arremessos de item recebem). Fora de escopo: IA preferir água. Testes:
+> fogo por `_ajustar_dano_elemental`, fora de `_apply_damage_types`, e não recebe a metade; as fontes que chegam
+> ao ramo de herói/prisioneiro de `_aplicar_dano_alvo`/`_dano_em_alvo` sem `_apply_damage_types` (Bola de
+> Fogo e zona residual, explosão do Elemental de Fogo, arremesso de área em aliado, armadilhas de fogo)
+> chamam `_dano_fogo_na_agua` (regra única `_agua_reduz_fogo`, uma só metade; nunca chame depois de
+> `_apply_damage_types`). Fora de escopo: IA preferir água. Testes:
 > `tools/test_agua_protege_fogo.py` e `tools/test_reacoes_cliente.js`.
 
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
