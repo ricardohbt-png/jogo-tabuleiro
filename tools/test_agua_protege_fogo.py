@@ -215,5 +215,96 @@ except Exception as e:
     traceback.print_exc()
     check(f"arremesso real executou ({e})", False)
 
+print("[7] Bola de Fogo real (funil de dano) e congelar")
+
+
+def dano_bola(na_agua):
+    """Bola de Fogo (_aplicar_dano_area_fogo -> _aplicar_dano_alvo) em um monstro."""
+    r = sala()
+    m = monstro(r, "goblin", (8, 5))
+    m["hp"] = m["max_hp"] = 200
+    m["immunities"] = []; m["resistances"] = []; m["weaknesses"] = []
+    if na_agua:
+        pinta(r, "agua", r._monster_tiles(m))
+    roda(r._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+    return r, m, 200 - m["hp"]
+
+
+# LIMITE CONHECIDO (fora de escopo): o ramo de HERÓI de `_aplicar_dano_alvo` não chama
+# `_apply_damage_types` (os chamadores é que chamam), então a Bola de Fogo direta contra
+# um herói na água não recebe a metade. Monstro e arremessos de item recebem.
+try:
+    _, _, d_seco = dano_bola(False)
+    r_b, m_b, d_agua = dano_bola(True)
+    check(f"Bola de Fogo seca: dano cheio ({d_seco})", d_seco > 0)
+    check(f"Bola de Fogo (monstro) na água: ~metade ({d_agua} vs {d_seco})",
+          abs(d_agua * 2 - d_seco) <= 1 and d_agua < d_seco)
+    # congelar a casa remove a proteção
+    r_b._aplicar_camadas_terreno_inverno(list(r_b._monster_tiles(m_b)), "piso_congelado", "z1",
+                                         permanente=False, expira_em=r_b.round_num + 5)
+    check("casa congelada: _agua_protege False", r_b._agua_protege(m_b) is False)
+    m_b["hp"] = 200
+    roda(r_b._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+    check(f"casa congelada: dano de fogo volta cheio ({200 - m_b['hp']})", 200 - m_b["hp"] == d_seco)
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    check(f"Bola de Fogo/congelar executou ({e})", False)
+
+print("[8] prisioneiro e servo animado")
+r = sala()
+r.prisoner = {"pos": [5, 5], "alive": True, "freed": True, "rescuer_pid": "p1",
+              "hp": 7, "max_hp": 7, "ac": 10, "moves_left": 6}
+pinta(r, "agua", [(5, 5)])
+check("prisioneiro na água: _agua_protege", r._agua_protege(r.prisoner) is True)
+check("prisioneiro na água: não pega fogo", r._aplicar_em_chamas(r.prisoner, 3, True) is False)
+# Servo animado: `_agua_protege` e o apagar valem, mas o dano de fogo do servo passa por
+# `_ajustar_dano_elemental` (fora de `_apply_damage_types`), então NÃO recebe a metade
+# do dano nesses caminhos. Limite conhecido, documentado no CLAUDE.md.
+servo = {"id": "a1", "pos": [5, 5], "vida_atual": 10, "vida_max": 10, "tipo": "esqueleto",
+         "nome": "Servo", "name": "Servo"}
+check("servo na água: _agua_protege", r._agua_protege(servo) is True)
+servo["em_chamas_rodadas"] = 3; servo["chamas_agua_apaga"] = True
+check("servo na água: apaga as chamas", roda(r._apagar_chamas_na_agua(servo)) is True
+      and servo["em_chamas_rodadas"] == 0)
+
+print("[9] arremesso de monstro (_monster_throw_item)")
+
+
+def monstro_arremessa(item_id, na_agua):
+    r = sala()
+    h = heroi(r, "h1", "Ana", "warrior", (7, 5))
+    h["hp"] = h["max_hp"] = 200
+    h["resistances"] = []; h["immunities"] = []
+    h["ac_base"] = h["ac"] = 0
+    sold = monstro(r, "goblin", (5, 5))
+    if na_agua:
+        pinta(r, "agua", [(7, 5)])
+    item = {"id": item_id, "name": item_id}
+    orig = S.random.randint
+    S.random.randint = lambda a, b: b
+    try:
+        roda(r._monster_throw_item(sold, {"kind": "player", "obj": h}, item))
+    finally:
+        S.random.randint = orig
+    return r, h, 200 - h["hp"]
+
+
+try:
+    _, h_s, d_s = monstro_arremessa("frasco_oleo", False)
+    r_w, h_w, d_w = monstro_arremessa("frasco_oleo", True)
+    check("óleo seco (monstro): pega fogo", h_s.get("em_chamas_rodadas", 0) > 0)
+    check("óleo na água (monstro): não pega fogo", h_w.get("em_chamas_rodadas", 0) == 0)
+    check(f"óleo na água (monstro): ~metade ({d_w} vs {d_s})", 0 < d_w < d_s)
+    _, h_fs, d_fs = monstro_arremessa("fogo_grego", False)
+    r_fg, h_fg, d_fg = monstro_arremessa("fogo_grego", True)
+    check("fogo grego na água (monstro): pega fogo", h_fg.get("em_chamas_rodadas", 0) > 0)
+    check(f"fogo grego na água (monstro): dano cheio ({d_fg} vs {d_fs})", d_fg == d_fs and d_fg > 0)
+    check("escopo não vaza (monstro)", r_fg._fogo_ignora_agua is False)
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    check(f"arremesso de monstro executou ({e})", False)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

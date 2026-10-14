@@ -3663,6 +3663,21 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > destaque de mira, tutorial; o frasco de óleo não muda. Testes: `tools/test_terrain_reactions.py`
 > e `tools/test_reacoes_cliente.js`. Spec: `docs/superpowers/specs/2026-10-13-reacoes-elementais-design.md`.
 
+> **Água protege do fogo (2026-10-13):** `_agua_protege(criatura, pantano=False)` (em `terrain_reactions.py`) é
+> verdadeiro quando TODAS as casas do footprint são água/redemoinho (sem ponte) e a criatura não voa acima
+> do chão; com `pantano=True` o pântano também conta, só para o status. Três pontos: `_apply_damage_types`
+> injeta uma resistência de metade a fogo (soma com as existentes); `_aplicar_em_chamas` devolve bool e
+> recusa o status na água/pântano quando as chamas são apagáveis; `_apagar_chamas_na_agua` roda no gancho
+> `_aplicar_lava_se_pisar` e como rede de segurança em `_processar_em_chamas_turno`. **Fogo Grego**
+> (`chamas_agua_apaga` falso): `_escopo_fogo_grego` nos wrappers `_throw_item_*`/`_monster_throw_item`
+> liga `_fogo_ignora_agua` durante o dano, e o tick lê a flag do alvo. **Limites conhecidos:** enquanto
+> o alvo queima com Fogo Grego a água não protege de NENHUM dano de fogo (inclui Bola de Fogo); armas com
+> `ignora_resistencia_fisica` pulam resistências, a da água inclusive; o servo animado (`vida_atual`) toma
+> fogo por `_ajustar_dano_elemental`, fora de `_apply_damage_types`, e não recebe a metade; o ramo de herói
+> de `_aplicar_dano_alvo` não chama `_apply_damage_types`, então a Bola de Fogo direta em herói na água
+> não recebe a metade (monstros e arremessos de item recebem). Fora de escopo: IA preferir água. Testes:
+> `tools/test_agua_protege_fogo.py` e `tools/test_reacoes_cliente.js`.
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota

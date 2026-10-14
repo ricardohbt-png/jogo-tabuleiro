@@ -23,6 +23,11 @@ Narração: "{nome} mergulha na água e as chamas se apagam." (`narracao.chamas_
 
 **4. Fogo Grego.** `chamas_agua_apaga == False` (Fogo Grego) ignora toda a regra: o status pega mesmo na água, não é apagado ao entrar e o dano — inicial e o tick de chamas — **não** recebe a metade. Para o dano inicial usa-se uma marca de escopo `self._fogo_ignora_agua` ligada pela resolução do arremesso enquanto o dano do item é aplicado (e desligada em `finally`); o tick lê a flag do próprio alvo (`alvo["chamas_agua_apaga"]`).
 
+Decisões conscientes da revisão:
+- Enquanto o alvo queima com Fogo Grego (`em_chamas_rodadas > 0` e `chamas_agua_apaga` falso), a água não protege de **nenhum** dano de fogo dele, inclusive o de uma Bola de Fogo recebida no mesmo período. Decisão deliberada, mais simples que escopar a exceção por tick.
+- Resistências, incluindo a metade da água, são puladas por armas com `ignora_resistencia_fisica` (limite herdado do laço de resistências de `_apply_damage_types`).
+- Limites de cobertura: o servo animado (`vida_atual`) toma dano de fogo por `_ajustar_dano_elemental`, fora de `_apply_damage_types`, e não recebe a metade nesses caminhos (a imunidade a pegar fogo e o apagar valem); e o ramo de herói de `_aplicar_dano_alvo` não chama `_apply_damage_types` (quem chama é o executor de cada fonte), então a Bola de Fogo direta contra um herói na água não recebe a metade, ao contrário de monstros e dos arremessos de item.
+
 ## Interações
 
 - **Reações elementais:** nada muda. Piche e água não ocupam a mesma casa; o choque em poça e o congelamento seguem como estão. Criatura que acabou de ser congelada (casa vira `piso_congelado`) deixa de estar na água para esta regra.
