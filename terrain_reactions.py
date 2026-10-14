@@ -29,6 +29,9 @@ RX_DADO_CHAMAS = "1d6"
 RX_GAS_DANO = "2d6"          # explosão de gás: dano de fogo
 RX_GAS_CD = 17               # Reflexos fixo (metade do dano)
 RX_GAS_TIPOS = ("camara_gas", "nuvem_gas")
+RX_DERRETER_RAIO = 4         # gelo derretido: casas conectadas até 4 do ponto atingido
+RX_DERRETER_TETO = 24        # ... e no máximo 24 casas
+RX_GELO_MATS = ("piso_congelado", "planicie_nevada")
 RX_PISO = (1, 2)             # server.FLOOR, server.DOOR (um teste confere)
 
 # Limitações conhecidas: relâmpago da Tempestade de Ciclones sobre poça VAZIA não conduz
@@ -59,7 +62,7 @@ REACOES = [
     {"id": "congelar_agua",   "elemento": RX_COLD,      "estado": "agua_rasa", "efeito": "_rx_congelar_agua",   "ativa": True},
     {"id": "crosta_de_lava",  "elemento": RX_COLD,      "estado": "lava",      "efeito": "_rx_crosta_lava",     "ativa": True},
     {"id": "explodir_gas",    "elemento": RX_FIRE,      "estado": "gas",        "efeito": "_rx_explodir_gas",    "ativa": True},
-    {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": None,                  "ativa": False},
+    {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": "_rx_derreter_gelo",   "ativa": True},
 ]
 
 
@@ -132,7 +135,7 @@ class TerrainReactions:
         if estado == "lava":
             return self._is_lava_tile(x, y)
         if estado == "gelo":
-            return mat in {"piso_congelado", "planicie_nevada"}
+            return mat in RX_GELO_MATS and not self._ponte_em(x, y)
         if estado == "gas":
             return any(tile in self._rx_gas_tiles(z) for z in self._rx_gas_zonas())
         return False
@@ -295,6 +298,42 @@ class TerrainReactions:
                 await self._dano_em_alvo(alvo, d, RX_FIRE, caster)
         # o fogo da explosão alcança tudo que estava no gás (piche, por exemplo)
         await self._rx_encadear(RX_FIRE, area, {"origem": origem}, prof)
+
+    def _rx_derreter_casa(self, tile):
+        """Derrete UMA casa de gelo/neve. Camada temporária sai e a casa volta ao que havia
+        embaixo; gelo permanente/do mapa (sem registro) ou cuja base também é gelo vira ÁGUA RASA."""
+        registro = self._terrenos_inverno.get(tile)
+        if not registro:
+            self.materiais[tile] = "agua"
+            return
+        camadas = [c for c in registro.get("camadas", []) if c.get("material") not in RX_GELO_MATS]
+        novo = camadas[-1]["material"] if camadas else registro.get("base")
+        if novo in RX_GELO_MATS:                 # o chão original também era gelo
+            self.materiais[tile] = "agua"
+            self._terrenos_inverno.pop(tile, None)
+            return
+        if novo is None:
+            self.materiais.pop(tile, None)
+        else:
+            self.materiais[tile] = novo
+        if camadas:
+            registro["camadas"] = camadas
+        else:
+            self._terrenos_inverno.pop(tile, None)
+
+    async def _rx_derreter_gelo(self, tiles, origem, pend, prof):
+        regiao = self._rx_regiao(tiles, lambda t: self._rx_estado("gelo", t),
+                                 raio=RX_DERRETER_RAIO, teto=RX_DERRETER_TETO)
+        if not regiao:
+            return
+        for t in regiao:
+            self._rx_derreter_casa(t)
+        self._rebuild_materiais_index()
+        await self._rx_anunciar("derreter", regiao, tiles[0])
+        await self.gm_say(self._rx_T("narracao.reacao.derreter"))
+        # a casa virou água: quem queimava com chamas apagáveis se apaga (Fogo Grego não)
+        for alvo in self._alvos_no_inverno(regiao):
+            await self._apagar_chamas_na_agua(alvo)
 
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")
