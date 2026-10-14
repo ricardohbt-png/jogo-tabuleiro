@@ -9,6 +9,7 @@ Run: python server.py
 
 import asyncio
 import base64
+from contextlib import contextmanager
 import datetime
 import gzip
 import hashlib
@@ -3517,6 +3518,7 @@ FOTO_SALA_CATEGORIAS = {
     "host_pid": "conexao", "master_pid": "conexao", "aguardando": "conexao",
     # trocado só durante o handle_magia (espião de recusa de mira) e sempre restaurado
     "send_to": "efemero",
+    "_fogo_ignora_agua": "efemero",
     "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero", "_rx_avisou_crosta": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     # janelas, timers e tarefas
@@ -11448,6 +11450,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._campfire_tiles = set()
         self._fire_damage_tiles = {}
         self._terrenos_inverno = {}
+        self._fogo_ignora_agua = False  # True só enquanto o dano de Fogo Grego é aplicado
         self._rx_escopo = None     # escopo da ação em curso (TerrainReactions)
         self._rx_em_reacao = False # True enquanto uma reação aplica dano: não reentra
         self._rx_seq = 0           # ids únicos de camadas de reação
@@ -20899,6 +20902,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._licao_evento(p, "arremessar_item", alvo=item.get("id"))
 
     async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None, source_location=None):
+        with self._escopo_fogo_grego(defn):
+            return await self._throw_item_alvo_impl(p, defn, item, target_id, target_pos, source_location)
+
+    async def _throw_item_alvo_impl(self, p, defn, item, target_id, target_pos=None, source_location=None):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
@@ -20981,8 +20988,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 dmg = 0   # itens sem dano nÃ£o usam 'dmg' depois (em_chamas/residual/corrosao exigem dano no catÃ¡logo)
             if defn.get("em_chamas") and target.get("hp", 0) > 0:
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
-                self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True))
-                await self.gm_say(T("narracao.pega_fogo_por_rodada_s", target=nome_criatura(target), dur=dur))
+                if self._aplicar_em_chamas(target, dur, defn.get("chamas_agua_apaga", True)):
+                    await self.gm_say(T("narracao.pega_fogo_por_rodada_s", target=nome_criatura(target), dur=dur))
             if defn.get("residual") and target.get("hp", 0) > 0:
                 target["acido_residual"] = max(target.get("acido_residual", 0), dmg // 2)
                 await self.gm_say(
@@ -21002,6 +21009,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.push_state()
 
     async def _throw_item_area(self, p, defn, item, tx, ty, source_location=None):
+        with self._escopo_fogo_grego(defn):
+            return await self._throw_item_area_impl(p, defn, item, tx, ty, source_location)
+
+    async def _throw_item_area_impl(self, p, defn, item, tx, ty, source_location=None):
         """Arremesso de ÁREA: sem jogada de ataque. Atinge TODOS no raio (fogo
         amigo, como a Bola de Fogo) com save de Reflexos (metade no sucesso);
         opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
@@ -21068,8 +21079,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._aplicar_dano_alvo(alvo, d, defn["elemento"], pid)   # aplica fraquezas elementais
                 if defn.get("em_chamas") and self._vivo(alvo):
                     dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
-                    self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
-                    await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome_criatura(alvo), dur=dur))
+                    if self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True)):
+                        await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome_criatura(alvo), dur=dur))
 
         # Zona (Bomba de FumaÃ§a = escuridÃ£o centrada no tile).
         zona = defn.get("zona")
@@ -34748,6 +34759,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """
         if not criatura or self._voo_imune_terreno(criatura):
             return
+        await self._apagar_chamas_na_agua(criatura)
         if criatura.get("em_chamas_rodadas", 0) > 0:      # gancho: criatura em chamas inflama o piche
             await self._rx_registrar(
                 DMG_FIRE, self._rx_tiles_da(criatura),
@@ -37048,10 +37060,37 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _aplicar_em_chamas(self, alvo, rodadas, agua_apaga):
         """Coloca (ou renova) o status 'em chamas' num ente (herói ou monstro).
         Renovar usa o MAIOR valor de duração (refresh), nunca soma dano.
-        `agua_apaga`=False (Fogo Grego) prevalece: beber água não apaga."""
+        `agua_apaga`=False (Fogo Grego) prevalece: beber água não apaga.
+        Devolve False quando a água/pântano impede o status (só chamas apagáveis)."""
+        if agua_apaga and self._agua_protege(alvo, pantano=True):
+            return False
         atual = alvo.get("em_chamas_rodadas", 0)
         alvo["em_chamas_rodadas"] = max(atual, int(rodadas))
         alvo["chamas_agua_apaga"] = bool(agua_apaga)
+        return True
+
+    async def _apagar_chamas_na_agua(self, criatura):
+        """Zera as chamas apagáveis de quem está na água/pântano. True se apagou."""
+        if (not criatura or criatura.get("em_chamas_rodadas", 0) <= 0
+                or not criatura.get("chamas_agua_apaga", True)
+                or not self._agua_protege(criatura, pantano=True)):
+            return False
+        criatura["em_chamas_rodadas"] = 0
+        await self.gm_say(T("narracao.chamas_apagadas_na_agua", nome=nome_criatura(criatura)))
+        return True
+
+    @contextmanager
+    def _escopo_fogo_grego(self, defn):
+        """Liga `_fogo_ignora_agua` enquanto o dano de um item com chamas não
+        apagáveis (Fogo Grego) é aplicado; sempre desliga, mesmo com exceção."""
+        ligar = bool(defn) and defn.get("chamas_agua_apaga", True) is False
+        antes = self._fogo_ignora_agua
+        if ligar:
+            self._fogo_ignora_agua = True
+        try:
+            yield
+        finally:
+            self._fogo_ignora_agua = antes
 
     async def _reduzir_con_temporario(self, alvo, valor, duracao):
         """Reduz CON por N rodadas (nuvem de gás). Registra em efeitos_veneno p/
@@ -37465,6 +37504,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             if not (alvo.get("alive") or alvo.get("hp", 0) > 0):
                 alvo["em_chamas_rodadas"] = 0
+                continue
+            if await self._apagar_chamas_na_agua(alvo):
                 continue
             escolha = await self._aguardar_decisao_chamas(alvo)
             if escolha == "water":
@@ -39633,7 +39674,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             resistance_applied = resistance_applied or total < antes
         # ResistÃªncias: reduÃ§Ã£o fixa escalonÃ¡vel OU metade do dano. A reduÃ§Ã£o
         # acontece antes da vulnerabilidade, preservando a ordem previsÃ­vel.
-        for resistance in target.get("resistances", []):
+        resistencias = list(target.get("resistances", []))
+        if (DMG_FIRE in damage_types and not getattr(self, "_fogo_ignora_agua", False)
+                and not (target.get("em_chamas_rodadas", 0) > 0
+                         and not target.get("chamas_agua_apaga", True))
+                and self._agua_protege(target)):
+            resistencias.append({"type": DMG_FIRE, "mode": "half"})
+        for resistance in resistencias:
             if ignora_resistencia_fisica:
                 continue
             # A RD de Tirano cobre somente armas comuns. Magias, habilidades,
@@ -42501,6 +42548,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return True
 
     async def _monster_throw_item(self, m, target_obj, item):
+        with self._escopo_fogo_grego(ARREMESSAVEIS.get((item or {}).get("id"))):
+            return await self._monster_throw_item_impl(m, target_obj, item)
+
+    async def _monster_throw_item_impl(self, m, target_obj, item):
         """Versão de IA dos arremessáveis de bolsa dos heróis."""
         defn = ARREMESSAVEIS[item["id"]]
         target = target_obj["obj"]
@@ -42575,8 +42626,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # dano da explosão e o fogo contínuo nunca começava.
             if defn.get("em_chamas") and dmg > 0 and self._vivo(alvo):
                 dur = self._rolar_dado(defn.get("chamas_dur", "1d4"))
-                self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True))
-                await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome_criatura(alvo), dur=dur))
+                if self._aplicar_em_chamas(alvo, dur, defn.get("chamas_agua_apaga", True)):
+                    await self.gm_say(T("narracao.pega_fogo_por_rodada_s_2", nome=nome_criatura(alvo), dur=dur))
         zona = defn.get("zona")
         if zona and zona.get("tipo") == "escuridao":
             await self._aplicar_escuridao(m, raio=raio, duracao=zona.get("duracao", 2), pos=target["pos"],

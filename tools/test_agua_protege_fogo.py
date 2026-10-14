@@ -1,0 +1,219 @@
+"""Água protege do fogo. Roda da raiz: python -X utf8 tools/test_agua_protege_fogo.py
+Spec: docs/superpowers/specs/2026-10-13-agua-protege-fogo-design.md
+"""
+import asyncio
+import os
+import sys
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S  # noqa: E402
+
+PASS = 0
+FAIL = 0
+
+
+def check(nome, cond):
+    global PASS, FAIL
+    if cond:
+        PASS += 1
+        print(f"  ✅ {nome}")
+    else:
+        FAIL += 1
+        print(f"  ❌ {nome}")
+
+
+def sala():
+    """Sala 20x12 de chão, fase 'playing', sem rede; captura broadcasts e narração."""
+    r = S.GameRoom("AGUAFOGO")
+    r.msgs = []
+    r.narr = []
+    async def noop(*a, **k):
+        pass
+    async def bc(msg, *a, **k):
+        r.msgs.append(msg)
+    async def say(txt, *a, **k):
+        r.narr.append(str(txt))
+    r.gm_say = say; r.broadcast = bc; r.push_state = noop; r.send_to = noop
+    r._broadcast_dado = noop
+    r.tiles = [[S.WALL] * S.MAP_W for _ in range(S.MAP_H)]
+    for y in range(1, 13):
+        for x in range(1, 21):
+            r.tiles[y][x] = S.FLOOR
+    r.rooms = [{"id": 0, "x": 1, "y": 1, "w": 20, "h": 12, "locked": False}]
+    r.phase = "playing"
+    r.round_num = 1
+    r.materiais = {}
+    return r
+
+
+def heroi(r, pid, nome, classe, pos):
+    h = S.make_player(pid, nome, classe, len(r.players))
+    h["pos"] = list(pos)
+    r.players[pid] = h
+    r.player_order = list(r.players)
+    return h
+
+
+def monstro(r, tipo, pos):
+    d = next(d for d in S.MONSTER_DEFS if d["type"] == tipo)
+    m = S.make_monster(d, {"id": 0, "cx": pos[0], "cy": pos[1]})
+    m["pos"] = list(pos)
+    r.monsters[m["id"]] = m
+    return m
+
+
+def pinta(r, material, tiles):
+    for t in tiles:
+        r.materiais[tuple(t)] = material
+    r._rebuild_materiais_index()
+
+
+def roda(coro):
+    return asyncio.run(coro)
+
+
+print("[1] metade do dano de fogo")
+r = sala()
+h = heroi(r, "h1", "Ana", "mage", (5, 5))
+check("fora da água: dano cheio", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
+pinta(r, "agua", [(5, 5)])
+check("na água rasa: metade", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
+check("na água: dano 1 não fica negativo", r._apply_damage_types(1, [S.DMG_FIRE], h) >= 0)
+check("na água: dano 0 não estoura", r._apply_damage_types(0, [S.DMG_FIRE], h) == 0)
+check("na água: outro elemento intacto", r._apply_damage_types(8, [S.DMG_COLD], h) == 8)
+for mat in ("agua_profunda", "rodamoinho", "rodamoinho_profundo"):
+    pinta(r, mat, [(5, 5)])
+    check(f"{mat} conta", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
+pinta(r, "pantano", [(5, 5)])
+check("pântano NÃO dá metade do dano", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
+pinta(r, "agua", [(5, 5)])
+h["altura"] = 3; h["voo"] = True
+check("voador não conta", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
+h["altura"] = 0; h["voo"] = False
+
+print("[2] footprint e soma com resistências")
+r = sala()
+grande = None
+for d in S.MONSTER_DEFS:
+    m = monstro(r, d["type"], (6, 6))
+    if len(r._monster_tiles(m)) == 4:
+        grande = m
+        break
+    del r.monsters[m["id"]]
+check("existe monstro 2x2 para o teste", grande is not None)
+tiles = r._monster_tiles(grande)
+grande["immunities"] = []; grande["resistances"] = []; grande["weaknesses"] = []
+pinta(r, "agua", tiles[:3])
+check("2x2 com uma casa fora: sem proteção", r._apply_damage_types(8, [S.DMG_FIRE], grande) == 8)
+check("2x2 com uma casa fora: pega fogo", r._aplicar_em_chamas(grande, 3, True) is True)
+grande["em_chamas_rodadas"] = 0
+pinta(r, "agua", tiles)
+check("2x2 todo na água: metade", r._apply_damage_types(8, [S.DMG_FIRE], grande) == 4)
+check("2x2 todo na água: não pega fogo", r._aplicar_em_chamas(grande, 3, True) is False)
+g2 = heroi(r, "h2", "Bia", "warrior", (9, 9))
+pinta(r, "agua", [(9, 9)])
+g2["resistances"] = [{"type": S.DMG_FIRE, "mode": "half"}]
+check("resistência existente + água = quarto", r._apply_damage_types(8, [S.DMG_FIRE], g2) == 2)
+g2["resistances"] = []; g2["immunities"] = [S.DMG_FIRE]
+check("imune a fogo na água segue 0", r._apply_damage_types(8, [S.DMG_FIRE], g2) == 0)
+
+print("[3] imunidade a pegar fogo")
+r = sala()
+h = heroi(r, "h1", "Ana", "warrior", (5, 5))
+check("fora da água: pega fogo", r._aplicar_em_chamas(h, 3, True) is True and h["em_chamas_rodadas"] == 3)
+h["em_chamas_rodadas"] = 0
+pinta(r, "agua", [(5, 5)])
+check("na água: não pega fogo", r._aplicar_em_chamas(h, 3, True) is False and h.get("em_chamas_rodadas", 0) == 0)
+pinta(r, "pantano", [(5, 5)])
+check("no pântano: não pega fogo", r._aplicar_em_chamas(h, 3, True) is False)
+pinta(r, "agua", [(5, 5)])
+check("Fogo Grego pega mesmo na água", r._aplicar_em_chamas(h, 3, False) is True and h["em_chamas_rodadas"] == 3)
+
+print("[4] água apaga")
+r = sala()
+h = heroi(r, "h1", "Ana", "warrior", (5, 5))
+pinta(r, "agua", [(6, 5)])
+h["em_chamas_rodadas"] = 3; h["chamas_agua_apaga"] = True
+roda(r._apagar_chamas_na_agua(h))
+check("fora da água não apaga", h["em_chamas_rodadas"] == 3)
+h["pos"] = [6, 5]
+roda(r._aplicar_lava_se_pisar(h))
+check("passo na água apaga (gancho de movimento)", h["em_chamas_rodadas"] == 0)
+check("narra o apagar", any("água" in n.lower() or "water" in n.lower() for n in r.narr))
+n0 = len(r.narr)
+roda(r._aplicar_lava_se_pisar(h))
+check("não narra de novo", len(r.narr) == n0)
+h["em_chamas_rodadas"] = 3; h["chamas_agua_apaga"] = True
+hp0 = h["hp"]
+roda(r._processar_em_chamas_turno())
+check("rede de segurança no tick apaga sem dano", h["em_chamas_rodadas"] == 0 and h["hp"] == hp0)
+h["pos"] = [5, 5]
+check("sair da água não reacende", h["em_chamas_rodadas"] == 0)
+h["pos"] = [6, 5]; h["em_chamas_rodadas"] = 3; h["chamas_agua_apaga"] = False
+roda(r._aplicar_lava_se_pisar(h))
+check("Fogo Grego não é apagado pela água", h["em_chamas_rodadas"] == 3)
+
+print("[5] Fogo Grego: dano cheio e escopo")
+r = sala()
+h = heroi(r, "h1", "Ana", "warrior", (5, 5))
+pinta(r, "agua", [(5, 5)])
+with r._escopo_fogo_grego({"chamas_agua_apaga": False}):
+    check("escopo ligado: dano cheio", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
+check("escopo desligado ao sair", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
+try:
+    with r._escopo_fogo_grego({"chamas_agua_apaga": False}):
+        raise RuntimeError("x")
+except RuntimeError:
+    pass
+check("escopo desligado após exceção", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
+with r._escopo_fogo_grego({"chamas_agua_apaga": True}):
+    check("óleo comum não liga o escopo", r._apply_damage_types(8, [S.DMG_FIRE], h) == 4)
+h["em_chamas_rodadas"] = 2; h["chamas_agua_apaga"] = False
+check("tick de Fogo Grego em chamas: dano cheio", r._apply_damage_types(8, [S.DMG_FIRE], h) == 8)
+
+print("[6] arremesso real (handler)")
+
+
+def arremessa(item_id, na_agua):
+    r = sala()
+    p = heroi(r, "h1", "Ana", "rogue", (5, 5))
+    gob = monstro(r, "goblin", (7, 5))
+    gob["hp"] = gob["max_hp"] = 100
+    gob["ac"] = 0
+    gob["immunities"] = []; gob["resistances"] = []; gob["weaknesses"] = []
+    if na_agua:
+        pinta(r, "agua", r._monster_tiles(gob))
+    defn = S.ARREMESSAVEIS[item_id]
+    item = {"id": item_id, "name": item_id}
+    p.setdefault("bag", []).append(item)
+    orig = S.random.randint
+    S.random.randint = lambda a, b: b      # d20 = 20, dados no máximo: acerta sempre
+    try:
+        roda(r._throw_item_alvo(p, defn, item, gob["id"]))
+    finally:
+        S.random.randint = orig
+    return r, gob, 100 - gob["hp"]
+
+
+try:
+    _, g_dry, d_dry = arremessa("frasco_oleo", False)
+    r_w, g_wet, d_wet = arremessa("frasco_oleo", True)
+    check("óleo seco: pega fogo", g_dry.get("em_chamas_rodadas", 0) > 0)
+    check("óleo na água: não pega fogo", g_wet.get("em_chamas_rodadas", 0) == 0)
+    check(f"óleo na água: dano reduzido ({d_wet} vs {d_dry})", 0 < d_wet < d_dry)
+    _, g_fg, d_fg = arremessa("fogo_grego", True)
+    _, g_fg_dry, d_fg_dry = arremessa("fogo_grego", False)
+    check("fogo grego na água: pega fogo", g_fg.get("em_chamas_rodadas", 0) > 0)
+    check(f"fogo grego na água: dano cheio ({d_fg} vs {d_fg_dry})", d_fg == d_fg_dry and d_fg > 0)
+    check("escopo não vaza após os arremessos", r_w._fogo_ignora_agua is False)
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+    check(f"arremesso real executou ({e})", False)
+
+print(f"\n{PASS} ok, {FAIL} falhas")
+sys.exit(1 if FAIL else 0)

@@ -4,6 +4,10 @@
 // Mantido À MÃO: depois da migração o server.py não contém mais o texto
 // em português, só a chave. A chave é o slug do texto SEM as interpolações.
 window.LANG_NARRACAO = {
+  "narracao.chamas_apagadas_na_agua": {
+    "en": "🌊 {nome} plunges into the water and the flames go out.",
+    "pt": "🌊 {nome} mergulha na água e as chamas se apagam."
+  },
   "narracao.cinto_conteudo_guardado": {
     "en": "The items remain in **{item}** and are inaccessible until the belt is equipped again.",
     "pt": "Os itens permanecem no **{item}** e ficam inacessíveis até o cinto ser equipado novamente."
