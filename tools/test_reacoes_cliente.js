@@ -108,6 +108,12 @@ for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.piche_chamas", "ui.reac
 const _pt = k => { const j = lang.indexOf('"' + k + '"'); const m = /"pt":\s*"([^"]*)"/.exec(lang.slice(j, j + 400)); return m ? m[1] : ""; };
 check("pt de agua menciona fogo", /fogo/i.test(_pt("ui.reacao.casa.agua")));
 check("pt de pantano menciona fogo", /fogo/i.test(_pt("ui.reacao.casa.pantano")));
+const sbSrc = fs.readFileSync(path.join(raiz, "src", "soundBank.js"), "utf8");
+check("SoundBank tem os eventos congelar e crosta", /congelar:\s*E\(\['combate\/congelar\.ogg'\]/.test(sbSrc) && /crosta:\s*E\(\['combate\/crosta\.ogg'\]/.test(sbSrc));
+check("arquivos de som de gelo existem", fs.existsSync(path.join(raiz, "assets", "sfx", "combate", "congelar.ogg")) && fs.existsSync(path.join(raiz, "assets", "sfx", "combate", "crosta.ogg")));
+check("_tocarSomReacao toca congelar e crosta", /function _tocarSomReacao[^]*?tipo === 'congelar'\) sfx\('congelar'[^]*?tipo === 'crosta'\) sfx\('crosta'/.test(jogoSrc));
+for (const k of ["ui.somteste.ev.congelar", "ui.somteste.ev.crosta"])
+  check("chave " + k + " pt+en", lang.indexOf('"' + k + '"') >= 0 && _pt(k) !== "" && lang.slice(lang.indexOf('"' + k + '"'), lang.indexOf('"' + k + '"') + 300).includes('"en"'));
 const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
 check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));
 
