@@ -77,6 +77,12 @@ const st3 = { ...st2, zonas_especiais: [{ ativa: true, tipo: "chamas_piche", til
 check("piche em chamas -> chave própria", RE.descreverCasa(st3, 1, 1).chave === "ui.reacao.casa.piche_chamas");
 check("zona inativa não conta", RE.descreverCasa({ ...st2, zonas_especiais: [{ ativa: false, tipo: "chamas_piche", tiles: [[1, 1]] }] }, 1, 1).chave === "ui.reacao.casa.piche");
 check("game.js lista chamas_piche nas zonas de fogo persistente", /_atualizarZonasMagia[^]*?z\.tipo === 'chamas_piche'/.test(fs.readFileSync(path.join(raiz, "game.js"), "utf8")));
+check("água rasa: conduz e protege", RE.descreverCasa(st2, 2, 1).chave === "ui.reacao.casa.agua");
+const stW = { materiais: { "1,1": "agua_profunda", "2,1": "rodamoinho", "3,1": "rodamoinho_profundo", "4,1": "pantano" }, round: 1 };
+check("água profunda -> agua_fogo", RE.descreverCasa(stW, 1, 1).chave === "ui.reacao.casa.agua_fogo");
+check("redemoinho -> agua_fogo", RE.descreverCasa(stW, 2, 1).chave === "ui.reacao.casa.agua_fogo");
+check("redemoinho profundo -> agua_fogo", RE.descreverCasa(stW, 3, 1).chave === "ui.reacao.casa.agua_fogo");
+check("pântano -> pantano", RE.descreverCasa(stW, 4, 1).chave === "ui.reacao.casa.pantano");
 const c = RE.descreverCasa(st2, 3, 1);
 check("crosta -> rodadas restantes", c.chave === "ui.reacao.casa.crosta" && c.params.n === 3);
 console.log("[7] fiação");
@@ -94,8 +100,11 @@ const corpo3D = jogoSrc.split("function _reacoes3DAtualizar")[1].split("function
 check("crostas 3D em cache por estado", /function _reacoesCrostas3D[^]*?_reacoesCrostasRef !== st/.test(jogoSrc) && !corpo3D.includes("ReacoesElementais.crostasAcabando"));
 check("_reacoes3DDispose zera _reacoesAnims", /function _reacoes3DDispose[^]*?_reacoesAnims\.length = 0/.test(jogoSrc));
 const lang = fs.readFileSync(path.join(raiz, "src", "lang", "interface.js"), "utf8").replace(/\r?\n/g, " ");
-for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.piche_chamas", "ui.reacao.casa.agua", "ui.reacao.casa.crosta"])
+for (const k of ["ui.reacao.casa.piche", "ui.reacao.casa.piche_chamas", "ui.reacao.casa.agua", "ui.reacao.casa.agua_fogo", "ui.reacao.casa.pantano", "ui.reacao.casa.crosta"])
   check("chave " + k + " pt+en", new RegExp('"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"pt"[^]{0,200}?"en"|"' + k.replace(/\./g, "\\.") + '":\\s*\\{[^]{0,200}?"en"[^]{0,200}?"pt"').test(lang));
+const _pt = k => { const j = lang.indexOf('"' + k + '"'); const m = /"pt":\s*"([^"]*)"/.exec(lang.slice(j, j + 400)); return m ? m[1] : ""; };
+check("pt de agua menciona fogo", /fogo/i.test(_pt("ui.reacao.casa.agua")));
+check("pt de pantano menciona fogo", /fogo/i.test(_pt("ui.reacao.casa.pantano")));
 const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
 check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));
 
