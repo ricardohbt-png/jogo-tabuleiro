@@ -4972,6 +4972,10 @@ window.LANG_INTERFACE = {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
   },
+  "ui.reacao.casa.gelo": {
+    "en": "Ice: fire melts it into shallow water.",
+    "pt": "Gelo: o fogo o derrete em água rasa."
+  },
   "ui.item.frasco_piche.desc": {
     "en": "Area (radius 1, range 4). Spreads pitch for 4 rounds — the ground is slowed and FLAMMABLE. No damage.",
     "pt": "Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento e INFLAMÁVEL. Sem dano."

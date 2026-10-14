@@ -56089,6 +56089,7 @@ function _tocarSomReacao(tipo, pos){
   else if(tipo === 'congelar') sfx('congelar', { pos });
   else if(tipo === 'crosta') sfx('crosta', { pos });
   else if(tipo === 'explosao_gas') sfx('explosao', { pos });
+  else if(tipo === 'derreter') sfx('fumaca_chiado', { pos });
 }
 GS.on('reacaoElemental', msg => {
   const est = ReacoesElementais.estilo(msg && msg.tipo);
@@ -56140,6 +56141,13 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
           ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.15 + 0.3 * p), 0, Math.PI * 2); ctx.stroke();
         } else if(a.tipo === 'incendio'){
           _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.35, CELL * 0.8, now, k + 1);
+        } else if(a.tipo === 'derreter'){
+          // calor laranja no miolo virando água clara nas bordas, subindo como vapor
+          const r = CELL * (0.3 + 0.45 * p), vy = cy - CELL * 0.25 * p;
+          const g = ctx.createRadialGradient(cx, vy, 0, cx, vy, r);
+          g.addColorStop(0, 'rgba(255,196,120,0.85)'); g.addColorStop(0.5, 'rgba(190,232,255,0.6)');
+          g.addColorStop(1, 'rgba(150,215,255,0)');
+          ctx.fillStyle = g; ctx.fillRect(cx - r, vy - r, r * 2, r * 2);
         } else if(a.tipo === 'explosao_gas'){
           // clarão que cresce do miolo amarelo-branco ao laranja e some
           const r = CELL * (0.35 + 0.75 * p);

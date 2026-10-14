@@ -3707,6 +3707,23 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > sobre as 98 casas da sala, gás consumido). O 2D só passou em checagem de sintaxe. Testes:
 > `tools/test_fogo_gas.py` (27), `tools/test_terrain_reactions.py`.
 
+> **Fogo + gelo (2026-10-14):** sexta reação do motor (`derreter_gelo` em `REACOES`, ligada; estado `gelo` =
+> `piso_congelado`/`planicie_nevada` fora de ponte). Fogo de qualquer fonte atingindo uma casa de gelo ou neve
+> derrete o gelo **conectado** (`_rx_regiao`, raio `RX_DERRETER_RAIO`=4 do ponto atingido, teto
+> `RX_DERRETER_TETO`=24), **sem dano**. `_rx_derreter_casa`: camada temporária (reação água + frio, Chamado do
+> Inverno temporário) sai e a casa volta ao que havia embaixo (poça congelada volta a ser água, chão comum volta
+> a chão); gelo **permanente ou do mapa** (sem registro em `_terrenos_inverno`), ou temporário cujo chão original
+> também era gelo, vira **água rasa permanente** pelo resto da missão. Quem estava em chamas apagáveis na região
+> derretida se apaga (`_apagar_chamas_na_agua`; Fogo Grego não); a água nova conduz choque e protege do fogo.
+> Como toda reação, resolve ao fim do escopo da ação — o golpe da própria explosão sai cheio, a proteção da água
+> só vale dali em diante (`test_agua_protege_fogo` roda a Bola de Fogo dentro de `evento_elemental` por isso).
+> Cliente: estilo `derreter` em `src/reacoesElementais.js`, desenho 2D (calor laranja virando água clara) e flash
+> 3D por casa em `_reacoesDesenhar2D`/`_reacoes3DAtualizar`, som reaproveitado `fumaca_chiado`, tooltip
+> `ui.reacao.casa.gelo` em gelo/neve, narração `narracao.reacao.derreter`. **Limite conhecido:** cancelar depois
+> um Chamado do Inverno permanente cujas casas já derreteram restaura o material-base original por cima da água.
+> Provado no navegador em servidor isolado (20 casas de gelo e neve viraram água, clarão sobre a região). O
+> desenho 2D só passou em checagem de sintaxe. Testes: `tools/test_fogo_gelo.py` (32).
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota

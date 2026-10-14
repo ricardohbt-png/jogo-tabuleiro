@@ -6,6 +6,7 @@
     congelar: { cor: '#bfefff', duracaoMs: 900 },
     crosta:   { cor: '#8a5a44', duracaoMs: 900 },
     explosao_gas: { cor: '#ffb347', duracaoMs: 1100 },
+    derreter: { cor: '#a8e4ff', duracaoMs: 1000 },
   };
   function estilo(tipo) { return ESTILOS[tipo] ? Object.assign({}, ESTILOS[tipo]) : null; }
 
@@ -45,6 +46,9 @@
     if (mat === 'agua_profunda' || mat === 'rodamoinho' || mat === 'rodamoinho_profundo')
       return { chave: 'ui.reacao.casa.agua_fogo', params: {} };
     if (mat === 'pantano') return { chave: 'ui.reacao.casa.pantano', params: {} };
+    // gelo e neve (fora de ponte): o fogo derrete em água
+    if ((mat === 'piso_congelado' || mat === 'planicie_nevada') && !_sobPonte(state, x, y))
+      return { chave: 'ui.reacao.casa.gelo', params: {} };
     if (mat === 'lava_solidificada')
       return { chave: 'ui.reacao.casa.crosta', params: { n: Math.max(1, _restantes(state, key) || 1) } };
     return null;

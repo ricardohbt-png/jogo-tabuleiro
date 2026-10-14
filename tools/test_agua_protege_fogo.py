@@ -242,7 +242,13 @@ try:
                                          permanente=False, expira_em=r_b.round_num + 5)
     check("casa congelada: _agua_protege False", r_b._agua_protege(m_b) is False)
     m_b["hp"] = 200
-    roda(r_b._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False))
+
+    async def _bola_em_escopo():
+        # como no jogo: a magia roda dentro de evento_elemental, então a reação (fogo derrete o gelo
+        # e a casa vira água) só resolve DEPOIS do dano — o golpe da própria explosão sai cheio.
+        async with r_b.evento_elemental({"tipo": "magia", "caster_id": "x"}):
+            await r_b._aplicar_dano_area_fogo("x", 8, 5, 1, 12, 99, "R1", com_save=False)
+    roda(_bola_em_escopo())
     check(f"casa congelada: dano de fogo volta cheio ({200 - m_b['hp']})", 200 - m_b["hp"] == d_seco)
 except Exception as e:
     import traceback
