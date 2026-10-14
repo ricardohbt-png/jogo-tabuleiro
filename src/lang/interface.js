@@ -1220,6 +1220,10 @@ window.LANG_INTERFACE = {
     "en": "Click a SQUARE (radius {raio} area, range {alcance})",
     "pt": "Clique numa CASA (área raio {raio}, alcance {alcance})"
   },
+  "ui.arremesso.mira_area_uma_casa": {
+    "en": "Click the impact square (range {alcance})",
+    "pt": "Clique na casa de impacto (alcance {alcance})"
+  },
   "ui.arremesso.mira_valida_confirme_para_arremessar": {
     "en": "Valid aim — confirm to throw.",
     "pt": "Mira válida — confirme para arremessar."
@@ -5281,8 +5285,8 @@ window.LANG_INTERFACE = {
     "pt": "Arremesse (4 quad., ataque por DES). 1d6 de ácido + metade na rodada seguinte. Corrói a defesa do alvo (−1 CA por acerto)."
   },
   "ui.item.frasco_oleo.desc": {
-    "en": "Throw (4 sq., DEX attack). 1d6 fire and the target catches fire (1/round for 1d4 rounds). Put out with Water or by spending the action.",
-    "pt": "Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação."
+    "en": "Hits only the chosen square (range 4). Deals 1d6 fire damage and ignites connected pitch from that square; anyone hit catches fire (1/round for 1d4 rounds). Extinguish with Water or by spending an action.",
+    "pt": "Atinge somente a casa escolhida (alcance 4). Causa 1d6 de fogo e incendeia o piche conectado a partir dela; quem for atingido pega fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação."
   },
   "ui.item.granada.desc": {
     "en": "Area (radius 1, range 4). 2d6 blast, Reflex DC 12 (half).",

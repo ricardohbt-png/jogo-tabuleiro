@@ -2046,6 +2046,12 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `handle_throw_item`) + `tools/test_editor_items_logic.js`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-g-arremessaveis*`.
 
+> **Frasco de Óleo — impacto pontual:** o arremessável nativo usa o fluxo `area` com
+> `area_raio: 0`, atingindo apenas a casa escolhida e iniciando a ignição do piche nela.
+> A mira trata raio zero como válido e mantém a prévia de uma casa; também aceita o payload
+> legado `{target_id,target_pos}` de clientes que já estavam abertos. Regressões:
+> `tools/test_frasco_oleo_area.py` e `tools/test_frasco_oleo_area_cliente.js`.
+>
 > **Editor de Itens — Fase H (Venenos):** destrava a sub-aba **Venenos** e **fecha as 8
 > sub-abas** do editor. Cobre as **5 operações** de `VENENOS`: `dano` (com os 2 modelos de
 > resistência — `save_aplicacao`, testa 1× ao aplicar, ou `save_neutraliza_por_rodada`, testa a

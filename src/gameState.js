@@ -632,10 +632,12 @@ const GS = (() => {
     },
     frasco_oleo: {
       id: 'frasco_oleo', nome: 'Frasco de Óleo Incendiário', emoji: '🔥',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'1d6', tipoDano:'fogo',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
+      alcance: 4, areaRaio: 0, dano:'1d6', tipoDano:'fogo',
       duracao: '1d4', permitidoPara:['todos'],
-      descricao: 'Arremesse (4 quad., ataque por DES). 1d6 de fogo e o alvo pega ' +
-                 'fogo (1/rodada por 1d4 rodadas). Apaga com Água ou gastando a ação.',
+      descricao: 'Atinge somente a casa escolhida (alcance 4). Causa 1d6 de fogo e ' +
+                 'incendeia o piche a partir dessa casa. Quem for atingido pega fogo por ' +
+                 '1d4 rodadas; apaga com Água ou ação.',
     },
     fogo_grego: {
       id: 'fogo_grego', nome: 'Fogo Grego', emoji: '🟢',

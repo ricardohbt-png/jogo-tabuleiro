@@ -5018,7 +5018,8 @@ function gerarConteudoTooltip(item){
     linhas.push(renderLinhaTooltip('📏',t('ui.tooltip.alcance'),t('ui.item.desc.alcance_lanca')));
   if(item.alcanceArremesso) linhas.push(renderLinhaTooltip('🎯',t('ui.tooltip.arremesso'),t('ui.tooltip.quad_diagonais',{n:item.alcanceArremesso})));
   if(item.arremessavel && item.alvo === 'area' && item.areaRaio != null)
-    linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.area'),`raio ${item.areaRaio}`));
+    linhas.push(renderLinhaTooltip('💥',t('ui.tooltip.area'), item.areaRaio === 0
+      ? t('ui.tooltip.area_uma_casa') : `raio ${item.areaRaio}`));
   if(item.saveTipo && item.saveCD != null)
     linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),`${String(item.saveTipo).replace(/^./, c => c.toUpperCase())} CD ${item.saveCD}`));
   if(item.arremesso || item.arremessavel) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
@@ -22308,14 +22309,16 @@ function _iniciarMiraArremesso(item, player, sourceInfo){
   const alvoTipo = catDef.alvo || item.alvo || 'ataque_alvo';
   const alcance = catDef.alcance || item.alcance || 4;
   const isArea  = alvoTipo === 'area';
-  const areaRaio = isArea ? (catDef.areaRaio || item.area_raio || 1) : 0;
+  const areaRaio = isArea ? (catDef.areaRaio ?? item.area_raio ?? 1) : null;
   window._modoThrowItem = { id: item.id, alcance, area: areaRaio, sourceInfo };
   GS.pendingThrow = { id: item.id, alcance, alvo: alvoTipo };   // habilita o ramo de throw em resolveTileClick
   // Realce de alcance em vermelho (mesmo canal _spellHL.range da mira de magia).
   const range = new Set();
   _addCheb(me.pos[0], me.pos[1], alcance, range);
   const _alvoTxt = isArea
-    ? t('ui.arremesso.mira_area', {raio:areaRaio, alcance})
+    ? (areaRaio === 0
+      ? t('ui.arremesso.mira_area_uma_casa', {alcance})
+      : t('ui.arremesso.mira_area', {raio:areaRaio, alcance}))
     : t('ui.arremesso.mira_alvo', {alcance});
   const validTargets = new Set();
   if (!isArea) for (const monster of GS.gameState?.monsters || []) {
@@ -22351,7 +22354,7 @@ function _clickTileThrow(tx, ty){
     _aimSetStatus(msg, '#ffb168');
     toast(msg, 'var(--gold)');
   } else {
-    _aimSetStatus(window._modoThrowItem?.area
+    _aimSetStatus(window._modoThrowItem?.area != null
       ? t('ui.arremesso.escolha_uma_casa_dentro_do_alcance_e_sem_p')
       : t('ui.arremesso.selecione_um_inimigo_vivo_dentro_do_alcanc'), '#ffb168');
   }
@@ -22635,7 +22638,7 @@ function _aimAlgumModoAtivo() {
 // O cursor saiu do tabuleiro: apaga a prévia que seguia o cursor e o marcador.
 function _aimPreviewNone() {
   if (window._modoMagia) _recomputarAreaMagia(null, null);
-  else if (window._modoThrowItem?.area) _recomputarAreaThrow(null, null);
+  else if (window._modoThrowItem?.area != null) _recomputarAreaThrow(null, null);
   else if (window._modoDirecaoInstrumento?.previewNota)
     _aimSetHighlights({range:window._modoDirecaoInstrumento.possibleArea,area:new Set()});
   if (window._modoInstrumento) { const tip = document.getElementById('tooltip'); if (tip) tip.style.display = 'none'; }
@@ -22720,7 +22723,7 @@ function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
   if (window._modoMagia)        { _recomputarAreaMagia(tx, ty); _aimHoverMagic(tx, ty); return true; }
   if (window._modoHabilidadeTeste) { _aimHoverHabilidadeTeste(tx, ty); return true; }
   if (window._modoThrowItem) {
-    if (window._modoThrowItem.area) _recomputarAreaThrow(tx, ty);
+    if (window._modoThrowItem.area != null) _recomputarAreaThrow(tx, ty);
     _aimHoverThrow(tx, ty);
     return true;
   }
@@ -23110,7 +23113,7 @@ function _semearTrajetoMagia() {
 // _recomputarAreaMagia): um quadrado Chebyshev de raio `mode.area` que segue o
 // cursor. O alcance vermelho (_spellHL.range) já foi pintado em _iniciarMiraArremesso.
 function _recomputarAreaThrow(hx, hy) {
-  const mode = window._modoThrowItem; if (!mode || !mode.area) return;
+  const mode = window._modoThrowItem; if (!mode || mode.area == null) return;
   const area = new Set();
   if (hx != null && hy != null) _addCheb(hx, hy, mode.area, area);
   window._spellHL.area   = area;

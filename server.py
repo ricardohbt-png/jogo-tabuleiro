@@ -7271,7 +7271,7 @@ ARREMESSAVEIS = {
     "agua_benta": {"id":"agua_benta","name":"Água Benta","emoji":"💧✝️","alcance":4,"alvo":"ataque_alvo","dano":"2d6","elemento":"sagrado","holy_water":True,"zona_sagrada":2},
     "frasco_oleo": {
         "id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥",
-        "alcance": 4, "alvo": "ataque_alvo", "dano": "1d6", "elemento": "fogo",
+        "alcance": 4, "alvo": "area", "area_raio": 0, "dano": "1d6", "elemento": "fogo",
         "em_chamas": True, "chamas_dur": "1d4", "chamas_agua_apaga": True,
     },
     "fogo_grego": {
@@ -20892,7 +20892,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
         elif alvo_tipo == "area":
             async with self.evento_elemental(_rx_origem):
-                await self._throw_item_area(p, defn, item, data.get("tx"), data.get("ty"), source_location)
+                tx, ty = data.get("tx"), data.get("ty")
+                if tx is None or ty is None:
+                    # Clientes já abertos podem ainda enviar o payload antigo de alvo único.
+                    alvo_antigo = self.monsters.get(data.get("target_id"))
+                    if alvo_antigo and alvo_antigo.get("hp", 0) > 0:
+                        tx, ty = self._target_tile(alvo_antigo, data.get("target_pos"))
+                await self._throw_item_area(p, defn, item, tx, ty, source_location)
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if not _agiu_antes and p.get("action_done"):
