@@ -25,6 +25,10 @@
     return out;
   }
 
+  function _sobPonte(state, x, y) {
+    return ((state && state.pontes) || []).some(p => ((p && p.tiles) || []).some(t => t && t[0] === x && t[1] === y));
+  }
+
   function descreverCasa(state, x, y) {
     const key = `${x},${y}`;
     const mat = state && state.materiais && state.materiais[key];
@@ -33,7 +37,13 @@
         && (z.tiles || []).some(t => `${t[0]},${t[1]}` === key));
       return { chave: emChamas ? 'ui.reacao.casa.piche_chamas' : 'ui.reacao.casa.piche', params: {} };
     }
+    // Água sob ponte não protege (o servidor ignora a água sob a ponte): sem promessa.
+    const ehAgua = mat === 'agua' || mat === 'agua_profunda' || mat === 'rodamoinho' || mat === 'rodamoinho_profundo';
+    if (ehAgua && _sobPonte(state, x, y)) return null;
     if (mat === 'agua') return { chave: 'ui.reacao.casa.agua', params: {} };
+    if (mat === 'agua_profunda' || mat === 'rodamoinho' || mat === 'rodamoinho_profundo')
+      return { chave: 'ui.reacao.casa.agua_fogo', params: {} };
+    if (mat === 'pantano') return { chave: 'ui.reacao.casa.pantano', params: {} };
     if (mat === 'lava_solidificada')
       return { chave: 'ui.reacao.casa.crosta', params: { n: Math.max(1, _restantes(state, key) || 1) } };
     return null;

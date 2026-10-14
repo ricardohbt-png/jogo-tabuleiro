@@ -10623,8 +10623,16 @@ window.LANG_INTERFACE = {
     "pt": "Piche em chamas: causa dano de fogo a quem estiver ou entrar aqui"
   },
   "ui.reacao.casa.agua": {
-    "en": "Water: conducts electricity",
-    "pt": "Água: conduz eletricidade"
+    "en": "Water: conducts electricity; halves fire damage and prevents burning",
+    "pt": "Água: conduz eletricidade; metade do dano de fogo e não pega fogo"
+  },
+  "ui.reacao.casa.agua_fogo": {
+    "en": "Water: halves fire damage and prevents burning",
+    "pt": "Água: metade do dano de fogo e não pega fogo"
+  },
+  "ui.reacao.casa.pantano": {
+    "en": "Swamp: prevents burning",
+    "pt": "Pântano: não pega fogo"
   },
   "ui.reacao.casa.crosta": {
     "en": "Solidified lava: reverts in {n} round(s)",

@@ -382,11 +382,15 @@ def corpo(nome):
 
 
 for nome, elem in TR.FONTES_COM_REGISTRO.items():
+    if nome == "_throw_item_area":      # wrapper do escopo do Fogo Grego: o corpo mora no _impl
+        nome_check, nome = nome, nome + "_impl"
+    else:
+        nome_check = nome
     seg = corpo(nome)
     no = next((n for n in ast.walk(_arvore) if isinstance(n, (ast.AsyncFunctionDef, ast.FunctionDef)) and n.name == nome), None)
     chamadas = [c for c in ast.walk(no) if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
                 and c.func.attr == "_rx_registrar"] if no is not None else []
-    check(f"{nome} existe e chama _rx_registrar (AST)", bool(chamadas))
+    check(f"{nome_check} existe e chama _rx_registrar (AST)", bool(chamadas))
 check("funil _aplicar_dano_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_aplicar_dano_alvo") or ""))
 check("funil _dano_em_alvo notifica o motor", "_rx_registrar_alvo" in (corpo("_dano_em_alvo") or ""))
 check("magias rodam dentro de um escopo elemental",

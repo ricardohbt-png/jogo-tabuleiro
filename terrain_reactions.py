@@ -130,6 +130,23 @@ class TerrainReactions:
             return mat in {"piso_congelado", "planicie_nevada"}
         return False
 
+    def _agua_protege(self, criatura, *, pantano=False):
+        """True se TODAS as casas do footprint são água (ou, com `pantano`, também
+        pântano) e a criatura não voa acima do chão. Derivado de posição/material:
+        nenhum estado novo, nada a persistir."""
+        if not criatura or self._voo_imune_terreno(criatura):
+            return False
+        tiles = self._rx_tiles_da(criatura)
+        if not tiles:
+            return False
+        for x, y in tiles:
+            if self._water_tile_kind(x, y):
+                continue
+            if pantano and not self._ponte_em(x, y) and self.materiais.get((x, y)) == "pantano":
+                continue
+            return False
+        return True
+
     def _rx_regiao(self, sementes, pred, *, raio, teto):
         """Casas conectadas (4 vizinhos) que satisfazem `pred`, a partir das
         sementes, dentro de `raio` (Chebyshev, None = sem limite) e até `teto`."""
