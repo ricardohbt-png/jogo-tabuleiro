@@ -34253,6 +34253,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if z["duracao"] <= 0:
                     z["ativa"] = False
                     await self.gm_say(T("narracao.camara_gas_se_dissipou"))
+            elif z.get("tipo") == "nuvem_gas":
+                z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
+                if z["duracao"] <= 0:
+                    z["ativa"] = False
+                    await self.gm_say(T("narracao.nuvem_gas_se_dissipou"))
             elif z.get("tipo") == "molochus_chamas":
                 z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
                 if z["duracao"] <= 0:
@@ -36685,6 +36690,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # quem foi atingido): o trap_result é privado, então sem isto a mina que
         # um MONSTRO pisa — ou que atinge outro herói — explodiria muda.
         await self._avisar_armadilha(arm["tipo"], [cx, cy], alvos, area=r)
+        if arm["tipo"] == "nuvem_gas":
+            # A nuvem fica no ar pela duração do efeito: é o gás que o fogo pode detonar
+            # (reação Fogo + gás, terrain_reactions.py). Câmara de Gás já nasce como zona.
+            dur = next((int(e.get("duracao") or 3) for e in tipo.get("efeitos", [])
+                        if e.get("tipo") == "reduzir_con"), 3)
+            self.zonas_especiais.append({
+                "id": f"nuvem_gas_{arm['id']}_{self.round_num}", "tipo": "nuvem_gas",
+                "cx": cx, "cy": cy, "raio": r,
+                "tiles": [list(t) for t in self._rx_tiles_area(cx, cy, raio=r)],
+                "duracao": dur, "ativa": True, "created_round": self.round_num,
+                "criador": arm.get("criador")})
         for alvo in alvos:
             alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
             save_ok, d20, sb, stot = self._testar_save(alvo, tipo["save"], _trap_cd(arm, tipo))

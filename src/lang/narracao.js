@@ -512,6 +512,10 @@ window.LANG_NARRACAO = {
     "en": "☠️ The Gas Chamber dissipates.",
     "pt": "☠️ A Câmara de Gás se dissipa."
   },
+  "narracao.nuvem_gas_se_dissipou": {
+    "en": "🌫️ The gas cloud dissipates.",
+    "pt": "🌫️ A nuvem de gás se dissipa."
+  },
   "narracao.cancao_heroica_de_manutencao": {
     "en": "🎵 **{heroi}**'s Heroic Song [{labels}] — upkeep 🍖-{custo_fome} 💧-{custo_sede}.",
     "pt": "🎵 Canção Heroica de **{heroi}** [{labels}] — manutenção 🍖-{custo_fome} 💧-{custo_sede}."
@@ -3039,6 +3043,10 @@ window.LANG_NARRACAO = {
   "narracao.visao_de_expandida_para_raio": {
     "en": "👁️ **{heroi}**'s vision expanded to radius {raio}.",
     "pt": "👁️ Visão de **{heroi}** expandida para raio {raio}."
+  },
+  "narracao.reacao.explosao_gas": {
+    "en": "💥 The fire ignites the gas — it explodes!",
+    "pt": "💥 O fogo incendeia o gás — ele explode!"
   },
   "narracao.reacao.choque": {
     "en": "⚡ The lightning surges through the pool!",

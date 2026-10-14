@@ -26,6 +26,10 @@ RX_DURACAO_CROSTA = 3
 RX_CD_PADRAO = 12
 RX_DURACAO_CHAMAS = 3
 RX_DADO_CHAMAS = "1d6"
+RX_GAS_DANO = "2d6"          # explosão de gás: dano de fogo
+RX_GAS_CD = 17               # Reflexos fixo (metade do dano)
+RX_GAS_TIPOS = ("camara_gas", "nuvem_gas")
+RX_PISO = (1, 2)             # server.FLOOR, server.DOOR (um teste confere)
 
 # Limitações conhecidas: relâmpago da Tempestade de Ciclones sobre poça VAZIA não conduz
 # (só criaturas atingidas pelo funil reagem); a Magia Geminada faz uma 2ª chamada de
@@ -54,6 +58,7 @@ REACOES = [
     {"id": "incendiar_piche", "elemento": RX_FIRE,      "estado": "piche",     "efeito": "_rx_incendiar_piche", "ativa": True},
     {"id": "congelar_agua",   "elemento": RX_COLD,      "estado": "agua_rasa", "efeito": "_rx_congelar_agua",   "ativa": True},
     {"id": "crosta_de_lava",  "elemento": RX_COLD,      "estado": "lava",      "efeito": "_rx_crosta_lava",     "ativa": True},
+    {"id": "explodir_gas",    "elemento": RX_FIRE,      "estado": "gas",        "efeito": "_rx_explodir_gas",    "ativa": True},
     {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": None,                  "ativa": False},
 ]
 
@@ -128,7 +133,25 @@ class TerrainReactions:
             return self._is_lava_tile(x, y)
         if estado == "gelo":
             return mat in {"piso_congelado", "planicie_nevada"}
+        if estado == "gas":
+            return any(tile in self._rx_gas_tiles(z) for z in self._rx_gas_zonas())
         return False
+
+    # ── zonas de gás (Câmara de Gás / Nuvem de Gás) ─────────────────────────
+    def _rx_gas_zonas(self):
+        return [z for z in self.zonas_especiais if z.get("ativa") and z.get("tipo") in RX_GAS_TIPOS]
+
+    def _rx_gas_tiles(self, zona):
+        """Casas ocupadas pelo gás: a Câmara cobre o piso da sala; a Nuvem tem casas próprias."""
+        if zona.get("tipo") == "camara_gas":
+            sala = self._room_by_id(zona.get("room_id"))
+            if not sala:
+                return set()
+            return {(x, y)
+                    for y in range(sala["y"], min(sala["y"] + sala["h"], len(self.tiles)))
+                    for x in range(sala["x"], min(sala["x"] + sala["w"], len(self.tiles[0])))
+                    if self.tiles[y][x] in RX_PISO}
+        return {(int(x), int(y)) for x, y in (zona.get("tiles") or [])}
 
     def _agua_protege(self, criatura, *, pantano=False):
         """True se TODAS as casas do footprint são água (ou, com `pantano`, também
@@ -248,6 +271,30 @@ class TerrainReactions:
                 # os prólogos de turno (herói, monstro, servo, prisioneiro) consomem
                 # esta flag com pop: sem ela o alvo congelado fora da vez andaria
                 alvo["turbilhao_perde_movimento"] = True
+
+    async def _rx_explodir_gas(self, tiles, origem, pend, prof):
+        """Fogo em gás: toda zona de gás tocada explode inteira e se consome."""
+        tocadas = [z for z in self._rx_gas_zonas() if set(tiles) & self._rx_gas_tiles(z)]
+        if not tocadas:
+            return
+        area = sorted({t for z in tocadas for t in self._rx_gas_tiles(z)}, key=lambda t: (t[1], t[0]))
+        for z in tocadas:
+            z["ativa"] = False          # o gás queimou: não explode de novo
+        await self._rx_anunciar("explosao_gas", area, tiles[0])
+        await self.gm_say(self._rx_T("narracao.reacao.explosao_gas"))
+        base = self._rolar_dado(RX_GAS_DANO)
+        caster = origem.get("caster_id")
+        for alvo in self._alvos_no_inverno(area):
+            if not self._vivo(alvo):      # morreu em cascata nesta mesma explosão
+                continue
+            ok, *_ = await self._save_mostrado(alvo, "reflexos", RX_GAS_CD, mitigacao="half_damage")
+            d = max(1, base // 2) if ok else base
+            if "vida_atual" not in alvo:
+                d = self._apply_damage_types(d, [RX_FIRE], alvo)
+            if d > 0:
+                await self._dano_em_alvo(alvo, d, RX_FIRE, caster)
+        # o fogo da explosão alcança tudo que estava no gás (piche, por exemplo)
+        await self._rx_encadear(RX_FIRE, area, {"origem": origem}, prof)
 
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")

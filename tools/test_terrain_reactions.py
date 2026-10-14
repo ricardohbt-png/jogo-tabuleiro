@@ -98,9 +98,9 @@ print("[2] constantes e tabela")
 check("elementos canônicos iguais aos do servidor",
       (TR.RX_FIRE, TR.RX_COLD, TR.RX_LIGHTNING) == (S.DMG_FIRE, S.DMG_COLD, S.DMG_LIGHTNING))
 ids = [l["id"] for l in TR.REACOES]
-check("tabela tem as 4 reações ativas + gelo desligada",
-      ids == ["choque_na_poca", "incendiar_piche", "congelar_agua", "crosta_de_lava", "derreter_gelo"]
-      and [l["ativa"] for l in TR.REACOES] == [True, True, True, True, False])
+check("tabela tem as 5 reações ativas + gelo desligada",
+      ids == ["choque_na_poca", "incendiar_piche", "congelar_agua", "crosta_de_lava", "explodir_gas", "derreter_gelo"]
+      and [l["ativa"] for l in TR.REACOES] == [True, True, True, True, True, False])
 
 print("[3] choque na poça")
 r = sala()
