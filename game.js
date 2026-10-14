@@ -10419,7 +10419,7 @@ let _gasFumacaSeq = 0;
 
 function _ehZonaFumaca(z){
   return !!(z && ((z.tipo === 'escuridao' && String(z.visual_id || '').startsWith('fumaca_'))
-    || z.tipo === 'camara_gas'));
+    || z.tipo === 'camara_gas' || z.tipo === 'nuvem_gas'));
 }
 
 function _fumacaTilesSala(state, roomId){
@@ -10474,12 +10474,12 @@ function _fumacaSync(state){
   const vivas = new Set();
   for(const z of (state.zonas_especiais || [])){
     if(!z.ativa || !_ehZonaFumaca(z)) continue;
-    const isGas=z.tipo==='camara_gas';
+    const isGas=z.tipo==='camara_gas'||z.tipo==='nuvem_gas';
     const id = String(isGas ? (z.id || `camara_gas_${z.room_id}`) : z.visual_id);
     vivas.add(id);
     let n = _fumacaNuvens.get(id);
     if(!n){
-      const roomTiles=isGas?_fumacaTilesSala(state,z.room_id):null;
+      const roomTiles=z.tipo==='nuvem_gas'?(Array.isArray(z.tiles)?z.tiles:null):isGas?_fumacaTilesSala(state,z.room_id):null;
       const xs=roomTiles?.length?roomTiles.map(t=>t[0]):null, ys=roomTiles?.length?roomTiles.map(t=>t[1]):null;
       const cx=isGas&&xs?(Math.min(...xs)+Math.max(...xs))/2:Number(z.cx);
       const cy=isGas&&ys?(Math.min(...ys)+Math.max(...ys))/2:Number(z.cy);
@@ -10501,20 +10501,8 @@ function _fumacaSync(state){
   if(!(mode3D && g3) && _fumacaNuvens.size && !_fumaca2DRaf) _fumaca2DRaf = _scheduleVisualFrame(_tickFumaca2D);
 }
 
-function _fumacaDisparoGas(msg){
-  if(!msg||msg.tick||msg.tipo_id!=='nuvem_gas') return;
-  const pos=_armadilhaPos(msg);
-  if(!pos||!_armadilhaTileVisivel(pos)) return;
-  const raio=Math.max(1,Math.min(3,Number(msg.area)||1)), state=GS.gameState;
-  const tiles=[];
-  for(let y=pos[1]-raio;y<=pos[1]+raio;y++) for(let x=pos[0]-raio;x<=pos[0]+raio;x++)
-    if(state?.tiles?.[y]?.[x]===TILE_FLOOR||state?.tiles?.[y]?.[x]===TILE_DOOR) tiles.push([x,y]);
-  if(!tiles.length) tiles.push(pos);
-  const now=performance.now(),id=`gas_trap_${++_gasFumacaSeq}_${now|0}`;
-  _fumacaCriarNuvem({id,cx:pos[0],cy:pos[1],raio,tiles,now,gas:true,nova:true,
-    persistente:false,expiraEm:now+2500});
-  if(!(mode3D&&g3)&&!_fumaca2DRaf) _fumaca2DRaf=_scheduleVisualFrame(_tickFumaca2D);
-}
+// A nuvem da armadilha agora é uma zona do servidor (`nuvem_gas`, 3 rodadas): ela nasce e
+// morre em `_fumacaSync`, junto da Câmara de Gás, porque é o gás que o fogo pode detonar.
 
 function _receberDisparoFosso(msg){
   if(!msg||msg.tick||msg.tipo_id!=='fosso'||!Array.isArray(msg.pos)) return;
@@ -56100,6 +56088,7 @@ function _tocarSomReacao(tipo, pos){
   else if(tipo === 'incendio') sfx('incendio', { pos });
   else if(tipo === 'congelar') sfx('congelar', { pos });
   else if(tipo === 'crosta') sfx('crosta', { pos });
+  else if(tipo === 'explosao_gas') sfx('explosao', { pos });
 }
 GS.on('reacaoElemental', msg => {
   const est = ReacoesElementais.estilo(msg && msg.tipo);
@@ -56151,6 +56140,13 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
           ctx.beginPath(); ctx.arc(cx, cy, CELL * (0.15 + 0.3 * p), 0, Math.PI * 2); ctx.stroke();
         } else if(a.tipo === 'incendio'){
           _desenharChamasPeao2D(ctx, cx, cy + CELL * 0.35, CELL * 0.8, now, k + 1);
+        } else if(a.tipo === 'explosao_gas'){
+          // clarão que cresce do miolo amarelo-branco ao laranja e some
+          const r = CELL * (0.35 + 0.75 * p);
+          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+          g.addColorStop(0, 'rgba(255,248,200,0.95)'); g.addColorStop(0.45, 'rgba(255,170,60,0.8)');
+          g.addColorStop(1, 'rgba(255,90,20,0)');
+          ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
         } else if(a.tipo === 'congelar'){
           const r = CELL * 0.36 * (0.3 + 0.7 * p);
           ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.6, cy);
@@ -56231,7 +56227,9 @@ function _reacoes3DAtualizar(){
     for(const a of _reacoesAnims){
       if(!a.grupo) _reacoes3DCriar(a, st, vis);
       const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
-      const esc = a.tipo === 'congelar' ? 0.3 + 0.7 * p : 0.8 + 0.4 * Math.sin(p * Math.PI);
+      const esc = a.tipo === 'congelar' ? 0.3 + 0.7 * p
+        : a.tipo === 'explosao_gas' ? 0.5 + 0.9 * p
+        : 0.8 + 0.4 * Math.sin(p * Math.PI);
       a.grupo.traverse(o => {
         if(o.material) o.material.opacity = Math.max(0, 1 - p) * (o.isLine ? 1 : 0.8);
         if(o.isMesh) o.scale.set(esc, esc, 1);
@@ -57722,7 +57720,6 @@ GS.on('sorteReacao', msg => {
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
 GS.on('trainingRockfall', msg => _receberQuedaDeRochasTreino(msg));
 GS.on('armadilhaDisparo', msg => {
-  try{ _fumacaDisparoGas(msg); }catch(e){ console.warn('Fumaça da nuvem de gás:', e); }
   try{ _receberDisparoTeletransporte(msg); }catch(e){ console.warn('Animação do teletransporte:', e); }
   try{ _receberDisparoFosso(msg); }catch(e){ console.warn('Queda no Fosso:', e); }
   try{ _receberDisparoMaldicao(msg); }catch(e){ console.warn('Animação da armadilha de maldição:', e); }

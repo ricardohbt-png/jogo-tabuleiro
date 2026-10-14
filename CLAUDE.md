@@ -3689,6 +3689,24 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `_apply_damage_types`). Fora de escopo: IA preferir água. Testes:
 > `tools/test_agua_protege_fogo.py` e `tools/test_reacoes_cliente.js`.
 
+> **Fogo + gás (2026-10-14):** quinta reação do motor (`explodir_gas` em `REACOES`, estado
+> `gas`). Fogo que atinge casas cobertas por uma zona de gás ativa — `camara_gas` (piso da
+> sala, `_rx_gas_tiles`) ou `nuvem_gas` — faz a zona **inteira** explodir: `_rx_explodir_gas`
+> consome a zona (`ativa=False`, não detona duas vezes), anuncia `reacao_elemental
+> {tipo:"explosao_gas"}`, rola **2d6 de fogo uma vez** e cada criatura nas casas (heróis,
+> monstros, servos, refém; voadores também, o gás ocupa o ar) testa Reflexos **CD 17 fixa** (a
+> CD do ataque original não vale): passou = metade. O dano passa por `_apply_damage_types`, então
+> resistência a fogo e **água protege do fogo** valem; depois encadeia fogo nas casas do gás
+> (piche da sala acende). **A Nuvem de Gás agora é zona do servidor** (`_aplicar_armadilha_area`
+> grava `zonas_especiais` tipo `nuvem_gas` com `tiles`, `duracao` 3 = a do efeito, e
+> `_processar_zonas_turno_impl` a dissipa); antes só existia o efeito instantâneo e uma nuvem
+> visual de 2,5 s no cliente, que foi removida: `_fumacaSync` desenha a nuvem persistente pelas
+> mesmas zonas (`_ehZonaFumaca` inclui `nuvem_gas`, casas vindas de `z.tiles`). Cliente: estilo
+> `explosao_gas` em `src/reacoesElementais.js`, clarão 2D/3D por casa em `_reacoesDesenhar2D`/
+> `_reacoes3DAtualizar`, som `explosao`. Provado no navegador em servidor isolado (explosão 3D
+> sobre as 98 casas da sala, gás consumido). O 2D só passou em checagem de sintaxe. Testes:
+> `tools/test_fogo_gas.py` (27), `tools/test_terrain_reactions.py`.
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
