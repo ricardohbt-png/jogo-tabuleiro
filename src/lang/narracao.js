@@ -3048,6 +3048,10 @@ window.LANG_NARRACAO = {
     "en": "💥 The fire ignites the gas — it explodes!",
     "pt": "💥 O fogo incendeia o gás — ele explode!"
   },
+  "narracao.reacao.derreter": {
+    "en": "🔥 The ice melts into water!",
+    "pt": "🔥 O gelo derrete e vira água!"
+  },
   "narracao.reacao.choque": {
     "en": "⚡ The lightning surges through the pool!",
     "pt": "⚡ O raio corre pela poça!"
