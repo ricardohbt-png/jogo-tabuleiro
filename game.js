@@ -56096,9 +56096,10 @@ function _intencoesAtualizar3D(){
 // evento (raro), removido e liberado ao vencer e em dispose3D.
 const _reacoesAnims = [];
 function _tocarSomReacao(tipo, pos){
-  // Não há evento de gelo/crosta no SoundBank: congelar e crosta ficam sem som.
   if(tipo === 'choque') sfx('relampago', { pos });
   else if(tipo === 'incendio') sfx('incendio', { pos });
+  else if(tipo === 'congelar') sfx('congelar', { pos });
+  else if(tipo === 'crosta') sfx('crosta', { pos });
 }
 GS.on('reacaoElemental', msg => {
   const est = ReacoesElementais.estilo(msg && msg.tipo);

@@ -1436,6 +1436,14 @@ window.LANG_INTERFACE = {
     "en": "Explosion (mine, grenade)",
     "pt": "Explosão (mina, granada)"
   },
+  "ui.somteste.ev.congelar": {
+    "en": "Freezing water (reaction)",
+    "pt": "Água congelando (reação)"
+  },
+  "ui.somteste.ev.crosta": {
+    "en": "Lava hardening into a crust (reaction)",
+    "pt": "Lava endurecendo em crosta (reação)"
+  },
   "ui.somteste.ev.teleporte": {
     "en": "Trap teleport",
     "pt": "Teleporte da armadilha"

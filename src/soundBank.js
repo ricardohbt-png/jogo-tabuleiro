@@ -36,6 +36,8 @@
     incendio:          E(n('combate/incendio', 3), 1.60, 150),
     acido:             E(n('combate/acido', 3), 1.25, 200),
     teleporte:         E(['combate/teleporte.ogg'], 0.85, 120, { pitchJitter: 0, volJitter: 0.04 }),
+    congelar:          E(['combate/congelar.ogg'], 0.90, 200, { pitchJitter: 0.03, volJitter: 0.04 }),
+    crosta:            E(['combate/crosta.ogg'], 0.90, 200, { pitchJitter: 0.03, volJitter: 0.04 }),
     rede:              E(['combate/rede.ogg'], 0.80, 150, { pitchJitter: 0, volJitter: 0.04 }),
     teto_esmagador:    E(['combate/teto_esmagador.ogg'], 0.90, 250, { pitchJitter: 0, volJitter: 0.03 }),
     bau_engolir:       E(['combate/bau_engolir.ogg'], 0.90, 250, { pitchJitter: 0, volJitter: 0.03 }),
