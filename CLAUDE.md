@@ -3724,6 +3724,18 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > Provado no navegador em servidor isolado (20 casas de gelo e neve viraram água, clarão sobre a região). O
 > desenho 2D só passou em checagem de sintaxe. Testes: `tools/test_fogo_gelo.py` (32).
 
+> **Água profunda e redemoinho nas reações (2026-10-14):** o estado `agua` (`_rx_estado`, qualquer
+> `_water_tile_kind` fora de ponte: `agua`, `agua_profunda`, `rodamoinho`, `rodamoinho_profundo`) substituiu
+> `agua_rasa` nas linhas `choque_na_poca` e `congelar_agua` (o estado `agua_rasa` segue existindo, sem uso).
+> **Eletricidade** conduz pelo corpo d'água conectado inteiro (rasa + profunda + redemoinhos na mesma região;
+> raio 6, teto 24, regras do choque inalteradas). **Frio** congela água profunda e redemoinho como a rasa
+> (`piso_congelado`, 3 rodadas, Reflexos; a camada guarda o material de baixo e a casa volta a ele no fim), e
+> `_rx_congelar_agua` chama `_liberar_presos_sem_rodamoinho()` — **congelar um redemoinho liberta quem estava
+> preso** nele. Fogo derretendo esse gelo devolve a água profunda/redemoinho (a camada some). Cliente: toda água
+> usa o tooltip `ui.reacao.casa.agua` (a chave `agua_fogo` saiu; o texto agora cita eletricidade e frio).
+> Provado com o servidor real (raio congelante num goblin na água profunda; relâmpago por cima de rasa +
+> profunda + redemoinho). Testes: `tools/test_agua_profunda_reacoes.py` (26).
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota

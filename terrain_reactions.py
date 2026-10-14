@@ -57,9 +57,9 @@ FONTES_COM_REGISTRO = {
 # Tabela de dados: elemento × estado da casa → efeito (nome do método).
 # `efeito: None` + `ativa: False` = linha reservada (fogo + gelo, fora da v1).
 REACOES = [
-    {"id": "choque_na_poca",  "elemento": RX_LIGHTNING, "estado": "agua_rasa", "efeito": "_rx_choque",          "ativa": True},
+    {"id": "choque_na_poca",  "elemento": RX_LIGHTNING, "estado": "agua",      "efeito": "_rx_choque",          "ativa": True},
     {"id": "incendiar_piche", "elemento": RX_FIRE,      "estado": "piche",     "efeito": "_rx_incendiar_piche", "ativa": True},
-    {"id": "congelar_agua",   "elemento": RX_COLD,      "estado": "agua_rasa", "efeito": "_rx_congelar_agua",   "ativa": True},
+    {"id": "congelar_agua",   "elemento": RX_COLD,      "estado": "agua",      "efeito": "_rx_congelar_agua",   "ativa": True},
     {"id": "crosta_de_lava",  "elemento": RX_COLD,      "estado": "lava",      "efeito": "_rx_crosta_lava",     "ativa": True},
     {"id": "explodir_gas",    "elemento": RX_FIRE,      "estado": "gas",        "efeito": "_rx_explodir_gas",    "ativa": True},
     {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": "_rx_derreter_gelo",   "ativa": True},
@@ -128,6 +128,8 @@ class TerrainReactions:
     def _rx_estado(self, estado, tile):
         x, y = tile
         mat = self.materiais.get((x, y))
+        if estado == "agua":        # qualquer água: rasa, profunda, redemoinho (fora de ponte)
+            return self._water_tile_kind(x, y) is not None
         if estado == "agua_rasa":
             return self._water_tile_kind(x, y) == "agua"
         if estado == "piche":
@@ -234,7 +236,7 @@ class TerrainReactions:
 
     # ── efeitos ─────────────────────────────────────────────────────────────
     async def _rx_choque(self, tiles, origem, pend, prof):
-        regiao = self._rx_regiao(tiles, lambda t: self._rx_estado("agua_rasa", t),
+        regiao = self._rx_regiao(tiles, lambda t: self._rx_estado("agua", t),
                                  raio=RX_CHOQUE_RAIO, teto=RX_CHOQUE_TETO)
         await self._rx_anunciar("choque", regiao, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.choque"))
@@ -261,6 +263,8 @@ class TerrainReactions:
         self._aplicar_camadas_terreno_inverno(
             tiles, "piso_congelado", zid, permanente=False,
             expira_em=self.round_num + RX_DURACAO_GELO)
+        # redemoinho congelado deixa de ser redemoinho: quem estava preso nele é solto
+        self._liberar_presos_sem_rodamoinho()
         await self._rx_anunciar("congelar", tiles, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.congelar"))
         cd = int(origem.get("cd") or RX_CD_PADRAO)
