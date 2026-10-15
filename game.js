@@ -23302,6 +23302,7 @@ function _aplicarSpellHL3D() {
   const zonaSet = new Set();
   const fogoSet = new Set();
   const chamasVivasSet = new Set();
+  const chamasBaixasSet = new Set();
   const adicionarZona = (z, destino) => {
     if (Array.isArray(z.tiles) && z.tiles.length) {
       for (const [x, y] of z.tiles) destino.add(`${x},${y}`);
@@ -23313,7 +23314,13 @@ function _aplicarSpellHL3D() {
     if (_zonaFogoLiberada(z)) {
       adicionarZona(z, zonaSet);
       adicionarZona(z, z.tipo === 'prisao_chamas' ? chamasVivasSet : fogoSet);
+      // Piche em chamas: além da brasa procedural do fogo persistente, as labaredas vivas
+      // (o mesmo GLB da Prisão) ficam acesas em cada casa enquanto a zona estiver ativa.
+      if (z.tipo === 'chamas_piche') adicionarZona(z, chamasVivasSet);
+      // Bola de Fogo: o chão em chamas (dano nas rodadas seguintes) também ganha labaredas vivas, mais baixas.
+      if (z.tipo === 'bola_fogo') adicionarZona(z, chamasBaixasSet);
     }
+  for (const k of chamasVivasSet) chamasBaixasSet.delete(k);   // casa já com labareda cheia (piche/Prisão) não duplica
   for (const z of (hl.tempestades || [])) adicionarZona(z, zonaSet);
   for (const z of (hl.nuvensAcidas || [])) _addCheb(z.cx, z.cy, z.raio, zonaSet);
   const escSet = new Set();
@@ -23343,6 +23350,7 @@ function _aplicarSpellHL3D() {
   // decoração Chama Viva. Não passam pelo filtro de névoa, como o fogo
   // persistente já fazia, para a parede continuar visível enquanto ativa.
   _overlayShowOnly(g3.spellLivingFlameFx, chamasVivasSet);
+  _overlayShowOnly(g3.spellLivingFlameBaixoFx, chamasBaixasSet);
   toggle(g3.spellDoubleMeshes, hl.double || []);          // verde escuro (atingido 2x)
   toggle(g3.spellAreaMeshes,   hl.area);                 // verde claro por último (por cima)
   // Destaque das reações elementais: cor por tipo de reação + anel em quem sofreria dano.
@@ -23352,7 +23360,6 @@ function _aplicarSpellHL3D() {
   }
   if(g3.spellTargetMeshes){
     const targets = _spellPreviewTargetSets(GS.gameState, hl.area);
-  const chamasBaixasSet = new Set();
     toggle(g3.spellTargetMeshes.ally, targets.ally);
     toggle(g3.spellTargetMeshes.enemy, targets.enemy);
     toggle(g3.spellTargetMeshes.self, targets.self);
@@ -23364,13 +23371,7 @@ function _aplicarSpellHL3D() {
 function _aimRenderHover3D(){
       // Piche em chamas: além da brasa procedural do fogo persistente, as labaredas vivas
       // (o mesmo GLB da Prisão) ficam acesas em cada casa enquanto a zona estiver ativa.
-      // Piche em chamas: além da brasa procedural do fogo persistente, as labaredas vivas
-      // (o mesmo GLB da Prisão) ficam acesas em cada casa enquanto a zona estiver ativa.
       if (z.tipo === 'chamas_piche') adicionarZona(z, chamasVivasSet);
-      // Bola de Fogo: o chão em chamas (dano nas rodadas seguintes) também ganha labaredas vivas, mais baixas.
-      if (z.tipo === 'bola_fogo') adicionarZona(z, chamasBaixasSet);
-      if (z.tipo === 'chamas_piche') adicionarZona(z, chamasVivasSet);
-  for (const k of chamasVivasSet) chamasBaixasSet.delete(k);   // casa já com labareda cheia (piche/Prisão) não duplica
   if(!g3?.scene || !window.THREE) return;
   const hover = window._spellHL?.hover;
   if(!hover){ if(g3.aimHoverGroup) g3.aimHoverGroup.visible = false; _renderWeaponAimTrajectory3D(); return; }
@@ -23400,7 +23401,6 @@ function _aimRenderHover3D(){
 function _atualizarDirecaoSpell3D(){
   if(!g3?.scene || !window.THREE) return;
   const mode = window._modoMagia;
-  _overlayShowOnly(g3.spellLivingFlameBaixoFx, chamasBaixasSet);
   const ativo = mode && Array.isArray(mode.dir) && ['linha','cone'].includes(mode.alvoTipo);
   if(!ativo){
     if(g3.spellDirectionGroup) g3.spellDirectionGroup.visible = false;
@@ -36110,6 +36110,7 @@ function _animarChamasVivasPersistentes3D(now){
   if(g3.spellLivingFlameBaixoFx) fxs.push(...Object.values(g3.spellLivingFlameBaixoFx));
   for(const fx of fxs){
     if(!fx || !fx.group?.visible) continue;
+    const am = fx.alturaMul || 1;     // altura das labaredas deste pool
     for(const item of (fx.livingFlames || [])){
       const t = now / 1000 + (item.phase || 0);
       // O GLB fornece a forma base; estes movimentos irregulares dão à
@@ -36183,7 +36184,6 @@ function _prisaoChamasDraw2D(ctx, state, anim, now){
   const fx = ox + (cx - ox) * p.travel, fy = oy + (cy - oy) * p.travel;
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
   if(!p.impacting){
-    const am = fx.alturaMul || 1;     // altura das labaredas deste pool
     ctx.shadowColor = '#ff4a00'; ctx.shadowBlur = CELL * .22;
     ctx.strokeStyle = 'rgba(255,84,8,.68)'; ctx.lineWidth = Math.max(5, CELL * .11);
     ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(fx, fy); ctx.stroke();
@@ -39359,6 +39359,9 @@ function _prisaoChamasZonaLiberada(zona){
   return _prisaoChamasProgress(anim, performance.now()).impacting;
 }
 
+// Altura das labaredas vivas no chão em chamas da Bola de Fogo, em relação às do piche/Prisão (1 = igual).
+const BOLA_FOGO_ALTURA_CHAMA = 0.55;
+
 // Portão único dos pontos de render das zonas de fogo persistentes: despacha
 // pelo tipo. Antes os 3 sites chamavam só o da Bola de Fogo, que devolvia
 // `true` para qualquer outro tipo — a Prisão acendia antes do projétil chegar.
@@ -39433,9 +39436,6 @@ function _bolaFogoBuild3D(anim){
   g3.scene.add(group); anim.group = group;
   return true;
 }
-
-// Altura das labaredas vivas no chão em chamas da Bola de Fogo, em relação às do piche/Prisão (1 = igual).
-const BOLA_FOGO_ALTURA_CHAMA = 0.55;
 
 function _bolaFogoDispose3D(anim){
   const group = anim.group; if(!group) return;
@@ -44909,6 +44909,9 @@ function init3D(state){
     });
     return fx3;
   });
+  const spellLivingFlameFx = _mkFogoVivoPool(1);
+  // Chão em chamas da Bola de Fogo: as mesmas labaredas vivas, só que mais baixas.
+  const spellLivingFlameBaixoFx = _mkFogoVivoPool(BOLA_FOGO_ALTURA_CHAMA);
 
   // ── WET FLOOR REFLECTION (damp specular sheen — all dungeon floor tiles) ──────
   // A near-black low-roughness plane floats 2mm above each floor piece.
@@ -44985,9 +44988,6 @@ function init3D(state){
         const isWhirlpool3 = mid3==='rodamoinho';
         const isDeepWhirlpool3 = mid3==='rodamoinho_profundo';
         const isLava3 = mid3==='lava';
-  const spellLivingFlameFx = _mkFogoVivoPool(1);
-  // Chão em chamas da Bola de Fogo: as mesmas labaredas vivas, só que mais baixas.
-  const spellLivingFlameBaixoFx = _mkFogoVivoPool(BOLA_FOGO_ALTURA_CHAMA);
         const isSwamp3 = mid3==='pantano';
         const isSky3 = mid3==='ceu_abismo';
         const baseFtex = makeMaterialTex(mid3);
