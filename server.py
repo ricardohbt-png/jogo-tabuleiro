@@ -11569,22 +11569,36 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dead = []
         skip = skip or ()
         por_idioma = {}   # lang -> JSON já serializado (um dumps por idioma na sala)
+        envios = []       # (pid, ws, texto)
         for pid, ws in list(self.connections.items()):
             if pid in skip:
                 continue
             lang = _lang_de(pid)
-            if personalize:
-                recipient_msg = personalize(pid, msg)
-                data = json.dumps(recipient_msg, default=lambda o, _l=lang: _t_render(o, _l))
-            else:
+            # `personalize` que devolve o PRÓPRIO `msg` (identidade) diz que este
+            # destinatário não tem nada seu: reaproveita o JSON do idioma.
+            recipient_msg = personalize(pid, msg) if personalize else msg
+            if recipient_msg is msg:
                 data = por_idioma.get(lang)
                 if data is None:
                     data = por_idioma[lang] = json.dumps(
                         msg, default=lambda o, _l=lang: _t_render(o, _l))
+            else:
+                data = json.dumps(recipient_msg, default=lambda o, _l=lang: _t_render(o, _l))
+            envios.append((pid, ws, data))
+
+        async def _enviar(pid, ws, data):
             try:
                 await ws.send(data)
             except Exception:
                 dead.append(pid)
+
+        # Em paralelo: um cliente com rede lenta não segura o envio aos demais.
+        # A ordem POR CONEXÃO se mantém, porque o broadcast seguinte só começa
+        # depois deste terminar.
+        if len(envios) == 1:
+            await _enviar(*envios[0])
+        elif envios:
+            await asyncio.gather(*(_enviar(*e) for e in envios))
         for pid in dead:
             self.connections.pop(pid, None)
 
@@ -18292,6 +18306,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _cooperative_markers_for_pid(self, pid):
         if self.phase != "playing" or self._fora_da_masmorra(pid):
+            return []
+        if not self.cooperative_markers:
+            # Sem marcador não há o que filtrar: pular evita varrer todas as casas
+            # exploradas com linha de visão, por destinatário, a cada game_state.
             return []
         visiveis = self._cooperative_vision_tiles_for_pid(pid)
         payload = []
@@ -49724,12 +49742,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
+        msg_state["cooperative_markers"] = []   # padrão comum; só quem tem marcador difere
+
         def personalizar_estado(pid, state):
+            marcadores = self._cooperative_markers_for_pid(pid)
+            jogador = self.players.get(pid)
+            if not marcadores and not (self.training_mode and jogador):
+                return state   # nada próprio: o broadcast reaproveita o JSON do idioma
             payload = {
                 **state,
-                "cooperative_markers": self._cooperative_markers_for_pid(pid),
+                "cooperative_markers": marcadores,
             }
-            jogador = self.players.get(pid)
             if self.training_mode and jogador:
                 classe = jogador.get("class_id")
                 payload["chests"] = [
