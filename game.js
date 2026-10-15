@@ -22594,14 +22594,18 @@ function _aimHoverMagic(tx, ty) {
     || mode.alvoTipo === 'self_area' || mode.validTiles?.has(key) || window._spellHL.range?.has(key);
   const valid = !!spec.ok && !!inRange;
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') : (spec.msg || t('ui.mira.escolha_uma_casa_destacada_dentro_do_alcan')), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') + _reageSufixo(true) : (spec.msg || t('ui.mira.escolha_uma_casa_destacada_dentro_do_alcan')), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverThrow(tx, ty) {
   const action = GS.resolveTileClick(tx, ty);
   const valid = action?.type === 'throw' || action?.type === 'throw_area';
+  if (window._modoThrowItem && window._modoThrowItem.area == null) {   // alvo único: não passa por _recomputarAreaThrow
+    _reagePrever(valid ? new Set([`${tx},${ty}`]) : null);
+    _aplicarSpellHL();
+  }
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede'), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus((valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede')) + _reageSufixo(valid), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverHabilidadeTeste(tx, ty) {
@@ -22736,6 +22740,7 @@ function _aimSetHighlights({ range = new Set(), area = new Set(), double = new S
   window._spellHL.range = range;
   window._spellHL.area = area;
   window._spellHL.double = double;
+  window._spellHL.reage = null;
   _aplicarSpellHL();
 }
 
@@ -23040,6 +23045,61 @@ function _recomputarAlcanceMagia() {
   window._spellHL.range = range;
 }
 
+// ── Destaque de mira das reações elementais ────────────────────────────────
+// Enquanto você mira, as casas que vão REAGIR (poça que conduz, piche que pega fogo, gelo que derrete,
+// gás que explode, água/lava que congela) ganham cor e ícone, e as criaturas que sofreriam dano levam um
+// anel. As regras moram em ReacoesElementais.preverReacoes (espelho do servidor, com teste de paridade).
+const _ELEMENTO_MIRA_MAGIA = { relampago: 'lightning', bola_fogo: 'fire', prisao_chamas: 'fire', raio_congelante: 'cold' };
+const _ELEMENTO_MIRA_ITEM = { frasco_oleo: 'fire', fogo_grego: 'fire', bomba_incendiaria: 'fire' };
+const _REAGE_ICONE = { choque: '⚡', ignicao: '🔥', congelar: '❄️', gas: '💥', derreter: '💧' };
+const _REAGE_FILL_2D = { choque: 'rgba(31,168,255,0.55)', ignicao: 'rgba(255,106,0,0.56)',
+  congelar: 'rgba(108,200,255,0.56)', gas: 'rgba(217,194,0,0.56)', derreter: 'rgba(63,184,255,0.55)' };
+const _REAGE_HEX_3D = { choque: 0x1fa8ff, ignicao: 0xff6a00, congelar: 0x6cc8ff, gas: 0xd9c200, derreter: 0x3fb8ff };
+const _REAGE_TEXTO = {
+  choque: n => t('ui.mira.reage.choque', { n }),
+  ignicao: n => t('ui.mira.reage.ignicao', { n }),
+  congelar: n => t('ui.mira.reage.congelar', { n }),
+  gas: n => t('ui.mira.reage.gas', { n }),
+  derreter: n => t('ui.mira.reage.derreter', { n }),
+};
+
+// A Prisão de Chamas só acende a borda do quadrado (o servidor registra as casas da parede).
+function _anelDaAreaMira(area) {
+  const out = new Set();
+  for (const k of area) {
+    const [x, y] = k.split(',').map(Number);
+    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => !area.has(`${x + dx},${y + dy}`))) out.add(k);
+  }
+  return out;
+}
+
+function _reagePrever(casasSet) {
+  const hl = window._spellHL;
+  hl.reage = null;
+  const st = GS.gameState;
+  if (!st || !window.ReacoesElementais || !casasSet || !casasSet.size) return;
+  let elemento = null, ehPrisao = false;
+  if (window._modoMagia) { elemento = _ELEMENTO_MIRA_MAGIA[window._modoMagia.magiaId]; ehPrisao = window._modoMagia.magiaId === 'prisao_chamas'; }
+  else if (window._modoThrowItem) elemento = _ELEMENTO_MIRA_ITEM[window._modoThrowItem.id];
+  if (!elemento) return;
+  const base = ehPrisao ? _anelDaAreaMira(casasSet) : casasSet;
+  const casas = [...base, ...(hl.double || [])].map(k => k.split(',').map(Number));
+  const previsao = ReacoesElementais.preverReacoes(st, elemento, casas);
+  const tipos = Object.keys(previsao);
+  if (!tipos.length) return;
+  const monstros = new Set(st.monsters || []);
+  const alvos = ReacoesElementais.alvosDasReacoes(st, previsao, casas, c => monstros.has(c) ? GS.monsterTiles(c) : [c.pos]);
+  const porTipo = {};
+  for (const tp of tipos) porTipo[tp] = new Set(previsao[tp].map(c => `${c[0]},${c[1]}`));
+  hl.reage = { tipos: porTipo, alvos: new Set(alvos.map(c => `${c[0]},${c[1]}`)),
+    texto: tipos.map(tp => _REAGE_TEXTO[tp](previsao[tp].length)).join(' · ') };
+}
+
+function _reageSufixo(valido) {
+  const r = window._spellHL && window._spellHL.reage;
+  return valido && r && r.texto ? ' · ' + r.texto : '';
+}
+
 function _recomputarAreaMagia(hx, hy) {
   const mode = window._modoMagia; if (!mode) return;
   if (mode.alvoTipo === 'adjacent_tile') {
@@ -23083,6 +23143,7 @@ function _recomputarAreaMagia(hx, hy) {
   }
   window._spellHL.area   = area;
   window._spellHL.double = dbl;
+  _reagePrever(area);
   _aplicarSpellHL();
 }
 
@@ -23106,6 +23167,7 @@ function _recomputarAreaThrow(hx, hy) {
   if (hx != null && hy != null) _addCheb(hx, hy, mode.area, area);
   window._spellHL.area   = area;
   window._spellHL.double = new Set();
+  _reagePrever(area);
   _aplicarSpellHL();
 }
 
@@ -23194,6 +23256,11 @@ function _aplicarSpellHL3D() {
   _overlayShowOnly(g3.spellLivingFlameFx, chamasVivasSet);
   toggle(g3.spellDoubleMeshes, hl.double || []);          // verde escuro (atingido 2x)
   toggle(g3.spellAreaMeshes,   hl.area);                 // verde claro por último (por cima)
+  // Destaque das reações elementais: cor por tipo de reação + anel em quem sofreria dano.
+  if (g3.spellReageMeshes) {
+    for (const tp of Object.keys(g3.spellReageMeshes)) toggle(g3.spellReageMeshes[tp], hl.reage?.tipos?.[tp] || []);
+    toggle(g3.spellReageAlvoMeshes, hl.reage?.alvos || []);
+  }
   if(g3.spellTargetMeshes){
     const targets = _spellPreviewTargetSets(GS.gameState, hl.area);
     toggle(g3.spellTargetMeshes.ally, targets.ally);
@@ -23357,6 +23424,35 @@ function _desenharSpellHL2D(ctx, exploredSet) {
   for (const k of acidSet) draw(k, 'rgba(150,235,60,0.38)');
   for (const k of (hl.double || [])) draw(k, 'rgba(8,90,25,0.62)'); // atingido 2x — verde escuro
   for (const k of hl.area) draw(k, AIM_COLORS.valid.fill);        // alvo/efeito válido — verde
+  // Destaque das reações elementais: cor + ícone por casa que reage; anel nas criaturas que sofreriam dano.
+  if (hl.reage) {
+    const pulso = 0.5 + 0.5 * Math.sin(performance.now() / 220);
+    ctx.save();
+    for (const tp of Object.keys(hl.reage.tipos)) {
+      for (const k of hl.reage.tipos[tp]) {
+        if (exploredSet && !exploredSet.has(k)) continue;
+        draw(k, _REAGE_FILL_2D[tp]);
+        const [rx, ry] = k.split(',').map(Number);
+        ctx.strokeStyle = `rgba(255,255,255,${(0.35 + 0.4 * pulso).toFixed(2)})`;
+        ctx.lineWidth = Math.max(1.5, CELL * 0.035);
+        ctx.strokeRect(rx * CELL + 2, ry * CELL + 2, CELL - 4, CELL - 4);
+        ctx.font = `${Math.round(CELL * 0.36)}px sans-serif`;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(_REAGE_ICONE[tp], rx * CELL + CELL * 0.07, ry * CELL + CELL * 0.04);
+      }
+    }
+    for (const k of hl.reage.alvos) {
+      if (exploredSet && !exploredSet.has(k)) continue;
+      const [ax, ay] = k.split(',').map(Number);
+      const acx = ax * CELL + CELL / 2, acy = ay * CELL + CELL / 2;
+      ctx.lineWidth = Math.max(4, CELL * 0.09); ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath(); ctx.arc(acx, acy, CELL * 0.42, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = Math.max(2, CELL * 0.05); ctx.strokeStyle = '#ff2d55';
+      ctx.beginPath(); ctx.arc(acx, acy, CELL * 0.42, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+    if (typeof _agendarChamas2D === 'function') _agendarChamas2D();       // pulsa sem depender do mouse
+  }
 }
 
 // Cursor da mira (2D). Fica FORA de _desenharSpellHL2D e é chamado DEPOIS da
@@ -24679,7 +24775,7 @@ function _limparMiraMestre(){
     return;
   }
   window._modoMestreMira = null;
-  window._spellHL.range = new Set(); window._spellHL.area = new Set(); window._spellHL.double = new Set();
+  window._spellHL.range = new Set(); window._spellHL.area = new Set(); window._spellHL.double = new Set(); window._spellHL.reage = null;
   _aplicarSpellHL();
   const leg=document.getElementById('legenda-mestre-mira'); if(leg) leg.remove();
   if(typeof g3!=='undefined' && g3 && g3.renderer) g3.renderer.domElement.style.cursor='default';
@@ -44547,6 +44643,13 @@ function init3D(state){
     ally:  _mkSpell(0x3791ff, 0.44, 0.0145),
     enemy: _mkSpell(0xeb2d32, 0.52, 0.015),
   };
+  // Destaque das reações elementais na mira: uma camada por tipo de reação (acima da área verde) e um
+  // anel branco nas casas de criaturas que sofreriam dano da reação.
+  const spellReageMeshes = {};
+  for (const [tp, hex] of Object.entries(_REAGE_HEX_3D)) spellReageMeshes[tp] = _mkSpell(hex, 0.68, 0.0155);
+  const spellReageAlvoMeshes = _mkOverlayPool(_mkPlano(new T.RingGeometry(TW * 0.40, TW * 0.495, 28),
+    new T.MeshBasicMaterial({ color: 0xff2d55, opacity: 0.95, transparent: true, depthWrite: false, side: T.DoubleSide }),
+    0.0165, _ehChao));
 
   // ── Fogo persistente da Bola de Fogo: 1 brilho + 5 chamas + 14 brasas ────────
   // Eram 21 objetos com geometria e material PRÓPRIOS por casa de chão — 18.522
@@ -45484,7 +45587,7 @@ function init3D(state){
     weaponRangeMeshes,
     masterAttackRangeMeshes, masterAttackZoneMeshes, inspectorAttackMeshes, inspectorMoveMeshes, masterFootprintMeshes,
     masterHistoryAttackerMeshes, masterHistoryTargetMeshes,
-    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
+    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellReageMeshes, spellReageAlvoMeshes, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
