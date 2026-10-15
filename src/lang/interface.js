@@ -8206,6 +8206,74 @@ window.LANG_INTERFACE = {
     "en": "Party travel: 🍖 -{fome} and 💧 -{sede} for each hero.",
     "pt": "Viagem do grupo: 🍖 -{fome} e 💧 -{sede} para cada herói."
   },
+  "ui.mundo.emboscada_chance": {
+    "en": "Road encounter risk: {chance}% (at most one fight).",
+    "pt": "Risco de emboscada na estrada: {chance}% (no máximo um combate)."
+  },
+  "ui.mundo.estrada_segura": {
+    "en": "Travel by road — {chance}% risk",
+    "pt": "Viajar pela estrada — {chance}% de risco"
+  },
+  "ui.mundo.caravana_segura": {
+    "en": "Pay caravan — {tarifa} per hero ({total} total)",
+    "pt": "Pagar caravana — {tarifa} por herói ({total} no total)"
+  },
+  "ui.mundo.caravana_so_cidades": {
+    "en": "Caravans travel only between cities and villages.",
+    "pt": "Caravanas viajam somente entre cidades e vilas."
+  },
+  "ui.mundo.patrocinio_titulo": {
+    "en": "A merchant asks for help",
+    "pt": "O mercador pede ajuda"
+  },
+  "ui.mundo.patrocinio_texto": {
+    "en": "{passageiro} cannot afford the {tarifa}-coin fare. Will you pay the full ticket? No debt will be recorded.",
+    "pt": "{passageiro} não tem as {tarifa} moedas da passagem. Você paga o valor inteiro? Nenhuma dívida será registrada."
+  },
+  "ui.mundo.patrocinio_pagar": {
+    "en": "Pay the ticket",
+    "pt": "Pagar a passagem"
+  },
+  "ui.mundo.patrocinio_recusar": {
+    "en": "Decline",
+    "pt": "Recusar"
+  },
+  "ui.mundo.patrocinio_aguardando": {
+    "en": "Waiting for another player to cover the ticket.",
+    "pt": "Aguardando outro jogador decidir se paga a passagem."
+  },
+  "ui.mundo.patrocinio_falhou": {
+    "en": "The caravan could not be paid for. Choose the risky road or cancel.",
+    "pt": "Não foi possível pagar a caravana. Escolha a estrada arriscada ou cancele."
+  },
+  "ui.mundo.patrocinio_estrada": {
+    "en": "Take the road",
+    "pt": "Seguir pela estrada"
+  },
+  "ui.mundo.patrocinio_cancelar": {
+    "en": "Cancel trip",
+    "pt": "Cancelar viagem"
+  },
+  "ui.mundo.emboscada_vitoria_masmorra": {
+    "en": "The ambush is defeated. Continue to the dungeon or return to the city of origin?",
+    "pt": "A emboscada foi vencida. Continuar até a masmorra ou retornar à cidade de origem?"
+  },
+  "ui.mundo.emboscada_decisao_titulo": {
+    "en": "The road is clear",
+    "pt": "A estrada está livre"
+  },
+  "ui.mundo.continuar_masmorra": {
+    "en": "Continue to the dungeon",
+    "pt": "Continuar até a masmorra"
+  },
+  "ui.mundo.retornar_origem": {
+    "en": "Return to the city of origin",
+    "pt": "Retornar à cidade de origem"
+  },
+  "ui.mundo.aguardar_anfitriao": {
+    "en": "Waiting for the host to choose…",
+    "pt": "Aguardando o anfitrião escolher…"
+  },
   "ui.mundo.rumo_a": {
     "en": "Heading to {nome}…",
     "pt": "Rumo a {nome}…"

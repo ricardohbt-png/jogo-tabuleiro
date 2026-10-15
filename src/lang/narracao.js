@@ -1888,6 +1888,22 @@ window.LANG_NARRACAO = {
     "en": "🧭 The group traveled from **{origem}** to **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} per hero).",
     "pt": "🧭 O grupo viajou de **{origem}** para **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} por herói)."
   },
+  "narracao.emboscada_derrotada_escolha_destino": {
+    "en": "The ambush is over. The host can continue to the dungeon or return to the city of origin.",
+    "pt": "A emboscada terminou. O anfitrião pode seguir para a masmorra ou retornar à cidade de origem."
+  },
+  "narracao.emboscada_vencida_viagem_continua": {
+    "en": "⚔️ The group defeated the road ambush and continues from **{origem}** to **{destino}**.",
+    "pt": "⚔️ O grupo venceu a emboscada e continua de **{origem}** para **{destino}**."
+  },
+  "narracao.o_grupo_viajou_com_a_caravana": {
+    "en": "🐪 The group traveled safely with the caravan (fare: {tarifa} coins per hero).",
+    "pt": "🐪 O grupo viajou em segurança com a caravana (passagem: {tarifa} moedas por herói)."
+  },
+  "narracao.o_grupo_retornou_a_cidade_sem_reembolso": {
+    "en": "The group returned to the city of origin. Travel provisions are not refunded.",
+    "pt": "O grupo retornou à cidade de origem. Os recursos gastos na viagem não são reembolsados."
+  },
   "narracao.o_mestre_caiu_os_monstros_voltam_ao_cont": {
     "en": "🔌 The Game Master disconnected — monsters return to AI control.",
     "pt": "🔌 O mestre caiu — os monstros voltam ao controle da IA."

@@ -2205,6 +2205,20 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `upload_city_art` → `assets/city/`. Teste: `tools/test_cidades_editor.py` (64 checks). Spec/plano
 > em `docs/superpowers/{specs,plans}/2026-07-28-editor-cidades-nova-cidade*`.
 
+> **Emboscadas e caravana nas viagens:** o custo combinado 🍖+💧 define a faixa: curta até 14,
+> média de 15 a 20 e longa acima de 20; uma viagem arriscada faz uma rolagem, com 10%, 15% ou
+> 20% e no máximo um encontro. `GameRoom.pending_world_travel` guarda a continuação cobrada e a
+> rolagem para não duplicá-las ao retomar. A caravana só vale entre cidade/vila: cada herói paga
+> passagem base 10/20/30 pela faixa + `ceil(15% do custo combinado)`, além das provisões. Em
+> multiplayer, outro jogador pode pagar integralmente a passagem de um amigo; é voluntário, sem
+> dívida. Sem cobertura, o anfitrião pode seguir pela estrada arriscada ou cancelar. Em solo com
+> grupo, cada personagem paga a própria passagem. Emboscada vencida numa rota de cidade termina
+> no destino; numa aventura do mapa-múndi, o anfitrião escolhe continuar até a masmorra ou voltar
+> à origem sem reembolso. Derrota continua no fluxo normal e o encontro não dá recompensa extra.
+> O mapa temporário é `dungeons/estrada_floresta_emboscada.json`; a família bandoleira combina
+> fichas existentes de goblins, orcs, kobolds e ogros, limitada pelo ND do grupo. Testes focados:
+> `tools/test_encontros_viagem.py` e `tools/test_viagem_cliente.js`.
+
 > **Pontos da ilustração da cidade — `CITY_MAP_POINTS` é a fonte única:** o cliente **não**
 > desenha mais nenhum marcador fixo. Os hotspots nativos de `_CTY_BLDGS` e a Caravana embutida
 > (`game.js`) só aparecem quando existe um ponto com o **mesmo id** em

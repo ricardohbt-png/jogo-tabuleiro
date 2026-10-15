@@ -1899,6 +1899,22 @@ const GS = (() => {
         _emit('storyComplete', msg);
         break;
 
+      case 'caravan_sponsorship_request':
+        _emit('caravanSponsorshipRequest', msg);
+        break;
+      case 'caravan_sponsorship_failed':
+        _emit('caravanSponsorshipFailed', msg);
+        break;
+      case 'caravan_sponsorship_started':
+        _emit('caravanSponsorshipStarted', msg);
+        break;
+      case 'caravan_sponsorship_closed':
+        _emit('caravanSponsorshipClosed', msg);
+        break;
+      case 'world_adventure_encounter_choice':
+        _emit('worldAdventureEncounterChoice', msg);
+        break;
+
       case 'gm_narration':
         _emit('gmNarration', msg.text);
         break;
@@ -2625,8 +2641,17 @@ const GS = (() => {
 
   // ── Guilda dos Heróis (Fase 0) ──────────────────────────────────────────
   function guildBuy(itemId)           { send({ type: 'guild_buy',   item_id: itemId }); }
-  function worldTravel(destination)   { send({ type: 'world_travel', destination: destination }); }
+  function worldTravel(destination, mode = 'road') {
+    send({ type: 'world_travel', destination: destination, mode: mode });
+  }
   function worldAdventure(adventureId) { send({ type: 'world_adventure', adventure_id: adventureId }); }
+  function respondCaravanSponsorship(requestId, accept) {
+    send({ type: 'caravan_sponsorship_response', request_id: requestId, accept: accept === true });
+  }
+  function cancelWorldTravel() { send({ type: 'world_travel_cancel' }); }
+  function worldAdventureEncounterChoice(choice) {
+    send({ type: 'world_adventure_encounter_choice', choice: choice });
+  }
   function talkSceneNpc(sceneId, npcId, conversationId) {
     send({ type: 'scene_npc', scene_id: sceneId, npc_id: npcId, conversation_id: conversationId });
   }
@@ -3962,6 +3987,9 @@ const GS = (() => {
     guildBuy,
     worldTravel,
     worldAdventure,
+    respondCaravanSponsorship,
+    cancelWorldTravel,
+    worldAdventureEncounterChoice,
     talkSceneNpc,
     scenes,
     cityPoints,

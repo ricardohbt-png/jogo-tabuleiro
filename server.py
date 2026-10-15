@@ -353,6 +353,39 @@ WORLD_ROUTES = {
     frozenset(("vila_corvin", "graciero")): {"fome": 8, "sede": 8},
 }
 
+
+# Viagens do mapa-múndi: as faixas são baseadas no custo combinado de
+# sobrevivência (fome + sede), sem alterar os custos originais das rotas.
+_VIAGEM_FAIXAS = ((14, "curta", 10, 10), (20, "media", 15, 20),
+                  (float("inf"), "longa", 20, 30))
+
+
+def tier_viagem(fome, sede):
+    """Retorna curta/media/longa a partir da soma de fome e sede."""
+    total = max(0, int(fome or 0)) + max(0, int(sede or 0))
+    for limite, tier, _chance, _base in _VIAGEM_FAIXAS:
+        if total <= limite:
+            return tier
+    return "longa"
+
+
+def chance_encontro(fome, sede):
+    """Chance percentual de uma única emboscada numa viagem arriscada."""
+    total = max(0, int(fome or 0)) + max(0, int(sede or 0))
+    for limite, _tier, chance, _base in _VIAGEM_FAIXAS:
+        if total <= limite:
+            return chance
+    return 20
+
+
+def tarifa_caravana(fome, sede):
+    """Tarifa individual: base por faixa + 15% dos custos, arredondado para cima."""
+    total = max(0, int(fome or 0)) + max(0, int(sede or 0))
+    base = next(base for limite, _tier, _chance, base in _VIAGEM_FAIXAS
+                if total <= limite)
+    adicional = (total * 15 + 99) // 100
+    return base + adicional
+
 # ─── CIDADES DO EDITOR ────────────────────────────────────────────────────────
 # As 4 cidades acima são a base imutável. O editor grava uma camada por cima em
 # cidades_personalizadas.json (cria, edita e remove), aplicada aqui no boot pela
@@ -3495,6 +3528,7 @@ FOTO_SALA_CATEGORIAS = {
     # que a masmorra era etapa do mapa-múndi e "Encerrar missão" virava fim de jogo.
     "world_adventure_id": "foto", "world_adventure_index": "foto",
     "world_adventure_revisit": "foto",
+    "pending_world_travel": "foto",
     "world_adventure_progress": "jogo_salvo",
     "world_adventure_route_progress": "jogo_salvo",
     "renome": "jogo_salvo", "fatos": "jogo_salvo", "story_beats_done": "jogo_salvo",
@@ -10725,6 +10759,65 @@ def monster_cr(mdef):
             pass
     return _CR_POR_TIER.get(mdef.get("tier", 1), 1.0)
 
+
+_COMPOSICOES_ENCONTRO_VIAGEM = {
+    "animais": (
+        ("lobo_cinzento",),
+        ("urso_negro",),
+        ("lobo_cinzento", "lobo_cinzento"),
+        ("cobra_constritora", "cobra_venenosa"),
+        ("urso_negro", "lobo_cinzento", "lobo_cinzento"),
+        ("cobra_constritora", "cobra_venenosa", "lobo_cinzento", "lobo_cinzento"),
+    ),
+    "bandoleiros": (
+        ("goblin", "goblin"),
+        ("goblin_combatente", "goblin_combatente"),
+        ("goblin_arqueiro", "goblin_combatente"),
+        ("goblin_assassino", "goblin"),
+        ("goblin_dual", "kobold_lanceiro"),
+        ("goblin_xama", "goblin_assassino"),
+        ("kobold_lanceiro", "kobold_besteiro"),
+        ("orc", "kobold_lanceiro"),
+        ("orc_guerreiro", "goblin_arqueiro"),
+        ("ogro_clava",),
+        ("ogro_lanca", "orc"),
+        ("ogro_clava", "ogro_lanca"),
+        ("ogro_clava", "orc", "kobold_besteiro"),
+    ),
+}
+
+
+def selecionar_composicao_viagem(grupo, categoria, rng=random):
+    """Escolhe um grupo preparado por força e tamanho dos viajantes vivos.
+
+    A função só escolhe fichas existentes; nunca ajusta atributos individuais.
+    ``grupo`` pode ser lista ou dict de personagens com level/alive/hp.
+    """
+    membros = list(grupo.values()) if isinstance(grupo, dict) else list(grupo or [])
+    vivos = [p for p in membros if isinstance(p, dict)
+             and p.get("alive", True) and p.get("hp", 1) > 0]
+    if not vivos:
+        return []
+    tipos = {str(m.get("type")): m for m in MONSTER_DEFS if isinstance(m, dict)}
+    chave = str(categoria or "").lower()
+    if chave in ("animal", "wildlife", "animais selvagens"):
+        chave = "animais"
+    if chave in ("bandido", "bandits", "bandoleiro", "humanoides"):
+        chave = "bandoleiros"
+    candidatas = []
+    for comp in _COMPOSICOES_ENCONTRO_VIAGEM.get(chave, ()):
+        if len(comp) > len(vivos) + 1 or any(t not in tipos for t in comp):
+            continue
+        cr_total = sum(monster_cr(tipos[t]) for t in comp)
+        candidatas.append((cr_total, comp))
+    if not candidatas:
+        return []
+    niveis = [max(1, min(30, int(p.get("level", 1) or 1))) for p in vivos]
+    limite_cr = max(0.5, sum(niveis) * 0.5)
+    adequadas = [comp for cr_total, comp in candidatas if cr_total <= limite_cr]
+    opcoes = adequadas or [min(candidatas, key=lambda item: item[0])[1]]
+    return list(rng.choice(opcoes))
+
 # Nome do terreno criado por magia, para a narracao. Guarda a CHAVE (nunca
 # um T()): T() no nivel de modulo e avaliado no import e derrubaria o boot.
 _TERRENO_MAGIA_CHAVE = {
@@ -11295,6 +11388,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # ao concluir, o grupo volta gratuitamente à cidade de partida.
         self.world_adventure_id = None
         self.world_adventure_index = None
+        self.pending_world_travel = None
         self.world_adventure_progress = {}
         self.world_adventure_route_progress = {}
         self.route_exits = []
@@ -12697,6 +12791,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 # Todo par aparece (custo salvo ou 0/0) para o cliente nunca
                 # tratar um destino como inalcançável.
                 "routes": _tabela_rotas(),
+                "travel_options": {
+                    destino: {
+                        "fome": (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("fome", 0),
+                        "sede": (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("sede", 0),
+                        "chance": chance_encontro(
+                            (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("fome", 0),
+                            (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("sede", 0)),
+                        "tarifa": tarifa_caravana(
+                            (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("fome", 0),
+                            (WORLD_ROUTES.get(frozenset((self.world_location, destino))) or {}).get("sede", 0)),
+                    }
+                    for destino, local in WORLD_LOCATIONS.items()
+                    if destino != self.world_location and local.get("tipo") in _CITY_TIPOS
+                },
                 "map_image": "assets/city/varluzia - Copia.png",
                 "transition_images": _transition_images(),
                 # Destino oculto e ainda bloqueado nem entra no payload — não há
@@ -15973,34 +16081,320 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if destino is not None:
                     animado["pos"] = destino
 
-    async def handle_world_travel(self, pid, destination):
-        """Move o grupo entre locais do mapa-múndi, cobrando sobrevivência de todos."""
-        if self.phase != "city":
+    def _viagem_eh_multiplayer(self):
+        if isinstance(self.savegame, dict):
+            if self.savegame.get("has_master"):
+                return True
+            modo = self.savegame.get("play_mode")
+            if modo in ("solo", "multiplayer"):
+                return modo == "multiplayer"
+        donos = {str(p.get("controlador") or pid)
+                 for pid, p in self.players.items() if not p.get("is_master")}
+        return len(donos) > 1
+
+    async def _solicitar_cobertura_caravana(self, pending):
+        passageiros = list(pending.get("unpaid_passengers") or [])
+        cobertos = pending.setdefault("coverage", {})
+        passageiro = next((pid for pid in passageiros if pid not in cobertos), None)
+        if passageiro is None:
+            await self._fechar_pagamento_caravana(pending)
+            return
+        alvo = self.players.get(passageiro) or {}
+        dono_alvo = str(alvo.get("controlador") or passageiro)
+        cobertura = pending.get("coverage") or {}
+        reservados = {}
+        for pagador_id in cobertura.values():
+            reservados[pagador_id] = reservados.get(pagador_id, 0) + int(pending.get("fare", 0) or 0)
+        pagadores = [pid for pid, p in self.players.items()
+                     if not p.get("is_master") and p.get("connected", True)
+                     and int(p.get("gold", 0) or 0) - reservados.get(pid, 0) >= int(pending["fare"])
+                     and str(p.get("controlador") or pid) != dono_alvo]
+        if not pagadores:
+            self.pending_world_travel = None
+            await self.send_to(pending.get("host_pid"), {
+                "type": "caravan_sponsorship_failed", "reason": "no_sponsor",
+                "passenger": alvo.get("name", ""),
+                "destination": pending.get("destination"), "fare": pending.get("fare"),
+            })
+            return
+        if not pending.get("waiting_notified"):
+            pending["waiting_notified"] = True
+            await self.send_to(pending.get("host_pid"), {
+                "type": "caravan_sponsorship_started", "destination": pending.get("destination"),
+                "passenger": alvo.get("name", ""), "fare": pending.get("fare"),
+            })
+        request_id = f"caravan-{time.time_ns()}"
+        pending["active_request_id"] = request_id
+        pending["active_passenger"] = passageiro
+        pending["active_payers"] = list(pagadores)
+        for pagador in pagadores:
+            await self.send_to(pagador, {
+                "type": "caravan_sponsorship_request", "request_id": request_id,
+                "passenger_pid": passageiro, "passenger": alvo.get("name", ""),
+                "fare": pending["fare"], "destination": pending["destination"],
+            })
+
+    async def _fechar_pagamento_caravana(self, pending):
+        cost = pending.get("cost") or {}
+        fare = int(pending.get("fare", 0) or 0)
+        passageiros = [p for p in self.players.values() if not p.get("is_master")]
+        # Valide todos os saldos antes de alterar qualquer personagem.
+        debitados = {}
+        for pid, p in self.players.items():
+            if p.get("is_master"):
+                continue
+            if p.get("fome", 0) < cost.get("fome", 0) or p.get("sede", 0) < cost.get("sede", 0):
+                self.pending_world_travel = None
+                if pending.get("waiting_notified"):
+                    await self.send_to(pending.get("host_pid"), {"type": "caravan_sponsorship_closed"})
+                await self.send_to(pending.get("host_pid"), {"type": "error", "msg": T("erro.recursos_insuficientes_para_viajar", nomes=[p.get("name", "")])})
+                return
+            if pid not in pending.get("unpaid_passengers", []):
+                if int(p.get("gold", 0) or 0) < fare:
+                    self.pending_world_travel = None
+                    if pending.get("waiting_notified"):
+                        await self.send_to(pending.get("host_pid"), {"type": "caravan_sponsorship_closed"})
+                    await self.send_to(pending.get("host_pid"), {"type": "error", "msg": T("erro.ouro_insuficiente")})
+                    return
+                debitados[pid] = fare
+        for passageiro, pagador in pending.get("coverage", {}).items():
+            debitados[pagador] = debitados.get(pagador, 0) + fare
+        for pid, amount in debitados.items():
+            if int((self.players.get(pid) or {}).get("gold", 0) or 0) < amount:
+                self.pending_world_travel = None
+                for pagador in pending.get("active_payers", []):
+                    await self.send_to(pagador, {"type": "caravan_sponsorship_closed",
+                                                 "request_id": pending.get("active_request_id")})
+                await self.send_to(pending.get("host_pid"), {
+                    "type": "caravan_sponsorship_failed", "reason": "insufficient_sponsor_gold",
+                    "destination": pending.get("destination"), "fare": fare,
+                })
+                return
+        for p in passageiros:
+            p["fome"] -= cost.get("fome", 0)
+            p["sede"] -= cost.get("sede", 0)
+        for pid, amount in debitados.items():
+            self.players[pid]["gold"] = int(self.players[pid].get("gold", 0) or 0) - amount
+        self.pending_world_travel = None
+        if pending.get("waiting_notified"):
+            await self.send_to(pending.get("host_pid"), {"type": "caravan_sponsorship_closed"})
+        origin, destination = pending["origin"], pending["destination"]
+        self.world_location = destination
+        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi",
+                            origem=nome_cat("local", origin, WORLD_LOCATIONS[origin]["nome"]),
+                            world_locations_destinat=nome_cat("local", destination, WORLD_LOCATIONS[destination]["nome"]),
+                            cost_fome=cost.get("fome", 0), cost_sede=cost.get("sede", 0)))
+        await self.gm_say(T("narracao.o_grupo_viajou_com_a_caravana", tarifa=fare))
+        self._checkpoint_savegame()
+        await self.broadcast_city_state()
+
+    async def handle_caravan_sponsorship_response(self, pid, request_id, accept):
+        pending = self.pending_world_travel
+        if (self.phase != "city" or not isinstance(pending, dict)
+                or pending.get("phase") != "sponsorship"
+                or str(request_id or "") != str(pending.get("active_request_id"))
+                or pid not in self.players or pid not in pending.get("active_payers", [])
+                or not self._viagem_eh_multiplayer()):
+            return
+        passageiro = pending.get("active_passenger")
+        pagador = self.players[pid]
+        dono_pagador = str(pagador.get("controlador") or pid)
+        dono_alvo = str((self.players.get(passageiro) or {}).get("controlador") or passageiro)
+        if dono_pagador == dono_alvo or not accept:
+            self.pending_world_travel = None
+            for pagador in pending.get("active_payers", []):
+                await self.send_to(pagador, {"type": "caravan_sponsorship_closed", "request_id": request_id})
+            await self.send_to(pending.get("host_pid"), {
+                "type": "caravan_sponsorship_failed", "reason": "declined",
+                "passenger": (self.players.get(passageiro) or {}).get("name", ""),
+                "destination": pending.get("destination"), "fare": pending.get("fare"),
+            })
+            return
+        for pagador in pending.get("active_payers", []):
+            await self.send_to(pagador, {"type": "caravan_sponsorship_closed", "request_id": request_id})
+        pending.setdefault("coverage", {})[passageiro] = pid
+        pending.pop("active_request_id", None)
+        pending.pop("active_passenger", None)
+        pending.pop("active_payers", None)
+        await self._solicitar_cobertura_caravana(pending)
+
+    async def handle_world_travel_cancel(self, pid):
+        pending = self.pending_world_travel
+        if (self._eh_anfitriao(pid) and isinstance(pending, dict)
+                and pending.get("mode") == "caravan" and pending.get("phase") == "sponsorship"):
+            self.pending_world_travel = None
+            for pagador in pending.get("active_payers", []):
+                await self.send_to(pagador, {"type": "caravan_sponsorship_closed",
+                                             "request_id": pending.get("active_request_id")})
+            if pending.get("waiting_notified"):
+                await self.send_to(pending.get("host_pid"), {"type": "caravan_sponsorship_closed"})
+            await self.broadcast_city_state()
+
+    async def _iniciar_encontro_viagem(self, pid, pending):
+        """Carrega o mapa de estrada com inimigos preparados e guarda a continuação."""
+        defn = carregar_dungeon("estrada_floresta_emboscada.json")
+        if not defn:
+            self.pending_world_travel = None
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Mapa de encontro de viagem ausente.")})
+            return
+        comp = pending.get("composition") or []
+        defs = {str(m.get("type")): m for m in MONSTER_DEFS if isinstance(m, dict)}
+        slots = [[14, 6], [17, 9], [20, 6], [16, 11], [22, 9]]
+        if len(comp) > len(slots) or any(tipo not in defs for tipo in comp):
+            self.pending_world_travel = None
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Composição de encontro inválida.")})
+            return
+        defn = deepcopy(defn)
+        defn["monsters"] = [
+            {"type": tipo, "pos": list(slots[i]), "room_id": None,
+             "boss": False, "target": False}
+            for i, tipo in enumerate(comp)
+        ]
+        pending["phase"] = "combat"
+        pending["composition"] = list(comp)
+        pending["encounter_map"] = "estrada_floresta_emboscada.json"
+        self.pending_world_travel = pending
+        self.mode = "authored"
+        self.selected_dungeon = "estrada_floresta_emboscada.json"
+        self.dungeon_def = defn
+        self.dungeon_generated = False
+        self.world_adventure_id = None
+        self.world_adventure_index = None
+        self.world_adventure_revisit = False
+        self._checkpoint_savegame()
+        await self.enter_dungeon(pid, from_world_adventure=True)
+
+    async def _concluir_encontro_viagem(self):
+        pending = self.pending_world_travel
+        if not isinstance(pending, dict) or pending.get("phase") != "combat":
+            return
+        self.phase = "city"
+        self.dungeon_generated = False
+        self.dungeon_intro_active = False
+        self.dungeon_intro_until_ms = None
+        self.selected_dungeon = None
+        self.dungeon_def = None
+        self._objetivo_concluido = False
+        self.mission_complete_pending = False
+        tipo = pending.get("destination_type")
+        if tipo == "adventure":
+            pending["phase"] = "choice"
+            self.mode = pending.get("restore_mode", "procedural")
+            self.world_location = pending.get("origin", self.world_location)
+            self.pending_world_travel = pending
+            await self.gm_say(T("narracao.emboscada_derrotada_escolha_destino"))
+            await self.broadcast_city_state()
+            await self.broadcast({
+                "type": "world_adventure_encounter_choice",
+                "adventure_id": pending.get("adventure_id"),
+                "origin": pending.get("origin"),
+                "host": self.host_pid,
+            })
+            self._checkpoint_savegame()
+            return
+        destination = pending.get("destination")
+        self.world_location = destination
+        self.pending_world_travel = None
+        self.mode = pending.get("restore_mode", "procedural")
+        self.world_adventure_id = None
+        self.world_adventure_index = None
+        self.world_adventure_revisit = False
+        origem = nome_cat("local", pending.get("origin"), WORLD_LOCATIONS.get(pending.get("origin"), {}).get("nome", ""))
+        nome_destino = nome_cat("local", destination, WORLD_LOCATIONS.get(destination, {}).get("nome", ""))
+        await self.gm_say(T("narracao.emboscada_vencida_viagem_continua", origem=origem, destino=nome_destino))
+        self._checkpoint_savegame()
+        await self.broadcast_city_state()
+
+    async def handle_world_travel(self, pid, destination, mode="road"):
+        """Inicia viagem arriscada ou caravana entre cidades com cobrança atômica."""
+        if self.phase != "city" or self.pending_world_travel:
             return
         if not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_escolher_o_desti")})
             return
         destination = str(destination or "")
-        if destination not in WORLD_LOCATIONS or destination == self.world_location:
+        mode = str(mode or "road")
+        if (destination not in WORLD_LOCATIONS or destination == self.world_location
+                or WORLD_LOCATIONS.get(destination, {}).get("tipo") not in _CITY_TIPOS):
             await self.send_to(pid, {"type": "error", "msg": T("erro.destino_invalido")})
             return
-        # Sem custo cadastrado a viagem é gratuita: a tabela guarda preços, não
-        # a lista de trajetos existentes.
+        if mode not in ("road", "caravan"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_invalido")})
+            return
         cost = WORLD_ROUTES.get(frozenset((self.world_location, destination))) or {"fome": 0, "sede": 0}
-        sem_recursos = [p["name"] for p in self.players.values()
+        passengers = [p for p in self.players.values() if not p.get("is_master")]
+        sem_recursos = [p.get("name", "") for p in passengers
                          if p.get("fome", 0) < cost["fome"] or p.get("sede", 0) < cost["sede"]]
         if sem_recursos:
             await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_viajar", nomes=sem_recursos)})
             return
-        for p in self.players.values():
+        fare = tarifa_caravana(cost["fome"], cost["sede"])
+        if mode == "caravan":
+            sem_ouro = [hero_pid for hero_pid, p in self.players.items()
+                        if not p.get("is_master") and int(p.get("gold", 0) or 0) < fare]
+            if sem_ouro:
+                if self._viagem_eh_multiplayer():
+                    pending = {
+                        "destination_type": "city", "origin": self.world_location,
+                        "destination": destination, "mode": "caravan", "phase": "sponsorship",
+                        "cost": dict(cost), "fare": fare, "charged": False,
+                        "host_pid": pid, "unpaid_passengers": sem_ouro, "coverage": {},
+                    }
+                    self.pending_world_travel = pending
+                    await self._solicitar_cobertura_caravana(pending)
+                    return
+                await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente")})
+                return
+        origin = self.world_location
+        for p in passengers:
             p["fome"] -= cost["fome"]
             p["sede"] -= cost["sede"]
-        origem = nome_cat("local", self.world_location,
-                          WORLD_LOCATIONS[self.world_location]["nome"])
+            if mode == "caravan":
+                p["gold"] = int(p.get("gold", 0) or 0) - fare
+        pending = {
+            "destination_type": "city", "origin": origin, "destination": destination,
+            "mode": mode, "cost": dict(cost), "fare_per_character": fare if mode == "caravan" else 0,
+            "charged": True, "roll_resolved": mode == "caravan", "encounter": False,
+            "restore_mode": self.mode,
+        }
+        self.pending_world_travel = pending
+        if mode == "road":
+            pending["roll_resolved"] = True
+            chance = chance_encontro(cost["fome"], cost["sede"])
+            pending["chance"] = chance
+            pending["encounter"] = random.random() * 100 < chance
+            if pending["encounter"]:
+                categoria = random.choice(tuple(_COMPOSICOES_ENCONTRO_VIAGEM))
+                grupo = [p for p in passengers if p.get("alive", True) and p.get("hp", 1) > 0]
+                pending["composition"] = selecionar_composicao_viagem(grupo, categoria)
+                pending["category"] = categoria
+                await self._iniciar_encontro_viagem(pid, pending)
+                return
         self.world_location = destination
-        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi", origem=origem, world_locations_destinat=nome_cat("local", destination, WORLD_LOCATIONS[destination]['nome']), cost_fome=cost['fome'], cost_sede=cost['sede']))
+        self.pending_world_travel = None
+        await self.gm_say(T("narracao.o_grupo_viajou_de_para_por_heroi", origem=nome_cat("local", origin, WORLD_LOCATIONS[origin]["nome"]), world_locations_destinat=nome_cat("local", destination, WORLD_LOCATIONS[destination]['nome']), cost_fome=cost['fome'], cost_sede=cost['sede']))
+        if mode == "caravan":
+            await self.gm_say(T("narracao.o_grupo_viajou_com_a_caravana", tarifa=fare))
         self._checkpoint_savegame()
         await self.broadcast_city_state()
+
+    async def handle_world_adventure_encounter_choice(self, pid, choice):
+        pending = self.pending_world_travel
+        if (not self._eh_anfitriao(pid) or self.phase != "city" or not isinstance(pending, dict)
+                or pending.get("destination_type") != "adventure" or pending.get("phase") != "choice"):
+            return
+        if choice == "return":
+            self.world_location = pending.get("origin", self.world_location)
+            self.pending_world_travel = None
+            await self.gm_say(T("narracao.o_grupo_retornou_a_cidade_sem_reembolso"))
+            self._checkpoint_savegame()
+            await self.broadcast_city_state()
+            return
+        if choice != "continue":
+            return
+        adventure_id = pending.get("adventure_id")
+        self.pending_world_travel = None
+        await self.handle_world_adventure(pid, adventure_id, _travel_resume=True)
 
     async def handle_world_map_points(self, pid, points):
         await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_do_mapa_so_podem_ser_ajustados")})
@@ -16439,8 +16833,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if item_id and item_acquired:
             await self._trigger_campaign_scene("key_item_obtained", item_id)
 
-    async def handle_world_adventure(self, pid, adventure_id):
+    async def handle_world_adventure(self, pid, adventure_id, _travel_resume=False):
         """Parte diretamente para uma entrada autorada marcada no mapa-múndi."""
+        if self.pending_world_travel and not _travel_resume:
+            return
         if self.phase != "city" or not self._eh_anfitriao(pid):
             await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
@@ -16489,12 +16885,33 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Saídas obrigatórias ausentes ou inválidas; revise esta etapa no editor.")})
                 return
         fome, sede = int(adventure.get("fome", 0)), int(adventure.get("sede", 0))
-        sem_recursos = [p["name"] for p in self.players.values() if p.get("fome", 0) < fome or p.get("sede", 0) < sede]
-        if sem_recursos:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_a_expedicao", nomes=sem_recursos)})
+        if not _travel_resume:
+            sem_recursos = [p["name"] for p in self.players.values() if p.get("fome", 0) < fome or p.get("sede", 0) < sede]
+            if sem_recursos:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.recursos_insuficientes_para_a_expedicao", nomes=sem_recursos)})
+                return
+            for p in self.players.values():
+                p["fome"] -= fome; p["sede"] -= sede
+            chance = chance_encontro(fome, sede)
+            if random.random() * 100 < chance:
+                categoria = random.choice(tuple(_COMPOSICOES_ENCONTRO_VIAGEM))
+                grupo = [p for p in self.players.values()
+                         if not p.get("is_master") and p.get("alive", True) and p.get("hp", 1) > 0]
+                pending = {
+                    "destination_type": "adventure", "origin": self.world_location,
+                    "destination": adventure["id"], "adventure_id": adventure["id"],
+                    "adventure_index": stage_index, "adventure_revisit": revisit,
+                    "mode": "road", "cost": {"fome": fome, "sede": sede},
+                    "charged": True, "roll_resolved": True, "chance": chance,
+                    "encounter": True, "category": categoria,
+                    "composition": selecionar_composicao_viagem(grupo, categoria),
+                    "restore_mode": self.mode,
+                }
+                await self._iniciar_encontro_viagem(pid, pending)
+                return
+        elif not self._eh_anfitriao(pid):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.apenas_o_anfitriao_pode_iniciar_uma_expe")})
             return
-        for p in self.players.values():
-            p["fome"] -= fome; p["sede"] -= sede
         self.mode = "authored"; self.selected_dungeon = file; self.dungeon_def = defn
         # A campanha continua ativa como contexto narrativo. A masmorra escolhida
         # no mapa é a referência usada pelos gatilhos vinculados ao local.
@@ -16845,6 +17262,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # da masmorra; antes disso o cliente limpa a fila de mensagens.
         if nova:
             await self._rolar_licantropia_inicio_masmorra()
+        if (self.pending_world_travel and self.pending_world_travel.get("phase") == "combat"):
+            # A emboscada já teve recursos cobrados e rolagem resolvida. Grave o
+            # primeiro estado seguro antes de liberar o cliente, mesmo com a
+            # transição de entrada ativa, para reconnect não rolar/cobrar de novo.
+            self._gravar_foto_entrada_emboscada()
         # Entrega o mapa e a fila de iniciativa ainda bloqueados, permitindo
         # que o cliente monte a masmorra por baixo da transição sem liberar
         # qualquer ação antes do prazo autoritativo.
@@ -25198,6 +25620,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         _agendar_descarga()
         if primeira:
             self._avisar_salvo("masmorra")
+        return True
+
+    def _gravar_foto_entrada_emboscada(self):
+        """Checkpoint inicial da emboscada após a transação já ter sido cobrada."""
+        if (self.savegame is None or getattr(self, "test_mode", False)
+                or self.phase != "playing" or not self.pending_world_travel
+                or self.pending_world_travel.get("phase") != "combat"):
+            return False
+        foto = foto_empacotar(self._montar_foto(), onde="masmorra",
+                              rodada=self.round_num,
+                              masmorra=self.selected_dungeon or "procedural",
+                              masmorra_nome=self._nome_masmorra_foto())
+        self._ultima_foto = foto
+        self.savegame["dungeon_snapshot"] = foto
+        write_savegame(self.savegame)
+        _agendar_descarga()
         return True
 
     def _nome_masmorra_foto(self):
@@ -48562,6 +49000,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Catch-all chamado por push_state. Recalcula o status p/ o HUD e, se o
         principal está cumprido, concede as recompensas (XP/ouro divididos + baú de
         itens) e sinaliza `mission_complete_pending` para o encerramento manual."""
+        travel = self.pending_world_travel
+        if (self.phase == "playing" and isinstance(travel, dict)
+                and travel.get("phase") == "combat"):
+            hostile_alive = [m for m in self.monsters.values()
+                             if m.get("hp", 0) > 0 and not m.get("summoned_by")]
+            if not hostile_alive:
+                await self._concluir_encontro_viagem()
+                return
         if not self.objectives:
             return
         prim = self.objectives.get("primary")
@@ -48900,6 +49346,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def end_game(self, victory, story=None):
         self._apagar_foto()
+        if not victory:
+            self.pending_world_travel = None
         self.cooperative_markers.clear()
         self._cooperative_marker_last_at.clear()
         self.cooperative_vision_preferences.clear()
@@ -50482,7 +50930,17 @@ async def handler(ws):
                     if room: await room.handle_take_all_from_decor(pid, msg.get("decor_id"))
 
                 elif t == "world_travel":
-                    if room: await room.handle_world_travel(pid, msg.get("destination"))
+                    if room: await room.handle_world_travel(pid, msg.get("destination"), msg.get("mode", "road"))
+
+                elif t == "caravan_sponsorship_response":
+                    if room: await room.handle_caravan_sponsorship_response(
+                        pid, msg.get("request_id"), msg.get("accept") is True)
+
+                elif t == "world_travel_cancel":
+                    if room: await room.handle_world_travel_cancel(pid)
+
+                elif t == "world_adventure_encounter_choice":
+                    if room: await room.handle_world_adventure_encounter_choice(pid, msg.get("choice"))
 
                 elif t == "world_map_points":
                     if room: await room.handle_world_map_points(pid, msg.get("points"))

@@ -2141,3 +2141,19 @@ body.preview-mode #map-panel { width:100%; }
   background:#1c1a26;border:1px solid var(--gold,#d9b45a);color:#eee;font-size:12.5px;line-height:1.35;
   box-shadow:0 4px 16px rgba(0,0,0,.5);display:none}
 #guia-balao.open{display:block}
+
+.travel-decision-overlay{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;
+  padding:20px;background:rgba(5,6,12,.78);}
+.travel-decision-dialog{width:min(460px,94vw);padding:24px;border:1px solid #b58a45;border-radius:12px;
+  background:linear-gradient(160deg,#29251d,#151522 70%);color:#f0e4ca;
+  box-shadow:0 18px 60px rgba(0,0,0,.72);}
+.travel-decision-dialog h2{margin:0 0 12px;color:#f2cb76;font-size:1.3rem;}
+.travel-decision-merchant{float:left;width:94px;height:118px;object-fit:cover;object-position:50% 20%;
+  margin:0 16px 12px 0;border:1px solid #987747;border-radius:8px;box-shadow:0 4px 14px #0008;}
+.travel-decision-dialog p{margin:0 0 20px;line-height:1.55;color:#e2d6be;}
+.travel-decision-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;}
+.travel-decision-actions button{min-height:42px;padding:9px 14px;border:1px solid #78613c;border-radius:7px;
+  background:#292a39;color:#f1e5cc;cursor:pointer;}
+.travel-decision-actions button.primary{border-color:#d2a54c;background:#71501c;color:#fff3d4;}
+.travel-decision-actions button:focus-visible{outline:3px solid #ffe18b;outline-offset:2px;}
+@media(max-width:520px){.travel-decision-dialog{padding:18px}.travel-decision-actions{justify-content:stretch}.travel-decision-actions button{flex:1 1 100%;}}

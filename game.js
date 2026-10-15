@@ -2263,9 +2263,15 @@ function _showCityTravelTransition(world, destination, durationMs=3000){
   });
 }
 
+function _clearCityTravelTransition(){
+  _cityTravelTransition = null;
+  document.getElementById('city-travel-transition')?.remove();
+}
+
 function showWorldLocationPreview(world, loc){
   if(!_worldMapEl) return;
   const route = _worldRouteCost(world, world.location, loc.id);
+  const preview = (world.travel_options || {})[loc.id] || route || {fome:0, sede:0, chance:10, tarifa:10};
   _worldMapEl.innerHTML = '';
   const frame = document.createElement('div'); frame.id = 'worldmap-location-frame';
   const img = document.createElement('img'); img.src = loc.imagem; img.alt = loc.nome; frame.appendChild(img);
@@ -2275,14 +2281,26 @@ function showWorldLocationPreview(world, loc){
   if(loc.id === world.location){
     panel.innerHTML = `<b>${t('ui.mundo.local_atual')}</b><small>${t('ui.mundo.local_atual_desc')}</small>`;
   } else if(route){
-    panel.innerHTML = `<b>${t('ui.mundo.rota_disponivel')}</b><small>${t('ui.mundo.rota_disponivel_desc', {fome:route.fome, sede:route.sede})}</small>`;
-    const go = document.createElement('button'); go.className = 'worldmap-travel'; go.textContent = t('ui.mundo.viajar_para', {nome:loc.nome});
-    go.disabled = !GS.souAnfitriao(GS.cityState.host);
-    go.title = go.disabled ? t('ui.mundo.so_anfitriao_viagem') : '';
-    go.onclick = () => {
-      go.disabled=true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id);
+    const count = Math.max(1, (GS.cityState?.players || []).filter(p=>!p.is_master).length);
+    const host = GS.souAnfitriao(GS.cityState.host);
+    panel.innerHTML = `<b>${t('ui.mundo.rota_disponivel')}</b><small>${t('ui.mundo.rota_disponivel_desc', {fome:preview.fome, sede:preview.sede})}</small>`
+      + `<small>${t('ui.mundo.emboscada_chance', {chance:preview.chance})}</small>`;
+    const road = document.createElement('button'); road.className = 'worldmap-travel';
+    road.textContent = t('ui.mundo.estrada_segura', {chance:preview.chance});
+    road.disabled = !host; road.title = road.disabled ? t('ui.mundo.so_anfitriao_viagem') : '';
+    road.onclick = () => {
+      road.disabled = true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id, 'road');
     };
-    panel.appendChild(go);
+    panel.appendChild(road);
+    if(loc.tipo === 'cidade' || loc.tipo === 'vila'){
+      const caravan = document.createElement('button'); caravan.className = 'worldmap-travel worldmap-caravan';
+      caravan.textContent = t('ui.mundo.caravana_segura', {tarifa:preview.tarifa, total:preview.tarifa * count});
+      caravan.disabled = !host; caravan.title = caravan.disabled ? t('ui.mundo.so_anfitriao_viagem') : '';
+      caravan.onclick = () => {
+        caravan.disabled = true; _showCityTravelTransition(world, loc); GS.worldTravel(loc.id, 'caravan');
+      };
+      panel.appendChild(caravan);
+    }
   } else {
     panel.innerHTML = `<b>${t('ui.mundo.local_distante')}</b><small>${t('ui.mundo.local_distante_desc')}</small>`;
   }
@@ -2290,6 +2308,77 @@ function showWorldLocationPreview(world, loc){
   _worldMapEl.appendChild(frame);
   _gamepadFocusMapPoint('.worldmap-travel:not([disabled])', '.worldmap-back');
 }
+
+function _fecharDialogoViagem(){ document.getElementById('travel-decision-overlay')?.remove(); }
+function _abrirDialogoViagem({titulo, texto, botoes=[], mercador=false}){
+  _fecharDialogoViagem();
+  const overlay=document.createElement('div'); overlay.id='travel-decision-overlay';
+  overlay.className='travel-decision-overlay'; overlay.setAttribute('role','presentation');
+  const dialog=document.createElement('section'); dialog.className='travel-decision-dialog';
+  dialog.setAttribute('role','dialog'); dialog.setAttribute('aria-modal','true');
+  if(mercador){
+    const portrait=document.createElement('img'); portrait.className='travel-decision-merchant';
+    portrait.src=_assetURL('assets/tavern/mercador.png'); portrait.alt=t('ui.mundo.patrocinio_titulo');
+    dialog.appendChild(portrait);
+  }
+  const heading=document.createElement('h2'); heading.textContent=titulo || ''; dialog.appendChild(heading);
+  const body=document.createElement('p'); body.textContent=texto || ''; dialog.appendChild(body);
+  const actions=document.createElement('div'); actions.className='travel-decision-actions';
+  for(const item of botoes){
+    const button=document.createElement('button'); button.type='button'; button.textContent=item.label;
+    button.className=item.primary ? 'primary' : ''; button.dataset.gamepadAction='activate';
+    button.onclick=()=>{ if(item.keepOpen) return item.onClick?.(); _fecharDialogoViagem(); item.onClick?.(); };
+    actions.appendChild(button);
+  }
+  dialog.appendChild(actions); overlay.appendChild(dialog); document.body.appendChild(overlay);
+  actions.querySelector('button')?.focus();
+  _gamepadFocusMapPoint('#travel-decision-overlay button');
+  return overlay;
+}
+
+GS.on('caravanSponsorshipRequest', msg=>{
+  _abrirDialogoViagem({
+    titulo:t('ui.mundo.patrocinio_titulo'),
+    texto:t('ui.mundo.patrocinio_texto',{passageiro:msg.passenger || '',tarifa:msg.fare || 0}),
+    mercador:true,
+    botoes:[
+      {label:t('ui.mundo.patrocinio_pagar'),primary:true,onClick:()=>GS.respondCaravanSponsorship(msg.request_id,true)},
+      {label:t('ui.mundo.patrocinio_recusar'),onClick:()=>GS.respondCaravanSponsorship(msg.request_id,false)},
+    ],
+  });
+});
+GS.on('caravanSponsorshipStarted', msg=>{
+  _clearCityTravelTransition();
+  _abrirDialogoViagem({titulo:t('ui.mundo.patrocinio_titulo'),
+    texto:t('ui.mundo.patrocinio_aguardando',{passageiro:msg.passenger || ''}),
+    mercador:true,
+    botoes:[{label:t('ui.mundo.patrocinio_cancelar'),onClick:()=>GS.cancelWorldTravel()}]});
+});
+GS.on('caravanSponsorshipClosed', ()=>_fecharDialogoViagem());
+GS.on('caravanSponsorshipFailed', msg=>{
+  _clearCityTravelTransition();
+  const world=GS.cityState?.world || {};
+  const destination=(world.locations || []).find(loc=>loc.id===msg.destination);
+  _abrirDialogoViagem({titulo:t('ui.mundo.patrocinio_titulo'),texto:t('ui.mundo.patrocinio_falhou'),mercador:true,botoes:[
+    {label:t('ui.mundo.patrocinio_estrada'),primary:true,onClick:()=>{
+      if(!msg.destination) return;
+      if(destination) _showCityTravelTransition(world,destination);
+      GS.worldTravel(msg.destination,'road');
+    }},
+    {label:t('ui.mundo.patrocinio_cancelar'),onClick:()=>GS.cancelWorldTravel()},
+  ]});
+});
+GS.on('worldAdventureEncounterChoice', msg=>{
+  const host=GS.souAnfitriao(msg.host);
+  _abrirDialogoViagem({
+    titulo:t('ui.mundo.emboscada_decisao_titulo'),
+    texto:host?t('ui.mundo.emboscada_vitoria_masmorra'):t('ui.mundo.aguardar_anfitriao'),
+    botoes:host?[
+      {label:t('ui.mundo.continuar_masmorra'),primary:true,onClick:()=>GS.worldAdventureEncounterChoice('continue')},
+      {label:t('ui.mundo.retornar_origem'),onClick:()=>GS.worldAdventureEncounterChoice('return')},
+    ]:[],
+  });
+});
 
 // Fragmentos de requisito ("renome 3", "informação: …"), compartilhados pelo
 // destino de aventura e pela conversa de NPC — as duas telas mostravam a mesma
@@ -55406,6 +55495,7 @@ GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', (msg) => {
+  _clearCityTravelTransition();
   fecharFichaCidade();
   _limparMortesVisuais();
   _limparAnimacoesTempestade();
