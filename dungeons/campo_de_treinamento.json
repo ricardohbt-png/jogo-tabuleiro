@@ -2587,22 +2587,28 @@
       "gold": 0,
       "items": [
         {
-          "id": "sword"
+          "id": "sword",
+          "tutorial_class": "warrior"
         },
         {
-          "id": "cajado_madeira"
+          "id": "dagger",
+          "tutorial_class": "mage"
         },
         {
-          "id": "dagger"
+          "id": "lanca_curta",
+          "tutorial_class": "rogue"
         },
         {
-          "id": "machado_basico"
+          "id": "bordao",
+          "tutorial_class": "cleric"
         },
         {
-          "id": "dagger"
+          "id": "lanca_curta",
+          "tutorial_class": "bard"
         },
         {
-          "id": "cajado_madeira"
+          "id": "sword",
+          "tutorial_class": "paladin"
         }
       ],
       "key_objective": false

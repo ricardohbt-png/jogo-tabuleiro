@@ -26865,7 +26865,8 @@ function _renderChestWindow(chest){
   const pending = _pendingChestTake?.chestId === chest.id ? _pendingChestTake : null;
 
   const visibleItems = (chest.items || []).map((item, idx) => ({ item, idx }))
-    .filter(({ idx }) => !(pending?.kind === 'item' && pending.index === idx));
+    .filter(({ item, idx }) => !item.tutorial_hidden
+      && !(pending?.kind === 'item' && pending.index === idx));
   const itemCount = visibleItems.length;
   const hasGold   = chest.gold > 0 && pending?.kind !== 'gold';
 

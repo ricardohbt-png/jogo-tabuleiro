@@ -8516,6 +8516,9 @@ def hidratar_itens_bau(items):
         base = _DUNGEON_ITEM_CATALOG.get(iid) if isinstance(iid, str) else None
         if base:
             inst = deepcopy(base)
+            tutorial_class = it.get("tutorial_class")
+            if tutorial_class in LICAO_CLASSES:
+                inst["tutorial_class"] = tutorial_class
             if GameRoom._is_utility_belt_item(inst):
                 # Authored loot selects IDs, never supplies runtime effects or belt stats.
                 if isinstance(it.get("instance_tag"), str):
@@ -27325,6 +27328,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if idx < 0 or idx >= len(chest["items"]):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
             item = chest["items"][idx]
+            classe_tutorial = item.get("tutorial_class")
+            if (self.training_mode and classe_tutorial in LICAO_CLASSES
+                    and classe_tutorial != p.get("class_id")):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
 
             # MuniÃ§Ã£o: tenta empilhar em off_hand ou em slot de bag do mesmo tipo
             if item.get("effect") == "ammo":
@@ -27408,6 +27415,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 break
             progresso = False
             for idx in range(len(chest["items"])):
+                item = chest["items"][idx]
+                classe_tutorial = item.get("tutorial_class")
+                if (self.training_mode and classe_tutorial in LICAO_CLASSES
+                        and classe_tutorial != p.get("class_id")):
+                    continue
                 antes = len(chest["items"])
                 await self.handle_take_from_chest(pid, chest_id, "item", idx)
                 chest = self.chests.get(chest_id)
@@ -49712,13 +49724,36 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
+        def personalizar_estado(pid, state):
+            payload = {
+                **state,
+                "cooperative_markers": self._cooperative_markers_for_pid(pid),
+            }
+            jogador = self.players.get(pid)
+            if self.training_mode and jogador:
+                classe = jogador.get("class_id")
+                payload["chests"] = [
+                    {
+                        **chest,
+                        "items": [
+                            {
+                                **item,
+                                "tutorial_hidden": (
+                                    item.get("tutorial_class") in LICAO_CLASSES
+                                    and item.get("tutorial_class") != classe
+                                ),
+                            }
+                            for item in chest.get("items", [])
+                        ],
+                    }
+                    for chest in state.get("chests", [])
+                ]
+            return payload
+
         await self.broadcast(
             msg_state,
             skip=self._conexoes_fora(),
-            personalize=lambda pid, state: {
-                **state,
-                "cooperative_markers": self._cooperative_markers_for_pid(pid),
-            },
+            personalize=personalizar_estado,
         )
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
