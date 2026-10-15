@@ -115,6 +115,13 @@ check("_tocarSomReacao toca congelar e crosta", /function _tocarSomReacao[^]*?ti
 for (const k of ["ui.somteste.ev.congelar", "ui.somteste.ev.crosta"])
   check("chave " + k + " pt+en", lang.indexOf('"' + k + '"') >= 0 && _pt(k) !== "" && lang.slice(lang.indexOf('"' + k + '"'), lang.indexOf('"' + k + '"') + 300).includes('"en"'));
 check("3D: piche em chamas acende as labaredas vivas (chamasVivasSet) enquanto a zona existe", /chamas_piche'\) adicionarZona\(z, chamasVivasSet\)/.test(jogoSrc));
+check("3D: chão em chamas da Bola de Fogo usa labaredas vivas mais baixas (pool próprio)", /BOLA_FOGO_ALTURA_CHAMA = 0\.\d+;/.test(jogoSrc)
+  && /spellLivingFlameBaixoFx = _mkFogoVivoPool\(BOLA_FOGO_ALTURA_CHAMA\)/.test(jogoSrc)
+  && /z\.tipo === 'bola_fogo'\) adicionarZona\(z, chamasBaixasSet\)/.test(jogoSrc)
+  && /_overlayShowOnly\(g3\.spellLivingFlameBaixoFx, chamasBaixasSet\)/.test(jogoSrc));
+check("3D: casa que já tem labareda cheia (piche/Prisão) não duplica com a baixa", /for \(const k of chamasVivasSet\) chamasBaixasSet\.delete\(k\)/.test(jogoSrc));
+check("3D: a animação percorre os dois pools e aplica a altura (alturaMul)", /_animarChamasVivasPersistentes3D[^]*?spellLivingFlameBaixoFx[^]*?const am = fx\.alturaMul \|\| 1/.test(jogoSrc)
+  && /item\.baseScale \* pulseY \* am/.test(jogoSrc));
 const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
 check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));
 

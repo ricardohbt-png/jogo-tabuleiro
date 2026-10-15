@@ -3808,6 +3808,23 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > procedural (`spellFireFx`) continua por baixo. 3D só; o 2D já desenhava chamas nessa zona. Teste estático em
 > `tools/test_reacoes_cliente.js`.
 
+> **Estado publicado depois das reações (2026-10-15):** a reação só resolve ao SAIR do escopo `evento_elemental`,
+> e a própria ação (arremesso, ataque, magia) manda o `game_state` ao terminar, ANTES disso: a zona de chamas do
+> piche (e o terreno novo de gelo derretido, crosta, gás consumido) só chegava ao cliente no envio seguinte — o
+> fogo "só aparecia depois que o herói andava". `_rx_resolver` marca `esc["mudou"]` quando um efeito rodou (a
+> reação encadeada propaga ao escopo pai) e `evento_elemental` chama `_rx_publicar(esc)` ao sair: UM `push_state`
+> extra, só se algo mudou, e falha de envio não derruba a ação. Só o escopo de saída publica; o caminho
+> implícito (`_rx_registrar` sem escopo) não. Teste: `tools/test_terrain_reactions.py` [14].
+
+> **Chão em chamas da Bola de Fogo com labaredas vivas (2026-10-15):** a zona residual `bola_fogo` (dano nas
+> rodadas seguintes) também acende as labaredas vivas (GLB Chama Viva), porém **mais baixas** que as do piche e da
+> Prisão. A fábrica do pool virou `_mkFogoVivoPool(alturaMul)`: `spellLivingFlameFx` (altura 1: piche, Prisão) e
+> `spellLivingFlameBaixoFx` (altura `BOLA_FOGO_ALTURA_CHAMA` = 0,55, ajuste fino em UM número). `fx.alturaMul`
+> escala o pulso do GLB, a subida das brasas e a altura das línguas em `_animarChamasVivasPersistentes3D` (que
+> percorre os dois pools). Casa que já tem labareda cheia (piche sob a Bola) não duplica com a baixa. A brasa
+> procedural (`spellFireFx`) continua por baixo. 3D só; o 2D já desenhava chamas nessa zona. Teste estático em
+> `tools/test_reacoes_cliente.js`.
+
 > e de ação permanece agregada; uma falha preserva a perda de ação mesmo se outro ciclone
 > for evitado na mesma rodada.
 
