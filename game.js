@@ -23205,6 +23205,9 @@ function _aplicarSpellHL3D() {
 }
 
 function _aimRenderHover3D(){
+      // Piche em chamas: além da brasa procedural do fogo persistente, as labaredas vivas
+      // (o mesmo GLB da Prisão) ficam acesas em cada casa enquanto a zona estiver ativa.
+      if (z.tipo === 'chamas_piche') adicionarZona(z, chamasVivasSet);
   if(!g3?.scene || !window.THREE) return;
   const hover = window._spellHL?.hover;
   if(!hover){ if(g3.aimHoverGroup) g3.aimHoverGroup.visible = false; _renderWeaponAimTrajectory3D(); return; }

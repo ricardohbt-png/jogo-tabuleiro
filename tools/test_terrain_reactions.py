@@ -739,5 +739,20 @@ hp0 = grande["hp"]
 roda(r._verificar_entrada_zona_molochus(grande, 4, 5))
 check("M4 criatura grande com a casa de trás na mancha sofre na entrada", grande["hp"] < hp0)
 
+print("[13] animação das chamas na ignição do piche (2026-10-14)")
+r = sala()
+pinta(r, "piche", [(5, 5), (6, 5), (7, 5)])
+roda(r._rx_registrar(S.DMG_FIRE, [(6, 5)], origem={"tipo": "teste"}))
+anims = [m for m in r.msgs if m.get("type") == "spell_animation" and m.get("spell_id") == "ignicao_piche"]
+check("ignição manda spell_animation ignicao_piche uma vez", len(anims) == 1)
+check("a animação leva as 3 casas da mancha, uma só execução e o centro no impacto",
+      anims and anims[0]["one_shot"] is True and anims[0]["phase"] == "start"
+      and sorted(map(tuple, anims[0]["tiles"])) == [(5, 5), (6, 5), (7, 5)]
+      and anims[0]["center"] == [6, 5] and anims[0]["origin"] == [6, 5])
+check("o id da animação é único por ignição", anims and str(anims[0]["animation_id"]).startswith("ignicao_piche_"))
+r = sala()
+roda(r._rx_registrar(S.DMG_FIRE, [(6, 5)], origem={"tipo": "teste"}))
+check("fogo sem piche não manda a animação", not any(m.get("spell_id") == "ignicao_piche" for m in r.msgs))
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

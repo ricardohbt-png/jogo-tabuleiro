@@ -114,6 +114,7 @@ check("arquivos de som de gelo existem", fs.existsSync(path.join(raiz, "assets",
 check("_tocarSomReacao toca congelar e crosta", /function _tocarSomReacao[^]*?tipo === 'congelar'\) sfx\('congelar'[^]*?tipo === 'crosta'\) sfx\('crosta'/.test(jogoSrc));
 for (const k of ["ui.somteste.ev.congelar", "ui.somteste.ev.crosta"])
   check("chave " + k + " pt+en", lang.indexOf('"' + k + '"') >= 0 && _pt(k) !== "" && lang.slice(lang.indexOf('"' + k + '"'), lang.indexOf('"' + k + '"') + 300).includes('"en"'));
+check("3D: piche em chamas acende as labaredas vivas (chamasVivasSet) enquanto a zona existe", /chamas_piche'\) adicionarZona\(z, chamasVivasSet\)/.test(jogoSrc));
 const vc = fs.readFileSync(path.join(raiz, "src", "visualConfig.js"), "utf8");
 check("VC.materiais tem piche e lava_solidificada", /piche\s*:/.test(vc) && /lava_solidificada\s*:/.test(vc));
 

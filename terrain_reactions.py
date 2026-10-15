@@ -377,6 +377,14 @@ class TerrainReactions:
                 if c.get("material") == "piche" and c.get("expira_em") is not None                         and int(c["expira_em"]) < zona["expira_em"]:
                     c["expira_em"] = zona["expira_em"]
         await self._rx_anunciar("incendio", regiao, tiles[0])
+        # chamas subindo da mancha, em cadeia a partir do ponto atingido (animação do cliente)
+        centro = [int(tiles[0][0]), int(tiles[0][1])]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ignicao_piche", "phase": "start",
+            "animation_id": f"ignicao_piche_{self.round_num}_{centro[0]}_{centro[1]}_{self._rx_id('anim')}",
+            "origin": centro, "center": centro,
+            "tiles": [list(t) for t in regiao], "one_shot": True,
+        })
         await self.gm_say(self._rx_T("narracao.reacao.piche_pegou_fogo"))
         zona["ignicao"] = {}
         for alvo in self._alvos_no_inverno(regiao):

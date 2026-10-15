@@ -3739,6 +3739,17 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
+> **Animação das chamas na ignição do piche (2026-10-14):** `_rx_incendiar_piche` volta a mandar o
+> `spell_animation` `ignicao_piche` (`one_shot`, `tiles` = a mancha inteira, `center`/`origin` = o ponto atingido,
+> `animation_id` único por ignição), que o `game.js` já desenhava por `_receberAnimacaoPrisaoChamas`
+> (chamas subindo casa a casa a partir do impacto, ~1 s). Convive com o clarão `reacao_elemental` `incendio`
+> (que também toca o som) e com a zona persistente `chamas_piche`. **Chamas acesas enquanto queima:** no 3D,
+> `_aplicarSpellHL3D` manda as casas da zona `chamas_piche` também para `chamasVivasSet`, o pool de labaredas
+> vivas (GLB Chama Viva) que a Prisão de Chamas já usava, por cima da brasa procedural do fogo persistente
+> (`spellFireFx`, aditiva: sobre piso muito claro quase não aparece, por isso a labareda viva); somem quando a
+> zona expira. O 2D já desenhava chamas na zona (`_desenharFogoPersistente2D`). Testes:
+> `tools/test_terrain_reactions.py` [13] e `tools/test_reacoes_cliente.js`.
+
 > restante para os próximos turnos, acessível no painel de ações e na aba Magias. Cada
 > leva soma ciclones à zona, preserva os IDs já colocados e rejeita footprints ocupados.
 > A tempestade parcialmente posicionada continua ativa, pode ser movida/encerrada e
