@@ -4972,6 +4972,26 @@ window.LANG_INTERFACE = {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
   },
+  "ui.mira.reage.choque": {
+    "en": "⚡ Shock: conducts through the water ({n} tiles)",
+    "pt": "⚡ Choque: conduz pela água ({n} casas)"
+  },
+  "ui.mira.reage.ignicao": {
+    "en": "🔥 Ignition: the pitch catches fire ({n} tiles)",
+    "pt": "🔥 Ignição: o piche pega fogo ({n} casas)"
+  },
+  "ui.mira.reage.congelar": {
+    "en": "❄️ Freeze: {n} tile(s) freeze over",
+    "pt": "❄️ Congelamento: {n} casa(s) congelam"
+  },
+  "ui.mira.reage.gas": {
+    "en": "💥 Explosion: the gas detonates ({n} tiles)",
+    "pt": "💥 Explosão: o gás detona ({n} casas)"
+  },
+  "ui.mira.reage.derreter": {
+    "en": "💧 Thaw: the ice melts into water ({n} tiles)",
+    "pt": "💧 Degelo: o gelo derrete em água ({n} casas)"
+  },
   "ui.reacao.casa.gelo": {
     "en": "Ice: fire melts it into shallow water.",
     "pt": "Gelo: o fogo o derrete em água rasa."

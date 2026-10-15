@@ -3736,6 +3736,25 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > Provado com o servidor real (raio congelante num goblin na água profunda; relâmpago por cima de rasa +
 > profunda + redemoinho). Testes: `tools/test_agua_profunda_reacoes.py` (26).
 
+> **Destaque de mira das reações (2026-10-14):** ao mirar, o mapa mostra o que VAI reagir. Módulo puro
+> `ReacoesElementais.preverReacoes(state, elemento, casas)` (`src/reacoesElementais.js`) devolve, por tipo
+> (`choque`, `ignicao`, `congelar`, `gas`, `derreter`), as casas da reação — ESPELHO das regras de
+> `terrain_reactions.py` (`_rx_regiao` com a mesma ordem de visita, raios e tetos; zonas de gás; piche já em
+> chamas não conta), e `alvosDasReacoes` devolve as casas das criaturas que sofreriam dano (choque exclui quem
+> levou o golpe e quem voa; gás atinge quem voa também; degelo não machuca). **Regra de manutenção: mudou uma
+> reação no servidor, mude o módulo** — `tools/test_destaque_mira.py` roda 21 cenários no motor real e no JS
+> (via node) e compara as casas, inclusive nos tetos. `game.js`: `_reagePrever(casas)` (elemento por
+> `_ELEMENTO_MIRA_MAGIA`: Relâmpago, Bola de Fogo, Prisão de Chamas — só a borda —, Raio Congelante; e
+> `_ELEMENTO_MIRA_ITEM`: óleo, Fogo Grego, Bomba Incendiária; o Frasco de Piche não tem elemento) roda no fim de
+> `_recomputarAreaMagia`, `_recomputarAreaThrow` e, para arremesso de alvo único, no hover (`_aimHoverThrow`);
+> guarda `window._spellHL.reage = {tipos, alvos, texto}` (zerado em `_aimSetHighlights` e na limpeza geral). 3D:
+> um pool de planos por tipo (`spellReageMeshes`, cores em `_REAGE_HEX_3D`) e um pool de anéis vermelhos
+> (`spellReageAlvoMeshes`) alternados em `_aplicarSpellHL3D` — **`toggle` não aceita `null`**, passe lista
+> vazia. 2D: cor, moldura pulsante, ícone e anel em `_desenharSpellHL2D`. Texto na linha de status da mira
+> (`ui.mira.reage.*`, ex.: "⚡ Choque: conduz pela água (9 casas)"). Fora de escopo: ataque com arma e flecha
+> incendiária. Provado no navegador (servidor isolado, piso escuro e claro). Testes:
+> `tools/test_destaque_mira.py` (21) e `tools/test_destaque_mira_cliente.js` (40).
+
 > **Tempestade de Ciclones — posicionamento por levas (2026-09-27):** o clérigo pode
 > confirmar de 1 até o número de ciclones restantes em cada seleção. A primeira leva
 > ativa a tempestade e inicia duração/descargas; `ciclones_pendentes` conserva a cota
