@@ -1408,6 +1408,17 @@ const GS = (() => {
       _previsoesPedidas[chave] = true;
     }
   }
+  // Campos do game_state que o servidor só reenvia quando mudam (ESTADO_DIFERIVEL
+  // em server.py): omitidos = iguais ao que já recebemos nesta conexão.
+  // O servidor lista em `diferidos` as chaves que omitiu; sem a lista, nada muda.
+  function _completarDiferidos(msg, anterior) {
+    if (!Array.isArray(msg.diferidos)) return true;
+    for (const k of msg.diferidos) {
+      if (!anterior || !(k in anterior)) return false;
+      msg[k] = anterior[k];
+    }
+    return true;
+  }
   function _limparPrevisoes() { _previsoes = {}; _previsoesPedidas = {}; }
 
   // Intenção dos monstros: o servidor responde a prever_intencoes só a quem
@@ -1829,6 +1840,10 @@ const GS = (() => {
         // começa, não a cada push_state (movimento, turno ou dano).
         const escuridaoAnterior = (gameState?.players || []).find(p => p.id === myPid)
           ?.escuridao_desvantagem === true;
+        // O servidor omite os campos grandes que já enviou nesta conexão
+        // (ESTADO_DIFERIVEL): reaproveita o que já temos. Sem cópia anterior,
+        // pede o estado completo em vez de renderizar um mapa vazio.
+        if (!_completarDiferidos(msg, gameState)) { send({ type: 'pedir_estado_completo' }); break; }
         gameState = msg;
         _limparPrevisoes();
         _captarStory(msg);
