@@ -754,5 +754,37 @@ r = sala()
 roda(r._rx_registrar(S.DMG_FIRE, [(6, 5)], origem={"tipo": "teste"}))
 check("fogo sem piche não manda a animação", not any(m.get("spell_id") == "ignicao_piche" for m in r.msgs))
 
+print("[14] o estado com o resultado da reação chega ao cliente (2026-10-15)")
+# Bug: a ação manda o game_state no FIM dela; a reação só resolve ao sair do escopo (depois disso), então a
+# zona de chamas / o terreno novo só chegava ao cliente no PRÓXIMO envio (quando o herói andava).
+def lance_de_oleo(prep):
+    r = sala()
+    prep(r)
+    h = heroi(r, "a", "Ana", "warrior", [6, 5])
+    h["bag"] = [{"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário"}]
+    h["moves_left"] = 6
+    r.current_turn = "a"
+    r.rooms[0].update({"cleared": True, "role": "normal", "looted": True})
+    r._is_turn = lambda pid: True
+    envios = []
+
+    async def push():
+        envios.append({"zonas": [z["tipo"] for z in r.zonas_especiais if z.get("ativa")],
+                       "materiais": dict(r.materiais)})
+    r.push_state = push
+    roda(r.handle_throw_item("a", {"item_id": "frasco_oleo", "tx": 9, "ty": 5}))
+    return r, envios
+r, envios = lance_de_oleo(lambda r: pinta(r, "piche", [(9, 5), (10, 5)]))
+check("o piche pegou fogo (pré-condição)", any(z.get("tipo") == "chamas_piche" and z.get("ativa") for z in r.zonas_especiais))
+check("houve envio de estado", len(envios) >= 1)
+check("o ÚLTIMO envio ao cliente já traz a zona chamas_piche", envios and "chamas_piche" in envios[-1]["zonas"])
+r, envios = lance_de_oleo(lambda r: pinta(r, "piso_congelado", [(9, 5), (10, 5)]))
+check("fogo no gelo: o último envio já traz a água derretida", envios and envios[-1]["materiais"].get((9, 5)) == "agua")
+r, envios = lance_de_oleo(lambda r: None)
+n_sem_reacao = len(envios)
+check("sem reação nenhuma não há envio extra", n_sem_reacao >= 1)
+r, envios_r = lance_de_oleo(lambda r: pinta(r, "piche", [(9, 5)]))
+check("com reação há no máximo 1 envio a mais que sem reação", len(envios_r) <= n_sem_reacao + 1)
+
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

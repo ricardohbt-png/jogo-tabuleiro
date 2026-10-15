@@ -82,6 +82,18 @@ class TerrainReactions:
             self._rx_escopo = None
         # Se o corpo lançar, esta linha não roda: ação abortada não reage (pendências descartadas).
         await self._rx_resolver(esc, 0)
+        await self._rx_publicar(esc)
+
+    async def _rx_publicar(self, esc):
+        """A ação já mandou o game_state ao terminar, mas a reação só resolve DEPOIS (ao sair do
+        escopo): sem este envio o terreno novo e as zonas de fogo só chegavam ao cliente no próximo
+        envio de estado — por exemplo, quando o herói andava. Uma publicação só, e só se algo mudou."""
+        if not esc.get("mudou"):
+            return
+        try:
+            await self.push_state()
+        except Exception:      # publicar não pode derrubar uma ação já aplicada
+            traceback.print_exc()
 
     def _rx_origem_atual(self, **kw):
         if self._rx_escopo is not None:
@@ -215,6 +227,7 @@ class TerrainReactions:
                         continue
                     try:
                         await getattr(self, linha["efeito"])(alvo_casas, esc["origem"], pend, profundidade)
+                        esc["mudou"] = True
                     except Exception:  # uma reação com defeito não aborta a ação já aplicada
                         traceback.print_exc()
         finally:
@@ -225,6 +238,8 @@ class TerrainReactions:
         filho = {"origem": dict(esc.get("origem", {})),
                  "pend": {elemento: {"casas": {tuple(c) for c in casas}, "dano": 0, "atingidos": set()}}}
         await self._rx_resolver(filho, profundidade + 1)
+        if filho.get("mudou"):
+            esc["mudou"] = True
 
     def _rx_id(self, tipo):
         self._rx_seq += 1
