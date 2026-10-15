@@ -3612,6 +3612,26 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > de entidades do 3D, senão o sprite não troca. Teste: `tools/test_perseguicao.py`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-09-26-perseguicao-monstros*`.
 
+> **Volume do `game_state` e envio (2026-10-15):** investigado o lag online com vários jogadores (medido com 5 heróis,
+> `calabouco_morte`, 60% explorado). O `game_state` pesa ~250–290 KB e ia inteiro a cada ação, a cada jogador, com CPU de
+> ~28 ms por `push_state`. Três correções de CPU/envio em `broadcast`/`push_state`: `_cooperative_markers_for_pid` devolve
+> `[]` sem marcadores (antes varria todas as casas exploradas com linha de visão por destinatário); `broadcast` serializa
+> **uma vez por (idioma, objeto)** — `personalize` pode devolver o próprio `msg` ou um derivado compartilhado (memoizado) para
+> dividir o JSON; e o envio é **em paralelo** (`asyncio.gather`), então um cliente lento não segura os outros (a ordem por
+> conexão se mantém porque o broadcast seguinte só começa depois). Resultado: 27,6 → 5,3 ms. **Estado diferido:**
+> `ESTADO_DIFERIVEL` (`tiles`, `rooms`, `materiais`, `decorations`, `secret_passages`, `elevacoes`, `alturas_parede`,
+> `pontes`, `door_conditions`, `hero_spawns`) só viaja a quem ainda não recebeu a versão atual. O servidor guarda por
+> conexão (`_diferidos_enviados[ws]`) a assinatura `(idioma, hash do JSON)` de cada campo; igual = omitido, e a mensagem
+> traz `diferidos: [chaves omitidas]`. O cliente (`_completarDiferidos` em `gameState.js`) preenche essas chaves com o
+> `gameState` anterior; sem cópia anterior envia `pedir_estado_completo` (o servidor descarta o cache daquela conexão e
+> reenvia) e descarta a mensagem. Mensagem **sem** `diferidos` age como antes (prévia do editor, testes). O cache é
+> descartado ao sair da masmorra (quem não recebe `game_state`), em `broadcast_city_state` e em conexão nova (o `ws` é a
+> chave); trocar de idioma reenvia porque o idioma entra na assinatura. Efeito: ~1730 → ~1005 KB brutos por push. **Campo
+> grande novo e quase estático:** acrescente-o a `ESTADO_DIFERIVEL` (servidor) — o cliente não precisa mudar, ele só
+> obedece `diferidos`; campo que muda a cada ação não deve entrar (a assinatura custa um `dumps`). **Próximo passo
+> (não feito):** deltas dos campos dinâmicos (`monsters` ~97 KB, `players`, `explored`). Testes:
+> `tools/test_broadcast_otimizado.py`, `tools/test_estado_diferido.py`, `tools/test_estado_diferido_cliente.js`.
+
 > **Intenção dos monstros (2026-10-12):** na vez do herói, setas que mostram qual alvo cada
 > monstro visível atacaria **no próximo turno dele**. Cliente pede `prever_intencoes` (sem
 > campos) e recebe, **só ele**, `intencoes_monstros {rodada, vez, itens}` (`vez` =

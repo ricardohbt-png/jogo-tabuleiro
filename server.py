@@ -3555,6 +3555,7 @@ FOTO_SALA_CATEGORIAS = {
     "_fogo_ignora_agua": "efemero",
     "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero", "_rx_avisou_crosta": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
+    "_diferidos_enviados": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
     "turn_timer_started_ms": "janela", "turn_token": "janela",
@@ -11459,6 +11460,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.initiative_order = []
         self._intent_cache = {}     # pid -> (assinatura, itens); ver MonsterIntent
         self._intent_ultimo = {}    # pid -> time.monotonic() do último pedido
+        self._diferidos_enviados = {}   # ws -> {chave: (idioma, assinatura)}; ver ESTADO_DIFERIVEL
         self.initiative_index = 0
         self.initiative_active = False
         self.initiative_task = None
@@ -11565,22 +11567,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         usado para não mandar game_state a quem está na cidade (fora_masmorra)."""
         dead = []
         skip = skip or ()
-        por_idioma = {}   # lang -> JSON já serializado (um dumps por idioma na sala)
+        por_idioma = {}   # (idioma, id do objeto) -> JSON já serializado
         envios = []       # (pid, ws, texto)
+        vivos = []        # mantém vivos os objetos cujo id serve de chave em por_idioma
         for pid, ws in list(self.connections.items()):
             if pid in skip:
                 continue
             lang = _lang_de(pid)
-            # `personalize` que devolve o PRÓPRIO `msg` (identidade) diz que este
-            # destinatário não tem nada seu: reaproveita o JSON do idioma.
+            # Destinatários que recebem o MESMO objeto (o próprio `msg` ou um derivado
+            # compartilhado, como o estado sem os campos diferidos) dividem um JSON por idioma.
             recipient_msg = personalize(pid, msg) if personalize else msg
-            if recipient_msg is msg:
-                data = por_idioma.get(lang)
-                if data is None:
-                    data = por_idioma[lang] = json.dumps(
-                        msg, default=lambda o, _l=lang: _t_render(o, _l))
-            else:
+            chave = (lang, id(recipient_msg))
+            data = por_idioma.get(chave)
+            if data is None:
                 data = json.dumps(recipient_msg, default=lambda o, _l=lang: _t_render(o, _l))
+                # Guardar o objeto evita que o id seja reaproveitado dentro deste broadcast.
+                vivos.append(recipient_msg)
+                por_idioma[chave] = data
             envios.append((pid, ws, data))
 
         async def _enviar(pid, ws, data):
@@ -12859,6 +12862,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         }
 
     async def broadcast_city_state(self):
+        self._diferidos_enviados.clear()   # o cliente zera o gameState ao receber a cidade
         await self._notificar_maldicoes_pendentes()   # ver push_state
         self._atualizar_alertas_sobrevivencia()
         await self.broadcast(self._city_state_payload())
@@ -49732,10 +49736,40 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
         msg_state["cooperative_markers"] = []   # padrão comum; só quem tem marcador difere
 
+        # Campos grandes que quase nunca mudam (mapa, materiais, decorações...) só
+        # viajam a quem ainda não os recebeu na versão atual; o cliente reaproveita
+        # o que já tem. A assinatura é do conteúdo, então qualquer mudança reenvia.
+        assinaturas = {
+            k: hash(json.dumps(msg_state[k], default=lambda o: _t_render(o, "pt")))
+            for k in ESTADO_DIFERIVEL if k in msg_state
+        }
+        fora = self._conexoes_fora()
+        destinatarios = {ws for pid_, ws in self.connections.items() if pid_ not in fora}
+        for ws_antigo in [w for w in self._diferidos_enviados if w not in destinatarios]:
+            del self._diferidos_enviados[ws_antigo]   # saiu da masmorra/caiu: recebe tudo ao voltar
+        reduzidos = {}   # chaves omitidas -> dict reduzido (o mesmo objeto p/ quem omite igual)
+
+        def sem_diferidos(pid, state):
+            ws = self.connections.get(pid)
+            if ws is None:
+                return state
+            lang = _lang_de(pid)
+            enviados = self._diferidos_enviados.setdefault(ws, {})
+            omitir = frozenset(k for k, a in assinaturas.items() if enviados.get(k) == (lang, a))
+            for k, a in assinaturas.items():
+                enviados[k] = (lang, a)
+            if not omitir:
+                return state
+            if omitir not in reduzidos:
+                reduzidos[omitir] = {**{k: v for k, v in state.items() if k not in omitir},
+                                     "diferidos": sorted(omitir)}
+            return reduzidos[omitir]
+
         def personalizar_estado(pid, state):
+            state = sem_diferidos(pid, state)
             marcadores = self._cooperative_markers_for_pid(pid)
             if not marcadores:
-                return state   # nada próprio: o broadcast reaproveita o JSON do idioma
+                return state   # nada próprio: o broadcast reaproveita o JSON por (idioma, objeto)
             payload = {
                 **state,
                 "cooperative_markers": marcadores,
@@ -49759,6 +49793,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._enviar_alertas_sobrevivencia()
 
 # â”€â”€â”€ CONNECTION HANDLER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# Campos do game_state grandes e quase estáticos: ver GameRoom.push_state.
+ESTADO_DIFERIVEL = ("tiles", "rooms", "materiais", "decorations", "secret_passages",
+                    "elevacoes", "alturas_parede", "pontes", "door_conditions", "hero_spawns")
 
 rooms = {}  # type: dict  # plain dict for Python 3.7+ compatibility
 TEST_DUNGEON_TOKENS = {}  # token -> room code; sessões efêmeras do editor
@@ -50708,6 +50746,12 @@ async def handler(ws):
 
                 elif t == "prever_intencoes":
                     if room: await room.handle_prever_intencoes(pid)
+
+                elif t == "pedir_estado_completo":
+                    # O cliente recebeu um game_state sem campos que ainda não tinha.
+                    if room and room.phase == "playing":
+                        room._diferidos_enviados.pop(room.connections.get(pid), None)
+                        await room.push_state()
 
                 elif t == "prever_ataque":
                     if room: await room.handle_prever_ataque(
