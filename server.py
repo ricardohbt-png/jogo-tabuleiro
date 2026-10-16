@@ -49734,8 +49734,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                              positive_effect_events)
         # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
         # prefere gameState a cityState e mostraria o paperdoll da masmorra.
-        msg_state["cooperative_markers"] = []   # padrão comum; só quem tem marcador difere
-
         # Campos grandes que quase nunca mudam (mapa, materiais, decorações...) só
         # viajam a quem ainda não os recebeu na versão atual; o cliente reaproveita
         # o que já tem. A assinatura é do conteúdo, então qualquer mudança reenvia.
@@ -49810,11 +49808,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 reduzidos[chave] = red
             return reduzidos[chave]
 
+        com_padrao = {}   # id(estado) -> (estado com cooperative_markers=[], estado original)
+
+        def padrao(estado):
+            # Sem marcadores o campo vai vazio; o objeto é um só por estado, então o
+            # broadcast ainda reaproveita o JSON entre destinatários iguais. O payload
+            # cru (_game_state_payload) não leva o campo: ele é do envio.
+            if id(estado) not in com_padrao:
+                com_padrao[id(estado)] = ({**estado, "cooperative_markers": []}, estado)
+            return com_padrao[id(estado)][0]
+
         def personalizar_estado(pid, state):
             state = sem_repetidos(pid, state)
             marcadores = self._cooperative_markers_for_pid(pid)
             if not marcadores:
-                return state   # nada próprio: o broadcast reaproveita o JSON por (idioma, objeto)
+                return padrao(state)   # nada próprio: o broadcast reaproveita o JSON por (idioma, objeto)
             payload = {
                 **state,
                 "cooperative_markers": marcadores,
