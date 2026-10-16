@@ -7,6 +7,7 @@ except Exception: pass
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ)
 import server as S
+S.ESTADO_LISTAS_DELTA = ()   # este teste cobre só `diferidos`; os deltas têm test_estado_delta.py
 
 PASS = FAIL = 0
 def check(n, c):
@@ -23,6 +24,8 @@ class Cliente:
         for k in m.get("diferidos") or []:
             if not self.estado or k not in self.estado: self.pedidos += 1; return
             m[k] = self.estado[k]
+        add = (m.pop("deltas", None) or {}).get("explored")   # só `explored` segue em delta aqui
+        if add is not None: m["explored"] = self.estado["explored"] + add["add"]
         self.estado = m
 
 def sala(n=2):
@@ -43,6 +46,7 @@ def completo(r, pid):
 def igual(r, pid, extra_ignorar=("diferidos",)):
     a = {k: v for k, v in r.connections[pid].estado.items() if k not in extra_ignorar}
     b = {k: v for k, v in completo(r, pid).items() if k not in extra_ignorar}
+    a["explored"] = sorted(map(tuple, a["explored"])); b["explored"] = sorted(map(tuple, b["explored"]))
     return a == b
 
 async def main():
