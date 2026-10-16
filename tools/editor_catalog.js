@@ -7789,7 +7789,7 @@ window.EDITOR_CATALOG = {
       "id": "derrubar",
       "name": "Derrubar",
       "action_type": "passiva",
-      "dc": 11,
+      "dc": 15,
       "save": "reflexos",
       "source": "monstro",
       "uses_per_day": 1,
@@ -11550,6 +11550,14 @@ window.EDITOR_CATALOG = {
       "value": 0
     },
     {
+      "id": "frasco_piche",
+      "name": "Frasco de Piche",
+      "emoji": "🛢️",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
+    },
+    {
       "id": "fogo_grego",
       "name": "Fogo Grego",
       "emoji": "🟢",
@@ -12131,6 +12139,21 @@ window.EDITOR_CATALOG = {
           "area": true
         }
       ],
+      "precisa_veneno": false
+    },
+    {
+      "tipo": "armadilha_sono",
+      "nome": "Armadilha do Sono",
+      "icone": "🌙",
+      "cr": 0.5,
+      "descricao": "Vontade CD 14 evita. Na falha, adormece por 1d4 rodadas todos os alvos vivos em um quadrado 3×3 ao redor do gatilho.",
+      "dificuldade": 14,
+      "save": "vontade",
+      "custo_ouro": 0,
+      "persiste": false,
+      "area": 1,
+      "duracao_sono": "1d4",
+      "special": "sono",
       "precisa_veneno": false
     },
     {
@@ -14005,7 +14028,8 @@ window.EDITOR_CATALOG = {
       "categoria": "piso",
       "cor": "#1b1410",
       "solido": false,
-      "oclui": false
+      "oclui": false,
+      "custo_mov": 2
     },
     {
       "id": "lava_solidificada",

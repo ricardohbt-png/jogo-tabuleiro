@@ -816,6 +816,18 @@ window.LANG_EDITOR = {
     "en": "Test DC",
     "pt": "CD do teste"
   },
+  "ui.editor.masmorra.painel.area_efeito": {
+    "en": "Area radius (tiles)",
+    "pt": "Raio da área (casas)"
+  },
+  "ui.editor.masmorra.painel.duracao_sono": {
+    "en": "Sleep duration",
+    "pt": "Duração do sono"
+  },
+  "ui.editor.masmorra.painel.formato_duracao": {
+    "en": "Enter a duration such as 1d4 or 2d6+1 rounds.",
+    "pt": "Informe a duração, como 1d4 ou 2d6+1 rodadas."
+  },
   "ui.editor.masmorra.painel.dano_principal": {
     "en": "primary damage",
     "pt": "dano principal"
@@ -1564,6 +1576,10 @@ window.LANG_EDITOR = {
     "en": "{n} rounds",
     "pt": "{n} rodadas"
   },
+  "ui.editor.masmorra.armadilha.duracao_sono": {
+    "en": "Sleep: {n} rounds",
+    "pt": "Sono: {n} rodadas"
+  },
   "ui.editor.masmorra.armadilha.permanece": {
     "en": "Stays active",
     "pt": "Permanece ativa"
@@ -1788,6 +1804,14 @@ window.LANG_EDITOR = {
     "en": "{tipo} at {pos} with invalid DC: {cd}",
     "pt": "{tipo} em {pos} com CD inválida: {cd}"
   },
+  "ui.editor.masmorra.valid.armadilha_area": {
+    "en": "{tipo} at {pos} with invalid area radius",
+    "pt": "{tipo} em {pos} com raio de área inválido"
+  },
+  "ui.editor.masmorra.valid.armadilha_duracao": {
+    "en": "{tipo} at {pos} with invalid sleep duration",
+    "pt": "{tipo} em {pos} com duração de sono inválida"
+  },
   "ui.editor.masmorra.valid.armadilha_dano": {
     "en": "{tipo} at {pos} with invalid damage: {dano}",
     "pt": "{tipo} em {pos} com dano inválido: {dano}"
@@ -1879,6 +1903,14 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.decor_trap_cd": {
     "en": "{tipo} on the decoration at {pos} with invalid DC",
     "pt": "{tipo} na decoração em {pos} com CD inválida"
+  },
+  "ui.editor.masmorra.valid.decor_trap_area": {
+    "en": "{tipo} on the decoration at {pos} with invalid area radius",
+    "pt": "{tipo} na decoração em {pos} com raio de área inválido"
+  },
+  "ui.editor.masmorra.valid.decor_trap_duracao": {
+    "en": "{tipo} on the decoration at {pos} with invalid sleep duration",
+    "pt": "{tipo} na decoração em {pos} com duração de sono inválida"
   },
   "ui.editor.masmorra.valid.decor_trap_dano": {
     "en": "{tipo} on the decoration at {pos} with invalid damage",

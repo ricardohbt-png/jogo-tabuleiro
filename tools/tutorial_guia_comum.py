@@ -59,8 +59,12 @@ GLOSSARIO = {
 }
 
 
-def P(id, texto, porque=None, ui=None, dica=(), conclui=None, titulo=None):
-    return {"id": id, "texto": texto, "porque": porque, "ui": ui, "dica": list(dica), "conclui": conclui, "titulo": titulo}
+def P(id, texto, porque=None, ui=None, dica=(), conclui=None, titulo=None, demonstracao=()):
+    passo = {"id": id, "texto": texto, "porque": porque, "ui": ui,
+             "dica": list(dica), "conclui": conclui, "titulo": titulo}
+    if demonstracao:
+        passo["demonstracao"] = [dict(op) for op in demonstracao]
+    return passo
 
 
 def GUIA_H_ATALHO(skill_id, nome_pt, nome_en):
@@ -171,7 +175,11 @@ GUIA = {
                     "Click a marked blue square to move."),
           ui="casa:[5,15]",
           dica=[("A casa marcada tem um anel dourado.", "The marked square has a golden ring."),
-                ("Confirme o destino para o herói seguir o caminho.", "Confirm the destination to send the hero along the path.")]),
+                ("Confirme o destino para o herói seguir o caminho.", "Confirm the destination to send the hero along the path.")],
+          demonstracao=(
+              {"acao": "focar", "alvo": "casa:[5,15]"},
+              {"acao": "prever_movimento", "alvo": "casa:[5,15]"},
+          )),
     ],
     "fala_1": [
         P("pegar", ("Abra o baú e pegue uma arma; ela vai para a bolsa.",
@@ -184,12 +192,22 @@ GUIA = {
     "fala_2": [
         P("abrir", ("Abra a bolsa no botão da mochila ou com [[atalho:inventario]].",
                     "Open the bag with the backpack button or with [[atalho:inventario]]."),
-          ui="botao:inventario"),
+          ui="botao:inventario",
+          demonstracao=(
+              {"acao": "focar", "alvo": "botao:inventario"},
+              {"acao": "abrir_interface", "alvo": "inventario"},
+              {"acao": "focar", "alvo": "slot:weapon"},
+          )),
         P("equipar", ("Clique na arma e equipe-a.", "Click the weapon and equip it."),
           porque=("Equipar é [[acao_livre]]: não gasta nada do seu [[turno]].",
                   "Equipping is a [[acao_livre]]: it costs nothing from your [[turno]]."),
+          ui="slot:weapon",
           dica=[("A arma está na bolsa, entre os quadrados do inventário.",
-                 "The weapon is in the bag, among the inventory squares.")]),
+                 "The weapon is in the bag, among the inventory squares.")],
+          demonstracao=(
+              {"acao": "focar", "alvo": "slot:weapon"},
+              {"acao": "prever_equipamento", "alvo": "slot:weapon"},
+          )),
     ],
     "fala_3": [
         P("entender", ("Os bonecos de treino esperam na próxima sala. Encerre o turno quando estiver pronto.",
@@ -216,23 +234,34 @@ GUIA = {
           dica=[("Se o golpe errar, tente outro boneco.", "If the attack misses, try another dummy.")]),
     ],
     "fala_18": [
-        P("pegar", ("O baú ao lado tem rações e água. Pegue uma ração.",
-                    "The chest nearby has rations and water. Take a ration."),
+        P("pegar", ("O baú tem quatro itens reservados para você: dois banquetes, uma ração e um cantil.",
+                    "The chest has four items reserved for you: two banquets, a ration and a canteen."),
           porque=("Comida e água mantêm [[fome_sede]] longe da zona de penalidade.",
                   "Food and water keep [[fome_sede]] out of the penalty zone.")),
-        P("comer", ("Abra a bolsa com [[atalho:inventario]] e coma a ração de viagem.",
-                    "Open the bag with [[atalho:inventario]] and eat the travel ration."),
-          porque=("Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno.",
-                  "Eating is a [[acao_bonus]]: you can eat and still fight in the same turn."),
-          ui="bolsa:racao_viagem",
+        P("banquete_1", ("Abra a bolsa com [[atalho:inventario]] e use o primeiro Banquete de Viagem.",
+                         "Open your bag with [[atalho:inventario]] and use the first Travel Banquet."),
+          porque=("Cada banquete recupera 40 de fome e 40 de sede.",
+                  "Each banquet restores 40 hunger and 40 thirst."),
+          ui="bolsa:banquete_viagem",
           dica=[("Se a bolsa está fechada, use o botão da mochila.", "If the bag is closed, use the backpack button.")]),
+        P("banquete_2", ("Use o segundo Banquete de Viagem no mesmo turno.",
+                         "Use the second Travel Banquet in the same turn."),
+          porque=("Alimentos não gastam sua ação bônus.",
+                  "Food does not use your bonus action."),
+          ui="bolsa:banquete_viagem"),
+        P("racao", ("Use a Ração de Viagem para completar a fome.",
+                     "Use the Travel Ration to fill hunger."),
+          porque=("A ração recupera 20 de fome; dois banquetes e ela somam 100.",
+                  "The ration restores 20 hunger; two banquets plus the ration total 100."),
+          ui="bolsa:racao_viagem"),
     ],
     "fala_19": [
-        P("beber", ("Beba duas garrafas de água pela bolsa.", "Drink two bottles of water from the bag."),
-          porque=("Água rende menos que comida. Habilidades cobram goles: curas, magias e canções.",
-                  "Water restores less than food. Abilities cost sips: heals, spells and songs."),
-          ui="bolsa:garrafa_agua",
-          dica=[("Clique na garrafa na bolsa e use-a duas vezes.", "Click the bottle in the bag and use it twice.")]),
+        P("cantil", ("Use o Cantil de Água para completar a sede.",
+                     "Use the Water Canteen to fill thirst."),
+          porque=("O cantil recupera 20 de sede; os dois banquetes já trouxeram 80.",
+                  "The canteen restores 20 thirst; the two banquets already restored 80."),
+          ui="bolsa:cantil_agua",
+          dica=[("Clique no cantil na bolsa e escolha Usar.", "Click the canteen in your bag and choose Use.")]),
     ],
     "fala_29": [
         P("pegar", ("Pegue os três itens do baú: óleo, veneno e poção.",

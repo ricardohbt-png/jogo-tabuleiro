@@ -20,6 +20,55 @@
     return null;
   }
 
+  // Normaliza a pequena lista declarativa permitida pelo servidor. Um item
+  // inválido invalida o roteiro inteiro para evitar execução parcial.
+  function demonstracaoValidada(passo) {
+    const lista = passo && passo.demonstracao;
+    if (!Array.isArray(lista) || lista.length > 4) return [];
+    const interfaces = ['inventario', 'habilidades', 'magias'];
+    const normalizada = [];
+    for (const operacao of lista) {
+        if (!operacao || typeof operacao !== 'object' || Array.isArray(operacao)) return [];
+        const chaves = Object.keys(operacao).sort().join(',');
+      if (operacao.acao === 'focar') {
+          if (chaves !== 'acao,alvo' || !parseUi(operacao.alvo)) return [];
+      } else if (operacao.acao === 'abrir_interface') {
+          if (chaves !== 'acao,alvo' || interfaces.indexOf(operacao.alvo) < 0) return [];
+        } else if (operacao.acao === 'prever_movimento') {
+          if (chaves !== 'acao,alvo' || typeof operacao.alvo !== 'string'
+              || !/^casa:\[[0-9]+,[0-9]+\]$/.test(operacao.alvo)) return [];
+        } else if (operacao.acao === 'prever_equipamento') {
+          if (chaves !== 'acao,alvo' || typeof operacao.alvo !== 'string'
+              || !/^slot:[a-z0-9_]+$/.test(operacao.alvo)) return [];
+        } else if (operacao.acao === 'prever_habilidade') {
+          if (chaves !== 'acao,alvo,habilidade'
+              || typeof operacao.habilidade !== 'string' || !/^[a-z0-9_]+$/.test(operacao.habilidade)
+              || typeof operacao.alvo !== 'string' || !/^monstro:[a-z0-9_]+$/.test(operacao.alvo)) return [];
+      } else return [];
+        normalizada.push(Object.assign({}, operacao));
+    }
+    return normalizada;
+  }
+
+  // Um passo pode ter roteiro sem ui final (por exemplo, abrir a bolsa e
+  // depois destacar o espaço de equipamento). Só mostramos o botão quando há
+  // uma operação segura validada ou um alvo de interface válido.
+  function demonstracaoDisponivel(passo) {
+    return demonstracaoValidada(passo).length > 0
+      || !!(passo && parseUi(passo.ui));
+  }
+
+  // Métodos limitados ao que cada alvo aceita de fato no cliente.
+  function controlesDemonstracao(ui) {
+    const alvo = parseUi(ui);
+    if (!alvo) return [];
+    if (alvo.tipo === 'casa' || alvo.tipo === 'porta' || alvo.tipo === 'botao'
+        || alvo.tipo === 'habilidade') return ['mouse', 'teclado', 'gamepad'];
+    if (alvo.tipo === 'bolsa' || alvo.tipo === 'slot' || alvo.tipo === 'monstro')
+      return ['mouse', 'gamepad'];
+    return [];
+  }
+
   // Seletor CSS do elemento de DOM correspondente. Devolve null para o que é
   // desenhado no tabuleiro (casa, monstro, porta): para esses, alvoTabuleiro.
   // `ancestral`: o achado é um filho; o halo vai no ancestral indicado.
@@ -136,5 +185,5 @@
     return 'ui.tutorial.atalho.' + id + '.' + (controleAtivo ? 'controle' : 'teclado');
   }
 
-  window.GuiaTutorial = { parseUi, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho, CAMERA };
+  window.GuiaTutorial = { parseUi, demonstracaoValidada, demonstracaoDisponivel, controlesDemonstracao, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho, CAMERA };
 })();

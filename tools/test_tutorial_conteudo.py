@@ -10,8 +10,9 @@ import gerar_guia_comum as G
 
 IDS_ESPERADOS = ["fala_intro", "fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
-                 "fala_hostilidade", "fala_primeiro_combate", "fala_res", "fala_vuln", "fala_retirada"]
-UI_OK = re.compile(r"^(?:(?:botao|bolsa|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
+                 "fala_armadilhas", "fala_hostilidade", "fala_primeiro_combate", "fala_res", "fala_vuln",
+                 "fala_retirada"]
+UI_OK = re.compile(r"^(?:(?:botao|bolsa|slot|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
 
@@ -125,6 +126,8 @@ class ConteudoTests(unittest.TestCase):
         retirada = fala["fala_retirada"]
         self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos"])
         p["licoes_feitas"] = feitas
+        self.assertFalse(lib(p, retirada), "a retirada ainda exige a aula obrigatória de armadilhas")
+        p["licoes_feitas"] = feitas + ["fala_armadilhas"]
         self.assertTrue(lib(p, retirada), "a retirada não depende das duas lições opcionais de dano")
 
     def test_boneco_imovel_substitui_esqueletos_nas_licoes_de_dano(self):
@@ -284,6 +287,85 @@ class GeradorTests(unittest.TestCase):
                     self.assertTrue(s["texto"].startswith("ui.tutorial.guia."), s)
         ok, msg = server.validar_dungeon(self.d)
         self.assertTrue(ok, msg)
+
+    def test_aplicador_preserva_demonstracao_autorada(self):
+        demo = [
+            {"acao": "focar", "alvo": "botao:inventario"},
+            {"acao": "abrir_interface", "alvo": "inventario"},
+            {"acao": "focar", "alvo": "slot:weapon"},
+        ]
+        tarefa_golpe = json.loads(json.dumps(
+            next(f for f in self.d["falas"] if f["id"] == "treino_golpe")["tarefa"]))
+        tarefas = {lid: json.loads(json.dumps(
+            next(f for f in self.d["falas"] if f["id"] == lid)["tarefa"]))
+            for lid in ("fala_0", "fala_2", "treino_golpe")}
+        G.aplicar_guia(self.d)
+        movimento = next(p for p in next(f for f in self.d["falas"] if f["id"] == "fala_0")["guia"]
+                         if p["id"] == "andar")
+        self.assertEqual(movimento["demonstracao"], [
+            {"acao": "focar", "alvo": "casa:[5,15]"},
+            {"acao": "prever_movimento", "alvo": "casa:[5,15]"},
+        ])
+        fala = next(f for f in self.d["falas"] if f["id"] == "fala_2")
+        passo = next(p for p in fala["guia"] if p["id"] == "abrir")
+        passo_antigo = next(p for p in fala["guia"] if p["id"] == "equipar")
+        self.assertEqual(passo["demonstracao"], demo)
+        self.assertEqual(passo_antigo["ui"], "slot:weapon")
+        self.assertEqual(passo_antigo["demonstracao"], [
+            {"acao": "focar", "alvo": "slot:weapon"},
+            {"acao": "prever_equipamento", "alvo": "slot:weapon"},
+        ])
+
+        golpe = next(p for p in G.guia_todos()["treino_golpe"] if p["id"] == "golpe")
+        self.assertEqual(golpe["demonstracao"], [
+            {"acao": "focar", "alvo": "habilidade:golpe_devastador"},
+            {"acao": "focar", "alvo": "monstro:boneco_treino"},
+            {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+             "alvo": "monstro:boneco_treino"},
+        ])
+        self.assertEqual(golpe["demonstracao"][-1]["acao"], "prever_habilidade")
+        self.assertEqual(next(f for f in self.d["falas"] if f["id"] == "treino_golpe")["tarefa"], tarefa_golpe)
+        for lid, tarefa in tarefas.items():
+            self.assertEqual(next(f for f in self.d["falas"] if f["id"] == lid)["tarefa"], tarefa)
+
+
+class DemonstracaoFantasmaContentTests(unittest.TestCase):
+    def setUp(self):
+        self.d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
+
+    def _assert_rota(self, fala_id, passo_id, esperado):
+        fala = next(f for f in self.d["falas"] if f["id"] == fala_id)
+        tarefa_antes = json.loads(json.dumps(fala.get("tarefa")))
+        conclui_antes = {p["id"]: json.loads(json.dumps(p.get("conclui_com")))
+                         for p in fala.get("guia", [])}
+        G.aplicar_guia(self.d)
+        fala = next(f for f in self.d["falas"] if f["id"] == fala_id)
+        passo = next(p for p in fala["guia"] if p["id"] == passo_id)
+        self.assertEqual(passo["demonstracao"], esperado, f"{fala_id}.{passo_id}")
+        self.assertLessEqual(len(passo["demonstracao"]), 4, f"{fala_id}.{passo_id}")
+        self.assertEqual(fala.get("tarefa"), tarefa_antes, f"tarefa alterada em {fala_id}")
+        self.assertEqual({p["id"]: p.get("conclui_com") for p in fala["guia"]},
+                         conclui_antes, f"conclui_com alterado em {fala_id}")
+
+    def test_demo_fantasma_rota_de_movimento(self):
+        self._assert_rota("fala_0", "andar", [
+            {"acao": "focar", "alvo": "casa:[5,15]"},
+            {"acao": "prever_movimento", "alvo": "casa:[5,15]"},
+        ])
+
+    def test_demo_fantasma_rota_de_equipamento(self):
+        self._assert_rota("fala_2", "equipar", [
+            {"acao": "focar", "alvo": "slot:weapon"},
+            {"acao": "prever_equipamento", "alvo": "slot:weapon"},
+        ])
+
+    def test_demo_fantasma_rota_de_habilidade(self):
+        self._assert_rota("treino_golpe", "golpe", [
+            {"acao": "focar", "alvo": "habilidade:golpe_devastador"},
+            {"acao": "focar", "alvo": "monstro:boneco_treino"},
+            {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+             "alvo": "monstro:boneco_treino"},
+        ])
 
     def test_aplicar_guia_e_idempotente(self):
         G.aplicar_guia(self.d); a = json.dumps(self.d, sort_keys=True)

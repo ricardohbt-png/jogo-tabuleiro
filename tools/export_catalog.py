@@ -125,6 +125,7 @@ def build_catalog():
         trap_fields = (
             "descricao", "dificuldade", "save", "save_reduz", "custo_ouro", "dano",
             "persiste", "visivel_apos", "area", "area_sala", "duracao_rodadas",
+            "duracao_sono",
             "special", "escape_save", "escape_dificuldade", "precisa_veneno",
             "custo_veneno", "permite_veneno", "apenas_objeto", "efeitos",
         )

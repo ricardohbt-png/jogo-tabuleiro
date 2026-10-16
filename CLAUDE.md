@@ -2,6 +2,10 @@
 
 ## Visão Geral
 
+### Ouro inicial dos heróis
+
+Heróis novos começam com 0 moedas em todos os modos. `CLASSES[*].start_gold` e o fallback em `make_player` ficam em zero; isso só define personagens recém-criados e não altera saldo salvo nem recompensas recebidas durante a partida.
+
 ### Goblin Combatente — equipamento por instância (2026-10-08)
 
 `make_monster` sorteia uniformemente uma arma entre `lanca_curta`, `bordao`,
@@ -71,6 +75,8 @@ O caminho comum começa com o briefing da Guilda, preparação do herói e câme
 O conteúdo dos guias é autorado em `tools/tutorial_guia_comum.py` e nos módulos específicos de classe, aplicado pelo patch idempotente `tools/aplicar_tutorial_missao.py` e incluído em `tools/configurar_tutorial_salas.py`; `tools/gerar_guia_comum.py` gera `src/lang/tutorial_guia.js` e injeta as chaves no mapa. `treino_menu_magias_mage` e `treino_menu_magias_cleric` exigem `magia_tipo = qualquer`, que verifica uma magia implementada com slot utilizável. O cliente avança o passo de abertura quando o menu correspondente realmente abre.
 
 O baú de armas da abertura é compartilhado, mas cada item usa `tutorial_class` para que cada herói veja e possa retirar somente sua escolha: Guerreiro Anão e Paladino recebem a Espada Curta de Ferro Serrilhado; Mago, Adaga; Ladino e Bardo, Lança Curta; Clérigo, Bordão. A filtragem é personalizada por jogador e a coleta autoritativa também valida a classe, inclusive em `take_all_from_chest`. A lista é autorada em `tools/configurar_tutorial_salas.py` e refletida em `dungeons/campo_de_treinamento.json`.
+
+O baú da lição comum oferece a cada herói 2 `banquete_viagem`, 1 `racao_viagem` e 1 `cantil_agua` (24 provisões para até seis heróis), marcadas `tutorial_provision`. Banquete: +40 fome/sede e referência de 100 moedas; ração: +20 fome; cantil: +20 sede. O banquete usa `assets/itens/banquete.png`, ocupa a bolsa e não entra na `SHOP_TAVERN`. Cada jogador vê e coleta apenas sua cota; `handle_take_from_chest`, `handle_take_all_from_chest`, `handle_pickup_item` e `handle_use_item` validam retirada e uso, incluindo a trava de dois banquetes. `fala_17` começa em 0/0; usar as quatro provisões restaura os medidores a 100/100. Todos os alimentos são de uso livre no turno e não consomem a ação bônus. As provisões são empréstimos do tutorial e são removidas ao sair. A configuração do baú está em `tools/configurar_tutorial_salas.py`; as falas e tarefas ficam em `tools/aplicar_tutorial_missao.py`, e os passos do guia em `tools/tutorial_guia_comum.py`.
 
 Falantes podem trazer `falante.retrato` (`assets/portraits/*.png`) e `falante.cena` (`assets/tela de transição/tutorial/*.png`). O editor preserva e edita esses campos; o servidor aceita somente PNG local nesses diretórios. A abertura, a descoberta dos esqueletos e a retirada usam arte própria do Mestre de Armas com capelo. As lições das salas de classe conduzidas pelo Mestre também mostram seu retrato-base; lições com outro falante mantêm a identidade própria. As cenas não contêm texto localizado.
 
@@ -2048,11 +2054,14 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `handle_throw_item`) + `tools/test_editor_items_logic.js`. Spec/plano em
 > `docs/superpowers/{specs,plans}/2026-07-26-editor-itens-fase-g-arremessaveis*`.
 
-> **Frasco de Óleo — impacto pontual:** o arremessável nativo usa o fluxo `area` com
-> `area_raio: 0`, atingindo apenas a casa escolhida e iniciando a ignição do piche nela.
-> A mira trata raio zero como válido e mantém a prévia de uma casa; também aceita o payload
-> legado `{target_id,target_pos}` de clientes que já estavam abertos. Regressões:
-> `tools/test_frasco_oleo_area.py` e `tools/test_frasco_oleo_area_cliente.js`.
+> **Frasco de Óleo — impacto pontual:** o arremessável nativo continua usando o fluxo `area`,
+> mas `area_raio: 0` limita o dano à casa de impacto e inicia a ignição do piche nela; piche
+> conectado continua se propagando pela região. A prévia verde do cliente
+> deve tratar raio zero como válido (usar checagem contra `null`, não truthiness), e a mira informa
+> que se escolhe uma única casa. `handle_throw_item` aceita também o payload legado
+> `{target_id,target_pos}` de uma tela que já estava aberta antes da atualização; o centro é
+> resolvido pela posição validada do monstro. Regressões: `tools/test_frasco_oleo_area.py` e
+> `tools/test_frasco_oleo_area_cliente.js`.
 >
 > **Editor de Itens — Fase H (Venenos):** destrava a sub-aba **Venenos** e **fecha as 8
 > sub-abas** do editor. Cobre as **5 operações** de `VENENOS`: `dano` (com os 2 modelos de
@@ -2214,9 +2223,14 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > passagem base 10/20/30 pela faixa + `ceil(15% do custo combinado)`, além das provisões. Em
 > multiplayer, outro jogador pode pagar integralmente a passagem de um amigo; é voluntário, sem
 > dívida. Sem cobertura, o anfitrião pode seguir pela estrada arriscada ou cancelar. Em solo com
-> grupo, cada personagem paga a própria passagem. Emboscada vencida numa rota de cidade termina
-> no destino; numa aventura do mapa-múndi, o anfitrião escolhe continuar até a masmorra ou voltar
-> à origem sem reembolso. Derrota continua no fluxo normal e o encontro não dá recompensa extra.
+> grupo, cada personagem paga a própria passagem. Após vencer a emboscada, o mapa do encontro
+> permanece aberto e o combate fica bloqueado até o anfitrião escolher: em rota de cidade,
+> encerrar o encontro e continuar até o destino; numa aventura do mapa-múndi, continuar até a
+> masmorra ou voltar à origem sem reembolso. Derrota continua no fluxo normal e o encontro não
+> dá recompensa extra.
+> Na entrada do mapa, `travel_ambush` mostra a ilustração e toca uma vez `alarme_emboscada`
+> (`assets/sfx/exploracao/alarme_emboscada.ogg`); entradas normais e sons de armadilha preservam
+> seus fluxos próprios.
 > O mapa temporário é `dungeons/estrada_floresta_emboscada.json`; a família bandoleira combina
 > fichas existentes de goblins, orcs, kobolds e ogros, limitada pelo ND do grupo. Testes focados:
 > `tools/test_encontros_viagem.py` e `tools/test_viagem_cliente.js`.
@@ -3818,6 +3832,23 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > (`spellFireFx`, aditiva: sobre piso muito claro quase não aparece, por isso a labareda viva); somem quando a
 > zona expira. O 2D já desenhava chamas na zona (`_desenharFogoPersistente2D`). Testes:
 > `tools/test_terrain_reactions.py` [13] e `tools/test_reacoes_cliente.js`.
+
+> **Estado publicado depois das reações (2026-10-15):** a reação só resolve ao SAIR do escopo `evento_elemental`,
+> e a própria ação (arremesso, ataque, magia) manda o `game_state` ao terminar, ANTES disso: a zona de chamas do
+> piche (e o terreno novo de gelo derretido, crosta, gás consumido) só chegava ao cliente no envio seguinte — o
+> fogo "só aparecia depois que o herói andava". `_rx_resolver` marca `esc["mudou"]` quando um efeito rodou (a
+> reação encadeada propaga ao escopo pai) e `evento_elemental` chama `_rx_publicar(esc)` ao sair: UM `push_state`
+> extra, só se algo mudou, e falha de envio não derruba a ação. Só o escopo de saída publica; o caminho
+> implícito (`_rx_registrar` sem escopo) não. Teste: `tools/test_terrain_reactions.py` [14].
+
+> **Chão em chamas da Bola de Fogo com labaredas vivas (2026-10-15):** a zona residual `bola_fogo` (dano nas
+> rodadas seguintes) também acende as labaredas vivas (GLB Chama Viva), porém **mais baixas** que as do piche e da
+> Prisão. A fábrica do pool virou `_mkFogoVivoPool(alturaMul)`: `spellLivingFlameFx` (altura 1: piche, Prisão) e
+> `spellLivingFlameBaixoFx` (altura `BOLA_FOGO_ALTURA_CHAMA` = 0,55, ajuste fino em UM número). `fx.alturaMul`
+> escala o pulso do GLB, a subida das brasas e a altura das línguas em `_animarChamasVivasPersistentes3D` (que
+> percorre os dois pools). Casa que já tem labareda cheia (piche sob a Bola) não duplica com a baixa. A brasa
+> procedural (`spellFireFx`) continua por baixo. 3D só; o 2D já desenhava chamas nessa zona. Teste estático em
+> `tools/test_reacoes_cliente.js`.
 
 > restante para os próximos turnos, acessível no painel de ações e na aba Magias. Cada
 > leva soma ciclones à zona, preserva os IDs já colocados e rejeita footprints ocupados.

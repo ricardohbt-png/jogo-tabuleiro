@@ -28,7 +28,13 @@ GUIA = {
           porque=("Cada habilidade armada gasta sua [[acao_principal]]; observe os dados de dano.",
                   "Each armed ability spends your [[acao_principal]]; watch the damage dice."),
           ui="habilidade:golpe_devastador",
-          dica=[("Se já usou sua ação, clique em Encerrar Turno antes.", "If you already used your action, click End Turn first.")]),
+          dica=[("Se já usou sua ação, clique em Encerrar Turno antes.", "If you already used your action, click End Turn first.")],
+          demonstracao=(
+              {"acao": "focar", "alvo": "habilidade:golpe_devastador"},
+              {"acao": "focar", "alvo": "monstro:boneco_treino"},
+              {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+               "alvo": "monstro:boneco_treino"},
+          )),
     ],
     "treino_furia": [
         P("furia", ("Clique em Fúria Berserker e ataque o boneco.", "Click Berserker Fury and attack the dummy."),

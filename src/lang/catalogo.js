@@ -34,6 +34,14 @@ window.LANG_CATALOGO = {
     "en": "Ray of Frost Trap",
     "pt": "Armadilha de Raio Congelante"
   },
+  "cat.armadilha.armadilha_sono.desc": {
+    "en": "Will DC 14 avoids it. On a failure, all living targets in a 3×3 area around the trigger fall asleep for 1d4 rounds.",
+    "pt": "Vontade CD 14 evita. Na falha, adormece por 1d4 rodadas todos os alvos vivos em um quadrado 3×3 ao redor do gatilho."
+  },
+  "cat.armadilha.armadilha_sono.nome": {
+    "en": "Sleep Trap",
+    "pt": "Armadilha do Sono"
+  },
   "cat.armadilha.armadilha_teletransporte.desc": {
     "en": "Will DC 12 or is teleported to the configured exit.",
     "pt": "Vontade CD 12 ou é teleportado para a saída configurada."
@@ -514,13 +522,13 @@ window.LANG_CATALOGO = {
     "en": "Twisted Roots",
     "pt": "Raízes retorcidas"
   },
-  "cat.decor.rochas_rachadas.nome": {
-    "en": "Cracked Rocks",
-    "pt": "Rochas rachadas"
-  },
   "cat.decor.rocha_grande.nome": {
     "en": "Large Boulder",
     "pt": "Rocha grande"
+  },
+  "cat.decor.rochas_rachadas.nome": {
+    "en": "Cracked Rocks",
+    "pt": "Rochas rachadas"
   },
   "cat.decor.ruinas_pedra.nome": {
     "en": "Stone Ruins",
@@ -1313,6 +1321,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_lobisomem.nome": {
     "en": "Lore: Werewolf",
     "pt": "Lenda: Lobisomem"
+  },
+  "cat.guilda.lenda_lobisomem_alfa.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Lobisomem Alfa."
+  },
+  "cat.guilda.lenda_lobisomem_alfa.nome": {
+    "en": "",
+    "pt": "Lenda: Lobisomem Alfa"
   },
   "cat.guilda.lenda_lobo_cinzento.desc": {
     "en": "+1 to attack and +1 to saving throws against Grey Wolf.",
@@ -2217,6 +2233,10 @@ window.LANG_CATALOGO = {
   "cat.item.banquete.nome": {
     "en": "Feast",
     "pt": "Banquete"
+  },
+  "cat.item.banquete_viagem.nome": {
+    "en": "Travel Banquet",
+    "pt": "Banquete de Viagem"
   },
   "cat.item.bastsword.desc": {
     "en": "Bastard Sword: 1d10 slashing damage, using Strength. Natural critical on 19–20.",
@@ -3450,13 +3470,13 @@ window.LANG_CATALOGO = {
     "en": "Aim Target",
     "pt": "Alvo de Mira"
   },
-  "cat.monstro.boneco_treino.nome": {
-    "en": "Training Dummy",
-    "pt": "Boneco de Treino"
-  },
   "cat.monstro.boneco_palha.nome": {
     "en": "Straw Dummy",
     "pt": "Boneco de Palha"
+  },
+  "cat.monstro.boneco_treino.nome": {
+    "en": "Training Dummy",
+    "pt": "Boneco de Treino"
   },
   "cat.monstro.boneco_treino_veneno.nome": {
     "en": "Poison-Sensitive Dummy",
@@ -3669,6 +3689,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.lobisomem.nome": {
     "en": "Werewolf",
     "pt": "Lobisomem"
+  },
+  "cat.monstro.lobisomem_alfa.nome": {
+    "en": "",
+    "pt": "Lobisomem Alfa"
   },
   "cat.monstro.lobo_cinzento.nome": {
     "en": "Grey Wolf",

@@ -23,6 +23,62 @@ check("lixo devolve null", G.parseUi("xyz") === null && G.parseUi("") === null
       && G.parseUi(null) === null && G.parseUi(5) === null);
 check("tipo desconhecido devolve null", G.parseUi("voar:alto") === null);
 
+console.log("\n[1b] demonstracaoValidada");
+const demoPasso = { demonstracao: [
+  { acao: "focar", alvo: "botao:inventario" },
+  { acao: "abrir_interface", alvo: "inventario" },
+  { acao: "focar", alvo: "bolsa:pocao_cura" }
+] };
+check("normaliza roteiro permitido", JSON.stringify(G.demonstracaoValidada(demoPasso))
+  === JSON.stringify(demoPasso.demonstracao));
+check("roteiro ausente vira lista vazia", JSON.stringify(G.demonstracaoValidada({})) === "[]");
+for (const demoInvalida of [
+  [{ acao: "focar", alvo: "querySelector:body" }],
+  [{ acao: "abrir_interface", alvo: "loja" }],
+  [{ acao: "atacar", alvo: "boneco_treino" }],
+  [{ acao: "focar", alvo: "botao:inventario", executar: "attack" }]
+]) {
+  check("operação inválida descarta roteiro inteiro", G.demonstracaoValidada({ demonstracao: demoInvalida }).length === 0);
+}
+check("mais de quatro operações são rejeitadas", G.demonstracaoValidada({
+  demonstracao: Array(5).fill({ acao: "focar", alvo: "botao:inventario" })
+}).length === 0);
+const previewsValidos = [
+  { acao: "prever_movimento", alvo: "casa:[5,15]" },
+  { acao: "prever_equipamento", alvo: "slot:weapon" },
+  { acao: "prever_habilidade", habilidade: "golpe_devastador", alvo: "monstro:boneco_treino" }
+];
+for (const operacao of previewsValidos) {
+  check("aceita operação visual " + operacao.acao,
+    JSON.stringify(G.demonstracaoValidada({ demonstracao: [operacao] })) === JSON.stringify([operacao]));
+}
+for (const operacao of [
+  { acao: "prever_movimento", alvo: "monstro:boneco_treino" },
+  { acao: "prever_movimento", alvo: "casa:[5,x]" },
+  { acao: "prever_equipamento", alvo: "casa:[5,15]" },
+  { acao: "prever_equipamento", alvo: "slot:" },
+  { acao: "prever_habilidade", habilidade: "Golpe!", alvo: "monstro:boneco_treino" },
+  { acao: "prever_habilidade", habilidade: "golpe_devastador", alvo: "slot:weapon" },
+  { acao: "prever_habilidade", alvo: "monstro:boneco_treino" },
+  { acao: "prever_movimento", alvo: "casa:[5,15]", handler: "attack" },
+  { acao: "prever_habilidade", habilidade: "golpe_devastador", alvo: "monstro:boneco_treino", comando: "attack" }
+]) {
+  check("rejeita operação visual malformada", G.demonstracaoValidada({ demonstracao: [operacao] }).length === 0);
+}
+check("passo com roteiro válido mostra Me mostra mesmo sem ui", G.demonstracaoDisponivel({
+  demonstracao: [{ acao: "focar", alvo: "slot:weapon" }]
+}) === true);
+check("passo antigo sem ui nem roteiro não ganha o botão", G.demonstracaoDisponivel({}) === false);
+check("inventário oferece mouse, teclado e gamepad", JSON.stringify(G.controlesDemonstracao("botao:inventario"))
+  === JSON.stringify(["mouse", "teclado", "gamepad"]));
+check("casa de movimento oferece os três controles", JSON.stringify(G.controlesDemonstracao("casa:[5,15]"))
+  === JSON.stringify(["mouse", "teclado", "gamepad"]));
+check("alvo de monstro não anuncia teclado sem seleção por teclado", JSON.stringify(G.controlesDemonstracao("monstro:boneco_treino"))
+  === JSON.stringify(["mouse", "gamepad"]));
+check("slot de equipamento não anuncia teclado sem ativação por teclado", JSON.stringify(G.controlesDemonstracao("slot:weapon"))
+  === JSON.stringify(["mouse", "gamepad"]));
+check("ui malformada não anuncia controles", G.controlesDemonstracao("querySelector:body").length === 0);
+
 console.log("\n[2] seletor (só o que o HUD desenha nesta fatia)");
 let s = G.seletor("botao:encerrar_turno");
 check("botão usa data-guia", s && s.css === '[data-guia="botao:encerrar_turno"]' && s.ancestral === null);
@@ -163,7 +219,7 @@ check("aviso usa as chaves de resultado", /ui\.tutorial\.resultado\./.test(gameS
 check("janela tem o elemento licao-aviso", /id="licao-aviso"/.test(gameSrc));
 check("halo usa a alternativa do seletor", /sel\.alternativa/.test(gameSrc));
 check("CSS do aviso existe", /\.licao-aviso\b/.test(cssSrc));
-check("'Me mostra' aparece para alvo de tabuleiro também", /const botoes = abrirMenu[\s\S]{0,700}: \(passo && passo\.ui && GuiaTutorial\.parseUi\(passo\.ui\)\)/.test(gameSrc));
+check("'Me mostra' aparece para roteiro validado e alvo de tabuleiro", /const botoes = abrirMenu[\s\S]{0,700}: \(passo && GuiaTutorial\.demonstracaoDisponivel\(passo\)\)/.test(gameSrc));
 
 console.log("\n[13] halo 2D no game.js");
 check("função _guiaDesenhar2D existe", /function _guiaDesenhar2D\(/.test(gameSrc));

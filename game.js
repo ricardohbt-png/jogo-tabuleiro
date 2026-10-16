@@ -2234,15 +2234,18 @@ function _preloadImage(path){
   return new Promise(resolve => { const img=new Image(); img.onload=img.onerror=resolve; img.src=_assetURL(path); });
 }
 
-function _showCityTravelTransition(world, destination, durationMs=3000){
+function _showCityTravelTransition(world, destination, durationMs=3000, presentation=null){
   const images=(world.transition_images || []);
-  const art=images.length ? images[Math.floor(Math.random()*images.length)] : '';
+  const art=presentation?.image || (images.length ? images[Math.floor(Math.random()*images.length)] : '');
   const destinationImage=destination && destination.imagem || '';
   const destinationName=destination && destination.nome || '';
   const duration=Math.max(0, Number(durationMs) || 3000);
+  const headline=presentation?.headline || t('ui.mundo.em_viagem');
+  const subline=presentation?.subline || t('ui.mundo.rumo_a', {nome:destinationName});
+  const copyClass=presentation?.copyClass ? ` ${presentation.copyClass}` : '';
   let overlay=document.getElementById('city-travel-transition');
   if(!overlay){ overlay=document.createElement('div'); overlay.id='city-travel-transition'; document.body.appendChild(overlay); }
-  overlay.innerHTML=`<div class="city-travel-art"></div><div class="city-travel-shade"></div><div class="city-travel-copy"><b>${t('ui.mundo.em_viagem')}</b><span>${t('ui.mundo.rumo_a', {nome:destinationName})}</span></div>`;
+  overlay.innerHTML=`<div class="city-travel-art"></div><div class="city-travel-shade"></div><div class="city-travel-copy${copyClass}"><b>${headline}</b><span>${subline}</span></div>`;
   const artEl=overlay.querySelector('.city-travel-art');
   artEl.style.backgroundImage=art ? 'url("'+_assetURL(art)+'")' : 'none';
   artEl.style.animationDuration=duration+'ms';
@@ -2370,15 +2373,19 @@ GS.on('caravanSponsorshipFailed', msg=>{
 });
 GS.on('worldAdventureEncounterChoice', msg=>{
   const host=GS.souAnfitriao(msg.host);
+  const adventure=msg.destination_type==='adventure';
   _abrirDialogoViagem({
     titulo:t('ui.mundo.emboscada_decisao_titulo'),
-    texto:host?t('ui.mundo.emboscada_vitoria_masmorra'):t('ui.mundo.aguardar_anfitriao'),
+    texto:host
+      ?t(adventure?'ui.mundo.emboscada_vitoria_masmorra':'ui.mundo.emboscada_vitoria_viagem')
+      :t('ui.mundo.aguardar_anfitriao'),
     botoes:host?[
-      {label:t('ui.mundo.continuar_masmorra'),primary:true,onClick:()=>GS.worldAdventureEncounterChoice('continue')},
-      {label:t('ui.mundo.retornar_origem'),onClick:()=>GS.worldAdventureEncounterChoice('return')},
+      {label:t(adventure?'ui.mundo.continuar_masmorra':'ui.mundo.fechar_encontro_continuar_viagem'),primary:true,onClick:()=>GS.worldAdventureEncounterChoice('continue')},
+      ...(adventure?[{label:t('ui.mundo.retornar_origem'),onClick:()=>GS.worldAdventureEncounterChoice('return')}]:[]),
     ]:[],
   });
 });
+GS.on('worldAdventureEncounterChoiceClosed', ()=>_fecharDialogoViagem());
 
 // Fragmentos de requisito ("renome 3", "informação: …"), compartilhados pelo
 // destino de aventura e pela conversa de NPC — as duas telas mostravam a mesma
@@ -3340,7 +3347,7 @@ function _itemDesc(item){
     if(item.fome) partes.push(t('ui.item.desc.mais_fome', {n: item.fome}));
     if(item.sede) partes.push(t('ui.item.desc.mais_sede', {n: item.sede}));
     let txt=partes.join(' / ');
-    if(item.effect==='meal_survival') txt+=' • '+t('ui.item.desc.uma_por_visita');
+    if(item.effect==='meal_survival' && !item.tutorial_banquete) txt+=' • '+t('ui.item.desc.uma_por_visita');
     return txt;
   }
   if(item.effect==='ale')
@@ -7731,7 +7738,7 @@ function _monsterIs2x2(m){
 // na orientação natural da arte (cabeça à ESQUERDA) e é espelhada quando encara
 // leste. Norte/sul ficam em pé centralizados — a base mostra a direção. hcx,hcy =
 // centro de tela da casa-cabeça (frente = m.pos).
-function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
+function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false, picheAfundado=false){
   const f = m.facing || [-1,0];
   const [offX, offY] = _monsterVisualCenterOffset(m);
   // Centro geométrico do footprint (inclui a segunda linha do 2x2).
@@ -7758,7 +7765,9 @@ function drawOrientedMonster2D(ctx, m, hcx, hcy, attackTargeted=false){
   // atacada. A rotação também cobre Norte/Sul, que antes permaneciam de lado.
   const imageName = _monsterImageName(m);
   const img = imageName ? _getMonster2DImg(imageName) : null;
-  ctx.save(); ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale);
+  ctx.save();
+  if(picheAfundado){ ctx.translate(0, mcy + CELL * .72); ctx.scale(1, .90); ctx.translate(0, -(mcy + CELL * .72)); }
+  ctx.translate(mcx, mcy - attackLift); ctx.scale(attackScale, attackScale);
   ctx.rotate(angBase);
   const filtroEstado = _filtroEstadoPeao2D(m);
   if(filtroEstado !== 'none') ctx.filter=filtroEstado;
@@ -9155,6 +9164,8 @@ function _armadilhaStyle(msg){
   const id = _armadilhaId(msg);
   if(id === 'training_rockfall')
     return {kind:'rockfall', color:'#d8c1a2', hot:'#fff0c9', dark:'#57483c', icon:'⬇'};
+  if(id === 'armadilha_sono')
+    return {kind:'gas', color:'#b78cff', hot:'#ead7ff', dark:'#39245c', icon:'🌙'};
   if(id === 'armadilha_maldicao')
     return {kind:'curse', color:'#bd8cff', hot:'#f0c4ff', dark:'#32124f', icon:'☠'};
   if(id === 'fosso')
@@ -12191,12 +12202,13 @@ function renderMap(state){
       ctx.translate(-cx,-cy);
     }
     if(m.oriented){
-      // A função recebe a casa-âncora e calcula internamente o centro do
-      // corpo; isso preserva a direção mesmo no footprint orientado 2x2.
-      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2+hitX, my*CELL+CELL/2+hitY, attackTargeted);
+      // A base fica apoiada no piso; só o corpo afunda no piche.
+      drawOrientedMonster2D(ctx, m, mx*CELL+CELL/2+hitX, my*CELL+CELL/2+hitY,
+        attackTargeted, _estaEmPiche2D(state, mx, my));
     } else {
       drawMiniBase(ctx, cx, cy, '#c02020', false, fp.logicalW, fp.logicalH);
-      drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted);
+      _comAfundamentoPiche2D(ctx, state, mx, my, cy + fp.logicalH * CELL * .42,
+        () => drawMonsterSprite(ctx, cx, cy-3, m, attackTargeted));
     }
     if(_poseQuedaM) ctx.restore();
     if(_monVortexPreso) ctx.restore();
@@ -12308,15 +12320,17 @@ function renderMap(state){
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
       }
       drawMiniBase(ctx, cx, cy, _pris.freed?'#2e90c0':'#8a6d3b', false);
-      const _pImg = _getPrisoner2DImg(_pris.image);
-      if(_pImg && _pImg.complete && _pImg.naturalWidth){
-        const sz = Math.round(CELL*0.78);
-        ctx.drawImage(_pImg, cx - sz/2, cy - sz/2 - 3, sz, sz);
-      } else {
-        ctx.font=`${Math.round(CELL*0.46)}px serif`;
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
-      }
+      _comAfundamentoPiche2D(ctx, state, drawX, drawY, cy + CELL * .40, () => {
+        const _pImg = _getPrisoner2DImg(_pris.image);
+        if(_pImg && _pImg.complete && _pImg.naturalWidth){
+          const sz = Math.round(CELL*0.78);
+          ctx.drawImage(_pImg, cx - sz/2, cy - sz/2 - 3, sz, sz);
+        } else {
+          ctx.font=`${Math.round(CELL*0.46)}px serif`;
+          ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(_pris.freed?'🧍':'⛓️', cx, cy-3);
+        }
+      });
       if(_prisVortexPreso) ctx.restore();
       // Barra de HP simples
       const max=_pris.max_hp||_pris.hp||1;
@@ -12389,10 +12403,12 @@ function renderMap(state){
         ctx.save(); ctx.translate(cx, cy); ctx.rotate(_vortexSpin2D); ctx.translate(-cx, -cy);
       }
       drawMiniBase(ctx, cx, cy, '#9900cc', false);
-      // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
-      drawMonsterSprite(ctx, cx, cy-3, {
-        type:a.tipo, image:a.image, porte:a.porte, emoji:a.icone, name:a.nome,
-        facing:_aFacing
+      _comAfundamentoPiche2D(ctx, state, drawX, drawY, cy + CELL * .40, () => {
+        // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
+        drawMonsterSprite(ctx, cx, cy-3, {
+          type:a.tipo, image:a.image, porte:a.porte, emoji:a.icone, name:a.nome,
+          facing:_aFacing
+        });
       });
       // Anel roxo de "animado aliado"; branco e grosso se selecionado.
       ctx.save();
@@ -12465,20 +12481,22 @@ function renderMap(state){
       ctx.translate(-cx,-cy);
     }
     drawMiniBase(ctx, cx, cy, p.color, isCur||isMe||isTesteSel);
-    if(formaVisual){
-      const wolf = _getMonster2DImg(formaVisual);
-      if(wolf && wolf.complete && wolf.naturalWidth){
-        const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
-        ctx.save();
-        ctx.translate(cx, cy-3);
-        ctx.rotate(_facingAngle2D(p.facing) + _spinAngle2D);
-        ctx.translate(-cx, -(cy-3));
-        const filtroEstado = _filtroEstadoPeao2D(p);
-        if(filtroEstado !== 'none') ctx.filter=filtroEstado;
-        ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
-        ctx.restore();
+    _comAfundamentoPiche2D(ctx, state, px, py, cy + CELL * .41, () => {
+      if(formaVisual){
+        const wolf = _getMonster2DImg(formaVisual);
+        if(wolf && wolf.complete && wolf.naturalWidth){
+          const h=CELL*1.42, w=Math.min(CELL*1.20,h*(wolf.naturalWidth/wolf.naturalHeight));
+          ctx.save();
+          ctx.translate(cx, cy-3);
+          ctx.rotate(_facingAngle2D(p.facing) + _spinAngle2D);
+          ctx.translate(-cx, -(cy-3));
+          const filtroEstado = _filtroEstadoPeao2D(p);
+          if(filtroEstado !== 'none') ctx.filter=filtroEstado;
+          ctx.drawImage(wolf,cx-w/2,cy-3+(CELL*.41)-h,w,h);
+          ctx.restore();
+        } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D, _estaParalisado(p));
       } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D, _estaParalisado(p));
-    } else drawHeroSprite(ctx, cx, cy-3, p.class_id, p.color, isMe, isCur, !!p.petrificado, p.facing, _spinAngle2D, _estaParalisado(p));
+    });
     if(_poseQueda2D) ctx.restore();
     if(_playerVortexPreso) ctx.restore();
     if(_estaParalisado(p) && !_invisP)
@@ -13493,6 +13511,38 @@ function matDaCasa(state, x, y){
   const id = secretId && MAT_PALETTE_2D[secretId] ? secretId : (m && m[`${x},${y}`]);
   if(id && MAT_PALETTE_2D[id]) return id;
   return (state.tiles[y][x] === TILE_WALL) ? 'pedra_normal' : 'pedra_cinza';
+}
+
+let _picheBridgeCacheSource = null;
+let _picheBridgeCacheKeys = new Set();
+function _estaEmPiche2D(state, x, y){
+  const gx = Math.round(Number(x)), gy = Math.round(Number(y));
+  if(!Number.isFinite(gx) || !Number.isFinite(gy)
+      || state?.materiais?.[`${gx},${gy}`] !== 'piche') return false;
+  const pontes = state?.pontes || [];
+  if(_picheBridgeCacheSource !== pontes){
+    _picheBridgeCacheSource = pontes;
+    _picheBridgeCacheKeys = new Set();
+    for(const ponte of pontes)
+      for(const [bx, by] of _bridgeTiles2D(ponte)) _picheBridgeCacheKeys.add(`${bx},${by}`);
+  }
+  return !_picheBridgeCacheKeys.has(`${gx},${gy}`);
+}
+function _comAfundamentoPiche2D(ctx, state, x, y, peBaseY, desenhar){
+  if(!_estaEmPiche2D(state, x, y)) return desenhar();
+  ctx.save();
+  ctx.translate(0, peBaseY);
+  ctx.scale(1, 0.90);
+  ctx.translate(0, -peBaseY);
+  desenhar();
+  ctx.restore();
+}
+function _picheSinkY3D(state, fig, x, y){
+  const gx = Math.round(Number(x)), gy = Math.round(Number(y));
+  if(!Number.isFinite(gx) || !Number.isFinite(gy)
+      || state?.materiais?.[`${gx},${gy}`] !== 'piche'
+      || ponteNaCasa3D(state, gx, gy)) return 0;
+  return Number(fig?.userData?._picheSinkY) || 0;
 }
 
 // Elevação visual do terreno autorado. Não confundir com `altura`, que é o
@@ -14534,7 +14584,7 @@ function _spellHasDedicatedSound(id){
     'barreira','maldicao','invisibilidade','protecao_energia','manto_escuridao',
     'clarividencia','regeneracao','velocidade','lentidao','abencoar','abencoar_arma',
     'senhor_das_aguas','chamado_inverno','olhar_petrificante','conjurar_elemental','voo','criar_alimentos','cura','cura_area','purificacao','ressurreicao','metamorfose','guerreiro_luz','cancao_heroica','saciar','contramagica',
-    'ira_rocha_ardente','prisao_chamas',
+    'ira_rocha_ardente','prisao_chamas','ignicao_piche',
     'requiem_final','dueto_marcial',
   ]).has(String(id || '').toLowerCase());
 }
@@ -27851,6 +27901,7 @@ function _somDorArmadilha(k, pos){
 const SOM_IMPACTO_ITEM = {
   granada: 'explosao', granada_superior: 'explosao',
   bomba_incendiaria: 'incendio', fogo_grego: 'incendio', frasco_oleo: 'incendio',
+  frasco_piche: 'frasco_piche_impacto',
   frasco_acido: 'acido', vidro_acido_grande: 'acido',
 };
 function _somExplosaoItem(itemId, pos, acertou = true){
@@ -28264,7 +28315,7 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const BONUS_ACTION_EFFECTS = new Set([
   'heal', 'regeneration', 'atk_bonus', 'antidote', 'coat_poison',
-  'veil_shadow', 'cure_poison', 'cure_petrification', 'cure_disease'
+  'veil_shadow', 'cure_poison', 'cure_petrification', 'cure_disease', 'meal_survival'
 ]);
 
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
@@ -31671,6 +31722,7 @@ function _gamepadUseOrAssignShortcut(slot){
 function _pollGamepad(now){
   const pad = _gamepadPrimary();
   if(!pad){
+    _guiaDemoGamepadAxisAtivo = false;
     const wasActive = _gamepadInput.active;
     _gamepadInput.index = null; _gamepadInput.active = false; _gamepadInput.cursor = null; _gamepadInput.cursorPlayerKey = ''; _gamepadInput.uiPointer = false; _gamepadInput.altitudeComboActive = false; _gamepadInput.interactionDismissedKey = null; _gamepadInput.shortcutWheelModifier = null; _gamepadInput.shortcutWheelConsumed = false; _gamepadInput.followPawn = false; _gamepadInput.buttons = [];
     _clearGamepadEndTurnConfirm();
@@ -31690,6 +31742,7 @@ function _pollGamepad(now){
   if(_gamepadBindingCapture){
     const pressed = Array.from(pad.buttons).findIndex((button, index) => !!button.pressed && !_gamepadInput.buttons[index]);
     if(pressed >= 0){
+      _guiaDemonstracaoInteracao(null);
       const action = _gamepadBindingCapture;
       _gamepadBindingCapture = null;
       _setGamepadBinding(action, pressed);
@@ -31698,6 +31751,12 @@ function _pollGamepad(now){
     _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
     return;
   }
+  const gamepadAxisAtivo = Array.from(pad.axes || []).some(axis => Math.abs(axis || 0) > 0.22);
+  const gamepadEntradaNova = GuiaDemonstracao.entradaNova(
+    pad.buttons, _gamepadInput.buttons, gamepadAxisAtivo, _guiaDemoGamepadAxisAtivo);
+  _guiaDemoGamepadAxisAtivo = gamepadAxisAtivo;
+  if((_guiaDemoEstado === 'executando' || _guiaDemoVisualTimeline?.ativo()) && gamepadEntradaNova)
+    _guiaDemonstracaoInteracao(null);
   // A capa inicial deliberadamente bloqueia a interface até o primeiro gesto.
   // Confirmar / Encerrar turno equivalem a esse clique para iniciar sem mouse.
   if(_gamepadCoverBlocking()){
@@ -35900,14 +35959,21 @@ const PRISAO_CHAMAS_DEFAULT_IMPACT_MS = 980;
 function _prisaoChamasAnimFromMessage(msg){
   const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0, 0];
   const center = Array.isArray(msg.center) ? msg.center.map(Number) : origin.slice();
+  const oneShot = msg.one_shot === true;
   const flames = (Array.isArray(msg.tiles) ? msg.tiles : (msg.flame_tiles || []))
     .filter(p => Array.isArray(p) && p.length >= 2).map(p => [Number(p[0]), Number(p[1])]);
-  const travelMs = Math.max(260, Number(msg.travel_ms) || PRISAO_CHAMAS_DEFAULT_TRAVEL_MS);
-  const impactMs = Math.max(460, Number(msg.impact_ms) || PRISAO_CHAMAS_DEFAULT_IMPACT_MS);
+  if(oneShot) flames.sort((a, b) =>
+    (Math.abs(a[0] - center[0]) + Math.abs(a[1] - center[1]))
+      - (Math.abs(b[0] - center[0]) + Math.abs(b[1] - center[1]))
+      || a[1] - b[1] || a[0] - b[0]);
+  const travelMs = oneShot ? 0 : Math.max(260, Number(msg.travel_ms) || PRISAO_CHAMAS_DEFAULT_TRAVEL_MS);
+  const impactMs = oneShot ? 460 : Math.max(460, Number(msg.impact_ms) || PRISAO_CHAMAS_DEFAULT_IMPACT_MS);
+  const fadeDelayMs = oneShot ? 120 : 0, fadeMs = oneShot ? 360 : 0;
   return {
     animationId: msg.animation_id == null ? null : String(msg.animation_id),
     origin, center, flames, tiles: flames, side: Number(msg.side) || 2, travelMs, impactMs,
-    start: performance.now(), duration: travelMs + impactMs + 640,
+    oneShot, fadeDelayMs, fadeMs, start: performance.now(),
+    duration: oneShot ? travelMs + impactMs + fadeDelayMs + fadeMs : travelMs + impactMs + 640,
     seed: ((origin[0] * 73856093) ^ (origin[1] * 19349663)
       ^ (center[0] * 83492791) ^ (center[1] * 2971215073) ^ Date.now()) >>> 0,
     impactPlayed: false, group: null, orb: null, orbGlow: null,
@@ -35918,11 +35984,21 @@ function _prisaoChamasAnimFromMessage(msg){
 
 function _prisaoChamasProgress(anim, now){
   const elapsed = Math.max(0, now - anim.start);
+  const afterImpact = Math.max(0, elapsed - anim.travelMs);
+  const fade = anim.oneShot
+    ? Math.max(0, Math.min(1, 1 - Math.max(0, afterImpact - anim.impactMs - anim.fadeDelayMs) / Math.max(1, anim.fadeMs)))
+    : 1;
   return {
-    elapsed, travel: Math.min(1, elapsed / anim.travelMs),
-    impact: Math.max(0, Math.min(1, (elapsed - anim.travelMs) / anim.impactMs)),
+    elapsed, travel: anim.travelMs > 0 ? Math.min(1, elapsed / anim.travelMs) : 1,
+    impact: Math.max(0, Math.min(1, afterImpact / anim.impactMs)), fade,
     impacting: elapsed >= anim.travelMs, finished: elapsed >= anim.duration
   };
+}
+
+function _prisaoChamasStagger(anim){
+  return anim.oneShot
+    ? Math.min(18, 360 / Math.max(1, anim.flames.length))
+    : Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
 }
 
 function _prisaoChamasSetLine(line, points, T){
@@ -36025,25 +36101,25 @@ function _prisaoChamasUpdate3D(anim, now){
   anim.impactRing.scale.setScalar(.35 + p.impact * 2.2); anim.impactRing.material.opacity = .92 * impactFade;
   anim.impactFlash.position.set(anim.center[0], .72, anim.center[1]);
   anim.impactFlash.scale.setScalar(.25 + p.impact * .95); anim.impactFlash.material.opacity = .62 * impactFade;
-  const stagger = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  const stagger = _prisaoChamasStagger(anim);
   for(const item of anim.rings){
-    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger) / Math.max(260, anim.impactMs * .72)));
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger) / (anim.oneShot ? 180 : Math.max(260, anim.impactMs * .72))));
     item.ring.scale.setScalar(.32 + q * (1.0 + .10 * pulse));
     item.ring.rotation.z = now / 210 + item.tileIndex;
-    item.ring.material.opacity = .66 * q;
+    item.ring.material.opacity = .66 * q * p.fade;
   }
   for(const item of anim.flames3d){
-    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger - item.j * 38) / Math.max(300, anim.impactMs * .65)));
-    item.flame.scale.set(.82 + .18 * pulse, q * (.86 + .20 * Math.sin(now / 75 + item.flame.userData.phase)), .82 + .18 * pulse);
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - item.tileIndex * stagger - item.j * 38) / (anim.oneShot ? 180 : Math.max(300, anim.impactMs * .65))));
+    item.flame.scale.set(.82 + .18 * pulse, q * p.fade * (.86 + .20 * Math.sin(now / 75 + item.flame.userData.phase)), .82 + .18 * pulse);
     item.flame.rotation.z = Math.sin(now / 92 + item.flame.userData.phase) * .14;
-    item.flame.material.opacity = .82 * q;
+    item.flame.material.opacity = .82 * q * p.fade;
   }
-  const staggerLiving = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  const staggerLiving = _prisaoChamasStagger(anim);
   for(let i = 0; i < anim.livingFlames.length; i++){
     const item = anim.livingFlames[i];
-    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - i * staggerLiving) / Math.max(300, anim.impactMs * .65)));
-    item.wrap.visible = q > 0;
-    item.wrap.scale.setScalar(item.baseScale * (.72 + .28 * q) * (0.94 + .06 * pulse));
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - i * staggerLiving) / (anim.oneShot ? 180 : Math.max(300, anim.impactMs * .65))));
+    item.wrap.visible = q > 0 && p.fade > 0;
+    item.wrap.scale.setScalar(item.baseScale * (.72 + .28 * q) * p.fade * (0.94 + .06 * pulse));
     if(item.mixer){
       item.mixer.update(Math.min(.1, Math.max(0, (now - item.lastAt) / 1000)));
       item.lastAt = now;
@@ -36176,7 +36252,7 @@ function _animarChamasVivasPersistentes3D(now){
 
 function _prisaoChamasDraw2D(ctx, state, anim, now){
   if(!_iraRochaVisible(anim, state)) return;
-  const p = _prisaoChamasProgress(anim, now), fade = p.finished ? Math.max(0, 1 - (p.elapsed - anim.duration) / 300) : 1;
+  const p = _prisaoChamasProgress(anim, now), fade = anim.oneShot ? p.fade : (p.finished ? Math.max(0, 1 - (p.elapsed - anim.duration) / 300) : 1);
   const ox = anim.origin[0] * CELL + CELL / 2, oy = anim.origin[1] * CELL + CELL / 2;
   const cx = anim.center[0] * CELL + CELL / 2, cy = anim.center[1] * CELL + CELL / 2;
   const fx = ox + (cx - ox) * p.travel, fy = oy + (cy - oy) * p.travel;
@@ -36195,10 +36271,10 @@ function _prisaoChamasDraw2D(ctx, state, anim, now){
   const burst = CELL * (.18 + p.impact * .42);
   ctx.strokeStyle = `rgba(255,226,100,${(.85 * impactFade * fade).toFixed(3)})`;
   ctx.lineWidth = Math.max(2, CELL * .045); ctx.beginPath(); ctx.arc(cx, cy, burst, 0, Math.PI * 2); ctx.stroke();
-  const stagger = Math.max(24, Math.min(90, anim.impactMs / Math.max(1, anim.flames.length)));
+  const stagger = _prisaoChamasStagger(anim);
   anim.flames.forEach(([tx, ty], tileIndex) => {
     if(!_iraRochaTileVisible(state, [tx, ty])) return;
-    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - tileIndex * stagger) / Math.max(260, anim.impactMs * .72)));
+    const q = Math.max(0, Math.min(1, (p.elapsed - anim.travelMs - tileIndex * stagger) / (anim.oneShot ? 180 : Math.max(260, anim.impactMs * .72))));
     if(q <= 0) return;
     const x = tx * CELL + CELL / 2, y = ty * CELL + CELL / 2;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, CELL * .72);
@@ -36225,8 +36301,10 @@ function _tickPrisaoChamas(now){
     const anim = _prisaoChamasAnims[i], p = _prisaoChamasProgress(anim, now);
     if(p.impacting && !anim.impactPlayed){
       anim.impactPlayed = true;
-      _playCombatCue('fire', {repeatKey:`prisao-chamas:${anim.animationId || anim.start}:impact`, power:1.42, volume:.96});
-      _liberarDadosMagia();
+      if(!anim.oneShot){
+        _playCombatCue('fire', {repeatKey:`prisao-chamas:${anim.animationId || anim.start}:impact`, power:1.42, volume:.96});
+        _liberarDadosMagia();
+      }
       // Reavalia o portão `_zonaFogoLiberada`: é agora que a parede de fogo
       // persistente (pool spellLivingFlameFx) pode acender. Em 2D o tick já
       // redesenha a cada quadro.
@@ -36240,11 +36318,11 @@ function _tickPrisaoChamas(now){
 }
 
 function _receberAnimacaoPrisaoChamas(msg){
-  if(!msg || msg.spell_id !== 'prisao_chamas' || msg.phase !== 'start') return;
+  if(!msg || !['prisao_chamas', 'ignicao_piche'].includes(msg.spell_id) || msg.phase !== 'start') return;
   const id = msg.animation_id == null ? null : String(msg.animation_id);
   if(id != null && _prisaoChamasAnims.some(a => a.animationId === id)) return;
   const anim = _prisaoChamasAnimFromMessage(msg); _prisaoChamasAnims.push(anim);
-  _playCombatCue('fire', {repeatKey:`prisao-chamas:${id || 'start'}`, power:1.08, volume:.92});
+  if(!anim.oneShot) _playCombatCue('fire', {repeatKey:`prisao-chamas:${id || 'start'}`, power:1.08, volume:.92});
   if(!_prisaoChamasRaf) _prisaoChamasRaf = _scheduleVisualFrame(_tickPrisaoChamas);
 }
 
@@ -44085,6 +44163,7 @@ function toggle3D(){
     toast(t('ui.hud.three_indisponivel'),'var(--orange)');
     return;
   }
+  _guiaDemoVisualLimpar();
   mode3D = !mode3D;
   const btn   = $('btn-3d-toggle');
   const hint  = $('orbit-hint');
@@ -44987,6 +45066,7 @@ function init3D(state){
         const isDeepWhirlpool3 = mid3==='rodamoinho_profundo';
         const isLava3 = mid3==='lava';
         const isSwamp3 = mid3==='pantano';
+        const isPitch3 = mid3==='piche';
         const isSky3 = mid3==='ceu_abismo';
         const baseFtex = makeMaterialTex(mid3);
         const ftex = isSky3 && baseFtex ? baseFtex.clone() : baseFtex;
@@ -44999,7 +45079,7 @@ function init3D(state){
         }
         // Com textura própria ou água a cor final não depende do jitter (é fixada
         // abaixo), então essas casas colapsam num material único por tipo.
-        const jitQ = (isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3 || ftex) ? 0 : _quantJit(vf);
+        const jitQ = (isWater3 || isWhirlpool3 || isDeepWhirlpool3 || isLava3 || isSwamp3 || isPitch3 || ftex) ? 0 : _quantJit(vf);
         const fKey = isSky3 ? `f|${mid3}|${x},${y}` : `f|${mid3}|${jitQ}`;
         let mat = _tileMatCache[fKey];
         if(!mat){
@@ -45066,6 +45146,14 @@ function init3D(state){
             mat.emissive.set(0x17351d);
             mat.emissiveIntensity = 0.22;
             mat.bumpMap = ftex;
+          }
+          if(isPitch3){
+            mat.roughness = 0.22;
+            mat.metalness = 0.12;
+            mat.emissive.set(0x1b1410);
+            mat.emissiveIntensity = 0.12;
+            mat.bumpMap = null;
+            mat.bumpScale = 0;
           }
           if(mid3 === 'piso_congelado'){
             mat.roughness = 0.10;
@@ -46031,6 +46119,7 @@ function _mkWoodTex(T){
 
 function dispose3D(){
   if(!g3) return;
+  _guiaDemoVisualLimpar();
   cancelAnimationFrame(g3.animFrame);
   // Sem o laço 3D ninguém mais tica as cenas: um herói morto ficaria
   // "tombando" para sempre (isDying) e seria desenhado vivo no 2D. Lacuna
@@ -47392,6 +47481,7 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   ring: {path: 'assets/itens/anel.glb', footprint: 0.42},
   ring_str: {path: 'assets/itens/anel.glb', footprint: 0.42},
   ring_vita: {path: 'assets/itens/anel.glb', footprint: 0.42},
+  helm_iron: {path: 'assets/itens/elmo.glb', footprint: 0.68},
   fullplate: {path: 'assets/itens/armadura_completa.glb', footprint: 0.82},
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
@@ -48117,6 +48207,9 @@ function _animarPasso(peao, destino, onPasso){
   const destinoWorld = casaParaMundo(destino.x, destino.z);
   const bridgeState = GS.gameState;
   const origemGrid = peao.userData._moveGridPos || [peao.userData.gridX, peao.userData.gridY];
+  const picheOrigemY = Array.isArray(origemGrid)
+    ? _picheSinkY3D(bridgeState, peao, origemGrid[0], origemGrid[1]) : 0;
+  const picheDestinoY = _picheSinkY3D(bridgeState, peao, destino.x, destino.z);
   const origemPonteY = Array.isArray(origemGrid) && Number.isFinite(origemGrid[0])
     ? baseSuperficiePonte3D(bridgeState, origemGrid[0], origemGrid[1]) : null;
   const destinoPonteY = baseSuperficiePonte3D(bridgeState, destino.x, destino.z);
@@ -48126,12 +48219,22 @@ function _animarPasso(peao, destino, onPasso){
     ? destinoPonteY
     : (origemPonteY !== null
       ? topoTerreno3D(bridgeState, destino.x, destino.z) - 0.22
-      : inicio.y);
+        + (peao.userData.flightBody ? 0 : picheDestinoY)
+      : (picheOrigemY || picheDestinoY)
+        ? topoSuperficie3D(bridgeState, destino.x, destino.z, 0.22) - 0.22
+          + (peao.userData.flightBody ? 0 : picheDestinoY)
+        : inicio.y);
   if(transitaPonte) peao.position.y = inicioSuperficieY;
   let startTime = null;
   function tick(timestamp){
     if(startTime === null) startTime = timestamp;
     const progress = Math.min((timestamp - startTime) / DURACAO_PASSO_MS, 1);
+    if(peao.userData.flightBody){
+      const pitchMix = easeInOut(progress);
+      const altitudeY = (Number(peao.userData.altitude) || 0) * FLIGHT_ALTITUDE_STEP;
+      peao.userData.flightBody.position.y = altitudeY
+        + picheOrigemY + (picheDestinoY - picheOrigemY) * pitchMix;
+    }
 
     if(progress < 0.3){
       // FASE 1 — levanta
@@ -49744,9 +49847,13 @@ function renderMap3D(state){
       const altitudeNormalizada = Math.max(0, Math.min(10,
         Number.isFinite(altitudeNum) ? Math.trunc(altitudeNum) : 0));
       fig.userData.altitude = altitudeNormalizada;
-      if(fig.userData.flightBody){
-        fig.userData.flightBody.position.y = altitudeNormalizada * FLIGHT_ALTITUDE_STEP;
-      }
+      const body = fig.userData.flightBody || fig;
+      const bodyBounds = new T.Box3().setFromObject(body);
+      const bodyHeight = bodyBounds.getSize(new T.Vector3()).y;
+      // Arte GLB pode chegar depois da miniatura provisória; recalcular aqui
+      // deixa o afundamento proporcional à altura final do modelo.
+      if(fig.userData._picheSinkY === undefined || bodyHeight > 0.10)
+        fig.userData._picheSinkY = -Math.max(0.10, bodyHeight) * 0.10;
       // Água rasa/profunda: afunda cada miniatura em 25%/45% da própria altura.
       // O deslocamento fica no grupo-raiz e serve para heróis e monstros.
       if(fig.userData._waterSinkDeepY === undefined){
@@ -49763,6 +49870,7 @@ function renderMap3D(state){
       // apoiado no tabuleiro e não afunda nem recebe aparência de lava/água.
       const waterKind = ponteNaCasa3D(state, x, y) ? null
         : state.materiais && state.materiais[`${x},${y}`];
+      const picheSinkY = waterKind === 'piche' ? fig.userData._picheSinkY : 0;
       const waterSinkY = (waterKind === 'rodamoinho' || waterKind === 'rodamoinho_profundo') && altitudeNormalizada <= 0 ? fig.userData._whirlpoolSinkY
         : waterKind === 'planicie_nevada' && altitudeNormalizada <= 0 ? fig.userData._snowPlainSinkY
         : waterKind === 'pantano' ? fig.userData._swampSinkY
@@ -49773,7 +49881,11 @@ function renderMap3D(state){
       // Compensa a redução vertical para manter a menor parte da miniatura
       // apoiada na superfície do piso, sem interferir no tamanho visual.
       const terrainLiftY = topoSuperficie3D(state, x, y, TH) - TH;
-      fig.userData.baseY = terrainLiftY + waterSinkY + (Number(fig.userData._floorAnchorLiftY) || 0);
+      const picheNoCorpo = !!fig.userData.flightBody;
+      if(fig.userData.flightBody)
+        fig.userData.flightBody.position.y = altitudeNormalizada * FLIGHT_ALTITUDE_STEP + picheSinkY;
+      fig.userData.baseY = terrainLiftY + waterSinkY + (picheNoCorpo ? 0 : picheSinkY)
+        + (Number(fig.userData._floorAnchorLiftY) || 0);
       fig.position.y = fig.userData.baseY;
       fig.userData._stepBaseY = fig.userData.baseY;
     }
@@ -50009,7 +50121,11 @@ function renderMap3D(state){
       const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id);
       if(!mesh) continue;
       if(window.CombatScene && CombatScene.poseFor(_figSceneKey(mesh), performance.now())) continue;
-      if(mesh.userData._stepBaseY === undefined) mesh.userData._stepBaseY = mesh.position.y;
+      if(mesh.userData._stepBaseY === undefined){
+        mesh.userData._stepBaseY = mesh.position.y;
+        mesh.userData._stepBasePitchY = _picheSinkY3D(state, mesh,
+          mesh.userData.gridX, mesh.userData.gridY);
+      }
       // entity_step usa a âncora do servidor. Criaturas 2x2 deslizam com o
       // mesmo offset visual usado no estado parado, sem voltar para o canto.
       mesh.position.x = step.x + (Number(mesh.userData.footprintOffsetX) || 0);
@@ -50023,12 +50139,31 @@ function renderMap3D(state){
       const stepAnim = _serverStepAnim.get(id);
       const stepFraction = stepAnim
         ? (performance.now() - stepAnim.startTime) / stepAnim.segDur : 0;
+      let picheStepY = 0;
+      if(stepAnim && stepAnim.pts.length > 1){
+        const segIndex = Math.min(stepAnim.pts.length - 2,
+          Math.max(0, Math.floor(stepFraction)));
+        const segT = Math.max(0, Math.min(1, stepFraction - segIndex));
+        const [sx, sy] = stepAnim.pts[segIndex];
+        const [tx, ty] = stepAnim.pts[segIndex + 1];
+        const fromSink = _picheSinkY3D(state, mesh, sx, sy);
+        const toSink = _picheSinkY3D(state, mesh, tx, ty);
+        picheStepY = fromSink + (toSink - fromSink) * easeInOut(segT);
+      }
       const ponteBaseY = stepAnim
         ? basePonteInterpolada3D(state, stepAnim.pts, stepFraction,
             mesh.userData._stepBaseY, TH)
         : null;
       const stepBaseY = ponteBaseY !== null
-        ? ponteBaseY : mesh.userData._stepBaseY;
+        ? ponteBaseY
+        : mesh.userData.flightBody
+          ? mesh.userData._stepBaseY
+          : mesh.userData._stepBaseY - (Number(mesh.userData._stepBasePitchY) || 0)
+            + picheStepY;
+      if(mesh.userData.flightBody){
+        mesh.userData.flightBody.position.y = (Number(mesh.userData.altitude) || 0)
+          * FLIGHT_ALTITUDE_STEP + picheStepY;
+      }
       mesh.position.y = stepBaseY + step.hop * ALTURA_ELEVACAO * 0.5;
     }
   }
@@ -55544,10 +55679,18 @@ GS.on('enterDungeon', (msg) => {
     const remaining=msg.intro_until_ms
       ? Math.max(0, Number(msg.intro_until_ms)-Date.now())
       : Number(msg.intro_duration_ms || 3000);
-    _showCityTravelTransition(
-      {transition_images:Array.isArray(msg.transition_images) ? msg.transition_images : []},
-      {nome:t('ui.hud.masmorra')},
-      remaining || Number(msg.intro_duration_ms || 3000));
+    const transitionWorld={transition_images:Array.isArray(msg.transition_images) ? msg.transition_images : []};
+    const transitionDuration=remaining || Number(msg.intro_duration_ms || 3000);
+    if(msg.travel_ambush){
+      _showCityTravelTransition(transitionWorld, null, transitionDuration, {
+        headline:t('ui.mundo.emboscada_entrada_titulo'),
+        subline:t('ui.mundo.emboscada_entrada_aviso'),
+        copyClass:'travel-ambush-copy',
+      });
+      try{ sfx('alarme_emboscada'); }catch(e){ console.warn('som de emboscada:', e); }
+    } else {
+      _showCityTravelTransition(transitionWorld, {nome:t('ui.hud.masmorra')}, transitionDuration);
+    }
   }
 });
 
@@ -55876,7 +56019,308 @@ let _guiaPasso = null;          // passo atual recebido do servidor
 let _guiaDesde = 0;             // performance.now() do último progresso
 let _guiaTimer = null;
 let _guiaEstadoRef = null;      // game_state vigente quando o passo foi disparado
+let _guiaDemoController = null, _guiaDemoFoco = null, _guiaDemoPid = null, _guiaDemoControlesUi = null;
+let _guiaDemoEstado = 'inativa';
+let _guiaDemoGamepadAxisAtivo = false;
+let _guiaDemoVisualTimeline = null, _guiaDemoVisualAmostra = null, _guiaDemoCursorVisual = null;
+
+function _guiaDemoVisualGarantir(){
+  if(_guiaDemoVisualTimeline) return _guiaDemoVisualTimeline;
+  _guiaDemoVisualTimeline = GuiaDemonstracaoVisual.criar({
+    aoQuadro: amostra => _guiaDemoVisualQuadro(amostra),
+    aoFim: () => _guiaDemoVisualLimpar(false)
+  });
+  return _guiaDemoVisualTimeline;
+}
+
+function _guiaDemoVisualVisivel(state, x, y){
+  const vis = _guiaVisao3D(state);
+  return !vis || vis.has(`${x},${y}`);
+}
+
+function _guiaDemoVisualContexto(op){
+  const state = GS.gameState;
+  const me = state && (state.players || []).find(p => p.id === GS.myPid && p.alive);
+  if(!state || !me || !Array.isArray(me.pos)) return null;
+  const origem = [me.pos[0], me.pos[1]];
+  if(op.acao === 'prever_equipamento'){
+    const slot = GuiaTutorial.parseUi(op.alvo);
+    const seletor = GuiaTutorial.seletor(op.alvo);
+    const destino = seletor && document.querySelector(seletor.css);
+    const slotId = slot?.id || '';
+    const itensBag = Array.isArray(me.bag) ? me.bag : [];
+    const itemCompativel = itensBag.find(item => item && item.id
+      && (item.item_slot === slotId || item.slot === slotId
+        || (slotId === 'weapon' && (item.tipo_item === 'arma' || item.kind === 'weapon'))));
+    const fontes = Array.from(document.querySelectorAll('.inv-bagslot[data-item-id]'));
+    const fonte = fontes.find(el => itemCompativel && el.dataset.itemId === String(itemCompativel.id)
+      && el.getClientRects().length);
+    return { tipo:'equipamento', origem, classe:me.class_id, slot:op.alvo,
+      origemElemento:fonte && fonte.getClientRects().length ? fonte : null,
+      destinoElemento:destino && destino.getClientRects().length ? destino : null,
+      destinoTipo:slot?.tipo || 'slot' };
+  }
+  const vis = _guiaVisao3D(state);
+  const alvo = GuiaTutorial.alvoTabuleiro(op.alvo, state, origem,
+    vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true));
+  if(!alvo || !alvo.pos) return null;
+  const destino = [alvo.pos[0], alvo.pos[1]];
+  let caminho = [origem];
+  if(op.acao === 'prever_movimento'){
+    const passos = _guiaCaminhoAteAlvo(state, { tipo:'casa', pos:destino, caminho:true });
+    caminho = [origem, ...(passos || [])];
+    if(caminho.length === 1 && (destino[0] !== origem[0] || destino[1] !== origem[1])) return null;
+  } else {
+    // Prévia de habilidade: aproximação visual curta até o alvo visível.
+    const dx = destino[0] - origem[0], dy = destino[1] - origem[1];
+    const d = Math.max(Math.abs(dx), Math.abs(dy));
+    if(d > 1) caminho.push([origem[0] + Math.sign(dx), origem[1] + Math.sign(dy)]);
+  }
+  const pontos = caminho.length > 1 ? caminho : [origem, destino];
+  for(let i = 0; i < pontos.length - 1; i++){
+    const a = pontos[i], b = pontos[i + 1];
+    const n = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]), 1) * 2;
+    for(let j = 0; j <= n; j++){
+      const x = Math.round(a[0] + (b[0] - a[0]) * j / n);
+      const y = Math.round(a[1] + (b[1] - a[1]) * j / n);
+      if(!_guiaDemoVisualVisivel(state, x, y)) return null;
+    }
+  }
+  return { tipo:op.acao === 'prever_movimento' ? 'movimento' : 'habilidade', origem,
+    destino, caminho:pontos, alvoTipo:alvo.tipo, alvoId:alvo.id || null, classe:me.class_id };
+}
+
+function _guiaDemoVisualIniciar(operacao){
+  _guiaDemoVisualLimpar();
+  const contexto = _guiaDemoVisualContexto(operacao);
+  if(!contexto) return false;
+  return _guiaDemoVisualGarantir().iniciar(operacao, contexto);
+}
+
+function _guiaDemoVisualPosicao(contexto, progresso){
+  const caminho = contexto?.caminho;
+  if(!Array.isArray(caminho) || caminho.length < 2) return null;
+  const trechos = caminho.length - 1;
+  const local = Math.min(trechos - 0.000001, Math.max(0, progresso * trechos));
+  const i = Math.floor(local), t = local - i;
+  const a = caminho[i], b = caminho[i + 1];
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  const facing = Math.abs(dx) > Math.abs(dy) ? [Math.sign(dx), 0] : [0, Math.sign(dy)];
+  return { x:a[0] + dx * t, y:a[1] + dy * t, facing };
+}
+
+function _guiaDemoVisualQuadro(amostra){
+  _guiaDemoVisualAmostra = amostra;
+  const texto = $('licao-demonstracao-texto');
+  if(texto) texto.textContent = amostra.operacao.acao === 'prever_equipamento'
+    && !amostra.contexto?.origemElemento
+    ? t('ui.tutorial.demonstracao.sem_origem')
+    : t('ui.tutorial.demonstracao.previsualizando');
+  if(amostra.operacao.acao === 'prever_equipamento') _guiaDemoCursorAtualizar(amostra);
+  else _guiaDemoCursorOcultar();
+  if(!(mode3D && g3)) _agendarChamas2D();
+}
+
+function _guiaDemoCursorOcultar(){
+  if(_guiaDemoCursorVisual) _guiaDemoCursorVisual.style.display = 'none';
+}
+
+function _guiaDemoCursorAtualizar(amostra){
+  if(!_guiaDemoCursorVisual){
+    _guiaDemoCursorVisual = document.createElement('div');
+    _guiaDemoCursorVisual.id = 'guia-demo-cursor-visual';
+    _guiaDemoCursorVisual.className = 'guia-demo-cursor-visual';
+    _guiaDemoCursorVisual.setAttribute('aria-hidden', 'true');
+    _guiaDemoCursorVisual.textContent = '✦';
+    document.body.appendChild(_guiaDemoCursorVisual);
+  }
+  const c = amostra.contexto || {};
+  const ret = el => el && el.isConnected && el.getClientRects().length ? el.getBoundingClientRect() : null;
+  const de = ret(c.origemElemento), para = ret(c.destinoElemento);
+  const fim = para ? { x:para.left + para.width/2, y:para.top + para.height/2 } : null;
+  const inicio = de ? { x:de.left + de.width/2, y:de.top + de.height/2 } : fim;
+  if(!inicio && !fim){ _guiaDemoCursorOcultar(); return; }
+  const a = inicio || fim, b = fim || inicio, p = amostra.progresso;
+  _guiaDemoCursorVisual.style.display = 'block';
+  _guiaDemoCursorVisual.style.left = `${a.x + (b.x-a.x)*p}px`;
+  _guiaDemoCursorVisual.style.top = `${a.y + (b.y-a.y)*p}px`;
+}
+
+function _guiaDemoVisualLimpar(cancelar=true){
+  if(cancelar && _guiaDemoVisualTimeline) _guiaDemoVisualTimeline.cancelar();
+  _guiaDemoVisualAmostra = null;
+  _guiaDemoCursorVisual?.remove();
+  _guiaDemoCursorVisual = null;
+  if(g3) _guiaDemoVisual3DLimpar();
+  const texto = $('licao-demonstracao-texto');
+  if(texto && _guiaDemoEstado !== 'inativa') texto.textContent = t('ui.tutorial.demonstracao.agora_voce');
+}
+
+function _guiaDemoVisual3DLimpar(){
+  if(!g3) return;
+  if(g3.guiaDemoTrilha){
+    g3.scene.remove(g3.guiaDemoTrilha);
+    g3.guiaDemoTrilha.geometry.dispose();
+    g3.guiaDemoTrilha.material.dispose();
+    g3.guiaDemoTrilha = null;
+  }
+  const ghost = g3.guiaDemoGhost;
+  if(ghost){
+    g3.scene.remove(ghost);
+    const geometriaPropria = !!ghost.userData?.guiaDemoGeometriaPropria;
+    ghost.traverse?.(obj => {
+      if(geometriaPropria && obj.geometry) obj.geometry.dispose();
+      if(obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => m.dispose());
+    });
+    g3.guiaDemoGhost = null;
+  }
+  if(g3.guiaDemoImpact){
+    g3.scene.remove(g3.guiaDemoImpact);
+    g3.guiaDemoImpact.geometry.dispose(); g3.guiaDemoImpact.material.dispose();
+    g3.guiaDemoImpact = null;
+  }
+}
 const _guiaCfg = () => ({ dica1S: 12, dica2S: 30, ...(window.VC && VC.tutorial) });
+
+function _guiaDemonstracaoAtualizar(info){
+  _guiaDemoEstado = info.estado;
+  _guiaDemoFoco = (info.estado !== 'inativa' && !info.fallback) ? info.alvo : null;
+  if(info.estado === 'inativa') _guiaDemoControlesUi = null;
+  else if(info.estado !== 'suspensa' && info.alvo) _guiaDemoControlesUi = info.alvo;
+  const janela = $('licao-janela');
+  const inventarioAberto = typeof InventoryModal !== 'undefined' && InventoryModal.isOpen();
+  janela?.classList.toggle('guia-demo-acima-inventario', info.estado !== 'inativa' && inventarioAberto);
+  const caixa = $('licao-demonstracao');
+  const texto = $('licao-demonstracao-texto');
+  const cancelar = $('licao-demonstracao-cancelar');
+  if(caixa && texto){
+    caixa.style.display = info.estado === 'inativa' ? 'none' : 'flex';
+    texto.textContent = _guiaDemoVisualTimeline?.ativo()
+      ? t('ui.tutorial.demonstracao.previsualizando')
+      : (info.estado === 'executando'
+      ? t('ui.tutorial.demonstracao.iniciada')
+      : (info.estado === 'suspensa' ? t('ui.tutorial.demonstracao.pausada')
+        : (info.fallback ? t('ui.tutorial.demonstracao.indisponivel')
+          : t('ui.tutorial.demonstracao.agora_voce'))));
+    if(cancelar) cancelar.style.display = info.estado === 'inativa' ? 'none' : '';
+    _guiaDemonstracaoControlesRenderizar(info.alvo || _guiaDemoControlesUi || _guiaPasso?.ui);
+  }
+  if(info.estado === 'inativa'){
+    document.querySelectorAll('.guia-demo-foco').forEach(el => el.classList.remove('guia-demo-foco'));
+  } else if(info.estado === 'suspensa'){
+    document.querySelectorAll('.guia-demo-foco').forEach(el => el.classList.remove('guia-demo-foco'));
+  } else _guiaAplicarHalo();
+}
+
+function _guiaDemonstracaoControlesRenderizar(ui){
+  const host = $('licao-demonstracao-controles');
+  if(!host) return;
+  const metodos = GuiaTutorial.controlesDemonstracao(ui);
+  const parsed = GuiaTutorial.parseUi(ui);
+  const linhas = metodos.map(metodo => {
+    let chave;
+    if(metodo === 'mouse') chave = 'ui.tutorial.demonstracao.controle_mouse';
+    else if(metodo === 'teclado') chave = ui === 'botao:inventario'
+      ? 'ui.tutorial.demonstracao.controle_teclado_inventario'
+      : (parsed?.tipo === 'casa' || parsed?.tipo === 'porta'
+        ? 'ui.tutorial.demonstracao.controle_teclado_mapa'
+        : 'ui.tutorial.demonstracao.controle_teclado_ui');
+    else if(ui === 'botao:inventario')
+      return `<span><b>${_esc(t('ui.tutorial.demonstracao.metodo_gamepad'))}</b> ${_esc(t('ui.tutorial.demonstracao.controle_gamepad_inventario', {botao:_gamepadButtonLabel(_gamepadBinding('characterMenu'))}))}</span>`;
+    else if(parsed?.tipo === 'casa' || parsed?.tipo === 'porta')
+      return `<span><b>${_esc(t('ui.tutorial.demonstracao.metodo_gamepad'))}</b> ${_esc(t('ui.tutorial.demonstracao.controle_gamepad_mapa', {botao:_gamepadButtonLabel(_gamepadBinding('confirm'))}))}</span>`;
+    else return `<span><b>${_esc(t('ui.tutorial.demonstracao.metodo_gamepad'))}</b> ${_esc(t('ui.tutorial.demonstracao.controle_gamepad_ui', {botao:_gamepadButtonLabel(_gamepadBinding('confirm'))}))}</span>`;
+    return `<span><b>${_esc(t('ui.tutorial.demonstracao.metodo_' + metodo))}</b> ${_esc(t(chave))}</span>`;
+  });
+  host.innerHTML = linhas.join('');
+  host.style.display = linhas.length ? 'flex' : 'none';
+}
+
+function _guiaDemonstracaoFocar(ui){
+  const parsed = GuiaTutorial.parseUi(ui);
+  if(!parsed) return false;
+  // Um passo de equipamento depende do inventário. Ao retomar depois de o
+  // jogador fechar esse modal, reabra a interface no mesmo clique que reaplica
+  // o foco, sem equipar nem executar qualquer ação de jogo.
+  if(parsed.tipo === 'slot' && typeof InventoryModal !== 'undefined' && !InventoryModal.isOpen())
+    InventoryModal.open(GS.myPid);
+  _guiaDemoFoco = ui;
+  if(['casa', 'porta', 'monstro'].includes(parsed.tipo)){
+    const st = GS.gameState;
+    if(!st) return false;
+    const me = (st.players || []).find(p => p.id === GS.myPid);
+    const vis = _guiaVisao3D(st);
+    const alvo = GuiaTutorial.alvoTabuleiro(ui, st, me ? me.pos : null,
+      vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true));
+    if(!alvo) return false;
+    if(!(mode3D && g3)) _agendarChamas2D();
+    return true;
+  }
+  _guiaAplicarHalo();
+  const sel = GuiaTutorial.seletor(ui);
+  if(!sel) return false;
+  let el = null;
+  for(const cand of document.querySelectorAll(sel.css)){
+    const alvo = sel.ancestral ? cand.closest(sel.ancestral) : cand;
+    if(alvo && alvo.getClientRects().length){ el = alvo; break; }
+  }
+  if(!el && sel.alternativa){
+    const alternativa = document.querySelector(sel.alternativa);
+    if(alternativa && alternativa.getClientRects().length) el = alternativa;
+  }
+  if(!el) return false;
+  el.classList.add('guia-demo-foco');
+  if(el.matches('button, a[href], input, select, textarea, [tabindex]') && !el.disabled){
+    if(_gamepadInput?.active && typeof _gamepadSetUiFocus === 'function') _gamepadSetUiFocus(el);
+    else { try { el.focus({ preventScroll: true }); } catch(e) { el.focus(); } }
+  }
+  return true;
+}
+
+function _guiaDemonstracaoGarantir(){
+  if(_guiaDemoController) return _guiaDemoController;
+  _guiaDemoController = GuiaDemonstracao.criar({
+    validar: passo => GuiaTutorial.demonstracaoValidada(passo),
+    parseUi: ui => GuiaTutorial.parseUi(ui),
+    focar: ui => _guiaDemonstracaoFocar(ui),
+    inventarioAberto: () => typeof InventoryModal !== 'undefined' && InventoryModal.isOpen(),
+    abrirInventario: () => { if(typeof InventoryModal !== 'undefined') InventoryModal.open(GS.myPid); },
+    abrirHabilidades: () => abrirMenuHabilidades(GS.myPid),
+    abrirMagias: () => abrirMenuMagias(GS.myPid),
+    preverVisual: op => _guiaDemoVisualIniciar(op),
+    limparVisual: () => _guiaDemoVisualLimpar(),
+    aoEstado: info => _guiaDemonstracaoAtualizar(info)
+  });
+  return _guiaDemoController;
+}
+
+function _guiaDemonstracaoIniciar(){
+  if(!_guiaPasso) return;
+  _guiaDemoPid = GS.myPid;
+  const chave = `${_licaoUltima?.licao_id || ''}:${_guiaPasso.i || 0}:${_guiaDemoPid || ''}`;
+  _guiaDemonstracaoGarantir().avancar(_guiaPasso, chave);
+  _guiaTick();
+}
+
+function _guiaDemonstracaoSuspender(motivo='manual'){
+  if(_guiaDemoController) _guiaDemoController.suspender(motivo);
+  else _guiaDemonstracaoAtualizar({ estado:'suspensa', alvo:null, fallback:false });
+}
+
+function _guiaDemonstracaoCancelar(motivo='manual'){
+  if(_guiaDemoController) _guiaDemoController.cancelar(motivo);
+  else _guiaDemonstracaoAtualizar({ estado:'inativa', alvo:null, fallback:false });
+  _guiaDemoPid = null;
+}
+
+function _guiaDemonstracaoInteracao(ev){
+  if(_guiaDemoEstado !== 'executando' && !_guiaDemoVisualTimeline?.ativo()) return;
+  if(ev && ev.target && ev.target.closest && ev.target.closest('[data-guia-demonstracao-cancelar]')) return;
+  _guiaDemoController?.interagir();
+}
+document.addEventListener('pointerdown', _guiaDemonstracaoInteracao, true);
+document.addEventListener('keydown', _guiaDemonstracaoInteracao, true);
+document.addEventListener('click', _guiaDemonstracaoInteracao, true);
 
 // Só a abertura do menu pedido no passo informativo avança a lição. Os menus
 // chamam este ponto depois de ficarem visíveis, igualando teclado, mouse e controle.
@@ -55952,7 +56396,10 @@ function _guiaAtualizarDispositivo(){
   const sig = !!(typeof _gamepadInput !== 'undefined' && _gamepadInput.active);
   if(sig === _guiaDispositivoSig) return;
   _guiaDispositivoSig = sig;
-  try { if(_licaoUltima && $('licao-janela')?.classList.contains('open')) _mostrarJanelaLicao(_licaoUltima); } catch (e) {}
+  try {
+    if(_licaoUltima && $('licao-janela')?.classList.contains('open')) _mostrarJanelaLicao(_licaoUltima, true);
+    _guiaDemoController?.redesenhar();
+  } catch (e) {}
 }
 
 // Texto do tutorial -> HTML seguro. `[[termo]]` vira botão sublinhado na 1ª vez e texto
@@ -55992,6 +56439,7 @@ document.addEventListener('click', ev => {
 
 function _guiaLimparHalo(){
   document.querySelectorAll('.guia-halo').forEach(el => el.classList.remove('guia-halo', 'guia-halo-forte', 'guia-ficha-zoom'));
+  document.querySelectorAll('.guia-demo-foco').forEach(el => el.classList.remove('guia-demo-foco'));
   document.getElementById('map-wrap')?.classList.remove('guia-camera-alvo');
 }
 
@@ -56027,9 +56475,10 @@ function _guiaAtalhoCursorAtualizar(){
 function _guiaAplicarHalo(){
   _guiaLimparHalo();
   if(!_guiaPasso || !_guiaPasso.ui) return;
+  const uiAtual = _guiaDemoFoco || _guiaPasso.ui;
   if(['aproximar', 'afastar', 'girar', 'deslocar'].includes(_guiaPasso.id))
     document.getElementById('map-wrap')?.classList.add('guia-camera-alvo');
-  const sel = GuiaTutorial.seletor(_guiaPasso.ui);
+  const sel = GuiaTutorial.seletor(uiAtual);
   if(!sel) return;
   // O mesmo data-ability-id também existe em telas escondidas (seleção de classe):
   // vale só o primeiro candidato que tem o ancestral pedido E está visível.
@@ -56041,6 +56490,7 @@ function _guiaAplicarHalo(){
   if(!el && sel.alternativa) el = document.querySelector(sel.alternativa);
   if(!el) return;
   el.classList.add('guia-halo');
+  if(_guiaDemoFoco === uiAtual) el.classList.add('guia-demo-foco');
   if(_licaoUltima?.licao_id?.startsWith('treino_atalhos_') && _guiaPasso.id === 'atribuir')
     document.querySelector('#menu-habilidades-overlay [data-guia="hud:atalho_1"]')?.classList.add('guia-halo');
   if(_guiaPasso.ui === 'botao:ficha' || _guiaPasso.ui === 'hud:vida')
@@ -56058,6 +56508,7 @@ function _guiaAtualizarDica(){
 }
 
 function _guiaEncerrar(){
+  _guiaDemonstracaoCancelar('guia_encerrado');
   _guiaPasso = null;
   if(_guiaTimer){ clearInterval(_guiaTimer); _guiaTimer = null; }
   document.getElementById('guia-atalho-cursor')?.remove();
@@ -56067,20 +56518,26 @@ function _guiaEncerrar(){
 
 function _guiaTick(){
   if(!_guiaPasso){ document.getElementById('guia-atalho-cursor')?.remove(); _guiaLimparHalo(); return; }
+  if(GS.gameState && GS.gameState.phase !== 'playing'){ _guiaEncerrar(); return; }
   // Chegou um game_state mais novo que a fala/passo: se a lição acabou, encerra.
   if(GS.gameState !== _guiaEstadoRef){
     const lic = GS.licaoAtual();
     if(!lic || !_licaoUltima || lic.licao_id !== _licaoUltima.licao_id){ _guiaEncerrar(); return; }
   }
+  if(_guiaDemoEstado !== 'inativa' && _guiaDemoPid !== GS.myPid){
+    _guiaDemonstracaoCancelar('heroi_trocado');
+  } else if(_guiaDemoEstado !== 'inativa') _guiaDemoController?.redesenhar();
   _guiaAplicarHalo();
   _guiaAtalhoCursorAtualizar();
   _guiaAtualizarDica();
   // 2D: o mapa só redesenha quando algo muda; com alvo de tabuleiro, redesenha para o halo pulsar.
-  if(!(mode3D && g3) && GS.gameState && _guiaPasso.ui && !GuiaTutorial.seletor(_guiaPasso.ui)
-     && GuiaTutorial.parseUi(_guiaPasso.ui)) _agendarChamas2D();
+  const uiAtual = _guiaDemoFoco || _guiaPasso.ui;
+  if(!(mode3D && g3) && GS.gameState && uiAtual && !GuiaTutorial.seletor(uiAtual)
+     && GuiaTutorial.parseUi(uiAtual)) _agendarChamas2D();
 }
 
-function _guiaIniciar(passo){
+function _guiaIniciar(passo, preservarDemonstracao=false){
+  if(!preservarDemonstracao) _guiaDemonstracaoCancelar('passo_novo');
   _guiaPasso = passo || null;
   _guiaEstadoRef = GS.gameState;
   _guiaDesde = performance.now();
@@ -56096,7 +56553,7 @@ function _guiaIniciar(passo){
   });
 }
 
-function _guiaMostrar(){ _guiaDesde = performance.now(); _guiaTick(); }
+function _guiaMostrar(){ _guiaDesde = performance.now(); _guiaDemonstracaoIniciar(); }
 
 let _guiaAvisoTimer = null;
 // Aviso curto (dica de erro ou resultado do ataque): na janela da lição se ela está
@@ -56118,9 +56575,10 @@ function _guiaAviso(texto){
 // Alvo (casa, porta ou monstro) do passo atual, ou null. `visivel(x,y)` impede o
 // halo de revelar o que a névoa esconde.
 function _guiaAlvoTabuleiro(state, visivel){
-  if(!_guiaPasso || !_guiaPasso.ui || !state) return null;
+  const ui = _guiaDemoFoco || _guiaPasso?.ui;
+  if(!ui || !state) return null;
   const me = (state.players || []).find(p => p.id === GS.myPid);
-  return GuiaTutorial.alvoTabuleiro(_guiaPasso.ui, state, me ? me.pos : null, visivel);
+  return GuiaTutorial.alvoTabuleiro(ui, state, me ? me.pos : null, visivel);
 }
 
 // Caminho até a porta, com cache por (minha casa, alvo, rodada): o BFS não pode
@@ -56169,9 +56627,86 @@ function _guiaPlacaDesenhar2D(ctx, state, visionSet, alvoPasso){
 }
 
 // 2D: anel pulsante + seta dourada sobre a casa; porta ganha linha tracejada.
+function _guiaDemoVisualDesenhar2D(ctx, state, visionSet){
+  const amostra = _guiaDemoVisualAmostra;
+  if(!amostra || amostra.operacao.acao === 'prever_equipamento') return;
+  const c = amostra.contexto, me = (state.players || []).find(p => p.id === GS.myPid && p.alive);
+  if(!c || !me || me.pos[0] !== c.origem[0] || me.pos[1] !== c.origem[1]){
+    _guiaDemoVisualLimpar(); return;
+  }
+  const visivel = (x, y) => visionSet.has(`${x},${y}`);
+  if(!_guiaDemoVisualContextoValido(amostra, state, visivel)){
+    _guiaDemoVisualLimpar(); return;
+  }
+  const pos = _guiaDemoVisualPosicao(c, amostra.progresso);
+  if(!pos) return;
+  const cx = pos.x * CELL + CELL / 2, cy = pos.y * CELL + CELL / 2;
+  const img = _getHero2DImg(c.classe);
+  ctx.save();
+  ctx.globalAlpha = 0.48;
+  ctx.translate(cx, cy);
+  ctx.rotate(_facingAngle2D(pos.facing));
+  if(img && img.complete && img.naturalWidth){
+    const h = CELL * 1.55, w = Math.min(CELL * 1.28, h * img.naturalWidth / img.naturalHeight);
+    const hh = h * w / (h * img.naturalWidth / img.naturalHeight);
+    ctx.drawImage(img, -w/2, CELL*.41-hh, w, hh);
+  } else {
+    ctx.fillStyle = '#d8f7ff';
+    ctx.beginPath(); ctx.ellipse(0, -CELL*.31, CELL*.19, CELL*.43, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -CELL*.78, CELL*.17, 0, Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+  ctx.save();
+  const destinoX = c.destino[0] * CELL + CELL / 2, destinoY = c.destino[1] * CELL + CELL / 2;
+  if(amostra.operacao.acao === 'prever_movimento'){
+    ctx.globalAlpha = 0.32 + amostra.progresso * 0.48;
+    ctx.strokeStyle = '#9cecff'; ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(c.origem[0]*CELL + CELL/2, c.origem[1]*CELL + CELL/2);
+    for(const p of c.caminho) ctx.lineTo(p[0]*CELL + CELL/2, p[1]*CELL + CELL/2);
+    ctx.stroke(); ctx.setLineDash([]);
+  } else if(amostra.progresso >= 0.72){
+    const pulso = 0.5 + 0.5 * Math.sin(performance.now()/90);
+    ctx.globalAlpha = 0.35 + pulso*.5; ctx.strokeStyle = '#ffe082'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(destinoX, destinoY, CELL*(.24 + .12*pulso), 0, Math.PI*2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// A prévia é descartável: se o tabuleiro mudar, o alvo desaparecer/mover ou o
+// caminho deixar de ser o mesmo caminho caminhável, encerra sem tentar adaptar
+// a demonstração a outro alvo ou revelar casas novas.
+function _guiaDemoVisualContextoValido(amostra, state, visivel){
+  const c = amostra?.contexto, me = (state?.players || []).find(p => p.id === GS.myPid && p.alive);
+  if(!c || !me?.pos || me.pos[0] !== c.origem[0] || me.pos[1] !== c.origem[1]) return false;
+  if(c.estadoValidado === state) return c.estadoValido;
+  const ver = typeof visivel === 'function' ? visivel : (() => true);
+  let valido = true;
+  if(amostra.operacao.acao === 'prever_movimento'){
+    const exp = new Set((state.explored || []).map(([x,y]) => `${x},${y}`));
+    for(const [x,y] of (state.revealed || [])) exp.add(`${x},${y}`);
+    const passos = GS.findPath(state.tiles, exp, me.pos[0], me.pos[1],
+      c.destino[0], c.destino[1], 60, true);
+    const atual = passos === null ? null
+      : [me.pos, ...GuiaTutorial.caminhoAbsoluto(passos, me.pos[0], me.pos[1])];
+    valido = !!atual && atual.at(-1)[0] === c.destino[0] && atual.at(-1)[1] === c.destino[1]
+      && atual.length === c.caminho.length
+      && atual.every((p,i) => p[0] === c.caminho[i][0] && p[1] === c.caminho[i][1]);
+  } else {
+    const alvo = GuiaTutorial.alvoTabuleiro(amostra.operacao.alvo, state, me.pos, ver);
+    valido = !!alvo?.pos && String(alvo.id || '') === String(c.alvoId || '')
+      && alvo.pos[0] === c.destino[0] && alvo.pos[1] === c.destino[1];
+  }
+  if(valido) valido = c.caminho.every(p => ver(p[0], p[1]))
+    && ver(c.destino[0], c.destino[1]);
+  c.estadoValidado = state;
+  c.estadoValido = valido;
+  return valido;
+}
+
 function _guiaDesenhar2D(ctx, state, visionSet){
   const alvo = _guiaAlvoTabuleiro(state, (x, y) => visionSet.has(`${x},${y}`));
   _guiaPlacaDesenhar2D(ctx, state, visionSet, alvo);
+  _guiaDemoVisualDesenhar2D(ctx, state, visionSet);
   if(!alvo) return;
   const agora = performance.now();
   const forte = _guiaForte();
@@ -56551,11 +57086,117 @@ function _guiaPlacaAtualizar3D(st, alvoPasso){
   m.grupo.visible = true;
 }
 
+function _guiaDemoGhost3DCriar(source){
+  const T = g3.T;
+  let ghost;
+  if(source){
+    ghost = source.clone(true);
+    ghost.traverse(obj => {
+      const dadosOriginais = obj.userData || {};
+      const billboardDaMiniatura = obj.isSprite && String(obj.material?.map?.name || '').startsWith('__spr_');
+      if(dadosOriginais.isOutline || dadosOriginais.isPulseRing || dadosOriginais.isSelectionRing
+          || (obj.isSprite && !billboardDaMiniatura)) obj.visible = false;
+      obj.userData = {};
+      obj.raycast = () => {};
+      if(obj.material){
+        const materiais = Array.isArray(obj.material) ? obj.material : [obj.material];
+        const clones = materiais.map(material => {
+          const clone = material.clone();
+          clone.transparent = true; clone.opacity = 0.44; clone.depthWrite = false;
+          clone.needsUpdate = true;
+          return clone;
+        });
+        obj.material = Array.isArray(obj.material) ? clones : clones[0];
+      }
+    });
+  } else {
+    ghost = new T.Group();
+    ghost.userData.guiaDemoGeometriaPropria = true;
+    const mat = new T.MeshBasicMaterial({ color:0x9cecff, transparent:true, opacity:.45, depthWrite:false });
+    const body = new T.Mesh(new T.CylinderGeometry(.18,.25,.78,10), mat);
+    const head = new T.Mesh(new T.SphereGeometry(.19,10,8), mat);
+    body.position.y = .55; head.position.y = 1.08;
+    body.raycast = head.raycast = () => {};
+    ghost.add(body); ghost.add(head);
+  }
+  ghost.renderOrder = 89;
+  ghost.traverse?.(obj => { obj.raycast = () => {}; obj.renderOrder = 89; });
+  g3.scene.add(ghost);
+  g3.guiaDemoGhost = ghost;
+  return ghost;
+}
+
+function _guiaDemoVisualAtualizar3D(st){
+  const amostra = _guiaDemoVisualAmostra;
+  if(!g3 || !amostra || amostra.operacao.acao === 'prever_equipamento'){
+    _guiaDemoVisual3DLimpar(); return;
+  }
+  const c = amostra.contexto, me = (st?.players || []).find(p => p.id === GS.myPid && p.alive);
+  const vis = st && _guiaVisao3D(st);
+  if(!c || !me || me.pos[0] !== c.origem[0] || me.pos[1] !== c.origem[1]
+      || !_guiaDemoVisualContextoValido(amostra, st, vis ? ((x,y) => vis.has(`${x},${y}`)) : (() => true))){
+    _guiaDemoVisualLimpar(); return;
+  }
+  if(amostra.operacao.acao === 'prever_movimento') _guiaDemoVisualTrilha3DAtualizar(st, c);
+  else if(g3.guiaDemoTrilha) g3.guiaDemoTrilha.visible = false;
+  const pos = _guiaDemoVisualPosicao(c, amostra.progresso);
+  if(!pos) return;
+  const source = getPeaoMesh(GS.myPid);
+  let ghost = g3.guiaDemoGhost;
+  if(!ghost) ghost = _guiaDemoGhost3DCriar(source);
+  ghost.position.set(pos.x, topoSuperficie3D(st, Math.round(pos.x), Math.round(pos.y)) + .05, pos.y);
+  ghost.rotation.y = _facingToRotY(pos.facing);
+  if(source) ghost.scale.copy(source.scale);
+  ghost.visible = true;
+  if(amostra.operacao.acao === 'prever_habilidade' && amostra.progresso >= .72){
+    if(!g3.guiaDemoImpact){
+      const mat = new g3.T.MeshBasicMaterial({ color:0xffdf83, transparent:true, opacity:.85,
+        side:g3.T.DoubleSide, depthTest:false, depthWrite:false });
+      const ring = new g3.T.Mesh(new g3.T.RingGeometry(.3,.42,32), mat);
+      ring.rotation.x = -Math.PI/2; ring.raycast = () => {}; ring.renderOrder = 90;
+      g3.scene.add(ring); g3.guiaDemoImpact = ring;
+    }
+    const pulso = .5 + .5*Math.sin(performance.now()/90);
+    g3.guiaDemoImpact.position.set(c.destino[0], topoSuperficie3D(st,c.destino[0],c.destino[1])+.07, c.destino[1]);
+    g3.guiaDemoImpact.scale.setScalar(.8 + pulso*.35);
+    g3.guiaDemoImpact.visible = true;
+  } else if(g3.guiaDemoImpact) g3.guiaDemoImpact.visible = false;
+}
+
+function _guiaDemoVisualTrilha3DAtualizar(st, contexto){
+  if(!g3 || !Array.isArray(contexto?.caminho) || contexto.caminho.length < 2) return;
+  const T = g3.T;
+  let trilha = g3.guiaDemoTrilha;
+  if(!trilha){
+    const geometria = new T.BufferGeometry();
+    const material = new T.LineBasicMaterial({ color:0x9cecff, transparent:true, opacity:.78,
+      depthTest:false, depthWrite:false });
+    trilha = new T.Line(geometria, material);
+    trilha.raycast = () => {};
+    trilha.renderOrder = 88;
+    g3.scene.add(trilha);
+    g3.guiaDemoTrilha = trilha;
+  }
+  const anterior = trilha.userData.guiaDemoCaminho;
+  if(anterior !== contexto.caminho || trilha.userData.guiaDemoEstado !== st){
+    const pontos = contexto.caminho.map(([x,y]) =>
+      new T.Vector3(x, topoSuperficie3D(st,x,y) + .13, y));
+    const geometria = new T.BufferGeometry().setFromPoints(pontos);
+    trilha.geometry.dispose();
+    trilha.geometry = geometria;
+    trilha.userData.guiaDemoCaminho = contexto.caminho;
+    trilha.userData.guiaDemoEstado = st;
+  }
+  trilha.visible = true;
+}
+
 function _guiaAtualizar3D(){
   if(!g3) return;
   const st = GS.gameState;
+  _guiaDemoVisualAtualizar3D(st);
   let alvo = null;
-  if(st && _guiaPasso && _guiaPasso.ui){
+  const uiAtual = _guiaDemoFoco || _guiaPasso?.ui;
+  if(st && uiAtual && GuiaTutorial.parseUi(uiAtual) && !GuiaTutorial.seletor(uiAtual)){
     const vis = _guiaVisao3D(st);
     alvo = _guiaAlvoTabuleiro(st, vis ? ((x, y) => vis.has(`${x},${y}`)) : (() => true));
   }
@@ -56586,7 +57227,7 @@ function _guiaAtualizar3D(){
   m.grupo.visible = true;
 }
 
-function _mostrarJanelaLicao(msg){
+function _mostrarJanelaLicao(msg, preservarDemonstracao=false){
   const host = $('licao-janela');
   if(!host) return;
   _licaoUltima = msg;
@@ -56615,7 +57256,7 @@ function _mostrarJanelaLicao(msg){
   const abrirMenu = passo?.ui === 'botao:habilidades' || passo?.ui === 'botao:magias';
   const botoes = abrirMenu
     ? `<button type="button" class="licao-botao" data-guia="${_esc(passo.ui)}" data-guia-acao="abrir-menu" data-gamepad-action="activate" onclick="${passo.ui === 'botao:habilidades' ? 'abrirMenuHabilidades(GS.myPid)' : 'abrirMenuMagias(GS.myPid)'}">${passo.ui === 'botao:habilidades' ? '📖 ' + t('ui.hud.habilidades') : '✨ ' + t('ui.hud.magias')}</button>`
-    : (passo && passo.ui && GuiaTutorial.parseUi(passo.ui))
+    : (passo && GuiaTutorial.demonstracaoDisponivel(passo))
       ? `<button type="button" class="licao-botao" onclick="_guiaMostrar()">${t('ui.tutorial.me_mostra')}</button>` : '';
   const entendi = (passo && passo.informativo)
     ? `<button type="button" class="licao-botao licao-botao-ok" onclick="GS.avancarPasso()">${t('ui.tutorial.entendi')}</button>` : '';
@@ -56634,18 +57275,24 @@ function _mostrarJanelaLicao(msg){
     `<div class="licao-texto">${explicito ? _tutHTML(passo.texto) : _esc(msg.texto || '')}</div>` + porque +
     `<div class="licao-dica" id="licao-dica" style="display:none"></div>` +
     `<div class="licao-aviso" id="licao-aviso" style="display:none"></div>` +
+    `<div class="licao-demonstracao" id="licao-demonstracao" role="status" aria-live="polite" style="display:none">` +
+      `<div class="licao-demo-conteudo"><span id="licao-demonstracao-texto"></span>` +
+      `<div id="licao-demonstracao-controles" class="licao-demo-controles" aria-label="${_esc(t('ui.tutorial.demonstracao.controles_titulo'))}"></div></div>` +
+      `<button type="button" id="licao-demonstracao-cancelar" class="licao-demo-cancelar" data-guia-demonstracao-cancelar data-gamepad-action="activate" onclick="_guiaDemonstracaoSuspender('manual')">${t('ui.tutorial.demonstracao.cancelar')}</button>` +
+    `</div>` +
     ((botoes || entendi) ? `<div class="licao-acoes">${botoes}${entendi}</div>` : '');
   mantidos.forEach(el => host.appendChild(el));
   host.classList.add('open');
-  _guiaIniciar(passo);
+  _guiaIniciar(passo, preservarDemonstracao);
 }
 // Fechar a janela não apaga o destaque: o halo vive até o passo mudar.
 function _fecharJanelaLicao(){
+  if(_guiaDemoEstado !== 'inativa') _guiaDemonstracaoSuspender('janela_fechada');
   $('licao-janela')?.classList.remove('open', 'prologo-abertura');
   $('licao-prologo-backdrop')?.classList.remove('open');
 }
 // O quadro ⚑ do HUD reabre a última lição — fechar não pode ser irreversível.
-function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima); }
+function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima, true); }
 
 GS.on('licaoPasso', msg => {
   if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
@@ -56673,6 +57320,7 @@ GS.on('licaoPassoOk', msg => {
 // Selo ao fim da lição, com o ganho (só na 1ª vez do personagem).
 GS.on('licaoConcluida', msg => {
   if(!msg) return;
+  _guiaDemonstracaoCancelar('licao_concluida');
   const r = msg.recompensa || {};
   const host = $('licao-janela');
   if(!host) return;

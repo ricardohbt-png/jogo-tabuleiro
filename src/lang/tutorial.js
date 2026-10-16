@@ -72,6 +72,69 @@ window.LANG_TUTORIAL = {
     "en": "Show me",
     "pt": "Me mostra"
   },
+  "ui.tutorial.demonstracao.iniciada": {
+    "en": "Showing the safe setup. You will perform the game action.",
+    "pt": "Preparando a interface. Você fará a ação do jogo."
+  },
+  "ui.tutorial.demonstracao.previsualizando": {
+    "en": "Watch the ghost preview, then perform the action yourself.",
+    "pt": "Observe a prévia fantasma e depois faça a ação você mesmo."
+  },
+  "ui.tutorial.demonstracao.sem_origem": {
+    "en": "The slot is highlighted. Select an item from your bag yourself.",
+    "pt": "O espaço está destacado. Selecione um item da bolsa manualmente."
+  },
+  "ui.tutorial.demonstracao.agora_voce": {
+    "en": "Your turn: continue with the highlighted control.",
+    "pt": "Agora você: continue pelo controle destacado."
+  },
+  "ui.tutorial.demonstracao.cancelar": {
+    "en": "Pause guidance",
+    "pt": "Pausar orientação"
+  },
+  "ui.tutorial.demonstracao.pausada": {
+    "en": "Guidance paused. Click “Show me” to resume this step.",
+    "pt": "Orientação pausada. Clique em “Me mostra” para retomar esta etapa."
+  },
+  "ui.tutorial.demonstracao.controles_titulo": {
+    "en": "Available controls",
+    "pt": "Controles disponíveis"
+  },
+  "ui.tutorial.demonstracao.metodo_mouse": { "en": "Mouse", "pt": "Mouse" },
+  "ui.tutorial.demonstracao.metodo_teclado": { "en": "Keyboard", "pt": "Teclado" },
+  "ui.tutorial.demonstracao.metodo_gamepad": { "en": "Gamepad", "pt": "Controle" },
+  "ui.tutorial.demonstracao.controle_mouse": {
+    "en": "click the highlighted target",
+    "pt": "clique no alvo destacado"
+  },
+  "ui.tutorial.demonstracao.controle_teclado_ui": {
+    "en": "Tab or Shift+Tab, then Enter",
+    "pt": "Tab ou Shift+Tab e depois Enter"
+  },
+  "ui.tutorial.demonstracao.controle_teclado_inventario": {
+    "en": "press I, or focus the button with Tab and press Enter",
+    "pt": "pressione I ou foque o botão com Tab e aperte Enter"
+  },
+  "ui.tutorial.demonstracao.controle_teclado_mapa": {
+    "en": "WASD or arrow keys to move",
+    "pt": "WASD ou setas para se mover"
+  },
+  "ui.tutorial.demonstracao.controle_gamepad_ui": {
+    "en": "focus the target and confirm with {botao}",
+    "pt": "foque o alvo e confirme com {botao}"
+  },
+  "ui.tutorial.demonstracao.controle_gamepad_inventario": {
+    "en": "open inventory with {botao}",
+    "pt": "abra o inventário com {botao}"
+  },
+  "ui.tutorial.demonstracao.controle_gamepad_mapa": {
+    "en": "move the cursor to the marked square and confirm with {botao}",
+    "pt": "leve o cursor até a casa marcada e confirme com {botao}"
+  },
+  "ui.tutorial.demonstracao.indisponivel": {
+    "en": "That target is unavailable. Follow the regular hint below.",
+    "pt": "Esse alvo não está disponível. Siga a dica normal abaixo."
+  },
   "ui.tutorial.entendi": {
     "en": "Got it",
     "pt": "Entendi"

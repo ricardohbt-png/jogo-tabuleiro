@@ -71,9 +71,51 @@ LICAO_EFEITOS = ("fome", "sede")
 # Guia do tutorial: uma lição pode listar PASSOS (`guia`) e cada passo aponta um
 # elemento da tela (`ui`). O servidor só valida o formato; quem desenha é o cliente.
 GUIA_MAX_PASSOS = 8
+GUIA_DEMO_MAX_OPERACOES = 4
 GUIA_UI_RE = re.compile(
     r"^(?:(?:botao|habilidade|bolsa|slot|monstro|hud):[a-z0-9_]+"
     r"|(?:casa|porta):\[\d+,\d+\])$")
+
+
+def _guia_demonstracao_valida(demonstracao):
+    """Valida apenas operações seguras de apresentação do guia."""
+    if not isinstance(demonstracao, list) or len(demonstracao) > GUIA_DEMO_MAX_OPERACOES:
+        return False
+    for operacao in demonstracao:
+        if not isinstance(operacao, dict):
+            return False
+        acao, alvo = operacao.get("acao"), operacao.get("alvo")
+        if acao == "focar":
+            if set(operacao) != {"acao", "alvo"}:
+                return False
+            if not isinstance(alvo, str) or not GUIA_UI_RE.fullmatch(alvo):
+                return False
+        elif acao == "abrir_interface":
+            if set(operacao) != {"acao", "alvo"}:
+                return False
+            if alvo not in ("inventario", "habilidades", "magias"):
+                return False
+        elif acao == "prever_movimento":
+            if set(operacao) != {"acao", "alvo"}:
+                return False
+            if not isinstance(alvo, str) or not re.fullmatch(r"casa:\[[0-9]+,[0-9]+\]", alvo):
+                return False
+        elif acao == "prever_equipamento":
+            if set(operacao) != {"acao", "alvo"}:
+                return False
+            if not isinstance(alvo, str) or not re.fullmatch(r"slot:[a-z0-9_]+", alvo):
+                return False
+        elif acao == "prever_habilidade":
+            if set(operacao) != {"acao", "habilidade", "alvo"}:
+                return False
+            habilidade = operacao.get("habilidade")
+            if not isinstance(habilidade, str) or not re.fullmatch(r"[a-z0-9_]+", habilidade):
+                return False
+            if not isinstance(alvo, str) or not re.fullmatch(r"monstro:[a-z0-9_]+", alvo):
+                return False
+        else:
+            return False
+    return True
 
 # Dica por erro: recusas que o servidor já emite viram um motivo curto que o cliente
 # traduz (ui.tutorial.dica_erro.<motivo>). Mapa por chave exata e por prefixo.
@@ -168,10 +210,14 @@ def _guia_payload(lic, i):
     passos = _guia_passos(lic)
     i = max(0, min(int(i or 0), len(passos) - 1))
     s = passos[i]
-    return {"id": s.get("id"), "titulo": s.get("titulo"), "texto": s.get("texto", ""), "porque": s.get("porque", ""),
+    payload = {"id": s.get("id"), "titulo": s.get("titulo"), "texto": s.get("texto", ""), "porque": s.get("porque", ""),
             "ui": s.get("ui"), "dica": list(s.get("dica") or []),
             "auto": bool(s.get("auto")), "i": i, "n": len(passos),
             "informativo": i < len(passos) - 1 and not s.get("conclui_com")}
+    demonstracao = s.get("demonstracao")
+    if demonstracao is not None and _guia_demonstracao_valida(demonstracao):
+        payload["demonstracao"] = deepcopy(demonstracao)
+    return payload
 
 
 def _e_licao(fala):
@@ -4492,7 +4538,7 @@ CLASSES = {
     # Saves: Bom = +2 base, Ruim = +0 base  |  atk_bonus = BAB + mod(STR)
     "warrior": {
         "name": "Guerreiro Anão", "emoji": "⚔️", "color": "#e74c3c",
-        "hp": 14, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
+        "hp": 14, "spd": 6, "start_gold": 0,    # habilidades custam fome/sede
         "str_": 18, "dex": 10, "con_": 14, "int_": 8,
         "ac_base": 12, "weapon": "machado_basico", "atk_bonus": 5,  # BAB 1 + FOR mod(18)=+4; ac_base 12=10+couro+2 | Victor: Machado de Ferro (1d6 FOR)
         "saves_base": {"fort": 2, "ref": 0, "will": 0},          # Fort bom, Ref/Von ruins
@@ -4529,7 +4575,7 @@ CLASSES = {
     },
     "mage": {
         "name": "Pedro, o Tímido", "emoji": "🔮", "color": "#9b59b6",
-        "hp": 7, "spd": 5, "start_gold": 20,   # magias custam SLOTS por círculo (ver MAGE_SLOTS) + fome/sede
+        "hp": 7, "spd": 5, "start_gold": 0,    # magias custam SLOTS por círculo (ver MAGE_SLOTS) + fome/sede
         "str_": 8, "dex": 12, "con_": 12, "int_": 18,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": -1,  # BAB 0 + FOR mod(8)=-1; ac_base 11=10+manto+1 | Pedro: Cajado (1d6 FOR)
         "saves_base": {"fort": 0, "ref": 0, "will": 2},       # Von bom, Fort/Ref ruins
@@ -4573,7 +4619,7 @@ CLASSES = {
     },
     "rogue": {
         "name": "Luccas, o Astuto", "emoji": "🗡️", "color": "#2ecc71",
-        "hp": 9, "spd": 7, "start_gold": 20,   # habilidades custam fome/sede
+        "hp": 9, "spd": 7, "start_gold": 0,    # habilidades custam fome/sede
         "str_": 10, "dex": 18, "con_": 12, "int_": 10,
         "ac_base": 14, "weapon": "dagger", "atk_bonus": 4,   # BAB 0 + DES mod(18)=+4; ac_base 14=10+couro+DES
         "saves_base": {"fort": 0, "ref": 2, "will": 0},       # Ref bom, Fort/Von ruins
@@ -4646,7 +4692,7 @@ CLASSES = {
     },
     "cleric": {
         "name": "Frade Lewis", "emoji": "✨", "color": "#f39c12",
-        "hp": 10, "spd": 5, "start_gold": 20,   # milagres custam fome/sede
+        "hp": 10, "spd": 5, "start_gold": 0,    # milagres custam fome/sede
         "str_": 10, "dex": 10, "con_": 14, "int_": 16,
         "ac_base": 11, "weapon": "cajado_madeira", "atk_bonus": 0,   # BAB 0 + FOR mod(10)=0; ac_base 11=10+couro+1 | Lewis: Cajado (1d6 FOR)
         "saves_base": {"fort": 2, "ref": 0, "will": 2},       # Fort e Von bons, Ref ruim
@@ -4696,7 +4742,7 @@ CLASSES = {
     },
     "bard": {
         "name": "Henrique, o Bardo", "emoji": "🎶", "color": "#9b7fd4",
-        "hp": 9, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
+        "hp": 9, "spd": 6, "start_gold": 0,    # habilidades custam fome/sede
         "str_": 10, "dex": 16, "con_": 12, "int_": 12,
         "ac_base": 13, "weapon": "dagger", "atk_bonus": 3,   # BAB 0 + DES mod(16)=+3; ac_base 13 inclui manto+1 | Henrique: Adaga (mÃ£o principal) + AlaÃºde Velho na mÃ£o do escudo (off_hand, substitui a 2Âª adaga)
         "saves_base": {"fort": 0, "ref": 2, "will": 2},           # Ref e Von bons, Fort ruim
@@ -4733,7 +4779,7 @@ CLASSES = {
     },
     "paladin": {
         "name": "Richard, o Cavaleiro", "emoji": "🛡️", "color": "#3498db",
-        "hp": 12, "spd": 6, "start_gold": 20,   # habilidades custam fome/sede
+        "hp": 12, "spd": 6, "start_gold": 0,    # habilidades custam fome/sede
         "str_": 16, "dex": 10, "con_": 14, "int_": 10,
         "ac_base": 14, "weapon": "shortsword", "atk_bonus": 4,  # BAB 1 + FOR mod(16)=+3; ac_base 14=10+cota+0
         "saves_base": {"fort": 2, "ref": 0, "will": 2},          # Fort e Von bons, Ref ruim
@@ -6952,7 +6998,33 @@ def _subtipo_padrao_monstro(m):
 for _mdef in MONSTER_DEFS:
     _mdef.setdefault("subtipo", _subtipo_padrao_monstro(_mdef))
 
+TUTORIAL_PROVISION_QUOTAS = {
+    "banquete_viagem": 2,
+    "racao_viagem": 1,
+    "cantil_agua": 1,
+}
+
+
+def _tutorial_provision_id(item):
+    """ID de uma provisão com cota individual no Campo de Treinamento."""
+    if not isinstance(item, dict):
+        return None
+    item_id = item.get("id")
+    if item_id not in TUTORIAL_PROVISION_QUOTAS:
+        return None
+    if item.get("tutorial_provision") is True:
+        return item_id
+    # Compatibilidade com baús/sessões criados antes da cota genérica.
+    if item_id == "banquete_viagem" and item.get("tutorial_banquete") is True:
+        return item_id
+    return None
+
+
 CHEST_ITEMS = [
+    # Refeição portátil autorada para o Campo de Treinamento; não é item de loja.
+    {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗",
+     "item_slot": "bag", "effect": "meal_survival", "fome": 40, "sede": 40,
+     "icon": "assets/itens/banquete.png", "loot_only": True, "price": 100},
     # Carta narrativa: o editor pode sobrescrever `texto` por instância.
     {"id": "carta", "name": "Carta", "emoji": "✉️", "item_slot": "bag",
      "effect": "letter", "value": 0, "price": 0, "loot_only": True,
@@ -7892,6 +7964,13 @@ def validar_dungeon(defn):
             return False, f"{tr['tipo']} recebeu dificuldade inválida: {tr.get('dificuldade')!r}."
         if "dano" in tr and not _valid_trap_damage(tr["dano"]):
             return False, f"{tr['tipo']} recebeu dano inválido: {tr.get('dano')!r}."
+        if "area" in tr and (isinstance(tr["area"], bool)
+                              or not isinstance(tr["area"], int)
+                              or not 0 <= tr["area"] <= 40):
+            return False, f"{tr['tipo']} recebeu área inválida: {tr.get('area')!r}."
+        if "duracao_sono" in tr and (tr.get("tipo") != "armadilha_sono"
+                                     or not _valid_trap_duration(tr["duracao_sono"])):
+            return False, f"{tr['tipo']} recebeu duração de sono inválida: {tr.get('duracao_sono')!r}."
         if tr["tipo"] == "armadilha_teletransporte":
             destino = tr.get("saida")
             if not in_grid(destino) or tile_at(destino) != FLOOR:
@@ -8056,6 +8135,13 @@ def validar_dungeon(defn):
                 return False, f"{trap_tipo} na decoração recebeu dificuldade inválida."
             if "dano" in decor_trap and not _valid_trap_damage(decor_trap["dano"]):
                 return False, f"{trap_tipo} na decoração recebeu dano inválido."
+            if "area" in decor_trap and (isinstance(decor_trap["area"], bool)
+                                          or not isinstance(decor_trap["area"], int)
+                                          or not 0 <= decor_trap["area"] <= 40):
+                return False, f"{trap_tipo} na decoração recebeu área inválida."
+            if "duracao_sono" in decor_trap and (trap_tipo != "armadilha_sono"
+                                                 or not _valid_trap_duration(decor_trap["duracao_sono"])):
+                return False, f"{trap_tipo} na decoração recebeu duração de sono inválida."
             if (ARMADILHAS[trap_tipo].get("precisa_veneno")
                     or ARMADILHAS[trap_tipo].get("custo_veneno")) \
                     and not _veneno_id_valido(decor_trap.get("veneno_id")):
@@ -8208,6 +8294,8 @@ def validar_dungeon(defn):
                 _ui = _ps.get("ui")
                 if _ui is not None and not (isinstance(_ui, str) and GUIA_UI_RE.match(_ui)):
                     return False, f"ui de passo inválida: {_ui!r}."
+                if "demonstracao" in _ps and not _guia_demonstracao_valida(_ps["demonstracao"]):
+                    return False, "demonstracao de passo inválida."
                 _dica = _ps.get("dica")
                 if _dica is not None and (not isinstance(_dica, list) or len(_dica) > 2
                                           or not all(isinstance(d, str) and d.strip() for d in _dica)):
@@ -8243,6 +8331,14 @@ def validar_dungeon(defn):
                     return False, f"alvo de {_tar['tipo']} fora do mapa: {_alvo}."
             elif not isinstance(_alvo, str):
                 return False, f"alvo de {_tar['tipo']} deve ser um texto."
+        _alvos = _tar.get("alvos")
+        if _alvos is not None:
+            if (_tar["tipo"] != "usar_item" or _alvo not in (None, "", [])
+                    or not isinstance(_alvos, list) or not 1 <= len(_alvos) <= 8
+                    or not all(isinstance(a, str) and re.fullmatch(r"[a-z0-9_]+", a)
+                               for a in _alvos)
+                    or len(set(_alvos)) != len(_alvos)):
+                return False, "alvos de tarefa usar_item devem ser IDs únicos de itens."
 
     _ordens_vistas = set()
     for _f in (defn.get("falas") or []):
@@ -8520,6 +8616,12 @@ def hidratar_itens_bau(items):
             tutorial_class = it.get("tutorial_class")
             if tutorial_class in LICAO_CLASSES:
                 inst["tutorial_class"] = tutorial_class
+            if it.get("tutorial_provision") is True:
+                inst["tutorial_provision"] = True
+                inst["tutorial_loan"] = True
+            if it.get("tutorial_banquete") is True:
+                inst["tutorial_banquete"] = True
+                inst["tutorial_loan"] = True
             if GameRoom._is_utility_belt_item(inst):
                 # Authored loot selects IDs, never supplies runtime effects or belt stats.
                 if isinstance(it.get("instance_tag"), str):
@@ -8572,6 +8674,10 @@ def make_authored_trap(tdef):
         arm["dificuldade"] = _monster_int(tdef.get("dificuldade"), meta.get("dificuldade", 10), 1, 40)
     if tdef.get("dano") is not None:
         arm["dano"] = tdef.get("dano")
+    if tdef.get("area") is not None:
+        arm["area"] = _monster_int(tdef.get("area"), meta.get("area", 1), 0, 40)
+    if tdef.get("duracao_sono") is not None:
+        arm["duracao_sono"] = tdef.get("duracao_sono")
     if tipo == "armadilha_teletransporte":
         arm["saida"] = list(tdef.get("saida") or [])
     if tipo == "chao_illusorio":
@@ -8602,6 +8708,15 @@ def _valid_trap_damage(value):
     return len(expression) <= 32 and bool(_TRAP_DAMAGE_EXPR_RE.fullmatch(expression))
 
 
+def _valid_trap_duration(value):
+    """Aceita expressão curta de dados (ou inteiro positivo) para a duração."""
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, int):
+        return 1 <= value <= 999
+    return isinstance(value, str) and _valid_trap_damage(value)
+
+
 def _trap_cd(arm, tipo):
     return _monster_int(arm.get("dificuldade", tipo.get("dificuldade", 10)),
                         tipo.get("dificuldade", 10), 1, 40)
@@ -8609,6 +8724,11 @@ def _trap_cd(arm, tipo):
 
 def _trap_damage(arm, default):
     return arm.get("dano") if arm.get("dano") is not None else default
+
+
+def _trap_duration_sono(arm, tipo):
+    value = arm.get("duracao_sono", tipo.get("duracao_sono", "1d4"))
+    return str(value)
 
 
 def _trap_effects(arm, tipo):
@@ -9010,6 +9130,13 @@ ARMADILHAS = {
         "efeitos": [{"tipo": "dano", "valor": "2d6", "elemento": "explosao", "area": True}],
         "descricao": "2d6 de dano em área de 1 quadrado. Save reduz à metade.",
         "formula_guild_id": "ladino_mina_terrestre", "formula_preco": 220,
+    },
+    "armadilha_sono": {
+        "cr": 0.5,
+        "nome": "Armadilha do Sono", "icone": "🌙", "dificuldade": 14, "save": "vontade",
+        "custo_ouro": 0, "persiste": False, "area": 1, "duracao_sono": "1d4",
+        "special": "sono",
+        "descricao": "Vontade CD 14 evita. Na falha, adormece por 1d4 rodadas todos os alvos vivos em um quadrado 3×3 ao redor do gatilho.",
     },
     "fosso_envenenado": {
         "cr": 0.5,
@@ -9513,7 +9640,7 @@ MATERIAIS = {
     "planicie_nevada": _mat("Planície nevada", "piso", "#d8edf2", terreno="planicie_nevada"),
     "lava":          _mat("Lava", "piso", "#d63b13", terreno="lava", custo_mov=2),
     "pantano":       _mat("Pântano", "piso", "#354e31", terreno="pantano", custo_mov=1),
-    "piche":         _mat("Piche", "piso", "#1b1410", terreno="piche"),
+    "piche":         _mat("Piche", "piso", "#1b1410", terreno="piche", custo_mov=2),
     "lava_solidificada": _mat("Lava solidificada", "piso", "#3a2a26", terreno="crosta_lava"),
     "areia_deserto": _mat("Areia do deserto", "piso", "#c49a58", custo_mov=2),
     "duna_deserto":  _mat("Duna do deserto", "parede", "#b9823f"),
@@ -10610,7 +10737,7 @@ def make_player(pid, name, cls_id, slot):
         "level_bonus": level_bonus,
         "spd": cls["spd"],
         "xp": 0, "level": 1, "renome_individual": 0,
-        "gold": cls.get("start_gold", 20),
+        "gold": cls.get("start_gold", 0),
         "bag": [],
         "bag_size": 6,            # inventÃ¡rio base (expansÃ­vel por mochilas)
         "auto_equip_arrows_enabled": False,
@@ -16287,44 +16414,29 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _concluir_encontro_viagem(self):
         pending = self.pending_world_travel
-        if not isinstance(pending, dict) or pending.get("phase") != "combat":
+        if (not isinstance(pending, dict) or pending.get("phase") != "combat"
+                or pending.get("destination_type") not in ("city", "adventure")):
             return
         self.phase = "city"
-        self.dungeon_generated = False
+        self.initiative_active = False
+        self._cancelar_timer_turno()
         self.dungeon_intro_active = False
         self.dungeon_intro_until_ms = None
-        self.selected_dungeon = None
-        self.dungeon_def = None
-        self._objetivo_concluido = False
-        self.mission_complete_pending = False
+        self._cancelar_intro_masmorra()
         tipo = pending.get("destination_type")
+        pending["phase"] = "choice"
         if tipo == "adventure":
-            pending["phase"] = "choice"
-            self.mode = pending.get("restore_mode", "procedural")
             self.world_location = pending.get("origin", self.world_location)
-            self.pending_world_travel = pending
             await self.gm_say(T("narracao.emboscada_derrotada_escolha_destino"))
-            await self.broadcast_city_state()
-            await self.broadcast({
-                "type": "world_adventure_encounter_choice",
-                "adventure_id": pending.get("adventure_id"),
-                "origin": pending.get("origin"),
-                "host": self.host_pid,
-            })
-            self._checkpoint_savegame()
-            return
-        destination = pending.get("destination")
-        self.world_location = destination
-        self.pending_world_travel = None
-        self.mode = pending.get("restore_mode", "procedural")
-        self.world_adventure_id = None
-        self.world_adventure_index = None
-        self.world_adventure_revisit = False
-        origem = nome_cat("local", pending.get("origin"), WORLD_LOCATIONS.get(pending.get("origin"), {}).get("nome", ""))
-        nome_destino = nome_cat("local", destination, WORLD_LOCATIONS.get(destination, {}).get("nome", ""))
-        await self.gm_say(T("narracao.emboscada_vencida_viagem_continua", origem=origem, destino=nome_destino))
+        await self.broadcast({
+            "type": "world_adventure_encounter_choice",
+            "destination_type": tipo,
+            "adventure_id": pending.get("adventure_id"),
+            "destination": pending.get("destination"),
+            "origin": pending.get("origin"),
+            "host": self.host_pid,
+        })
         self._checkpoint_savegame()
-        await self.broadcast_city_state()
 
     async def handle_world_travel(self, pid, destination, mode="road"):
         """Inicia viagem arriscada ou caravana entre cidades com cobrança atômica."""
@@ -16402,20 +16514,56 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def handle_world_adventure_encounter_choice(self, pid, choice):
         pending = self.pending_world_travel
         if (not self._eh_anfitriao(pid) or self.phase != "city" or not isinstance(pending, dict)
-                or pending.get("destination_type") != "adventure" or pending.get("phase") != "choice"):
+                or pending.get("destination_type") not in ("city", "adventure")
+                or pending.get("phase") != "choice"):
+            return
+        tipo = pending.get("destination_type")
+        if (tipo == "city" and choice != "continue") or (
+                tipo == "adventure" and choice not in ("continue", "return")):
+            return
+        await self.broadcast({"type": "world_adventure_encounter_choice_closed"})
+        if tipo == "city":
+            destination = pending.get("destination")
+            origem = nome_cat("local", pending.get("origin"), WORLD_LOCATIONS.get(pending.get("origin"), {}).get("nome", ""))
+            nome_destino = nome_cat("local", destination, WORLD_LOCATIONS.get(destination, {}).get("nome", ""))
+            self.world_location = destination
+            self.pending_world_travel = None
+            self.mode = pending.get("restore_mode", "procedural")
+            self.world_adventure_id = None
+            self.world_adventure_index = None
+            self.world_adventure_revisit = False
+            self._limpar_encontro_viagem_concluido()
+            await self.gm_say(T("narracao.emboscada_vencida_viagem_continua", origem=origem, destino=nome_destino))
+            self._checkpoint_savegame()
+            await self.broadcast_city_state()
             return
         if choice == "return":
             self.world_location = pending.get("origin", self.world_location)
             self.pending_world_travel = None
+            self.mode = pending.get("restore_mode", "procedural")
+            self._limpar_encontro_viagem_concluido()
             await self.gm_say(T("narracao.o_grupo_retornou_a_cidade_sem_reembolso"))
             self._checkpoint_savegame()
             await self.broadcast_city_state()
             return
-        if choice != "continue":
-            return
         adventure_id = pending.get("adventure_id")
         self.pending_world_travel = None
+        self.mode = pending.get("restore_mode", "procedural")
+        self._limpar_encontro_viagem_concluido()
         await self.handle_world_adventure(pid, adventure_id, _travel_resume=True)
+
+    def _limpar_encontro_viagem_concluido(self):
+        """Libera os dados da estrada só depois da escolha pós-vitória."""
+        self.dungeon_generated = False
+        self.selected_dungeon = None
+        self.dungeon_def = None
+        self._objetivo_concluido = False
+        self.mission_complete_pending = False
+        self.initiative_active = False
+        self.dungeon_intro_active = False
+        self.dungeon_intro_until_ms = None
+        self._cancelar_timer_turno()
+        self._cancelar_intro_masmorra()
 
     async def handle_world_map_points(self, pid, points):
         await self.send_to(pid, {"type": "error", "msg": T("erro.os_pontos_do_mapa_so_podem_ser_ajustados")})
@@ -17272,12 +17420,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.dungeon_intro_active = True
         self.dungeon_intro_until_ms = int(time.time() * 1000) + 3000
         self._cancelar_intro_masmorra()
+        viagem_emboscada = bool(
+            isinstance(self.pending_world_travel, dict)
+            and self.pending_world_travel.get("phase") == "combat"
+            and self.pending_world_travel.get("encounter_map") == "estrada_floresta_emboscada.json"
+        )
         await self.broadcast({
             "type": "enter_dungeon",
             "intro": True,
             "intro_duration_ms": 3000,
             "intro_until_ms": self.dungeon_intro_until_ms,
-            "transition_images": _transition_images(),
+            "transition_images": (["assets/armadilhas/emboscada_estrada.png"]
+                                  if viagem_emboscada else _transition_images()),
+            "travel_ambush": viagem_emboscada,
         })
         # O aviso de transformação precisa ser enviado depois de entrar na tela
         # da masmorra; antes disso o cliente limpa a fila de mensagens.
@@ -19643,7 +19798,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if categoria_arma and (contexto or {}).get("categoria_arma") != categoria_arma:
             await self._guia_dica(p["id"], "categoria_arma_errada")
             return
-        if not self._licao_alvo_ok(tar.get("alvo"), alvo):
+        alvos = tar.get("alvos")
+        if alvos is not None:
+            if verbo != "usar_item" or alvo not in alvos:
+                return
+        elif not self._licao_alvo_ok(tar.get("alvo"), alvo):
             await self._guia_dica(p["id"], "alvo_errado")
             return
         prog = p.setdefault("licao_progresso", {})
@@ -21501,6 +21660,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "result", p, alvo_area, nome_arr, "normal",
             attack_id=attack_feedback_id, hit=True, crit=False,
             natural_critical=False, natural_fumble=False)
+        if defn.get("id") == "frasco_piche":
+            # A cena 3D arma o gesto por 180 ms e então voa a 90 ms/casa
+            # (mínimo 220 ms, máximo 900 ms). Só depois do impacto o mapa deve
+            # revelar a camada de piche, para ela não surgir antes do frasco.
+            distancia = max(abs(p["pos"][0] - cx), abs(p["pos"][1] - cy))
+            voo_ms = max(220, min(900, max(1, distancia) * 90))
+            await asyncio.sleep((180 + voo_ms) / 1000)
         await self.gm_say(T("narracao.arremessa_em", defn_emoji=defn['emoji'], heroi=p['name'], defn=nome_item(defn), cx=cx, cy=cy))
 
         # Dano de Ã¡rea com save de Reflexos (metade no sucesso).
@@ -27320,6 +27486,37 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._spawn_chest([room["cx"], room["cy"]], gold, items)
         await self.gm_say(T("narracao.um_bau_apareceu_no_centro_da_sala_aproxi"))
 
+    def _tutorial_provision_counts(self, pid, item_id, used=False):
+        state_key = "provisoes_usadas_por_heroi" if used else "provisoes_por_heroi"
+        por_heroi = self.training_state.setdefault(state_key, {}).get(pid, {})
+        count = int(por_heroi.get(item_id, 0) or 0)
+        if item_id == "banquete_viagem":
+            legacy_key = "banquetes_usados_por_heroi" if used else "banquetes_por_heroi"
+            count = max(count, int(self.training_state.setdefault(legacy_key, {}).get(pid, 0) or 0))
+        return count
+
+    def _tutorial_provision_remaining(self, pid, item):
+        if not self.training_mode:
+            return None
+        item_id = _tutorial_provision_id(item)
+        if not item_id:
+            return None
+        taken = self._tutorial_provision_counts(pid, item_id)
+        used = self._tutorial_provision_counts(pid, item_id, used=True)
+        return max(0, TUTORIAL_PROVISION_QUOTAS[item_id] - max(taken, used))
+
+    def _tutorial_provision_register(self, pid, item, used=False):
+        item_id = _tutorial_provision_id(item)
+        if not self.training_mode or not item_id:
+            return
+        state_key = "provisoes_usadas_por_heroi" if used else "provisoes_por_heroi"
+        por_heroi = self.training_state.setdefault(state_key, {}).setdefault(pid, {})
+        por_heroi[item_id] = int(por_heroi.get(item_id, 0) or 0) + 1
+        if item_id == "banquete_viagem":
+            legacy_key = "banquetes_usados_por_heroi" if used else "banquetes_por_heroi"
+            legado = self.training_state.setdefault(legacy_key, {})
+            legado[pid] = por_heroi[item_id]
+
     async def handle_take_from_chest(self, pid, chest_id, kind, index):
         """Player takes gold or an item from a chest (no turn restriction)."""
         p = self.players.get(pid)
@@ -27354,6 +27551,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if (self.training_mode and classe_tutorial in LICAO_CLASSES
                     and classe_tutorial != p.get("class_id")):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+            if self._tutorial_provision_remaining(pid, item) == 0:
+                mensagem = (T("erro.banquete_tutorial_limite")
+                            if _tutorial_provision_id(item) == "banquete_viagem"
+                            else T("erro.item_invalido"))
+                await self.send_to(pid, {"type": "error", "msg": mensagem}); return
 
             # MuniÃ§Ã£o: tenta empilhar em off_hand ou em slot de bag do mesmo tipo
             if item.get("effect") == "ammo":
@@ -27391,6 +27593,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
                 chest["items"].pop(idx)
+                self._tutorial_provision_register(pid, item)
                 extra = " (equipado — bolsa cheia)" if result == "equipped" else ""
                 await self.gm_say(T("narracao.pegou_do_bau", heroi=p['name'], item_get_emoji=item.get('emoji','📦'), item=nome_item(item), extra=extra))
         else:
@@ -27441,6 +27644,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 classe_tutorial = item.get("tutorial_class")
                 if (self.training_mode and classe_tutorial in LICAO_CLASSES
                         and classe_tutorial != p.get("class_id")):
+                    continue
+                if self._tutorial_provision_remaining(pid, item) == 0:
                     continue
                 antes = len(chest["items"])
                 await self.handle_take_from_chest(pid, chest_id, "item", idx)
@@ -27514,6 +27719,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         gx, gy = gi["pos"]; px, py = p["pos"]
         if max(abs(px - gx), abs(py - gy)) > 1:
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_item")}); return
+        item_chao = gi.get("item") or {}
+        if self._tutorial_provision_remaining(pid, item_chao) == 0:
+            mensagem = (T("erro.banquete_tutorial_limite")
+                        if _tutorial_provision_id(item_chao) == "banquete_viagem"
+                        else T("erro.item_invalido"))
+            await self.send_to(pid, {"type": "error", "msg": mensagem}); return
         if gi.get("kind") == "gold":
             recebido = await self._ganhar_ouro(p, gi.get("amount", 0), "do chão")
             del self.ground_items[ground_id]
@@ -27525,6 +27736,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.inventario_cheio_e_slot_ocupado_abra_esp_2")}); return
         del self.ground_items[ground_id]
+        self._tutorial_provision_register(pid, gi.get("item") or {})
         extra = " (equipado — bolsa cheia)" if res == "equipped" else ""
         await self.gm_say(T("narracao.pegou_do_chao", heroi=p['name'], gi_item_name=nome_item(gi['item']), extra=extra))
         await self._licao_evento(p, "pegar_item", alvo=(gi["item"] or {}).get("id"))
@@ -27533,7 +27745,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Efeitos de item que contam como aÃ§Ã£o bÃ´nus (mÃ¡x. 1 por turno).
     BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison",
-                            "veil_shadow", "cure_poison", "cure_petrification", "cure_disease"}
+                            "veil_shadow", "cure_poison", "cure_petrification", "cure_disease",
+                            "meal_survival"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -36134,17 +36347,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "efeitos_extra": efeitos,
         })
 
-    async def _enviar_resultado_sono(self, alvo, duracao):
-        """Alerta pessoal quando uma magia de Sono afeta um herói."""
+    async def _enviar_resultado_sono(self, alvo, duracao, descricao=None, tipo_id=None):
+        """Alerta pessoal quando Sono afeta um herói, por magia ou armadilha."""
         if not self._eh_jogador(alvo) or not alvo.get("id"):
             return
-        await self.send_to(alvo["id"], {
+        payload = {
             "type": "sleep_result", "tipo": "sono", "nome": "Sono", "icone": "🌙",
             "target_id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0])),
             "duracao": int(duracao or 0),
-            "descricao": "Uma magia de sono domina seus sentidos.",
+            "descricao": descricao or "Uma magia de sono domina seus sentidos.",
             "efeitos_extra": ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
-        })
+        }
+        if tipo_id:
+            payload["tipo_id"] = tipo_id
+        await self.send_to(alvo["id"], payload)
 
     async def _enviar_resultado_veneno(self, alvo, veneno, duracao, efeitos,
                                        resistencia=None, imagem=None):
@@ -36429,6 +36645,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         tipo = ARMADILHAS.get(arm["tipo"])
         if not tipo or arm.get("desativada") or arm.get("esgotada"):
             return
+        if tipo.get("area") is not None and arm.get("area") is not None:
+            tipo = {**tipo, "area": _monster_int(arm.get("area"), tipo["area"], 0, 40)}
         if arm["tipo"] == "armadilha_incendiaria":
             await self._rx_registrar(DMG_FIRE, [tuple(arm.get("pos") or alvo.get("pos"))])
         elif tipo.get("special") == "raio_congelante":
@@ -37158,6 +37376,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 and not self._voo_imune_terreno(pr) \
                 and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r:
             alvos.append(pr)
+        if arm.get("tipo") == "armadilha_sono":
+            alvos = [a for a in alvos
+                     if not self._tem_imunidade(a, "sono")
+                     and a.get("subtipo", _subtipo_padrao_monstro(a)) not in ("construto", "morto_vivo")]
         # Aviso público do disparo antes dos saves (som da explosão + gemido de
         # quem foi atingido): o trap_result é privado, então sem isto a mina que
         # um MONSTRO pisa — ou que atinge outro herói — explodiria muda.
@@ -37173,6 +37395,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "tiles": [list(t) for t in self._rx_tiles_area(cx, cy, raio=r)],
                 "duracao": dur, "ativa": True, "created_round": self.round_num,
                 "criador": arm.get("criador")})
+        duracao_sono = None
         for alvo in alvos:
             alvo_nome = alvo.get("name") or alvo.get("nome", "Alvo")
             save_ok, d20, sb, stot = self._testar_save(alvo, tipo["save"], _trap_cd(arm, tipo))
@@ -37183,6 +37406,27 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=True,
                                                 dano=0, metade=False, descricao=tipo["descricao"],
                                                 efeitos_extra=[], tipo_id=arm["tipo"])
+                continue
+            if arm.get("tipo") == "armadilha_sono":
+                if duracao_sono is None:
+                    duracao_sono = max(1, int(self._rolar_dado(_trap_duration_sono(arm, tipo)) or 1))
+                alvo["dormindo"] = True
+                alvo["dormindo_rodadas"] = duracao_sono
+                await self._aplicar_queda(alvo, "sono", arm.get("criador"))
+                await self.gm_say(T("narracao.adormeceu", tgt_name=nome_criatura(alvo)))
+                if self._eh_jogador(alvo):
+                    await self._enviar_resultado_sono(
+                        alvo, duracao_sono,
+                        descricao="A armadilha libera uma onda de sono que domina seus sentidos.",
+                        tipo_id=arm["tipo"],
+                    )
+                elif alvo is self.prisoner:
+                    await self._enviar_trap_result(
+                        alvo, "Sono", "🌙", sucesso=False, dano=0, metade=False,
+                        descricao=tipo["descricao"],
+                        efeitos_extra=[f"😴 Adormecido por {duracao_sono} rodada(s)"],
+                        tipo_id=arm["tipo"],
+                    )
                 continue
             metade = bool(save_ok and tipo.get("save_reduz"))
             dano_total = 0
@@ -38174,6 +38418,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index, belt_token)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
+        provision_id = _tutorial_provision_id(item)
+        if (self.training_mode and provision_id
+                and self._tutorial_provision_counts(pid, provision_id, used=True)
+                    >= TUTORIAL_PROVISION_QUOTAS[provision_id]):
+            mensagem = (T("erro.banquete_tutorial_limite")
+                        if provision_id == "banquete_viagem" else T("erro.item_invalido"))
+            await self.send_to(pid, {"type": "error", "msg": mensagem}); return
 
         # Carta é um item narrativo: ler é gratuito e nunca consome a instância.
         # O cliente normalmente abre a carta localmente, mas esta guarda mantém
@@ -38249,8 +38500,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "msg": T("erro.esta_pocao_ja_nao_possui_doses")})
             return
 
-        # Itens consumÃ­veis de bolsa sÃ£o aÃ§Ãµes bÃ´nus â€” verificar antes de aplicar
-        if effect in self.BONUS_ACTION_EFFECTS:
+        # SÃ³ efeitos listados como aÃ§Ã£o bÃ´nus consomem esse limite; comida Ã© livre.
+        if effect in self.BONUS_ACTION_EFFECTS and effect not in {"food", "meal_survival"}:
             ok = await self._executar_acao_bonus(p)
             if not ok:
                 return  # jÃ¡ usou aÃ§Ã£o bÃ´nus neste turno â€” abortar sem consumir o item
@@ -38359,6 +38610,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if sede: partes.append(f"+{sede} sede")
             await self.gm_say(
                 T("narracao.consome", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), e_join_partes=' e '.join(partes)))
+        elif effect == "meal_survival":
+            fome = item.get("fome", 0)
+            sede = item.get("sede", 0)
+            _restaurar_sobrevivencia(p, fome, sede)
+            self._verificar_estado_sobrevivencia(p)
+            partes = [f"+{n} {recurso}" for n, recurso in ((fome, "fome"), (sede, "sede")) if n]
+            await self.gm_say(T("narracao.consome", item_emoji=item['emoji'], heroi=p['name'],
+                               item=nome_item(item), e_join_partes=' e '.join(partes)))
         elif effect == "ale":
             # Caneca de Cerveja: +fome/sede, mas embriaga (-1 ataque por 10 rodadas).
             _restaurar_sobrevivencia(p, val, val)
@@ -38384,6 +38643,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if remove_item and source_location is None:
             if not self._consume_action_item(p, item, source_location):
                 return
+        self._tutorial_provision_register(pid, item, used=True)
         await self.push_state()
 
     # â”€â”€ Pergaminhos mÃ¡gicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -40735,7 +40995,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "ativada": False, "aliada": False, "so_luccas": False, "efeitos_ativos": [],
             "permanente": bool(trap.get("permanente", False)),
         }
-        for key in ("veneno_id", "saida", "curse_mode", "curse_id", "curse_category", "dificuldade", "dano"):
+        for key in ("veneno_id", "saida", "curse_mode", "curse_id", "curse_category",
+                    "dificuldade", "dano", "area", "duracao_sono"):
             if key in trap:
                 arm[key] = deepcopy(trap[key])
         return arm
@@ -43211,7 +43472,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_no_inventario")}); return
         effect = item.get("effect")
 
-        if effect in {"food", "ration", "wine", "ale"}:
+        if effect in {"food", "ration", "wine", "ale", "meal_survival"}:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_nao_tem_efeito_em_monstros")}); return
 
         if effect == "throwable":
@@ -49744,8 +50005,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._positive_effect_events = []
         msg_state = self._game_state_payload(combat_damage_events, resistance_events,
                                              positive_effect_events)
-        # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
-        # prefere gameState a cityState e mostraria o paperdoll da masmorra.
+
         # Campos grandes que quase nunca mudam (mapa, materiais, decorações...) só
         # viajam a quem ainda não os recebeu na versão atual; o cliente reaproveita
         # o que já tem. A assinatura é do conteúdo, então qualquer mudança reenvia.
@@ -49842,24 +50102,32 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             }
             if self.training_mode and jogador:
                 classe = jogador.get("class_id")
+                def itens_bau_personalizados(chest):
+                    visiveis = {}
+                    items = []
+                    for item in chest.get("items", []):
+                        oculto = (item.get("tutorial_class") in LICAO_CLASSES
+                                  and item.get("tutorial_class") != classe)
+                        provision_id = _tutorial_provision_id(item)
+                        if provision_id:
+                            remaining = self._tutorial_provision_remaining(pid, item) or 0
+                            count = visiveis.get(provision_id, 0)
+                            oculto = oculto or count >= remaining
+                            visiveis[provision_id] = count + 1
+                        items.append({**item, "tutorial_hidden": oculto})
+                    return items
+
                 payload["chests"] = [
                     {
                         **chest,
-                        "items": [
-                            {
-                                **item,
-                                "tutorial_hidden": (
-                                    item.get("tutorial_class") in LICAO_CLASSES
-                                    and item.get("tutorial_class") != classe
-                                ),
-                            }
-                            for item in chest.get("items", [])
-                        ],
+                        "items": itens_bau_personalizados(chest),
                     }
                     for chest in state.get("chests", [])
                 ]
             return payload
 
+        # Quem está na cidade (fora_masmorra) não recebe game_state: o cliente
+        # prefere gameState a cityState e mostraria o paperdoll da masmorra.
         await self.broadcast(
             msg_state,
             skip=self._conexoes_fora(),
@@ -49881,7 +50149,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 # Campos do game_state grandes e quase estáticos: ver GameRoom.push_state.
 ESTADO_DIFERIVEL = ("tiles", "rooms", "materiais", "decorations", "secret_passages",
                     "elevacoes", "alturas_parede", "pontes", "door_conditions", "hero_spawns")
-
 # Listas de entidades com `id` enviadas como delta (só as que mudaram): ver push_state.
 ESTADO_LISTAS_DELTA = ("monsters", "players", "chests", "corpses", "armadilhas")
 

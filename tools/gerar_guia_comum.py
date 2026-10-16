@@ -94,6 +94,8 @@ def aplicar_guia(d):
                 s["dica"] = [_chave(f["id"], p["id"], "dica", n) for n in range(1, len(p["dica"]) + 1)]
             if p.get("conclui"):
                 s["conclui_com"] = p["conclui"]
+            if p.get("demonstracao"):
+                s["demonstracao"] = [dict(op) for op in p["demonstracao"]]
             guia.append(s)
         f["guia"] = guia
     return d

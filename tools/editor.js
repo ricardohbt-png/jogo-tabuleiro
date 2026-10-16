@@ -2171,12 +2171,15 @@
   function trapCharacteristicsHTML(meta, compact, instance) {
     if (!meta || !meta.nome) return "";
     const difficulty = instance && instance.dificuldade != null ? instance.dificuldade : meta.dificuldade;
+    const area = instance && instance.area != null ? instance.area : meta.area;
     const damage = instance && instance.dano != null ? instance.dano : trapPrimaryDamage(meta);
     const save = meta.save ? `${trapText(meta.save).replace(/^./, c => c.toUpperCase())}${difficulty ? ` CD ${difficulty}` : ""}` : t(K_ARM + "sem_teste");
-    const scope = meta.area_sala ? t(K_ARM + "sala_inteira") : meta.area ? t(K_ARM + (meta.area === 1 ? "area_casa" : "area_casas"), { n: meta.area }) : t(K_ARM + "alvo_casa");
+    const scope = meta.area_sala ? t(K_ARM + "sala_inteira") : area ? t(K_ARM + (area === 1 ? "area_casa" : "area_casas"), { n: area }) : t(K_ARM + "alvo_casa");
     const duration = meta.duracao_rodadas ? t(K_ARM + "duracao_rodadas", { n: meta.duracao_rodadas }) : (meta.persiste ? t(K_ARM + "permanece") : t(K_ARM + "uso_unico"));
+    const sleepDuration = instance && instance.duracao_sono != null ? instance.duracao_sono : meta.duracao_sono;
     const flags = [
       `🎲 ${save}`, `🎯 ${scope}`, `⏱️ ${duration}`,
+      sleepDuration != null ? t(K_ARM + "duracao_sono", { n: trapText(sleepDuration) }) : "",
       damage ? t(K_ARM + "dano", { v: trapText(damage) }) : "",
       meta.custo_ouro != null ? t(K_ARM + "custo", { n: meta.custo_ouro }) : "",
       meta.save_reduz ? t(K_ARM + "sucesso_reduz") : "",
@@ -3129,6 +3132,8 @@
           <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
           ${ref.tipo !== "chao_illusorio" ? `<label style="display:block"><input type="checkbox" id="p-trap-permanent" ${ref.permanente ? "checked" : ""}> ${t("ui.editor.masmorra.painel.armadilha_permanente")}</label><small>${t("ui.editor.masmorra.painel.permanente_xp")}</small>` : ""}
           <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="p-trap-cd" type="number" min="1" max="40" value="${ref.dificuldade ?? defaultDifficulty}"></label>
+          ${ref.tipo === "armadilha_sono" ? `<label>${t("ui.editor.masmorra.painel.area_efeito")} <input id="p-trap-area" type="number" min="0" max="40" value="${ref.area ?? meta.area ?? 1}"></label>
+          <label>${t("ui.editor.masmorra.painel.duracao_sono")} <input id="p-trap-sleep-duration" value="${trapText(ref.duracao_sono ?? meta.duracao_sono ?? "1d4")}" placeholder="1d4"></label><small>${t("ui.editor.masmorra.painel.formato_duracao")}</small>` : ""}
           ${defaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="p-trap-damage" value="${trapText(ref.dano ?? defaultDamage)}" placeholder="ex.: 2d6"></label><small id="p-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
           <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
         </div>
@@ -3154,6 +3159,8 @@
         if (ref.tipo === "chao_illusorio") delete ref.permanente;
         delete ref.dificuldade;
         delete ref.dano;
+        delete ref.area;
+        delete ref.duracao_sono;
         const nextMeta = CAT.traps.find(tr => tr.tipo === ref.tipo) || {};
         if (!(nextMeta.precisa_veneno || nextMeta.permite_veneno)) delete ref.veneno_id;
         if (ref.tipo !== "armadilha_teletransporte") delete ref.saida;
@@ -3172,6 +3179,20 @@
         if (!raw) delete ref.dificuldade;
         else ref.dificuldade = Math.max(1, Math.min(40, Number(raw) | 0));
         renderPanel(); render(); updateStatus();
+      };
+      const trapAreaInput = document.getElementById("p-trap-area");
+      if (trapAreaInput) trapAreaInput.onchange = e => {
+        const raw = e.target.value.trim();
+        if (!raw) delete ref.area;
+        else ref.area = Math.max(0, Math.min(40, Number(raw) | 0));
+        renderPanel(); render(); updateStatus();
+      };
+      const trapSleepDurationInput = document.getElementById("p-trap-sleep-duration");
+      if (trapSleepDurationInput) trapSleepDurationInput.onchange = e => {
+        const raw = e.target.value.trim().replace(/\s/g, "");
+        if (!raw) { delete ref.duracao_sono; renderPanel(); render(); updateStatus(); return; }
+        if (!validTrapDamage(raw)) { e.target.focus(); return; }
+        ref.duracao_sono = raw; renderPanel(); render(); updateStatus();
       };
       const trapDamageInput = document.getElementById("p-trap-damage");
       if (trapDamageInput) trapDamageInput.onchange = e => {
@@ -3532,6 +3553,8 @@
             <b>⚙️ ${t("ui.editor.masmorra.painel.ajustes_armadilha")}</b>
             ${decorTrap.tipo !== "chao_illusorio" ? `<label style="display:block"><input type="checkbox" id="d-trap-permanent" ${decorTrap.permanente ? "checked" : ""}> ${t("ui.editor.masmorra.painel.armadilha_permanente_curta")}</label><small>${t("ui.editor.masmorra.painel.permanente_xp")}</small>` : ""}
             <label>${t("ui.editor.masmorra.painel.cd_teste")} <input id="d-trap-cd" type="number" min="1" max="40" value="${decorTrap.dificuldade ?? decorTrapDefaultDifficulty}"></label>
+            ${decorTrap.tipo === "armadilha_sono" ? `<label>${t("ui.editor.masmorra.painel.area_efeito")} <input id="d-trap-area" type="number" min="0" max="40" value="${decorTrap.area ?? decorTrapMeta.area ?? 1}"></label>
+            <label>${t("ui.editor.masmorra.painel.duracao_sono")} <input id="d-trap-sleep-duration" value="${trapText(decorTrap.duracao_sono ?? decorTrapMeta.duracao_sono ?? "1d4")}" placeholder="1d4"></label><small>${t("ui.editor.masmorra.painel.formato_duracao")}</small>` : ""}
             ${decorTrapDefaultDamage ? `<label>${t("ui.editor.masmorra.painel.dano_principal")} <input id="d-trap-damage" value="${trapText(decorTrap.dano ?? decorTrapDefaultDamage)}" placeholder="ex.: 2d6"></label><small id="d-trap-damage-help">${t("ui.editor.masmorra.painel.formato_dano")}</small>` : `<small>${t("ui.editor.masmorra.painel.sem_dano_configuravel")}</small>`}
             <small>${t("ui.editor.masmorra.painel.apague_valor_padrao")}</small>
           </div>
@@ -3635,6 +3658,20 @@
           if (!raw) delete ref.trap.dificuldade;
           else ref.trap.dificuldade = Math.max(1, Math.min(40, Number(raw) | 0));
           renderPanel(); render(); updateStatus();
+        };
+        const decorTrapAreaInput = document.getElementById("d-trap-area");
+        if (decorTrapAreaInput) decorTrapAreaInput.onchange = e => {
+          const raw = e.target.value.trim();
+          if (!raw) delete ref.trap.area;
+          else ref.trap.area = Math.max(0, Math.min(40, Number(raw) | 0));
+          renderPanel(); render(); updateStatus();
+        };
+        const decorTrapSleepDurationInput = document.getElementById("d-trap-sleep-duration");
+        if (decorTrapSleepDurationInput) decorTrapSleepDurationInput.onchange = e => {
+          const raw = e.target.value.trim().replace(/\s/g, "");
+          if (!raw) { delete ref.trap.duracao_sono; renderPanel(); render(); updateStatus(); return; }
+          if (!validTrapDamage(raw)) { e.target.focus(); return; }
+          ref.trap.duracao_sono = raw; renderPanel(); render(); updateStatus();
         };
         const decorTrapDamageInput = document.getElementById("d-trap-damage");
         if (decorTrapDamageInput) decorTrapDamageInput.onchange = e => {
@@ -4225,6 +4262,8 @@
         if (trap.tipo === "chao_illusorio" && trap.ponte_id) o.ponte_id = trap.ponte_id;
         if (trap.permanente && trap.tipo !== "chao_illusorio") o.permanente = true;
         if (trap.dificuldade != null) o.dificuldade = Math.max(1, Math.min(40, trap.dificuldade | 0));
+        if (trap.area != null) o.area = Math.max(0, Math.min(40, Number(trap.area) | 0));
+        if (trap.duracao_sono != null && validTrapDamage(trap.duracao_sono)) o.duracao_sono = String(trap.duracao_sono).replace(/\s/g, "");
         if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
         if (trap.veneno_id) o.veneno_id = trap.veneno_id;
         if (trap.saida) o.saida = trap.saida.slice();
@@ -4246,6 +4285,8 @@
           o.trap = { tipo: d.trap.tipo };
           if (d.trap.permanente && d.trap.tipo !== "chao_illusorio") o.trap.permanente = true;
           if (d.trap.dificuldade != null) o.trap.dificuldade = Math.max(1, Math.min(40, d.trap.dificuldade | 0));
+          if (d.trap.area != null) o.trap.area = Math.max(0, Math.min(40, Number(d.trap.area) | 0));
+          if (d.trap.duracao_sono != null && validTrapDamage(d.trap.duracao_sono)) o.trap.duracao_sono = String(d.trap.duracao_sono).replace(/\s/g, "");
           if (d.trap.dano != null && validTrapDamage(d.trap.dano)) o.trap.dano = String(d.trap.dano).replace(/\s/g, "");
           if (d.trap.veneno_id) o.trap.veneno_id = d.trap.veneno_id;
           if (Array.isArray(d.trap.saida)) o.trap.saida = d.trap.saida.slice();
@@ -4462,6 +4503,8 @@
           e.push(V("chao_sem_queda", { pos: P(trap.pos) }));
       } else if (isWall(trap.pos)) e.push(V("armadilha_em_parede", { pos: P(trap.pos) }));
       if (trap.dificuldade != null && (!Number.isInteger(trap.dificuldade) || trap.dificuldade < 1 || trap.dificuldade > 40)) e.push(V("armadilha_cd", { ...tp, cd: trap.dificuldade }));
+      if (trap.area != null && (!Number.isInteger(trap.area) || trap.area < 0 || trap.area > 40)) e.push(V("armadilha_area", tp));
+      if (trap.duracao_sono != null && (trap.tipo !== "armadilha_sono" || !validTrapDamage(trap.duracao_sono))) e.push(V("armadilha_duracao", tp));
       if (trap.dano != null && !validTrapDamage(trap.dano)) e.push(V("armadilha_dano", { ...tp, dano: trap.dano }));
       if ((trap.tipo === "fosso_envenenado" || trap.tipo === "armadilha_dardos_envenenados") && !venoms.has(trap.veneno_id)) e.push(V("armadilha_veneno", tp));
       if (trap.tipo === "armadilha_teletransporte" && (!Array.isArray(trap.saida) || S.tiles[trap.saida[1]]?.[trap.saida[0]] !== FLOOR)) e.push(V("armadilha_tp_saida", { pos: P(trap.pos) }));
@@ -4525,6 +4568,8 @@
         if (d.trap.permanente != null && typeof d.trap.permanente !== "boolean") e.push(V("decor_trap_permanente_invalido", dp));
         if (d.trap.tipo === "chao_illusorio" && d.trap.permanente) e.push(V("decor_chao_permanente", { pos: P(d.pos) }));
         if (d.trap.dificuldade != null && (!Number.isInteger(d.trap.dificuldade) || d.trap.dificuldade < 1 || d.trap.dificuldade > 40)) e.push(V("decor_trap_cd", dp));
+        if (d.trap.area != null && (!Number.isInteger(d.trap.area) || d.trap.area < 0 || d.trap.area > 40)) e.push(V("decor_trap_area", dp));
+        if (d.trap.duracao_sono != null && (d.trap.tipo !== "armadilha_sono" || !validTrapDamage(d.trap.duracao_sono))) e.push(V("decor_trap_duracao", dp));
         if (d.trap.dano != null && !validTrapDamage(d.trap.dano)) e.push(V("decor_trap_dano", dp));
         if (["fosso_envenenado", "armadilha_dardos_envenenados"].includes(d.trap.tipo) && !venoms.has(d.trap.veneno_id)) e.push(V("decor_trap_veneno", dp));
         if (d.trap.tipo === "armadilha_teletransporte" && (!Array.isArray(d.trap.saida) || S.tiles[d.trap.saida[1]]?.[d.trap.saida[0]] !== FLOOR)) e.push(V("decor_trap_tp_saida", { pos: P(d.pos) }));
@@ -4751,6 +4796,8 @@
       if (trap.tipo === "chao_illusorio" && trap.ponte_id) o.ponte_id = trap.ponte_id;
       if (trap.permanente === true && trap.tipo !== "chao_illusorio") o.permanente = true;
       if (trap.dificuldade != null) o.dificuldade = Number(trap.dificuldade) | 0;
+      if (trap.area != null) o.area = Number(trap.area) | 0;
+      if (trap.duracao_sono != null && validTrapDamage(trap.duracao_sono)) o.duracao_sono = String(trap.duracao_sono).replace(/\s/g, "");
       if (trap.dano != null && validTrapDamage(trap.dano)) o.dano = String(trap.dano).replace(/\s/g, "");
       if (trap.veneno_id) o.veneno_id = trap.veneno_id;
       if (trap.saida) o.saida = trap.saida.slice();
@@ -4796,6 +4843,8 @@
         tipo: d.trap.tipo,
         ...(d.trap.permanente === true && d.trap.tipo !== "chao_illusorio" ? { permanente: true } : {}),
         ...(d.trap.dificuldade != null ? { dificuldade: Number(d.trap.dificuldade) | 0 } : {}),
+        ...(d.trap.area != null ? { area: Number(d.trap.area) | 0 } : {}),
+        ...(d.trap.duracao_sono != null && validTrapDamage(d.trap.duracao_sono) ? { duracao_sono: String(d.trap.duracao_sono).replace(/\s/g, "") } : {}),
         ...(d.trap.dano != null && validTrapDamage(d.trap.dano) ? { dano: String(d.trap.dano).replace(/\s/g, "") } : {}),
         ...(d.trap.veneno_id ? { veneno_id: d.trap.veneno_id } : {}),
         ...(Array.isArray(d.trap.saida) ? { saida: d.trap.saida.slice() } : {}),

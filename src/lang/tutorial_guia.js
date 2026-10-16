@@ -224,37 +224,53 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take down the dummy.",
     "pt": "Derrube o boneco."
   },
-  "ui.tutorial.guia.fala_18.comer.dica.1": {
+  "ui.tutorial.guia.fala_18.banquete_1.dica.1": {
     "en": "If the bag is closed, use the backpack button.",
     "pt": "Se a bolsa está fechada, use o botão da mochila."
   },
-  "ui.tutorial.guia.fala_18.comer.porque": {
-    "en": "Eating is a [[acao_bonus]]: you can eat and still fight in the same turn.",
-    "pt": "Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno."
+  "ui.tutorial.guia.fala_18.banquete_1.porque": {
+    "en": "Each banquet restores 40 hunger and 40 thirst.",
+    "pt": "Cada banquete recupera 40 de fome e 40 de sede."
   },
-  "ui.tutorial.guia.fala_18.comer.texto": {
-    "en": "Open the bag with [[atalho:inventario]] and eat the travel ration.",
-    "pt": "Abra a bolsa com [[atalho:inventario]] e coma a ração de viagem."
+  "ui.tutorial.guia.fala_18.banquete_1.texto": {
+    "en": "Open your bag with [[atalho:inventario]] and use the first Travel Banquet.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e use o primeiro Banquete de Viagem."
+  },
+  "ui.tutorial.guia.fala_18.banquete_2.porque": {
+    "en": "Food does not use your bonus action.",
+    "pt": "Alimentos não gastam sua ação bônus."
+  },
+  "ui.tutorial.guia.fala_18.banquete_2.texto": {
+    "en": "Use the second Travel Banquet in the same turn.",
+    "pt": "Use o segundo Banquete de Viagem no mesmo turno."
   },
   "ui.tutorial.guia.fala_18.pegar.porque": {
     "en": "Food and water keep [[fome_sede]] out of the penalty zone.",
     "pt": "Comida e água mantêm [[fome_sede]] longe da zona de penalidade."
   },
   "ui.tutorial.guia.fala_18.pegar.texto": {
-    "en": "The chest nearby has rations and water. Take a ration.",
-    "pt": "O baú ao lado tem rações e água. Pegue uma ração."
+    "en": "The chest has four items reserved for you: two banquets, a ration and a canteen.",
+    "pt": "O baú tem quatro itens reservados para você: dois banquetes, uma ração e um cantil."
   },
-  "ui.tutorial.guia.fala_19.beber.dica.1": {
-    "en": "Click the bottle in the bag and use it twice.",
-    "pt": "Clique na garrafa na bolsa e use-a duas vezes."
+  "ui.tutorial.guia.fala_18.racao.porque": {
+    "en": "The ration restores 20 hunger; two banquets plus the ration total 100.",
+    "pt": "A ração recupera 20 de fome; dois banquetes e ela somam 100."
   },
-  "ui.tutorial.guia.fala_19.beber.porque": {
-    "en": "Water restores less than food. Abilities cost sips: heals, spells and songs.",
-    "pt": "Água rende menos que comida. Habilidades cobram goles: curas, magias e canções."
+  "ui.tutorial.guia.fala_18.racao.texto": {
+    "en": "Use the Travel Ration to fill hunger.",
+    "pt": "Use a Ração de Viagem para completar a fome."
   },
-  "ui.tutorial.guia.fala_19.beber.texto": {
-    "en": "Drink two bottles of water from the bag.",
-    "pt": "Beba duas garrafas de água pela bolsa."
+  "ui.tutorial.guia.fala_19.cantil.dica.1": {
+    "en": "Click the canteen in your bag and choose Use.",
+    "pt": "Clique no cantil na bolsa e escolha Usar."
+  },
+  "ui.tutorial.guia.fala_19.cantil.porque": {
+    "en": "The canteen restores 20 thirst; the two banquets already restored 80.",
+    "pt": "O cantil recupera 20 de sede; os dois banquetes já trouxeram 80."
+  },
+  "ui.tutorial.guia.fala_19.cantil.texto": {
+    "en": "Use the Water Canteen to fill thirst.",
+    "pt": "Use o Cantil de Água para completar a sede."
   },
   "ui.tutorial.guia.fala_2.abrir.texto": {
     "en": "Open the bag with the backpack button or with [[atalho:inventario]].",

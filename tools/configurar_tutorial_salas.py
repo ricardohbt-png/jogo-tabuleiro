@@ -54,6 +54,13 @@ d['chests'][0]['items'] = [
     {'id': 'lanca_curta', 'tutorial_class': 'bard'},
     {'id': 'sword', 'tutorial_class': 'paladin'},
 ]
+# O depósito oferece duas refeições, uma ração e um cantil por herói. O estoque
+# cobre seis heróis; a serialização e os handlers aplicam cotas pessoais.
+next(c for c in d['chests'] if c['pos'] == [29, 14])['items'] = [
+    {'id': iid, 'tutorial_provision': True}
+    for _ in range(6)
+    for iid in ('banquete_viagem', 'banquete_viagem', 'racao_viagem', 'cantil_agua')
+]
 d['prisoner'] = {'pos': [35, 25], 'room_id': 38,
                  'image': 'soldado.png', 'model3d': 'soldado.glb'}
 

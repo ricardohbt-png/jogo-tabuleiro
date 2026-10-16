@@ -2200,6 +2200,10 @@ window.LANG_ERROS = {
   "erro.jogo_encerrado_use_novo_capitulo": {
     "en": "This game has ended. Start a new chapter to play again.",
     "pt": "Este jogo foi encerrado. Abra um novo capítulo para voltar a jogar."
+  },
+  "erro.banquete_tutorial_limite": {
+    "en": "You have already picked up or used two banquets in this tutorial.",
+    "pt": "Você já pegou ou usou dois banquetes neste tutorial."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
