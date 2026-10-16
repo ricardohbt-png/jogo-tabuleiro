@@ -481,6 +481,8 @@
     "x": 24,
     "y": 7
   },
+  "routes": [],
+  "route_exits": [],
   "monsters": [],
   "chests": [],
   "traps": [],
@@ -764,6 +766,2595 @@
       ],
       "loot": null,
       "key_objective": false
+    },
+    {
+      "id": "decor_0",
+      "type": "arvore",
+      "pos": [
+        7,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_1",
+      "type": "arvore",
+      "pos": [
+        19,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_2",
+      "type": "arvore",
+      "pos": [
+        20,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_3",
+      "type": "arvore",
+      "pos": [
+        19,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_4",
+      "type": "arvore",
+      "pos": [
+        20,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_5",
+      "type": "arvore",
+      "pos": [
+        4,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_6",
+      "type": "arvore",
+      "pos": [
+        5,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_7",
+      "type": "arvore",
+      "pos": [
+        16,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_8",
+      "type": "arvore",
+      "pos": [
+        16,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_9",
+      "type": "arvore",
+      "pos": [
+        17,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_10",
+      "type": "arvore",
+      "pos": [
+        23,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_11",
+      "type": "arvore",
+      "pos": [
+        24,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_12",
+      "type": "arvore",
+      "pos": [
+        23,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.4,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_13",
+      "type": "arvore",
+      "pos": [
+        24,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_14",
+      "type": "arvore",
+      "pos": [
+        4,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_15",
+      "type": "arvore",
+      "pos": [
+        1,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.5,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_16",
+      "type": "arvore",
+      "pos": [
+        1,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_17",
+      "type": "arvore",
+      "pos": [
+        13,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_18",
+      "type": "arvore",
+      "pos": [
+        14,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_19",
+      "type": "arvore",
+      "pos": [
+        13,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_20",
+      "type": "arvore",
+      "pos": [
+        14,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_21",
+      "type": "arvore",
+      "pos": [
+        10,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_22",
+      "type": "arvore",
+      "pos": [
+        11,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_23",
+      "type": "arvore",
+      "pos": [
+        11,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_24",
+      "type": "arvore",
+      "pos": [
+        4,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_25",
+      "type": "arvore",
+      "pos": [
+        5,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_26",
+      "type": "arvore",
+      "pos": [
+        4,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_27",
+      "type": "arvore",
+      "pos": [
+        5,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_28",
+      "type": "arvore",
+      "pos": [
+        1,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_29",
+      "type": "arvore",
+      "pos": [
+        2,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_30",
+      "type": "arvore",
+      "pos": [
+        1,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_31",
+      "type": "arvore",
+      "pos": [
+        2,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_32",
+      "type": "arvore",
+      "pos": [
+        23,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_33",
+      "type": "arvore",
+      "pos": [
+        24,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_34",
+      "type": "arvore",
+      "pos": [
+        17,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_35",
+      "type": "arvore",
+      "pos": [
+        17,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_36",
+      "type": "arvore",
+      "pos": [
+        10,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_37",
+      "type": "arvore",
+      "pos": [
+        11,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_38",
+      "type": "arvore",
+      "pos": [
+        7,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_39",
+      "type": "arvore",
+      "pos": [
+        8,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_40",
+      "type": "arvore",
+      "pos": [
+        19,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_41",
+      "type": "arvore",
+      "pos": [
+        20,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_42",
+      "type": "arvore",
+      "pos": [
+        7,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_43",
+      "type": "arvore",
+      "pos": [
+        8,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_44",
+      "type": "arvore",
+      "pos": [
+        7,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_45",
+      "type": "arvore",
+      "pos": [
+        8,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_46",
+      "type": "arvore",
+      "pos": [
+        11,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_47",
+      "type": "arvore",
+      "pos": [
+        11,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_48",
+      "type": "arvore",
+      "pos": [
+        13,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_49",
+      "type": "arvore",
+      "pos": [
+        14,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.6
+      ]
+    },
+    {
+      "id": "decor_50",
+      "type": "arvore",
+      "pos": [
+        13,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_51",
+      "type": "arvore",
+      "pos": [
+        14,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.5,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_52",
+      "type": "arvore",
+      "pos": [
+        19,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_53",
+      "type": "arvore",
+      "pos": [
+        19,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_54",
+      "type": "arvore",
+      "pos": [
+        22,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_55",
+      "type": "arvore",
+      "pos": [
+        22,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_56",
+      "type": "arvore",
+      "pos": [
+        4,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_57",
+      "type": "arvore",
+      "pos": [
+        5,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_58",
+      "type": "arvore",
+      "pos": [
+        4,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_59",
+      "type": "arvore",
+      "pos": [
+        5,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_60",
+      "type": "arvore",
+      "pos": [
+        8,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_61",
+      "type": "arvore",
+      "pos": [
+        8,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_62",
+      "type": "arvore",
+      "pos": [
+        11,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_63",
+      "type": "arvore",
+      "pos": [
+        12,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_64",
+      "type": "arvore",
+      "pos": [
+        11,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_65",
+      "type": "arvore",
+      "pos": [
+        12,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_66",
+      "type": "arvore",
+      "pos": [
+        1,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_67",
+      "type": "arvore",
+      "pos": [
+        2,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_68",
+      "type": "arvore",
+      "pos": [
+        1,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_69",
+      "type": "arvore",
+      "pos": [
+        2,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_70",
+      "type": "arvore",
+      "pos": [
+        16,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_71",
+      "type": "arvore",
+      "pos": [
+        17,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_72",
+      "type": "arvore",
+      "pos": [
+        14,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.7
+      ]
+    },
+    {
+      "id": "decor_73",
+      "type": "arvore",
+      "pos": [
+        14,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_74",
+      "type": "arvore",
+      "pos": [
+        19,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.4,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_75",
+      "type": "arvore",
+      "pos": [
+        20,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_76",
+      "type": "arvore",
+      "pos": [
+        22,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_77",
+      "type": "arvore",
+      "pos": [
+        23,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_78",
+      "type": "arvore",
+      "pos": [
+        22,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.7
+      ]
+    },
+    {
+      "id": "decor_79",
+      "type": "arvore",
+      "pos": [
+        23,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_80",
+      "type": "arvore",
+      "pos": [
+        15,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_81",
+      "type": "arvore",
+      "pos": [
+        16,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.4,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_82",
+      "type": "arvore",
+      "pos": [
+        20,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_83",
+      "type": "arvore",
+      "pos": [
+        21,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_84",
+      "type": "arvore",
+      "pos": [
+        20,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_85",
+      "type": "arvore",
+      "pos": [
+        21,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_86",
+      "type": "arvore",
+      "pos": [
+        6,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.4,
+        1.8
+      ]
+    },
+    {
+      "id": "decor_87",
+      "type": "arvore",
+      "pos": [
+        18,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.3,
+        1.4
+      ]
+    },
+    {
+      "id": "decor_88",
+      "type": "carroca",
+      "pos": [
+        12,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "carroca.png"
+    },
+    {
+      "id": "decor_89",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_90",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_91",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_92",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_93",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_94",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_95",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_96",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_97",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_98",
+      "type": "capim_alto",
+      "pos": [
+        25,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_99",
+      "type": "capim_alto",
+      "pos": [
+        25,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_100",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_101",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_102",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_103",
+      "type": "capim_alto",
+      "pos": [
+        19,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_104",
+      "type": "capim_alto",
+      "pos": [
+        14,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_105",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_106",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_107",
+      "type": "capim_alto",
+      "pos": [
+        7,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_108",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_109",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_110",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_111",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_112",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_113",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_114",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_115",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_116",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_117",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_118",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_119",
+      "type": "capim_alto",
+      "pos": [
+        7,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_120",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_121",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_122",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_123",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_124",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_125",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_126",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_127",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_128",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_129",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_130",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_131",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_132",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_133",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_134",
+      "type": "capim_alto",
+      "pos": [
+        18,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_135",
+      "type": "capim_alto",
+      "pos": [
+        18,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_136",
+      "type": "capim_alto",
+      "pos": [
+        19,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_137",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_138",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_139",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_140",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_141",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_142",
+      "type": "capim_alto",
+      "pos": [
+        14,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_143",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_144",
+      "type": "capim_alto",
+      "pos": [
+        4,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_145",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_146",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_147",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_148",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_149",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_150",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_151",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_152",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_153",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
+    },
+    {
+      "id": "decor_154",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png"
     }
   ],
   "secret_passages": [],
@@ -1192,20 +3783,10 @@
     "24,15": "grama",
     "25,15": "grama"
   },
-  "encounter_spawn_zones": {
-    "heroes": {
-      "x_min": 0,
-      "x_max": 4,
-      "y_min": 6,
-      "y_max": 12
-    },
-    "enemies": {
-      "x_min": 12,
-      "x_max": 23,
-      "y_min": 3,
-      "y_max": 12
-    }
-  },
+  "pontes": [],
+  "elevacoes": {},
+  "alturas_parede": {},
+  "transicao_altura": "rampa",
   "objectives": {
     "primary": {
       "type": "kill_all",

@@ -623,7 +623,7 @@ const GS = (() => {
     },
 
     // ── MERCADO — Arremessáveis de fogo (consumíveis de bolsa; ver ARREMESSAVEIS no server) ──
-    // Usados por clique direito → mira de alvo → throw_item. Ataque por DES vs CA.
+    // Usados por clique direito → mira de alvo/área → throw_item.
     agua_benta: {
       id: 'agua_benta', nome: 'Água Benta', emoji: '💧✝️',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, dano:'2d6', tipoDano:'sagrado',
@@ -683,8 +683,8 @@ const GS = (() => {
       id: 'frasco_piche', nome: 'Frasco de Piche', emoji: '🛢️',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
       alcance: 4, areaRaio: 1, duracao: 4, permitidoPara:['todos'],
-      descricao: 'Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento ' +
-                 'e INFLAMÁVEL. Sem dano.',
+      descricao: 'Área (raio 1, alcance 4). Espalha piche em 3×3 casas por 4 rodadas; ' +
+                 'atravessar custa 2 pontos de movimento e o chão fica INFLAMÁVEL. Sem dano.',
     },
     // ── MERCADO — Arremessáveis de ÁCIDO (Sub-projeto C; ver ARREMESSAVEIS no server) ──
     frasco_acido: {
@@ -1855,7 +1855,7 @@ const GS = (() => {
         pendingMove = null;
         _resetTurnActivity();
         _intencoes = { rodada: null, vez: null, itens: [] };
-        _emit('enterDungeon');
+        _emit('enterDungeon', msg);
         break;
 
       case 'game_state':
@@ -1951,6 +1951,9 @@ const GS = (() => {
         break;
       case 'world_adventure_encounter_choice':
         _emit('worldAdventureEncounterChoice', msg);
+        break;
+      case 'world_adventure_encounter_choice_closed':
+        _emit('worldAdventureEncounterChoiceClosed', msg);
         break;
 
       case 'gm_narration':

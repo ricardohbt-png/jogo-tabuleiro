@@ -239,5 +239,37 @@ def aplicar(definicao):
         else:
             atual.update(valores)
 
+    provisoes = {
+        "fala_18": (
+            "Cada herói tem dois Banquetes de Viagem e uma Ração de Viagem no baú. "
+            "Use os três; comida pode ser usada livremente no seu turno.",
+            ["banquete_viagem", "racao_viagem"], 3,
+            "Use dois banquetes e uma ração"),
+        "fala_19": (
+            "Agora use o Cantil de Água pessoal. Com ele, os medidores voltam a 100.",
+            "cantil_agua", 1, "Use o Cantil de Água"),
+    }
+    for ident, (texto, alvos, vezes, texto_curto) in provisoes.items():
+        fala = _fala(definicao, ident)
+        if fala:
+            fala["texto"] = texto
+            tarefa = fala.setdefault("tarefa", {})
+            tarefa.update({"tipo": "usar_item", "vezes": vezes,
+                           "texto_curto": texto_curto})
+            if isinstance(alvos, list):
+                tarefa.pop("alvo", None)
+                tarefa["alvos"] = alvos
+            else:
+                tarefa.pop("alvos", None)
+                tarefa["alvo"] = alvos
+
+    fala_fome_sede = _fala(definicao, "fala_17")
+    if fala_fome_sede:
+        fala_fome_sede.setdefault("efeito", {}).update({"fome": 0, "sede": 0})
+
     definicao.setdefault("objectives", {}).setdefault("primary", {})["type"] = "all_heroes_at_exit"
+    # A ala final acima fixa a saída e a retirada da época; a fatia 20 (sala das reações de
+    # terreno) as move para baixo. Aplicada aqui, nenhum caminho do pipeline a desfaz.
+    from aplicar_fatia20_tutorial import aplicar as _aplicar_fatia20
+    _aplicar_fatia20(definicao)
     return definicao

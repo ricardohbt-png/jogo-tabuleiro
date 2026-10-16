@@ -72,6 +72,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Extra damage from attacking while hidden in the shadows. It triggers by itself when the conditions hold.",
     "pt": "Dano extra de quem ataca escondido, vindo das sombras. Dispara sozinho quando as condições valem."
   },
+  "ui.tutorial.glossario.inflamavel.nome": {
+    "en": "flammable",
+    "pt": "inflamável"
+  },
+  "ui.tutorial.glossario.inflamavel.texto": {
+    "en": "Catches fire or explodes when fire reaches it. The gas in this room is like that.",
+    "pt": "Pega fogo ou explode quando o fogo o alcança. O gás desta sala é assim."
+  },
   "ui.tutorial.glossario.manutencao.nome": {
     "en": "upkeep",
     "pt": "manutenção"
@@ -87,6 +95,14 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.glossario.movimento.texto": {
     "en": "How many squares you walk per turn. When it runs out, only the next turn restores it.",
     "pt": "Quantas casas você anda por turno. Acabou, só o próximo turno devolve."
+  },
+  "ui.tutorial.glossario.reacao.nome": {
+    "en": "reaction",
+    "pt": "reação"
+  },
+  "ui.tutorial.glossario.reacao.texto": {
+    "en": "What happens when an element meets the terrain, like fire on gas or pitch. The aim shows the squares that will react.",
+    "pt": "O que acontece quando um elemento encontra o terreno, como fogo no gás ou no piche. A mira mostra as casas que vão reagir."
   },
   "ui.tutorial.glossario.resistencia.nome": {
     "en": "resistance",
@@ -224,37 +240,53 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Take down the dummy.",
     "pt": "Derrube o boneco."
   },
-  "ui.tutorial.guia.fala_18.comer.dica.1": {
+  "ui.tutorial.guia.fala_18.banquete_1.dica.1": {
     "en": "If the bag is closed, use the backpack button.",
     "pt": "Se a bolsa está fechada, use o botão da mochila."
   },
-  "ui.tutorial.guia.fala_18.comer.porque": {
-    "en": "Eating is a [[acao_bonus]]: you can eat and still fight in the same turn.",
-    "pt": "Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno."
+  "ui.tutorial.guia.fala_18.banquete_1.porque": {
+    "en": "Each banquet restores 40 hunger and 40 thirst.",
+    "pt": "Cada banquete recupera 40 de fome e 40 de sede."
   },
-  "ui.tutorial.guia.fala_18.comer.texto": {
-    "en": "Open the bag with [[atalho:inventario]] and eat the travel ration.",
-    "pt": "Abra a bolsa com [[atalho:inventario]] e coma a ração de viagem."
+  "ui.tutorial.guia.fala_18.banquete_1.texto": {
+    "en": "Open your bag with [[atalho:inventario]] and use the first Travel Banquet.",
+    "pt": "Abra a bolsa com [[atalho:inventario]] e use o primeiro Banquete de Viagem."
+  },
+  "ui.tutorial.guia.fala_18.banquete_2.porque": {
+    "en": "Food does not use your bonus action.",
+    "pt": "Alimentos não gastam sua ação bônus."
+  },
+  "ui.tutorial.guia.fala_18.banquete_2.texto": {
+    "en": "Use the second Travel Banquet in the same turn.",
+    "pt": "Use o segundo Banquete de Viagem no mesmo turno."
   },
   "ui.tutorial.guia.fala_18.pegar.porque": {
     "en": "Food and water keep [[fome_sede]] out of the penalty zone.",
     "pt": "Comida e água mantêm [[fome_sede]] longe da zona de penalidade."
   },
   "ui.tutorial.guia.fala_18.pegar.texto": {
-    "en": "The chest nearby has rations and water. Take a ration.",
-    "pt": "O baú ao lado tem rações e água. Pegue uma ração."
+    "en": "The chest has four items reserved for you: two banquets, a ration and a canteen.",
+    "pt": "O baú tem quatro itens reservados para você: dois banquetes, uma ração e um cantil."
   },
-  "ui.tutorial.guia.fala_19.beber.dica.1": {
-    "en": "Click the bottle in the bag and use it twice.",
-    "pt": "Clique na garrafa na bolsa e use-a duas vezes."
+  "ui.tutorial.guia.fala_18.racao.porque": {
+    "en": "The ration restores 20 hunger; two banquets plus the ration total 100.",
+    "pt": "A ração recupera 20 de fome; dois banquetes e ela somam 100."
   },
-  "ui.tutorial.guia.fala_19.beber.porque": {
-    "en": "Water restores less than food. Abilities cost sips: heals, spells and songs.",
-    "pt": "Água rende menos que comida. Habilidades cobram goles: curas, magias e canções."
+  "ui.tutorial.guia.fala_18.racao.texto": {
+    "en": "Use the Travel Ration to fill hunger.",
+    "pt": "Use a Ração de Viagem para completar a fome."
   },
-  "ui.tutorial.guia.fala_19.beber.texto": {
-    "en": "Drink two bottles of water from the bag.",
-    "pt": "Beba duas garrafas de água pela bolsa."
+  "ui.tutorial.guia.fala_19.cantil.dica.1": {
+    "en": "Click the canteen in your bag and choose Use.",
+    "pt": "Clique no cantil na bolsa e escolha Usar."
+  },
+  "ui.tutorial.guia.fala_19.cantil.porque": {
+    "en": "The canteen restores 20 thirst; the two banquets already restored 80.",
+    "pt": "O cantil recupera 20 de sede; os dois banquetes já trouxeram 80."
+  },
+  "ui.tutorial.guia.fala_19.cantil.texto": {
+    "en": "Use the Water Canteen to fill thirst.",
+    "pt": "Use o Cantil de Água para completar a sede."
   },
   "ui.tutorial.guia.fala_2.abrir.texto": {
     "en": "Open the bag with the backpack button or with [[atalho:inventario]].",
@@ -425,8 +457,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Esta passagem parece estranha. Observe o piso antes de avançar."
   },
   "ui.tutorial.guia.fala_armadilhas.atravessar.texto": {
-    "en": "Cross the corridor carefully. Then continue to the marked exit.",
-    "pt": "Atravesse o corredor com cuidado. Depois, siga até a saída marcada."
+    "en": "Cross the corridor carefully. Then keep going.",
+    "pt": "Atravesse o corredor com cuidado. Depois, siga adiante."
   },
   "ui.tutorial.guia.fala_armadilhas.efeitos.texto": {
     "en": "Holes knock you down; pits damage. Nets and bear traps restrain; darts poison.",
@@ -471,6 +503,34 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_camera.modo_3d.texto": {
     "en": "Turn on 3D view with the highlighted button. Or select Got it.",
     "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
+  },
+  "ui.tutorial.guia.fala_gas.bau.porque": {
+    "en": "The flasks are only here, in the middle of the gas, which deals only 1 damage per turn. The water is the safest spot.",
+    "pt": "Os frascos só existem aqui, no meio do gás, que causa só 1 de dano por turno. A água é o lugar mais seguro."
+  },
+  "ui.tutorial.guia.fala_gas.bau.texto": {
+    "en": "Open the marked chest on the water island and take the flasks.",
+    "pt": "Abra o baú marcado, na ilha de água, e pegue os frascos."
+  },
+  "ui.tutorial.guia.fala_gas.gas.porque": {
+    "en": "Fire touching the gas makes the whole cloud explode, and the door opens.",
+    "pt": "Fogo em contato com o gás faz a nuvem inteira explodir, e a porta se abre."
+  },
+  "ui.tutorial.guia.fala_gas.gas.texto": {
+    "en": "Read the warning: this gas is [[inflamavel]] and seals the door below.",
+    "pt": "Leia o aviso: este gás é [[inflamavel]] e sela a porta de baixo."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.dica.1": {
+    "en": "Select the flask in your bag and click a square covered in gas.",
+    "pt": "Selecione o frasco na bolsa e clique numa casa coberta de gás."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.porque": {
+    "en": "The aim shows the [[reacao]] before the throw. In the water, the explosion deals only half damage.",
+    "pt": "A mira mostra a [[reacao]] antes do arremesso. Na água, a explosão causa só metade do dano."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.texto": {
+    "en": "Use the Oil Flask and throw it at a gas square next to you.",
+    "pt": "Use o Frasco de Óleo e jogue-o numa casa de gás ao lado."
   },
   "ui.tutorial.guia.fala_hostilidade.abrir.porque": {
     "en": "Something is fighting in there. Open the door to see the situation before deciding what to do.",
@@ -551,6 +611,30 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_intro.vida.texto": {
     "en": "Check your hero's health. If it reaches zero, they fall and need help.",
     "pt": "Confira a vida do herói. Se ela chegar a zero, ele cai e precisa de ajuda."
+  },
+  "ui.tutorial.guia.fala_piche.bau.texto": {
+    "en": "Open the marked chest and take the Pitch and Oil Flasks.",
+    "pt": "Abra o baú marcado e pegue os Frascos de Piche e de Óleo."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.dica.1": {
+    "en": "Stay out of the patch: burning pitch lasts 3 rounds.",
+    "pt": "Fique fora da mancha: o piche em chamas queima por 3 rodadas."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.porque": {
+    "en": "Fire on pitch lights the whole patch, which burns anyone standing in it. Each throw uses your main action.",
+    "pt": "Fogo no piche acende a mancha inteira, que queima quem estiver nela. Cada arremesso gasta a ação principal."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.texto": {
+    "en": "Use the Oil Flask on your next turn and throw it onto the pitch.",
+    "pt": "Use o Frasco de Óleo no turno seguinte e jogue-o sobre o piche."
+  },
+  "ui.tutorial.guia.fala_piche.piche.porque": {
+    "en": "Pitch makes a 3×3 patch that lasts 4 rounds and deals no damage by itself.",
+    "pt": "O piche forma uma mancha de 3×3 que dura 4 rodadas e não causa dano sozinha."
+  },
+  "ui.tutorial.guia.fala_piche.piche.texto": {
+    "en": "Use the Pitch Flask and throw it near the dummy, two squares away.",
+    "pt": "Use o Frasco de Piche e jogue-o perto do boneco, a duas casas."
   },
   "ui.tutorial.guia.fala_primeiro_combate.alvo.texto": {
     "en": "Use a training dummy to try your attack without spending resources.",

@@ -35,6 +35,7 @@
     armadilha_lamina:  E(['combate/golpe_cortante_1.ogg'], 0.90, 150),
     incendio:          E(n('combate/incendio', 3), 1.60, 150),
     acido:             E(n('combate/acido', 3), 1.25, 200),
+    frasco_piche_impacto: E(n('combate/frasco_piche_impacto', 3), 0.95, 180),
     teleporte:         E(['combate/teleporte.ogg'], 0.85, 120, { pitchJitter: 0, volJitter: 0.04 }),
     congelar:          E(['combate/congelar.ogg'], 0.90, 200, { pitchJitter: 0.03, volJitter: 0.04 }),
     crosta:            E(['combate/crosta.ogg'], 0.90, 200, { pitchJitter: 0.03, volJitter: 0.04 }),
@@ -56,6 +57,8 @@
     bau_abre:          E(n('exploracao/bau_abre', 3), 0.75, 300),
     sino_igreja:       E(['exploracao/sino_igreja.ogg'], 0.78, 250,
                          { pitchJitter: 0, volJitter: 0.02 }),
+    alarme_emboscada:  E(['exploracao/alarme_emboscada.ogg'], 0.78, 0,
+                         { pitchJitter: 0, volJitter: 0 }),
     // Passo em água/pântano: toca pelo canal dos passos (slider "Movimento dos
     // peões"), não pelo sfx() — ver tocarSomPasso no game.js.
     passo_agua:        E(n('exploracao/passo_agua', 3), 0.55, 0, { canal: 'passos', pitchJitter: 0.08 }),

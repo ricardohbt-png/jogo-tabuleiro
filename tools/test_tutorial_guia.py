@@ -77,6 +77,62 @@ class ValidacaoTests(unittest.TestCase):
         ok, msg = S.validar_dungeon(dungeon_com_guia([{"texto": "  "}]))
         self.assertFalse(ok); self.assertIn("texto", msg)
 
+    def test_demonstracao_permitida_e_validada(self):
+        demo = [
+            {"acao": "focar", "alvo": "botao:inventario"},
+            {"acao": "abrir_interface", "alvo": "inventario"},
+            {"acao": "focar", "alvo": "bolsa:pocao_cura"},
+        ]
+        guia = [{"id": "s1", "texto": "Abra a bolsa.", "ui": "botao:inventario",
+                 "demonstracao": demo}]
+        self.assertEqual(S.validar_dungeon(dungeon_com_guia(guia)), (True, 'ok'))
+
+    def test_demonstracao_visual_valida_por_operacao(self):
+        validas = (
+            {"acao": "prever_movimento", "alvo": "casa:[5,15]"},
+            {"acao": "prever_equipamento", "alvo": "slot:weapon"},
+            {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+             "alvo": "monstro:boneco_treino"},
+        )
+        for operacao in validas:
+            with self.subTest(operacao=operacao):
+                guia = [{"id": "s1", "texto": "Veja o passo.",
+                         "demonstracao": [operacao]}]
+                self.assertEqual(S.validar_dungeon(dungeon_com_guia(guia)), (True, 'ok'))
+
+        invalidas = (
+            {"acao": "prever_movimento", "alvo": "monstro:boneco_treino"},
+            {"acao": "prever_movimento", "alvo": "casa:[5,x]"},
+            {"acao": "prever_equipamento", "alvo": "casa:[5,15]"},
+            {"acao": "prever_equipamento", "alvo": "slot:"},
+            {"acao": "prever_habilidade", "habilidade": "Golpe!",
+             "alvo": "monstro:boneco_treino"},
+            {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+             "alvo": "slot:weapon"},
+            {"acao": "prever_habilidade", "alvo": "monstro:boneco_treino"},
+            {"acao": "prever_movimento", "alvo": "casa:[5,15]", "handler": "attack"},
+            {"acao": "prever_habilidade", "habilidade": "golpe_devastador",
+             "alvo": "monstro:boneco_treino", "comando": "attack"},
+        )
+        for operacao in invalidas:
+            with self.subTest(operacao=operacao):
+                guia = [{"id": "s1", "texto": "Veja o passo.",
+                         "demonstracao": [operacao]}]
+                self.assertFalse(S.validar_dungeon(dungeon_com_guia(guia))[0])
+
+    def test_demonstracao_invalida_e_rejeitada(self):
+        invalidas = (
+            [{"acao": "atacar", "alvo": "boneco_treino"}],
+            [{"acao": "focar", "alvo": "querySelector:body"}],
+            [{"acao": "abrir_interface", "alvo": "loja"}],
+            ["abrir_interface"],
+            [{"acao": "focar", "alvo": "botao:inventario"}] * 5,
+        )
+        for demo in invalidas:
+            guia = [{"id": "s1", "texto": "Abra a bolsa.", "demonstracao": demo}]
+            with self.subTest(demo=demo):
+                self.assertFalse(S.validar_dungeon(dungeon_com_guia(guia))[0])
+
     def test_ui_invalida(self):
         for ui in ("botao", "xyz:abc", "casa:3,4", "habilidade:Mira Certeira", 5):
             ok, _ = S.validar_dungeon(dungeon_com_guia([{"texto": "a", "ui": ui}]))
@@ -127,6 +183,16 @@ class DerivacaoTests(unittest.TestCase):
         p9 = S._guia_payload(lic, 9)
         self.assertEqual(p9["i"], 2)
         self.assertFalse(p9["informativo"])
+
+    def test_payload_preserva_demonstracao_e_nao_inventa_em_passos_antigos(self):
+        demo = [{"acao": "focar", "alvo": "habilidade:mira_certeira"}]
+        lic = {"id": "x", "guia": [{"texto": "a", "demonstracao": demo}]}
+        self.assertEqual(S._guia_payload(lic, 0)["demonstracao"], demo)
+
+        antiga = {"id": "x", "guia": [{"texto": "a"}]}
+        self.assertNotIn("demonstracao", S._guia_payload(antiga, 0))
+        auto = {"id": "x", "texto": "a", "tarefa": {"tipo": "encerrar_turno"}}
+        self.assertNotIn("demonstracao", S._guia_payload(auto, 0))
 
 
 class AvancoTests(unittest.IsolatedAsyncioTestCase):
@@ -377,7 +443,7 @@ class ResultadoTests(unittest.IsolatedAsyncioTestCase):
 
     def test_handle_attack_chama_o_resultado(self):
         import inspect
-        self.assertIn('_guia_resultado_ataque(', inspect.getsource(S.GameRoom.handle_attack))
+        self.assertIn('_guia_resultado_ataque(', inspect.getsource(S.GameRoom.handle_attack_impl))
 
 
 class RecompensaTests(unittest.TestCase):

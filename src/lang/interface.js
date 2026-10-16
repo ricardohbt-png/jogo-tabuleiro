@@ -1432,6 +1432,10 @@ window.LANG_INTERFACE = {
     "en": "Critical hit",
     "pt": "Golpe crítico"
   },
+  "ui.somteste.ev.frasco_piche_impacto": {
+    "en": "Pitch flask shattering",
+    "pt": "Frasco de piche se quebrando"
+  },
   "ui.somteste.ev.explosao": {
     "en": "Explosion (mine, grenade)",
     "pt": "Explosão (mina, granada)"
@@ -1523,6 +1527,10 @@ window.LANG_INTERFACE = {
   "ui.somteste.ev.sino_igreja": {
     "en": "Church bell (ritual bell)",
     "pt": "Sino de igreja (sino ritualístico)"
+  },
+  "ui.somteste.ev.alarme_emboscada": {
+    "en": "Road ambush alarm",
+    "pt": "Alarme de emboscada na estrada"
   },
   "ui.somteste.ev.sua_vez": {
     "en": "Your turn",
@@ -4997,8 +5005,8 @@ window.LANG_INTERFACE = {
     "pt": "Gelo: o fogo o derrete em água rasa."
   },
   "ui.item.frasco_piche.desc": {
-    "en": "Area (radius 1, range 4). Spreads pitch for 4 rounds — the ground is slowed and FLAMMABLE. No damage.",
-    "pt": "Área (raio 1, alcance 4). Espalha piche por 4 rodadas — o chão fica lento e INFLAMÁVEL. Sem dano."
+    "en": "Area (radius 1, range 4). Spreads pitch over 3×3 tiles for 4 rounds; crossing costs 2 movement points and the ground is FLAMMABLE. No damage.",
+    "pt": "Área (raio 1, alcance 4). Espalha piche em 3×3 casas por 4 rodadas; atravessar custa 2 pontos de movimento e o chão fica INFLAMÁVEL. Sem dano."
   },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
@@ -8210,6 +8218,14 @@ window.LANG_INTERFACE = {
     "en": "Road encounter risk: {chance}% (at most one fight).",
     "pt": "Risco de emboscada na estrada: {chance}% (no máximo um combate)."
   },
+  "ui.mundo.emboscada_entrada_titulo": {
+    "en": "AMBUSH ON THE ROAD!",
+    "pt": "EMBOSCADA NA ESTRADA!"
+  },
+  "ui.mundo.emboscada_entrada_aviso": {
+    "en": "Enemies burst from hidden pits and surround the party!",
+    "pt": "Inimigos saltam de buracos escondidos e cercam o grupo!"
+  },
   "ui.mundo.estrada_segura": {
     "en": "Travel by road — {chance}% risk",
     "pt": "Viajar pela estrada — {chance}% de risco"
@@ -8257,6 +8273,14 @@ window.LANG_INTERFACE = {
   "ui.mundo.emboscada_vitoria_masmorra": {
     "en": "The ambush is defeated. Continue to the dungeon or return to the city of origin?",
     "pt": "A emboscada foi vencida. Continuar até a masmorra ou retornar à cidade de origem?"
+  },
+  "ui.mundo.emboscada_vitoria_viagem": {
+    "en": "The obstacle is overcome. Close the encounter map and continue the journey?",
+    "pt": "Obstáculo vencido. Fechar o mapa do encontro e continuar a viagem?"
+  },
+  "ui.mundo.fechar_encontro_continuar_viagem": {
+    "en": "Close encounter and continue journey",
+    "pt": "Encerrar encontro e continuar viagem"
   },
   "ui.mundo.emboscada_decisao_titulo": {
     "en": "The road is clear",

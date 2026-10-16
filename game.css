@@ -1363,6 +1363,9 @@ input:focus { outline: none; border-color: var(--gold); }
 .city-travel-shade{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 15%,rgba(0,0,0,.78) 100%);}
 .city-travel-copy{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);min-width:240px;text-align:center;color:#f7e4af;text-shadow:0 2px 6px #000;font-family:var(--font-body);}
 .city-travel-copy b{display:block;font-size:23px;letter-spacing:2px;}.city-travel-copy span{display:block;margin-top:7px;font-size:15px;color:#ead3a0;}@keyframes city-travel-zoom{from{transform:scale(1.06)}to{transform:scale(1)}}
+.city-travel-copy.travel-ambush-copy{bottom:7%;width:min(90vw,760px);padding:14px 20px;border:1px solid #c99a47;border-radius:8px;background:rgba(13,10,7,.78);box-shadow:0 6px 24px #000a;}
+.city-travel-copy.travel-ambush-copy b{font-size:clamp(22px,4vw,34px);color:#ffd67c;}
+.city-travel-copy.travel-ambush-copy span{font-size:clamp(14px,2vw,18px);color:#f4e7ce;}
 #worldmap-frame{position:relative;width:min(100%,1200px);aspect-ratio:1240/1269;margin:0 auto;overflow:hidden;
   border:2px solid #9d7b3d;border-radius:8px;background:#0a1118;box-shadow:0 0 42px #000;}
 #worldmap-frame>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;}
@@ -1965,6 +1968,7 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
   opacity:0; transform:translateY(-8px);
   transition:opacity .18s ease, transform .18s ease; }
 #licao-janela.open{ display:block; opacity:1; transform:translateY(0); }
+#licao-janela.guia-demo-acima-inventario{ z-index:1110; }
 #licao-prologo-backdrop{ position:fixed; inset:0; display:none; z-index:117;
   background:rgba(4,8,15,.82); backdrop-filter:blur(2px); }
 #licao-prologo-backdrop.open{ display:block; }
@@ -2014,6 +2018,17 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
   background:#f0c8671f; font-size:.82rem; line-height:1.35; }
 #licao-janela .licao-aviso{ margin-top:8px; padding:6px 8px; border-left:3px solid #e8d8a0;
   background:#ffffff14; font-size:.82rem; line-height:1.35; }
+#licao-janela .licao-demonstracao{ display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-top:8px; padding:7px 8px; border:1px solid #f0c86766; border-radius:5px;
+  background:#f0c86712; color:#f3e6cf; font-size:.8rem; line-height:1.35; }
+#licao-janela .licao-demo-conteudo{ display:flex; flex:1 1 auto; min-width:0; flex-direction:column; gap:5px; }
+#licao-janela .licao-demo-controles{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:.74rem; opacity:.9; }
+#licao-janela .licao-demo-controles b{ color:#f0c867; }
+#licao-janela .licao-demo-cancelar{ flex:0 0 auto; cursor:pointer; padding:4px 7px; border-radius:4px;
+  border:1px solid #f0c86766; background:#140f09; color:inherit; font:inherit; }
+#licao-janela .licao-demo-cancelar:hover{ background:#f0c86733; }
+.guia-demo-foco{ outline:3px solid #fff1a6 !important; outline-offset:4px !important;
+  box-shadow:0 0 0 6px #f0c86755, 0 0 18px #f0c867aa !important; }
 #licao-janela .licao-acoes{ display:flex; gap:8px; margin-top:8px; }
 #licao-janela .licao-botao{ cursor:pointer; padding:5px 10px; border-radius:4px; font-size:.8rem;
   border:1px solid #f0c86788; background:#f0c8671a; color:inherit; }
@@ -2041,6 +2056,9 @@ body[data-animation-speed="instant"] .city-gateglow { animation-duration:.001ms 
   0%,100%{ box-shadow:0 0 0 0 #f0c86799; }
   50%{ box-shadow:0 0 0 10px #f0c86700, 0 0 18px 4px #f0c867cc; }
 }
+.guia-demo-cursor-visual{ position:fixed; z-index:1200; width:30px; height:30px; display:none;
+  transform:translate(-50%,-50%); pointer-events:none; color:#fff0a6; font-size:25px; line-height:30px;
+  text-align:center; text-shadow:0 0 5px #ffcf45,0 0 14px #68dcff; filter:drop-shadow(0 2px 3px #000); }
   @media (prefers-reduced-motion:reduce){ .guia-halo{ animation:none; box-shadow:0 0 14px 3px #f0c867cc; } #guia-atalho-cursor{animation:none;opacity:1;} .guia-camera-alvo{animation:none;box-shadow:inset 0 0 24px #36c9ef88;} }
 
 /* ── Prévia do editor (index.html?preview=1): só o tabuleiro ──────────────── */

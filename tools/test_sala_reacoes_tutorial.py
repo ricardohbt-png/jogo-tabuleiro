@@ -1,0 +1,442 @@
+"""Sala das Reações de Terreno (Campo de Treinamento): gás permanente, porta `gas`,
+verbos de lição, frasco de socorro e criação do gás. Roda da raiz:
+python -X utf8 tools/test_sala_reacoes_tutorial.py
+Spec: docs/superpowers/specs/2026-10-16-sala-reacoes-terreno-design.md"""
+import asyncio
+import os
+import sys
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import server as S  # noqa: E402
+
+PASS = 0
+FAIL = 0
+
+
+def check(nome, cond):
+    global PASS, FAIL
+    if cond:
+        PASS += 1
+        print(f"  ✅ {nome}")
+    else:
+        FAIL += 1
+        print(f"  ❌ {nome}")
+
+
+def roda(coro):
+    return asyncio.run(coro)
+
+
+def sala():
+    """Duas salas de chão lado a lado (0: x1-10, 1: x11-20), 'playing', sem rede."""
+    r = S.GameRoom("SRT")
+    r.msgs = []
+    r.narr = []
+    r.saves = []
+    r.dados = []
+
+    async def noop(*a, **k):
+        pass
+
+    async def bc(msg, *a, **k):
+        r.msgs.append(msg)
+
+    async def say(txt, *a, **k):
+        r.narr.append(str(txt))
+    r.gm_say = say; r.broadcast = bc; r.push_state = noop; r.send_to = noop
+    r._broadcast_dado = noop
+    r.tiles = [[S.WALL] * S.MAP_W for _ in range(S.MAP_H)]
+    for y in range(1, 13):
+        for x in range(1, 21):
+            r.tiles[y][x] = S.FLOOR
+    r.rooms = [{"id": 0, "x": 1, "y": 1, "w": 10, "h": 12, "locked": False},
+               {"id": 1, "x": 11, "y": 1, "w": 10, "h": 12, "locked": False}]
+    r.phase = "playing"
+    r.round_num = 1
+    r.materiais = {}
+    return r
+
+
+def heroi(r, pid, nome, classe, pos, hp=60):
+    h = S.make_player(pid, nome, classe, len(r.players))
+    h["pos"] = list(pos)
+    h["hp"] = h["max_hp"] = hp
+    r.players[pid] = h
+    r.player_order = list(r.players)
+    return h
+
+
+def camara(r, sala_id=0, duracao=4, **extra):
+    z = {"id": f"camara_gas_t{sala_id}", "tipo": "camara_gas", "room_id": sala_id,
+         "duracao": duracao, "ativa": True, "created_round": r.round_num}
+    z.update(extra)
+    r.zonas_especiais.append(z)
+    return z
+
+
+def fixa(r, dado=8, passa=False):
+    """Dado fixo (registra a expressão pedida em r.dados) e save fixo."""
+    def rolar(expr):
+        r.dados.append(expr)
+        return dado
+    r._rolar_dado = rolar
+
+    async def save(alvo, tipo, cd, *a, **k):
+        r.saves.append((tipo, cd))
+        return passa, 10, 0, 10
+    r._save_mostrado = save
+
+
+async def fogo_em(r, casas, caster="x", origem=None):
+    async with r.evento_elemental(origem or {"tipo": "item", "id": "frasco_oleo", "caster_id": caster}):
+        await r._rx_registrar(S.DMG_FIRE, casas, dano=1)
+
+
+def secao_1():
+    print("[1] gás permanente e dano de explosão por zona")
+    r = sala()
+    z = camara(r, duracao=2, permanente=True)
+    for _ in range(5):
+        roda(r._processar_zonas_turno_impl())
+    check("zona permanente não dissipa em 5 rodadas", z["ativa"] is True)
+    r = sala()
+    z = camara(r, duracao=2)
+    for _ in range(2):
+        roda(r._processar_zonas_turno_impl())
+    check("sem a marca a câmara ainda dissipa", z["ativa"] is False)
+    r = sala()
+    z = camara(r, permanente=True)
+    n = camara(r, sala_id=1, permanente=True)
+    n.update(id="nuvem_t", tipo="nuvem_gas", tiles=[[12, 3]])
+    for _ in range(6):
+        roda(r._processar_zonas_turno_impl())
+    check("nuvem de gás permanente também não dissipa", n["ativa"] is True)
+    r = sala()
+    fixa(r, dado=3)
+    heroi(r, "a", "Ana", "warrior", [3, 3])
+    camara(r, dano_explosao="1d4")
+    roda(fogo_em(r, [(3, 3)]))
+    check("dano_explosao da zona é a expressão rolada", "1d4" in r.dados and "2d6" not in r.dados)
+    r = sala()
+    fixa(r, dado=3)
+    heroi(r, "a", "Ana", "warrior", [3, 3])
+    camara(r)
+    roda(fogo_em(r, [(3, 3)]))
+    check("sem o campo a explosão continua 2d6", "2d6" in r.dados)
+
+
+def masmorra_porta(cond):
+    """Masmorra 12x9: sala A (y1-4) | porta [5,5] | sala B (y6-7)."""
+    W, H = 12, 9
+    tiles = [[S.WALL] * W for _ in range(H)]
+    for y in list(range(1, 5)) + [6, 7]:
+        for x in range(1, 11):
+            tiles[y][x] = S.FLOOR
+    tiles[5][5] = S.DOOR
+    d = {
+        "schema_version": 1, "id": "porta_gas", "name": "Porta do gás",
+        "grid": {"w": W, "h": H}, "tiles": tiles, "entrance": {"x": 2, "y": 2},
+        "rooms": [{"id": "a", "x": 1, "y": 1, "w": 10, "h": 4, "role": "entrance", "doors": []},
+                  {"id": "b", "x": 1, "y": 6, "w": 10, "h": 2, "role": "empty", "locked": True,
+                   "doors": [[5, 5]]}],
+        "monsters": [], "decorations": [], "chests": [], "traps": [],
+        "objectives": {"primary": {"type": "kill_all"}, "secondary": []},
+    }
+    if cond is not None:
+        d["door_conditions"] = {"5,5": cond}
+    return d
+
+
+def secao_2():
+    print("[2] condição de porta `gas`")
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas", "zona_id": "gas_tutorial"}))
+    check("validar_dungeon aceita {type:gas, zona_id}", ok is True)
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas", "zona_id": ""}))
+    check("zona_id vazio é recusado", ok is False)
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas"}))
+    check("zona_id ausente é recusado", ok is False)
+    r = S.GameRoom("PGAS")
+    r.phase = "playing"
+    r.load_authored_dungeon(masmorra_porta({"type": "gas", "zona_id": "gas_tutorial"}))
+    check("sem a zona a porta já está satisfeita", r._door_condition_satisfied((5, 5)) is True)
+    z = camara(r, sala_id="b", duracao=9, permanente=True)
+    z["id"] = "gas_tutorial"
+    check("zona ativa: porta NÃO satisfeita", r._door_condition_satisfied((5, 5)) is False)
+    z["ativa"] = False
+    check("zona consumida: porta satisfeita", r._door_condition_satisfied((5, 5)) is True)
+    z["ativa"] = True
+    pl = r._game_state_payload()["door_conditions"]["5,5"]
+    check("payload leva type, satisfied e zona_id",
+          pl["type"] == "gas" and pl["satisfied"] is False and pl["zona_id"] == "gas_tutorial")
+    # abrir a porta com o gás ativo responde com a mensagem própria
+    erros = []
+
+    async def captura(pid, m):
+        if m.get("type") == "error":
+            erros.append(m["msg"])
+    r.send_to = captura
+    h = heroi(r, "a", "Ana", "warrior", [5, 4])
+    r.player_order = ["a"]
+    roda(r.handle_open_door("a", 5, 5))
+    check("abrir com gás ativo recusa com erro.porta_exige_gas_consumido",
+          len(erros) == 1 and getattr(erros[0], "key", None) == "erro.porta_exige_gas_consumido")
+    check("a porta continua fechada", (5, 5) not in r.opened_doors)
+    z["ativa"] = False
+    roda(r.handle_open_door("a", 5, 5))
+    check("com o gás consumido a porta abre", (5, 5) in r.opened_doors)
+
+    # O editor descartava condições de tipo desconhecido ao abrir a masmorra: salvar o
+    # Campo de Treinamento por ele apagaria a trava de gás. O editor não roda sem DOM,
+    # então a prova é estática: leitura e escrita do tipo `gas` + chave de idioma.
+    ed = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "editor.js"),
+              encoding="utf-8").read()
+    check("editor.js carrega a condição gas (loadJSON)",
+          'c.type === "gas" && typeof c.zona_id === "string"' in ed)
+    check("editor.js grava a condição gas (buildJSON)", 'c.type === "gas" ? { type: "gas", zona_id' in ed)
+    check("chave de idioma do editor para gas existe",
+          '"ui.editor.masmorra.painel.gas_consumido"' in S._LANG_TEXTO if hasattr(S, "_LANG_TEXTO") else
+          '"ui.editor.masmorra.painel.gas_consumido"' in open(os.path.join(
+              os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "lang", "editor.js"),
+              encoding="utf-8").read())
+
+
+def sala_treino(*licoes):
+    """Sala de treinamento mínima: lições à mão, sem falas, sem rede."""
+    r = sala()
+    r.training_mode = True
+    r.training_state = {}
+    r.falas = []
+    r.licoes = list(licoes)
+    r.licoes_feitas = set()
+    return r
+
+
+def licao(lid, tipo, alvo=None, ordem=36):
+    tar = {"tipo": tipo, "vezes": 1, "texto_curto": lid}
+    if alvo is not None:
+        tar["alvo"] = alvo
+    return {"id": lid, "ordem": ordem, "pos": [3, 3], "texto": "", "tarefa": tar,
+            "falante": {"nome": "Mestre", "emoji": "x"}, "trigger": {"tipo": "proximidade", "raio": 2}}
+
+
+def com_licao(r, pid, nome, classe, lid, pos=(3, 3)):
+    h = heroi(r, pid, nome, classe, pos)
+    h["licao_atual"] = lid
+    h["licoes_feitas"] = []
+    h["licao_progresso"] = {}
+    h["tutorial_history"] = []
+    h["licao_passo"] = 0
+    return h
+
+
+def secao_3():
+    print("[3] verbos explodir_gas / incendiar_piche e seus eventos")
+    check("explodir_gas e incendiar_piche são verbos de lição",
+          "explodir_gas" in S.LICAO_VERBOS and "incendiar_piche" in S.LICAO_VERBOS)
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial"))
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_gas", pos=(15, 5))
+    b = com_licao(r, "b", "Bia", "mage", "fala_gas", pos=(16, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="a"))
+    check("detonar o gás conclui a lição dos DOIS heróis",
+          "fala_gas" in a["licoes_feitas"] and "fala_gas" in b["licoes_feitas"])
+    check("quem estava fora do gás não perde PV", a["hp"] == 60 and b["hp"] == 60)
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial"))
+    fixa(r, dado=1)
+    m = com_licao(r, "m", "Mia", "mage", "fala_gas", pos=(15, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="m", origem={"tipo": "magia", "id": "bola_fogo", "caster_id": "m"}))
+    check("Bola de Fogo de fora também conclui", "fala_gas" in m["licoes_feitas"])
+    r = sala()
+    r.licoes = [licao("fala_gas", "explodir_gas", "gas_tutorial")]
+    r.licoes_feitas = set()
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_gas", pos=(15, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="a"))
+    check("fora do treinamento nada é emitido", "fala_gas" not in a["licoes_feitas"])
+    # piche: só o autor
+    r = sala_treino(licao("fala_piche", "incendiar_piche", None, ordem=37))
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_piche", pos=(15, 5))
+    b = com_licao(r, "b", "Bia", "rogue", "fala_piche", pos=(16, 5))
+    for xy in ((4, 4), (5, 4), (4, 5), (5, 5)):
+        r.materiais[xy] = "piche"
+    roda(fogo_em(r, [(4, 4)], caster="a"))
+    check("acender o piche conclui só a lição do autor",
+          "fala_piche" in a["licoes_feitas"] and "fala_piche" not in b["licoes_feitas"])
+
+
+def secao_4():
+    print("[4] lição de estado: pulada quando o gás já foi consumido")
+    gas = licao("fala_gas", "explodir_gas", "gas_tutorial", ordem=36)
+    piche = licao("fala_piche", "incendiar_piche", None, ordem=37)
+    piche["pos"] = [8, 8]
+    # sem zona ativa (já explodiu) -> o herói que chega depois pula, sem prêmio
+    r = sala_treino(gas, piche)
+    r.falas = r.licoes
+    enviados = []
+
+    async def captura(pid, m):
+        enviados.append(m.get("type"))
+    r.send_to = captura
+    b = com_licao(r, "b", "Bia", "mage", None, pos=(3, 4))
+    ouro, xp = b["gold"], b["xp"]
+    roda(r._verificar_falas(b, None))
+    check("com o gás consumido a lição não abre", b["licao_atual"] != "fala_gas")
+    check("fica em licoes_puladas e licoes_feitas",
+          "fala_gas" in b["licoes_puladas"] and "fala_gas" in b["licoes_feitas"])
+    check("sem prêmio: fora do tutorial_history, ouro e XP intactos",
+          "fala_gas" not in b["tutorial_history"] and b["gold"] == ouro and b["xp"] == xp)
+    check("o cliente recebe licao_pulada", "licao_pulada" in enviados)
+    b["pos"] = [8, 9]
+    roda(r._verificar_falas(b, None))
+    check("a lição seguinte (fala_piche) fica liberada e abre", b["licao_atual"] == "fala_piche")
+    # com a zona ativa a lição abre normalmente
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial", ordem=36))
+    r.falas = r.licoes
+    r.send_to = captura
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    a = com_licao(r, "a", "Ana", "warrior", None, pos=(3, 4))
+    roda(r._verificar_falas(a, None))
+    check("com o gás ativo a lição abre", a["licao_atual"] == "fala_gas" and not a.get("licoes_puladas"))
+
+
+def sala_do_gas():
+    """Sala de treino com a sala 49 (x11-20) e o gás permanente ativo."""
+    r = sala_treino()
+    r.rooms[1]["id"] = 49
+    z = camara(r, sala_id=49, permanente=True)
+    z["id"] = "gas_tutorial"
+    return r, z
+
+
+def oleo(h):
+    return [i for i in h["bag"] if i.get("id") == "frasco_oleo"]
+
+
+def secao_5():
+    print("[5] frasco de socorro")
+    r, z = sala_do_gas()
+    a = heroi(r, "a", "Ana", "warrior", [3, 3])
+    a["bag"] = []
+    check("sem óleo, sem baú e com o gás ativo: dá 1 frasco emprestado",
+          roda(r._training_frasco_socorro(a)) is True and len(oleo(a)) == 1
+          and oleo(a)[0].get("tutorial_loan") is True)
+    check("chamado de novo não dá outro (já tem óleo)",
+          roda(r._training_frasco_socorro(a)) is False and len(oleo(a)) == 1)
+    r, z = sala_do_gas()
+    b = heroi(r, "b", "Bia", "mage", [3, 3])
+    b["bag"] = [S.hidratar_itens_bau([{"id": "frasco_oleo"}])[0]]
+    check("com óleo na bolsa não dá", roda(r._training_frasco_socorro(b)) is False and len(oleo(b)) == 1)
+    r, z = sala_do_gas()
+    c = heroi(r, "c", "Cris", "rogue", [3, 3])
+    c["bag"] = []
+    r._spawn_chest([15, 6], 0, S.hidratar_itens_bau([{"id": "frasco_oleo"}]))
+    check("com óleo ainda no baú da sala 49 não dá", roda(r._training_frasco_socorro(c)) is False)
+    r.chests.clear()
+    check("baú esvaziado: dá", roda(r._training_frasco_socorro(c)) is True)
+    r, z = sala_do_gas()
+    z["ativa"] = False
+    d = heroi(r, "d", "Davi", "bard", [3, 3])
+    d["bag"] = []
+    check("gás já consumido: não dá", roda(r._training_frasco_socorro(d)) is False)
+    r, z = sala_do_gas()
+    e = heroi(r, "e", "Eva", "paladin", [3, 3])
+    e["bag_size"] = 2
+    e["bag"] = [{"id": "x1"}, {"id": "x2"}]
+    check("bolsa cheia: não dá", roda(r._training_frasco_socorro(e)) is False)
+    r, z = sala_do_gas()
+    r.training_mode = False
+    f = heroi(r, "f", "Fio", "warrior", [3, 3])
+    f["bag"] = []
+    check("fora do treinamento: não dá", roda(r._training_frasco_socorro(f)) is False)
+    # integração: o início do turno chama o socorro
+    r, z = sala_do_gas()
+    g = heroi(r, "g", "Gil", "warrior", [3, 3])
+    g["bag"] = []
+    roda(r._start_initiative_player_turn(g))
+    check("início do turno do herói sem óleo entrega o frasco", len(oleo(g)) == 1)
+
+
+def masmorra_treino(com_sala_gas=True, treino=True):
+    """Masmorra mínima de treinamento: sala 0 (entrada) e, opcionalmente, a sala 49 do gás."""
+    W, H = 12, 12
+    tiles = [[S.WALL] * W for _ in range(H)]
+    for y in range(1, 4):
+        for x in range(1, 11):
+            tiles[y][x] = S.FLOOR
+    rooms = [{"id": 0, "x": 1, "y": 1, "w": 10, "h": 3, "role": "entrance", "doors": []}]
+    if com_sala_gas:
+        for y in range(6, 10):
+            for x in range(1, 11):
+                tiles[y][x] = S.FLOOR
+        tiles[5][5] = S.DOOR
+        rooms.append({"id": 49, "x": 1, "y": 6, "w": 10, "h": 4, "role": "empty", "locked": True,
+                      "doors": [[5, 5]]})
+    d = {"schema_version": 1, "id": "treino_gas", "name": "Treino do gás",
+         "grid": {"w": W, "h": H}, "tiles": tiles, "entrance": {"x": 2, "y": 2}, "rooms": rooms,
+         "monsters": [], "decorations": [], "chests": [], "traps": [],
+         "objectives": {"primary": {"type": "kill_all"}, "secondary": []}}
+    if treino:
+        d["tutorial_training"] = True
+    return d
+
+
+def gas_do_treino(r):
+    return [z for z in r.zonas_especiais if z.get("id") == "gas_tutorial"]
+
+
+def secao_6():
+    print("[6] o gás nasce na preparação do treinamento")
+    r = S.GameRoom("TG")
+    r.phase = "playing"
+    r.load_authored_dungeon(masmorra_treino())
+    zs = gas_do_treino(r)
+    check("existe exatamente 1 zona gas_tutorial", len(zs) == 1)
+    z = zs[0] if zs else {}
+    check("tipo, sala e marcas do design",
+          z.get("tipo") == "camara_gas" and z.get("room_id") == 49 and z.get("ativa") is True
+          and z.get("permanente") is True)
+    check("dificuldade 10, dano \"1\" e explosão \"1d4\"",
+          z.get("dificuldade") == 10 and z.get("dano") == "1" and z.get("dano_explosao") == "1d4")
+    r._training_criar_gas()
+    check("criar de novo não duplica (idempotente)", len(gas_do_treino(r)) == 1)
+    # enter_dungeon limpa as zonas ANTES de carregar a masmorra: a zona tem de reaparecer
+    r.zonas_especiais = []
+    r.load_authored_dungeon(masmorra_treino())
+    check("recarregar a masmorra (como o enter_dungeon faz) recria a zona", len(gas_do_treino(r)) == 1)
+    for _ in range(12):
+        roda(r._processar_zonas_turno_impl())
+    check("12 rodadas depois ela segue ativa", gas_do_treino(r)[0]["ativa"] is True)
+    roundtrip = S.foto_desempacotar(S.foto_empacotar({"zonas_especiais": r.zonas_especiais}))
+    check("a zona sobrevive ao empacotar/desempacotar da foto",
+          roundtrip["zonas_especiais"] == r.zonas_especiais)
+    r2 = S.GameRoom("TG2")
+    r2.phase = "playing"
+    r2.load_authored_dungeon(masmorra_treino(com_sala_gas=False))
+    check("mapa de treinamento sem sala 49: não cria", gas_do_treino(r2) == [])
+    r3 = S.GameRoom("TG3")
+    r3.phase = "playing"
+    r3.load_authored_dungeon(masmorra_treino(treino=False))
+    check("masmorra que não é de treinamento: não cria", gas_do_treino(r3) == [])
+
+
+if __name__ == "__main__":
+    secao_1()
+    secao_2()
+    secao_3()
+    secao_4()
+    secao_5()
+    secao_6()
+    print(f"\n{PASS} ok, {FAIL} falhas")
+    sys.exit(1 if FAIL else 0)

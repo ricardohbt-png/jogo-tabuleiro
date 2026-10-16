@@ -90,6 +90,22 @@ async def main():
     e0 = json.loads(r.connections["b0"].msgs[-1])
     check("o marcador chega ao cliente", any(m.get("owner_id") == "b0" for m in e0["cooperative_markers"]))
 
+    print("\n[6] Treinamento: baús personalizados por classe + marcador padrão vazio")
+    r = sala(2)
+    for i, (pid, cls) in enumerate((("b0", "warrior"), ("b1", "mage"))):
+        p = S.make_player(pid, f"J{i}", cls, i); p["pos"] = [2 + i, 2]; r.players[pid] = p
+    r.training_mode = True
+    r.chests.clear()
+    r.chests["c1"] = {"id": "c1", "pos": [3, 3], "gold": 0, "opened": False,
+                      "items": [{"id": "espada", "tutorial_class": "mage"}, {"id": "pocao"}]}
+    await r.push_state()
+    por = {pid: json.loads(r.connections[pid].msgs[-1]) for pid in ("b0", "b1")}
+    ocultos = {pid: [i["id"] for c in m["chests"] for i in c["items"] if i["tutorial_hidden"]] for pid, m in por.items()}
+    check("guerreiro não vê o item do mago", ocultos["b0"] == ["espada"])
+    check("mago vê o próprio item", ocultos["b1"] == [])
+    check("cooperative_markers vai vazio em todos", all(m.get("cooperative_markers") == [] for m in por.values()))
+    check("payload cru não leva cooperative_markers", "cooperative_markers" not in r._game_state_payload())
+
 asyncio.run(main())
 print(f"\n{PASS} ok, {FAIL} falhas")
 sys.exit(1 if FAIL else 0)

@@ -304,7 +304,9 @@ class TerrainReactions:
             z["ativa"] = False          # o gás queimou: não explode de novo
         await self._rx_anunciar("explosao_gas", area, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.explosao_gas"))
-        base = self._rolar_dado(RX_GAS_DANO)
+        # Zona autoral (treinamento) pode pedir uma explosão mais fraca.
+        expr = next((z["dano_explosao"] for z in tocadas if z.get("dano_explosao")), RX_GAS_DANO)
+        base = self._rolar_dado(expr)
         caster = origem.get("caster_id")
         for alvo in self._alvos_no_inverno(area):
             if not self._vivo(alvo):      # morreu em cascata nesta mesma explosão
@@ -317,6 +319,8 @@ class TerrainReactions:
                 await self._dano_em_alvo(alvo, d, RX_FIRE, caster)
         # o fogo da explosão alcança tudo que estava no gás (piche, por exemplo)
         await self._rx_encadear(RX_FIRE, area, {"origem": origem}, prof)
+        for z in tocadas:
+            await self._training_gas_consumido(z)
 
     def _rx_derreter_casa(self, tile):
         """Derrete UMA casa de gelo/neve. Camada temporária sai e a casa volta ao que havia
@@ -407,6 +411,7 @@ class TerrainReactions:
             # quem foi atingido aqui não leva o dano de "entrada" no mesmo passo
             pos = alvo.get("pos") or [0, 0]
             zona["ignicao"][str(alvo.get("id"))] = [self.round_num, int(pos[0]), int(pos[1])]
+        await self._training_piche_aceso(origem.get("caster_id"))
 
     async def _rx_fogo_piche(self, alvo, zona, motivo):
         """1d6 de fogo + em chamas, só no piso. Não reentra no motor."""

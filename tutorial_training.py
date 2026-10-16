@@ -6,6 +6,10 @@ from copy import deepcopy
 # (que sai na última lição de verdade) e são refeitas junto com a sala.
 LICAO_FORA_DA_TRILHA_PREFIXOS = ("volta_",)
 
+# Sala das reações de terreno: o gás permanente da sala 49 (fatia 20 do tutorial).
+TREINO_GAS_ID = "gas_tutorial"
+TREINO_GAS_SALA = 49
+
 
 def _licao_fora_da_trilha(lic):
     return str((lic or {}).get("id", "")).startswith(LICAO_FORA_DA_TRILHA_PREFIXOS)
@@ -117,6 +121,7 @@ class TutorialTraining:
         self.training_state = {}
         if not self.training_mode:
             return
+        self._training_criar_gas()
         api = self._tutorial_api()
         for authored, live in zip(defn.get("traps", []), self.armadilhas):
             if authored.get("id") == "trap_treino_luccas":
@@ -392,6 +397,82 @@ class TutorialTraining:
                                   "icone": "💀", "nd": 0.25, "nivel": 1, "ca": 10,
                                   "vida_max": 8, "dano": "1d4", "ficha_original": deepcopy(mdef),
                                   "training_target": True}
+
+    def _training_criar_gas(self):
+        """O gás permanente da sala 49 (só em mapa de treinamento que tem essa sala).
+        Idempotente por id. Dano e CD baixos e explosão 1d4 para ninguém morrer:
+        o Mago tem 7 PV. A zona só some quando o fogo a detona."""
+        if not self.training_mode or self._room_by_id(TREINO_GAS_SALA) is None:
+            return
+        if any(z.get("id") == TREINO_GAS_ID for z in self.zonas_especiais):
+            return
+        self.zonas_especiais.append({
+            "id": TREINO_GAS_ID, "tipo": "camara_gas", "room_id": TREINO_GAS_SALA,
+            "duracao": 999, "ativa": True, "permanente": True, "created_round": 0,
+            "dificuldade": 10, "dano": "1", "dano_explosao": "1d4",
+        })
+
+    def _training_oleo_no_bau(self):
+        """Ainda há Frasco de Óleo num baú da sala do gás?"""
+        for chest in self.chests.values():
+            sala = self._room_containing_point(chest.get("pos"))
+            if sala and sala.get("id") == TREINO_GAS_SALA                     and any(i.get("id") == "frasco_oleo" for i in chest.get("items", [])):
+                return True
+        return False
+
+    async def _training_frasco_socorro(self, p):
+        """Rede de segurança: o gás é permanente e a porta só abre quando ele explode, então
+        quem gastou todos os frascos (baú e bolsa) ganha mais um emprestado. Devolve True se deu."""
+        if not self.training_mode or not p or not p.get("alive", True):
+            return False
+        if not any(z.get("id") == TREINO_GAS_ID and z.get("ativa") for z in self.zonas_especiais):
+            return False
+        if any(i.get("id") == "frasco_oleo" for i in p.get("bag", [])) or self._training_oleo_no_bau():
+            return False
+        if len(p.get("bag", [])) >= p.get("bag_size", 20):
+            return False
+        item = self._tutorial_api().hidratar_itens_bau([{"id": "frasco_oleo"}])[0]
+        item["tutorial_loan"] = True
+        p["bag"].append(item)
+        await self.gm_say(self._tutorial_api().T("narracao.frasco_de_socorro_do_treinamento", heroi=p["name"]))
+        return True
+
+    async def _pular_licao_de_estado(self, p, fala):
+        """Lição cujo resultado é um ESTADO da sala (o gás explodiu): se o estado já
+        aconteceu antes de o herói chegar, a lição é pulada, sem prêmio — o mesmo efeito
+        de `_pular_etapas_abandonadas` (licoes_feitas/licoes_puladas, fora do
+        tutorial_history). Devolve True se pulou."""
+        tar = fala.get("tarefa") or {}
+        if not getattr(self, "training_mode", False) or tar.get("tipo") != "explodir_gas":
+            return False
+        if not self._fala_elegivel(p, fala):
+            return False
+        if any(z.get("id") == tar.get("alvo") and z.get("ativa") for z in self.zonas_especiais):
+            return False
+        feitas = p.setdefault("licoes_feitas", [])
+        puladas = p.setdefault("licoes_puladas", [])
+        if fala["id"] not in feitas:
+            feitas.append(fala["id"])
+        if fala["id"] not in puladas:
+            puladas.append(fala["id"])
+        p.setdefault("licao_progresso", {})[fala["id"]] = int(tar.get("vezes", 1) or 1)
+        await self.send_to(p["id"], {"type": "licao_pulada", "licao_id": fala["id"]})
+        return True
+
+    async def _training_gas_consumido(self, zona):
+        """O gás explodiu: o resultado é da sala, então a lição conta para todos os heróis."""
+        if not self.training_mode:
+            return
+        for p in list(self.players.values()):
+            await self._licao_evento(p, "explodir_gas", alvo=zona.get("id"))
+
+    async def _training_piche_aceso(self, caster_id):
+        """O piche pegou fogo: só quem lançou o fogo cumpre a lição (cada um faz a sua)."""
+        if not self.training_mode:
+            return
+        p = self.players.get(caster_id)
+        if p:
+            await self._licao_evento(p, "incendiar_piche")
 
     async def _training_event(self, p, kind, target=None, amount=0):
         """Condições de resultado usadas pelos exercícios, além dos eventos legados."""

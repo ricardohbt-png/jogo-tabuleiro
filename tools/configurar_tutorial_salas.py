@@ -45,8 +45,22 @@ for f in d['falas']:
     if f['id'] in ['fala_6', 'fala_8', 'fala_10', 'fala_12', 'fala_14', 'fala_16']:
         f['texto'] = f['texto'].split('Quando ele cair')[0].split(' Depois procure a porta')[0] + ' Depois procure a porta da sala exclusiva do seu herói para praticar suas habilidades.'
 
-# O baú do átrio oferece uma arma básica apropriada para cada classe.
-d['chests'][0]['items'] = [{'id': i} for i in ['sword', 'cajado_madeira', 'dagger', 'machado_basico', 'dagger', 'cajado_madeira']]
+# O baú do átrio oferece somente a arma de treino da classe de cada herói.
+d['chests'][0]['items'] = [
+    {'id': 'sword', 'tutorial_class': 'warrior'},
+    {'id': 'dagger', 'tutorial_class': 'mage'},
+    {'id': 'lanca_curta', 'tutorial_class': 'rogue'},
+    {'id': 'bordao', 'tutorial_class': 'cleric'},
+    {'id': 'lanca_curta', 'tutorial_class': 'bard'},
+    {'id': 'sword', 'tutorial_class': 'paladin'},
+]
+# O depósito oferece duas refeições, uma ração e um cantil por herói. O estoque
+# cobre seis heróis; a serialização e os handlers aplicam cotas pessoais.
+next(c for c in d['chests'] if c['pos'] == [29, 14])['items'] = [
+    {'id': iid, 'tutorial_provision': True}
+    for _ in range(6)
+    for iid in ('banquete_viagem', 'banquete_viagem', 'racao_viagem', 'cantil_agua')
+]
 d['prisoner'] = {'pos': [35, 25], 'room_id': 38,
                  'image': 'soldado.png', 'model3d': 'soldado.glb'}
 

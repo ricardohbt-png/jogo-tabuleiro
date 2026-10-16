@@ -5,6 +5,12 @@ Cada texto é uma tupla (pt, en). `[[termo]]` chama o glossário.
 """
 
 GLOSSARIO = {
+    "inflamavel": {"nome": ("inflamável", "flammable"),
+                   "texto": ("Pega fogo ou explode quando o fogo o alcança. O gás desta sala é assim.",
+                             "Catches fire or explodes when fire reaches it. The gas in this room is like that.")},
+    "reacao": {"nome": ("reação", "reaction"),
+               "texto": ("O que acontece quando um elemento encontra o terreno, como fogo no gás ou no piche. A mira mostra as casas que vão reagir.",
+                         "What happens when an element meets the terrain, like fire on gas or pitch. The aim shows the squares that will react.")},
     "turno": {"nome": ("turno", "turn"),
               "texto": ("Sua vez de agir. Quando você passa a vez, os outros agem e depois o turno volta.",
                         "Your time to act. When you pass, the others act and then the turn comes back.")},
@@ -59,8 +65,12 @@ GLOSSARIO = {
 }
 
 
-def P(id, texto, porque=None, ui=None, dica=(), conclui=None, titulo=None):
-    return {"id": id, "texto": texto, "porque": porque, "ui": ui, "dica": list(dica), "conclui": conclui, "titulo": titulo}
+def P(id, texto, porque=None, ui=None, dica=(), conclui=None, titulo=None, demonstracao=()):
+    passo = {"id": id, "texto": texto, "porque": porque, "ui": ui,
+             "dica": list(dica), "conclui": conclui, "titulo": titulo}
+    if demonstracao:
+        passo["demonstracao"] = [dict(op) for op in demonstracao]
+    return passo
 
 
 def GUIA_H_ATALHO(skill_id, nome_pt, nome_en):
@@ -171,7 +181,11 @@ GUIA = {
                     "Click a marked blue square to move."),
           ui="casa:[5,15]",
           dica=[("A casa marcada tem um anel dourado.", "The marked square has a golden ring."),
-                ("Confirme o destino para o herói seguir o caminho.", "Confirm the destination to send the hero along the path.")]),
+                ("Confirme o destino para o herói seguir o caminho.", "Confirm the destination to send the hero along the path.")],
+          demonstracao=(
+              {"acao": "focar", "alvo": "casa:[5,15]"},
+              {"acao": "prever_movimento", "alvo": "casa:[5,15]"},
+          )),
     ],
     "fala_1": [
         P("pegar", ("Abra o baú e pegue uma arma; ela vai para a bolsa.",
@@ -184,12 +198,22 @@ GUIA = {
     "fala_2": [
         P("abrir", ("Abra a bolsa no botão da mochila ou com [[atalho:inventario]].",
                     "Open the bag with the backpack button or with [[atalho:inventario]]."),
-          ui="botao:inventario"),
+          ui="botao:inventario",
+          demonstracao=(
+              {"acao": "focar", "alvo": "botao:inventario"},
+              {"acao": "abrir_interface", "alvo": "inventario"},
+              {"acao": "focar", "alvo": "slot:weapon"},
+          )),
         P("equipar", ("Clique na arma e equipe-a.", "Click the weapon and equip it."),
           porque=("Equipar é [[acao_livre]]: não gasta nada do seu [[turno]].",
                   "Equipping is a [[acao_livre]]: it costs nothing from your [[turno]]."),
+          ui="slot:weapon",
           dica=[("A arma está na bolsa, entre os quadrados do inventário.",
-                 "The weapon is in the bag, among the inventory squares.")]),
+                 "The weapon is in the bag, among the inventory squares.")],
+          demonstracao=(
+              {"acao": "focar", "alvo": "slot:weapon"},
+              {"acao": "prever_equipamento", "alvo": "slot:weapon"},
+          )),
     ],
     "fala_3": [
         P("entender", ("Os bonecos de treino esperam na próxima sala. Encerre o turno quando estiver pronto.",
@@ -216,23 +240,34 @@ GUIA = {
           dica=[("Se o golpe errar, tente outro boneco.", "If the attack misses, try another dummy.")]),
     ],
     "fala_18": [
-        P("pegar", ("O baú ao lado tem rações e água. Pegue uma ração.",
-                    "The chest nearby has rations and water. Take a ration."),
+        P("pegar", ("O baú tem quatro itens reservados para você: dois banquetes, uma ração e um cantil.",
+                    "The chest has four items reserved for you: two banquets, a ration and a canteen."),
           porque=("Comida e água mantêm [[fome_sede]] longe da zona de penalidade.",
                   "Food and water keep [[fome_sede]] out of the penalty zone.")),
-        P("comer", ("Abra a bolsa com [[atalho:inventario]] e coma a ração de viagem.",
-                    "Open the bag with [[atalho:inventario]] and eat the travel ration."),
-          porque=("Comer é [[acao_bonus]]: dá para comer e ainda lutar no mesmo turno.",
-                  "Eating is a [[acao_bonus]]: you can eat and still fight in the same turn."),
-          ui="bolsa:racao_viagem",
+        P("banquete_1", ("Abra a bolsa com [[atalho:inventario]] e use o primeiro Banquete de Viagem.",
+                         "Open your bag with [[atalho:inventario]] and use the first Travel Banquet."),
+          porque=("Cada banquete recupera 40 de fome e 40 de sede.",
+                  "Each banquet restores 40 hunger and 40 thirst."),
+          ui="bolsa:banquete_viagem",
           dica=[("Se a bolsa está fechada, use o botão da mochila.", "If the bag is closed, use the backpack button.")]),
+        P("banquete_2", ("Use o segundo Banquete de Viagem no mesmo turno.",
+                         "Use the second Travel Banquet in the same turn."),
+          porque=("Alimentos não gastam sua ação bônus.",
+                  "Food does not use your bonus action."),
+          ui="bolsa:banquete_viagem"),
+        P("racao", ("Use a Ração de Viagem para completar a fome.",
+                     "Use the Travel Ration to fill hunger."),
+          porque=("A ração recupera 20 de fome; dois banquetes e ela somam 100.",
+                  "The ration restores 20 hunger; two banquets plus the ration total 100."),
+          ui="bolsa:racao_viagem"),
     ],
     "fala_19": [
-        P("beber", ("Beba duas garrafas de água pela bolsa.", "Drink two bottles of water from the bag."),
-          porque=("Água rende menos que comida. Habilidades cobram goles: curas, magias e canções.",
-                  "Water restores less than food. Abilities cost sips: heals, spells and songs."),
-          ui="bolsa:garrafa_agua",
-          dica=[("Clique na garrafa na bolsa e use-a duas vezes.", "Click the bottle in the bag and use it twice.")]),
+        P("cantil", ("Use o Cantil de Água para completar a sede.",
+                     "Use the Water Canteen to fill thirst."),
+          porque=("O cantil recupera 20 de sede; os dois banquetes já trouxeram 80.",
+                  "The canteen restores 20 thirst; the two banquets already restored 80."),
+          ui="bolsa:cantil_agua",
+          dica=[("Clique no cantil na bolsa e escolha Usar.", "Click the canteen in your bag and choose Use.")]),
     ],
     "fala_29": [
         P("pegar", ("Pegue os três itens do baú: óleo, veneno e poção.",
@@ -307,7 +342,7 @@ GUIA = {
     "fala_retirada": [
         P("retirar", ("Mova todos os heróis até a saída marcada. O relatório pode esperar.",
                       "Move every hero to the marked exit. The report can wait."),
-          ui="casa:[51,29]",
+          ui="casa:[51,36]",
           dica=[("A missão termina quando o grupo todo estiver ao lado da saída.",
                  "The mission ends when the whole party is beside the exit.")]),
     ],
@@ -319,8 +354,43 @@ GUIA = {
                        "Holes knock you down; pits damage. Nets and bear traps restrain; darts poison.")),
         P("teleporte", ("A armadilha de teletransporte testa Vontade. Falhar na resistência devolve você ao início da masmorra.",
                          "The teleport trap tests Will. Fail its save and return to the dungeon entrance.")),
-        P("atravessar", ("Atravesse o corredor com cuidado. Depois, siga até a saída marcada.",
-                          "Cross the corridor carefully. Then continue to the marked exit.")),
+        P("atravessar", ("Atravesse o corredor com cuidado. Depois, siga adiante.",
+                          "Cross the corridor carefully. Then keep going.")),
+    ],
+    "fala_gas": [
+        P("gas", ("Leia o aviso: este gás é [[inflamavel]] e sela a porta de baixo.",
+                  "Read the warning: this gas is [[inflamavel]] and seals the door below."),
+          porque=("Fogo em contato com o gás faz a nuvem inteira explodir, e a porta se abre.",
+                  "Fire touching the gas makes the whole cloud explode, and the door opens.")),
+        P("bau", ("Abra o baú marcado, na ilha de água, e pegue os frascos.",
+                  "Open the marked chest on the water island and take the flasks."),
+          porque=("Os frascos só existem aqui, no meio do gás, que causa só 1 de dano por turno. A água é o lugar mais seguro.",
+                  "The flasks are only here, in the middle of the gas, which deals only 1 damage per turn. The water is the safest spot."),
+          ui="casa:[51,29]"),
+        P("jogar", ("Use o Frasco de Óleo e jogue-o numa casa de gás ao lado.",
+                    "Use the Oil Flask and throw it at a gas square next to you."),
+          porque=("A mira mostra a [[reacao]] antes do arremesso. Na água, a explosão causa só metade do dano.",
+                  "The aim shows the [[reacao]] before the throw. In the water, the explosion deals only half damage."),
+          ui="bolsa:frasco_oleo",
+          dica=[("Selecione o frasco na bolsa e clique numa casa coberta de gás.",
+                 "Select the flask in your bag and click a square covered in gas.")]),
+    ],
+    "fala_piche": [
+        P("bau", ("Abra o baú marcado e pegue os Frascos de Piche e de Óleo.",
+                  "Open the marked chest and take the Pitch and Oil Flasks."),
+          ui="casa:[49,33]"),
+        P("piche", ("Use o Frasco de Piche e jogue-o perto do boneco, a duas casas.",
+                    "Use the Pitch Flask and throw it near the dummy, two squares away."),
+          porque=("O piche forma uma mancha de 3×3 que dura 4 rodadas e não causa dano sozinha.",
+                  "Pitch makes a 3×3 patch that lasts 4 rounds and deals no damage by itself."),
+          ui="bolsa:frasco_piche"),
+        P("fogo", ("Use o Frasco de Óleo no turno seguinte e jogue-o sobre o piche.",
+                   "Use the Oil Flask on your next turn and throw it onto the pitch."),
+          porque=("Fogo no piche acende a mancha inteira, que queima quem estiver nela. Cada arremesso gasta a ação principal.",
+                  "Fire on pitch lights the whole patch, which burns anyone standing in it. Each throw uses your main action."),
+          ui="bolsa:frasco_oleo",
+          dica=[("Fique fora da mancha: o piche em chamas queima por 3 rodadas.",
+                 "Stay out of the patch: burning pitch lasts 3 rounds.")]),
     ],
     "fala_vuln": [
         P("pegar", ("Abra o baú marcado e pegue o Cajado de Madeira.",
