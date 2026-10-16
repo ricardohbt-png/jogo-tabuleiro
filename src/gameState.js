@@ -1410,12 +1410,35 @@ const GS = (() => {
   }
   // Campos do game_state que o servidor só reenvia quando mudam (ESTADO_DIFERIVEL
   // em server.py): omitidos = iguais ao que já recebemos nesta conexão.
-  // O servidor lista em `diferidos` as chaves que omitiu; sem a lista, nada muda.
+  // O servidor lista em `diferidos` as chaves que omitiu e em `deltas` as listas de
+  // entidades que mandou só com o que mudou (+ a ordem) e as casas novas de `explored`.
+  // Sem essas chaves, nada muda. Devolve false se faltar a cópia anterior.
   function _completarDiferidos(msg, anterior) {
-    if (!Array.isArray(msg.diferidos)) return true;
-    for (const k of msg.diferidos) {
-      if (!anterior || !(k in anterior)) return false;
-      msg[k] = anterior[k];
+    if (Array.isArray(msg.diferidos)) {
+      for (const k of msg.diferidos) {
+        if (!anterior || !(k in anterior)) return false;
+        msg[k] = anterior[k];
+      }
+    }
+    const deltas = msg.deltas;
+    if (deltas && typeof deltas === 'object') {
+      for (const k of Object.keys(deltas)) {
+        const ant = anterior && anterior[k];
+        if (!Array.isArray(ant)) return false;
+        const d = deltas[k];
+        if (k === 'explored') { msg.explored = ant.concat(d.add || []); continue; }
+        const velhas = new Map(ant.map(e => [e.id, e]));
+        const novas = new Map((d.mudou || []).map(e => [e.id, e]));
+        const lista = [];
+        for (const id of d.orden || []) {
+          // Entrada igual à anterior vira cópia rasa: o estado antigo não é compartilhado.
+          const e = novas.get(id) || (velhas.has(id) ? Object.assign({}, velhas.get(id)) : null);
+          if (!e) return false;
+          lista.push(e);
+        }
+        msg[k] = lista;
+      }
+      delete msg.deltas;
     }
     return true;
   }

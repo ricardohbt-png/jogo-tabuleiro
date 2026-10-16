@@ -49749,7 +49749,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             del self._diferidos_enviados[ws_antigo]   # saiu da masmorra/caiu: recebe tudo ao voltar
         reduzidos = {}   # chaves omitidas -> dict reduzido (o mesmo objeto p/ quem omite igual)
 
-        def sem_diferidos(pid, state):
+        # Deltas: listas de entidades com `id` só levam as que mudaram nesta conexão
+        # (a ordem vai à parte) e `explored` só as casas novas. Ids repetidos/ausentes
+        # ou lista curta: vai inteira. Em treinamento os baús são personalizados por
+        # jogador, então ficam fora.
+        listas = {}
+        for k in ESTADO_LISTAS_DELTA:
+            L = msg_state.get(k)
+            if not isinstance(L, list) or len(L) < 2 or (k == "chests" and self.training_mode):
+                continue
+            ids = [e.get("id") if isinstance(e, dict) else None for e in L]
+            if None in ids or len(set(ids)) != len(ids):
+                continue
+            textos = [json.dumps(e, default=lambda o: _t_render(o, "pt")) for e in L]
+            if sum(map(len, textos)) < 1500:
+                continue   # lista pequena: o delta não compensa a complexidade
+            listas[k] = (ids, [hash(x) for x in textos])
+        explorado = frozenset(self.explored)
+
+        def sem_repetidos(pid, state):
             ws = self.connections.get(pid)
             if ws is None:
                 return state
@@ -49758,15 +49776,42 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             omitir = frozenset(k for k, a in assinaturas.items() if enviados.get(k) == (lang, a))
             for k, a in assinaturas.items():
                 enviados[k] = (lang, a)
-            if not omitir:
+            inalterados = {}   # lista -> ids que o cliente já tem iguais
+            for k, (ids, hs) in listas.items():
+                ant = enviados.get(("L", k))
+                enviados[("L", k)] = (lang, dict(zip(ids, hs)))
+                if ant and ant[0] == lang:
+                    iguais = frozenset(i for i, h in zip(ids, hs) if ant[1].get(i) == h)
+                    if iguais:
+                        inalterados[k] = iguais
+            novas = None   # casas exploradas desde o último envio (None = enviar tudo)
+            ant_exp = enviados.get("E")
+            enviados["E"] = explorado
+            if ant_exp is not None and ant_exp <= explorado and len(ant_exp) * 2 >= len(explorado):
+                novas = explorado - ant_exp
+            if not omitir and not inalterados and novas is None:
                 return state
-            if omitir not in reduzidos:
-                reduzidos[omitir] = {**{k: v for k, v in state.items() if k not in omitir},
-                                     "diferidos": sorted(omitir)}
-            return reduzidos[omitir]
+            chave = (omitir, tuple(sorted(inalterados.items(), key=lambda kv: kv[0])), novas)
+            if chave not in reduzidos:
+                red = {k: v for k, v in state.items() if k not in omitir}
+                if omitir:
+                    red["diferidos"] = sorted(omitir)
+                deltas = {}
+                for k, iguais in inalterados.items():
+                    ids = listas[k][0]
+                    deltas[k] = {"orden": ids,
+                                 "mudou": [e for e, i in zip(state[k], ids) if i not in iguais]}
+                    del red[k]
+                if novas is not None:
+                    deltas["explored"] = {"add": sorted(list(c) for c in novas)}
+                    del red["explored"]
+                if deltas:
+                    red["deltas"] = deltas
+                reduzidos[chave] = red
+            return reduzidos[chave]
 
         def personalizar_estado(pid, state):
-            state = sem_diferidos(pid, state)
+            state = sem_repetidos(pid, state)
             marcadores = self._cooperative_markers_for_pid(pid)
             if not marcadores:
                 return state   # nada próprio: o broadcast reaproveita o JSON por (idioma, objeto)
@@ -49797,6 +49842,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 # Campos do game_state grandes e quase estáticos: ver GameRoom.push_state.
 ESTADO_DIFERIVEL = ("tiles", "rooms", "materiais", "decorations", "secret_passages",
                     "elevacoes", "alturas_parede", "pontes", "door_conditions", "hero_spawns")
+
+# Listas de entidades com `id` enviadas como delta (só as que mudaram): ver push_state.
+ESTADO_LISTAS_DELTA = ("monsters", "players", "chests", "corpses", "armadilhas")
 
 rooms = {}  # type: dict  # plain dict for Python 3.7+ compatibility
 TEST_DUNGEON_TOKENS = {}  # token -> room code; sessões efêmeras do editor

@@ -3628,9 +3628,23 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > descartado ao sair da masmorra (quem não recebe `game_state`), em `broadcast_city_state` e em conexão nova (o `ws` é a
 > chave); trocar de idioma reenvia porque o idioma entra na assinatura. Efeito: ~1730 → ~1005 KB brutos por push. **Campo
 > grande novo e quase estático:** acrescente-o a `ESTADO_DIFERIVEL` (servidor) — o cliente não precisa mudar, ele só
-> obedece `diferidos`; campo que muda a cada ação não deve entrar (a assinatura custa um `dumps`). **Próximo passo
-> (não feito):** deltas dos campos dinâmicos (`monsters` ~97 KB, `players`, `explored`). Testes:
-> `tools/test_broadcast_otimizado.py`, `tools/test_estado_diferido.py`, `tools/test_estado_diferido_cliente.js`.
+> obedece `diferidos`; campo que muda a cada ação não deve entrar (a assinatura custa um `dumps`). **Deltas
+> (2026-10-15):** as listas de `ESTADO_LISTAS_DELTA` (`monsters`, `players`, `chests`, `corpses`, `armadilhas`; todas com
+> `id` único, senão vão inteiras) só levam as entradas que mudaram **para aquela conexão**: o servidor guarda por `ws`
+> o hash do JSON de cada entrada (`("L", lista)` em `_diferidos_enviados`) e manda `deltas[lista] = {orden: [ids na ordem],
+> mudou: [entradas novas/alteradas]}`; `explored` manda só as casas novas (`deltas.explored.add`) enquanto o conjunto só
+> crescer (se encolher, vai inteiro). O cliente (`_completarDiferidos`) reconstrói a lista pela `orden`, copiando de forma
+> rasa as entradas iguais do estado anterior (o estado antigo não é compartilhado) e, se faltar qualquer id ou a lista
+> anterior, pede `pedir_estado_completo`. Troca de idioma reenvia as listas (o hash vale por idioma); lista com menos de
+> ~1,5 KB não compensa e vai inteira; `chests` fica de fora em treinamento (personalizados por jogador). O filtro de
+> tradução do cliente alcança as entradas dentro de `deltas` sem mudança. Medido (5 heróis, `calabouco_morte`): ~1730 KB
+> → ~18 KB por push (≈3,6 KB por jogador) com ~7 ms de CPU. **Para o cliente ler campo novo** não há nada a fazer: o
+> `gameState` já chega reconstruído. **Cuidado:** código novo que *mute* uma entrada de `monsters`/`players` no lugar
+> não vê a mutação no próximo estado (as entradas iguais são recopiadas do anterior, como antes eram objetos novos).
+> **Próximo passo (não feito):** `gm_log`, `chests` em treinamento e reduzir o custo de CPU (hash por entrada
+> a cada push). Testes: `tools/test_broadcast_otimizado.py`, `tools/test_estado_diferido.py`,
+> `tools/test_estado_diferido_cliente.js`, `tools/test_estado_delta.py` (usa o `gameState.js` real via node) e
+> `tools/test_estado_delta_cliente.js`.
 
 > **Intenção dos monstros (2026-10-12):** na vez do herói, setas que mostram qual alvo cada
 > monstro visível atacaria **no próximo turno dele**. Cliente pede `prever_intencoes` (sem
