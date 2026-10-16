@@ -268,4 +268,8 @@ def aplicar(definicao):
         fala_fome_sede.setdefault("efeito", {}).update({"fome": 0, "sede": 0})
 
     definicao.setdefault("objectives", {}).setdefault("primary", {})["type"] = "all_heroes_at_exit"
+    # A ala final acima fixa a saída e a retirada da época; a fatia 20 (sala das reações de
+    # terreno) as move para baixo. Aplicada aqui, nenhum caminho do pipeline a desfaz.
+    from aplicar_fatia20_tutorial import aplicar as _aplicar_fatia20
+    _aplicar_fatia20(definicao)
     return definicao

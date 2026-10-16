@@ -11,7 +11,7 @@ import gerar_guia_comum as G
 IDS_ESPERADOS = ["fala_intro", "fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
                  "fala_armadilhas", "fala_hostilidade", "fala_primeiro_combate", "fala_res", "fala_vuln",
-                 "fala_retirada"]
+                 "fala_gas", "fala_piche", "fala_retirada"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|slot|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -124,11 +124,13 @@ class ConteudoTests(unittest.TestCase):
         p["licoes_feitas"] = feitas + ["fala_res"]
         self.assertTrue(lib(p, fala["fala_vuln"]))
         retirada = fala["fala_retirada"]
-        self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos"])
+        self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos", "fala_piche"])
         p["licoes_feitas"] = feitas
         self.assertFalse(lib(p, retirada), "a retirada ainda exige a aula obrigatória de armadilhas")
         p["licoes_feitas"] = feitas + ["fala_armadilhas"]
-        self.assertTrue(lib(p, retirada), "a retirada não depende das duas lições opcionais de dano")
+        self.assertFalse(lib(p, retirada), "e a aula do gás, que sela a porta de baixo")
+        p["licoes_feitas"] = feitas + ["fala_armadilhas", "fala_gas"]
+        self.assertTrue(lib(p, retirada), "a retirada não depende das lições opcionais (dano e piche)")
 
     def test_boneco_imovel_substitui_esqueletos_nas_licoes_de_dano(self):
         d = json.loads((RAIZ / "dungeons/campo_de_treinamento.json").read_text(encoding="utf-8"))
@@ -228,7 +230,8 @@ class ConteudoTests(unittest.TestCase):
 
     def test_glossario_completo(self):
         esperados = {"turno", "movimento", "acao_livre", "acao_bonus", "ca", "fome_sede", "resistencia",
-                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho", "vulnerabilidade", "sinfonia"}
+                     "d20", "acao_principal", "slot", "teste_resistencia", "manutencao", "furtivo", "critico", "atalho", "vulnerabilidade", "sinfonia",
+                     "inflamavel", "reacao"}
         self.assertEqual(set(C.GLOSSARIO), esperados)
         for k, v in C.GLOSSARIO.items():
             for campo in ("nome", "texto"):

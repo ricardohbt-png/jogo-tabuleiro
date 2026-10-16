@@ -72,6 +72,14 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Extra damage from attacking while hidden in the shadows. It triggers by itself when the conditions hold.",
     "pt": "Dano extra de quem ataca escondido, vindo das sombras. Dispara sozinho quando as condições valem."
   },
+  "ui.tutorial.glossario.inflamavel.nome": {
+    "en": "flammable",
+    "pt": "inflamável"
+  },
+  "ui.tutorial.glossario.inflamavel.texto": {
+    "en": "Catches fire or explodes when fire reaches it. The gas in this room is like that.",
+    "pt": "Pega fogo ou explode quando o fogo o alcança. O gás desta sala é assim."
+  },
   "ui.tutorial.glossario.manutencao.nome": {
     "en": "upkeep",
     "pt": "manutenção"
@@ -87,6 +95,14 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.glossario.movimento.texto": {
     "en": "How many squares you walk per turn. When it runs out, only the next turn restores it.",
     "pt": "Quantas casas você anda por turno. Acabou, só o próximo turno devolve."
+  },
+  "ui.tutorial.glossario.reacao.nome": {
+    "en": "reaction",
+    "pt": "reação"
+  },
+  "ui.tutorial.glossario.reacao.texto": {
+    "en": "What happens when an element meets the terrain, like fire on gas or pitch. The aim shows the squares that will react.",
+    "pt": "O que acontece quando um elemento encontra o terreno, como fogo no gás ou no piche. A mira mostra as casas que vão reagir."
   },
   "ui.tutorial.glossario.resistencia.nome": {
     "en": "resistance",
@@ -441,8 +457,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Esta passagem parece estranha. Observe o piso antes de avançar."
   },
   "ui.tutorial.guia.fala_armadilhas.atravessar.texto": {
-    "en": "Cross the corridor carefully. Then continue to the marked exit.",
-    "pt": "Atravesse o corredor com cuidado. Depois, siga até a saída marcada."
+    "en": "Cross the corridor carefully. Then keep going.",
+    "pt": "Atravesse o corredor com cuidado. Depois, siga adiante."
   },
   "ui.tutorial.guia.fala_armadilhas.efeitos.texto": {
     "en": "Holes knock you down; pits damage. Nets and bear traps restrain; darts poison.",
@@ -487,6 +503,34 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_camera.modo_3d.texto": {
     "en": "Turn on 3D view with the highlighted button. Or select Got it.",
     "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
+  },
+  "ui.tutorial.guia.fala_gas.bau.porque": {
+    "en": "The flasks are only here, in the middle of the gas, which deals only 1 damage per turn. The water is the safest spot.",
+    "pt": "Os frascos só existem aqui, no meio do gás, que causa só 1 de dano por turno. A água é o lugar mais seguro."
+  },
+  "ui.tutorial.guia.fala_gas.bau.texto": {
+    "en": "Open the marked chest on the water island and take the flasks.",
+    "pt": "Abra o baú marcado, na ilha de água, e pegue os frascos."
+  },
+  "ui.tutorial.guia.fala_gas.gas.porque": {
+    "en": "Fire touching the gas makes the whole cloud explode, and the door opens.",
+    "pt": "Fogo em contato com o gás faz a nuvem inteira explodir, e a porta se abre."
+  },
+  "ui.tutorial.guia.fala_gas.gas.texto": {
+    "en": "Read the warning: this gas is [[inflamavel]] and seals the door below.",
+    "pt": "Leia o aviso: este gás é [[inflamavel]] e sela a porta de baixo."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.dica.1": {
+    "en": "Select the flask in your bag and click a square covered in gas.",
+    "pt": "Selecione o frasco na bolsa e clique numa casa coberta de gás."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.porque": {
+    "en": "The aim shows the [[reacao]] before the throw. In the water, the explosion deals only half damage.",
+    "pt": "A mira mostra a [[reacao]] antes do arremesso. Na água, a explosão causa só metade do dano."
+  },
+  "ui.tutorial.guia.fala_gas.jogar.texto": {
+    "en": "Use the Oil Flask and throw it at a gas square next to you.",
+    "pt": "Use o Frasco de Óleo e jogue-o numa casa de gás ao lado."
   },
   "ui.tutorial.guia.fala_hostilidade.abrir.porque": {
     "en": "Something is fighting in there. Open the door to see the situation before deciding what to do.",
@@ -567,6 +611,30 @@ window.LANG_TUTORIAL_GUIA = {
   "ui.tutorial.guia.fala_intro.vida.texto": {
     "en": "Check your hero's health. If it reaches zero, they fall and need help.",
     "pt": "Confira a vida do herói. Se ela chegar a zero, ele cai e precisa de ajuda."
+  },
+  "ui.tutorial.guia.fala_piche.bau.texto": {
+    "en": "Open the marked chest and take the Pitch and Oil Flasks.",
+    "pt": "Abra o baú marcado e pegue os Frascos de Piche e de Óleo."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.dica.1": {
+    "en": "Stay out of the patch: burning pitch lasts 3 rounds.",
+    "pt": "Fique fora da mancha: o piche em chamas queima por 3 rodadas."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.porque": {
+    "en": "Fire on pitch lights the whole patch, which burns anyone standing in it. Each throw uses your main action.",
+    "pt": "Fogo no piche acende a mancha inteira, que queima quem estiver nela. Cada arremesso gasta a ação principal."
+  },
+  "ui.tutorial.guia.fala_piche.fogo.texto": {
+    "en": "Use the Oil Flask on your next turn and throw it onto the pitch.",
+    "pt": "Use o Frasco de Óleo no turno seguinte e jogue-o sobre o piche."
+  },
+  "ui.tutorial.guia.fala_piche.piche.porque": {
+    "en": "Pitch makes a 3×3 patch that lasts 4 rounds and deals no damage by itself.",
+    "pt": "O piche forma uma mancha de 3×3 que dura 4 rodadas e não causa dano sozinha."
+  },
+  "ui.tutorial.guia.fala_piche.piche.texto": {
+    "en": "Use the Pitch Flask and throw it near the dummy, two squares away.",
+    "pt": "Use o Frasco de Piche e jogue-o perto do boneco, a duas casas."
   },
   "ui.tutorial.guia.fala_primeiro_combate.alvo.texto": {
     "en": "Use a training dummy to try your attack without spending resources.",

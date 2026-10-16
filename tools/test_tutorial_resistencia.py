@@ -45,18 +45,18 @@ class TutorialResistenciaTests(unittest.IsolatedAsyncioTestCase):
         salas = {s['id']: s for s in d['rooms']}
         aula, saida = salas[48], salas[49]
         self.assertEqual((aula['x'], aula['y'], aula['w'], aula['h']), (48, 12, 8, 7))
-        self.assertEqual((saida['x'], saida['y'], saida['w'], saida['h']), (48, 21, 6, 6))
+        self.assertEqual((saida['x'], saida['y'], saida['w'], saida['h']), (48, 26, 6, 6))
         self.assertIn([51, 19], aula['doors'])
-        self.assertIn([51, 20], saida['doors'])
+        self.assertIn([51, 25], saida['doors'])   # a sala 49 virou a sala do gás (fatia 20)
         self.assertEqual(d['grid']['w'], 57)
         self.assertTrue(all(len(row) == d['grid']['w'] for row in d['tiles']))
         self.assertEqual(d['tiles'][19][51], S.DOOR)
         self.assertEqual(d['tiles'][20][51], S.DOOR)
-        self.assertEqual(d['exit'], {'x': 51, 'y': 24})
+        self.assertEqual(d['exit'], {'x': 51, 'y': 36})   # a saída desceu para a sala 51
 
         fala = next(f for f in d['falas'] if f['id'] == 'fala_retirada')
-        self.assertEqual(fala['pos'], [51, 24])
-        self.assertEqual(fala['tarefa']['alvo'], [51, 24])
+        self.assertEqual(fala['pos'], [51, 36])
+        self.assertEqual(fala['tarefa']['alvo'], [51, 36])
         self.assertEqual(fala['trigger'], {'tipo': 'proximidade', 'raio': 1})
         ok, msg = S.validar_dungeon(d)
         self.assertTrue(ok, msg)

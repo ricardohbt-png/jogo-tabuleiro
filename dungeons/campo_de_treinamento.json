@@ -8,7 +8,7 @@
   "tutorial_training": true,
   "grid": {
     "w": 57,
-    "h": 33
+    "h": 40
   },
   "tiles": [
     [
@@ -1951,6 +1951,419 @@
       0,
       0,
       0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
       0,
       0,
       0,
@@ -2172,6 +2585,10 @@
         [
           51,
           25
+        ],
+        [
+          51,
+          32
         ]
       ]
     },
@@ -2193,9 +2610,29 @@
           25
         ]
       ]
+    },
+    {
+      "id": 51,
+      "x": 48,
+      "y": 33,
+      "w": 6,
+      "h": 6,
+      "role": "empty",
+      "locked": true,
+      "doors": [
+        [
+          51,
+          32
+        ]
+      ]
     }
   ],
-  "door_conditions": {},
+  "door_conditions": {
+    "51,32": {
+      "type": "gas",
+      "zona_id": "gas_tutorial"
+    }
+  },
   "entrance": null,
   "hero_spawns": [
     {
@@ -2249,7 +2686,7 @@
   ],
   "exit": {
     "x": 51,
-    "y": 29
+    "y": 36
   },
   "routes": [],
   "route_exits": [],
@@ -2556,6 +2993,17 @@
       "room_id": 48,
       "boss": false,
       "target": false
+    },
+    {
+      "type": "boneco_treino",
+      "pos": [
+        53,
+        37
+      ],
+      "room_id": 51,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_reacoes_boneco"
     }
   ],
   "chests": [
@@ -2756,6 +3204,47 @@
         }
       ],
       "key_objective": false
+    },
+    {
+      "pos": [
+        51,
+        29
+      ],
+      "gold": 0,
+      "key_objective": false,
+      "items": [
+        {
+          "id": "frasco_oleo"
+        },
+        {
+          "id": "frasco_oleo"
+        },
+        {
+          "id": "frasco_oleo"
+        }
+      ]
+    },
+    {
+      "pos": [
+        49,
+        33
+      ],
+      "gold": 0,
+      "key_objective": false,
+      "items": [
+        {
+          "id": "frasco_piche"
+        },
+        {
+          "id": "frasco_piche"
+        },
+        {
+          "id": "frasco_oleo"
+        },
+        {
+          "id": "frasco_oleo"
+        }
+      ]
     }
   ],
   "traps": [
@@ -6112,7 +6601,7 @@
       "id": "fala_retirada",
       "pos": [
         51,
-        29
+        36
       ],
       "falante": {
         "nome": "Mestre de Armas",
@@ -6128,14 +6617,15 @@
       "continua_sem": [
         "fala_res",
         "fala_vuln",
-        "fala_atalhos"
+        "fala_atalhos",
+        "fala_piche"
       ],
-      "ordem": 36,
+      "ordem": 38,
       "tarefa": {
         "tipo": "mover_ate",
         "alvo": [
           51,
-          29
+          36
         ],
         "vezes": 1,
         "texto_curto": "Reúna o grupo na saída"
@@ -6144,7 +6634,7 @@
         {
           "id": "retirar",
           "texto": "ui.tutorial.guia.fala_retirada.retirar.texto",
-          "ui": "casa:[51,29]",
+          "ui": "casa:[51,36]",
           "dica": [
             "ui.tutorial.guia.fala_retirada.retirar.dica.1"
           ]
@@ -6206,6 +6696,107 @@
         {
           "id": "atravessar",
           "texto": "ui.tutorial.guia.fala_armadilhas.atravessar.texto"
+        }
+      ]
+    },
+    {
+      "id": "fala_gas",
+      "ordem": 36,
+      "pos": [
+        51,
+        25
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Este gás é inflamável e selou a porta de baixo. Pegue o óleo na ilha de água e detone-o com fogo.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 2
+      },
+      "continua_sem": [
+        "fala_res",
+        "fala_vuln",
+        "fala_atalhos"
+      ],
+      "tarefa": {
+        "tipo": "explodir_gas",
+        "alvo": "gas_tutorial",
+        "vezes": 1,
+        "texto_curto": "Detone o gás com fogo"
+      },
+      "guia": [
+        {
+          "id": "gas",
+          "texto": "ui.tutorial.guia.fala_gas.gas.texto",
+          "porque": "ui.tutorial.guia.fala_gas.gas.porque"
+        },
+        {
+          "id": "bau",
+          "texto": "ui.tutorial.guia.fala_gas.bau.texto",
+          "porque": "ui.tutorial.guia.fala_gas.bau.porque",
+          "ui": "casa:[51,29]"
+        },
+        {
+          "id": "jogar",
+          "texto": "ui.tutorial.guia.fala_gas.jogar.texto",
+          "porque": "ui.tutorial.guia.fala_gas.jogar.porque",
+          "ui": "bolsa:frasco_oleo",
+          "dica": [
+            "ui.tutorial.guia.fala_gas.jogar.dica.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fala_piche",
+      "ordem": 37,
+      "pos": [
+        51,
+        33
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🛡️",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Piche e fogo combinam muito bem. Jogue o piche no boneco e acenda-o com o óleo.",
+      "trigger": {
+        "tipo": "proximidade",
+        "raio": 2
+      },
+      "continua_sem": [
+        "fala_res",
+        "fala_vuln",
+        "fala_atalhos"
+      ],
+      "tarefa": {
+        "tipo": "incendiar_piche",
+        "vezes": 1,
+        "texto_curto": "Acenda o piche com o óleo"
+      },
+      "guia": [
+        {
+          "id": "bau",
+          "texto": "ui.tutorial.guia.fala_piche.bau.texto",
+          "ui": "casa:[49,33]"
+        },
+        {
+          "id": "piche",
+          "texto": "ui.tutorial.guia.fala_piche.piche.texto",
+          "porque": "ui.tutorial.guia.fala_piche.piche.porque",
+          "ui": "bolsa:frasco_piche"
+        },
+        {
+          "id": "fogo",
+          "texto": "ui.tutorial.guia.fala_piche.fogo.texto",
+          "porque": "ui.tutorial.guia.fala_piche.fogo.porque",
+          "ui": "bolsa:frasco_oleo",
+          "dica": [
+            "ui.tutorial.guia.fala_piche.fogo.dica.1"
+          ]
         }
       ]
     },
@@ -8603,7 +9194,13 @@
     "30,17": "pedra_negra",
     "31,17": "pedra_negra",
     "31,16": "pedra_negra",
-    "30,16": "pedra_negra"
+    "30,16": "pedra_negra",
+    "50,28": "agua",
+    "51,28": "agua",
+    "52,28": "agua",
+    "50,29": "agua",
+    "51,29": "agua",
+    "52,29": "agua"
   },
   "pontes": [],
   "elevacoes": {},
