@@ -304,7 +304,9 @@ class TerrainReactions:
             z["ativa"] = False          # o gás queimou: não explode de novo
         await self._rx_anunciar("explosao_gas", area, tiles[0])
         await self.gm_say(self._rx_T("narracao.reacao.explosao_gas"))
-        base = self._rolar_dado(RX_GAS_DANO)
+        # Zona autoral (treinamento) pode pedir uma explosão mais fraca.
+        expr = next((z["dano_explosao"] for z in tocadas if z.get("dano_explosao")), RX_GAS_DANO)
+        base = self._rolar_dado(expr)
         caster = origem.get("caster_id")
         for alvo in self._alvos_no_inverno(area):
             if not self._vivo(alvo):      # morreu em cascata nesta mesma explosão

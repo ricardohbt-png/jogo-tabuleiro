@@ -34934,11 +34934,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     z["ativa"] = False
                     await self.gm_say(T("narracao.a_nuvem_acida_se_dissipou"))
             elif z.get("tipo") == "camara_gas":
+                if z.get("permanente"):
+                    continue   # o gás do treinamento só some quando explode
                 z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
                 if z["duracao"] <= 0:
                     z["ativa"] = False
                     await self.gm_say(T("narracao.camara_gas_se_dissipou"))
             elif z.get("tipo") == "nuvem_gas":
+                if z.get("permanente"):
+                    continue
                 z["duracao"] = max(0, int(z.get("duracao", 0) or 0) - 1)
                 if z["duracao"] <= 0:
                     z["ativa"] = False
