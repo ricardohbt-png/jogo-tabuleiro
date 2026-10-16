@@ -1505,6 +1505,10 @@ window.LANG_ERROS = {
     "en": "🚪 This door requires the key item: {item}.",
     "pt": "🚪 Esta porta exige o item-chave: {item}."
   },
+  "erro.porta_exige_gas_consumido": {
+    "en": "🚪 The gas has sealed this door. Set it off with fire.",
+    "pt": "🚪 O gás selou esta porta. Detone-o com fogo."
+  },
   "erro.porta_exige_licao": {
     "en": "This door only opens once you complete your current lesson.",
     "pt": "Esta porta só abre quando você cumprir a lição atual."

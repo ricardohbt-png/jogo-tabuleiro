@@ -2947,6 +2947,7 @@
             <option value="decor"${condition?.type === "decor" ? " selected" : ""}>${t("ui.editor.masmorra.painel.objeto_chave_ativado")}</option>
             <option value="licao"${condition?.type === "licao" ? " selected" : ""}>${t("ui.editor.masmorra.painel.licao_cumprida")}</option>
             <option value="requirement"${condition?.type === "requirement" ? " selected" : ""}>${t("ui.editor.masmorra.rotas.trava_externa")}</option>
+            ${condition?.type === "gas" ? `<option value="gas" selected disabled>☠️ ${t("ui.editor.masmorra.painel.gas_consumido")}</option>` : ""}
           </select>
           ${condition?.type === "licao" ? (() => {
             const licoes = S.falas.filter(f => f.tarefa && f.tarefa.tipo);
@@ -4223,6 +4224,7 @@
         c.type === "item" ? { type: "item", item_id: c.item_id || "" }
         : c.type === "licao" ? { type: "licao", licao_id: c.licao_id || "" }
         : c.type === "requirement" ? { type: "requirement", requirement: Object.assign({}, c.requirement || {}) }
+        : c.type === "gas" ? { type: "gas", zona_id: c.zona_id || "" }
         : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
@@ -4720,6 +4722,7 @@
       if (c.type === "item" && typeof c.item_id === "string") S.doorConditions[key] = { type: "item", item_id: c.item_id };
       else if (c.type === "licao" && typeof c.licao_id === "string") S.doorConditions[key] = { type: "licao", licao_id: c.licao_id };
       else if (c.type === "requirement" && c.requirement && typeof c.requirement === "object") S.doorConditions[key] = { type: "requirement", requirement: Object.assign({}, c.requirement) };
+      else if (c.type === "gas" && typeof c.zona_id === "string") S.doorConditions[key] = { type: "gas", zona_id: c.zona_id };
       else if (c.type === "decor") S.doorConditions[key] = { type: "decor", key_decor_ids: Array.isArray(c.key_decor_ids) ? c.key_decor_ids.slice() : [], keys_mode: c.keys_mode === "all" ? "all" : "any" };
     }
     S.doorRotations = {};

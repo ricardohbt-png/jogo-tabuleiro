@@ -129,7 +129,83 @@ def secao_1():
     check("sem o campo a explosão continua 2d6", "2d6" in r.dados)
 
 
+def masmorra_porta(cond):
+    """Masmorra 12x9: sala A (y1-4) | porta [5,5] | sala B (y6-7)."""
+    W, H = 12, 9
+    tiles = [[S.WALL] * W for _ in range(H)]
+    for y in list(range(1, 5)) + [6, 7]:
+        for x in range(1, 11):
+            tiles[y][x] = S.FLOOR
+    tiles[5][5] = S.DOOR
+    d = {
+        "schema_version": 1, "id": "porta_gas", "name": "Porta do gás",
+        "grid": {"w": W, "h": H}, "tiles": tiles, "entrance": {"x": 2, "y": 2},
+        "rooms": [{"id": "a", "x": 1, "y": 1, "w": 10, "h": 4, "role": "entrance", "doors": []},
+                  {"id": "b", "x": 1, "y": 6, "w": 10, "h": 2, "role": "empty", "locked": True,
+                   "doors": [[5, 5]]}],
+        "monsters": [], "decorations": [], "chests": [], "traps": [],
+        "objectives": {"primary": {"type": "kill_all"}, "secondary": []},
+    }
+    if cond is not None:
+        d["door_conditions"] = {"5,5": cond}
+    return d
+
+
+def secao_2():
+    print("[2] condição de porta `gas`")
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas", "zona_id": "gas_tutorial"}))
+    check("validar_dungeon aceita {type:gas, zona_id}", ok is True)
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas", "zona_id": ""}))
+    check("zona_id vazio é recusado", ok is False)
+    ok, _ = S.validar_dungeon(masmorra_porta({"type": "gas"}))
+    check("zona_id ausente é recusado", ok is False)
+    r = S.GameRoom("PGAS")
+    r.phase = "playing"
+    r.load_authored_dungeon(masmorra_porta({"type": "gas", "zona_id": "gas_tutorial"}))
+    check("sem a zona a porta já está satisfeita", r._door_condition_satisfied((5, 5)) is True)
+    z = camara(r, sala_id="b", duracao=9, permanente=True)
+    z["id"] = "gas_tutorial"
+    check("zona ativa: porta NÃO satisfeita", r._door_condition_satisfied((5, 5)) is False)
+    z["ativa"] = False
+    check("zona consumida: porta satisfeita", r._door_condition_satisfied((5, 5)) is True)
+    z["ativa"] = True
+    pl = r._game_state_payload()["door_conditions"]["5,5"]
+    check("payload leva type, satisfied e zona_id",
+          pl["type"] == "gas" and pl["satisfied"] is False and pl["zona_id"] == "gas_tutorial")
+    # abrir a porta com o gás ativo responde com a mensagem própria
+    erros = []
+
+    async def captura(pid, m):
+        if m.get("type") == "error":
+            erros.append(m["msg"])
+    r.send_to = captura
+    h = heroi(r, "a", "Ana", "warrior", [5, 4])
+    r.player_order = ["a"]
+    roda(r.handle_open_door("a", 5, 5))
+    check("abrir com gás ativo recusa com erro.porta_exige_gas_consumido",
+          len(erros) == 1 and getattr(erros[0], "key", None) == "erro.porta_exige_gas_consumido")
+    check("a porta continua fechada", (5, 5) not in r.opened_doors)
+    z["ativa"] = False
+    roda(r.handle_open_door("a", 5, 5))
+    check("com o gás consumido a porta abre", (5, 5) in r.opened_doors)
+
+    # O editor descartava condições de tipo desconhecido ao abrir a masmorra: salvar o
+    # Campo de Treinamento por ele apagaria a trava de gás. O editor não roda sem DOM,
+    # então a prova é estática: leitura e escrita do tipo `gas` + chave de idioma.
+    ed = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tools", "editor.js"),
+              encoding="utf-8").read()
+    check("editor.js carrega a condição gas (loadJSON)",
+          'c.type === "gas" && typeof c.zona_id === "string"' in ed)
+    check("editor.js grava a condição gas (buildJSON)", 'c.type === "gas" ? { type: "gas", zona_id' in ed)
+    check("chave de idioma do editor para gas existe",
+          '"ui.editor.masmorra.painel.gas_consumido"' in S._LANG_TEXTO if hasattr(S, "_LANG_TEXTO") else
+          '"ui.editor.masmorra.painel.gas_consumido"' in open(os.path.join(
+              os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src", "lang", "editor.js"),
+              encoding="utf-8").read())
+
+
 if __name__ == "__main__":
     secao_1()
+    secao_2()
     print(f"\n{PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)

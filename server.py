@@ -8402,8 +8402,8 @@ def validar_dungeon(defn):
         dx, dy = (int(v) for v in key.split(","))
         if not in_grid([dx, dy]) or tile_at([dx, dy]) != DOOR:
             return False, f"condicao de abertura referencia uma casa que nao e porta: {key}."
-        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor", "licao", "requirement"):
-            return False, f"condicao de porta invalida em {key}: use item, decor, licao ou requirement."
+        if not isinstance(cond, dict) or cond.get("type") not in ("item", "decor", "licao", "requirement", "gas"):
+            return False, f"condicao de porta invalida em {key}: use item, decor, licao, requirement ou gas."
         if cond["type"] == "requirement":
             req = _clean_requirement(cond.get("requirement"))
             if not any((req["renome_min"], req["nivel_grupo_min"], req["item_id"], req["fato"], req["aventura_id"])):
@@ -8417,6 +8417,9 @@ def validar_dungeon(defn):
         elif cond["type"] == "item":
             if cond.get("item_id") not in _DUNGEON_ITEM_CATALOG:
                 return False, f"item-chave invalido na porta {key}: {cond.get('item_id')!r}."
+        elif cond["type"] == "gas":
+            if not isinstance(cond.get("zona_id"), str) or not cond["zona_id"].strip():
+                return False, f"porta {key} (gas) precisa de zona_id."
         else:
             keys = cond.get("key_decor_ids", [])
             if (not isinstance(keys, list) or not keys
@@ -15997,6 +16000,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             elif cond.get("type") == "licao":
                 self.door_conditions[(dx, dy)] = {"type": "licao",
                                                   "licao_id": cond.get("licao_id", "")}
+            elif cond.get("type") == "gas":
+                self.door_conditions[(dx, dy)] = {"type": "gas", "zona_id": cond.get("zona_id", "")}
             else:
                 self.door_conditions[(dx, dy)] = {
                     "type": "decor",
@@ -18155,6 +18160,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return self._grupo_tem_item(cond.get("item_id"))
         if cond["type"] == "licao":
             return cond.get("licao_id") in getattr(self, "licoes_feitas", set())
+        if cond["type"] == "gas":
+            # Estado real do gás, e não uma lição: lição pulada nunca abriria a porta.
+            return not any(z.get("id") == cond.get("zona_id") and z.get("ativa")
+                           for z in self.zonas_especiais)
         if cond["type"] == "requirement":
             return self._avaliar_requisito(cond.get("requirement"))[0]
         keys = cond.get("key_decor_ids") or []
@@ -18170,6 +18179,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return T("erro.porta_exige_item_chave", item=item.get("name", cond.get("item_id", "item-chave")))
         if cond.get("type") == "licao":
             return T("erro.porta_exige_licao")
+        if cond.get("type") == "gas":
+            return T("erro.porta_exige_gas_consumido")
         if cond.get("type") == "requirement":
             return T("erro.destino_bloqueado_requer", motivos=self._avaliar_requisito(cond.get("requirement"))[1])
         return T("erro.porta_exige_ativacao_objeto_chave")
@@ -41350,6 +41361,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 row["item_id"] = cond.get("item_id")
             elif cond["type"] == "licao":
                 row["licao_id"] = cond.get("licao_id")
+            elif cond["type"] == "gas":
+                row["zona_id"] = cond.get("zona_id")
             elif cond["type"] == "requirement":
                 row["requirement"] = deepcopy(cond.get("requirement") or {})
             else:

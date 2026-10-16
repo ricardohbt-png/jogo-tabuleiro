@@ -672,6 +672,10 @@ window.LANG_EDITOR = {
     "en": "Activated key object",
     "pt": "Objeto-chave ativado"
   },
+  "ui.editor.masmorra.painel.gas_consumido": {
+    "en": "Gas consumed (training)",
+    "pt": "Gás consumido (treinamento)"
+  },
   "ui.editor.masmorra.painel.licao_cumprida": {
     "en": "Lesson completed",
     "pt": "Lição cumprida"
