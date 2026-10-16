@@ -12,6 +12,14 @@ window.LANG_EDITOR = {
   "ui.editor.cinto.item": {"pt": "Item do bolso {n}", "en": "Pocket {n} item"},
   "ui.editor.cinto.quantidade": {"pt": "Quantidade do bolso {n}", "en": "Pocket {n} quantity"},
   "ui.editor.cinto.vazio": {"pt": "Vazio", "en": "Empty"},
+  "ui.editor.masmorra.licao.explodir_gas": {
+    "en": "Set off the gas with fire",
+    "pt": "Detonar o gás com fogo"
+  },
+  "ui.editor.masmorra.licao.incendiar_piche": {
+    "en": "Set the pitch on fire",
+    "pt": "Acender o piche"
+  },
   "ui.editor.masmorra.licao.libertar_refem": {
     "en": "Free the hostage",
     "pt": "Libertar o refém"

@@ -393,6 +393,21 @@ class TutorialTraining:
                                   "vida_max": 8, "dano": "1d4", "ficha_original": deepcopy(mdef),
                                   "training_target": True}
 
+    async def _training_gas_consumido(self, zona):
+        """O gás explodiu: o resultado é da sala, então a lição conta para todos os heróis."""
+        if not self.training_mode:
+            return
+        for p in list(self.players.values()):
+            await self._licao_evento(p, "explodir_gas", alvo=zona.get("id"))
+
+    async def _training_piche_aceso(self, caster_id):
+        """O piche pegou fogo: só quem lançou o fogo cumpre a lição (cada um faz a sua)."""
+        if not self.training_mode:
+            return
+        p = self.players.get(caster_id)
+        if p:
+            await self._licao_evento(p, "incendiar_piche")
+
     async def _training_event(self, p, kind, target=None, amount=0):
         """Condições de resultado usadas pelos exercícios, além dos eventos legados."""
         if not self.training_mode or not p:

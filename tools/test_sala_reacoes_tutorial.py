@@ -204,8 +204,80 @@ def secao_2():
               encoding="utf-8").read())
 
 
+def sala_treino(*licoes):
+    """Sala de treinamento mínima: lições à mão, sem falas, sem rede."""
+    r = sala()
+    r.training_mode = True
+    r.training_state = {}
+    r.falas = []
+    r.licoes = list(licoes)
+    r.licoes_feitas = set()
+    return r
+
+
+def licao(lid, tipo, alvo=None, ordem=36):
+    tar = {"tipo": tipo, "vezes": 1, "texto_curto": lid}
+    if alvo is not None:
+        tar["alvo"] = alvo
+    return {"id": lid, "ordem": ordem, "pos": [3, 3], "texto": "", "tarefa": tar,
+            "falante": {"nome": "Mestre", "emoji": "x"}, "trigger": {"tipo": "proximidade", "raio": 2}}
+
+
+def com_licao(r, pid, nome, classe, lid, pos=(3, 3)):
+    h = heroi(r, pid, nome, classe, pos)
+    h["licao_atual"] = lid
+    h["licoes_feitas"] = []
+    h["licao_progresso"] = {}
+    h["tutorial_history"] = []
+    h["licao_passo"] = 0
+    return h
+
+
+def secao_3():
+    print("[3] verbos explodir_gas / incendiar_piche e seus eventos")
+    check("explodir_gas e incendiar_piche são verbos de lição",
+          "explodir_gas" in S.LICAO_VERBOS and "incendiar_piche" in S.LICAO_VERBOS)
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial"))
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_gas", pos=(15, 5))
+    b = com_licao(r, "b", "Bia", "mage", "fala_gas", pos=(16, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="a"))
+    check("detonar o gás conclui a lição dos DOIS heróis",
+          "fala_gas" in a["licoes_feitas"] and "fala_gas" in b["licoes_feitas"])
+    check("quem estava fora do gás não perde PV", a["hp"] == 60 and b["hp"] == 60)
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial"))
+    fixa(r, dado=1)
+    m = com_licao(r, "m", "Mia", "mage", "fala_gas", pos=(15, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="m", origem={"tipo": "magia", "id": "bola_fogo", "caster_id": "m"}))
+    check("Bola de Fogo de fora também conclui", "fala_gas" in m["licoes_feitas"])
+    r = sala()
+    r.licoes = [licao("fala_gas", "explodir_gas", "gas_tutorial")]
+    r.licoes_feitas = set()
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_gas", pos=(15, 5))
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    roda(fogo_em(r, [(3, 3)], caster="a"))
+    check("fora do treinamento nada é emitido", "fala_gas" not in a["licoes_feitas"])
+    # piche: só o autor
+    r = sala_treino(licao("fala_piche", "incendiar_piche", None, ordem=37))
+    fixa(r, dado=1)
+    a = com_licao(r, "a", "Ana", "warrior", "fala_piche", pos=(15, 5))
+    b = com_licao(r, "b", "Bia", "rogue", "fala_piche", pos=(16, 5))
+    for xy in ((4, 4), (5, 4), (4, 5), (5, 5)):
+        r.materiais[xy] = "piche"
+    roda(fogo_em(r, [(4, 4)], caster="a"))
+    check("acender o piche conclui só a lição do autor",
+          "fala_piche" in a["licoes_feitas"] and "fala_piche" not in b["licoes_feitas"])
+
+
 if __name__ == "__main__":
     secao_1()
     secao_2()
+    secao_3()
     print(f"\n{PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)

@@ -53,7 +53,9 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  # sai cedo no ramo "throwable" e nunca chega ao gancho.
                  "arremessar_item", "libertar_refem", "proteger", "regenerar",
                  "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo",
-                 "guiar_refem", "configurar_atalho")
+                 "guiar_refem", "configurar_atalho",
+                 # Sala das reações de terreno: o evento vem do motor de reações.
+                 "explodir_gas", "incendiar_piche")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta", "guiar_refem")
