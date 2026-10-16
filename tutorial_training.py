@@ -393,6 +393,28 @@ class TutorialTraining:
                                   "vida_max": 8, "dano": "1d4", "ficha_original": deepcopy(mdef),
                                   "training_target": True}
 
+    async def _pular_licao_de_estado(self, p, fala):
+        """Lição cujo resultado é um ESTADO da sala (o gás explodiu): se o estado já
+        aconteceu antes de o herói chegar, a lição é pulada, sem prêmio — o mesmo efeito
+        de `_pular_etapas_abandonadas` (licoes_feitas/licoes_puladas, fora do
+        tutorial_history). Devolve True se pulou."""
+        tar = fala.get("tarefa") or {}
+        if not self.training_mode or tar.get("tipo") != "explodir_gas":
+            return False
+        if not self._fala_elegivel(p, fala):
+            return False
+        if any(z.get("id") == tar.get("alvo") and z.get("ativa") for z in self.zonas_especiais):
+            return False
+        feitas = p.setdefault("licoes_feitas", [])
+        puladas = p.setdefault("licoes_puladas", [])
+        if fala["id"] not in feitas:
+            feitas.append(fala["id"])
+        if fala["id"] not in puladas:
+            puladas.append(fala["id"])
+        p.setdefault("licao_progresso", {})[fala["id"]] = int(tar.get("vezes", 1) or 1)
+        await self.send_to(p["id"], {"type": "licao_pulada", "licao_id": fala["id"]})
+        return True
+
     async def _training_gas_consumido(self, zona):
         """O gás explodiu: o resultado é da sala, então a lição conta para todos os heróis."""
         if not self.training_mode:

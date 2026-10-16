@@ -20081,6 +20081,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 gatilho = bool(sala and sala["id"] == entered["id"])
             if not gatilho:
                 continue
+            if licao and await self._pular_licao_de_estado(p, fala):
+                continue
             if licao and self._fala_elegivel(p, fala) and fala.get("continua_sem"):
                 # Mesmo que as exceções já liberem a etapa, registre as lições não
                 # feitas como puladas para que não reapareçam numa volta pelo mapa.

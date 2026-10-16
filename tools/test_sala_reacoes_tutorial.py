@@ -275,9 +275,46 @@ def secao_3():
           "fala_piche" in a["licoes_feitas"] and "fala_piche" not in b["licoes_feitas"])
 
 
+def secao_4():
+    print("[4] lição de estado: pulada quando o gás já foi consumido")
+    gas = licao("fala_gas", "explodir_gas", "gas_tutorial", ordem=36)
+    piche = licao("fala_piche", "incendiar_piche", None, ordem=37)
+    piche["pos"] = [8, 8]
+    # sem zona ativa (já explodiu) -> o herói que chega depois pula, sem prêmio
+    r = sala_treino(gas, piche)
+    r.falas = r.licoes
+    enviados = []
+
+    async def captura(pid, m):
+        enviados.append(m.get("type"))
+    r.send_to = captura
+    b = com_licao(r, "b", "Bia", "mage", None, pos=(3, 4))
+    ouro, xp = b["gold"], b["xp"]
+    roda(r._verificar_falas(b, None))
+    check("com o gás consumido a lição não abre", b["licao_atual"] != "fala_gas")
+    check("fica em licoes_puladas e licoes_feitas",
+          "fala_gas" in b["licoes_puladas"] and "fala_gas" in b["licoes_feitas"])
+    check("sem prêmio: fora do tutorial_history, ouro e XP intactos",
+          "fala_gas" not in b["tutorial_history"] and b["gold"] == ouro and b["xp"] == xp)
+    check("o cliente recebe licao_pulada", "licao_pulada" in enviados)
+    b["pos"] = [8, 9]
+    roda(r._verificar_falas(b, None))
+    check("a lição seguinte (fala_piche) fica liberada e abre", b["licao_atual"] == "fala_piche")
+    # com a zona ativa a lição abre normalmente
+    r = sala_treino(licao("fala_gas", "explodir_gas", "gas_tutorial", ordem=36))
+    r.falas = r.licoes
+    r.send_to = captura
+    z = camara(r, permanente=True)
+    z["id"] = "gas_tutorial"
+    a = com_licao(r, "a", "Ana", "warrior", None, pos=(3, 4))
+    roda(r._verificar_falas(a, None))
+    check("com o gás ativo a lição abre", a["licao_atual"] == "fala_gas" and not a.get("licoes_puladas"))
+
+
 if __name__ == "__main__":
     secao_1()
     secao_2()
     secao_3()
+    secao_4()
     print(f"\n{PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)
