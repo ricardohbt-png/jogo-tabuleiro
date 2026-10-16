@@ -311,10 +311,68 @@ def secao_4():
     check("com o gás ativo a lição abre", a["licao_atual"] == "fala_gas" and not a.get("licoes_puladas"))
 
 
+def sala_do_gas():
+    """Sala de treino com a sala 49 (x11-20) e o gás permanente ativo."""
+    r = sala_treino()
+    r.rooms[1]["id"] = 49
+    z = camara(r, sala_id=49, permanente=True)
+    z["id"] = "gas_tutorial"
+    return r, z
+
+
+def oleo(h):
+    return [i for i in h["bag"] if i.get("id") == "frasco_oleo"]
+
+
+def secao_5():
+    print("[5] frasco de socorro")
+    r, z = sala_do_gas()
+    a = heroi(r, "a", "Ana", "warrior", [3, 3])
+    a["bag"] = []
+    check("sem óleo, sem baú e com o gás ativo: dá 1 frasco emprestado",
+          roda(r._training_frasco_socorro(a)) is True and len(oleo(a)) == 1
+          and oleo(a)[0].get("tutorial_loan") is True)
+    check("chamado de novo não dá outro (já tem óleo)",
+          roda(r._training_frasco_socorro(a)) is False and len(oleo(a)) == 1)
+    r, z = sala_do_gas()
+    b = heroi(r, "b", "Bia", "mage", [3, 3])
+    b["bag"] = [S.hidratar_itens_bau([{"id": "frasco_oleo"}])[0]]
+    check("com óleo na bolsa não dá", roda(r._training_frasco_socorro(b)) is False and len(oleo(b)) == 1)
+    r, z = sala_do_gas()
+    c = heroi(r, "c", "Cris", "rogue", [3, 3])
+    c["bag"] = []
+    r._spawn_chest([15, 6], 0, S.hidratar_itens_bau([{"id": "frasco_oleo"}]))
+    check("com óleo ainda no baú da sala 49 não dá", roda(r._training_frasco_socorro(c)) is False)
+    r.chests.clear()
+    check("baú esvaziado: dá", roda(r._training_frasco_socorro(c)) is True)
+    r, z = sala_do_gas()
+    z["ativa"] = False
+    d = heroi(r, "d", "Davi", "bard", [3, 3])
+    d["bag"] = []
+    check("gás já consumido: não dá", roda(r._training_frasco_socorro(d)) is False)
+    r, z = sala_do_gas()
+    e = heroi(r, "e", "Eva", "paladin", [3, 3])
+    e["bag_size"] = 2
+    e["bag"] = [{"id": "x1"}, {"id": "x2"}]
+    check("bolsa cheia: não dá", roda(r._training_frasco_socorro(e)) is False)
+    r, z = sala_do_gas()
+    r.training_mode = False
+    f = heroi(r, "f", "Fio", "warrior", [3, 3])
+    f["bag"] = []
+    check("fora do treinamento: não dá", roda(r._training_frasco_socorro(f)) is False)
+    # integração: o início do turno chama o socorro
+    r, z = sala_do_gas()
+    g = heroi(r, "g", "Gil", "warrior", [3, 3])
+    g["bag"] = []
+    roda(r._start_initiative_player_turn(g))
+    check("início do turno do herói sem óleo entrega o frasco", len(oleo(g)) == 1)
+
+
 if __name__ == "__main__":
     secao_1()
     secao_2()
     secao_3()
     secao_4()
+    secao_5()
     print(f"\n{PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)

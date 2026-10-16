@@ -3060,6 +3060,10 @@ window.LANG_NARRACAO = {
     "en": "👁️ **{heroi}**'s vision expanded to radius {raio}.",
     "pt": "👁️ Visão de **{heroi}** expandida para raio {raio}."
   },
+  "narracao.frasco_de_socorro_do_treinamento": {
+    "en": "🛢️ The Weapon Master tosses {heroi} another flask of oil: \"Try again — and keep your distance!\"",
+    "pt": "🛢️ O Mestre de Armas joga outro Frasco de Óleo para {heroi}: \"Tente de novo — e mantenha a distância!\""
+  },
   "narracao.reacao.explosao_gas": {
     "en": "💥 The fire ignites the gas — it explodes!",
     "pt": "💥 O fogo incendeia o gás — ele explode!"

@@ -6,6 +6,10 @@ from copy import deepcopy
 # (que sai na última lição de verdade) e são refeitas junto com a sala.
 LICAO_FORA_DA_TRILHA_PREFIXOS = ("volta_",)
 
+# Sala das reações de terreno: o gás permanente da sala 49 (fatia 20 do tutorial).
+TREINO_GAS_ID = "gas_tutorial"
+TREINO_GAS_SALA = 49
+
 
 def _licao_fora_da_trilha(lic):
     return str((lic or {}).get("id", "")).startswith(LICAO_FORA_DA_TRILHA_PREFIXOS)
@@ -392,6 +396,31 @@ class TutorialTraining:
                                   "icone": "💀", "nd": 0.25, "nivel": 1, "ca": 10,
                                   "vida_max": 8, "dano": "1d4", "ficha_original": deepcopy(mdef),
                                   "training_target": True}
+
+    def _training_oleo_no_bau(self):
+        """Ainda há Frasco de Óleo num baú da sala do gás?"""
+        for chest in self.chests.values():
+            sala = self._room_containing_point(chest.get("pos"))
+            if sala and sala.get("id") == TREINO_GAS_SALA                     and any(i.get("id") == "frasco_oleo" for i in chest.get("items", [])):
+                return True
+        return False
+
+    async def _training_frasco_socorro(self, p):
+        """Rede de segurança: o gás é permanente e a porta só abre quando ele explode, então
+        quem gastou todos os frascos (baú e bolsa) ganha mais um emprestado. Devolve True se deu."""
+        if not self.training_mode or not p or not p.get("alive", True):
+            return False
+        if not any(z.get("id") == TREINO_GAS_ID and z.get("ativa") for z in self.zonas_especiais):
+            return False
+        if any(i.get("id") == "frasco_oleo" for i in p.get("bag", [])) or self._training_oleo_no_bau():
+            return False
+        if len(p.get("bag", [])) >= p.get("bag_size", 20):
+            return False
+        item = self._tutorial_api().hidratar_itens_bau([{"id": "frasco_oleo"}])[0]
+        item["tutorial_loan"] = True
+        p["bag"].append(item)
+        await self.gm_say(self._tutorial_api().T("narracao.frasco_de_socorro_do_treinamento", heroi=p["name"]))
+        return True
 
     async def _pular_licao_de_estado(self, p, fala):
         """Lição cujo resultado é um ESTADO da sala (o gás explodiu): se o estado já

@@ -17635,6 +17635,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._processar_mods_magia_turno(p)
         await self._processar_nuvem_acida_inicio_turno(p)
         await self._processar_camara_gas_inicio_turno(p)
+        await self._training_frasco_socorro(p)   # treinamento: nunca fica sem fogo para o gás
         if p.get("preso"): await self._processar_escape_agarrar(p)
         congelamento_pen = await self._processar_congelamento_progressivo_turno(p)
         self._preparar_desnutricao_jogador_turno(p)
