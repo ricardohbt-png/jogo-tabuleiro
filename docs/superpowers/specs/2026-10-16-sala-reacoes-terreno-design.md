@@ -115,7 +115,7 @@ As duas salas nascem `locked: true`, como as demais.
 
 ## Dados e script
 
-- Novo `tools/aplicar_fatia18_tutorial.py`, cirúrgico e idempotente, chamado
+- Novo `tools/aplicar_fatia20_tutorial.py`, cirúrgico e idempotente, chamado
   também por `configurar_tutorial_salas.py`: amplia o grid, move a sala/saída,
   cria sala 51, lago, baús, porta `[51,32]` com condição, boneco, as falas
   `fala_gas` e `fala_piche`, reordena `fala_retirada` (36 → 38) e ajusta o alvo.

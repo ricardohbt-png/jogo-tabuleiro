@@ -443,7 +443,7 @@ class TutorialTraining:
         de `_pular_etapas_abandonadas` (licoes_feitas/licoes_puladas, fora do
         tutorial_history). Devolve True se pulou."""
         tar = fala.get("tarefa") or {}
-        if not self.training_mode or tar.get("tipo") != "explodir_gas":
+        if not getattr(self, "training_mode", False) or tar.get("tipo") != "explodir_gas":
             return False
         if not self._fala_elegivel(p, fala):
             return False
