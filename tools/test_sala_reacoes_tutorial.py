@@ -368,11 +368,75 @@ def secao_5():
     check("início do turno do herói sem óleo entrega o frasco", len(oleo(g)) == 1)
 
 
+def masmorra_treino(com_sala_gas=True, treino=True):
+    """Masmorra mínima de treinamento: sala 0 (entrada) e, opcionalmente, a sala 49 do gás."""
+    W, H = 12, 12
+    tiles = [[S.WALL] * W for _ in range(H)]
+    for y in range(1, 4):
+        for x in range(1, 11):
+            tiles[y][x] = S.FLOOR
+    rooms = [{"id": 0, "x": 1, "y": 1, "w": 10, "h": 3, "role": "entrance", "doors": []}]
+    if com_sala_gas:
+        for y in range(6, 10):
+            for x in range(1, 11):
+                tiles[y][x] = S.FLOOR
+        tiles[5][5] = S.DOOR
+        rooms.append({"id": 49, "x": 1, "y": 6, "w": 10, "h": 4, "role": "empty", "locked": True,
+                      "doors": [[5, 5]]})
+    d = {"schema_version": 1, "id": "treino_gas", "name": "Treino do gás",
+         "grid": {"w": W, "h": H}, "tiles": tiles, "entrance": {"x": 2, "y": 2}, "rooms": rooms,
+         "monsters": [], "decorations": [], "chests": [], "traps": [],
+         "objectives": {"primary": {"type": "kill_all"}, "secondary": []}}
+    if treino:
+        d["tutorial_training"] = True
+    return d
+
+
+def gas_do_treino(r):
+    return [z for z in r.zonas_especiais if z.get("id") == "gas_tutorial"]
+
+
+def secao_6():
+    print("[6] o gás nasce na preparação do treinamento")
+    r = S.GameRoom("TG")
+    r.phase = "playing"
+    r.load_authored_dungeon(masmorra_treino())
+    zs = gas_do_treino(r)
+    check("existe exatamente 1 zona gas_tutorial", len(zs) == 1)
+    z = zs[0] if zs else {}
+    check("tipo, sala e marcas do design",
+          z.get("tipo") == "camara_gas" and z.get("room_id") == 49 and z.get("ativa") is True
+          and z.get("permanente") is True)
+    check("dificuldade 10, dano \"1\" e explosão \"1d4\"",
+          z.get("dificuldade") == 10 and z.get("dano") == "1" and z.get("dano_explosao") == "1d4")
+    r._training_criar_gas()
+    check("criar de novo não duplica (idempotente)", len(gas_do_treino(r)) == 1)
+    # enter_dungeon limpa as zonas ANTES de carregar a masmorra: a zona tem de reaparecer
+    r.zonas_especiais = []
+    r.load_authored_dungeon(masmorra_treino())
+    check("recarregar a masmorra (como o enter_dungeon faz) recria a zona", len(gas_do_treino(r)) == 1)
+    for _ in range(12):
+        roda(r._processar_zonas_turno_impl())
+    check("12 rodadas depois ela segue ativa", gas_do_treino(r)[0]["ativa"] is True)
+    roundtrip = S.foto_desempacotar(S.foto_empacotar({"zonas_especiais": r.zonas_especiais}))
+    check("a zona sobrevive ao empacotar/desempacotar da foto",
+          roundtrip["zonas_especiais"] == r.zonas_especiais)
+    r2 = S.GameRoom("TG2")
+    r2.phase = "playing"
+    r2.load_authored_dungeon(masmorra_treino(com_sala_gas=False))
+    check("mapa de treinamento sem sala 49: não cria", gas_do_treino(r2) == [])
+    r3 = S.GameRoom("TG3")
+    r3.phase = "playing"
+    r3.load_authored_dungeon(masmorra_treino(treino=False))
+    check("masmorra que não é de treinamento: não cria", gas_do_treino(r3) == [])
+
+
 if __name__ == "__main__":
     secao_1()
     secao_2()
     secao_3()
     secao_4()
     secao_5()
+    secao_6()
     print(f"\n{PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)

@@ -121,6 +121,7 @@ class TutorialTraining:
         self.training_state = {}
         if not self.training_mode:
             return
+        self._training_criar_gas()
         api = self._tutorial_api()
         for authored, live in zip(defn.get("traps", []), self.armadilhas):
             if authored.get("id") == "trap_treino_luccas":
@@ -396,6 +397,20 @@ class TutorialTraining:
                                   "icone": "💀", "nd": 0.25, "nivel": 1, "ca": 10,
                                   "vida_max": 8, "dano": "1d4", "ficha_original": deepcopy(mdef),
                                   "training_target": True}
+
+    def _training_criar_gas(self):
+        """O gás permanente da sala 49 (só em mapa de treinamento que tem essa sala).
+        Idempotente por id. Dano e CD baixos e explosão 1d4 para ninguém morrer:
+        o Mago tem 7 PV. A zona só some quando o fogo a detona."""
+        if not self.training_mode or self._room_by_id(TREINO_GAS_SALA) is None:
+            return
+        if any(z.get("id") == TREINO_GAS_ID for z in self.zonas_especiais):
+            return
+        self.zonas_especiais.append({
+            "id": TREINO_GAS_ID, "tipo": "camara_gas", "room_id": TREINO_GAS_SALA,
+            "duracao": 999, "ativa": True, "permanente": True, "created_round": 0,
+            "dificuldade": 10, "dano": "1", "dano_explosao": "1d4",
+        })
 
     def _training_oleo_no_bau(self):
         """Ainda há Frasco de Óleo num baú da sala do gás?"""
