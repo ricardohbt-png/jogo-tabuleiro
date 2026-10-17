@@ -157,6 +157,11 @@ O renderer (`game.js`) se comunica com `gameState.js` **apenas** via:
 
 O renderer **nunca** escreve diretamente em variáveis internas do módulo GS.
 
+`GS.on` mantém **um callback por evento**: outro registro substitui o anterior.
+Na entrada da masmorra, a limpeza de fuligem e de conhecimento dos monstros deve
+ficar no callback principal `enterDungeon`, que fecha a cidade e mostra o tabuleiro.
+Regressão: `node tools/test_entrada_masmorra_cliente.js`.
+
 ### HUD de objetivos
 
 `renderObjectivesHUD` em `game.js` apresenta os objetivos autorados a partir de
@@ -3768,8 +3773,15 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `_processar_zonas_turno_impl` a dissipa); antes só existia o efeito instantâneo e uma nuvem
 > visual de 2,5 s no cliente, que foi removida: `_fumacaSync` desenha a nuvem persistente pelas
 > mesmas zonas (`_ehZonaFumaca` inclui `nuvem_gas`, casas vindas de `z.tiles`). Cliente: estilo
-> `explosao_gas` em `src/reacoesElementais.js`, clarão 2D/3D por casa em `_reacoesDesenhar2D`/
-> `_reacoes3DAtualizar`, som `explosao`. Provado no navegador em servidor isolado (explosão 3D
+> `explosao_gas` em `src/reacoesElementais.js`, efeito 2D/3D em `_reacoesDesenhar2D`/
+> `_reacoes3DAtualizar`: começa no impacto e percorre as casas visíveis como uma onda de fogo,
+> terminando em fumaça e brasas. O 3D usa núcleo claro e anéis por casa visível, preservando a névoa;
+> depois deixa fuligem irregular no chão por 30 segundos, também limitada às casas visíveis.
+> Água rasa/profunda e redemoinhos não recebem fuligem (pontes sobre água conservam a marca no deck);
+> 2D/3D consultam o material atual, inclusive se o terreno virar água após a explosão.
+> A previsão de reação (`_spellHL.reage`) é limpa por `_limparSpellHLMira` ao concluir/cancelar
+> a mira; deixá-la ativa mantém a camada amarela da previsão de gás sobre toda a sala, inclusive água.
+> O som continua `explosao`. Provado no navegador em servidor isolado (explosão 3D
 > sobre as 98 casas da sala, gás consumido). O 2D só passou em checagem de sintaxe. Testes:
 > `tools/test_fogo_gas.py` (27), `tools/test_terrain_reactions.py`.
 

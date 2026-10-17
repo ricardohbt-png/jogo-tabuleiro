@@ -5,7 +5,7 @@
     incendio: { cor: '#ff8a2a', duracaoMs: 900 },
     congelar: { cor: '#bfefff', duracaoMs: 900 },
     crosta:   { cor: '#8a5a44', duracaoMs: 900 },
-    explosao_gas: { cor: '#ffb347', duracaoMs: 1100 },
+    explosao_gas: { cor: '#ffb347', duracaoMs: 1800 },
     derreter: { cor: '#a8e4ff', duracaoMs: 1000 },
   };
   function estilo(tipo) { return ESTILOS[tipo] ? Object.assign({}, ESTILOS[tipo]) : null; }

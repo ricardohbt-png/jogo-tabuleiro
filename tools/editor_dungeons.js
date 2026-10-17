@@ -16018,7 +16018,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 48,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_25"
         },
         {
           "type": "boneco_treino",
@@ -16237,7 +16238,6 @@ window.EDITOR_DUNGEONS = [
             29
           ],
           "gold": 0,
-          "key_objective": false,
           "items": [
             {
               "id": "frasco_oleo"
@@ -16248,7 +16248,8 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "frasco_oleo"
             }
-          ]
+          ],
+          "key_objective": false
         },
         {
           "pos": [
@@ -16256,7 +16257,6 @@ window.EDITOR_DUNGEONS = [
             33
           ],
           "gold": 0,
-          "key_objective": false,
           "items": [
             {
               "id": "frasco_piche"
@@ -16270,7 +16270,8 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "frasco_oleo"
             }
-          ]
+          ],
+          "key_objective": false
         }
       ],
       "traps": [
@@ -16291,7 +16292,7 @@ window.EDITOR_DUNGEONS = [
             21
           ],
           "dificuldade": 14,
-          "dano": 1,
+          "dano": "1",
           "veneno_id": "veneno_escorpiao_pedra"
         },
         {
@@ -16302,7 +16303,7 @@ window.EDITOR_DUNGEONS = [
             21
           ],
           "dificuldade": 14,
-          "dano": 1,
+          "dano": "1",
           "veneno_id": "veneno_escorpiao_pedra"
         },
         {
@@ -17793,7 +17794,7 @@ window.EDITOR_DUNGEONS = [
           "type": "tocha_parede",
           "pos": [
             50,
-            32
+            39
           ],
           "facing": [
             0,
@@ -17808,7 +17809,7 @@ window.EDITOR_DUNGEONS = [
           "type": "tocha_parede",
           "pos": [
             53,
-            32
+            39
           ],
           "facing": [
             0,
@@ -17823,7 +17824,7 @@ window.EDITOR_DUNGEONS = [
           "type": "tocha_parede",
           "pos": [
             47,
-            28
+            36
           ],
           "facing": [
             1,
@@ -17838,7 +17839,7 @@ window.EDITOR_DUNGEONS = [
           "type": "tocha_parede",
           "pos": [
             54,
-            28
+            35
           ],
           "facing": [
             -1,
@@ -18021,30 +18022,11 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false
         },
         {
-          "id": "decor_107",
-          "type": "chao",
-          "pos": [
-            48,
-            26
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "chaotapete1.png",
-          "size": [
-            6,
-            6
-          ]
-        },
-        {
           "id": "decor_109",
           "type": "cortina_vermelha",
           "pos": [
             49,
-            32
+            39
           ],
           "facing": [
             0,
@@ -18063,7 +18045,7 @@ window.EDITOR_DUNGEONS = [
           "type": "cortina_vermelha",
           "pos": [
             47,
-            27
+            34
           ],
           "facing": [
             1,
@@ -18082,7 +18064,7 @@ window.EDITOR_DUNGEONS = [
           "type": "cortina_vermelha",
           "pos": [
             54,
-            27
+            34
           ],
           "facing": [
             -1,
@@ -18101,7 +18083,7 @@ window.EDITOR_DUNGEONS = [
           "type": "cortina_vermelha",
           "pos": [
             54,
-            30
+            37
           ],
           "facing": [
             -1,
@@ -18120,7 +18102,7 @@ window.EDITOR_DUNGEONS = [
           "type": "cortina_vermelha",
           "pos": [
             52,
-            32
+            39
           ],
           "facing": [
             0,
@@ -18139,7 +18121,7 @@ window.EDITOR_DUNGEONS = [
           "type": "cortina_vermelha",
           "pos": [
             47,
-            30
+            37
           ],
           "facing": [
             1,
@@ -18309,7 +18291,8 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Conheça seu herói e a missão"
+            "texto_curto": "Conheça seu herói e a missão",
+            "alvo": null
           },
           "guia": [
             {
@@ -18358,7 +18341,8 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Pratique a câmera e encerre o turno"
+            "texto_curto": "Pratique a câmera e encerre o turno",
+            "alvo": null
           },
           "guia": [
             {
@@ -18431,16 +18415,6 @@ window.EDITOR_DUNGEONS = [
               "dica": [
                 "ui.tutorial.guia.fala_0.andar.dica.1",
                 "ui.tutorial.guia.fala_0.andar.dica.2"
-              ],
-              "demonstracao": [
-                {
-                  "acao": "focar",
-                  "alvo": "casa:[5,15]"
-                },
-                {
-                  "acao": "prever_movimento",
-                  "alvo": "casa:[5,15]"
-                }
               ]
             }
           ]
@@ -18465,7 +18439,8 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "pegar_item",
             "vezes": 1,
-            "texto_curto": "Pegue uma arma do baú"
+            "texto_curto": "Pegue uma arma do baú",
+            "alvo": null
           },
           "guia": [
             {
@@ -18499,27 +18474,14 @@ window.EDITOR_DUNGEONS = [
           "tarefa": {
             "tipo": "equipar",
             "vezes": 1,
-            "texto_curto": "Equipe a arma que pegou"
+            "texto_curto": "Equipe a arma que pegou",
+            "alvo": null
           },
           "guia": [
             {
               "id": "abrir",
               "texto": "ui.tutorial.guia.fala_2.abrir.texto",
-              "ui": "botao:inventario",
-              "demonstracao": [
-                {
-                  "acao": "focar",
-                  "alvo": "botao:inventario"
-                },
-                {
-                  "acao": "abrir_interface",
-                  "alvo": "inventario"
-                },
-                {
-                  "acao": "focar",
-                  "alvo": "slot:weapon"
-                }
-              ]
+              "ui": "botao:inventario"
             },
             {
               "id": "equipar",
@@ -18528,16 +18490,6 @@ window.EDITOR_DUNGEONS = [
               "ui": "slot:weapon",
               "dica": [
                 "ui.tutorial.guia.fala_2.equipar.dica.1"
-              ],
-              "demonstracao": [
-                {
-                  "acao": "focar",
-                  "alvo": "slot:weapon"
-                },
-                {
-                  "acao": "prever_equipamento",
-                  "alvo": "slot:weapon"
-                }
               ]
             }
           ]
@@ -19063,7 +19015,8 @@ window.EDITOR_DUNGEONS = [
             "alvos": [
               "banquete_viagem",
               "racao_viagem"
-            ]
+            ],
+            "alvo": null
           },
           "guia": [
             {
@@ -19541,8 +19494,8 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "observar",
-              "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
               "titulo": "ui.tutorial.guia.fala_hostilidade.observar.titulo",
+              "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
               "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque",
               "ui": "monstro:rato_gigante"
             },
@@ -19579,8 +19532,8 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "parabens",
-              "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto",
-              "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo"
+              "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo",
+              "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto"
             }
           ]
         },
@@ -19597,8 +19550,7 @@ window.EDITOR_DUNGEONS = [
           },
           "texto": "Os bonecos não reagem. Faça um ataque para conferir seu equipamento.",
           "trigger": {
-            "tipo": "sala",
-            "raio": 2
+            "tipo": "sala"
           },
           "ordem": 8,
           "tarefa": {
@@ -19727,7 +19679,6 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "id": "fala_gas",
-          "ordem": 36,
           "pos": [
             51,
             25
@@ -19747,6 +19698,7 @@ window.EDITOR_DUNGEONS = [
             "fala_vuln",
             "fala_atalhos"
           ],
+          "ordem": 36,
           "tarefa": {
             "tipo": "explodir_gas",
             "alvo": "gas_tutorial",
@@ -19778,7 +19730,6 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "id": "fala_piche",
-          "ordem": 37,
           "pos": [
             51,
             33
@@ -19798,10 +19749,12 @@ window.EDITOR_DUNGEONS = [
             "fala_vuln",
             "fala_atalhos"
           ],
+          "ordem": 37,
           "tarefa": {
             "tipo": "incendiar_piche",
             "vezes": 1,
-            "texto_curto": "Acenda o piche com o óleo"
+            "texto_curto": "Acenda o piche com o óleo",
+            "alvo": null
           },
           "guia": [
             {
@@ -19842,8 +19795,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -19887,8 +19840,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 5,
           "sala_exclusiva": true,
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -19923,8 +19876,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 6,
           "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -19939,21 +19892,6 @@ window.EDITOR_DUNGEONS = [
               "ui": "habilidade:golpe_devastador",
               "dica": [
                 "ui.tutorial.guia.treino_golpe.golpe.dica.1"
-              ],
-              "demonstracao": [
-                {
-                  "acao": "focar",
-                  "alvo": "habilidade:golpe_devastador"
-                },
-                {
-                  "acao": "focar",
-                  "alvo": "monstro:boneco_treino"
-                },
-                {
-                  "acao": "prever_habilidade",
-                  "habilidade": "golpe_devastador",
-                  "alvo": "monstro:boneco_treino"
-                }
               ]
             }
           ]
@@ -19974,8 +19912,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20007,8 +19945,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 8,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "ataque_extra",
             "vezes": 1,
@@ -20043,12 +19981,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "warrior",
-          "ordem": 9,
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para concluir"
+            "texto_curto": "Encerre o turno para concluir",
+            "alvo": null
           },
           "guia": [
             {
@@ -20079,8 +20018,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -20124,15 +20063,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 5,
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
           "sala_exclusiva": true,
+          "ordem": 5,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Conheça o grimório"
-          },
-          "requisitos": {
-            "magia_tipo": "qualquer"
+            "texto_curto": "Conheça o grimório",
+            "alvo": null
           },
           "guia": [
             {
@@ -20163,15 +20103,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 6,
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
           "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia conhecida"
-          },
-          "requisitos": {
-            "magia_tipo": "qualquer"
+            "texto_curto": "Lance uma magia conhecida",
+            "alvo": null
           },
           "guia": [
             {
@@ -20198,12 +20139,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 7,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para continuar"
+            "texto_curto": "Encerre o turno para continuar",
+            "alvo": null
           },
           "guia": [
             {
@@ -20230,16 +20172,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 8,
+          "requisitos": {
+            "magia_tipo": "save"
+          },
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
             "texto_curto": "Lance uma magia com Aprimorar Magia",
             "alvo": "aprimorar_magia"
-          },
-          "requisitos": {
-            "magia_tipo": "save"
           },
           "guia": [
             {
@@ -20269,16 +20211,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 9,
+          "requisitos": {
+            "magia_tipo": "duracao"
+          },
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
             "texto_curto": "Lance uma magia com Estender Magia",
             "alvo": "estender_magia"
-          },
-          "requisitos": {
-            "magia_tipo": "duracao"
           },
           "guia": [
             {
@@ -20305,16 +20247,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 10,
+          "requisitos": {
+            "magia_tipo": "dano"
+          },
           "sala_exclusiva": true,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
             "texto_curto": "Lance uma magia com Fortalecer Magia",
             "alvo": "fortalecer_magia"
-          },
-          "requisitos": {
-            "magia_tipo": "dano"
           },
           "guia": [
             {
@@ -20341,8 +20283,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 11,
           "sala_exclusiva": true,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20378,12 +20320,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "mage",
-          "ordem": 12,
           "sala_exclusiva": true,
+          "ordem": 12,
           "tarefa": {
             "tipo": "comandar_servo",
             "vezes": 1,
-            "texto_curto": "Comande o servo de treinamento"
+            "texto_curto": "Comande o servo de treinamento",
+            "alvo": null
           },
           "guia": [
             {
@@ -20414,8 +20357,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -20459,8 +20402,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 5,
           "sala_exclusiva": true,
+          "ordem": 5,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20492,12 +20435,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 6,
           "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "desarmar_armadilha",
             "vezes": 1,
-            "texto_curto": "Desarme a armadilha"
+            "texto_curto": "Desarme a armadilha",
+            "alvo": null
           },
           "guia": [
             {
@@ -20523,8 +20467,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20556,8 +20500,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 8,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20592,8 +20536,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 9,
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20625,13 +20569,14 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 10,
           "sala_exclusiva": true,
+          "ordem": 10,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
             "texto_curto": "Acerte o boneco com a arma untada",
-            "requer_veneno": true
+            "requer_veneno": true,
+            "alvo": null
           },
           "guia": [
             {
@@ -20658,8 +20603,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "rogue",
-          "ordem": 11,
           "sala_exclusiva": true,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20691,8 +20636,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -20736,15 +20681,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 5,
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
           "sala_exclusiva": true,
+          "ordem": 5,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Conheça o grimório"
-          },
-          "requisitos": {
-            "magia_tipo": "qualquer"
+            "texto_curto": "Conheça o grimório",
+            "alvo": null
           },
           "guia": [
             {
@@ -20775,15 +20721,16 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 6,
+          "requisitos": {
+            "magia_tipo": "qualquer"
+          },
           "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "usar_magia",
             "vezes": 1,
-            "texto_curto": "Lance uma magia conhecida"
-          },
-          "requisitos": {
-            "magia_tipo": "qualquer"
+            "texto_curto": "Lance uma magia conhecida",
+            "alvo": null
           },
           "guia": [
             {
@@ -20813,12 +20760,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 7,
           "tarefa": {
             "tipo": "encerrar_turno",
             "vezes": 1,
-            "texto_curto": "Encerre o turno para continuar"
+            "texto_curto": "Encerre o turno para continuar",
+            "alvo": null
           },
           "guia": [
             {
@@ -20845,8 +20793,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 8,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20884,8 +20832,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 9,
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 2,
@@ -20918,8 +20866,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 10,
           "sala_exclusiva": true,
+          "ordem": 10,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20952,8 +20900,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "cleric",
-          "ordem": 11,
           "sala_exclusiva": true,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -20986,8 +20934,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -21152,8 +21100,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 8,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -21189,12 +21137,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 9,
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "manter_cancao",
             "vezes": 1,
-            "texto_curto": "Mantenha a canção por uma rodada"
+            "texto_curto": "Mantenha a canção por uma rodada",
+            "alvo": null
           },
           "guia": [
             {
@@ -21221,12 +21170,13 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 10,
           "sala_exclusiva": true,
+          "ordem": 10,
           "tarefa": {
             "tipo": "encerrar_cancao",
             "vezes": 1,
-            "texto_curto": "Encerre a Canção Heroica"
+            "texto_curto": "Encerre a Canção Heroica",
+            "alvo": null
           },
           "guia": [
             {
@@ -21252,8 +21202,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "bard",
-          "ordem": 11,
           "sala_exclusiva": true,
+          "ordem": 11,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -21285,8 +21235,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 4,
           "sala_exclusiva": true,
+          "ordem": 4,
           "tarefa": {
             "tipo": "configurar_atalho",
             "vezes": 1,
@@ -21330,8 +21280,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 5,
           "sala_exclusiva": true,
+          "ordem": 5,
           "tarefa": {
             "tipo": "libertar_refem",
             "vezes": 1,
@@ -21363,8 +21313,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 6,
           "sala_exclusiva": true,
+          "ordem": 6,
           "tarefa": {
             "tipo": "proteger",
             "vezes": 1,
@@ -21396,8 +21346,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 7,
           "sala_exclusiva": true,
+          "ordem": 7,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -21434,8 +21384,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 8,
           "sala_exclusiva": true,
+          "ordem": 8,
           "tarefa": {
             "tipo": "guiar_refem",
             "vezes": 1,
@@ -21483,8 +21433,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 9,
           "sala_exclusiva": true,
+          "ordem": 9,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,
@@ -21516,13 +21466,14 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 10,
           "sala_exclusiva": true,
+          "ordem": 10,
           "tarefa": {
             "tipo": "atacar",
             "vezes": 1,
             "texto_curto": "Acerte com Golpe Sagrado ativo",
-            "requer_sagrado": true
+            "requer_sagrado": true,
+            "alvo": null
           },
           "guia": [
             {
@@ -21549,8 +21500,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 11,
           "sala_exclusiva": true,
+          "ordem": 11,
           "tarefa": {
             "tipo": "regenerar",
             "vezes": 1,
@@ -21582,8 +21533,8 @@ window.EDITOR_DUNGEONS = [
             "tipo": "sala"
           },
           "classe": "paladin",
-          "ordem": 12,
           "sala_exclusiva": true,
+          "ordem": 12,
           "tarefa": {
             "tipo": "usar_habilidade",
             "vezes": 1,

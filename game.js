@@ -11675,6 +11675,7 @@ function renderMap(state){
   // Lava e pântano ficam acima do piso, mas abaixo das entidades e dos
   // efeitos de combate. Somente estes detalhes são recalculados por quadro.
   _drawAnimatedTerrain2D(ctx, state, terrainSet, performance.now());
+  _reacoesFuligensDesenhar2D(ctx, state, visionSet);
 
   const highlightTiles = new Set([...reachable, ...attackable, ...weaponRangeTiles, ...ataqueGiratorioTiles]);
   const bridgeTiles2D = new Set();
@@ -18401,7 +18402,6 @@ GS.on('previsaoAtaque', msg => {
 });
 
 const _monsterKnowledgeLevels = new Map();
-GS.on('enterDungeon',()=>_monsterKnowledgeLevels.clear());
 function _bestiarioNivel(monster){
   return Number(_monsterKnowledgeLevels.get(String(monster?.id))?.level || 0);
 }
@@ -23510,6 +23510,7 @@ function _limparSpellHLMira() {
   window._spellHL.range  = new Set();
   window._spellHL.area   = new Set();
   window._spellHL.double = new Set();
+  window._spellHL.reage  = null;
   window._spellHL.hover  = null;
   _aplicarSpellHL();
 }
@@ -55646,6 +55647,9 @@ GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', (msg) => {
+  // GS.on mantém um único callback por evento: as limpezas ficam nesta transição.
+  _monsterKnowledgeLevels.clear();
+  _reacoesFuligensLimpar();
   _clearCityTravelTransition();
   fecharFichaCidade();
   _limparMortesVisuais();
@@ -56830,6 +56834,8 @@ function _intencoesAtualizar3D(){
 // Casas fora da visão do herói não animam. 2D: tela; 3D: um grupo temporário por
 // evento (raro), removido e liberado ao vencer e em dispose3D.
 const _reacoesAnims = [];
+const _reacoesFuligens = [];
+const _REACAO_FULIGEM_DURACAO_MS = 30000;
 function _tocarSomReacao(tipo, pos){
   if(tipo === 'choque') sfx('relampago', { pos });
   else if(tipo === 'incendio') sfx('incendio', { pos });
@@ -56841,17 +56847,91 @@ function _tocarSomReacao(tipo, pos){
 GS.on('reacaoElemental', msg => {
   const est = ReacoesElementais.estilo(msg && msg.tipo);
   if(!est || !Array.isArray(msg.casas)) return;
-  _reacoesAnims.push({ tipo: msg.tipo, casas: msg.casas, origem: msg.origem, t0: performance.now(), est, grupo: null });
+  const t0 = performance.now();
+  _reacoesAnims.push({ tipo: msg.tipo, casas: msg.casas, origem: msg.origem, t0, est, grupo: null });
+  if(msg.tipo === 'explosao_gas'){
+    const inicio = t0 + est.duracaoMs;
+    _reacoesFuligens.push({ casas: msg.casas.map(c => [c[0], c[1]]), inicio, fim: inicio + _REACAO_FULIGEM_DURACAO_MS, grupo: null });
+  }
   _tocarSomReacao(msg.tipo, msg.origem);
   if(GS.gameState && !(mode3D && g3)) renderMap(GS.gameState);
 });
 function _reacoesVisivel(vis, c){ return Array.isArray(c) && (!vis || vis.has(`${c[0]},${c[1]}`)); }
+function _reacoesFuligemPermitida(state, c){
+  const mat = state?.materiais?.[`${c[0]},${c[1]}`];
+  // A água permanece limpa; uma ponte é uma superfície sólida acima dela.
+  return !['agua', 'agua_profunda', 'rodamoinho', 'rodamoinho_profundo'].includes(mat)
+    || !!ponteNaCasa3D(state, c[0], c[1]);
+}
+function _reacoesFuligemAlpha(r, now){
+  if(now < r.inicio || now >= r.fim) return 0;
+  const entrada = Math.min(1, (now - r.inicio) / 700);
+  const saida = Math.min(1, Math.max(0, (r.fim - now) / 5000));
+  return 0.26 * entrada * saida;
+}
+function _reacoesFuligensDesenhar2D(ctx, state, visionSet){
+  if(!_reacoesFuligens.length) return;
+  const now = performance.now();
+  ctx.save();
+  try {
+    for(const r of _reacoesFuligens){
+      const alpha = _reacoesFuligemAlpha(r, now);
+      if(!alpha) continue;
+      for(const c of r.casas){
+        if(!_reacoesVisivel(visionSet, c) || !_reacoesFuligemPermitida(state, c)) continue;
+        const cx = c[0] * CELL + CELL / 2, cy = c[1] * CELL + CELL / 2;
+        const seed = (c[0] * 73856093 ^ c[1] * 19349663) >>> 0;
+        // Uma mancha da margem não pode invadir a água na casa vizinha.
+        ctx.save(); ctx.beginPath(); ctx.rect(c[0] * CELL, c[1] * CELL, CELL, CELL); ctx.clip();
+        ctx.globalAlpha = alpha;
+        for(let j = 0; j < 3; j++){
+          const h = Math.abs(Math.sin(seed * 0.0001 + j * 2.7));
+          const x = cx + Math.sin(seed + j * 13.1) * CELL * 0.16;
+          const y = cy + Math.cos(seed * 0.7 + j * 5.3) * CELL * 0.13;
+          const rx = CELL * (0.18 + h * 0.19), ry = CELL * (0.12 + (1 - h) * 0.15);
+          ctx.save(); ctx.translate(x, y); ctx.rotate(Math.sin(seed + j) * 0.7);
+          const g = ctx.createRadialGradient(0, 0, rx * 0.08, 0, 0, rx);
+          g.addColorStop(0, j === 0 ? 'rgba(35,32,30,0.9)' : 'rgba(55,49,44,0.72)');
+          g.addColorStop(0.68, 'rgba(57,51,47,0.5)'); g.addColorStop(1, 'rgba(45,40,37,0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        }
+        // Pontos de fuligem quebram a borda e evitam a aparência de um círculo uniforme.
+        ctx.fillStyle = 'rgba(39,35,32,0.62)';
+        for(let j = 0; j < 4; j++){
+          const x = cx + Math.sin(seed * 1.3 + j * 9.1) * CELL * 0.36;
+          const y = cy + Math.cos(seed * 0.9 + j * 6.7) * CELL * 0.32;
+          ctx.beginPath(); ctx.arc(x, y, CELL * (0.018 + (j % 2) * 0.012), 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+  } finally { ctx.restore(); }
+}
+function _reacoesFuligemDispose3D(r){
+  if(!r.grupo) return;
+  if(g3 && g3.scene) g3.scene.remove(r.grupo);
+  r.grupo.traverse(o => {
+    if(o.geometry) o.geometry.dispose();
+    if(o.material) o.material.dispose();
+  });
+  r.grupo = null;
+}
+function _reacoesFuligensLimpar(){
+  for(const r of _reacoesFuligens) _reacoesFuligemDispose3D(r);
+  _reacoesFuligens.length = 0;
+}
 function _reacoesPurgar(now){
   for(let i = _reacoesAnims.length - 1; i >= 0; i--){
     const a = _reacoesAnims[i];
     if(now - a.t0 < a.est.duracaoMs) continue;
     _reacoesDisposeAnim3D(a);
     _reacoesAnims.splice(i, 1);
+  }
+  for(let i = _reacoesFuligens.length - 1; i >= 0; i--){
+    const r = _reacoesFuligens[i];
+    if(now < r.fim) continue;
+    _reacoesFuligemDispose3D(r);
+    _reacoesFuligens.splice(i, 1);
   }
 }
 function _reacoesDisposeAnim3D(a){
@@ -56867,13 +56947,16 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
   const now = performance.now();
   _reacoesPurgar(now);
   const crostas = ReacoesElementais.crostasAcabando(state).filter(c => _reacoesVisivel(visionSet, c));
-  if(!_reacoesAnims.length && !crostas.length) return;
+  if(!_reacoesAnims.length && !crostas.length && !_reacoesFuligens.length) return;
   ctx.save();
   try {
     for(const a of _reacoesAnims){
       const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
       ctx.strokeStyle = ctx.fillStyle = a.est.cor;
       let ant = Array.isArray(a.origem) ? a.origem : null;
+      const casasVisiveisGas = a.tipo === 'explosao_gas' ? a.casas.filter(c => _reacoesVisivel(visionSet, c)) : null;
+      const origemGas = Array.isArray(a.origem) ? a.origem : a.casas[0];
+      const maxDGas = casasVisiveisGas && Math.max(1, ...casasVisiveisGas.map(t => Math.max(Math.abs(t[0] - origemGas[0]), Math.abs(t[1] - origemGas[1]))));
       a.casas.forEach((c, k) => {
         if(!_reacoesVisivel(visionSet, c)){ ant = c; return; }
         const cx = c[0] * CELL + CELL / 2, cy = c[1] * CELL + CELL / 2;
@@ -56896,12 +56979,45 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
           g.addColorStop(1, 'rgba(150,215,255,0)');
           ctx.fillStyle = g; ctx.fillRect(cx - r, vy - r, r * 2, r * 2);
         } else if(a.tipo === 'explosao_gas'){
-          // clarão que cresce do miolo amarelo-branco ao laranja e some
-          const r = CELL * (0.35 + 0.75 * p);
-          const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-          g.addColorStop(0, 'rgba(255,248,200,0.95)'); g.addColorStop(0.45, 'rgba(255,170,60,0.8)');
-          g.addColorStop(1, 'rgba(255,90,20,0)');
-          ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+          // A zona inflama do ponto de impacto para fora, sem desenhar sobre casas ocultas.
+          const d = Math.max(Math.abs(c[0] - origemGas[0]), Math.abs(c[1] - origemGas[1])) / maxDGas;
+          const inicio = 0.03 + d * 0.52, q = Math.max(0, Math.min(1, (p - inicio) / 0.19));
+          if(q > 0){
+            const fade = Math.max(0, Math.min(1, (0.88 + d * 0.08 - p) / 0.2));
+            const flicker = 0.82 + 0.18 * Math.sin(now / 38 + k * 2.1);
+            const r = CELL * (0.2 + 0.52 * q) * flicker;
+            ctx.globalAlpha = fade * Math.min(1, q * 3);
+            const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+            g.addColorStop(0, 'rgba(255,255,225,0.98)'); g.addColorStop(0.28, 'rgba(255,205,90,0.96)');
+            g.addColorStop(0.7, 'rgba(255,93,24,0.78)'); g.addColorStop(1, 'rgba(150,28,5,0)');
+            ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+            // Três línguas de fogo oscilam sobre a casa enquanto a onda passa.
+            ctx.fillStyle = 'rgba(255,174,53,0.82)';
+            for(let j = 0; j < 3; j++){
+              const fx = cx + (j - 1) * CELL * 0.2;
+              const h = CELL * (0.18 + 0.26 * Math.abs(Math.sin(now / 75 + k + j * 1.7))) * q;
+              ctx.beginPath(); ctx.moveTo(fx - CELL * 0.1, cy + CELL * 0.22);
+              ctx.quadraticCurveTo(fx - CELL * 0.02, cy - h * 0.25, fx, cy - h);
+              ctx.quadraticCurveTo(fx + CELL * 0.12, cy - h * 0.35, fx + CELL * 0.1, cy + CELL * 0.22);
+              ctx.fill();
+            }
+            // Fumaça e pequenas brasas aparecem depois do pico de calor.
+            const fumaca = Math.max(0, Math.min(1, (p - (0.5 + d * 0.1)) / 0.18)) * fade;
+            if(fumaca > 0){
+              ctx.globalAlpha = fumaca * 0.42;
+              for(let j = 0; j < 2; j++){
+                const drift = Math.sin(now / 180 + k * 1.3 + j) * CELL * 0.12;
+                const sy = cy - CELL * (0.18 + ((p * 1.7 + j * 0.35) % 0.55));
+                ctx.fillStyle = '#77736e'; ctx.beginPath();
+                ctx.arc(cx + drift + (j - 0.5) * CELL * 0.18, sy, CELL * (0.12 + j * 0.035), 0, Math.PI * 2); ctx.fill();
+              }
+              ctx.globalAlpha = fumaca * 0.9; ctx.fillStyle = '#ffd05a';
+              for(let j = 0; j < 2; j++){
+                const phase = (p * 2.8 + j * 0.47 + k * 0.13) % 1;
+                ctx.beginPath(); ctx.arc(cx + (j ? 1 : -1) * CELL * (0.14 + phase * 0.22), cy - CELL * (0.15 + phase * 0.48), CELL * 0.035, 0, Math.PI * 2); ctx.fill();
+              }
+            }
+          }
         } else if(a.tipo === 'congelar'){
           const r = CELL * 0.36 * (0.3 + 0.7 * p);
           ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx + r * 0.6, cy);
@@ -56928,6 +57044,7 @@ function _reacoesDesenhar2D(ctx, state, visionSet){
 function _reacoes3DDispose(){
   for(const a of _reacoesAnims) _reacoesDisposeAnim3D(a);
   _reacoesAnims.length = 0;
+  for(const r of _reacoesFuligens) _reacoesFuligemDispose3D(r);
   _reacoesCrostasRef = null; _reacoesCrostasVal = [];
   const pool = g3 && g3.reacoesCrostas;
   if(pool){
@@ -56940,14 +57057,42 @@ function _reacoes3DCriar(a, st, vis){
   const T = g3.T;
   const grupo = new T.Group();
   const cor = new T.Color(a.est.cor);
+  const gas = a.tipo === 'explosao_gas';
+  const origem = Array.isArray(a.origem) ? a.origem : a.casas[0];
+  const casasVisiveisGas = gas ? a.casas.filter(c => _reacoesVisivel(vis, c)) : null;
+  const maxD = gas ? Math.max(1, ...casasVisiveisGas.map(t => Math.max(Math.abs(t[0] - origem[0]), Math.abs(t[1] - origem[1])))) : 1;
   let ant = Array.isArray(a.origem) ? a.origem : null;
   a.casas.forEach((c, k) => {
     if(!_reacoesVisivel(vis, c)){ ant = c; return; }
     const y = topoSuperficie3D(st, c[0], c[1]) + 0.07;
-    const m = new T.Mesh(new T.PlaneGeometry(0.9, 0.9),
-      new T.MeshBasicMaterial({ color: cor, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+    const dist = Math.max(Math.abs(c[0] - origem[0]), Math.abs(c[1] - origem[1])) / maxD;
+    const m = new T.Mesh(new T.PlaneGeometry(gas ? 0.86 : 0.9, gas ? 0.86 : 0.9),
+      new T.MeshBasicMaterial({ color: gas ? 0xffa02b : cor, transparent: true, opacity: gas ? 0 : 0.8, depthTest: false, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
     m.rotation.x = -Math.PI / 2; m.position.set(c[0], y, c[1]); m.renderOrder = 90; m.raycast = () => {};
+    if(gas) m.userData.gasFx = { kind: 'tile', delay: 0.03 + dist * 0.52, fadeAt: 0.88 + dist * 0.08, seed: k };
     grupo.add(m);
+    if(gas){
+      const wave = new T.Mesh(new T.RingGeometry(0.19, 0.27, 20),
+        new T.MeshBasicMaterial({ color: 0xffffbb, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+      wave.rotation.x = -Math.PI / 2; wave.position.set(c[0], y + 0.1, c[1]); wave.renderOrder = 91; wave.raycast = () => {};
+      wave.userData.gasFx = { kind: 'tileRing', delay: 0.03 + dist * 0.52, fadeAt: 0.88 + dist * 0.08, seed: k };
+      grupo.add(wave);
+    }
+    if(gas && k % Math.max(1, Math.ceil(a.casas.length / 12)) === 0){
+      // Poucas partículas por zona mantêm a fumaça visível sem multiplicar meshes por casa.
+      for(let j = 0; j < 2; j++){
+        const puff = new T.Mesh(new T.SphereGeometry(0.16 + j * 0.045, 8, 6),
+          new T.MeshBasicMaterial({ color: 0x615e59, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }));
+        puff.position.set(c[0] + (j - 0.5) * 0.2, y + 0.24, c[1]); puff.renderOrder = 92; puff.raycast = () => {};
+        puff.userData.gasFx = { kind: 'smoke', delay: 0.5 + dist * 0.1 + j * 0.035, x: puff.position.x, y: puff.position.y, z: puff.position.z, seed: k + j };
+        grupo.add(puff);
+        const ember = new T.Mesh(new T.SphereGeometry(0.045, 6, 5),
+          new T.MeshBasicMaterial({ color: 0xffbd45, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }));
+        ember.position.set(c[0] + (j ? 0.16 : -0.16), y + 0.16, c[1]); ember.renderOrder = 93; ember.raycast = () => {};
+        ember.userData.gasFx = { kind: 'ember', delay: 0.48 + dist * 0.12 + j * 0.06, x: ember.position.x, y: ember.position.y, z: ember.position.z, seed: k + j };
+        grupo.add(ember);
+      }
+    }
     if(a.tipo === 'choque'){
       const x0 = ant ? ant[0] : c[0], z0 = ant ? ant[1] : c[1];
       const off = (k % 2 ? 1 : -1) * 0.14;
@@ -56960,6 +57105,13 @@ function _reacoes3DCriar(a, st, vis){
     }
     ant = c;
   });
+  if(gas && _reacoesVisivel(vis, origem)){
+    const y = topoSuperficie3D(st, origem[0], origem[1]) + 0.18;
+    const core = new T.Mesh(new T.SphereGeometry(0.24, 12, 8),
+      new T.MeshBasicMaterial({ color: 0xfff2bd, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false }));
+    core.position.set(origem[0], y, origem[1]); core.renderOrder = 94; core.raycast = () => {};
+    core.userData.gasFx = { kind: 'core' }; grupo.add(core);
+  }
   g3.scene.add(grupo);
   a.grupo = grupo;
 }
@@ -56982,12 +57134,79 @@ function _reacoes3DAtualizar(){
     for(const a of _reacoesAnims){
       if(!a.grupo) _reacoes3DCriar(a, st, vis);
       const p = Math.min(1, (now - a.t0) / a.est.duracaoMs);
+      if(a.tipo === 'explosao_gas'){
+        a.grupo.traverse(o => {
+          const fx = o.userData && o.userData.gasFx;
+          if(!fx) return;
+          if(fx.kind === 'tile'){
+            const q = Math.max(0, Math.min(1, (p - fx.delay) / 0.19));
+            const fade = Math.max(0, Math.min(1, (fx.fadeAt - p) / 0.2));
+            o.material.opacity = q > 0 ? Math.min(0.96, q * 3) * fade : 0;
+            const flicker = 0.72 + 0.28 * Math.abs(Math.sin(now / 65 + fx.seed * 1.7));
+            o.scale.set(0.45 + 0.55 * q * flicker, 0.45 + 0.55 * q * flicker, 1);
+          } else if(fx.kind === 'tileRing'){
+            const q = Math.max(0, Math.min(1, (p - fx.delay) / 0.2));
+            const fade = Math.max(0, Math.min(1, (fx.fadeAt - p) / 0.2));
+            o.material.opacity = q * fade * 0.9;
+            o.scale.setScalar(0.35 + q * 1.9);
+          } else if(fx.kind === 'core'){
+            const q = Math.max(0, Math.min(1, p / 0.22));
+            o.material.opacity = q * Math.max(0, 1 - p / 0.5);
+            o.scale.setScalar(0.35 + q * 1.8);
+          } else {
+            const q = Math.max(0, Math.min(1, (p - fx.delay) / (fx.kind === 'smoke' ? 0.34 : 0.2)));
+            const fade = Math.max(0, 1 - q);
+            o.material.opacity = fx.kind === 'smoke' ? q * fade * 0.52 : q * fade * 0.95;
+            const rise = fx.kind === 'smoke' ? q * 0.55 : q * 0.42;
+            o.position.set(fx.x + Math.sin(now / 210 + fx.seed) * q * 0.12, fx.y + rise, fx.z + Math.cos(now / 190 + fx.seed) * q * 0.08);
+            if(fx.kind === 'smoke') o.scale.setScalar(0.55 + q * 1.9);
+          }
+        });
+        continue;
+      }
       const esc = a.tipo === 'congelar' ? 0.3 + 0.7 * p
         : a.tipo === 'explosao_gas' ? 0.5 + 0.9 * p
         : 0.8 + 0.4 * Math.sin(p * Math.PI);
       a.grupo.traverse(o => {
         if(o.material) o.material.opacity = Math.max(0, 1 - p) * (o.isLine ? 1 : 0.8);
         if(o.isMesh) o.scale.set(esc, esc, 1);
+      });
+    }
+    for(const r of _reacoesFuligens){
+      const alpha = _reacoesFuligemAlpha(r, now);
+      if(!alpha) continue;
+      if(!r.grupo){
+        const T = g3.T, grupo = new T.Group();
+        r.casas.forEach(c => {
+          const seed = (c[0] * 73856093 ^ c[1] * 19349663) >>> 0;
+          const baseY = topoSuperficie3D(st, c[0], c[1]) + 0.012;
+          for(let j = 0; j < 3; j++){
+            const points = 9, shape = new T.Shape();
+            for(let i = 0; i < points; i++){
+              const ang = i / points * Math.PI * 2;
+              const jitter = 0.72 + 0.28 * Math.abs(Math.sin(seed * 0.00013 + i * 4.1 + j * 2.3));
+              const rx = (0.13 + j * 0.025) * jitter, rz = (0.095 + j * 0.018) * jitter;
+              const x = Math.cos(ang) * rx, y = Math.sin(ang) * rz;
+              if(i === 0) shape.moveTo(x, y); else shape.lineTo(x, y);
+            }
+            shape.closePath();
+            const mesh = new T.Mesh(new T.ShapeGeometry(shape),
+              new T.MeshBasicMaterial({ color: j === 0 ? 0x292724 : 0x48413b, transparent: true, opacity: alpha, depthTest: true, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.position.set(c[0] + Math.sin(seed + j * 12) * 0.15, baseY + j * 0.001, c[1] + Math.cos(seed * 0.8 + j * 8) * 0.12);
+            mesh.renderOrder = 2; mesh.raycast = () => {};
+            mesh.userData.fuligem = { casa: c };
+            mesh.visible = _reacoesVisivel(vis, c) && _reacoesFuligemPermitida(st, c);
+            grupo.add(mesh);
+          }
+        });
+        g3.scene.add(grupo); r.grupo = grupo;
+      }
+      r.grupo.traverse(o => {
+        if(!o.userData?.fuligem) return;
+        o.visible = _reacoesVisivel(vis, o.userData.fuligem.casa)
+          && _reacoesFuligemPermitida(st, o.userData.fuligem.casa);
+        o.material.opacity = alpha;
       });
     }
   }
