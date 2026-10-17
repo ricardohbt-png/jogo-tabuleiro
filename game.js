@@ -6124,6 +6124,8 @@ function renderObjectivesHUD(msg){
     + `<button type="button" class="obj-close" data-gamepad-action="activate" tabindex="0" aria-keyshortcuts="O"`
     + ` aria-label="${_esc(t('ui.objetivo.ocultar'))}" title="${_esc(t('ui.objetivo.ocultar'))}">×</button></div>`;
   if(obj.primary) html += `<div class="obj-primary">${_objRow(obj.primary)}</div>`;
+  if(obj.alternativo && obj.primary && obj.primary.status === 'failed')
+    html += `<div class="obj-sec-label">${t('ui.objetivo.alternativo')}</div><div class="obj-primary">${_objRow(obj.alternativo)}</div>`;
   const missionSteps = Array.isArray(obj.steps) ? obj.steps : [];
   if(missionSteps.length){
     html += `<div class="obj-sec-label">${t('ui.objetivo.etapas')}</div>`;

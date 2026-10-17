@@ -49404,6 +49404,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _respawn_returned_route_monsters(self):
         """Reaparece somente o grupo de uma rota já visitada, após o retorno à cidade."""
         if not self._etapa_com_saidas():
+    def _objetivo_principal_efetivo(self):
+        """O objetivo que encerra a missão: o `alternativo` quando o resgate falhou e a masmorra
+        define um; senão o principal."""
+        objs = self.objectives or {}
+        alt = objs.get("alternativo")
+        if self.rescue_failed and isinstance(alt, dict):
+            return alt
+        return objs.get("primary")
+
             return
         progress = self._route_progress_state() or {}
         visited = set(progress.get("visited_route_ids") or [])
@@ -49472,13 +49481,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if steps:
             self.objective_status["steps"] = step_status
         if (self.phase == "playing" and not self._objetivo_concluido
-                and prim and self._objetivo_cumprido(prim)):
+                and efetivo and self._objetivo_cumprido(efetivo)):
             self._objetivo_concluido = True
             route_progress = self._route_progress_state()
             if route_progress is not None:
                 route_progress["objective_completed"] = True
             loot = []
-            await self._conceder_objetivo_reward(prim, is_primary=True, loot_acc=loot)
+            await self._conceder_objetivo_reward(efetivo, is_primary=True, loot_acc=loot)
             for s in secs:
                 if self._objetivo_cumprido(s):
                     await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
@@ -49536,7 +49545,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not was_revisit:
                 self.world_adventure_progress[adventure_id] = max(
                     int(self.world_adventure_progress.get(adventure_id, 0) or 0), completed_index + 1)
-            reward = 0 if was_revisit else int(adventure.get("renome_recompensa", 1) or 0)
+            reward = 0 if (was_revisit or self.rescue_failed) else int(adventure.get("renome_recompensa", 1) or 0)
             if reward:
                 self.renome = max(0, self.renome + reward)
             # Etapa marcada como encadeada: emenda direto na próxima, sem cidade.
@@ -49579,6 +49588,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             story = None
             if self.mode == "campaign" and self.campaign:
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
+        alt = self.objectives.get("alternativo")
+        if isinstance(alt, dict):
+            self.objective_status["alternativo"] = self._objetivo_payload(alt)
+        efetivo = self._objetivo_principal_efetivo()
                 story = _story_beat(f"final:{self.campaign_phase}",
                                     [fase.get("outro"), self.campaign.get("outro")],
                                     self._requisito_do_slide)
@@ -49590,6 +49603,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         `_voltar_para_cidade`, não chamá-lo já entrega o 'nada se recupera' —
         HP, fome/sede, slots, recargas e status atravessam a emenda."""
         stages = list(adventure.get("dungeons") or [])
+                # Final alternativo: o secundário do mesmo tipo já foi "pago" pelo alternativo.
+                if efetivo is not prim and s.get("type") == efetivo.get("type"):
+                    continue
         anterior = _etapa_obj(stages[indice - 1])
         proxima  = _etapa_obj(stages[indice])
         defn = carregar_dungeon(proxima["file"])

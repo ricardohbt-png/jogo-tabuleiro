@@ -106,7 +106,13 @@ class DadosTests(unittest.TestCase):
         gerado = G.destinos()["sombras_covil"]["outro_rota"]
         arq = next(a for a in json.loads((RAIZ / "world_adventures.json").read_text(encoding="utf-8")).values()
                    if a.get("id") == "sombras_covil")["outro_rota"]
-        self.assertEqual(gerado, arq)
+        def sem_vazios(v):   # campos de requisito vazios (ex.: sem_fato) não mudam o sentido
+            if isinstance(v, dict):
+                return {k: sem_vazios(x) for k, x in v.items() if x not in ("", None)}
+            if isinstance(v, list):
+                return [sem_vazios(x) for x in v]
+            return v
+        self.assertEqual(sem_vazios(gerado), sem_vazios(arq))
 
     def test_gerador_do_anel_nao_desfaz_preco_e_descricao(self):
         import gerar_campanha_sombras as G

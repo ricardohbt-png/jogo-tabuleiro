@@ -8346,6 +8346,10 @@ window.LANG_INTERFACE = {
     "en": "All heroes at the exit",
     "pt": "Todos os heróis na saída"
   },
+  "ui.objetivo.alternativo": {
+    "en": "New objective",
+    "pt": "Novo objetivo"
+  },
   "ui.objetivo.abrir": {
     "en": "🎯 Objectives (O)",
     "pt": "🎯 Objetivos (O)"
