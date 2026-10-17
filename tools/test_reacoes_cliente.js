@@ -90,6 +90,18 @@ const c = RE.descreverCasa(st2, 3, 1);
 check("crosta -> rodadas restantes", c.chave === "ui.reacao.casa.crosta" && c.params.n === 3);
 console.log("[7] fiação");
 const jogo2 = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
+// A previsão de gás cobre a sala inteira, incluindo água. Deve sumir ao encerrar a mira.
+{
+  const limpar = jogo2.match(/function _limparSpellHLMira\(\)\s*\{[\s\S]*?\n\}/)[0];
+  const zona = { tipo: 'bola_fogo', cx: 1, cy: 1 };
+  const win = { _spellHL: { range: new Set(['1,1']), area: new Set(['1,1']),
+    double: new Set(['1,1']), hover: {key:'1,1'}, zonas: [zona],
+    reage: { tipos: { gas: new Set(['1,1', '2,1']) }, alvos: new Set() } } };
+  let redraw = false;
+  new Function('window', '_aplicarSpellHL', limpar + '\n_limparSpellHLMira();')(win, () => { redraw = true; });
+  check('encerrar mira remove previsão de explosão de gás', win._spellHL.reage === null);
+  check('encerrar mira redesenha sem apagar zonas persistentes', redraw && win._spellHL.zonas[0] === zona);
+}
 check("GS trata reacao_elemental", fs.readFileSync(path.join(raiz, "src", "gameState.js"), "utf8").includes("case 'reacao_elemental'"));
 check("game.js ouve reacaoElemental uma vez", (jogo2.match(/GS\.on\('reacaoElemental'/g) || []).length === 1);
 check("game.js não duplica GS.on('gameState')", (jogo2.match(/^GS\.on\('gameState'/gm) || []).length === 1);

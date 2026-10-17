@@ -55,7 +55,9 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo",
                  "guiar_refem", "configurar_atalho",
                  # Sala das reações de terreno: o evento vem do motor de reações.
-                 "explodir_gas", "incendiar_piche")
+                 "explodir_gas", "incendiar_piche",
+                 # Mecanismo (decoração) que desliga armadilhas autoradas.
+                 "desativar_armadilha")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta", "guiar_refem")
@@ -8672,6 +8674,8 @@ def make_authored_trap(tdef):
         "so_luccas":     False,
         "efeitos_ativos": [],
     }
+    if isinstance(tdef.get("id"), str):
+        arm["autoral_id"] = tdef["id"]   # id do editor: um mecanismo (decor) liga/desliga por ele
     if (meta.get("precisa_veneno") or meta.get("custo_veneno")
             or meta.get("permite_veneno") or tdef.get("veneno_id") is not None):
         arm["veneno_id"] = tdef.get("veneno_id")
@@ -16101,6 +16105,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "trap_triggered": False,
                 "trap_disarmed": False,
                 "trap_revealed": False,
+                "disable_trap_ids": ([i for i in d["disable_trap_ids"] if isinstance(i, str)]
+                                     if isinstance(d.get("disable_trap_ids"), list) else None),
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
                 "model3d": (d.get("model3d") if isinstance(d.get("model3d"), str)
                             else meta.get("model3d") or DECOR_MODEL3D.get(d["type"])),
@@ -41072,11 +41078,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        if cond.get("type") == "decor"
                        and d["id"] in cond.get("key_decor_ids", [])
                        and not self._door_condition_satisfied(pos)]
+        trap_linked = self._armadilhas_do_mecanismo(d)
         # A ativaÃ§Ã£o Ã© uma escolha explÃ­cita para evitar abrir a passagem ao
         # apenas inspecionar um altar, estÃ¡tua ou outro objeto-chave.
-        if linked or door_linked:
+        if linked or door_linked or trap_linked:
             await self.send_to(pid, {"type": "decor_mechanism", "decor_id": d["id"],
-                                     "linked_count": len(linked) + len(door_linked)})
+                                     "linked_count": len(linked) + len(door_linked) + len(trap_linked)})
+            return
+        if d.get("disable_trap_ids"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.mecanismo_ja_ativado")})
             return
         # MantÃ©m o objetivo narrativo legado para uma decoraÃ§Ã£o-chave que nÃ£o
         # esteja ligada a nenhuma passagem.
@@ -41150,6 +41160,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                             descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras, tipo_id='bau_armadilha')
         await self.push_state()
 
+    def _armadilhas_do_mecanismo(self, d):
+        """Armadilhas autoradas ainda ativas que este objeto desliga (`disable_trap_ids`)."""
+        ids = set(d.get("disable_trap_ids") or [])
+        if not ids:
+            return []
+        return [a for a in self.armadilhas
+                if a.get("autoral_id") in ids and not a.get("desativada")]
+
     async def handle_activate_decor_mechanism(self, pid, decor_id):
         p = self.players.get(pid)
         d = self._decor_by_id(decor_id)
@@ -41160,8 +41178,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        if cond.get("type") == "decor"
                        and d["id"] in cond.get("key_decor_ids", [])
                        and not self._door_condition_satisfied(pos)]
-        if not d.get("key_objective") and not linked and not door_linked:
+        trap_linked = self._armadilhas_do_mecanismo(d)
+        if not d.get("key_objective") and not linked and not door_linked and not trap_linked:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_objeto_nao_possui_mecanismo")}); return
+        if trap_linked:
+            for arm in trap_linked:
+                arm["desativada"] = True
+                arm["visivel"] = True
+            await self.gm_say(T("narracao.mecanismo_desliga_armadilha", heroi=p['name']))
+            for q in (list(self.players.values()) if getattr(self, "training_mode", False) else [p]):
+                await self._licao_evento(q, "desativar_armadilha", alvo=d["id"])
         opened = []
         for sp in linked:
             if d["id"] not in sp["activated_decor_ids"]:
@@ -41291,6 +41317,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                              and (not d.get("trap_triggered") or d.get("trap", {}).get("permanente"))),
                 "trap_revealed": bool(d.get("trap_revealed")),
                 "key_objective": bool(d.get("key_objective")),
+                # mecanismo que desliga armadilhas: o cliente o trata como objeto clicável
+                **({"interactive": True} if d.get("disable_trap_ids") else {}),
                 "charges": d.get("charges"),
                 **({"intervalo_rodadas": d.get("intervalo_rodadas", 2)}
                    if d.get("type") == "fumarola" else {}),

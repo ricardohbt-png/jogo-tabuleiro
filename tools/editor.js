@@ -354,7 +354,7 @@
     { v: "usar_instrumento" },
     { v: "arremessar_item" },
     { v: "desarmar_armadilha" },
-    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo", "guiar_refem", "configurar_atalho"].map(v => ({v})),
+    ...["libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao", "encerrar_cancao", "comandar_servo", "guiar_refem", "configurar_atalho", "explodir_gas", "incendiar_piche"].map(v => ({v})),
   ];
   const LICAO_VERBOS_CASA = new Set(["mover_ate", "abrir_porta", "guiar_refem"]);
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
@@ -2362,6 +2362,9 @@
   function exportLootItem(item) {
     const out = { id: item.id };
     if (utilityBeltCapacity(item)) out.utility_belt_slots = utilityBeltSlots(item);
+    if (typeof item.tutorial_class === "string") out.tutorial_class = item.tutorial_class;
+    for (const marker of ["tutorial_provision", "tutorial_banquete", "tutorial_loan"])
+      if (item[marker] === true) out[marker] = true;
     if (item.id === "carta") {
       if (String(item.texto || "").trim()) out.texto = item.texto.trim().slice(0, 2000);
       if (item.curse_mode === "especifica" && item.curse_id) {
@@ -4589,7 +4592,7 @@
       if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
         e.push(V("porta_cond_invalida", { chave: key })); continue;
       }
-      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
+      if (!c || !["item", "decor", "licao", "requirement", "gas"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
       if (c.type === "item" && !items.has(c.item_id)) e.push(V("porta_item_chave", { chave: key, id: c.item_id }));
       if (c.type === "licao" && !S.falas.some(f => f.id === c.licao_id && f.tarefa && f.tarefa.tipo))
         e.push(V("porta_licao", { chave: key }));

@@ -14,7 +14,7 @@
     "usar_item", "usar_magia", "usar_habilidade", "usar_tecnica", "usar_instrumento", "desarmar_armadilha",
     "arremessar_item", "libertar_refem", "proteger", "regenerar", "ataque_extra", "manter_cancao",
     "encerrar_cancao", "comandar_servo", "guiar_refem", "configurar_atalho",
-    "explodir_gas", "incendiar_piche"];
+    "explodir_gas", "incendiar_piche", "desativar_armadilha"];
 
   const ehChave = (s) => typeof s === "string" && /^ui\.tutorial\.[a-z0-9_.]+$/.test(s);
 
@@ -50,22 +50,26 @@
       dica: Array.isArray(p.dica) ? p.dica.filter(d => typeof d === "string").slice() : [],
       conclui_com: p.conclui_com && typeof p.conclui_com === "object" && p.conclui_com.tipo
         ? JSON.parse(JSON.stringify(p.conclui_com)) : null,
+      // Roteiro da demonstração do "Me mostra": gerado, o editor só o conserva.
+      ...(Array.isArray(p.demonstracao) && p.demonstracao.length
+        ? { demonstracao: JSON.parse(JSON.stringify(p.demonstracao)) } : {}),
     }));
   }
 
-  // Ordem das chaves = a do gerador (id, titulo, texto, porque, ui, dica, conclui_com).
+  // Ordem das chaves = a do gerador (id, texto, titulo, porque, ui, dica, conclui_com, demonstracao).
   function serializar(passos) {
     if (!Array.isArray(passos)) return null;
     const out = passos.map(p => {
       const o = {};
       if (p.id != null && p.id !== "") o.id = p.id;
-      if (p.titulo) o.titulo = p.titulo;
       o.texto = p.texto || "";
+      if (p.titulo) o.titulo = p.titulo;
       if (p.porque) o.porque = p.porque;
       if (p.ui) o.ui = p.ui;
       const dica = (p.dica || []).filter(d => typeof d === "string" && d.trim() !== "");
       if (dica.length) o.dica = dica;
       if (p.conclui_com && p.conclui_com.tipo) o.conclui_com = JSON.parse(JSON.stringify(p.conclui_com));
+      if (Array.isArray(p.demonstracao) && p.demonstracao.length) o.demonstracao = JSON.parse(JSON.stringify(p.demonstracao));
       return o;
     });
     return out.length ? out : null;

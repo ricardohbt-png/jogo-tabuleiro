@@ -53,11 +53,11 @@ class MapaTests(unittest.TestCase):
         self.assertEqual(s49["doors"], [[51, 25], [51, 32]])
         self.assertEqual((s51["x"], s51["y"], s51["w"], s51["h"]), (48, 33, 6, 6))
         self.assertTrue(s49["locked"] and s51["locked"])
-        self.assertEqual(s51["doors"], [[51, 32]])
+        self.assertEqual(s51["doors"], [[51, 32], [47, 35]])
 
     def test_saida_e_porta(self):
         d = aplicado()
-        self.assertEqual(d["exit"], {"x": 51, "y": 36})
+        self.assertEqual(d["exit"], {"x": 36, "y": 36})
         self.assertEqual(d["door_conditions"]["51,32"], {"type": "gas", "zona_id": "gas_tutorial"})
 
     def test_lago_bau_e_boneco(self):
@@ -75,7 +75,7 @@ class MapaTests(unittest.TestCase):
         self.assertEqual([m["type"] for m in bonecos], ["boneco_treino"])
         bx, by = bonecos[0]["pos"]
         self.assertLessEqual(max(abs(bx - bau2["pos"][0]), abs(by - bau2["pos"][1])), 4)
-        self.assertNotEqual([bx, by], [51, 36])
+        self.assertNotEqual([bx, by], [36, 36])
 
     def test_valida(self):
         ok, msg = S.validar_dungeon(aplicado())
@@ -103,20 +103,24 @@ class LicoesTests(unittest.TestCase):
     def test_ordens_e_tarefas(self):
         d = aplicado()
         gas, piche, retirada = fala(d, "fala_gas"), fala(d, "fala_piche"), fala(d, "fala_retirada")
-        self.assertEqual((gas["ordem"], piche["ordem"], retirada["ordem"]), (36, 37, 38))
+        gargula = fala(d, "fala_gargula")
+        self.assertEqual((gas["ordem"], piche["ordem"], gargula["ordem"], retirada["ordem"]), (36, 37, 38, 39))
+        self.assertEqual(gargula["tarefa"]["tipo"], "desativar_armadilha")
+        self.assertEqual(gargula["tarefa"]["alvo"], "decor_133")
         self.assertEqual(gas["tarefa"]["tipo"], "explodir_gas")
         self.assertEqual(gas["tarefa"]["alvo"], "gas_tutorial")
         self.assertEqual(piche["tarefa"]["tipo"], "incendiar_piche")
-        self.assertEqual(retirada["pos"], [51, 36])
-        self.assertEqual(retirada["tarefa"]["alvo"], [51, 36])
+        self.assertEqual(retirada["pos"], [36, 36])
+        self.assertEqual(retirada["tarefa"]["alvo"], [36, 36])
         self.assertIn("fala_piche", retirada["continua_sem"])
-        ordens = [f["ordem"] for f in d["falas"] if isinstance(f.get("ordem"), int) and 35 <= f["ordem"] <= 38]
-        self.assertEqual(sorted(ordens), [35, 36, 37, 38])
+        self.assertIn("fala_gargula", retirada["continua_sem"])
+        ordens = [f["ordem"] for f in d["falas"] if isinstance(f.get("ordem"), int) and 35 <= f["ordem"] <= 39]
+        self.assertEqual(sorted(ordens), [35, 36, 37, 38, 39])
 
     def test_guia_com_chaves_de_idioma(self):
         d = aplicado()
         lang = G.gerar_lang()
-        for lid in ("fala_gas", "fala_piche", "fala_retirada"):
+        for lid in ("fala_gas", "fala_piche", "fala_gargula", "fala_retirada"):
             passos = fala(d, lid)["guia"]
             self.assertTrue(passos, lid)
             for p in passos:
@@ -129,7 +133,7 @@ class LicoesTests(unittest.TestCase):
             self.assertFalse([p for p in fala(d, lid)["guia"] if p.get("conclui_com")], lid)
         self.assertIn("ui.tutorial.glossario.inflamavel.nome", lang)
         self.assertIn("ui.tutorial.glossario.reacao.nome", lang)
-        self.assertEqual(fala(d, "fala_retirada")["guia"][0]["ui"], "casa:[51,36]")
+        self.assertEqual(fala(d, "fala_retirada")["guia"][0]["ui"], "casa:[36,36]")
 
 
 if __name__ == "__main__":

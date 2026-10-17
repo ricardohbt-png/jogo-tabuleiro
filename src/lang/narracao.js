@@ -3171,6 +3171,10 @@ window.LANG_NARRACAO = {
   "narracao.aprendiz_treino_ressurreicao_agradece": {
     "en": "Thank you for bringing me back to life!",
     "pt": "Obrigado por me trazer de volta à vida!"
+  },
+  "narracao.mecanismo_desliga_armadilha": {
+    "en": "⚙️ **{heroi}** activated the mechanism: a trap has been switched off!",
+    "pt": "⚙️ **{heroi}** ativou o mecanismo: uma armadilha foi desligada!"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

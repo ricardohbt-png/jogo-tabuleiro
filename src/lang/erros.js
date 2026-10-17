@@ -2208,6 +2208,10 @@ window.LANG_ERROS = {
   "erro.banquete_tutorial_limite": {
     "en": "You have already picked up or used two banquets in this tutorial.",
     "pt": "Você já pegou ou usou dois banquetes neste tutorial."
+  },
+  "erro.mecanismo_ja_ativado": {
+    "en": "The mechanism has already been activated.",
+    "pt": "O mecanismo já foi ativado."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
