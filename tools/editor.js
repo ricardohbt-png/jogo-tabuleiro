@@ -4592,7 +4592,7 @@
       if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1]) || S.tiles[pos[1]]?.[pos[0]] !== DOOR) {
         e.push(V("porta_cond_invalida", { chave: key })); continue;
       }
-      if (!c || !["item", "decor", "licao"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
+      if (!c || !["item", "decor", "licao", "requirement", "gas"].includes(c.type)) { e.push(V("porta_cond_tipo", { chave: key })); continue; }
       if (c.type === "item" && !items.has(c.item_id)) e.push(V("porta_item_chave", { chave: key, id: c.item_id }));
       if (c.type === "licao" && !S.falas.some(f => f.id === c.licao_id && f.tarefa && f.tarefa.tipo))
         e.push(V("porta_licao", { chave: key }));
