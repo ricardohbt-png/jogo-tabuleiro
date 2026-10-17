@@ -223,14 +223,14 @@ def trofeu_bruto():
             "disponibilidade": {"loja": False, "baus": True, "loot_monstro": False}}
 
 
-# ─── Masmorras (uma tarefa por mapa) ─────────────────────────────────────────
+# ─── Masmorras (os mapas moram em tools/charcos_mapas.py) ────────────────────
 def masmorras(so_dados=False):
     if so_dados:
         return {}
-    return {a: globals()[f]() for a, f in (
-        ("charcos_1_bordas.json", "masmorra_bordas"), ("charcos_2_palafitas.json", "masmorra_palafitas"),
-        ("charcos_3_travessia.json", "masmorra_travessia"), ("charcos_4a_arredores.json", "masmorra_arredores"),
-        ("charcos_4b_aldeia.json", "masmorra_aldeia"))}
+    import charcos_mapas as M
+    return {"charcos_1_bordas.json": M.masmorra_bordas(), "charcos_2_palafitas.json": M.masmorra_palafitas(),
+            "charcos_3_travessia.json": M.masmorra_travessia(), "charcos_4a_arredores.json": M.masmorra_arredores(),
+            "charcos_4b_aldeia.json": M.masmorra_aldeia()}
 
 
 # ─── Montagem e gravação ─────────────────────────────────────────────────────

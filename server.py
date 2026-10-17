@@ -49235,7 +49235,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             next((i for i in CHEST_ITEMS    if i["id"] == iid), None) or
             next((i for i in SHOP_WEAPONS   if i["id"] == iid), None) or
             next((i for i in SHOP_AMMO      if i["id"] == iid), None) or
-            next((i for i in SHOP_MERCHANT  if i["id"] == iid), None)
+            next((i for i in SHOP_MERCHANT  if i["id"] == iid), None) or
+            # Itens do editor só de baú (sem loja) vivem apenas no catálogo mesclado.
+            _DUNGEON_ITEM_CATALOG.get(iid)
         )
         return deepcopy(idef) if idef else None
 
