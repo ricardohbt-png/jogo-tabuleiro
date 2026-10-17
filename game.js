@@ -4964,7 +4964,86 @@ let _itemTooltipReady = false;
 // re-renderiza a lista e destrói a linha em hover. Sem esse registro o quadro
 // ficava preso na tela até outro item receber mouseenter+mouseleave.
 let _itemTooltipDono = null;
-function _marcarDonoTooltip(el){ _itemTooltipDono = el || null; }
+let _itemTooltipHover = null;
+function _marcarDonoTooltip(el){
+  if(_itemTooltipHover && _itemTooltipHover.elemento !== el) esconderTooltip();
+  _itemTooltipDono = el || null;
+}
+// Hover de itens: nome imediato, detalhes após 2s e uma ponte de 300ms até o quadro.
+function _posicionarTooltipItem(tip, elemento){
+  const anchor = elemento.getBoundingClientRect();
+  const rect = tip.getBoundingClientRect();
+  const margin = 8;
+  let x = anchor.right + margin;
+  if(x + rect.width > window.innerWidth - margin) x = anchor.left - rect.width - margin;
+  tip.style.left = Math.max(margin, Math.min(x, window.innerWidth - rect.width - margin)) + 'px';
+  tip.style.top = Math.max(margin, Math.min(anchor.top, window.innerHeight - rect.height - margin)) + 'px';
+}
+function _adiarFechamentoTooltipItem(){
+  const hover = _itemTooltipHover;
+  if(!hover) return;
+  clearTimeout(hover.expandTimer);
+  clearTimeout(hover.closeTimer);
+  if(!hover.full){ esconderTooltip(); return; }
+  hover.closeTimer = setTimeout(() => { if(_itemTooltipHover === hover) esconderTooltip(); }, 300);
+}
+function _ligarTooltipItem(elemento, nome, renderDetalhes){
+  // Evita o balão nativo duplicado. aria-label continua disponível ao teclado.
+  elemento.removeAttribute('title');
+  const abrir = () => {
+    if(_itemTooltipHover?.elemento === elemento){
+      clearTimeout(_itemTooltipHover.closeTimer);
+      return;
+    }
+    esconderTooltip();
+    _initItemTooltip();
+    const tip = document.getElementById('item-tooltip');
+    _itemTooltipDono = elemento;
+    const hover = _itemTooltipHover = {elemento, full:false};
+    tip.textContent = nome || '';
+    tip.style.padding = '8px 12px';
+    tip.style.color = '#e8cf7e';
+    tip.style.fontSize = '12px';
+    tip.style.borderColor = '#c8a951';
+    tip.style.maxWidth = 'calc(100vw - 16px)';
+    tip.style.boxSizing = 'border-box';
+    tip.style.maxHeight = 'calc(100vh - 16px)';
+    tip.style.overflowY = 'auto';
+    tip.style.overscrollBehavior = 'contain';
+    tip.style.scrollbarWidth = 'thin';
+    tip.style.scrollbarColor = '#8a7440 #17110b';
+    tip.style.opacity = '1';
+    tip.scrollTop = 0;
+    _posicionarTooltipItem(tip, elemento);
+    hover.observer = new MutationObserver(() => {
+      if(!elemento.isConnected || !elemento.getClientRects().length) esconderTooltip();
+    });
+    hover.observer.observe(document.body, {childList:true, subtree:true});
+    for(let ancestor = elemento; ancestor; ancestor = ancestor.parentElement){
+      hover.observer.observe(ancestor, {attributes:true, attributeFilter:['style','class','hidden']});
+    }
+    hover.expandTimer = setTimeout(() => {
+      if(_itemTooltipHover !== hover) return;
+      if(!elemento.isConnected || !elemento.getClientRects().length){ esconderTooltip(); return; }
+      hover.full = true;
+      tip.style.padding = '';
+      renderDetalhes();
+      tip.style.pointerEvents = 'auto';
+      tip.scrollTop = 0;
+      _posicionarTooltipItem(tip, elemento);
+    }, 2000);
+  };
+  elemento.addEventListener('mouseenter', abrir);
+  elemento.addEventListener('mouseleave', () => {
+    if(_itemTooltipHover?.elemento === elemento) _adiarFechamentoTooltipItem();
+  });
+  elemento.addEventListener('focus', abrir);
+  elemento.addEventListener('blur', () => {
+    if(_itemTooltipHover?.elemento === elemento) _adiarFechamentoTooltipItem();
+  });
+  elemento.addEventListener('dragstart', esconderTooltip);
+  elemento.addEventListener('mousedown', esconderTooltip);
+}
 function _initItemTooltip(){
   if(_itemTooltipReady) return;
   _itemTooltipReady = true;
@@ -4983,10 +5062,23 @@ function _initItemTooltip(){
     `;
     document.body.appendChild(tooltip);
   }
+  tooltip.addEventListener('mouseenter', () => {
+    if(_itemTooltipHover) clearTimeout(_itemTooltipHover.closeTimer);
+  });
+  tooltip.addEventListener('mouseleave', _adiarFechamentoTooltipItem);
+  tooltip.addEventListener('wheel', e => {
+    if(_itemTooltipHover) e.stopPropagation();
+  }, {passive:true});
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') esconderTooltip(); });
+  document.addEventListener('scroll', e => {
+    if(_itemTooltipHover && !tooltip.contains(e.target)) esconderTooltip();
+  }, true);
+  window.addEventListener('resize', () => { if(_itemTooltipHover) esconderTooltip(); });
   // Posiciona o tooltip perto do cursor (evita sair da tela).
   document.addEventListener('mousemove', (e) => {
     const t = document.getElementById('item-tooltip');
     if(!t || t.style.opacity === '0') return;
+    if(_itemTooltipHover) return; // O quadro de item fica ancorado, inclusive durante a travessia.
     // Dono sumiu da tela (ou o cursor já saiu dele) sem que mouseleave ocorresse.
     if(_itemTooltipDono && !_itemTooltipDono.contains(e.target)){ esconderTooltip(); return; }
     const margin = 16;
@@ -5001,8 +5093,18 @@ function _initItemTooltip(){
 }
 
 function esconderTooltip(){
+  if(_itemTooltipHover){
+    clearTimeout(_itemTooltipHover.expandTimer);
+    clearTimeout(_itemTooltipHover.closeTimer);
+    _itemTooltipHover.observer?.disconnect();
+    _itemTooltipHover = null;
+  }
   const t = document.getElementById('item-tooltip');
-  if(t) t.style.opacity = '0';
+  if(t){
+    t.style.opacity = '0';
+    t.style.pointerEvents = 'none';
+    for(const key of ['padding','color','fontSize','maxWidth','boxSizing','maxHeight','overflowY','overscrollBehavior','scrollbarWidth','scrollbarColor']) t.style[key] = '';
+  }
   _itemTooltipDono = null;
   if(window._animadoHover){ window._animadoHover = null; if(GS.gameState) renderMap(GS.gameState); }
 }
@@ -5256,7 +5358,8 @@ function gerarHabilidadesEspeciais(item){
 // quadro detalhado exibido ao passar o mouse sobre uma magia.
 function aplicarTooltipAoItemDados(elemento, item){
   if(!elemento || !item) return;
-  elemento.addEventListener('mouseenter', () => {
+  const catalogado = GS.CATALOGO_ITENS[item.id] || {};
+  _ligarTooltipItem(elemento, item.nome || item.name || catalogado.nome || catalogado.name || 'Item', () => {
     _initItemTooltip();
     _marcarDonoTooltip(elemento);
     const catalogado = GS.CATALOGO_ITENS[item.id] || {};
@@ -5269,7 +5372,6 @@ function aplicarTooltipAoItemDados(elemento, item){
     t.style.borderColor = corBordaPorPreco(dados.preco);
     t.style.opacity = '1';
   });
-  elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
 // ── Tooltip de PERGAMINHO: nível de conjurador, dano/alcance/CD no nível e a
@@ -5332,7 +5434,7 @@ function _tooltipPergaminhoHTML(item){
 }
 function aplicarTooltipPergaminho(elemento, item){
   if(!elemento || !item) return;
-  elemento.addEventListener('mouseenter', () => {
+  _ligarTooltipItem(elemento, item.nome || item.name, () => {
     _initItemTooltip();
     _marcarDonoTooltip(elemento);
     const t = document.getElementById('item-tooltip');
@@ -5341,7 +5443,6 @@ function aplicarTooltipPergaminho(elemento, item){
     t.style.borderColor = corBordaPorPreco(item.price || 0);
     t.style.opacity = '1';
   });
-  elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
 // ── Tooltip de Instrumento do Bardo (Fase 1) ────────────────────────────────
@@ -5394,7 +5495,7 @@ function _tooltipInstrumentoHTML(inst){
 
 function aplicarTooltipInstrumento(elemento, inst){
   if(!elemento || !inst) return;
-  elemento.addEventListener('mouseenter', () => {
+  _ligarTooltipItem(elemento, inst.nome || inst.name, () => {
     _initItemTooltip();
     _marcarDonoTooltip(elemento);
     const t = document.getElementById('item-tooltip');
@@ -5403,7 +5504,6 @@ function aplicarTooltipInstrumento(elemento, inst){
     t.style.borderColor = '#4db8ff';   // azul — instrumento (mão do escudo)
     t.style.opacity = '1';
   });
-  elemento.addEventListener('mouseleave', () => esconderTooltip());
 }
 
 // Cor da borda do tooltip por raridade (faixa de preço).

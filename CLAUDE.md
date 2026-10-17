@@ -164,6 +164,16 @@ Na entrada da masmorra, a limpeza de fuligem e de conhecimento dos monstros deve
 ficar no callback principal `enterDungeon`, que fecha a cidade e mostra o tabuleiro.
 Regressão: `node tools/test_entrada_masmorra_cliente.js`.
 
+### Descrição de itens por hover
+
+`_ligarTooltipItem` em `game.js` mostra o nome imediatamente e expande a descrição
+após 2 segundos no mesmo item (movimentos internos não reiniciam o tempo).
+Inventário, loja, pergaminhos e instrumentos reutilizam esse fluxo. O quadro fica
+ancorado ao item, limitado à tela e aceita rolagem interna com a rodinha; há 300 ms
+para atravessar entre item e quadro. Troca, remoção do item, clique, arrasto ou
+fechamento cancelam os timers. O toque longo do inventário mantém os 350 ms.
+Regressão: `node tools/test_item_tooltip_hover.js`.
+
 ### HUD de objetivos
 
 `renderObjectivesHUD` em `game.js` apresenta os objetivos autorados a partir de

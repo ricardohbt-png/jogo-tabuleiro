@@ -1133,12 +1133,10 @@ const InventoryModal = (() => {
   function _wireTooltip(el, itemId, comparisonItemId, itemInstance){
     if(!itemId) return;
     let pressTimer = null;
-    el.addEventListener('mouseenter', (e) => {
+    const item = itemInstance || GS.CATALOGO_ITENS[itemId] || {};
+    _ligarTooltipItem(el, item.name || item.nome || itemId, () => {
       _showInventoryTooltip(itemId, comparisonItemId, null, itemInstance);
-      const tooltip = document.getElementById('item-tooltip');
-      if(tooltip && typeof posicionarTooltipAbaixo === 'function') posicionarTooltipAbaixo(tooltip, e.currentTarget);
     });
-    el.addEventListener('mouseleave', () => { if(typeof esconderTooltip === 'function') esconderTooltip(); });
     el.addEventListener('touchstart', (e) => {
       const touch = e.touches[0];
       pressTimer = setTimeout(() => _showInventoryTooltip(itemId, comparisonItemId, { x: touch.clientX, y: touch.clientY }, itemInstance), 350);
