@@ -3089,8 +3089,8 @@ window.LANG_NARRACAO = {
     "pt": "🔥 O feno pega fogo e arde com violência!"
   },
   "narracao.reacao.feno_virou_cinzas": {
-    "en": "🌫️ The flames die down: only ashes remain of the hay.",
-    "pt": "🌫️ As chamas se apagam: do feno restam só cinzas."
+    "en": "🌫️ The hay burns away, leaving only soot on the ground.",
+    "pt": "🌫️ O feno se consome e deixa só fuligem no chão."
   },
   "narracao.reacao.piche_pegou_fogo": {
     "en": "🔥 The pitch catches fire!",

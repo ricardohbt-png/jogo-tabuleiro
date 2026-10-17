@@ -26,7 +26,8 @@ RX_DURACAO_CROSTA = 3
 RX_CD_PADRAO = 12
 RX_DURACAO_CHAMAS = 3
 RX_FENO_TETO = 24          # montes de feno encostados que pegam fogo juntos
-RX_DURACAO_FENO = 3        # rodadas em chamas antes de virar cinzas
+RX_DURACAO_FENO = 3        # rodadas em chamas antes de virar fuligem
+RX_DADO_FENO = "1d4"       # dano da fogueira
 RX_DADO_CHAMAS = "1d6"
 RX_GAS_DANO = "2d6"          # explosão de gás: dano de fogo
 RX_GAS_CD = 17               # Reflexos fixo (metade do dano)
@@ -162,7 +163,7 @@ class TerrainReactions:
     def _rx_feno_em(self, tile):
         """Monte de feno (ainda intacto) que ocupa a casa, ou None."""
         for d in getattr(self, "decorations", []):
-            if d.get("type") == "monte_feno" and list(tile) in [list(t) for t in self._decor_tiles(d)]:
+            if d.get("type") == "monte_feno" and not d.get("queimando") and list(tile) in [list(t) for t in self._decor_tiles(d)]:
                 return d
         return None
 
@@ -371,21 +372,27 @@ class TerrainReactions:
             await self._apagar_chamas_na_agua(alvo)
 
     async def _rx_incendiar_feno(self, tiles, origem, pend, prof):
-        """Fogo no feno: o monte (e os encostados nele) vira uma fogueira por RX_DURACAO_FENO
-        rodadas e depois cinzas. Quem está na casa queima na hora, como numa fogueira."""
+        """Fogo no feno: o monte (e os encostados) arde como o piche, numa zona de chamas por
+        RX_DURACAO_FENO rodadas (1d4 de fogo, como a fogueira). O monte continua com a mesma
+        imagem e deixa de bloquear a passagem; ao fim das chamas some e deixa fuligem."""
         regiao = self._rx_regiao(tiles, lambda t: self._rx_estado("feno", t),
                                  raio=None, teto=RX_FENO_TETO)
         if not regiao:
             return
-        casas = []
+        casas, ids = [], []
         for t in regiao:
             d = self._rx_feno_em(t)
-            if d is None or d.get("type") != "monte_feno":
+            if d is None:
                 continue
-            self._decor_trocar_tipo(d, "fogueira")
-            d["queima_ate"] = self.round_num + RX_DURACAO_FENO
+            d["queimando"] = True
+            ids.append(d["id"])
             casas.extend(list(q) for q in self._decor_tiles(d))
         self._rebuild_decor_index()
+        zona = {"id": self._rx_id("chamas_feno"), "tipo": "chamas_piche", "feno": True, "dado": RX_DADO_FENO,
+                "tiles": [list(c) for c in casas], "decor_ids": ids, "criado_em": self.round_num,
+                "expira_em": self.round_num + RX_DURACAO_FENO, "ativa": True,
+                "caster": origem.get("caster_id")}
+        self.zonas_especiais.append(zona)
         await self._rx_anunciar("incendio", casas, regiao[0])
         centro = [int(regiao[0][0]), int(regiao[0][1])]
         await self.broadcast({
@@ -394,8 +401,19 @@ class TerrainReactions:
             "origin": centro, "center": centro, "tiles": casas, "one_shot": True,
         })
         await self.gm_say(self._rx_T("narracao.reacao.feno_pegou_fogo"))
+        zona["ignicao"] = {}
         for alvo in self._alvos_no_inverno(casas):
-            await self._aplicar_fogueira_se_pisar(alvo, aplicar_espinhos=False)
+            await self._rx_fogo_piche(alvo, zona, "ignição")
+            pos = alvo.get("pos") or [0, 0]
+            zona["ignicao"][str(alvo.get("id"))] = [self.round_num, int(pos[0]), int(pos[1])]
+
+    async def _rx_feno_acabou(self, zona):
+        """Fim das chamas do feno: o monte queimado some e o chão fica com fuligem."""
+        ids = set(zona.get("decor_ids") or [])
+        self.decorations = [d for d in self.decorations if d.get("id") not in ids]
+        self._rebuild_decor_index()
+        await self._rx_anunciar("fuligem", zona.get("tiles", []), (zona.get("tiles") or [[0, 0]])[0])
+        await self.gm_say(self._rx_T("narracao.reacao.feno_virou_cinzas"))
 
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")
@@ -484,13 +502,14 @@ class TerrainReactions:
         antes = self._rx_em_reacao
         self._rx_em_reacao = True
         try:
-            raw = self._rolar_dado(RX_DADO_CHAMAS)
-            await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw,
-                                  "label": self._rx_T("dado.chamas_de_piche"),
+            feno = bool(zona.get("feno"))
+            raw = self._rolar_dado(zona.get("dado") or RX_DADO_CHAMAS)
+            await self.broadcast({"type": "dice_roll", "die": "d4" if feno else "d6", "value": raw,
+                                  "label": self._rx_T("dado.fogueira" if feno else "dado.chamas_de_piche"),
                                   "damage_type": RX_FIRE})
             dano = raw if "vida_atual" in alvo else self._apply_damage_types(raw, [RX_FIRE], alvo)
             await self._dano_em_alvo(alvo, dano, "fogo", zona.get("caster"))
-            if self._vivo(alvo):
+            if self._vivo(alvo) and not feno:     # fogueira e feno não põem ninguém em chamas
                 self._aplicar_em_chamas(alvo, self._rolar_dado("1d4"), True)
         finally:
             self._rx_em_reacao = antes

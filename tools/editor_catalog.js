@@ -13345,21 +13345,6 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
-      "type": "cinzas",
-      "nome": "Cinzas",
-      "emoji": "🌫️",
-      "size": [
-        1,
-        1
-      ],
-      "gira": false,
-      "alto": false,
-      "pisavel": true,
-      "loot_capaz": false,
-      "special": null,
-      "image": null
-    },
-    {
       "type": "brasao_leao",
       "nome": "Brasão do Leão",
       "emoji": "🦁",
