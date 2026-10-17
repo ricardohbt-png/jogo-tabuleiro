@@ -185,5 +185,35 @@ class MapasTests(unittest.TestCase):
         self.assertEqual(G.masmorras(), G.masmorras())
 
 
+class CalibracaoTests(unittest.TestCase):
+    """6e. A curva de XP do jogo é lenta (nível N→N+1 custa N×1040 por herói, 80 XP por ponto de ND), então a
+    campanha NÃO leva sozinha do 2 ao 4: ela rende cerca de um nível. O teste fixa o que importa — que a
+    campanha vale a pena, que a fuga rende menos que a vitória e que nenhum herói pula níveis."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mm = G.preparar()["masmorras"]
+
+    def test_xp_por_heroi_dentro_do_esperado(self):
+        vitoria, fuga = G.xp_da_campanha(self.mm)
+        self.assertGreater(vitoria, 1500)
+        self.assertLess(vitoria, 2 * S.XP_POR_NIVEL + 3 * S.XP_POR_NIVEL, "não pula do nível 2 ao 4 numa só campanha")
+        self.assertLess(fuga, vitoria)
+
+    def test_fugir_rende_o_xp_do_resgate_mas_nao_o_do_ferrao(self):
+        d = self.mm["charcos_4b_aldeia.json"]
+        self.assertEqual(d["objectives"]["primary"]["xp"], 150)
+        self.assertEqual(d["objectives"]["secondary"][0]["xp"], 600)
+
+    def test_relatorio_mostra_o_xp(self):
+        art = {"masmorras": self.mm}
+        self.assertIn("XP por herói", G.relatorio(art))
+
+    def test_niveis_esperados_crescem(self):
+        niveis = [self.mm[a]["expected_party"]["level"] for a in G.ARQUIVOS]
+        self.assertEqual(niveis, sorted(niveis))
+        self.assertEqual((niveis[0], niveis[-1]), (2, 4))
+
+
 if __name__ == "__main__":
     unittest.main()

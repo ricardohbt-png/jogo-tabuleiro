@@ -218,8 +218,8 @@ def masmorra_bordas():
     c.fala("bordas_ossos", m.em(3, 3, hs // 2), "Rastreador", "🦴",
            "Ossos roídos, mas nenhum corpo inteiro. O rastro atravessa a ponte quebrada.", 4)
     return c.finalizar("charcos_1_bordas", "Bordas da Mata", "ar_livre", 2,
-                       {"primary": obj("all_heroes_at_exit", 100, 30),
-                        "secondary": [obj("kill_target", 80, 25, ["health_potion_small"])]}, ent, sai)
+                       {"primary": obj("all_heroes_at_exit", 250, 30),
+                        "secondary": [obj("kill_target", 150, 25, ["health_potion_small"])]}, ent, sai)
 
 
 # ─── 2 · Palafitas dos Pescadores ────────────────────────────────────────────
@@ -273,8 +273,8 @@ def masmorra_palafitas():
     c.fala("palafitas_deposito", m.em(2, 3, hs // 2), "Narrador", "📜",
            "Uma carta pregada na parede e prateleiras com frascos: óleo e piche. A criatura teme o fogo.", 4)
     d = c.finalizar("charcos_2_palafitas", "Palafitas dos Pescadores", "ar_livre", 3,
-                    {"primary": obj("all_heroes_at_exit", 120, 40),
-                     "secondary": [obj("kill_target", 150, 40, ["antidote"])]}, ent, sai)
+                    {"primary": obj("all_heroes_at_exit", 300, 40),
+                     "secondary": [obj("kill_target", 250, 40, ["antidote"])]}, ent, sai)
     # A ponte: margens a 1 nível, tábuas sobre o canal a 0; o Chão Ilusório cede no meio.
     ini, fim = [xcan - 1, ymeio], [xcan + 3, ymeio]
     d["elevacoes"] = {f"{ini[0]},{ini[1]}": 1, f"{fim[0]},{fim[1]}": 1}
@@ -290,12 +290,14 @@ def masmorra_travessia():
     c.proteger(ent, sai)
     c.pintar(0, "grama")
     c.mon_livre("escorpiao_pedra", 0, 2); c.mon_livre("rato_gigante", 0, 4); c.mon_livre("cobra_venenosa", 0, 1)
+    c.mon_livre("cobra_constritora", 0, 1)
     c.espalha("arvore", 0, 3); c.espalha("juncos", 0, 4)
     # 1 · Charco aberto (pântano + poças)
     for (dx, dy, w, h) in ((2, 2, 4, 3), (8, 9, 4, 3)):
         c.pintar(1, "agua", dx=dx, dy=dy, w=w, h=h)
     c.mon("crocodilo_jovem", 1, 3, 2); c.mon("crocodilo_jovem", 1, 9, 10)
     c.mon_livre("cobra_constritora", 1, 1); c.mon_livre("rato_gigante", 1, 2)
+    c.mon_livre("cobra_venenosa", 1, 1)
     c.espalha("juncos", 1, 5); c.espalha("tocos_alagados", 1, 3); c.espalha("raizes_torcidas", 1, 2)
     # 2 · Ilhotas (grama) entre água funda
     c.pintar(2, "agua")
@@ -304,16 +306,17 @@ def masmorra_travessia():
     c.pintar(2, "pantano", dx=0, dy=hs // 2 - 1, w=14, h=3)             # a trilha de pântano que liga as ilhotas
     c.mon("crocodilo_jovem", 2, 8, 10)
     c.mon_livre("cobra_venenosa", 2, 2); c.mon_livre("escorpiao_pedra", 2, 2); c.mon_livre("rato_gigante", 2, 2)
+    c.mon_livre("cobra_constritora", 2, 1)
     c.espalha("juncos", 2, 4); c.espalha("tocos_alagados", 2, 3)
     # 3 · Aproximação da aldeia: zumbis (primeiro sinal dos necromantes)
     c.pintar(3, "grama", dx=7, dy=0, w=5)
     c.mon_livre("zumbi_infectado", 3, 2); c.mon_livre("cobra_constritora", 3, 1)
-    c.mon_livre("escorpiao_de_pedra_customizado", 3, 1)
+    c.mon_livre("escorpiao_de_pedra_customizado", 3, 1); c.mon_livre("escorpiao_pedra", 3, 2)
     c.espalha("arvore_seca", 3, 3); c.espalha("monte_ossos", 3, 3); c.espalha("lapide", 3, 2)
     c.fala("travessia_aldeia", m.em(3, 9, hs // 2), "Narrador", "🔥",
            "Fumaça e cantos baixos. Do alto da ilhota, uma paliçada: a aldeia dos bruxos.", 4)
     return c.finalizar("charcos_3_travessia", "Travessia do Pântano", "ar_livre", 3,
-                       {"primary": obj("all_heroes_at_exit", 150, 50), "secondary": []}, ent, sai)
+                       {"primary": obj("all_heroes_at_exit", 350, 50), "secondary": []}, ent, sai)
 
 
 # ─── 4A · Arredores da Aldeia ────────────────────────────────────────────────
@@ -324,24 +327,24 @@ def masmorra_arredores():
     c.proteger(ent, sai)
     c.pintar(1, "madeira_escura"); c.pintar(2, "madeira_escura"); c.pintar(3, "madeira_escura")
     # 0 · Trilha
-    c.mon_livre("esqueleto_animal", 0, 2); c.mon_livre("rato_gigante", 0, 2)
+    c.mon_livre("esqueleto_animal", 0, 2); c.mon_livre("rato_gigante", 0, 2); c.mon_livre("esqueleto_humano", 0, 1)
     c.espalha("arvore_seca", 0, 3); c.espalha("monte_ossos", 0, 2)
     # 1 · Vigias de osso
-    c.mon_livre("esqueleto_humano", 1, 3); c.mon_livre("esqueleto_animal", 1, 2)
-    c.mon_livre("zumbi_infectado", 1, 1)
+    c.mon_livre("esqueleto_humano", 1, 4); c.mon_livre("esqueleto_animal", 1, 2)
+    c.mon_livre("zumbi_infectado", 1, 1); c.mon_livre("goblin_combatente", 1, 2)
     c.espalha("cerca_reta", 1, 5); c.espalha("lapide", 1, 3); c.espalha("monte_ossos", 1, 2)
     # 2 · Pátio externo
     c.mon_livre("goblin_xama", 2, 1); c.mon_livre("esqueleto_humano", 2, 2)
-    c.mon_livre("zumbi_infectado", 2, 2); c.mon_livre("goblin_combatente", 2, 2)
+    c.mon_livre("zumbi_infectado", 2, 2); c.mon_livre("goblin_combatente", 2, 2); c.mon_livre("esqueleto_animal", 2, 2)
     c.espalha("cerca_reta", 2, 5); c.espalha("caldeirao", 2, 1); c.espalha("tumba", 2, 2)
     # 3 · Portão
-    c.mon_livre("goblin_combatente", 3, 2); c.mon_livre("esqueleto_humano", 3, 2)
+    c.mon_livre("goblin_combatente", 3, 2); c.mon_livre("esqueleto_humano", 3, 2); c.mon_livre("zumbi_infectado", 3, 1)
     c.espalha("cerca_reta", 3, 4); c.deco("porteira_fechada", 3, 7, hs // 2 - 1)
     c.deco("porteira_fechada", 3, 7, hs // 2 + 1)
     c.fala("arredores_vigias", m.em(0, 5, hs // 2), "Narrador", "💀",
            "Vigias de osso andam pelas tábuas. Os bruxos não deixam os mortos descansar.", 4)
     return c.finalizar("charcos_4a_arredores", "Arredores da Aldeia", "ar_livre", 3,
-                       {"primary": obj("all_heroes_at_exit", 150, 50), "secondary": []}, ent, sai)
+                       {"primary": obj("all_heroes_at_exit", 400, 50), "secondary": []}, ent, sai)
 
 
 # ─── 4B · A Aldeia (praça, cercado e a cova do Ferrão) ───────────────────────
@@ -378,6 +381,8 @@ def masmorra_aldeia():
     c.pintar_abs(cx0 + 2, cy0 + 8, 5, 2, "piche")
     c.deco("barril", 1, cx0 - 4 - 11, cy0 - 3 - 2); c.deco("barril", 1, cx0 + 9 - 11, cy0 - 2 - 2)
     c.deco("monte_feno", 1, cx0 - 2 - 11, cy0 + 6 - 2)
+    c.mon_livre("goblin_combatente", 0, 2); c.mon_livre("esqueleto_animal", 0, 2)
+    c.espalha("cerca_reta", 0, 3); c.espalha("monte_ossos", 0, 2)
     # Bruxos da praça — revidam SÓ contra o Ferrão (os heróis seguem sendo alvo normal)
     so_ferrao = {"mode": "custom", "rules": {"all_monsters": False, "subtypes": [], "types": [FERRAO]}}
     # Os bruxos ficam do lado da passagem da cova (a oeste): com a parede aberta há linha de visão até o Ferrão.

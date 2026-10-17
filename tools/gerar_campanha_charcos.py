@@ -7,6 +7,16 @@ Roda da raiz do projeto:
 
 Spec: docs/superpowers/specs/2026-10-17-campanha-mare-do-charco-design.md
 
+Calibração (4 heróis; ND por sala = soma dos CR; poder = heróis × nível):
+    masmorra          nível  salas (ND)                          XP/herói (monstros+objetivos)
+    1 Bordas            2    1,6 · 3,8 · 3,8 · 1,5               ~190 + 100
+    2 Palafitas         3    2,4 · 5,8 · 3,3 · 6,0               ~270 + 140
+    3 Travessia         3    3,5 · 4,3 · 5,3 · 5,0               ~300 + 90
+    4A Arredores        3    1,8 · 4,5 · 5,5 · 2,5               ~230 + 100
+    4B Aldeia           4    1,5 · 15,8 (com o Ferrão, ND 5) · 0 ~300 + 190
+  O jogo é lento em XP (nível N→N+1 custa N×1040 por herói): a campanha rende cerca de um nível
+  (vitória ~1850, fuga ~1600 por herói), não do 2 ao 4. Para mais, suba o `xp` dos objetivos.
+
 Só toca no que é dele: as 5 masmorras `charcos_*.json`, os destinos `charcos_*` de
 world_adventures.json, as conversas `charcos_*` da taverna da Vila dos Charcos, o modificador de
 preço da vila e o troféu `ferrao_do_brejo`. Tudo o mais é relido e regravado intacto.
@@ -328,6 +338,34 @@ def aplicar(artefatos, caminhos=None, forcar=False, regen_editor=True):
         S._regen_dungeons_index()
 
 
+def xp_por_heroi(defn, herois=4):
+    """XP que cada herói leva de uma masmorra se vencer TUDO: monstros (fórmula de `_calc_monster_xp`,
+    com o nível esperado do grupo) + objetivos (total dividido pelos heróis). Devolve (monstros, objetivos)."""
+    defs = {m["type"]: m for m in S.MONSTER_DEFS}
+    nivel = defn["expected_party"]["level"]
+    monstros = 0.0
+    for m in defn["monsters"]:
+        cr = S.monster_cr(defs[m["type"]])
+        monstros += S.XP_MONSTRO_POR_ND * cr * max(0.0, 1.0 + 0.10 * (cr - nivel))
+    o = defn["objectives"]
+    objetivos = o["primary"]["xp"] + sum(s["xp"] for s in o.get("secondary", []))
+    return monstros / herois, objetivos / herois
+
+
+def xp_da_campanha(masmorras_, herois=4):
+    """Soma por herói para vitória total e para a fuga (sem o Ferrão e sem o objetivo secundário dele)."""
+    vitoria = sum(sum(xp_por_heroi(d, herois)) for d in masmorras_.values())
+    aldeia = masmorras_.get("charcos_4b_aldeia.json")
+    fuga = vitoria
+    if aldeia:
+        defs = {m["type"]: m for m in S.MONSTER_DEFS}
+        cr = S.monster_cr(defs["ferrao_charcos_adulto"])
+        nivel = aldeia["expected_party"]["level"]
+        xp_ferrao = S.XP_MONSTRO_POR_ND * cr * max(0.0, 1.0 + 0.10 * (cr - nivel)) / herois
+        fuga = vitoria - xp_ferrao - aldeia["objectives"]["secondary"][0]["xp"] / herois
+    return vitoria, fuga
+
+
 def relatorio(artefatos):
     linhas = []
     for arquivo, defn in artefatos["masmorras"].items():
@@ -335,6 +373,10 @@ def relatorio(artefatos):
         linhas.append(f"{arquivo}  (poder {poder})")
         for rid, nd in nd_por_sala(defn).items():
             linhas.append(f"   sala {rid}: ND {nd:g} -> {faixa(nd, poder)} ({nd / poder:.2f})")
+    if artefatos["masmorras"]:
+        vit, fuga = xp_da_campanha(artefatos["masmorras"])
+        linhas.append(f"XP por herói (4 heróis): vitória total {vit:.0f} · fuga {fuga:.0f}  "
+                      f"(nível 2→3 custa {2 * S.XP_POR_NIVEL}, 3→4 custa {3 * S.XP_POR_NIVEL})")
     linhas.append("Artes pedidas pelos slides:")
     linhas += [f"   {k}: {arte}" for k, arte in ARTES_PEDIDAS]
     return "\n".join(linhas)
