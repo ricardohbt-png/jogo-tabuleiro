@@ -346,6 +346,10 @@ window.LANG_CATALOGO = {
     "en": "Ground (Grass)",
     "pt": "Chão (grama)"
   },
+  "cat.decor.cinzas.nome": {
+    "en": "Ashes",
+    "pt": "Cinzas"
+  },
   "cat.decor.coluna.nome": {
     "en": "Stone Column",
     "pt": "Coluna de pedra"

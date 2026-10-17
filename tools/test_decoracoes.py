@@ -18,7 +18,7 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("86 tipos", len(d) == 86)
+    check("87 tipos", len(d) == 87)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
         "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
@@ -183,7 +183,7 @@ def test_catalog():
         for v in d.values()))
     check("pisáveis: não bloqueiam movimento", sorted(k for k, v in d.items() if v["pisavel"]) == [
         "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "capim_alto",
-        "capim_amarelado", "cerca_quebrada", "chama_viva", "chao", "cortina_branca",
+        "capim_amarelado", "cerca_quebrada", "chama_viva", "chao", "cinzas", "cortina_branca",
         "cortina_vermelha", "fenda_fumegante", "fogueira", "fumarola", "gargula_pedra",
         "geiser_lava", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
         "monte_ossos", "ninho_abutres", "ossos_semi_enterrados", "placa", "porteira_aberta",
