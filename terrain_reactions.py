@@ -411,7 +411,25 @@ class TerrainReactions:
             # quem foi atingido aqui não leva o dano de "entrada" no mesmo passo
             pos = alvo.get("pos") or [0, 0]
             zona["ignicao"][str(alvo.get("id"))] = [self.round_num, int(pos[0]), int(pos[1])]
+        await self._rx_derreter_sob_chamas(regiao, origem, prof)
         await self._training_piche_aceso(origem.get("caster_id"))
+
+    async def _rx_derreter_sob_chamas(self, regiao, origem, prof):
+        """O piche em chamas derrete o gelo sob ele (a base vira água quando o fogo acabar)
+        e o gelo encostado nas chamas, que é a mesma reação do fogo em gelo."""
+        area = {tuple(t) for t in regiao}
+        sob = []
+        for t in sorted(area):
+            reg = self._terrenos_inverno.get(t)
+            if reg and reg.get("base") in RX_GELO_MATS:
+                reg["base"] = "agua"
+                sob.append(t)
+        vizinhas = sorted({(x + dx, y + dy) for x, y in area for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                           if (x + dx, y + dy) not in area and self._rx_estado("gelo", (x + dx, y + dy))})
+        if sob:
+            await self._rx_anunciar("derreter", sob, sob[0])
+        if vizinhas:
+            await self._rx_derreter_gelo(vizinhas, origem, {}, prof)
 
     async def _rx_fogo_piche(self, alvo, zona, motivo):
         """1d6 de fogo + em chamas, só no piso. Não reentra no motor."""

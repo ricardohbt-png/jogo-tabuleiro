@@ -204,23 +204,96 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
         await r.handle_throw_item("h0", {"item_id": "frasco_oleo", "tx": 53, "ty": 37})
         self.assertEqual(erros(r), [])
         self.assertIn("fala_piche", p["licoes_feitas"], "o piche aceso cumpre a lição de quem lançou")
-        p["pos"] = [51, 35]
-        await r._verificar_falas(p, r._room_containing_point(p["pos"]))
-        self.assertEqual(p["licao_atual"], "fala_retirada")
-        await r.handle_move("h0", 0, 1)
-        self.assertEqual(p["pos"], [51, 36])
-        self.assertIn("fala_retirada", p["licoes_feitas"])
+        gelo = [(x, y) for x in (51, 52, 53) for y in (36, 37, 38)]
+        for t in gelo:
+            mat = r.materiais.get(t)
+            base = (r._terrenos_inverno.get(t) or {}).get("base")
+            self.assertTrue(mat == "agua" or base == "agua" or mat == "piche",
+                            f"o gelo em {t} derrete com o piche em chamas: {mat}/{base}")
+        self.assertNotIn("piso_congelado", [r.materiais.get(t) for t in ((51, 36), (51, 37), (51, 38))])
 
-    async def test_retirada_nao_depende_da_parte_2(self):
+    async def test_degelo_na_coluna_fora_do_piche(self):
         r = await sala_real("warrior")
         p = r.players["h0"]
         gas(r)["ativa"] = False
-        p["licoes_feitas"].append("fala_gas"); r.licoes_feitas.add("fala_gas")
-        p["licao_atual"] = None
-        p["pos"] = [51, 35]
+        p["pos"] = [49, 34]
+        self.assertEqual(r.materiais.get((51, 37)), "piso_congelado")
+        # piche e óleo reais do catálogo
+        p["bag"] = [S._DUNGEON_ITEM_CATALOG["frasco_piche"] | {}, S._DUNGEON_ITEM_CATALOG["frasco_oleo"] | {}]
+        await r.handle_throw_item("h0", {"item_id": "frasco_piche", "tx": 53, "ty": 37})
+        p["action_done"] = False
+        await r.handle_throw_item("h0", {"item_id": "frasco_oleo", "tx": 53, "ty": 37})
+        self.assertEqual(erros(r), [])
+        for y in (36, 37, 38):
+            self.assertEqual(r.materiais.get((51, y)), "agua", "o gelo encostado nas chamas vira água")
+
+
+async def sala_gargula(*classes):
+    r = await sala_real(*classes)
+    feitas = [f["id"] for f in r.licoes if f.get("ordem") is not None and not f.get("classe")
+              and f["ordem"] <= 37]
+    for p in r.players.values():
+        p["licoes_feitas"] = list(feitas); p["licao_atual"] = None
+        p["licao_progresso"] = {i: 1 for i in feitas}
+        r.licoes_feitas.update(feitas)
+        p["pos"] = [44, 35]
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
-        await r.handle_move("h0", 0, 1)
-        self.assertEqual(p["pos"], [51, 36])
+    return r
+
+
+class GargulaTests(unittest.IsolatedAsyncioTestCase):
+    async def test_armadilha_final_armada_e_gargula_liga(self):
+        r = await sala_gargula("warrior")
+        p = r.players["h0"]
+        self.assertEqual(p["licao_atual"], "fala_gargula")
+        self.assertIsNotNone(r._armadilha_no_tile(39, 35), "o teletransporte começa armado")
+        garg = r._decor_by_id("decor_133")
+        self.assertTrue(next(d for d in r._serializar_decoracoes() if d["id"] == "decor_133").get("interactive"),
+                        "o cliente precisa saber que a gárgula é clicável")
+        p["pos"] = [43, 36]
+        await r.handle_interagir_decor("h0", "decor_133")
+        self.assertIn("decor_mechanism", [m.get("type") for m in r.msgs])
+        self.assertEqual(erros(r), [])
+        await r.handle_activate_decor_mechanism("h0", "decor_133")
+        self.assertEqual(erros(r), [])
+        self.assertIsNone(r._armadilha_no_tile(39, 35), "a gárgula desliga o teletransporte")
+        self.assertIn("fala_gargula", p["licoes_feitas"])
+        self.assertEqual(r._armadilhas_do_mecanismo(garg), [])
+        await r.handle_interagir_decor("h0", "decor_133")
+        self.assertEqual(erros(r), ["erro.mecanismo_ja_ativado"])
+
+    async def test_sem_a_gargula_o_teletransporte_devolve_ao_inicio(self):
+        r = await sala_gargula("warrior")
+        p = r.players["h0"]
+        arm = r._armadilha_no_tile(39, 35)
+        await r._disparar_armadilha(p, arm)
+        self.assertEqual(p["pos"], [2, 15], "sem desligar, volta ao início do Campo")
+
+    async def test_evento_vale_para_todos_e_quem_chega_depois_pula(self):
+        r = await sala_gargula("warrior", "mage")
+        a, b = r.players["h0"], r.players["h1"]
+        self.assertEqual(b["licao_atual"], "fala_gargula")
+        a["pos"] = [43, 36]
+        await r.handle_activate_decor_mechanism("h0", "decor_133")
+        self.assertIn("fala_gargula", a["licoes_feitas"])
+        self.assertIn("fala_gargula", b["licoes_feitas"], "o mecanismo é da sala: vale para quem está na lição")
+        # quem chega depois, com o mecanismo já ligado, pula a lição sem prêmio
+        c = S.make_player("h9", "Tardio", "rogue", 9)
+        r.players["h9"] = c
+        c.update(licoes_feitas=list(a["licoes_feitas"][:-1]), licao_progresso={i: 1 for i in a["licoes_feitas"][:-1]},
+                 licao_atual=None, pos=[44, 35], moves_left=5)
+        await r._verificar_falas(c, r._room_containing_point(c["pos"]))
+        self.assertIn("fala_gargula", c["licoes_feitas"])
+        self.assertIn("fala_gargula", c["licoes_puladas"])
+
+    async def test_retirada_na_sala_final(self):
+        r = await sala_gargula("warrior")
+        p = r.players["h0"]
+        p["pos"] = [43, 36]
+        await r.handle_activate_decor_mechanism("h0", "decor_133")
+        p["pos"] = [37, 36]; p["moves_left"] = 10
+        await r.handle_move("h0", -1, 0)
+        self.assertEqual(p["pos"], [36, 36])
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         self.assertIn("fala_retirada", p["licoes_feitas"] + [p.get("licao_atual")])
 

@@ -11,7 +11,7 @@ import gerar_guia_comum as G
 IDS_ESPERADOS = ["fala_intro", "fala_0", "fala_1", "fala_2", "fala_3", "fala_4", "fala_18", "fala_19",
                  "fala_29", "fala_30", "fala_31", "fala_32", "fala_33", "fala_atalhos", "fala_camera",
                  "fala_armadilhas", "fala_hostilidade", "fala_primeiro_combate", "fala_res", "fala_vuln",
-                 "fala_gas", "fala_piche", "fala_retirada"]
+                 "fala_gas", "fala_piche", "fala_gargula", "fala_retirada"]
 UI_OK = re.compile(r"^(?:(?:botao|bolsa|slot|monstro|hud):[a-z0-9_]+|(?:casa|porta):\[\d+,\d+\])$")
 TERMO = re.compile(r"\[\[([a-z0-9_]+)\]\]")
 
@@ -124,7 +124,8 @@ class ConteudoTests(unittest.TestCase):
         p["licoes_feitas"] = feitas + ["fala_res"]
         self.assertTrue(lib(p, fala["fala_vuln"]))
         retirada = fala["fala_retirada"]
-        self.assertEqual(retirada.get("continua_sem"), ["fala_res", "fala_vuln", "fala_atalhos", "fala_piche"])
+        self.assertEqual(retirada.get("continua_sem"),
+                         ["fala_res", "fala_vuln", "fala_atalhos", "fala_piche", "fala_gargula"])
         p["licoes_feitas"] = feitas
         self.assertFalse(lib(p, retirada), "a retirada ainda exige a aula obrigatória de armadilhas")
         p["licoes_feitas"] = feitas + ["fala_armadilhas"]
@@ -257,7 +258,11 @@ class ConteudoTests(unittest.TestCase):
                         self.assertIn(alvo, portas | {alvo_tarefa}, lid)
                     else:
                         # casa pode ser o alvo da tarefa ou o baú da sala.
-                        self.assertIn(alvo, {json.dumps(tar.get("alvo")).replace(" ", "")} | baus, lid)
+                        # ... ou uma casa ao lado do mecanismo (decoração) que a tarefa ativa.
+                        ao_lado = {json.dumps([dec["pos"][0] + dx, dec["pos"][1] + dy]).replace(" ", "")
+                                   for dec in d["decorations"] if dec["id"] == tar.get("alvo")
+                                   for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+                        self.assertIn(alvo, {json.dumps(tar.get("alvo")).replace(" ", "")} | baus | ao_lado, lid)
 
 
 class GeradorTests(unittest.TestCase):

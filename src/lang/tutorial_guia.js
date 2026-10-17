@@ -504,6 +504,30 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Turn on 3D view with the highlighted button. Or select Got it.",
     "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
   },
+  "ui.tutorial.guia.fala_gargula.ativar.dica.1": {
+    "en": "Stand adjacent to the gargoyle; activating the mechanism does not use your turn.",
+    "pt": "Fique adjacente à gárgula; ativar o mecanismo não gasta o turno."
+  },
+  "ui.tutorial.guia.fala_gargula.ativar.porque": {
+    "en": "This switches the teleport off. Without it, you return to the start of the Field.",
+    "pt": "Isso desliga o teletransporte. Sem isso, você volta ao início do Campo."
+  },
+  "ui.tutorial.guia.fala_gargula.ativar.texto": {
+    "en": "Click the gargoyle and confirm to activate the mechanism.",
+    "pt": "Clique na gárgula e confirme para ativar o mecanismo."
+  },
+  "ui.tutorial.guia.fala_gargula.aviso.porque": {
+    "en": "The final room has a hidden teleport. Look for a mechanism nearby.",
+    "pt": "A sala final tem um teletransporte escondido. Procure um mecanismo por perto."
+  },
+  "ui.tutorial.guia.fala_gargula.aviso.texto": {
+    "en": "Some traps are switched off somewhere else, not where they sit.",
+    "pt": "Algumas armadilhas se desligam em outro lugar, não onde estão."
+  },
+  "ui.tutorial.guia.fala_gargula.ir.texto": {
+    "en": "Walk to the stone gargoyle on the wall and stand next to it.",
+    "pt": "Ande até a gárgula de pedra na parede e fique ao lado dela."
+  },
   "ui.tutorial.guia.fala_gas.bau.porque": {
     "en": "The flasks are only here, in the middle of the gas, which deals only 1 damage per turn. The water is the safest spot.",
     "pt": "Os frascos só existem aqui, no meio do gás, que causa só 1 de dano por turno. A água é o lugar mais seguro."
@@ -621,8 +645,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "Fique fora da mancha: o piche em chamas queima por 3 rodadas."
   },
   "ui.tutorial.guia.fala_piche.fogo.porque": {
-    "en": "Fire on pitch lights the whole patch, which burns anyone standing in it. Each throw uses your main action.",
-    "pt": "Fogo no piche acende a mancha inteira, que queima quem estiver nela. Cada arremesso gasta a ação principal."
+    "en": "Fire lights the pitch, melts the surrounding ice and turns it into water. Each throw uses your main action.",
+    "pt": "O fogo acende o piche, derrete o gelo em volta e o transforma em água. Cada arremesso gasta a ação principal."
   },
   "ui.tutorial.guia.fala_piche.fogo.texto": {
     "en": "Use the Oil Flask on your next turn and throw it onto the pitch.",
@@ -633,8 +657,8 @@ window.LANG_TUTORIAL_GUIA = {
     "pt": "O piche forma uma mancha de 3×3 que dura 4 rodadas e não causa dano sozinha."
   },
   "ui.tutorial.guia.fala_piche.piche.texto": {
-    "en": "Use the Pitch Flask and throw it near the dummy, two squares away.",
-    "pt": "Use o Frasco de Piche e jogue-o perto do boneco, a duas casas."
+    "en": "Use the Pitch Flask and throw it at the dummy, onto the icy floor.",
+    "pt": "Use o Frasco de Piche e jogue-o no boneco, sobre o chão de gelo."
   },
   "ui.tutorial.guia.fala_primeiro_combate.alvo.texto": {
     "en": "Use a training dummy to try your attack without spending resources.",

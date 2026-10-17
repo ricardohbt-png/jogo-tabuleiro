@@ -54625,7 +54625,7 @@ function on3DClick(e){
     const decsHere3D = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere3D.length){
-      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
+      const inter3D = decsHere3D.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.interactive || d.special === 'fountain' || d.special === 'plaque');
       if(inter3D){ GS.interagirDecor(inter3D.id); return; }
       const sino = decsHere3D.find(d => d.type === 'sino_ritualistico');
       if(sino){ tocarSinoRitualistico(sino); return; }
@@ -55009,7 +55009,7 @@ function handleTileClick(tx, ty){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
-      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.special === 'fountain' || d.special === 'plaque');
+      const inter = decsHere.find(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.interactive || d.special === 'fountain' || d.special === 'plaque');
       if(inter){ GS.interagirDecor(inter.id); return; }
       const sino = decsHere.find(d => d.type === 'sino_ritualistico');
       if(sino){ tocarSinoRitualistico(sino); return; }

@@ -15019,12 +15019,12 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -15078,12 +15078,189 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
           0,
           0,
           0,
           0,
           0,
           0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          2,
+          2,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0,
           0,
           0,
@@ -15137,189 +15314,12 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           1,
           1,
           1,
           1,
           1,
           1,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0,
@@ -15649,6 +15649,44 @@ window.EDITOR_DUNGEONS = [
             [
               51,
               32
+            ],
+            [
+              47,
+              35
+            ]
+          ]
+        },
+        {
+          "id": 52,
+          "x": 42,
+          "y": 34,
+          "w": 4,
+          "h": 3,
+          "role": "empty",
+          "locked": true,
+          "doors": [
+            [
+              46,
+              35
+            ],
+            [
+              41,
+              35
+            ]
+          ]
+        },
+        {
+          "id": 53,
+          "x": 34,
+          "y": 33,
+          "w": 6,
+          "h": 6,
+          "role": "monster",
+          "locked": true,
+          "doors": [
+            [
+              40,
+              35
             ]
           ]
         }
@@ -15711,7 +15749,7 @@ window.EDITOR_DUNGEONS = [
         }
       ],
       "exit": {
-        "x": 51,
+        "x": 36,
         "y": 36
       },
       "routes": [],
@@ -16238,6 +16276,7 @@ window.EDITOR_DUNGEONS = [
             29
           ],
           "gold": 0,
+          "key_objective": false,
           "items": [
             {
               "id": "frasco_oleo"
@@ -16248,8 +16287,7 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "frasco_oleo"
             }
-          ],
-          "key_objective": false
+          ]
         },
         {
           "pos": [
@@ -16257,6 +16295,7 @@ window.EDITOR_DUNGEONS = [
             33
           ],
           "gold": 0,
+          "key_objective": false,
           "items": [
             {
               "id": "frasco_piche"
@@ -16270,8 +16309,7 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "frasco_oleo"
             }
-          ],
-          "key_objective": false
+          ]
         }
       ],
       "traps": [
@@ -16379,6 +16417,19 @@ window.EDITOR_DUNGEONS = [
           ],
           "saida": [
             3,
+            15
+          ]
+        },
+        {
+          "id": "trap_0",
+          "tipo": "armadilha_teletransporte",
+          "pos": [
+            39,
+            35
+          ],
+          "dificuldade": 20,
+          "saida": [
+            2,
             15
           ]
         }
@@ -17703,12 +17754,12 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_80",
           "type": "tocha_parede",
           "pos": [
-            50,
-            20
+            49,
+            21
           ],
           "facing": [
-            0,
-            1
+            1,
+            0
           ],
           "loot": null,
           "key_objective": false,
@@ -17720,21 +17771,6 @@ window.EDITOR_DUNGEONS = [
           "pos": [
             52,
             20
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "tocha_parede.png"
-        },
-        {
-          "id": "decor_82",
-          "type": "tocha_parede",
-          "pos": [
-            50,
-            25
           ],
           "facing": [
             0,
@@ -17775,40 +17811,10 @@ window.EDITOR_DUNGEONS = [
           "image": "tocha_parede.png"
         },
         {
-          "id": "decor_85",
-          "type": "tocha_parede",
-          "pos": [
-            52,
-            25
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "tocha_parede.png"
-        },
-        {
-          "id": "decor_86",
-          "type": "tocha_parede",
-          "pos": [
-            50,
-            39
-          ],
-          "facing": [
-            0,
-            -1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "tocha_parede.png"
-        },
-        {
           "id": "decor_87",
           "type": "tocha_parede",
           "pos": [
-            53,
+            49,
             39
           ],
           "facing": [
@@ -17824,25 +17830,10 @@ window.EDITOR_DUNGEONS = [
           "type": "tocha_parede",
           "pos": [
             47,
-            36
+            34
           ],
           "facing": [
             1,
-            0
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "tocha_parede.png"
-        },
-        {
-          "id": "decor_91",
-          "type": "tocha_parede",
-          "pos": [
-            54,
-            35
-          ],
-          "facing": [
-            -1,
             0
           ],
           "loot": null,
@@ -18025,7 +18016,7 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_109",
           "type": "cortina_vermelha",
           "pos": [
-            49,
+            38,
             39
           ],
           "facing": [
@@ -18044,7 +18035,7 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_116",
           "type": "cortina_vermelha",
           "pos": [
-            47,
+            33,
             34
           ],
           "facing": [
@@ -18063,12 +18054,12 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_117",
           "type": "cortina_vermelha",
           "pos": [
-            54,
-            34
+            35,
+            32
           ],
           "facing": [
-            -1,
-            0
+            0,
+            1
           ],
           "loot": null,
           "key_objective": false,
@@ -18082,12 +18073,12 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_118",
           "type": "cortina_vermelha",
           "pos": [
-            54,
-            37
+            38,
+            32
           ],
           "facing": [
-            -1,
-            0
+            0,
+            1
           ],
           "loot": null,
           "key_objective": false,
@@ -18101,7 +18092,7 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_119",
           "type": "cortina_vermelha",
           "pos": [
-            52,
+            35,
             39
           ],
           "facing": [
@@ -18120,7 +18111,7 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_120",
           "type": "cortina_vermelha",
           "pos": [
-            47,
+            33,
             37
           ],
           "facing": [
@@ -18266,6 +18257,246 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "image": "brasa_chao.png"
+        },
+        {
+          "id": "decor_82",
+          "type": "tocha_parede",
+          "pos": [
+            52,
+            32
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_85",
+          "type": "tocha_parede",
+          "pos": [
+            47,
+            36
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_91",
+          "type": "tocha_parede",
+          "pos": [
+            54,
+            37
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_130",
+          "type": "tocha_parede",
+          "pos": [
+            46,
+            34
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_131",
+          "type": "tocha_parede",
+          "pos": [
+            46,
+            36
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_132",
+          "type": "tocha_parede",
+          "pos": [
+            50,
+            32
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "tocha_parede.png"
+        },
+        {
+          "id": "decor_133",
+          "type": "gargula_pedra",
+          "pos": [
+            43,
+            37
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "disable_trap_ids": [
+            "trap_0"
+          ],
+          "image": "gargula_pedra.png"
+        },
+        {
+          "id": "decor_134",
+          "type": "chao",
+          "pos": [
+            34,
+            33
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "chaotapete1.png",
+          "size": [
+            6,
+            6
+          ],
+          "visao": "livre"
+        },
+        {
+          "id": "decor_135",
+          "type": "barril",
+          "pos": [
+            48,
+            38
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_136",
+          "type": "barril",
+          "pos": [
+            53,
+            33
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_137",
+          "type": "barril",
+          "pos": [
+            53,
+            26
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_138",
+          "type": "barril",
+          "pos": [
+            48,
+            31
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_139",
+          "type": "barril",
+          "pos": [
+            53,
+            31
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_140",
+          "type": "barril",
+          "pos": [
+            48,
+            26
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_141",
+          "type": "barril",
+          "pos": [
+            48,
+            27
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_142",
+          "type": "barril",
+          "pos": [
+            49,
+            26
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
         }
       ],
       "secret_passages": [],
@@ -18415,6 +18646,16 @@ window.EDITOR_DUNGEONS = [
               "dica": [
                 "ui.tutorial.guia.fala_0.andar.dica.1",
                 "ui.tutorial.guia.fala_0.andar.dica.2"
+              ],
+              "demonstracao": [
+                {
+                  "acao": "focar",
+                  "alvo": "casa:[5,15]"
+                },
+                {
+                  "acao": "prever_movimento",
+                  "alvo": "casa:[5,15]"
+                }
               ]
             }
           ]
@@ -18481,7 +18722,21 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "abrir",
               "texto": "ui.tutorial.guia.fala_2.abrir.texto",
-              "ui": "botao:inventario"
+              "ui": "botao:inventario",
+              "demonstracao": [
+                {
+                  "acao": "focar",
+                  "alvo": "botao:inventario"
+                },
+                {
+                  "acao": "abrir_interface",
+                  "alvo": "inventario"
+                },
+                {
+                  "acao": "focar",
+                  "alvo": "slot:weapon"
+                }
+              ]
             },
             {
               "id": "equipar",
@@ -18490,6 +18745,16 @@ window.EDITOR_DUNGEONS = [
               "ui": "slot:weapon",
               "dica": [
                 "ui.tutorial.guia.fala_2.equipar.dica.1"
+              ],
+              "demonstracao": [
+                {
+                  "acao": "focar",
+                  "alvo": "slot:weapon"
+                },
+                {
+                  "acao": "prever_equipamento",
+                  "alvo": "slot:weapon"
+                }
               ]
             }
           ]
@@ -19494,8 +19759,8 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "observar",
-              "titulo": "ui.tutorial.guia.fala_hostilidade.observar.titulo",
               "texto": "ui.tutorial.guia.fala_hostilidade.observar.texto",
+              "titulo": "ui.tutorial.guia.fala_hostilidade.observar.titulo",
               "porque": "ui.tutorial.guia.fala_hostilidade.observar.porque",
               "ui": "monstro:rato_gigante"
             },
@@ -19532,8 +19797,8 @@ window.EDITOR_DUNGEONS = [
             },
             {
               "id": "parabens",
-              "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo",
-              "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto"
+              "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto",
+              "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo"
             }
           ]
         },
@@ -19578,7 +19843,7 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "fala_retirada",
           "pos": [
-            51,
+            36,
             36
           ],
           "falante": {
@@ -19596,13 +19861,14 @@ window.EDITOR_DUNGEONS = [
             "fala_res",
             "fala_vuln",
             "fala_atalhos",
-            "fala_piche"
+            "fala_piche",
+            "fala_gargula"
           ],
-          "ordem": 38,
+          "ordem": 39,
           "tarefa": {
             "tipo": "mover_ate",
             "alvo": [
-              51,
+              36,
               36
             ],
             "vezes": 1,
@@ -19612,7 +19878,7 @@ window.EDITOR_DUNGEONS = [
             {
               "id": "retirar",
               "texto": "ui.tutorial.guia.fala_retirada.retirar.texto",
-              "ui": "casa:[51,36]",
+              "ui": "casa:[36,36]",
               "dica": [
                 "ui.tutorial.guia.fala_retirada.retirar.dica.1"
               ]
@@ -19679,6 +19945,7 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "id": "fala_gas",
+          "ordem": 36,
           "pos": [
             51,
             25
@@ -19698,7 +19965,6 @@ window.EDITOR_DUNGEONS = [
             "fala_vuln",
             "fala_atalhos"
           ],
-          "ordem": 36,
           "tarefa": {
             "tipo": "explodir_gas",
             "alvo": "gas_tutorial",
@@ -19730,6 +19996,7 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "id": "fala_piche",
+          "ordem": 37,
           "pos": [
             51,
             33
@@ -19739,7 +20006,7 @@ window.EDITOR_DUNGEONS = [
             "emoji": "🛡️",
             "retrato": "assets/portraits/mestre_de_armas.png"
           },
-          "texto": "Piche e fogo combinam muito bem. Jogue o piche no boneco e acenda-o com o óleo.",
+          "texto": "Piche e fogo combinam muito bem. Jogue o piche no boneco, acenda-o com o óleo e veja o gelo derreter.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 2
@@ -19749,12 +20016,10 @@ window.EDITOR_DUNGEONS = [
             "fala_vuln",
             "fala_atalhos"
           ],
-          "ordem": 37,
           "tarefa": {
             "tipo": "incendiar_piche",
             "vezes": 1,
-            "texto_curto": "Acenda o piche com o óleo",
-            "alvo": null
+            "texto_curto": "Acenda o piche com o óleo"
           },
           "guia": [
             {
@@ -19775,6 +20040,56 @@ window.EDITOR_DUNGEONS = [
               "ui": "bolsa:frasco_oleo",
               "dica": [
                 "ui.tutorial.guia.fala_piche.fogo.dica.1"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fala_gargula",
+          "ordem": 38,
+          "pos": [
+            43,
+            35
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Algumas armadilhas se desligam em outro lugar, não onde estão. Ative a gárgula para liberar a sala final.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 2
+          },
+          "continua_sem": [
+            "fala_res",
+            "fala_vuln",
+            "fala_atalhos",
+            "fala_piche"
+          ],
+          "tarefa": {
+            "tipo": "desativar_armadilha",
+            "alvo": "decor_133",
+            "vezes": 1,
+            "texto_curto": "Ative a gárgula"
+          },
+          "guia": [
+            {
+              "id": "aviso",
+              "texto": "ui.tutorial.guia.fala_gargula.aviso.texto",
+              "porque": "ui.tutorial.guia.fala_gargula.aviso.porque"
+            },
+            {
+              "id": "ir",
+              "texto": "ui.tutorial.guia.fala_gargula.ir.texto",
+              "ui": "casa:[43,36]"
+            },
+            {
+              "id": "ativar",
+              "texto": "ui.tutorial.guia.fala_gargula.ativar.texto",
+              "porque": "ui.tutorial.guia.fala_gargula.ativar.porque",
+              "dica": [
+                "ui.tutorial.guia.fala_gargula.ativar.dica.1"
               ]
             }
           ]
@@ -19892,6 +20207,21 @@ window.EDITOR_DUNGEONS = [
               "ui": "habilidade:golpe_devastador",
               "dica": [
                 "ui.tutorial.guia.treino_golpe.golpe.dica.1"
+              ],
+              "demonstracao": [
+                {
+                  "acao": "focar",
+                  "alvo": "habilidade:golpe_devastador"
+                },
+                {
+                  "acao": "focar",
+                  "alvo": "monstro:boneco_treino"
+                },
+                {
+                  "acao": "prever_habilidade",
+                  "habilidade": "golpe_devastador",
+                  "alvo": "monstro:boneco_treino"
+                }
               ]
             }
           ]
@@ -22177,7 +22507,16 @@ window.EDITOR_DUNGEONS = [
         "52,28": "agua",
         "50,29": "agua",
         "51,29": "agua",
-        "52,29": "agua"
+        "52,29": "agua",
+        "52,36": "piso_congelado",
+        "53,36": "piso_congelado",
+        "52,37": "piso_congelado",
+        "53,37": "piso_congelado",
+        "53,38": "piso_congelado",
+        "52,38": "piso_congelado",
+        "51,38": "piso_congelado",
+        "51,37": "piso_congelado",
+        "51,36": "piso_congelado"
       },
       "pontes": [],
       "elevacoes": {},
@@ -74269,4 +74608,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

@@ -80,10 +80,10 @@ def _configurar_ala_final(definicao):
     posicoes_antigas = {(42, 15), (49, 15)}
     traps_tutorial = [
         {"id": "trap_tutorial_dardos_1", "tipo": "armadilha_dardos_envenenados",
-         "pos": [50, 21], "dificuldade": 14, "dano": 1,
+         "pos": [50, 21], "dificuldade": 14, "dano": "1",
          "veneno_id": "veneno_escorpiao_pedra"},
         {"id": "trap_tutorial_dardos_2", "tipo": "armadilha_dardos_envenenados",
-         "pos": [52, 21], "dificuldade": 14, "dano": 1,
+         "pos": [52, 21], "dificuldade": 14, "dano": "1",
          "veneno_id": "veneno_escorpiao_pedra"},
         {"id": "trap_tutorial_buraco_1", "tipo": "buraco", "pos": [50, 22]},
         {"id": "trap_tutorial_buraco_2", "tipo": "buraco", "pos": [52, 22]},

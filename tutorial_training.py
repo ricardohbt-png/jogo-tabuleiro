@@ -443,12 +443,18 @@ class TutorialTraining:
         de `_pular_etapas_abandonadas` (licoes_feitas/licoes_puladas, fora do
         tutorial_history). Devolve True se pulou."""
         tar = fala.get("tarefa") or {}
-        if not getattr(self, "training_mode", False) or tar.get("tipo") != "explodir_gas":
+        tipo = tar.get("tipo")
+        if not getattr(self, "training_mode", False) or tipo not in ("explodir_gas", "desativar_armadilha"):
             return False
         if not self._fala_elegivel(p, fala):
             return False
-        if any(z.get("id") == tar.get("alvo") and z.get("ativa") for z in self.zonas_especiais):
-            return False
+        if tipo == "explodir_gas":
+            if any(z.get("id") == tar.get("alvo") and z.get("ativa") for z in self.zonas_especiais):
+                return False
+        else:
+            mecanismo = self._decor_by_id(tar.get("alvo"))
+            if not mecanismo or self._armadilhas_do_mecanismo(mecanismo):
+                return False
         feitas = p.setdefault("licoes_feitas", [])
         puladas = p.setdefault("licoes_puladas", [])
         if fala["id"] not in feitas:

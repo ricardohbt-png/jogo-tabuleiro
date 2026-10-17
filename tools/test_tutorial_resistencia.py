@@ -52,11 +52,11 @@ class TutorialResistenciaTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(len(row) == d['grid']['w'] for row in d['tiles']))
         self.assertEqual(d['tiles'][19][51], S.DOOR)
         self.assertEqual(d['tiles'][20][51], S.DOOR)
-        self.assertEqual(d['exit'], {'x': 51, 'y': 36})   # a saída desceu para a sala 51
+        self.assertEqual(d['exit'], {'x': 36, 'y': 36})   # a saída fica na última sala (53), depois da gárgula
 
         fala = next(f for f in d['falas'] if f['id'] == 'fala_retirada')
-        self.assertEqual(fala['pos'], [51, 36])
-        self.assertEqual(fala['tarefa']['alvo'], [51, 36])
+        self.assertEqual(fala['pos'], [36, 36])
+        self.assertEqual(fala['tarefa']['alvo'], [36, 36])
         self.assertEqual(fala['trigger'], {'tipo': 'proximidade', 'raio': 1})
         ok, msg = S.validar_dungeon(d)
         self.assertTrue(ok, msg)
