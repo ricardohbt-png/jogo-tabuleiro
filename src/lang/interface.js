@@ -5025,8 +5025,16 @@ window.LANG_INTERFACE = {
     "pt": "Cerveja Anã"
   },
   "ui.item.cola_alquimica.desc": {
-    "en": "Throw (4 sq., DEX attack). The target rolls Reflex DC 12; on a failure its movement is halved for 2 rounds.",
-    "pt": "Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; se falhar, fica com o movimento reduzido à metade por 2 rodadas."
+    "en": "Throw (4 sq., DEX attack). The target rolls Reflex DC 15; on a failure it loses all movement for 2 rounds.",
+    "pt": "Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 15; se falhar, perde todo o movimento por 2 rodadas."
+  },
+  "ui.item.cola_alquimica_superior.nome": {
+    "en": "Superior Alchemical Glue",
+    "pt": "Cola Alquímica Superior"
+  },
+  "ui.item.cola_alquimica_superior.desc": {
+    "en": "Throw (4 sq., DEX attack). The target rolls Reflex DC 18; on a failure it loses all movement for 2 rounds.",
+    "pt": "Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 18; se falhar, perde todo o movimento por 2 rodadas."
   },
   "ui.item.cota_malha.nome": {
     "en": "Chain Mail",

@@ -704,10 +704,19 @@ const GS = (() => {
     // ── MERCADO — Arremessáveis TÁTICOS (Sub-projeto D; ver ARREMESSAVEIS no server) ──
     cola_alquimica: {
       id: 'cola_alquimica', nome: 'Cola Alquímica', emoji: '🍯',
-      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, saveTipo:'reflexos', saveCD:12,
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alcance: 4, saveTipo:'reflexos', saveCD:15,
       duracao: 2, permitidoPara:['todos'],
-      descricao: 'Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 12; ' +
-                 'se falhar, fica com o movimento reduzido à metade por 2 rodadas.',
+      descricao: 'Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 15; ' +
+                 'se falhar, perde todo o movimento por 2 rodadas.',
+    },
+    cola_alquimica_superior: {
+      id: 'cola_alquimica_superior', nome: 'Cola Alquímica Superior', emoji: '🍯',
+      icon: 'assets/itens/cola_alquimica.png', tipo: 'consumivel', loja: 'mercado', preco: 30,
+      slot: 'bag', item_slot: 'bag', effect: 'throwable', value: 0,
+      arremessavel: true, alcance: 4, saveTipo: 'reflexos', saveCD: 18,
+      duracao: 2, permitidoPara: ['todos'],
+      descricao: 'Arremesse (4 quad., ataque por DES). O alvo testa Reflexos CD 18; ' +
+                 'se falhar, perde todo o movimento por 2 rodadas.',
     },
     rede_arremesso: {
       id: 'rede_arremesso', nome: 'Rede', emoji: '🕸️',

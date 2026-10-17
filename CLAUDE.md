@@ -174,6 +174,14 @@ para atravessar entre item e quadro. Troca, remoção do item, clique, arrasto o
 fechamento cancelam os timers. O toque longo do inventário mantém os 350 ms.
 Regressão: `node tools/test_item_tooltip_hover.js`.
 
+### Cola Alquímica
+
+No acerto, exige Reflexos CD 15; falha zera o movimento do monstro por 2 rodadas,
+sem remover seu turno ou ataques. O servidor bloqueia movimento da IA e movimento
+manual e restaura o valor original ao expirar. Descrições: `src/gameState.js` e
+`src/lang/interface.js`; regressão: `python -X utf8 tools/test_arremessaveis_tatico.py`.
+`cola_alquimica_superior` usa a mesma imagem e efeito por 30 moedas, com Reflexos CD 18.
+
 ### HUD de objetivos
 
 `renderObjectivesHUD` em `game.js` apresenta os objetivos autorados a partir de

@@ -2,6 +2,7 @@
 Roda da raiz: python tools/test_arremessaveis_tatico.py"""
 import asyncio, sys, os, random
 from copy import deepcopy
+from pathlib import Path
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -61,15 +62,53 @@ async def main():
 
     # ── [1] Catálogo + loja ────────────────────────────────────────────────────
     print("\n[1] Catálogo tático + loja")
-    for iid in ("cola_alquimica", "rede_arremesso"):
+    for iid in ("cola_alquimica", "cola_alquimica_superior", "rede_arremesso"):
         check(f"{iid} no catálogo", iid in ARREMESSAVEIS)
         check(f"{iid} alvo=ataque_alvo", ARREMESSAVEIS.get(iid, {}).get("alvo") == "ataque_alvo")
         check(f"{iid} sem dano", "dano" not in ARREMESSAVEIS.get(iid, {}))
         check(f"{iid} vendável", any(i["id"] == iid for i in SHOP_MERCHANT))
+    cola_superior_loja = next((i for i in SHOP_MERCHANT if i["id"] == "cola_alquimica_superior"), {})
+    check("cola superior: preço 30", cola_superior_loja.get("price") == 30)
+    check("cola superior: mesma imagem da cola", cola_superior_loja.get("icon") == "assets/itens/cola_alquimica.png")
+    check("cola superior: disponível no mercador de Alva e Luz",
+          any(i["id"] == "cola_alquimica_superior" for i in S._city_shop_items("alva_e_luz", "mercador")))
+    r = setup(); r.phase = "city"; r.world_location = "alva_e_luz"
+    async def noop(*a, **k): pass
+    r.push_state_or_city = noop
+    comprador = make_player("p1", "V", "warrior", 0); comprador["gold"] = 50
+    r.players["p1"] = comprador
+    await r.handle_shop_buy("p1", "mercador", "cola_alquimica_superior")
+    comprada = next((i for i in comprador["bag"] if i.get("id") == "cola_alquimica_superior"), None)
+    check("cola superior: compra debita 30 moedas", comprador["gold"] == 20)
+    check("cola superior: compra coloca o item com imagem na bolsa",
+          comprada is not None and comprada.get("buy_price") == 30
+          and comprada.get("icon") == "assets/itens/cola_alquimica.png")
     cola = ARREMESSAVEIS["cola_alquimica"]["controle"]
     check("cola: mov_reduzido", cola["tipo"] == "mov_reduzido")
-    check("cola: resist Reflexos CD12", cola["resist_save"] == {"tipo": "reflexos", "cd": 12})
+    check("cola: resist Reflexos CD15", cola["resist_save"] == {"tipo": "reflexos", "cd": 15})
     check("cola: duracao 2", cola["duracao"] == 2)
+    ui = Path(__file__).resolve().parents[1] / "src" / "gameState.js"
+    interface = Path(__file__).resolve().parents[1] / "src" / "lang" / "interface.js"
+    check("cola: tooltip atualizado", "Reflexos CD 15" in ui.read_text(encoding="utf-8")
+          and "perde todo o movimento por 2 rodadas" in ui.read_text(encoding="utf-8"))
+    check("cola: descrição de interface atualizada", "Reflexos CD 15" in interface.read_text(encoding="utf-8")
+          and "perde todo o movimento por 2 rodadas" in interface.read_text(encoding="utf-8"))
+    game_state_text = ui.read_text(encoding="utf-8")
+    interface_text = interface.read_text(encoding="utf-8")
+    check("cola superior: catálogo cliente com preço, imagem e CD18",
+          "cola_alquimica_superior" in game_state_text
+          and "preco: 30" in game_state_text
+          and "assets/itens/cola_alquimica.png" in game_state_text
+          and "saveCD: 18" in game_state_text)
+    check("cola superior: nome e descrição traduzidos",
+          '"ui.item.cola_alquimica_superior.nome"' in interface_text
+          and '"ui.item.cola_alquimica_superior.desc"' in interface_text
+          and "Reflex DC 18" in interface_text
+          and "Reflexos CD 18" in interface_text)
+    cola_superior = ARREMESSAVEIS.get("cola_alquimica_superior", {}).get("controle", {})
+    check("cola superior: mesmo efeito, Reflexos CD18 e 2 rodadas",
+          cola_superior == {"tipo": "mov_reduzido",
+                            "resist_save": {"tipo": "reflexos", "cd": 18}, "duracao": 2})
     rede = ARREMESSAVEIS["rede_arremesso"]["controle"]
     check("rede: enredado", rede["tipo"] == "enredado")
     check("rede: escape Fortitude CD12", rede["escape_save"] == {"tipo": "fortitude", "cd": 12})
@@ -79,11 +118,13 @@ async def main():
     cola_ctrl = ARREMESSAVEIS["cola_alquimica"]["controle"]
     rede_ctrl = ARREMESSAVEIS["rede_arremesso"]["controle"]
 
-    # cola: falha no Reflexos → corta movimento à metade
+    # cola: falha no Reflexos → perde todo o movimento
     r = setup(); r._save_mostrado = _mk_save(False)
     m = make_monster(r, "m1", 4, 4, movement=6)
     await r._aplicar_controle_arremesso(m, cola_ctrl)
-    check("cola: movement 6→3", m["movement"] == 3)
+    check("cola: movement 6→0", m["movement"] == 0)
+    check("cola: bloqueio de movimento ativo", m.get("cola_sem_movimento") is True
+          and m.get("_water_moves_left", 0) == 0 and m.get("master_moves_left", 0) == 0)
     check("cola: mov_reduzido_rodadas=2", m.get("mov_reduzido_rodadas") == 2)
     check("cola: guardou original 6", m.get("mov_reduzido_orig") == 6)
 
@@ -97,7 +138,7 @@ async def main():
     r._save_mostrado = _mk_save(False)
     m["mov_reduzido_rodadas"] = 1
     await r._aplicar_controle_arremesso(m, cola_ctrl)
-    check("cola reaplicar: movement fica 3 (não corta de novo)", m["movement"] == 3)
+    check("cola reaplicar: movement fica 0 (não acumula)", m["movement"] == 0)
     check("cola reaplicar: renova p/ 2", m["mov_reduzido_rodadas"] == 2)
 
     # rede: marca enredado + guarda o save de escape
@@ -112,15 +153,17 @@ async def main():
     print("\n[3] tick de mov_reduzido em _status_monstro_turno")
     r = setup()
     m = make_monster(r, "m1", 4, 4, movement=6)
-    m["movement"] = 3; m["mov_reduzido_orig"] = 6; m["mov_reduzido_rodadas"] = 2
+    m["movement"] = 0; m["mov_reduzido_orig"] = 6; m["mov_reduzido_rodadas"] = 2
+    m["cola_sem_movimento"] = True
     res = await r._status_monstro_turno(m, [m])
     check("mov_reduzido não pula o turno", res != "pulou")
-    check("turno reduzido 1: tica p/ 1, movement 3", m["mov_reduzido_rodadas"] == 1 and m["movement"] == 3)
+    check("cola sem movimento 1: tica p/ 1 e mantém movement 0", m["mov_reduzido_rodadas"] == 1 and m["movement"] == 0)
     await r._status_monstro_turno(m, [m])
-    check("turno reduzido 2: tica p/ 0, ainda 3", m.get("mov_reduzido_rodadas", 0) == 0 and m["movement"] == 3)
+    check("cola sem movimento 2: tica p/ 0 e ainda mantém movement 0", m.get("mov_reduzido_rodadas", 0) == 0 and m["movement"] == 0)
     await r._status_monstro_turno(m, [m])
     check("expira: movement restaurado p/ 6", m["movement"] == 6)
-    check("flag e backup limpos", "mov_reduzido_rodadas" not in m and "mov_reduzido_orig" not in m)
+    check("flag e backup limpos", "mov_reduzido_rodadas" not in m and "mov_reduzido_orig" not in m
+          and "cola_sem_movimento" not in m)
 
     # ── [4] _processar_enredado_turno (escape) ─────────────────────────────────
     print("\n[4] _processar_enredado_turno")
@@ -151,10 +194,38 @@ async def main():
     r.players["p1"] = p; p["bag"] = [throwable("cola_alquimica")]
     m = make_monster(r, "m1", 4, 6, ac=1, movement=6)
     await r.handle_throw_item("p1", {"item_id": "cola_alquimica", "target_id": "m1"})
-    check("cola: movement reduzido (6→3)", m["movement"] == 3)
+    check("cola: movement zerado (6→0)", m["movement"] == 0)
     check("cola: mov_reduzido_rodadas=2", m.get("mov_reduzido_rodadas") == 2)
+    pos_antes = list(m["pos"])
+    await r._monster_move_step(m, p["pos"])
+    check("cola: IA não desloca o alvo", m["pos"] == pos_antes)
+    check("cola: orçamento de movimento zero", r._water_turn_moves(m, 12) == 0)
+    m["master_moves_left"] = 6
+    check("cola: movimento manual bloqueado", r._manual_move_paths(m) == {}
+          and await r._commit_monster_step(m, pos_antes[0], pos_antes[1] + 1) is False)
     check("cola: item consumido", len(p["bag"]) == 0)
     check("cola: sem dano (hp intacto)", m["hp"] == 40)
+
+    if cola_superior_loja and cola_superior:
+        r = setup()
+        save_calls = []
+        async def save_cd18(alvo, tipo, cd, *a, **k):
+            save_calls.append((tipo, cd))
+            return (False, 1, 0, 1)
+        r._save_mostrado = save_cd18
+        p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["atk_bonus"] = 5
+        r.players["p1"] = p; p["bag"] = [throwable("cola_alquimica_superior")]
+        m = make_monster(r, "m1", 4, 6, ac=1, movement=6)
+        await r.handle_throw_item("p1", {"item_id": "cola_alquimica_superior", "target_id": "m1"})
+        check("cola superior: arremesso aplica save Reflexos CD18", save_calls == [("reflexos", 18)])
+        check("cola superior: falha zera o movimento por 2 rodadas",
+              m["movement"] == 0 and m.get("cola_sem_movimento") is True
+              and m.get("mov_reduzido_rodadas") == 2)
+        check("cola superior: consumida após o arremesso", len(p["bag"]) == 0)
+    else:
+        check("cola superior: arremesso aplica save Reflexos CD18", False)
+        check("cola superior: falha zera o movimento por 2 rodadas", False)
+        check("cola superior: consumida após o arremesso", False)
 
     r = setup()
     p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; p["atk_bonus"] = 5

@@ -1361,8 +1361,8 @@ window.LANG_NARRACAO = {
     "pt": "🐌 **{alvo_nome}** fica Lento por {duracao} rodada(s)."
   },
   "narracao.fica_preso_na_cola_movimento_reduzido_a": {
-    "en": "🟢 **{nome}** is stuck in the glue — movement halved for {alvo_mov_reduzido_rodada} round(s)!",
-    "pt": "🟢 **{nome}** fica preso na cola — movimento reduzido à metade por {alvo_mov_reduzido_rodada} rodada(s)!"
+    "en": "🟢 **{nome}** is stuck in the glue — loses all movement for {alvo_mov_reduzido_rodada} round(s)!",
+    "pt": "🟢 **{nome}** fica preso na cola — perde todo o movimento por {alvo_mov_reduzido_rodada} rodada(s)!"
   },
   "narracao.fica_preso_na_rede_escapar_cd": {
     "en": "🕸️ **{nome}** is caught in the net! (escape: {es_tipo} DC {es_cd})",

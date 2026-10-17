@@ -7308,6 +7308,7 @@ SHOP_MERCHANT = [
     {"id": "frasco_acido",       "name": "Frasco de Ácido",       "emoji": "🧪", "price": 20, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "cola_alquimica_superior", "name": "Cola Alquímica Superior", "emoji": "🍯", "icon": "assets/itens/cola_alquimica.png", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "rede_arremesso", "name": "Rede",          "emoji": "🕸️", "price": 18, "item_slot": "bag", "effect": "throwable", "value": 0},
     # â”€â”€ Instrumentos do Bardo (item_slot "instrumento" â€” bolsa-primeiro, NUNCA
     #    auto-equipa/resgata; ver _route_acquired_item) â”€â”€
@@ -7432,7 +7433,13 @@ ARREMESSAVEIS = {
         "id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯",
         "alcance": 4, "alvo": "ataque_alvo",
         "controle": {"tipo": "mov_reduzido",
-                     "resist_save": {"tipo": "reflexos", "cd": 12}, "duracao": 2},
+                     "resist_save": {"tipo": "reflexos", "cd": 15}, "duracao": 2},
+    },
+    "cola_alquimica_superior": {
+        "id": "cola_alquimica_superior", "name": "Cola Alquímica Superior", "emoji": "🍯",
+        "alcance": 4, "alvo": "ataque_alvo",
+        "controle": {"tipo": "mov_reduzido",
+                     "resist_save": {"tipo": "reflexos", "cd": 18}, "duracao": 2},
     },
     "rede_arremesso": {
         "id": "rede_arremesso", "name": "Rede", "emoji": "🕸️",
@@ -30655,6 +30662,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             else:
                 m["movement"] = m.pop("mov_reduzido_orig")
                 m.pop("mov_reduzido_rodadas", None)
+                m.pop("cola_sem_movimento", None)
                 await self.gm_say(T("narracao.recupera_o_movimento_normal", monstro=nome_criatura(m)))
         return None
 
@@ -35761,7 +35769,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _water_turn_moves(self, criatura, base_moves):
         """Orçamento normal do turno; água agora é cobrada a cada casa.
-        O mínimo de movimento disponível é sempre 1."""
+        O mínimo é 1, exceto quando um status retira todo o movimento."""
         criatura.pop("_water_penalty_applied", None)
         criatura.pop("_water_heavy_step_used", None)
         criatura.pop("_deep_water_penalty_applied", None)
@@ -35769,6 +35777,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         criatura.pop("_swamp_penalty_applied", None)
         criatura.pop("_thorn_bush_penalty_applied", None)
         criatura.pop("_snow_movement_reduced", None)
+        if criatura.get("cola_sem_movimento"):
+            return 0
         base = max(0, int(base_moves or 0))
         # A Canção Heroica do Xamã entra no orçamento antes dos descontos de
         # terreno. Heróis continuam usando o cálculo próprio do bardo.
@@ -40035,11 +40045,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.gm_say(T("narracao.se_esquiva_da_cola_sem_efeito", nome=nome_criatura(alvo)))
                     return
             dur = ctrl.get("duracao", 2)
-            # Passa pelo mecanismo unificado (_reduzir_mov_monstro) para coexistir
-            # com outras fontes de reduÃ§Ã£o (ex.: Trompa) â€” "maior reduÃ§Ã£o vence,
-            # original verdadeiro preservado". Cola corta Ã  metade do original.
+            # Reusa o movimento original e a duração compartilhada com a Trompa.
             orig = alvo.get("mov_reduzido_orig", alvo.get("movement", 5))
-            self._reduzir_mov_monstro(alvo, orig - orig // 2, dur)
+            self._reduzir_mov_monstro(alvo, orig, dur)
+            alvo["movement"] = 0
+            alvo["cola_sem_movimento"] = True
+            alvo["_water_moves_left"] = 0
+            alvo["master_moves_left"] = 0
             await self.gm_say(
                 T("narracao.fica_preso_na_cola_movimento_reduzido_a", nome=nome_criatura(alvo), alvo_mov_reduzido_rodada=alvo['mov_reduzido_rodadas']))
         elif tipo == "enredado":
@@ -40932,6 +40944,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _commit_monster_step(self, m, nx, ny):
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
+        if m.get("cola_sem_movimento"):
+            return False
         if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
             return False
         # Agarrado por outra criatura: só quem o segura o desloca (_arrastar_preso).
@@ -41653,6 +41667,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         cliente não tenta reproduzir as regras de footprint, orientação,
         terreno e travessia do servidor."""
         move_paths = {}
+        if m.get("cola_sem_movimento"):
+            return move_paths
         budget = int(m.get("master_moves_left", 0) or 0)
         if budget > 0 and not (m.get("preso") and self._captor_ativo(m)):
             sx, sy = m["pos"]
@@ -41682,7 +41698,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {
             "mid": mid,
             "moves_left": int(m.get("master_moves_left", 0) or 0),
-            "moves_max": int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
+            "moves_max": 0 if m.get("cola_sem_movimento") else int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
             "acao": m.get("_master_acao_tipo") if m.get("_master_acted") else None,
             "bonus": bool(m.get("_master_bonus_acted")),
             "restante": max(0, round(self.master_manual_deadline - time.monotonic())),
@@ -41702,7 +41718,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "mid": mid,
             "pid": self.command_control_pid,
             "moves_left": int(m.get("master_moves_left", 0) or 0),
-            "moves_max": int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
+            "moves_max": 0 if m.get("cola_sem_movimento") else int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
             "acao": m.get("_master_acao_tipo") if m.get("_master_acted") else None,
             "bonus": bool(m.get("_master_bonus_acted")),
             "restante": max(0, round(self.command_control_deadline - time.monotonic())),
@@ -41725,7 +41741,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "mid": mid,
             "pid": self.mind_control_pid,
             "moves_left": int(m.get("master_moves_left", 0) or 0),
-            "moves_max": int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
+            "moves_max": 0 if m.get("cola_sem_movimento") else int(m.get("movement", self.MASTER_MANUAL_MOVE) or self.MASTER_MANUAL_MOVE),
             "acao": m.get("_master_acao_tipo") if m.get("_master_acted") else None,
             "bonus": bool(m.get("_master_bonus_acted")),
             "restante": max(0, round(self.mind_control_deadline - time.monotonic())),
@@ -42694,6 +42710,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _monster_move_step(self, m, target_pos, avoid_tiles=None):
         """Move o monstro 1 passo cardinal em direção a target_pos.
         avoid_tiles: frozenset de (x,y) que o monstro recusa pisar (ex: armadilhas próprias)."""
+        if m.get("cola_sem_movimento"):
+            return
         if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
             return
         avoid = set(avoid_tiles or ()) | self._monster_known_hazard_tiles(m)
