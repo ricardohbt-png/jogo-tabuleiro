@@ -206,6 +206,7 @@
       "x": 30.44,
       "y": 52.45,
       "type": "taverna",
+      "scene": "taverna",
       "name": "Taverna",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": false
