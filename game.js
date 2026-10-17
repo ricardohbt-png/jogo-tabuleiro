@@ -54444,6 +54444,30 @@ function get3DTile(e){
   return [obj.userData.gridX, obj.userData.gridY];
 }
 
+function get3DInteractiveDecorAtPointer(e){
+  if(!g3 || !g3.decorMeshes) return null;
+  const interactiveIds = new Set((GS.decorations || [])
+    .filter(d => d.tem_loot || d.chest_trap || d.trap || d.key_objective || d.interactive || d.special === 'fountain' || d.special === 'plaque')
+    .map(d => d.id));
+  if(!interactiveIds.size) return null;
+  const {T, renderer, raycaster, camera} = g3;
+  const rect = renderer.domElement.getBoundingClientRect();
+  const mx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  const my = ((e.clientY - rect.top) / rect.height) * -2 + 1;
+  raycaster.setFromCamera(new T.Vector2(mx, my), camera);
+  const meshes = [...interactiveIds]
+    .map(id => g3.decorMeshes[id])
+    .filter(mesh => mesh && mesh.visible);
+  for(const hit of raycaster.intersectObjects(meshes, true)){
+    let obj = hit.object;
+    while(obj){
+      if(obj.userData?.decorId && interactiveIds.has(obj.userData.decorId)) return obj.userData.decorId;
+      obj = obj.parent;
+    }
+  }
+  return null;
+}
+
 function get3DMonsterAtPointer(e){
   if(!g3 || !g3.entityGroup) return null;
   const {T,renderer,raycaster,camera,entityGroup}=g3;
@@ -54681,6 +54705,8 @@ function on3DClick(e){
       return;
     }
   }
+  const decorDireto = get3DInteractiveDecorAtPointer(e);
+  if(decorDireto){ GS.interagirDecor(decorDireto); return; }
   const tile = get3DTile(e);
   if(!tile) return;
   const [tx, ty] = tile;
