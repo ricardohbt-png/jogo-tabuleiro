@@ -10887,6 +10887,18 @@ window.EDITOR_CATALOG = {
       "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
     },
     {
+      "id": "machadinha_ana",
+      "name": "Machadinha de Arremesso Anã",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "throw_range": 3,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "descricao": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+    },
+    {
       "id": "arco_curto",
       "name": "Arco Curto",
       "emoji": "🏹",
@@ -11090,6 +11102,18 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "descricao": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "machadinha_ana_prata",
+      "name": "Machadinha de Arremesso Anã de Prata",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "throw_range": 3,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_prata",
@@ -11984,34 +12008,19 @@ window.EDITOR_CATALOG = {
       "item_slot": "ring"
     },
     {
-      "id": "machado_duplo_copia",
-      "name": "Machado Duplo (cópia)",
-      "emoji": "🪓",
-      "die": "1d8",
-      "stat": "str_",
-      "finesse": false,
-      "throw_range": 3,
-      "categoria": "cortante",
-      "granted_ability": "guild_tecnica_ataque_giratorio",
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 0,
-      "descricao": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
-    },
-    {
       "id": "lamina_do_vento",
       "name": "Lamina do Vento",
       "emoji": "🪓",
-      "die": "1d8",
+      "die": "1d10",
       "stat": "str_",
       "finesse": false,
-      "throw_range": 1,
+      "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
-      "descricao": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
+      "descricao": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
     }
   ],
   "traps": [

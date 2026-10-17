@@ -2716,7 +2716,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
-    "pt": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
+    "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.lamina_do_vento.nome": {
     "en": "Wind Blade",
@@ -2818,6 +2818,22 @@ window.LANG_CATALOGO = {
     "en": "Training Mace",
     "pt": "Maça de Treino"
   },
+  "cat.item.machadinha_ana.desc": {
+    "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
+    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+  },
+  "cat.item.machadinha_ana.nome": {
+    "en": "Dwarven Throwing Hatchet",
+    "pt": "Machadinha de Arremesso Anã"
+  },
+  "cat.item.machadinha_ana_prata.desc": {
+    "en": "Silver Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength. Silver: withstands 5 levels of corrosion, the first 2 without penalty, and can hurt enemies resistant to normal weapons.",
+    "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+  },
+  "cat.item.machadinha_ana_prata.nome": {
+    "en": "Silver Dwarven Throwing Hatchet",
+    "pt": "Machadinha de Arremesso Anã de Prata"
+  },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
     "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
@@ -2841,14 +2857,6 @@ window.LANG_CATALOGO = {
   "cat.item.machado_duplo.nome": {
     "en": "Double Axe",
     "pt": "Machado Duplo"
-  },
-  "cat.item.machado_duplo_copia.desc": {
-    "en": "Double Axe (copy): 1d8 slashing damage, using Strength. Can also be thrown up to 3 squares.",
-    "pt": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
-  },
-  "cat.item.machado_duplo_copia.nome": {
-    "en": "Double Axe (copy)",
-    "pt": "Machado Duplo (cópia)"
   },
   "cat.item.machado_duplo_prata.desc": {
     "en": "Silver Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",

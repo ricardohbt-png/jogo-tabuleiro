@@ -124,6 +124,7 @@
     d.stat = item.stat === "dex" ? "dex" : "str_";
     d.finesse = !!item.finesse; d.two_handed = !!item.two_handed;
     d.granted_ability = item.granted_ability || "";
+    if (item.extra_attack_on_crit_min_nat) d.extra_attack_on_crit_min_nat = item.extra_attack_on_crit_min_nat;
     if (item.throw_range) { d.manejo = "arremessavel"; d.throw_range = item.throw_range; }
     if (item.reach === "lanca" || item.reach === "cajado") d.manejo = item.reach;
     else if (item.range) { d.manejo = "distancia"; d.range = item.range; }
