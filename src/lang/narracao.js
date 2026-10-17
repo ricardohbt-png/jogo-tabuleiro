@@ -2008,6 +2008,10 @@ window.LANG_NARRACAO = {
     "en": "🧴 **{heroi}**'s projectile poison ran out.",
     "pt": "🧴 O veneno do projétil de **{heroi}** acabou."
   },
+  "narracao.refem_morto_consequencia": {
+    "en": "💔 The news will spread. The hostage's death will be remembered.",
+    "pt": "💔 A notícia vai se espalhar. A morte do refém será lembrada."
+  },
   "narracao.obj_renome": {
     "en": "🏅 Renown {n}.",
     "pt": "🏅 Renome {n}."

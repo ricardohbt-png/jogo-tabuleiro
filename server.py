@@ -3547,7 +3547,7 @@ FOTO_SALA_CATEGORIAS = {
     "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
     # criaturas
     "monsters": "foto", "corpses": "foto", "hero_corpses": "foto",
-    "prisoner": "foto", "rescue_failed": "foto",
+    "prisoner": "foto", "rescue_failed": "foto", "_consequencia_refem_aplicada": "foto",
     # mundo
     "chests": "foto", "ground_items": "foto", "traps": "foto", "armadilhas": "foto",
     "_armadilha_seq": "foto", "zonas_especiais": "foto", "_terrenos_inverno": "foto",
@@ -11594,6 +11594,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.hero_rooms = {}
         self.fatos = set()
         self.scene_conversations_done = set()
+        self._consequencia_refem_aplicada = False
         self.scene_triggers_done = set()  # gatilhos narrativos da campanha já consumidos
         self.story_beats_done = set()     # slides narrativos já concluídos pelo anfitrião
         self.location_scene_trigger = None # cena da entrada atual do mapa-múndi
@@ -16225,6 +16226,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.mission_step_index = 0
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self._consequencia_refem_aplicada = False
         self.mission_complete_pending = False
         self.salas_visitadas = set()
         pr = defn.get("prisoner")
@@ -17382,7 +17384,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.door_conditions = {}
             self.door_condition_activated = {}
             self.exit_pos = None; self.objectives = None; self.objective_status = None; self.mission_step_index = 0
-            self.prisoner = None; self.rescue_failed = False; self._objetivo_concluido = False; self.mission_complete_pending = False
+            self.prisoner = None; self.rescue_failed = False; self._consequencia_refem_aplicada = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -49856,6 +49858,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                # elas usam os destinos do Mapa do Mundo. O acesso indexado
                # anterior abortava o game_start antes da cena inicial.
                "total": len(stages),
+        await self._aplicar_consequencia_refem()
+
+    async def _aplicar_consequencia_refem(self):
+        """`objectives.primary.se_falhar` ({renome, fato}): a perda de renome e o marcador entram na
+        hora, uma única vez, e a missão continua (o Ferrão ainda precisa cair ou o grupo fugir).
+        Só altera estado e narra: roda no meio do turno dos monstros."""
+        if self._consequencia_refem_aplicada:
+            return
+        self._consequencia_refem_aplicada = True
+        sf = ((self.objectives or {}).get("primary") or {}).get("se_falhar")
+        if isinstance(sf, dict):
+            await self._aplicar_renome_fato(sf)
+            if sf.get("renome") or sf.get("fato"):
+                await self.gm_say(T("narracao.refem_morto_consequencia"))
                "story": None}
         # A abertura da fase é enviada em `game_state.story` antes da entrada e
         # aguarda a confirmação do anfitrião. Não a regenere já em `playing`.
