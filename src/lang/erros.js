@@ -1569,6 +1569,10 @@ window.LANG_ERROS = {
     "en": "information: {fato}",
     "pt": "informação: {fato}"
   },
+  "erro.requisito.sem_informacao": {
+    "en": "no longer applies: {fato}",
+    "pt": "não pode ter acontecido: {fato}"
+  },
   "erro.requisito.item_chave": {
     "en": "key item: {item}",
     "pt": "item-chave: {item}"

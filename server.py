@@ -667,7 +667,7 @@ def _clean_requirement(raw):
     except (TypeError, ValueError): nivel = 0
     return {"renome_min": renome, "nivel_grupo_min": nivel,
             "item_id": text("item_id"), "fato": text("fato"),
-            "aventura_id": text("aventura_id")}
+            "sem_fato": text("sem_fato"), "aventura_id": text("aventura_id")}
 
 def _save_world_adventures_upload(raw_locations, raw_adventures):
     """Valida e grava cidades e entradas de aventura criadas no editor."""
@@ -16684,6 +16684,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if req["fato"] and req["fato"] not in self.fatos:
             reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
         if req["aventura_id"]:
+        if req["sem_fato"] and req["sem_fato"] in self.fatos:
+            reasons.append(T("erro.requisito.sem_informacao", fato=req["sem_fato"]))
             adventure = WORLD_ADVENTURES.get(req["aventura_id"])
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
                 reasons.append(T("erro.requisito.rota_anterior"))
