@@ -830,6 +830,7 @@ const DECOR_3D = {
   lareira:        { shape: 'box', h: 0.8,  color: 0x6b6b6b },
   fonte:          { shape: 'cyl', h: 0.6,  color: 0x5a8fb0 },
   fogueira:       { shape: 'cyl', h: 0.25, color: 0xd2691e },
+  cinzas:         { shape: 'cyl', h: 0.29, color: 0x3a3532, basic: true },
   tumba:          { shape: 'box', h: 0.6,  color: 0x777777 },
   mesa_cadeiras:  { shape: 'box', h: 0.6,  color: 0x9a6b3c },
   estante:        { shape: 'box', h: 1.6,  color: 0x6b4a2a },
@@ -49731,7 +49732,8 @@ function renderMap3D(state){
 
       // ── Caminho procedural (sem image) ──
       // Se havia uma miniatura PNG antes (imageName), destrói e reconstrói como procedural
-      if (mesh && mesh.userData.imageName) {
+      // (o mesmo vale para um GLB: o feno queimado deixa de ser fogueira e vira cinzas)
+      if (mesh && (mesh.userData.imageName || mesh.userData.glbPath)) {
         g3.scene.remove(mesh); _disposeDecorMesh(mesh);
         mesh = null;
       }
@@ -49740,7 +49742,9 @@ function renderMap3D(state){
         const geo = spec.shape === 'cyl'
           ? new T.CylinderGeometry(0.4, 0.4, spec.h, 16)
           : new T.BoxGeometry(1, spec.h, 1);
-        mesh = new T.Mesh(geo, new T.MeshStandardMaterial({ color: spec.color }));
+        // `basic`: cor chapada, sem luz (cinzas: a luz forte da cena lavava o escuro até o creme)
+        mesh = new T.Mesh(geo, spec.basic ? new T.MeshBasicMaterial({ color: spec.color })
+                                          : new T.MeshStandardMaterial({ color: spec.color }));
         mesh.userData.isDecor = true;
         mesh.userData.decorId = d.id;
         g3.scene.add(mesh);

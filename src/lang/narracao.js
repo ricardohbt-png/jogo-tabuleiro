@@ -3084,6 +3084,14 @@ window.LANG_NARRACAO = {
     "en": "⚠️ The lava crust is breaking apart!",
     "pt": "⚠️ A crosta de lava está se desfazendo!"
   },
+  "narracao.reacao.feno_pegou_fogo": {
+    "en": "🔥 The hay catches fire and burns fiercely!",
+    "pt": "🔥 O feno pega fogo e arde com violência!"
+  },
+  "narracao.reacao.feno_virou_cinzas": {
+    "en": "🌫️ The flames die down: only ashes remain of the hay.",
+    "pt": "🌫️ As chamas se apagam: do feno restam só cinzas."
+  },
   "narracao.reacao.piche_pegou_fogo": {
     "en": "🔥 The pitch catches fire!",
     "pt": "🔥 O piche pega fogo!"

@@ -25,6 +25,8 @@ RX_DURACAO_GELO = 3
 RX_DURACAO_CROSTA = 3
 RX_CD_PADRAO = 12
 RX_DURACAO_CHAMAS = 3
+RX_FENO_TETO = 24          # montes de feno encostados que pegam fogo juntos
+RX_DURACAO_FENO = 3        # rodadas em chamas antes de virar cinzas
 RX_DADO_CHAMAS = "1d6"
 RX_GAS_DANO = "2d6"          # explosão de gás: dano de fogo
 RX_GAS_CD = 17               # Reflexos fixo (metade do dano)
@@ -63,6 +65,7 @@ REACOES = [
     {"id": "crosta_de_lava",  "elemento": RX_COLD,      "estado": "lava",      "efeito": "_rx_crosta_lava",     "ativa": True},
     {"id": "explodir_gas",    "elemento": RX_FIRE,      "estado": "gas",        "efeito": "_rx_explodir_gas",    "ativa": True},
     {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": "_rx_derreter_gelo",   "ativa": True},
+    {"id": "incendiar_feno",  "elemento": RX_FIRE,      "estado": "feno",      "efeito": "_rx_incendiar_feno",  "ativa": True},
 ]
 
 
@@ -152,7 +155,16 @@ class TerrainReactions:
             return mat in RX_GELO_MATS and not self._ponte_em(x, y)
         if estado == "gas":
             return any(tile in self._rx_gas_tiles(z) for z in self._rx_gas_zonas())
+        if estado == "feno":
+            return self._rx_feno_em(tile) is not None
         return False
+
+    def _rx_feno_em(self, tile):
+        """Monte de feno (ainda intacto) que ocupa a casa, ou None."""
+        for d in getattr(self, "decorations", []):
+            if d.get("type") == "monte_feno" and list(tile) in [list(t) for t in self._decor_tiles(d)]:
+                return d
+        return None
 
     # ── zonas de gás (Câmara de Gás / Nuvem de Gás) ─────────────────────────
     def _rx_gas_zonas(self):
@@ -357,6 +369,33 @@ class TerrainReactions:
         # a casa virou água: quem queimava com chamas apagáveis se apaga (Fogo Grego não)
         for alvo in self._alvos_no_inverno(regiao):
             await self._apagar_chamas_na_agua(alvo)
+
+    async def _rx_incendiar_feno(self, tiles, origem, pend, prof):
+        """Fogo no feno: o monte (e os encostados nele) vira uma fogueira por RX_DURACAO_FENO
+        rodadas e depois cinzas. Quem está na casa queima na hora, como numa fogueira."""
+        regiao = self._rx_regiao(tiles, lambda t: self._rx_estado("feno", t),
+                                 raio=None, teto=RX_FENO_TETO)
+        if not regiao:
+            return
+        casas = []
+        for t in regiao:
+            d = self._rx_feno_em(t)
+            if d is None or d.get("type") != "monte_feno":
+                continue
+            self._decor_trocar_tipo(d, "fogueira")
+            d["queima_ate"] = self.round_num + RX_DURACAO_FENO
+            casas.extend(list(q) for q in self._decor_tiles(d))
+        self._rebuild_decor_index()
+        await self._rx_anunciar("incendio", casas, regiao[0])
+        centro = [int(regiao[0][0]), int(regiao[0][1])]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ignicao_piche", "phase": "start",
+            "animation_id": f"ignicao_feno_{self.round_num}_{centro[0]}_{centro[1]}_{self._rx_id('anim')}",
+            "origin": centro, "center": centro, "tiles": casas, "one_shot": True,
+        })
+        await self.gm_say(self._rx_T("narracao.reacao.feno_pegou_fogo"))
+        for alvo in self._alvos_no_inverno(casas):
+            await self._aplicar_fogueira_se_pisar(alvo, aplicar_espinhos=False)
 
     async def _rx_crosta_lava(self, tiles, origem, pend, prof):
         zid = self._rx_id("crosta")
