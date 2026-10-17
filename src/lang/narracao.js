@@ -2008,6 +2008,10 @@ window.LANG_NARRACAO = {
     "en": "🧴 **{heroi}**'s projectile poison ran out.",
     "pt": "🧴 O veneno do projétil de **{heroi}** acabou."
   },
+  "narracao.obj_renome": {
+    "en": "🏅 Renown {n}.",
+    "pt": "🏅 Renome {n}."
+  },
   "narracao.obj_ganhos": {
     "en": " {lista} each.",
     "pt": " {lista} a cada herói."

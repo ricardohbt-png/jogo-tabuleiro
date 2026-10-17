@@ -2439,11 +2439,30 @@
     if (!Array.isArray(obj.reward.items)) obj.reward.items = [];
     return obj;
   }
+  // Campos opcionais de um objetivo que o buildJSON precisa conservar: renome (delta com sinal)
+  // e fato (marcador). `se_falhar` e `alternativo` são objetos do mesmo molde.
+  function objExtras(obj) {
+    const x = {};
+    if (Number.isInteger(obj.renome) && obj.renome) x.renome = obj.renome;
+    if (typeof obj.fato === "string" && obj.fato.trim()) x.fato = obj.fato.trim();
+    return x;
+  }
+  function objSerializar(obj) {
+    return { type: obj.type, xp: obj.xp | 0,
+             reward: { gold: (obj.reward.gold | 0), items: obj.reward.items.map(i => ({ id: i.id })) },
+             ...objExtras(obj) };
+  }
+  function seFalharSerializar(sf) {
+    const x = sf ? objExtras(sf) : {};
+    return Object.keys(x).length ? x : null;
+  }
   // HTML dos campos de recompensa de um objetivo. `pfx` é um prefixo único de ids.
   const K_REC = "ui.editor.masmorra.recompensa.";
   function rewardFieldsHTML(obj, pfx) {
     return `<label>${t(K_REC + "xp")} <input id="${pfx}-xp" type="number" min="0" value="${obj.xp}"></label>
       <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
+      <label>${t(K_REC + "renome")} <input id="${pfx}-renome" type="number" value="${obj.renome | 0}"></label>
+      <label>${t(K_REC + "fato")} <input id="${pfx}-fato" value="${(obj.fato || "").replace(/"/g, "&quot;")}"></label>
       <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
       <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) })), "", o => o.v + " — " + o.name)}</select>
@@ -2452,6 +2471,8 @@
   function wireRewardFields(obj, pfx) {
     document.getElementById(`${pfx}-xp`).onchange = e => { obj.xp = Math.max(0, Number(e.target.value) | 0); };
     document.getElementById(`${pfx}-gold`).onchange = e => { obj.reward.gold = Math.max(0, Number(e.target.value) | 0); };
+    document.getElementById(`${pfx}-renome`).onchange = e => { const n = Math.trunc(Number(e.target.value)) || 0; if (n) obj.renome = n; else delete obj.renome; };
+    document.getElementById(`${pfx}-fato`).onchange = e => { const v = e.target.value.trim(); if (v) obj.fato = v; else delete obj.fato; };
     document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
     panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
   }
@@ -2803,6 +2824,11 @@
         <label>${t("ui.editor.masmorra.painel.objetivo_principal")}</label>
         <select id="o-prim">${OBJ.map(objId => `<option value="${objId}"${o.primary.type === objId ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + objId)}</option>`).join("")}</select>
         ${rewardFieldsHTML(o.primary, "o-prim-rw")}
+        <label title="${t("ui.editor.masmorra.recompensa.se_falhar_dica")}">${t("ui.editor.masmorra.recompensa.se_falhar")}</label>
+        <label>${t("ui.editor.masmorra.recompensa.renome")} <input id="o-sf-renome" type="number" value="${(o.primary.se_falhar && o.primary.se_falhar.renome) | 0}"></label>
+        <label>${t("ui.editor.masmorra.recompensa.fato")} <input id="o-sf-fato" value="${((o.primary.se_falhar && o.primary.se_falhar.fato) || "").replace(/"/g, "&quot;")}"></label>
+        <label><input type="checkbox" id="o-alt-on"${o.alternativo ? " checked" : ""}> ${t("ui.editor.masmorra.recompensa.alternativo")}</label>
+        ${o.alternativo ? `<select id="o-alt-type">${OBJ.map(objId => `<option value="${objId}"${o.alternativo.type === objId ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + objId)}</option>`).join("")}</select>${rewardFieldsHTML(o.alternativo, "o-alt-rw")}` : ""}
         <hr style="border-color:#3a3022;margin:10px 0">
         <label>${t("ui.editor.masmorra.painel.objetivos_secundarios")}</label>
         <div id="o-sec">${o.secondary.map((s, i) => `<div class="o-sec-item" style="border-top:1px solid #3a3022;padding-top:6px;margin-top:6px">
@@ -2866,6 +2892,22 @@
         renderPanel();
       };
       wireRewardFields(o.primary, "o-prim-rw");
+      const sfSet = (k, v) => {
+        const sf = o.primary.se_falhar = o.primary.se_falhar || {};
+        if (v) sf[k] = v; else delete sf[k];
+        if (!Object.keys(sf).length) delete o.primary.se_falhar;
+      };
+      document.getElementById("o-sf-renome").onchange = e => sfSet("renome", Math.trunc(Number(e.target.value)) || 0);
+      document.getElementById("o-sf-fato").onchange = e => sfSet("fato", e.target.value.trim());
+      document.getElementById("o-alt-on").onchange = e => {
+        if (e.target.checked) o.alternativo = normalizeObjective({ type: "kill_target", xp: 0 }, true);
+        else delete o.alternativo;
+        renderPanel();
+      };
+      if (o.alternativo) {
+        document.getElementById("o-alt-type").onchange = e => { o.alternativo.type = e.target.value; };
+        wireRewardFields(o.alternativo, "o-alt-rw");
+      }
       document.getElementById("o-add").onclick = () => { o.secondary.push({ type: "rescue_prisoner", ...objDefaults(false) }); renderPanel(); };
       panel.querySelectorAll(".o-secsel").forEach(sel => sel.onchange = e => { o.secondary[Number(e.target.dataset.i)].type = e.target.value; });
       panel.querySelectorAll(".o-rm").forEach(b => b.onclick = () => { o.secondary.splice(Number(b.dataset.i), 1); renderPanel(); });
@@ -4204,6 +4246,7 @@
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
     normalizeObjective(S.objectives.primary, true);
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
+    if (S.objectives.alternativo) normalizeObjective(S.objectives.alternativo, false);
     return {
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       saida_permitida: S.startMode !== "hero_spawns" && S.meta.saida_permitida !== false,
@@ -4370,10 +4413,10 @@
         .map(([key, value]) => [key, Math.max(0, Math.min(ELEVACAO_MAX, value))])),
       transicao_altura: S.transicaoAltura === "declive" ? "declive" : "rampa",
       objectives: {
-        primary: { type: S.objectives.primary.type, xp: S.objectives.primary.xp | 0,
-                   reward: { gold: (S.objectives.primary.reward.gold | 0), items: S.objectives.primary.reward.items.map(i => ({ id: i.id })) } },
-        secondary: S.objectives.secondary.map(s => ({ type: s.type, xp: s.xp | 0,
-                   reward: { gold: (s.reward.gold | 0), items: s.reward.items.map(i => ({ id: i.id })) } })),
+        primary: { ...objSerializar(S.objectives.primary),
+                   ...(seFalharSerializar(S.objectives.primary.se_falhar) ? { se_falhar: seFalharSerializar(S.objectives.primary.se_falhar) } : {}) },
+        secondary: S.objectives.secondary.map(objSerializar),
+        ...(S.objectives.alternativo ? { alternativo: objSerializar(S.objectives.alternativo) } : {}),
         ...(S.objectives.steps?.length ? { steps: S.objectives.steps.map(step => ({
           id: String(step.id || ""), condition: { type: step.condition?.type || "" },
           text: { pt: String(step.text?.pt || "").trim(), en: String(step.text?.en || "").trim() },
@@ -4962,6 +5005,7 @@
     })) : [];
     normalizeObjective(S.objectives.primary, true);
     S.objectives.secondary.forEach(s => normalizeObjective(s, false));
+    if (S.objectives.alternativo) normalizeObjective(S.objectives.alternativo, false);
     S.sel = null;
     document.getElementById("m-id").value = S.meta.id;
     document.getElementById("m-name").value = S.meta.name;

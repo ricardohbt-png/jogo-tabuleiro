@@ -8250,6 +8250,20 @@ def validar_dungeon(defn):
         if tile_at([ex["x"], ex["y"]]) != FLOOR:
             return False, "exit precisa estar em FLOOR (1)."
     for _ob in _objs:
+    _extras = [_o.get("alternativo")] if _o.get("alternativo") is not None else []
+    if isinstance(_o.get("primary"), dict) and _o["primary"].get("se_falhar") is not None:
+        _extras.append(_o["primary"]["se_falhar"])
+    for _ob in _objs + _extras:
+        if _ob is _o.get("alternativo") and not isinstance(_ob, dict):
+            return False, "objectives.alternativo deve ser um objeto."
+        if not isinstance(_ob, dict):
+            continue
+        _rn = _ob.get("renome")
+        if _rn is not None and (isinstance(_rn, bool) or not isinstance(_rn, int) or abs(_rn) > 9999):
+            return False, "renome do objetivo deve ser um inteiro entre -9999 e 9999."
+        _ft = _ob.get("fato")
+        if _ft is not None and (not isinstance(_ft, str) or len(_ft) > 100):
+            return False, "fato do objetivo deve ser um texto de até 100 caracteres."
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
         if isinstance(_ob, dict) and _ob.get("type") == "all_heroes_at_exit" and ex is None:
@@ -49311,6 +49325,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entries = diario.setdefault("items", [])
         if not isinstance(entries, list):
             entries = diario["items"] = []
+        await self._aplicar_renome_fato(obj)
         if any(isinstance(entry, dict) and entry.get("item_id") == item_id for entry in entries):
             return False
         row = {"item_id": item_id}
@@ -49320,6 +49335,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return True
 
     def _required_route_exit_ids(self):
+    async def _aplicar_renome_fato(self, obj):
+        """Soma o `renome` (delta com sinal, piso zero no total do grupo) e grava o `fato` de um
+        objetivo ou consequência. Objetivos antigos não têm os campos: nada muda."""
+        obj = obj or {}
+        delta = obj.get("renome")
+        if isinstance(delta, int) and not isinstance(delta, bool) and delta:
+            self.renome = max(0, self.renome + delta)
+            await self.gm_say(T("narracao.obj_renome", n=f"{delta:+d}"))
+        fato = obj.get("fato")
+        if isinstance(fato, str) and fato.strip():
+            self.fatos.add(fato.strip())
+
         if not self._etapa_com_saidas():
             return []
         adventure = WORLD_ADVENTURES.get(self.world_adventure_id) or {}

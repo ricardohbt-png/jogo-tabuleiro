@@ -1672,6 +1672,26 @@ window.LANG_EDITOR = {
     "en": "XP (total, split among the living)",
     "pt": "XP (total, dividido entre os vivos)"
   },
+  "ui.editor.masmorra.recompensa.renome": {
+    "en": "renown (+/−)",
+    "pt": "renome (+/−)"
+  },
+  "ui.editor.masmorra.recompensa.fato": {
+    "en": "marker (fact)",
+    "pt": "marcador (fato)"
+  },
+  "ui.editor.masmorra.recompensa.se_falhar": {
+    "en": "If the hostage dies: consequence",
+    "pt": "Se o refém morrer: consequência"
+  },
+  "ui.editor.masmorra.recompensa.se_falhar_dica": {
+    "en": "Applied once, immediately; the mission does not end.",
+    "pt": "Aplicada uma vez, na hora; a missão não termina."
+  },
+  "ui.editor.masmorra.recompensa.alternativo": {
+    "en": "Alternative objective (when the rescue fails)",
+    "pt": "Objetivo alternativo (quando o resgate falha)"
+  },
   "ui.editor.masmorra.recompensa.ouro": {
     "en": "gold (total, split)",
     "pt": "ouro (total, dividido)"
