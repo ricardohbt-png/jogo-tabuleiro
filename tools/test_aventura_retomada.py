@@ -71,6 +71,7 @@ async def encerrar():
     r.players = {"p1": {"name": "Ana", "alive": True}}
     r.phase = "playing"
     r.mission_complete_pending = True
+    r._objetivo_concluido = True       # o encerramento exige o objetivo cumprido (guarda atual)
     r.renome = 0
     chamadas = {}
     async def nada(*a, **k): pass

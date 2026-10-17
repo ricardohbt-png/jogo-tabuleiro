@@ -269,9 +269,12 @@ def historia(chave, slides, audio=None):
     de `destinos()`, que limpa ARTES_PEDIDAS no início — chamar fora dali acumula
     pedidos de uma chamada anterior."""
     out = []
-    for i, (texto, arte) in enumerate(slides):
+    for i, (texto, arte, *resto) in enumerate(slides):
         ARTES_PEDIDAS.append((f"{chave}#{i + 1}", arte))
-        out.append({"text": texto, "fit": "contain"})
+        slide = {"text": texto, "fit": "contain"}
+        if resto:      # condição do slide: {"requisito": {...}, "negar": bool}
+            slide.update(resto[0])
+        out.append(slide)
     h = {"slides": out}
     if audio:
         h["audio"] = audio
@@ -338,8 +341,11 @@ def destinos():
          "outra vez. Missão cumprida.", "heróis erguendo as armas ao amanhecer, fortaleza em ruínas ao fundo"),
         ("Semanas depois, as caravanas voltam a cruzar o Vau. Em Alva e Luz, o nome do "
          "grupo corre de mesa em mesa na taverna.", "praça de Alva e Luz em festa, caravana chegando"),
+        # Só para quem NÃO achou o anel: quem o tem já conhece o segredo.
         ("E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez "
-         "ninguém tenha encontrado. Outras estradas esperam por vocês no mapa.","estante de livros na penumbra, uma fresta de escuridão atrás"),
+         "ninguém tenha encontrado.", "estante de livros na penumbra, uma fresta de escuridão atrás",
+         {"requisito": S._clean_requirement({"item_id": ANEL_ID}), "negar": True}),
+        ("Outras estradas esperam por vocês no mapa.", "mapa-múndi aberto sobre a mesa da taverna"),
     ])
 
     def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
@@ -368,7 +374,12 @@ def anel_bruto():
     return {"id": ANEL_ID, "name": "Anel da Garra Negra", "emoji": "💍", "item_type": "ring",
             "bonuses": [{"effect": "atk_bonus", "value": 1}, {"effect": "vision", "value": 1}],
             "granted_ability": "hero_rogue_esconder_sombras",
-            "allowed_classes": [], "price": 250,
+            "descricao": ("+1 de acerto e +1 de visão. Concede a habilidade Esconder nas Sombras enquanto "
+                          "estiver equipado: ação bônus (🍖-2 💧-1); teste de d20 + Destreza contra a percepção "
+                          "dos monstros que o enxergam. Em sucesso você fica invisível e não pode ser escolhido "
+                          "como alvo, e ainda pode atacar na mesma rodada; manter a invisibilidade custa 🍖-1 "
+                          "💧-1 por turno. Para o Ladino, o primeiro golpe saindo das sombras é um Ataque Furtivo."),
+            "allowed_classes": [], "price": 1000,
             "disponibilidade": {"loja": False, "baus": True, "loot_monstro": False}}
 
 

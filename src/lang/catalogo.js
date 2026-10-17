@@ -2386,6 +2386,10 @@ window.LANG_CATALOGO = {
     "en": "Alchemical Glue",
     "pt": "Cola Alquímica"
   },
+  "cat.item.cola_alquimica_superior.nome": {
+    "en": "",
+    "pt": "Cola Alquímica Superior"
+  },
   "cat.item.dagger.desc": {
     "en": "Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield.",
     "pt": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
@@ -2409,14 +2413,6 @@ window.LANG_CATALOGO = {
   "cat.item.dente_da_fera.nome": {
     "en": "Beast Fang",
     "pt": "Dente da fera"
-  },
-  "cat.item.dente_da_fera_copia.desc": {
-    "en": "Beast Fang (Copy): 1d6 slashing damage, using Strength or Dexterity. Can also be thrown up to 5 squares.",
-    "pt": "Dente da fera (cópia): 1d6 de dano cortante, usando Força ou Destreza. Também pode ser arremessada até 5 casas."
-  },
-  "cat.item.dente_da_fera_copia.nome": {
-    "en": "Beast Fang (Copy)",
-    "pt": "Dente da fera (cópia)"
   },
   "cat.item.elixir.nome": {
     "en": "Elixir of Strength",
@@ -2813,10 +2809,6 @@ window.LANG_CATALOGO = {
   "cat.item.maca_prata.nome": {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
-  },
-  "cat.item.maca_treino.nome": {
-    "en": "Training Mace",
-    "pt": "Maça de Treino"
   },
   "cat.item.machadinha_ana.desc": {
     "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",

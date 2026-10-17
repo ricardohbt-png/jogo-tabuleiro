@@ -13,21 +13,31 @@
       return { slides: [{ text: val, image: "", fit: "cover" }], audio: null, _audioUrl: null };
     const slides = (val.slides || []).map(s => ({
       text: s.text || "", image: s.image || "",
-      fit: s.fit === "contain" ? "contain" : "cover", _url: "" }));
+      fit: s.fit === "contain" ? "contain" : "cover", _url: "",
+      // condição do slide (item/fato/...): o painel só edita o item, mas conserva o resto
+      requisito: s.requisito && typeof s.requisito === "object" ? s.requisito : null,
+      negar: s.negar === true }));
     return { slides, audio: val.audio || null, _audioUrl: null };
+  }
+  // Um slide tem condição quando o requisito traz algum campo preenchido.
+  function condicaoAtiva(s) {
+    const r = s && s.requisito;
+    return !!r && ["item_id", "fato", "aventura_id"].some(k => r[k]) ||
+      !!r && (+r.renome_min > 0 || +r.nivel_grupo_min > 0);
   }
   // -> string (1 slide só-texto, sem áudio) | objeto | undefined (vazio)
   function storyToSaved(st) {
     const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image);
     if (!slides.length) return undefined;
     if (slides.length === 1 && slides[0].text && slides[0].text.trim()
-        && !slides[0].image && !st.audio)
+        && !slides[0].image && !st.audio && !condicaoAtiva(slides[0]))
       return slides[0].text;
     const out = { slides: slides.map(s => {
       const o = {};
       if (s.text && s.text.trim()) o.text = s.text;
       if (s.image) o.image = s.image;
       if (s.fit === "contain") o.fit = "contain";
+      if (condicaoAtiva(s)) { o.requisito = s.requisito; if (s.negar) o.negar = true; }
       return o;
     }) };
     if (st.audio) out.audio = st.audio;
@@ -113,6 +123,14 @@
              </span>
            </div>
            <textarea class="hist-text" placeholder="texto do slide">${s.text || ""}</textarea>
+           <div class="hist-cond" title="Deixe em 'sempre' para o slide aparecer para todos.">
+             <select class="hist-cond-modo">
+               <option value="">mostrar sempre</option>
+               <option value="tem">só se o grupo TEM o item</option>
+               <option value="nao">só se o grupo NÃO tem o item</option>
+             </select>
+             <input class="hist-cond-item" placeholder="id do item (ex.: anel_garra_negra)" value="${(s.requisito && s.requisito.item_id) || ""}">
+           </div>
          </div>
          <div class="hist-ops">
            <span class="op-up">▲</span><span class="op-down">▼</span><span class="op-dup" title="Duplicar como próximo slide">⧉</span><span class="op-del">✕</span>
@@ -128,6 +146,15 @@
       });
       card.querySelectorAll(".fit-opt").forEach(el => el.onclick = () => { s.fit = el.dataset.fit; render(); });
       card.querySelector(".hist-text").oninput = e => { s.text = e.target.value; };
+      const condModo = card.querySelector(".hist-cond-modo"), condItem = card.querySelector(".hist-cond-item");
+      condModo.value = !condicaoAtiva(s) ? "" : (s.negar ? "nao" : "tem");
+      const aplicarCondicao = () => {
+        const id = condItem.value.trim();
+        if (!condModo.value || !id) { s.requisito = null; s.negar = false; return; }
+        s.requisito = Object.assign({ renome_min: 0, nivel_grupo_min: 0, fato: "", aventura_id: "" }, s.requisito || {}, { item_id: id });
+        s.negar = condModo.value === "nao";
+      };
+      condModo.onchange = aplicarCondicao; condItem.oninput = aplicarCondicao;
       card.querySelector(".op-up").onclick = () => { if (i > 0) { st.slides.splice(i - 1, 0, st.slides.splice(i, 1)[0]); render(); } };
       card.querySelector(".op-down").onclick = () => { if (i < st.slides.length - 1) { st.slides.splice(i + 1, 0, st.slides.splice(i, 1)[0]); render(); } };
       card.querySelector(".op-dup").onclick = () => {
@@ -136,7 +163,8 @@
         // poderia ser revogado ao excluir um dos dois slides.
         st.slides.splice(i + 1, 0, {
           text: s.text || "", image: s.image || "", fit: s.fit === "contain" ? "contain" : "cover",
-          _url: "", _imgFile: s._imgFile || ""
+          _url: "", _imgFile: s._imgFile || "",
+          requisito: s.requisito ? Object.assign({}, s.requisito) : null, negar: !!s.negar
         });
         render();
       };

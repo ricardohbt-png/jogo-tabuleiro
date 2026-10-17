@@ -8924,6 +8924,11 @@ def _story_norm(val):
                 continue
             slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
             out.append(slide)
+            req = _clean_requirement(s.get("requisito")) if isinstance(s.get("requisito"), dict) else None
+            if req and any(req.values()):
+                slide["requisito"] = req
+                if s.get("negar") is True:
+                    slide["negar"] = True
         audio = val.get("audio")
         audio = audio if (isinstance(audio, str) and audio) else None
         return {"slides": out, "audio": audio}
@@ -8957,6 +8962,10 @@ def _clean_story_field(raw):
         if s.get("fit") == "contain":
             slide["fit"] = "contain"
         slides.append(slide)
+        if s.get("requisito"):
+            slide["requisito"] = s["requisito"]
+            if s.get("negar"):
+                slide["negar"] = True
     if not slides:
         return ""
     out = {"slides": slides}
@@ -8979,14 +8988,27 @@ def _clean_location_scene_trigger(raw):
                          "key_items_all": values("key_items_all")}}
 
 
-def _story_beat(key, parts):
+def _story_beat(key, parts, avaliar=None):
     """parts: lista de campos de história (string|objeto) na ORDEM de exibição.
     Retorna {'key','slides','audio'} ou None se não houver slides. O áudio é o
-    primeiro não-nulo encontrado na ordem das partes."""
+    primeiro não-nulo encontrado na ordem das partes.
+
+    Um slide pode trazer `requisito` (o mesmo vocabulário dos destinos e conversas:
+    item, fato, renome…) e `negar`: com `avaliar(requisito) -> bool` o slide só entra
+    quando a condição vale (ou, com `negar`, quando NÃO vale) — é o que deixa o final
+    de uma rota mudar conforme o que o grupo achou. Sem `avaliar`, o slide condicional
+    é descartado: ninguém pode garantir que a condição vale. A condição nunca viaja ao
+    cliente."""
     slides, audio = [], None
     for p in parts:
         n = _story_norm(p)
-        slides.extend(n["slides"])
+        for sl in n["slides"]:
+            req = sl.pop("requisito", None)
+            negar = sl.pop("negar", False)
+            if req is not None:
+                if avaliar is None or bool(avaliar(req)) == bool(negar):
+                    continue
+            slides.append(sl)
         if audio is None and n["audio"]:
             audio = n["audio"]
     if not slides:
@@ -9013,6 +9035,8 @@ def _validar_story(val, rotulo):
         if "fit" in s and s["fit"] not in ("cover", "contain"):
             return False, f"{rotulo}: slide {j+1} 'fit' deve ser 'cover' ou 'contain'."
         if not (s.get("text") or s.get("image")):
+        if "requisito" in s and not isinstance(s["requisito"], dict):
+            return False, f"{rotulo}: slide {j+1} 'requisito' deve ser um objeto."
             return False, f"{rotulo}: slide {j+1} precisa de texto ou imagem."
     if "audio" in val and not isinstance(val["audio"], str):
         return False, f"{rotulo}: 'audio' deve ser texto."
@@ -9716,6 +9740,10 @@ SHOP_TAVERN = [
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
 ]
+    # Refeição portátil (a mesma dos baús do Campo de Treinamento): vai para a mochila e é
+    # consumida depois; não tem o limite de 1×/visita do Banquete de balcão.
+    {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗", "price": 100, "item_slot": "bag",
+     "effect": "meal_survival", "fome": 40, "sede": 40, "icon": "assets/itens/banquete.png"},
 # Estoque por cidade: a configuração guarda IDs, enquanto as definições completas
 # continuam nos catálogos. Editar uma loja, portanto, não duplica regras de itens.
 CITY_SHOPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_shops.json")
@@ -12906,7 +12934,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # montado, antes da cidade, tal como uma cena inicial moderna.
         if self.mode == "campaign" and self.campaign and self.campaign.get("intro") and not self.campaign.get("scene_intro"):
             self._story_encadeada = _story_beat("campaign-start:" + str(self.selected_campaign or self.campaign.get("id", "")),
-                                                [self.campaign.get("intro")])
+                                                [self.campaign.get("intro")], self._requisito_do_slide)
         await self.broadcast({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE})
         # Jogo salvo com foto da masmorra: o grupo volta para dentro dela, no
         # início da rodada em que parou, em vez de ir para a cidade.
@@ -15784,7 +15812,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         elif shop == "taverna":
             effect = item.get("effect")
-            if effect == "meal_survival":
+            if effect == "meal_survival" and item.get("item_slot") != "bag":
                 # RefeiÃ§Ã£o de balcÃ£o: consumida na hora, 1Ã— por visita Ã  cidade.
                 if item_id in p.get("taverna_refeicoes", []):
                     p["gold"] += price  # estorna â€” compra recusada
@@ -16634,6 +16662,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return False
 
     def _avaliar_requisito(self, raw):
+    def _requisito_do_slide(self, raw):
+        """Condição de um slide de história (ver `_story_beat`): vale o mesmo vocabulário dos
+        requisitos de destino. É avaliada na hora de montar o beat, com o grupo como está."""
+        return self._avaliar_requisito(raw)[0]
+
         """Avalia os requisitos comuns de renome, diálogo e mapa-múndi."""
         req = _clean_requirement(raw)
         # Cada motivo é um T, não texto pronto: quem exibe passa a lista inteira
@@ -17117,7 +17150,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # toda etapa iniciada pelo mapa, não só a primeira.
         self._story_encadeada = _story_beat(
             f"aventura:{adventure['id']}:{stage_index}",
-            [_etapa_obj(stages[stage_index]).get("intro")])
+            [_etapa_obj(stages[stage_index]).get("intro")], self._requisito_do_slide)
         if self._story_encadeada and self._story_encadeada["key"] in self.story_beats_done:
             self._story_encadeada = None
         self.dungeon_generated = False
@@ -17259,7 +17292,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if self.campaign_phase == 0:
                     parts.append(self.campaign.get("intro"))
                 parts.append(phase.get("intro"))
-                story = _story_beat(f"intro:{self.campaign_phase}", parts)
+                story = _story_beat(f"intro:{self.campaign_phase}", parts, self._requisito_do_slide)
                 if story and story["key"] not in self.story_beats_done:
                     self._story_encadeada = story
                     self._pending_dungeon_entry = {
@@ -49487,7 +49520,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             partes = [] if was_revisit else [etapa.get("outro")]
             if not was_revisit and completed_index + 1 >= len(stages):
                 partes.append(adventure.get("outro_rota"))
-            fim = _story_beat(f"fim:{adventure_id}:{completed_index}", partes)
+            fim = _story_beat(f"fim:{adventure_id}:{completed_index}", partes, self._requisito_do_slide)
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.world_adventure_revisit = False
@@ -49504,7 +49537,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif (self.mode == "campaign" and self.campaign
                 and self.campaign_phase < len(self.campaign["dungeons"]) - 1):
             fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-            self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")])
+            self._campaign_outro = _story_beat(f"outro:{self.campaign_phase}", [fase.get("outro")],
+                                               self._requisito_do_slide)
             self.campaign_phase += 1
             self.dungeon_generated = False
             self._objetivo_concluido = False
@@ -49515,7 +49549,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if self.mode == "campaign" and self.campaign:
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
                 story = _story_beat(f"final:{self.campaign_phase}",
-                                    [fase.get("outro"), self.campaign.get("outro")])
+                                    [fase.get("outro"), self.campaign.get("outro")],
+                                    self._requisito_do_slide)
             await self.end_game(victory=True, story=story)
 
     async def _emendar_proxima_etapa(self, adventure, indice):
@@ -49537,7 +49572,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         self._story_encadeada = _story_beat(
             f"encadeada:{adventure.get('id')}:{indice}",
-            [anterior.get("outro"), proxima.get("intro")])
+            [anterior.get("outro"), proxima.get("intro")], self._requisito_do_slide)
         if self._story_encadeada and self._story_encadeada["key"] in self.story_beats_done:
             self._story_encadeada = None
         self.mode = "authored"; self.selected_dungeon = proxima["file"]; self.dungeon_def = defn
@@ -53405,6 +53440,9 @@ def _validate_custom_poison(raw):
         if isinstance(v, int):
             return max(1, v)
         return str(v).lower() if _die_ok(v) else padrao
+    descricao = str(raw.get("descricao") or "").strip()[:600]
+    if descricao:
+        item["descricao"] = descricao
     def _pares(lista):
         out = []
         for par in (lista or []):
@@ -53733,6 +53771,8 @@ def _apply_custom_items(records):
     # Acessórios custom (anel/bota) vivem no mercador — nenhum outro bloco limpa SHOP_MERCHANT.
     SHOP_MERCHANT[:] = [i for i in SHOP_MERCHANT if not i.get("custom")]
     # Arremessáveis custom vivem no dict ARREMESSAVEIS (espelha o cleanup de WEAPONS).
+    if item.get("descricao"):
+        inv["descricao"] = item["descricao"]
     for k in [k for k, v in ARREMESSAVEIS.items() if v.get("custom")]:
         ARREMESSAVEIS.pop(k, None)
     # Venenos custom vivem no dict VENENOS (mesmo padrão de ARREMESSAVEIS).

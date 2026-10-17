@@ -178,6 +178,8 @@
         loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
       },
     };
+    var descricao = String(d.descricao || "").trim().slice(0, 600);
+    if (descricao) item.descricao = descricao;
     if (kind === "boots") {
       var mats = [];
       var mm = d.materiais || {};

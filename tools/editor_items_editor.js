@@ -394,7 +394,8 @@
     f.innerHTML = [
       seccao("Identidade",
         campo("Nome", '<input id="ie-name" value="' + esc(draft.name) + '">') +
-        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">')),
+        campo("Emoji", '<input id="ie-emoji" size="3" value="' + esc(draft.emoji) + '">') +
+        campo("Descrição (aparece no quadro do item)", '<textarea id="ie-descricao" rows="3" maxlength="600">' + esc(draft.descricao || "") + '</textarea>')),
       seccao("Bônus (motor de efeitos)",
         '<div id="ie-abonus"></div><button id="ie-add-abonus">+ bônus</button>' +
         abonusTemplate()),
@@ -432,6 +433,7 @@
   function currentAccessoryDraftFromForm() {
     var g = function (id) { return root.querySelector("#" + id); };
     draft.name = g("ie-name").value; draft.emoji = g("ie-emoji").value;
+    if (g("ie-descricao")) draft.descricao = g("ie-descricao").value;
     draft.allowed_classes = Array.prototype.map.call(root.querySelectorAll(".ie-class:checked"), function (c) { return c.value; });
     draft.disponibilidade = { loja: g("ie-disp-loja").checked, baus: g("ie-disp-baus").checked, loot_monstro: g("ie-disp-loot").checked };
     draft.price = +g("ie-price").value || 0;

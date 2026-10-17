@@ -26,7 +26,8 @@ class BanqueteViagemTests(unittest.TestCase):
         self.assertEqual(item.get("price"), 100)
         self.assertEqual(item.get("icon"), "assets/itens/banquete.png")
         self.assertTrue((RAIZ / item["icon"]).is_file())
-        self.assertNotIn("banquete_viagem", {i["id"] for i in S.SHOP_TAVERN})
+        # Desde 2026-10-17 também é vendido nas tavernas (ver test_banquete_viagem_na_taverna.py).
+        self.assertIn("banquete_viagem", {i["id"] for i in S.SHOP_TAVERN})
         self.assertEqual((S._DUNGEON_ITEM_CATALOG["racao_viagem"].get("fome"),
                           S._DUNGEON_ITEM_CATALOG["racao_viagem"].get("sede")), (20, 0))
         self.assertEqual((S._DUNGEON_ITEM_CATALOG["cantil_agua"].get("fome"),

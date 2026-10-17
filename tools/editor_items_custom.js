@@ -67,35 +67,6 @@ window.EDITOR_CUSTOM_ITEMS = [
     "corrosao_niveis_penalidade": 2
   },
   {
-    "id": "dente_da_fera_copia",
-    "name": "Dente da fera (cópia)",
-    "emoji": "⚔️",
-    "item_type": "weapon",
-    "custom": true,
-    "die": "1d6",
-    "stat": "str_",
-    "categoria": "cortante",
-    "finesse": true,
-    "two_handed": false,
-    "atk_bonus": 0,
-    "damage_bonus": 0,
-    "corrosao_resistente": 0,
-    "corrosao_niveis_penalidade": 2,
-    "material": "metal",
-    "extra_damages": [],
-    "granted_ability": "guild_tecnica_grito_guerra",
-    "maldicao_id": null,
-    "maldicao_prende": false,
-    "allowed_classes": [],
-    "price": 0,
-    "disponibilidade": {
-      "loja": true,
-      "baus": false,
-      "loot_monstro": false
-    },
-    "throw_range": 5
-  },
-  {
     "id": "dente_da_fera",
     "name": "Dente da fera",
     "emoji": "⚔️",
@@ -125,34 +96,6 @@ window.EDITOR_CUSTOM_ITEMS = [
     "throw_range": 3
   },
   {
-    "id": "maca_treino",
-    "name": "Maça de Treino",
-    "emoji": "🔨",
-    "item_type": "weapon",
-    "custom": true,
-    "die": "1d6",
-    "stat": "str_",
-    "categoria": "contundente",
-    "finesse": true,
-    "two_handed": false,
-    "atk_bonus": 0,
-    "damage_bonus": 2,
-    "corrosao_resistente": 0,
-    "corrosao_niveis_penalidade": 2,
-    "material": "metal",
-    "extra_damages": [],
-    "granted_ability": null,
-    "maldicao_id": null,
-    "maldicao_prende": false,
-    "allowed_classes": [],
-    "price": 0,
-    "disponibilidade": {
-      "loja": false,
-      "baus": true,
-      "loot_monstro": false
-    }
-  },
-  {
     "id": "anel_garra_negra",
     "name": "Anel da Garra Negra",
     "emoji": "💍",
@@ -170,11 +113,12 @@ window.EDITOR_CUSTOM_ITEMS = [
         "value": 1
       }
     ],
+    "descricao": "+1 de acerto e +1 de visão. Concede a habilidade Esconder nas Sombras enquanto estiver equipado: ação bônus (🍖-2 💧-1); teste de d20 + Destreza contra a percepção dos monstros que o enxergam. Em sucesso você fica invisível e não pode ser escolhido como alvo, e ainda pode atacar na mesma rodada; manter a invisibilidade custa 🍖-1 💧-1 por turno. Para o Ladino, o primeiro golpe saindo das sombras é um Ataque Furtivo.",
     "granted_ability": "hero_rogue_esconder_sombras",
     "maldicao_id": null,
     "maldicao_prende": false,
     "allowed_classes": [],
-    "price": 250,
+    "price": 1000,
     "disponibilidade": {
       "loja": false,
       "baus": true,

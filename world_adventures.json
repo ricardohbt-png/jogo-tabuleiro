@@ -593,7 +593,19 @@
           "fit": "contain"
         },
         {
-          "text": "E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez ninguém tenha encontrado. Outras estradas esperam por vocês no mapa.",
+          "text": "E, em algum lugar sob a fortaleza, uma estante esconde um segredo que talvez ninguém tenha encontrado.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "anel_garra_negra",
+            "fato": "",
+            "aventura_id": ""
+          },
+          "negar": true
+        },
+        {
+          "text": "Outras estradas esperam por vocês no mapa.",
           "fit": "contain"
         }
       ]

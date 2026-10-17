@@ -3120,7 +3120,7 @@ function _renderShopItems(){
     // Restrição de classe: allowed_classes ausente = todas as classes.
     const classRestrita = item.allowed_classes && myClass && !item.allowed_classes.includes(myClass);
     // Refeição de balcão (1×/visita): bloqueia se o herói já a pediu nesta visita.
-    const jaUsada = item.effect==='meal_survival'
+    const jaUsada = item.effect==='meal_survival' && item.item_slot!=='bag'
       && myP && (myP.taverna_refeicoes||[]).includes(item.id);
     const jaConhecida = item.effect==='learn_spell'
       && myP && (myP.magias_conhecidas||[]).includes(item.magia_id);
@@ -3346,7 +3346,7 @@ function _itemDesc(item){
     if(item.fome) partes.push(t('ui.item.desc.mais_fome', {n: item.fome}));
     if(item.sede) partes.push(t('ui.item.desc.mais_sede', {n: item.sede}));
     let txt=partes.join(' / ');
-    if(item.effect==='meal_survival' && !item.tutorial_banquete) txt+=' • '+t('ui.item.desc.uma_por_visita');
+    if(item.effect==='meal_survival' && item.item_slot!=='bag' && !item.tutorial_banquete) txt+=' • '+t('ui.item.desc.uma_por_visita');
     return txt;
   }
   if(item.effect==='ale')

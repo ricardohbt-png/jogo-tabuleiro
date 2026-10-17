@@ -42,7 +42,6 @@
       "machado_orc_prata",
       "alabarda_prata",
       "espada2m_prata",
-      "dente_da_fera_copia",
       "dente_da_fera",
       "lamina_do_vento",
       "machadinha_ana_prata"
@@ -165,7 +164,8 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
-      "cantil_agua"
+      "cantil_agua",
+      "banquete_viagem"
     ]
   },
   "vila_riacho": {
@@ -213,7 +213,6 @@
       "alabarda_prata",
       "espada2m_prata",
       "marreta_prata",
-      "dente_da_fera_copia",
       "dente_da_fera"
     ],
     "ferreiro_armor": [
@@ -272,6 +271,7 @@
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
+      "cola_alquimica_superior",
       "rede_arremesso",
       "instrumento_harpa_velho",
       "instrumento_harpa_rustico",
@@ -333,7 +333,8 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
-      "cantil_agua"
+      "cantil_agua",
+      "banquete_viagem"
     ]
   },
   "vila_corvin": {
@@ -381,7 +382,6 @@
       "alabarda_prata",
       "espada2m_prata",
       "marreta_prata",
-      "dente_da_fera_copia",
       "dente_da_fera"
     ],
     "ferreiro_armor": [
@@ -440,6 +440,7 @@
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
+      "cola_alquimica_superior",
       "rede_arremesso",
       "instrumento_harpa_velho",
       "instrumento_harpa_rustico",
@@ -501,7 +502,8 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
-      "cantil_agua"
+      "cantil_agua",
+      "banquete_viagem"
     ]
   },
   "graciero": {
@@ -549,7 +551,6 @@
       "alabarda_prata",
       "espada2m_prata",
       "marreta_prata",
-      "dente_da_fera_copia",
       "dente_da_fera"
     ],
     "ferreiro_armor": [
@@ -608,6 +609,7 @@
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
+      "cola_alquimica_superior",
       "rede_arremesso",
       "instrumento_harpa_velho",
       "instrumento_harpa_rustico",
@@ -669,7 +671,8 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
-      "cantil_agua"
+      "cantil_agua",
+      "banquete_viagem"
     ]
   },
   "vila_dos_charcos": {
@@ -682,7 +685,8 @@
       "suco_fruta",
       "garrafa_vinho",
       "racao_viagem",
-      "cantil_agua"
+      "cantil_agua",
+      "banquete_viagem"
     ],
     "ferreiro_weapon": [
       "lamina_do_vento",
@@ -728,7 +732,6 @@
       "alabarda_prata",
       "espada2m_prata",
       "marreta_prata",
-      "dente_da_fera_copia",
       "dente_da_fera"
     ],
     "ferreiro_armor": [
