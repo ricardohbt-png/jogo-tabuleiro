@@ -1604,6 +1604,7 @@ WEAPONS = {
     "dagger":        {"id": "dagger",        "name": "Adaga",                "die": "1d4",  "stat": "str_", "finesse": True, "off_hand_weapon": True, "throw_range": 3, "categoria": "perfurante"},
     # â”€â”€ Armas iniciais da spec (EQUIPAMENTOS_INICIAIS) â”€â”€
     "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
+    "machadinha_ana":{"id": "machadinha_ana","name": "Machadinha de Arremesso Anã", "die": "1d6", "stat": "str_", "off_hand_weapon": True, "off_hand_forca": True, "throw_range": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante", "allowed_classes": ["warrior"]},
     "cajado_madeira":{"id": "cajado_madeira","name": "Cajado de Madeira",    "die": "1d6",  "stat": "str_", "finesse": True, "reach": "cajado", "categoria": "contundente"},
     "instrumento":   {"id": "instrumento",   "name": "Instrumento Musical",  "die": None,   "stat": "dex"},
     "bordao":        {"id": "bordao",        "name": "Bordão",               "die": "1d6",  "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente"},
@@ -4895,7 +4896,7 @@ CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
 # Devorador de Metal: corrÃ³i metal (madeira/couro/ossos sÃ£o imunes).
 CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate",
                            "escudo_p", "escudo_g"}
-CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machado_duplo", "machado_orc",
+CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
                        "bastsword", "espada2m", "warhammer", "mangual", "maca"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
@@ -7105,6 +7106,8 @@ SHOP_WEAPONS = [
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
+    {"id": "machadinha_ana","name": "Machadinha de Arremesso Anã", "emoji": "🪓", "die": "1d6", "stat": "str_", "price": 35, "off_hand_weapon": True, "off_hand_forca": True, "throw_range": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante",
+     "allowed_classes": ["warrior"]},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -7160,7 +7163,8 @@ def _descricao_arma_catalogo(arma):
     if arma.get("throw_range") is not None:
         partes.append(f"Também pode ser arremessada até {arma['throw_range']} casas.")
     if arma.get("off_hand_weapon"):
-        partes.append("Pode ser usada na mão secundária para um ataque extra, substituindo o escudo.")
+        partes.append("Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
+                      + (" O ataque usa Força." if arma.get("off_hand_forca") else ""))
     if arma.get("two_handed"):
         partes.append("Requer as duas mãos.")
     if arma.get("ignora_reducao_dano"):
@@ -15639,7 +15643,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "buy_price": price,
                 "descricao": item.get("descricao"),
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
-                                     "finesse", "off_hand_weapon", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
+                                     "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
                                      "two_handed", "dmg_bonus", "corrosao_resistente",
                                      "corrosao_niveis_penalidade",
                                      "silver", "corrosion_max", "corrosion_free_levels",
@@ -21286,7 +21290,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 self._consumir_recursos(p, 'acao_bonus')
                 odex = mod(p.get("dex", 12))
                 off_finesse = _weapon_uses_finesse(off)
-                off_stat_mod = (max(mod(p.get("str_", 10)), odex)
+                off_forca = bool(off.get("off_hand_forca")
+                                 or WEAPONS.get(off.get("id"), {}).get("off_hand_forca"))
+                off_stat_mod = (mod(p.get("str_", 10)) if off_forca
+                                else max(mod(p.get("str_", 10)), odex)
                                 if off_finesse else odex)
                 _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
                 offhand_atk = off_stat_mod + p.get("level_bonus", 1) + (eff_atk - main_attack_base - _mainhand_atk_bonus)
@@ -21317,7 +21324,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self._registrar_dano_desbloqueio_metamorfose(p, tgt, odmg)
                     ocrit_str = " **CRÍTICO!**" if ocrit else ""
                     osb = f"+{off_stat_mod}" if off_stat_mod >= 0 else str(off_stat_mod)
-                    ostat = "FOR/DES" if off_finesse else "DES"
+                    ostat = "FOR" if off_forca else "FOR/DES" if off_finesse else "DES"
                     await self.gm_say(
                         T("narracao.desfere_golpe_de_mao_secundaria_com_acao", heroi=p['name'], off=nome_item(off), oroll=oroll, offhand_atk=offhand_atk, ototal=ototal, tgt_ac=tgt['ac'], ocrit_str=ocrit_str, off_die=off['die'], oraw=oraw, osb=osb, ostat=ostat, odmg=odmg))
                     await self._dano_retaliacao(tgt, p, True, odmg)
@@ -26970,7 +26977,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         vale para a bolsa e para o baú do Refúgio. O catálogo `WEAPONS` fecha essa
         lacuna pelo id; arma com campos próprios (loja/loot/editor) segue por eles."""
         combat_fields = ("id", "name", "die", "stat", "range", "reach",
-                         "finesse", "off_hand_weapon", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
+                         "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
                          "ignora_reducao_dano",
                          "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
                          "silver", "corrosion_max", "corrosion_free_levels",
