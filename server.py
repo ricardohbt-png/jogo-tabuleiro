@@ -9806,6 +9806,47 @@ def _city_shop_items(city_id, shop_id):
 _load_city_shops()
 
 def _sincronizar_cidades_derivadas():
+# Preço das lojas de uma cidade por marcador (fato) da campanha: `cidade_modificadores.json`
+# = {cidade: [{"fato": str, "preco_mult": 0.1..5}]}. Só a COMPRA muda; a revenda parte do preço base.
+CITY_PRICE_MODS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cidade_modificadores.json")
+CITY_PRICE_MODS = {}
+
+def _carregar_modificadores_cidade(path=None):
+    """Lê e valida o arquivo; qualquer defeito descarta só a parte ruim (nunca derruba o boot)."""
+    out = {}
+    try:
+        with open(path or CITY_PRICE_MODS_FILE, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except (OSError, ValueError, TypeError):
+        return out
+    if not isinstance(raw, dict):
+        return out
+    for cidade, mods in raw.items():
+        if cidade not in WORLD_LOCATIONS or not isinstance(mods, list):
+            continue
+        ok = []
+        for m in mods:
+            if not isinstance(m, dict) or not isinstance(m.get("fato"), str) or not m["fato"].strip():
+                continue
+            try:
+                mult = float(m.get("preco_mult"))
+            except (TypeError, ValueError):
+                continue
+            if 0.1 <= mult <= 5:
+                ok.append({"fato": m["fato"].strip(), "preco_mult": mult})
+        if ok:
+            out[cidade] = ok
+    return out
+
+def _city_price_mult(city_id, fatos):
+    mult = 1.0
+    for m in CITY_PRICE_MODS.get(city_id, []):
+        if m["fato"] in fatos:
+            mult *= m["preco_mult"]
+    return mult
+
+CITY_PRICE_MODS.update(_carregar_modificadores_cidade())
+
     """Garante uma entrada vazia de lojas/pontos/taverna para cada cidade e
     remove as sobras de cidades excluídas. Usado após salvar pelo editor (no
     boot cada subsistema já se semeia na sua própria declaração)."""
@@ -13038,12 +13079,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                              if self.active_scene else None),
             "story": self._story_encadeada,   # encerramento da etapa; de-dup por key no cliente
             "shops": {
-                "ferreiro": {"weapons": _city_shop_items(self.world_location, "ferreiro_weapon"),
-                             "armors": _city_shop_items(self.world_location, "ferreiro_armor"),
-                             "ammo": _city_shop_items(self.world_location, "ferreiro_ammo")},
-                "mercador": _city_shop_items(self.world_location, "mercador") + self.shop_scrolls,
-                "templo":   _city_shop_items(self.world_location, "templo"),
-                "taverna":  _city_shop_items(self.world_location, "taverna"),
+                "ferreiro": {"weapons": self._itens_da_loja("ferreiro_weapon"),
+                             "armors": self._itens_da_loja("ferreiro_armor"),
+                             "ammo": self._itens_da_loja("ferreiro_ammo")},
+                "mercador": self._itens_da_loja("mercador") + [self._ajustar_preco(s) for s in self.shop_scrolls],
+                "templo":   self._itens_da_loja("templo"),
+                "taverna":  self._itens_da_loja("taverna"),
             },
             "guild": {
                 "catalog": list(GUILD_CATALOG.values()),
@@ -15610,6 +15651,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._checkpoint_savegame()
 
     async def handle_shop_buy(self, pid, shop, item_id, poison_upgrades=None):
+    def _ajustar_preco(self, item):
+        """Cópia do item da loja com o preço da cidade já ajustado pelos marcadores do grupo."""
+        mult = _city_price_mult(self.world_location, self.fatos)
+        if mult == 1.0 or not item.get("price"):
+            return item
+        novo = dict(item)
+        novo["preco_base"] = item.get("preco_base", item["price"])
+        novo["price"] = max(1, round(item["price"] * mult))
+        return novo
+
+    def _itens_da_loja(self, shop_id):
+        return [self._ajustar_preco(i) for i in _city_shop_items(self.world_location, shop_id)]
+
         if not self._em_cidade(pid):
             return
         p = self.players.get(pid)
@@ -15619,18 +15673,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Locate item in the correct catalog
         item = None
         if shop == "ferreiro_weapon":
-            item = next((i for i in _city_shop_items(self.world_location, "ferreiro_weapon") if i["id"] == item_id), None)
+            item = next((i for i in self._itens_da_loja("ferreiro_weapon") if i["id"] == item_id), None)
         elif shop == "ferreiro_armor":
-            item = next((i for i in _city_shop_items(self.world_location, "ferreiro_armor") if i["id"] == item_id), None)
+            item = next((i for i in self._itens_da_loja("ferreiro_armor") if i["id"] == item_id), None)
         elif shop == "ferreiro_ammo":
-            item = next((i for i in _city_shop_items(self.world_location, "ferreiro_ammo") if i["id"] == item_id), None)
+            item = next((i for i in self._itens_da_loja("ferreiro_ammo") if i["id"] == item_id), None)
         elif shop == "mercador":
-            item = (next((i for i in _city_shop_items(self.world_location, "mercador") if i["id"] == item_id), None)
-                    or next((i for i in self.shop_scrolls if i["id"] == item_id), None))
+            item = (next((i for i in self._itens_da_loja("mercador") if i["id"] == item_id), None)
+                    or next((self._ajustar_preco(i) for i in self.shop_scrolls if i["id"] == item_id), None))
         elif shop == "templo":
-            item = next((i for i in _city_shop_items(self.world_location, "templo") if i["id"] == item_id), None)
+            item = next((i for i in self._itens_da_loja("templo") if i["id"] == item_id), None)
         elif shop == "taverna":
-            item = next((i for i in _city_shop_items(self.world_location, "taverna") if i["id"] == item_id), None)
+            item = next((i for i in self._itens_da_loja("taverna") if i["id"] == item_id), None)
 
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
@@ -15676,6 +15730,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         p["gold"] -= price
+        preco_base = item.get("preco_base", price)   # a revenda não sobe com o ágio da cidade
         log = ""
 
         if shop == "ferreiro_weapon":
@@ -15690,7 +15745,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "id": item_id, "name": item["name"],
                 "emoji": item.get("emoji", "⚔️"),
                 "item_slot": "weapon", "effect": "atk", "value": 0,
-                "buy_price": price,
+                "buy_price": preco_base,
                 "descricao": item.get("descricao"),
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
                                      "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
@@ -15718,7 +15773,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "id": item_id, "name": item["name"],
                 "emoji": item.get("emoji", "🛡️"),
                 "item_slot": slot_disp, "effect": "def_", "value": ac_bonus,
-                "buy_price": price,
+                "buy_price": preco_base,
             }
             if kind == "armor":
                 gear_item["armor_category"] = item.get("armor_category")
@@ -15755,7 +15810,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     log = f"{loja_emoji} **{p['name']}** recarregou **{item['name']}** (+{add} → {off['ammo_count']} total)."
                 elif off is None:
                     # Off-hand livre: equipa diretamente
-                    p["gear"]["off_hand"] = {**item, "buy_price": price}
+                    p["gear"]["off_hand"] = {**item, "buy_price": preco_base}
                     log = f"{loja_emoji} **{p['name']}** equipou **{item['name']}** na mão esquerda ({ammo_count} projéteis)."
                 else:
                     # Off-hand ocupado ou mesmo tipo lotado: empilha na bolsa (mÃ¡x MAX_AMMO_STACK)
@@ -15772,18 +15827,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         await self.send_to(pid, {"type": "error", "msg": T("erro.mao_esquerda_ocupada_e_inventario_cheio")})
                         return
                     else:
-                        p["bag"].append({**item, "buy_price": price})
+                        p["bag"].append({**item, "buy_price": preco_base})
                         log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa (bestas usam virotes diretamente; arcos exigem flechas na mão esquerda)."
             elif slot == "bag":
                 # ConsumÃ­vel â€” sÃ³ a bolsa (categoria 'bag' nÃ£o tem slot de resgate).
-                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
+                if self._route_acquired_item(p, {**item, "buy_price": preco_base}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
                     return
                 log = f"{loja_emoji} **{p['name']}** comprou **{item['name']}**!"
             else:
                 # AcessÃ³rio/anel/elmo/mochila â€” bolsa-primeiro, resgate-equipa se a bolsa encher.
-                res = self._route_acquired_item(p, {**item, "buy_price": price})
+                res = self._route_acquired_item(p, {**item, "buy_price": preco_base})
                 if res == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
@@ -15797,7 +15852,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Itens sagrados portÃ¡teis (como a PoÃ§Ã£o de Cura) vÃ£o para a bolsa;
             # bÃªnÃ§Ã£os e serviÃ§os do templo continuam sendo aplicados na hora.
             if item.get("item_slot"):
-                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
+                if self._route_acquired_item(p, {**item, "buy_price": preco_base}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
@@ -15841,7 +15896,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 log = f"🍺 **{p['name']}** se serve de **{item['name']}**: +{fome} fome e +{sede} sede!"
             else:
                 # ProvisÃµes (item_slot bag): vÃ£o para a mochila para consumo posterior.
-                if self._route_acquired_item(p, {**item, "buy_price": price}) == "full":
+                if self._route_acquired_item(p, {**item, "buy_price": preco_base}) == "full":
                     p["gold"] += price
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
