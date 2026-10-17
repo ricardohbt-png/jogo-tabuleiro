@@ -10665,6 +10665,14 @@ window.EDITOR_CATALOG = {
   ],
   "items": [
     {
+      "id": "banquete_viagem",
+      "name": "Banquete de Viagem",
+      "emoji": "🍗",
+      "item_slot": "bag",
+      "effect": "meal_survival",
+      "loot_only": true
+    },
+    {
       "id": "carta",
       "name": "Carta",
       "emoji": "✉️",
