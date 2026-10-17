@@ -12008,34 +12008,19 @@ window.EDITOR_CATALOG = {
       "item_slot": "ring"
     },
     {
-      "id": "machado_duplo_copia",
-      "name": "Machado Duplo (cópia)",
-      "emoji": "🪓",
-      "die": "1d8",
-      "stat": "str_",
-      "finesse": false,
-      "throw_range": 3,
-      "categoria": "cortante",
-      "granted_ability": "guild_tecnica_ataque_giratorio",
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 0,
-      "descricao": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
-    },
-    {
       "id": "lamina_do_vento",
       "name": "Lamina do Vento",
       "emoji": "🪓",
-      "die": "1d8",
+      "die": "1d10",
       "stat": "str_",
       "finesse": false,
-      "throw_range": 1,
+      "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
-      "descricao": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
+      "descricao": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
     }
   ],
   "traps": [

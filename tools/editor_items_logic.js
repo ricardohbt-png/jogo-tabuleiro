@@ -60,6 +60,7 @@
         loot_monstro: !!(d.disponibilidade || {}).loot_monstro,
       },
     };
+    if (+d.extra_attack_on_crit_min_nat === 19 || +d.extra_attack_on_crit_min_nat === 20) item.extra_attack_on_crit_min_nat = +d.extra_attack_on_crit_min_nat;
     if (d.manejo === "lanca") item.reach = "lanca";
     else if (d.manejo === "cajado") item.reach = "cajado";
     else if (d.manejo === "distancia") {

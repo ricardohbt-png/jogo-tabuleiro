@@ -53518,6 +53518,9 @@ def _validate_custom_weapon(raw):
     if reach: item["reach"] = reach
     if rng:   item["range"] = rng
     if throw: item["throw_range"] = throw
+    # Ataque extra em acerto crítico natural (como o Machado Duplo): 19 ou 20.
+    extra_nat = _pos_int(raw.get("extra_attack_on_crit_min_nat")) if raw.get("extra_attack_on_crit_min_nat") not in (None, "", 0) else None
+    if extra_nat in (19, 20): item["extra_attack_on_crit_min_nat"] = extra_nat
     if rng and am: item["ammo"] = am   # munição só faz sentido em arma à distância
     return True, item
 
@@ -53526,7 +53529,8 @@ def _custom_weapon_combat_dict(item):
     out = {k: item[k] for k in ("id", "name", "die", "stat", "categoria", "finesse",
             "two_handed", "atk_bonus", "damage_bonus", "extra_damages",
             "granted_ability", "corrosao_resistente", "corrosao_niveis_penalidade",
-            "material", "ammo", "reach", "range", "throw_range", "maldicao_id", "maldicao_prende") if k in item}
+            "material", "ammo", "reach", "range", "throw_range", "maldicao_id", "maldicao_prende",
+            "extra_attack_on_crit_min_nat") if k in item}
     out["custom"] = True
     return out
 

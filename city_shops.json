@@ -44,7 +44,6 @@
       "espada2m_prata",
       "dente_da_fera_copia",
       "dente_da_fera",
-      "machado_duplo_copia",
       "lamina_do_vento"
     ],
     "ferreiro_armor": [
@@ -167,7 +166,6 @@
   },
   "vila_riacho": {
     "ferreiro_weapon": [
-      "machado_duplo_copia",
       "lamina_do_vento"
     ],
     "ferreiro_armor": [],
@@ -178,7 +176,6 @@
   },
   "vila_corvin": {
     "ferreiro_weapon": [
-      "machado_duplo_copia",
       "lamina_do_vento"
     ],
     "ferreiro_armor": [],
@@ -189,7 +186,6 @@
   },
   "graciero": {
     "ferreiro_weapon": [
-      "machado_duplo_copia",
       "lamina_do_vento"
     ],
     "ferreiro_armor": [],
@@ -206,7 +202,6 @@
       "garrafa_agua"
     ],
     "ferreiro_weapon": [
-      "machado_duplo_copia",
       "lamina_do_vento"
     ]
   }

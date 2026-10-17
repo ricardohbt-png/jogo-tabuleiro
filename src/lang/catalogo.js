@@ -2716,7 +2716,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
-    "pt": "Lamina do Vento: 1d8 de dano cortante, usando Força. Também pode ser arremessada até 1 casas."
+    "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.lamina_do_vento.nome": {
     "en": "Wind Blade",
@@ -2857,14 +2857,6 @@ window.LANG_CATALOGO = {
   "cat.item.machado_duplo.nome": {
     "en": "Double Axe",
     "pt": "Machado Duplo"
-  },
-  "cat.item.machado_duplo_copia.desc": {
-    "en": "Double Axe (copy): 1d8 slashing damage, using Strength. Can also be thrown up to 3 squares.",
-    "pt": "Machado Duplo (cópia): 1d8 de dano cortante, usando Força. Também pode ser arremessada até 3 casas."
-  },
-  "cat.item.machado_duplo_copia.nome": {
-    "en": "Double Axe (copy)",
-    "pt": "Machado Duplo (cópia)"
   },
   "cat.item.machado_duplo_prata.desc": {
     "en": "Silver Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
