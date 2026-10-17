@@ -1,1 +1,8 @@
-{}
+{
+  "vila_dos_charcos": [
+    {
+      "fato": "charcos_criancas_mortas",
+      "preco_mult": 1.5
+    }
+  ]
+}

@@ -668,5 +668,293 @@
       "aventura_id": ""
     },
     "renome_recompensa": 1
+  },
+  "charcos_bordas": {
+    "id": "charcos_bordas",
+    "nome": "Bordas da Mata",
+    "x": 63.62,
+    "y": 69.57,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "charcos_1_bordas.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "As crianças da Vila dos Charcos somem uma a uma, sempre ao anoitecer. Os rastros pequenos levam para a mata fechada, onde a lama engole o caminho.",
+              "fit": "contain"
+            },
+            {
+              "text": "Atrás de cada tronco, olhos que acompanham os heróis sem piscar.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "Ossos roídos, marcas de arrasto e um sapatinho enlameado. Ninguém ali — mas o rastro segue, atravessa uma ponte quebrada e desce para as palafitas.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "charcos_criancas_sumidas",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "charcos_palafitas": {
+    "id": "charcos_palafitas",
+    "nome": "Palafitas dos Pescadores",
+    "x": 68.62,
+    "y": 73.57,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "charcos_2_palafitas.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "A aldeia de pescadores sobre estacas foi abandonada depois de ataques que ninguém soube explicar. As passarelas rangem sozinhas.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "Numa carta, um pescador fala de homens encapuzados e de algo que tem medo do fogo. No depósito, óleo e piche — e rastros arrastados que descem para o pântano.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "charcos_bordas"
+    },
+    "renome_recompensa": 1
+  },
+  "charcos_travessia": {
+    "id": "charcos_travessia",
+    "nome": "Travessia do Pântano",
+    "x": 73.62,
+    "y": 77.57,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "charcos_3_travessia.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "O pântano cobre tudo de verde-escuro. Cada passo afunda; cada sombra na água pode ter dentes.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "Fumaça. Cantos baixos. Do alto de uma ilhota, os heróis avistam a paliçada de uma aldeia que não está em nenhum mapa.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "charcos_palafitas"
+    },
+    "renome_recompensa": 1
+  },
+  "charcos_aldeia": {
+    "id": "charcos_aldeia",
+    "nome": "Aldeia dos Bruxos",
+    "x": 78.62,
+    "y": 81.57,
+    "fome": 3,
+    "sede": 3,
+    "dungeons": [
+      {
+        "file": "charcos_4a_arredores.json",
+        "encadear": true,
+        "intro": {
+          "slides": [
+            {
+              "text": "Vigias de osso andam pelo caminho de tábuas. Os bruxos dos charcos não deixam os mortos descansarem.",
+              "fit": "contain"
+            },
+            {
+              "text": "Daqui até o fim os lugares se emendam: o que for gasto não se recupera.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/a_song_of_old_stones.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "O portão cede. Dentro, a praça dos bruxos: totens, caldeirões e, ao fundo, um cercado de onde vêm vozes de criança.",
+              "fit": "contain"
+            }
+          ]
+        }
+      },
+      {
+        "file": "charcos_4b_aldeia.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "text": "Atrás de uma parede de pedra e lama, algo respira. Os bruxos o chamam de arma. Mas ele não obedece a ninguém: o Ferrão dos Charcos Adulto, mais forte que o grupo.",
+              "fit": "contain"
+            },
+            {
+              "text": "Fogo, piche e uma alavanca. O que os heróis fizerem com isso decide quem sai vivo.",
+              "fit": "contain"
+            }
+          ],
+          "audio": "assets/story/the_kraken_s_overture.mp3"
+        },
+        "outro": {
+          "slides": [
+            {
+              "text": "O último passo é a fuga — ou o último golpe.",
+              "fit": "contain"
+            }
+          ]
+        }
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "Os pequenos voltam para os braços das mães, sujos, assustados e vivos. A Vila dos Charcos acende todas as lamparinas da praça naquela noite.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "charcos_criancas_mortas",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Ferrão tomba entre as chamas do piche, e com ele cai o poder dos bruxos. O nome do grupo vai de boca em boca, e o ferrão da fera passa a ser troféu de quem o venceu.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "charcos_ferrao_morto",
+            "sem_fato": "charcos_criancas_mortas",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "A fera ficou para trás, e o rugido seguiu os heróis até o rio. Dizem que ela ainda espera no charco. A vila agradece as crianças — e teme o que ficou vivo lá dentro.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "charcos_ferrao_morto",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Ferrão tomba, mas as crianças não vão voltar. A vila vira o rosto para o grupo; nas portas, o silêncio pesa mais que qualquer grito.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "charcos_criancas_mortas",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Mais fundo no charco, dizem os velhos, existe algo muito maior que o Adulto. Outras estradas esperam por vocês no mapa.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "charcos_criancas_mortas",
+            "aventura_id": ""
+          }
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "charcos_travessia"
+    },
+    "renome_recompensa": 2
   }
 }

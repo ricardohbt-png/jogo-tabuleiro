@@ -156,6 +156,34 @@ window.EDITOR_CUSTOM_ITEMS = [
       "loot_monstro": true
     },
     "extra_attack_on_crit_min_nat": 19
+  },
+  {
+    "id": "ferrao_do_brejo",
+    "name": "Ferrão do Brejo",
+    "emoji": "🗡️",
+    "item_type": "weapon",
+    "custom": true,
+    "die": "1d6",
+    "stat": "dex",
+    "categoria": "perfurante",
+    "finesse": true,
+    "two_handed": false,
+    "atk_bonus": 1,
+    "damage_bonus": 0,
+    "corrosao_resistente": 0,
+    "corrosao_niveis_penalidade": 2,
+    "material": "metal",
+    "extra_damages": [],
+    "granted_ability": null,
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [],
+    "price": 400,
+    "disponibilidade": {
+      "loja": false,
+      "baus": true,
+      "loot_monstro": false
+    }
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de itens.

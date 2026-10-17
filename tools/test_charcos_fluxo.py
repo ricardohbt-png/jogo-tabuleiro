@@ -1,6 +1,7 @@
 """Campanha "A Maré do Charco" com o motor real: o Ferrão, os bruxos e as crianças.
 Roda da raiz: python -X utf8 tools/test_charcos_fluxo.py"""
 import asyncio
+import json
 import random
 import sys
 import unittest
@@ -213,6 +214,37 @@ class VilaTests(unittest.TestCase):
         finally:
             for k in G.destinos():
                 S.WORLD_ADVENTURES.pop(k, None)
+
+
+class DiscoTests(unittest.TestCase):
+    """O que o gerador gravou é o que o gerador produz hoje (ninguém esqueceu de rodá-lo)."""
+
+    def ler(self, nome):
+        import json
+        return json.loads((RAIZ / nome).read_text(encoding="utf-8"))
+
+    def test_masmorras_gravadas(self):
+        for arq, d in G.masmorras().items():
+            gravada = self.ler(f"dungeons/{arq}")
+            self.assertEqual(gravada, json.loads(json.dumps(d)), arq)
+            ok, msg = S.validar_dungeon(gravada)
+            self.assertTrue(ok, f"{arq}: {msg}")
+
+    def test_destinos_gravados_e_carregados(self):
+        gravados = self.ler("world_adventures.json")
+        sem_vazios = lambda v: json.loads(json.dumps(v))
+        for did, dest in G.destinos().items():
+            self.assertEqual(sem_vazios(gravados[did]), sem_vazios(dest), did)
+            self.assertIn(did, S.WORLD_ADVENTURES, "o servidor carrega o destino no boot")
+
+    def test_modificador_e_cenas_e_troféu_gravados(self):
+        self.assertEqual(self.ler("cidade_modificadores.json"), G.modificadores())
+        self.assertEqual(S.CITY_PRICE_MODS.get(G.CIDADE), G.modificadores()[G.CIDADE], "carregado no boot")
+        slots = self.ler("city_scenes.json")[G.CIDADE]["taverna"]["slots"]
+        ids = {c["id"] for s in slots for c in s["conversations"]}
+        self.assertTrue({"charcos_gancho", "charcos_gratidao", "charcos_hostil_ysa"} <= ids)
+        self.assertEqual({s["name"] for s in slots}, {"Ysa", "Bento", "Velho Quim"})
+        self.assertTrue(any(i["id"] == G.ITEM_TROFEU for i in self.ler("itens_personalizados.json")))
 
 
 if __name__ == "__main__":
