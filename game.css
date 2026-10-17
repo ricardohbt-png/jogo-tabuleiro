@@ -1214,18 +1214,13 @@ input:focus { outline: none; border-color: var(--gold); }
 #cs-confirm-wrap { position:absolute; bottom:32px; left:50%;
                    transform:translateX(-50%); z-index:10;
                    display:flex; flex-direction:column; align-items:center; gap:12px; }
-#cs-progress-wrap { width:220px; height:3px; background:rgba(255,255,255,.1);
-                    border-radius:2px; overflow:hidden; }
-#cs-progress-fill { height:100%; width:0%; border-radius:2px;
-                    background:linear-gradient(to right,var(--gold),#ffe090);
-                    transition:width .1s linear; }
 #cs-btn-confirm   { font-family:var(--font-title); font-weight:700;
                     font-size:clamp(11px,1.2vw,14px); letter-spacing:4px;
                     color:var(--gold); background:rgba(0,0,0,.8);
                     border:1px solid var(--gold); border-radius:3px;
                     padding:clamp(10px,1.2vh,14px) clamp(28px,3.5vw,52px);
                     cursor:pointer; transition:all .3s;
-                    display:none; opacity:0; animation:csFadeIn .6s ease forwards; }
+                    display:block; opacity:0; animation:csFadeIn .6s ease forwards; }
 #cs-btn-confirm:hover { background:rgba(var(--gold-rgb),.18);
                         box-shadow:0 0 24px rgba(var(--gold-rgb),.3); }
 @keyframes csFadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }

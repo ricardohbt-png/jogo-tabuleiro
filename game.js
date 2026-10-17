@@ -332,8 +332,7 @@ document.body.innerHTML = `
     <button id="cs-btn-start" onclick="startGame()" style="display:none" data-i18n="ui.selecao.iniciar_jogo">▶ Iniciar Jogo</button>
   </div>
   <div id="cs-confirm-wrap">
-    <div id="cs-progress-wrap"><div id="cs-progress-fill"></div></div>
-    <button id="cs-btn-confirm" onclick="csConfirmClass()" data-i18n="ui.selecao.partir_aventura">⚔ Partir para a Aventura</button>
+        <button id="cs-btn-confirm" onclick="csConfirmClass()" data-i18n="ui.selecao.partir_aventura">⚔ Partir para a Aventura</button>
   </div>
   <div id="cs-hint" data-i18n="ui.selecao.escolha_heroi">Escolha seu herói</div>
   <!-- Celular: fundo + botão flutuante para abrir/fechar a aba de características -->
@@ -53370,8 +53369,6 @@ function initClassSelectFull(){
     takenIds:     new Set(),   // classes já escolhidas por OUTROS jogadores (indisponíveis)
     animFrame:    null,
     tweens:       [],
-    confirmStart: Date.now(),
-    confirmShown: false,
     raycaster:    new T.Raycaster(),
   };
 
@@ -53513,20 +53510,6 @@ function _startCsfLoop(){
       particles.mats[i].emissive.lerp(pColor, 0.04);
     }
 
-    // ── Confirm timer
-    if(!csf.confirmShown){
-      const elapsed = now - csf.confirmStart;
-      const pct     = Math.min(elapsed / 3000, 1) * 100;
-      const fillEl  = document.getElementById('cs-progress-fill');
-      if(fillEl) fillEl.style.width = pct + '%';
-      if(elapsed >= 3000){
-        csf.confirmShown = true;
-        const btn = document.getElementById('cs-btn-confirm');
-        if(btn) btn.style.display = 'block';
-        if(fillEl) fillEl.style.width = '100%';
-      }
-    }
-
     renderer.render(scene, cam);
   }
   tick();
@@ -53624,14 +53607,6 @@ function csfSelectHero(classId){
   csf.selectedId = classId;
   csf.gridSelectionMade = true;
   _csHeroGridSync();
-
-  // Reset confirm timer
-  csf.confirmStart  = Date.now();
-  csf.confirmShown  = false;
-  const btn = document.getElementById('cs-btn-confirm');
-  if(btn) btn.style.display = 'none';
-  const fill = document.getElementById('cs-progress-fill');
-  if(fill) fill.style.width = '0%';
 
   // Crossfade right panel
   const pane = document.getElementById('cs-pane-inner');
