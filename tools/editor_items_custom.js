@@ -205,7 +205,7 @@ window.EDITOR_CUSTOM_ITEMS = [
       "paladin",
       "warrior"
     ],
-    "price": 0,
+    "price": 880,
     "disponibilidade": {
       "loja": true,
       "baus": true,
