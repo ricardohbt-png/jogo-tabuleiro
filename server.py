@@ -9497,8 +9497,6 @@ DECOR_TYPES = {
     "caldeirao":      _decor("Caldeirão", "⚗️", [1, 1], gira=True,
                               loot_capaz=False),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
-    # O que sobra de um monte de feno depois de queimar (ver `_rx_incendiar_feno`).
-    "cinzas":         _decor("Cinzas", "🌫️", [1, 1], pisavel=True, loot_capaz=False),
     # DecoraÃ§Ãµes de parede: ficam presas a uma face de WALL, sem ocupar nem
     # bloquear o chÃ£o. A arte Ã© um decal vertical no modo 3D.
     "brasao_leao": _decor("Brasão do Leão", "🦁", [1, 1], gira=True, pisavel=True,
@@ -17820,7 +17818,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       self._processar_em_chamas_turno,
                       self._processar_acido_residual_turno,
                       self._processar_zonas_turno,
-                      self._apagar_feno_queimado,
                       self._aplicar_exaustao_rodada,
                       self._tick_retorno_masmorra):
             await self._isolar(passo(), f"virada de rodada: {passo.__name__}")
@@ -34980,8 +34977,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             elif z.get("tipo") == "chamas_piche":
                 if self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
-                    self._consumir_piche(z.get("tiles", []))
-                    await self.gm_say(T("narracao.reacao.piche_consumido"))
+                    if z.get("feno"):
+                        await self._rx_feno_acabou(z)
+                    else:
+                        self._consumir_piche(z.get("tiles", []))
+                        await self.gm_say(T("narracao.reacao.piche_consumido"))
             elif z.get("tipo") == "chamado_inverno":
                 if not z.get("permanente") and self.round_num >= int(z.get("expira_em", 0) or 0):
                     z["ativa"] = False
@@ -40729,23 +40729,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return self._decor_tiles_at(d["type"], d["pos"][0], d["pos"][1],
                                     d.get("facing"), d.get("size"))
 
-    def _decor_trocar_tipo(self, d, novo):
-        """Troca o tipo de uma decoração em jogo (feno -> fogueira -> cinzas) e a arte que vem do tipo."""
-        d["type"] = novo
-        d["image"] = DECOR_TYPES[novo].get("image")
-        d["model3d"] = DECOR_TYPES[novo].get("model3d") or DECOR_MODEL3D.get(novo)
-
-    async def _apagar_feno_queimado(self):
-        """Fim das chamas do feno: a fogueira vira cinzas, sem dano e atravessável."""
-        acabou = [d for d in getattr(self, "decorations", [])
-                  if d.get("queima_ate") is not None and self.round_num >= d["queima_ate"]]
-        for d in acabou:
-            d.pop("queima_ate", None)
-            self._decor_trocar_tipo(d, "cinzas")
-        if acabou:
-            self._rebuild_decor_index()
-            await self.gm_say(T("narracao.reacao.feno_virou_cinzas"))
-
     def _rebuild_decor_index(self):
         """Recalcula os índices rápidos de bloqueio/visão das decorações."""
         self._decor_block_tiles = set()
@@ -40762,7 +40745,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for tx, ty in self._decor_tiles(d):
                 if d["type"] == "moita_espinhosa":
                     self._thorn_bush_tiles.add((tx, ty))
-                if not meta["pisavel"]:
+                if not meta["pisavel"] and not d.get("queimando"):   # feno em chamas já não barra o passo
                     self._decor_block_tiles.add((tx, ty))
                 if visao == "alto":
                     self._decor_tall_tiles.add((tx, ty))
