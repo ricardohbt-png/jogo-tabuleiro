@@ -55401,8 +55401,8 @@ window.EDITOR_DUNGEONS = [
           "id": "aldeia_monte_ossos_9",
           "type": "monte_ossos",
           "pos": [
-            31,
-            8
+            23,
+            5
           ],
           "facing": [
             0,
@@ -55431,8 +55431,8 @@ window.EDITOR_DUNGEONS = [
           "id": "aldeia_caldeirao_11",
           "type": "caldeirao",
           "pos": [
-            25,
-            11
+            22,
+            8
           ],
           "facing": [
             0,
@@ -55453,8 +55453,8 @@ window.EDITOR_DUNGEONS = [
             3
           ],
           "facing": [
-            0,
-            1
+            1,
+            0
           ],
           "loot": null,
           "key_objective": false
@@ -56180,8 +56180,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_28",
           "type": "estatua_soterrada",
           "pos": [
-            26,
-            9
+            31,
+            6
           ],
           "facing": [
             0,
@@ -111360,4 +111360,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).
