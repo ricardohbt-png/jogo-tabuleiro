@@ -307,6 +307,20 @@
       loot_capaz: false, special: null, image: "esqueleto_tiranossauro.png",
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "choupana_palha_escura")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "choupana_palha_escura", nome: nomeCat("decor", "choupana_palha_escura", "Choupana de palha escura"), emoji: "🛖",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "choupana_palha_escura.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "cabana_palha_velha")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "cabana_palha_velha", nome: nomeCat("decor", "cabana_palha_velha", "Cabana de palha velha"), emoji: "🛖",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "cabana_palha_velha.png",
+    });
+  }
   const MAT = (CAT.materiais || []);
   // Descrição de catálogo traduzida pelo id (cat.<família>.<id>.desc); sem chave
   // (conteúdo do autor) fica o texto original.
@@ -1869,6 +1883,17 @@
     return S.pontes.find(p => bridgeTilesOf(p).some(([tx, ty]) => tx === x && ty === y)) || null;
   }
 
+  function removeBridge(bridge) {
+    if (!bridge) return false;
+    const before = S.pontes.length;
+    S.pontes = S.pontes.filter(p => p !== bridge);
+    if (S.pontes.length === before) return false;
+    // Chão Ilusório guarda o ID da ponte; não deixe uma referência órfã que
+    // invalide a masmorra depois de apagar a estrutura.
+    if (bridge.id) S.traps = S.traps.filter(trap => trap.ponte_id !== bridge.id);
+    return true;
+  }
+
   function bridgeDragValid(drag) {
     if (!drag) return false;
     const tiles = bridgeTilesOf(null, drag.start, drag.end, drag.width);
@@ -2059,6 +2084,7 @@
 
   function eraseAt(x, y) {
     if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
+    removeBridge(bridgeAt(x, y));
     if (S.entrance && S.entrance.x === x && S.entrance.y === y) S.entrance = null;
     S.heroSpawns = S.heroSpawns.filter(s => !(s.pos[0] === x && s.pos[1] === y));
     if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
@@ -2098,9 +2124,7 @@
       S.chests = S.chests.filter(c => c !== ref);
       if (S.chests.length === before) return false;
     } else if (kind === "bridge") {
-      const before = S.pontes.length;
-      S.pontes = S.pontes.filter(p => p !== ref);
-      if (S.pontes.length === before) return false;
+      if (!removeBridge(ref)) return false;
     } else {
       return false;
     }
@@ -4754,7 +4778,7 @@
 
   function loadJSON(obj) {
     S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
-               ambiente: ["penumbra", "masmorra", "ar_livre"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
+               ambiente: ["penumbra", "masmorra", "ar_livre", "bruma_tenebrosa"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
                saida_permitida: obj.saida_permitida !== false };
     S.trainingMode = obj.tutorial_training === true;

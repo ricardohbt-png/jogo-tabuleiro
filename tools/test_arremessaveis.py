@@ -128,16 +128,16 @@ async def main():
     await r.handle_throw_item("p1", {"item_id": "fogo_grego", "target_id": "m1"})
     check("LOS bloqueada: item mantido", len(p["bag"]) == 1)
 
-    # (4d) Erro (CA altíssima) → item consumido, sem dano, sem chamas, ação gasta
+    # (4d) Erro (CA altíssima) → item consumido, sem dano, ação gasta
     r = setup(); random.seed(7)   # seed evita nat20 (que seria acerto crítico)
     p = make_player("p1", "V", "warrior", 0); p["pos"] = [4, 4]; r.players["p1"] = p
-    p["bag"] = [throwable("frasco_oleo")]
+    p["bag"] = [throwable("fogo_grego")]
     m = make_monster(r, "m1", 4, 6, hp=30, ac=99)   # no alcance, LOS livre, impossível acertar
     hp0 = m["hp"]
-    await r.handle_throw_item("p1", {"item_id": "frasco_oleo", "target_id": "m1"})
+    await r.handle_throw_item("p1", {"item_id": "fogo_grego", "target_id": "m1"})
     check("erro: item consumido (espatifa)", len(p["bag"]) == 0)
     check("erro: alvo NÃO sofre dano", m["hp"] == hp0)
-    check("erro: alvo NÃO pega fogo", m.get("em_chamas_rodadas", 0) == 0)
+    check("erro: fogo grego não causa dano nem chamas", m.get("em_chamas_rodadas", 0) == 0)
     check("erro: ação principal gasta", p.get("action_done") is True)
 
     # ── [5] Beber água apaga chamas (ação livre); Fogo Grego ignora ─────────────

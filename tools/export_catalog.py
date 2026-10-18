@@ -103,10 +103,13 @@ def build_catalog():
         monsters.append(entry)
     item_fields = (
         "id", "name", "emoji", "die", "stat", "finesse", "off_hand_weapon",
+        "icon", "allowed_classes", "off_hand_stat", "throw_nat1_damage_levels",
+        "corrosion_max", "corrosion_materials",
         "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
         "range", "reach", "throw_range", "categoria", "granted_ability", "kind", "ac_bonus",
         "damage_reduction", "item_slot", "effect", "value", "veneno_id",
         "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao", "texto",
+        "magic_ids", "fixed_magic_ids",
         "curse_mode", "curse_id", "curse_category"
     )
     items = []

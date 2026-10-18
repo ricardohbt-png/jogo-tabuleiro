@@ -17,6 +17,7 @@ const t = (chave, params) => I18N.t(chave, params);
 // mensagens e clientes antigos; a interface troca-o pela arte quando houver uma
 // imagem correspondente em assets/habilidades.
 const ABILITY_ICON_ASSETS = Object.freeze({
+  usar_bola_cristal: 'assets/itens/bola_cristal_clarividencia.png',
   brutalidade: 'assets/habilidades/brutalidade.png',
   tecnica_mira_perfeita: 'assets/habilidades/mira_perfeita.png',
   tecnica_espirito_indomavel: 'assets/habilidades/espirito_indomavel.png',
@@ -706,6 +707,8 @@ const DECOR_GLB_MODELS = {
   'esqueleto_tiranossauro.png': 'assets/objetos/esqueleto_tiranossauro.glb',
   'galinheiro.png': 'assets/objetos/galinheiro.glb',
   'cabana_rustica.png': 'assets/objetos/cabana_rustica.glb',
+  'choupana_palha_escura.png': 'assets/objetos/choupana_palha_escura.glb',
+  'cabana_palha_velha.png': 'assets/objetos/cabana_palha_velha.glb',
   'lago_patos.png': 'assets/objetos/lago_patos.glb',
   'grades_prisao.png': 'assets/objetos/grades_prisao.glb',
 };
@@ -722,6 +725,8 @@ const DECOR_GLB_TYPES = {
   celeiro_medieval: 'assets/objetos/celeiro_medieval.glb',
   galinheiro: 'assets/objetos/galinheiro.glb',
   cabana_rustica: 'assets/objetos/cabana_rustica.glb',
+  choupana_palha_escura: 'assets/objetos/choupana_palha_escura.glb',
+  cabana_palha_velha: 'assets/objetos/cabana_palha_velha.glb',
   lago_patos: 'assets/objetos/lago_patos.glb',
   grades_prisao: 'assets/objetos/grades_prisao.glb',
   // Altar criado pelo editor pode não trazer `image`; usa o modelo pelo tipo.
@@ -2097,11 +2102,21 @@ let _worldMapEl = null;
 
 function _worldOfCityState(){ return (GS.cityState && GS.cityState.world) || null; }
 
+function _resetCityExtraHotspotsForLocation(locationId){
+  if(!_cityImg || _cityImg.locationId === locationId) return;
+  // IDs de pontos extras não são globais: `ponto_1`, por exemplo, é a
+  // caravana em Charcos e a Fazenda do Leste em Alva. Recrie esses botões na
+  // troca de cidade para renovar rótulo e ação, que capturam os dados do ponto.
+  _cityImg.hotWrap.querySelectorAll('[data-city-extra]').forEach(marker => marker.remove());
+  _cityImg.locationId = locationId;
+}
+
 function _refreshCityLocation(msg){
   if(!_cityImg) return;
   const world = msg && msg.world;
   const location = world && (world.locations || []).find(l => l.id === world.location);
   if(!location) return;
+  _resetCityExtraHotspotsForLocation(location.id);
   // O quadro da entrada de masmorra é montado a partir de um snapshot do
   // destino; um city_state novo pode mudar progresso, requisito ou anfitrião,
   // então ele fecha e o jogador reabre com os dados frescos.
@@ -3278,6 +3293,10 @@ function _renderRepairItems(){
 }
 
 function _itemDesc(item){
+  if(item.effect === 'grimoire'){
+    const nomes = (item.magic_ids || []).map(id => GRIMORIO_CLIENT[id]?.nome || id);
+    return item.descricao || (nomes.length ? `Magias fixas: ${nomes.join(', ')}.` : item.name || '');
+  }
   if(item.effect === 'learn_spell'){
     const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
     return item.descricao || (mg ? `${mg.nome} • ${mg.descricao || ''}` : item.name || '');
@@ -3357,6 +3376,14 @@ function _itemDesc(item){
     return t('ui.item.desc.racao', {n: item.value||0});
   if(item.effect==='regeneration')
     return t('ui.item.desc.regeneracao', {n: item.value||0});
+  if(item.effect==='strength_potion')
+    return t('cat.item.gole_do_gigante.desc');
+  if(item.effect==='dexterity_potion')
+    return t('cat.item.bote_da_serpente.desc');
+  if(item.effect==='constitution_potion')
+    return t('cat.item.elixir_cavalo_ferro.desc');
+  if(item.effect==='intelligence_potion')
+    return t('cat.item.sabedoria_liquida.desc');
   if(item.effect==='heal')
     return t('ui.item.desc.cura_hp', {n: item.value ?? item.valor ?? 0});
   if(item.effect==='full_heal')
@@ -5219,7 +5246,17 @@ function gerarConteudoTooltip(item){
       ? t('ui.tooltip.area_uma_casa') : `raio ${item.areaRaio}`));
   if(item.saveTipo && item.saveCD != null)
     linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.resistencia'),`${String(item.saveTipo).replace(/^./, c => c.toUpperCase())} CD ${item.saveCD}`));
-  if(item.arremesso || item.arremessavel) linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
+  const nivelDesgasteArma = Math.max(0, Number(item.corrosion_level || 0));
+  const vitalidadeArma = Math.max(0, Number(item.corrosion_max || 0));
+  if(vitalidadeArma > 0){
+    linhas.push(renderLinhaTooltip('🛠️',t('ui.tooltip.vitalidade_arma'),`${Math.max(0, vitalidadeArma - nivelDesgasteArma)}/${vitalidadeArma}`));
+    if(nivelDesgasteArma > 0)
+      linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.penalidade_desgaste'),`-${Math.min(nivelDesgasteArma, 2)}`));
+  }
+  if(item.throw_nat1_damage_levels > 0)
+    linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_arremesso_desgaste',{n:item.throw_nat1_damage_levels})));
+  else if(item.arremesso || item.arremessavel)
+    linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_val')));
   if(item.linhaVisao) linhas.push(renderLinhaTooltip('👁️',t('ui.tooltip.linha_visao'),t('ui.tooltip.linha_visao_val')));
   if(item.tipo === 'arma') linhas.push(renderLinhaTooltip('🛡️',t('ui.tooltip.escudo'), item.escudo ? t('ui.tooltip.permitido') : t('ui.tooltip.nao_permitido')));
   if(item.duasMaos && !item.modosDuasMaos) linhas.push(renderLinhaTooltip('✋',t('ui.tooltip.uso'),t('ui.tooltip.requer_duas_maos')));
@@ -5623,7 +5660,7 @@ function _cooperativeMarkerView(state, visionSet){
         || state.tiles[y][x] === TILE_WALL || !visionSet.has(`${x},${y}`)) continue;
     if(marker.target_type === 'enemy'){
       const target = monsters.get(String(marker.target_id));
-      if(!target || target.hp <= 0 || target.invisivel_sombras) continue;
+      if(!target || target.hp <= 0 || _monstroOcultadoParaJogador(target)) continue;
     } else if(marker.target_type !== 'tile') continue;
     result.push({...marker, x, y, icon:style.icon, color:style.color});
   }
@@ -5748,7 +5785,7 @@ function _handleCooperativeMarkerTarget(tx, ty){
     return true;
   }
   const monster = _masterMonsterAtTileClient(st, tx, ty);
-  const target = monster && monster.hp > 0 && !monster.invisivel_sombras
+  const target = monster && monster.hp > 0 && !_monstroOcultadoParaJogador(monster)
     ? {type:'enemy', value:monster.id} : {type:'tile', value:[tx,ty]};
   const sent = GS.createCooperativeMarker(_cooperativeMarkerMode, target.type, target.value);
   if(sent){
@@ -11437,6 +11474,146 @@ function _protetorFade(fx, now){
   return fx.endingAt == null ? 1 : Math.max(0, 1 - (now - fx.endingAt) / PROTETOR_FX_FADE_MS);
 }
 
+// Névoa atmosférica independente do desenho do tabuleiro. A camada 2D usa
+// resolução reduzida e recebe somente as casas já visíveis; não toca no estado
+// de visão nem nos canvas de interação.
+let _bruma2D = null;
+let _bruma2DRaf = null;
+function _limparBruma2D(){
+  if(_bruma2DRaf){ cancelAnimationFrame(_bruma2DRaf); _bruma2DRaf = null; }
+  if(_bruma2D?.canvas?.parentNode) _bruma2D.canvas.parentNode.removeChild(_bruma2D.canvas);
+  _bruma2D = null;
+}
+function _sincronizarBruma2D(state, terrainSet){
+  if(state.ambiente !== 'bruma_tenebrosa' || mode3D){ _limparBruma2D(); return; }
+  const wrap = $('map-wrap'), board = $('dungeon-canvas');
+  if(!wrap || !board) return;
+  const W = state.tiles[0].length, H = state.tiles.length;
+  if(!_bruma2D || _bruma2D.W !== W || _bruma2D.H !== H || _bruma2D.canvas.parentNode !== wrap){
+    _limparBruma2D();
+    const canvas = document.createElement('canvas');
+    canvas.className = 'dungeon-mist-overlay';
+    Object.assign(canvas.style, {position:'absolute', left:'8px', top:'8px', pointerEvents:'none', zIndex:'2'});
+    wrap.appendChild(canvas);
+    const scale = Math.min(window.devicePixelRatio || 1, 0.5);
+    canvas.width = Math.ceil(W * CELL * scale); canvas.height = Math.ceil(H * CELL * scale);
+    canvas.style.width = `${W * CELL}px`; canvas.style.height = `${H * CELL}px`;
+    const ctx = canvas.getContext('2d'); ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+    const maskCtx = maskCanvas.getContext('2d'); maskCtx.setTransform(scale, 0, 0, scale, 0, 0);
+    _bruma2D = {canvas, ctx, maskCanvas, maskCtx, W, H, scale, visible:[], startedAt:performance.now()};
+  }
+  _bruma2D.visible = [...terrainSet];
+  _atualizarMascaraBruma2D();
+  if(!_bruma2DRaf){
+    const tick = now => {
+      _bruma2DRaf = null;
+      if(!_bruma2D || !GS.gameState || GS.gameState.ambiente !== 'bruma_tenebrosa' || mode3D
+        || document.hidden || !$('screen-game')?.classList.contains('active')){ _limparBruma2D(); return; }
+      _desenharBruma2D(now);
+      _bruma2DRaf = requestAnimationFrame(tick);
+    };
+    _bruma2DRaf = requestAnimationFrame(tick);
+  }
+}
+function _atualizarMascaraBruma2D(){
+  if(!_bruma2D) return;
+  const {maskCanvas, maskCtx, W, H, visible} = _bruma2D;
+  maskCtx.clearRect(0, 0, W * CELL, H * CELL); maskCtx.fillStyle = '#fff';
+  for(const key of visible){
+    const comma = key.indexOf(','), x = Number(key.slice(0, comma)), y = Number(key.slice(comma + 1));
+    if(Number.isInteger(x) && Number.isInteger(y)) maskCtx.fillRect(x * CELL, y * CELL, CELL, CELL);
+  }
+}
+function _desenharBruma2D(now){
+  if(!_bruma2D) return;
+  const {canvas, ctx, maskCanvas, W, H} = _bruma2D;
+  const w = W * CELL, h = H * CELL, t = (now - _bruma2D.startedAt) * 0.000035;
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(142,166,181,0.045)'; ctx.fillRect(0, 0, w, h);
+  const wisps = [
+    [.14,.28,.24,.13,0], [.42,.68,.30,.16,1.7], [.73,.34,.28,.14,3.1],
+    [.91,.77,.22,.12,4.8], [.27,.88,.26,.12,2.5], [.60,.12,.22,.11,5.7]
+  ];
+  for(const [px,py,rx,ry,phase] of wisps){
+    const x = (px + Math.sin(t + phase) * .045) * w;
+    const y = (py + Math.cos(t * .77 + phase) * .035) * h;
+    const r = Math.max(CELL * 1.1, Math.min(w, h) * rx);
+    const g = ctx.createRadialGradient(x, y, r * .08, x, y, r);
+    g.addColorStop(0, 'rgba(178,198,209,0.13)');
+    g.addColorStop(.48, 'rgba(142,167,182,0.085)');
+    g.addColorStop(1, 'rgba(112,139,157,0)');
+    ctx.fillStyle = g; ctx.fillRect(x-r, y-r, 2*r, 2*r);
+  }
+  // A máscara é refeita só quando chega um novo estado do tabuleiro; o frame
+  // animado aplica-a por composição, sem percorrer milhares de casas a cada RAF.
+  ctx.globalCompositeOperation = 'destination-in'; ctx.drawImage(maskCanvas, 0, 0, w, h);
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function _criarTexturaBruma3D(T){
+  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 128;
+  const c = canvas.getContext('2d');
+  const g = c.createRadialGradient(64,64,4,64,64,62);
+  g.addColorStop(0,'rgba(188,207,218,0.70)');
+  g.addColorStop(.38,'rgba(151,177,193,0.38)');
+  g.addColorStop(.72,'rgba(125,153,171,0.12)');
+  g.addColorStop(1,'rgba(110,140,160,0)');
+  c.fillStyle=g; c.fillRect(0,0,128,128);
+  const texture = new T.CanvasTexture(canvas);
+  if(T.SRGBColorSpace) texture.colorSpace = T.SRGBColorSpace;
+  return texture;
+}
+function _criarBruma3D(T, state, scene){
+  if(state.ambiente !== 'bruma_tenebrosa') return null;
+  const W = state.tiles[0].length, H = state.tiles.length;
+  const stride = Math.max(2, Math.ceil(Math.max(W,H) / 14));
+  const data = [];
+  for(let y=0;y<H;y+=stride) for(let x=0;x<W;x+=stride){
+    if(state.tiles[y][x] !== TILE_FLOOR && state.tiles[y][x] !== TILE_DOOR) continue;
+    const seed = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+    data.push({x:x + .5, z:y + .5, key:`${x},${y}`, phase:(seed % 6283) / 1000,
+      sx:1.5 + (seed % 100) / 100, sz:1.0 + ((seed >>> 8) % 80) / 100, visible:false});
+  }
+  if(!data.length) return null;
+  const texture = _criarTexturaBruma3D(T);
+  const material = new T.MeshBasicMaterial({map:texture, transparent:true, opacity:.25,
+    depthWrite:false, side:T.DoubleSide, color:0xb5c9d4});
+  const mesh = new T.InstancedMesh(new T.PlaneGeometry(1,1), material, data.length);
+  mesh.name = 'bruma-tenebrosa'; mesh.renderOrder = 3; mesh.frustumCulled = false;
+  scene.add(mesh);
+  const dummy = new T.Object3D();
+  for(let i=0;i<data.length;i++){
+    const d = data[i]; dummy.position.set(d.x, .245, d.z); dummy.rotation.set(-Math.PI/2, d.phase, 0);
+    dummy.scale.set(d.sx, d.sz, 1); dummy.updateMatrix(); mesh.setMatrixAt(i, dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+  return {mesh, data, dummy, texture, material};
+}
+function _syncBruma3D(terrainSet){
+  const fx = g3?.bruma;
+  if(!fx) return;
+  for(const d of fx.data) d.visible = terrainSet.has(d.key);
+}
+function _atualizarBruma3D(now){
+  const fx = g3?.bruma;
+  if(!fx) return;
+  const {mesh, data, dummy} = fx;
+  for(let i=0;i<data.length;i++){
+    const d=data[i];
+    if(!d.visible){ dummy.position.set(0,-100,0); dummy.scale.set(0,0,0); }
+    else {
+      dummy.position.set(d.x + Math.sin(now*.00013+d.phase)*.24,
+        .245 + Math.sin(now*.001+d.phase)*.012, d.z + Math.cos(now*.00011+d.phase)*.18);
+      dummy.rotation.set(-Math.PI/2, d.phase + Math.sin(now*.00008+d.phase)*.12, 0);
+      dummy.scale.set(d.sx, d.sz, 1);
+    }
+    dummy.updateMatrix(); mesh.setMatrixAt(i,dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate = true;
+}
+
 function _protetorDraw2D(ctx, state, visionSet, foreground, now){
   if(!ctx || !_protetorVisuals.size) return;
   ctx.save();
@@ -11640,6 +11817,44 @@ function _tickProtetorVisual(now){
   _protetorVisualRaf=_protetorNeedsRaf()?_scheduleVisualFrame(_tickProtetorVisual):null;
 }
 
+function _monstroOcultadoParaJogador(monstro){
+  return !!(monstro?.invisivel_sombras && !monstro?.revealed_by_arcane_vigilance
+    && !GS.isMaster());
+}
+
+function _velaTrapRevealPositions(state){
+  const porCasa = new Map();
+  const add = (pos, revelada) => {
+    if(!revelada || !Array.isArray(pos) || pos.length < 2) return;
+    const x = Number(pos[0]), y = Number(pos[1]);
+    if(!Number.isInteger(x) || !Number.isInteger(y)) return;
+    porCasa.set(`${x},${y}`, [x, y]);
+  };
+  for(const trap of (state?.traps || [])) add(trap.pos, trap.vela_revelada);
+  for(const arm of (state?.armadilhas || [])) add(arm.pos, arm.vela_revelada);
+  for(const decor of (state?.decorations || [])) add(decor.pos, decor.trap_revelada_vela);
+  return [...porCasa.values()];
+}
+
+function _desenharVelaTrapMarkers2D(ctx, state, exploredSet){
+  const casas = _velaTrapRevealPositions(state);
+  if(!casas.length) return;
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for(const [x, y] of casas){
+    // Armadilhas já conhecidas usam o desenho normal do mapa; o marcador
+    // separado serve apenas para mostrar perigos através da névoa temporária.
+    if(exploredSet?.has(`${x},${y}`)) continue;
+    const cx = x * CELL + CELL / 2, cy = y * CELL + CELL / 2;
+    ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.24, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(58,12,18,0.94)'; ctx.fill();
+    ctx.strokeStyle = '#62e8ff'; ctx.lineWidth = Math.max(2, CELL * 0.045); ctx.stroke();
+    ctx.font = `bold ${Math.max(12, CELL * 0.34)}px sans-serif`;
+    ctx.fillStyle = '#fff1d0'; ctx.fillText('!', cx, cy);
+  }
+  ctx.restore();
+}
+
 function renderMap(state){
   if(!state.tiles) return;
   state = _estadoComMortosVisuais(state);
@@ -11697,6 +11912,7 @@ function renderMap(state){
     exploredSet = new Set(visionSet);
     terrainSet = new Set(visionSet);
   }
+  _sincronizarBruma2D(state, terrainSet);
   const {closed:doorClosed} = GS.doorSets(state);
 
   const isAnimadosTurn2D = state.animados_turn === GS.myPid;
@@ -11709,9 +11925,11 @@ function renderMap(state){
 
   const reachable=new Set();
   if(selAnimado2D && selAnimado2D.moves_left>0)
-    bfsReachable(state.tiles,exploredSet,selAnimado2D.pos[0],selAnimado2D.pos[1],selAnimado2D.moves_left,reachable);
+    bfsReachable(state.tiles,exploredSet,selAnimado2D.pos[0],selAnimado2D.pos[1],selAnimado2D.moves_left,reachable,
+      {state, materiais: state.materiais, actor: selAnimado2D});
   else if(selPris2D && (selPris2D.moves_left||0)>0)
-    bfsReachable(state.tiles,exploredSet,selPris2D.pos[0],selPris2D.pos[1],selPris2D.moves_left,reachable);
+    bfsReachable(state.tiles,exploredSet,selPris2D.pos[0],selPris2D.pos[1],selPris2D.moves_left,reachable,
+      {state, materiais: state.materiais, actor: selPris2D});
   else if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&me.moves_left>0)
     bfsReachable(state.tiles,exploredSet,me.pos[0],me.pos[1],me.moves_left,reachable);
   if(testeHeroiControlado && (testeHeroiControlado.moves_left || 0) > 0){
@@ -11729,7 +11947,7 @@ function renderMap(state){
   if(!isAnimadosTurn2D&&GS.isMyTurn&&me&&!me.action_done){
     const wRng=me.weapon?.range??null;
     for(const m of state.monsters){
-      if(!m||m.hp<=0||m._morteVisualPendente||(m.invisivel_sombras&&!GS.isMaster())) continue;
+      if(!m||m.hp<=0||m._morteVisualPendente||_monstroOcultadoParaJogador(m)) continue;
       const dx=Math.abs(me.pos[0]-m.pos[0]), dy=Math.abs(me.pos[1]-m.pos[1]);
       const inR=_alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
@@ -11738,7 +11956,7 @@ function renderMap(state){
   }
   if(testeHeroiControlado && !testeHeroiControlado.action_done){
     for(const m of state.monsters || []){
-      if(!m || m.hp <= 0 || m._morteVisualPendente || (m.invisivel_sombras && !GS.isMaster())) continue;
+      if(!m || m.hp <= 0 || m._morteVisualPendente || _monstroOcultadoParaJogador(m)) continue;
       for(const [tx,ty] of GS.monsterTiles(m)){
         if(GS.weaponCanReachTile(testeHeroiControlado, tx, ty, m.altura)
           && (testeHeroiControlado.weapon?.range == null
@@ -11860,6 +12078,8 @@ function renderMap(state){
       ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
   }
   _desenharSombraObjetos2D(ctx, state, terrainSet);
+  _desenharVelaTrapMarkers2D(ctx, state, exploredSet);
+  _desenharSolucaoMecanismoPreview2D(ctx, state);
   _desenharAimHover2D(ctx);   // cursor da mira por cima da névoa — ver a função
 
   // ── PASS 5: Dramatic Diablo torchlight (multi-layer, orange-red inferno glow)
@@ -12255,7 +12475,7 @@ function renderMap(state){
     ctx.setLineDash([Math.max(3, CELL*.16), Math.max(2, CELL*.10)]);
     ctx.lineWidth = Math.max(1, CELL*.045);
     for(const m of state.monsters){
-      if(!m || m.hp<=0 || m._morteVisualPendente || (m.invisivel_sombras && !GS.isMaster()) || !visionSet.has(`${m.pos[0]},${m.pos[1]}`)) continue;
+      if(!m || m.hp<=0 || m._morteVisualPendente || _monstroOcultadoParaJogador(m) || !visionSet.has(`${m.pos[0]},${m.pos[1]}`)) continue;
       const raio = Math.max(1, Number(m.vision_radius || 6));
       ctx.beginPath();
       ctx.arc(m.pos[0]*CELL+CELL/2, m.pos[1]*CELL+CELL/2, raio*CELL, 0, Math.PI*2);
@@ -12277,7 +12497,7 @@ function renderMap(state){
   const _vortexSpin2D = performance.now() / 260;
   const gamepadAttackTarget2D = _gamepadSelectedAttackTarget(state);
   for(const m of state.monsters){
-    if(m.invisivel_sombras && !GS.isMaster()) continue;
+    if(_monstroOcultadoParaJogador(m)) continue;
     const [mtx,mty]=m.pos;
     if(!visionSet.has(`${mtx},${mty}`)) continue;
     const _buracoM=_buracoQuedaPose2D(`m:${m.id}`);
@@ -20892,18 +21112,21 @@ function magiaIconFill(m){
 }
 
 // Carta de magia 60x72 — cor por círculo (ver VISUAL_CONTRACT.md).
-function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
+function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo, origemGrimorio=false) {
   const m = GRIMORIO_CLIENT[magiaId];
   if (!m) return '';
+  const implementada = typeof GRIMORIO_IMPLEMENTADAS_CLIENT === 'undefined'
+    || GRIMORIO_IMPLEMENTADAS_CLIENT.has(magiaId);
+  const podeConjurar = !!disponivel && (modo !== 'jogo' || implementada);
   const corCirculo = _COR_CIRCULO[m.circulo] || '#c8a951';
-  const cor = usada ? '#2a2a2a' : disponivel ? corCirculo : '#4a4a4a';
+  const cor = usada ? '#2a2a2a' : podeConjurar ? corCirculo : '#4a4a4a';
   const rgb = _RGB_CIRCULO[m.circulo] || '200,169,81';
   // modo 'jogo' → clicar LANÇA a magia; 'selecao' (default) → escolhe na criação.
   const acao = (modo === 'jogo') ? `castarMagia('${magiaId}')` : `selecionarMagia('${magiaId}')`;
   return `
     <div class="carta-magia"
       data-magia-id="${magiaId}"
-      onclick="${disponivel && !usada ? acao : ''}"
+      onclick="${podeConjurar && !usada ? acao : ''}"
       onmouseenter="mostrarTooltipMagia('${magiaId}', event)"
       onmouseleave="ocultarTooltipMagia()"
       style="
@@ -20913,16 +21136,17 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo) {
         background:${selecionada ? `rgba(${rgb},0.20)` : usada ? 'rgba(20,20,20,0.8)' : 'rgba(255,255,255,0.03)'};
         border:2px solid ${selecionada ? cor : usada ? '#1a1a1a' : cor + '44'};
         border-radius:4px;
-        cursor:${disponivel && !usada ? 'pointer' : 'not-allowed'};
-        opacity:${usada ? 0.35 : disponivel ? 1 : 0.5};
+        cursor:${podeConjurar && !usada ? 'pointer' : 'not-allowed'};
+        opacity:${usada ? 0.35 : podeConjurar ? 1 : 0.5};
         transition:all 0.2s; position:relative; margin:3px;
       "
-      onmouseover="if(${disponivel && !usada})this.style.borderColor='${cor}'"
+      onmouseover="if(${podeConjurar && !usada})this.style.borderColor='${cor}'"
       onmouseout="if(!${selecionada})this.style.borderColor='${cor}44'"
     >
       <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; line-height:1; overflow:hidden; border-radius:3px;">${usada ? '💤' : magiaIconFill(m)}</div>
       <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>
       ${selecionada ? `<div style="position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:${cor}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>` : ''}
+      ${origemGrimorio ? `<span title="Magia concedida pelo grimório equipado" style="position:absolute; left:2px; bottom:2px; padding:1px 3px; border-radius:2px; background:#172438e8; color:#9fc9ff; font:7px sans-serif; z-index:3;">GRIMÓRIO</span>` : ''}
     </div>
   `;
 }
@@ -21345,7 +21569,11 @@ function _slotsMaxParaHeroi(heroi){
 function renderMagiasFichaEmJogo(heroi, cls) {
   cls = cls || (heroi && heroi.class_id) || 'mage';
   const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
-  const known    = _magiasConhecidasIds(heroi);
+  const magiasLivro = cls === 'mage' && Array.isArray(heroi?.magias_grimorio)
+    ? heroi.magias_grimorio : [];
+  const idsKnown = [...new Set([..._magiasConhecidasIds(heroi), ...magiasLivro])];
+  const known    = idsKnown;
+  const idsDoLivro = new Set(magiasLivro);
   const limites  = _slotsMaxParaHeroi(heroi);
   const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[], quarto:[], quinto:[]};
   const restantesServidor = (heroi && heroi.slots_remaining) || null;
@@ -21357,7 +21585,8 @@ function renderMagiasFichaEmJogo(heroi, cls) {
     // Sala de treino do Mago: o servidor manda `slots_livres_treino` e as magias não gastam slots.
     const treinoLivre = !!heroi?.slots_livres_treino && magiasCirculo.length > 0;
     const possuiTesteLivre = treinoLivre || (cls === 'cleric' && circulo === 'quinto' && magiasCirculo.includes('tempestade_ciclones'));
-    if (limite === 0 && !possuiTesteLivre) return `
+    const temMagiaDoLivro = magiasCirculo.some(id => idsDoLivro.has(id));
+    if (limite === 0 && !possuiTesteLivre && !temMagiaDoLivro) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — ${t('ui.magia.slot_nivel_maior')}</div>
       </div>`;
@@ -21392,13 +21621,14 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
+          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? 'sem slot deste círculo' : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
           ${magiasCirculo.map((id, idx) => {
             const livreParaTeste = possuiTesteLivre || (cls === 'mage' && (id === 'metamorfose' || id === 'teleporte'));
-            return criarCartaMagia(id, false, livreParaTeste || livres > 0, false, 'jogo');
+            const temSlotMaximo = limite > 0 || treinoLivre || (cls === 'cleric' && circulo === 'quinto' && id === 'tempestade_ciclones');
+            return criarCartaMagia(id, false, temSlotMaximo && (livreParaTeste || livres > 0), false, 'jogo', idsDoLivro.has(id));
           }).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">${t('ui.magia.nenhuma_magia_memorizada')}</div>` : ''}
         </div>
@@ -21876,14 +22106,19 @@ function _areaLadoMiraMagia(magiaId, _def, _me, scroll) {
   return cajadoLado || invernoLado || (_def && _def.area_lado) || 0;
 }
 
-function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId) {
+function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId, options = {}) {
   const _def = GRIMORIO_CLIENT[magiaId];
   _registrarEfeitoVisualLocal(magiaId, 'magic');
   // alvoLivre: a magia mira qualquer casa do mapa, sem limite de alcance e
   // mesmo sob névoa (ex.: Clarividência). Some o anel vermelho de alcance.
   const _me = GS.me;
+  const areaBola = options.crystalBall
+    ? ((_me?.class_id === 'mage' || _me?.class_id === 'cleric')
+      ? _areaLadoMiraMagia(magiaId, _def, _me, false) : 4)
+    : null;
   window._modoMagia = { magiaId, alvoTipo, alvoLivre: !!(_def && _def.alvoLivre),
-                        areaLado: _areaLadoMiraMagia(magiaId, _def, _me, !!scrollItemId),
+                        areaLado: areaBola ?? _areaLadoMiraMagia(magiaId, _def, _me, !!scrollItemId),
+                        crystalBall: !!options.crystalBall,
                         scrollItemId: scrollItemId || null };
   // Realce: alcance (azul) fixo no caster; área (verde) segue o cursor.
   if (alvoTipo === 'adjacent_tile') {
@@ -22044,7 +22279,10 @@ function _clickTileMagia(tx, ty) {
   // Tamanho ESCOLHIDO (2/3/4), não `mode.areaLado`: com o Cajado Arcano a
   // prévia já inclui o +1, e o servidor recusa lado 5.
   if (magiaId === 'prisao_chamas') fields.lado = _prisaoChamasLadoEscolhido();
-  if (mode.scrollItemId) {
+  if (mode.crystalBall) {
+    GS.useCrystalBall(fields.tx, fields.ty);
+    toast(t('ui.magia.lancada', {icone: '🔮', nome: t('cat.item.bola_cristal_clarividencia.nome')}), '#c8a951');
+  } else if (mode.scrollItemId) {
     send(Object.assign({ type: 'use_scroll', item_id: mode.scrollItemId }, fields));
     toast(`📜 ${m.nome} (pergaminho)!`, '#c8a951');
   } else {
@@ -22522,7 +22760,7 @@ window.castarMagia = castarMagia;
 function _iniciarMiraArremesso(item, player, sourceInfo){
   const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid && p.alive);
   if(!me){ toast(t('ui.arremesso.agora_nao'), 'var(--gold)'); return; }
-  if(!GS.isMyTurn || me.action_done){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'), 'var(--gold)'); return; }
+  if(!GS.isMyTurn || !GS.canThrowItem(me)){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'), 'var(--gold)'); return; }
   // Encerra qualquer outra mira ativa para não empilhar realces.
   if(window._modoThrowItem) _encerrarMiraArremesso();   // re-entrada: limpa a mira de item anterior
   if(window._modoMagia) _encerrarModoMagia();
@@ -22535,7 +22773,7 @@ function _iniciarMiraArremesso(item, player, sourceInfo){
   // Itens custom (Editor de Itens) não estão no CATALOGO_ITENS estático — a mira
   // cai para os metadados que o servidor carrega no próprio item de bolsa.
   const alvoTipo = catDef.alvo || item.alvo || 'ataque_alvo';
-  const alcance = catDef.alcance || item.alcance || 4;
+  const alcance = (catDef.alcance || item.alcance || 4) + _bonusAlcanceArremessoCli(me);
   const isArea  = alvoTipo === 'area';
   const areaRaio = isArea ? (catDef.areaRaio ?? item.area_raio ?? 1) : null;
   window._modoThrowItem = { id: item.id, alcance, area: areaRaio, sourceInfo };
@@ -23138,6 +23376,9 @@ function _alcanceComAlturaCli(origem, alcance, destino=null, alturaDestino=0){
     : (GS.custoVerticalAlcance
       ? GS.custoVerticalAlcance(_alturaEntidadeCli(origem), alvoAltura) : 0);
   return Number(alcance || 0) - custo;
+}
+function _bonusAlcanceArremessoCli(player){
+  return Number(player?.essencia_vento_rodadas || 0) > 0 ? 2 : 0;
 }
 // Direção 8-way dominante do caster até o cursor (cardinal ou diagonal).
 function _dir8(ddx, ddy) {
@@ -26571,7 +26812,7 @@ function renderMyPanel(state){
   if(me.gear && me.gear.off_hand && me.gear.off_hand.throw_range)
     _throwWeapons.push({slot:'off_hand', item:me.gear.off_hand, hand:t('ui.hud.segunda_mao')});
   const _throwBtns = _throwWeapons.map(tw=>{
-    const tr = tw.item.throw_range;
+    const tr = tw.item.throw_range + _bonusAlcanceArremessoCli(me);
     const tgts = (GS.gameState ? GS.gameState.monsters : []).filter(m=>
       m && m.hp>0 && Math.max(Math.abs(_pp[0]-m.pos[0]), Math.abs(_pp[1]-m.pos[1])) <= tr);
     const can = canAct && tgts.length>0;
@@ -26839,6 +27080,7 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'cleric')  sl.appendChild(_clericSkillBtn(me, sk));
     else if(sk.granted_origem === 'bard')    sl.appendChild(_bardSkillBtn(me, sk));
     else if(sk.granted_origem === 'weapon')  sl.appendChild(_weaponThrowSkillBtn(me, sk));
+    else if(sk.granted_origem === 'crystal_ball') sl.appendChild(_crystalBallSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -28417,18 +28659,169 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const BONUS_ACTION_EFFECTS = new Set([
   'heal', 'regeneration', 'atk_bonus', 'antidote', 'coat_poison',
-  'veil_shadow', 'cure_poison', 'cure_petrification', 'cure_disease', 'meal_survival'
+  'veil_shadow', 'disarm_traps_area', 'invisibility', 'speed', 'darkness_mantle', 'elemental_resistance_potion', 'arcane_barrier_potion', 'strength_potion', 'dexterity_potion',
+  'constitution_potion', 'intelligence_potion', 'ranged_range_potion',
+  'cure_poison', 'cure_petrification', 'cure_disease', 'meal_survival'
 ]);
 
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
 // ADJACENTE — se o alvo não veio, abre o modal de alvo (o servidor revalida).
 const CURA_STATUS_EFFECTS = ['cure_poison', 'cure_petrification', 'cure_disease'];
+
+let _solucaoMecanismoPreview = null;
+function _solucaoMecanismoAreaTiles(pos, width, height, radius = 3){
+  if(!Array.isArray(pos) || pos.length < 2) return [];
+  const cx = Number(pos[0]), cy = Number(pos[1]);
+  const w = Math.max(0, Number(width) || 0), h = Math.max(0, Number(height) || 0);
+  if(!Number.isInteger(cx) || !Number.isInteger(cy)) return [];
+  const tiles = [];
+  for(let y = Math.max(0, cy - radius); y <= Math.min(h - 1, cy + radius); y++)
+    for(let x = Math.max(0, cx - radius); x <= Math.min(w - 1, cx + radius); x++)
+      tiles.push([x, y]);
+  return tiles;
+}
+
+function _solucaoMecanismoCenter(state = GS.gameState){
+  const me = state?.players?.find(p => p?.id === GS.myPid && p.alive);
+  return Array.isArray(me?.pos) ? [Number(me.pos[0]), Number(me.pos[1])] : null;
+}
+
+function _solucaoMecanismoFecharPreview(){
+  if(!_solucaoMecanismoPreview) return;
+  _solucaoMecanismoPreview = null;
+  window.removeEventListener('keydown', _solucaoMecanismoPreviewKeydown, true);
+  document.getElementById('solucao-mecanismo-preview')?.remove();
+  if(GS.gameState) renderMap(GS.gameState);
+}
+
+function _cancelarPreviewSolucaoMecanismo(){
+  _solucaoMecanismoFecharPreview();
+}
+
+function _confirmarPreviewSolucaoMecanismo(){
+  const preview = _solucaoMecanismoPreview;
+  if(!preview) return;
+  const center = _solucaoMecanismoCenter();
+  if(!center) return _cancelarPreviewSolucaoMecanismo();
+  if(center[0] !== preview.center[0] || center[1] !== preview.center[1]){
+    preview.center = center;
+    if(GS.gameState) renderMap(GS.gameState);
+    toast(t('ui.item.solucao_mecanismo.posicao_atualizada'), 'var(--gold)');
+    return;
+  }
+  _solucaoMecanismoFecharPreview();
+  GS.useItem(preview.itemId, preview.sourceInfo);
+}
+
+function _solucaoMecanismoPreviewKeydown(event){
+  if(!_solucaoMecanismoPreview) return;
+  if(event.key === 'Escape'){
+    event.preventDefault(); event.stopImmediatePropagation();
+    _cancelarPreviewSolucaoMecanismo();
+    return;
+  }
+  if(event.key === 'Enter'){
+    event.preventDefault(); event.stopImmediatePropagation();
+    _confirmarPreviewSolucaoMecanismo();
+    return;
+  }
+  if(event.key !== 'Tab'){
+    event.preventDefault(); event.stopImmediatePropagation();
+  }
+}
+
+function _iniciarPreviewSolucaoMecanismo(itemId, sourceInfo){
+  if(_solucaoMecanismoPreview) _solucaoMecanismoFecharPreview();
+  const state = GS.gameState;
+  const center = _solucaoMecanismoCenter(state);
+  if(!state?.tiles?.length || !center || !GS.isMyTurn) return;
+  _solucaoMecanismoPreview = { itemId, sourceInfo, center };
+  if(typeof InventoryModal !== 'undefined') InventoryModal.close();
+  const root = document.createElement('div');
+  root.id = 'solucao-mecanismo-preview';
+  root.setAttribute('role', 'dialog');
+  root.setAttribute('aria-modal', 'true');
+  root.setAttribute('aria-labelledby', 'solucao-mecanismo-preview-title');
+  root.style.cssText = 'position:fixed;inset:0;z-index:10050;display:flex;align-items:flex-start;justify-content:center;padding:18px;box-sizing:border-box;background:rgba(8,7,12,.16);pointer-events:auto;';
+  root.innerHTML = `<section style="margin-top:10px;max-width:440px;width:100%;padding:14px 16px;border:1px solid #c8a85c;border-radius:10px;background:rgba(25,20,17,.97);color:#f4ead1;box-shadow:0 12px 38px #000b;font-family:'Cinzel',serif;text-align:center;">
+    <div id="solucao-mecanismo-preview-title" style="font-size:16px;font-weight:bold;color:#f0cf7a;">${t('ui.item.solucao_mecanismo.preview_titulo')}</div>
+    <div style="margin:8px 0 12px;font:13px/1.45 sans-serif;color:#eee2c9;">${t('ui.item.solucao_mecanismo.preview_texto')}</div>
+    <div style="display:flex;justify-content:center;gap:10px;">
+      <button type="button" id="solucao-mecanismo-preview-confirm" data-gamepad-action="activate" tabindex="0" style="padding:8px 14px;border:1px solid #f0cf7a;border-radius:6px;background:#57451f;color:#fff3d1;cursor:pointer;">${t('ui.item.solucao_mecanismo.confirmar')}</button>
+      <button type="button" id="solucao-mecanismo-preview-cancel" data-gamepad-action="activate" tabindex="0" style="padding:8px 14px;border:1px solid #837d70;border-radius:6px;background:#302d2a;color:#eee;cursor:pointer;">${t('ui.item.solucao_mecanismo.cancelar')}</button>
+    </div>
+  </section>`;
+  root.addEventListener('pointerdown', event => {
+    if(event.target === root){ event.preventDefault(); event.stopPropagation(); }
+  });
+  root.querySelector('#solucao-mecanismo-preview-confirm')?.addEventListener('click', _confirmarPreviewSolucaoMecanismo);
+  root.querySelector('#solucao-mecanismo-preview-cancel')?.addEventListener('click', _cancelarPreviewSolucaoMecanismo);
+  document.body.appendChild(root);
+  window.addEventListener('keydown', _solucaoMecanismoPreviewKeydown, true);
+  root.querySelector('#solucao-mecanismo-preview-confirm')?.focus();
+  renderMap(state);
+}
+
+function _desenharSolucaoMecanismoPreview2D(ctx, state){
+  if(!_solucaoMecanismoPreview || !state?.tiles?.length) return;
+  const center = _solucaoMecanismoPreview.center;
+  const tiles = _solucaoMecanismoAreaTiles(center, state.tiles[0].length, state.tiles.length);
+  ctx.save();
+  ctx.fillStyle = 'rgba(69,194,219,0.20)';
+  ctx.strokeStyle = 'rgba(228,197,112,0.92)';
+  ctx.lineWidth = Math.max(1.5, CELL * 0.035);
+  for(const [x, y] of tiles){
+    ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+    ctx.strokeRect(x * CELL + 1.5, y * CELL + 1.5, CELL - 3, CELL - 3);
+  }
+  ctx.restore();
+}
+
+function _syncSolucaoMecanismoPreview3D(state){
+  if(!g3?.scene || !g3.T) return;
+  if(!g3.solucaoMecanismoPreviewTiles) g3.solucaoMecanismoPreviewTiles = {};
+  const meshes = g3.solucaoMecanismoPreviewTiles;
+  const preview = _solucaoMecanismoPreview;
+  const tiles = preview && state?.tiles?.length
+    ? _solucaoMecanismoAreaTiles(preview.center, state.tiles[0].length, state.tiles.length) : [];
+  const T = g3.T, ativos = new Set();
+  for(const [x, y] of tiles){
+    const key = `${x},${y}`;
+    ativos.add(key);
+    let mesh = meshes[key];
+    if(!mesh){
+      mesh = new T.Mesh(new T.PlaneGeometry(0.9, 0.9), new T.MeshBasicMaterial({
+        color: 0x45c2db, transparent: true, opacity: 0.27, depthWrite: false,
+        side: T.DoubleSide,
+      }));
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.renderOrder = 14;
+      mesh.userData.isSolucaoMecanismoPreview = true;
+      g3.scene.add(mesh);
+      meshes[key] = mesh;
+    }
+    mesh.position.set(x, topoSuperficie3D(state, x, y, 0.22) + 0.018, y);
+    mesh.visible = true;
+  }
+  for(const [key, mesh] of Object.entries(meshes)){
+    if(ativos.has(key)) continue;
+    g3.scene.remove(mesh);
+    mesh.geometry?.dispose();
+    mesh.material?.dispose();
+    delete meshes[key];
+  }
+}
+
 function useItem(itemId, targetId, sourceInfo){
   if(targetId === undefined){
     const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
     const it = sourceInfo?.source === 'utility_belt'
       ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
       : me && (me.bag || []).find(b => b.id === itemId);
+    if(it?.effect === 'disarm_traps_area'){
+      _iniciarPreviewSolucaoMecanismo(itemId, sourceInfo);
+      return;
+    }
     if(it && CURA_STATUS_EFFECTS.includes(it.effect)){
       const alvos = (GS.gameState.players || []).filter(q =>
         q.alive && (q.id === me.id ||
@@ -28743,6 +29136,28 @@ function _modificadoresTemporariosStatus(p){
   if(p.visao_escuro_missao) add(`🌌 ${magicName('visao_escuro')}`, t('ui.status.visao_no_escuro_ativa'));
   if(Number(p.protecao_rodadas || 0) > 0)
     addRestante(`🛡️ ${magicName('protecao_energia')}`, t('ui.status.absorve_dano_elemental', {n: p.protecao_restante ?? p.protecao_max ?? 0}), p.protecao_rodadas);
+  for(const [elemento, protecao] of Object.entries(p.protecao_pocoes_elementais || {}))
+    if(Number(protecao?.rodadas || 0) > 0)
+      addRestante(`🧪 ${t(`cat.item.pocao_resistencia_${elemento}.nome`)}`,
+        t('ui.status.absorve_dano_elemental', {n: protecao.restante ?? protecao.max ?? 10}), protecao.rodadas);
+  if(Number(p.gole_gigante_rodadas || 0) > 0)
+    addRestante(`💪 ${t('cat.item.gole_do_gigante.nome')}`,
+      t('ui.status.gole_do_gigante_ef', {n: p.gole_gigante_bonus || 0}), p.gole_gigante_rodadas);
+  if(Number(p.bote_serpente_rodadas || 0) > 0)
+    addRestante(`🐍 ${t('cat.item.bote_da_serpente.nome')}`,
+      t('ui.status.bote_da_serpente_ef', {n: p.bote_serpente_bonus || 0}), p.bote_serpente_rodadas);
+  if(Number(p.elixir_cavalo_ferro_rodadas || 0) > 0)
+    addRestante(`🛡️ ${t('cat.item.elixir_cavalo_ferro.nome')}`,
+      t('ui.status.elixir_cavalo_ferro_ef', {n: p.elixir_cavalo_ferro_bonus || 0}), p.elixir_cavalo_ferro_rodadas);
+  if(Number(p.sabedoria_liquida_rodadas || 0) > 0)
+    addRestante(`🔮 ${t('cat.item.sabedoria_liquida.nome')}`,
+      t('ui.status.sabedoria_liquida_ef', {n: p.sabedoria_liquida_bonus || 0}), p.sabedoria_liquida_rodadas);
+  if(Number(p.mira_falcao_rodadas || 0) > 0)
+    addRestante(`🏹 ${t('cat.item.mira_do_falcao.nome')}`,
+      t('ui.status.mira_do_falcao_ef'), p.mira_falcao_rodadas);
+  if(Number(p.essencia_vento_rodadas || 0) > 0)
+    addRestante(`🍃 ${t('cat.item.essencia_vento_favoravel.nome')}`,
+      t('ui.status.essencia_vento_ef'), p.essencia_vento_rodadas);
   if(Number(p.temp_ca_bonus || 0) !== 0)
     addRestante(t('ui.status.ca_temporaria'), `${fmtDelta(p.temp_ca_bonus)} CA`, p.temp_ca_rodadas);
   if(p.invisivel_magico && Number(p.invisivel_magico_rodadas || 0) > 0)
@@ -28754,7 +29169,12 @@ function _modificadoresTemporariosStatus(p){
   if(Number(p.potion_regen_pool || 0) > 0)
     add(t('ui.status.pocao_de_regeneracao'), t('ui.status.reserva_regen_pocao', {n: p.potion_regen_pool}));
   if(p.contramagica_preparada) add(`🛑 ${magicName('contramagica')}`, t('ui.status.pronta_para_reagir_a_proxima_magia'));
-  if(Number(p.voo || p.voo_magico || 0) > 0) add(t('ui.status.voo'), `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`);
+  if(Number(p.voo || p.voo_magico || 0) > 0) {
+    const vooDescricao = `altura ${p.altura ?? 0}/${p.altura_max ?? 10}`;
+    const vooPocaoRodadas = Number(p.voo_pocao_rodadas || 0);
+    if(vooPocaoRodadas > 0) addRestante(t('ui.status.voo'), vooDescricao, vooPocaoRodadas);
+    else add(t('ui.status.voo'), vooDescricao);
+  }
   if(Number(p.olhar_petrificante_ate || 0) >= r && Number(p.olhar_petrificante_ate || 0) > 0)
     add(t('ui.status.olhar_petrificante'), t('ui.status.efeito_ativo_criaturas_que_o_veem_devem_re'), p.olhar_petrificante_ate);
 
@@ -29499,6 +29919,21 @@ function ativarHabilidadeDoMenu(skillId){
     });
     return;
   }
+  if(skillId === 'usar_bola_cristal'){
+    const item = me.gear?.off_hand;
+    const prontaEm = Number(item?.clarividencia_pronta_em || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(item?.effect !== 'crystal_ball_clairvoyance'){
+      toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return;
+    }
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.item.bola_cristal_clarividencia.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    _iniciarModoMagia('clarividencia', 'tile', null, {crystalBall:true});
+    return;
+  }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
   if(weaponThrowSlot){
     fecharMenuHabilidades();
@@ -30009,7 +30444,7 @@ function _weaponThrowSkillEntries(player){
       icon: item.emoji || '🎯',
       tipo: 'acao_principal',
       target: 'enemy',
-      description: t('ui.arremesso.descricao_arma', {nome, alcance: item.throw_range, atributo}),
+      description: t('ui.arremesso.descricao_arma', {nome, alcance: item.throw_range + _bonusAlcanceArremessoCli(player), atributo}),
       throw_slot: slot,
       weapon_id: item.id,
       granted_origem: 'weapon',
@@ -30033,7 +30468,7 @@ function _weaponThrowSkillBtn(me, skill){
     if(!monstro || monstro.hp <= 0 || !item?.throw_range) return false;
     const p = me.pos || [0, 0];
     return Math.max(Math.abs(p[0] - monstro.pos[0]), Math.abs(p[1] - monstro.pos[1])) <=
-      _alcanceComAlturaCli(me, item.throw_range, monstro)
+      _alcanceComAlturaCli(me, item.throw_range + _bonusAlcanceArremessoCli(me), monstro)
       && GS.hasLineOfSight(state, p[0], p[1], monstro.pos[0], monstro.pos[1]);
   });
   // O arremesso pode ser ação principal ou bônus, exatamente como no servidor.
@@ -30052,6 +30487,29 @@ function _weaponThrowSkillBtn(me, skill){
   return btn;
 }
 
+function _crystalBallSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.off_hand;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.clarividencia_pronta_em || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.effect === 'crystal_ball_clairvoyance' && GS.isMyTurn
+    && me.alive && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '🔮')} ${t('cat.item.bola_cristal_clarividencia.nome')}${recarga}</div>
+      <div class="skill-desc">${t('cat.item.bola_cristal_clarividencia.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🎯'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_bola_cristal');
+  return btn;
+}
+
 // Arremessa a arma de um slot específico ('weapon' = mão principal, 'off_hand' =
 // 2ª mão). Seleção rápida de alvo (modal se houver vários). Envia o slot para o
 // servidor arremessar exatamente aquela arma.
@@ -30063,26 +30521,27 @@ function beginThrowSlot(slot){
   const item = slot === 'off_hand' ? (me.gear && me.gear.off_hand) : me.weapon;
   const tr = item && item.throw_range;
   if(!tr){ toast(t('ui.arremesso.sem_arma_na_mao')); return; }
+  const alcance = tr + _bonusAlcanceArremessoCli(me);
   const nome = (item && item.name) || 'arma';
   const pp = me.pos || [0,0];
   const targets = (st.monsters||[]).filter(m=>m && m.hp>0 &&
-    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, tr, m) &&
+    Math.max(Math.abs(pp[0]-m.pos[0]), Math.abs(pp[1]-m.pos[1])) <= _alcanceComAlturaCli(me, alcance, m) &&
     GS.hasLineOfSight(st, pp[0], pp[1], m.pos[0], m.pos[1]));   // paredes barram o arremesso
   if(!targets.length){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:tr})); return; }
   const range = new Set(), validTargets = new Set();
-  _addCheb(pp[0], pp[1], Math.max(0, _alcanceComAlturaCli(me, tr)), range);
+  _addCheb(pp[0], pp[1], Math.max(0, _alcanceComAlturaCli(me, alcance)), range);
   for(const monster of st.monsters || []) {
     if(!monster || monster.hp <= 0) continue;
     for(const [x, y] of GS.monsterTiles(monster)) {
-      const efetivo = _alcanceComAlturaCli(me, tr, monster);
+      const efetivo = _alcanceComAlturaCli(me, alcance, monster);
       if(Math.max(Math.abs(pp[0]-x), Math.abs(pp[1]-y)) <= efetivo
           && GS.hasLineOfSight(st, pp[0], pp[1], x, y)) validTargets.add(`${x},${y}`);
     }
   }
-  window._modoArremessoArma = {slot, alcance:tr, range};
+  window._modoArremessoArma = {slot, alcance, range};
   _aimStart({
     kind:'arremesso_arma', title:`🎯 ${t('ui.acao.arremessar_arma', {nome})}`,
-    instruction:t('ui.arremesso.escolha_alvo', {nome, alcance:tr}),
+    instruction:t('ui.arremesso.escolha_alvo', {nome, alcance}),
     color:'#ffad57', targetLabel:t('ui.arremesso.inimigo'), range, area:validTargets,
     cancelText:t('ui.arremesso.arremesso_de_arma_cancelado'),
     cleanup:()=>{ window._modoArremessoArma = null; },
@@ -30985,7 +31444,8 @@ function _gamepadAtualizarPreviaMovimento(state){
     const exp = new Set((state.explored || []).map(([x, y]) => `${x},${y}`));
     for(const [rx, ry] of (state.revealed || [])) exp.add(`${rx},${ry}`);
     const passos = GS.findPath(state.tiles, exp, peca.pos[0], peca.pos[1],
-                               cursor[0], cursor[1], peca.moves_left);
+                               cursor[0], cursor[1], peca.moves_left,
+                               false, {state, materiais: state.materiais, actor: peca.ref});
     if(passos && passos.length){
       _selecionarPreviaMovimento({type:'move', path:passos}, cursor[0], cursor[1], false, peca);
     } else if(GS.pendingMove){
@@ -31871,6 +32331,12 @@ function _pollGamepad(now){
   // Um modal aberto recebe o direcional antes do tabuleiro: evita mover o
   // herói acidentalmente enquanto uma confirmação, loja ou ficha está na tela.
   const playing = inDungeon && _gamepadUiScope() === $('screen-game');
+  if(playing && _solucaoMecanismoPreview){
+    if(_gamepadButtonEdge(pad, _gamepadBinding('confirm'))) _confirmarPreviewSolucaoMecanismo();
+    else if(_gamepadButtonEdge(pad, _gamepadBinding('cancel'))) _cancelarPreviewSolucaoMecanismo();
+    _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
+    return;
+  }
   if(_gamepadInput.uiPointer && !_gamepadUiPointerControls().length){
     _gamepadInput.uiPointer = false;
     _gamepadSetUiFocus(null);
@@ -43400,12 +43866,16 @@ function _protecaoEnergiaTarget(anim,state){return(state?.players||[]).find(p=>S
 function _syncProtecaoEnergiaState(state){
   if(!state)return;const now=performance.now();
   for(const p of(state.players||[])){
-    if(!p.alive||!(p.protecao_rodadas>0))continue;
+    const potions=p.protecao_pocoes_elementais||{},potionTypes=Object.keys(potions).filter(k=>Number(potions[k]?.rodadas||0)>0),spellActive=Number(p.protecao_rodadas||0)>0;
+    if(!p.alive||(!spellActive&&!potionTypes.length))continue;
+    const types=[...new Set([...(spellActive?(p.protecao_tipos||[]):[]),...potionTypes])];
+    const remainingValues=potionTypes.map(k=>Number(potions[k]?.restante??potions[k]?.max??10));if(spellActive)remainingValues.push(Number(p.protecao_restante??p.protecao_max??10));
     let anim=_protecaoEnergiaAnims.find(a=>String(a.targetId)===String(p.id)&&a.endingAt==null);
-    if(!anim){anim=_protecaoEnergiaAnimFromMessage({spell_id:'protecao_energia',target_id:p.id,target:p.pos,reduction:p.protecao_max,remaining:p.protecao_restante,types:p.protecao_tipos});anim.start=now-anim.riseMs;anim.resolved=true;anim.stateSeen=true;_protecaoEnergiaAnims.push(anim);_tocarSomProtecaoEnergia(anim,true);}
-    anim.stateSeen=true;anim.origin=Array.isArray(p.pos)?p.pos.map(Number):anim.origin;anim.max=Math.max(1,Number(p.protecao_max)||anim.max);anim.remaining=Math.max(0,Number(p.protecao_restante??anim.remaining));anim.types=Array.isArray(p.protecao_tipos)?p.protecao_tipos.slice():anim.types;
+    const max=Math.max(Number(p.protecao_max)||0,...potionTypes.map(k=>Number(potions[k]?.max)||10),10),remaining=Math.min(...remainingValues,10);
+    if(!anim){anim=_protecaoEnergiaAnimFromMessage({spell_id:'protecao_energia',target_id:p.id,target:p.pos,reduction:max,remaining,types});anim.start=now-anim.riseMs;anim.resolved=true;anim.stateSeen=true;_protecaoEnergiaAnims.push(anim);_tocarSomProtecaoEnergia(anim,true);}
+    anim.stateSeen=true;anim.origin=Array.isArray(p.pos)?p.pos.map(Number):anim.origin;anim.max=max;anim.remaining=Math.max(0,remaining);anim.types=types;
   }
-  for(const anim of _protecaoEnergiaAnims){const p=_protecaoEnergiaTarget(anim,state);if(anim.resolved&&anim.stateSeen&&anim.endingAt==null&&(!p||!p.alive||!(p.protecao_rodadas>0)))anim.endingAt=now;}
+  for(const anim of _protecaoEnergiaAnims){const p=_protecaoEnergiaTarget(anim,state),active=!!p&&p.alive&&((Number(p.protecao_rodadas||0)>0)||Object.values(p.protecao_pocoes_elementais||{}).some(v=>Number(v?.rodadas||0)>0));if(anim.resolved&&anim.stateSeen&&anim.endingAt==null&&!active)anim.endingAt=now;}
 }
 
 function _tocarSomProtecaoEnergia(anim,sustainOnly=false){
@@ -43455,7 +43925,7 @@ function _receberAnimacaoProtecaoEnergia(msg){
   const anim=_protecaoEnergiaAnims.find(a=>String(a.targetId)===target&&a.endingAt==null)||_protecaoEnergiaAnims.find(a=>a.animationId===id);if(!anim)return;
   if(msg.phase==='resolve'){anim.resolved=true;anim.resolveAt=performance.now();return;}
   if(msg.phase==='hit'){const absorbed=Math.max(0,Number(msg.absorbed)||0);anim.remaining=Math.max(0,Number(msg.remaining??anim.remaining));anim.lastElement=msg.element||anim.lastElement;anim.hitBursts.push({start:performance.now(),absorbed,element:anim.lastElement});_tocarSomProtecaoEnergiaHit(anim.lastElement);}
-  else if(msg.phase==='refresh'){anim.remaining=Math.max(0,Number(msg.remaining??anim.max));anim.max=Math.max(1,Number(msg.reduction)||anim.max);anim.refreshAt=performance.now();}
+  else if(msg.phase==='refresh'){anim.remaining=Math.max(0,Number(msg.remaining??anim.max));anim.max=Math.max(1,Number(msg.reduction)||anim.max);if(Array.isArray(msg.types))anim.types=msg.types.slice();anim.refreshAt=performance.now();}
   else if(msg.phase==='expire'){anim.endingAt=performance.now();_pararSomProtecaoEnergia(anim);}
   if(!_protecaoEnergiaRaf)_protecaoEnergiaRaf=_scheduleVisualFrame(_tickProtecaoEnergia);
 }
@@ -44369,6 +44839,7 @@ function _overlayShowOnly(pool, keys){
 function init3D(state){
   if(!window.THREE){ console.error('Three.js not loaded'); return; }
   if(!window.THREE.OrbitControls){ console.error('OrbitControls not loaded'); return; }
+  _limparBruma2D();
   if(g3) dispose3D();
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
@@ -45767,6 +46238,7 @@ function init3D(state){
 
   const entityGroup = new T.Group();
   scene.add(entityGroup);
+  const bruma = _criarBruma3D(T, state, scene);
 
   const raycaster = new T.Raycaster();
 
@@ -45887,7 +46359,7 @@ function init3D(state){
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,
     hoverSpot,
-    activeEffectGroup, movePreviewGroup, protetorEffectGroup, sombraGroup,
+    activeEffectGroup, movePreviewGroup, protetorEffectGroup, sombraGroup, bruma,
     activeEffectSprites: {},
     stairGroup,                          // staircase mesh (null if no stairs)
     heroSpawnGroups,                     // markers for separated hero starts
@@ -45895,6 +46367,7 @@ function init3D(state){
     chestMeshes: {},                     // chest_id → THREE.Group
     groundItemMeshes: {},                // ground_item id → THREE.Group (item largado no chão)
     groundItemSeenIds: new Set((state.ground_items || []).map(item => String(item.id))),
+    trapRevealMarkers: {},               // alerta temporário da Vela Reveladora por casa
     decorMeshes: {},                     // decor id → THREE.Mesh
     hoveredPos:  null,   // [gx, gy] of figure under cursor, or null
     selectedPos: null    // [gx, gy] of clicked-selected figure, or null
@@ -46221,6 +46694,7 @@ function _mkWoodTex(T){
 
 function dispose3D(){
   if(!g3) return;
+  _limparBruma2D();
   _guiaDemoVisualLimpar();
   cancelAnimationFrame(g3.animFrame);
   // Sem o laço 3D ninguém mais tica as cenas: um herói morto ficaria
@@ -46287,6 +46761,11 @@ function dispose3D(){
     g3.cooperativeMarkerGroup = null;
   }
   _clearMovePreviewVisual();
+  if(g3.bruma){
+    g3.scene.remove(g3.bruma.mesh);
+    g3.bruma.mesh.geometry.dispose();
+    g3.bruma.material.dispose(); g3.bruma.texture.dispose();
+  }
   for(const f of _combatFeedbacks) _disposeCombatFeedback3D(f);
   // Restore map-wrap positioning so the 2D canvas flows normally
   const wrap = $('map-wrap');
@@ -46702,6 +47181,7 @@ function startLoop3D(){
       }
     }
     _updateGroundItemDropAnimations3D(now);
+    _atualizarBruma3D(now);
     _fpsTick(now);
     // Todos os efeitos de magia compartilham este mesmo frame do renderer.
     _flushVisualAnimFrame3D(now);
@@ -49334,6 +49814,7 @@ function renderMap3D(state){
     exploredSet = new Set(visionSet);
     terrainSet = new Set(visionSet);
   }
+  _syncBruma3D(terrainSet);
 
   // Reachable tiles (movement highlight)
   const isAnimadosTurn3D = state.animados_turn === GS.myPid;
@@ -49346,9 +49827,11 @@ function renderMap3D(state){
 
   const reachable = new Set();
   if(selAnimado3D && selAnimado3D.moves_left > 0)
-    bfsReachable(state.tiles, exploredSet, selAnimado3D.pos[0], selAnimado3D.pos[1], selAnimado3D.moves_left, reachable);
+    bfsReachable(state.tiles, exploredSet, selAnimado3D.pos[0], selAnimado3D.pos[1], selAnimado3D.moves_left, reachable,
+      {state, materiais: state.materiais, actor: selAnimado3D});
   else if(selPris3D && (selPris3D.moves_left||0) > 0)
-    bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable);
+    bfsReachable(state.tiles, exploredSet, selPris3D.pos[0], selPris3D.pos[1], selPris3D.moves_left, reachable,
+      {state, materiais: state.materiais, actor: selPris3D});
   else if(!isAnimadosTurn3D && GS.isMyTurn && me && me.moves_left > 0)
     bfsReachable(state.tiles, exploredSet, me.pos[0], me.pos[1], me.moves_left, reachable);
   if(testeHeroiControlado && (testeHeroiControlado.moves_left || 0) > 0){
@@ -49366,7 +49849,7 @@ function renderMap3D(state){
   if(!isAnimadosTurn3D && GS.isMyTurn && me && !me.action_done){
     const wRng = me.weapon?.range ?? null;
     for(const m of state.monsters){
-      if(!m || m.hp <= 0 || m._morteVisualPendente || (m.invisivel_sombras && !GS.isMaster())) continue;
+      if(!m || m.hp <= 0 || m._morteVisualPendente || _monstroOcultadoParaJogador(m)) continue;
       const dx = Math.abs(me.pos[0] - m.pos[0]), dy = Math.abs(me.pos[1] - m.pos[1]);
       const inR = _alvoNoAlcanceArmaClient(me, m.pos[0], m.pos[1], m.altura)
         && (wRng == null || GS.hasLineOfSight(state, me.pos[0],me.pos[1], m.pos[0],m.pos[1]));
@@ -49375,7 +49858,7 @@ function renderMap3D(state){
   }
   if(testeHeroiControlado && !testeHeroiControlado.action_done){
     for(const m of state.monsters || []){
-      if(!m || m.hp <= 0 || m._morteVisualPendente || (m.invisivel_sombras && !GS.isMaster())) continue;
+      if(!m || m.hp <= 0 || m._morteVisualPendente || _monstroOcultadoParaJogador(m)) continue;
       for(const [tx,ty] of GS.monsterTiles(m)){
         if(GS.weaponCanReachTile(testeHeroiControlado, tx, ty, m.altura)
           && (testeHeroiControlado.weapon?.range == null
@@ -49673,7 +50156,7 @@ function renderMap3D(state){
       g3.scene.add(grp);
       g3.chestMeshes[chest.id] = grp;
     }
-    g3.chestMeshes[chest.id].position.y = topoTerreno3D(state, chest.pos[0], chest.pos[1], 0.22);
+    g3.chestMeshes[chest.id].position.y = topoSuperficie3D(state, chest.pos[0], chest.pos[1], 0.22);
     g3.chestMeshes[chest.id].visible = exploredSet.has(key);
   }
 
@@ -50068,7 +50551,7 @@ function renderMap3D(state){
   // Monsters — only visible within player's current vision radius
   for(const m of state.monsters){
     if(m.hp <= 0) continue;
-    if(m.invisivel_sombras && !GS.isMaster()){
+    if(_monstroOcultadoParaJogador(m)){
       const hiddenFig = g3._figCache && g3._figCache.get(`mon:${m.id}`);
       if(hiddenFig && hiddenFig.fig) hiddenFig.fig.visible = false;
       continue;
@@ -50199,7 +50682,6 @@ function renderMap3D(state){
       sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
     }
   }
-
   // Descarta as figuras que saíram de cena (morte, fora da visão, consumidas).
   for(const [key, ent] of figCache){
     if(!figsUsadas.has(key)){
@@ -50212,6 +50694,11 @@ function renderMap3D(state){
   g3._pulseNodesDirty = true;
 
   }   // fim do bloco de reconstrução condicionada por entitySig
+
+  // A revelação da vela pode expirar mesmo sem mudar a geometria de armadilhas;
+  // sincroniza os avisos em todo game_state, fora do gate de reconstrução.
+  _syncVelaTrapMarkers3D(state, exploredSet);
+  _syncSolucaoMecanismoPreview3D(state);
 
   // ── Deslize fiel (entity_step): reposiciona meshes em animação ───────────────
   // Fora do gate do entitySig: roda todo frame para que, mesmo quando o
@@ -50300,6 +50787,35 @@ function _decorTrapBadge3D(){
   badge.renderOrder = 8;
   badge.userData.isTrapBadge = true;
   return badge;
+}
+
+function _syncVelaTrapMarkers3D(state, exploredSet){
+  if(!g3?.scene || !g3.T) return;
+  if(!g3.trapRevealMarkers) g3.trapRevealMarkers = {};
+  const marcadores = g3.trapRevealMarkers;
+  const ativos = new Set();
+  for(const [x, y] of _velaTrapRevealPositions(state)){
+    const key = `${x},${y}`;
+    if(exploredSet?.has(key)) continue;
+    ativos.add(key);
+    let marker = marcadores[key];
+    if(!marker){
+      marker = _decorTrapBadge3D();
+      marker.userData.isVelaTrapRevealMarker = true;
+      marker.renderOrder = 9;
+      g3.scene.add(marker);
+      marcadores[key] = marker;
+    }
+    marker.position.set(x, topoSuperficie3D(state, x, y, 0.22) + 0.46, y);
+    marker.visible = true;
+  }
+  for(const [key, marker] of Object.entries(marcadores)){
+    if(ativos.has(key)) continue;
+    g3.scene.remove(marker);
+    if(marker.material?.map) marker.material.map.dispose();
+    if(marker.material) marker.material.dispose();
+    delete marcadores[key];
+  }
 }
 
 function _armadilhaSprite3D(arm, x, y){
@@ -55135,7 +55651,8 @@ function handleTileClick(tx, ty){
     if(meuPrisClk && _prisSel){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
       for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
-      const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty, _prisC.moves_left||0);
+      const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty,
+        _prisC.moves_left||0, false, {state: _st, materiais: _st.materiais, actor: _prisC});
       if(passosP && passosP.length){
         GS.pendingMove = null; _clearMovePreviewVisual();
         _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return;
@@ -55193,7 +55710,8 @@ function handleTileClick(tx, ty){
           }
           const expSetMin = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
           for(const [rx,ry] of (_st.revealed||[])) expSetMin.add(`${rx},${ry}`);
-          const passosMin = GS.findPath(_st.tiles, expSetMin, a.pos[0], a.pos[1], tx, ty, a.moves_left||0);
+          const passosMin = GS.findPath(_st.tiles, expSetMin, a.pos[0], a.pos[1], tx, ty,
+            a.moves_left||0, false, {state: _st, materiais: _st.materiais, actor: a});
           if(passosMin && passosMin.length){
             GS.pendingMove = null; _clearMovePreviewVisual();
             _animarEEnviarMoverCaminhoMinino(a, passosMin); return;

@@ -8446,6 +8446,28 @@ window.EDITOR_CATALOG = {
       "guild_category": "tecnica"
     },
     {
+      "id": "guild_disparo_duplo",
+      "source": "guilda",
+      "source_id": "disparo_duplo",
+      "name": "Disparo Duplo",
+      "icon": "✦",
+      "descricao": "Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo dispara também a besta secundária contra o mesmo alvo como ação bônus. O alvo precisa continuar vivo, ao alcance e visível; cada disparo consome 1 virote, mesmo se errar. Uma vez por turno.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_arremesso_rapido",
+      "source": "guilda",
+      "source_id": "arremesso_rapido",
+      "name": "Arremesso Rápido",
+      "icon": "✦",
+      "descricao": "Passivo. Uma vez por turno, depois de arremessar um consumível arremessável com a ação principal, você pode arremessar um segundo com a ação bônus. Cada frasco mantém seu alcance e resolução normal e pode mirar um alvo ou local diferente; cada uso consome o item.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_tecnica_mira_perfeita",
       "source": "guilda",
       "source_id": "tecnica_mira_perfeita",
@@ -10668,9 +10690,9 @@ window.EDITOR_CATALOG = {
       "id": "banquete_viagem",
       "name": "Banquete de Viagem",
       "emoji": "🍗",
+      "icon": "assets/itens/banquete.png",
       "item_slot": "bag",
-      "effect": "meal_survival",
-      "loot_only": true
+      "effect": "meal_survival"
     },
     {
       "id": "carta",
@@ -10773,6 +10795,20 @@ window.EDITOR_CATALOG = {
       "descricao": "Runa ancestral de poder mágico; item especial para uso futuro."
     },
     {
+      "id": "grimorio_bau",
+      "name": "Grimório Antigo",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "loot_only": true,
+      "descricao": "Livro raro de mago com duas ou três magias fixas. Só funciona equipado na mão do escudo e não concede espaços de magia."
+    },
+    {
       "id": "joia",
       "name": "Joia",
       "emoji": "💎",
@@ -10799,6 +10835,12 @@ window.EDITOR_CATALOG = {
       "die": "1d4",
       "stat": "dex",
       "off_hand_weapon": true,
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "range": 2,
       "categoria": "cortante",
       "descricao": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
@@ -10819,6 +10861,12 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "throw_range": 4,
       "categoria": "perfurante",
       "descricao": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
@@ -10830,6 +10878,13 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "finesse": true,
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "categoria": "contundente",
       "descricao": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto."
     },
@@ -10851,6 +10906,14 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "finesse": true,
+      "allowed_classes": [
+        "mage",
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "reach": "cajado",
       "categoria": "contundente",
       "descricao": "Cajado Arcano: 1d6 de dano contundente, usando Força ou Destreza. Alcance: qualquer casa adjacente."
@@ -10861,6 +10924,12 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "descricao": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
@@ -10871,6 +10940,12 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -10887,12 +10962,19 @@ window.EDITOR_CATALOG = {
       "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
     },
     {
-      "id": "machadinha_ana",
+      "id": "machadinha_arremesso_ana",
       "name": "Machadinha de Arremesso Anã",
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
       "off_hand_weapon": true,
+      "icon": "assets/itens/machadinha_arremesso_ana.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 3,
       "throw_range": 3,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
@@ -10904,6 +10986,12 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d6",
       "stat": "dex",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "range": 6,
       "categoria": "perfurante",
       "descricao": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
@@ -10914,6 +11002,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "reach": "lanca",
       "throw_range": 4,
       "categoria": "perfurante",
@@ -10925,6 +11017,10 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -10935,6 +11031,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "range": 10,
       "categoria": "perfurante",
       "descricao": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
@@ -10945,6 +11045,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "descricao": "Martelo de Guerra: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
@@ -10955,6 +11060,12 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
+      "allowed_classes": [
+        "cleric",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
       "range": 8,
       "categoria": "perfurante",
       "descricao": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
@@ -10965,6 +11076,11 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
       "categoria": "contundente",
@@ -10976,6 +11092,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "descricao": "Machado Duplo: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
@@ -10986,6 +11106,10 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Bastarda: 1d10 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -10996,6 +11120,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
       "descricao": "Machado de Guerra Órquico: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3."
@@ -11006,6 +11134,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "range": 2,
       "categoria": "perfurante",
       "descricao": "Alabarda: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos."
@@ -11016,6 +11148,10 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
@@ -11026,6 +11162,10 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "categoria": "contundente",
       "descricao": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
     },
@@ -11037,6 +11177,7 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
+      "corrosion_max": 5,
       "throw_range": 3,
       "categoria": "perfurante",
       "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11048,6 +11189,13 @@ window.EDITOR_CATALOG = {
       "die": "1d4",
       "stat": "dex",
       "off_hand_weapon": true,
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "range": 2,
       "categoria": "cortante",
       "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11058,6 +11206,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "throw_range": 4,
       "categoria": "perfurante",
       "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11069,6 +11224,14 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "finesse": true,
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "categoria": "contundente",
       "descricao": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
@@ -11078,6 +11241,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "descricao": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11088,6 +11258,13 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11098,6 +11275,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "corrosion_max": 5,
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
@@ -11110,6 +11288,13 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "str_",
       "off_hand_weapon": true,
+      "icon": "assets/itens/machadinha_ana_prata.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 5,
       "throw_range": 3,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
@@ -11121,6 +11306,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🔱",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "reach": "lanca",
       "throw_range": 4,
       "categoria": "perfurante",
@@ -11132,6 +11322,11 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11142,6 +11337,12 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "descricao": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11152,6 +11353,12 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d8",
       "stat": "str_",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
       "categoria": "contundente",
@@ -11163,6 +11370,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11173,6 +11385,11 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11183,6 +11400,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
       "descricao": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11193,6 +11415,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "range": 2,
       "categoria": "perfurante",
       "descricao": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11203,6 +11430,11 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -11213,6 +11445,11 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 5,
       "categoria": "contundente",
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
@@ -11220,6 +11457,11 @@ window.EDITOR_CATALOG = {
       "id": "escudo_p",
       "name": "Escudo Pequeno",
       "emoji": "🛡️",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
       "kind": "shield",
       "ac_bonus": 1,
       "damage_reduction": 1,
@@ -11229,6 +11471,10 @@ window.EDITOR_CATALOG = {
       "id": "escudo_g",
       "name": "Escudo Grande",
       "emoji": "🛡️",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "kind": "shield",
       "ac_bonus": 2,
       "damage_reduction": 2,
@@ -11238,6 +11484,9 @@ window.EDITOR_CATALOG = {
       "id": "cloak",
       "name": "Manto",
       "emoji": "🧣",
+      "corrosion_materials": [
+        "organic"
+      ],
       "kind": "armor",
       "ac_bonus": 1
     },
@@ -11245,6 +11494,16 @@ window.EDITOR_CATALOG = {
       "id": "leather",
       "name": "Armadura de Couro",
       "emoji": "🥋",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
       "kind": "armor",
       "ac_bonus": 2
     },
@@ -11252,6 +11511,16 @@ window.EDITOR_CATALOG = {
       "id": "leather_plate",
       "name": "Armadura de Couro e Placas",
       "emoji": "🥋",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 3
     },
@@ -11259,6 +11528,15 @@ window.EDITOR_CATALOG = {
       "id": "chainmail",
       "name": "Cota de Malha",
       "emoji": "🪖",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 4
     },
@@ -11266,6 +11544,13 @@ window.EDITOR_CATALOG = {
       "id": "bronze_armor",
       "name": "Armadura de Bronze",
       "emoji": "🪖",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 5
     },
@@ -11273,6 +11558,16 @@ window.EDITOR_CATALOG = {
       "id": "leather_mail",
       "name": "Armadura de Couro Revestido com Malha",
       "emoji": "🪖",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 6
     },
@@ -11280,6 +11575,13 @@ window.EDITOR_CATALOG = {
       "id": "plate",
       "name": "Armadura de Placas",
       "emoji": "🛡️",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 6
     },
@@ -11287,6 +11589,14 @@ window.EDITOR_CATALOG = {
       "id": "monster_leather_plate",
       "name": "Armadura de Couro de Monstro e Placas",
       "emoji": "🛡️",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 7
     },
@@ -11294,6 +11604,13 @@ window.EDITOR_CATALOG = {
       "id": "fullplate",
       "name": "Armadura Completa",
       "emoji": "🛡️",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
       "kind": "armor",
       "ac_bonus": 8
     },
@@ -11434,6 +11751,36 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
     },
     {
+      "id": "vela_reveladora",
+      "name": "Vela Reveladora",
+      "emoji": "🕯️",
+      "icon": "assets/itens/vela_reveladora.png",
+      "item_slot": "bag",
+      "effect": "reveal_traps_potion",
+      "value": 10,
+      "descricao": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."
+    },
+    {
+      "id": "lampada_vigilia_arcana",
+      "name": "Lâmpada da Vigília Arcana",
+      "emoji": "🏮",
+      "icon": "assets/itens/lampada_vigilia_arcana.png",
+      "item_slot": "bag",
+      "effect": "arcane_vigilance_potion",
+      "value": 10,
+      "descricao": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."
+    },
+    {
+      "id": "solucao_mecanismo",
+      "name": "Solução do Mecanismo",
+      "emoji": "📦",
+      "icon": "assets/itens/solucao_mecanismo.png",
+      "item_slot": "bag",
+      "effect": "disarm_traps_area",
+      "value": 3,
+      "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."
+    },
+    {
       "id": "ring_str",
       "name": "Anel de Força",
       "emoji": "💍",
@@ -11504,6 +11851,7 @@ window.EDITOR_CATALOG = {
       "id": "cinto_utilidades",
       "name": "Cinto de Utilidades",
       "emoji": "🎒",
+      "icon": "assets/itens/cinto_e_bolsos.png",
       "item_slot": "item",
       "effect": "utility_belt",
       "value": 0,
@@ -11513,6 +11861,7 @@ window.EDITOR_CATALOG = {
       "id": "cinto_com_bolsos",
       "name": "Cinto com Bolsos",
       "emoji": "🎒",
+      "icon": "assets/itens/cinto_e_bolsos.png",
       "item_slot": "item",
       "effect": "utility_belt",
       "value": 0,
@@ -11585,6 +11934,7 @@ window.EDITOR_CATALOG = {
       "id": "frasco_piche",
       "name": "Frasco de Piche",
       "emoji": "🛢️",
+      "icon": "assets/itens/frasco_piche.png",
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
@@ -11654,6 +12004,15 @@ window.EDITOR_CATALOG = {
       "value": 0
     },
     {
+      "id": "cola_alquimica_superior",
+      "name": "Cola Alquímica Superior",
+      "emoji": "🍯",
+      "icon": "assets/itens/cola_alquimica.png",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
+    },
+    {
       "id": "rede_arremesso",
       "name": "Rede",
       "emoji": "🕸️",
@@ -11665,216 +12024,324 @@ window.EDITOR_CATALOG = {
       "id": "instrumento_harpa_velho",
       "name": "Harpa Velha",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_rustico",
       "name": "Harpa Rústica",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao",
       "name": "Harpa Padrão",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_rustico",
       "name": "Tambor de Guerra Rústico",
       "emoji": "🥁",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao",
       "name": "Tambor de Guerra Padrão",
       "emoji": "🥁",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_rustico",
       "name": "Sino Rústico",
       "emoji": "🔔",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao",
       "name": "Sino Padrão",
       "emoji": "🔔",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_rustico",
       "name": "Alaúde Rústico",
       "emoji": "🪕",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_alaude_padrao",
       "name": "Alaúde Padrão",
       "emoji": "🪕",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado",
       "name": "Harpa Refinada",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_rustico",
       "name": "Trompa de Guerra Rústica",
       "emoji": "📯",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao",
       "name": "Trompa de Guerra Padrão",
       "emoji": "📯",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_rustico",
       "name": "Lira Rústica",
       "emoji": "🎼",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao",
       "name": "Lira Padrão",
       "emoji": "🎼",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_rustico",
       "name": "Flauta Rústica",
       "emoji": "🎶",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao",
       "name": "Flauta Padrão",
       "emoji": "🎶",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_rustico",
       "name": "Violino Rústico",
       "emoji": "🎻",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao",
       "name": "Violino Padrão",
       "emoji": "🎻",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_padrao_elfica",
       "name": "Harpa Padrão Élfica",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_elfica",
       "name": "Trompa de Guerra Padrão Élfica",
       "emoji": "📯",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_elfica",
       "name": "Sino Padrão Élfico",
       "emoji": "🔔",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_tambor_padrao_ana",
       "name": "Tambor de Guerra Padrão Anão",
       "emoji": "🥁",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_ana",
       "name": "Lira Padrão Anã",
       "emoji": "🎼",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_ana",
       "name": "Violino Padrão Anão",
       "emoji": "🎻",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_sino_padrao_runico",
       "name": "Sino Padrão Rúnico",
       "emoji": "🔔",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_flauta_padrao_runico",
       "name": "Flauta Padrão Rúnica",
       "emoji": "🎶",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_trompa_padrao_runico",
       "name": "Trompa de Guerra Padrão Rúnica",
       "emoji": "📯",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_violino_padrao_runico",
       "name": "Violino Padrão Rúnico",
       "emoji": "🎻",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_lira_padrao_runico",
       "name": "Lira Padrão Rúnica",
       "emoji": "🎼",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_harpa_refinado_elfica_runico",
       "name": "Harpa Lendária Élfica",
       "emoji": "🎵",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_velho",
       "name": "Gaita Velha",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_rustico",
       "name": "Gaita Rústica",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao",
       "name": "Gaita Padrão",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado",
       "name": "Gaita Refinada",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_padrao_runico",
       "name": "Gaita Padrão Rúnica",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
       "id": "instrumento_gaita_refinado_ana_runico",
       "name": "Gaita Lendária Anã",
       "emoji": "🪗",
+      "allowed_classes": [
+        "bard"
+      ],
       "item_slot": "instrumento"
     },
     {
@@ -11976,6 +12443,369 @@ window.EDITOR_CATALOG = {
       "value": 10
     },
     {
+      "id": "pocao_invisibilidade",
+      "name": "Poção de Invisibilidade",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_invisibilidade.png",
+      "item_slot": "bag",
+      "effect": "invisibility",
+      "value": 6,
+      "descricao": "Ação bônus. Fica invisível por 6 rodadas; atacar ou lançar outra magia encerra o efeito."
+    },
+    {
+      "id": "pocao_velocidade",
+      "name": "Poção de Velocidade",
+      "emoji": "⚡",
+      "icon": "assets/itens/pocao_velocidade.png",
+      "item_slot": "bag",
+      "effect": "speed",
+      "value": "1d4+1",
+      "descricao": "Ação bônus. Dobra o movimento e concede uma ação principal extra por turno por 1d4+1 rodadas. Cada ação mantém seu custo normal."
+    },
+    {
+      "id": "pocao_voo",
+      "name": "Poção de Voo",
+      "emoji": "🪽",
+      "icon": "assets/itens/pocao_voo.png",
+      "item_slot": "bag",
+      "effect": "flight_potion",
+      "value": 10,
+      "descricao": "Ação bônus. Permite voar e controlar a altura até 10 por 10 rodadas. Ao expirar, pousa na casa segura mais próxima; se perder o controle ou não houver piso seguro, sofre a queda normal."
+    },
+    {
+      "id": "pocao_manto_escuridao",
+      "name": "Poção do Manto da Escuridão",
+      "emoji": "🌑",
+      "icon": "assets/itens/pocao_manto_escuridao.png",
+      "item_slot": "bag",
+      "effect": "darkness_mantle",
+      "value": "1d4",
+      "descricao": "Ação bônus. Cria uma área de escuridão de raio 3 que acompanha você. Você enxerga dentro dela por 1d4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_fogo",
+      "name": "Poção de Resistência ao Fogo",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_fogo.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano de fogo por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_gelo",
+      "name": "Poção de Resistência ao Gelo",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_gelo.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano de gelo por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_eletricidade",
+      "name": "Poção de Resistência à Eletricidade",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_eletricidade.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano elétrico por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_acido",
+      "name": "Poção de Resistência ao Ácido",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_acido.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano de ácido por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_agua",
+      "name": "Poção de Resistência à Água",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_agua.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano de água por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_resistencia_sagrado",
+      "name": "Poção de Resistência Sagrada",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_resistencia_sagrado.png",
+      "item_slot": "bag",
+      "effect": "elemental_resistance_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Absorve até 10 de dano sagrado por rodada durante 1d6+4 rodadas."
+    },
+    {
+      "id": "pocao_barreira_arcana",
+      "name": "Poção de Barreira Arcana",
+      "emoji": "🧪",
+      "icon": "assets/itens/pocao_barreira_arcana.png",
+      "item_slot": "bag",
+      "effect": "arcane_barrier_potion",
+      "value": "1d6+2",
+      "descricao": "Ação bônus. Reduz em 5 todo dano recebido por 1d6+2 rodadas. Pode coexistir com proteções elementais."
+    },
+    {
+      "id": "mira_do_falcao",
+      "name": "Elixir da Mira do Falcão",
+      "emoji": "🧪",
+      "icon": "assets/itens/mira_do_falcao.png",
+      "item_slot": "bag",
+      "effect": "archery_potion",
+      "value": "1d4+1",
+      "descricao": "Ação bônus. Concede +2 nos ataques com arcos e armas de arremesso por 1d4+1 rodadas. Beber outra renova a duração sem acumular bônus. Não aumenta o dano."
+    },
+    {
+      "id": "essencia_vento_favoravel",
+      "name": "Essência do Vento Favorável",
+      "emoji": "🧪",
+      "icon": "assets/itens/essencia_vento_favoravel.png",
+      "item_slot": "bag",
+      "effect": "ranged_range_potion",
+      "value": "1d6+2",
+      "descricao": "Ação bônus. Aumenta em 2 casas o alcance de armas à distância, armas arremessadas e itens arremessáveis por 1d6+2 rodadas. Beber outra renova a duração sem acumular alcance."
+    },
+    {
+      "id": "gole_do_gigante",
+      "name": "Gole do Gigante",
+      "emoji": "🧪",
+      "icon": "assets/itens/gole_do_gigante.png",
+      "item_slot": "bag",
+      "effect": "strength_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Aumenta a Força em 1d4+1 por 1d6+4 rodadas, aplicando o modificador normal a ataques, dano e testes de Força. Beber outro renova a duração sem acumular o bônus; pode coexistir com proteções elementais."
+    },
+    {
+      "id": "bote_da_serpente",
+      "name": "Bote da Serpente",
+      "emoji": "🧪",
+      "icon": "assets/itens/bote_da_serpente.png",
+      "item_slot": "bag",
+      "effect": "dexterity_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Aumenta a Destreza em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo. Beber outro renova a duração sem acumular o bônus."
+    },
+    {
+      "id": "elixir_cavalo_ferro",
+      "name": "Elixir do Cavalo de Ferro",
+      "emoji": "🧪",
+      "icon": "assets/itens/elixir_cavalo_ferro.png",
+      "item_slot": "bag",
+      "effect": "constitution_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Aumenta a Constituição em 1d4+1 por 1d6+4 rodadas, ajustando Fortitude e PV máximos conforme o nível. O aumento do máximo pode repor PV atuais, exceto quando Último Esforço bloqueia esse top-up; ao expirar, os PV são limitados ao máximo atualizado. Beber outro renova a duração sem acumular o bônus."
+    },
+    {
+      "id": "sabedoria_liquida",
+      "name": "Sabedoria Líquida",
+      "emoji": "🧪",
+      "icon": "assets/itens/sabedoria_liquida.png",
+      "item_slot": "bag",
+      "effect": "intelligence_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Aumenta a Inteligência em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a Vontade, CD das magias, iniciativa na próxima recalculação, visão, curas que usam INT e slots de controle do Reviver quando aplicável. Não concede slots normais nem magias conhecidas. Beber outra renova a duração sem acumular o bônus."
+    },
+    {
+      "id": "grimorio_bola_fogo",
+      "name": "Grimório: Bola de Fogo",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Bola de Fogo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "bola_fogo"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_relampago",
+      "name": "Grimório: Relâmpago",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Relâmpago. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "relampago"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_raio_congelante",
+      "name": "Grimório: Raio Congelante",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Raio Congelante. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "raio_congelante"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_voo",
+      "name": "Grimório: Voo",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Voo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "voo"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_sono",
+      "name": "Grimório: Sono",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Sono. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "sono"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_comando",
+      "name": "Grimório: Comando",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Comando. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "comando"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_medo",
+      "name": "Grimório: Medo",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Medo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "medo"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_clarividencia",
+      "name": "Grimório: Clarividência",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Clarividência. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "clarividencia"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_barreira_arcana",
+      "name": "Grimório: Barreira Arcana",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Barreira Arcana. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "barreira_arcana"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "grimorio_contramagica",
+      "name": "Grimório: Contramágica",
+      "emoji": "📘",
+      "icon": "assets/itens/grimorio.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "off_hand",
+      "effect": "grimoire",
+      "value": 0,
+      "descricao": "Contém Contramágica. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.",
+      "magic_ids": [
+        "contramagica"
+      ],
+      "fixed_magic_ids": true
+    },
+    {
+      "id": "bola_cristal_clarividencia",
+      "name": "Bola de Cristal da Clarividência",
+      "emoji": "🔮",
+      "icon": "assets/itens/bola_cristal_clarividencia.png",
+      "item_slot": "off_hand",
+      "effect": "crystal_ball_clairvoyance",
+      "value": 10,
+      "descricao": "Ação principal. Reproduz Clarividência sem consumir espaço de magia. Recarga: 10 rodadas. Mago e Clérigo usam a escala normal; outras classes revelam uma área fixa de 4×4 casas."
+    },
+    {
+      "id": "calice_eter",
+      "name": "Cálice de Éter",
+      "emoji": "🏆",
+      "icon": "assets/itens/calice_eter.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "bag",
+      "effect": "restore_spell_slot",
+      "descricao": "Ação bônus. Recupera um espaço gasto de magia de 1º círculo; não ultrapassa o máximo de espaços do herói."
+    },
+    {
       "id": "ensaio_sobre_a_cegueira",
       "name": "Ensaio sobre a Cegueira",
       "emoji": "☠️",
@@ -11986,26 +12816,13 @@ window.EDITOR_CATALOG = {
       "descricao": "Fortitude CD 14. Falha: cego por 1d4+2 rodadas, visão 1 quadrado, -5 percepção, -4 ataques e sem ataques à distância. Sucesso: visão -2 quadrados e -3 percepção por 1d4 rodadas; ao final, novo Fortitude CD 14. Falha: cegueira por 1d2 rodadas."
     },
     {
-      "id": "maca_treino",
-      "name": "Maça de Treino",
-      "emoji": "🔨",
-      "die": "1d6",
-      "stat": "str_",
-      "finesse": true,
-      "categoria": "contundente",
-      "granted_ability": null,
-      "item_slot": "weapon",
-      "effect": "atk",
-      "value": 0,
-      "descricao": "Maça de Treino: 1d6 de dano contundente, usando Força ou Destreza."
-    },
-    {
       "id": "anel_garra_negra",
       "name": "Anel da Garra Negra",
       "emoji": "💍",
       "granted_ability": "hero_rogue_esconder_sombras",
       "kind": "ring",
-      "item_slot": "ring"
+      "item_slot": "ring",
+      "descricao": "+1 de acerto e +1 de visão. Concede a habilidade Esconder nas Sombras enquanto estiver equipado: ação bônus (🍖-2 💧-1); teste de d20 + Destreza contra a percepção dos monstros que o enxergam. Em sucesso você fica invisível e não pode ser escolhido como alvo, e ainda pode atacar na mesma rodada; manter a invisibilidade custa 🍖-1 💧-1 por turno. Para o Ladino, o primeiro golpe saindo das sombras é um Ataque Furtivo."
     },
     {
       "id": "lamina_do_vento",
@@ -12014,6 +12831,10 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "finesse": false,
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
@@ -12021,6 +12842,20 @@ window.EDITOR_CATALOG = {
       "effect": "atk",
       "value": 0,
       "descricao": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+    },
+    {
+      "id": "ferrao_do_brejo",
+      "name": "Ferrão do Brejo",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "finesse": true,
+      "categoria": "perfurante",
+      "granted_ability": null,
+      "item_slot": "weapon",
+      "effect": "atk",
+      "value": 0,
+      "descricao": "Ferrão do Brejo: 1d6 de dano perfurante, usando Força ou Destreza."
     }
   ],
   "traps": [
@@ -12826,6 +13661,36 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "cabana_rustica.png"
+    },
+    {
+      "type": "choupana_palha_escura",
+      "nome": "Choupana de palha escura",
+      "emoji": "🛖",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "choupana_palha_escura.png"
+    },
+    {
+      "type": "cabana_palha_velha",
+      "nome": "Cabana de palha velha",
+      "emoji": "🛖",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cabana_palha_velha.png"
     },
     {
       "type": "lago_patos",

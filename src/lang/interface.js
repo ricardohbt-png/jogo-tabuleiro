@@ -5008,6 +5008,26 @@ window.LANG_INTERFACE = {
     "en": "Area (radius 1, range 4). Spreads pitch over 3×3 tiles for 4 rounds; crossing costs 2 movement points and the ground is FLAMMABLE. No damage.",
     "pt": "Área (raio 1, alcance 4). Espalha piche em 3×3 casas por 4 rodadas; atravessar custa 2 pontos de movimento e o chão fica INFLAMÁVEL. Sem dano."
   },
+  "ui.item.solucao_mecanismo.preview_titulo": {
+    "en": "Solution of the Mechanism",
+    "pt": "Solução do Mecanismo"
+  },
+  "ui.item.solucao_mecanismo.preview_texto": {
+    "en": "The highlighted 3-square area around your hero will be checked. Confirm to spend the item and bonus action; cancel to keep both.",
+    "pt": "A área destacada de 3 casas ao redor do herói será verificada. Confirme para gastar o item e a ação bônus; cancelar preserva os dois."
+  },
+  "ui.item.solucao_mecanismo.confirmar": {
+    "en": "Confirm use",
+    "pt": "Confirmar uso"
+  },
+  "ui.item.solucao_mecanismo.cancelar": {
+    "en": "Cancel",
+    "pt": "Cancelar"
+  },
+  "ui.item.solucao_mecanismo.posicao_atualizada": {
+    "en": "Your hero moved. The highlighted area has been updated; confirm again to use the item.",
+    "pt": "Seu herói mudou de posição. A área destacada foi atualizada; confirme novamente para usar o item."
+  },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
     "pt": "Área (raio 1, alcance 4). 2d6 de fogo, Reflexos CD 12 (metade)."
@@ -10070,6 +10090,30 @@ window.LANG_INTERFACE = {
     "en": "{n} HP reserve; heals 1 HP at the start of the turn",
     "pt": "reserva de {n} PV; cura 1 PV no início do turno"
   },
+  "ui.status.gole_do_gigante_ef": {
+    "en": "+{n} Strength; applies its normal modifier to attacks, damage, and Strength checks",
+    "pt": "+{n} de Força; aplica o modificador normal a ataques, dano e testes de Força"
+  },
+  "ui.status.bote_da_serpente_ef": {
+    "en": "+{n} Dexterity; applies its normal modifiers to attacks, damage, AC, Reflex saves, initiative, vision radius, Dexterity checks, and Bard instrument ability DCs",
+    "pt": "+{n} de Destreza; aplica os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo"
+  },
+  "ui.status.elixir_cavalo_ferro_ef": {
+    "en": "+{n} Constitution; increases Fortitude and maximum HP according to level",
+    "pt": "+{n} de Constituição; aumenta Fortitude e PV máximos conforme o nível"
+  },
+  "ui.status.sabedoria_liquida_ef": {
+    "en": "+{n} Intelligence; improves Will, spell save DCs, initiative, vision, INT-based healing, and Reviver control slots when applicable",
+    "pt": "+{n} de Inteligência; melhora Vontade, CD das magias, iniciativa, visão, curas com INT e slots de controle do Reviver quando aplicável"
+  },
+  "ui.status.mira_do_falcao_ef": {
+    "en": "+2 to attacks with bows and thrown weapons; no damage bonus",
+    "pt": "+2 nos ataques com arcos e armas de arremesso; sem bônus de dano"
+  },
+  "ui.status.essencia_vento_ef": {
+    "en": "+2 range on ranged weapons, thrown weapons, and throwable items",
+    "pt": "+2 casas de alcance para armas à distância, armas e itens arremessáveis"
+  },
   "ui.status.resistencia": {
     "en": "resistance",
     "pt": "resistência"
@@ -10481,6 +10525,18 @@ window.LANG_INTERFACE = {
   "ui.tooltip.risco_val": {
     "en": "A 1 on the d20 = weapon destroyed",
     "pt": "Resultado 1 no d20 = arma destruída"
+  },
+  "ui.tooltip.risco_arremesso_desgaste": {
+    "en": "A natural 1 damages the weapon by {n} durability levels",
+    "pt": "Um 1 natural causa {n} níveis de dano à arma"
+  },
+  "ui.tooltip.vitalidade_arma": {
+    "en": "Weapon vitality",
+    "pt": "Vitalidade da arma"
+  },
+  "ui.tooltip.penalidade_desgaste": {
+    "en": "Wear penalty",
+    "pt": "Penalidade por desgaste"
   },
   "ui.tooltip.rodadas": {
     "en": "{n} rounds",
